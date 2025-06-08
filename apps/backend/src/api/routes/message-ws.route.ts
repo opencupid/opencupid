@@ -36,7 +36,11 @@ const messageWsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/message', { websocket: true }, (conn, req) => {
 
     const userId = req.raw.req.user.userId
-    // TODO handle case where userId is not present, close connection
+    if (!userId) {
+      fastify.log.warn('WebSocket connection without userId, closing')
+      conn.socket.close()
+      return
+    }
     fastify.connections[userId] = conn.socket
 
     conn.socket.on('close', () => {
@@ -44,12 +48,21 @@ const messageWsRoutes: FastifyPluginAsync = async (fastify) => {
       delete fastify.connections[userId]
     })
 
-    // TODO add debug logging for other WS events like 'error', 'ping', etc.
+    conn.socket.on('error', (err) => {
+      fastify.log.error('WebSocket error', err)
+    })
+
+    conn.socket.on('ping', () => {
+      fastify.log.debug('Received ping from client')
+    })
+
+    conn.socket.on('pong', () => {
+      fastify.log.debug('Received pong from client')
+    })
 
     // TOD implement automatic reconnect
 
     conn.socket.on('message', async (raw: any) => {
-      // TODO FIXME figure out why we never reach this point
       fastify.log.info(`Received message from user ${userId}: ${raw.toString()}`)
       try {
         const data = JSON.parse(raw.toString()) as WsMessage
@@ -63,7 +76,6 @@ const messageWsRoutes: FastifyPluginAsync = async (fastify) => {
             content: msg.content,
             createdAt: msg.createdAt
           }))
-          // TODO persist message in DB using sendMessage in message.service.ts
         }
       } catch (err) {
         fastify.log.error('Invalid WS message', err)
