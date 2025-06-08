@@ -48,19 +48,21 @@ const url = `${__APP_CONFIG__.WS_BASE_URL}/message?token=${authStore.jwt}`
 const { ws, data, send, open, close } = useWebSocket(url, {
   immediate: true,
   autoReconnect: true,
-  // TODO: Implement heartbeat, send valid JSON message
-  // that is handled correctly by  socket.on('message', ...)
-  // heartbeat: {
-  //   message: 'ping',
-  //   interval: 1000,
-  //   pongTimeout: 1000,
-  // },
+  heartbeat: {
+    message: JSON.stringify({ type: 'ping' }),
+    interval: 10000,
+    pongTimeout: 10000,
+  },
 })
 
 if (ws.value) {
   ws.value.addEventListener('message', (e) => {
     console.log('WebSocket message received:', e.data)
-    const data = JSON.parse(e.data) as WsMessage
+    const parsed = JSON.parse(e.data)
+    if (parsed.type === 'pong') {
+      return
+    }
+    const data = parsed as WsMessage
     messages.value.push(data)
   })
 }

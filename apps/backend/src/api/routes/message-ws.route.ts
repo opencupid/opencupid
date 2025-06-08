@@ -49,9 +49,28 @@ const messageWsRoutes: FastifyPluginAsync = async (fastify) => {
 
     socket.on('message', async (raw: any) => {
       fastify.log.info(`Received message from user ${userId}: ${raw.toString()}`)
+
+      let data: WsMessage
+
       try {
-        const data = JSON.parse(raw.toString()) as WsMessage
-        if (!data.to || !data.content) return
+        data = JSON.parse(raw.toString()) as WsMessage
+      } catch (err) {
+        fastify.log.warn('Malformed JSON received on WebSocket', err)
+        return
+      }
+
+      // Ignore heartbeat messages from client
+      if ((data as any).type === 'ping') {
+        socket.send(JSON.stringify({ type: 'pong' }))
+        return
+      }
+
+      if (!data.to || !data.content) {
+        fastify.log.warn('WS message missing required fields', data)
+        return
+      }
+
+      try {
         const msg = await messageService.sendMessage(userId, data.to, data.content)
         const receiver = fastify.connections[data.to]
         if (receiver && receiver.readyState === receiver.OPEN) {
@@ -63,9 +82,7 @@ const messageWsRoutes: FastifyPluginAsync = async (fastify) => {
           }))
         }
       } catch (err) {
-        // TODO FIXME more fine grained catch to handle JSON.parse, messageService.sendMessage errors and do more meaningful logging.
-        console.error('Error processing WS message', err)
-        fastify.log.error('Invalid WS message', err)
+        fastify.log.error('Failed to persist or forward WS message', err)
       }
     })
   })
