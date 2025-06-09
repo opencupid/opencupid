@@ -1,6 +1,6 @@
 import { FastifyPluginAsync } from 'fastify'
 import { PrismaClient } from '@prisma/client'
-import { CityQuerySchema, CitySchema } from '@zod/city.schema'
+import { CityQuerySchema, CityRecordSchema } from '@/schemas/city.route.schema'
 
 const prisma = new PrismaClient()
 
@@ -26,7 +26,7 @@ const cityRoutes: FastifyPluginAsync = async (fastify) => {
     })
 
     // Validate output and send
-    const valid = CitySchema.array().parse(cities)
+    const valid = CityRecordSchema.array().parse(cities)
     return reply.send(valid)
   })
 }
