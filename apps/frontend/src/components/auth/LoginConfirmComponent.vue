@@ -1,19 +1,20 @@
 <template>
-
   <div class="login-success-component">
     <div class="d-flex justify-content-center align-items-center flex-column h-100">
       <div class="icon-inner text-success animate__animated animate__fadeIn">
         <IconSun class="svg-icon welcome-icon" />
       </div>
-      <div class="text-success fs-3 animate__animated animate__fadeIn">Welcome!</div>
+      <div class="text-success fs-3 animate__animated animate__fadeIn">{{ t('auth.welcome') }}</div>
     </div>
   </div>
-
 </template>
 
 <script lang="ts" setup>
 import 'animate.css'
-import { IconSun } from '@/components/icons/DoodleIcons';
+import { IconSun } from '@/components/icons/DoodleIcons'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 </script>
 
 <style scoped>

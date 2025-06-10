@@ -90,7 +90,13 @@
     "auth_id_input_placeholder": "+12 34567121 or your@email.com",
     "captcha_input_label": "I am a human being",
     "email": "Email",
-    "password": "Password"
+    "password": "Password",
+    "check_your_messages": "Check your messages",
+    "otp_sms_instruction": "We have sent you a little code to your phone number, please enter it below.",
+    "otp_email_instruction": "We have sent you a login link, check your inbox. If you don't see it, please check your spam folder.",
+    "otp_label": "Login code...",
+    "continue": "Continue",
+    "welcome": "Welcome!"
   },
   "nav": {
     "home": "Home",
@@ -121,6 +127,36 @@
         "title": "Error",
         "message": "An error occurred. Please try again."
       }
-    }
+    },
+    "error": {
+      "title": "Error"
+    },
+    "loading": "Loading..."
+  },
+  "errors": {
+    "unknown": "An unknown error occurred, please try again a bit later.",
+    "unexpected": "An unexpected error occurred.",
+    "browser_storage": "Something is off with this browser. Please try again in a different one (or try clearing your browser storage.)",
+    "missing_code": "Something went wrong here with the code. Try again?",
+    "otp_expired": "Oops, this code has probably expired. Try again?",
+    "confirm_email_failed": "Failed to confirm email."
+  },
+  "messaging": {
+    "title": "Messaging",
+    "conversations": "Convos",
+    "recipient_placeholder": "Recipient user id",
+    "message_placeholder": "Type a message",
+    "send_button": "Send",
+    "users": "Users",
+    "send_message": "Send Message"
+  },
+  "settings": {
+    "phone_number": "Phone number",
+    "toggle_theme": "Toggle night or day"
+  },
+  "profile": {
+    "fetch_error": "Failed to fetch profiles",
+    "add_photo": "Add a photo",
+    "update_failed": "Failed to update profile."
   }
 }

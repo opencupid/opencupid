@@ -9,6 +9,7 @@ import ErrorComponent from '@/components/ErrorComponent.vue'
 import LoginConfirmComponent from '@/components/auth/LoginConfirmComponent.vue'
 
 import ChevronLeftIcon from '@/assets/icons/arrows/arrow-single-left.svg'
+import { useI18n } from 'vue-i18n'
 
 // Reactive variables
 const error = ref('' as string)
@@ -33,7 +34,7 @@ const showConfirmScreen = ref(false)
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
-
+const { t } = useI18n()
 
 // // On mounted lifecycle hook
 onMounted(async () => {
@@ -61,10 +62,10 @@ async function handleSendOtp(payload: SendOtpPayload) {
       showOtpForm.value = true
       showUserIdForm.value = false
     } else {
-      error.value = 'An unknown error occurred, please try again a bit later.'
+      error.value = t('errors.unknown')
     }
   } catch (err: any) {
-    error.value = err || 'An unexpected error occurred.'
+    error.value = err || t('errors.unexpected')
     console.error('Login error:', err)
   } finally {
     isLoading.value = false
@@ -84,20 +85,20 @@ async function doOtpLogin(otp: string) {
       showConfirmScreen.value = true
       showOtpForm.value = false
       showUserIdForm.value = false
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      await new Promise((resolve) => setTimeout(resolve, 2000))
       await router.push({ name: 'Onboarding' })
       return true
     } else {
       console.log('OTP login failed:', res)
       // Handle different status flags
       if (res.status === 'storage_error') {
-        error.value = 'Something is off with this browser. Please try again in a different one (or try clearing your browser storage.)'
+        error.value = t('errors.browser_storage')
       }
       if (res.status === 'missing_userid') {
-        error.value = 'Something went wrong here with the code.  Try again?'
+        error.value = t('errors.missing_code')
       }
       if (res.status === 'missing_otp' || res.status === 'invalid_token') {
-        error.value = 'Oops, this code has probably expired. Try again?'
+        error.value = t('errors.otp_expired')
       }
       showUserIdForm.value = true
       showOtpForm.value = false
@@ -105,7 +106,7 @@ async function doOtpLogin(otp: string) {
     }
   } catch (err: any) {
     console.error(err)
-    error.value = err.response?.data?.message || 'Failed to confirm email.'
+    error.value = err.response?.data?.message || t('errors.confirm_email_failed')
   } finally {
     isLoading.value = false
   }
@@ -117,55 +118,52 @@ function handleBackButton() {
   showOtpForm.value = false
   error.value = ''
   isLoading.value = false
-} 
+}
 </script>
-
 
 <template>
   <div class="login-container">
-   
-    <BModal v-model="showModal"
-            title="Login"
-            size="md"
-            :backdrop="'static'"
-            centered
-            button-size="sm"
-            :focus="false"
-            :no-close-on-backdrop="true"
-            :no-footer="true"
-            :no-header="true"
-            cancel-title="Nevermind"
-            initial-animation
-            fullscreen="md"
-            body-class="d-flex flex-row align-items-center justify-content-center overflow-hidden"
-            :keyboard="false">
+    <BModal
+      v-model="showModal"
+      :title="t('authentication.login')"
+      size="md"
+      :backdrop="'static'"
+      centered
+      button-size="sm"
+      :focus="false"
+      :no-close-on-backdrop="true"
+      :no-footer="true"
+      :no-header="true"
+      :cancel-title="t('uicomponents.modal.close')"
+      initial-animation
+      fullscreen="md"
+      body-class="d-flex flex-row align-items-center justify-content-center overflow-hidden"
+      :keyboard="false"
+    >
       <div class="w-100">
         <div v-if="showOtpForm">
           <div class="back-button">
-            <a class="btn btn-secondary-outline"
-               @click="handleBackButton">
+            <a class="btn btn-secondary-outline" @click="handleBackButton">
               <ChevronLeftIcon class="svg-icon" />
             </a>
           </div>
         </div>
         <ErrorComponent :error="error" />
 
-        <AuthIdComponent :isLoading="isLoading"
-                         @otp:send="handleSendOtp"
-                         v-if="showUserIdForm" />
+        <AuthIdComponent :isLoading="isLoading" @otp:send="handleSendOtp" v-if="showUserIdForm" />
 
-
-        <OtpLoginComponent :isLoading="isLoading"
-                           :user="user"
-                           @otp:submit="handleOTPSubmitted"
-                           v-if="showOtpForm" />
+        <OtpLoginComponent
+          :isLoading="isLoading"
+          :user="user"
+          @otp:submit="handleOTPSubmitted"
+          v-if="showOtpForm"
+        />
 
         <LoginConfirmComponent v-if="showConfirmScreen" />
       </div>
     </BModal>
   </div>
 </template>
-
 
 <style scoped>
 .back-button {
