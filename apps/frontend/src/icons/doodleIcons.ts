@@ -1,45 +1,39 @@
-import IconSun from '@/assets/icons/interface/sun.svg'
-import IconMail from '@/assets/icons/interface/mail.svg'
-import IconMessage from '@/assets/icons/interface/message.svg'
-import IconPhone from '@/assets/icons/interface/phone.svg'
-import IconTick from '@/assets/icons/interface/tick.svg'
-import IconLogin from '@/assets/icons/interface/login.svg'
-import IconArrowSingleLeft from '@/assets/icons/arrows/arrow-single-left.svg'
-import IconMenuDotsVert from '@/assets/icons/interface/menu-dots-vert.svg'
-import IconPen from '@/assets/icons/interface/pen.svg'
-import IconSearch from '@/assets/icons/interface/search.svg'
-import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
-import IconUser from '@/assets/icons/interface/user.svg'
-import IconLogout from '@/assets/icons/interface/logout.svg'
-import IconGlobe from '@/assets/icons/interface/globe.svg'
-import IconMic from '@/assets/icons/interface/mic.svg'
-import IconMic2 from '@/assets/icons/interface/mic-2.svg'
-import IconArrowLeft from '@/assets/icons/arrows/arrow-left.svg'
-import IconCamera2 from '@/assets/icons/interface/camera.svg'
-import IconPhoto from '@/assets/icons/interface/photo.svg'
-import IconCross from '@/assets/icons/interface/cross.svg'
+/**
+ * Map the icon component names used throughout the application to their
+ * corresponding SVG file paths under `@/assets/icons`.
+ */
+export const doodleIconPaths = {
+  IconSun: 'interface/sun',
+  IconMail: 'interface/mail',
+  IconMessage: 'interface/message',
+  IconPhone: 'interface/phone',
+  IconTick: 'interface/tick',
+  IconLogin: 'interface/login',
+  IconArrowSingleLeft: 'arrows/arrow-single-left',
+  IconMenuDotsVert: 'interface/menu-dots-vert',
+  IconPen: 'interface/pen',
+  IconSearch: 'interface/search',
+  IconSetting2: 'interface/setting-2',
+  IconUser: 'interface/user',
+  IconLogout: 'interface/logout',
+  IconGlobe: 'interface/globe',
+  IconMic: 'interface/mic',
+  IconMic2: 'interface/mic-2',
+  IconArrowLeft: 'arrows/arrow-left',
+  IconCamera2: 'interface/camera',
+  IconPhoto: 'interface/photo',
+  IconCross: 'interface/cross',
+} as const
 
-export const doodleIcons = {
-  IconSun,
-  IconMail,
-  IconMessage,
-  IconPhone,
-  IconTick,
-  IconLogin,
-  IconArrowSingleLeft,
-  IconMenuDotsVert,
-  IconPen,
-  IconSearch,
-  IconSetting2,
-  IconUser,
-  IconLogout,
-  IconGlobe,
-  IconMic,
-  IconMic2,
-  IconArrowLeft,
-  IconCamera2,
-  IconPhoto,
-  IconCross,
+export type DoodleIconName = keyof typeof doodleIconPaths
+
+const iconModules = import.meta.glob('../assets/icons/**/*.svg')
+
+/** Dynamically import an icon by its component name. */
+export async function loadIcon(name: DoodleIconName) {
+  const importer = iconModules[`../assets/icons/${doodleIconPaths[name]}.svg`]
+  if (!importer) {
+    throw new Error(`Icon not found: ${name}`)
+  }
+  return await (importer as () => Promise<any>)()
 }
-
-export type DoodleIconName = keyof typeof doodleIcons
