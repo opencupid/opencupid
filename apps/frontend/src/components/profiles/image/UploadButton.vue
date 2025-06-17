@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AvatarUploadIcon from '@/assets/icons/files/avatar-upload.svg'
-import { IconCamera2, IconPhoto } from '@/components/icons/DoodleIcons'
+import DoodleIcons from '@/components/icons/DoodleIcons.vue'
 import { computed, ref } from 'vue'
 
 const props = defineProps<{
@@ -31,9 +31,9 @@ const captureAttr = computed(() => (props.capture ? 'user' : null))
       <template #label>
         <div class="ratio ratio-1x1">
           <div class="btn btn-secondary rounded rounded-lg-5 w-100 file-upload-label">
-            <IconCamera2 class="svg-icon" v-if="captureAttr" />
+            <DoodleIcons name="IconCamera2" class="svg-icon" v-if="captureAttr" />
             <AvatarUploadIcon class="svg-icon" v-else-if="genericIcon" />
-            <IconPhoto class="svg-icon" v-else />
+            <DoodleIcons name="IconPhoto" class="svg-icon" v-else />
           </div>
         </div>
       </template>

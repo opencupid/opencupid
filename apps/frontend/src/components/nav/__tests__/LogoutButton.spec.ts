@@ -5,7 +5,7 @@ const logout = vi.fn()
 const push = vi.fn()
 vi.mock('@/store/authStore', () => ({ useAuthStore: () => ({ logout }) }))
 vi.mock('vue-router', () => ({ useRouter: () => ({ push }) }))
-vi.mock('@/components/icons/DoodleIcons', () => ({ IconLogout: { template: '<div />' } }))
+vi.mock('@/components/icons/DoodleIcons.vue', () => ({ default: { template: '<div />' } }))
 
 import LogoutButton from '../LogoutButton.vue'
 

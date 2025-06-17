@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi } from 'vitest'
 
-vi.mock('@/components/icons/DoodleIcons', () => ({ IconArrowLeft: { template: '<div class="icon" />' } }))
+vi.mock('@/components/icons/DoodleIcons.vue', () => ({ default: { template: '<div class="icon" />' } }))
 
 import HelpScribble from '../HelpScribble.vue'
 

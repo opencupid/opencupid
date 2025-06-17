@@ -1,10 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi } from 'vitest'
 
-vi.mock('@/components/icons/DoodleIcons', () => ({
-  IconMail: { template: '<div />' },
-  IconMessage: { template: '<div />' }
-}))
+vi.mock('@/components/icons/DoodleIcons.vue', () => ({ default: { template: '<div />' } }))
 
 const stubFormKit = { template: '<form><slot :state="{ valid: true }" /></form>' }
 

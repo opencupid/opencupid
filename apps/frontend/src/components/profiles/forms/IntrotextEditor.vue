@@ -2,7 +2,7 @@
 import { useI18n } from 'vue-i18n'
 import { ref } from 'vue'
 import type { SpeechRecognition, SpeechRecognitionEvent } from '@/types/speechrecognition'
-import { IconGlobe, IconMic, IconMic2 } from '@/components/icons/DoodleIcons'
+import DoodleIcons from '@/components/icons/DoodleIcons.vue'
 
 // i18n
 const { t } = useI18n()
@@ -98,7 +98,7 @@ const toggleListening = () => {
   <div>
     <div class="d-flex justify-content-between align-items-center mb-3">
       <div>
-        <IconGlobe class="svg-icon me-2" />
+        <DoodleIcons name="IconGlobe" class="svg-icon me-2" />
       </div>
       <ul class="nav nav-underline flex-grow-1">
         <li class="nav-item me-2" v-for="lang in props.languages" :key="lang">
@@ -116,7 +116,7 @@ const toggleListening = () => {
       </ul>
       <div class="">
         <BButton variant="secondary" size="sm" pill @click="toggleListening">
-          <IconMic2 class="svg-icon" />
+          <DoodleIcons name="IconMic2" class="svg-icon" />
           <i class="fas fa-microphone"></i> {{ isListening ? 'Listening…' : 'Dictate' }}
         </BButton>
       </div>

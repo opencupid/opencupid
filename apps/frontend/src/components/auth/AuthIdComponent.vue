@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import type { AuthIdentifierCaptchaInput } from '@zod/user/user.dto'
 import { emailRegex, phoneRegex } from '@/lib/utils'
 import CaptchaWidget from './CaptchaWidget.vue'
-import { IconMail, IconPhone, IconTick, IconLogin } from '@/components/icons/DoodleIcons'
+import DoodleIcons from '@/components/icons/DoodleIcons.vue'
 import Logo from '@/assets/icons/app/logo.svg'
 import { useI18n } from 'vue-i18n'
 
@@ -96,11 +96,11 @@ const authIdInputRef = ref<InstanceType<any> | null>(null)
           <template #suffixIcon>
             <div class="suffix-icon">
               <span class="text-success" v-if="valid">
-                <IconTick class="svg-icon" />
+                <DoodleIcons name="IconTick" class="svg-icon" />
               </span>
               <span class="text-muted" v-else>
-                <IconMail class="svg-icon" v-if="authIdInput.includes('@')" />
-                <IconPhone class="svg-icon" v-else-if="authIdInput.startsWith('+')" />
+                <DoodleIcons name="IconMail" class="svg-icon" v-if="authIdInput.includes('@')" />
+                <DoodleIcons name="IconPhone" class="svg-icon" v-else-if="authIdInput.startsWith('+')" />
               </span>
             </div>
           </template>
@@ -117,7 +117,7 @@ const authIdInputRef = ref<InstanceType<any> | null>(null)
         input-class="btn-primary btn-lg w-100"
         :disabled="!valid || props.isLoading"
       >
-        <IconLogin class="svg-icon" /> {{ t('auth.login') }}
+        <DoodleIcons name="IconLogin" class="svg-icon" /> {{ t('auth.login') }}
       </FormKit>
     </FormKit>
   </div>

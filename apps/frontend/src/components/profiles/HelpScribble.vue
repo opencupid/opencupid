@@ -1,12 +1,12 @@
 <template>
   <div class="help-scribble">
-    <IconArrowLeft class="svg-icon" />
+    <DoodleIcons name="IconArrowLeft" class="svg-icon" />
     {{ text }}
   </div>
 </template>
 
 <script setup lang="ts">
-import { IconArrowLeft } from '@/components/icons/DoodleIcons'
+import DoodleIcons from '@/components/icons/DoodleIcons.vue'
 
 defineProps<{
   text: string

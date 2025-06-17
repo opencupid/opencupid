@@ -3,7 +3,7 @@ import { ref } from 'vue'
 
 import { BCarousel } from 'bootstrap-vue-next'
 import { type PublicProfile } from '@zod/profile/profile.dto'
-import { IconCross } from '@/components/icons/DoodleIcons'
+import DoodleIcons from '@/components/icons/DoodleIcons.vue'
 import ImageTag from '../image/ImageTag.vue'
 
 const props = defineProps<{
@@ -49,7 +49,7 @@ const handleCloseClick = () => (showModal.value = false)
     :lazy="true"
   >
     <template #header-close>
-      <IconCross class="svg-icon" />
+      <DoodleIcons name="IconCross" class="svg-icon" />
     </template>
     <BCarousel controls indicators v-model="slide" class="w-100 h-100">
       <BCarouselSlide

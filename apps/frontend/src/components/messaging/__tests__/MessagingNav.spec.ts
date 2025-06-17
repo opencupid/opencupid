@@ -1,10 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi } from 'vitest'
 
-vi.mock('@/components/icons/DoodleIcons', () => ({
-  IconArrowSingleLeft: { template: '<div />' },
-  IconMenuDotsVert: { template: '<div />' }
-}))
+vi.mock('@/components/icons/DoodleIcons.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('../profiles/image/ProfileThumbnail.vue', () => ({ default: { template: '<div />' } }))
 
 import MessagingNav from '../MessagingNav.vue'

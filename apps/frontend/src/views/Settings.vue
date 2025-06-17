@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { IconSetting2 } from '@/components/icons/DoodleIcons'
+import DoodleIcons from '@/components/icons/DoodleIcons.vue'
 import LoadingComponent from '@/components/LoadingComponent.vue'
 import LogoutButton from '@/components/nav/LogoutButton.vue'
 import { useAuthStore } from '@/store/authStore'
@@ -49,7 +49,7 @@ const messageStore = useMessageStore()
 <template>
   <main class="container mt-4">
     <h3 class="mb-4">
-      <IconSetting2 class="svg-icon" />
+      <DoodleIcons name="IconSetting2" class="svg-icon" />
       Settings
     </h3>
 

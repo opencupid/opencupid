@@ -7,13 +7,7 @@ vi.mock('@fortawesome/vue-fontawesome', () => ({
 }))
 const push = vi.fn()
 vi.mock('vue-router', () => ({ useRouter: () => ({ push }) }))
-vi.mock('@/components/icons/DoodleIcons', () => ({
-  IconMessage: { template: '<div />' },
-  IconPen: { template: '<div />' },
-  IconSearch: { template: '<div />' },
-  IconSetting2: { template: '<div />' },
-  IconUser: { template: '<div />' }
-}))
+vi.mock('@/components/icons/DoodleIcons.vue', () => ({ default: { template: '<div />' } }))
 
 const logout = vi.fn()
 vi.mock('@/store/authStore', () => ({ useAuthStore: () => ({ isLoggedIn: true, logout }) }))

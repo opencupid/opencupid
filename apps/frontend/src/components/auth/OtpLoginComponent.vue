@@ -3,8 +3,7 @@ import { ref } from 'vue'
 import { type LoginUser } from '@zod/user/user.types'
 import { otpRegex } from '@/lib/utils'
 
-import { IconMail } from '@/components/icons/DoodleIcons'
-import { IconMessage } from '@/components/icons/DoodleIcons'
+import DoodleIcons from '@/components/icons/DoodleIcons.vue'
 
 const props = defineProps<{
   user: LoginUser
@@ -39,10 +38,10 @@ function validateOtp(node: any) {
     <div class="fs-4 mb-3">
       <span class="text-muted opacity-50">
         <span v-if="user.phonenumber">
-          <IconMessage class="svg-icon" />
+          <DoodleIcons name="IconMessage" class="svg-icon" />
         </span>
         <span v-else>
-          <IconMail class="svg-icon" />
+          <DoodleIcons name="IconMail" class="svg-icon" />
         </span>
       </span>
       Check your messages
