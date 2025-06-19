@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import { detectMobile } from '@/lib/mobile-detect'
 
@@ -10,6 +11,7 @@ import AvatarUploadIcon from '@/assets/icons/files/avatar-upload.svg'
 import { useImageStore } from '@/store/imageStore'
 
 const imageStore = useImageStore()
+const { t } = useI18n()
 
 // State
 const preview = ref<string | null>(null)
@@ -99,10 +101,10 @@ const handleFileChange = (event: Event) => {
     :focus="false"
     :no-close-on-backdrop="true"
     :no-footer="true"
-    cancel-title="Nevermind"
+    :cancel-title="t('profiles.image_upload.nevermind')"
     initial-animation
     fullscreen="md"
-    title="Add a photo"
+    :title="t('profiles.image_upload.title')"
   >
     <div v-if="preview" class="preview-container">
       <div class="mb-3">
@@ -139,7 +141,7 @@ const handleFileChange = (event: Event) => {
           type="button"
           wrapper-class=""
           input-class="btn btn-primary btn-lg mb-3"
-          label="Looks good!"
+          :label="t('profiles.image_upload.looks_good')"
           :disabled="isLoading"
           @click.prevent="handleUpload"
         />
@@ -147,7 +149,7 @@ const handleFileChange = (event: Event) => {
           href="#"
           @click.prevent="closeModal"
           class="text-secondary link-underline link-underline-opacity-0"
-          >Nevermind</a
+          >{{ t('profiles.image_upload.nevermind') }}</a
         >
       </div>
     </div>
@@ -158,18 +160,18 @@ const handleFileChange = (event: Event) => {
       <div class="w-50 mx-auto d-flex flex-column align-items-center">
         <div class="mb-4">
           <UploadButton @file:change="handleFileChange" :key="'capture-none'" />
-          <div class="mt-2 text-muted">Add a photo from your phone</div>
+          <div class="mt-2 text-muted">{{ t('profiles.image_upload.add_from_phone') }}</div>
         </div>
         <div class="mb-3">
           <UploadButton @file:change="handleFileChange" capture="user" :key="'capture-user'" />
-          <div class="mt-2 text-muted">Or take a photo with your camera</div>
+          <div class="mt-2 text-muted">{{ t('profiles.image_upload.take_photo') }}</div>
         </div>
         <div>
           <a
             href="#"
             @click.prevent="closeModal"
             class="text-secondary link-underline link-underline-opacity-0"
-            >Nevermind</a
+            >{{ t('profiles.image_upload.nevermind') }}</a
           >
         </div>
       </div>

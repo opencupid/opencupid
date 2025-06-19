@@ -6,6 +6,7 @@ import GenderPronounSelector from '@/components/profiles/forms/GenderPronounSele
 import RelationstatusSelector from '@/components/profiles/forms/RelationstatusSelector.vue'
 import IntrotextEditor from '@/components/profiles/forms/IntrotextEditor.vue'
 import HaskidsSelector from '@/components/profiles/forms/HaskidsSelector.vue'
+import { useI18n } from 'vue-i18n'
 
 const formData = defineModel<EditProfileForm>({
   default: () => ({
@@ -17,6 +18,8 @@ const formData = defineModel<EditProfileForm>({
     introDating: '',
   }),
 })
+
+const { t } = useI18n()
 
 const props = defineProps<{
   isCurrent: (step: any) => boolean
@@ -35,17 +38,17 @@ const {
 
 <template>
   <fieldset v-if="isCurrent('age')">
-    <legend>I was born...</legend>
+    <legend>{{ t('onboarding.steps.age_legend') }}</legend>
     <AgeSelector v-model="birthdayModel" />
   </fieldset>
 
   <fieldset v-else-if="isCurrent('gender')">
-    <legend>I identify as...</legend>
+    <legend>{{ t('onboarding.steps.gender_legend') }}</legend>
     <GenderPronounSelector v-model="genderPronounsModel" />
   </fieldset>
 
   <fieldset v-else-if="isCurrent('family_situation')">
-    <legend>My situation</legend>
+    <legend>{{ t('onboarding.steps.situation_legend') }}</legend>
     <div class="mb-3">
       <RelationstatusSelector v-model="relationshipModel" />
     </div>
@@ -53,11 +56,11 @@ const {
   </fieldset>
 
   <fieldset v-else-if="isCurrent('introDating')">
-    <legend>I would like to find:</legend>
+    <legend>{{ t('onboarding.steps.intro_find_legend') }}</legend>
     <IntrotextEditor
       v-model="introDatingModel"
       :languages="formData.languages"
-      placeholder="Give people an idea who you're after."
+      :placeholder="t('onboarding.steps.intro_find_placeholder')"
     />
   </fieldset>
 </template>

@@ -79,7 +79,7 @@ const showPronouns = computed(() => {
       variant="link-secondary"
       class="m-0 p-0 w-100 text-center"
     >
-      More options...
+      {{ t('profiles.forms.more_options') }}
     </BButton>
 
     <div v-if="showPronouns && !showAll" class="mt-3">

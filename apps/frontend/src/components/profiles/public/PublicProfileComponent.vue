@@ -96,7 +96,7 @@ const emit = defineEmits<{
             :editComponent="IntrotextEditor"
             :editProps="{
               languages: profile.languages,
-              placeholder: 'Tell a bit about yourself',
+              placeholder: t('profiles.forms.intro_placeholder'),
             }"
           />
         </div>
@@ -111,7 +111,7 @@ const emit = defineEmits<{
               :editComponent="IntrotextEditor"
               :editProps="{
                 languages: profile.languages,
-                placeholder: 'Who would you like to meet?',
+                placeholder: t('profiles.forms.intro_who_placeholder'),
               }"
             />
           </div>

@@ -38,7 +38,7 @@ const toggleDating = () => {
         <IconSocialize class="svg-icon-lg h-100 w-100" />
       </div>
       <div class="card-body">
-        <p class="card-text">Socializing, hanging out, traveling, and meeting new people</p>
+        <p class="card-text">{{ t('onboarding.goals.socializing') }}</p>
       </div>
       <div class="card-footer text-center">
         <div class="form-control-lg">
@@ -61,7 +61,7 @@ const toggleDating = () => {
         <IconDate class="svg-icon-lg h-100 w-100" />
       </div>
       <div class="card-body">
-        <p class="card-text">Dating, finding a partner, and exploring romantic relationships.</p>
+        <p class="card-text">{{ t('onboarding.goals.dating') }}</p>
       </div>
       <div class="card-footer text-center">
         <div class="form-control-lg">

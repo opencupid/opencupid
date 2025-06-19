@@ -89,6 +89,12 @@
     "auth_id_input_label": "Email or phone Number",
     "auth_id_input_placeholder": "+12 34567121 or your{'@'}email.com",
     "captcha_input_label": "I am a human being",
+    "login_confirm_welcome": "Welcome!",
+    "otp_check_messages": "Check your messages",
+    "otp_sent_phone": "We have sent you a little code to your phone number, please enter it below.",
+    "otp_sent_email": "We have sent you a login link, check your inbox. If you don't see it, please check your spam folder.",
+    "otp_input_label": "Enter code",
+    "otp_invalid_feedback": "Code should be 6 digits",
     "email": "Email",
     "password": "Password"
   },
@@ -106,7 +112,38 @@
   },
   "profiles": {
     "send_message_button": "Message",
-    "profile_photos": "{name}'s photos"
+    "profile_photos": "{name}'s photos",
+    "no_profile_title": "Please fill in your profile",
+    "no_profile_create": "Create Profile",
+    "invite_message": "This community is still growing, please help spread the word.",
+    "invite_button": "Invite friends",
+    "image_editor_help": "Your photo here",
+    "image_upload": {
+      "title": "Add a photo",
+      "looks_good": "Looks good!",
+      "add_from_phone": "Add a photo from your phone",
+      "take_photo": "Or take a photo with your camera",
+      "nevermind": "Nevermind"
+    },
+    "forms": {
+      "my_preferences": "My preferences",
+      "age_range": "Age range",
+      "kids_label": "Kids?",
+      "relationship_label": "I am...",
+      "pronouns_label": "They refer to me as...",
+      "name_label": "My name is...",
+      "name_invalid": "Enter at least 3 letters",
+      "more_options": "More options...",
+      "city_search_placeholder": "Search cities",
+      "city_add_placeholder": "Add this as new city",
+      "city_start_typing": "Start typing to search for your city",
+      "tag_search_placeholder": "Search interests...",
+      "tag_add_placeholder": "Add this as new tag",
+      "dictate_listening": "Listening…",
+      "dictate": "Dictate",
+      "intro_placeholder": "Tell a bit about yourself",
+      "intro_who_placeholder": "Who would you like to meet?"
+    }
   },
   "messaging": {
     "page_title": "Messages",
@@ -117,16 +154,50 @@
     "unknown_sender": "Someone",
     "message_input_hint":"Press Enter to send",
     "send_failed": "Oops, this didn't work. Please try again.",
-    "message_sent_success": "Message sent successfully!"
+    "message_sent_success": "Message sent successfully!",
+    "my_turn": "My turn",
+    "block_report_unmatch": "Block/report/unmatch",
+    "block_user_ok": "Block {name}",
+    "nevermind": "Nevermind",
+    "send_message_heading": "Send Message"
   },
   "onboarding":{
     "name_title": "Hello!",
-    "country_placeholder": "Country"
+    "country_placeholder": "Country",
+    "steps": {
+      "age_legend": "I was born...",
+      "gender_legend": "I identify as...",
+      "situation_legend": "My situation",
+      "intro_find_legend": "I would like to find:",
+      "intro_find_placeholder": "Give people an idea who you're after."
+    },
+    "goals": {
+      "socializing": "Socializing, hanging out, traveling, and meeting new people",
+      "dating": "Dating, finding a partner, and exploring romantic relationships."
+    },
+    "wizard": {
+      "all_set": "All set!",
+      "appear_message": "You will now appear to people who are looking for the same things as you. You can always change this info later.",
+      "next": "Next",
+      "hint_click_next": "Click Next"
+    }
+  },
+  "settings": {
+    "language_label": "Language",
+    "push_notifications": "Push Notifications",
+    "enable_push": "Enable Push Notifications"
   },
   "uicomponents": {
     "submitbutton": {
       "working": "Working...",
-      "submit": "Submit"
+      "submit": "Submit",
+      "save": "Save"
+    },
+    "loading": {
+      "loading": "Loading..."
+    },
+    "spinner": {
+      "spinning": "Spinning"
     },
     "modal": {
       "close": "Close"

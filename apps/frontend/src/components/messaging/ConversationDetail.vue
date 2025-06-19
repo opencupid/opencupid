@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watchEffect } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import { useProfileStore } from '@/store/profileStore'
 import { useMessageStore } from '@/store/messageStore'
@@ -26,6 +27,8 @@ const emit = defineEmits<{
 const showModal = ref(false)
 const isLoading = ref(false)
 const conversationPartner = ref<PublicProfile | null>(null)
+
+const { t } = useI18n()
 
 watchEffect(async () => {
   if (props.conversation) {
@@ -71,14 +74,14 @@ watchEffect(async () => {
     :focus="false"
     :no-close-on-backdrop="true"
     :no-header="true"
-    :ok-title="`Block ${conversationPartner ? conversationPartner.publicName : ''}`"
-    cancel-title="Nevermind"
+    :ok-title="t('messaging.block_user_ok', { name: conversationPartner ? conversationPartner.publicName : '' })"
+    :cancel-title="t('messaging.nevermind')"
     initial-animation
     body-class="d-flex flex-row align-items-center justify-content-center overflow-hidden"
     :keyboard="false"
   >
     <div class="w-100">
-      <h4>Block/report/unmatch</h4>
+      <h4>{{ t('messaging.block_report_unmatch') }}</h4>
     </div>
   </BModal>
 </template>

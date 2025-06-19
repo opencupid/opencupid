@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { api } from '@/lib/api'
+import { useI18n } from 'vue-i18n'
 
 function urlBase64ToUint8Array(base64: string): Uint8Array {
   const padding = '='.repeat((4 - (base64.length % 4)) % 4)
@@ -27,13 +28,15 @@ async function enablePushNotifications() {
   const res = await api.post('/push/subscription',  subscription)
   console.log('Subscription saved:', res)
 }
+
+const { t } = useI18n()
 </script>
 
 <template>
   <div>
-    <h5>Push Notifications</h5>
+    <h5>{{ t('settings.push_notifications') }}</h5>
     <BButton class="btn btn-primary" @click="enablePushNotifications"
-      >Enable Push Notifications</BButton
+      >{{ t('settings.enable_push') }}</BButton
     >
   </div>
 </template>

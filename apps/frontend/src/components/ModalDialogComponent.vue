@@ -1,6 +1,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { Modal } from 'bootstrap'
+import { useI18n } from 'vue-i18n'
 
 export default defineComponent({
   name: 'ModalDialogComponent',
@@ -13,6 +14,10 @@ export default defineComponent({
       type: Boolean,
       required: true,
     },
+  },
+  setup() {
+    const { t } = useI18n()
+    return { t }
   },
   data() {
     return {
@@ -53,12 +58,12 @@ export default defineComponent({
         <div class="modal-content">
           <div class="modal-header">
             <h1 class="modal-title fs-5" id="exampleModalLabel">{{ title }}</h1>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            :aria-label="t('uicomponents.modal.close')"
+          ></button>
           </div>
           <div class="modal-body">
             <slot></slot>

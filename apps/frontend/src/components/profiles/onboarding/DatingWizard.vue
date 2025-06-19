@@ -3,10 +3,13 @@ import { ref } from 'vue'
 import { useOnboardingWizard } from './useProfileWizards'
 import { type EditFieldProfileFormWithImages } from '@zod/profile/profile.form'
 import HelpScribble from '../HelpScribble.vue'
+import { useI18n } from 'vue-i18n'
 
 import { useStepper } from '@vueuse/core'
 const isComplete = ref(false)
 const error = ref('')
+
+const { t } = useI18n()
 
 const formData = defineModel<EditFieldProfileFormWithImages>({
   default: () => ({
@@ -74,10 +77,9 @@ const handleNext = async () => {
   <div>
     <DatingSteps v-model="formData" :isCurrent />
     <fieldset v-if="isCurrent('confirm')" class="position-relative">
-      <legend>All set!</legend>
+      <legend>{{ t('onboarding.wizard.all_set') }}</legend>
       <p class="text-muted">
-        You will now appear to people who are looking for the same things as you. You can always
-        change this info later.
+        {{ t('onboarding.wizard.appear_message') }}
       </p>
     </fieldset>
     <div class="mt-3">
@@ -89,11 +91,11 @@ const handleNext = async () => {
         size="lg"
         pill
         class="w-100"
-        >Next</BButton
+        >{{ t('onboarding.wizard.next') }}</BButton
       >
     </div>
       <div class="scribble position-absolute bottom-0 end-0 me-5 mb-2" v-if="isComplete">
-        <HelpScribble text="Click Next" direction="se" />
+        <HelpScribble :text="t('onboarding.wizard.hint_click_next')" direction="se" />
       </div>
   </div>
 </template>

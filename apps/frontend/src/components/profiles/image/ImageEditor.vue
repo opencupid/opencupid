@@ -10,11 +10,14 @@ import LoadingComponent from '@/components/LoadingComponent.vue'
 import ImageUpload from './ImageUpload.vue'
 import ImageTag from './ImageTag.vue'
 import HelpScribble from '../HelpScribble.vue'
+import { useI18n } from 'vue-i18n'
 
 const imageStore = useImageStore()
 
 const isRemoving = ref<Record<string, boolean>>({})
 const error = ref<string>('')
+
+const { t } = useI18n()
 
 const model = computed(() => {
   return imageStore.images
@@ -74,7 +77,7 @@ onMounted(async () => {
         </div> -->
         <div class="col-sm-12">
           <div v-if="!model || model.length === 0" class="position-absolute end-0 me-5">
-            <HelpScribble text="Your photo here" direction="w"/>
+            <HelpScribble :text="t('profiles.image_editor_help')" direction="w"/>
           </div>
           <VueDraggableNext
             class="row row-cols-2 row-cols-sm-3 row-cols-md-3 g-4 sortable-grid p-4"

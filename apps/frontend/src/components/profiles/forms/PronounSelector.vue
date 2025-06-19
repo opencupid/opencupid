@@ -18,7 +18,7 @@ const pronounsChoices = pronounsOptions() as MultiselectOption[]
 
 <template>
   <div>
-    <label>They refer to me as...</label>
+    <label>{{ t('profiles.forms.pronouns_label') }}</label>
     <BListGroup>
       <BListGroupItem
         v-for="p in pronounsChoices"

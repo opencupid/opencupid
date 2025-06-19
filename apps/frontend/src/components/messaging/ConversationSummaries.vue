@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { type ConversationSummary } from '@zod/messaging/messaging.dto'
 import ProfileThumbnail from '../profiles/image/ProfileThumbnail.vue'
+import { useI18n } from 'vue-i18n'
 
 defineProps<{
   conversations: ConversationSummary[]
@@ -10,6 +11,8 @@ defineProps<{
 defineEmits<{
   (e: 'convo:select', val: ConversationSummary): void
 }>()
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -35,7 +38,7 @@ defineEmits<{
           >
         </div>
         <div class="flex-shrink-0 me-2">
-          <small v-if="!convo.lastMessage?.isMine" class="badge bg-danger">My turn</small>
+          <small v-if="!convo.lastMessage?.isMine" class="badge bg-danger">{{ t('messaging.my_turn') }}</small>
         </div>
       </BListGroupItem>
     </BListGroup>

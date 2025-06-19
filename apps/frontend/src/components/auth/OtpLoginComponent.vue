@@ -5,6 +5,7 @@ import { otpRegex } from '@/lib/utils'
 
 import IconMessage from '@/assets/icons/interface/message.svg'
 import IconMail from '@/assets/icons/interface/mail.svg'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps<{
   user: LoginUser
@@ -14,6 +15,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'otp:submit', otp: string): void
 }>()
+
+const { t } = useI18n()
 
 // Reactive variables
 const otpInput = ref('')
@@ -54,15 +57,14 @@ watch(inputState, state => {
           <IconMail class="svg-icon" />
         </span>
       </span>
-      Check your messages
+      {{ t('auth.otp_check_messages') }}
     </div>
     <div class="mb-3 form-text mb-3">
       <div v-if="user.phonenumber">
-        We have sent you a little code to your phone number, please enter it below.
+        {{ t('auth.otp_sent_phone') }}
       </div>
       <div v-else>
-        We have sent you a login link, check your inbox. If you don't see it, please check your spam
-        folder.
+        {{ t('auth.otp_sent_email') }}
       </div>
     </div>
 
@@ -74,7 +76,7 @@ watch(inputState, state => {
       :disabled="isLoading || !inputState"
     >
       <div class="mb-3">
-        <BFormFloatingLabel label="Enter code" label-for="otpInput" class="my-2">
+        <BFormFloatingLabel :label="t('auth.otp_input_label')" label-for="otpInput" class="my-2">
           <BInput
             size="lg"
             v-model.trim="otpInput"
@@ -91,7 +93,7 @@ watch(inputState, state => {
             :state="inputState"
           >
           </BInput>
-          <BFormInvalidFeedback>Code should be 6 digits </BFormInvalidFeedback>
+          <BFormInvalidFeedback>{{ t('auth.otp_invalid_feedback') }}</BFormInvalidFeedback>
         </BFormFloatingLabel>
 
         <!-- <FormKit

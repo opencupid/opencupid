@@ -99,11 +99,11 @@ function handleGenderPrefsUpdate() {
 
 <template>
   <fieldset>
-    <h5>My preferences</h5>
+    <h5>{{ t('profiles.forms.my_preferences') }}</h5>
 
     <div class="mb-3">
       <div v-if="age">
-        <label for="ageRange" class="form-text text-muted">Age range</label>
+        <label for="ageRange" class="form-text text-muted">{{ t('profiles.forms.age_range') }}</label>
         <div class="d-flex flex-row align-items-center">
           <div class="fs-2 me-2 px-4">{{ prefAge[0] }} - {{ prefAge[1] }}</div>
           <div class="flex-grow-1 px-3">

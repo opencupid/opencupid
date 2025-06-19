@@ -2,6 +2,7 @@
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import Multiselect from 'vue-multiselect'
 import { useCitiesStore } from '@/store/cityStore'
+import { useI18n } from 'vue-i18n'
 
 import type { PublicCity } from '@zod/dto/city.dto'
 import type { LocationDTO } from '@zod/dto/location.dto'
@@ -25,6 +26,8 @@ const selectOptions = ref<PublicCity[]>([])
 const isLoading = ref(false)
 
 const multiselectRef = ref<MultiselectComponent>()
+
+const { t } = useI18n()
 
 // Computed selected city
 const selectedCity = computed<PublicCity>({
@@ -140,11 +143,11 @@ async function addCity(name: string) {
       track-by="id"
       @search-change="asyncFind"
       @tag="addCity"
-      placeholder="Search cities"
-      tag-placeholder="Add this as new city"
+      :placeholder="t('profiles.forms.city_search_placeholder')"
+      :tag-placeholder="t('profiles.forms.city_add_placeholder')"
     />
     <div class="mt-2 form-text text-muted text-center">
-      <small>Start typing to search for your city</small>
+      <small>{{ t('profiles.forms.city_start_typing') }}</small>
     </div>
   </div>
 </template>

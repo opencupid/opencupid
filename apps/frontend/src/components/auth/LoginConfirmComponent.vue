@@ -1,6 +1,9 @@
 <script lang="ts" setup>
 import 'animate.css'
 import IconSun from '@/assets/icons/interface/sun.svg'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -9,7 +12,7 @@ import IconSun from '@/assets/icons/interface/sun.svg'
       <div class="icon-inner text-success animate__animated animate__fadeIn">
         <IconSun class="svg-icon welcome-icon" />
       </div>
-      <div class="text-success fs-3 animate__animated animate__fadeIn">Welcome!</div>
+      <div class="text-success fs-3 animate__animated animate__fadeIn">{{ t('auth.login_confirm_welcome') }}</div>
     </div>
   </div>
 </template>

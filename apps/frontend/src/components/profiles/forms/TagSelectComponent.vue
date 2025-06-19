@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import Multiselect from 'vue-multiselect'
 import { useTagsStore } from '@/store/tagStore'
+import { useI18n } from 'vue-i18n'
 import type { PublicTag } from '@zod/dto/tag.dto'
 
 // Store
@@ -15,6 +16,7 @@ const model = defineModel<PublicTag[]>({
 // State
 const tags = ref<PublicTag[]>([])
 const isLoading = ref(false)
+const { t } = useI18n()
 
 /**
  * Called when the user types in the search input
@@ -68,8 +70,8 @@ async function addTag(name: string) {
       @tag="addTag"
       label="name"
       track-by="id"
-      tag-placeholder="Add this as new tag"
-      placeholder="Search interests..."
+      :tag-placeholder="t('profiles.forms.tag_add_placeholder')"
+      :placeholder="t('profiles.forms.tag_search_placeholder')"
       @search-change="asyncFind"
     />
   </div>

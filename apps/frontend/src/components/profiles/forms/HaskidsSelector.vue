@@ -15,7 +15,7 @@ const checkboxOptions = hasKidsOptions()
 
 <template>
   <div>
-    <label>Kids?</label>
+    <label>{{ t('profiles.forms.kids_label') }}</label>
     <BListGroup>
       <BListGroupItem
         v-for="s in checkboxOptions"

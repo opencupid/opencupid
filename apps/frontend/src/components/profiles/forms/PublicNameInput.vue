@@ -1,11 +1,15 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+
 const model = defineModel<string>({
   default: () => '',
 })
 </script>
 
 <template>
-  <BFormFloatingLabel label="My name is..." label-for="publicName" class="my-2">
+  <BFormFloatingLabel :label="t('profiles.forms.name_label')" label-for="publicName" class="my-2">
     <BInput
       size="lg"
       v-model.trim="model"
@@ -19,6 +23,6 @@ const model = defineModel<string>({
       required
     >
     </BInput>
-    <BFormInvalidFeedback> Enter at least 3 letters </BFormInvalidFeedback>
+    <BFormInvalidFeedback>{{ t('profiles.forms.name_invalid') }}</BFormInvalidFeedback>
   </BFormFloatingLabel>
 </template>
