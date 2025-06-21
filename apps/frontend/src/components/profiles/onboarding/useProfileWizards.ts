@@ -36,7 +36,7 @@ export const useOnboardingWizard = (formData: EditProfileForm) => {
       isCompleted: false,
     },
     introDating: {
-      state: computed(() => formData.introDating.length > 0),
+      state: computed(() => Object.values(formData.introDatingLocalized).some(val => val.trim() !== '')),
       flags: 'stage_two_end',
       isCompleted: false,
     },
@@ -76,10 +76,7 @@ export const useOnboardingWizard = (formData: EditProfileForm) => {
       isCompleted: false,
     },
     introSocial: {
-      state: computed(() => {
-        console.log('introSocialLocalized', formData.introSocialLocalized)
-        return Object.values(formData.introSocialLocalized).some(val => val.trim() !== '')
-      }),
+      state: computed(() => Object.values(formData.introSocialLocalized).some(val => val.trim() !== '')),
       flags: '',
       isCompleted: false,
     },
