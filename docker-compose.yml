@@ -36,7 +36,7 @@ services:
       - '1025:1025'
 
   redis:
-    image: redis:7
+    image: redis:8
     restart: unless-stopped
     ports:
       - '6379:6379'
