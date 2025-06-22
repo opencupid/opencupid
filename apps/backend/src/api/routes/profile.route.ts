@@ -29,7 +29,7 @@ import type {
   GetDatingPreferenceseResponse,
   UpdateDatingPreferencesResponse,
 } from '@shared/dto/apiResponse.dto'
-import { DatingPreferencesDTOSchema, UpdateDatingPreferencesPayloadSchema } from '@zod/profile/datingPreference.dto'
+import { DatingPreferencesDTOSchema, UpdateDatingPreferencesPayloadSchema } from '@zod/match/datingPreference.dto'
 
 // Route params for ID lookups
 const IdLookupParamsSchema = z.object({

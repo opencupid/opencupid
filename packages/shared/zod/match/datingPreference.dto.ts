@@ -1,6 +1,12 @@
 import { ProfileSchema } from '@zod/generated';
 import { z } from 'zod'
-import { datingPreferencesFields } from './profile.fields';
+
+export const datingPreferencesFields = {
+  prefAgeMin: true,
+  prefAgeMax: true,
+  prefGender: true,
+  prefKids: true,
+} as const;
 
 
 // API -> client dating preferences DTO

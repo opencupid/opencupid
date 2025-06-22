@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { type DatingPreferencesDTO } from '@zod/profile/datingPreference.dto'
+import { type DatingPreferencesDTO } from '@zod/match/datingPreference.dto'
 import { ref } from 'vue'
 import { type OwnerProfile } from '@zod/profile/profile.dto'
 

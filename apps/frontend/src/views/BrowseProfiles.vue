@@ -14,9 +14,9 @@ import IconSetting from '@/assets/icons/interface/setting.svg'
 import ErrorOverlay from '@/components/ErrorOverlay.vue'
 import DatingPreferencesForm from '@/components/profiles/browse/DatingPreferencesForm.vue'
 import { useAgeFields } from '@/components/profiles/composables/useAgeFields'
-import { useProfileBrowserStore } from '@/store/profileBrowserStore'
+import { useProfileBrowserStore } from '@/store/matchStore'
 import ScopeViewToggler from '@/components/profiles/ScopeViewToggler.vue'
-import SecondaryNav from '@/components/profiles/browse/SecondaryNav.vue'
+import SecondaryNav from '@/components/profiles/match/SecondaryNav.vue'
 
 const router = useRouter()
 const profileStore = useProfileStore()

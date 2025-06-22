@@ -6,7 +6,7 @@ import {
   type UpdateProfilePayload,
   OwnerScalarsSchema,
 } from '@zod/profile/profile.dto'
-import { DatingPreferencesDTOSchema, type DatingPreferencesDTO } from '@zod/profile/datingPreference.dto'
+import { DatingPreferencesDTOSchema, type DatingPreferencesDTO } from '@zod/match/datingPreference.dto'
 import { DbProfile, type DbProfileComplete, DbProfileWithImages, DbProfileWithImagesSchema } from '@zod/profile/profile.db'
 import { LocationSchema } from '@zod/dto/location.dto'
 
