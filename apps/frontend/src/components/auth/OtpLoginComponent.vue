@@ -10,6 +10,8 @@ import { useI18n } from 'vue-i18n'
 const props = defineProps<{
   user: LoginUser
   isLoading: boolean
+  validationError: string | null
+  validationResult: boolean | null
 }>()
 
 const emit = defineEmits<{
@@ -18,9 +20,8 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-// Reactive variables
+// input field
 const otpInput = ref('')
-const error = ref('' as string)
 
 // Method to handle OTP entered
 async function handleOTPEntered() {
@@ -28,15 +29,13 @@ async function handleOTPEntered() {
 }
 
 const inputState = computed(() => {
-  // console.log('Validating OTP:', otpInput.value)
   if (!otpInput.value) return null
   // Simple validation for OTP: must be a number and 6 digits long
   return otpRegex.test(otpInput.value)
 })
 
 const validated = computed(() => {
-  // console.log('Validating Auth ID state:', state.value)
-  return !!(otpInput.value !== '' && inputState.value)
+  return inputState.value && props.validationResult === true
 })
 
 watch(inputState, state => {
@@ -67,12 +66,10 @@ watch(inputState, state => {
         {{ t('auth.otp_sent_email') }}
       </div>
     </div>
-
     <BForm
       @submit.prevent="handleOTPEntered"
       class="otp-form"
       :novalidate="true"
-      :validated="validated"
       :disabled="isLoading || !inputState"
     >
       <div class="mb-3">
@@ -90,10 +87,13 @@ watch(inputState, state => {
             autocomplete="off"
             lazy
             required
-            :state="inputState"
+            :state="validated"
           >
           </BInput>
-          <BFormInvalidFeedback>{{ t('auth.otp_invalid_feedback') }}</BFormInvalidFeedback>
+          <BFormInvalidFeedback v-if="!isLoading">
+            <span v-if="!inputState"> {{ t('auth.otp_invalid_feedback') }}</span>
+            <span v-if="validationResult === false && inputState">{{ validationError }}</span>
+          </BFormInvalidFeedback>
         </BFormFloatingLabel>
 
         <!-- <FormKit

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { api } from '@/lib/api'
+import { api, axios } from '@/lib/api'
 import { bus } from '@/lib/bus'
 import { type UserRoleType } from '@zod/generated'
 
@@ -114,12 +114,16 @@ export const useAuthStore = defineStore('auth', {
           }
         }
       } catch (error: any) {
-        console.error('Login failed:', error)
+        const message = axios.isAxiosError(error)
+          ? error.response?.data?.message || error.message
+          : 'Unexpected error'
+
+        // console.error('Login failed:', error)
         return {
           success: false,
           code: error.response?.data?.code || 'AUTH_INTERNAL_ERROR',
-          message: error.response?.data?.message || 'An error occurred during login',
-          restart: 'userid'
+          message: message || 'An error occurred during login',
+          restart: 'otp'
         }
       }
       return { success: true, status: '' }

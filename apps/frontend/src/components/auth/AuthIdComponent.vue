@@ -10,7 +10,7 @@ import IconTick from '@/assets/icons/interface/tick.svg'
 import IconMail from '@/assets/icons/interface/mail.svg'
 import IconPhone from '@/assets/icons/interface/phone.svg'
 import IconLogin from '@/assets/icons/interface/login.svg'
-import LanguageSelector from './LanguageSelector.vue'
+import LocaleSelector from './LocaleSelector.vue'
 
 const { t } = useI18n()
 
@@ -139,7 +139,7 @@ const authIdInputRef = ref<InstanceType<any> | null>(null)
       </BButton>
     </BForm>
     <div class="d-flex justify-content-center align-items-center mt-3">
-      <LanguageSelector @language:select="lang => $emit('language:select', lang)" />
+      <LocaleSelector @language:select="lang => $emit('language:select', lang)" />
     </div>
   </div>
 </template>

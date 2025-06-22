@@ -40,8 +40,14 @@ describe('UserService roles', () => {
 describe('UserService.otpLogin', () => {
   it('returns null when user not found', async () => {
     mockPrisma.user.findUnique.mockResolvedValue(null)
-    const result = await service.otpLogin('id', 'otp')
-    expect(result).toEqual({ user: null, isNewUser: false })
+    const result = await service.validateUserOtpLogin('id', 'otp')
+    expect(result).toEqual({
+      "code": "AUTH_INVALID_OTP",
+      "message": "Invalid OTP",
+      "success": false,
+    })
+    expect(mockPrisma.user.update).not.toHaveBeenCalled()
+
   })
 
   it('updates user and returns result', async () => {
@@ -59,7 +65,7 @@ describe('UserService.otpLogin', () => {
       loginToken: null,
       loginTokenExp: null,
     })
-    const res = await service.otpLogin('u1', 'otp')
+    const res = await service.validateUserOtpLogin('u1', 'otp')
     expect(res.isNewUser).toBe(true)
     expect(mockPrisma.user.update).toHaveBeenCalled()
   })

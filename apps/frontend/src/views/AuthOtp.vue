@@ -11,13 +11,11 @@ import LoginConfirmComponent from '@/components/auth/LoginConfirmComponent.vue'
 import ChevronLeftIcon from '@/assets/icons/arrows/arrow-single-left.svg'
 import { type LoginUser } from '@zod/user/user.types'
 import { useI18nStore } from '@/store/i18nStore'
-
-const props = defineProps<{
-  otp: string
-}>()
+import z from 'zod'
 
 // Reactive variables
 const error = ref('' as string)
+const isValidated = ref<boolean | null>(null)
 const isLoading = ref(false)
 const showModal = ref(true)
 
@@ -41,50 +39,28 @@ const user = reactive<LoginUser>({
   hasActiveProfile: false,
 })
 
-// // On mounted lifecycle hook
-onMounted(async () => {
-  const queryOtp = (route.query.otp as string) || ''
-
-  if (queryOtp) {
-    const ok = await doOtpLogin(queryOtp)
-    if (!ok) {
-      error.value = 'Failed to login with the provided OTP.'
-      // showOtpForm.value = true
-    }
-  } else {
-    // showUserIdForm.value = true
-  }
+const OtpParamSchema = z.object({
+  otp: z.string().min(6).max(6),
 })
 
-// // Method to handle sending login link
-// async function handleSendOtp(authIdCaptcha: AuthIdentifierCaptchaInput) {
-//   const payload = {
-//     ...authIdCaptcha,
-//     language: user.language || 'en',
-//   }
-//   try {
-//     error.value = ''
-//     isLoading.value = true
-//     const res = await authStore.sendLoginLink(payload)
-//     if (res.success) {
-//       Object.assign(user, res.user)
-//       // console.log('Login link sent successfully:', user)
-//       showOtpForm.value = true
-//       showUserIdForm.value = false
-//     } else {
-//       error.value = 'An unknown error occurred, please try again a bit later.'
-//     }
-//   } catch (err: any) {
-//     error.value = err || 'An unexpected error occurred.'
-//     console.error('Login error:', err)
-//   } finally {
-//     isLoading.value = false
-//   }
-// }
+// // On mounted lifecycle hook
+onMounted(async () => {
+  // no query params -> do nothing here and display form
+  if (!route.query.otp) return
+  isLoading.value = true
+  // if query params, parse and validate
+  const params = OtpParamSchema.safeParse(route.query)
+  if (!params.success) {
+    error.value =
+      "Hmm that link in the email didn't look right. Please enter the code in the message."
+    return
+  }
+  await doOtpLogin(params.data.otp)
+})
 
 // Method to handle OTP entered
-async function handleOTPSubmitted(otp: string): Promise<boolean> {
-  return doOtpLogin(otp)
+async function handleOTPSubmitted(otp: string): Promise<void> {
+  await doOtpLogin(otp)
 }
 
 async function doOtpLogin(otp: string) {
@@ -93,41 +69,38 @@ async function doOtpLogin(otp: string) {
     const res = await authStore.otpLogin(otp)
     if (res.success) {
       showConfirmScreen.value = true
-      // showOtpForm.value = false
-      // showUserIdForm.value = false
       await new Promise(resolve => setTimeout(resolve, 2000))
       await router.push({ name: 'UserHome' })
-      return true
+      isValidated.value = true
+      error.value = ''
+      return
     } else {
       console.log('OTP login failed:', res)
-      error.value = res.message || 'An unknown error occurred, please try again a bit later.'
-      // TODO we need to give the user another chance to enter the OTP
-      // before bouncing them back to the user ID form
-      // showUserIdForm.value = true
-      // showOtpForm.value = false
-      return false
+      switch (res.code) {
+        case 'AUTH_EXPIRED_OTP':
+          error.value = 'This code has expired. Please request a new one.'
+          break
+        case 'AUTH_INVALID_OTP':
+          error.value = 'The OTP is invalid. Please try again.'
+          break
+        default:
+          error.value = res.message || 'An unknown error occurred. Please try again later.'
+      }
+      isValidated.value = false
+      return
     }
   } catch (err: any) {
-    console.error(err)
     error.value = err.response?.data?.message || 'Failed to confirm email.'
   } finally {
     isLoading.value = false
   }
-  return false
 }
 
 function handleBackButton() {
-  // showUserIdForm.value = true
-  // showOtpForm.value = false
   error.value = ''
   isLoading.value = false
-  router.replace({ name: 'AuthUserId' })
+  router.push({ name: 'Login' })
 }
-
-// const handleSetLanguage = (lang: string) => {
-//   user.language = lang
-//   i18nStore.setLanguage(lang)
-// }
 </script>
 
 <template>
@@ -155,22 +128,17 @@ function handleBackButton() {
             <ChevronLeftIcon class="svg-icon" />
           </a>
         </div>
-        <ErrorComponent :error="error" />
-        <!-- 
-        <AuthIdComponent
-          :isLoading="isLoading"
-          @otp:send="handleSendOtp"
-          @language:select="handleSetLanguage"
-          v-if="showUserIdForm"
-        /> -->
-
-        <OtpLoginComponent
-          :isLoading="isLoading"
-          :user="user"
-          @otp:submit="handleOTPSubmitted"
-        />
-
-        <LoginConfirmComponent v-if="showConfirmScreen" />
+        <div v-if="!showConfirmScreen">
+          <OtpLoginComponent
+            :isLoading
+            :user
+            :validationResult="isValidated"
+            :validationError="error"
+            @otp:submit="handleOTPSubmitted"
+          />
+          <!-- <ErrorComponent :error="error" /> -->
+        </div>
+        <LoginConfirmComponent v-else />
       </div>
     </BModal>
   </main>

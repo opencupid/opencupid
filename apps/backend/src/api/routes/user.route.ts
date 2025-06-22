@@ -25,14 +25,15 @@ const userRoutes: FastifyPluginAsync = async fastify => {
     try {
       const params = OtpLoginInputSchema.safeParse(req.query)
       if (!params.success) {
-        return reply.status(400).send({ code: 'AUTH_INVALID_INPUT' })
+        return reply.code(400).send({ code: 'AUTH_INVALID_INPUT' })
       }
       const { userId, otp } = params.data
-      const { user, isNewUser } = await userService.otpLogin(userId, otp)
-      if (!user) {
-        return reply.status(401).send({ code: 'INVALID_OTP' })
+      const  result  = await userService.validateUserOtpLogin(userId, otp)
+      if (!result.success) {
+        return reply.code(401).send({ code: result.code, message: result.message })
       }
 
+      const { user, isNewUser } = result
       let profileId = null
 
       // new user
@@ -49,8 +50,7 @@ const userRoutes: FastifyPluginAsync = async fastify => {
         profileId = newProfile.id
       } else {
         // TODO FIXME otpLogin return a User which has no profile on it.
-        // @ts-expect-error fix this
-        profileId = user.profile?.id
+        profileId = user.profile.id
       }
 
       const payload: JwtPayload = { userId: user.id, profileId: profileId }
@@ -59,7 +59,7 @@ const userRoutes: FastifyPluginAsync = async fastify => {
       const response: OtpLoginResponse = { success: true, token: jwt }
       reply.code(200).send(response)
     } catch (error) {
-      return reply.status(500).send({ code: 'AUTH_INTERNAL_ERROR' })
+      return reply.code(500).send({ code: 'AUTH_INTERNAL_ERROR' })
     }
   })
 
@@ -67,7 +67,7 @@ const userRoutes: FastifyPluginAsync = async fastify => {
 
     const params = AuthIdentifierCaptchaInputSchema.safeParse(req.body)
     if (!params.success) {
-      return reply.status(400).send({ code: 'AUTH_MISSING_FIELD' })
+      return reply.code(400).send({ code: 'AUTH_MISSING_FIELD' })
     }
 
     const { email, phonenumber, captchaSolution, language } = params.data
@@ -133,7 +133,7 @@ const userRoutes: FastifyPluginAsync = async fastify => {
         user: userReturned,
         status: 'register'
       }
-      return reply.status(200).send(response)
+      return reply.code(200).send(response)
     }
 
     //  existing user

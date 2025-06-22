@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { Prisma, UserRole } from '@prisma/client'
-import type {  User } from '@zod/generated'
+import type { User } from '@zod/generated'
+import { ValidateUserOtpLoginResponse } from '@zod/user/auth.dto'
 import type { AuthIdentifier, SessionProfile } from '@zod/user/user.types'
 import otpGenerator from 'otp-generator'
 
@@ -29,22 +30,22 @@ export class UserService {
     return UserService.instance
   }
 
-  async otpLogin(
+  async validateUserOtpLogin(
     userId: string,
     otp: string
-  ): Promise<{
-    user: User | null
-    isNewUser: boolean
-  }> {
+  ): Promise<ValidateUserOtpLoginResponse> {
     const user = await prisma.user.findUnique({
       where: {
         id: userId,
         loginToken: otp,
       },
-      include: userSelectInclude,
     })
     if (!user) {
-      return { user: null, isNewUser: false }
+      return { code: 'AUTH_INVALID_OTP', message: 'Invalid OTP', success: false }
+    }
+
+    if (user.loginTokenExp && user.loginTokenExp < new Date()) {
+      return { code: 'AUTH_EXPIRED_OTP', message: 'OTP has expired', success: false }
     }
 
     const isNewUser = user.isRegistrationConfirmed === false
@@ -61,7 +62,7 @@ export class UserService {
       include: userSelectInclude,
     })
 
-    return { user: userUpdated, isNewUser }
+    return { user: userUpdated, isNewUser, success: true }
   }
 
   async setUserOTP(

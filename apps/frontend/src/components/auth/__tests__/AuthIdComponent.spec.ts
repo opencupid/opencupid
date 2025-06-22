@@ -7,7 +7,7 @@ vi.mock('@/assets/icons/interface/login.svg', () => ({ default: { template: '<di
 vi.mock('@/assets/icons/interface/tick.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/mail.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/phone.svg', () => ({ default: { template: '<div />' } }))
-vi.mock('../LanguageSelector.vue', () => ({ default: { template: '<div />' } }))
+vi.mock('../LocaleSelector.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 const stubFormKit = { template: '<form><slot :state="{ valid: true }" /></form>' }
 const CaptchaWidget = { template: '<div />' }

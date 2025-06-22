@@ -31,51 +31,51 @@ const currentLanguage = ref(i18nStore.getLanguage() || 'en')
 
 let recognition: SpeechRecognition | null = null
 
-// if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-//   const SpeechRecognition =
-//     (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition
-//   recognition = new SpeechRecognition()
-//   recognition.lang = 'en-US'
-//   recognition.continuous = false
-//   recognition.interimResults = false
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+  const SpeechRecognition =
+    (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition
+  recognition = new SpeechRecognition()
+  recognition.lang = 'en-US'
+  recognition.continuous = false
+  recognition.interimResults = false
 
-//   recognition.onstart = () => {
-//     status.value = 'started'
-//     isListening.value = true
-//   }
+  recognition.onstart = () => {
+    status.value = 'started'
+    isListening.value = true
+  }
 
-//   recognition.onend = () => {
-//     status.value = 'ended'
-//     isListening.value = false
-//   }
+  recognition.onend = () => {
+    status.value = 'ended'
+    isListening.value = false
+  }
 
-//   recognition.onerror = (e: any) => {
-//     error.value = e.error
-//     status.value = 'error'
-//     isListening.value = false
-//   }
+  recognition.onerror = (e: any) => {
+    error.value = e.error
+    status.value = 'error'
+    isListening.value = false
+  }
 
-//   recognition.onresult = (event: SpeechRecognitionEvent) => {
-//     const result = event.results[0][0]
-//     lastTranscript.value = result.transcript
-//     lastConfidence.value = result.confidence
-//     model.value += (model.value ? ' ' : '') + result.transcript
-//     status.value = 'result'
-//   }
+  recognition.onresult = (event: SpeechRecognitionEvent) => {
+    const result = event.results[0][0]
+    lastTranscript.value = result.transcript
+    lastConfidence.value = result.confidence
+    model.value[currentLanguage.value] += (model.value ? ' ' : '') + result.transcript
+    status.value = 'result'
+  }
 
-//   recognition.onspeechend = () => {
-//     status.value = 'speechend'
-//     recognition?.stop()
-//   }
+  recognition.onspeechend = () => {
+    status.value = 'speechend'
+    recognition?.stop()
+  }
 
-//   recognition.onaudioend = () => {
-//     status.value = 'audioend'
-//   }
+  recognition.onaudioend = () => {
+    status.value = 'audioend'
+  }
 
-//   recognition.onnomatch = () => {
-//     status.value = 'no match'
-//   }
-// }
+  recognition.onnomatch = () => {
+    status.value = 'no match'
+  }
+}
 
 const toggleListening = () => {
   if (!recognition) {

@@ -50,14 +50,14 @@ function handleLogoutClick() {
 
       <BNavItemDropdown right>
         <template #button-content>
-          <span class="profile-thumbnail d-inline-flex">
+          <span v-if="profileStore.profile?.profileImages.length" class="profile-thumbnail d-inline-flex">
             <ProfileImage
-              v-if="profileStore.profile"
               :profile="profileStore.profile"
               class="img-fluid rounded"
               style="width: 2.5rem; height: 2.5rem"
             />
           </span>
+          <IconUser v-else class="svg-icon-lg" />
         </template>
         <BDropdownItem to="/me" active-class="active">
           <IconUser class="svg-icon me-2" />
@@ -77,13 +77,12 @@ function handleLogoutClick() {
 </template>
 
 <style scoped>
-
 :deep(.nav-link .label) {
   vertical-align: sub;
   margin-left: 0.25rem;
 }
 .nav-item {
-  display: flex ;
+  display: flex;
   align-items: center;
   justify-content: center;
 }

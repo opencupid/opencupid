@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
-// import useToast from 'vue-toastification'
 
 import { useAuthStore } from '@/store/authStore'
 import { useLocalStore } from '@/store/localStore'

@@ -43,7 +43,7 @@ new Worker(
         html: `<p>Hey there, welcome aboard!</p>
       <h1>${otp}</h1>
       <p>Please click this link to jump right in:       
-      <a href="${appConfig.FRONTEND_URL}/login?otp=${otp}">Confirm Email</a></p>`,
+      <a href="${appConfig.FRONTEND_URL}/auth/otp?otp=${otp}">Confirm Email</a></p>`,
       })
     }
 

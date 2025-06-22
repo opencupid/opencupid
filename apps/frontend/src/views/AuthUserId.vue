@@ -4,9 +4,7 @@ import { useAuthStore } from '@/store/authStore'
 import { useRoute, useRouter } from 'vue-router'
 import AuthIdComponent from '@/components/auth/AuthIdComponent.vue'
 import type { AuthIdentifierCaptchaInput } from '@zod/user/user.dto'
-import OtpLoginComponent from '@/components/auth/OtpLoginComponent.vue'
 import ErrorComponent from '@/components/ErrorComponent.vue'
-import LoginConfirmComponent from '@/components/auth/LoginConfirmComponent.vue'
 
 import ChevronLeftIcon from '@/assets/icons/arrows/arrow-single-left.svg'
 import { type LoginUser } from '@zod/user/user.types'
@@ -19,11 +17,8 @@ const showModal = ref(true)
 
 // form state
 const showUserIdForm = ref(true)
-const showOtpForm = ref(false)
-const showConfirmScreen = ref(false)
 
 const router = useRouter()
-const route = useRoute()
 const authStore = useAuthStore()
 const i18nStore = useI18nStore()
 
@@ -37,20 +32,6 @@ const user = reactive<LoginUser>({
   hasActiveProfile: false,
 })
 
-// // // On mounted lifecycle hook
-// onMounted(async () => {
-//   const queryOtp = (route.query.otp as string) || ''
-
-//   if (queryOtp) {
-//     const ok = await doOtpLogin(queryOtp)
-//     if (!ok) {
-//       // showOtpForm.value = true
-//     }
-//   } else {
-//     showUserIdForm.value = true
-//   }
-// })
-
 // Method to handle sending login link
 async function handleSendOtp(authIdCaptcha: AuthIdentifierCaptchaInput) {
   const payload = {
@@ -63,9 +44,7 @@ async function handleSendOtp(authIdCaptcha: AuthIdentifierCaptchaInput) {
     const res = await authStore.sendLoginLink(payload)
     if (res.success) {
       Object.assign(user, res.user)
-      // console.log('Login link sent successfully:', user)
-      // showOtpForm.value = true
-      // showUserIdForm.value = false
+      router.push({ name: 'LoginOTP' })
     } else {
       error.value = 'An unknown error occurred, please try again a bit later.'
     }
@@ -76,57 +55,6 @@ async function handleSendOtp(authIdCaptcha: AuthIdentifierCaptchaInput) {
     isLoading.value = false
   }
 }
-
-// // Method to handle OTP entered
-// async function handleOTPSubmitted(otp: string): Promise<boolean> {
-//   return doOtpLogin(otp)
-// }
-
-// async function doOtpLogin(otp: string) {
-//   isLoading.value = true
-//   try {
-//     const res = await authStore.otpLogin(otp)
-//     if (res.success) {
-//       showConfirmScreen.value = true
-//       showOtpForm.value = false
-//       showUserIdForm.value = false
-//       await new Promise(resolve => setTimeout(resolve, 2000))
-//       await router.push({ name: 'UserHome' })
-//       return true
-//     } else {
-//       console.log('OTP login failed:', res)
-//       // Handle different status flags
-//       if (res.status === 'storage_error') {
-//         error.value =
-//           'Something is off with this browser. Please try again in a different one (or try clearing your browser storage.)'
-//       }
-//       if (res.status === 'missing_userid') {
-//         error.value = 'Something went wrong here with the code.  Try again?'
-//       }
-//       if (res.status === 'missing_otp' || res.status === 'invalid_token') {
-//         error.value = 'Oops, this code has probably expired. Try again?'
-//       }
-//       // TODO we need to give the user another chance to enter the OTP
-//       // before bouncing them back to the user ID form
-//       showUserIdForm.value = true
-//       showOtpForm.value = false
-//       return false
-//     }
-//   } catch (err: any) {
-//     console.error(err)
-//     error.value = err.response?.data?.message || 'Failed to confirm email.'
-//   } finally {
-//     isLoading.value = false
-//   }
-//   return false
-// }
-
-// function handleBackButton() {
-//   showUserIdForm.value = true
-//   showOtpForm.value = false
-//   error.value = ''
-//   isLoading.value = false
-// }
 
 const handleSetLanguage = (lang: string) => {
   user.language = lang
