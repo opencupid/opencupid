@@ -130,8 +130,8 @@ function handleBackButton() {
         </div>
         <div v-if="!showConfirmScreen">
           <OtpLoginComponent
-            :isLoading
-            :user
+            :isLoading="isLoading"
+            :user="user"
             :validationResult="isValidated"
             :validationError="error"
             @otp:submit="handleOTPSubmitted"
