@@ -24,6 +24,7 @@ import { type EditProfileForm } from '@zod/profile/profile.form'
 import ErrorComponent from '@/components/ErrorComponent.vue'
 import { useOnboardingWizard } from '@/components/profiles/onboarding/useProfileWizards'
 import { useI18nStore } from '@/store/i18nStore'
+import fetchGeoIpInfo from '@/lib/geoip'
 
 const { t } = useI18n()
 const profileStore = useProfileStore()
@@ -130,6 +131,17 @@ onMounted(async () => {
   if (profileStore.profile?.isOnboarded) {
     router.push({ name: 'MyProfile' })
   }
+
+  if (formData.location.country) return
+  fetchGeoIpInfo()
+    .then(countryCode => {
+      if (countryCode) {
+        formData.location.country = countryCode
+      }
+    })
+    .catch(error => {
+      console.error('Failed to fetch GeoIP info:', error)
+    })
 })
 </script>
 
