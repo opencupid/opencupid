@@ -1,5 +1,5 @@
-import { User } from "@zod/generated"
-import { ApiError } from "packages/shared/dto/apiResponse.dto"
+import { type User } from "@zod/generated"
+import { type ApiError } from "@zod/apiResponse.dto"
 
 export const AuthErrorCodes = {
   INVALID_OTP: 'AUTH_INVALID_OTP',

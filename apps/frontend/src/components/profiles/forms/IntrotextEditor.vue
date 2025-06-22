@@ -30,7 +30,7 @@ const status = ref('idle')
 const currentLanguage = ref(i18nStore.getLanguage() || 'en')
 
 let recognition: SpeechRecognition | null = null
-
+/*
 if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
   const SpeechRecognition =
     (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition
@@ -76,7 +76,7 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
     status.value = 'no match'
   }
 }
-
+*/
 const toggleListening = () => {
   if (!recognition) {
     status.value = 'SpeechRecognition not supported'

@@ -4,9 +4,9 @@ import { bus } from '@/lib/bus'
 import { type UserRoleType } from '@zod/generated'
 
 import {
-  OtpSendReturn,
+  type OtpSendReturn,
   OtpSendReturnSchema,
-  SettingsUser,
+  type SettingsUser,
   SettingsUserSchema,
 } from '@zod/user/user.dto'
 
@@ -163,7 +163,7 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    async fetchUser(): Promise<UserStoreResponse<{ user: SettingsUser }>> {
+    async fetchUser(): Promise<UserStoreResponse<{user:SettingsUser}>> {
       try {
         const res = await api.get<UserMeResponse>('/users/me')
         const params = SettingsUserSchema.safeParse(res.data.user)

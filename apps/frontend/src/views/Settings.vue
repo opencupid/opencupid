@@ -24,7 +24,6 @@ const mode = useColorMode({
     dark: 'dark',
   },
 })
-console.log('mode', mode.value)
 
 const changeColor = () => {
   mode.value = mode.value === 'dark' ? 'light' : 'dark'
@@ -32,12 +31,14 @@ const changeColor = () => {
 
 onMounted(async () => {
   isLoading.value = true
-  const { success, user: fetched, error } = await authStore.fetchUser()
+  const res = await authStore.fetchUser()
 
-  if (success) {
+  if (res.success) {
+    const { user: fetched } = res
     Object.assign(user, fetched)
   } else {
-    console.error('Failed to fetch user:', error)
+    const { message } = res
+    console.error('Failed to fetch user:', message)
   }
   isLoading.value = false
 })
