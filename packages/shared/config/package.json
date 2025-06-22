@@ -9,7 +9,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@10.11.0",
+  "packageManager": "pnpm@10.12.1",
   "dependencies": {
     "dotenv": "^16.5.0",
     "dotenv-expand": "^12.0.2",
