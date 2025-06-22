@@ -11,7 +11,7 @@ import { appConfig } from '@shared/config/appconfig'
 
 import { AuthIdentifierCaptchaInput, AuthIdentifierCaptchaInputSchema, OtpLoginInputSchema, OtpSendReturn } from '@zod/user/user.dto'
 import type { OtpLoginResponse, SendLoginLinkResponse, UserMeResponse } from '@shared/dto/apiResponse.dto'
-import { JwtPayload } from '@zod/user/user.types'
+import { AuthIdentifier, JwtPayload } from '@zod/user/user.types'
 import { User } from '@zod/generated'
 
 
@@ -20,13 +20,17 @@ const userRoutes: FastifyPluginAsync = async fastify => {
   const profileService = ProfileService.getInstance()
   const captchaService = new CaptchaService(appConfig.ALTCHA_HMAC_KEY)
 
+  // TODO add rate limiting to this endpoint, see tags.routes.ts
   fastify.get('/otp-login', async (req, reply) => {
     try {
-      const { userId, otp } = OtpLoginInputSchema.parse(req.query)
+      const params = OtpLoginInputSchema.safeParse(req.query)
+      if (!params.success) {
+        return reply.status(400).send({ code: 'AUTH_INVALID_INPUT' })
+      }
+      const { userId, otp } = params.data
       const { user, isNewUser } = await userService.otpLogin(userId, otp)
       if (!user) {
-        const response: OtpLoginResponse = { success: false, status: 'invalid_token' }
-        return reply.status(200).send(response)
+        return reply.status(401).send({ code: 'INVALID_OTP' })
       }
 
       let profileId = null
@@ -45,54 +49,67 @@ const userRoutes: FastifyPluginAsync = async fastify => {
         profileId = newProfile.id
       } else {
         // TODO FIXME otpLogin return a User which has no profile on it.
+        // @ts-expect-error fix this
         profileId = user.profile?.id
       }
 
       const payload: JwtPayload = { userId: user.id, profileId: profileId }
-      console.info('jwt payload', payload)
+      // console.info('jwt payload', payload)
       const jwt = fastify.jwt.sign(payload)
       const response: OtpLoginResponse = { success: true, token: jwt }
       reply.code(200).send(response)
     } catch (error) {
-      return sendError(reply, 400, 'Invalid query parameters')
+      return reply.status(500).send({ code: 'AUTH_INTERNAL_ERROR' })
     }
   })
 
   fastify.post('/send-login-link', async (req, reply) => {
-    const data: AuthIdentifierCaptchaInput | null = validateBody(AuthIdentifierCaptchaInputSchema, req, reply)
-    if (!data) return
+
+    const params = AuthIdentifierCaptchaInputSchema.safeParse(req.body)
+    if (!params.success) {
+      return reply.status(400).send({ code: 'AUTH_MISSING_FIELD' })
+    }
+
+    const { email, phonenumber, captchaSolution, language } = params.data
+
+    // const data: AuthIdentifierCaptchaInput | null = validateBody(AuthIdentifierCaptchaInputSchema, req, reply)
+    // if (!data) return
 
     try {
-      const captchaOk = await captchaService.validate(data.captchaSolution)
+      const captchaOk = await captchaService.validate(captchaSolution)
       if (!captchaOk) {
-        return reply.code(400).send({ success: false, status: 'invalid_captcha' })
+        return reply.code(403).send({ code: 'AUTH_INVALID_CAPTCHA' })
       }
     } catch (err: any) {
       fastify.log.error('Captcha validation error', err)
-      return reply.code(500).send({ success: false, status: 'captcha_validation_failed' })
+      return reply.code(500).send({ code: 'AUTH_INTERNAL_ERROR' })
     }
 
     let otp = ''
 
-    if (data.email) {
+    if (email) {
       otp = userService.generateOTP()
-    } else if (data.phonenumber) {
+    } else if (phonenumber) {
       const smsService = new SmsService(appConfig.SMS_API_KEY)
       const userId = cuid()
-      const smsRes = await smsService.sendOtp(data.phonenumber, userId)
+      const smsRes = await smsService.sendOtp(phonenumber, userId)
       if (smsRes.success && smsRes.otp && smsRes.otp !== '') {
         otp = smsRes.otp
       } else {
         fastify.log.error('Textbelt error sending', smsRes.error)
-        return sendError(
-          reply,
-          500,
-          'SMS sending is down at the moment. Apologies for that, please try again later.'
-        )
+        return reply.code(500).send({
+          code: 'AUTH_INTERNAL_ERROR',
+          message: 'SMS sending is down at the moment. Apologies for that, please try again later.'
+        })
       }
     }
 
-    const { user, isNewUser } = await userService.setUserOTP(data, otp, data.language)
+    const authId: AuthIdentifier = {
+      email: email || undefined,
+      phonenumber: phonenumber || undefined,
+    }
+
+    const { user, isNewUser } = await userService.setUserOTP(authId, otp, language)
 
     const userReturned: OtpSendReturn = {
       id: user.id,
@@ -111,7 +128,11 @@ const userRoutes: FastifyPluginAsync = async fastify => {
           { attempts: 3, backoff: { type: 'exponential', delay: 5000 } }
         )
 
-      const response: SendLoginLinkResponse = { success: true, user: userReturned, status: 'register' }
+      const response: SendLoginLinkResponse = {
+        success: true,
+        user: userReturned,
+        status: 'register'
+      }
       return reply.status(200).send(response)
     }
 
@@ -122,7 +143,11 @@ const userRoutes: FastifyPluginAsync = async fastify => {
         { userId: user.id },
         { attempts: 3, backoff: { type: 'exponential', delay: 5000 } }
       )
-    const response: SendLoginLinkResponse = { success: true, user: userReturned, status: 'login' }
+    const response: SendLoginLinkResponse = {
+      success: true,
+      user: userReturned,
+      status: 'login'
+    }
     return reply.code(200).send(response)
   })
 
@@ -132,20 +157,25 @@ const userRoutes: FastifyPluginAsync = async fastify => {
       onRequest: [fastify.authenticate],
     },
     async (req, reply) => {
-      if (req.user === null) return sendUnauthorizedError(reply)
+      // if (req.user === null) return sendUnauthorizedError(reply)
 
-      const user = await userService.getUserById(req.user.userId, {
-        select: {
-          email: true,
-          phonenumber: true,
-          language: true,
-        },
-      })
+      try {
+        const user = await userService.getUserById(req.user.userId, {
+          select: {
+            email: true,
+            phonenumber: true,
+            language: true,
+          },
+        })
 
-      if (!user) return sendUnauthorizedError(reply)
+        if (!user) return sendUnauthorizedError(reply)
+        const response: UserMeResponse = { success: true, user }
+        return reply.code(200).send(response)
 
-      const response: UserMeResponse = { success: true, user }
-      return reply.code(200).send(response)
+      } catch (error) {
+        fastify.log.error('Error fetching user:', error)
+        return sendError(reply, 500, 'Failed to fetch user')
+      }
     }
   )
 

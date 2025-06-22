@@ -17,6 +17,7 @@ import type { ConversationSummary, MessageDTO } from '@zod/messaging/messaging.d
 import type { SettingsUser, OtpSendReturn } from '@zod/user/user.dto'
 import type { PublicCity } from '@zod/dto/city.dto'
 import type { DatingPreferencesDTO } from '@zod/profile/datingPreference.dto'
+import { AuthErrorCodes } from '@zod/user/auth.dto'
 
 export type GetDatingPreferenceseResponse = ApiSuccess<{ prefs: DatingPreferencesDTO }>
 export type UpdateDatingPreferencesResponse = ApiSuccess<{ prefs: DatingPreferencesDTO }>
@@ -43,14 +44,18 @@ export type SendMessageResponse = ApiSuccess<{
 export type InitiateConversationResponse = ApiSuccess<{
 }>
 
+export type AuthResponse<T> = ApiSuccess<T>| ApiError & { code: AuthErrorCodes }
 export type UserMeResponse = ApiSuccess<{ user: SettingsUser }>
 export type SendLoginLinkResponse = ApiSuccess<{ user: OtpSendReturn; status: string }>
-export type OtpLoginSuccess = ApiSuccess<{ token: string }>
+export type OtpLoginSuccess = AuthResponse<{ token: string }>
 export interface OtpLoginFailure {
   success: false
   status: string
 }
 export type OtpLoginResponse = OtpLoginSuccess | OtpLoginFailure
+
+
+
 
 export type CitySearchResponse = PublicCity[]
 export type CaptchaChallengeResponse = ApiSuccess<any> // altcha challenge shape

@@ -4,13 +4,21 @@ import { bus } from '@/lib/bus'
 import { type UserRoleType } from '@zod/generated'
 
 import {
+  OtpSendReturn,
   OtpSendReturnSchema,
+  SettingsUser,
   SettingsUserSchema,
 } from '@zod/user/user.dto'
 
 import type { AuthIdentifier, JwtPayload, SessionData } from '@zod/user/user.types'
 
-import type { OtpLoginResponse, SendLoginLinkResponse, UserMeResponse } from '@shared/dto/apiResponse.dto'
+import type { ApiError, ApiSuccess, OtpLoginResponse, SendLoginLinkResponse, UserMeResponse } from '@shared/dto/apiResponse.dto'
+import { AuthErrorCodes } from '@zod/user/auth.dto'
+
+type SuccessResponse<T> = { success: true } & T
+
+type AuthStoreResponse<T> = SuccessResponse<T> | ApiError & { code: AuthErrorCodes, restart: 'otp' | 'userid' }
+type UserStoreResponse<T> = SuccessResponse<T> | ApiError
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -57,22 +65,37 @@ export const useAuthStore = defineStore('auth', {
       this.isInitialized = true
     },
 
-    async otpLogin(otp: string) {
+    async otpLogin(otp: string): Promise<AuthStoreResponse<{ status: string }>> {
       let userId: string | null
       try {
         userId = localStorage.getItem('uid')
       } catch (error) {
         console.warn('Failed to access localStorage:', error)
-        return { success: false, status: 'storage_error' }
+        return {
+          success: false,
+          restart: 'userid',
+          code: 'AUTH_INVALID_INPUT',
+          message: 'Something is off with this browser. Please try again in a different one (or try clearing your browser storage.)'
+        }
       }
 
       if (!userId) {
         // registration/login initiated in a different browser -> no userId
-        return { success: false, status: 'missing_userid' }
+        return {
+          success: false,
+          code: 'AUTH_INVALID_INPUT',
+          message: 'Something went wrong here, you started on a different phone or computer?',
+          restart: 'userid'
+        }
       }
       if (!otp) {
         // OTP is missing - maybe it got garbled in the email link
-        return { success: false, status: 'missing_otp' }
+        return {
+          success: false,
+          code: 'AUTH_INVALID_INPUT',
+          message: "Oops, that link in the message didn't work, try entering the code.",
+          restart: 'otp'
+        }
       }
       try {
         const res = await api.get<OtpLoginResponse>('/users/otp-login', {
@@ -83,38 +106,78 @@ export const useAuthStore = defineStore('auth', {
           this.setAuthState(res.data.token)
           localStorage.removeItem('uid') // Clear userId after successful login
         } else {
-          return { success: false, status: res.data.status }
+          return {
+            success: false,
+            code: 'AUTH_INTERNAL_ERROR',
+            message: 'An internal error occurred during login',
+            restart: 'userid'
+          }
         }
       } catch (error: any) {
         console.error('Login failed:', error)
-        return { success: false, status: error.message }
+        return {
+          success: false,
+          code: error.response?.data?.code || 'AUTH_INTERNAL_ERROR',
+          message: error.response?.data?.message || 'An error occurred during login',
+          restart: 'userid'
+        }
       }
       return { success: true, status: '' }
     },
 
-    async sendLoginLink(authId: AuthIdentifier) {
+    async sendLoginLink(authId: AuthIdentifier): Promise<AuthStoreResponse<{
+      user: OtpSendReturn,
+    }>> {
       // console.log('Sending login link with data:', authId)
       try {
         const res = await api.post<SendLoginLinkResponse>('/users/send-login-link', authId)
-        const user = OtpSendReturnSchema.parse(res.data.user)
+        const params = OtpSendReturnSchema.safeParse(res.data.user)
+        if (!params.success) {
+          console.error('Invalid user data received:', params.error)
+          return {
+            success: false,
+            code: 'AUTH_INTERNAL_ERROR',
+            message: 'Invalid user data received',
+            restart: 'userid'
+          }
+        }
+        const user = params.data
         // set userId in localStorage for the otplogin to pick up
         localStorage.setItem('uid', user.id)
         // Return the status flag for the frontend to handle
-        return { success: true, user, status: res.data.status }
+        return {
+          success: true, user,
+        }
       } catch (error: any) {
         console.error('Sending login link failed:', error)
-        return { success: false, status: error.message }
+        return {
+          success: false,
+          code: error.response?.data?.code || 'AUTH_INTERNAL_ERROR',
+          message: error.message,
+          restart: 'userid'
+        }
       }
     },
 
-    async fetchUser() {
+    async fetchUser(): Promise<UserStoreResponse<{ user: SettingsUser }>> {
       try {
         const res = await api.get<UserMeResponse>('/users/me')
-        const user = SettingsUserSchema.parse(res.data.user)
-        return { success: true, user, error: null }
+        const params = SettingsUserSchema.safeParse(res.data.user)
+        if (!params.success) {
+          console.error('Invalid user data received:', params.error)
+          return {
+            success: false,
+            message: 'Invalid user data received',
+          }
+        }
+        const user = params.data
+        return { success: true, user }
       } catch (error: any) {
         console.error('Could not fetch user:', error)
-        return { success: false, user: null, error: error.message }
+        return {
+          success: false,
+          message: error.message
+        }
       }
     },
 
@@ -124,14 +187,16 @@ export const useAuthStore = defineStore('auth', {
     },
 
     // Update the current user
-    async updateUser(userData: Record<string, any>) {
+    async updateUser(userData: Record<string, any>): Promise<UserStoreResponse<{
+      user: SettingsUser
+    }>> {
       try {
         const res = await api.patch("/users/me", userData)
-        return { success: true, user: res.data.user, error: null }
+        return { success: true, user: res.data.user }
       } catch (error: any) {
         console.error('Failed to update profile:', error)
         const msg = error.response?.data?.message || 'Failed to update profile'
-        return { success: false, user: null, error: msg }
+        return { success: false, message: msg }
       }
     },
 

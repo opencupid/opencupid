@@ -12,16 +12,18 @@ import ChevronLeftIcon from '@/assets/icons/arrows/arrow-single-left.svg'
 import { type LoginUser } from '@zod/user/user.types'
 import { useI18nStore } from '@/store/i18nStore'
 
+const props = defineProps<{
+  otp: string
+}>()
+
 // Reactive variables
 const error = ref('' as string)
 const isLoading = ref(false)
 const showModal = ref(true)
 
-
-
 // form state
-const showUserIdForm = ref(true)
-const showOtpForm = ref(false)
+// const showUserIdForm = ref(true)
+// const showOtpForm = ref(false)
 const showConfirmScreen = ref(false)
 
 const router = useRouter()
@@ -46,38 +48,39 @@ onMounted(async () => {
   if (queryOtp) {
     const ok = await doOtpLogin(queryOtp)
     if (!ok) {
+      error.value = 'Failed to login with the provided OTP.'
       // showOtpForm.value = true
     }
   } else {
-    showUserIdForm.value = true
+    // showUserIdForm.value = true
   }
 })
 
-// Method to handle sending login link
-async function handleSendOtp(authIdCaptcha: AuthIdentifierCaptchaInput) {
-  const payload = {
-    ...authIdCaptcha,
-    language: user.language || 'en',
-  }
-  try {
-    error.value = ''
-    isLoading.value = true
-    const res = await authStore.sendLoginLink(payload)
-    if (res.success) {
-      Object.assign(user, res.user)
-      // console.log('Login link sent successfully:', user)
-      showOtpForm.value = true
-      showUserIdForm.value = false
-    } else {
-      error.value = 'An unknown error occurred, please try again a bit later.'
-    }
-  } catch (err: any) {
-    error.value = err || 'An unexpected error occurred.'
-    console.error('Login error:', err)
-  } finally {
-    isLoading.value = false
-  }
-}
+// // Method to handle sending login link
+// async function handleSendOtp(authIdCaptcha: AuthIdentifierCaptchaInput) {
+//   const payload = {
+//     ...authIdCaptcha,
+//     language: user.language || 'en',
+//   }
+//   try {
+//     error.value = ''
+//     isLoading.value = true
+//     const res = await authStore.sendLoginLink(payload)
+//     if (res.success) {
+//       Object.assign(user, res.user)
+//       // console.log('Login link sent successfully:', user)
+//       showOtpForm.value = true
+//       showUserIdForm.value = false
+//     } else {
+//       error.value = 'An unknown error occurred, please try again a bit later.'
+//     }
+//   } catch (err: any) {
+//     error.value = err || 'An unexpected error occurred.'
+//     console.error('Login error:', err)
+//   } finally {
+//     isLoading.value = false
+//   }
+// }
 
 // Method to handle OTP entered
 async function handleOTPSubmitted(otp: string): Promise<boolean> {
@@ -90,28 +93,18 @@ async function doOtpLogin(otp: string) {
     const res = await authStore.otpLogin(otp)
     if (res.success) {
       showConfirmScreen.value = true
-      showOtpForm.value = false
-      showUserIdForm.value = false
+      // showOtpForm.value = false
+      // showUserIdForm.value = false
       await new Promise(resolve => setTimeout(resolve, 2000))
       await router.push({ name: 'UserHome' })
       return true
     } else {
       console.log('OTP login failed:', res)
-      // Handle different status flags
-      if (res.status === 'storage_error') {
-        error.value =
-          'Something is off with this browser. Please try again in a different one (or try clearing your browser storage.)'
-      }
-      if (res.status === 'missing_userid') {
-        error.value = 'Something went wrong here with the code.  Try again?'
-      }
-      if (res.status === 'missing_otp' || res.status === 'invalid_token') {
-        error.value = 'Oops, this code has probably expired. Try again?'
-      }
+      error.value = res.message || 'An unknown error occurred, please try again a bit later.'
       // TODO we need to give the user another chance to enter the OTP
       // before bouncing them back to the user ID form
-      showUserIdForm.value = true
-      showOtpForm.value = false
+      // showUserIdForm.value = true
+      // showOtpForm.value = false
       return false
     }
   } catch (err: any) {
@@ -124,16 +117,17 @@ async function doOtpLogin(otp: string) {
 }
 
 function handleBackButton() {
-  showUserIdForm.value = true
-  showOtpForm.value = false
+  // showUserIdForm.value = true
+  // showOtpForm.value = false
   error.value = ''
   isLoading.value = false
+  router.replace({ name: 'AuthUserId' })
 }
 
-const handleSetLanguage = (lang: string) => {
-  user.language = lang
-  i18nStore.setLanguage(lang)
-}
+// const handleSetLanguage = (lang: string) => {
+//   user.language = lang
+//   i18nStore.setLanguage(lang)
+// }
 </script>
 
 <template>
@@ -156,27 +150,24 @@ const handleSetLanguage = (lang: string) => {
       :keyboard="false"
     >
       <div class="w-100">
-        <div v-if="showOtpForm">
-          <div class="back-button">
-            <a class="btn btn-secondary-outline" @click="handleBackButton">
-              <ChevronLeftIcon class="svg-icon" />
-            </a>
-          </div>
+        <div class="back-button">
+          <a class="btn btn-secondary-outline" @click="handleBackButton">
+            <ChevronLeftIcon class="svg-icon" />
+          </a>
         </div>
         <ErrorComponent :error="error" />
-
+        <!-- 
         <AuthIdComponent
           :isLoading="isLoading"
           @otp:send="handleSendOtp"
           @language:select="handleSetLanguage"
           v-if="showUserIdForm"
-        />
+        /> -->
 
         <OtpLoginComponent
           :isLoading="isLoading"
           :user="user"
           @otp:submit="handleOTPSubmitted"
-          v-if="showOtpForm"
         />
 
         <LoginConfirmComponent v-if="showConfirmScreen" />
