@@ -50,7 +50,7 @@ function handleLogoutClick() {
 
       <BNavItemDropdown right>
         <template #button-content>
-          <span v-if="profileStore.profile?.profileImages.length" class="profile-thumbnail d-inline-flex">
+          <span v-if="profileStore.profile?.profileImages?.length" class="profile-thumbnail d-inline-flex">
             <ProfileImage
               :profile="profileStore.profile"
               class="img-fluid rounded"
