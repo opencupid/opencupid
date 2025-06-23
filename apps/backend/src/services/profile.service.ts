@@ -12,31 +12,7 @@ import {
   DbProfileWithImages
 } from '@zod/profile/profile.db'
 import { mapToLocalizedUpserts } from '@/api/mappers/profile.mappers'
-
-function profileCompleteInclude() {
-  const clause = {
-    profileImages: {
-      orderBy: { position: 'asc' },
-    },
-    tags: {
-      include: {
-        tag: {
-          include: {
-            translations: {
-              // where: { locale: 'de' },
-              select: { name: true, locale: true },
-            },
-          }
-        },
-      },
-    },
-    localized: true,
-
-  } satisfies Prisma.ProfileInclude
-
-  return clause
-}
-
+import { profileCompleteInclude } from '@/db/includes/profileCompleteInclude'
 
 
 const conversationWithMyProfileInclude = (myProfileId: string) => ({
@@ -71,7 +47,7 @@ export class ProfileService {
     return ProfileService.instance
   }
 
-  async getProfileWithConversationsById(profileId: string, myProfileId: string,): Promise<DbProfileComplete | null> {
+  async getProfileWithContextById(profileId: string, myProfileId: string,): Promise<DbProfileComplete | null> {
 
     return prisma.profile.findUnique({
       where: { id: profileId },

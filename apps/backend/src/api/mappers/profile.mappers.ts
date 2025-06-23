@@ -1,5 +1,5 @@
 import {
-  type PublicProfileWithConversation,
+  type PublicProfileWithContext,
   ProfileUnionSchema,
   type ProfileSummary,
   type OwnerProfile,
@@ -66,7 +66,7 @@ export function mapDbProfileToOwnerProfile(locale: string, db: DbProfileWithImag
 
 
 
-export function ownerToPublicProfile(profile: OwnerProfile | null): PublicProfileWithConversation | null {
+export function ownerToPublicProfile(profile: OwnerProfile | null): PublicProfileWithContext | null {
   if (!profile) return null
   // const { location, ...rest } = profile
 
@@ -79,7 +79,7 @@ export function ownerToPublicProfile(profile: OwnerProfile | null): PublicProfil
 
 
 
-export function mapProfileToPublic(dbProfile: DbProfileWithImages, hasDatingPermission: boolean, locale: string): PublicProfileWithConversation {
+export function mapProfileToPublic(dbProfile: DbProfileWithImages, hasDatingPermission: boolean, locale: string): PublicProfileWithContext {
 
   // const get = (field: string) =>
   //   dbProfile.localized.find(l => l.field === field && l.locale === locale)?.value
@@ -105,11 +105,11 @@ export function mapProfileToPublic(dbProfile: DbProfileWithImages, hasDatingPerm
     location: LocationSchema.parse(dbProfile),
     introSocial: get('introSocial') || '',
     introDating: get('introDating') || '',
-  } as PublicProfileWithConversation
+  } as PublicProfileWithContext
 }
 
 
-export function mapProfileWithConversationToPublic(dbProfile: DbProfileComplete, hasDatingPermission: boolean, locale: string): PublicProfileWithConversation {
+export function mapProfileWithContext(dbProfile: DbProfileComplete, hasDatingPermission: boolean, locale: string): PublicProfileWithContext {
 
   const mapped = mapProfileToPublic(dbProfile, hasDatingPermission, locale)
   const conversation = dbProfile.conversationParticipants?.[0]?.conversation ?? null
@@ -117,7 +117,7 @@ export function mapProfileWithConversationToPublic(dbProfile: DbProfileComplete,
   return {
     ...mapped,
     conversation: conversation|| null
-  } as PublicProfileWithConversation
+  } as PublicProfileWithContext
 }
 
 export function mapProfileImagesToOwner(images: ProfileImage[]): OwnerProfileImage[] {

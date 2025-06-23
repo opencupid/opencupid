@@ -7,7 +7,10 @@ import IconGlobe from '@/assets/icons/interface/globe.svg'
 import ScopeViewToggler from '../ScopeViewToggler.vue'
 
 const model = defineModel<ViewState>({
-  default: {} as ViewState,
+  default: {
+    scopes: [],
+    currentScope: 'dating',
+  },
   required: true,
 })
 
@@ -19,28 +22,38 @@ const currentLanguage = computed(() => {
 </script>
 
 <template>
-  <ScopeViewToggler v-model="model.previewScope">
-    <template #items-right>
-      <BNavItemDropdown
-        size="sm"
-        id="my-nav-dropdown"
-        text="Dropdown"
-        toggle-class="nav-link-custom"
-        right
-      >
-        <template #button-content>
-          <IconGlobe class="svg-icon" />
-          <!-- {{ currentLanguage?.label }} -->
-        </template>
-        <BDropdownItem
-          v-for="lang in languagePreviewOptions"
-          :key="lang.value"
-          :active="lang.value === model.previewLanguage"
-          @click="model.previewLanguage = lang.value"
+  <div class="d-flex justify-content-end align-items-center w-100">
+    <ul pills class="nav nav-pills w-100 d-flex align-items-center">
+      <li class="col-2">
+        <slot name="items-left"></slot>
+      </li>
+
+      <li class="col-8 d-flex nav-item justify-content-center align-items-center">
+        <ScopeViewToggler v-model="model"> </ScopeViewToggler>
+      </li>
+
+      <li class="col-2 d-flex justify-content-end">
+        <BNavItemDropdown
+          size="sm"
+          id="my-nav-dropdown"
+          text="Dropdown"
+          toggle-class="nav-link-custom"
+          right
         >
-          {{ lang.label }}
-        </BDropdownItem>
-      </BNavItemDropdown>
-    </template>
-  </ScopeViewToggler>
+          <template #button-content>
+            <IconGlobe class="svg-icon" />
+            <!-- {{ currentLanguage?.label }} -->
+          </template>
+          <BDropdownItem
+            v-for="lang in languagePreviewOptions"
+            :key="lang.value"
+            :active="lang.value === model.previewLanguage"
+            @click="model.previewLanguage = lang.value"
+          >
+            {{ lang.label }}
+          </BDropdownItem>
+        </BNavItemDropdown>
+      </li>
+    </ul>
+  </div>
 </template>

@@ -5,7 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { useProfileStore } from '@/store/profileStore'
 import { useMessageStore } from '@/store/messageStore'
 
-import { type PublicProfileWithConversation } from '@zod/profile/profile.dto'
+import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 import { type ConversationSummary } from '@zod/messaging/messaging.dto'
 
 import SendMessage from './SendMessage.vue'
@@ -21,12 +21,12 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'deselect:convo'): void
-  (e: 'profile:select', profile: PublicProfileWithConversation): void
+  (e: 'profile:select', profile: PublicProfileWithContext): void
 }>()
 
 const showModal = ref(false)
 const isLoading = ref(false)
-const conversationPartner = ref<PublicProfileWithConversation | null>(null)
+const conversationPartner = ref<PublicProfileWithContext | null>(null)
 
 const { t } = useI18n()
 

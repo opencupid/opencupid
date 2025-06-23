@@ -19,11 +19,13 @@ import {
   type StoreError
 } from './helpers'
 import { type DatingPreferencesDTO, DatingPreferencesDTOSchema } from '@zod/match/datingPreference.dto'
+import type { SocialSearchQuery } from '@zod/match/socialSearch.dto'
 
-export const useProfileBrowserStore = defineStore('profileBrowser', {
+export const useFindProfilesStore = defineStore('findProfiles', {
   state: () => ({
     profileList: [] as PublicProfile[], // List of public profiles
     datingPrefs: null as DatingPreferencesDTO | null, // Current user's dating preferences  
+    socialSearch: null as SocialSearchQuery | null, // Current social search query
 
     isLoading: false, // Loading state
   }),

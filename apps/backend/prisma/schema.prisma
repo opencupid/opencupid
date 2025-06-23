@@ -234,12 +234,20 @@ model Profile {
   localized LocalizedProfileField[]
 }
 
+model DatingPreferences {
+  profileId  String    @id @unique
+  prefAgeMin Int?
+  prefAgeMax Int?
+  prefGender Gender[]  @default([])
+  prefKids   HasKids[] @default([])
+}
+
 model LocalizedProfileField {
-  id        String   @id @default(cuid())
-  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  id        String  @id @default(cuid())
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
   profileId String
-  field     String   // 'introSocial', 'introDating', etc.
-  locale    String   // 'en', 'hu', etc.
+  field     String // 'introSocial', 'introDating', etc.
+  locale    String // 'en', 'hu', etc.
   value     String
 
   @@unique([profileId, field, locale])

@@ -10,7 +10,7 @@ export type ApiResponse<T> = ApiSuccess<T> | ApiError
 // Profile responses
 import type {
   OwnerProfile,
-  PublicProfileWithConversation,
+  PublicProfileWithContext,
 } from '@zod/profile/profile.dto'
 import type { PublicTag } from '@zod/tag/tag.dto'
 import type { ConversationSummary, MessageDTO } from '@zod/messaging/messaging.dto'
@@ -23,8 +23,8 @@ export type GetDatingPreferenceseResponse = ApiSuccess<{ prefs: DatingPreference
 export type UpdateDatingPreferencesResponse = ApiSuccess<{ prefs: DatingPreferencesDTO }>
 
 export type GetMyProfileResponse = ApiSuccess<{ profile: OwnerProfile }>
-export type GetPublicProfileResponse = ApiSuccess<{ profile: PublicProfileWithConversation }>
-export type GetProfilesResponse = ApiSuccess<{ profiles: PublicProfileWithConversation[] }>
+export type GetPublicProfileResponse = ApiSuccess<{ profile: PublicProfileWithContext }>
+export type GetProfilesResponse = ApiSuccess<{ profiles: PublicProfileWithContext[] }>
 export type UpdateProfileResponse = ApiSuccess<{ profile: OwnerProfile }>
 
 export type TagsResponse = ApiSuccess<{ tags: PublicTag[] }>

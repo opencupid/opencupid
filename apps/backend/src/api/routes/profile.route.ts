@@ -18,7 +18,7 @@ import {
   mapDbProfileToOwnerProfile,
   mapProfileToDatingPreferences,
   mapProfileToPublic,
-  mapProfileWithConversationToPublic,
+  mapProfileWithContext,
 } from '@/api/mappers/profile.mappers'
 import { UserService } from 'src/services/user.service'
 import type {
@@ -81,7 +81,7 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
 
     try {
       const { id } = IdLookupParamsSchema.parse(req.params)
-      const raw = await profileService.getProfileWithConversationsById(id, myProfileId)
+      const raw = await profileService.getProfileWithContextById(id, myProfileId)
       if (!raw) return sendError(reply, 404, 'Profile not found')
 
       if (raw.userId !== req.user.userId && !req.session.hasActiveProfile) {
@@ -89,7 +89,7 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
       }
       const hasDatingPermission = req.session.profile.isDatingActive
 
-      const profile = mapProfileWithConversationToPublic(raw, hasDatingPermission, locale)
+      const profile = mapProfileWithContext(raw, hasDatingPermission, locale)
       // const profile = publicProfileSchema.parse(raw)
       const response: GetPublicProfileResponse = { success: true, profile }
       return reply.code(200).send(response)
@@ -135,7 +135,7 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
     try {
       const profiles = await profileService.findProfilesFor(locale, myProfileId)
       const hasDatingPermission = req.session.profile.isDatingActive
-      const mappedProfiles = profiles.map(p => mapProfileWithConversationToPublic(p, hasDatingPermission, locale))
+      const mappedProfiles = profiles.map(p => mapProfileWithContext(p, hasDatingPermission, locale))
       const response: GetProfilesResponse = { success: true, profiles: mappedProfiles }
       return reply.code(200).send(response)
     } catch (err) {

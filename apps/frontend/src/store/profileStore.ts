@@ -3,12 +3,12 @@ import { api } from '@/lib/api'
 import type {
   OwnerProfile,
   PublicProfile,
-  PublicProfileWithConversation,
+  PublicProfileWithContext,
 } from '@zod/profile/profile.dto'
 import {
   OwnerProfileSchema,
   PublicProfileSchema,
-  PublicProfileWithConversationSchema,
+  PublicProfileWithContextSchema,
 } from '@zod/profile/profile.dto'
 import type {
   GetMyProfileResponse,
@@ -85,11 +85,11 @@ export const useProfileStore = defineStore('profile', {
 
 
     // Fetch a profile by ID
-    async getPublicProfile(profileId: string): Promise<StoreResponse<PublicProfileWithConversation>> {
+    async getPublicProfile(profileId: string): Promise<StoreResponse<PublicProfileWithContext>> {
       try {
         this.isLoading = true // Set loading state
         const res = await api.get<GetPublicProfileResponse>(`/profiles/${profileId}`)
-        const fetched = PublicProfileWithConversationSchema.parse(res.data.profile)
+        const fetched = PublicProfileWithContextSchema.parse(res.data.profile)
         return storeSuccess(fetched)
       } catch (error: any) {
         return storeError(error, 'Failed to fetch profile')

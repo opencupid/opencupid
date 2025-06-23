@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
 
-import { type PublicProfileWithConversation } from '@zod/profile/profile.dto'
+import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 
 import ImageCarousel from './ImageCarousel.vue'
 import ActionButtons from './ActionButtons.vue'
@@ -24,7 +24,7 @@ import ImageEditor from '../image/ImageEditor.vue'
 const { t } = useI18n()
 
 const props = defineProps<{
-  profile: PublicProfileWithConversation
+  profile: PublicProfileWithContext
   isLoading: boolean
   wrapperClass?: string
 }>()

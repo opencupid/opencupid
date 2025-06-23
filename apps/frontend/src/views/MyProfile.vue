@@ -14,7 +14,7 @@ import { useOnboardingWizard } from '@/components/profiles/onboarding/useProfile
 import { useStepper } from '@vueuse/core'
 import { useRouter } from 'vue-router'
 import ErrorOverlay from '@/components/ErrorOverlay.vue'
-import { type PublicProfileWithConversation } from '@zod/profile/profile.dto'
+import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import ScopeViewToggler from '@/components/profiles/ScopeViewToggler.vue'
 import EditButton from '@/components/profiles/myprofile/EditButton.vue'
@@ -33,15 +33,16 @@ const formData: EditFieldProfileFormWithImages = reactive({} as EditFieldProfile
 const viewState = reactive<ViewState>({
   isEditable: false,
   previewLanguage: useI18nStore().currentLanguage,
-  previewScope: 'social',
+  scopes: ['dating', 'social'],
+  currentScope: 'social',
 })
 
-const publicProfile = reactive({} as PublicProfileWithConversation)
-const profilePreview = computed((): PublicProfileWithConversation => {
+const publicProfile = reactive({} as PublicProfileWithContext)
+const profilePreview = computed((): PublicProfileWithContext => {
   return {
     ...publicProfile,
-    isDatingActive: viewState.previewScope === 'dating',
-  } as PublicProfileWithConversation
+    isDatingActive: viewState.currentScope === 'dating',
+  } as PublicProfileWithContext
 })
 
 const fetchProfilePreview = async () => {
@@ -176,7 +177,7 @@ const update = (value: EditFieldProfileFormWithImages) => {}
 </script>
 
 <template>
-  <main class="container" :class="[viewState.previewScope, {editable: viewState.isEditable}]">
+  <main class="container" :class="[viewState.currentScope, {editable: viewState.isEditable}]">
     <ErrorOverlay v-if="error" :error />
     <div v-else class="row justify-content-center mt-3">
       <div class="col-12 col-md-8 col-lg-6 position-relative user-select-none">

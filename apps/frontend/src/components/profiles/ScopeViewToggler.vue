@@ -1,47 +1,47 @@
 <script setup lang="ts">
 import IconDate from '@/assets/icons/app/cupid.svg'
 import IconSocialize from '@/assets/icons/app/socialize.svg'
+import { type ScopeSelectModel } from '@/components/profiles/types'
 
-const model = defineModel<string>({
-  default: 'social',
+const model = defineModel<ScopeSelectModel>({
+  default: () => {},
 })
 </script>
 
 <template>
-  <ul pills class="nav nav-pills w-100 d-flex align-items-center">
-    <li class="col-2">
-      <slot name="items-left"></slot>
-    </li>
-
-    <li class="col-8 d-flex nav-item justify-content-center align-items-center">
-      <a
-        href="#"
-        class="link nav-link-social mx-2"
-        :class="{ active: model === 'social' }"
-        @click="model = 'social'"
-      >
-        <IconSocialize class="svg-icon-100" />
-      </a>
-      <a
-        href="#"
-        class="link nav-link-dating"
-        :class="{ active: model === 'dating' }"
-        @click="model = 'dating'"
-      >
-        <IconDate class="svg-icon-100" />
-      </a>
-    </li>
-
-    <li class="col-2 d-flex justify-content-end">
-      <slot name="items-right"> </slot>
-    </li>
-  </ul>
+  <a
+    href="#"
+    class="link nav-link-social mx-2"
+    :class="{
+      disabled: model.scopes.includes('social') === false,
+      active: model.currentScope === 'social',
+    }"
+    @click="model.currentScope = 'social'"
+  >
+    <IconSocialize class="svg-icon-100" />
+  </a>
+  <a
+    href="#"
+    class="link nav-link-dating"
+    :class="{
+      active: model.currentScope === 'dating',
+      disabled: model.scopes.includes('dating') === false,
+    }"
+    @click="model.currentScope = 'dating'"
+  >
+    <IconDate class="svg-icon-100" />
+  </a>
 </template>
-<style lang="css" scoped>
 
+<style lang="css" scoped>
 .link {
-  padding:0.25rem 2rem;
+  padding: 0.25rem 2rem;
   height: 3rem;
 }
-
+a.disabled {
+  pointer-events: none;
+  opacity: 0.5;
+  cursor: default;
+  filter: grayscale(100%);
+}
 </style>

@@ -1,66 +1,33 @@
 <script setup lang="ts">
-import { type DatingPreferencesDTO } from '@zod/match/datingPreference.dto'
-import { ref } from 'vue'
-import { type OwnerProfile } from '@zod/profile/profile.dto'
 
 import IconSetting from '@/assets/icons/interface/setting.svg'
 import ScopeViewToggler from '../ScopeViewToggler.vue'
-import DatingPreferencesForm from './DatingPreferencesForm.vue'
+import { type FindMatchViewModel } from './types'
 
-const model = defineModel<DatingPreferencesDTO>()
-
-const props = defineProps<{
-  profile: OwnerProfile
-}>()
+const model = defineModel<FindMatchViewModel>()
 
 defineEmits({
-  'update:datingPrefs': () => true,
+  'edit:datingPrefs': () => true,
 })
 
-const showModal = ref(false)
-
-const handlePrefsClick = () => {
-  showModal.value = true
-}
-
-const viewState = ref('social')
 </script>
 
 <template>
   <div class="d-flex justify-content-end align-items-center w-100">
-    <ScopeViewToggler v-model="viewState">
-      <template #items-left>
-        <!-- <BButton
-          variant="primary"
-          class="me-2"
-          @click="$emit('update:datingPrefs')"
-        >
-          <IconRefresh class="svg-icon" />
-        </BButton> -->
-      </template>
-      <template #items-right>
-        <BButton variant="primary" class="ms-2" @click="handlePrefsClick">
+    <ul pills class="nav nav-pills w-100 d-flex align-items-center">
+      <li class="col-2">
+        <slot name="items-left"></slot>
+      </li>
+
+      <li class="col-8 d-flex nav-item justify-content-center align-items-center">
+        <ScopeViewToggler v-model="model" v-if="model?.scopes?.length! > 0" />
+      </li>
+
+      <li class="col-2 d-flex justify-content-end">
+        <BButton variant="primary" class="ms-2" @click="$emit('edit:datingPrefs')">
           <IconSetting class="svg-icon" />
         </BButton>
-      </template>
-    </ScopeViewToggler>
-
-    <BModal
-      v-model="showModal"
-      centered
-      button-size="sm"
-      :focus="false"
-      :no-close-on-backdrop="true"
-      fullscreen="sm"
-      :no-footer="false"
-      :no-header="true"
-      cancel-title="Nevermind"
-      initial-animation
-      :body-scrolling="false"
-      title="Add a photo"
-      @ok="$emit('update:datingPrefs')"
-    >
-      <DatingPreferencesForm v-model="model" :profile />
-    </BModal>
+      </li>
+    </ul>
   </div>
 </template>

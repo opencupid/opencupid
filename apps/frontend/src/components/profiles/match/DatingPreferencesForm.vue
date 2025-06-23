@@ -2,9 +2,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import VueSlider from 'vue-3-slider-component'
-import { type OwnerProfile } from '@zod/profile/profile.dto'
 
-import { useAgeFields } from '@/components/profiles/composables/useAgeFields'
 import { DatingPreferencesFormSchema } from '@zod/match/datingPreference.form'
 import GenderPreferenceSelector from './GenderPreferenceSelector.vue'
 import HasKidsPreferenceSelector from './HaskidsPreferenceSelector.vue'
@@ -16,11 +14,8 @@ const model = defineModel<DatingPreferencesDTO>({
   default: () => DatingPreferencesFormSchema.parse({}),
 })
 
-const props = defineProps<{
-  profile: OwnerProfile | null
-}>()
 
-const { age } = useAgeFields(props.profile?.birthday ?? null)
+// const { age } = useAgeFields(props.profile?.birthday ?? null)
 
 const { t } = useI18n()
 
@@ -32,19 +27,19 @@ const prefAge = computed({
   },
 })
 
-const ageMaxMin = computed(() => {
-  if (age.value) {
-    return {
-      min: Math.max(18, age.value - 25),
-      max: age.value + 25,
-    }
-  } else {
-    return {
-      min: 18,
-      max: 100,
-    }
-  }
-})
+// const ageMaxMin = computed(() => {
+//   if (age.value) {
+//     return {
+//       min: Math.max(18, age.value - 25),
+//       max: age.value + 25,
+//     }
+//   } else {
+//     return {
+//       min: 18,
+//       max: 100,
+//     }
+//   }
+// })
 </script>
 
 <template>
@@ -66,8 +61,8 @@ const ageMaxMin = computed(() => {
               :contained="true"
               :tooltip="'none'"
               :enable-cross="false"
-              :min="ageMaxMin.min"
-              :max="ageMaxMin.max"
+              :min="18"
+              :max="100"
             ></vue-slider>
           </div>
         </div>

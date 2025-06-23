@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { type PublicProfileWithConversation } from '@zod/profile/profile.dto'
+import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 
 // Props & Emits
 const props = defineProps<{
-  profile: PublicProfileWithConversation
+  profile: PublicProfileWithContext
 }>()
 </script>
 

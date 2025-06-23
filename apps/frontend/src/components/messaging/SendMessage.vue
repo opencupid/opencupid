@@ -5,14 +5,14 @@ import { funnel } from 'remeda'
 import { useLocalStore } from '@/store/localStore'
 
 import { type MessageDTO } from '@zod/messaging/messaging.dto'
-import { type PublicProfileWithConversation } from '@zod/profile/profile.dto'
+import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 
 import { useMessaging } from '../composables/useMessaging'
 import TagList from '@/components/profiles/display/TagList.vue'
 import LanguageList from '@/components/profiles/display/LanguageList.vue'
 
 const props = defineProps<{
-  recipientProfile: PublicProfileWithConversation
+  recipientProfile: PublicProfileWithContext
   conversationId: string | null
 }>()
 

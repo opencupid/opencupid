@@ -88,6 +88,7 @@ declare module 'vue' {
     NoProfileInfoCTA: typeof import('./src/components/profiles/NoProfileInfoCTA.vue')['default']
     OtpLoginComponent: typeof import('./src/components/auth/OtpLoginComponent.vue')['default']
     ProfileCardComponent: typeof import('./src/components/profiles/public/ProfileCardComponent.vue')['default']
+    ProfileCardGrid: typeof import('./src/components/profiles/match/ProfileCardGrid.vue')['default']
     ProfileImage: typeof import('./src/components/profiles/image/ProfileImage.vue')['default']
     ProfileThumbnail: typeof import('./src/components/profiles/image/ProfileThumbnail.vue')['default']
     PronounSelector: typeof import('./src/components/profiles/forms/PronounSelector.vue')['default']
