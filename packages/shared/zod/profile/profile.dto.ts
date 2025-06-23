@@ -119,6 +119,9 @@ export type ProfileSummary = z.infer<typeof ProfileSummarySchema>;
 
 
 
-// localized profile fields
-type ProfileWithLocalized = Profile & { localized: LocalizedProfileField[] }
+export const UpdateProfileScopeSchemaPayload = z.object({
+  isDatingActive: z.boolean(),
+  isSocialActive: z.boolean(),
+}).partial()
 
+export type UpdateProfileScopePayload = z.infer<typeof UpdateProfileScopeSchemaPayload>

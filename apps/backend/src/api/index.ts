@@ -7,6 +7,7 @@ import captchaRoutes from './routes/captcha.route'
 import messageRoutes from './routes/messaging.route'
 import pushRoutes from './routes/push.routes'
 import imageRoutes from './routes/image.route'
+import discoverRoutes from './routes/discover.route'
 
 const api: FastifyPluginAsync = async fastify => {
   fastify.register(userRoutes, { prefix: '/users' })
@@ -17,6 +18,7 @@ const api: FastifyPluginAsync = async fastify => {
   fastify.register(captchaRoutes, { prefix: '/captcha' })
   fastify.register(pushRoutes, { prefix: '/push' })
   fastify.register(imageRoutes, { prefix: '/image' })
+  fastify.register(discoverRoutes, { prefix: '/discover' })
 }
 
 export default api

@@ -10,7 +10,7 @@ import IconPencil2 from '@/assets/icons/interface/pencil-2.svg'
 import IconGlobe from '@/assets/icons/interface/globe.svg'
 import IconTick from '@/assets/icons/interface/tick.svg'
 
-import { useOnboardingWizard } from '@/components/profiles/onboarding/useProfileWizards'
+import { useWizardSteps } from '@/components/profiles/onboarding/useWizardSteps'
 import { useStepper } from '@vueuse/core'
 import { useRouter } from 'vue-router'
 import ErrorOverlay from '@/components/ErrorOverlay.vue'
@@ -18,7 +18,7 @@ import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import ScopeViewToggler from '@/components/profiles/ScopeViewToggler.vue'
 import EditButton from '@/components/profiles/myprofile/EditButton.vue'
-
+import DatingWizard from '@/components/profiles/onboarding/DatingWizard.vue'
 import { useI18nStore } from '@/store/i18nStore'
 import MyProfileSecondaryNav from '../components/profiles/myprofile/MyProfileSecondaryNav.vue'
 import { type ViewState } from '@/components/profiles/myprofile/types'
@@ -58,7 +58,7 @@ const fetchProfilePreview = async () => {
     error.value = 'Something went wrong (public profile)'
     return
   }
-  console.log('Public profile fetched:', res.data)
+  // console.log('Public profile fetched:', res.data)
   Object.assign(publicProfile, res.data)
 }
 
@@ -86,98 +86,67 @@ watch(
     deep: true,
   }
 )
-provide('isOwner', true)
-provide('isEditable', toRef(viewState, 'isEditable'))
-provide('editableModel', formData)
+
+async function updateScopes() {
+  const res = await profileStore.updateProfileScopes({
+    isDatingActive: formData.isDatingActive,
+    isSocialActive: formData.isSocialActive,
+  })
+}
 
 const toggleSocial = async () => {
   // if (!profileStore.profile) return
   formData.isSocialActive = !formData.isSocialActive
-  const res = await profileStore.updateOwnerProfile(formData)
+  await updateScopes()
 }
 
-const datingPopup = ref(false)
+const isDatingOnboarded = computed(() => {
+  console.log('Checking if dating is onboarded:', profileStore.profile?.birthday)
+  return profileStore.profile?.birthday !== null
+})
+
+const isDatingWizardActive = ref(false)
 const toggleDating = async () => {
-  // if (!profileStore.profile) return
   formData.isDatingActive = !formData.isDatingActive
-  if (formData.isDatingActive && !formData.birthday) {
-    datingPopup.value = true
-    profileStore.currentField = null
-    profileStore.open()
+  if (!isDatingOnboarded.value) {
+    console.log('Dating onboarding wizard is active')
+    isDatingWizardActive.value = true
     return
   }
-  const res = await profileStore.updateOwnerProfile(formData)
+  await updateScopes()
 }
 
-const handleOkClick = async () => {
+const handleWizardFinish = async () => {
   console.log('Dating popup OK clicked formData', formData)
   const res = await profileStore.updateOwnerProfile(formData)
   if (res.success) {
     await fetchProfilePreview()
-    // profileStore.close()
+    isDatingWizardActive.value = false
   } else {
     console.error('Failed to fetch updated profile after edit.')
   }
 }
 
-const handleCancelClick = () => {
+const handleWizardCancel = () => {
   console.log('Dating popup cancelled')
   profileStore.currentField = null
-  datingPopup.value = false
+  isDatingWizardActive.value = false
   // this handles the case where the user cancels the dating popup
   // and the birthday is not set
-  if (formData.isDatingActive && !profileStore.profile?.birthday) {
+  if (formData.isDatingActive && !isDatingOnboarded.value) {
     formData.isDatingActive = false
   }
 }
 
-const { datingWizard } = useOnboardingWizard(formData)
-const { current, isFirst, goToNext, goToPrevious, goTo, isCurrent } = useStepper(datingWizard)
-
-// const saveProfile = async () => {
-//   const res = await profileStore.createOwnerProfile(formData)
-//   if (!res.success) {
-//     console.error('Failed to save profile:', res.message)
-//     error.value = res.message || 'Failed to save profile'
-//     return
-//   }
-//   console.log('Profile saved:', formData)
-// }
-
-// const handleNext = async () => {
-//   if (current.value) {
-//     current.value.isCompleted = true
-//     if (current.value.flags === 'stage_one_end') {
-//       console.log('Stage completed:', current.value.state)
-//       if (formData.isDatingActive) {
-//         goToNext()
-//       } else {
-//         isComplete.value = true
-//         goTo('confirm')
-//         await saveProfile()
-//       }
-//     }
-//     if (current.value.flags === 'stage_two_end') {
-//       isComplete.value = true
-//       goTo('confirm')
-//       await saveProfile()
-//       console.log('Stage completed:', current.value.state)
-//     }
-//     if (current.value.state) {
-//       goToNext()
-//     } else {
-//       console.warn('Current step is not valid')
-//     }
-//   } else {
-//     console.warn('No current step found')
-//   }
-// }
-
 const update = (value: EditFieldProfileFormWithImages) => {}
+
+provide('isOwner', true)
+provide('isEditable', toRef(viewState, 'isEditable'))
+provide('editableModel', formData)
 </script>
 
 <template>
-  <main class="container" :class="[viewState.currentScope, {editable: viewState.isEditable}]">
+  <main class="container" :class="[viewState.currentScope, { editable: viewState.isEditable }]">
     <ErrorOverlay v-if="error" :error />
     <div v-else class="row justify-content-center mt-3">
       <div class="col-12 col-md-8 col-lg-6 position-relative user-select-none">
@@ -231,8 +200,8 @@ const update = (value: EditFieldProfileFormWithImages) => {}
       cancel-title="Nevermind"
       :initial-animation="false"
       body-class="d-flex flex-row align-items-center justify-content-center overflow-hidden"
-      @ok="handleOkClick"
-      @cancel="handleCancelClick"
+      @ok="handleWizardFinish"
+      @cancel="handleWizardCancel"
       @close="profileStore.fieldEditModal = false"
       :keyboard="false"
     >
@@ -243,28 +212,33 @@ const update = (value: EditFieldProfileFormWithImages) => {}
       </template>
       <div id="field-edit-modal" class="w-100 py-5"></div>
     </BModal>
-    <Teleport to="#field-edit-modal" v-if="datingPopup">
-      <DatingWizard v-model="formData" @update:modelValue="update"></DatingWizard>
-      <!-- <div>
-        <DatingSteps v-model="formData" :isCurrent />
-        <fieldset v-if="isCurrent('confirm')">Cool!</fieldset>
-      </div>
-      <BButton
-        @click="handleNext"
-        :disabled="!current.state"
-        v-if="!isComplete"
-        variant="primary"
-        size="lg"
-        pill
-        >Next</BButton
-      > -->
-    </Teleport>
+
+    <BModal
+      title=""
+      v-if="isDatingWizardActive"
+      :backdrop="'static'"
+      centered
+      size="lg"
+      button-size="sm"
+      fullscreen="sm"
+      :focus="false"
+      :no-close-on-backdrop="true"
+      :no-header="true"
+      :no-footer="true"
+      :show="true"
+      body-class="d-flex flex-column align-items-center justify-content-center overflow-hidden p-5"
+      :keyboard="false"
+    >
+      <DatingWizard
+        v-model="formData"
+        @finished="handleWizardFinish"
+        @cancel="handleWizardCancel"
+      />
+    </BModal>
   </main>
 </template>
 
 <style scoped lang="scss">
-
-
 @import '@/css/theme.scss';
 
 .main-edit-button {
@@ -278,10 +252,10 @@ const update = (value: EditFieldProfileFormWithImages) => {}
   background-color: var(--bs-light);
 }
 .dating {
-  background-color: transparentize($dating,0.9);
+  background-color: transparentize($dating, 0.9);
 }
 .social {
-  background-color: transparentize($social,0.9);
+  background-color: transparentize($social, 0.9);
 }
 
 :deep(.editable-textarea) {

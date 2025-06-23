@@ -4,12 +4,14 @@ import { z } from 'zod'
 
 import {
   type UpdateProfilePayload,
-  UpdateProfilePayloadSchema
+  UpdateProfilePayloadSchema,
+  UpdateProfileScopeSchemaPayload
 } from '@zod/profile/profile.dto'
 
 import { ProfileService } from 'src/services/profile.service'
 import { validateBody } from '@/utils/zodValidate'
 import {
+  rateLimitConfig,
   sendError,
   sendForbiddenError,
   sendUnauthorizedError
@@ -30,6 +32,7 @@ import type {
   UpdateDatingPreferencesResponse,
 } from '@shared/dto/apiResponse.dto'
 import { DatingPreferencesDTOSchema, UpdateDatingPreferencesPayloadSchema } from '@zod/match/datingPreference.dto'
+import { appConfig } from '@shared/config/appconfig'
 
 // Route params for ID lookups
 const IdLookupParamsSchema = z.object({
@@ -126,23 +129,23 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
   })
 
 
-  fastify.get('/', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+  // fastify.get('/', { onRequest: [fastify.authenticate] }, async (req, reply) => {
 
-    if (!req.session.hasActiveProfile) return sendForbiddenError(reply)
-    const myProfileId = req.session.profileId
-    const locale = req.session.lang
+  //   if (!req.session.hasActiveProfile) return sendForbiddenError(reply)
+  //   const myProfileId = req.session.profileId
+  //   const locale = req.session.lang
 
-    try {
-      const profiles = await profileService.findProfilesFor(locale, myProfileId)
-      const hasDatingPermission = req.session.profile.isDatingActive
-      const mappedProfiles = profiles.map(p => mapProfileWithContext(p, hasDatingPermission, locale))
-      const response: GetProfilesResponse = { success: true, profiles: mappedProfiles }
-      return reply.code(200).send(response)
-    } catch (err) {
-      fastify.log.error(err)
-      return sendError(reply, 500, 'Failed to fetch profiles')
-    }
-  })
+  //   try {
+  //     const profiles = await profileService.findProfilesFor(locale, myProfileId)
+  //     const hasDatingPermission = req.session.profile.isDatingActive
+  //     const mappedProfiles = profiles.map(p => mapProfileWithContext(p, hasDatingPermission, locale))
+  //     const response: GetProfilesResponse = { success: true, profiles: mappedProfiles }
+  //     return reply.code(200).send(response)
+  //   } catch (err) {
+  //     fastify.log.error(err)
+  //     return sendError(reply, 500, 'Failed to fetch profiles')
+  //   }
+  // })
 
   /**
    * Update the current user's profile
@@ -224,7 +227,7 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
     if (!data) return
 
     try {
-      const updated = await profileService.updateProfile(req.user.userId, data)
+      const updated = await profileService.updateProfileScalars(req.user.userId, data)
       if (!updated) return sendError(reply, 404, 'Profile not found')
       const prefs = DatingPreferencesDTOSchema.parse(updated)
       const response: UpdateDatingPreferencesResponse = { success: true, prefs }
@@ -233,7 +236,20 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
       fastify.log.error(err)
       return sendError(reply, 500, 'Failed to update dating preferences')
     }
+  })
 
+
+  fastify.patch('/scopes', {
+    onRequest: [fastify.authenticate],
+    config: {
+      ...rateLimitConfig(fastify, '1 day', appConfig.RATE_LIMIT_PROFILE_SCOPES), 
+    },
+
+  }, async (req, reply) => {
+
+    const data = await validateBody(UpdateProfileScopeSchemaPayload, req, reply) as UpdateProfilePayload
+    if (!data) return
+    return updateProfile(data, req, reply)
   })
 
 }

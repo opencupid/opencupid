@@ -2,8 +2,9 @@
 import { useFindProfilesStore } from '@/store/findProfilesStore';
 import { useProfileStore } from '@/store/profileStore';
 import { OwnerProfile } from '@zod/profile/profile.dto';
-import { computed, reactive, readonly, ref } from 'vue';
+import { computed, reactive, readonly, ref, watch } from 'vue';
 import { type FindMatchViewModel } from './types';
+import { find } from 'remeda';
 
 
 export function useFindMatchViewModel() {
@@ -34,11 +35,19 @@ export function useFindMatchViewModel() {
     vm.currentScope = vm.scopes.length > 0 ? vm.scopes[0] : null
 
     await findProfilesStore.fetchDatingPrefs()
-    await findProfilesStore.findProfiles()
+    await findProfilesStore.findSocial()
   }
 
   const haveResults = computed(() => {
     return findProfilesStore.profileList.length > 0
+  })
+
+  watch(() => vm.currentScope, (newScope) => {
+    if (newScope === 'social') {
+      findProfilesStore.findSocial()
+    } else if (newScope === 'dating') {
+      findProfilesStore.findDating()
+    }
   })
   // const results = computed(() => findProfilesStore.profileList)
   // const datingPrefs = computed(() => findProfilesStore.datingPrefs)

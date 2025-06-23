@@ -37,5 +37,7 @@ export const configSchema = z.object({
 
   TYPEAHEAD_DEBOUNCE_MS: z.coerce.number().default(300),
 
-  GOOGLE_APPLICATION_CREDENTIALS: z.string()
+  GOOGLE_APPLICATION_CREDENTIALS: z.string(),
+
+  RATE_LIMIT_PROFILE_SCOPES: z.coerce.number().default(1),
 })

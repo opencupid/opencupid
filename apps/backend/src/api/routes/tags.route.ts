@@ -6,7 +6,7 @@ import {
   CreateTagPayload,
 } from '@zod/tag/tag.dto'
 import { FastifyPluginAsync } from 'fastify'
-import { sendError, addDebounceHeaders } from '../helpers'
+import { sendError, addDebounceHeaders, rateLimitConfig } from '../helpers'
 import { TagService } from 'src/services/tag.service'
 import type { TagResponse, TagsResponse } from '@shared/dto/apiResponse.dto'
 import { DbTagToPublicTagTransform } from '../mappers/tag.mappers'
@@ -29,7 +29,7 @@ const tagsRoutes: FastifyPluginAsync = async fastify => {
         const response: TagsResponse = { success: true, tags: [] }
         return reply.code(200).send(response)
       }
-      const publicTags = tags.map(tag => DbTagToPublicTagTransform(tag))
+      const publicTags = tags.map(tag => DbTagToPublicTagTransform(tag,locale))
       const response: TagsResponse = { success: true, tags: publicTags }
       return reply.code(200).send(response)
     } catch (err) {
@@ -47,13 +47,7 @@ const tagsRoutes: FastifyPluginAsync = async fastify => {
       onRequest: [fastify.authenticate],
       // rate limiter
       config: {
-        rateLimit: {
-          max: 2,
-          timeWindow: '1 minute',
-          onExceeded: (req, key) => {
-            fastify.log.warn(`Rate limit exceeded for user: ${key}`)
-          },
-        }
+       ...rateLimitConfig(fastify, '1 minute', 2), // 10 requests per minute
       },
     },
     async (req, reply) => {
@@ -72,7 +66,7 @@ const tagsRoutes: FastifyPluginAsync = async fastify => {
           createdBy: userId, // Set the creator to the authenticated user
           isUserCreated: true, // Mark as user-created
         })
-        const tag = DbTagToPublicTagTransform(created)
+        const tag = DbTagToPublicTagTransform(created, locale)
         const response: TagResponse = { success: true, tag }
         return reply.code(200).send(response)
       } catch (err: any) {

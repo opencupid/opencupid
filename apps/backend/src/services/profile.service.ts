@@ -164,7 +164,7 @@ export class ProfileService {
   }
 
 
-  async updateProfile(userId: string, data: DbOwnerUpdateScalars) {
+  async updateProfileScalars(userId: string, data: DbOwnerUpdateScalars) {
     return await prisma.profile.update({
       where: { userId },
       data: data,
@@ -346,18 +346,18 @@ export class ProfileService {
     })
   }
 
-  async findProfilesFor(locale: string, profileId: string): Promise<DbProfileComplete[]> {
-    return await prisma.profile.findMany({
-      where: {
-        isActive: true,
-        id: {
-          not: profileId,
-        },
-      },
-      include: {
-        ...profileCompleteInclude(),
-        ...conversationWithMyProfileInclude(profileId),
-      },
-    })
-  }
+  // async findProfilesFor(locale: string, profileId: string): Promise<DbProfileComplete[]> {
+  //   return await prisma.profile.findMany({
+  //     where: {
+  //       isActive: true,
+  //       id: {
+  //         not: profileId,
+  //       },
+  //     },
+  //     include: {
+  //       ...profileCompleteInclude(),
+  //       ...conversationWithMyProfileInclude(profileId),
+  //     },
+  //   })
+  // }
 }

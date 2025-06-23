@@ -20,10 +20,7 @@ function translationWhereClause(term: string, locale: string) {
 
 function includeTranslations(locale: string) {
   return {
-    translations: {
-      where: { locale },
-      select: { name: true },
-    },
+    translations: true
   }
 }
 export class TagService {

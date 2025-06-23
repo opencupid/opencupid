@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import LocationSelectorComponent from '@/components/profiles/forms/LocationSelector.vue'
-import { useStepper } from '@vueuse/core'
 import { type LocationDTO } from '@zod/dto/location.dto'
 import { onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 
 import { type GenderType, type PronounsType } from '@zod/generated'
+import { type EditProfileForm } from '@zod/profile/profile.form'
 
 import LanguageSelector from '@/components/profiles/forms/LanguageSelector.vue'
 import GoalsSelector from '../components/profiles/onboarding/GoalsSelector.vue'
@@ -14,17 +14,19 @@ import IntrotextEditor from '@/components/profiles/forms/IntrotextEditor.vue'
 import ImageEditor from '@/components/profiles/image/ImageEditor.vue'
 import PublicNameInput from '../components/profiles/forms/PublicNameInput.vue'
 import DatingSteps from '@/components/profiles/onboarding/DatingSteps.vue'
-
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import SpinnerComponent from '@/components/SpinnerComponent.vue'
-import { useRouter } from 'vue-router'
-import { useProfileStore } from '@/store/profileStore'
-import useEditFields from '@/components/profiles/composables/useEditFields'
-import { type EditProfileForm } from '@zod/profile/profile.form'
 import ErrorComponent from '@/components/ErrorComponent.vue'
-import { useOnboardingWizard } from '@/components/profiles/onboarding/useProfileWizards'
+import LocationSelectorComponent from '@/components/profiles/forms/LocationSelector.vue'
+
+import { useStepper } from '@vueuse/core'
+
 import { useI18nStore } from '@/store/i18nStore'
+import { useProfileStore } from '@/store/profileStore'
 import fetchGeoIpInfo from '@/lib/geoip'
+
+import useEditFields from '@/components/profiles/composables/useEditFields'
+import { useWizardSteps } from '@/components/profiles/onboarding/useWizardSteps'
+import BackButton from '@/components/profiles/onboarding/BackButton.vue'
 
 const { t } = useI18n()
 const profileStore = useProfileStore()
@@ -62,10 +64,10 @@ const {
   genderPronounsModel,
 } = useEditFields(formData)
 
-const { onboardingWizard } = useOnboardingWizard(formData)
+const { onboardingWizardSteps } = useWizardSteps(formData)
 
 const { current, isFirst, goToNext, goToPrevious, goTo, isCurrent, next, index, previous, steps } =
-  useStepper(onboardingWizard)
+  useStepper(onboardingWizardSteps)
 
 const isComplete = ref(false)
 const error = ref('')
@@ -82,7 +84,6 @@ const saveProfile = async () => {
 
 const handleNext = async () => {
   if (current.value) {
-    current.value.isCompleted = true
     if (current.value.flags === 'stage_one_end') {
       if (formData.isDatingActive) {
         goToNext()
@@ -115,11 +116,6 @@ const handleGoToBrowse = () => {
   router.push({ name: 'BrowseProfiles' })
 }
 
-const handlePrevious = () => {
-  current.value.isCompleted = false
-  goToPrevious()
-}
-
 const handleSubmit = () => {
   if (current.value.state) {
     handleNext()
@@ -149,16 +145,7 @@ onMounted(async () => {
   <main class="container pb-5 h-100 d-flex flex-column justify-content-center align-items-center">
     <!-- {{ formData }} -->
     <div class="w-100 d-flex justify-content-between align-items-center">
-      <BButton
-        @click="handlePrevious"
-        v-if="!isFirst && !isComplete"
-        href="#"
-        variant="link-secondary"
-        class="d-flex align-items-center mt-2"
-        size="lg"
-      >
-        <FontAwesomeIcon icon="fa-solid fa-chevron-left" class="" />
-      </BButton>
+      <BackButton :show="!isFirst && !isComplete" @click="goToPrevious" />
     </div>
 
     <div class="d-flex align-items-center flex-grow-1 col-12 justify-content-center">

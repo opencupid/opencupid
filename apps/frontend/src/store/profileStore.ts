@@ -4,11 +4,13 @@ import type {
   OwnerProfile,
   PublicProfile,
   PublicProfileWithContext,
+  UpdateProfileScopePayload,
 } from '@zod/profile/profile.dto'
 import {
   OwnerProfileSchema,
   PublicProfileSchema,
   PublicProfileWithContextSchema,
+  UpdateProfileScopeSchemaPayload,
 } from '@zod/profile/profile.dto'
 import type {
   GetMyProfileResponse,
@@ -67,6 +69,28 @@ export const useProfileStore = defineStore('profile', {
       }
       return this.persistOwnerProfile() // Persist dating preferences if they exist
     },
+
+    // Update the current user's social profile
+    async updateProfileScopes(profileFragment: UpdateProfileScopePayload): Promise<StoreVoidSuccess | StoreError> {
+      const parsed = UpdateProfileScopeSchemaPayload.safeParse(profileFragment)
+
+      if (!parsed.success) return storeError(new Error('Invalid profile data'), 'Failed to update profile')
+      try {
+        this.isLoading = true // Set loading state
+        const res = await api.patch<UpdateProfileResponse>('/profiles/scopes', parsed.data)
+        const fetched = OwnerProfileSchema.parse(res.data.profile)
+        if (this.profile)
+          Object.assign(this.profile, fetched) // Update local state with new data  
+        return storeSuccess()
+      } catch (error: any) {
+        this.profile = null // Reset profile on error
+        console.log('Error fetching profile:', error)
+        return storeError(error, 'Failed to fetch profile')
+      } finally {
+        this.isLoading = false // Reset loading state
+      }
+    },
+
 
     async persistOwnerProfile(): Promise<StoreVoidSuccess | StoreError> {
       try {

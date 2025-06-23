@@ -1,5 +1,5 @@
 import { UserRole } from '@prisma/client'
-import { FastifyPluginAsync, FastifyRequest } from 'fastify'
+import type { FastifyInstance, FastifyPluginAsync, FastifyRequest } from 'fastify'
 import { appConfig } from '@shared/config/appconfig'
 
 // --- Helper to send uniform error responses ---
@@ -39,4 +39,16 @@ export function addDebounceHeaders(
   // disable caching and inform client of debounce interval
   reply.header('Cache-Control', 'no-cache, no-store, must-revalidate')
   reply.header('X-Debounce', appConfig.TYPEAHEAD_DEBOUNCE_MS.toString())
+}
+
+export function rateLimitConfig(fastify: FastifyInstance, timeWindow: string, max: number) {
+  return {
+    rateLimit: {
+      max,
+      timeWindow,
+      onExceeded: (req: FastifyRequest, key: string) => {
+        fastify.log.warn(`Rate limit exceeded for user: ${key}`)
+      },
+    },
+  }
 }

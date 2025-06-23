@@ -1,15 +1,21 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useOnboardingWizard } from './useProfileWizards'
-import { type EditFieldProfileFormWithImages } from '@zod/profile/profile.form'
-import HelpScribble from '../HelpScribble.vue'
 import { useI18n } from 'vue-i18n'
+import { type EditFieldProfileFormWithImages } from '@zod/profile/profile.form'
 
+import { useWizardSteps } from './useWizardSteps'
 import { useStepper } from '@vueuse/core'
-const isComplete = ref(false)
-const error = ref('')
+
+import BackButton from './BackButton.vue'
+import DatingSteps from './DatingSteps.vue'
+import HelpScribble from '../HelpScribble.vue'
+import IconArrowRight from '@/assets/icons/arrows/arrow-right.svg'
 
 const { t } = useI18n()
+
+defineEmits<{
+  (e: 'finished'): void
+  (e: 'cancel'): void
+}>()
 
 const formData = defineModel<EditFieldProfileFormWithImages>({
   default: () => ({
@@ -24,78 +30,63 @@ const formData = defineModel<EditFieldProfileFormWithImages>({
   }),
 })
 
-// const props = defineProps<{
-//   modelValue: EditProfileForm
-// }>()
-// const formData = reactive<EditProfileForm>({
-//   ...props.modelValue,
-//   isDatingActive: props.modelValue.isDatingActive || false,
-//   isSocialActive: props.modelValue.isSocialActive || false,
-// })
-// watch(
-//   () => props.modelValue,
-//   newValue => {
-//     Object.assign(formData, newValue)
-//   },
-//   { deep: true }
-// )
-
-const { datingWizard } = useOnboardingWizard(formData.value)
-const { current, isFirst, goToNext, goToPrevious, goTo, isCurrent } = useStepper(datingWizard)
-
-const handleNext = async () => {
-  if (current.value) {
-    current.value.isCompleted = true
-    if (current.value.flags === 'stage_one_end') {
-      console.log('Stage completed:', current.value.state)
-      if (formData.value.isDatingActive) {
-        goToNext()
-      } else {
-        isComplete.value = true
-        goTo('confirm')
-        // await saveProfile()
-      }
-    }
-    if (current.value.flags === 'stage_two_end') {
-      isComplete.value = true
-      goTo('confirm')
-      // await saveProfile()
-      console.log('Stage completed:', current.value.state)
-    }
-    if (current.value.state) {
-      goToNext()
-    } else {
-      console.warn('Current step is not valid')
-    }
-  } else {
-    console.warn('No current step found')
-  }
-}
+const { datingWizardSteps } = useWizardSteps(formData.value)
+const { current, isFirst, isLast, goToNext, goToPrevious, isCurrent } =
+  useStepper(datingWizardSteps)
 </script>
 
 <template>
-  <div>
-    <DatingSteps v-model="formData" :isCurrent />
-    <fieldset v-if="isCurrent('confirm')" class="position-relative">
-      <legend>{{ t('onboarding.wizard.all_set') }}</legend>
-      <p class="text-muted">
-        {{ t('onboarding.wizard.appear_message') }}
-      </p>
-    </fieldset>
-    <div class="mt-3">
+    <div class="d-flex justify-content-start align-items-center w-100 flex-grow-0">
+      <BackButton :show="!isFirst && !isLast" @click="goToPrevious" />
+    </div>
+
+    <div class="flex-grow-1 d-flex flex-column justify-content-center w-100">
+      <DatingSteps v-model="formData" :isCurrent />
+
+      <fieldset v-if="isCurrent('confirm')" class="position-relative py-5 px-3">
+        <legend>{{ t('onboarding.wizard.all_set') }}</legend>
+        <p class="text-muted">
+          {{ t('onboarding.wizard.appear_message') }}
+        </p>
+      </fieldset>
+    </div>
+    
+    <div class="mt-3 d-flex justify-content-end align-items-center">
+      <a
+        v-if="!isLast"
+        href="#"
+        @click="$emit('cancel')"
+        class="link-underline link-underline-opacity-0 me-4"
+      >
+        {{ 'Nevermind' }}
+      </a>
+
       <BButton
-        @click="handleNext"
+        v-if="!isLast"
+        @click="goToNext"
         :disabled="!current.state"
-        v-if="!isComplete"
         variant="primary"
         size="lg"
+        class="px-5"
         pill
-        class="w-100"
-        >{{ t('onboarding.wizard.next') }}</BButton
       >
+        {{ t('onboarding.wizard.next') }}
+        <IconArrowRight class="svg-icon" />
+      </BButton>
+      <BButton
+        v-else
+        @click="$emit('finished')"
+        :disabled="!current.state"
+        variant="primary"
+        size="lg"
+        class="px-5"
+        pill
+      >
+        {{ t('onboarding.wizard.finish') }}
+      </BButton>
     </div>
-      <div class="scribble position-absolute bottom-0 end-0 me-5 mb-2" v-if="isComplete">
-        <HelpScribble :text="t('onboarding.wizard.hint_click_next')" direction="se" />
-      </div>
-  </div>
+
+    <!-- <div class="scribble position-absolute bottom-0 end-0 me-5 mb-2" v-if="isLast">
+      <HelpScribble :text="t('onboarding.wizard.hint_click_next')" direction="se" />
+    </div> -->
 </template>

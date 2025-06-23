@@ -12,6 +12,7 @@ declare module 'vue' {
     AgeSelector: typeof import('./src/components/profiles/forms/AgeSelector.vue')['default']
     AppNotifier: typeof import('./src/components/AppNotifier.vue')['default']
     AuthIdComponent: typeof import('./src/components/auth/AuthIdComponent.vue')['default']
+    BackButton: typeof import('./src/components/profiles/onboarding/BackButton.vue')['default']
     BBadge: typeof import('bootstrap-vue-next/components/BBadge')['BBadge']
     BButton: typeof import('bootstrap-vue-next/components/BButton')['BButton']
     BCarouselSlide: typeof import('bootstrap-vue-next/components/BCarousel')['BCarouselSlide']

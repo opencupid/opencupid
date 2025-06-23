@@ -31,10 +31,24 @@ export const useFindProfilesStore = defineStore('findProfiles', {
   }),
 
   actions: {
-    async findProfiles(): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
+    async findSocial(): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
       try {
         this.isLoading = true // Set loading state
-        const res = await api.get<GetProfilesResponse>('/profiles')
+        const res = await api.get<GetProfilesResponse>('/discover/social')
+        const fetched = PublicProfileArraySchema.parse(res.data.profiles)
+        this.profileList = fetched // Update local state
+        return storeSuccess()
+      } catch (error: any) {
+        this.profileList = [] // Reset profile list on error
+        return storeError(error, 'Failed to fetch profiles')
+      } finally {
+        this.isLoading = false // Reset loading state
+      }
+    },
+    async findDating(): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
+      try {
+        this.isLoading = true // Set loading state
+        const res = await api.get<GetProfilesResponse>('/discover/dating')
         const fetched = PublicProfileArraySchema.parse(res.data.profiles)
         this.profileList = fetched // Update local state
         return storeSuccess()
