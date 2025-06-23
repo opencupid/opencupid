@@ -124,7 +124,7 @@ const authIdInputRef = ref<InstanceType<any> | null>(null)
         </BFormFloatingLabel>
       </div>
 
-      <div class="mb-3">
+      <div class="mb-3 user-select-none">
         <CaptchaWidget v-if="!props.isLoading" @update:payload="handleCaptchaUpdatePayload" />
       </div>
       <BButton

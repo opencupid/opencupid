@@ -123,7 +123,7 @@ function handleBackButton() {
       :keyboard="false"
     >
       <div class="w-100">
-        <div class="back-button">
+        <div class="back-button" v-if="!showConfirmScreen">
           <a class="btn btn-secondary-outline" @click="handleBackButton">
             <ChevronLeftIcon class="svg-icon" />
           </a>
