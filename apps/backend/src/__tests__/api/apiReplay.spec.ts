@@ -13,16 +13,20 @@ function sanitizeHeaders(headers: Record<string, string | undefined>) {
   return cleaned
 }
 
-describe('Replay captured API requests', async () => {
-  const files = (await fs.readdir(LOG_DIR)).filter(f => f.endsWith('.json'))
+let files: string[] = []
 
+beforeAll(async () => {
+  files = (await fs.readdir(LOG_DIR)).filter(f => f.endsWith('.json'))
+})
+
+describe('Replay captured API requests', () => {
   for (const file of files) {
     const fullPath = path.join(LOG_DIR, file)
-    const json = await fs.readFile(fullPath, 'utf-8')
-    console.log(`Replaying ${file}...`,json)
-    const data = JSON.parse(json) as RecordedRequest
 
-    it(`${data.method} ${data.url}`, async () => {
+    it(`should replay ${file}`, async () => {
+      const json = await fs.readFile(fullPath, 'utf-8')
+      console.log(`Replaying ${file}...`, json)
+      const data = JSON.parse(json) as RecordedRequest
       const res = await axios.request({
         method: data.method,
         url: BASE_URL + data.url,
