@@ -15,6 +15,7 @@
     "redis:flush": "docker compose exec redis redis-cli FLUSHALL",
     "redis:sessions": "docker compose exec redis  redis-cli KEYS '*'",
     "tags:translate": "ts-node -r tsconfig-paths/register  scripts/translate-tags.ts",
+    "db:psql": "docker compose exec db psql -U appuser app",
     "test": "vitest"
   },
   "prisma": {
