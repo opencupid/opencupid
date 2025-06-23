@@ -59,6 +59,25 @@ export const useProfileStore = defineStore('profile', {
     },
 
     // Update the current user's social profile
+    async createOwnerProfile(profileData: EditProfileForm): Promise<StoreVoidSuccess | StoreError> {
+      const update = ProfileFormToPayloadTransform.parse(profileData)
+
+      if (!update) return storeError(new Error('Invalid profile data'), 'Failed to update profile')
+
+      try {
+        this.isLoading = true // Set loading state
+        const res = await api.post<UpdateProfileResponse>('/profiles/me', update)
+        const updated = OwnerProfileSchema.parse(res.data.profile)
+        this.profile = updated
+        return storeSuccess()
+      } catch (error: any) {
+        return storeError(error, 'Failed to create profile')
+      } finally {
+        this.isLoading = false // Reset loading state
+      }
+    },
+
+    // Update the current user's social profile
     async updateOwnerProfile(profileData: EditProfileForm): Promise<StoreVoidSuccess | StoreError> {
       const update = ProfileFormToPayloadTransform.parse(profileData)
 

@@ -148,29 +148,42 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
   // })
 
   /**
-   * Update the current user's profile
+   * Create a new profile for the current user
+   * @description This route is used to create a new profile for the current user.
+   * It sets the onboarding flag to true, indicating that the user has completed the onboarding process.
    */
-  fastify.patch('/me', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-
+  fastify.post('/me', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const data = await validateBody(UpdateProfilePayloadSchema, req, reply) as UpdateProfilePayload
     if (!data) return
+
+    // check if the user already has an onboarded profile. Since we're allowing the setting of
+    // isDatingActive and isSocialActive here, we need to ensure that those flags can only be set once
+    // and later via the PATCH /scopes route which is rate limited
+    const existing = await profileService.getProfileByUserId(req.user.userId)
+    if(existing && existing.isOnboarded){
+      return sendError(reply, 403, 'Profile already exists and is onboarded')
+    }
     // @ts-expect-error - We are setting isOnboarded here, which is not part of CreateProfilePayload
     //  i'm not gonna bloody write a transform for this
     data.isOnboarded = true // Set the onboarding flag to true
     return updateProfile(data, req, reply)
   })
 
+  /**
+   * Update the current user's profile
+   */
+  fastify.patch('/me', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const data = await validateBody(UpdateProfilePayloadSchema, req, reply) as UpdateProfilePayload
+    // destructure to remove isSocialActive and isDatingActive
+    if (!data) return
+    const { isSocialActive, isDatingActive, ...rest } = data
+    return updateProfile(rest, req, reply)
+  })
 
   async function updateProfile(profileData: UpdateProfilePayload, req: FastifyRequest, reply: FastifyReply) {
     const user = await userService.getUserById(req.user.userId)
     if (!user) return sendUnauthorizedError(reply)
 
-    // // set flags on user object (these are used in authorization)
-    // if (profileData.isDatingActive) {
-    //   userService.addRole(user, 'user_dating')
-    // } else {
-    //   userService.removeRole(user, 'user_dating')
-    // }
     user.hasActiveProfile = [profileData.isDatingActive, profileData.isSocialActive].some(Boolean)
     const locale = req.session.lang
 
@@ -242,7 +255,7 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
   fastify.patch('/scopes', {
     onRequest: [fastify.authenticate],
     config: {
-      ...rateLimitConfig(fastify, '1 day', appConfig.RATE_LIMIT_PROFILE_SCOPES), 
+      ...rateLimitConfig(fastify, '1 day', appConfig.RATE_LIMIT_PROFILE_SCOPES),
     },
 
   }, async (req, reply) => {
@@ -251,6 +264,37 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
     if (!data) return
     return updateProfile(data, req, reply)
   })
+
+
+
+  /*
+   fastify.patch('/scopes', {
+    onRequest: [fastify.authenticate],
+    config: {
+      ...rateLimitConfig(fastify, '1 day', appConfig.RATE_LIMIT_PROFILE_SCOPES),
+    },
+
+  }, async (req, reply) => {
+
+    const data = await validateBody(UpdateProfileScopeSchemaPayload, req, reply) as UpdateProfileScopePayload
+    if (!data) return
+    const locale = req.session.lang
+
+    try {
+      const updated = await profileService.updateScopes(req.user.userId, data)
+      if (!updated) return sendError(reply, 404, 'Profile not found')
+      await req.deleteSession()
+
+      const profile = mapDbProfileToOwnerProfile(locale, updated)
+      const response: UpdateProfileResponse = { success: true, profile }
+      return reply.code(200).send(response)
+    } catch (error) {
+      fastify.log.error(error)
+      return sendError(reply, 500, 'Failed to update profile scopes')
+    }
+
+  })
+    */
 
 }
 
