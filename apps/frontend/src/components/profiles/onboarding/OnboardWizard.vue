@@ -8,11 +8,9 @@ import { type GenderType, type PronounsType } from '@zod/generated'
 import { type EditProfileForm } from '@zod/profile/profile.form'
 
 import LanguageSelector from '@/components/profiles/forms/LanguageSelector.vue'
-import GoalsSelector from '../components/profiles/onboarding/GoalsSelector.vue'
 import TagSelectComponent from '@/components/profiles/forms/TagSelectComponent.vue'
 import IntrotextEditor from '@/components/profiles/forms/IntrotextEditor.vue'
 import ImageEditor from '@/components/profiles/image/ImageEditor.vue'
-import PublicNameInput from '../components/profiles/forms/PublicNameInput.vue'
 import DatingSteps from '@/components/profiles/onboarding/DatingSteps.vue'
 import SpinnerComponent from '@/components/SpinnerComponent.vue'
 import ErrorComponent from '@/components/ErrorComponent.vue'
@@ -27,93 +25,38 @@ import fetchGeoIpInfo from '@/lib/geoip'
 import useEditFields from '@/components/profiles/composables/useEditFields'
 import { useWizardSteps } from '@/components/profiles/onboarding/useWizardSteps'
 import BackButton from '@/components/profiles/onboarding/BackButton.vue'
+import { useImageStore } from '@/store/imageStore'
 
 const { t } = useI18n()
 const profileStore = useProfileStore()
 const i18nStore = useI18nStore()
 
-const formData = reactive({
-  publicName: '',
-  birthday: null,
-  tags: [],
-  languages: [i18nStore.getLanguage()],
-  location: {
-    country: '',
-    cityId: '',
-    cityName: '',
-  } as LocationDTO,
-  gender: 'unspecified' as GenderType,
-  pronouns: 'unspecified' as PronounsType,
-  relationship: null,
-  hasKids: null,
-  introSocial: '',
-  introDating: '',
-  introSocialLocalized: {} as Record<string, string>,
-  introDatingLocalized: {} as Record<string, string>,
-  isDatingActive: false,
-  isSocialActive: true,
-} as EditProfileForm)
+const formData = defineModel<EditProfileForm>({
+  default: () => ({}),
+})
 
-const {
-  publicNameModel,
-  birthdayModel,
-  relationshipModel,
-  hasKidsModel,
-  introSocialModel,
-  introDatingModel,
-  genderPronounsModel,
-} = useEditFields(formData)
+const emit = defineEmits<{
+  (e: 'finished'): void
+}>()
 
-const { onboardingWizardSteps } = useWizardSteps(formData)
+const { onboardingWizardSteps } = useWizardSteps(formData.value)
 
-const { current, isFirst, goToNext, goToPrevious, goTo, isCurrent, next, index, previous, steps } =
+const { current, isLast, isFirst, goToNext, goToPrevious, goTo, isCurrent } =
   useStepper(onboardingWizardSteps)
 
-const isComplete = ref(false)
-const error = ref('')
-
-const saveProfile = async () => {
-  const res = await profileStore.updateOwnerProfile(formData)
-  if (!res.success) {
-    console.error('Failed to save profile:', res.message)
-    error.value = res.message || 'Failed to save profile'
-    return
-  }
-  console.log('Profile saved:', formData)
-}
-
-const handleNext = async () => {
-  if (current.value) {
-    if (current.value.flags === 'stage_one_end') {
-      if (formData.isDatingActive) {
-        goToNext()
-      } else {
-        isComplete.value = true
-        goTo('confirm')
-        await saveProfile()
-      }
-    } else if (current.value.flags === 'stage_two_end') {
-      isComplete.value = true
+const handleNext = () => {
+  if (current.value.flags === 'stage_one_end') {
+    if (!formData.value.isDatingActive) {
       goTo('confirm')
-      await saveProfile()
-      console.log('Stage completed:', current.value.state)
-    } else if (current.value.state) {
-      goToNext()
-    } else {
-      console.warn('Current step is not valid')
+      emit('finished')
+      return
     }
-  } else {
-    console.warn('No current step found')
   }
-}
+  goToNext()
 
-const router = useRouter()
-const handleGoToProfile = async () => {
-  router.push({ name: 'MyProfile' })
-}
-
-const handleGoToBrowse = () => {
-  router.push({ name: 'BrowseProfiles' })
+  if (isLast.value) {
+    emit('finished')
+  }
 }
 
 const handleSubmit = () => {
@@ -121,38 +64,19 @@ const handleSubmit = () => {
     handleNext()
   }
 }
-
-onMounted(async () => {
-  await profileStore.fetchOwnerProfile()
-  if (profileStore.profile?.isOnboarded) {
-    router.push({ name: 'MyProfile' })
-  }
-
-  if (formData.location.country) return
-  fetchGeoIpInfo()
-    .then(countryCode => {
-      if (countryCode) {
-        formData.location.country = countryCode
-      }
-    })
-    .catch(error => {
-      console.error('Failed to fetch GeoIP info:', error)
-    })
-})
 </script>
 
 <template>
-  <main class="container pb-5 h-100 d-flex flex-column justify-content-center align-items-center">
-    <!-- {{ formData }} -->
+  <div class="w-100 h-100 d-flex flex-column justify-content-center align-items-center">
     <div class="w-100 d-flex justify-content-between align-items-center">
-      <BackButton :show="!isFirst && !isComplete" @click="goToPrevious" />
+      <BackButton :show="!isFirst && !isLast" @click="goToPrevious" />
     </div>
 
     <div class="d-flex align-items-center flex-grow-1 col-12 justify-content-center">
       <BForm id="onboarding" novalidate class="w-100" @submit.prevent="handleSubmit">
         <fieldset v-if="isCurrent('publicname')" class="w-100">
           <legend>{{ t('onboarding.name_title') }}</legend>
-          <PublicNameInput v-model="publicNameModel" />
+          <PublicNameInput v-model="formData.publicName" />
         </fieldset>
 
         <fieldset v-else-if="isCurrent('location')">
@@ -183,7 +107,7 @@ onMounted(async () => {
         <fieldset v-else-if="isCurrent('introSocial')">
           <legend>About me...</legend>
           <IntrotextEditor
-            v-model="introSocialModel"
+            v-model="formData.introSocialLocalized"
             :languages="formData.languages"
             placeholder="Tell a bit about yourself"
           />
@@ -197,39 +121,14 @@ onMounted(async () => {
         <DatingSteps v-model="formData" :isCurrent></DatingSteps>
 
         <fieldset v-if="isCurrent('confirm')">
-          <div v-if="profileStore.isLoading" class="text-center">
-            <SpinnerComponent />
-          </div>
-          <div v-else>
-            <ErrorComponent v-if="error" :error="error" />
-            <div v-else>
-              <legend>Done!</legend>
-              <div v-if="!profileStore.isLoading" class="d-flex flex-column gap-3">
-                <BButton
-                  @click="handleGoToProfile"
-                  variant="success"
-                  size="lg"
-                  pill
-                  class="d-flex align-items-center justify-content-center"
-                  >Go to my profile</BButton
-                >
-                <BButton
-                  @click="handleGoToBrowse"
-                  variant="success"
-                  size="lg"
-                  pill
-                  class="d-flex align-items-center justify-content-center"
-                  >Go find people</BButton
-                >
-              </div>
-            </div>
-          </div>
+          <slot> </slot>
         </fieldset>
+
         <div class="w-100 text-center mt-4">
           <BButton
             @click="handleNext"
             :disabled="!current.state"
-            v-if="!isComplete"
+            v-if="!isLast"
             variant="primary"
             size="lg"
             pill
@@ -248,9 +147,7 @@ onMounted(async () => {
         </ul>
       </div> -->
     </div>
-
-    <!-- <pre>{{ formData }}</pre> -->
-  </main>
+  </div>
 </template>
 
 <style lang="scss" scoped>

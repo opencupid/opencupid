@@ -1,3 +1,4 @@
+import { useImageStore } from "@/store/imageStore"
 import { type EditProfileForm, EditProfileFormSchema } from "@zod/profile/profile.form"
 import { computed } from "vue"
 
@@ -7,6 +8,7 @@ import { computed } from "vue"
 
 export const useWizardSteps = (formData: EditProfileForm) => {
 
+const imageStore = useImageStore()
 
   const socialSteps = {
     publicname: {
@@ -36,7 +38,7 @@ export const useWizardSteps = (formData: EditProfileForm) => {
       flags: '',
     },
     photos: {
-      state: computed(() => true),
+      state: computed(() => imageStore.images.length >= 1),
       flags: 'stage_one_end',
     },
   }
@@ -59,7 +61,7 @@ export const useWizardSteps = (formData: EditProfileForm) => {
     },
     introDating: {
       state: computed(() => Object.values(formData.introDatingLocalized).some(val => val.trim() !== '')),
-      flags: 'stage_two_end',
+      flags: '',
     },
   }
 

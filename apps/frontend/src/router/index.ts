@@ -12,7 +12,7 @@ import MyProfile from '@/views/MyProfile.vue'
 import Messaging from '@/views/Messaging.vue'
 import PublicProfile from '@/views/PublicProfile.vue'
 import BrowseProfiles from '@/views/BrowseProfiles.vue'
-import OnboardWizard from '@/views/OnboardWizard.vue'
+import OnboardingView from '@/views/Onboarding.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -49,7 +49,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/onboarding',
     name: 'Onboarding',
-    component: OnboardWizard,
+    component: OnboardingView,
     meta: { requiresAuth: true },
   },
   {

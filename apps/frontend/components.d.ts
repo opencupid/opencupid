@@ -87,6 +87,7 @@ declare module 'vue' {
     MyProfileSecondaryNav: typeof import('./src/components/profiles/myprofile/MyProfileSecondaryNav.vue')['default']
     Navbar: typeof import('./src/components/nav/Navbar.vue')['default']
     NoProfileInfoCTA: typeof import('./src/components/profiles/NoProfileInfoCTA.vue')['default']
+    OnboardWizard: typeof import('./src/components/profiles/onboarding/OnboardWizard.vue')['default']
     OtpLoginComponent: typeof import('./src/components/auth/OtpLoginComponent.vue')['default']
     ProfileCardComponent: typeof import('./src/components/profiles/public/ProfileCardComponent.vue')['default']
     ProfileCardGrid: typeof import('./src/components/profiles/match/ProfileCardGrid.vue')['default']
