@@ -19,29 +19,31 @@ export const LOG_DIR = path.join(process.cwd(), 'src/__tests__/fixtures/apiRecor
 export default fp(async function apiRecorder(fastify) {
 
   fastify.addHook('onSend', async (req: FastifyRequest, reply: FastifyReply, payload: any) => {
-    try {
-      const record: RecordedRequest = {
-        method: req.method,
-        url: req.url,
-        query: req.query,
-        body: req.body,
-        headers: {
-          ...req.headers,
-          authorization: undefined,
-          cookie: undefined,
-        },
-        response: safeJson(payload),
-        status: reply.statusCode,
-        timestamp: new Date().toISOString(),
-      }
+    setImmediate(async () => {
+      try {
+        const record: RecordedRequest = {
+          method: req.method,
+          url: req.url,
+          query: req.query,
+          body: req.body,
+          headers: {
+            ...req.headers,
+            authorization: undefined,
+            cookie: undefined,
+          },
+          response: safeJson(payload),
+          status: reply.statusCode,
+          timestamp: new Date().toISOString(),
+        }
 
-      await fs.mkdir(LOG_DIR, { recursive: true })
-      const filename = `${req.method}_${req.url.replace(/\W+/g, '_')}_${Date.now()}.json`
-      const json = JSON.stringify(record, null, 2)
-      await fs.writeFile(path.join(LOG_DIR, filename), json)
-    } catch (err) {
-      fastify.log.warn('Failed to write API log:', err)
-    }
+        await fs.mkdir(LOG_DIR, { recursive: true })
+        const filename = `${req.method}_${req.url.replace(/\W+/g, '_')}_${Date.now()}.json`
+        const json = JSON.stringify(record, null, 2)
+        await fs.writeFile(path.join(LOG_DIR, filename), json)
+      } catch (err) {
+        fastify.log.warn('Failed to write API log:', err)
+      }
+    })
   })
 })
 
