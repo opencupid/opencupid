@@ -53,7 +53,6 @@ export function createRandomUser() {
     // roles: ['user'],
   }
 }
-let locale = ''
 
 
 let tags = [] as any[]
@@ -66,6 +65,7 @@ let cities = [] as any[]
 // const imageDir = './test-data/images'
 
 async function main() {
+  let locale = ''
   tags = await fetchTags()
   cities = await fetchCities()
   const users = faker.helpers.multiple(createRandomUser, {
@@ -164,7 +164,8 @@ async function main() {
       return
     }
 
-    // console.log(`Created user  with profile ID`, profile)
+    console.log(`Created user  with profile ID`)
+    console.dir(profile, { depth: null, colors: true })
 
 
     const imageUrls = []
