@@ -5,7 +5,7 @@ import { faker, SexType } from '@faker-js/faker'
 import cuid from 'cuid'
 import fs from 'fs'
 import path, { basename } from 'path'
-import { allFakers, allLocales } from '@faker-js/faker';
+import { allFakers } from '@faker-js/faker';
 
 
 import { downloadImage, randomBoolean } from './utils'
