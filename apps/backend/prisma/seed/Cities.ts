@@ -39,7 +39,7 @@ async function main() {
       isApproved: true,
     }))
 
-  const recordsToInsert = 100//toUpsert.length
+  const recordsToInsert = toUpsert.length
   // await prisma.$executeRawUnsafe(`DELETE FROM City`);
   // Upsert all in batches
   for (let i = 0; i < recordsToInsert; i += 10) {
