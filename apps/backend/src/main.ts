@@ -44,7 +44,6 @@ app.register(import('./plugins/websockets'))
 app.register(import('./plugins/prisma'))
 app.register(import('./plugins/session-auth'))
 app.register(import('./plugins/rate-limiter'))
-app.register(import('./plugins/rate-limiter'))
 
 if(process.env.RECORD_API === 'true') {
   app.register(import('./plugins/api-recorder'))
