@@ -1,3 +1,5 @@
+import { vi } from "vitest";
+
 export function createMockPrisma() {
   return {
     user: {
