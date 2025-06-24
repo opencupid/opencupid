@@ -1,10 +1,9 @@
 
+import { computed, reactive, readonly, ref, watch } from 'vue';
 import { useFindProfilesStore } from '@/store/findProfilesStore';
 import { useProfileStore } from '@/store/profileStore';
-import { OwnerProfile } from '@zod/profile/profile.dto';
-import { computed, reactive, readonly, ref, watch } from 'vue';
+import { type OwnerProfile } from '@zod/profile/profile.dto';
 import { type FindMatchViewModel } from './types';
-import { find } from 'remeda';
 
 
 export function useFindMatchViewModel() {

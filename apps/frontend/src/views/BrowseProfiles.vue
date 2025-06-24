@@ -1,28 +1,13 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { reactive, onMounted, computed, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useProfileStore } from '@/store/profileStore'
 
-import {
-  OwnerProfile,
-  type PublicProfile,
-  type PublicProfileWithContext,
-} from '@zod/profile/profile.dto'
 
-import LoadingComponent from '@/components/LoadingComponent.vue'
-import ProfileCardComponent from '@/components/profiles/public/ProfileCardComponent.vue'
-import NoProfileInfoCTAComponent from '@/components/profiles/NoProfileInfoCTA.vue'
 import InvitePeopleDialog from '@/components/profiles/public/InvitePeopleDialog.vue'
-import ErrorComponent from '@/components/ErrorComponent.vue'
-import IconSetting from '@/assets/icons/interface/setting.svg'
 import ErrorOverlay from '@/components/ErrorOverlay.vue'
 import DatingPreferencesForm from '@/components/profiles/match/DatingPreferencesForm.vue'
-import { useAgeFields } from '@/components/profiles/composables/useAgeFields'
-import ScopeViewToggler from '@/components/profiles/ScopeViewToggler.vue'
 import SecondaryNav from '@/components/profiles/match/SecondaryNav.vue'
-import { DatingPreferencesDTO, DatingPreferencesDTOSchema } from '@zod/match/datingPreference.dto'
-import { SocialSearchQuery, SocialSearchQuerySchema } from '@zod/match/socialSearch.dto'
-import { useFindProfilesStore } from '@/store/findProfilesStore'
 import ProfileCardGrid from '../components/profiles/match/ProfileCardGrid.vue'
 import { useFindMatchViewModel } from '@/components/profiles/match/useFindMatchViewModel'
 

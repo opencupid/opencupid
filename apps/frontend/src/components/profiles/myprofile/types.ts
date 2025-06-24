@@ -1,4 +1,4 @@
-import { ScopeSelectModel } from "../types";
+import { type ScopeSelectModel } from "../types";
 
 export type ViewState = ScopeSelectModel & {
   isEditable: boolean,

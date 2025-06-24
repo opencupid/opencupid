@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import ProfileCardComponent from '@/components/profiles/public/ProfileCardComponent.vue'
-import { PublicProfile } from '@zod/profile/profile.dto'
+import { type PublicProfile } from '@zod/profile/profile.dto'
 
 defineProps<{
   profiles: PublicProfile[]

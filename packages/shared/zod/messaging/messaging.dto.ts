@@ -1,8 +1,7 @@
-import { Prisma } from '@prisma/client'
 import { z } from 'zod'
 import { ProfileSummarySchema } from '../profile/profile.dto'
 import { ConversationParticipantSchema, ConversationSchema, MessageSchema } from '../generated'
-
+import { Prisma } from '@prisma/client'
 
 const conversationParticipantFields = {
   id: true,
