@@ -1,16 +1,22 @@
 import 'dotenv/config'
 
-import { faker } from '@faker-js/faker'
+// import { prisma } from '@/lib/prisma'
+import { faker, SexType } from '@faker-js/faker'
+import cuid from 'cuid'
 import fs from 'fs'
-import path from 'path'
-import { allFakers } from '@faker-js/faker';
+import path, { basename } from 'path'
+import { allFakers, allLocales } from '@faker-js/faker';
+// import { prisma } from '@/lib/prisma'
 
-import { randomBoolean } from './utils'
-import { Gender, HasKids, Prisma, PrismaClient, ProfileImage, Pronouns, RelationshipStatus } from '@prisma/client'
+import { downloadImage, randomBoolean } from './utils'
+import { User, GenderType, UserRoleType } from '@zod/generated'
+import { Gender, HasKids, Prisma, PrismaClient, Pronouns, RelationshipStatus } from '@prisma/client'
 
 import { ImageService } from '@/services/image.service'
 import { ProfileService } from '@/services/profile.service'
 import { UserService } from '@/services/user.service'
+import { appConfig } from '@shared/config/appconfig'
+import { UpdateProfilePayloadSchema } from '@zod/profile/profile.dto'
 
 const prisma = new PrismaClient({
   // log: ['query', 'error', 'warn'],
@@ -20,7 +26,7 @@ const imageService = ImageService.getInstance()
 const profileService = ProfileService.getInstance()
 const userService = UserService.getInstance()
 
-const howMany = 30
+const howMany = 1
 const languages = ['en', 'de', 'it', 'fr', 'es', 'hu', 'nl']
 const locales = {
   en: allFakers.en,
@@ -31,7 +37,13 @@ const locales = {
   hu: allFakers.hu,
   nl: allFakers.nl,
 }
-const genders = ['male', 'female', 'bigender']
+const genders = ['male', 'female']
+
+const testImagesDir = path.join(appConfig.MEDIA_UPLOAD_DIR, '/test-images')
+// faker.seed(123);
+// const prisma = new PrismaClient({
+//   log: ['query', 'error', 'warn'],
+// })
 
 export function createRandomUser() {
   return {
@@ -49,7 +61,12 @@ export function createRandomUser() {
 
 let tags = [] as any[]
 let cities = [] as any[]
-let files: string[] = []
+// const storagePrefix = generateStorageDirPrefix();
+// const uploadBaseDir = getUploadBaseDir();
+// const uploadDir = path.join(uploadBaseDir, storagePrefix)
+// createStorageDir(uploadDir);
+
+// const imageDir = './test-data/images'
 
 async function main() {
   let locale = ''
@@ -59,14 +76,14 @@ async function main() {
     count: howMany,
   })
 
-  await initializeImagePools()
-
+  loadImages()
   for (const user of users) {
     // Create the user in the database
     const createdUser = await prisma.user.create({
       data: user,
     })
 
+    // const profileData = createRandomProfile(createdUser)
     let isSocialActive = randomBoolean(0.7) // higher chance
     let isDatingActive = randomBoolean(0.3) // lower chance
 
@@ -75,8 +92,8 @@ async function main() {
       isSocialActive = true
     }
 
-    const gender = weightedRandom(genders, weights)
-
+    // const gender = faker.person.sex() as GenderType
+    const gender = faker.helpers.arrayElement(genders)
     const langs = faker.helpers.arrayElements(languages, faker.number.int({ min: 1, max: 3 }))
     locale = langs[0]
 
@@ -87,11 +104,17 @@ async function main() {
     const f = (allFakers as any)[locale as any]
 
     const baseProfile = {
+      // id: cuid(),
       user: { connect: { id: createdUser.id } },
+      // userId: createdUser.id,
       publicName: f.person.firstName(gender as any),
       country: city.country,
       cityName: city.name,
+      // cityId: city.id,
+      // city: { connect: { id: city.id } },
       languages: langs,
+      // tags: randomTags,
+      // introSocial: f.person.bio() + ' ' + f.lorem.sentences({ min: 1, max: 5 }),
 
       isDatingActive: isDatingActive,
       isSocialActive: isSocialActive,
@@ -105,6 +128,7 @@ async function main() {
     const datingProfile = isDatingActive
       ? {
         work: f.person.jobTitle(),
+        // introDating: f.person.bio() + ' ' + f.lorem.sentences({ min: 1, max: 6 }),
         birthday: faker.date.birthdate({ min: 18, max: 35, mode: 'age' }),
         gender: gender as Gender,
         relationship: faker.helpers.enumValue(RelationshipStatus),
@@ -114,6 +138,7 @@ async function main() {
       : {}
 
     const data: Prisma.ProfileCreateInput = {
+      // const data = {
       ...baseProfile,
       ...datingProfile,
       city: { connect: { id: city.id } },
@@ -127,17 +152,20 @@ async function main() {
           {
             locale,
             field: 'introDating',
-            value: (allFakers as any)[locale as any].person.bio() + ' ' + f.lorem.sentences(2, 5),
+            value: f.lorem.sentences(2, 5),
           },
           {
             locale,
             field: 'introSocial',
-            value: (allFakers as any)[locale as any].person.bio() + ' ' + f.lorem.sentences(1, 5),
+            value: f.lorem.sentences(1, 5),
           },
         ]),
       },
     }
 
+
+
+    // console.log(JSON.stringify(data, null, 2))
     let profile
     try {
       // console.dir(data, { depth: null, colors: true })
@@ -154,14 +182,29 @@ async function main() {
     }
 
     console.log(`Created profile  with profile ID ${profile.id} for user ${createdUser.email}`)
-    // console.dir(profile, { depth: null, colors: true })
+    console.dir(profile, { depth: null, colors: true })
 
-    const profileImage = await attachRandomImage(profile, gender, createdUser.id)
-    if (profileImage) {
-      await profileService.addProfileImage(profile.id, profileImage?.id)
-    }
-    else throw new Error(`Failed to attach image to profile ${profile.id}`)
-   
+    await attachRandomImage(profile, gender, createdUser.id)
+
+    // TODO attach a random image to profile
+    // images are located 
+//     ls test-data/images/avatar/
+// 0c7fwqk.female.jpg  m60xwo6.male.jpg	v89awrs.female.jpg
+// 0g9fw60.male.jpg    nj74w4v.male.jpg	vpcaw56.female.jpg
+// 0kbfwea.female.jpg  nrb4wg4.female.jpg	vxeaw58.male.jpg
+// 0ndfwie.female.jpg  ...
+
+
+    // pick one random image from the test-data/images/avatar/ directory
+    // don't use the same image more than once
+    // with the gender in profile.gender
+    // then attach to profile
+    //  const profileImage = await imageService.storeImage(
+    //     createdUser.id,
+    //     tmpFile,
+    //     faker.lorem.sentence({ min: 1, max: 2 })
+    //   )
+
 
   }
 }
@@ -196,39 +239,30 @@ async function fetchCities() {
   })
 }
 
-const avatarDir = path.resolve('test-data/images/avatar')
+const  avatarDir = path.resolve('test-data/images/avatar')
+let files:string[]
+async function loadImages(){
+   files = await fs.promises.readdir(avatarDir)
+}
 
 // Keep track of used images across runs
 const usedImages = new Set<string>()
-const genderImagePool = new Map<string, string[]>()
 
-async function initializeImagePools() {
-  const files = await fs.promises.readdir(avatarDir)
+async function attachRandomImage(profile: any, gender: string, userId: string) {
+  // const gender = profile.gender?.toLowerCase() ?? 'unspecified'
 
-  for (const file of files) {
-    const match = file.match(/.*\.(\w+)\.(jpeg|jpg)$/)
-    if (!match) continue
+  // Filter by gender
+  const matching = files.filter(file => {
+    return file.endsWith(`.${gender}.jpg`) && !usedImages.has(file)
+  })
 
-    const gender = match[1].toLowerCase()
-    if (!genderImagePool.has(gender)) {
-      genderImagePool.set(gender, [])
-    }
-
-    genderImagePool.get(gender)!.push(file)
-  }
-}
-
-async function attachRandomImage(profile: any, gender: string, userId: string): Promise<ProfileImage | null> {
-  const genderKey = gender.toLowerCase()
-  const pool = genderImagePool.get(genderKey)
-
-  if (!pool || pool.length === 0) {
-    console.warn(`⚠️ No available image left for gender "${genderKey}"`)
-    return null
+  if (matching.length === 0) {
+    console.warn(`⚠️ No unused avatar left for gender "${gender}"`)
+    return
   }
 
-  const file = pool.pop()! // guaranteed non-null
-  const tmpFile = path.join(avatarDir, file)
+  const randomFile = faker.helpers.arrayElement(matching)
+  const tmpFile = path.join(avatarDir, randomFile)
 
   try {
     const profileImage = await imageService.storeImage(
@@ -237,23 +271,9 @@ async function attachRandomImage(profile: any, gender: string, userId: string): 
       faker.lorem.sentence({ min: 1, max: 2 })
     )
 
-    console.log(`📸 Attached image ${file} to profile ${profile.id}`)
-    return profileImage
+    console.log(`Attached image ${randomFile} to profile ${profile.id}`)
+    usedImages.add(randomFile)
   } catch (err) {
-    console.error(`❌ Failed to store image ${file} for profile ${profile.id}`, err)
+    console.error(`❌ Failed to store image ${randomFile} for profile ${profile.id}`, err)
   }
-  return null
-}
-
-const weights = [0.45, 0.45, 0.1]
-
-function weightedRandom<T>(items: T[], weights: number[]): T {
-  const total = weights.reduce((sum, w) => sum + w, 0)
-  const r = Math.random() * total
-  let acc = 0
-  for (let i = 0; i < items.length; i++) {
-    acc += weights[i]
-    if (r < acc) return items[i]
-  }
-  return items[items.length - 1] // fallback
 }

@@ -180,7 +180,6 @@ model User {
 
 model Profile {
   id          String  @id @default(cuid())
-  slug        String  @unique
   publicName  String
   country     String  @default("")
   cityName    String  @default("")
@@ -258,7 +257,7 @@ model ProfileImage {
   userId    String
   user      User     @relation(fields: [userId], references: [id])
   profileId String?
-  profile   Profile? @relation("ProfileImages", fields: [profileId], references: [id])
+  profile   Profile? @relation("ProfileImages", fields: [profileId], references: [id], onDelete: Cascade)
 
   position    Int     @default(0) // order of images, 0 is the primary profile image
   altText     String  @default("")
@@ -283,10 +282,10 @@ model Conversation {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  profileA   Profile @relation("ProfileA", fields: [profileAId], references: [id])
+  profileA   Profile @relation("ProfileA", fields: [profileAId], references: [id], onDelete: Cascade)
   profileAId String
 
-  profileB   Profile @relation("ProfileB", fields: [profileBId], references: [id])
+  profileB   Profile @relation("ProfileB", fields: [profileBId], references: [id], onDelete: Cascade)
   profileBId String
 
   participants ConversationParticipant[]
@@ -301,10 +300,10 @@ model Conversation {
 
 model ConversationParticipant {
   id        String  @id @default(cuid())
-  profile   Profile @relation(fields: [profileId], references: [id])
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
   profileId String
 
-  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   conversationId String
 
   lastReadAt DateTime?
@@ -323,9 +322,9 @@ enum ConversationStatus {
 
 model Message {
   id             String       @id @default(cuid())
-  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   conversationId String
-  sender         Profile      @relation(fields: [senderId], references: [id])
+  sender         Profile      @relation(fields: [senderId], references: [id], onDelete: Cascade)
   senderId       String
   content        String
   createdAt      DateTime     @default(now())

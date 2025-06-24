@@ -334,12 +334,9 @@ export class ProfileService {
       return profile
     }
 
-    const slug = cuid.slug()
-
     return prisma.profile.create({
       data: {
         userId,
-        slug,
         publicName: '',
         introSocial: '',
       },
