@@ -3,26 +3,9 @@ import { prisma } from '../lib/prisma'
 import { Tag } from '@zod/generated'
 import { CreateTagInput } from '@zod/tag/tag.dto'
 import { TagWithTranslations } from '@zod/tag/tag.db'
+import { tagTranslationsInclude, translationWhereClause } from '@/db/includes/tagTranslationsInclude'
 
-function translationWhereClause(term: string, locale: string) {
-  return {
-    translations: {
-      some: {
-        locale,
-        name: {
-          contains: term,
-          mode: 'insensitive' as const,
-        },
-      },
-    },
-  }
-}
 
-function includeTranslations(locale: string) {
-  return {
-    translations: true
-  }
-}
 export class TagService {
   private static instance: TagService
 
@@ -67,7 +50,7 @@ export class TagService {
         isHidden: false,
         ...translationWhereClause(term, locale),
       },
-      include: includeTranslations(locale),
+      include: tagTranslationsInclude(locale),
       take: 20, // limit results for performance
       orderBy: {
         name: 'asc',
@@ -91,7 +74,7 @@ export class TagService {
           },
         },
       },
-      include: includeTranslations(locale),
+      include: tagTranslationsInclude(locale),
     })
     return tag
   }

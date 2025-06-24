@@ -23,7 +23,7 @@ beforeEach(async () => {
 describe('GET /search', () => {
   it('returns mapped tags', async () => {
     const handler = fastify.routes['GET /search']
-    mockTagService.search.mockResolvedValue([{ id: 'ck1234567890abcd12345678', name: 'Test', slug: 'test' , translations: [{ name: 'Test' }] }])
+    mockTagService.search.mockResolvedValue([{ id: 'ck1234567890abcd12345678', name: 'Test', slug: 'test' , translations: [{ name: 'Test', locale: 'en' }] }])
     await handler({ query: { q: 'te' }, user: { userId: 'u1' }, session: { lang: 'en' } } as any, reply as any)
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.tags[0].name).toBe('Test')

@@ -25,4 +25,3 @@ export function profileCompleteInclude() {
   return clause
 }
 
-
