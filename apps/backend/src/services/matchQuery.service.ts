@@ -40,15 +40,15 @@ export class MatchQueryService {
       return []
     }
 
-    const myAge = this.calculateAge(profile.birthday)
+    const myAge = calculateAge(profile.birthday)
 
     return prisma.profile.findMany({
       where: {
         id: { not: profile.id },
         isDatingActive: true,
         birthday: {
-          gte: this.subtractYears(new Date(), profile.prefAgeMax ?? 99), // oldest acceptable
-          lte: this.subtractYears(new Date(), profile.prefAgeMin ?? 18), // youngest acceptable
+          gte: subtractYears(new Date(), profile.prefAgeMax ?? 99), // oldest acceptable
+          lte: subtractYears(new Date(), profile.prefAgeMin ?? 18), // youngest acceptable
         },
         gender: { in: profile.prefGender },
         hasKids: { in: profile.prefKids },
@@ -63,21 +63,25 @@ export class MatchQueryService {
     })
   }
 
-  private calculateAge(birthday: Date): number {
-    const today = new Date()
-    let age = today.getFullYear() - birthday.getFullYear()
-    const m = today.getMonth() - birthday.getMonth()
-    if (m < 0 || (m === 0 && today.getDate() < birthday.getDate())) {
-      age--
-    }
-    return age
-  }
-
-  private subtractYears(date: Date, years: number): Date {
-    const d = new Date(date)
-    d.setFullYear(d.getFullYear() - years)
-    return d
-  }
 
   // Add methods for match query operations here
+}
+
+
+
+
+export function calculateAge(birthday: Date): number {
+  const today = new Date()
+  let age = today.getFullYear() - birthday.getFullYear()
+  const m = today.getMonth() - birthday.getMonth()
+  if (m < 0 || (m === 0 && today.getDate() < birthday.getDate())) {
+    age--
+  }
+  return age
+}
+
+export function subtractYears(date: Date, years: number): Date {
+  const d = new Date(date)
+  d.setFullYear(d.getFullYear() - years)
+  return d
 }
