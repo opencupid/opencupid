@@ -20,7 +20,7 @@ const matcherRoutes: FastifyPluginAsync = async fastify => {
     const locale = req.session.lang
 
     try {
-      const profiles = await matchQueryService.findSocialProfilesFor(locale, myProfileId)
+      const profiles = await matchQueryService.findSocialProfilesFor(myProfileId)
       const hasDatingPermission = req.session.profile.isDatingActive
       const mappedProfiles = profiles.map(p => mapProfileToPublic(p, hasDatingPermission, locale))
       const response: GetProfilesResponse = { success: true, profiles: mappedProfiles }
@@ -39,7 +39,7 @@ const matcherRoutes: FastifyPluginAsync = async fastify => {
     const locale = req.session.lang
 
     try {
-      const profiles = await matchQueryService.findMutualMatchesFor(locale, myProfileId)
+      const profiles = await matchQueryService.findMutualMatchesFor(myProfileId)
       const hasDatingPermission = req.session.profile.isDatingActive
       const mappedProfiles = profiles.map(p => mapProfileToPublic(p, hasDatingPermission, locale))
       const response: GetProfilesResponse = { success: true, profiles: mappedProfiles }
