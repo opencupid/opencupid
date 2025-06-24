@@ -1,130 +1,173 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { createMockPrisma } from '../../test-utils/prisma'
-import { profileCompleteInclude } from '../../db/includes/profileCompleteInclude'
+import { beforeAll, afterAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
-let service: any
-let mockPrisma: any
+process.env.DATABASE_URL =
+  process.env.DATABASE_URL_TEST ||
+  'postgresql://appuser:secret@localhost:5432/app_test'
+process.env.NODE_ENV = 'test'
+
+import { prisma } from '../../lib/prisma'
+import { MatchQueryService } from '../../services/matchQuery.service'
+
+let service: MatchQueryService
+
+beforeAll(async () => {
+  service = MatchQueryService.getInstance()
+  await prisma.$connect()
+})
+
+afterAll(async () => {
+  await prisma.$disconnect()
+})
 
 beforeEach(async () => {
-  vi.resetModules()
-  mockPrisma = createMockPrisma()
-  vi.doMock('../../lib/prisma', () => ({ prisma: mockPrisma }))
-  const module = await import('../../services/matchQuery.service')
-  ;(module.MatchQueryService as any).instance = undefined
-  service = module.MatchQueryService.getInstance()
+  await prisma.$transaction([
+    prisma.profileImage.deleteMany(),
+    prisma.profileTag.deleteMany(),
+    prisma.profile.deleteMany(),
+    prisma.user.deleteMany(),
+  ])
 })
 
 describe('MatchQueryService.findSocialProfilesFor', () => {
-  it('queries active profiles excluding given id', async () => {
-    mockPrisma.profile.findMany.mockResolvedValue([{ id: 'p2' }])
-    const res = await service.findSocialProfilesFor('en', 'p1')
-    expect(mockPrisma.profile.findMany).toHaveBeenCalledWith({
-      where: {
-        isActive: true,
-        id: { not: 'p1' },
-      },
-      include: {
-        ...profileCompleteInclude(),
-      },
+  it('returns only active profiles excluding the current one', async () => {
+    await prisma.user.createMany({
+      data: [
+        { id: 'u1', email: 'u1@test', isRegistrationConfirmed: true, hasActiveProfile: true, isActive: true, isOnboarded: true },
+        { id: 'u2', email: 'u2@test', isRegistrationConfirmed: true, hasActiveProfile: true, isActive: true, isOnboarded: true },
+        { id: 'u3', email: 'u3@test', isRegistrationConfirmed: true, hasActiveProfile: true, isActive: true, isOnboarded: true },
+      ],
     })
-    expect(res[0].id).toBe('p2')
+    await prisma.profile.create({
+      data: { id: 'p1', userId: 'u1', publicName: 'p1', country: 'US', cityName: '', isActive: true },
+    })
+    await prisma.profile.create({
+      data: { id: 'p2', userId: 'u2', publicName: 'p2', country: 'US', cityName: '', isActive: true },
+    })
+    await prisma.profile.create({
+      data: { id: 'p3', userId: 'u3', publicName: 'p3', country: 'US', cityName: '', isActive: false },
+    })
+
+    const res = await service.findSocialProfilesFor('en', 'p1')
+    expect(res.map(p => p.id)).toEqual(['p2'])
   })
 })
 
 describe('MatchQueryService.findMutualMatchesFor', () => {
   it('returns empty array when profile is missing', async () => {
-    mockPrisma.profile.findUnique.mockResolvedValue(null)
-    const res = await service.findMutualMatchesFor('en', 'p1')
+    const res = await service.findMutualMatchesFor('en', 'unknown')
     expect(res).toEqual([])
-    expect(mockPrisma.profile.findMany).not.toHaveBeenCalled()
   })
 
   it('returns empty array when profile lacks data', async () => {
-    mockPrisma.profile.findUnique.mockResolvedValue({ id: 'p1', isDatingActive: false })
+    await prisma.user.create({
+      data: { id: 'u1', email: 'u1@test', isRegistrationConfirmed: true, hasActiveProfile: true, isActive: true, isOnboarded: true },
+    })
+    await prisma.profile.create({
+      data: { id: 'p1', userId: 'u1', publicName: 'p1', country: 'US', cityName: '', isDatingActive: false },
+    })
     const res = await service.findMutualMatchesFor('en', 'p1')
     expect(res).toEqual([])
-    expect(mockPrisma.profile.findMany).not.toHaveBeenCalled()
   })
 
-  it('queries for mutual matches including prefKids when set', async () => {
+  it('returns mutual matches including prefKids when set', async () => {
     vi.setSystemTime(new Date('2024-05-20'))
-    const profile = {
-      id: 'p1',
-      birthday: new Date('1995-05-21'),
-      gender: 'male',
-      isDatingActive: true,
-      prefAgeMin: 25,
-      prefAgeMax: 35,
-      prefGender: ['female'],
-      prefKids: ['no'],
-      hasKids: 'yes' as const,
-    }
-    mockPrisma.profile.findUnique.mockResolvedValue(profile)
-    mockPrisma.profile.findMany.mockResolvedValue([{ id: 'p2' }])
+    await prisma.user.createMany({
+      data: [
+        { id: 'u1', email: 'u1@test', isRegistrationConfirmed: true, hasActiveProfile: true, isActive: true, isOnboarded: true },
+        { id: 'u2', email: 'u2@test', isRegistrationConfirmed: true, hasActiveProfile: true, isActive: true, isOnboarded: true },
+      ],
+    })
+
+    await prisma.profile.create({
+      data: {
+        id: 'p1',
+        userId: 'u1',
+        publicName: 'p1',
+        country: 'US',
+        cityName: '',
+        birthday: new Date('1995-05-21'),
+        gender: 'male',
+        isDatingActive: true,
+        isActive: true,
+        prefAgeMin: 25,
+        prefAgeMax: 35,
+        prefGender: ['female'],
+        prefKids: ['no'],
+        hasKids: 'yes',
+      },
+    })
+
+    await prisma.profile.create({
+      data: {
+        id: 'p2',
+        userId: 'u2',
+        publicName: 'p2',
+        country: 'US',
+        cityName: '',
+        birthday: new Date('1993-01-01'),
+        gender: 'female',
+        isDatingActive: true,
+        isActive: true,
+        prefAgeMin: 28,
+        prefAgeMax: 40,
+        prefGender: ['male'],
+        prefKids: ['yes', 'no'],
+        hasKids: 'no',
+      },
+    })
+
     const res = await service.findMutualMatchesFor('en', 'p1')
-
-    const today = new Date('2024-05-20')
-    const gte = new Date(today)
-    gte.setFullYear(gte.getFullYear() - 35)
-    const lte = new Date(today)
-    lte.setFullYear(lte.getFullYear() - 25)
-    const age = 28
-
-    expect(mockPrisma.profile.findMany).toHaveBeenCalledWith({
-      where: {
-        id: { not: 'p1' },
-        isDatingActive: true,
-        birthday: { gte, lte },
-        gender: { in: profile.prefGender },
-        hasKids: { in: profile.prefKids },
-        prefAgeMin: { lte: age },
-        prefAgeMax: { gte: age },
-        prefGender: { hasSome: [profile.gender] },
-        prefKids: { hasSome: [profile.hasKids] },
-      },
-      include: {
-        ...profileCompleteInclude(),
-      },
-    })
-    expect(res[0].id).toBe('p2')
+    expect(res.map(p => p.id)).toEqual(['p2'])
   })
 
-  it('omits prefKids when profile.hasKids is null', async () => {
+  it('omits prefKids filter when profile.hasKids is null', async () => {
     vi.setSystemTime(new Date('2024-05-20'))
-    const profile = {
-      id: 'p1',
-      birthday: new Date('1990-01-01'),
-      gender: 'female',
-      isDatingActive: true,
-      prefAgeMin: 20,
-      prefAgeMax: 30,
-      prefGender: ['male'],
-      prefKids: ['yes'],
-      hasKids: null,
-    }
-    mockPrisma.profile.findUnique.mockResolvedValue(profile)
-    mockPrisma.profile.findMany.mockResolvedValue([{ id: 'p3' }])
-    await service.findMutualMatchesFor('en', 'p1')
-    const age = 34
-    const gte = new Date('2024-05-20')
-    gte.setFullYear(gte.getFullYear() - 30)
-    const lte = new Date('2024-05-20')
-    lte.setFullYear(lte.getFullYear() - 20)
-    expect(mockPrisma.profile.findMany).toHaveBeenCalledWith({
-      where: {
-        id: { not: 'p1' },
+    await prisma.user.createMany({
+      data: [
+        { id: 'u3', email: 'u3@test', isRegistrationConfirmed: true, hasActiveProfile: true, isActive: true, isOnboarded: true },
+        { id: 'u4', email: 'u4@test', isRegistrationConfirmed: true, hasActiveProfile: true, isActive: true, isOnboarded: true },
+      ],
+    })
+
+    await prisma.profile.create({
+      data: {
+        id: 'p3',
+        userId: 'u3',
+        publicName: 'p3',
+        country: 'US',
+        cityName: '',
+        birthday: new Date('1990-01-01'),
+        gender: 'female',
         isDatingActive: true,
-        birthday: { gte, lte },
-        gender: { in: profile.prefGender },
-        hasKids: { in: profile.prefKids },
-        prefAgeMin: { lte: age },
-        prefAgeMax: { gte: age },
-        prefGender: { hasSome: [profile.gender] },
-        prefKids: undefined,
-      },
-      include: {
-        ...profileCompleteInclude(),
+        isActive: true,
+        prefAgeMin: 20,
+        prefAgeMax: 30,
+        prefGender: ['male'],
+        prefKids: ['yes', 'no'],
+        hasKids: null,
       },
     })
+
+    await prisma.profile.create({
+      data: {
+        id: 'p4',
+        userId: 'u4',
+        publicName: 'p4',
+        country: 'US',
+        cityName: '',
+        birthday: new Date('1995-01-01'),
+        gender: 'male',
+        isDatingActive: true,
+        isActive: true,
+        prefAgeMin: 20,
+        prefAgeMax: 35,
+        prefGender: ['female'],
+        prefKids: ['no'],
+        hasKids: 'no',
+      },
+    })
+
+    const res = await service.findMutualMatchesFor('en', 'p3')
+    expect(res.map(p => p.id)).toEqual(['p4'])
   })
 })
