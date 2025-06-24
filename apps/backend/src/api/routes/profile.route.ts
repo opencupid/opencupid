@@ -4,6 +4,7 @@ import { z } from 'zod'
 
 import {
   type UpdateProfilePayload,
+  type UpdateProfileScopePayload,
   UpdateProfilePayloadSchema,
   UpdateProfileScopeSchemaPayload
 } from '@zod/profile/profile.dto'
@@ -260,22 +261,6 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
 
   }, async (req, reply) => {
 
-    const data = await validateBody(UpdateProfileScopeSchemaPayload, req, reply) as UpdateProfilePayload
-    if (!data) return
-    return updateProfile(data, req, reply)
-  })
-
-
-
-  /*
-   fastify.patch('/scopes', {
-    onRequest: [fastify.authenticate],
-    config: {
-      ...rateLimitConfig(fastify, '1 day', appConfig.RATE_LIMIT_PROFILE_SCOPES),
-    },
-
-  }, async (req, reply) => {
-
     const data = await validateBody(UpdateProfileScopeSchemaPayload, req, reply) as UpdateProfileScopePayload
     if (!data) return
     const locale = req.session.lang
@@ -294,7 +279,8 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
     }
 
   })
-    */
+
+
 
 }
 

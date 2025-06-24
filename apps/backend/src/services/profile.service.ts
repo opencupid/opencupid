@@ -4,7 +4,8 @@ import { Prisma } from '@prisma/client'
 
 import { Profile, ProfileImage, ProfileTag } from '@zod/generated'
 import {
-  type UpdateProfilePayload
+  type UpdateProfilePayload,
+  type UpdateProfileScopePayload,
 } from '@zod/profile/profile.dto'
 import {
   DbProfileComplete,
@@ -197,6 +198,49 @@ export class ProfileService {
         })
       )
     )
+  }
+
+  async updateScopes(
+    userId: string,
+    scopes: UpdateProfileScopePayload,
+  ): Promise<DbProfileWithImages | null> {
+    const data: Prisma.ProfileUpdateInput = {}
+    if (typeof scopes.isDatingActive === 'boolean') {
+      data.isDatingActive = scopes.isDatingActive
+    }
+    if (typeof scopes.isSocialActive === 'boolean') {
+      data.isSocialActive = scopes.isSocialActive
+    }
+
+    try {
+      return await prisma.$transaction(async tx => {
+        const updated = await tx.profile.update({
+          where: { userId },
+          data,
+          include: {
+            ...profileCompleteInclude(),
+          },
+        })
+
+        await tx.user.update({
+          where: { id: userId },
+          data: {
+            hasActiveProfile:
+              updated.isDatingActive || updated.isSocialActive,
+          },
+        })
+
+        return updated
+      })
+    } catch (err) {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2025'
+      ) {
+        return null
+      }
+      throw err
+    }
   }
 
 
