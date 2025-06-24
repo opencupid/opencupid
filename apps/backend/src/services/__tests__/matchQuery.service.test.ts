@@ -1,108 +1,130 @@
-import { describe, it, expect, afterEach } from 'vitest';
-import { subtractYears } from '../matchQuery.service';
-import { calculateAge } from '../matchQuery.service';
-import { date } from 'zod';
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { createMockPrisma } from '../../test-utils/prisma'
+import { profileCompleteInclude } from '../../db/includes/profileCompleteInclude'
 
-describe('subtractYears', () => {
-  it('should subtract years from a date', () => {
-    const date = new Date('2020-06-15');
-    const result = subtractYears(date, 5);
-    expect(result.getFullYear()).toBe(2015);
-    expect(result.getMonth()).toBe(5); // June is month 5 (0-based)
-    expect(result.getDate()).toBe(15);
-  });
+let service: any
+let mockPrisma: any
 
-  it('should handle leap years correctly', () => {
-    const date = new Date('2020-02-29');
-    const result = subtractYears(date, 1);
-    // 2019 is not a leap year, so Feb 29 becomes Mar 1
-    expect(result.getFullYear()).toBe(2019);
-    expect(result.getMonth()).toBe(2); // March is month 2 (0-based)
-    expect(result.getDate()).toBe(1);
-  });
+beforeEach(async () => {
+  vi.resetModules()
+  mockPrisma = createMockPrisma()
+  vi.doMock('../../lib/prisma', () => ({ prisma: mockPrisma }))
+  const module = await import('../../services/matchQuery.service')
+  ;(module.MatchQueryService as any).instance = undefined
+  service = module.MatchQueryService.getInstance()
+})
 
-  it('should not mutate the original date', () => {
-    const date = new Date('2020-01-01');
-    subtractYears(date, 2);
-    expect(date.getFullYear()).toBe(2020);
-    expect(date.getMonth()).toBe(0);
-    expect(date.getDate()).toBe(1);
-  });
+describe('MatchQueryService.findSocialProfilesFor', () => {
+  it('queries active profiles excluding given id', async () => {
+    mockPrisma.profile.findMany.mockResolvedValue([{ id: 'p2' }])
+    const res = await service.findSocialProfilesFor('en', 'p1')
+    expect(mockPrisma.profile.findMany).toHaveBeenCalledWith({
+      where: {
+        isActive: true,
+        id: { not: 'p1' },
+      },
+      include: {
+        ...profileCompleteInclude(),
+      },
+    })
+    expect(res[0].id).toBe('p2')
+  })
+})
 
-  it('should handle subtracting zero years', () => {
-    const date = new Date(Date.UTC(2022, 11, 31)); // December 31, 2022
-    const result = subtractYears(date, 0);
-    expect(result.getFullYear()).toBe(2022);
-    expect(result.getMonth()).toBe(11); // December is month 11
-    expect(result.getDate()).toBe(31);
-  });
+describe('MatchQueryService.findMutualMatchesFor', () => {
+  it('returns empty array when profile is missing', async () => {
+    mockPrisma.profile.findUnique.mockResolvedValue(null)
+    const res = await service.findMutualMatchesFor('en', 'p1')
+    expect(res).toEqual([])
+    expect(mockPrisma.profile.findMany).not.toHaveBeenCalled()
+  })
 
-  describe('calculateAge', () => {
+  it('returns empty array when profile lacks data', async () => {
+    mockPrisma.profile.findUnique.mockResolvedValue({ id: 'p1', isDatingActive: false })
+    const res = await service.findMutualMatchesFor('en', 'p1')
+    expect(res).toEqual([])
+    expect(mockPrisma.profile.findMany).not.toHaveBeenCalled()
+  })
 
-    const originalDate = global.Date;
+  it('queries for mutual matches including prefKids when set', async () => {
+    vi.setSystemTime(new Date('2024-05-20'))
+    const profile = {
+      id: 'p1',
+      birthday: new Date('1995-05-21'),
+      gender: 'male',
+      isDatingActive: true,
+      prefAgeMin: 25,
+      prefAgeMax: 35,
+      prefGender: ['female'],
+      prefKids: ['no'],
+      hasKids: 'yes' as const,
+    }
+    mockPrisma.profile.findUnique.mockResolvedValue(profile)
+    mockPrisma.profile.findMany.mockResolvedValue([{ id: 'p2' }])
+    const res = await service.findMutualMatchesFor('en', 'p1')
 
-    const mockToday = (dateString: string) => {
-      const fixedDate = new Date(dateString);
-      global.Date = class extends Date {
-        constructor(...args: any[]) {
-          if (args.length === 0) {
-            return new originalDate(fixedDate);
-          }
-          // Call the parent Date constructor with the provided arguments
-          // @ts-expect-error sdf
-          return super(...args);
-        }
-        static now() {
-          return fixedDate.getTime();
-        }
-        static parse = originalDate.parse;
-        static UTC = originalDate.UTC;
-      } as unknown as DateConstructor;
-    };
+    const today = new Date('2024-05-20')
+    const gte = new Date(today)
+    gte.setFullYear(gte.getFullYear() - 35)
+    const lte = new Date(today)
+    lte.setFullYear(lte.getFullYear() - 25)
+    const age = 28
 
-    afterEach(() => {
-      global.Date = originalDate;
-    });
+    expect(mockPrisma.profile.findMany).toHaveBeenCalledWith({
+      where: {
+        id: { not: 'p1' },
+        isDatingActive: true,
+        birthday: { gte, lte },
+        gender: { in: profile.prefGender },
+        hasKids: { in: profile.prefKids },
+        prefAgeMin: { lte: age },
+        prefAgeMax: { gte: age },
+        prefGender: { hasSome: [profile.gender] },
+        prefKids: { hasSome: [profile.hasKids] },
+      },
+      include: {
+        ...profileCompleteInclude(),
+      },
+    })
+    expect(res[0].id).toBe('p2')
+  })
 
-    it('should calculate correct age when birthday has passed this year', () => {
-      mockToday('2024-06-15');
-      const birthday = new Date('2000-01-01');
-      expect(calculateAge(birthday)).toBe(24);
-    });
-
-    it('should calculate correct age when birthday is today', () => {
-      mockToday('2024-06-15');
-      const birthday = new Date('2000-06-15');
-      expect(calculateAge(birthday)).toBe(24);
-    });
-
-    it('should calculate correct age when birthday has not occurred yet this year', () => {
-      mockToday('2024-06-15');
-      const birthday = new Date('2000-12-31');
-      expect(calculateAge(birthday)).toBe(23);
-    });
-
-    it('should handle leap year birthdays', () => {
-      mockToday('2023-02-28');
-      const birthday = new Date('2000-02-29');
-      expect(calculateAge(birthday)).toBe(22);
-      mockToday('2024-02-29');
-      expect(calculateAge(birthday)).toBe(24);
-    });
-
-    it('should return 0 if birthday is today and this year', () => {
-      mockToday('2024-06-15');
-      const birthday = new Date('2024-06-15');
-      expect(calculateAge(birthday)).toBe(0);
-    });
-
-    it('should return negative age if birthday is in the future', () => {
-      mockToday('2024-06-15');
-      const birthday = new Date('2025-01-01');
-      expect(calculateAge(birthday)).toBe(-1);
-    });
-  });
-});
-
-
-
+  it('omits prefKids when profile.hasKids is null', async () => {
+    vi.setSystemTime(new Date('2024-05-20'))
+    const profile = {
+      id: 'p1',
+      birthday: new Date('1990-01-01'),
+      gender: 'female',
+      isDatingActive: true,
+      prefAgeMin: 20,
+      prefAgeMax: 30,
+      prefGender: ['male'],
+      prefKids: ['yes'],
+      hasKids: null,
+    }
+    mockPrisma.profile.findUnique.mockResolvedValue(profile)
+    mockPrisma.profile.findMany.mockResolvedValue([{ id: 'p3' }])
+    await service.findMutualMatchesFor('en', 'p1')
+    const age = 34
+    const gte = new Date('2024-05-20')
+    gte.setFullYear(gte.getFullYear() - 30)
+    const lte = new Date('2024-05-20')
+    lte.setFullYear(lte.getFullYear() - 20)
+    expect(mockPrisma.profile.findMany).toHaveBeenCalledWith({
+      where: {
+        id: { not: 'p1' },
+        isDatingActive: true,
+        birthday: { gte, lte },
+        gender: { in: profile.prefGender },
+        hasKids: { in: profile.prefKids },
+        prefAgeMin: { lte: age },
+        prefAgeMax: { gte: age },
+        prefGender: { hasSome: [profile.gender] },
+        prefKids: undefined,
+      },
+      include: {
+        ...profileCompleteInclude(),
+      },
+    })
+  })
+})
