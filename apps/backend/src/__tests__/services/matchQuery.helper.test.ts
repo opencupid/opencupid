@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { subtractYears } from '../matchQuery.service';
-import { calculateAge } from '../matchQuery.service';
+import { subtractYears } from '../../services/matchQuery.service';
+import { calculateAge } from '../../services/matchQuery.service';
 import { date } from 'zod';
 
 describe('subtractYears', () => {

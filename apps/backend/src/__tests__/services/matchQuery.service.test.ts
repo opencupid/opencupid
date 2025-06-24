@@ -17,10 +17,11 @@ beforeEach(async () => {
 describe('MatchQueryService.findSocialProfilesFor', () => {
   it('queries active profiles excluding given id', async () => {
     mockPrisma.profile.findMany.mockResolvedValue([{ id: 'p2' }])
-    const res = await service.findSocialProfilesFor('en', 'p1')
+    const res = await service.findSocialProfilesFor('p1')
     expect(mockPrisma.profile.findMany).toHaveBeenCalledWith({
       where: {
         isActive: true,
+        isSocialActive: true,
         id: { not: 'p1' },
       },
       include: {
@@ -34,14 +35,14 @@ describe('MatchQueryService.findSocialProfilesFor', () => {
 describe('MatchQueryService.findMutualMatchesFor', () => {
   it('returns empty array when profile is missing', async () => {
     mockPrisma.profile.findUnique.mockResolvedValue(null)
-    const res = await service.findMutualMatchesFor('en', 'p1')
+    const res = await service.findMutualMatchesFor('p1')
     expect(res).toEqual([])
     expect(mockPrisma.profile.findMany).not.toHaveBeenCalled()
   })
 
   it('returns empty array when profile lacks data', async () => {
     mockPrisma.profile.findUnique.mockResolvedValue({ id: 'p1', isDatingActive: false })
-    const res = await service.findMutualMatchesFor('en', 'p1')
+    const res = await service.findMutualMatchesFor('p1')
     expect(res).toEqual([])
     expect(mockPrisma.profile.findMany).not.toHaveBeenCalled()
   })
@@ -61,7 +62,7 @@ describe('MatchQueryService.findMutualMatchesFor', () => {
     }
     mockPrisma.profile.findUnique.mockResolvedValue(profile)
     mockPrisma.profile.findMany.mockResolvedValue([{ id: 'p2' }])
-    const res = await service.findMutualMatchesFor('en', 'p1')
+    const res = await service.findMutualMatchesFor('p1')
 
     const today = new Date('2024-05-20')
     const gte = new Date(today)
@@ -104,7 +105,7 @@ describe('MatchQueryService.findMutualMatchesFor', () => {
     }
     mockPrisma.profile.findUnique.mockResolvedValue(profile)
     mockPrisma.profile.findMany.mockResolvedValue([{ id: 'p3' }])
-    await service.findMutualMatchesFor('en', 'p1')
+    await service.findMutualMatchesFor('p1')
     const age = 34
     const gte = new Date('2024-05-20')
     gte.setFullYear(gte.getFullYear() - 30)

@@ -18,10 +18,11 @@ export class MatchQueryService {
     return MatchQueryService.instance;
   }
 
-  async findSocialProfilesFor(locale: string, profileId: string): Promise<DbProfileWithImages[]> {
+  async findSocialProfilesFor(profileId: string): Promise<DbProfileWithImages[]> {
     return await prisma.profile.findMany({
       where: {
         isActive: true,
+        isSocialActive: true,
         id: {
           not: profileId,
         },
@@ -32,7 +33,7 @@ export class MatchQueryService {
     })
   }
 
-  async findMutualMatchesFor(locale: string, profileId: string): Promise<DbProfileWithImages[]> {
+  async findMutualMatchesFor(profileId: string): Promise<DbProfileWithImages[]> {
     const profile = await prisma.profile.findUnique({
       where: { id: profileId },
     })
