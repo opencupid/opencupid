@@ -20,7 +20,8 @@
     "migrate": "turbo run migrate",
     "format": "turbo run format",
     "gen-certs": "openssl req -x509 -nodes -days 365   -newkey rsa:2048   -keyout certs/localhost-key.pem   -out certs/localhost-cert.pem   -subj \"/C=US/ST=Dev/L=Local/O=Dev/CN=localhost\"",
-    "mcp-server": "npx -y supergateway --stdio \"npx -y @modelcontextprotocol/server-filesystem $(pwd)\" --port 9999"
+    "mcp-server": "npx -y supergateway --stdio \"npx -y @modelcontextprotocol/server-filesystem $(pwd)\" --port 9999",
+    "test:integration": "turbo run test:integration"
   },
   "dependencies": {
     "zod": "^3.24.4"

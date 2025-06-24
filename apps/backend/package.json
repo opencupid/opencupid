@@ -17,7 +17,8 @@
     "tags:translate": "ts-node -r tsconfig-paths/register  scripts/translate-tags.ts",
     "db:psql": "docker compose exec db psql -U appuser app",
     "db:dump": "docker compose exec db pg_dump -U appuser app",
-    "test": "vitest"
+    "test": "vitest",
+    "test:integration": "vitest --config vitest.integration.config.ts"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"

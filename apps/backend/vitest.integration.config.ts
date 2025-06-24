@@ -5,7 +5,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     globals: true,
-    include: ['src/**/__tests__/**/*.ts'],
+    include: ['src/**/__integration_tests__/**/*.ts'],
     deps: { external: ['dotenv'] },
   },
   server: {

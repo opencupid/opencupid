@@ -4,7 +4,8 @@ import dotenvExpand from 'dotenv-expand'
 import { configSchema } from './schema'
 
 // This will walk up from the current directory to find the first `.env` file
-const envFile = findUpSync('.env')
+// If not found, fall back to `.env.example` so tests run with defaults
+const envFile = findUpSync('.env') ?? findUpSync('.env.example')
 if (!envFile) {
   console.error('Could not find a .env file')
   process.exit(1)
