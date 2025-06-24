@@ -31,7 +31,7 @@ const locales = {
   hu: allFakers.hu,
   nl: allFakers.nl,
 }
-const genders = ['male', 'female', 'bigender']
+const genders = ['male', 'female']
 
 export function createRandomUser() {
   return {
@@ -67,8 +67,8 @@ async function main() {
       data: user,
     })
 
-    let isSocialActive = randomBoolean(0.7) // higher chance
-    let isDatingActive = randomBoolean(0.3) // lower chance
+    let isSocialActive = randomBoolean(0.8) // higher chance
+    let isDatingActive = randomBoolean(0.6) // lower chance
 
     if (!isSocialActive && !isDatingActive) {
       // force one to be true — prefer isSocialActive
@@ -113,9 +113,17 @@ async function main() {
       }
       : {}
 
+      const datingPrefs = isDatingActive? {
+          prefAgeMin: 18,
+        prefAgeMax: 100,
+        prefGender: [],
+        prefKids: []
+      } : {}
+
     const data: Prisma.ProfileCreateInput = {
       ...baseProfile,
       ...datingProfile,
+      ...datingPrefs,
       city: { connect: { id: city.id } },
       tags: {
         create: randomTags.map(tag => ({
