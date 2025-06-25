@@ -128,3 +128,10 @@ export const UpdateProfileScopeSchemaPayload = z.object({
 }).partial()
 
 export type UpdateProfileScopePayload = z.infer<typeof UpdateProfileScopeSchemaPayload>
+
+
+export const BlockProfilePayloadSchema = z.object({
+  targetId: z.string().cuid(), // The profile being blocked/unblocked
+});
+
+export type BlockProfilePayload = z.infer<typeof BlockProfilePayloadSchema>;

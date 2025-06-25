@@ -1,5 +1,12 @@
 import { Prisma } from "@prisma/client"
 
+export function profileImageInclude() {
+  return {
+    profileImages: {
+      orderBy: { position: 'asc' },
+    },
+  } satisfies Prisma.ProfileInclude
+}
 
 export function profileCompleteInclude() {
   const clause = {

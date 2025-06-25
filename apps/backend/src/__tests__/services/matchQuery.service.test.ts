@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { createMockPrisma } from '../../test-utils/prisma'
 import { profileCompleteInclude } from '../../db/includes/profileCompleteInclude'
+import { block } from 'sharp'
+import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
 
 let service: any
 let mockPrisma: any
@@ -23,6 +25,7 @@ describe('MatchQueryService.findSocialProfilesFor', () => {
         isActive: true,
         isSocialActive: true,
         id: { not: 'p1' },
+        ...blocklistWhereClause('p1'), // Ensure blocklist is applied
       },
       include: {
         ...profileCompleteInclude(),
@@ -82,6 +85,7 @@ describe('MatchQueryService.findMutualMatchesFor', () => {
         prefAgeMax: { gte: age },
         prefGender: { hasSome: [profile.gender] },
         prefKids: { hasSome: [profile.hasKids] },
+        ...blocklistWhereClause('p1'), // Ensure blocklist is applied
       },
       include: {
         ...profileCompleteInclude(),
@@ -122,6 +126,7 @@ describe('MatchQueryService.findMutualMatchesFor', () => {
         prefAgeMax: { gte: age },
         prefGender: { hasSome: [profile.gender] },
         prefKids: undefined,
+        ...blocklistWhereClause('p1'), // Ensure blocklist is applied
       },
       include: {
         ...profileCompleteInclude(),

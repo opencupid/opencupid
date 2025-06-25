@@ -231,6 +231,9 @@ model Profile {
   Conversation Conversation[]
 
   localized LocalizedProfileField[]
+
+  blockedProfiles   Profile[] @relation("BlockedProfiles")
+  blockedByProfiles Profile[] @relation("BlockedProfiles")
 }
 
 model DatingPreferences {

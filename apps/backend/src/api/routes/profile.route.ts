@@ -5,6 +5,7 @@ import { z } from 'zod'
 import {
   type UpdateProfilePayload,
   type UpdateProfileScopePayload,
+  BlockProfilePayloadSchema,
   UpdateProfilePayloadSchema,
   UpdateProfileScopeSchemaPayload
 } from '@zod/profile/profile.dto'
@@ -19,6 +20,7 @@ import {
 } from '../helpers'
 import {
   mapDbProfileToOwnerProfile,
+  mapProfileSummary,
   mapProfileToDatingPreferences,
   mapProfileToPublic,
   mapProfileWithContext,
@@ -34,6 +36,7 @@ import type {
 } from '@shared/dto/apiResponse.dto'
 import { DatingPreferencesDTOSchema, UpdateDatingPreferencesPayloadSchema } from '@zod/match/datingPreference.dto'
 import { appConfig } from '@shared/config/appconfig'
+import { GetProfileSummariesResponse } from '@zod/apiResponse.dto'
 
 // Route params for ID lookups
 const IdLookupParamsSchema = z.object({
@@ -161,7 +164,7 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
     // isDatingActive and isSocialActive here, we need to ensure that those flags can only be set once
     // and later via the PATCH /scopes route which is rate limited
     const existing = await profileService.getProfileByUserId(req.user.userId)
-    if(existing && existing.isOnboarded){
+    if (existing && existing.isOnboarded) {
       return sendError(reply, 403, 'Profile already exists and is onboarded')
     }
     // @ts-expect-error - We are setting isOnboarded here, which is not part of CreateProfilePayload
@@ -281,7 +284,48 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
   })
 
 
+  fastify.post('/:id/block', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const profileId = req.session.profileId
+    try {
+      const { id } = IdLookupParamsSchema.parse(req.params);
+      if (profileId === id) {
+        return reply.code(400).send({ error: 'Cannot block yourself.' });
+      }
+      await profileService.blockProfile(profileId, id);
+      return reply.code(204).send();
 
+    } catch (error) {
+      fastify.log.error(error);
+      return sendError(reply, 500, 'Failed to block profile');
+    }
+  });
+
+  fastify.post('/:id/unblock', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const profileId = req.session.profileId
+    try {
+      const { id } = IdLookupParamsSchema.parse(req.params);
+      await profileService.unblockProfile(profileId, id);
+      return reply.code(204).send();
+
+    } catch (error) {
+      fastify.log.error(error);
+      return sendError(reply, 500, 'Failed to unblock profile');
+    }
+  });
+
+  fastify.get('/blocked', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const profileId = req.session.profileId
+    try {
+      const profiles = await profileService.getBlockedProfiles(profileId)
+      const mappedProfiles = profiles.map(p => mapProfileSummary(p)) // <-- error
+      const response: GetProfileSummariesResponse = { success: true, profiles: mappedProfiles }
+      return reply.code(200).send(response)
+
+    } catch (error) {
+      fastify.log.error(error);
+      return sendError(reply, 500, 'Failed to fetch blocked profiles');
+    }
+  });
 }
 
 export default profileRoutes

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { api } from '@/lib/api'
 import type {
   OwnerProfile,
+  ProfileSummary,
   PublicProfile,
   PublicProfileWithContext,
   UpdateProfileScopePayload,
@@ -26,6 +27,8 @@ import {
 } from './helpers'
 import { type EditProfileForm, ProfileFormToPayloadTransform, type EditFieldProfileFormWithImages } from '@zod/profile/profile.form'
 import { bus } from '@/lib/bus'
+import { type GetProfileSummariesResponse } from '@zod/apiResponse.dto'
+import z from 'zod'
 
 export const useProfileStore = defineStore('profile', {
   state: () => ({
@@ -163,6 +166,51 @@ export const useProfileStore = defineStore('profile', {
       }
     },
 
+    async blockProfile(targetId: string): Promise<StoreVoidSuccess | StoreError> {
+      try {
+        this.isLoading = true // Set loading state
+        const res = await api.post(`/profiles/${targetId}/block`)
+        if (res.status === 204) {
+          // Successfully blocked the profile
+          return storeSuccess()
+        } else {
+          return storeError(new Error('Failed to block profile'), 'Failed to block profile')
+        }
+      } catch (error: any) {
+        return storeError(error, 'Failed to block profile')
+      } finally {
+        this.isLoading = false // Reset loading state
+      }
+    },
+    async unblockProfile(targetId: string): Promise<StoreVoidSuccess | StoreError> {
+      try {
+        this.isLoading = true // Set loading state
+        const res = await api.post(`/profiles/${targetId}/unblock`)
+        if (res.status === 204) {
+          // Successfully unblocked the profile
+          return storeSuccess()
+        } else {
+          return storeError(new Error('Failed to unblock profile'), 'Failed to unblock profile')
+        }
+      } catch (error: any) {
+        return storeError(error, 'Failed to unblock profile')
+      } finally {
+        this.isLoading = false // Reset loading state
+      }
+    },
+
+    async listBlockedProfiles(): Promise<StoreResponse<ProfileSummary[]>> {
+      try {
+        this.isLoading = true // Set loading state
+        const res = await api.get<GetProfileSummariesResponse>('/profiles/blocked')
+        const fetched = z.array(PublicProfileWithContextSchema).parse(res.data.profiles)
+        return storeSuccess(fetched)
+      } catch (error: any) {
+        return storeError(error, 'Failed to fetch profile')
+      } finally {
+        this.isLoading = false // Reset loading state
+      }
+    },
 
     reset() {
       this.profile = null // Reset profile

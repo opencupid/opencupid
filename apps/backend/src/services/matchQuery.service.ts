@@ -1,8 +1,8 @@
-import { DbProfileComplete, DbProfileWithImages } from '@zod/profile/profile.db';
+import { DbProfileWithImages } from '@zod/profile/profile.db';
 import { prisma } from '../lib/prisma'
 
-import { type Profile, HasKidsType } from '@zod/generated';
 import { profileCompleteInclude } from '@/db/includes/profileCompleteInclude';
+import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause';
 
 
 export class MatchQueryService {
@@ -26,6 +26,7 @@ export class MatchQueryService {
         id: {
           not: profileId,
         },
+        ...blocklistWhereClause(profileId), // shared with blocklistWhereClause.ts
       },
       include: {
         ...profileCompleteInclude(),
@@ -44,19 +45,21 @@ export class MatchQueryService {
     const myAge = calculateAge(profile.birthday)
 
     const where = {
-        id: { not: profile.id },
-        isDatingActive: true,
-        birthday: {
-          gte: subtractYears(new Date(), profile.prefAgeMax ?? 99), // oldest acceptable
-          lte: subtractYears(new Date(), profile.prefAgeMin ?? 18), // youngest acceptable
-        },
-        gender: { in: profile.prefGender },
-        hasKids: { in: profile.prefKids },
-        prefAgeMin: { lte: myAge },
-        prefAgeMax: { gte: myAge },
-        prefGender: { hasSome: [profile.gender] },
-        prefKids: profile.hasKids ? { hasSome: [profile.hasKids] } : undefined,
-      }
+      id: { not: profile.id },
+      blockedProfiles: { none: { id: profileId } },    // I did not block them
+      blockedByProfiles: { none: { id: profileId } },  // They did not block me
+      isDatingActive: true,
+      birthday: {
+        gte: subtractYears(new Date(), profile.prefAgeMax ?? 99), // oldest acceptable
+        lte: subtractYears(new Date(), profile.prefAgeMin ?? 18), // youngest acceptable
+      },
+      gender: { in: profile.prefGender },
+      hasKids: { in: profile.prefKids },
+      prefAgeMin: { lte: myAge },
+      prefAgeMax: { gte: myAge },
+      prefGender: { hasSome: [profile.gender] },
+      prefKids: profile.hasKids ? { hasSome: [profile.hasKids] } : undefined,
+    }
 
     return prisma.profile.findMany({
       where: where,

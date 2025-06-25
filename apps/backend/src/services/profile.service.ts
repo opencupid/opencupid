@@ -13,7 +13,7 @@ import {
   DbProfileWithImages
 } from '@zod/profile/profile.db'
 import { mapToLocalizedUpserts } from '@/api/mappers/profile.mappers'
-import { profileCompleteInclude } from '@/db/includes/profileCompleteInclude'
+import { profileCompleteInclude, profileImageInclude } from '@/db/includes/profileCompleteInclude'
 
 
 const conversationWithMyProfileInclude = (myProfileId: string) => ({
@@ -81,7 +81,7 @@ export class ProfileService {
     })
   }
 
-  async getProfileCompleteById( profileId: string): Promise<DbProfileWithImages | null> {
+  async getProfileCompleteById(profileId: string): Promise<DbProfileWithImages | null> {
     return prisma.profile.findUnique({
       where: { id: profileId },
       include: {
@@ -286,71 +286,6 @@ export class ProfileService {
     })
   }
 
-  // async getAllProfiles(options?: {
-  //   active?: boolean,
-  //   includeImages?: boolean,
-  //   includeTags?: boolean,
-  //   limit?: number,
-  //   offset?: number
-  // }): Promise<ProfileComplete[]> {
-  //   return prisma.profile.findMany({
-  //     where: options?.active !== undefined ? { isActive: options.active } : undefined,
-  //     include: {
-  //       profileImage: options?.includeImages !== false,
-  //       otherImages: options?.includeImages !== false,
-  //       tags: options?.includeTags !== false
-  //     },
-  //     take: options?.limit,
-  //     skip: options?.offset
-  //   })
-  // }
-  /*
-    async searchProfiles(searchOptions: {
-      query?: string
-      tags?: string[]
-      active?: boolean
-      limit?: number
-      offset?: number
-    }): Promise<ProfileComplete[]> {
-      const { query, tags, active, limit, offset } = searchOptions
-  
-      // Build where clause dynamically
-      const where: Prisma.ProfileWhereInput = {}
-  
-      if (active !== undefined) {
-        where.isActive = active
-      }
-  
-      if (query) {
-        where.OR = [
-          { publicName: { contains: query, mode: 'insensitive' } },
-          { cityName: { contains: query, mode: 'insensitive' } },
-        ]
-      }
-  
-      if (tags && tags.length > 0) {
-        where.tags = {
-          some: {
-            tagId: { in: tags },
-          },
-        }
-      }
-  
-      return prisma.profile.findMany({
-        where,
-        include: {
-          profileImages: true,
-          tags: {
-            include: {
-              tag: true,
-            },
-          },
-        },
-        take: limit,
-        skip: offset,
-      })
-    }
-  */
   /**
    * Attach a tag to a profile.
    */
@@ -385,6 +320,83 @@ export class ProfileService {
         introSocial: '',
       },
     })
+  }
+
+  async blockProfile(blockingProfileId: string, blockedProfileId: string) {
+    return prisma.profile.update({
+      where: { id: blockingProfileId },
+      data: {
+        blockedProfiles: {
+          connect: { id: blockedProfileId }
+        }
+      }
+    });
+  }
+
+  async unblockProfile(blockingProfileId: string, blockedProfileId: string) {
+    return prisma.profile.update({
+      where: { id: blockingProfileId },
+      data: {
+        blockedProfiles: {
+          disconnect: { id: blockedProfileId }
+        }
+      }
+    });
+  }
+
+  async getVisibleProfiles(forProfileId: string) {
+    const blockedIds = await prisma.profile.findUnique({
+      where: { id: forProfileId },
+      select: { blockedProfiles: { select: { id: true } } }
+    });
+
+    return prisma.profile.findMany({
+      where: {
+        id: {
+          notIn: blockedIds?.blockedProfiles.map(p => p.id) || []
+        },
+        blockedByProfiles: {
+          none: {
+            id: forProfileId
+          }
+        }
+      }
+    });
+  }
+
+  async canInteract(profileAId: string, profileBId: string): Promise<boolean> {
+    const [aBlocksB, bBlocksA] = await Promise.all([
+      prisma.profile.findFirst({
+        where: {
+          id: profileAId,
+          blockedProfiles: { some: { id: profileBId } }
+        }
+      }),
+      prisma.profile.findFirst({
+        where: {
+          id: profileBId,
+          blockedProfiles: { some: { id: profileAId } }
+        }
+      })
+    ]);
+
+    return !(aBlocksB || bBlocksA);
+  }
+
+  async getBlockedProfiles(profileId: string): Promise<{ id: string; publicName: string; profileImages: ProfileImage[] }[]> {
+    const result = await prisma.profile.findUnique({
+      where: { id: profileId },
+      include: {
+        blockedProfiles: {
+          include: {
+            profileImages: {
+              orderBy: { position: 'asc' },
+            },
+          },
+        },
+      },
+    });
+    return result?.blockedProfiles ?? [];
   }
 
   // async findProfilesFor(locale: string, profileId: string): Promise<DbProfileComplete[]> {

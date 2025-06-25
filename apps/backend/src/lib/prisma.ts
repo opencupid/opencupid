@@ -9,7 +9,6 @@ const logLevels: Prisma.LogLevel[] =
 
 // In development, use global to prevent multiple instances during hot reloading
 declare global {
-  // eslint-disable-next-line no-var
   var prisma: PrismaClient | undefined
 }
 

@@ -34,6 +34,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Generate Prisma
         run: pnpm --filter backend exec npx prisma generate
+      - name: Run lint
+        run: pnpm lint
       - name: Initialize test database
         run: pnpm --filter backend exec npx prisma db push
         env:

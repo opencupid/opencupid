@@ -4,11 +4,11 @@ import { useRouter } from 'vue-router'
 import type { PublicProfileWithContext } from '@zod/profile/profile.dto'
 import { useProfileStore } from '@/store/profileStore'
 
-import LoadingComponent from '@/components/LoadingComponent.vue'
 import PublicProfileComponent from '@/components/profiles/public/PublicProfileComponent.vue'
 
-import IconArrowSingleLeft from '@/assets/icons/arrows/arrow-single-left.svg'
-import IconMenuDotsVert from '@/assets/icons/interface/menu-dots-vert.svg'
+import BlockProfileDialog from '../components/profiles/public/BlockProfileDialog.vue'
+import PublicProfileSecondaryNav from '../components/profiles/public/PublicProfileSecondaryNav.vue'
+import { useToast } from 'vue-toastification'
 
 const router = useRouter()
 const profileStore = useProfileStore()
@@ -21,6 +21,7 @@ const props = defineProps<{
 // Local state
 const profile = reactive<PublicProfileWithContext>({} as PublicProfileWithContext)
 const error = ref<string | null>(null)
+const showModal = ref(false)
 
 onMounted(async () => {
   const profileId = props.id
@@ -38,25 +39,48 @@ const handleOpenConversation = (conversationId: string) => {
     params: { conversationId },
   })
 }
+const toast = useToast()
+
+const handleBlock = async () => {
+  const res = await profileStore.blockProfile(profile.id)
+  showModal.value = false
+  if (res.success) {
+    toast('Successfully blocked profile')
+    router.back()
+  } else {
+    error.value = res.message
+  }
+}
 </script>
 
 <template>
   <main class="container">
-    <div class="my-2">
-      <a class="btn btn-secondary-outline" @click="router.back()">
-        <IconArrowSingleLeft class="svg-icon" />
-      </a>
-    </div>
-    <!-- <BPlaceholderWrapper :loading="profileStore.isLoading">
+    <div class="row justify-content-center">
+      <div class="col-12 col-md-8 mx-auto">
+        <div class="my-2">
+          <PublicProfileSecondaryNav
+            @intent:back="$router.back()"
+            @intent:block="showModal = true"
+          />
+        </div>
+        <!-- <BPlaceholderWrapper :loading="profileStore.isLoading">
       <template #loading>
         <BPlaceholderCard class="w-100 opacity-50" img-height="250" animation="glow" no-button />
       </template> -->
 
-      <PublicProfileComponent
-        :profile
-        :isLoading="profileStore.isLoading"
-        @intent:conversation:open="handleOpenConversation"
-      />
-    <!-- </BPlaceholderWrapper> -->
+        <PublicProfileComponent
+          :profile
+          :isLoading="profileStore.isLoading"
+          @intent:conversation:open="handleOpenConversation"
+        />
+        <!-- </BPlaceholderWrapper> -->
+      </div>
+    </div>
+    <BlockProfileDialog
+      :profile="profile"
+      v-model="showModal"
+      :loading="profileStore.isLoading"
+      @block="handleBlock"
+    />
   </main>
 </template>
