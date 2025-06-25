@@ -317,7 +317,7 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
     const profileId = req.session.profileId
     try {
       const profiles = await profileService.getBlockedProfiles(profileId)
-      const mappedProfiles = profiles.map(p => mapProfileSummary(p)) // <-- error
+      const mappedProfiles = profiles.map(p => mapProfileSummary(p))
       const response: GetProfileSummariesResponse = { success: true, profiles: mappedProfiles }
       return reply.code(200).send(response)
 
