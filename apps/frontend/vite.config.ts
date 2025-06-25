@@ -59,13 +59,21 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
           },
         },
       }),
-      visualizer({
-        open: true,
-        gzipSize: true,
-        emitFile: true,
-        filename: "stats.html",
-        template: 'sunburst'
-      }) as PluginOption,
+      ...(mode === 'development'
+        ? [visualizer({
+            open: true,
+            gzipSize: true,
+            emitFile: true,
+            filename: "stats.html",
+            template: 'sunburst'
+          }) as PluginOption]
+        : [visualizer({
+            open: false,
+            gzipSize: true,
+            emitFile: true,
+            filename: "stats.html",
+            template: 'sunburst'
+          }) as PluginOption]),
       vueJsx(),
       vueDevTools(),
       svgLoader(),
