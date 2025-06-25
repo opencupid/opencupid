@@ -46,8 +46,7 @@ export class MatchQueryService {
 
     const where = {
       id: { not: profile.id },
-      blockedProfiles: { none: { id: profileId } },    // I did not block them
-      blockedByProfiles: { none: { id: profileId } },  // They did not block me
+      ...blocklistWhereClause(profileId),
       isDatingActive: true,
       birthday: {
         gte: subtractYears(new Date(), profile.prefAgeMax ?? 99), // oldest acceptable

@@ -10,7 +10,7 @@ defineEmits<{
 
 <template>
   <div class="d-flex justify-content-end align-items-center w-100">
-    <ul pills class="nav nav-pills w-100 d-flex align-items-center">
+    <ul class="nav nav-pills w-100 d-flex align-items-center">
       <li class="col-2">
         <a class="btn btn-secondary-outline" @click="$emit('intent:back')">
           <IconArrowSingleLeft class="svg-icon" />

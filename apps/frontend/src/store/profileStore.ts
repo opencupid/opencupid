@@ -9,6 +9,7 @@ import type {
 } from '@zod/profile/profile.dto'
 import {
   OwnerProfileSchema,
+  ProfileSummarySchema,
   PublicProfileSchema,
   PublicProfileWithContextSchema,
   UpdateProfileScopeSchemaPayload,
@@ -203,7 +204,7 @@ export const useProfileStore = defineStore('profile', {
       try {
         this.isLoading = true // Set loading state
         const res = await api.get<GetProfileSummariesResponse>('/profiles/blocked')
-        const fetched = z.array(PublicProfileWithContextSchema).parse(res.data.profiles)
+        const fetched = z.array(ProfileSummarySchema).parse(res.data.profiles)
         return storeSuccess(fetched)
       } catch (error: any) {
         return storeError(error, 'Failed to fetch profile')
