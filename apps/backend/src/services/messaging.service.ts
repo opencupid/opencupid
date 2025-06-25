@@ -5,6 +5,7 @@ import type {
   MessageInConversation,
 } from '@zod/messaging/messaging.dto'
 import { Conversation, Message } from '@zod/generated'
+import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
 
 const conversationSummaryInclude = {
   conversation: {
@@ -68,7 +69,20 @@ export class MessageService {
             },
           },
         ],
+        conversation: {
+          participants: {
+            some: {
+              profile: {
+                id: {
+                  not: profileId, // the other participant
+                },
+                ...blocklistWhereClause(profileId), // ensure the other did not block me and I did not block them
+              },
+            },
+          },
+        },
       },
+
       include: conversationSummaryInclude,
       orderBy: {
         conversation: { updatedAt: 'desc' },
