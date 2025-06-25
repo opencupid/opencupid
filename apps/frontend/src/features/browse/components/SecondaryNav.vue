@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import IconSetting from '@/assets/icons/interface/setting.svg'
-import ScopeViewToggler from '../ScopeViewToggler.vue'
+import ScopeViewToggler from '@/components/profiles/ScopeViewToggler.vue'
 import { type ProfileScope } from '@zod/profile/profile.dto'
 
 const currentScope = defineModel<ProfileScope | null>()

@@ -3,15 +3,15 @@ import { useRouter } from 'vue-router'
 import { onMounted, ref, watch } from 'vue'
 import { useProfileStore } from '@/store/profileStore'
 
-import { useFindMatchViewModel } from '@/components/profiles/match/useFindMatchViewModel'
+import { useFindMatchViewModel } from '@/features/browse/composables/useFindMatchViewModel'
 
 import ErrorOverlay from '@/components/ErrorOverlay.vue'
-import DatingPreferencesForm from '@/components/profiles/match/DatingPreferencesForm.vue'
-import SecondaryNav from '@/components/profiles/match/SecondaryNav.vue'
-import ProfileCardGrid from '../components/profiles/match/ProfileCardGrid.vue'
-import NoAccessCTA from '@/components/profiles/match/NoAccessCTA.vue'
-import NoResultsCTA from '@/components/profiles/match/NoResultsCTA.vue'
-import PlaceholdersGrid from '@/components/profiles/match/PlaceholdersGrid.vue'
+import DatingPreferencesForm from '@/features/browse/components/DatingPreferencesForm.vue'
+import SecondaryNav from '@/features/browse/components/SecondaryNav.vue'
+import ProfileCardGrid from '@/features/browse/components/ProfileCardGrid.vue'
+import NoAccessCTA from '@/features/browse/components/NoAccessCTA.vue'
+import NoResultsCTA from '@/features/browse/components/NoResultsCTA.vue'
+import PlaceholdersGrid from '@/features/browse/components/PlaceholdersGrid.vue'
 import { type ProfileScope, ProfileScopeSchema } from '@zod/profile/profile.dto'
 
 const router = useRouter()

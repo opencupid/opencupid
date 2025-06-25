@@ -1,6 +1,6 @@
 
 import { computed, reactive, readonly, ref, watch } from 'vue';
-import { useFindProfilesStore } from '@/store/findProfilesStore';
+import { useFindProfilesStore } from '@/features/browse/stores/findProfilesStore';
 import { useProfileStore } from '@/store/profileStore';
 import type { ProfileScope,  OwnerProfile } from '@zod/profile/profile.dto';
 

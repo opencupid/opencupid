@@ -17,7 +17,7 @@ import {
   type StoreVoidSuccess,
   type StoreResponse,
   type StoreError
-} from './helpers'
+} from '@/store/helpers'
 import { type DatingPreferencesDTO, DatingPreferencesDTOSchema } from '@zod/match/datingPreference.dto'
 import type { SocialSearchQuery } from '@zod/match/socialSearch.dto'
 import type { ProfileScope, OwnerProfile } from '@zod/profile/profile.dto';

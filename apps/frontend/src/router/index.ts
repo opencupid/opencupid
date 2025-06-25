@@ -9,7 +9,7 @@ import UserHome from '@/views/UserHome.vue'
 import Settings from '@/features/settings/views/Settings.vue'
 import MyProfile from '@/views/MyProfile.vue'
 import PublicProfile from '@/views/PublicProfile.vue'
-import BrowseProfiles from '@/views/BrowseProfiles.vue'
+import BrowseProfiles from '@/features/browse/views/BrowseProfiles.vue'
 import OnboardingView from '@/features/onboarding/views/Onboarding.vue'
 
 const routes: Array<RouteRecordRaw> = [

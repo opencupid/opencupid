@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { HasKidsType } from '@zod/generated'
 import { useI18n } from 'vue-i18n'
-import { useEnumOptions } from '../composables/useEnumOptions'
+import { useEnumOptions } from '@/components/profiles/composables/useEnumOptions'
 
 // i18n
 const { t } = useI18n()

@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import type { PublicProfile } from '@zod/profile/profile.dto'
 import ProfileImage from '@/features/images/components/ProfileImage.vue'
-import DatingIcon from '../display/DatingIcon.vue'
-import LanguageList from '../display/LanguageList.vue'
-import TagList from '../display/TagList.vue'
-import LocationLabel from '../display/LocationLabel.vue'
+import DatingIcon from '@/components/profiles/display/DatingIcon.vue'
+import LanguageList from '@/components/profiles/display/LanguageList.vue'
+import TagList from '@/components/profiles/display/TagList.vue'
+import LocationLabel from '@/components/profiles/display/LocationLabel.vue'
 // Props & Emits
 defineProps<{
   profile: PublicProfile
