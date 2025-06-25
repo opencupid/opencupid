@@ -1,10 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { createMockPrisma } from '../../test-utils/prisma'
 
 let service: any
 let mockPrisma: any
 
 beforeEach(async () => {
-  mockPrisma = {}
+  vi.resetModules()
+  mockPrisma = createMockPrisma()
   vi.doMock('../../lib/prisma', () => ({ prisma: mockPrisma }))
   const module = await import('../../services/messaging.service')
   ;(module.MessageService as any).instance = undefined
@@ -45,3 +47,39 @@ describe('MessageService.canSendMessageInConversation', () => {
   })
 })
 
+
+describe('MessageService.getConversationSummary', () => {
+  it('queries prisma with correct args', async () => {
+    mockPrisma.conversationParticipant.findFirst.mockResolvedValue({ id: 'cp' })
+    const res = await service.getConversationSummary('c1', 'p1')
+    expect(mockPrisma.conversationParticipant.findFirst).toHaveBeenCalled()
+    const args = mockPrisma.conversationParticipant.findFirst.mock.calls[0][0]
+    expect(args.where).toEqual({ conversationId: 'c1', profileId: 'p1' })
+    expect(res.id).toBe('cp')
+  })
+})
+
+describe('MessageService.listMessagesForConversation', () => {
+  it('fetches messages ordered by creation', async () => {
+    mockPrisma.message.findMany.mockResolvedValue([])
+    await service.listMessagesForConversation('c1')
+    expect(mockPrisma.message.findMany).toHaveBeenCalledWith({
+      where: { conversationId: 'c1' },
+      include: {
+        sender: { include: { profileImages: { where: { position: 0 } } } },
+      },
+      orderBy: { createdAt: 'asc' },
+    })
+  })
+})
+
+describe('MessageService.markConversationRead', () => {
+  it('updates participant lastReadAt', async () => {
+    mockPrisma.conversationParticipant.update.mockResolvedValue({ id: 'cp' })
+    await service.markConversationRead('c1', 'p1')
+    expect(mockPrisma.conversationParticipant.update).toHaveBeenCalledWith({
+      where: { profileId_conversationId: { profileId: 'p1', conversationId: 'c1' } },
+      data: { lastReadAt: expect.any(Date) },
+    })
+  })
+})
