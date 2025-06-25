@@ -19,7 +19,8 @@ import LocationSelector from '../forms/LocationSelector.vue'
 import LanguageSelector from '@/components/profiles/forms/LanguageSelector.vue'
 import TagSelectComponent from '@/components/profiles/forms/TagSelectComponent.vue'
 import IntrotextEditor from '@/components/profiles/forms/IntrotextEditor.vue'
-import ImageEditor from '../image/ImageEditor.vue'
+
+import ImageEditor from '@/features/images/components/ImageEditor.vue'
 
 const { t } = useI18n()
 

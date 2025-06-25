@@ -4,7 +4,7 @@ import { ref } from 'vue'
 import { BCarousel } from 'bootstrap-vue-next'
 import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 import IconCross from '@/assets/icons/interface/cross.svg'
-import ImageTag from '../image/ImageTag.vue'
+import ImageTag from '@/features/images/components/ImageTag.vue'
 
 const props = defineProps<{
   profile: PublicProfileWithContext

@@ -7,12 +7,12 @@ import IconSearch from '@/assets/icons/interface/search.svg'
 import IconUser from '@/assets/icons/interface/user.svg'
 import IconLogout from '@/assets/icons/interface/logout.svg'
 
-import { useAuthStore } from '@/store/authStore'
+import { useAuthStore } from '@/features/auth/stores/authStore'
 
 import { computed } from 'vue'
-import { useMessageStore } from '@/store/messageStore'
+import { useMessageStore } from '@/features/messaging/stores/messageStore'
 import { useProfileStore } from '@/store/profileStore'
-import ProfileImage from '../profiles/image/ProfileImage.vue'
+import ProfileImage from '@/features/images/components/ProfileImage.vue'
 
 const { t } = useI18n()
 const authStore = useAuthStore()

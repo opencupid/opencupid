@@ -16,7 +16,7 @@ vi.mock('../forms/LocationSelector.vue', () => ({ default: { template: '<div />'
 vi.mock('@/components/profiles/forms/LanguageSelector.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('@/components/profiles/forms/TagSelectComponent.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('../forms/IntrotextEditor.vue', () => ({ default: { template: '<div />' } }))
-vi.mock('../image/ImageEditor.vue', () => ({ default: { template: '<div />' } }))
+vi.mock('@/features/images/components/ImageEditor.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/photo.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k:string)=>k }) }))
 

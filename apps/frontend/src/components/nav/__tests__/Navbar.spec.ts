@@ -14,8 +14,8 @@ vi.mock('@/assets/icons/interface/search.svg', () => ({ default: { template: '<d
 vi.mock('@/assets/icons/interface/user.svg', () => ({ default: { template: '<div />' } }))
 
 const logout = vi.fn()
-vi.mock('@/store/authStore', () => ({ useAuthStore: () => ({ isLoggedIn: true, logout }) }))
-vi.mock('@/store/messageStore', () => ({ useMessageStore: () => ({ hasUnreadMessages: false }) }))
+vi.mock('@/features/auth/stores/authStore', () => ({ useAuthStore: () => ({ isLoggedIn: true, logout }) }))
+vi.mock('@/features/messaging/stores/messageStore', () => ({ useMessageStore: () => ({ hasUnreadMessages: false }) }))
 vi.mock('@/store/profileStore', () => ({ useProfileStore: () => ({}) }))
 
 import Navbar from '../Navbar.vue'

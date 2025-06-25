@@ -4,7 +4,7 @@ vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k:string)=>k }) }))
 vi.mock('@/assets/icons/app/cupid.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/app/socialize.svg', () => ({ default: { template: '<div />' } }))
 
-import GoalsSelector from '../onboarding/GoalsSelector.vue'
+import GoalsSelector from '../../../features/onboarding/components/GoalsSelector.vue'
 
 describe('GoalsSelector', () => {
   it('toggles flags when buttons clicked', async () => {

@@ -4,7 +4,7 @@ import { inject, nextTick, ref } from 'vue'
 import { type MessageDTO } from '@zod/messaging/messaging.dto'
 import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 
-import SendMessage from '@/components/messaging/SendMessage.vue'
+import SendMessage from '@/features/messaging/components/SendMessage.vue'
 import IconMessage from '@/assets/icons/interface/message.svg'
 
 const props = defineProps<{

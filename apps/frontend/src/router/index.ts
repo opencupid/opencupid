@@ -1,30 +1,28 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 
-import { useAuthStore } from '@/store/authStore'
+import { useAuthStore } from '@/features/auth/stores/authStore'
 import { useLocalStore } from '@/store/localStore'
 
-import AuthUserId from '@/views/AuthUserId.vue'
-import AuthOtp from '@/views/AuthOtp.vue'
+import MessagingView from '@/features/messaging/views/Messaging.vue'
 import UserHome from '@/views/UserHome.vue'
-import Settings from '@/views/Settings.vue'
+import Settings from '@/features/settings/views/Settings.vue'
 import MyProfile from '@/views/MyProfile.vue'
-import Messaging from '@/views/Messaging.vue'
 import PublicProfile from '@/views/PublicProfile.vue'
 import BrowseProfiles from '@/views/BrowseProfiles.vue'
-import OnboardingView from '@/views/Onboarding.vue'
+import OnboardingView from '@/features/onboarding/views/Onboarding.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/auth',
     name: 'Login',
-    component: AuthUserId,
+    component: () => import('@/features/auth/views/AuthUserId.vue'),
     meta: { requiresAuth: false },
   },
   {
     path: '/auth/otp',
     name: 'LoginOTP',
-    component: AuthOtp,
+    component: () => import('@/features/auth/views/AuthOtp.vue'),
     meta: { requiresAuth: false },
   },
   {
@@ -74,7 +72,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/inbox/:conversationId?',
     name: 'Messaging',
-    component: Messaging,
+    component: MessagingView,
     props: true,
     meta: { requiresAuth: true },
   },

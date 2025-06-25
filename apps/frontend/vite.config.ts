@@ -1,9 +1,10 @@
 import fs from 'fs'
 import path from 'path'
-import { type ConfigEnv, defineConfig, loadEnv, type UserConfig } from 'vite'
+import { type ConfigEnv, defineConfig, loadEnv, type PluginOption, type UserConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import vueDevTools from 'vite-plugin-vue-devtools'
+import { visualizer } from 'rollup-plugin-visualizer'
 import { VitePWA } from 'vite-plugin-pwa'
 
 import Components from 'unplugin-vue-components/vite'
@@ -23,7 +24,20 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
     ...server(mode),
     build: {
       rollupOptions: {
-        external: (id) => id.includes('__tests__')
+        external: (id) => id.includes('__tests__'),
+        output: {
+          manualChunks(id) {
+            if (id.includes('features/auth')) {
+              return 'auth'
+            }
+            if (id.includes('vue-circle-flag')) {
+              return 'flags'
+            }
+            if (id.includes('assets/icons')) {
+              return 'icons'
+            }
+          }
+        }
       }
     },
     optimizeDeps: {
@@ -45,6 +59,13 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
           },
         },
       }),
+      visualizer({
+        open: true,
+        gzipSize: true,
+        emitFile: true,
+        filename: "stats.html",
+        template: 'sunburst'
+      }) as PluginOption,
       vueJsx(),
       vueDevTools(),
       svgLoader(),

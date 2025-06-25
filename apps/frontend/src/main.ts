@@ -46,7 +46,7 @@ localStore.initialize()
 import { appUseI18n } from './lib/i18n'
 appUseI18n(app)
 
-import { useMessageStore } from './store/messageStore'
+import { useMessageStore } from './features/messaging/stores/messageStore'
 useMessageStore()
 
 // toasts

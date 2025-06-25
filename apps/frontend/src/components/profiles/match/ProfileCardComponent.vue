@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { PublicProfile } from '@zod/profile/profile.dto'
-import ProfileImage from '../image/ProfileImage.vue'
+import ProfileImage from '@/features/images/components/ProfileImage.vue'
 import DatingIcon from '../display/DatingIcon.vue'
 import LanguageList from '../display/LanguageList.vue'
 import TagList from '../display/TagList.vue'
