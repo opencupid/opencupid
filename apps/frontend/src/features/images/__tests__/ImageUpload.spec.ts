@@ -15,9 +15,16 @@ import ImageUpload from '../components/ImageUpload.vue'
 describe('ImageUpload', () => {
   it('opens modal and sets preview on file change', async () => {
     const wrapper = mount(ImageUpload, { global: { stubs: { BModal: true, BButton: { template: '<button></button>' }, FormKit: true } } })
-    const file = new File(['a'], 'a.png', { type: 'image/png' })
-    const orig = window.FileReader
-    ;(window as any).FileReader = class { result: string | ArrayBuffer | null = null; onload: any = null; readAsDataURL() { this.result = 'data:'; this.onload && this.onload(); } }
+    const file = new File(['a'], 'a.png', { type: 'image/png' });
+    const orig = window.FileReader;
+    (window as any).FileReader = class {
+      result: string | ArrayBuffer | null = null;
+      onload: any = null;
+      readAsDataURL() {
+        this.result = 'data:';
+        this.onload?.();
+      }
+    };
     await (wrapper.vm as any).handleFileChange({ target: { files: [file] } } as any)
     window.FileReader = orig
     expect((wrapper.vm as any).preview).not.toBeNull()
