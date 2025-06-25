@@ -1,6 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-import { type ConfigEnv, defineConfig, type PluginOption, type UserConfig } from 'vite'
+import { type ConfigEnv, defineConfig, loadEnv, type PluginOption, type UserConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import vueDevTools from 'vite-plugin-vue-devtools'
