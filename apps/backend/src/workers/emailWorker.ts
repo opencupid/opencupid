@@ -4,6 +4,9 @@ import IORedis from 'ioredis'
 import { prisma } from '../lib/prisma'
 import nodemailer from 'nodemailer'
 import { appConfig } from '@shared/config/appconfig'
+import i18next from 'i18next'
+import FsBackend from 'i18next-fs-backend'
+import path from 'path'
 
 const redisUrl = appConfig.REDIS_URL
 if (!redisUrl) {
@@ -24,6 +27,26 @@ const transporter = nodemailer.createTransport({
   },
 })
 
+const translationsPath = path.join(
+  __dirname,
+  __dirname.includes('dist') ? '../../..' : '../../../../',
+  'packages',
+  'shared',
+  'i18n',
+  '{{lng}}.json'
+)
+
+i18next
+  .use(FsBackend)
+  .init({
+    fallbackLng: 'en',
+    preload: ['en', 'de', 'fr', 'hu'],
+    initImmediate: false,
+    backend: {
+      loadPath: translationsPath,
+    },
+  })
+
 new Worker(
   'emails',
   async job => {
@@ -36,14 +59,13 @@ new Worker(
       const otp = user.loginToken
       if (!otp || !user.email) throw new Error('OTP or email not found for user')
 
+      const t = i18next.getFixedT(user.language || 'en')
+      const link = `${appConfig.FRONTEND_URL}/auth/otp?otp=${otp}`
       await transporter.sendMail({
         from: appConfig.EMAIL_FROM,
         to: user.email,
-        subject: 'Your login link',
-        html: `<p>Hey there, welcome aboard!</p>
-      <h1>${otp}</h1>
-      <p>Please click this link to jump right in:       
-      <a href="${appConfig.FRONTEND_URL}/auth/otp?otp=${otp}">Confirm Email</a></p>`,
+        subject: t('emails.loginLink.subject'),
+        html: t('emails.loginLink.html', { otp, link }),
       })
     }
 
@@ -54,13 +76,13 @@ new Worker(
       if (!user) throw new Error('User not found')
       if (!user.email) throw new Error('Email not found for user')
 
+      const t = i18next.getFixedT(user.language || 'en')
+      const link = `${appConfig.FRONTEND_URL}/me`
       await transporter.sendMail({
         from: appConfig.EMAIL_FROM,
         to: user.email,
-        subject: 'Welcome to OpenCupid!',
-        html: `<p>Hey there, welcome aboard!</p>
-      <a href="${appConfig.FRONTEND_URL}/me">Go connect with people</a></p>
-      `,
+        subject: t('emails.welcome.subject'),
+        html: t('emails.welcome.html', { link }),
       })
     }
   },

@@ -183,5 +183,15 @@
         "message": "An error occurred. Please try again."
       }
     }
+  },
+  "emails": {
+    "loginLink": {
+      "subject": "Your login link",
+      "html": "<p>Hey there, welcome aboard!</p><h1>{{otp}}</h1><p>Please click this link to jump right in: <a href=\"{{link}}\">Confirm Email</a></p>"
+    },
+    "welcome": {
+      "subject": "Welcome to OpenCupid!",
+      "html": "<p>Hey there, welcome aboard!</p><a href=\"{{link}}\">Go connect with people</a></p>"
+    }
   }
 }
