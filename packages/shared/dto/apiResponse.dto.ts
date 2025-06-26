@@ -16,6 +16,7 @@ import type { PublicTag } from '@zod/tag/tag.dto'
 import type { ConversationSummary, MessageDTO } from '@zod/messaging/messaging.dto'
 import type { SettingsUser, OtpSendReturn } from '@zod/user/user.dto'
 import type { PublicCity } from '@zod/dto/city.dto'
+import type { LocationDTO } from '@zod/dto/location.dto'
 import type { DatingPreferencesDTO } from '@zod/match/datingPreference.dto'
 import { AuthErrorCodes } from '@zod/user/auth.dto'
 
@@ -32,6 +33,7 @@ export type TagResponse = ApiSuccess<{ tag: PublicTag }>
 
 export type CitiesResponse = ApiSuccess<{ cities: PublicCity[] }>
 export type CityResponse = ApiSuccess<{ city: PublicCity }>
+export type LocationResponse = ApiSuccess<{ location: LocationDTO }>
 
 export type MessagesResponse = ApiSuccess<{ messages: MessageDTO[] }>
 export type ConversationsResponse = ApiSuccess<{ conversations: ConversationSummary[] }>

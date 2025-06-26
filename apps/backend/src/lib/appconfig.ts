@@ -37,6 +37,8 @@ export const configSchema = z.object({
   VAPID_PRIVATE_KEY: z.string().min(10),
 
   GEOIP_URL: z.string(),
+  MAXMIND_ACCOUNT_ID: z.string(),
+  MAXMIND_LICENSE_KEY: z.string(),
 
   TYPEAHEAD_DEBOUNCE_MS: z.coerce.number().default(300),
 

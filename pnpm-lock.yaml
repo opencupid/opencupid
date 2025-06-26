@@ -51,6 +51,9 @@ importers:
       '@google-cloud/translate':
         specifier: ^9.1.0
         version: 9.1.0
+      '@maxmind/geoip2-node':
+        specifier: ^6.1.0
+        version: 6.1.0
       '@prisma/client':
         specifier: ^6.8.2
         version: 6.10.1(prisma@6.10.1(typescript@5.8.3))(typescript@5.8.3)
@@ -1555,6 +1558,9 @@ packages:
   '@lukeed/ms@2.0.2':
     resolution: {integrity: sha512-9I2Zn6+NJLfaGoz9jN3lpwDgAYvfGeNYdbAIjJOqzs4Tpc+VU3Jqq4IofSUBKajiDS8k9fZIg18/z13mpk1bsA==}
     engines: {node: '>=8'}
+
+  '@maxmind/geoip2-node@6.1.0':
+    resolution: {integrity: sha512-yJWQNxKRqPaGKorzpDKZBAR+gLk80XnZ3w/fhLEdfGnqls+Rv3ui0qQSd3akpvAC2NX8cjn7VJ5xxrlVw7i6KA==}
 
   '@modelcontextprotocol/sdk@0.5.0':
     resolution: {integrity: sha512-RXgulUX6ewvxjAG0kOpLMEdXXWkzWgaoCGaA2CwNW7cQCIphjpJhjpHSiaPdVCnisjRF/0Cm9KWHUuIoeiAblQ==}
@@ -4744,6 +4750,10 @@ packages:
     resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==}
     engines: {node: '>= 0.4'}
 
+  maxmind@4.3.27:
+    resolution: {integrity: sha512-JAHOoeuEOW4irH4OWXndaZPODfEXOlebL25pKeXSwZv7jbu5CzQZvim/aiFZNFTIuTbYs7bKFVwVXYhoSXWDqA==}
+    engines: {node: '>=12', npm: '>=6'}
+
   mdn-data@2.0.28:
     resolution: {integrity: sha512-aylIc7Z9y4yzHYAJNuESG3hfhC+0Ibp/MAMiaOZgNv4pmEdFyfZhhhny4MNiAfWdBQ1RQ2mfDWmM1x8SvGyp8g==}
 
@@ -4853,6 +4863,10 @@ packages:
 
   mlly@1.7.4:
     resolution: {integrity: sha512-qmdSIPC4bDJXgZTCR7XosJiNKySV7O215tsPtDN9iEO/7q/76b/ijtgRu/+epFXSJhijtTCCGp3DWS549P3xKw==}
+
+  mmdb-lib@2.2.1:
+    resolution: {integrity: sha512-DXO4L9W+08T+A7h5+xdT32l7IMot8z7WOH+7C1Maol571PnktQ8un7Ni4CyPFp4H+vht/FDA5/tpjRvWMFQDMw==}
+    engines: {node: '>=10', npm: '>=6'}
 
   mnemonist@0.40.3:
     resolution: {integrity: sha512-Vjyr90sJ23CKKH/qPAgUKicw/v6pRoamxIEDFOF8uSgFME7DqPRpHgRTejWVjkdGg5dXj0/NyxZHZ9bcjH+2uQ==}
@@ -6234,6 +6248,10 @@ packages:
 
   through@2.3.8:
     resolution: {integrity: sha512-w89qg7PI8wAdvX60bMDP+bFoD5Dvhm9oLheFp5O4a2QF0cSBGsBX4qZmadPMvVqlLJBBci+WqGGOAPvcDeNSVg==}
+
+  tiny-lru@11.3.2:
+    resolution: {integrity: sha512-JOHabNXZYoaa41/vcpUaq2UxyFts5xXS1qc+Dj00HsGXGYqdtUx79a8xNv38Cy0qgUQH9OdMXvsk6NETsAGxyQ==}
+    engines: {node: '>=12'}
 
   tinybench@2.9.0:
     resolution: {integrity: sha512-0+DUvqWMValLmha6lr4kD8iAMK1HzV0/aKnCtWb9v9641TnP/MFb7Pc2bxoxQjTXAErryXVgUOfv2YqNllqGeg==}
@@ -8249,6 +8267,10 @@ snapshots:
   '@js-sdsl/ordered-map@4.4.2': {}
 
   '@lukeed/ms@2.0.2': {}
+
+  '@maxmind/geoip2-node@6.1.0':
+    dependencies:
+      maxmind: 4.3.27
 
   '@modelcontextprotocol/sdk@0.5.0':
     dependencies:
@@ -11768,6 +11790,11 @@ snapshots:
 
   math-intrinsics@1.1.0: {}
 
+  maxmind@4.3.27:
+    dependencies:
+      mmdb-lib: 2.2.1
+      tiny-lru: 11.3.2
+
   mdn-data@2.0.28: {}
 
   mdn-data@2.0.30: {}
@@ -11849,6 +11876,8 @@ snapshots:
       pathe: 2.0.3
       pkg-types: 1.3.1
       ufo: 1.6.1
+
+  mmdb-lib@2.2.1: {}
 
   mnemonist@0.40.3:
     dependencies:
@@ -13379,6 +13408,8 @@ snapshots:
       real-require: 0.2.0
 
   through@2.3.8: {}
+
+  tiny-lru@11.3.2: {}
 
   tinybench@2.9.0: {}
 
