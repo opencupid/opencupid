@@ -15,9 +15,10 @@ module.exports = {
   open: false,
   reloadOnRestart: true,
   middleware: [
-    createProxyMiddleware('/api', {
+    createProxyMiddleware({
       target: 'http://localhost:3000',
       changeOrigin: true,
+      pathFilter: '/api',
     }),
     {
       route: '/images',
