@@ -25,7 +25,6 @@ export const configSchema = z.object({
   EMAIL_FROM: z.string(),
 
   MEDIA_UPLOAD_DIR: z.string(),
-  IMAGE_SRV_PORT: z.coerce.number(),
   IMAGE_URL_BASE: z.string(),
   IMAGE_MAX_SIZE: z.coerce.number(),
 
@@ -46,10 +45,7 @@ export const configSchema = z.object({
   RATE_LIMIT_PROFILE_SCOPES: z.coerce.number().default(1),
 })
 
-
-
 if (process.env.NODE_ENV !== 'production') {
-
   // This will walk up from the current directory to find the first `.env` file
   // If not found, fall back to `.env.example` so tests run with defaults
   const envFile = findUpSync('.env') ?? findUpSync('.env.example')
