@@ -5,6 +5,7 @@ import is_ip_private from 'node_modules/private-ip/lib/index.js'
 import { appConfig } from '@/lib/appconfig'
 import { LocationSchema, type LocationDTO } from '@zod/dto/location.dto'
 import type { ApiError } from '@shared/zod/apiResponse.dto'
+import { rateLimitConfig } from '../helpers'
 
 function extractClientIp(headerValue: string | undefined, fallbackIp: string): string {
   const rawIp = headerValue?.split(',')[0].trim() ?? fallbackIp
@@ -13,7 +14,13 @@ function extractClientIp(headerValue: string | undefined, fallbackIp: string): s
 }
 
 const appRoutes: FastifyPluginAsync = async fastify => {
-  fastify.get('/location', async (req, reply) => {
+  fastify.get('/location', {
+    onRequest: [fastify.authenticate],
+    // rate limiter
+    config: {
+      ...rateLimitConfig(fastify, '5 minute', 5), 
+    },
+  }, async (req, reply) => {
     const rawHeader = req.headers['x-forwarded-for'] as string | undefined
     const clientIp = extractClientIp(rawHeader, req.ip)
 
