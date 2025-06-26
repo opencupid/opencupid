@@ -20,7 +20,7 @@ export class ImageService {
   /**
    * Private constructor to prevent direct instantiation
    */
-  private constructor() { }
+  private constructor() {}
 
   /**
    * Get singleton instance
@@ -193,13 +193,20 @@ export class ImageService {
       return false
     }
 
-    // Delete the file from the filesystem
-    const file = path.join(getImageRoot(), image.storagePath)
+    // Delete all generated image files from the filesystem
+    const baseFile = path.join(getImageRoot(), image.storagePath)
+    const filesToDelete = [
+      `${baseFile}-original.jpg`,
+      ...sizes.map(size => `${baseFile}-${size.name}.webp`),
+    ]
 
-    try {
-      await fs.promises.unlink(file)
-    } catch (err) {
-      console.error('Error deleting file:', err)
+    for (const f of filesToDelete) {
+      try {
+        await fs.promises.unlink(f)
+      } catch (err) {
+        // Log but continue deleting other variants
+        console.error('Error deleting file:', err)
+      }
     }
     return true
   }
