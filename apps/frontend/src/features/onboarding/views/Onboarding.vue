@@ -11,11 +11,10 @@ import SpinnerComponent from '@/components/SpinnerComponent.vue'
 import ErrorComponent from '@/components/ErrorComponent.vue'
 import OnboardWizard from '@/features/onboarding/components/OnboardWizard.vue'
 
-
 import { useI18nStore } from '@/store/i18nStore'
 import { useProfileStore } from '@/store/profileStore'
 import fetchGeoIpInfo from '@/lib/geoip'
-
+import { useAppStore } from '@/features/app/stores/appStore'
 
 const { t } = useI18n()
 const profileStore = useProfileStore()
@@ -43,9 +42,7 @@ const formData = reactive({
   isSocialActive: true,
 } as EditProfileForm)
 
-
 const error = ref('')
-
 
 const router = useRouter()
 
@@ -68,6 +65,8 @@ const handleWizardFinish = async () => {
   console.log('Profile saved:', formData)
 }
 
+const appStore = useAppStore()
+
 onMounted(async () => {
   await profileStore.fetchOwnerProfile()
   if (profileStore.profile?.isOnboarded) {
@@ -75,11 +74,12 @@ onMounted(async () => {
     return
   }
 
-  // if (formData.location.country) return
-  fetchGeoIpInfo()
-    .then(countryCode => {
-      if (countryCode) {
-        formData.location.country = countryCode
+  // obtain GeoIP info
+  appStore
+    .fetchLocation()
+    .then(res => {
+      if (res.success && res.data && !formData.location.country) {
+        formData.location = res.data
       }
     })
     .catch(error => {
@@ -122,6 +122,4 @@ onMounted(async () => {
   </main>
 </template>
 
-<style lang="scss" scoped>
-
-</style>
+<style lang="scss" scoped></style>

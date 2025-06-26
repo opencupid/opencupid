@@ -14,18 +14,20 @@ export const server = (mode: string) => {
           target: 'http://localhost:3000', // or https://localhost:3000 if backend runs TLS
           changeOrigin: true,
           secure: false, // accept self-signed TLS
+          configure: (proxy: any, _options: any) => {
+            proxy.on('proxyReq', (proxyReq: any, req: any) => {
+              const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+              if (clientIp) {
+                proxyReq.setHeader('X-Forwarded-For', clientIp);
+              }
+            });
+          },
         },
         '/ws': {
           target: 'ws://localhost:3000',
           rewriteWsOrigin: true,
           ws: true,
           secure: false, // accept self-signed TLS
-        },
-        '/geo': {
-          target: 'http://ifconfig.co/',
-          changeOrigin: true,
-          secure: false, // accept self-signed TLS
-          rewrite: (path: any) => path.replace(/^\/geo/, '/json'),
         },
       },
       https: {
@@ -40,7 +42,7 @@ export const define = (mode: string) => {
 
   const envFile = findUpSync('.env') ?? findUpSync('.env.example')
 
-  if(!envFile) {
+  if (!envFile) {
     console.error('Could not find a .env file')
     process.exit(1)
   }
