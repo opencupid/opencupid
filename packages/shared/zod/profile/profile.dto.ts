@@ -40,6 +40,8 @@ export const PublicProfileSchema = ProfileUnionSchema.and(
     location: LocationSchema,
     profileImages: z.array(PublicProfileImageSchema).default([]),
     tags: z.array(PublicTagSchema).default([]),
+    introSocial: z.string().default(''),
+    introDating: z.string().default(''),
   })
 );
 export type PublicProfile = z.infer<typeof PublicProfileSchema>;
@@ -50,6 +52,8 @@ export const PublicProfileWithContextSchema = ProfileUnionSchema.and(
     profileImages: z.array(PublicProfileImageSchema).default([]),
     tags: z.array(PublicTagSchema).default([]),
     conversation: ConversationSchema.nullable(),
+    introSocial: z.string().default(''),
+    introDating: z.string().default(''),
   })
 );
 export const PublicProfileArraySchema = z.array(PublicProfileSchema);

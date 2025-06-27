@@ -7,11 +7,9 @@ export const baseFields = {
 export const socialFields = {
   languages: true,
   publicName: true,
-  introSocial: true,
 } as const;
 
 export const datingFields = {
-  introDating: true,
   hasKids: true,
   relationship: true,
   gender: true,

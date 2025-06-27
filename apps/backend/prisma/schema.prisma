@@ -185,7 +185,6 @@ model Profile {
   cityName    String  @default("")
   cityId      String?
   city        City?   @relation(fields: [cityId], references: [id])
-  introSocial String  @default("")
 
   isSocialActive Boolean @default(false)
   isDatingActive Boolean @default(false)
@@ -199,7 +198,6 @@ model Profile {
 
   work         String              @default("")
   languages    String[]            @default([])
-  introDating  String              @default("")
   birthday     DateTime?
   gender       Gender?
   pronouns     Pronouns?

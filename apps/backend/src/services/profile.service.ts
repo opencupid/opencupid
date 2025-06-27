@@ -317,7 +317,6 @@ export class ProfileService {
       data: {
         userId,
         publicName: '',
-        introSocial: '',
       },
     })
   }
