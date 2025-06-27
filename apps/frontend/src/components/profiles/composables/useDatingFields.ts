@@ -12,14 +12,14 @@ export function useDatingFields(profile: Ref<PublicProfileWithContext>, t: (key:
   })
 
   const gender = computed(() => {
-    if (!profile.value.isDatingActive){
+    if (!profile.value.scopes.includes('dating')){
       return ''
     }
     return profile.value.gender
   })
 
   const age = computed(() => {
-    if (!profile.value.isDatingActive || !profile.value.birthday) return null
+    if (!profile.value.scopes.includes('dating') || !profile.value.birthday) return null
     const currentYear = new Date().getFullYear()
     return currentYear - new Date(profile.value.birthday).getFullYear()
   })
@@ -27,19 +27,19 @@ export function useDatingFields(profile: Ref<PublicProfileWithContext>, t: (key:
   const { relationshipStatusLabels, pronounsLabels, hasKidsLabels } = useEnumOptions(t)
 
   const hasKids = computed(() => {
-    if (!profile.value.isDatingActive || profile.value.hasKids === 'unspecified') return ''
+    if (!profile.value.scopes.includes('dating') || profile.value.hasKids === 'unspecified') return ''
     return hasKidsLabels()[profile.value.hasKids!] || profile.value.hasKids
   })
 
   const relationshipStatus = computed(() => {
-    if (!profile.value.isDatingActive) return ''
+    if (!profile.value.scopes.includes('dating')) return ''
     if (!profile.value.relationship || profile.value.relationship === 'unspecified') return ''
 
     return relationshipStatusLabels()[profile.value.relationship] || profile.value.relationship
   })
 
   const pronouns = computed(() => {
-    if (!profile.value.isDatingActive) return ''
+    if (!profile.value.scopes.includes('dating')) return ''
     if (!profile.value.pronouns || profile.value.pronouns === 'unspecified') return ''
 
     return pronounsLabels()[profile.value.pronouns] || profile.value.pronouns

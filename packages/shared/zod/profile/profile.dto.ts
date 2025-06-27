@@ -13,29 +13,14 @@ import { PublicProfileImageSchema } from "./profileimage.dto";
 import { LocationSchema } from "@zod/dto/location.dto";
 import { baseFields, socialFields, datingFields, ownerFields } from "./profile.fields";
 
-const PublicScalarsSchema = ProfileSchema.pick({
-  ...baseFields,
-  ...socialFields,
-}).extend({
-  isDatingActive: z.literal(false)
-})
-
-const PublicDatingScalarsSchema = ProfileSchema.pick({
+export const PublicProfileSchema = ProfileSchema.pick({
   ...baseFields,
   ...socialFields,
   ...datingFields,
+  scopes: true,
 }).extend({
-  isDatingActive: z.literal(true)
-})
-
-export const ProfileUnionSchema = z.discriminatedUnion('isDatingActive', [
-  // when isDatingActive = false, use the base
-  PublicScalarsSchema,
-  // when isDatingActive = true, require the dating picks
-  PublicDatingScalarsSchema,
-])
-
-export const PublicProfileSchema = ProfileUnionSchema.and(
+  scopes: z.array(z.enum(['social', 'dating'])).default([]),
+}).and(
   z.object({
     location: LocationSchema,
     profileImages: z.array(PublicProfileImageSchema).default([]),
@@ -46,7 +31,7 @@ export const PublicProfileSchema = ProfileUnionSchema.and(
 );
 export type PublicProfile = z.infer<typeof PublicProfileSchema>;
 
-export const PublicProfileWithContextSchema = ProfileUnionSchema.and(
+export const PublicProfileWithContextSchema = PublicProfileSchema.and(
   z.object({
     location: LocationSchema,
     profileImages: z.array(PublicProfileImageSchema).default([]),
@@ -85,8 +70,7 @@ export type OwnerOrPublicProfile = OwnerProfile | PublicProfileWithContext
 export const editableFields = {
   ...socialFields,
   ...datingFields,
-  isDatingActive: true,
-  isSocialActive: true,
+  scopes: true,
 
 } as const;
 
@@ -125,8 +109,7 @@ export type ProfileScope = z.infer<typeof ProfileScopeSchema>
 
 
 export const UpdateProfileScopeSchemaPayload = z.object({
-  isDatingActive: z.boolean(),
-  isSocialActive: z.boolean(),
+  scopes: z.array(ProfileScopeSchema),
 }).partial()
 
 export type UpdateProfileScopePayload = z.infer<typeof UpdateProfileScopeSchemaPayload>

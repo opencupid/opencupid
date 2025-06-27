@@ -94,7 +94,7 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
       if (raw.userId !== req.user.userId && !req.session.hasActiveProfile) {
         return sendForbiddenError(reply, 'You do not have access to this profile')
       }
-      const hasDatingPermission = req.session.profile.isDatingActive
+      const hasDatingPermission = req.session.profile.scopes.includes('dating')
 
       const profile = mapProfileWithContext(raw, hasDatingPermission, locale)
       // const profile = publicProfileSchema.parse(raw)
@@ -161,7 +161,7 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
     if (!data) return
 
     // check if the user already has an onboarded profile. Since we're allowing the setting of
-    // isDatingActive and isSocialActive here, we need to ensure that those flags can only be set once
+    // scopes here, we need to ensure that those scopes can only be set once
     // and later via the PATCH /scopes route which is rate limited
     const existing = await profileService.getProfileByUserId(req.user.userId)
     if (existing && existing.isOnboarded) {
@@ -178,17 +178,15 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
    */
   fastify.patch('/me', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const data = await validateBody(UpdateProfilePayloadSchema, req, reply) as UpdateProfilePayload
-    // destructure to remove isSocialActive and isDatingActive
     if (!data) return
-    const { isSocialActive, isDatingActive, ...rest } = data
-    return updateProfile(rest, req, reply)
+    return updateProfile(data, req, reply)
   })
 
   async function updateProfile(profileData: UpdateProfilePayload, req: FastifyRequest, reply: FastifyReply) {
     const user = await userService.getUserById(req.user.userId)
     if (!user) return sendUnauthorizedError(reply)
 
-    user.hasActiveProfile = [profileData.isDatingActive, profileData.isSocialActive].some(Boolean)
+    user.hasActiveProfile = Array.isArray(profileData.scopes) && profileData.scopes.length > 0
     const locale = req.session.lang
 
     try {
@@ -221,7 +219,7 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
 
   fastify.get('/datingprefs', { onRequest: [fastify.authenticate] }, async (req, reply) => {
 
-    if (req.session.profile.isDatingActive === false) {
+    if (!req.session.profile.scopes.includes('dating')) {
       return sendForbiddenError(reply, 'Dating preferences are not active for this profile')
     }
 

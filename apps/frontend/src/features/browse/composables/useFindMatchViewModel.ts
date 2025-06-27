@@ -27,9 +27,9 @@ export function useFindMatchViewModel() {
 
   const haveAccess = computed(() => {
     if (findProfilesStore.currentScope === 'social') {
-      return me.isSocialActive
+      return me.scopes?.includes('social')
     } else if (findProfilesStore.currentScope === 'dating') {
-      return me.isDatingActive
+      return me.scopes?.includes('dating')
     }
     return false
   })

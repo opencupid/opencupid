@@ -120,7 +120,7 @@ const emit = defineEmits<{
     </div>
 
     <div class="mb-3">
-      <div class="mb-3 dating-field" v-if="props.profile.isDatingActive">
+      <div class="mb-3 dating-field" v-if="props.profile.scopes.includes('dating')">
         <span class="opacity-25">
           <hr />
         </span>

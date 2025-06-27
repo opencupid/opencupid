@@ -37,22 +37,30 @@ const isDatingWizardActive = ref(false)
 
 const toggleDating = async () => {
   // If dating is not onboarded, show the wizard
-  if (!isDatingOnboarded.value && !formData.isDatingActive) {
+  if (!isDatingOnboarded.value && !formData.scopes.includes('dating')) {
     isDatingWizardActive.value = true
     return
   }
-  formData.isDatingActive = !formData.isDatingActive
+  if (formData.scopes.includes('dating')) {
+    formData.scopes = formData.scopes.filter(s => s !== 'dating')
+  } else {
+    formData.scopes.push('dating')
+  }
   await updateScopes()
 }
 
 const toggleSocial = async () => {
-  formData.isSocialActive = !formData.isSocialActive
+  if (formData.scopes.includes('social')) {
+    formData.scopes = formData.scopes.filter(s => s !== 'social')
+  } else {
+    formData.scopes.push('social')
+  }
   await updateScopes()
 }
 
 const handleFinishEdit = async () => {
   const res = await updateProfile()
-  formData.isDatingActive = true
+  if (!formData.scopes.includes('dating')) formData.scopes.push('dating')
   await updateScopes()
   if (res.success) {
     isDatingWizardActive.value = false
@@ -86,14 +94,14 @@ provide('isOwner', true)
                 <span
                   class="btn-social-toggle px-4 py-1 rounded-4 me-2"
                   @click="toggleSocial"
-                  :class="{ active: formData.isSocialActive }"
+                  :class="{ active: formData.scopes.includes('social') }"
                 >
                   <IconSocialize class="svg-icon-lg" />
                 </span>
                 <span
                   class="btn-dating-toggle px-4 py-1 rounded-4"
                   @click="toggleDating"
-                  :class="{ active: formData.isDatingActive }"
+                  :class="{ active: formData.scopes.includes('dating') }"
                 >
                   <IconDate class="svg-icon-lg" />
                 </span>

@@ -20,7 +20,7 @@ const { age, gender, pronouns } = useDatingFields(profileRef, t)
 
 <template>
   <div
-    v-if="props.profile.isDatingActive"
+    v-if="props.profile.scopes.includes('dating')"
     class="text-muted dating-field d-flex align-items-center"
   >
     <span class="me-1">{{ age }}</span>

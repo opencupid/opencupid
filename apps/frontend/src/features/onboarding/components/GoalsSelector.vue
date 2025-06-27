@@ -5,25 +5,29 @@ import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 
+import type { ProfileScope } from '@zod/profile/profile.dto'
+
 type FormData = {
-  isSocialActive: boolean
-  isDatingActive: boolean
+  scopes: ProfileScope[]
 }
 
 // Replace props/emits/watch with defineModel
 const model = defineModel<FormData>({
   default: () => ({
-    isSocialActive: false,
-    isDatingActive: false,
+    scopes: [],
   }),
 })
 
 const toggleSocial = () => {
-  model.value.isSocialActive = !model.value.isSocialActive
+  const scopes = new Set(model.value.scopes)
+  scopes.has('social') ? scopes.delete('social') : scopes.add('social')
+  model.value.scopes = Array.from(scopes)
 }
 
 const toggleDating = () => {
-  model.value.isDatingActive = !model.value.isDatingActive
+  const scopes = new Set(model.value.scopes)
+  scopes.has('dating') ? scopes.delete('dating') : scopes.add('dating')
+  model.value.scopes = Array.from(scopes)
 }
 </script>
 
@@ -31,7 +35,7 @@ const toggleDating = () => {
   <div class="d-flex gap-2 flex-row justify-content-between w-100">
     <div
       class="card btn-social-toggle"
-      :class="{ active: model.isSocialActive }"
+      :class="{ active: model.scopes.includes('social') }"
       @click="toggleSocial"
     >
       <div class="m-4">
@@ -45,7 +49,7 @@ const toggleDating = () => {
           <input
             type="checkbox"
             class="form-check-input"
-            :checked="model.isSocialActive"
+            :checked="model.scopes.includes('social')"
             value="true"
           />
         </div>
@@ -54,7 +58,7 @@ const toggleDating = () => {
 
     <div
       class="card btn-dating-toggle"
-      :class="{ active: model.isDatingActive }"
+      :class="{ active: model.scopes.includes('dating') }"
       @click="toggleDating"
     >
       <div class="m-4">
@@ -68,7 +72,7 @@ const toggleDating = () => {
           <input
             type="checkbox"
             class="form-check-input"
-            :checked="model.isDatingActive"
+            :checked="model.scopes.includes('dating')"
             value="true"
           />
         </div>

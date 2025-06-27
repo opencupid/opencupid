@@ -72,6 +72,11 @@ enum RelationshipStatus {
   unspecified
 }
 
+enum ProfileScope {
+  social
+  dating
+}
+
 enum UserRole {
   user
   user_dating
@@ -186,8 +191,7 @@ model Profile {
   cityId      String?
   city        City?   @relation(fields: [cityId], references: [id])
 
-  isSocialActive Boolean @default(false)
-  isDatingActive Boolean @default(false)
+  scopes        ProfileScope[] @default([])
   isActive       Boolean @default(false)
   isReported     Boolean @default(false)
   isBlocked      Boolean @default(false)

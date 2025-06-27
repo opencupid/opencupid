@@ -22,7 +22,7 @@ export class MatchQueryService {
     return await prisma.profile.findMany({
       where: {
         isActive: true,
-        isSocialActive: true,
+        scopes: { has: 'social' },
         id: {
           not: profileId,
         },
@@ -38,7 +38,7 @@ export class MatchQueryService {
     const profile = await prisma.profile.findUnique({
       where: { id: profileId },
     })
-    if (!profile || !profile.birthday || !profile.gender || profile.isDatingActive !== true) {
+    if (!profile || !profile.birthday || !profile.gender || !profile.scopes.includes('dating')) {
       return []
     }
 
@@ -47,7 +47,7 @@ export class MatchQueryService {
     const where = {
       id: { not: profile.id },
       ...blocklistWhereClause(profileId),
-      isDatingActive: true,
+      scopes: { has: 'dating' },
       birthday: {
         gte: subtractYears(new Date(), profile.prefAgeMax ?? 99), // oldest acceptable
         lte: subtractYears(new Date(), profile.prefAgeMin ?? 18), // youngest acceptable

@@ -27,7 +27,7 @@ export function useMyProfile(isEditMode: boolean) {
   const profilePreview = computed((): PublicProfileWithContext => {
     return {
       ...publicProfile,
-      isDatingActive: viewState.currentScope === 'dating',
+      scopes: [viewState.currentScope],
     } as PublicProfileWithContext
   })
 
@@ -62,10 +62,10 @@ export function useMyProfile(isEditMode: boolean) {
   }
 
   const updateScopes = async () => {
-    const res = await profileStore.updateProfileScopes({
-      isDatingActive: formData.isDatingActive,
-      isSocialActive: formData.isSocialActive,
-    })
+    const scopes: ProfileScope[] = []
+    if (formData.isDatingActive) scopes.push('dating')
+    if (formData.isSocialActive) scopes.push('social')
+    const res = await profileStore.updateProfileScopes({ scopes })
   }
 
   const updateProfile = async () => {

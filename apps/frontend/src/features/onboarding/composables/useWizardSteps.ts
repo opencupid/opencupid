@@ -20,9 +20,7 @@ const imageStore = useImageStore()
       flags: '',
     },
     looking_for: {
-      state: computed(() =>
-        [formData.isDatingActive, formData.isSocialActive].some(t => t) ? true : false
-      ),
+      state: computed(() => formData.scopes.length > 0),
       flags: '',
     },
     interests: {

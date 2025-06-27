@@ -19,8 +19,7 @@ defineEmits<{
 
 const formData = defineModel<EditFieldProfileFormWithImages>({
   default: () => ({
-    isDatingActive: false,
-    isSocialActive: false,
+    scopes: [],
     birthday: null,
     genderPronouns: null,
     relationshipStatus: null,

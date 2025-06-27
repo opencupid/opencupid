@@ -5,8 +5,7 @@ import { AuthIdentifierSchema, JwtPayloadSchema } from "./user.dto"
 
 export const SessionProfileSchema = ProfileSchema.pick({
   id: true,
-  isDatingActive: true,
-  isSocialActive: true,
+  scopes: true,
 })
 export type SessionProfile = z.infer<typeof SessionProfileSchema>
 

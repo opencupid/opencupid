@@ -98,10 +98,7 @@ export const useFindProfilesStore = defineStore('findProfiles', {
     async initialize(me: OwnerProfile, defaultScope: ProfileScope | undefined) {
       console.log('Initializing FindMatchViewModel with defaultScope:', defaultScope)
 
-      this.scopes = [
-        ...(me.isSocialActive ? (['social'] as const) : []),
-        ...(me.isDatingActive ? (['dating'] as const) : []),
-      ]
+      this.scopes = [...(me.scopes || [])]
       this.currentScope = defaultScope ?
         defaultScope : this.scopes.length > 0 ? this.scopes[0] : null
 

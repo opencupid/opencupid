@@ -37,8 +37,7 @@ const formData = reactive({
   introDating: '',
   introSocialLocalized: {} as Record<string, string>,
   introDatingLocalized: {} as Record<string, string>,
-  isDatingActive: false,
-  isSocialActive: true,
+  scopes: ['social'],
 } as EditProfileForm)
 
 const error = ref('')

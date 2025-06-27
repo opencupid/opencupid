@@ -33,7 +33,7 @@ const { current, isLast, isFirst, goToNext, goToPrevious, goTo, isCurrent } =
 
 const handleNext = () => {
   if (current.value.flags === 'stage_one_end') {
-    if (!formData.value.isDatingActive) {
+    if (!formData.value.scopes.includes('dating')) {
       goTo('confirm')
       emit('finished')
       return

@@ -15,13 +15,13 @@ const matcherRoutes: FastifyPluginAsync = async fastify => {
 
   fastify.get('/social', { onRequest: [fastify.authenticate] }, async (req, reply) => {
 
-    if (!req.session.hasActiveProfile || !req.session.profile.isSocialActive) return sendForbiddenError(reply)
+    if (!req.session.hasActiveProfile || !req.session.profile.scopes.includes('social')) return sendForbiddenError(reply)
     const myProfileId = req.session.profileId
     const locale = req.session.lang
 
     try {
       const profiles = await matchQueryService.findSocialProfilesFor(myProfileId)
-      const hasDatingPermission = req.session.profile.isDatingActive
+      const hasDatingPermission = req.session.profile.scopes.includes('dating')
       const mappedProfiles = profiles.map(p => mapProfileToPublic(p, hasDatingPermission, locale))
       const response: GetProfilesResponse = { success: true, profiles: mappedProfiles }
       return reply.code(200).send(response)
@@ -34,7 +34,7 @@ const matcherRoutes: FastifyPluginAsync = async fastify => {
 
   fastify.get('/dating', { onRequest: [fastify.authenticate] }, async (req, reply) => {
 
-    if (!req.session.hasActiveProfile || !req.session.profile.isDatingActive) return sendForbiddenError(reply)
+    if (!req.session.hasActiveProfile || !req.session.profile.scopes.includes('dating')) return sendForbiddenError(reply)
     const myProfileId = req.session.profileId
     const locale = req.session.lang
 

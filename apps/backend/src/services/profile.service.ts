@@ -205,11 +205,8 @@ export class ProfileService {
     scopes: UpdateProfileScopePayload,
   ): Promise<DbProfileWithImages | null> {
     const data: Prisma.ProfileUpdateInput = {}
-    if (typeof scopes.isDatingActive === 'boolean') {
-      data.isDatingActive = scopes.isDatingActive
-    }
-    if (typeof scopes.isSocialActive === 'boolean') {
-      data.isSocialActive = scopes.isSocialActive
+    if (Array.isArray(scopes.scopes)) {
+      data.scopes = scopes.scopes as any
     }
 
     try {
@@ -225,8 +222,7 @@ export class ProfileService {
         await tx.user.update({
           where: { id: userId },
           data: {
-            hasActiveProfile:
-              updated.isDatingActive || updated.isSocialActive,
+            hasActiveProfile: Array.isArray(updated.scopes) && updated.scopes.length > 0,
           },
         })
 

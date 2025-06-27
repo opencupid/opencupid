@@ -20,7 +20,6 @@ export const datingFields = {
 
 
 export const ownerFields = {
-  isDatingActive: true,
-  isSocialActive: true,
+  scopes: true,
   isOnboarded: true,
 } as const;

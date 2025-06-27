@@ -8,5 +8,5 @@ const props = defineProps<{
 </script>
 
 <template>
-  <slot v-if="props.profile.isDatingActive" />
+  <slot v-if="props.profile.scopes.includes('dating')" />
 </template>
