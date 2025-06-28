@@ -4,7 +4,6 @@ import { inject, nextTick, ref } from 'vue'
 import { type MessageDTO } from '@zod/messaging/messaging.dto'
 import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 
-import SendMessage from '@/features/messaging/components/SendMessageForm.vue'
 import IconMessage from '@/assets/icons/interface/message.svg'
 import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
 
