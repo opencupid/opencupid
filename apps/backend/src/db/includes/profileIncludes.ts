@@ -74,15 +74,12 @@ export const interactionContextInclude = (myProfileId: string) => {
   return {
     likesReceived: {
       where: { fromId: myProfileId }, // Did I like them?
-      select: { id: true },
     },
     likesSent: {
       where: { toId: myProfileId },   // Did they like me?
-      select: { id: true },
     },
-    hiddenProfiles: {
+    hiddenBy: {
       where: { fromId: myProfileId }, // Did I pass them?
-      select: { id: true },
     },
   }
 }

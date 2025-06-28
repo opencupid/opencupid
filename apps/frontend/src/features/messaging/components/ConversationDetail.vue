@@ -8,7 +8,7 @@ import { useMessageStore } from '@/features/messaging/stores/messageStore'
 import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 import { type ConversationSummary } from '@zod/messaging/messaging.dto'
 
-import SendMessage from './SendMessage.vue'
+import SendMessage from './SendMessageForm.vue'
 import MessageList from './MessageList.vue'
 import MessagingNav from './MessagingNav.vue'
 

@@ -1,7 +1,7 @@
 
 
 import { z } from 'zod'
-import { ProfileSummarySchema } from '../profile/profile.dto'
+import { ProfileSummarySchema } from '@zod/profile/profile.dto'
 
 export const InteractionEdgeSchema = z.object({
   profile: ProfileSummarySchema,
@@ -10,3 +10,5 @@ export const InteractionEdgeSchema = z.object({
 })
 
 export type InteractionEdge = z.infer<typeof InteractionEdgeSchema>
+
+

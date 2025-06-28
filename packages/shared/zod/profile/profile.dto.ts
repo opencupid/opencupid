@@ -12,7 +12,8 @@ import { PublicTagSchema } from "../tag/tag.dto";
 import { PublicProfileImageSchema } from "./profileimage.dto";
 import { LocationSchema } from "@zod/dto/location.dto";
 import { baseFields, socialFields, datingFields, ownerFields } from "./profile.fields";
-import { InteractionContextSchema } from "./profile.db";
+import { InteractionContextSchema } from "@zod/datinginteraction/interactionContext.dto";
+import { ConversationContextSchema } from "@zod/messaging/conversationContext.dto";
 
 const PublicScalarsSchema = ProfileSchema.pick({
   ...baseFields,
@@ -47,6 +48,9 @@ export const PublicProfileSchema = ProfileUnionSchema.and(
 );
 export type PublicProfile = z.infer<typeof PublicProfileSchema>;
 
+
+
+
 export const PublicProfileWithContextSchema = ProfileUnionSchema.and(
   z.object({
     location: LocationSchema,
@@ -55,6 +59,7 @@ export const PublicProfileWithContextSchema = ProfileUnionSchema.and(
     introSocial: z.string().default(''),
     introDating: z.string().default(''),
     conversation: ConversationSchema.nullable(),
+    conversationContext: ConversationContextSchema,
     interactionContext: InteractionContextSchema
   })
 );
@@ -139,3 +144,5 @@ export const BlockProfilePayloadSchema = z.object({
 });
 
 export type BlockProfilePayload = z.infer<typeof BlockProfilePayloadSchema>;
+
+

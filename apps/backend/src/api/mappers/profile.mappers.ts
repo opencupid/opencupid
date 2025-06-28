@@ -7,7 +7,7 @@ import {
   OwnerScalarsSchema,
 } from '@zod/profile/profile.dto'
 import { DatingPreferencesDTOSchema, type DatingPreferencesDTO } from '@zod/match/datingPreference.dto'
-import { DbProfile, type DbProfileWithContext, DbProfileWithImages, DbProfileWithImagesSchema } from '@zod/profile/profile.db'
+import { type DbProfileWithContext, type DbProfileWithImages } from '@zod/profile/profile.db'
 import { LocationSchema } from '@zod/dto/location.dto'
 
 import {
@@ -17,6 +17,9 @@ import {
 import { mapProfileTagsTranslated } from './tag.mappers'
 import { Profile, ProfileImage } from '@zod/generated'
 import { toOwnerProfileImage, toPublicProfileImage } from './image.mappers'
+import { mapInteractionContext } from './interaction.mappers'
+import { type ConversationContext } from '@zod/messaging/conversationContext.dto'
+import { mapConversationContext } from './messaging.mappers'
 
 
 export function mapDbProfileToOwnerProfile(locale: string, db: DbProfileWithImages): OwnerProfile {
@@ -72,6 +75,7 @@ export function mapProfileToPublic(dbProfile: DbProfileWithImages, hasDatingPerm
 }
 
 
+
 export function mapProfileWithContext(dbProfile: DbProfileWithContext, hasDatingPermission: boolean, locale: string): PublicProfileWithContext {
 
   const mapped = mapProfileToPublic(dbProfile, hasDatingPermission, locale)
@@ -80,7 +84,8 @@ export function mapProfileWithContext(dbProfile: DbProfileWithContext, hasDating
   return {
     ...mapped,
     conversation: conversation || null,
-    interactionContext: dbProfile.interactionContext
+    conversationContext: mapConversationContext(dbProfile),
+    interactionContext: mapInteractionContext(dbProfile)
   } as PublicProfileWithContext
 }
 

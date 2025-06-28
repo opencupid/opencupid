@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useMessageStore } from '../stores/messageStore'
 import { type ProfileSummary } from '@zod/profile/profile.dto'
 
@@ -49,11 +49,16 @@ export function useMessaging() {
     return null
   }
 
+  const canMessage = computed(() => {
+    return true
+  })
+
   return {
     isSending,
     isSent,
     errorMsg,
     sendMessage,
     initiateConversation,
+    canMessage
   }
 }

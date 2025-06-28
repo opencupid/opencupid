@@ -1,29 +1,65 @@
 <script lang="ts" setup>
-import IconHeart from '@/assets/icons/interface/heart.svg'
-import IconCross from '@/assets/icons/interface/cross.svg'
+import { computed, onMounted, ref } from 'vue'
 
 import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 
 import InteractionButtons from './InteractionButtons.vue'
-import { computed } from 'vue';
+import SendMessageDialog from '@/features/publicprofile/components/SendMessageDialog.vue'
+import { useDatingInteractions } from '../composables/useDatingInteractions'
+import { useToast } from 'vue-toastification'
+const toast = useToast()
 
 const props = defineProps<{
   profile: PublicProfileWithContext
 }>()
 
-defineEmits<{
-  (e: 'intent:like'): void
-  (e: 'intent:pass'): void
-  (e: 'intent:message'): void
+const emit = defineEmits<{
+  (e: 'intent:message', conversationId: string): void
+  (e: 'updated'): void
 }>()
 
-const canMessage = computed(() => {
-  return !props.profile.conversation || props.profile.conversation.status === 'ACCEPTED'
+const showMessageModal = ref(false)
+
+const { like, unlike, pass, unpass, refreshInteractions, loadingLikes } = useDatingInteractions()
+
+const handleLike = async () => {
+  await like(props.profile.id)
+  emit('updated')
+  toast('Successfully liked profile')
+}
+
+const handlePass = async () => {
+  await pass(props.profile.id)
+  emit('updated')
+  toast('Successfully passed profile')
+}
+
+const handleMessageIntent = () => {
+  const context = props.profile.conversationContext
+  if (context.haveConversation && context.conversationId) {
+    emit('intent:message', context?.conversationId)
+    return
+  }
+  if (context.canMessage) {
+    showMessageModal.value = true
+  }
+}
+
+onMounted(() => {
+  refreshInteractions()
 })
 </script>
 
 <template>
   <div class="d-flex justify-content-center align-items-center gap-2">
-    <InteractionButtons @message="$emit('intent:message')" @pass="$emit('intent:pass')" @like="$emit('intent:like')" />
+    <InteractionButtons
+      @message="handleMessageIntent"
+      @pass="handlePass"
+      @like="handleLike"
+      :canLike="props.profile.interactionContext.canLike"
+      :canPass="props.profile.interactionContext.canPass"
+      :canMessage="props.profile.conversationContext.canMessage"
+    />
+    <SendMessageDialog v-model="showMessageModal" :profile="props.profile" @sent="emit('updated')" />
   </div>
 </template>

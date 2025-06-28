@@ -9,8 +9,8 @@ import DatingInteractions from '@/features/datinginteraction/components/DatingIn
 import ProfileContent from '../components/ProfileContent.vue'
 import BlockProfileDialog from '../components/BlockProfileDialog.vue'
 import PublicProfileSecondaryNav from '../components/PublicProfileSecondaryNav.vue'
-import ActionButtons from '../components/ActionButtons.vue'
 import { useToast } from 'vue-toastification'
+import { usePublicProfile } from '../composables/usePublicProfile'
 
 const router = useRouter()
 const profileStore = useProfileStore()
@@ -21,21 +21,12 @@ const props = defineProps<{
 }>()
 
 // Local state
-const profile = reactive<PublicProfileWithContext>({} as PublicProfileWithContext)
-const error = ref<string | null>(null)
 const showModal = ref(false)
-import { useDatingInteractions } from '@/features/datinginteraction/composables/useDatingInteractions'
 
-const { like, unlike, pass, unpass, refreshLikes, loadingLikes } = useDatingInteractions()
+const { fetchProfile, refreshProfile, profile, isLoading, error } = usePublicProfile()
 
 onMounted(async () => {
-  const profileId = props.id
-  const res = await profileStore.getPublicProfile(profileId)
-  if (!res.success) {
-    error.value = res.message
-    return
-  }
-  Object.assign(profile, res.data)
+  await fetchProfile(props.id)
 })
 
 const handleOpenConversation = (conversationId: string) => {
@@ -47,7 +38,7 @@ const handleOpenConversation = (conversationId: string) => {
 const toast = useToast()
 
 const handleBlock = async () => {
-  const res = await profileStore.blockProfile(profile.id)
+  const res = await profileStore.blockProfile(profile.value.id)
   showModal.value = false
   if (res.success) {
     toast('Successfully blocked profile')
@@ -55,16 +46,6 @@ const handleBlock = async () => {
   } else {
     error.value = res.message
   }
-}
-
-const handleLike = async () => {
-  await like(profile.id)
-  toast('Successfully liked profile')
-}
-
-const handlePass = async () => {
-  await pass(profile.id)
-  toast('Successfully passed profile')
 }
 </script>
 
@@ -83,25 +64,15 @@ const handlePass = async () => {
         <BPlaceholderCard class="w-100 opacity-50" img-height="250" animation="glow" no-button />
       </template> -->
 
-        <ProfileContent
-          :profile
-          :isLoading="profileStore.isLoading"
-        />
-        <div>
-          <DatingInteractions
-            v-if="profile.isDatingActive"
-            :profile="profile"
-            @intent:pass="handlePass"
-            @intent:like="handleLike"
-          />
-        </div>
+        <ProfileContent :profile :isLoading="profileStore.isLoading" />
 
-        <ActionButtons
-          :profile
-          @intent:conversation:open="
-            (conversationId: string) => handleOpenConversation(conversationId)
-          "
+        <DatingInteractions
+          v-if="profile.isDatingActive"
+          :profile="profile"
+          @intent:message="(convoId: string) => handleOpenConversation(convoId)"
+          @updated="refreshProfile"
         />
+
         <!-- </BPlaceholderWrapper> -->
       </div>
     </div>

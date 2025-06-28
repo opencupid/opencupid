@@ -9,7 +9,7 @@ export function useDatingInteractions() {
     unlike: store.removeLike,
     pass: store.passProfile,
     unpass: store.unpassProfile,
-    refreshLikes: store.fetchInteractions,
+    refreshInteractions: store.fetchInteractions,
     loadingLikes: store.loading,
   }
 }

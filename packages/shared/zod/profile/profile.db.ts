@@ -1,6 +1,8 @@
 import {
   ConversationParticipantSchema,
   ConversationSchema,
+  HiddenProfileSchema,
+  LikedProfileSchema,
   LocalizedProfileFieldSchema,
   ProfileImageSchema,
   ProfileSchema,
@@ -9,6 +11,7 @@ import {
 import { TagWithTranslationsSchema } from "@zod/tag/tag.db";
 import z from "zod";
 import { datingFields, ownerFields, socialFields } from "./profile.fields";
+import { InteractionContextSchema } from "@zod/datinginteraction/interactionContext.dto";
 
 export const DbProfileSchema = ProfileSchema.extend({
   localized: z.array(LocalizedProfileFieldSchema).default([]),
@@ -25,21 +28,16 @@ export type DbProfileWithImages = z.infer<typeof DbProfileWithImagesSchema>;
 
 
 
-export const InteractionContextSchema = z.object({
-  likedByMe: z.boolean().default(false),
-  isMatch: z.boolean().default(false),
-  passedByMe: z.boolean().default(false),
-})
-
-export type InteractionContext = z.infer<typeof InteractionContextSchema>
-
 export const DbProfileWithContextSchema = DbProfileWithImagesSchema.extend({
   conversationParticipants: z
     .array(ConversationParticipantSchema.extend({
       conversation: ConversationSchema,
     }))
     .default([]),
-  interactionContext: InteractionContextSchema
+
+  likesReceived: z.array(LikedProfileSchema),
+  likesSent: z.array(LikedProfileSchema),
+  hiddenBy: z.array(HiddenProfileSchema),
 })
 
 export type DbProfileWithContext = z.infer<typeof DbProfileWithContextSchema>;
