@@ -159,6 +159,12 @@
     "enable_push": "Enable Push Notifications"
   },
   "uicomponents": {
+    "error": {
+      "title": "We've hit a snag here.",
+      "message": "An error occurred. Please try again later.",
+      "retry": "Retry",
+      "cancel": "Cancel"
+    },
     "submitbutton": {
       "working": "Working...",
       "submit": "Submit",

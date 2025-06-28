@@ -11,6 +11,7 @@ import BlockProfileDialog from '../components/BlockProfileDialog.vue'
 import PublicProfileSecondaryNav from '../components/PublicProfileSecondaryNav.vue'
 import { useToast } from 'vue-toastification'
 import { usePublicProfile } from '../composables/usePublicProfile'
+import ErrorOverlay from '@/features/shared/ui/StoreErrorOverlay.vue'
 
 const router = useRouter()
 const profileStore = useProfileStore()
@@ -23,10 +24,10 @@ const props = defineProps<{
 // Local state
 const showModal = ref(false)
 
-const { fetchProfile, refreshProfile, profile, isLoading, error } = usePublicProfile()
+const { fetchProfile, refreshProfile, blockProfile, profile, isLoading, error } = usePublicProfile()
 
 onMounted(async () => {
-  await fetchProfile(props.id)
+  const res = await fetchProfile(props.id)
 })
 
 const handleOpenConversation = (conversationId: string) => {
@@ -38,20 +39,30 @@ const handleOpenConversation = (conversationId: string) => {
 const toast = useToast()
 
 const handleBlock = async () => {
-  const res = await profileStore.blockProfile(profile.value.id)
+  const ok = await blockProfile()
   showModal.value = false
-  if (res.success) {
+  if (ok) {
     toast('Successfully blocked profile')
     router.back()
-  } else {
-    error.value = res.message
   }
 }
 </script>
 
 <template>
   <main class="container">
-    <div class="row justify-content-center">
+    <ErrorOverlay v-if="error" :error>
+      <template #default="{ error }">
+        <BButton
+          v-if="error.status"
+          variant="primary"
+          @click="$router.push({ name: 'BrowseProfiles' })"
+        >
+          Keep browsing though!
+        </BButton>
+      </template>
+    </ErrorOverlay>
+
+    <div v-else class="row justify-content-center">
       <div class="col-12 col-md-8 mx-auto">
         <div class="my-2">
           <PublicProfileSecondaryNav

@@ -51,6 +51,16 @@ export function tagsInclude() {
   return clause
 }
 
+export function blockedContextInclude(myProfileId: string) {
+  return {
+    blockedByProfiles: {
+      where: { id: myProfileId }, // Did I block them?
+    },
+    blockedProfiles: {
+      where: { id: myProfileId },   // Did they block me?
+    },
+  } satisfies Prisma.ProfileInclude
+}
 
 export const conversationContextInclude = (myProfileId: string) => ({
   conversationParticipants: {

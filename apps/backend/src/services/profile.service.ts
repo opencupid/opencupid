@@ -13,7 +13,7 @@ import {
   DbProfileWithImages
 } from '@zod/profile/profile.db'
 import { mapToLocalizedUpserts } from '@/api/mappers/profile.mappers'
-import { conversationContextInclude, interactionContextInclude, profileImageInclude, tagsInclude } from '@/db/includes/profileIncludes'
+import { blockedContextInclude, conversationContextInclude, interactionContextInclude, profileImageInclude, tagsInclude } from '@/db/includes/profileIncludes'
 
 
 
@@ -40,6 +40,7 @@ export class ProfileService {
         ...profileImageInclude(),
         ...interactionContextInclude(myProfileId),
         ...conversationContextInclude(myProfileId),
+        ...blockedContextInclude(myProfileId),
       },
     }
     return await prisma.profile.findUnique(query) 

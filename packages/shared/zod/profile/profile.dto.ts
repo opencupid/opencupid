@@ -50,7 +50,6 @@ export type PublicProfile = z.infer<typeof PublicProfileSchema>;
 
 
 
-
 export const PublicProfileWithContextSchema = ProfileUnionSchema.and(
   z.object({
     location: LocationSchema,
@@ -60,9 +59,9 @@ export const PublicProfileWithContextSchema = ProfileUnionSchema.and(
     introDating: z.string().default(''),
     conversation: ConversationSchema.nullable(),
     conversationContext: ConversationContextSchema,
-    interactionContext: InteractionContextSchema
+    interactionContext: InteractionContextSchema,
   })
-);
+)
 export const PublicProfileArraySchema = z.array(PublicProfileSchema);
 
 export type PublicProfileWithContext = z.infer<typeof PublicProfileWithContextSchema>;

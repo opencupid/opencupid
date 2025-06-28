@@ -91,6 +91,12 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
       const raw = await profileService.getProfileWithContextById(id, myProfileId)
       if (!raw) return sendError(reply, 404, 'Profile not found')
 
+        // the profile being requested has blocked the current profile
+      if (raw.blockedProfiles.length > 0) {
+        // intentionally returning a vague 404 for privacy reasons
+        return sendError(reply, 404, 'This profile does not exist')
+      }
+
       if (raw.userId !== req.user.userId && !req.session.hasActiveProfile) {
         return sendForbiddenError(reply, 'You do not have access to this profile')
       }

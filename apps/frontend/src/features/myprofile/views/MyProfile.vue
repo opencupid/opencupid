@@ -5,7 +5,7 @@ import { onMounted, ref, provide } from 'vue'
 import IconDate from '@/assets/icons/app/cupid.svg'
 import IconSocialize from '@/assets/icons/app/socialize.svg'
 
-import ErrorOverlay from '@/features/shared/ui/ErrorOverlay.vue'
+import ErrorOverlay from '@/features/shared/ui/StoreErrorOverlay.vue'
 import EditButton from '@/features/myprofile/components/EditButton.vue'
 import DatingWizard from '../../onboarding/components/DatingWizard.vue'
 import MyProfileSecondaryNav from '../components/MyProfileSecondaryNav.vue'

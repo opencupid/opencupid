@@ -45,10 +45,10 @@ export function storeError(error: unknown, fallbackMessage = 'Request failed'): 
   }
 
   // Handle Axios response errors
-  if (isAxiosError(error)) {
+  else if (isAxiosError(error)) {
     status = error.response?.status || 500
     const data = error.response?.data as ApiError
-    const message = data.message || fallbackMessage
+    message = data.message || fallbackMessage
     if (data.fieldErrors) {
       fieldErrors = data.fieldErrors
     }

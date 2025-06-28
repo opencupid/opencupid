@@ -31,6 +31,8 @@ import { bus } from '@/lib/bus'
 import { type GetProfileSummariesResponse } from '@zod/apiResponse.dto'
 import z from 'zod'
 
+export type PublicProfileResponse = StoreResponse<PublicProfileWithContext> | StoreError
+
 export const useProfileStore = defineStore('profile', {
   state: () => ({
     profile: null as OwnerProfile | null,// Current user's profile
