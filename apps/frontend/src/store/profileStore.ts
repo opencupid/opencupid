@@ -33,10 +33,17 @@ import z from 'zod'
 
 export type PublicProfileResponse = StoreResponse<PublicProfileWithContext> | StoreError
 
+interface ProfileStoreState {
+  profile: OwnerProfile | null // Current user's profile
+  isLoading: boolean // Loading state
+  error: StoreError | null // Error state
+}
+
 export const useProfileStore = defineStore('profile', {
-  state: () => ({
+  state: (): ProfileStoreState => ({
     profile: null as OwnerProfile | null,// Current user's profile
     isLoading: false, // Loading state
+    error: null
   }),
 
   actions: {
@@ -147,7 +154,7 @@ export const useProfileStore = defineStore('profile', {
      * @returns 
      */
 
-    async getProfilePreview(profileId: string, locale: string): Promise<StoreResponse<PublicProfile>> {
+    async getProfilePreview(profileId: string, locale: string): Promise<StoreResponse<PublicProfile>|StoreError> {
       try {
         this.isLoading = true // Set loading state
         const res = await api.get<GetPublicProfileResponse>(`/profiles/preview/${locale}/${profileId}`)

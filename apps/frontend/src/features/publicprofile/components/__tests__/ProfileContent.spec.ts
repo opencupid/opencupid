@@ -3,12 +3,12 @@ import { describe, it, expect, vi } from 'vitest'
 import { mount, shallowMount } from '@vue/test-utils'
 import ProfileContent from '../ProfileContent.vue'
 import type { GenderType, HasKidsType, PronounsType, RelationshipStatusType } from '@zod/generated'
-import type { InteractionContext } from '@zod/profile/profile.db'
 
 import { createTestingPinia } from '@pinia/testing'
 import { config } from '@vue/test-utils'
 
 import { appCreateI18n } from '@/lib/i18n'
+import type { InteractionContext } from '@zod/datinginteraction/interactionContext.dto'
 const i18n = appCreateI18n()
 
 config.global.plugins = [i18n, createTestingPinia()]
@@ -63,7 +63,23 @@ const baseProfile = {
   hasKids: 'no' as HasKidsType,
   birthday: new Date('1990-01-01'),
   conversation: null,
-  interactionContext: {} as InteractionContext
+  conversationContext: {
+    conversationId: null,
+    haveConversation: false,
+    canMessage: true,
+    initiated: false,
+  },
+  interactionContext: {
+    isMatch:false,
+    canLike: true,
+    canPass: true,
+    likedByMe: false,
+    passedByMe: false
+  },
+  visibility: {
+    isBlocked: false,
+    isHidden: false
+  }
 }
 
 describe('ProfileContent.vue', () => {

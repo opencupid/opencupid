@@ -2,18 +2,18 @@ import { useI18nStore } from "@/store/i18nStore"
 import { computed, reactive, ref, watch } from "vue"
 
 import { type PublicProfileWithContext } from "@zod/profile/profile.dto"
-import { type EditProfileForm, type EditFieldProfileFormWithImages } from "@zod/profile/profile.form"
+import { type EditFieldProfileFormWithImages } from "@zod/profile/profile.form"
 
 import { useProfileStore } from "@/store/profileStore"
 
 import { type ViewState } from '../composables/types'
+import { type StoreError } from "@/store/helpers"
 
 
 export function useMyProfile(isEditMode: boolean) {
 
   const profileStore = useProfileStore()
   const formData: EditFieldProfileFormWithImages = reactive({} as EditFieldProfileFormWithImages)
-  const error = ref('')
 
   const viewState = reactive<ViewState>({
     isEditable: isEditMode,
@@ -47,16 +47,15 @@ export function useMyProfile(isEditMode: boolean) {
   // actions
   const fetchPreview = async () => {
     if (!profileStore.profile) {
-      error.value = 'Profile not found'
+      // error.value = 'Profile not found'
       return
     }
     const res = await profileStore.getProfilePreview(
       profileStore.profile.id,
       viewState.previewLanguage
     )
-    if (!res.success || !res.data) {
-      error.value = 'Something went wrong (public profile)'
-      return
+    if (!res.success) {
+      return res
     }
     Object.assign(publicProfile, res.data)
   }
@@ -77,7 +76,7 @@ export function useMyProfile(isEditMode: boolean) {
     await profileStore.fetchOwnerProfile()
     // console.log('Profile fetched:', profileStore.profile)
     if (!profileStore.profile) {
-      error.value = 'Something went wrong (owner profile)'
+      // error.value = 'Something went wrong (owner profile)'
       return
     }
     // Object.assign(formData, profileStore.profile)
@@ -100,7 +99,7 @@ export function useMyProfile(isEditMode: boolean) {
     {}
   )
   return {
-    error,
+    error: profileStore.error,
     isLoading,
     viewState,
     formData,

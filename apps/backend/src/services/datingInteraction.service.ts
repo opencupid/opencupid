@@ -1,8 +1,9 @@
 import { mapProfileSummary } from '@/api/mappers/profile.mappers'
 import { profileImageInclude } from '@/db/includes/profileIncludes'
 import { prisma } from '@/lib/prisma'
+
 import { Prisma } from '@prisma/client'
-import { type InteractionEdge } from '@zod/datinginteraction/datinginteraction.dto'
+import { InteractionEdgePair, type InteractionEdge } from '@zod/datinginteraction/datinginteraction.dto'
 
 function toLikeEdge(
   profile: Prisma.ProfileGetPayload<{ include: { profileImages: true } }>,
@@ -28,7 +29,7 @@ export class DatingInteractionService {
 
   private constructor() { }
 
-  async like(fromId: string, toId: string): Promise<InteractionEdge> {
+  async like(fromId: string, toId: string): Promise<InteractionEdgePair> {
     if (fromId === toId) throw new Error('Cannot like yourself')
 
     await prisma.hiddenProfile.deleteMany({ where: { fromId, toId } }) // remove pass if exists
@@ -44,11 +45,22 @@ export class DatingInteractionService {
       include: profileImageInclude(),
     })
 
+    const initiatorProfile = await prisma.profile.findUniqueOrThrow({
+      where: { id: fromId },
+      include: profileImageInclude(),
+    })
+
     const isMatch = await prisma.likedProfile.findUnique({
       where: { fromId_toId: { fromId: toId, toId: fromId } },
     })
 
-    return toLikeEdge(likedProfile, like.createdAt, !!isMatch)
+    const response: InteractionEdgePair = {
+      isMatch: !!isMatch,
+      to: toLikeEdge(likedProfile, like.createdAt, !!isMatch),
+      from: toLikeEdge(initiatorProfile, like.createdAt, !!isMatch),
+    }
+
+    return response
   }
 
   async unlike(fromId: string, toId: string): Promise<void> {

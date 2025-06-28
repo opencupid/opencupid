@@ -13,7 +13,6 @@ const TargetLookupParamsSchema = z.object({
 
 const datingInteractionRoutes: FastifyPluginAsync = async fastify => {
   const service = DatingInteractionService.getInstance()
-  const webPushService = WebPushService.getInstance()
 
   // POST /interactions/like/:targetId
   fastify.post<{ Params: { targetId: string } }>('/like/:targetId', {
@@ -24,24 +23,17 @@ const datingInteractionRoutes: FastifyPluginAsync = async fastify => {
     const myId = req.session.profileId
 
     try {
-      const edge = await service.like(myId, targetId)
-      const response: InteractionEdgeResponse = { success: true, edge }
+      const likeResult = await service.like(myId, targetId)
+      const response: InteractionEdgeResponse = { success: true, pair: likeResult }
       reply.code(200).send(response)
 
-      console.error('Edge created:', edge)
-      // Broadcast the new message to the recipient's WebSocket connections
+      // Broadcast the new message to the recipient
       const ok = broadcastToProfile(fastify, targetId, {
-        type: edge.isMatch ? 'ws:new_match' : 'ws:new_like',
-        payload: edge,
+        type: likeResult.isMatch ? 'ws:new_match' : 'ws:new_like',
+        payload: likeResult.to,
       })
 
-      // if it's a match then send a broadcast back to the sender
-      if (edge.isMatch) {
-        broadcastToProfile(fastify, myId, {
-          type: 'ws:new_match',
-          payload: edge,
-        })
-      }
+
       // webPushService.send(edge)
 
     } catch (err) {

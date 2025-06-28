@@ -12,3 +12,11 @@ export const InteractionEdgeSchema = z.object({
 export type InteractionEdge = z.infer<typeof InteractionEdgeSchema>
 
 
+
+export const InteractionEdgePairSchema = z.object({
+  to: InteractionEdgeSchema,
+  from: InteractionEdgeSchema,
+  isMatch: z.boolean(),
+})
+
+export type InteractionEdgePair = z.infer<typeof InteractionEdgePairSchema>

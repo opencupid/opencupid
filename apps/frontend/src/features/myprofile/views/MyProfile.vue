@@ -5,7 +5,7 @@ import { onMounted, ref, provide } from 'vue'
 import IconDate from '@/assets/icons/app/cupid.svg'
 import IconSocialize from '@/assets/icons/app/socialize.svg'
 
-import ErrorOverlay from '@/features/shared/ui/StoreErrorOverlay.vue'
+import StoreErrorOverlay from '@/features/shared/ui/StoreErrorOverlay.vue'
 import EditButton from '@/features/myprofile/components/EditButton.vue'
 import DatingWizard from '../../onboarding/components/DatingWizard.vue'
 import MyProfileSecondaryNav from '../components/MyProfileSecondaryNav.vue'
@@ -34,7 +34,6 @@ const {
 } = useMyProfile(props.editMode)
 
 const isDatingWizardActive = ref(false)
-
 const toggleDating = async () => {
   // If dating is not onboarded, show the wizard
   if (!isDatingOnboarded.value && !formData.isDatingActive) {
@@ -47,7 +46,7 @@ const toggleDating = async () => {
 
 const toggleSocial = async () => {
   formData.isSocialActive = !formData.isSocialActive
-  await updateScopes()
+  const res = await updateScopes()
 }
 
 const handleFinishEdit = async () => {
@@ -77,7 +76,7 @@ provide('isOwner', true)
 <template>
   <main class="container" :class="[viewState.currentScope, { editable: viewState.isEditable }]">
     <EditableFields v-model="formData" :editState="viewState.isEditable" @updated="updateProfile">
-      <ErrorOverlay v-if="error" :error />
+      <StoreErrorOverlay v-if="error" :error />
       <div v-else class="row justify-content-center mt-3">
         <div class="col-12 col-md-8 col-lg-6 position-relative user-select-none">
           <div class="d-flex flex-row justify-content-between align-items-center mb-2">

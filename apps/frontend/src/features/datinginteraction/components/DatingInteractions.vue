@@ -1,12 +1,16 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 
 import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 
 import InteractionButtons from './InteractionButtons.vue'
 import SendMessageDialog from '@/features/publicprofile/components/SendMessageDialog.vue'
+import MatchPopup from './MatchPopup.vue'
+
 import { useDatingInteractions } from '../composables/useDatingInteractions'
 import { useToast } from 'vue-toastification'
+import { type InteractionEdgePair } from '@zod/datinginteraction/datinginteraction.dto'
+
 const toast = useToast()
 
 const props = defineProps<{
@@ -19,13 +23,20 @@ const emit = defineEmits<{
 }>()
 
 const showMessageModal = ref(false)
+const showMatchModal = ref(false)
 
 const { like, unlike, pass, unpass, refreshInteractions, loadingLikes } = useDatingInteractions()
 
 const handleLike = async () => {
-  await like(props.profile.id)
+  const result = await like(props.profile.id)
   emit('updated')
-  toast('Successfully liked profile')
+
+  if (result.success) {
+    match.value = result.data!
+    showMatchModal.value = true
+  } else {
+    toast('Successfully liked profile')
+  }
 }
 
 const handlePass = async () => {
@@ -45,6 +56,8 @@ const handleMessageIntent = () => {
   }
 }
 
+const match = ref<InteractionEdgePair | null>(null)
+
 onMounted(() => {
   refreshInteractions()
 })
@@ -60,6 +73,16 @@ onMounted(() => {
       :canPass="props.profile.interactionContext.canPass"
       :canMessage="props.profile.conversationContext.canMessage"
     />
-    <SendMessageDialog v-model="showMessageModal" :profile="props.profile" @sent="emit('updated')" />
+    <SendMessageDialog
+      v-model="showMessageModal"
+      :profile="props.profile"
+      @sent="emit('updated')"
+    />
+    <MatchPopup
+      v-if="match"
+      :show="showMatchModal"
+      :match="match"
+      @close="showMatchModal = false"
+    />
   </div>
 </template>

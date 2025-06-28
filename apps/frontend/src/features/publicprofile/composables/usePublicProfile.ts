@@ -1,8 +1,8 @@
 import { computed, reactive, ref } from "vue"
 
 import { type StoreError } from "@/store/helpers"
-import { PublicProfileResponse, useProfileStore } from "@/store/profileStore"
-import { PublicProfileWithContext } from "@zod/profile/profile.dto"
+import { useProfileStore } from "@/store/profileStore"
+import { type PublicProfileWithContext } from "@zod/profile/profile.dto"
 
 export function usePublicProfile() {
 

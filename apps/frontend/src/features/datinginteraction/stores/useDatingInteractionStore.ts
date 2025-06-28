@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
 import { api } from '@/lib/api'
 import { bus } from '@/lib/bus'
-import type { InteractionEdge } from '@zod/datinginteraction/datinginteraction.dto'
+import { InteractionEdgePairSchema, type InteractionEdge, type InteractionEdgePair } from '@zod/datinginteraction/datinginteraction.dto'
+import { storeError, storeSuccess, type StoreError, type StoreResponse } from '@/store/helpers'
 
 interface InteractionState {
   sent: InteractionEdge[]
@@ -9,6 +10,7 @@ interface InteractionState {
   matches: InteractionEdge[]
   passed: string[] // just IDs for now
   loading: boolean
+  error: StoreError | null
 }
 
 export const useDatingInteractionStore = defineStore('datingInteraction', {
@@ -18,6 +20,7 @@ export const useDatingInteractionStore = defineStore('datingInteraction', {
     matches: [],
     passed: [],
     loading: false,
+    error: null,
   }),
 
   actions: {
@@ -48,37 +51,44 @@ export const useDatingInteractionStore = defineStore('datingInteraction', {
         this.sent = sentRes.data.edges
         this.matches = matchRes.data.edges
         this.receivedLikesCount = receivedRes.data.count
-      } catch (err) {
-        console.error('Failed to fetch likes:', err)
+        return storeSuccess()
+      } catch (error) {
+        console.error('Failed to fetch likes:', error)
+        return storeError(error)
       } finally {
         this.loading = false
       }
     },
 
-    async sendLike(targetId: string): Promise<InteractionEdge | null> {
+    async sendLike(targetId: string): Promise<StoreResponse<InteractionEdgePair>> {
       try {
-        const res = await api.post(`/interactions/like/${targetId}`)
-        const edge = res.data.edge as InteractionEdge
-        this.sent.push(edge)
-        if (edge.isMatch) this.matches.push(edge)
-        return edge
-      } catch (err) {
-        console.error('Failed to like profile:', err)
-        return null
+        const res = await api.post<InteractionEdgePair>(`/interactions/like/${targetId}`)
+        const pair = InteractionEdgePairSchema.parse(res.data)
+        if (pair.isMatch) {
+          this.matches.push(pair.from)
+        } else {
+          this.sent.push(pair.from)
+        }
+        return storeSuccess(pair)
+      } catch (error) {
+        console.error('Failed to like profile:', error)
+        return storeError(error)
       }
     },
 
-    async removeLike(targetId: string) {
+    async removeLike(targetId: string): Promise<StoreResponse<void>> {
       try {
         await api.delete(`/interactions/like/${targetId}`)
         this.sent = this.sent.filter(e => e.profile.id !== targetId)
         this.matches = this.matches.filter(e => e.profile.id !== targetId)
-      } catch (err) {
-        console.error('Failed to unlike profile:', err)
+        return storeSuccess()
+      } catch (error) {
+        console.error('Failed to unlike profile:', error)
+        return storeError(error)
       }
     },
 
-    async passProfile(targetId: string) {
+    async passProfile(targetId: string): Promise<StoreResponse<void>> {
       try {
         await api.post(`/interactions/pass/${targetId}`)
         if (!this.passed.includes(targetId)) {
@@ -87,17 +97,21 @@ export const useDatingInteractionStore = defineStore('datingInteraction', {
         // Optionally: remove from sent/matches if previously liked
         this.sent = this.sent.filter(e => e.profile.id !== targetId)
         this.matches = this.matches.filter(e => e.profile.id !== targetId)
-      } catch (err) {
-        console.error('Failed to pass profile:', err)
+        return storeSuccess()
+      } catch (error) {
+        console.error('Failed to pass profile:', error)
+        return storeError(error)
       }
     },
 
-    async unpassProfile(targetId: string) {
+    async unpassProfile(targetId: string): Promise<StoreResponse<void>> {
       try {
         await api.delete(`/interactions/pass/${targetId}`)
         this.passed = this.passed.filter(id => id !== targetId)
-      } catch (err) {
-        console.error('Failed to unpass profile:', err)
+        return storeSuccess()
+      } catch (error) {
+        console.error('Failed to unpass profile:', error)
+        return storeError(error)
       }
     },
   },
