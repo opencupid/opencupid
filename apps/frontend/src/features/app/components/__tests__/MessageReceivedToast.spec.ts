@@ -5,13 +5,23 @@ import MessageReceivedToast from '../MessageReceivedToast.vue'
 vi.mock('@/features/images/components/ProfileImage.vue', () => ({ default: { template: '<div />' } }))
 
 const mockMessage = {
-  sender: {
-    publicName: 'Alice',
-    id: 1,
-    imageUrl: 'https://example.com/alice.jpg'
-  },
+  id: '123',
+  conversationId: '456',
+  senderId: '1',
   content: 'Hello!',
-  id: 123
+  createdAt: new Date(),
+  sender: {
+    id: '1',
+    publicName: 'Alice',
+    profileImages: [
+      {
+        position: 0,
+        altText: 'Alice profile',
+        url: 'https://example.com/alice.jpg',
+        mimeType: 'image/jpeg'
+      }
+    ]
+  }
 }
 
 vi.mock('vue-i18n', () => ({
@@ -47,6 +57,7 @@ describe('MessageReceivedToast', () => {
       props: {
         message: {
           ...mockMessage,
+          // @ts-expect-error invalid type to simulate missing publicName
           sender: { ...mockMessage.sender, publicName: undefined }
         },
         toastId: 2

@@ -5,8 +5,8 @@ vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 vi.mock('@/lib/mobile-detect', () => ({ detectMobile: vi.fn().mockReturnValue(false) }))
 
 vi.mock('@/assets/icons/files/avatar-upload.svg', () => ({ default: { template: '<div />' } }))
-vi.mock('@/components/LoadingComponent.vue', () => ({ default: { template: '<div />' } }))
-vi.mock('@/components/ErrorComponent.vue', () => ({ default: { template: '<div />' } }))
+vi.mock('@/features/shared/ui/LoadingComponent.vue', () => ({ default: { template: '<div />' } }))
+vi.mock('@/features/shared/ui/ErrorComponent.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('../components/UploadButton.vue', () => ({ default: { template: '<input />' } }))
 vi.mock('../stores/imageStore', () => ({ useImageStore: () => ({ uploadProfileImage: vi.fn().mockResolvedValue({ success: true }) }) }))
 

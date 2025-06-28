@@ -7,7 +7,7 @@ vi.mock('@fortawesome/vue-fontawesome', () => ({
 }))
 const push = vi.fn()
 vi.mock('vue-router', () => ({ useRouter: () => ({ push }) }))
-vi.mock('@/components/icons/DoodleIcons.vue', () => ({ default: { template: '<div />' } }))
+vi.mock('@/features/shared/icons/DoodleIcons.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/setting-2.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/message.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/search.svg', () => ({ default: { template: '<div />' } }))

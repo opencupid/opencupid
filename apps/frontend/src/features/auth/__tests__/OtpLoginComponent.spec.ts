@@ -5,7 +5,7 @@ vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 vi.mock('@/assets/icons/interface/message.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/mail.svg', () => ({ default: { template: '<div />' } }))
 
-vi.mock('@/components/icons/DoodleIcons.vue', () => ({ default: { template: '<div />' } }))
+vi.mock('@/features/shared/icons/DoodleIcons.vue', () => ({ default: { template: '<div />' } }))
 
 const stubFormKit = { template: '<form><slot :state="{ valid: true }" /></form>' }
 

@@ -2,7 +2,7 @@ import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi } from 'vitest'
 
 vi.mock('../image/ImageTag.vue', () => ({ default: { template: '<div />' } }))
-vi.mock('@/components/icons/DoodleIcons.vue', () => ({ default: { template: '<div />' } }))
+vi.mock('@/features/shared/icons/DoodleIcons.vue', () => ({ default: { template: '<div />' } }))
 
 import ImageCarousel from '../ImageCarousel.vue'
 

@@ -12,7 +12,11 @@ import LocationSelector from '@/features/shared/profileform/LocationSelector.vue
 import LanguageSelector from '@/features/shared/profileform/LanguageSelector.vue'
 import TagSelectComponent from '@/features/shared/profileform/TagSelectComponent.vue'
 import IntrotextEditor from '@/features/shared/profileform/IntrotextEditor.vue'
-
+import GenderPronounLabel from '@/features/shared/profiledisplay/GenderPronounLabel.vue'
+import RelationshipTags from '@/features/shared/profiledisplay/RelationshipTags.vue'
+import LanguageList from '@/features/shared/profiledisplay/LanguageList.vue'
+import TagList from '@/features/shared/profiledisplay/TagList.vue'
+import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
 import ImageEditor from '@/features/images/components/ImageEditor.vue'
 
 const { t } = useI18n()

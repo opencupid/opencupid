@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi } from 'vitest'
 
-vi.mock('@/components/icons/DoodleIcons.vue', () => ({ default: { template: '<div />' } }))
+vi.mock('@/features/shared/icons/DoodleIcons.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/app/logo.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/login.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/tick.svg', () => ({ default: { template: '<div />' } }))

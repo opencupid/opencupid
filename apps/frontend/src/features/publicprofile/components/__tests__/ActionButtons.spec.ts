@@ -1,8 +1,8 @@
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi } from 'vitest'
 
-vi.mock('@/components/icons/DoodleIcons.vue', () => ({ default: { template: '<div />' } }))
-vi.mock('@/components/messaging/SendMessage.vue', () => ({ default: { template: '<div />' } }))
+vi.mock('@/features/shared/icons/DoodleIcons.vue', () => ({ default: { template: '<div />' } }))
+vi.mock('@/features/shared/ui/messaging/SendMessage.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/message.svg', () => ({ default: { template: '<div />' } }))
 
 import ActionButtons from '../ActionButtons.vue'
