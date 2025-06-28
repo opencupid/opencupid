@@ -50,7 +50,7 @@ const handleBlock = async () => {
 
 <template>
   <main class="container">
-    <ErrorOverlay v-if="error" :error>
+    <ErrorOverlay v-if="error" :error="error">
       <template #default="{ error }">
         <BButton
           v-if="error.status"
