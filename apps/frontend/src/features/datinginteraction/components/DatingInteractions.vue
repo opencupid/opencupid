@@ -34,8 +34,9 @@ const handleLike = async () => {
   if (result.success) {
     match.value = result.data!
     showMatchModal.value = true
-  } else {
     toast('Successfully liked profile')
+  } else {
+    toast.error('Failed to like profile. Please try again.')
   }
 }
 
