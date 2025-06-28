@@ -5,7 +5,7 @@ import { useProfileStore } from '@/store/profileStore'
 
 import { useFindMatchViewModel } from '@/features/browse/composables/useFindMatchViewModel'
 
-import ErrorOverlay from '@/components/ErrorOverlay.vue'
+import ErrorOverlay from '@/features/shared/ui/ErrorOverlay.vue'
 import DatingPreferencesForm from '@/features/browse/components/DatingPreferencesForm.vue'
 import SecondaryNav from '@/features/browse/components/SecondaryNav.vue'
 import ProfileCardGrid from '@/features/browse/components/ProfileCardGrid.vue'

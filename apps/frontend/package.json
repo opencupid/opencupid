@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host",
-    "dev:depcruise": "depcruise   --output-type dot src | dot -T svg > docs/deps.svg",
+    "dev:depcruise": "depcruise   --output-type json src > docs/deps.json && depcruise   --output-type dot src | dot -T svg > docs/deps.svg",
     "build": "NODE_OPTIONS='--max-old-space-size=4096' run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "test:unit": "vitest",
@@ -53,6 +53,7 @@
     "@fortawesome/free-regular-svg-icons": "^6.7.2",
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "@fortawesome/vue-fontawesome": "^3.0.8",
+    "@pinia/testing": "^1.0.2",
     "@playwright/test": "^1.51.1",
     "@popperjs/core": "^2.11.8",
     "@tsconfig/node22": "^22.0.1",

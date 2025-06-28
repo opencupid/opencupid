@@ -18,18 +18,20 @@ export function getLocale(): string {
   return localStorage.getItem('language') || 'en'
 }
 
+export function appCreateI18n() {
+  return createI18n({
+    legacy: false,
+    locale: getLocale(),
+    fallbackLocale: 'en',
+    messages: { en, hu, de, fr },
+    missingWarn: true,
+    fallbackWarn: false,
+  })
+}
+
 export function appUseI18n(app: any) {
-  const i18n =
-    window.__APP_I18N__ ||
-    createI18n({
-      legacy: false,
-      locale: getLocale(),
-      fallbackLocale: 'en',
-      messages: { en, hu, de, fr },
-      missingWarn: true,
-      fallbackWarn: false,
-    })
-  window.__APP_I18N__ = i18n
+  const i18n = window.__APP_I18N__ || appCreateI18n()
+  window.__APP_I18N__ = i18n as any
   app.use(i18n)
   // app.provide('$i18n', i18n)
 }

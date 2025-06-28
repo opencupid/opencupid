@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { type Component, inject, ref } from 'vue'
 import IconPencil2 from '@/assets/icons/interface/pencil-2.svg'
-import useEditFields from '../../../components/profiles/composables/useEditFields'
+import useEditFields from '@/features/shared/composables/useEditFields'
 import { type EditFieldProfileFormWithImages } from '@zod/profile/profile.form'
 import { type FieldEditState } from '../composables/types'
-import { type EditProfileForm } from "@zod/profile/profile.form"
 
 // Only allow field names that are accepted by getModelProxy
 type AllowedFieldKey = keyof EditFieldProfileFormWithImages

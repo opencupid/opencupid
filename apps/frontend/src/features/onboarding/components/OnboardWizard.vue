@@ -3,12 +3,12 @@ import { useI18n } from 'vue-i18n'
 
 import { type EditProfileForm } from '@zod/profile/profile.form'
 
-import LanguageSelector from '@/components/profiles/forms/LanguageSelector.vue'
-import TagSelectComponent from '@/components/profiles/forms/TagSelectComponent.vue'
-import IntrotextEditor from '@/components/profiles/forms/IntrotextEditor.vue'
+import LanguageSelector from '@/features/shared/profileform/LanguageSelector.vue'
+import TagSelectComponent from '@/features/shared/profileform/TagSelectComponent.vue'
+import IntrotextEditor from '@/features/shared/profileform/IntrotextEditor.vue'
 import ImageEditor from '@/features/images/components/ImageEditor.vue'
 import DatingSteps from '../components/DatingSteps.vue'
-import LocationSelectorComponent from '@/components/profiles/forms/LocationSelector.vue'
+import LocationSelectorComponent from '@/features/shared/profileform/LocationSelector.vue'
 import GoalsSelector from './GoalsSelector.vue'
 import BackButton from '../components/BackButton.vue'
 

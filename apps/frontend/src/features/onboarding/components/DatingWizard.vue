@@ -7,7 +7,7 @@ import { useStepper } from '@vueuse/core'
 
 import BackButton from './BackButton.vue'
 import DatingSteps from './DatingSteps.vue'
-import HelpScribble from '@/components/HelpScribble.vue'
+import HelpScribble from '@/features/shared/ui/HelpScribble.vue'
 import IconArrowRight from '@/assets/icons/arrows/arrow-right.svg'
 
 const { t } = useI18n()

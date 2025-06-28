@@ -7,8 +7,8 @@ import { useLocalStore } from '@/store/localStore'
 import { type MessageDTO } from '@zod/messaging/messaging.dto'
 import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 
-import TagList from '@/components/profiles/display/TagList.vue'
-import LanguageList from '@/components/profiles/display/LanguageList.vue'
+import TagList from '@/features/shared/profiledisplay/TagList.vue'
+import LanguageList from '@/features/shared/profiledisplay/LanguageList.vue'
 
 import { useMessaging } from  '../composables/useMessaging'
 

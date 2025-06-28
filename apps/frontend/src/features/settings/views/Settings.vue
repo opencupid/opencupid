@@ -9,7 +9,7 @@ import { useAuthStore } from '@/features/auth/stores/authStore'
 
 import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
 
-import LoadingComponent from '@/components/LoadingComponent.vue'
+import LoadingComponent from '@/features/shared/ui/LoadingComponent.vue'
 import LogoutButton from '@/features/auth/components/LogoutButton.vue'
 import LanguageSelectorDropdown from '../components/LanguageSelectorDropdown.vue'
 import PushPermissions from '../components/PushPermissions.vue'

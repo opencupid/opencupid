@@ -5,11 +5,11 @@ import { onMounted, ref, provide } from 'vue'
 import IconDate from '@/assets/icons/app/cupid.svg'
 import IconSocialize from '@/assets/icons/app/socialize.svg'
 
-import ErrorOverlay from '@/components/ErrorOverlay.vue'
+import ErrorOverlay from '@/features/shared/ui/ErrorOverlay.vue'
 import EditButton from '@/features/myprofile/components/EditButton.vue'
 import DatingWizard from '../../onboarding/components/DatingWizard.vue'
 import MyProfileSecondaryNav from '../components/MyProfileSecondaryNav.vue'
-import PublicProfileComponent from '@/components/profiles/public/PublicProfileComponent.vue'
+import PublicProfileComponent from '@/features/publicprofile/components/ProfileContent.vue'
 import { useMyProfile } from '../composables/useMyProfile'
 import EditableFields from '../components/EditableFields.vue'
 

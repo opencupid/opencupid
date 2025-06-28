@@ -5,6 +5,7 @@ import IconCross from '@/assets/icons/interface/cross.svg'
 defineEmits<{
   (e: 'like'): void
   (e: 'pass'): void
+  (e: 'message'): void
 }>()
 </script>
 
@@ -14,6 +15,14 @@ defineEmits<{
       <IconCross class="svg-icon-lg" />
     </BButton>
 
+      <!-- <BButton
+        v-if="(!profile.conversation || profile.conversation.status === 'ACCEPTED') && !isOwner"
+        :pill="true"
+        class="btn-overlay"
+        @click="handleMessageIntent"
+      >
+        <IconMessage class="svg-icon-lg p-0" />
+      </BButton> -->
     <BButton  class="btn-icon-lg  btn-dating" @click="$emit('like')">
       <IconHeart class="svg-icon-lg" />
     </BButton>

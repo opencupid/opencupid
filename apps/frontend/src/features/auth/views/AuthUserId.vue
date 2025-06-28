@@ -8,7 +8,7 @@ import { useI18nStore } from '@/store/i18nStore'
 import { useAuthStore } from '../stores/authStore'
 import AuthIdComponent from '../components/AuthIdComponent.vue'
 
-import ErrorComponent from '@/components/ErrorComponent.vue'
+import ErrorComponent from '@/features/shared/ui/ErrorComponent.vue'
 
 // Reactive variables
 const error = ref('' as string)

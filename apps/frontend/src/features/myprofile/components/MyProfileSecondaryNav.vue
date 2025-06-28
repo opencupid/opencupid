@@ -3,8 +3,8 @@ import { computed } from 'vue'
 import { useI18nStore } from '@/store/i18nStore'
 
 import { type ViewState } from '../composables/types'
-import ScopeViewToggler from '@/components/profiles/ScopeViewToggler.vue'
-import LanguageIcon from '@/components/profiles/display/LanguageIcon.vue'
+import ScopeViewToggler from '@/features/shared/ui/ScopeViewToggler.vue'
+import LanguageIcon from '@/features/shared/profiledisplay/LanguageIcon.vue'
 import { type ProfileScope } from '@zod/profile/profile.dto'
 
 const model = defineModel<ViewState>({

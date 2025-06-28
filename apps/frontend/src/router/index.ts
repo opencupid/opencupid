@@ -8,11 +8,9 @@ import MessagingView from '@/features/messaging/views/Messaging.vue'
 import UserHome from '@/views/UserHome.vue'
 import Settings from '@/features/settings/views/Settings.vue'
 import MyProfile from '@/features/myprofile/views/MyProfile.vue'
-import PublicProfile from '@/views/PublicProfile.vue'
+import PublicProfile from '@/features/publicprofile/views/PublicProfile.vue'
 import BrowseProfiles from '@/features/browse/views/BrowseProfiles.vue'
 import OnboardingView from '@/features/onboarding/views/Onboarding.vue'
-import { connectWebSocket, disconnectWebSocket } from '@/lib/websocket'
-import { bus } from '@/lib/bus'
 
 const routes: Array<RouteRecordRaw> = [
   {

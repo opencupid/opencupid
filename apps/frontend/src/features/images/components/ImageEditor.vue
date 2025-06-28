@@ -6,10 +6,10 @@ import { useImageStore } from '@/features/images/stores/imageStore'
 
 import type { OwnerProfileImage } from '@zod/profile/profileimage.dto'
 
-import LoadingComponent from '@/components/LoadingComponent.vue'
+import LoadingComponent from '@/features/shared/ui/LoadingComponent.vue'
 import ImageUpload from './ImageUpload.vue'
 import ImageTag from './ImageTag.vue'
-import HelpScribble from '@/components/HelpScribble.vue'
+import HelpScribble from '@/features/shared/ui/HelpScribble.vue'
 
 import { useI18n } from 'vue-i18n'
 

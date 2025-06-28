@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import useEditFields from '@/components/profiles/composables/useEditFields'
+import useEditFields from '@/features/shared/composables/useEditFields'
 import { type EditProfileForm } from '@zod/profile/profile.form'
-import AgeSelector from '@/components/profiles/forms/AgeSelector.vue'
-import GenderPronounSelector from '@/components/profiles/forms/GenderPronounSelector.vue'
-import RelationstatusSelector from '@/components/profiles/forms/RelationstatusSelector.vue'
-import IntrotextEditor from '@/components/profiles/forms/IntrotextEditor.vue'
-import HaskidsSelector from '@/components/profiles/forms/HaskidsSelector.vue'
+import AgeSelector from '@/features/shared/profileform/AgeSelector.vue'
+import GenderPronounSelector from '@/features/shared/profileform/GenderPronounSelector.vue'
+import RelationstatusSelector from '@/features/shared/profileform/RelationstatusSelector.vue'
+import IntrotextEditor from '@/features/shared/profileform/IntrotextEditor.vue'
+import HaskidsSelector from '@/features/shared/profileform/HaskidsSelector.vue'
 import { useI18n } from 'vue-i18n'
 
 const formData = defineModel<EditProfileForm>({

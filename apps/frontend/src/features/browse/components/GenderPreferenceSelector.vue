@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { useEnumOptions } from '@/components/profiles/composables/useEnumOptions'
+import { useEnumOptions } from '@/features/shared/composables/useEnumOptions'
 import { computed, ref } from 'vue'
 import { type MultiselectOption } from '@/types/multiselect'
 

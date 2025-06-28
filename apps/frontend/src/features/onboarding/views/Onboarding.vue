@@ -7,8 +7,8 @@ import { useRouter } from 'vue-router'
 import { type GenderType, type PronounsType } from '@zod/generated'
 import { type EditProfileForm } from '@zod/profile/profile.form'
 
-import SpinnerComponent from '@/components/SpinnerComponent.vue'
-import ErrorComponent from '@/components/ErrorComponent.vue'
+import SpinnerComponent from '@/features/shared/ui/SpinnerComponent.vue'
+import ErrorComponent from '@/features/shared/ui/ErrorComponent.vue'
 import OnboardWizard from '@/features/onboarding/components/OnboardWizard.vue'
 
 import { useI18nStore } from '@/store/i18nStore'

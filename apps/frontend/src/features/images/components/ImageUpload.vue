@@ -4,8 +4,8 @@ import { useI18n } from 'vue-i18n'
 
 import { detectMobile } from '@/lib/mobile-detect'
 
-import LoadingComponent from '@/components/LoadingComponent.vue'
-import ErrorComponent from '@/components/ErrorComponent.vue'
+import LoadingComponent from '@/features/shared/ui/LoadingComponent.vue'
+import ErrorComponent from '@/features/shared/ui/ErrorComponent.vue'
 import UploadButton from './UploadButton.vue'
 import AvatarUploadIcon from '@/assets/icons/files/avatar-upload.svg'
 import { useImageStore } from '@/features/images/stores/imageStore'
