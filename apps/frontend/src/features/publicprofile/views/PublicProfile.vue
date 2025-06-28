@@ -4,11 +4,12 @@ import { useRouter } from 'vue-router'
 import type { PublicProfileWithContext } from '@zod/profile/profile.dto'
 import { useProfileStore } from '@/store/profileStore'
 
-import PublicProfileComponent from '@/features/publicprofile/components/ProfileContent.vue'
-
-import BlockProfileDialog from '@/features/publicprofile/components/BlockProfileDialog.vue'
-import PublicProfileSecondaryNav from '@/features/publicprofile/components/PublicProfileSecondaryNav.vue'
 import DatingInteractions from '@/features/datinginteraction/components/DatingInteractions.vue'
+
+import ProfileContent from '../components/ProfileContent.vue'
+import BlockProfileDialog from '../components/BlockProfileDialog.vue'
+import PublicProfileSecondaryNav from '../components/PublicProfileSecondaryNav.vue'
+import ActionButtons from '../components/ActionButtons.vue'
 import { useToast } from 'vue-toastification'
 
 const router = useRouter()
@@ -82,12 +83,9 @@ const handlePass = async () => {
         <BPlaceholderCard class="w-100 opacity-50" img-height="250" animation="glow" no-button />
       </template> -->
 
-        <PublicProfileComponent
+        <ProfileContent
           :profile
           :isLoading="profileStore.isLoading"
-          @intent:conversation:open="handleOpenConversation"
-          @intent:pass="handlePass"
-          @intent:like="handleLike"
         />
         <div>
           <DatingInteractions
