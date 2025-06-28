@@ -46,7 +46,7 @@ const toggleDating = async () => {
 
 const toggleSocial = async () => {
   formData.isSocialActive = !formData.isSocialActive
-  const res = await updateScopes()
+  await updateScopes()
 }
 
 const handleFinishEdit = async () => {
