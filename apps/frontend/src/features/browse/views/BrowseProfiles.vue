@@ -5,7 +5,7 @@ import { useProfileStore } from '@/store/profileStore'
 
 import { useFindMatchViewModel } from '@/features/browse/composables/useFindMatchViewModel'
 
-import ErrorOverlay from '@/features/shared/ui/StoreErrorOverlay.vue'
+import StoreErrorOverlay from '@/features/shared/ui/StoreErrorOverlay.vue'
 import DatingPreferencesForm from '@/features/browse/components/DatingPreferencesForm.vue'
 import SecondaryNav from '@/features/browse/components/SecondaryNav.vue'
 import ProfileCardGrid from '@/features/browse/components/ProfileCardGrid.vue'
@@ -72,7 +72,7 @@ const handleEditProfileIntent = () => {
 
 <template>
   <main class="container h-100">
-    <ErrorOverlay v-if="error" :error />
+    <StoreErrorOverlay v-if="error" :error />
 
     <div v-else class="mt-2 h-100 overflow-hidden position-relative d-flex flex-column">
       <div class="mb-2">

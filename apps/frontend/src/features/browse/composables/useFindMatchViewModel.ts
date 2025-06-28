@@ -2,7 +2,8 @@
 import { computed, reactive, readonly, ref, watch } from 'vue';
 import { useFindProfilesStore } from '@/features/browse/stores/findProfilesStore';
 import { useProfileStore } from '@/store/profileStore';
-import type { ProfileScope,  OwnerProfile } from '@zod/profile/profile.dto';
+import type { ProfileScope, OwnerProfile } from '@zod/profile/profile.dto';
+import { type StoreError } from '@/store/helpers';
 
 
 export function useFindMatchViewModel() {
@@ -12,13 +13,13 @@ export function useFindMatchViewModel() {
 
   const me = reactive({} as OwnerProfile)
 
-  const error = ref<string | null>('')
+  const error = ref<StoreError | null>(null)
 
   const initialize = async (defaultScope?: ProfileScope) => {
     console.log('Initializing FindMatchViewModel with defaultScope:', defaultScope)
     const meRes = await profileStore.fetchOwnerProfile()
-    if (!meRes.success || !profileStore.profile) {
-      error.value = 'Could not load profile'
+    if (!meRes.success) {
+      error.value = meRes
       return
     }
     Object.assign(me, profileStore.profile)
