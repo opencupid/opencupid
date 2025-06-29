@@ -89,7 +89,7 @@
     "rollup-plugin-visualizer": "^6.0.3",
     "sass": "^1.89.0",
     "sass-embedded": "^1.88.0",
-    "serve-static": "^1.16.2",
+    "serve-static": "^2.0.0",
     "typescript": "~5.8.0",
     "typescript-eslint": "^8.34.0",
     "unplugin-vue-components": "^28.5.0",
