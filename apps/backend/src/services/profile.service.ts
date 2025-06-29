@@ -1,4 +1,3 @@
-import cuid from 'cuid'
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
 

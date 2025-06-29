@@ -1,4 +1,4 @@
-import { type ApiError } from '@shared/dto/apiResponse.dto'
+import { type ApiError } from '@zod/apiResponse.dto'
 import { AxiosError } from 'axios'
 import { ZodError } from 'zod'
 import { useToast } from 'vue-toastification'

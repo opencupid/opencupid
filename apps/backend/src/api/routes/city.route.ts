@@ -9,7 +9,7 @@ import {
 import { FastifyPluginAsync } from 'fastify'
 import { sendError, addDebounceHeaders } from '../helpers'
 import { CityService } from 'src/services/city.service'
-import type { CityResponse, CitiesResponse } from '@shared/dto/apiResponse.dto'
+import type { CityResponse, CitiesResponse } from '@zod/apiResponse.dto'
 
 
 

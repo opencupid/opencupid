@@ -1,6 +1,6 @@
 // import { createEntityStore } from './entityStore'
 // import type { PublicCity, CreateCityInput } from '@zod/dto/city.dto'
-// import type { CityResponse, CitiesResponse } from '@shared/dto/apiResponse.dto'
+// import type { CityResponse, CitiesResponse } from '@zod/apiResponse.dto'
 
 // export const useCitiesStore = createEntityStore<PublicCity, CreateCityInput>({
 //   name: 'cities',
@@ -21,7 +21,7 @@ import { api, axios } from '@/lib/api'
 
 import type { PublicCity, CreateCityPayload } from '@zod/dto/city.dto'
 import type { City } from '@zod/generated'
-import type { CityResponse, CitiesResponse, ApiError } from '@shared/dto/apiResponse.dto'
+import type { CityResponse, CitiesResponse, ApiError } from '@zod/apiResponse.dto'
 
 interface ServiceError {
   success: false

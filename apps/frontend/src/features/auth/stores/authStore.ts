@@ -12,7 +12,7 @@ import {
 
 import type { AuthIdentifier, JwtPayload, SessionData } from '@zod/user/user.types'
 
-import type { ApiError, ApiSuccess, OtpLoginResponse, SendLoginLinkResponse, UserMeResponse } from '@shared/dto/apiResponse.dto'
+import type { ApiError, ApiSuccess, OtpLoginResponse, SendLoginLinkResponse, UserMeResponse } from '@zod/apiResponse.dto'
 import { AuthErrorCodes } from '@zod/user/auth.dto'
 
 type SuccessResponse<T> = { success: true } & T

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { api } from '@/lib/api'
 import { LocationSchema, type LocationDTO } from '@zod/dto/location.dto'
-import type { LocationResponse } from '@shared/dto/apiResponse.dto'
+import type { LocationResponse } from '@zod/apiResponse.dto'
 import { storeSuccess, storeError, type StoreResponse } from '@/store/helpers'
 
 export const useAppStore = defineStore('app', {

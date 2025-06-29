@@ -2,7 +2,7 @@ import { FastifyPluginAsync } from 'fastify'
 import { createChallenge } from 'altcha-lib'
 import { sendError } from '../helpers'
 import { appConfig } from '@/lib/appconfig'
-import type { CaptchaChallengeResponse } from '@shared/dto/apiResponse.dto'
+import type { CaptchaChallengeResponse } from '@zod/apiResponse.dto'
 
 const captchaRoutes: FastifyPluginAsync = async fastify => {
   fastify.get('/challenge', async (request, reply) => {

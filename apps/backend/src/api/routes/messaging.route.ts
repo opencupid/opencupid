@@ -15,7 +15,7 @@ import type {
   ConversationsResponse,
   ConversationResponse,
   SendMessageResponse,
-} from '@shared/dto/apiResponse.dto'
+} from '@zod/apiResponse.dto'
 import { broadcastToProfile } from '@/utils/wsUtils'
 import { SendMessagePayloadSchema } from '@zod/messaging/messaging.dto'
 

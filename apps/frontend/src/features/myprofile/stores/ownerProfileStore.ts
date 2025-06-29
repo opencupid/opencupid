@@ -19,7 +19,7 @@ import type {
   GetPublicProfileResponse,
   UpdateDatingPreferencesResponse,
   UpdateProfileResponse,
-} from '@shared/dto/apiResponse.dto'
+} from '@zod/apiResponse.dto'
 import {
   storeSuccess,
   storeError,
@@ -33,19 +33,19 @@ import { type DatingPreferencesDTO, DatingPreferencesDTOSchema } from '@zod/matc
 export type PublicProfileResponse = StoreResponse<PublicProfileWithContext> | StoreError
 
 interface ProfileStoreState {
-  profile: OwnerProfile | null // Current user's profile
-  datingPrefs: DatingPreferencesDTO | null, // Current user's dating preferences  
-  scopes: ProfileScope[], // Available scopes based on user profile
-  isLoading: boolean // Loading state
-  error: StoreError | null // Error state
+  profile: OwnerProfile | null
+  datingPrefs: DatingPreferencesDTO | null,
+  scopes: ProfileScope[],
+  isLoading: boolean
+  error: StoreError | null
 }
 
 export const useOwnerProfileStore = defineStore('ownerProfile', {
   state: (): ProfileStoreState => ({
-    profile: null as OwnerProfile | null,// Current user's profile
-    datingPrefs: null, // Current user's dating preferences  
-    scopes: [], // Available scopes based on user profile
-    isLoading: false, // Loading state
+    profile: null as OwnerProfile | null,
+    datingPrefs: null,
+    scopes: [],
+    isLoading: false,
     error: null
   }),
 

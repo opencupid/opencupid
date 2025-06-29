@@ -10,7 +10,7 @@ import { CaptchaService } from '@/services/captcha.service'
 import { appConfig } from '@/lib/appconfig'
 
 import { AuthIdentifierCaptchaInput, AuthIdentifierCaptchaInputSchema, OtpLoginInputSchema, OtpSendReturn } from '@zod/user/user.dto'
-import type { OtpLoginResponse, SendLoginLinkResponse, UserMeResponse } from '@shared/dto/apiResponse.dto'
+import type { OtpLoginResponse, SendLoginLinkResponse, UserMeResponse } from '@zod/apiResponse.dto'
 import { AuthIdentifier, JwtPayload } from '@zod/user/user.types'
 import { User } from '@zod/generated'
 

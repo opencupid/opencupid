@@ -1,6 +1,6 @@
 // import { createEntityStore } from './entityStore'
 // import type { PublicTag, CreateTagInput } from '@zod/dto/tag.dto'
-// import type { TagResponse, TagsResponse } from '@shared/dto/apiResponse.dto'
+// import type { TagResponse, TagsResponse } from '@zod/apiResponse.dto'
 
 // export const useTagsStore = createEntityStore<PublicTag, CreateTagInput>({
 //   name: 'tags',
@@ -21,7 +21,7 @@ import { api, axios } from '@/lib/api'
 
 import type { PublicTag, CreateTagInput, CreateTagPayload } from '@zod/tag/tag.dto'
 import type { Tag } from '@zod/generated'
-import type { TagResponse, TagsResponse, ApiError } from '@shared/dto/apiResponse.dto'
+import type { TagResponse, TagsResponse, ApiError } from '@zod/apiResponse.dto'
 
 interface ServiceError {
   success: false

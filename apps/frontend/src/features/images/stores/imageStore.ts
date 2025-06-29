@@ -1,7 +1,7 @@
 import z from 'zod'
 import { defineStore } from 'pinia'
 import { api, axios } from '@/lib/api'
-import type { ApiError, ApiSuccess } from '@shared/dto/apiResponse.dto'
+import type { ApiError, ApiSuccess } from '@zod/apiResponse.dto'
 import { type ImageApiResponse, ImageApiResponseSchema, type OwnerProfileImage, type ProfileImagePosition } from '@zod/profile/profileimage.dto'
 import { bus } from '@/lib/bus'
 

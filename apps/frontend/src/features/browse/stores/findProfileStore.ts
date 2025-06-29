@@ -8,7 +8,7 @@ import {
 } from '@zod/profile/profile.dto'
 import type {
   GetProfilesResponse,
-} from '@shared/dto/apiResponse.dto'
+} from '@zod/apiResponse.dto'
 import {
   storeSuccess,
   storeError,

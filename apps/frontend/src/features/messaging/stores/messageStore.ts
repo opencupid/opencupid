@@ -14,7 +14,7 @@ import type {
   ConversationsResponse,
   ConversationResponse,
   SendMessageResponse,
-} from '@shared/dto/apiResponse.dto'
+} from '@zod/apiResponse.dto'
 import { storeError, type StoreError, type StoreResponse, storeSuccess } from '@/store/helpers'
 
 
