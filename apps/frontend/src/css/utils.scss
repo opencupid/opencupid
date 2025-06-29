@@ -46,9 +46,15 @@ body.modal-open #app {
   // -moz-filter: blur(5px);
   // -o-filter: blur(5px);
   // -ms-filter: blur(5px);
-  // filter: blur(5px) grayscale(0.9);
+  // filter: grayscale(0.9);
+  filter: blur(5px) ;
 }
-
+.modal-backdrop {
+  transition: opacity 0.1s ease-in-out;
+}
+.modal-backdrop.show {
+  opacity: 0.75; // Set desired opacity here
+}
 
 .modal.carousel-modal {
   .modal-content {

@@ -12,8 +12,8 @@ import ProfileCardGrid from '../components/ProfileCardGrid.vue'
 import NoAccessCTA from '../components/NoAccessCTA.vue'
 import NoResultsCTA from '../components/NoResultsCTA.vue'
 import PlaceholdersGrid from '../components/PlaceholdersGrid.vue'
+import PublicProfile from '@/features/publicprofile/components/PublicProfile.vue'
 
-import PublicProfile from '@/features/publicprofile/views/PublicProfile.vue'
 import StoreErrorOverlay from '@/features/shared/ui/StoreErrorOverlay.vue'
 
 const router = useRouter()
@@ -37,6 +37,7 @@ const {
   datingPrefs,
   selectedProfileId,
   hideProfile,
+  updateDatingPrefs,
   initialize,
   reset,
 } = useFindMatchViewModel()
@@ -82,10 +83,6 @@ const handleCardClick = async (profileId: string) => {
 //   showModal.value = true
 // }
 
-const updateDatingPrefs = async () => {
-  // await findProfilesStore.persistDatingPrefs()
-}
-
 const handleEditProfileIntent = () => {
   router.push({ name: 'EditProfile' })
 }
@@ -117,18 +114,22 @@ const handleOpenConversation = (conversationId: string) => {
       </template>
     </StoreErrorOverlay>
 
-    <div v-else class="row d-flex justify-content-center pt-3 h-100">
-      <div class="col-12 col-md-6 mx-auto h-100 position-relative">
-        <div id="profile-view" v-if="selectedProfileId" class="px-3">
+    <div v-else class="row d-flex justify-content-center h-100" :class="currentScope">
+      <div class="col-12 col-md-6 mx-auto h-100 position-relative overflow-hidden">
+        <div id="profile-view" v-if="selectedProfileId" class="overflow-auto" :class="{ active: selectedProfileId }">
           <PublicProfile
             :id="selectedProfileId"
             @intent:back="handleCloseProfileView"
+            @intent:message="handleOpenConversation"
             @hidden="(id: string) => hideProfile(id)"
           />
         </div>
 
-        <div class="h-100 overflow-hidden position-relative d-flex flex-column">
-          <div class="mb-2">
+        <div
+          class="h-100 overflow-hidden position-relative d-flex flex-column"
+          :class="{ inactive: selectedProfileId }"
+        >
+          <div class="my-3">
             <SecondaryNav
               v-model="currentScope"
               @edit:datingPrefs="showModal = true"
@@ -142,9 +143,8 @@ const handleOpenConversation = (conversationId: string) => {
                 show
                 no-spinner
                 no-center
-                bg-color="var(--bs-body-bg)"
                 :blur="null"
-                opacity="0.85"
+                bg-color="inherit"
                 class="h-100 overlay"
                 spinner-variant="primary"
                 spinner-type="grow"
@@ -204,6 +204,9 @@ const handleOpenConversation = (conversationId: string) => {
   z-index: 4;
   height: 100%;
   width: 100%;
-  background-color: var(--bs-body-bg);
+}
+.inactive {
+  pointer-events: none;
+  visibility: hidden;
 }
 </style>

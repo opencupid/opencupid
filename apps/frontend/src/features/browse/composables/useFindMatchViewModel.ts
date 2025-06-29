@@ -37,13 +37,23 @@ export function useFindMatchViewModel() {
       ownerStore.scopes.length > 0 ? ownerStore.scopes[0] : null
   }
 
+  const fetchResults = async () => {
+    switch (currentScope.value) {
+      case 'social':
+        await findProfileStore.findSocial()
+        break
+      case 'dating':
+        await findProfileStore.findDating()
+        break
+      default:
+        console.warn('No valid scope selected, cannot fetch results')
+        return
+    }
+  }
+
   watch(() => currentScope.value, (newScope) => {
     if (!newScope) return // No scope selected
-    if (newScope === 'social') {
-      findProfileStore.findSocial()
-    } else if (newScope === 'dating') {
-      findProfileStore.findDating()
-    }
+    fetchResults()
     router.replace({
       name: 'BrowseProfilesScope',
       params: {
@@ -53,7 +63,7 @@ export function useFindMatchViewModel() {
   })
 
   watch(() => selectedProfileId.value, (profileId) => {
-    if (!profileId) return // No scope selected
+    if (!profileId) return
     router.push({
       name: 'PublicProfile',
       params: {
@@ -61,6 +71,7 @@ export function useFindMatchViewModel() {
       },
     })
   })
+
 
   const haveAccess = computed(() => {
     if (!me.value) return false // Ensure me is loaded
@@ -90,6 +101,17 @@ export function useFindMatchViewModel() {
     selectedProfileId.value = null
   }
 
+  const updateDatingPrefs = async () => {
+    const res = await ownerStore.persistDatingPrefs()
+    if (!res.success) {
+      storeError.value = res
+      return
+    }
+    // Reset the error if successful
+    storeError.value = null
+    fetchResults() // Refresh results after updating prefs
+  }
+
   return {
     haveResults,
     haveAccess,
@@ -98,10 +120,11 @@ export function useFindMatchViewModel() {
     initialize,
     hideProfile,
     reset,
-    availableScopes: computed(() => ownerStore.scopes),
+    availableScopes: ownerStore.scopes,
     currentScope,
     selectedProfileId,
     datingPrefs: toRef(ownerStore, 'datingPrefs'),
+    updateDatingPrefs,
     profileList: computed(() => findProfileStore.profileList),
   }
 

@@ -101,4 +101,7 @@ function handleLogoutClick() {
   margin: 0 !important;
   padding: 0 !important;
 }
+.navbar {
+  height: 4rem;
+}
 </style>

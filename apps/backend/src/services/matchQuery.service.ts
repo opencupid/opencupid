@@ -44,14 +44,16 @@ export class MatchQueryService {
     }
 
     const myAge = calculateAge(profile.birthday)
-
+    const prefAgeMax = profile.prefAgeMax ? profile.prefAgeMax + 1 : 99
+    const prefAgeMin = profile.prefAgeMin ? profile.prefAgeMin - 1 : 18
+    
     const where = {
       id: { not: profile.id },
       ...blocklistWhereClause(profileId),
       isDatingActive: true,
       birthday: {
-        gte: subtractYears(new Date(), profile.prefAgeMax ?? 99), // oldest acceptable
-        lte: subtractYears(new Date(), profile.prefAgeMin ?? 18), // youngest acceptable
+        gte: subtractYears(new Date(), prefAgeMax), // oldest acceptable
+        lte: subtractYears(new Date(), prefAgeMin), // youngest acceptable
       },
       gender: { in: profile.prefGender },
       hasKids: { in: profile.prefKids },
@@ -70,6 +72,31 @@ export class MatchQueryService {
     })
   }
 
+  async areProfilesMutuallyCompatible(aId: string, bId: string): Promise<boolean> {
+    const [a, b] = await prisma.profile.findMany({
+      where: { id: { in: [aId, bId] } },
+    })
+
+    if (!a || !b || !a.birthday || !b.birthday || !a.gender || !b.gender) return false
+    if (!a.isDatingActive || !b.isDatingActive) return false
+
+    const ageA = calculateAge(a.birthday)
+    const ageB = calculateAge(b.birthday)
+
+    const aMatchesB =
+      ageB >= (a.prefAgeMin ?? 18) &&
+      ageB <= (a.prefAgeMax ?? 99) &&
+      a.prefGender.includes(b.gender) &&
+      (b.hasKids == null || a.prefKids.includes(b.hasKids) || a.prefKids.length === 0)
+
+    const bMatchesA =
+      ageA >= (b.prefAgeMin ?? 18) &&
+      ageA <= (b.prefAgeMax ?? 99) &&
+      b.prefGender.includes(a.gender) &&
+      (a.hasKids == null || b.prefKids.includes(a.hasKids) || b.prefKids.length === 0)
+
+    return aMatchesB && bMatchesA
+  }
 
   // Add methods for match query operations here
 }

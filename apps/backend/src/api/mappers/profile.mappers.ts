@@ -18,7 +18,6 @@ import { mapProfileTagsTranslated } from './tag.mappers'
 import { Profile, ProfileImage } from '@zod/generated'
 import { toOwnerProfileImage, toPublicProfileImage } from './image.mappers'
 import { mapInteractionContext } from './interaction.mappers'
-import { type ConversationContext } from '@zod/messaging/conversationContext.dto'
 import { mapConversationContext } from './messaging.mappers'
 
 
@@ -45,10 +44,7 @@ export function mapDbProfileToOwnerProfile(locale: string, db: DbProfileWithImag
 }
 
 
-export function mapProfileToPublic(dbProfile: DbProfileWithImages, hasDatingPermission: boolean, locale: string): PublicProfileWithContext {
-
-  // const get = (field: string) =>
-  //   dbProfile.localized.find(l => l.field === field && l.locale === locale)?.value
+export function mapProfileToPublic(dbProfile: DbProfileWithImages, includeDatingContext: boolean, locale: string): PublicProfileWithContext {
 
   // map localized fields with fallback to first available locale
   const get = (field: string): string =>
@@ -58,7 +54,7 @@ export function mapProfileToPublic(dbProfile: DbProfileWithImages, hasDatingPerm
   // shape discriminated union ProfileUnionSchema
   const dProf = {
     ...dbProfile,
-    isDatingActive: hasDatingPermission && dbProfile.isDatingActive,
+    isDatingActive: includeDatingContext,
   }
   const scalars = ProfileUnionSchema.parse(dProf)
   const publicImages = dbProfile.profileImages ? mapProfileImagesToPublic(dbProfile.profileImages) : []

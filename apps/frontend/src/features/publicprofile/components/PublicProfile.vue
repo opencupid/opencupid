@@ -44,7 +44,7 @@ const handleBlock = async () => {
 </script>
 
 <template>
-  <div>
+  <div :class="{ 'dating': profile.isDatingActive }" class="p-3" style="min-height: 100%;">
     <StoreErrorOverlay v-if="error" :error="error">
       <template #default="{ error }">
         <BButton v-if="error.status" variant="primary" @click="$emit('intent:back')">
@@ -84,3 +84,7 @@ const handleBlock = async () => {
     />
   </div>
 </template>
+
+<style scoped>    
+
+</style>

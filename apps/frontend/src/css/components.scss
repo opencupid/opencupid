@@ -122,6 +122,13 @@
   @include btn-colored-push($dating);
 }
 
+.dating {
+  background-color: transparentize($dating, 0.9);
+}
+.social {
+  background-color: transparentize($social, 0.9);
+}
+
 
 // List group checkbox/radio lists
 // expand clickable area to the whole list item

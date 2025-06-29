@@ -149,12 +149,6 @@ provide('isOwner', true)
 .editable {
   background-color: var(--bs-light);
 }
-.dating {
-  background-color: transparentize($dating, 0.9);
-}
-.social {
-  background-color: transparentize($social, 0.9);
-}
 
 :deep(.editable-textarea) {
   position: relative;

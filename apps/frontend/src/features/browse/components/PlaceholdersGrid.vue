@@ -24,7 +24,7 @@ const props = withDefaults(
 
 <style scoped>
 .card {
-  /* opacity: 0.4; */
+  opacity: 0.2;
 }
 :deep(.card img) {
   height: 12rem;

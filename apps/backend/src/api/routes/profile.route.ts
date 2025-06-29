@@ -2,16 +2,16 @@ import { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify'
 import { Prisma } from '@prisma/client'
 import { z } from 'zod'
 
+import { appConfig } from '@/lib/appconfig'
+import { validateBody } from '@/utils/zodValidate'
+
 import {
   type UpdateProfilePayload,
   type UpdateProfileScopePayload,
-  BlockProfilePayloadSchema,
   UpdateProfilePayloadSchema,
   UpdateProfileScopeSchemaPayload
 } from '@zod/profile/profile.dto'
 
-import { ProfileService } from 'src/services/profile.service'
-import { validateBody } from '@/utils/zodValidate'
 import {
   rateLimitConfig,
   sendError,
@@ -25,18 +25,19 @@ import {
   mapProfileToPublic,
   mapProfileWithContext,
 } from '@/api/mappers/profile.mappers'
-import { UserService } from 'src/services/user.service'
 import type {
   GetMyProfileResponse,
   GetPublicProfileResponse,
-  GetProfilesResponse,
   UpdateProfileResponse,
   GetDatingPreferenceseResponse,
   UpdateDatingPreferencesResponse,
-} from '@shared/dto/apiResponse.dto'
+} from '@zod/apiResponse.dto'
 import { DatingPreferencesDTOSchema, UpdateDatingPreferencesPayloadSchema } from '@zod/match/datingPreference.dto'
-import { appConfig } from '@/lib/appconfig'
 import { GetProfileSummariesResponse } from '@zod/apiResponse.dto'
+
+import { ProfileService } from 'src/services/profile.service'
+import { MatchQueryService } from '@/services/matchQuery.service'
+import { UserService } from 'src/services/user.service'
 
 // Route params for ID lookups
 const IdLookupParamsSchema = z.object({
@@ -56,6 +57,7 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
   // instantiate services
   const profileService = ProfileService.getInstance()
   const userService = UserService.getInstance()
+  const matchQueryService = MatchQueryService.getInstance()
 
   /**
    * Get the current user's profile
@@ -91,7 +93,7 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
       const raw = await profileService.getProfileWithContextById(id, myProfileId)
       if (!raw) return sendError(reply, 404, 'Profile not found')
 
-        // the profile being requested has blocked the current profile
+      // the profile being requested has blocked the current profile
       if (raw.blockedProfiles.length > 0) {
         // intentionally returning a vague 404 for privacy reasons
         return sendError(reply, 404, 'This profile does not exist')
@@ -100,10 +102,13 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
       if (raw.userId !== req.user.userId && !req.session.hasActiveProfile) {
         return sendForbiddenError(reply, 'You do not have access to this profile')
       }
-      const hasDatingPermission = req.session.profile.isDatingActive
 
-      const profile = mapProfileWithContext(raw, hasDatingPermission, locale)
-      // const profile = publicProfileSchema.parse(raw)
+      let includeDatingContext = false
+      if(raw.isDatingActive && req.session.profile.isDatingActive) {
+        includeDatingContext = await matchQueryService.areProfilesMutuallyCompatible(myProfileId, raw.id)
+      }
+
+      const profile = mapProfileWithContext(raw, includeDatingContext, locale)
       const response: GetPublicProfileResponse = { success: true, profile }
       return reply.code(200).send(response)
     } catch (err) {
