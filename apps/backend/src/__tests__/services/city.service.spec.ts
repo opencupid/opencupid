@@ -59,3 +59,13 @@ describe('CityService.update', () => {
     })
   })
 })
+
+describe('CityService.remove', () => {
+  it('soft deletes the city', async () => {
+    await service.remove('c3')
+    expect(mockPrisma.city.update).toHaveBeenCalledWith({
+      where: { id: 'c3' },
+      data: { isDeleted: true },
+    })
+  })
+})

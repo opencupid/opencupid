@@ -83,3 +83,15 @@ describe('MessageService.markConversationRead', () => {
     })
   })
 })
+
+describe('MessageService.listConversationsForProfile', () => {
+  it('queries prisma with correct filters', async () => {
+    mockPrisma.conversationParticipant.findMany.mockResolvedValue([])
+    await service.listConversationsForProfile('p1')
+    const args = mockPrisma.conversationParticipant.findMany.mock.calls[0][0]
+    expect(args.where.profileId).toBe('p1')
+    expect(args.orderBy).toEqual({ conversation: { updatedAt: 'desc' } })
+    // ensure blocklist filters applied
+    expect(args.where.conversation.participants.some.profile.blockedProfiles.none.id).toBe('p1')
+  })
+})
