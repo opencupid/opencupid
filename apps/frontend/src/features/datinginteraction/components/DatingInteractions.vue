@@ -84,7 +84,7 @@ onMounted(() => {
     <MatchPopup
       v-if="match"
       :show="showMatchModal"
-      :profile="profile"
+      :profile="props.profile"
       :match="match"
       @close="showMatchModal = false"
     />
