@@ -15,25 +15,31 @@ import type {
   ConversationsResponse,
   ConversationResponse,
   SendMessageResponse,
-  InitiateConversationResponse,
 } from '@shared/dto/apiResponse.dto'
 import { broadcastToProfile } from '@/utils/wsUtils'
+import { SendMessagePayloadSchema } from '@zod/messaging/messaging.dto'
 
 // Route params for ID lookups
 const IdLookupParamsSchema = z.object({
   id: z.string().cuid(),
 })
 
-const ReplyToConversationParamsSchema = z.object({
-  content: z.string().min(1),
-})
 
-const InitiateConversationParamsSchema = z.object({
-  profileId: z.string().cuid(),
-  content: z.string().min(1),
-})
-
-
+/**
+ * Registers messaging-related routes for the Fastify server.
+ *
+ * This plugin provides endpoints for:
+ * - Fetching messages in a conversation (`GET /:id`)
+ * - Listing all conversations for the authenticated profile (`GET /conversations`)
+ * - Marking a conversation as read (`POST /conversations/:id/mark-read`)
+ * - Initiating a new conversation with a message (`POST /conversations/initiate`)
+ * - Sending a message to an existing conversation (`POST /conversations/:id`)
+ *
+ * All routes require authentication via `fastify.authenticate`.
+ * Handles request validation, error responses, and broadcasts new messages via WebSocket and web push notifications.
+ *
+ * @param fastify - The Fastify instance to decorate with messaging routes.
+ */
 const messageRoutes: FastifyPluginAsync = async fastify => {
   const messageService = MessageService.getInstance()
   const webPushService = WebPushService.getInstance()
@@ -74,7 +80,10 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
     }
   })
 
-
+  /**
+   * Marks a conversation as read.  
+   * @param :id - conversation ID
+   */
   fastify.post('/conversations/:id/mark-read', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const profileId = req.session.profileId
     if (!profileId) return sendError(reply, 401, 'Profile not found.')
@@ -101,30 +110,28 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
     }
   })
 
-  /**
-  * Initiates a conversation.  
-  * @param :id - recipient profile ID
-  */
-  fastify.post('/conversations/initiate', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+  fastify.post('/message', { onRequest: [fastify.authenticate] }, async (req, reply) => {
 
     const senderProfileId = req.session.profileId
     if (!senderProfileId) return sendError(reply, 401, 'Sender ID not found.')
 
-    const body = InitiateConversationParamsSchema.safeParse(req.body)
+    const body = SendMessagePayloadSchema.safeParse(req.body)
     if (!body.success) return sendError(reply, 401, 'Invalid parameters')
 
     const { profileId, content } = body.data
 
     try {
-      const { conversation, message } = await messageService.initiateConversation(
+      const { conversation, message } = await messageService.sendOrStartConversation(
         senderProfileId,
         profileId,
         content
       )
       const messageDTO = mapMessageDTO(message, conversation)
 
-      const response: InitiateConversationResponse = {
+      const response: SendMessageResponse = {
         success: true,
+        conversation: mapConversationParticipantToSummary(conversation, senderProfileId),
+        message: mapMessageForMessageList(messageDTO, senderProfileId),
       }
 
       reply.code(200).send(response)
@@ -143,46 +150,7 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
 
   })
 
-  /**
-   * Send a message to an existing conversation.  
-   * @param :id - conversation ID
-   */
-  fastify.post('/conversations/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-    const senderProfileId = req.session.profileId
-    if (!senderProfileId) return sendError(reply, 401, 'Sender ID not found.')
 
-    const params = IdLookupParamsSchema.safeParse(req.params)
-    if (!params.success) return sendError(reply, 401, 'Recipient ID not found')
-    const { id } = params.data
-
-    const body = ReplyToConversationParamsSchema.safeParse(req.body)
-    if (!body.success) return sendError(reply, 401, 'Invalid message body')
-    const { content } = body.data
-
-    try {
-      const { conversation, message } = await messageService.replyInConversation(senderProfileId, id, content)
-      const messageDTO = mapMessageDTO(message, conversation)
-      const convoSummary = mapConversationParticipantToSummary(conversation, senderProfileId)
-
-      const response: SendMessageResponse = {
-        success: true,
-        conversation: convoSummary,
-        message: mapMessageForMessageList(messageDTO, senderProfileId),
-      }
-
-      reply.code(200).send(response)
-
-      // Broadcast the new message to the recipient's WebSocket connections
-      const ok = broadcastToProfile(fastify, convoSummary.partnerProfile.id, {
-        type: 'ws:new_message',
-        payload: messageDTO,
-      })
-
-      webPushService.send(messageDTO)
-    } catch (error: any) {
-      return sendError(reply, 403, 'You are not allowed to send messages to this recipient')
-    }
-  })
 }
 
 export default messageRoutes

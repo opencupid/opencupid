@@ -34,6 +34,7 @@ declare module 'vue' {
     BOverlay: typeof import('bootstrap-vue-next/components/BOverlay')['BOverlay']
     BPlaceholderCard: typeof import('bootstrap-vue-next/components/BPlaceholder')['BPlaceholderCard']
     BPlaceholderWrapper: typeof import('bootstrap-vue-next/components/BPlaceholder')['BPlaceholderWrapper']
+    BPopover: typeof import('bootstrap-vue-next/components/BPopover')['BPopover']
     BSpinner: typeof import('bootstrap-vue-next/components/BSpinner')['BSpinner']
     BTooltip: typeof import('bootstrap-vue-next/components/BTooltip')['BTooltip']
     RouterLink: typeof import('vue-router')['RouterLink']

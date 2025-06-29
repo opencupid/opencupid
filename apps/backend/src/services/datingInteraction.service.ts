@@ -141,8 +141,16 @@ export class DatingInteractionService {
   async pass(fromId: string, toId: string): Promise<void> {
     if (fromId === toId) throw new Error('Cannot pass yourself')
 
-    await prisma.likedProfile.deleteMany({ where: { fromId, toId } }) // remove like if exists
-
+    // Remove likes in both directions if a match exists
+    await prisma.likedProfile.deleteMany({
+      where: {
+        OR: [
+          { fromId, toId },
+          { fromId: toId, toId: fromId }
+        ]
+      }
+    })
+    // Hide the profile from view (unidirectional)
     await prisma.hiddenProfile.upsert({
       where: { fromId_toId: { fromId, toId } },
       update: {},

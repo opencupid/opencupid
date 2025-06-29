@@ -26,7 +26,6 @@ const props = defineProps<{
   isLoading: boolean
   wrapperClass?: string
 }>()
-
 </script>
 
 <template>
@@ -70,7 +69,7 @@ const props = defineProps<{
 
     <div class="mb-3">
       <div class="d-inline-block">
-        <TagList :profile />
+        <TagList :tags="profile.tags" />
         <EditField fieldName="tags" :editComponent="TagSelectComponent">
           <template #display>
             <div class="editable-placeholder" v-if="!props.profile.tags?.length">
@@ -130,8 +129,6 @@ const props = defineProps<{
     <div class="mb-3">
       <RelationshipTags :profile="props.profile" />
     </div>
-
-    
   </div>
 </template>
 

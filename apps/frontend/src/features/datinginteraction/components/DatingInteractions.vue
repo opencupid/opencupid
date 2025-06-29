@@ -19,22 +19,28 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'intent:message', conversationId: string): void
+  (e: 'liked'): void
+  (e: 'passed'): void
   (e: 'updated'): void
 }>()
 
 const showMessageModal = ref(false)
 const showMatchModal = ref(false)
+const match = ref<InteractionEdgePair>()
 
-const { like, unlike, pass, unpass, refreshInteractions, loadingLikes } = useDatingInteractions()
+const { like, pass, refreshInteractions, loadingLikes } = useDatingInteractions()
 
 const handleLike = async () => {
   const result = await like(props.profile.id)
+  emit('liked')
   emit('updated')
-
   if (result.success) {
-    match.value = result.data!
-    showMatchModal.value = true
-    toast('Successfully liked profile')
+    match.value = result.data
+    if (match.value?.isMatch) {
+      showMatchModal.value = true
+    } else {
+      toast('Successfully liked profile')
+    }
   } else {
     toast.error('Failed to like profile. Please try again.')
   }
@@ -42,8 +48,8 @@ const handleLike = async () => {
 
 const handlePass = async () => {
   await pass(props.profile.id)
+  emit('passed')
   emit('updated')
-  toast('Successfully passed profile')
 }
 
 const handleMessageIntent = () => {
@@ -57,8 +63,6 @@ const handleMessageIntent = () => {
   }
 }
 
-const match = ref<InteractionEdgePair | null>(null)
-
 onMounted(() => {
   refreshInteractions()
 })
@@ -70,9 +74,7 @@ onMounted(() => {
       @message="handleMessageIntent"
       @pass="handlePass"
       @like="handleLike"
-      :canLike="props.profile.interactionContext.canLike"
-      :canPass="props.profile.interactionContext.canPass"
-      :canMessage="props.profile.conversationContext.canMessage"
+      :context="props.profile.interactionContext"
     />
     <SendMessageDialog
       v-model="showMessageModal"
@@ -82,6 +84,7 @@ onMounted(() => {
     <MatchPopup
       v-if="match"
       :show="showMatchModal"
+      :profile="profile"
       :match="match"
       @close="showMatchModal = false"
     />

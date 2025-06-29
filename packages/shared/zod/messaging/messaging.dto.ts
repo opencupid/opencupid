@@ -87,6 +87,15 @@ export type ConversationParticipantWithConversationSummary =
     }
   }>
 
+
+export const SendMessagePayloadSchema = z.object({
+  profileId: z.string().cuid(),
+  content: z.string().min(1),
+})
+
+export type SendMessagePayload = z.infer<typeof SendMessagePayloadSchema>
+
+
 // export type ConversationParticipantWithExtras = ConversationParticipantWithConversationSummary & {
 //   unreadCount: number,
 // }

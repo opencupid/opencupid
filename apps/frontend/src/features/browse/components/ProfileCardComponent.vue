@@ -25,7 +25,7 @@ defineProps<{
         </small>
       </div>
       <div class="p-2 flex-grow-1">
-        <TagList :profile />
+        <TagList :tags="profile.tags" />
       </div>
       <!-- <p class="card-text" :class="{ 'truncated-text': profile.introSocial.length > 100 }">
         {{ profile.introSocial }}

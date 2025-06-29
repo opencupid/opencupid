@@ -10,8 +10,7 @@ import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 import TagList from '@/features/shared/profiledisplay/TagList.vue'
 import LanguageList from '@/features/shared/profiledisplay/LanguageList.vue'
 
-import { useMessaging } from  '../composables/useMessaging'
-
+import { useMessaging } from '../composables/useMessaging'
 
 const props = defineProps<{
   recipientProfile: PublicProfileWithContext
@@ -24,7 +23,7 @@ const emit = defineEmits<{
 
 const content = ref('')
 
-const { sendMessage, initiateConversation, isSending, isSent, errorMsg } = useMessaging()
+const { sendMessage, errorMsg } = useMessaging()
 
 // Local store for managing message drafts
 const localStore = useLocalStore()
@@ -59,18 +58,17 @@ defineExpose({
 async function handleSendMessage() {
   const trimmedContent = content.value.trim()
   if (trimmedContent === '') return
-  if (props.conversationId) {
-    // If conversationId is provided, use it to send the message
-    const sentMessage = await sendMessage(props.conversationId, trimmedContent)
-    emit('message:sent', sentMessage!)
+  const result = await sendMessage(props.recipientProfile.id, trimmedContent)
+  if (result.success) {
+    console.log('Message sent successfully:', result.data)
+    emit('message:sent', result.data!)
+    content.value = '' // Clear the input after sending
+    localStore.setMessageDraft(props.recipientProfile.id, '') // Clear the draft in local store
   } else {
-    console.log('No conversationId provided, starting a new conversation...')
-    // If no conversationId, create a new conversation and send the message
-    await initiateConversation(props.recipientProfile, trimmedContent)
-    emit('message:sent', null) // Emit null to indicate a new conversation was started
+    console.error('Failed to send message:', result.message)
+    errorMsg.value = result.message || 'Message not sent' // TODO i18n doesn't work in composables, this must be moved to parent
+    return
   }
-  content.value = '' // Clear the input after sending
-  localStore.setMessageDraft(props.recipientProfile.id, '') // Clear the draft in local store
 }
 </script>
 
@@ -79,7 +77,7 @@ async function handleSendMessage() {
     <div class="mb-2">
       <div class="mb-2 opacity-50">
         <div class="d-inline-block">
-          <TagList :profile="props.recipientProfile" class="d-inline-block" />
+          <TagList :tags="props.recipientProfile.tags" class="d-inline-block" />
         </div>
         <div class="d-inline-block">
           <LanguageList :languages="props.recipientProfile.languages" class="d-inline-block" />

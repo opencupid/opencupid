@@ -26,6 +26,7 @@ export const useDatingInteractionStore = defineStore('datingInteraction', {
   actions: {
     initialize() {
       bus.on('ws:new_like', this.onNewLike)
+      bus.on('ws:new_match', this.onNewMatch)
       // You can also listen for future events: ws:new_pass, ws:match, etc.
     },
 
@@ -38,6 +39,11 @@ export const useDatingInteractionStore = defineStore('datingInteraction', {
       // if (edge.isMatch && !this.matches.some(e => e.profile.id === edge.profile.id)) {
       //   this.matches.unshift(edge)
       // }
+    },
+    onNewMatch(edge: InteractionEdge) {
+      if (edge.isMatch && !this.matches.some(e => e.profile.id === edge.profile.id)) {
+        this.matches.unshift(edge)
+      }
     },
 
     async fetchInteractions() {
@@ -62,13 +68,21 @@ export const useDatingInteractionStore = defineStore('datingInteraction', {
 
     async sendLike(targetId: string): Promise<StoreResponse<InteractionEdgePair>> {
       try {
-        const res = await api.post<InteractionEdgePair>(`/interactions/like/${targetId}`)
-        const pair = InteractionEdgePairSchema.parse(res.data)
+        const res = await api.post<{ success: true; pair: unknown }>(
+          `/interactions/like/${targetId}`
+        )
+
+        console.log('store Like response:', res.data)
+
+        // Parse and validate the response shape
+        const pair = InteractionEdgePairSchema.parse(res.data.pair)
+
         if (pair.isMatch) {
           this.matches.push(pair.from)
         } else {
           this.sent.push(pair.from)
         }
+
         return storeSuccess(pair)
       } catch (error) {
         console.error('Failed to like profile:', error)

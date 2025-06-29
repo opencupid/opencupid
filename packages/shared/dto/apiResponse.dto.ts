@@ -43,9 +43,6 @@ export type SendMessageResponse = ApiSuccess<{
   message: MessageDTO
 }>
 
-export type InitiateConversationResponse = ApiSuccess<{
-}>
-
 export type AuthResponse<T> = ApiSuccess<T>| ApiError & { code: AuthErrorCodes }
 export type UserMeResponse = ApiSuccess<{ user: SettingsUser }>
 export type SendLoginLinkResponse = ApiSuccess<{ user: OtpSendReturn; status: string }>

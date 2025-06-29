@@ -17,7 +17,7 @@ const datingInteractionRoutes: FastifyPluginAsync = async fastify => {
   // POST /interactions/like/:targetId
   fastify.post<{ Params: { targetId: string } }>('/like/:targetId', {
     onRequest: [fastify.authenticate],
-    config: rateLimitConfig(fastify, '5 minute', 5),
+    config: rateLimitConfig(fastify, '5 minute', 15),
   }, async (req, reply) => {
     const { targetId } = TargetLookupParamsSchema.parse(req.params)
     const myId = req.session.profileId
@@ -33,7 +33,6 @@ const datingInteractionRoutes: FastifyPluginAsync = async fastify => {
         payload: likeResult.to,
       })
 
-
       // webPushService.send(edge)
 
     } catch (err) {
@@ -43,26 +42,26 @@ const datingInteractionRoutes: FastifyPluginAsync = async fastify => {
   })
 
   // DELETE /interactions/like/:targetId
-  fastify.delete<{ Params: { targetId: string } }>('/like/:targetId', {
-    onRequest: [fastify.authenticate],
-    config: rateLimitConfig(fastify, '1 minute', 10),
-  }, async (req, reply) => {
-    const { targetId } = TargetLookupParamsSchema.parse(req.params)
-    const myId = req.session.profileId
+  // fastify.delete<{ Params: { targetId: string } }>('/like/:targetId', {
+  //   onRequest: [fastify.authenticate],
+  //   config: rateLimitConfig(fastify, '1 minute', 10),
+  // }, async (req, reply) => {
+  //   const { targetId } = TargetLookupParamsSchema.parse(req.params)
+  //   const myId = req.session.profileId
 
-    try {
-      await service.unlike(myId, targetId)
-      return reply.code(200).send({ success: true })
-    } catch (err) {
-      fastify.log.error(err)
-      return sendError(reply, 500, 'Failed to unlike profile')
-    }
-  })
+  //   try {
+  //     await service.unlike(myId, targetId)
+  //     return reply.code(200).send({ success: true })
+  //   } catch (err) {
+  //     fastify.log.error(err)
+  //     return sendError(reply, 500, 'Failed to unlike profile')
+  //   }
+  // })
 
   // POST /interactions/pass/:targetId
   fastify.post<{ Params: { targetId: string } }>('/pass/:targetId', {
     onRequest: [fastify.authenticate],
-    config: rateLimitConfig(fastify, '5 minute', 5),
+    config: rateLimitConfig(fastify, '5 minute', 15),
   }, async (req, reply) => {
     const { targetId } = TargetLookupParamsSchema.parse(req.params)
     const myId = req.session.profileId
@@ -77,21 +76,21 @@ const datingInteractionRoutes: FastifyPluginAsync = async fastify => {
   })
 
   // DELETE /interactions/pass/:targetId
-  fastify.delete<{ Params: { targetId: string } }>('/pass/:targetId', {
-    onRequest: [fastify.authenticate],
-    config: rateLimitConfig(fastify, '1 minute', 10),
-  }, async (req, reply) => {
-    const { targetId } = TargetLookupParamsSchema.parse(req.params)
-    const myId = req.session.profileId
+  // fastify.delete<{ Params: { targetId: string } }>('/pass/:targetId', {
+  //   onRequest: [fastify.authenticate],
+  //   config: rateLimitConfig(fastify, '1 minute', 10),
+  // }, async (req, reply) => {
+  //   const { targetId } = TargetLookupParamsSchema.parse(req.params)
+  //   const myId = req.session.profileId
 
-    try {
-      await service.unpass(myId, targetId)
-      return reply.code(200).send({ success: true })
-    } catch (err) {
-      fastify.log.error(err)
-      return sendError(reply, 500, 'Failed to unpass profile')
-    }
-  })
+  //   try {
+  //     await service.unpass(myId, targetId)
+  //     return reply.code(200).send({ success: true })
+  //   } catch (err) {
+  //     fastify.log.error(err)
+  //     return sendError(reply, 500, 'Failed to unpass profile')
+  //   }
+  // })
 
   // GET /interactions/received
   fastify.get('/received', {

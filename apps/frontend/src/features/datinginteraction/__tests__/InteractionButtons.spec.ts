@@ -14,7 +14,15 @@ const BButton = {
 describe('InteractionButtons', () => {
   it('emits events when buttons clicked', async () => {
     const wrapper = mount(InteractionButtons, {
-      props: { canLike: true, canPass: true },
+      props: {
+        context: {
+          canLike: true,
+          canPass: true,
+          likedByMe: false,
+          passedByMe: false,
+          isMatch: false,
+        }
+      },
       global: { stubs: { BButton } }
     })
 
@@ -30,7 +38,15 @@ describe('InteractionButtons', () => {
 
   it('disables like and pass buttons based on props', () => {
     const wrapper = mount(InteractionButtons, {
-      props: { canLike: false, canPass: false },
+      props: {
+        context: {
+          canLike: false,
+          canPass: false,
+          likedByMe: false,
+          passedByMe: false,
+          isMatch: false,
+        }
+      },
       global: { stubs: { BButton } }
     })
 

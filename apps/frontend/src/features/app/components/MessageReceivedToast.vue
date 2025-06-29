@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { type MessageDTO } from '@zod/messaging/messaging.dto'
 import ProfileImage from '@/features/images/components/ProfileImage.vue'
-import { useI18n } from 'vue-i18n';
-const { t } = useI18n()
+
 
 defineEmits<{
   (e: 'closeToast'): void
@@ -21,8 +20,8 @@ defineProps<{
     </div>
     <span>
       {{
-        t('messaging.new_message_notification', {
-          sender: message.sender.publicName || t('messaging.unknown_sender'),
+        $t('messaging.new_message_notification', {
+          sender: message.sender.publicName || $t('messaging.unknown_sender'),
         })
       }}
     </span>

@@ -4,6 +4,7 @@ import AppNotifier from '@/features/app/components/AppNotifier.vue'
 import { useI18nStore } from './store/i18nStore'
 import { useCountries } from './features/shared/composables/useCountries'
 import { useLanguages } from './features/shared/composables/useLanguages'
+import { useDatingInteractionStore } from './features/datinginteraction/stores/useDatingInteractionStore'
 
 // FIXME
 // This is a workaround to ensure the page scrolls down
@@ -14,12 +15,13 @@ import { useLanguages } from './features/shared/composables/useLanguages'
 //   setTimeout(() => {
 //     document.documentElement.scrollTop = 100
 //     document.body.scrollTop = 100
-//     // window.scrollTo(0, 100) // fallback
+//     // window.scr 100) // fallback
 //   }, 1000)
 // })
 const i18nStore = useI18nStore()
 useCountries().initialize(i18nStore.getLanguage())
 useLanguages().initialize(i18nStore.getLanguage())
+useDatingInteractionStore().initialize()
 
 </script>
 

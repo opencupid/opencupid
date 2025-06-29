@@ -1,27 +1,40 @@
 import { defineStore } from 'pinia'
-import { useWebSocket } from '@vueuse/core'
 
 import { api } from '@/lib/api'
 import { bus } from '@/lib/bus'
 
-import type { ConversationSummary, MessageDTO, MessageInConversation } from '@zod/messaging/messaging.dto'
+import type {
+  ConversationSummary,
+  MessageDTO,
+  MessageInConversation,
+  SendMessagePayload
+} from '@zod/messaging/messaging.dto'
 import type {
   MessagesResponse,
   ConversationsResponse,
   ConversationResponse,
   SendMessageResponse,
-  InitiateConversationResponse,
 } from '@shared/dto/apiResponse.dto'
+import { storeError, type StoreError, type StoreResponse, storeSuccess } from '@/store/helpers'
 
 
+type MessageStoreState = {
+  profileId: string | null,
+  conversations: ConversationSummary[],
+  messages: MessageDTO[],
+  activeConversation: ConversationSummary | null,
+  hasUnreadMessages: boolean,
+  isSending: boolean,
+}
 
 export const useMessageStore = defineStore('message', {
-  state: () => ({
+  state: (): MessageStoreState => ({
     profileId: null as string | null,
     conversations: [] as ConversationSummary[],
     messages: [] as MessageDTO[],
     activeConversation: null as ConversationSummary | null,
     hasUnreadMessages: false,
+    isSending: false,
   }),
 
   actions: {
@@ -46,8 +59,6 @@ export const useMessageStore = defineStore('message', {
       // If this is the active conversation, append to visible messages
       if (this.activeConversation?.conversationId === message.conversationId) {
         this.messages.push(message)
-      } else {
-        bus.emit('ws:new_message', message)
       }
     },
 
@@ -115,43 +126,42 @@ export const useMessageStore = defineStore('message', {
       // await this.fetchUnreadCount()
     },
 
-    async initiateConversation(
-      recipientProfileId: string,
-      content: string
-    ): Promise<boolean> {
-      try {
-        const res = await api.post<InitiateConversationResponse>(`/messages/conversations/initiate`, { profileId: recipientProfileId, content })
-        return res.data.success
-      } catch (error: any) {
-        console.error('Failed to send message:', error.message)
-      }
-      return false
-    },
-
+    // async sendOrInitiate(recipientId: string, content: string) {
+    //   if (conversationId) {
+    //     // If conversationId is provided, use it to send the message
+    //     const sentMessage = await this.sendMessage(conversationId, content)
+    //   } else {
+    //     console.log('No conversationId provided, starting a new conversation...')
+    //     // If no conversationId, create a new conversation and send the message
+    //     await this.initiateConversation(recipientId, content)
+    //   }
+    // },
 
     async sendMessage(
-      conversationId: string,
+      recipientProfileId: string,
       content: string
-    ): Promise<MessageDTO | null> {
+    ): Promise<StoreResponse<MessageDTO> | StoreError> {
       try {
-        const res = await api.post<SendMessageResponse>(`/messages/conversations/${conversationId}`, { content })
-
-        if (res.data.success) {
-          const { conversation, message } = res.data
-          // Move conversation to top, remove any old instance
-          this.conversations = [
-            conversation,
-            ...this.conversations.filter(c => c.conversationId !== conversation.conversationId),
-          ]
-          if (this.activeConversation?.conversationId === conversation.conversationId) {
-            this.messages.push(message)
-          }
-          return message
+        const payload: SendMessagePayload = { profileId: recipientProfileId, content }
+        this.isSending = true // Set sending state
+        const res = await api.post<SendMessageResponse>(`/messages/message`, payload)
+        const { conversation, message } = res.data
+        if (!message)
+          return storeError(new Error('Message not sent'))
+        // Move conversation to top, remove any old instance
+        this.conversations = [
+          conversation,
+          ...this.conversations.filter(c => c.conversationId !== conversation.conversationId),
+        ]
+        if (this.activeConversation?.conversationId === conversation.conversationId) {
+          this.messages.push(message)
         }
-      } catch (error) {
-        console.error('Failed to send message:', error)
+        return storeSuccess(message)
+      } catch (error: any) {
+        return storeError(error)
+      } finally {
+        this.isSending = false // Reset sending state
       }
-      return null
     },
 
     async setActiveConversation(convo: ConversationSummary | null) {

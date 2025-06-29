@@ -28,6 +28,19 @@ const conversationSummaryInclude = {
     },
   },
 }
+
+const sendInclude = {
+  sender: {
+    select: {
+      id: true,
+      publicName: true,
+      profileImages: {
+        orderBy: { position: 'asc' },
+      },
+    },
+  },
+} satisfies Prisma.MessageInclude
+
 export class MessageService {
   private static instance: MessageService
 
@@ -40,6 +53,12 @@ export class MessageService {
     return MessageService.instance
   }
 
+  /**
+   * Retrieves a conversation summary for a given conversation and profile.
+   * @param conversationId - The ID of the conversation to retrieve.
+   * @param profileId - The ID of the profile to retrieve the summary for.
+   * @returns A conversation participant with its summary or null if not found.
+   */
   async getConversationSummary(conversationId: string, profileId: string): Promise<ConversationParticipantWithConversationSummary | null> {
     return await prisma.conversationParticipant.findFirst({
       where: {
@@ -50,6 +69,11 @@ export class MessageService {
     })
   }
 
+  /**
+   * Lists all conversations for a given profile, including unread message counts.
+   * @param profileId - The ID of the profile to list conversations for.
+   * @returns An array of conversation summaries with unread message counts.
+   */
   async listConversationsForProfile(profileId: string) {
     return await prisma.conversationParticipant.findMany({
       where: {
@@ -91,41 +115,11 @@ export class MessageService {
   }
 
 
-
-
-  async _listConversationsForProfile(profileId: string) {
-    return await prisma.conversationParticipant.findMany({
-      where: { profileId },
-      include: conversationSummaryInclude,
-      orderBy: {
-        conversation: { updatedAt: 'desc' },
-      },
-    })
-
-    // Post-process to calculate unreadCount
-    // TODO optimize this further by batching message.count()
-    // using a raw SQL query if performance becomes a concern.
-    // return await Promise.all(
-    //   participants.map(async p => {
-    //     const unreadCount = await prisma.message.count({
-    //       where: {
-    //         conversationId: p.conversationId,
-    //         createdAt: {
-    //           gt: p.lastReadAt || new Date(0),
-    //         },
-    //         senderId: {
-    //           not: profileId, // don't count own messages
-    //         },
-    //       },
-    //     })
-    //     return {
-    //       ...p,
-    //       unreadCount,
-    //     }
-    //   })
-    // )
-  }
-
+  /**
+   * Lists all messages for a given conversation.
+   * @param conversationId - The ID of the conversation to list messages for.
+   * @returns An array of messages in the conversation, including sender profile images.
+   */
   async listMessagesForConversation(conversationId: string): Promise<MessageInConversation[]> {
     return await prisma.message.findMany({
       where: {
@@ -146,6 +140,12 @@ export class MessageService {
     })
   }
 
+  /**
+   * Marks a conversation as read 
+   * @param conversationId - The ID of the conversation to mark as read.
+   * @param profileId - The ID of the profile marking the conversation as read.
+   * @returns The updated conversation participant record.
+   */
   async markConversationRead(conversationId: string, profileId: string) {
     return prisma.conversationParticipant.update({
       where: {
@@ -159,25 +159,13 @@ export class MessageService {
 
 
 
-  // async sendMessage(profileId: string, conversationId: string, content: string) {
-  //   const message = await prisma.message.create({
-  //     data: {
-  //       senderId: profileId,
-  //       conversationId,
-  //       content,
-  //     },
-  //   })
-
-  //   await prisma.conversation.update({
-  //     where: { id: conversationId },
-  //     data: { updatedAt: new Date() },
-  //   })
-
-  //   return message
-  // }
-
-
-
+  /**
+   * Initiates a new conversation between two profiles.
+   * @param senderProfileId - The profile ID of the sender (initiator).
+   * @param recipientProfileId - The profile ID of the recipient.
+   * @param content - The initial message content.
+   * @returns An object containing the created conversation and the initial message.
+   */
   async initiateConversation(
     senderProfileId: string,
     recipientProfileId: string,
@@ -227,7 +215,13 @@ export class MessageService {
     return { conversation: convoSummary, message }
   }
 
-
+  /**
+   * Replies to an existing conversation.
+   * @param senderProfileId - The profile ID of the sender.
+   * @param conversationId - The ID of the conversation to reply to.
+   * @param content - The message content to send.
+   * @returns An object containing the updated conversation and the new message.
+   */
 
   async replyInConversation(
     senderProfileId: string,
@@ -284,14 +278,95 @@ export class MessageService {
     return { conversation: convoSummary, message }
   }
 
-  // async sendOrStartConversation(
+  async sendOrStartConversation(
+    senderProfileId: string,
+    recipientProfileId: string,
+    content: string
+  ): Promise<SendMessageSuccessResponse> {
+    const [profileAId, profileBId] = this.sortProfilePair(senderProfileId, recipientProfileId)
+
+    const { conversationId, message } = await prisma.$transaction(async (tx) => {
+      const convo = await this.findOrCreateConversation(tx, profileAId, profileBId, senderProfileId)
+
+      const message = await tx.message.create({
+        data: {
+          conversationId: convo.id,
+          senderId: senderProfileId,
+          content,
+        },
+        include: sendInclude,
+      })
+
+      return { conversationId: convo.id, message }
+    })
+
+    const conversation = await this.getConversationSummary(conversationId, senderProfileId)
+    if (!conversation) throw {
+      error: 'Conversation not found after creation',
+      code: 'INTERNAL_ERROR',
+    }
+
+    return { conversation, message }
+  }
+
+  private async findOrCreateConversation(
+    tx: Prisma.TransactionClient,
+    profileAId: string,
+    profileBId: string,
+    senderId: string
+  ): Promise<Conversation> {
+    const existing = await tx.conversation.findUnique({
+      where: {
+        profileAId_profileBId: { profileAId, profileBId },
+      },
+    })
+
+    if (existing) {
+      if (!this.canSendMessageInConversation(existing, senderId)) {
+        throw {
+          error: 'Conversation is not accepted or sender cannot reply to initiated thread',
+          code: 'CONVERSATION_BLOCKED',
+        }
+      }
+
+      // Update status & last activity
+      await tx.conversation.update({
+        where: {
+          profileAId_profileBId: { profileAId, profileBId },
+        },
+        data: {
+          updatedAt: new Date(),
+          status: 'ACCEPTED',
+        },
+      })
+
+      return existing
+    }
+
+    // No existing conversation → create a new one
+    return tx.conversation.create({
+      data: {
+        status: 'INITIATED',
+        initiatorProfileId: senderId,
+        profileAId,
+        profileBId,
+        participants: {
+          create: [
+            { profileId: profileAId },
+            { profileId: profileBId }
+          ],
+        },
+      },
+    })
+  }
+
+
+
+  // async _sendOrStartConversation(
   //   senderProfileId: string,
   //   recipientProfileId: string,
   //   content: string
-  // ): Promise<{
-  //   conversation: ConversationParticipantWithConversationSummary | null
-  //   message: Message
-  // }> {
+  // ): Promise<SendMessageSuccessResponse> {
   //   const [profileAId, profileBId] = this.sortProfilePair(senderProfileId, recipientProfileId)
 
   //   const { conversationId, message } = await prisma.$transaction(
@@ -306,7 +381,9 @@ export class MessageService {
 
   //         // Check if the sender is allowed to reply to a conversation.
   //         if (!this.canSendMessageInConversation(convo, senderProfileId)) {
-  //           throw new Error('Conversation is not accepted or sender cannot reply to initiated thread')
+  //           throw {
+  //             error: 'Conversation is not accepted or sender cannot reply to initiated thread',
+  //           }
   //         }
 
   //         // existing conversation, update lastMessageAt
@@ -324,6 +401,7 @@ export class MessageService {
   //         convo = await tx.conversation.create({
   //           data: {
   //             status: 'INITIATED', // start as initiated
+  //             initiatorProfileId: senderProfileId, // set the initiator
   //             profileAId,
   //             profileBId,
   //             participants: {
@@ -378,3 +456,14 @@ export class MessageService {
     )
   }
 }
+
+export type SendMessageSuccessResponse = {
+  conversation: ConversationParticipantWithConversationSummary
+  message: MessageInConversation
+}
+
+export type SendMessageErrorResponse = {
+  success: false
+  error: string
+}
+
