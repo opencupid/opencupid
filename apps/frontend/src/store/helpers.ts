@@ -1,8 +1,7 @@
 import { type ApiError } from '@shared/dto/apiResponse.dto'
 import { AxiosError } from 'axios'
 import { ZodError } from 'zod'
-
-
+import { useToast } from 'vue-toastification'
 
 export type StoreSuccess<T> = {
   success: true
@@ -49,13 +48,18 @@ export function storeError(error: unknown, fallbackMessage = 'Request failed'): 
     status = error.response?.status || 500
     const data = error.response?.data as ApiError
     message = data.message || fallbackMessage
+    // Rate limit hit
+    if (status === 429) {
+      useToast().error('Slow down partner.')
+    }
     if (data.fieldErrors) {
       fieldErrors = data.fieldErrors
     }
   }
 
   //   // TODO hook this up to a global debug flag
-  console.error(message, status, message)
+  if (__APP_CONFIG__.NODE_ENV === 'development')
+    console.error(message, status, message)
 
   return {
     success: false,

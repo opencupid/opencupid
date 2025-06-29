@@ -59,7 +59,7 @@ export const useDatingInteractionStore = defineStore('datingInteraction', {
         this.receivedLikesCount = receivedRes.data.count
         return storeSuccess()
       } catch (error) {
-        console.error('Failed to fetch likes:', error)
+        // console.error('Failed to fetch likes:', error)
         return storeError(error)
       } finally {
         this.loading = false

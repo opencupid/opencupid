@@ -5,11 +5,11 @@
 </template>
 
 <script setup lang="ts">
-import { useProfileStore } from '@/store/profileStore'
+import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-const profileStore = useProfileStore()
+const profileStore = useOwnerProfileStore()
 const router = useRouter()
 const error = ref<string>('')
 

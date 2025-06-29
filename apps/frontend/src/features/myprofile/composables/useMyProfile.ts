@@ -4,7 +4,7 @@ import { computed, reactive, ref, watch } from "vue"
 import { type PublicProfileWithContext } from "@zod/profile/profile.dto"
 import { type EditFieldProfileFormWithImages } from "@zod/profile/profile.form"
 
-import { useProfileStore } from "@/store/profileStore"
+import { useOwnerProfileStore } from "@/features/myprofile/stores/ownerProfileStore"
 
 import { type ViewState } from '../composables/types'
 import { type StoreError } from "@/store/helpers"
@@ -12,7 +12,7 @@ import { type StoreError } from "@/store/helpers"
 
 export function useMyProfile(isEditMode: boolean) {
 
-  const profileStore = useProfileStore()
+  const profileStore = useOwnerProfileStore()
   const formData: EditFieldProfileFormWithImages = reactive({} as EditFieldProfileFormWithImages)
 
   const viewState = reactive<ViewState>({

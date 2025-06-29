@@ -1,23 +1,23 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { computed } from 'vue'
+
 import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
 import IconMessage from '@/assets/icons/interface/message.svg'
 import IconSearch from '@/assets/icons/interface/search.svg'
 import IconUser from '@/assets/icons/interface/user.svg'
 import IconLogout from '@/assets/icons/interface/logout.svg'
-
-import { useAuthStore } from '@/features/auth/stores/authStore'
-
-import { computed } from 'vue'
-import { useMessageStore } from '@/features/messaging/stores/messageStore'
-import { useProfileStore } from '@/store/profileStore'
-import ProfileImage from '@/features/images/components/ProfileImage.vue'
 import { faCircle } from '@fortawesome/free-solid-svg-icons'
 
-const { t } = useI18n()
+import { useAuthStore } from '@/features/auth/stores/authStore'
+import { useMessageStore } from '@/features/messaging/stores/messageStore'
+import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
+
+import ProfileImage from '@/features/images/components/ProfileImage.vue'
+
 const authStore = useAuthStore()
-const profileStore = useProfileStore()
+const profileStore = useOwnerProfileStore()
 
 const isLoggedIn = computed(() => authStore.isLoggedIn)
 const hasUnreadMessages = computed(() => useMessageStore().hasUnreadMessages)
@@ -51,7 +51,10 @@ function handleLogoutClick() {
 
       <BNavItemDropdown right>
         <template #button-content>
-          <span v-if="profileStore.profile?.profileImages?.length" class="profile-thumbnail d-inline-flex">
+          <span
+            v-if="profileStore.profile?.profileImages?.length"
+            class="profile-thumbnail d-inline-flex"
+          >
             <ProfileImage
               :profile="profileStore.profile"
               class="img-fluid rounded"

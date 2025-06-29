@@ -61,7 +61,7 @@ const datingInteractionRoutes: FastifyPluginAsync = async fastify => {
   // POST /interactions/pass/:targetId
   fastify.post<{ Params: { targetId: string } }>('/pass/:targetId', {
     onRequest: [fastify.authenticate],
-    config: rateLimitConfig(fastify, '5 minute', 15),
+    config: rateLimitConfig(fastify, '1 minute', 3),
   }, async (req, reply) => {
     const { targetId } = TargetLookupParamsSchema.parse(req.params)
     const myId = req.session.profileId
@@ -95,7 +95,7 @@ const datingInteractionRoutes: FastifyPluginAsync = async fastify => {
   // GET /interactions/received
   fastify.get('/received', {
     onRequest: [fastify.authenticate],
-    config: rateLimitConfig(fastify, '5 minute', 10),
+    config: rateLimitConfig(fastify, '1 minute', 5),
   }, async (req, reply) => {
     const myId = req.session.profileId
 
@@ -112,7 +112,7 @@ const datingInteractionRoutes: FastifyPluginAsync = async fastify => {
   // GET /interactions/sent
   fastify.get('/sent', {
     onRequest: [fastify.authenticate],
-    config: rateLimitConfig(fastify, '5 minute', 10),
+    config: rateLimitConfig(fastify, '1 minute', 5),
   }, async (req, reply) => {
     const myId = req.session.profileId
 
@@ -129,7 +129,7 @@ const datingInteractionRoutes: FastifyPluginAsync = async fastify => {
   // GET /interactions/matches
   fastify.get('/matches', {
     onRequest: [fastify.authenticate],
-    config: rateLimitConfig(fastify, '5 minute', 10),
+    config: rateLimitConfig(fastify, '1 minute', 5),
   }, async (req, reply) => {
     const myId = req.session.profileId
 

@@ -2,17 +2,17 @@
 import { ref, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import { useProfileStore } from '@/store/profileStore'
-import { useMessageStore } from '@/features/messaging/stores/messageStore'
-
 import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 import { type ConversationSummary } from '@zod/messaging/messaging.dto'
+
+import { useMessageStore } from '@/features/messaging/stores/messageStore'
+import { usePublicProfileStore } from '@/features/publicprofile/stores/publicProfileStore'
 
 import SendMessage from './SendMessageForm.vue'
 import MessageList from './MessageList.vue'
 import MessagingNav from './MessagingNav.vue'
 
-const profileStore = useProfileStore()
+const profileStore = usePublicProfileStore()
 const messageStore = useMessageStore()
 
 const props = defineProps<{

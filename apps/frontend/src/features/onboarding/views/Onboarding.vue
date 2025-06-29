@@ -12,11 +12,11 @@ import ErrorComponent from '@/features/shared/ui/ErrorComponent.vue'
 import OnboardWizard from '@/features/onboarding/components/OnboardWizard.vue'
 
 import { useI18nStore } from '@/store/i18nStore'
-import { useProfileStore } from '@/store/profileStore'
+import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { useAppStore } from '@/features/app/stores/appStore'
 
 const { t } = useI18n()
-const profileStore = useProfileStore()
+const profileStore = useOwnerProfileStore()
 const i18nStore = useI18nStore()
 
 const formData = reactive({

@@ -1,151 +1,209 @@
 <script setup lang="ts">
+import z from 'zod'
 import { useRouter } from 'vue-router'
-import { onMounted, ref, watch } from 'vue'
-import { useProfileStore } from '@/store/profileStore'
+import { onMounted, onUnmounted, ref } from 'vue'
 
-import { useFindMatchViewModel } from '@/features/browse/composables/useFindMatchViewModel'
-
-import StoreErrorOverlay from '@/features/shared/ui/StoreErrorOverlay.vue'
-import DatingPreferencesForm from '@/features/browse/components/DatingPreferencesForm.vue'
-import SecondaryNav from '@/features/browse/components/SecondaryNav.vue'
-import ProfileCardGrid from '@/features/browse/components/ProfileCardGrid.vue'
-import NoAccessCTA from '@/features/browse/components/NoAccessCTA.vue'
-import NoResultsCTA from '@/features/browse/components/NoResultsCTA.vue'
-import PlaceholdersGrid from '@/features/browse/components/PlaceholdersGrid.vue'
 import { type ProfileScope, ProfileScopeSchema } from '@zod/profile/profile.dto'
 
+import { useFindMatchViewModel } from '../composables/useFindMatchViewModel'
+import DatingPreferencesForm from '../components/DatingPreferencesForm.vue'
+import SecondaryNav from '../components/SecondaryNav.vue'
+import ProfileCardGrid from '../components/ProfileCardGrid.vue'
+import NoAccessCTA from '../components/NoAccessCTA.vue'
+import NoResultsCTA from '../components/NoResultsCTA.vue'
+import PlaceholdersGrid from '../components/PlaceholdersGrid.vue'
+
+import PublicProfile from '@/features/publicprofile/views/PublicProfile.vue'
+import StoreErrorOverlay from '@/features/shared/ui/StoreErrorOverlay.vue'
+
 const router = useRouter()
-const profileStore = useProfileStore()
 
 const props = defineProps<{
   scope?: string
+  profileId?: string
 }>()
+
 // state management
 const showModal = ref(false)
+const canGoBack = ref(false)
 
-const {  me, haveAccess, haveResults, isLoading, findProfilesStore, error, initialize } =
-  useFindMatchViewModel()
+const {
+  haveAccess,
+  haveResults,
+  isLoading,
+  currentScope,
+  profileList,
+  storeError,
+  datingPrefs,
+  selectedProfileId,
+  hideProfile,
+  initialize,
+  reset,
+} = useFindMatchViewModel()
 
-onMounted(async () => {
-  const params = ProfileScopeSchema.safeParse(props.scope)
-  let defaultScope
-  if (params.success) {
-    defaultScope = params.data
-  }
-  await initialize(defaultScope)
+// const { fetchProfile, refreshProfile, blockProfile, profile } = usePublicProfile()
+const ParamsSchema = z.object({
+  scope: ProfileScopeSchema.optional(),
+  profileId: z.string().optional(),
 })
 
-watch(
-  () => findProfilesStore.currentScope,
-  (newScope: ProfileScope | null) => {
-    if (newScope) {
-      router.replace({
-        name: 'BrowseProfilesScope',
-        params: {
-          scope: newScope,
-        },
-      })
+onMounted(async () => {
+  const params = ParamsSchema.safeParse(props)
+  if (params.success) {
+    const { scope, profileId } = params.data
+    if (profileId) {
+      selectedProfileId.value = profileId
+      canGoBack.value = false
     }
+    await initialize(scope)
   }
-)
-const handleCardClick = (profileId: string) => {
+})
+
+onUnmounted(() => {
+  selectedProfileId.value = null
+  canGoBack.value = false
+  reset()
+})
+
+const handleCardClick = async (profileId: string) => {
+  // const res = await fetchProfile(profileId)
+  selectedProfileId.value = profileId
+  canGoBack.value = true
+  // profileDetailId.value = profileId
   router.push({
     name: 'PublicProfile',
     params: {
-      id: profileId,
+      profileId: profileId,
     },
   })
 }
 
-const handlePrefsClick = () => {
-  showModal.value = true
-}
+// const handlePrefsClick = () => {
+//   showModal.value = true
+// }
 
 const updateDatingPrefs = async () => {
-  await findProfilesStore.persistDatingPrefs()
+  // await findProfilesStore.persistDatingPrefs()
 }
 
 const handleEditProfileIntent = () => {
   router.push({ name: 'EditProfile' })
 }
+
+const handleCloseProfileView = () => {
+  selectedProfileId.value = null
+  router.back()
+}
+
+const handleOpenConversation = (conversationId: string) => {
+  router.push({
+    name: 'Messaging',
+    params: { conversationId },
+  })
+}
 </script>
 
 <template>
   <main class="container h-100">
-    <StoreErrorOverlay v-if="error" :error />
+    <StoreErrorOverlay v-if="storeError" :error="storeError">
+      <template #default="{ error }">
+        <BButton
+          v-if="error.status"
+          variant="primary"
+          @click="$router.push({ name: 'BrowseProfiles' })"
+        >
+          Keep browsing though!
+        </BButton>
+      </template>
+    </StoreErrorOverlay>
 
-    <div v-else class="mt-2 h-100 overflow-hidden position-relative d-flex flex-column">
-      <div class="mb-2">
-        <SecondaryNav
-          v-model="findProfilesStore.currentScope"
-          @edit:datingPrefs="showModal = true"
-          @scope:change="findProfilesStore.setCurrentScope($event)"
-          :prefs-button-disabled="!haveAccess"
-        />
-      </div>
-      <BPlaceholderWrapper :loading="!haveResults">
-        <template #loading>
-          <BOverlay
-            show
-            no-spinner
-            no-center
-            bg-color="var(--bs-body-bg)"
-            :blur="null"
-            opacity="0.85"
-            class="h-100 overlay"
-            spinner-variant="primary"
-            spinner-type="grow"
-          >
-            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-2 g-4 my-0 overflow-hidden">
-              <PlaceholdersGrid :howMany="6" :loading="isLoading" />
-            </div>
-            <template #overlay>
-              <div
-                v-if="!isLoading"
-                class="h-100 w-100 d-flex flex-column align-items-center justify-content-center p-2"
-              >
-                <NoAccessCTA
-                  v-if="!haveAccess"
-                  v-model="findProfilesStore.currentScope"
-                  @edit:profile="handleEditProfileIntent"
-                />
-                <NoResultsCTA v-else-if="!haveResults" />
-              </div>
-            </template>
-          </BOverlay>
-        </template>
-
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-2 g-4 my-0 overflow-auto h-100">
-          <ProfileCardGrid
-            :profiles="findProfilesStore.profileList"
-            @profile:select="handleCardClick"
+    <div v-else class="row d-flex justify-content-center pt-3 h-100">
+      <div class="col-12 col-md-6 mx-auto h-100 position-relative">
+        <div id="profile-view" v-if="selectedProfileId" class="px-3">
+          <PublicProfile
+            :id="selectedProfileId"
+            @intent:back="handleCloseProfileView"
+            @hidden="(id: string) => hideProfile(id)"
           />
         </div>
-      </BPlaceholderWrapper>
 
-      <BModal
-        v-model="showModal"
-        centered
-        button-size="sm"
-        :focus="false"
-        :no-close-on-backdrop="true"
-        fullscreen="sm"
-        :no-footer="false"
-        :no-header="true"
-        cancel-title="Nevermind"
-        initial-animation
-        :body-scrolling="false"
-        title="Add a photo"
-        @ok="updateDatingPrefs"
-      >
-        <DatingPreferencesForm
-          v-model="findProfilesStore.datingPrefs"
-          v-if="findProfilesStore.datingPrefs"
-        />
-      </BModal>
+        <div class="h-100 overflow-hidden position-relative d-flex flex-column">
+          <div class="mb-2">
+            <SecondaryNav
+              v-model="currentScope"
+              @edit:datingPrefs="showModal = true"
+              @scope:change="(scope: ProfileScope) => (currentScope = scope)"
+              :prefs-button-disabled="!haveAccess"
+            />
+          </div>
+          <BPlaceholderWrapper :loading="isLoading">
+            <template #loading>
+              <BOverlay
+                show
+                no-spinner
+                no-center
+                bg-color="var(--bs-body-bg)"
+                :blur="null"
+                opacity="0.85"
+                class="h-100 overlay"
+                spinner-variant="primary"
+                spinner-type="grow"
+              >
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-2 g-4 my-0 overflow-hidden">
+                  <PlaceholdersGrid :howMany="6" :loading="isLoading" />
+                </div>
+                <template #overlay>
+                  <div
+                    v-if="!isLoading"
+                    class="h-100 w-100 d-flex flex-column align-items-center justify-content-center p-2"
+                  >
+                    <NoAccessCTA
+                      v-if="!haveAccess"
+                      v-model="currentScope"
+                      @edit:profile="handleEditProfileIntent"
+                    />
+                    <NoResultsCTA v-else-if="!haveResults" />
+                  </div>
+                </template>
+              </BOverlay>
+            </template>
+
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-2 g-4 my-0 overflow-auto h-100">
+              <ProfileCardGrid :profiles="profileList" @profile:select="handleCardClick" />
+            </div>
+          </BPlaceholderWrapper>
+
+          <BModal
+            v-model="showModal"
+            centered
+            button-size="sm"
+            :focus="false"
+            :no-close-on-backdrop="true"
+            fullscreen="sm"
+            :no-footer="false"
+            :no-header="true"
+            cancel-title="Nevermind"
+            initial-animation
+            :body-scrolling="false"
+            title="Add a photo"
+            @ok="updateDatingPrefs"
+          >
+            <DatingPreferencesForm v-model="datingPrefs" v-if="datingPrefs" />
+          </BModal>
+        </div>
+      </div>
     </div>
   </main>
 </template>
 
 <style scoped>
+#profile-view {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 4;
+  height: 100%;
+  width: 100%;
+  background-color: var(--bs-body-bg);
+}
 </style>

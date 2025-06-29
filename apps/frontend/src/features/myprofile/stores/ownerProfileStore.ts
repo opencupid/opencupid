@@ -1,22 +1,23 @@
 import { defineStore } from 'pinia'
+import { bus } from '@/lib/bus'
 import { api } from '@/lib/api'
 import type {
   OwnerProfile,
-  ProfileSummary,
+  ProfileScope,
   PublicProfile,
   PublicProfileWithContext,
   UpdateProfileScopePayload,
 } from '@zod/profile/profile.dto'
 import {
   OwnerProfileSchema,
-  ProfileSummarySchema,
   PublicProfileSchema,
-  PublicProfileWithContextSchema,
   UpdateProfileScopeSchemaPayload,
 } from '@zod/profile/profile.dto'
 import type {
+  GetDatingPreferenceseResponse,
   GetMyProfileResponse,
   GetPublicProfileResponse,
+  UpdateDatingPreferencesResponse,
   UpdateProfileResponse,
 } from '@shared/dto/apiResponse.dto'
 import {
@@ -25,23 +26,25 @@ import {
   type StoreVoidSuccess,
   type StoreResponse,
   type StoreError
-} from './helpers'
-import { type EditProfileForm, ProfileFormToPayloadTransform, type EditFieldProfileFormWithImages } from '@zod/profile/profile.form'
-import { bus } from '@/lib/bus'
-import { type GetProfileSummariesResponse } from '@zod/apiResponse.dto'
-import z from 'zod'
+} from '../../../store/helpers'
+import { type EditProfileForm, ProfileFormToPayloadTransform } from '@zod/profile/profile.form'
+import { type DatingPreferencesDTO, DatingPreferencesDTOSchema } from '@zod/match/datingPreference.dto'
 
 export type PublicProfileResponse = StoreResponse<PublicProfileWithContext> | StoreError
 
 interface ProfileStoreState {
   profile: OwnerProfile | null // Current user's profile
+  datingPrefs: DatingPreferencesDTO | null, // Current user's dating preferences  
+  scopes: ProfileScope[], // Available scopes based on user profile
   isLoading: boolean // Loading state
   error: StoreError | null // Error state
 }
 
-export const useProfileStore = defineStore('profile', {
+export const useOwnerProfileStore = defineStore('ownerProfile', {
   state: (): ProfileStoreState => ({
     profile: null as OwnerProfile | null,// Current user's profile
+    datingPrefs: null, // Current user's dating preferences  
+    scopes: [], // Available scopes based on user profile
     isLoading: false, // Loading state
     error: null
   }),
@@ -52,6 +55,11 @@ export const useProfileStore = defineStore('profile', {
         this.isLoading = true // Set loading state
         const res = await api.get<GetMyProfileResponse>('/profiles/me')
         const fetched = OwnerProfileSchema.parse(res.data.profile)
+        this.scopes = [
+          ...(fetched.isSocialActive ? (['social'] as const) : []),
+          ...(fetched.isDatingActive ? (['dating'] as const) : []),
+        ]
+
         this.profile = fetched // Update local state
         return storeSuccess()
       } catch (error: any) {
@@ -130,17 +138,32 @@ export const useProfileStore = defineStore('profile', {
       }
     },
 
-
-
-    // Fetch a profile by ID
-    async getPublicProfile(profileId: string): Promise<StoreResponse<PublicProfileWithContext>> {
+    async fetchDatingPrefs(): Promise<StoreVoidSuccess | StoreError> {
       try {
         this.isLoading = true // Set loading state
-        const res = await api.get<GetPublicProfileResponse>(`/profiles/${profileId}`)
-        const fetched = PublicProfileWithContextSchema.parse(res.data.profile)
-        return storeSuccess(fetched)
+        const res = await api.get<GetDatingPreferenceseResponse>('/profiles/datingprefs')
+        const fetched = DatingPreferencesDTOSchema.parse(res.data.prefs)
+        this.datingPrefs = fetched // Update local state
+        return storeSuccess()
       } catch (error: any) {
-        return storeError(error, 'Failed to fetch profile')
+        this.datingPrefs = null // Reset profile on error
+        // console.log('Error fetching datingPrefs:', error)
+        return storeError(error, 'Failed to fetch datingPrefs')
+      } finally {
+        this.isLoading = false // Reset loading state
+      }
+    },
+
+    async persistDatingPrefs(): Promise<StoreVoidSuccess | StoreError> {
+      try {
+        // console.log('Updating datingPrefs with data:', update)
+        this.isLoading = true // Set loading state
+        const res = await api.patch<UpdateDatingPreferencesResponse>('/profiles/datingprefs', this.datingPrefs)
+        const updated = DatingPreferencesDTOSchema.parse(res.data.prefs)
+        this.datingPrefs = updated
+        return storeSuccess()
+      } catch (error: any) {
+        return storeError(error, 'Failed to update profile')
       } finally {
         this.isLoading = false // Reset loading state
       }
@@ -154,7 +177,7 @@ export const useProfileStore = defineStore('profile', {
      * @returns 
      */
 
-    async getProfilePreview(profileId: string, locale: string): Promise<StoreResponse<PublicProfile>|StoreError> {
+    async getProfilePreview(profileId: string, locale: string): Promise<StoreResponse<PublicProfile> | StoreError> {
       try {
         this.isLoading = true // Set loading state
         const res = await api.get<GetPublicProfileResponse>(`/profiles/preview/${locale}/${profileId}`)
@@ -168,114 +191,15 @@ export const useProfileStore = defineStore('profile', {
       }
     },
 
-    async blockProfile(targetId: string): Promise<StoreVoidSuccess | StoreError> {
-      try {
-        this.isLoading = true // Set loading state
-        const res = await api.post(`/profiles/${targetId}/block`)
-        if (res.status === 204) {
-          // Successfully blocked the profile
-          return storeSuccess()
-        } else {
-          return storeError(new Error('Failed to block profile'), 'Failed to block profile')
-        }
-      } catch (error: any) {
-        return storeError(error, 'Failed to block profile')
-      } finally {
-        this.isLoading = false // Reset loading state
-      }
-    },
-    async unblockProfile(targetId: string): Promise<StoreVoidSuccess | StoreError> {
-      try {
-        this.isLoading = true // Set loading state
-        const res = await api.post(`/profiles/${targetId}/unblock`)
-        if (res.status === 204) {
-          // Successfully unblocked the profile
-          return storeSuccess()
-        } else {
-          return storeError(new Error('Failed to unblock profile'), 'Failed to unblock profile')
-        }
-      } catch (error: any) {
-        return storeError(error, 'Failed to unblock profile')
-      } finally {
-        this.isLoading = false // Reset loading state
-      }
-    },
-
-    async listBlockedProfiles(): Promise<StoreResponse<ProfileSummary[]>> {
-      try {
-        this.isLoading = true // Set loading state
-        const res = await api.get<GetProfileSummariesResponse>('/profiles/blocked')
-        const fetched = z.array(ProfileSummarySchema).parse(res.data.profiles)
-        return storeSuccess(fetched)
-      } catch (error: any) {
-        return storeError(error, 'Failed to fetch profile')
-      } finally {
-        this.isLoading = false // Reset loading state
-      }
-    },
 
     reset() {
       this.profile = null // Reset profile
       this.isLoading = false // Reset loading state
     },
 
-    // async findProfiles(): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
-    //   try {
-    //     this.isLoading = true // Set loading state
-    //     const res = await api.get<GetProfilesResponse>('/profiles')
-    //     const fetched = PublicProfileArraySchema.parse(res.data.profiles)
-    //     this.profileList = fetched // Update local state
-    //     return storeSuccess()
-    //   } catch (error: any) {
-    //     this.profileList = [] // Reset profile list on error
-    //     return storeError(error, 'Failed to fetch profiles')
-    //   } finally {
-    //     this.isLoading = false // Reset loading state
-    //   }
-    // },
-
-    // async fetchDatingPrefs(): Promise<StoreVoidSuccess | StoreError> {
-    //   try {
-    //     this.isLoading = true // Set loading state
-    //     const res = await api.get<GetDatingPreferenceseResponse>('/profiles/datingprefs')
-    //     const fetched = DatingPreferencesDTOSchema.parse(res.data.prefs)
-    //     this.datingPrefs = fetched // Update local state
-    //     return storeSuccess()
-    //   } catch (error: any) {
-    //     this.datingPrefs = null // Reset profile on error
-    //     console.log('Error fetching datingPrefs:', error)
-    //     return storeError(error, 'Failed to fetch datingPrefs')
-    //   } finally {
-    //     this.isLoading = false // Reset loading state
-    //   }
-    // },
-
-    // async persistDatingPrefs(): Promise<StoreVoidSuccess | StoreError> {
-    //   try {
-    //     // console.log('Updating datingPrefs with data:', update)
-    //     this.isLoading = true // Set loading state
-    //     const res = await api.patch<UpdateDatingPreferencesResponse>('/profiles/datingprefs', this.datingPrefs)
-    //     const updated = DatingPreferencesDTOSchema.parse(res.data.prefs)
-    //     this.datingPrefs = updated
-    //     return storeSuccess()
-    //   } catch (error: any) {
-    //     return storeError(error, 'Failed to update profile')
-    //   } finally {
-    //     this.isLoading = false // Reset loading state
-    //   }
-    // },
-
-
-    // open() {
-    //   this.fieldEditModal = true
-    // },
-
-    // close() {
-    //   this.fieldEditModal = false
-    // }
   },
 })
 
 bus.on('auth:logout', () => {
-  useProfileStore().reset()
+  useOwnerProfileStore().reset()
 })

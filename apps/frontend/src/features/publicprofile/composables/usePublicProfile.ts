@@ -1,12 +1,15 @@
 import { computed, reactive, ref } from "vue"
 
 import { type StoreError } from "@/store/helpers"
-import { useProfileStore } from "@/store/profileStore"
+import { useOwnerProfileStore } from "@/features/myprofile/stores/ownerProfileStore"
 import { type PublicProfileWithContext } from "@zod/profile/profile.dto"
+import { usePublicProfileStore } from "../stores/publicProfileStore"
 
 export function usePublicProfile() {
 
-  const store = useProfileStore()
+  // const store = useOwnerProfileStore()
+  const store = usePublicProfileStore()
+
   const id = ref<string | null>(null)
   const profile = reactive<PublicProfileWithContext>({} as PublicProfileWithContext)
   const error = ref<StoreError | null>(null)
