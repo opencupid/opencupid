@@ -102,6 +102,19 @@ const handleOpenConversation = (conversationId: string) => {
 
 <template>
   <main class="container h-100">
+    <div
+      id="profile-view"
+      v-if="selectedProfileId"
+      class="overflow-auto"
+      :class="{ active: selectedProfileId }"
+    >
+      <PublicProfile
+        :id="selectedProfileId"
+        @intent:back="handleCloseProfileView"
+        @intent:message="handleOpenConversation"
+        @hidden="(id: string) => hideProfile(id)"
+      />
+    </div>
     <StoreErrorOverlay v-if="storeError" :error="storeError">
       <template #default="{ error }">
         <BButton
@@ -116,15 +129,6 @@ const handleOpenConversation = (conversationId: string) => {
 
     <div v-else class="row d-flex justify-content-center h-100" :class="currentScope">
       <div class="col-12 col-md-6 mx-auto h-100 position-relative overflow-hidden">
-        <div id="profile-view" v-if="selectedProfileId" class="overflow-auto" :class="{ active: selectedProfileId }">
-          <PublicProfile
-            :id="selectedProfileId"
-            @intent:back="handleCloseProfileView"
-            @intent:message="handleOpenConversation"
-            @hidden="(id: string) => hideProfile(id)"
-          />
-        </div>
-
         <div
           class="h-100 overflow-hidden position-relative d-flex flex-column"
           :class="{ inactive: selectedProfileId }"
@@ -201,7 +205,7 @@ const handleOpenConversation = (conversationId: string) => {
   position: absolute;
   top: 0;
   left: 0;
-  z-index: 4;
+  z-index: 1035;
   height: 100%;
   width: 100%;
 }

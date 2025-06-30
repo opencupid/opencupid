@@ -29,8 +29,8 @@ const props = defineProps<{
 </script>
 
 <template>
-  <div v-bind:class="props.wrapperClass" class="position-relative full-profile">
-    <div class="overflow-hidden rounded">
+  <div v-bind:class="props.wrapperClass" class="profile-content position-relative">
+    <div class="overflow-hidden carousel-wrapper">
       <ImageCarousel :profile />
     </div>
 
@@ -48,86 +48,88 @@ const props = defineProps<{
       </EditField>
     </div>
 
-    <div class="d-flex flex-row align-items-center mt-2">
-      <div class="flex-grow-1 d-inline-flex align-items-center">
-        <span class="fw-bolder fs-2 me-1"> {{ props.profile.publicName }}</span>
-        <EditField fieldName="publicName" :editComponent="PublicNameInput" />
+    <div class="mx-3">
+      <div class="d-flex flex-row align-items-center mt-2">
+        <div class="flex-grow-1 d-inline-flex align-items-center">
+          <span class="fw-bolder fs-2 me-1"> {{ props.profile.publicName }}</span>
+          <EditField fieldName="publicName" :editComponent="PublicNameInput" />
+        </div>
+        <GenderPronounLabel :profile="props.profile" />
       </div>
-      <GenderPronounLabel :profile="props.profile" />
-    </div>
-    <div class="mb-2 text-muted d-inline-flex align-items-center">
-      <span class="me-1">
-        <LocationLabel
-          :location="profile.location"
-          :showCity="true"
-          :showCountryLabel="true"
-          :showIcon="false"
-        />
-      </span>
-      <EditField fieldName="location" :editComponent="LocationSelector" />
-    </div>
-
-    <div class="mb-3">
-      <div class="d-inline-block">
-        <TagList :tags="profile.tags" />
-        <EditField fieldName="tags" :editComponent="TagSelectComponent">
-          <template #display>
-            <div class="editable-placeholder" v-if="!props.profile.tags?.length">
-              {{ t('profiles.forms.tags_placeholder') }}
-            </div>
-          </template>
-        </EditField>
-      </div>
-
-      <div class="d-inline-flex align-items-center">
-        <LanguageList :languages="profile.languages" />
-        <EditField fieldName="languages" :editComponent="LanguageSelector" />
-      </div>
-    </div>
-    <div class="mb-3">
-      {{ props.profile.introSocial }}
-      <EditField
-        fieldName="introSocialLocalized"
-        :editComponent="IntrotextEditor"
-        wrapper-class="editable-textarea"
-        :editProps="{
-          languages: profile.languages,
-          placeholder: t('profiles.forms.intro_placeholder'),
-        }"
-      >
-        <template #display>
-          <div class="editable-placeholder" v-if="!props.profile.introSocial">
-            {{ t('profiles.forms.intro_placeholder') }}
-          </div>
-        </template>
-      </EditField>
-    </div>
-
-    <div class="mb-3">
-      <div class="mb-3 dating-field" v-if="props.profile.isDatingActive">
-        <span class="opacity-25">
-          <hr />
+      <div class="mb-2 text-muted d-inline-flex align-items-center">
+        <span class="me-1">
+          <LocationLabel
+            :location="profile.location"
+            :showCity="true"
+            :showCountryLabel="true"
+            :showIcon="false"
+          />
         </span>
-        {{ props.profile.introDating }}
+        <EditField fieldName="location" :editComponent="LocationSelector" />
+      </div>
+
+      <div class="mb-3">
+        <div class="d-inline-block">
+          <TagList :tags="profile.tags" />
+          <EditField fieldName="tags" :editComponent="TagSelectComponent">
+            <template #display>
+              <div class="editable-placeholder" v-if="!props.profile.tags?.length">
+                {{ t('profiles.forms.tags_placeholder') }}
+              </div>
+            </template>
+          </EditField>
+        </div>
+
+        <div class="d-inline-flex align-items-center">
+          <LanguageList :languages="profile.languages" />
+          <EditField fieldName="languages" :editComponent="LanguageSelector" />
+        </div>
+      </div>
+      <div class="mb-3">
+        {{ props.profile.introSocial }}
         <EditField
-          fieldName="introDatingLocalized"
+          fieldName="introSocialLocalized"
           :editComponent="IntrotextEditor"
           wrapper-class="editable-textarea"
           :editProps="{
             languages: profile.languages,
-            placeholder: t('profiles.forms.intro_who_placeholder'),
+            placeholder: t('profiles.forms.intro_placeholder'),
           }"
         >
           <template #display>
-            <div class="editable-placeholder" v-if="!props.profile.introDating">
-              {{ t('profiles.forms.intro_who_placeholder') }}
+            <div class="editable-placeholder" v-if="!props.profile.introSocial">
+              {{ t('profiles.forms.intro_placeholder') }}
             </div>
           </template>
         </EditField>
       </div>
-    </div>
-    <div class="mb-3">
-      <RelationshipTags :profile="props.profile" />
+
+      <div class="mb-3">
+        <div class="mb-3 dating-field" v-if="props.profile.isDatingActive">
+          <span class="opacity-25">
+            <hr />
+          </span>
+          {{ props.profile.introDating }}
+          <EditField
+            fieldName="introDatingLocalized"
+            :editComponent="IntrotextEditor"
+            wrapper-class="editable-textarea"
+            :editProps="{
+              languages: profile.languages,
+              placeholder: t('profiles.forms.intro_who_placeholder'),
+            }"
+          >
+            <template #display>
+              <div class="editable-placeholder" v-if="!props.profile.introDating">
+                {{ t('profiles.forms.intro_who_placeholder') }}
+              </div>
+            </template>
+          </EditField>
+        </div>
+      </div>
+      <div class="mb-3">
+        <RelationshipTags :profile="props.profile" />
+      </div>
     </div>
   </div>
 </template>
@@ -145,5 +147,8 @@ const props = defineProps<{
   margin-top: -4rem;
   right: 1rem;
   z-index: 5;
+}
+.carousel-wrapper {
+  height: 50vh;
 }
 </style>

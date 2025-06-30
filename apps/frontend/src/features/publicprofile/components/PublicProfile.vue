@@ -44,7 +44,7 @@ const handleBlock = async () => {
 </script>
 
 <template>
-  <div :class="{ 'dating': profile.isDatingActive }" class="p-3" style="min-height: 100%;">
+  <div :class="{ dating: profile.isDatingActive }" class="public-profile" style="min-height: 100%;">
     <StoreErrorOverlay v-if="error" :error="error">
       <template #default="{ error }">
         <BButton v-if="error.status" variant="primary" @click="$emit('intent:back')">
@@ -53,8 +53,8 @@ const handleBlock = async () => {
       </template>
     </StoreErrorOverlay>
 
-    <div v-else class="h-100">
-      <div class="my-2">
+    <div v-else class="h-100 position-relative">
+      <div class="secondary-nav position-absolute w-100 py-2 text-color-white">
         <PublicProfileSecondaryNav
           @intent:back="$emit('intent:back')"
           @intent:block="showModal = true"
@@ -65,15 +65,17 @@ const handleBlock = async () => {
           <BPlaceholderCard class="w-100 opacity-50" img-height="250" animation="glow" no-button />
         </template>
 
-        <ProfileContent :profile :isLoading="isLoading" />
+        <ProfileContent :profile :isLoading="isLoading" class="" />
 
-        <DatingInteractions
-          v-if="profile.isDatingActive"
-          :profile="profile"
-          @intent:message="(convoId: string) => emit('intent:message', convoId)"
-          @updated="$emit('intent:back')"
-          @passed="$emit('hidden', profile.id)"
-        />
+        <div class="interactions position-fixed w-100">
+          <DatingInteractions
+            v-if="profile.isDatingActive"
+            :profile="profile"
+            @intent:message="(convoId: string) => emit('intent:message', convoId)"
+            @updated="$emit('intent:back')"
+            @passed="$emit('hidden', profile.id)"
+          />
+        </div>
       </BPlaceholderWrapper>
     </div>
     <BlockProfileDialog
@@ -85,6 +87,11 @@ const handleBlock = async () => {
   </div>
 </template>
 
-<style scoped>    
-
+<style scoped>
+.secondary-nav {
+  z-index: 1040;
+}
+.interactions {
+  bottom: 1rem;
+}
 </style>

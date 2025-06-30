@@ -18,7 +18,7 @@ defineEmits<{
       v-if="context.isMatch"
       class="d-flex align-items-center flex-column justify-content-center mb-2"
     >
-      <div style="width: 5rem; height: 5rem">
+      <div style="width: 5rem; height: 5rem" class="mb-2">
         <IconSurprisedEmoji class="svg-icon-100 text-warning" />
       </div>
       <h3>But wait...</h3>
@@ -35,7 +35,7 @@ defineEmits<{
     </div>
 
     <div v-else class="d-flex align-items-center flex-column justify-content-center mb-2">
-      <div style="width: 5rem; height: 5rem">
+      <div style="width: 5rem; height: 5rem" class="mb-2">
         <IconConfusedEmoji class="svg-icon-100 text-warning" />
       </div>
       <h3>But wait...</h3>
