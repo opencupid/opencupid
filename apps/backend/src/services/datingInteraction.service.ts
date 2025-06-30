@@ -32,12 +32,16 @@ export class DatingInteractionService {
   async like(fromId: string, toId: string): Promise<InteractionEdgePair> {
     if (fromId === toId) throw new Error('Cannot like yourself')
 
-    await prisma.hiddenProfile.deleteMany({ where: { fromId, toId } }) // remove pass if exists
+    const { like } = await prisma.$transaction(async tx => {
+      await tx.hiddenProfile.deleteMany({ where: { fromId, toId } }) // remove pass if exists
 
-    const like = await prisma.likedProfile.upsert({
-      where: { fromId_toId: { fromId, toId } },
-      update: {},
-      create: { fromId, toId },
+      const like = await tx.likedProfile.upsert({
+        where: { fromId_toId: { fromId, toId } },
+        update: {},
+        create: { fromId, toId },
+      })
+
+      return { like }
     })
 
     const likedProfile = await prisma.profile.findUniqueOrThrow({
@@ -141,20 +145,22 @@ export class DatingInteractionService {
   async pass(fromId: string, toId: string): Promise<void> {
     if (fromId === toId) throw new Error('Cannot pass yourself')
 
-    // Remove likes in both directions if a match exists
-    await prisma.likedProfile.deleteMany({
-      where: {
-        OR: [
-          { fromId, toId },
-          { fromId: toId, toId: fromId }
-        ]
-      }
-    })
-    // Hide the profile from view (unidirectional)
-    await prisma.hiddenProfile.upsert({
-      where: { fromId_toId: { fromId, toId } },
-      update: {},
-      create: { fromId, toId },
+    await prisma.$transaction(async tx => {
+      // Remove likes in both directions if a match exists
+      await tx.likedProfile.deleteMany({
+        where: {
+          OR: [
+            { fromId, toId },
+            { fromId: toId, toId: fromId }
+          ]
+        }
+      })
+      // Hide the profile from view (unidirectional)
+      await tx.hiddenProfile.upsert({
+        where: { fromId_toId: { fromId, toId } },
+        update: {},
+        create: { fromId, toId },
+      })
     })
   }
 
