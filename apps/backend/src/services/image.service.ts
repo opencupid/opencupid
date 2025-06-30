@@ -1,5 +1,9 @@
 import path from 'path'
 import fs from 'fs'
+import '@tensorflow/tfjs-node'
+import * as faceapi from 'face-api.js'
+import * as canvas from 'canvas'
+import { appConfig } from '../lib/appconfig'
 
 import { prisma } from '../lib/prisma'
 import { ProfileImage } from '@prisma/client'
@@ -9,6 +13,10 @@ import { generateContentHash } from '@/utils/hash'
 import { ProfileImagePosition } from '@zod/profile/profileimage.dto'
 import sharp from 'sharp'
 
+const { Canvas, Image, ImageData } = canvas
+faceapi.env.monkeyPatch({ Canvas, Image, ImageData })
+const MODEL_PATH = path.resolve(appConfig.MODEL_PATH)
+
 const sizes = [
   { name: 'thumb', width: 150, height: 150, fit: sharp.fit.cover }, // square crop
   { name: 'card', width: 480 }, // keep aspect ratio
@@ -16,6 +24,7 @@ const sizes = [
 ]
 export class ImageService {
   private static instance: ImageService
+  private faceModelsLoaded = false
 
   /**
    * Private constructor to prevent direct instantiation
@@ -30,6 +39,13 @@ export class ImageService {
       ImageService.instance = new ImageService()
     }
     return ImageService.instance
+  }
+
+  private async loadFaceModels() {
+    if (!this.faceModelsLoaded) {
+      await faceapi.nets.ssdMobilenetv1.loadFromDisk(MODEL_PATH)
+      this.faceModelsLoaded = true
+    }
   }
 
   /**
@@ -47,6 +63,51 @@ export class ImageService {
       where: { userId },
       orderBy: { position: 'asc' },
     })
+  }
+
+  private async autoCrop(filePath: string, outputDir: string, baseName: string) {
+    try {
+      await this.loadFaceModels()
+    } catch (err) {
+      console.error('Failed to load face models', err)
+      return null
+    }
+
+    const buffer = await sharp(filePath).rotate().toBuffer()
+    const img = await canvas.loadImage(buffer)
+    const detection = await faceapi.detectSingleFace(img)
+    if (!detection) {
+      return null
+    }
+
+    const imgWidth = img.width
+    const imgHeight = img.height
+    const box = detection.box
+    const faceSize = Math.max(box.width, box.height)
+    let cropSize = Math.min(Math.max(faceSize * 2, faceSize * 1.5), Math.min(imgWidth, imgHeight))
+
+    cropSize = Math.min(cropSize, imgWidth, imgHeight)
+    const centerX = box.x + box.width / 2
+    const centerY = box.y + box.height / 2
+    let left = Math.round(centerX - cropSize / 2)
+    let top = Math.round(centerY - cropSize / 2)
+    if (left < 0) left = 0
+    if (top < 0) top = 0
+    if (left + cropSize > imgWidth) left = imgWidth - cropSize
+    if (top + cropSize > imgHeight) top = imgHeight - cropSize
+
+    const out = path.join(outputDir, `${baseName}-face.jpg`)
+    await sharp(buffer)
+      .extract({
+        left: Math.round(left),
+        top: Math.round(top),
+        width: Math.round(cropSize),
+        height: Math.round(cropSize),
+      })
+      .jpeg({ quality: 90 })
+      .toFile(out)
+
+    return out
   }
 
   /**
@@ -123,6 +184,7 @@ export class ImageService {
     await fs.promises.mkdir(outputDir, { recursive: true })
 
     const original = sharp(filePath).rotate()
+    const facePath = await this.autoCrop(filePath, outputDir, baseName)
 
     const metadata = await original.metadata()
     const format = metadata.format ?? 'jpeg'
@@ -130,7 +192,11 @@ export class ImageService {
     const outputPaths: Record<string, string> = {}
 
     for (const size of sizes) {
-      const resized = original.clone().resize({
+      const source =
+        facePath && (size.name === 'thumb' || size.name === 'card')
+          ? sharp(facePath)
+          : original.clone()
+      const resized = source.resize({
         width: size.width,
         height: size.height,
         fit: size.fit ?? sharp.fit.inside,
@@ -147,6 +213,9 @@ export class ImageService {
     await original.jpeg({ quality: 90 }).toFile(originalCleaned)
 
     outputPaths.original = originalCleaned
+    if (facePath) {
+      outputPaths.face = facePath
+    }
 
     return {
       width: metadata.width,

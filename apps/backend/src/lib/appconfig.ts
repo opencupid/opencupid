@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { findUpSync } from 'find-up'
 import dotenv from 'dotenv'
 import dotenvExpand from 'dotenv-expand'
+import path from 'path'
 
 // Zod schema
 export const configSchema = z.object({
@@ -41,6 +42,8 @@ export const configSchema = z.object({
   TYPEAHEAD_DEBOUNCE_MS: z.coerce.number().default(300),
 
   GOOGLE_APPLICATION_CREDENTIALS: z.string(),
+
+  MODEL_PATH: z.string().default(path.join(process.cwd(), 'face-models')),
 
   RATE_LIMIT_PROFILE_SCOPES: z.coerce.number().default(1),
 })
