@@ -74,34 +74,52 @@ const isDetailView = computed(() => !!messageStore.activeConversation && !messag
 </script>
 
 <template>
-  <main class="d-flex flex-column h-100">
-    <!-- <h1 class="px-3 mb-2" v-if="!detailVisible">{{  $t('messaging.page_title') }}</h1> -->
-
-    <BOverlay
-      :show="!haveConversations"
-      no-spinner
-      bg-color="var(--bs-body-bg)"
-      :blur="null"
-      opacity="0.85"
-      class="h-100 overlay"
+  <main class="w-100 position-relative">
+    <!-- Detail view overlay -->
+    <div
+      v-if="isDetailView"
+      class="position-absolute top-0 start-0 w-100 h-100"
+      style="z-index: 1050;"
     >
-      <template #overlay>
-        <div class="d-flex flex-column align-items-center justify-content-center h-100">
-          <IconMessage class="svg-icon-100 opacity-25" />
-          <p class="text-muted mb-4 mt-4 text-center">Your conversations will take place here.</p>
-          <BButton
-            variant="primary"
-            size="lg"
-            pill
-            @click="router.push({ name: 'BrowseProfiles' })"
-          >
-            <!-- <IconSearch class="svg-icon me-2" /> -->
-            Find people to talk to
-          </BButton>
-        </div>
-      </template>
-      <div class="flex-grow-1 d-flex flex-row overflow-hidden pt-5">
-        <div class="col-12 col-md-4 d-md-block" :class="{ 'd-none': isDetailView }">
+      <div class="overflow-auto h-100">
+        <ConversationDetail
+          :loading="messageStore.isLoading"
+          :conversation="messageStore.activeConversation"
+          @deselect:convo="handleDeselectConvo"
+          @profile:select="handleProfileSelect"
+        />
+      </div>
+    </div>
+
+    <!-- List view -->
+    <div class="d-flex flex-column h-100" :class="{ 'd-none': isDetailView }">
+      <BOverlay
+        :show="!haveConversations"
+        no-spinner
+        bg-color="var(--bs-body-bg)"
+        :blur="null"
+        opacity="0.85"
+        class="h-100 overlay"
+      >
+        <template #overlay>
+          <div class="d-flex flex-column align-items-center justify-content-center h-100">
+            <IconMessage class="svg-icon-100 opacity-25" />
+            <p class="text-muted mb-4 mt-4 text-center">
+              Your conversations will take place here.
+            </p>
+            <BButton
+              variant="primary"
+              size="lg"
+              pill
+              @click="router.push({ name: 'BrowseProfiles' })"
+            >
+              Find people to talk to
+            </BButton>
+          </div>
+        </template>
+
+        <!-- Conversation summaries -->
+        <div class="flex-grow-1 overflow-auto pt-5">
           <div class="mx-3">
             <ConversationSummaries
               :loading="messageStore.isLoading"
@@ -109,23 +127,10 @@ const isDetailView = computed(() => !!messageStore.activeConversation && !messag
               :activeConversation="messageStore.activeConversation"
               @convo:select="handleSelectConvo"
             />
-            <!-- <BPlaceholderWrapper :loading="isLoading" class="mb-3">
-            <template #loading>
-              <ConversationPlaceholder :howMany="5" />
-            </template>
-          </BPlaceholderWrapper> -->
           </div>
         </div>
-        <div class="col-md-8 flex-grow-1 d-flex flex-column overflow-hidden" v-if="isDetailView">
-          <ConversationDetail
-            :loading="messageStore.isLoading"
-            :conversation="messageStore.activeConversation"
-            @deselect:convo="handleDeselectConvo"
-            @profile:select="handleProfileSelect"
-          />
-        </div>
-      </div>
-    </BOverlay>
+      </BOverlay>
+    </div>
   </main>
 </template>
 <style scoped></style>
