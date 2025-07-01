@@ -1,6 +1,7 @@
 <template>
   <main class="container">
     <h2>Home</h2>
+    <ReceivedLikesCount class="my-3" />
   </main>
 </template>
 
@@ -8,6 +9,7 @@
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import ReceivedLikesCount from '@/features/datinginteraction/components/ReceivedLikesCount.vue'
 
 const profileStore = useOwnerProfileStore()
 const router = useRouter()

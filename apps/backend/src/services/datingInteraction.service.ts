@@ -78,9 +78,9 @@ export class DatingInteractionService {
       where: {
         toId: profileId,
         from: {
-          likesSent: {
+          likesReceived: {
             none: {
-              toId: profileId, // exclude mutual likes
+              fromId: profileId, // exclude mutual likes
             },
           },
         },

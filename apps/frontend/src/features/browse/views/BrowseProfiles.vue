@@ -16,6 +16,7 @@ import NoResultsCTA from '../components/NoResultsCTA.vue'
 import PlaceholdersGrid from '../components/PlaceholdersGrid.vue'
 import MiddleColumn from '../components/MiddleColumn.vue'
 import StoreErrorOverlay from '@/features/shared/ui/StoreErrorOverlay.vue'
+import ReceivedLikesCount from '@/features/datinginteraction/components/ReceivedLikesCount.vue'
 
 const router = useRouter()
 
@@ -139,6 +140,8 @@ provide('viewerProfile', viewerProfile.value)
             @scope:change="(scope: ProfileScope) => (currentScope = scope)"
             :prefs-button-disabled="!haveAccess"
           />
+
+          <ReceivedLikesCount class="my-3" v-if="currentScope == 'dating'" />
         </div>
       </MiddleColumn>
       <BPlaceholderWrapper :loading="isLoading">

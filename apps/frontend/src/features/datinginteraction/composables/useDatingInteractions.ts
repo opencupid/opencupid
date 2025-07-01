@@ -5,6 +5,7 @@ export function useDatingInteractions() {
   return {
     likesSent: store.sent,
     matches: store.matches,
+    receivedLikesCount: store.receivedLikesCount,
     like: store.sendLike,
     pass: store.passProfile,
     refreshInteractions: store.fetchInteractions,
