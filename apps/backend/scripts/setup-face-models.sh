@@ -11,9 +11,6 @@ if [ ! -f "$MODEL_DIR/frozen_inference_graph_face.pb" ]; then
   curl -L "$MODEL_URL" -o "$MODEL_DIR/frozen_inference_graph_face.pb"
 fi
 
-# TODO tensorflowjs_converter is has been archived in favor of tensorflow/tfjs.
-# adapt this to use tfjs
-# https://github.com/tensorflow/tfjs
 if command -v tensorflowjs_converter >/dev/null; then
   echo "Converting TensorFlow model to TensorFlow.js format"
   tensorflowjs_converter \
