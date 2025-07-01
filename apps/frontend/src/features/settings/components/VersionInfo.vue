@@ -24,66 +24,33 @@ const formatCommit = (commit: string) => {
 onMounted(async () => {
   isLoading.value = true
   error.value = null
-  
+
   const result = await appStore.fetchVersion()
-  
+
   if (result.success) {
-    version.value = result.data
+    version.value = result.data!
   } else {
     error.value = result.message
   }
-  
+
   isLoading.value = false
 })
 </script>
 
 <template>
-  <div class="version-info">
-    <h5 class="mb-3">Version Information</h5>
-    
-    <div v-if="isLoading" class="text-muted">
-      Loading version information...
-    </div>
-    
+  <div class="position-fixed bottom-0 end-0 p-2 text-center w-100" style="font-size: 0.5rem">
+    <div v-if="isLoading" class="text-muted">Loading version information...</div>
+
     <div v-else-if="error" class="text-danger">
       {{ error }}
     </div>
-    
-    <div v-else-if="version" class="version-details">
-      <div class="mb-2">
-        <strong>Version:</strong> <code>{{ version.version }}</code>
-      </div>
-      <div class="mb-2">
-        <strong>Commit:</strong> <code>{{ formatCommit(version.commit) }}</code>
-      </div>
-      <div class="mb-2">
-        <strong>Built:</strong> {{ formatTimestamp(version.timestamp) }}
-      </div>
-    </div>
+
+    <code v-else-if="version" class="text-muted" >
+      <strong>Version:</strong> {{ version.version }} <strong>Commit:</strong>
+      {{ formatCommit(version.commit) }} <strong>Built:</strong>
+      {{ formatTimestamp(version.timestamp) }}
+    </code>
   </div>
 </template>
 
-<style scoped>
-.version-info {
-  padding: 1rem;
-  background-color: var(--bs-light);
-  border-radius: 0.375rem;
-  border: 1px solid var(--bs-border-color);
-}
-
-[data-bs-theme="dark"] .version-info {
-  background-color: var(--bs-dark);
-}
-
-.version-details code {
-  background-color: var(--bs-gray-100);
-  padding: 0.125rem 0.25rem;
-  border-radius: 0.25rem;
-  font-size: 0.875em;
-}
-
-[data-bs-theme="dark"] .version-details code {
-  background-color: var(--bs-gray-800);
-  color: var(--bs-gray-200);
-}
-</style>
+<style scoped></style>
