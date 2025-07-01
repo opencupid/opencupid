@@ -53,7 +53,7 @@ const handlePass = async () => {
 }
 
 const handleMessageIntent = () => {
-  const context = props.profile.conversationContext
+  const context = props.profile.interactionContext
   if (context.haveConversation && context.conversationId) {
     emit('intent:message', context?.conversationId)
     return

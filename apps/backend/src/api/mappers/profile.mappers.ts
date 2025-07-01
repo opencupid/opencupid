@@ -18,7 +18,6 @@ import { mapProfileTagsTranslated } from './tag.mappers'
 import { Profile, ProfileImage } from '@zod/generated'
 import { toOwnerProfileImage, toPublicProfileImage } from './image.mappers'
 import { mapInteractionContext } from './interaction.mappers'
-import { mapConversationContext } from './messaging.mappers'
 
 
 export function mapDbProfileToOwnerProfile(locale: string, db: DbProfileWithImages): OwnerProfile {
@@ -80,7 +79,6 @@ export function mapProfileWithContext(dbProfile: DbProfileWithContext, hasDating
   return {
     ...mapped,
     conversation: conversation || null,
-    conversationContext: mapConversationContext(dbProfile),
     interactionContext: mapInteractionContext(dbProfile)
   } as PublicProfileWithContext
 }

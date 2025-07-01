@@ -55,7 +55,7 @@ const handleMessageSent = () => {
           <ProfileImage :profile="match.to.profile" />
         </div>
       </div>
-      <div v-if="profile.conversationContext.canMessage" class="text-center mb-4">
+      <div v-if="profile.interactionContext.canMessage" class="text-center mb-4">
         <div v-if="!messageSent">
           <h5 class="text-center mb-3">Send {{ profile.publicName }} a message!</h5>
           <SendMessageForm
