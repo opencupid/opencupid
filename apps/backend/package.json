@@ -74,7 +74,7 @@
     "prisma": "^6.8.2",
     "prisma-zod-generator": "^0.8.13",
     "ts-node-dev": "^2.0.0",
-    "tsc-watch": "^6.2.1",
+    "tsc-watch": "^7.0.0",
     "tsconfig-paths": "^4.2.0",
     "tsup": "^8.4.0",
     "typescript": "^5.8.3",
