@@ -10,6 +10,7 @@ import Settings from '@/features/settings/views/Settings.vue'
 import MyProfile from '@/features/myprofile/views/MyProfile.vue'
 import BrowseProfiles from '@/features/browse/views/BrowseProfiles.vue'
 import OnboardingView from '@/features/onboarding/views/Onboarding.vue'
+import MatchesView from '@/features/interaction/views/Matches.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -79,6 +80,13 @@ const routes: Array<RouteRecordRaw> = [
     path: '/inbox/:conversationId?',
     name: 'Messaging',
     component: MessagingView,
+    props: true,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/matches/:profileId?',
+    name: 'Matches',
+    component: MatchesView,
     props: true,
     meta: { requiresAuth: true },
   },

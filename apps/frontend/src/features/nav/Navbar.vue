@@ -6,6 +6,7 @@ import { computed } from 'vue'
 import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
 import IconMessage from '@/assets/icons/interface/message.svg'
 import IconSearch from '@/assets/icons/interface/search.svg'
+import IconHeart from '@/assets/icons/interface/heart.svg'
 import IconUser from '@/assets/icons/interface/user.svg'
 import IconLogout from '@/assets/icons/interface/logout.svg'
 import { faCircle } from '@fortawesome/free-solid-svg-icons'
@@ -34,6 +35,11 @@ function handleLogoutClick() {
       <BNavItem to="/browse" active-class="active">
         <IconSearch class="svg-icon-lg" />
         <span class="d-none d-sm-inline label">{{ $t('nav.browse') }}</span>
+      </BNavItem>
+
+      <BNavItem to="/matches" active-class="active">
+        <IconHeart class="svg-icon-lg" />
+        <span class="d-none d-sm-inline label">Matches</span>
       </BNavItem>
 
       <BNavItem to="/inbox" active-class="active">
