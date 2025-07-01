@@ -4,9 +4,9 @@ import MiddleColumn from '@/features/browse/components/MiddleColumn.vue'
 import MatchesList from '../components/MatchesList.vue'
 import IconDate from '@/assets/icons/app/cupid.svg'
 import ProfileChipListPlaceholder from '@/features/publicprofile/components/ProfileChipListPlaceholder.vue'
-import { useDatingInteractions } from '../composables/useDatingInteractions'
+import { useInteractionsViewModel } from '../composables/useInteractionsViewModel'
 
-const { matches, haveMatches, isLoading, refreshInteractions } = useDatingInteractions()
+const { matches, haveMatches, isLoading, refreshInteractions } = useInteractionsViewModel()
 
 onMounted(async () => {
   await refreshInteractions()

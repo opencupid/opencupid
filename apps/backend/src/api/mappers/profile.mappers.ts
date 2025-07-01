@@ -71,15 +71,15 @@ export function mapProfileToPublic(dbProfile: DbProfileWithImages, includeDating
 
 
 
-export function mapProfileWithContext(dbProfile: DbProfileWithContext, hasDatingPermission: boolean, locale: string): PublicProfileWithContext {
+export function mapProfileWithContext(dbProfile: DbProfileWithContext, includeDatingContext: boolean, locale: string): PublicProfileWithContext {
 
-  const mapped = mapProfileToPublic(dbProfile, hasDatingPermission, locale)
+  const mapped = mapProfileToPublic(dbProfile, includeDatingContext, locale)
   const conversation = dbProfile.conversationParticipants?.[0]?.conversation ?? null
 
   return {
     ...mapped,
     conversation: conversation || null,
-    interactionContext: mapInteractionContext(dbProfile)
+    interactionContext: mapInteractionContext(dbProfile, includeDatingContext)
   } as PublicProfileWithContext
 }
 

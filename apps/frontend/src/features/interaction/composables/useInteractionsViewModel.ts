@@ -1,15 +1,15 @@
 import { computed } from "vue"
-import { useDatingInteractionStore } from "../stores/useDatingInteractionStore"
+import { useInteractionStore } from "../stores/useInteractionStore"
 
-export function useDatingInteractions() {
-  const store = useDatingInteractionStore()
+export function useInteractionsViewModel() {
+  const store = useInteractionStore()
 
   
   return {
     likesSent: store.sent,
-    matches: store.matches,
+    matches: computed(() => store.matches)  ,
     haveMatches: computed(() => store.matches.length > 0),
-    receivedLikesCount: store.receivedLikesCount,
+    receivedLikesCount: computed(() => store.receivedLikesCount),
     like: store.sendLike,
     pass: store.passProfile,
     refreshInteractions: store.fetchInteractions,

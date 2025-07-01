@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { useToast } from 'vue-toastification'
 
-import DatingInteractions from '@/features/interaction/components/DatingInteractions.vue'
+import ProfileInteractions from '@/features/interaction/components/ProfileInteractions.vue'
 
 import { usePublicProfile } from '../composables/usePublicProfile'
 import ProfileContent from '../components/ProfileContent.vue'
@@ -68,8 +68,7 @@ const handleBlock = async () => {
         <ProfileContent :profile :isLoading="isLoading" class="" />
 
         <div class="interactions position-fixed w-100">
-          <DatingInteractions
-            v-if="profile.isDatingActive"
+          <ProfileInteractions
             :profile="profile"
             @intent:message="(convoId: string) => emit('intent:message', convoId)"
             @updated="$emit('intent:back')"

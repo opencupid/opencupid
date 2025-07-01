@@ -13,7 +13,7 @@ interface InteractionState {
   error: StoreError | null
 }
 
-export const useDatingInteractionStore = defineStore('datingInteraction', {
+export const useInteractionStore = defineStore('interaction', {
   state: (): InteractionState => ({
     sent: [],
     receivedLikesCount: 0,

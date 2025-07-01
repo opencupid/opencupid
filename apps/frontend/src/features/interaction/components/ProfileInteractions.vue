@@ -7,7 +7,7 @@ import InteractionButtons from './InteractionButtons.vue'
 import SendMessageDialog from '@/features/publicprofile/components/SendMessageDialog.vue'
 import MatchPopup from './MatchPopup.vue'
 
-import { useDatingInteractions } from '../composables/useDatingInteractions'
+import { useInteractionsViewModel } from '../composables/useInteractionsViewModel'
 import { useToast } from 'vue-toastification'
 import { type InteractionEdgePair } from '@zod/interaction/interaction.dto'
 
@@ -28,7 +28,7 @@ const showMessageModal = ref(false)
 const showMatchModal = ref(false)
 const match = ref<InteractionEdgePair>()
 
-const { like, pass, refreshInteractions, isLoading } = useDatingInteractions()
+const { like, pass, refreshInteractions, isLoading } = useInteractionsViewModel()
 
 const handleLike = async () => {
   const result = await like(props.profile.id)
@@ -63,18 +63,18 @@ const handleMessageIntent = () => {
   }
 }
 
-onMounted(() => {
-  refreshInteractions()
+onMounted(async () => {
+  await refreshInteractions()
 })
 </script>
 
 <template>
-  <div class="d-flex justify-content-center align-items-center gap-2">
+  <div v-if="profile.interactionContext" class="d-flex justify-content-center align-items-center gap-2">
     <InteractionButtons
       @message="handleMessageIntent"
       @pass="handlePass"
       @like="handleLike"
-      :context="props.profile.interactionContext"
+      :context="profile.interactionContext"
     />
     <SendMessageDialog
       v-model="showMessageModal"

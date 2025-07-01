@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import IconHeart from '@/assets/icons/interface/heart.svg'
-import { useDatingInteractions } from '../composables/useDatingInteractions'
+import { useInteractionsViewModel } from '../composables/useInteractionsViewModel'
 
-const { receivedLikesCount, refreshInteractions, isLoading } = useDatingInteractions()
+const { receivedLikesCount, refreshInteractions, isLoading } = useInteractionsViewModel()
 
 onMounted(() => {
   refreshInteractions()
