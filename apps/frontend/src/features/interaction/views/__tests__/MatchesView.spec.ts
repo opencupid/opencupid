@@ -14,7 +14,7 @@ const mockState = {
   refreshInteractions: vi.fn()
 }
 
-vi.mock('../../composables/useDatingInteractions', () => ({ useDatingInteractions: () => mockState }))
+vi.mock('../../composables/useInteractionsViewModel', () => ({ useInteractionsViewModel: () => mockState }))
 
 const BPlaceholderWrapper = {
   props: ['loading'],
