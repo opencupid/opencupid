@@ -13,6 +13,7 @@ import LoadingComponent from '@/features/shared/ui/LoadingComponent.vue'
 import LogoutButton from '@/features/auth/components/LogoutButton.vue'
 import LanguageSelectorDropdown from '../components/LanguageSelectorDropdown.vue'
 import PushPermissions from '../components/PushPermissions.vue'
+import VersionInfo from '../components/VersionInfo.vue'
 
 const authStore = useAuthStore()
 
@@ -77,6 +78,10 @@ onMounted(async () => {
     </div>
     <div class="mb-3">
       <LanguageSelectorDropdown />
+    </div>
+
+    <div class="mb-3">
+      <VersionInfo />
     </div>
   </main>
 </template>
