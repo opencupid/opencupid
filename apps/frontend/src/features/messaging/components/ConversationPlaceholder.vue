@@ -17,7 +17,7 @@ const animation=computed(() => props.isAnimated ? 'wave' : undefined)
   >
     <div class="img " />
     <div class="d-flex flex-column flex-grow-1 ms-2">
-      <BPlaceholder size="lg" :animation="animation" width="75" />
+      <BPlaceholder size="lg" :animation="animation" width="75" variant="secondary" />
       <BPlaceholder size="sm" :animation="animation" width="50" variant="secondary" />
     </div>
   </div>

@@ -11,7 +11,7 @@ const animation = computed(() => (props.isAnimated ? 'wave' : undefined))
 <template>
   <div class="ph d-flex align-items-center gap-2 p-2 w-100 mb-2">
     <div class="img" />
-    <BPlaceholder size="lg" :animation="animation" width="75" />
+    <BPlaceholder size="lg" :animation="animation" width="75" variant="secondary" />
   </div>
 </template>
 
