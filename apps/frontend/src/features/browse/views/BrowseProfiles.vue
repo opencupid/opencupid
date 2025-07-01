@@ -16,7 +16,7 @@ import NoResultsCTA from '../components/NoResultsCTA.vue'
 import PlaceholdersGrid from '../components/PlaceholdersGrid.vue'
 import MiddleColumn from '../components/MiddleColumn.vue'
 import StoreErrorOverlay from '@/features/shared/ui/StoreErrorOverlay.vue'
-import ReceivedLikesCount from '@/features/datinginteraction/components/ReceivedLikesCount.vue'
+import ReceivedLikesCount from '@/features/interaction/components/ReceivedLikesCount.vue'
 
 const router = useRouter()
 

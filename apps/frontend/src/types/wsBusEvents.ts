@@ -1,5 +1,5 @@
 import type { MessageDTO } from '@zod/messaging/messaging.dto'
-import type { InteractionEdge } from '@zod/datinginteraction/datinginteraction.dto'
+import type { InteractionEdge } from '@zod/interaction/interaction.dto'
 
 export type WSEvents = {
   'ws:new_message': MessageDTO

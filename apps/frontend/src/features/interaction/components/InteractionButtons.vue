@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
 
-import { type InteractionContext } from '@zod/datinginteraction/interactionContext.dto'
+import { type InteractionContext } from '@zod/interaction/interactionContext.dto'
 
 import IconHeart from '@/assets/icons/interface/heart.svg'
 import IconCross from '@/assets/icons/interface/cross.svg'

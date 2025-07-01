@@ -3,7 +3,7 @@ import { profileImageInclude } from '@/db/includes/profileIncludes'
 import { prisma } from '@/lib/prisma'
 
 import { Prisma } from '@prisma/client'
-import { InteractionEdgePair, type InteractionEdge } from '@zod/datinginteraction/datinginteraction.dto'
+import { InteractionEdgePair, type InteractionEdge } from '@zod/interaction/interaction.dto'
 
 function toLikeEdge(
   profile: Prisma.ProfileGetPayload<{ include: { profileImages: true } }>,
@@ -17,14 +17,14 @@ function toLikeEdge(
   }
 }
 
-export class DatingInteractionService {
-  private static instance: DatingInteractionService
+export class InteractionService {
+  private static instance: InteractionService
 
-  public static getInstance(): DatingInteractionService {
-    if (!DatingInteractionService.instance) {
-      DatingInteractionService.instance = new DatingInteractionService()
+  public static getInstance(): InteractionService {
+    if (!InteractionService.instance) {
+      InteractionService.instance = new InteractionService()
     }
-    return DatingInteractionService.instance
+    return InteractionService.instance
   }
 
   private constructor() { }

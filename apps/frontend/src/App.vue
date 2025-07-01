@@ -4,7 +4,7 @@ import AppNotifier from '@/features/app/components/AppNotifier.vue'
 import { useI18nStore } from './store/i18nStore'
 import { useCountries } from './features/shared/composables/useCountries'
 import { useLanguages } from './features/shared/composables/useLanguages'
-import { useDatingInteractionStore } from './features/datinginteraction/stores/useDatingInteractionStore'
+import { useDatingInteractionStore } from './features/interaction/stores/useDatingInteractionStore'
 
 // FIXME
 // This is a workaround to ensure the page scrolls down

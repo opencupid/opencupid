@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { useToast } from 'vue-toastification'
 
-import DatingInteractions from '@/features/datinginteraction/components/DatingInteractions.vue'
+import DatingInteractions from '@/features/interaction/components/DatingInteractions.vue'
 
 import { usePublicProfile } from '../composables/usePublicProfile'
 import ProfileContent from '../components/ProfileContent.vue'

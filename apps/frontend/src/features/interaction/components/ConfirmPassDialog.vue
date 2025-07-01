@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import IconConfusedEmoji from '@/assets/icons/emojis/confused-emoji.svg'
 import IconSurprisedEmoji from '@/assets/icons/emojis/surprised-emoji.svg'
-import { type InteractionContext } from '@zod/datinginteraction/interactionContext.dto'
+import { type InteractionContext } from '@zod/interaction/interactionContext.dto'
 
 defineProps<{
   context: InteractionContext

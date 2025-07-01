@@ -12,7 +12,7 @@ import { PublicTagSchema } from "../tag/tag.dto";
 import { PublicProfileImageSchema } from "./profileimage.dto";
 import { LocationSchema } from "@zod/dto/location.dto";
 import { baseFields, socialFields, datingFields, ownerFields } from "./profile.fields";
-import { InteractionContextSchema } from "@zod/datinginteraction/interactionContext.dto";
+import { InteractionContextSchema } from "@zod/interaction/interactionContext.dto";
 import { ConversationContextSchema } from "@zod/messaging/conversationContext.dto";
 
 const PublicScalarsSchema = ProfileSchema.pick({

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
 
-import { type InteractionEdgePair } from '@zod/datinginteraction/datinginteraction.dto'
+import { type InteractionEdgePair } from '@zod/interaction/interaction.dto'
 import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 
 import ProfileImage from '@/features/images/components/ProfileImage.vue'

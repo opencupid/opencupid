@@ -20,7 +20,7 @@ import type { PublicCity } from '@zod/dto/city.dto'
 import type { LocationDTO } from '@zod/dto/location.dto'
 import type { DatingPreferencesDTO } from '@zod/match/datingPreference.dto'
 import { AuthErrorCodes } from '@zod/user/auth.dto'
-import { type InteractionEdgePair, type InteractionEdge } from './datinginteraction/datinginteraction.dto'
+import { type InteractionEdgePair, type InteractionEdge, type InteractionStats } from './interaction/interaction.dto'
 
 export type GetProfileSummariesResponse = ApiSuccess<{ profiles: ProfileSummary[] }>
 export type GetDatingPreferenceseResponse = ApiSuccess<{ prefs: DatingPreferencesDTO }>
@@ -53,6 +53,7 @@ export type InitiateConversationResponse = ApiSuccess<{
 export type InteractionEdgesResponse = ApiSuccess<{ edges: InteractionEdge[] }>
 export type InteractionEdgeResponse = ApiSuccess<{ pair: InteractionEdgePair }>
 export type InteractionEdgeCountResponse = ApiSuccess<{ count: number }>
+export type InteractionStatsResponse = ApiSuccess<{ stats: InteractionStats }>
 
 export type AuthResponse<T> = ApiSuccess<T> | ApiError & { code: AuthErrorCodes }
 export type UserMeResponse = ApiSuccess<{ user: SettingsUser }>

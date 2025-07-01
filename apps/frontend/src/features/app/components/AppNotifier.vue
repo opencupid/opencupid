@@ -8,7 +8,7 @@ import { useToast } from 'vue-toastification'
 const router = useRouter()
 
 import { type MessageDTO } from '@zod/messaging/messaging.dto'
-import { type InteractionEdge } from '@zod/datinginteraction/datinginteraction.dto'
+import { type InteractionEdge } from '@zod/interaction/interaction.dto'
 
 import MessageReceivedToast from './MessageReceivedToast.vue'
 import LikeReceivedToast from './LikeReceivedToast.vue'

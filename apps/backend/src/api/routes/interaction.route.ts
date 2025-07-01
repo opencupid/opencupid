@@ -1,8 +1,8 @@
 import { FastifyPluginAsync } from 'fastify'
 import z from 'zod'
 import { rateLimitConfig, sendError } from '../helpers'
-import type { InteractionEdgeCountResponse, InteractionEdgeResponse, InteractionEdgesResponse } from '@zod/apiResponse.dto'
-import { DatingInteractionService } from '@/services/datingInteraction.service'
+import type { InteractionEdgeCountResponse, InteractionEdgeResponse, InteractionEdgesResponse, InteractionStatsResponse } from '@zod/apiResponse.dto'
+import { InteractionService } from '@/services/interaction.service'
 import { broadcastToProfile } from '@/utils/wsUtils'
 import { WebPushService } from '@/services/webpush.service'
 
@@ -11,8 +11,32 @@ const TargetLookupParamsSchema = z.object({
   targetId: z.string().cuid(),
 })
 
-const datingInteractionRoutes: FastifyPluginAsync = async fastify => {
-  const service = DatingInteractionService.getInstance()
+const interactionRoutes: FastifyPluginAsync = async fastify => {
+  const service = InteractionService.getInstance()
+
+  // GET /interactions
+  fastify.get('/', {
+    onRequest: [fastify.authenticate],
+    config: rateLimitConfig(fastify, '1 minute', 5),
+  }, async (req, reply) => {
+    const myId = req.session.profileId
+
+    try {
+      const [sent, matches, count] = await Promise.all([
+        service.getLikesSent(myId),
+        service.getMatches(myId),
+        service.getLikesReceivedCount(myId),
+      ])
+      const response: InteractionStatsResponse = {
+        success: true,
+        stats: { sent, matches, receivedLikesCount: count },
+      }
+      return reply.code(200).send(response)
+    } catch (err) {
+      fastify.log.error(err)
+      return sendError(reply, 500, 'Failed to fetch interactions')
+    }
+  })
 
   // POST /interactions/like/:targetId
   fastify.post<{ Params: { targetId: string } }>('/like/:targetId', {
@@ -144,4 +168,4 @@ const datingInteractionRoutes: FastifyPluginAsync = async fastify => {
   })
 }
 
-export default datingInteractionRoutes
+export default interactionRoutes

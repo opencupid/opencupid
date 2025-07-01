@@ -9,7 +9,7 @@ import MatchPopup from './MatchPopup.vue'
 
 import { useDatingInteractions } from '../composables/useDatingInteractions'
 import { useToast } from 'vue-toastification'
-import { type InteractionEdgePair } from '@zod/datinginteraction/datinginteraction.dto'
+import { type InteractionEdgePair } from '@zod/interaction/interaction.dto'
 
 const toast = useToast()
 

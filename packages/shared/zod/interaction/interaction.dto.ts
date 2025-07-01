@@ -1,5 +1,3 @@
-
-
 import { z } from 'zod'
 import { ProfileSummarySchema } from '@zod/profile/profile.dto'
 
@@ -11,8 +9,6 @@ export const InteractionEdgeSchema = z.object({
 
 export type InteractionEdge = z.infer<typeof InteractionEdgeSchema>
 
-
-
 export const InteractionEdgePairSchema = z.object({
   to: InteractionEdgeSchema,
   from: InteractionEdgeSchema,
@@ -20,3 +16,11 @@ export const InteractionEdgePairSchema = z.object({
 })
 
 export type InteractionEdgePair = z.infer<typeof InteractionEdgePairSchema>
+
+export const InteractionStatsSchema = z.object({
+  sent: z.array(InteractionEdgeSchema),
+  matches: z.array(InteractionEdgeSchema),
+  receivedLikesCount: z.number(),
+})
+
+export type InteractionStats = z.infer<typeof InteractionStatsSchema>

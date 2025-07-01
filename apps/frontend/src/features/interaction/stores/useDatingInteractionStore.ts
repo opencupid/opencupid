@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { api } from '@/lib/api'
 import { bus } from '@/lib/bus'
-import { InteractionEdgePairSchema, type InteractionEdge, type InteractionEdgePair } from '@zod/datinginteraction/datinginteraction.dto'
+import { InteractionEdgePairSchema, InteractionStatsSchema, type InteractionEdge, type InteractionEdgePair } from '@zod/interaction/interaction.dto'
 import { storeError, storeSuccess, type StoreError, type StoreResponse } from '@/store/helpers'
 
 interface InteractionState {
@@ -49,17 +49,13 @@ export const useDatingInteractionStore = defineStore('datingInteraction', {
     async fetchInteractions() {
       this.loading = true
       try {
-        const [sentRes, receivedRes, matchRes] = await Promise.all([
-          api.get('/interactions/sent'),
-          api.get('/interactions/received'),
-          api.get('/interactions/matches'),
-        ])
-        this.sent = sentRes.data.edges
-        this.matches = matchRes.data.edges
-        this.receivedLikesCount = receivedRes.data.count
+        const res = await api.get('/interactions')
+        const stats = InteractionStatsSchema.parse(res.data.stats)
+        this.sent = stats.sent
+        this.matches = stats.matches
+        this.receivedLikesCount = stats.receivedLikesCount
         return storeSuccess()
       } catch (error) {
-        // console.error('Failed to fetch likes:', error)
         return storeError(error)
       } finally {
         this.loading = false

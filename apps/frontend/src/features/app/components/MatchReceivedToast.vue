@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import ProfileImage from '@/features/images/components/ProfileImage.vue'
-import { type InteractionEdge } from '@zod/datinginteraction/datinginteraction.dto'
+import { type InteractionEdge } from '@zod/interaction/interaction.dto'
 // import { useI18n } from 'vue-i18n';
 // const { t } = useI18n()
 

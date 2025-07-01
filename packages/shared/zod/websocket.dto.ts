@@ -1,4 +1,4 @@
-import { type InteractionEdge } from "./datinginteraction/datinginteraction.dto";
+import { type InteractionEdge } from "./interaction/interaction.dto";
 import { type MessageDTO } from "./messaging/messaging.dto";
 
 export type WSMessage =

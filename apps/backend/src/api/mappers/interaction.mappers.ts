@@ -1,4 +1,4 @@
-import { InteractionContext } from "@zod/datinginteraction/interactionContext.dto";
+import { InteractionContext } from "@zod/interaction/interactionContext.dto";
 import { DbProfileWithContext } from "@zod/profile/profile.db";
 
 
