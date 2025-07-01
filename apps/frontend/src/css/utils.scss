@@ -25,6 +25,10 @@
   opacity: 0.5;
 }
 
+.clickable {
+  cursor: pointer;
+}
+
 .form-check-label {
   &:hover {
     cursor: pointer;

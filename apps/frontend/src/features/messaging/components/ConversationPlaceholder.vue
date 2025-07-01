@@ -1,7 +1,12 @@
 <script setup lang="ts">
-defineProps<{
-  howMany?: number
+import { computed } from 'vue';
+
+const props = defineProps<{
+  howMany?: number,
+  isAnimated?: boolean
 }>()
+
+const animation=computed(() => props.isAnimated ? 'wave' : undefined)
 </script>
 
 <template>
@@ -12,8 +17,8 @@ defineProps<{
   >
     <div class="img " />
     <div class="d-flex flex-column flex-grow-1 ms-2">
-      <BPlaceholder size="lg" animation="wave" width="75" />
-      <BPlaceholder size="sm" animation="wave" width="50" variant="secondary" />
+      <BPlaceholder size="lg" :animation="animation" width="75" />
+      <BPlaceholder size="sm" :animation="animation" width="50" variant="secondary" />
     </div>
   </div>
 </template>
