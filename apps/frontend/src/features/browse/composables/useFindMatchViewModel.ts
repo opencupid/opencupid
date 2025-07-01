@@ -17,12 +17,14 @@ export function useFindMatchViewModel() {
   const storeError = ref<StoreError | null>(null)
   const currentScope = ref(null as ProfileScope | null)
   const selectedProfileId = ref<string | null>(null)
+  const isInitialized = ref(false)
 
   const initialize = async (defaultScope?: ProfileScope) => {
 
     const meRes = await ownerStore.fetchOwnerProfile()
     if (!meRes.success) {
       storeError.value = meRes
+      isInitialized.value = true
       return
     }
     if (!ownerStore.profile)
@@ -32,6 +34,8 @@ export function useFindMatchViewModel() {
 
     currentScope.value = defaultScope ? defaultScope :
       ownerStore.scopes.length > 0 ? ownerStore.scopes[0] : null
+    
+    isInitialized.value = true
   }
 
   const fetchResults = async () => {
@@ -102,6 +106,7 @@ export function useFindMatchViewModel() {
     findProfileStore.reset()
     storeError.value = null
     selectedProfileId.value = null
+    isInitialized.value = false
   }
 
   const updateDatingPrefs = async () => {
@@ -119,7 +124,7 @@ export function useFindMatchViewModel() {
     viewerProfile,
     haveResults,
     haveAccess,
-    isLoading: computed(() => findProfileStore.isLoading),
+    isLoading: computed(() => findProfileStore.isLoading || ownerStore.isLoading || !isInitialized.value),
     storeError,
     initialize,
     hideProfile,
@@ -130,6 +135,7 @@ export function useFindMatchViewModel() {
     datingPrefs: toRef(ownerStore, 'datingPrefs'),
     updateDatingPrefs,
     profileList: computed(() => findProfileStore.profileList),
+    isInitialized: computed(() => isInitialized.value),
   }
 
 

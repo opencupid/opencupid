@@ -42,6 +42,7 @@ const {
   updateDatingPrefs,
   initialize,
   reset,
+  isInitialized,
 } = useFindMatchViewModel()
 
 // const { fetchProfile, refreshProfile, blockProfile, profile } = usePublicProfile()
@@ -167,7 +168,7 @@ const isDetailView = computed(() => !!selectedProfileId.value)
         </template>
 
         <!-- After loading -->
-        <template v-if="!haveAccess || !haveResults">
+        <template v-if="isInitialized && (!haveAccess || !haveResults)">
           <BOverlay show no-spinner no-center :blur="null" bg-color="inherit" class="h-100 overlay">
             <!-- Keep placeholders in background -->
             <MiddleColumn class="overflow-hidden">
@@ -204,7 +205,7 @@ const isDetailView = computed(() => !!selectedProfileId.value)
         </template>
 
         <!-- Main profile results -->
-        <template v-else>
+        <template v-else-if="isInitialized">
           <div class="overflow-auto">
             <MiddleColumn>
               <ProfileCardGrid :profiles="profileList" @profile:select="handleCardClick" />
