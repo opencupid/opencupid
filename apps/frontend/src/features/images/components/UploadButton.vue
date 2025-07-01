@@ -16,7 +16,7 @@ defineEmits<{
 
 const fileInput = ref<HTMLInputElement>()
 
-const captureAttr = computed(() => (props.capture ? 'user' : null))
+const captureAttr = computed(() => props.capture || undefined)
 </script>
 
 <template>
@@ -29,6 +29,7 @@ const captureAttr = computed(() => (props.capture ? 'user' : null))
       @change="$emit('file:change', $event)"
       :plain="true"
       label-class="file-upload-label"
+      :capture="captureAttr"
     >
       <template #label>
         <div class="ratio ratio-1x1">

@@ -17,4 +17,55 @@ describe('UploadButton', () => {
     await wrapper.find('input').trigger('change')
     expect(wrapper.emitted('file:change')).toBeTruthy()
   })
+
+  it('applies capture attribute when capture prop is provided', () => {
+    const wrapper = mount(UploadButton, {
+      props: {
+        capture: 'user'
+      },
+      global: {
+        stubs: {
+          BFormFile: {
+            props: ['capture'],
+            template: '<input :capture="capture" @change="$emit(\'change\', $event)" />',
+          },
+        },
+      },
+    })
+    const input = wrapper.find('input')
+    expect(input.attributes('capture')).toBe('user')
+  })
+
+  it('applies environment capture attribute when specified', () => {
+    const wrapper = mount(UploadButton, {
+      props: {
+        capture: 'environment'
+      },
+      global: {
+        stubs: {
+          BFormFile: {
+            props: ['capture'],
+            template: '<input :capture="capture" @change="$emit(\'change\', $event)" />',
+          },
+        },
+      },
+    })
+    const input = wrapper.find('input')
+    expect(input.attributes('capture')).toBe('environment')
+  })
+
+  it('does not apply capture attribute when capture prop is not provided', () => {
+    const wrapper = mount(UploadButton, {
+      global: {
+        stubs: {
+          BFormFile: {
+            props: ['capture'],
+            template: '<input :capture="capture" @change="$emit(\'change\', $event)" />',
+          },
+        },
+      },
+    })
+    const input = wrapper.find('input')
+    expect(input.attributes('capture')).toBeUndefined()
+  })
 })
