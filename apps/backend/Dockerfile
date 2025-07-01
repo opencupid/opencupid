@@ -21,6 +21,10 @@ RUN pnpm install --no-frozen-lockfile
 # Generate Prisma client and build application
 RUN pnpm run generate && pnpm run build
 
+# Install tools for face model conversion
+RUN apk add --no-cache python3 py3-pip && \
+    pip install --no-cache-dir tensorflowjs
+
 # Remove dev dependencies
 RUN pnpm prune --prod
 
@@ -28,6 +32,10 @@ FROM node:20-alpine
 WORKDIR /app
 
 COPY --from=builder /app .
+COPY scripts/setup-face-models.sh /app/scripts/setup-face-models.sh
+RUN /app/scripts/setup-face-models.sh /app/face-models
+
+ENV MODEL_PATH=/app/face-models
 
 WORKDIR /app/apps/backend
 

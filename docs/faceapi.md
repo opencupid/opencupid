@@ -23,3 +23,21 @@ MODEL_PATH=/usr/share/face-api
 ```
 
 Make sure the directory is readable by the backend process.
+
+## Obtaining SSD Mobilenet V1
+
+The face detection model comes from [`tensorflow-face-detection`](https://github.com/yeephycho/tensorflow-face-detection). A helper script is provided to download and convert the TensorFlow model into the TensorFlow.js format expected by **face-api.js**.
+
+```bash
+pnpm run setup-face-models   # runs scripts/setup-face-models.sh
+```
+
+The script downloads `frozen_inference_graph_face.pb` and, if `tensorflowjs_converter` is available, converts it into `/face-models/ssd_mobilenetv1`.
+
+### Docker
+
+The backend Dockerfile runs the same script during the build stage so the model is bundled in the final image. `MODEL_PATH` defaults to `/app/face-models` inside the container.
+
+```dockerfile
+ENV MODEL_PATH=/app/face-models
+```

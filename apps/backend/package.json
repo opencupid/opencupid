@@ -18,7 +18,8 @@
     "db:psql": "docker compose exec db psql -U appuser app",
     "db:dump": "docker compose exec db pg_dump --clean -U appuser app",
     "test": "vitest",
-    "test:integration": "vitest --config vitest.integration.config.ts"
+    "test:integration": "vitest --config vitest.integration.config.ts",
+    "setup-face-models": "bash ../../scripts/setup-face-models.sh"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"

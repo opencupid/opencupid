@@ -36,3 +36,4 @@ coverage/
 apps/frontend/dev-dist/
 secrets/
 .config-cache/
+face-models/
