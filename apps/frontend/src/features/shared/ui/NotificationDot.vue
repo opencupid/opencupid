@@ -19,11 +19,5 @@ const props = defineProps<{ show: boolean }>()
 </template>
 
 <style scoped>
-.icon-wrapper {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1em;
-  height: 1em;
-}
+
 </style>
