@@ -14,7 +14,12 @@ import { ProfileImagePosition } from '@zod/profile/profileimage.dto'
 import sharp from 'sharp'
 
 const { Canvas, Image, ImageData } = canvas
-faceapi.env.monkeyPatch({ Canvas, Image, ImageData })
+faceapi.env.monkeyPatch({
+  Canvas: Canvas as unknown as typeof HTMLCanvasElement,
+  Image: Image as unknown as typeof HTMLImageElement,
+  ImageData: ImageData as any
+})
+
 const MODEL_PATH = path.resolve(appConfig.MODEL_PATH)
 
 const sizes = [

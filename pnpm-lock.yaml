@@ -69,9 +69,6 @@ importers:
       bullmq:
         specifier: ^5.52.2
         version: 5.54.3
-      canvas:
-        specifier: ^3.1.2
-        version: 3.1.2
       cuid:
         specifier: ^3.0.0
         version: 3.0.0
@@ -140,7 +137,7 @@ importers:
         specifier: ^2.1.4
         version: 2.1.4
       '@types/node':
-        specifier: ^18.19.100
+        specifier: ^18.19.112
         version: 18.19.112
       '@types/nodemailer':
         specifier: ^6.4.17
@@ -163,6 +160,9 @@ importers:
       axios:
         specifier: ^1.9.0
         version: 1.10.0
+      canvas:
+        specifier: ^3.1.2
+        version: 3.1.2
       eslint:
         specifier: ^9.26.0
         version: 9.29.0(jiti@2.4.2)
