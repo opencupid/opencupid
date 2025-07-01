@@ -4,7 +4,6 @@ import AppNotifier from '@/features/app/components/AppNotifier.vue'
 import { useI18nStore } from './store/i18nStore'
 import { useCountries } from './features/shared/composables/useCountries'
 import { useLanguages } from './features/shared/composables/useLanguages'
-import { useInteractionStore } from './features/interaction/stores/useInteractionStore'
 
 // FIXME
 // This is a workaround to ensure the page scrolls down
@@ -21,7 +20,7 @@ import { useInteractionStore } from './features/interaction/stores/useInteractio
 const i18nStore = useI18nStore()
 useCountries().initialize(i18nStore.getLanguage())
 useLanguages().initialize(i18nStore.getLanguage())
-useInteractionStore().initialize()
+
 
 </script>
 

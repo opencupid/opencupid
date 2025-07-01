@@ -24,11 +24,6 @@ export const useInteractionStore = defineStore('interaction', {
   }),
 
   actions: {
-    initialize() {
-      bus.on('ws:new_like', this.onNewLike)
-      bus.on('ws:new_match', this.onNewMatch)
-      // You can also listen for future events: ws:new_pass, ws:match, etc.
-    },
 
     onNewLike() {
       // // Push to sent only if not already there
@@ -124,5 +119,32 @@ export const useInteractionStore = defineStore('interaction', {
         return storeError(error)
       }
     },
+
+    async initialize() {
+      await this.fetchInteractions()
+      bus.on('ws:new_like', this.onNewLike)
+      bus.on('ws:new_match', this.onNewMatch)
+    },
+
+    teardown() {
+      bus.off('ws:new_like', this.onNewLike)
+      bus.off('ws:new_match', this.onNewMatch)
+      // Remove any other event listeners you may have added
+      this.sent = []
+      this.receivedLikesCount = 0
+      this.matches = []
+      this.passed = []
+      this.loading = false
+      this.error = null
+    }
   },
 })
+
+bus.on('auth:login', async ({ token, userInfo }) => {
+  await useInteractionStore().initialize()
+})
+
+bus.on('auth:logout', () => {
+  useInteractionStore().teardown()
+})
+
