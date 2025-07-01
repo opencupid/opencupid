@@ -30,6 +30,9 @@ Thumbs.db
 turbo/
 .turbo/
 
+# Coverage reports
+coverage/
+
 apps/frontend/dev-dist/
 secrets/
 .config-cache/

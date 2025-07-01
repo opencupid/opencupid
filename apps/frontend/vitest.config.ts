@@ -29,7 +29,16 @@ export default defineConfig(({ mode }: ConfigEnv): ViteUserConfig => {
       globals: true,
       setupFiles: ['./src/tests/setup.ts'],
       include: ['src/**/__tests__/**/*.{spec,test}.ts'],
-      exclude: ['e2e/**']
+      exclude: ['e2e/**'],
+      coverage: {
+        provider: 'v8',
+        reporter: ['text', 'json', 'html'],
+        exclude: [
+          'node_modules/',
+          'src/tests/',
+          '**/*.d.ts'
+        ]
+      }
     }
   }
 })
