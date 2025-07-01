@@ -2,7 +2,9 @@
 
 body {
   overflow: hidden;
-  height: 101vh;
+
+  // TODO investigate if this is really needed for iOS
+  height: 105vh;
 }
 
 main {

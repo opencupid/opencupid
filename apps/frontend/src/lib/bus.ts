@@ -1,10 +1,12 @@
 import mitt from 'mitt'
 import type { JwtPayload } from '@zod/user/user.types'
 import type { WSEvents } from '@/types/wsBusEvents'
+import type { MessageDTO } from '@zod/messaging/messaging.dto'
 
 type AppEvents = {
   'auth:login': { token: string, userInfo: JwtPayload }
   'auth:logout': void
+  'notification:new_message': MessageDTO
   'language:changed': { language: string }
 }
 

@@ -83,13 +83,13 @@ function handleMatchReceived(edge: InteractionEdge) {
 }
 
 onMounted(() => {
-  bus.on('ws:new_message', handleMessageReceived)
+  bus.on('notification:new_message', handleMessageReceived)
   bus.on('ws:new_like', handleLikeReceived)
   bus.on('ws:new_match', handleMatchReceived)
 })
 
 onUnmounted(() => {
-  bus.off('ws:new_message', handleMessageReceived)
+  bus.off('notification:new_message', handleMessageReceived)
   bus.off('ws:new_like', handleLikeReceived)
   bus.off('ws:new_match', handleMatchReceived)
 })

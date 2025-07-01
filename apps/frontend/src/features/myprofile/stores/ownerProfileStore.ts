@@ -156,7 +156,6 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
 
     async persistDatingPrefs(): Promise<StoreVoidSuccess | StoreError> {
       try {
-        // console.log('Updating datingPrefs with data:', update)
         this.isLoading = true // Set loading state
         const res = await api.patch<UpdateDatingPreferencesResponse>('/profiles/datingprefs', this.datingPrefs)
         const updated = DatingPreferencesDTOSchema.parse(res.data.prefs)
@@ -182,7 +181,6 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
         this.isLoading = true // Set loading state
         const res = await api.get<GetPublicProfileResponse>(`/profiles/preview/${locale}/${profileId}`)
         const fetched = PublicProfileSchema.parse(res.data.profile)
-        console.log('Fetched profile preview:', fetched)
         return storeSuccess(fetched)
       } catch (error: any) {
         return storeError(error, 'Failed to fetch profile')
@@ -198,6 +196,10 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
     },
 
   },
+})
+
+bus.on('auth:login', async ({ token, userInfo }) => {
+  await useOwnerProfileStore().fetchOwnerProfile()
 })
 
 bus.on('auth:logout', () => {

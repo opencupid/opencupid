@@ -80,6 +80,7 @@ const handleMessageSent = (message: MessageDTO | null) => {
           :recipientProfile="profile"
           :conversationId="null"
           @message:sent="handleMessageSent"
+          showTags
         />
       </div>
       <div v-else>

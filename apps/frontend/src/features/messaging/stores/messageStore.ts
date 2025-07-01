@@ -44,7 +44,7 @@ export const useMessageStore = defineStore('message', {
   actions: {
 
     async handleIncomingMessage(message: MessageDTO) {
-      // console.log('New message received:', message, message.senderId, this.profileId)
+
       // Update conversation summary (and bump it to top)
       const convoIndex = this.conversations.findIndex(c => c.conversationId === message.conversationId)
 
@@ -63,6 +63,13 @@ export const useMessageStore = defineStore('message', {
       // If this is the active conversation, append to visible messages
       if (this.activeConversation?.conversationId === message.conversationId) {
         this.messages.push(message)
+      } else {
+        // Emit notification for new message
+        // this occurs here instead of the AppNotifier.vue handling it directly
+        // because we only want to send popup notifications 
+        // *if* the conversation it's in is not already open
+        // (this is to avoid popup spam when the user is in the messaging view)
+        bus.emit('notification:new_message', message)
       }
     },
 
@@ -171,6 +178,10 @@ export const useMessageStore = defineStore('message', {
       if (this.activeConversation) {
         await this.fetchMessagesForConversation(this.activeConversation.conversationId)
       }
+    },
+
+    resetActiveConversation() {
+      this.activeConversation = null
     },
 
     async setActiveConversationById(conversationId: string) {

@@ -17,7 +17,7 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <div class="mb-3">
+  <div class="mb-3 px-3">
     <BListGroup >
       <BListGroupItem
         v-for="convo in conversations"
@@ -38,7 +38,7 @@ const { t } = useI18n()
             >{{ convo.lastMessage.content }}</small
           >
         </div>
-        <div class="flex-shrink-0 me-2">
+        <div class="flex-shrink-0 me-2 ">
           <small v-if="!convo.lastMessage?.isMine" class="badge bg-danger">{{ t('messaging.my_turn') }}</small>
         </div>
       </BListGroupItem>

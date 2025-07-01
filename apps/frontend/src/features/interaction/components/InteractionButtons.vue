@@ -77,7 +77,7 @@ const handleMessageClick = () => {
       </BPopover>
     </div>
 
-    <BPopover v-if="context.canDate" placement="top" title="" title-class="d-none">
+    <BPopover placement="top" title="" title-class="d-none">
       <template #target>
         <BButton class="btn-icon-lg btn-info me-2" @click="handleMessageClick">
           <IconMessage class="svg-icon-lg p-0" />

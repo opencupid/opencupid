@@ -17,6 +17,7 @@ const messageStore = useMessageStore()
 const props = defineProps<{
   recipientProfile: PublicProfileWithContext
   conversationId: string | null
+  showTags?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -60,7 +61,7 @@ async function handleSendMessage() {
   if (trimmedContent === '') return
   const result = await messageStore.sendMessage(props.recipientProfile.id, trimmedContent)
   if (result.success) {
-    console.log('Message sent successfully:', result.data)
+    // console.log('Message sent successfully:', result.data)
     emit('message:sent', result.data!)
     content.value = '' // Clear the input after sending
     localStore.setMessageDraft(props.recipientProfile.id, '') // Clear the draft in local store
@@ -70,11 +71,11 @@ async function handleSendMessage() {
 </script>
 
 <template>
-  <div class="send-message-wrapper w-100">
+  <div class="w-100">
     <StoreErrorOverlay v-if="messageStore.error" :error="messageStore.error" />
 
     <div class="mb-2">
-      <div class="mb-2 opacity-50">
+      <div v-if="showTags" class="mb-2 opacity-75">
         <div class="d-inline-block">
           <TagList :tags="props.recipientProfile.tags" class="d-inline-block" />
         </div>

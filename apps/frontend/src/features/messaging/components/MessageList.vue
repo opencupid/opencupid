@@ -11,16 +11,18 @@ onMounted(() => {
 })
 
 watch(
-  () => props.messages.length,
+  () => props.messages,
   async () => {
     await nextTick()
     messageListRef.value?.scrollTo({ top: messageListRef.value.scrollHeight })
+  },{
+    deep: true,
   }
 )
 </script>
 
 <template>
-  <div class="p-2 mb-2 scrollable overflow-auto d-flex flex-column" ref="messageListRef">
+  <div class="p-2 mb-2 hide-scrollbar overflow-auto d-flex flex-column" ref="messageListRef">
     <div
       v-for="msg in messages"
       :key="msg.id"
@@ -36,8 +38,4 @@ watch(
 </template>
 
 <style scoped>
-#message-list {
-  --animate-duration: 200ms;
-  --animate-delay: 0.9s;
-}
 </style>

@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import MiddleColumn from '@/features/browse/components/MiddleColumn.vue'
+import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 import MatchesList from '../components/MatchesList.vue'
 import IconDate from '@/assets/icons/app/cupid.svg'
+import ViewTitle from '@/features/shared/ui/ViewTitle.vue'
 import ProfileChipListPlaceholder from '@/features/publicprofile/components/ProfileChipListPlaceholder.vue'
 import { useInteractionsViewModel } from '../composables/useInteractionsViewModel'
 
@@ -15,12 +16,7 @@ onMounted(async () => {
 
 <template>
   <main class="container mt-3 pt-5 dating">
-    <div class="d-flex flex-column align-items-center justify-content-center">
-      <div class="col-6 col-sm-2 mx-auto my-3 text-dating">
-        <IconDate class="svg-icon-lg h-100 w-100" />
-      </div>
-      <h1 class="mb-3 text-muted">My matches</h1>
-    </div>
+    <ViewTitle :icon="IconDate" title="My matches" class="text-dating"/>
     <MiddleColumn>
       <div class="d-flex flex-column align-items-center justify-content-center">
         <BPlaceholderWrapper :loading="isLoading">

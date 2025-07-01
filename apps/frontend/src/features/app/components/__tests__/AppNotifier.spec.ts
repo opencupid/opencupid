@@ -26,7 +26,7 @@ describe('AppNotifier', () => {
   it('shows toast when message received and handles click', () => {
     mount(AppNotifier)
     const message = { id: '1', conversationId: '42' } as any
-    bus.emit('ws:new_message', message)
+    bus.emit('notification:new_message', message)
 
     expect(toast).toHaveBeenCalled()
     const [opts, cfg] = toast.mock.calls[0]

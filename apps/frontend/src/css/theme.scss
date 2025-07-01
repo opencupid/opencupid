@@ -2,18 +2,18 @@
 @import '../../node_modules/bootstrap/scss/variables';
 
 
-$happy-sans: 'Nunito', 'Poppins', sans-serif ;
-$headings-font-family: 'Rubik', 'Mukta', sans-serif ;
+$happy-sans: 'Nunito', 'Poppins', sans-serif;
+$headings-font-family: 'Rubik', 'Mukta', sans-serif;
 
 $font-family-sans-serif: $happy-sans ;
 $body-font-family: $happy-sans ;
 $headings-font-family: $happy-sans ;
 
-// $font-size-root: 16px ;
-$font-size-base: 18px ; // Assumes the browser default, typically `16px`
-$font-size-sm: $font-size-base * 0.875 ;
-$font-size-lg: $font-size-base * 1.25 ;
-    
+$font-size-root: 20px;  // size of 1rem
+$font-size-base: 1.125rem;   // default body text size
+$font-size-sm: $font-size-base * 0.875;
+$font-size-lg: $font-size-base * 1.25;
+
 
 // https://coolors.co/palette/003049-d62828-f77f00-fcbf49-eae2b7
 
@@ -23,16 +23,15 @@ $social : #003049;
 $dating: #D62828; // Custom dating color
 $dating-light: transparentize($dating, 0.75);
 
-$theme-colors: map-merge($theme-colors,    (
-    'dating': $dating, 
-    'dating-light': $dating-light ,
-    'social': $social,
-    ));
+$theme-colors: map-merge($theme-colors, ('dating': $dating,
+            'dating-light': $dating-light ,
+            'social': $social,
+        ));
 
 
 
-$aspect-ratios: map-merge($aspect-ratios, 
-("3x4": calc(4 / 3 * 100%)));
+$aspect-ratios: map-merge($aspect-ratios,
+        ("3x4": calc(4 / 3 * 100%)));
 
 // Enable negative margins for Bootstrap
 $enable-negative-margins: true;

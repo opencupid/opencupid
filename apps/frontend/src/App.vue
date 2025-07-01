@@ -5,6 +5,7 @@ import { useI18nStore } from './store/i18nStore'
 import { useCountries } from './features/shared/composables/useCountries'
 import { useLanguages } from './features/shared/composables/useLanguages'
 
+import ViewportSizeDebug from '@/features/app/components/ViewportSizeDebug.vue'
 // FIXME
 // This is a workaround to ensure the page scrolls down
 // on initial load. in order to ensure on mobile devices
@@ -25,6 +26,7 @@ useLanguages().initialize(i18nStore.getLanguage())
 </script>
 
 <template>
+  <!-- <ViewportSizeDebug class="position-absolute bg-dark"/> -->
   <Navbar />
   <RouterView />
   <AppNotifier />
