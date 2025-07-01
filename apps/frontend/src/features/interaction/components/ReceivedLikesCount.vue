@@ -3,7 +3,7 @@ import { onMounted } from 'vue'
 import IconHeart from '@/assets/icons/interface/heart.svg'
 import { useDatingInteractions } from '../composables/useDatingInteractions'
 
-const { receivedLikesCount, refreshInteractions, loadingLikes } = useDatingInteractions()
+const { receivedLikesCount, refreshInteractions, isLoading } = useDatingInteractions()
 
 onMounted(() => {
   refreshInteractions()

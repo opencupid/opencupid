@@ -28,7 +28,7 @@ const showMessageModal = ref(false)
 const showMatchModal = ref(false)
 const match = ref<InteractionEdgePair>()
 
-const { like, pass, refreshInteractions, loadingLikes } = useDatingInteractions()
+const { like, pass, refreshInteractions, isLoading } = useDatingInteractions()
 
 const handleLike = async () => {
   const result = await like(props.profile.id)
