@@ -11,6 +11,7 @@ vi.mock('@/features/shared/icons/DoodleIcons.vue', () => ({ default: { template:
 vi.mock('@/assets/icons/interface/setting-2.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/message.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/search.svg', () => ({ default: { template: '<div />' } }))
+vi.mock('@/assets/icons/interface/heart.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/user.svg', () => ({ default: { template: '<div />' } }))
 
 const logout = vi.fn()
@@ -31,5 +32,6 @@ describe('Navbar', () => {
     })
     expect(wrapper.html()).toContain('nav.browse')
     expect(wrapper.html()).toContain('nav.settings')
+    expect(wrapper.html()).toContain('Matches')
   })
 })
