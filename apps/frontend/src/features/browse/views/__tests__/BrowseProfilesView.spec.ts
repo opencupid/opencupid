@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 // stub child components
 vi.mock('../../components/SecondaryNav.vue', () => ({ default: { template: '<div class="secondary-nav" />' } }))
@@ -19,12 +19,15 @@ const vmState = {
   viewerProfile: ref({ isDatingActive: true }),
   haveAccess: ref(true),
   haveResults: ref(true),
-  isLoading: ref(false),
+  isLoading: computed(() => vmState.findProfileStoreLoading.value || vmState.ownerStoreLoading.value || !vmState.isInitialized.value),
+  findProfileStoreLoading: ref(false),
+  ownerStoreLoading: ref(false),
   currentScope: ref('dating'),
   profileList: ref([{ id: '1' }]),
   storeError: ref(null),
   datingPrefs: ref(null),
   selectedProfileId: ref(null),
+  isInitialized: ref(true),
   hideProfile: vi.fn(),
   updateDatingPrefs: vi.fn(),
   initialize: vi.fn(),
@@ -47,11 +50,23 @@ describe('BrowseProfiles view', () => {
   beforeEach(() => {
     vmState.haveAccess.value = true
     vmState.haveResults.value = true
-    vmState.isLoading.value = false
+    vmState.findProfileStoreLoading.value = false
+    vmState.ownerStoreLoading.value = false
+    vmState.isInitialized.value = true
   })
 
-  it('displays placeholders while loading', () => {
-    vmState.isLoading.value = true
+  it('displays placeholders while loading (store loading)', () => {
+    vmState.findProfileStoreLoading.value = true
+    vmState.isInitialized.value = true // Already initialized but store is loading
+    const wrapper = mount(BrowseProfiles, { global: { stubs: { BPlaceholderWrapper, BOverlay, BModal, BButton } } })
+    expect(wrapper.find('.placeholders-grid').exists()).toBe(true)
+    expect(wrapper.find('.profile-grid').exists()).toBe(false)
+  })
+
+  it('displays placeholders while initializing', () => {
+    vmState.findProfileStoreLoading.value = false
+    vmState.ownerStoreLoading.value = false
+    vmState.isInitialized.value = false // Not yet initialized
     const wrapper = mount(BrowseProfiles, { global: { stubs: { BPlaceholderWrapper, BOverlay, BModal, BButton } } })
     expect(wrapper.find('.placeholders-grid').exists()).toBe(true)
     expect(wrapper.find('.profile-grid').exists()).toBe(false)
@@ -74,5 +89,41 @@ describe('BrowseProfiles view', () => {
   it('renders profile grid when results available', () => {
     const wrapper = mount(BrowseProfiles, { global: { stubs: { BPlaceholderWrapper, BOverlay, BModal, BButton } } })
     expect(wrapper.find('.profile-grid').exists()).toBe(true)
+  })
+
+  it('shows no-access overlay when not initialized yet but access would be false', () => {
+    vmState.haveAccess.value = false
+    vmState.isInitialized.value = false // Still initializing
+    const wrapper = mount(BrowseProfiles, { global: { stubs: { BPlaceholderWrapper, BOverlay, BModal, BButton } } })
+    // Should show loading placeholders, not the no-access overlay during initialization
+    expect(wrapper.find('.placeholders-grid').exists()).toBe(true)
+    expect(wrapper.find('.no-access').exists()).toBe(false)
+  })
+
+  it('shows no-results overlay when not initialized yet but results would be false', () => {
+    vmState.haveResults.value = false 
+    vmState.isInitialized.value = false // Still initializing
+    const wrapper = mount(BrowseProfiles, { global: { stubs: { BPlaceholderWrapper, BOverlay, BModal, BButton } } })
+    // Should show loading placeholders, not the no-results overlay during initialization
+    expect(wrapper.find('.placeholders-grid').exists()).toBe(true)
+    expect(wrapper.find('.no-results').exists()).toBe(false)
+  })
+
+  it('shows no-access overlay when initialized and access is false', () => {
+    vmState.haveAccess.value = false
+    vmState.haveResults.value = false
+    vmState.isInitialized.value = true // Initialized
+    const wrapper = mount(BrowseProfiles, { global: { stubs: { BPlaceholderWrapper, BOverlay, BModal, BButton } } })
+    expect(wrapper.find('.no-access').exists()).toBe(true)
+    expect(wrapper.find('.no-results').exists()).toBe(false)
+  })
+
+  it('shows no-results overlay when initialized, access is true but no results', () => {
+    vmState.haveAccess.value = true
+    vmState.haveResults.value = false
+    vmState.isInitialized.value = true // Initialized
+    const wrapper = mount(BrowseProfiles, { global: { stubs: { BPlaceholderWrapper, BOverlay, BModal, BButton } } })
+    expect(wrapper.find('.no-access').exists()).toBe(false)
+    expect(wrapper.find('.no-results').exists()).toBe(true)
   })
 })
