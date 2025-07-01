@@ -9,7 +9,9 @@ import IconSearch from '@/assets/icons/interface/search.svg'
 import IconHeart from '@/assets/icons/interface/heart.svg'
 import IconUser from '@/assets/icons/interface/user.svg'
 import IconLogout from '@/assets/icons/interface/logout.svg'
-import { faCircle } from '@fortawesome/free-solid-svg-icons'
+
+import NotificationDot from '@/features/shared/ui/NotificationDot.vue'
+import { useInteractionStore } from '@/features/interaction/stores/useInteractionStore'
 
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { useMessageStore } from '@/features/messaging/stores/messageStore'
@@ -19,9 +21,13 @@ import ProfileImage from '@/features/images/components/ProfileImage.vue'
 
 const authStore = useAuthStore()
 const profileStore = useOwnerProfileStore()
+const interactionStore = useInteractionStore()
 
 const isLoggedIn = computed(() => authStore.isLoggedIn)
 const hasUnreadMessages = computed(() => useMessageStore().hasUnreadMessages)
+const hasMatchNotifications = computed(
+  () => interactionStore.matches.length > 0 || interactionStore.receivedLikesCount > 0
+)
 
 function handleLogoutClick() {
   authStore.logout() // Clear the authentication state
@@ -38,20 +44,16 @@ function handleLogoutClick() {
       </BNavItem>
 
       <BNavItem to="/matches" active-class="active">
-        <IconHeart class="svg-icon-lg" />
+        <NotificationDot :show="hasMatchNotifications">
+          <IconHeart class="svg-icon-lg" />
+        </NotificationDot>
         <span class="d-none d-sm-inline label">Matches</span>
       </BNavItem>
 
       <BNavItem to="/inbox" active-class="active">
-        <span class="icon-wrapper position-relative">
+        <NotificationDot :show="hasUnreadMessages">
           <IconMessage class="svg-icon-lg" />
-          <FontAwesomeIcon
-            v-if="hasUnreadMessages"
-            :icon="faCircle"
-            class="text-danger position-absolute top-0 start-55 translate-middle"
-            style="font-size: 0.75rem"
-          />
-        </span>
+        </NotificationDot>
         <span class="d-none d-sm-inline label">{{ $t('nav.inbox') }}</span>
       </BNavItem>
 

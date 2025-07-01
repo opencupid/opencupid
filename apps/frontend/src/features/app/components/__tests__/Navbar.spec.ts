@@ -13,11 +13,13 @@ vi.mock('@/assets/icons/interface/message.svg', () => ({ default: { template: '<
 vi.mock('@/assets/icons/interface/search.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/heart.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/user.svg', () => ({ default: { template: '<div />' } }))
+vi.mock('@/features/shared/ui/NotificationDot.vue', () => ({ default: { template: '<div><slot /></div>' } }))
 
 const logout = vi.fn()
 vi.mock('@/features/auth/stores/authStore', () => ({ useAuthStore: () => ({ isLoggedIn: true, logout }) }))
 vi.mock('@/features/messaging/stores/messageStore', () => ({ useMessageStore: () => ({ hasUnreadMessages: false }) }))
 vi.mock('@/features/myprofile/stores/ownerProfileStore', () => ({ useOwnerProfileStore: () => ({}) }))
+vi.mock('@/features/interaction/stores/useInteractionStore', () => ({ useInteractionStore: () => ({ matches: [], receivedLikesCount: 0 }) }))
 
 import Navbar from '../Navbar.vue'
 const stub = { template: '<div><slot /></div>' }
