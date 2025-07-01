@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import Navbar from '@/features/nav/Navbar.vue'
+import Navbar from '@/features/app/components/Navbar.vue'
 import AppNotifier from '@/features/app/components/AppNotifier.vue'
 import { useI18nStore } from './store/i18nStore'
 import { useCountries } from './features/shared/composables/useCountries'
