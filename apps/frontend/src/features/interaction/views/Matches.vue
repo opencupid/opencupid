@@ -3,7 +3,7 @@ import { onMounted } from 'vue'
 import MiddleColumn from '@/features/browse/components/MiddleColumn.vue'
 import MatchesList from '../components/MatchesList.vue'
 import IconDate from '@/assets/icons/app/cupid.svg'
-import ConversationPlaceholder from '@/features/messaging/components/ConversationPlaceholder.vue'
+import ProfileChipListPlaceholder from '@/features/publicprofile/components/ProfileChipListPlaceholder.vue'
 import { useDatingInteractions } from '../composables/useDatingInteractions'
 
 const { matches, haveMatches, isLoading, refreshInteractions } = useDatingInteractions()
@@ -26,7 +26,7 @@ onMounted(() => {
         <BPlaceholderWrapper :loading="isLoading">
           <template #loading>
             <div class="col-10 col-md-6 mb-3">
-              <ConversationPlaceholder :isAnimated="true" :howMany="5" />
+              <ProfileChipListPlaceholder :isAnimated="true" :howMany="5" />
             </div>
           </template>
 
@@ -54,7 +54,7 @@ onMounted(() => {
                 </BButton>
               </div>
               <div class="mb-3">
-                <ConversationPlaceholder :howMany="4" />
+                <ProfileChipListPlaceholder :howMany="4" />
               </div>
             </div>
           </div>
