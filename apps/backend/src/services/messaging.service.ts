@@ -157,6 +157,41 @@ export class MessageService {
     })
   }
 
+  /**
+   * Sets conversation status to ACCEPTED when a match occurs between two profiles.
+   * @param profileAId - The ID of the first profile.
+   * @param profileBId - The ID of the second profile.
+   * @returns The updated conversation or null if no conversation exists.
+   */
+  async acceptConversationOnMatch(profileAId: string, profileBId: string): Promise<Conversation | null> {
+    const [sortedProfileAId, sortedProfileBId] = this.sortProfilePair(profileAId, profileBId)
+    
+    const existingConversation = await prisma.conversation.findUnique({
+      where: {
+        profileAId_profileBId: { profileAId: sortedProfileAId, profileBId: sortedProfileBId },
+      },
+    })
+
+    if (!existingConversation) {
+      return null
+    }
+
+    // Only update if conversation is currently INITIATED
+    if (existingConversation.status === 'INITIATED') {
+      return await prisma.conversation.update({
+        where: {
+          profileAId_profileBId: { profileAId: sortedProfileAId, profileBId: sortedProfileBId },
+        },
+        data: {
+          status: 'ACCEPTED',
+          updatedAt: new Date(),
+        },
+      })
+    }
+
+    return existingConversation
+  }
+
 
 
   /**

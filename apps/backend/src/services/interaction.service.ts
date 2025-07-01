@@ -1,6 +1,7 @@
 import { mapProfileSummary } from '@/api/mappers/profile.mappers'
 import { profileImageInclude } from '@/db/includes/profileIncludes'
 import { prisma } from '@/lib/prisma'
+import { MessageService } from './messaging.service'
 
 import { Prisma } from '@prisma/client'
 import { InteractionEdgePair, type InteractionEdge } from '@zod/interaction/interaction.dto'
@@ -57,6 +58,12 @@ export class InteractionService {
     const isMatch = await prisma.likedProfile.findUnique({
       where: { fromId_toId: { fromId: toId, toId: fromId } },
     })
+
+    // If this is a match, update any existing conversation status to ACCEPTED
+    if (isMatch) {
+      const messageService = MessageService.getInstance()
+      await messageService.acceptConversationOnMatch(fromId, toId)
+    }
 
     const response: InteractionEdgePair = {
       isMatch: !!isMatch,

@@ -10,6 +10,7 @@ export function createMockPrisma() {
     },
     profile: {
       findUnique: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
       findMany: vi.fn(),
       update: vi.fn(),
       create: vi.fn(),
@@ -34,6 +35,17 @@ export function createMockPrisma() {
       findUnique: vi.fn(),
       update: vi.fn(),
       create: vi.fn(),
+    },
+    likedProfile: {
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      upsert: vi.fn(),
+      deleteMany: vi.fn(),
+    },
+    hiddenProfile: {
+      findMany: vi.fn(),
+      deleteMany: vi.fn(),
+      upsert: vi.fn(),
     },
     conversationParticipant: {
       findFirst: vi.fn(),
