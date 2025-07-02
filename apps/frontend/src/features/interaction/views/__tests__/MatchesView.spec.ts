@@ -3,15 +3,24 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { ref } from 'vue'
 
 vi.mock('@/assets/icons/app/cupid.svg', () => ({ default: { template: '<div />' } }))
-vi.mock('@/features/browse/components/MiddleColumn.vue', () => ({ default: { template: '<div class="middle"><slot /></div>' } }))
+vi.mock('@/features/shared/ui/MiddleColumn.vue', () => ({ default: { template: '<div class="middle"><slot /></div>' } }))
+vi.mock('@/features/shared/ui/ViewTitle.vue', () => ({ default: { template: '<div />', props: ['icon', 'title', 'class'] } }))
+vi.mock('@/features/browse/components/PlaceholdersGrid.vue', () => ({ default: { template: '<div />' } }))
+vi.mock('../../components/ReceivedLikesCount.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('../../components/MatchesList.vue', () => ({ default: { template: '<div class="matches-list" />', props: ['edges'] } }))
 vi.mock('@/features/publicprofile/components/ProfileChipListPlaceholder.vue', () => ({ default: { template: '<div class="placeholder" />', props: ['howMany'] } }))
+
+const push = vi.fn()
+vi.mock('vue-router', () => ({ useRouter: () => ({ push }) }))
 
 const mockState = {
   matches: ref([] as any[]),
   haveMatches: ref(false),
+  haveReceivedLikes: ref(false),
+  haveSentLikes: ref(false),
+  receivedLikesCount: ref(0),
   isLoading: ref(false),
-  refreshInteractions: vi.fn()
+  initialize: vi.fn()
 }
 
 vi.mock('../../composables/useInteractionsViewModel', () => ({ useInteractionsViewModel: () => mockState }))
@@ -21,6 +30,7 @@ const BPlaceholderWrapper = {
   template: `<div><slot v-if="!loading" /><slot name="loading" v-else /></div>`
 }
 const BButton = { template: '<button><slot /></button>' }
+const BCol = { props: ['cols'], template: '<div><slot /></div>' }
 
 import Matches from '../Matches.vue'
 
@@ -28,7 +38,22 @@ describe('Matches view', () => {
   beforeEach(() => {
     mockState.matches.value = []
     mockState.haveMatches.value = false
+    mockState.haveReceivedLikes.value = false
+    mockState.haveSentLikes.value = false
+    mockState.receivedLikesCount.value = 0
     mockState.isLoading.value = false
+    mockState.initialize.mockClear()
+    push.mockClear()
+  })
+
+  it('calls initialize on mount', () => {
+    mount(Matches, { 
+      global: { 
+        stubs: { BPlaceholderWrapper, BButton, BCol },
+        mocks: { $t: (msg: string) => msg, $router: { push } }
+      } 
+    })
+    expect(mockState.initialize).toHaveBeenCalledOnce()
   })
 
   it('TODO needs fixing', () => {

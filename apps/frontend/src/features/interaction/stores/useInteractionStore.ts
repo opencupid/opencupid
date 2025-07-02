@@ -10,6 +10,7 @@ interface InteractionState {
   matches: InteractionEdge[]
   passed: string[] // just IDs for now
   loading: boolean
+  initialized: boolean
   error: StoreError | null
 }
 
@@ -20,6 +21,7 @@ export const useInteractionStore = defineStore('interaction', {
     matches: [],
     passed: [],
     loading: false,
+    initialized: false,
     error: null,
   }),
 
@@ -49,6 +51,7 @@ export const useInteractionStore = defineStore('interaction', {
         this.sent = stats.sent
         this.matches = stats.matches
         this.receivedLikesCount = stats.receivedLikesCount
+        this.initialized = true
         return storeSuccess()
       } catch (error) {
         return storeError(error)
@@ -119,7 +122,9 @@ export const useInteractionStore = defineStore('interaction', {
     },
 
     async initialize() {
-      await this.fetchInteractions()
+      if (!this.initialized) {
+        await this.fetchInteractions()
+      }
       bus.on('ws:new_like', this.onNewLike)
       bus.on('ws:new_match', this.onNewMatch)
     },
@@ -133,6 +138,7 @@ export const useInteractionStore = defineStore('interaction', {
       this.matches = []
       this.passed = []
       this.loading = false
+      this.initialized = false
       this.error = null
     }
   },

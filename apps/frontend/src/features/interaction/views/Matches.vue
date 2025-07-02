@@ -16,11 +16,11 @@ const {
   haveSentLikes,
   receivedLikesCount,
   isLoading,
-  refreshInteractions,
+  initialize,
 } = useInteractionsViewModel()
 
 onMounted(async () => {
-  await refreshInteractions()
+  await initialize()
 })
 </script>
 
