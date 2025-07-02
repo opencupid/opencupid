@@ -24,6 +24,8 @@ const profileStore = useOwnerProfileStore()
 const interactionStore = useInteractionStore()
 
 const isLoggedIn = computed(() => authStore.isLoggedIn)
+const isProfileLoaded = computed(() => profileStore.profile !== null && !profileStore.isLoading)
+const shouldShowNavbar = computed(() => isLoggedIn.value && isProfileLoaded.value)
 const hasUnreadMessages = computed(() => useMessageStore().hasUnreadMessages)
 const hasMatchNotifications = computed(
   () => interactionStore.matches.length > 0 || interactionStore.receivedLikesCount > 0
@@ -36,14 +38,14 @@ function handleLogoutClick() {
 </script>
 
 <template>
-  <BNavbar variant="secondary" fixed="top" class="" v-if="isLoggedIn">
+  <BNavbar variant="secondary" fixed="top" class="" v-if="shouldShowNavbar" data-testid="navbar">
     <BNavbarNav class="d-flex justify-content-between w-100">
       <BNavItem to="/browse" active-class="active">
         <IconSearch class="svg-icon-lg" />
         <span class="d-none d-sm-inline label">{{ $t('nav.browse') }}</span>
       </BNavItem>
 
-      <BNavItem to="/matches" active-class="active">
+      <BNavItem to="/matches" active-class="active" v-if="profileStore.profile?.isDatingActive">
         <NotificationDot :show="hasMatchNotifications">
           <IconHeart class="svg-icon-lg" />
         </NotificationDot>

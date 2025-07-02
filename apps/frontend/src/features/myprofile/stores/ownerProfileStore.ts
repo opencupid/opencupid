@@ -51,6 +51,11 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
 
   actions: {
     async fetchOwnerProfile(): Promise<StoreVoidSuccess | StoreError> {
+      // Prevent redundant calls if already loading or profile exists
+      if (this.isLoading || this.profile !== null) {
+        return storeSuccess()
+      }
+      
       try {
         this.isLoading = true // Set loading state
         const res = await api.get<GetMyProfileResponse>('/profiles/me')
