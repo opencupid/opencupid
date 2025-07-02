@@ -13,11 +13,11 @@ defineEmits<{
     <BListGroupItem
       v-for="edge in edges"
       :key="edge.profile.id"
-      class="d-flex align-items-center gap-2 clickable"
+      class="d-flex align-items-center mb-2 clickable"
       @click="$emit('select:profile', edge.profile.id)"
     >
       <ProfileThumbnail :profile="edge.profile" />
-      <span>{{ edge.profile.publicName }}</span>
+      <span class="ms-2">{{ edge.profile.publicName }}</span>
     </BListGroupItem>
   </BListGroup>
 </template>

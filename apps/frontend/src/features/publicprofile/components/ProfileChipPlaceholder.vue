@@ -9,9 +9,11 @@ const animation = computed(() => (props.isAnimated ? 'wave' : undefined))
 </script>
 
 <template>
-  <div class="ph d-flex align-items-center gap-2 p-2 w-100 mb-2">
+  <div class="d-flex align-items-center opacity-25" :class="animation" style="width: 100%; height: 3.5rem">
     <div class="img" />
-    <BPlaceholder size="lg" :animation="animation" width="75" />
+    <div class="ms-2 flex-grow-1">
+      <BPlaceholder size="lg" :animation="animation" :width="65+50*Math.random()" />
+    </div>
   </div>
 </template>
 
@@ -22,8 +24,5 @@ const animation = computed(() => (props.isAnimated ? 'wave' : undefined))
   border-radius: 50%;
   background-color: var(--bs-secondary);
   opacity: 0.5;
-}
-.ph {
-  opacity: 0.75;
 }
 </style>

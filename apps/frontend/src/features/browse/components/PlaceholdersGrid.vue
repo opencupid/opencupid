@@ -1,10 +1,11 @@
 <script setup lang="ts">
+import ProfileCardPlaceholder from '@/features/publicprofile/components/ProfileCardPlaceholder.vue'
 import { BContainer, BRow } from 'bootstrap-vue-next'
 
-const props = withDefaults(
+withDefaults(
   defineProps<{
     howMany: number
-    loading?: boolean
+    isAnimated?: boolean
   }>(),
   {
     howMany: 6,
@@ -14,15 +15,10 @@ const props = withDefaults(
 
 <template>
   <BContainer>
-    <BRow cols="1" cols-sm="2">
-      <BCol v-for="n in howMany" :key="n" class="col">
-        <BPlaceholderCard
-          no-footer
-          no-button
-          no-header
-          size="sm"
-          :animation="loading ? 'glow' : undefined"
-        />
+
+    <BRow cols="1" cols-sm="2" >
+      <BCol v-for="n in howMany" :key="n" class="mb-3">
+        <ProfileCardPlaceholder :isAnimated="isAnimated" />
       </BCol>
     </BRow>
   </BContainer>

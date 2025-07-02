@@ -4,10 +4,20 @@ import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 import MatchesList from '../components/MatchesList.vue'
 import IconDate from '@/assets/icons/app/cupid.svg'
 import ViewTitle from '@/features/shared/ui/ViewTitle.vue'
+import PlaceholdersGrid from '@/features/browse/components/PlaceholdersGrid.vue'
 import ProfileChipListPlaceholder from '@/features/publicprofile/components/ProfileChipListPlaceholder.vue'
 import { useInteractionsViewModel } from '../composables/useInteractionsViewModel'
+import ReceivedLikesCount from '../components/ReceivedLikesCount.vue'
 
-const { matches, haveMatches, isLoading, refreshInteractions } = useInteractionsViewModel()
+const {
+  matches,
+  haveMatches,
+  haveReceivedLikes,
+  haveSentLikes,
+  receivedLikesCount,
+  isLoading,
+  refreshInteractions,
+} = useInteractionsViewModel()
 
 onMounted(async () => {
   await refreshInteractions()
@@ -15,45 +25,89 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main class="container mt-3 pt-5 dating">
-    <ViewTitle :icon="IconDate" title="My matches" class="text-dating"/>
+  <main class="container mt-3 pt-5 dating overflow-auto">
+    <ViewTitle :icon="IconDate" title="" class="text-dating" />
     <MiddleColumn>
-      <div class="d-flex flex-column align-items-center justify-content-center">
+      <div class="d-flex flex-column align-items-center justify-content-center text-center">
         <BPlaceholderWrapper :loading="isLoading">
           <template #loading>
-            <div class="col-10 col-md-6 mb-3">
-              <ProfileChipListPlaceholder :isAnimated="true" :howMany="5" />
-            </div>
+            <BCol cols="6">
+              <ProfileChipListPlaceholder :howMany="4" :isAnimated="true" />
+            </BCol>
           </template>
 
-          <div class="col-10 col-md-6 mb-3">
-            <MatchesList
-              v-if="haveMatches"
-              :edges="matches"
-              @select:profile="
-                profileId => $router.push({ name: 'PublicProfile', params: { profileId } })
-              "
-            />
-            <div v-else>
-              <p class="text-muted text-center">You have no matches yet.</p>
-              <div class="text-center mb-3">
-                <BButton
-                  variant="primary"
-                  @click="
-                    $router.push({
-                      name: 'BrowseProfiles',
-                      params: { scope: 'dating' },
-                    })
-                  "
-                >
-                  Find people
-                </BButton>
-              </div>
-              <div class="mb-3">
-                <ProfileChipListPlaceholder :howMany="4" />
-              </div>
+          <!-- have inbound likes but no matches -->
+          <template v-if="haveReceivedLikes && !haveMatches">
+            <div class="mb-3">
+              {{ $t('matches.received_likes', { count: receivedLikesCount }) }}
             </div>
-          </div>
+
+            <BButton
+              v-if="haveReceivedLikes"
+              variant="primary"
+              @click="
+                $router.push({
+                  name: 'BrowseProfiles',
+                  params: { scope: 'dating' },
+                })
+              "
+            >
+              {{ $t('matches.received_likes_cta', { count: receivedLikesCount }) }}
+            </BButton>
+          </template>
+
+          <!-- no matches and haven't sent any likes -->
+          <template v-else-if="!haveMatches && !haveSentLikes">
+            <p>
+              {{ $t('matches.no_match_no_sent_like') }}
+            </p>
+            <BButton
+              variant="primary"
+              @click="
+                $router.push({
+                  name: 'BrowseProfiles',
+                  params: { scope: 'dating' },
+                })
+              "
+            >
+              {{ $t('matches.no_match_no_sent_like_cta') }}
+            </BButton>
+          </template>
+
+          <!-- no matches but have sent likes -->
+          <template v-else-if="!haveMatches && haveSentLikes">
+            <p>
+              {{ $t('matches.no_match_have_sent_like') }}
+            </p>
+            <BButton
+              variant="primary"
+              @click="
+                $router.push({
+                  name: 'BrowseProfiles',
+                  params: { scope: 'dating' },
+                })
+              "
+            >
+              {{ $t('matches.no_match_have_sent_like_cta') }}
+            </BButton>
+          </template>
+
+          <!-- got matches -->
+          <template v-else-if="haveMatches">
+            <p>My matches</p>
+            <div class="w-100 px-5">
+              <MatchesList
+                :edges="matches"
+                @select:profile="
+                  profileId => $router.push({ name: 'PublicProfile', params: { profileId } })
+                "
+              />
+            </div>
+          </template>
+          <template v-else>
+            <!-- any condition not covered above (this should be dead code)-->
+            <ProfileChipListPlaceholder :howMany="4" :isAnimated="false" />
+          </template>
         </BPlaceholderWrapper>
       </div>
     </MiddleColumn>

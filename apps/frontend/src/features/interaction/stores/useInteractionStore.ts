@@ -63,8 +63,6 @@ export const useInteractionStore = defineStore('interaction', {
           `/interactions/like/${targetId}`
         )
 
-        console.log('store Like response:', res.data)
-
         // Parse and validate the response shape
         const pair = InteractionEdgePairSchema.parse(res.data.pair)
 

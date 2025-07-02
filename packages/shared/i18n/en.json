@@ -116,6 +116,15 @@
       "intro_who_placeholder": "Who would you like to meet?"
     }
   },
+  "matches":{
+    "received_likes": "You have no likes.|You have 1 like.|You have {count} likes!",
+    "received_likes_cta": "Who|Find out who sent it.|Find out who sent them.",
+    "no_match_no_sent_like": "There's gotta be someone you like out there?  ",
+    "no_match_no_sent_like_cta": "Start lookin'",
+    "no_match_have_sent_like": "They will surely like you back.",
+    "no_match_have_sent_like_cta": "Keep lookin'",
+    "find_button_cta": "Go connect"
+  },
   "messaging": {
     "page_title": "Messages",
     "send_message_button": "Send",

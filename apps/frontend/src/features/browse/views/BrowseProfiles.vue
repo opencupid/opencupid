@@ -162,7 +162,7 @@ const isDetailView = computed(() => !!selectedProfileId.value)
           >
             <!-- Placeholders while loading -->
             <MiddleColumn class="overflow-hidden">
-              <PlaceholdersGrid :howMany="6" :loading="true" />
+              <PlaceholdersGrid :howMany="6" :isAnimated="true" />
             </MiddleColumn>
           </BOverlay>
         </template>
@@ -172,7 +172,7 @@ const isDetailView = computed(() => !!selectedProfileId.value)
           <BOverlay show no-spinner no-center :blur="null" bg-color="inherit" class="h-100 overlay">
             <!-- Keep placeholders in background -->
             <MiddleColumn class="overflow-hidden">
-              <PlaceholdersGrid :howMany="6" :loading="false" />
+              <PlaceholdersGrid :howMany="6" :isAnimated="false" />
             </MiddleColumn>
 
             <!-- CTA overlay -->
