@@ -55,7 +55,7 @@ export class FaceDetectionService {
     if (this.modelsLoaded) return;
 
     try {
-      const modelsPath = path.join(__dirname, '../../face-models');
+      const modelsPath = path.join(process.cwd(), 'face-models');
       
       // Load the tiny face detector model (always available)
       await faceapi.nets.tinyFaceDetector.loadFromDisk(modelsPath);
