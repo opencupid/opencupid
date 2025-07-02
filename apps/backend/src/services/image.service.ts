@@ -1,6 +1,6 @@
 import path from 'path'
 import fs from 'fs'
-import '@tensorflow/tfjs-node'
+import '@tensorflow/tfjs'
 import * as faceapi from 'face-api.js'
 import * as canvas from 'canvas'
 import { appConfig } from '../lib/appconfig'

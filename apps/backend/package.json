@@ -34,7 +34,7 @@
     "@google-cloud/translate": "^9.1.0",
     "@maxmind/geoip2-node": "^6.1.0",
     "@prisma/client": "^6.8.2",
-    "@tensorflow/tfjs-node": "^4.22.0",
+    "@tensorflow/tfjs": "^4.22.0",
     "altcha-lib": "^1.2.0",
     "bcrypt": "^6.0.0",
     "bullmq": "^5.52.2",
