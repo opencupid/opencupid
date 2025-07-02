@@ -6,7 +6,7 @@ import ReceivedLikesCount from '@/features/interaction/components/ReceivedLikesC
 
 const profileStore = useOwnerProfileStore()
 const router = useRouter()
-const error = ref<string>('')
+// Line removed as it is unused.
 </script>
 
 <template>
