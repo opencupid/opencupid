@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest'
 import sharp from 'sharp'
 import * as canvas from 'canvas'
 import * as tf from '@tensorflow/tfjs'
-import '@tensorflow/tfjs-node'
+import '@tensorflow/tfjs-backend-cpu'
 import * as faceDetection from '@tensorflow-models/face-detection'
 
 describe('TensorFlow.js face detection basic functionality', () => {

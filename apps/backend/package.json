@@ -36,7 +36,7 @@
     "@tensorflow-models/blazeface": "^0.1.0",
     "@tensorflow-models/face-detection": "^1.0.3",
     "@tensorflow/tfjs": "^4.22.0",
-    "@tensorflow/tfjs-node": "^4.22.0",
+    "@tensorflow/tfjs-backend-cpu": "^4.22.0",
     "altcha-lib": "^1.2.0",
     "bcrypt": "^6.0.0",
     "bullmq": "^5.52.2",

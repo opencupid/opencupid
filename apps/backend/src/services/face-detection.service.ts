@@ -1,5 +1,5 @@
 import * as tf from '@tensorflow/tfjs';
-import '@tensorflow/tfjs-node'; // Use Node.js backend for TensorFlow
+import '@tensorflow/tfjs-backend-cpu';
 import * as faceDetection from '@tensorflow-models/face-detection';
 import * as blazeface from '@tensorflow-models/blazeface';
 import { Canvas, Image, ImageData } from 'canvas';
