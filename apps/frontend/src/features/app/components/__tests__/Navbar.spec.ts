@@ -1,6 +1,15 @@
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+// Mock bus first to prevent side effects from the interaction store
+vi.mock('@/lib/bus', () => ({
+  bus: {
+    on: vi.fn(),
+    off: vi.fn(),
+    emit: vi.fn()
+  }
+}))
+
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 vi.mock('@fortawesome/vue-fontawesome', () => ({
   FontAwesomeIcon: { template: '<div />' },
