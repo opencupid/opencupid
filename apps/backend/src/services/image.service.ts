@@ -2,7 +2,7 @@ import path from 'path'
 import fs from 'fs'
 
 import { prisma } from '../lib/prisma'
-import { getImageRoot, makeImageLocation } from 'src/lib/media'
+import { getImageRoot, makeImageLocation } from '@/lib/media'
 
 import { generateContentHash } from '@/utils/hash'
 import { ProfileImagePosition } from '@zod/profile/profileimage.dto'
@@ -102,14 +102,9 @@ export class ImageService {
     } catch (err: any) {
       console.error('Failed to process image', err)
       throw new Error(`Failed to process image ${tmpImagePath}: ${err.message}`)
-    } finally {
-      // Ensure the temporary file is deleted regardless of success or failure
-      try {
-        await fs.promises.unlink(tmpImagePath)
-      } catch (unlinkErr) {
-        // console.error('Failed to delete temporary file after processing', unlinkErr);
-      }
     }
+    // Note: Temporary file cleanup is handled automatically by @fastify/multipart
+    // No manual cleanup needed to avoid ENOENT errors
   }
 
   /**
