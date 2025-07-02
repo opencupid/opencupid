@@ -1,12 +1,16 @@
 packages:
   - apps/*
   - packages/*
+
 ignoredBuiltDependencies:
   - msgpackr-extract
+
 onlyBuiltDependencies:
   - '@prisma/client'
   - '@prisma/engines'
   - bcrypt
+  - canvas
+  - core-js
   - esbuild
   - prisma
   - vue-demi
