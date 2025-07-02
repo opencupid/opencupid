@@ -21,15 +21,36 @@ function checkTensorFlowVersions() {
       if (pkg.startsWith('@tensorflow') || pkg === 'face-api.js') {
         const pkgPath = path.join(nodeModulesPath, pkg)
         if (fs.statSync(pkgPath).isDirectory()) {
-          const packageJsonPath = path.join(pkgPath, 'package.json')
-          if (fs.existsSync(packageJsonPath)) {
-            const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
-            tfPackages.push({
-              name: packageJson.name,
-              version: packageJson.version,
-              dependencies: packageJson.dependencies || {},
-              peerDependencies: packageJson.peerDependencies || {}
+          
+          // Handle @tensorflow scope
+          if (pkg === '@tensorflow') {
+            const subPackages = fs.readdirSync(pkgPath)
+            subPackages.forEach(tfPkg => {
+              const tfPkgPath = path.join(pkgPath, tfPkg)
+              if (fs.statSync(tfPkgPath).isDirectory() || fs.lstatSync(tfPkgPath).isSymbolicLink()) {
+                const packageJsonPath = path.join(tfPkgPath, 'package.json')
+                if (fs.existsSync(packageJsonPath)) {
+                  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
+                  tfPackages.push({
+                    name: packageJson.name,
+                    version: packageJson.version,
+                    dependencies: packageJson.dependencies || {},
+                    peerDependencies: packageJson.peerDependencies || {}
+                  })
+                }
+              }
             })
+          } else {
+            const packageJsonPath = path.join(pkgPath, 'package.json')
+            if (fs.existsSync(packageJsonPath)) {
+              const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
+              tfPackages.push({
+                name: packageJson.name,
+                version: packageJson.version,
+                dependencies: packageJson.dependencies || {},
+                peerDependencies: packageJson.peerDependencies || {}
+              })
+            }
           }
         }
       }
