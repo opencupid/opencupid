@@ -1,6 +1,8 @@
-FROM node:20-alpine AS builder
+FROM node:22-bookworm AS builder
 
 WORKDIR /app
+
+RUN apt-get update && apt-get -y install build-essential python3
 
 # Install dependencies
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
@@ -24,7 +26,7 @@ RUN pnpm run generate && pnpm run build
 # Remove dev dependencies
 RUN pnpm prune --prod
 
-FROM node:20-alpine
+FROM node:22-bookworm
 WORKDIR /app
 
 COPY --from=builder /app .
