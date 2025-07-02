@@ -1,6 +1,5 @@
 import { FastifyPluginAsync } from 'fastify'
 import { WebServiceClient } from '@maxmind/geoip2-node'
-import is_ip_private from 'node_modules/private-ip/lib/index.js'
 import fs from 'fs'
 import path from 'path'
 
@@ -55,7 +54,7 @@ const appRoutes: FastifyPluginAsync = async fastify => {
     const rawHeader = req.headers['x-forwarded-for'] as string | undefined
     const clientIp = extractClientIp(rawHeader, req.ip)
 
-    if (is_ip_private(clientIp)) {
+    if (appConfig.NODE_ENV === 'development') {
       const location: LocationDTO = {
         country: 'MX',
         cityId: null,
