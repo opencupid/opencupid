@@ -26,8 +26,6 @@ export const UserScalarFieldEnumSchema = z.enum(['id','email','phonenumber','tok
 
 export const ProfileScalarFieldEnumSchema = z.enum(['id','publicName','country','cityName','cityId','isSocialActive','isDatingActive','isActive','isReported','isBlocked','isOnboarded','userId','work','languages','birthday','gender','pronouns','relationship','hasKids','prefAgeMin','prefAgeMax','prefGender','prefKids','createdAt','updatedAt']);
 
-export const DatingPreferencesScalarFieldEnumSchema = z.enum(['profileId','prefAgeMin','prefAgeMax','prefGender','prefKids']);
-
 export const LocalizedProfileFieldScalarFieldEnumSchema = z.enum(['id','profileId','field','locale','value']);
 
 export const ProfileImageScalarFieldEnumSchema = z.enum(['id','userId','profileId','position','altText','storagePath','url','width','height','mimeType','createdAt','updatedAt','contentHash','isModerated','isFlagged']);
@@ -224,20 +222,6 @@ export const ProfileSchema = z.object({
 })
 
 export type Profile = z.infer<typeof ProfileSchema>
-
-/////////////////////////////////////////
-// DATING PREFERENCES SCHEMA
-/////////////////////////////////////////
-
-export const DatingPreferencesSchema = z.object({
-  prefGender: GenderSchema.array(),
-  prefKids: HasKidsSchema.array(),
-  profileId: z.string(),
-  prefAgeMin: z.number().int().nullable(),
-  prefAgeMax: z.number().int().nullable(),
-})
-
-export type DatingPreferences = z.infer<typeof DatingPreferencesSchema>
 
 /////////////////////////////////////////
 // LOCALIZED PROFILE FIELD SCHEMA
@@ -657,17 +641,6 @@ export const ProfileSelectSchema: z.ZodType<Prisma.ProfileSelect> = z.object({
   hiddenProfiles: z.union([z.boolean(),z.lazy(() => HiddenProfileFindManyArgsSchema)]).optional(),
   hiddenBy: z.union([z.boolean(),z.lazy(() => HiddenProfileFindManyArgsSchema)]).optional(),
   _count: z.union([z.boolean(),z.lazy(() => ProfileCountOutputTypeArgsSchema)]).optional(),
-}).strict()
-
-// DATING PREFERENCES
-//------------------------------------------------------
-
-export const DatingPreferencesSelectSchema: z.ZodType<Prisma.DatingPreferencesSelect> = z.object({
-  profileId: z.boolean().optional(),
-  prefAgeMin: z.boolean().optional(),
-  prefAgeMax: z.boolean().optional(),
-  prefGender: z.boolean().optional(),
-  prefKids: z.boolean().optional(),
 }).strict()
 
 // LOCALIZED PROFILE FIELD
@@ -1695,63 +1668,6 @@ export const ProfileScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.Profi
   prefKids: z.lazy(() => EnumHasKidsNullableListFilterSchema).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
-}).strict();
-
-export const DatingPreferencesWhereInputSchema: z.ZodType<Prisma.DatingPreferencesWhereInput> = z.object({
-  AND: z.union([ z.lazy(() => DatingPreferencesWhereInputSchema),z.lazy(() => DatingPreferencesWhereInputSchema).array() ]).optional(),
-  OR: z.lazy(() => DatingPreferencesWhereInputSchema).array().optional(),
-  NOT: z.union([ z.lazy(() => DatingPreferencesWhereInputSchema),z.lazy(() => DatingPreferencesWhereInputSchema).array() ]).optional(),
-  profileId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
-  prefAgeMin: z.union([ z.lazy(() => IntNullableFilterSchema),z.number() ]).optional().nullable(),
-  prefAgeMax: z.union([ z.lazy(() => IntNullableFilterSchema),z.number() ]).optional().nullable(),
-  prefGender: z.lazy(() => EnumGenderNullableListFilterSchema).optional(),
-  prefKids: z.lazy(() => EnumHasKidsNullableListFilterSchema).optional()
-}).strict();
-
-export const DatingPreferencesOrderByWithRelationInputSchema: z.ZodType<Prisma.DatingPreferencesOrderByWithRelationInput> = z.object({
-  profileId: z.lazy(() => SortOrderSchema).optional(),
-  prefAgeMin: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
-  prefAgeMax: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
-  prefGender: z.lazy(() => SortOrderSchema).optional(),
-  prefKids: z.lazy(() => SortOrderSchema).optional()
-}).strict();
-
-export const DatingPreferencesWhereUniqueInputSchema: z.ZodType<Prisma.DatingPreferencesWhereUniqueInput> = z.object({
-  profileId: z.string()
-})
-.and(z.object({
-  profileId: z.string().optional(),
-  AND: z.union([ z.lazy(() => DatingPreferencesWhereInputSchema),z.lazy(() => DatingPreferencesWhereInputSchema).array() ]).optional(),
-  OR: z.lazy(() => DatingPreferencesWhereInputSchema).array().optional(),
-  NOT: z.union([ z.lazy(() => DatingPreferencesWhereInputSchema),z.lazy(() => DatingPreferencesWhereInputSchema).array() ]).optional(),
-  prefAgeMin: z.union([ z.lazy(() => IntNullableFilterSchema),z.number().int() ]).optional().nullable(),
-  prefAgeMax: z.union([ z.lazy(() => IntNullableFilterSchema),z.number().int() ]).optional().nullable(),
-  prefGender: z.lazy(() => EnumGenderNullableListFilterSchema).optional(),
-  prefKids: z.lazy(() => EnumHasKidsNullableListFilterSchema).optional()
-}).strict());
-
-export const DatingPreferencesOrderByWithAggregationInputSchema: z.ZodType<Prisma.DatingPreferencesOrderByWithAggregationInput> = z.object({
-  profileId: z.lazy(() => SortOrderSchema).optional(),
-  prefAgeMin: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
-  prefAgeMax: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
-  prefGender: z.lazy(() => SortOrderSchema).optional(),
-  prefKids: z.lazy(() => SortOrderSchema).optional(),
-  _count: z.lazy(() => DatingPreferencesCountOrderByAggregateInputSchema).optional(),
-  _avg: z.lazy(() => DatingPreferencesAvgOrderByAggregateInputSchema).optional(),
-  _max: z.lazy(() => DatingPreferencesMaxOrderByAggregateInputSchema).optional(),
-  _min: z.lazy(() => DatingPreferencesMinOrderByAggregateInputSchema).optional(),
-  _sum: z.lazy(() => DatingPreferencesSumOrderByAggregateInputSchema).optional()
-}).strict();
-
-export const DatingPreferencesScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.DatingPreferencesScalarWhereWithAggregatesInput> = z.object({
-  AND: z.union([ z.lazy(() => DatingPreferencesScalarWhereWithAggregatesInputSchema),z.lazy(() => DatingPreferencesScalarWhereWithAggregatesInputSchema).array() ]).optional(),
-  OR: z.lazy(() => DatingPreferencesScalarWhereWithAggregatesInputSchema).array().optional(),
-  NOT: z.union([ z.lazy(() => DatingPreferencesScalarWhereWithAggregatesInputSchema),z.lazy(() => DatingPreferencesScalarWhereWithAggregatesInputSchema).array() ]).optional(),
-  profileId: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
-  prefAgeMin: z.union([ z.lazy(() => IntNullableWithAggregatesFilterSchema),z.number() ]).optional().nullable(),
-  prefAgeMax: z.union([ z.lazy(() => IntNullableWithAggregatesFilterSchema),z.number() ]).optional().nullable(),
-  prefGender: z.lazy(() => EnumGenderNullableListFilterSchema).optional(),
-  prefKids: z.lazy(() => EnumHasKidsNullableListFilterSchema).optional()
 }).strict();
 
 export const LocalizedProfileFieldWhereInputSchema: z.ZodType<Prisma.LocalizedProfileFieldWhereInput> = z.object({
@@ -3147,62 +3063,6 @@ export const ProfileUncheckedUpdateManyInputSchema: z.ZodType<Prisma.ProfileUnch
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
-export const DatingPreferencesCreateInputSchema: z.ZodType<Prisma.DatingPreferencesCreateInput> = z.object({
-  profileId: z.string(),
-  prefAgeMin: z.number().int().optional().nullable(),
-  prefAgeMax: z.number().int().optional().nullable(),
-  prefGender: z.union([ z.lazy(() => DatingPreferencesCreateprefGenderInputSchema),z.lazy(() => GenderSchema).array() ]).optional(),
-  prefKids: z.union([ z.lazy(() => DatingPreferencesCreateprefKidsInputSchema),z.lazy(() => HasKidsSchema).array() ]).optional(),
-}).strict();
-
-export const DatingPreferencesUncheckedCreateInputSchema: z.ZodType<Prisma.DatingPreferencesUncheckedCreateInput> = z.object({
-  profileId: z.string(),
-  prefAgeMin: z.number().int().optional().nullable(),
-  prefAgeMax: z.number().int().optional().nullable(),
-  prefGender: z.union([ z.lazy(() => DatingPreferencesCreateprefGenderInputSchema),z.lazy(() => GenderSchema).array() ]).optional(),
-  prefKids: z.union([ z.lazy(() => DatingPreferencesCreateprefKidsInputSchema),z.lazy(() => HasKidsSchema).array() ]).optional(),
-}).strict();
-
-export const DatingPreferencesUpdateInputSchema: z.ZodType<Prisma.DatingPreferencesUpdateInput> = z.object({
-  profileId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  prefAgeMin: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  prefAgeMax: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  prefGender: z.union([ z.lazy(() => DatingPreferencesUpdateprefGenderInputSchema),z.lazy(() => GenderSchema).array() ]).optional(),
-  prefKids: z.union([ z.lazy(() => DatingPreferencesUpdateprefKidsInputSchema),z.lazy(() => HasKidsSchema).array() ]).optional(),
-}).strict();
-
-export const DatingPreferencesUncheckedUpdateInputSchema: z.ZodType<Prisma.DatingPreferencesUncheckedUpdateInput> = z.object({
-  profileId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  prefAgeMin: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  prefAgeMax: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  prefGender: z.union([ z.lazy(() => DatingPreferencesUpdateprefGenderInputSchema),z.lazy(() => GenderSchema).array() ]).optional(),
-  prefKids: z.union([ z.lazy(() => DatingPreferencesUpdateprefKidsInputSchema),z.lazy(() => HasKidsSchema).array() ]).optional(),
-}).strict();
-
-export const DatingPreferencesCreateManyInputSchema: z.ZodType<Prisma.DatingPreferencesCreateManyInput> = z.object({
-  profileId: z.string(),
-  prefAgeMin: z.number().int().optional().nullable(),
-  prefAgeMax: z.number().int().optional().nullable(),
-  prefGender: z.union([ z.lazy(() => DatingPreferencesCreateprefGenderInputSchema),z.lazy(() => GenderSchema).array() ]).optional(),
-  prefKids: z.union([ z.lazy(() => DatingPreferencesCreateprefKidsInputSchema),z.lazy(() => HasKidsSchema).array() ]).optional(),
-}).strict();
-
-export const DatingPreferencesUpdateManyMutationInputSchema: z.ZodType<Prisma.DatingPreferencesUpdateManyMutationInput> = z.object({
-  profileId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  prefAgeMin: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  prefAgeMax: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  prefGender: z.union([ z.lazy(() => DatingPreferencesUpdateprefGenderInputSchema),z.lazy(() => GenderSchema).array() ]).optional(),
-  prefKids: z.union([ z.lazy(() => DatingPreferencesUpdateprefKidsInputSchema),z.lazy(() => HasKidsSchema).array() ]).optional(),
-}).strict();
-
-export const DatingPreferencesUncheckedUpdateManyInputSchema: z.ZodType<Prisma.DatingPreferencesUncheckedUpdateManyInput> = z.object({
-  profileId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  prefAgeMin: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  prefAgeMax: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  prefGender: z.union([ z.lazy(() => DatingPreferencesUpdateprefGenderInputSchema),z.lazy(() => GenderSchema).array() ]).optional(),
-  prefKids: z.union([ z.lazy(() => DatingPreferencesUpdateprefKidsInputSchema),z.lazy(() => HasKidsSchema).array() ]).optional(),
-}).strict();
-
 export const LocalizedProfileFieldCreateInputSchema: z.ZodType<Prisma.LocalizedProfileFieldCreateInput> = z.object({
   id: z.string().cuid().optional(),
   field: z.string(),
@@ -4571,36 +4431,6 @@ export const IntNullableWithAggregatesFilterSchema: z.ZodType<Prisma.IntNullable
   _sum: z.lazy(() => NestedIntNullableFilterSchema).optional(),
   _min: z.lazy(() => NestedIntNullableFilterSchema).optional(),
   _max: z.lazy(() => NestedIntNullableFilterSchema).optional()
-}).strict();
-
-export const DatingPreferencesCountOrderByAggregateInputSchema: z.ZodType<Prisma.DatingPreferencesCountOrderByAggregateInput> = z.object({
-  profileId: z.lazy(() => SortOrderSchema).optional(),
-  prefAgeMin: z.lazy(() => SortOrderSchema).optional(),
-  prefAgeMax: z.lazy(() => SortOrderSchema).optional(),
-  prefGender: z.lazy(() => SortOrderSchema).optional(),
-  prefKids: z.lazy(() => SortOrderSchema).optional()
-}).strict();
-
-export const DatingPreferencesAvgOrderByAggregateInputSchema: z.ZodType<Prisma.DatingPreferencesAvgOrderByAggregateInput> = z.object({
-  prefAgeMin: z.lazy(() => SortOrderSchema).optional(),
-  prefAgeMax: z.lazy(() => SortOrderSchema).optional()
-}).strict();
-
-export const DatingPreferencesMaxOrderByAggregateInputSchema: z.ZodType<Prisma.DatingPreferencesMaxOrderByAggregateInput> = z.object({
-  profileId: z.lazy(() => SortOrderSchema).optional(),
-  prefAgeMin: z.lazy(() => SortOrderSchema).optional(),
-  prefAgeMax: z.lazy(() => SortOrderSchema).optional()
-}).strict();
-
-export const DatingPreferencesMinOrderByAggregateInputSchema: z.ZodType<Prisma.DatingPreferencesMinOrderByAggregateInput> = z.object({
-  profileId: z.lazy(() => SortOrderSchema).optional(),
-  prefAgeMin: z.lazy(() => SortOrderSchema).optional(),
-  prefAgeMax: z.lazy(() => SortOrderSchema).optional()
-}).strict();
-
-export const DatingPreferencesSumOrderByAggregateInputSchema: z.ZodType<Prisma.DatingPreferencesSumOrderByAggregateInput> = z.object({
-  prefAgeMin: z.lazy(() => SortOrderSchema).optional(),
-  prefAgeMax: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const ProfileScalarRelationFilterSchema: z.ZodType<Prisma.ProfileScalarRelationFilter> = z.object({
@@ -6015,24 +5845,6 @@ export const HiddenProfileUncheckedUpdateManyWithoutToNestedInputSchema: z.ZodTy
   update: z.union([ z.lazy(() => HiddenProfileUpdateWithWhereUniqueWithoutToInputSchema),z.lazy(() => HiddenProfileUpdateWithWhereUniqueWithoutToInputSchema).array() ]).optional(),
   updateMany: z.union([ z.lazy(() => HiddenProfileUpdateManyWithWhereWithoutToInputSchema),z.lazy(() => HiddenProfileUpdateManyWithWhereWithoutToInputSchema).array() ]).optional(),
   deleteMany: z.union([ z.lazy(() => HiddenProfileScalarWhereInputSchema),z.lazy(() => HiddenProfileScalarWhereInputSchema).array() ]).optional(),
-}).strict();
-
-export const DatingPreferencesCreateprefGenderInputSchema: z.ZodType<Prisma.DatingPreferencesCreateprefGenderInput> = z.object({
-  set: z.lazy(() => GenderSchema).array()
-}).strict();
-
-export const DatingPreferencesCreateprefKidsInputSchema: z.ZodType<Prisma.DatingPreferencesCreateprefKidsInput> = z.object({
-  set: z.lazy(() => HasKidsSchema).array()
-}).strict();
-
-export const DatingPreferencesUpdateprefGenderInputSchema: z.ZodType<Prisma.DatingPreferencesUpdateprefGenderInput> = z.object({
-  set: z.lazy(() => GenderSchema).array().optional(),
-  push: z.union([ z.lazy(() => GenderSchema),z.lazy(() => GenderSchema).array() ]).optional(),
-}).strict();
-
-export const DatingPreferencesUpdateprefKidsInputSchema: z.ZodType<Prisma.DatingPreferencesUpdateprefKidsInput> = z.object({
-  set: z.lazy(() => HasKidsSchema).array().optional(),
-  push: z.union([ z.lazy(() => HasKidsSchema),z.lazy(() => HasKidsSchema).array() ]).optional(),
 }).strict();
 
 export const ProfileCreateNestedOneWithoutLocalizedInputSchema: z.ZodType<Prisma.ProfileCreateNestedOneWithoutLocalizedInput> = z.object({
@@ -12696,63 +12508,6 @@ export const ProfileFindUniqueOrThrowArgsSchema: z.ZodType<Prisma.ProfileFindUni
   where: ProfileWhereUniqueInputSchema,
 }).strict() ;
 
-export const DatingPreferencesFindFirstArgsSchema: z.ZodType<Prisma.DatingPreferencesFindFirstArgs> = z.object({
-  select: DatingPreferencesSelectSchema.optional(),
-  where: DatingPreferencesWhereInputSchema.optional(),
-  orderBy: z.union([ DatingPreferencesOrderByWithRelationInputSchema.array(),DatingPreferencesOrderByWithRelationInputSchema ]).optional(),
-  cursor: DatingPreferencesWhereUniqueInputSchema.optional(),
-  take: z.number().optional(),
-  skip: z.number().optional(),
-  distinct: z.union([ DatingPreferencesScalarFieldEnumSchema,DatingPreferencesScalarFieldEnumSchema.array() ]).optional(),
-}).strict() ;
-
-export const DatingPreferencesFindFirstOrThrowArgsSchema: z.ZodType<Prisma.DatingPreferencesFindFirstOrThrowArgs> = z.object({
-  select: DatingPreferencesSelectSchema.optional(),
-  where: DatingPreferencesWhereInputSchema.optional(),
-  orderBy: z.union([ DatingPreferencesOrderByWithRelationInputSchema.array(),DatingPreferencesOrderByWithRelationInputSchema ]).optional(),
-  cursor: DatingPreferencesWhereUniqueInputSchema.optional(),
-  take: z.number().optional(),
-  skip: z.number().optional(),
-  distinct: z.union([ DatingPreferencesScalarFieldEnumSchema,DatingPreferencesScalarFieldEnumSchema.array() ]).optional(),
-}).strict() ;
-
-export const DatingPreferencesFindManyArgsSchema: z.ZodType<Prisma.DatingPreferencesFindManyArgs> = z.object({
-  select: DatingPreferencesSelectSchema.optional(),
-  where: DatingPreferencesWhereInputSchema.optional(),
-  orderBy: z.union([ DatingPreferencesOrderByWithRelationInputSchema.array(),DatingPreferencesOrderByWithRelationInputSchema ]).optional(),
-  cursor: DatingPreferencesWhereUniqueInputSchema.optional(),
-  take: z.number().optional(),
-  skip: z.number().optional(),
-  distinct: z.union([ DatingPreferencesScalarFieldEnumSchema,DatingPreferencesScalarFieldEnumSchema.array() ]).optional(),
-}).strict() ;
-
-export const DatingPreferencesAggregateArgsSchema: z.ZodType<Prisma.DatingPreferencesAggregateArgs> = z.object({
-  where: DatingPreferencesWhereInputSchema.optional(),
-  orderBy: z.union([ DatingPreferencesOrderByWithRelationInputSchema.array(),DatingPreferencesOrderByWithRelationInputSchema ]).optional(),
-  cursor: DatingPreferencesWhereUniqueInputSchema.optional(),
-  take: z.number().optional(),
-  skip: z.number().optional(),
-}).strict() ;
-
-export const DatingPreferencesGroupByArgsSchema: z.ZodType<Prisma.DatingPreferencesGroupByArgs> = z.object({
-  where: DatingPreferencesWhereInputSchema.optional(),
-  orderBy: z.union([ DatingPreferencesOrderByWithAggregationInputSchema.array(),DatingPreferencesOrderByWithAggregationInputSchema ]).optional(),
-  by: DatingPreferencesScalarFieldEnumSchema.array(),
-  having: DatingPreferencesScalarWhereWithAggregatesInputSchema.optional(),
-  take: z.number().optional(),
-  skip: z.number().optional(),
-}).strict() ;
-
-export const DatingPreferencesFindUniqueArgsSchema: z.ZodType<Prisma.DatingPreferencesFindUniqueArgs> = z.object({
-  select: DatingPreferencesSelectSchema.optional(),
-  where: DatingPreferencesWhereUniqueInputSchema,
-}).strict() ;
-
-export const DatingPreferencesFindUniqueOrThrowArgsSchema: z.ZodType<Prisma.DatingPreferencesFindUniqueOrThrowArgs> = z.object({
-  select: DatingPreferencesSelectSchema.optional(),
-  where: DatingPreferencesWhereUniqueInputSchema,
-}).strict() ;
-
 export const LocalizedProfileFieldFindFirstArgsSchema: z.ZodType<Prisma.LocalizedProfileFieldFindFirstArgs> = z.object({
   select: LocalizedProfileFieldSelectSchema.optional(),
   include: LocalizedProfileFieldIncludeSchema.optional(),
@@ -13624,56 +13379,6 @@ export const ProfileUpdateManyAndReturnArgsSchema: z.ZodType<Prisma.ProfileUpdat
 
 export const ProfileDeleteManyArgsSchema: z.ZodType<Prisma.ProfileDeleteManyArgs> = z.object({
   where: ProfileWhereInputSchema.optional(),
-  limit: z.number().optional(),
-}).strict() ;
-
-export const DatingPreferencesCreateArgsSchema: z.ZodType<Prisma.DatingPreferencesCreateArgs> = z.object({
-  select: DatingPreferencesSelectSchema.optional(),
-  data: z.union([ DatingPreferencesCreateInputSchema,DatingPreferencesUncheckedCreateInputSchema ]),
-}).strict() ;
-
-export const DatingPreferencesUpsertArgsSchema: z.ZodType<Prisma.DatingPreferencesUpsertArgs> = z.object({
-  select: DatingPreferencesSelectSchema.optional(),
-  where: DatingPreferencesWhereUniqueInputSchema,
-  create: z.union([ DatingPreferencesCreateInputSchema,DatingPreferencesUncheckedCreateInputSchema ]),
-  update: z.union([ DatingPreferencesUpdateInputSchema,DatingPreferencesUncheckedUpdateInputSchema ]),
-}).strict() ;
-
-export const DatingPreferencesCreateManyArgsSchema: z.ZodType<Prisma.DatingPreferencesCreateManyArgs> = z.object({
-  data: z.union([ DatingPreferencesCreateManyInputSchema,DatingPreferencesCreateManyInputSchema.array() ]),
-  skipDuplicates: z.boolean().optional(),
-}).strict() ;
-
-export const DatingPreferencesCreateManyAndReturnArgsSchema: z.ZodType<Prisma.DatingPreferencesCreateManyAndReturnArgs> = z.object({
-  data: z.union([ DatingPreferencesCreateManyInputSchema,DatingPreferencesCreateManyInputSchema.array() ]),
-  skipDuplicates: z.boolean().optional(),
-}).strict() ;
-
-export const DatingPreferencesDeleteArgsSchema: z.ZodType<Prisma.DatingPreferencesDeleteArgs> = z.object({
-  select: DatingPreferencesSelectSchema.optional(),
-  where: DatingPreferencesWhereUniqueInputSchema,
-}).strict() ;
-
-export const DatingPreferencesUpdateArgsSchema: z.ZodType<Prisma.DatingPreferencesUpdateArgs> = z.object({
-  select: DatingPreferencesSelectSchema.optional(),
-  data: z.union([ DatingPreferencesUpdateInputSchema,DatingPreferencesUncheckedUpdateInputSchema ]),
-  where: DatingPreferencesWhereUniqueInputSchema,
-}).strict() ;
-
-export const DatingPreferencesUpdateManyArgsSchema: z.ZodType<Prisma.DatingPreferencesUpdateManyArgs> = z.object({
-  data: z.union([ DatingPreferencesUpdateManyMutationInputSchema,DatingPreferencesUncheckedUpdateManyInputSchema ]),
-  where: DatingPreferencesWhereInputSchema.optional(),
-  limit: z.number().optional(),
-}).strict() ;
-
-export const DatingPreferencesUpdateManyAndReturnArgsSchema: z.ZodType<Prisma.DatingPreferencesUpdateManyAndReturnArgs> = z.object({
-  data: z.union([ DatingPreferencesUpdateManyMutationInputSchema,DatingPreferencesUncheckedUpdateManyInputSchema ]),
-  where: DatingPreferencesWhereInputSchema.optional(),
-  limit: z.number().optional(),
-}).strict() ;
-
-export const DatingPreferencesDeleteManyArgsSchema: z.ZodType<Prisma.DatingPreferencesDeleteManyArgs> = z.object({
-  where: DatingPreferencesWhereInputSchema.optional(),
   limit: z.number().optional(),
 }).strict() ;
 
