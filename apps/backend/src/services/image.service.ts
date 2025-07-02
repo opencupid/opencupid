@@ -8,6 +8,7 @@ import { generateContentHash } from '@/utils/hash'
 import { ProfileImagePosition } from '@zod/profile/profileimage.dto'
 import sharp from 'sharp'
 import type { ProfileImage } from '@zod/generated'
+import { FaceDetectionService } from './face-detection.service'
 
 const sizes = [
   { name: 'thumb', width: 150, height: 150, fit: sharp.fit.cover }, // square crop
@@ -16,11 +17,14 @@ const sizes = [
 ]
 export class ImageService {
   private static instance: ImageService
+  private faceDetectionService: FaceDetectionService
 
   /**
    * Private constructor to prevent direct instantiation
    */
-  private constructor() {}
+  private constructor() {
+    this.faceDetectionService = FaceDetectionService.getInstance()
+  }
 
   /**
    * Get singleton instance
@@ -113,6 +117,25 @@ export class ImageService {
   }
 
   /**
+   * Auto-crop an image based on face detection
+   * @param filePath - Path to the image file
+   * @param outputDir - Directory to save the cropped image
+   * @param baseName - Base name for the output file
+   * Returns path to the cropped image if successful, null otherwise
+   */
+  async autoCrop(filePath: string, outputDir: string, baseName: string): Promise<string | null> {
+    const outputPath = path.join(outputDir, `${baseName}-face.jpg`)
+    
+    try {
+      const success = await this.faceDetectionService.autoCrop(filePath, outputPath)
+      return success ? outputPath : null
+    } catch (error) {
+      console.error('Error in autoCrop:', error)
+      return null
+    }
+  }
+
+  /**
    * Process an uploaded image file, resizing and saving variants
    * @param filePath - Path to the uploaded image file
    * @param outputDir - Directory to save processed images
@@ -129,8 +152,22 @@ export class ImageService {
 
     const outputPaths: Record<string, string> = {}
 
+    // Try to generate a face-cropped version first
+    const faceCroppedPath = await this.autoCrop(filePath, outputDir, baseName)
+    
+    // If face detection succeeded, use face-cropped version for card and thumb
+    const sourceForCropVersions = faceCroppedPath || filePath
+    const sourceForCropVersionsSharp = sharp(sourceForCropVersions).rotate()
+
     for (const size of sizes) {
-      const resized = original.clone().resize({
+      let resizedSource = original.clone()
+      
+      // Use face-cropped version for card and thumb sizes if available
+      if (faceCroppedPath && (size.name === 'card' || size.name === 'thumb')) {
+        resizedSource = sourceForCropVersionsSharp.clone()
+      }
+
+      const resized = resizedSource.resize({
         width: size.width,
         height: size.height,
         fit: size.fit ?? sharp.fit.inside,
@@ -147,6 +184,11 @@ export class ImageService {
     await original.jpeg({ quality: 90 }).toFile(originalCleaned)
 
     outputPaths.original = originalCleaned
+
+    // Include face-cropped version in outputs if generated
+    if (faceCroppedPath) {
+      outputPaths.face = faceCroppedPath
+    }
 
     return {
       width: metadata.width,
