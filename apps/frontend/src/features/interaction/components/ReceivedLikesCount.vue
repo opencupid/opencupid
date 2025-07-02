@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import IconHeart from '@/assets/icons/interface/heart.svg'
-
 import { useInteractionsViewModel } from '../composables/useInteractionsViewModel';
 
 defineProps<{
 }>()
 
 const {receivedLikesCount,haveReceivedLikes,haveMatches,matches} = useInteractionsViewModel()
-
 </script>
 
 <template>
