@@ -44,8 +44,8 @@ export class FaceDetectionService {
       FaceDetectionService.instance = new FaceDetectionService();
       // Initialize models at startup if face API is enabled
       if (process.env.FACEAPI_ENABLED === 'true') {
-        FaceDetectionService.instance.loadModels().catch((error) => {
-          console.error('Failed to load face detection models at startup:', error);
+        FaceDetectionService.instance.loadModels().catch(() => {
+          // Silently fail model loading at startup
         });
       }
     }
@@ -59,14 +59,12 @@ export class FaceDetectionService {
     if (this.modelsLoaded) return;
 
     try {
-      console.log(`Loading TensorFlow.js face detection model: ${this.config.model}`);
-      
       if (this.config.model === 'BlazeFace') {
         // Use BlazeFace model (simpler and more stable)
         this.detector = await blazeface.load();
       } else {
         // Use MediaPipe Face Detection (more advanced)
-        const modelConfig: faceDetection.MediaPipeFaceDetectorModelConfig = {
+        const modelConfig: faceDetection.MediaPipeFaceDetectorTfjsModelConfig = {
           runtime: 'tfjs' as const,
           modelType: 'short' as const, // 'short' for faster inference, 'full' for better accuracy
           maxFaces: 1, // We only need to detect one face for cropping
@@ -81,10 +79,7 @@ export class FaceDetectionService {
       }
       
       this.modelsLoaded = true;
-      console.log(`Face detection model loaded successfully: ${this.config.model}`);
     } catch (error) {
-      console.error('Error loading face detection models:', error);
-      console.error('Error value:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
       throw new Error('Failed to load face detection models');
     }
   }
@@ -176,7 +171,6 @@ export class FaceDetectionService {
 
       // Check confidence threshold
       if (confidence < this.config.detectionThreshold) {
-        console.log(`Face confidence ${confidence} below threshold ${this.config.detectionThreshold}`);
         return { hasFace: false };
       }
 
@@ -187,7 +181,7 @@ export class FaceDetectionService {
 
       // Check if face is within acceptable size range
       if (faceRatio < this.config.minFaceSize || faceRatio > this.config.maxFaceSize) {
-        console.log(`Face size ratio ${faceRatio.toFixed(3)} outside acceptable range (${this.config.minFaceSize}-${this.config.maxFaceSize})`);
+        return { hasFace: false };
       }
 
       // Calculate 1:1 crop box centered on face
@@ -224,7 +218,6 @@ export class FaceDetectionService {
         },
       };
     } catch (error) {
-      console.error('Error in face detection:', error);
       return { hasFace: false };
     }
   }
@@ -237,7 +230,6 @@ export class FaceDetectionService {
       const detection = await this.detectFaces(inputPath);
       
       if (!detection.hasFace || !detection.cropBox) {
-        console.log('No suitable face detected for auto-crop');
         return false;
       }
 
@@ -249,10 +241,8 @@ export class FaceDetectionService {
         .jpeg({ quality: 90 })
         .toFile(outputPath);
 
-      console.log(`Auto-crop successful: face detected and cropped to ${width}x${height} at (${x}, ${y})`);
       return true;
     } catch (error) {
-      console.error('Error in auto-crop:', error);
       return false;
     }
   }
@@ -268,8 +258,8 @@ export class FaceDetectionService {
       this.modelsLoaded = false;
       this.detector = null;
       if (this.isEnabled()) {
-        this.loadModels().catch((error) => {
-          console.error('Failed to reload face detection models:', error);
+        this.loadModels().catch(() => {
+          // Silently fail model loading
         });
       }
     }
