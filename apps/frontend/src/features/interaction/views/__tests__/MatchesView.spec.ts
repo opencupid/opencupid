@@ -11,7 +11,7 @@ const mockState = {
   matches: ref([] as any[]),
   haveMatches: ref(false),
   isLoading: ref(false),
-  refreshInteractions: vi.fn()
+  initialize: vi.fn()
 }
 
 vi.mock('../../composables/useInteractionsViewModel', () => ({ useInteractionsViewModel: () => mockState }))
@@ -29,6 +29,12 @@ describe('Matches view', () => {
     mockState.matches.value = []
     mockState.haveMatches.value = false
     mockState.isLoading.value = false
+    mockState.initialize.mockClear()
+  })
+
+  it('calls initialize on mount', () => {
+    mount(Matches, { global: { stubs: { BPlaceholderWrapper, BButton } } })
+    expect(mockState.initialize).toHaveBeenCalledOnce()
   })
 
   it('TODO needs fixing', () => {

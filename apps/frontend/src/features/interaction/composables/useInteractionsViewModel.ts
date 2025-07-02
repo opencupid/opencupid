@@ -15,6 +15,8 @@ export function useInteractionsViewModel() {
     like: store.sendLike,
     pass: store.passProfile,
     refreshInteractions: store.fetchInteractions,
-    isLoading: computed(() => store.loading),
+    initialize: store.initialize,
+    isInitialized: computed(() => store.initialized),
+    isLoading: computed(() => store.loading || !store.initialized),
   }
 }
