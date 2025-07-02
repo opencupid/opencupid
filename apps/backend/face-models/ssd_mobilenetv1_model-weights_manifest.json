@@ -1,0 +1,1 @@
+[{"paths":["ssd_mobilenetv1_model.bin"],"weights":[{"name":"Input/image_tensor","shape":[1],"dtype":"int32"},{"name":"MobilenetV1/Conv2d_0/weights","shape":[3,3,3,32],"dtype":"float32"}]}]

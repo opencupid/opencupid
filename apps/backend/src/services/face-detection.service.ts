@@ -26,6 +26,8 @@ export interface AutoCropConfig {
   maxFaceSize: number;
   // Detection threshold (0-1, higher = more confident detections)
   detectionThreshold: number;
+  // Model to use for face detection ('tiny' or 'ssd')
+  model: 'tiny' | 'ssd';
 }
 
 export class FaceDetectionService {
@@ -35,6 +37,7 @@ export class FaceDetectionService {
     minFaceSize: 0.25,
     maxFaceSize: 0.5,
     detectionThreshold: 0.5,
+    model: 'tiny',
   };
 
   private constructor() {}
@@ -55,8 +58,16 @@ export class FaceDetectionService {
     try {
       const modelsPath = path.join(__dirname, '../face-models');
       
-      // Load the tiny face detector model
+      // Load the tiny face detector model (always available)
       await faceapi.nets.tinyFaceDetector.loadFromDisk(modelsPath);
+      
+      // Load SSD MobileNetV1 model if available
+      try {
+        await faceapi.nets.ssdMobilenetv1.loadFromDisk(modelsPath);
+        console.log('Both TinyFaceDetector and SSD MobileNetV1 models loaded');
+      } catch (ssdError) {
+        console.log('SSD MobileNetV1 model not available, using TinyFaceDetector only');
+      }
       
       this.modelsLoaded = true;
       console.log('Face detection models loaded successfully');
@@ -98,12 +109,29 @@ export class FaceDetectionService {
       }
       ctx.putImageData(imageData, 0, 0);
       
-      // Detect faces using tiny face detector
-      const detections = await faceapi
-        .detectAllFaces(canvas as any, new faceapi.TinyFaceDetectorOptions({
-          inputSize: 416,
-          scoreThreshold: this.config.detectionThreshold,
-        }));
+      // Detect faces using the selected model
+      let detections;
+      if (this.config.model === 'ssd') {
+        try {
+          detections = await faceapi
+            .detectAllFaces(canvas as any, new faceapi.SsdMobilenetv1Options({
+              minConfidence: this.config.detectionThreshold,
+            }));
+        } catch (ssdError) {
+          console.log('SSD MobileNetV1 not available, falling back to TinyFaceDetector');
+          detections = await faceapi
+            .detectAllFaces(canvas as any, new faceapi.TinyFaceDetectorOptions({
+              inputSize: 416,
+              scoreThreshold: this.config.detectionThreshold,
+            }));
+        }
+      } else {
+        detections = await faceapi
+          .detectAllFaces(canvas as any, new faceapi.TinyFaceDetectorOptions({
+            inputSize: 416,
+            scoreThreshold: this.config.detectionThreshold,
+          }));
+      }
 
       if (detections.length === 0) {
         return { hasFace: false };
