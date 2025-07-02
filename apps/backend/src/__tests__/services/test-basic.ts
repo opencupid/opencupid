@@ -20,8 +20,11 @@ try {
   console.log('✓ Face-api.js monkey patch applied')
   
   // Check if models exist
-  const modelsPath = path.join(__dirname, 'face-models')
-  const manifestPath = path.join(modelsPath, 'tiny_face_detector_model-weights_manifest.json')
+  const cwd = process.cwd();
+  const modelsPath = cwd.endsWith('apps/backend') 
+    ? path.join(cwd, 'face-models')
+    : path.join(cwd, 'apps', 'backend', 'face-models');
+  const manifestPath = path.join(modelsPath, 'ssd_mobilenetv1_model-weights_manifest.json')
   
   if (fs.existsSync(manifestPath)) {
     console.log('✓ Face detection models found')
