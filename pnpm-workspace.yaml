@@ -1,12 +1,17 @@
 packages:
   - apps/*
   - packages/*
+
 ignoredBuiltDependencies:
   - msgpackr-extract
+
 onlyBuiltDependencies:
+  - '@parcel/watcher'
   - '@prisma/client'
   - '@prisma/engines'
   - bcrypt
   - esbuild
   - prisma
+  - protobufjs
+  - sharp
   - vue-demi
