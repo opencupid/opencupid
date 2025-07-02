@@ -32,6 +32,7 @@ export interface AutoCropConfig {
 export class FaceDetectionService {
   private static instance: FaceDetectionService;
   private modelsLoaded = false;
+  private availableModels: Set<string> = new Set();
   private config: AutoCropConfig = {
     minFaceSize: 0.25,
     maxFaceSize: 0.5,
@@ -44,6 +45,12 @@ export class FaceDetectionService {
   public static getInstance(): FaceDetectionService {
     if (!FaceDetectionService.instance) {
       FaceDetectionService.instance = new FaceDetectionService();
+      // Initialize models at startup if face API is enabled
+      if (process.env.FACEAPI_ENABLED === 'true') {
+        FaceDetectionService.instance.loadModels().catch((error) => {
+          console.error('Failed to load face detection models at startup:', error);
+        });
+      }
     }
     return FaceDetectionService.instance;
   }
@@ -59,17 +66,20 @@ export class FaceDetectionService {
       
       // Load the tiny face detector model (always available)
       await faceapi.nets.tinyFaceDetector.loadFromDisk(modelsPath);
+      this.availableModels.add('tiny');
+      console.log('TinyFaceDetector model loaded');
       
-      // Load SSD MobileNetV1 model if available
+      // Try to load SSD MobileNetV1 model
       try {
         await faceapi.nets.ssdMobilenetv1.loadFromDisk(modelsPath);
-        console.log('Both TinyFaceDetector and SSD MobileNetV1 models loaded');
+        this.availableModels.add('ssd');
+        console.log('SSD MobileNetV1 model loaded');
       } catch (ssdError) {
-        console.log('SSD MobileNetV1 model not available, using TinyFaceDetector only');
+        console.log('SSD MobileNetV1 model not available');
       }
       
       this.modelsLoaded = true;
-      console.log('Face detection models loaded successfully');
+      console.log(`Face detection models loaded. Available models: ${Array.from(this.availableModels).join(', ')}`);
     } catch (error) {
       console.error('Error loading face detection models:', error);
       throw new Error('Failed to load face detection models');
@@ -80,7 +90,14 @@ export class FaceDetectionService {
    * Detect faces in an image and return crop information
    */
   async detectFaces(imagePath: string): Promise<FaceDetectionResult> {
-    await this.loadModels();
+    if (!this.modelsLoaded) {
+      throw new Error('Face detection models not loaded. Make sure FACEAPI_ENABLED=true and models are available.');
+    }
+
+    // Check if the requested model is available
+    if (!this.availableModels.has(this.config.model)) {
+      throw new Error(`Requested face detection model '${this.config.model}' is not available. Available models: ${Array.from(this.availableModels).join(', ')}`);
+    }
 
     try {
       // Load image using sharp to get metadata and convert to RGBA
@@ -111,19 +128,10 @@ export class FaceDetectionService {
       // Detect faces using the selected model
       let detections;
       if (this.config.model === 'ssd') {
-        try {
-          detections = await faceapi
-            .detectAllFaces(canvas as any, new faceapi.SsdMobilenetv1Options({
-              minConfidence: this.config.detectionThreshold,
-            }));
-        } catch (ssdError) {
-          console.log('SSD MobileNetV1 not available, falling back to TinyFaceDetector');
-          detections = await faceapi
-            .detectAllFaces(canvas as any, new faceapi.TinyFaceDetectorOptions({
-              inputSize: 416,
-              scoreThreshold: this.config.detectionThreshold,
-            }));
-        }
+        detections = await faceapi
+          .detectAllFaces(canvas as any, new faceapi.SsdMobilenetv1Options({
+            minConfidence: this.config.detectionThreshold,
+          }));
       } else {
         detections = await faceapi
           .detectAllFaces(canvas as any, new faceapi.TinyFaceDetectorOptions({
@@ -232,5 +240,26 @@ export class FaceDetectionService {
    */
   getConfig(): AutoCropConfig {
     return { ...this.config };
+  }
+
+  /**
+   * Check if face API is enabled via environment variable
+   */
+  isEnabled(): boolean {
+    return process.env.FACEAPI_ENABLED === 'true';
+  }
+
+  /**
+   * Check if the service is ready (models loaded)
+   */
+  isReady(): boolean {
+    return this.modelsLoaded;
+  }
+
+  /**
+   * Get available models
+   */
+  getAvailableModels(): string[] {
+    return Array.from(this.availableModels);
   }
 }

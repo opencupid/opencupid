@@ -119,6 +119,11 @@ export class ImageService {
    * Returns path to the cropped image if successful, null otherwise
    */
   async autoCrop(filePath: string, outputDir: string, baseName: string): Promise<string | null> {
+    // Check if face API is enabled
+    if (!this.faceDetectionService.isEnabled()) {
+      return null;
+    }
+
     const outputPath = path.join(outputDir, `${baseName}-face.jpg`)
     
     try {
