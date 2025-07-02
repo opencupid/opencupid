@@ -208,8 +208,7 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
         // if (!updatedProfile) return sendError(reply, 404, 'Profile not found')
         const profile = mapDbProfileToOwnerProfile(locale, updatedProfile)
 
-        // Mark user as onboarded
-        user.isOnboarded = true
+        // Update user profile state
         const updatedUser = await userService.updateUser(tx, user)
         if (!updatedUser) return sendError(reply, 500, 'Failed to update user')
         return profile

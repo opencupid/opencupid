@@ -157,7 +157,6 @@ model User {
   tokenVersion            Int        @default(0)
   loginToken              String?    @unique
   loginTokenExp           DateTime?
-  isOnboarded             Boolean    @default(false)
   isActive                Boolean    @default(true)
   isBlocked               Boolean    @default(false)
   isRegistrationConfirmed Boolean    @default(false)
