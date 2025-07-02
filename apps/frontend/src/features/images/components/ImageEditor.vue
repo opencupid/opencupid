@@ -5,6 +5,7 @@ import { VueDraggableNext } from 'vue-draggable-next'
 import { useImageStore } from '@/features/images/stores/imageStore'
 
 import type { OwnerProfileImage } from '@zod/profile/profileimage.dto'
+import { faXmark } from '@fortawesome/free-solid-svg-icons'
 
 import LoadingComponent from '@/features/shared/ui/LoadingComponent.vue'
 import ImageUpload from './ImageUpload.vue'
@@ -104,7 +105,7 @@ onMounted(async () => {
                     @click="handleDelete(img)"
                     :disabled="isRemoving[img.id]"
                   >
-                    <FontAwesomeIcon icon="fa-solid fa-xmark" />
+                    <FontAwesomeIcon :icon="faXmark" />
                   </button>
                 </div>
                 <div :class="{ removing: isRemoving[img.id] }">

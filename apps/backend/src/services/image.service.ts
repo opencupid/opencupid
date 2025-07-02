@@ -6,12 +6,12 @@ import * as canvas from 'canvas'
 import { appConfig } from '../lib/appconfig'
 
 import { prisma } from '../lib/prisma'
-import { ProfileImage } from '@prisma/client'
 import { getImageRoot, makeImageLocation } from 'src/lib/media'
 
 import { generateContentHash } from '@/utils/hash'
 import { ProfileImagePosition } from '@zod/profile/profileimage.dto'
 import sharp from 'sharp'
+import type { ProfileImage } from '@zod/generated'
 
 const { Canvas, Image, ImageData } = canvas
 faceapi.env.monkeyPatch({
