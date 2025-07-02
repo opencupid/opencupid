@@ -11,7 +11,7 @@ export const api = axios.create({
   baseURL,
 })
 
-// Track API status
+// Track API status - only used in non-development environments
 let isOffline = false
 let retryTimeoutId: NodeJS.Timeout | null = null
 
@@ -26,44 +26,58 @@ api.interceptors.request.use(
 )
 
 // Response interceptor to handle errors and recovery
-api.interceptors.response.use(
-  (response) => {
-    // If we were offline and got a successful response, mark as online
-    if (isOffline) {
-      isOffline = false
-      bus.emit('api:online')
-      // Clear any pending retry
-      if (retryTimeoutId) {
-        clearTimeout(retryTimeoutId)
-        retryTimeoutId = null
+// Only enable offline/online detection in non-development environments
+if (__APP_CONFIG__?.NODE_ENV !== 'development') {
+  api.interceptors.response.use(
+    (response) => {
+      // If we were offline and got a successful response, mark as online
+      if (isOffline) {
+        isOffline = false
+        bus.emit('api:online')
+        // Clear any pending retry
+        if (retryTimeoutId) {
+          clearTimeout(retryTimeoutId)
+          retryTimeoutId = null
+        }
       }
+      return response
+    },
+    (error) => {
+      // Check for network-related errors
+      const isNetworkError = 
+        error.code === 'ECONNABORTED' ||
+        error.code === 'ENETUNREACH' ||
+        error.code === 'ENOTFOUND' ||
+        error.code === 'ECONNREFUSED' ||
+        error.code === 'ETIMEDOUT' ||
+        !error.response
+
+      if (isNetworkError && !isOffline) {
+        isOffline = true
+        bus.emit('api:offline')
+        
+        // Start periodic retry to detect recovery
+        startRetryMechanism()
+      }
+
+      return Promise.reject(error)
     }
-    return response
-  },
-  (error) => {
-    // Check for network-related errors
-    const isNetworkError = 
-      error.code === 'ECONNABORTED' ||
-      error.code === 'ENETUNREACH' ||
-      error.code === 'ENOTFOUND' ||
-      error.code === 'ECONNREFUSED' ||
-      error.code === 'ETIMEDOUT' ||
-      !error.response
+  )
+} else {
+  // In development mode, use a simple pass-through interceptor
+  api.interceptors.response.use(
+    (response) => response,
+    (error) => Promise.reject(error)
+  )
+}
 
-    if (isNetworkError && !isOffline) {
-      isOffline = true
-      bus.emit('api:offline')
-      
-      // Start periodic retry to detect recovery
-      startRetryMechanism()
-    }
-
-    return Promise.reject(error)
-  }
-)
-
-// Periodic retry mechanism to detect API recovery
+// Periodic retry mechanism to detect API recovery - only used in non-development environments
 function startRetryMechanism() {
+  // Only run retry mechanism in non-development environments
+  if (__APP_CONFIG__?.NODE_ENV === 'development') {
+    return
+  }
+
   if (retryTimeoutId) {
     clearTimeout(retryTimeoutId)
   }
