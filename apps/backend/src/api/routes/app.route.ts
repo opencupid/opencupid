@@ -1,6 +1,6 @@
 import { FastifyPluginAsync } from 'fastify'
 import { WebServiceClient } from '@maxmind/geoip2-node'
-import is_ip_private from 'node_modules/private-ip/lib/index.js'
+import is_ip_private from 'private-ip'
 import fs from 'fs'
 import path from 'path'
 

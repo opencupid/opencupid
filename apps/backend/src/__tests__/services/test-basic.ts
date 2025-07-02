@@ -1,40 +1,30 @@
 // Simple test to verify face detection compilation and basic functionality
-import fs from 'fs'
-import path from 'path'
+import { describe, it, expect } from 'vitest'
 import sharp from 'sharp'
 import * as canvas from 'canvas'
 import * as tf from '@tensorflow/tfjs'
-import * as faceapi from 'face-api.js'
+import '@tensorflow/tfjs-node'
+import * as faceDetection from '@tensorflow-models/face-detection'
 
-console.log('Testing basic imports...')
+describe('TensorFlow.js face detection basic functionality', () => {
+  it('should import all required modules successfully', () => {
+    expect(sharp).toBeDefined()
+    expect(canvas).toBeDefined()
+    expect(tf).toBeDefined()
+    expect(faceDetection).toBeDefined()
+  })
 
-try {
-  console.log('✓ Sharp imported successfully')
-  console.log('✓ Canvas imported successfully')
-  console.log('✓ TensorFlow.js imported successfully')
-  console.log('✓ Face-api.js imported successfully')
-  
-  // Test face-api.js monkey patch
-  const { Canvas: FaceCanvas, Image: FaceImage, ImageData: FaceImageData } = canvas;
-  (faceapi.env as any).monkeyPatch({ Canvas: FaceCanvas, Image: FaceImage, ImageData: FaceImageData });
-  console.log('✓ Face-api.js monkey patch applied')
-  
-  // Check if models exist
-  const cwd = process.cwd();
-  const modelsPath = cwd.endsWith('apps/backend') 
-    ? path.join(cwd, 'face-models')
-    : path.join(cwd, 'apps', 'backend', 'face-models');
-  const manifestPath = path.join(modelsPath, 'ssd_mobilenetv1_model-weights_manifest.json')
-  
-  if (fs.existsSync(manifestPath)) {
-    console.log('✓ Face detection models found')
-  } else {
-    console.log('⚠ Face detection models not found')
-  }
-  
-  console.log('✓ All basic imports and setup successful!')
-  
-} catch (error) {
-  console.error('❌ Error in basic test:', error)
-  process.exit(1)
-}
+  it('should create and dispose tensors correctly', () => {
+    const tensor = tf.tensor2d([[1, 2], [3, 4]])
+    expect(tensor).toBeDefined()
+    expect(tensor.shape).toEqual([2, 2])
+    tensor.dispose()
+  })
+
+  it('should list supported face detection models', () => {
+    const supportedModels = Object.values(faceDetection.SupportedModels)
+    expect(supportedModels).toBeDefined()
+    expect(supportedModels.length).toBeGreaterThan(0)
+    expect(supportedModels).toContain('MediaPipeFaceDetector')
+  })
+})

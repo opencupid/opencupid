@@ -19,6 +19,7 @@ The auto-crop feature can be configured through the `FaceDetectionService`:
 - **`minFaceSize`** (default: 0.25): Minimum face size as percentage of total image area (25%)
 - **`maxFaceSize`** (default: 0.5): Maximum face size as percentage of total image area (50%)  
 - **`detectionThreshold`** (default: 0.5): Face detection confidence threshold (0-1, higher = more confident)
+- **`model`** (default: 'BlazeFace'): Face detection model to use ('BlazeFace' or 'MediaPipeFaceDetector')
 
 ### Example Configuration
 
@@ -31,17 +32,29 @@ const faceService = FaceDetectionService.getInstance();
 faceService.updateConfig({
   minFaceSize: 0.20,      // Face should be at least 20% of image
   maxFaceSize: 0.60,      // Face should be at most 60% of image
-  detectionThreshold: 0.6  // Higher confidence threshold
+  detectionThreshold: 0.6, // Higher confidence threshold
+  model: 'MediaPipeFaceDetector' // Use MediaPipe for better accuracy
 });
+```
+
+### Environment Configuration
+
+Enable face detection by setting the environment variable:
+
+```bash
+FACEAPI_ENABLED=true
 ```
 
 ## Technical Details
 
 ### Models
 
-The feature uses TensorFlow.js and face-api.js with the Tiny Face Detector model for fast face detection.
+The feature uses TensorFlow.js with two available face detection models:
 
-Models are automatically downloaded to `apps/backend/face-models/` on first setup.
+- **BlazeFace** (default): Fast and lightweight face detection model
+- **MediaPipeFaceDetector**: More accurate but slower face detection model
+
+Models are automatically downloaded from the TensorFlow.js CDN when first loaded.
 
 ### Image Processing Pipeline
 
@@ -63,7 +76,7 @@ For an image with base name `abc123`:
 ## Performance Considerations
 
 - Face detection adds ~200-500ms processing time per image
-- Models are loaded once and cached in memory
+- Models are loaded once at startup and cached in memory
 - Face detection runs automatically but fails gracefully if no face is found
 - Only affects card and thumbnail generation - full-size images use originals
 
@@ -71,11 +84,7 @@ For an image with base name `abc123`:
 
 ### Models Not Loading
 
-Ensure face detection models are present:
-```bash
-cd apps/backend
-node scripts/download-face-models.js
-```
+Check server logs for TensorFlow.js model loading errors. Models are downloaded automatically from the TensorFlow.js CDN.
 
 ### No Face Detected
 
@@ -86,3 +95,15 @@ Common reasons:
 - Face not clearly visible (profile, obscured, etc.)
 
 The system will fallback to normal image processing when face detection fails.
+
+### Switching Models
+
+You can switch between models for different accuracy/speed tradeoffs:
+
+```typescript
+// For speed (default)
+faceService.updateConfig({ model: 'BlazeFace' });
+
+// For accuracy
+faceService.updateConfig({ model: 'MediaPipeFaceDetector' });
+```

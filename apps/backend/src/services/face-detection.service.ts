@@ -1,12 +1,9 @@
-import * as faceapi from 'face-api.js';
 import * as tf from '@tensorflow/tfjs';
+import '@tensorflow/tfjs-node'; // Use Node.js backend for TensorFlow
+import * as faceDetection from '@tensorflow-models/face-detection';
+import * as blazeface from '@tensorflow-models/blazeface';
 import { Canvas, Image, ImageData } from 'canvas';
-import fs from 'fs';
-import path from 'path';
 import sharp from 'sharp';
-
-// Monkey patch for face-api.js in Node.js environment
-(faceapi.env as any).monkeyPatch({ Canvas, Image, ImageData });
 
 export interface FaceDetectionResult {
   hasFace: boolean;
@@ -25,19 +22,19 @@ export interface AutoCropConfig {
   maxFaceSize: number;
   // Detection threshold (0-1, higher = more confident detections)
   detectionThreshold: number;
-  // Model to use for face detection ('tiny' or 'ssd')
-  model: 'tiny' | 'ssd';
+  // Model to use for face detection
+  model: 'BlazeFace' | 'MediaPipeFaceDetector';
 }
 
 export class FaceDetectionService {
   private static instance: FaceDetectionService;
+  private detector: faceDetection.FaceDetector | blazeface.BlazeFaceModel | null = null;
   private modelsLoaded = false;
-  private availableModels: Set<string> = new Set();
   private config: AutoCropConfig = {
     minFaceSize: 0.25,
     maxFaceSize: 0.5,
     detectionThreshold: 0.5,
-    model: 'tiny',
+    model: 'BlazeFace',
   };
 
   private constructor() {}
@@ -62,40 +59,29 @@ export class FaceDetectionService {
     if (this.modelsLoaded) return;
 
     try {
-      // Determine models path based on current working directory
-      const cwd = process.cwd();
-      const modelsPath = cwd.endsWith('apps/backend') 
-        ? path.join(cwd, 'face-models')
-        : path.join(cwd, 'apps', 'backend', 'face-models');
+      console.log(`Loading TensorFlow.js face detection model: ${this.config.model}`);
       
-      console.log(`Loading face detection models from: ${modelsPath}`);
-      console.log(`Models directory exists: ${fs.existsSync(modelsPath)}`);
-      if (fs.existsSync(modelsPath)) {
-        console.log(`Files in models directory: ${fs.readdirSync(modelsPath).join(', ')}`);
-      }
-      
-      // Load both TinyFaceDetector and SSD MobileNetV1 models
-      try {
-        await faceapi.nets.tinyFaceDetector.loadFromDisk(modelsPath);
-        this.availableModels.add('tiny');
-        console.log('TinyFaceDetector model loaded');
-      } catch (error) {
-        console.warn('TinyFaceDetector model not available:', error);
-      }
+      if (this.config.model === 'BlazeFace') {
+        // Use BlazeFace model (simpler and more stable)
+        this.detector = await blazeface.load();
+      } else {
+        // Use MediaPipe Face Detection (more advanced)
+        const modelConfig: faceDetection.MediaPipeFaceDetectorModelConfig = {
+          runtime: 'tfjs' as const,
+          modelType: 'short' as const, // 'short' for faster inference, 'full' for better accuracy
+          maxFaces: 1, // We only need to detect one face for cropping
+          detectorModelUrl: undefined, // Use default model
+          landmarkModelUrl: undefined, // Use default model
+        };
 
-      try {
-        await faceapi.nets.ssdMobilenetv1.loadFromDisk(modelsPath);
-        this.availableModels.add('ssd');
-        console.log('SSD MobileNetV1 model loaded');
-      } catch (error) {
-        console.warn('SSD MobileNetV1 model not available:', error);
-      }
-      if (this.availableModels.size === 0) {
-        throw new Error('No face detection models could be loaded');
+        this.detector = await faceDetection.createDetector(
+          faceDetection.SupportedModels.MediaPipeFaceDetector,
+          modelConfig
+        );
       }
       
       this.modelsLoaded = true;
-      console.log(`Face detection models loaded. Available models: ${Array.from(this.availableModels).join(', ')}`);
+      console.log(`Face detection model loaded successfully: ${this.config.model}`);
     } catch (error) {
       console.error('Error loading face detection models:', error);
       console.error('Error value:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
@@ -107,17 +93,12 @@ export class FaceDetectionService {
    * Detect faces in an image and return crop information
    */
   async detectFaces(imagePath: string): Promise<FaceDetectionResult> {
-    if (!this.modelsLoaded) {
+    if (!this.modelsLoaded || !this.detector) {
       throw new Error('Face detection models not loaded. Make sure FACEAPI_ENABLED=true and models are available.');
     }
 
-    // Check if the requested model is available
-    if (!this.availableModels.has(this.config.model)) {
-      throw new Error(`Requested face detection model '${this.config.model}' is not available. Available models: ${Array.from(this.availableModels).join(', ')}`);
-    }
-
     try {
-      // Load image using sharp to get metadata and convert to RGBA
+      // Load image using sharp to get metadata and convert to ImageData
       const image = sharp(imagePath);
       const metadata = await image.metadata();
       
@@ -125,7 +106,7 @@ export class FaceDetectionService {
         throw new Error('Could not read image dimensions');
       }
 
-      // Convert image to RGBA buffer for canvas
+      // Convert image to RGBA buffer for TensorFlow
       const { data, info } = await image
         .ensureAlpha()
         .raw()
@@ -142,53 +123,66 @@ export class FaceDetectionService {
       }
       ctx.putImageData(imageData, 0, 0);
       
-      // Detect faces using the configured model
-      let detections;
-      if (this.config.model === 'ssd' && this.availableModels.has('ssd')) {
-        detections = await faceapi
-          .detectAllFaces(canvas as any, new faceapi.SsdMobilenetv1Options({
-            minConfidence: this.config.detectionThreshold,
-          }));
-      } else if (this.config.model === 'tiny' && this.availableModels.has('tiny')) {
-        detections = await faceapi
-          .detectAllFaces(canvas as any, new faceapi.TinyFaceDetectorOptions({
-            inputSize: 416,
-            scoreThreshold: this.config.detectionThreshold,
-          }));
+      // Detect faces using the appropriate model
+      let predictions: any[];
+      
+      if (this.config.model === 'BlazeFace') {
+        // BlazeFace uses a different API
+        predictions = await (this.detector as blazeface.BlazeFaceModel).estimateFaces(canvas as any, false);
       } else {
-        // Fallback to any available model
-        if (this.availableModels.has('tiny')) {
-          console.log(`Requested model '${this.config.model}' not available, falling back to TinyFaceDetector`);
-          detections = await faceapi
-            .detectAllFaces(canvas as any, new faceapi.TinyFaceDetectorOptions({
-              inputSize: 416,
-              scoreThreshold: this.config.detectionThreshold,
-            }));
-        } else if (this.availableModels.has('ssd')) {
-          console.log(`Requested model '${this.config.model}' not available, falling back to SSD MobileNetV1`);
-          detections = await faceapi
-            .detectAllFaces(canvas as any, new faceapi.SsdMobilenetv1Options({
-              minConfidence: this.config.detectionThreshold,
-            }));
-        } else {
-          throw new Error('No face detection models available');
-        }
+        // MediaPipe Face Detection
+        predictions = await (this.detector as faceDetection.FaceDetector).estimateFaces(canvas as any);
       }
 
-      if (detections.length === 0) {
+      if (predictions.length === 0) {
         return { hasFace: false };
       }
 
-      // Get the largest face (most prominent)
-      const largestDetection = detections.reduce((prev, current) => {
-        const prevArea = prev.box.width * prev.box.height;
-        const currentArea = current.box.width * current.box.height;
-        return currentArea > prevArea ? current : prev;
-      });
+      // Get the face with highest confidence score
+      let bestFace;
+      let box;
+      let confidence;
 
-      const faceBox = largestDetection.box;
+      if (this.config.model === 'BlazeFace') {
+        // BlazeFace returns different format
+        bestFace = predictions.reduce((prev, current) => {
+          const prevScore = prev.probability ? prev.probability[0] : 0;
+          const currentScore = current.probability ? current.probability[0] : 0;
+          return currentScore > prevScore ? current : prev;
+        });
+        
+        confidence = bestFace.probability ? bestFace.probability[0] : 0;
+        
+        // BlazeFace returns topLeft and bottomRight
+        const topLeft = bestFace.topLeft;
+        const bottomRight = bestFace.bottomRight;
+        box = {
+          xMin: topLeft[0],
+          yMin: topLeft[1],
+          width: bottomRight[0] - topLeft[0],
+          height: bottomRight[1] - topLeft[1]
+        };
+      } else {
+        // MediaPipe format
+        bestFace = predictions.reduce((prev, current) => {
+          const prevScore = prev.score || 0;
+          const currentScore = current.score || 0;
+          return currentScore > prevScore ? current : prev;
+        });
+        
+        confidence = bestFace.score || 0;
+        box = bestFace.box;
+      }
+
+      // Check confidence threshold
+      if (confidence < this.config.detectionThreshold) {
+        console.log(`Face confidence ${confidence} below threshold ${this.config.detectionThreshold}`);
+        return { hasFace: false };
+      }
+
+      // Extract bounding box measurements
       const imageArea = metadata.width! * metadata.height!;
-      const faceArea = faceBox.width * faceBox.height;
+      const faceArea = box.width * box.height;
       const faceRatio = faceArea / imageArea;
 
       // Check if face is within acceptable size range
@@ -197,8 +191,8 @@ export class FaceDetectionService {
       }
 
       // Calculate 1:1 crop box centered on face
-      const faceCenterX = faceBox.x + faceBox.width / 2;
-      const faceCenterY = faceBox.y + faceBox.height / 2;
+      const faceCenterX = box.xMin + box.width / 2;
+      const faceCenterY = box.yMin + box.height / 2;
 
       // Size the crop box so face takes up 25-50% of the image
       const targetFaceRatio = Math.max(this.config.minFaceSize, Math.min(this.config.maxFaceSize, faceRatio));
@@ -268,6 +262,17 @@ export class FaceDetectionService {
    */
   updateConfig(config: Partial<AutoCropConfig>): void {
     this.config = { ...this.config, ...config };
+    
+    // If model changed, reload models
+    if (config.model && config.model !== this.config.model) {
+      this.modelsLoaded = false;
+      this.detector = null;
+      if (this.isEnabled()) {
+        this.loadModels().catch((error) => {
+          console.error('Failed to reload face detection models:', error);
+        });
+      }
+    }
   }
 
   /**
@@ -288,13 +293,13 @@ export class FaceDetectionService {
    * Check if the service is ready (models loaded)
    */
   isReady(): boolean {
-    return this.modelsLoaded;
+    return this.modelsLoaded && this.detector !== null;
   }
 
   /**
    * Get available models
    */
   getAvailableModels(): string[] {
-    return Array.from(this.availableModels);
+    return ['BlazeFace', 'MediaPipeFaceDetector'];
   }
 }
