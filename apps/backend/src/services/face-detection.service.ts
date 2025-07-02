@@ -25,8 +25,8 @@ export interface AutoCropConfig {
   maxFaceSize: number;
   // Detection threshold (0-1, higher = more confident detections)
   detectionThreshold: number;
-  // Model to use for face detection (only 'ssd' supported)
-  model: 'ssd';
+  // Model to use for face detection ('tiny' or 'ssd')
+  model: 'tiny' | 'ssd';
 }
 
 export class FaceDetectionService {
@@ -37,7 +37,7 @@ export class FaceDetectionService {
     minFaceSize: 0.25,
     maxFaceSize: 0.5,
     detectionThreshold: 0.5,
-    model: 'ssd',
+    model: 'tiny',
   };
 
   private constructor() {}
@@ -68,15 +68,37 @@ export class FaceDetectionService {
         ? path.join(cwd, 'face-models')
         : path.join(cwd, 'apps', 'backend', 'face-models');
       
-      // Load only SSD MobileNetV1 model
-      await faceapi.nets.ssdMobilenetv1.loadFromDisk(modelsPath);
-      this.availableModels.add('ssd');
-      console.log('SSD MobileNetV1 model loaded');
+      console.log(`Loading face detection models from: ${modelsPath}`);
+      console.log(`Models directory exists: ${fs.existsSync(modelsPath)}`);
+      if (fs.existsSync(modelsPath)) {
+        console.log(`Files in models directory: ${fs.readdirSync(modelsPath).join(', ')}`);
+      }
+      
+      // Load both TinyFaceDetector and SSD MobileNetV1 models
+      try {
+        await faceapi.nets.tinyFaceDetector.loadFromDisk(modelsPath);
+        this.availableModels.add('tiny');
+        console.log('TinyFaceDetector model loaded');
+      } catch (error) {
+        console.warn('TinyFaceDetector model not available:', error);
+      }
+
+      try {
+        await faceapi.nets.ssdMobilenetv1.loadFromDisk(modelsPath);
+        this.availableModels.add('ssd');
+        console.log('SSD MobileNetV1 model loaded');
+      } catch (error) {
+        console.warn('SSD MobileNetV1 model not available:', error);
+      }
+      if (this.availableModels.size === 0) {
+        throw new Error('No face detection models could be loaded');
+      }
       
       this.modelsLoaded = true;
       console.log(`Face detection models loaded. Available models: ${Array.from(this.availableModels).join(', ')}`);
     } catch (error) {
       console.error('Error loading face detection models:', error);
+      console.error('Error value:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
       throw new Error('Failed to load face detection models');
     }
   }
@@ -120,11 +142,38 @@ export class FaceDetectionService {
       }
       ctx.putImageData(imageData, 0, 0);
       
-      // Detect faces using SSD MobileNetV1 model
-      const detections = await faceapi
-        .detectAllFaces(canvas as any, new faceapi.SsdMobilenetv1Options({
-          minConfidence: this.config.detectionThreshold,
-        }));
+      // Detect faces using the configured model
+      let detections;
+      if (this.config.model === 'ssd' && this.availableModels.has('ssd')) {
+        detections = await faceapi
+          .detectAllFaces(canvas as any, new faceapi.SsdMobilenetv1Options({
+            minConfidence: this.config.detectionThreshold,
+          }));
+      } else if (this.config.model === 'tiny' && this.availableModels.has('tiny')) {
+        detections = await faceapi
+          .detectAllFaces(canvas as any, new faceapi.TinyFaceDetectorOptions({
+            inputSize: 416,
+            scoreThreshold: this.config.detectionThreshold,
+          }));
+      } else {
+        // Fallback to any available model
+        if (this.availableModels.has('tiny')) {
+          console.log(`Requested model '${this.config.model}' not available, falling back to TinyFaceDetector`);
+          detections = await faceapi
+            .detectAllFaces(canvas as any, new faceapi.TinyFaceDetectorOptions({
+              inputSize: 416,
+              scoreThreshold: this.config.detectionThreshold,
+            }));
+        } else if (this.availableModels.has('ssd')) {
+          console.log(`Requested model '${this.config.model}' not available, falling back to SSD MobileNetV1`);
+          detections = await faceapi
+            .detectAllFaces(canvas as any, new faceapi.SsdMobilenetv1Options({
+              minConfidence: this.config.detectionThreshold,
+            }));
+        } else {
+          throw new Error('No face detection models available');
+        }
+      }
 
       if (detections.length === 0) {
         return { hasFace: false };

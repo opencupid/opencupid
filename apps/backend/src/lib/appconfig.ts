@@ -43,6 +43,8 @@ export const configSchema = z.object({
   GOOGLE_APPLICATION_CREDENTIALS: z.string(),
 
   RATE_LIMIT_PROFILE_SCOPES: z.coerce.number().default(1),
+
+  FACEAPI_ENABLED: z.string().transform(val => val === 'true').default('false'),
 })
 
 if (process.env.NODE_ENV !== 'production') {
