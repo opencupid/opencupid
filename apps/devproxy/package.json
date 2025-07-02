@@ -7,7 +7,7 @@
     "gen-certs": "openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout certs/localhost-key.pem -out certs/localhost-cert.pem -subj \"/C=US/ST=Dev/L=Local/O=Dev/CN=localhost\""
   },
   "dependencies": {
-    "browser-sync": "^2.29.3",
+    "browser-sync": "^3.0.0",
     "dotenv": "^16.5.0",
     "http-proxy-middleware": "^3.0.5",
     "serve-static": "^1.15.0"
