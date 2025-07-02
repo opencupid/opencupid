@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { onMounted, ref, provide } from 'vue'
+import { useBootstrap } from '@/lib/bootstrap'
 
 import IconDate from '@/assets/icons/app/cupid.svg'
 import IconSocialize from '@/assets/icons/app/socialize.svg'
@@ -29,7 +30,6 @@ const {
   profilePreview,
   isDatingOnboarded,
   isOnboarded,
-  initialize,
   updateScopes,
   updateProfile,
 } = useMyProfileViewModel(props.editMode)
@@ -64,7 +64,7 @@ const handleCancelEdit = () => {
 }
 
 onMounted(async () => {
-  await initialize()
+  await useBootstrap().bootstrap()
   if (!isOnboarded.value) {
     router.push({ name: 'Onboarding' })
     return

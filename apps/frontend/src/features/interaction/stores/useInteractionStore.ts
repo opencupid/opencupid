@@ -144,10 +144,6 @@ export const useInteractionStore = defineStore('interaction', {
   },
 })
 
-bus.on('auth:login', async ({ token, userInfo }) => {
-  await useInteractionStore().initialize()
-})
-
 bus.on('auth:logout', () => {
   useInteractionStore().teardown()
 })

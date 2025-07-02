@@ -5,10 +5,6 @@ import type { WSMessage } from '@zod/websocket.dto'
 let socket: ReturnType<typeof useWebSocket> | null = null
 
 
-bus.on('auth:login', ({ token }) => {
-  connectWebSocket(token)
-})
-
 bus.on('auth:logout', () => {
   disconnectWebSocket()
 })

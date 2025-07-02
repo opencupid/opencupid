@@ -106,19 +106,12 @@ export const useImageStore = defineStore('image', {
       }
     },
 
-    initialize() {
+    teardown() {
       this.images = []
     }
   },
 })
 
-
-
-bus.on('auth:login', () => {
-  useImageStore().initialize()
-})
-
 bus.on('auth:logout', () => {
-  console.log('Clearing image store on logout')
-  useImageStore().initialize()
+  useImageStore().teardown()
 })

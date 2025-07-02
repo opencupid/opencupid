@@ -71,23 +71,13 @@ export function useMyProfileViewModel(isEditMode: boolean) {
     return res
   }
 
-  const initialize = async () => {
-    await profileStore.fetchOwnerProfile()
-    // console.log('Profile fetched:', profileStore.profile)
-    if (!profileStore.profile) {
-      // error.value = 'Something went wrong (owner profile)'
-      return
-    }
-    // Object.assign(formData, profileStore.profile)
-  }
-
   watch(
     [() => viewState.previewLanguage, () => profileStore.profile],
     () => {
       // Object.assign(formData, profileStore.profile)
       fetchPreview()
     },
-    {}
+    {immediate: true}
   )
 
   watch(
@@ -95,7 +85,7 @@ export function useMyProfileViewModel(isEditMode: boolean) {
     () => {
       Object.assign(formData, profileStore.profile)
     },
-    {}
+    {immediate: true}
   )
 
   // switch to dating scope when editable is turned on,
@@ -111,7 +101,7 @@ export function useMyProfileViewModel(isEditMode: boolean) {
 
 
   return {
-    error: profileStore.error,
+    error: computed(() => profileStore.error),
     isLoading,
     viewState,
     formData,
@@ -121,8 +111,6 @@ export function useMyProfileViewModel(isEditMode: boolean) {
     isOnboarded,
     updateScopes,
     updateProfile,
-    initialize,
-
   }
 
 }

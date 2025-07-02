@@ -1,6 +1,8 @@
 import { computed, ref, toRef, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
+import {useBootstrap} from '@/lib/bootstrap'
+
 import type { StoreError } from '@/store/helpers';
 import type { ProfileScope } from '@zod/profile/profile.dto';
 
@@ -21,14 +23,7 @@ export function useFindMatchViewModel() {
 
   const initialize = async (defaultScope?: ProfileScope) => {
 
-    const meRes = await ownerStore.fetchOwnerProfile()
-    if (!meRes.success) {
-      storeError.value = meRes
-      isInitialized.value = true
-      return
-    }
-    if (!ownerStore.profile)
-      throw new Error('Owner profile is not loaded')
+    await useBootstrap().bootstrap()
 
     await ownerStore.fetchDatingPrefs()
 

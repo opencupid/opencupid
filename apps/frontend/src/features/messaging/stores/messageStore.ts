@@ -19,7 +19,6 @@ import { storeError, type StoreError, type StoreResponse, storeSuccess } from '@
 
 
 type MessageStoreState = {
-  profileId: string | null,
   conversations: ConversationSummary[],
   messages: MessageDTO[],
   activeConversation: ConversationSummary | null,
@@ -31,7 +30,6 @@ type MessageStoreState = {
 
 export const useMessageStore = defineStore('message', {
   state: (): MessageStoreState => ({
-    profileId: null as string | null,
     conversations: [] as ConversationSummary[],
     messages: [] as MessageDTO[],
     activeConversation: null as ConversationSummary | null,
@@ -196,15 +194,13 @@ export const useMessageStore = defineStore('message', {
     },
 
 
-    async initialize(profileId: string) {
-      this.profileId = profileId
+    async initialize() {
       await this.fetchConversations()
       bus.on('ws:new_message', this.handleIncomingMessage)
     },
 
     teardown() {
       bus.off('ws:new_message', this.handleIncomingMessage)
-      this.profileId = null
       this.conversations = []
       this.messages = []
       this.activeConversation = null
@@ -215,10 +211,6 @@ export const useMessageStore = defineStore('message', {
     }
 
   },
-})
-
-bus.on('auth:login', async ({ token, userInfo }) => {
-  await useMessageStore().initialize(userInfo.profileId)
 })
 
 bus.on('auth:logout', () => {

@@ -49,15 +49,13 @@ export const useAuthStore = defineStore('auth', {
         const payload = JSON.parse(atob(token.split('.')[1])) as JwtPayload
         this.userId = payload.userId
         this.profileId = payload.profileId
-        // Notify messageStore
-        bus.emit('auth:login', { token: this.jwt, userInfo: payload })
       } catch (e) {
         console.warn('Failed to parse JWT payload:', e)
         this.userId = null
       }
     },
 
-    initializeFromStorage() {
+    initialize() {
       const token = localStorage.getItem('token')
       if (token) {
         this.setAuthState(token)
@@ -126,6 +124,7 @@ export const useAuthStore = defineStore('auth', {
           restart: 'otp'
         }
       }
+      bus.emit('auth:login', { token: this.jwt })
       return { success: true, status: '' }
     },
 
@@ -163,7 +162,7 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    async fetchUser(): Promise<UserStoreResponse<{user:SettingsUser}>> {
+    async fetchUser(): Promise<UserStoreResponse<{ user: SettingsUser }>> {
       try {
         const res = await api.get<UserMeResponse>('/users/me')
         const params = SettingsUserSchema.safeParse(res.data.user)

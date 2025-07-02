@@ -2,7 +2,6 @@ import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 
 import { useAuthStore } from '@/features/auth/stores/authStore'
-import { useLocalStore } from '@/store/localStore'
 
 import MessagingView from '@/features/messaging/views/Messaging.vue'
 import UserHome from '@/views/UserHome.vue'
@@ -104,13 +103,8 @@ const router = createRouter({
 
 // Register the navigation guard
 router.beforeEach(async (to, from, next) => {
-  // TODO refactor this. most of this logic should be lifted from here
-  const authStore = useAuthStore()
 
-  // Initialize auth state if not already done
-  if (!authStore.isInitialized) {
-    await authStore.initializeFromStorage()
-  }
+  const authStore = useAuthStore()
 
   if (to.meta.requiresAuth === false && authStore.isLoggedIn) {
     return next({ name: 'UserHome' })
@@ -123,23 +117,11 @@ router.beforeEach(async (to, from, next) => {
     // Otherwise, allow access
     next()
   }
-
-
 })
 
-// const toast = useToast()
 
 router.afterEach((to, from) => {
-  const localStore = useLocalStore()
-  // const flashMessage = localStore.getFlashMessage()
 
-  // if (flashMessage) {
-  // toast(flashMessage)
-  // }
-
-  // Set the page title based on the route name
-  // const title = to.name ? `${to.name} - My App` : 'My App';
-  // document.title = title;
 })
 
 export default router

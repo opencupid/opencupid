@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
+import { useBootstrap } from '@/lib/bootstrap'
+
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 import MatchesList from '../components/MatchesList.vue'
 import IconDate from '@/assets/icons/app/cupid.svg'
@@ -9,18 +11,11 @@ import ProfileChipListPlaceholder from '@/features/publicprofile/components/Prof
 import { useInteractionsViewModel } from '../composables/useInteractionsViewModel'
 import ReceivedLikesCount from '../components/ReceivedLikesCount.vue'
 
-const {
-  matches,
-  haveMatches,
-  haveReceivedLikes,
-  haveSentLikes,
-  receivedLikesCount,
-  isLoading,
-  initialize,
-} = useInteractionsViewModel()
+const { matches, haveMatches, haveReceivedLikes, haveSentLikes, receivedLikesCount, isLoading } =
+  useInteractionsViewModel()
 
 onMounted(async () => {
-  await initialize()
+  await useBootstrap().bootstrap()
 })
 </script>
 

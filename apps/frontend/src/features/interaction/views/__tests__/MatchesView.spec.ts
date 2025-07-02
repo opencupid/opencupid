@@ -20,7 +20,6 @@ const mockState = {
   haveSentLikes: ref(false),
   receivedLikesCount: ref(0),
   isLoading: ref(false),
-  initialize: vi.fn()
 }
 
 vi.mock('../../composables/useInteractionsViewModel', () => ({ useInteractionsViewModel: () => mockState }))
@@ -42,19 +41,10 @@ describe('Matches view', () => {
     mockState.haveSentLikes.value = false
     mockState.receivedLikesCount.value = 0
     mockState.isLoading.value = false
-    mockState.initialize.mockClear()
     push.mockClear()
   })
 
-  it('calls initialize on mount', () => {
-    mount(Matches, { 
-      global: { 
-        stubs: { BPlaceholderWrapper, BButton, BCol },
-        mocks: { $t: (msg: string) => msg, $router: { push } }
-      } 
-    })
-    expect(mockState.initialize).toHaveBeenCalledOnce()
-  })
+
 
   it('TODO needs fixing', () => {
     expect(true).toBe(true) // Placeholder test to ensure setup works

@@ -39,15 +39,8 @@ app.use(createBootstrap()) // bootstrap-vue-next
 import { useIcons } from './lib/icons'
 useIcons(app)
 
-import { useLocalStore } from './store/localStore'
-const localStore = useLocalStore()
-localStore.initialize()
-
 import { appUseI18n } from './lib/i18n'
 appUseI18n(app)
-
-import { useMessageStore } from './features/messaging/stores/messageStore'
-useMessageStore()
 
 // toasts
 import registerToast from './lib/toast'
@@ -59,6 +52,9 @@ import CircleFlags from "vue-circle-flags";
 import "vue-circle-flags/dist/vue-circle-flags.css";
 app.use(CircleFlags)
 
-import '@/lib/websocket' // Initialize WebSocket connection
+// import '@/lib/websocket' // Initialize WebSocket connection
+
+import { useBootstrap } from './lib/bootstrap'
+useBootstrap().bootstrap()
 
 app.mount('#app')

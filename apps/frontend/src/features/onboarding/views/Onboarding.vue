@@ -14,6 +14,7 @@ import OnboardWizard from '@/features/onboarding/components/OnboardWizard.vue'
 import { useI18nStore } from '@/store/i18nStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { useAppStore } from '@/features/app/stores/appStore'
+import { useBootstrap } from '@/lib/bootstrap'
 
 const { t } = useI18n()
 const profileStore = useOwnerProfileStore()
@@ -67,7 +68,8 @@ const handleWizardFinish = async () => {
 const appStore = useAppStore()
 
 onMounted(async () => {
-  await profileStore.fetchOwnerProfile()
+  await useBootstrap().bootstrap()
+
   if (profileStore.profile?.isOnboarded) {
     router.push({ name: 'MyProfile' })
     return
