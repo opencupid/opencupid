@@ -265,7 +265,7 @@ export class ImageService {
       select: { id: true },
     })
 
-    const validIds = new Set(valid.map(v => v.id))
+    const validIds = new Set(valid.map((v: any) => v.id))
     if (items.some(i => !validIds.has(i.id))) {
       throw new Error('Invalid image ID')
     }
@@ -280,6 +280,6 @@ export class ImageService {
     const updated = await prisma.$transaction(ops)
 
     // Return them sorted by position
-    return updated.sort((a, b) => a.position - b.position)
+    return updated.sort((a: any, b: any) => a.position - b.position)
   }
 }

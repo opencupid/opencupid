@@ -1,4 +1,5 @@
 import { FaceDetectionService } from '../src/services/face-detection.service'
+import { ImageService } from '../src/services/image.service'
 import path from 'path'
 import fs from 'fs'
 
@@ -7,28 +8,17 @@ async function testFaceDetection() {
   
   try {
     const faceService = FaceDetectionService.getInstance()
+    const imageService = ImageService.getInstance()
     
-    // Check if we have any test images
-    const testImageDir = path.join(__dirname, '../test-data/images/avatar')
+    // Use one of the sample images from the node_modules
+    const testImage = path.join(__dirname, 'node_modules/@fastify/static/test/static/shallow/sample.jpg')
     
-    if (!fs.existsSync(testImageDir)) {
-      console.log('No test images found, creating a simple test...')
+    if (!fs.existsSync(testImage)) {
+      console.log('Sample test image not found, skipping test')
       return
     }
     
-    const files = fs.readdirSync(testImageDir)
-    const imageFiles = files.filter(f => f.endsWith('.jpg') || f.endsWith('.jpeg'))
-    
-    if (imageFiles.length === 0) {
-      console.log('No test images found')
-      return
-    }
-    
-    console.log(`Found ${imageFiles.length} test images`)
-    
-    // Test with first image
-    const testImage = path.join(testImageDir, imageFiles[0])
-    console.log(`Testing with image: ${imageFiles[0]}`)
+    console.log(`Testing with sample image: ${testImage}`)
     
     const result = await faceService.detectFaces(testImage)
     console.log('Face detection result:', result)
@@ -49,7 +39,22 @@ async function testFaceDetection() {
         console.log(`Cropped image saved to: ${outputPath}`)
       }
     } else {
-      console.log('No face detected in test image')
+      console.log('No face detected in test image (expected - it may not contain a face)')
+    }
+    
+    // Test the ImageService integration
+    console.log('\nTesting ImageService integration...')
+    const outputDir = '/tmp/test-output'
+    fs.mkdirSync(outputDir, { recursive: true })
+    
+    const processed = await imageService.processImage(testImage, outputDir, 'test-sample')
+    console.log('Image processing result:', processed)
+    console.log('Generated variants:', Object.keys(processed.variants))
+    
+    if (processed.variants.face) {
+      console.log('✓ Face-cropped version generated!')
+    } else {
+      console.log('No face-cropped version (expected if no face detected)')
     }
     
   } catch (error) {
