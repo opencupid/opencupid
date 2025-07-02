@@ -6,8 +6,7 @@ import path from 'path';
 import sharp from 'sharp';
 
 // Monkey patch for face-api.js in Node.js environment
-const { Canvas: FaceCanvas, Image: FaceImage, ImageData: FaceImageData } = require('canvas');
-(faceapi.env as any).monkeyPatch({ Canvas: FaceCanvas, Image: FaceImage, ImageData: FaceImageData });
+(faceapi.env as any).monkeyPatch({ Canvas, Image, ImageData });
 
 export interface FaceDetectionResult {
   hasFace: boolean;
