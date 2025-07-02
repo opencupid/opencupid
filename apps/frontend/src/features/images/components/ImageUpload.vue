@@ -57,6 +57,7 @@ const handleUpload = async () => {
     console.error('Upload error:', res.message)
     error.value = res.message
     isLoading.value = false
+    showModal.value = true
     return
   }
   closeModal()

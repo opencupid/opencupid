@@ -8,7 +8,8 @@ vi.mock('@/assets/icons/files/avatar-upload.svg', () => ({ default: { template: 
 vi.mock('@/features/shared/ui/LoadingComponent.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('@/features/shared/ui/ErrorComponent.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('../components/UploadButton.vue', () => ({ default: { template: '<input />' } }))
-vi.mock('../stores/imageStore', () => ({ useImageStore: () => ({ uploadProfileImage: vi.fn().mockResolvedValue({ success: true }) }) }))
+const uploadMock = vi.fn().mockResolvedValue({ success: true })
+vi.mock('../stores/imageStore', () => ({ useImageStore: () => ({ uploadProfileImage: uploadMock }) }))
 
 import ImageUpload from '../components/ImageUpload.vue'
 
@@ -29,5 +30,15 @@ describe('ImageUpload', () => {
     window.FileReader = orig
     expect((wrapper.vm as any).preview).not.toBeNull()
     expect((wrapper.vm as any).showModal).toBe(true)
+  })
+
+  it('keeps modal open and shows error when upload fails', async () => {
+    uploadMock.mockResolvedValueOnce({ success: false, message: 'bad' })
+    const wrapper = mount(ImageUpload, { global: { stubs: { BModal: true, BButton: { template: '<button></button>' }, FormKit: true } } })
+    ;(wrapper.vm as any).selectedFile = new File(['a'], 'a.png', { type: 'image/png' })
+    await (wrapper.vm as any).handleUpload()
+    expect(uploadMock).toHaveBeenCalled()
+    expect((wrapper.vm as any).showModal).toBe(true)
+    expect((wrapper.vm as any).error).toBe('bad')
   })
 })
