@@ -14,10 +14,8 @@ import {
   UpdateProfileScopeSchemaPayload,
 } from '@zod/profile/profile.dto'
 import type {
-  GetDatingPreferenceseResponse,
   GetMyProfileResponse,
   GetPublicProfileResponse,
-  UpdateDatingPreferencesResponse,
   UpdateProfileResponse,
 } from '@zod/apiResponse.dto'
 import {
@@ -28,13 +26,11 @@ import {
   type StoreError
 } from '../../../store/helpers'
 import { type EditProfileForm, ProfileFormToPayloadTransform } from '@zod/profile/profile.form'
-import { type DatingPreferencesDTO, DatingPreferencesDTOSchema } from '@zod/match/datingPreference.dto'
 
 export type PublicProfileResponse = StoreResponse<PublicProfileWithContext> | StoreError
 
 interface ProfileStoreState {
   profile: OwnerProfile | null
-  datingPrefs: DatingPreferencesDTO | null,
   scopes: ProfileScope[],
   isLoading: boolean
   error: StoreError | null
@@ -43,7 +39,6 @@ interface ProfileStoreState {
 export const useOwnerProfileStore = defineStore('ownerProfile', {
   state: (): ProfileStoreState => ({
     profile: null as OwnerProfile | null,
-    datingPrefs: null,
     scopes: [],
     isLoading: false,
     error: null
@@ -135,36 +130,6 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
         const res = await api.patch<UpdateProfileResponse>('/profiles/me', this.profile)
         const updated = OwnerProfileSchema.parse(res.data.profile)
         this.profile = updated
-        return storeSuccess()
-      } catch (error: any) {
-        return storeError(error, 'Failed to update profile')
-      } finally {
-        this.isLoading = false // Reset loading state
-      }
-    },
-
-    async fetchDatingPrefs(): Promise<StoreVoidSuccess | StoreError> {
-      try {
-        this.isLoading = true // Set loading state
-        const res = await api.get<GetDatingPreferenceseResponse>('/profiles/datingprefs')
-        const fetched = DatingPreferencesDTOSchema.parse(res.data.prefs)
-        this.datingPrefs = fetched // Update local state
-        return storeSuccess()
-      } catch (error: any) {
-        this.datingPrefs = null // Reset profile on error
-        // console.log('Error fetching datingPrefs:', error)
-        return storeError(error, 'Failed to fetch datingPrefs')
-      } finally {
-        this.isLoading = false // Reset loading state
-      }
-    },
-
-    async persistDatingPrefs(): Promise<StoreVoidSuccess | StoreError> {
-      try {
-        this.isLoading = true // Set loading state
-        const res = await api.patch<UpdateDatingPreferencesResponse>('/profiles/datingprefs', this.datingPrefs)
-        const updated = DatingPreferencesDTOSchema.parse(res.data.prefs)
-        this.datingPrefs = updated
         return storeSuccess()
       } catch (error: any) {
         return storeError(error, 'Failed to update profile')
