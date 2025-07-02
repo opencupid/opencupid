@@ -6,7 +6,6 @@ import {
   type UpdateProfilePayload,
   OwnerScalarsSchema,
 } from '@zod/profile/profile.dto'
-import { DatingPreferencesDTOSchema, type DatingPreferencesDTO } from '@zod/match/datingPreference.dto'
 import { type DbProfileWithContext, type DbProfileWithImages } from '@zod/profile/profile.db'
 import { LocationSchema } from '@zod/dto/location.dto'
 
@@ -124,13 +123,4 @@ export function mapToLocalizedUpserts(
     locale,
     updates,
   }))
-}
-
-
-export function mapProfileToDatingPreferences(
-  profile: Profile,
-): DatingPreferencesDTO {
-
-  return DatingPreferencesDTOSchema.parse(profile)
-
 }

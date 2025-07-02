@@ -23,6 +23,7 @@ beforeEach(async () => {
   await prisma.$transaction([
     prisma.profileImage.deleteMany(),
     prisma.profileTag.deleteMany(),
+    prisma.datingPreferences.deleteMany(),
     prisma.profile.deleteMany(),
     prisma.user.deleteMany(),
   ])
@@ -124,11 +125,17 @@ describe('MatchQueryService.findMutualMatchesFor', () => {
         gender: 'male',
         isDatingActive: true,
         isActive: true,
+        hasKids: 'yes',
+      },
+    })
+
+    await prisma.datingPreferences.create({
+      data: {
+        profileId: 'p1',
         prefAgeMin: 25,
         prefAgeMax: 35,
         prefGender: ['female'],
         prefKids: ['no'],
-        hasKids: 'yes',
       },
     })
 
@@ -143,11 +150,17 @@ describe('MatchQueryService.findMutualMatchesFor', () => {
         gender: 'female',
         isDatingActive: true,
         isActive: true,
+        hasKids: 'no',
+      },
+    })
+
+    await prisma.datingPreferences.create({
+      data: {
+        profileId: 'p2',
         prefAgeMin: 28,
         prefAgeMax: 40,
         prefGender: ['male'],
         prefKids: ['yes', 'no'],
-        hasKids: 'no',
       },
     })
 
@@ -175,11 +188,17 @@ describe('MatchQueryService.findMutualMatchesFor', () => {
         gender: 'female',
         isDatingActive: true,
         isActive: true,
+        hasKids: null,
+      },
+    })
+
+    await prisma.datingPreferences.create({
+      data: {
+        profileId: 'p3',
         prefAgeMin: 20,
         prefAgeMax: 30,
         prefGender: ['male'],
         prefKids: ['yes', 'no'],
-        hasKids: null,
       },
     })
 
@@ -194,11 +213,17 @@ describe('MatchQueryService.findMutualMatchesFor', () => {
         gender: 'male',
         isDatingActive: true,
         isActive: true,
+        hasKids: 'no',
+      },
+    })
+
+    await prisma.datingPreferences.create({
+      data: {
+        profileId: 'p4',
         prefAgeMin: 20,
         prefAgeMax: 35,
         prefGender: ['female'],
         prefKids: ['no'],
-        hasKids: 'no',
       },
     })
 
