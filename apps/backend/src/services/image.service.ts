@@ -8,6 +8,7 @@ import { getImageRoot, makeImageLocation } from 'src/lib/media'
 import { generateContentHash } from '@/utils/hash'
 import { ProfileImagePosition } from '@zod/profile/profileimage.dto'
 import sharp from 'sharp'
+import { FaceDetectionService } from './face-detection.service'
 
 const sizes = [
   { name: 'thumb', width: 150, height: 150, fit: sharp.fit.cover }, // square crop
@@ -122,7 +123,33 @@ export class ImageService {
   async processImage(filePath: string, outputDir: string, baseName: string) {
     await fs.promises.mkdir(outputDir, { recursive: true })
 
-    const original = sharp(filePath).rotate()
+    let original = sharp(filePath).rotate()
+
+    // Try to apply face detection autocrop
+    try {
+      const faceDetectionService = FaceDetectionService.getInstance()
+      
+      if (faceDetectionService.isAvailable()) {
+        const faceResult = await faceDetectionService.detectFaces(filePath)
+        
+        if (faceResult.cropBox) {
+          console.log(`Applying face-based autocrop: ${JSON.stringify(faceResult.cropBox)}`)
+          original = original.extract({
+            left: faceResult.cropBox.x,
+            top: faceResult.cropBox.y,
+            width: faceResult.cropBox.width,
+            height: faceResult.cropBox.height
+          })
+        } else {
+          console.log('No faces detected, using original image')
+        }
+      } else {
+        console.log('Face detection not available, using original image')
+      }
+    } catch (error) {
+      console.warn('Face detection failed, proceeding without autocrop:', error.message)
+      // Continue with original image if face detection fails
+    }
 
     const metadata = await original.metadata()
     const format = metadata.format ?? 'jpeg'

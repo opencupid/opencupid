@@ -51,7 +51,11 @@
     "ts-node": "^10.9.2",
     "web-push": "^3.6.7",
     "ws": "^8.18.2",
-    "zod": "^3.24.4"
+    "zod": "^3.24.4",
+    "face-api.js": "^0.22.2",
+    "@tensorflow/tfjs-node": "^1.7.0",
+    "@tensorflow/tfjs-core": "^1.7.0",
+    "canvas": "^3.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.28.0",
