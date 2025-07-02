@@ -32,7 +32,7 @@ import type {
 import { GetProfileSummariesResponse } from '@zod/apiResponse.dto'
 
 import { ProfileService } from 'src/services/profile.service'
-import { MatchQueryService } from '@/services/matchQuery.service'
+import { ProfileFilterService } from '@/services/profileFilter.service'
 import { UserService } from 'src/services/user.service'
 
 // Route params for ID lookups
@@ -53,7 +53,7 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
   // instantiate services
   const profileService = ProfileService.getInstance()
   const userService = UserService.getInstance()
-  const matchQueryService = MatchQueryService.getInstance()
+  const profileFilterService = ProfileFilterService.getInstance()
 
   /**
    * Get the current user's profile
@@ -101,7 +101,7 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
 
       let includeDatingContext = false
       if(raw.isDatingActive && req.session.profile.isDatingActive) {
-        includeDatingContext = await matchQueryService.areProfilesMutuallyCompatible(myProfileId, raw.id)
+        includeDatingContext = await profileFilterService.areProfilesMutuallyCompatible(myProfileId, raw.id)
       }
 
       const profile = mapProfileWithContext(raw, includeDatingContext, locale)
