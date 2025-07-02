@@ -2,15 +2,19 @@ import { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify'
 import { Prisma } from '@prisma/client'
 import { z } from 'zod'
 import { MatchQueryService } from '@/services/matchQuery.service'
+import { ProfileFilterService } from '@/services/profileFilter.service'
 import { ProfileService } from '@/services/profile.service'
 import { sendError, sendForbiddenError } from '../helpers'
 import { mapProfileToPublic, mapProfileWithContext } from '../mappers/profile.mappers'
-import { GetProfilesResponse } from '@zod/apiResponse.dto'
+import { GetProfilesResponse, GetDatingPreferenceseResponse, UpdateDatingPreferencesResponse } from '@zod/apiResponse.dto'
+import { validateBody } from '@/utils/zodValidate'
+import { UpdateDatingPreferencesPayloadSchema } from '@zod/match/datingPreference.dto'
 
-const matcherRoutes: FastifyPluginAsync = async fastify => {
+const profileDiscoveryRoutes: FastifyPluginAsync = async fastify => {
 
   // instantiate services
   const matchQueryService = MatchQueryService.getInstance()
+  const profileFilterService = ProfileFilterService.getInstance()
 
 
   fastify.get('/social', { onRequest: [fastify.authenticate] }, async (req, reply) => {
@@ -49,7 +53,45 @@ const matcherRoutes: FastifyPluginAsync = async fastify => {
     }
   })
 
+  // Dating preferences routes
+  fastify.get('/preferences', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+
+    if (req.session.profile.isDatingActive === false) {
+      return sendForbiddenError(reply, 'Dating preferences are not active for this profile')
+    }
+
+    try {
+      const prefs = await profileFilterService.getDatingPreferences(req.session.profileId)
+      const datingPrefs = profileFilterService.mapToDatingPreferencesDTO(prefs)
+      const response: GetDatingPreferenceseResponse = { success: true, prefs: datingPrefs }
+      return reply.code(200).send(response)
+    } catch (err) {
+      fastify.log.error(err)
+      return sendError(reply, 500, 'Failed to load dating preferences')
+    }
+  })
+
+  fastify.patch('/preferences', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+
+    const data = await validateBody(UpdateDatingPreferencesPayloadSchema, req, reply)
+    if (!data) return
+
+    if (req.session.profile.isDatingActive === false) {
+      return sendForbiddenError(reply, 'Dating preferences are not active for this profile')
+    }
+
+    try {
+      const updated = await profileFilterService.updateDatingPreferences(req.session.profileId, data)
+      const prefs = profileFilterService.mapToDatingPreferencesDTO(updated)
+      const response: UpdateDatingPreferencesResponse = { success: true, prefs }
+      return reply.code(200).send(response)
+    } catch (err) {
+      fastify.log.error(err)
+      return sendError(reply, 500, 'Failed to update dating preferences')
+    }
+  })
+
 
 }
 
-export default matcherRoutes
+export default profileDiscoveryRoutes
