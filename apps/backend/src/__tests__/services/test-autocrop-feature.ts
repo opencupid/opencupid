@@ -1,5 +1,5 @@
-import { FaceDetectionService } from './src/services/face-detection.service'
-import { ImageService } from './src/services/image.service'
+import { FaceDetectionService } from '../../services/face-detection.service'
+import { ImageService } from '../../services/image.service'
 import path from 'path'
 import fs from 'fs'
 import sharp from 'sharp'
