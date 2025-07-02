@@ -15,6 +15,12 @@ export function createMockPrisma() {
       update: vi.fn(),
       create: vi.fn(),
     },
+    datingFilter: {
+      findUnique: vi.fn(),
+      upsert: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+    },
     profileImage: {
       findUnique: vi.fn(),
       findMany: vi.fn(),
