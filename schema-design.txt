@@ -44,7 +44,7 @@ Profile    DB schema (from Prisma)
   relationship RelationshipStatus?
   hasKids      HasKids?
 
-  tags          ProfileTag[]
+  tags          Tag[]
   profileImages ProfileImage[] @relation("ProfileImages")
 
   // Dating preferences
@@ -73,7 +73,7 @@ PublicProfile   API->client DTO
   publicName  String
   introSocial String  @default("")
   languages    String[]            @default([])
-  tags          ProfileTag[] -> transform to PublicTag
+  tags          Tag[] -> transform to PublicTag
   profileImages ProfileImage[] @relation("ProfileImages")
   conversations ConversationParticipant->Conversation
 
@@ -96,7 +96,7 @@ OwnerProfile  API->client DTO (owner view)
   publicName  String
   introSocial String  @default("")
   languages    String[]            @default([])
-  tags          ProfileTag[] -> transform to PublicTag
+  tags          Tag[] -> transform to PublicTag
   profileImages ProfileImage[] @relation("ProfileImages")
 
   Location (transform)

@@ -7,16 +7,13 @@ import {
   LocalizedProfileFieldSchema,
   ProfileImageSchema,
   ProfileSchema,
-  ProfileTagSchema
 } from "@zod/generated";
 import { TagWithTranslationsSchema } from "@zod/tag/tag.db";
 import { datingFields, ownerFields, socialFields } from "./profile.fields";
 
 export const DbProfileSchema = ProfileSchema.extend({
   localized: z.array(LocalizedProfileFieldSchema).default([]),
-  tags: z.array(ProfileTagSchema.extend({
-    tag: TagWithTranslationsSchema
-  })).default([]),
+  tags: z.array(TagWithTranslationsSchema).default([]),
 })
 export type DbProfile = z.infer<typeof DbProfileSchema>;
 

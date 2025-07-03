@@ -1,6 +1,6 @@
 // TODO: review usage; copied for both db and dto layers
 import { z } from 'zod'
-import { ProfileTagSchema, TagSchema } from '../generated'
+import { TagSchema } from '../generated'
 
 // Public tag fields
 const publicTagFields = {
