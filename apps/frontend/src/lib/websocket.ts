@@ -46,8 +46,8 @@ export function connectWebSocket(token: string): void {
 }
 
 export function disconnectWebSocket() {
-  if (socket?.ws.value) {
-    socket.ws.value.close()
+  if (socket) {
+    socket.close()
     socket = null
     console.log('[WS] Disconnected')
   }
