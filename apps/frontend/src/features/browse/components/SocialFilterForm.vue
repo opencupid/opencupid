@@ -11,9 +11,9 @@ const model = defineModel<SocialMatchFilterDTO>({
 </script>
 
 <template>
-  <div class="d-flex flex-column justtify-content-center h-100">
+  <div class="d-flex flex-column justify-content-center">
     <h4>I 'm looking for connections in...</h4>
-    <CountrySelector v-model="model.location.country"  v-if="model.location"/>
+    <CountrySelector v-model="model.location"  v-if="model.location"/>
 
     <div class="mt-3">
       <CitySelector v-model="model.location" :required="true"  v-if="model.location"/>

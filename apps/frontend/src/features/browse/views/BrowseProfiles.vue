@@ -225,6 +225,8 @@ const isDetailView = computed(() => !!selectedProfileId.value)
         :no-footer="false"
         :no-header="true"
         cancel-title="Nevermind"
+        cancel-variant="link-secondary"
+        ok-title="Search"
         initial-animation
         :body-scrolling="false"
         title="Add a photo"

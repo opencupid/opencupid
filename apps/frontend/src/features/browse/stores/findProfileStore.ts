@@ -32,8 +32,7 @@ type FindProfileStoreState = {
 
 export function mapSocialMatchFilterDTOToPayload(dto: SocialMatchFilterDTO): UpdateSocialMatchFilterPayload {
   return UpdateSocialMatchFilterPayloadSchema.parse({
-    ...unmapLocation(dto.location),
-    radius: dto.radius ?? 0,
+    ...dto,
     tags: dto.tags.map(tag => tag.id),
   })
 }
@@ -113,7 +112,6 @@ export const useFindProfileStore = defineStore('findProfile', {
       try {
         this.isLoading = true
         const res = await api.get<GetSocialMatchFilterResponse>('/find/social/filter')
-        console.log('Fetched dating preferences:', res.data)
         this.socialFilter = SocialMatchFilterDTOSchema.parse(res.data.filter)
         return storeSuccess()
       } catch (error: any) {
@@ -125,12 +123,11 @@ export const useFindProfileStore = defineStore('findProfile', {
     },
 
     async persistSocialFilter(): Promise<StoreVoidSuccess | StoreError> {
-        if (!this.socialFilter) {
-          return storeError(new Error('No social filter to persist'), 'No social filter set')
-        }
+      if (!this.socialFilter) {
+        return storeError(new Error('No social filter to persist'), 'No social filter set')
+      }
       try {
         this.isLoading = true
-        console.log('Persisting social filter:', this.socialFilter)
         const payload = mapSocialMatchFilterDTOToPayload(this.socialFilter)
         const res = await api.patch<GetSocialMatchFilterResponse>('/find/social/filter', payload)
         this.socialFilter = SocialMatchFilterDTOSchema.parse(res.data.filter)
@@ -150,7 +147,7 @@ export const useFindProfileStore = defineStore('findProfile', {
     },
 
     teardown() {
-      this.profileList = [] 
+      this.profileList = []
       this.socialSearch = null
       this.datingPrefs = null
       this.isLoading = false

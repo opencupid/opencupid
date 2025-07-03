@@ -1,24 +1,32 @@
 <script setup lang="ts">
 import { useCountries } from '@/features/shared/composables/useCountries'
+import { LocationDTO } from '@zod/dto/location.dto'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Multiselect from 'vue-multiselect'
 
 const { t } = useI18n()
 
-// Use defineModel instead of props/emits
-const model = defineModel<string>({
-  default: '',
+const model = defineModel<LocationDTO>({
+  default: () => ({
+    cityId: '',
+    cityName: '',
+    country: '',
+  }),
 })
+
+const props = defineProps<{
+  allowEmpty?: boolean
+}>()
 
 const { getCountryOptions } = useCountries()
 
 const countrySelectOptions = getCountryOptions()
 
 const country = computed({
-  get: () => countrySelectOptions.find(o => o.value === model.value),
+  get: () => countrySelectOptions.find(o => o.value === model.value.country),
   set: (opt: any) => {
-    model.value = opt?.value ?? ''
+    model.value.country = opt?.value ?? ''
   },
 })
 </script>
@@ -27,6 +35,7 @@ const country = computed({
   <div>
     <Multiselect
       v-model="country"
+      v-bind:allow-empty="props.allowEmpty"
       :options="countrySelectOptions"
       :close-on-select="true"
       :clear-on-select="false"

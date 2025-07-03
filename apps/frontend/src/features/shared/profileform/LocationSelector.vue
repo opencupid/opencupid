@@ -1,5 +1,4 @@
 <script setup lang="ts">
-
 import { type LocationDTO } from '@zod/dto/location.dto'
 
 import CountrySelector from './CountrySelector.vue'
@@ -13,14 +12,22 @@ const model = defineModel<LocationDTO>({
   }),
 })
 
+const props = withDefaults(
+  defineProps<{
+    allowEmpty?: boolean
+  }>(),
+  {
+    allowEmpty: false,
+  }
+)
 </script>
 
 <template>
   <div>
-    <CountrySelector v-model="model.country" />
+    <CountrySelector v-model="model" v-bind:allow-empty="props.allowEmpty" />
 
     <div class="mt-3">
-      <CitySelector v-model="model" :required="true" />
+      <CitySelector v-model="model" v-bind:allow-empty="props.allowEmpty" />
     </div>
   </div>
 </template>

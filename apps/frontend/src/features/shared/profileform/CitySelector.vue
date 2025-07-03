@@ -21,6 +21,9 @@ const model = defineModel<LocationDTO>({
   }),
 })
 
+const props = defineProps<{
+  allowEmpty?: boolean
+}>()
 // State
 const selectOptions = ref<PublicCity[]>([])
 const isLoading = ref(false)
@@ -126,6 +129,7 @@ async function addCity(name: string) {
   <div class="interests-multiselect">
     <Multiselect
       v-model="selectedCity"
+      v-bind:allow-empty="props.allowEmpty"
       ref="multiselectRef"
       :options="selectOptions"
       :searchable="true"
