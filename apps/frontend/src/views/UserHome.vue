@@ -4,7 +4,7 @@ import { onMounted, provide, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useBootstrap } from '@/lib/bootstrap'
 import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
-import { PublicProfile } from '@zod/profile/profile.dto'
+import { type PublicProfile } from '@zod/profile/profile.dto'
 
 import ReceivedLikesCount from '@/features/interaction/components/ReceivedLikesCount.vue'
 

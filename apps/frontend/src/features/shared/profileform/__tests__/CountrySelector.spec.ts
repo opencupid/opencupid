@@ -9,16 +9,33 @@ vi.mock('@/store/i18nStore', () => ({
   }),
 }))
 
-vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k:string)=>k }) }))
+vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 vi.mock('vue-multiselect', () => ({ default: { template: '<div />' } }))
 
 import CountrySelector from '../CountrySelector.vue'
 
+
 describe('CountrySelector', () => {
-  it('emits update when selection changes', async () => {
-    const wrapper = mount(CountrySelector, { props: { modelValue: '' } })
-    ;(wrapper.vm as any).country = { label: 'USA', value: 'US' }
+  it('emits update:modelValue when country selection changes', async () => {
+    const wrapper = mount(CountrySelector, {
+      props: {
+        modelValue: { country: '', cityId: '', cityName: '' },
+      }
+    })
+
+    // simulate selecting a country via Multiselect
+    const vm = wrapper.vm as any
+
+    // directly set the computed country
+    vm.country = { label: 'United States', value: 'US' }
+
     await wrapper.vm.$nextTick()
-    expect(wrapper.emitted('update:modelValue')![0]).toEqual(['US'])
+
+    const emitted = wrapper.emitted('update:modelValue')
+
+    expect(emitted).toBeTruthy()
+    expect(emitted![0]).toEqual([
+      { country: 'US', cityId: '', cityName: '' }
+    ])
   })
 })

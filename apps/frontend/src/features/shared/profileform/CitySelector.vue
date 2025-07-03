@@ -72,7 +72,7 @@ watch(
       }
       if (props.cityInputAutoFocus) {
         await nextTick()
-        multiselectRef.value?.activate()
+        if(multiselectRef.value?.activate) multiselectRef.value?.activate()
         showHint.value = true
       }
     }

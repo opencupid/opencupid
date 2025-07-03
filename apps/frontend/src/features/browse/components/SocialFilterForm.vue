@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
+import { ref } from 'vue'
 
 import TagSelectComponent from '@/features/shared/profileform/TagSelectComponent.vue'
 import CountrySelector from '@/features/shared/profileform/CountrySelector.vue'
@@ -8,7 +8,7 @@ import IconTarget2 from '@/assets/icons/interface/target-2.svg'
 
 import type { OwnerProfile } from '@zod/profile/profile.dto'
 import { type SocialMatchFilterDTO, SocialMatchFilterDTOSchema } from '@zod/match/filters.dto'
-import { LocationDTO } from '@zod/dto/location.dto'
+import { type LocationDTO } from '@zod/dto/location.dto'
 
 const model = defineModel<SocialMatchFilterDTO>({
   default: () => SocialMatchFilterDTOSchema.parse({}),

@@ -21,6 +21,7 @@ vi.mock('@/assets/icons/interface/message.svg', () => ({ default: { template: '<
 vi.mock('@/assets/icons/interface/search.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/heart.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/user.svg', () => ({ default: { template: '<div />' } }))
+vi.mock('@/assets/icons/interface/home.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/features/shared/ui/NotificationDot.vue', () => ({ default: { template: '<div><slot /></div>' } }))
 vi.mock('@/features/images/components/ProfileImage.vue', () => ({ default: { template: '<div />' } }))
 

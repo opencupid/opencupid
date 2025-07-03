@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useCountries } from '@/features/shared/composables/useCountries'
-import { LocationDTO } from '@zod/dto/location.dto'
+import { type LocationDTO } from '@zod/dto/location.dto'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Multiselect from 'vue-multiselect'
@@ -19,6 +19,9 @@ const props = defineProps<{
   allowEmpty?: boolean
 }>()
 
+const emit = defineEmits<{
+  (event: 'update:modelValue', value: LocationDTO): void
+}>()
 const { getCountryOptions } = useCountries()
 
 const countrySelectOptions = getCountryOptions()
@@ -26,7 +29,10 @@ const countrySelectOptions = getCountryOptions()
 const country = computed({
   get: () => countrySelectOptions.find(o => o.value === model.value.country),
   set: (opt: any) => {
-    model.value.country = opt?.value ?? ''
+    model.value = {
+      ...model.value,
+      country: opt?.value ?? ''
+    }
   },
 })
 </script>

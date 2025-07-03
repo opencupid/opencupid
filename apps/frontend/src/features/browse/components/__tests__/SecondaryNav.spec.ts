@@ -35,11 +35,11 @@ describe('SecondaryNav', () => {
     expect(toggler.exists()).toBe(true)
   })
 
-  it('emits edit:datingPrefs when button is clicked', async () => {
+  it('emits prefs:toggle when button is clicked', async () => {
     const wrapper = mount(SecondaryNav)
     const button = wrapper.find('button')
     await button.trigger('click')
-    expect(wrapper.emitted('edit:datingPrefs')).toBeTruthy()
+    expect(wrapper.emitted('prefs:toggle')).toBeTruthy()
   })
 
   it('disables button when prefsButtonDisabled is true', () => {
