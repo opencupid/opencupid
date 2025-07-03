@@ -5,7 +5,7 @@ import { ref } from 'vue'
 vi.mock('@/assets/icons/app/cupid.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/features/shared/ui/MiddleColumn.vue', () => ({ default: { template: '<div class="middle"><slot /></div>' } }))
 vi.mock('@/features/shared/ui/ViewTitle.vue', () => ({ default: { template: '<div />', props: ['icon', 'title', 'class'] } }))
-vi.mock('@/features/browse/components/PlaceholdersGrid.vue', () => ({ default: { template: '<div />' } }))
+vi.mock('@/features/findProfile/components/PlaceholdersGrid.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('../../components/ReceivedLikesCount.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('../../components/MatchesList.vue', () => ({ default: { template: '<div class="matches-list" />', props: ['edges'] } }))
 vi.mock('@/features/publicprofile/components/ProfileChipListPlaceholder.vue', () => ({ default: { template: '<div class="placeholder" />', props: ['howMany'] } }))

@@ -207,11 +207,7 @@ model Profile {
   tags          ProfileTag[]
   profileImages ProfileImage[] @relation("ProfileImages")
 
-  // Dating preferences
-  prefAgeMin Int?
-  prefAgeMax Int?
-  prefGender Gender[]  @default([])
-  prefKids   HasKids[] @default([])
+  // Dating filter moved to separate table
 
   // latitude         Float?
   // longitude        Float?
@@ -367,4 +363,16 @@ model PushSubscription {
 
   deviceInfo String? // optional: "Firefox", "Chrome", etc.
   lastSeen   DateTime?
+}
+
+model DatingFilter {
+  id         String    @id @default(cuid())
+  profileId  String    @unique
+  prefAgeMin Int?
+  prefAgeMax Int?
+  prefGender Gender[]  @default([])
+  prefKids   HasKids[] @default([])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

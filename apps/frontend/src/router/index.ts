@@ -7,7 +7,7 @@ import MessagingView from '@/features/messaging/views/Messaging.vue'
 import UserHome from '@/views/UserHome.vue'
 import Settings from '@/features/settings/views/Settings.vue'
 import MyProfile from '@/features/myprofile/views/MyProfile.vue'
-import BrowseProfiles from '@/features/browse/views/BrowseProfiles.vue'
+import BrowseProfiles from '@/features/findProfile/views/BrowseProfiles.vue'
 import OnboardingView from '@/features/onboarding/views/Onboarding.vue'
 import MatchesView from '@/features/interaction/views/Matches.vue'
 

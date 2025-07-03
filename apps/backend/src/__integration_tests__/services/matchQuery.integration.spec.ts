@@ -6,12 +6,12 @@ process.env.DATABASE_URL =
 process.env.NODE_ENV = 'test'
 
 import { prisma } from '../../lib/prisma'
-import { MatchQueryService } from '../../services/matchQuery.service'
+import { ProfileFilterService } from '../../services/profileFilter.service'
 
-let service: MatchQueryService
+let service: ProfileFilterService
 
 beforeAll(async () => {
-  service = MatchQueryService.getInstance()
+  service = ProfileFilterService.getInstance()
   await prisma.$connect()
 })
 
@@ -28,7 +28,7 @@ beforeEach(async () => {
   ])
 })
 
-describe('MatchQueryService.findSocialProfilesFor', () => {
+describe('ProfileFilterService.findSocialProfilesFor', () => {
   it('returns only active profiles excluding the current one', async () => {
     await prisma.user.createMany({
       data: [
@@ -87,7 +87,7 @@ describe('MatchQueryService.findSocialProfilesFor', () => {
   })
 })
 
-describe('MatchQueryService.findMutualMatchesFor', () => {
+describe('ProfileFilterService.findMutualMatchesFor', () => {
   it('returns empty array when profile is missing', async () => {
     const res = await service.findMutualMatchesFor('unknown')
     expect(res).toEqual([])

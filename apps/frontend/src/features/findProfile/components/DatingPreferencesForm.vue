@@ -3,15 +3,15 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import VueSlider from 'vue-3-slider-component'
 
-import { DatingPreferencesFormSchema } from '@zod/match/datingPreference.form'
+import { DatingFilterFormSchema } from '@zod/match/datingFilter.form'
 import GenderPreferenceSelector from './GenderPreferenceSelector.vue'
 import HasKidsPreferenceSelector from './HaskidsPreferenceSelector.vue'
-import { type DatingPreferencesDTO } from '@zod/match/datingPreference.dto'
+import { type DatingFilterDTO } from '@zod/match/datingFilter.dto'
 
 // https://github.com/s-sasaki-0529/vue-slider-component
 
-const model = defineModel<DatingPreferencesDTO>({
-  default: () => DatingPreferencesFormSchema.parse({}),
+const model = defineModel<DatingFilterDTO>({
+  default: () => DatingFilterFormSchema.parse({}),
 })
 
 

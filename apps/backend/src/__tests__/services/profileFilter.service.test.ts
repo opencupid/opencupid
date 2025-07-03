@@ -8,12 +8,12 @@ beforeEach(async () => {
   vi.resetModules()
   mockPrisma = createMockPrisma()
   vi.doMock('../../lib/prisma', () => ({ prisma: mockPrisma }))
-  const module = await import('../../services/matchQuery.service')
-  ;(module.MatchQueryService as any).instance = undefined
-  service = module.MatchQueryService.getInstance()
+  const module = await import('../../services/profileFilter.service')
+  ;(module.ProfileFilterService as any).instance = undefined
+  service = module.ProfileFilterService.getInstance()
 })
 
-describe('MatchQueryService.findSocialProfilesFor', () => {
+describe('ProfileFilterService.findSocialProfilesFor', () => {
   it('queries active profiles excluding given id', async () => {
     mockPrisma.profile.findMany.mockResolvedValue([{ id: 'p2' }])
     const res = await service.findSocialProfilesFor('p1')
@@ -22,7 +22,7 @@ describe('MatchQueryService.findSocialProfilesFor', () => {
   })
 })
 
-describe('MatchQueryService.findMutualMatchesFor', () => {
+describe('ProfileFilterService.findMutualMatchesFor', () => {
   it('returns empty array when profile is missing', async () => {
     mockPrisma.profile.findUnique.mockResolvedValue(null)
     const res = await service.findMutualMatchesFor('p1')
@@ -44,13 +44,16 @@ describe('MatchQueryService.findMutualMatchesFor', () => {
       birthday: new Date('1995-05-21'),
       gender: 'male',
       isDatingActive: true,
+      hasKids: 'yes' as const,
+    }
+    mockPrisma.profile.findUnique.mockResolvedValue(profile)
+    mockPrisma.datingFilter.findUnique.mockResolvedValue({
+      profileId: 'p1',
       prefAgeMin: 25,
       prefAgeMax: 35,
       prefGender: ['female'],
       prefKids: ['no'],
-      hasKids: 'yes' as const,
-    }
-    mockPrisma.profile.findUnique.mockResolvedValue(profile)
+    })
     mockPrisma.profile.findMany.mockResolvedValue([{ id: 'p2' }])
     const res = await service.findMutualMatchesFor('p1')
 
@@ -72,13 +75,16 @@ describe('MatchQueryService.findMutualMatchesFor', () => {
       birthday: new Date('1990-01-01'),
       gender: 'female',
       isDatingActive: true,
+      hasKids: null,
+    }
+    mockPrisma.profile.findUnique.mockResolvedValue(profile)
+    mockPrisma.datingFilter.findUnique.mockResolvedValue({
+      profileId: 'p1',
       prefAgeMin: 20,
       prefAgeMax: 30,
       prefGender: ['male'],
       prefKids: ['yes'],
-      hasKids: null,
-    }
-    mockPrisma.profile.findUnique.mockResolvedValue(profile)
+    })
     mockPrisma.profile.findMany.mockResolvedValue([{ id: 'p3' }])
     await service.findMutualMatchesFor('p1')
     const age = 34

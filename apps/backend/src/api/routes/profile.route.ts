@@ -21,7 +21,6 @@ import {
 import {
   mapDbProfileToOwnerProfile,
   mapProfileSummary,
-  mapProfileToDatingPreferences,
   mapProfileToPublic,
   mapProfileWithContext,
 } from '@/api/mappers/profile.mappers'
@@ -29,14 +28,12 @@ import type {
   GetMyProfileResponse,
   GetPublicProfileResponse,
   UpdateProfileResponse,
-  GetDatingPreferenceseResponse,
-  UpdateDatingPreferencesResponse,
 } from '@zod/apiResponse.dto'
-import { DatingPreferencesDTOSchema, UpdateDatingPreferencesPayloadSchema } from '@zod/match/datingPreference.dto'
+
 import { GetProfileSummariesResponse } from '@zod/apiResponse.dto'
 
 import { ProfileService } from 'src/services/profile.service'
-import { MatchQueryService } from '@/services/matchQuery.service'
+import { ProfileFilterService } from '@/services/profileFilter.service'
 import { UserService } from 'src/services/user.service'
 
 // Route params for ID lookups
@@ -57,7 +54,7 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
   // instantiate services
   const profileService = ProfileService.getInstance()
   const userService = UserService.getInstance()
-  const matchQueryService = MatchQueryService.getInstance()
+  const matchQueryService = ProfileFilterService.getInstance()
 
   /**
    * Get the current user's profile
@@ -228,41 +225,6 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
   }
 
 
-  fastify.get('/datingprefs', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-
-    if (req.session.profile.isDatingActive === false) {
-      return sendForbiddenError(reply, 'Dating preferences are not active for this profile')
-    }
-
-    try {
-      const fetched = await profileService.getProfileByUserId(req.user.userId)
-      if (!fetched) return sendError(reply, 404, 'Profile not found')
-
-      const datingPrefs = mapProfileToDatingPreferences(fetched)
-      const response: GetDatingPreferenceseResponse = { success: true, prefs: datingPrefs }
-      return reply.code(200).send(response)
-    } catch (err) {
-      fastify.log.error(err)
-      return sendError(reply, 500, 'Failed to load profile')
-    }
-  })
-
-  fastify.patch('/datingprefs', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-
-    const data = await validateBody(UpdateDatingPreferencesPayloadSchema, req, reply)
-    if (!data) return
-
-    try {
-      const updated = await profileService.updateProfileScalars(req.user.userId, data)
-      if (!updated) return sendError(reply, 404, 'Profile not found')
-      const prefs = DatingPreferencesDTOSchema.parse(updated)
-      const response: UpdateDatingPreferencesResponse = { success: true, prefs }
-      return reply.code(200).send(response)
-    } catch (err) {
-      fastify.log.error(err)
-      return sendError(reply, 500, 'Failed to update dating preferences')
-    }
-  })
 
 
   fastify.patch('/scopes', {

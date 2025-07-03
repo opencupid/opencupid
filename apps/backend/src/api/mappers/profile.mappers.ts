@@ -6,7 +6,8 @@ import {
   type UpdateProfilePayload,
   OwnerScalarsSchema,
 } from '@zod/profile/profile.dto'
-import { DatingPreferencesDTOSchema, type DatingPreferencesDTO } from '@zod/match/datingPreference.dto'
+import { DatingFilterDTOSchema, type DatingFilterDTO } from '@zod/match/datingFilter.dto'
+import { type DatingFilter } from '@zod/generated'
 import { type DbProfileWithContext, type DbProfileWithImages } from '@zod/profile/profile.db'
 import { LocationSchema } from '@zod/dto/location.dto'
 
@@ -127,10 +128,8 @@ export function mapToLocalizedUpserts(
 }
 
 
-export function mapProfileToDatingPreferences(
-  profile: Profile,
-): DatingPreferencesDTO {
-
-  return DatingPreferencesDTOSchema.parse(profile)
-
+export function mapDatingFilter(
+  filter: DatingFilter | null,
+): DatingFilterDTO {
+  return DatingFilterDTOSchema.parse(filter ?? {})
 }

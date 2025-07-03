@@ -1,16 +1,16 @@
 import { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify'
 import { Prisma } from '@prisma/client'
 import { z } from 'zod'
-import { MatchQueryService } from '@/services/matchQuery.service'
+import { ProfileFilterService } from '@/services/profileFilter.service'
 import { ProfileService } from '@/services/profile.service'
 import { sendError, sendForbiddenError } from '../helpers'
 import { mapProfileToPublic, mapProfileWithContext } from '../mappers/profile.mappers'
 import { GetProfilesResponse } from '@zod/apiResponse.dto'
 
-const matcherRoutes: FastifyPluginAsync = async fastify => {
+const findProfileRoutes: FastifyPluginAsync = async fastify => {
 
   // instantiate services
-  const matchQueryService = MatchQueryService.getInstance()
+  const matchQueryService = ProfileFilterService.getInstance()
 
 
   fastify.get('/social', { onRequest: [fastify.authenticate] }, async (req, reply) => {
@@ -50,6 +50,28 @@ const matcherRoutes: FastifyPluginAsync = async fastify => {
   })
 
 
+  fastify.get('/filter', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const profileId = req.session.profileId
+    try {
+      const prefs = await matchQueryService.getFilter(profileId)
+      return reply.code(200).send({ success: true, prefs })
+    } catch (err) {
+      fastify.log.error(err)
+      return sendError(reply, 500, 'Failed to load filters')
+    }
+  })
+
+  fastify.patch('/filter', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const data = req.body as any
+    try {
+      const prefs = await matchQueryService.upsertFilter(req.session.profileId, data)
+      return reply.code(200).send({ success: true, prefs })
+    } catch (err) {
+      fastify.log.error(err)
+      return sendError(reply, 500, 'Failed to update filters')
+    }
+  })
+
 }
 
-export default matcherRoutes
+export default findProfileRoutes
