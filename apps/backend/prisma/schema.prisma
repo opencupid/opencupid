@@ -102,18 +102,19 @@ model City {
 }
 
 model Tag {
-  id            String           @id @default(cuid())
-  slug          String           @unique
-  name          String           @unique
+  id            String              @id @default(cuid())
+  slug          String              @unique
+  name          String              @unique
+  isUserCreated Boolean             @default(false)
+  isApproved    Boolean             @default(false)
+  isHidden      Boolean             @default(false)
+  isDeleted     Boolean             @default(false)
+  createdBy     String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
   translations  TagTranslation[]
   profileTags   ProfileTag[]
-  isUserCreated Boolean          @default(false)
-  isApproved    Boolean          @default(false)
-  isHidden      Boolean          @default(false)
-  isDeleted     Boolean          @default(false)
-  createdBy     String?
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
+  filters       SocialMatchFilter[]
 }
 
 model TagTranslation {
@@ -351,6 +352,15 @@ model Message {
   senderId       String
   content        String
   createdAt      DateTime     @default(now())
+}
+
+model SocialMatchFilter {
+  id        String  @id @default(cuid())
+  profileId String  @unique
+  country   String?
+  cityId    String?
+  radius    Int?    @default(50) // in km
+  tags      Tag[]
 }
 
 model PushSubscription {

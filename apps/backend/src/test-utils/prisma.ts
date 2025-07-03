@@ -47,6 +47,11 @@ export function createMockPrisma() {
       deleteMany: vi.fn(),
       upsert: vi.fn(),
     },
+    socialMatchFilter: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      upsert: vi.fn(),
+    },
     conversationParticipant: {
       findFirst: vi.fn(),
       findMany: vi.fn(),

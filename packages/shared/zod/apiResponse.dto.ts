@@ -19,13 +19,17 @@ import type { SettingsUser, OtpSendReturn } from '@zod/user/user.dto'
 import type { PublicCity } from '@zod/dto/city.dto'
 import type { LocationDTO } from '@zod/dto/location.dto'
 import type { VersionDTO } from '@zod/dto/version.dto'
-import type { DatingPreferencesDTO } from '@zod/match/datingPreference.dto'
+import type { DatingPreferencesDTO, SocialMatchFilterDTO } from '@zod/match/filters.dto'
 import { AuthErrorCodes } from '@zod/user/auth.dto'
 import { type InteractionEdgePair, type InteractionEdge, type InteractionStats } from './interaction/interaction.dto'
 
 export type GetProfileSummariesResponse = ApiSuccess<{ profiles: ProfileSummary[] }>
-export type GetDatingPreferenceseResponse = ApiSuccess<{ prefs: DatingPreferencesDTO }>
+
+export type GetSocialMatchFilterResponse = ApiSuccess<{ filter: SocialMatchFilterDTO }>
+
+export type GetDatingPreferencesResponse = ApiSuccess<{ prefs: DatingPreferencesDTO }>
 export type UpdateDatingPreferencesResponse = ApiSuccess<{ prefs: DatingPreferencesDTO }>
+
 
 export type GetMyProfileResponse = ApiSuccess<{ profile: OwnerProfile }>
 export type GetPublicProfileResponse = ApiSuccess<{ profile: PublicProfileWithContext }>

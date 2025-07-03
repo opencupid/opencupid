@@ -3,22 +3,81 @@ import { prisma } from '../lib/prisma'
 import { type DbProfileWithImages } from '@zod/profile/profile.db';
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause';
 import { profileImageInclude, tagsInclude } from '@/db/includes/profileIncludes';
+import type { SocialMatchFilterDTO, SocialMatchFilterWithTags, UpdateSocialMatchFilterPayload } from '../../../../packages/shared/zod/match/filters.dto';
 
+const tagInclude = {
+  tags: {
+    include: {
+      translations: {
+        select: { name: true, locale: true },
+      },
+    }
+  },
+}
 
-export class MatchQueryService {
-  private static instance: MatchQueryService;
+export class ProfileMatchService {
+  private static instance: ProfileMatchService;
 
   private constructor() {
   }
 
-  public static getInstance(): MatchQueryService {
-    if (!MatchQueryService.instance) {
-      MatchQueryService.instance = new MatchQueryService();
+  public static getInstance(): ProfileMatchService {
+    if (!ProfileMatchService.instance) {
+      ProfileMatchService.instance = new ProfileMatchService();
     }
-    return MatchQueryService.instance;
+    return ProfileMatchService.instance;
+  }
+
+  async getSocialMatchFilter(profileId: string): Promise<SocialMatchFilterWithTags | null> {
+    return await prisma.socialMatchFilter.findUnique({
+      where: { profileId },
+      include: {
+        ...tagInclude,
+      }
+    })
+  }
+  async updateSocialMatchFilter(profileId: string, data: SocialMatchFilterDTO): Promise<SocialMatchFilterWithTags | null> {
+    const update = {
+      profileId: profileId,
+      country: data.location?.country ?? null,
+      cityId: data.location?.cityId ?? null,
+      radius: data.radius ?? null,
+      tags: {
+        connect: data.tags?.map(tag => ({ id: tag.id })) ?? [],
+      },
+    }
+    return await prisma.socialMatchFilter.upsert({
+      where: { profileId },
+      update: update,
+      create: update,
+      include: {
+        ...tagInclude,
+      }
+    })
   }
 
   async findSocialProfilesFor(profileId: string): Promise<DbProfileWithImages[]> {
+
+    const userPrefs = await this.getSocialMatchFilter(profileId)
+
+    if (!userPrefs) {
+      return [] // no preferences set, return empty array
+    }
+
+    const tagIds = userPrefs.tags?.map(tag => tag.id)
+
+    const filters = {
+      ...(userPrefs.country ? { country: userPrefs.country } : {}),
+      ...(userPrefs.cityId ? { cityId: userPrefs.cityId } : {}),
+      ...(userPrefs.tags?.length ? {
+        tags: {
+          some: {
+            id: { in: tagIds },
+          },
+        },
+      } : {}),
+    }
+
     return await prisma.profile.findMany({
       where: {
         isActive: true,
@@ -26,6 +85,7 @@ export class MatchQueryService {
         id: {
           not: profileId,
         },
+        ...filters, // apply user preferences
         ...blocklistWhereClause(profileId), // shared with blocklistWhereClause.ts
       },
       include: {
@@ -46,7 +106,7 @@ export class MatchQueryService {
     const myAge = calculateAge(profile.birthday)
     const prefAgeMax = profile.prefAgeMax ? profile.prefAgeMax + 1 : 99
     const prefAgeMin = profile.prefAgeMin ? profile.prefAgeMin - 1 : 18
-    
+
     const where = {
       id: { not: profile.id },
       ...blocklistWhereClause(profileId),
@@ -98,7 +158,6 @@ export class MatchQueryService {
     return aMatchesB && bMatchesA
   }
 
-  // Add methods for match query operations here
 }
 
 

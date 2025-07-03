@@ -6,12 +6,12 @@ process.env.DATABASE_URL =
 process.env.NODE_ENV = 'test'
 
 import { prisma } from '../../lib/prisma'
-import { MatchQueryService } from '../../services/matchQuery.service'
+import { ProfileMatchService } from '../../services/profileMatch.service'
 
-let service: MatchQueryService
+let service: ProfileMatchService
 
 beforeAll(async () => {
-  service = MatchQueryService.getInstance()
+  service = ProfileMatchService.getInstance()
   await prisma.$connect()
 })
 

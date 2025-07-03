@@ -1,6 +1,6 @@
 import z from "zod"
 
-import { ProfileTag, ProfileTagSchema } from "@zod/generated"
+import { ProfileTag, ProfileTagSchema, type Tag } from "@zod/generated"
 import { TagWithTranslations, TagWithTranslationsSchema } from "@zod/tag/tag.db"
 import { PublicTag } from "@zod/tag/tag.dto"
 

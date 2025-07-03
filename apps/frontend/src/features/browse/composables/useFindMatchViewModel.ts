@@ -1,7 +1,7 @@
 import { computed, ref, toRef, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
-import {useBootstrap} from '@/lib/bootstrap'
+import { useBootstrap } from '@/lib/bootstrap'
 
 import type { StoreError } from '@/store/helpers';
 import type { ProfileScope } from '@zod/profile/profile.dto';
@@ -23,24 +23,21 @@ export function useFindMatchViewModel() {
 
   const initialize = async (defaultScope?: ProfileScope) => {
 
+    // ensure ownerProfile is initialized
     await useBootstrap().bootstrap()
 
-    await ownerStore.fetchDatingPrefs()
+    await findProfileStore.fetchDatingPrefs()
 
     currentScope.value = defaultScope ? defaultScope :
       ownerStore.scopes.length > 0 ? ownerStore.scopes[0] : null
-    
+
     isInitialized.value = true
   }
 
   const fetchResults = async () => {
     switch (currentScope.value) {
       case 'social': {
-        const res = await findProfileStore.findSocial()
-        if (!res.success) {
-          storeError.value = res
-          return
-        }
+        await findProfileStore.findSocial()
         break
       }
       case 'dating': {
@@ -79,7 +76,7 @@ export function useFindMatchViewModel() {
 
   const haveAccess = computed(() => {
     if (!viewerProfile.value) return false // Ensure viewerProfile is loaded
-    switch(currentScope.value) {
+    switch (currentScope.value) {
       case 'social':
         return viewerProfile.value.isSocialActive
       case 'dating':
@@ -104,8 +101,19 @@ export function useFindMatchViewModel() {
     isInitialized.value = false
   }
 
+  const updateSocialFilter = async () => {
+    const res = await findProfileStore.persistSocialFilter()
+    if (!res.success) {
+      storeError.value = res
+      return
+    }
+    // Reset the error if successful
+    storeError.value = null
+    fetchResults() // Refresh results after updating prefs
+  }
+
   const updateDatingPrefs = async () => {
-    const res = await ownerStore.persistDatingPrefs()
+    const res = await findProfileStore.persistDatingPrefs()
     if (!res.success) {
       storeError.value = res
       return
@@ -127,8 +135,10 @@ export function useFindMatchViewModel() {
     availableScopes: computed(() => ownerStore.scopes),
     currentScope,
     selectedProfileId,
-    datingPrefs: toRef(ownerStore, 'datingPrefs'),
+    datingPrefs: toRef(findProfileStore, 'datingPrefs'),
+    socialFilter: toRef(findProfileStore, 'socialFilter'),
     updateDatingPrefs,
+    updateSocialFilter,
     profileList: computed(() => findProfileStore.profileList),
     isInitialized: computed(() => isInitialized.value),
   }

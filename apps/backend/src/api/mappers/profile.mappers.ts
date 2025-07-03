@@ -6,16 +6,16 @@ import {
   type UpdateProfilePayload,
   OwnerScalarsSchema,
 } from '@zod/profile/profile.dto'
-import { DatingPreferencesDTOSchema, type DatingPreferencesDTO } from '@zod/match/datingPreference.dto'
+import { DatingPreferencesDTOSchema, SocialMatchFilterDTOSchema, type DatingPreferencesDTO, type SocialMatchFilterDTO, type SocialMatchFilterWithTags } from '@zod/match/filters.dto'
 import { type DbProfileWithContext, type DbProfileWithImages } from '@zod/profile/profile.db'
-import { LocationSchema } from '@zod/dto/location.dto'
+import { LocationSchema, type LocationDTO } from '@zod/dto/location.dto'
 
 import {
   type OwnerProfileImage,
   type PublicProfileImage,
 } from '@zod/profile/profileimage.dto'
-import { mapProfileTagsTranslated } from './tag.mappers'
-import { Profile, ProfileImage } from '@zod/generated'
+import { DbTagToPublicTagTransform, mapProfileTagsTranslated } from './tag.mappers'
+import { Profile, ProfileImage, type SocialMatchFilter } from '@zod/generated'
 import { toOwnerProfileImage, toPublicProfileImage } from './image.mappers'
 import { mapInteractionContext } from './interaction.mappers'
 
@@ -127,10 +127,3 @@ export function mapToLocalizedUpserts(
 }
 
 
-export function mapProfileToDatingPreferences(
-  profile: Profile,
-): DatingPreferencesDTO {
-
-  return DatingPreferencesDTOSchema.parse(profile)
-
-}

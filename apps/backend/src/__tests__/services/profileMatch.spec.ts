@@ -8,19 +8,11 @@ beforeEach(async () => {
   vi.resetModules()
   mockPrisma = createMockPrisma()
   vi.doMock('../../lib/prisma', () => ({ prisma: mockPrisma }))
-  const module = await import('../../services/matchQuery.service')
-  ;(module.MatchQueryService as any).instance = undefined
-  service = module.MatchQueryService.getInstance()
+  const module = await import('../../services/profileMatch.service')
+  ;(module.ProfileMatchService as any).instance = undefined
+  service = module.ProfileMatchService.getInstance()
 })
 
-describe('MatchQueryService.findSocialProfilesFor', () => {
-  it('queries active profiles excluding given id', async () => {
-    mockPrisma.profile.findMany.mockResolvedValue([{ id: 'p2' }])
-    const res = await service.findSocialProfilesFor('p1')
-  
-    expect(res[0].id).toBe('p2')
-  })
-})
 
 describe('MatchQueryService.findMutualMatchesFor', () => {
   it('returns empty array when profile is missing', async () => {
