@@ -3,7 +3,7 @@ import z from "zod";
 
 export const LocationSchema = z.object({
   country: z.string(),
-  cityId: z.string().cuid().nullable(), // TODO !!remove nullable when DB records are updated
+  cityId: z.string(),
   cityName: z.string(),
 })
 
