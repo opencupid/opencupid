@@ -134,17 +134,6 @@ export function useFindMatchViewModel() {
     isInitialized.value = false
   }
 
-  const updateSocialFilter = async () => {
-    const res = await findProfileStore.persistSocialFilter()
-    if (!res.success) {
-      storeError.value = res
-      return
-    }
-    // Reset the error if successful
-    storeError.value = null
-    fetchResults() // Refresh results after updating prefs
-  }
-
   const updatePrefs = async () => {
     let res
     switch (currentScope.value) {
@@ -180,7 +169,6 @@ export function useFindMatchViewModel() {
     datingPrefs: toRef(findProfileStore, 'datingPrefs'),
     socialFilter: toRef(findProfileStore, 'socialFilter'),
     updatePrefs,
-    updateSocialFilter,
     profileList: computed(() => findProfileStore.profileList),
     isInitialized: computed(() => isInitialized.value),
   }
