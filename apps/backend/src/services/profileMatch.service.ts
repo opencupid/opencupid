@@ -86,7 +86,7 @@ export class ProfileMatchService {
       ...(userPrefs.tags?.length ? {
         tags: {
           some: {
-            id: { in: tagIds },
+            tagId: { in: tagIds },
           },
         },
       } : {}),
@@ -99,8 +99,8 @@ export class ProfileMatchService {
         id: {
           not: profileId,
         },
-        ...filters, // apply user preferences
-        ...blocklistWhereClause(profileId), // shared with blocklistWhereClause.ts
+        ...filters, 
+        ...blocklistWhereClause(profileId), 
       },
       include: {
         ...tagsInclude(),

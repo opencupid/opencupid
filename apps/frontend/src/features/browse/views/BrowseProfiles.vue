@@ -236,7 +236,11 @@ const isDetailView = computed(() => !!selectedProfileId.value)
           v-model="datingPrefs"
           v-if="currentScope === 'dating' && datingPrefs"
         />
-        <SocialFilterForm v-model="socialFilter" v-if="currentScope === 'social' && socialFilter" />
+        <SocialFilterForm
+          v-model="socialFilter"
+          :viewerProfile="viewerProfile"
+          v-if="currentScope === 'social' && socialFilter"
+        />
       </BModal>
     </div>
   </main>

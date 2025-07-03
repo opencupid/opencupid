@@ -9,6 +9,8 @@ import type { LocationDTO } from '@zod/dto/location.dto'
 import { toInitialCaps } from '@/lib/utils'
 import { type MultiselectComponent } from '@/types/multiselect'
 
+const { t } = useI18n()
+
 // Store
 const cityStore = useCitiesStore()
 
@@ -21,16 +23,22 @@ const model = defineModel<LocationDTO>({
   }),
 })
 
-const props = defineProps<{
-  allowEmpty?: boolean
-}>()
+const props = withDefaults(
+  defineProps<{
+    allowEmpty?: boolean
+    cityInputAutoFocus?: boolean // focus city input on country change
+  }>(),
+  {
+    allowEmpty: false,
+    cityInputAutoFocus: true,
+  }
+)
+
 // State
 const selectOptions = ref<PublicCity[]>([])
 const isLoading = ref(false)
-
+const showHint = ref(false)
 const multiselectRef = ref<MultiselectComponent>()
-
-const { t } = useI18n()
 
 // Computed selected city
 const selectedCity = computed<PublicCity>({
@@ -54,7 +62,7 @@ const selectedCity = computed<PublicCity>({
 // Watch for country change and reset city
 watch(
   () => model.value.country,
-  (newVal, oldVal) => {
+  async (newVal, oldVal) => {
     if (newVal && newVal !== oldVal) {
       selectOptions.value = []
       selectedCity.value = {
@@ -62,9 +70,11 @@ watch(
         name: '',
         country: newVal,
       }
-      nextTick(() => {
-        // multiselectRef.value?.activate()
-      })
+      if (props.cityInputAutoFocus) {
+        await nextTick()
+        multiselectRef.value?.activate()
+        showHint.value = true
+      }
     }
   }
 )
@@ -147,24 +157,21 @@ async function addCity(name: string) {
       track-by="id"
       @search-change="asyncFind"
       @tag="addCity"
+      @open="showHint = true"
+      @close="showHint = false"
       :placeholder="t('profiles.forms.city_search_placeholder')"
       :tag-placeholder="t('profiles.forms.city_add_placeholder')"
-    />
-    <div class="mt-2 form-text text-muted text-center">
+    >
+    </Multiselect>
+    <div class="mt-1 form-text text-muted hint" :class="{ 'opacity-0': !showHint }">
       <small>{{ t('profiles.forms.city_start_typing') }}</small>
     </div>
   </div>
 </template>
 
-<style lang="scss">
-.interests-multiselect {
-  .multiselect__city {
-    background-color: var(--bs-warning);
-    color: var(--bs-body-bg);
-
-    i:after {
-      color: var(--bs-text-secondary);
-    }
-  }
+<style lang="scss" scoped>
+.hint {
+  transition: opacity 0.3s ease-in-out;
+  opacity: 0.5;
 }
 </style>
