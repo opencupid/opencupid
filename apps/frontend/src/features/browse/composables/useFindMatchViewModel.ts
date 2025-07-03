@@ -40,6 +40,8 @@ export function useFindMatchViewModel() {
   const selectedProfileId = ref<string | null>(null)
   const isInitialized = ref(false)
 
+  const savedScope = ref(localStorage.getItem('currentScope') as ProfileScope | null)
+
   const initialize = async (defaultScope?: ProfileScope) => {
 
     // ensure ownerProfile is initialized
@@ -61,8 +63,10 @@ export function useFindMatchViewModel() {
       await findProfileStore.fetchDatingPrefs(datingPrefsDefaults(ownerProfile))
     }
 
-    currentScope.value = defaultScope ? defaultScope :
-      ownerStore.scopes.length > 0 ? ownerStore.scopes[0] : null
+    currentScope.value =
+      defaultScope
+      ?? savedScope.value
+      ?? (ownerStore.scopes.length > 0 ? ownerStore.scopes[0] : null)
 
     isInitialized.value = true
   }
@@ -86,6 +90,7 @@ export function useFindMatchViewModel() {
 
   watch(() => currentScope.value, (newScope) => {
     if (!newScope) return // No scope selected
+    localStorage.setItem('currentScope', newScope) // save last selected scope
     fetchResults()
     router.replace({
       name: 'BrowseProfilesScope',

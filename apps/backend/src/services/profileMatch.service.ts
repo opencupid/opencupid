@@ -1,10 +1,11 @@
 import { prisma } from '../lib/prisma'
+import type { Prisma } from '@prisma/client';
 
 import { type DbProfileWithImages } from '@zod/profile/profile.db';
+import type { SocialMatchFilterWithTags, UpdateSocialMatchFilterPayload } from '@zod/match/filters.dto';
+
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause';
 import { profileImageInclude, tagsInclude } from '@/db/includes/profileIncludes';
-import type { SocialMatchFilterDTO, SocialMatchFilterWithTags, UpdateSocialMatchFilterPayload } from '../../../../packages/shared/zod/match/filters.dto';
-import { mapSocialMatchFilterToDTO } from '../api/mappers/profileMatch.mappers';
 
 const tagInclude = {
   tags: {
@@ -14,6 +15,17 @@ const tagInclude = {
       },
     }
   },
+}
+
+export type OrderBy = Prisma.Enumerable<Prisma.ProfileOrderByWithRelationInput> | Prisma.ProfileOrderByWithRelationInput
+
+const defaultOrderBy: OrderBy = {
+  updatedAt: 'desc',
+}
+
+const statusFlags = {
+  isActive: true,
+  isOnboarded: true,
 }
 
 export class ProfileMatchService {
@@ -37,6 +49,7 @@ export class ProfileMatchService {
       }
     })
   }
+
   async updateSocialMatchFilter(profileId: string, data: UpdateSocialMatchFilterPayload): Promise<SocialMatchFilterWithTags | null> {
     const tagIds = (data.tags ?? []).map(id => ({ id }))
     const update = {
@@ -70,7 +83,7 @@ export class ProfileMatchService {
     })
   }
 
-  async findSocialProfilesFor(profileId: string): Promise<DbProfileWithImages[]> {
+  async findSocialProfilesFor(profileId: string, orderBy: OrderBy = defaultOrderBy, take: number = 20): Promise<DbProfileWithImages[]> {
 
     const userPrefs = await this.getSocialMatchFilter(profileId)
 
@@ -94,22 +107,57 @@ export class ProfileMatchService {
 
     return await prisma.profile.findMany({
       where: {
-        isActive: true,
+        ...statusFlags,
         isSocialActive: true,
         id: {
           not: profileId,
         },
-        ...filters, 
-        ...blocklistWhereClause(profileId), 
+        ...filters,
+        ...blocklistWhereClause(profileId),
       },
       include: {
         ...tagsInclude(),
         ...profileImageInclude(),
       },
+      take: take,
+      orderBy: orderBy,
     })
   }
 
-  async findMutualMatchesFor(profileId: string): Promise<DbProfileWithImages[]> {
+
+  async findLocalProfiles(profileId: string, orderBy: OrderBy = defaultOrderBy, take: number = 20): Promise<DbProfileWithImages[]> {
+
+    const userPrefs = await this.getSocialMatchFilter(profileId)
+
+    if (!userPrefs) {
+      return [] // no preferences set, return empty array
+    }
+
+    const filters = {
+      ...(userPrefs.country ? { country: userPrefs.country } : {}),
+    }
+
+    return await prisma.profile.findMany({
+      where: {
+        ...statusFlags,
+        isSocialActive: true,
+        id: {
+          not: profileId,
+        },
+        ...filters,
+        ...blocklistWhereClause(profileId),
+      },
+      include: {
+        ...tagsInclude(),
+        ...profileImageInclude(),
+      },
+      take: take,
+      orderBy: orderBy,
+    })
+  }
+
+
+  async findMutualMatchesFor(profileId: string, orderBy: OrderBy = defaultOrderBy, take: number = 20): Promise<DbProfileWithImages[]> {
     const profile = await prisma.profile.findUnique({
       where: { id: profileId },
     })
@@ -122,9 +170,12 @@ export class ProfileMatchService {
     const prefAgeMin = profile.prefAgeMin ? profile.prefAgeMin - 1 : 18
 
     const where = {
-      id: { not: profile.id },
-      ...blocklistWhereClause(profileId),
+      ...statusFlags,
       isDatingActive: true,
+      id: {
+        not: profile.id
+      },
+      ...blocklistWhereClause(profileId),
       birthday: {
         gte: subtractYears(new Date(), prefAgeMax), // oldest acceptable
         lte: subtractYears(new Date(), prefAgeMin), // youngest acceptable
@@ -140,9 +191,11 @@ export class ProfileMatchService {
     return prisma.profile.findMany({
       where: where,
       include: {
-        ...tagsInclude(),  // shared with profile.service.ts - where to keep this?
+        ...tagsInclude(),
         ...profileImageInclude(),
-      }
+      },
+      take: take,
+      orderBy: orderBy,
     })
   }
 

@@ -1,6 +1,7 @@
-import { defineStore } from 'pinia'
+import { defineStore, type Store } from 'pinia'
 import { api } from '@/lib/api'
 import type {
+  ProfileScope,
   PublicProfile,
 } from '@zod/profile/profile.dto'
 import {
@@ -16,11 +17,13 @@ import {
   storeError,
   type StoreVoidSuccess,
   type StoreResponse,
-  type StoreError
+  type StoreError,
+  type StoreSuccess
 } from '@/store/helpers'
 import { bus } from '@/lib/bus'
 import { DatingPreferencesDTOSchema, SocialMatchFilterDTOSchema, UpdateSocialMatchFilterPayloadSchema, type DatingPreferencesDTO, type SocialMatchFilterDTO, type UpdateSocialMatchFilterPayload } from '@zod/match/filters.dto'
 import { unmapLocation } from '@zod/dto/location.dto'
+import { initialize } from '../../shared/composables/useCountries'
 
 type FindProfileStoreState = {
   datingPrefs: DatingPreferencesDTO | null,
@@ -29,6 +32,8 @@ type FindProfileStoreState = {
   socialSearch: SocialMatchFilterDTO | null; // Current social search query
   isLoading: boolean; // Loading state
 }
+
+type StoreProfileListResponse = StoreSuccess<{ result: PublicProfile[] }> | StoreError
 
 export function mapSocialMatchFilterDTOToPayload(dto: SocialMatchFilterDTO): UpdateSocialMatchFilterPayload {
   return UpdateSocialMatchFilterPayloadSchema.parse({
@@ -78,6 +83,16 @@ export const useFindProfileStore = defineStore('findProfile', {
       }
     },
 
+
+    async fetchNewSocial(): Promise<StoreProfileListResponse> {
+      try {
+        const res = await api.get<GetProfilesResponse>('/find/social/new')
+        const fetched = PublicProfileArraySchema.parse(res.data.profiles)
+        return storeSuccess({ result: fetched })
+      } catch (error: any) {
+        return storeError(error, 'Failed to fetch profiles')
+      }
+    },
 
     async fetchDatingPrefs(defaults?: DatingPreferencesDTO): Promise<StoreVoidSuccess | StoreError> {
       try {

@@ -1,12 +1,14 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { useAuthStore } from '../features/auth/stores/authStore'
-import { useOwnerProfileStore } from '../features/myprofile/stores/ownerProfileStore'
-import { useMessageStore } from '../features/messaging/stores/messageStore'
-import { useInteractionStore } from '../features/interaction/stores/useInteractionStore'
-import { useLocalStore } from '../store/localStore'
-import { connectWebSocket } from './websocket'
 import { bus } from './bus'
+import { connectWebSocket } from './websocket'
+
+import { useAuthStore } from '../features/auth/stores/authStore'
+import { useFindProfileStore } from '../features/browse/stores/findProfileStore'
+import { useInteractionStore } from '../features/interaction/stores/useInteractionStore'
+import { useMessageStore } from '../features/messaging/stores/messageStore'
+import { useOwnerProfileStore } from '../features/myprofile/stores/ownerProfileStore'
+import { useLocalStore } from '../store/localStore'
 
 export const useBootstrap = defineStore('bootstrap', () => {
 

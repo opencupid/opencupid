@@ -7,6 +7,7 @@ import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
 import IconMessage from '@/assets/icons/interface/message.svg'
 import IconSearch from '@/assets/icons/interface/search.svg'
 import IconHeart from '@/assets/icons/interface/heart.svg'
+import IconHome from '@/assets/icons/interface/home.svg'
 import IconUser from '@/assets/icons/interface/user.svg'
 import IconLogout from '@/assets/icons/interface/logout.svg'
 
@@ -38,8 +39,13 @@ function handleLogoutClick() {
 </script>
 
 <template>
-  <BNavbar variant="secondary" fixed="top" class="" v-if="shouldShowNavbar" data-testid="navbar">
+  <BNavbar variant="secondary" fixed="top" class=""  data-testid="navbar">
     <BNavbarNav class="d-flex justify-content-between w-100">
+      <BNavItem to="/" active-class="active">
+        <IconHome class="svg-icon-lg" />
+        <span class="d-none d-sm-inline label">{{ $t('nav.home') }}</span>
+      </BNavItem>
+
       <BNavItem to="/browse" active-class="active">
         <IconSearch class="svg-icon-lg" />
         <span class="d-none d-sm-inline label">{{ $t('nav.browse') }}</span>

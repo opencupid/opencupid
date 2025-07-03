@@ -1,11 +1,13 @@
-import { FastifyPluginAsync } from 'fastify'
-import { ProfileMatchService } from '@/services/profileMatch.service'
+import { FastifyPluginAsync, type FastifyReply, type FastifyRequest } from 'fastify'
+
 import { sendError, sendForbiddenError } from '../helpers'
-import { mapProfileToPublic } from '../mappers/profile.mappers'
+
+import { ProfileMatchService, type OrderBy } from '@/services/profileMatch.service'
 import { GetProfilesResponse, type GetDatingPreferencesResponse, type GetSocialMatchFilterResponse, type UpdateDatingPreferencesResponse } from '@zod/apiResponse.dto'
-import { UpdateDatingPreferencesPayloadSchema, DatingPreferencesDTOSchema, UpdateSocialMatchFilterPayloadSchema } from '../../../../../packages/shared/zod/match/filters.dto'
-import { validateBody } from '../../utils/zodValidate'
+import { DatingPreferencesDTOSchema, UpdateDatingPreferencesPayloadSchema, UpdateSocialMatchFilterPayloadSchema } from '../../../../../packages/shared/zod/match/filters.dto'
 import { ProfileService } from '../../services/profile.service'
+import { validateBody } from '../../utils/zodValidate'
+import { mapProfileToPublic } from '../mappers/profile.mappers'
 import { mapProfileToDatingPreferencesDTO, mapSocialMatchFilterToDTO } from '../mappers/profileMatch.mappers'
 
 const findProfileRoutes: FastifyPluginAsync = async fastify => {
@@ -15,37 +17,31 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
   const profileService = ProfileService.getInstance()
 
 
-  fastify.get('/social', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+  fastify.get('/social', { onRequest: [fastify.authenticate] }, (req, reply) =>
+    getSocialProfiles(req, reply, [{ updatedAt: 'desc' }])
+  )
 
-    if (!req.session.hasActiveProfile || !req.session.profile.isSocialActive) return sendForbiddenError(reply)
-    const myProfileId = req.session.profileId
-    const locale = req.session.lang
+  fastify.get('/dating', { onRequest: [fastify.authenticate] }, (req, reply) =>
+    getDatingProfiles(req, reply, [{ updatedAt: 'desc' }])
+  )
 
-    try {
-      const profiles = await profileMatchService.findSocialProfilesFor(myProfileId)
-      const mappedProfiles = profiles.map(p => mapProfileToPublic(p, false /* includeDatingContext */, locale))
-      const response: GetProfilesResponse = { success: true, profiles: mappedProfiles }
-      return reply.code(200).send(response)
-    } catch (err) {
-      fastify.log.error(err)
-      return sendError(reply, 500, 'Failed to fetch profiles')
+  fastify.get('/social/new', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    if (!req.session.hasActiveProfile || !req.session.profile.isSocialActive) {
+      return sendForbiddenError(reply)
     }
-  })
 
-
-  fastify.get('/dating', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-
-    if (!req.session.hasActiveProfile || !req.session.profile.isDatingActive) return sendForbiddenError(reply)
     const myProfileId = req.session.profileId
     const locale = req.session.lang
 
     try {
-      const profiles = await profileMatchService.findMutualMatchesFor(myProfileId)
-      const mappedProfiles = profiles.map(p => mapProfileToPublic(p, true /* includeDatingContext*/, locale))
+      const profiles = await profileMatchService.findLocalProfiles(myProfileId, [{ createdAt: 'desc' }], 10)
+      const mappedProfiles = profiles.map(p =>
+        mapProfileToPublic(p, false /* includeDatingContext */, locale)
+      )
       const response: GetProfilesResponse = { success: true, profiles: mappedProfiles }
       return reply.code(200).send(response)
     } catch (err) {
-      fastify.log.error(err)
+      req.log.error(err)
       return sendError(reply, 500, 'Failed to fetch profiles')
     }
   })
@@ -124,8 +120,61 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
     }
   })
 
+  const getDatingProfiles = async (
+    req: FastifyRequest,
+    reply: FastifyReply,
+    orderBy: OrderBy,
+    take: number = 10
+  ) => {
+    if (!req.session.hasActiveProfile || !req.session.profile.isDatingActive) {
+      return sendForbiddenError(reply)
+    }
 
+    const myProfileId = req.session.profileId
+    const locale = req.session.lang
+
+    try {
+      const profiles = await profileMatchService.findMutualMatchesFor(myProfileId, orderBy, take)
+      const mappedProfiles = profiles.map(p =>
+        mapProfileToPublic(p, true /* includeDatingContext */, locale)
+      )
+      const response: GetProfilesResponse = { success: true, profiles: mappedProfiles }
+      return reply.code(200).send(response)
+    } catch (err) {
+      req.log.error(err)
+      return sendError(reply, 500, 'Failed to fetch profiles')
+    }
+  }
+
+
+  const getSocialProfiles = async (
+    req: FastifyRequest,
+    reply: FastifyReply,
+    orderBy: OrderBy,
+    take: number = 10
+  ) => {
+    if (!req.session.hasActiveProfile || !req.session.profile.isSocialActive) {
+      return sendForbiddenError(reply)
+    }
+
+    const myProfileId = req.session.profileId
+    const locale = req.session.lang
+
+    try {
+      const profiles = await profileMatchService.findSocialProfilesFor(myProfileId, orderBy, take)
+      const mappedProfiles = profiles.map(p =>
+        mapProfileToPublic(p, false /* includeDatingContext */, locale)
+      )
+      const response: GetProfilesResponse = { success: true, profiles: mappedProfiles }
+      return reply.code(200).send(response)
+    } catch (err) {
+      req.log.error(err)
+      return sendError(reply, 500, 'Failed to fetch profiles')
+    }
+  }
 
 }
+
+
 
 export default findProfileRoutes
