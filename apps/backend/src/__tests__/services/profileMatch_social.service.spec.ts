@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
 import { tagsInclude } from '@/db/includes/profileIncludes'
 import { profileImageInclude } from '@/db/includes/profileIncludes'
@@ -9,11 +9,12 @@ import { createMockPrisma } from '../../test-utils/prisma'
 let service: any
 let mockPrisma: any
 
-vi.mock('../../lib/prisma', () => ({ prisma: mockPrisma }))
+// vi.mock('../../lib/prisma', () => ({ prisma: mockPrisma }))
 
 beforeEach(async () => {
   vi.resetModules()
   mockPrisma = createMockPrisma()
+  vi.doMock('../../lib/prisma', () => ({ prisma: mockPrisma }))
   const module = await import('../../services/profileMatch.service')
     ; (module.ProfileMatchService as any).instance = undefined
   service = module.ProfileMatchService.getInstance()
