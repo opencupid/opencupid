@@ -6,7 +6,7 @@ import { type ProfileScope } from '@zod/profile/profile.dto'
 const currentScope = defineModel<ProfileScope | null>()
 
 defineEmits<{
-  (event: 'edit:datingPrefs'):void,
+  (event: 'prefs:toggle'):void,
 }>()
 
 defineProps<{
@@ -29,7 +29,7 @@ defineProps<{
         variant="secondary"
         pill
         class="ms-2"
-        @click="$emit('edit:datingPrefs')"
+        @click="$emit('prefs:toggle')"
         :disabled="prefsButtonDisabled"
       >
         <IconSetting class="svg-icon" />

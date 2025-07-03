@@ -14,10 +14,8 @@ import {
   UpdateProfileScopeSchemaPayload,
 } from '@zod/profile/profile.dto'
 import type {
-  GetDatingPreferencesResponse,
   GetMyProfileResponse,
   GetPublicProfileResponse,
-  UpdateDatingPreferencesResponse,
   UpdateProfileResponse,
 } from '@zod/apiResponse.dto'
 import {
@@ -28,7 +26,6 @@ import {
   type StoreError
 } from '../../../store/helpers'
 import { type EditProfileForm, ProfileFormToPayloadTransform } from '@zod/profile/profile.form'
-import { type DatingPreferencesDTO, DatingPreferencesDTOSchema } from '@zod/match/filters.dto'
 
 export type PublicProfileResponse = StoreResponse<PublicProfileWithContext> | StoreError
 

@@ -4,6 +4,7 @@ import { type DbProfileWithImages } from '@zod/profile/profile.db';
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause';
 import { profileImageInclude, tagsInclude } from '@/db/includes/profileIncludes';
 import type { SocialMatchFilterDTO, SocialMatchFilterWithTags, UpdateSocialMatchFilterPayload } from '../../../../packages/shared/zod/match/filters.dto';
+import { mapSocialMatchFilterToDTO } from '../api/mappers/profileMatch.mappers';
 
 const tagInclude = {
   tags: {
@@ -36,20 +37,33 @@ export class ProfileMatchService {
       }
     })
   }
-  async updateSocialMatchFilter(profileId: string, data: SocialMatchFilterDTO): Promise<SocialMatchFilterWithTags | null> {
+  async updateSocialMatchFilter(profileId: string, data: UpdateSocialMatchFilterPayload): Promise<SocialMatchFilterWithTags | null> {
+    const tagIds = (data.tags ?? []).map(id => ({ id }))
     const update = {
-      profileId: profileId,
-      country: data.location?.country ?? null,
-      cityId: data.location?.cityId ?? null,
-      radius: data.radius ?? null,
+      profileId,
+      country: data.location?.country ?? '',
+      cityId: data.location?.cityId ?? '',
+      radius: data.radius ?? 0,
       tags: {
-        connect: data.tags?.map(tag => ({ id: tag.id })) ?? [],
+        set: tagIds, // ✅ safe for update
       },
     }
+
+    const create = {
+      profileId,
+      country: data.location?.country ?? '',
+      cityId: data.location?.cityId ?? '',
+      radius: data.radius ?? 0,
+      tags: {
+        connect: tagIds, // ✅ required for create
+      },
+    }
+
+
     return await prisma.socialMatchFilter.upsert({
       where: { profileId },
-      update: update,
-      create: update,
+      update,
+      create,
       include: {
         ...tagInclude,
       }

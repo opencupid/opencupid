@@ -41,6 +41,7 @@ declare module 'vue' {
     BRow: typeof import('bootstrap-vue-next/components/BContainer')['BRow']
     BSpinner: typeof import('bootstrap-vue-next/components/BSpinner')['BSpinner']
     BTooltip: typeof import('bootstrap-vue-next/components/BTooltip')['BTooltip']
+    ImageCarousel: typeof import('./src/components/profiles/public/ImageCarousel.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
   }

@@ -9,8 +9,6 @@ import { createMockPrisma } from '../../test-utils/prisma'
 let service: any
 let mockPrisma: any
 
-// vi.mock('../../lib/prisma', () => ({ prisma: mockPrisma }))
-
 beforeEach(async () => {
   vi.resetModules()
   mockPrisma = createMockPrisma()

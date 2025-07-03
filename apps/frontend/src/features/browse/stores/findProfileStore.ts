@@ -19,7 +19,8 @@ import {
   type StoreError
 } from '@/store/helpers'
 import { bus } from '@/lib/bus'
-import { DatingPreferencesDTOSchema, SocialMatchFilterDTOSchema, type DatingPreferencesDTO, type SocialMatchFilterDTO } from '@zod/match/filters.dto'
+import { DatingPreferencesDTOSchema, SocialMatchFilterDTOSchema, UpdateSocialMatchFilterPayloadSchema, type DatingPreferencesDTO, type SocialMatchFilterDTO, type UpdateSocialMatchFilterPayload } from '@zod/match/filters.dto'
+import { unmapLocation } from '@zod/dto/location.dto'
 
 type FindProfileStoreState = {
   datingPrefs: DatingPreferencesDTO | null,
@@ -29,86 +30,94 @@ type FindProfileStoreState = {
   isLoading: boolean; // Loading state
 }
 
+export function mapSocialMatchFilterDTOToPayload(dto: SocialMatchFilterDTO): UpdateSocialMatchFilterPayload {
+  return UpdateSocialMatchFilterPayloadSchema.parse({
+    ...unmapLocation(dto.location),
+    radius: dto.radius ?? 0,
+    tags: dto.tags.map(tag => tag.id),
+  })
+}
+
 export const useFindProfileStore = defineStore('findProfile', {
   state: (): FindProfileStoreState => ({
-    datingPrefs: null, // Dating preferences, initially null
-    socialFilter: null, // Social match filter preferences, initially null
-    profileList: [] as PublicProfile[], // List of public profiles
+    datingPrefs: null,
+    socialFilter: null,
+    profileList: [] as PublicProfile[],
     socialSearch: null as SocialMatchFilterDTO | null, // Current social search query
-    isLoading: false, // Loading state
+    isLoading: false,
   }),
 
   actions: {
 
     async findSocial(): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
       try {
-        this.isLoading = true // Set loading state
-        const res = await api.get<GetProfilesResponse>('/discover/social')
+        this.isLoading = true
+        const res = await api.get<GetProfilesResponse>('/find/social')
         const fetched = PublicProfileArraySchema.parse(res.data.profiles)
-        this.profileList = fetched // Update local state
+        this.profileList = fetched
         return storeSuccess()
       } catch (error: any) {
-        this.profileList = [] // Reset profile list on error
+        this.profileList = []
         return storeError(error, 'Failed to fetch profiles')
       } finally {
-        this.isLoading = false // Reset loading state
+        this.isLoading = false
       }
     },
 
     async findDating(): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
       try {
-        this.isLoading = true // Set loading state
-        const res = await api.get<GetProfilesResponse>('/discover/dating')
+        this.isLoading = true
+        const res = await api.get<GetProfilesResponse>('/find/dating')
         const fetched = PublicProfileArraySchema.parse(res.data.profiles)
-        this.profileList = fetched // Update local state
+        this.profileList = fetched
         return storeSuccess()
       } catch (error: any) {
-        this.profileList = [] // Reset profile list on error
+        this.profileList = []
         return storeError(error, 'Failed to fetch profiles')
       } finally {
-        this.isLoading = false // Reset loading state
+        this.isLoading = false
       }
     },
 
 
-    async fetchDatingPrefs(): Promise<StoreVoidSuccess | StoreError> {
+    async fetchDatingPrefs(defaults?: DatingPreferencesDTO): Promise<StoreVoidSuccess | StoreError> {
       try {
-        this.isLoading = true // Set loading state
-        const res = await api.get<GetDatingPreferencesResponse>('/dating/filter')
+        this.isLoading = true
+        const res = await api.get<GetDatingPreferencesResponse>('/find/dating/filter')
         const fetched = DatingPreferencesDTOSchema.parse(res.data.prefs)
-        this.datingPrefs = fetched // Update local state
+        this.datingPrefs = fetched
         return storeSuccess()
       } catch (error: any) {
-        this.datingPrefs = null // Reset profile on error
-        // console.log('Error fetching datingPrefs:', error)
+        this.datingPrefs = defaults ?? null
         return storeError(error, 'Failed to fetch datingPrefs')
       } finally {
-        this.isLoading = false // Reset loading state
+        this.isLoading = false
       }
     },
 
     async persistDatingPrefs(): Promise<StoreVoidSuccess | StoreError> {
       try {
-        this.isLoading = true // Set loading state
-        const res = await api.patch<GetDatingPreferencesResponse>('/dating/filter', this.datingPrefs)
+        this.isLoading = true
+        const res = await api.patch<GetDatingPreferencesResponse>('/find/dating/filter', this.datingPrefs)
         const updated = DatingPreferencesDTOSchema.parse(res.data.prefs)
         this.datingPrefs = updated
         return storeSuccess()
       } catch (error: any) {
         return storeError(error, 'Failed to update profile')
       } finally {
-        this.isLoading = false // Reset loading state
+        this.isLoading = false
       }
     },
 
-    async fetchSocialFilter(): Promise<StoreVoidSuccess | StoreError> {
+    async fetchSocialFilter(defaults?: SocialMatchFilterDTO): Promise<StoreVoidSuccess | StoreError> {
       try {
         this.isLoading = true
-        const res = await api.get<GetSocialMatchFilterResponse>('/social/filter')
+        const res = await api.get<GetSocialMatchFilterResponse>('/find/social/filter')
+        console.log('Fetched dating preferences:', res.data)
         this.socialFilter = SocialMatchFilterDTOSchema.parse(res.data.filter)
         return storeSuccess()
       } catch (error: any) {
-        this.socialFilter = null
+        this.socialFilter = defaults ?? null
         return storeError(error, 'Failed to fetch socialFilter')
       } finally {
         this.isLoading = false
@@ -116,9 +125,14 @@ export const useFindProfileStore = defineStore('findProfile', {
     },
 
     async persistSocialFilter(): Promise<StoreVoidSuccess | StoreError> {
+        if (!this.socialFilter) {
+          return storeError(new Error('No social filter to persist'), 'No social filter set')
+        }
       try {
         this.isLoading = true
-        const res = await api.patch<GetSocialMatchFilterResponse>('/social/filter', this.socialFilter)
+        console.log('Persisting social filter:', this.socialFilter)
+        const payload = mapSocialMatchFilterDTOToPayload(this.socialFilter)
+        const res = await api.patch<GetSocialMatchFilterResponse>('/find/social/filter', payload)
         this.socialFilter = SocialMatchFilterDTOSchema.parse(res.data.filter)
         return storeSuccess()
       } catch (error: any) {
@@ -135,10 +149,11 @@ export const useFindProfileStore = defineStore('findProfile', {
       }
     },
 
-    reset() {
-      this.profileList = [] // Reset profile list
-      this.socialSearch = null // Reset social search query
-      this.isLoading = false // Reset loading state
+    teardown() {
+      this.profileList = [] 
+      this.socialSearch = null
+      this.datingPrefs = null
+      this.isLoading = false
     }
   },
 })
@@ -146,5 +161,5 @@ export const useFindProfileStore = defineStore('findProfile', {
 
 
 bus.on('auth:logout', () => {
-  useFindProfileStore().reset()
+  useFindProfileStore().teardown()
 })

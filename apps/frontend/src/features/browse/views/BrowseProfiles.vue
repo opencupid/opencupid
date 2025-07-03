@@ -11,6 +11,7 @@ import ReceivedLikesCount from '@/features/interaction/components/ReceivedLikesC
 
 import { useFindMatchViewModel } from '../composables/useFindMatchViewModel'
 import DatingPreferencesForm from '../components/DatingPreferencesForm.vue'
+import SocialFilterForm from '../components/SocialFilterForm.vue'
 import SecondaryNav from '../components/SecondaryNav.vue'
 import ProfileCardGrid from '../components/ProfileCardGrid.vue'
 import NoAccessCTA from '../components/NoAccessCTA.vue'
@@ -25,7 +26,7 @@ const props = defineProps<{
 }>()
 
 // state management
-const showModal = ref(false)
+const showPrefsModal = ref(false)
 const canGoBack = ref(false)
 
 const {
@@ -37,15 +38,15 @@ const {
   profileList,
   storeError,
   datingPrefs,
+  socialFilter,
   selectedProfileId,
   hideProfile,
-  updateDatingPrefs,
+  updatePrefs,
   initialize,
   reset,
   isInitialized,
 } = useFindMatchViewModel()
 
-// const { fetchProfile, refreshProfile, blockProfile, profile } = usePublicProfile()
 const ParamsSchema = z.object({
   scope: ProfileScopeSchema.optional(),
   profileId: z.string().optional(),
@@ -104,7 +105,7 @@ const handleHidden = (id: string) => {
   canGoBack.value = false
 }
 
-// Provide the me object (current user's profile) to child components
+// Provide the viewerProfile object (current user's profile) to child components
 provide('viewerProfile', viewerProfile.value)
 
 const isDetailView = computed(() => !!selectedProfileId.value)
@@ -140,7 +141,7 @@ const isDetailView = computed(() => !!selectedProfileId.value)
         <div class="container d-flex flex-column">
           <SecondaryNav
             v-model="currentScope"
-            @edit:datingPrefs="showModal = true"
+            @prefs:toggle="showPrefsModal = true"
             @scope:change="(scope: ProfileScope) => (currentScope = scope)"
             :prefs-button-disabled="!haveAccess"
           />
@@ -215,7 +216,7 @@ const isDetailView = computed(() => !!selectedProfileId.value)
       </BPlaceholderWrapper>
 
       <BModal
-        v-model="showModal"
+        v-model="showPrefsModal"
         centered
         button-size="sm"
         :focus="false"
@@ -227,9 +228,13 @@ const isDetailView = computed(() => !!selectedProfileId.value)
         initial-animation
         :body-scrolling="false"
         title="Add a photo"
-        @ok="updateDatingPrefs"
+        @ok="updatePrefs"
       >
-        <DatingPreferencesForm v-model="datingPrefs" v-if="datingPrefs" />
+        <DatingPreferencesForm
+          v-model="datingPrefs"
+          v-if="currentScope === 'dating' && datingPrefs"
+        />
+        <SocialFilterForm v-model="socialFilter" v-if="currentScope === 'social' && socialFilter" />
       </BModal>
     </div>
   </main>

@@ -120,7 +120,7 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
       return reply.code(200).send(response)
     } catch (err) {
       fastify.log.error(err)
-      return sendError(reply, 500, 'Failed to update dating preferences')
+      return sendError(reply, 500, 'Failed to update social filter')
     }
   })
 

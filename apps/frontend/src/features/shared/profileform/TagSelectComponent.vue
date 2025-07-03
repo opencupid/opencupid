@@ -5,13 +5,22 @@ import { useTagsStore } from '@/store/tagStore'
 import { useI18n } from 'vue-i18n'
 import type { PublicTag } from '@zod/tag/tag.dto'
 
-// Store
-const tagStore = useTagsStore()
-
 // v-model binding
 const model = defineModel<PublicTag[]>({
   default: () => [],
 })
+
+const props = withDefaults(
+  defineProps<{
+    taggable?: boolean
+  }>(),
+  {
+    taggable: true,
+  }
+)
+
+// Store
+const tagStore = useTagsStore()
 
 // State
 const tags = ref<PublicTag[]>([])
@@ -54,6 +63,7 @@ async function addTag(name: string) {
   <div class="interests-multiselect">
     <Multiselect
       v-model="model"
+      v-bind:taggable="props.taggable"
       :options="tags"
       :multiple="true"
       :loading="isLoading"
@@ -64,7 +74,6 @@ async function addTag(name: string) {
       :show-labels="false"
       :show-no-results="true"
       :show-no-options="false"
-      :taggable="true"
       :maxHeight="250"
       open-direction="top"
       @tag="addTag"
