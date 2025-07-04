@@ -19,7 +19,6 @@ import PlaceholdersGrid from '../components/PlaceholdersGrid.vue'
 
 const router = useRouter()
 
-
 // state management
 const showPrefsModal = ref(false)
 const canGoBack = ref(false)
@@ -188,7 +187,12 @@ const isDetailView = computed(() => !!selectedProfileId.value)
         <template v-else-if="isInitialized">
           <div class="overflow-auto">
             <MiddleColumn>
-              <ProfileCardGrid :profiles="profileList" @profile:select="handleCardClick" />
+              <ProfileCardGrid
+                :profiles="profileList"
+                :showTags="true"
+                :showLocation="true"
+                @profile:select="handleCardClick"
+              />
             </MiddleColumn>
           </div>
         </template>

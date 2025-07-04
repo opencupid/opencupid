@@ -18,9 +18,9 @@ const router = useRouter()
 const newProfiles = ref([] as PublicProfile[])
 
 onMounted(async () => {
-  const findProfileStore = useFindProfileStore()
-
   await useBootstrap().bootstrap()
+
+  const findProfileStore = useFindProfileStore()
 
   const result = await findProfileStore.fetchNewSocial()
   console.log('New profiles fetched:', result)
@@ -48,9 +48,16 @@ provide('viewerProfile', viewerProfile.value)
 
     <div v-if="newProfiles.length > 0" class="mb-4">
       <h5>New people nearby</h5>
-      <MiddleColumn>
-        <ProfileCardGrid :profiles="newProfiles" @profile:select="handleCardClick" cols="2" gutter="2" gap="2"/>
-      </MiddleColumn>
+      <BRow>
+        <ProfileCardGrid
+          :profiles="newProfiles"
+          @profile:select="handleCardClick"
+          :showTags="false"
+          cols="2"
+          gutter="2"
+          gap="2"
+        />
+      </BRow>
     </div>
   </main>
 </template>
