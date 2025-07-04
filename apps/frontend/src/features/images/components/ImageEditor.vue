@@ -11,6 +11,9 @@ import ImageUpload from './ImageUpload.vue'
 import ImageTag from './ImageTag.vue'
 import HelpScribble from '@/features/shared/ui/HelpScribble.vue'
 import IconPhoto from '@/assets/icons/interface/photo.svg'
+import UploadButton from './UploadButton.vue'
+import AvatarUploadIcon from '@/assets/icons/files/avatar-upload.svg'
+import { detectMobile } from '@/lib/mobile-detect'
 
 import { useI18n } from 'vue-i18n'
 
@@ -27,6 +30,17 @@ const isRemoving = ref<Record<string, boolean>>({})
 const error = ref<string>('')
 
 const { t } = useI18n()
+
+// Upload modal state
+type ModalState = 'closed' | 'chooser' | 'preview'
+const modalState = ref<ModalState>('closed')
+const showModal = ref(false)
+const selectedFile = ref<File | null>(null)
+const preview = ref<string | null>(null)
+const captionText = ref<string>('')
+const isLoading = ref(false)
+const uploadError = ref<string | null>(null)
+const isMobile = computed(() => detectMobile())
 
 const model = computed({
   get() {
@@ -81,6 +95,65 @@ const placeholderSlots = computed(() => {
 const remainingSlots = computed(() => {
   return props.maxImages - model.value.length
 })
+
+function openModal(state: ModalState = isMobile.value ? 'chooser' : 'preview') {
+  modalState.value = state
+  showModal.value = true
+}
+
+function closeModal() {
+  showModal.value = false
+}
+
+function onModalHidden() {
+  modalState.value = 'closed'
+  selectedFile.value = null
+  preview.value = null
+  captionText.value = ''
+  uploadError.value = null
+  isLoading.value = false
+}
+
+const handleFileChange = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0] ?? null
+  selectedFile.value = file
+
+  if (!file) {
+    preview.value = null
+    return
+  }
+
+  const reader = new FileReader()
+  reader.onload = () => {
+    preview.value = typeof reader.result === 'string' ? reader.result : null
+    modalState.value = 'preview'
+    showModal.value = true
+  }
+  reader.readAsDataURL(file)
+}
+
+async function handleUpload() {
+  if (!selectedFile.value) return
+  isLoading.value = true
+  uploadError.value = null
+
+  const res = await imageStore.uploadProfileImage(selectedFile.value, captionText.value)
+  if (!res.success) {
+    uploadError.value = res.message
+    isLoading.value = false
+    return
+  }
+  closeModal()
+}
+
+const backFromPreview = () => {
+  if (isMobile.value) {
+    modalState.value = 'chooser'
+  } else {
+    closeModal()
+  }
+}
 </script>
 
 <template>
@@ -120,7 +193,15 @@ const remainingSlots = computed(() => {
               </div>
             </div>
             <div v-if="remainingSlots > 0" class="col nodrag">
-              <ImageUpload />
+              <BButton
+                v-if="isMobile"
+                variant="secondary"
+                class="w-100 h-100"
+                @click="openModal('chooser')"
+              >
+                <AvatarUploadIcon class="svg-icon w-100 h-100" />
+              </BButton>
+              <UploadButton v-else @file:change="handleFileChange" :genericIcon="true" />
             </div>
 
             <div v-for="(_, i) in placeholderSlots" :key="'placeholder-' + i" class="col nodrag">
@@ -133,6 +214,30 @@ const remainingSlots = computed(() => {
         </div>
       </div>
     </BOverlay>
+    <BModal
+      :show="showModal"
+      centered
+      button-size="sm"
+      :focus="false"
+      :no-close-on-backdrop="true"
+      :no-footer="true"
+      body-class="d-flex flex-column align-items-center justify-content-center"
+      initial-animation
+      fullscreen="md"
+      :title="t('profiles.image_upload.title')"
+      @hidden="onModalHidden"
+    >
+      <ImageUpload
+        :modalState="modalState"
+        :preview="preview"
+        :isLoading="isLoading"
+        :error="uploadError"
+        @file:change="handleFileChange"
+        @upload="handleUpload"
+        @back="backFromPreview"
+        @cancel="closeModal"
+      />
+    </BModal>
   </div>
 </template>
 
