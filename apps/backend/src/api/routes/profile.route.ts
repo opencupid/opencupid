@@ -15,7 +15,8 @@ import {
 import {
   rateLimitConfig,
   sendError,
-  sendForbiddenError} from '../helpers'
+  sendForbiddenError
+} from '../helpers'
 import {
   mapDbProfileToOwnerProfile,
   mapProfileSummary,
@@ -49,7 +50,7 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
 
   // instantiate services
   const profileService = ProfileService.getInstance()
-  const matchQueryService = ProfileMatchService.getInstance()
+  const profileMatchService = ProfileMatchService.getInstance()
 
   /**
    * Get the current user's profile
@@ -97,7 +98,7 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
 
       let includeDatingContext = false
       if (raw.isDatingActive && req.session.profile.isDatingActive) {
-        includeDatingContext = await matchQueryService.areProfilesMutuallyCompatible(myProfileId, raw.id)
+        includeDatingContext = await profileMatchService.areProfilesMutuallyCompatible(myProfileId, raw.id)
       }
 
       const profile = mapProfileWithContext(raw, includeDatingContext, locale)
@@ -160,6 +161,7 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
    * It sets the onboarding flag to true, indicating that the user has completed the onboarding process.
    */
   fastify.post('/me', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+
     const data = await validateBody(UpdateProfilePayloadSchema, req, reply) as UpdateProfilePayload
     if (!data) return
 
@@ -170,10 +172,34 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
     if (existing && existing.isOnboarded) {
       return sendError(reply, 403, 'Profile already exists and is onboarded')
     }
+
     // @ts-expect-error - We are setting isOnboarded here, which is not part of CreateProfilePayload
     //  i'm not gonna bloody write a transform for this
     data.isOnboarded = true // Set the onboarding flag to true
-    return updateProfile(data, req, reply)
+
+    const locale = req.session.lang
+
+    try {
+      const updated = await fastify.prisma.$transaction(async tx => {
+        const updatedProfile = await profileService.updateCompleteProfile(tx, locale, req.user.userId, data)
+        const profile = mapDbProfileToOwnerProfile(locale, updatedProfile)
+        // Create the default social match filter for the new profile
+        await profileMatchService.createSocialMatchFilter(tx, updatedProfile.id, profile.location)
+        return profile
+      })
+      // Clear session to force re-fetch on next request, we need the roles updated
+      await req.deleteSession()
+      const response: UpdateProfileResponse = { success: true, profile: updated }
+      return reply.code(200).send(response)
+    } catch (err) {
+      fastify.log.error(err)
+      // profileService.updateProfile() returned null, which means the profile was not found
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
+        return sendError(reply, 404, 'Profile not found')
+      }
+      return sendError(reply, 500, 'Failed to update profile')
+    }
+
   })
 
   /**
