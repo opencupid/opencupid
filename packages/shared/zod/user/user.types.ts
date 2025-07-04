@@ -15,7 +15,6 @@ export const SessionDataSchema = z.object({
   profileId: z.string(),
   lang: z.string().default("en"),
   roles: z.array(UserRoleSchema),
-  isOnboarded: z.boolean().default(false),
   hasActiveProfile: z.boolean().default(false),
   profile: SessionProfileSchema,
 })
@@ -28,7 +27,6 @@ const LoginUserSchema = UserSchema.pick({
   email: true,
   phonenumber: true,
   language: true,
-  isOnboarded: true,
   hasActiveProfile: true,
   isRegistrationConfirmed: true,
 })

@@ -82,7 +82,6 @@ export default fp(async (fastify: FastifyInstance) => {
         roles: user.roles,
         userId: user.id,
         profileId: user.profile?.id || '',
-        isOnboarded: user.isOnboarded || false,
         hasActiveProfile: user.hasActiveProfile || false,
         profile: profile
       }
