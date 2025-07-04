@@ -28,7 +28,6 @@ export const useAuthStore = defineStore('auth', {
     email: null as string | null,
     profileId: null as string | null,
     isInitialized: false,
-    hasActiveProfile: false as boolean,
   }),
 
   getters: {

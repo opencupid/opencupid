@@ -34,7 +34,6 @@ const user = reactive<LoginUser>({
   phonenumber: '',
   language: i18nStore.getLanguage(),
   isRegistrationConfirmed: false,
-  hasActiveProfile: false,
 })
 
 const OtpParamSchema = z.object({

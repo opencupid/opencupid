@@ -28,7 +28,6 @@ const LoginUserSchema = UserSchema.pick({
   email: true,
   phonenumber: true,
   language: true,
-  hasActiveProfile: true,
   isRegistrationConfirmed: true,
 })
 
