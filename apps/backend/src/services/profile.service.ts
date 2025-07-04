@@ -1,28 +1,9 @@
 import { prisma } from '@/lib/prisma'
 import { appConfig } from '@/lib/appconfig'
 import { Prisma } from '@prisma/client'
-import { MessageService } from './messaging.service'
 import i18next from 'i18next'
-import FsBackend from 'i18next-fs-backend'
-import path from 'path'
 
-const translationsPath = path.join(
-  __dirname,
-  __dirname.includes('dist') ? '../../..' : '../../../../',
-  'packages',
-  'shared',
-  'i18n',
-  '{{lng}}.json'
-)
-
-i18next
-  .use(FsBackend)
-  .init({
-    fallbackLng: 'en',
-    preload: ['en', 'de', 'fr', 'hu'],
-    initImmediate: false,
-    backend: { loadPath: translationsPath },
-  })
+import { MessageService } from './messaging.service'
 
 import { Profile, ProfileImage, ProfileTag } from '@zod/generated'
 import {
@@ -36,8 +17,6 @@ import {
 } from '@zod/profile/profile.db'
 import { mapToLocalizedUpserts } from '@/api/mappers/profile.mappers'
 import { blockedContextInclude, conversationContextInclude, interactionContextInclude, profileImageInclude, tagsInclude } from '@/db/includes/profileIncludes'
-
-
 
 
 export class ProfileService {

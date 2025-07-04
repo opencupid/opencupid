@@ -1,6 +1,7 @@
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import { appConfig } from '@/lib/appconfig'
+import './lib/i18n' // Initialize i18next with translations
 
 import './workers/emailWorker' // ← side‐effect: starts the worker
 import { checkImageRoot } from '@/lib/media'
@@ -51,6 +52,9 @@ if (!ok) {
   app.log.error('Media upload directory cannot be created or is not writable')
   process.exit(1)
 }
+
+
+
 
 app.listen(
   {
