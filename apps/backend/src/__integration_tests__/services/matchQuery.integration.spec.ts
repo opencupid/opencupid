@@ -22,7 +22,6 @@ afterAll(async () => {
 beforeEach(async () => {
   await prisma.$transaction([
     prisma.profileImage.deleteMany(),
-    prisma.profileTag.deleteMany(),
     prisma.profile.deleteMany(),
     prisma.user.deleteMany(),
   ])

@@ -5,7 +5,7 @@ import i18next from 'i18next'
 
 import { MessageService } from './messaging.service'
 
-import { Profile, ProfileImage, ProfileTag } from '@zod/generated'
+import { Profile, ProfileImage } from '@zod/generated'
 import {
   type UpdateProfilePayload,
   type UpdateProfileScopePayload,
@@ -114,17 +114,16 @@ export class ProfileService {
 
     const profileId = current.id
 
-    // 3) Update tags
-    // delete all existing tags for this profile
-    await tx.profileTag.deleteMany({
-      where: { profileId },
-    })
-
-    // Re-create only the tags the user sent
-    if (tags && tags.length > 0) {
-      await tx.profileTag.createMany({
-        data: tags.map(tagId => ({ profileId, tagId })),
-        skipDuplicates: true,
+    // 3) Update tags using implicit many-to-many relation
+    if (tags) {
+      await tx.profile.update({
+        where: { id: profileId },
+        data: {
+          tags: {
+            set: [],
+            connect: tags.map(tagId => ({ id: tagId })),
+          },
+        },
       })
     }
 
@@ -256,43 +255,37 @@ export class ProfileService {
     })
   }
 
-  async addProfileTag(profileId: string, tagId: string): Promise<ProfileTag> {
-    return prisma.profileTag.create({
-      data: {
-        profile: {
-          connect: { id: profileId },
-        },
-        tag: {
-          connect: { id: tagId },
-        },
-      },
+  async addProfileTag(profileId: string, tagId: string): Promise<void> {
+    await prisma.profile.update({
+      where: { id: profileId },
+      data: { tags: { connect: { id: tagId } } },
     })
   }
 
   async removeProfileTag(profileId: string, tagId: string): Promise<void> {
-    await prisma.profileTag.deleteMany({
-      where: {
-        profileId,
-        tagId,
-      },
+    await prisma.profile.update({
+      where: { id: profileId },
+      data: { tags: { disconnect: { id: tagId } } },
     })
   }
 
   /**
    * Attach a tag to a profile.
    */
-  public async addTagToProfile(profileId: string, tagId: string): Promise<ProfileTag> {
-    return prisma.profileTag.create({
-      data: { profileId, tagId },
+  public async addTagToProfile(profileId: string, tagId: string): Promise<void> {
+    await prisma.profile.update({
+      where: { id: profileId },
+      data: { tags: { connect: { id: tagId } } },
     })
   }
 
   /**
    * Remove a tag from a profile.
    */
-  public async removeTagFromProfile(profileId: string, tagId: string): Promise<ProfileTag> {
-    return prisma.profileTag.delete({
-      where: { profileId_tagId: { profileId, tagId } },
+  public async removeTagFromProfile(profileId: string, tagId: string): Promise<void> {
+    await prisma.profile.update({
+      where: { id: profileId },
+      data: { tags: { disconnect: { id: tagId } } },
     })
   }
 

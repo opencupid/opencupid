@@ -34,13 +34,9 @@ export function tagsInclude() {
   const clause = {
     tags: {
       include: {
-        tag: {
-          include: {
-            translations: {
-              // where: { locale: 'de' },
-              select: { name: true, locale: true },
-            },
-          }
+        translations: {
+          // where: { locale: 'de' },
+          select: { name: true, locale: true },
         },
       },
     },

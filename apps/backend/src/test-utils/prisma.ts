@@ -24,13 +24,6 @@ export function createMockPrisma() {
       count: vi.fn(),
       deleteMany: vi.fn(),
     },
-    profileTag: {
-      create: vi.fn(),
-      createMany: vi.fn(),
-      deleteMany: vi.fn(),
-      delete: vi.fn(),
-      findMany: vi.fn(),
-    },
     conversation: {
       findUnique: vi.fn(),
       update: vi.fn(),

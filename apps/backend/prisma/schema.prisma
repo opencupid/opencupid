@@ -113,7 +113,7 @@ model Tag {
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
   translations  TagTranslation[]
-  profileTags   ProfileTag[]
+  profiles      Profile[]        @relation("ProfileTags")
   filters       SocialMatchFilter[]
 }
 
@@ -125,17 +125,6 @@ model TagTranslation {
   name   String // e.g. "Farm stay", "Ferien auf dem Bauernhof"
 
   @@unique([tagId, locale])
-}
-
-model ProfileTag {
-  id    String @id @default(cuid())
-  tag   Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
-  tagId String
-
-  profileId String?
-  profile   Profile? @relation(fields: [profileId], references: [id])
-
-  @@unique([profileId, tagId])
 }
 
 model ConnectionRequest {
@@ -205,7 +194,7 @@ model Profile {
   relationship RelationshipStatus?
   hasKids      HasKids?
 
-  tags          ProfileTag[]
+  tags          Tag[] @relation("ProfileTags")
   profileImages ProfileImage[] @relation("ProfileImages")
 
   // Dating preferences
