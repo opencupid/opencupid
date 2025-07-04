@@ -16,7 +16,9 @@ import ProfileCardGrid from '../components/ProfileCardGrid.vue'
 import NoAccessCTA from '../components/NoAccessCTA.vue'
 import NoResultsCTA from '../components/NoResultsCTA.vue'
 import PlaceholdersGrid from '../components/PlaceholdersGrid.vue'
-
+import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
+import SocialFilterDisplay
+ from '../components/SocialFilterDisplay.vue'
 const router = useRouter()
 
 // state management
@@ -147,7 +149,7 @@ const isDetailView = computed(() => !!selectedProfileId.value)
         </template>
 
         <!-- After loading -->
-        <template v-if="isInitialized && (!haveAccess || !haveResults)">
+        <template v-if="isInitialized && !haveAccess">
           <BOverlay show no-spinner no-center :blur="null" bg-color="inherit" class="h-100 overlay">
             <!-- Keep placeholders in background -->
             <MiddleColumn class="overflow-hidden">
@@ -165,7 +167,6 @@ const isDetailView = computed(() => !!selectedProfileId.value)
                     v-model="currentScope"
                     @edit:profile="handleEditProfileIntent"
                   />
-                  <NoResultsCTA v-else-if="!haveResults" />
                   <!-- <StoreErrorOverlay v-else-if="storeError" :error="storeError">
                     <template #default="{ error }">
                       <BButton
@@ -183,10 +184,25 @@ const isDetailView = computed(() => !!selectedProfileId.value)
           </BOverlay>
         </template>
 
+        <template v-if="isInitialized && !haveResults">
+          <MiddleColumn class="h-100">
+            <div>
+              There's nobody in in your area that matches your preferences.
+              <SocialFilterDisplay
+                v-if="socialFilter"
+                :socialFilter="socialFilter"
+                :viewerLocation="viewerProfile?.location"
+              />
+            </div>
+            <NoResultsCTA />
+          </MiddleColumn>
+        </template>
+
         <!-- Main profile results -->
         <template v-else-if="isInitialized">
           <div class="overflow-auto">
             <MiddleColumn>
+  
               <ProfileCardGrid
                 :profiles="profileList"
                 :showTags="true"
