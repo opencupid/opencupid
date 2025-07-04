@@ -70,7 +70,7 @@ export function useFindMatchViewModel() {
       await findProfileStore.fetchDatingPrefs(datingPrefsDefaults(ownerProfile))
     }
 
-    if (!currentScope.value) {
+    if (!currentScope.value && !selectedProfileId.value) {
       const resolvedScope =
         defaultScope ??
         savedScope.value ??
