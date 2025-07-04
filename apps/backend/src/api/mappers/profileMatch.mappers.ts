@@ -22,8 +22,11 @@ export function mapProfileToDatingPreferencesDTO(
 
 
 
-export function mapSocialMatchFilterToDTO(filter: SocialMatchFilterWithTags, locale: string): SocialMatchFilterDTO {
-  const location = mapLocation(filter)
+export function mapSocialMatchFilterToDTO(
+  filter: SocialMatchFilterWithTags,
+  locale: string,
+): SocialMatchFilterDTO {
+  const location = mapLocation({ country: filter.country, cityId: filter.cityId })
   const tags = (filter.tags ?? []).map(tag => DbTagToPublicTagTransform(tag, locale))
   return {
     location,

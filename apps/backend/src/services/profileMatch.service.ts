@@ -54,8 +54,8 @@ export class ProfileMatchService {
     const tagIds = (data.tags ?? []).map(id => ({ id }))
     const update = {
       profileId,
-      country: data.location?.country ?? '',
-      cityId: data.location?.cityId ?? '',
+      country: data.location?.country || null,
+      cityId: data.location?.cityId || null,
       radius: data.radius ?? 0,
       tags: {
         set: tagIds, // ✅ safe for update
@@ -64,8 +64,8 @@ export class ProfileMatchService {
 
     const create = {
       profileId,
-      country: data.location?.country ?? '',
-      cityId: data.location?.cityId ?? '',
+      country: data.location?.country || null,
+      cityId: data.location?.cityId || null,
       radius: data.radius ?? 0,
       tags: {
         connect: tagIds, // ✅ required for create

@@ -10,23 +10,32 @@ export const LocationSchema = z.object({
 export type LocationDTO = z.infer<typeof LocationSchema>
 
 
-export function mapLocation(raw: { country: string | null, cityId: string | null }): LocationDTO | null {
-  const { country, cityId } = raw
+export function mapLocation(
+  raw: { country: string | null; cityId: string | null },
+): LocationDTO | null {
+  const country = raw.country && raw.country !== '' ? raw.country : null
+  const cityId = raw.cityId && raw.cityId !== '' ? raw.cityId : null
 
-  // Accept: country alone, or country + cityId
+  if (!country) {
+    return null
+  }
+
   return {
-    country: country ?? '',
-    cityId: cityId ?? '',
+    country,
+    cityId,
     cityName: '',
   }
 }
-export function unmapLocation(location: LocationDTO | null): { country: string | null, cityId: string | null } {
 
+export function unmapLocation(
+  location: LocationDTO | null,
+): { country: string | null; cityId: string | null } {
   if (!location) {
-    return { country: '', cityId: '' }
+    return { country: null, cityId: null }
   }
-  return {
-    country: location.country ?? null,
-    cityId: location.cityId ?? null,
-  }
+
+  const country = location.country && location.country !== '' ? location.country : null
+  const cityId = location.cityId && location.cityId !== '' ? location.cityId : null
+
+  return { country, cityId }
 }

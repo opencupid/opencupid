@@ -35,11 +35,17 @@ type FindProfileStoreState = {
 
 type StoreProfileListResponse = StoreSuccess<{ result: PublicProfile[] }> | StoreError
 
-export function mapSocialMatchFilterDTOToPayload(dto: SocialMatchFilterDTO): UpdateSocialMatchFilterPayload {
-  return UpdateSocialMatchFilterPayloadSchema.parse({
+export function mapSocialMatchFilterDTOToPayload(
+  dto: SocialMatchFilterDTO,
+): UpdateSocialMatchFilterPayload {
+  const payload = {
     ...dto,
+    location: dto.location ? unmapLocation(dto.location) : undefined,
     tags: dto.tags.map(tag => tag.id),
-  })
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return payload as any as UpdateSocialMatchFilterPayload
 }
 
 export const useFindProfileStore = defineStore('findProfile', {
