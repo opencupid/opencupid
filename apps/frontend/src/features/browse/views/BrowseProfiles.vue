@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import z from 'zod'
 import { useRouter } from 'vue-router'
 import { computed, onMounted, onUnmounted, provide, ref } from 'vue'
 
-import { type ProfileScope, ProfileScopeSchema } from '@zod/profile/profile.dto'
+import { type ProfileScope } from '@zod/profile/profile.dto'
 
 import PublicProfile from '@/features/publicprofile/components/PublicProfile.vue'
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
@@ -20,10 +19,6 @@ import PlaceholdersGrid from '../components/PlaceholdersGrid.vue'
 
 const router = useRouter()
 
-const props = defineProps<{
-  scope?: string
-  profileId?: string
-}>()
 
 // state management
 const showPrefsModal = ref(false)
@@ -42,45 +37,32 @@ const {
   selectedProfileId,
   hideProfile,
   updatePrefs,
+  navigateToScope,
+  openProfile,
   initialize,
   reset,
   isInitialized,
 } = useFindMatchViewModel()
 
-const ParamsSchema = z.object({
-  scope: ProfileScopeSchema.optional(),
-  profileId: z.string().optional(),
+const scopeModel = computed({
+  get: () => currentScope.value,
+  set: (scope: ProfileScope | null) => {
+    if (scope) navigateToScope(scope)
+  },
 })
 
 onMounted(async () => {
-  const params = ParamsSchema.safeParse(props)
-  if (params.success) {
-    const { scope, profileId } = params.data
-    if (profileId) {
-      selectedProfileId.value = profileId
-      canGoBack.value = false
-    }
-    await initialize(scope)
-  }
+  await initialize()
 })
 
 onUnmounted(() => {
-  selectedProfileId.value = null
   canGoBack.value = false
   reset()
 })
 
 const handleCardClick = async (profileId: string) => {
-  // const res = await fetchProfile(profileId)
-  selectedProfileId.value = profileId
   canGoBack.value = true
-  // profileDetailId.value = profileId
-  router.push({
-    name: 'PublicProfile',
-    params: {
-      profileId: profileId,
-    },
-  })
+  openProfile(profileId)
 }
 
 const handleEditProfileIntent = () => {
@@ -89,7 +71,6 @@ const handleEditProfileIntent = () => {
 
 const handleCloseProfileView = () => {
   router.back()
-  selectedProfileId.value = null
 }
 
 const handleOpenConversation = (conversationId: string) => {
@@ -101,7 +82,6 @@ const handleOpenConversation = (conversationId: string) => {
 
 const handleHidden = (id: string) => {
   hideProfile(id)
-  selectedProfileId.value = null
   canGoBack.value = false
 }
 
@@ -140,9 +120,8 @@ const isDetailView = computed(() => !!selectedProfileId.value)
       <MiddleColumn class="my-2">
         <div class="container d-flex flex-column">
           <SecondaryNav
-            v-model="currentScope"
+            v-model="scopeModel"
             @prefs:toggle="showPrefsModal = true"
-            @scope:change="(scope: ProfileScope) => (currentScope = scope)"
             :prefs-button-disabled="!haveAccess"
           />
 

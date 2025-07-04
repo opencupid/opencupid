@@ -1,5 +1,5 @@
-import { computed, ref, toRef, watch } from 'vue';
-import { useRouter } from 'vue-router';
+import { computed, ref, toRef, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 import { useBootstrap } from '@/lib/bootstrap'
 
@@ -31,13 +31,20 @@ function socialFilterDefaults(ownerProfile: OwnerProfile) {
 export function useFindMatchViewModel() {
 
   const router = useRouter()
+  const route = useRoute()
 
   const ownerStore = useOwnerProfileStore()
   const findProfileStore = useFindProfileStore()
 
   const storeError = ref<StoreError | null>(null)
-  const currentScope = ref(null as ProfileScope | null)
-  const selectedProfileId = ref<string | null>(null)
+  const currentScope = computed(() =>
+    typeof route.params.scope === 'string'
+      ? (route.params.scope as ProfileScope)
+      : null
+  )
+  const selectedProfileId = computed(() =>
+    typeof route.params.profileId === 'string' ? route.params.profileId : null
+  )
   const isInitialized = ref(false)
 
   const savedScope = ref(localStorage.getItem('currentScope') as ProfileScope | null)
@@ -63,10 +70,15 @@ export function useFindMatchViewModel() {
       await findProfileStore.fetchDatingPrefs(datingPrefsDefaults(ownerProfile))
     }
 
-    currentScope.value =
-      defaultScope
-      ?? savedScope.value
-      ?? (ownerStore.scopes.length > 0 ? ownerStore.scopes[0] : null)
+    if (!currentScope.value) {
+      const resolvedScope =
+        defaultScope ??
+        savedScope.value ??
+        (ownerStore.scopes.length > 0 ? ownerStore.scopes[0] : null)
+      if (resolvedScope) navigateToScope(resolvedScope)
+    }
+
+    if (currentScope.value) await fetchResults()
 
     isInitialized.value = true
   }
@@ -88,27 +100,25 @@ export function useFindMatchViewModel() {
     }
   }
 
-  watch(() => currentScope.value, (newScope) => {
+  watch(currentScope, (newScope) => {
     if (!newScope) return // No scope selected
-    localStorage.setItem('currentScope', newScope) // save last selected scope
     fetchResults()
-    router.replace({
-      name: 'BrowseProfilesScope',
-      params: {
-        scope: newScope,
-      },
-    })
   })
 
-  watch(() => selectedProfileId.value, (profileId) => {
-    if (!profileId) return
-    router.push({
-      name: 'PublicProfile',
-      params: {
-        profileId: profileId,
-      },
-    })
-  })
+  watch(
+    () => route.params.scope,
+    (scope) => {
+      if (typeof scope === 'string') localStorage.setItem('currentScope', scope)
+    }
+  )
+
+  function navigateToScope(scope: ProfileScope): void {
+    router.replace({ name: 'BrowseProfilesScope', params: { scope } })
+  }
+
+  function openProfile(profileId: string): void {
+    router.push({ name: 'PublicProfile', params: { profileId } })
+  }
 
   const viewerProfile = computed(() => ownerStore.profile)
 
@@ -135,7 +145,6 @@ export function useFindMatchViewModel() {
   const reset = () => {
     findProfileStore.teardown()
     storeError.value = null
-    selectedProfileId.value = null
     isInitialized.value = false
   }
 
@@ -174,6 +183,8 @@ export function useFindMatchViewModel() {
     datingPrefs: toRef(findProfileStore, 'datingPrefs'),
     socialFilter: toRef(findProfileStore, 'socialFilter'),
     updatePrefs,
+    navigateToScope,
+    openProfile,
     profileList: computed(() => findProfileStore.profileList),
     isInitialized: computed(() => isInitialized.value),
   }
