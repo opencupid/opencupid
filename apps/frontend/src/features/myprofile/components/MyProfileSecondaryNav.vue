@@ -5,7 +5,7 @@ import { useI18nStore } from '@/store/i18nStore'
 import { type ViewState } from '../composables/types'
 import ScopeViewToggler from '@/features/shared/ui/ScopeViewToggler.vue'
 import LanguageIcon from '@/features/shared/profiledisplay/LanguageIcon.vue'
-import { type ProfileScope } from '@zod/profile/profile.dto'
+import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
 
 const model = defineModel<ViewState>({
   default: {
@@ -25,8 +25,12 @@ const currentLanguage = computed(() => {
 <template>
   <div class="d-flex justify-content-end align-items-center w-100">
     <ul pills class="nav nav-pills w-100 d-flex align-items-center">
-      <li class="col-2">
-        <slot name="items-left"></slot>
+      <li class="col-2 d-flex align-items-center">
+        <BNavItem to="/settings" class="p-0">
+          <BButton variant="link-secondary" class="p-0">
+            <IconSetting2 class="svg-icon-lg" />
+          </BButton>
+        </BNavItem>
       </li>
       <li class="col-8 d-flex nav-item justify-content-center align-items-center">
         <ScopeViewToggler v-model="model.currentScope" />

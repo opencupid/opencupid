@@ -3,7 +3,6 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { computed } from 'vue'
 
-import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
 import IconMessage from '@/assets/icons/interface/message.svg'
 import IconSearch from '@/assets/icons/interface/search.svg'
 import IconHeart from '@/assets/icons/interface/heart.svg'
@@ -26,7 +25,6 @@ const interactionStore = useInteractionStore()
 
 const isLoggedIn = computed(() => authStore.isLoggedIn)
 const isProfileLoaded = computed(() => profileStore.profile !== null && !profileStore.isLoading)
-const shouldShowNavbar = computed(() => isLoggedIn.value && isProfileLoaded.value)
 const hasUnreadMessages = computed(() => useMessageStore().hasUnreadMessages)
 const hasMatchNotifications = computed(
   () => interactionStore.matches.length > 0 || interactionStore.receivedLikesCount > 0
@@ -39,7 +37,7 @@ function handleLogoutClick() {
 </script>
 
 <template>
-  <BNavbar variant="secondary" fixed="top" class=""  data-testid="navbar">
+  <BNavbar variant="secondary" fixed="top" class="" data-testid="navbar">
     <BNavbarNav class="d-flex justify-content-between w-100">
       <BNavItem to="/" active-class="active">
         <IconHome class="svg-icon-lg" />
@@ -55,7 +53,7 @@ function handleLogoutClick() {
         <NotificationDot :show="hasMatchNotifications">
           <IconHeart class="svg-icon-lg" />
         </NotificationDot>
-        <span class="d-none d-md-inline label">Matches</span>
+        <span class="d-none d-md-inline label">{{ $t('nav.matches') }}</span>
       </BNavItem>
 
       <BNavItem to="/inbox" active-class="active">
@@ -65,33 +63,20 @@ function handleLogoutClick() {
         <span class="d-none d-md-inline label">{{ $t('nav.inbox') }}</span>
       </BNavItem>
 
-      <BNavItemDropdown right>
-        <template #button-content>
-          <span
-            v-if="profileStore.profile?.profileImages?.length"
-            class="profile-thumbnail d-inline-flex"
-          >
-            <ProfileImage
-              :profile="profileStore.profile"
-              class="img-fluid rounded"
-              style="width: 2.5rem; height: 2.5rem"
-            />
-          </span>
-          <IconUser v-else class="svg-icon-lg" />
-        </template>
-        <BDropdownItem to="/me" active-class="active">
-          <IconUser class="svg-icon me-2" />
-          {{ $t('nav.profile') }}
-        </BDropdownItem>
-        <BDropdownItem to="/settings" active-class="active">
-          <IconSetting2 class="svg-icon me-2" />
-          {{ $t('nav.settings') }}
-        </BDropdownItem>
-        <!-- <BDropdownItem href="#" @click="handleLogoutClick">
-          <IconLogout class="svg-icon me-2" />
-          {{ t('authentication.logout') }}
-        </BDropdownItem> -->
-      </BNavItemDropdown>
+      <BNavItem to="/me" active-class="active">
+        <span
+          v-if="profileStore.profile?.profileImages?.length"
+          class="profile-thumbnail d-flex"
+        >
+          <ProfileImage
+            :profile="profileStore.profile"
+            class="img-fluid rounded"
+            style="width: 2.5rem; height: 2.5rem"
+          />
+        </span>
+        <IconUser v-else class="svg-icon-lg" />
+      </BNavItem>
+
     </BNavbarNav>
   </BNavbar>
 </template>

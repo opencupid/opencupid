@@ -16,7 +16,6 @@ vi.mock('@fortawesome/vue-fontawesome', () => ({
 }))
 vi.mock('vue-router', () => ({ useRouter: () => ({ push: vi.fn() }) }))
 vi.mock('@/features/shared/icons/DoodleIcons.vue', () => ({ default: { template: '<div />' } }))
-vi.mock('@/assets/icons/interface/setting-2.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/message.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/search.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/heart.svg', () => ({ default: { template: '<div />' } }))
@@ -25,28 +24,28 @@ vi.mock('@/assets/icons/interface/home.svg', () => ({ default: { template: '<div
 vi.mock('@/features/shared/ui/NotificationDot.vue', () => ({ default: { template: '<div><slot /></div>' } }))
 vi.mock('@/features/images/components/ProfileImage.vue', () => ({ default: { template: '<div />' } }))
 
-vi.mock('@/features/auth/stores/authStore', () => ({ 
-  useAuthStore: () => ({ 
-    isLoggedIn: true, 
-    logout: vi.fn() 
-  }) 
+vi.mock('@/features/auth/stores/authStore', () => ({
+  useAuthStore: () => ({
+    isLoggedIn: true,
+    logout: vi.fn()
+  })
 }))
-vi.mock('@/features/messaging/stores/messageStore', () => ({ 
-  useMessageStore: () => ({ 
-    hasUnreadMessages: false 
-  }) 
+vi.mock('@/features/messaging/stores/messageStore', () => ({
+  useMessageStore: () => ({
+    hasUnreadMessages: false
+  })
 }))
-vi.mock('@/features/myprofile/stores/ownerProfileStore', () => ({ 
+vi.mock('@/features/myprofile/stores/ownerProfileStore', () => ({
   useOwnerProfileStore: () => ({
-    profile: { isDatingActive: true, profileImages: [] }, 
-    isLoading: false 
-  }) 
+    profile: { isDatingActive: true, profileImages: [] },
+    isLoading: false
+  })
 }))
-vi.mock('@/features/interaction/stores/useInteractionStore', () => ({ 
-  useInteractionStore: () => ({ 
-    matches: [], 
-    receivedLikesCount: 0 
-  }) 
+vi.mock('@/features/interaction/stores/useInteractionStore', () => ({
+  useInteractionStore: () => ({
+    matches: [],
+    receivedLikesCount: 0
+  })
 }))
 
 import Navbar from '../Navbar.vue'
@@ -56,19 +55,23 @@ describe('Navbar', () => {
   it('renders when logged in and profile is loaded', () => {
     const wrapper = mount(Navbar, {
       global: {
-        stubs: { 
-          BNavbar: stub, 
-          BNavItem: stub, 
-          BNavbarNav: stub, 
-          BNavItemDropdown: stub,
-          BDropdownItem: stub,
-          FontAwesomeIcon: stub 
+        stubs: {
+          BNavbar: stub,
+          BNavItem: stub,
+          BNavbarNav: stub,
+          FontAwesomeIcon: stub
         },
         mocks: { $t: (msg: string) => msg },
       }
     })
+    expect(wrapper.html()).toContain('nav.home')
+    expect(wrapper.html()).toContain('nav.inbox')
     expect(wrapper.html()).toContain('nav.browse')
-    expect(wrapper.html()).toContain('nav.settings')
-    expect(wrapper.html()).toContain('Matches')
+    expect(wrapper.html()).toContain('nav.matches')
   })
+
+
+
 })
+
+

@@ -14,6 +14,7 @@ import LogoutButton from '@/features/auth/components/LogoutButton.vue'
 import LanguageSelectorDropdown from '../components/LanguageSelectorDropdown.vue'
 import PushPermissions from '../components/PushPermissions.vue'
 import VersionInfo from '../components/VersionInfo.vue'
+import RouterBackButton from '@/features/shared/ui/RouterBackButton.vue'
 
 const authStore = useAuthStore()
 
@@ -47,15 +48,16 @@ onMounted(async () => {
   }
   isLoading.value = false
 })
-
 </script>
 
 <template>
   <main class="container mt-4">
-    <h3 class="mb-4 d-flex align-items-center">
+    <RouterBackButton />
+
+    <h2 class="mb-4 d-flex align-items-center justify-content-center w-100">
       <IconSetting2 class="svg-icon me-2" />
       Settings
-    </h3>
+    </h2>
 
     <LoadingComponent v-if="isLoading" />
 
