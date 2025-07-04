@@ -19,5 +19,8 @@
     "profile": "Profil",
     "browse": "Explorer",
     "inbox": "Messages"
+  },
+  "messaging": {
+    "welcome_message": "Bienvenue sur Gaians!"
   }
 }

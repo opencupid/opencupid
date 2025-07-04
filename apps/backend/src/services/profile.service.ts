@@ -1,5 +1,28 @@
 import { prisma } from '@/lib/prisma'
+import { appConfig } from '@/lib/appconfig'
 import { Prisma } from '@prisma/client'
+import { MessageService } from './messaging.service'
+import i18next from 'i18next'
+import FsBackend from 'i18next-fs-backend'
+import path from 'path'
+
+const translationsPath = path.join(
+  __dirname,
+  __dirname.includes('dist') ? '../../..' : '../../../../',
+  'packages',
+  'shared',
+  'i18n',
+  '{{lng}}.json'
+)
+
+i18next
+  .use(FsBackend)
+  .init({
+    fallbackLng: 'en',
+    preload: ['en', 'de', 'fr', 'hu'],
+    initImmediate: false,
+    backend: { loadPath: translationsPath },
+  })
 
 import { Profile, ProfileImage, ProfileTag } from '@zod/generated'
 import {
@@ -303,12 +326,30 @@ export class ProfileService {
       return profile
     }
 
-    return prisma.profile.create({
+    const newProfile = await prisma.profile.create({
       data: {
         userId,
         publicName: '',
       },
     })
+
+    const senderId = appConfig.WELCOME_MESSAGE_SENDER_PROFILE_ID
+    if (senderId) {
+      try {
+        const user = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { language: true },
+        })
+        const t = i18next.getFixedT(user?.language || 'en')
+        const content = t('messaging.welcome_message')
+        const messageService = MessageService.getInstance()
+        await messageService.initiateConversation(senderId, newProfile.id, content)
+      } catch (err) {
+        console.error('Failed to send welcome message', err)
+      }
+    }
+
+    return newProfile
   }
 
   async blockProfile(blockingProfileId: string, blockedProfileId: string) {

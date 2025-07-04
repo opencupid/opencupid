@@ -159,7 +159,8 @@
     "block_report_unmatch": "Letiltás / jelentés / bontás",
     "block_user_ok": "{name} letiltása",
     "nevermind": "Mégsem",
-    "send_message_heading": "Üzenet küldése"
+    "send_message_heading": "Üzenet küldése",
+    "welcome_message": "Üdvözlünk a Gaians-en!"
   },
   "onboarding": {
     "name_title": "Helló!",

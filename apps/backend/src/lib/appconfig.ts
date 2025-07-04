@@ -44,6 +44,8 @@ export const configSchema = z.object({
 
   RATE_LIMIT_PROFILE_SCOPES: z.coerce.number().default(1),
 
+  WELCOME_MESSAGE_SENDER_PROFILE_ID: z.string().optional(),
+
   FACEAPI_ENABLED: z.string().transform(val => val === 'true').default('false'),
 })
 

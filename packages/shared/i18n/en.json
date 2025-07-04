@@ -140,6 +140,8 @@
     "block_user_ok": "Block {name}",
     "nevermind": "Nevermind",
     "send_message_heading": "Send Message"
+    ,
+    "welcome_message": "Welcome to Gaians!"
   },
   "onboarding": {
     "name_title": "Hello!",

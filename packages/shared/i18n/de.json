@@ -159,7 +159,8 @@
     "block_report_unmatch": "Blockieren/melden/trennen",
     "block_user_ok": "{name} blockieren",
     "nevermind": "Schon gut",
-    "send_message_heading": "Nachricht senden"
+    "send_message_heading": "Nachricht senden",
+    "welcome_message": "Willkommen bei Gaians!"
   },
   "onboarding": {
     "name_title": "Hallo!",
