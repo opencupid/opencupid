@@ -7,6 +7,13 @@ export const LocationSchema = z.object({
   cityName: z.string(),
 })
 
+export const LocationPayloadSchema = z.object({
+  country: z.string().nullable(),
+  cityId: z.string().nullable(),
+})
+
+export type LocationPayload = z.infer<typeof LocationPayloadSchema>
+
 export type LocationDTO = z.infer<typeof LocationSchema>
 
 
