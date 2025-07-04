@@ -36,7 +36,7 @@ vi.mock('@/features/messaging/stores/messageStore', () => ({
   })
 }))
 
-const mockProfileRef = { value: { isDatingActive: true, profileImages: [] } }
+const mockProfileRef: { value: { isDatingActive: boolean; profileImages: { url: string }[] } } = { value: { isDatingActive: true, profileImages: [] } }
 
 vi.mock('@/features/myprofile/stores/ownerProfileStore', () => ({
   useOwnerProfileStore: () => ({
