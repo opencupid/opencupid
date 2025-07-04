@@ -7,6 +7,7 @@ export const SessionProfileSchema = ProfileSchema.pick({
   id: true,
   isDatingActive: true,
   isSocialActive: true,
+  isActive: true,
 })
 export type SessionProfile = z.infer<typeof SessionProfileSchema>
 

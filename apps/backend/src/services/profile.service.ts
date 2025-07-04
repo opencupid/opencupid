@@ -44,7 +44,7 @@ export class ProfileService {
         ...blockedContextInclude(myProfileId),
       },
     }
-    return await prisma.profile.findUnique(query) 
+    return await prisma.profile.findUnique(query)
   }
 
   async getProfileByUserId(userId: string): Promise<Profile | null> {
@@ -119,6 +119,8 @@ export class ProfileService {
       await tx.profile.update({
         where: { id: profileId },
         data: {
+          // XXX duplicated in updateScopes(), should be refactored to be updated in only place only
+          isActive: [data.isDatingActive, data.isSocialActive].some(Boolean),
           tags: {
             set: [],
             connect: tags.map(tagId => ({ id: tagId })),
@@ -201,27 +203,17 @@ export class ProfileService {
     if (typeof scopes.isSocialActive === 'boolean') {
       data.isSocialActive = scopes.isSocialActive
     }
+    // isActive is exported into the session for authorization checks
+    data.isActive = [data.isDatingActive, data.isSocialActive].some(Boolean)
 
     try {
-      return await prisma.$transaction(async tx => {
-        const updated = await tx.profile.update({
-          where: { userId },
-          data,
-          include: {
-            ...tagsInclude(),
-            ...profileImageInclude(),
-          },
-        })
-
-        await tx.user.update({
-          where: { id: userId },
-          data: {
-            hasActiveProfile:
-              updated.isDatingActive || updated.isSocialActive,
-          },
-        })
-
-        return updated
+      return await prisma.profile.update({
+        where: { userId },
+        data,
+        include: {
+          ...tagsInclude(),
+          ...profileImageInclude(),
+        },
       })
     } catch (err) {
       if (

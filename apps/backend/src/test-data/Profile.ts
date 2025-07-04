@@ -39,7 +39,6 @@ export function createRandomUser() {
     createdAt: faker.date.past(),
     lastLoginAt: faker.date.recent(),
     isRegistrationConfirmed: true,
-    hasActiveProfile: true,
     isActive: true,
     isOnboarded: true,
     // roles: ['user'],

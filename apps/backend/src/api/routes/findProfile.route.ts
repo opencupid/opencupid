@@ -26,7 +26,7 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
   )
 
   fastify.get('/social/new', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-    if (!req.session.hasActiveProfile || !req.session.profile.isSocialActive) {
+    if (!req.session.profile.isSocialActive) {
       return sendForbiddenError(reply)
     }
 
@@ -126,7 +126,7 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
     orderBy: OrderBy,
     take: number = 10
   ) => {
-    if (!req.session.hasActiveProfile || !req.session.profile.isDatingActive) {
+    if (!req.session.profile.isDatingActive) {
       return sendForbiddenError(reply)
     }
 
@@ -153,7 +153,7 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
     orderBy: OrderBy,
     take: number = 10
   ) => {
-    if (!req.session.hasActiveProfile || !req.session.profile.isSocialActive) {
+    if (!req.session.profile.isSocialActive) {
       return sendForbiddenError(reply)
     }
 

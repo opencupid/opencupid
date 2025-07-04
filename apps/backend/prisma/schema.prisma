@@ -150,7 +150,6 @@ model User {
   isActive                Boolean    @default(true)
   isBlocked               Boolean    @default(false)
   isRegistrationConfirmed Boolean    @default(false)
-  hasActiveProfile        Boolean    @default(false)
   createdAt               DateTime   @default(now())
   updatedAt               DateTime   @updatedAt
   lastLoginAt             DateTime?

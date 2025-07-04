@@ -15,9 +15,7 @@ import {
 import {
   rateLimitConfig,
   sendError,
-  sendForbiddenError,
-  sendUnauthorizedError
-} from '../helpers'
+  sendForbiddenError} from '../helpers'
 import {
   mapDbProfileToOwnerProfile,
   mapProfileSummary,
@@ -28,15 +26,11 @@ import type {
   GetMyProfileResponse,
   GetPublicProfileResponse,
   UpdateProfileResponse,
-  GetDatingPreferencesResponse,
-  UpdateDatingPreferencesResponse,
 } from '@zod/apiResponse.dto'
-import { DatingPreferencesDTOSchema, UpdateDatingPreferencesPayloadSchema } from '@zod/match/filters.dto'
 import { GetProfileSummariesResponse } from '@zod/apiResponse.dto'
 
 import { ProfileService } from 'src/services/profile.service'
 import { ProfileMatchService } from '@/services/profileMatch.service'
-import { UserService } from 'src/services/user.service'
 
 // Route params for ID lookups
 const IdLookupParamsSchema = z.object({
@@ -55,7 +49,6 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
 
   // instantiate services
   const profileService = ProfileService.getInstance()
-  const userService = UserService.getInstance()
   const matchQueryService = ProfileMatchService.getInstance()
 
   /**
@@ -103,7 +96,7 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
       }
 
       let includeDatingContext = false
-      if(raw.isDatingActive && req.session.profile.isDatingActive) {
+      if (raw.isDatingActive && req.session.profile.isDatingActive) {
         includeDatingContext = await matchQueryService.areProfilesMutuallyCompatible(myProfileId, raw.id)
       }
 
@@ -195,21 +188,12 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
   })
 
   async function updateProfile(profileData: UpdateProfilePayload, req: FastifyRequest, reply: FastifyReply) {
-    const user = await userService.getUserById(req.user.userId)
-    if (!user) return sendUnauthorizedError(reply)
-
-    user.hasActiveProfile = [profileData.isDatingActive, profileData.isSocialActive].some(Boolean)
     const locale = req.session.lang
 
     try {
       const updated = await fastify.prisma.$transaction(async tx => {
         const updatedProfile = await profileService.updateCompleteProfile(tx, locale, req.user.userId, profileData)
-        // if (!updatedProfile) return sendError(reply, 404, 'Profile not found')
         const profile = mapDbProfileToOwnerProfile(locale, updatedProfile)
-
-        // Update user profile state
-        const updatedUser = await userService.updateUser(tx, user)
-        if (!updatedUser) return sendError(reply, 500, 'Failed to update user')
         return profile
       })
 

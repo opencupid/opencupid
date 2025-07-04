@@ -82,7 +82,7 @@ export default fp(async (fastify: FastifyInstance) => {
         roles: user.roles,
         userId: user.id,
         profileId: user.profile?.id || '',
-        hasActiveProfile: user.hasActiveProfile || false,
+        hasActiveProfile: user.profile.isActive,
         profile: profile
       }
       sess = await sessionService.getOrCreate(sessionId, sessionData)

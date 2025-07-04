@@ -41,15 +41,6 @@ export class SessionService {
 
     const result = SessionDataSchema.safeParse(JSON.parse(raw))
     return result.success ? result.data : null
-
-    // return {
-    //   userId: session.userId,
-    //   profileId: session.profileId,
-    //   lang: session.lang || 'en',
-    //   roles: session.roles ?? [],
-    //   isOnboarded: Boolean(session.isOnboarded),
-    //   hasActiveProfile: Boolean(session.hasActiveProfile),
-    // }
   }
 
   /**
