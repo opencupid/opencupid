@@ -16,6 +16,13 @@ import { useI18n } from 'vue-i18n'
 
 const imageStore = useImageStore()
 
+const props = defineProps({
+  maxImages: {
+    type: Number,
+    default: 6,
+  },
+})
+
 const isRemoving = ref<Record<string, boolean>>({})
 const error = ref<string>('')
 
@@ -28,6 +35,11 @@ const model = computed({
   set(val) {
     imageStore.images = val
   }
+})
+
+const placeholderSlots = computed(() => {
+  const count = Math.max(0, props.maxImages - model.value.length)
+  return Array.from({ length: count })
 })
 
 /**
@@ -114,7 +126,11 @@ onMounted(async () => {
                   </div>
                 </div>
               </div>
-              <div class="col nodrag" key="upload-button" id="upload-button">
+              <div
+                v-for="(_, index) in placeholderSlots"
+                :key="'upload-' + index"
+                class="col nodrag"
+              >
                 <ImageUpload />
               </div>
             </TransitionGroup>
