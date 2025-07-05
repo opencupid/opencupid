@@ -147,7 +147,36 @@ export class InteractionService {
     return matches.map(like => toLikeEdge(like.to, like.createdAt, true))
   }
 
+  async getNewMatchesCount(profileId: string): Promise<number> {
+    return await prisma.likedProfile.count({
+      where: {
+        fromId: profileId,
+        to: {
+          likesSent: {
+            some: { toId: profileId },
+          },
+        },
+        isNew: true, // Only fetch new matches
+      },
+    })
+  }
 
+  /**
+   * Marks any mutual likes between profileA and profileB as no longer "new".
+   */
+  async markMatchAsSeen(profileAId: string, profileBId: string): Promise<void> {
+    await prisma.likedProfile.updateMany({
+      where: {
+        OR: [
+          { fromId: profileAId, toId: profileBId, isNew: true },
+          { fromId: profileBId, toId: profileAId, isNew: true },
+        ],
+      },
+      data: {
+        isNew: false,
+      },
+    })
+  }
 
   async pass(fromId: string, toId: string): Promise<void> {
     if (fromId === toId) throw new Error('Cannot pass yourself')

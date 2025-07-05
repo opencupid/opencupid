@@ -317,6 +317,7 @@ model LikedProfile {
   to        Profile  @relation("LikesReceived", fields: [toId], references: [id])
   toId      String
   createdAt DateTime @default(now())
+  isNew     Boolean  @default(true)
 
   @@unique([fromId, toId]) // Prevent double-like
 }

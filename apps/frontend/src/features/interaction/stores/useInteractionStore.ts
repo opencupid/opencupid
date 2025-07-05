@@ -7,6 +7,7 @@ import { storeError, storeSuccess, type StoreError, type StoreResponse } from '@
 interface InteractionState {
   sent: InteractionEdge[]
   receivedLikesCount: number
+  newMatchesCount: number
   matches: InteractionEdge[]
   passed: string[] // just IDs for now
   loading: boolean
@@ -18,6 +19,7 @@ export const useInteractionStore = defineStore('interaction', {
   state: (): InteractionState => ({
     sent: [],
     receivedLikesCount: 0,
+    newMatchesCount: 0,
     matches: [],
     passed: [],
     loading: false,
@@ -40,6 +42,7 @@ export const useInteractionStore = defineStore('interaction', {
     onNewMatch(edge: InteractionEdge) {
       if (edge.isMatch && !this.matches.some(e => e.profile.id === edge.profile.id)) {
         this.matches.unshift(edge)
+        this.newMatchesCount++
       }
     },
 
@@ -51,6 +54,7 @@ export const useInteractionStore = defineStore('interaction', {
         this.sent = stats.sent
         this.matches = stats.matches
         this.receivedLikesCount = stats.receivedLikesCount
+        this.newMatchesCount = stats.newMatchesCount
         this.initialized = true
         return storeSuccess()
       } catch (error) {

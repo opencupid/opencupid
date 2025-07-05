@@ -15,6 +15,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'close'): void
+  (e: 'messaged'): void
 }>()
 const messageSent = ref(false)
 const handleMessageSent = () => {
@@ -23,6 +24,7 @@ const handleMessageSent = () => {
   messageSent.value = true
   setTimeout(() => {
     console.log('Hiding modal after message sent')
+    emit('messaged')
     emit('close')
   }, 3000)
 }

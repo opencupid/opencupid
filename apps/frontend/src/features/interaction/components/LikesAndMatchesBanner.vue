@@ -2,7 +2,7 @@
 import IconHeart from '@/assets/icons/interface/heart.svg'
 import { useInteractionsViewModel } from '../composables/useInteractionsViewModel'
 
-const { receivedLikesCount, haveReceivedLikes, haveMatches, matches } = useInteractionsViewModel()
+const { receivedLikesCount, haveReceivedLikes, haveNewMatches, newMatchesCount } = useInteractionsViewModel()
 </script>
 
 <template>
@@ -10,14 +10,14 @@ const { receivedLikesCount, haveReceivedLikes, haveMatches, matches } = useInter
     class="rounded shadow clickable d-flex align-items-center gap-1 dating p-4"
         @click="$router.push({ name: 'Matches' })"
 
-    v-if="haveMatches || haveReceivedLikes"
+    v-if="haveNewMatches || haveReceivedLikes"
   >
     <div class="">
       <span class="text-dating"><IconHeart class="svg-icon" /></span>
       You have
       <span v-if="haveReceivedLikes">{{ receivedLikesCount }} likes</span>
-      <span v-if="haveMatches && haveReceivedLikes"> and </span>
-      <span v-if="haveMatches">{{ matches.length }} matches</span>
+      <span v-if="haveNewMatches && haveReceivedLikes"> and </span>
+      <span v-if="haveNewMatches">{{ newMatchesCount }} new matches</span>
       <span>!</span>
       <!-- <BButton
         variant="link-primary"

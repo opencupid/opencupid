@@ -96,7 +96,7 @@ const isDetailView = computed(() => !!messageStore.activeConversation)
     </div>
 
     <!-- List view -->
-    <div class="d-flex flex-column h-100" :class="{ 'd-none': isDetailView }">
+    <div class="d-flex flex-column overflow-auto h-100" :class="{ 'd-none': isDetailView }">
       <ViewTitle :icon="IconMessage" title="Messages" class="text-primary" />
       <BOverlay
         :show="!haveConversations"

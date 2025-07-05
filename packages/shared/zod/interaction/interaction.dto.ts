@@ -20,6 +20,7 @@ export type InteractionEdgePair = z.infer<typeof InteractionEdgePairSchema>
 export const InteractionStatsSchema = z.object({
   sent: z.array(InteractionEdgeSchema),
   matches: z.array(InteractionEdgeSchema),
+  newMatchesCount: z.number().default(0), 
   receivedLikesCount: z.number(),
 })
 

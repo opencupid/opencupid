@@ -23,6 +23,7 @@ const { t } = useI18n()
         v-for="convo in conversations"
         :key="convo.conversationId"
         :active="activeConversation?.conversationId === convo.conversationId"
+        :class="{disabled: !convo.canReply}"
         variant="light"
         class="d-flex justify-content-start align-items-center mb-3 p-2 border-0 rounded-3 shadow cursor-pointer user-select-none"
         @click="$emit('convo:select', convo)"
@@ -40,6 +41,7 @@ const { t } = useI18n()
         </div>
         <div class="flex-shrink-0 me-2 ">
           <small v-if="!convo.lastMessage?.isMine" class="badge bg-danger">{{ t('messaging.my_turn') }}</small>
+          <small v-if="!convo.canReply" class="badge bg-secondary">Their turn</small>
         </div>
       </BListGroupItem>
     </BListGroup>
@@ -49,5 +51,9 @@ const { t } = useI18n()
 <style scoped>
 .last-message {
   text-overflow: ellipsis;
+}
+.disabled {
+  opacity: 0.5;
+  pointer-events: none;
 }
 </style>

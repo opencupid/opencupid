@@ -8,17 +8,13 @@ const { receivedLikesCount, haveReceivedLikes, haveMatches, matches } = useInter
 <template>
   <div
     class="rounded shadow clickable d-flex align-items-center gap-1 dating p-4"
-        @click="$router.push({ name: 'Matches' })"
-
-    v-if="haveMatches || haveReceivedLikes"
+    @click="$router.push({ name: 'Matches' })"
+    v-if="haveReceivedLikes"
   >
     <div class="">
       <span class="text-dating"><IconHeart class="svg-icon" /></span>
       You have
-      <span v-if="haveReceivedLikes">{{ receivedLikesCount }} likes</span>
-      <span v-if="haveMatches && haveReceivedLikes">and</span>
-      <span v-if="haveMatches">{{ matches.length }} matches</span>
-      <span>!</span>
+      {{ receivedLikesCount }} likes!
       <!-- <BButton
         variant="link-primary"
         class="stretched-link p-0 ms-1"

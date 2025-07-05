@@ -307,7 +307,7 @@ export class ProfileService {
         const t = i18next.getFixedT(user?.language || 'en')
         const content = t('messaging.welcome_message')
         const messageService = MessageService.getInstance()
-        await messageService.initiateConversation(senderId, newProfile.id, content)
+        await messageService.sendOrStartConversation(prisma, senderId, newProfile.id, content)
       } catch (err) {
         console.error('Failed to send welcome message', err)
       }

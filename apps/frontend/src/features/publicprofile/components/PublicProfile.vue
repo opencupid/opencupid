@@ -71,7 +71,7 @@ const handleBlock = async () => {
           <ProfileInteractions
             :profile="profile"
             @intent:message="(convoId: string) => emit('intent:message', convoId)"
-            @updated="$emit('intent:back')"
+            @updated="refreshProfile"
             @passed="$emit('hidden', profile.id)"
           />
         </div>

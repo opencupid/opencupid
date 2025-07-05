@@ -18,6 +18,7 @@ import type {
 } from '@zod/apiResponse.dto'
 import { broadcastToProfile } from '@/utils/wsUtils'
 import { SendMessagePayloadSchema } from '@zod/messaging/messaging.dto'
+import { InteractionService } from '../../services/interaction.service'
 
 // Route params for ID lookups
 const IdLookupParamsSchema = z.object({
@@ -43,6 +44,7 @@ const IdLookupParamsSchema = z.object({
 const messageRoutes: FastifyPluginAsync = async fastify => {
   const messageService = MessageService.getInstance()
   const webPushService = WebPushService.getInstance()
+  const interactionService = InteractionService.getInstance()
 
   fastify.get('/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const profileId = req.session.profileId
@@ -121,11 +123,28 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
     const { profileId, content } = body.data
 
     try {
-      const { conversation, message } = await messageService.sendOrStartConversation(
-        senderProfileId,
-        profileId,
-        content
+      const { convoId, message } = await fastify.prisma.$transaction(async (tx) => {
+        return await messageService.sendOrStartConversation(
+          tx,
+          senderProfileId,
+          profileId,
+          content
+        )
+      })
+
+      const conversation = await messageService.getConversationSummary(
+        convoId,
+        senderProfileId
       )
+      if (conversation?.conversation.status !== 'INITIATED') {
+        await interactionService.markMatchAsSeen(senderProfileId, profileId)
+      }
+
+      if (!conversation) {
+        throw new Error('Conversation summary not found')
+      }
+
+
       const messageDTO = mapMessageDTO(message, conversation)
 
       const response: SendMessageResponse = {

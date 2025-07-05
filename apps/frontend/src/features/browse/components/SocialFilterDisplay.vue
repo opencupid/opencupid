@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { relativeLocationLabel } from '@/features/shared/composables/useLocationLabel'
-import { LocationDTO } from '@zod/dto/location.dto'
-import { SocialMatchFilterDTO } from '@zod/match/filters.dto'
+import { type LocationDTO } from '@zod/dto/location.dto'
+import { type SocialMatchFilterDTO } from '@zod/match/filters.dto'
 import { computed } from 'vue';
 
 const props = defineProps<{

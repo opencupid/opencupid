@@ -53,6 +53,7 @@ const ConversationSummarySchema = ConversationParticipantSchema.pick({
     updatedAt: true,
     createdAt: true,
   }),
+  canReply: z.boolean().default(false),
   partnerProfile: ProfileSummarySchema,
   lastMessage: MessageInConversationSummarySchema.nullable(),
 })

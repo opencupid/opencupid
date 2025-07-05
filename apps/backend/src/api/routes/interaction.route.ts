@@ -22,14 +22,15 @@ const interactionRoutes: FastifyPluginAsync = async fastify => {
     const myId = req.session.profileId
 
     try {
-      const [sent, matches, count] = await Promise.all([
+      const [sent, matches, receivedLikesCount, newMatchesCount] = await Promise.all([
         service.getLikesSent(myId),
         service.getMatches(myId),
         service.getLikesReceivedCount(myId),
+        service.getNewMatchesCount(myId),
       ])
       const response: InteractionStatsResponse = {
         success: true,
-        stats: { sent, matches, receivedLikesCount: count },
+        stats: { sent, matches, receivedLikesCount, newMatchesCount },
       }
       return reply.code(200).send(response)
     } catch (err) {

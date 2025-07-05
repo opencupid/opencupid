@@ -20,6 +20,7 @@ export const DbProfileSchema = ProfileSchema.extend({
 export type DbProfile = z.infer<typeof DbProfileSchema>;
 
 export const DbProfileWithImagesSchema = DbProfileSchema.extend({
+  city: CitySchema.nullable(),
   profileImages: z.array(ProfileImageSchema).default([]),
 })
 export type DbProfileWithImages = z.infer<typeof DbProfileWithImagesSchema>;

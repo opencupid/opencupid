@@ -32,7 +32,7 @@ export const ConversationScalarFieldEnumSchema = z.enum(['id','createdAt','updat
 
 export const ConversationParticipantScalarFieldEnumSchema = z.enum(['id','profileId','conversationId','lastReadAt','isMuted','isArchived']);
 
-export const LikedProfileScalarFieldEnumSchema = z.enum(['id','fromId','toId','createdAt']);
+export const LikedProfileScalarFieldEnumSchema = z.enum(['id','fromId','toId','createdAt','isNew']);
 
 export const HiddenProfileScalarFieldEnumSchema = z.enum(['id','fromId','toId','createdAt']);
 
@@ -287,6 +287,7 @@ export const LikedProfileSchema = z.object({
   fromId: z.string(),
   toId: z.string(),
   createdAt: z.coerce.date(),
+  isNew: z.boolean(),
 })
 
 export type LikedProfile = z.infer<typeof LikedProfileSchema>
@@ -764,6 +765,7 @@ export const LikedProfileSelectSchema: z.ZodType<Prisma.LikedProfileSelect> = z.
   fromId: z.boolean().optional(),
   toId: z.boolean().optional(),
   createdAt: z.boolean().optional(),
+  isNew: z.boolean().optional(),
   from: z.union([z.boolean(),z.lazy(() => ProfileArgsSchema)]).optional(),
   to: z.union([z.boolean(),z.lazy(() => ProfileArgsSchema)]).optional(),
 }).strict()
@@ -1985,6 +1987,7 @@ export const LikedProfileWhereInputSchema: z.ZodType<Prisma.LikedProfileWhereInp
   fromId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   toId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  isNew: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
   from: z.union([ z.lazy(() => ProfileScalarRelationFilterSchema),z.lazy(() => ProfileWhereInputSchema) ]).optional(),
   to: z.union([ z.lazy(() => ProfileScalarRelationFilterSchema),z.lazy(() => ProfileWhereInputSchema) ]).optional(),
 }).strict();
@@ -1994,6 +1997,7 @@ export const LikedProfileOrderByWithRelationInputSchema: z.ZodType<Prisma.LikedP
   fromId: z.lazy(() => SortOrderSchema).optional(),
   toId: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
+  isNew: z.lazy(() => SortOrderSchema).optional(),
   from: z.lazy(() => ProfileOrderByWithRelationInputSchema).optional(),
   to: z.lazy(() => ProfileOrderByWithRelationInputSchema).optional()
 }).strict();
@@ -2019,6 +2023,7 @@ export const LikedProfileWhereUniqueInputSchema: z.ZodType<Prisma.LikedProfileWh
   fromId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   toId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  isNew: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
   from: z.union([ z.lazy(() => ProfileScalarRelationFilterSchema),z.lazy(() => ProfileWhereInputSchema) ]).optional(),
   to: z.union([ z.lazy(() => ProfileScalarRelationFilterSchema),z.lazy(() => ProfileWhereInputSchema) ]).optional(),
 }).strict());
@@ -2028,6 +2033,7 @@ export const LikedProfileOrderByWithAggregationInputSchema: z.ZodType<Prisma.Lik
   fromId: z.lazy(() => SortOrderSchema).optional(),
   toId: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
+  isNew: z.lazy(() => SortOrderSchema).optional(),
   _count: z.lazy(() => LikedProfileCountOrderByAggregateInputSchema).optional(),
   _max: z.lazy(() => LikedProfileMaxOrderByAggregateInputSchema).optional(),
   _min: z.lazy(() => LikedProfileMinOrderByAggregateInputSchema).optional()
@@ -2041,6 +2047,7 @@ export const LikedProfileScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.
   fromId: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   toId: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
+  isNew: z.union([ z.lazy(() => BoolWithAggregatesFilterSchema),z.boolean() ]).optional(),
 }).strict();
 
 export const HiddenProfileWhereInputSchema: z.ZodType<Prisma.HiddenProfileWhereInput> = z.object({
@@ -3358,6 +3365,7 @@ export const ConversationParticipantUncheckedUpdateManyInputSchema: z.ZodType<Pr
 export const LikedProfileCreateInputSchema: z.ZodType<Prisma.LikedProfileCreateInput> = z.object({
   id: z.string().cuid().optional(),
   createdAt: z.coerce.date().optional(),
+  isNew: z.boolean().optional(),
   from: z.lazy(() => ProfileCreateNestedOneWithoutLikesSentInputSchema),
   to: z.lazy(() => ProfileCreateNestedOneWithoutLikesReceivedInputSchema)
 }).strict();
@@ -3366,12 +3374,14 @@ export const LikedProfileUncheckedCreateInputSchema: z.ZodType<Prisma.LikedProfi
   id: z.string().cuid().optional(),
   fromId: z.string(),
   toId: z.string(),
-  createdAt: z.coerce.date().optional()
+  createdAt: z.coerce.date().optional(),
+  isNew: z.boolean().optional()
 }).strict();
 
 export const LikedProfileUpdateInputSchema: z.ZodType<Prisma.LikedProfileUpdateInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  isNew: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   from: z.lazy(() => ProfileUpdateOneRequiredWithoutLikesSentNestedInputSchema).optional(),
   to: z.lazy(() => ProfileUpdateOneRequiredWithoutLikesReceivedNestedInputSchema).optional()
 }).strict();
@@ -3381,18 +3391,21 @@ export const LikedProfileUncheckedUpdateInputSchema: z.ZodType<Prisma.LikedProfi
   fromId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   toId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  isNew: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const LikedProfileCreateManyInputSchema: z.ZodType<Prisma.LikedProfileCreateManyInput> = z.object({
   id: z.string().cuid().optional(),
   fromId: z.string(),
   toId: z.string(),
-  createdAt: z.coerce.date().optional()
+  createdAt: z.coerce.date().optional(),
+  isNew: z.boolean().optional()
 }).strict();
 
 export const LikedProfileUpdateManyMutationInputSchema: z.ZodType<Prisma.LikedProfileUpdateManyMutationInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  isNew: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const LikedProfileUncheckedUpdateManyInputSchema: z.ZodType<Prisma.LikedProfileUncheckedUpdateManyInput> = z.object({
@@ -3400,6 +3413,7 @@ export const LikedProfileUncheckedUpdateManyInputSchema: z.ZodType<Prisma.LikedP
   fromId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   toId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  isNew: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const HiddenProfileCreateInputSchema: z.ZodType<Prisma.HiddenProfileCreateInput> = z.object({
@@ -4649,21 +4663,24 @@ export const LikedProfileCountOrderByAggregateInputSchema: z.ZodType<Prisma.Like
   id: z.lazy(() => SortOrderSchema).optional(),
   fromId: z.lazy(() => SortOrderSchema).optional(),
   toId: z.lazy(() => SortOrderSchema).optional(),
-  createdAt: z.lazy(() => SortOrderSchema).optional()
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  isNew: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const LikedProfileMaxOrderByAggregateInputSchema: z.ZodType<Prisma.LikedProfileMaxOrderByAggregateInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
   fromId: z.lazy(() => SortOrderSchema).optional(),
   toId: z.lazy(() => SortOrderSchema).optional(),
-  createdAt: z.lazy(() => SortOrderSchema).optional()
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  isNew: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const LikedProfileMinOrderByAggregateInputSchema: z.ZodType<Prisma.LikedProfileMinOrderByAggregateInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
   fromId: z.lazy(() => SortOrderSchema).optional(),
   toId: z.lazy(() => SortOrderSchema).optional(),
-  createdAt: z.lazy(() => SortOrderSchema).optional()
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  isNew: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const HiddenProfileFromIdToIdCompoundUniqueInputSchema: z.ZodType<Prisma.HiddenProfileFromIdToIdCompoundUniqueInput> = z.object({
@@ -8213,13 +8230,15 @@ export const ProfileCreateOrConnectWithoutBlockedProfilesInputSchema: z.ZodType<
 export const LikedProfileCreateWithoutFromInputSchema: z.ZodType<Prisma.LikedProfileCreateWithoutFromInput> = z.object({
   id: z.string().cuid().optional(),
   createdAt: z.coerce.date().optional(),
+  isNew: z.boolean().optional(),
   to: z.lazy(() => ProfileCreateNestedOneWithoutLikesReceivedInputSchema)
 }).strict();
 
 export const LikedProfileUncheckedCreateWithoutFromInputSchema: z.ZodType<Prisma.LikedProfileUncheckedCreateWithoutFromInput> = z.object({
   id: z.string().cuid().optional(),
   toId: z.string(),
-  createdAt: z.coerce.date().optional()
+  createdAt: z.coerce.date().optional(),
+  isNew: z.boolean().optional()
 }).strict();
 
 export const LikedProfileCreateOrConnectWithoutFromInputSchema: z.ZodType<Prisma.LikedProfileCreateOrConnectWithoutFromInput> = z.object({
@@ -8235,13 +8254,15 @@ export const LikedProfileCreateManyFromInputEnvelopeSchema: z.ZodType<Prisma.Lik
 export const LikedProfileCreateWithoutToInputSchema: z.ZodType<Prisma.LikedProfileCreateWithoutToInput> = z.object({
   id: z.string().cuid().optional(),
   createdAt: z.coerce.date().optional(),
+  isNew: z.boolean().optional(),
   from: z.lazy(() => ProfileCreateNestedOneWithoutLikesSentInputSchema)
 }).strict();
 
 export const LikedProfileUncheckedCreateWithoutToInputSchema: z.ZodType<Prisma.LikedProfileUncheckedCreateWithoutToInput> = z.object({
   id: z.string().cuid().optional(),
   fromId: z.string(),
-  createdAt: z.coerce.date().optional()
+  createdAt: z.coerce.date().optional(),
+  isNew: z.boolean().optional()
 }).strict();
 
 export const LikedProfileCreateOrConnectWithoutToInputSchema: z.ZodType<Prisma.LikedProfileCreateOrConnectWithoutToInput> = z.object({
@@ -8641,6 +8662,7 @@ export const LikedProfileScalarWhereInputSchema: z.ZodType<Prisma.LikedProfileSc
   fromId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   toId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  isNew: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
 }).strict();
 
 export const LikedProfileUpsertWithWhereUniqueWithoutToInputSchema: z.ZodType<Prisma.LikedProfileUpsertWithWhereUniqueWithoutToInput> = z.object({
@@ -11782,13 +11804,15 @@ export const LocalizedProfileFieldCreateManyProfileInputSchema: z.ZodType<Prisma
 export const LikedProfileCreateManyFromInputSchema: z.ZodType<Prisma.LikedProfileCreateManyFromInput> = z.object({
   id: z.string().cuid().optional(),
   toId: z.string(),
-  createdAt: z.coerce.date().optional()
+  createdAt: z.coerce.date().optional(),
+  isNew: z.boolean().optional()
 }).strict();
 
 export const LikedProfileCreateManyToInputSchema: z.ZodType<Prisma.LikedProfileCreateManyToInput> = z.object({
   id: z.string().cuid().optional(),
   fromId: z.string(),
-  createdAt: z.coerce.date().optional()
+  createdAt: z.coerce.date().optional(),
+  isNew: z.boolean().optional()
 }).strict();
 
 export const HiddenProfileCreateManyFromInputSchema: z.ZodType<Prisma.HiddenProfileCreateManyFromInput> = z.object({
@@ -12279,6 +12303,7 @@ export const ProfileUncheckedUpdateManyWithoutBlockedProfilesInputSchema: z.ZodT
 export const LikedProfileUpdateWithoutFromInputSchema: z.ZodType<Prisma.LikedProfileUpdateWithoutFromInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  isNew: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   to: z.lazy(() => ProfileUpdateOneRequiredWithoutLikesReceivedNestedInputSchema).optional()
 }).strict();
 
@@ -12286,17 +12311,20 @@ export const LikedProfileUncheckedUpdateWithoutFromInputSchema: z.ZodType<Prisma
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   toId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  isNew: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const LikedProfileUncheckedUpdateManyWithoutFromInputSchema: z.ZodType<Prisma.LikedProfileUncheckedUpdateManyWithoutFromInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   toId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  isNew: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const LikedProfileUpdateWithoutToInputSchema: z.ZodType<Prisma.LikedProfileUpdateWithoutToInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  isNew: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   from: z.lazy(() => ProfileUpdateOneRequiredWithoutLikesSentNestedInputSchema).optional()
 }).strict();
 
@@ -12304,12 +12332,14 @@ export const LikedProfileUncheckedUpdateWithoutToInputSchema: z.ZodType<Prisma.L
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   fromId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  isNew: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const LikedProfileUncheckedUpdateManyWithoutToInputSchema: z.ZodType<Prisma.LikedProfileUncheckedUpdateManyWithoutToInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   fromId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  isNew: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const HiddenProfileUpdateWithoutFromInputSchema: z.ZodType<Prisma.HiddenProfileUpdateWithoutFromInput> = z.object({

@@ -32,14 +32,13 @@ const { like, pass, refreshInteractions, isLoading } = useInteractionsViewModel(
 
 const handleLike = async () => {
   const result = await like(props.profile.id)
-  emit('liked')
-  emit('updated')
   if (result.success) {
     match.value = result.data
     if (match.value?.isMatch) {
       showMatchModal.value = true
     } else {
-      toast('Successfully liked profile')
+      emit('liked')
+      emit('updated')
     }
   } else {
     toast.error('Failed to like profile. Please try again.')
@@ -69,7 +68,10 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div v-if="profile.interactionContext" class="d-flex justify-content-center align-items-center gap-2">
+  <div
+    v-if="profile.interactionContext"
+    class="d-flex justify-content-center align-items-center gap-2"
+  >
     <InteractionButtons
       @message="handleMessageIntent"
       @pass="handlePass"
@@ -86,6 +88,7 @@ onMounted(async () => {
       :show="showMatchModal"
       :profile="props.profile"
       :match="match"
+      @messaged="$emit('updated')"
       @close="showMatchModal = false"
     />
   </div>

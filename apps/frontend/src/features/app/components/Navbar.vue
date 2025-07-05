@@ -23,11 +23,9 @@ const authStore = useAuthStore()
 const profileStore = useOwnerProfileStore()
 const interactionStore = useInteractionStore()
 
-const isLoggedIn = computed(() => authStore.isLoggedIn)
-const isProfileLoaded = computed(() => profileStore.profile !== null && !profileStore.isLoading)
 const hasUnreadMessages = computed(() => useMessageStore().hasUnreadMessages)
 const hasMatchNotifications = computed(
-  () => interactionStore.matches.length > 0 || interactionStore.receivedLikesCount > 0
+  () => interactionStore.newMatchesCount > 0 || interactionStore.receivedLikesCount > 0
 )
 
 function handleLogoutClick() {
