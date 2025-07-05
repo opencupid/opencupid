@@ -1,8 +1,8 @@
-import type { LocationDTO } from '@zod/dto/location.dto'
+import type { LocationDTO, LocationPayload, SearchLocationDTO } from '@zod/dto/location.dto'
 import { useCountries } from './useCountries'
 
 interface UseLocationLabelOptions {
-  location: LocationDTO | null
+  location: SearchLocationDTO 
   viewerLocation: LocationDTO | null
   showCity?: boolean
   showCountryLabel?: boolean
@@ -24,8 +24,8 @@ export function relativeLocationLabel({
 
   const parts: string[] = []
 
-  if (showCityName) parts.push(location.cityName)
-  if (showCountry && showCountryLabel) {
+  if (showCityName && location.cityName) parts.push(location.cityName)
+  if (showCountry && showCountryLabel && location.country) {
     const countryName = countryCodeToName(location.country)
     if (countryName) parts.push(countryName)
   }

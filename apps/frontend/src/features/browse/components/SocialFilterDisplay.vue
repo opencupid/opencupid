@@ -2,7 +2,7 @@
 import { relativeLocationLabel } from '@/features/shared/composables/useLocationLabel'
 import { type LocationDTO } from '@zod/dto/location.dto'
 import { type SocialMatchFilterDTO } from '@zod/match/filters.dto'
-import { computed } from 'vue';
+import { computed } from 'vue'
 
 const props = defineProps<{
   socialFilter: SocialMatchFilterDTO | null
@@ -15,7 +15,7 @@ const interestlist = computed(() => {
 </script>
 
 <template>
-  <div v-if="socialFilter?.location && viewerLocation" >
+  <div v-if="socialFilter?.location && viewerLocation">
     {{
       relativeLocationLabel({
         location: socialFilter?.location,
