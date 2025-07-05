@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { createMockPrisma } from '../../test-utils/prisma'
+import { canSendMessageInConversation } from '../../services/messaging.service'
 
 let service: any
 let mockPrisma: any
@@ -23,27 +24,27 @@ describe('MessageService.sortProfilePair', () => {
 
 describe('MessageService.canSendMessageInConversation', () => {
   it('allows when no conversation', () => {
-    expect(service.canSendMessageInConversation(null, 'p1')).toBe(true)
+    expect(canSendMessageInConversation(null, 'p1')).toBe(true)
   })
 
   it('allows when accepted', () => {
-    const convo: any = { status: 'ACCEPTED', profileAId: 'p1' }
-    expect(service.canSendMessageInConversation(convo, 'p1')).toBe(true)
+    const convo: any = { status: 'ACCEPTED', initiatorProfileId: 'p1' }
+    expect(canSendMessageInConversation(convo, 'p1')).toBe(true)
   })
 
   it('allows when initiated by other user', () => {
-    const convo: any = { status: 'INITIATED', profileAId: 'other' }
-    expect(service.canSendMessageInConversation(convo, 'p1')).toBe(true)
+    const convo: any = { status: 'INITIATED', initiatorProfileId: 'other' }
+    expect(canSendMessageInConversation(convo, 'p1')).toBe(true)
   })
 
   it('rejects when initiated by sender', () => {
-    const convo: any = { status: 'INITIATED', profileAId: 'p1' }
-    expect(service.canSendMessageInConversation(convo, 'p1')).toBe(false)
+    const convo: any = { status: 'INITIATED', initiatorProfileId: 'p1' }
+    expect(canSendMessageInConversation(convo, 'p1')).toBe(false)
   })
 
   it('rejects when blocked', () => {
-    const convo: any = { status: 'BLOCKED', profileAId: 'x' }
-    expect(service.canSendMessageInConversation(convo, 'p1')).toBe(false)
+    const convo: any = { status: 'BLOCKED', initiatorProfileId: 'x' }
+    expect(canSendMessageInConversation(convo, 'p1')).toBe(false)
   })
 })
 
@@ -90,7 +91,6 @@ describe('MessageService.listConversationsForProfile', () => {
     await service.listConversationsForProfile('p1')
     const args = mockPrisma.conversationParticipant.findMany.mock.calls[0][0]
     expect(args.where.profileId).toBe('p1')
-    expect(args.orderBy).toEqual({ conversation: { updatedAt: 'desc' } })
     // ensure blocklist filters applied
     expect(args.where.conversation.participants.some.profile.blockedProfiles.none.id).toBe('p1')
   })

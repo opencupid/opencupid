@@ -195,9 +195,6 @@ export class MessageService {
   }
 
 
-
-
-
   async sendOrStartConversation(
     tx: Prisma.TransactionClient,
     senderProfileId: string,
@@ -236,7 +233,7 @@ export class MessageService {
     })
 
     if (existing) {
-      if (!this.canSendMessageInConversation(existing, senderId)) {
+      if (!canSendMessageInConversation(existing, senderId)) {
         throw {
           error: 'Conversation is not accepted or sender cannot reply to initiated thread',
           code: 'CONVERSATION_BLOCKED',
@@ -286,26 +283,7 @@ export class MessageService {
     return a < b ? [a, b] : [b, a]
   }
 
-  // Checks if the sender is allowed to reply to a conversation.
-  /*
-  | Condition                                | Allow?                   |
-  | ---------------------------------------- | ------------------------ |
-  | status = `ACCEPTED`                      | ✅ Yes                    |
-  | status = `INITIATED`, sender ≠ initiator | ✅ Yes                    |
-  | status = `INITIATED`, sender = initiator | ❌ No (already initiated) |
-  | status = `BLOCKED` or anything else      | ❌ No                     |
-  */
-  canSendMessageInConversation(
-    conversation: Conversation | null,
-    senderProfileId: string
-  ): boolean {
-    if (!conversation) return true // no conversation yet → allowed to start one
 
-    return (
-      conversation.status === 'ACCEPTED' ||
-      (conversation.status === 'INITIATED' && conversation.initiatorProfileId !== senderProfileId)
-    )
-  }
 }
 
 export type SendMessageSuccessResponse = {
@@ -318,3 +296,20 @@ export type SendMessageErrorResponse = {
   error: string
 }
 
+/*
+Checks if the sender is allowed to reply to a conversation.
+| Condition                                | Allow?                   |
+| ---------------------------------------- | ------------------------ |
+| status = `ACCEPTED`                      | ✅ Yes                    |
+| status = `INITIATED`, sender ≠ initiator | ✅ Yes                    |
+| status = `INITIATED`, sender = initiator | ❌ No (already initiated) |
+| status = `BLOCKED` or anything else      | ❌ No                     |
+*/
+export function canSendMessageInConversation(conversation: Conversation | null, senderProfileId: string): boolean {
+  if (!conversation) return true // no conversation yet → allowed to start one
+
+  return (
+    conversation.status === 'ACCEPTED' ||
+    (conversation.status === 'INITIATED' && conversation.initiatorProfileId !== senderProfileId)
+  )
+}

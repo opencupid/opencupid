@@ -8,6 +8,7 @@ import type {
 import { mapProfileSummary } from './profile.mappers';
 import { DbProfileWithContext } from '@zod/profile/profile.db';
 import { ConversationContext } from '@zod/messaging/conversationContext.dto';
+import { canSendMessageInConversation } from '../../services/messaging.service';
 
 function mapConversationMeta(c: { id: string; updatedAt: Date; createdAt: Date }) {
   return {
@@ -51,10 +52,7 @@ export function mapConversationParticipantToSummary(
 
   const lastMessage = p.conversation.messages[0] ?? null
 
-  const canReply = (
-    p.conversation.status === 'ACCEPTED' ||
-    (p.conversation.status === 'INITIATED' && p.conversation.initiatorProfileId !== currentProfileId)
-  )
+  const canReply = canSendMessageInConversation(p.conversation, currentProfileId)
   return {
     id: p.id,
     profileId: p.profileId,
