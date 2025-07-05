@@ -1,0 +1,16 @@
+{
+  "servers": {
+    "my-mcp-server-fde65dfd": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "."
+      ]
+    },
+    "my-mcp-server-622c2184": {
+      "url": "http://localhost:9999/sse"
+    },
+  }
+}

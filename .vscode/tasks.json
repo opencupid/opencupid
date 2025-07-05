@@ -1,0 +1,20 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "typescript",
+			"tsconfig": "tsconfig.json",
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build",
+			"label": "tsc: build - tsconfig.json",
+			"options": {
+				"cwd": "${workspaceFolder}/apps/backend",
+				"env": {
+					"PATH": "${workspaceFolder}/apps/backend/node_modules/.bin:/usr/local/bin:${env:PATH}"
+				}
+			}
+		}
+	]
+}

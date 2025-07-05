@@ -1,0 +1,39 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Attach",
+      "port": 9229,
+      "request": "attach",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "type": "node",
+      "restart": true,
+      "autoAttachChildProcesses": true,
+      "localRoot": "${workspaceFolder}/apps/backend",
+    },
+    {
+      "type": "node-terminal",
+      "request": "launch",
+      "name": "Run Profile test-data script",
+      "command": "pnpm run test-data",
+      "cwd": "${workspaceFolder}/apps/backend",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+    },
+     {
+      "type": "node-terminal",
+      "request": "launch",
+      "name": "Run frontend test:unit",
+      "command": "pnpm test:unit",
+      "cwd": "${workspaceFolder}/apps/frontend",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+    },
+  ]
+}
