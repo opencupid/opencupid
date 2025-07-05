@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import { type LocationDTO } from '@zod/dto/location.dto'
-import { type SocialMatchFilterDTO } from '@zod/match/filters.dto'
+import { DatingPreferencesDTO, type SocialMatchFilterDTO } from '@zod/match/filters.dto'
 import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
 import TagList from '@/features/shared/profiledisplay/TagList.vue'
 import IconSetting from '@/assets/icons/interface/setting.svg'
 import IconSearch from '@/assets/icons/interface/search.svg'
+import GenderSymbol from '@/features/shared/profiledisplay/GenderSymbol.vue'
 
-const socialFilter = defineModel<SocialMatchFilterDTO | null>({
+const model = defineModel<DatingPreferencesDTO | null>({
   default: null,
 })
+
 const props = defineProps<{
   viewerLocation?: LocationDTO | null
   prefsButtonDisabled?: boolean
@@ -20,26 +22,13 @@ defineEmits<{
 </script>
 
 <template>
-
-  
   <div
     class="d-flex align-items-center justify-content-between w-100 clickable bg-secondary rounded-2 px-2 py-1 text-white"
     @click="$emit('prefs:toggle')"
   >
-    <div class="flex-grow-1">
-      <span class="me-2 ps-1">
-        <LocationLabel
-          v-if="socialFilter?.location && viewerLocation"
-          :location="socialFilter.location"
-          :viewerLocation="viewerLocation"
-          :showCity="true"
-          :showCountryLabel="true"
-          :showCountryIcon="false"
-        />
-        <span v-if="!socialFilter?.location.country">Anywhere</span>
-      </span>
-
-      <TagList v-if="socialFilter?.tags.length" :tags="socialFilter.tags" />
+    <div class="flex-grow-1 d-flex align-items-center">
+      <span class="me-2">Age: {{ model?.prefAgeMin }} - {{ model?.prefAgeMax }}</span>
+      <GenderSymbol v-for="pref in model?.prefGender" :key="pref" :gender="pref" />
     </div>
 
     <div class="flex-shrink-1">

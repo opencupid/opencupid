@@ -120,6 +120,13 @@ export function useFindMatchViewModel() {
     router.push({ name: 'PublicProfile', params: { profileId } })
   }
 
+  const scopeModel = computed({
+    get: () => currentScope.value,
+    set: (scope: ProfileScope | null) => {
+      if (scope) navigateToScope(scope)
+    },
+  })
+
   const viewerProfile = computed(() => ownerStore.profile)
 
   const haveAccess = computed(() => {
@@ -183,7 +190,7 @@ export function useFindMatchViewModel() {
     datingPrefs: toRef(findProfileStore, 'datingPrefs'),
     socialFilter: toRef(findProfileStore, 'socialFilter'),
     updatePrefs,
-    navigateToScope,
+    scopeModel,
     openProfile,
     profileList: computed(() => findProfileStore.profileList),
     isInitialized: computed(() => isInitialized.value),

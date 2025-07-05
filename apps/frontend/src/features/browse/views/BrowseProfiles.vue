@@ -18,6 +18,7 @@ import NoResultsCTA from '../components/NoResultsCTA.vue'
 import PlaceholdersGrid from '../components/PlaceholdersGrid.vue'
 import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
 import SocialFilterDisplay from '../components/SocialFilterDisplay.vue'
+import DatingPrefsDisplay from '../components/DatingPrefsDisplay.vue'
 const router = useRouter()
 
 // state management
@@ -30,6 +31,7 @@ const {
   haveResults,
   isLoading,
   currentScope,
+  scopeModel,
   profileList,
   storeError,
   datingPrefs,
@@ -37,19 +39,11 @@ const {
   selectedProfileId,
   hideProfile,
   updatePrefs,
-  navigateToScope,
   openProfile,
   initialize,
   reset,
   isInitialized,
 } = useFindMatchViewModel()
-
-const scopeModel = computed({
-  get: () => currentScope.value,
-  set: (scope: ProfileScope | null) => {
-    if (scope) navigateToScope(scope)
-  },
-})
 
 onMounted(async () => {
   await initialize()
@@ -120,21 +114,22 @@ const isDetailView = computed(() => !!selectedProfileId.value)
       <MiddleColumn class="my-2">
         <div class="container d-flex flex-column">
           <SecondaryNav v-model="scopeModel" />
-          <div
-            v-if="currentScope == 'social'"
-            class="my-2"
-            style="font-size: 0.75rem;"
-          >
+          <div v-if="currentScope == 'social'" class="filter-controls my-2">
             <SocialFilterDisplay
-              v-if="socialFilter"
-              :socialFilter="socialFilter"
+              v-if="socialFilter && haveAccess"
+              v-model="socialFilter"
               :viewerLocation="viewerProfile?.location"
-              :prefs-button-disabled="!haveAccess"
               @prefs:toggle="showPrefsModal = true"
             />
           </div>
-
-          <ReceivedLikesCount class="my-3" v-if="currentScope == 'dating'" />
+          <div v-if="currentScope == 'dating'" class="filter-controls my-2">
+            <DatingPrefsDisplay
+              v-if="datingPrefs && haveAccess"
+              v-model="datingPrefs"
+              :viewerLocation="viewerProfile?.location"
+              @prefs:toggle="showPrefsModal = true"
+            />
+          </div>
         </div>
       </MiddleColumn>
       <BPlaceholderWrapper :loading="isLoading">
@@ -193,17 +188,14 @@ const isDetailView = computed(() => !!selectedProfileId.value)
         </template>
 
         <template v-if="isInitialized && !haveResults && haveAccess">
-          <MiddleColumn class="h-100">
-            <div>
-              There's nobody in your area that matches your preferences.
-              <!-- <SocialFilterDisplay
-                v-if="socialFilter"
-                :socialFilter="socialFilter"
-                :viewerLocation="viewerProfile?.location"
-              /> -->
-            </div>
-            <NoResultsCTA />
-          </MiddleColumn>
+          <BContainer>
+            <MiddleColumn class="h-100">
+              <div class="my-3">
+                There's nobody in your area that matches your preferences, yet.
+              </div>
+              <NoResultsCTA />
+            </MiddleColumn>
+          </BContainer>
         </template>
 
         <!-- Main profile results -->
@@ -285,5 +277,8 @@ const isDetailView = computed(() => !!selectedProfileId.value)
 main {
   width: 100%;
   // height: 100vh;
+}
+.filter-controls {
+  font-size: 0.75rem;
 }
 </style>

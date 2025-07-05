@@ -26,8 +26,8 @@ const viewerLocation = viewerProfile?.location
     </div>
     <div class="overlay d-flex flex-column flex-grow-1">
       <div class="card-title mb-0 pb-0 d-flex align-items-center justify-content-between flex-row">
-        <h5 class="flex-grow-1 fw-bold m-0">{{ profile.publicName }}</h5>
-        <span v-if="showLocation" class="location">
+        <div class="flex-grow-1 fs-6 fw-bold m-0">{{ profile.publicName }}</div>
+        <span v-if="showLocation" class="location position-absolute end-0 top-0 me-2 mt-2">
           <LocationLabel
             :viewerLocation="viewerLocation"
             :location="profile.location"
@@ -36,7 +36,7 @@ const viewerLocation = viewerProfile?.location
           />
         </span>
       </div>
-      <div v-if="showTags" class="p-2 flex-grow-1">
+      <div v-if="showTags" class="p-2 flex-grow-1 tags-wrapper">
         <TagList :tags="profile.tags" />
       </div>
       <!-- <p class="card-text" :class="{ 'truncated-text': profile.introSocial.length > 100 }">
@@ -55,7 +55,7 @@ const viewerLocation = viewerProfile?.location
 }
 
 .card {
-  font-size: 1.25rem;
+  font-size: 0.9rem;
   &:hover {
     border-color: var(--bs-primary);
   }
@@ -71,10 +71,12 @@ const viewerLocation = viewerProfile?.location
   width: 100%;
   position: absolute;
   bottom: 0rem;
-  max-height: 7.25rem;
+  max-height: 4rem;
   background-color: rgba(80, 80, 80, 0.5);
 }
-
+.tags-wrapper {
+  font-size: 0.75rem;
+}
 .truncated-text {
   position: relative;
   max-height: 8rem;
