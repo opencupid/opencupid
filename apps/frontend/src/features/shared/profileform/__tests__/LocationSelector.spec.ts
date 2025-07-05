@@ -31,10 +31,16 @@ describe('LocationSelectorComponent', () => {
       props: { modelValue: { country: '', cityName: '' } as any },
       global: { stubs: { FormKit: true } }
     })
-    ;(wrapper.vm as any).model.country = 'US'
+    ;(wrapper.vm as any).model = {
+      ...((wrapper.vm as any).model),
+      country: 'US'
+    }
     await wrapper.vm.$nextTick()
     expect(wrapper.emitted('update:modelValue')).toBeTruthy()
-    ;(wrapper.vm as any).model.cityName = 'NYC'
+    ;(wrapper.vm as any).model = {
+      ...((wrapper.vm as any).model),
+      cityName: 'NYC'
+    }
     await wrapper.vm.$nextTick()
     expect(wrapper.emitted('update:modelValue')!.length).toBeGreaterThanOrEqual(1)
   })
