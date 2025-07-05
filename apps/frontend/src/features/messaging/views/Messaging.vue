@@ -13,6 +13,7 @@ import ConversationDetail from '../components/ConversationDetail.vue'
 import { useMessageStore } from '../stores/messageStore'
 import ConversationSummaries from '../components/ConversationSummaries.vue'
 import ViewTitle from '../../shared/ui/ViewTitle.vue'
+import { useBootstrap } from '@/lib/bootstrap'
 
 const router = useRouter()
 const messageStore = useMessageStore()
@@ -37,8 +38,14 @@ watch(
   { immediate: true }
 )
 
+const isInitialized = ref(false)
+
 onMounted(async () => {
+  // ensure ownerProfile is initialized
+  await useBootstrap().bootstrap()
+
   await messageStore.fetchConversations()
+  isInitialized.value = true
   if (props.conversationId) {
     await messageStore.setActiveConversationById(props.conversationId)
   }
@@ -79,11 +86,7 @@ const isDetailView = computed(() => !!messageStore.activeConversation)
 <template>
   <main class="w-100 position-relative">
     <!-- Detail view overlay -->
-    <div
-      v-if="isDetailView"
-      class="detail-view position-absolute w-100"
-      style="z-index: 1050"
-    >
+    <div v-if="isInitialized && isDetailView" class="detail-view position-absolute w-100" style="z-index: 1050">
       <MiddleColumn class="h-100">
         <ConversationDetail
           :loading="messageStore.isLoading"
@@ -99,7 +102,7 @@ const isDetailView = computed(() => !!messageStore.activeConversation)
     <div class="d-flex flex-column overflow-auto h-100" :class="{ 'd-none': isDetailView }">
       <ViewTitle :icon="IconMessage" title="Messages" class="text-primary" />
       <BOverlay
-        :show="!haveConversations"
+        :show="!haveConversations && isInitialized"
         no-spinner
         bg-color="inherit"
         :blur="null"
