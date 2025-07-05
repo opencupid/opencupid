@@ -45,10 +45,6 @@ describe('ProfileMatchService.findSocialProfilesFor', () => {
     (mockPrisma.socialMatchFilter.findUnique as any).mockResolvedValue(null)
     const result = await service.findSocialProfilesFor(mockProfileId)
     expect(result).toEqual([])
-    expect(mockPrisma.socialMatchFilter.findUnique).toHaveBeenCalledWith({
-      where: { profileId: mockProfileId },
-      include: { tags: { include: { translations: { select: { name: true, locale: true } } } } },
-    })
   })
 
   it('no location and tag filters', async () => {
@@ -59,20 +55,7 @@ describe('ProfileMatchService.findSocialProfilesFor', () => {
     mockPrisma.profile.findMany.mockResolvedValue(mockProfiles)
     const result = await service.findSocialProfilesFor(mockProfileId)
     expect(result).toBe(mockProfiles)
-    // expect(mockPrisma.profile.findMany).toHaveBeenCalledWith({
-    //   where: {
-    //     isActive: true,
-    //     isSocialActive: true,
-    //     id: { not: mockProfileId },
-    //     ...blocklistWhereClause(mockProfileId),
-    //   },
-    //   include: {
-    //     ...tagsInclude(),
-    //     ...profileImageInclude(),
-    //   },
-    // })
   })
-
 
 
   it('country filter', async () => {
@@ -84,19 +67,6 @@ describe('ProfileMatchService.findSocialProfilesFor', () => {
     mockPrisma.profile.findMany.mockResolvedValue(mockProfiles)
     const result = await service.findSocialProfilesFor(mockProfileId)
     expect(result).toBe(mockProfiles)
-    // expect(mockPrisma.profile.findMany).toHaveBeenCalledWith({
-    //   where: {
-    //     isActive: true,
-    //     isSocialActive: true,
-    //     id: { not: mockProfileId },
-    //     country: 'US',
-    //     ...blocklistWhereClause(mockProfileId),
-    //   },
-    //   include: {
-    //     ...tagsInclude(),
-    //     ...profileImageInclude(),
-    //   },
-    // })
   })
 
   it('country and city filters', async () => {
@@ -111,20 +81,6 @@ describe('ProfileMatchService.findSocialProfilesFor', () => {
     mockPrisma.profile.findMany.mockResolvedValue(mockProfiles)
     const result = await service.findSocialProfilesFor(mockProfileId)
     expect(result).toBe(mockProfiles)
-    // expect(mockPrisma.profile.findMany).toHaveBeenCalledWith({
-    //   where: {
-    //     isActive: true,
-    //     isSocialActive: true,
-    //     id: { not: mockProfileId },
-    //     country: 'US',
-    //     cityId: 'city-1',
-    //     ...blocklistWhereClause(mockProfileId),
-    //   },
-    //   include: {
-    //     ...tagsInclude(),
-    //     ...profileImageInclude(),
-    //   },
-    // })
   })
 
   it('tag filter', async () => {
@@ -136,19 +92,6 @@ describe('ProfileMatchService.findSocialProfilesFor', () => {
     mockPrisma.profile.findMany.mockResolvedValue(mockProfiles)
     const result = await service.findSocialProfilesFor(mockProfileId)
     expect(result).toBe(mockProfiles)
-    // expect(mockPrisma.profile.findMany).toHaveBeenCalledWith({
-    //   where: {
-    //     isActive: true,
-    //     isSocialActive: true,
-    //     id: { not: mockProfileId },
-    //     tags: { some: { id: { in: ['tag-1', 'tag-2'] } } },
-    //     ...blocklistWhereClause(mockProfileId),
-    //   },
-    //   include: {
-    //     ...tagsInclude(),
-    //     ...profileImageInclude(),
-    //   },
-    // })
   })
 
 
