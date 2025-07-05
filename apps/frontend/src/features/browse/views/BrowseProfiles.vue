@@ -184,7 +184,7 @@ const isDetailView = computed(() => !!selectedProfileId.value)
           </BOverlay>
         </template>
 
-        <template v-if="isInitialized && !haveResults">
+        <template v-if="isInitialized && !haveResults && haveAccess">
           <MiddleColumn class="h-100">
             <div>
               There's nobody in in your area that matches your preferences.
