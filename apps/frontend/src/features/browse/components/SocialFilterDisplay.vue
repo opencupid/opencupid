@@ -18,7 +18,7 @@ const interestlist = computed(() => {
   <div v-if="socialFilter?.location && viewerLocation" >
     {{
       relativeLocationLabel({
-        location: socialFilter?.location,
+        location: socialFilter?.location ?? null,
         viewerLocation: viewerLocation,
         showCity: true,
         showCountryLabel: true,
