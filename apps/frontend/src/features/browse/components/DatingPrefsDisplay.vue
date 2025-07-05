@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import { type LocationDTO } from '@zod/dto/location.dto'
-import { DatingPreferencesDTO, type SocialMatchFilterDTO } from '@zod/match/filters.dto'
-import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
-import TagList from '@/features/shared/profiledisplay/TagList.vue'
-import IconSetting from '@/assets/icons/interface/setting.svg'
+import { type DatingPreferencesDTO } from '@zod/match/filters.dto'
 import IconSearch from '@/assets/icons/interface/search.svg'
 import GenderSymbol from '@/features/shared/profiledisplay/GenderSymbol.vue'
 

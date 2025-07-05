@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { SearchLocationDTO, type LocationDTO } from '@zod/dto/location.dto'
+import { type SearchLocationDTO, type LocationDTO } from '@zod/dto/location.dto'
 import { useCountries } from '@/features/shared/composables/useCountries'
 
 const props = withDefaults(
