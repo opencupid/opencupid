@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { LocationSchema, LocationPayloadSchema, SearchLocationSchema } from '../dto/location.dto';
 import { PublicTagSchema } from '../tag/tag.dto';
 import { TagWithTranslationsSchema } from '../tag/tag.db';
+import { PublicCitySchema } from '../dto/city.dto';
 
 export const datingPreferencesFields = {
   prefAgeMin: true,
@@ -26,6 +27,7 @@ export const UpdateDatingPreferencesPayloadSchema = ProfileSchema.pick({
 export type UpdateDatingPreferencesPayload = z.infer<typeof UpdateDatingPreferencesPayloadSchema>;
 
 export const SocialMatchFilterWithTagsSchema = SocialMatchFilterSchema.extend({
+  city: PublicCitySchema.nullable(), // or z.null() if you want to allow null
   tags: z.array(TagWithTranslationsSchema), // or z.array(z.string()) if you only want IDs
 })
 

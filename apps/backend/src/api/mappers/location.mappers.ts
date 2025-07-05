@@ -1,0 +1,18 @@
+import type { LocationDTO } from "@zod/dto/location.dto";
+
+export type DbLocation = {
+  country: string | null;
+  cityId: string | null;
+  city?: {
+    name: string;
+  } | null;
+}
+
+export function DbLocationToLocationDTO(dbLocation: DbLocation): LocationDTO {
+  return {
+    country: dbLocation.country ?? '',
+    cityId: dbLocation.cityId,
+    cityName: dbLocation.city?.name,
+  }
+}
+

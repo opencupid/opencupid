@@ -1,7 +1,6 @@
-import { defineStore, type Store } from 'pinia'
+import { defineStore } from 'pinia'
 import { api } from '@/lib/api'
 import type {
-  ProfileScope,
   PublicProfile,
 } from '@zod/profile/profile.dto'
 import {
@@ -21,8 +20,13 @@ import {
   type StoreSuccess
 } from '@/store/helpers'
 import { bus } from '@/lib/bus'
-import { DatingPreferencesDTOSchema, SocialMatchFilterDTOSchema, UpdateSocialMatchFilterPayloadSchema, type DatingPreferencesDTO, type SocialMatchFilterDTO, type UpdateSocialMatchFilterPayload } from '@zod/match/filters.dto'
-import { mapLocationDTOToPayload } from '@zod/dto/location.dto'
+import {
+  DatingPreferencesDTOSchema,
+  SocialMatchFilterDTOSchema,
+  type DatingPreferencesDTO, type SocialMatchFilterDTO,
+  type UpdateSocialMatchFilterPayload
+} from '@zod/match/filters.dto'
+import type { LocationPayload, SearchLocationDTO } from '@zod/dto/location.dto'
 
 type FindProfileStoreState = {
   datingPrefs: DatingPreferencesDTO | null,
@@ -34,16 +38,30 @@ type FindProfileStoreState = {
 
 type StoreProfileListResponse = StoreSuccess<{ result: PublicProfile[] }> | StoreError
 
-export function mapSocialMatchFilterDTOToPayload(dto: SocialMatchFilterDTO): UpdateSocialMatchFilterPayload {
+function mapLocationToPayload(
+  dto: SearchLocationDTO,
+): LocationPayload {
+  const country = dto.country && dto.country !== '' ? dto.country : null
+  const cityId = dto.cityId && dto.cityId !== '' ? dto.cityId : null
+
+  return {
+    country,
+    cityId,
+  }
+}
+
+
+function mapSocialMatchFilterDTOToPayload(dto: SocialMatchFilterDTO): UpdateSocialMatchFilterPayload {
   const payload = {
     ...dto,
-    location: dto.location ? mapLocationDTOToPayload(dto.location) : undefined,
+    location: mapLocationToPayload(dto.location),
     tags: dto.tags.map(tag => tag.id),
   }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return payload as any as UpdateSocialMatchFilterPayload
 }
+
+
+
 
 export const useFindProfileStore = defineStore('findProfile', {
   state: (): FindProfileStoreState => ({

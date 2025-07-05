@@ -9,6 +9,7 @@ import { profileImageInclude, tagsInclude } from '@/db/includes/profileIncludes'
 import type { LocationDTO } from '@zod/dto/location.dto';
 
 const tagInclude = {
+  city: true,
   tags: {
     include: {
       translations: {
