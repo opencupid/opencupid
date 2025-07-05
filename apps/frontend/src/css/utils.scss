@@ -27,6 +27,7 @@
 
 .clickable {
   cursor: pointer;
+  pointer-events: all;
 }
 
 .form-check-label {

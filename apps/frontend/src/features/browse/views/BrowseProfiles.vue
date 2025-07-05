@@ -17,8 +17,7 @@ import NoAccessCTA from '../components/NoAccessCTA.vue'
 import NoResultsCTA from '../components/NoResultsCTA.vue'
 import PlaceholdersGrid from '../components/PlaceholdersGrid.vue'
 import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
-import SocialFilterDisplay
- from '../components/SocialFilterDisplay.vue'
+import SocialFilterDisplay from '../components/SocialFilterDisplay.vue'
 const router = useRouter()
 
 // state management
@@ -120,11 +119,20 @@ const isDetailView = computed(() => !!selectedProfileId.value)
     >
       <MiddleColumn class="my-2">
         <div class="container d-flex flex-column">
-          <SecondaryNav
-            v-model="scopeModel"
-            @prefs:toggle="showPrefsModal = true"
-            :prefs-button-disabled="!haveAccess"
-          />
+          <SecondaryNav v-model="scopeModel" />
+          <div
+            v-if="currentScope == 'social'"
+            class="my-2"
+            style="font-size: 0.75rem;"
+          >
+            <SocialFilterDisplay
+              v-if="socialFilter"
+              :socialFilter="socialFilter"
+              :viewerLocation="viewerProfile?.location"
+              :prefs-button-disabled="!haveAccess"
+              @prefs:toggle="showPrefsModal = true"
+            />
+          </div>
 
           <ReceivedLikesCount class="my-3" v-if="currentScope == 'dating'" />
         </div>
@@ -187,12 +195,12 @@ const isDetailView = computed(() => !!selectedProfileId.value)
         <template v-if="isInitialized && !haveResults && haveAccess">
           <MiddleColumn class="h-100">
             <div>
-              There's nobody in in your area that matches your preferences.
-              <SocialFilterDisplay
+              There's nobody in your area that matches your preferences.
+              <!-- <SocialFilterDisplay
                 v-if="socialFilter"
                 :socialFilter="socialFilter"
                 :viewerLocation="viewerProfile?.location"
-              />
+              /> -->
             </div>
             <NoResultsCTA />
           </MiddleColumn>
@@ -202,7 +210,6 @@ const isDetailView = computed(() => !!selectedProfileId.value)
         <template v-else-if="isInitialized">
           <div class="overflow-auto">
             <MiddleColumn>
-  
               <ProfileCardGrid
                 :profiles="profileList"
                 :showTags="true"

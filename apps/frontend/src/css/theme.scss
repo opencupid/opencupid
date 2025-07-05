@@ -21,7 +21,7 @@ $social : #003049;
 // $social : rgb(0, 0, 191);
 
 $dating: #D62828; // Custom dating color
-$dating-light: transparentize($dating, 0.75);
+$dating-light: lighten($dating, 40%); // Lightened version of dating color
 
 $theme-colors: map-merge($theme-colors, ('dating': $dating,
             'dating-light': $dating-light ,
@@ -35,3 +35,8 @@ $aspect-ratios: map-merge($aspect-ratios,
 
 // Enable negative margins for Bootstrap
 $enable-negative-margins: true;
+
+// 🌕 Light mode input styling
+$input-bg: #fcfcfc;
+$input-color: #212529;
+$input-border-color: #ced4da;

@@ -1,3 +1,8 @@
+@import 'bootstrap/scss/functions';
+@import 'bootstrap/scss/variables';
+@import 'bootstrap/scss/mixins';
+@import '@/css/app-vars.scss';
+
 fieldset[disabled] .multiselect {
   pointer-events: none;
 }
@@ -160,7 +165,7 @@ fieldset[disabled] .multiselect {
   padding: 10px 40px 0 15px;
   border-radius: 5px;
   border: 1px solid var(--bs-border-color);
-  background: var(--bs-body-bg);
+  background: var(--bs-input-bg);
   // font-size: 14px;
 }
 

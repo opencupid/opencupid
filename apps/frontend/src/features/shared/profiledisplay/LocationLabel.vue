@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { type LocationDTO } from '@zod/dto/location.dto'
+import { SearchLocationDTO, type LocationDTO } from '@zod/dto/location.dto'
 import { useCountries } from '@/features/shared/composables/useCountries'
 
 const props = withDefaults(
   defineProps<{
-    location: LocationDTO
+    location: LocationDTO | SearchLocationDTO
     viewerLocation?: LocationDTO
     showCity?: boolean
     showCountryLabel?: boolean
@@ -29,13 +29,16 @@ const isSameCountry = computed(() => {
   return props.viewerLocation?.country === props.location.country
 })
 
-const shouldRenderCountry = computed(() => {
-  return !!props.location.country && !isSameCountry.value
-})
-
 const shouldRenderCity = computed(() => {
   return !!props.location.cityName && (isSameCountry.value || props.showCity)
 })
+
+const shouldRenderCountry = computed(() => {
+  return !!props.location.country && (!isSameCountry.value || props.showCountryLabel)
+})
+
+
+
 </script>
 
 <template>
