@@ -3,9 +3,10 @@ import { computed, ref, watch } from 'vue'
 import { type LoginUser } from '@zod/user/user.types'
 import { otpRegex } from '@/lib/utils'
 
+import { useI18n } from 'vue-i18n'
 import IconMessage from '@/assets/icons/interface/message.svg'
 import IconMail from '@/assets/icons/interface/mail.svg'
-import { useI18n } from 'vue-i18n'
+import ViewTitle from '@/features/shared/ui/ViewTitle.vue'
 
 const props = defineProps<{
   user: LoginUser
@@ -46,16 +47,11 @@ watch(inputState, state => {
 </script>
 
 <template>
-  <div class="otp-form">
+  <div>
     <div class="fs-4 mb-3">
-      <span class="text-muted opacity-50">
-        <!-- <span v-if="user.phonenumber">
-          <IconMessage class="svg-icon" />
-        </span>
-        <span v-else>
-          <IconMail class="svg-icon" />
-        </span> -->
-      </span>
+      <ViewTitle v-if="user.phonenumber" :icon="IconMessage" title="" class="text-primary" />
+      <ViewTitle v-else :icon="IconMail" title="" class="text-primary" />
+
       {{ t('auth.otp_check_messages') }}
     </div>
     <div class="mb-3 form-text mb-3">
@@ -66,14 +62,15 @@ watch(inputState, state => {
         {{ t('auth.otp_sent_email') }}
       </div>
     </div>
+    <div class="px-3">
     <BForm
       @submit.prevent="handleOTPEntered"
-      class="otp-form"
       :novalidate="true"
       :disabled="isLoading || !inputState"
     >
-      <div class="mb-3">
-        <BFormFloatingLabel :label="t('auth.otp_input_label')" label-for="otpInput" class="my-2">
+      <div class="d-flex flex-column align-items-center position-relative">
+        <BFormFloatingLabel :label="t('auth.otp_input_label')" label-for="otpInput" 
+        >
           <BInput
             size="lg"
             v-model.trim="otpInput"
@@ -88,6 +85,7 @@ watch(inputState, state => {
             lazy
             required
             :state="validated"
+
           >
           </BInput>
           <BFormInvalidFeedback v-if="!isLoading">
@@ -95,34 +93,9 @@ watch(inputState, state => {
             <span v-if="validationResult === false && inputState">{{ validationError }}</span>
           </BFormInvalidFeedback>
         </BFormFloatingLabel>
-
-        <!-- <FormKit
-          type="text"
-          v-model="otpInput"
-          label="Login code..."
-          id="otp"
-          :floating-label="true"
-          input-class="form-control-lg"
-          aria-autocomplete="none"
-          autocomplete="off"
-          autofocus
-          validation="+validateOtp"
-          :validation-rules="{
-            validateOtp,
-          }"
-          validation-visibility="live"
-        /> -->
       </div>
-
-      <!-- <BButton
-        type="submit"
-        size="lg"
-        class="w-100"
-        variant="primary"
-        label="Continue"
-        :disabled="isLoading || !inputState"
-      >Continue</BButton> -->
     </BForm>
+  </div>
   </div>
 </template>
 

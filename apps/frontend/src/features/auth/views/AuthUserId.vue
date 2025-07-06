@@ -7,16 +7,14 @@ import { type LoginUser } from '@zod/user/user.types'
 import { useI18nStore } from '@/store/i18nStore'
 import { useAuthStore } from '../stores/authStore'
 import AuthIdComponent from '../components/AuthIdComponent.vue'
+import LocaleSelector from '../components/LocaleSelector.vue'
 
 import ErrorComponent from '@/features/shared/ui/ErrorComponent.vue'
+import LogoComponent from '../components/LogoComponent.vue'
 
-// Reactive variables
+// State
 const error = ref('' as string)
 const isLoading = ref(false)
-const showModal = ref(true)
-
-// form state
-const showUserIdForm = ref(true)
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -61,40 +59,21 @@ const handleSetLanguage = (lang: string) => {
 </script>
 
 <template>
-  <main class="login-container">
-    <BModal
-      v-model="showModal"
-      title="Login"
-      size="md"
-      :backdrop="'static'"
-      centered
-      button-size="sm"
-      :focus="false"
-      :no-close-on-backdrop="true"
-      :no-footer="true"
-      :no-header="true"
-      cancel-title="Nevermind"
-      initial-animation
-      fullscreen="md"
-      body-class="d-flex flex-row align-items-center justify-content-center overflow-hidden"
-      :keyboard="false"
-    >
-      <div class="w-100">
-        <ErrorComponent :error="error" />
+  <main class="container d-flex justify-content-center align-items-center flex-column">
+    <LogoComponent />
 
-        <AuthIdComponent
-          :isLoading="isLoading"
-          @otp:send="handleSendOtp"
-          @language:select="handleSetLanguage"
-          v-if="showUserIdForm"
-        />
-      </div>
-    </BModal>
+    <ErrorComponent :error="error" />
+
+    <AuthIdComponent
+      :isLoading="isLoading"
+      v-model="user"
+      @otp:send="handleSendOtp"
+      @language:select="handleSetLanguage"
+    />
+
+    <div class="d-flex justify-content-center align-items-center mt-3">
+      <LocaleSelector @language:select="(lang: string) => handleSetLanguage(lang)" />
+    </div>
   </main>
 </template>
 
-<style scoped>
-:deep(.modal-body) {
-  display: flex;
-}
-</style>

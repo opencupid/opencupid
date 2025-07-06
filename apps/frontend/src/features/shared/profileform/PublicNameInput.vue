@@ -19,10 +19,12 @@ const model = defineModel<string>({
       label="publicName"
       maxlength="25"
       autocomplete="off"
+      autofocus
       lazy
-      required
     >
     </BInput>
+    <!-- public name hint  -->
+    <p class="form-text text-muted">First name only please.</p>
     <BFormInvalidFeedback>{{ t('profiles.forms.name_invalid') }}</BFormInvalidFeedback>
   </BFormFloatingLabel>
 </template>

@@ -10,7 +10,9 @@ const model = defineModel<RelationshipStatusType|null>({
   default: () => 'unspecified',
 })
 const { relationshipStatusOptions } = useEnumOptions(t)
-const checkboxOptions = relationshipStatusOptions()
+const checkboxOptions = relationshipStatusOptions().filter(
+  (option) => option.value !== 'unspecified'
+)
 </script>
 
 <template>
@@ -20,7 +22,7 @@ const checkboxOptions = relationshipStatusOptions()
       <BListGroupItem
         v-for="s in checkboxOptions"
         :key="s.value"
-        class="d-flex justify-content-between align-items-center"
+        class="d-flex justify-content-between align-items-center clickable"
       >
         <BFormRadio
           name="relationship"

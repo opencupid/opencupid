@@ -8,6 +8,7 @@ import { useMessageStore } from '@/features/messaging/stores/messageStore'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 
 import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
+import IconLogout from '@/assets/icons/interface/logout.svg'
 
 import LoadingComponent from '@/features/shared/ui/LoadingComponent.vue'
 import LogoutButton from '@/features/auth/components/LogoutButton.vue'
@@ -16,8 +17,10 @@ import PushPermissions from '../components/PushPermissions.vue'
 import VersionInfo from '../components/VersionInfo.vue'
 import RouterBackButton from '@/features/shared/ui/RouterBackButton.vue'
 import SecondaryNav from '@/features/shared/ui/SecondaryNav.vue'
+import { useRouter } from 'vue-router'
 
 const authStore = useAuthStore()
+const router = useRouter()
 
 const user = reactive({} as LoginUser)
 const isLoading = ref(true)
@@ -49,11 +52,17 @@ onMounted(async () => {
   }
   isLoading.value = false
 })
+
+function handleClick() {
+  authStore.logout()
+  console.log('User logged out sending to /auth' )
+  router.push({ name: 'Login' })
+}
 </script>
 
 <template>
   <main class="container">
-    <div class="d-flex flex-column  justify-content-center align-items-center h-100 w-100">
+    <div class="d-flex flex-column justify-content-center align-items-center h-100 w-100">
       <LoadingComponent v-if="isLoading" />
       <SecondaryNav>
         <template #items-left>
@@ -66,13 +75,16 @@ onMounted(async () => {
       </SecondaryNav>
 
       <section class="w-100 flex-grow-1">
-        <BOverlay :show="false" class="h-100 d-flex flex-column justify-content-center ">
+        <BOverlay :show="false" class="h-100 d-flex flex-column justify-content-center">
           <div class="mb-3">
             <div class="me-2">
               <span v-if="user.email">Email: {{ user.email }}</span>
               <span v-if="user.phonenumber">Phone number: {{ user.phonenumber }}</span>
             </div>
-            <LogoutButton />
+            <BButton variant="primary" size="sm" @click="handleClick">
+              <IconLogout class="svg-icon" />
+              {{ $t('authentication.logout') }}</BButton
+            >
           </div>
 
           <div class="mb-3"></div>

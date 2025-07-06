@@ -1,16 +1,14 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import type { AuthIdentifierCaptchaInput } from '@zod/user/user.dto'
 import { emailRegex, phoneRegex } from '@/lib/utils'
 import CaptchaWidget from './CaptchaWidget.vue'
-import Logo from '@/assets/icons/app/logo.svg'
 import { useI18n } from 'vue-i18n'
 
 import IconTick from '@/assets/icons/interface/tick.svg'
 import IconMail from '@/assets/icons/interface/mail.svg'
 import IconPhone from '@/assets/icons/interface/phone.svg'
 import IconLogin from '@/assets/icons/interface/login.svg'
-import LocaleSelector from './LocaleSelector.vue'
 
 const { t } = useI18n()
 
@@ -19,8 +17,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'otp:send', identifier: AuthIdentifierCaptchaInput): void,
-  (e: 'language:select', language: string): void
+  (e: 'otp:send', identifier: AuthIdentifierCaptchaInput): void
 }>()
 
 // State variables
@@ -29,12 +26,11 @@ const captchaPayload = ref('')
 const error = ref('')
 
 const authIdentifier = computed(() => {
-  // console.log('authIdInput.value:', authIdInput.value)
   return {
     email: emailRegex.test(authIdInput.value) ? authIdInput.value : '',
     phonenumber: phoneRegex.test(authIdInput.value) ? authIdInput.value : '',
     captchaSolution: captchaPayload.value || '',
-    language:'',
+    language: '',
   }
 })
 
@@ -48,38 +44,27 @@ async function handleSendLoginLink() {
 }
 
 const inputState = computed(() => {
-  // console.log('Validating Auth ID:', authIdInput.value)
   if (!authIdInput.value || authIdInput.value === '') return null
   // Check if the input is a valid email or phone number
   return emailRegex.test(authIdInput.value) || phoneRegex.test(authIdInput.value)
 })
 
 const formState = computed(() => {
-  // console.log('Form state:', inputState.value)
   return inputState.value && captchaPayload.value !== ''
 })
 
 const validated = computed(() => {
-  // console.log('Validating Auth ID state:', state.value)
   return !!(authIdInput.value !== '' && inputState.value)
 })
 
 function handleCaptchaUpdatePayload(payload: string) {
-  // console.log('Captcha payload updated:', payload)
   captchaPayload.value = payload
 }
 
-const authIdInputRef = ref<InstanceType<any> | null>(null)
 </script>
 
 <template>
-  <div class="auth-id-component">
-    <div class="d-flex justify-content-center align-items-center flex-column h-100 mb-4">
-      <div class="icon-inner text-success animate__animated animate__fadeIn">
-        <Logo class="svg-icon logo" />
-      </div>
-    </div>
-
+  <div>
     <BForm
       @submit.prevent="handleSendLoginLink"
       class="userIdForm"
@@ -100,7 +85,6 @@ const authIdInputRef = ref<InstanceType<any> | null>(null)
             size="lg"
             v-model.trim="authIdInput"
             id="authIdInput"
-            ref="authIdInputRef"
             type="text"
             :label="t('auth.auth_id_input_label')"
             :placeholder="t('auth.auth_id_input_placeholder')"
@@ -138,9 +122,6 @@ const authIdInputRef = ref<InstanceType<any> | null>(null)
         <IconLogin class="svg-icon" /> {{ t('auth.login') }}
       </BButton>
     </BForm>
-    <div class="d-flex justify-content-center align-items-center mt-3">
-      <LocaleSelector @language:select="lang => $emit('language:select', lang)" />
-    </div>
   </div>
 </template>
 
@@ -155,16 +136,6 @@ const authIdInputRef = ref<InstanceType<any> | null>(null)
     width: 1.5rem;
     height: 1.5rem;
   }
-}
-
-.svg-icon {
-  fill: currentColor;
-}
-
-.logo {
-  width: 7.5rem;
-  height: 7.5rem;
-  color: currentColor;
 }
 
 input.form-control.is-valid,

@@ -24,7 +24,7 @@ const pronounsChoices = pronounsOptions() as MultiselectOption[]
       <BListGroupItem
         v-for="p in pronounsChoices"
         :key="p.value"
-        class="d-flex justify-content-between align-items-center"
+        class="d-flex justify-content-between align-items-center clickable"
       >
         <BFormRadio
           name="pronouns"

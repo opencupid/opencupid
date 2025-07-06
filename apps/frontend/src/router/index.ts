@@ -10,6 +10,8 @@ import MyProfile from '@/features/myprofile/views/MyProfile.vue'
 import BrowseProfiles from '@/features/browse/views/BrowseProfiles.vue'
 import OnboardingView from '@/features/onboarding/views/Onboarding.vue'
 import MatchesView from '@/features/interaction/views/Matches.vue'
+import { useOwnerProfileStore } from '../features/myprofile/stores/ownerProfileStore'
+import { useBootstrap } from '../lib/bootstrap'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -106,17 +108,17 @@ router.beforeEach(async (to, from, next) => {
 
   const authStore = useAuthStore()
 
-  if (to.meta.requiresAuth === false && authStore.isLoggedIn) {
+  // if route requires authentication and the user is not logged in, redirect to login
+  if (to.meta.requiresAuth && !authStore.isLoggedIn){
+    return next({ name: 'Login' })
+  }
+
+  // user is logged in and tries to access the login page, redirect to UserHome
+  if (!to.meta.requiresAuth && authStore.isLoggedIn){
     return next({ name: 'UserHome' })
   }
 
-  if (to.meta.requiresAuth && !authStore.isLoggedIn) {
-    // If the route requires authentication and the user is not logged in, redirect to login
-    return next({ name: 'Login' })
-  } else {
-    // Otherwise, allow access
-    next()
-  }
+  next()
 })
 
 

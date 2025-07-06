@@ -28,49 +28,49 @@ const toggleDating = () => {
 </script>
 
 <template>
-  <div class="d-flex gap-2 flex-row justify-content-between w-100">
+  <div class="d-flex gap-2 flex-column justify-content-between w-100">
     <div
-      class="card btn-social-toggle"
+      class="card btn-social-toggle clickable mb-2"
       :class="{ active: model.isSocialActive }"
       @click="toggleSocial"
     >
-      <div class="m-4">
-        <IconSocialize class="svg-icon-lg h-100 w-100" />
-      </div>
-      <div class="card-body">
-        <p class="card-text">{{ t('onboarding.goals.socializing') }}</p>
-      </div>
-      <div class="card-footer text-center">
-        <div class="form-control-lg">
-          <input
-            type="checkbox"
-            class="form-check-input"
-            :checked="model.isSocialActive"
-            value="true"
-          />
+      <div class="card-body d-flex flex-row align-items-center">
+        <div class="col-4 col-sm-3 p-sm-3">
+          <IconSocialize class="svg-icon-lg h-100 w-100" />
+        </div>
+        <p class="m-0 ps-2 p-sm-4 flex-grow-1">{{ t('onboarding.goals.socializing') }}</p>
+        <div class="text-center flex-shrink-1">
+          <div class="form-control-lg m-0 p-0 ms-2 p-sm-2 d-flex  align-items-center">
+            <input
+              type="checkbox"
+              class="form-check-input"
+              :checked="model.isSocialActive"
+              value="true"
+            />
+          </div>
         </div>
       </div>
     </div>
 
     <div
-      class="card btn-dating-toggle"
+      class="card btn-dating-toggle clickable"
       :class="{ active: model.isDatingActive }"
       @click="toggleDating"
     >
-      <div class="m-4">
-        <IconDate class="svg-icon-lg h-100 w-100" />
-      </div>
-      <div class="card-body">
-        <p class="card-text">{{ t('onboarding.goals.dating') }}</p>
-      </div>
-      <div class="card-footer text-center">
-        <div class="form-control-lg">
-          <input
-            type="checkbox"
-            class="form-check-input"
-            :checked="model.isDatingActive"
-            value="true"
-          />
+      <div class="card-body d-flex flex-row align-items-center">
+        <div class="col-4 col-sm-3 p-sm-3">
+          <IconDate class="svg-icon-lg h-100 w-100" />
+        </div>
+        <p class="m-0 ps-2 p-sm-4 flex-grow-1">{{ t('onboarding.goals.dating') }}</p>
+        <div class="text-center">
+          <div class="form-control-lg m-0 p-0 ms-2 p-sm-2 d-flex  align-items-center">
+            <input
+              type="checkbox"
+              class="form-check-input"
+              :checked="model.isDatingActive"
+              value="true"
+            />
+          </div>
         </div>
       </div>
     </div>

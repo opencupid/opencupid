@@ -10,7 +10,9 @@ const model = defineModel<HasKidsType|null>({
   default: () => 'unspecified',
 })
 const { hasKidsOptions } = useEnumOptions(t)
-const checkboxOptions = hasKidsOptions()
+const checkboxOptions = hasKidsOptions().filter(
+  (option) => option.value !== 'unspecified'
+)
 </script>
 
 <template>
@@ -20,13 +22,14 @@ const checkboxOptions = hasKidsOptions()
       <BListGroupItem
         v-for="s in checkboxOptions"
         :key="s.value"
-        class="d-flex justify-content-between align-items-center"
+        class="d-flex justify-content-between align-items-center clickable"
       >
         <BFormRadio
           name="haskids"
           v-model="model"
           :id="`list-haskids-${s.value}`"
           :value="s.value"
+        class="clickable"
           >{{ s.label }}</BFormRadio
         >
       </BListGroupItem>

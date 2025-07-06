@@ -10,7 +10,7 @@
   display: block !important;
 }
 
-.form-control+.invalid-feedback,
+.form-control~.invalid-feedback,
 .is-valid~.invalid-feedback {
   visibility: hidden;
 }
@@ -193,3 +193,10 @@
     border-radius: 50% !important;
   }
 }
+
+.list-group-item.clickable {
+  .form-check-label {
+    cursor: pointer;
+  }
+}
+

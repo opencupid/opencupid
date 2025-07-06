@@ -154,20 +154,23 @@ function onModalHidden() {
     <!-- Mobile: Capture Chooser -->
     <div v-show="modalState === 'chooser'">
       <div class="d-flex flex-column align-items-center h-100 justify-content-center">
-        <div class="mx-auto d-flex flex-column align-items-center">
-          <div class="mb-5 d-flex flex-column align-items-center">
-            <div class="col-6">
-              <UploadButton @file:change="handleFileChange" :key="'capture-none'" />
-            </div>
-            <div class="mt-0 form-text text-mute text-centerd">
+        <div class="mx-auto col-6 d-flex flex-column align-items-center">
+          <div class="mb-3 d-flex flex-column align-items-center">
+            <UploadButton @file:change="handleFileChange" :key="'capture-none'" class="w-100" />
+            <div class="mt-0 form-text text-mute text-center">
               {{ t('profiles.image_upload.add_from_phone') }}
             </div>
           </div>
           <div class="mb-4 d-flex flex-column align-items-center">
-            <div class="col-6">
-              <UploadButton @file:change="handleFileChange" capture="user" :key="'capture-user'" />
+            <UploadButton
+              @file:change="handleFileChange"
+              capture="user"
+              :key="'capture-user'"
+              class="w-100"
+            />
+            <div class="form-text text-muted text-center">
+              {{ t('profiles.image_upload.take_photo') }}
             </div>
-            <div class="form-text text-muted text-center">{{ t('profiles.image_upload.take_photo') }}</div>
           </div>
           <div>
             <BButton

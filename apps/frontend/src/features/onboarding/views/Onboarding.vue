@@ -10,6 +10,8 @@ import { type EditProfileForm } from '@zod/profile/profile.form'
 import SpinnerComponent from '@/features/shared/ui/SpinnerComponent.vue'
 import ErrorComponent from '@/features/shared/ui/ErrorComponent.vue'
 import OnboardWizard from '@/features/onboarding/components/OnboardWizard.vue'
+import ViewTitle from '@/features/shared/ui/ViewTitle.vue'
+import IconOkHand from '@/assets/icons/hand_gestures/ok.svg'
 
 import { useI18nStore } from '@/store/i18nStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
@@ -62,7 +64,7 @@ const handleWizardFinish = async () => {
     error.value = res.message || 'Failed to save profile'
     return
   }
-  console.log('Profile saved:', formData)
+  // console.log('Profile saved:', formData)
 }
 
 const appStore = useAppStore()
@@ -90,7 +92,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main class="container pb-5 h-100 d-flex flex-column justify-content-center align-items-center">
+  <main class="container">
     <OnboardWizard v-model="formData" @finished="handleWizardFinish">
       <div v-if="profileStore.isLoading" class="text-center">
         <SpinnerComponent />
@@ -98,29 +100,45 @@ onMounted(async () => {
       <div v-else>
         <ErrorComponent v-if="error" :error="error" />
         <div v-else>
-          <legend>Done!</legend>
+          <!-- onboarding wizard finish title -->
+          <ViewTitle :icon="IconOkHand" :title="'Done!'" class="text-primary" />
+
           <div v-if="!profileStore.isLoading" class="d-flex flex-column gap-3">
-            <BButton
-              @click="handleGoToProfile"
-              variant="success"
-              size="lg"
-              pill
-              class="d-flex align-items-center justify-content-center"
-              >Go to my profile</BButton
-            >
-            <BButton
-              @click="handleGoToBrowse"
-              variant="success"
-              size="lg"
-              pill
-              class="d-flex align-items-center justify-content-center"
-              >Go find people</BButton
-            >
+            <div class="mb-4 text-center">
+              <p class="wizard-step-subtitle">
+                <!-- onboarding wizard finish browse profiles button hint -->
+                See who else is on here
+              </p>
+              <BButton
+                @click="handleGoToBrowse"
+                variant="primary"
+                size="lg"
+                pill
+                class="d-flex align-items-center justify-content-center"
+              >
+                <!-- onboarding wizard finish browse profiles button label -->
+
+                Go find people
+              </BButton>
+            </div>
+            <div class="mb-3">
+              <p class="wizard-step-subtitle">
+                <!-- onboarding wizard finish My profile button hint -->
+                See what other people see about me.
+              </p>
+              <BButton
+                @click="handleGoToProfile"
+                variant="primary"
+                size="lg"
+                pill
+                class="d-flex align-items-center justify-content-center"
+                >My profile</BButton
+              >
+              <!-- onboarding wizard finish My profile button label -->
+            </div>
           </div>
         </div>
       </div>
     </OnboardWizard>
   </main>
 </template>
-
-<style lang="scss" scoped></style>

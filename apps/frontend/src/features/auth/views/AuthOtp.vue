@@ -8,22 +8,12 @@ import { useI18nStore } from '@/store/i18nStore'
 
 import { useAuthStore } from '../stores/authStore'
 import OtpLoginComponent from '../components/OtpLoginComponent.vue'
-import LoginConfirmComponent from '../components/LoginConfirmComponent.vue'
-import IconMessage from '@/assets/icons/interface/message.svg'
-import IconMail from '@/assets/icons/interface/mail.svg'
-import ViewTitle from '@/features/shared/ui/ViewTitle.vue'
 import ChevronLeftIcon from '@/assets/icons/arrows/arrow-single-left.svg'
 
 // Reactive variables
 const error = ref('' as string)
 const isValidated = ref<boolean | null>(null)
 const isLoading = ref(false)
-const showModal = ref(true)
-
-// form state
-// const showUserIdForm = ref(true)
-// const showOtpForm = ref(false)
-const showConfirmScreen = ref(false)
 
 const router = useRouter()
 const route = useRoute()
@@ -44,8 +34,13 @@ const OtpParamSchema = z.object({
 
 // // On mounted lifecycle hook
 onMounted(async () => {
+  // TODO this logic needs fixing.
   // no query params -> do nothing here and display form
-  if (!route.query.otp) return
+  if (!route.query.otp) {
+    // call method on authStore to look up user 
+    // obtain login user ID (phone or email)
+    return
+  }
   isLoading.value = true
   // if query params, parse and validate
   const params = OtpParamSchema.safeParse(route.query)
@@ -67,11 +62,9 @@ async function doOtpLogin(otp: string) {
   try {
     const res = await authStore.otpLogin(otp)
     if (res.success) {
-      showConfirmScreen.value = true
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      await router.push({ name: 'UserHome' })
       isValidated.value = true
       error.value = ''
+      await router.push({ name: 'UserHome' })
       return
     } else {
       console.log('OTP login failed:', res)
@@ -103,47 +96,21 @@ function handleBackButton() {
 </script>
 
 <template>
-  <main class="login-container">
-    <BModal
-      v-model="showModal"
-      title="Login"
-      size="md"
-      :backdrop="'static'"
-      centered
-      button-size="sm"
-      :focus="false"
-      :no-close-on-backdrop="true"
-      :no-footer="true"
-      :no-header="true"
-      cancel-title="Nevermind"
-      initial-animation
-      fullscreen="md"
-      body-class="d-flex flex-row align-items-center justify-content-center overflow-hidden"
-      :keyboard="false"
-    >
-      <div class="w-100">
-        <div class="back-button" v-if="!showConfirmScreen">
-          <a class="btn btn-secondary-outline" @click="handleBackButton">
-            <ChevronLeftIcon class="svg-icon" />
-          </a>
-        </div>
-
-        <div v-if="!showConfirmScreen">
-          <ViewTitle v-if="user.phonenumber" :icon="IconMessage" title="" class="text-primary" />
-          <ViewTitle v-else :icon="IconMail" title="" class="text-primary" />
-
-          <OtpLoginComponent
-            :isLoading="isLoading"
-            :user="user"
-            :validationResult="isValidated"
-            :validationError="error"
-            @otp:submit="handleOTPSubmitted"
-          />
-          <!-- <ErrorComponent :error="error" /> -->
-        </div>
-        <LoginConfirmComponent v-else />
+  <main class="container d-flex justify-content-center align-items-center flex-column">
+    <div class="d-flex flex-column align-items-center justify-content-center overflow-hidden">
+      <div class="back-button">
+        <a class="btn btn-secondary-outline" @click="handleBackButton">
+          <ChevronLeftIcon class="svg-icon" />
+        </a>
       </div>
-    </BModal>
+      <OtpLoginComponent
+        :isLoading="isLoading"
+        :user="user"
+        :validationResult="isValidated"
+        :validationError="error"
+        @otp:submit="handleOTPSubmitted"
+      />
+    </div>
   </main>
 </template>
 

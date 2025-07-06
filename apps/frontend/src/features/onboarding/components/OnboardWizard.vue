@@ -12,6 +12,8 @@ import LocationSelectorComponent from '@/features/shared/profileform/LocationSel
 import GoalsSelector from './GoalsSelector.vue'
 import BackButton from '../components/BackButton.vue'
 import PublicNameInput from '@/features/shared/profileform/PublicNameInput.vue'
+import IconSun from '@/assets/icons/interface/sun.svg'
+
 import { useStepper } from '@vueuse/core'
 
 import { useWizardSteps } from '@/features/onboarding/composables/useWizardSteps'
@@ -59,25 +61,51 @@ const handleSubmit = () => {
       <BackButton :show="!isFirst && !isLast" @click="goToPrevious" />
     </div>
 
-    <div class="d-flex align-items-center flex-grow-1 col-12 justify-content-center">
+    <div class="wizard d-flex align-items-center flex-grow-1 col-12 justify-content-center">
       <BForm id="onboarding" novalidate class="w-100" @submit.prevent="handleSubmit">
         <fieldset v-if="isCurrent('publicname')" class="w-100">
-          <legend>{{ t('onboarding.name_title') }}</legend>
+          <div
+            class="d-flex align-items-center justify-content-center text-success w-100 mb-4 animate__animated animate__fadeIn"
+           style="height:10rem; width:10rem;">
+            <IconSun class="svg-icon-100 opacity-50" />
+          </div>
+
+          <!-- onboarding intro title -->
+          <legend>Welcome to Gaians.net.</legend>
+          <p class="wizard-step-subtitle">
+            <!-- onboarding intro text -->
+            Let's walk through a few steps to set up your profile.
+          </p>
           <PublicNameInput v-model="formData.publicName" />
         </fieldset>
 
         <fieldset v-else-if="isCurrent('location')">
-          <legend>I'm from...</legend>
+          <!-- location step title -->
+          <legend>I am from...</legend>
+          <p class="wizard-step-subtitle">
+            <!-- location step input hint -->
+            Where I spend my time these days on our beautiful planet.
+          </p>
           <LocationSelectorComponent v-model="formData.location" :geoIp="true" />
         </fieldset>
 
         <fieldset v-else-if="isCurrent('looking_for')">
+          <!-- goals selector title -->
           <legend>The connections I'm looking for...</legend>
+          <p class="wizard-step-subtitle">
+            <!-- goals selector hint -->
+            I feel complete but could use some company.
+          </p>
           <GoalsSelector v-model="formData" />
         </fieldset>
 
         <fieldset v-else-if="isCurrent('interests')">
+          <!-- interests step title -->
           <legend>I'm into...</legend>
+          <p class="wizard-step-subtitle">
+            <!-- interests step input hint -->
+            Select your interests to help others find you.
+          </p>
           <TagSelectComponent
             v-model="formData.tags"
             :label="t('onboarding.interests_label')"
@@ -87,12 +115,22 @@ const handleSubmit = () => {
         </fieldset>
 
         <fieldset v-else-if="isCurrent('languages')">
+          <!-- languages step title -->
           <legend>I speak...</legend>
+          <p class="wizard-step-subtitle">
+            <!-- languages step input hint -->
+            Select the languages you speak to help others connect with you.
+          </p>
           <LanguageSelector v-model="formData.languages" :required="true" />
         </fieldset>
 
         <fieldset v-else-if="isCurrent('introSocial')">
+          <!-- intro social step title -->
           <legend>About me...</legend>
+          <p class="wizard-step-subtitle">
+            <!-- intro social step input hint -->
+            Write a short introduction to help others get to know you.
+          </p>
           <IntrotextEditor
             v-model="formData.introSocialLocalized"
             :languages="formData.languages"
@@ -101,8 +139,15 @@ const handleSubmit = () => {
         </fieldset>
 
         <fieldset v-else-if="isCurrent('photos')">
+          <!-- photos step title -->
           <legend>I look like...</legend>
-          <ImageEditor />
+          <p class="wizard-step-subtitle">
+            <!-- photos step input hint -->
+            Upload a profile picture and any other images you want to share.
+          </p>
+          <div class="m-4">
+            <ImageEditor />
+          </div>
         </fieldset>
 
         <DatingSteps v-model="formData" :isCurrent></DatingSteps>
@@ -144,6 +189,9 @@ const handleSubmit = () => {
   margin-bottom: 1rem;
   text-align: center;
   color: var(--bs-secondary);
+}
+:deep(.wizard) {
+  font-size: 1rem;
 }
 // .indicators {
 //   bottom: 0;

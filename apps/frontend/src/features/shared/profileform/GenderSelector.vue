@@ -27,7 +27,7 @@ const options = computed(() => {
     <BListGroupItem
       v-for="g in options"
       :key="g.value"
-      class="d-flex justify-content-between align-items-center"
+      class="d-flex justify-content-between align-items-center clickable"
     >
       <BFormRadio name="gender" v-model="model" :id="`list-gender-${g.value}`" :value="g.value">{{
         g.label
