@@ -21,5 +21,5 @@ const showModal = ref(false)
       {{ t('profiles.browse.invite_button') }}
     </BButton>
   </div>
-  <ShareDialog v-model;="showModal" />
+  <ShareDialog v-model="showModal" />
 </template>

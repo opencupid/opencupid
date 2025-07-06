@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import messageRoutes from '../../api/routes/messaging.route'
 import { MockFastify, MockReply } from '../../test-utils/fastify'
 
+vi.mock('@prisma/client', () => ({ Prisma: {}, PrismaClient: class {} }))
+
 let fastify: MockFastify
 let reply: MockReply
 let mockMessageService: any

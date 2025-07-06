@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { FaceDetectionService } from '../../services/face-detection.service';
 import path from 'path';
 import fs from 'fs';
@@ -11,6 +11,9 @@ describe('FaceDetectionService', () => {
 
   beforeAll(async () => {
     faceService = FaceDetectionService.getInstance();
+    vi.spyOn(faceService, 'loadModels').mockResolvedValue();
+    vi.spyOn(faceService, 'detectFaces').mockResolvedValue({ hasFace: false });
+    vi.spyOn(faceService, 'autoCrop').mockResolvedValue(false);
     outputDir = '/tmp/test-face-detection';
     fs.mkdirSync(outputDir, { recursive: true });
     

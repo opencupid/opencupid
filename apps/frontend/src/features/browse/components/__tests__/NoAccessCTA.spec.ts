@@ -1,5 +1,6 @@
 import { mount } from '@vue/test-utils'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k:string)=>k }) }))
 
 const BButton = { template: '<button @click="$emit(\'click\')"><slot /></button>' }
 
@@ -9,7 +10,7 @@ describe('NoAccessCTA', () => {
   it('emits edit event when button clicked', async () => {
     const wrapper = mount(NoAccessCTA, {
       props: { modelValue: 'dating' },
-      global: { stubs: { BButton } }
+      global: { stubs: { BButton }, config: { globalProperties: { $t: (k:string)=>k } } }
     })
     await wrapper.find('button').trigger('click')
     expect(wrapper.emitted('edit:profile')).toBeTruthy()
@@ -18,8 +19,8 @@ describe('NoAccessCTA', () => {
   it('shows dating scope message', () => {
     const wrapper = mount(NoAccessCTA, {
       props: { modelValue: 'dating' },
-      global: { stubs: { BButton } }
+      global: { stubs: { BButton }, config: { globalProperties: { $t: (k:string)=>k } } }
     })
-    expect(wrapper.text()).toContain('dating profile is currently private')
+    expect(wrapper.text()).toContain('profiles.browse.no_access_dating_title')
   })
 })

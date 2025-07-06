@@ -1,9 +1,10 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import { FaceDetectionService } from '../../services/face-detection.service'
 import { ImageService } from '../../services/image.service'
 import path from 'path'
 import fs from 'fs'
 import sharp from 'sharp'
+vi.mock('@prisma/client', () => ({ Prisma: {}, PrismaClient: class {} }))
 
 describe('AutoCrop Feature Integration', () => {
   let outputDir: string

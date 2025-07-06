@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { createMockPrisma } from '../../test-utils/prisma'
 import { canSendMessageInConversation } from '../../services/messaging.service'
 
+vi.mock('@prisma/client', () => ({ Prisma: {}, PrismaClient: class {} }))
+
 let service: any
 let mockPrisma: any
 
