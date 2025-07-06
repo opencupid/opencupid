@@ -61,7 +61,6 @@ provide('isEditable', toRef(props, 'editState'))
     :no-header="false"
     :ok-title="'OK'"
     :ok-class="'btn btn-primary px-5'"
-    cancel-title="Nevermind"
     :initial-animation="false"
     body-class="d-flex flex-row align-items-center justify-content-center overflow-hidden"
     @ok="handleUpdate"
@@ -71,8 +70,7 @@ provide('isEditable', toRef(props, 'editState'))
   >
     <template #cancel="{ close }">
       <BButton class="btn btn-link text-decoration-none" @click="close" variant="link" size="sm"
-        >Nevermind</BButton
-      >
+        >{{ $t('uicomponents.dialog_cancel_button') }}</BButton>
     </template>
     <div id="field-edit-modal" class="w-100 py-5"></div>
   </BModal>

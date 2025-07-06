@@ -29,7 +29,8 @@
     "test:integration": "turbo run test:integration",
     "test:coverage": "pnpm run test:coverage:frontend && pnpm run test:coverage:backend",
     "test:coverage:frontend": "pnpm --filter frontend run test:unit --coverage --run",
-    "test:coverage:backend": "pnpm --filter backend run test --coverage --run"
+    "test:coverage:backend": "pnpm --filter backend run test --coverage --run",
+    "translate": "npx json-autotranslate  -i packages/shared/i18n/ --directory-structure ngx-translate -d --type key-based -c secrets/plasma-light-463416-u5-4d5bc449ca13.json  -m i18next "
   },
   "dependencies": {
     "zod": "^3.24.4"
