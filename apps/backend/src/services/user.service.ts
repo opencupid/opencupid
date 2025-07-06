@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { Prisma, UserRole } from '@prisma/client'
 import type { User } from '@zod/generated'
 import { ValidateUserOtpLoginResponse } from '@zod/user/auth.dto'
-import type { AuthIdentifier, SessionProfile } from '@zod/user/user.dto'
+import type { UserIdentifier, SessionProfile } from '@zod/user/user.dto'
 import otpGenerator from 'otp-generator'
 
 // Define types for service return values
@@ -66,7 +66,7 @@ export class UserService {
   }
 
   async setUserOTP(
-    authId: AuthIdentifier,
+    authId: UserIdentifier,
     otp: string,
     language: string
   ): Promise<{

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { type AuthIdentifierCaptchaInput } from '@zod/user/user.dto'
+import { type UserIdentifyPayload } from '@zod/user/user.dto'
 import { type LoginUser } from '@zod/user/user.dto'
 
 import { useI18nStore } from '@/store/i18nStore'
@@ -28,7 +28,7 @@ const user = reactive<LoginUser>({
 })
 
 // Method to handle sending login link
-async function handleSendOtp(authIdCaptcha: AuthIdentifierCaptchaInput) {
+async function handleSendOtp(authIdCaptcha: UserIdentifyPayload) {
   const payload = {
     ...authIdCaptcha,
     language: user.language || 'en',
@@ -66,8 +66,7 @@ const handleSetLanguage = (lang: string) => {
     <AuthIdComponent
       :isLoading="isLoading"
       v-model="user"
-      @otp:send="handleSendOtp"
-      @language:select="handleSetLanguage"
+      @updated="handleSendOtp"
     />
 
     <div class="d-flex justify-content-center align-items-center mt-3">

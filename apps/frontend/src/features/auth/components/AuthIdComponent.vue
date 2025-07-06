@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import type { AuthIdentifierCaptchaInput } from '@zod/user/user.dto'
+import type { UserIdentifyPayload } from '@zod/user/user.dto'
 import { emailRegex, phoneRegex } from '@/lib/utils'
 import CaptchaWidget from './CaptchaWidget.vue'
 import { useI18n } from 'vue-i18n'
@@ -17,7 +17,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'otp:send', identifier: AuthIdentifierCaptchaInput): void
+  (e: 'updated', identifier: UserIdentifyPayload): void
 }>()
 
 // State variables
@@ -40,7 +40,7 @@ async function handleSendLoginLink() {
     error.value = t('auth.auth_id_input_empty') // "Please enter your email or phone number."
     return
   }
-  emit('otp:send', authIdentifier.value)
+  emit('updated', authIdentifier.value)
 }
 
 const inputState = computed(() => {

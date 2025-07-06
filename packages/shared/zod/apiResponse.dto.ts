@@ -15,7 +15,7 @@ import type {
 } from '@zod/profile/profile.dto'
 import type { PublicTag } from '@zod/tag/tag.dto'
 import type { ConversationSummary, MessageDTO } from '@zod/messaging/messaging.dto'
-import type { SettingsUser, OtpSendReturn } from '@zod/user/user.dto'
+import type { LoginUser, SettingsUser } from '@zod/user/user.dto'
 import type { PublicCity } from '@zod/dto/city.dto'
 import type { LocationDTO } from '@zod/dto/location.dto'
 import type { VersionDTO } from '@zod/dto/version.dto'
@@ -63,7 +63,7 @@ export type InteractionStatsResponse = ApiSuccess<{ stats: InteractionStats }>
 
 export type AuthResponse<T> = ApiSuccess<T> | ApiError & { code: AuthErrorCodes }
 export type UserMeResponse = ApiSuccess<{ user: SettingsUser }>
-export type SendLoginLinkResponse = ApiSuccess<{ user: OtpSendReturn; status: string }>
+export type SendLoginLinkResponse = ApiSuccess<{ user: LoginUser; status: string }>
 export type OtpLoginSuccess = AuthResponse<{ token: string }>
 export interface OtpLoginFailure {
   success: false

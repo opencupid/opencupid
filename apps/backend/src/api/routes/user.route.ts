@@ -1,6 +1,5 @@
 import cuid from 'cuid'
 import { FastifyPluginAsync } from 'fastify'
-import { validateBody } from '../../utils/zodValidate'
 import { emailQueue } from '../../queues/emailQueue'
 import { UserService } from 'src/services/user.service'
 import { ProfileService } from 'src/services/profile.service'
@@ -9,9 +8,9 @@ import { SmsService } from '@/services/sms.service'
 import { CaptchaService } from '@/services/captcha.service'
 import { appConfig } from '@/lib/appconfig'
 
-import { AuthIdentifierCaptchaInput, AuthIdentifierCaptchaInputSchema, OtpLoginInputSchema, OtpSendReturn } from '@zod/user/user.dto'
+import { UserIdentifyPayloadSchema, OtpLoginPayloadSchema, type LoginUser } from '@zod/user/user.dto'
 import type { OtpLoginResponse, SendLoginLinkResponse, UserMeResponse } from '@zod/apiResponse.dto'
-import { AuthIdentifier, JwtPayload } from '@zod/user/user.dto'
+import { UserIdentifier, JwtPayload } from '@zod/user/user.dto'
 import { User } from '@zod/generated'
 
 
@@ -27,7 +26,7 @@ const userRoutes: FastifyPluginAsync = async fastify => {
     },
   }, async (req, reply) => {
     try {
-      const params = OtpLoginInputSchema.safeParse(req.query)
+      const params = OtpLoginPayloadSchema.safeParse(req.query)
       if (!params.success) {
         return reply.code(400).send({ code: 'AUTH_INVALID_INPUT' })
       }
@@ -74,7 +73,7 @@ const userRoutes: FastifyPluginAsync = async fastify => {
     },
   }, async (req, reply) => {
 
-    const params = AuthIdentifierCaptchaInputSchema.safeParse(req.body)
+    const params = UserIdentifyPayloadSchema.safeParse(req.body)
     if (!params.success) {
       return reply.code(400).send({ code: 'AUTH_MISSING_FIELD' })
     }
@@ -113,14 +112,14 @@ const userRoutes: FastifyPluginAsync = async fastify => {
       }
     }
 
-    const authId: AuthIdentifier = {
+    const authId: UserIdentifier = {
       email: email || undefined,
       phonenumber: phonenumber || undefined,
     }
 
     const { user, isNewUser } = await userService.setUserOTP(authId, otp, language)
 
-    const userReturned: OtpSendReturn = {
+    const userReturned: LoginUser = {
       id: user.id,
       email: user.email,
       phonenumber: user.phonenumber,

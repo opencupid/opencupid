@@ -7,26 +7,17 @@ export const JwtPayloadSchema = z.object({
   userId: z.string().cuid(),
   profileId: z.string().cuid(),
 })
+export type JwtPayload = z.infer<typeof JwtPayloadSchema>
 
 
-// JWT payload verified and set on request.user
-// const RequestUserSchema = z.object({
-//   userId: z.string().cuid(),
-//   profileId: z.string().cuid(),
-// })
-// export type RequestUser = z.infer<typeof RequestUserSchema>
-
-
-
-
-export const AuthIdentifierSchema = z.object({
+export const UserIdentifierSchema = z.object({
   email: z.string().optional(),
   phonenumber: z.string().optional(),
 })
+export type UserIdentifier = z.infer<typeof UserIdentifierSchema>
 
 
-// TODO rename this, it's more than just an auth identifier. more like a CreateUserPayload
-export const AuthIdentifierCaptchaInputSchema = AuthIdentifierSchema
+export const UserIdentifyPayloadSchema = UserIdentifierSchema
   .extend({
     captchaSolution: z.string().min(1, 'Captcha solution is required'),
     language: z.string(),
@@ -38,9 +29,7 @@ export const AuthIdentifierCaptchaInputSchema = AuthIdentifierSchema
       path: ['email'], // mark the error on the email field (or 'phonenumber')
     }
   )
-export type AuthIdentifierCaptchaInput = z.infer<typeof AuthIdentifierCaptchaInputSchema>
-export type AuthIdentifier = z.infer<typeof AuthIdentifierSchema>
-export type JwtPayload = z.infer<typeof JwtPayloadSchema>
+export type UserIdentifyPayload = z.infer<typeof UserIdentifyPayloadSchema>
 
 export const SessionProfileSchema = ProfileSchema.pick({
   id: true,
@@ -61,7 +50,6 @@ export const SessionDataSchema = z.object({
 export type SessionData = z.infer<typeof SessionDataSchema>
 
 
-
 export const SettingsUserSchema = UserSchema.pick({
   email: true,
   phonenumber: true,
@@ -78,21 +66,11 @@ export const LoginUserSchema = UserSchema.pick({
 export type LoginUser = z.infer<typeof LoginUserSchema>
 
 
-
-
-export const OtpSendReturnSchema = UserSchema.pick({
-  id: true,
-  email: true,
-  phonenumber: true,
-  language: true,
-})
-export type OtpSendReturn = z.infer<typeof OtpSendReturnSchema>
-
-export const OtpLoginInputSchema = z.object({
+export const OtpLoginPayloadSchema = z.object({
   userId: z.string().cuid(),
   otp: z.string().min(6, 'OTP must be at least 6 characters long').max(6, 'OTP must be exactly 6 characters long'),
 })
-export type OtpLogin = z.infer<typeof OtpLoginInputSchema>
+export type OtpLoginPayload = z.infer<typeof OtpLoginPayloadSchema>
 
 
 export const UserWithProfileSchema = UserSchema.extend({

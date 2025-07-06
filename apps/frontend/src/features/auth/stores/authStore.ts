@@ -4,15 +4,14 @@ import { bus } from '@/lib/bus'
 import { type UserRoleType } from '@zod/generated'
 
 import {
-  type OtpSendReturn,
-  OtpSendReturnSchema,
+  LoginUserSchema,
   type SettingsUser,
   SettingsUserSchema,
 } from '@zod/user/user.dto'
 
-import type { AuthIdentifier, JwtPayload, SessionData } from '@zod/user/user.dto'
+import type { UserIdentifier, JwtPayload, SessionData, LoginUser } from '@zod/user/user.dto'
 
-import type { ApiError, ApiSuccess, OtpLoginResponse, SendLoginLinkResponse, UserMeResponse } from '@zod/apiResponse.dto'
+import type { ApiError, OtpLoginResponse, SendLoginLinkResponse, UserMeResponse } from '@zod/apiResponse.dto'
 import { AuthErrorCodes } from '@zod/user/auth.dto'
 
 type SuccessResponse<T> = { success: true } & T
@@ -127,13 +126,13 @@ export const useAuthStore = defineStore('auth', {
       return { success: true, status: '' }
     },
 
-    async sendLoginLink(authId: AuthIdentifier): Promise<AuthStoreResponse<{
-      user: OtpSendReturn,
+    async sendLoginLink(authId: UserIdentifier): Promise<AuthStoreResponse<{
+      user: LoginUser,
     }>> {
       // console.log('Sending login link with data:', authId)
       try {
         const res = await api.post<SendLoginLinkResponse>('/users/send-login-link', authId)
-        const params = OtpSendReturnSchema.safeParse(res.data.user)
+        const params = LoginUserSchema.safeParse(res.data.user)
         if (!params.success) {
           console.error('Invalid user data received:', params.error)
           return {

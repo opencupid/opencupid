@@ -28,14 +28,14 @@ describe('AuthIdComponent', () => {
     expect((wrapper.vm as any).inputState).toBe(true)
   })
 
-  it('emits otp:send with computed identifier', async () => {
+  it('emits updated with computed identifier', async () => {
     const wrapper = mount(AuthIdComponent, {
       props: { isLoading: false },
       global: { stubs: {  CaptchaWidget } }
     })
     ;(wrapper.vm as any).authIdInput = 'test@example.com'
     await (wrapper.vm as any).handleSendLoginLink()
-    expect(wrapper.emitted('otp:send')![0][0]).toEqual({
+    expect(wrapper.emitted('updated')![0][0]).toEqual({
       email: 'test@example.com',
       phonenumber: '',
       captchaSolution: '',
