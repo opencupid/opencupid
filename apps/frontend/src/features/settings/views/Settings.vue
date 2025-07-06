@@ -37,9 +37,7 @@ const mode = useColorMode({
   },
 })
 
-mode.value = localStore.getTheme
-
-watch(mode, (newMode) => {
+watch(mode, newMode => {
   localStore.setTheme(newMode)
 })
 
@@ -49,6 +47,7 @@ const changeColor = () => {
 
 onMounted(async () => {
   isLoading.value = true
+  mode.value = localStore.getTheme as any
   const res = await authStore.fetchUser()
 
   if (res.success) {
@@ -63,7 +62,7 @@ onMounted(async () => {
 
 function handleClick() {
   authStore.logout()
-  console.log('User logged out sending to /auth' )
+  console.log('User logged out sending to /auth')
   router.push({ name: 'Login' })
 }
 </script>
