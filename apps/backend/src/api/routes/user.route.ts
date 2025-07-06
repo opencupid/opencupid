@@ -4,7 +4,7 @@ import { validateBody } from '../../utils/zodValidate'
 import { emailQueue } from '../../queues/emailQueue'
 import { UserService } from 'src/services/user.service'
 import { ProfileService } from 'src/services/profile.service'
-import { sendError, sendUnauthorizedError } from '../helpers'
+import { rateLimitConfig, sendError, sendUnauthorizedError } from '../helpers'
 import { SmsService } from '@/services/sms.service'
 import { CaptchaService } from '@/services/captcha.service'
 import { appConfig } from '@/lib/appconfig'
@@ -20,15 +20,19 @@ const userRoutes: FastifyPluginAsync = async fastify => {
   const profileService = ProfileService.getInstance()
   const captchaService = new CaptchaService(appConfig.ALTCHA_HMAC_KEY)
 
-  // TODO add rate limiting to this endpoint, see tags.routes.ts
-  fastify.get('/otp-login', async (req, reply) => {
+  fastify.get('/otp-login', {
+    // rate limiter
+    config: {
+      ...rateLimitConfig(fastify, '5 minute', 5), // 10 requests per minute
+    },
+  }, async (req, reply) => {
     try {
       const params = OtpLoginInputSchema.safeParse(req.query)
       if (!params.success) {
         return reply.code(400).send({ code: 'AUTH_INVALID_INPUT' })
       }
       const { userId, otp } = params.data
-      const  result  = await userService.validateUserOtpLogin(userId, otp)
+      const result = await userService.validateUserOtpLogin(userId, otp)
       if (!result.success) {
         return reply.code(401).send({ code: result.code, message: result.message })
       }
@@ -63,7 +67,12 @@ const userRoutes: FastifyPluginAsync = async fastify => {
     }
   })
 
-  fastify.post('/send-login-link', async (req, reply) => {
+  fastify.post('/send-login-link', {
+    // rate limiter
+    config: {
+      ...rateLimitConfig(fastify, '5 minute', 5), // 10 requests per minute
+    },
+  }, async (req, reply) => {
 
     const params = AuthIdentifierCaptchaInputSchema.safeParse(req.body)
     if (!params.success) {

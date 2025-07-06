@@ -12,7 +12,7 @@ function getTokenExpiration() {
   return new Date(Date.now() + 1000 * 60 * 60 * 240)
 }
 
-const userSelectInclude = {
+const profileInclude = {
   profile: true,
 }
 
@@ -59,7 +59,7 @@ export class UserService {
         loginTokenExp: null, // Clear the expiration
         lastLoginAt: new Date(), // Update the last login date
       },
-      include: userSelectInclude,
+      include: profileInclude,
     })
 
     return { user: userUpdated, isNewUser, success: true }

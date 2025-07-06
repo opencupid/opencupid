@@ -46,6 +46,10 @@ export function rateLimitConfig(fastify: FastifyInstance, timeWindow: string, ma
     rateLimit: {
       max,
       timeWindow,
+      keyGenerator: (req: FastifyRequest) => {
+        if (req.user) return `user:${req.user.userId}`
+        return req.ip // fallback to IP address
+      },
       onExceeded: (req: FastifyRequest, key: string) => {
         fastify.log.warn(`Rate limit exceeded for user: ${key}`)
       },
