@@ -1,0 +1,286 @@
+{
+  "general": {
+    "connectiontypes": {
+      "dating": "Daten",
+      "socializing": "Socialiseren"
+    }
+  },
+  "gender": {
+    "male": "Mannelijk",
+    "female": "Vrouwelijk",
+    "agender": "Gender",
+    "androgynous": "Androgyn",
+    "bigender": "Bigender",
+    "cis_man": "Cisgender-man",
+    "cis_woman": "Cisgender-vrouw",
+    "genderfluid": "Gendervloeistof",
+    "genderqueer": "Genderqueer",
+    "gender_nonconforming": "Niet conform het geslacht",
+    "hijra": "Hijra",
+    "intersex": "Intersekse",
+    "pangender": "Pangender",
+    "transfeminine": "Transvrouwelijk",
+    "trans_man": "Transman",
+    "transmasculine": "Transmasculine",
+    "transsexual": "Transseksueel",
+    "trans_woman": "Transvrouw",
+    "two_spirit": "Met twee geesten",
+    "non_binary": "Niet-binair",
+    "other": "Andere",
+    "unspecified": "Ik zeg liever niet"
+  },
+  "pronouns": {
+    "he_him": "Hij/hem",
+    "she_her": "Zij/haar",
+    "they_them": "Zij/hen",
+    "unspecified": "zij wensen"
+  },
+  "relationship": {
+    "single": "Alleenstaand",
+    "in_relationship": "In een relatie",
+    "married": "Getrouwd",
+    "divorced": "Gescheiden",
+    "widowed": "Weduwe",
+    "other": "Ander (het is ingewikkeld)",
+    "unspecified": "Ik zeg liever niet"
+  },
+  "haskids": {
+    "yes": "Ja",
+    "no": "Nee",
+    "unspecified": "Ik zeg liever niet"
+  },
+  "haskids_label": {
+    "yes": "Heeft kinderen",
+    "no": "Geen kinderen",
+    "unspecified": "Ik zeg liever niet"
+  },
+  "auth": {
+    "login": "Login",
+    "auth_id_input_empty": "Voer je e-mailadres of telefoonnummer in.",
+    "auth_id_input_label": "E-mailadres of telefoonnummer",
+    "auth_id_input_placeholder": "+12 34567121 of uw email.com",
+    "captcha_input_label": "Ik ben een mens",
+    "login_confirm_welcome": "Welkom!",
+    "otp_check_messages": "Controleer je berichten",
+    "otp_sent_phone": "We hebben je een kleine code naar je telefoonnummer gestuurd, voer deze hieronder in.",
+    "otp_sent_email": "We hebben je een inloglink gestuurd, check je inbox. Als je het niet ziet, controleer dan je spam-map.",
+    "otp_input_label": "Voer de code in",
+    "otp_invalid_feedback": "De code moet uit 6 cijfers bestaan",
+    "email": "Email",
+    "phone_number": "Telefoonnummer",
+    "password": "Wachtwoord"
+  },
+  "nav": {
+    "home": "Home",
+    "onboarding": "Onboarding",
+    "profile": "Profiel",
+    "browse": "Blader",
+    "matches": "Wedstrijden",
+    "inbox": "Inbox",
+    "settings": "Instellingen"
+  },
+  "authentication": {
+    "login": "Login",
+    "logout": "Uitloggen"
+  },
+  "home": {
+    "welcome_title": "Welkom bij {SiteName}!",
+    "meet_new_people": "Ontmoet nieuwe mensen"
+  },
+  "profiles": {
+    "send_message_button": "Bericht",
+    "profile_photos": "Foto's van {name}",
+    "no_profile_title": "Vul je profiel in",
+    "no_profile_create": "Profiel aanmaken",
+    "image_editor_help": "Je foto hier",
+    "image_upload": {
+      "title": "Een foto toevoegen",
+      "looks_good": "Ziet er goed uit!",
+      "add_from_phone": "Voeg een foto toe vanaf je telefoon",
+      "take_photo": "Of maak een foto met je camera",
+      "nevermind": "Maakt niet uit"
+    },
+    "forms": {
+      "my_preferences": "Mijn voorkeuren",
+      "age_range": "Leeftijdscategorie",
+      "kids_label": "Kinderen?",
+      "relationship_label": "Ik ben...",
+      "pronouns_label": "Ze noemen me...",
+      "name_label": "Mijn naam is...",
+      "name_invalid": "Voer minimaal 3 letters in",
+      "more_options": "Meer opties...",
+      "city_search_placeholder": "Zoek steden",
+      "city_add_placeholder": "Voeg dit toe als nieuwe stad",
+      "city_start_typing": "Begin met typen om naar je stad te zoeken",
+      "tag_search_placeholder": "Interesses zoeken...",
+      "tag_add_placeholder": "Voeg dit toe als nieuwe tag",
+      "dictate_listening": "Luisteren...",
+      "dictate": "Dicteren",
+      "intro_placeholder": "Vertel iets over jezelf",
+      "intro_who_placeholder": "Wie zou je graag willen ontmoeten?"
+    },
+    "blocklist": {
+      "title": "Geblokkeerde gebruikers",
+      "empty": "Je hebt geen geblokkeerde gebruikers.",
+      "unblock_button": "Deblokkeer",
+      "unblock_confirmation": "Weet je zeker dat je deze gebruiker wilt deblokkeren?",
+      "unblock_confirmation_yes": "Ja, deblokkeer",
+      "unblock_confirmation_no": "Nee, blijf geblokkeerd",
+      "dialog_title": "{name} blokkeren?",
+      "dialog_message_1": "Als deze persoon je lastig valt, kun je hem of haar blokkeren. Dit voorkomt dat ze je berichten sturen of interactie hebben met je profiel. Ze worden ook nergens op deze site aan u getoond, alsof ze nooit hebben bestaan.",
+      "dialog_message_2": "Ze krijgen geen melding dat je ze hebt geblokkeerd.",
+      "confirmation_no": "Maakt niet uit",
+      "confirmation_yes": "Ja, blokkeer ze"
+    },
+    "browse": {
+      "no_access_dating_title": "Je eigen datingprofiel is momenteel privé.",
+      "no_access_dating_description": "Als anderen je niet kunnen zien, kun jij ze niet zien - dat is niet meer dan eerlijk. Om matches te vinden, maak je datingprofiel openbaar.",
+      "no_access_social_title": "Je eigen sociale profiel is momenteel privé.",
+      "no_access_social_description": "Als anderen je niet kunnen zien, kun jij ze niet zien - dat is niet meer dan eerlijk. Om anderen te zien en te ontmoeten, maak je profiel openbaar.",
+      "cta_button_label": "Ga naar mijn profiel",
+      "social_no_results": "Er is nog niemand in je omgeving die aan je voorkeuren voldoet.",
+      "no_results_cta_title": "Deze gemeenschap groeit nog steeds.",
+      "no_results_cta_description": "Je kunt helpen door je vrienden uit te nodigen om mee te doen. Hoe meer, hoe beter.",
+      "invite_button": "Vrienden uitnodigen",
+      "filters": {
+        "dialog_ok_button": "Mensen vinden",
+        "dialog_cancel_button": "Maakt niet uit",
+        "social_title": "Ik ben op zoek naar verbindingen...",
+        "tags_label": "Geïnteresseerd in...",
+        "anywhere": "Overal",
+        "locate_button_title": "Ingesteld op mijn land",
+        "search_button_title_social": "Mensen vinden",
+        "search_button_title_dating": "Mensen vinden",
+        "age_range": "Leeftijdscategorie:"
+      }
+    }
+  },
+  "matches": {
+    "matches_list_title": "Mijn wedstrijden",
+    "you_received_like": "Je hebt een like gekregen!",
+    "you_matched_with": "Je hebt gematcht met {name}!",
+    "received_likes": "Je hebt geen likes. |Je hebt 1 like. |Je hebt {count} likes!",
+    "received_likes_cta": "Ontdek wie het heeft verzonden",
+    "no_match_no_sent_like": "Er moet toch iemand zijn die je leuk vindt?  ",
+    "no_match_no_sent_like_cta": "Begin met zoeken",
+    "no_match_have_sent_like": "Ze zullen je zeker weer leuk vinden.",
+    "no_match_have_sent_like_cta": "Blijf zoeken",
+    "find_button_cta": "Ga verbinding maken",
+    "notifications": {
+      "you_have": "Je hebt",
+      "likes": "{count} vind ik leuk | {count} likes",
+      "matches": "{count} nieuwe match | {count} nieuwe matches",
+      "and": "en"
+    }
+  },
+  "interactions": {
+    "send_a_message": "Stuur een bericht",
+    "you_messaged_them": "Je hebt ze een bericht gestuurd.",
+    "you_liked_them": "Je vond ze leuk",
+    "you_matched_with_them": "Je hebt bij hen gematcht.",
+    "send_a_like": "Stuur ze een like. Ze zullen pas weten wie het heeft gestuurd als ze je weer leuk vinden.",
+    "its_a_match": "Het is een match!",
+    "send_them_a_message": "Stuur {name} een bericht",
+    "cancel_button": "Misschien later",
+    "message_confirmation": "Leuk!",
+    "like_error": "Oeps, dit werkte niet. Probeer het opnieuw."
+  },
+  "messaging": {
+    "page_title": "Berichten",
+    "send_message_button": "Verzenden",
+    "message_input_placeholder": "Typ hier je bericht...",
+    "new_message_notification": "{sender} heeft een bericht gestuurd",
+    "send_message_to_user": "Stuur een bericht naar {name}",
+    "unknown_sender": "Iemand",
+    "message_input_hint": "Druk op Enter om te verzenden",
+    "send_failed": "Oeps, dit werkte niet. Probeer het opnieuw.",
+    "message_sent_success": "Bericht succesvol verzonden!",
+    "my_turn": "Mijn beurt",
+    "their_turn": "Hun beurt",
+    "block_report_unmatch": "Blokkeren/rapporteren/dematchen",
+    "block_user_ok": "Blokkeer {name}",
+    "nevermind": "Maakt niet uit",
+    "send_message_heading": "Bericht verzenden",
+    "welcome_message": "Welkom bij Gaians!",
+    "no_messages_cta": "Vind mensen om mee te praten",
+    "no_messages_title": "Nog geen berichten",
+    "no_messages_placeholder": "Je gesprekken vinden hier plaats."
+  },
+  "onboarding": {
+    "name_title": "Hallo!",
+    "country_placeholder": "Land",
+    "steps": {
+      "age_legend": "Ik ben geboren...",
+      "gender_legend": "Ik identificeer me als...",
+      "situation_legend": "Mijn situatie",
+      "intro_find_legend": "Ik zou graag het volgende willen vinden:",
+      "intro_find_placeholder": "Geef mensen een idee naar wie je op zoek bent."
+    },
+    "goals": {
+      "socializing": "Socialiseren, uitgaan, reizen en nieuwe mensen ontmoeten",
+      "dating": "Daten, een partner vinden, en romantische relaties verkennen."
+    },
+    "wizard": {
+      "all_set": "Helemaal klaar!",
+      "appear_message": "Je verschijnt nu aan mensen die op zoek zijn naar dezelfde dingen als jij. Je kunt deze informatie later altijd nog wijzigen.",
+      "next": "Volgende",
+      "hint_click_next": "Klik op Volgende"
+    }
+  },
+  "settings": {
+    "title": "Instellingen",
+    "language_label": "taal",
+    "push_notifications": "Push-meldingen",
+    "enable_push": "Pushmeldingen inschakelen"
+  },
+  "uicomponents": {
+    "error": {
+      "title": "We zijn hier op een probleem gestuit.",
+      "message": "Er is een fout opgetreden. Probeer het later opnieuw.",
+      "retry": "Probeer het opnieuw",
+      "cancel": "Annuleer"
+    },
+    "submitbutton": {
+      "working": "Aan het werk...",
+      "submit": "Verzenden",
+      "save": "Opslaan"
+    },
+    "loading": {
+      "loading": "Aan het laden..."
+    },
+    "spinner": {
+      "spinning": "Draaien"
+    },
+    "modal": {
+      "close": "Sluiten"
+    },
+    "toast": {
+      "success": {
+        "title": "Succes",
+        "message": "Je actie was succesvol."
+      },
+      "error": {
+        "title": "Fout",
+        "message": "Er is een fout opgetreden. Probeer het nog eens."
+      }
+    },
+    "share_dialog": {
+      "title": "Vertel het verder",
+      "description": "Nodig je vrienden uit om lid te worden van Gaians en contact te maken met gelijkgestemde mensen.",
+      "button_copy": "Kopiëren",
+      "button_copied": "Gekopieerd",
+      "qr_hint": "Flash dit op hun telefoon"
+    },
+    "dialog_cancel_button": "Maakt niet uit"
+  },
+  "emails": {
+    "loginLink": {
+      "subject": "Je inloglink",
+      "html": "<p>Hallo, welkom aan boord!</p> <h1>{{otp}}</h1> <p>Klik op deze link om direct naar te gaan: <a href=\"{{link}} \">E-mail bevestigen</a></p>"
+    },
+    "welcome": {
+      "subject": "Welkom bij Gaians!",
+      "html": "<p>Hallo, welkom aan boord!</p> <a href=\"{{link}} \">Ga in contact komen met mensen</a></p>"
+    }
+  }
+}

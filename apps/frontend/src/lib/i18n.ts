@@ -10,10 +10,23 @@ declare global {
 
 // Import JSON locale files
 import en from '@shared/i18n/en.json'
-import hu from '@shared/i18n/hu.json'
-import de from '@shared/i18n/de.json'
-import fr from '@shared/i18n/fr.json'
+
+export const messagesLoaders: Record<string, () => Promise<any>> = {
+  hu: () => import('@shared/i18n/hu.json'),
+  de: () => import('@shared/i18n/de.json'),
+  fr: () => import('@shared/i18n/fr.json'),
+  es: () => import('@shared/i18n/es.json'),
+  it: () => import('@shared/i18n/it.json'),
+  pt: () => import('@shared/i18n/pt.json'),
+  sk: () => import('@shared/i18n/sk.json'),
+  pl: () => import('@shared/i18n/pl.json'),
+  ro: () => import('@shared/i18n/ro.json'),
+  nl: () => import('@shared/i18n/nl.json'),
+}
+
+
 import { useLocalStore } from '@/store/localStore'
+import { bus } from './bus'
 
 export function getLocale(): string {
   const localStore = useLocalStore()
@@ -27,7 +40,7 @@ export function appCreateI18n() {
     legacy: false,
     locale: getLocale(),
     fallbackLocale: 'en',
-    messages: { en, hu, de, fr },
+    messages: { en },
     missingWarn: true,
     fallbackWarn: false,
   })
@@ -37,5 +50,17 @@ export function appUseI18n(app: any) {
   const i18n = window.__APP_I18N__ || appCreateI18n()
   window.__APP_I18N__ = i18n as any
   app.use(i18n)
-  // app.provide('$i18n', i18n)
+
+  bus.on('language:changed', async ({ language }) => {
+    // Lazy-load messages only if not already loaded
+    const messages = await messagesLoaders[language]?.()
+    if (messages) {
+      (i18n.global as import('vue-i18n').Composer).setLocaleMessage(language, messages.default || messages)
+    } else {
+      console.warn(`No message loader found for locale: ${language}`)
+    }
+
+    // Apply new locale
+    (i18n.global as import('vue-i18n').Composer).locale.value = language
+  })
 }

@@ -1,0 +1,286 @@
+{
+  "general": {
+    "connectiontypes": {
+      "dating": "Întâlniri",
+      "socializing": "Socializare"
+    }
+  },
+  "gender": {
+    "male": "Masculin",
+    "female": "Femeie",
+    "agender": "Agenți",
+    "androgynous": "Androgin",
+    "bigender": "bigend",
+    "cis_man": "Bărbat cisgender",
+    "cis_woman": "Femeie cisgender",
+    "genderfluid": "Fluid de gen",
+    "genderqueer": "Genderqueer",
+    "gender_nonconforming": "Neconformitate de gen",
+    "hijra": "Hijra",
+    "intersex": "Intersex",
+    "pangender": "Pangender",
+    "transfeminine": "Transfeminin",
+    "trans_man": "Bărbat trans",
+    "transmasculine": "Transmasculin",
+    "transsexual": "Transsexual",
+    "trans_woman": "Femeie trans",
+    "two_spirit": "Două spirite",
+    "non_binary": "Non-binar",
+    "other": "Altele",
+    "unspecified": "Aș prefera să nu spun"
+  },
+  "pronouns": {
+    "he_him": "El/el",
+    "she_her": "Ea/ea",
+    "they_them": "Ei/ei",
+    "unspecified": "ei doresc"
+  },
+  "relationship": {
+    "single": "Singur",
+    "in_relationship": "Într-o relație",
+    "married": "Căsătorit",
+    "divorced": "Divortat",
+    "widowed": "Văduv",
+    "other": "Altele (este complicat)",
+    "unspecified": "Aș prefera să nu spun"
+  },
+  "haskids": {
+    "yes": "da",
+    "no": "Nu",
+    "unspecified": "Aș prefera să nu spun"
+  },
+  "haskids_label": {
+    "yes": "Are copii",
+    "no": "Fără copii",
+    "unspecified": "Aș prefera să nu spun"
+  },
+  "auth": {
+    "login": "Logare",
+    "auth_id_input_empty": "Vă rugăm să introduceți adresa dvs. de e-mail sau numărul de telefon.",
+    "auth_id_input_label": "E-mail sau număr de telefon",
+    "auth_id_input_placeholder": "+12 34567121 sau email.com",
+    "captcha_input_label": "Sunt o ființă umană",
+    "login_confirm_welcome": "Bine ai venit!",
+    "otp_check_messages": "Verificați-vă mesajele",
+    "otp_sent_phone": "V-am trimis un mic cod la numărul dvs. de telefon, vă rugăm să îl introduceți mai jos.",
+    "otp_sent_email": "V-am trimis un link de conectare, verificați-vă căsuța de e-mail. Dacă nu îl vedeți, vă rugăm să verificați folderul de spam.",
+    "otp_input_label": "Introduceți codul",
+    "otp_invalid_feedback": "Codul trebuie să fie de 6 cifre",
+    "email": "E-mailul",
+    "phone_number": "Număr de telefon",
+    "password": "Parola"
+  },
+  "nav": {
+    "home": "Acasă",
+    "onboarding": "Înregistrare",
+    "profile": "Profiluri",
+    "browse": "Naviga",
+    "matches": "Meciuri",
+    "inbox": "Inbox",
+    "settings": "Setări"
+  },
+  "authentication": {
+    "login": "Logare",
+    "logout": "Deconectare"
+  },
+  "home": {
+    "welcome_title": "Bine ați venit la {siteName}!",
+    "meet_new_people": "Întâlnește oameni noi"
+  },
+  "profiles": {
+    "send_message_button": "Mesaj",
+    "profile_photos": "Fotografiile lui {name}",
+    "no_profile_title": "Vă rugăm să completați profilul dvs.",
+    "no_profile_create": "Creați un profil",
+    "image_editor_help": "Fotografia ta aici",
+    "image_upload": {
+      "title": "Adaugă o fotografie",
+      "looks_good": "Arată bine!",
+      "add_from_phone": "Adăugarea unei fotografii de pe telefon",
+      "take_photo": "Sau faceți o fotografie cu aparatul foto",
+      "nevermind": "Nu-ți pasă"
+    },
+    "forms": {
+      "my_preferences": "Preferințele mele",
+      "age_range": "Intervalul de vârstă",
+      "kids_label": "Copii?",
+      "relationship_label": "Eu sunt...",
+      "pronouns_label": "Se referă la mine ca...",
+      "name_label": "Numele meu este...",
+      "name_invalid": "Introduceți cel puțin 3 litere",
+      "more_options": "Mai multe opțiuni...",
+      "city_search_placeholder": "Caută orașe",
+      "city_add_placeholder": "Adăugați acest oraș ca oraș nou",
+      "city_start_typing": "Începeți să tastați pentru a căuta orașul dvs.",
+      "tag_search_placeholder": "Căutare interese...",
+      "tag_add_placeholder": "Adăugați aceasta ca etichetă nouă",
+      "dictate_listening": "Ascultând...",
+      "dictate": "Dictează",
+      "intro_placeholder": "Spune un pic despre tine",
+      "intro_who_placeholder": "Pe cine ai vrea să te întâlnești?"
+    },
+    "blocklist": {
+      "title": "Utilizatori blocați",
+      "empty": "Nu aveți utilizatori blocați.",
+      "unblock_button": "Deblocare",
+      "unblock_confirmation": "Ești sigur că vrei să deblochezi acest utilizator?",
+      "unblock_confirmation_yes": "Da, deblocați",
+      "unblock_confirmation_no": "Nu, rămâi blocat",
+      "dialog_title": "Blocați {nume}?",
+      "dialog_message_1": "Dacă această persoană vă deranjează, o puteți bloca. Acest lucru îi va împiedica să vă trimită mesaje sau să interacționeze cu profilul dvs. De asemenea, nu vă vor fi afișate nicăieri pe acest site, ca și cum nu ar exista niciodată.",
+      "dialog_message_2": "Nu vor primi nicio notificare că le-ați blocat.",
+      "confirmation_no": "Nu-ți pasă",
+      "confirmation_yes": "Da, blocați-le"
+    },
+    "browse": {
+      "no_access_dating_title": "Propriul tău profil de dating este privat în acest moment.",
+      "no_access_dating_description": "Când alții nu te pot vedea, nu îi poți vedea - este corect. Pentru a găsi potriviri, vă rugăm să faceți public profilul dvs. de dating.",
+      "no_access_social_title": "Propriul dvs. profil social este în prezent privat.",
+      "no_access_social_description": "Când alții nu te pot vedea, nu îi poți vedea - este corect. Pentru a vedea și a întâlni alții, vă rugăm să vă faceți profilul public.",
+      "cta_button_label": "Du-te la profilul meu",
+      "social_no_results": "Nu există nimeni în zona dvs. care să se potrivească preferințelor dvs., încă.",
+      "no_results_cta_title": "Această comunitate continuă să crească.",
+      "no_results_cta_description": "Vă puteți ajuta invitându-vă prietenii să se alăture. Cu cât mai mult, cu atât mai bine.",
+      "invite_button": "Invitați prieteni",
+      "filters": {
+        "dialog_ok_button": "Găseşte oameni",
+        "dialog_cancel_button": "Nu-ți pasă",
+        "social_title": "Caut conexiuni...",
+        "tags_label": "Interesat de...",
+        "anywhere": "Oriunde",
+        "locate_button_title": "Setat în țara mea",
+        "search_button_title_social": "Găseşte oameni",
+        "search_button_title_dating": "Găseşte oameni",
+        "age_range": "Intervalul de vârstă:"
+      }
+    }
+  },
+  "matches": {
+    "matches_list_title": "Meciurile mele",
+    "you_received_like": "Ai primit un like!",
+    "you_matched_with": "Te-ai asortat cu {name}!",
+    "received_likes": "Nu ai aprecieri. |Ai 1 like. |Ai {count} aprecieri!",
+    "received_likes_cta": "Află cine a trimis-o",
+    "no_match_no_sent_like": "Trebuie să fie cineva care îți place acolo?  ",
+    "no_match_no_sent_like_cta": "Începe să cauți",
+    "no_match_have_sent_like": "Cu siguranță vă vor plăcea înapoi.",
+    "no_match_have_sent_like_cta": "Continuă să te uiți",
+    "find_button_cta": "Du-te conectează-te",
+    "notifications": {
+      "you_have": "Tu ai",
+      "likes": "{count} aprecieri | {count} aprecieri",
+      "matches": "{count} meci nou | {count} meciuri noi",
+      "and": "și"
+    }
+  },
+  "interactions": {
+    "send_a_message": "Trimite un mesaj",
+    "you_messaged_them": "Le-ai trimis mesaje",
+    "you_liked_them": "Ți-au plăcut",
+    "you_matched_with_them": "Te-ai asortat cu ei",
+    "send_a_like": "Trimite-le un like. Ei nu vor ști cine a trimis-o până nu te vor plăcea înapoi.",
+    "its_a_match": "Este un meci!",
+    "send_them_a_message": "Trimiteți {name} un mesaj",
+    "cancel_button": "Poate mai târziu",
+    "message_confirmation": "Frumos!",
+    "like_error": "Hopa, asta nu a funcționat. Vă rugăm să încercați din nou."
+  },
+  "messaging": {
+    "page_title": "Mesaje",
+    "send_message_button": "Trimite",
+    "message_input_placeholder": "Tastați mesajul dvs. aici...",
+    "new_message_notification": "{sender} a trimis un mesaj",
+    "send_message_to_user": "Trimite un mesaj către {name}",
+    "unknown_sender": "Cineva",
+    "message_input_hint": "Apăsați Enter pentru a trimite",
+    "send_failed": "Hopa, asta nu a funcționat. Vă rugăm să încercați din nou.",
+    "message_sent_success": "Mesajul a fost trimis cu succes!",
+    "my_turn": "Rândul meu",
+    "their_turn": "Rândul lor",
+    "block_report_unmatch": "Blocare/raportare/dezpotrivire",
+    "block_user_ok": "Blocați {nume}",
+    "nevermind": "Nu-ți pasă",
+    "send_message_heading": "Trimite Mesaj",
+    "welcome_message": "Bine ați venit la Gaians!",
+    "no_messages_cta": "Găsește oameni cu care să vorbești",
+    "no_messages_title": "Niciun mesaj încă",
+    "no_messages_placeholder": "Conversațiile dvs. vor avea loc aici."
+  },
+  "onboarding": {
+    "name_title": "Bună ziua!",
+    "country_placeholder": "Țara",
+    "steps": {
+      "age_legend": "M-am născut...",
+      "gender_legend": "Mă identific ca...",
+      "situation_legend": "Situația mea",
+      "intro_find_legend": "Aș dori să găsesc:",
+      "intro_find_placeholder": "Dă-le oamenilor o idee despre cine cauți."
+    },
+    "goals": {
+      "socializing": "Socializarea, petrecerea timpului liber, călătoria și întâlnirea cu oameni noi",
+      "dating": "Întâlniri, găsirea unui partener și explorarea relațiilor romantice."
+    },
+    "wizard": {
+      "all_set": "Toate pregătite!",
+      "appear_message": "Vei apărea acum oamenilor care caută aceleași lucruri ca tine. Puteți oricând să modificați aceste informații mai târziu.",
+      "next": "Următor →",
+      "hint_click_next": "Faceți clic pe Următorul"
+    }
+  },
+  "settings": {
+    "title": "Setări",
+    "language_label": "Limba",
+    "push_notifications": "Notificări push",
+    "enable_push": "Activați notificările push"
+  },
+  "uicomponents": {
+    "error": {
+      "title": "Am lovit un obstacol aici.",
+      "message": "A apărut o eroare. Vă rugăm să încercați din nou mai târziu.",
+      "retry": "Încearcă din nou",
+      "cancel": "Anulează"
+    },
+    "submitbutton": {
+      "working": "Lucrează...",
+      "submit": "Trimiteți",
+      "save": "Salvați"
+    },
+    "loading": {
+      "loading": "Se încarcă..."
+    },
+    "spinner": {
+      "spinning": "Învârtire"
+    },
+    "modal": {
+      "close": "Închide"
+    },
+    "toast": {
+      "success": {
+        "title": "Succes",
+        "message": "Acțiunea ta a avut succes."
+      },
+      "error": {
+        "title": "Eroare",
+        "message": "A apărut o eroare. Vă rugăm să încercați din nou."
+      }
+    },
+    "share_dialog": {
+      "title": "Răspândiți cuvântul",
+      "description": "Invită-ți prietenii să se alăture lui Gaians și să se conecteze cu oameni asemănători.",
+      "button_copy": "Copiază",
+      "button_copied": "Copiată",
+      "qr_hint": "Flasă-l pe telefonul lor"
+    },
+    "dialog_cancel_button": "Nu-ți pasă"
+  },
+  "emails": {
+    "loginLink": {
+      "subject": "Linkul dvs. de conectare",
+      "html": "<p>Hei, bine ai venit la bord!</p> <h1>{{otp}}</h1> <p>Vă rugăm să faceți clic pe acest link pentru a intra direct: Confir <a href=\"{{link}} \">mați e-mailul</a></p>"
+    },
+    "welcome": {
+      "subject": "Bine ați venit la Gaians!",
+      "html": "<p>Hei, bine ai venit la bord!</p> <a href=\"{{link}} \">Conectează-te cu oamenii</a></p>"
+    }
+  }
+}

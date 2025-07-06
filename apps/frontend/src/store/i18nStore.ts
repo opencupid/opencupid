@@ -8,13 +8,17 @@ import { Settings } from 'luxon'
 Settings.defaultZone = 'Europe/Berlin'
 
 const labels: Record<string, string> = {
+  en: 'English',
   hu: 'Magyar',
   de: 'Deutsch',
-  en: 'English',
   fr: 'Français',
   es: 'Español',
   it: 'Italiano',
   pt: 'Português',
+  sk: 'Slovenčina',
+  pl: 'Polski',
+  ro: 'Română',
+  nl: 'Nederlands',
 }
 
 
@@ -43,7 +47,7 @@ export const useI18nStore = defineStore('i18n', () => {
 
   function setLanguage(lang: string) {
 
-    if (!availableLocales.includes(lang)) {
+    if (!labels[lang]) {
       console.error(`Unsupported language: ${lang}`)
       return
     }
@@ -51,11 +55,11 @@ export const useI18nStore = defineStore('i18n', () => {
   }
 
   function getAvailableLocales() {
-    return availableLocales
+    return Object.keys(labels)
   }
 
   function getAvailableLocalesWithLabels() {
-    return availableLocales.map((lang) => ({
+    return Object.keys(labels).map((lang) => ({
       value: lang,
       label: labels[lang] || lang, // Fallback to code if no label found
     }))

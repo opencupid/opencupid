@@ -1,0 +1,286 @@
+{
+  "general": {
+    "connectiontypes": {
+      "dating": "Incontri",
+      "socializing": "Socializzare"
+    }
+  },
+  "gender": {
+    "male": "Maschio",
+    "female": "Femmina",
+    "agender": "Agender",
+    "androgynous": "Androgino",
+    "bigender": "Bigender",
+    "cis_man": "Uomo cisgender",
+    "cis_woman": "Donna cisgender",
+    "genderfluid": "Genderfluid",
+    "genderqueer": "Genderqueer",
+    "gender_nonconforming": "Non conforme al genere",
+    "hijra": "Hijra",
+    "intersex": "Intersessuale",
+    "pangender": "Pangender",
+    "transfeminine": "Transfemminile",
+    "trans_man": "Uomo trans",
+    "transmasculine": "Transmascolino",
+    "transsexual": "Transessuale",
+    "trans_woman": "Donna trans",
+    "two_spirit": "Due spiriti",
+    "non_binary": "Non binario",
+    "other": "Altro",
+    "unspecified": "Preferirei non dire"
+  },
+  "pronouns": {
+    "he_him": "Lui/lui",
+    "she_her": "Lei/lei",
+    "they_them": "Lei/loro",
+    "unspecified": "desiderano"
+  },
+  "relationship": {
+    "single": "Singola",
+    "in_relationship": "In una relazione",
+    "married": "Sposato",
+    "divorced": "Divorziato",
+    "widowed": "Vedova",
+    "other": "Altro (è complicato)",
+    "unspecified": "Preferirei non dire"
+  },
+  "haskids": {
+    "yes": "sì",
+    "no": "No",
+    "unspecified": "Preferirei non dire"
+  },
+  "haskids_label": {
+    "yes": "Ha figli",
+    "no": "Niente bambini",
+    "unspecified": "Preferirei non dire"
+  },
+  "auth": {
+    "login": "Accedi",
+    "auth_id_input_empty": "Inserisci il tuo indirizzo email o numero di telefono.",
+    "auth_id_input_label": "Email o numero di telefono",
+    "auth_id_input_placeholder": "+12 34567121 o il tuo indirizzo email.com",
+    "captcha_input_label": "Sono un essere umano",
+    "login_confirm_welcome": "Benvenuto!",
+    "otp_check_messages": "Controlla i tuoi messaggi",
+    "otp_sent_phone": "Ti abbiamo inviato un piccolo codice al tuo numero di telefono, inseriscilo qui sotto.",
+    "otp_sent_email": "Ti abbiamo inviato un link di accesso, controlla la tua casella di posta. Se non lo vedi, controlla la tua cartella spam.",
+    "otp_input_label": "Inserisci il codice",
+    "otp_invalid_feedback": "Il codice deve essere composto da 6 cifre",
+    "email": "E-mail",
+    "phone_number": "numero di telefono",
+    "password": "Password"
+  },
+  "nav": {
+    "home": "Home",
+    "onboarding": "Onboarding",
+    "profile": "Profilo",
+    "browse": "Sfoglia",
+    "matches": "Fiammiferi",
+    "inbox": "Posta in arrivo",
+    "settings": "Impostazioni"
+  },
+  "authentication": {
+    "login": "Accedi",
+    "logout": "Esci"
+  },
+  "home": {
+    "welcome_title": "Benvenuto su {siteName}!",
+    "meet_new_people": "Incontra nuove persone"
+  },
+  "profiles": {
+    "send_message_button": "Messaggio",
+    "profile_photos": "foto di {name}",
+    "no_profile_title": "Compila il tuo profilo",
+    "no_profile_create": "Crea profilo",
+    "image_editor_help": "La tua foto qui",
+    "image_upload": {
+      "title": "Aggiungere una foto",
+      "looks_good": "Sembra buono!",
+      "add_from_phone": "Aggiungi una foto dal tuo telefono",
+      "take_photo": "Oppure scatta una foto con la tua fotocamera",
+      "nevermind": "Non importa"
+    },
+    "forms": {
+      "my_preferences": "Le mie preferenze",
+      "age_range": "Fascia d'età",
+      "kids_label": "Bambini?",
+      "relationship_label": "Sono...",
+      "pronouns_label": "Si riferiscono a me come...",
+      "name_label": "Il mio nome è...",
+      "name_invalid": "Inserisci almeno 3 lettere",
+      "more_options": "Altre opzioni...",
+      "city_search_placeholder": "Cerca città",
+      "city_add_placeholder": "Aggiungila come nuova città",
+      "city_start_typing": "Inizia a digitare per cercare la tua città",
+      "tag_search_placeholder": "Cerca interessi...",
+      "tag_add_placeholder": "Aggiungilo come nuovo tag",
+      "dictate_listening": "Ascoltando...",
+      "dictate": "Dettare",
+      "intro_placeholder": "Raccontaci un po' di te",
+      "intro_who_placeholder": "Chi vorresti incontrare?"
+    },
+    "blocklist": {
+      "title": "Utenti bloccati",
+      "empty": "Non hai utenti bloccati.",
+      "unblock_button": "Sblocca",
+      "unblock_confirmation": "Sei sicuro di voler sbloccare questo utente?",
+      "unblock_confirmation_yes": "Sì, sblocca",
+      "unblock_confirmation_no": "No, resta bloccato",
+      "dialog_title": "Bloccare {name}?",
+      "dialog_message_1": "Se questa persona ti dà fastidio, puoi bloccarla. Ciò impedirà loro di inviarti messaggi o interagire con il tuo profilo. Inoltre, non ti verranno mostrati da nessuna parte su questo sito, come se non fossero mai esistiti.",
+      "dialog_message_2": "Non riceveranno alcuna notifica che li hai bloccati.",
+      "confirmation_no": "Non importa",
+      "confirmation_yes": "Sì, bloccali"
+    },
+    "browse": {
+      "no_access_dating_title": "Il tuo profilo di appuntamenti è attualmente privato.",
+      "no_access_dating_description": "Quando gli altri non possono vederti, non puoi vederli, è giusto. Per trovare corrispondenze, rendi pubblico il tuo profilo di appuntamenti.",
+      "no_access_social_title": "Il tuo profilo social è attualmente privato.",
+      "no_access_social_description": "Quando gli altri non possono vederti, non puoi vederli, è giusto. Per vedere e incontrare altre persone, rendi pubblico il tuo profilo.",
+      "cta_button_label": "Vai al mio profilo",
+      "social_no_results": "Non c'è ancora nessuno nella tua zona che corrisponda alle tue preferenze.",
+      "no_results_cta_title": "Questa comunità è ancora in crescita.",
+      "no_results_cta_description": "Puoi contribuire invitando i tuoi amici a partecipare. Più ce ne sono, meglio è.",
+      "invite_button": "Invita amici",
+      "filters": {
+        "dialog_ok_button": "Trova persone",
+        "dialog_cancel_button": "Non importa",
+        "social_title": "Sto cercando connessioni...",
+        "tags_label": "Interessato a...",
+        "anywhere": "Ovunque",
+        "locate_button_title": "Impostato sul mio paese",
+        "search_button_title_social": "Trova persone",
+        "search_button_title_dating": "Trova persone",
+        "age_range": "Fascia d'età:"
+      }
+    }
+  },
+  "matches": {
+    "matches_list_title": "I miei abbinamenti",
+    "you_received_like": "Hai ricevuto un like!",
+    "you_matched_with": "Hai trovato {name}!",
+    "received_likes": "Non hai like. |Hai 1 like. |Hai ricevuto {count} like!",
+    "received_likes_cta": "Scopri chi l'ha spedito",
+    "no_match_no_sent_like": "Ci deve essere qualcuno che ti piace là fuori?  ",
+    "no_match_no_sent_like_cta": "Inizia a cercare",
+    "no_match_have_sent_like": "Sicuramente piacerai di nuovo.",
+    "no_match_have_sent_like_cta": "Continua a cercare",
+    "find_button_cta": "Vai a connetterti",
+    "notifications": {
+      "you_have": "Hai",
+      "likes": "{count} mi piace | {count} mi piace",
+      "matches": "{count} nuova partita | {count} nuove partite",
+      "and": "e"
+    }
+  },
+  "interactions": {
+    "send_a_message": "Inviare un messaggio",
+    "you_messaged_them": "Hai mandato loro un messaggio",
+    "you_liked_them": "Ti sono piaciuti",
+    "you_matched_with_them": "Ti sei abbinato a loro",
+    "send_a_like": "Invia loro un like. Non sapranno chi l'ha spedito finché non gli piaci di nuovo.",
+    "its_a_match": "È una partita!",
+    "send_them_a_message": "Invia un messaggio a {name}",
+    "cancel_button": "Forse più tardi",
+    "message_confirmation": "Bello!",
+    "like_error": "Ops, questo non ha funzionato. Per favore riprova."
+  },
+  "messaging": {
+    "page_title": "Messaggi",
+    "send_message_button": "Inviare",
+    "message_input_placeholder": "Digita qui il tuo messaggio...",
+    "new_message_notification": "{sender} ha inviato un messaggio",
+    "send_message_to_user": "Invia un messaggio a {name}",
+    "unknown_sender": "Qualcuno",
+    "message_input_hint": "Premi Invio per inviare",
+    "send_failed": "Ops, questo non ha funzionato. Per favore riprova.",
+    "message_sent_success": "Messaggio inviato con successo!",
+    "my_turn": "Tocca a me",
+    "their_turn": "Il loro turno",
+    "block_report_unmatch": "Blocca/segnala/annullamento della corrispondenza",
+    "block_user_ok": "Blocca {nome}",
+    "nevermind": "Non importa",
+    "send_message_heading": "Invia messaggio",
+    "welcome_message": "Benvenuto a Gaians!",
+    "no_messages_cta": "Trova persone con cui parlare",
+    "no_messages_title": "Ancora nessun messaggio",
+    "no_messages_placeholder": "Le tue conversazioni si svolgeranno qui."
+  },
+  "onboarding": {
+    "name_title": "Salve!",
+    "country_placeholder": "Paese",
+    "steps": {
+      "age_legend": "Sono nata...",
+      "gender_legend": "Mi identifico come...",
+      "situation_legend": "La mia situazione",
+      "intro_find_legend": "Vorrei trovare:",
+      "intro_find_placeholder": "Dai alle persone un'idea di chi stai cercando."
+    },
+    "goals": {
+      "socializing": "Socializzare, uscire, viaggiare e conoscere nuove persone",
+      "dating": "Incontri, trovare un partner ed esplorare relazioni sentimentali."
+    },
+    "wizard": {
+      "all_set": "Tutto pronto!",
+      "appear_message": "Ora apparirai a persone che cercano le tue stesse cose. Puoi sempre modificare queste informazioni in un secondo momento.",
+      "next": "Prossimo",
+      "hint_click_next": "Fai clic su Avanti"
+    }
+  },
+  "settings": {
+    "title": "Impostazioni",
+    "language_label": "Lingua",
+    "push_notifications": "Notifiche push",
+    "enable_push": "Attiva le notifiche push"
+  },
+  "uicomponents": {
+    "error": {
+      "title": "Abbiamo avuto un problema qui.",
+      "message": "Si è verificato un errore. Riprova più tardi.",
+      "retry": "Riprova",
+      "cancel": "Annulla"
+    },
+    "submitbutton": {
+      "working": "Lavorando...",
+      "submit": "Invia",
+      "save": "Salva"
+    },
+    "loading": {
+      "loading": "Caricamento..."
+    },
+    "spinner": {
+      "spinning": "Filatura"
+    },
+    "modal": {
+      "close": "Chiudi"
+    },
+    "toast": {
+      "success": {
+        "title": "Successo",
+        "message": "La tua azione ha avuto successo."
+      },
+      "error": {
+        "title": "Errore",
+        "message": "Si è verificato un errore. Per favore riprova."
+      }
+    },
+    "share_dialog": {
+      "title": "Diffondi la notizia",
+      "description": "Invita i tuoi amici a unirsi a Gaians e a entrare in contatto con persone che la pensano allo stesso modo.",
+      "button_copy": "Copia",
+      "button_copied": "Copiato",
+      "qr_hint": "Fai lampeggiare questo sul loro telefono"
+    },
+    "dialog_cancel_button": "Non importa"
+  },
+  "emails": {
+    "loginLink": {
+      "subject": "Il tuo link di accesso",
+      "html": "<p>Ehi, benvenuto a bordo!</p> <h1>{{otp}}</h1> <p>Fai clic su questo link per accedere direttamente: <a href=\"{{link}} \">Conferma email</a></p>"
+    },
+    "welcome": {
+      "subject": "Benvenuto a Gaians!",
+      "html": "<p>Ehi, benvenuto a bordo!</p> <a href=\"{{link}} \">Entra in contatto con le persone</a></p>"
+    }
+  }
+}

@@ -69,7 +69,7 @@ const handleSetLanguage = (lang: string) => {
       @updated="handleSendOtp"
     />
 
-    <div class="d-flex justify-content-center align-items-center mt-3">
+    <div class="d-flex justify-content-center align-items-center mt-3 text-center">
       <LocaleSelector @language:select="(lang: string) => handleSetLanguage(lang)" />
     </div>
   </main>

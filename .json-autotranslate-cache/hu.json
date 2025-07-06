@@ -1,47 +1,47 @@
 {
   "general": {
     "connectiontypes": {
-      "dating": "Randizás",
-      "socializing": "Szocializálódás"
+      "dating": "Randevú",
+      "socializing": "Szocializáció"
     }
   },
   "gender": {
     "male": "Férfi",
     "female": "Női",
     "agender": "Ügynök",
-    "androgynous": "Kétnemű",
+    "androgynous": "Androgén",
     "bigender": "Bigender",
-    "cis_man": "Cisznemű férfi",
-    "cis_woman": "cisznemű nő",
+    "cis_man": "Cisgender-férfi",
+    "cis_woman": "Cisgender-nő",
     "genderfluid": "Genderfluid",
-    "genderqueer": "Nemek közötti különbség",
-    "gender_nonconforming": "Nemek szerinti nem konformitás",
-    "hijra": "Hidzsra",
-    "intersex": "Interszexuális",
-    "pangender": "Panger",
+    "genderqueer": "Genderqueer",
+    "gender_nonconforming": "Nemek nem megfelelő",
+    "hijra": "Hijra",
+    "intersex": "Interszex",
+    "pangender": "Pangender",
     "transfeminine": "Transzfeminin",
-    "trans_man": "Transz férfi",
-    "transmasculine": "Transzmaszkulin",
-    "transsexual": "transzszexuális",
-    "trans_woman": "transz nő",
-    "two_spirit": "Kétlélekű",
+    "trans_man": "Transzférfi",
+    "transmasculine": "Transzmaskulin",
+    "transsexual": "Transzszexuális",
+    "trans_woman": "Transz nő",
+    "two_spirit": "Kétszellem",
     "non_binary": "Nem bináris",
-    "other": "Más",
+    "other": "Egyéb",
     "unspecified": "Inkább nem mondanám"
   },
   "pronouns": {
-    "he_him": "Ő/őt",
-    "she_her": "Ő/ő",
-    "they_them": "Ők/őket",
-    "unspecified": "kívánnak"
+    "he_him": "Ő/ő",
+    "she_her": "Ő",
+    "they_them": "Ők/ők",
+    "unspecified": "kívánják"
   },
   "relationship": {
-    "single": "Egyetlen",
+    "single": "Egyedülálló",
     "in_relationship": "Egy kapcsolatban",
     "married": "Házas",
     "divorced": "Elvált",
-    "widowed": "Megözvegyült",
-    "other": "Egyéb (ez bonyolult)",
+    "widowed": "Özvegy",
+    "other": "Egyéb (bonyolult)",
     "unspecified": "Inkább nem mondanám"
   },
   "haskids": {
@@ -50,181 +50,181 @@
     "unspecified": "Inkább nem mondanám"
   },
   "haskids_label": {
-    "yes": "Vannak gyerekei",
+    "yes": "Gyermekei vannak",
     "no": "Nincsenek gyerekek",
     "unspecified": "Inkább nem mondanám"
   },
   "auth": {
-    "login": "Bejelentkezés",
+    "login": "Belépés",
     "auth_id_input_empty": "Kérjük, adja meg e-mail címét vagy telefonszámát.",
-    "auth_id_input_label": "E-mail cím vagy telefonszám",
-    "auth_id_input_placeholder": "+12 34567121 vagy az e-mail címed: .com",
-    "captcha_input_label": "Ember vagyok",
+    "auth_id_input_label": "E-mail vagy telefonszám",
+    "auth_id_input_placeholder": "+12 34567121 vagy az e-mailed.com",
+    "captcha_input_label": "Emberi lény vagyok",
     "login_confirm_welcome": "Üdvözöljük!",
-    "otp_check_messages": "Üzenetek ellenőrzése",
-    "otp_sent_phone": "Elküldtünk egy kis kódot a telefonszámodra, kérlek írd be alább.",
-    "otp_sent_email": "Elküldtünk egy bejelentkezési linket, nézd meg a beérkező leveleidet. Ha nem találod, kérlek, nézd meg a spam mappádat is.",
+    "otp_check_messages": "Ellenőrizze üzeneteit",
+    "otp_sent_phone": "Küldtünk egy kis kódot a telefonszámodra, kérjük, írja be alább.",
+    "otp_sent_email": "Küldtünk egy bejelentkezési linket, ellenőrizze a postaládáját. Ha nem látja, kérjük, ellenőrizze a spam mappát.",
     "otp_input_label": "Írja be a kódot",
     "otp_invalid_feedback": "A kódnak 6 számjegyűnek kell lennie",
-    "email": "Email",
+    "email": "E-mail",
     "phone_number": "Telefonszám",
     "password": "Jelszó"
   },
   "nav": {
-    "home": "Otthon",
-    "onboarding": "Bevezetés",
+    "home": "Kezdőlap",
+    "onboarding": "Bejelentkezés",
     "profile": "Profil",
     "browse": "Böngészés",
-    "matches": "Mérkőzések",
-    "inbox": "Beérkezett üzenetek",
+    "matches": "mérkőzések",
+    "inbox": "Beérkező levelek",
     "settings": "Beállítások"
   },
   "authentication": {
-    "login": "Bejelentkezés",
+    "login": "Belépés",
     "logout": "Kijelentkezés"
   },
   "home": {
-    "welcome_title": "Üdvözöljük a {siteName} oldalon!",
-    "meet_new_people": "Ismerkedj meg új emberekkel"
+    "welcome_title": "Üdvözöljük a {SiteName} oldalán!",
+    "meet_new_people": "Találkozz új emberekkel"
   },
   "profiles": {
     "send_message_button": "Üzenet",
-    "profile_photos": "{name} fotói",
-    "no_profile_title": "Kérjük, töltse ki a profilját",
+    "profile_photos": "{name} fényképei",
+    "no_profile_title": "Kérjük, töltse ki profilját",
     "no_profile_create": "Profil létrehozása",
     "image_editor_help": "A fotód itt",
     "image_upload": {
-      "title": "Fotó hozzáadása",
+      "title": "Fénykép hozzáadása",
       "looks_good": "Jól néz ki!",
-      "add_from_phone": "Töltsön fel egy fotót a telefonjáról",
-      "take_photo": "Vagy készítsen egy fotót a fényképezőgépével",
-      "nevermind": "Mindegy"
+      "add_from_phone": "Fénykép hozzáadása a telefonjáról",
+      "take_photo": "Vagy készítsen fényképet a fényképezőgéppel",
+      "nevermind": "Nem törődjön"
     },
     "forms": {
-      "my_preferences": "Saját beállítások",
-      "age_range": "Korosztály",
+      "my_preferences": "Saját preferenciáim",
+      "age_range": "Kortartomány",
       "kids_label": "Gyerekek?",
       "relationship_label": "Én vagyok...",
-      "pronouns_label": "Úgy emlegetnek engem, mint...",
+      "pronouns_label": "Úgy utalnak rám, mint...",
       "name_label": "A nevem...",
       "name_invalid": "Írjon be legalább 3 betűt",
       "more_options": "További lehetőségek...",
-      "city_search_placeholder": "Városok keresése",
-      "city_add_placeholder": "Hozzáadás új városként",
-      "city_start_typing": "Kezdj el gépelni a városod kereséséhez",
-      "tag_search_placeholder": "Keresési érdeklődési körök...",
-      "tag_add_placeholder": "Új címke hozzáadása",
-      "dictate_listening": "Hallgatás…",
-      "dictate": "Diktál",
-      "intro_placeholder": "Mesélj magadról egy kicsit",
+      "city_search_placeholder": "Városak keresése",
+      "city_add_placeholder": "Adja hozzá új városként",
+      "city_start_typing": "Indítsa el a gépelést a város kereséséhez",
+      "tag_search_placeholder": "Érdeklődések keresése...",
+      "tag_add_placeholder": "Adja hozzá új címkéként",
+      "dictate_listening": "Hallgatás...",
+      "dictate": "Diktálj",
+      "intro_placeholder": "Mesélj egy kicsit magadról",
       "intro_who_placeholder": "Kivel szeretnél találkozni?"
     },
     "blocklist": {
-      "title": "Letiltott felhasználók",
+      "title": "Blokkolt felhasználók",
       "empty": "Nincsenek blokkolt felhasználói.",
       "unblock_button": "Feloldás",
-      "unblock_confirmation": "Biztosan feloldod a felhasználó blokkolását?",
-      "unblock_confirmation_yes": "Igen, feloldom a blokkolást",
-      "unblock_confirmation_no": "Nem, maradjak blokkolva",
-      "dialog_title": "Blokkolja {name} felhasználót?",
-      "dialog_message_1": "Ha ez a személy zavar téged, blokkolhatod. Ez megakadályozza, hogy üzeneteket küldjön neked, vagy kapcsolatba lépjen a profiloddal. Emellett sehol sem fog megjelenni ezen az oldalon, mintha soha nem is létezett volna.",
-      "dialog_message_2": "Nem fognak értesítést kapni arról, hogy letiltottad őket.",
-      "confirmation_no": "Mindegy",
-      "confirmation_yes": "Igen, blokkold őket"
+      "unblock_confirmation": "Biztos, hogy fel akarja oldani ezt a felhasználót?",
+      "unblock_confirmation_yes": "Igen, oldja fel",
+      "unblock_confirmation_no": "Nem, maradj blokkolva",
+      "dialog_title": "Blokkolja a {név} -t?",
+      "dialog_message_1": "Ha ez a személy zavar téged, blokkolhatja őket. Ez megakadályozza, hogy üzeneteket küldjenek Önnek vagy lépjenek kapcsolatba a profiljával. Ezen az oldalon sehol sem jelennek meg Önnek, mintha soha nem léteztek volna.",
+      "dialog_message_2": "Nem kapnak értesítést arról, hogy blokkolta őket.",
+      "confirmation_no": "Nem törődjön",
+      "confirmation_yes": "Igen, blokkolja őket"
     },
     "browse": {
-      "no_access_dating_title": "A saját társkereső profilod jelenleg privát.",
-      "no_access_dating_description": "Ha mások nem látnak téged, te sem láthatod őket – ez így igazságos. Ahhoz, hogy találj partnert, tedd nyilvánossá a társkereső profilodat.",
-      "no_access_social_title": "A saját közösségi profilod jelenleg privát.",
-      "no_access_social_description": "Ha mások nem látnak téged, te sem láthatod őket – ez így igazságos. Ha szeretnél másokkal találkozni és találkozni, kérlek, tedd nyilvánossá a profilodat.",
+      "no_access_dating_title": "Saját társkereső profilod jelenleg privát.",
+      "no_access_dating_description": "Ha mások nem látnak téged, te nem láthatod őket - ez csak tisztességes. A mérkőzések megtalálásához, kérjük, tegye nyilvánosságra társkereső profilját.",
+      "no_access_social_title": "Saját közösségi profilod jelenleg privát.",
+      "no_access_social_description": "Ha mások nem látnak téged, te nem láthatod őket - ez csak tisztességes. Ha másokat szeretne látni és találkozni, kérjük, tegye nyilvánossá profilját.",
       "cta_button_label": "Ugrás a profilomra",
-      "social_no_results": "Még nincs senki a környékeden, aki megfelelne az elvárásaidnak.",
+      "social_no_results": "A környéken még nincs senki, aki megfelelne az Ön preferenciáinak.",
       "no_results_cta_title": "Ez a közösség még mindig növekszik.",
-      "no_results_cta_description": "Segíthetsz azzal, hogy meghívod a barátaidat. Minél többen, annál jobb.",
-      "invite_button": "Hívd meg a barátaidat",
+      "no_results_cta_description": "Segíthet, ha meghívja barátait, hogy csatlakozzanak. Minél több, annál vidámabb.",
+      "invite_button": "Hívd meg barátait",
       "filters": {
-        "dialog_ok_button": "Személyek keresése",
-        "dialog_cancel_button": "Mindegy",
+        "dialog_ok_button": "Keressen embereket",
+        "dialog_cancel_button": "Nem törődjön",
         "social_title": "Kapcsolatokat keresek...",
-        "tags_label": "Érdekli...",
+        "tags_label": "Érdeklődik...",
         "anywhere": "Bárhol",
-        "locate_button_title": "Az országomra állítva",
-        "search_button_title_social": "Személyek keresése",
-        "search_button_title_dating": "Személyek keresése",
+        "locate_button_title": "Állj az országomba",
+        "search_button_title_social": "Keressen embereket",
+        "search_button_title_dating": "Keressen embereket",
         "age_range": "Korosztály:"
       }
     }
   },
   "matches": {
-    "matches_list_title": "Az egyezéseim",
-    "you_received_like": "Kaptál egy lájkot!",
-    "you_matched_with": "Egyezel ezzel a névvel: {name}!",
-    "received_likes": "Nincsenek lájkjaid.|1 lájkod van.|{count} lájkod van!",
-    "received_likes_cta": "Tudd meg, ki küldte",
-    "no_match_no_sent_like": "Biztos van valaki odakint, akit kedvelsz?",
-    "no_match_no_sent_like_cta": "Kezdj el keresgélni",
-    "no_match_have_sent_like": "Biztosan viszonozni fogják a szeretetedet.",
-    "no_match_have_sent_like_cta": "Nézz tovább!",
-    "find_button_cta": "Csatlakozz",
+    "matches_list_title": "A mérkőzéseim",
+    "you_received_like": "Megkaptál egy lájkot!",
+    "you_matched_with": "Megegyeztél a {névvel}!",
+    "received_likes": "Nincsenek kedveletek. |Önnek van 1 like. |Van {count} kedvelése!",
+    "received_likes_cta": "Tudja meg, ki küldte",
+    "no_match_no_sent_like": "Kell lennie valakinek, akit kedvelsz odakint?  ",
+    "no_match_no_sent_like_cta": "Kezdje el keresni",
+    "no_match_have_sent_like": "Biztosan kedvelni fognak téged.",
+    "no_match_have_sent_like_cta": "Figyelj tovább",
+    "find_button_cta": "Menj csatlakozni",
     "notifications": {
-      "you_have": "Van",
-      "likes": "{count} kedvelés | {count} kedvelés",
-      "matches": "{count} új találat |{count} új találat",
+      "you_have": "Neked van",
+      "likes": "{count} tetszik | {count} kedveli",
+      "matches": "{count} új mérkőzés | {count} új mérkőzések",
       "and": "és"
     }
   },
   "interactions": {
     "send_a_message": "Üzenet küldése",
     "you_messaged_them": "Üzenetet küldtél nekik",
-    "you_liked_them": "Kedvelted őket",
-    "you_matched_with_them": "Összeilleszkedtél velük",
-    "send_a_like": "Küldj nekik egy lájkot. Nem fogják tudni, hogy ki küldte, amíg nem viszonozzák a lájkot.",
+    "you_liked_them": "Tetszettek",
+    "you_matched_with_them": "Megegyeztél velük",
+    "send_a_like": "Küldj nekik egy lájkot. Nem fogják tudni, ki küldte, amíg vissza nem kedvelnek téged.",
     "its_a_match": "Ez egy meccs!",
-    "send_them_a_message": "Küldj üzenetet {name}-nek",
+    "send_them_a_message": "Üzenet küldése a (z) {name}",
     "cancel_button": "Talán később",
     "message_confirmation": "Szép!",
-    "like_error": "Hoppá, ez nem működött. Próbáld újra."
+    "like_error": "Hoppá, ez nem működött. Kérjük, próbálkozzon újra."
   },
   "messaging": {
     "page_title": "Üzenetek",
-    "send_message_button": "Elküld",
-    "message_input_placeholder": "Írd be az üzeneted ide...",
+    "send_message_button": "Küldés",
+    "message_input_placeholder": "Írja be ide az üzenetét...",
     "new_message_notification": "{sender} üzenetet küldött",
-    "send_message_to_user": "Küldj üzenetet {name}-nek",
+    "send_message_to_user": "Küldjön üzenetet {name} címre",
     "unknown_sender": "Valaki",
-    "message_input_hint": "Nyomd meg az Entert a küldéshez",
-    "send_failed": "Hoppá, ez nem működött. Próbáld újra.",
-    "message_sent_success": "Üzenet sikeresen elküldve!",
-    "my_turn": "Én jövök",
-    "their_turn": "Az ő soruk",
-    "block_report_unmatch": "Blokkolás/jelentés/egyezés megszüntetése",
-    "block_user_ok": "{név} blokk",
-    "nevermind": "Mindegy",
+    "message_input_hint": "Az Enter billentyűt a küldéshez",
+    "send_failed": "Hoppá, ez nem működött. Kérjük, próbálkozzon újra.",
+    "message_sent_success": "Üzenet sikeresen elküldött!",
+    "my_turn": "Én köröm",
+    "their_turn": "Ők a soruk",
+    "block_report_unmatch": "Blokk/jelentés/nem egyező",
+    "block_user_ok": "Blokkolás {név}",
+    "nevermind": "Nem törődjön",
     "send_message_heading": "Üzenet küldése",
-    "welcome_message": "Üdvözlünk a Gaians-nál!",
-    "no_messages_cta": "Keress embereket, akikkel beszélgethetsz",
+    "welcome_message": "Üdvözöljük Gaians-ban!",
+    "no_messages_cta": "Keressen embereket, akikkel beszélgethet",
     "no_messages_title": "Még nincsenek üzenetek",
-    "no_messages_placeholder": "A beszélgetéseitek itt fognak zajlani."
+    "no_messages_placeholder": "A beszélgetései itt zajlanak."
   },
   "onboarding": {
     "name_title": "Helló!",
     "country_placeholder": "Ország",
     "steps": {
-      "age_legend": "Megszülettem...",
-      "gender_legend": "Azonosulok, mint...",
+      "age_legend": "Én születtem...",
+      "gender_legend": "Úgy azonosítom, mint...",
       "situation_legend": "A helyzetem",
       "intro_find_legend": "Szeretném megtalálni:",
-      "intro_find_placeholder": "Adj képet az embereknek arról, hogy kit keresel."
+      "intro_find_placeholder": "Adj ötletet az embereknek, kit keres."
     },
     "goals": {
-      "socializing": "Társasági élet, lógás, utazás és új emberekkel való találkozás",
-      "dating": "Randizás, párkeresés és romantikus kapcsolatok felfedezése."
+      "socializing": "Szocializáció, lógás, utazás és új emberekkel való találkozás",
+      "dating": "Randevú, partner megtalálása, és romantikus kapcsolatok feltárása."
     },
     "wizard": {
-      "all_set": "Készen áll!",
-      "appear_message": "Mostantól azoknak fogsz megjelenni, akik ugyanazokat a dolgokat keresik, mint te. Ezt az információt később bármikor módosíthatod.",
+      "all_set": "Minden készen!",
+      "appear_message": "Most olyan embereknek fogsz megjelenni, akik ugyanazokat a dolgokat keresik, mint te. Ezt az információt később bármikor megváltoztathatja.",
       "next": "Következő",
-      "hint_click_next": "Kattintson a Tovább gombra"
+      "hint_click_next": "Kattintson a Következő gombra"
     }
   },
   "settings": {
@@ -235,52 +235,52 @@
   },
   "uicomponents": {
     "error": {
-      "title": "Itt belefutottunk egy bökkenőbe.",
-      "message": "Hiba történt. Kérjük, próbálja meg később.",
-      "retry": "Újrapróbálkozás",
-      "cancel": "Mégsem"
+      "title": "Megakadtunk itt.",
+      "message": "Hiba történt. Kérjük, próbálkozzon újra később.",
+      "retry": "Próbáld újra",
+      "cancel": "Törölje"
     },
     "submitbutton": {
-      "working": "Dolgozó...",
-      "submit": "Küldés",
-      "save": "Megtakarítás"
+      "working": "Dolgozik...",
+      "submit": "Beküldés",
+      "save": "Mentés"
     },
     "loading": {
-      "loading": "Terhelés..."
+      "loading": "Betöltés..."
     },
     "spinner": {
-      "spinning": "Fonás"
+      "spinning": "fonás"
     },
     "modal": {
-      "close": "Közeli"
+      "close": "Bezárás"
     },
     "toast": {
       "success": {
-        "title": "Siker",
-        "message": "A műveleted sikeres volt."
+        "title": "siker",
+        "message": "Az akciód sikeres volt."
       },
       "error": {
         "title": "Hiba",
-        "message": "Hiba történt. Kérjük, próbálja újra."
+        "message": "Hiba történt. Kérjük, próbálkozzon újra."
       }
     },
     "share_dialog": {
-      "title": "Terjeszd a hírt",
-      "description": "Hívd meg barátaidat, hogy csatlakozzanak a Gaianshez, és ismerkedj meg hasonló gondolkodású emberekkel.",
-      "button_copy": "Másolat",
-      "button_copied": "Másolva",
-      "qr_hint": "Villogtasd ezt a telefonjukra"
+      "title": "Terjessze a szót",
+      "description": "Hívja meg barátait, hogy csatlakozzanak a Gaians-hoz, és lépjenek kapcsolatba hasonló gondolkodású emberekkel.",
+      "button_copy": "Másolás",
+      "button_copied": "Másolt",
+      "qr_hint": "Villogja ezt a telefonjukon"
     },
-    "dialog_cancel_button": "Mindegy"
+    "dialog_cancel_button": "Nem törődjön"
   },
   "emails": {
     "loginLink": {
-      "subject": "Bejelentkezési linked",
-      "html": "<p>Szia, üdv a fedélzeten!</p><h1>{{otp}}</h1><p>Kattintson erre a linkre a kezdéshez: <a href=\"<span translate=\"no\">1 &quot;&gt;E-mail cím megerősítése</a></p>"
+      "subject": "Az Ön bejelentkezési linkje",
+      "html": "<p>Hé, üdvözlöm a fedélzeten!</p> <h1>{{otp}}</h1> <p>Kattintson erre a linkre, hogy ugráljon be: <a href=\"{{link}} \">E-mail megerősítése</a></p>"
     },
     "welcome": {
-      "subject": "Üdvözlünk a Gaians-nál!",
-      "html": "<p>Szia, üdv a fedélzeten!</p> <a href=\"<span translate=\"no\">0 &quot;&gt;Lépj kapcsolatba az emberekkel</a></p>"
+      "subject": "Üdvözöljük Gaians-ban!",
+      "html": "<p>Hé, üdvözlöm a fedélzeten!</p> <a href=\"{{link}} \">Menj kapcsolatba az emberekkel</a></p>"
     }
   }
 }

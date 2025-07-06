@@ -1,0 +1,286 @@
+{
+  "general": {
+    "connectiontypes": {
+      "dating": "Zoznamka",
+      "socializing": "socializácia"
+    }
+  },
+  "gender": {
+    "male": "Muž",
+    "female": "Žena",
+    "agender": "Agendant",
+    "androgynous": "Androgynny",
+    "bigender": "Dvojpohlavosť",
+    "cis_man": "Cisgender-muž",
+    "cis_woman": "Cisgenderová žena",
+    "genderfluid": "Genderfluid",
+    "genderqueer": "Genderqueer",
+    "gender_nonconforming": "Nezodpovedajúci pohlaviu",
+    "hijra": "Hidžra",
+    "intersex": "Intersex",
+    "pangender": "Pánder",
+    "transfeminine": "Transfeminizmus",
+    "trans_man": "Trans muž",
+    "transmasculine": "Transmaskulín",
+    "transsexual": "Transsexuál",
+    "trans_woman": "Trans žena",
+    "two_spirit": "Dvojduchov",
+    "non_binary": "Nebinárne",
+    "other": "Ostatné",
+    "unspecified": "Radšej by som nehovoril"
+  },
+  "pronouns": {
+    "he_him": "On/on",
+    "she_her": "Ona/jej",
+    "they_them": "On/oni",
+    "unspecified": "chcú"
+  },
+  "relationship": {
+    "single": "Single",
+    "in_relationship": "Vo vzťahu",
+    "married": "ženatý",
+    "divorced": "Rozvedený",
+    "widowed": "Ovdovený",
+    "other": "Iné (je to komplikované)",
+    "unspecified": "Radšej by som nehovoril"
+  },
+  "haskids": {
+    "yes": "Áno",
+    "no": "Nie",
+    "unspecified": "Radšej by som nehovoril"
+  },
+  "haskids_label": {
+    "yes": "Má deti",
+    "no": "Žiadne deti",
+    "unspecified": "Radšej by som nehovoril"
+  },
+  "auth": {
+    "login": "Prihlásiť sa",
+    "auth_id_input_empty": "Zadajte prosím svoju e-mailovú adresu alebo telefónne číslo.",
+    "auth_id_input_label": "E-mail alebo telefónne číslo",
+    "auth_id_input_placeholder": "+12 34567121 alebo váš email.com",
+    "captcha_input_label": "Som ľudská bytosť",
+    "login_confirm_welcome": "Vitajte!",
+    "otp_check_messages": "Skontrolujte svoje správy",
+    "otp_sent_phone": "Poslali sme vám malý kód na vaše telefónne číslo, zadajte ho nižšie.",
+    "otp_sent_email": "Poslali sme vám prihlasovací odkaz, skontrolujte si doručenú poštu. Ak ho nevidíte, skontrolujte si priečinok so spamom.",
+    "otp_input_label": "Zadajte kód",
+    "otp_invalid_feedback": "Kód by mal byť 6 číslic",
+    "email": "E-mailom",
+    "phone_number": "Telefónne číslo",
+    "password": "Heslo"
+  },
+  "nav": {
+    "home": "Domov",
+    "onboarding": "Vstup do prevádzky",
+    "profile": "Profil",
+    "browse": "prezerať",
+    "matches": "Zápasy",
+    "inbox": "Doručená pošta",
+    "settings": "Nastavenia"
+  },
+  "authentication": {
+    "login": "Prihlásiť sa",
+    "logout": "Odhlásiť"
+  },
+  "home": {
+    "welcome_title": "Vitajte na {SiteName}!",
+    "meet_new_people": "Zoznámte sa s novými ľuďmi"
+  },
+  "profiles": {
+    "send_message_button": "Správa",
+    "profile_photos": "Fotky používateľa {name}",
+    "no_profile_title": "Prosím vyplňte svoj profil",
+    "no_profile_create": "Vytvoriť profil",
+    "image_editor_help": "Vaša fotka tu",
+    "image_upload": {
+      "title": "Pridať fotografiu",
+      "looks_good": "Vyzerá dobre!",
+      "add_from_phone": "Pridanie fotografie z telefónu",
+      "take_photo": "Alebo urobte fotografiu pomocou fotoaparátu",
+      "nevermind": "Nevadí"
+    },
+    "forms": {
+      "my_preferences": "Moje preferencie",
+      "age_range": "Vekové rozpätie",
+      "kids_label": "Deti?",
+      "relationship_label": "Som...",
+      "pronouns_label": "Označujú sa ma ako...",
+      "name_label": "Moje meno je...",
+      "name_invalid": "Zadajte aspoň 3 písmená",
+      "more_options": "Viac možností...",
+      "city_search_placeholder": "Hľadať mestá",
+      "city_add_placeholder": "Pridajte toto ako nové mesto",
+      "city_start_typing": "Začnite písať a vyhľadajte svoje mesto",
+      "tag_search_placeholder": "Hľadať záujmy...",
+      "tag_add_placeholder": "Pridajte túto značku ako novú značku",
+      "dictate_listening": "Počúvanie...",
+      "dictate": "Diktovať",
+      "intro_placeholder": "Povedzte niečo o sebe",
+      "intro_who_placeholder": "S kým by ste sa chceli stretnúť?"
+    },
+    "blocklist": {
+      "title": "Zablokovaní používatelia",
+      "empty": "Nemáte žiadnych blokovaných používateľov.",
+      "unblock_button": "Odblokovať",
+      "unblock_confirmation": "Ste si istí, že chcete odblokovať tohto používateľa?",
+      "unblock_confirmation_yes": "Áno, odblokovať",
+      "unblock_confirmation_no": "Nie, zostaňte zablokovaní",
+      "dialog_title": "Blokovať {meno}?",
+      "dialog_message_1": "Ak vás táto osoba obťažuje, môžete ju zablokovať. To im zabráni v odosielaní správ alebo interakcii s vaším profilom. Taktiež sa vám nezobrazia nikde na tejto stránke, akoby nikdy neexistovali.",
+      "dialog_message_2": "Nedostanú žiadne upozornenie, že ste ich zablokovali.",
+      "confirmation_no": "Nevadí",
+      "confirmation_yes": "Áno, zablokujte ich"
+    },
+    "browse": {
+      "no_access_dating_title": "Váš vlastný zoznamovací profil je momentálne súkromný.",
+      "no_access_dating_description": "Keď vás ostatní nevidia, nemôžete ich vidieť - je to spravodlivé. Ak chcete nájsť zhody, zverejnite svoj zoznamovací profil.",
+      "no_access_social_title": "Váš vlastný sociálny profil je momentálne súkromný.",
+      "no_access_social_description": "Keď vás ostatní nevidia, nemôžete ich vidieť - je to spravodlivé. Ak chcete vidieť a spoznať ostatných, zverejnite svoj profil.",
+      "cta_button_label": "Prejsť na môj profil",
+      "social_no_results": "Vo vašej oblasti zatiaľ nie je nikto, kto by zodpovedal vašim preferenciám.",
+      "no_results_cta_title": "Táto komunita stále rastie.",
+      "no_results_cta_description": "Môžete pomôcť pozvaním svojich priateľov, aby sa pripojili. Čím viac, tým veselšie.",
+      "invite_button": "Pozvite priateľov",
+      "filters": {
+        "dialog_ok_button": "Nájsť ľudí",
+        "dialog_cancel_button": "Nevadí",
+        "social_title": "Hľadám spojenia...",
+        "tags_label": "Zaujíma vás...",
+        "anywhere": "Kdekoľvek",
+        "locate_button_title": "Nastaviť do mojej krajiny",
+        "search_button_title_social": "Nájsť ľudí",
+        "search_button_title_dating": "Nájsť ľudí",
+        "age_range": "Vekové rozpätie:"
+      }
+    }
+  },
+  "matches": {
+    "matches_list_title": "Moje zápasy",
+    "you_received_like": "Dostali ste lajky!",
+    "you_matched_with": "Zhodili ste sa s {name}!",
+    "received_likes": "Nemáš žiadne páči sa. Máte 1 páči sa mi. |Máte {count} páči sa vám!",
+    "received_likes_cta": "Zistite, kto ho poslal",
+    "no_match_no_sent_like": "Musí tam byť niekto, kto sa ti páči?  ",
+    "no_match_no_sent_like_cta": "Začnite hľadať",
+    "no_match_have_sent_like": "Určite sa im bude páčiť späť.",
+    "no_match_have_sent_like_cta": "Pokračujte v hľadaní",
+    "find_button_cta": "Prejsť sa pripojiť",
+    "notifications": {
+      "you_have": "Máte",
+      "likes": "{count} páči sa | {count} páči sa mi",
+      "matches": "{count} nový zápas | {count} nové zápasy",
+      "and": "a"
+    }
+  },
+  "interactions": {
+    "send_a_message": "Odoslať správu",
+    "you_messaged_them": "Poslali ste im správu",
+    "you_liked_them": "Páčili sa vám",
+    "you_matched_with_them": "Zhodili ste sa s nimi",
+    "send_a_like": "Pošlite im like. Nebudú vedieť, kto ho poslal, kým vás nebudú páčiť späť.",
+    "its_a_match": "Je to zápas!",
+    "send_them_a_message": "Odoslať správu {name}",
+    "cancel_button": "Možno neskôr",
+    "message_confirmation": "Pekné!",
+    "like_error": "Ups, to nefungovalo. Prosím, skúste to znova."
+  },
+  "messaging": {
+    "page_title": "Správy",
+    "send_message_button": "Odoslať",
+    "message_input_placeholder": "Tu napíšte svoju správu...",
+    "new_message_notification": "{sender} odoslal správu",
+    "send_message_to_user": "Odoslať správu na adresu {name}",
+    "unknown_sender": "Niekto",
+    "message_input_hint": "Stlačením klávesu Enter odoslať",
+    "send_failed": "Ups, to nefungovalo. Prosím, skúste to znova.",
+    "message_sent_success": "Správa bola odoslaná úspešne!",
+    "my_turn": "Môj rad",
+    "their_turn": "Ich rad",
+    "block_report_unmatch": "Blokov/správa/nezhoda",
+    "block_user_ok": "Blokovať {názov}",
+    "nevermind": "Nevadí",
+    "send_message_heading": "Odoslať správu",
+    "welcome_message": "Vitajte v Gaians!",
+    "no_messages_cta": "Nájdite ľudí, s ktorými sa môžete porozprávať",
+    "no_messages_title": "Zatiaľ žiadne správy",
+    "no_messages_placeholder": "Vaše rozhovory sa budú konať tu."
+  },
+  "onboarding": {
+    "name_title": "Dobrý deň!",
+    "country_placeholder": "Krajina",
+    "steps": {
+      "age_legend": "Narodil som sa...",
+      "gender_legend": "Identifikujem sa ako...",
+      "situation_legend": "Moja situácia",
+      "intro_find_legend": "Chcel by som nájsť:",
+      "intro_find_placeholder": "Dajte ľuďom predstavu, koho hľadáte."
+    },
+    "goals": {
+      "socializing": "Socializácia, stretávanie, cestovanie a spoznávanie nových ľudí",
+      "dating": "Zoznamka, nájdenie partnera a skúmanie romantických vzťahov."
+    },
+    "wizard": {
+      "all_set": "Všetko pripravené!",
+      "appear_message": "Teraz sa objavíte ľuďom, ktorí hľadajú rovnaké veci ako vy. Tieto informácie môžete kedykoľvek zmeniť neskôr.",
+      "next": "Ďalšie",
+      "hint_click_next": "Kliknite na tlačidlo Ďalej"
+    }
+  },
+  "settings": {
+    "title": "Nastavenia",
+    "language_label": "Jazyk",
+    "push_notifications": "Push oznámenia",
+    "enable_push": "Povoliť Push upozornenia"
+  },
+  "uicomponents": {
+    "error": {
+      "title": "Zasiahli sme tu problém.",
+      "message": "Vyskytla sa chyba. Skúste to znova neskôr.",
+      "retry": "Skúste znova",
+      "cancel": "Zrušiť"
+    },
+    "submitbutton": {
+      "working": "Pracuje...",
+      "submit": "Predložiť",
+      "save": "Uložiť"
+    },
+    "loading": {
+      "loading": "Načítava sa..."
+    },
+    "spinner": {
+      "spinning": "Trátenie"
+    },
+    "modal": {
+      "close": "Zavrieť"
+    },
+    "toast": {
+      "success": {
+        "title": "Úspech",
+        "message": "Vaša akcia bola úspešná."
+      },
+      "error": {
+        "title": "Chyba",
+        "message": "Vyskytla sa chyba. Skúste to znova."
+      }
+    },
+    "share_dialog": {
+      "title": "Rozšírte slovo",
+      "description": "Pozvite svojich priateľov, aby sa pripojili k Gaians a spojte sa s rovnako zmýšľajúcimi ľuďmi.",
+      "button_copy": "Kopírovať",
+      "button_copied": "Kopírované",
+      "qr_hint": "Bleskajte to na telefóne"
+    },
+    "dialog_cancel_button": "Nevadí"
+  },
+  "emails": {
+    "loginLink": {
+      "subject": "Váš prihlasovací odkaz",
+      "html": "<p>Ahoj, vitajte na palube!</p> <h1>{{otp}}</h1> <p>Kliknutím na tento odkaz prejdete priamo do: <a href=\"{{link}} \">Potvrdiť e-mail</a></p>"
+    },
+    "welcome": {
+      "subject": "Vitajte v Gaians!",
+      "html": "<p>Ahoj, vitajte na palube!</p> <a href=\"{{link}} \">Spojte sa s ľuďmi</a></p>"
+    }
+  }
+}

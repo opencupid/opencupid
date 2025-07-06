@@ -1,5 +1,5 @@
 import { bus } from '@/lib/bus';
-import {type  MultiselectOption } from '@/types/multiselect';
+import { type MultiselectOption } from '@/types/multiselect';
 import languages from '@cospired/i18n-iso-languages'
 
 // https://www.npmjs.com/package/@cospired/i18n-iso-languages
@@ -24,10 +24,16 @@ let language = 'en'
 
 
 const localeLoaders: Record<string, () => Promise<any>> = {
-  hu: () => import('@cospired/i18n-iso-languages/langs/hu.json'),
-  fr: () => import('@cospired/i18n-iso-languages/langs/fr.json'),
   de: () => import('@cospired/i18n-iso-languages/langs/de.json'),
+  es: () => import('@cospired/i18n-iso-languages/langs/es.json'),
+  fr: () => import('@cospired/i18n-iso-languages/langs/fr.json'),
+  hu: () => import('@cospired/i18n-iso-languages/langs/hu.json'),
   it: () => import('@cospired/i18n-iso-languages/langs/it.json'),
+  nl: () => import('@cospired/i18n-iso-languages/langs/nl.json'),
+  pl: () => import('@cospired/i18n-iso-languages/langs/pl.json'),
+  pt: () => import('@cospired/i18n-iso-languages/langs/pt.json'),
+  ro: () => import('@cospired/i18n-iso-languages/langs/ro.json'),
+  sk: () => import('@cospired/i18n-iso-languages/langs/sk.json'),
 };
 const loadedLocales = new Set(['en'])
 
