@@ -52,7 +52,7 @@
   "haskids_label": {
     "yes": "Has kids",
     "no": "No kids",
-    "unspecified": ""
+    "unspecified": "I'd rather not say"
   },
   "auth": {
     "login": "Login",
@@ -142,9 +142,6 @@
       "no_results_cta_title": "This community is still growing.",
       "no_results_cta_description": "You can help by inviting your friends to join. The more, the merrier.",
       "invite_button": "Invite friends",
-      "share_dialog_title": "",
-      "share_dialog_description": "",
-      "share_dialog_button": "Invite friends",
       "filters": {
         "dialog_ok_button": "Find people",
         "dialog_cancel_button": "Nevermind",
