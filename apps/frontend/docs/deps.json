@@ -171,7 +171,7 @@
         },
         {
           "dynamic": false,
-          "module": "@zod/user/user.types",
+          "module": "@zod/user/user.dto",
           "moduleSystem": "es6",
           "exoticallyRequired": false,
           "dependencyTypes": [
@@ -1227,7 +1227,7 @@
         },
         {
           "dynamic": false,
-          "module": "@zod/user/user.types",
+          "module": "@zod/user/user.dto",
           "moduleSystem": "es6",
           "exoticallyRequired": false,
           "dependencyTypes": [
@@ -2504,7 +2504,7 @@
         },
         {
           "dynamic": false,
-          "module": "@zod/user/user.types",
+          "module": "@zod/user/user.dto",
           "moduleSystem": "es6",
           "exoticallyRequired": false,
           "dependencyTypes": [
@@ -2603,7 +2603,7 @@
         },
         {
           "dynamic": false,
-          "module": "@zod/user/user.types",
+          "module": "@zod/user/user.dto",
           "moduleSystem": "es6",
           "exoticallyRequired": false,
           "dependencyTypes": [
@@ -2726,7 +2726,7 @@
         },
         {
           "dynamic": false,
-          "module": "@zod/user/user.types",
+          "module": "@zod/user/user.dto",
           "moduleSystem": "es6",
           "exoticallyRequired": false,
           "dependencyTypes": [
@@ -7620,7 +7620,7 @@
         },
         {
           "dynamic": false,
-          "module": "@zod/user/user.types",
+          "module": "@zod/user/user.dto",
           "moduleSystem": "es6",
           "exoticallyRequired": false,
           "dependencyTypes": [

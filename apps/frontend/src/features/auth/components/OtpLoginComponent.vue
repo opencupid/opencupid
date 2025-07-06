@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { type LoginUser } from '@zod/user/user.types'
+import { type LoginUser } from '@zod/user/user.dto'
 import { otpRegex } from '@/lib/utils'
 
 import { useI18n } from 'vue-i18n'

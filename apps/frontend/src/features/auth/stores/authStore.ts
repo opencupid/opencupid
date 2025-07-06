@@ -10,7 +10,7 @@ import {
   SettingsUserSchema,
 } from '@zod/user/user.dto'
 
-import type { AuthIdentifier, JwtPayload, SessionData } from '@zod/user/user.types'
+import type { AuthIdentifier, JwtPayload, SessionData } from '@zod/user/user.dto'
 
 import type { ApiError, ApiSuccess, OtpLoginResponse, SendLoginLinkResponse, UserMeResponse } from '@zod/apiResponse.dto'
 import { AuthErrorCodes } from '@zod/user/auth.dto'

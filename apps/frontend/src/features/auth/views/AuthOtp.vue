@@ -3,7 +3,7 @@ import z from 'zod'
 import { ref, reactive, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { type LoginUser } from '@zod/user/user.types'
+import { type LoginUser } from '@zod/user/user.dto'
 import { useI18nStore } from '@/store/i18nStore'
 
 import { useAuthStore } from '../stores/authStore'
@@ -25,7 +25,6 @@ const user = reactive<LoginUser>({
   email: '',
   phonenumber: '',
   language: i18nStore.getLanguage(),
-  isRegistrationConfirmed: false,
 })
 
 const OtpParamSchema = z.object({

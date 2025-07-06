@@ -11,7 +11,7 @@ import { appConfig } from '@/lib/appconfig'
 
 import { AuthIdentifierCaptchaInput, AuthIdentifierCaptchaInputSchema, OtpLoginInputSchema, OtpSendReturn } from '@zod/user/user.dto'
 import type { OtpLoginResponse, SendLoginLinkResponse, UserMeResponse } from '@zod/apiResponse.dto'
-import { AuthIdentifier, JwtPayload } from '@zod/user/user.types'
+import { AuthIdentifier, JwtPayload } from '@zod/user/user.dto'
 import { User } from '@zod/generated'
 
 
@@ -115,7 +115,6 @@ const userRoutes: FastifyPluginAsync = async fastify => {
       id: user.id,
       email: user.email,
       phonenumber: user.phonenumber,
-      isRegistrationConfirmed: user.isRegistrationConfirmed,
       language: user.language,
     }
 

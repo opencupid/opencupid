@@ -2,7 +2,7 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { type AuthIdentifierCaptchaInput } from '@zod/user/user.dto'
-import { type LoginUser } from '@zod/user/user.types'
+import { type LoginUser } from '@zod/user/user.dto'
 
 import { useI18nStore } from '@/store/i18nStore'
 import { useAuthStore } from '../stores/authStore'
@@ -25,7 +25,6 @@ const user = reactive<LoginUser>({
   email: '',
   phonenumber: '',
   language: i18nStore.getLanguage(),
-  isRegistrationConfirmed: false,
 })
 
 // Method to handle sending login link

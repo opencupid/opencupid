@@ -4,7 +4,6 @@ const testUser = {
   id: 'usr1',
   email: 'test@example.com',
   phonenumber: '',
-  isRegistrationConfirmed: false,
   language: 'en'
 }
 

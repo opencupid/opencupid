@@ -8,7 +8,7 @@ import { UserService, type UserWithProfile } from 'src/services/user.service'
 import { SessionService } from '../services/session.service'
 import { sendUnauthorizedError } from 'src/api/helpers'
 import { appConfig } from '@/lib/appconfig'
-import { SessionData, SessionProfile, SessionProfileSchema } from '@zod/user/user.types'
+import { SessionData, SessionProfile, SessionProfileSchema } from '@zod/user/user.dto'
 
 // Extend Fastify types
 declare module 'fastify' {

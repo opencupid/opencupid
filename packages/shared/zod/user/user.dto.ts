@@ -1,6 +1,6 @@
 // TODO: review usage; copied for both db and dto layers
 import { z } from 'zod'
-import { UserSchema } from '../generated'
+import { ProfileSchema, UserRoleSchema, UserSchema } from '../generated'
 import { OwnerProfileSchema } from '@zod/profile/profile.dto'
 
 export const JwtPayloadSchema = z.object({
@@ -39,17 +39,26 @@ export const AuthIdentifierCaptchaInputSchema = AuthIdentifierSchema
     }
   )
 export type AuthIdentifierCaptchaInput = z.infer<typeof AuthIdentifierCaptchaInputSchema>
+export type AuthIdentifier = z.infer<typeof AuthIdentifierSchema>
+export type JwtPayload = z.infer<typeof JwtPayloadSchema>
 
-// export const SessionDataSchema = z.object({
-//   userId: z.string(),
-//   profileId: z.string(),
-//   lang: z.string(),
-//   roles: z.array(UserRoleSchema),
-//   isOnboarded: z.boolean().default(false),
-//   hasActiveProfile: z.boolean().default(false),
-// })
+export const SessionProfileSchema = ProfileSchema.pick({
+  id: true,
+  isDatingActive: true,
+  isSocialActive: true,
+  isActive: true,
+})
+export type SessionProfile = z.infer<typeof SessionProfileSchema>
 
-// export type SessionData = z.infer<typeof SessionDataSchema>
+export const SessionDataSchema = z.object({
+  userId: z.string(),
+  profileId: z.string(),
+  lang: z.string().default('en'),
+  roles: z.array(UserRoleSchema),
+  hasActiveProfile: z.boolean().default(false),
+  profile: SessionProfileSchema,
+})
+export type SessionData = z.infer<typeof SessionDataSchema>
 
 
 
@@ -60,6 +69,14 @@ export const SettingsUserSchema = UserSchema.pick({
 })
 export type SettingsUser = z.infer<typeof SettingsUserSchema>
 
+export const LoginUserSchema = UserSchema.pick({
+  id: true,
+  email: true,
+  phonenumber: true,
+  language: true,
+})
+export type LoginUser = z.infer<typeof LoginUserSchema>
+
 
 
 
@@ -67,7 +84,6 @@ export const OtpSendReturnSchema = UserSchema.pick({
   id: true,
   email: true,
   phonenumber: true,
-  isRegistrationConfirmed: true,
   language: true,
 })
 export type OtpSendReturn = z.infer<typeof OtpSendReturnSchema>

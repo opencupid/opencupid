@@ -2,7 +2,7 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 
 import { useColorMode } from 'bootstrap-vue-next'
-import { type LoginUser } from '@zod/user/user.types'
+import { type LoginUser } from '@zod/user/user.dto'
 
 import { useMessageStore } from '@/features/messaging/stores/messageStore'
 import { useAuthStore } from '@/features/auth/stores/authStore'
