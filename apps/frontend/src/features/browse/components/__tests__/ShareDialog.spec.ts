@@ -15,7 +15,7 @@ describe('ShareDialog', () => {
   it('binds v-model to BModal', async () => {
     const wrapper = mount(ShareDialog, {
       props: { modelValue: false },
-      global: { stubs: { BModal, BFormGroup, BFormInput, BButton, UseClipboard }, config: { globalProperties: { $t: (k:string)=>k } } }
+      global: { stubs: { BModal, BFormGroup, BFormInput, BButton, UseClipboard }, config: { globalProperties: { $t: (k:string)=>k } as any } }
     })
     expect(wrapper.find('.modal').attributes('data-show')).toBe('false')
     await wrapper.setProps({ modelValue: true })
