@@ -2,11 +2,10 @@ import { defineStore } from "pinia";
 import { useI18n } from "vue-i18n";
 import { ref, watch } from "vue";
 import { bus } from "@/lib/bus";
+import { useLocalStore } from "@/store/localStore";
 
 import { Settings } from 'luxon'
 Settings.defaultZone = 'Europe/Berlin'
-
-const STORAGE_KEY = 'language'
 
 const labels: Record<string, string> = {
   hu: 'Magyar',
@@ -21,16 +20,20 @@ const labels: Record<string, string> = {
 
 export const useI18nStore = defineStore('i18n', () => {
 
+  const localStore = useLocalStore()
+  localStore.initialize()
   const { locale, availableLocales } = useI18n()
-  const currentLanguage = ref(localStorage.getItem(STORAGE_KEY) || getBrowserLanguage(availableLocales))
+  const currentLanguage = ref(localStore.getLanguage)
+  if (!currentLanguage.value)
+    currentLanguage.value = getBrowserLanguage(availableLocales)
   locale.value = currentLanguage.value
 
-  // Sync changes to localStorage + vue-i18n
+  // Sync changes to localStore + vue-i18n
   watch(currentLanguage, (newLang) => {
     locale.value = newLang
     // Set the locale for Luxon
     Settings.defaultLocale = locale.value
-    localStorage.setItem(STORAGE_KEY, newLang)
+    localStore.setLanguage(newLang)
     bus.emit('language:changed', { language: newLang })
   })
 

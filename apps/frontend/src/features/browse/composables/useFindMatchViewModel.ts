@@ -2,6 +2,7 @@ import { computed, ref, toRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useBootstrap } from '@/lib/bootstrap'
+import { useLocalStore } from '@/store/localStore'
 
 import type { StoreError } from '@/store/helpers';
 import type { OwnerProfile, ProfileScope } from '@zod/profile/profile.dto';
@@ -47,7 +48,8 @@ export function useFindMatchViewModel() {
   )
   const isInitialized = ref(false)
 
-  const savedScope = ref(localStorage.getItem('currentScope') as ProfileScope | null)
+  const localStore = useLocalStore()
+  const savedScope = ref(localStore.getCurrentScope)
 
   const initialize = async (defaultScope?: ProfileScope) => {
 
@@ -108,7 +110,7 @@ export function useFindMatchViewModel() {
   watch(
     () => route.params.scope,
     (scope) => {
-      if (typeof scope === 'string') localStorage.setItem('currentScope', scope)
+      if (typeof scope === 'string') localStore.setCurrentScope(scope as ProfileScope)
     }
   )
 

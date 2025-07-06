@@ -1,20 +1,32 @@
 // import { type ToastMessage } from '@/lib/toast'
 import { defineStore } from 'pinia'
 import { bus } from '@/lib/bus'
-import { language } from '@vue/eslint-config-prettier/skip-formatting'
+import type { ProfileScope } from '@zod/profile/profile.dto'
+
+export interface LocalState {
+  messageDrafts: Record<string, string>
+  language: string
+  theme: string
+  currentScope: ProfileScope | null
+}
 
 export const useLocalStore = defineStore('local', {
-  state: () => ({
-    messageDrafts: {} as Record<string, string>, // Maps recipient profileIDs to their drafts
-    // flashMessage: null as ToastMessage | null,
+  state: (): LocalState => ({
+    messageDrafts: {},
+    language: 'en',
+    theme: 'light',
+    currentScope: null,
   }),
+  getters: {
+    getLanguage: state => state.language,
+    getTheme: state => state.theme,
+    getCurrentScope: state => state.currentScope,
+    getMessageDraft: state => (id: string) => state.messageDrafts[id] || '',
+  },
   actions: {
     setMessageDraft(profileId: string, message: string) {
       this.messageDrafts[profileId] = message
       localStorage.setItem('messageDrafts', JSON.stringify(this.messageDrafts))
-    },
-    getMessageDraft(profileId: string): string {
-      return this.messageDrafts[profileId] || ''
     },
     async initialize() {
       const stored = localStorage.getItem('messageDrafts')
@@ -26,11 +38,34 @@ export const useLocalStore = defineStore('local', {
         }
       }
 
+      const lang = localStorage.getItem('language')
+      if (lang) this.language = lang
+      const theme = localStorage.getItem('theme')
+      if (theme) this.theme = theme
+      const scope = localStorage.getItem('currentScope')
+      if (scope) this.currentScope = scope as ProfileScope
+
       bus.on('auth:logout', this.cleanUp)
     },
     async cleanUp() {
       this.messageDrafts = {}
-      localStorage.removeItem('messageDrafts')
+      this.language = 'en'
+      this.theme = 'light'
+      this.currentScope = null
+      localStorage.clear()
+    },
+    setLanguage(lang: string) {
+      this.language = lang
+      localStorage.setItem('language', lang)
+    },
+    setTheme(theme: string) {
+      this.theme = theme
+      localStorage.setItem('theme', theme)
+    },
+    setCurrentScope(scope: ProfileScope | null) {
+      this.currentScope = scope
+      if (scope) localStorage.setItem('currentScope', scope)
+      else localStorage.removeItem('currentScope')
     }
     // setFlashMessage(message: string, type: string) {
     //   this.flashMessage = {

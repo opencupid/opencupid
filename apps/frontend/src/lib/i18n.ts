@@ -13,9 +13,13 @@ import en from '@shared/i18n/en.json'
 import hu from '@shared/i18n/hu.json'
 import de from '@shared/i18n/de.json'
 import fr from '@shared/i18n/fr.json'
+import { useLocalStore } from '@/store/localStore'
 
 export function getLocale(): string {
-  return localStorage.getItem('language') || 'en'
+  const localStore = useLocalStore()
+  // Ensure the store is initialized so values are loaded from localStorage
+  if (!localStore.language) localStore.initialize()
+  return localStore.getLanguage
 }
 
 export function appCreateI18n() {

@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 
 import { useColorMode } from 'bootstrap-vue-next'
 import { type LoginUser } from '@zod/user/user.dto'
 
 import { useMessageStore } from '@/features/messaging/stores/messageStore'
 import { useAuthStore } from '@/features/auth/stores/authStore'
+import { useLocalStore } from '@/store/localStore'
 
 import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
 import IconLogout from '@/assets/icons/interface/logout.svg'
@@ -21,6 +22,7 @@ import { useRouter } from 'vue-router'
 
 const authStore = useAuthStore()
 const router = useRouter()
+const localStore = useLocalStore()
 
 const user = reactive({} as LoginUser)
 const isLoading = ref(true)
@@ -33,6 +35,12 @@ const mode = useColorMode({
     light: 'light',
     dark: 'dark',
   },
+})
+
+mode.value = localStore.getTheme
+
+watch(mode, (newMode) => {
+  localStore.setTheme(newMode)
 })
 
 const changeColor = () => {
