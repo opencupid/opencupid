@@ -23,4 +23,9 @@ declare const __APP_CONFIG__: {
   readonly NODE_ENV: string
   readonly VAPID_PUBLIC_KEY: string
   readonly GEOIP_URL: string
+  readonly OG_TITLE: string
+  readonly OG_DESCRIPTION: string
+  readonly OG_IMAGE: string
+  readonly OG_URL: string
+  readonly OG_TYPE: string
 }

@@ -46,6 +46,12 @@ export const configSchema = z.object({
 
   WELCOME_MESSAGE_SENDER_PROFILE_ID: z.string().optional(),
 
+  OG_TITLE: z.string(),
+  OG_DESCRIPTION: z.string(),
+  OG_IMAGE: z.string(),
+  OG_URL: z.string(),
+  OG_TYPE: z.string(),
+
   FACEAPI_ENABLED: z.string().transform(val => val === 'true').default('false'),
 })
 

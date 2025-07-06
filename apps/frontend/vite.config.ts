@@ -13,6 +13,7 @@ import svgLoader from 'vite-svg-loader'
 import serveStatic from 'serve-static'
 import VitePluginBrowserSync from 'vite-plugin-browser-sync'
 import { server, define } from './vite.common'
+import MetaInjectPlugin from './vite/vite-plugin-meta-inject'
 
 process.env.DEBUG = 'vite:*' // Add this to force verbose output
 // https://vite.dev/config/
@@ -108,7 +109,8 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
             notify: false
           }
         }
-      })
+      }),
+      MetaInjectPlugin(mode)
 
       // VitePWA({
       //   registerType: 'autoUpdate',
