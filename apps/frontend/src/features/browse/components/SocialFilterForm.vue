@@ -39,16 +39,25 @@ const toggleDisabled = () => {
 
 <template>
   <div class="d-flex flex-column justify-content-center h-100">
-    <h5 class="text-center mb-4">I 'm looking for connections...</h5>
+    <h5 class="text-center mb-4">
+      <!-- I 'm looking for connections... -->
+      {{ $t('profiles.browse.filters.social_title') }}
+    </h5>
     <div class="mb-2">
       <div class="d-flex flex-row">
         <div class="flex-grow-1">
-          <BFormCheckbox v-model="locationDisabled" @change="toggleDisabled"
-            >Anywhere</BFormCheckbox
-          >
+          <BFormCheckbox v-model="locationDisabled" @change="toggleDisabled">
+            <!-- Anywhere -->
+            {{ $t('profiles.browse.filters.anywhere') }}
+          </BFormCheckbox>
         </div>
         <div class="text-end">
-          <BButton variant="link-success" :disabled="locationDisabled" class="p-0">
+          <BButton
+            variant="link-success"
+            :disabled="locationDisabled"
+            class="p-0"
+            :title="$t('profiles.browse.filters.locate_button_title')"
+          >
             <IconTarget2 class="svg-icon-lg" @click="setLocationFromProfile" />
           </BButton>
         </div>
@@ -69,13 +78,11 @@ const toggleDisabled = () => {
     </fieldset>
 
     <div>
-      <label>Interested in...</label>
-      <TagSelectComponent
-        v-model="model.tags"
-        label="Select interests"
-        placeholder="Interested in"
-        :taggable="false"
-      />
+      <label>
+        <!-- Interested in... -->
+        {{ $t('profiles.browse.filters.tags_label') }}
+      </label>
+      <TagSelectComponent v-model="model.tags" :taggable="false" />
     </div>
   </div>
 </template>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
-import { onMounted, ref, provide } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { onMounted, ref, provide, computed } from 'vue'
 import { useBootstrap } from '@/lib/bootstrap'
 
 import IconDate from '@/assets/icons/app/cupid.svg'
@@ -73,6 +73,12 @@ onMounted(async () => {
 
 provide('isOwner', true)
 provide('viewerProfile', formData)
+
+const route = useRoute()
+const hint = computed(() => history?.state?.hint || null)
+// TODO implement floating hints
+// adapt HelpScribble.vue and use @floating-ui/vue to display floating scribbles
+// alongside controls
 </script>
 
 <template>

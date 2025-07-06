@@ -67,6 +67,7 @@
     "otp_input_label": "Enter code",
     "otp_invalid_feedback": "Code should be 6 digits",
     "email": "Email",
+    "phone_number": "Phone number",
     "password": "Password"
   },
   "nav": {
@@ -82,13 +83,15 @@
     "login": "Login",
     "logout": "Logout"
   },
+  "home": {
+    "welcome_title": "Welcome to {siteName}!",
+    "meet_new_people": "Meet new people"
+  },
   "profiles": {
     "send_message_button": "Message",
     "profile_photos": "{name}'s photos",
     "no_profile_title": "Please fill in your profile",
     "no_profile_create": "Create Profile",
-    "invite_message": "This community is still growing, please help spread the word.",
-    "invite_button": "Invite friends",
     "image_editor_help": "Your photo here",
     "image_upload": {
       "title": "Add a photo",
@@ -115,6 +118,44 @@
       "dictate": "Dictate",
       "intro_placeholder": "Tell a bit about yourself",
       "intro_who_placeholder": "Who would you like to meet?"
+    },
+    "blocklist": {
+      "title": "Blocked users",
+      "empty": "You have no blocked users.",
+      "unblock_button": "Unblock",
+      "unblock_confirmation": "Are you sure you want to unblock this user?",
+      "unblock_confirmation_yes": "Yes, unblock",
+      "unblock_confirmation_no": "No, keep blocked",
+      "dialog_title": "Block {name}?",
+      "dialog_message_1": "If this person is bothering you, you can block them. This will prevent them from sending you messages or interacting with your profile. They will also not be shown to you anywhere on this site, as if they never existed.",
+      "dialog_message_2": "They will not receive any notification that you have blocked them.",
+      "confirmation_no": "Nevermind",
+      "confirmation_yes": "Yes, block them"
+    },
+    "browse": {
+      "no_access_dating_title": "Your own dating profile is currently private.",
+      "no_access_dating_description": "When others can't see you, you can't see them - it's only fair.  To find matches, please make your dating profile public.",
+      "no_access_social_title": "Your own social profile is currently private.",
+      "no_access_social_description": "When others can't see you, you can't see them - it's only fair.  To see and meet others, please make your profile public.",
+      "cta_button_label": "Go to my profile",
+      "social_no_results": "There's nobody in your area that matches your preferences, yet.",
+      "no_results_cta_title": "This community is still growing.",
+      "no_results_cta_description": "You can help by inviting your friends to join. The more, the merrier.",
+      "invite_button": "Invite friends",
+      "share_dialog_title": "",
+      "share_dialog_description": "",
+      "share_dialog_button": "Invite friends",
+      "filters": {
+        "dialog_ok_button": "Find people",
+        "dialog_cancel_button": "Nevermind",
+        "social_title": "I 'm looking for connections...",
+        "tags_label": "Interested in...",
+        "anywhere": "Anywhere",
+        "locate_button_title": "Set to my country",
+        "search_button_title_social": "Find people",
+        "search_button_title_dating": "Find people",
+        "age_range": "Age range:"
+      }
     }
   },
   "matches": {
@@ -158,11 +199,15 @@
     "send_failed": "Oops, this didn't work. Please try again.",
     "message_sent_success": "Message sent successfully!",
     "my_turn": "My turn",
+    "their_turn": "Their turn",
     "block_report_unmatch": "Block/report/unmatch",
     "block_user_ok": "Block {name}",
     "nevermind": "Nevermind",
     "send_message_heading": "Send Message",
-    "welcome_message": "Welcome to Gaians!"
+    "welcome_message": "Welcome to Gaians!",
+    "no_messages_cta": "Find people to talk to",
+    "no_messages_title": "No messages yet",
+    "no_messages_placeholder": "Your conversations will take place here."
   },
   "onboarding": {
     "name_title": "Hello!",
@@ -186,6 +231,7 @@
     }
   },
   "settings": {
+    "title": "Settings",
     "language_label": "Language",
     "push_notifications": "Push Notifications",
     "enable_push": "Enable Push Notifications"
@@ -220,6 +266,13 @@
         "title": "Error",
         "message": "An error occurred. Please try again."
       }
+    },
+    "share_dialog": {
+      "title": "Spread the word",
+      "description": "Invite your friends to join Gaians and connect with like-minded people.",
+      "button_copy": "Copy",
+      "button_copied": "Copied",
+      "qr_hint": "Flash this at their phone"
     }
   },
   "emails": {

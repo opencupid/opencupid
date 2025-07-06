@@ -20,8 +20,10 @@ import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
 import SocialFilterDisplay from '../components/SocialFilterDisplay.vue'
 import DatingPrefsDisplay from '../components/DatingPrefsDisplay.vue'
 import ScopeViewToggler from '@/features/shared/ui/ScopeViewToggler.vue'
-const router = useRouter()
+import { useI18n } from 'vue-i18n'
 
+const router = useRouter()
+const { t } = useI18n()
 // state management
 const showPrefsModal = ref(false)
 const canGoBack = ref(false)
@@ -61,7 +63,12 @@ const handleCardClick = async (profileId: string) => {
 }
 
 const handleEditProfileIntent = () => {
-  router.push({ name: 'EditProfile' })
+  router.push({
+    name: 'EditProfile',
+    state: {
+      hint: 'scope',
+    },
+  })
 }
 
 const handleCloseProfileView = () => {
@@ -196,7 +203,8 @@ const isDetailView = computed(() => !!selectedProfileId.value)
           <BContainer>
             <MiddleColumn class="h-100">
               <div class="my-3">
-                There's nobody in your area that matches your preferences, yet.
+                <!-- There's nobody in your area that matches your preferences, yet. -->
+                {{ $t('profiles.browse.social_no_results') }}
               </div>
               <NoResultsCTA />
             </MiddleColumn>
@@ -227,7 +235,7 @@ const isDetailView = computed(() => !!selectedProfileId.value)
         fullscreen="sm"
         :no-footer="false"
         :no-header="true"
-        cancel-title="Nevermind"
+        :cancel-title="t('profiles.browse.filters.dialog_cancel_button')"
         cancel-variant="link"
         ok-title="Search"
         initial-animation

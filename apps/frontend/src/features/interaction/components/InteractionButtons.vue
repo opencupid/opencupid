@@ -86,11 +86,11 @@ const handleMessageClick = () => {
       </template>
       <span v-if="props.context.canMessage">
         <!-- Send a message -->
-        <I18nT keypath="interactions.send_a_message" />
+        {{ $t('interactions.send_a_message') }}
       </span>
       <span v-else>
         <!-- You messaged them -->
-         {{ $t('interactions.you_messaged_them') }}
+        {{ $t('interactions.you_messaged_them') }}
       </span>
     </BPopover>
 

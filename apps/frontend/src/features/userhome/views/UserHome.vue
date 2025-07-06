@@ -15,7 +15,6 @@ import LikesAndMatchesBanner from '@/features/interaction/components/LikesAndMat
 const profileStore = useOwnerProfileStore()
 const viewerProfile = ref(profileStore.profile)
 const router = useRouter()
-// Line removed as it is unused.
 const newProfiles = ref([] as PublicProfile[])
 
 onMounted(async () => {
@@ -44,17 +43,25 @@ const handleCardClick = async (profileId: string) => {
 }
 
 provide('viewerProfile', viewerProfile.value)
+
+const siteName = __APP_CONFIG__.SITE_NAME
 </script>
 
 <template>
   <main class="overflow-auto">
     <div class="container">
       <MiddleColumn>
-        <h2 class="mt-3">Welcome to Gaians.</h2>
+        <h2 class="mt-3">
+          <!-- Welcome to site_name -->
+          {{ $t('home.welcome_title', { siteName: siteName }) }}
+        </h2>
         <LikesAndMatchesBanner class="my-3" />
 
         <div v-if="newProfiles.length > 0" class="mb-4">
-          <h5>Meet new people</h5>
+          <h5>
+            <!-- Meet new people -->
+            {{ $t('home.meet_new_people') }}
+          </h5>
           <BRow>
             <ProfileCardGrid
               :profiles="newProfiles"

@@ -62,7 +62,8 @@ export const define = (mode: string) => {
         FRONTEND_URL: env.FRONTEND_URL,
         NODE_ENV: env.NODE_ENV,
         VAPID_PUBLIC_KEY: env.VAPID_PUBLIC_KEY,
-        GEOIP_URL: env.GEOIP_URL
+        GEOIP_URL: env.GEOIP_URL,
+        SITE_NAME: env.SITE_NAME,
       }),
     }
   }

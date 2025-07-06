@@ -4,7 +4,7 @@ import { type DatingPreferencesDTO } from '@zod/match/filters.dto'
 import IconSearch from '@/assets/icons/interface/search.svg'
 import GenderSymbol from '@/features/shared/profiledisplay/GenderSymbol.vue'
 
-const model = defineModel<DatingPreferencesDTO | null>({
+const datingPrefs = defineModel<DatingPreferencesDTO | null>({
   default: null,
 })
 
@@ -24,12 +24,20 @@ defineEmits<{
     @click="$emit('prefs:toggle')"
   >
     <div class="flex-grow-1 d-flex align-items-center">
-      <span class="me-2">Age: {{ model?.prefAgeMin }} - {{ model?.prefAgeMax }}</span>
-      <GenderSymbol v-for="pref in model?.prefGender" :key="pref" :gender="pref" />
+      <span class="me-3">
+        {{ $t('profiles.browse.filters.age_range') }}
+        {{ datingPrefs?.prefAgeMin }} - {{ datingPrefs?.prefAgeMax }}</span
+      >
+      <GenderSymbol v-for="pref in datingPrefs?.prefGender" :key="pref" :gender="pref" class="me-2"/>
     </div>
 
     <div class="flex-shrink-1">
-      <BButton variant="link" pill class="text-white py-0 ms-2" :disabled="prefsButtonDisabled">
+      <BButton
+        variant="link"
+        pill
+        class="text-white py-0 ms-2"
+        :title="$t('profiles.browse.filters.search_button_title_dating')"
+      >
         <IconSearch class="svg-icon" />
       </BButton>
     </div>

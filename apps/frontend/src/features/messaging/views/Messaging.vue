@@ -86,7 +86,11 @@ const isDetailView = computed(() => !!messageStore.activeConversation)
 <template>
   <main class="w-100 position-relative">
     <!-- Detail view overlay -->
-    <div v-if="isInitialized && isDetailView" class="detail-view position-absolute w-100" style="z-index: 1050">
+    <div
+      v-if="isInitialized && isDetailView"
+      class="detail-view position-absolute w-100"
+      style="z-index: 1050"
+    >
       <MiddleColumn class="h-100">
         <ConversationDetail
           :loading="messageStore.isLoading"
@@ -100,7 +104,9 @@ const isDetailView = computed(() => !!messageStore.activeConversation)
 
     <!-- List view -->
     <div class="d-flex flex-column overflow-auto h-100" :class="{ 'd-none': isDetailView }">
-      <ViewTitle :icon="IconMessage" title="Messages" class="text-primary" />
+      <ViewTitle :icon="IconMessage" class="text-primary">
+        {{ $t('messaging.page_title') }}
+      </ViewTitle>
       <BOverlay
         :show="!haveConversations && isInitialized"
         no-spinner
@@ -111,7 +117,10 @@ const isDetailView = computed(() => !!messageStore.activeConversation)
       >
         <template #overlay>
           <div class="d-flex flex-column align-items-center justify-content-center h-100">
-            <p class="text-muted mb-4 mt-4 text-center">Your conversations will take place here.</p>
+            <p class="text-muted mb-4 mt-4 text-center">
+              <!-- Your conversations will take place here. -->
+              {{ $t('messaging.no_messages_placeholder') }}
+            </p>
             <BButton
               variant="primary"
               size="lg"
@@ -119,7 +128,8 @@ const isDetailView = computed(() => !!messageStore.activeConversation)
               @click="router.push({ name: 'BrowseProfiles' })"
             >
               <IconSearch class="svg-icon" />
-              Find people to talk to
+              <!-- Find people to talk to -->
+              {{ $t('messaging.no_messages_cta') }}
             </BButton>
           </div>
         </template>

@@ -55,7 +55,6 @@ onMounted(async () => {
 
 function handleClick() {
   authStore.logout()
-  console.log('User logged out sending to /auth' )
   router.push({ name: 'Login' })
 }
 </script>
@@ -70,7 +69,7 @@ function handleClick() {
         </template>
         <template #items-center>
           <IconSetting2 class="svg-icon me-2" />
-          Settings
+          {{ $t('settings.title') }}
         </template>
       </SecondaryNav>
 
@@ -78,8 +77,10 @@ function handleClick() {
         <BOverlay :show="false" class="h-100 d-flex flex-column justify-content-center">
           <div class="mb-3">
             <div class="me-2">
-              <span v-if="user.email">Email: {{ user.email }}</span>
-              <span v-if="user.phonenumber">Phone number: {{ user.phonenumber }}</span>
+              <span v-if="user.email"> {{ $t('auth.email') }}: {{ user.email }}</span>
+              <span v-if="user.phonenumber">
+                {{ $t('auth.phone_number') }}: {{ user.phonenumber }}</span
+              >
             </div>
             <BButton variant="primary" size="sm" @click="handleClick">
               <IconLogout class="svg-icon" />

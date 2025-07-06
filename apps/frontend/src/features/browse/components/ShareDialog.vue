@@ -3,6 +3,11 @@ import { UseClipboard } from '@vueuse/components'
 import { useQRCode } from '@vueuse/integrations/useQRCode'
 import IconCopy from '@/assets/icons/interface/copy.svg'
 
+const showModal = defineModel<boolean>({
+  default: false,
+  type: Boolean,
+})
+
 const shareUrl = __APP_CONFIG__.FRONTEND_URL
 const qrcode = useQRCode(shareUrl, {
   errorCorrectionLevel: 'H',
@@ -16,36 +21,46 @@ const handleSelect = (event: Event) => {
 </script>
 
 <template>
-  <div>
-    <div class="mb-3">
-      <BFormGroup class="d-flex align-items-center justify-content-between flex-column mb-3">
-        <div class="mb-2">
-          <BFormInput
-            v-model="shareUrl"
-            type="text"
-            :placeholder="shareUrl"
-            readonly
-            size="md"
-            class="flex-shrink-1"
-            @click="handleSelect"
-          />
-        </div>
-          <UseClipboard v-slot="{ copy, copied }" :source="shareUrl">
-            <BButton
-              @click="copy()"
-              size="md"
-              variant="primary"
-              pill
-              class="flex-grow-1 flex-shrink-0 ms-3"
-            >
-              <IconCopy class="svg-icon" />
-              {{ copied ? 'Copied' : 'Copy' }}
-            </BButton>
-          </UseClipboard>
-      </BFormGroup>
-      <div class="col-12 text-center">
-        <img :src="qrcode" alt="QR Code" class="img-fluid w-100" />
+  <BModal
+    centered
+    v-model="showModal"
+    :no-footer="true"
+    :no-header="false"
+    fullscreen="sm"
+    :title="$t('uicomponents.share_dialog.title')"
+    :backdrop-first="false"
+    no-animation
+  >
+    <BFormGroup class="d-flex align-items-center justify-content-between flex-column mb-3">
+      <div class="my-2">
+        <BFormInput
+          v-model="shareUrl"
+          type="text"
+          :placeholder="shareUrl"
+          readonly
+          size="lg"
+          class="flex-shrink-1"
+          @click="handleSelect"
+        />
+      </div>
+      <UseClipboard v-slot="{ copy, copied }" :source="shareUrl">
+        <BButton
+          @click="copy()"
+          size="lg"
+          variant="primary"
+          pill
+          class="flex-grow-1 flex-shrink-0 ms-3"
+        >
+          <IconCopy class="svg-icon" />
+          {{ copied ? $t('uicomponents.share_dialog.button_copied') : $t('uicomponents.share_dialog.button_copy') }}
+        </BButton>
+      </UseClipboard>
+    </BFormGroup>
+    <div class="col-12 text-center">
+      <img :src="qrcode" alt="QR Code" class="img-fluid w-100" />
+      <div class="text-muted">
+        {{ $t('uicomponents.share_dialog.qr_hint') }}
       </div>
     </div>
-  </div>
+  </BModal>
 </template>

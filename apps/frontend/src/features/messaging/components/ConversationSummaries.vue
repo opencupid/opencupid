@@ -41,7 +41,10 @@ const { t } = useI18n()
         </div>
         <div class="flex-shrink-0 me-2 ">
           <small v-if="!convo.lastMessage?.isMine" class="badge bg-danger">{{ t('messaging.my_turn') }}</small>
-          <small v-if="!convo.canReply" class="badge bg-secondary">Their turn</small>
+          <small v-if="!convo.canReply" class="badge bg-secondary">
+            <!-- Their turn -->
+            {{ t('messaging.their_turn') }}
+          </small>
         </div>
       </BListGroupItem>
     </BListGroup>
