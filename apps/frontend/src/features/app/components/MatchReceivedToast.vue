@@ -20,7 +20,8 @@ defineProps<{
       <ProfileImage :profile="edge.profile" />
     </div>
     <span>
-      You matched with {{ edge.profile.publicName || 'someone' }}!
+      <!-- You matched with someone! -->
+      {{ $t('matches.you_matched_with', { name: edge.profile.publicName || 'someone' }) }}
     </span>
   </div>
 </template>

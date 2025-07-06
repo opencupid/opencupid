@@ -19,8 +19,6 @@ const emit = defineEmits<{
 }>()
 const messageSent = ref(false)
 const handleMessageSent = () => {
-  // Close the match popup after sending a message
-  // emit('close')
   messageSent.value = true
   setTimeout(() => {
     console.log('Hiding modal after message sent')
@@ -47,7 +45,10 @@ const handleMessageSent = () => {
     @hidden="messageSent = false"
   >
     <div class="w-100 p-5">
-      <h1 class="text-center mb-4">It's a match!</h1>
+      <h1 class="text-center mb-4">
+        <!-- It's a match! -->
+        {{ $t('interactions.its_a_match') }}
+      </h1>
       <div class="d-flex flex-row align-items-center justify-content-center mb-4">
         <div class="image-wrapper">
           <ProfileImage :profile="match.from.profile" />
@@ -59,18 +60,25 @@ const handleMessageSent = () => {
       </div>
       <div v-if="profile.interactionContext.canMessage" class="text-center mb-4">
         <div v-if="!messageSent">
-          <h5 class="text-center mb-3">Send {{ profile.publicName }} a message!</h5>
+          <h5 class="text-center mb-3">
+            <!-- send {them} a messages -->
+            {{ $t('interactions.send_them_a_message', { name: profile.publicName }) }}
+          </h5>
           <SendMessageForm
             ref="messageInput"
             :recipientProfile="profile"
             :conversationId="null"
             @message:sent="handleMessageSent"
           />
-          <BButton class="btn btn-link text-decoration-none" @click="emit('close')"
-            >Maybe later</BButton
-          >
+          <BButton class="btn btn-link text-decoration-none" @click="emit('close')">
+            <!-- Maybe later -->
+            {{ $t('interactions.cancel_button') }}
+          </BButton>
         </div>
-        <div v-else class="text-center">Nice!</div>
+        <div v-else class="text-center">
+          <!-- Nice -->
+          {{ $t('interactions.message_confirmation') }}
+        </div>
       </div>
     </div>
   </BModal>

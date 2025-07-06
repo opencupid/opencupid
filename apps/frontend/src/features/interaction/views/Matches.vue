@@ -6,10 +6,8 @@ import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 import MatchesList from '../components/MatchesList.vue'
 import IconDate from '@/assets/icons/app/cupid.svg'
 import ViewTitle from '@/features/shared/ui/ViewTitle.vue'
-import PlaceholdersGrid from '@/features/browse/components/PlaceholdersGrid.vue'
 import ProfileChipListPlaceholder from '@/features/publicprofile/components/ProfileChipListPlaceholder.vue'
 import { useInteractionsViewModel } from '../composables/useInteractionsViewModel'
-import ReceivedLikesCount from '../components/ReceivedLikesCount.vue'
 
 const { matches, haveMatches, haveReceivedLikes, haveSentLikes, receivedLikesCount, isLoading } =
   useInteractionsViewModel()
@@ -34,9 +32,9 @@ onMounted(async () => {
           <!-- have inbound likes but no matches -->
           <template v-if="haveReceivedLikes && !haveMatches">
             <div class="mb-3">
+              <!-- You have no likes.|You have 1 like.|You have {count} likes! -->
               {{ $t('matches.received_likes', { count: receivedLikesCount }) }}
             </div>
-
             <BButton
               v-if="haveReceivedLikes"
               variant="primary"
@@ -47,13 +45,15 @@ onMounted(async () => {
                 })
               "
             >
-              {{ $t('matches.received_likes_cta', { count: receivedLikesCount }) }}
+            <!-- received_likes_cta -->
+              {{ $t('matches.received_likes_cta') }}
             </BButton>
           </template>
 
           <!-- no matches and haven't sent any likes -->
           <template v-else-if="!haveMatches && !haveSentLikes">
             <p>
+              <!-- There's gotta be someone you like out there -->
               {{ $t('matches.no_match_no_sent_like') }}
             </p>
             <BButton
@@ -67,11 +67,13 @@ onMounted(async () => {
             >
               {{ $t('matches.no_match_no_sent_like_cta') }}
             </BButton>
+            <!-- "Start lookin'", -->
           </template>
 
           <!-- no matches but have sent likes -->
           <template v-else-if="!haveMatches && haveSentLikes">
             <p>
+              <!-- "They will surely like you back." -->
               {{ $t('matches.no_match_have_sent_like') }}
             </p>
             <BButton
@@ -83,13 +85,17 @@ onMounted(async () => {
                 })
               "
             >
+              <!-- "Keep lookin'" -->
               {{ $t('matches.no_match_have_sent_like_cta') }}
             </BButton>
           </template>
 
           <!-- got matches -->
           <template v-else-if="haveMatches">
-            <p>My matches</p>
+            <p>
+              <!-- My matches -->
+              {{ $t('matches.matches_list_title') }}
+            </p>
             <div class="w-100 px-5">
               <MatchesList
                 :edges="matches"

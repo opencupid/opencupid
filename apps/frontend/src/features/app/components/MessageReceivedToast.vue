@@ -19,11 +19,9 @@ defineProps<{
       <ProfileImage :profile="message.sender" />
     </div>
     <span>
-      {{
-        $t('messaging.new_message_notification', {
-          sender: message.sender.publicName || $t('messaging.unknown_sender'),
-        })
-      }}
+      {{ $t('messaging.new_message_notification', {
+        sender: message.sender.publicName || $t('messaging.unknown_sender'),
+      }) }}
     </span>
   </div>
 </template>

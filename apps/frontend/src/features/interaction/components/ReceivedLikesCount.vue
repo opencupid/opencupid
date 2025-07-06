@@ -2,7 +2,7 @@
 import IconHeart from '@/assets/icons/interface/heart.svg'
 import { useInteractionsViewModel } from '../composables/useInteractionsViewModel'
 
-const { receivedLikesCount, haveReceivedLikes, haveMatches, matches } = useInteractionsViewModel()
+const { receivedLikesCount, haveReceivedLikes } = useInteractionsViewModel()
 </script>
 
 <template>
@@ -13,13 +13,7 @@ const { receivedLikesCount, haveReceivedLikes, haveMatches, matches } = useInter
   >
     <div class="">
       <span class="text-dating"><IconHeart class="svg-icon" /></span>
-      You have
-      {{ receivedLikesCount }} likes!
-      <!-- <BButton
-        variant="link-primary"
-        class="stretched-link p-0 ms-1"
-        >Check them out</BButton
-      > -->
+      {{ $t('matches.received_likes', { count: receivedLikesCount }) }}
     </div>
   </div>
 </template>

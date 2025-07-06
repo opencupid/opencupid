@@ -74,6 +74,7 @@
     "onboarding": "Onboarding",
     "profile": "Profile",
     "browse": "Browse",
+    "matches": "Matches",
     "inbox": "Inbox",
     "settings": "Settings"
   },
@@ -116,14 +117,35 @@
       "intro_who_placeholder": "Who would you like to meet?"
     }
   },
-  "matches":{
+  "matches": {
+    "matches_list_title": "My matches",
+    "you_received_like": "You received a like!",
+    "you_matched_with": "You matched with {name}!",
     "received_likes": "You have no likes.|You have 1 like.|You have {count} likes!",
-    "received_likes_cta": "Who|Find out who sent it.|Find out who sent them.",
+    "received_likes_cta": "Find out who sent it",
     "no_match_no_sent_like": "There's gotta be someone you like out there?  ",
     "no_match_no_sent_like_cta": "Start lookin'",
     "no_match_have_sent_like": "They will surely like you back.",
     "no_match_have_sent_like_cta": "Keep lookin'",
-    "find_button_cta": "Go connect"
+    "find_button_cta": "Go connect",
+    "notifications": {
+      "you_have": "You have",
+      "likes": "{count} like | {count} likes",
+      "matches": "{count} new match |{count} new matches",
+      "and": "and"
+    }
+  },
+  "interactions": {
+    "send_a_message": "Send a message",
+    "you_messaged_them": "You messaged them",
+    "you_liked_them": "You liked them",
+    "you_matched_with_them": "You matched with them",
+    "send_a_like": "Send them a like. They will will not know who sent it until they like you back.",
+    "its_a_match": "It's a match!",
+    "send_them_a_message": "Send {name} a message",
+    "cancel_button": "Maybe later",
+    "message_confirmation": "Nice!",
+    "like_error": "Oops, this didn't work. Please try again."
   },
   "messaging": {
     "page_title": "Messages",
@@ -139,8 +161,7 @@
     "block_report_unmatch": "Block/report/unmatch",
     "block_user_ok": "Block {name}",
     "nevermind": "Nevermind",
-    "send_message_heading": "Send Message"
-    ,
+    "send_message_heading": "Send Message",
     "welcome_message": "Welcome to Gaians!"
   },
   "onboarding": {

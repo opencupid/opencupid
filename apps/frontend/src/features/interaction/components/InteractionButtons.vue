@@ -77,16 +77,24 @@ const handleMessageClick = () => {
       </BPopover>
     </div>
 
+    <!-- interaction action buttons popovers, message action -->
     <BPopover placement="top" title="" title-class="d-none">
       <template #target>
         <BButton class="btn-icon-lg btn-info me-2" @click="handleMessageClick">
           <IconMessage class="svg-icon-lg p-0" />
         </BButton>
       </template>
-      <span v-if="props.context.canMessage">Send a message</span>
-      <span v-else>You messaged them</span>
+      <span v-if="props.context.canMessage">
+        <!-- Send a message -->
+        <I18nT keypath="interactions.send_a_message" />
+      </span>
+      <span v-else>
+        <!-- You messaged them -->
+         {{ $t('interactions.you_messaged_them') }}
+      </span>
     </BPopover>
 
+    <!-- interaction action buttons popovers, 'like' action -->
     <BPopover v-if="context.canDate" placement="top" title="" title-class="d-none">
       <template #target>
         <BButton class="btn-icon-lg btn-dating" @click="handleLikeClick">
@@ -94,21 +102,18 @@ const handleMessageClick = () => {
         </BButton>
       </template>
       <span v-if="context.isMatch">
-        You matched with them! <IconHeart class="svg-icon text-dating" />
+        <!-- You matched with them -->
+        <IconHeart class="svg-icon text-dating" />
+        {{ $t('interactions.you_matched_with_them') }}
       </span>
       <span v-else-if="context.likedByMe">
-        You <IconHeart class="svg-icon text-dating" /> them!
-
-        <!-- TODO fix this -->
-        <!-- <i18n-t
-        keypath="profiles.interactions.you_liked_them"
-        :components="{ icon: IconHeart }"
-        tag="span"
-      >
-      </i18n-t> -->
+        <!-- You liked them -->
+        <IconHeart class="svg-icon text-dating" />
+        {{ $t('interactions.you_liked_them') }}
       </span>
       <span v-else>
-        Send them a like. They will will not know who sent it until they like you back.
+        <!-- Send a like. They will will not know who sent it until they like you back. -->
+        {{ $t('interactions.send_a_like') }}
       </span>
     </BPopover>
   </div>

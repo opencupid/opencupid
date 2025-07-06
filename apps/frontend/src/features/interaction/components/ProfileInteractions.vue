@@ -10,7 +10,9 @@ import MatchPopup from './MatchPopup.vue'
 import { useInteractionsViewModel } from '../composables/useInteractionsViewModel'
 import { useToast } from 'vue-toastification'
 import { type InteractionEdgePair } from '@zod/interaction/interaction.dto'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const toast = useToast()
 
 const props = defineProps<{
@@ -41,7 +43,7 @@ const handleLike = async () => {
       emit('updated')
     }
   } else {
-    toast.error('Failed to like profile. Please try again.')
+    toast.error(t('interactions.like_error'))
   }
 }
 

@@ -18,6 +18,7 @@ defineEmits<{
       v-if="context.isMatch"
       class="d-flex align-items-center flex-column justify-content-center mb-2"
     >
+        <!-- interactions match pass confirmation  dialog -->
       <div style="width: 5rem; height: 5rem" class="mb-2">
         <IconSurprisedEmoji class="svg-icon-100 text-warning" />
       </div>
@@ -34,6 +35,7 @@ defineEmits<{
       </BButton>
     </div>
 
+        <!-- interactions match pass confirmation  dialog -->
     <div v-else class="d-flex align-items-center flex-column justify-content-center mb-2">
       <div style="width: 5rem; height: 5rem" class="mb-2">
         <IconConfusedEmoji class="svg-icon-100 text-warning" />
