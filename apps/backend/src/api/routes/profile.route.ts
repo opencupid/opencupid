@@ -27,6 +27,7 @@ import type {
   GetMyProfileResponse,
   GetPublicProfileResponse,
   UpdateProfileResponse,
+  BrowseProfilesResponse,
 } from '@zod/apiResponse.dto'
 import { GetProfileSummariesResponse } from '@zod/apiResponse.dto'
 
@@ -42,6 +43,23 @@ const IdLookupParamsSchema = z.object({
 const PreviewLookupParamsSchema = z.object({
   id: z.string().cuid(),
   locale: z.string()
+})
+
+const BrowseQuerySchema = z.object({
+  take: z
+    .preprocess(val => (typeof val === 'string' ? parseInt(val, 10) : val),
+      z.number().int().min(1).max(50).default(20)),
+  cursor: z.string().cuid().optional(),
+  country: z.string().length(2).optional(),
+  cityId: z.string().cuid().optional(),
+  tags: z
+    .preprocess(val => {
+      if (Array.isArray(val)) return val
+      if (typeof val === 'string' && val.length > 0) {
+        return val.split(',')
+      }
+      return []
+    }, z.array(z.string().cuid()).optional()),
 })
 
 
@@ -306,6 +324,31 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
       return sendError(reply, 500, 'Failed to fetch blocked profiles');
     }
   });
+
+  fastify.get('/browse', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const locale = req.session.lang
+    try {
+      const { take, cursor, country, cityId, tags } = BrowseQuerySchema.parse(req.query)
+
+      const result = await profileService.browseProfiles(take, cursor ?? undefined, {
+        country,
+        cityId,
+        tags,
+      })
+      const profiles = result.items.map(p =>
+        mapProfileToPublic(p, false /* includeDatingContext */, locale)
+      )
+      const response = {
+        success: true,
+        profiles,
+        nextCursor: result.nextCursor,
+      } as BrowseProfilesResponse
+      return reply.code(200).send(response)
+    } catch (err) {
+      fastify.log.error(err)
+      return sendError(reply, 500, 'Failed to fetch profiles')
+    }
+  })
 }
 
 export default profileRoutes

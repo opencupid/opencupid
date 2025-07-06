@@ -11,6 +11,7 @@ import type {
   GetDatingPreferencesResponse,
   GetProfilesResponse,
   GetSocialMatchFilterResponse,
+  BrowseProfilesResponse,
 } from '@zod/apiResponse.dto'
 import {
   storeSuccess,
@@ -29,6 +30,7 @@ type FindProfileStoreState = {
   socialFilter: SocialMatchFilterDTO | null, // Social match filter preferences
   profileList: PublicProfile[]; // List of public profiles
   socialSearch: SocialMatchFilterDTO | null; // Current social search query
+  nextCursor: string | null;
   isLoading: boolean; // Loading state
 }
 
@@ -41,7 +43,7 @@ export function mapSocialMatchFilterDTOToPayload(dto: SocialMatchFilterDTO): Upd
     tags: dto.tags.map(tag => tag.id),
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   return payload as any as UpdateSocialMatchFilterPayload
 }
 
@@ -51,6 +53,7 @@ export const useFindProfileStore = defineStore('findProfile', {
     socialFilter: null,
     profileList: [] as PublicProfile[],
     socialSearch: null as SocialMatchFilterDTO | null, // Current social search query
+    nextCursor: null,
     isLoading: false,
   }),
 
@@ -157,6 +160,27 @@ export const useFindProfileStore = defineStore('findProfile', {
       }
     },
 
+    async browseProfiles(take: number = 20): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
+      try {
+        this.isLoading = true
+        const params: Record<string, string | number | undefined> = { take }
+        if (this.nextCursor) params.cursor = this.nextCursor
+        if (this.socialFilter?.location.country) params.country = this.socialFilter.location.country
+        if (this.socialFilter?.location.cityId) params.cityId = this.socialFilter.location.cityId
+        if (this.socialFilter?.tags.length) params.tags = this.socialFilter.tags.map(t => t.id).join(',')
+
+        const res = await api.get<BrowseProfilesResponse>('/profiles/browse', { params })
+        const fetched = PublicProfileArraySchema.parse(res.data.profiles)
+        this.profileList.push(...fetched)
+        this.nextCursor = res.data.nextCursor
+        return storeSuccess()
+      } catch (error: any) {
+        return storeError(error, 'Failed to fetch profiles')
+      } finally {
+        this.isLoading = false
+      }
+    },
+
     hide(profileId: string): void {
       const profileIndex = this.profileList.findIndex(p => p.id === profileId)
       if (profileIndex !== -1) {
@@ -168,6 +192,7 @@ export const useFindProfileStore = defineStore('findProfile', {
       this.profileList = []
       this.socialSearch = null
       this.datingPrefs = null
+      this.nextCursor = null
       this.isLoading = false
     }
   },

@@ -393,6 +393,39 @@ export class ProfileService {
     return result?.blockedProfiles ?? [];
   }
 
+  async browseProfiles(
+    take: number = 20,
+    cursor?: string,
+    filters?: { country?: string; cityId?: string; tags?: string[] }
+  ): Promise<{ items: DbProfileWithImages[]; nextCursor: string | null }> {
+    const where: Prisma.ProfileWhereInput = {
+      isActive: true,
+      isOnboarded: true,
+      ...(filters?.country ? { country: filters.country } : {}),
+      ...(filters?.cityId ? { cityId: filters.cityId } : {}),
+      ...(filters?.tags && filters.tags.length
+        ? { tags: { some: { id: { in: filters.tags } } } }
+        : {}),
+    }
+
+    const results = await prisma.profile.findMany({
+      where,
+      include: {
+        ...tagsInclude(),
+        ...profileImageInclude(),
+      },
+      orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
+      take: take + 1,
+      skip: cursor ? 1 : 0,
+      cursor: cursor ? { id: cursor } : undefined,
+    })
+
+    const hasNext = results.length > take
+    const items = hasNext ? results.slice(0, -1) : results
+    const nextCursor = hasNext ? results[results.length - 1].id : null
+    return { items, nextCursor }
+  }
+
   // async findProfilesFor(locale: string, profileId: string): Promise<DbProfileComplete[]> {
   //   return await prisma.profile.findMany({
   //     where: {

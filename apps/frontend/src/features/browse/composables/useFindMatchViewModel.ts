@@ -84,20 +84,7 @@ export function useFindMatchViewModel() {
   }
 
   const fetchResults = async () => {
-    switch (currentScope.value) {
-      case 'social': {
-        await findProfileStore.findSocial()
-        break
-      }
-      case 'dating': {
-        await findProfileStore.findDating()
-        break
-      }
-      default: {
-        console.warn('No valid scope selected, cannot fetch results')
-        return
-      }
-    }
+    await findProfileStore.browseProfiles()
   }
 
   watch(currentScope, (newScope) => {
@@ -186,6 +173,8 @@ export function useFindMatchViewModel() {
     navigateToScope,
     openProfile,
     profileList: computed(() => findProfileStore.profileList),
+    nextCursor: toRef(findProfileStore, 'nextCursor'),
+    loadMore: findProfileStore.browseProfiles,
     isInitialized: computed(() => isInitialized.value),
   }
 

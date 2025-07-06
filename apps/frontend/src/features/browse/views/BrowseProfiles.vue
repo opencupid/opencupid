@@ -24,6 +24,16 @@ const router = useRouter()
 // state management
 const showPrefsModal = ref(false)
 const canGoBack = ref(false)
+const sentinel = ref<HTMLElement | null>(null)
+let observer: IntersectionObserver | null = null
+const loadingMore = ref(false)
+
+const fetchMore = async () => {
+  if (loadingMore.value || !nextCursor.value) return
+  loadingMore.value = true
+  await loadMore()
+  loadingMore.value = false
+}
 
 const {
   viewerProfile,
@@ -43,6 +53,8 @@ const {
   initialize,
   reset,
   isInitialized,
+  nextCursor,
+  loadMore,
 } = useFindMatchViewModel()
 
 const scopeModel = computed({
@@ -54,10 +66,17 @@ const scopeModel = computed({
 
 onMounted(async () => {
   await initialize()
+  observer = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting && nextCursor.value) {
+      fetchMore()
+    }
+  })
+  if (sentinel.value) observer.observe(sentinel.value)
 })
 
 onUnmounted(() => {
   canGoBack.value = false
+  observer?.disconnect()
   reset()
 })
 
@@ -209,6 +228,7 @@ const isDetailView = computed(() => !!selectedProfileId.value)
                 :showLocation="true"
                 @profile:select="handleCardClick"
               />
+              <div ref="sentinel" class="py-2" />
             </MiddleColumn>
           </div>
         </template>
