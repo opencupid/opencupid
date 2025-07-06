@@ -13,10 +13,10 @@ import OnboardWizard from '@/features/onboarding/components/OnboardWizard.vue'
 import ViewTitle from '@/features/shared/ui/ViewTitle.vue'
 import IconOkHand from '@/assets/icons/hand_gestures/ok.svg'
 
-import { useI18nStore } from '@/store/i18nStore'
-import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { useAppStore } from '@/features/app/stores/appStore'
+import { useI18nStore } from '@/store/i18nStore'
 import { useBootstrap } from '@/lib/bootstrap'
+import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 
 const { t } = useI18n()
 const profileStore = useOwnerProfileStore()
@@ -64,7 +64,6 @@ const handleWizardFinish = async () => {
     error.value = res.message || 'Failed to save profile'
     return
   }
-  // console.log('Profile saved:', formData)
 }
 
 const appStore = useAppStore()
@@ -104,34 +103,23 @@ onMounted(async () => {
           <ViewTitle :icon="IconOkHand" :title="'Done!'" class="text-primary" />
 
           <div v-if="!profileStore.isLoading" class="d-flex flex-column gap-3">
-            <div class="mb-4 text-center">
+            <div class="mb-4 d-flex flex-column align-items-center">
               <p class="wizard-step-subtitle">
                 <!-- onboarding wizard finish browse profiles button hint -->
                 See who else is on here
               </p>
-              <BButton
-                @click="handleGoToBrowse"
-                variant="primary"
-                size="lg"
-                pill
-                class="d-flex align-items-center justify-content-center"
-              >
+              <BButton @click="handleGoToBrowse" variant="success" size="lg" pill>
                 <!-- onboarding wizard finish browse profiles button label -->
 
-                Go find people
+                Meet people
               </BButton>
             </div>
-            <div class="mb-3">
+            <div class="d-flex flex-column align-items-center">
               <p class="wizard-step-subtitle">
                 <!-- onboarding wizard finish My profile button hint -->
                 See what other people see about me.
               </p>
-              <BButton
-                @click="handleGoToProfile"
-                variant="primary"
-                size="lg"
-                pill
-                class="d-flex align-items-center justify-content-center"
+              <BButton @click="handleGoToProfile" variant="primary" size="lg" pill
                 >My profile</BButton
               >
               <!-- onboarding wizard finish My profile button label -->
