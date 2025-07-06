@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import TagSelectComponent from '@/features/shared/profileform/TagSelectComponent.vue'
 import CountrySelector from '@/features/shared/profileform/CountrySelector.vue'
@@ -13,6 +14,8 @@ import { type LocationDTO } from '@zod/dto/location.dto'
 const model = defineModel<SocialMatchFilterDTO>({
   default: () => SocialMatchFilterDTOSchema.parse({}),
 })
+
+const { t } = useI18n()
 
 const props = defineProps<{
   viewerProfile: OwnerProfile | null
@@ -39,12 +42,13 @@ const toggleDisabled = () => {
 
 <template>
   <div class="d-flex flex-column justify-content-center h-100">
-    <h5 class="text-center mb-4">I 'm looking for connections...</h5>
+    <!-- I'm looking for connections... -->
+    <h5 class="text-center mb-4">{{ t('browse.filter.title') }}</h5>
     <div class="mb-2">
       <div class="d-flex flex-row">
         <div class="flex-grow-1">
           <BFormCheckbox v-model="locationDisabled" @change="toggleDisabled"
-            >Anywhere</BFormCheckbox
+            >{{ t('browse.filter.anywhere') }}</BFormCheckbox
           >
         </div>
         <div class="text-end">
@@ -69,11 +73,12 @@ const toggleDisabled = () => {
     </fieldset>
 
     <div>
-      <label>Interested in...</label>
+      <!-- Interested in... -->
+      <label>{{ t('browse.filter.interests_label') }}</label>
       <TagSelectComponent
         v-model="model.tags"
-        label="Select interests"
-        placeholder="Interested in"
+        :label="t('browse.filter.select_interests')"
+        :placeholder="t('browse.filter.interests_placeholder')"
         :taggable="false"
       />
     </div>

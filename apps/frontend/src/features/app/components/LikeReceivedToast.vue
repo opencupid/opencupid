@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import ProfileImage from '@/features/images/components/ProfileImage.vue'
 import { type InteractionEdge } from '@zod/interaction/interaction.dto'
-// import { useI18n } from 'vue-i18n';
-// const { t } = useI18n()
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 defineEmits<{
   (e: 'closeToast'): void
@@ -15,7 +16,8 @@ defineProps<{
 
 <template>
   <div class="d-flex align-items-center clickable">
-    <span> You have received a new like!</span>
+    <!-- You have received a new like! -->
+    <span>{{ t('matches.like_received_toast') }}</span>
   </div>
 </template>
 

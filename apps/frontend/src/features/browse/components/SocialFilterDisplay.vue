@@ -5,6 +5,7 @@ import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
 import TagList from '@/features/shared/profiledisplay/TagList.vue'
 import IconSetting from '@/assets/icons/interface/setting.svg'
 import IconSearch from '@/assets/icons/interface/search.svg'
+import { useI18n } from 'vue-i18n'
 
 const socialFilter = defineModel<SocialMatchFilterDTO | null>({
   default: null,
@@ -17,6 +18,8 @@ const props = defineProps<{
 defineEmits<{
   (event: 'prefs:toggle'): void
 }>()
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -36,7 +39,8 @@ defineEmits<{
           :showCountryLabel="true"
           :showCountryIcon="false"
         />
-        <span v-if="!socialFilter?.location.country">Anywhere</span>
+        <!-- Anywhere -->
+        <span v-if="!socialFilter?.location.country">{{ t('browse.filter.anywhere') }}</span>
       </span>
 
       <TagList v-if="socialFilter?.tags.length" :tags="socialFilter.tags" />
