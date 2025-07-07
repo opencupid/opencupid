@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import '@/css/landing.scss'
 
 import { ref } from 'vue'
 

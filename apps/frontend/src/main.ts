@@ -1,7 +1,14 @@
 import { createApp } from 'vue'
-import Landing from '@/features/landingpage/views/LandingPage.vue'
+import '@/css/landing.scss'
 
-// Trigger preload of full app (router + App.vue)
-import('./app')
+if (window.location.pathname === '/') {
+  import('@/features/landingpage/views/LandingPage.vue').then(({ default: Landing }) => {
+    createApp(Landing).mount('#app')
+    // Preload full app silently in background
+    // import('./app')
+  })
+} else {
+  import('./app').then(({ bootstrapApp }) => bootstrapApp())
+}
 
-createApp(Landing).mount('#app')
+
