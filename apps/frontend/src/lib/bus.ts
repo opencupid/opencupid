@@ -1,5 +1,4 @@
 import mitt from 'mitt'
-import type { JwtPayload } from '@zod/user/user.dto'
 import type { WSEvents } from '@/types/wsBusEvents'
 import type { MessageDTO } from '@zod/messaging/messaging.dto'
 

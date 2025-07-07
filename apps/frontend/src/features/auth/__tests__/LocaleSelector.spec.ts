@@ -12,7 +12,7 @@ vi.mock('@/store/i18nStore', () => ({
   })
 }))
 
-import LocaleSelector from '../components/LocaleSelector.vue'
+import LocaleSelector from '../../shared/ui/LocaleSelector.vue'
 
 describe('LocaleSelector', () => {
   it('emits selected locale when clicked', async () => {

@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import { useI18nStore } from '@/store/i18nStore'
-import { useI18n } from 'vue-i18n'
 
 const i18nStore = useI18nStore()
-const { t } = useI18n()
 
 defineEmits<{
   (e: 'language:select', lang: string): void

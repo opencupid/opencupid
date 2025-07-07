@@ -1,11 +1,17 @@
 import { createApp } from 'vue'
 import '@/css/landing.scss'
+import { createPinia } from 'pinia'
+import { appUseI18n } from './lib/i18n'
 
 if (window.location.pathname === '/') {
   import('@/features/landingpage/views/LandingPage.vue').then(({ default: Landing }) => {
-    createApp(Landing).mount('#app')
+    const app = createApp(Landing)
+    app.use(createPinia())
+    appUseI18n(app)
+
+    app.mount('#app')
     // Preload full app silently in background
-    // import('./app')
+    import('./app')
   })
 } else {
   import('./app').then(({ bootstrapApp }) => bootstrapApp())

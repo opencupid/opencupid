@@ -7,7 +7,7 @@ import { type LoginUser } from '@zod/user/user.dto'
 import { useI18nStore } from '@/store/i18nStore'
 import { useAuthStore } from '../stores/authStore'
 import AuthIdComponent from '../components/AuthIdComponent.vue'
-import LocaleSelector from '../components/LocaleSelector.vue'
+import LocaleSelector from '../../shared/ui/LocaleSelector.vue'
 
 import ErrorComponent from '@/features/shared/ui/ErrorComponent.vue'
 import LogoComponent from '../components/LogoComponent.vue'
