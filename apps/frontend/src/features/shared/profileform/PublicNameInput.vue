@@ -24,7 +24,10 @@ const model = defineModel<string>({
     >
     </BInput>
     <!-- public name hint  -->
-    <p class="form-text text-muted">First name only please.</p>
+    <p class="form-text text-muted">
+      <!-- First name only please. -->
+      {{ t('profiles.forms.publicname_hint') }}
+    </p>
     <BFormInvalidFeedback>{{ t('profiles.forms.name_invalid') }}</BFormInvalidFeedback>
   </BFormFloatingLabel>
 </template>

@@ -18,6 +18,7 @@ const editState = defineModel<boolean>({
       key="edit"
       @click="editState = false"
       variant="success"
+      :title="$t('profiles.forms.save_changes_hint')"
     >
       <IconTick class="svg-icon me-1" />
     </BButton>
@@ -28,6 +29,7 @@ const editState = defineModel<boolean>({
       key="save"
       @click="editState = true"
       variant="primary"
+      :title="$t('profiles.forms.edit_button_hint')"
     >
       <FontAwesomeIcon :icon="faPenToSquare" class="animate__animated animate__fadeIn" />
       <!-- <IconPencil2 class="svg-icon-lg" /> -->

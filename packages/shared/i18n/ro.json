@@ -68,11 +68,15 @@
     "otp_invalid_feedback": "Codul trebuie să fie de 6 cifre",
     "email": "E-mailul",
     "phone_number": "Număr de telefon",
-    "password": "Parola"
+    "password": "Parola",
+    "captcha_success": "Bineînțeles! Îmi pare rău că întreb.",
+    "captcha_refresh": "Încearcă din nou",
+    "captcha_error": "Ceva se întâmplă, încercați din nou?",
+    "captcha_verify": "Să verificăm",
+    "captcha_verifying": "Așteptați o secundă..."
   },
   "nav": {
     "home": "Acasă",
-    "onboarding": "Înregistrare",
     "profile": "Profiluri",
     "browse": "Naviga",
     "matches": "Meciuri",
@@ -207,15 +211,7 @@
     "no_messages_placeholder": "Conversațiile dvs. vor avea loc aici."
   },
   "onboarding": {
-    "name_title": "Bună ziua!",
     "country_placeholder": "Țara",
-    "steps": {
-      "age_legend": "M-am născut...",
-      "gender_legend": "Mă identific ca...",
-      "situation_legend": "Situația mea",
-      "intro_find_legend": "Aș dori să găsesc:",
-      "intro_find_placeholder": "Dă-le oamenilor o idee despre cine cauți."
-    },
     "goals": {
       "socializing": "Socializarea, petrecerea timpului liber, călătoria și întâlnirea cu oameni noi",
       "dating": "Întâlniri, găsirea unui partener și explorarea relațiilor romantice."
@@ -224,8 +220,42 @@
       "all_set": "Toate pregătite!",
       "appear_message": "Vei apărea acum oamenilor care caută aceleași lucruri ca tine. Puteți oricând să modificați aceste informații mai târziu.",
       "next": "Următor →",
-      "hint_click_next": "Faceți clic pe Următorul"
-    }
+      "finish": "Finisează",
+      "cancel": "Nu-ți pasă"
+    },
+    "welcome_title": "Bine ați venit la {siteName}!",
+    "welcome_subtitle": "Să vă configurăm astfel încât să puteți începe să întâlniți oameni.",
+    "location_title": "Sunt din...",
+    "location_subtitle": "Unde îmi petrec timpul în aceste zile pe frumoasa noastră planetă.",
+    "connections_title": "Caut...",
+    "connections_subtitle": "Mă simt complet, dar aș putea folosi o companie.",
+    "interests_title": "Sunt interesat de...",
+    "interests_subtitle": "Selectează-ți interesele pentru a-i ajuta pe ceilalți să te găsească.",
+    "languages_title": "Eu vorbesc...",
+    "languages_subtitle": "Selectați limbile pe care le vorbiți pentru a-i ajuta pe ceilalți să se conecteze cu dvs.",
+    "social_intro_title": "Despre mine...",
+    "social_intro_subtitle": "Spune un pic despre tine pentru a-i ajuta pe ceilalți să te cunoască.",
+    "social_intro_placeholder": "Spune un pic despre tine",
+    "photos_title": "Arăt ca...",
+    "photos_subtitle": "Adaugă o fotografie cu tine, astfel încât alții să te poată vedea.",
+    "age_title": "M-am născut...",
+    "age_subtitle": "Am fost pe această planetă de atunci",
+    "gender_subtitle": "Mă identific ca...",
+    "relationship_title": "Eu sunt...",
+    "relationship_subtitle": "Situația familiei mele este",
+    "dating_intro_title": "Aș dori să găsesc:",
+    "dating_intro_subtitle": "Acest lucru va fi vizibil doar pentru persoanele care caută o relație, nu pentru cei care caută doar prieteni sau conexiuni sociale.",
+    "dating_intro_placeholder": "Spuneți puțin despre tipul de relație pe care îl căutați",
+    "confirmation": {
+      "title": "Toate pregătite!",
+      "profile_hint": "Vezi ce văd ceilalți despre mine.",
+      "profile_button": "Profilul meu",
+      "browse_hint": "Vezi cine mai este aici",
+      "browse_button": "Întâlnește oameni"
+    },
+    "next_button": "Următor →",
+    "back_button": "Înapoi",
+    "finish_button": "Finisează"
   },
   "settings": {
     "title": "Setări",

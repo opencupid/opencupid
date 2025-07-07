@@ -68,11 +68,15 @@
     "otp_invalid_feedback": "Kod powinien mieć 6 cyfr",
     "email": "Poczta e-mail",
     "phone_number": "Numer telefonu",
-    "password": "Hasło"
+    "password": "Hasło",
+    "captcha_success": "Oczywiście! Przepraszam, że pytam.",
+    "captcha_refresh": "Spróbuj ponownie",
+    "captcha_error": "Coś się dzieje, spróbuj jeszcze raz?",
+    "captcha_verify": "Sprawdźmy",
+    "captcha_verifying": "Poczekaj chwilę..."
   },
   "nav": {
     "home": "Strona główna",
-    "onboarding": "Wdrażanie",
     "profile": "Profil",
     "browse": "rozglądać się",
     "matches": "Mecze",
@@ -207,15 +211,7 @@
     "no_messages_placeholder": "Twoje rozmowy będą odbywać się tutaj."
   },
   "onboarding": {
-    "name_title": "Cześć!",
     "country_placeholder": "Kraj",
-    "steps": {
-      "age_legend": "Urodziłem się...",
-      "gender_legend": "Identyfikuję się jako...",
-      "situation_legend": "Moja sytuacja",
-      "intro_find_legend": "Chciałbym znaleźć:",
-      "intro_find_placeholder": "Daj ludziom pomysł, kogo szukasz."
-    },
     "goals": {
       "socializing": "Kontakty towarzyskie, spędzanie czasu, podróżowanie, i poznawanie nowych ludzi",
       "dating": "Randki, znalezienie partnera, i odkrywanie romantycznych związków."
@@ -224,8 +220,42 @@
       "all_set": "Wszystko gotowe!",
       "appear_message": "Pojawisz się teraz ludziom, którzy szukają tych samych rzeczy co Ty. Zawsze możesz zmienić te informacje później.",
       "next": "Kolejny",
-      "hint_click_next": "Kliknij Dalej"
-    }
+      "finish": "Zakończ",
+      "cancel": "Nieważne"
+    },
+    "welcome_title": "Witamy w {SiteName}!",
+    "welcome_subtitle": "Skonfigurujmy cię, abyś mógł zacząć poznawać ludzi.",
+    "location_title": "Jestem z...",
+    "location_subtitle": "Gdzie w dzisiejszych czasach spędzam czas na naszej pięknej planecie.",
+    "connections_title": "Szukam...",
+    "connections_subtitle": "Czuję się kompletny, ale przydałoby mi się jakieś towarzystwo.",
+    "interests_title": "Lubię...",
+    "interests_subtitle": "Wybierz swoje zainteresowania, aby pomóc innym Cię znaleźć.",
+    "languages_title": "Mówię...",
+    "languages_subtitle": "Wybierz języki, którymi mówisz, aby pomóc innym połączyć się z Tobą.",
+    "social_intro_title": "O mnie...",
+    "social_intro_subtitle": "Opowiedz trochę o sobie, aby pomóc innym Cię poznać.",
+    "social_intro_placeholder": "Opowiedz trochę o sobie",
+    "photos_title": "Wyglądam jak...",
+    "photos_subtitle": "Dodaj swoje zdjęcie, aby inni mogli Cię zobaczyć.",
+    "age_title": "Urodziłem się...",
+    "age_subtitle": "Od tamtej pory jestem na tej planecie",
+    "gender_subtitle": "Identyfikuję się jako...",
+    "relationship_title": "Jestem...",
+    "relationship_subtitle": "Moja sytuacja rodzinna jest",
+    "dating_intro_title": "Chciałbym znaleźć:",
+    "dating_intro_subtitle": "Będzie to widoczne tylko dla osób, które również szukają związku, nie dla tych, którzy szukają tylko przyjaciół lub kontaktów towarzyskich.",
+    "dating_intro_placeholder": "Opowiedz trochę o rodzaju związku, którego szukasz",
+    "confirmation": {
+      "title": "Wszystko gotowe!",
+      "profile_hint": "Zobacz, co inni ludzie o mnie widzą.",
+      "profile_button": "Mój profil",
+      "browse_hint": "Zobacz, kto jeszcze jest tutaj",
+      "browse_button": "Poznaj ludzi"
+    },
+    "next_button": "Kolejny",
+    "back_button": "Wstecz",
+    "finish_button": "Zakończ"
   },
   "settings": {
     "title": "Ustawienia",

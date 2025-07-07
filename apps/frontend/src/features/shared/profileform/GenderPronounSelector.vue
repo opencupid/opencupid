@@ -7,6 +7,7 @@ import { useI18n } from 'vue-i18n'
 import { useEnumOptions } from '../composables/useEnumOptions'
 import PronounSelector from './PronounSelector.vue'
 import GenderSelector from './GenderSelector.vue'
+import GenderSelectorTitle from '@/features/shared/ui/GenderSelectorTitle.vue'
 
 // i18n
 const { t } = useI18n()
@@ -49,7 +50,6 @@ const pronouns = computed({
 
 const { genderOptions, pronounsOptions } = useEnumOptions(t)
 
-
 const allGenderOptions = genderOptions().filter(
   o => o.value !== 'unspecified'
 ) as MultiselectOption[]
@@ -72,7 +72,6 @@ const showPronouns = computed(() => {
 </script>
 <template>
   <div>
-
     <GenderSelector :sortedOptions="sortedOptions" v-model="gender" />
     <BButton
       v-if="!showAll"
@@ -89,6 +88,4 @@ const showPronouns = computed(() => {
   </div>
 </template>
 
-<style lang="scss" scoped>
-
-</style>
+<style lang="scss" scoped></style>

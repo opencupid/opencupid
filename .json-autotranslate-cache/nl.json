@@ -68,11 +68,15 @@
     "otp_invalid_feedback": "De code moet uit 6 cijfers bestaan",
     "email": "Email",
     "phone_number": "Telefoonnummer",
-    "password": "Wachtwoord"
+    "password": "Wachtwoord",
+    "captcha_success": "Natuurlijk! Sorry dat ik het vraag.",
+    "captcha_refresh": "Probeer het opnieuw",
+    "captcha_error": "Er is iets aan de hand, probeer het nog eens?",
+    "captcha_verify": "Laten we eens kijken",
+    "captcha_verifying": "Wacht even..."
   },
   "nav": {
     "home": "Home",
-    "onboarding": "Onboarding",
     "profile": "Profiel",
     "browse": "Blader",
     "matches": "Wedstrijden",
@@ -207,15 +211,7 @@
     "no_messages_placeholder": "Je gesprekken vinden hier plaats."
   },
   "onboarding": {
-    "name_title": "Hallo!",
     "country_placeholder": "Land",
-    "steps": {
-      "age_legend": "Ik ben geboren...",
-      "gender_legend": "Ik identificeer me als...",
-      "situation_legend": "Mijn situatie",
-      "intro_find_legend": "Ik zou graag het volgende willen vinden:",
-      "intro_find_placeholder": "Geef mensen een idee naar wie je op zoek bent."
-    },
     "goals": {
       "socializing": "Socialiseren, uitgaan, reizen en nieuwe mensen ontmoeten",
       "dating": "Daten, een partner vinden, en romantische relaties verkennen."
@@ -224,8 +220,42 @@
       "all_set": "Helemaal klaar!",
       "appear_message": "Je verschijnt nu aan mensen die op zoek zijn naar dezelfde dingen als jij. Je kunt deze informatie later altijd nog wijzigen.",
       "next": "Volgende",
-      "hint_click_next": "Klik op Volgende"
-    }
+      "finish": "Afmaken",
+      "cancel": "Maakt niet uit"
+    },
+    "welcome_title": "Welkom bij {SiteName}!",
+    "welcome_subtitle": "Laten we het voor je regelen zodat je mensen kunt gaan ontmoeten.",
+    "location_title": "Ik kom uit...",
+    "location_subtitle": "Waar ik tegenwoordig mijn tijd doorbreng op onze prachtige planeet.",
+    "connections_title": "Ik ben op zoek naar...",
+    "connections_subtitle": "Ik voel me compleet, maar kan wel wat gezelschap gebruiken.",
+    "interests_title": "Ik hou van...",
+    "interests_subtitle": "Selecteer je interesses om anderen te helpen je te vinden.",
+    "languages_title": "Ik spreek...",
+    "languages_subtitle": "Selecteer de talen die je spreekt om anderen te helpen contact met je op te nemen.",
+    "social_intro_title": "Over mij...",
+    "social_intro_subtitle": "Vertel iets over jezelf om anderen te helpen je te leren kennen.",
+    "social_intro_placeholder": "Vertel iets over jezelf",
+    "photos_title": "Ik zie eruit als...",
+    "photos_subtitle": "Voeg een foto van jezelf toe zodat anderen je kunnen zien.",
+    "age_title": "Ik ben geboren...",
+    "age_subtitle": "Ik ben sindsdien op deze planeet",
+    "gender_subtitle": "Ik identificeer me als...",
+    "relationship_title": "Ik ben...",
+    "relationship_subtitle": "Mijn gezinssituatie is",
+    "dating_intro_title": "Ik zou graag het volgende willen vinden:",
+    "dating_intro_subtitle": "Dit is ook alleen zichtbaar voor mensen die op zoek zijn naar een relatie, niet voor mensen die alleen op zoek zijn naar vrienden of sociale contacten.",
+    "dating_intro_placeholder": "Vertel iets over het soort relatie dat je zoekt",
+    "confirmation": {
+      "title": "Helemaal klaar!",
+      "profile_hint": "Kijk wat andere mensen over mij zien.",
+      "profile_button": "Mijn profiel",
+      "browse_hint": "Bekijk hier wie er nog meer is",
+      "browse_button": "Mensen ontmoeten"
+    },
+    "next_button": "Volgende",
+    "back_button": "Terug",
+    "finish_button": "Afmaken"
   },
   "settings": {
     "title": "Instellingen",

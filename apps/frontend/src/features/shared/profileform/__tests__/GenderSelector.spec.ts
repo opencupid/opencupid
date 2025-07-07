@@ -6,6 +6,7 @@ vi.mock('./composables/useEnumOptions', () => ({ useEnumOptions: () => ({
   pronounsOptions: () => [{ value: 'he', label: 'He' }]
 }) }))
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
+vi.mock('@/features/shared/ui/GenderSelectorTitle.vue')
 
 import GenderPickerComponent from '../GenderPronounSelector.vue'
 

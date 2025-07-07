@@ -60,6 +60,11 @@
     "auth_id_input_label": "E-mail vagy telefonszám",
     "auth_id_input_placeholder": "+12 34567121 vagy az e-mailed.com",
     "captcha_input_label": "Emberi lény vagyok",
+    "captcha_verify": "Ellenőrizzük",
+    "captcha_verifying": "Várj egy percet...",
+    "captcha_success": "Természetesen! Sajnálom, hogy kérdeztem.",
+    "captcha_refresh": "Próbáld újra",
+    "captcha_error": "Valami nincs rendben, próbálkozzon újra?",
     "login_confirm_welcome": "Üdvözöljük!",
     "otp_check_messages": "Ellenőrizze üzeneteit",
     "otp_sent_phone": "Küldtünk egy kis kódot a telefonszámodra, kérjük, írja be alább.",
@@ -72,7 +77,6 @@
   },
   "nav": {
     "home": "Kezdőlap",
-    "onboarding": "Bejelentkezés",
     "profile": "Profil",
     "browse": "Böngészés",
     "matches": "mérkőzések",
@@ -155,6 +159,53 @@
       }
     }
   },
+  "onboarding": {
+    "welcome_title": "Üdvözöljük a {SiteName} oldalán!",
+    "welcome_subtitle": "Állítsuk be, hogy elkezdhessen emberekkel találkozni.",
+    "location_title": "Én a... -ből jöttem.",
+    "location_subtitle": "Ahol töltöm az időmet manapság gyönyörű bolygónkon.",
+    "connections_title": "Én keresem...",
+    "connections_subtitle": "Teljesnek érzem magam, de jól jönne valami társaság.",
+    "interests_title": "Szeretem...",
+    "interests_subtitle": "Válassza ki érdeklődését, hogy segítsen másoknak megtalálni Önt.",
+    "languages_title": "Beszélek...",
+    "languages_subtitle": "Válassza ki a beszélt nyelveket, hogy segítsen másoknak kapcsolatba lépni veled.",
+    "social_intro_title": "Rólam...",
+    "social_intro_subtitle": "Meséljen egy kicsit magadról, hogy segítsen másoknak megismerni téged.",
+    "social_intro_placeholder": "Mesélj egy kicsit magadról",
+    "photos_title": "Úgy nézek ki, mint...",
+    "photos_subtitle": "Adj hozzá egy fényképet magadról, hogy mások láthassák téged.",
+    "age_title": "Én születtem...",
+    "age_subtitle": "Azóta ezen a bolygón vagyok",
+    "gender_subtitle": "Úgy azonosítom, mint...",
+    "relationship_title": "Én vagyok...",
+    "relationship_subtitle": "A családi helyzetem az",
+    "dating_intro_title": "Szeretném megtalálni:",
+    "dating_intro_subtitle": "Ez csak azok számára lesz látható, akik kapcsolatot is keresnek, nem azok számára, akik csak barátokat vagy társadalmi kapcsolatokat keresnek.",
+    "dating_intro_placeholder": "Meséljen egy kicsit arról, hogy milyen kapcsolatot keres",
+    "confirmation": {
+      "title": "Minden készen!",
+      "profile_hint": "Nézd meg, mit látnak rólam mások.",
+      "profile_button": "Saját profilom",
+      "browse_hint": "Nézze meg, ki van még itt",
+      "browse_button": "Találkozzon emberekkel"
+    },
+    "goals": {
+      "socializing": "Szocializáció, lógás, utazás és új emberekkel való találkozás",
+      "dating": "Randevú, partner megtalálása, és romantikus kapcsolatok feltárása."
+    },
+    "country_placeholder": "Ország",
+    "wizard": {
+      "all_set": "Minden készen!",
+      "appear_message": "Most olyan embereknek fogsz megjelenni, akik ugyanazokat a dolgokat keresik, mint te. Ezt az információt később bármikor megváltoztathatja.",
+      "next": "Következő",
+      "finish": "Befejez",
+      "cancel": "Nem törődjön"
+    },
+    "next_button": "Következő",
+    "back_button": "Vissza",
+    "finish_button": "Befejez"
+  },
   "matches": {
     "matches_list_title": "A mérkőzéseim",
     "you_received_like": "Megkaptál egy lájkot!",
@@ -205,27 +256,6 @@
     "no_messages_cta": "Keressen embereket, akikkel beszélgethet",
     "no_messages_title": "Még nincsenek üzenetek",
     "no_messages_placeholder": "A beszélgetései itt zajlanak."
-  },
-  "onboarding": {
-    "name_title": "Helló!",
-    "country_placeholder": "Ország",
-    "steps": {
-      "age_legend": "Én születtem...",
-      "gender_legend": "Úgy azonosítom, mint...",
-      "situation_legend": "A helyzetem",
-      "intro_find_legend": "Szeretném megtalálni:",
-      "intro_find_placeholder": "Adj ötletet az embereknek, kit keres."
-    },
-    "goals": {
-      "socializing": "Szocializáció, lógás, utazás és új emberekkel való találkozás",
-      "dating": "Randevú, partner megtalálása, és romantikus kapcsolatok feltárása."
-    },
-    "wizard": {
-      "all_set": "Minden készen!",
-      "appear_message": "Most olyan embereknek fogsz megjelenni, akik ugyanazokat a dolgokat keresik, mint te. Ezt az információt később bármikor megváltoztathatja.",
-      "next": "Következő",
-      "hint_click_next": "Kattintson a Következő gombra"
-    }
   },
   "settings": {
     "title": "Beállítások",

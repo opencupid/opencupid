@@ -7,7 +7,6 @@ import { useStepper } from '@vueuse/core'
 
 import BackButton from './BackButton.vue'
 import DatingSteps from './DatingSteps.vue'
-import HelpScribble from '@/features/shared/ui/HelpScribble.vue'
 import IconArrowRight from '@/assets/icons/arrows/arrow-right.svg'
 
 const { t } = useI18n()
@@ -52,14 +51,14 @@ const { current, isFirst, isLast, goToNext, goToPrevious, isCurrent } =
   </div>
 
   <div class="mt-3 d-flex justify-content-end align-items-center">
-    <a
+    <BButton
       v-if="!isLast"
-      href="#"
       @click="$emit('cancel')"
-      class="link-underline link-underline-opacity-0 me-4"
+      variant="link"
+      class="link-secondary"
     >
-      {{ 'Nevermind' }}
-    </a>
+      {{ t('onboarding.wizard.cancel') }}
+    </BButton>
 
     <BButton
       v-if="!isLast"
@@ -85,8 +84,4 @@ const { current, isFirst, isLast, goToNext, goToPrevious, isCurrent } =
       {{ t('onboarding.wizard.finish') }}
     </BButton>
   </div>
-
-  <!-- <div class="scribble position-absolute bottom-0 end-0 me-5 mb-2" v-if="isLast">
-      <HelpScribble :text="t('onboarding.wizard.hint_click_next')" direction="se" />
-    </div> -->
 </template>

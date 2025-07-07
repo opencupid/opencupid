@@ -76,7 +76,7 @@ function handleCaptchaUpdatePayload(payload: string) {
       <div class="mb-3">
         <BFormFloatingLabel
           floating
-          label="Email or phone number"
+          :label="t('auth.auth_id_input_label')"
           label-for="authIdInput"
           class="my-2"
           :state="null"

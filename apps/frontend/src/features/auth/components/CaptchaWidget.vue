@@ -65,6 +65,11 @@ onUnmounted(() => {
     :strings="
       JSON.stringify({
         label: t('auth.captcha_input_label'),
+        verify: t('auth.captcha_verify'),
+        verifying: t('auth.captcha_verifying'),
+        verified: t('auth.captcha_success'),
+        reload: t('auth.captcha_refresh'),
+        error: t('auth.captcha_error'),
       })
     "
   ></altcha-widget>

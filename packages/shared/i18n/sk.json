@@ -68,11 +68,15 @@
     "otp_invalid_feedback": "Kód by mal byť 6 číslic",
     "email": "E-mailom",
     "phone_number": "Telefónne číslo",
-    "password": "Heslo"
+    "password": "Heslo",
+    "captcha_success": "Samozrejme! Prepáčte, že sa pýtam.",
+    "captcha_refresh": "Skúste to znova",
+    "captcha_error": "Niečo sa deje, skúste to znova?",
+    "captcha_verify": "Poďme skontrolovať",
+    "captcha_verifying": "Počkať sekundu..."
   },
   "nav": {
     "home": "Domov",
-    "onboarding": "Vstup do prevádzky",
     "profile": "Profil",
     "browse": "prezerať",
     "matches": "Zápasy",
@@ -207,15 +211,7 @@
     "no_messages_placeholder": "Vaše rozhovory sa budú konať tu."
   },
   "onboarding": {
-    "name_title": "Dobrý deň!",
     "country_placeholder": "Krajina",
-    "steps": {
-      "age_legend": "Narodil som sa...",
-      "gender_legend": "Identifikujem sa ako...",
-      "situation_legend": "Moja situácia",
-      "intro_find_legend": "Chcel by som nájsť:",
-      "intro_find_placeholder": "Dajte ľuďom predstavu, koho hľadáte."
-    },
     "goals": {
       "socializing": "Socializácia, stretávanie, cestovanie a spoznávanie nových ľudí",
       "dating": "Zoznamka, nájdenie partnera a skúmanie romantických vzťahov."
@@ -224,8 +220,42 @@
       "all_set": "Všetko pripravené!",
       "appear_message": "Teraz sa objavíte ľuďom, ktorí hľadajú rovnaké veci ako vy. Tieto informácie môžete kedykoľvek zmeniť neskôr.",
       "next": "Ďalšie",
-      "hint_click_next": "Kliknite na tlačidlo Ďalej"
-    }
+      "finish": "Dokončiť",
+      "cancel": "Nevadí"
+    },
+    "welcome_title": "Vitajte na {SiteName}!",
+    "welcome_subtitle": "Poďme vás nastaviť, aby ste sa mohli začať stretávať s ľuďmi.",
+    "location_title": "Pochádzam z...",
+    "location_subtitle": "Kde v týchto dňoch trávim svoj čas na našej krásnej planéte.",
+    "connections_title": "Hľadám...",
+    "connections_subtitle": "Cítim sa kompletný, ale mohla by som využiť nejakú spoločnosť.",
+    "interests_title": "Zaujímam sa...",
+    "interests_subtitle": "Vyberte si svoje záujmy a pomôžte ostatným nájsť vás.",
+    "languages_title": "Hovorím...",
+    "languages_subtitle": "Vyberte jazyky, ktorými hovoríte, aby ste s vami pomohli ostatným spojiť.",
+    "social_intro_title": "O mne...",
+    "social_intro_subtitle": "Povedzte niečo o sebe, aby ste pomohli ostatným spoznať vás.",
+    "social_intro_placeholder": "Povedzte niečo o sebe",
+    "photos_title": "Vyzerám ako...",
+    "photos_subtitle": "Pridajte si fotku seba, aby vás ostatní videli.",
+    "age_title": "Narodil som sa...",
+    "age_subtitle": "Odvtedy som na tejto planéte",
+    "gender_subtitle": "Identifikujem sa ako...",
+    "relationship_title": "Som...",
+    "relationship_subtitle": "Moja rodinná situácia je",
+    "dating_intro_title": "Chcel by som nájsť:",
+    "dating_intro_subtitle": "Bude to viditeľné len pre ľudí, ktorí hľadajú vzťah, nie pre tých, ktorí hľadajú len priateľov alebo sociálne spojenia.",
+    "dating_intro_placeholder": "Povedzte trochu o druhu vzťahu, ktorý hľadáte",
+    "confirmation": {
+      "title": "Všetko pripravené!",
+      "profile_hint": "Pozrite sa, čo o mne vidia ostatní ľudia.",
+      "profile_button": "Môj profil",
+      "browse_hint": "Pozrite sa, kto je tu ešte",
+      "browse_button": "Zoznámte sa s ľuďmi"
+    },
+    "next_button": "Ďalšie",
+    "back_button": "Späť",
+    "finish_button": "Dokončiť"
   },
   "settings": {
     "title": "Nastavenia",

@@ -102,29 +102,32 @@ onMounted(async () => {
         <ErrorComponent v-if="error" :error="error" />
         <div v-else>
           <!-- onboarding wizard finish title -->
-          <ViewTitle :icon="IconOkHand" :title="'Done!'" class="text-primary" />
+          <ViewTitle :icon="IconOkHand"   class="text-primary mb-5" >
+            {{ t('onboarding.confirmation.title') }}
+          </ViewTitle>
 
           <div v-if="!profileStore.isLoading" class="d-flex flex-column gap-3">
             <div class="mb-4 d-flex flex-column align-items-center">
               <p class="wizard-step-subtitle">
-                <!-- onboarding wizard finish browse profiles button hint -->
-                See who else is on here
+                <!-- See who else is on here -->
+                {{ t('onboarding.confirmation.browse_hint') }}
               </p>
               <BButton @click="handleGoToBrowse" variant="success" size="lg" pill>
-                <!-- onboarding wizard finish browse profiles button label -->
-
-                Meet people
+                <!-- Meet people -->
+                {{ t('onboarding.confirmation.browse_button') }}
               </BButton>
             </div>
             <div class="d-flex flex-column align-items-center">
               <p class="wizard-step-subtitle">
-                <!-- onboarding wizard finish My profile button hint -->
-                See what other people see about me.
+                <!-- See what other people see about me. -->
+                {{ t('onboarding.confirmation.profile_hint') }}
               </p>
               <BButton @click="handleGoToProfile" variant="primary" size="lg" pill
-                >My profile</BButton
+                >
+                <!-- My profile -->
+                 {{ t('onboarding.confirmation.profile_button') }}
+                </BButton
               >
-              <!-- onboarding wizard finish My profile button label -->
             </div>
           </div>
         </div>

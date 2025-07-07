@@ -60,6 +60,11 @@
     "auth_id_input_label": "Email or phone Number",
     "auth_id_input_placeholder": "+12 34567121 or your email.com",
     "captcha_input_label": "I am a human being",
+    "captcha_verify": "Let's check",
+    "captcha_verifying": "Hang on a sec...",
+    "captcha_success": "Of course!  Sorry for asking.",
+    "captcha_refresh": "Try again",
+    "captcha_error": "Something is up, try again?",
     "login_confirm_welcome": "Welcome!",
     "otp_check_messages": "Check your messages",
     "otp_sent_phone": "We have sent you a little code to your phone number, please enter it below.",
@@ -72,7 +77,6 @@
   },
   "nav": {
     "home": "Home",
-    "onboarding": "Onboarding",
     "profile": "Profile",
     "browse": "Browse",
     "matches": "Matches",
@@ -155,6 +159,60 @@
       }
     }
   },
+  "onboarding": {
+    "welcome_title": "Welcome to {siteName}!",
+    "welcome_subtitle": "Let's get you set up so you can start meeting people.",
+    "location_title": "I'm from...",
+    "location_subtitle": "Where I spend my time these days on our beautiful planet.",
+    "connections_title": "I am looking for...",
+    "connections_subtitle": "I feel complete but could use some company.",
+    "interests_title": "I'm into...",
+    "interests_subtitle": "Select your interests to help others find you.",
+    "languages_title": "I speak...",
+    "languages_subtitle": "Select the languages you speak to help others connect with you.",
+    "social_intro_title": "About me...",
+    "social_intro_subtitle": "Tell a bit about yourself to help others get to know you.",
+    "social_intro_placeholder": "Tell a bit about yourself",
+    "photos_title": "I look like...",
+    "photos_subtitle": "Add a photo of yourself so others can see you.",
+
+    "age_title": "I was born...",
+    "age_subtitle": "I've been on this planet since",
+
+    "gender_subtitle": "I identify as...",
+    "relationship_title": "I am...",
+    "relationship_subtitle": "My family situation is",
+
+    "dating_intro_title": "I would like to find:",
+    "dating_intro_subtitle": "This will be visible only to people who are looking for a relationship as well, not to those who are just looking for friends or social connections.",
+    "dating_intro_placeholder": "Tell a bit about the kind of relationship you are looking for",
+
+    "confirmation": {
+      "title": "All set!",
+      "profile_hint": "See what other people see about me.",
+      "profile_button": "My profile",
+
+      "browse_hint": "See who else is on here",
+      "browse_button": "Meet people"
+    },
+
+    "goals": {
+      "socializing": "Socializing, hanging out, traveling, and meeting new people",
+      "dating": "Dating, finding a partner, and exploring romantic relationships."
+    },
+    "country_placeholder": "Country",
+    "wizard": {
+      "all_set": "All set!",
+      "appear_message": "You will now appear to people who are looking for the same things as you. You can always change this info later.",
+      "next": "Next",
+      "finish": "Finish",
+      "cancel": "Nevermind"
+    },
+
+    "next_button": "Next",
+    "back_button": "Back",
+    "finish_button": "Finish"
+  },
   "matches": {
     "matches_list_title": "My matches",
     "you_received_like": "You received a like!",
@@ -205,27 +263,6 @@
     "no_messages_cta": "Find people to talk to",
     "no_messages_title": "No messages yet",
     "no_messages_placeholder": "Your conversations will take place here."
-  },
-  "onboarding": {
-    "name_title": "Hello!",
-    "country_placeholder": "Country",
-    "steps": {
-      "age_legend": "I was born...",
-      "gender_legend": "I identify as...",
-      "situation_legend": "My situation",
-      "intro_find_legend": "I would like to find:",
-      "intro_find_placeholder": "Give people an idea who you're after."
-    },
-    "goals": {
-      "socializing": "Socializing, hanging out, traveling, and meeting new people",
-      "dating": "Dating, finding a partner, and exploring romantic relationships."
-    },
-    "wizard": {
-      "all_set": "All set!",
-      "appear_message": "You will now appear to people who are looking for the same things as you. You can always change this info later.",
-      "next": "Next",
-      "hint_click_next": "Click Next"
-    }
   },
   "settings": {
     "title": "Settings",

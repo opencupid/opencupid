@@ -53,6 +53,8 @@ const handleSubmit = () => {
     handleNext()
   }
 }
+
+const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
 </script>
 
 <template>
@@ -66,45 +68,56 @@ const handleSubmit = () => {
         <fieldset v-if="isCurrent('publicname')" class="w-100">
           <div
             class="d-flex align-items-center justify-content-center text-success w-100 mb-4 animate__animated animate__fadeIn"
-           style="height:10rem; width:10rem;">
+            style="height: 10rem; width: 10rem"
+          >
             <IconSun class="svg-icon-100 opacity-50" />
           </div>
 
-          <!-- onboarding intro title -->
-          <legend>Welcome to Gaians.net.</legend>
+          <legend>
+            <!-- Welcome to {siteName}. -->
+            {{ t('onboarding.welcome_title', { siteName: siteName }) }}
+          </legend>
           <p class="wizard-step-subtitle">
-            <!-- onboarding intro text -->
-            Let's walk through a few steps to set up your profile.
+            <!-- Let's walk through a few steps to set up your profile. -->
+            {{ t('onboarding.welcome_subtitle') }}
           </p>
           <PublicNameInput v-model="formData.publicName" />
         </fieldset>
 
         <fieldset v-else-if="isCurrent('location')">
-          <!-- location step title -->
-          <legend>I am from...</legend>
+          <legend>
+            <!-- I am from... -->
+            {{ t('onboarding.location_title') }}
+          </legend>
           <p class="wizard-step-subtitle">
-            <!-- location step input hint -->
-            Where I spend my time these days on our beautiful planet.
+            <!-- Where I spend my time these days on our beautiful planet. -->
+            {{ t('onboarding.location_subtitle') }}
           </p>
           <LocationSelectorComponent v-model="formData.location" :geoIp="true" />
         </fieldset>
 
         <fieldset v-else-if="isCurrent('looking_for')">
           <!-- goals selector title -->
-          <legend>The connections I'm looking for...</legend>
+          <legend>
+            <!-- The connections I'm looking for... -->
+            {{ t('onboarding.connections_title') }}
+          </legend>
           <p class="wizard-step-subtitle">
             <!-- goals selector hint -->
-            I feel complete but could use some company.
+            <!-- I feel complete but could use some company. -->
+            {{ t('onboarding.connections_subtitle') }}
           </p>
           <GoalsSelector v-model="formData" />
         </fieldset>
 
         <fieldset v-else-if="isCurrent('interests')">
-          <!-- interests step title -->
-          <legend>I'm into...</legend>
+          <legend>
+            <!-- I'm into... -->
+            {{ t('onboarding.interests_title') }}
+          </legend>
           <p class="wizard-step-subtitle">
-            <!-- interests step input hint -->
-            Select your interests to help others find you.
+            <!-- Select your interests to help others find you. -->
+            {{ t('onboarding.interests_subtitle') }}
           </p>
           <TagSelectComponent
             v-model="formData.tags"
@@ -115,35 +128,41 @@ const handleSubmit = () => {
         </fieldset>
 
         <fieldset v-else-if="isCurrent('languages')">
-          <!-- languages step title -->
-          <legend>I speak...</legend>
+          <legend>
+            <!-- I speak... -->
+            {{ t('onboarding.languages_title') }}
+          </legend>
           <p class="wizard-step-subtitle">
-            <!-- languages step input hint -->
-            Select the languages you speak to help others connect with you.
+            <!-- Select the languages you speak to help others connect with you. -->
+            {{ t('onboarding.languages_subtitle') }}
           </p>
           <LanguageSelector v-model="formData.languages" :required="true" />
         </fieldset>
 
         <fieldset v-else-if="isCurrent('introSocial')">
-          <!-- intro social step title -->
-          <legend>About me...</legend>
+          <legend>
+            <!-- About me... -->
+            {{ t('onboarding.social_intro_title') }}
+          </legend>
           <p class="wizard-step-subtitle">
-            <!-- intro social step input hint -->
-            Write a short introduction to help others get to know you.
+            <!-- Write a short introduction to help others get to know you. -->
+            {{ t('onboarding.social_intro_subtitle') }}
           </p>
           <IntrotextEditor
             v-model="formData.introSocialLocalized"
             :languages="formData.languages"
-            placeholder="Tell a bit about yourself"
+            :placeholder="t('onboarding.social_intro_placeholder')"
           />
         </fieldset>
 
         <fieldset v-else-if="isCurrent('photos')">
-          <!-- photos step title -->
-          <legend>I look like...</legend>
+          <legend>
+            <!-- I look like... -->
+            {{ t('onboarding.photos_title') }}
+          </legend>
           <p class="wizard-step-subtitle">
-            <!-- photos step input hint -->
-            Upload a profile picture and any other images you want to share.
+            <!-- Upload a profile picture and any other images you want to share. -->
+            {{ t('onboarding.photos_subtitle') }}
           </p>
           <div class="m-4">
             <ImageEditor />
@@ -164,7 +183,10 @@ const handleSubmit = () => {
             variant="primary"
             size="lg"
             pill
-            >Next</BButton
+            >
+            <!-- Next -->
+            {{ t('onboarding.wizard.next') }}
+            </BButton
           >
         </div>
       </BForm>
