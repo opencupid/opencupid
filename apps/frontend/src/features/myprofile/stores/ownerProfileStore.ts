@@ -31,7 +31,7 @@ export type PublicProfileResponse = StoreResponse<PublicProfileWithContext> | St
 
 interface ProfileStoreState {
   profile: OwnerProfile | null
-  scopes: ProfileScope[],
+  profileScopes: ProfileScope[],
   isLoading: boolean
   error: StoreError | null
 }
@@ -39,22 +39,25 @@ interface ProfileStoreState {
 export const useOwnerProfileStore = defineStore('ownerProfile', {
   state: (): ProfileStoreState => ({
     profile: null as OwnerProfile | null,
-    scopes: [],
+    profileScopes: [],
     isLoading: false,
     error: null
   }),
 
+  getters: {
+    scopes(): ProfileScope[] {
+      return [
+        ...(this.profile?.isSocialActive ? (['social'] as const) : []),
+        ...(this.profile?.isDatingActive ? (['dating'] as const) : []),
+      ]
+    },
+  },
   actions: {
     async fetchOwnerProfile(): Promise<StoreVoidSuccess | StoreError> {
       try {
         this.isLoading = true // Set loading state
         const res = await api.get<GetMyProfileResponse>('/profiles/me')
         const fetched = OwnerProfileSchema.parse(res.data.profile)
-        this.scopes = [
-          ...(fetched.isSocialActive ? (['social'] as const) : []),
-          ...(fetched.isDatingActive ? (['dating'] as const) : []),
-        ]
-
         this.profile = fetched // Update local state
         return storeSuccess()
       } catch (error: any) {

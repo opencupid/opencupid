@@ -17,6 +17,7 @@ import { useAppStore } from '@/features/app/stores/appStore'
 import { useI18nStore } from '@/store/i18nStore'
 import { useBootstrap } from '@/lib/bootstrap'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
+import { useMessageStore } from '../../messaging/stores/messageStore'
 
 const { t } = useI18n()
 const profileStore = useOwnerProfileStore()
@@ -64,6 +65,7 @@ const handleWizardFinish = async () => {
     error.value = res.message || 'Failed to save profile'
     return
   }
+  await useMessageStore().fetchConversations()
 }
 
 const appStore = useAppStore()
