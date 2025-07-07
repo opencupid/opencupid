@@ -184,13 +184,12 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
     try {
       const updated = await fastify.prisma.$transaction(async tx => {
 
-        const datingPrefsFragment = data.isDatingActive ? profileMatchService.createDatingPrefsDefaults(tx, data) : {}
+        const datingPrefsFragment = data.isDatingActive ? profileMatchService.createDatingPrefsDefaults(data) : {}
         const update = {
           ...data,
           ...datingPrefsFragment
         }
 
-        console.error("DEBUG - datingPrefsFragment", update)
         const updatedProfile = await profileService.updateCompleteProfile(tx, locale, req.user.userId, update)
         const profile = mapDbProfileToOwnerProfile(locale, updatedProfile)
         // Create the default social match filter for the new profile

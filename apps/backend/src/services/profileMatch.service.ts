@@ -97,9 +97,9 @@ export class ProfileMatchService {
       }
     })
   }
-  async createDatingPrefsDefaults(tx: Prisma.TransactionClient, profile: { birthday?: Date | null }) {
+  createDatingPrefsDefaults(profile: { birthday?: Date | null }) {
 
-    if (!profile.birthday) return null
+    if (!profile.birthday) return {}
     const currentYear = new Date().getFullYear()
     const age = currentYear - new Date(profile.birthday).getFullYear()
     const prefs = {
