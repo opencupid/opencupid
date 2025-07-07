@@ -1,5 +1,4 @@
 import { createApp } from 'vue'
-import '@/css/landing.scss'
 import { createPinia } from 'pinia'
 import { appUseI18n } from './lib/i18n'
 

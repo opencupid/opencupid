@@ -42,3 +42,7 @@ const handleSetLanguage = (lang: string) => {
     </div>
   </BContainer>
 </template>
+
+<style lang="scss">
+@import '@/css/landing.scss';
+</style>

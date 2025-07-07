@@ -1,8 +1,8 @@
 import './fonts.scss'
 
-import '@fontsource/nunito/index.css'
+// import '@fontsource/nunito/index.css'
 // import "@fontsource/poppins/index.css";
-import '@fontsource/rubik/index.css'
+// import '@fontsource/rubik/index.css'
 // import "@fontsource/quicksand/index.css";
 // import "@fontsource/mukta/index.css";
 
