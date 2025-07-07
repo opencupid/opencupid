@@ -97,6 +97,28 @@ export class ProfileMatchService {
       }
     })
   }
+  async createDatingPrefsDefaults(tx: Prisma.TransactionClient, profile: { birthday?: Date | null }) {
+
+    if (!profile.birthday) return null
+    const currentYear = new Date().getFullYear()
+    const age = currentYear - new Date(profile.birthday).getFullYear()
+    const prefs = {
+      prefAgeMin: age ? age - 5 : 18,
+      prefAgeMax: age ? age + 5 : 100,
+      prefGender: [],
+      prefKids: [],
+    }
+    // for now we'll just return the created preferences object.
+    return prefs
+    /*
+    // TODO this will eventually moved to its own table, then we'll upsert it from here
+    return await tx.profile.update({
+      where: { id: profile.id },
+      data: prefs,
+    })
+      */
+  }
+
 
 
   async findSocialProfilesFor(profileId: string, orderBy: OrderBy = defaultOrderBy, take: number = 20): Promise<DbProfileWithImages[]> {

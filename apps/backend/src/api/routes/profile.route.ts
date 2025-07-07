@@ -32,6 +32,7 @@ import { GetProfileSummariesResponse } from '@zod/apiResponse.dto'
 
 import { ProfileService } from 'src/services/profile.service'
 import { ProfileMatchService } from '@/services/profileMatch.service'
+import { MessageService } from '../../services/messaging.service'
 
 // Route params for ID lookups
 const IdLookupParamsSchema = z.object({
@@ -51,6 +52,7 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
   // instantiate services
   const profileService = ProfileService.getInstance()
   const profileMatchService = ProfileMatchService.getInstance()
+  const messageService = MessageService.getInstance()
 
   /**
    * Get the current user's profile
@@ -181,16 +183,36 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
 
     try {
       const updated = await fastify.prisma.$transaction(async tx => {
-        const updatedProfile = await profileService.updateCompleteProfile(tx, locale, req.user.userId, data)
+
+        const datingPrefsFragment = data.isDatingActive ? profileMatchService.createDatingPrefsDefaults(tx, data) : {}
+        const update = {
+          ...data,
+          ...datingPrefsFragment
+        }
+
+        console.error("DEBUG - datingPrefsFragment", update)
+        const updatedProfile = await profileService.updateCompleteProfile(tx, locale, req.user.userId, update)
         const profile = mapDbProfileToOwnerProfile(locale, updatedProfile)
         // Create the default social match filter for the new profile
         await profileMatchService.createSocialMatchFilter(tx, updatedProfile.id, profile.location)
+
+
         return profile
       })
       // Clear session to force re-fetch on next request, we need the roles updated
       await req.deleteSession()
       const response: UpdateProfileResponse = { success: true, profile: updated }
-      return reply.code(200).send(response)
+      reply.code(200).send(response)
+
+      // send welcome message
+      // additional try-catch to avoid breaking the profile creation flow
+      // if it blows up
+      try {
+        await messageService.sendWelcomeMessage(updated.id, req.session.lang)
+      } catch (error) {
+        fastify.log.warn('Failed to send welcome message', error)
+      }
+
     } catch (err) {
       fastify.log.error(err)
       // profileService.updateProfile() returned null, which means the profile was not found

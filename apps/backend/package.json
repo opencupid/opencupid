@@ -19,10 +19,9 @@
     "db:dump": "docker compose exec db pg_dump  --data-only --no-privileges  --disable-triggers -U appuser app",
     "db:backup": "docker compose exec db pg_dump --clean -U appuser app",
     "test": "vitest",
-    "test:integration": "vitest --config vitest.integration.config.ts"
+    "test:integration": "vitest --config vitest.integration.config.ts --mode test"
   },
-  "prisma": {
-  },
+  "prisma": {},
   "dependencies": {
     "@fastify/cors": "^11.0.1",
     "@fastify/jwt": "^9.1.0",
@@ -86,6 +85,7 @@
     "tsup": "^8.4.0",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.34.0",
+    "vite": "^6.3.5",
     "vite-tsconfig-paths": "^5.0.0",
     "vitest": "^3.2.4",
     "wscat": "^6.1.0",

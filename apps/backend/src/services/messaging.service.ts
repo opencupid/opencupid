@@ -6,6 +6,8 @@ import type {
 } from '@zod/messaging/messaging.dto'
 import { Conversation, Message } from '@zod/generated'
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
+import i18next from 'i18next'
+import { appConfig } from '../lib/appconfig'
 
 const conversationSummaryInclude = {
   conversation: {
@@ -193,127 +195,6 @@ export class MessageService {
     return existingConversation
   }
 
-
-
-  /**
-   * Initiates a new conversation between two profiles.
-   * @param senderProfileId - The profile ID of the sender (initiator).
-   * @param recipientProfileId - The profile ID of the recipient.
-   * @param content - The initial message content.
-   * @returns An object containing the created conversation and the initial message.
-   */
-  async initiateConversation(
-    senderProfileId: string,
-    recipientProfileId: string,
-    content: string
-  ): Promise<{
-    conversation: ConversationParticipantWithConversationSummary
-    message: Message
-  }> {
-    const [profileAId, profileBId] = this.sortProfilePair(senderProfileId, recipientProfileId)
-
-    const { conversationId, message } = await prisma.$transaction(
-      async (tx: Prisma.TransactionClient) => {
-        const existing = await tx.conversation.findUnique({
-          where: {
-            profileAId_profileBId: { profileAId, profileBId },
-          },
-        })
-
-        if (existing) {
-          throw new Error('Conversation already exists between these profiles')
-        }
-
-        const convo = await tx.conversation.create({
-          data: {
-            status: 'INITIATED', // start as initiated
-            initiatorProfileId: senderProfileId, // set the initiator
-            profileAId,
-            profileBId,
-            participants: {
-              create: [{ profileId: profileAId }, { profileId: profileBId }],
-            },
-          },
-        })
-
-        const message = await tx.message.create({
-          data: {
-            conversationId: convo.id,
-            senderId: senderProfileId,
-            content,
-          },
-        })
-        return { conversationId: convo.id, message }
-      }
-    )
-    const convoSummary = await this.getConversationSummary(conversationId, senderProfileId)
-    if (!convoSummary) throw new Error('Conversation not found after creation')
-    return { conversation: convoSummary, message }
-  }
-
-  /**
-   * Replies to an existing conversation.
-   * @param senderProfileId - The profile ID of the sender.
-   * @param conversationId - The ID of the conversation to reply to.
-   * @param content - The message content to send.
-   * @returns An object containing the updated conversation and the new message.
-   */
-
-  async replyInConversation(
-    senderProfileId: string,
-    conversationId: string,
-    content: string
-  ): Promise<{
-    conversation: ConversationParticipantWithConversationSummary
-    message: Message
-  }> {
-    // const [profileAId, profileBId] = this.sortProfilePair(senderProfileId, recipientProfileId)
-
-    const { conversation, message } = await prisma.$transaction(
-      async (tx: Prisma.TransactionClient) => {
-        const conversation = await tx.conversation.findUnique({
-          where: {
-            id: conversationId,
-          },
-        })
-
-        // If the conversation does not exist, throw an error.
-        if (!conversation) {
-          throw new Error('Conversation not found')
-        }
-
-        // Check if the sender is allowed to reply to this conversation.
-        if (!canSendMessageInConversation(conversation, senderProfileId)) {
-          throw new Error('Conversation is not accepted or sender cannot reply to initiated thread')
-        }
-
-        // update lastMessageAt and status
-        await tx.conversation.update({
-          where: {
-            id: conversationId,
-          },
-          data: {
-            updatedAt: new Date(),
-            status: 'ACCEPTED' // ensure status is set to ACCEPTED
-          },
-        })
-
-        const message = await tx.message.create({
-          data: {
-            conversationId: conversation.id,
-            senderId: senderProfileId,
-            content,
-          },
-        })
-        return { conversation, message }
-      }
-    )
-    const convoSummary = await this.getConversationSummary(conversation.id, senderProfileId)
-    if (!convoSummary) throw new Error('Conversation not found after creation')
-
-    return { conversation: convoSummary, message }
-  }
-
   async sendOrStartConversation(
     tx: Prisma.TransactionClient,
     senderProfileId: string,
@@ -391,6 +272,18 @@ export class MessageService {
   }
 
 
+  async sendWelcomeMessage(recipientProfileId: string, locale: string) {
+    const senderId = appConfig.WELCOME_MESSAGE_SENDER_PROFILE_ID
+    console.error('Welcome message sender ID:', senderId)
+    if (senderId) {
+      const t = i18next.getFixedT(locale)
+      const content = t('messaging.welcome_message')
+      console.error('Sending welcome message:', content)
+      return await prisma.$transaction(async tx => {
+        await this.sendOrStartConversation(tx, senderId, recipientProfileId, content)
+      })
+    }
+  }
 
   /**
    * Sorts a pair of profile IDs in a consistent order.

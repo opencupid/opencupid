@@ -1,9 +1,6 @@
 import { prisma } from '@/lib/prisma'
-import { appConfig } from '@/lib/appconfig'
 import { Prisma } from '@prisma/client'
-import i18next from 'i18next'
 
-import { MessageService } from './messaging.service'
 
 import { Profile, ProfileImage } from '@zod/generated'
 import {
@@ -50,6 +47,12 @@ export class ProfileService {
   async getProfileByUserId(userId: string): Promise<Profile | null> {
     return prisma.profile.findUnique({
       where: { userId },
+    })
+  }
+
+  async getProfileById(profileId: string): Promise<Profile | null> {
+    return prisma.profile.findUnique({
+      where: { id: profileId },
     })
   }
 
@@ -163,6 +166,7 @@ export class ProfileService {
       data: data,
     })
   }
+
 
   async upsertLocalizedProfileText(
     tx: Prisma.TransactionClient,
@@ -296,25 +300,9 @@ export class ProfileService {
         publicName: '',
       },
     })
-
-    const senderId = appConfig.WELCOME_MESSAGE_SENDER_PROFILE_ID
-    if (senderId) {
-      try {
-        const user = await prisma.user.findUnique({
-          where: { id: userId },
-          select: { language: true },
-        })
-        const t = i18next.getFixedT(user?.language || 'en')
-        const content = t('messaging.welcome_message')
-        const messageService = MessageService.getInstance()
-        await messageService.sendOrStartConversation(prisma, senderId, newProfile.id, content)
-      } catch (err) {
-        console.error('Failed to send welcome message', err)
-      }
-    }
-
     return newProfile
   }
+
 
   async blockProfile(blockingProfileId: string, blockedProfileId: string) {
     return prisma.profile.update({
