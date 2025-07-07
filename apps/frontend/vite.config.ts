@@ -26,16 +26,16 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       sourcemap: true,
       rollupOptions: {
         external: (id) => id.includes('__tests__'),
-        output: {
-          manualChunks(id) {
-            if (id.includes('features/auth')) {
-              return 'auth'
-            }
-            if (id.includes('assets/icons')) {
-              return 'icons'
-            }
-          }
-        }
+        // output: {
+        //   manualChunks(id) {
+        //     if (id.includes('features/auth')) {
+        //       return 'auth'
+        //     }
+        //     if (id.includes('assets/icons')) {
+        //       return 'icons'
+        //     }
+        //   }
+        // }
       }
     },
     esbuild: {
