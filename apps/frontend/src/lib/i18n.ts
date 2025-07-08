@@ -35,6 +35,15 @@ export function getLocale(): string {
   return localStore.getLanguage
 }
 
+export function sortLanguagesWithEnFirst(codes: string[]): string[] {
+  return codes.slice().sort((a, b) => {
+    if (a === 'en') return -1
+    if (b === 'en') return 1
+    return a.localeCompare(b)
+  })
+}
+
+
 export function appCreateI18n() {
   return createI18n({
     legacy: false,

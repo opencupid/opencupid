@@ -151,7 +151,7 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
     req: FastifyRequest,
     reply: FastifyReply,
     orderBy: OrderBy,
-    take: number = 10
+    take: number = 20
   ) => {
     if (!req.session.profile.isSocialActive) {
       return sendForbiddenError(reply)

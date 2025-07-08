@@ -44,7 +44,7 @@ const { age, gender, pronouns } = useDatingFields(profileRef, t)
         <span
           v-if="!pronouns || props.profile.pronouns === 'unspecified'"
           class="editable-placeholder"
-          >{{ $t('profile.pronouns') }}
+          >{{ $t('profiles.pronouns_edit_label') }}
         </span>
       </template>
     </EditField>

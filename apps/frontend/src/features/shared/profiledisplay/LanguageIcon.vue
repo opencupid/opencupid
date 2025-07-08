@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import CountryFlag from '@/features/shared/ui/CountryFlag.vue'
 
 const props = defineProps<{
   countryCode: string
@@ -9,7 +10,8 @@ const props = defineProps<{
 const lang = computed(() => {
   return props.countryCode == 'en' ? 'gb' : props.countryCode
 })
+
 </script>
 <template>
-  <CircleFlags :showFlagName="false" :size="size" :country="lang" title="" />
+  <CountryFlag :size="size ?? '36'" :code="lang" title="" />
 </template>

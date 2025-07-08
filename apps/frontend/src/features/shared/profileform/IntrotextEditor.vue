@@ -1,17 +1,18 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
-import { onMounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type { SpeechRecognition, SpeechRecognitionEvent } from '@/types/speechrecognition'
-import { useI18nStore } from '@/store/i18nStore'
 
 import IconMic2 from '@/assets/icons/interface/mic-2.svg'
 import IconGlobe from '@/assets/icons/interface/globe.svg'
+import { sortLanguagesWithEnFirst } from '@/lib/i18n'
 // i18n
 const { t } = useI18n()
 
-const i18nStore = useI18nStore()
+type Language = string
+type LocalizedText = Record<Language, string>
 
-const model = defineModel<Record<string, string> | null>({
+const model = defineModel<LocalizedText | null>({
   default: () => ({}),
 })
 
@@ -27,7 +28,10 @@ const lastTranscript = ref('')
 const lastConfidence = ref(0)
 const error = ref('')
 const status = ref('idle')
-const currentLanguage = ref(i18nStore.getLanguage() || 'en')
+
+const langList = computed(() => sortLanguagesWithEnFirst(props.languages))
+
+const currentLanguage = ref(langList.value[0])
 
 let recognition: SpeechRecognition | null = null
 
@@ -56,7 +60,7 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
   }
 
   recognition.onresult = (event: SpeechRecognitionEvent) => {
-    if(!model.value) return
+    if (!model.value) return
     const result = event.results[0][0]
     lastTranscript.value = result.transcript
     lastConfidence.value = result.confidence
@@ -115,9 +119,9 @@ watch(
 
 <template>
   <div class="d-flex flex-column">
-    <div class="d-flex justify-content-end align-items-center mb-3">
+    <div class="d-flex justify-content-start align-items-center mb-3">
       <ul class="nav nav-pills">
-        <li class="nav-item me-2" v-for="lang in props.languages" :key="lang">
+        <li class="nav-item me-2" v-for="lang in langList" :key="lang">
           <a
             class="nav-link"
             :class="{ active: currentLanguage === lang }"
@@ -129,7 +133,7 @@ watch(
             ><small>{{ lang }}</small></a
           >
         </li>
-        <li class="nav-item"  style="width: 1rem; height: 1rem">
+        <li class="nav-item" style="width: 1rem; height: 1rem">
           <IconGlobe class="svg-icon svg-icon-100 me-2" />
         </li>
       </ul>
@@ -150,7 +154,14 @@ watch(
       </div>
     </div>
     <div class="align-self-end">
-      <BButton variant="secondary" class="btn-icon" size="sm" @click="toggleListening">
+      <BButton
+        variant="secondary"
+        class="btn-icon"
+        size="sm"
+        @click="toggleListening"
+        disabled
+        title="Coming soon"
+      >
         <IconMic2 class="svg-icon" />
         <i class="fas fa-microphone"></i>
         <!-- {{ isListening ? t('profiles.forms.dictate_listening') : t('profiles.forms.dictate') }} -->
