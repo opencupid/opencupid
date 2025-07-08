@@ -6,10 +6,9 @@ import IconHeart from '@/assets/icons/interface/heart.svg'
 import IconDate from '@/assets/icons/app/cupid.svg'
 import IconSocialize from '@/assets/icons/app/socialize.svg'
 import IconGlobe from '@/assets/icons/interface/globe.svg'
-import LogoComponent from '@/features/shared/ui/LogoComponent.vue'
 import Logo from '@/assets/icons/app/logo.svg'
 
-// @ts-expect-error no type
+// @ts-ignore sdf
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
 
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
