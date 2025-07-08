@@ -6,6 +6,7 @@ import { useCountries } from './features/shared/composables/useCountries'
 import { useLanguages } from './features/shared/composables/useLanguages'
 
 import ViewportSizeDebug from '@/features/app/components/ViewportSizeDebug.vue'
+import { useI18n } from 'vue-i18n'
 // FIXME
 // This is a workaround to ensure the page scrolls down
 // on initial load. in order to ensure on mobile devices
@@ -18,11 +19,14 @@ import ViewportSizeDebug from '@/features/app/components/ViewportSizeDebug.vue'
 //     // window.scr 100) // fallback
 //   }, 1000)
 // })
+
+const { locale, availableLocales } = useI18n()
+
 const i18nStore = useI18nStore()
-useCountries().initialize(i18nStore.getLanguage())
-useLanguages().initialize(i18nStore.getLanguage())
+i18nStore.initialize(locale)
 
-
+useCountries().initialize(locale.value)
+useLanguages().initialize(locale.value)
 </script>
 
 <template>

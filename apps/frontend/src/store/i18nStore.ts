@@ -1,48 +1,29 @@
 import { defineStore } from "pinia";
 import { useI18n } from "vue-i18n";
-import { ref, watch } from "vue";
+import { ref, watch, type Ref } from "vue";
 import { bus } from "@/lib/bus";
 import { useLocalStore } from "@/store/localStore";
+import { labels } from "../lib/i18n";
 
-import { Settings } from 'luxon'
-Settings.defaultZone = 'Europe/Berlin'
-
-const labels: Record<string, string> = {
-  en: 'English',
-  hu: 'Magyar',
-  de: 'Deutsch',
-  fr: 'Français',
-  es: 'Español',
-  it: 'Italiano',
-  pt: 'Português',
-  sk: 'Slovenčina',
-  pl: 'Polski',
-  ro: 'Română',
-  nl: 'Nederlands',
-}
 
 
 export const useI18nStore = defineStore('i18n', () => {
 
+  function initialize(localeRef: Ref<string>) {
+    // Sync changes to localStore + vue-i18n
+    console.log('Initializing i18nStore with locale:', localeRef  )
+    watch(localeRef, (newLang) => {
+      localStore.setLanguage(newLang)
+      console.log('Language changed to:', newLang)
+    })
+  }
+
   const localStore = useLocalStore()
-  localStore.initialize()
-  const { locale, availableLocales } = useI18n()
-  const currentLanguage = ref(localStore.getLanguage)
-  if (!currentLanguage.value)
-    currentLanguage.value = getBrowserLanguage(availableLocales)
-  locale.value = currentLanguage.value
 
-  // Sync changes to localStore + vue-i18n
-  watch(currentLanguage, (newLang) => {
-    locale.value = newLang
-    // Set the locale for Luxon
-    Settings.defaultLocale = locale.value
-    localStore.setLanguage(newLang)
-    bus.emit('language:changed', { language: newLang })
-  })
-
-  function getLanguage() {
-    return currentLanguage.value
+  const currentLanguage = ref(localStore.getLanguage || 'en')
+  
+  function getCurrentLocale() {
+    return localStore.getLanguage
   }
 
   function setLanguage(lang: string) {
@@ -51,7 +32,7 @@ export const useI18nStore = defineStore('i18n', () => {
       console.error(`Unsupported language: ${lang}`)
       return
     }
-    currentLanguage.value = lang
+    bus.emit('language:changed', { language: lang })
   }
 
   function getAvailableLocales() {
@@ -65,20 +46,20 @@ export const useI18nStore = defineStore('i18n', () => {
     }))
   }
 
+  watch(currentLanguage, (newLang) => {
+    if (newLang !== localStore.getLanguage) {
+      setLanguage(newLang)
+    }
+  })
+
+
   return {
+    initialize,
     currentLanguage,
+    getCurrentLocale,
     getAvailableLocales,
     getAvailableLocalesWithLabels,
     setLanguage,
-    getLanguage,
+    getLanguage: getCurrentLocale,
   }
 })
-
-function getBrowserLanguage(availableLocales: string[]): string {
-  // TODO - handle multiple languages in navigator.languages
-  // is navigator.language always == navigator.languages[0]?
-  // const browserLanguage = navigator.language || navigator.languages[0] || 'en'
-  const browserLang = (navigator.language || 'en').split('-')[0]
-  return availableLocales.includes(browserLang) ? browserLang : 'en'
-
-}

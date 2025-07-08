@@ -15,7 +15,7 @@ defineEmits<{
       :key="locale.value"
       class="list-inline-item me-3"
     >
-      <span v-if="i18nStore.currentLanguage === locale.value" class="text-primary">{{ locale.label }}</span>
+      <span v-if="i18nStore.getCurrentLocale() === locale.value" class="text-primary">{{ locale.label }}</span>
       <a
         v-else
         class="text-decoration-none text-muted"
