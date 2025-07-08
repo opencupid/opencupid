@@ -1,21 +1,21 @@
 {
   "general": {
     "connectiontypes": {
-      "dating": "Întâlniri",
-      "socializing": "Socializare"
+      "dating": "Dating",
+      "socializing": "Socializarea"
     }
   },
   "gender": {
     "male": "Masculin",
-    "female": "Femeie",
-    "agender": "Agenți",
+    "female": "Femei",
+    "agender": "Agender",
     "androgynous": "Androgin",
-    "bigender": "bigend",
+    "bigender": "Bigender",
     "cis_man": "Bărbat cisgender",
     "cis_woman": "Femeie cisgender",
-    "genderfluid": "Fluid de gen",
+    "genderfluid": "Genderfluid",
     "genderqueer": "Genderqueer",
-    "gender_nonconforming": "Neconformitate de gen",
+    "gender_nonconforming": "Nonconformism de gen",
     "hijra": "Hijra",
     "intersex": "Intersex",
     "pangender": "Pangender",
@@ -30,22 +30,22 @@
     "unspecified": "Aș prefera să nu spun"
   },
   "pronouns": {
-    "he_him": "El/el",
-    "she_her": "Ea/ea",
-    "they_them": "Ei/ei",
-    "unspecified": "ei doresc"
+    "he_him": "El/ea",
+    "she_her": "Ea/el",
+    "they_them": "Ei/ele",
+    "unspecified": "își doresc"
   },
   "relationship": {
     "single": "Singur",
     "in_relationship": "Într-o relație",
     "married": "Căsătorit",
-    "divorced": "Divortat",
-    "widowed": "Văduv",
+    "divorced": "Divorțat",
+    "widowed": "Văduvă",
     "other": "Altele (este complicat)",
     "unspecified": "Aș prefera să nu spun"
   },
   "haskids": {
-    "yes": "da",
+    "yes": "Da",
     "no": "Nu",
     "unspecified": "Aș prefera să nu spun"
   },
@@ -55,207 +55,221 @@
     "unspecified": "Aș prefera să nu spun"
   },
   "auth": {
-    "login": "Logare",
+    "login": "Autentificare",
     "auth_id_input_empty": "Vă rugăm să introduceți adresa dvs. de e-mail sau numărul de telefon.",
     "auth_id_input_label": "E-mail sau număr de telefon",
-    "auth_id_input_placeholder": "+12 34567121 sau email.com",
-    "captcha_input_label": "Sunt o ființă umană",
-    "login_confirm_welcome": "Bine ai venit!",
-    "otp_check_messages": "Verificați-vă mesajele",
-    "otp_sent_phone": "V-am trimis un mic cod la numărul dvs. de telefon, vă rugăm să îl introduceți mai jos.",
-    "otp_sent_email": "V-am trimis un link de conectare, verificați-vă căsuța de e-mail. Dacă nu îl vedeți, vă rugăm să verificați folderul de spam.",
+    "auth_id_input_placeholder": "+12 34567121 sau adresa dvs. de e-mail.com",
+    "captcha_input_label": "Eu sunt o ființă umană",
+    "login_confirm_welcome": "Bine ați venit!",
+    "otp_check_messages": "Verifică-ți mesajele",
+    "otp_sent_phone": "Ți-am trimis un mic cod la numărul tău de telefon, te rugăm să îl introduci mai jos.",
+    "otp_sent_email": "Ți-am trimis un link de conectare, verifică-ți inbox-ul. Dacă nu îl vedeți, vă rugăm să verificați folderul de spam.",
     "otp_input_label": "Introduceți codul",
-    "otp_invalid_feedback": "Codul trebuie să fie de 6 cifre",
-    "email": "E-mailul",
+    "otp_invalid_feedback": "Codul trebuie să fie format din 6 cifre",
+    "email": "E-mail",
     "phone_number": "Număr de telefon",
-    "password": "Parola",
-    "captcha_success": "Bineînțeles! Îmi pare rău că întreb.",
-    "captcha_refresh": "Încearcă din nou",
-    "captcha_error": "Ceva se întâmplă, încercați din nou?",
+    "password": "Parolă",
+    "captcha_success": "Desigur!  Scuze pentru întrebare.",
+    "captcha_refresh": "Încercați din nou",
+    "captcha_error": "S-a întâmplat ceva, încercați din nou?",
     "captcha_verify": "Să verificăm",
-    "captcha_verifying": "Așteptați o secundă..."
+    "captcha_verifying": "Stai o secundă..."
   },
   "nav": {
     "home": "Acasă",
-    "profile": "Profiluri",
-    "browse": "Naviga",
-    "matches": "Meciuri",
+    "profile": "Profil",
+    "browse": "Răsfoiește",
+    "matches": "Potriviri",
     "inbox": "Inbox",
     "settings": "Setări"
   },
   "authentication": {
-    "login": "Logare",
-    "logout": "Deconectare"
+    "login": "Autentificare",
+    "logout": "Ieșire"
   },
   "home": {
     "welcome_title": "Bine ați venit la {siteName}!",
-    "meet_new_people": "Întâlnește oameni noi"
+    "meet_new_people": "Faceți cunoștință cu oameni noi"
   },
   "profiles": {
     "send_message_button": "Mesaj",
     "profile_photos": "Fotografiile lui {name}",
-    "no_profile_title": "Vă rugăm să completați profilul dvs.",
-    "no_profile_create": "Creați un profil",
-    "image_editor_help": "Fotografia ta aici",
+    "no_profile_title": "Vă rugăm să vă completați profilul",
+    "no_profile_create": "Crearea profilului",
+    "image_editor_help": "Fotografia dvs. aici",
     "image_upload": {
-      "title": "Adaugă o fotografie",
+      "title": "Adăugați o fotografie",
       "looks_good": "Arată bine!",
-      "add_from_phone": "Adăugarea unei fotografii de pe telefon",
-      "take_photo": "Sau faceți o fotografie cu aparatul foto",
-      "nevermind": "Nu-ți pasă"
+      "add_from_phone": "Adăugați o fotografie de pe telefon",
+      "take_photo": "Sau faceți o fotografie cu aparatul dvs. foto",
+      "nevermind": "Nevermind"
     },
     "forms": {
       "my_preferences": "Preferințele mele",
       "age_range": "Intervalul de vârstă",
       "kids_label": "Copii?",
       "relationship_label": "Eu sunt...",
-      "pronouns_label": "Se referă la mine ca...",
+      "pronouns_label": "Ei se referă la mine ca...",
       "name_label": "Numele meu este...",
       "name_invalid": "Introduceți cel puțin 3 litere",
       "more_options": "Mai multe opțiuni...",
-      "city_search_placeholder": "Caută orașe",
-      "city_add_placeholder": "Adăugați acest oraș ca oraș nou",
+      "city_search_placeholder": "Căutare orașe",
+      "city_add_placeholder": "Adăugați acest lucru ca oraș nou",
       "city_start_typing": "Începeți să tastați pentru a căuta orașul dvs.",
-      "tag_search_placeholder": "Căutare interese...",
-      "tag_add_placeholder": "Adăugați aceasta ca etichetă nouă",
+      "tag_search_placeholder": "Căutați interese...",
+      "tag_add_placeholder": "Adăugați acest lucru ca etichetă nouă",
       "dictate_listening": "Ascultând...",
-      "dictate": "Dictează",
-      "intro_placeholder": "Spune un pic despre tine",
-      "intro_who_placeholder": "Pe cine ai vrea să te întâlnești?"
+      "dictate": "Dictați",
+      "intro_placeholder": "Spune-ne câte ceva despre tine",
+      "intro_who_placeholder": "Pe cine ți-ar plăcea să întâlnești?",
+      "publicname_hint": "Numai prenumele, vă rog.",
+      "save_changes_hint": "Editare terminată",
+      "edit_button_hint": "Editează-ți informațiile"
     },
     "blocklist": {
       "title": "Utilizatori blocați",
-      "empty": "Nu aveți utilizatori blocați.",
+      "empty": "Nu aveți niciun utilizator blocat.",
       "unblock_button": "Deblocare",
-      "unblock_confirmation": "Ești sigur că vrei să deblochezi acest utilizator?",
+      "unblock_confirmation": "Sunteți sigur că doriți să deblocați acest utilizator?",
       "unblock_confirmation_yes": "Da, deblocați",
-      "unblock_confirmation_no": "Nu, rămâi blocat",
-      "dialog_title": "Blocați {nume}?",
-      "dialog_message_1": "Dacă această persoană vă deranjează, o puteți bloca. Acest lucru îi va împiedica să vă trimită mesaje sau să interacționeze cu profilul dvs. De asemenea, nu vă vor fi afișate nicăieri pe acest site, ca și cum nu ar exista niciodată.",
-      "dialog_message_2": "Nu vor primi nicio notificare că le-ați blocat.",
-      "confirmation_no": "Nu-ți pasă",
-      "confirmation_yes": "Da, blocați-le"
+      "unblock_confirmation_no": "Nu, păstrați blocat",
+      "dialog_title": "Bloc {name}?",
+      "dialog_message_1": "Dacă această persoană vă deranjează, o puteți bloca. Acest lucru o va împiedica să vă trimită mesaje sau să interacționeze cu profilul dvs. De asemenea, nu vă va fi prezentată nicăieri pe acest site, ca și cum nu ar fi existat niciodată.",
+      "dialog_message_2": "Ei nu vor primi nicio notificare că i-ați blocat.",
+      "confirmation_no": "Nevermind",
+      "confirmation_yes": "Da, blocați-le",
+      "block_confirm_message": "Nu le veți mai vedea."
     },
     "browse": {
-      "no_access_dating_title": "Propriul tău profil de dating este privat în acest moment.",
-      "no_access_dating_description": "Când alții nu te pot vedea, nu îi poți vedea - este corect. Pentru a găsi potriviri, vă rugăm să faceți public profilul dvs. de dating.",
-      "no_access_social_title": "Propriul dvs. profil social este în prezent privat.",
-      "no_access_social_description": "Când alții nu te pot vedea, nu îi poți vedea - este corect. Pentru a vedea și a întâlni alții, vă rugăm să vă faceți profilul public.",
+      "no_access_dating_title": "Profilul dvs. de dating este în prezent privat.",
+      "no_access_dating_description": "Atunci când ceilalți nu te pot vedea, nici tu nu-i poți vedea - este corect.  Pentru a găsi potriviri, vă rugăm să faceți profilul dvs. de dating public.",
+      "no_access_social_title": "Profilul dvs. social este în prezent privat.",
+      "no_access_social_description": "Când ceilalți nu te pot vedea, nici tu nu-i poți vedea - este corect.  Pentru a vedea și a cunoaște alte persoane, vă rugăm să vă faceți profilul public.",
       "cta_button_label": "Du-te la profilul meu",
-      "social_no_results": "Nu există nimeni în zona dvs. care să se potrivească preferințelor dvs., încă.",
-      "no_results_cta_title": "Această comunitate continuă să crească.",
-      "no_results_cta_description": "Vă puteți ajuta invitându-vă prietenii să se alăture. Cu cât mai mult, cu atât mai bine.",
-      "invite_button": "Invitați prieteni",
+      "social_no_results": "Nu există încă nimeni în zona ta care să corespundă preferințelor tale.",
+      "no_results_cta_title": "Această comunitate este încă în creștere.",
+      "no_results_cta_description": "Puteți ajuta invitându-vă prietenii să se alăture. Cu cât mai mulți, cu atât mai bine.",
+      "invite_button": "Invitați prietenii",
       "filters": {
-        "dialog_ok_button": "Găseşte oameni",
-        "dialog_cancel_button": "Nu-ți pasă",
+        "dialog_ok_button": "Găsiți oameni",
+        "dialog_cancel_button": "Nevermind",
         "social_title": "Caut conexiuni...",
-        "tags_label": "Interesat de...",
+        "tags_label": "Interesat în...",
         "anywhere": "Oriunde",
-        "locate_button_title": "Setat în țara mea",
-        "search_button_title_social": "Găseşte oameni",
-        "search_button_title_dating": "Găseşte oameni",
-        "age_range": "Intervalul de vârstă:"
+        "locate_button_title": "Set pentru țara mea",
+        "search_button_title_social": "Găsiți oameni",
+        "search_button_title_dating": "Găsiți oameni",
+        "age_range": "Interval de vârstă:"
       }
-    }
+    },
+    "pronouns_edit_label": "pronume"
   },
   "matches": {
     "matches_list_title": "Meciurile mele",
     "you_received_like": "Ai primit un like!",
-    "you_matched_with": "Te-ai asortat cu {name}!",
-    "received_likes": "Nu ai aprecieri. |Ai 1 like. |Ai {count} aprecieri!",
-    "received_likes_cta": "Află cine a trimis-o",
-    "no_match_no_sent_like": "Trebuie să fie cineva care îți place acolo?  ",
-    "no_match_no_sent_like_cta": "Începe să cauți",
-    "no_match_have_sent_like": "Cu siguranță vă vor plăcea înapoi.",
-    "no_match_have_sent_like_cta": "Continuă să te uiți",
+    "you_matched_with": "Te-ai împerecheat cu {numele}!",
+    "received_likes": "Nu ai niciun like.|Ai 1 like.|Ai {număr} de like-uri!",
+    "received_likes_cta": "Aflați cine a trimis-o",
+    "no_match_no_sent_like": "Trebuie să fie cineva care să îți placă acolo?  ",
+    "no_match_no_sent_like_cta": "Începeți să căutați",
+    "no_match_have_sent_like": "Cu siguranță vă vor plăcea și ei.",
+    "no_match_have_sent_like_cta": "Continuă să cauți",
     "find_button_cta": "Du-te conectează-te",
     "notifications": {
-      "you_have": "Tu ai",
-      "likes": "{count} aprecieri | {count} aprecieri",
-      "matches": "{count} meci nou | {count} meciuri noi",
+      "you_have": "Aveți",
+      "likes": "{count} place | {count} place",
+      "matches": "{count} potrivire nouă |{count} potrivire nouă",
       "and": "și"
+    },
+    "pass_confirm_dialog": {
+      "title": "Dar așteptați...",
+      "question_matched": "Te-ai împerecheat deja cu ei. Vreți cu adevărat să renunțați la potrivire?",
+      "question_liked": "Ți-au plăcut deja. Ești sigur că vrei să treci?",
+      "matched_button_yes": "Da, nepotrivit",
+      "matched_button_no": "Nu!",
+      "liked_button_yes": "Da, trece",
+      "liked_button_no": "Nu, nu trece"
     }
   },
   "interactions": {
-    "send_a_message": "Trimite un mesaj",
-    "you_messaged_them": "Le-ai trimis mesaje",
+    "send_a_message": "Trimiteți un mesaj",
+    "you_messaged_them": "Le-ai trimis mesaj",
     "you_liked_them": "Ți-au plăcut",
-    "you_matched_with_them": "Te-ai asortat cu ei",
-    "send_a_like": "Trimite-le un like. Ei nu vor ști cine a trimis-o până nu te vor plăcea înapoi.",
-    "its_a_match": "Este un meci!",
+    "you_matched_with_them": "Te-ai împerecheat cu ei",
+    "send_a_like": "Trimiteți-le un like. Aceștia nu vor ști cine le-a trimis mesajul până când nu vă vor da like înapoi.",
+    "its_a_match": "Este o potrivire!",
     "send_them_a_message": "Trimiteți {name} un mesaj",
     "cancel_button": "Poate mai târziu",
     "message_confirmation": "Frumos!",
-    "like_error": "Hopa, asta nu a funcționat. Vă rugăm să încercați din nou."
+    "like_error": "Oops, acest lucru nu a funcționat. Vă rugăm să încercați din nou."
   },
   "messaging": {
     "page_title": "Mesaje",
-    "send_message_button": "Trimite",
-    "message_input_placeholder": "Tastați mesajul dvs. aici...",
+    "send_message_button": "Trimiteți",
+    "message_input_placeholder": "Scrieți mesajul dvs. aici...",
     "new_message_notification": "{sender} a trimis un mesaj",
-    "send_message_to_user": "Trimite un mesaj către {name}",
+    "send_message_to_user": "Trimiteți un mesaj lui {name}",
     "unknown_sender": "Cineva",
     "message_input_hint": "Apăsați Enter pentru a trimite",
-    "send_failed": "Hopa, asta nu a funcționat. Vă rugăm să încercați din nou.",
-    "message_sent_success": "Mesajul a fost trimis cu succes!",
+    "send_failed": "Oops, acest lucru nu a funcționat. Vă rugăm să încercați din nou.",
+    "message_sent_success": "Mesaj trimis cu succes!",
     "my_turn": "Rândul meu",
     "their_turn": "Rândul lor",
-    "block_report_unmatch": "Blocare/raportare/dezpotrivire",
-    "block_user_ok": "Blocați {nume}",
-    "nevermind": "Nu-ți pasă",
-    "send_message_heading": "Trimite Mesaj",
+    "block_report_unmatch": "Blocare/raportare/nepotrivire",
+    "block_user_ok": "Bloc {name}",
+    "nevermind": "Nevermind",
+    "send_message_heading": "Trimite mesaj",
     "welcome_message": "Bine ați venit la Gaians!",
-    "no_messages_cta": "Găsește oameni cu care să vorbești",
-    "no_messages_title": "Niciun mesaj încă",
-    "no_messages_placeholder": "Conversațiile dvs. vor avea loc aici."
+    "no_messages_cta": "Găsiți oameni cu care să vorbiți",
+    "no_messages_title": "Încă nu există mesaje",
+    "no_messages_placeholder": "Conversațiile tale vor avea loc aici."
   },
   "onboarding": {
     "country_placeholder": "Țara",
     "goals": {
-      "socializing": "Socializarea, petrecerea timpului liber, călătoria și întâlnirea cu oameni noi",
-      "dating": "Întâlniri, găsirea unui partener și explorarea relațiilor romantice."
+      "socializing": "Să socializez, să ies, să călătoresc și să cunosc oameni noi",
+      "dating": "Dating, găsirea unui partener și explorarea relațiilor romantice."
     },
     "wizard": {
-      "all_set": "Toate pregătite!",
-      "appear_message": "Vei apărea acum oamenilor care caută aceleași lucruri ca tine. Puteți oricând să modificați aceste informații mai târziu.",
-      "next": "Următor →",
-      "finish": "Finisează",
-      "cancel": "Nu-ți pasă"
+      "all_set": "Totul este pregătit!",
+      "appear_message": "Acum veți apărea în fața persoanelor care caută aceleași lucruri ca dumneavoastră. Puteți schimba oricând aceste informații mai târziu.",
+      "next": "Următorul",
+      "finish": "Terminare",
+      "cancel": "Nevermind"
     },
     "welcome_title": "Bine ați venit la {siteName}!",
-    "welcome_subtitle": "Să vă configurăm astfel încât să puteți începe să întâlniți oameni.",
-    "location_title": "Sunt din...",
+    "welcome_subtitle": "Hai să te pregătim ca să poți începe să cunoști oameni.",
+    "location_title": "Eu sunt din...",
     "location_subtitle": "Unde îmi petrec timpul în aceste zile pe frumoasa noastră planetă.",
     "connections_title": "Caut...",
-    "connections_subtitle": "Mă simt complet, dar aș putea folosi o companie.",
-    "interests_title": "Sunt interesat de...",
+    "connections_subtitle": "Mă simt completă, dar aș avea nevoie de companie.",
+    "interests_title": "Sunt în...",
     "interests_subtitle": "Selectează-ți interesele pentru a-i ajuta pe ceilalți să te găsească.",
     "languages_title": "Eu vorbesc...",
-    "languages_subtitle": "Selectați limbile pe care le vorbiți pentru a-i ajuta pe ceilalți să se conecteze cu dvs.",
+    "languages_subtitle": "Selectați limbile pe care le vorbiți pentru a-i ajuta pe ceilalți să vă contacteze.",
     "social_intro_title": "Despre mine...",
-    "social_intro_subtitle": "Spune un pic despre tine pentru a-i ajuta pe ceilalți să te cunoască.",
-    "social_intro_placeholder": "Spune un pic despre tine",
+    "social_intro_subtitle": "Spuneți câte ceva despre dvs. pentru a-i ajuta pe ceilalți să vă cunoască.",
+    "social_intro_placeholder": "Spune-ne câte ceva despre tine",
     "photos_title": "Arăt ca...",
-    "photos_subtitle": "Adaugă o fotografie cu tine, astfel încât alții să te poată vedea.",
+    "photos_subtitle": "Adăugați o fotografie cu dvs., astfel încât ceilalți să vă poată vedea.",
     "age_title": "M-am născut...",
-    "age_subtitle": "Am fost pe această planetă de atunci",
+    "age_subtitle": "Sunt pe această planetă de când",
     "gender_subtitle": "Mă identific ca...",
     "relationship_title": "Eu sunt...",
-    "relationship_subtitle": "Situația familiei mele este",
+    "relationship_subtitle": "Situația mea familială este următoarea",
     "dating_intro_title": "Aș dori să găsesc:",
-    "dating_intro_subtitle": "Acest lucru va fi vizibil doar pentru persoanele care caută o relație, nu pentru cei care caută doar prieteni sau conexiuni sociale.",
-    "dating_intro_placeholder": "Spuneți puțin despre tipul de relație pe care îl căutați",
+    "dating_intro_subtitle": "Acest lucru va fi vizibil doar pentru persoanele care caută și o relație, nu și pentru cele care caută doar prieteni sau conexiuni sociale.",
+    "dating_intro_placeholder": "Spuneți-ne câte ceva despre tipul de relație pe care îl căutați",
     "confirmation": {
-      "title": "Toate pregătite!",
-      "profile_hint": "Vezi ce văd ceilalți despre mine.",
+      "title": "Totul este pregătit!",
+      "profile_hint": "Vedeți ce văd alții despre mine.",
       "profile_button": "Profilul meu",
-      "browse_hint": "Vezi cine mai este aici",
-      "browse_button": "Întâlnește oameni"
+      "browse_hint": "Vedeți cine mai este pe aici",
+      "browse_button": "Faceți cunoștință cu oamenii"
     },
-    "next_button": "Următor →",
+    "next_button": "Următorul",
     "back_button": "Înapoi",
-    "finish_button": "Finisează"
+    "finish_button": "Terminare"
   },
   "settings": {
     "title": "Setări",
@@ -265,29 +279,29 @@
   },
   "uicomponents": {
     "error": {
-      "title": "Am lovit un obstacol aici.",
+      "title": "Ne-am lovit de un obstacol aici.",
       "message": "A apărut o eroare. Vă rugăm să încercați din nou mai târziu.",
-      "retry": "Încearcă din nou",
+      "retry": "Reîncercare",
       "cancel": "Anulează"
     },
     "submitbutton": {
-      "working": "Lucrează...",
-      "submit": "Trimiteți",
+      "working": "De lucru...",
+      "submit": "Trimite",
       "save": "Salvați"
     },
     "loading": {
-      "loading": "Se încarcă..."
+      "loading": "Încărcare..."
     },
     "spinner": {
       "spinning": "Învârtire"
     },
     "modal": {
-      "close": "Închide"
+      "close": "Închidere"
     },
     "toast": {
       "success": {
         "title": "Succes",
-        "message": "Acțiunea ta a avut succes."
+        "message": "Acțiunea dvs. a avut succes."
       },
       "error": {
         "title": "Eroare",
@@ -296,21 +310,33 @@
     },
     "share_dialog": {
       "title": "Răspândiți cuvântul",
-      "description": "Invită-ți prietenii să se alăture lui Gaians și să se conecteze cu oameni asemănători.",
-      "button_copy": "Copiază",
-      "button_copied": "Copiată",
-      "qr_hint": "Flasă-l pe telefonul lor"
+      "description": "Invită-ți prietenii să se alăture Gaians și să se conecteze cu oameni care gândesc la fel.",
+      "button_copy": "Copiați",
+      "button_copied": "Copiat",
+      "qr_hint": "Afișează asta la telefonul lor"
     },
-    "dialog_cancel_button": "Nu-ți pasă"
+    "dialog_cancel_button": "Nevermind"
   },
   "emails": {
     "loginLink": {
       "subject": "Linkul dvs. de conectare",
-      "html": "<p>Hei, bine ai venit la bord!</p> <h1>{{otp}}</h1> <p>Vă rugăm să faceți clic pe acest link pentru a intra direct: Confir <a href=\"{{link}} \">mați e-mailul</a></p>"
+      "html": "<p>Bună ziua, bine ați venit la bord!</p><h1>{{otp}}</h1><p>Vă rugăm să faceți clic pe acest link pentru a intra direct în joc: <a href=\"{{link}}\">Confirm Email</a></p>"
     },
     "welcome": {
       "subject": "Bine ați venit la Gaians!",
-      "html": "<p>Hei, bine ai venit la bord!</p> <a href=\"{{link}} \">Conectează-te cu oamenii</a></p>"
+      "html": "<p>Salutare, bine ați venit la bord!</p><a href=\"{{link}}\">Go connect with people</a></p>"
     }
+  },
+  "landingpage": {
+    "title_lg": "Bine ați venit la {siteName}",
+    "title": "{siteName}",
+    "subtitle_1": "Acesta este un punct de întâlnire în domeniul online pentru a ne găsi unii pe alții și a ne conecta.",
+    "socialize_1": "Să ne conectăm în călătoriile noastre, să găsim suflete care gândesc la fel în apropiere cu care să ieșim",
+    "date_1": "Găsiți un suflet pereche sau un partener de joacă",
+    "footer_madeby": "Fabricat cu ❤️ de către Gaiani",
+    "footer_contribute": "Oricine poate contribui pe",
+    "enter_button": "Introduceți",
+    "enter_button_loading": "Stai o secundă...",
+    "select_language": "Selectați limba dvs."
   }
 }

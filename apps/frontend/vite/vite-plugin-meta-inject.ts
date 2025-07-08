@@ -7,6 +7,7 @@ export default function MetaInjectPlugin(mode: string): Plugin {
 
   const metaTags = `
     <meta property="og:title" content="${env.OG_TITLE}" />
+    <title>${env.SITE_NAME}</title>
     <meta property="og:description" content="${env.OG_DESCRIPTION}" />
     <meta property="og:image" content="${env.OG_IMAGE}" />
     <meta property="og:url" content="${env.OG_URL}" />

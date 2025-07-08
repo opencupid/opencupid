@@ -13,14 +13,15 @@ const { receivedLikesCount, haveReceivedLikes, haveNewMatches, newMatchesCount }
     v-if="haveNewMatches || haveReceivedLikes"
   >
     <div class="">
-      <span class="text-dating"><IconHeart class="svg-icon" /></span>
       {{ $t('matches.notifications.you_have') }}
       <span v-if="haveReceivedLikes">{{
         $t('matches.notifications.likes', { count: receivedLikesCount }, receivedLikesCount)
       }}</span>
+      <span>&nbsp;</span>
       <span v-if="haveNewMatches && haveReceivedLikes">
         {{ $t('matches.notifications.and') }}
       </span>
+      <span>&nbsp;</span>
       <span v-if="haveNewMatches">
         {{ $t('matches.notifications.matches', { count: newMatchesCount }, newMatchesCount) }}
       </span>

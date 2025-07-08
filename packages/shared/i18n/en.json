@@ -5,6 +5,18 @@
       "socializing": "Socializing"
     }
   },
+  "landingpage": {
+    "title_lg": "Welcome to {siteName}",
+    "title": "{siteName}",
+    "subtitle_1": "This is a meeting point in the online realm for us to find each other and connect.",
+    "socialize_1": "Connect on our travels, find like-minded souls nearby to hang out with",
+    "date_1": "Find a soulmate or playmate",
+    "footer_madeby": "Made with ❤️ by the Gaians",
+    "footer_contribute": "Anyone can contribute on",
+    "enter_button": "Enter",
+    "enter_button_loading": "Hang on a sec...",
+    "select_language": "Select your language"
+  },
   "gender": {
     "male": "Male",
     "female": "Female",
@@ -231,9 +243,18 @@
     "find_button_cta": "Go connect",
     "notifications": {
       "you_have": "You have",
-      "likes": "{count} like | {count} likes",
+      "likes": "{count} ❤️  | {count} ❤️ ",
       "matches": "{count} new match |{count} new matches",
       "and": "and"
+    },
+    "pass_confirm_dialog": {
+      "title": "But wait...",
+      "question_matched": "You already matched with them. Do you REALLY want to unmatch?",
+      "matched_button_yes": "Yes, unmatch",
+      "matched_button_no": "No!",
+      "question_liked": "You already liked them. Are you sure you want to pass?",
+      "liked_button_yes": "Yes, pass",
+      "liked_button_no": "No, don't pass"
     }
   },
   "interactions": {

@@ -31,6 +31,7 @@ import { bus } from './bus'
 export function getLocale(): string {
   const localStore = useLocalStore()
   // Ensure the store is initialized so values are loaded from localStorage
+  // neccessary for the landing page where bootstrap isn't called
   // if (!localStore.language) localStore.initialize()
   return localStore.getLanguage
 }
@@ -52,15 +53,25 @@ export function appCreateI18n() {
     messages: { en },
     missingWarn: true,
     fallbackWarn: false,
+    interpolation: {
+      escapeParameter: false,
+      // optional but explicit:
+      delimiters: ['{{', '}}'],
+    },
   })
 }
 
 async function loadMessages(language: string) {
   // Lazy-load messages only if not already loaded
+  const i18n = window.__APP_I18N__
+
+  if (i18n?.global?.messages && i18n.global.messages[language as keyof typeof i18n.global.messages]) {
+    return
+  }
+
   const messages = await messagesLoaders[language]?.()
   if (messages) {
     (window.__APP_I18N__?.global as Composer).setLocaleMessage(language, messages.default || messages)
-    console.log(`Messages for locale ${language} loaded successfully.`)
   } else {
     console.warn(`No message loader found for locale: ${language}`)
   }
@@ -69,13 +80,13 @@ async function loadMessages(language: string) {
   (window.__APP_I18N__?.global as Composer).locale.value = language
 }
 
-export function appUseI18n(app: any) {
+export async function appUseI18n(app: any) {
   const i18n = window.__APP_I18N__ || appCreateI18n()
   window.__APP_I18N__ = i18n as any
   app.use(i18n)
-  loadMessages(getLocale())
+  await loadMessages(getLocale())
 
   bus.on('language:changed', async ({ language }) => {
-    loadMessages(language)
+    await loadMessages(language)
   })
 }

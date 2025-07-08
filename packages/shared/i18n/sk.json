@@ -2,287 +2,301 @@
   "general": {
     "connectiontypes": {
       "dating": "Zoznamka",
-      "socializing": "socializácia"
+      "socializing": "Socializácia"
     }
   },
   "gender": {
-    "male": "Muž",
-    "female": "Žena",
-    "agender": "Agendant",
-    "androgynous": "Androgynny",
-    "bigender": "Dvojpohlavosť",
-    "cis_man": "Cisgender-muž",
-    "cis_woman": "Cisgenderová žena",
+    "male": "Muži",
+    "female": "Ženy",
+    "agender": "Agender",
+    "androgynous": "Androgynous",
+    "bigender": "Bigender",
+    "cis_man": "Cisgender muž",
+    "cis_woman": "Cisgender žena",
     "genderfluid": "Genderfluid",
     "genderqueer": "Genderqueer",
-    "gender_nonconforming": "Nezodpovedajúci pohlaviu",
-    "hijra": "Hidžra",
+    "gender_nonconforming": "Rodovo nekonformné",
+    "hijra": "Hijra",
     "intersex": "Intersex",
-    "pangender": "Pánder",
-    "transfeminine": "Transfeminizmus",
+    "pangender": "Pangender",
+    "transfeminine": "Transfeminizácia",
     "trans_man": "Trans muž",
-    "transmasculine": "Transmaskulín",
+    "transmasculine": "Transmaskulínny",
     "transsexual": "Transsexuál",
     "trans_woman": "Trans žena",
-    "two_spirit": "Dvojduchov",
+    "two_spirit": "Dva duchovia",
     "non_binary": "Nebinárne",
-    "other": "Ostatné",
-    "unspecified": "Radšej by som nehovoril"
+    "other": "Iné",
+    "unspecified": "Radšej by som to nehovoril"
   },
   "pronouns": {
-    "he_him": "On/on",
-    "she_her": "Ona/jej",
-    "they_them": "On/oni",
-    "unspecified": "chcú"
+    "he_him": "On/ona",
+    "she_her": "Ona/ona",
+    "they_them": "Oni/oni",
+    "unspecified": "si želajú"
   },
   "relationship": {
     "single": "Single",
     "in_relationship": "Vo vzťahu",
-    "married": "ženatý",
+    "married": "Manželstvo",
     "divorced": "Rozvedený",
-    "widowed": "Ovdovený",
-    "other": "Iné (je to komplikované)",
-    "unspecified": "Radšej by som nehovoril"
+    "widowed": "Ovdovelé",
+    "other": "Iné (je to zložité)",
+    "unspecified": "Radšej by som to nehovoril"
   },
   "haskids": {
     "yes": "Áno",
     "no": "Nie",
-    "unspecified": "Radšej by som nehovoril"
+    "unspecified": "Radšej by som to nehovoril"
   },
   "haskids_label": {
     "yes": "Má deti",
     "no": "Žiadne deti",
-    "unspecified": "Radšej by som nehovoril"
+    "unspecified": "Radšej by som to nehovoril"
   },
   "auth": {
-    "login": "Prihlásiť sa",
-    "auth_id_input_empty": "Zadajte prosím svoju e-mailovú adresu alebo telefónne číslo.",
+    "login": "Prihlásenie",
+    "auth_id_input_empty": "Zadajte svoju e-mailovú adresu alebo telefónne číslo.",
     "auth_id_input_label": "E-mail alebo telefónne číslo",
-    "auth_id_input_placeholder": "+12 34567121 alebo váš email.com",
+    "auth_id_input_placeholder": "+12 34567121 alebo váš e-mail.com",
     "captcha_input_label": "Som ľudská bytosť",
     "login_confirm_welcome": "Vitajte!",
-    "otp_check_messages": "Skontrolujte svoje správy",
-    "otp_sent_phone": "Poslali sme vám malý kód na vaše telefónne číslo, zadajte ho nižšie.",
-    "otp_sent_email": "Poslali sme vám prihlasovací odkaz, skontrolujte si doručenú poštu. Ak ho nevidíte, skontrolujte si priečinok so spamom.",
+    "otp_check_messages": "Kontrola správ",
+    "otp_sent_phone": "Na vaše telefónne číslo sme vám poslali malý kód, ktorý zadajte nižšie.",
+    "otp_sent_email": "Poslali sme vám odkaz na prihlásenie, skontrolujte si doručenú poštu. Ak ho nevidíte, skontrolujte priečinok so spamom.",
     "otp_input_label": "Zadajte kód",
-    "otp_invalid_feedback": "Kód by mal byť 6 číslic",
-    "email": "E-mailom",
+    "otp_invalid_feedback": "Kód by mal mať 6 číslic",
+    "email": "E-mail",
     "phone_number": "Telefónne číslo",
     "password": "Heslo",
-    "captcha_success": "Samozrejme! Prepáčte, že sa pýtam.",
+    "captcha_success": "Samozrejme!  Ospravedlňujem sa za otázku.",
     "captcha_refresh": "Skúste to znova",
     "captcha_error": "Niečo sa deje, skúste to znova?",
-    "captcha_verify": "Poďme skontrolovať",
-    "captcha_verifying": "Počkať sekundu..."
+    "captcha_verify": "Skontrolujme",
+    "captcha_verifying": "Počkajte chvíľu..."
   },
   "nav": {
     "home": "Domov",
     "profile": "Profil",
-    "browse": "prezerať",
+    "browse": "Prehľadávať",
     "matches": "Zápasy",
     "inbox": "Doručená pošta",
     "settings": "Nastavenia"
   },
   "authentication": {
-    "login": "Prihlásiť sa",
-    "logout": "Odhlásiť"
+    "login": "Prihlásenie",
+    "logout": "Odhlásenie"
   },
   "home": {
-    "welcome_title": "Vitajte na {SiteName}!",
-    "meet_new_people": "Zoznámte sa s novými ľuďmi"
+    "welcome_title": "Vitajte na {názov stránky}!",
+    "meet_new_people": "Spoznávanie nových ľudí"
   },
   "profiles": {
     "send_message_button": "Správa",
-    "profile_photos": "Fotky používateľa {name}",
-    "no_profile_title": "Prosím vyplňte svoj profil",
+    "profile_photos": "{meno}'s photos",
+    "no_profile_title": "Vyplňte svoj profil",
     "no_profile_create": "Vytvoriť profil",
-    "image_editor_help": "Vaša fotka tu",
+    "image_editor_help": "Vaša fotografia tu",
     "image_upload": {
       "title": "Pridať fotografiu",
-      "looks_good": "Vyzerá dobre!",
+      "looks_good": "Vyzerá to dobre!",
       "add_from_phone": "Pridanie fotografie z telefónu",
-      "take_photo": "Alebo urobte fotografiu pomocou fotoaparátu",
-      "nevermind": "Nevadí"
+      "take_photo": "Alebo sa odfoťte fotoaparátom",
+      "nevermind": "Nevermind"
     },
     "forms": {
       "my_preferences": "Moje preferencie",
       "age_range": "Vekové rozpätie",
       "kids_label": "Deti?",
       "relationship_label": "Som...",
-      "pronouns_label": "Označujú sa ma ako...",
-      "name_label": "Moje meno je...",
+      "pronouns_label": "Hovoria o mne ako o...",
+      "name_label": "Volám sa...",
       "name_invalid": "Zadajte aspoň 3 písmená",
       "more_options": "Viac možností...",
-      "city_search_placeholder": "Hľadať mestá",
-      "city_add_placeholder": "Pridajte toto ako nové mesto",
+      "city_search_placeholder": "Vyhľadávanie miest",
+      "city_add_placeholder": "Pridať toto ako nové mesto",
       "city_start_typing": "Začnite písať a vyhľadajte svoje mesto",
-      "tag_search_placeholder": "Hľadať záujmy...",
-      "tag_add_placeholder": "Pridajte túto značku ako novú značku",
+      "tag_search_placeholder": "Vyhľadávanie záujmov...",
+      "tag_add_placeholder": "Pridať to ako novú značku",
       "dictate_listening": "Počúvanie...",
-      "dictate": "Diktovať",
+      "dictate": "Diktát",
       "intro_placeholder": "Povedzte niečo o sebe",
-      "intro_who_placeholder": "S kým by ste sa chceli stretnúť?"
+      "intro_who_placeholder": "S kým by ste sa chceli stretnúť?",
+      "publicname_hint": "Prosím, len krstné meno.",
+      "save_changes_hint": "Hotové úpravy",
+      "edit_button_hint": "Upravte svoje informácie"
     },
     "blocklist": {
       "title": "Zablokovaní používatelia",
-      "empty": "Nemáte žiadnych blokovaných používateľov.",
-      "unblock_button": "Odblokovať",
+      "empty": "Nemáte žiadnych zablokovaných používateľov.",
+      "unblock_button": "Odblokovanie",
       "unblock_confirmation": "Ste si istí, že chcete odblokovať tohto používateľa?",
       "unblock_confirmation_yes": "Áno, odblokovať",
-      "unblock_confirmation_no": "Nie, zostaňte zablokovaní",
-      "dialog_title": "Blokovať {meno}?",
-      "dialog_message_1": "Ak vás táto osoba obťažuje, môžete ju zablokovať. To im zabráni v odosielaní správ alebo interakcii s vaším profilom. Taktiež sa vám nezobrazia nikde na tejto stránke, akoby nikdy neexistovali.",
-      "dialog_message_2": "Nedostanú žiadne upozornenie, že ste ich zablokovali.",
-      "confirmation_no": "Nevadí",
-      "confirmation_yes": "Áno, zablokujte ich"
+      "unblock_confirmation_no": "Nie, nechajte blokované",
+      "dialog_title": "Blokovať {názov}?",
+      "dialog_message_1": "Ak vás táto osoba obťažuje, môžete ju zablokovať. Zabránite im tak posielať vám správy alebo komunikovať s vaším profilom. Taktiež sa vám nebudú zobrazovať nikde na tejto stránke, akoby nikdy neexistovali.",
+      "dialog_message_2": "Nedostanú žiadne oznámenie o tom, že ste ich zablokovali.",
+      "confirmation_no": "Nevermind",
+      "confirmation_yes": "Áno, zablokujte ich",
+      "block_confirm_message": "Už ich neuvidíte."
     },
     "browse": {
       "no_access_dating_title": "Váš vlastný zoznamovací profil je momentálne súkromný.",
-      "no_access_dating_description": "Keď vás ostatní nevidia, nemôžete ich vidieť - je to spravodlivé. Ak chcete nájsť zhody, zverejnite svoj zoznamovací profil.",
-      "no_access_social_title": "Váš vlastný sociálny profil je momentálne súkromný.",
-      "no_access_social_description": "Keď vás ostatní nevidia, nemôžete ich vidieť - je to spravodlivé. Ak chcete vidieť a spoznať ostatných, zverejnite svoj profil.",
+      "no_access_dating_description": "Keď vás ostatní nevidia, vy nevidíte ich - je to spravodlivé.  Ak chcete nájsť zhodu, zverejnite svoj zoznamovací profil.",
+      "no_access_social_title": "Váš vlastný profil v sociálnej sieti je momentálne súkromný.",
+      "no_access_social_description": "Keď vás ostatní nevidia, vy nevidíte ich - je to spravodlivé.  Ak chcete vidieť a spoznať ostatných, zverejnite svoj profil.",
       "cta_button_label": "Prejsť na môj profil",
       "social_no_results": "Vo vašej oblasti zatiaľ nie je nikto, kto by zodpovedal vašim preferenciám.",
       "no_results_cta_title": "Táto komunita stále rastie.",
-      "no_results_cta_description": "Môžete pomôcť pozvaním svojich priateľov, aby sa pripojili. Čím viac, tým veselšie.",
-      "invite_button": "Pozvite priateľov",
+      "no_results_cta_description": "Môžete pomôcť tým, že pozvete svojich priateľov, aby sa pripojili. Čím viac, tým lepšie.",
+      "invite_button": "Pozvať priateľov",
       "filters": {
         "dialog_ok_button": "Nájsť ľudí",
-        "dialog_cancel_button": "Nevadí",
+        "dialog_cancel_button": "Nevermind",
         "social_title": "Hľadám spojenia...",
-        "tags_label": "Zaujíma vás...",
+        "tags_label": "Máte záujem o...",
         "anywhere": "Kdekoľvek",
-        "locate_button_title": "Nastaviť do mojej krajiny",
+        "locate_button_title": "Nastaviť na moju krajinu",
         "search_button_title_social": "Nájsť ľudí",
         "search_button_title_dating": "Nájsť ľudí",
-        "age_range": "Vekové rozpätie:"
+        "age_range": "Veková kategória:"
       }
-    }
+    },
+    "pronouns_edit_label": "zámená"
   },
   "matches": {
     "matches_list_title": "Moje zápasy",
-    "you_received_like": "Dostali ste lajky!",
-    "you_matched_with": "Zhodili ste sa s {name}!",
-    "received_likes": "Nemáš žiadne páči sa. Máte 1 páči sa mi. |Máte {count} páči sa vám!",
-    "received_likes_cta": "Zistite, kto ho poslal",
-    "no_match_no_sent_like": "Musí tam byť niekto, kto sa ti páči?  ",
+    "you_received_like": "Dostali ste like!",
+    "you_matched_with": "Zhodli ste sa s {meno}!",
+    "received_likes": "Nemáte žiadne lajky.|Máte 1 lajk.|Máte {počet} lajkov!",
+    "received_likes_cta": "Zistite, kto ju poslal",
+    "no_match_no_sent_like": "Musí tam byť niekto, kto sa vám páči?  ",
     "no_match_no_sent_like_cta": "Začnite hľadať",
-    "no_match_have_sent_like": "Určite sa im bude páčiť späť.",
-    "no_match_have_sent_like_cta": "Pokračujte v hľadaní",
-    "find_button_cta": "Prejsť sa pripojiť",
+    "no_match_have_sent_like": "Určite vás budú mať radi späť.",
+    "no_match_have_sent_like_cta": "Hľadajte ďalej",
+    "find_button_cta": "Prejsť na pripojenie",
     "notifications": {
       "you_have": "Máte",
-      "likes": "{count} páči sa | {count} páči sa mi",
-      "matches": "{count} nový zápas | {count} nové zápasy",
+      "likes": "{count} like | {count} likes",
+      "matches": "{count} new match |{count} new matches",
       "and": "a"
+    },
+    "pass_confirm_dialog": {
+      "title": "Ale počkajte...",
+      "question_matched": "Už ste sa s nimi dohodli. Naozaj chcete zrušiť párovanie?",
+      "question_liked": "Už ste si ich obľúbili. Ste si istý, že ich chcete odovzdať?",
+      "matched_button_yes": "Áno, nezhodujú sa",
+      "matched_button_no": "Nie!",
+      "liked_button_yes": "Áno, prejsť",
+      "liked_button_no": "Nie, neprechádzajte"
     }
   },
   "interactions": {
     "send_a_message": "Odoslať správu",
     "you_messaged_them": "Poslali ste im správu",
     "you_liked_them": "Páčili sa vám",
-    "you_matched_with_them": "Zhodili ste sa s nimi",
-    "send_a_like": "Pošlite im like. Nebudú vedieť, kto ho poslal, kým vás nebudú páčiť späť.",
+    "you_matched_with_them": "Zhodli ste sa s nimi",
+    "send_a_like": "Pošlite im like. Nebudú vedieť, kto im to poslal, kým vám to neodpíšu.",
     "its_a_match": "Je to zápas!",
-    "send_them_a_message": "Odoslať správu {name}",
+    "send_them_a_message": "Poslať {menu} správu",
     "cancel_button": "Možno neskôr",
     "message_confirmation": "Pekné!",
-    "like_error": "Ups, to nefungovalo. Prosím, skúste to znova."
+    "like_error": "Ups, toto nefungovalo. Skúste to prosím znova."
   },
   "messaging": {
     "page_title": "Správy",
     "send_message_button": "Odoslať",
-    "message_input_placeholder": "Tu napíšte svoju správu...",
-    "new_message_notification": "{sender} odoslal správu",
-    "send_message_to_user": "Odoslať správu na adresu {name}",
+    "message_input_placeholder": "Tu zadajte svoju správu...",
+    "new_message_notification": "{odosielateľ} poslal správu",
+    "send_message_to_user": "Odoslať správu na {meno}",
     "unknown_sender": "Niekto",
-    "message_input_hint": "Stlačením klávesu Enter odoslať",
-    "send_failed": "Ups, to nefungovalo. Prosím, skúste to znova.",
-    "message_sent_success": "Správa bola odoslaná úspešne!",
-    "my_turn": "Môj rad",
-    "their_turn": "Ich rad",
-    "block_report_unmatch": "Blokov/správa/nezhoda",
-    "block_user_ok": "Blokovať {názov}",
-    "nevermind": "Nevadí",
+    "message_input_hint": "Stlačením tlačidla Enter odošlete",
+    "send_failed": "Ups, toto nefungovalo. Skúste to prosím znova.",
+    "message_sent_success": "Správa bola úspešne odoslaná!",
+    "my_turn": "Som na rade",
+    "their_turn": "Na rade sú oni",
+    "block_report_unmatch": "Blokovanie/správy/nezhody",
+    "block_user_ok": "Blok {názov}",
+    "nevermind": "Nevermind",
     "send_message_heading": "Odoslať správu",
     "welcome_message": "Vitajte v Gaians!",
     "no_messages_cta": "Nájdite ľudí, s ktorými sa môžete porozprávať",
     "no_messages_title": "Zatiaľ žiadne správy",
-    "no_messages_placeholder": "Vaše rozhovory sa budú konať tu."
+    "no_messages_placeholder": "Vaše rozhovory budú prebiehať tu."
   },
   "onboarding": {
     "country_placeholder": "Krajina",
     "goals": {
-      "socializing": "Socializácia, stretávanie, cestovanie a spoznávanie nových ľudí",
-      "dating": "Zoznamka, nájdenie partnera a skúmanie romantických vzťahov."
+      "socializing": "Stretávanie sa s ľuďmi, cestovanie a spoznávanie nových ľudí",
+      "dating": "Randenie, hľadanie partnera a skúmanie romantických vzťahov."
     },
     "wizard": {
       "all_set": "Všetko pripravené!",
-      "appear_message": "Teraz sa objavíte ľuďom, ktorí hľadajú rovnaké veci ako vy. Tieto informácie môžete kedykoľvek zmeniť neskôr.",
+      "appear_message": "Teraz sa budete zobrazovať ľuďom, ktorí hľadajú rovnaké veci ako vy. Tieto informácie môžete neskôr vždy zmeniť.",
       "next": "Ďalšie",
-      "finish": "Dokončiť",
-      "cancel": "Nevadí"
+      "finish": "Dokončenie",
+      "cancel": "Nevermind"
     },
-    "welcome_title": "Vitajte na {SiteName}!",
-    "welcome_subtitle": "Poďme vás nastaviť, aby ste sa mohli začať stretávať s ľuďmi.",
-    "location_title": "Pochádzam z...",
+    "welcome_title": "Vitajte na {názov stránky}!",
+    "welcome_subtitle": "Pripravíme vás na to, aby ste sa mohli začať stretávať s ľuďmi.",
+    "location_title": "Som z...",
     "location_subtitle": "Kde v týchto dňoch trávim svoj čas na našej krásnej planéte.",
     "connections_title": "Hľadám...",
-    "connections_subtitle": "Cítim sa kompletný, ale mohla by som využiť nejakú spoločnosť.",
-    "interests_title": "Zaujímam sa...",
-    "interests_subtitle": "Vyberte si svoje záujmy a pomôžte ostatným nájsť vás.",
+    "connections_subtitle": "Cítim sa kompletný, ale potreboval by som spoločnosť.",
+    "interests_title": "Mám rád...",
+    "interests_subtitle": "Vyberte si svoje záujmy, aby vás ostatní mohli nájsť.",
     "languages_title": "Hovorím...",
-    "languages_subtitle": "Vyberte jazyky, ktorými hovoríte, aby ste s vami pomohli ostatným spojiť.",
+    "languages_subtitle": "Vyberte jazyky, ktorými hovoríte, aby ste ostatným pomohli nadviazať s vami kontakt.",
     "social_intro_title": "O mne...",
-    "social_intro_subtitle": "Povedzte niečo o sebe, aby ste pomohli ostatným spoznať vás.",
+    "social_intro_subtitle": "Povedzte niečo o sebe, aby vás ostatní lepšie spoznali.",
     "social_intro_placeholder": "Povedzte niečo o sebe",
     "photos_title": "Vyzerám ako...",
-    "photos_subtitle": "Pridajte si fotku seba, aby vás ostatní videli.",
+    "photos_subtitle": "Pridajte svoju fotografiu, aby vás mohli vidieť aj ostatní.",
     "age_title": "Narodil som sa...",
-    "age_subtitle": "Odvtedy som na tejto planéte",
+    "age_subtitle": "Som na tejto planéte od",
     "gender_subtitle": "Identifikujem sa ako...",
     "relationship_title": "Som...",
     "relationship_subtitle": "Moja rodinná situácia je",
     "dating_intro_title": "Chcel by som nájsť:",
-    "dating_intro_subtitle": "Bude to viditeľné len pre ľudí, ktorí hľadajú vzťah, nie pre tých, ktorí hľadajú len priateľov alebo sociálne spojenia.",
-    "dating_intro_placeholder": "Povedzte trochu o druhu vzťahu, ktorý hľadáte",
+    "dating_intro_subtitle": "To bude viditeľné len pre ľudí, ktorí hľadajú aj vzťah, nie pre tých, ktorí hľadajú len priateľov alebo sociálne kontakty.",
+    "dating_intro_placeholder": "Povedzte niečo o vzťahu, ktorý hľadáte",
     "confirmation": {
       "title": "Všetko pripravené!",
-      "profile_hint": "Pozrite sa, čo o mne vidia ostatní ľudia.",
+      "profile_hint": "Pozrite sa, čo na mne vidia ostatní.",
       "profile_button": "Môj profil",
-      "browse_hint": "Pozrite sa, kto je tu ešte",
+      "browse_hint": "Pozrite sa, kto ďalší je tu",
       "browse_button": "Zoznámte sa s ľuďmi"
     },
     "next_button": "Ďalšie",
     "back_button": "Späť",
-    "finish_button": "Dokončiť"
+    "finish_button": "Dokončenie"
   },
   "settings": {
     "title": "Nastavenia",
     "language_label": "Jazyk",
-    "push_notifications": "Push oznámenia",
-    "enable_push": "Povoliť Push upozornenia"
+    "push_notifications": "Oznámenia Push",
+    "enable_push": "Povolenie oznámení Push"
   },
   "uicomponents": {
     "error": {
-      "title": "Zasiahli sme tu problém.",
-      "message": "Vyskytla sa chyba. Skúste to znova neskôr.",
-      "retry": "Skúste znova",
+      "title": "Narazili sme na problém.",
+      "message": "Vyskytla sa chyba. Skúste to prosím neskôr.",
+      "retry": "Opakovanie",
       "cancel": "Zrušiť"
     },
     "submitbutton": {
       "working": "Pracuje...",
-      "submit": "Predložiť",
+      "submit": "Odoslať",
       "save": "Uložiť"
     },
     "loading": {
-      "loading": "Načítava sa..."
+      "loading": "Načítavanie..."
     },
     "spinner": {
-      "spinning": "Trátenie"
+      "spinning": "Spinning"
     },
     "modal": {
-      "close": "Zavrieť"
+      "close": "Zatvoriť"
     },
     "toast": {
       "success": {
@@ -291,26 +305,38 @@
       },
       "error": {
         "title": "Chyba",
-        "message": "Vyskytla sa chyba. Skúste to znova."
+        "message": "Vyskytla sa chyba. Prosím, skúste to znova."
       }
     },
     "share_dialog": {
-      "title": "Rozšírte slovo",
-      "description": "Pozvite svojich priateľov, aby sa pripojili k Gaians a spojte sa s rovnako zmýšľajúcimi ľuďmi.",
+      "title": "Šírenie informácií",
+      "description": "Pozvite svojich priateľov, aby sa pridali ku Gaians a spojili sa s podobne zmýšľajúcimi ľuďmi.",
       "button_copy": "Kopírovať",
-      "button_copied": "Kopírované",
-      "qr_hint": "Bleskajte to na telefóne"
+      "button_copied": "Skopírované",
+      "qr_hint": "Ukážte im to na telefóne."
     },
-    "dialog_cancel_button": "Nevadí"
+    "dialog_cancel_button": "Nevermind"
   },
   "emails": {
     "loginLink": {
-      "subject": "Váš prihlasovací odkaz",
-      "html": "<p>Ahoj, vitajte na palube!</p> <h1>{{otp}}</h1> <p>Kliknutím na tento odkaz prejdete priamo do: <a href=\"{{link}} \">Potvrdiť e-mail</a></p>"
+      "subject": "Vaše prihlasovacie prepojenie",
+      "html": "<p>Ahoj, vitajte na palube!</p><h1>{{otp}}</h1><p>Kliknutím na tento odkaz sa môžete rovno zapojiť: <a href=\"{{link}}\">Confirm Email</a></p>"
     },
     "welcome": {
       "subject": "Vitajte v Gaians!",
-      "html": "<p>Ahoj, vitajte na palube!</p> <a href=\"{{link}} \">Spojte sa s ľuďmi</a></p>"
+      "html": "<p>Ahoj, vitajte na palube!</p><a href=\"{{link}}\">Go connect with people</a></p>"
     }
+  },
+  "landingpage": {
+    "title_lg": "Vitajte na stránke {siteName}",
+    "title": "{siteName}",
+    "subtitle_1": "Toto je miesto stretnutia v online priestore, kde sa môžeme navzájom nájsť a spojiť.",
+    "socialize_1": "Spojte sa na našich cestách, nájdite podobne zmýšľajúce duše, s ktorými sa môžete stretnúť",
+    "date_1": "Nájdite si spriaznenú dušu alebo spoluhráča",
+    "footer_madeby": "Vyrobené s ❤️ Gaianmi",
+    "footer_contribute": "Každý môže prispieť na",
+    "enter_button": "Vstúpte na stránku",
+    "enter_button_loading": "Počkajte chvíľu...",
+    "select_language": "Vyberte svoj jazyk"
   }
 }
