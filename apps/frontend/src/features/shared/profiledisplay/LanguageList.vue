@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useLanguages } from '@/features/shared/composables/useLanguages'
+import { sortLanguagesWithEnFirst } from '@/lib/i18n'
 
 const props = withDefaults(
   defineProps<{
@@ -10,10 +11,11 @@ const props = withDefaults(
     languages: () => [] as string[],
   }
 )
-const { getLanguageList } = useLanguages()
+const { getLanguageLabels } = useLanguages()
 
 const languages = computed(() => {
-  return getLanguageList(props.languages)
+  const list = sortLanguagesWithEnFirst(props.languages)
+  return getLanguageLabels(list)
 })
 </script>
 

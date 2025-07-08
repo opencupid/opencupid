@@ -74,7 +74,7 @@ export function useLanguages() {
     }))
   }
 
-  const getLanguageList = (codes: string[]) => {
+  const getLanguageLabels = (codes: string[]) => {
     if (!codes) {
       return []
     }
@@ -84,10 +84,11 @@ export function useLanguages() {
       label: langs[code] || code,
     }))
   }
+
   return {
     initialize,
     ensureCountryLocale,
     getLanguageSelectorOptions,
-    getLanguageList,
+    getLanguageLabels,
   }
 }

@@ -29,7 +29,6 @@ const props = defineProps<{
 }>()
 
 const viewerProfile = inject('viewerProfile') as OwnerProfile
-console.log('viewerProfile', viewerProfile)
 const viewerLocation = viewerProfile?.location
 </script>
 
