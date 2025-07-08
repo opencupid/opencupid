@@ -1,11 +1,13 @@
 
+// @import './fonts.scss';
 // custom variables
 @import './theme.scss';
 
 // bootstrap proper
-@import './bootstrap.scss';
+// @import './bootstrap.scss';
 
 @import './layout.scss';
 @import './utils.scss';
 @import './components.scss';
 @import './vue-multiselect.scss';
+@import 'bootstrap-vue-next/dist/bootstrap-vue-next.css';

@@ -1,6 +1,6 @@
 
 
-import '@/css'
+// import '@/css'
 import { useIcons } from './lib/icons'
 import registerToast from './lib/toast'
 import { useBootstrap } from './lib/bootstrap'

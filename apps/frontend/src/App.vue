@@ -37,3 +37,6 @@ useLanguages().initialize(i18nStore.getLanguage())
     </transition>
   </router-view> -->
 </template>
+<style lang="scss">
+@import '@/css/main.scss';
+</style>

@@ -33,6 +33,8 @@ const icons = {
 </template>
 
 <style scoped>
+@import '@fontsource/caveat'; 
+
 .help-scribble {
   font-family: 'Caveat', cursive;
   font-size: 2rem;
