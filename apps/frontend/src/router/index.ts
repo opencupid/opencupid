@@ -62,7 +62,7 @@ const routes: Array<RouteRecordRaw> = [
     meta: { requiresAuth: true },
   },
   {
-    path: '/',
+    path: '/home',
     name: 'UserHome',
     component: UserHome,
     meta: { requiresAuth: true },
@@ -92,11 +92,6 @@ const routes: Array<RouteRecordRaw> = [
     component: MatchesView,
     props: true,
     meta: { requiresAuth: true },
-  },
-  // Redirect root to login page
-  {
-    path: '/',
-    redirect: '/login',
   },
 ]
 

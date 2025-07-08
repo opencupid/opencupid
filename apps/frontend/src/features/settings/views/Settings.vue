@@ -13,12 +13,15 @@ import IconLogout from '@/assets/icons/interface/logout.svg'
 
 import LoadingComponent from '@/features/shared/ui/LoadingComponent.vue'
 import LogoutButton from '@/features/auth/components/LogoutButton.vue'
-import LanguageSelectorDropdown from '../components/LanguageSelectorDropdown.vue'
+import LanguageSelectorDropdown from '../../shared/ui/LanguageSelectorDropdown.vue'
 import PushPermissions from '../components/PushPermissions.vue'
 import VersionInfo from '../components/VersionInfo.vue'
 import RouterBackButton from '@/features/shared/ui/RouterBackButton.vue'
 import SecondaryNav from '@/features/shared/ui/SecondaryNav.vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -104,9 +107,12 @@ function handleClick() {
           <!-- <div class="mb-3">
       <PushPermissions />
     </div> -->
-          <div class="mb-3">
-            <LanguageSelectorDropdown />
-          </div>
+          <fieldset class="mb-3">
+            <legend for="language-selector" class="form-label">
+              {{ t('settings.language_label') }}
+            </legend>
+            <LanguageSelectorDropdown size="md" />
+          </fieldset>
         </BOverlay>
       </section>
       <div class="position-fixed bottom-0 w-100 p-2">

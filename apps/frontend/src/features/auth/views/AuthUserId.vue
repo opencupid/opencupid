@@ -10,7 +10,7 @@ import AuthIdComponent from '../components/AuthIdComponent.vue'
 import LocaleSelector from '../../shared/ui/LocaleSelector.vue'
 
 import ErrorComponent from '@/features/shared/ui/ErrorComponent.vue'
-import LogoComponent from '../components/LogoComponent.vue'
+import LogoComponent from '@/features/shared/ui/LogoComponent.vue'
 
 // State
 const error = ref('' as string)
