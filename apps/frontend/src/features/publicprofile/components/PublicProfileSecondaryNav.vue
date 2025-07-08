@@ -12,7 +12,7 @@ defineEmits<{
   <div class="d-flex justify-content-end align-items-center w-100">
     <ul class="nav nav-pills w-100 d-flex align-items-center">
       <li class="col-2">
-        <a class="btn btn-link text-light" @click="$emit('intent:back')">
+        <a class="btn btn-shaded" @click="$emit('intent:back')">
           <IconArrowSingleLeft class="svg-icon" />
         </a>
       </li>
@@ -20,8 +20,8 @@ defineEmits<{
       <li class="col-8 d-flex nav-item justify-content-center align-items-center"></li>
 
       <li class="col-2 d-flex justify-content-end">
-        <a class="btn btn-link text-light" @click="$emit('intent:block')">
-          <IconMenuDotsVert class="svg-icon-lg fs-4" />
+        <a class="btn btn-shaded" @click="$emit('intent:block')">
+          <IconMenuDotsVert class="svg-icon-lg" />
         </a>
       </li>
     </ul>

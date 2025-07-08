@@ -9,6 +9,9 @@ import ProfileContent from '../components/ProfileContent.vue'
 import BlockProfileDialog from '../components/BlockProfileDialog.vue'
 import PublicProfileSecondaryNav from '../components/PublicProfileSecondaryNav.vue'
 import StoreErrorOverlay from '@/features/shared/ui/StoreErrorOverlay.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 // Props
 const props = defineProps<{
@@ -37,14 +40,14 @@ const handleBlock = async () => {
   const ok = await blockProfile()
   showModal.value = false
   if (ok) {
-    toast.warning("You won't see them again.")
+    toast.warning(t('profiles.blocklist.block_confirm_message'))
   }
   emit('hidden', profile.value.id)
 }
 </script>
 
 <template>
-  <div :class="{ dating: profile.isDatingActive }" class="public-profile" style="min-height: 100%;">
+  <div :class="{ dating: profile.isDatingActive }" class="public-profile" style="min-height: 100%">
     <StoreErrorOverlay v-if="error" :error="error">
       <template #default="{ error }">
         <BButton v-if="error.status" variant="primary" @click="$emit('intent:back')">

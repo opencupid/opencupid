@@ -8,7 +8,7 @@ import IconMessage from '@/assets/icons/interface/message.svg'
 import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
 import SendMessageForm from '@/features/messaging/components/SendMessageForm.vue'
 
-const modal = defineModel<boolean>('show')
+const showModal = defineModel<boolean>()
 
 const props = defineProps<{
   profile: PublicProfileWithContext,
@@ -33,7 +33,7 @@ const handleMessageSent = (message: MessageDTO | null) => {
   messageSent.value = true
   setTimeout(() => {
     console.log('Hiding modal after message sent')
-    modal.value = false
+    showModal.value = false
     emit('sent')
   }, 3000)
   if (message) {
@@ -47,7 +47,7 @@ const handleMessageSent = (message: MessageDTO | null) => {
 
 <template>
   <BModal
-    v-model="modal"
+    v-model="showModal"
     title=""
     size="md"
     centered

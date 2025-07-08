@@ -130,7 +130,7 @@
       "unblock_confirmation": "Biztos, hogy fel akarja oldani ezt a felhasználót?",
       "unblock_confirmation_yes": "Igen, oldja fel",
       "unblock_confirmation_no": "Nem, maradj blokkolva",
-      "dialog_title": "Blokkolja a {név} -t?",
+      "dialog_title": "Blokkolja a {name} -t?",
       "dialog_message_1": "Ha ez a személy zavar téged, blokkolhatja őket. Ez megakadályozza, hogy üzeneteket küldjenek Önnek vagy lépjenek kapcsolatba a profiljával. Ezen az oldalon sehol sem jelennek meg Önnek, mintha soha nem léteztek volna.",
       "dialog_message_2": "Nem kapnak értesítést arról, hogy blokkolta őket.",
       "confirmation_no": "Nem törődjön",

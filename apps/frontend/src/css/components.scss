@@ -20,9 +20,34 @@
 }
 
 .btn-overlay {
-  background-color: rgba(0, 0, 0, 0.75);
+  background-color: rgba(0, 0, 0, 0.5);
   color: #fff;
   border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem
+}
+
+.btn-shaded {
+  color: #fff;
+  position: relative;
+  z-index: 1;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index:-1;
+    width: 3rem;
+    height: 3rem;
+    background-color: rgba(0, 0, 0, 0.15);
+    border-radius: 50%;
+    filter: blur(15px);
+  }
 }
 
 // SVG icon styles
@@ -125,6 +150,7 @@
 .dating {
   background-color: transparentize($dating, 0.9);
 }
+
 .social {
   background-color: transparentize($social, 0.9);
 }
@@ -199,4 +225,3 @@
     cursor: pointer;
   }
 }
-

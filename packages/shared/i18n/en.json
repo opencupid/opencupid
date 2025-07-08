@@ -137,6 +137,7 @@
       "dialog_title": "Block {name}?",
       "dialog_message_1": "If this person is bothering you, you can block them. This will prevent them from sending you messages or interacting with your profile. They will also not be shown to you anywhere on this site, as if they never existed.",
       "dialog_message_2": "They will not receive any notification that you have blocked them.",
+      "block_confirm_message": "You won't see them again.",
       "confirmation_no": "Nevermind",
       "confirmation_yes": "Yes, block them"
     },

@@ -2,11 +2,9 @@
 import { useRouter } from 'vue-router'
 import { computed, onMounted, onUnmounted, provide, ref } from 'vue'
 
-import { type ProfileScope } from '@zod/profile/profile.dto'
 
 import PublicProfile from '@/features/publicprofile/components/PublicProfile.vue'
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
-import ReceivedLikesCount from '@/features/interaction/components/ReceivedLikesCount.vue'
 
 import { useFindMatchViewModel } from '../composables/useFindMatchViewModel'
 import DatingPreferencesForm from '../components/DatingPreferencesForm.vue'
@@ -16,7 +14,6 @@ import ProfileCardGrid from '../components/ProfileCardGrid.vue'
 import NoAccessCTA from '../components/NoAccessCTA.vue'
 import NoResultsCTA from '../components/NoResultsCTA.vue'
 import PlaceholdersGrid from '../components/PlaceholdersGrid.vue'
-import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
 import SocialFilterDisplay from '../components/SocialFilterDisplay.vue'
 import DatingPrefsDisplay from '../components/DatingPrefsDisplay.vue'
 import ScopeViewToggler from '@/features/shared/ui/ScopeViewToggler.vue'
