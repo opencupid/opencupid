@@ -58,6 +58,7 @@ const handleMessageClick = () => {
         v-model="passPopover"
         placement="top"
         title="Popover"
+        body-class="bg-danger-subtle"
         manual
         click
         lazy

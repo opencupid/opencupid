@@ -25,11 +25,11 @@ defineEmits<{
       <div style="width: 5rem; height: 5rem" class="mb-2">
         <IconSurprisedEmoji class="svg-icon-100 text-warning" />
       </div>
-      <h3>
+      <h3 class="text-center">
         <!-- But wait... -->
         {{ t('matches.pass_confirm_dialog.title') }}
       </h3>
-      <p>
+      <p class="text-center">
         <!-- You already matched with them. Do you REALLY want to unmatch? -->
         {{ t('matches.pass_confirm_dialog.question_matched') }}
       </p>
@@ -38,7 +38,7 @@ defineEmits<{
         <!-- Yes, unmatch -->
         {{ t('matches.pass_confirm_dialog.matched_button_yes') }}
       </BButton>
-      <BButton class="btn btn-link text-decoration-none" size="sm" @click="$emit('no')">
+      <BButton class="btn btn-link link-secondary text-decoration-none" @click="$emit('no')">
         <!-- No! -->
         {{ t('matches.pass_confirm_dialog.matched_button_no') }}
       </BButton>
@@ -49,11 +49,11 @@ defineEmits<{
       <div style="width: 5rem; height: 5rem" class="mb-2">
         <IconConfusedEmoji class="svg-icon-100 text-warning" />
       </div>
-      <h3>
+      <h3 class="text-center">
         <!-- But wait... -->
         {{ t('matches.pass_confirm_dialog.title') }}
       </h3>
-      <p>
+      <p class="text-center">
         <!-- You already liked them. Are you sure you want to pass? -->
         {{ t('matches.pass_confirm_dialog.question_liked') }}
       </p>
@@ -62,7 +62,7 @@ defineEmits<{
         <!-- Yes, pass -->
         {{ t('matches.pass_confirm_dialog.liked_button_yes') }}
       </BButton>
-      <BButton class="btn btn-link text-decoration-none" size="sm" @click="$emit('no')">
+      <BButton class="btn btn-link link-secondary text-decoration-none" @click="$emit('no')">
         <!-- No, don't pass -->
         {{ t('matches.pass_confirm_dialog.liked_button_no') }}
       </BButton>
