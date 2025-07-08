@@ -61,7 +61,8 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
     optimizeDeps: {
       include: ['qrcode']
     },
-    plugins: [
+    plugins: (() => {
+      const plugins: PluginOption[] = [
       {
         name: 'exclude-tests-from-build',
         resolveId(source) {
@@ -84,14 +85,14 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
           emitFile: true,
           filename: "stats.html",
           template: 'sunburst'
-        }) as PluginOption]
+        }) as unknown as PluginOption]
         : [visualizer({
           open: false,
           gzipSize: true,
           emitFile: true,
           filename: "stats.html",
           template: 'sunburst'
-        }) as PluginOption]),
+        }) as unknown as PluginOption]),
       vueJsx(),
       vueDevTools(),
       svgLoader(),
@@ -135,10 +136,13 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       //     maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
       //   },
       //   devOptions: {
-      //     enabled: true, 
+      //     enabled: true,
       //   },
       // })
-    ],
+      ]
+
+      return plugins
+    })(),
     css: {
       preprocessorOptions: {
         scss: {
