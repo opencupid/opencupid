@@ -102,7 +102,7 @@
       "looks_good": "Arată bine!",
       "add_from_phone": "Adăugați o fotografie de pe telefon",
       "take_photo": "Sau faceți o fotografie cu aparatul dvs. foto",
-      "nevermind": "Nevermind"
+      "Lasă": "Lasă"
     },
     "forms": {
       "my_preferences": "Preferințele mele",
@@ -136,7 +136,7 @@
       "dialog_title": "Bloc {name}?",
       "dialog_message_1": "Dacă această persoană vă deranjează, o puteți bloca. Acest lucru o va împiedica să vă trimită mesaje sau să interacționeze cu profilul dvs. De asemenea, nu vă va fi prezentată nicăieri pe acest site, ca și cum nu ar fi existat niciodată.",
       "dialog_message_2": "Ei nu vor primi nicio notificare că i-ați blocat.",
-      "confirmation_no": "Nevermind",
+      "confirmation_no": "Lasă",
       "confirmation_yes": "Da, blocați-le",
       "block_confirm_message": "Nu le veți mai vedea."
     },
@@ -152,7 +152,7 @@
       "invite_button": "Invitați prietenii",
       "filters": {
         "dialog_ok_button": "Găsiți oameni",
-        "dialog_cancel_button": "Nevermind",
+        "dialog_cancel_button": "Lasă",
         "social_title": "Caut conexiuni...",
         "tags_label": "Interesat în...",
         "anywhere": "Oriunde",
@@ -167,8 +167,8 @@
   "matches": {
     "matches_list_title": "Meciurile mele",
     "you_received_like": "Ai primit un like!",
-    "you_matched_with": "Te-ai împerecheat cu {numele}!",
-    "received_likes": "Nu ai niciun like.|Ai 1 like.|Ai {număr} de like-uri!",
+    "you_matched_with": "Te-ai împerecheat cu {name}",
+    "received_likes": "Nu ai niciun like.|Ai 1 like.|Ai {count} de like-uri!",
     "received_likes_cta": "Aflați cine a trimis-o",
     "no_match_no_sent_like": "Trebuie să fie cineva care să îți placă acolo?  ",
     "no_match_no_sent_like_cta": "Începeți să căutați",
@@ -177,7 +177,7 @@
     "find_button_cta": "Du-te conectează-te",
     "notifications": {
       "you_have": "Aveți",
-      "likes": "{count} place | {count} place",
+      "likes": "{count} ❤️ | {count} ❤️ ",
       "matches": "{count} potrivire nouă |{count} potrivire nouă",
       "and": "și"
     },
@@ -217,7 +217,7 @@
     "their_turn": "Rândul lor",
     "block_report_unmatch": "Blocare/raportare/nepotrivire",
     "block_user_ok": "Bloc {name}",
-    "nevermind": "Nevermind",
+    "Lasă": "Lasă",
     "send_message_heading": "Trimite mesaj",
     "welcome_message": "Bine ați venit la Gaians!",
     "no_messages_cta": "Găsiți oameni cu care să vorbiți",
@@ -235,7 +235,7 @@
       "appear_message": "Acum veți apărea în fața persoanelor care caută aceleași lucruri ca dumneavoastră. Puteți schimba oricând aceste informații mai târziu.",
       "next": "Următorul",
       "finish": "Terminare",
-      "cancel": "Nevermind"
+      "cancel": "Lasă"
     },
     "welcome_title": "Bine ați venit la {siteName}!",
     "welcome_subtitle": "Hai să te pregătim ca să poți începe să cunoști oameni.",
@@ -315,7 +315,7 @@
       "button_copied": "Copiat",
       "qr_hint": "Afișează asta la telefonul lor"
     },
-    "dialog_cancel_button": "Nevermind"
+    "dialog_cancel_button": "Lasă"
   },
   "emails": {
     "loginLink": {

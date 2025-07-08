@@ -88,7 +88,7 @@
     "logout": "Disconnessione"
   },
   "home": {
-    "welcome_title": "Benvenuto su {sitoNome}!",
+    "welcome_title": "Benvenuto su {siteName}!",
     "meet_new_people": "Incontrare nuove persone"
   },
   "profiles": {
@@ -133,7 +133,7 @@
       "unblock_confirmation": "Sei sicuro di voler sbloccare questo utente?",
       "unblock_confirmation_yes": "Sì, sblocca",
       "unblock_confirmation_no": "No, resta bloccato",
-      "dialog_title": "Bloccare {nome}?",
+      "dialog_title": "Bloccare {name}?",
       "dialog_message_1": "Se questa persona ti infastidisce, puoi bloccarla. In questo modo non potrà più inviarti messaggi o interagire con il tuo profilo. Inoltre non ti verrà mostrata da nessuna parte su questo sito, come se non fosse mai esistita.",
       "dialog_message_2": "Non riceveranno alcuna notifica del fatto che li hai bloccati.",
       "confirmation_no": "Nevermind",
@@ -167,8 +167,8 @@
   "matches": {
     "matches_list_title": "Le mie partite",
     "you_received_like": "Hai ricevuto un like!",
-    "you_matched_with": "Ti sei abbinato a {nome}!",
-    "received_likes": "Non hai nessun like.|Hai 1 like.|Hai {conteggio} di like!",
+    "you_matched_with": "Ti sei abbinato a {name}!",
+    "received_likes": "Non hai nessun like.|Hai 1 like.|Hai {count} di like!",
     "received_likes_cta": "Scopri chi l'ha inviato",
     "no_match_no_sent_like": "Ci sarà pure qualcuno che ti piace là fuori?  ",
     "no_match_no_sent_like_cta": "Inizia a cercare",
@@ -177,7 +177,7 @@
     "find_button_cta": "Vai a connetterti",
     "notifications": {
       "you_have": "Hai",
-      "likes": "{count} like | {count} likes",
+      "likes": "{count} ❤️ | {count} ❤️ ",
       "matches": "{count} nuova partita |{count} nuove partite",
       "and": "e"
     },
@@ -207,8 +207,8 @@
     "page_title": "Messaggi",
     "send_message_button": "Invia",
     "message_input_placeholder": "Scrivi qui il tuo messaggio...",
-    "new_message_notification": "{mittente} ha inviato un messaggio",
-    "send_message_to_user": "Invia un messaggio a {nome}",
+    "new_message_notification": "{sender} ha inviato un messaggio",
+    "send_message_to_user": "Invia un messaggio a {name}",
     "unknown_sender": "Qualcuno",
     "message_input_hint": "Premi Invio per inviare",
     "send_failed": "Ops, non ha funzionato. Riprova.",
@@ -216,7 +216,7 @@
     "my_turn": "Il mio turno",
     "their_turn": "Il loro turno",
     "block_report_unmatch": "Blocca/riportati/scomponi",
-    "block_user_ok": "Blocco {nome}",
+    "block_user_ok": "Blocco {name}",
     "nevermind": "Nevermind",
     "send_message_heading": "Invia un messaggio",
     "welcome_message": "Benvenuto a Gaians!",
@@ -237,7 +237,7 @@
       "finish": "Finitura",
       "cancel": "Nevermind"
     },
-    "welcome_title": "Benvenuto su {sitoNome}!",
+    "welcome_title": "Benvenuto su {siteName}!",
     "welcome_subtitle": "Ti organizziamo per iniziare a incontrare persone.",
     "location_title": "Vengo da...",
     "location_subtitle": "Dove trascorro il mio tempo in questi giorni sul nostro bellissimo pianeta.",
@@ -328,8 +328,8 @@
     }
   },
   "landingpage": {
-    "title_lg": "Benvenuto su {sitoNome}",
-    "title": "{sitoNome}",
+    "title_lg": "Benvenuto su {siteName}",
+    "title": "{siteName}",
     "subtitle_1": "Questo è un punto d'incontro nel regno online per trovarci e connetterci.",
     "socialize_1": "Connettersi durante i nostri viaggi, trovare anime che la pensano come noi nelle vicinanze con cui uscire",
     "date_1": "Trova un'anima gemella o un compagno di giochi",

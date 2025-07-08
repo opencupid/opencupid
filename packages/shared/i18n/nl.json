@@ -88,12 +88,12 @@
     "logout": "Afmelden"
   },
   "home": {
-    "welcome_title": "Welkom op {siteNaam}!",
+    "welcome_title": "Welkom op {siteName}!",
     "meet_new_people": "Nieuwe mensen ontmoeten"
   },
   "profiles": {
     "send_message_button": "Bericht",
-    "profile_photos": "{naam}'s foto's",
+    "profile_photos": "{name}'s foto's",
     "no_profile_title": "Vul je profiel in",
     "no_profile_create": "Profiel aanmaken",
     "image_editor_help": "Jouw foto hier",
@@ -133,7 +133,7 @@
       "unblock_confirmation": "Weet je zeker dat je deze gebruiker wilt deblokkeren?",
       "unblock_confirmation_yes": "Ja, deblokkeren",
       "unblock_confirmation_no": "Nee, geblokkeerd houden",
-      "dialog_title": "{naam} blokkeren?",
+      "dialog_title": "{name} blokkeren?",
       "dialog_message_1": "Als deze persoon je lastig valt, kun je hem blokkeren. Hierdoor kunnen ze je geen berichten sturen of interactie hebben met je profiel. Ze zullen ook nergens op deze site te zien zijn, alsof ze nooit hebben bestaan.",
       "dialog_message_2": "Ze zullen geen melding ontvangen dat je ze hebt geblokkeerd.",
       "confirmation_no": "Nevermind",
@@ -167,8 +167,8 @@
   "matches": {
     "matches_list_title": "Mijn wedstrijden",
     "you_received_like": "Je hebt een like ontvangen!",
-    "you_matched_with": "Je bent gekoppeld aan {naam}!",
-    "received_likes": "Je hebt geen likes.|Je hebt 1 like.|Je hebt {getal} likes!",
+    "you_matched_with": "Je bent gekoppeld aan {name}!",
+    "received_likes": "Je hebt geen likes.|Je hebt 1 like.|Je hebt {count} likes!",
     "received_likes_cta": "Zoek uit wie het stuurde",
     "no_match_no_sent_like": "Er moet toch iemand zijn die je leuk vindt?  ",
     "no_match_no_sent_like_cta": "Begin met zoeken",
@@ -177,8 +177,8 @@
     "find_button_cta": "Ga verbinden",
     "notifications": {
       "you_have": "Je hebt",
-      "likes": "{telling} leuk | {telling} vindt leuk",
-      "matches": "{telling} nieuwe match |{telling} nieuwe matches",
+      "likes": "{count} ❤️ | {count} ❤️ ",
+      "matches": "{count} nieuwe match |{count} nieuwe matches",
       "and": "en"
     },
     "pass_confirm_dialog": {
@@ -198,7 +198,7 @@
     "you_matched_with_them": "Je hebt ze gekoppeld",
     "send_a_like": "Stuur ze een like. Ze zullen niet weten wie het stuurde totdat ze je terug liken.",
     "its_a_match": "Het is een match!",
-    "send_them_a_message": "Stuur {naam} een bericht",
+    "send_them_a_message": "Stuur {name} een bericht",
     "cancel_button": "Misschien later",
     "message_confirmation": "Leuk!",
     "like_error": "Oeps, dit werkte niet. Probeer het opnieuw."
@@ -207,8 +207,8 @@
     "page_title": "Berichten",
     "send_message_button": "Stuur",
     "message_input_placeholder": "Type hier je bericht...",
-    "new_message_notification": "{zender} heeft een bericht verzonden",
-    "send_message_to_user": "Stuur een bericht naar {naam}",
+    "new_message_notification": "{sender} heeft een bericht verzonden",
+    "send_message_to_user": "Stuur een bericht naar {name}",
     "unknown_sender": "Iemand",
     "message_input_hint": "Druk op Enter om te verzenden",
     "send_failed": "Oeps, dit werkte niet. Probeer het opnieuw.",
@@ -216,7 +216,7 @@
     "my_turn": "Mijn beurt",
     "their_turn": "Hun beurt",
     "block_report_unmatch": "Blokkeren/rapporten/ongelijkmatigheid",
-    "block_user_ok": "Blok {naam}",
+    "block_user_ok": "Blok {name}",
     "nevermind": "Nevermind",
     "send_message_heading": "Verstuur bericht",
     "welcome_message": "Welkom bij Gaians!",
@@ -237,7 +237,7 @@
       "finish": "Afwerking",
       "cancel": "Nevermind"
     },
-    "welcome_title": "Welkom op {siteNaam}!",
+    "welcome_title": "Welkom op {siteName}!",
     "welcome_subtitle": "Laten we je op weg helpen zodat je mensen kunt ontmoeten.",
     "location_title": "Ik kom uit...",
     "location_subtitle": "Waar ik deze dagen mijn tijd doorbreng op onze prachtige planeet.",
@@ -328,8 +328,8 @@
     }
   },
   "landingpage": {
-    "title_lg": "Welkom op {siteNaam}",
-    "title": "{siteNaam}",
+    "title_lg": "Welkom op {siteName}",
+    "title": "{siteName}",
     "subtitle_1": "Dit is een ontmoetingsplaats in de online wereld waar we elkaar kunnen vinden en met elkaar in contact kunnen komen.",
     "socialize_1": "Contact maken tijdens onze reizen, gelijkgestemde zielen in de buurt vinden om mee rond te hangen",
     "date_1": "Vind een soulmate of speelkameraadje",

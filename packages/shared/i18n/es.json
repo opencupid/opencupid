@@ -93,7 +93,7 @@
   },
   "profiles": {
     "send_message_button": "Mensaje",
-    "profile_photos": "Fotos de {nombre}",
+    "profile_photos": "Fotos de {name}",
     "no_profile_title": "Rellena tu perfil",
     "no_profile_create": "Crear perfil",
     "image_editor_help": "Tu foto aquí",
@@ -133,7 +133,7 @@
       "unblock_confirmation": "¿Estás seguro de que quieres desbloquear a este usuario?",
       "unblock_confirmation_yes": "Sí, desbloquea",
       "unblock_confirmation_no": "No, mantener bloqueado",
-      "dialog_title": "¿Bloquear {nombre}?",
+      "dialog_title": "¿Bloquear {name}?",
       "dialog_message_1": "Si esta persona te molesta, puedes bloquearla. Esto les impedirá enviarte mensajes o interactuar con tu perfil. Tampoco se te mostrarán en ninguna parte de este sitio, como si nunca hubieran existido.",
       "dialog_message_2": "No recibirán ninguna notificación de que les has bloqueado.",
       "confirmation_no": "No importa",
@@ -167,8 +167,8 @@
   "matches": {
     "matches_list_title": "Mis partidos",
     "you_received_like": "¡Has recibido un me gusta!",
-    "you_matched_with": "¡Te has emparejado con {nombre}!",
-    "received_likes": "No tienes Me gusta.|Tienes 1 Me gusta.|¡Tienes {cuenta} Me gusta!",
+    "you_matched_with": "¡Te has emparejado con {name}!",
+    "received_likes": "No tienes Me gusta.|Tienes 1 Me gusta.|¡Tienes {count} Me gusta!",
     "received_likes_cta": "Averigua quién lo envió",
     "no_match_no_sent_like": "¿Tiene que haber alguien que te guste por ahí?  ",
     "no_match_no_sent_like_cta": "Empieza a buscar",
@@ -177,8 +177,8 @@
     "find_button_cta": "Conéctate",
     "notifications": {
       "you_have": "Tienes",
-      "likes": "{cuenta} me gusta | {cuenta} me gusta",
-      "matches": "{contar} nueva coincidencia |{contar} nuevas coincidencias",
+      "likes": "{count} ❤️ | {count} ❤️ ",
+      "matches": "{count} nueva coincidencia |{count} nuevas coincidencias",
       "and": "y"
     },
     "pass_confirm_dialog": {
@@ -198,7 +198,7 @@
     "you_matched_with_them": "Te emparejaste con ellos",
     "send_a_like": "Envíales un like. No sabrán quién se lo ha enviado hasta que te devuelvan el like.",
     "its_a_match": "¡Es una coincidencia!",
-    "send_them_a_message": "Envía un mensaje a {nombre}",
+    "send_them_a_message": "Envía un mensaje a {name}",
     "cancel_button": "Quizás más tarde",
     "message_confirmation": "Muy bien.",
     "like_error": "Ups, esto no ha funcionado. Inténtalo de nuevo."
@@ -208,7 +208,7 @@
     "send_message_button": "Envía",
     "message_input_placeholder": "Escribe aquí tu mensaje...",
     "new_message_notification": "{remitente} envió un mensaje",
-    "send_message_to_user": "Enviar un mensaje a {nombre}",
+    "send_message_to_user": "Enviar un mensaje a {name}",
     "unknown_sender": "Alguien",
     "message_input_hint": "Pulsa Intro para enviar",
     "send_failed": "Ups, esto no ha funcionado. Inténtalo de nuevo.",
@@ -216,7 +216,7 @@
     "my_turn": "Mi turno",
     "their_turn": "Su turno",
     "block_report_unmatch": "Bloquear/informar/no coincidir",
-    "block_user_ok": "Bloque {nombre}",
+    "block_user_ok": "Bloque {name}",
     "nevermind": "No importa",
     "send_message_heading": "Enviar mensaje",
     "welcome_message": "¡Bienvenido a Gaians!",
@@ -329,7 +329,7 @@
   },
   "landingpage": {
     "title_lg": "Bienvenido a {siteName}",
-    "title": "{nombredelsitio}",
+    "title": "{siteName}",
     "subtitle_1": "Este es un punto de encuentro en el ámbito online para que nos encontremos y conectemos.",
     "socialize_1": "Conectar en nuestros viajes, encontrar almas afines cercanas con las que pasar el rato",
     "date_1": "Encuentra un alma gemela o un compañero de juegos",

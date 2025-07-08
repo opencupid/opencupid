@@ -133,7 +133,7 @@
       "unblock_confirmation": "Biztos, hogy fel akarja oldani a felhasználó blokkolását?",
       "unblock_confirmation_yes": "Igen, oldja fel a blokkolást",
       "unblock_confirmation_no": "Nem, tartsa blokkolva",
-      "dialog_title": "Blokkolás {név}?",
+      "dialog_title": "Letiltod {name}?",
       "dialog_message_1": "Ha ez a személy zavarja Önt, blokkolhatja. Ez megakadályozza, hogy üzeneteket küldjön neked, vagy interakcióba lépjen a profiloddal. Ezen kívül sehol sem fog megjelenni neked ezen az oldalon, mintha soha nem is létezett volna.",
       "dialog_message_2": "Nem kapnak értesítést arról, hogy Ön letiltotta őket.",
       "confirmation_no": "Nevermind",
@@ -214,7 +214,7 @@
   "matches": {
     "matches_list_title": "Az én mérkőzéseim",
     "you_received_like": "Kaptál egy like-ot!",
-    "you_matched_with": "Párosítottál a {névvel}!",
+    "you_matched_with": "Párosítottál a {name}!",
     "received_likes": "Nincsenek kedveléseid.|1 kedvelésed van.|Minden kedvelésed megvan!",
     "received_likes_cta": "Tudja meg, ki küldte",
     "no_match_no_sent_like": "Kell lennie valakinek, akit kedvelsz?  ",
@@ -224,7 +224,7 @@
     "find_button_cta": "Menj csatlakozz",
     "notifications": {
       "you_have": "Van egy...",
-      "likes": "{count} like | {count} likes",
+      "likes": "{count} ❤️ | {count} ❤️ ",
       "matches": "{count} új mérkőzés |{count} új mérkőzések",
       "and": "és"
     },
@@ -245,7 +245,7 @@
     "you_matched_with_them": "Összeillesztetted őket",
     "send_a_like": "Küldj nekik egy like-ot. Nem fogják tudni, hogy ki küldte, amíg vissza nem like-olnak.",
     "its_a_match": "Egyezik!",
-    "send_them_a_message": "Küldjön {név} egy üzenetet",
+    "send_them_a_message": "Küldjön {name} egy üzenetet",
     "cancel_button": "Talán később",
     "message_confirmation": "Szép!",
     "like_error": "Hoppá, ez nem működött. Kérjük, próbálja meg újra."

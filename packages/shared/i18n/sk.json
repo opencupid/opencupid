@@ -88,7 +88,7 @@
     "logout": "Odhlásenie"
   },
   "home": {
-    "welcome_title": "Vitajte na {názov stránky}!",
+    "welcome_title": "Vitajte na {siteName}!",
     "meet_new_people": "Spoznávanie nových ľudí"
   },
   "profiles": {
@@ -133,7 +133,7 @@
       "unblock_confirmation": "Ste si istí, že chcete odblokovať tohto používateľa?",
       "unblock_confirmation_yes": "Áno, odblokovať",
       "unblock_confirmation_no": "Nie, nechajte blokované",
-      "dialog_title": "Blokovať {názov}?",
+      "dialog_title": "Blokovať {name}?",
       "dialog_message_1": "Ak vás táto osoba obťažuje, môžete ju zablokovať. Zabránite im tak posielať vám správy alebo komunikovať s vaším profilom. Taktiež sa vám nebudú zobrazovať nikde na tejto stránke, akoby nikdy neexistovali.",
       "dialog_message_2": "Nedostanú žiadne oznámenie o tom, že ste ich zablokovali.",
       "confirmation_no": "Nevermind",
@@ -168,7 +168,7 @@
     "matches_list_title": "Moje zápasy",
     "you_received_like": "Dostali ste like!",
     "you_matched_with": "Zhodli ste sa s {meno}!",
-    "received_likes": "Nemáte žiadne lajky.|Máte 1 lajk.|Máte {počet} lajkov!",
+    "received_likes": "Nemáte žiadne lajky.|Máte 1 lajk.|Máte {count} lajkov!",
     "received_likes_cta": "Zistite, kto ju poslal",
     "no_match_no_sent_like": "Musí tam byť niekto, kto sa vám páči?  ",
     "no_match_no_sent_like_cta": "Začnite hľadať",
@@ -177,7 +177,7 @@
     "find_button_cta": "Prejsť na pripojenie",
     "notifications": {
       "you_have": "Máte",
-      "likes": "{count} like | {count} likes",
+      "likes": "{count} ❤️ | {count} ❤️ ",
       "matches": "{count} new match |{count} new matches",
       "and": "a"
     },
@@ -207,7 +207,7 @@
     "page_title": "Správy",
     "send_message_button": "Odoslať",
     "message_input_placeholder": "Tu zadajte svoju správu...",
-    "new_message_notification": "{odosielateľ} poslal správu",
+    "new_message_notification": "{sender} poslal správu",
     "send_message_to_user": "Odoslať správu na {meno}",
     "unknown_sender": "Niekto",
     "message_input_hint": "Stlačením tlačidla Enter odošlete",
@@ -216,7 +216,7 @@
     "my_turn": "Som na rade",
     "their_turn": "Na rade sú oni",
     "block_report_unmatch": "Blokovanie/správy/nezhody",
-    "block_user_ok": "Blok {názov}",
+    "block_user_ok": "Blok {name}",
     "nevermind": "Nevermind",
     "send_message_heading": "Odoslať správu",
     "welcome_message": "Vitajte v Gaians!",
@@ -237,7 +237,7 @@
       "finish": "Dokončenie",
       "cancel": "Nevermind"
     },
-    "welcome_title": "Vitajte na {názov stránky}!",
+    "welcome_title": "Vitajte na {siteName}!",
     "welcome_subtitle": "Pripravíme vás na to, aby ste sa mohli začať stretávať s ľuďmi.",
     "location_title": "Som z...",
     "location_subtitle": "Kde v týchto dňoch trávim svoj čas na našej krásnej planéte.",

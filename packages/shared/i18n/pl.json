@@ -177,8 +177,8 @@
     "find_button_cta": "Połącz się",
     "notifications": {
       "you_have": "Masz",
-      "likes": "{count} like | {count} likes",
-      "matches": "{liczba} nowych dopasowań |{liczba} nowych dopasowań",
+      "likes": "{count} ❤️ | {count} ❤️ ",
+      "matches": "{count} nowych dopasowań |{count} nowych dopasowań",
       "and": "i"
     },
     "pass_confirm_dialog": {
@@ -198,7 +198,7 @@
     "you_matched_with_them": "Dopasowałeś się do nich",
     "send_a_like": "Wyślij im polubienie. Nie będą wiedzieć, kto je wysłał, dopóki nie polubią Cię ponownie.",
     "its_a_match": "To mecz!",
-    "send_them_a_message": "Wyślij {imię} wiadomość",
+    "send_them_a_message": "Wyślij {name} wiadomość",
     "cancel_button": "Może później",
     "message_confirmation": "Nieźle!",
     "like_error": "Ups, to nie zadziałało. Spróbuj ponownie."
@@ -216,7 +216,7 @@
     "my_turn": "Moja kolej",
     "their_turn": "Ich kolej",
     "block_report_unmatch": "Zablokuj/zgłoś/niedopasuj",
-    "block_user_ok": "Blok {nazwa}",
+    "block_user_ok": "Blok {name}",
     "nevermind": "Nevermind",
     "send_message_heading": "Wyślij wiadomość",
     "welcome_message": "Witaj w Gaians!",
