@@ -23,7 +23,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
     ...define(mode),
     ...server(mode),
     build: {
-      sourcemap: false,
+      sourcemap: true,
       rollupOptions: {
         external: (id) => id.includes('__tests__'),
         output: {
@@ -56,7 +56,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       }
     },
     esbuild: {
-      sourcemap: false,
+      sourcemap: true,
     },
     optimizeDeps: {
       include: ['qrcode']
