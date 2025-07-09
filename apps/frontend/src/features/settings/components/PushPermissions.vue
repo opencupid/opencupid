@@ -5,7 +5,11 @@ import { useI18n } from 'vue-i18n'
 function urlBase64ToUint8Array(base64: string): Uint8Array {
   const padding = '='.repeat((4 - (base64.length % 4)) % 4)
   const base64url = (base64 + padding).replace(/-/g, '+').replace(/_/g, '/')
-  const raw = atob(base64url)
+  try {
+    const raw = atob(base64url)
+  } catch (error) {
+    console.error('Failed to decode base64 string:', error)
+  }
   return Uint8Array.from([...raw].map(char => char.charCodeAt(0)))
 }
 
