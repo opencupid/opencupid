@@ -30,7 +30,7 @@
     "translate": "npx json-autotranslate -i packages/shared/i18n/ --directory-structure ngx-translate -d --type key-based -m i18next -s deepl-free -c ${DEEPL_API_KEY},less,1000"
   },
   "dependencies": {
-    "@types/node": "^24.0.11",
+    "@types/node": "^22.16.1",
     "rollup": "^4.44.2",
     "zod": "^3.24.4"
   },
