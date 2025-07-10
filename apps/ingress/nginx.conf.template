@@ -102,6 +102,21 @@ http {
 
     location /images/ {
       alias /var/www/;
+      access_by_lua_block {
+        local jwt = require "resty.jwt"
+        local auth = ngx.var.http_Authorization
+        if not auth then
+          return ngx.exit(401)
+        end
+        local _, _, token = string.find(auth, "Bearer%s+(.+)")
+        if not token then
+          return ngx.exit(401)
+        end
+        local jwt_obj = jwt:verify("${JWT_SECRET}", token)
+        if not jwt_obj["verified"] then
+          return ngx.exit(401)
+        end
+      }
       autoindex off;
       try_files $uri =404;
       add_header Cache-Control "public, max-age=31536000, immutable";
