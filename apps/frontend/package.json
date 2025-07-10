@@ -55,7 +55,8 @@
     "vue-toastification": "2.0.0-rc.5",
     "vue3-flag-icons": "^0.0.3",
     "workbox-precaching": "^7.3.0",
-    "workbox-window": "^7.3.0"
+    "workbox-window": "^7.3.0",
+    "flag-icons": "^7.5.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",

@@ -313,6 +313,9 @@ importers:
       find-up:
         specifier: ^7.0.0
         version: 7.0.0
+      flag-icons:
+        specifier: ^7.5.0
+        version: 7.5.0
       i18n-iso-countries:
         specifier: ^7.14.0
         version: 7.14.0

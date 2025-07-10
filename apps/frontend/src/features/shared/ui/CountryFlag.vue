@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import FlagIcon, { type CountryCode } from 'vue3-flag-icons'
-import 'vue3-flag-icons/styles'
+import 'flag-icons/css/flag-icons.min.css'
 
 defineProps<{
   code: string | undefined
