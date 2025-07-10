@@ -96,7 +96,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       vueJsx(),
       vueDevTools(),
       VueI18nPlugin({
-        include: [path.resolve(__dirname, '../../packages/shared/i18n/**')]
+        include: [path.resolve(__dirname, '../../packages/shared/i18n/*')]
       }),
       svgLoader(),
       Components({

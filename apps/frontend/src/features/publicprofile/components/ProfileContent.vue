@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { inject, ref, Ref } from 'vue'
+import { inject, ref, type Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { type OwnerProfile, type PublicProfileWithContext } from '@zod/profile/profile.dto'

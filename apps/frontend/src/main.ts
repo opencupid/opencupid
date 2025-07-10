@@ -16,14 +16,12 @@ if (window.location.pathname === '/') {
     const localStore = useLocalStore()
     localStore.initialize()
 
-    appUseI18n(app).then(() => {
+    appUseI18n(app)
 
-      app.mount('#app')
-      // Preload full app silently in background
-
-      nextTick(() => {
-        import('./app')
-      })
+    app.mount('#app')
+    // Preload full app silently in background
+    nextTick(() => {
+      import('./app')
     })
   })
 } else {

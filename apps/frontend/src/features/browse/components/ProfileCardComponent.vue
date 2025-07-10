@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, ref, Ref } from 'vue'
+import { inject, ref, type Ref } from 'vue'
 import type { OwnerProfile, PublicProfile } from '@zod/profile/profile.dto'
 import ProfileImage from '@/features/images/components/ProfileImage.vue'
 import TagList from '@/features/shared/profiledisplay/TagList.vue'

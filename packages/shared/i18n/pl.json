@@ -93,7 +93,7 @@
   },
   "profiles": {
     "send_message_button": "Wiadomość",
-    "profile_photos": "Zdjęcia {imię}",
+    "profile_photos": "Zdjęcia {name}",
     "no_profile_title": "Wypełnij swój profil",
     "no_profile_create": "Utwórz profil",
     "image_editor_help": "Twoje zdjęcie tutaj",
@@ -116,7 +116,6 @@
       "city_search_placeholder": "Wyszukaj miasta",
       "city_add_placeholder": "Dodaj to jako nowe miasto",
       "city_start_typing": "Zacznij wpisywać, aby wyszukać swoje miasto",
-      "city_deselect_label": "Usuń miasto",
       "tag_search_placeholder": "Wyszukaj zainteresowania...",
       "tag_add_placeholder": "Dodaj to jako nowy tag",
       "dictate_listening": "Słuchanie...",
@@ -172,8 +171,8 @@
   "matches": {
     "matches_list_title": "Moje mecze",
     "you_received_like": "Otrzymałeś polubienie!",
-    "you_matched_with": "Dopasowałeś się do {imię}!",
-    "received_likes": "Nie masz polubień.|Masz 1 polubienie.|Masz {liczba} polubień!",
+    "you_matched_with": "Dopasowałeś się do {name}!",
+    "received_likes": "Nie masz polubień.|Masz 1 polubienie.|Masz {count} polubień!",
     "received_likes_cta": "Dowiedz się, kto go wysłał",
     "no_match_no_sent_like": "Musi tam być ktoś, kogo lubisz?  ",
     "no_match_no_sent_like_cta": "Zacznij szukać",
