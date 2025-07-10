@@ -1,7 +1,11 @@
 import { mount } from '@vue/test-utils'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 
 import UploadButton from '../components/UploadButton.vue'
+
+vi.mock('@/assets/icons/files/avatar-upload.svg', () => ({ default: { name: 'AvatarUploadIcon' } }))
+vi.mock('@/assets/icons/interface/camera.svg', () => ({ default: { name: 'IconCamera2' } }))
+vi.mock('@/assets/icons/interface/photo.svg', () => ({ default: { name: 'IconPhoto' } }))
 
 describe('UploadButton', () => {
   it('emits file:change on input', async () => {
@@ -11,6 +15,9 @@ describe('UploadButton', () => {
           BFormFile: {
             template: '<input @change="$emit(\'change\', $event)" />',
           },
+          AvatarUploadIcon: true,
+          IconCamera2: true,
+          IconPhoto: true,
         },
       },
     })
@@ -29,6 +36,9 @@ describe('UploadButton', () => {
             props: ['capture'],
             template: '<input :capture="capture" @change="$emit(\'change\', $event)" />',
           },
+          AvatarUploadIcon: true,
+          IconCamera2: true,
+          IconPhoto: true,
         },
       },
     })
@@ -47,6 +57,9 @@ describe('UploadButton', () => {
             props: ['capture'],
             template: '<input :capture="capture" @change="$emit(\'change\', $event)" />',
           },
+          AvatarUploadIcon: true,
+          IconCamera2: true,
+          IconPhoto: true,
         },
       },
     })
@@ -62,6 +75,9 @@ describe('UploadButton', () => {
             props: ['capture'],
             template: '<input :capture="capture" @change="$emit(\'change\', $event)" />',
           },
+          AvatarUploadIcon: true,
+          IconCamera2: true,
+          IconPhoto: true,
         },
       },
     })
