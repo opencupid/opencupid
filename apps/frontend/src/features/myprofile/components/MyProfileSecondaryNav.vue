@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, inject, type Ref } from 'vue'
 import { useI18nStore } from '@/store/i18nStore'
+import { useCountries } from '@/features/shared/composables/useCountries'
+import type { OwnerProfile } from '@zod/profile/profile.dto'
 
 import { type ViewState } from '../composables/types'
 import ScopeViewToggler from '@/features/shared/ui/ScopeViewToggler.vue'
@@ -15,7 +17,19 @@ const model = defineModel<ViewState>({
   required: true,
 })
 
-const languagePreviewOptions = useI18nStore().getAvailableLocalesWithLabels()
+const viewerProfile = inject<Ref<OwnerProfile>>('viewerProfile')
+const { countryCodeToName } = useCountries()
+
+const languagePreviewOptions = computed(() => {
+  const langs = viewerProfile?.value?.languages && viewerProfile.value.languages.length
+    ? viewerProfile.value.languages
+    : [useI18nStore().currentLanguage]
+
+  return langs.map(code => ({
+    value: code,
+    label: countryCodeToName(code) || code,
+  }))
+})
 
 const currentLanguage = computed(() => {
   return languagePreviewOptions.find(lang => lang.value === model.value.previewLanguage)
