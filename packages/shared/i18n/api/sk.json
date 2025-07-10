@@ -1,14 +1,14 @@
 {
   "messages": {
-    "welcome_message": "Vitajte na {siteName}!\nSom Mookie, váš hostiteľ.\nToto je miesto, kde sa môžeme spojiť, spoznať nových ľudí a nájsť podobne zmýšľajúce duše. Dúfam, že sa vám tu bude páčiť.\nŠťastné spojenie!\n- Mookie"
+    "welcome_message": "Vitajte na stránke {{siteName}}!\nSom Mookie, váš hostiteľ.\nToto je miesto, kde sa môžeme spojiť, spoznať nových ľudí a nájsť podobne zmýšľajúce duše. Dúfam, že sa vám tu bude páčiť.\nŠťastné spojenie!\n- Mookie"
   },
   "emails": {
     "loginLink": {
-      "subject": "Vaše prihlasovacie prepojenie",
-      "html": "<p>Ahoj, vitajte na palube!</p><h1>{{otp}}</h1><p>Kliknutím na tento odkaz sa môžete rovno zapojiť: <a href=\"{{link}}\">Confirm Email</a></p>"
+      "subject": "Vaše prihlasovacie prepojenie pre {{siteName}}",
+      "html": "<p>Ahoj,</p><p>Toto je váš prihlasovací kód:</p><h1>{{otp}}</h1><p>Alebo <a href=\"{{link}}\">click this link</a>, aby ste sa mohli rovno zapojiť</p>"
     },
     "welcome": {
-      "subject": "Vitajte v Gaians!",
+      "subject": "Vitajte na stránke {{siteName}}!",
       "html": "<p>Ahoj, vitajte na palube!</p><a href=\"{{link}}\">Go connect with people</a></p>"
     }
   }

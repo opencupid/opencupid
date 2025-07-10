@@ -4,11 +4,11 @@
   },
   "emails": {
     "loginLink": {
-      "subject": "A tua ligação de acesso",
-      "html": "<p>Olá, sê bem-vindo a bordo!</p><h1>{{otp}}</h1><p>Clica nesta hiperligação para entrares de imediato: <a href=\"{{link}}\">Confirm Email</a></p>"
+      "subject": "A tua ligação de acesso ao {{siteName}}",
+      "html": "<p>Olha lá,</p><p>Este é o teu código de acesso:</p><h1>{{otp}}</h1><p>Ou <a href=\"{{link}}\">click this link</a> para entrares diretamente</p>"
     },
     "welcome": {
-      "subject": "Bem-vindo ao Gaians!",
+      "subject": "Bem-vindo a {{siteName}}!",
       "html": "<p>Olá, sê bem-vindo a bordo!</p><a href=\"{{link}}\">Go connect with people</a></p>"
     }
   }

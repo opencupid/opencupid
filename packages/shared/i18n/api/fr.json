@@ -1,14 +1,14 @@
 {
   "messages": {
-    "welcome_message": "Bienvenue sur {{siteName}} !\nJe suis Mookie, ton hôte.\nC'est un endroit qui nous permet de nous connecter, de rencontrer de nouvelles personnes et de trouver des âmes partageant les mêmes idées. J'espère que tu apprécieras ton séjour ici.\nBonne connexion !\n- Mookie"
+    "welcome_message": "Bienvenue sur {{siteName}}!\nJe suis Mookie, ton hôte.\nC'est un endroit qui nous permet de nous connecter, de rencontrer de nouvelles personnes et de trouver des âmes partageant les mêmes idées. J'espère que tu apprécieras ton séjour ici.\nBonne connexion !\n- Mookie"
   },
   "emails": {
     "loginLink": {
-      "subject": "Ton lien de connexion",
-      "html": "<p>Salut, bienvenue à bord !</p><h1>{{otp}}</h1><p>Clique sur ce lien pour te lancer dans l'aventure : <a href=\"{{link}}\">Confirm Email</a></p>"
+      "subject": "Ton lien de connexion pour {{siteName}}",
+      "html": "<p>Salut à toi,</p><p>Voici ton code de connexion :</p><h1>{{otp}}</h1><p>Ou <a href=\"{{link}}\">click this link</a> pour entrer directement dans le jeu</p>"
     },
     "welcome": {
-      "subject": "Bienvenue chez les Gaïens !",
+      "subject": "Bienvenue sur {{siteName}}!",
       "html": "<p>Salut, bienvenue à bord !</p><a href=\"{{link}}\">Go connect with people</a></p>"
     }
   }

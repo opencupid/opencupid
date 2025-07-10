@@ -4,11 +4,11 @@
   },
   "emails": {
     "loginLink": {
-      "subject": "Je inloglink",
-      "html": "<p>Hallo, welkom aan boord!</p><h1>{{otp}}</h1><p>Klik op deze link om er meteen in te springen: <a href=\"{{link}}\">Confirm Email</a></p>"
+      "subject": "Je aanmeldlink voor {{siteName}}",
+      "html": "<p>Hallo daar,</p><p>Dit is je inlogcode:</p><h1>{{otp}}</h1><p>Of <a href=\"{{link}}\">click this link</a> om direct in te loggen</p>"
     },
     "welcome": {
-      "subject": "Welkom bij Gaians!",
+      "subject": "Welkom op {{siteName}}!",
       "html": "<p>Hallo, welkom aan boord!</p><a href=\"{{link}}\">Go connect with people</a></p>"
     }
   }

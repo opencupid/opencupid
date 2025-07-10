@@ -4,11 +4,11 @@
   },
   "emails": {
     "loginLink": {
-      "subject": "Your login link",
-      "html": "<p>Hey there, welcome aboard!</p><h1>{{otp}}</h1><p>Please click this link to jump right in: <a href=\"{{link}}\">Confirm Email</a></p>"
+      "subject": "Your login link for {{siteName}}",
+      "html": "<p>Hey there,</p><p>This is your login code:</p><h1>{{otp}}</h1><p>Or <a href=\"{{link}}\">click this link</a> to jump right in</p>"
     },
     "welcome": {
-      "subject": "Welcome to Gaians!",
+      "subject": "Welcome to {{siteName}}!",
       "html": "<p>Hey there, welcome aboard!</p><a href=\"{{link}}\">Go connect with people</a></p>"
     }
   }
