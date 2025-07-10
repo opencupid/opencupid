@@ -7,10 +7,11 @@ function urlBase64ToUint8Array(base64: string): Uint8Array {
   const base64url = (base64 + padding).replace(/-/g, '+').replace(/_/g, '/')
   try {
     const raw = atob(base64url)
+    return Uint8Array.from([...raw].map(char => char.charCodeAt(0)))
   } catch (error) {
     console.error('Failed to decode base64 string:', error)
   }
-  return Uint8Array.from([...raw].map(char => char.charCodeAt(0)))
+  return new Uint8Array()
 }
 
 async function enablePushNotifications() {
@@ -29,7 +30,7 @@ async function enablePushNotifications() {
 
   // const payload = JSON.stringify(subscription)
   // Send to your backend
-  const res = await api.post('/push/subscription',  subscription)
+  const res = await api.post('/push/subscription', subscription)
   console.log('Subscription saved:', res)
 }
 
@@ -39,8 +40,8 @@ const { t } = useI18n()
 <template>
   <fieldset>
     <legend>{{ t('settings.push_notifications') }}</legend>
-    <BButton variant="primary" size="sm" @click="enablePushNotifications"
-      >{{ t('settings.enable_push') }}</BButton
-    >
+    <BButton variant="primary" size="sm" @click="enablePushNotifications">{{
+      t('settings.enable_push')
+    }}</BButton>
   </fieldset>
 </template>
