@@ -7,7 +7,6 @@ import { useStepper } from '@vueuse/core'
 
 import BackButton from './BackButton.vue'
 import DatingSteps from './DatingSteps.vue'
-import IconArrowRight from '@/assets/icons/arrows/arrow-right.svg'
 
 const { t } = useI18n()
 
@@ -35,7 +34,9 @@ const { current, isFirst, isLast, goToNext, goToPrevious, isCurrent } =
 </script>
 
 <template>
-  <div class="d-flex justify-content-start align-items-center w-100 flex-grow-0">
+  <div
+    class="d-flex justify-content-start align-items-center w-100 flex-grow-0 position-absolute top-0 start-0"
+  >
     <BackButton :show="!isFirst && !isLast" @click="goToPrevious" />
   </div>
 
@@ -50,7 +51,7 @@ const { current, isFirst, isLast, goToNext, goToPrevious, isCurrent } =
     </fieldset>
   </div>
 
-  <div class="mt-3 d-flex flex-column justify-content-end align-items-center">
+  <div class="mt-1 mt-md-3 d-flex flex-column justify-content-end align-items-center">
     <div class="mb-2">
       <BButton
         v-if="!isLast"
@@ -61,7 +62,6 @@ const { current, isFirst, isLast, goToNext, goToPrevious, isCurrent } =
         pill
       >
         {{ t('onboarding.wizard.next') }}
-        <IconArrowRight class="svg-icon" />
       </BButton>
       <BButton
         v-else

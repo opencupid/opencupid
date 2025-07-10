@@ -94,14 +94,11 @@ const isDetailView = computed(() => !!selectedProfileId.value)
     <!-- this is the container for the detail view -->
     <div
       v-if="isDetailView"
-      class="detail-view position-absolute w-100 h-100" 
+      class="detail-view position-absolute w-100 h-100"
       :class="{ active: isDetailView }"
     >
       <div class="overflow-auto hide-scrollbar h-100 d-flex flex-column">
-        <MiddleColumn
-          class="pt-sm-3 position-relative flex-grow-1"
-          style="min-height: 100%"
-        >
+        <MiddleColumn class="pt-sm-3 position-relative flex-grow-1" style="min-height: 100%">
           <PublicProfile
             v-if="selectedProfileId"
             :id="selectedProfileId"
@@ -164,44 +161,21 @@ const isDetailView = computed(() => !!selectedProfileId.value)
 
         <!-- After loading -->
         <template v-if="isInitialized && !haveAccess">
-          <BOverlay show no-spinner no-center :blur="null" bg-color="inherit" class="h-100 overlay">
-            <!-- Keep placeholders in background -->
-            <MiddleColumn class="overflow-hidden">
-              <PlaceholdersGrid :howMany="6" :isAnimated="false" />
+          <BContainer class="flex-grow-1 d-flex align-items-center justify-content-center">
+            <MiddleColumn class="">
+              <NoAccessCTA
+                v-if="!haveAccess"
+                v-model="currentScope"
+                @edit:profile="handleEditProfileIntent"
+              />
             </MiddleColumn>
-
-            <!-- CTA overlay -->
-            <template #overlay>
-              <MiddleColumn class="h-100">
-                <div
-                  class="h-100 w-100 d-flex flex-column align-items-center justify-content-center p-2"
-                >
-                  <NoAccessCTA
-                    v-if="!haveAccess"
-                    v-model="currentScope"
-                    @edit:profile="handleEditProfileIntent"
-                  />
-                  <!-- <StoreErrorOverlay v-else-if="storeError" :error="storeError">
-                    <template #default="{ error }">
-                      <BButton
-                        v-if="error.status"
-                        variant="primary"
-                        @click="$router.push({ name: 'BrowseProfiles' })"
-                      >
-                        Keep browsing though!
-                      </BButton>
-                    </template>
-                  </StoreErrorOverlay> -->
-                </div>
-              </MiddleColumn>
-            </template>
-          </BOverlay>
+          </BContainer>
         </template>
 
         <template v-if="isInitialized && !haveResults && haveAccess">
-          <BContainer>
-            <MiddleColumn class="h-100">
-              <div class="my-3">
+          <BContainer class="flex-grow-1 d-flex align-items-center justify-content-center">
+            <MiddleColumn class="">
+              <div class="mb-3">
                 <!-- There's nobody in your area that matches your preferences, yet. -->
                 {{ t('profiles.browse.social_no_results') }}
               </div>
@@ -265,8 +239,8 @@ const isDetailView = computed(() => !!selectedProfileId.value)
 .detail-view {
   // nav.fixed is on 1030 - on screens < md we put this above the navbar
   z-index: 1050;
-  height: 100vh;
-  inset:0;
+  height: 100dvh;
+  inset: 0;
 
   @include media-breakpoint-up(sm) {
     // on screens > sm navbar stays visible

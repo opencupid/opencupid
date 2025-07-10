@@ -109,7 +109,7 @@ onMounted(async () => {
             </ViewTitle>
 
             <div v-if="!profileStore.isLoading" class="d-flex flex-column gap-3">
-              <div class="mb-4 d-flex flex-column align-items-center">
+              <div class="mb-2 d-flex flex-column align-items-center">
                 <p class="wizard-step-subtitle">
                   <!-- See who else is on here -->
                   {{ t('onboarding.confirmation.browse_hint') }}

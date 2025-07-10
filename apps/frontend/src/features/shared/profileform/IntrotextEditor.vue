@@ -120,7 +120,10 @@ watch(
 <template>
   <div class="d-flex flex-column">
     <div class="d-flex justify-content-start align-items-center mb-3">
-      <ul class="nav nav-pills">
+      <ul class="nav nav-pills flex-grow-1">
+        <li class="nav-item me-2" style="width: 1rem; height: 1rem">
+          <IconGlobe class="svg-icon svg-icon-100" />
+        </li>
         <li class="nav-item me-2" v-for="lang in langList" :key="lang">
           <a
             class="nav-link"
@@ -133,12 +136,21 @@ watch(
             ><small>{{ lang }}</small></a
           >
         </li>
-        <li class="nav-item" style="width: 1rem; height: 1rem">
-          <IconGlobe class="svg-icon svg-icon-100 me-2" />
-        </li>
       </ul>
+      <div class="align-self-end">
+        <BButton
+          :variant="isListening ? 'danger' : 'secondary'"
+          class="btn-icon"
+          size="sm"
+          @click="toggleListening"
+          title="Coming soon"
+        >
+          <IconMic2 class="svg-icon" />
+          <!-- {{ isListening ? t('profiles.forms.dictate_listening') : t('profiles.forms.dictate') }} -->
+        </BButton>
+      </div>
     </div>
-    <div class="" v-for="lang in props.languages" :key="lang">
+    <div v-for="lang in props.languages" :key="lang">
       <div v-if="currentLanguage === lang">
         <BFormFloatingLabel :label="props.placeholder" label-for="publicName" v-if="model">
           <BFormTextarea
@@ -152,20 +164,6 @@ watch(
           />
         </BFormFloatingLabel>
       </div>
-    </div>
-    <div class="align-self-end">
-      <BButton
-        variant="secondary"
-        class="btn-icon"
-        size="sm"
-        @click="toggleListening"
-        disabled
-        title="Coming soon"
-      >
-        <IconMic2 class="svg-icon" />
-        <i class="fas fa-microphone"></i>
-        <!-- {{ isListening ? t('profiles.forms.dictate_listening') : t('profiles.forms.dictate') }} -->
-      </BButton>
     </div>
 
     <!-- <BFormFloatingLabel label="My name is..." label-for="publicName">
@@ -181,7 +179,7 @@ watch(
         class="mb-3"
       />
     </BFormFloatingLabel> -->
-<!-- 
+    <!-- 
     <div v-if="recognition">
       <p><strong>isListening:</strong> {{ isListening }}</p>
       <p><strong>lastTranscript:</strong> {{ lastTranscript }}</p>

@@ -160,9 +160,18 @@ const isDetailView = computed(() => !!messageStore.activeConversation)
   // nav.fixed is on 1030 - on screens < md we put this above the navbar
 
   // on screens > sm navbar stays visible
-  top: $navbar-height;
-  height: calc(100vh - $navbar-height);
-  z-index: 900;
+  // top: $navbar-height;
+  // height: calc(100vh - $navbar-height);
+  inset: 0;
+  height: 100dvh;
+  z-index: 1050;
+
+  @include media-breakpoint-up(sm) {
+    // on screens > sm navbar stays visible
+    top: $navbar-height;
+    height: calc(100vh - $navbar-height);
+    z-index: 900;
+  }
 }
 
 .inactive {
@@ -172,6 +181,5 @@ const isDetailView = computed(() => !!messageStore.activeConversation)
 }
 main {
   width: 100%;
-  // height: 100vh;
 }
 </style>

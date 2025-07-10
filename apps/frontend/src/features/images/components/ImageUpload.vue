@@ -93,7 +93,7 @@ function onModalHidden() {
 
 <template>
   <div class="image-upload h-100">
-    <BButton v-if="isMobile" variant="secondary" class="w-100 h-100" @click="openModal">
+    <BButton v-if="isMobile" variant="secondary" class="w-100 h-100" @click="openModal" @touchend="openModal">
       <AvatarUploadIcon class="svg-icon w-100 h-100" />
     </BButton>
     <UploadButton v-else @file:change="handleFileChange" :genericIcon="true" />

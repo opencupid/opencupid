@@ -173,13 +173,14 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
           <slot> </slot>
         </fieldset>
 
-        <div class="w-100 text-center mt-2">
+        <div class="w-100 text-center mt-2 mt-md-4">
           <BButton
             @click="handleNext"
             :disabled="!current.state"
             v-if="!isLast"
             variant="primary"
             size="lg"
+            class="px-md-5"
             pill
             >
             <!-- Next -->

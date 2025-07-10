@@ -30,7 +30,7 @@ const toggleDating = () => {
 <template>
   <div class="d-flex gap-2 flex-column justify-content-between w-100">
     <div
-      class="card btn-social-toggle clickable mb-2"
+      class="card btn-social-toggle clickable mb-2 mb-md-4"
       :class="{ active: model.isSocialActive }"
       @click="toggleSocial"
     >
