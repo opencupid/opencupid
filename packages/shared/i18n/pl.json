@@ -102,7 +102,7 @@
       "looks_good": "Wygląda dobrze!",
       "add_from_phone": "Dodaj zdjęcie z telefonu",
       "take_photo": "Lub zrób zdjęcie aparatem",
-      "nevermind": "Nevermind"
+      "nevermind": "Nieważne"
     },
     "forms": {
       "my_preferences": "Moje preferencje",
@@ -116,6 +116,7 @@
       "city_search_placeholder": "Wyszukaj miasta",
       "city_add_placeholder": "Dodaj to jako nowe miasto",
       "city_start_typing": "Zacznij wpisywać, aby wyszukać swoje miasto",
+      "city_deselect_label": "Usuń miasto",
       "tag_search_placeholder": "Wyszukaj zainteresowania...",
       "tag_add_placeholder": "Dodaj to jako nowy tag",
       "dictate_listening": "Słuchanie...",
@@ -133,10 +134,10 @@
       "unblock_confirmation": "Czy na pewno chcesz odblokować tego użytkownika?",
       "unblock_confirmation_yes": "Tak, odblokuj",
       "unblock_confirmation_no": "Nie, pozostań zablokowany",
-      "dialog_title": "Zablokować {nazwa}?",
+      "dialog_title": "Zablokować {name}?",
       "dialog_message_1": "Jeśli dana osoba Ci przeszkadza, możesz ją zablokować. Uniemożliwi to jej wysyłanie wiadomości lub interakcję z Twoim profilem. Nie będzie ona również widoczna dla Ciebie w żadnym miejscu na tej stronie, tak jakby nigdy nie istniała.",
       "dialog_message_2": "Nie otrzymają oni żadnego powiadomienia o tym, że ich zablokowałeś.",
-      "confirmation_no": "Nevermind",
+      "confirmation_no": "Nieważne",
       "confirmation_yes": "Tak, zablokuj ich",
       "block_confirm_message": "Nie zobaczysz ich więcej."
     },
@@ -152,7 +153,7 @@
       "invite_button": "Zaproś znajomych",
       "filters": {
         "dialog_ok_button": "Znajdź ludzi",
-        "dialog_cancel_button": "Nevermind",
+        "dialog_cancel_button": "Nieważne",
         "social_title": "Szukam połączeń...",
         "tags_label": "Jesteś zainteresowany...",
         "anywhere": "Gdziekolwiek",
@@ -208,7 +209,7 @@
     "send_message_button": "Wyślij",
     "message_input_placeholder": "Wpisz swoją wiadomość tutaj...",
     "new_message_notification": "{nadawca} wysłał wiadomość",
-    "send_message_to_user": "Wyślij wiadomość do {nazwa}",
+    "send_message_to_user": "Wyślij wiadomość do {name}",
     "unknown_sender": "Ktoś",
     "message_input_hint": "Naciśnij Enter, aby wysłać",
     "send_failed": "Ups, to nie zadziałało. Spróbuj ponownie.",
@@ -217,7 +218,7 @@
     "their_turn": "Ich kolej",
     "block_report_unmatch": "Zablokuj/zgłoś/niedopasuj",
     "block_user_ok": "Blok {name}",
-    "nevermind": "Nevermind",
+    "nevermind": "Nieważne",
     "send_message_heading": "Wyślij wiadomość",
     "welcome_message": "Witaj na {{siteName}}!\nJestem Mookie, twój gospodarz.\nTo miejsce, w którym możemy się łączyć, poznawać nowych ludzi i znajdować podobnie myślące dusze. Mam nadzieję, że spodoba ci się pobyt tutaj.\nMiłego korzystania!\n- Mookie",
     "no_messages_cta": "Znajdź ludzi, z którymi możesz porozmawiać",
@@ -235,7 +236,7 @@
       "appear_message": "Będziesz teraz widoczny dla osób, które szukają tego samego, co Ty. Zawsze możesz zmienić te informacje później.",
       "next": "Następny",
       "finish": "Zakończ",
-      "cancel": "Nevermind"
+      "cancel": "Nieważne"
     },
     "welcome_title": "Witaj na {siteName}!",
     "welcome_subtitle": "Przygotujmy Cię, abyś mógł zacząć poznawać ludzi.",
@@ -315,7 +316,7 @@
       "button_copied": "Skopiowany",
       "qr_hint": "Pokaż to na ich telefonie"
     },
-    "dialog_cancel_button": "Nevermind"
+    "dialog_cancel_button": "Nieważne"
   },
   "emails": {
     "loginLink": {
