@@ -1,0 +1,15 @@
+{
+  "messages": {
+    "welcome_message": "Welkom op {{siteName}}!\nIk ben Mookie, jullie gastheer.\nDit is een plek voor ons om met elkaar in contact te komen, nieuwe mensen te ontmoeten en gelijkgestemde zielen te vinden. Ik hoop dat je geniet van je verblijf hier.\nVeel plezier met verbinden!\n- Mookie"
+  },
+  "emails": {
+    "loginLink": {
+      "subject": "Je inloglink",
+      "html": "<p>Hallo, welkom aan boord!</p><h1>{{otp}}</h1><p>Klik op deze link om er meteen in te springen: <a href=\"{{link}}\">Confirm Email</a></p>"
+    },
+    "welcome": {
+      "subject": "Welkom bij Gaians!",
+      "html": "<p>Hallo, welkom aan boord!</p><a href=\"{{link}}\">Go connect with people</a></p>"
+    }
+  }
+}

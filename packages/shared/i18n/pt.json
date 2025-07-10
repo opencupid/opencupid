@@ -219,7 +219,6 @@
     "block_user_ok": "Bloqueia {name}",
     "nevermind": "Não te preocupes",
     "send_message_heading": "Enviar mensagem",
-    "welcome_message": "Bem-vindo ao {{siteName}}!\nEu sou o Mookie, o teu anfitrião.\nEste é um lugar para nos relacionarmos, conhecermos novas pessoas e encontrarmos almas que pensam como tu. Espero que gostes da tua estadia aqui.\nDesejo-te uma boa ligação!\n- Mookie",
     "no_messages_cta": "Encontra pessoas com quem falar",
     "no_messages_title": "Ainda não tens mensagens",
     "no_messages_placeholder": "As tuas conversas terão lugar aqui."
@@ -316,16 +315,6 @@
       "qr_hint": "Mostra isto ao telemóvel deles"
     },
     "dialog_cancel_button": "Não te preocupes"
-  },
-  "emails": {
-    "loginLink": {
-      "subject": "A tua ligação de acesso",
-      "html": "<p>Olá, sê bem-vindo a bordo!</p><h1>{{otp}}</h1><p>Clica nesta hiperligação para entrares de imediato: <a href=\"{{link}}\">Confirm Email</a></p>"
-    },
-    "welcome": {
-      "subject": "Bem-vindo ao Gaians!",
-      "html": "<p>Olá, sê bem-vindo a bordo!</p><a href=\"{{link}}\">Go connect with people</a></p>"
-    }
   },
   "landingpage": {
     "title_lg": "Bem-vindo ao {siteName}",

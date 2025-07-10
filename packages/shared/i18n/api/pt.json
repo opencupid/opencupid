@@ -1,0 +1,15 @@
+{
+  "messages": {
+    "welcome_message": "Bem-vindo ao {{siteName}}!\nEu sou o Mookie, o teu anfitrião.\nEste é um lugar para nos relacionarmos, conhecermos novas pessoas e encontrarmos almas que pensam como tu. Espero que gostes da tua estadia aqui.\nDesejo-te uma boa ligação!\n- Mookie"
+  },
+  "emails": {
+    "loginLink": {
+      "subject": "A tua ligação de acesso",
+      "html": "<p>Olá, sê bem-vindo a bordo!</p><h1>{{otp}}</h1><p>Clica nesta hiperligação para entrares de imediato: <a href=\"{{link}}\">Confirm Email</a></p>"
+    },
+    "welcome": {
+      "subject": "Bem-vindo ao Gaians!",
+      "html": "<p>Olá, sê bem-vindo a bordo!</p><a href=\"{{link}}\">Go connect with people</a></p>"
+    }
+  }
+}

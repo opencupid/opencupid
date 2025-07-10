@@ -220,7 +220,6 @@
     "block_user_ok": "Blok {name}",
     "nevermind": "Nieważne",
     "send_message_heading": "Wyślij wiadomość",
-    "welcome_message": "Witaj na {{siteName}}!\nJestem Mookie, twój gospodarz.\nTo miejsce, w którym możemy się łączyć, poznawać nowych ludzi i znajdować podobnie myślące dusze. Mam nadzieję, że spodoba ci się pobyt tutaj.\nMiłego korzystania!\n- Mookie",
     "no_messages_cta": "Znajdź ludzi, z którymi możesz porozmawiać",
     "no_messages_title": "Brak wiadomości",
     "no_messages_placeholder": "Twoje rozmowy będą odbywać się tutaj."
@@ -317,16 +316,6 @@
       "qr_hint": "Pokaż to na ich telefonie"
     },
     "dialog_cancel_button": "Nieważne"
-  },
-  "emails": {
-    "loginLink": {
-      "subject": "Twój link logowania",
-      "html": "<p>Witaj na pokładzie!</p><h1>{{otp}}</h1><p>Kliknij ten link, aby przejść od razu do gry: <a href=\"{{link}}\">Confirm Email</a></p>"
-    },
-    "welcome": {
-      "subject": "Witaj w Gaians!",
-      "html": "<p>Witaj na pokładzie!</p><a href=\"{{link}}\">Go connect with people</a></p>"
-    }
   },
   "landingpage": {
     "title_lg": "Witaj na {siteName}",

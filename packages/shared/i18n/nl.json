@@ -220,7 +220,6 @@
     "block_user_ok": "Blok {name}",
     "nevermind": "Laat maar",
     "send_message_heading": "Verstuur bericht",
-    "welcome_message": "Welkom op {{siteName}}!\nIk ben Mookie, jullie gastheer.\nDit is een plek voor ons om met elkaar in contact te komen, nieuwe mensen te ontmoeten en gelijkgestemde zielen te vinden. Ik hoop dat je geniet van je verblijf hier.\nVeel plezier met verbinden!\n- Mookie",
     "no_messages_cta": "Mensen vinden om mee te praten",
     "no_messages_title": "Nog geen berichten",
     "no_messages_placeholder": "Je gesprekken vinden hier plaats."
@@ -317,16 +316,6 @@
       "qr_hint": "Flash dit naar hun telefoon"
     },
     "dialog_cancel_button": "Laat maar"
-  },
-  "emails": {
-    "loginLink": {
-      "subject": "Je inloglink",
-      "html": "<p>Hallo, welkom aan boord!</p><h1>{{otp}}</h1><p>Klik op deze link om er meteen in te springen: <a href=\"{{link}}\">Confirm Email</a></p>"
-    },
-    "welcome": {
-      "subject": "Welkom bij Gaians!",
-      "html": "<p>Hallo, welkom aan boord!</p><a href=\"{{link}}\">Go connect with people</a></p>"
-    }
   },
   "landingpage": {
     "title_lg": "Welkom op {siteName}",

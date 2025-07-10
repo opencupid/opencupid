@@ -219,7 +219,6 @@
     "block_user_ok": "Bloc {name}",
     "nevermind": "Nevermind",
     "send_message_heading": "Envoyer un message",
-    "welcome_message": "Bienvenue sur {{siteName}} !\nJe suis Mookie, ton hôte.\nC'est un endroit qui nous permet de nous connecter, de rencontrer de nouvelles personnes et de trouver des âmes partageant les mêmes idées. J'espère que tu apprécieras ton séjour ici.\nBonne connexion !\n- Mookie",
     "no_messages_cta": "Trouve des gens à qui parler",
     "no_messages_title": "Aucun message pour l'instant",
     "no_messages_placeholder": "Tes conversations se dérouleront ici."
@@ -316,16 +315,6 @@
       "qr_hint": "Montre ça à leur téléphone"
     },
     "dialog_cancel_button": "Nevermind"
-  },
-  "emails": {
-    "loginLink": {
-      "subject": "Ton lien de connexion",
-      "html": "<p>Salut, bienvenue à bord !</p><h1>{{otp}}</h1><p>Clique sur ce lien pour te lancer dans l'aventure : <a href=\"{{link}}\">Confirm Email</a></p>"
-    },
-    "welcome": {
-      "subject": "Bienvenue chez les Gaïens !",
-      "html": "<p>Salut, bienvenue à bord !</p><a href=\"{{link}}\">Go connect with people</a></p>"
-    }
   },
   "landingpage": {
     "title_lg": "Bienvenue sur {siteName}",

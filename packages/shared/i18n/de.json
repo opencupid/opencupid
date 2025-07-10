@@ -175,7 +175,6 @@
     "block_user_ok": "Block {name}",
     "nevermind": "Nevermind",
     "send_message_heading": "Nachricht senden",
-    "welcome_message": "Willkommen bei {{siteName}}!\nIch bin Mookie, dein Gastgeber.\nDies ist ein Ort, an dem wir uns verbinden, neue Leute kennenlernen und Gleichgesinnte finden können. Ich hoffe, du genießt deinen Aufenthalt hier.\nViel Spaß beim Verbinden!\n- Mookie",
     "their_turn": "Sie sind dran",
     "no_messages_cta": "Menschen finden, mit denen du reden kannst",
     "no_messages_title": "Noch keine Nachrichten",
@@ -273,16 +272,6 @@
       "qr_hint": "Zeige dies auf ihrem Telefon"
     },
     "dialog_cancel_button": "Nevermind"
-  },
-  "emails": {
-    "loginLink": {
-      "subject": "Dein Login-Link",
-      "html": "<p>Hallo, willkommen an Bord!</p><h1>{{otp}}</h1><p>Bitte klicke auf diesen Link, um gleich loszulegen: <a href=\"{{link}}\">Confirm Email</a></p>"
-    },
-    "welcome": {
-      "subject": "Willkommen bei Gaians!",
-      "html": "<p>Hallo, willkommen an Bord!</p><a href=\"{{link}}\">Go connect with people</a></p>"
-    }
   },
   "home": {
     "welcome_title": "Willkommen bei {siteName}!",

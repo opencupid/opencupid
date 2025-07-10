@@ -289,7 +289,7 @@ export class MessageService {
     console.error('Welcome message sender ID:', senderId)
     if (senderId) {
       const t = i18next.getFixedT(locale)
-      const mdContent = t('messaging.welcome_message', { siteName })
+      const mdContent = t('messages.welcome_message', { siteName })
       const content = simpleMarkdownToHtml(mdContent)
       console.error('Sending welcome message:', content)
       return await prisma.$transaction(async tx => {

@@ -218,7 +218,6 @@
     "block_report_unmatch": "Blocare/raportare/nepotrivire",
     "block_user_ok": "Bloc {name}",
     "send_message_heading": "Trimite mesaj",
-    "welcome_message": "Bine ați venit la {siteName}!\nEu sunt Mookie, gazda voastră.\nAcesta este un loc în care să ne conectăm, să cunoaștem oameni noi și să găsim suflete care gândesc la fel. Sper să te bucuri de șederea ta aici.\nConectare fericită!\n- Mookie",
     "no_messages_cta": "Găsiți oameni cu care să vorbiți",
     "no_messages_title": "Încă nu există mesaje",
     "no_messages_placeholder": "Conversațiile tale vor avea loc aici.",
@@ -316,16 +315,6 @@
       "qr_hint": "Afișează asta la telefonul lor"
     },
     "dialog_cancel_button": "Lasă"
-  },
-  "emails": {
-    "loginLink": {
-      "subject": "Linkul dvs. de conectare",
-      "html": "<p>Bună ziua, bine ați venit la bord!</p><h1>{{otp}}</h1><p>Vă rugăm să faceți clic pe acest link pentru a intra direct în joc: <a href=\"{{link}}\">Confirm Email</a></p>"
-    },
-    "welcome": {
-      "subject": "Bine ați venit la Gaians!",
-      "html": "<p>Salutare, bine ați venit la bord!</p><a href=\"{{link}}\">Go connect with people</a></p>"
-    }
   },
   "landingpage": {
     "title_lg": "Bine ați venit la {siteName}",

@@ -289,7 +289,6 @@
     "block_user_ok": "Block {name}",
     "nevermind": "Nevermind",
     "send_message_heading": "Send Message",
-    "welcome_message": "Welcome to {{siteName}}!\nI am Mookie, your host.\nThis is a place for us to connect, meet new people, and find like-minded souls. I hope you enjoy your stay here.\nHappy connecting!\n- Mookie",
     "no_messages_cta": "Find people to talk to",
     "no_messages_title": "No messages yet",
     "no_messages_placeholder": "Your conversations will take place here."
@@ -339,15 +338,5 @@
       "qr_hint": "Flash this at their phone"
     },
     "dialog_cancel_button": "Nevermind"
-  },
-  "emails": {
-    "loginLink": {
-      "subject": "Your login link",
-      "html": "<p>Hey there, welcome aboard!</p><h1>{{otp}}</h1><p>Please click this link to jump right in: <a href=\"{{link}}\">Confirm Email</a></p>"
-    },
-    "welcome": {
-      "subject": "Welcome to Gaians!",
-      "html": "<p>Hey there, welcome aboard!</p><a href=\"{{link}}\">Go connect with people</a></p>"
-    }
   }
 }

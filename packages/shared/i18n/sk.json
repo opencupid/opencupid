@@ -219,7 +219,6 @@
     "block_user_ok": "Blok {name}",
     "nevermind": "Nevermind",
     "send_message_heading": "Odoslať správu",
-    "welcome_message": "Vitajte na {siteName}!\nSom Mookie, váš hostiteľ.\nToto je miesto, kde sa môžeme spojiť, spoznať nových ľudí a nájsť podobne zmýšľajúce duše. Dúfam, že sa vám tu bude páčiť.\nŠťastné spojenie!\n- Mookie",
     "no_messages_cta": "Nájdite ľudí, s ktorými sa môžete porozprávať",
     "no_messages_title": "Zatiaľ žiadne správy",
     "no_messages_placeholder": "Vaše rozhovory budú prebiehať tu."
@@ -316,16 +315,6 @@
       "qr_hint": "Ukážte im to na telefóne."
     },
     "dialog_cancel_button": "Nevermind"
-  },
-  "emails": {
-    "loginLink": {
-      "subject": "Vaše prihlasovacie prepojenie",
-      "html": "<p>Ahoj, vitajte na palube!</p><h1>{{otp}}</h1><p>Kliknutím na tento odkaz sa môžete rovno zapojiť: <a href=\"{{link}}\">Confirm Email</a></p>"
-    },
-    "welcome": {
-      "subject": "Vitajte v Gaians!",
-      "html": "<p>Ahoj, vitajte na palube!</p><a href=\"{{link}}\">Go connect with people</a></p>"
-    }
   },
   "landingpage": {
     "title_lg": "Vitajte na stránke {siteName}",

@@ -8,6 +8,7 @@ const translationsPath = path.join(
   'packages',
   'shared',
   'i18n',
+  'api',
   '{{lng}}.json'
 )
 

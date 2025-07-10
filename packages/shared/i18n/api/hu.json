@@ -269,6 +269,7 @@
     "block_user_ok": "Blokk {name}",
     "nevermind": "Nevermind",
     "send_message_heading": "Üzenet küldése",
+    "welcome_message": "Üdvözöljük a {{siteName}} oldalon!\nMookie vagyok, a házigazda.\nEz egy olyan hely, ahol kapcsolatba léphetünk, új embereket ismerhetünk meg, és hasonlóan gondolkodó lelkeket találhatunk. Remélem, jól érzed magad itt.\nBoldog kapcsolódást!\n- Mookie",
     "no_messages_cta": "Találjon embereket, akikkel beszélgethet",
     "no_messages_title": "Még nincsenek üzenetek",
     "no_messages_placeholder": "A beszélgetések itt fognak zajlani."
@@ -318,6 +319,16 @@
       "qr_hint": "Villantsd ezt a telefonjukra"
     },
     "dialog_cancel_button": "Nevermind"
+  },
+  "emails": {
+    "loginLink": {
+      "subject": "Az Ön bejelentkezési linkje",
+      "html": "<p>Üdvözöllek a fedélzeten!</p><h1>{{otp}}</h1><p>Kérjük, kattintson erre a linkre, hogy azonnal belevágjon: <a href=\"{{link}}\">Confirm Email</a></p>"
+    },
+    "welcome": {
+      "subject": "Üdvözöljük a Gaians!",
+      "html": "<p>Üdvözöllek a fedélzeten!</p><a href=\"{{link}}\">Go connect with people</a></p>"
+    }
   },
   "landingpage": {
     "title_lg": "Üdvözöljük a {siteName}",
