@@ -23,7 +23,7 @@ describe('TagService', () => {
 
   it('creates a tag', async () => {
     mockPrisma.tag.create.mockResolvedValue({ id: 'ck1234567890abcd12345670', name: 'Bar', slug: 'bar' })
-    const tag = await service.create('en', { name: 'Bar', createdBy: 'u1' })
+    const tag = await service.create('en', { name: 'Bar', createdBy: 'u1', originalLocale: 'en' })
     expect(tag.slug).toBe('bar')
     expect(mockPrisma.tag.create).toHaveBeenCalled()
   })

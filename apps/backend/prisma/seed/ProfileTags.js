@@ -29,6 +29,7 @@ async function main() {
           create: {
             name,
             slug,
+            originalLocale: 'en',
             isApproved: true,
           },
         });

@@ -106,6 +106,8 @@ model Tag {
   id            String              @id @default(cuid())
   slug          String              @unique
   name          String              @unique
+  /// Locale the tag was originally created in
+  originalLocale String            @default("en")
   isUserCreated Boolean             @default(false)
   isApproved    Boolean             @default(false)
   isHidden      Boolean             @default(false)

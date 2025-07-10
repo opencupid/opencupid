@@ -11,8 +11,8 @@ const TARGET_LOCALES = ['fr', 'de', 'hu', 'es', 'fr', 'it', 'pt-PT', 'sk', 'pl',
 
 const dryRun = false // Toggle this
 
-async function translateText(text, target) {
-  const translated = await deeplClient.translateText(text, 'en', target)
+async function translateText(text, source, target) {
+  const translated = await deeplClient.translateText(text, source, target)
   return translated.text
 }
 
@@ -26,16 +26,19 @@ async function main() {
   for (const tag of tags) {
     const existing = new Set(tag.translations.map(t => t.locale))
 
+    const sourceLocale = tag.originalLocale || 'en'
+    const sourceText = tag.translations.find(t => t.locale === sourceLocale)?.name || tag.name
+
     for (const longLocale of TARGET_LOCALES) {
 
       const locale = longLocale.slice(0,2) // Use only the first two characters for locale
-      if (existing.has(locale)) continue
+      if (existing.has(locale) || locale === sourceLocale.slice(0,2)) continue
 
       try {
-        const translated = await translateText(tag.name, longLocale)
+        const translated = await translateText(sourceText, sourceLocale, longLocale)
 
         if (dryRun) {
-          console.log(`Would translate "${tag.name}" → [${locale}] "${translated}"`)
+          console.log(`Would translate "${sourceText}" (${sourceLocale}) → [${locale}] "${translated}"`)
         } else {
           await prisma.tagTranslation.upsert({
             where: {
@@ -55,12 +58,12 @@ async function main() {
               name: translated,
             },
           })
-          console.log(`✔ Translated "${tag.name}" → [${locale}] "${translated}"`)
+          console.log(`✔ Translated "${sourceText}" (${sourceLocale}) → [${locale}] "${translated}"`)
         }
 
         count++
       } catch (err) {
-        console.error(`❌ Failed to translate "${tag.name}" to [${locale}]:`, err)
+        console.error(`❌ Failed to translate "${sourceText}" (${sourceLocale}) to [${locale}]:`, err)
       }
     }
       await sleep(1000); // Wait for 1 second

@@ -65,6 +65,7 @@ export class TagService {
         name: data.name,
         slug,
         createdBy: data.createdBy,
+        originalLocale: data.originalLocale ?? locale,
         isApproved: true,
         isUserCreated: data.isUserCreated,
         translations: {

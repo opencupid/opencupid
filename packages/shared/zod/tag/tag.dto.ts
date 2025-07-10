@@ -32,6 +32,7 @@ export const CreateTagSchema = TagSchema.pick({
   name: true,
   createdBy: true,
   isUserCreated: true,
+  originalLocale: true,
 })
 
 export type CreateTagInput = z.infer<typeof CreateTagSchema>

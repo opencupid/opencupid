@@ -65,6 +65,7 @@ const tagsRoutes: FastifyPluginAsync = async fastify => {
           name: data.name,
           createdBy: userId, // Set the creator to the authenticated user
           isUserCreated: true, // Mark as user-created
+          originalLocale: locale,
         })
         const tag = DbTagToPublicTagTransform(created, locale)
         const response: TagResponse = { success: true, tag }
