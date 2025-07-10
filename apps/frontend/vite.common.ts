@@ -8,7 +8,7 @@ export const server = (mode: string) => {
 
   return {
     server: {
-      allowedHosts: ['localhost', 'oc.dev.froggle.org'],
+      allowedHosts: ['localhost', 'oc.dev.froggle.org', 'gaians.net'],
       proxy: {
         '/api': {
           target: 'http://localhost:3000', // or https://localhost:3000 if backend runs TLS
