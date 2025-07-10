@@ -125,7 +125,8 @@
       "intro_who_placeholder": "Kogo chciałbyś poznać?",
       "publicname_hint": "Tylko imię i nazwisko.",
       "save_changes_hint": "Edycja zakończona",
-      "edit_button_hint": "Edytuj swoje informacje"
+      "edit_button_hint": "Edytuj swoje informacje",
+      "city_deselect_label": "Usuń"
     },
     "blocklist": {
       "title": "Zablokowani użytkownicy",
@@ -147,7 +148,7 @@
       "no_access_social_title": "Twój profil społecznościowy jest obecnie prywatny.",
       "no_access_social_description": "Gdy inni nie widzą Ciebie, Ty nie widzisz ich - to sprawiedliwe.  Aby zobaczyć i poznać innych, upublicznij swój profil.",
       "cta_button_label": "Przejdź do mojego profilu",
-      "social_no_results": "W Twojej okolicy nie ma jeszcze nikogo, kto odpowiadałby Twoim preferencjom.",
+      "social_no_results": "Nie znaleźliśmy jeszcze nikogo w {country}.",
       "no_results_cta_title": "Ta społeczność wciąż rośnie.",
       "no_results_cta_description": "Możesz pomóc, zapraszając swoich znajomych. Im więcej, tym weselej.",
       "invite_button": "Zaproś znajomych",
@@ -160,8 +161,11 @@
         "locate_button_title": "Ustaw na mój kraj",
         "search_button_title_social": "Znajdź ludzi",
         "search_button_title_dating": "Znajdź ludzi",
-        "age_range": "Przedział wiekowy:"
-      }
+        "age_range": "Przedział wiekowy:",
+        "filter_display_label": "Patrząc do środka:"
+      },
+      "social_no_results_city": "Nie znalazłem jeszcze nikogo w {cityName}.",
+      "social_no_results_tags": "Nie znalazłem nikogo o takich zainteresowaniach."
     },
     "pronouns_edit_label": "zaimki"
   },

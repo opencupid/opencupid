@@ -124,7 +124,8 @@
       "intro_who_placeholder": "S kým by ste sa chceli stretnúť?",
       "publicname_hint": "Prosím, len krstné meno.",
       "save_changes_hint": "Hotové úpravy",
-      "edit_button_hint": "Upravte svoje informácie"
+      "edit_button_hint": "Upravte svoje informácie",
+      "city_deselect_label": "Odstránenie stránky"
     },
     "blocklist": {
       "title": "Zablokovaní používatelia",
@@ -146,7 +147,7 @@
       "no_access_social_title": "Váš vlastný profil v sociálnej sieti je momentálne súkromný.",
       "no_access_social_description": "Keď vás ostatní nevidia, vy nevidíte ich - je to spravodlivé.  Ak chcete vidieť a spoznať ostatných, zverejnite svoj profil.",
       "cta_button_label": "Prejsť na môj profil",
-      "social_no_results": "Vo vašej oblasti zatiaľ nie je nikto, kto by zodpovedal vašim preferenciám.",
+      "social_no_results": "Na stránke {country} sme zatiaľ nikoho nenašli.",
       "no_results_cta_title": "Táto komunita stále rastie.",
       "no_results_cta_description": "Môžete pomôcť tým, že pozvete svojich priateľov, aby sa pripojili. Čím viac, tým lepšie.",
       "invite_button": "Pozvať priateľov",
@@ -159,8 +160,11 @@
         "locate_button_title": "Nastaviť na moju krajinu",
         "search_button_title_social": "Nájsť ľudí",
         "search_button_title_dating": "Nájsť ľudí",
-        "age_range": "Veková kategória:"
-      }
+        "age_range": "Veková kategória:",
+        "filter_display_label": "Pri pohľade dovnútra:"
+      },
+      "social_no_results_city": "Na stránke {cityName} som zatiaľ nikoho nenašiel.",
+      "social_no_results_tags": "Nenašiel som nikoho s takýmito záujmami."
     },
     "pronouns_edit_label": "zámená"
   },

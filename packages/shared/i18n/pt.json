@@ -124,7 +124,8 @@
       "intro_who_placeholder": "Quem gostarias de conhecer?",
       "publicname_hint": "Só o primeiro nome, por favor.",
       "save_changes_hint": "Edição concluída",
-      "edit_button_hint": "Editar a tua informação"
+      "edit_button_hint": "Editar a tua informação",
+      "city_deselect_label": "Retira"
     },
     "blocklist": {
       "title": "Utilizadores bloqueados",
@@ -146,7 +147,7 @@
       "no_access_social_title": "O teu próprio perfil social é atualmente privado.",
       "no_access_social_description": "Quando os outros não te conseguem ver, tu não os consegues ver - é justo.  Para veres e conheceres outras pessoas, torna o teu perfil público.",
       "cta_button_label": "Vai ao meu perfil",
-      "social_no_results": "Ainda não há ninguém na tua zona que corresponda às tuas preferências.",
+      "social_no_results": "Ainda não encontrámos ninguém em {country}.",
       "no_results_cta_title": "Esta comunidade continua a crescer.",
       "no_results_cta_description": "Podes ajudar convidando os teus amigos a juntarem-se a nós. Quanto mais, melhor.",
       "invite_button": "Convida amigos",
@@ -159,8 +160,11 @@
         "locate_button_title": "Vai para o meu país",
         "search_button_title_social": "Encontra pessoas",
         "search_button_title_dating": "Encontra pessoas",
-        "age_range": "Idade:"
-      }
+        "age_range": "Idade:",
+        "filter_display_label": "Olha para dentro:"
+      },
+      "social_no_results_city": "Ainda não encontraste ninguém em {cityName}.",
+      "social_no_results_tags": "Ainda não encontraste ninguém com esses interesses."
     },
     "pronouns_edit_label": "pronomes"
   },

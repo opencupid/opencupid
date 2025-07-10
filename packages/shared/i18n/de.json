@@ -120,7 +120,8 @@
       "intro_who_placeholder": "Wen würdest du gerne mal treffen?",
       "publicname_hint": "Bitte nur den Vornamen.",
       "save_changes_hint": "Fertig bearbeiten",
-      "edit_button_hint": "Deine Infos bearbeiten"
+      "edit_button_hint": "Deine Infos bearbeiten",
+      "city_deselect_label": "entfernen"
     },
     "blocklist": {
       "title": "Gesperrte Benutzer",
@@ -142,7 +143,7 @@
       "no_access_social_title": "Dein eigenes soziales Profil ist derzeit privat.",
       "no_access_social_description": "Wenn andere dich nicht sehen können, kannst du sie auch nicht sehen - das ist nur fair.  Um andere zu sehen und zu treffen, mach bitte dein Profil öffentlich.",
       "cta_button_label": "Gehe zu meinem Profil",
-      "social_no_results": "In deiner Gegend gibt es noch niemanden, der deinen Wünschen entspricht.",
+      "social_no_results": "Wir haben noch niemanden auf {country} gefunden.",
       "no_results_cta_title": "Diese Gemeinschaft wächst immer noch.",
       "no_results_cta_description": "Du kannst helfen, indem du deine Freunde zum Mitmachen einlädst. Je mehr, desto besser.",
       "invite_button": "Freunde einladen",
@@ -155,8 +156,11 @@
         "locate_button_title": "Auf mein Land eingestellt",
         "search_button_title_social": "Menschen finden",
         "search_button_title_dating": "Menschen finden",
-        "age_range": "Altersspanne:"
-      }
+        "age_range": "Altersspanne:",
+        "filter_display_label": "Schau rein:"
+      },
+      "social_no_results_city": "Ich habe noch niemanden auf {cityName} gefunden.",
+      "social_no_results_tags": "Ich habe niemanden mit diesen Interessen gefunden."
     },
     "pronouns_edit_label": "Pronomen"
   },

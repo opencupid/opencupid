@@ -28,7 +28,8 @@
     "test:coverage": "pnpm run test:coverage:frontend && pnpm run test:coverage:backend",
     "test:coverage:frontend": "pnpm --filter frontend run test:unit --coverage --run",
     "test:coverage:backend": "pnpm --filter backend run test --coverage --run",
-    "translate": "npx json-autotranslate -i packages/shared/i18n/ --directory-structure ngx-translate -d --type key-based -m i18next -s deepl-free -c ${DEEPL_API_KEY},less,1000"
+    "translate:icu": "npx json-autotranslate -i packages/shared/i18n/ --directory-structure ngx-translate -d --type key-based -m icu -s deepl-free -c ${DEEPL_API_KEY},less,1000",
+    "translate:i18next": "npx json-autotranslate -i packages/shared/i18n/api --directory-structure ngx-translate -d --type key-based -m icu -s deepl-free -c ${DEEPL_API_KEY},less,1000"
   },
   "dependencies": {
     "@types/node": "^22.16.1",

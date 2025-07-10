@@ -124,7 +124,8 @@
       "intro_who_placeholder": "Pe cine ți-ar plăcea să întâlnești?",
       "publicname_hint": "Numai prenumele, vă rog.",
       "save_changes_hint": "Editare terminată",
-      "edit_button_hint": "Editează-ți informațiile"
+      "edit_button_hint": "Editează-ți informațiile",
+      "city_deselect_label": "Eliminați"
     },
     "blocklist": {
       "title": "Utilizatori blocați",
@@ -146,7 +147,7 @@
       "no_access_social_title": "Profilul dvs. social este în prezent privat.",
       "no_access_social_description": "Când ceilalți nu te pot vedea, nici tu nu-i poți vedea - este corect.  Pentru a vedea și a cunoaște alte persoane, vă rugăm să vă faceți profilul public.",
       "cta_button_label": "Du-te la profilul meu",
-      "social_no_results": "Nu există încă nimeni în zona ta care să corespundă preferințelor tale.",
+      "social_no_results": "Nu am găsit încă pe nimeni la {country}.",
       "no_results_cta_title": "Această comunitate este încă în creștere.",
       "no_results_cta_description": "Puteți ajuta invitându-vă prietenii să se alăture. Cu cât mai mulți, cu atât mai bine.",
       "invite_button": "Invitați prietenii",
@@ -159,8 +160,11 @@
         "locate_button_title": "Set pentru țara mea",
         "search_button_title_social": "Găsiți oameni",
         "search_button_title_dating": "Găsiți oameni",
-        "age_range": "Interval de vârstă:"
-      }
+        "age_range": "Interval de vârstă:",
+        "filter_display_label": "Privind înăuntru:"
+      },
+      "social_no_results_city": "Nu am găsit încă pe nimeni în {cityName}.",
+      "social_no_results_tags": "Nu am găsit pe nimeni cu aceste interese."
     },
     "pronouns_edit_label": "pronume"
   },

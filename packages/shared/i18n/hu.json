@@ -58,7 +58,7 @@
     "login": "Belépés",
     "auth_id_input_empty": "Add meg e-mail címedet vagy telefonszámodat.",
     "auth_id_input_label": "E-mail vagy telefonszám",
-    "auth_id_input_placeholder": "",
+    "auth_id_input_placeholder": "+12 34567121 vagy az Ön email.com",
     "captcha_input_label": "Emberi lény vagyok!",
     "captcha_verify": "Nézzük meg",
     "captcha_verifying": "Egy pillanat...",
@@ -124,7 +124,8 @@
       "intro_who_placeholder": "Kivel szeretnél találkozni?",
       "publicname_hint": "Csak a keresztnevedet",
       "save_changes_hint": "Kész a szerkesztés",
-      "edit_button_hint": "Változtatás"
+      "edit_button_hint": "Változtatás",
+      "city_deselect_label": "Távolítsa el a"
     },
     "blocklist": {
       "title": "Letiltott felhasználók",
@@ -146,10 +147,9 @@
       "no_access_social_title": "A saját közösségi profilod jelenleg nem nyilvános.",
       "no_access_social_description": "Ha mások nem látnak téged, te sem láthatod őket - ez így fair.  Ha nyilvánossá teszed, akkor látni fogod itt a többieket.",
       "cta_button_label": "A beállításaimhoz",
-      "social_no_results": "Még nincs itt ({country}) senki a közösségben.",
-      "social_no_results_city": "Még nincs itt ({cityName}) senki. Próbálj tágabban keresni, csak országra.",
-      "social_no_results_tags": "Ilyen érdeklődési körű tagokat nem találtunk.  Próbálj más érdeklődésre keresni.",
-
+      "social_no_results": "A {country} címen még nem találtunk senkit.",
+      "social_no_results_city": "Még nem találtam senkit a {cityName} címen.",
+      "social_no_results_tags": "Nem találtam senkit, akinek ilyen érdekei lennének.",
       "no_results_cta_title": "Ez a közösség még növekszik.",
       "no_results_cta_description": "Segíthetsz, ha meghívod barátaidat, hogy csatlakozzanak. Minél többen vagyunk, annál jobb.",
       "invite_button": "Barátok meghívása",
@@ -162,7 +162,8 @@
         "locate_button_title": "Keress körülöttem",
         "search_button_title_social": "Keresés",
         "search_button_title_dating": "Keresés",
-        "age_range": "Korosztály:"
+        "age_range": "Korosztály:",
+        "filter_display_label": "Belenézek:"
       }
     },
     "pronouns_edit_label": "névmások"
@@ -190,7 +191,7 @@
     "relationship_subtitle": "A családi helyzetem a következő",
     "dating_intro_title": "Kit keresek",
     "dating_intro_subtitle": "Ez csak azok számára lesz látható, akik szintén kapcsolatot keresnek.  Akik egyéb kapcsolódást keresnek, ők nem olvassák ezt a részt.",
-    "dating_intro_placeholder": "",
+    "dating_intro_placeholder": "Meséljen egy kicsit arról, hogy milyen kapcsolatot keres",
     "confirmation": {
       "title": "Minden kész!",
       "profile_hint": "Hogyan látnak mások?",
