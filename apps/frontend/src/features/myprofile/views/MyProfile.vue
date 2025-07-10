@@ -58,6 +58,15 @@ const handleFinishEdit = async () => {
     isDatingWizardActive.value = false
   }
 }
+const handleFinishDatingOnboarding = async () => {
+  const res = await updateProfile()
+  formData.isDatingActive = true
+  await updateScopes()
+  if (res.success) {
+    isDatingWizardActive.value = false
+    router.push({ name: 'BrowseProfilesScope', params: { scope: 'dating' } })
+  }
+}
 
 const handleCancelEdit = () => {
   isDatingWizardActive.value = false
@@ -143,10 +152,14 @@ const hint = computed(() => history?.state?.hint || null)
       :no-header="true"
       :no-footer="true"
       :show="true"
-      body-class="d-flex flex-column align-items-center justify-content-center overflow-hidden p-5"
+      body-class="d-flex flex-column align-items-center justify-content-center overflow-auto hide-scrollbar p-2 p-md-5"
       :keyboard="false"
     >
-      <DatingWizard v-model="formData" @finished="handleFinishEdit" @cancel="handleCancelEdit" />
+      <DatingWizard
+        v-model="formData"
+        @finished="handleFinishDatingOnboarding"
+        @cancel="handleCancelEdit"
+      />
     </BModal>
   </main>
 </template>
