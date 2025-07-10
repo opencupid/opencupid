@@ -4,7 +4,9 @@ vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 vi.mock('@/store/i18nStore', () => ({ useI18nStore: () => ({ getLanguage: () => 'en' }) }))
 vi.mock('@/assets/icons/interface/mic-2.svg', () => ({ default: { template: '<div />' } }))
 
-
+vi.mock('@/lib/i18n', () => ({
+  sortLanguagesWithEnFirst: (langs: string[]) => langs,
+}))
 
 vi.mock('@/assets/icons/interface/globe.svg', () => ({ default: { template: '<div />' } }))
 
