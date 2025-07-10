@@ -38,20 +38,9 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
             if (id.includes('assets/icons')) {
               return 'icons'
             }
-            if (id.includes('vue3-flag-icons')) {
+            if (id.includes('flag-icons')) {
               return 'flags'
             }
-            // output: {
-            //   manualChunks(id) {
-            //     if (id.includes('features/auth')) {
-            //       return 'auth'
-            //     }
-            //     if (id.includes('assets/icons')) {
-            //       return 'icons'
-            //     }
-            //   }
-            // }
-
           }
         }
       }

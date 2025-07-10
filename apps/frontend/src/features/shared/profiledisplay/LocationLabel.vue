@@ -51,12 +51,12 @@ const countryCode = computed(() => {
       <span v-if="showCountryLabel">
         {{ countryName }}
       </span>
-      <span v-if="showCountryIcon" class="flag-icon" @click="$event.stopPropagation()">
+      <span v-if="showCountryIcon" @click="$event.stopPropagation()">
         <BTooltip :delay="100" placement="top" :title="countryName">
           <template #target>
             <CountryFlag 
               :code="countryCode"
-              size="36"
+              size="32"
               circle
               :title="countryName"
             />

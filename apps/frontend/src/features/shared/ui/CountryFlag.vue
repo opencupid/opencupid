@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import FlagIcon, { type CountryCode } from 'vue3-flag-icons'
 import 'flag-icons/css/flag-icons.min.css'
 
 defineProps<{
@@ -9,11 +8,20 @@ defineProps<{
 }>()
 </script>
 <template>
-  <FlagIcon
-    :code="code as CountryCode"
-    circle
-    v-if="code"
-    :title="title ?? ''"
-    v-bind:size="size"
-  />
+  <div
+    class="fis flag-icon"
+    :class="`fi-${code?.toLowerCase()}`"
+    :title="title"
+    :style="{ width: size + 'px', height: size + 'px' }"
+  ></div>
 </template>
+<style>
+.flag-icon {
+  width: 100%;
+  height: 100%;
+  background-size: contain;
+  background-position: 50%;
+  background-repeat: no-repeat;
+  border-radius: 50%;
+}
+</style>
