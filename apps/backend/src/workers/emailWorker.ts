@@ -67,6 +67,58 @@ new Worker(
         html: t('emails.welcome.html', { link, siteName }),
       })
     }
+
+    if (job.name === 'sendMessageNotificationEmail') {
+      const { userId, sender } = job.data as { userId: string, sender: string }
+
+      const user = await prisma.user.findUnique({ where: { id: userId } })
+      if (!user) throw new Error('User not found')
+      if (!user.email) throw new Error('Email not found for user')
+
+      const t = i18next.getFixedT(user.language || 'en')
+      const link = `${appConfig.FRONTEND_URL}/messages`
+      await transporter.sendMail({
+        from: appConfig.EMAIL_FROM,
+        to: user.email,
+        subject: t('emails.new_message.subject', { siteName }),
+        html: t('emails.new_message.html', { link, siteName, sender }),
+      })
+    }
+
+    if (job.name === 'sendLikeNotificationEmail') {
+      const { userId } = job.data as { userId: string }
+
+      const user = await prisma.user.findUnique({ where: { id: userId } })
+      if (!user) throw new Error('User not found')
+      if (!user.email) throw new Error('Email not found for user')
+
+      const t = i18next.getFixedT(user.language || 'en')
+      const link = `${appConfig.FRONTEND_URL}/browse/dating`
+      await transporter.sendMail({
+        from: appConfig.EMAIL_FROM,
+        to: user.email,
+        subject: t('emails.new_like.subject', { siteName }),
+        html: t('emails.new_like.html', { link, siteName }),
+      })
+    }
+
+
+    if (job.name === 'sendMatchNotificationEmail') {
+      const { userId, name } = job.data as { userId: string, name: string }
+
+      const user = await prisma.user.findUnique({ where: { id: userId } })
+      if (!user) throw new Error('User not found')
+      if (!user.email) throw new Error('Email not found for user')
+
+      const t = i18next.getFixedT(user.language || 'en')
+      const link = `${appConfig.FRONTEND_URL}/matches`
+      await transporter.sendMail({
+        from: appConfig.EMAIL_FROM,
+        to: user.email,
+        subject: t('emails.new_match.subject', { siteName }),
+        html: t('emails.new_match.html', { link, siteName, name }),
+      })
+    }
   },
   { connection }
 )
