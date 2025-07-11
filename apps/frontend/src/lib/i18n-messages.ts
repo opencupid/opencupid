@@ -6,7 +6,7 @@ if (import.meta.env.PROD) {
   messages = (await import('@intlify/unplugin-vue-i18n/messages')).default || {}
 } else {
   // Dev: eagerly import locale files so Vite can watch them
-  const modules = import.meta.glob('@shared/i18n/*.json', { eager: true }) as Record<string, { default: any }>
+  const modules = import.meta.glob('../../packages/shared/i18n/*.json', { eager: true }) as Record<string, { default: any }>
 
   messages = {}
 
