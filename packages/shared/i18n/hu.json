@@ -147,7 +147,7 @@
       "no_access_social_title": "A saját közösségi profilod jelenleg nem nyilvános.",
       "no_access_social_description": "Ha mások nem látnak téged, te sem láthatod őket - ez így fair.  Ha nyilvánossá teszed, akkor látni fogod itt a többieket.",
       "cta_button_label": "A beállításaimhoz",
-      "social_no_results": "A {country} címen még nem találtunk senkit.",
+      "social_no_results": "Errefelé még nem találtunk senkit.",
       "social_no_results_city": "Még nem találtam senkit a {cityName} címen.",
       "social_no_results_tags": "Nem találtam senkit, akinek ilyen érdekei lennének.",
       "no_results_cta_title": "Ez a közösség még növekszik.",
@@ -163,7 +163,7 @@
         "search_button_title_social": "Keresés",
         "search_button_title_dating": "Keresés",
         "age_range": "Korosztály:",
-        "filter_display_label": "Belenézek:"
+        "filter_display_label": "Hely:"
       }
     },
     "pronouns_edit_label": "névmások"

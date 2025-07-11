@@ -15,7 +15,6 @@ import serveStatic from 'serve-static'
 import VitePluginBrowserSync from 'vite-plugin-browser-sync'
 import { server, define } from './vite.common'
 import MetaInjectPlugin from './vite/vite-plugin-meta-inject'
-import WatchLocalesPlugin from './vite/watch-locales-plugin'
 
 process.env.DEBUG = 'vite:*' // Add this to force verbose output
 // https://vite.dev/config/
@@ -88,7 +87,6 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       VueI18nPlugin({
         include: [path.resolve(__dirname, '../../packages/shared/i18n/*')]
       }),
-      WatchLocalesPlugin(),
       svgLoader(),
       Components({
         resolvers: [BootstrapVueNextResolver()],
