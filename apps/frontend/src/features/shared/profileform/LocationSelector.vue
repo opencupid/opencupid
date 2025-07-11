@@ -5,6 +5,17 @@ import { useI18n } from 'vue-i18n'
 import { useKomootStore, type KomootLocation } from '@/features/komoot/stores/komootStore'
 import type { LocationDTO } from '@zod/dto/location.dto'
 
+
+import { useDebounceFn } from '@vueuse/core'
+
+const debouncedAsyncFind = useDebounceFn(async (query: string) => {
+  if (!query) {
+    komoot.results = selected.value ? [selected.value] : []
+    return
+  }
+  await komoot.search(query, locale.value)
+}, 500) // debounce delay in ms
+
 const model = defineModel<LocationDTO>({
   default: () => ({
     country: '',
@@ -54,7 +65,7 @@ async function asyncFind(query: string) {
     komoot.results = selected.value ? [selected.value] : []
     return
   }
-  await komoot.search(query, locale.value)
+  await debouncedAsyncFind(query)
 }
 </script>
 
