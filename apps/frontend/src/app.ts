@@ -80,7 +80,7 @@ export async function bootstrapApp() {
 
   useBootstrap().bootstrap()
 
-  await appUseI18n(app)
+  appUseI18n(app)
 
   await router.isReady()
 

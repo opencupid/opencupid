@@ -1,8 +1,10 @@
 let messages: Record<string, any> = {}
 
-if (import.meta.env.PROD) {
+import prodMessages from '@intlify/unplugin-vue-i18n/messages'
+
+  if (import.meta.env.PROD) {
   // Production: use statically bundled messages
-  messages = (await import('@intlify/unplugin-vue-i18n/messages')).default || {}
+    messages = prodMessages || {}
 } else {
   // Dev: eagerly import locale files so Vite can watch them
   // it's not happening no matter what I do
