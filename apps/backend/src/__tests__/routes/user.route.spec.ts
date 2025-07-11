@@ -23,7 +23,7 @@ vi.mock('../../services/captcha.service', () => ({
 vi.mock('../../services/notifier.service', () => ({
   notifierService: { notifyUser: vi.fn() },
 }))
-vi.mock('@shared/config/appconfig', () => ({
+vi.mock('@/lib/appconfig', () => ({
   appConfig: {
     ALTCHA_HMAC_KEY: 'x',
     SMS_API_KEY: 'k',
