@@ -6,8 +6,6 @@ declare global {
   }
 }
 
-
-
 import { Settings } from 'luxon'
 Settings.defaultZone = 'Europe/Berlin'
 

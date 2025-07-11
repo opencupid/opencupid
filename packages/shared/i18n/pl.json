@@ -93,7 +93,7 @@
   },
   "profiles": {
     "send_message_button": "Wiadomość",
-    "profile_photos": "Zdjęcia {name}",
+    "profile_photos": "{name}zdjęcia",
     "no_profile_title": "Wypełnij swój profil",
     "no_profile_create": "Utwórz profil",
     "image_editor_help": "Twoje zdjęcie tutaj",
@@ -102,7 +102,7 @@
       "looks_good": "Wygląda dobrze!",
       "add_from_phone": "Dodaj zdjęcie z telefonu",
       "take_photo": "Lub zrób zdjęcie aparatem",
-      "nevermind": "Nieważne"
+      "nevermind": "Nevermind"
     },
     "forms": {
       "my_preferences": "Moje preferencje",
@@ -134,10 +134,10 @@
       "unblock_confirmation": "Czy na pewno chcesz odblokować tego użytkownika?",
       "unblock_confirmation_yes": "Tak, odblokuj",
       "unblock_confirmation_no": "Nie, pozostań zablokowany",
-      "dialog_title": "Zablokować {name}?",
+      "dialog_title": "Zablokuj {name}?",
       "dialog_message_1": "Jeśli dana osoba Ci przeszkadza, możesz ją zablokować. Uniemożliwi to jej wysyłanie wiadomości lub interakcję z Twoim profilem. Nie będzie ona również widoczna dla Ciebie w żadnym miejscu na tej stronie, tak jakby nigdy nie istniała.",
       "dialog_message_2": "Nie otrzymają oni żadnego powiadomienia o tym, że ich zablokowałeś.",
-      "confirmation_no": "Nieważne",
+      "confirmation_no": "Nevermind",
       "confirmation_yes": "Tak, zablokuj ich",
       "block_confirm_message": "Nie zobaczysz ich więcej."
     },
@@ -153,7 +153,7 @@
       "invite_button": "Zaproś znajomych",
       "filters": {
         "dialog_ok_button": "Znajdź ludzi",
-        "dialog_cancel_button": "Nieważne",
+        "dialog_cancel_button": "Nevermind",
         "social_title": "Szukam połączeń...",
         "tags_label": "Jesteś zainteresowany...",
         "anywhere": "Gdziekolwiek",
@@ -171,7 +171,7 @@
   "matches": {
     "matches_list_title": "Moje mecze",
     "you_received_like": "Otrzymałeś polubienie!",
-    "you_matched_with": "Dopasowałeś się do {name}!",
+    "you_matched_with": "Pasujesz do {name}!",
     "received_likes": "Nie masz polubień.|Masz 1 polubienie.|Masz {count} polubień!",
     "received_likes_cta": "Dowiedz się, kto go wysłał",
     "no_match_no_sent_like": "Musi tam być ktoś, kogo lubisz?  ",
@@ -182,7 +182,7 @@
     "notifications": {
       "you_have": "Masz",
       "likes": "{count} ❤️ | {count} ❤️ ",
-      "matches": "{count} nowych dopasowań |{count} nowych dopasowań",
+      "matches": "{count} nowy mecz |{count} nowe mecze",
       "and": "i"
     },
     "pass_confirm_dialog": {
@@ -202,7 +202,7 @@
     "you_matched_with_them": "Dopasowałeś się do nich",
     "send_a_like": "Wyślij im polubienie. Nie będą wiedzieć, kto je wysłał, dopóki nie polubią Cię ponownie.",
     "its_a_match": "To mecz!",
-    "send_them_a_message": "Wyślij {name} wiadomość",
+    "send_them_a_message": "Wyślij wiadomość na adres {name} ",
     "cancel_button": "Może później",
     "message_confirmation": "Nieźle!",
     "like_error": "Ups, to nie zadziałało. Spróbuj ponownie."
@@ -211,8 +211,8 @@
     "page_title": "Wiadomości",
     "send_message_button": "Wyślij",
     "message_input_placeholder": "Wpisz swoją wiadomość tutaj...",
-    "new_message_notification": "{nadawca} wysłał wiadomość",
-    "send_message_to_user": "Wyślij wiadomość do {name}",
+    "new_message_notification": "{sender} wysłał wiadomość",
+    "send_message_to_user": "Wyślij wiadomość na adres {name}",
     "unknown_sender": "Ktoś",
     "message_input_hint": "Naciśnij Enter, aby wysłać",
     "send_failed": "Ups, to nie zadziałało. Spróbuj ponownie.",
@@ -221,7 +221,7 @@
     "their_turn": "Ich kolej",
     "block_report_unmatch": "Zablokuj/zgłoś/niedopasuj",
     "block_user_ok": "Blok {name}",
-    "nevermind": "Nieważne",
+    "nevermind": "Nevermind",
     "send_message_heading": "Wyślij wiadomość",
     "no_messages_cta": "Znajdź ludzi, z którymi możesz porozmawiać",
     "no_messages_title": "Brak wiadomości",
@@ -238,7 +238,7 @@
       "appear_message": "Będziesz teraz widoczny dla osób, które szukają tego samego, co Ty. Zawsze możesz zmienić te informacje później.",
       "next": "Następny",
       "finish": "Zakończ",
-      "cancel": "Nieważne"
+      "cancel": "Nevermind"
     },
     "welcome_title": "Witaj na {siteName}!",
     "welcome_subtitle": "Przygotujmy Cię, abyś mógł zacząć poznawać ludzi.",
@@ -272,7 +272,8 @@
     },
     "next_button": "Następny",
     "back_button": "Powrót",
-    "finish_button": "Zakończ"
+    "finish_button": "Zakończ",
+    "interests_hint": "Zacznij wpisywać, aby wyszukać tagi. Możesz dodać nowe tagi, jeśli nie znajdziesz tego, czego szukasz."
   },
   "settings": {
     "title": "Ustawienia",
@@ -313,15 +314,15 @@
     },
     "share_dialog": {
       "title": "Rozpowszechniaj informacje",
-      "description": "Zaproś swoich znajomych do przyłączenia się do Gaians i nawiązania kontaktu z ludźmi o podobnych poglądach.",
+      "description": "Zaproś znajomych do dołączenia do Gaians i nawiąż kontakt z osobami o podobnych poglądach.",
       "button_copy": "Kopia",
       "button_copied": "Skopiowany",
       "qr_hint": "Pokaż to na ich telefonie"
     },
-    "dialog_cancel_button": "Nieważne"
+    "dialog_cancel_button": "Nevermind"
   },
   "landingpage": {
-    "title_lg": "Witaj na {siteName}",
+    "title_lg": "Witamy w {siteName}",
     "title": "{siteName}",
     "subtitle_1": "Jest to miejsce spotkań w świecie online, w którym możemy się nawzajem odnaleźć i połączyć.",
     "socialize_1": "Nawiąż kontakt podczas naszych podróży, znajdź w pobliżu podobnie myślące dusze, z którymi możesz spędzać czas.",

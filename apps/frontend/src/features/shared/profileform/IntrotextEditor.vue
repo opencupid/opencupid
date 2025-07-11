@@ -156,11 +156,10 @@ watch(
           <BFormTextarea
             v-model="model[lang]"
             id="content-input"
-            rows="5"
+            rows="3"
             no-resize
             size="lg"
             :required="true"
-            class="mb-3"
           />
         </BFormFloatingLabel>
       </div>

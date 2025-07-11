@@ -34,7 +34,8 @@ const imageStore = useImageStore()
       flags: '',
     },
     introSocial: {
-      state: computed(() => Object.values(formData.introSocialLocalized).some(val => val.trim() !== '')),
+      state: () =>true,
+      // state: computed(() => Object.values(formData.introSocialLocalized).some(val => val.trim() !== '')),
       flags: '',
     },
     photos: {
@@ -60,7 +61,8 @@ const imageStore = useImageStore()
       flags: '',
     },
     introDating: {
-      state: computed(() => Object.values(formData.introDatingLocalized).some(val => val.trim() !== '')),
+      state: () => true,
+      // state: computed(() => Object.values(formData.introDatingLocalized).some(val => val.trim() !== '')),
       flags: '',
     },
   }

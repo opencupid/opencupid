@@ -61,7 +61,7 @@
     "auth_id_input_placeholder": "+12 34567121 of je e-mail.com",
     "captcha_input_label": "Ik ben een mens",
     "login_confirm_welcome": "Welkom!",
-    "otp_check_messages": "Controleer je berichtjes",
+    "otp_check_messages": "Controleer je berichten",
     "otp_sent_phone": "We hebben je een kleine code naar je telefoonnummer gestuurd, voer deze hieronder in.",
     "otp_sent_email": "We hebben je een inloglink gestuurd, controleer je inbox. Als je deze niet ziet, controleer dan je spamfolder.",
     "otp_input_label": "Code invoeren",
@@ -157,7 +157,7 @@
         "social_title": "Ik ben op zoek naar connecties...",
         "tags_label": "Geïnteresseerd in...",
         "anywhere": "Overal",
-        "locate_button_title": "Ingesteld op mijn land",
+        "locate_button_title": "Stel in op mijn land",
         "search_button_title_social": "Mensen vinden",
         "search_button_title_dating": "Mensen vinden",
         "age_range": "Leeftijdscategorie:",
@@ -187,7 +187,7 @@
     },
     "pass_confirm_dialog": {
       "title": "Maar wacht...",
-      "question_matched": "Je hebt al met ze gematcht. Wil je ECHT unmatchen?",
+      "question_matched": "Je hebt al met hen gematcht. Wil je ECHT unmatchen?",
       "question_liked": "Je vond ze al leuk. Weet je zeker dat je wilt passen?",
       "matched_button_yes": "Ja, niet matchen",
       "matched_button_no": "Nee!",
@@ -210,8 +210,8 @@
   "messaging": {
     "page_title": "Berichtjes",
     "send_message_button": "Stuur",
-    "message_input_placeholder": "Type hier je bericht...",
-    "new_message_notification": "{sender} heeft een bericht verzonden",
+    "message_input_placeholder": "Typ hier je bericht...",
+    "new_message_notification": "{sender} een bericht verzonden",
     "send_message_to_user": "Stuur een bericht naar {name}",
     "unknown_sender": "Iemand",
     "message_input_hint": "Druk op Enter om te verzenden",
@@ -272,7 +272,8 @@
     },
     "next_button": "Volgende",
     "back_button": "Terug",
-    "finish_button": "Afwerking"
+    "finish_button": "Afwerking",
+    "interests_hint": "Begin te typen om tags te zoeken. Je kunt nieuwe tags toevoegen als je niet vindt wat je zoekt."
   },
   "settings": {
     "title": "Instellingen",

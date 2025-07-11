@@ -59,7 +59,9 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
 
 <template>
   <div class="w-100 h-100 d-flex flex-column justify-content-center align-items-center">
-    <div class="w-100 d-flex justify-content-between align-items-center position-absolute top-0 left-0">
+    <div
+      class="w-100 d-flex justify-content-between align-items-center position-absolute top-0 left-0"
+    >
       <BackButton :show="!isFirst && !isLast" @click="goToPrevious" />
     </div>
 
@@ -89,10 +91,6 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
             <!-- I am from... -->
             {{ t('onboarding.location_title') }}
           </legend>
-          <p class="wizard-step-subtitle">
-            <!-- Where I spend my time these days on our beautiful planet. -->
-            {{ t('onboarding.location_subtitle') }}
-          </p>
           <LocationSelectorComponent v-model="formData.location" :geoIp="true" />
         </fieldset>
 
@@ -102,11 +100,6 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
             <!-- The connections I'm looking for... -->
             {{ t('onboarding.connections_title') }}
           </legend>
-          <p class="wizard-step-subtitle">
-            <!-- goals selector hint -->
-            <!-- I feel complete but could use some company. -->
-            {{ t('onboarding.connections_subtitle') }}
-          </p>
           <GoalsSelector v-model="formData" />
         </fieldset>
 
@@ -125,6 +118,10 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
             :placeholder="t('onboarding.interests_placeholder')"
             :required="true"
           />
+          <div class="form-text text-muted">
+            <!-- Start typing to search for tags. You can add new tags if you don't find what you're looking for. -->
+            {{ t('onboarding.interests_hint') }}
+          </div>
         </fieldset>
 
         <fieldset v-else-if="isCurrent('languages')">
@@ -153,6 +150,10 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
             :languages="formData.languages"
             :placeholder="t('onboarding.social_intro_placeholder')"
           />
+          <div class="form-text text-muted">
+            <!-- This is optional, you can fill it out later. -->
+            {{ t('onboarding.social_intro_hint') }}
+          </div>
         </fieldset>
 
         <fieldset v-else-if="isCurrent('photos')">
@@ -160,11 +161,7 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
             <!-- I look like... -->
             {{ t('onboarding.photos_title') }}
           </legend>
-          <p class="wizard-step-subtitle">
-            <!-- Upload a profile picture and any other images you want to share. -->
-            {{ t('onboarding.photos_subtitle') }}
-          </p>
-            <ImageEditor />
+          <ImageEditor />
         </fieldset>
 
         <DatingSteps v-model="formData" :isCurrent></DatingSteps>
@@ -182,11 +179,10 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
             size="lg"
             class="px-md-5"
             pill
-            >
+          >
             <!-- Next -->
             {{ t('onboarding.wizard.next') }}
-            </BButton
-          >
+          </BButton>
         </div>
       </BForm>
       <!-- <div v-if="!isComplete" class="d-flex justify-content-center indicators ">
@@ -213,6 +209,10 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
 }
 :deep(.wizard) {
   font-size: 1rem;
+}
+p.wizard-step-subtitle {
+  margin-bottom: 0.5rem;
+  text-align: center;
 }
 // .indicators {
 //   bottom: 0;
