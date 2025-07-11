@@ -13,7 +13,7 @@
     "bigender": "Bigender",
     "cis_man": "Homem cisgénero",
     "cis_woman": "Mulher cisgénero",
-    "genderfluid": "Género fluido",
+    "genderfluid": "Genderfluid",
     "genderqueer": "Homossexual",
     "gender_nonconforming": "Não-conformidade de género",
     "hijra": "Hijra",
@@ -88,12 +88,12 @@
     "logout": "Terminar sessão"
   },
   "home": {
-    "welcome_title": "Bem-vindo ao {siteName}!",
+    "welcome_title": "Bem-vindo a {siteName}!",
     "meet_new_people": "Conhece novas pessoas"
   },
   "profiles": {
     "send_message_button": "Mensagem",
-    "profile_photos": "As fotos de {name}",
+    "profile_photos": "{name}as tuas fotos",
     "no_profile_title": "Preenche o teu perfil",
     "no_profile_create": "Criar perfil",
     "image_editor_help": "A tua foto aqui",
@@ -172,7 +172,7 @@
     "matches_list_title": "Os meus jogos",
     "you_received_like": "Recebeste um like!",
     "you_matched_with": "Combinaste com {name}!",
-    "received_likes": "Não tens gostos.|Tens 1 gosto.|Tens {count} de gostos!",
+    "received_likes": "Não tens gostos.|Tens 1 gosto.|Tens {count} gostos!",
     "received_likes_cta": "Descobre quem a enviou",
     "no_match_no_sent_like": "Tem de haver alguém de quem gostes por aí?  ",
     "no_match_no_sent_like_cta": "Começa a procurar",
@@ -182,12 +182,12 @@
     "notifications": {
       "you_have": "Tens",
       "likes": "{count} ❤️ | {count} ❤️ ",
-      "matches": "{count} nova correspondência |{count} novas correspondências",
+      "matches": "{count} nova partida |{count} novas partidas",
       "and": "e"
     },
     "pass_confirm_dialog": {
       "title": "Mas espera...",
-      "question_matched": "Já fizeste o match com eles. Queres mesmo desfazer a correspondência?",
+      "question_matched": "Já fizeste o match com eles. Queres mesmo desemparelhar?",
       "question_liked": "Já gostaste deles. Tens a certeza que queres passar?",
       "matched_button_yes": "Sim, não corresponde",
       "matched_button_no": "Não!",
@@ -202,7 +202,7 @@
     "you_matched_with_them": "Combinaste com eles",
     "send_a_like": "Envia-lhes um like. Eles não saberão quem o enviou até te darem um like de volta.",
     "its_a_match": "Combina!",
-    "send_them_a_message": "Envia uma mensagem a {name}",
+    "send_them_a_message": "Envia uma mensagem para {name} ",
     "cancel_button": "Talvez mais tarde",
     "message_confirmation": "Que bom!",
     "like_error": "Oops, isto não funcionou. Tenta novamente."
@@ -211,8 +211,8 @@
     "page_title": "Mensagens",
     "send_message_button": "Envia",
     "message_input_placeholder": "Escreve aqui a tua mensagem...",
-    "new_message_notification": "{sender} enviaste uma mensagem",
-    "send_message_to_user": "Envia uma mensagem a {name}",
+    "new_message_notification": "{sender} enviou uma mensagem",
+    "send_message_to_user": "Envia uma mensagem para {name}",
     "unknown_sender": "Alguém",
     "message_input_hint": "Pressiona Enter para enviar",
     "send_failed": "Oops, isto não funcionou. Tenta novamente.",
@@ -240,7 +240,7 @@
       "finish": "Termina",
       "cancel": "Não te preocupes"
     },
-    "welcome_title": "Bem-vindo ao {siteName}!",
+    "welcome_title": "Bem-vindo a {siteName}!",
     "welcome_subtitle": "Vamos preparar-te para que possas começar a conhecer pessoas.",
     "location_title": "Eu sou de...",
     "location_subtitle": "Onde passo o meu tempo hoje em dia no nosso belo planeta.",
@@ -272,7 +272,8 @@
     },
     "next_button": "Seguinte",
     "back_button": "Volta",
-    "finish_button": "Termina"
+    "finish_button": "Termina",
+    "interests_hint": "Começa a escrever para procurar etiquetas. Podes adicionar novas etiquetas se não encontrares o que procuras."
   },
   "settings": {
     "title": "Definições",

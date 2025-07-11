@@ -71,7 +71,7 @@
     "password": "Password",
     "captcha_success": "Certo!  Scusa se te lo chiedo.",
     "captcha_refresh": "Riprova",
-    "captcha_error": "C'è qualcosa che non va, prova di nuovo?",
+    "captcha_error": "C'è qualcosa che non va, riprova?",
     "captcha_verify": "Controlliamo",
     "captcha_verifying": "Aspetta un attimo..."
   },
@@ -93,7 +93,7 @@
   },
   "profiles": {
     "send_message_button": "Messaggio",
-    "profile_photos": "Le foto di {name}",
+    "profile_photos": "{name}le foto di",
     "no_profile_title": "Compila il tuo profilo",
     "no_profile_create": "Crea profilo",
     "image_editor_help": "La tua foto qui",
@@ -123,7 +123,7 @@
       "intro_placeholder": "Racconta un po' di te",
       "intro_who_placeholder": "Chi vorresti incontrare?",
       "publicname_hint": "Solo nome e cognome, per favore.",
-      "save_changes_hint": "Modifica completata",
+      "save_changes_hint": "Fine della modifica",
       "edit_button_hint": "Modifica le tue informazioni",
       "city_deselect_label": "Rimuovi"
     },
@@ -134,7 +134,7 @@
       "unblock_confirmation": "Sei sicuro di voler sbloccare questo utente?",
       "unblock_confirmation_yes": "Sì, sblocca",
       "unblock_confirmation_no": "No, resta bloccato",
-      "dialog_title": "Bloccare {name}?",
+      "dialog_title": "Blocca {name}?",
       "dialog_message_1": "Se questa persona ti infastidisce, puoi bloccarla. In questo modo non potrà più inviarti messaggi o interagire con il tuo profilo. Inoltre non ti verrà mostrata da nessuna parte su questo sito, come se non fosse mai esistita.",
       "dialog_message_2": "Non riceveranno alcuna notifica del fatto che li hai bloccati.",
       "confirmation_no": "Nevermind",
@@ -172,7 +172,7 @@
     "matches_list_title": "Le mie partite",
     "you_received_like": "Hai ricevuto un like!",
     "you_matched_with": "Ti sei abbinato a {name}!",
-    "received_likes": "Non hai nessun like.|Hai 1 like.|Hai {count} di like!",
+    "received_likes": "Non hai nessun like.|Hai 1 like.|Hai {count} like!",
     "received_likes_cta": "Scopri chi l'ha inviato",
     "no_match_no_sent_like": "Ci sarà pure qualcuno che ti piace là fuori?  ",
     "no_match_no_sent_like_cta": "Inizia a cercare",
@@ -202,7 +202,7 @@
     "you_matched_with_them": "Ti sei abbinato a loro",
     "send_a_like": "Invia loro un like. Non sapranno chi l'ha inviato finché non ricambieranno il tuo like.",
     "its_a_match": "È una partita!",
-    "send_them_a_message": "Invia a {name} un messaggio",
+    "send_them_a_message": "Invia un messaggio a {name} ",
     "cancel_button": "Forse più tardi",
     "message_confirmation": "Bello!",
     "like_error": "Ops, non ha funzionato. Riprova."
@@ -262,7 +262,7 @@
     "relationship_subtitle": "La mia situazione familiare è",
     "dating_intro_title": "Vorrei trovare:",
     "dating_intro_subtitle": "Questo sarà visibile solo alle persone che sono alla ricerca di una relazione, non a quelle che cercano solo amici o connessioni sociali.",
-    "dating_intro_placeholder": "Racconta un po' del tipo di relazione che stai cercando",
+    "dating_intro_placeholder": "Raccontaci un po' del tipo di relazione che stai cercando",
     "confirmation": {
       "title": "Tutto pronto!",
       "profile_hint": "Guarda cosa vedono gli altri di me.",
@@ -272,7 +272,8 @@
     },
     "next_button": "Avanti",
     "back_button": "Indietro",
-    "finish_button": "Finitura"
+    "finish_button": "Finitura",
+    "interests_hint": "Inizia a digitare per cercare i tag. Puoi aggiungere nuovi tag se non trovi quello che stai cercando."
   },
   "settings": {
     "title": "Impostazioni",
@@ -321,7 +322,7 @@
     "dialog_cancel_button": "Nevermind"
   },
   "landingpage": {
-    "title_lg": "Benvenuto su {siteName}",
+    "title_lg": "Benvenuti a {siteName}",
     "title": "{siteName}",
     "subtitle_1": "Questo è un punto d'incontro nel regno online per trovarci e connetterci.",
     "socialize_1": "Connettersi durante i nostri viaggi, trovare anime che la pensano come noi nelle vicinanze con cui uscire",

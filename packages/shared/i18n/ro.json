@@ -93,7 +93,7 @@
   },
   "profiles": {
     "send_message_button": "Mesaj",
-    "profile_photos": "Fotografiile lui {name}",
+    "profile_photos": "{name}'s fotografii",
     "no_profile_title": "Vă rugăm să vă completați profilul",
     "no_profile_create": "Crearea profilului",
     "image_editor_help": "Fotografia dvs. aici",
@@ -102,7 +102,7 @@
       "looks_good": "Arată bine!",
       "add_from_phone": "Adăugați o fotografie de pe telefon",
       "take_photo": "Sau faceți o fotografie cu aparatul dvs. foto",
-      "nevermind": "Lasă"
+      "nevermind": "Nevermind"
     },
     "forms": {
       "my_preferences": "Preferințele mele",
@@ -137,7 +137,7 @@
       "dialog_title": "Bloc {name}?",
       "dialog_message_1": "Dacă această persoană vă deranjează, o puteți bloca. Acest lucru o va împiedica să vă trimită mesaje sau să interacționeze cu profilul dvs. De asemenea, nu vă va fi prezentată nicăieri pe acest site, ca și cum nu ar fi existat niciodată.",
       "dialog_message_2": "Ei nu vor primi nicio notificare că i-ați blocat.",
-      "confirmation_no": "Lasă",
+      "confirmation_no": "Nevermind",
       "confirmation_yes": "Da, blocați-le",
       "block_confirm_message": "Nu le veți mai vedea."
     },
@@ -153,7 +153,7 @@
       "invite_button": "Invitați prietenii",
       "filters": {
         "dialog_ok_button": "Găsiți oameni",
-        "dialog_cancel_button": "Lasă",
+        "dialog_cancel_button": "Nevermind",
         "social_title": "Caut conexiuni...",
         "tags_label": "Interesat în...",
         "anywhere": "Oriunde",
@@ -171,8 +171,8 @@
   "matches": {
     "matches_list_title": "Meciurile mele",
     "you_received_like": "Ai primit un like!",
-    "you_matched_with": "Te-ai împerecheat cu {name}",
-    "received_likes": "Nu ai niciun like.|Ai 1 like.|Ai {count} de like-uri!",
+    "you_matched_with": "Te-ai potrivit cu {name}!",
+    "received_likes": "You have no likes.|You have 1 like.|You have {count} likes!",
     "received_likes_cta": "Aflați cine a trimis-o",
     "no_match_no_sent_like": "Trebuie să fie cineva care să îți placă acolo?  ",
     "no_match_no_sent_like_cta": "Începeți să căutați",
@@ -182,7 +182,7 @@
     "notifications": {
       "you_have": "Aveți",
       "likes": "{count} ❤️ | {count} ❤️ ",
-      "matches": "{count} potrivire nouă |{count} potrivire nouă",
+      "matches": "{count} meci nou |{count} meciuri noi",
       "and": "și"
     },
     "pass_confirm_dialog": {
@@ -202,7 +202,7 @@
     "you_matched_with_them": "Te-ai împerecheat cu ei",
     "send_a_like": "Trimiteți-le un like. Aceștia nu vor ști cine le-a trimis mesajul până când nu vă vor da like înapoi.",
     "its_a_match": "Este o potrivire!",
-    "send_them_a_message": "Trimiteți {name} un mesaj",
+    "send_them_a_message": "Trimite {name} un mesaj",
     "cancel_button": "Poate mai târziu",
     "message_confirmation": "Frumos!",
     "like_error": "Oops, acest lucru nu a funcționat. Vă rugăm să încercați din nou."
@@ -212,7 +212,7 @@
     "send_message_button": "Trimiteți",
     "message_input_placeholder": "Scrieți mesajul dvs. aici...",
     "new_message_notification": "{sender} a trimis un mesaj",
-    "send_message_to_user": "Trimiteți un mesaj lui {name}",
+    "send_message_to_user": "Trimiteți un mesaj la {name}",
     "unknown_sender": "Cineva",
     "message_input_hint": "Apăsați Enter pentru a trimite",
     "send_failed": "Oops, acest lucru nu a funcționat. Vă rugăm să încercați din nou.",
@@ -238,7 +238,7 @@
       "appear_message": "Acum veți apărea în fața persoanelor care caută aceleași lucruri ca dumneavoastră. Puteți schimba oricând aceste informații mai târziu.",
       "next": "Următorul",
       "finish": "Terminare",
-      "cancel": "Lasă"
+      "cancel": "Nevermind"
     },
     "welcome_title": "Bine ați venit la {siteName}!",
     "welcome_subtitle": "Hai să te pregătim ca să poți începe să cunoști oameni.",
@@ -272,7 +272,8 @@
     },
     "next_button": "Următorul",
     "back_button": "Înapoi",
-    "finish_button": "Terminare"
+    "finish_button": "Terminare",
+    "interests_hint": "Începeți să tastați pentru a căuta etichete. Puteți adăuga etichete noi dacă nu găsiți ceea ce căutați."
   },
   "settings": {
     "title": "Setări",
@@ -318,7 +319,7 @@
       "button_copied": "Copiat",
       "qr_hint": "Afișează asta la telefonul lor"
     },
-    "dialog_cancel_button": "Lasă"
+    "dialog_cancel_button": "Nevermind"
   },
   "landingpage": {
     "title_lg": "Bine ați venit la {siteName}",

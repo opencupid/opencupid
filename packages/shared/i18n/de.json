@@ -89,7 +89,7 @@
   },
   "profiles": {
     "send_message_button": "Nachricht",
-    "profile_photos": "Fotos von {name}",
+    "profile_photos": "{name}'s Fotos",
     "no_profile_title": "Bitte fülle dein Profil aus",
     "no_profile_create": "Profil erstellen",
     "image_editor_help": "Dein Foto hier",
@@ -145,7 +145,7 @@
       "cta_button_label": "Gehe zu meinem Profil",
       "social_no_results": "Wir haben noch niemanden auf {country} gefunden.",
       "no_results_cta_title": "Diese Gemeinschaft wächst immer noch.",
-      "no_results_cta_description": "Du kannst helfen, indem du deine Freunde zum Mitmachen einlädst. Je mehr, desto besser.",
+      "no_results_cta_description": "Du kannst helfen, indem du deine Freunde einlädst, mitzumachen. Je mehr, desto besser.",
       "invite_button": "Freunde einladen",
       "filters": {
         "dialog_ok_button": "Menschen finden",
@@ -229,7 +229,8 @@
     },
     "next_button": "Nächste",
     "back_button": "Zurück",
-    "finish_button": "Finish"
+    "finish_button": "Finish",
+    "interests_hint": "Fang an zu tippen, um nach Tags zu suchen. Du kannst neue Tags hinzufügen, wenn du nicht findest, wonach du suchst."
   },
   "settings": {
     "language_label": "Sprache",
@@ -284,7 +285,7 @@
   "matches": {
     "matches_list_title": "Meine Treffer",
     "you_received_like": "Du hast ein Like erhalten!",
-    "you_matched_with": "Du hast mit {name} übereingestimmt!",
+    "you_matched_with": "Du hast mit {name} zusammengepasst!",
     "received_likes": "Du hast keine Likes.|Du hast 1 Like.|Du hast {count} Likes!",
     "received_likes_cta": "Finde heraus, wer sie geschickt hat",
     "no_match_no_sent_like": "Da draußen muss es doch jemanden geben, den du magst?  ",

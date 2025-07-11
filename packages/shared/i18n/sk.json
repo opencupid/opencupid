@@ -40,7 +40,7 @@
     "in_relationship": "Vo vzťahu",
     "married": "Manželstvo",
     "divorced": "Rozvedený",
-    "widowed": "Ovdovelé",
+    "widowed": "Ovdovený",
     "other": "Iné (je to zložité)",
     "unspecified": "Radšej by som to nehovoril"
   },
@@ -88,12 +88,12 @@
     "logout": "Odhlásenie"
   },
   "home": {
-    "welcome_title": "Vitajte na {siteName}!",
+    "welcome_title": "Vitajte na stránke {siteName}!",
     "meet_new_people": "Spoznávanie nových ľudí"
   },
   "profiles": {
     "send_message_button": "Správa",
-    "profile_photos": "{meno}'s photos",
+    "profile_photos": "{name}fotografie",
     "no_profile_title": "Vyplňte svoj profil",
     "no_profile_create": "Vytvoriť profil",
     "image_editor_help": "Vaša fotografia tu",
@@ -134,7 +134,7 @@
       "unblock_confirmation": "Ste si istí, že chcete odblokovať tohto používateľa?",
       "unblock_confirmation_yes": "Áno, odblokovať",
       "unblock_confirmation_no": "Nie, nechajte blokované",
-      "dialog_title": "Blokovať {name}?",
+      "dialog_title": "Blok {name}?",
       "dialog_message_1": "Ak vás táto osoba obťažuje, môžete ju zablokovať. Zabránite im tak posielať vám správy alebo komunikovať s vaším profilom. Taktiež sa vám nebudú zobrazovať nikde na tejto stránke, akoby nikdy neexistovali.",
       "dialog_message_2": "Nedostanú žiadne oznámenie o tom, že ste ich zablokovali.",
       "confirmation_no": "Nevermind",
@@ -171,7 +171,7 @@
   "matches": {
     "matches_list_title": "Moje zápasy",
     "you_received_like": "Dostali ste like!",
-    "you_matched_with": "Zhodli ste sa s {meno}!",
+    "you_matched_with": "Zhodli ste sa s {name}!",
     "received_likes": "Nemáte žiadne lajky.|Máte 1 lajk.|Máte {count} lajkov!",
     "received_likes_cta": "Zistite, kto ju poslal",
     "no_match_no_sent_like": "Musí tam byť niekto, kto sa vám páči?  ",
@@ -182,7 +182,7 @@
     "notifications": {
       "you_have": "Máte",
       "likes": "{count} ❤️ | {count} ❤️ ",
-      "matches": "{count} new match |{count} new matches",
+      "matches": "{count} nový zápas |{count} nové zápasy",
       "and": "a"
     },
     "pass_confirm_dialog": {
@@ -202,7 +202,7 @@
     "you_matched_with_them": "Zhodli ste sa s nimi",
     "send_a_like": "Pošlite im like. Nebudú vedieť, kto im to poslal, kým vám to neodpíšu.",
     "its_a_match": "Je to zápas!",
-    "send_them_a_message": "Poslať {menu} správu",
+    "send_them_a_message": "Pošlite {name} správu",
     "cancel_button": "Možno neskôr",
     "message_confirmation": "Pekné!",
     "like_error": "Ups, toto nefungovalo. Skúste to prosím znova."
@@ -212,7 +212,7 @@
     "send_message_button": "Odoslať",
     "message_input_placeholder": "Tu zadajte svoju správu...",
     "new_message_notification": "{sender} poslal správu",
-    "send_message_to_user": "Odoslať správu na {meno}",
+    "send_message_to_user": "Pošlite správu na adresu {name}",
     "unknown_sender": "Niekto",
     "message_input_hint": "Stlačením tlačidla Enter odošlete",
     "send_failed": "Ups, toto nefungovalo. Skúste to prosím znova.",
@@ -240,7 +240,7 @@
       "finish": "Dokončenie",
       "cancel": "Nevermind"
     },
-    "welcome_title": "Vitajte na {siteName}!",
+    "welcome_title": "Vitajte na stránke {siteName}!",
     "welcome_subtitle": "Pripravíme vás na to, aby ste sa mohli začať stretávať s ľuďmi.",
     "location_title": "Som z...",
     "location_subtitle": "Kde v týchto dňoch trávim svoj čas na našej krásnej planéte.",
@@ -272,7 +272,8 @@
     },
     "next_button": "Ďalšie",
     "back_button": "Späť",
-    "finish_button": "Dokončenie"
+    "finish_button": "Dokončenie",
+    "interests_hint": "Začnite písať a vyhľadajte značky. Ak nenájdete, čo hľadáte, môžete pridať nové značky."
   },
   "settings": {
     "title": "Nastavenia",
@@ -321,7 +322,7 @@
     "dialog_cancel_button": "Nevermind"
   },
   "landingpage": {
-    "title_lg": "Vitajte na stránke {siteName}",
+    "title_lg": "Vitajte v {siteName}",
     "title": "{siteName}",
     "subtitle_1": "Toto je miesto stretnutia v online priestore, kde sa môžeme navzájom nájsť a spojiť.",
     "socialize_1": "Spojte sa na našich cestách, nájdite podobne zmýšľajúce duše, s ktorými sa môžete stretnúť",
