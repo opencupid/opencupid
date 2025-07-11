@@ -19,6 +19,8 @@ import type {
 import { broadcastToProfile } from '@/utils/wsUtils'
 import { SendMessagePayloadSchema } from '@zod/messaging/messaging.dto'
 import { InteractionService } from '../../services/interaction.service'
+import { notifierService } from '@/services/notifier.service'
+import { appConfig } from '@/lib/appconfig'
 
 // Route params for ID lookups
 const IdLookupParamsSchema = z.object({
@@ -162,6 +164,12 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
       })
 
       webPushService.send(messageDTO)
+
+      await notifierService.notifyProfile(profileId, 'new_message', {
+        sender: messageDTO.sender.publicName,
+        message: messageDTO.content,
+        link: `${appConfig.FRONTEND_URL}/messages`,
+      })
 
     } catch (error: any) {
       return sendError(reply, 403, error)

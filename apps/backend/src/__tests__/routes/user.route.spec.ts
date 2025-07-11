@@ -20,7 +20,9 @@ vi.mock('../../services/captcha.service', () => ({
     }
   },
 }))
-vi.mock('../../queues/emailQueue', () => ({ emailQueue: { add: vi.fn() } }))
+vi.mock('../../services/notifier.service', () => ({
+  notifierService: { notifyUser: vi.fn() },
+}))
 vi.mock('@shared/config/appconfig', () => ({
   appConfig: {
     ALTCHA_HMAC_KEY: 'x',
@@ -116,16 +118,14 @@ describe('GET /otp-login', () => {
     const newProfile = { id: 'profile2' }
     mockProfileService.initializeProfiles.mockResolvedValue(newProfile)
     fastify.jwt = { sign: vi.fn().mockReturnValue('jwt-token2') }
-    const emailQueue = (await import('../../queues/emailQueue')).emailQueue
+    const notifier = (await import('../../services/notifier.service')).notifierService
     // @ts-expect-error whatever
-    emailQueue.add.mockClear()
+    notifier.notifyUser.mockClear()
     const req = { query: { userId: 'cmc7t45x400086w39gj30pzn3', otp: '654321' } }
     await handler(req as any, reply as any)
-    expect(emailQueue.add).toHaveBeenCalledWith(
-      'sendWelcomeEmail',
-      { userId: 'user2' },
-      { attempts: 3, backoff: { type: 'exponential', delay: 5000 } }
-    )
+    expect(notifier.notifyUser).toHaveBeenCalledWith('user2', 'welcome', {
+      link: 'http://test/me',
+    })
     expect(mockProfileService.initializeProfiles).toHaveBeenCalledWith('user2')
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
@@ -143,12 +143,12 @@ describe('GET /otp-login', () => {
 
   describe('POST /send-login-link', () => {
     let handler: any
-    let emailQueue: any
+    let notifier: any
 
     beforeEach(async () => {
       handler = fastify.routes['POST /send-login-link']
-      emailQueue = (await import('../../queues/emailQueue')).emailQueue
-      emailQueue.add.mockClear()
+      notifier = (await import('../../services/notifier.service')).notifierService
+      notifier.notifyUser.mockClear()
     })
 
     it('returns 400 if input is invalid', async () => {
@@ -217,11 +217,10 @@ describe('GET /otp-login', () => {
       }
       await handler(req as any, reply as any)
       expect(mockUserService.generateOTP).toHaveBeenCalled()
-      expect(emailQueue.add).toHaveBeenCalledWith(
-        'sendLoginLinkEmail',
-        { userId: 'user3' },
-        { attempts: 3, backoff: { type: 'exponential', delay: 5000 } }
-      )
+      expect(notifier.notifyUser).toHaveBeenCalledWith('user3', 'login_link', {
+        otp: '123456',
+        link: 'http://test/auth/otp?otp=123456',
+      })
       expect(reply.statusCode).toBe(200)
       expect(reply.payload.success).toBe(true)
       expect(reply.payload.status).toBe('register')
@@ -248,11 +247,10 @@ describe('GET /otp-login', () => {
       }
       await handler(req as any, reply as any)
       expect(mockUserService.generateOTP).toHaveBeenCalled()
-      expect(emailQueue.add).toHaveBeenCalledWith(
-        'sendLoginLinkEmail',
-        { userId: 'user4' },
-        { attempts: 3, backoff: { type: 'exponential', delay: 5000 } }
-      )
+      expect(notifier.notifyUser).toHaveBeenCalledWith('user4', 'login_link', {
+        otp: '123456',
+        link: 'http://test/auth/otp?otp=123456',
+      })
       expect(reply.statusCode).toBe(200)
       expect(reply.payload.success).toBe(true)
       expect(reply.payload.status).toBe('login')

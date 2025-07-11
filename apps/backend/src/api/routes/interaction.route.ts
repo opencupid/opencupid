@@ -5,6 +5,8 @@ import type { InteractionEdgeCountResponse, InteractionEdgeResponse, Interaction
 import { InteractionService } from '@/services/interaction.service'
 import { broadcastToProfile } from '@/utils/wsUtils'
 import { WebPushService } from '@/services/webpush.service'
+import { notifierService } from '@/services/notifier.service'
+import { appConfig } from '@/lib/appconfig'
 
 // Route params for ID lookups
 const TargetLookupParamsSchema = z.object({
@@ -57,6 +59,17 @@ const interactionRoutes: FastifyPluginAsync = async fastify => {
         type: likeResult.isMatch ? 'ws:new_match' : 'ws:new_like',
         payload: likeResult.to,
       })
+
+      if (likeResult.isMatch) {
+        await notifierService.notifyProfile(targetId, 'new_match', {
+          name: likeResult.from.profile.publicName,
+          link: `${appConfig.FRONTEND_URL}/matches`,
+        })
+      } else {
+        await notifierService.notifyProfile(targetId, 'new_like', {
+          link: `${appConfig.FRONTEND_URL}/browse/dating`,
+        })
+      }
 
       // webPushService.send(edge)
 

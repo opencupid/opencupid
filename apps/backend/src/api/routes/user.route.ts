@@ -1,6 +1,6 @@
 import cuid from 'cuid'
 import { FastifyPluginAsync } from 'fastify'
-import { emailQueue } from '../../queues/emailQueue'
+import { notifierService } from '@/services/notifier.service'
 import { UserService } from 'src/services/user.service'
 import { ProfileService } from 'src/services/profile.service'
 import { rateLimitConfig, sendError, sendUnauthorizedError } from '../helpers'
@@ -41,13 +41,10 @@ const userRoutes: FastifyPluginAsync = async fastify => {
 
       // new user
       if (isNewUser) {
-        // 2) enqueue the welcome email
         if (user.email)
-          await emailQueue.add(
-            'sendWelcomeEmail',
-            { userId: user.id },
-            { attempts: 3, backoff: { type: 'exponential', delay: 5000 } }
-          )
+          await notifierService.notifyUser(''+user.id, 'welcome', {
+            link: `${appConfig.FRONTEND_URL}/me`,
+          })
         // If the user is new, initialize their profiles
         const newProfile = await profileService.initializeProfiles(user.id)
         profileId = newProfile.id
@@ -129,11 +126,10 @@ const userRoutes: FastifyPluginAsync = async fastify => {
     // new user
     if (isNewUser) {
       if (user.email)
-        await emailQueue.add(
-          'sendLoginLinkEmail',
-          { userId: user.id },
-          { attempts: 3, backoff: { type: 'exponential', delay: 5000 } }
-        )
+        await notifierService.notifyUser(user.id, 'login_link', {
+          otp,
+          link: `${appConfig.FRONTEND_URL}/auth/otp?otp=${otp}`,
+        })
 
       const response: SendLoginLinkResponse = {
         success: true,
@@ -145,11 +141,10 @@ const userRoutes: FastifyPluginAsync = async fastify => {
 
     //  existing user
     if (user.email)
-      await emailQueue.add(
-        'sendLoginLinkEmail',
-        { userId: user.id },
-        { attempts: 3, backoff: { type: 'exponential', delay: 5000 } }
-      )
+      await notifierService.notifyUser(user.id, 'login_link', {
+        otp,
+        link: `${appConfig.FRONTEND_URL}/auth/otp?otp=${otp}`,
+      })
     const response: SendLoginLinkResponse = {
       success: true,
       user: userReturned,
