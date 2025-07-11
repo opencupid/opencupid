@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
-import { computed, onMounted, provide, ref } from 'vue'
+import { computed, onMounted, provide, ref, toRef } from 'vue'
 import { useRouter } from 'vue-router'
 import { useBootstrap } from '@/lib/bootstrap'
 import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
@@ -40,7 +40,7 @@ const handleCardClick = async (profileId: string) => {
   })
 }
 
-provide('viewerProfile', viewerProfile)
+provide('viewerProfile', toRef(viewerProfile))
 
 const siteName = __APP_CONFIG__.SITE_NAME
 </script>
