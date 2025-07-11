@@ -16,6 +16,7 @@
     "turbo": "^2.5.4"
   },
   "scripts": {
+    "ci:test": "pnpm install && pnpm generate && pnpm lint && pnpm test && pnpm --filter frontend type-check",
     "dev": "turbo run dev",
     "build": "turbo run build",
     "lint": "turbo run lint",
