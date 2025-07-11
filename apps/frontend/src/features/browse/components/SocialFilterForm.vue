@@ -2,8 +2,7 @@
 import { ref } from 'vue'
 
 import TagSelectComponent from '@/features/shared/profileform/TagSelectComponent.vue'
-import CountrySelector from '@/features/shared/profileform/CountrySelector.vue'
-import CitySelector from '@/features/shared/profileform/CitySelector.vue'
+import LocationSelector from '@/features/shared/profileform/LocationSelector.vue'
 import IconTarget2 from '@/assets/icons/interface/target-2.svg'
 
 import type { OwnerProfile } from '@zod/profile/profile.dto'
@@ -18,7 +17,7 @@ const props = defineProps<{
   viewerProfile: OwnerProfile | null
 }>()
 
-const locationDisabled = ref(!model.value.location.country)
+const locationDisabled = ref(!model.value.location.lat)
 
 const setLocationFromProfile = () => {
   if (props.viewerProfile?.location && model.value.location) {
@@ -29,10 +28,12 @@ const setLocationFromProfile = () => {
 const toggleDisabled = () => {
   if (!model.value.location) return
   if (locationDisabled.value) {
-    Object.assign(model.value.location, { country: '', cityId: '' } as LocationDTO)
+    Object.assign(model.value.location, { country: '', cityId: '', cityName: '', lat: null, lon: null } as LocationDTO)
   } else {
-    // console.log('Setting location from model:', props.viewerProfile?.location)
     model.value.location.country = props.viewerProfile?.location?.country || ''
+    model.value.location.cityName = props.viewerProfile?.location?.cityName || ''
+    model.value.location.lat = props.viewerProfile?.location?.lat || null
+    model.value.location.lon = props.viewerProfile?.location?.lon || null
   }
 }
 </script>
@@ -64,17 +65,7 @@ const toggleDisabled = () => {
       </div>
     </div>
     <fieldset class="mb-4" :disabled="locationDisabled">
-      <CountrySelector v-model="model.location" v-if="model.location" />
-
-      <div class="mt-3">
-        <CitySelector
-          v-model="model.location"
-          v-if="model.location"
-          :allowEmpty="true"
-          :canAddCity="false"
-          :cityInputAutoFocus="false"
-        />
-      </div>
+      <LocationSelector v-model="model.location as LocationDTO" v-if="model.location" :allowEmpty="true" />
     </fieldset>
 
     <div>

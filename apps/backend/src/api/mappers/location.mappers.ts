@@ -6,6 +6,8 @@ export type DbLocation = {
   city?: {
     name: string;
   } | null;
+  lat?: number | null;
+  lon?: number | null;
 }
 
 export function DbLocationToLocationDTO(dbLocation: DbLocation): LocationDTO {
@@ -13,6 +15,8 @@ export function DbLocationToLocationDTO(dbLocation: DbLocation): LocationDTO {
     country: dbLocation.country ?? '',
     cityId: dbLocation.cityId,
     cityName: dbLocation.city?.name,
+    lat: dbLocation.lat ?? null,
+    lon: dbLocation.lon ?? null,
   }
 }
 

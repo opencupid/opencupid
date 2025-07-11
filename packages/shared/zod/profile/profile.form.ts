@@ -35,6 +35,8 @@ export const ProfileFormToPayloadTransform = EditProfileFormSchema.transform((da
     cityId: data.location.cityId,
     country: data.location.country,
     cityName: data.location.cityName,
+    lat: data.location.lat,
+    lon: data.location.lon,
     // location: undefined
   }
 })

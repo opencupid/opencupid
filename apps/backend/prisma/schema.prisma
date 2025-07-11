@@ -204,8 +204,8 @@ model Profile {
   prefGender Gender[]  @default([])
   prefKids   HasKids[] @default([])
 
-  // latitude         Float?
-  // longitude        Float?
+  lat         Float?
+  lon         Float?
   // prefRadius       Int?    @default(50) // in km
   // isLocationActive Boolean @default(false)
 

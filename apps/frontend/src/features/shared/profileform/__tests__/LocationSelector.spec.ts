@@ -2,25 +2,8 @@ import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi } from 'vitest'
 
 vi.mock('vue-multiselect', () => ({ default: { template: '<div />' } }))
-vi.mock('@/store/i18nStore', () => ({
-  useI18nStore: () => ({
-    getLanguage: () => 'en',
-    currentLanguage: ref('en'),
-  }),
-}))
-vi.mock('@/composables/useCountries', () => ({
-  useCountries: () => ({
-    getCountryOptions: () => [{ label: 'USA', value: 'US' }],
-    countryCodeToName: () => 'USA',
-  }),
-}))
-vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
-vi.mock('@/lib/geoip', () => ({ default: vi.fn().mockResolvedValue('US') }))
-vi.mock('@/store/cityStore', () => ({ useCitiesStore: () => ({
-  getCity: vi.fn(),
-  search: vi.fn(),
-  create: vi.fn(),
-}) }))
+vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k, locale: ref('en') }) }))
+vi.mock('axios', () => ({ default: { get: vi.fn().mockResolvedValue({ data: { features: [] } }) } }))
 
 import LocationSelectorComponent from '../LocationSelector.vue'
 import { ref } from 'vue'

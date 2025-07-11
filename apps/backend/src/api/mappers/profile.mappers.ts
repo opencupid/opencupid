@@ -66,7 +66,9 @@ export function mapProfileToPublic(dbProfile: DbProfileWithImages, includeDating
     location: {
       country: dbProfile.country || '',
       cityId: dbProfile.cityId || '',
-      cityName: dbProfile.city?.name || '',
+      cityName: dbProfile.city?.name || dbProfile.cityName || '',
+      lat: dbProfile.lat ?? null,
+      lon: dbProfile.lon ?? null,
     },
     introSocial: get('introSocial') || '',
     introDating: get('introDating') || '',
