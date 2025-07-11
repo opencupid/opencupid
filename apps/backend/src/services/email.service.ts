@@ -27,23 +27,6 @@ export class EmailService {
     return this.transporter.sendMail(mailOptions)
   }
 
-  async sendConfirmationEmail(to: string, token: string) {
-    const confirmUrl = `${appConfig.FRONTEND_URL}/confirm-email?token=${token}`
-    const html = `
-      <p>Thank you for registering! Please confirm your email by clicking the link below:</p>
-      <a href="${confirmUrl}">${confirmUrl}</a>
-    `
-    return this.sendMail(to, 'Confirm your email address', html)
-  }
-
-  async sendPasswordRecoveryEmail(to: string, token: string) {
-    const confirmUrl = `${appConfig.FRONTEND_URL}/confirm-email?token=${token}`
-    const html = `
-      <p>Thank you for registering! Please confirm your email by clicking the link below:</p>
-      <a href="${confirmUrl}">${confirmUrl}</a>
-    `
-    return this.sendMail(to, 'Confirm your email address', html)
-  }
 }
 
 export const emailService = new EmailService()
