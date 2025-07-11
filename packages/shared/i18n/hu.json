@@ -78,7 +78,7 @@
   "nav": {
     "home": "Főoldal",
     "profile": "Profilom",
-    "browse": "Böngész",
+    "browse": "Böngészes",
     "matches": "Egyezések",
     "inbox": "Üzenetek",
     "settings": "Beállítások"
@@ -89,7 +89,7 @@
   },
   "home": {
     "welcome_title": "Légy üdvözölve nálunk.",
-    "meet_new_people": "Nemrég csatlakoztak"
+    "meet_new_people": "Nemrég csatlakoztak!"
   },
   "profiles": {
     "send_message_button": "Üzenet",
@@ -172,26 +172,28 @@
     "welcome_title": "Légy üdvözölve nálunk.",
     "welcome_subtitle": "Hogy hívnak?",
     "location_title": "Hol laksz?",
-    "location_subtitle": "Itt  gyönyörű bolygónkon.",
-    "connections_title": "Keresek...",
-    "connections_subtitle": "Teljesnek érzem magam, de jól jönne egy kis társaság.",
-    "interests_title": "Érdeklődési köreim",
-    "interests_subtitle": "Számomra fontos dolgok",
-    "languages_title": "Én beszélni nyelvek",
+    "location_subtitle": "Itt a gyönyörű bolygónkon.",
+    "connections_title": "Kit keresel?",
+    "connections_subtitle": "Milyen fajta kapcsolódást keresek",
+    "interests_title": "Mi érdekel?",
+    "interests_subtitle": "Érdeklődési köreim, számomra fontos dolgok",
+    "languages_title": "Nyelvek",
     "languages_subtitle": "Ezeken a nyelveken beszélek",
     "social_intro_title": "Pár szóban magamról",
-    "social_intro_subtitle": "Mesélj egy kicsit magadról, hogy mások is megismerhessenek.",
-    "social_intro_placeholder": "Mi érdekel? Mi fontos számodra? Mit csinálsz szívesen?",
+    "social_intro_subtitle": "Mesélj egy kicsit magadról. Ha inkább későbbre hagynád ezt, hagyd üresen.",
+    "social_intro_placeholder": "Mit érdemes rólam tudni...\n fontos számomra... Mivel töltöm az időmet szívesen...",
+    "social_intro_hint": "Nem kötelező, később is kitöltheted",
     "photos_title": "Képeim",
     "photos_subtitle": "Ilyen vagyok képeken",
-    "age_title": "Születtem...",
+    "age_title": "Mikor születtél?",
     "age_subtitle": "Ezóta vagyok a bolygón",
     "gender_subtitle": "Így azonosítom magam",
-    "relationship_title": "Én...",
+    "relationship_title": "Családi helyzetem",
     "relationship_subtitle": "A családi helyzetem a következő",
     "dating_intro_title": "Kit keresek",
-    "dating_intro_subtitle": "Ez csak azok számára lesz látható, akik szintén kapcsolatot keresnek.  Akik egyéb kapcsolódást keresnek, ők nem olvassák ezt a részt.",
-    "dating_intro_placeholder": "Meséljen egy kicsit arról, hogy milyen kapcsolatot keres",
+    "dating_intro_subtitle": "Ha később írnál magadról, hagyd üresen.",
+    "dating_intro_placeholder": "Milyen kapcsolódást, milyen társat keresek...",
+    "dating_intro_hint": "Nem kötelező, később is kitöltheted",
     "confirmation": {
       "title": "Minden kész!",
       "profile_hint": "Hogyan látnak mások?",
@@ -200,16 +202,16 @@
       "browse_button": "Körülnézek"
     },
     "goals": {
-      "socializing": "Szocializálódni, lógni, utazni és új embereket megismerni.",
-      "dating": "Randizás, partnerkeresés és romantikus kapcsolatok felfedezése."
+      "socializing": "Új embereket szeretnék megismerni, útitársat, zenésztársat stb keresek.",
+      "dating": "Romantikus kapcsolatokat fedeznék fel, randiznék, játszótárs stb"
     },
     "country_placeholder": "Ország",
     "wizard": {
       "all_set": "Minden kész!",
-      "appear_message": "Mostantól olyan emberek előtt fogsz megjelenni, akik ugyanazt keresik, mint te. Ezt az információt később bármikor megváltoztathatja.",
+      "appear_message": "Mostantól olyan emberek előtt fogsz megjelenni, akik ugyanazt keresik, mint te. Ezt az infót később bármikor megváltoztatod.",
       "next": "Következő",
       "finish": "Befejezés",
-      "cancel": "Nevermind"
+      "cancel": "Inkább mégse"
     },
     "next_button": "Következő",
     "back_button": "Vissza",
@@ -221,10 +223,10 @@
     "you_matched_with": "Párosítottál a {name}!",
     "received_likes": "Még nincs ❤️-od|1 ❤️-ot kaptál|{count} ❤️-od van",
     "received_likes_cta": "Vajon ki küldte?",
-    "no_match_no_sent_like": "Kell lennie valakinek, akit kedvelsz?  ",
+    "no_match_no_sent_like": "Még nem lájkoltál senkit",
     "no_match_no_sent_like_cta": "Kapcsolód",
-    "no_match_have_sent_like": "Ők biztosan vissza fognak kedvelni téged.",
-    "no_match_have_sent_like_cta": "Keep lookin'",
+    "no_match_have_sent_like": "Még nem lájkolt vissza senki",
+    "no_match_have_sent_like_cta": "Keresés",
     "find_button_cta": "Kapcsolódj",
     "notifications": {
       "you_have": " ",
@@ -246,31 +248,31 @@
     "send_a_message": "Üzenet küldése",
     "you_messaged_them": "Üzenetet küldtél nekik",
     "you_liked_them": "Tetszett neked",
-    "you_matched_with_them": "Összeillesztetted őket",
-    "send_a_like": "Küldj nekik egy like-ot. Nem fogják tudni, hogy ki küldte, amíg vissza nem like-olnak.",
-    "its_a_match": "Egyezik!",
-    "send_them_a_message": "Küldjön {name} egy üzenetet",
+    "you_matched_with_them": "{name} visszajelölt!",
+    "send_a_like": "Küldj neki egy ❤️-ot. Nem fogja tudni, ki küldte, amíg vissza nem ❤️-ol.",
+    "its_a_match": "Kölcsönös!",
+    "send_them_a_message": "Küldj egy üzenetet neki",
     "cancel_button": "Talán később",
-    "message_confirmation": "Szép!",
-    "like_error": "Hoppá, ez nem működött. Kérjük, próbálja meg újra."
+    "message_confirmation": "Elküldve!",
+    "like_error": "Hoppá, ez nem működött. Kérjük, próbáld meg újra."
   },
   "messaging": {
     "page_title": "Üzenetek",
-    "send_message_button": "Küldje el a",
-    "message_input_placeholder": "Írja be ide az üzenetét...",
+    "send_message_button": "Mehet",
+    "message_input_placeholder": "...",
     "new_message_notification": "{sender} küldött egy üzenetet",
-    "send_message_to_user": "Üzenet küldése a következő címre: {name}",
+    "send_message_to_user": "Üzenet küldése",
     "unknown_sender": "Valaki",
-    "message_input_hint": "Nyomja meg az Entert a küldéshez",
-    "send_failed": "Hoppá, ez nem működött. Kérjük, próbálja meg újra.",
-    "message_sent_success": "Üzenet sikeresen elküldve!",
-    "my_turn": "Most én jövök.",
-    "their_turn": "Ők következnek",
-    "block_report_unmatch": "Blokkolás/jelentés/nem egyeztetés",
-    "block_user_ok": "Blokk {name}",
-    "nevermind": "Nevermind",
+    "message_input_hint": "Enter-rel küldheted",
+    "send_failed": "Hoppá, ez nem működött. Kérjük, próbáld meg újra.",
+    "message_sent_success": "Elküldve!",
+    "my_turn": "Én jövök",
+    "their_turn": "Ő jön",
+    "block_report_unmatch": "Letiltás/jelentés",
+    "block_user_ok": "{name} letiltása",
+    "nevermind": "Mégse",
     "send_message_heading": "Üzenet küldése",
-    "no_messages_cta": "Találjon embereket, akikkel beszélgethet",
+    "no_messages_cta": "Böngészés",
     "no_messages_title": "Még nincsenek üzenetek",
     "no_messages_placeholder": "A beszélgetések itt fognak zajlani."
   },
@@ -308,28 +310,28 @@
       },
       "error": {
         "title": "Hiba",
-        "message": "Hiba történt. Kérjük, próbálja meg újra."
+        "message": "Hiba történt. Kérjük, próbáld újra."
       }
     },
     "share_dialog": {
-      "title": "Terjessze az igét",
-      "description": "Hívd meg barátaidat, hogy csatlakozzanak a Gaianshoz, és csatlakozz hasonlóan gondolkodó emberekhez.",
+      "title": "Terjeszd az igét",
+      "description": "Hívj hasonlóan gondolkodó embereket közénk",
       "button_copy": "Másolás",
       "button_copied": "Másolva",
       "qr_hint": "Villantsd ezt a telefonjukra"
     },
-    "dialog_cancel_button": "Nevermind"
+    "dialog_cancel_button": "Bezár"
   },
   "landingpage": {
-    "title_lg": "Üdvözöljük a {siteName}",
+    "title_lg": "Üdv!",
     "title": "{siteName}",
-    "subtitle_1": "Ez egy találkozási pont az online térben, ahol megtalálhatjuk egymást és kapcsolatba léphetünk egymással.",
-    "socialize_1": "Kapcsolódjunk össze utazásaink során, találjunk hasonlóan gondolkodó lelkeket a közelben, akikkel együtt lóghatunk.",
-    "date_1": "Találj lelki társat vagy játszótársat",
-    "footer_madeby": "Készült a ❤️ a Gaians",
-    "footer_contribute": "Bárki hozzájárulhat a",
-    "enter_button": "Írja be a  címet.",
-    "enter_button_loading": "Várj egy pillanatot...",
-    "select_language": "Válassza ki a nyelvet"
+    "subtitle_1": "Ez egy találkozási pont az online térben, ahol megtalálhatjuk és kapcsolódhatunk egymással.",
+    "socialize_1": "Útitárs, zenésztárs, fesztivál buddy, stb",
+    "date_1": "Lelki társ, játszótárs",
+    "footer_madeby": "Készült ❤️ a Gaians",
+    "footer_contribute": "Nyílt forráskód",
+    "enter_button": "Belépés",
+    "enter_button_loading": "Egy pillanat...",
+    "select_language": "Másik nyelv"
   }
 }

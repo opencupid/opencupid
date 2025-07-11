@@ -34,6 +34,13 @@ export const server = (mode: string) => {
         key: fs.readFileSync(path.resolve(__dirname, '../../certs/key.pem')),
         cert: fs.readFileSync(path.resolve(__dirname, '../../certs/cert.pem')),
       },
+      fs: {
+        allow: [
+          path.resolve(__dirname, './'),
+          path.resolve(__dirname, '../../packages/shared'),
+          path.resolve(__dirname, '../../node_modules'),
+        ],
+      },
     }
   }
 }

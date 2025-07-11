@@ -12,12 +12,7 @@ import { Settings } from 'luxon'
 Settings.defaultZone = 'Europe/Berlin'
 
 
-
-// https://lokalise.com/blog/vue-i18n/
-
-// Import JSON locale files
-import messages from '@intlify/unplugin-vue-i18n/messages'
-
+import messages from './i18n-messages'
 
 import { useLocalStore } from '@/store/localStore'
 import { bus } from './bus'
