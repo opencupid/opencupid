@@ -39,7 +39,7 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
   const SpeechRecognition =
     (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition
   recognition = new SpeechRecognition()
-  recognition.lang = 'en-US'
+  recognition.lang = currentLanguage.value
   recognition.continuous = false
   recognition.interimResults = false
 
@@ -64,7 +64,8 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
     const result = event.results[0][0]
     lastTranscript.value = result.transcript
     lastConfidence.value = result.confidence
-    model.value[currentLanguage.value] += (model.value ? ' ' : '') + result.transcript
+    const current = model.value[currentLanguage.value] || ''
+    model.value[currentLanguage.value] = (current ? current + ' ' : '') + result.transcript
     status.value = 'result'
   }
 
@@ -93,6 +94,7 @@ const toggleListening = () => {
     status.value = 'manually stopped'
   } else {
     try {
+      recognition.lang = currentLanguage.value
       recognition.start()
       status.value = 'starting...'
     } catch (e: any) {
@@ -112,6 +114,16 @@ watch(
         value[lang] = ''
       }
     })
+  },
+  { immediate: true }
+)
+
+watch(
+  () => currentLanguage.value,
+  lang => {
+    if (recognition) {
+      recognition.lang = lang
+    }
   },
   { immediate: true }
 )
@@ -143,10 +155,9 @@ watch(
           class="btn-icon"
           size="sm"
           @click="toggleListening"
-          title="Coming soon"
+          :title="isListening ? t('profiles.forms.dictate_listening') : t('profiles.forms.dictate')"
         >
           <IconMic2 class="svg-icon" />
-          <!-- {{ isListening ? t('profiles.forms.dictate_listening') : t('profiles.forms.dictate') }} -->
         </BButton>
       </div>
     </div>
