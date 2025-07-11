@@ -91,10 +91,6 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
             <!-- I am from... -->
             {{ t('onboarding.location_title') }}
           </legend>
-          <p class="wizard-step-subtitle">
-            <!-- Where I spend my time these days on our beautiful planet. -->
-            {{ t('onboarding.location_subtitle') }}
-          </p>
           <LocationSelectorComponent v-model="formData.location" :geoIp="true" />
         </fieldset>
 
@@ -104,11 +100,6 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
             <!-- The connections I'm looking for... -->
             {{ t('onboarding.connections_title') }}
           </legend>
-          <p class="wizard-step-subtitle">
-            <!-- goals selector hint -->
-            <!-- I feel complete but could use some company. -->
-            <!-- {{ t('onboarding.connections_subtitle') }} -->
-          </p>
           <GoalsSelector v-model="formData" />
         </fieldset>
 

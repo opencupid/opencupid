@@ -33,7 +33,7 @@
     "he_him": "Ő/Ő",
     "she_her": "Ő/Ő",
     "they_them": "Ők/azok",
-    "unspecified": "azt kívánják"
+    "unspecified": "egyéb"
   },
   "relationship": {
     "single": "Szingli",
@@ -58,7 +58,7 @@
     "login": "Belépés",
     "auth_id_input_empty": "Add meg e-mail címedet vagy telefonszámodat.",
     "auth_id_input_label": "E-mail vagy telefonszám",
-    "auth_id_input_placeholder": "+12 34567121 vagy az Ön email.com",
+    "auth_id_input_placeholder": " ",
     "captcha_input_label": "Emberi lény vagyok!",
     "captcha_verify": "Nézzük meg",
     "captcha_verifying": "Egy pillanat...",
@@ -111,11 +111,11 @@
       "relationship_label": "Én...",
       "pronouns_label": "Úgy hivatkoznak rám, mint...",
       "name_label": "A nevem...",
-      "name_invalid": "Adjon meg legalább 3 betűt",
+      "name_invalid": "Adj meg legalább 3 betűt",
       "more_options": "További lehetőségek...",
       "city_search_placeholder": "Városok keresése",
-      "city_add_placeholder": "Új városként hozzáadni",
-      "city_start_typing": "Kezdd el gépelni a város keresését",
+      "city_add_placeholder": "Új város hozzáadása",
+      "city_start_typing": "Kezdd el beírni a városod nevét",
       "tag_search_placeholder": "Érdeklődési kör keresése...",
       "tag_add_placeholder": "Új címke",
       "dictate_listening": "Hallgatom...",
@@ -125,21 +125,21 @@
       "publicname_hint": "Csak a keresztnevedet",
       "save_changes_hint": "Kész a szerkesztés",
       "edit_button_hint": "Változtatás",
-      "city_deselect_label": "Távolítsa el a"
+      "city_deselect_label": "Eltávolítás"
     },
     "blocklist": {
       "title": "Letiltott felhasználók",
       "empty": "Nincsenek letiltott felhasználóid.",
-      "unblock_button": "A  tiltás feloldása",
-      "unblock_confirmation": "Biztos, hogy fel akarod oldani a felhasználó tiltását?",
+      "unblock_button": "Tiltás feloldása",
+      "unblock_confirmation": "Biztos, hogy fel akarod oldani a tiltását?",
       "unblock_confirmation_yes": "Igen",
-      "unblock_confirmation_no": "Nem, tartsa blokkolva",
-      "dialog_title": "Profil letiltasa",
+      "unblock_confirmation_no": "Nem, maradjon blokkolva",
+      "dialog_title": "Profil letiltása",
       "dialog_message_1": "Ha ez a személy zavar téged, itt tudod letiltani. Ha letiltod, nem fog tudni üzeneteket küldeni neked, vagy bármilyen interakcióba lépni a profiloddal. Ezen kívül sehol sem fog megjelenni neked ezen az oldalon, mintha soha nem is létezett volna.",
       "dialog_message_2": "Nem kap értesítést arról, hogy letiltottad.",
       "confirmation_no": "Inkább ne",
       "confirmation_yes": "Igen, letiltom",
-      "block_confirm_message": "Nem fogod őket többé látni."
+      "block_confirm_message": "Nem fogod többé látni."
     },
     "browse": {
       "no_access_dating_title": "A saját párkereső profilod jelenleg nem nyilvános.",
@@ -148,8 +148,8 @@
       "no_access_social_description": "Ha mások nem látnak téged, te sem láthatod őket - ez így fair.  Ha nyilvánossá teszed, akkor látni fogod itt a többieket.",
       "cta_button_label": "A beállításaimhoz",
       "social_no_results": "Errefelé még nem találtunk senkit.",
-      "social_no_results_city": "Még nem találtam senkit a {cityName} címen.",
-      "social_no_results_tags": "Nem találtam senkit, akinek ilyen érdekei lennének.",
+      "social_no_results_city": "Errefelé még nem találtunk senkit.",
+      "social_no_results_tags": "Nem találtunk senkit, akinek ezek a dolgok érdekelnének.",
       "no_results_cta_title": "Ez a közösség még növekszik.",
       "no_results_cta_description": "Segíthetsz, ha meghívod barátaidat, hogy csatlakozzanak. Minél többen vagyunk, annál jobb.",
       "invite_button": "Barátok meghívása",
@@ -172,9 +172,7 @@
     "welcome_title": "Légy üdvözölve nálunk.",
     "welcome_subtitle": "Hogy hívnak?",
     "location_title": "Hol laksz?",
-    "location_subtitle": "...itt a gyönyörű bolygónkon.",
     "connections_title": "Kivel kapcsolódnál?",
-    "connections_subtitle": "Milyen fajta kapcsolódást keresek",
     "interests_title": "Mi érdekel?",
     "interests_subtitle": "Érdeklődési köreim, számomra fontos dolgok",
     "languages_title": "Nyelvek",
@@ -283,11 +281,11 @@
       "title": "Itt elakadtunk.",
       "message": "Hiba történt. Kérjük, próbálja meg később újra.",
       "retry": "Retry",
-      "cancel": "Törölje"
+      "cancel": "Mégse"
     },
     "submitbutton": {
       "working": "Dolgozom...",
-      "submit": "Küldje be a",
+      "submit": "Mehet",
       "save": "Mentés"
     },
     "loading": {
@@ -311,7 +309,7 @@
     },
     "share_dialog": {
       "title": "Terjeszd az igét",
-      "description": "Hívj hasonlóan gondolkodó embereket közénk",
+      "description": "Hívj meg barátokat",
       "button_copy": "Másolás",
       "button_copied": "Másolva",
       "qr_hint": "Villantsd ezt a telefonjukra"
