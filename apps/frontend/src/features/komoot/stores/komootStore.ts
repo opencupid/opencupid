@@ -35,6 +35,7 @@ export const useKomootStore = defineStore('komoot', {
       params.set('q', query)
       params.set('lang', defaultLang)
       params.set('limit', '10')
+      // params.set('dedupe', '1')
       for (const tag of searchOSMTagFilters) {
         params.append('osm_tag', tag)
       }
