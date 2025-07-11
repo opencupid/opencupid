@@ -69,7 +69,7 @@ export class ImageService {
 
     // create image subdir, generate basename
     try {
-      imageLocation = await makeImageLocation()
+      imageLocation = await makeImageLocation(userId)
     } catch (err: any) {
       console.error('Failed to create dest dir', err)
       throw new Error('Failed to create dest dir')

@@ -1,6 +1,4 @@
 import path, { dirname } from 'path'
-import { randomUUID } from 'crypto'
-import { createHash } from 'crypto'
 import fs from 'fs'
 
 import cuid from 'cuid'
@@ -8,19 +6,6 @@ import { appConfig } from '@/lib/appconfig'
 
 export function uploadTmpDir() {
   return path.join(appConfig.MEDIA_UPLOAD_DIR, 'tmp')
-}
-
-export function generateStorageDirPrefix(): string {
-  // 1) Generate a unique ID
-  const id = randomUUID() // e.g. "9f47a2c9-9f1c-4a2d-8b1e-1234567890ab"
-
-  // 2) Hash the ID for even distribution
-  const hash = createHash('md5').update(id).digest('hex') // 32 hex chars
-
-  // 3) Take the first 2 chars as your bucket
-  const prefix = hash.slice(0, 2) // e.g. "a3"
-
-  return prefix
 }
 
 export function getImageRoot(): string {
@@ -53,12 +38,11 @@ type ImageLocation = {
   absPath: string
 }
 
-export async function makeImageLocation(): Promise<ImageLocation> {
+export async function makeImageLocation(storagePrefix: string): Promise<ImageLocation> {
   // Generate a CUID for the ProfileImage
   const base = cuid.slug()
 
   const imageRoot = getImageRoot()
-  const storagePrefix = generateStorageDirPrefix()
   const relPath = path.posix.join(storagePrefix)
   const absPath = path.join(imageRoot, relPath)
   await fs.promises.mkdir(dirname(absPath), { recursive: true })
