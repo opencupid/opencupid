@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import Multiselect from 'vue-multiselect'
-import axios from 'axios'
 import { useI18n } from 'vue-i18n'
+import { useKomootStore, type KomootLocation } from '@/features/komoot/stores/komootStore'
 import type { LocationDTO } from '@zod/dto/location.dto'
 
 const model = defineModel<LocationDTO>({
@@ -18,19 +18,13 @@ const model = defineModel<LocationDTO>({
 const props = withDefaults(defineProps<{ allowEmpty?: boolean }>(), { allowEmpty: false })
 
 const { locale, t } = useI18n()
+const komoot = useKomootStore()
 
-interface Option {
-  name: string
-  country: string
-  lat: number
-  lon: number
-}
-
-const options = ref<Option[]>([])
-const isLoading = ref(false)
 const showHint = ref(false)
+const options = computed(() => komoot.results)
+const isLoading = computed(() => komoot.isLoading)
 
-const selected = computed<Option | null>({
+const selected = computed<KomootLocation | null>({
   get() {
     if (!model.value.cityName) return null
     return {
@@ -40,7 +34,7 @@ const selected = computed<Option | null>({
       lon: model.value.lon ?? 0,
     }
   },
-  set(val: Option | null) {
+  set(val: KomootLocation | null) {
     if (!val) {
       model.value.country = ''
       model.value.cityName = ''
@@ -57,25 +51,10 @@ const selected = computed<Option | null>({
 
 async function asyncFind(query: string) {
   if (!query) {
-    options.value = selected.value ? [selected.value] : []
+    komoot.results = selected.value ? [selected.value] : []
     return
   }
-  isLoading.value = true
-  try {
-    const res = await axios.get('https://photon.komoot.io/api/', {
-      params: { q: query, lang: locale.value },
-    })
-    options.value = (res.data.features || []).map((f: any) => ({
-      name: f.properties.name,
-      country: f.properties.country,
-      lat: f.geometry.coordinates[1],
-      lon: f.geometry.coordinates[0],
-    }))
-  } catch (err) {
-    console.error('Location search failed:', err)
-  } finally {
-    isLoading.value = false
-  }
+  await komoot.search(query, locale.value)
 }
 </script>
 
