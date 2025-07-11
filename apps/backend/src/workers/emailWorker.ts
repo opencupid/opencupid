@@ -30,6 +30,8 @@ const transporter = nodemailer.createTransport({
 new Worker(
   'emails',
   async job => {
+    const siteName = appConfig.SITE_NAME || 'OpenCupid'
+
     if (job.name === 'sendLoginLinkEmail') {
       const { userId } = job.data as { userId: string }
 
@@ -44,8 +46,8 @@ new Worker(
       await transporter.sendMail({
         from: appConfig.EMAIL_FROM,
         to: user.email,
-        subject: t('emails.loginLink.subject'),
-        html: t('emails.loginLink.html', { otp, link }),
+        subject: t('emails.loginLink.subject', { siteName }),
+        html: t('emails.loginLink.html', { otp, link, siteName }),
       })
     }
 
@@ -61,8 +63,8 @@ new Worker(
       await transporter.sendMail({
         from: appConfig.EMAIL_FROM,
         to: user.email,
-        subject: t('emails.welcome.subject'),
-        html: t('emails.welcome.html', { link }),
+        subject: t('emails.welcome.subject', { siteName }),
+        html: t('emails.welcome.html', { link, siteName }),
       })
     }
   },

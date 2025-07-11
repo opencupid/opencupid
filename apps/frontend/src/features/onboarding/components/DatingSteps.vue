@@ -42,10 +42,10 @@ const {
   <fieldset v-if="isCurrent('age')">
     <!-- I was born... -->
     <legend>{{ t('onboarding.age_title') }}</legend>
-    <p class="wizard-step-subtitle">
-      <!-- I've been on this planet since -->
-      {{ t('onboarding.age_subtitle') }}
-    </p>
+    <!-- <p class="wizard-step-subtitle"> -->
+    <!-- I've been on this planet since -->
+    <!-- {{ t('onboarding.age_subtitle') }} -->
+    <!-- </p> -->
     <AgeSelector v-model="birthdayModel" />
   </fieldset>
 
@@ -59,10 +59,6 @@ const {
   <fieldset v-else-if="isCurrent('family_situation')">
     <!-- relationship status step title -->
     <legend>{{ t('onboarding.relationship_title') }}</legend>
-    <p class="wizard-step-subtitle">
-      <!-- My family situation is -->
-      {{ t('onboarding.relationship_subtitle') }}
-    </p>
     <div class="mb-3">
       <RelationstatusSelector v-model="relationshipModel" />
     </div>
@@ -72,15 +68,14 @@ const {
   <fieldset v-else-if="isCurrent('introDating')">
     <!-- dating intro title -->
     <legend>{{ t('onboarding.dating_intro_title') }}</legend>
-    <p class="wizard-step-subtitle">
-      <!-- This will be visible only to people who are looking for a relationship as well,
-      not to those who are just looking for friends or social connections. -->
-      {{ t('onboarding.dating_intro_subtitle') }}
-    </p>
     <IntrotextEditor
       v-model="introDatingModel"
       :languages="formData.languages"
       :placeholder="t('onboarding.dating_intro_placeholder')"
     />
+    <div class="form-text text-muted">
+      <!-- This is optional, you can fill it out later. -->
+      {{ t('onboarding.dating_intro_hint') }}
+    </div>
   </fieldset>
 </template>

@@ -189,6 +189,7 @@
     "connections_subtitle": "I feel complete but could use some company.",
     "interests_title": "I'm into...",
     "interests_subtitle": "Select your interests to help others find you.",
+    "interests_hint": "Start typing to search for tags. You can add new tags if you don't find what you're looking for.",
     "languages_title": "I speak...",
     "languages_subtitle": "Select the languages you speak to help others connect with you.",
     "social_intro_title": "About me...",
