@@ -29,6 +29,8 @@ vi.mock('@/lib/appconfig', () => ({
     SMS_API_KEY: 'k',
     IMAGE_MAX_SIZE: 1000,
     FRONTEND_URL: 'http://test',
+    AUTH_IMG_HMAC_SECRET: 'imgsecret',
+    DOMAIN: 'example.org',
   },
 }))
 

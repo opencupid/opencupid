@@ -1,10 +1,12 @@
 worker_processes 1;
+env AUTH_IMG_HMAC_SECRET;
 
 events {
   worker_connections 1024;
 }
 
 http {
+  js_import auth_img from /etc/nginx/auth_img.js;
   include mime.types;
   default_type application/octet-stream;
 
@@ -101,6 +103,7 @@ http {
     }
 
     location /images/ {
+      js_access auth_img.authorize;
       alias /var/www/;
       autoindex off;
       try_files $uri =404;
