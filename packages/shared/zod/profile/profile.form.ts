@@ -32,7 +32,7 @@ export const ProfileFormToPayloadTransform = EditProfileFormSchema.transform((da
   return {
     ...rest,
     tags: data.tags.map(tag => tag.id),
-    cityId: data.location.cityId,
+    // cityId: data.location.cityId,
     country: data.location.country,
     cityName: data.location.cityName,
     lat: data.location.lat,

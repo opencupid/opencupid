@@ -50,7 +50,6 @@ describe('GET /location', () => {
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.location.country).toBe('MX')
-    expect(reply.payload.location.cityId).toBe(null)
     expect(reply.payload.location.cityName).toBe('')
     expect(mockMaxMindClient.country).not.toHaveBeenCalled()
   })

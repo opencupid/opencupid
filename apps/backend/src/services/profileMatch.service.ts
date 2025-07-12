@@ -9,7 +9,7 @@ import type { LocationDTO } from '@zod/dto/location.dto';
 import { Gender, HasKids, type Prisma } from '@prisma/client';
 
 const tagInclude = {
-  city: true,
+  // city: true,
   tags: {
     include: {
       translations: {
@@ -79,7 +79,10 @@ export class ProfileMatchService {
     const update = {
       profileId,
       country: data.location?.country || null,
-      cityId: data.location?.cityId || null,
+      // cityId: data.location?.cityId || null,
+      cityName: data.location?.cityName || null,
+      lat: data.location?.lat ?? null,
+      lon: data.location?.lon ?? null,
       radius: data.radius ?? 0,
       tags: {
         set: tagIds, // ✅ safe for update
@@ -89,7 +92,11 @@ export class ProfileMatchService {
     const create = {
       profileId,
       country: data.location?.country ?? '',
-      cityId: data.location?.cityId ?? '',
+      cityName: data.location?.cityName || null,
+      lat: data.location?.lat ?? null,
+      lon: data.location?.lon ?? null,
+
+      // cityId: data.location?.cityId ?? '',
       radius: data.radius ?? 0,
       tags: {
         connect: tagIds, // ✅ required for create

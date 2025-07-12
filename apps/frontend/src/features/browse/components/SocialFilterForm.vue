@@ -17,7 +17,7 @@ const props = defineProps<{
   viewerProfile: OwnerProfile | null
 }>()
 
-const locationDisabled = ref(!model.value.location.lat)
+const locationDisabled = ref(model.value.location.country == '')
 
 const setLocationFromProfile = () => {
   if (props.viewerProfile?.location && model.value.location) {

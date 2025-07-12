@@ -1,54 +1,45 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useDebounceFn } from '@vueuse/core'
 import { useKomootStore, type KomootLocation } from '@/features/komoot/stores/komootStore'
 import type { LocationDTO } from '@zod/dto/location.dto'
+import Multiselect from '@/features/shared/ui/multiselect'
 
-const { locale, t } = useI18n()
-const komoot = useKomootStore()
+import { useDebounceFn } from '@vueuse/core'
+import CountryFlag from '../ui/CountryFlag.vue'
 
-const props = withDefaults(
-  defineProps<{
-    allowEmpty?: boolean
-  }>(),
-  { allowEmpty: false }
-)
+const debouncedAsyncFind = useDebounceFn(async (query: string) => {
+  if (!query) {
+    komoot.results = selected.value ? [selected.value] : []
+    return
+  }
+  await komoot.search(query, locale.value)
+}, 500) // debounce delay in ms
 
 const model = defineModel<LocationDTO>({
   default: () => ({
     country: '',
-    cityId: null,
     cityName: '',
     lat: null,
     lon: null,
   }),
 })
 
-const query = ref(model.value.cityName)
-// const inputValue = computed({
-//   get() {
-//     return query.value
-//   },
-//   set(val) {
-//     query.value = val
-//   },
-// })
-const showHint = ref(false)
-const isLoading = computed(() => komoot.isLoading)
-const results = computed(() => komoot.results)
-
-const debouncedSearch = useDebounceFn(async () => {
-  if (!query.value) {
-    komoot.results = selected.value ? [selected.value] : []
-    return
+const props = withDefaults(
+  defineProps<{
+    allowEmpty?: boolean
+  }>(),
+  {
+    allowEmpty: false,
   }
-  await komoot.search(query.value, locale.value)
-}, 500)
+)
 
-watch(query, () => {
-  debouncedSearch()
-})
+const { locale, t } = useI18n()
+const komoot = useKomootStore()
+
+const showHint = ref(false)
+const options = computed(() => komoot.results)
+const isLoading = computed(() => komoot.isLoading)
 
 const selected = computed<KomootLocation | null>({
   get() {
@@ -60,71 +51,77 @@ const selected = computed<KomootLocation | null>({
       lon: model.value.lon ?? 0,
     }
   },
-  set(val) {
+  set(val: KomootLocation | null) {
     if (!val) {
-      model.value = {
-        country: '',
-        cityId: null,
-        cityName: '',
-        lat: null,
-        lon: null,
-      }
+      model.value.country = ''
+      model.value.cityName = ''
+      model.value.lat = null
+      model.value.lon = null
       return
     }
-    model.value = {
-      country: val.country,
-      cityId: null, // if needed, populate from another source
-      cityName: val.name,
-      lat: val.lat,
-      lon: val.lon,
-    }
+    model.value.country = val.country
+    model.value.cityName = val.name
+    model.value.lat = val.lat
+    model.value.lon = val.lon
   },
 })
 
-function select(option: KomootLocation) {
-  selected.value = option
-  query.value = option.name
+function handleSelected() {
   komoot.results = []
 }
+
+onUnmounted(() => {
+  komoot.results = []
+})
 </script>
 
 <template>
-  <div class="interests-multiselect position-relative">
-    <!-- Fixed-height scrollable suggestions above input -->
-    <div
-      v-if="results.length"
-      class="position-relative overflow-auto border rounded mb-2"
-      :class="{'visibility-hidden': !results.length}"
-      style="height: 8rem"
+  <div class="interests-multiselect">
+    <Multiselect
+      v-model="selected"
+      v-bind:allow-empty="props.allowEmpty"
+      :options="options"
+      :searchable="true"
+      :close-on-select="true"
+      :clear-on-select="true"
+      :internal-search="false"
+      :show-no-results="false"
+      :show-no-options="false"
+      :loading="isLoading"
+      select-label=""
+      selected-label=""
+      deselect-label=""
+      open-direction="top"
+      label="name"
+      track-by="name"
+      @search-change="debouncedAsyncFind"
+      @open="showHint = true"
+      @close="showHint = false"
+      @select="handleSelected"
+      :placeholder="t('profiles.forms.city_search_placeholder')"
     >
-      <a
-        v-for="option in results"
-        :key="option.name"
-        href="#"
-        class="list-group-item list-group-item-action py-1 px-2 "
-        @click="select(option)"
-      >
-        <div class="d-flex align-items-center">
-          <span class="flex-grow-1">
-            {{ option.name }}
-          </span>
-          <span class="text-muted small flex-shrink-1">
-            {{ option.country ? option.country : '' }}
+      <template #option="{ option }">
+        <div class="d-flex flex-row align-items-start">
+          <span class="flex-grow-1">{{ option.name }}</span>
+          <span class="flex-shrink-1 flex-grow-0">{{ option.country }}</span>
+        </div>
+      </template>
+      <template #singleLabel="{}">
+        <div class="d-flex flex-row align-items-start">
+          <span class="flex-grow-1">{{ selected?.name }}</span>
+          <span class="flex-shrink-1 flex-grow-0">
+            <CountryFlag
+              :code="selected?.country"
+              class="ms-1"
+              size="20"
+              :title="selected?.country"
+            />
           </span>
         </div>
-      </a>
-    </div>
-
-    <!-- Text input for async search -->
-    <BFormInput
-      v-model="query"
-      :placeholder="t('profiles.forms.city_search_placeholder')"
-      @focus="showHint = true"
-    />
-
-    <!-- Optional hint below input -->
+      </template>
+    </Multiselect>
     <div class="mt-1 form-text text-muted hint" :class="{ 'opacity-0': !showHint }">
-      <small>{{ t('profiles.forms.city_start_typing') }}</small>
+      <!-- <small>{{ t('profiles.forms.city_start_typing') }}</small> -->
     </div>
   </div>
 </template>

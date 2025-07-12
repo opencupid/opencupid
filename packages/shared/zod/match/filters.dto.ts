@@ -27,7 +27,7 @@ export const UpdateDatingPreferencesPayloadSchema = ProfileSchema.pick({
 export type UpdateDatingPreferencesPayload = z.infer<typeof UpdateDatingPreferencesPayloadSchema>;
 
 export const SocialMatchFilterWithTagsSchema = SocialMatchFilterSchema.extend({
-  city: PublicCitySchema.nullable(), // or z.null() if you want to allow null
+  // city: PublicCitySchema.nullable(), // or z.null() if you want to allow null
   tags: z.array(TagWithTranslationsSchema), // or z.array(z.string()) if you only want IDs
 })
 

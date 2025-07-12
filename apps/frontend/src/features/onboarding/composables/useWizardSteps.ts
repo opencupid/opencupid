@@ -16,7 +16,7 @@ const imageStore = useImageStore()
       flags: '',
     },
     location: {
-      state: computed(() => (formData.location.country && formData.location.cityId ? true : false)),
+      state: computed(() => (formData.location.country  ? true : false)),
       flags: '',
     },
     looking_for: {

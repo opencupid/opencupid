@@ -34,7 +34,7 @@ defineEmits<{
           v-if="socialFilter?.location && viewerLocation"
           :location="socialFilter.location"
           :viewerLocation="viewerLocation"
-          :showCity="true"
+          :showCity="false"
           :showCountryLabel="true"
           :showCountryIcon="false"
         />

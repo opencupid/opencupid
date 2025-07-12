@@ -57,7 +57,6 @@ const appRoutes: FastifyPluginAsync = async fastify => {
     if (appConfig.NODE_ENV === 'development') {
       const location: LocationDTO = {
         country: 'MX',
-        cityId: null,
         cityName: ''
       }
       const payload = LocationSchema.parse(location)
@@ -73,7 +72,6 @@ const appRoutes: FastifyPluginAsync = async fastify => {
       const result = await client.country(clientIp)
       const location: LocationDTO = {
         country: result.country?.isoCode ?? '',
-        cityId: null,
         cityName: ''
       }
       const payload = LocationSchema.parse(location)

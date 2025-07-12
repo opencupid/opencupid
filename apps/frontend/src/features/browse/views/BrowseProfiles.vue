@@ -17,6 +17,7 @@ import SocialFilterDisplay from '../components/SocialFilterDisplay.vue'
 import DatingPrefsDisplay from '../components/DatingPrefsDisplay.vue'
 import ScopeViewToggler from '@/features/shared/ui/ScopeViewToggler.vue'
 import { useI18n } from 'vue-i18n'
+import { useCountries } from '../../shared/composables/useCountries'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -82,6 +83,13 @@ const handleHidden = (id: string) => {
   hideProfile(id)
   canGoBack.value = false
 }
+
+const { countryCodeToName } = useCountries()
+
+const countryName = computed(() => {
+  if (!socialFilter ) return ''
+  return countryCodeToName(socialFilter?.value?.location.country ?? '')
+})
 
 // Provide the viewerProfile object (current user's profile) to child components
 provide('viewerProfile', viewerProfile)
@@ -177,7 +185,11 @@ const isDetailView = computed(() => !!selectedProfileId.value)
             <MiddleColumn class="">
               <div class="mb-3">
                 <!-- There's nobody in your area that matches your preferences, yet. -->
-                {{ t('profiles.browse.social_no_results') }}
+                {{
+                  t('profiles.browse.social_no_results', {
+                    country: countryName,
+                  })
+                }}
               </div>
               <NoResultsCTA />
             </MiddleColumn>

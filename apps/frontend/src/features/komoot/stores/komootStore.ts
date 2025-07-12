@@ -15,6 +15,27 @@ export interface KomootLocation {
   lon: number
 }
 
+// Define Komoot API response interfaces
+interface KomootFeatureProperties {
+  name: string;
+  countrycode: string;
+  [key: string]: unknown;
+}
+
+interface KomootFeature {
+  type: 'Feature';
+  geometry: {
+    type: 'Point';
+    coordinates: [number, number];
+  };
+  properties: KomootFeatureProperties;
+}
+
+interface KomootFeatureCollection {
+  type: 'FeatureCollection';
+  features: KomootFeature[];
+}
+
 export const useKomootStore = defineStore('komoot', {
   state: () => ({
     results: [] as KomootLocation[],
@@ -41,7 +62,7 @@ export const useKomootStore = defineStore('komoot', {
       }
 
       try {
-        const res = await axios.get<FeatureCollection<Point>>(
+        const res = await axios.get<KomootFeatureCollection>(
           'https://photon.komoot.io/api/',
           {
             params,
@@ -49,10 +70,10 @@ export const useKomootStore = defineStore('komoot', {
         )
         const features = res.data.features ?? []
         this.results = features.map(f => ({
-          name: (f.properties as any).name,
-          country: (f.properties as any).countrycode,
-          lat: (f.geometry?.coordinates[1] as number) ?? 0,
-          lon: (f.geometry?.coordinates[0] as number) ?? 0,
+          name: f.properties.name,
+          country: f.properties.countrycode,
+          lat: f.geometry?.coordinates[1] ?? 0,
+          lon: f.geometry?.coordinates[0] ?? 0,
         }))
         return this.results
       } catch (err) {

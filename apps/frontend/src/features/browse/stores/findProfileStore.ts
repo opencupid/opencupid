@@ -42,11 +42,15 @@ function mapLocationToPayload(
   dto: SearchLocationDTO,
 ): LocationPayload {
   const country = dto.country && dto.country !== '' ? dto.country : null
-  const cityId = dto.cityId && dto.cityId !== '' ? dto.cityId : null
+  // const cityId = dto.cityId && dto.cityId !== '' ? dto.cityId : null
+  const cityName = dto.cityName ?? ''
 
   return {
     country,
-    cityId,
+    // cityId,
+    cityName,
+    lat: dto.lat ?? null,
+    lon: dto.lon ?? null,
   }
 }
 

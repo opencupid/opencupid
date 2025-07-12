@@ -103,21 +103,21 @@ model City {
 }
 
 model Tag {
-  id            String              @id @default(cuid())
-  slug          String              @unique
-  name          String              @unique
+  id             String              @id @default(cuid())
+  slug           String              @unique
+  name           String              @unique
   /// Locale the tag was originally created in
-  originalLocale String            @default("en")
-  isUserCreated Boolean             @default(false)
-  isApproved    Boolean             @default(false)
-  isHidden      Boolean             @default(false)
-  isDeleted     Boolean             @default(false)
-  createdBy     String?
-  createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
-  translations  TagTranslation[]
-  profiles      Profile[]           @relation("ProfileTags")
-  filters       SocialMatchFilter[]
+  originalLocale String              @default("en")
+  isUserCreated  Boolean             @default(false)
+  isApproved     Boolean             @default(false)
+  isHidden       Boolean             @default(false)
+  isDeleted      Boolean             @default(false)
+  createdBy      String?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  translations   TagTranslation[]
+  profiles       Profile[]           @relation("ProfileTags")
+  filters        SocialMatchFilter[]
 }
 
 model TagTranslation {
@@ -204,8 +204,8 @@ model Profile {
   prefGender Gender[]  @default([])
   prefKids   HasKids[] @default([])
 
-  lat         Float?
-  lon         Float?
+  lat Float?
+  lon Float?
   // prefRadius       Int?    @default(50) // in km
   // isLocationActive Boolean @default(false)
 
@@ -350,6 +350,9 @@ model SocialMatchFilter {
   profileId String  @unique
   country   String?
   cityId    String?
+  cityName  String?
+  lat       Float?
+  lon       Float?
   radius    Int?    @default(50) // in km
   tags      Tag[]
   city      City?   @relation(fields: [cityId], references: [id])

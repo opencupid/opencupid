@@ -38,7 +38,7 @@ export const HiddenProfileScalarFieldEnumSchema = z.enum(['id','fromId','toId','
 
 export const MessageScalarFieldEnumSchema = z.enum(['id','conversationId','senderId','content','createdAt']);
 
-export const SocialMatchFilterScalarFieldEnumSchema = z.enum(['id','profileId','country','cityId','radius']);
+export const SocialMatchFilterScalarFieldEnumSchema = z.enum(['id','profileId','country','cityId','cityName','lat','lon','radius']);
 
 export const PushSubscriptionScalarFieldEnumSchema = z.enum(['id','userId','endpoint','p256dh','auth','createdAt','updatedAt','deviceInfo','lastSeen']);
 
@@ -334,6 +334,9 @@ export const SocialMatchFilterSchema = z.object({
   profileId: z.string(),
   country: z.string().nullable(),
   cityId: z.string().nullable(),
+  cityName: z.string().nullable(),
+  lat: z.number().nullable(),
+  lon: z.number().nullable(),
   radius: z.number().int().nullable(),
 })
 
@@ -851,6 +854,9 @@ export const SocialMatchFilterSelectSchema: z.ZodType<Prisma.SocialMatchFilterSe
   profileId: z.boolean().optional(),
   country: z.boolean().optional(),
   cityId: z.boolean().optional(),
+  cityName: z.boolean().optional(),
+  lat: z.boolean().optional(),
+  lon: z.boolean().optional(),
   radius: z.boolean().optional(),
   tags: z.union([z.boolean(),z.lazy(() => TagFindManyArgsSchema)]).optional(),
   city: z.union([z.boolean(),z.lazy(() => CityArgsSchema)]).optional(),
@@ -2209,6 +2215,9 @@ export const SocialMatchFilterWhereInputSchema: z.ZodType<Prisma.SocialMatchFilt
   profileId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   country: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   cityId: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
+  cityName: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
+  lat: z.union([ z.lazy(() => FloatNullableFilterSchema),z.number() ]).optional().nullable(),
+  lon: z.union([ z.lazy(() => FloatNullableFilterSchema),z.number() ]).optional().nullable(),
   radius: z.union([ z.lazy(() => IntNullableFilterSchema),z.number() ]).optional().nullable(),
   tags: z.lazy(() => TagListRelationFilterSchema).optional(),
   city: z.union([ z.lazy(() => CityNullableScalarRelationFilterSchema),z.lazy(() => CityWhereInputSchema) ]).optional().nullable(),
@@ -2219,6 +2228,9 @@ export const SocialMatchFilterOrderByWithRelationInputSchema: z.ZodType<Prisma.S
   profileId: z.lazy(() => SortOrderSchema).optional(),
   country: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   cityId: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
+  cityName: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
+  lat: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
+  lon: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   radius: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   tags: z.lazy(() => TagOrderByRelationAggregateInputSchema).optional(),
   city: z.lazy(() => CityOrderByWithRelationInputSchema).optional()
@@ -2244,6 +2256,9 @@ export const SocialMatchFilterWhereUniqueInputSchema: z.ZodType<Prisma.SocialMat
   NOT: z.union([ z.lazy(() => SocialMatchFilterWhereInputSchema),z.lazy(() => SocialMatchFilterWhereInputSchema).array() ]).optional(),
   country: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   cityId: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
+  cityName: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
+  lat: z.union([ z.lazy(() => FloatNullableFilterSchema),z.number() ]).optional().nullable(),
+  lon: z.union([ z.lazy(() => FloatNullableFilterSchema),z.number() ]).optional().nullable(),
   radius: z.union([ z.lazy(() => IntNullableFilterSchema),z.number().int() ]).optional().nullable(),
   tags: z.lazy(() => TagListRelationFilterSchema).optional(),
   city: z.union([ z.lazy(() => CityNullableScalarRelationFilterSchema),z.lazy(() => CityWhereInputSchema) ]).optional().nullable(),
@@ -2254,6 +2269,9 @@ export const SocialMatchFilterOrderByWithAggregationInputSchema: z.ZodType<Prism
   profileId: z.lazy(() => SortOrderSchema).optional(),
   country: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   cityId: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
+  cityName: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
+  lat: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
+  lon: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   radius: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   _count: z.lazy(() => SocialMatchFilterCountOrderByAggregateInputSchema).optional(),
   _avg: z.lazy(() => SocialMatchFilterAvgOrderByAggregateInputSchema).optional(),
@@ -2270,6 +2288,9 @@ export const SocialMatchFilterScalarWhereWithAggregatesInputSchema: z.ZodType<Pr
   profileId: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   country: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema),z.string() ]).optional().nullable(),
   cityId: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema),z.string() ]).optional().nullable(),
+  cityName: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema),z.string() ]).optional().nullable(),
+  lat: z.union([ z.lazy(() => FloatNullableWithAggregatesFilterSchema),z.number() ]).optional().nullable(),
+  lon: z.union([ z.lazy(() => FloatNullableWithAggregatesFilterSchema),z.number() ]).optional().nullable(),
   radius: z.union([ z.lazy(() => IntNullableWithAggregatesFilterSchema),z.number() ]).optional().nullable(),
 }).strict();
 
@@ -3566,6 +3587,9 @@ export const SocialMatchFilterCreateInputSchema: z.ZodType<Prisma.SocialMatchFil
   id: z.string().cuid().optional(),
   profileId: z.string(),
   country: z.string().optional().nullable(),
+  cityName: z.string().optional().nullable(),
+  lat: z.number().optional().nullable(),
+  lon: z.number().optional().nullable(),
   radius: z.number().int().optional().nullable(),
   tags: z.lazy(() => TagCreateNestedManyWithoutFiltersInputSchema).optional(),
   city: z.lazy(() => CityCreateNestedOneWithoutSocialFiltersInputSchema).optional()
@@ -3576,6 +3600,9 @@ export const SocialMatchFilterUncheckedCreateInputSchema: z.ZodType<Prisma.Socia
   profileId: z.string(),
   country: z.string().optional().nullable(),
   cityId: z.string().optional().nullable(),
+  cityName: z.string().optional().nullable(),
+  lat: z.number().optional().nullable(),
+  lon: z.number().optional().nullable(),
   radius: z.number().int().optional().nullable(),
   tags: z.lazy(() => TagUncheckedCreateNestedManyWithoutFiltersInputSchema).optional()
 }).strict();
@@ -3584,6 +3611,9 @@ export const SocialMatchFilterUpdateInputSchema: z.ZodType<Prisma.SocialMatchFil
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   profileId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   country: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  cityName: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  lat: z.union([ z.number(),z.lazy(() => NullableFloatFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  lon: z.union([ z.number(),z.lazy(() => NullableFloatFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   radius: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   tags: z.lazy(() => TagUpdateManyWithoutFiltersNestedInputSchema).optional(),
   city: z.lazy(() => CityUpdateOneWithoutSocialFiltersNestedInputSchema).optional()
@@ -3594,6 +3624,9 @@ export const SocialMatchFilterUncheckedUpdateInputSchema: z.ZodType<Prisma.Socia
   profileId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   country: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   cityId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  cityName: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  lat: z.union([ z.number(),z.lazy(() => NullableFloatFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  lon: z.union([ z.number(),z.lazy(() => NullableFloatFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   radius: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   tags: z.lazy(() => TagUncheckedUpdateManyWithoutFiltersNestedInputSchema).optional()
 }).strict();
@@ -3603,6 +3636,9 @@ export const SocialMatchFilterCreateManyInputSchema: z.ZodType<Prisma.SocialMatc
   profileId: z.string(),
   country: z.string().optional().nullable(),
   cityId: z.string().optional().nullable(),
+  cityName: z.string().optional().nullable(),
+  lat: z.number().optional().nullable(),
+  lon: z.number().optional().nullable(),
   radius: z.number().int().optional().nullable()
 }).strict();
 
@@ -3610,6 +3646,9 @@ export const SocialMatchFilterUpdateManyMutationInputSchema: z.ZodType<Prisma.So
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   profileId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   country: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  cityName: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  lat: z.union([ z.number(),z.lazy(() => NullableFloatFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  lon: z.union([ z.number(),z.lazy(() => NullableFloatFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   radius: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
 
@@ -3618,6 +3657,9 @@ export const SocialMatchFilterUncheckedUpdateManyInputSchema: z.ZodType<Prisma.S
   profileId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   country: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   cityId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  cityName: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  lat: z.union([ z.number(),z.lazy(() => NullableFloatFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  lon: z.union([ z.number(),z.lazy(() => NullableFloatFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   radius: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
 
@@ -4796,10 +4838,15 @@ export const SocialMatchFilterCountOrderByAggregateInputSchema: z.ZodType<Prisma
   profileId: z.lazy(() => SortOrderSchema).optional(),
   country: z.lazy(() => SortOrderSchema).optional(),
   cityId: z.lazy(() => SortOrderSchema).optional(),
+  cityName: z.lazy(() => SortOrderSchema).optional(),
+  lat: z.lazy(() => SortOrderSchema).optional(),
+  lon: z.lazy(() => SortOrderSchema).optional(),
   radius: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const SocialMatchFilterAvgOrderByAggregateInputSchema: z.ZodType<Prisma.SocialMatchFilterAvgOrderByAggregateInput> = z.object({
+  lat: z.lazy(() => SortOrderSchema).optional(),
+  lon: z.lazy(() => SortOrderSchema).optional(),
   radius: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
@@ -4808,6 +4855,9 @@ export const SocialMatchFilterMaxOrderByAggregateInputSchema: z.ZodType<Prisma.S
   profileId: z.lazy(() => SortOrderSchema).optional(),
   country: z.lazy(() => SortOrderSchema).optional(),
   cityId: z.lazy(() => SortOrderSchema).optional(),
+  cityName: z.lazy(() => SortOrderSchema).optional(),
+  lat: z.lazy(() => SortOrderSchema).optional(),
+  lon: z.lazy(() => SortOrderSchema).optional(),
   radius: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
@@ -4816,10 +4866,15 @@ export const SocialMatchFilterMinOrderByAggregateInputSchema: z.ZodType<Prisma.S
   profileId: z.lazy(() => SortOrderSchema).optional(),
   country: z.lazy(() => SortOrderSchema).optional(),
   cityId: z.lazy(() => SortOrderSchema).optional(),
+  cityName: z.lazy(() => SortOrderSchema).optional(),
+  lat: z.lazy(() => SortOrderSchema).optional(),
+  lon: z.lazy(() => SortOrderSchema).optional(),
   radius: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const SocialMatchFilterSumOrderByAggregateInputSchema: z.ZodType<Prisma.SocialMatchFilterSumOrderByAggregateInput> = z.object({
+  lat: z.lazy(() => SortOrderSchema).optional(),
+  lon: z.lazy(() => SortOrderSchema).optional(),
   radius: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
@@ -6803,6 +6858,9 @@ export const SocialMatchFilterCreateWithoutCityInputSchema: z.ZodType<Prisma.Soc
   id: z.string().cuid().optional(),
   profileId: z.string(),
   country: z.string().optional().nullable(),
+  cityName: z.string().optional().nullable(),
+  lat: z.number().optional().nullable(),
+  lon: z.number().optional().nullable(),
   radius: z.number().int().optional().nullable(),
   tags: z.lazy(() => TagCreateNestedManyWithoutFiltersInputSchema).optional()
 }).strict();
@@ -6811,6 +6869,9 @@ export const SocialMatchFilterUncheckedCreateWithoutCityInputSchema: z.ZodType<P
   id: z.string().cuid().optional(),
   profileId: z.string(),
   country: z.string().optional().nullable(),
+  cityName: z.string().optional().nullable(),
+  lat: z.number().optional().nullable(),
+  lon: z.number().optional().nullable(),
   radius: z.number().int().optional().nullable(),
   tags: z.lazy(() => TagUncheckedCreateNestedManyWithoutFiltersInputSchema).optional()
 }).strict();
@@ -6898,6 +6959,9 @@ export const SocialMatchFilterScalarWhereInputSchema: z.ZodType<Prisma.SocialMat
   profileId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   country: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   cityId: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
+  cityName: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
+  lat: z.union([ z.lazy(() => FloatNullableFilterSchema),z.number() ]).optional().nullable(),
+  lon: z.union([ z.lazy(() => FloatNullableFilterSchema),z.number() ]).optional().nullable(),
   radius: z.union([ z.lazy(() => IntNullableFilterSchema),z.number() ]).optional().nullable(),
 }).strict();
 
@@ -7017,6 +7081,9 @@ export const SocialMatchFilterCreateWithoutTagsInputSchema: z.ZodType<Prisma.Soc
   id: z.string().cuid().optional(),
   profileId: z.string(),
   country: z.string().optional().nullable(),
+  cityName: z.string().optional().nullable(),
+  lat: z.number().optional().nullable(),
+  lon: z.number().optional().nullable(),
   radius: z.number().int().optional().nullable(),
   city: z.lazy(() => CityCreateNestedOneWithoutSocialFiltersInputSchema).optional()
 }).strict();
@@ -7026,6 +7093,9 @@ export const SocialMatchFilterUncheckedCreateWithoutTagsInputSchema: z.ZodType<P
   profileId: z.string(),
   country: z.string().optional().nullable(),
   cityId: z.string().optional().nullable(),
+  cityName: z.string().optional().nullable(),
+  lat: z.number().optional().nullable(),
+  lon: z.number().optional().nullable(),
   radius: z.number().int().optional().nullable()
 }).strict();
 
@@ -11450,6 +11520,9 @@ export const SocialMatchFilterCreateManyCityInputSchema: z.ZodType<Prisma.Social
   id: z.string().cuid().optional(),
   profileId: z.string(),
   country: z.string().optional().nullable(),
+  cityName: z.string().optional().nullable(),
+  lat: z.number().optional().nullable(),
+  lon: z.number().optional().nullable(),
   radius: z.number().int().optional().nullable()
 }).strict();
 
@@ -11572,6 +11645,9 @@ export const SocialMatchFilterUpdateWithoutCityInputSchema: z.ZodType<Prisma.Soc
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   profileId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   country: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  cityName: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  lat: z.union([ z.number(),z.lazy(() => NullableFloatFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  lon: z.union([ z.number(),z.lazy(() => NullableFloatFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   radius: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   tags: z.lazy(() => TagUpdateManyWithoutFiltersNestedInputSchema).optional()
 }).strict();
@@ -11580,6 +11656,9 @@ export const SocialMatchFilterUncheckedUpdateWithoutCityInputSchema: z.ZodType<P
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   profileId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   country: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  cityName: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  lat: z.union([ z.number(),z.lazy(() => NullableFloatFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  lon: z.union([ z.number(),z.lazy(() => NullableFloatFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   radius: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   tags: z.lazy(() => TagUncheckedUpdateManyWithoutFiltersNestedInputSchema).optional()
 }).strict();
@@ -11588,6 +11667,9 @@ export const SocialMatchFilterUncheckedUpdateManyWithoutCityInputSchema: z.ZodTy
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   profileId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   country: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  cityName: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  lat: z.union([ z.number(),z.lazy(() => NullableFloatFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  lon: z.union([ z.number(),z.lazy(() => NullableFloatFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   radius: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
 
@@ -11734,6 +11816,9 @@ export const SocialMatchFilterUpdateWithoutTagsInputSchema: z.ZodType<Prisma.Soc
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   profileId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   country: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  cityName: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  lat: z.union([ z.number(),z.lazy(() => NullableFloatFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  lon: z.union([ z.number(),z.lazy(() => NullableFloatFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   radius: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   city: z.lazy(() => CityUpdateOneWithoutSocialFiltersNestedInputSchema).optional()
 }).strict();
@@ -11743,6 +11828,9 @@ export const SocialMatchFilterUncheckedUpdateWithoutTagsInputSchema: z.ZodType<P
   profileId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   country: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   cityId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  cityName: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  lat: z.union([ z.number(),z.lazy(() => NullableFloatFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  lon: z.union([ z.number(),z.lazy(() => NullableFloatFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   radius: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
 
@@ -11751,6 +11839,9 @@ export const SocialMatchFilterUncheckedUpdateManyWithoutTagsInputSchema: z.ZodTy
   profileId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   country: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   cityId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  cityName: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  lat: z.union([ z.number(),z.lazy(() => NullableFloatFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  lon: z.union([ z.number(),z.lazy(() => NullableFloatFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   radius: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
 

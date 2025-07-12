@@ -127,7 +127,7 @@
       "name_label": "My name is...",
       "name_invalid": "Enter at least 3 letters",
       "more_options": "More options...",
-      "city_search_placeholder": "Search cities",
+      "city_search_placeholder": "Search locations",
       "city_add_placeholder": "Add this as new city",
       "city_deselect_label": "Remove",
       "city_start_typing": "Start typing to search for your city",
