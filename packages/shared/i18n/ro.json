@@ -113,7 +113,7 @@
       "name_label": "Numele meu este...",
       "name_invalid": "Introduceți cel puțin 3 litere",
       "more_options": "Mai multe opțiuni...",
-      "city_search_placeholder": "Căutare orașe",
+      "city_search_placeholder": "Căutare locații",
       "city_add_placeholder": "Adăugați acest lucru ca oraș nou",
       "city_start_typing": "Începeți să tastați pentru a căuta orașul dvs.",
       "tag_search_placeholder": "Căutați interese...",
@@ -243,7 +243,6 @@
     "welcome_title": "Bine ați venit la {siteName}!",
     "welcome_subtitle": "Hai să te pregătim ca să poți începe să cunoști oameni.",
     "location_title": "Eu sunt din...",
-    "location_subtitle": "Unde îmi petrec timpul în aceste zile pe frumoasa noastră planetă.",
     "connections_title": "Caut...",
     "connections_subtitle": "Mă simt completă, dar aș avea nevoie de companie.",
     "interests_title": "Sunt în...",
@@ -273,7 +272,9 @@
     "next_button": "Următorul",
     "back_button": "Înapoi",
     "finish_button": "Terminare",
-    "interests_hint": "Începeți să tastați pentru a căuta etichete. Puteți adăuga etichete noi dacă nu găsiți ceea ce căutați."
+    "interests_hint": "Începeți să tastați pentru a căuta etichete. Puteți adăuga etichete noi dacă nu găsiți ceea ce căutați.",
+    "social_intro_hint": "Lăsați această rubrică goală dacă doriți să o completați ulterior.",
+    "dating_intro_hint": "Lăsați această rubrică goală dacă doriți să o completați ulterior."
   },
   "settings": {
     "title": "Setări",

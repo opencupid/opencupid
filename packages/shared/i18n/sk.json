@@ -113,7 +113,7 @@
       "name_label": "Volám sa...",
       "name_invalid": "Zadajte aspoň 3 písmená",
       "more_options": "Viac možností...",
-      "city_search_placeholder": "Vyhľadávanie miest",
+      "city_search_placeholder": "Vyhľadávanie lokalít",
       "city_add_placeholder": "Pridať toto ako nové mesto",
       "city_start_typing": "Začnite písať a vyhľadajte svoje mesto",
       "tag_search_placeholder": "Vyhľadávanie záujmov...",
@@ -243,7 +243,6 @@
     "welcome_title": "Vitajte na stránke {siteName}!",
     "welcome_subtitle": "Pripravíme vás na to, aby ste sa mohli začať stretávať s ľuďmi.",
     "location_title": "Som z...",
-    "location_subtitle": "Kde v týchto dňoch trávim svoj čas na našej krásnej planéte.",
     "connections_title": "Hľadám...",
     "connections_subtitle": "Cítim sa kompletný, ale potreboval by som spoločnosť.",
     "interests_title": "Mám rád...",
@@ -273,7 +272,9 @@
     "next_button": "Ďalšie",
     "back_button": "Späť",
     "finish_button": "Dokončenie",
-    "interests_hint": "Začnite písať a vyhľadajte značky. Ak nenájdete, čo hľadáte, môžete pridať nové značky."
+    "interests_hint": "Začnite písať a vyhľadajte značky. Ak nenájdete, čo hľadáte, môžete pridať nové značky.",
+    "social_intro_hint": "Ak ho chcete vyplniť neskôr, nechajte ho prázdny.",
+    "dating_intro_hint": "Ak ho chcete vyplniť neskôr, nechajte ho prázdny."
   },
   "settings": {
     "title": "Nastavenia",

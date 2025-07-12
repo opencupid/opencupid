@@ -113,7 +113,7 @@
       "name_label": "O meu nome é...",
       "name_invalid": "Introduz pelo menos 3 letras",
       "more_options": "Mais opções...",
-      "city_search_placeholder": "Procura cidades",
+      "city_search_placeholder": "Localizações de pesquisa",
       "city_add_placeholder": "Adiciona isto como nova cidade",
       "city_start_typing": "Começa a escrever para procurar a tua cidade",
       "tag_search_placeholder": "Procura interesses...",
@@ -243,7 +243,6 @@
     "welcome_title": "Bem-vindo a {siteName}!",
     "welcome_subtitle": "Vamos preparar-te para que possas começar a conhecer pessoas.",
     "location_title": "Eu sou de...",
-    "location_subtitle": "Onde passo o meu tempo hoje em dia no nosso belo planeta.",
     "connections_title": "Procuro-te...",
     "connections_subtitle": "Sinto-me completo, mas precisava de companhia.",
     "interests_title": "Eu gosto de...",
@@ -273,7 +272,9 @@
     "next_button": "Seguinte",
     "back_button": "Volta",
     "finish_button": "Termina",
-    "interests_hint": "Começa a escrever para procurar etiquetas. Podes adicionar novas etiquetas se não encontrares o que procuras."
+    "interests_hint": "Começa a escrever para procurar etiquetas. Podes adicionar novas etiquetas se não encontrares o que procuras.",
+    "social_intro_hint": "Deixa este campo vazio se quiseres preenchê-lo mais tarde.",
+    "dating_intro_hint": "Deixa este campo vazio se quiseres preenchê-lo mais tarde."
   },
   "settings": {
     "title": "Definições",

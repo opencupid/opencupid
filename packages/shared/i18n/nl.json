@@ -113,7 +113,7 @@
       "name_label": "Mijn naam is...",
       "name_invalid": "Voer minstens 3 letters in",
       "more_options": "Meer opties...",
-      "city_search_placeholder": "Steden zoeken",
+      "city_search_placeholder": "Locaties zoeken",
       "city_add_placeholder": "Voeg dit toe als nieuwe stad",
       "city_deselect_label": "Verwijder",
       "city_start_typing": "Begin te typen om je stad te zoeken",
@@ -243,7 +243,6 @@
     "welcome_title": "Welkom op {siteName}!",
     "welcome_subtitle": "Laten we je op weg helpen zodat je mensen kunt ontmoeten.",
     "location_title": "Ik kom uit...",
-    "location_subtitle": "Waar ik deze dagen mijn tijd doorbreng op onze prachtige planeet.",
     "connections_title": "Ik ben op zoek naar...",
     "connections_subtitle": "Ik voel me compleet, maar kan wel wat gezelschap gebruiken.",
     "interests_title": "Ik ben in...",
@@ -273,7 +272,9 @@
     "next_button": "Volgende",
     "back_button": "Terug",
     "finish_button": "Afwerking",
-    "interests_hint": "Begin te typen om tags te zoeken. Je kunt nieuwe tags toevoegen als je niet vindt wat je zoekt."
+    "interests_hint": "Begin te typen om tags te zoeken. Je kunt nieuwe tags toevoegen als je niet vindt wat je zoekt.",
+    "social_intro_hint": "Laat dit leeg als je het later wilt invullen.",
+    "dating_intro_hint": "Laat dit leeg als je het later wilt invullen."
   },
   "settings": {
     "title": "Instellingen",

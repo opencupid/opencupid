@@ -113,7 +113,7 @@
       "name_label": "Il mio nome è...",
       "name_invalid": "Inserisci almeno 3 lettere",
       "more_options": "Altre opzioni...",
-      "city_search_placeholder": "Cerca città",
+      "city_search_placeholder": "Cerca le località",
       "city_add_placeholder": "Aggiungi questa come nuova città",
       "city_start_typing": "Inizia a digitare per cercare la tua città",
       "tag_search_placeholder": "Interessi di ricerca...",
@@ -243,7 +243,6 @@
     "welcome_title": "Benvenuto su {siteName}!",
     "welcome_subtitle": "Ti organizziamo per iniziare a incontrare persone.",
     "location_title": "Vengo da...",
-    "location_subtitle": "Dove trascorro il mio tempo in questi giorni sul nostro bellissimo pianeta.",
     "connections_title": "Sto cercando...",
     "connections_subtitle": "Mi sento completa ma avrei bisogno di un po' di compagnia.",
     "interests_title": "Mi piace...",
@@ -273,7 +272,9 @@
     "next_button": "Avanti",
     "back_button": "Indietro",
     "finish_button": "Finitura",
-    "interests_hint": "Inizia a digitare per cercare i tag. Puoi aggiungere nuovi tag se non trovi quello che stai cercando."
+    "interests_hint": "Inizia a digitare per cercare i tag. Puoi aggiungere nuovi tag se non trovi quello che stai cercando.",
+    "social_intro_hint": "Lascia questo punto vuoto se vuoi compilarlo in seguito.",
+    "dating_intro_hint": "Lascia questo punto vuoto se vuoi compilarlo in seguito."
   },
   "settings": {
     "title": "Impostazioni",
