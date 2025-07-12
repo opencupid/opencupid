@@ -25,7 +25,9 @@ const languagePreviewOptions = computed(() => {
 })
 
 const currentLanguage = computed(() => {
-  return languagePreviewOptions.value.find(lang => lang.value === model.value.previewLanguage)
+  return (
+    languagePreviewOptions.value.find(lang => lang.value === model.value.previewLanguage)
+  )
 })
 </script>
 
@@ -45,6 +47,7 @@ const currentLanguage = computed(() => {
 
       <li class="col-2 d-flex justify-content-end">
         <BNavItemDropdown
+          v-if="languagePreviewOptions.length > 1"
           size="sm"
           id="my-nav-dropdown"
           text="Dropdown"
