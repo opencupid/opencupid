@@ -1,6 +1,7 @@
 import cuid from 'cuid'
 import { FastifyPluginAsync } from 'fastify'
 import { notifierService } from '@/services/notifier.service'
+import { createHmac } from 'crypto'
 import { UserService } from 'src/services/user.service'
 import { ProfileService } from 'src/services/profile.service'
 import { rateLimitConfig, sendError, sendUnauthorizedError } from '../helpers'
@@ -56,6 +57,21 @@ const userRoutes: FastifyPluginAsync = async fastify => {
       const payload: JwtPayload = { userId: user.id, profileId: profileId }
       // console.info('jwt payload', payload)
       const jwt = fastify.jwt.sign(payload)
+
+      // --- Set auth_img cookie ---
+      const exp = Math.floor(Date.now() / 1000 + 60 * 60 * 6)
+      const payloadStr = `${user.id}:${exp}`
+      const sig = createHmac('sha256', appConfig.AUTH_IMG_HMAC_SECRET)
+        .update(payloadStr)
+        .digest('base64')
+      const cookieVal = Buffer.from(`${payloadStr}:${sig}`).toString('base64')
+      const domain = appConfig.DOMAIN.startsWith('.') ? appConfig.DOMAIN : `.${appConfig.DOMAIN}`
+      const expires = new Date(exp * 1000).toUTCString()
+      reply.header(
+        'Set-Cookie',
+        `auth_img=${cookieVal}; Path=/images/; Domain=${domain}; HttpOnly; Secure; SameSite=Lax; Expires=${expires}`
+      )
+
       const response: OtpLoginResponse = { success: true, token: jwt }
       reply.code(200).send(response)
     } catch (error) {

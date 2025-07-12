@@ -14,6 +14,7 @@ export const configSchema = z.object({
   WS_BASE_URL: z.string(),
 
   JWT_SECRET: z.string().min(10),
+  AUTH_IMG_HMAC_SECRET: z.string().min(10),
 
   DATABASE_URL: z.string().url(),
   REDIS_URL: z.string().url(),
