@@ -4,7 +4,7 @@ import ProfileImage from './ProfileImage.vue'
 // Props & Emits
 defineProps<{
   profile: {
-    profileImages: { url: string | null }[]
+    profileImages: { variants: { size: string; url: string }[] }[]
   }
 }>()
 </script>

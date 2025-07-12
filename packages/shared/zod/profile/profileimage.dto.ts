@@ -4,7 +4,7 @@ import { ProfileImageSchema, ProfileSchema } from "../generated"
 
 export const ImageVariantSchema = z.object({
   size: z.string(),
-  url: z.string().url(),
+  url: z.string().min(1),
 })
 
 // Fields exposed in the public API for profile images
