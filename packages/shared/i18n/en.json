@@ -194,6 +194,7 @@
     "social_intro_title": "About me...",
     "social_intro_subtitle": "Tell a bit about yourself to help others get to know you.",
     "social_intro_placeholder": "Tell a bit about yourself",
+    "social_intro_hint": "Leave this empty if you want to fill this in later.",
     "photos_title": "I look like...",
     "photos_subtitle": "Add a photo of yourself so others can see you.",
 
@@ -207,7 +208,7 @@
     "dating_intro_title": "I would like to find:",
     "dating_intro_subtitle": "This will be visible only to people who are looking for a relationship as well, not to those who are just looking for friends or social connections.",
     "dating_intro_placeholder": "Tell a bit about the kind of relationship you are looking for",
-
+    "dating_intro_hint": "Leave this empty if you want to fill this in later.",
     "confirmation": {
       "title": "All set!",
       "profile_hint": "See what other people see about me.",
