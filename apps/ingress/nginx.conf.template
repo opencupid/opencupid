@@ -101,10 +101,17 @@ http {
     }
 
     location /images/ {
+      auth_request /auth/image;
       alias /var/www/;
       autoindex off;
       try_files $uri =404;
       add_header Cache-Control "public, max-age=31536000, immutable";
+    }
+
+    location = /auth/image {
+      internal;
+      proxy_pass http://backend/api/auth/image;
+      proxy_set_header Cookie $http_cookie;
     }
 
     location /.well-known/acme-challenge/ {
