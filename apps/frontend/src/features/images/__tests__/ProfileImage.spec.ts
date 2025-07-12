@@ -4,12 +4,12 @@ import ProfileImage from '../components/ProfileImage.vue'
 
 const ImageTag = {
   props: ['image', 'className'],
-  template: '<div class="image-tag">{{ image.url }}</div>'
+  template: '<div class="image-tag">{{ image.variants[0].url }}</div>'
 }
 
 describe('ProfileImage', () => {
   it('renders first image from profile', () => {
-    const profile = { profileImages: [{ url: '/one.jpg' }] }
+    const profile = { profileImages: [{ variants: [{ size: 'original', url: '/one.jpg' }] }] }
     const wrapper = mount(ProfileImage, {
       props: { profile },
       global: { stubs: { ImageTag } }
@@ -18,12 +18,12 @@ describe('ProfileImage', () => {
   })
 
   it('updates when profile prop changes', async () => {
-    const profile = { profileImages: [{ url: '/one.jpg' }] }
+    const profile = { profileImages: [{ variants: [{ size: 'original', url: '/one.jpg' }] }] }
     const wrapper = mount(ProfileImage, {
       props: { profile },
       global: { stubs: { ImageTag } }
     })
-    await wrapper.setProps({ profile: { profileImages: [{ url: '/two.jpg' }] } })
+    await wrapper.setProps({ profile: { profileImages: [{ variants: [{ size: 'original', url: '/two.jpg' }] }] } })
     expect(wrapper.find('.image-tag').text()).toContain('/two.jpg')
   })
 })

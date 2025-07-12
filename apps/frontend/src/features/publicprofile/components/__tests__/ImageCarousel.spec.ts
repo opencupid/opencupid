@@ -9,7 +9,7 @@ import ImageCarousel from '../ImageCarousel.vue'
 describe('ImageCarousel', () => {
   it('opens modal on image click', async () => {
     const wrapper = mount(ImageCarousel, {
-      props: { profile: { profileImages: [{ url: '/img' }] } as any },
+      props: { profile: { profileImages: [{ id: '1', variants: [{ size: 'original', url: '/img' }] }] } as any },
       global: {
         stubs: {
           BCarousel: true,

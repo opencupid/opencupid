@@ -1,4 +1,5 @@
 worker_processes 1;
+env AUTH_IMG_HMAC_SECRET;
 
 events {
   worker_connections 1024;
@@ -101,6 +102,7 @@ http {
     }
 
     location /images/ {
+      access_by_lua_file /etc/nginx/image_auth.lua;
       alias /var/www/;
       autoindex off;
       try_files $uri =404;

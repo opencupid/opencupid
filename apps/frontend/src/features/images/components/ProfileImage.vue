@@ -6,11 +6,11 @@ import ImageTag from './ImageTag.vue'
 // Props & Emits
 const props = defineProps<{
   profile: {
-    profileImages: { url: string | null }[]
+    profileImages: { variants: { size: string; url: string }[] }[]
   }
 }>()
 
-const image = ref<{ url: string | null }>()
+const image = ref<{ variants: { size: string; url: string }[] }>()
 
 watchEffect(() => {
   if (props.profile && props.profile.profileImages && props.profile.profileImages.length > 0) {

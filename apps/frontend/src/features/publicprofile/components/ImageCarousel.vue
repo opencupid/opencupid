@@ -23,7 +23,7 @@ const handleCloseClick = () => (showModal.value = false)
     <BCarousel controls v-model="slide" v-if="!showModal" class="h-100">
       <BCarouselSlide
         v-for="img in props.profile.profileImages"
-        :key="img.url!"
+        :key="img.id"
         @click="handleImageClick"
         class="w-100 h-100"
       >
@@ -51,7 +51,7 @@ const handleCloseClick = () => (showModal.value = false)
       <BCarousel controls indicators v-model="slide" class="w-100 h-100" v-if="showModal">
         <BCarouselSlide
           v-for="img in props.profile.profileImages"
-          :key="img.url!"
+          :key="img.id"
           @click="handleCloseClick"
           class="w-100 h-100 wrapper"
         >

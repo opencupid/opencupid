@@ -1,8 +1,10 @@
 import path from 'path'
 import fs from 'fs'
+import { createHmac } from 'crypto'
 
 import { prisma } from '../lib/prisma'
 import { getImageRoot, makeImageLocation } from '@/lib/media'
+import { appConfig } from '@/lib/appconfig'
 
 import { generateContentHash } from '@/utils/hash'
 import { ProfileImagePosition } from '@zod/profile/profileimage.dto'
@@ -51,6 +53,24 @@ export class ImageService {
       where: { userId },
       orderBy: { position: 'asc' },
     })
+  }
+
+  /**
+   * Generate signed URLs for all variants of an image
+   */
+  getSignedUrls(image: { storagePath: string }): { size: string; url: string }[] {
+    const exp = Math.floor(Date.now() / 1000) + appConfig.IMAGE_URL_HMAC_TTL_SECONDS
+    const sign = (file: string) => {
+      const data = `${file}:${exp}`
+      const h = createHmac('sha256', appConfig.AUTH_IMG_HMAC_SECRET)
+        .update(data)
+        .digest('hex')
+      return `${appConfig.IMAGE_URL_BASE}/${file}?exp=${exp}&sig=${h}`
+    }
+    const base = image.storagePath
+    const variants = sizes.map(s => ({ size: s.name, url: sign(`${base}-${s.name}.webp`) }))
+    variants.push({ size: 'original', url: sign(`${base}-original.jpg`) })
+    return variants
   }
 
   /**

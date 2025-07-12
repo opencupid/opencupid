@@ -41,7 +41,7 @@ vi.mock('@/features/messaging/stores/messageStore', () => ({
   })
 }))
 
-const mockProfileRef: { value: { isDatingActive: boolean; isOnboarded: boolean; profileImages: { url: string }[] } } =
+const mockProfileRef: { value: { isDatingActive: boolean; isOnboarded: boolean; profileImages: { id?: string; variants: { size: string; url: string }[] }[] } } =
   { value: { isDatingActive: true, isOnboarded: true, profileImages: [] } }
 
 vi.mock('@/features/myprofile/stores/ownerProfileStore', () => ({
@@ -84,7 +84,7 @@ describe('Navbar', () => {
 
   it('does not render when logged in but not onBoarded', () => {
     mockIsLoggedIn.value = true
-    mockProfileRef.value = { isDatingActive: true, isOnboarded: false, profileImages: [{ url: "/path", }] }
+    mockProfileRef.value = { isDatingActive: true, isOnboarded: false, profileImages: [{ variants: [{ size: 'original', url: '/path' }] }] }
     const wrapper = mount(Navbar, {
       global: {
         stubs: {
@@ -101,7 +101,7 @@ describe('Navbar', () => {
 
   it('renders when logged in and profile image is loaded', () => {
     mockIsLoggedIn.value = true
-    mockProfileRef.value = { isDatingActive: true, isOnboarded: true, profileImages: [{ url: "/path", }] }
+    mockProfileRef.value = { isDatingActive: true, isOnboarded: true, profileImages: [{ variants: [{ size: 'original', url: '/path' }] }] }
     const wrapper = mount(Navbar, {
       global: {
         stubs: {
