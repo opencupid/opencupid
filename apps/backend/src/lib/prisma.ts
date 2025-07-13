@@ -40,6 +40,6 @@ const prismaClientSingleton = () => {
 export const prisma = global.prisma ?? prismaClientSingleton()
 
 // Cache in development only
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV === 'development') {
   global.prisma = prisma
 }

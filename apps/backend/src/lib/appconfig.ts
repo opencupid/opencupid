@@ -5,7 +5,7 @@ import dotenvExpand from 'dotenv-expand'
 
 // Zod schema
 export const configSchema = z.object({
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  NODE_ENV: z.enum(['development', 'production', 'test', 'staging']).default('development'),
   API_PORT: z.coerce.number().default(3000),
   FRONTEND_PORT: z.coerce.number().default(5173),
 
@@ -57,11 +57,11 @@ export const configSchema = z.object({
   FACEAPI_ENABLED: z.string().transform(val => val === 'true').default('false'),
 
   DOMAIN: z.string().default('example.org'),
-  
+
   SITE_NAME: z.string().default('OpenCupid'),
 })
 
-if (process.env.NODE_ENV === 'development') {
+if (['development', 'test'].includes(process.env.NODE_ENV!)) {
   // This will walk up from the current directory to find the first `.env` file
   // If not found, fall back to `.env.example` so tests run with defaults
   const envFile = findUpSync('.env') ?? findUpSync('.env.example')

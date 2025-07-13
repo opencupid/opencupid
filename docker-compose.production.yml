@@ -1,11 +1,13 @@
 services:
   redis:
     image: redis:8
-    restart: unless-stopped
+    restart: always
+    volumes:
+      - redis-data:/data
 
   db:
     image: postgres:15
-    restart: unless-stopped
+    restart: always
     env_file:
       - .env
     volumes:
@@ -30,7 +32,7 @@ services:
     build:
       context: .
       dockerfile: apps/frontend/Dockerfile
-    restart: unless-stopped
+    restart: always
     env_file:
       - .env
     depends_on:
@@ -40,7 +42,7 @@ services:
     image: ghcr.io/opencupid/opencupid-ingress
     build:
       context: apps/ingress
-    restart: unless-stopped
+    restart: always
     depends_on:
       - frontend
       - backend
@@ -48,7 +50,7 @@ services:
       - .env
     ports:
       - '443:443'
-      - "80:80"
+      - '80:80'
     volumes:
       - ${MEDIA_UPLOAD_DIR}:/var/www
       - certbot-etc:/etc/letsencrypt
@@ -56,6 +58,7 @@ services:
 
   certbot:
     image: certbot/certbot
+    restart: always
     volumes:
       - certbot-etc:/etc/letsencrypt
       - certbot-webroot:/var/www/html
@@ -63,11 +66,12 @@ services:
     command: -c "sleep infinity"
     env_file:
       - .env
-      
+
 volumes:
+  redis-data:
+    driver: local
   postgres_data:
     external: true
   certbot-etc:
     external: true
   certbot-webroot:
-
