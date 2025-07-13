@@ -8,7 +8,6 @@ import { type FieldEditState } from '../composables/types'
 // Only allow field names that are accepted by getModelProxy
 type AllowedFieldKey = keyof EditFieldProfileFormWithImages
 
-
 const props = defineProps<{
   fieldName: AllowedFieldKey
   editComponent: Component
@@ -39,7 +38,9 @@ const fieldProxy = getModelProxy(props.fieldName)
 
 <template>
   <span v-if="isEditable" class="editable-field" v-bind:class="props.wrapperClass">
-    <slot name="display"> </slot>
+    <span @click="handleButtonClick" class="clickable">
+      <slot name="placeholder"> </slot>
+    </span>
     <a
       href="#"
       @click="handleButtonClick"
@@ -58,6 +59,9 @@ const fieldProxy = getModelProxy(props.fieldName)
         v-if="fieldEditState.currentField === fieldName"
       />
     </Teleport>
+  </span>
+  <span v-else>
+    <slot name="display"></slot>
   </span>
 </template>
 

@@ -28,12 +28,15 @@ const props = defineProps<{
   wrapperClass?: string
 }>()
 
-const viewerProfile = inject<Ref<OwnerProfile>>('viewerProfile') 
+const viewerProfile = inject<Ref<OwnerProfile>>('viewerProfile')
 const viewerLocation = ref(viewerProfile?.value?.location)
 </script>
 
 <template>
-  <div v-bind:class="props.wrapperClass" class="profile-content position-relative rounded-top overflow-hidden">
+  <div
+    v-bind:class="props.wrapperClass"
+    class="profile-content position-relative rounded-top overflow-hidden"
+  >
     <div class="overflow-hidden carousel-wrapper">
       <ImageCarousel :profile />
     </div>
@@ -77,7 +80,7 @@ const viewerLocation = ref(viewerProfile?.value?.location)
         <div class="d-inline-block">
           <TagList :tags="profile.tags" />
           <EditField fieldName="tags" :editComponent="TagSelectComponent">
-            <template #display>
+            <template #placeholder>
               <div class="editable-placeholder" v-if="!props.profile.tags?.length">
                 {{ t('profiles.forms.tags_placeholder') }}
               </div>
@@ -91,7 +94,6 @@ const viewerLocation = ref(viewerProfile?.value?.location)
         </div>
       </div>
       <div class="mb-3">
-        {{ props.profile.introSocial }}
         <EditField
           fieldName="introSocialLocalized"
           :editComponent="IntrotextEditor"
@@ -102,8 +104,16 @@ const viewerLocation = ref(viewerProfile?.value?.location)
           }"
         >
           <template #display>
-            <div class="editable-placeholder" v-if="!props.profile.introSocial">
-              {{ t('profiles.forms.intro_placeholder') }}
+            {{ props.profile.introSocial }}
+          </template>
+          <template #placeholder>
+            <div class="editable-placeholder">
+              <span v-if="!props.profile.introSocial">
+                {{ t('profiles.forms.intro_placeholder') }}
+              </span>
+              <span v-else>
+                {{ props.profile.introSocial }}
+              </span>
             </div>
           </template>
         </EditField>
@@ -114,7 +124,6 @@ const viewerLocation = ref(viewerProfile?.value?.location)
           <span class="opacity-25">
             <hr />
           </span>
-          {{ props.profile.introDating }}
           <EditField
             fieldName="introDatingLocalized"
             :editComponent="IntrotextEditor"
@@ -125,8 +134,16 @@ const viewerLocation = ref(viewerProfile?.value?.location)
             }"
           >
             <template #display>
-              <div class="editable-placeholder" v-if="!props.profile.introDating">
-                {{ t('profiles.forms.intro_who_placeholder') }}
+              {{ props.profile.introDating }}
+            </template>
+            <template #placeholder>
+              <div class="editable-placeholder">
+                <span v-if="!props.profile.introDating">
+                  {{ t('profiles.forms.intro_who_placeholder') }}
+                </span>
+                <span v-else>
+                  {{ props.profile.introDating }}
+                </span>
               </div>
             </template>
           </EditField>

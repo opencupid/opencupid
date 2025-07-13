@@ -25,7 +25,7 @@ const { relationshipStatus, hasKids } = useDatingFields(profileRef, t)
     <li v-if="props.profile.relationship" class="me-2">
       <span class="badge text-bg-dating">{{ relationshipStatus }}</span>
       <EditField fieldName="relationship" :editComponent="RelationstatusSelector">
-        <template #display>
+        <template #placeholder>
           {{  }}
           <span
             v-if="props.profile.relationship === 'unspecified'"
@@ -38,7 +38,7 @@ const { relationshipStatus, hasKids } = useDatingFields(profileRef, t)
     <li v-if="props.profile.hasKids" class="me-2">
       <span class="badge text-bg-dating">{{ hasKids }}</span>
       <EditField fieldName="hasKids" :editComponent="HaskidsSelector">
-        <template #display>
+        <template #placeholder>
           {{   }}
           <span
             v-if="props.profile.hasKids === 'unspecified'"
