@@ -171,6 +171,6 @@ const viewerLocation = ref(viewerProfile?.value?.location)
   z-index: 5;
 }
 .carousel-wrapper {
-  height: 50vh;
+  /* height: 50vh; */
 }
 </style>

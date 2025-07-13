@@ -14,6 +14,7 @@ import { useMyProfileViewModel } from '../composables/useMyProfileViewModel'
 import DatingWizard from '../../onboarding/components/DatingWizard.vue'
 import MyProfileSecondaryNav from '../components/MyProfileSecondaryNav.vue'
 import EditableFields from '../components/EditableFields.vue'
+import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 
 const router = useRouter()
 
@@ -91,7 +92,10 @@ const hint = computed(() => history?.state?.hint || null)
 </script>
 
 <template>
-  <main class="w-100" :class="[viewState.currentScope, { editable: viewState.isEditable }]">
+  <main
+    class="w-100 position-relative overflow-hidden"
+    :class="[viewState.currentScope, { editable: viewState.isEditable }]"
+  >
     <EditableFields v-model="formData" :editState="viewState.isEditable" @updated="updateProfile">
       <StoreErrorOverlay v-if="error" :error />
       <div v-else class="d-flex flex-column justify-content-center h-100">
@@ -124,7 +128,7 @@ const hint = computed(() => history?.state?.hint || null)
           </div>
         </div>
         <div class="overflow-auto h-100">
-          <div class="col-12 col-sm-8 mx-auto position-relative h-100">
+          <MiddleColumn class="pt-sm-3 position-relative flex-grow-1" style="min-height: 100%">
             <ProfileContent
               v-if="profilePreview"
               :isLoading="isLoading"
@@ -132,7 +136,7 @@ const hint = computed(() => history?.state?.hint || null)
               class="shadow-lg"
               :profile="profilePreview"
             />
-          </div>
+          </MiddleColumn>
         </div>
       </div>
       <div class="main-edit-button">

@@ -42,7 +42,7 @@ const fallbackUrl = computed(() =>
       sizes="(max-width: 600px) 360px, (max-width: 1024px) 480px, 600px"
       type="image/webp"
     />
-    <img :src="fallbackUrl" class="w-100 h-100" :class="className" />
+    <img :src="fallbackUrl" class="" :class="className" />
   </picture>
 </template>
 

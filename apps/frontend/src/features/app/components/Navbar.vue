@@ -63,12 +63,11 @@ const hasMatchNotifications = computed(
         </BNavItem>
 
         <BNavItem to="/me" active-class="active">
-          <span v-if="profileStore.profile?.profileImages?.length" class="profile-thumbnail d-flex">
-            <ProfileImage
-              :profile="profileStore.profile"
-              class="img-fluid rounded"
-              style="width: 2.5rem; height: 2.5rem"
-            />
+          <span
+            v-if="profileStore.profile?.profileImages?.length"
+            class="profile-thumbnail d-flex overflow-hidden"
+          >
+            <ProfileImage :profile="profileStore.profile" class="img-fluid rounded w-100 h-100" />
           </span>
           <IconUser v-else class="svg-icon-lg" />
         </BNavItem>
@@ -103,15 +102,5 @@ const hasMatchNotifications = computed(
   align-items: center;
   justify-content: center;
 }
-:deep(button) {
-  margin: 0 !important;
-  padding: 0;
-  display: flex;
-}
-:deep(button:after) {
-  content: none !important;
-  display: none !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
+
 </style>

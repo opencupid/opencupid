@@ -11,6 +11,7 @@ import { useLocalStore } from '@/store/localStore'
 import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
 import IconLogout from '@/assets/icons/interface/logout.svg'
 
+import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 import LoadingComponent from '@/features/shared/ui/LoadingComponent.vue'
 import LogoutButton from '@/features/auth/components/LogoutButton.vue'
 import LanguageSelectorDropdown from '../../shared/ui/LanguageSelectorDropdown.vue'
@@ -30,27 +31,27 @@ const localStore = useLocalStore()
 const user = reactive({} as LoginUser)
 const isLoading = ref(true)
 
-const mode = useColorMode({
-  selector: 'html',
-  attribute: 'data-bs-theme',
-  storageKey: 'theme',
-  modes: {
-    light: 'light',
-    dark: 'dark',
-  },
-})
+// const mode = useColorMode({
+//   selector: 'html',
+//   attribute: 'data-bs-theme',
+//   storageKey: 'theme',
+//   modes: {
+//     light: 'light',
+//     dark: 'dark',
+//   },
+// })
 
-watch(mode, newMode => {
-  localStore.setTheme(newMode)
-})
+// watch(mode, newMode => {
+//   localStore.setTheme(newMode)
+// })
 
-const changeColor = () => {
-  mode.value = mode.value === 'dark' ? 'light' : 'dark'
-}
+// const changeColor = () => {
+//   mode.value = mode.value === 'dark' ? 'light' : 'dark'
+// }
 
 onMounted(async () => {
   isLoading.value = true
-  mode.value = localStore.getTheme as any
+  // mode.value = localStore.getTheme as any
   const res = await authStore.fetchUser()
 
   if (res.success) {
@@ -70,54 +71,56 @@ function handleClick() {
 </script>
 
 <template>
-  <main class="container">
-    <div class="d-flex flex-column justify-content-center align-items-center h-100 w-100">
-      <LoadingComponent v-if="isLoading" />
-      <SecondaryNav>
-        <template #items-left>
-          <RouterBackButton />
-        </template>
-        <template #items-center>
-          <IconSetting2 class="svg-icon me-2" />
-          {{ $t('settings.title') }}
-        </template>
-      </SecondaryNav>
+  <main class="w-100 position-relative overflow-hidden container-fluid">
+    <MiddleColumn class="h-100 d-flex flex-column">
+      <div class="d-flex flex-column justify-content-center align-items-center h-100 w-100">
+        <LoadingComponent v-if="isLoading" />
+        <SecondaryNav>
+          <template #items-left>
+            <RouterBackButton />
+          </template>
+          <template #items-center>
+            <IconSetting2 class="svg-icon me-2" />
+            {{ $t('settings.title') }}
+          </template>
+        </SecondaryNav>
 
-      <section class="w-100 flex-grow-1">
-        <BOverlay :show="false" class="h-100 d-flex flex-column justify-content-center">
-          <div class="mb-3">
-            <div class="me-2">
-              <span v-if="user.email"> {{ $t('auth.email') }}: {{ user.email }}</span>
-              <span v-if="user.phonenumber">
-                {{ $t('auth.phone_number') }}: {{ user.phonenumber }}</span
+        <section class="w-100 flex-grow-1">
+          <BOverlay :show="false" class="h-100 d-flex flex-column justify-content-center">
+            <div class="mb-3">
+              <div class="me-2">
+                <span v-if="user.email"> {{ $t('auth.email') }}: {{ user.email }}</span>
+                <span v-if="user.phonenumber">
+                  {{ $t('auth.phone_number') }}: {{ user.phonenumber }}</span
+                >
+              </div>
+              <BButton variant="primary" size="sm" @click="handleClick">
+                <IconLogout class="svg-icon" />
+                {{ $t('authentication.logout') }}</BButton
               >
             </div>
-            <BButton variant="primary" size="sm" @click="handleClick">
-              <IconLogout class="svg-icon" />
-              {{ $t('authentication.logout') }}</BButton
-            >
-          </div>
 
-          <div class="mb-3"></div>
+            <div class="mb-3"></div>
 
-          <!-- <div class="mb-3">
+            <!-- <div class="mb-3">
       <button class="btn btn-secondary" @click="changeColor">Toggle night or day</button>
     </div> -->
 
-          <!-- <div class="mb-3">
+            <!-- <div class="mb-3">
       <PushPermissions />
     </div> -->
-          <fieldset class="mb-3">
-            <legend for="language-selector" class="form-label">
-              {{ t('settings.language_label') }}
-            </legend>
-            <LanguageSelectorDropdown size="md" />
-          </fieldset>
-        </BOverlay>
-      </section>
-      <div class="position-fixed bottom-0 w-100 p-2">
-        <VersionInfo />
+            <fieldset class="mb-3">
+              <legend for="language-selector" class="form-label">
+                {{ t('settings.language_label') }}
+              </legend>
+              <LanguageSelectorDropdown size="md" />
+            </fieldset>
+          </BOverlay>
+        </section>
+        <div class="position-fixed bottom-0 w-100 p-2">
+          <VersionInfo />
+        </div>
       </div>
-    </div>
+    </MiddleColumn>
   </main>
 </template>

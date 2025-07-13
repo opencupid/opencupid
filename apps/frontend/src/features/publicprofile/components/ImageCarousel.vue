@@ -25,10 +25,14 @@ const handleCloseClick = () => (showModal.value = false)
         v-for="img in props.profile.profileImages"
         :key="img.position"
         @click="handleImageClick"
-        class="w-100 h-100"
+        class="w-100 h-100 bg-black"
       >
         <template #img>
-          <ImageTag :image="img" className="" />
+          <div
+            class="image-fit-wrapper h-100 w-100 d-flex justify-content-center align-items-center overflow-hidden"
+          >
+            <ImageTag :image="img" className="fitted-image" />
+          </div>
         </template>
       </BCarouselSlide>
     </BCarousel>
@@ -53,10 +57,10 @@ const handleCloseClick = () => (showModal.value = false)
           v-for="img in props.profile.profileImages"
           :key="img.position"
           @click="handleCloseClick"
-          class="h-100"
+          class="bg-black d-flex justify-content-center align-items-center flex-column h-100"
         >
           <template #img>
-            <div class="image-fit-wrapper">
+            <div class="w-100 d-flex justify-content-center align-items-center overflow-hidden">
               <ImageTag :image="img" className="fitted-image" />
             </div>
           </template>
@@ -67,23 +71,17 @@ const handleCloseClick = () => (showModal.value = false)
 </template>
 
 <style lang="scss">
-.image-fit-wrapper {
-  width: 100%;
+.profile-image {
+  flex: 1;
   height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
-  background-color: rgba(0, 0, 0, 0.9);
 }
-
-.fitted-image img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-}
-
 .modal.carousel-modal {
+  .fitted-image img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: cover;
+  }
+
   .carousel-inner {
     height: 100%;
   }
