@@ -34,3 +34,4 @@ apps/frontend/dev-dist/
 secrets/
 .config-cache/
 .json-autotranslate-cache/
+.env.staging

@@ -1,6 +1,9 @@
 FROM openresty/openresty:alpine-fat
 
 RUN apk add --no-cache gettext
+# Install lua-resty-openssl from OPM
+RUN opm get xiaocang/lua-resty-openssl
+RUN opm get jkeys089/lua-resty-hmac
 
 COPY nginx.conf.template /usr/local/openresty/nginx/conf/nginx.conf.template
 COPY image_auth.lua /usr/local/openresty/nginx/
