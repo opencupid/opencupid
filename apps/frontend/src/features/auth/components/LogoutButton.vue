@@ -3,7 +3,7 @@ import { useAuthStore } from '@/features/auth/stores/authStore'
 import { useRouter } from 'vue-router'
 import IconLogout from '@/assets/icons/interface/logout.svg'
 import { useI18n } from 'vue-i18n'
-import { BaseButtonVariant } from 'bootstrap-vue-next'
+import { type BaseButtonVariant } from 'bootstrap-vue-next'
 
 const auth = useAuthStore()
 const router = useRouter()
