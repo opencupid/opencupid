@@ -59,7 +59,7 @@ const handleSetLanguage = (lang: string) => {
 
 <template>
   <main class="container d-flex justify-content-center align-items-center flex-column">
-    <LogoComponent />
+    <LogoComponent class="w-25 mb-2 mb-md-4"/>
 
     <ErrorComponent :error="error" />
 

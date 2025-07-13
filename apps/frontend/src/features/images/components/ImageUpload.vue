@@ -192,7 +192,9 @@ function onModalHidden() {
 img {
   object-fit: cover;
 }
-
+.form-text {
+  line-height: 1.125;
+}
 .preview-image {
   object-fit: cover;
   width: 100%;

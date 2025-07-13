@@ -22,7 +22,7 @@ const userRoutes: FastifyPluginAsync = async fastify => {
   fastify.get('/otp-login', {
     // rate limiter
     config: {
-      ...rateLimitConfig(fastify, '5 minute', 5), // 10 requests per minute
+      ...rateLimitConfig(fastify, '15 minute', 5), // 10 requests per minute
     },
   }, async (req, reply) => {
     try {
@@ -66,7 +66,7 @@ const userRoutes: FastifyPluginAsync = async fastify => {
   fastify.post('/send-login-link', {
     // rate limiter
     config: {
-      ...rateLimitConfig(fastify, '5 minute', 5), // 10 requests per minute
+      ...rateLimitConfig(fastify, '15 minute', 5), // 10 requests per minute
     },
   }, async (req, reply) => {
 

@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import Multiselect from 'vue-multiselect'
+import { computed, ref } from 'vue'
 import { useTagsStore } from '@/store/tagStore'
 import { useI18n } from 'vue-i18n'
 import type { PublicTag } from '@zod/tag/tag.dto'
-
+import Multiselect from '../ui/multiselect'
+import { detectMobile } from '@/lib/mobile-detect'
+import { useWindowSize } from '@vueuse/core'
 // v-model binding
 const model = defineModel<PublicTag[]>({
   default: () => [],
@@ -57,6 +58,11 @@ async function addTag(name: string) {
     isLoading.value = false
   }
 }
+const { width, height } = useWindowSize()
+
+const selectHeight = computed(() => {
+  return height.value * 0.25
+})
 </script>
 
 <template>
@@ -74,7 +80,7 @@ async function addTag(name: string) {
       :show-labels="false"
       :show-no-results="true"
       :show-no-options="false"
-      :maxHeight="250"
+      :maxHeight="selectHeight"
       open-direction="top"
       @tag="addTag"
       label="name"

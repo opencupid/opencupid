@@ -104,26 +104,32 @@ onMounted(async () => {
           <ErrorComponent v-if="error" :error="error" />
           <div v-else>
             <!-- onboarding wizard finish title -->
-            <ViewTitle :icon="IconOkHand" class="text-primary mb-1">
-              {{ t('onboarding.confirmation.title') }}
-            </ViewTitle>
+            <div
+              class="col-6 mx-auto d-flex flex-column align-items-center justify-content-center text-success mb-2 mb-md-4 animate__animated animate__fadeIn"
+            >
+              <IconOkHand class="svg-icon-100 opacity-25 mb-1 mb-md-3" />
+              <h2>
+                <!-- All set! -->
+                {{ t('onboarding.confirmation.title') }}
+              </h2>
+            </div>
 
             <div v-if="!profileStore.isLoading" class="d-flex flex-column gap-3">
               <div class="mb-2 d-flex flex-column align-items-center">
-                <p class="wizard-step-subtitle">
+                <div class="wizard-step-subtitle mb-1 mb-sm-2 mb-md-3 text-center">
                   <!-- See who else is on here -->
                   {{ t('onboarding.confirmation.browse_hint') }}
-                </p>
+                </div>
                 <BButton @click="handleGoToBrowse" variant="success" size="lg" pill>
                   <!-- Meet people -->
                   {{ t('onboarding.confirmation.browse_button') }}
                 </BButton>
               </div>
               <div class="d-flex flex-column align-items-center">
-                <p class="wizard-step-subtitle">
+                <div class="wizard-step-subtitle mb-1 mb-sm-2 mb-md-3 text-center">
                   <!-- See what other people see about me. -->
                   {{ t('onboarding.confirmation.profile_hint') }}
-                </p>
+                </div>
                 <BButton @click="handleGoToProfile" variant="primary" size="lg" pill>
                   <!-- My profile -->
                   {{ t('onboarding.confirmation.profile_button') }}

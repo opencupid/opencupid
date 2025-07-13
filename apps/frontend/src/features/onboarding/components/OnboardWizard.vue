@@ -13,6 +13,8 @@ import GoalsSelector from './GoalsSelector.vue'
 import BackButton from '../components/BackButton.vue'
 import PublicNameInput from '@/features/shared/profileform/PublicNameInput.vue'
 import IconSun from '@/assets/icons/interface/sun.svg'
+import IconLogout from '@/assets/icons/interface/logout.svg'
+import LogoutButton from '@/features/auth/components/LogoutButton.vue'
 
 import { useStepper } from '@vueuse/core'
 
@@ -63,14 +65,17 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
       class="w-100 d-flex justify-content-between align-items-center position-absolute top-0 left-0"
     >
       <BackButton :show="!isFirst && !isLast" @click="goToPrevious" />
+
+        <LogoutButton v-if="isFirst" variant="link" class="btn btn-link link-secondary text-decoration-non">
+          <IconLogout class="svg-icon" />
+        </LogoutButton>
     </div>
 
     <div class="wizard d-flex align-items-center flex-grow-1 col-12 justify-content-center">
       <BForm id="onboarding" novalidate class="w-100" @submit.prevent="handleSubmit">
         <fieldset v-if="isCurrent('publicname')" class="w-100">
           <div
-            class="d-flex align-items-center justify-content-center text-success w-100 mb-4 animate__animated animate__fadeIn"
-            style="height: 10rem; width: 10rem"
+            class="col-6 mx-auto d-flex align-items-center justify-content-center text-success mb-2 mb-md-4 animate__animated animate__fadeIn"
           >
             <IconSun class="svg-icon-100 opacity-50" />
           </div>
@@ -108,14 +113,8 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
             <!-- I'm into... -->
             {{ t('onboarding.interests_title') }}
           </legend>
-          <p class="wizard-step-subtitle">
-            <!-- Select your interests to help others find you. -->
-            {{ t('onboarding.interests_subtitle') }}
-          </p>
           <TagSelectComponent
             v-model="formData.tags"
-            :label="t('onboarding.interests_label')"
-            :placeholder="t('onboarding.interests_placeholder')"
             :required="true"
           />
           <div class="form-text text-muted">

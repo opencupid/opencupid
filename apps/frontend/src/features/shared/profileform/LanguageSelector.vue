@@ -5,6 +5,7 @@ import { computed, onMounted, reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Multiselect from 'vue-multiselect'
 import { type MultiselectOption } from '@/types/multiselect'
+import { useWindowSize } from '@vueuse/core'
 
 const { t } = useI18n()
 
@@ -29,6 +30,12 @@ const { getLanguageSelectorOptions } = useLanguages()
 onMounted(() => {
   languageOptions.push(...getLanguageSelectorOptions())
 })
+
+const { width, height } = useWindowSize()
+
+const selectHeight = computed(() => {
+  return height.value * 0.25
+})
 </script>
 
 <template>
@@ -41,7 +48,7 @@ onMounted(() => {
       :multiple="true"
       :searchable="true"
       open-direction="top"
-      :maxHeight="250"
+      :maxHeight="selectHeight"
       id="languages"
       label="label"
       track-by="label"

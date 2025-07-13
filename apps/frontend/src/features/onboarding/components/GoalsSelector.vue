@@ -28,19 +28,21 @@ const toggleDating = () => {
 </script>
 
 <template>
-  <div class="d-flex gap-2 flex-column justify-content-between w-100">
+  <div class="d-flex gap-2 flex-column justify-content-between w-100 mb-1 mb-sm-3 mb-md-3">
     <div
-      class="card btn-social-toggle clickable mb-2 mb-md-4"
+      class="card btn-social-toggle clickable mb-2 mb-sm-2 mb-md-4"
       :class="{ active: model.isSocialActive }"
       @click="toggleSocial"
     >
       <div class="card-body d-flex flex-row align-items-center">
-        <div class="col-4 col-sm-3 p-sm-3">
-          <IconSocialize class="svg-icon-lg h-100 w-100" />
+        <div class="col-4 col-sm-3 flex-shrink-0 flex-grow-0">
+          <div class="p-0 p-sm-1">
+            <IconSocialize class="svg-icon-lg h-100 w-100" />
+          </div>
         </div>
-        <p class="m-0 ps-2 p-sm-4 flex-grow-1">{{ t('onboarding.goals.socializing') }}</p>
+        <p class="m-0 ps-2 p-sm-2 p-md-3 flex-grow-1">{{ t('onboarding.goals.socializing') }}</p>
         <div class="text-center flex-shrink-1">
-          <div class="form-control-lg m-0 p-0 ms-2 p-sm-2 d-flex  align-items-center">
+          <div class="form-control-lg m-0 p-0 ms-2 p-sm-2 d-flex align-items-center">
             <input
               type="checkbox"
               class="form-check-input"
@@ -58,12 +60,14 @@ const toggleDating = () => {
       @click="toggleDating"
     >
       <div class="card-body d-flex flex-row align-items-center">
-        <div class="col-4 col-sm-3 p-sm-3">
-          <IconDate class="svg-icon-lg h-100 w-100" />
+        <div class="col-4 col-sm-3 flex-shrink-0 flex-grow-0">
+          <div class="p-0 p-sm-1">
+            <IconDate class="svg-icon-lg h-100 w-100" />
+          </div>
         </div>
-        <p class="m-0 ps-2 p-sm-4 flex-grow-1">{{ t('onboarding.goals.dating') }}</p>
+        <p class="m-0 ps-2 p-sm-2 flex-grow-1">{{ t('onboarding.goals.dating') }}</p>
         <div class="text-center">
-          <div class="form-control-lg m-0 p-0 ms-2 p-sm-2 d-flex  align-items-center">
+          <div class="form-control-lg m-0 p-0 ms-2 p-sm-2 d-flex align-items-center">
             <input
               type="checkbox"
               class="form-check-input"
@@ -76,8 +80,17 @@ const toggleDating = () => {
     </div>
   </div>
 </template>
-<style scoped>
+<style scoped lang="scss">
+@import 'bootstrap/scss/functions';
+@import 'bootstrap/scss/variables';
+@import 'bootstrap/scss/mixins';
+
 p {
-  line-height: 1.25;
+  line-height: 1.175;
+  font-size: 0.9rem;
+
+  @include media-breakpoint-up(sm) {
+    font-size: 1rem;
+  }
 }
 </style>

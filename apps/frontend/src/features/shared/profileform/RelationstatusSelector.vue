@@ -16,7 +16,7 @@ const checkboxOptions = relationshipStatusOptions().filter(
 </script>
 
 <template>
-  <div>
+  <div class="overflow-auto">
     <!-- <label>{{ t('profiles.forms.relationship_label') }}</label> -->
     <BListGroup>
       <BListGroupItem

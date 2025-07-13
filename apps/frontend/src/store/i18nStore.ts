@@ -7,15 +7,15 @@ import { useLocalStore } from "@/store/localStore";
 const labels: Record<string, string> = {
   en: 'English',
   hu: 'Magyar',
-  de: 'Deutsch',
-  fr: 'Français',
-  es: 'Español',
-  it: 'Italiano',
-  pt: 'Português',
-  sk: 'Slovenčina',
-  pl: 'Polski',
-  ro: 'Română',
-  nl: 'Nederlands',
+  // de: 'Deutsch',
+  // fr: 'Français',
+  // es: 'Español',
+  // it: 'Italiano',
+  // pt: 'Português',
+  // sk: 'Slovenčina',
+  // pl: 'Polski',
+  // ro: 'Română',
+  // nl: 'Nederlands',
 }
 
 

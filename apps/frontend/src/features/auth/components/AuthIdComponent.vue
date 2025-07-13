@@ -73,7 +73,7 @@ function handleCaptchaUpdatePayload(payload: string) {
       :disabled="isLoading"
       :state="formState"
     >
-      <div class="mb-3">
+      <div class="mb-1 mb-md-3">
         <BFormFloatingLabel
           floating
           :label="t('auth.auth_id_input_label')"
@@ -108,7 +108,7 @@ function handleCaptchaUpdatePayload(payload: string) {
         </BFormFloatingLabel>
       </div>
 
-      <div class="mb-3 user-select-none">
+      <div class="mb-1 mb-md-3 user-select-none">
         <CaptchaWidget v-if="!props.isLoading" @update:payload="handleCaptchaUpdatePayload" />
       </div>
       <BButton

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 
 const viewportWidth = ref(window.innerWidth)
 const viewportHeight = ref(window.innerHeight)
@@ -15,10 +15,17 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('resize', updateViewportSize)
 })
+
+
+const osk = computed(() => {
+  return 'virtualKeyboard' in navigator
+})
+
 </script>
 
 <template>
   <div class="viewport-size-debug">
+    {{ osk }}
     <p>Viewport Width: {{ viewportWidth }}px</p>
     <p>Viewport Height: {{ viewportHeight }}px</p>
   </div>
@@ -28,7 +35,7 @@ onUnmounted(() => {
 <style scoped>
 .viewport-size-debug {
   position: fixed;
-  bottom: 50%;
+  bottom: 30%;
   left: 50%;
   background-color: rgba(0, 0, 0, 0.7);
   color: white;

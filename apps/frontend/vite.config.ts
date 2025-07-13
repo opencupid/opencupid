@@ -102,6 +102,8 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
         },
       },
       VitePluginBrowserSync({
+
+
         dev: {
           bs: {
             https: {
@@ -110,10 +112,11 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
             },
             open: false,
             port: 5174,
+            cors: true,
             ui: {
-              port: 8081
+              port: 8081,
             },
-            notify: false
+            notify: true
           }
         }
       }),
