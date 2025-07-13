@@ -1,3 +1,6 @@
+local hmac = require "resty.hmac"
+local str = require "resty.string"
+
 local secret = os.getenv('AUTH_IMG_HMAC_SECRET')
 if not secret or secret == '' then
   ngx.log(ngx.ERR, 'AUTH_IMG_HMAC_SECRET is not set')
@@ -16,8 +19,10 @@ end
 
 local image_path = ngx.var.uri:gsub('^/images/', '')
 local data = image_path .. ':' .. exp
-local hmac = ngx.hmac_sha256(secret, data)
-local expected = require('resty.string').to_hex(hmac)
+
+local hmac_sha = hmac:new(secret, hmac.ALGOS.SHA256)
+local digest = hmac_sha:final(data, true) -- true = binary output
+local expected = str.to_hex(digest)
 
 if sig ~= expected then
   return ngx.exit(ngx.HTTP_UNAUTHORIZED)

@@ -102,7 +102,7 @@ http {
     }
 
     location /images/ {
-      access_by_lua_file /etc/nginx/image_auth.lua;
+      access_by_lua_file image_auth.lua;
       alias /var/www/;
       autoindex off;
       try_files $uri =404;

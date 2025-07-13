@@ -105,8 +105,8 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
         dev: {
           bs: {
             https: {
-              key: '../../certs/key.pem',
-              cert: '../../certs/cert.pem',
+              key: '../../certs/privkey.pem',
+              cert: '../../certs/fullchain.pem',
             },
             open: false,
             port: 5174,

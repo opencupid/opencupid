@@ -2,35 +2,66 @@ services:
   redis:
     image: redis:8
     restart: unless-stopped
-    ports:
-      - '6379:6379'
-
+    command: redis-server --port 6380
   db:
     image: postgres:15
     restart: unless-stopped
-    environment:
-      POSTGRES_DB: app
-      POSTGRES_USER: appuser
-      POSTGRES_PASSWORD: secret
-    ports:
-      - '5432:5432'
+    env_file:
+      - .env.staging
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
   backend:
+    image: ghcr.io/opencupid/opencupid-backend
     build:
-      context: ./apps/backend
+      context: .
+      dockerfile: apps/backend/Dockerfile
     depends_on:
       - db
       - redis
     env_file:
-      - .env
-    ports:
-      - '3000:3000'
+      - .env.staging
+    volumes:
+      - '${MEDIA_UPLOAD_DIR}:${MEDIA_UPLOAD_DIR}'
+      - '${PWD}/secrets:/secrets'
+
   frontend:
+    image: ghcr.io/opencupid/opencupid-frontend
     build:
-      context: ./apps/frontend
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env.staging
     depends_on:
       - backend
+
+
+  maildev:
+    restart: unless-stopped
+    image: maildev/maildev
     ports:
-      - '80:80'
+      - '1080:1080'
+      - '1025:1025'
+      
+  ingress:
+    image: ghcr.io/opencupid/opencupid-ingress
+    build:
+      context: apps/ingress
+    restart: unless-stopped
+    depends_on:
+      - frontend
+      - backend
+    env_file:
+      - .env.staging
+    ports:
+      - '443:443'
+      - "80:80"
+    volumes:
+      - ${MEDIA_UPLOAD_DIR}:/var/www
+      - ${PWD}/certs:/etc/letsencrypt/live/oc.dev.froggle.org/
+
+      
+volumes:
+  postgres_data:
+

@@ -31,8 +31,8 @@ export const server = (mode: string) => {
         },
       },
       https: {
-        key: fs.readFileSync(path.resolve(__dirname, '../../certs/key.pem')),
-        cert: fs.readFileSync(path.resolve(__dirname, '../../certs/cert.pem')),
+        key: fs.readFileSync(path.resolve(__dirname, '../../certs/privkey.pem')),
+        cert: fs.readFileSync(path.resolve(__dirname, '../../certs/fullchain.pem')),
       },
       fs: {
         allow: [

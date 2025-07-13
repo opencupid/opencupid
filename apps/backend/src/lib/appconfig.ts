@@ -61,7 +61,7 @@ export const configSchema = z.object({
   SITE_NAME: z.string().default('OpenCupid'),
 })
 
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV === 'development') {
   // This will walk up from the current directory to find the first `.env` file
   // If not found, fall back to `.env.example` so tests run with defaults
   const envFile = findUpSync('.env') ?? findUpSync('.env.example')
