@@ -141,20 +141,23 @@ export class ImageService {
   async autoCrop(filePath: string, outputDir: string, baseName: string): Promise<string | null> {
     // Check if face API is enabled
     if (!this.faceDetectionService.isEnabled()) {
+      console.warn('Face detection is not enabled, skipping auto-crop')
       return null;
     }
 
     const outputPath = path.join(outputDir, `${baseName}-face.jpg`)
-    
+
     try {
       const success = await this.faceDetectionService.autoCrop(filePath, outputPath)
-      return success ? outputPath : null
+      if (!success) {
+        console.warn('No face detected, auto-crop skipped')
+        return null
+      }
+      return outputPath
     } catch (error) {
       console.error('Error in autoCrop:', error)
       return null
     }
-    // Note: Temporary file cleanup is handled automatically by @fastify/multipart
-    // No manual cleanup needed to avoid ENOENT errors
   }
 
   /**
@@ -176,14 +179,14 @@ export class ImageService {
 
     // Try to generate a face-cropped version first
     const faceCroppedPath = await this.autoCrop(filePath, outputDir, baseName)
-    
+
     // If face detection succeeded, use face-cropped version for card and thumb
     const sourceForCropVersions = faceCroppedPath || filePath
     const sourceForCropVersionsSharp = sharp(sourceForCropVersions).rotate()
 
     for (const size of sizes) {
       let resizedSource = original.clone()
-      
+
       // Use face-cropped version for card and thumb sizes if available
       if (faceCroppedPath && (size.name === 'card' || size.name === 'thumb')) {
         resizedSource = sourceForCropVersionsSharp.clone()

@@ -37,14 +37,15 @@ export class FaceDetectionService {
     model: 'BlazeFace',
   };
 
-  private constructor() {}
+  private constructor() { }
 
   public static getInstance(): FaceDetectionService {
     if (!FaceDetectionService.instance) {
       FaceDetectionService.instance = new FaceDetectionService();
       // Initialize models at startup if face API is enabled
       if (process.env.FACEAPI_ENABLED === 'true') {
-        FaceDetectionService.instance.loadModels().catch(() => {
+        FaceDetectionService.instance.loadModels().catch((error) => {
+          console.error('Failed to load face detection models', error);
           // Silently fail model loading at startup
         });
       }
@@ -78,7 +79,7 @@ export class FaceDetectionService {
           modelConfig
         );
       }
-      
+
       this.modelsLoaded = true;
     } catch (error) {
       throw new Error('Failed to load face detection models');
@@ -97,7 +98,7 @@ export class FaceDetectionService {
       // Load image using sharp to get metadata and convert to ImageData
       const image = sharp(imagePath);
       const metadata = await image.metadata();
-      
+
       if (!metadata.width || !metadata.height) {
         throw new Error('Could not read image dimensions');
       }
@@ -107,21 +108,21 @@ export class FaceDetectionService {
         .ensureAlpha()
         .raw()
         .toBuffer({ resolveWithObject: true });
-      
+
       // Create a canvas and load the image
       const canvas = new Canvas(info.width, info.height);
       const ctx = canvas.getContext('2d');
-      
+
       // Create ImageData from the RGBA buffer
       const imageData = ctx.createImageData(info.width, info.height);
       for (let i = 0; i < data.length; i++) {
         imageData.data[i] = data[i];
       }
       ctx.putImageData(imageData, 0, 0);
-      
+
       // Detect faces using the appropriate model
       let predictions: any[];
-      
+
       if (this.config.model === 'BlazeFace') {
         // BlazeFace uses a different API
         predictions = await (this.detector as blazeface.BlazeFaceModel).estimateFaces(canvas as any, false);
@@ -146,9 +147,9 @@ export class FaceDetectionService {
           const currentScore = current.probability ? current.probability[0] : 0;
           return currentScore > prevScore ? current : prev;
         });
-        
+
         confidence = bestFace.probability ? bestFace.probability[0] : 0;
-        
+
         // BlazeFace returns topLeft and bottomRight
         const topLeft = bestFace.topLeft;
         const bottomRight = bestFace.bottomRight;
@@ -165,7 +166,7 @@ export class FaceDetectionService {
           const currentScore = current.score || 0;
           return currentScore > prevScore ? current : prev;
         });
-        
+
         confidence = bestFace.score || 0;
         box = bestFace.box;
       }
@@ -197,7 +198,7 @@ export class FaceDetectionService {
       const halfCropSize = cropSize / 2;
       let cropX = Math.max(0, faceCenterX - halfCropSize);
       let cropY = Math.max(0, faceCenterY - halfCropSize);
-      
+
       // Adjust if crop box extends beyond image
       if (cropX + cropSize > metadata.width!) {
         cropX = metadata.width! - cropSize;
@@ -229,13 +230,13 @@ export class FaceDetectionService {
   async autoCrop(inputPath: string, outputPath: string): Promise<boolean> {
     try {
       const detection = await this.detectFaces(inputPath);
-      
+
       if (!detection.hasFace || !detection.cropBox) {
         return false;
       }
 
       const { x, y, width, height } = detection.cropBox;
-      
+
       // Crop the image using sharp
       await sharp(inputPath)
         .extract({ left: x, top: y, width, height })
@@ -253,7 +254,7 @@ export class FaceDetectionService {
    */
   updateConfig(config: Partial<AutoCropConfig>): void {
     this.config = { ...this.config, ...config };
-    
+
     // If model changed, reload models
     if (config.model && config.model !== this.config.model) {
       this.modelsLoaded = false;
