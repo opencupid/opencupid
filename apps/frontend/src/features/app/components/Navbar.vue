@@ -33,7 +33,7 @@ const hasMatchNotifications = computed(
 <template>
   <BNavbar
     v-if="authStore.isLoggedIn && profileStore.profile?.isOnboarded"
-    variant="secondary"
+    class="bg-dark"
     data-testid="navbar"
   >
     <MiddleColumn>
@@ -84,14 +84,13 @@ const hasMatchNotifications = computed(
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  color: var(--bs-light);
   &.active {
-    color: var(--bs-primary);
-    background-color: var(--bs-secondary-light);
+    color: var(--bs-secondary);
   }
 
   &:hover {
     color: var(--bs-primary);
-    background-color: var(--bs-secondary-light);
   }
 }
 .nav-link .label {
