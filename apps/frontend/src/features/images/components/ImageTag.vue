@@ -36,7 +36,7 @@ const fallbackUrl = computed(() =>
 </script>
 
 <template>
-  <picture class="profile-image w-100 h-100">
+  <picture class="profile-image">
     <source
       :srcset="webpSrcset"
       sizes="(max-width: 600px) 360px, (max-width: 1024px) 480px, 600px"
