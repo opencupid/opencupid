@@ -48,6 +48,7 @@ async function detectFaces(canvas: Canvas): Promise<FaceBox[]> {
     })
   }
   predictions = await (detector as faceDetection.FaceDetector).estimateFaces(canvas as any)
+  console.log(`Detected ${predictions.length} faces`, predictions)
   return predictions.map(p => ({
     x: p.box.xMin,
     y: p.box.yMin,
@@ -67,6 +68,7 @@ export async function smartcropImage(
   ctx.drawImage(img as any, 0, 0)
 
   const faces = await detectFaces(canvas)
+  console.log(`Found ${faces.length} faces for cropping`, faces)
   const boosts = faces.map(b => ({ ...b, weight: 1 }))
 
   const result = await smartcrop.crop(canvas, {
