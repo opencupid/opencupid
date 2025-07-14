@@ -10,7 +10,7 @@ import { generateContentHash } from '@/utils/hash'
 import { ProfileImagePosition } from '@zod/profile/profileimage.dto'
 import sharp from 'sharp'
 import type { ProfileImage } from '@zod/generated'
-import { FaceDetectionService } from './face-detection.service'
+import { smartcropImage } from './smartcrop.service'
 
 const sizes = [
   { name: 'thumb', width: 150, height: 150, fit: sharp.fit.cover }, // square crop
@@ -19,14 +19,11 @@ const sizes = [
 ]
 export class ImageService {
   private static instance: ImageService
-  private faceDetectionService: FaceDetectionService
 
   /**
    * Private constructor to prevent direct instantiation
    */
-  private constructor() {
-    this.faceDetectionService = FaceDetectionService.getInstance()
-  }
+  private constructor() {}
 
   /**
    * Get singleton instance
@@ -139,20 +136,13 @@ export class ImageService {
    * Returns path to the cropped image if successful, null otherwise
    */
   async autoCrop(filePath: string, outputDir: string, baseName: string): Promise<string | null> {
-    // Check if face API is enabled
-    if (!this.faceDetectionService.isEnabled()) {
-      console.warn('Face detection is not enabled, skipping auto-crop')
-      return null;
-    }
-
     const outputPath = path.join(outputDir, `${baseName}-face.jpg`)
-
     try {
-      const success = await this.faceDetectionService.autoCrop(filePath, outputPath)
-      if (!success) {
-        console.warn('No face detected, auto-crop skipped')
-        return null
-      }
+      const crop = await smartcropImage(await fs.promises.readFile(filePath), { width: 600, height: 600 })
+      await sharp(filePath)
+        .extract({ left: crop.x, top: crop.y, width: crop.width, height: crop.height })
+        .jpeg({ quality: 90 })
+        .toFile(outputPath)
       return outputPath
     } catch (error) {
       console.error('Error in autoCrop:', error)

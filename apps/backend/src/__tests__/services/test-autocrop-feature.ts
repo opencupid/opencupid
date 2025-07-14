@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
-import { FaceDetectionService } from '../../services/face-detection.service'
 import { ImageService } from '../../services/image.service'
 import path from 'path'
 import fs from 'fs'

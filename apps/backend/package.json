@@ -36,6 +36,7 @@
     "@tensorflow-models/face-detection": "^1.0.3",
     "@tensorflow/tfjs": "^4.22.0",
     "@tensorflow/tfjs-backend-cpu": "^4.22.0",
+    "smartcrop": "^2.0.5",
     "altcha-lib": "^1.2.0",
     "bcrypt": "^6.0.0",
     "bullmq": "^5.52.2",

@@ -141,6 +141,9 @@ importers:
       slugify:
         specifier: ^1.6.6
         version: 1.6.6
+      smartcrop:
+        specifier: ^2.0.5
+        version: 2.0.5
       ts-node:
         specifier: ^10.9.2
         version: 10.9.2(@types/node@22.16.2)(typescript@5.8.3)
@@ -5390,6 +5393,9 @@ packages:
   slugify@1.6.6:
     resolution: {integrity: sha512-h+z7HKHYXj6wJU+AnS/+IH8Uh9fdcX1Lrhg1/VMdf9PwoBQXFcXiAdsy2tSK0P6gKwJLXp02r90ahUCqHk9rrw==}
     engines: {node: '>=8.0.0'}
+
+  smartcrop@2.0.5:
+    resolution: {integrity: sha512-aXoHTM8XlC51g96kgZkYxZ2mx09/ibOrIVLiUNOFozV/MHmFSgEr1/5CKVBoFD5vd+re2wSy0xra21CyjRITzA==}
 
   socket.io-adapter@2.5.5:
     resolution: {integrity: sha512-eLDQas5dzPgOWCk9GuuJC2lBqItuhKI4uxGgo9aIV7MYbk2h9Q6uULEh8WBzThoI7l+qU9Ast9fVUmkqPP9wYg==}
@@ -11638,6 +11644,8 @@ snapshots:
       is-fullwidth-code-point: 3.0.0
 
   slugify@1.6.6: {}
+
+  smartcrop@2.0.5: {}
 
   socket.io-adapter@2.5.5:
     dependencies:

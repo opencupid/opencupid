@@ -1,6 +1,6 @@
 # Auto-Crop Feature
 
-The auto-crop feature automatically detects faces in uploaded images and generates face-cropped versions optimized for profile display.
+The auto-crop feature uses saliency based cropping enhanced with face detection to generate face-centric crops optimised for profile display.
 
 ## Overview
 
@@ -12,7 +12,7 @@ When images are uploaded, the system:
 
 ## Configuration
 
-The auto-crop feature can be configured through the `FaceDetectionService`:
+The auto-crop feature can be configured through the `SmartCropService`:
 
 ### Face Size Parameters
 
@@ -21,20 +21,13 @@ The auto-crop feature can be configured through the `FaceDetectionService`:
 - **`detectionThreshold`** (default: 0.5): Face detection confidence threshold (0-1, higher = more confident)
 - **`model`** (default: 'BlazeFace'): Face detection model to use ('BlazeFace' or 'MediaPipeFaceDetector')
 
-### Example Configuration
+### Example Usage
 
 ```typescript
-import { FaceDetectionService } from './services/face-detection.service';
+import { smartcropImage } from './services/smartcrop.service'
 
-const faceService = FaceDetectionService.getInstance();
-
-// Update configuration
-faceService.updateConfig({
-  minFaceSize: 0.20,      // Face should be at least 20% of image
-  maxFaceSize: 0.60,      // Face should be at most 60% of image
-  detectionThreshold: 0.6, // Higher confidence threshold
-  model: 'MediaPipeFaceDetector' // Use MediaPipe for better accuracy
-});
+const crop = await smartcropImage(buffer, { width: 150, height: 150 })
+// crop => { x, y, width, height }
 ```
 
 ### Environment Configuration
@@ -43,6 +36,7 @@ Enable face detection by setting the environment variable:
 
 ```bash
 FACEAPI_ENABLED=true
+SMARTCROP_MODEL=BlazeFace
 ```
 
 ## Technical Details
@@ -98,12 +92,4 @@ The system will fallback to normal image processing when face detection fails.
 
 ### Switching Models
 
-You can switch between models for different accuracy/speed tradeoffs:
-
-```typescript
-// For speed (default)
-faceService.updateConfig({ model: 'BlazeFace' });
-
-// For accuracy
-faceService.updateConfig({ model: 'MediaPipeFaceDetector' });
-```
+You can switch between models for different accuracy/speed trade-offs by setting the `SMARTCROP_MODEL` environment variable to either `BlazeFace` or `MediaPipeFaceDetector`.
