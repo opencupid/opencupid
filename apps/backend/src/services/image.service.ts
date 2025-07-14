@@ -161,17 +161,14 @@ export class ImageService {
   }
 
   /**
-   * Process an uploaded image file, resizing and saving variants
-   * @param filePath - Path to the uploaded image file
-   * @param outputDir - Directory to save processed images
-   * @param baseName - Base name for the output files
-   * Returns an object with metadata and paths to resized images
+   * Generate resized image variants for a given file. The input file should be
+   * the cleaned original image (usually `${baseName}-original.jpg`).
+   * @param filePath - Path to the cleaned original image
+   * @param outputDir - Directory where variants will be saved
+   * @param baseName - Base name for output files
    */
-  async processImage(filePath: string, outputDir: string, baseName: string) {
-    await fs.promises.mkdir(outputDir, { recursive: true })
-
+  async generateVariants(filePath: string, outputDir: string, baseName: string) {
     const original = sharp(filePath).rotate()
-
     const metadata = await original.metadata()
     const format = metadata.format ?? 'jpeg'
 
@@ -204,12 +201,6 @@ export class ImageService {
       outputPaths[size.name] = outputWebP
     }
 
-    // Optionally save cleaned original as JPEG
-    const originalCleaned = path.join(outputDir, `${baseName}-original.jpg`)
-    await original.jpeg({ quality: 90 }).toFile(originalCleaned)
-
-    outputPaths.original = originalCleaned
-
     // Include face-cropped version in outputs if generated
     if (faceCroppedPath) {
       outputPaths.face = faceCroppedPath
@@ -221,6 +212,31 @@ export class ImageService {
       mime: `image/${format}`,
       variants: outputPaths,
     }
+  }
+
+  /**
+   * Process an uploaded image file. This saves a cleaned `-original.jpg`
+   * version and then generates the resized variants.
+   * @param filePath - Path to the uploaded image file
+   * @param outputDir - Directory to save processed images
+   * @param baseName - Base name for the output files
+   * Returns an object with metadata and paths to resized images
+   */
+  async processImage(filePath: string, outputDir: string, baseName: string) {
+    await fs.promises.mkdir(outputDir, { recursive: true })
+
+    const meta = await sharp(filePath).rotate().metadata()
+    const format = meta.format ?? 'jpeg'
+
+    const originalPath = path.join(outputDir, `${baseName}-original.jpg`)
+    await sharp(filePath).rotate().jpeg({ quality: 90 }).toFile(originalPath)
+
+    const processed = await this.generateVariants(originalPath, outputDir, baseName)
+    processed.width = meta.width
+    processed.height = meta.height
+    processed.mime = `image/${format}`
+    processed.variants.original = originalPath
+    return processed
   }
 
   /**
