@@ -55,7 +55,6 @@ export const configSchema = z.object({
   OG_TYPE: z.string(),
 
   FACEAPI_ENABLED: z.string().transform(val => val === 'true').default('false'),
-  SMARTCROP_MODEL: z.enum(['BlazeFace', 'MediaPipeFaceDetector']).default('BlazeFace'),
 
   DOMAIN: z.string().default('example.org'),
 

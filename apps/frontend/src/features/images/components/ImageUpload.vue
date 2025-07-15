@@ -93,7 +93,13 @@ function onModalHidden() {
 
 <template>
   <div class="image-upload h-100">
-    <BButton v-if="isMobile" variant="secondary" class="w-100 h-100" @click="openModal" @touchend="openModal">
+    <BButton
+      v-if="isMobile"
+      variant="secondary"
+      class="w-100 h-100"
+      @click="openModal"
+      @touchend="openModal"
+    >
       <AvatarUploadIcon class="svg-icon w-100 h-100" />
     </BButton>
     <UploadButton v-else @file:change="handleFileChange" :genericIcon="true" />
@@ -122,10 +128,8 @@ function onModalHidden() {
       <ErrorComponent :error="error" v-if="error" />
       <div v-if="preview && !error" class="mb-3">
         <BOverlay spinner-type="grow" :show="isLoading">
-          <div class="ratio ratio-4x3 position-relative">
-            <div class="preview-wrapper overflow-hidden" v-show="modalState === 'preview'">
-              <img :src="preview" alt="Preview" class="preview-image" />
-            </div>
+          <div class="h-100 overflow-hidden" v-show="modalState === 'preview'">
+            <img :src="preview" alt="Preview" class="preview-image" />
           </div>
         </BOverlay>
       </div>

@@ -10,12 +10,18 @@ import { generateContentHash } from '@/utils/hash'
 import { ProfileImagePosition } from '@zod/profile/profileimage.dto'
 import sharp from 'sharp'
 import type { ProfileImage } from '@zod/generated'
-import { smartcropImage } from './smartcrop.service'
+import { smartcropImage } from '@/services/smartcrop.service'
 
 const sizes = [
   { name: 'thumb', width: 150, height: 150, fit: sharp.fit.cover }, // square crop
   { name: 'card', width: 480 }, // keep aspect ratio
   { name: 'full', width: 1280 }, // max width
+
+  // { name: 'thumbnail', width: 96, height: 96 },
+  // { name: 'small', width: 320 },
+  // { name: 'medium', width: 640 },
+  // { name: 'large', width: 1280 },
+  // { name: 'square', width: 600, height: 600 },
 ]
 export class ImageService {
   private static instance: ImageService
@@ -23,7 +29,7 @@ export class ImageService {
   /**
    * Private constructor to prevent direct instantiation
    */
-  private constructor() {}
+  private constructor() { }
 
   /**
    * Get singleton instance
@@ -124,30 +130,6 @@ export class ImageService {
       console.error('Failed to process image', err)
       throw new Error(`Failed to process image ${tmpImagePath}: ${err.message}`)
     }
-    // Note: Temporary file cleanup is handled automatically by @fastify/multipart
-    // No manual cleanup needed to avoid ENOENT errors
-  }
-
-  /**
-   * Auto-crop an image based on face detection
-   * @param filePath - Path to the image file
-   * @param outputDir - Directory to save the cropped image
-   * @param baseName - Base name for the output file
-   * Returns path to the cropped image if successful, null otherwise
-   */
-  async autoCrop(filePath: string, outputDir: string, baseName: string): Promise<string | null> {
-    const outputPath = path.join(outputDir, `${baseName}-face.jpg`)
-    try {
-      const crop = await smartcropImage(await fs.promises.readFile(filePath), { width: 600, height: 600 })
-      await sharp(filePath)
-        .extract({ left: crop.x, top: crop.y, width: crop.width, height: crop.height })
-        .jpeg({ quality: 90 })
-        .toFile(outputPath)
-      return outputPath
-    } catch (error) {
-      console.error('Error in autoCrop:', error)
-      return null
-    }
   }
 
   /**
@@ -164,6 +146,64 @@ export class ImageService {
 
     const metadata = await original.metadata()
     const format = metadata.format ?? 'jpeg'
+
+    const originalCleaned = path.join(outputDir, `${baseName}-original.jpg`)
+    await original.jpeg({ quality: 100 }).toFile(originalCleaned)
+
+    const outputPaths = await this.generateVariants(original, filePath, outputDir, baseName)
+    outputPaths.original = originalCleaned
+
+    return {
+      width: metadata.width,
+      height: metadata.height,
+      mime: `image/${format}`,
+      variants: outputPaths,
+    }
+  }
+
+
+
+  /**
+   * Auto-crop an image based on face detection
+   * @param filePath - Path to the image file
+   * @param outputDir - Directory to save the cropped image
+   * @param baseName - Base name for the output file
+   * Returns path to the cropped image if successful, null otherwise
+   */
+  async autoCrop(filePath: string, outputDir: string, baseName: string): Promise<string | null> {
+    const outputPath = path.join(outputDir, `${baseName}-face.jpg`)
+    try {
+      const crop = await smartcropImage(await fs.promises.readFile(filePath), { width: 600, height: 600 })
+      await sharp(filePath)
+        .extract({ left: crop.x, top: crop.y, width: crop.width, height: crop.height })
+        .jpeg({ quality: 100 })
+        .toFile(outputPath)
+      return outputPath
+    } catch (error) {
+      console.error('Error in autoCrop:', error)
+      return null
+    }
+  }
+
+  
+  async reprocessImage(filePath: string, outputDir: string, baseName: string) {
+
+    const original = sharp(filePath)
+
+    const outputPaths = this.generateVariants(original, filePath, outputDir, baseName)
+
+    return outputPaths
+  }
+
+
+  /**
+   * Process an uploaded image file, resizing and saving variants
+   * @param filePath - Path to the uploaded image file
+   * @param outputDir - Directory to save processed images
+   * @param baseName - Base name for the output files
+   * Returns an object with metadata and paths to resized images
+   */
+  async generateVariants(original: sharp.Sharp, filePath: string, outputDir: string, baseName: string) {
 
     const outputPaths: Record<string, string> = {}
 
@@ -194,23 +234,7 @@ export class ImageService {
       outputPaths[size.name] = outputWebP
     }
 
-    // Optionally save cleaned original as JPEG
-    const originalCleaned = path.join(outputDir, `${baseName}-original.jpg`)
-    await original.jpeg({ quality: 90 }).toFile(originalCleaned)
-
-    outputPaths.original = originalCleaned
-
-    // Include face-cropped version in outputs if generated
-    if (faceCroppedPath) {
-      outputPaths.face = faceCroppedPath
-    }
-
-    return {
-      width: metadata.width,
-      height: metadata.height,
-      mime: `image/${format}`,
-      variants: outputPaths,
-    }
+    return outputPaths
   }
 
   /**
@@ -254,6 +278,7 @@ export class ImageService {
     const baseFile = path.join(getImageRoot(), image.storagePath)
     const filesToDelete = [
       `${baseFile}-original.jpg`,
+      `${baseFile}-face.jpg`,
       ...sizes.map(size => `${baseFile}-${size.name}.webp`),
     ]
 

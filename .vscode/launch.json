@@ -1,6 +1,7 @@
 {
   "version": "0.2.0",
   "configurations": [
+  
     {
       "name": "Attach",
       "port": 9229,
@@ -17,7 +18,7 @@
       "type": "node-terminal",
       "request": "launch",
       "name": "Run Profile test-data script",
-      "command": "pnpm run test-data",
+      "command": "bash",
       "cwd": "${workspaceFolder}/apps/backend",
       "internalConsoleOptions": "neverOpen",
       "skipFiles": [

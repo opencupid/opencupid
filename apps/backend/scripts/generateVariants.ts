@@ -13,7 +13,6 @@ const variants = [
   { name: 'medium', width: 640 },
   { name: 'large', width: 1280 },
   { name: 'square', width: 600, height: 600 },
-  { name: 'og', width: 1200, height: 630 }
 ]
 
 const argv = yargs(hideBin(process.argv))

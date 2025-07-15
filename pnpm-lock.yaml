@@ -75,9 +75,6 @@ importers:
       '@tensorflow-models/blazeface':
         specifier: ^0.1.0
         version: 0.1.0(@tensorflow/tfjs-converter@4.22.0(@tensorflow/tfjs-core@4.22.0))(@tensorflow/tfjs-core@4.22.0)
-      '@tensorflow-models/face-detection':
-        specifier: ^1.0.3
-        version: 1.0.3(@mediapipe/face_detection@0.4.1646425229)(@tensorflow/tfjs-backend-webgl@4.22.0(@tensorflow/tfjs-core@4.22.0))(@tensorflow/tfjs-converter@4.22.0(@tensorflow/tfjs-core@4.22.0))(@tensorflow/tfjs-core@4.22.0)
       '@tensorflow/tfjs':
         specifier: ^4.22.0
         version: 4.22.0(seedrandom@3.0.5)
@@ -144,6 +141,9 @@ importers:
       smartcrop:
         specifier: ^2.0.5
         version: 2.0.5
+      smartcrop-sharp:
+        specifier: ^2.0.8
+        version: 2.0.8(sharp@0.34.2)
       ts-node:
         specifier: ^10.9.2
         version: 10.9.2(@types/node@22.16.2)(typescript@5.8.3)
@@ -1281,9 +1281,6 @@ packages:
   '@maxmind/geoip2-node@6.1.0':
     resolution: {integrity: sha512-yJWQNxKRqPaGKorzpDKZBAR+gLk80XnZ3w/fhLEdfGnqls+Rv3ui0qQSd3akpvAC2NX8cjn7VJ5xxrlVw7i6KA==}
 
-  '@mediapipe/face_detection@0.4.1646425229':
-    resolution: {integrity: sha512-aeCN+fRAojv9ch3NXorP6r5tcGVLR3/gC1HmtqB0WEZBRXrdP6/3W/sGR0dHr1iT6ueiK95G9PVjbzFosf/hrg==}
-
   '@modelcontextprotocol/sdk@1.15.0':
     resolution: {integrity: sha512-67hnl/ROKdb03Vuu0YOr+baKTvf1/5YBHBm9KnZdjdAh8hjt4FRCPD5ucwxGB237sBpzlqQsLy1PFu7z/ekZ9Q==}
     engines: {node: '>=18'}
@@ -1718,14 +1715,6 @@ packages:
     peerDependencies:
       '@tensorflow/tfjs-converter': ^4.10.0
       '@tensorflow/tfjs-core': ^4.10.0
-
-  '@tensorflow-models/face-detection@1.0.3':
-    resolution: {integrity: sha512-4Ld/vFF8MrdFdrMWhlLKZD4hMW0PNY9OkYeqoCPNZ+LwFyenxAqVaNaWrR8JKp37vw9Nuzp4ILbkal5zPUnA0g==}
-    peerDependencies:
-      '@mediapipe/face_detection': ~0.4.0
-      '@tensorflow/tfjs-backend-webgl': ^4.21.0
-      '@tensorflow/tfjs-converter': ^4.21.0
-      '@tensorflow/tfjs-core': ^4.21.0
 
   '@tensorflow/tfjs-backend-cpu@4.22.0':
     resolution: {integrity: sha512-1u0FmuLGuRAi8D2c3cocHTASGXOmHc/4OvoVDENJayjYkS119fcTcQf4iHrtLthWyDIPy3JiPhRrZQC9EwnhLw==}
@@ -5394,6 +5383,11 @@ packages:
     resolution: {integrity: sha512-h+z7HKHYXj6wJU+AnS/+IH8Uh9fdcX1Lrhg1/VMdf9PwoBQXFcXiAdsy2tSK0P6gKwJLXp02r90ahUCqHk9rrw==}
     engines: {node: '>=8.0.0'}
 
+  smartcrop-sharp@2.0.8:
+    resolution: {integrity: sha512-0rpK/ddGAx7ou6YqqvJRkw/xyR4qgqmJeUQ2EWDnN3hSuJUk4InPGE6Sa45+TYOfGEEQJrchjF1ujBPMhoe9iA==}
+    peerDependencies:
+      sharp: ^0.32.5
+
   smartcrop@2.0.5:
     resolution: {integrity: sha512-aXoHTM8XlC51g96kgZkYxZ2mx09/ibOrIVLiUNOFozV/MHmFSgEr1/5CKVBoFD5vd+re2wSy0xra21CyjRITzA==}
 
@@ -5813,9 +5807,6 @@ packages:
 
   tsconfig@7.0.0:
     resolution: {integrity: sha512-vZXmzPrL+EmC4T/4rVlT2jNVMWCi/O4DIiSj3UHg1OE5kCKbk4mfrXc6dZksLgRM/TZlKnousKH9bbTazUWRRw==}
-
-  tslib@2.4.0:
-    resolution: {integrity: sha512-d6xOpEDfsi2CZVlPQzGeux8XMwLT9hssAsaPYExaQMuYskwb+x1x7J371tWlbBdWHroy99KnVB6qIkUbs5X3UQ==}
 
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
@@ -7196,8 +7187,6 @@ snapshots:
     dependencies:
       maxmind: 4.3.28
 
-  '@mediapipe/face_detection@0.4.1646425229': {}
-
   '@modelcontextprotocol/sdk@1.15.0':
     dependencies:
       ajv: 6.12.6
@@ -7638,15 +7627,6 @@ snapshots:
     dependencies:
       '@tensorflow/tfjs-converter': 4.22.0(@tensorflow/tfjs-core@4.22.0)
       '@tensorflow/tfjs-core': 4.22.0
-
-  '@tensorflow-models/face-detection@1.0.3(@mediapipe/face_detection@0.4.1646425229)(@tensorflow/tfjs-backend-webgl@4.22.0(@tensorflow/tfjs-core@4.22.0))(@tensorflow/tfjs-converter@4.22.0(@tensorflow/tfjs-core@4.22.0))(@tensorflow/tfjs-core@4.22.0)':
-    dependencies:
-      '@mediapipe/face_detection': 0.4.1646425229
-      '@tensorflow/tfjs-backend-webgl': 4.22.0(@tensorflow/tfjs-core@4.22.0)
-      '@tensorflow/tfjs-converter': 4.22.0(@tensorflow/tfjs-core@4.22.0)
-      '@tensorflow/tfjs-core': 4.22.0
-      rimraf: 3.0.2
-      tslib: 2.4.0
 
   '@tensorflow/tfjs-backend-cpu@4.22.0(@tensorflow/tfjs-core@4.22.0)':
     dependencies:
@@ -11645,6 +11625,11 @@ snapshots:
 
   slugify@1.6.6: {}
 
+  smartcrop-sharp@2.0.8(sharp@0.34.2):
+    dependencies:
+      sharp: 0.34.2
+      smartcrop: 2.0.5
+
   smartcrop@2.0.5: {}
 
   socket.io-adapter@2.5.5:
@@ -12097,8 +12082,6 @@ snapshots:
       '@types/strip-json-comments': 0.0.30
       strip-bom: 3.0.0
       strip-json-comments: 2.0.1
-
-  tslib@2.4.0: {}
 
   tslib@2.8.1: {}
 

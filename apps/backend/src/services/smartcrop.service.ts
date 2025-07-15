@@ -1,81 +1,63 @@
+
 import * as tf from '@tensorflow/tfjs'
 import '@tensorflow/tfjs-backend-cpu'
-import * as faceDetection from '@tensorflow-models/face-detection'
 import * as blazeface from '@tensorflow-models/blazeface'
-import smartcrop, { CropResult } from 'smartcrop'
-import { createCanvas, loadImage, Canvas } from 'canvas'
+import smartcrop from 'smartcrop-sharp'
+import sharp from 'sharp'
 
 export interface SmartCropOptions {
   width: number
   height: number
 }
 
+
 type FaceBox = { x: number; y: number; width: number; height: number }
 
-let detector: faceDetection.FaceDetector | blazeface.BlazeFaceModel | null = null
-let modelsLoaded = false
+let detector: blazeface.BlazeFaceModel
 
-async function loadModels() {
-  if (modelsLoaded) return
-  if (process.env.SMARTCROP_MODEL === 'MediaPipeFaceDetector') {
-    const modelConfig: faceDetection.MediaPipeFaceDetectorTfjsModelConfig = {
-      runtime: 'tfjs',
-      modelType: 'short',
-      maxFaces: 1,
-    }
-    detector = await faceDetection.createDetector(
-      faceDetection.SupportedModels.MediaPipeFaceDetector,
-      modelConfig
-    )
-  } else {
-    detector = await blazeface.load()
-  }
-  modelsLoaded = true
+export async function initialize() {
+  await tf.ready()
+  detector = await blazeface.load()
+  console.log('✅ Face detection model loaded:', process.env.SMARTCROP_MODEL) // <-- executes
 }
 
-async function detectFaces(canvas: Canvas): Promise<FaceBox[]> {
-  await loadModels()
+
+async function detectFaces(buffer: Buffer): Promise<FaceBox[]> {
   if (!detector) return []
   await tf.ready()
 
-  let predictions: any[]
-  if ('estimateFaces' in detector && (detector as any).estimateFaces.length === 2) {
-    predictions = await (detector as blazeface.BlazeFaceModel).estimateFaces(canvas as any, false)
-    return predictions.map(p => {
-      const [x1, y1] = p.topLeft as [number, number]
-      const [x2, y2] = p.bottomRight as [number, number]
-      return { x: x1, y: y1, width: x2 - x1, height: y2 - y1 }
-    })
-  }
-  predictions = await (detector as faceDetection.FaceDetector).estimateFaces(canvas as any)
-  console.log(`Detected ${predictions.length} faces`, predictions)
-  return predictions.map(p => ({
-    x: p.box.xMin,
-    y: p.box.yMin,
-    width: p.box.width,
-    height: p.box.height,
-  }))
+  // const { data, info } = await sharp(buffer).raw().toBuffer({ resolveWithObject: true })
+
+  const { data, info } = await sharp(buffer)
+    .removeAlpha() // TFJS needs 3 channels (RGB)
+    .raw()
+    .toBuffer({ resolveWithObject: true })
+
+  const imageTensor = tf.tensor3d(new Uint8Array(data), [info.height, info.width, 3])
+
+  const predictions = await detector.estimateFaces(imageTensor as any, false)
+  // imageTensor.dispose()
+  return predictions.map(p => {
+    const [x1, y1] = p.topLeft as [number, number]
+    const [x2, y2] = p.bottomRight as [number, number]
+    return { x: x1, y: y1, width: x2 - x1, height: y2 - y1 }
+  })
 }
 
 export async function smartcropImage(
-  image: Buffer | CanvasImageSource,
+  image: Buffer,
   options: SmartCropOptions
-): Promise<CropResult['topCrop']> {
-  const img = Buffer.isBuffer(image) ? await loadImage(image) : (image as CanvasImageSource)
-
-  const canvas = createCanvas((img as any).width, (img as any).height)
-  const ctx = canvas.getContext('2d')
-  ctx.drawImage(img as any, 0, 0)
-
-  const faces = await detectFaces(canvas)
+) {
+  // const metadata = await sharp(image).metadata()
+  const faces = await detectFaces(image)
   console.log(`Found ${faces.length} faces for cropping`, faces)
-  const boosts = faces.map(b => ({ ...b, weight: 1 }))
 
-  const result = await smartcrop.crop(canvas, {
+  const boosts = faces.map(f => ({ ...f, weight: 1 }))
+
+  const result = await smartcrop.crop(image, {
     width: options.width,
     height: options.height,
-    boost: boosts,
-    canvasFactory: createCanvas,
+    boost: boosts
   })
 
   return result.topCrop
