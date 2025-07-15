@@ -6,8 +6,7 @@ import './lib/i18n' // Initialize i18next with translations
 import './workers/emailWorker' // ← side‐effect: starts the worker
 import { checkImageRoot } from '@/lib/media'
 
-import { initialize } from '@/services/smartcrop.service'
-
+import { ImageService } from './services/image.service'
 
 async function main() {
   const app = Fastify({
@@ -58,8 +57,7 @@ async function main() {
   }
 
   // load face detection models
-  await initialize()
-
+  ImageService.getInstance().initialize()
 
   app.listen(
     {

@@ -10,21 +10,38 @@ import { generateContentHash } from '@/utils/hash'
 import { ProfileImagePosition } from '@zod/profile/profileimage.dto'
 import sharp from 'sharp'
 import type { ProfileImage } from '@zod/generated'
-import { smartcropImage } from '@/services/smartcrop.service'
 
-const sizes = [
+import * as tf from '@tensorflow/tfjs'
+import '@tensorflow/tfjs-backend-cpu'
+import * as blazeface from '@tensorflow-models/blazeface'
+import smartcrop from 'smartcrop-sharp'
+
+export interface SmartCropOptions {
+  width: number
+  height: number
+}
+
+
+type FaceBox = { x: number; y: number; width: number; height: number }
+
+
+
+type Variant = {
+  name: string
+  width: number
+  height?: number
+  fit?: keyof sharp.FitEnum
+}
+const variants: Variant[] = [
   { name: 'thumb', width: 150, height: 150, fit: sharp.fit.cover }, // square crop
-  { name: 'card', width: 480 }, // keep aspect ratio
-  { name: 'full', width: 1280 }, // max width
-
-  // { name: 'thumbnail', width: 96, height: 96 },
-  // { name: 'small', width: 320 },
-  // { name: 'medium', width: 640 },
-  // { name: 'large', width: 1280 },
-  // { name: 'square', width: 600, height: 600 },
+  { name: 'card', width: 600, height: 600, fit: sharp.fit.contain }, // optional black bars or pad
+  { name: 'profile', width: 640, height: 480, fit: sharp.fit.cover }, // 4:3 aspect ratio
+  { name: 'medium', width: 640 },
+  { name: 'full', width: 1280 },
 ]
 export class ImageService {
   private static instance: ImageService
+  private detector: blazeface.BlazeFaceModel | null = null
 
   /**
    * Private constructor to prevent direct instantiation
@@ -40,6 +57,14 @@ export class ImageService {
     }
     return ImageService.instance
   }
+
+
+  async initialize() {
+    await tf.ready()
+    this.detector = await blazeface.load()
+    console.log('✅ Face detection model loaded:', process.env.SMARTCROP_MODEL) // <-- executes
+  }
+
 
   /**
    * Get a single image by ID for the authenticated user
@@ -71,9 +96,9 @@ export class ImageService {
       return `${appConfig.IMAGE_URL_BASE}/${file}?exp=${exp}&sig=${h}`
     }
     const base = image.storagePath
-    const variants = sizes.map(s => ({ size: s.name, url: sign(`${base}-${s.name}.webp`) }))
-    variants.push({ size: 'original', url: sign(`${base}-original.jpg`) })
-    return variants
+    const imgSet = variants.map(s => ({ size: s.name, url: sign(`${base}-${s.name}.webp`) }))
+    imgSet.push({ size: 'original', url: sign(`${base}-original.jpg`) })
+    return imgSet
   }
 
   /**
@@ -173,7 +198,7 @@ export class ImageService {
   async autoCrop(filePath: string, outputDir: string, baseName: string): Promise<string | null> {
     const outputPath = path.join(outputDir, `${baseName}-face.jpg`)
     try {
-      const crop = await smartcropImage(await fs.promises.readFile(filePath), { width: 600, height: 600 })
+      const crop = await this.smartcropImage(await fs.promises.readFile(filePath), { width: 600, height: 600 })
       await sharp(filePath)
         .extract({ left: crop.x, top: crop.y, width: crop.width, height: crop.height })
         .jpeg({ quality: 100 })
@@ -185,7 +210,7 @@ export class ImageService {
     }
   }
 
-  
+
   async reprocessImage(filePath: string, outputDir: string, baseName: string) {
 
     const original = sharp(filePath)
@@ -214,11 +239,11 @@ export class ImageService {
     const sourceForCropVersions = faceCroppedPath || filePath
     const sourceForCropVersionsSharp = sharp(sourceForCropVersions).rotate()
 
-    for (const size of sizes) {
+    for (const size of variants) {
       let resizedSource = original.clone()
 
       // Use face-cropped version for card and thumb sizes if available
-      if (faceCroppedPath && (size.name === 'card' || size.name === 'thumb')) {
+      if (faceCroppedPath && (size.name === 'card' || size.name === 'thumb' || size.name === 'profile')) {
         resizedSource = sourceForCropVersionsSharp.clone()
       }
 
@@ -279,7 +304,7 @@ export class ImageService {
     const filesToDelete = [
       `${baseFile}-original.jpg`,
       `${baseFile}-face.jpg`,
-      ...sizes.map(size => `${baseFile}-${size.name}.webp`),
+      ...variants.map(size => `${baseFile}-${size.name}.webp`),
     ]
 
     for (const f of filesToDelete) {
@@ -321,5 +346,47 @@ export class ImageService {
 
     // Return them sorted by position
     return updated.sort((a: any, b: any) => a.position - b.position)
+  }
+
+
+  async detectFaces(buffer: Buffer): Promise<FaceBox[]> {
+    if (!this.detector) return []
+    await tf.ready()
+
+    // const { data, info } = await sharp(buffer).raw().toBuffer({ resolveWithObject: true })
+
+    const { data, info } = await sharp(buffer)
+      .removeAlpha() // TFJS needs 3 channels (RGB)
+      .raw()
+      .toBuffer({ resolveWithObject: true })
+
+    const imageTensor = tf.tensor3d(new Uint8Array(data), [info.height, info.width, 3])
+
+    const predictions = await this.detector.estimateFaces(imageTensor as any, false)
+    // imageTensor.dispose()
+    return predictions.map(p => {
+      const [x1, y1] = p.topLeft as [number, number]
+      const [x2, y2] = p.bottomRight as [number, number]
+      return { x: x1, y: y1, width: x2 - x1, height: y2 - y1 }
+    })
+  }
+
+  async smartcropImage(
+    image: Buffer,
+    options: SmartCropOptions
+  ) {
+    // const metadata = await sharp(image).metadata()
+    const faces = await this.detectFaces(image)
+    console.log(`Found ${faces.length} faces for cropping`, faces)
+
+    const boosts = faces.map(f => ({ ...f, weight: 1 }))
+
+    const result = await smartcrop.crop(image, {
+      width: options.width,
+      height: options.height,
+      boost: boosts
+    })
+
+    return result.topCrop
   }
 }

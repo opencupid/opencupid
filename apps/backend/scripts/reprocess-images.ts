@@ -8,11 +8,10 @@ import { getImageRoot } from '../src/lib/media'
 const prisma = new PrismaClient()
 const imageService = ImageService.getInstance()
 
-import { initialize } from '../src/services/smartcrop.service'
 
 async function main() {
 
-  await initialize()
+  await imageService.initialize()
 
   const images = await prisma.profileImage.findMany({
     where: {
