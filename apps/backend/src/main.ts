@@ -1,6 +1,8 @@
+
+import Sentry from '@/lib/sentry' // keep this at the top
+
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
-import * as Sentry from '@sentry/node'
 import { appConfig } from '@/lib/appconfig'
 import './lib/i18n' // Initialize i18next with translations
 
@@ -8,15 +10,6 @@ import './workers/emailWorker' // ← side‐effect: starts the worker
 import { checkImageRoot } from '@/lib/media'
 
 import { ImageProcessor } from './services/imageprocessor'
-
-Sentry.init({
-  dsn: appConfig.SENTRY_DSN,
-  environment: appConfig.NODE_ENV,
-  integrations: [
-    new Sentry.Integrations.Http({ tracing: true }),
-  ],
-  tracesSampleRate: 1.0,
-})
 
 async function main() {
   const app = Fastify({

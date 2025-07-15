@@ -2,7 +2,7 @@
   "name": "backend",
   "main": "dist/main.js",
   "scripts": {
-    "dev": "tsup --watch --onSuccess \"node --inspect dist/main.js\"",
+    "dev": "tsup --watch --onSuccess \"node --inspect dist/src/main.js\"",
     "build": "tsup && node scripts/generate-version.js",
     "start": "node dist/main.js",
     "generate": "prisma generate --no-hints",
