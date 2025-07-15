@@ -42,7 +42,7 @@ export async function bootstrapApp() {
   if (__APP_CONFIG__.NODE_ENV !== 'development') {
     Sentry.init({
       app,
-      dsn: "https://a2f4d7f45badfcced4c78c61279c4011@o4509640167849984.ingest.de.sentry.io/4509640168308816",
+      dsn: __APP_CONFIG__.SENTRY_DSN,
       // Setting this option to true will send default PII data to Sentry.
       // For example, automatic IP address collection on events
       sendDefaultPii: true,

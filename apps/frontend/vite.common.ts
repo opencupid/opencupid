@@ -76,6 +76,7 @@ export const define = (mode: string) => {
         OG_URL: env.OG_URL,
         OG_TYPE: env.OG_TYPE,
         SITE_NAME: env.SITE_NAME,
+        SENTRY_DSN: env.SENTRY_DSN,
       }),
     }
   }

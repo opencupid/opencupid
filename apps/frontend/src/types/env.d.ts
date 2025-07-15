@@ -29,4 +29,5 @@ declare const __APP_CONFIG__: {
   readonly OG_URL: string
   readonly OG_TYPE: string
   readonly SITE_NAME: string
+  readonly SENTRY_DSN: string
 }

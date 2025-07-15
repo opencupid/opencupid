@@ -37,6 +37,8 @@ export const configSchema = z.object({
   VAPID_PUBLIC_KEY: z.string().min(10),
   VAPID_PRIVATE_KEY: z.string().min(10),
 
+  SENTRY_DSN: z.string().optional(),
+
   MAXMIND_ACCOUNT_ID: z.string(),
   MAXMIND_LICENSE_KEY: z.string(),
 
