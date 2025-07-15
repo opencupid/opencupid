@@ -15,7 +15,7 @@ async function main() {
 
   const images = await prisma.profileImage.findMany({
     where: {
-      userId: 'cmd24iao800006wxr0vwglvzd'
+      // userId: 'cmd24iao800006wxr0vwglvzd'
     },
   })
 

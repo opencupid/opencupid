@@ -8,22 +8,11 @@ import { appConfig } from '@/lib/appconfig'
 
 import { generateContentHash } from '@/utils/hash'
 import { ProfileImagePosition } from '@zod/profile/profileimage.dto'
-import sharp from 'sharp'
 import type { ProfileImage } from '@zod/generated'
 
-import * as tf from '@tensorflow/tfjs'
-import '@tensorflow/tfjs-backend-cpu'
-import * as blazeface from '@tensorflow-models/blazeface'
-import smartcrop from 'smartcrop-sharp'
+import sharp from 'sharp'
 
-export interface SmartCropOptions {
-  width: number
-  height: number
-}
-
-
-type FaceBox = { x: number; y: number; width: number; height: number }
-
+import { ImageProcessor } from './imageprocessor'
 
 
 type Variant = {
@@ -32,16 +21,16 @@ type Variant = {
   height?: number
   fit?: keyof sharp.FitEnum
 }
+
 const variants: Variant[] = [
   { name: 'thumb', width: 150, height: 150, fit: sharp.fit.cover }, // square crop
-  { name: 'card', width: 600, height: 600, fit: sharp.fit.contain }, // optional black bars or pad
-  { name: 'profile', width: 640, height: 480, fit: sharp.fit.cover }, // 4:3 aspect ratio
-  { name: 'medium', width: 640 },
+  { name: 'card', width: 400, height: 400, fit: sharp.fit.contain }, // optional black bars or pad
+  { name: 'profile', width: 720, height: 540, fit: sharp.fit.cover }, // 4:3 aspect ratio
+  { name: 'medium', width: 800 },
   { name: 'full', width: 1280 },
 ]
 export class ImageService {
   private static instance: ImageService
-  private detector: blazeface.BlazeFaceModel | null = null
 
   /**
    * Private constructor to prevent direct instantiation
@@ -56,13 +45,6 @@ export class ImageService {
       ImageService.instance = new ImageService()
     }
     return ImageService.instance
-  }
-
-
-  async initialize() {
-    await tf.ready()
-    this.detector = await blazeface.load()
-    console.log('✅ Face detection model loaded:', process.env.SMARTCROP_MODEL) // <-- executes
   }
 
 
@@ -156,111 +138,63 @@ export class ImageService {
       throw new Error(`Failed to process image ${tmpImagePath}: ${err.message}`)
     }
   }
-
-  /**
-   * Process an uploaded image file, resizing and saving variants
-   * @param filePath - Path to the uploaded image file
-   * @param outputDir - Directory to save processed images
-   * @param baseName - Base name for the output files
-   * Returns an object with metadata and paths to resized images
-   */
   async processImage(filePath: string, outputDir: string, baseName: string) {
     await fs.promises.mkdir(outputDir, { recursive: true })
 
-    const original = sharp(filePath).rotate()
+    const buffer = await fs.promises.readFile(filePath)
+    const processor = new ImageProcessor(buffer)
+    await processor.analyze()
 
-    const metadata = await original.metadata()
-    const format = metadata.format ?? 'jpeg'
+    const originalPath = path.join(outputDir, `${baseName}-original.jpg`)
+    await sharp(buffer).jpeg({ quality: 100 }).toFile(originalPath)
 
-    const originalCleaned = path.join(outputDir, `${baseName}-original.jpg`)
-    await original.jpeg({ quality: 100 }).toFile(originalCleaned)
-
-    const outputPaths = await this.generateVariants(original, filePath, outputDir, baseName)
-    outputPaths.original = originalCleaned
+    const outputPaths = await this.generateAllVariants(processor, outputDir, baseName)
+    outputPaths.original = originalPath
 
     return {
-      width: metadata.width,
-      height: metadata.height,
-      mime: `image/${format}`,
+      ...processor.getOriginalSize(),
+      mime: processor.getMime(),
       variants: outputPaths,
     }
   }
 
-
-
-  /**
-   * Auto-crop an image based on face detection
-   * @param filePath - Path to the image file
-   * @param outputDir - Directory to save the cropped image
-   * @param baseName - Base name for the output file
-   * Returns path to the cropped image if successful, null otherwise
-   */
-  async autoCrop(filePath: string, outputDir: string, baseName: string): Promise<string | null> {
-    const outputPath = path.join(outputDir, `${baseName}-face.jpg`)
-    try {
-      const crop = await this.smartcropImage(await fs.promises.readFile(filePath), { width: 600, height: 600 })
-      await sharp(filePath)
-        .extract({ left: crop.x, top: crop.y, width: crop.width, height: crop.height })
-        .jpeg({ quality: 100 })
-        .toFile(outputPath)
-      return outputPath
-    } catch (error) {
-      console.error('Error in autoCrop:', error)
-      return null
-    }
-  }
-
-
   async reprocessImage(filePath: string, outputDir: string, baseName: string) {
+    await fs.promises.mkdir(outputDir, { recursive: true })
 
-    const original = sharp(filePath)
+    const buffer = await fs.promises.readFile(filePath)
+    const processor = new ImageProcessor(buffer)
+    await processor.analyze()
 
-    const outputPaths = this.generateVariants(original, filePath, outputDir, baseName)
-
+    const outputPaths = await this.generateAllVariants(processor, outputDir, baseName)
     return outputPaths
   }
 
-
-  /**
-   * Process an uploaded image file, resizing and saving variants
-   * @param filePath - Path to the uploaded image file
-   * @param outputDir - Directory to save processed images
-   * @param baseName - Base name for the output files
-   * Returns an object with metadata and paths to resized images
-   */
-  async generateVariants(original: sharp.Sharp, filePath: string, outputDir: string, baseName: string) {
-
+  private async generateAllVariants(
+    processor: ImageProcessor,
+    outputDir: string,
+    baseName: string
+  ): Promise<Record<string, string>> {
     const outputPaths: Record<string, string> = {}
 
-    // Try to generate a face-cropped version first
-    const faceCroppedPath = await this.autoCrop(filePath, outputDir, baseName)
+    for (const v of variants) {
+      const outputPath = path.join(outputDir, `${baseName}-${v.name}.webp`)
+      const width = v.width
+      const height = v.height ?? v.width
+      const fit = v.fit ?? sharp.fit.inside
 
-    // If face detection succeeded, use face-cropped version for card and thumb
-    const sourceForCropVersions = faceCroppedPath || filePath
-    const sourceForCropVersionsSharp = sharp(sourceForCropVersions).rotate()
-
-    for (const size of variants) {
-      let resizedSource = original.clone()
-
-      // Use face-cropped version for card and thumb sizes if available
-      if (faceCroppedPath && (size.name === 'card' || size.name === 'thumb' || size.name === 'profile')) {
-        resizedSource = sourceForCropVersionsSharp.clone()
+      if (['thumb', 'card', 'profile'].includes(v.name)) {
+        const crop = await processor.getCropRegion(width, height)
+        await processor.extractAndResize(crop, width, height, outputPath)
+      } else {
+        await processor.resizeOriginal(width, height, fit, outputPath)
       }
 
-      const resized = resizedSource.resize({
-        width: size.width,
-        height: size.height,
-        fit: size.fit ?? sharp.fit.inside,
-      })
-
-      const outputWebP = path.join(outputDir, `${baseName}-${size.name}.webp`)
-      await resized.webp({ quality: 85 }).toFile(outputWebP)
-
-      outputPaths[size.name] = outputWebP
+      outputPaths[v.name] = outputPath
     }
 
     return outputPaths
   }
+
 
   /**
    * Update an existing ProfileImage's metadata
@@ -349,44 +283,6 @@ export class ImageService {
   }
 
 
-  async detectFaces(buffer: Buffer): Promise<FaceBox[]> {
-    if (!this.detector) return []
-    await tf.ready()
 
-    // const { data, info } = await sharp(buffer).raw().toBuffer({ resolveWithObject: true })
 
-    const { data, info } = await sharp(buffer)
-      .removeAlpha() // TFJS needs 3 channels (RGB)
-      .raw()
-      .toBuffer({ resolveWithObject: true })
-
-    const imageTensor = tf.tensor3d(new Uint8Array(data), [info.height, info.width, 3])
-
-    const predictions = await this.detector.estimateFaces(imageTensor as any, false)
-    // imageTensor.dispose()
-    return predictions.map(p => {
-      const [x1, y1] = p.topLeft as [number, number]
-      const [x2, y2] = p.bottomRight as [number, number]
-      return { x: x1, y: y1, width: x2 - x1, height: y2 - y1 }
-    })
-  }
-
-  async smartcropImage(
-    image: Buffer,
-    options: SmartCropOptions
-  ) {
-    // const metadata = await sharp(image).metadata()
-    const faces = await this.detectFaces(image)
-    console.log(`Found ${faces.length} faces for cropping`, faces)
-
-    const boosts = faces.map(f => ({ ...f, weight: 1 }))
-
-    const result = await smartcrop.crop(image, {
-      width: options.width,
-      height: options.height,
-      boost: boosts
-    })
-
-    return result.topCrop
-  }
 }

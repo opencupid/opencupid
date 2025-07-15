@@ -13,33 +13,36 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  variant: {
+    type: String,
+    default: '',
+  },
 })
 
 const sizesMap: Record<string, string> = {
   thumb: '150w',
-  card: '480w',
-  medium: '960w',
+  card: '400w',
+  profile: '720w',
+  medium: '800w',
   full: '1280w',
-  hd: '1920w',
 }
 
-const webpSrcset = computed(() =>
+const scrSet = computed(() =>
   props.image.variants
     .filter(v => sizesMap[v.size])
     .map(v => `${v.url} ${sizesMap[v.size]}`)
     .join(', ')
 )
 
-const fallbackUrl = computed(() =>
-  props.image.variants.find(v => v.size === 'original')?.url || ''
-)
+const fallbackUrl = computed(() => props.image.variants.find(v => v.size === 'original')?.url || '')
 </script>
 
 <template>
   <picture class="profile-image">
+    <!-- square crop (thumb/card) for small/mobile -->
     <source
-      :srcset="webpSrcset"
-      sizes="(max-width: 600px) 360px, (max-width: 1024px) 480px, 600px"
+      :srcset="scrSet"
+      sizes="(max-aspect-ratio: 1/1) and (max-width: 600px) 360px, 600px"
       type="image/webp"
     />
     <img :src="fallbackUrl" class="" :class="className" />
