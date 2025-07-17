@@ -2,15 +2,13 @@
 import i18next from 'i18next'
 import FsBackend from 'i18next-fs-backend'
 import path from 'path'
-const translationsPath = path.join(
-  __dirname,
-  __dirname.includes('dist') ? '../../..' : '../../../../',
-  'packages',
-  'shared',
-  'i18n',
-  'api',
-  '{{lng}}.json'
+
+
+const translationsPath = path.resolve(
+  process.cwd(),
+  'packages/shared/i18n/api/{{lng}}.json'
 )
+
 
 // TODO consolidate this with frontend i18n store
 // move it out to packages/shared/i18n.ts
