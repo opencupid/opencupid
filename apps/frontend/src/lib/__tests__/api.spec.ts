@@ -32,19 +32,27 @@ describe('api error handling', () => {
       { code: 'ENOTFOUND', expected: true },
       { code: 'ECONNREFUSED', expected: true },
       { code: 'ETIMEDOUT', expected: true },
+      { code: 'ECONNRESET', expected: true },
+      { code: 'ERR_NETWORK', expected: true },
+      { code: 'ERR_BAD_RESPONSE', expected: true },
       { response: null, expected: true }, // no response = network error
       { code: 'SOME_OTHER_ERROR', response: { status: 500 }, expected: false },
     ]
 
     testCases.forEach(({ code, response, expected }) => {
       const error = { code, response }
-      const isNetworkError = 
-        error.code === 'ECONNABORTED' ||
-        error.code === 'ENETUNREACH' ||
-        error.code === 'ENOTFOUND' ||
-        error.code === 'ECONNREFUSED' ||
-        error.code === 'ETIMEDOUT' ||
-        !error.response
+      const isNetworkError =
+        !error.response ||
+        [
+          'ECONNABORTED',
+          'ENETUNREACH',
+          'ENOTFOUND',
+          'ECONNREFUSED',
+          'ETIMEDOUT',
+          'ECONNRESET',
+          'ERR_NETWORK',
+          'ERR_BAD_RESPONSE',
+        ].includes(error.code)
 
       expect(isNetworkError).toBe(expected)
     })
@@ -54,30 +62,49 @@ describe('api error handling', () => {
     const mockError = { code: 'ECONNABORTED' }
     
     // Test the error detection logic directly
-    const isNetworkError = 
-      mockError.code === 'ECONNABORTED' ||
-      mockError.code === 'ENETUNREACH' ||
-      mockError.code === 'ENOTFOUND' ||
-      mockError.code === 'ECONNREFUSED' ||
-      mockError.code === 'ETIMEDOUT' ||
-      !mockError.response
+    const isNetworkError =
+      !mockError.response ||
+      [
+        'ECONNABORTED',
+        'ENETUNREACH',
+        'ENOTFOUND',
+        'ECONNREFUSED',
+        'ETIMEDOUT',
+        'ECONNRESET',
+        'ERR_NETWORK',
+        'ERR_BAD_RESPONSE',
+      ].includes(mockError.code)
 
     expect(isNetworkError).toBe(true)
   })
 
   it('handles various network error codes', () => {
-    const errorCodes = ['ECONNABORTED', 'ENETUNREACH', 'ENOTFOUND', 'ECONNREFUSED', 'ETIMEDOUT']
+    const errorCodes = [
+      'ECONNABORTED',
+      'ENETUNREACH',
+      'ENOTFOUND',
+      'ECONNREFUSED',
+      'ETIMEDOUT',
+      'ECONNRESET',
+      'ERR_NETWORK',
+      'ERR_BAD_RESPONSE',
+    ]
     
     for (const code of errorCodes) {
       const mockError = { code }
       
-      const isNetworkError = 
-        mockError.code === 'ECONNABORTED' ||
-        mockError.code === 'ENETUNREACH' ||
-        mockError.code === 'ENOTFOUND' ||
-        mockError.code === 'ECONNREFUSED' ||
-        mockError.code === 'ETIMEDOUT' ||
-        !mockError.response
+      const isNetworkError =
+        !mockError.response ||
+        [
+          'ECONNABORTED',
+          'ENETUNREACH',
+          'ENOTFOUND',
+          'ECONNREFUSED',
+          'ETIMEDOUT',
+          'ECONNRESET',
+          'ERR_NETWORK',
+          'ERR_BAD_RESPONSE',
+        ].includes(mockError.code)
 
       expect(isNetworkError).toBe(true)
     }
