@@ -10,10 +10,11 @@ const router = useRouter()
 import { type MessageDTO } from '@zod/messaging/messaging.dto'
 import { type InteractionEdge } from '@zod/interaction/interaction.dto'
 
-import MessageReceivedToast from './MessageReceivedToast.vue'
+import ApiErrorOverlay from './ApiErrorOverlay.vue'
 import LikeReceivedToast from './LikeReceivedToast.vue'
 import MatchReceivedToast from './MatchReceivedToast.vue'
-import { BOverlay } from 'bootstrap-vue-next'
+import MessageReceivedToast from './MessageReceivedToast.vue'
+
 import { useI18n } from 'vue-i18n'
 
 const toast = useToast()
@@ -124,25 +125,6 @@ onUnmounted(() => {
 <template>
   <slot> </slot>
 
-  <BOverlay
-    :show="showApiOfflineOverlay"
-    no-wrap
-    z-index="1200"
-    spinner-variant="danger"
-    spinner-type="grow"
-    variant="warning"
-    opacity="0.9"
-  >
-    <template #overlay>
-
-      <div class="text-center text-dark">
-        <h3>{{ t('uicomponents.connection_error.title') }}</h3>
-        <p class="fs-6">
-          {{ t('uicomponents.connection_error.description') }}
-        </p>
-        <BSpinner variant="danger" type="grow" small></BSpinner>
-      </div>
-    </template>
-  </BOverlay>
+  <ApiErrorOverlay :show="showApiOfflineOverlay" class="api-offline-overlay" />
 </template>
 <style scoped></style>
