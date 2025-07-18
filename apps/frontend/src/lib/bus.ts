@@ -7,6 +7,8 @@ type AppEvents = {
   'auth:logout': void
   'notification:new_message': MessageDTO
   'language:changed': { language: string }
+  'api:offline': void
+  'api:online': void
 }
 
 type Events = AppEvents & WSEvents
