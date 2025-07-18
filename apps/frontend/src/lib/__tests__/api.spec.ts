@@ -52,14 +52,14 @@ describe('api error handling', () => {
           'ECONNRESET',
           'ERR_NETWORK',
           'ERR_BAD_RESPONSE',
-        ].includes(error.code)
+        ].includes(error.code ?? '')
 
       expect(isNetworkError).toBe(expected)
     })
   })
 
   it('handles ECONNABORTED error code', () => {
-    const mockError = { code: 'ECONNABORTED' }
+    const mockError = { code: 'ECONNABORTED', response: '' }
     
     // Test the error detection logic directly
     const isNetworkError =
@@ -91,7 +91,7 @@ describe('api error handling', () => {
     ]
     
     for (const code of errorCodes) {
-      const mockError = { code }
+      const mockError: { code: string; response?: unknown } = { code }
       
       const isNetworkError =
         !mockError.response ||

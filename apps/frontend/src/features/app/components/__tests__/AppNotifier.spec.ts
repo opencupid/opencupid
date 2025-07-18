@@ -26,7 +26,7 @@ vi.mock('../MatchReceivedToast.vue', () => ({ default: 'MatchToast' }))
 const push = vi.fn()
 vi.mock('vue-router', () => ({ useRouter: () => ({ push }) }))
 
-const toast = vi.fn()
+const toast = vi.fn() as any
 toast.error = vi.fn()
 toast.success = vi.fn()
 toast.dismiss = vi.fn()
