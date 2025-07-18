@@ -2,7 +2,6 @@
 import { useI18n } from 'vue-i18n'
 import { BOverlay } from 'bootstrap-vue-next'
 
-import image from '@/assets/api-error.png'
 defineProps<{
   show: boolean
 }>()
@@ -29,7 +28,7 @@ const { t } = useI18n()
         <p class="fs-6">
           {{ t('uicomponents.connection_error.description') }}
         </p>
-        <img :src="image" alt="" />
+        <img src="/images/api-error.png" alt="" />
       </div>
     </template>
   </BOverlay>
