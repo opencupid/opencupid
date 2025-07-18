@@ -9,6 +9,7 @@ import { type PublicProfile } from '@zod/profile/profile.dto'
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 import ProfileCardGrid from '@/features/browse/components/ProfileCardGrid.vue'
 import LikesAndMatchesBanner from '@/features/interaction/components/LikesAndMatchesBanner.vue'
+import { bus } from '@/lib/bus'
 
 const profileStore = useOwnerProfileStore()
 const viewerProfile = computed(() => profileStore.profile)

@@ -87,18 +87,18 @@ function handleMatchReceived(edge: InteractionEdge) {
 
 function handleApiOffline() {
   showApiOfflineOverlay.value = true
-  toast.error('Connection lost. Trying to reconnect...', {
-    timeout: false,
-    id: 'api-offline'
-  })
+  // toast.error('Connection lost. Trying to reconnect...', {
+  //   timeout: false,
+  //   id: 'api-offline'
+  // })
 }
 
 function handleApiOnline() {
   showApiOfflineOverlay.value = false
-  toast.dismiss('api-offline')
-  toast.success('Connection restored!', {
-    timeout: 3000
-  })
+  // toast.dismiss('api-offline')
+  // toast.success('Connection restored!', {
+  //   timeout: 3000
+  // })
 }
 
 onMounted(() => {
