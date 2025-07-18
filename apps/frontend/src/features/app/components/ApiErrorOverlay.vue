@@ -2,7 +2,7 @@
 import { useI18n } from 'vue-i18n'
 import { BOverlay } from 'bootstrap-vue-next'
 
-import image from '@/assets/machine-elf.png'
+import image from '@/assets/api-error.png'
 defineProps<{
   show: boolean
 }>()
