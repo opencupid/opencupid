@@ -299,6 +299,10 @@
     "enable_push": "Enable Push Notifications"
   },
   "uicomponents": {
+    "connection_error": {
+      "title": "It's not you, it's us.",
+      "description": "Apologies for the interruption.  The Machine Elves need a few seconds to sort things out, we'll be back in a bit."
+    },
     "error": {
       "title": "We've hit a snag here.",
       "message": "An error occurred. Please try again later.",

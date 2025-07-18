@@ -1,6 +1,6 @@
 import z from 'zod'
 import { defineStore } from 'pinia'
-import { api, axios } from '@/lib/api'
+import { api, axios, safeApiCall } from '@/lib/api'
 import type { ApiError, ApiSuccess } from '@zod/apiResponse.dto'
 import { type ImageApiResponse, ImageApiResponseSchema, type OwnerProfileImage, type ProfileImagePosition } from '@zod/profile/profileimage.dto'
 import { bus } from '@/lib/bus'
@@ -23,7 +23,7 @@ export const useImageStore = defineStore('image', {
 
       try {
         this.isLoading = true // Set loading state
-        const { data } = await api.post<ImageApiResponse>('/image', formData)
+        const { data } = await safeApiCall(() => api.post<ImageApiResponse>('/image', formData))
         const { success, images } = ImageApiResponseSchema.parse(data)
         this.images = images
         return { success: true }
@@ -55,7 +55,7 @@ export const useImageStore = defineStore('image', {
     async deleteImage(image: OwnerProfileImage): Promise<ImageStoreResponse> {
       try {
         this.isLoading = true // Set loading state
-        const { data } = await api.delete<ImageApiResponse>(`/image/${image.id}`)
+        const { data } = await safeApiCall(() => api.delete<ImageApiResponse>(`/image/${image.id}`))
         const { success, images } = ImageApiResponseSchema.parse(data)
         this.images = images
         return { success: true }
@@ -72,7 +72,7 @@ export const useImageStore = defineStore('image', {
     async reorderImages(imagesForUpdate: ProfileImagePosition[]): Promise<ImageStoreResponse> {
       try {
         this.isLoading = true // Set loading state
-        const { data } = await api.patch<ImageApiResponse>('/image/order', { images: imagesForUpdate })
+        const { data } = await safeApiCall(() => api.patch<ImageApiResponse>('/image/order', { images: imagesForUpdate }))
         const { success, images } = ImageApiResponseSchema.parse(data)
         this.images = images
         return { success: true }
@@ -90,7 +90,7 @@ export const useImageStore = defineStore('image', {
     async fetchImages(): Promise<ImageStoreResponse> {
       try {
         this.isLoading = true // Set loading state
-        const { data } = await api.get<ImageApiResponse>('/image/me')
+        const { data } = await safeApiCall(() => api.get<ImageApiResponse>('/image/me'))
         const { success, images } = ImageApiResponseSchema.parse(data)
         this.images = images
         return { success: true }

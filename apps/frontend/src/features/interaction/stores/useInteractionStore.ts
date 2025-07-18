@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { api } from '@/lib/api'
+import { api, safeApiCall } from '@/lib/api'
 import { bus } from '@/lib/bus'
 import { InteractionEdgePairSchema, InteractionStatsSchema, type InteractionEdge, type InteractionEdgePair } from '@zod/interaction/interaction.dto'
 import { storeError, storeSuccess, type StoreError, type StoreResponse } from '@/store/helpers'
@@ -49,7 +49,7 @@ export const useInteractionStore = defineStore('interaction', {
     async fetchInteractions() {
       this.loading = true
       try {
-        const res = await api.get('/interactions')
+        const res = await safeApiCall(() => api.get('/interactions'))
         const stats = InteractionStatsSchema.parse(res.data.stats)
         this.sent = stats.sent
         this.matches = stats.matches
@@ -66,9 +66,9 @@ export const useInteractionStore = defineStore('interaction', {
 
     async sendLike(targetId: string): Promise<StoreResponse<InteractionEdgePair>> {
       try {
-        const res = await api.post<{ success: true; pair: unknown }>(
+        const res = await safeApiCall(() => api.post<{ success: true; pair: unknown }>(
           `/interactions/like/${targetId}`
-        )
+        ))
 
         // Parse and validate the response shape
         const pair = InteractionEdgePairSchema.parse(res.data.pair)
@@ -88,7 +88,7 @@ export const useInteractionStore = defineStore('interaction', {
 
     async removeLike(targetId: string): Promise<StoreResponse<void>> {
       try {
-        await api.delete(`/interactions/like/${targetId}`)
+        await safeApiCall(() => api.delete(`/interactions/like/${targetId}`))
         this.sent = this.sent.filter(e => e.profile.id !== targetId)
         this.matches = this.matches.filter(e => e.profile.id !== targetId)
         return storeSuccess()
@@ -100,7 +100,7 @@ export const useInteractionStore = defineStore('interaction', {
 
     async passProfile(targetId: string): Promise<StoreResponse<void>> {
       try {
-        await api.post(`/interactions/pass/${targetId}`)
+        await safeApiCall(() => api.post(`/interactions/pass/${targetId}`))
         if (!this.passed.includes(targetId)) {
           this.passed.push(targetId)
         }
@@ -116,7 +116,7 @@ export const useInteractionStore = defineStore('interaction', {
 
     async unpassProfile(targetId: string): Promise<StoreResponse<void>> {
       try {
-        await api.delete(`/interactions/pass/${targetId}`)
+        await safeApiCall(() => api.delete(`/interactions/pass/${targetId}`))
         this.passed = this.passed.filter(id => id !== targetId)
         return storeSuccess()
       } catch (error) {

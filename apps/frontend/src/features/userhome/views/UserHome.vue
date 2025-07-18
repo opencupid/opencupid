@@ -9,7 +9,6 @@ import { type PublicProfile } from '@zod/profile/profile.dto'
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 import ProfileCardGrid from '@/features/browse/components/ProfileCardGrid.vue'
 import LikesAndMatchesBanner from '@/features/interaction/components/LikesAndMatchesBanner.vue'
-import { bus } from '@/lib/bus'
 
 const profileStore = useOwnerProfileStore()
 const viewerProfile = computed(() => profileStore.profile)
@@ -19,13 +18,12 @@ const newProfiles = ref([] as PublicProfile[])
 onMounted(async () => {
   await useBootstrap().bootstrap()
 
-  if (!viewerProfile.value?.isOnboarded) {
+  if (viewerProfile.value && !viewerProfile.value?.isOnboarded) {
     router.push({ name: 'Onboarding' })
     return
   }
 
   const findProfileStore = useFindProfileStore()
-
   const result = await findProfileStore.fetchNewSocial()
   if (result.success && result.data) {
     newProfiles.value = result.data.result as PublicProfile[]

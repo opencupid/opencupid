@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { bus } from '@/lib/bus'
-import { api } from '@/lib/api'
+import { api, isApiOnline, safeApiCall } from '@/lib/api'
 import type {
   OwnerProfile,
   ProfileScope,
@@ -56,7 +56,7 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
     async fetchOwnerProfile(): Promise<StoreVoidSuccess | StoreError> {
       try {
         this.isLoading = true // Set loading state
-        const res = await api.get<GetMyProfileResponse>('/profiles/me')
+        const res = await safeApiCall(() => api.get<GetMyProfileResponse>('/profiles/me'))
         const fetched = OwnerProfileSchema.parse(res.data.profile)
         this.profile = fetched // Update local state
         return storeSuccess()
@@ -107,7 +107,7 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
       if (!parsed.success) return storeError(new Error('Invalid profile data'), 'Failed to update profile')
       try {
         this.isLoading = true // Set loading state
-        const res = await api.patch<UpdateProfileResponse>('/profiles/scopes', parsed.data)
+        const res = await safeApiCall(() => api.patch<UpdateProfileResponse>('/profiles/scopes', parsed.data))
         const fetched = OwnerProfileSchema.parse(res.data.profile)
         if (this.profile)
           Object.assign(this.profile, fetched) // Update local state with new data  
@@ -125,7 +125,7 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
     async persistOwnerProfile(): Promise<StoreVoidSuccess | StoreError> {
       try {
         this.isLoading = true // Set loading state
-        const res = await api.patch<UpdateProfileResponse>('/profiles/me', this.profile)
+        const res = await safeApiCall(() => api.patch<UpdateProfileResponse>('/profiles/me', this.profile))
         const updated = OwnerProfileSchema.parse(res.data.profile)
         this.profile = updated
         return storeSuccess()
@@ -148,7 +148,7 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
     async getProfilePreview(profileId: string, locale: string): Promise<StoreResponse<PublicProfile> | StoreError> {
       try {
         this.isLoading = true // Set loading state
-        const res = await api.get<GetPublicProfileResponse>(`/profiles/preview/${locale}/${profileId}`)
+        const res = await safeApiCall(() => api.get<GetPublicProfileResponse>(`/profiles/preview/${locale}/${profileId}`))
         const fetched = PublicProfileSchema.parse(res.data.profile)
         return storeSuccess(fetched)
       } catch (error: any) {

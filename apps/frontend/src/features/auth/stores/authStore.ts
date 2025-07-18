@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { api, axios } from '@/lib/api'
+import { api, axios, safeApiCall } from '@/lib/api'
 import { bus } from '@/lib/bus'
 import { type UserRoleType } from '@zod/generated'
 
@@ -94,9 +94,9 @@ export const useAuthStore = defineStore('auth', {
         }
       }
       try {
-        const res = await api.get<OtpLoginResponse>('/users/otp-login', {
+        const res = await safeApiCall(() => api.get<OtpLoginResponse>('/users/otp-login', {
           params: { userId, otp },
-        })
+        }))
 
         if (res.data.success === true) {
           this.setAuthState(res.data.token)
@@ -131,7 +131,7 @@ export const useAuthStore = defineStore('auth', {
     }>> {
       // console.log('Sending login link with data:', authId)
       try {
-        const res = await api.post<SendLoginLinkResponse>('/users/send-login-link', authId)
+        const res = await safeApiCall(() => api.post<SendLoginLinkResponse>('/users/send-login-link', authId))
         const params = LoginUserSchema.safeParse(res.data.user)
         if (!params.success) {
           console.error('Invalid user data received:', params.error)
@@ -162,7 +162,7 @@ export const useAuthStore = defineStore('auth', {
 
     async fetchUser(): Promise<UserStoreResponse<{ user: SettingsUser }>> {
       try {
-        const res = await api.get<UserMeResponse>('/users/me')
+        const res = await safeApiCall(() => api.get<UserMeResponse>('/users/me'))
         const params = SettingsUserSchema.safeParse(res.data.user)
         if (!params.success) {
           console.error('Invalid user data received:', params.error)
@@ -192,10 +192,10 @@ export const useAuthStore = defineStore('auth', {
       user: SettingsUser
     }>> {
       try {
-        const res = await api.patch("/users/me", userData)
+        const res = await safeApiCall(() => api.patch("/users/me", userData))
         return { success: true, user: res.data.user }
       } catch (error: any) {
-        console.error('Failed to update profile:', error)
+        // console.error('Failed to update profile:', error)
         const msg = error.response?.data?.message || 'Failed to update profile'
         return { success: false, message: msg }
       }
@@ -216,7 +216,8 @@ export const useAuthStore = defineStore('auth', {
 bus.on('language:changed', async ({ language }) => {
   const store = useAuthStore()
   if (!store.isLoggedIn) return
-  await store.updateUser({ language })
+  // TODO move this into the settings view
+  // await store.updateUser({ language })
 })
 
 

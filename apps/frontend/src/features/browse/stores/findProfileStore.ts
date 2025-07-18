@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { api } from '@/lib/api'
+import { api, isApiOnline, safeApiCall } from '@/lib/api'
 import type {
   PublicProfile,
 } from '@zod/profile/profile.dto'
@@ -81,7 +81,7 @@ export const useFindProfileStore = defineStore('findProfile', {
     async findSocial(): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
       try {
         this.isLoading = true
-        const res = await api.get<GetProfilesResponse>('/find/social')
+        const res = await safeApiCall(() => api.get<GetProfilesResponse>('/find/social'))
         const fetched = PublicProfileArraySchema.parse(res.data.profiles)
         this.profileList = fetched
         return storeSuccess()
@@ -96,7 +96,7 @@ export const useFindProfileStore = defineStore('findProfile', {
     async findDating(): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
       try {
         this.isLoading = true
-        const res = await api.get<GetProfilesResponse>('/find/dating')
+        const res = await safeApiCall(() => api.get<GetProfilesResponse>('/find/dating'))
         const fetched = PublicProfileArraySchema.parse(res.data.profiles)
         this.profileList = fetched
         return storeSuccess()
@@ -111,7 +111,7 @@ export const useFindProfileStore = defineStore('findProfile', {
 
     async fetchNewSocial(): Promise<StoreProfileListResponse> {
       try {
-        const res = await api.get<GetProfilesResponse>('/find/social/new')
+        const res = await safeApiCall(() => safeApiCall(() => api.get<GetProfilesResponse>('/find/social/new')))
         const fetched = PublicProfileArraySchema.parse(res.data.profiles)
         return storeSuccess({ result: fetched })
       } catch (error: any) {
@@ -122,7 +122,7 @@ export const useFindProfileStore = defineStore('findProfile', {
     async fetchDatingPrefs(defaults?: DatingPreferencesDTO): Promise<StoreVoidSuccess | StoreError> {
       try {
         this.isLoading = true
-        const res = await api.get<GetDatingPreferencesResponse>('/find/dating/filter')
+        const res = await safeApiCall(() => api.get<GetDatingPreferencesResponse>('/find/dating/filter'))
         const fetched = DatingPreferencesDTOSchema.parse(res.data.prefs)
         this.datingPrefs = fetched
         return storeSuccess()
@@ -137,7 +137,7 @@ export const useFindProfileStore = defineStore('findProfile', {
     async persistDatingPrefs(): Promise<StoreVoidSuccess | StoreError> {
       try {
         this.isLoading = true
-        const res = await api.patch<GetDatingPreferencesResponse>('/find/dating/filter', this.datingPrefs)
+        const res = await safeApiCall(() => api.patch<GetDatingPreferencesResponse>('/find/dating/filter', this.datingPrefs))
         const updated = DatingPreferencesDTOSchema.parse(res.data.prefs)
         this.datingPrefs = updated
         return storeSuccess()
@@ -151,7 +151,7 @@ export const useFindProfileStore = defineStore('findProfile', {
     async fetchSocialFilter(defaults?: SocialMatchFilterDTO): Promise<StoreVoidSuccess | StoreError> {
       try {
         this.isLoading = true
-        const res = await api.get<GetSocialMatchFilterResponse>('/find/social/filter')
+        const res = await safeApiCall(() => api.get<GetSocialMatchFilterResponse>('/find/social/filter'))
         this.socialFilter = SocialMatchFilterDTOSchema.parse(res.data.filter)
         return storeSuccess()
       } catch (error: any) {
@@ -169,7 +169,7 @@ export const useFindProfileStore = defineStore('findProfile', {
       try {
         this.isLoading = true
         const payload = mapSocialMatchFilterDTOToPayload(this.socialFilter)
-        const res = await api.patch<GetSocialMatchFilterResponse>('/find/social/filter', payload)
+        const res = await safeApiCall(() => api.patch<GetSocialMatchFilterResponse>('/find/social/filter', payload))
         this.socialFilter = SocialMatchFilterDTOSchema.parse(res.data.filter)
         return storeSuccess()
       } catch (error: any) {

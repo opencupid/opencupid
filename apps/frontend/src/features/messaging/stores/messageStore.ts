@@ -1,6 +1,6 @@
 import { defineStore, type Store } from 'pinia'
 
-import { api } from '@/lib/api'
+import { api, safeApiCall } from '@/lib/api'
 import { bus } from '@/lib/bus'
 
 import type {
@@ -96,7 +96,7 @@ export const useMessageStore = defineStore('message', {
         // console.log('Fetching messages for conversation:', conversationId)
         this.isLoading = true // Set loading state
         this.error = null // Reset error state
-        const res = await api.get<MessagesResponse>(`/messages/${conversationId}`)
+        const res = await safeApiCall(() => api.get<MessagesResponse>(`/messages/${conversationId}`))
         console.log('Fetched messages:', res.data)
         if (res.data.success) {
           this.messages = res.data.messages
@@ -115,7 +115,7 @@ export const useMessageStore = defineStore('message', {
       try {
         this.isLoading = true
         this.error = null
-        const res = await api.get<ConversationsResponse>('/messages/conversations')
+        const res = await safeApiCall(() => api.get<ConversationsResponse>('/messages/conversations'))
         if (res.data.success) {
           this.conversations = res.data.conversations
           this.updateUnreadFlag()
@@ -131,7 +131,7 @@ export const useMessageStore = defineStore('message', {
 
     async markAsRead(convoId: string) {
       try {
-        const updateConvo = await api.post<ConversationResponse>(`/messages/conversations/${convoId}/mark-read`)
+        const updateConvo = await safeApiCall(() => api.post<ConversationResponse>(`/messages/conversations/${convoId}/mark-read`))
         if (updateConvo.data.success) {
           const updatedConvo: ConversationSummary = updateConvo.data.conversation
           this.updateConvo(updatedConvo)
@@ -150,7 +150,7 @@ export const useMessageStore = defineStore('message', {
         const payload: SendMessagePayload = { profileId: recipientProfileId, content }
         this.isSending = true
         this.error = null
-        const res = await api.post<SendMessageResponse>(`/messages/message`, payload)
+        const res = await safeApiCall(() => api.post<SendMessageResponse>(`/messages/message`, payload))
         const { conversation, message } = res.data
         if (!message)
           return storeError(new Error('Message not sent'))

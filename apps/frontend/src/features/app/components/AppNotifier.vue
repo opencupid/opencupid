@@ -13,13 +13,16 @@ import { type InteractionEdge } from '@zod/interaction/interaction.dto'
 import MessageReceivedToast from './MessageReceivedToast.vue'
 import LikeReceivedToast from './LikeReceivedToast.vue'
 import MatchReceivedToast from './MatchReceivedToast.vue'
+import { BOverlay } from 'bootstrap-vue-next'
+import { useI18n } from 'vue-i18n'
 
 const toast = useToast()
+const { t } = useI18n()
 
 // API status overlay
 const showApiOfflineOverlay = ref(false)
 
-function toastId(){
+function toastId() {
   return new Date().getUTCMilliseconds()
 }
 
@@ -119,32 +122,27 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <slot/>
-  
-  <!-- API Offline Overlay -->
-  <div 
-    v-if="showApiOfflineOverlay"
-    class="api-offline-overlay"
-    style="
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background-color: rgba(0, 0, 0, 0.3);
-      z-index: 9999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      backdrop-filter: blur(2px);
-    "
+  <slot> </slot>
+
+  <BOverlay
+    :show="showApiOfflineOverlay"
+    no-wrap
+    z-index="1200"
+    spinner-variant="danger"
+    spinner-type="grow"
+    variant="warning"
+    opacity="0.9"
   >
-    <div class="text-center text-white">
-      <div class="spinner-border mb-3" role="status">
-        <span class="visually-hidden">Loading...</span>
+    <template #overlay>
+
+      <div class="text-center text-dark">
+        <h3>{{ t('uicomponents.connection_error.title') }}</h3>
+        <p class="fs-6">
+          {{ t('uicomponents.connection_error.description') }}
+        </p>
+        <BSpinner variant="danger" type="grow" small></BSpinner>
       </div>
-      <h5>Connection lost</h5>
-      <p>Trying to reconnect...</p>
-    </div>
-  </div>
+    </template>
+  </BOverlay>
 </template>
+<style scoped></style>
