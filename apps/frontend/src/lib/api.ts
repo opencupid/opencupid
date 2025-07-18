@@ -20,67 +20,6 @@ export const isApiOnline = () =>
     ? new Promise<void>((resolve) => waitForRecovery.push(resolve))
     : Promise.resolve()
 
-
-// // Request interceptor - no changes needed, but can be used for future enhancements
-// api.interceptors.request.use(
-//   (config) => {
-//     return config
-//   },
-//   (error) => {
-//     return Promise.reject(error)
-//   }
-// )
-
-// // Response interceptor to handle errors and recovery
-// api.interceptors.response.use(
-//   (response) => {
-//     console.log('api state change isOffoline ',isOffline)
-//     // If we were offline and got a successful response, mark as online
-//     if (isOffline) {
-//       isOffline = false
-//       bus.emit('api:online')
-
-//       // ✅ resolve all pending waiters
-//       waitForRecovery.forEach((fn) => fn())
-//       waitForRecovery = []
-
-//       // Clear any pending retry
-//       if (retryTimeoutId) {
-//         clearTimeout(retryTimeoutId)
-//         retryTimeoutId = null
-//       }
-//     }
-//     return response
-//   },
-//   (error) => {
-//     console.log('got error ', error.code)
-//     // Check for network-related errors
-//     const isNetworkError =
-//       [
-//         'ECONNABORTED',
-//         'ENETUNREACH',
-//         'ENOTFOUND',
-//         'ECONNREFUSED',
-//         'ETIMEDOUT',
-//         'ECONNRESET',
-//         'ERR_NETWORK',
-//         'ERR_BAD_RESPONSE',
-//       ].includes(error.code) || !error.response
-
-
-//     if (isNetworkError && !isOffline) {
-//       isOffline = true
-//       bus.emit('api:offline')
-
-//       // Start periodic retry to detect recovery
-//       startRetryMechanism()
-//     }
-
-//     return Promise.reject(error)
-//   }
-// )
-
-
 // // Periodic retry mechanism to detect API recovery - only used in non-development environments
 function startRetryMechanism() {
   if (retryTimeoutId) {
@@ -118,6 +57,8 @@ api.interceptors.response.use(
     return response
   },
   (error) => {
+    // TODO verify that this is really neccessary (== safeApiCall is used
+    // *everywhere* to wrap api requests) and remove if redundant.
     const isNetworkError =
       !error.response || [
         'ECONNABORTED',
@@ -166,7 +107,7 @@ export async function safeApiCall<T>(fn: () => Promise<T>): Promise<T> {
       isOffline = true
       startRetryMechanism()
       await isApiOnline()
-      return safeApiCall(fn) // ⏳ try again after recovery
+      return safeApiCall(fn) // try again after recovery
     }
 
     throw err
