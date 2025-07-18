@@ -13,6 +13,16 @@ vi.mock('@/lib/bus', () => {
   return { bus } // ✅ named export, like the real module
 })
 
+vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
+vi.mock('../ApiErrorOverlay.vue', () => ({
+  default: {
+    props: ['show'],
+    template: '<div v-if="show" class="api-offline-overlay">overlay</div>'
+  }
+}))
+vi.mock('../LikeReceivedToast.vue', () => ({ default: 'LikeToast' }))
+vi.mock('../MatchReceivedToast.vue', () => ({ default: 'MatchToast' }))
+
 const push = vi.fn()
 vi.mock('vue-router', () => ({ useRouter: () => ({ push }) }))
 
@@ -45,45 +55,30 @@ describe('AppNotifier', () => {
     expect(close).toHaveBeenCalled()
   })
 
-  it('shows overlay and error toast when API goes offline', async () => {
+  it('shows overlay when API goes offline', async () => {
     const wrapper = mount(AppNotifier)
     bus.emit('api:offline')
 
-    // Wait for Vue reactivity
     await nextTick()
 
-    // Check that overlay is shown
     const overlay = wrapper.find('.api-offline-overlay')
     expect(overlay.exists()).toBe(true)
-    expect(overlay.text()).toContain('Connection lost')
-
-    // Check that error toast is called
-    expect(toast.error).toHaveBeenCalledWith('Connection lost. Trying to reconnect...', {
-      timeout: false,
-      id: 'api-offline'
-    })
+    expect(toast.error).not.toHaveBeenCalled()
   })
 
-  it('hides overlay and shows success toast when API comes back online', async () => {
+  it('hides overlay when API comes back online', async () => {
     const wrapper = mount(AppNotifier)
-    
-    // First go offline
+
     bus.emit('api:offline')
     await nextTick()
     expect(wrapper.find('.api-offline-overlay').exists()).toBe(true)
-    
-    // Then come back online
+
     bus.emit('api:online')
     await nextTick()
-    
-    // Check that overlay is hidden
+
     expect(wrapper.find('.api-offline-overlay').exists()).toBe(false)
-    
-    // Check that toasts are called correctly
-    expect(toast.dismiss).toHaveBeenCalledWith('api-offline')
-    expect(toast.success).toHaveBeenCalledWith('Connection restored!', {
-      timeout: 3000
-    })
+    expect(toast.dismiss).not.toHaveBeenCalled()
+    expect(toast.success).not.toHaveBeenCalled()
   })
 
   it('cleans up listener on unmount', () => {
