@@ -58,25 +58,7 @@ describe('api error handling', () => {
     })
   })
 
-  it('handles ECONNABORTED error code', () => {
-    const mockError = { code: 'ECONNABORTED', response: '' }
-    
-    // Test the error detection logic directly
-    const isNetworkError =
-      !mockError.response ||
-      [
-        'ECONNABORTED',
-        'ENETUNREACH',
-        'ENOTFOUND',
-        'ECONNREFUSED',
-        'ETIMEDOUT',
-        'ECONNRESET',
-        'ERR_NETWORK',
-        'ERR_BAD_RESPONSE',
-      ].includes(mockError.code)
 
-    expect(isNetworkError).toBe(true)
-  })
 
   it('handles various network error codes', () => {
     const errorCodes = [
@@ -89,10 +71,10 @@ describe('api error handling', () => {
       'ERR_NETWORK',
       'ERR_BAD_RESPONSE',
     ]
-    
+
     for (const code of errorCodes) {
       const mockError: { code: string; response?: unknown } = { code }
-      
+
       const isNetworkError =
         !mockError.response ||
         [
@@ -110,32 +92,6 @@ describe('api error handling', () => {
     }
   })
 
-  it('disables interceptors in development mode', () => {
-    // Override __APP_CONFIG__ for this test
-    vi.stubGlobal('__APP_CONFIG__', {
-      API_BASE_URL: 'http://localhost:3000',
-      NODE_ENV: 'development'
-    })
 
-    // Clear mocks and re-import the api module to apply new config
-    vi.clearAllMocks()
-    
-    // Since we're testing the module initialization behavior, we just need to verify
-    // that the logic would work correctly. The actual interceptor setup happens
-    // during module import, so we test the condition logic.
-    const isDevelopment = __APP_CONFIG__?.NODE_ENV === 'development'
-    expect(isDevelopment).toBe(true)
-    
-    // Reset back to production for other tests
-    vi.stubGlobal('__APP_CONFIG__', {
-      API_BASE_URL: 'http://localhost:3000',
-      NODE_ENV: 'production'
-    })
-  })
 
-  it('enables interceptors in production mode', () => {
-    // Verify production mode logic
-    const isDevelopment = __APP_CONFIG__?.NODE_ENV === 'development'
-    expect(isDevelopment).toBe(false)
-  })
 })

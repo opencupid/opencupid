@@ -195,7 +195,7 @@ export const useAuthStore = defineStore('auth', {
         const res = await safeApiCall(() => api.patch("/users/me", userData))
         return { success: true, user: res.data.user }
       } catch (error: any) {
-        // console.error('Failed to update profile:', error)
+        console.error('Failed to update profile:', error)
         const msg = error.response?.data?.message || 'Failed to update profile'
         return { success: false, message: msg }
       }

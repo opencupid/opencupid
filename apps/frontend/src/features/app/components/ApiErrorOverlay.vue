@@ -13,11 +13,11 @@ const { t } = useI18n()
   <BOverlay
     :show="show"
     no-wrap
-    z-index="1200"
+    :z-index="1200"
     spinner-variant="danger"
     spinner-type="grow"
     variant="warning"
-    opacity="0.9"
+    :opacity="0.9"
   >
     <template #overlay>
       <div class="text-center text-dark">
