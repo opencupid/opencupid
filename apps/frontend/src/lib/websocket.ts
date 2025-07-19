@@ -1,6 +1,6 @@
 import { useWebSocket } from '@vueuse/core'
 import { bus } from '@/lib/bus'
-import type { WSMessage } from '@zod/websocket.dto'
+import type { WSMessage } from '@zod/dto/websocket.dto'
 
 let socket: ReturnType<typeof useWebSocket> | null = null
 
