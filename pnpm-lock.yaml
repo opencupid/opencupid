@@ -507,8 +507,6 @@ importers:
         specifier: ^2.2.12
         version: 2.2.12(typescript@5.8.3)
 
-  apps/imgsrv: {}
-
   packages/shared:
     devDependencies:
       '@prisma/client':
