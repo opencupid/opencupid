@@ -69,13 +69,6 @@ export const define = (mode: string) => {
         NODE_ENV: env.NODE_ENV,
         VAPID_PUBLIC_KEY: env.VAPID_PUBLIC_KEY,
         SENTRY_DSN: env.SENTRY_DSN,
-
-        // build time variables
-        OG_TITLE: env.OG_TITLE,
-        OG_DESCRIPTION: env.OG_DESCRIPTION,
-        OG_IMAGE: env.OG_IMAGE,
-        OG_URL: env.OG_URL,
-        OG_TYPE: env.OG_TYPE,
         SITE_NAME: env.SITE_NAME,
       }),
     }
