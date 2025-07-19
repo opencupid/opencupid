@@ -13,7 +13,7 @@ const showModal = defineModel<boolean>({
   type: Boolean,
 })
 
-const shareUrl = __APP_CONFIG__.FRONTEND_URL
+const shareUrl = window.location.origin
 const qrcode = useQRCode(shareUrl, {
   errorCorrectionLevel: 'H',
   margin: 3,

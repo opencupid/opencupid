@@ -19,7 +19,6 @@ declare const __APP_CONFIG__: {
   readonly API_BASE_URL: string
   readonly WS_BASE_URL: string
   readonly IMAGE_URL_BASE: string
-  readonly FRONTEND_URL: string
   readonly NODE_ENV: string
   readonly VAPID_PUBLIC_KEY: string
   readonly OG_TITLE: string

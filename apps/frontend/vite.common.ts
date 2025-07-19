@@ -66,16 +66,17 @@ export const define = (mode: string) => {
         API_BASE_URL: env.API_BASE_URL,
         WS_BASE_URL: env.WS_BASE_URL,
         IMAGE_URL_BASE: env.IMAGE_URL_BASE,
-        FRONTEND_URL: env.FRONTEND_URL,
         NODE_ENV: env.NODE_ENV,
         VAPID_PUBLIC_KEY: env.VAPID_PUBLIC_KEY,
+        SENTRY_DSN: env.SENTRY_DSN,
+
+        // build time variables
         OG_TITLE: env.OG_TITLE,
         OG_DESCRIPTION: env.OG_DESCRIPTION,
         OG_IMAGE: env.OG_IMAGE,
         OG_URL: env.OG_URL,
         OG_TYPE: env.OG_TYPE,
         SITE_NAME: env.SITE_NAME,
-        SENTRY_DSN: env.SENTRY_DSN,
       }),
     }
   }
