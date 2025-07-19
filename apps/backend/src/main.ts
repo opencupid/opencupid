@@ -42,10 +42,6 @@ async function main() {
   app.register(import('./plugins/session-auth'))
   app.register(import('./plugins/rate-limiter'))
 
-  if (process.env.RECORD_API === 'true') {
-    app.register(import('./plugins/api-recorder'))
-  }
-
   // API routes
   app.register(import('./api'), { prefix: '/api' })
 
