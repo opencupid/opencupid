@@ -69,7 +69,6 @@ export const define = (mode: string) => {
         FRONTEND_URL: env.FRONTEND_URL,
         NODE_ENV: env.NODE_ENV,
         VAPID_PUBLIC_KEY: env.VAPID_PUBLIC_KEY,
-        GEOIP_URL: env.GEOIP_URL,
         OG_TITLE: env.OG_TITLE,
         OG_DESCRIPTION: env.OG_DESCRIPTION,
         OG_IMAGE: env.OG_IMAGE,
