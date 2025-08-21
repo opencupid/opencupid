@@ -92,6 +92,7 @@ services:
       - ${EMAIL}
       - --agree-tos
       - --no-eff-email
+      - --standalone
 
 volumes:
   redis-data:
