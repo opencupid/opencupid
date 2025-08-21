@@ -36,10 +36,28 @@ pnpm lint
 pnpm --filter frontend type-check
 ```
 
-## Running production instance
-```
-cp .env.example .env  # create default configuration
+## Running a production instance
+```bash
+# create default configuration
+cp .env.example .env  
 # edit .env to customize the instance
+# create data volumes
+docker volume create postgres_data
+docker volume create certbot-etc
+docker volume create certbot-webroot
+# obtain TLS cert from Letsencrypt via certbot  (https://eff-certbot.readthedocs.io/en/latest/install.html#running-with-docker)
+docker compose -f docker-compose.production.yml run --rm certbot-init
 docker compose -f docker-compose.production.yml build
 docker compose -f docker-compose.production.yml up -d
 ```
+
+## Call for collaborators
+
+If you like the project and would like to improve it in some way, there are several ways to contribute:
+
+* Run the software in your community
+* OpenCupid currently speaks English and Hungarian. We are looking for help translating into other languages to make the software accessible to more communities. 
+* Test the platform and file issues for bugs/problems you find (don't need to be a developer to do this)
+* Work on open Github issues
+
+🙏
