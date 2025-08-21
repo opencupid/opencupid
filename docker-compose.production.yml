@@ -67,6 +67,32 @@ services:
     env_file:
       - .env
 
+  # this obtains the initial cert from letsencrypt
+  certbot-init:
+    image: certbot/certbot
+    restart: "no" # prevents auto start with `up`
+    ports:
+      - "80:80"
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-webroot:/var/www/html
+    env_file:
+      - .env
+    entrypoint: certbot
+    command:
+      - certonly
+      - --webroot
+      - -w
+      - /var/www/html
+      - -d
+      - ${DOMAIN}
+      - -d
+      - ${DOMAIN}
+      - --email
+      - ${EMAIL}
+      - --agree-tos
+      - --no-eff-email
+
 volumes:
   redis-data:
     driver: local
