@@ -81,6 +81,10 @@ const placeholderSlots = computed(() => {
 const remainingSlots = computed(() => {
   return props.maxImages - model.value.length
 })
+
+const isDeletable = computed(() => {
+  return model.value.length > 1
+})
 </script>
 
 <template>
@@ -109,6 +113,7 @@ const remainingSlots = computed(() => {
                   @mousedown.stop.prevent
                   @click="handleDelete(img)"
                   :disabled="isRemoving[img.id]"
+                  v-if="isDeletable"
                 >
                   <FontAwesomeIcon :icon="faXmark" />
                 </button>
