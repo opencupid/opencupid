@@ -217,7 +217,7 @@ bus.on('language:changed', async ({ language }) => {
   const store = useAuthStore()
   if (!store.isLoggedIn) return
   // TODO move this into the settings view
-  // await store.updateUser({ language })
+  await store.updateUser({ language })
 })
 
 
