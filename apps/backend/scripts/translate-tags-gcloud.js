@@ -6,7 +6,7 @@ const prisma = new PrismaClient()
 // Parse credentials JSON from env
 const translate = new Translate.Translate()
 
-const TARGET_LOCALES = ['fr', 'de', 'hu', 'es', 'fr', 'it', 'pt', 'sk', 'pl', 'ro', 'nl']
+const TARGET_LOCALES = ['en-GB', 'fr', 'de', 'hu', 'es', 'fr', 'it', 'pt-PT', 'sk', 'pl', 'ro', 'nl']
 
 const dryRun = false // Toggle this
 
@@ -24,9 +24,11 @@ async function main() {
 
   for (const tag of tags) {
     const existing = new Set(tag.translations.map(t => t.locale))
+    const sourceLocale = tag.originalLocale || 'en'
 
-    for (const locale of TARGET_LOCALES) {
-      if (existing.has(locale)) continue
+    for (const longLocale of TARGET_LOCALES) {
+      const locale = longLocale.slice(0,2) // Use only the first two characters for locale
+      if (existing.has(locale) || locale === sourceLocale.slice(0,2)) continue
 
       try {
         const translated = await translateText(tag.name, locale)

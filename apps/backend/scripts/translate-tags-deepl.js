@@ -7,7 +7,7 @@ const prisma = new PrismaClient()
 const authKey = process.env.DEEPL_API_KEY
 const deeplClient = new deepl.DeepLClient(authKey);
 
-const TARGET_LOCALES = ['fr', 'de', 'hu', 'es', 'fr', 'it', 'pt-PT', 'sk', 'pl', 'ro', 'nl']
+const TARGET_LOCALES = ['en-GB', 'fr', 'de', 'hu', 'es', 'fr', 'it', 'pt-PT', 'sk', 'pl', 'ro', 'nl']
 
 const dryRun = false // Toggle this
 
