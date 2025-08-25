@@ -71,8 +71,11 @@ services:
   certbot-init:
     image: certbot/certbot
     restart: "no" # prevents auto start with `up`
-    ports:
-      - "80:80"
+
+    # enable this before running this, and disable after
+    # so that ingress can use port 80
+#    ports:
+#      - "80:80"
     volumes:
       - certbot-etc:/etc/letsencrypt
       - certbot-webroot:/var/www/html
