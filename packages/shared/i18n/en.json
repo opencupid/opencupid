@@ -68,9 +68,9 @@
   },
   "auth": {
     "login": "Login",
-    "auth_id_input_empty": "Please enter your email address or phone number.",
-    "auth_id_input_label": "Email or phone Number",
-    "auth_id_input_placeholder": "+12 34567121 or your email.com",
+    "auth_id_input_empty": "Please enter your email address.",
+    "auth_id_input_label": "Email",
+    "auth_id_input_placeholder": " ",
     "captcha_input_label": "I am a human being",
     "captcha_verify": "Let's check",
     "captcha_verifying": "Hang on a sec...",
