@@ -1,8 +1,8 @@
 {
   "general": {
     "connectiontypes": {
-      "dating": "Ismerkedés",
-      "socializing": "Szocializálódás"
+      "dating": "Társ",
+      "socializing": "Koma"
     }
   },
   "gender": {

@@ -1,8 +1,8 @@
 {
   "general": {
     "connectiontypes": {
-      "dating": "Dating",
-      "socializing": "Socializing"
+      "dating": "Date",
+      "socializing": "Buddy"
     }
   },
   "landingpage": {

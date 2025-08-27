@@ -2,6 +2,7 @@
 import IconDate from '@/assets/icons/app/cupid.svg'
 import IconSocialize from '@/assets/icons/app/socialize.svg'
 import { type ProfileScope } from '@zod/profile/profile.dto'
+import { T } from 'vitest/dist/chunks/reporters.d.BFLkQcL6.js'
 
 const currentScope = defineModel<ProfileScope | null>()
 </script>
@@ -17,8 +18,10 @@ const currentScope = defineModel<ProfileScope | null>()
       :checked="currentScope === 'social'"
       @click="currentScope = 'social'"
     />
-    <label class="social btn btn-outline-social" for="social"
-      ><IconSocialize class="svg-icon-100"
+    <label class="social btn btn-outline-social d-flex align-items-center flex-row justify-content-right" for="social"
+      :title="$t('general.connectiontypes.socializing')">
+      <span class="d-none d-sm-inline">{{ $t('general.connectiontypes.socializing') }}</span>
+      <IconSocialize class="svg-icon-100"
     /></label>
 
     <input
@@ -30,7 +33,9 @@ const currentScope = defineModel<ProfileScope | null>()
       :checked="currentScope === 'dating'"
       @click="currentScope = 'dating'"
     />
-    <label class="dating btn btn-outline-dating" for="dating">
+    <label class="dating btn btn-outline-dating d-flex align-items-center flex-row justify-content-left" for="dating"
+          :title="$t('general.connectiontypes.dating')">
+      <span class="d-none d-sm-inline">{{ $t('general.connectiontypes.dating') }}</span>
       <IconDate class="svg-icon-100" />
     </label>
   </div>
