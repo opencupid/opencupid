@@ -11,7 +11,7 @@ services:
     env_file:
       - .env
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ${POSTGRES_DATADIR}:/var/lib/postgresql/data
 
   backend:
     image: ghcr.io/opencupid/opencupid-backend
@@ -53,31 +53,30 @@ services:
       - '80:80'
     volumes:
       - ${MEDIA_UPLOAD_DIR}:/var/www
-      - certbot-etc:/etc/letsencrypt
+      - ${CERTBOT_ETCDIR}:/etc/letsencrypt
       - certbot-webroot:/var/www/html
 
   certbot:
     image: certbot/certbot
     restart: always
     volumes:
-      - certbot-etc:/etc/letsencrypt
+      - ${CERTBOT_ETCDIR}:/etc/letsencrypt
       - certbot-webroot:/var/www/html
     entrypoint: /bin/sh
     command: -c "sleep infinity"
     env_file:
       - .env
 
-  # this obtains the initial cert from letsencrypt
+  # this obtains the initial cert from letsencrypt. Should be run once manually.
   certbot-init:
     image: certbot/certbot
-    restart: "no" # prevents auto start with `up`
+    restart: no # don't auto start this
 
-    # enable this before running this, and disable after
-    # so that ingress can use port 80
+    # enable this before running certbot-init, and disable after so that ingress can use port 80
 #    ports:
 #      - "80:80"
     volumes:
-      - certbot-etc:/etc/letsencrypt
+      - ${CERTBOT_ETCDIR}:/etc/letsencrypt
       - certbot-webroot:/var/www/html
     env_file:
       - .env
@@ -100,8 +99,4 @@ services:
 volumes:
   redis-data:
     driver: local
-  postgres_data:
-    external: true
-  certbot-etc:
-    external: true
   certbot-webroot:
