@@ -35,7 +35,7 @@
     "@vueuse/integrations": "^13.5.0",
     "altcha": "^2.0.5",
     "animate.css": "^4.1.1",
-    "axios": "^1.10.0",
+    "axios": "^1.11.0",
     "bootstrap": "^5.3.7",
     "bootstrap-vue-next": "^0.30.4",
     "find-up": "^7.0.0",
