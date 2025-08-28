@@ -1,5 +1,15 @@
 version: 2
 updates:
+  # Force manifest bumps for selected direct deps
+  - package-ecosystem: npm
+    directory: "/"
+    schedule: { interval: daily }
+    versioning-strategy: increase
+    allow:
+      - dependency-name: "@fastify/*"
+      - dependency-name: "zod"
+      - dependency-name: "vue"
+      - dependency-name: "bootstrap"
   - package-ecosystem: npm 
     directory: "/" 
     schedule:
