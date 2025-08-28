@@ -99,7 +99,7 @@ const hint = computed(() => history?.state?.hint || null)
     <EditableFields v-model="formData" :editState="viewState.isEditable" @updated="updateProfile">
       <StoreErrorOverlay v-if="error" :error />
       <div v-else class="d-flex flex-column justify-content-center h-100">
-        <div class="col-12 col-sm-8 mx-auto position-relative">
+        <MiddleColumn class="pt-sm-3 position-relative">
           <div class="d-flex flex-row justify-content-between align-items-center my-2">
             <div
               style="height: 3rem"
@@ -126,7 +126,7 @@ const hint = computed(() => history?.state?.hint || null)
               </div>
             </div>
           </div>
-        </div>
+        </MiddleColumn>
         <div class="overflow-auto h-100">
           <MiddleColumn class="pt-sm-3 position-relative flex-grow-1" style="min-height: 100%">
             <ProfileContent
