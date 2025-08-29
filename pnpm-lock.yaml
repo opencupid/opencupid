@@ -345,7 +345,7 @@ importers:
         version: 1.5.4
       remeda:
         specifier: ^2.24.0
-        version: 2.25.0
+        version: 2.30.0
       vue:
         specifier: ^3.5.17
         version: 3.5.17(typescript@5.8.3)
@@ -5362,8 +5362,8 @@ packages:
     resolution: {integrity: sha512-gUAyHVHPPC5wdqX/LG4LWtRYtgjxyX78oanFNTMMyFEfOqdC54s3eE82imuWKbOeqYht2CrNf64Qb8vgmmtZGA==}
     engines: {node: '>=4'}
 
-  remeda@2.25.0:
-    resolution: {integrity: sha512-4dT2oiS/CS5IcnReZfrdQybe3il2oH7ozO1+LxGiJe7wBwhIfikzaIi+qSjE0HesRJ6tS8wsWrM34WxgGgkn/Q==}
+  remeda@2.30.0:
+    resolution: {integrity: sha512-TcRpI1ecqnMer3jHhFtMerGvHFCDlCHljUp0/9A4HxHOh5bSY3kP1l8nQDFMnWYJKl3MSarDNY1tb0Bs/bCmvw==}
 
   replace-string@3.1.0:
     resolution: {integrity: sha512-yPpxc4ZR2makceA9hy/jHNqc7QVkd4Je/N0WRHm6bs3PtivPuPynxE5ejU/mp5EhnCv8+uZL7vhz8rkluSlx+Q==}
@@ -12062,7 +12062,7 @@ snapshots:
     dependencies:
       es6-error: 4.1.1
 
-  remeda@2.25.0:
+  remeda@2.30.0:
     dependencies:
       type-fest: 4.41.0
 
