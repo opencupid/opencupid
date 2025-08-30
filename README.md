@@ -18,31 +18,13 @@ Unlike commercial matchmaking apps, OpenCupid is free from dark patterns and man
 - Backend: Node.js + Fastify + Prisma
 - DB: PostgreSQL
 
-## Getting started with development
-
-```bash
-docker compose up -d # start DB and Redis
-pnpm install
-cp .env.example .env
-pnpm dev
-```
-
-## Running tests and code quality checks
-
-```bash
-pnpm install 
-pnpm --filter backend generate  # generate prisma client
-
-pnpm test  # this runs all of the tests in backend/frontend
-
-# lint
-pnpm lint
-pnpm --filter frontend type-check
-```
-
 ## Running a production instance
 
 See [DEPLOYMENT.md](docs/DEPLOYMENT.md).
+
+## Getting started with development
+
+See [DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 ## Call for collaborators
 
