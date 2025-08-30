@@ -10,6 +10,8 @@ import './workers/emailWorker' // ← side‐effect: starts the worker
 import { checkImageRoot } from '@/lib/media'
 
 import { ImageProcessor } from './services/imageprocessor'
+import fs from 'fs'
+import path from 'path'
 
 async function main() {
   const app = Fastify({
@@ -28,6 +30,26 @@ async function main() {
           },
     },
   })
+
+  // Log version information at startup
+  try {
+    const versionPath = path.join(process.cwd(), 'dist', 'version.json')
+    
+    if (fs.existsSync(versionPath)) {
+      const versionData = JSON.parse(fs.readFileSync(versionPath, 'utf8'))
+      app.log.info({
+        app: versionData.app || 'unknown',
+        frontend: versionData.frontend || 'unknown', 
+        backend: versionData.backend || 'unknown',
+        commit: versionData.commit || 'unknown',
+        timestamp: versionData.timestamp || 'unknown'
+      }, '🚀 Starting server with version info')
+    } else {
+      app.log.info('🚀 Starting server (version.json not found)')
+    }
+  } catch (err) {
+    app.log.warn('Could not read version info at startup:', err)
+  }
 
   // Register CORS plugin
   app.register(cors, {
