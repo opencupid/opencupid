@@ -34,8 +34,8 @@ export const configSchema = z.object({
 
   ALTCHA_HMAC_KEY: z.string().uuid(),
 
-  VAPID_PUBLIC_KEY: z.string().min(10),
-  VAPID_PRIVATE_KEY: z.string().min(10),
+  VAPID_PUBLIC_KEY: z.string().optional(),
+  VAPID_PRIVATE_KEY: z.string().optional(),
 
   SENTRY_DSN: z.string().optional(),
 
