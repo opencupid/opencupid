@@ -5,10 +5,24 @@ const fs = require('fs')
 const path = require('path')
 
 /**
+ * Reads package.json version from a given path
+ */
+function getPackageVersion(packagePath) {
+  try {
+    const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf8'))
+    return packageJson.version || 'unknown'
+  } catch (err) {
+    console.warn(`Warning: Could not read package version from ${packagePath}:`, err.message)
+    return 'unknown'
+  }
+}
+
+/**
  * Generates version.json file with build-time metadata
  */
 function generateVersionInfo() {
   const outputPath = path.join(__dirname, '..', 'dist', 'version.json')
+  const repoRoot = path.join(__dirname, '..', '..', '..')
   
   let version = 'unknown'
   let commit = 'unknown'
@@ -33,12 +47,20 @@ function generateVersionInfo() {
     console.warn('Warning: Could not get git commit hash:', err.message)
   }
   
+  // Get package versions
+  const appVersion = getPackageVersion(path.join(repoRoot, 'package.json'))
+  const frontendVersion = getPackageVersion(path.join(repoRoot, 'apps', 'frontend', 'package.json'))
+  const backendVersion = getPackageVersion(path.join(repoRoot, 'apps', 'backend', 'package.json'))
+  
   const timestamp = new Date().toISOString()
   
   const versionInfo = {
     version,
     commit,
-    timestamp
+    timestamp,
+    app: appVersion,
+    frontend: frontendVersion,
+    backend: backendVersion
   }
   
   // Ensure dist directory exists

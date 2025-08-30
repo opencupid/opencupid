@@ -20,22 +20,52 @@ const appRoutes: FastifyPluginAsync = async fastify => {
     try {
       const versionPath = path.join(process.cwd(), 'dist', 'version.json')
       
-      // Check if version.json exists
-      if (!fs.existsSync(versionPath)) {
-        const fallbackVersion: VersionDTO = {
-          version: 'development',
-          commit: 'unknown',
-          timestamp: new Date().toISOString()
-        }
-        const payload = VersionSchema.parse(fallbackVersion)
-        return reply.code(200).send({ success: true, version: payload })
+      // Default fallback version info
+      let versionInfo = {
+        version: 'development',
+        commit: 'unknown',
+        timestamp: new Date().toISOString(),
+        app: 'unknown',
+        frontend: 'unknown',
+        backend: 'unknown'
       }
       
-      // Read and parse version.json
-      const versionData = fs.readFileSync(versionPath, 'utf8')
-      const versionInfo = JSON.parse(versionData)
-      const payload = VersionSchema.parse(versionInfo)
+      // Check if version.json exists and read it
+      if (fs.existsSync(versionPath)) {
+        try {
+          const versionData = fs.readFileSync(versionPath, 'utf8')
+          const fileInfo = JSON.parse(versionData)
+          versionInfo = { ...versionInfo, ...fileInfo }
+        } catch (parseErr) {
+          fastify.log.warn('Could not parse version.json:', parseErr)
+        }
+      }
       
+      // If package versions are missing, try to read them directly
+      if (versionInfo.app === 'unknown' || versionInfo.frontend === 'unknown' || versionInfo.backend === 'unknown') {
+        try {
+          const repoRoot = path.join(process.cwd(), '..')
+          
+          if (versionInfo.app === 'unknown') {
+            const rootPkg = JSON.parse(fs.readFileSync(path.join(repoRoot, 'package.json'), 'utf8'))
+            versionInfo.app = rootPkg.version || 'unknown'
+          }
+          
+          if (versionInfo.frontend === 'unknown') {
+            const frontendPkg = JSON.parse(fs.readFileSync(path.join(repoRoot, 'apps', 'frontend', 'package.json'), 'utf8'))
+            versionInfo.frontend = frontendPkg.version || 'unknown'
+          }
+          
+          if (versionInfo.backend === 'unknown') {
+            const backendPkg = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf8'))
+            versionInfo.backend = backendPkg.version || 'unknown'
+          }
+        } catch (pkgErr) {
+          fastify.log.warn('Could not read package versions:', pkgErr)
+        }
+      }
+      
+      const payload = VersionSchema.parse(versionInfo)
       return reply.code(200).send({ success: true, version: payload })
     } catch (err) {
       fastify.log.error(err)

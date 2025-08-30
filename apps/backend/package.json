@@ -1,5 +1,6 @@
 {
   "name": "backend",
+  "version": "1.0.0",
   "main": "dist/main.js",
   "scripts": {
     "dev": "tsup --watch --onSuccess \"node --inspect dist/main.js\"",

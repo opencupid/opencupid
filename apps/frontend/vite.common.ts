@@ -59,6 +59,24 @@ export const define = (mode: string) => {
     ...process.env,
     ...loadEnv(mode, envDir, ''),
   }
+
+  // Read package versions
+  const repoRoot = path.resolve(__dirname, '../..')
+  const getPackageVersion = (packagePath: string) => {
+    try {
+      const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf8'))
+      return packageJson.version || 'unknown'
+    } catch {
+      return 'unknown'
+    }
+  }
+
+  const versions = {
+    app: getPackageVersion(path.join(repoRoot, 'package.json')),
+    frontend: getPackageVersion(path.join(repoRoot, 'apps', 'frontend', 'package.json')),
+    backend: getPackageVersion(path.join(repoRoot, 'apps', 'backend', 'package.json')),
+  }
+
   return {
     envDir: '../../',
     define: {
@@ -71,6 +89,7 @@ export const define = (mode: string) => {
         SENTRY_DSN: env.SENTRY_DSN,
         SITE_NAME: env.SITE_NAME,
       }),
+      __APP_VERSION__: JSON.stringify(versions),
     }
   }
 }
