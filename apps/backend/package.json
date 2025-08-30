@@ -1,6 +1,7 @@
 {
   "name": "backend",
   "main": "dist/main.js",
+  "type": "module",
   "scripts": {
     "dev": "tsup --watch --onSuccess \"node --inspect dist/main.js\"",
     "build": "tsup && node scripts/generate-version.js && tsup --config tsup.scripts.config.ts",
@@ -16,7 +17,7 @@
     "images:reprocess": "npx tsx scripts/reprocess-images.ts",
     "redis:flush": "docker compose exec redis redis-cli FLUSHALL",
     "redis:sessions": "docker compose exec redis  redis-cli KEYS '*'",
-    "tags:translate": "npx scripts/translate-tags-deepl.ts",
+    "tags:translate": "npx node scripts/translate-tags-deepl.js",
     "db:psql": "docker compose exec db psql -U appuser app",
     "db:dump": "docker compose exec db pg_dump  --data-only --no-privileges  --disable-triggers -U appuser app",
     "db:backup": "docker compose exec db pg_dump --clean -U appuser app",
@@ -53,6 +54,7 @@
     "i18next-fs-backend": "^2.6.0",
     "ioredis": "^5.6.1",
     "jsdom": "^26.1.0",
+    "node": "^22.19.0",
     "nodemailer": "^7.0.3",
     "otp-generator": "^4.0.1",
     "sharp": "^0.34.2",
