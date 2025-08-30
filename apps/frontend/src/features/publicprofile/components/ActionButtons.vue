@@ -53,7 +53,7 @@ const handleMessageIntent = () => {
       <JoinCallButton v-if="!isOwner" :with-profile-id="profile.id" />
     </div>
 
-    <SendMessageDialog v-model="showMessageModal" />
+    <SendMessageDialog v-model="showMessageModal" :profile="profile" />
   </div>
 </template>
 
