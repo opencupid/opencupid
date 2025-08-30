@@ -22,7 +22,7 @@ const viewerLocation = ref(viewerProfile?.value.location)
     @click="$emit('click', profile.id)"
   >
     <div class="ratio ratio-1x1">
-      <ProfileImage :profile="profile" className="" />
+      <ProfileImage :profile="profile" className="" context="card"/>
     </div>
     <div class="overlay d-flex flex-column flex-grow-1">
       <div class="card-title mb-0 pb-0 d-flex align-items-center justify-content-between flex-row">

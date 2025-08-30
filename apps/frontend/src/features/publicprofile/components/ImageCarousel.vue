@@ -20,7 +20,7 @@ const handleCloseClick = () => (showModal.value = false)
 
 <template>
   <div class="image-carousel">
-    <BCarousel controls v-model="slide" v-if="!showModal" class="h-100">
+    <BCarousel controls v-model="slide" v-show="!showModal" class="h-100">
       <BCarouselSlide
         v-for="img in props.profile.profileImages"
         :key="img.position"
@@ -29,7 +29,7 @@ const handleCloseClick = () => (showModal.value = false)
       >
         <template #img>
           <div class="ratio ratio-4x3">
-            <ImageTag :image="img" className="fitted-image" />
+            <ImageTag :image="img" className="fitted-image" variant="profile" />
           </div>
         </template>
       </BCarouselSlide>
@@ -50,7 +50,7 @@ const handleCloseClick = () => (showModal.value = false)
       <template #header-close>
         <IconCross class="svg-icon" />
       </template>
-      <BCarousel controls indicators v-model="slide" class="w-100 h-100" v-if="showModal">
+      <BCarousel controls indicators v-model="slide" class="w-100 h-100" v-show="showModal">
         <BCarouselSlide
           v-for="img in props.profile.profileImages"
           :key="img.position"
@@ -58,8 +58,10 @@ const handleCloseClick = () => (showModal.value = false)
           class="bg-black d-flex justify-content-center align-items-center flex-column h-100"
         >
           <template #img>
-            <div class="w-100 d-flex justify-content-center align-items-center overflow-hidden">
-              <ImageTag :image="img" className="fitted-image" />
+            <div
+              class="w-100 h-100 d-flex justify-content-center align-items-center overflow-hidden"
+            >
+              <ImageTag :image="img" className="fitted-image" context="full" />
             </div>
           </template>
         </BCarouselSlide>
@@ -74,10 +76,11 @@ const handleCloseClick = () => (showModal.value = false)
   height: 100%;
 }
 .modal.carousel-modal {
-  .fitted-image img {
+  .fitted-image {
     max-width: 100%;
     max-height: 100%;
-    object-fit: cover;
+    object-fit: contain;
+    object-position: center;
   }
 
   .carousel-inner {

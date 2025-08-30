@@ -1,60 +1,66 @@
 <script setup lang="ts">
+import { ImageVariant } from '@zod/profile/profileimage.dto'
 import { computed } from 'vue'
 import type { PropType } from 'vue'
+import { VariantName } from './types'
 
-type Variant = { size: string; url: string }
 
 const props = defineProps({
   image: {
-    type: Object as PropType<{ variants: Variant[] }>,
+    type: Object as PropType<{ variants: ImageVariant[] }>,
     required: true,
   },
+  /** extra classes for the <img> */
   className: {
     type: String,
     default: '',
   },
   variant: {
-    type: String,
-    default: '',
+    type: String as PropType<VariantName >,
+    default: 'card',
+  },
+  /** optional: add loading/decoding hints */
+  loading: {
+    type: String as PropType<'eager' | 'lazy'>,
+    default: 'lazy',
+  },
+  decoding: {
+    type: String as PropType<'sync' | 'async' | 'auto'>,
+    default: 'async',
   },
 })
 
-const sizesMap: Record<string, string> = {
-  thumb: '150w',
-  card: '400w',
-  profile: '720w',
-  medium: '800w',
-  full: '1280w',
+
+const pickUrl = (variant: string, variants: ImageVariant[]) => {
+  if (!variants?.length) return ''
+  // explicit override first
+  if (variant) {
+    const v = variants.find(v => v.size === variant)
+    if (v) return v.url
+  }
+  console.warn('ImageTag: missing  explicit variant', variant)
 }
 
-const scrSet = computed(() =>
-  props.image.variants
-    .filter(v => sizesMap[v.size])
-    .map(v => `${v.url} ${sizesMap[v.size]}`)
-    .join(', ')
-)
-
-const fallbackUrl = computed(() => props.image.variants.find(v => v.size === 'original')?.url || '')
+const url = computed(() => pickUrl(props.variant,  props.image.variants))
 </script>
 
 <template>
-  <picture class="profile-image">
-    <!-- square crop (thumb/card) for small/mobile -->
-    <source
-      :srcset="scrSet"
-      sizes="(max-aspect-ratio: 1/1) and (max-width: 600px) 360px, 600px"
-      type="image/webp"
-    />
-    <img :src="fallbackUrl" class="" :class="className" />
-  </picture>
+  <img
+    :src="url"
+    :data-variant="variant"
+    :class="['fitted-image', className]"
+    :loading="loading"
+    :decoding="decoding"
+  />
 </template>
 
 <style scoped>
-img {
+.fitted-image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center;
   display: block;
+  object-fit: cover;   /* change to 'contain' if you want letterboxing */
+  object-position: center;
 }
 </style>
+``

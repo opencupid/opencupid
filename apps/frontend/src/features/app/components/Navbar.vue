@@ -67,7 +67,7 @@ const hasMatchNotifications = computed(
             v-if="profileStore.profile?.profileImages?.length"
             class="profile-thumbnail d-flex overflow-hidden"
           >
-            <ProfileImage :profile="profileStore.profile" class="img-fluid rounded w-100 h-100" />
+            <ProfileImage :profile="profileStore.profile" context="thumb" class="img-fluid rounded w-100 h-100" />
           </span>
           <IconUser v-else class="svg-icon-lg" />
         </BNavItem>

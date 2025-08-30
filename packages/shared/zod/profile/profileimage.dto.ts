@@ -7,6 +7,8 @@ export const ImageVariantSchema = z.object({
   url: z.string().min(1),
 })
 
+export type ImageVariant = z.infer<typeof ImageVariantSchema>
+
 // Fields exposed in the public API for profile images
 const publicFields = {
   mimeType: true,

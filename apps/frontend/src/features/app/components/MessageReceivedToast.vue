@@ -16,7 +16,7 @@ defineProps<{
 <template>
   <div class="d-flex align-items-center clickable">
     <div class="profile-thumbnail me-2">
-      <ProfileImage :profile="message.sender" />
+      <ProfileImage :profile="message.sender" context="thumb" />
     </div>
     <span>
       {{ $t('messaging.new_message_notification', {
