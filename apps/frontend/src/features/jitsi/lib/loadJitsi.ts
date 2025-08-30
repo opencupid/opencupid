@@ -1,3 +1,9 @@
+declare global {
+  interface Window {
+    JitsiMeetExternalAPI?: unknown
+  }
+}
+
 let loading: Promise<void> | null = null
 
 export function loadJitsi() {
