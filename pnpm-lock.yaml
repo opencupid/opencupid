@@ -62,7 +62,7 @@ importers:
         version: 8.2.0
       '@fastify/websocket':
         specifier: ^11.1.0
-        version: 11.1.0
+        version: 11.2.0
       '@google-cloud/translate':
         specifier: ^9.1.0
         version: 9.2.0
@@ -979,8 +979,8 @@ packages:
   '@fastify/static@8.2.0':
     resolution: {integrity: sha512-PejC/DtT7p1yo3p+W7LiUtLMsV8fEvxAK15sozHy9t8kwo5r0uLYmhV/inURmGz1SkHZFz/8CNtHLPyhKcx4SQ==}
 
-  '@fastify/websocket@11.1.0':
-    resolution: {integrity: sha512-BH6yZjbA5+DjuC9lMgv3hHuaSsf3snph6df9l1zIW6lvZLnYVmxN7OgmGlMKftsTOFB7NePXVCJZPzagunQK5Q==}
+  '@fastify/websocket@11.2.0':
+    resolution: {integrity: sha512-3HrDPbAG1CzUCqnslgJxppvzaAZffieOVbLp1DAy1huCSynUWPifSvfdEDUR8HlJLp3sp1A36uOM2tJogADS8w==}
 
   '@fontsource/caveat@5.2.6':
     resolution: {integrity: sha512-OKS809xrwMZq7wFQFBQ5DfK7EL7Pd0dVl7/cKyx3bwplugYhwLDp/+/7/PJH9F6KCHuit9aVdxMCxAbxFgKhSA==}
@@ -7297,7 +7297,7 @@ snapshots:
       fastq: 1.19.1
       glob: 11.0.3
 
-  '@fastify/websocket@11.1.0':
+  '@fastify/websocket@11.2.0':
     dependencies:
       duplexify: 4.1.3
       fastify-plugin: 5.0.1
