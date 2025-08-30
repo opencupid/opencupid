@@ -2,11 +2,12 @@
 import { ref, watchEffect } from 'vue'
 
 import ImageTag from './ImageTag.vue'
-import { ImageVariant } from '@zod/profile/profileimage.dto';
+import { type ImageVariant } from '@zod/profile/profileimage.dto';
+import { type VariantName } from './types';
 
 // Props & Emits
 const props = defineProps<{
-  variant?: 'thumb' | 'card' | 'profile' | 'full'
+  variant?: VariantName
   profile: {
     profileImages: { variants: ImageVariant[] }[]
   }

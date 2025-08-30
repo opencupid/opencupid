@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { ImageVariant } from '@zod/profile/profileimage.dto'
+import { type ImageVariant } from '@zod/profile/profileimage.dto'
 import { computed } from 'vue'
 import type { PropType } from 'vue'
-import { VariantName } from './types'
-
+import { type VariantName } from './types'
 
 const props = defineProps({
   image: {
@@ -16,7 +15,7 @@ const props = defineProps({
     default: '',
   },
   variant: {
-    type: String as PropType<VariantName >,
+    type: String as PropType<VariantName>,
     default: 'card',
   },
   /** optional: add loading/decoding hints */
@@ -30,7 +29,6 @@ const props = defineProps({
   },
 })
 
-
 const pickUrl = (variant: string, variants: ImageVariant[]) => {
   if (!variants?.length) return ''
   // explicit override first
@@ -41,7 +39,7 @@ const pickUrl = (variant: string, variants: ImageVariant[]) => {
   console.warn('ImageTag: missing  explicit variant', variant)
 }
 
-const url = computed(() => pickUrl(props.variant,  props.image.variants))
+const url = computed(() => pickUrl(props.variant, props.image.variants))
 </script>
 
 <template>
@@ -59,7 +57,7 @@ const url = computed(() => pickUrl(props.variant,  props.image.variants))
   width: 100%;
   height: 100%;
   display: block;
-  object-fit: cover;   /* change to 'contain' if you want letterboxing */
+  object-fit: cover; /* change to 'contain' if you want letterboxing */
   object-position: center;
 }
 </style>

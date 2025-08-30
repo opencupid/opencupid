@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ImageVariant } from '@zod/profile/profileimage.dto';
+import { type ImageVariant } from '@zod/profile/profileimage.dto';
 import ProfileImage from './ProfileImage.vue'
 
 // Props & Emits
