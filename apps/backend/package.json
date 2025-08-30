@@ -1,7 +1,6 @@
 {
   "name": "backend",
   "main": "dist/main.js",
-  "type": "module",
   "scripts": {
     "dev": "tsup --watch --onSuccess \"node --inspect dist/main.js\"",
     "build": "tsup && node scripts/generate-version.js && tsup --config tsup.scripts.config.ts",
