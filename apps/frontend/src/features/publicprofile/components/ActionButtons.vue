@@ -6,6 +6,9 @@ import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 
 import IconMessage from '@/assets/icons/interface/message.svg'
 import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
+import SendMessageDialog from './SendMessageDialog.vue'
+import VideoCallButton from '@/features/jitsi/components/VideoCallButton.vue'
+import JoinCallButton from '@/features/jitsi/components/JoinCallButton.vue'
 
 const props = defineProps<{
   profile: PublicProfileWithContext
@@ -45,11 +48,12 @@ const handleMessageIntent = () => {
         @click="handleMessageIntent"
       >
         <IconMessage class="svg-icon-lg p-0" />
-        <!-- {{ $t('profiles.send_message_button') }} -->
       </BButton>
+      <VideoCallButton v-if="!isOwner" :target-profile-id="profile.id" />
+      <JoinCallButton v-if="!isOwner" :with-profile-id="profile.id" />
     </div>
 
-   <SendMessageDialog/>
+    <SendMessageDialog v-model="showMessageModal" />
   </div>
 </template>
 

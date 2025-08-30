@@ -229,6 +229,9 @@ model Profile {
   likesSent     LikedProfile[] @relation("LikesSent")
   likesReceived LikedProfile[] @relation("LikesReceived")
 
+  meetingsCreated  Meeting[] @relation("MeetingsCreated")
+  meetingsReceived Meeting[] @relation("MeetingsTarget")
+
   hiddenProfiles HiddenProfile[] @relation("HiddenProfiles")
   hiddenBy       HiddenProfile[] @relation("HiddenBy")
 }
@@ -356,6 +359,17 @@ model SocialMatchFilter {
   radius    Int?    @default(50) // in km
   tags      Tag[]
   city      City?   @relation(fields: [cityId], references: [id])
+}
+
+model Meeting {
+  id             String   @id @default(cuid())
+  room           String   @unique
+  createdBy      Profile  @relation("MeetingsCreated", fields: [createdById], references: [id])
+  createdById    String
+  targetProfile  Profile  @relation("MeetingsTarget", fields: [targetProfileId], references: [id])
+  targetProfileId String
+  createdAt      DateTime @default(now())
+  endedAt        DateTime?
 }
 
 model PushSubscription {
