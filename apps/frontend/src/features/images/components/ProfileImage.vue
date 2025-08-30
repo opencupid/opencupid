@@ -6,7 +6,7 @@ import { ImageVariant } from '@zod/profile/profileimage.dto';
 
 // Props & Emits
 const props = defineProps<{
-  context?: 'thumb' | 'card' | 'profile' | 'full'
+  variant?: 'thumb' | 'card' | 'profile' | 'full'
   profile: {
     profileImages: { variants: ImageVariant[] }[]
   }
@@ -22,5 +22,5 @@ watchEffect(() => {
 </script>
 
 <template>
-  <ImageTag :image="image" v-if="image" className="img-fluid rounded" :variant="props.context" />
+  <ImageTag :image="image" v-if="image" className="img-fluid rounded" :variant="props.variant" />
 </template>

@@ -51,11 +51,11 @@ const handleMessageSent = () => {
       </h1>
       <div class="d-flex flex-row align-items-center justify-content-center mb-4">
         <div class="image-wrapper">
-          <ProfileImage :profile="match.from.profile" context="thumb"/>
+          <ProfileImage :profile="match.from.profile" variant="thumb"/>
         </div>
 
         <div class="image-wrapper right">
-          <ProfileImage :profile="match.to.profile" context="thumb"/>
+          <ProfileImage :profile="match.to.profile" variant="thumb"/>
         </div>
       </div>
       <div v-if="profile.interactionContext.canMessage" class="text-center mb-4">
