@@ -4,9 +4,9 @@ import ProfileImageComponent from '../components/ImageTag.vue'
 
 describe('ProfileImageComponent', () => {
   it('renders picture sources', () => {
-    const img = { variants: [{ size: 'original', url: '/img/one-original.jpg' }], altText: 'test' } as any
+    const img = { variants: [{ size: 'card', url: '/img/one-card.webp' }], altText: 'test' } as any
     const wrapper = mount(ProfileImageComponent, { props: { image: img } })
-    expect(wrapper.find('img').attributes('src')).toContain('/img/one-original.jpg')
+    expect(wrapper.find('img').attributes('src')).toContain('/img/one-card.webp')
     expect(wrapper.html()).toContain('webp')
   })
 })

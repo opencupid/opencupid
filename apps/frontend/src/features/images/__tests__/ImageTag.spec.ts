@@ -6,8 +6,9 @@ import ImageTag from '../components/ImageTag.vue'
 describe('ImageTag', () => {
   it('renders img with variant url', () => {
     const wrapper = mount(ImageTag, {
-      props: { image: { variants: [{ size: 'original', url: '/path/img-original.jpg' }] } },
+      props: { image: { variants: [{ size: 'card', url: '/path/img-card.jpg' }] } },
     })
-    expect(wrapper.find('img').attributes('src')).toContain('/path/img-original.jpg')
+    expect(wrapper.find('img').attributes('src')).toContain('/path/img-card.jpg')
+    expect(wrapper.html()).toContain('jpg')
   })
 })
