@@ -120,7 +120,7 @@ const isDeletable = computed(() => {
               </div>
               <div :class="{ removing: isRemoving[img.id] }">
                 <div class="ratio ratio-1x1">
-                  <ImageTag :image="img" className="rounded" />
+                  <ImageTag :image="img" className="rounded" variant="card" />
                 </div>
               </div>
             </div>

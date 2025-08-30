@@ -61,7 +61,7 @@ const handleCloseClick = () => (showModal.value = false)
             <div
               class="w-100 h-100 d-flex justify-content-center align-items-center overflow-hidden"
             >
-              <ImageTag :image="img" className="fitted-image" context="full" />
+              <ImageTag :image="img" className="fitted-image" variant="full" />
             </div>
           </template>
         </BCarouselSlide>
