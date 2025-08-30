@@ -14,12 +14,12 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
 
 export class WebPushService {
   private static instance: WebPushService
-  private static isConfigured: boolean = !!(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY)
+
 
   private constructor() { }
 
   public static isWebPushConfigured(): boolean {
-    return WebPushService.isConfigured
+    return !!(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY)
   }
 
   public static getInstance(): WebPushService {
