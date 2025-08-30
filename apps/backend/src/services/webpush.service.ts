@@ -14,8 +14,13 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
 
 export class WebPushService {
   private static instance: WebPushService
+  private static isConfigured: boolean = !!(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY)
 
   private constructor() { }
+
+  public static isWebPushConfigured(): boolean {
+    return WebPushService.isConfigured
+  }
 
   public static getInstance(): WebPushService {
     if (!WebPushService.instance) {
@@ -25,6 +30,9 @@ export class WebPushService {
   }
 
   async send(message: MessageDTO) {
+    if (!WebPushService.isWebPushConfigured()) {
+      throw new Error('Web push is not configured: VAPID keys are missing.')
+    }
 
     const payload = {
       body: 'You got message',
@@ -53,6 +61,9 @@ export class WebPushService {
   }
 
   async sendPushNotification(subscription: webpush.PushSubscription, payload: any) {
+    if (!WebPushService.isWebPushConfigured()) {
+      throw new Error('Web push is not configured: VAPID keys are missing.')
+    }
     return await webpush.sendNotification(subscription, JSON.stringify(payload))
   }
 
