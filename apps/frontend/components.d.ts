@@ -10,6 +10,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     BBadge: typeof import('bootstrap-vue-next/components/BBadge')['BBadge']
     BButton: typeof import('bootstrap-vue-next/components/BButton')['BButton']
+    BButtonGroup: typeof import('bootstrap-vue-next/components/BButton')['BButtonGroup']
     BCarouselSlide: typeof import('bootstrap-vue-next/components/BCarousel')['BCarouselSlide']
     BCol: typeof import('bootstrap-vue-next/components/BContainer')['BCol']
     BContainer: typeof import('bootstrap-vue-next/components/BContainer')['BContainer']
@@ -34,8 +35,10 @@ declare module 'vue' {
     BNavItem: typeof import('bootstrap-vue-next/components/BNav')['BNavItem']
     BNavItemDropdown: typeof import('bootstrap-vue-next/components/BNav')['BNavItemDropdown']
     BOverlay: typeof import('bootstrap-vue-next/components/BOverlay')['BOverlay']
+    BPlaceholder: typeof import('bootstrap-vue-next/components/BPlaceholder')['BPlaceholder']
     BPlaceholderCard: typeof import('bootstrap-vue-next/components/BPlaceholder')['BPlaceholderCard']
     BPlaceholderWrapper: typeof import('bootstrap-vue-next/components/BPlaceholder')['BPlaceholderWrapper']
+    BPopover: typeof import('bootstrap-vue-next/components/BPopover')['BPopover']
     BRow: typeof import('bootstrap-vue-next/components/BContainer')['BRow']
     BSpinner: typeof import('bootstrap-vue-next/components/BSpinner')['BSpinner']
     BTooltip: typeof import('bootstrap-vue-next/components/BTooltip')['BTooltip']

@@ -16,8 +16,12 @@ import PlaceholdersGrid from '../components/PlaceholdersGrid.vue'
 import SocialFilterDisplay from '../components/SocialFilterDisplay.vue'
 import DatingPrefsDisplay from '../components/DatingPrefsDisplay.vue'
 import ScopeViewToggler from '@/features/shared/ui/ScopeViewToggler.vue'
+import OsmPoiMap from '../components/OsmPoiMap.vue'
 import { useI18n } from 'vue-i18n'
 import { useCountries } from '../../shared/composables/useCountries'
+
+import IconSquare from '@/assets/icons/interface/square.svg'
+import IconMap from '@/assets/icons/interface/map.svg'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -32,6 +36,7 @@ const {
   isLoading,
   currentScope,
   scopeModel,
+  viewModeModel,
   profileList,
   storeError,
   datingPrefs,
@@ -87,7 +92,7 @@ const handleHidden = (id: string) => {
 const { countryCodeToName } = useCountries()
 
 const countryName = computed(() => {
-  if (!socialFilter ) return ''
+  if (!socialFilter) return ''
   return countryCodeToName(socialFilter?.value?.location.country ?? '')
 })
 
@@ -131,12 +136,40 @@ const isDetailView = computed(() => !!selectedProfileId.value)
             </template>
           </SecondaryNav>
           <div v-if="currentScope == 'social'" class="filter-controls my-2">
-            <SocialFilterDisplay
-              v-if="socialFilter && haveAccess"
-              v-model="socialFilter"
-              :viewerLocation="viewerProfile?.location"
-              @prefs:toggle="showPrefsModal = true"
-            />
+            <div
+              class="d-flex align-items-center justify-content-between w-100 px-2 py-1 bg-light rounded"
+            >
+              <SocialFilterDisplay
+                v-if="socialFilter && haveAccess"
+                v-model="socialFilter"
+                :viewerLocation="viewerProfile?.location"
+                @prefs:toggle="showPrefsModal = true"
+              />
+              <BButtonGroup aria-label="Toggle view mode" size="sm">
+                <BButton
+                  variant="outline-secondary"
+                  :title="$t('profiles.browse.views.grid_view_button_title')"
+                  :pressed="viewModeModel === 'grid'"
+                  @click="viewModeModel = 'grid'"
+                >
+                  <div class="icon-grid">
+                    <IconSquare class="svg-icon-sm" />
+                    <IconSquare class="svg-icon-sm" />
+                    <IconSquare class="svg-icon-sm" />
+                    <IconSquare class="svg-icon-sm" />
+                  </div>
+                </BButton>
+
+                <BButton
+                  variant="outline-secondary"
+                  :title="$t('profiles.browse.views.map_view_button_title')"
+                  :pressed="viewModeModel === 'map'"
+                  @click="viewModeModel = 'map'"
+                >
+                  <IconMap class="svg-icon" />
+                </BButton>
+              </BButtonGroup>
+            </div>
           </div>
           <div v-if="currentScope == 'dating'" class="filter-controls my-2">
             <DatingPrefsDisplay
@@ -198,8 +231,8 @@ const isDetailView = computed(() => !!selectedProfileId.value)
 
         <!-- Main profile results -->
         <template v-else-if="isInitialized">
-          <div class="overflow-auto hide-scrollbar pb-5">
-            <MiddleColumn>
+          <div class="overflow-auto hide-scrollbar pb-5 flex-grow-1">
+            <MiddleColumn v-if="viewModeModel === 'grid'">
               <ProfileCardGrid
                 :profiles="profileList"
                 :showTags="true"
@@ -207,6 +240,12 @@ const isDetailView = computed(() => !!selectedProfileId.value)
                 @profile:select="handleCardClick"
               />
             </MiddleColumn>
+            <OsmPoiMap
+              v-if="viewModeModel === 'map'"
+              :profiles="profileList"
+              class="h-100"
+              @profile:select="handleCardClick"
+            />
           </div>
         </template>
       </BPlaceholderWrapper>

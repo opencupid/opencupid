@@ -11,6 +11,12 @@ import { useFindProfileStore } from '@/features/browse/stores/findProfileStore';
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore';
 import { useAgeFields } from '@/features/shared/composables/useAgeFields';
 
+enum ViewMode {
+  'map',
+  'grid',
+}
+
+
 function datingPrefsDefaults(ownerProfile: OwnerProfile) {
   const { age } = useAgeFields(ownerProfile.birthday)
   return {
@@ -50,6 +56,23 @@ export function useFindMatchViewModel() {
 
   const localStore = useLocalStore()
   const savedScope = computed(() => localStore.getCurrentScope)
+
+  const currentViewMode = computed(() =>
+    typeof route.query.viewMode === 'string' && Object.values(ViewMode).includes(route.query.viewMode)
+      ? (route.query.viewMode)
+      : 'grid'
+  )
+
+  function navigateToViewMode(viewMode: ViewMode): void {
+    router.replace({ query: { ...route.query, viewMode } })
+  }
+
+  const viewModeModel = computed({
+    get: () => currentViewMode.value,
+    set: (mode: ViewMode) => {
+      navigateToViewMode(mode)
+    },
+  })
 
   const initialize = async (defaultScope?: ProfileScope) => {
 
@@ -205,6 +228,7 @@ export function useFindMatchViewModel() {
     openProfile,
     profileList: computed(() => findProfileStore.profileList),
     isInitialized: computed(() => isInitialized.value),
+    viewModeModel,
   }
 
 

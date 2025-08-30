@@ -165,6 +165,10 @@
       "no_results_cta_title": "This community is still growing.",
       "no_results_cta_description": "You can help by inviting your friends to join. The more, the merrier.",
       "invite_button": "Invite friends",
+      "views": {
+        "grid_view_button_title": "Grid view",
+        "map_view_button_title": "Map view"
+      },
       "filters": {
         "filter_display_label": "Looking in:",
         "dialog_ok_button": "Find people",
