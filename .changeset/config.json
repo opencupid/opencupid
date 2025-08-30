@@ -4,7 +4,7 @@
   "commit": false,
   "fixed": [],
   "linked": [
-    ["opencupid", "frontend", "backend"]
+    ["frontend", "backend"]
   ],
   "access": "restricted",
   "baseBranch": "main",
