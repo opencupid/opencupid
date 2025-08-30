@@ -17,6 +17,7 @@
     "redis:sessions": "docker compose exec redis  redis-cli KEYS '*'",
     "tags:translate": "ts-node -r tsconfig-paths/register  scripts/translate-tags.ts",
     "db:psql": "docker compose exec db psql -U appuser app",
+    "db:restore": "docker compose exec -T db psql -U appuser app",
     "db:dump": "docker compose exec db pg_dump  --data-only --no-privileges  --disable-triggers -U appuser app",
     "db:backup": "docker compose exec db pg_dump --clean -U appuser app",
     "test": "vitest",
