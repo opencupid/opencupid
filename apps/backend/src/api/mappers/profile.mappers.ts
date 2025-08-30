@@ -46,9 +46,17 @@ export function mapDbProfileToOwnerProfile(locale: string, db: DbProfileWithImag
 export function mapProfileToPublic(dbProfile: DbProfileWithImages, includeDatingContext: boolean, locale: string): PublicProfileWithContext {
 
   // map localized fields with fallback to first available locale
-  const get = (field: string): string =>
-    dbProfile.localized.find(l => l.field === field && l.locale === locale)?.value ??
-    dbProfile.localized.find(l => l.field === field)?.value ?? ''
+  const get = (field: string): string => {
+    // First try to find the preferred locale with a non-empty value
+    const preferredEntry = dbProfile.localized.find(l => l.field === field && l.locale === locale)
+    if (preferredEntry && preferredEntry.value.trim() !== '') {
+      return preferredEntry.value
+    }
+    
+    // Fallback to any locale with a non-empty value
+    const fallbackEntry = dbProfile.localized.find(l => l.field === field && l.value.trim() !== '')
+    return fallbackEntry?.value ?? ''
+  }
 
   // shape discriminated union ProfileUnionSchema
   const dProf = {
