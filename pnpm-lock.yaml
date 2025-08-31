@@ -71,7 +71,7 @@ importers:
         version: 6.1.0
       '@prisma/client':
         specifier: ^6.8.2
-        version: 6.11.1(prisma@6.15.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3)
+        version: 6.15.0(prisma@6.15.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3)
       '@sentry/node':
         specifier: ^9.39.0
         version: 9.39.0
@@ -258,7 +258,7 @@ importers:
         version: 6.1.0
       zod-prisma-types:
         specifier: ^3.2.4
-        version: 3.2.4(@prisma/client@6.11.1(prisma@6.15.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(prisma@6.15.0(magicast@0.3.5)(typescript@5.8.3))
+        version: 3.2.4(@prisma/client@6.15.0(prisma@6.15.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(prisma@6.15.0(magicast@0.3.5)(typescript@5.8.3))
 
   apps/frontend:
     dependencies:
@@ -517,7 +517,7 @@ importers:
     devDependencies:
       '@prisma/client':
         specifier: ^6.8.2
-        version: 6.11.1(prisma@6.15.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3)
+        version: 6.15.0(prisma@6.15.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3)
 
 packages:
 
@@ -1664,8 +1664,8 @@ packages:
       prisma:
         optional: true
 
-  '@prisma/client@6.11.1':
-    resolution: {integrity: sha512-5CLFh8QP6KxRm83pJ84jaVCeSVPQr8k0L2SEtOJHwdkS57/VQDcI/wQpGmdyOZi+D9gdNabdo8tj1Uk+w+upsQ==}
+  '@prisma/client@6.15.0':
+    resolution: {integrity: sha512-wR2LXUbOH4cL/WToatI/Y2c7uzni76oNFND7+23ypLllBmIS8e3ZHhO+nud9iXSXKFt1SoM3fTZvHawg63emZw==}
     engines: {node: '>=18.18'}
     peerDependencies:
       prisma: '*'
@@ -8039,7 +8039,7 @@ snapshots:
     optionalDependencies:
       prisma: 6.15.0(magicast@0.3.5)(typescript@5.8.3)
 
-  '@prisma/client@6.11.1(prisma@6.15.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3)':
+  '@prisma/client@6.15.0(prisma@6.15.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3)':
     optionalDependencies:
       prisma: 6.15.0(magicast@0.3.5)(typescript@5.8.3)
       typescript: 5.8.3
@@ -13727,9 +13727,9 @@ snapshots:
       compress-commons: 4.1.2
       readable-stream: 3.6.2
 
-  zod-prisma-types@3.2.4(@prisma/client@6.11.1(prisma@6.15.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(prisma@6.15.0(magicast@0.3.5)(typescript@5.8.3)):
+  zod-prisma-types@3.2.4(@prisma/client@6.15.0(prisma@6.15.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3))(prisma@6.15.0(magicast@0.3.5)(typescript@5.8.3)):
     dependencies:
-      '@prisma/client': 6.11.1(prisma@6.15.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3)
+      '@prisma/client': 6.15.0(prisma@6.15.0(magicast@0.3.5)(typescript@5.8.3))(typescript@5.8.3)
       '@prisma/generator-helper': 6.11.1
       code-block-writer: 12.0.0
       lodash: 4.17.21
