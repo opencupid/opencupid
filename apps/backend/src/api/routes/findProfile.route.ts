@@ -121,10 +121,9 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
   })
 
   const getDatingProfiles = async (
-    req: FastifyRequest,
+    req: FastifyRequest<{ Querystring: { cursor?: string; take?: number } }>,
     reply: FastifyReply,
-    orderBy: OrderBy,
-    take: number = 10
+    orderBy: OrderBy
   ) => {
     if (!req.session.profile.isDatingActive) {
       return sendForbiddenError(reply)
@@ -132,13 +131,21 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
 
     const myProfileId = req.session.profileId
     const locale = req.session.lang
+    const take = Number(req.query.take) || 10
+    const cursor = req.query.cursor
+    console.log('getDatingProfiles', { cursor, take })
 
     try {
-      const profiles = await profileMatchService.findMutualMatchesFor(myProfileId, orderBy, take)
-      const mappedProfiles = profiles.map(p =>
+      const results = await profileMatchService.findMutualMatchesFor(myProfileId, orderBy, take + 1, cursor)
+      const next = results.length > take ? results.pop() : null
+      const mappedProfiles = results.map(p =>
         mapProfileToPublic(p, true /* includeDatingContext */, locale)
       )
-      const response: GetProfilesResponse = { success: true, profiles: mappedProfiles }
+      const response: GetProfilesResponse = {
+        success: true,
+        profiles: mappedProfiles,
+        nextCursor: next ? next.id : null,
+      }
       return reply.code(200).send(response)
     } catch (err) {
       req.log.error(err)
@@ -148,10 +155,9 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
 
 
   const getSocialProfiles = async (
-    req: FastifyRequest,
+    req: FastifyRequest<{ Querystring: { cursor?: string; take?: number } }>,
     reply: FastifyReply,
-    orderBy: OrderBy,
-    take: number = 20
+    orderBy: OrderBy
   ) => {
     if (!req.session.profile.isSocialActive) {
       return sendForbiddenError(reply)
@@ -159,13 +165,21 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
 
     const myProfileId = req.session.profileId
     const locale = req.session.lang
+    const take = Number(req.query.take) || 20
+    const cursor = req.query.cursor
+    console.log('getSocialProfiles', { cursor, take })
 
     try {
-      const profiles = await profileMatchService.findSocialProfilesFor(myProfileId, orderBy, take)
-      const mappedProfiles = profiles.map(p =>
+      const results = await profileMatchService.findSocialProfilesFor(myProfileId, orderBy, take + 1, cursor)
+      const next = results.length > take ? results.pop() : null
+      const mappedProfiles = results.map(p =>
         mapProfileToPublic(p, false /* includeDatingContext */, locale)
       )
-      const response: GetProfilesResponse = { success: true, profiles: mappedProfiles }
+      const response: GetProfilesResponse = {
+        success: true,
+        profiles: mappedProfiles,
+        nextCursor: next ? next.id : null,
+      }
       return reply.code(200).send(response)
     } catch (err) {
       req.log.error(err)

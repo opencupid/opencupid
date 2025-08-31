@@ -147,7 +147,12 @@ export class ProfileMatchService {
 
 
 
-  async findSocialProfilesFor(profileId: string, orderBy: OrderBy = defaultOrderBy, take: number = 20): Promise<DbProfileWithImages[]> {
+  async findSocialProfilesFor(
+    profileId: string,
+    orderBy: OrderBy = defaultOrderBy,
+    take: number = 20,
+    cursor?: string
+  ): Promise<DbProfileWithImages[]> {
 
     const userPrefs = await this.getSocialMatchFilter(profileId)
 
@@ -184,6 +189,7 @@ export class ProfileMatchService {
       },
       take: take,
       orderBy: orderBy,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
     })
   }
 
@@ -220,7 +226,12 @@ export class ProfileMatchService {
   }
 
 
-  async findMutualMatchesFor(profileId: string, orderBy: OrderBy = defaultOrderBy, take: number = 20): Promise<DbProfileWithImages[]> {
+  async findMutualMatchesFor(
+    profileId: string,
+    orderBy: OrderBy = defaultOrderBy,
+    take: number = 20,
+    cursor?: string
+  ): Promise<DbProfileWithImages[]> {
     const profile = await prisma.profile.findUnique({
       where: { id: profileId },
     })
@@ -261,6 +272,7 @@ export class ProfileMatchService {
       },
       take: take,
       orderBy: orderBy,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
     })
   }
 

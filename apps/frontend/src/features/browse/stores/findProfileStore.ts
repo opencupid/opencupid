@@ -34,6 +34,7 @@ type FindProfileStoreState = {
   profileList: PublicProfile[]; // List of public profiles
   socialSearch: SocialMatchFilterDTO | null; // Current social search query
   isLoading: boolean; // Loading state
+  nextCursor: string | null;
 }
 
 type StoreProfileListResponse = StoreSuccess<{ result: PublicProfile[] }> | StoreError
@@ -74,6 +75,7 @@ export const useFindProfileStore = defineStore('findProfile', {
     profileList: [] as PublicProfile[],
     socialSearch: null as SocialMatchFilterDTO | null, // Current social search query
     isLoading: false,
+    nextCursor: null,
   }),
 
   actions: {
@@ -84,6 +86,8 @@ export const useFindProfileStore = defineStore('findProfile', {
         const res = await safeApiCall(() => api.get<GetProfilesResponse>('/find/social'))
         const fetched = PublicProfileArraySchema.parse(res.data.profiles)
         this.profileList = fetched
+        this.nextCursor = res.data.nextCursor ?? null
+        console.log('findSocial', this.nextCursor)
         return storeSuccess()
       } catch (error: any) {
         this.profileList = []
@@ -99,6 +103,8 @@ export const useFindProfileStore = defineStore('findProfile', {
         const res = await safeApiCall(() => api.get<GetProfilesResponse>('/find/dating'))
         const fetched = PublicProfileArraySchema.parse(res.data.profiles)
         this.profileList = fetched
+        this.nextCursor = res.data.nextCursor ?? null
+        console.log('findDating', this.nextCursor)
         return storeSuccess()
       } catch (error: any) {
         this.profileList = []
@@ -114,6 +120,38 @@ export const useFindProfileStore = defineStore('findProfile', {
         const res = await safeApiCall(() => api.get<GetProfilesResponse>('/find/social/new'))
         const fetched = PublicProfileArraySchema.parse(res.data.profiles)
         return storeSuccess({ result: fetched })
+      } catch (error: any) {
+        return storeError(error, 'Failed to fetch profiles')
+      }
+    },
+
+    async loadMoreSocial(): Promise<StoreVoidSuccess | StoreError> {
+      if (!this.nextCursor) return storeSuccess()
+      try {
+        const res = await safeApiCall(() =>
+          api.get<GetProfilesResponse>('/find/social', { params: { cursor: this.nextCursor } })
+        )
+        const fetched = PublicProfileArraySchema.parse(res.data.profiles)
+        this.profileList.push(...fetched)
+        this.nextCursor = res.data.nextCursor ?? null
+        console.log('loadMoreSocial', this.nextCursor)
+        return storeSuccess()
+      } catch (error: any) {
+        return storeError(error, 'Failed to fetch profiles')
+      }
+    },
+
+    async loadMoreDating(): Promise<StoreVoidSuccess | StoreError> {
+      if (!this.nextCursor) return storeSuccess()
+      try {
+        const res = await safeApiCall(() =>
+          api.get<GetProfilesResponse>('/find/dating', { params: { cursor: this.nextCursor } })
+        )
+        const fetched = PublicProfileArraySchema.parse(res.data.profiles)
+        this.profileList.push(...fetched)
+        this.nextCursor = res.data.nextCursor ?? null
+        console.log('loadMoreDating', this.nextCursor)
+        return storeSuccess()
       } catch (error: any) {
         return storeError(error, 'Failed to fetch profiles')
       }
@@ -191,6 +229,7 @@ export const useFindProfileStore = defineStore('findProfile', {
       this.socialSearch = null
       this.datingPrefs = null
       this.isLoading = false
+      this.nextCursor = null
     }
   },
 })

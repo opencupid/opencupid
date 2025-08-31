@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { computed, onMounted, onUnmounted, provide, ref } from 'vue'
+import { computed, onMounted, onUnmounted, provide, ref, nextTick } from 'vue'
 
 import PublicProfile from '@/features/publicprofile/components/PublicProfile.vue'
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
@@ -18,12 +18,17 @@ import DatingPrefsDisplay from '../components/DatingPrefsDisplay.vue'
 import ScopeViewToggler from '@/features/shared/ui/ScopeViewToggler.vue'
 import { useI18n } from 'vue-i18n'
 import { useCountries } from '../../shared/composables/useCountries'
+import { useFindProfileStore } from '../stores/findProfileStore'
 
 const router = useRouter()
 const { t } = useI18n()
 // state management
 const showPrefsModal = ref(false)
 const canGoBack = ref(false)
+const scrollContainer = ref<HTMLElement | null>(null)
+const loadMoreTrigger = ref<HTMLElement | null>(null)
+let observer: IntersectionObserver | null = null
+const findProfileStore = useFindProfileStore()
 
 const {
   viewerProfile,
@@ -47,11 +52,21 @@ const {
 
 onMounted(async () => {
   await initialize()
+  await nextTick()
+  observer = new IntersectionObserver(async entries => {
+    if (entries[0].isIntersecting) {
+      await loadMore()
+    }
+  }, { root: scrollContainer.value })
+  if (loadMoreTrigger.value) {
+    observer.observe(loadMoreTrigger.value)
+  }
 })
 
 onUnmounted(() => {
   canGoBack.value = false
   reset()
+  observer?.disconnect()
 })
 
 const handleCardClick = async (profileId: string) => {
@@ -95,6 +110,16 @@ const countryName = computed(() => {
 provide('viewerProfile', viewerProfile)
 
 const isDetailView = computed(() => !!selectedProfileId.value)
+
+const loadMore = async () => {
+  console.log('loadMore', currentScope.value, findProfileStore.nextCursor)
+  if (!findProfileStore.nextCursor) return
+  if (currentScope.value === 'social') {
+    await findProfileStore.loadMoreSocial()
+  } else if (currentScope.value === 'dating') {
+    await findProfileStore.loadMoreDating()
+  }
+}
 </script>
 
 <template>
@@ -198,7 +223,7 @@ const isDetailView = computed(() => !!selectedProfileId.value)
 
         <!-- Main profile results -->
         <template v-else-if="isInitialized">
-          <div class="overflow-auto hide-scrollbar pb-5">
+          <div class="overflow-auto hide-scrollbar pb-5" ref="scrollContainer">
             <MiddleColumn>
               <ProfileCardGrid
                 :profiles="profileList"
@@ -206,6 +231,7 @@ const isDetailView = computed(() => !!selectedProfileId.value)
                 :showLocation="true"
                 @profile:select="handleCardClick"
               />
+              <div ref="loadMoreTrigger" class="py-3"></div>
             </MiddleColumn>
           </div>
         </template>
