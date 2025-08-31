@@ -2,6 +2,7 @@ import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi } from 'vitest'
 
 vi.mock('../JitsiModalBVN.vue', () => ({ default: { template: '<div />' } }))
+vi.mock('@/assets/icons/interface/video-camera.svg', () => ({ default: { template: '<svg />' } }))
 const mockStore = {
   makePublicRoomName: vi.fn().mockReturnValue('room'),
   createMeeting: vi.fn().mockResolvedValue({ id: '1', room: 'room' }),
