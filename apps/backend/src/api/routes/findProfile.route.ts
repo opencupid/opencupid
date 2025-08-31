@@ -1,4 +1,5 @@
 import { FastifyPluginAsync, type FastifyReply, type FastifyRequest } from 'fastify'
+import { z } from 'zod'
 
 import { sendError, sendForbiddenError } from '../helpers'
 
@@ -10,6 +11,18 @@ import { validateBody } from '../../utils/zodValidate'
 import { mapProfileToPublic } from '../mappers/profile.mappers'
 import { mapProfileToDatingPreferencesDTO, mapSocialMatchFilterToDTO } from '../mappers/profileMatch.mappers'
 
+// Pagination query schema for infinite scrolling
+const PaginationQuerySchema = z.object({
+  skip: z.preprocess(
+    val => typeof val === 'string' ? parseInt(val, 10) : val,
+    z.number().int().min(0).default(0)
+  ),
+  take: z.preprocess(
+    val => typeof val === 'string' ? parseInt(val, 10) : val,
+    z.number().int().min(1).max(50).default(20)
+  ),
+})
+
 const findProfileRoutes: FastifyPluginAsync = async fastify => {
 
   // instantiate services
@@ -17,15 +30,22 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
   const profileService = ProfileService.getInstance()
 
 
-  fastify.get('/social', { onRequest: [fastify.authenticate] }, (req, reply) =>
-    getSocialProfiles(req, reply, [{ updatedAt: 'desc' }])
-  )
+  fastify.get('/social', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const { skip, take } = PaginationQuerySchema.parse(req.query)
+    console.log('🔍 /find/social - pagination params:', { skip, take })
+    return getSocialProfiles(req, reply, [{ updatedAt: 'desc' }], take, skip)
+  })
 
-  fastify.get('/dating', { onRequest: [fastify.authenticate] }, (req, reply) =>
-    getDatingProfiles(req, reply, [{ updatedAt: 'desc' }])
-  )
+  fastify.get('/dating', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const { skip, take } = PaginationQuerySchema.parse(req.query)
+    console.log('🔍 /find/dating - pagination params:', { skip, take })
+    return getDatingProfiles(req, reply, [{ updatedAt: 'desc' }], take, skip)
+  })
 
   fastify.get('/social/new', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const { skip, take } = PaginationQuerySchema.parse(req.query)
+    console.log('🔍 /find/social/new - pagination params:', { skip, take })
+    
     if (!req.session.profile.isSocialActive) {
       return sendForbiddenError(reply)
     }
@@ -34,10 +54,11 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
     const locale = req.session.lang
 
     try {
-      const profiles = await profileMatchService.findNewProfilesAnywhere(myProfileId, [{ createdAt: 'desc' }], 10)
+      const profiles = await profileMatchService.findNewProfilesAnywhere(myProfileId, [{ createdAt: 'desc' }], take, skip)
       const mappedProfiles = profiles.map(p =>
         mapProfileToPublic(p, false /* includeDatingContext */, locale)
       )
+      console.log('✅ /find/social/new - found profiles:', mappedProfiles.length)
       const response: GetProfilesResponse = { success: true, profiles: mappedProfiles }
       return reply.code(200).send(response)
     } catch (err) {
@@ -124,7 +145,8 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
     req: FastifyRequest,
     reply: FastifyReply,
     orderBy: OrderBy,
-    take: number = 10
+    take: number = 10,
+    skip: number = 0
   ) => {
     if (!req.session.profile.isDatingActive) {
       return sendForbiddenError(reply)
@@ -134,10 +156,11 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
     const locale = req.session.lang
 
     try {
-      const profiles = await profileMatchService.findMutualMatchesFor(myProfileId, orderBy, take)
+      const profiles = await profileMatchService.findMutualMatchesFor(myProfileId, orderBy, take, skip)
       const mappedProfiles = profiles.map(p =>
         mapProfileToPublic(p, true /* includeDatingContext */, locale)
       )
+      console.log('✅ getDatingProfiles - found profiles:', mappedProfiles.length, 'skip:', skip)
       const response: GetProfilesResponse = { success: true, profiles: mappedProfiles }
       return reply.code(200).send(response)
     } catch (err) {
@@ -151,7 +174,8 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
     req: FastifyRequest,
     reply: FastifyReply,
     orderBy: OrderBy,
-    take: number = 20
+    take: number = 20,
+    skip: number = 0
   ) => {
     if (!req.session.profile.isSocialActive) {
       return sendForbiddenError(reply)
@@ -161,10 +185,11 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
     const locale = req.session.lang
 
     try {
-      const profiles = await profileMatchService.findSocialProfilesFor(myProfileId, orderBy, take)
+      const profiles = await profileMatchService.findSocialProfilesFor(myProfileId, orderBy, take, skip)
       const mappedProfiles = profiles.map(p =>
         mapProfileToPublic(p, false /* includeDatingContext */, locale)
       )
+      console.log('✅ getSocialProfiles - found profiles:', mappedProfiles.length, 'skip:', skip)
       const response: GetProfilesResponse = { success: true, profiles: mappedProfiles }
       return reply.code(200).send(response)
     } catch (err) {

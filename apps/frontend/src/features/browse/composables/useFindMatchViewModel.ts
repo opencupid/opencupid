@@ -186,11 +186,29 @@ export function useFindMatchViewModel() {
     fetchResults() // Refresh results after updating prefs
   }
 
+  const loadMoreProfiles = async () => {
+    console.log('🔍 useFindMatchViewModel.loadMoreProfiles - scope:', currentScope.value)
+    switch (currentScope.value) {
+      case 'social': {
+        return await findProfileStore.loadMoreSocial()
+      }
+      case 'dating': {
+        return await findProfileStore.loadMoreDating()
+      }
+      default: {
+        console.warn('No valid scope selected, cannot load more profiles')
+        return
+      }
+    }
+  }
+
   return {
     viewerProfile,
     haveResults,
     haveAccess,
     isLoading: computed(() => findProfileStore.isLoading || ownerStore.isLoading || !isInitialized.value),
+    isLoadingMore: computed(() => findProfileStore.isLoadingMore),
+    hasMoreProfiles: computed(() => findProfileStore.hasMoreProfiles),
     storeError,
     initialize,
     hideProfile,
@@ -205,6 +223,7 @@ export function useFindMatchViewModel() {
     openProfile,
     profileList: computed(() => findProfileStore.profileList),
     isInitialized: computed(() => isInitialized.value),
+    loadMoreProfiles,
   }
 
 
