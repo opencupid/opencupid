@@ -9,9 +9,11 @@
 // @import "~@fontsource/mukta/index.css";
 // import "@fontsource/poppins/index.css";
 
-// TODO tighten this up, only import the weights we need
-@import '@fontsource/nunito/index.css';
-@import '@fontsource/rubik/index.css';
+// Import only latin subset and required weights
+@import '@fontsource/nunito/latin-400.css';
+@import '@fontsource/nunito/latin-700.css';
+@import '@fontsource/rubik/latin-400.css';
+@import '@fontsource/rubik/latin-700.css';
 
 // scribble
 // @import '@fontsource/caveat'; // Defaults to weight 400
