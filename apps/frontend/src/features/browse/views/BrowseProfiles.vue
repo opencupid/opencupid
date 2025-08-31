@@ -102,7 +102,6 @@ const isDetailView = computed(() => !!selectedProfileId.value)
 
 // Infinite scroll setup
 const scrollContainer = ref<HTMLElement>()
-console.log('🔧 BrowseProfiles - setting up infinite scroll')
 
 useInfiniteScroll(
   scrollContainer,
@@ -115,11 +114,9 @@ useInfiniteScroll(
     })
     
     if (isLoadingMore.value || !hasMoreProfiles.value || !isInitialized.value) {
-      console.log('🚫 BrowseProfiles - skipping load more due to conditions')
       return
     }
 
-    console.log('📥 BrowseProfiles - loading more profiles...')
     await loadMoreProfiles()
   },
   {
@@ -245,13 +242,12 @@ useInfiniteScroll(
               <!-- Infinite scroll loading indicator -->
               <div v-if="isLoadingMore" class="text-center py-3">
                 <BSpinner variant="primary" small />
-                <span class="ms-2 text-muted">Loading more profiles...</span>
+                <span class="ms-2 text-muted">{{  $t('profiles.browse.loading_more_profiles') }}</span>
               </div>
               
               <!-- No more profiles indicator -->
-              <div v-else-if="!hasMoreProfiles && profileList.length > 0" class="text-center py-3 text-muted">
-                No more profiles to show
-              </div>
+              <!-- <div v-else-if="!hasMoreProfiles && profileList.length > 0" class="text-center py-3 text-muted">
+              </div> -->
             </MiddleColumn>
           </div>
         </template>
