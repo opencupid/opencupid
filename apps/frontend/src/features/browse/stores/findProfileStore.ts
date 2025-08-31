@@ -83,7 +83,7 @@ export const useFindProfileStore = defineStore('findProfile', {
     isLoadingMore: false,
     hasMoreProfiles: true,
     currentPage: 0,
-    pageSize: 20,
+    pageSize: 10,
   }),
 
   actions: {
@@ -93,13 +93,11 @@ export const useFindProfileStore = defineStore('findProfile', {
         this.isLoading = true
         this.currentPage = 0
         this.hasMoreProfiles = true
-        console.log('🔍 findProfileStore.findSocial - initial load')
         
         const res = await safeApiCall(() => api.get<GetProfilesResponse>('/find/social'))
         const fetched = PublicProfileArraySchema.parse(res.data.profiles)
         this.profileList = fetched
         this.hasMoreProfiles = fetched.length === this.pageSize
-        console.log('✅ findProfileStore.findSocial - loaded profiles:', fetched.length)
         
         return storeSuccess()
       } catch (error: any) {
@@ -115,13 +113,11 @@ export const useFindProfileStore = defineStore('findProfile', {
         this.isLoading = true
         this.currentPage = 0
         this.hasMoreProfiles = true
-        console.log('🔍 findProfileStore.findDating - initial load')
         
         const res = await safeApiCall(() => api.get<GetProfilesResponse>('/find/dating'))
         const fetched = PublicProfileArraySchema.parse(res.data.profiles)
         this.profileList = fetched
         this.hasMoreProfiles = fetched.length === this.pageSize
-        console.log('✅ findProfileStore.findDating - loaded profiles:', fetched.length)
         
         return storeSuccess()
       } catch (error: any) {
@@ -145,7 +141,6 @@ export const useFindProfileStore = defineStore('findProfile', {
 
     async loadMoreSocial(): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
       if (this.isLoadingMore || !this.hasMoreProfiles) {
-        console.log('🚫 loadMoreSocial - already loading or no more profiles:', { isLoadingMore: this.isLoadingMore, hasMoreProfiles: this.hasMoreProfiles })
         return storeSuccess()
       }
 
@@ -153,7 +148,6 @@ export const useFindProfileStore = defineStore('findProfile', {
         this.isLoadingMore = true
         const nextPage = this.currentPage + 1
         const skip = nextPage * this.pageSize
-        console.log('🔍 findProfileStore.loadMoreSocial - loading more:', { currentPage: this.currentPage, skip })
         
         const res = await safeApiCall(() => 
           api.get<GetProfilesResponse>('/find/social', { 
@@ -166,15 +160,12 @@ export const useFindProfileStore = defineStore('findProfile', {
           this.profileList.push(...fetched)
           this.currentPage = nextPage
           this.hasMoreProfiles = fetched.length === this.pageSize
-          console.log('✅ findProfileStore.loadMoreSocial - appended profiles:', fetched.length, 'total:', this.profileList.length)
         } else {
           this.hasMoreProfiles = false
-          console.log('🔚 findProfileStore.loadMoreSocial - no more profiles')
         }
         
         return storeSuccess()
       } catch (error: any) {
-        console.error('❌ findProfileStore.loadMoreSocial - error:', error)
         return storeError(error, 'Failed to load more profiles')
       } finally {
         this.isLoadingMore = false
@@ -183,7 +174,6 @@ export const useFindProfileStore = defineStore('findProfile', {
 
     async loadMoreDating(): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
       if (this.isLoadingMore || !this.hasMoreProfiles) {
-        console.log('🚫 loadMoreDating - already loading or no more profiles:', { isLoadingMore: this.isLoadingMore, hasMoreProfiles: this.hasMoreProfiles })
         return storeSuccess()
       }
 
@@ -191,7 +181,6 @@ export const useFindProfileStore = defineStore('findProfile', {
         this.isLoadingMore = true
         const nextPage = this.currentPage + 1
         const skip = nextPage * this.pageSize
-        console.log('🔍 findProfileStore.loadMoreDating - loading more:', { currentPage: this.currentPage, skip })
         
         const res = await safeApiCall(() => 
           api.get<GetProfilesResponse>('/find/dating', { 
@@ -204,15 +193,12 @@ export const useFindProfileStore = defineStore('findProfile', {
           this.profileList.push(...fetched)
           this.currentPage = nextPage
           this.hasMoreProfiles = fetched.length === this.pageSize
-          console.log('✅ findProfileStore.loadMoreDating - appended profiles:', fetched.length, 'total:', this.profileList.length)
         } else {
           this.hasMoreProfiles = false
-          console.log('🔚 findProfileStore.loadMoreDating - no more profiles')
         }
         
         return storeSuccess()
       } catch (error: any) {
-        console.error('❌ findProfileStore.loadMoreDating - error:', error)
         return storeError(error, 'Failed to load more profiles')
       } finally {
         this.isLoadingMore = false

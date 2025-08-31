@@ -19,7 +19,7 @@ const PaginationQuerySchema = z.object({
   ),
   take: z.preprocess(
     val => typeof val === 'string' ? parseInt(val, 10) : val,
-    z.number().int().min(1).max(50).default(20)
+    z.number().int().min(1).max(50).default(10)
   ),
 })
 
@@ -32,19 +32,16 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
 
   fastify.get('/social', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const { skip, take } = PaginationQuerySchema.parse(req.query)
-    console.log('🔍 /find/social - pagination params:', { skip, take })
     return getSocialProfiles(req, reply, [{ updatedAt: 'desc' }], take, skip)
   })
 
   fastify.get('/dating', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const { skip, take } = PaginationQuerySchema.parse(req.query)
-    console.log('🔍 /find/dating - pagination params:', { skip, take })
     return getDatingProfiles(req, reply, [{ updatedAt: 'desc' }], take, skip)
   })
 
   fastify.get('/social/new', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const { skip, take } = PaginationQuerySchema.parse(req.query)
-    console.log('🔍 /find/social/new - pagination params:', { skip, take })
     
     if (!req.session.profile.isSocialActive) {
       return sendForbiddenError(reply)
@@ -58,7 +55,6 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
       const mappedProfiles = profiles.map(p =>
         mapProfileToPublic(p, false /* includeDatingContext */, locale)
       )
-      console.log('✅ /find/social/new - found profiles:', mappedProfiles.length)
       const response: GetProfilesResponse = { success: true, profiles: mappedProfiles }
       return reply.code(200).send(response)
     } catch (err) {
@@ -160,7 +156,6 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
       const mappedProfiles = profiles.map(p =>
         mapProfileToPublic(p, true /* includeDatingContext */, locale)
       )
-      console.log('✅ getDatingProfiles - found profiles:', mappedProfiles.length, 'skip:', skip)
       const response: GetProfilesResponse = { success: true, profiles: mappedProfiles }
       return reply.code(200).send(response)
     } catch (err) {
@@ -174,7 +169,7 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
     req: FastifyRequest,
     reply: FastifyReply,
     orderBy: OrderBy,
-    take: number = 20,
+    take: number = 10,
     skip: number = 0
   ) => {
     if (!req.session.profile.isSocialActive) {
@@ -189,7 +184,6 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
       const mappedProfiles = profiles.map(p =>
         mapProfileToPublic(p, false /* includeDatingContext */, locale)
       )
-      console.log('✅ getSocialProfiles - found profiles:', mappedProfiles.length, 'skip:', skip)
       const response: GetProfilesResponse = { success: true, profiles: mappedProfiles }
       return reply.code(200).send(response)
     } catch (err) {
