@@ -2,10 +2,6 @@
 import ProfileCardComponent from './ProfileCardComponent.vue'
 import { type PublicProfile } from '@zod/profile/profile.dto'
 
-// defineEmits<{
-//   (event: 'profile:select', id: string): void
-// }>()
-
 import { onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import type { Ref } from 'vue'
 import L, { Map as LMap, Marker as LMarker } from 'leaflet'
