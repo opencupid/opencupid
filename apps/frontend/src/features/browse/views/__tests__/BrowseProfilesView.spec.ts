@@ -10,6 +10,7 @@ vi.mock('../../components/NoAccessCTA.vue', () => ({ default: { template: '<div 
 vi.mock('../../components/NoResultsCTA.vue', () => ({ default: { template: '<div class="no-results" />' } }))
 vi.mock('../../components/DatingPreferencesForm.vue', () => ({ default: { template: '<div class="prefs-form" />', props: ['modelValue'] } }))
 vi.mock('../../components/MiddleColumn.vue', () => ({ default: { template: '<div class="middle"><slot /></div>' } }))
+vi.mock('../../components/OsmPoiMap.vue', () => ({ default: { template: '<div class="osm-poi-map" />', props: ['profiles'] } }))
 vi.mock('@/features/publicprofile/components/PublicProfile.vue', () => ({ default: { template: '<div class="public-profile" />', props: ['id'] } }))
 vi.mock('@/features/interaction/components/ReceivedLikesCount.vue', () => ({ default: { template: '<div class="received-likes" />' } }))
 vi.mock('@/features/shared/ui/SecondaryNav.vue', () => ({ default: { template: '<div class="secondary-nav" />' } }))
@@ -24,13 +25,18 @@ const vmState = {
   findProfileStoreLoading: ref(false),
   ownerStoreLoading: ref(false),
   currentScope: ref('dating'),
+  viewModeModel: ref('grid'),
   profileList: ref([{ id: '1' }]),
   storeError: ref(null),
   datingPrefs: ref(null),
   selectedProfileId: ref(null),
   isInitialized: ref(true),
   hideProfile: vi.fn(),
-  updateDatingPrefs: vi.fn(),
+  updatePrefs: vi.fn(),
+  openProfile: vi.fn(),
+  isLoadingMore: ref(false),
+  hasMoreProfiles: ref(true),
+  loadMoreProfiles: vi.fn(),
   initialize: vi.fn(),
   reset: vi.fn()
 }
@@ -54,6 +60,7 @@ describe('BrowseProfiles view', () => {
     vmState.findProfileStoreLoading.value = false
     vmState.ownerStoreLoading.value = false
     vmState.isInitialized.value = true
+    vmState.viewModeModel.value = 'grid'
   })
 
   it('displays placeholders while loading (store loading)', () => {
@@ -87,9 +94,18 @@ describe('BrowseProfiles view', () => {
     expect(wrapper.find('.no-results').exists()).toBe(true)
   })
 
-  it('renders profile grid when results available', () => {
+  it('renders profile grid when in grid view mode', () => {
+    vmState.viewModeModel.value = 'grid'
     const wrapper = mount(BrowseProfiles, { global: { stubs: { BPlaceholderWrapper, BOverlay, BModal, BButton } } })
     expect(wrapper.find('.profile-grid').exists()).toBe(true)
+    expect(wrapper.find('.osm-poi-map').exists()).toBe(false)
+  })
+
+  it('renders map when in map view mode', () => {
+    vmState.viewModeModel.value = 'map'
+    const wrapper = mount(BrowseProfiles, { global: { stubs: { BPlaceholderWrapper, BOverlay, BModal, BButton } } })
+    expect(wrapper.find('.profile-grid').exists()).toBe(false)
+    expect(wrapper.find('.osm-poi-map').exists()).toBe(true)
   })
 
   it('shows no-access overlay when not initialized yet but access would be false', () => {
