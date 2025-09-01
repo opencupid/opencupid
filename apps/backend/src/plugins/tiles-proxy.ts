@@ -19,8 +19,7 @@ const tilesPlugin: FastifyPluginAsync = async (fastify) => {
   const MAX_AGE = Number(process.env.TILE_MAX_AGE_SECONDS ?? 86400)
   const LRU_SIZE = Number(process.env.TILE_CACHE_ITEMS ?? 500)
 
-  const cache = new LRUCache<string, CacheEntry>({
-    max: Number(process.env.TILE_CACHE_ITEMS ?? 500), // items
+    max: LRU_SIZE, // items
     ttl: 0, // no TTL (use upstream caching headers instead)
   })
   // polite: identify ourselves to OSM
