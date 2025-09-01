@@ -2,6 +2,7 @@ import path from "path";
 import fs from 'fs'
 import { loadEnv } from "vite";
 import { findUpSync } from 'find-up'
+import { getPackageVersion } from "../../packages/shared/version";
 
 export const server = (mode: string) => {
   if (mode !== 'development') return {}
@@ -59,6 +60,13 @@ export const define = (mode: string) => {
     ...process.env,
     ...loadEnv(mode, envDir, ''),
   }
+
+  // Read package versions
+  const repoRoot = path.resolve(__dirname, '../..')
+  const versions = {
+    app: getPackageVersion(path.join(repoRoot, 'package.json')),
+  }
+
   return {
     envDir: '../../',
     define: {
@@ -71,6 +79,7 @@ export const define = (mode: string) => {
         SENTRY_DSN: env.SENTRY_DSN,
         SITE_NAME: env.SITE_NAME,
       }),
+      __APP_VERSION__: JSON.stringify(versions),
     }
   }
 }

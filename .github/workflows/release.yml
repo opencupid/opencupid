@@ -1,0 +1,141 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  packages: write
+  pull-requests: write
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    
+    outputs:
+      has-changesets: ${{ steps.changesets.outputs.hasChangesets }}
+      app-version: ${{ steps.get-versions.outputs.app }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # This makes Actions fetch all git history so that Changesets can generate changelogs with the correct commits
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create Release Pull Request or Publish to npm
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          # This expects you to have a script called release which does a build for your packages and calls changeset publish
+          version: pnpm changeset version
+          publish: echo "No npm publish - this is a monorepo release"
+          commit: "chore: version packages"
+          title: "chore: version packages"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get current versions
+        id: get-versions
+        run: |
+          APP_VERSION=$(node -p "require('./package.json').version")
+          echo "app=$APP_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create tags if versions were bumped
+        if: steps.changesets.outputs.published == 'true'
+        run: |
+          git tag "app-v${{ steps.get-versions.outputs.app }}"
+          git push origin --tags
+
+  docker:
+    needs: version
+    runs-on: ubuntu-latest
+    if: needs.version.outputs.has-changesets == 'false'
+    
+    strategy:
+      matrix:
+        node-version: [22]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create .env from secret
+        uses: SpicyPizza/create-envfile@v2.0
+        with:
+          envkey_PRODUCTION_ENV_FILE: ${{ secrets.PRODUCTION_ENV_FILE }}
+          file_name: .env
+          
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: peterzen
+          password: ${{ secrets.GHCR_PAT }}
+
+      - name: Get git commit short SHA
+        id: git-sha
+        run: echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      # Build and push backend image
+      - name: Build and push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/backend/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}-backend:latest
+            ghcr.io/${{ github.repository }}-backend:${{ needs.version.outputs.backend-version }}
+            ghcr.io/${{ github.repository }}-backend:${{ steps.git-sha.outputs.sha }}
+
+      # Build and push frontend image
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/frontend/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}-frontend:latest
+            ghcr.io/${{ github.repository }}-frontend:${{ needs.version.outputs.frontend-version }}
+            ghcr.io/${{ github.repository }}-frontend:${{ steps.git-sha.outputs.sha }}
+
+      # Create a combined app tag using the app version
+      - name: Tag app bundle version
+        run: |
+          echo "App bundle version: ${{ needs.version.outputs.app-version }}"
+          echo "This represents the deployable bundle of frontend:${{ needs.version.outputs.frontend-version }} + backend:${{ needs.version.outputs.backend-version }}"
