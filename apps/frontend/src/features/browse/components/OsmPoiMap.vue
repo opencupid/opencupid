@@ -71,7 +71,7 @@ function ensureMap() {
   })
 
   // OSM tiles + required attribution
-  const tilesUrl = __APP_CONFIG__.API_BASE_URL + '/tiles/{z}/{x}/{y}.png'
+  const tilesUrl = `${__APP_CONFIG__.API_BASE_URL}/tiles/{z}/{x}/{y}.png`
 
   L.tileLayer(tilesUrl, {
     // L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
