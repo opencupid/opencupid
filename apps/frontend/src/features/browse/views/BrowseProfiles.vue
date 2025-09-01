@@ -177,7 +177,7 @@ useInfiniteScroll(
               <BButtonGroup aria-label="Toggle view mode" size="sm">
                 <BButton
                   variant="outline-secondary"
-                  :title="$t('profiles.browse.views.grid_view_button_title')"
+                  :title="t('profiles.browse.views.grid_view_button_title')"
                   :pressed="viewModeModel === 'grid'"
                   @click="viewModeModel = 'grid'"
                 >
@@ -191,7 +191,7 @@ useInfiniteScroll(
 
                 <BButton
                   variant="outline-secondary"
-                  :title="$t('profiles.browse.views.map_view_button_title')"
+                  :title="t('profiles.browse.views.map_view_button_title')"
                   :pressed="viewModeModel === 'map'"
                   @click="viewModeModel = 'map'"
                 >
