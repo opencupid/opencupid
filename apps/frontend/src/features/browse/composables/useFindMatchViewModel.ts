@@ -58,7 +58,7 @@ export function useFindMatchViewModel() {
   const savedScope = computed(() => localStore.getCurrentScope)
 
   const currentViewMode = computed(() =>
-    typeof route.query.viewMode === 'string' && Object.values(ViewMode).includes(route.query.viewMode)
+    typeof route.query.viewMode === 'string' && Object.values(ViewMode).includes(route.query.viewMode as ViewMode)
       ? (route.query.viewMode)
       : 'grid'
   )
