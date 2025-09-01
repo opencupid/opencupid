@@ -1,0 +1,23 @@
+services:
+  listmonk:
+    image: listmonk/listmonk:latest
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      - LISTMONK_app__address=0.0.0.0:9000
+      - LISTMONK_app__admin_username=${LISTMONK_USER:-admin}
+      - LISTMONK_app__admin_password=${LISTMONK_PASS:-admin}
+      - LISTMONK_db__host=db
+      - LISTMONK_db__port=5432
+      - LISTMONK_db__user=appuser
+      - LISTMONK_db__password=secret
+      - LISTMONK_db__database=app
+      - LISTMONK_db__ssl_mode=disable
+    ports:
+      - "9000:9000"
+    command: >
+      sh -c "
+      ./listmonk --install --yes &&
+      ./listmonk
+      "
