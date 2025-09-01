@@ -92,8 +92,12 @@ const tilesPlugin: FastifyPluginAsync = async (fastify) => {
       .header('Content-Type', ct)
       .header('Cache-Control', `public, max-age=${MAX_AGE}`)
       .header('Access-Control-Allow-Origin', '*')
-      .header('ETag', etag ?? '')
-      .header('Last-Modified', lastMod ?? '')
+    if (etag !== undefined) {
+      reply.header('ETag', etag)
+    }
+    if (lastMod !== undefined) {
+      reply.header('Last-Modified', lastMod)
+    }
 
     return reply.send(buf)
   })
