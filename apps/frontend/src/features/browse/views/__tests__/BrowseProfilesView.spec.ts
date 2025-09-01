@@ -36,9 +36,9 @@ const vmState = {
   scopeModel: ref('dating'),
   profileList: ref([{ id: '1' }]),
   storeError: ref(null),
-  datingPrefs: ref(null),
-  socialFilter: ref(null),
-  selectedProfileId: ref(null),
+  datingPrefs: ref<{ prefAgeMin: number; prefAgeMax: number } | null>(null),
+  socialFilter: ref<{ location: { country: string }; radius: number } | null>(null),
+  selectedProfileId: ref<string | null>(null),
   isInitialized: ref(true),
   isLoadingMore: ref(false),
   hasMoreProfiles: ref(true),
@@ -177,15 +177,15 @@ describe('BrowseProfiles view', () => {
     expect(wrapper.find('.no-results').exists()).toBe(true)
   })
 
-  // ViewMode Tests - Grid View (default state)
-  describe('ViewMode - Grid View', () => {
+  // ViewMode Tests - List View (default state)
+  describe('ViewMode - List View', () => {
     it('displays grid view when no profile is selected', () => {
       vmState.selectedProfileId.value = null
       const wrapper = mountComponent()
       
-      expect(wrapper.find('.grid-view').exists()).toBe(true)
+      expect(wrapper.find('.list-view').exists()).toBe(true)
       expect(wrapper.find('.detail-view').exists()).toBe(false)
-      expect(wrapper.find('.grid-view').classes()).not.toContain('inactive')
+      expect(wrapper.find('.list-view').classes()).not.toContain('inactive')
     })
 
     it('shows scope view toggler in grid view', () => {
@@ -221,7 +221,7 @@ describe('BrowseProfiles view', () => {
       const wrapper = mountComponent()
       
       expect(wrapper.find('.detail-view').exists()).toBe(true)
-      expect(wrapper.find('.grid-view').classes()).toContain('inactive')
+      expect(wrapper.find('.list-view').classes()).toContain('inactive')
     })
 
     it('shows public profile component in detail view', () => {
@@ -235,7 +235,7 @@ describe('BrowseProfiles view', () => {
       vmState.selectedProfileId.value = 'profile-123'
       const wrapper = mountComponent()
       
-      const gridView = wrapper.find('.grid-view')
+      const gridView = wrapper.find('.list-view')
       expect(gridView.classes()).toContain('inactive')
     })
 
@@ -244,14 +244,14 @@ describe('BrowseProfiles view', () => {
       const wrapper = mountComponent()
       
       // Initially in grid view
-      expect(wrapper.find('.grid-view').classes()).not.toContain('inactive')
+      expect(wrapper.find('.list-view').classes()).not.toContain('inactive')
       expect(wrapper.find('.detail-view').exists()).toBe(false)
       
       // Switch to detail view
       vmState.selectedProfileId.value = 'profile-456'
       await wrapper.vm.$nextTick()
       
-      expect(wrapper.find('.grid-view').classes()).toContain('inactive')
+      expect(wrapper.find('.list-view').classes()).toContain('inactive')
       expect(wrapper.find('.detail-view').exists()).toBe(true)
     })
 
@@ -260,14 +260,14 @@ describe('BrowseProfiles view', () => {
       const wrapper = mountComponent()
       
       // Initially in detail view
-      expect(wrapper.find('.grid-view').classes()).toContain('inactive')
+      expect(wrapper.find('.list-view').classes()).toContain('inactive')
       expect(wrapper.find('.detail-view').exists()).toBe(true)
       
       // Switch to grid view
       vmState.selectedProfileId.value = null
       await wrapper.vm.$nextTick()
       
-      expect(wrapper.find('.grid-view').classes()).not.toContain('inactive')
+      expect(wrapper.find('.list-view').classes()).not.toContain('inactive')
       expect(wrapper.find('.detail-view').exists()).toBe(false)
     })
   })

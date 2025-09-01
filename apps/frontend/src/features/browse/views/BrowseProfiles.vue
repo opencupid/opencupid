@@ -154,7 +154,7 @@ useInfiniteScroll(
     </div>
 
     <div
-      class="grid-view d-flex flex-column justify-content-start"
+      class="list-view d-flex flex-column justify-content-start"
       :class="[currentScope, { inactive: isDetailView }]"
     >
       <MiddleColumn class="my-2">
@@ -264,7 +264,7 @@ useInfiniteScroll(
             ref="scrollContainer"
             class="overflow-auto hide-scrollbar pb-5 flex-grow-1"
           >
-            <MiddleColumn v-if="viewModeModel === 'grid'">
+            <MiddleColumn v-if="viewModeModel === 'grid'" class="grid-view">
               <ProfileCardGrid
                 :profiles="profileList"
                 :showTags="true"
@@ -285,7 +285,7 @@ useInfiniteScroll(
             <OsmPoiMap
               v-if="viewModeModel === 'map'"
               :profiles="profileList"
-              class="h-100"
+              class="map-view h-100"
               @profile:select="handleCardClick"
             />
           </div>
@@ -343,7 +343,7 @@ useInfiniteScroll(
   }
 }
 
-.grid-view {
+.list-view {
   height: calc(100vh - $navbar-height);
 }
 
