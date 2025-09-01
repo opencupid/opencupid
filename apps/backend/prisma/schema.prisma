@@ -79,6 +79,14 @@ enum UserRole {
   moderator
 }
 
+enum NewsletterStatus {
+  SUBSCRIBED
+  UNSUBSCRIBED
+  BOUNCED
+  COMPLAINED
+  PENDING_DOUBLE_OPT_IN
+}
+
 model City {
   id      String @id @default(cuid())
   name    String
@@ -231,6 +239,26 @@ model Profile {
 
   hiddenProfiles HiddenProfile[] @relation("HiddenProfiles")
   hiddenBy       HiddenProfile[] @relation("HiddenBy")
+
+  // Newsletter subscription
+  newsletter NewsletterSubscription?
+}
+
+model NewsletterSubscription {
+  id              String            @id @default(cuid())
+  profileId       String            @unique
+  profile         Profile           @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  status          NewsletterStatus  @default(SUBSCRIBED)
+  listmonkId      Int?              // Remote subscriber ID in Listmonk
+  listmonkUUID    String?           // Remote subscriber UUID in Listmonk
+  subscribedAt    DateTime?
+  unsubscribedAt  DateTime?
+  source          String?           // e.g., "site_signup", "admin", "import"
+  attributes      Json?             // Segmentation attributes (optional)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([profileId])
 }
 
 model LocalizedProfileField {

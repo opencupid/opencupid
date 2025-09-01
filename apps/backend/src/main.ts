@@ -49,6 +49,7 @@ async function main() {
 
   app.register(import('./plugins/websockets'))
   app.register(import('./plugins/prisma'))
+  app.register(import('./plugins/listmonk'))
   app.register(import('./plugins/session-auth'))
   // API routes
   app.register(import('./api'), { prefix: '/api' })
@@ -56,6 +57,13 @@ async function main() {
   // WebSocket routes
   const wsRoutes = import('./api/routes/message-ws.route')
   app.register(wsRoutes, { prefix: '/ws' })
+
+  // Webhook routes (no auth required)
+  const webhookRoutes = import('./api/routes/newsletter.route')
+  app.register(async (f) => {
+    const { newsletterWebhookRoutes } = await webhookRoutes
+    f.register(newsletterWebhookRoutes)
+  }, { prefix: '/webhooks' })
 
   const rateLimit = import('@fastify/rate-limit')
   const tilesPlugin = import('./plugins/tiles-proxy')

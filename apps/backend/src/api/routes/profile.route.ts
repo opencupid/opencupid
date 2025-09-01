@@ -33,6 +33,7 @@ import { GetProfileSummariesResponse } from '@zod/apiResponse.dto'
 import { ProfileService } from 'src/services/profile.service'
 import { ProfileMatchService } from '@/services/profileMatch.service'
 import { MessageService } from '../../services/messaging.service'
+import { NewsletterSyncService } from '@/services/newsletterSync.service'
 
 // Route params for ID lookups
 const IdLookupParamsSchema = z.object({
@@ -53,6 +54,8 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
   const profileService = ProfileService.getInstance()
   const profileMatchService = ProfileMatchService.getInstance()
   const messageService = MessageService.getInstance()
+  const newsletterService = NewsletterSyncService.getInstance()
+  newsletterService.setFastifyInstance(fastify)
 
   /**
    * Get the current user's profile
@@ -212,6 +215,13 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
         fastify.log.warn('Failed to send welcome message', error)
       }
 
+      // Sync to newsletter service
+      try {
+        await newsletterService.syncProfileToListmonk(updated.id)
+      } catch (error) {
+        fastify.log.warn('Failed to sync profile to newsletter service', error)
+      }
+
     } catch (err) {
       fastify.log.error(err)
       // profileService.updateProfile() returned null, which means the profile was not found
@@ -245,6 +255,12 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
       })
 
       const response: UpdateProfileResponse = { success: true, profile: updated }
+      
+      // Sync to newsletter service (don't await to avoid blocking the response)
+      newsletterService.syncProfileToListmonk(updated.id).catch(error => {
+        fastify.log.warn('Failed to sync profile to newsletter service', error)
+      })
+      
       return reply.code(200).send(response)
     } catch (err) {
       fastify.log.error(err)

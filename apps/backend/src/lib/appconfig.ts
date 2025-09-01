@@ -59,6 +59,13 @@ export const configSchema = z.object({
   DOMAIN: z.string().default('example.org'),
 
   SITE_NAME: z.string().default('OpenCupid'),
+
+  // Listmonk Newsletter
+  LISTMONK_URL: z.string().url().optional(),
+  LISTMONK_USER: z.string().optional(),
+  LISTMONK_PASS: z.string().optional(),
+  LISTMONK_LIST_ID: z.coerce.number().optional(),
+  NEWSLETTER_ENABLED: z.coerce.boolean().default(false),
 })
 
 if (!['production', 'staging'].includes(process.env.NODE_ENV!)) {
