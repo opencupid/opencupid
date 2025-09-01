@@ -1,11 +1,11 @@
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { ref, computed } from 'vue'
-vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k:string)=>k }) }))
+vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 
 // stub child components
 vi.mock('../../components/ProfileCardGrid.vue', () => ({ default: { template: '<div class="profile-grid" />', props: ['profiles'] } }))
-vi.mock('../../components/PlaceholdersGrid.vue', () => ({ default: { template: '<div class="placeholders-grid" />', props: ['howMany','loading'] } }))
+vi.mock('../../components/PlaceholdersGrid.vue', () => ({ default: { template: '<div class="placeholders-grid" />', props: ['howMany', 'loading'] } }))
 vi.mock('../../components/NoAccessCTA.vue', () => ({ default: { template: '<div class="no-access" />', props: ['modelValue'] } }))
 vi.mock('../../components/NoResultsCTA.vue', () => ({ default: { template: '<div class="no-results" />' } }))
 vi.mock('../../components/DatingPreferencesForm.vue', () => ({ default: { template: '<div class="prefs-form" />', props: ['modelValue'] } }))
@@ -41,13 +41,10 @@ const vmState = {
   selectedProfileId: ref<string | null>(null),
   isInitialized: ref(true),
   isLoadingMore: ref(false),
-  hasMoreProfiles: ref(true),
   hideProfile: vi.fn(),
   updatePrefs: vi.fn(),
   openProfile: vi.fn(),
-  isLoadingMore: ref(false),
   hasMoreProfiles: ref(true),
-  loadMoreProfiles: vi.fn(),
   initialize: vi.fn(),
   reset: vi.fn(),
   loadMoreProfiles: vi.fn()
@@ -81,19 +78,19 @@ describe('BrowseProfiles view', () => {
   })
 
   const mountComponent = () => {
-    return mount(BrowseProfiles, { 
-      global: { 
-        stubs: { 
-          BPlaceholderWrapper, 
-          BOverlay, 
-          BModal, 
-          BButton, 
-          BContainer, 
-          BSpinner 
-        } 
-      } 
-      vmState.viewModeModel.value = 'grid'
-  })
+    vmState.viewModeModel.value = 'grid'
+    return mount(BrowseProfiles, {
+      global: {
+        stubs: {
+          BPlaceholderWrapper,
+          BOverlay,
+          BModal,
+          BButton,
+          BContainer,
+          BSpinner
+        }
+      }
+    })
   }
 
   it('displays placeholders while loading (store loading)', () => {
@@ -151,7 +148,7 @@ describe('BrowseProfiles view', () => {
   })
 
   it('shows no-results overlay when not initialized yet but results would be false', () => {
-    vmState.haveResults.value = false 
+    vmState.haveResults.value = false
     vmState.isInitialized.value = false // Still initializing
     const wrapper = mountComponent()
     // Should show loading placeholders, not the no-results overlay during initialization
@@ -182,7 +179,7 @@ describe('BrowseProfiles view', () => {
     it('displays grid view when no profile is selected', () => {
       vmState.selectedProfileId.value = null
       const wrapper = mountComponent()
-      
+
       expect(wrapper.find('.list-view').exists()).toBe(true)
       expect(wrapper.find('.detail-view').exists()).toBe(false)
       expect(wrapper.find('.list-view').classes()).not.toContain('inactive')
@@ -191,7 +188,7 @@ describe('BrowseProfiles view', () => {
     it('shows scope view toggler in grid view', () => {
       vmState.selectedProfileId.value = null
       const wrapper = mountComponent()
-      
+
       expect(wrapper.find('.secondary-nav').exists()).toBe(true)
     })
 
@@ -200,7 +197,7 @@ describe('BrowseProfiles view', () => {
       vmState.currentScope.value = 'dating'
       vmState.datingPrefs.value = { prefAgeMin: 18, prefAgeMax: 30 }
       const wrapper = mountComponent()
-      
+
       expect(wrapper.find('.dating-prefs-display').exists()).toBe(true)
     })
 
@@ -209,7 +206,7 @@ describe('BrowseProfiles view', () => {
       vmState.currentScope.value = 'social'
       vmState.socialFilter.value = { location: { country: 'US' }, radius: 50 }
       const wrapper = mountComponent()
-      
+
       expect(wrapper.find('.social-filter-display').exists()).toBe(true)
     })
   })
@@ -219,7 +216,7 @@ describe('BrowseProfiles view', () => {
     it('displays detail view when a profile is selected', () => {
       vmState.selectedProfileId.value = 'profile-123'
       const wrapper = mountComponent()
-      
+
       expect(wrapper.find('.detail-view').exists()).toBe(true)
       expect(wrapper.find('.list-view').classes()).toContain('inactive')
     })
@@ -227,14 +224,14 @@ describe('BrowseProfiles view', () => {
     it('shows public profile component in detail view', () => {
       vmState.selectedProfileId.value = 'profile-123'
       const wrapper = mountComponent()
-      
+
       expect(wrapper.find('.public-profile').exists()).toBe(true)
     })
 
     it('hides grid view when in detail view', () => {
       vmState.selectedProfileId.value = 'profile-123'
       const wrapper = mountComponent()
-      
+
       const gridView = wrapper.find('.list-view')
       expect(gridView.classes()).toContain('inactive')
     })
@@ -242,15 +239,15 @@ describe('BrowseProfiles view', () => {
     it('transitions from grid to detail view', async () => {
       vmState.selectedProfileId.value = null
       const wrapper = mountComponent()
-      
+
       // Initially in grid view
       expect(wrapper.find('.list-view').classes()).not.toContain('inactive')
       expect(wrapper.find('.detail-view').exists()).toBe(false)
-      
+
       // Switch to detail view
       vmState.selectedProfileId.value = 'profile-456'
       await wrapper.vm.$nextTick()
-      
+
       expect(wrapper.find('.list-view').classes()).toContain('inactive')
       expect(wrapper.find('.detail-view').exists()).toBe(true)
     })
@@ -258,15 +255,15 @@ describe('BrowseProfiles view', () => {
     it('transitions from detail to grid view', async () => {
       vmState.selectedProfileId.value = 'profile-789'
       const wrapper = mountComponent()
-      
+
       // Initially in detail view
       expect(wrapper.find('.list-view').classes()).toContain('inactive')
       expect(wrapper.find('.detail-view').exists()).toBe(true)
-      
+
       // Switch to grid view
       vmState.selectedProfileId.value = null
       await wrapper.vm.$nextTick()
-      
+
       expect(wrapper.find('.list-view').classes()).not.toContain('inactive')
       expect(wrapper.find('.detail-view').exists()).toBe(false)
     })
@@ -293,7 +290,7 @@ describe('BrowseProfiles view', () => {
           }
         }
       })
-      
+
       expect(osmPoiMapMock.find('.osm-poi-map').exists()).toBe(true)
     })
 
@@ -310,7 +307,7 @@ describe('BrowseProfiles view', () => {
           }
         }
       })
-      
+
       expect(osmPoiMapMock.find('.osm-poi-map').exists()).toBe(true)
     })
 
