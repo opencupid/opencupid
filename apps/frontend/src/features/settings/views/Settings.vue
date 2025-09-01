@@ -115,6 +115,16 @@ function handleClick() {
               </legend>
               <LanguageSelectorDropdown size="md" />
             </fieldset>
+
+            <!-- Email Preferences Link -->
+            <div class="mb-3">
+              <router-link 
+                to="/settings/email-preferences" 
+                class="btn btn-outline-primary w-100"
+              >
+                {{ t('newsletter.emailPreferences') }}
+              </router-link>
+            </div>
           </BOverlay>
         </section>
         <div class="position-fixed bottom-0 w-100 p-2">

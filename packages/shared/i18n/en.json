@@ -303,6 +303,19 @@
     "push_notifications": "Push Notifications",
     "enable_push": "Enable Push Notifications"
   },
+  "newsletter": {
+    "emailPreferences": "Email Preferences",
+    "currentStatus": "Current Status",
+    "manageSubscription": "Manage Subscription",
+    "manageDescription": "Choose whether to receive occasional newsletters about community updates and features.",
+    "subscribe": "Subscribe to Newsletter",
+    "unsubscribe": "Unsubscribe from Newsletter",
+    "subscribedSince": "Subscribed since",
+    "unsubscribedOn": "Unsubscribed on",
+    "aboutNewsletters": "About Our Newsletter",
+    "aboutDescription": "We send occasional newsletters with community updates, new features, and helpful tips. We respect your privacy and won't spam you.",
+    "unsubscribeNote": "You can also unsubscribe using the link in any newsletter email."
+  },
   "uicomponents": {
     "connection_error": {
       "title": "It's not you, it's us.",
