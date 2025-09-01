@@ -11,7 +11,7 @@ type CacheEntry = {
   lastModified?: string
 }
 
-const tilesPlugin: FastifyPluginAsync = async (fastify) => {
+const tilesPlugin: FastifyPluginAsync = async fastify => {
   const UPSTREAM = process.env.TILE_UPSTREAM ?? 'https://{s}.tile.openstreetmap.org'
   const SUBDOMAINS = (process.env.TILE_SUBDOMAINS ?? 'a,b,c').split(',')
   const UA = process.env.TILE_USER_AGENT ?? 'OpenCupid/tiles-proxy (contact: you@example.com)'
@@ -19,13 +19,14 @@ const tilesPlugin: FastifyPluginAsync = async (fastify) => {
   const MAX_AGE = Number(process.env.TILE_MAX_AGE_SECONDS ?? 86400)
   const LRU_SIZE = Number(process.env.TILE_CACHE_ITEMS ?? 500)
 
-    max: LRU_SIZE, // items
+  const cache = new LRUCache<string, CacheEntry>({
+    max: Number(LRU_SIZE), // items
     ttl: 0, // no TTL (use upstream caching headers instead)
   })
   // polite: identify ourselves to OSM
   const baseHeaders = {
     'User-Agent': UA,
-    'Referer': REF,
+    Referer: REF,
   }
 
   fastify.get<{
@@ -37,7 +38,13 @@ const tilesPlugin: FastifyPluginAsync = async (fastify) => {
     const zNum = Number(z)
     const xNum = Number(x)
     const yNum = Number(y)
-    if (!Number.isFinite(zNum) || !Number.isFinite(xNum) || !Number.isFinite(yNum) || zNum < 0 || zNum > 19) {
+    if (
+      !Number.isFinite(zNum) ||
+      !Number.isFinite(xNum) ||
+      !Number.isFinite(yNum) ||
+      zNum < 0 ||
+      zNum > 19
+    ) {
       return reply.code(400).send('bad tile coords')
     }
 
@@ -62,8 +69,13 @@ const tilesPlugin: FastifyPluginAsync = async (fastify) => {
         .code(304)
         .header('Cache-Control', `public, max-age=${MAX_AGE}`)
         .header('Access-Control-Allow-Origin', '*') // images-safe
-        .header('ETag', cached.etag ?? '')
-        .header('Last-Modified', cached.lastModified ?? '')
+
+      if (cached.etag !== undefined) {
+        reply.header('ETag', cached.etag)
+      }
+      if (cached.lastModified !== undefined) {
+        reply.header('Last-Modified', cached.lastModified)
+      }
       return reply.send()
     }
 
@@ -92,6 +104,7 @@ const tilesPlugin: FastifyPluginAsync = async (fastify) => {
       .header('Content-Type', ct)
       .header('Cache-Control', `public, max-age=${MAX_AGE}`)
       .header('Access-Control-Allow-Origin', '*')
+
     if (etag !== undefined) {
       reply.header('ETag', etag)
     }
