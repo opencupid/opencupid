@@ -111,6 +111,15 @@ const hint = computed(() => history?.state?.hint || null)
                   @click="toggleSocial"
                   :class="{ active: formData.isSocialActive }"
                 >
+                  <input
+                    type="checkbox"
+                    class="form-check-input me-2"
+                    :checked="formData.isSocialActive"
+                    value="true"
+                  />
+                  <span class="d-none d-sm-inline me-2">{{
+                    $t('general.connectiontypes.socializing')
+                  }}</span>
                   <IconSocialize class="svg-icon-lg" />
                 </span>
                 <span
@@ -118,6 +127,15 @@ const hint = computed(() => history?.state?.hint || null)
                   @click="toggleDating"
                   :class="{ active: formData.isDatingActive }"
                 >
+                  <input
+                    type="checkbox"
+                    class="form-check-input me-2"
+                    :checked="formData.isDatingActive"
+                    value="true"
+                  />
+                  <span class="d-none d-sm-inline me-2">{{
+                    $t('general.connectiontypes.dating')
+                  }}</span>
                   <IconDate class="svg-icon-lg" />
                 </span>
               </div>
