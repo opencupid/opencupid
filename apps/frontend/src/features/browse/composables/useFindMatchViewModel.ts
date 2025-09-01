@@ -63,13 +63,19 @@ export function useFindMatchViewModel() {
       : 'grid'
   )
 
-  function navigateToViewMode(viewMode: ViewMode): void {
-    router.replace({ query: { ...route.query, viewMode } })
+  function isValidViewMode(mode: string): mode is ViewMode {
+    return Object.values(ViewMode).includes(mode as ViewMode);
+  }
+
+  function navigateToViewMode(viewMode: string): void {
+    if (isValidViewMode(viewMode)) {
+      router.replace({ query: { ...route.query, viewMode } })
+    }
   }
 
   const viewModeModel = computed({
     get: () => currentViewMode.value,
-    set: (mode: ViewMode) => {
+    set: (mode: string) => {
       navigateToViewMode(mode)
     },
   })
