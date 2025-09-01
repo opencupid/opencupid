@@ -12,8 +12,8 @@ import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileSt
 import { useAgeFields } from '@/features/shared/composables/useAgeFields';
 
 enum ViewMode {
-  'map',
-  'grid',
+  map = 'map',
+  grid = 'grid',
 }
 
 
