@@ -40,8 +40,6 @@ async function main() {
   app.register(import('./plugins/websockets'))
   app.register(import('./plugins/prisma'))
   app.register(import('./plugins/session-auth'))
-  // app.register(import('./plugins/rate-limiter'))
-  // app.register(import('./plugins/tiles-proxy'))
   // API routes
   app.register(import('./api'), { prefix: '/api' })
 
