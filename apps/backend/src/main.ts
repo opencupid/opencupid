@@ -40,14 +40,28 @@ async function main() {
   app.register(import('./plugins/websockets'))
   app.register(import('./plugins/prisma'))
   app.register(import('./plugins/session-auth'))
-  app.register(import('./plugins/rate-limiter'))
-
   // API routes
   app.register(import('./api'), { prefix: '/api' })
 
   // WebSocket routes
   const wsRoutes = import('./api/routes/message-ws.route')
   app.register(wsRoutes, { prefix: '/ws' })
+
+  const rateLimit = import('@fastify/rate-limit')
+  const tilesPlugin = import('./plugins/tiles-proxy')
+
+  // Tiles proxy setup
+  await app.register(rateLimit, {
+    global: false, // we’ll apply to the route below
+  })
+
+  // Rate-limit only the tile route (be polite to OSM)
+  app.register(async (f) => {
+    await f.register(rateLimit, { max: 56, timeWindow: '1 second' }) // ~6 rps per client
+    await f.register(tilesPlugin)
+  })
+
+  // app.get('/healthz', async () => ({ ok: true }))
 
   const ok = checkImageRoot()
   if (!ok) {

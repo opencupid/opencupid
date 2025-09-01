@@ -154,6 +154,10 @@
       "no_results_cta_description": "Segíthetsz, ha meghívod barátaidat, hogy csatlakozzanak. Minél többen vagyunk, annál jobb.",
       "loading_more_profiles": "Egy pillanat...",
       "invite_button": "Barátok meghívása",
+      "views": {
+        "grid_view_button_title": "Profilok",
+        "map_view_button_title": "Térkép"
+      },
       "filters": {
         "dialog_ok_button": "Keresés",
         "dialog_cancel_button": "Mégse",

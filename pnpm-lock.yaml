@@ -109,7 +109,7 @@ importers:
         specifier: ^12.0.2
         version: 12.0.2
       fastify:
-        specifier: ^5.3.3
+        specifier: ^5.4.0
         version: 5.4.0
       fastify-plugin:
         specifier: ^4.5.1
@@ -129,9 +129,9 @@ importers:
       jsdom:
         specifier: ^26.1.0
         version: 26.1.0(canvas@3.1.2)
-      node:
-        specifier: ^22.19.0
-        version: 22.19.0
+      lru-cache:
+        specifier: ^11.1.0
+        version: 11.1.0
       nodemailer:
         specifier: ^7.0.3
         version: 7.0.5
@@ -153,6 +153,9 @@ importers:
       ts-node:
         specifier: ^10.9.2
         version: 10.9.2(@types/node@22.16.2)(typescript@5.8.3)
+      undici:
+        specifier: ^7.15.0
+        version: 7.15.0
       web-push:
         specifier: ^3.6.7
         version: 3.6.7
@@ -334,6 +337,9 @@ importers:
       i18n-iso-countries:
         specifier: ^7.14.0
         version: 7.14.0
+      leaflet:
+        specifier: ^1.9.4
+        version: 1.9.4
       luxon:
         specifier: ^3.6.1
         version: 3.6.1
@@ -401,6 +407,9 @@ importers:
       '@types/jsdom':
         specifier: ^21.1.7
         version: 21.1.7
+      '@types/leaflet':
+        specifier: ^1.9.20
+        version: 1.9.20
       '@types/luxon':
         specifier: ^3.6.2
         version: 3.6.2
@@ -2075,6 +2084,9 @@ packages:
 
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
+
+  '@types/leaflet@1.9.20':
+    resolution: {integrity: sha512-rooalPMlk61LCaLOvBF2VIf9M47HgMQqi5xQ9QRi7c8PkdIe0WrIi5IxXUXQjAdL0c+vcQ01mYWbthzmp9GHWw==}
 
   '@types/long@4.0.2':
     resolution: {integrity: sha512-MqTGEo5bj5t157U6fA/BiDynNkn0YknVdh48CMPkTSpFTVmvao5UQmm7uEF6xBEo7qIMAlY/JSleYaE6VOdpaA==}
@@ -4428,6 +4440,9 @@ packages:
     resolution: {integrity: sha512-b94GiNHQNy6JNTrt5w6zNyffMrNkXZb3KTkCZJb2V1xaEGCk093vkZ2jk3tpaeP33/OiXC+WvK9AxUebnf5nbw==}
     engines: {node: '>= 0.6.3'}
 
+  leaflet@1.9.4:
+    resolution: {integrity: sha512-nxS1ynzJOmOlHp+iL3FyWqK89GtNL8U8rvlMOsQdTTssxZwCXh8N2NB3GDQOL+YR3XnWyZAxwQixURb+FA74PA==}
+
   levn@0.4.1:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
     engines: {node: '>= 0.8.0'}
@@ -4766,9 +4781,6 @@ packages:
     resolution: {integrity: sha512-D9DI/gXHvVmjHS08SVch0Em8G5S1P+QWtU31appcKT/8wFSPRcdHadIFSAntdMMVM5zz+/DL+bL/gz3UDppqtg==}
     engines: {node: ^18 || ^20 || >= 21}
 
-  node-bin-setup@1.1.4:
-    resolution: {integrity: sha512-vWNHOne0ZUavArqPP5LJta50+S8R261Fr5SvGul37HbEDcowvLjwdvd0ZeSr0r2lTSrPxl6okq9QUw8BFGiAxA==}
-
   node-cleanup@2.1.2:
     resolution: {integrity: sha512-qN8v/s2PAJwGUtr1/hYTpNKlD6Y9rc4p8KSmJXyGdYGZsDGKXrGThikLFP9OCHFeLeEpQzPwiAtdIvBLqm//Hw==}
 
@@ -4816,11 +4828,6 @@ packages:
 
   node-releases@2.0.19:
     resolution: {integrity: sha512-xxOWJsBKtzAq7DY0J+DTzuz58K8e7sJbdgwkbMWQe8UYB6ekmsQ45q0M/tJDsGaZmbC+l7n57UV8Hl5tHxO9uw==}
-
-  node@22.19.0:
-    resolution: {integrity: sha512-Cgt3vsL2HqwXRnA3bGZpatYnKGO1UmE4z0jpxlTfqghEmRe9p0sIF2yvgWUE8Zg7C3o2SZsKQ1m0eaZ5n4SyKA==}
-    engines: {npm: '>=5.0.0'}
-    hasBin: true
 
   nodemailer@7.0.5:
     resolution: {integrity: sha512-nsrh2lO3j4GkLLXoeEksAMgAOqxOv6QumNRVQTJwKH4nuiww6iC2y7GyANs9kRAxCexg3+lTWM3PZ91iLlVjfg==}
@@ -6364,6 +6371,10 @@ packages:
 
   undici-types@6.21.0:
     resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
+
+  undici@7.15.0:
+    resolution: {integrity: sha512-7oZJCPvvMvTd0OlqWsIxTuItTpJBpU1tcbVl24FMn3xt3+VSunwUasmfPJRE57oNO1KsZ4PgA1xTdAX4hq8NyQ==}
+    engines: {node: '>=20.18.1'}
 
   unicorn-magic@0.1.0:
     resolution: {integrity: sha512-lRfVq8fE8gz6QMBuDM6a+LO3IAzTi05H6gCVaUpir2E1Rwpo4ZUog45KpNXKC/Mn3Yb9UDuHumeFTo9iV/D9FQ==}
@@ -8544,6 +8555,10 @@ snapshots:
       parse5: 7.3.0
 
   '@types/json-schema@7.0.15': {}
+
+  '@types/leaflet@1.9.20':
+    dependencies:
+      '@types/geojson': 7946.0.16
 
   '@types/long@4.0.2': {}
 
@@ -11219,6 +11234,8 @@ snapshots:
     dependencies:
       readable-stream: 2.3.8
 
+  leaflet@1.9.4: {}
+
   levn@0.4.1:
     dependencies:
       prelude-ls: 1.2.1
@@ -11485,8 +11502,6 @@ snapshots:
 
   node-addon-api@8.4.0: {}
 
-  node-bin-setup@1.1.4: {}
-
   node-cleanup@2.1.2: {}
 
   node-domexception@1.0.0: {}
@@ -11519,10 +11534,6 @@ snapshots:
       process-on-spawn: 1.1.0
 
   node-releases@2.0.19: {}
-
-  node@22.19.0:
-    dependencies:
-      node-bin-setup: 1.1.4
 
   nodemailer@7.0.5: {}
 
@@ -13195,6 +13206,8 @@ snapshots:
   ufo@1.6.1: {}
 
   undici-types@6.21.0: {}
+
+  undici@7.15.0: {}
 
   unicorn-magic@0.1.0: {}
 

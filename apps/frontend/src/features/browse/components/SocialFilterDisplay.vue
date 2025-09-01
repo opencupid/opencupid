@@ -4,6 +4,8 @@ import { type SocialMatchFilterDTO } from '@zod/match/filters.dto'
 import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
 import TagList from '@/features/shared/profiledisplay/TagList.vue'
 import IconSetting from '@/assets/icons/interface/setting.svg'
+import IconSquare from '@/assets/icons/interface/square.svg'
+import IconMap from '@/assets/icons/interface/map.svg'
 import IconSearch from '@/assets/icons/interface/search.svg'
 
 const socialFilter = defineModel<SocialMatchFilterDTO | null>({
@@ -20,11 +22,16 @@ defineEmits<{
 </script>
 
 <template>
-  <div
-    class="d-flex align-items-center justify-content-between w-100 clickable px-2 py-1 bg-light rounded"
-    @click="$emit('prefs:toggle')"
-  >
-    <span>
+    <BButton
+      variant="primary"
+      pill
+      :title="$t('profiles.browse.filters.search_button_title_social')"
+      @click="$emit('prefs:toggle')"
+    >
+      <!-- <IconSearch class="svg-icon" /> -->
+      <IconSetting class="svg-icon" />
+    </BButton>
+    <span class="ms-2">
       <!-- Looking:  -->
       {{ $t('profiles.browse.filters.filter_display_label') }}
     </span>
@@ -46,21 +53,13 @@ defineEmits<{
 
       <TagList v-if="socialFilter?.tags.length" :tags="socialFilter.tags" />
     </div>
-
-    <BButton
-      variant="primary"
-      pill
-      :title="$t('profiles.browse.filters.search_button_title_social')"
-    >
-      <!-- <IconSearch class="svg-icon" /> -->
-      <IconSetting class="svg-icon" />
-    </BButton>
-
-    <!-- <div class="flex-shrink-1">
-      <BButton variant="primary" pill class="ms-2"
-      :title="$t('profiles.browse.filters.search_button_title_social')">
-         <IconSetting class="svg-icon" />
-      </BButton>
-    </div> -->
-  </div>
+   
 </template>
+
+<style>
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 0.15rem;
+}
+</style>
