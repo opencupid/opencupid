@@ -13,6 +13,35 @@ services:
     volumes:
       - ${POSTGRES_DATADIR}:/var/lib/postgresql/data
 
+  listmonk-db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: listmonk
+      POSTGRES_USER: listmonk
+      POSTGRES_PASSWORD: ${LISTMONK_DB_PASSWORD}
+    volumes:
+      - listmonk-db-data:/var/lib/postgresql/data
+
+  listmonk:
+    image: listmonk/listmonk:latest
+    restart: always
+    depends_on:
+      - listmonk-db
+    environment:
+      LISTMONK_config__db__host: listmonk-db
+      LISTMONK_config__db__port: 5432
+      LISTMONK_config__db__user: listmonk
+      LISTMONK_config__db__password: ${LISTMONK_DB_PASSWORD}
+      LISTMONK_config__db__database: listmonk
+      LISTMONK_config__db__ssl_mode: disable
+      LISTMONK_admin_username: ${LISTMONK_USERNAME}
+      LISTMONK_admin_password: ${LISTMONK_PASSWORD}
+    volumes:
+      - listmonk-data:/listmonk
+    ports:
+      - "9000:9000"
+
   backend:
     image: ghcr.io/opencupid/opencupid-backend
     build:
@@ -21,6 +50,7 @@ services:
     depends_on:
       - db
       - redis
+      - listmonk
     env_file:
       - .env
     volumes:
@@ -98,5 +128,9 @@ services:
 
 volumes:
   redis-data:
+    driver: local
+  listmonk-db-data:
+    driver: local
+  listmonk-data:
     driver: local
   certbot-webroot:
