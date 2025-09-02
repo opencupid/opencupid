@@ -12,56 +12,19 @@ if (!redisUrl) {
 const connection = new IORedis(redisUrl, { maxRetriesPerRequest: null })
 const emailProvider = createEmailProvider()
 
-// Legacy email job format for backward compatibility
-interface LegacyEmailJob {
-  to: string
-  subject: string
-  html: string
-}
-
-// New email job format using TxPayload
+// Email job format using TxPayload
 interface EmailJob {
   type: 'legacy' | 'transactional'
-  payload: LegacyEmailJob | TxPayload
+  payload: TxPayload
 }
 
 new Worker(
   'emails',
   async job => {
-    const jobData = job.data as EmailJob | LegacyEmailJob
+    const jobData = job.data as EmailJob
 
-    // Handle backward compatibility - if it's the old format, treat as legacy
-    if ('to' in jobData && 'subject' in jobData && 'html' in jobData) {
-      // Legacy format: convert to TxPayload
-      const legacyData = jobData as LegacyEmailJob
-      const txPayload: TxPayload = {
-        to: [{ email: legacyData.to }],
-        templateId: 0, // Dummy template ID for direct content
-        data: {
-          subject: legacyData.subject,
-          html: legacyData.html,
-        },
-      }
-      await emailProvider.sendTransactional(txPayload)
-    } else {
-      // New format
-      const emailJobData = jobData as EmailJob
-      if (emailJobData.type === 'legacy') {
-        const legacyPayload = emailJobData.payload as LegacyEmailJob
-        const txPayload: TxPayload = {
-          to: [{ email: legacyPayload.to }],
-          templateId: 0, // Dummy template ID for direct content
-          data: {
-            subject: legacyPayload.subject,
-            html: legacyPayload.html,
-          },
-        }
-        await emailProvider.sendTransactional(txPayload)
-      } else {
-        // Transactional format
-        await emailProvider.sendTransactional(emailJobData.payload as TxPayload)
-      }
-    }
+    // All jobs now use TxPayload format with provider system
+    await emailProvider.sendTransactional(jobData.payload)
   },
   { connection }
 )
