@@ -26,5 +26,33 @@ services:
       - '6379:6379'
 
 
+  listmonk:
+    image: listmonk/listmonk:latest
+    restart: always
+    depends_on:
+      - db
+    env_file:
+      - .env
+    command: [sh, -c, "./listmonk --install --idempotent --yes --config '' && ./listmonk --upgrade --yes --config '' && ./listmonk --config ''"]      
+    environment:                                              # The same params as in config.toml are passed as env vars here.
+      LISTMONK_app__address: 0.0.0.0:9000
+      LISTMONK_db__user: appuser
+      LISTMONK_db__create_db_query: "CREATE DATABASE listmonk OWNER appuser;"
+      LISTMONK_db__password: secret
+      LISTMONK_db__database: listmonk
+      LISTMONK_db__host: db
+      LISTMONK_db__port: 5432
+      LISTMONK_db__ssl_mode: disable
+      LISTMONK_db__max_open: 25
+      LISTMONK_db__max_idle: 25
+      LISTMONK_db__max_lifetime: 300s
+      TZ: Etc/UTC
+      LISTMONK_ADMIN_USER: ${LISTMONK_ADMIN_USER:-}           # If these (optional) are set during the first `docker compose up`, then the Super Admin user is automatically created.
+      LISTMONK_ADMIN_PASSWORD: ${LISTMONK_ADMIN_PASSWORD:-} 
+    volumes:
+      - listmonk-uploads:/listmonk/uploads:rw
+    ports:
+      - "9000:9000"
 volumes:
   postgres_data:
+  listmonk-uploads:
