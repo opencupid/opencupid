@@ -1,5 +1,11 @@
 # backend
 
+## 0.6.0
+
+### Minor Changes
+
+- Introducing map view
+
 ## 0.5.1
 
 ### Patch Changes
