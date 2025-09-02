@@ -1,5 +1,11 @@
 # backend
 
+## 0.6.1
+
+### Patch Changes
+
+- Dependency updates
+
 ## 0.6.0
 
 ### Minor Changes
