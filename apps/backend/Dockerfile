@@ -22,7 +22,7 @@ RUN pnpm install --no-frozen-lockfile
 # RUN apk add --no-cache libc6-compat
 
 # Generate Prisma client and build application
-RUN pnpm run generate && pnpm run build
+RUN pnpm run prisma:generate && pnpm run build
 
 # Remove dev dependencies
 RUN pnpm prune --prod
