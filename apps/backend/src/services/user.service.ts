@@ -4,6 +4,7 @@ import type { User } from '@zod/generated'
 import { ValidateUserOtpLoginResponse } from '@zod/user/auth.dto'
 import type { UserIdentifier, SessionProfile } from '@zod/user/user.dto'
 import otpGenerator from 'otp-generator'
+import { listmonkUserSyncService } from './listmonkUserSync.service'
 
 // Define types for service return values
 export type UserWithProfile = User & { profile: SessionProfile }
@@ -102,6 +103,15 @@ export class UserService {
         language,
       },
     })
+
+    // Sync new user to Listmonk (best effort)
+    listmonkUserSyncService.syncUser({
+      id: user.id,
+      email: user.email!,
+      displayName: user.displayName,
+      language: user.language,
+    }).catch(console.warn)
+
     return { user, isNewUser }
   }
 
@@ -137,12 +147,24 @@ export class UserService {
   }
 
   async update(user: User): Promise<User | null> {
-    return prisma.user.update({
+    const updatedUser = await prisma.user.update({
       where: { id: user.id },
       data: {
         ...user,
       },
     })
+
+    // Sync updated user to Listmonk (best effort)
+    if (updatedUser && updatedUser.email) {
+      listmonkUserSyncService.syncUser({
+        id: updatedUser.id,
+        email: updatedUser.email,
+        displayName: updatedUser.displayName,
+        language: updatedUser.language,
+      }).catch(console.warn)
+    }
+
+    return updatedUser
   }
 
 
