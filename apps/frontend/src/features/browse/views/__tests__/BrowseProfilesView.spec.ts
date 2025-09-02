@@ -22,7 +22,7 @@ vi.mock('@/features/shared/ui/StoreErrorOverlay.vue', () => ({ default: { templa
 vi.mock('@/assets/icons/interface/square.svg', () => ({ default: 'IconSquare' }))
 vi.mock('@/assets/icons/interface/map.svg', () => ({ default: 'IconMap' }))
 vi.mock('../../shared/composables/useCountries', () => ({ useCountries: () => ({ countryCodeToName: vi.fn(() => 'Test Country') }) }))
-vi.mock('vue-router', () => ({ useRouter: () => ({ push: vi.fn(), back: vi.fn(), replace: vi.fn() }) }))
+vi.mock('vue-router', () => ({ useRouter: () => ({ push: vi.fn(), replace: vi.fn() }) }))
 
 const vmState = {
   viewerProfile: ref({ isDatingActive: true }),
@@ -44,6 +44,7 @@ const vmState = {
   hideProfile: vi.fn(),
   updatePrefs: vi.fn(),
   openProfile: vi.fn(),
+  closeProfile: vi.fn(),
   hasMoreProfiles: ref(true),
   initialize: vi.fn(),
   reset: vi.fn(),

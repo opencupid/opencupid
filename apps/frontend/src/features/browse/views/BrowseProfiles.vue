@@ -48,6 +48,7 @@ const {
   hideProfile,
   updatePrefs,
   openProfile,
+  closeProfile,
   initialize,
   reset,
   isInitialized,
@@ -78,7 +79,7 @@ const handleEditProfileIntent = () => {
 }
 
 const handleCloseProfileView = () => {
-  router.back()
+  closeProfile()
 }
 
 const handleOpenConversation = (conversationId: string) => {
@@ -350,7 +351,7 @@ useInfiniteScroll(
 .inactive {
   pointer-events: none;
   visibility: hidden;
-  display: none;
+  /* Remove display: none to keep list view rendered */
 }
 main {
   width: 100%;

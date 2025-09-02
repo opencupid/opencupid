@@ -1,5 +1,6 @@
 import { computed, ref, toRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { getPreviousUrl } from '@/router'
 
 import { useBootstrap } from '@/lib/bootstrap'
 import { useLocalStore } from '@/store/localStore'
@@ -49,9 +50,10 @@ export function useFindMatchViewModel() {
       ? (route.params.scope as ProfileScope)
       : null
   )
-  const selectedProfileId = computed(() =>
-    typeof route.params.profileId === 'string' ? route.params.profileId : null
-  )
+  
+  // Manage selectedProfileId as internal state instead of from route params
+  const selectedProfileId = ref<string | null>(null)
+  
   const isInitialized = ref(false)
 
   const localStore = useLocalStore()
@@ -99,6 +101,11 @@ export function useFindMatchViewModel() {
     await findProfileStore.fetchSocialFilter(socialFilterDefaults(ownerProfile))
     if (ownerProfile.isDatingActive) {
       await findProfileStore.fetchDatingPrefs(datingPrefsDefaults(ownerProfile))
+    }
+
+    // Check if we're on a profile route and set selectedProfileId accordingly
+    if (route.name === 'PublicProfile' && typeof route.params.profileId === 'string') {
+      selectedProfileId.value = route.params.profileId
     }
 
     resolveScope(defaultScope)
@@ -157,7 +164,24 @@ export function useFindMatchViewModel() {
   }
 
   function openProfile(profileId: string): void {
-    router.push({ name: 'PublicProfile', params: { profileId } })
+    selectedProfileId.value = profileId
+    // Update URL to show detail view, using replace to not affect back navigation
+    router.replace({ name: 'PublicProfile', params: { profileId } })
+  }
+
+  function closeProfile(): void {
+    selectedProfileId.value = null
+    // Navigate back to previous URL or default to browse
+    const prevUrl = getPreviousUrl()
+    if (prevUrl && !prevUrl.includes('/profile/')) {
+      router.replace(prevUrl)
+    } else {
+      // Fallback to browse with current scope if available
+      const fallbackRoute = currentScope.value 
+        ? { name: 'BrowseProfilesScope', params: { scope: currentScope.value } }
+        : { name: 'BrowseProfiles' }
+      router.replace(fallbackRoute)
+    }
   }
 
   const scopeModel = computed({
@@ -244,12 +268,13 @@ export function useFindMatchViewModel() {
     reset,
     availableScopes: computed(() => ownerStore.scopes),
     currentScope,
-    selectedProfileId,
+    selectedProfileId: computed(() => selectedProfileId.value),
     datingPrefs: toRef(findProfileStore, 'datingPrefs'),
     socialFilter: toRef(findProfileStore, 'socialFilter'),
     updatePrefs,
     scopeModel,
     openProfile,
+    closeProfile,
     profileList: computed(() => findProfileStore.profileList),
     isInitialized: computed(() => isInitialized.value),
     loadMoreProfiles,

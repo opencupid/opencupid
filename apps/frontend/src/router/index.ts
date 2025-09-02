@@ -1,7 +1,15 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
+import { ref } from 'vue'
 
 import { useAuthStore } from '@/features/auth/stores/authStore'
+
+// Track previous URL for navigation
+const previousUrl = ref<string>('')
+
+export function getPreviousUrl(): string {
+  return previousUrl.value
+}
 
 import MessagingView from '@/features/messaging/views/Messaging.vue'
 import UserHome from '@/features/userhome/views/UserHome.vue'
@@ -131,7 +139,10 @@ router.beforeEach(async (to, from, next) => {
 
 
 router.afterEach((to, from) => {
-
+  // Update previousUrl when navigating, but don't track navigation to same route
+  if (from.fullPath && from.fullPath !== to.fullPath) {
+    previousUrl.value = from.fullPath
+  }
 })
 
 export default router
