@@ -119,8 +119,8 @@ jobs:
           push: true
           tags: |
             ghcr.io/${{ github.repository }}-backend:latest
-            ghcr.io/${{ github.repository }}-backend:${{ needs.version.outputs.backend-version }}
-            ghcr.io/${{ github.repository }}-backend:${{ steps.git-sha.outputs.sha }}
+            ghcr.io/${{ github.repository }}-backend:${{ needs.version.outputs.app-version }}
+            ghcr.io/${{ github.repository }}-frontend:${{ steps.git-sha.outputs.sha }}
 
       # Build and push frontend image
       - name: Build and push frontend image
@@ -131,11 +131,11 @@ jobs:
           push: true
           tags: |
             ghcr.io/${{ github.repository }}-frontend:latest
-            ghcr.io/${{ github.repository }}-frontend:${{ needs.version.outputs.frontend-version }}
+            ghcr.io/${{ github.repository }}-frontend:${{ needs.version.outputs.app-version }}
             ghcr.io/${{ github.repository }}-frontend:${{ steps.git-sha.outputs.sha }}
 
       # Create a combined app tag using the app version
       - name: Tag app bundle version
         run: |
           echo "App bundle version: ${{ needs.version.outputs.app-version }}"
-          echo "This represents the deployable bundle of frontend:${{ needs.version.outputs.frontend-version }} + backend:${{ needs.version.outputs.backend-version }}"
+          echo "This represents the deployable bundle of frontend:${{ needs.version.outputs.app-version }} + backend:${{ needs.version.outputs.app-version }}"
