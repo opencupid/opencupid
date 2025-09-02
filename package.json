@@ -1,11 +1,13 @@
 {
   "name": "opencupid",
+  "version": "0.5.0",
   "private": true,
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
   "devDependencies": {
+    "@changesets/cli": "^2.29.6",
     "@intlify/unplugin-vue-i18n": "^6.0.8",
     "@modelcontextprotocol/server-filesystem": "^2025.3.28",
     "@types/geojson": "^7946.0.16",
@@ -21,8 +23,6 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "test": "turbo run test",
-    "generate": "turbo run generate",
-    "migrate": "turbo run migrate",
     "format": "turbo run format",
     "gen-certs": "openssl req -x509 -nodes -days 365   -newkey rsa:2048   -keyout certs/localhost-key.pem   -out certs/localhost-cert.pem   -subj \"/C=US/ST=Dev/L=Local/O=Dev/CN=localhost\"",
     "mcp-server": "npx -y supergateway --stdio \"npx -y @modelcontextprotocol/server-filesystem $(pwd)\" --port 9999",

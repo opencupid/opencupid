@@ -24,3 +24,7 @@ declare const __APP_CONFIG__: {
   readonly SITE_NAME: string
   readonly SENTRY_DSN: string
 }
+
+declare const __APP_VERSION__: {
+  readonly app: string
+}

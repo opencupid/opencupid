@@ -1,10 +1,12 @@
-name: Build and Push Docker Images
+name: Manual Docker Build
 
 on:
   workflow_dispatch:
-  
-  release:
-    types: [published]
+    inputs:
+      tag:
+        description: 'Docker tag suffix (e.g., "hotfix", "test")'
+        required: false
+        default: 'manual'
 
 permissions:
   contents: read
@@ -48,6 +50,12 @@ jobs:
           username: peterzen
           password: ${{ secrets.GHCR_PAT }}
 
+      - name: Get git commit short SHA and tag suffix
+        id: git-info
+        run: |
+          echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "tag-suffix=${{ github.event.inputs.tag || 'manual' }}" >> $GITHUB_OUTPUT
+
       # Build and push backend image
       - name: Build and push backend image
         uses: docker/build-push-action@v6
@@ -55,7 +63,9 @@ jobs:
           context: .
           file: apps/backend/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository }}-backend:latest
+          tags: |
+            ghcr.io/${{ github.repository }}-backend:${{ steps.git-info.outputs.tag-suffix }}
+            ghcr.io/${{ github.repository }}-backend:${{ steps.git-info.outputs.sha }}
 
       # Build and push frontend image
       - name: Build and push frontend image
@@ -64,4 +74,6 @@ jobs:
           context: .
           file: apps/frontend/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository }}-frontend:latest
+          tags: |
+            ghcr.io/${{ github.repository }}-frontend:${{ steps.git-info.outputs.tag-suffix }}
+            ghcr.io/${{ github.repository }}-frontend:${{ steps.git-info.outputs.sha }}
