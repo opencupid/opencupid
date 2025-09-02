@@ -1,0 +1,1 @@
+../frontend/vue-i18n-extract.config.js
