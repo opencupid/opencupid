@@ -76,6 +76,13 @@ export const PostQuerySchema = z.object({
 })
 export type PostQuery = z.infer<typeof PostQuerySchema>
 
+// Frontend query type (all optional)
+export interface PostQueryInput {
+  type?: PostType
+  limit?: number
+  offset?: number
+}
+
 // Query parameters for nearby posts
 export const NearbyPostQuerySchema = PostQuerySchema.extend({
   lat: z.preprocess(
@@ -92,3 +99,10 @@ export const NearbyPostQuerySchema = PostQuerySchema.extend({
   ),
 })
 export type NearbyPostQuery = z.infer<typeof NearbyPostQuerySchema>
+
+// Frontend nearby query type
+export interface NearbyPostQueryInput extends PostQueryInput {
+  lat: number
+  lon: number
+  radius?: number
+}

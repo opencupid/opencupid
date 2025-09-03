@@ -228,6 +228,33 @@ const postRoutes: FastifyPluginAsync = async fastify => {
       return sendError(reply, 500, 'Failed to fetch profile posts')
     }
   })
+
+  /**
+   * Get current user's posts
+   */
+  fastify.get('/profile/me', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const profileId = req.session.profileId
+    if (!profileId) {
+      return sendError(reply, 401, 'Profile required')
+    }
+    
+    const query = PostQuerySchema.parse(req.query)
+
+    try {
+      const posts = await postService.findByProfileId(profileId, {
+        type: query.type,
+        limit: query.limit,
+        offset: query.offset,
+        includeInvisible: true, // Always include invisible posts for own profile
+      })
+
+      const response: PostsResponse = { success: true, posts }
+      return reply.code(200).send(response)
+    } catch (err) {
+      fastify.log.error(err)
+      return sendError(reply, 500, 'Failed to fetch profile posts')
+    }
+  })
 }
 
 export default postRoutes
