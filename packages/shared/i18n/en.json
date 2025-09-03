@@ -346,5 +346,43 @@
       "qr_hint": "Flash this at their phone"
     },
     "dialog_cancel_button": "Nevermind"
+  },
+  "posts": {
+    "title": "Posts",
+    "types": {
+      "OFFER": "Offer",
+      "REQUEST": "Request"
+    },
+    "actions": {
+      "create": "Create Post",
+      "edit": "Edit Post",
+      "delete": "Delete Post",
+      "save": "Save Post",
+      "cancel": "Cancel"
+    },
+    "placeholders": {
+      "content": "Share what you're offering or looking for..."
+    },
+    "labels": {
+      "type": "Post Type",
+      "content": "Content",
+      "visibility": "Visible to others"
+    },
+    "messages": {
+      "created": "Post created successfully",
+      "updated": "Post updated successfully",
+      "deleted": "Post deleted successfully",
+      "error_create": "Failed to create post",
+      "error_update": "Failed to update post",
+      "error_delete": "Failed to delete post",
+      "error_load": "Failed to load posts"
+    },
+    "filters": {
+      "all": "All Posts",
+      "offers": "Offers",
+      "requests": "Requests",
+      "nearby": "Nearby",
+      "recent": "Recent"
+    }
   }
 }
