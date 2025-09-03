@@ -105,6 +105,7 @@ const routes: Array<RouteRecordRaw> = [
     path: '/posts',
     name: 'Posts',
     component: PostsView,
+    props: true,
     meta: { requiresAuth: true },
   },
   {

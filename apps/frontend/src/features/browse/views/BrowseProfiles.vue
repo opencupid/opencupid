@@ -259,7 +259,7 @@ useInfiniteScroll(
         </template>
 
         <!-- Main profile results -->
-        <template v-else-if="isInitialized">
+        <template v-else-if="isInitialized && haveResults">
           <div 
             ref="scrollContainer"
             class="overflow-auto hide-scrollbar pb-5 flex-grow-1"

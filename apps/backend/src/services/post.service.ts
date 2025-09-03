@@ -1,6 +1,18 @@
 import { PrismaClient, PostType, Prisma } from '@prisma/client'
 import type { CreatePostPayload, UpdatePostPayload } from '@zod/post/post.dto'
 
+const postedByInclude = {
+  include: {
+    postedBy: {
+      include: {
+        profileImages: {
+          where: { position: 0 },
+        },
+      },
+    },
+  },
+}
+
 export class PostService {
   private static instance: PostService
   private prisma: PrismaClient
@@ -26,22 +38,7 @@ export class PostService {
         type: data.type,
         postedById: profileId,
       },
-      include: {
-        postedBy: {
-          select: {
-            id: true,
-            publicName: true,
-            profileImages: {
-              where: { position: 0 },
-              select: {
-                id: true,
-                url: true,
-                altText: true,
-              },
-            },
-          },
-        },
-      },
+      ...postedByInclude,
     })
   }
 
@@ -52,22 +49,7 @@ export class PostService {
         isDeleted: false,
         ...(viewerProfileId ? {} : { isVisible: true }),
       },
-      include: {
-        postedBy: {
-          select: {
-            id: true,
-            publicName: true,
-            profileImages: {
-              where: { position: 0 },
-              select: {
-                id: true,
-                url: true,
-                altText: true,
-              },
-            },
-          },
-        },
-      },
+      ...postedByInclude,
     })
 
     // If viewer is not the owner, only return visible posts
@@ -93,22 +75,7 @@ export class PostService {
         ...(includeInvisible ? {} : { isVisible: true }),
         ...(type ? { type } : {}),
       },
-      include: {
-        postedBy: {
-          select: {
-            id: true,
-            publicName: true,
-            profileImages: {
-              where: { position: 0 },
-              select: {
-                id: true,
-                url: true,
-                altText: true,
-              },
-            },
-          },
-        },
-      },
+      ...postedByInclude,
       orderBy: { createdAt: 'desc' },
       take: limit,
       skip: offset,
@@ -128,22 +95,7 @@ export class PostService {
         isVisible: true,
         ...(type ? { type } : {}),
       },
-      include: {
-        postedBy: {
-          select: {
-            id: true,
-            publicName: true,
-            profileImages: {
-              where: { position: 0 },
-              select: {
-                id: true,
-                url: true,
-                altText: true,
-              },
-            },
-          },
-        },
-      },
+      ...postedByInclude,
       orderBy: { createdAt: 'desc' },
       take: limit,
       skip: offset,
@@ -176,24 +128,7 @@ export class PostService {
           lon: { gte: minLon, lte: maxLon },
         },
       },
-      include: {
-        postedBy: {
-          select: {
-            id: true,
-            publicName: true,
-            lat: true,
-            lon: true,
-            profileImages: {
-              where: { position: 0 },
-              select: {
-                id: true,
-                url: true,
-                altText: true,
-              },
-            },
-          },
-        },
-      },
+      ...postedByInclude,
       orderBy: { createdAt: 'desc' },
       take: limit,
       skip: offset,
@@ -216,22 +151,7 @@ export class PostService {
         createdAt: { gte: oneWeekAgo },
         ...(type ? { type } : {}),
       },
-      include: {
-        postedBy: {
-          select: {
-            id: true,
-            publicName: true,
-            profileImages: {
-              where: { position: 0 },
-              select: {
-                id: true,
-                url: true,
-                altText: true,
-              },
-            },
-          },
-        },
-      },
+      ...postedByInclude,
       orderBy: { createdAt: 'desc' },
       take: limit,
       skip: offset,
@@ -256,22 +176,7 @@ export class PostService {
         ...(data.isVisible !== undefined && { isVisible: data.isVisible }),
         updatedAt: new Date(),
       },
-      include: {
-        postedBy: {
-          select: {
-            id: true,
-            publicName: true,
-            profileImages: {
-              where: { position: 0 },
-              select: {
-                id: true,
-                url: true,
-                altText: true,
-              },
-            },
-          },
-        },
-      },
+      ...postedByInclude,
     })
   }
 

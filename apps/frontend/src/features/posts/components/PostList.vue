@@ -1,96 +1,15 @@
-<template>
-  <div class="post-list">
-    <div class="post-list__header">
-      <h2 class="post-list__title">{{ title }}</h2>
-      
-      <div v-if="showFilters" class="post-list__filters">
-        <select 
-          v-model="selectedType" 
-          @change="handleTypeFilter"
-          class="filter-select"
-        >
-          <option value="">{{ $t('posts.filters.all') }}</option>
-          <option value="OFFER">{{ $t('posts.filters.offers') }}</option>
-          <option value="REQUEST">{{ $t('posts.filters.requests') }}</option>
-        </select>
-      </div>
-    </div>
-
-    <div v-if="postStore.isLoading && posts.length === 0" class="post-list__loading">
-      <div class="loading-spinner"></div>
-      <p>{{ $t('uicomponents.loading.loading') }}</p>
-    </div>
-
-    <div v-else-if="postStore.error" class="post-list__error">
-      <p>{{ postStore.error }}</p>
-      <button @click="handleRetry" class="btn btn-primary">
-        {{ $t('uicomponents.error.retry') }}
-      </button>
-    </div>
-
-    <div v-else-if="posts.length === 0" class="post-list__empty">
-      <p>{{ emptyMessage }}</p>
-    </div>
-
-    <div v-else class="post-list__grid">
-      <PostCard 
-        v-for="post in posts" 
-        :key="post.id"
-        :post="post"
-        @click="handlePostClick"
-        @edit="handlePostEdit"
-        @delete="handlePostDelete"
-      />
-    </div>
-
-    <div v-if="canLoadMore" class="post-list__load-more">
-      <button 
-        @click="handleLoadMore"
-        :disabled="postStore.isLoading"
-        class="btn btn-secondary"
-      >
-        {{ postStore.isLoading ? $t('uicomponents.loading.loading') : 'Load More' }}
-      </button>
-    </div>
-
-    <!-- Post Full View Modal -->
-    <div v-if="showFullView && selectedPost" class="modal-overlay" @click="closeFullView">
-      <div class="modal-content" @click.stop>
-        <PostFullView 
-          :post="selectedPost"
-          @close="closeFullView"
-          @edit="handlePostEdit"
-          @delete="handlePostDelete"
-        />
-      </div>
-    </div>
-
-    <!-- Post Edit Modal -->
-    <div v-if="showEditModal && editingPost" class="modal-overlay" @click="closeEditModal">
-      <div class="modal-content" @click.stop>
-        <PostEdit
-          :post="editingPost"
-          :is-edit="true"
-          @cancel="closeEditModal"
-          @saved="handlePostSaved"
-        />
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { usePostStore } from '../stores/postStore'
 import { useI18n } from 'vue-i18n'
-import PostCard from './PostCard.vue'
+import PostCard from './PostCardPostIt.vue'
 import PostEdit from './PostEdit.vue'
 import PostFullView from './PostFullView.vue'
-import type { 
-  PublicPostWithProfile, 
-  OwnerPost, 
+import type {
+  PublicPostWithProfile,
+  OwnerPost,
   PostQueryInput,
-  NearbyPostQueryInput 
+  NearbyPostQueryInput,
 } from '@zod/post/post.dto'
 import { PostType } from '@prisma/client'
 
@@ -107,7 +26,7 @@ const props = withDefaults(defineProps<Props>(), {
   title: 'Posts',
   showFilters: true,
   viewMode: 'all',
-  emptyMessage: 'No posts found'
+  emptyMessage: 'No posts found',
 })
 
 const { t } = useI18n()
@@ -133,16 +52,16 @@ const canLoadMore = computed(() => {
 })
 
 const buildQuery = (): PostQueryInput => ({
-  type: selectedType.value as PostType || undefined,
+  type: (selectedType.value as PostType) || undefined,
   limit: pageSize,
-  offset: currentPage.value * pageSize
+  offset: currentPage.value * pageSize,
 })
 
 const buildNearbyQuery = (): NearbyPostQueryInput => ({
   ...buildQuery(),
   lat: props.nearbyParams!.lat,
   lon: props.nearbyParams!.lon,
-  radius: props.nearbyParams!.radius || 50
+  radius: props.nearbyParams!.radius || 50,
 })
 
 const loadPosts = async (append = false) => {
@@ -219,21 +138,97 @@ const closeEditModal = () => {
 }
 
 // Watch for prop changes
-watch(() => props.type, (newType) => {
-  selectedType.value = newType || ''
-  loadPosts()
-})
-
-watch(() => props.nearbyParams, () => {
-  if (props.viewMode === 'nearby') {
+watch(
+  () => props.type,
+  newType => {
+    selectedType.value = newType || ''
     loadPosts()
   }
-}, { deep: true })
+)
+
+watch(
+  () => props.nearbyParams,
+  () => {
+    if (props.viewMode === 'nearby') {
+      loadPosts()
+    }
+  },
+  { deep: true }
+)
 
 onMounted(() => {
   loadPosts()
 })
 </script>
+
+<template>
+  <div class="">
+    <BFormGroup v-if="showFilters">
+      <BFormSelect v-model="selectedType" @change="handleTypeFilter">
+        <option value="">{{ $t('posts.filters.all') }}</option>
+        <option value="OFFER">{{ $t('posts.filters.offers') }}</option>
+        <option value="REQUEST">{{ $t('posts.filters.requests') }}</option>
+      </BFormSelect>
+    </BFormGroup>
+
+    <div v-if="postStore.isLoading && posts.length === 0" class="post-list__loading">
+      <div class="loading-spinner"></div>
+      <p>{{ $t('uicomponents.loading.loading') }}</p>
+    </div>
+
+    <div v-else-if="postStore.error" class="post-list__error">
+      <p>{{ postStore.error }}</p>
+      <BButton variant="warning" @click="handleRetry" class="btn btn-primary">
+        {{ $t('uicomponents.error.retry') }}
+      </BButton>
+    </div>
+
+    <div v-else-if="posts.length === 0" class="post-list__empty">
+      <p>{{ emptyMessage }}</p>
+    </div>
+
+    <BRow v-else class="cols-4 g-4 pt-4 ps-2">
+      <BCol v-for="post in posts" :key="post.id">
+        <PostCard
+          :post="post"
+          @click="handlePostClick"
+          @edit="handlePostEdit"
+          @delete="handlePostDelete"
+        />
+      </BCol>
+    </BRow>
+
+    <div v-if="canLoadMore" class="post-list__load-more">
+      <BButton variant="secondary" @click="handleLoadMore" :disabled="postStore.isLoading" >
+        {{ postStore.isLoading ? $t('uicomponents.loading.loading') : 'Load More' }}
+      </BButton>
+    </div>
+
+    <!-- Post Full View Modal -->
+    <div v-if="showFullView && selectedPost" class="modal-overlay" @click="closeFullView">
+      <div class="modal-content" @click.stop>
+        <PostFullView
+          :post="selectedPost"
+          @close="closeFullView"
+          @edit="handlePostEdit"
+          @delete="handlePostDelete"
+        />
+      </div>
+    </div>
+
+    <!-- Post Edit Modal -->
+    <div v-if="showEditModal && editingPost" class="modal-overlay" @click="closeEditModal">
+      <div class="modal-content" @click.stop>
+        <PostEdit
+          :post="editingPost"
+          :is-edit="true"
+          @cancel="closeEditModal"
+          @saved="handlePostSaved"
+        />
+      </div>
+    </div>
+  </div>
+</template>
 
 <style scoped>
 .post-list {
@@ -373,7 +368,7 @@ onMounted(() => {
   .post-list__grid {
     grid-template-columns: 1fr;
   }
-  
+
   .post-list__header {
     flex-direction: column;
     align-items: stretch;

@@ -28,8 +28,8 @@ export const usePostStore = defineStore('posts', {
 
   getters: {
     getPostById: (state) => (id: string) => {
-      return state.posts.find(post => post.id === id) || 
-             state.myPosts.find(post => post.id === id)
+      return state.posts.find(post => post.id === id) ||
+        state.myPosts.find(post => post.id === id)
     },
     getPostsByType: (state) => (type: PostType) => {
       return state.posts.filter(post => post.type === type)
@@ -44,9 +44,11 @@ export const usePostStore = defineStore('posts', {
       this.error = null
 
       try {
-        const response = await safeApiCall<CreatePostResponse>(
+        const r = await safeApiCall<{ data: CreatePostResponse }>(
           () => api.post('/posts', payload)
         )
+
+        const response = r.data
 
         if (response.success) {
           this.myPosts.unshift(response.post)
@@ -68,9 +70,10 @@ export const usePostStore = defineStore('posts', {
       this.error = null
 
       try {
-        const response = await safeApiCall<UpdatePostResponse>(
+        const r = await safeApiCall<{data:UpdatePostResponse}>(
           () => api.patch(`/posts/${id}`, payload)
         )
+        const response = r.data
 
         if (response.success) {
           // Update in myPosts array
@@ -78,7 +81,7 @@ export const usePostStore = defineStore('posts', {
           if (index !== -1) {
             this.myPosts[index] = response.post
           }
-          
+
           // Update current post if it's the same
           if (this.currentPost?.id === id) {
             this.currentPost = response.post
@@ -102,17 +105,18 @@ export const usePostStore = defineStore('posts', {
       this.error = null
 
       try {
-        const response = await safeApiCall<DeletePostResponse>(
+        const r = await safeApiCall<{data:DeletePostResponse}>(
           () => api.delete(`/posts/${id}`)
         )
+        const response = r.data
 
         if (response.success) {
           // Remove from myPosts
           this.myPosts = this.myPosts.filter(post => post.id !== id)
-          
+
           // Remove from posts if it exists there
           this.posts = this.posts.filter(post => post.id !== id)
-          
+
           // Clear current post if it's the same
           if (this.currentPost?.id === id) {
             this.currentPost = null
@@ -136,9 +140,10 @@ export const usePostStore = defineStore('posts', {
       this.error = null
 
       try {
-        const response = await safeApiCall<PostResponse>(
+        const r = await safeApiCall<{data:PostResponse}>(
           () => api.get(`/posts/${id}`)
         )
+        const response = r.data
 
         if (response.success) {
           this.currentPost = response.post
@@ -165,10 +170,12 @@ export const usePostStore = defineStore('posts', {
         if (query.limit) params.set('limit', query.limit.toString())
         if (query.offset) params.set('offset', query.offset.toString())
 
-        const response = await safeApiCall<PostsResponse>(
+        const r = await safeApiCall<{ data: PostsResponse }>(
           () => api.get(`/posts?${params.toString()}`)
         )
+        const response = r.data
 
+        console.log('Fetched posts response:', response)
         if (response.success) {
           if (query.offset === 0) {
             this.posts = response.posts
@@ -181,7 +188,7 @@ export const usePostStore = defineStore('posts', {
           return []
         }
       } catch (error: any) {
-        this.error = error.message || 'Failed to fetch posts'
+        this.error = error.message || 'Failed to fetch posts exception'
         return []
       } finally {
         this.isLoading = false
@@ -201,9 +208,10 @@ export const usePostStore = defineStore('posts', {
         if (query.limit) params.set('limit', query.limit.toString())
         if (query.offset) params.set('offset', query.offset.toString())
 
-        const response = await safeApiCall<PostsResponse>(
+        const r = await safeApiCall<{ data: PostsResponse }>(
           () => api.get(`/posts/nearby?${params.toString()}`)
         )
+        const response = r.data
 
         if (response.success) {
           if (query.offset === 0) {
@@ -234,9 +242,10 @@ export const usePostStore = defineStore('posts', {
         if (query.limit) params.set('limit', query.limit.toString())
         if (query.offset) params.set('offset', query.offset.toString())
 
-        const response = await safeApiCall<PostsResponse>(
+        const r = await safeApiCall<{ data: PostsResponse }>(
           () => api.get(`/posts/recent?${params.toString()}`)
         )
+        const response = r.data
 
         if (response.success) {
           if (query.offset === 0) {
@@ -269,9 +278,10 @@ export const usePostStore = defineStore('posts', {
 
         // We'll need to get the current profile ID from auth store
         // For now, we'll use a placeholder endpoint
-        const response = await safeApiCall<PostsResponse>(
+        const r = await safeApiCall<{ data: PostsResponse }>(
           () => api.get(`/posts/profile/me?${params.toString()}`)
         )
+        const response = r.data
 
         if (response.success) {
           if (query.offset === 0) {
