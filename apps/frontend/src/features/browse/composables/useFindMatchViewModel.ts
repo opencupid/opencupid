@@ -12,7 +12,7 @@ import { useFindProfileStore } from '@/features/browse/stores/findProfileStore';
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore';
 import { useAgeFields } from '@/features/shared/composables/useAgeFields';
 
-enum ViewMode {
+export enum ViewMode {
   map = 'map',
   grid = 'grid',
 }
@@ -50,10 +50,10 @@ export function useFindMatchViewModel() {
       ? (route.params.scope as ProfileScope)
       : null
   )
-  
+
   // Manage selectedProfileId as internal state instead of from route params
   const selectedProfileId = ref<string | null>(null)
-  
+
   const isInitialized = ref(false)
 
   const localStore = useLocalStore()
@@ -65,22 +65,33 @@ export function useFindMatchViewModel() {
       : 'grid'
   )
 
-  function isValidViewMode(mode: string): mode is ViewMode {
-    return Object.values(ViewMode).includes(mode as ViewMode);
-  }
+  const canGoBack = ref(false)
 
-  function navigateToViewMode(viewMode: string): void {
-    if (isValidViewMode(viewMode)) {
-      router.replace({ query: { ...route.query, viewMode } })
-    }
-  }
 
-  const viewModeModel = computed({
-    get: () => currentViewMode.value,
-    set: (mode: string) => {
-      navigateToViewMode(mode)
+  // const viewModeModel = computed({
+  //   get: () => currentViewMode.value,
+  //   set: (mode: string) => {
+  //     console.log('set viewModeModel:', mode)
+  //     navigateToViewMode(mode)
+  //   },
+  // })
+
+
+  // Single source of truth: the route param `viewMode`
+  const viewModeModel = computed<ViewMode>({
+    get: () => (route.params.viewMode as ViewMode) ?? 'grid',
+    set: async (mode: ViewMode) => {
+      // avoid redundant navigations
+      if (mode === route.params.viewMode) return
+      // keep the same named route + params, only swap viewMode
+      await router.replace({
+        name: route.name as string,
+        params: { ...route.params, viewMode: mode },
+        query: route.query,
+      })
     },
   })
+
 
   const initialize = async (defaultScope?: ProfileScope) => {
 
@@ -120,7 +131,11 @@ export function useFindMatchViewModel() {
         defaultScope ??
         savedScope.value ??
         (ownerStore.scopes.length > 0 ? ownerStore.scopes[0] : null)
-      if (resolvedScope) navigateToScope(resolvedScope)
+      console.log('resolveScope: resolvedScope:', resolvedScope)
+      if (resolvedScope) {
+        navigateToScope(resolvedScope)
+        localStore.setCurrentScope(resolvedScope)
+      }
     }
   }
 
@@ -142,6 +157,7 @@ export function useFindMatchViewModel() {
   }
 
   watch(currentScope, (newScope) => {
+    console.log('watch(currentScope) newScope:', newScope)
     if (!newScope) return // No scope selected
     fetchResults()
   })
@@ -149,39 +165,61 @@ export function useFindMatchViewModel() {
   // this forces re-rendering the view when the route changes
   // e.g. details view -> /browse
   watch(() => route.fullPath, () => {
+    console.log('watch(route.fullPath) - resolveScope')
     resolveScope()
   })
 
-  watch(
-    () => route.params.scope,
-    (scope) => {
-      if (typeof scope === 'string') localStore.setCurrentScope(scope as ProfileScope)
-    }
-  )
+  // watch(
+  //   () => route.params.scope,
+  //   (scope) => {
+  //     console.log('watch(route.params.scope) - saving to localStore:', scope)
+  //     if (typeof scope === 'string') localStore.setCurrentScope(scope as ProfileScope)
+  //   }
+  // )
+
+  function navigateToViewMode(viewMode: string): void {
+    router.push({ name: 'BrowseProfilesScope', params: { scope: currentScope.value, viewMode: viewMode } })
+    // if (isValidViewMode(viewMode)) {
+    //   router.replace({ query: { ...route.query, viewMode } })
+    // }
+  }
 
   function navigateToScope(scope: ProfileScope): void {
-    router.replace({ name: 'BrowseProfilesScope', params: { scope } })
+    router.push({ name: 'BrowseProfilesScope', params: { scope, viewMode: viewModeModel.value } })
   }
 
   function openProfile(profileId: string): void {
     selectedProfileId.value = profileId
+    canGoBack.value = true
     // Update URL to show detail view, using replace to not affect back navigation
-    router.replace({ name: 'PublicProfile', params: { profileId } })
+    // history.pushState({}, '', router.resolve({ name: 'PublicProfile', params: { profileId } }).href)
+    router.push({ name: 'PublicProfile', params: { profileId } })
   }
 
   function closeProfile(): void {
     selectedProfileId.value = null
+
     // Navigate back to previous URL or default to browse
     const prevUrl = getPreviousUrl()
-    if (prevUrl && !prevUrl.includes('/profile/')) {
+    console.log('previousUrl:', getPreviousUrl())
+    if (prevUrl && canGoBack.value) {
+      history.replaceState({}, '', prevUrl)
+    }
+    else if (prevUrl) {
+      console.log(`router.replace(${prevUrl}`)
       router.replace(prevUrl)
-    } else {
+    }
+    else {
+      console.log('No previousUrl, navigating to default browse route')
       // Fallback to browse with current scope if available
-      const fallbackRoute = currentScope.value 
+      const fallbackRoute = currentScope.value
         ? { name: 'BrowseProfilesScope', params: { scope: currentScope.value } }
         : { name: 'BrowseProfiles' }
+      const url = router.resolve(fallbackRoute).href
+      // history.replaceState({}, '', url)
       router.replace(fallbackRoute)
     }
+    canGoBack.value = false
   }
 
   const scopeModel = computed({
@@ -211,6 +249,7 @@ export function useFindMatchViewModel() {
 
   const hideProfile = (profileId: string) => {
     findProfileStore.hide(profileId)
+    canGoBack.value = false
   }
 
   const reset = () => {
@@ -259,6 +298,7 @@ export function useFindMatchViewModel() {
     viewerProfile,
     haveResults,
     haveAccess,
+    canGoBack,
     isLoading: computed(() => findProfileStore.isLoading || ownerStore.isLoading || !isInitialized.value),
     isLoadingMore: computed(() => findProfileStore.isLoadingMore),
     hasMoreProfiles: computed(() => findProfileStore.hasMoreProfiles),
