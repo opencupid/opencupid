@@ -18,6 +18,8 @@ import type {
   UpdatePostResponse,
   DeletePostResponse,
 } from '@zod/apiResponse.dto'
+import { mapProfileSummary } from '../mappers/profile.mappers'
+import { mapPostWithProfile } from '../mappers/post.mappers'
 
 const postRoutes: FastifyPluginAsync = async fastify => {
   const postService = PostService.getInstance(fastify.prisma)
@@ -84,7 +86,7 @@ const postRoutes: FastifyPluginAsync = async fastify => {
     async (req, reply) => {
       const { id } = PostParamsSchema.parse(req.params)
       const profileId = req.session.profileId
-      
+
       if (!profileId) {
         return sendError(reply, 401, 'Profile required')
       }
@@ -146,11 +148,13 @@ const postRoutes: FastifyPluginAsync = async fastify => {
     const query = PostQuerySchema.parse(req.query)
 
     try {
-      const posts = await postService.findAll({
+      const raw = (await postService.findAll({
         type: query.type,
         limit: query.limit,
         offset: query.offset,
       })
+      )
+      const posts = raw.map(post => mapPostWithProfile(post))
 
       const response: PostsResponse = { success: true, posts }
       return reply.code(200).send(response)
@@ -167,11 +171,12 @@ const postRoutes: FastifyPluginAsync = async fastify => {
     const query = NearbyPostQuerySchema.parse(req.query)
 
     try {
-      const posts = await postService.findNearby(query.lat, query.lon, query.radius, {
+      const raw = await postService.findNearby(query.lat, query.lon, query.radius, {
         type: query.type,
         limit: query.limit,
         offset: query.offset,
       })
+      const posts = raw.map(post => mapPostWithProfile(post))
 
       const response: PostsResponse = { success: true, posts }
       return reply.code(200).send(response)
@@ -188,11 +193,12 @@ const postRoutes: FastifyPluginAsync = async fastify => {
     const query = PostQuerySchema.parse(req.query)
 
     try {
-      const posts = await postService.findRecent({
+      const raw = await postService.findRecent({
         type: query.type,
         limit: query.limit,
         offset: query.offset,
       })
+      const posts = raw.map(post => mapPostWithProfile(post))
 
       const response: PostsResponse = { success: true, posts }
       return reply.code(200).send(response)
@@ -206,7 +212,7 @@ const postRoutes: FastifyPluginAsync = async fastify => {
    * Get posts by profile ID (for viewing user's own posts)
    */
   fastify.get('/profile/:profileId', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-    const { profileId } = PostParamsSchema.parse({ id: (req.params as any).profileId })
+    const { id: profileId } = PostParamsSchema.parse({ id: (req.params as any).profileId })
     const viewerProfileId = req.session.profileId
     const query = PostQuerySchema.parse(req.query)
 
@@ -214,12 +220,13 @@ const postRoutes: FastifyPluginAsync = async fastify => {
       // If viewing own posts, include invisible ones
       const includeInvisible = viewerProfileId === profileId
 
-      const posts = await postService.findByProfileId(profileId, {
+      const raw = await postService.findByProfileId(profileId, {
         type: query.type,
         limit: query.limit,
         offset: query.offset,
         includeInvisible,
       })
+      const posts = raw.map(post => mapPostWithProfile(post))
 
       const response: PostsResponse = { success: true, posts }
       return reply.code(200).send(response)
@@ -237,16 +244,17 @@ const postRoutes: FastifyPluginAsync = async fastify => {
     if (!profileId) {
       return sendError(reply, 401, 'Profile required')
     }
-    
+
     const query = PostQuerySchema.parse(req.query)
 
     try {
-      const posts = await postService.findByProfileId(profileId, {
+      const raw = await postService.findByProfileId(profileId, {
         type: query.type,
         limit: query.limit,
         offset: query.offset,
         includeInvisible: true, // Always include invisible posts for own profile
       })
+      const posts = raw.map(post => mapPostWithProfile(post))
 
       const response: PostsResponse = { success: true, posts }
       return reply.code(200).send(response)

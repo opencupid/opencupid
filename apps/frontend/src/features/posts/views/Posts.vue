@@ -1,90 +1,10 @@
-<template>
-  <div class="posts-view">
-    <div class="posts-view__header">
-      <h1 class="posts-view__title">{{ $t('posts.title') }}</h1>
-      <button @click="showCreateModal = true" class="btn btn-primary">
-        {{ $t('posts.actions.create') }}
-      </button>
-    </div>
-
-    <div class="posts-view__tabs">
-      <button 
-        v-for="tab in tabs" 
-        :key="tab.key"
-        @click="activeTab = tab.key"
-        :class="['tab-btn', { 'tab-btn--active': activeTab === tab.key }]"
-      >
-        {{ tab.label }}
-      </button>
-    </div>
-
-    <div class="posts-view__content">
-      <!-- All Posts Tab -->
-      <div v-if="activeTab === 'all'" class="tab-content">
-        <PostList
-          :title="$t('posts.filters.all')"
-          view-mode="all"
-          :show-filters="true"
-          :empty-message="$t('posts.messages.no_posts')"
-        />
-      </div>
-
-      <!-- Nearby Posts Tab -->
-      <div v-else-if="activeTab === 'nearby'" class="tab-content">
-        <div v-if="!locationPermission" class="location-prompt">
-          <p>{{ $t('posts.location.prompt') }}</p>
-          <button @click="requestLocation" class="btn btn-primary">
-            {{ $t('posts.location.enable') }}
-          </button>
-        </div>
-        <PostList
-          v-else
-          :title="$t('posts.filters.nearby')"
-          view-mode="nearby"
-          :nearby-params="nearbyParams"
-          :show-filters="true"
-          :empty-message="$t('posts.messages.no_nearby')"
-        />
-      </div>
-
-      <!-- Recent Posts Tab -->
-      <div v-else-if="activeTab === 'recent'" class="tab-content">
-        <PostList
-          :title="$t('posts.filters.recent')"
-          view-mode="recent"
-          :show-filters="true"
-          :empty-message="$t('posts.messages.no_recent')"
-        />
-      </div>
-
-      <!-- My Posts Tab -->
-      <div v-else-if="activeTab === 'my'" class="tab-content">
-        <PostList
-          :title="$t('posts.my_posts')"
-          view-mode="my"
-          :show-filters="true"
-          :empty-message="$t('posts.messages.no_my_posts')"
-        />
-      </div>
-    </div>
-
-    <!-- Create Post Modal -->
-    <div v-if="showCreateModal" class="modal-overlay" @click="closeCreateModal">
-      <div class="modal-content" @click.stop>
-        <PostEdit
-          @cancel="closeCreateModal"
-          @saved="handlePostCreated"
-        />
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import PostList from '../components/PostList.vue'
 import PostEdit from '../components/PostEdit.vue'
+import IconPencil2 from '@/assets/icons/interface/pencil-2.svg'
+
 import type { OwnerPost } from '@zod/post/post.dto'
 
 const { t } = useI18n()
@@ -108,7 +28,7 @@ const nearbyParams = computed(() => {
   return {
     lat: userLocation.value.lat,
     lon: userLocation.value.lon,
-    radius: 50
+    radius: 50,
   }
 })
 
@@ -117,7 +37,7 @@ const requestLocation = async () => {
     const position = await getCurrentPosition()
     userLocation.value = {
       lat: position.coords.latitude,
-      lon: position.coords.longitude
+      lon: position.coords.longitude,
     }
     locationPermission.value = true
   } catch (error) {
@@ -136,7 +56,7 @@ const getCurrentPosition = (): Promise<GeolocationPosition> => {
     navigator.geolocation.getCurrentPosition(resolve, reject, {
       enableHighAccuracy: true,
       timeout: 5000,
-      maximumAge: 300000 // 5 minutes
+      maximumAge: 300000, // 5 minutes
     })
   })
 }
@@ -154,10 +74,10 @@ onMounted(() => {
   // Check if we already have location permission
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      position => {
         userLocation.value = {
           lat: position.coords.latitude,
-          lon: position.coords.longitude
+          lon: position.coords.longitude,
         }
         locationPermission.value = true
       },
@@ -168,145 +88,132 @@ onMounted(() => {
     )
   }
 })
+
+const isDetailView = ref(false)
 </script>
 
-<style scoped>
-.posts-view {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
-}
+<template>
+  <main class="w-100 position-relative overflow-hidden">
+    <div
+      v-if="isDetailView"
+      class="detail-view position-absolute w-100 h-100"
+      :class="{ active: isDetailView }"
+    ></div>
 
-.posts-view__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
+      <h1>{{ $t('posts.title') }}</h1>
+   
 
-.posts-view__title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #111827;
-  margin: 0;
-}
 
-.posts-view__tabs {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 2rem;
-  border-bottom: 1px solid #e5e7eb;
-  overflow-x: auto;
-}
+    <BCard no-body>
+      <div class="d-flex align-items-center justify-content-between p-2">
+      <BTabs pills>
+        <BTab v-for="tab in tabs" :key="tab.key" :title="tab.label" @click="activeTab = tab.key"/>
+      </BTabs>
+      </div>  
+    </BCard>
 
-.tab-btn {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  font-weight: 500;
-  color: #6b7280;
-  border-bottom: 2px solid transparent;
-  transition: all 0.2s;
-  white-space: nowrap;
-}
+    <div class="posts-view__content">
+      <!-- All Posts Tab -->
+      <div v-if="activeTab === 'all'" class="tab-content">
+        <PostList
+          view-mode="all"
+          :show-filters="true"
+          :empty-message="$t('posts.messages.no_posts')"
+        />
+      </div>
 
-.tab-btn:hover {
-  color: #374151;
-}
+      <!-- Nearby Posts Tab -->
+      <div v-else-if="activeTab === 'nearby'" class="tab-content">
+        <div v-if="!locationPermission" class="location-prompt">
+          <p>{{ $t('posts.location.prompt') }}</p>
+          <BButton variant="info" @click="requestLocation" size="lg">
+            {{ $t('posts.location.enable') }}
+          </BButton>
+        </div>
+        <PostList
+          v-else
+          view-mode="nearby"
+          :nearby-params="nearbyParams"
+          :show-filters="true"
+          :empty-message="$t('posts.messages.no_nearby')"
+        />
+      </div>
 
-.tab-btn--active {
-  color: #3b82f6;
-  border-bottom-color: #3b82f6;
-}
+      <!-- Recent Posts Tab -->
+      <div v-else-if="activeTab === 'recent'" class="tab-content">
+        <PostList
+          view-mode="recent"
+          :show-filters="true"
+          :empty-message="$t('posts.messages.no_recent')"
+        />
+      </div>
 
-.posts-view__content {
-  min-height: 400px;
-}
+      <!-- My Posts Tab -->
+      <div v-else-if="activeTab === 'my'" class="tab-content">
+        <PostList
+          view-mode="my"
+          :show-filters="true"
+          :empty-message="$t('posts.messages.no_my_posts')"
+        />
+      </div>
+    </div>
 
-.tab-content {
-  animation: fadeIn 0.3s ease-in-out;
-}
+    <!-- Create Post Modal -->
+    <!-- <div v-if="showCreateModal" class="modal-overlay" @click="closeCreateModal">
+      <div class="modal-content" @click.stop>
+        <PostEdit @cancel="closeCreateModal" @saved="handlePostCreated" />
+      </div>
+    </div> -->
+  </main>
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+  <div class="main-edit-button">
+    <BButton
+      size="lg"
+      class="btn-icon-lg"
+      key="save"
+      @click="showCreateModal = true"
+      variant="primary"
+      :title="$t('profiles.forms.edit_button_hint')"
+    >
+      <IconPencil2 class="svg-icon-lg" />
+    </BButton>
+  </div>
 
-.location-prompt {
-  text-align: center;
-  padding: 3rem;
-  background: #f9fafb;
-  border-radius: 8px;
-  margin-bottom: 2rem;
-}
+  <BModal
+    title=""
+    v-if="showCreateModal"
+    :backdrop="'static'"
+    centered
+    size="lg"
+    button-size="sm"
+    fullscreen="sm"
+    :focus="false"
+    :no-close-on-backdrop="true"
+    :no-header="true"
+    :no-footer="true"
+    :show="true"
+    body-class="d-flex flex-column align-items-center justify-content-center overflow-auto hide-scrollbar p-2 p-md-5"
+    :keyboard="false"
+  >
+    <PostEdit @cancel="closeCreateModal" @saved="handlePostCreated" />
+  </BModal>
+</template>
 
-.location-prompt p {
-  color: #6b7280;
-  margin-bottom: 1rem;
-}
+<style scoped lang="scss">
+@import 'bootstrap/scss/functions';
+@import 'bootstrap/scss/variables';
+@import 'bootstrap/scss/mixins';
+@import '@/css/app-vars.scss';
 
-.btn {
-  padding: 0.75rem 1.5rem;
-  border-radius: 6px;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.btn-primary {
-  background-color: #3b82f6;
-  color: white;
-}
-
-.btn-primary:hover {
-  background-color: #2563eb;
-}
-
-.modal-overlay {
+.main-edit-button {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 1rem;
+  z-index: 5;
+  bottom: 1rem;
+  right: 1rem;
 }
 
-.modal-content {
-  background: white;
-  border-radius: 12px;
-  max-width: 600px;
-  width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
+.list-view {
+  height: calc(100vh - $navbar-height);
 }
 
-@media (max-width: 768px) {
-  .posts-view {
-    padding: 1rem;
-  }
-  
-  .posts-view__header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .posts-view__title {
-    font-size: 1.5rem;
-  }
-}
 </style>

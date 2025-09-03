@@ -1,6 +1,7 @@
 import { z } from 'zod'
-import { PostSchema, PostTypeSchema } from '../generated'
+import { PostSchema, PostTypeSchema, ProfileImageSchema } from '../generated'
 import { PostType } from '@prisma/client'
+import { ProfileSummarySchema, PublicProfileSchema } from '../profile/profile.dto'
 
 // Base fields that are public
 const publicPostFields = {
@@ -29,15 +30,7 @@ export type OwnerPost = z.infer<typeof OwnerPostSchema>
 
 // Extended public post with profile info
 export const PublicPostWithProfileSchema = PublicPostSchema.extend({
-  postedBy: z.object({
-    id: z.string(),
-    publicName: z.string(),
-    profileImages: z.array(z.object({
-      id: z.string(),
-      url: z.string().nullable(),
-      altText: z.string(),
-    })).default([]),
-  }),
+  postedBy: ProfileSummarySchema,
 })
 export type PublicPostWithProfile = z.infer<typeof PublicPostWithProfileSchema>
 

@@ -348,7 +348,7 @@
     "dialog_cancel_button": "Nevermind"
   },
   "posts": {
-    "title": "Posts",
+    "title": "Bulletin board",
     "types": {
       "OFFER": "Offer",
       "REQUEST": "Request"
@@ -368,17 +368,6 @@
       "content": "Content",
       "visibility": "Visible to others",
       "updated": "Last updated"
-    },
-    "messages": {
-      "created": "Post created successfully",
-      "updated": "Post updated successfully",
-      "deleted": "Post deleted successfully",
-      "error_create": "Failed to create post",
-      "error_update": "Failed to update post",
-      "error_delete": "Failed to delete post",
-      "error_load": "Failed to load posts",
-      "not_visible": "This post is not visible to others",
-      "confirm_delete": "Are you sure you want to delete this post?"
     },
     "filters": {
       "all": "All Posts",

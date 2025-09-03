@@ -1,67 +1,9 @@
-<template>
-  <div
-    class="post-card"
-    :class="[`post-card--${post.type.toLowerCase()}`, { 'post-card--own': isOwn }]"
-    @click="$emit('click', post)"
-  >
-    <div class="post-card__header">
-      <div class="post-card__profile">
-        <div class="post-card__avatar">
-          <ProfileThumbnail
-            v-if="hasProfileData(post)"
-            :profile="post.postedBy"
-            :size="40"
-            :placeholder="true"
-          />
-        profile
-        </div>
-        <div class="post-card__profile-info">
-          <div class="post-card__name">
-            {{ hasProfileData(post) ? post.postedBy.publicName : 'Unknown User' }}
-          </div>
-          <div class="post-card__date">{{ formatDate(post.createdAt) }}</div>
-        </div>
-      </div>
-
-      <div class="post-card__type">
-        <span class="post-type-badge" :class="`post-type-badge--${post.type.toLowerCase()}`">
-          {{ $t(`posts.types.${post.type}`) }}
-        </span>
-      </div>
-    </div>
-
-    <div class="post-card__content">
-      <p class="post-card__text">{{ post.content }}</p>
-    </div>
-
-    <div v-if="isOwn" class="post-card__actions">
-      <button
-        @click.stop="$emit('edit', post)"
-        class="action-btn action-btn--edit"
-        :title="$t('posts.actions.edit')"
-      >
-        <EditIcon class="action-icon" />
-      </button>
-      <button
-        @click.stop="$emit('delete', post)"
-        class="action-btn action-btn--delete"
-        :title="$t('posts.actions.delete')"
-      >
-        <TrashIcon class="action-icon" />
-      </button>
-    </div>
-
-    <div v-if="isOwn && !(post as any).isVisible" class="post-card__visibility-notice">
-      {{ $t('posts.messages.not_visible') }}
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useAuthStore } from '@/features/auth/stores/authStore'
-import type { PublicPostWithProfile, OwnerPost } from '@zod/post/post.dto'
+import PostIt from '@/features/shared/ui/PostIt.vue'
 import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
+import type { PublicPostWithProfile, OwnerPost } from '@zod/post/post.dto'
 
 // Simple icons - in a real app you'd use a proper icon library
 const EditIcon = {
@@ -114,21 +56,72 @@ const formatDate = (date: Date | string) => {
 }
 </script>
 
+<template>
+  <PostIt>
+    <div
+      class="post-card"
+      :class="[`post-card--${post.type.toLowerCase()}`, { 'post-card--own': isOwn }]"
+      @click="$emit('click', post)"
+    >
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="post-type-badge" :class="`post-type-badge--${post.type.toLowerCase()}`">
+          {{ $t(`posts.types.${post.type}`) }}
+        </span>
+      </div>
+
+      <div class="post-card__content">
+        <p class="post-card__text">{{ post.content }}</p>
+        <div class="fs-6">{{ formatDate(post.createdAt) }}</div>
+      </div>
+
+      <div v-if="hasProfileData(post)" class="d-flex align-items-center mb-2">
+        <div class="thumbnail">
+          <ProfileThumbnail :profile="post.postedBy" class="me-2" />
+        </div>
+        <div>
+          <div>{{ post.postedBy.publicName }}</div>
+        </div>
+      </div>
+
+      <div v-if="isOwn" class="post-card__actions">
+        <button
+          @click.stop="$emit('edit', post)"
+          class="action-btn action-btn--edit"
+          :title="$t('posts.actions.edit')"
+        >
+          <EditIcon class="action-icon" />
+        </button>
+        <button
+          @click.stop="$emit('delete', post)"
+          class="action-btn action-btn--delete"
+          :title="$t('posts.actions.delete')"
+        >
+          <TrashIcon class="action-icon" />
+        </button>
+      </div>
+
+      <div v-if="isOwn && !(post as any).isVisible" class="post-card__visibility-notice">
+        {{ $t('posts.messages.not_visible') }}
+      </div>
+    </div>
+  </PostIt>
+</template>
+
 <style scoped>
 .post-card {
-  background: white;
-  border-radius: 12px;
+  /* background: white; */
+  /* border-radius: 12px;
   padding: 1rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   transition: all 0.2s ease;
-  position: relative;
-  border-left: 4px solid transparent;
+  position: relative; */
+  /* border-left: 4px solid transparent; */
 }
 
 .post-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  /* transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15); */
 }
 
 .post-card--offer {
@@ -139,19 +132,7 @@ const formatDate = (date: Date | string) => {
   border-left-color: #3b82f6;
 }
 
-.post-card--own {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-}
-
-.post-card__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.75rem;
-}
-
-.post-card__profile {
+/* .post-card__profile {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -163,9 +144,9 @@ const formatDate = (date: Date | string) => {
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
-}
+} */
 
-.avatar-image {
+/* .avatar-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -181,13 +162,13 @@ const formatDate = (date: Date | string) => {
   color: white;
   font-weight: bold;
   font-size: 1.2rem;
-}
+} */
 
-.post-card__profile-info {
-  min-width: 0;
-}
+/* .post-card__profile-info {
+  min-width: 0; */
+/* } */
 
-.post-card__name {
+/* .post-card__name {
   font-weight: 600;
   color: #111827;
   white-space: nowrap;
@@ -198,9 +179,12 @@ const formatDate = (date: Date | string) => {
 .post-card__date {
   font-size: 0.875rem;
   color: #6b7280;
-}
+} */
 
 .post-type-badge {
+  position: absolute;
+  margin-top: -1rem;
+  margin-left: -1rem;
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
   font-size: 0.75rem;
@@ -219,9 +203,9 @@ const formatDate = (date: Date | string) => {
   color: #1e40af;
 }
 
-.post-card__content {
+/* .post-card__content {
   margin-bottom: 1rem;
-}
+} */
 
 .post-card__text {
   color: #374151;
