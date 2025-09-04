@@ -22,6 +22,9 @@ export function usePostListViewModel(options: UsePostListOptions) {
   const selectedType = ref<string>(options.type || '')
   const currentPage = ref(0)
   const pageSize = 20
+  const isLoadingMore = ref(false)
+  const hasMorePosts = ref(true)
+  const isInitialized = ref(false)
 
   const showFullView = ref(false)
   const showEditModal = ref(false)
@@ -32,29 +35,39 @@ export function usePostListViewModel(options: UsePostListOptions) {
     return options.scope === 'my' ? postStore.myPosts : postStore.posts
   })
 
-  const canLoadMore = computed(() => {
-    return posts.value.length >= (currentPage.value + 1) * pageSize
-  })
-
   const loadPosts = async (append = false) => {
     if (!append) {
       currentPage.value = 0
+      hasMorePosts.value = true
+    } else {
+      isLoadingMore.value = true
     }
-    await postStore.loadPosts(options.scope || 'all', {
+
+    const fetched = await postStore.loadPosts(options.scope || 'all', {
       type: (selectedType.value as PostTypeType) || undefined,
       page: currentPage.value,
       pageSize,
       nearbyParams: options.nearbyParams,
     })
+
+    if (fetched.length < pageSize) {
+      hasMorePosts.value = false
+    }
+
+    if (append) {
+      isLoadingMore.value = false
+    } else {
+      isInitialized.value = true
+    }
   }
 
   const handleTypeFilter = () => {
     loadPosts()
   }
 
-  const handleLoadMore = () => {
+  const handleLoadMore = async () => {
     currentPage.value++
-    loadPosts(true)
+    await loadPosts(true)
   }
 
   const handleRetry = () => {
@@ -122,7 +135,9 @@ export function usePostListViewModel(options: UsePostListOptions) {
     postStore,
     posts,
     selectedType,
-    canLoadMore,
+    isLoadingMore,
+    hasMorePosts,
+    isInitialized,
     showFullView,
     showEditModal,
     selectedPost,
