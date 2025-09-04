@@ -93,7 +93,8 @@
     "browse": "Browse",
     "matches": "Matches",
     "inbox": "Inbox",
-    "settings": "Settings"
+    "settings": "Settings",
+    "bulletin": "Bulletin"
   },
   "authentication": {
     "login": "Login",

@@ -100,23 +100,26 @@ const isDetailView = ref(false)
       :class="{ active: isDetailView }"
     ></div>
 
-      <h1>{{ $t('posts.title') }}</h1>
-   
-
+    <!-- <h1>{{ $t('posts.title') }}</h1> -->
 
     <BCard no-body>
       <div class="d-flex align-items-center justify-content-between p-2">
-      <BTabs pills>
-        <BTab v-for="tab in tabs" :key="tab.key" :title="tab.label" @click="activeTab = tab.key"/>
-      </BTabs>
-      </div>  
+        <BTabs pills>
+          <BTab
+            v-for="tab in tabs"
+            :key="tab.key"
+            :title="tab.label"
+            @click="activeTab = tab.key"
+          />
+        </BTabs>
+      </div>
     </BCard>
 
     <div class="posts-view__content">
       <!-- All Posts Tab -->
       <div v-if="activeTab === 'all'" class="tab-content">
         <PostList
-          view-mode="all"
+          scope="all"
           :show-filters="true"
           :empty-message="$t('posts.messages.no_posts')"
         />
@@ -132,7 +135,7 @@ const isDetailView = ref(false)
         </div>
         <PostList
           v-else
-          view-mode="nearby"
+          scope="nearby"
           :nearby-params="nearbyParams"
           :show-filters="true"
           :empty-message="$t('posts.messages.no_nearby')"
@@ -142,7 +145,7 @@ const isDetailView = ref(false)
       <!-- Recent Posts Tab -->
       <div v-else-if="activeTab === 'recent'" class="tab-content">
         <PostList
-          view-mode="recent"
+          scope="recent"
           :show-filters="true"
           :empty-message="$t('posts.messages.no_recent')"
         />
@@ -151,20 +154,12 @@ const isDetailView = ref(false)
       <!-- My Posts Tab -->
       <div v-else-if="activeTab === 'my'" class="tab-content">
         <PostList
-          view-mode="my"
+          scope="my"
           :show-filters="true"
           :empty-message="$t('posts.messages.no_my_posts')"
         />
       </div>
     </div>
-
-    <!-- Create Post Modal -->
-    <!-- <div v-if="showCreateModal" class="modal-overlay" @click="closeCreateModal">
-      <div class="modal-content" @click.stop>
-        <PostEdit @cancel="closeCreateModal" @saved="handlePostCreated" />
-      </div>
-    </div> -->
-  </main>
 
   <div class="main-edit-button">
     <BButton
@@ -197,6 +192,14 @@ const isDetailView = ref(false)
   >
     <PostEdit @cancel="closeCreateModal" @saved="handlePostCreated" />
   </BModal>
+    <!-- Create Post Modal -->
+    <!-- <div v-if="showCreateModal" class="modal-overlay" @click="closeCreateModal">
+      <div class="modal-content" @click.stop>
+        <PostEdit @cancel="closeCreateModal" @saved="handlePostCreated" />
+      </div>
+    </div> -->
+  </main>
+
 </template>
 
 <style scoped lang="scss">
@@ -215,5 +218,4 @@ const isDetailView = ref(false)
 .list-view {
   height: calc(100vh - $navbar-height);
 }
-
 </style>

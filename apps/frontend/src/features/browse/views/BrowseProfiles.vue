@@ -17,12 +17,14 @@ import PlaceholdersGrid from '../components/PlaceholdersGrid.vue'
 import SocialFilterDisplay from '../components/SocialFilterDisplay.vue'
 import DatingPrefsDisplay from '../components/DatingPrefsDisplay.vue'
 import ScopeViewToggler from '@/features/shared/ui/ScopeViewToggler.vue'
+import ViewModeToggler from '@/features/shared/ui/ViewModeToggler.vue'
+
 import OsmPoiMap from '../components/OsmPoiMap.vue'
 import { useI18n } from 'vue-i18n'
 import { useCountries } from '../../shared/composables/useCountries'
 
-import IconSquare from '@/assets/icons/interface/square.svg'
 import IconMap from '@/assets/icons/interface/map.svg'
+import GridButton from '../../shared/ui/GridButton.vue'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -174,30 +176,7 @@ useInfiniteScroll(
                 :viewerLocation="viewerProfile?.location"
                 @prefs:toggle="showPrefsModal = true"
               />
-              <BButtonGroup aria-label="Toggle view mode" size="sm">
-                <BButton
-                  variant="outline-secondary"
-                  :title="t('profiles.browse.views.grid_view_button_title')"
-                  :pressed="viewModeModel === 'grid'"
-                  @click="viewModeModel = 'grid'"
-                >
-                  <div class="icon-grid">
-                    <IconSquare class="svg-icon-sm" />
-                    <IconSquare class="svg-icon-sm" />
-                    <IconSquare class="svg-icon-sm" />
-                    <IconSquare class="svg-icon-sm" />
-                  </div>
-                </BButton>
-
-                <BButton
-                  variant="outline-secondary"
-                  :title="t('profiles.browse.views.map_view_button_title')"
-                  :pressed="viewModeModel === 'map'"
-                  @click="viewModeModel = 'map'"
-                >
-                  <IconMap class="svg-icon" />
-                </BButton>
-              </BButtonGroup>
+              <ViewModeToggler v-model="viewModeModel" />
             </div>
           </div>
           <div v-if="currentScope == 'dating'" class="filter-controls my-2">
