@@ -11,13 +11,14 @@ import type {
   PostQueryInput,
   NearbyPostQueryInput,
 } from '@zod/post/post.dto'
-import { PostType } from '@prisma/client'
+import { type PostTypeType } from '@zod/generated'
+import ViewModeToggler from '@/features/shared/ui/ViewModeToggler.vue'
 
 interface Props {
   title?: string
-  type?: PostType
+  type?: PostTypeType
   showFilters?: boolean
-  viewMode?: 'all' | 'nearby' | 'recent' | 'my'
+  scope?: 'all' | 'nearby' | 'recent' | 'my'
   nearbyParams?: { lat: number; lon: number; radius: number }
   emptyMessage?: string
 }
@@ -25,7 +26,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   title: 'Posts',
   showFilters: true,
-  viewMode: 'all',
+  scope: 'all',
   emptyMessage: 'No posts found',
 })
 
@@ -41,7 +42,7 @@ const selectedPost = ref<PublicPostWithProfile | OwnerPost | null>(null)
 const editingPost = ref<OwnerPost | null>(null)
 
 const posts = computed(() => {
-  if (props.viewMode === 'my') {
+  if (props.scope === 'my') {
     return postStore.myPosts
   }
   return postStore.posts
@@ -52,7 +53,7 @@ const canLoadMore = computed(() => {
 })
 
 const buildQuery = (): PostQueryInput => ({
-  type: (selectedType.value as PostType) || undefined,
+  type: (selectedType.value as PostTypeType) || undefined,
   limit: pageSize,
   offset: currentPage.value * pageSize,
 })
@@ -71,7 +72,7 @@ const loadPosts = async (append = false) => {
 
   const query = buildQuery()
 
-  switch (props.viewMode) {
+  switch (props.scope) {
     case 'nearby':
       if (props.nearbyParams) {
         await postStore.fetchNearbyPosts(buildNearbyQuery())
@@ -149,7 +150,7 @@ watch(
 watch(
   () => props.nearbyParams,
   () => {
-    if (props.viewMode === 'nearby') {
+    if (props.scope === 'nearby') {
       loadPosts()
     }
   },
@@ -163,13 +164,21 @@ onMounted(() => {
 
 <template>
   <div class="">
-    <BFormGroup v-if="showFilters">
-      <BFormSelect v-model="selectedType" @change="handleTypeFilter">
-        <option value="">{{ $t('posts.filters.all') }}</option>
-        <option value="OFFER">{{ $t('posts.filters.offers') }}</option>
-        <option value="REQUEST">{{ $t('posts.filters.requests') }}</option>
-      </BFormSelect>
-    </BFormGroup>
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <BFormGroup v-if="showFilters">
+          <BFormSelect v-model="selectedType" @change="handleTypeFilter">
+            <option value="">{{ $t('posts.filters.all') }}</option>
+            <option value="OFFER">{{ $t('posts.filters.offers') }}</option>
+            <option value="REQUEST">{{ $t('posts.filters.requests') }}</option>
+          </BFormSelect>
+        </BFormGroup>
+      </div>
+      <div>
+        <!-- add viewModeTogglee -->
+         <!-- <ViewModeToggler/> -->
+      </div>
+    </div>
 
     <div v-if="postStore.isLoading && posts.length === 0" class="post-list__loading">
       <div class="loading-spinner"></div>
@@ -199,7 +208,7 @@ onMounted(() => {
     </BRow>
 
     <div v-if="canLoadMore" class="post-list__load-more">
-      <BButton variant="secondary" @click="handleLoadMore" :disabled="postStore.isLoading" >
+      <BButton variant="secondary" @click="handleLoadMore" :disabled="postStore.isLoading">
         {{ postStore.isLoading ? $t('uicomponents.loading.loading') : 'Load More' }}
       </BButton>
     </div>

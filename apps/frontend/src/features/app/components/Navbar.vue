@@ -9,6 +9,7 @@ import IconHeart from '@/assets/icons/interface/heart.svg'
 import IconHome from '@/assets/icons/interface/home.svg'
 import IconUser from '@/assets/icons/interface/user.svg'
 import IconLogout from '@/assets/icons/interface/logout.svg'
+import IconNote from '@/assets/icons/interface/message-2.svg'
 
 import NotificationDot from '@/features/shared/ui/NotificationDot.vue'
 import { useInteractionStore } from '@/features/interaction/stores/useInteractionStore'
@@ -43,6 +44,11 @@ const hasMatchNotifications = computed(
           <span class="d-none d-md-block label">{{ $t('nav.home') }}</span>
         </BNavItem>
 
+        <BNavItem to="/posts" active-class="active">
+          <IconNote class="svg-icon-lg" />
+          <span class="d-none d-md-inline label">{{ $t('nav.bulletin') }}</span>
+        </BNavItem>
+        
         <BNavItem to="/browse" active-class="active">
           <IconSearch class="svg-icon-lg" />
           <span class="d-none d-md-inline label">{{ $t('nav.browse') }}</span>
@@ -67,7 +73,11 @@ const hasMatchNotifications = computed(
             v-if="profileStore.profile?.profileImages?.length"
             class="profile-thumbnail d-flex overflow-hidden"
           >
-            <ProfileImage :profile="profileStore.profile" variant="thumb" class="img-fluid rounded w-100 h-100" />
+            <ProfileImage
+              :profile="profileStore.profile"
+              variant="thumb"
+              class="img-fluid rounded w-100 h-100"
+            />
           </span>
           <IconUser v-else class="svg-icon-lg" />
         </BNavItem>
@@ -102,5 +112,4 @@ const hasMatchNotifications = computed(
   align-items: center;
   justify-content: center;
 }
-
 </style>

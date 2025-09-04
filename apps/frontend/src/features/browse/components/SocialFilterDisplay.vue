@@ -56,10 +56,4 @@ defineEmits<{
    
 </template>
 
-<style>
-.icon-grid {
-  display: grid;
-  grid-template-columns: repeat(2, auto);
-  gap: 0.15rem;
-}
-</style>
+
