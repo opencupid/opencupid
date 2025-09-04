@@ -16,6 +16,7 @@ import type {
   DeletePostResponse,
 } from '@zod/apiResponse.dto'
 import { PostType } from '@prisma/client'
+import type { PostTypeType } from '@zod/generated'
 
 export const usePostStore = defineStore('posts', {
   state: () => ({
@@ -132,6 +133,38 @@ export const usePostStore = defineStore('posts', {
         return false
       } finally {
         this.isLoading = false
+      }
+    },
+
+    async loadPosts(scope: 'all' | 'nearby' | 'recent' | 'my', options: {
+      type?: PostTypeType
+      page?: number
+      pageSize?: number
+      nearbyParams?: { lat: number; lon: number; radius?: number }
+    } = {}) {
+      const { type, page = 0, pageSize = 20, nearbyParams } = options
+      const baseQuery: PostQueryInput = {
+        type,
+        limit: pageSize,
+        offset: page * pageSize,
+      }
+      switch (scope) {
+        case 'nearby':
+          if (nearbyParams) {
+            return await this.fetchNearbyPosts({
+              ...baseQuery,
+              lat: nearbyParams.lat,
+              lon: nearbyParams.lon,
+              radius: nearbyParams.radius ?? 50,
+            })
+          }
+          return []
+        case 'recent':
+          return await this.fetchRecentPosts(baseQuery)
+        case 'my':
+          return await this.fetchMyPosts(baseQuery)
+        default:
+          return await this.fetchPosts(baseQuery)
       }
     },
 
