@@ -1,18 +1,13 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
-import { usePostStore } from '../stores/postStore'
-import { useI18n } from 'vue-i18n'
+import { ref } from 'vue'
+import { useInfiniteScroll } from '@vueuse/core'
+
 import PostCard from './PostCardPostIt.vue'
 import PostEdit from './PostEdit.vue'
 import PostFullView from './PostFullView.vue'
-import type {
-  PublicPostWithProfile,
-  OwnerPost,
-  PostQueryInput,
-  NearbyPostQueryInput,
-} from '@zod/post/post.dto'
 import { type PostTypeType } from '@zod/generated'
-import ViewModeToggler from '@/features/shared/ui/ViewModeToggler.vue'
+
+import { usePostListViewModel } from '../composables/usePostListViewModel'
 
 interface Props {
   title?: string
@@ -30,140 +25,47 @@ const props = withDefaults(defineProps<Props>(), {
   emptyMessage: 'No posts found',
 })
 
-const { t } = useI18n()
-const postStore = usePostStore()
+const {
+  postStore,
+  posts,
+  selectedType,
+  isLoadingMore,
+  hasMorePosts,
+  isInitialized,
+  showFullView,
+  showEditModal,
+  selectedPost,
+  editingPost,
+  handleTypeFilter,
+  handleLoadMore,
+  handleRetry,
+  handlePostClick,
+  handlePostEdit,
+  handlePostDelete,
+  handlePostSaved,
+  closeFullView,
+  closeEditModal,
+} = usePostListViewModel(props)
 
-const selectedType = ref<string>(props.type || '')
-const currentPage = ref(0)
-const pageSize = 20
-const showFullView = ref(false)
-const showEditModal = ref(false)
-const selectedPost = ref<PublicPostWithProfile | OwnerPost | null>(null)
-const editingPost = ref<OwnerPost | null>(null)
+const scrollContainer = ref<HTMLElement>()
 
-const posts = computed(() => {
-  if (props.scope === 'my') {
-    return postStore.myPosts
-  }
-  return postStore.posts
-})
-
-const canLoadMore = computed(() => {
-  return posts.value.length >= (currentPage.value + 1) * pageSize
-})
-
-const buildQuery = (): PostQueryInput => ({
-  type: (selectedType.value as PostTypeType) || undefined,
-  limit: pageSize,
-  offset: currentPage.value * pageSize,
-})
-
-const buildNearbyQuery = (): NearbyPostQueryInput => ({
-  ...buildQuery(),
-  lat: props.nearbyParams!.lat,
-  lon: props.nearbyParams!.lon,
-  radius: props.nearbyParams!.radius || 50,
-})
-
-const loadPosts = async (append = false) => {
-  if (!append) {
-    currentPage.value = 0
-  }
-
-  const query = buildQuery()
-
-  switch (props.scope) {
-    case 'nearby':
-      if (props.nearbyParams) {
-        await postStore.fetchNearbyPosts(buildNearbyQuery())
-      }
-      break
-    case 'recent':
-      await postStore.fetchRecentPosts(query)
-      break
-    case 'my':
-      await postStore.fetchMyPosts(query)
-      break
-    default:
-      await postStore.fetchPosts(query)
-  }
-}
-
-const handleTypeFilter = () => {
-  loadPosts()
-}
-
-const handleLoadMore = () => {
-  currentPage.value++
-  loadPosts(true)
-}
-
-const handleRetry = () => {
-  postStore.clearError()
-  loadPosts()
-}
-
-const handlePostClick = (post: PublicPostWithProfile | OwnerPost) => {
-  selectedPost.value = post
-  showFullView.value = true
-}
-
-const handlePostEdit = (post: PublicPostWithProfile | OwnerPost) => {
-  editingPost.value = post as OwnerPost
-  showEditModal.value = true
-}
-
-const handlePostDelete = async (post: PublicPostWithProfile | OwnerPost) => {
-  if (confirm(t('posts.confirm_delete'))) {
-    const success = await postStore.deletePost(post.id)
-    if (success) {
-      closeFullView()
+useInfiniteScroll(
+  scrollContainer,
+  async () => {
+    if (isLoadingMore.value || !hasMorePosts.value || !isInitialized.value) {
+      return
     }
-  }
-}
-
-const handlePostSaved = (post: OwnerPost) => {
-  closeEditModal()
-  // Refresh the list to show updated post
-  loadPosts()
-}
-
-const closeFullView = () => {
-  showFullView.value = false
-  selectedPost.value = null
-}
-
-const closeEditModal = () => {
-  showEditModal.value = false
-  editingPost.value = null
-}
-
-// Watch for prop changes
-watch(
-  () => props.type,
-  newType => {
-    selectedType.value = newType || ''
-    loadPosts()
-  }
-)
-
-watch(
-  () => props.nearbyParams,
-  () => {
-    if (props.scope === 'nearby') {
-      loadPosts()
-    }
+    await handleLoadMore()
   },
-  { deep: true }
+  {
+    distance: 300,
+    canLoadMore: () => hasMorePosts.value && !isLoadingMore.value && isInitialized.value,
+  }
 )
-
-onMounted(() => {
-  loadPosts()
-})
 </script>
 
 <template>
-  <div class="">
+  <div ref="scrollContainer" class="post-list overflow-auto">
     <div class="d-flex justify-content-between align-items-center">
       <div>
         <BFormGroup v-if="showFilters">
@@ -207,12 +109,11 @@ onMounted(() => {
       </BCol>
     </BRow>
 
-    <div v-if="canLoadMore" class="post-list__load-more">
-      <BButton variant="secondary" @click="handleLoadMore" :disabled="postStore.isLoading">
-        {{ postStore.isLoading ? $t('uicomponents.loading.loading') : 'Load More' }}
-      </BButton>
+    <div v-if="isLoadingMore" class="text-center py-3">
+      <BSpinner small variant="primary" />
+      <span class="ms-2 text-muted">{{ $t('uicomponents.loading.loading') }}</span>
     </div>
-
+  
     <!-- Post Full View Modal -->
     <div v-if="showFullView && selectedPost" class="modal-overlay" @click="closeFullView">
       <div class="modal-content" @click.stop>
@@ -312,42 +213,6 @@ onMounted(() => {
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
-}
-
-.post-list__load-more {
-  text-align: center;
-}
-
-.btn {
-  padding: 0.75rem 1.5rem;
-  border-radius: 6px;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-primary {
-  background-color: #3b82f6;
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background-color: #2563eb;
-}
-
-.btn-secondary {
-  background-color: #f3f4f6;
-  color: #374151;
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background-color: #e5e7eb;
 }
 
 .modal-overlay {
