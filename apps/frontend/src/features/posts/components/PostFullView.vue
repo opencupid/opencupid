@@ -1,94 +1,16 @@
-<template>
-  <div class="post-full-view">
-    <div class="post-full-view__header">
-      <h3 class="post-full-view__title">{{ $t(`posts.types.${post.type}`) }}</h3>
-      <button @click="$emit('close')" class="close-btn">
-        <CloseIcon class="close-icon" />
-      </button>
-    </div>
-
-    <div class="post-full-view__content">
-      <div class="post-full-view__profile">
-        <div class="profile-avatar">
-            <ProfileThumbnail
-            v-if="hasProfileData(post)"
-            :profile="post.postedBy"
-            :size="40"
-            :placeholder="true"
-          />
-          <div v-else class="avatar-placeholder">
-            {{ hasProfileData(post) ? post.postedBy.publicName.charAt(0).toUpperCase() : '?' }}
-          </div>
-        </div>
-        <div class="profile-info">
-          <h4 class="profile-name">{{ hasProfileData(post) ? post.postedBy.publicName : 'Unknown User' }}</h4>
-          <p class="post-date">{{ formatDate(post.createdAt) }}</p>
-        </div>
-      </div>
-
-      <div class="post-type-section">
-        <span class="post-type-badge" :class="`post-type-badge--${post.type.toLowerCase()}`">
-          {{ $t(`posts.types.${post.type}`) }}
-        </span>
-      </div>
-
-      <div class="post-content-section">
-        <h5 class="content-label">{{ $t('posts.labels.content') }}</h5>
-        <div class="post-content">
-          <p class="post-text">{{ post.content }}</p>
-        </div>
-      </div>
-
-      <div v-if="isOwn" class="post-meta-section">
-        <div class="meta-item">
-          <span class="meta-label">{{ $t('posts.labels.visibility') }}:</span>
-          <span :class="['meta-value', { 'meta-value--warning': !(post as any).isVisible }]">
-            {{ (post as any).isVisible ? 'Visible' : 'Hidden' }}
-          </span>
-        </div>
-        <div class="meta-item">
-          <span class="meta-label">{{ $t('posts.labels.updated') }}:</span>
-          <span class="meta-value">{{ formatDate(post.updatedAt) }}</span>
-        </div>
-      </div>
-    </div>
-
-    <div v-if="isOwn" class="post-full-view__actions">
-      <button 
-        @click="$emit('edit', post)"
-        class="action-btn action-btn--edit"
-      >
-        <EditIcon class="action-icon" />
-        {{ $t('posts.actions.edit') }}
-      </button>
-      <button 
-        @click="handleDelete"
-        class="action-btn action-btn--delete"
-      >
-        <TrashIcon class="action-icon" />
-        {{ $t('posts.actions.delete') }}
-      </button>
-    </div>
-
-    <div v-if="!isOwn" class="post-full-view__actions">
-      <!-- Future: Add contact/message buttons here -->
-      <button class="action-btn action-btn--contact" disabled>
-        Contact (Coming Soon)
-      </button>
-    </div>
-  </div>
-</template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { useI18n } from 'vue-i18n'
 import type { PublicPostWithProfile, OwnerPost } from '@zod/post/post.dto'
+import PostIt from '@/features/shared/ui/PostIt.vue'
 import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
+import PostTypeBadge from './PostTypeBadge.vue'
 // Simple icons
-const CloseIcon = { template: '<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>' }
-const EditIcon = { template: '<svg viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.828-2.828z" /></svg>' }
-const TrashIcon = { template: '<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>' }
+import IconTrash from '@/assets/icons/interface/hide.svg'
+import IconEdit from '@/assets/icons/interface/pencil-2.svg'
+
 
 interface Props {
   post: PublicPostWithProfile | OwnerPost
@@ -127,8 +49,75 @@ const handleDelete = () => {
 }
 </script>
 
+<template>
+  <PostIt>
+  <div class="post-full-view">
+    <PostTypeBadge :post="post"   />
+
+    <div class="post-full-view__content">
+
+      <div class="my-2">
+          <p class="">{{ post.content }}</p>
+      </div>
+
+      <div class="post-full-view__profile">
+        <div class="profile-avatar">
+            <ProfileThumbnail
+            v-if="hasProfileData(post)"
+            :profile="post.postedBy"
+            :size="40"
+            :placeholder="true"
+          />
+          <div v-else class="avatar-placeholder">
+            {{ hasProfileData(post) ? post.postedBy.publicName.charAt(0).toUpperCase() : '?' }}
+          </div>
+        </div>
+        <div class="profile-info">
+          <h4 class="profile-name">{{ hasProfileData(post) ? post.postedBy.publicName : 'Unknown User' }}</h4>
+          <p class="post-date">{{ formatDate(post.createdAt) }}</p>
+        </div>
+      </div>
+
+
+      <div v-if="isOwn" class="post-meta-section">
+        <small class="text-muted">
+          <span class="meta-label">{{ $t('posts.labels.updated') }}:</span>
+          <span class="meta-value">{{ formatDate(post.updatedAt) }}</span>
+        </small>
+      </div>
+    </div>
+
+    <div v-if="isOwn" class="post-full-view__actions">
+      <BButton 
+        @click="$emit('edit', post)"
+        variant="link-primary"
+      >
+        <IconEdit class="svg-icon" />
+        {{ $t('posts.actions.edit') }}
+      </BButton>
+      <BButton 
+        @click="handleDelete"
+        variant="link-danger"
+      >
+        <IconTrash class="svg-icon" />
+        {{ $t('posts.actions.delete') }}
+      </BButton>
+    </div>
+
+    <div v-if="!isOwn" class="post-full-view__actions">
+      <!-- Future: Add contact/message buttons here -->
+      <BButton variant="primary" disabled>
+        Contact (Coming Soon)
+      </BButton>
+    </div>
+  </div>
+  </PostIt>
+</template>
+
+
 <style scoped>
-.post-full-view {
+
+/* .post-full-view {
   padding: 2rem;
   max-height: 80vh;
   overflow-y: auto;
@@ -380,5 +369,5 @@ const handleDelete = () => {
   .action-btn {
     justify-content: center;
   }
-}
+} */
 </style>

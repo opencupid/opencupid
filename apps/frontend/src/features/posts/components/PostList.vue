@@ -115,16 +115,31 @@ useInfiniteScroll(
     </div>
   
     <!-- Post Full View Modal -->
-    <div v-if="showFullView && selectedPost" class="modal-overlay" @click="closeFullView">
-      <div class="modal-content" @click.stop>
+       <!-- Post Full View Modal -->
+     <BModal
+      title=""
+      v-if="showFullView && selectedPost"
+      :backdrop="'static'"
+      centered
+      size="lg"
+      button-size="sm"
+      fullscreen="sm"
+      :focus="false"
+      :no-header="false"
+      :no-footer="true"
+      :show="true"
+      body-class="d-flex flex-column align-items-center justify-content-center overflow-auto hide-scrollbar p-2 p-md-5"
+      :keyboard="false"
+      @close="closeFullView"
+    >
         <PostFullView
           :post="selectedPost"
           @close="closeFullView"
           @edit="handlePostEdit"
           @delete="handlePostDelete"
         />
-      </div>
-    </div>
+  </BModal>
+  
 
     <!-- Post Edit Modal -->
     <div v-if="showEditModal && editingPost" class="modal-overlay" @click="closeEditModal">
