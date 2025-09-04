@@ -42,7 +42,9 @@ export function usePostListViewModel(options: UsePostListOptions) {
     } else {
       isLoadingMore.value = true
     }
+console.log('loadPosts', { append, currentPage: currentPage.value, selectedType: selectedType.value })
 
+    
     const fetched = await postStore.loadPosts(options.scope || 'all', {
       type: (selectedType.value as PostTypeType) || undefined,
       page: currentPage.value,
@@ -82,7 +84,7 @@ export function usePostListViewModel(options: UsePostListOptions) {
 
   const handlePostEdit = (post: PublicPostWithProfile | OwnerPost) => {
     editingPost.value = post as OwnerPost
-    showEditModal.value = true
+    showFullView.value = true
   }
 
   const handlePostDelete = async (post: PublicPostWithProfile | OwnerPost) => {
@@ -105,7 +107,7 @@ export function usePostListViewModel(options: UsePostListOptions) {
   }
 
   const closeEditModal = () => {
-    showEditModal.value = false
+    showFullView.value = false
     editingPost.value = null
   }
 

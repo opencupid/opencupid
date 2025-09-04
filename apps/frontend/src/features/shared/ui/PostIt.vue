@@ -1,11 +1,12 @@
 <template>
   <div class="post-it" :style="{ backgroundColor: color }">
-    <slot></slot>
+    <div class="content">
+      <slot></slot>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-
 defineProps({
   color: {
     type: String,
@@ -17,14 +18,18 @@ defineProps({
 <style scoped>
 .post-it {
   background-color: #ffffcc; /* Default yellow */
-  padding: 10px;
+  /* padding: 0.5rem; */
   border: 1px solid #ccc;
-  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
-  display: inline-block; /* Allows for multiple Post-its to sit side-by-side */
-  margin: 5px;
-  width: 200px; /* Example width */
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
+  /* display: inline-block; */
+  /* margin: 0.25rem; */
+  width: 100%; /* Example width */
   min-height: 150px; /* Example minimum height */
-  /* font-family: 'Caveat', cursive; */
-  transform: rotate(3deg); /* Slightly tilted for a real Post-it effect */
+  /* transform: rotate(3deg);  */
+}
+.content {
+  white-space: pre-wrap; /* Preserves whitespace and line breaks */
+  max-height: 5rem;
+  overflow: hidden;
 }
 </style>

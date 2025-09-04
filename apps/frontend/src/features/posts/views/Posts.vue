@@ -14,12 +14,12 @@ const showCreateModal = ref(false)
 const locationPermission = ref(false)
 const userLocation = ref<{ lat: number; lon: number } | null>(null)
 
-const tabs = computed(() => [
-  { key: 'all', label: t('posts.filters.all') },
-  { key: 'nearby', label: t('posts.filters.nearby') },
-  { key: 'recent', label: t('posts.filters.recent') },
-  { key: 'my', label: t('posts.my_posts') },
-])
+// const tabs = computed(() => [
+//   { key: 'all', label: t('posts.filters.all') },
+//   { key: 'nearby', label: t('posts.filters.nearby') },
+//   { key: 'recent', label: t('posts.filters.recent') },
+//   { key: 'my', label: t('posts.my_posts') },
+// ])
 
 const nearbyParams = computed(() => {
   if (!userLocation.value) {
@@ -54,7 +54,7 @@ const getCurrentPosition = (): Promise<GeolocationPosition> => {
     }
 
     navigator.geolocation.getCurrentPosition(resolve, reject, {
-      enableHighAccuracy: true,
+      enableHighAccuracy: false,
       timeout: 5000,
       maximumAge: 300000, // 5 minutes
     })
@@ -67,7 +67,6 @@ const closeCreateModal = () => {
 
 const handlePostCreated = (post: OwnerPost) => {
   closeCreateModal()
-  // The post store will handle updating the lists automatically
 }
 
 onMounted(() => {
@@ -100,98 +99,82 @@ const isDetailView = ref(false)
       :class="{ active: isDetailView }"
     ></div>
 
-    <!-- <h1>{{ $t('posts.title') }}</h1> -->
-
-    <BCard no-body>
-      <div class="d-flex align-items-center justify-content-between p-2">
-        <BTabs pills>
-          <BTab
-            v-for="tab in tabs"
-            :key="tab.key"
-            :title="tab.label"
-            @click="activeTab = tab.key"
+    <div class="list-view d-flex align-items-center justify-content-between p-2">
+      <BTabs pills v-model="activeTab" lazy class="h-100 d-flex flex-column">
+        <!-- All posts -->
+        <BTab id="all" :title="t('posts.filters.all')" lazy>
+          <PostList
+            scope="all"
+            :show-filters="true"
+            :empty-message="$t('posts.messages.no_posts')"
           />
-        </BTabs>
-      </div>
-    </BCard>
+        </BTab>
 
-    <div class="posts-view__content">
-      <!-- All Posts Tab -->
-      <div v-if="activeTab === 'all'" class="tab-content">
-        <PostList
-          scope="all"
-          :show-filters="true"
-          :empty-message="$t('posts.messages.no_posts')"
-        />
-      </div>
+        <!-- Nearby -->
+        <BTab id="nearby" :title="t('posts.filters.nearby')" lazy>
+          <div v-if="!locationPermission" class="location-prompt">
+            <p>{{ $t('posts.location.prompt') }}</p>
+            <BButton variant="info" @click="requestLocation" size="lg">
+              {{ $t('posts.location.enable') }}
+            </BButton>
+          </div>
+          <PostList
+            v-else
+            scope="nearby"
+            :nearby-params="nearbyParams"
+            :show-filters="true"
+            :empty-message="$t('posts.messages.no_nearby')"
+          />
+        </BTab>
 
-      <!-- Nearby Posts Tab -->
-      <div v-else-if="activeTab === 'nearby'" class="tab-content">
-        <div v-if="!locationPermission" class="location-prompt">
-          <p>{{ $t('posts.location.prompt') }}</p>
-          <BButton variant="info" @click="requestLocation" size="lg">
-            {{ $t('posts.location.enable') }}
-          </BButton>
-        </div>
-        <PostList
-          v-else
-          scope="nearby"
-          :nearby-params="nearbyParams"
-          :show-filters="true"
-          :empty-message="$t('posts.messages.no_nearby')"
-        />
-      </div>
+        <!-- Recent Posts -->
+        <BTab id="recent" :title="t('posts.filters.recent')" lazy>
+          <PostList
+            scope="recent"
+            :show-filters="true"
+            :empty-message="$t('posts.messages.no_recent')"
+          />
+        </BTab>
 
-      <!-- Recent Posts Tab -->
-      <div v-else-if="activeTab === 'recent'" class="tab-content">
-        <PostList
-          scope="recent"
-          :show-filters="true"
-          :empty-message="$t('posts.messages.no_recent')"
-        />
-      </div>
-
-      <!-- My Posts Tab -->
-      <div v-else-if="activeTab === 'my'" class="tab-content">
-        <PostList
-          scope="my"
-          :show-filters="true"
-          :empty-message="$t('posts.messages.no_my_posts')"
-        />
-      </div>
+        <!-- My Posts -->
+        <BTab id="my" :title="t('posts.my_posts')" lazy>
+          <PostList scope="my" :show-filters="true" :empty-message="$t('posts.no_my_posts')" />
+        </BTab>
+      </BTabs>
     </div>
 
-  <div class="main-edit-button">
-    <BButton
-      size="lg"
-      class="btn-icon-lg"
-      key="save"
-      @click="showCreateModal = true"
-      variant="primary"
-      :title="$t('profiles.forms.edit_button_hint')"
-    >
-      <IconPencil2 class="svg-icon-lg" />
-    </BButton>
-  </div>
+    <!-- Create Post Button -->
+    <div class="main-edit-button">
+      <BButton
+        size="lg"
+        class="btn-icon-lg"
+        key="save"
+        @click="showCreateModal = true"
+        variant="primary"
+        :title="$t('profiles.forms.edit_button_hint')"
+      >
+        <IconPencil2 class="svg-icon-lg" />
+      </BButton>
+    </div>
 
-  <BModal
-    title=""
-    v-if="showCreateModal"
-    :backdrop="'static'"
-    centered
-    size="lg"
-    button-size="sm"
-    fullscreen="sm"
-    :focus="false"
-    :no-close-on-backdrop="true"
-    :no-header="true"
-    :no-footer="true"
-    :show="true"
-    body-class="d-flex flex-column align-items-center justify-content-center overflow-auto hide-scrollbar p-2 p-md-5"
-    :keyboard="false"
-  >
-    <PostEdit @cancel="closeCreateModal" @saved="handlePostCreated" />
-  </BModal>
+    <BModal
+      title=""
+      v-if="showCreateModal"
+      :backdrop="'static'"
+      centered
+      size="lg"
+      button-size="sm"
+      fullscreen="sm"
+      :focus="false"
+      :no-close-on-backdrop="true"
+      :no-header="true"
+      :no-footer="true"
+      :show="true"
+      body-class="d-flex flex-column align-items-center justify-content-center overflow-auto hide-scrollbar p-2 p-md-5"
+      :keyboard="false"
+    >
+      <PostEdit @cancel="closeCreateModal" @saved="handlePostCreated" />
+    </BModal>
     <!-- Create Post Modal -->
     <!-- <div v-if="showCreateModal" class="modal-overlay" @click="closeCreateModal">
       <div class="modal-content" @click.stop>
@@ -199,7 +182,6 @@ const isDetailView = ref(false)
       </div>
     </div> -->
   </main>
-
 </template>
 
 <style scoped lang="scss">
@@ -217,5 +199,13 @@ const isDetailView = ref(false)
 
 .list-view {
   height: calc(100vh - $navbar-height);
+}
+:deep(.tab-content) {
+  height: 100%;
+  overflow: hidden;
+}
+:deep(.tab-content .tab-pane) {
+  height: 100%;
+  overflow: hidden;
 }
 </style>

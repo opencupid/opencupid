@@ -31,7 +31,7 @@ defineEmits<{
       <!-- <IconSearch class="svg-icon" /> -->
       <IconSetting class="svg-icon" />
     </BButton>
-    <span class="ms-2">
+    <span class="ms-2 d-none">
       <!-- Looking:  -->
       {{ $t('profiles.browse.filters.filter_display_label') }}
     </span>
