@@ -1,7 +1,15 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
+import { ref } from 'vue'
 
 import { useAuthStore } from '@/features/auth/stores/authStore'
+
+// Track previous URL for navigation
+const previousUrl = ref<string>('')
+
+export function getPreviousUrl(): string {
+  return previousUrl.value
+}
 
 import MessagingView from '@/features/messaging/views/Messaging.vue'
 import UserHome from '@/features/userhome/views/UserHome.vue'
@@ -42,7 +50,7 @@ const routes: Array<RouteRecordRaw> = [
     meta: { requiresAuth: true },
   },
   {
-    path: '/browse/:scope',
+    path: '/browse/:scope/:viewMode',
     name: 'BrowseProfilesScope',
     component: BrowseProfiles,
     props: true,
@@ -131,7 +139,12 @@ router.beforeEach(async (to, from, next) => {
 
 
 router.afterEach((to, from) => {
-
+  // Update previousUrl when navigating, but don't track navigation to same route
+  // console.log('Navigated from', from.fullPath, 'to', to.fullPath)
+  if (from.fullPath && from.fullPath !== to.fullPath) {
+    previousUrl.value = from.fullPath
+  }
+  console.log('Navigated from', from.fullPath, 'to', to.fullPath, '-> previousUrl is now', previousUrl.value)
 })
 
 export default router

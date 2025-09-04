@@ -6,7 +6,7 @@ import { useInfiniteScroll } from '@vueuse/core'
 import PublicProfile from '@/features/publicprofile/components/PublicProfile.vue'
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 
-import { useFindMatchViewModel } from '../composables/useFindMatchViewModel'
+import { useFindMatchViewModel, ViewMode } from '../composables/useFindMatchViewModel'
 import DatingPreferencesForm from '../components/DatingPreferencesForm.vue'
 import SocialFilterForm from '../components/SocialFilterForm.vue'
 import SecondaryNav from '../../shared/ui/SecondaryNav.vue'
@@ -28,11 +28,11 @@ const router = useRouter()
 const { t } = useI18n()
 // state management
 const showPrefsModal = ref(false)
-const canGoBack = ref(false)
 
 const {
   viewerProfile,
   haveAccess,
+  canGoBack,
   haveResults,
   isLoading,
   isLoadingMore,
@@ -48,6 +48,7 @@ const {
   hideProfile,
   updatePrefs,
   openProfile,
+  closeProfile,
   initialize,
   reset,
   isInitialized,
@@ -64,7 +65,7 @@ onUnmounted(() => {
 })
 
 const handleCardClick = async (profileId: string) => {
-  canGoBack.value = true
+  // canGoBack.value = true
   openProfile(profileId)
 }
 
@@ -78,7 +79,7 @@ const handleEditProfileIntent = () => {
 }
 
 const handleCloseProfileView = () => {
-  router.back()
+  closeProfile()
 }
 
 const handleOpenConversation = (conversationId: string) => {
@@ -90,7 +91,7 @@ const handleOpenConversation = (conversationId: string) => {
 
 const handleHidden = (id: string) => {
   hideProfile(id)
-  canGoBack.value = false
+  // canGoBack.value = false
 }
 
 const { countryCodeToName } = useCountries()
@@ -111,29 +112,34 @@ const scrollContainer = ref<HTMLElement>()
 useInfiniteScroll(
   scrollContainer,
   async () => {
-    console.log('🔄 BrowseProfiles - infinite scroll triggered', {
-      isLoadingMore: isLoadingMore.value,
-      hasMoreProfiles: hasMoreProfiles.value,
-      isInitialized: isInitialized.value,
-      currentScope: currentScope.value
-    })
-    
     if (isLoadingMore.value || !hasMoreProfiles.value || !isInitialized.value) {
       return
     }
 
+    console.log('🔄 BrowseProfiles - infinite scroll triggered', {
+      isLoadingMore: isLoadingMore.value,
+      hasMoreProfiles: hasMoreProfiles.value,
+      isInitialized: isInitialized.value,
+      currentScope: currentScope.value,
+    })
     await loadMoreProfiles()
   },
   {
-    distance: 300, // Trigger when 300px from bottom
+    distance: 100, // Trigger when 300px from bottom
     canLoadMore: () => hasMoreProfiles.value && !isLoadingMore.value && isInitialized.value,
   }
 )
+
+// Optional: typed helpers for readability
+const setGrid = () => (viewModeModel.value = ViewMode.grid)
+const setMap = () => (viewModeModel.value = ViewMode.map)
+
 </script>
 
 <template>
   <main class="w-100 position-relative overflow-hidden">
     <!-- this is the container for the detail view -->
+    <!-- XXX does not reflect change from https://github.com/opencupid/opencupid/blob/0dce16ff1326ee631212f97f877fe1e218594a1b/apps/frontend/src/features/browse/views/BrowseProfiles.vue#L198 -->
     <div
       v-if="isDetailView"
       class="detail-view position-absolute w-100 h-100"
@@ -164,6 +170,7 @@ useInfiniteScroll(
               <ScopeViewToggler v-model="scopeModel" />
             </template>
           </SecondaryNav>
+          scope {{ currentScope }}
           <div v-if="currentScope == 'social'" class="filter-controls my-2">
             <div
               class="d-flex align-items-center justify-content-between w-100 px-2 py-1 bg-light rounded"
@@ -179,7 +186,7 @@ useInfiniteScroll(
                   variant="outline-secondary"
                   :title="t('profiles.browse.views.grid_view_button_title')"
                   :pressed="viewModeModel === 'grid'"
-                  @click="viewModeModel = 'grid'"
+                  @click="setGrid()"
                 >
                   <div class="icon-grid">
                     <IconSquare class="svg-icon-sm" />
@@ -193,7 +200,7 @@ useInfiniteScroll(
                   variant="outline-secondary"
                   :title="t('profiles.browse.views.map_view_button_title')"
                   :pressed="viewModeModel === 'map'"
-                  @click="viewModeModel = 'map'"
+                  @click="setMap()"
                 >
                   <IconMap class="svg-icon" />
                 </BButton>
@@ -232,7 +239,7 @@ useInfiniteScroll(
         <!-- After loading -->
         <template v-if="isInitialized && !haveAccess">
           <BContainer class="flex-grow-1 d-flex align-items-center justify-content-center">
-            <MiddleColumn class="">
+            <MiddleColumn class="">noaccess
               <NoAccessCTA
                 v-if="!haveAccess"
                 v-model="currentScope"
@@ -260,10 +267,7 @@ useInfiniteScroll(
 
         <!-- Main profile results -->
         <template v-else-if="isInitialized">
-          <div 
-            ref="scrollContainer"
-            class="overflow-auto hide-scrollbar pb-5 flex-grow-1"
-          >
+          <div ref="scrollContainer" class="overflow-auto hide-scrollbar pb-5 flex-grow-1">
             <MiddleColumn v-if="viewModeModel === 'grid'" class="grid-view">
               <ProfileCardGrid
                 :profiles="profileList"
@@ -271,13 +275,15 @@ useInfiniteScroll(
                 :showLocation="true"
                 @profile:select="handleCardClick"
               />
-              
+
               <!-- Infinite scroll loading indicator -->
               <div v-if="isLoadingMore" class="text-center py-3">
                 <BSpinner variant="primary" small />
-                <span class="ms-2 text-muted">{{  $t('profiles.browse.loading_more_profiles') }}</span>
+                <span class="ms-2 text-muted">{{
+                  $t('profiles.browse.loading_more_profiles')
+                }}</span>
               </div>
-              
+
               <!-- No more profiles indicator -->
               <!-- <div v-else-if="!hasMoreProfiles && profileList.length > 0" class="text-center py-3 text-muted">
               </div> -->
@@ -350,7 +356,7 @@ useInfiniteScroll(
 .inactive {
   pointer-events: none;
   visibility: hidden;
-  display: none;
+  /* Remove display: none to keep list view rendered */
 }
 main {
   width: 100%;
