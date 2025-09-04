@@ -16,12 +16,6 @@
             :size="40"
             :placeholder="true"
           />
-          <img 
-            v-if="hasProfileData(post) && post.postedBy.profileImages?.[0]?.url" 
-            :src="post.postedBy.profileImages[0].url"
-            :alt="post.postedBy.profileImages[0].altText || 'Profile'"
-            class="avatar-image"
-          >
           <div v-else class="avatar-placeholder">
             {{ hasProfileData(post) ? post.postedBy.publicName.charAt(0).toUpperCase() : '?' }}
           </div>

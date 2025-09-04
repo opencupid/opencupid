@@ -15,7 +15,7 @@ import type {
   UpdatePostResponse,
   DeletePostResponse,
 } from '@zod/apiResponse.dto'
-import { PostType } from '@prisma/client'
+import { type PostTypeType } from '@zod/generated'
 
 export const usePostStore = defineStore('posts', {
   state: () => ({
@@ -31,7 +31,7 @@ export const usePostStore = defineStore('posts', {
       return state.posts.find(post => post.id === id) ||
         state.myPosts.find(post => post.id === id)
     },
-    getPostsByType: (state) => (type: PostType) => {
+    getPostsByType: (state) => (type: PostTypeType) => {
       return state.posts.filter(post => post.type === type)
     },
     getOffers: (state) => state.posts.filter(post => post.type === 'OFFER'),

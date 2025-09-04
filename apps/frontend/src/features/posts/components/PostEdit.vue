@@ -4,7 +4,7 @@ import { ref, computed, watch } from 'vue'
 import { usePostStore } from '../stores/postStore'
 import { useI18n } from 'vue-i18n'
 import type { CreatePostPayload, UpdatePostPayload, OwnerPost } from '@zod/post/post.dto'
-import { PostType } from '@prisma/client'
+import { type PostTypeType } from '@zod/generated'
 
 interface Props {
   post?: OwnerPost
@@ -26,7 +26,7 @@ const { t } = useI18n()
 const postStore = usePostStore()
 
 const form = ref<{
-  type: PostType
+  type: PostTypeType
   content: string
   isVisible: boolean
 }>({
