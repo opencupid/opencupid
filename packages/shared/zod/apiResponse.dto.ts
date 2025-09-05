@@ -22,6 +22,7 @@ import type { VersionDTO } from '@zod/dto/version.dto'
 import type { DatingPreferencesDTO, SocialMatchFilterDTO } from '@zod/match/filters.dto'
 import { AuthErrorCodes } from '@zod/user/auth.dto'
 import { type InteractionEdgePair, type InteractionEdge, type InteractionStats } from './interaction/interaction.dto'
+import type { OwnerPost, PublicPostWithProfile } from '@zod/post/post.dto'
 
 export type GetProfileSummariesResponse = ApiSuccess<{ profiles: ProfileSummary[] }>
 
@@ -76,3 +77,10 @@ export type OtpLoginResponse = OtpLoginSuccess | OtpLoginFailure
 
 export type CitySearchResponse = PublicCity[]
 export type CaptchaChallengeResponse = ApiSuccess<any> // altcha challenge shape
+
+// Post responses
+export type PostsResponse = ApiSuccess<{ posts: PublicPostWithProfile[] }>
+export type PostResponse = ApiSuccess<{ post: OwnerPost }>
+export type CreatePostResponse = ApiSuccess<{ post: OwnerPost }>
+export type UpdatePostResponse = ApiSuccess<{ post: OwnerPost }>
+export type DeletePostResponse = ApiSuccess<{}>

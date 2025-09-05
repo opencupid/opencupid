@@ -361,6 +361,9 @@ importers:
       remeda:
         specifier: ^2.24.0
         version: 2.30.0
+      timeago.js:
+        specifier: ^4.0.2
+        version: 4.0.2
       vue:
         specifier: ^3.5.17
         version: 3.5.17(typescript@5.8.3)
@@ -6377,6 +6380,9 @@ packages:
 
   through@2.3.8:
     resolution: {integrity: sha512-w89qg7PI8wAdvX60bMDP+bFoD5Dvhm9oLheFp5O4a2QF0cSBGsBX4qZmadPMvVqlLJBBci+WqGGOAPvcDeNSVg==}
+
+  timeago.js@4.0.2:
+    resolution: {integrity: sha512-a7wPxPdVlQL7lqvitHGGRsofhdwtkoSXPGATFuSOA2i1ZNQEPLrGnj68vOp2sOJTCFAQVXPeNMX/GctBaO9L2w==}
 
   tiny-lru@11.3.3:
     resolution: {integrity: sha512-/ShxBZOgHXDdZi7FxajcsH0MfcBqwP+t7i4T3PGjI//NUA5aCpC7cB9bbdAYrAeQLBUTJfg2rk191fzZGeo7DA==}
@@ -13561,6 +13567,8 @@ snapshots:
       real-require: 0.2.0
 
   through@2.3.8: {}
+
+  timeago.js@4.0.2: {}
 
   tiny-lru@11.3.3: {}
 
