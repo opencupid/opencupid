@@ -1,13 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useInfiniteScroll } from '@vueuse/core'
-
 import PostCard from './PostCard.vue'
-import PostEdit from './PostEdit.vue'
-import PostFullView from './PostFullView.vue'
 import { type PostTypeType } from '@zod/generated'
-
 import { usePostListViewModel } from '../composables/usePostListViewModel'
+import IconFilter from '@/assets/icons/interface/filter.svg'
 
 interface Props {
   title?: string
@@ -25,6 +22,14 @@ const props = withDefaults(defineProps<Props>(), {
   emptyMessage: 'No posts found',
 })
 
+const emit = defineEmits<{
+  (e: 'intent:fullview', post: any): void
+  (e: 'intent:edit', post: any): void
+  (e: 'intent:close'): void
+  (e: 'intent:delete', post: any): void
+  (e: 'intent:saved', post: any): void
+}>()
+
 const {
   postStore,
   posts,
@@ -32,22 +37,12 @@ const {
   isLoadingMore,
   hasMorePosts,
   isInitialized,
-  showFullView,
-  selectedPost,
-  editingPost,
   handleTypeFilter,
   handleLoadMore,
   handleRetry,
-  handlePostClick,
-  handlePostEdit,
-  handlePostDelete,
-  handlePostSaved,
-  closeFullView,
-  closeEditModal,
 } = usePostListViewModel(props)
 
 const scrollContainer = ref<HTMLElement>()
-import IconFilter from '@/assets/icons/interface/filter.svg'
 
 useInfiniteScroll(
   scrollContainer,
@@ -62,6 +57,22 @@ useInfiniteScroll(
     canLoadMore: () => hasMorePosts.value && !isLoadingMore.value && isInitialized.value,
   }
 )
+
+function handlePostClick(post: any) {
+  emit('intent:fullview', post)
+}
+function handlePostEdit(post: any) {
+  emit('intent:edit', post)
+}
+function handlePostDelete(post: any) {
+  emit('intent:delete', post)
+}
+function handlePostSaved(post: any) {
+  emit('intent:saved', post)
+}
+function handleClose() {
+  emit('intent:close')
+}
 </script>
 
 <template>
@@ -116,9 +127,9 @@ useInfiniteScroll(
           <PostCard
             :post="post"
             :show-details="false"
-            @click="handlePostClick"
-            @edit="handlePostEdit"
-            @delete="handlePostDelete"
+            @click="() => handlePostClick(post)"
+            @edit="() => handlePostEdit(post)"
+            @delete="() => handlePostDelete(post)"
             class="clickable"
           />
         </BCol>
@@ -129,44 +140,6 @@ useInfiniteScroll(
       <BSpinner small variant="primary" />
       <span class="ms-2 text-muted">{{ $t('uicomponents.loading.loading') }}</span>
     </div>
-
-    <!-- Post Full View / Edit Modal -->
-    <BModal
-      title=""
-      v-if="showFullView"
-      :backdrop="'static'"
-      centered
-      size="lg"
-      button-size="sm"
-      fullscreen="sm"
-      :focus="false"
-      :no-header="false"
-      :no-footer="true"
-      :show="true"
-      body-class="d-flex flex-column align-items-center justify-content-center overflow-auto hide-scrollbar p-2 p-md-5"
-      :keyboard="false"
-      @close="closeFullView"
-    >
-      <!-- Post Edit Modal -->
-      <template v-if="editingPost">
-        <PostEdit
-          :post="editingPost"
-          :is-edit="true"
-          @cancel="closeEditModal"
-          @saved="handlePostSaved"
-        />
-      </template>
-
-      <!-- Post Full View Modal Content -->
-      <template v-else-if="selectedPost">
-        <PostFullView
-          :post="selectedPost"
-          @close="closeFullView"
-          @edit="handlePostEdit"
-          @delete="handlePostDelete"
-        />
-      </template>
-    </BModal>
   </div>
 </template>
 

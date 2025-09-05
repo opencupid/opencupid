@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { useI18n } from 'vue-i18n'
 import type { PublicPostWithProfile, OwnerPost } from '@zod/post/post.dto'
 
-import PostCardPostIt from './PostCard.vue'
+import PostCard from './PostCard.vue'
 
 const props = defineProps<{
   post: PublicPostWithProfile | OwnerPost
@@ -18,21 +17,17 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const authStore = useAuthStore()
 
-const isOwn = computed(() => {
-  return authStore.profileId === props.post.postedById
-})
 
-const hasProfileData = (post: any): post is PublicPostWithProfile => {
-  return 'postedBy' in post && post.postedBy != null
-}
-
-const handleDelete = () => {
-  emit('delete', props.post)
-}
 </script>
 
 <template>
-  <PostCardPostIt :post="post" :show-details="true" :class="{details:true}"/>
+  <PostCard
+    :post="post"
+    :show-details="true"
+    :class="{ details: true }"
+    @edit="emit('edit', post)"
+    @delete="emit('delete', post)"
+  />
 </template>
 
 <style scoped></style>

@@ -18,7 +18,6 @@ import type {
   UpdatePostResponse,
   DeletePostResponse,
 } from '@zod/apiResponse.dto'
-import { mapProfileSummary } from '../mappers/profile.mappers'
 import { mapPostWithProfile } from '../mappers/post.mappers'
 
 const postRoutes: FastifyPluginAsync = async fastify => {
@@ -44,6 +43,7 @@ const postRoutes: FastifyPluginAsync = async fastify => {
 
       try {
         const post = await postService.create(profileId, data)
+        // TODO filter non-public fields
         const response: CreatePostResponse = { success: true, post }
         return reply.code(201).send(response)
       } catch (err: any) {
@@ -66,6 +66,7 @@ const postRoutes: FastifyPluginAsync = async fastify => {
         return sendError(reply, 404, 'Post not found')
       }
 
+      // TODO filter non-public fields
       const response: PostResponse = { success: true, post }
       return reply.code(200).send(response)
     } catch (err) {
@@ -100,6 +101,7 @@ const postRoutes: FastifyPluginAsync = async fastify => {
           return sendError(reply, 404, 'Post not found or access denied')
         }
 
+        // TODO filter non-public fields
         const response: UpdatePostResponse = { success: true, post }
         return reply.code(200).send(response)
       } catch (err: any) {

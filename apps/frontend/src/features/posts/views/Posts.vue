@@ -6,7 +6,7 @@ import PostEdit from '../components/PostEdit.vue'
 import PostFullView from '../components/PostFullView.vue'
 import IconPencil2 from '@/assets/icons/interface/pencil-2.svg'
 
-import type { OwnerPost, PublicPostWithProfile } from '@zod/post/post.dto'
+import type { OwnerPost } from '@zod/post/post.dto'
 
 const { t } = useI18n()
 
@@ -90,60 +90,43 @@ onMounted(() => {
 })
 
 const isDetailView = ref(false)
-
-// View mode state for toggler
-const viewMode = ref('grid')
-
-// Modal state for post full view/edit
 const showFullView = ref(false)
-import type { Ref } from 'vue'
-const selectedPost: Ref<PublicPostWithProfile | OwnerPost | null> = ref(null)
-const editingPost: Ref<PublicPostWithProfile | OwnerPost | null> = ref(null)
+const editingPost = ref(null)
+const selectedPost = ref(null)
 
-function handlePostListIntent(payload: { type: string; value?: any }) {
-  if (payload.type === 'viewMode') {
-    viewMode.value = payload.value
+function handlePostListIntent(event: string, post?: any) {
+  switch (event) {
+    case 'fullview':
+      selectedPost.value = post
+      editingPost.value = null
+      showCreateModal.value = false
+      showFullView.value = true
+      break
+    case 'create':
+      editingPost.value = null
+      showCreateModal.value = true
+      showFullView.value = true
+      break
+    case 'edit':
+      editingPost.value = post
+      showCreateModal.value = false
+      showFullView.value = true
+      break
+    case 'close':
+      showFullView.value = false
+      showCreateModal.value = false
+      editingPost.value = null
+      selectedPost.value = null
+      break
+    case 'delete':
+      showFullView.value = false
+      // Optionally handle delete intent here
+      break
+    case 'saved':
+      // Optionally handle saved intent here
+      showFullView.value = false
+      break
   }
-  // You can add more intent types here, e.g. open modal, etc.
-}
-
-function openFullView(post: PublicPostWithProfile | OwnerPost) {
-  selectedPost.value = post
-  editingPost.value = null
-  showFullView.value = true
-}
-
-function openEditModal(post: PublicPostWithProfile | OwnerPost) {
-  editingPost.value = post
-  selectedPost.value = null
-  showFullView.value = true
-}
-
-function closeFullView() {
-  showFullView.value = false
-  selectedPost.value = null
-  editingPost.value = null
-}
-
-function handlePostEdit(post: PublicPostWithProfile | OwnerPost) {
-  openEditModal(post)
-}
-
-function handlePostClick(post: PublicPostWithProfile | OwnerPost) {
-  openFullView(post)
-}
-
-function handlePostDelete(post: PublicPostWithProfile | OwnerPost) {
-  // Optionally handle delete in parent
-  closeFullView()
-}
-
-function handlePostSaved(post: PublicPostWithProfile | OwnerPost) {
-  closeFullView()
-}
-
-function closeEditModal() {
-  closeFullView()
 }
 </script>
 
@@ -163,13 +146,11 @@ function closeEditModal() {
             scope="all"
             :show-filters="true"
             :empty-message="$t('posts.messages.no_posts')"
-            :view-mode="viewMode"
-            @intent="handlePostListIntent"
-            @edit="handlePostEdit"
-            @click="handlePostClick"
-            @delete="handlePostDelete"
-            @saved="handlePostSaved"
-            @close="closeFullView"
+            @intent:fullview="post => handlePostListIntent('fullview', post)"
+            @intent:edit="post => handlePostListIntent('edit', post)"
+            @intent:close="() => handlePostListIntent('close')"
+            @intent:delete="post => handlePostListIntent('delete', post)"
+            @intent:saved="post => handlePostListIntent('saved', post)"
           />
         </BTab>
 
@@ -187,13 +168,11 @@ function closeEditModal() {
             :nearby-params="nearbyParams"
             :show-filters="true"
             :empty-message="$t('posts.messages.no_nearby')"
-            :view-mode="viewMode"
-            @intent="handlePostListIntent"
-            @edit="handlePostEdit"
-            @click="handlePostClick"
-            @delete="handlePostDelete"
-            @saved="handlePostSaved"
-            @close="closeFullView"
+            @intent:fullview="post => handlePostListIntent('fullview', post)"
+            @intent:edit="post => handlePostListIntent('edit', post)"
+            @intent:close="() => handlePostListIntent('close')"
+            @intent:delete="post => handlePostListIntent('delete', post)"
+            @intent:saved="post => handlePostListIntent('saved', post)"
           />
         </BTab>
 
@@ -203,13 +182,11 @@ function closeEditModal() {
             scope="recent"
             :show-filters="true"
             :empty-message="$t('posts.messages.no_recent')"
-            :view-mode="viewMode"
-            @intent="handlePostListIntent"
-            @edit="handlePostEdit"
-            @click="handlePostClick"
-            @delete="handlePostDelete"
-            @saved="handlePostSaved"
-            @close="closeFullView"
+            @intent:fullview="post => handlePostListIntent('fullview', post)"
+            @intent:edit="post => handlePostListIntent('edit', post)"
+            @intent:close="() => handlePostListIntent('close')"
+            @intent:delete="post => handlePostListIntent('delete', post)"
+            @intent:saved="post => handlePostListIntent('saved', post)"
           />
         </BTab>
 
@@ -219,14 +196,29 @@ function closeEditModal() {
             scope="my"
             :show-filters="true"
             :empty-message="$t('posts.no_my_posts')"
-            :view-mode="viewMode"
-            @intent="handlePostListIntent"
-            @edit="handlePostEdit"
-            @click="handlePostClick"
-            @delete="handlePostDelete"
-            @saved="handlePostSaved"
-            @close="closeFullView"
+            @intent:fullview="post => handlePostListIntent('fullview', post)"
+            @intent:edit="post => handlePostListIntent('edit', post)"
+            @intent:close="() => handlePostListIntent('close')"
+            @intent:delete="post => handlePostListIntent('delete', post)"
+            @intent:saved="post => handlePostListIntent('saved', post)"
           />
+        </BTab>
+      </BTabs>
+    </div>
+
+    <!-- Create Post Button -->
+    <div class="main-edit-button">
+      <BButton
+        size="lg"
+        class="btn-icon-lg"
+        key="save"
+        @click="post => handlePostListIntent('create')"
+        variant="primary"
+        :title="$t('profiles.forms.edit_button_hint')"
+      >
+        <IconPencil2 class="svg-icon-lg" />
+      </BButton>
+    </div>
 
     <!-- Post Full View / Edit Modal -->
     <BModal
@@ -243,15 +235,24 @@ function closeEditModal() {
       :show="true"
       body-class="d-flex flex-column align-items-center justify-content-center overflow-auto hide-scrollbar p-2 p-md-5"
       :keyboard="false"
-      @close="closeFullView"
+      @close="handlePostListIntent('close')"
     >
+      <!-- Post Edit Modal -->
+      <template v-if="showCreateModal">
+        <PostEdit
+          :is-edit="false"
+          @cancel="handlePostListIntent('close')"
+          @saved="handlePostListIntent('saved', $event)"
+        />
+      </template>
+
       <!-- Post Edit Modal -->
       <template v-if="editingPost">
         <PostEdit
           :post="editingPost"
           :is-edit="true"
-          @cancel="closeEditModal"
-          @saved="handlePostSaved"
+          @cancel="handlePostListIntent('close')"
+          @saved="handlePostListIntent('saved', $event)"
         />
       </template>
 
@@ -259,47 +260,11 @@ function closeEditModal() {
       <template v-else-if="selectedPost">
         <PostFullView
           :post="selectedPost"
-          @close="closeFullView"
-          @edit="handlePostEdit"
-          @delete="handlePostDelete"
+          @close="handlePostListIntent('close')"
+          @edit="handlePostListIntent('edit', $event)"
+          @delete="handlePostListIntent('delete', $event)"
         />
       </template>
-    </BModal>
-        </BTab>
-      </BTabs>
-    </div>
-
-    <!-- Create Post Button -->
-    <div class="main-edit-button">
-      <BButton
-        size="lg"
-        class="btn-icon-lg"
-        key="save"
-        @click="showCreateModal = true"
-        variant="primary"
-        :title="$t('profiles.forms.edit_button_hint')"
-      >
-        <IconPencil2 class="svg-icon-lg" />
-      </BButton>
-    </div>
-
-    <BModal
-      title=""
-      v-if="showCreateModal"
-      :backdrop="'static'"
-      centered
-      size="lg"
-      button-size="sm"
-      fullscreen="sm"
-      :focus="false"
-      :no-close-on-backdrop="true"
-      :no-header="true"
-      :no-footer="true"
-      :show="true"
-      body-class="d-flex flex-column align-items-center justify-content-center overflow-auto hide-scrollbar p-2 p-md-5"
-      :keyboard="false"
-    >
-      <PostEdit @cancel="closeCreateModal" @saved="handlePostCreated" />
     </BModal>
   </main>
 </template>
@@ -309,6 +274,20 @@ function closeEditModal() {
 @import 'bootstrap/scss/variables';
 @import 'bootstrap/scss/mixins';
 @import '@/css/app-vars.scss';
+
+.detail-view {
+  // nav.fixed is on 1030 - on screens < md we put this above the navbar
+  z-index: 1050;
+  height: 100dvh;
+  inset: 0;
+
+  @include media-breakpoint-up(sm) {
+    // on screens > sm navbar stays visible
+    top: $navbar-height;
+    height: calc(100vh - $navbar-height);
+    z-index: 900;
+  }
+}
 
 .main-edit-button {
   position: fixed;
