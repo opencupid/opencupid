@@ -1,10 +1,12 @@
-
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { usePostStore } from '../stores/postStore'
 import { useI18n } from 'vue-i18n'
 import type { CreatePostPayload, UpdatePostPayload, OwnerPost } from '@zod/post/post.dto'
 import { type PostTypeType } from '@zod/generated'
+
+import PostIt from '@/features/shared/ui/PostIt.vue'
+import PostTypeBadge from './PostTypeBadge.vue'
 
 interface Props {
   post?: OwnerPost
@@ -17,7 +19,7 @@ interface Emits {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  isEdit: false
+  isEdit: false,
 })
 
 const emit = defineEmits<Emits>()
@@ -32,7 +34,7 @@ const form = ref<{
 }>({
   type: 'OFFER',
   content: '',
-  isVisible: true
+  isVisible: true,
 })
 
 const isLoading = ref(false)
@@ -42,13 +44,12 @@ if (props.isEdit && props.post) {
   form.value = {
     type: props.post.type,
     content: props.post.content,
-    isVisible: props.post.isVisible
+    isVisible: props.post.isVisible,
   }
 }
 
 const isFormValid = computed(() => {
-  return form.value.content.trim().length > 0 && 
-         form.value.content.length <= 2000
+  return form.value.content.trim().length > 0 && form.value.content.length <= 2000
 })
 
 const saveButtonText = computed(() => {
@@ -66,9 +67,9 @@ const handleSubmit = async () => {
       const updatePayload: UpdatePostPayload = {
         content: form.value.content,
         type: form.value.type,
-        isVisible: form.value.isVisible
+        isVisible: form.value.isVisible,
       }
-      
+
       const updatedPost = await postStore.updatePost(props.post.id, updatePayload)
       if (updatedPost) {
         emit('saved', updatedPost)
@@ -77,9 +78,9 @@ const handleSubmit = async () => {
       // Create new post
       const createPayload: CreatePostPayload = {
         content: form.value.content,
-        type: form.value.type
+        type: form.value.type,
       }
-      
+
       const newPost = await postStore.createPost(createPayload)
       if (newPost) {
         emit('saved', newPost)
@@ -87,7 +88,7 @@ const handleSubmit = async () => {
         form.value = {
           type: 'OFFER',
           content: '',
-          isVisible: true
+          isVisible: true,
         }
       }
     }
@@ -98,69 +99,66 @@ const handleSubmit = async () => {
 </script>
 
 <template>
-  <div class="w-100">
-    <BForm @submit.prevent="handleSubmit">
+  <BForm @submit.prevent="handleSubmit" class="w-100">
+    <PostIt class="position-relative p-2">
       <BFormGroup class="mb-2">
         <label for="post-type" class="form-label">{{ $t('posts.labels.type') }}</label>
-        <BFormSelect 
-          id="post-type"
-          v-model="form.type" 
-          class="form-select"
-          required
-        >
-          <option value="OFFER">{{ $t('posts.types.OFFER') }}</option>
-          <option value="REQUEST">{{ $t('posts.types.REQUEST') }}</option>
-        </BFormSelect>
+        <BFormRadioGroup v-model="form.type">
+          <BFormRadio id="post-type-offer" value="OFFER" class="me-3">
+            <PostTypeBadge :type="'OFFER'" />
+          </BFormRadio>
+          <BFormRadio id="post-type-request" value="REQUEST">
+            <PostTypeBadge :type="'REQUEST'" />
+          </BFormRadio>
+        </BFormRadioGroup>
       </BFormGroup>
 
-      <BFormGroup>
-        <!-- <div class="form-text">{{ $t('posts.labels.content') }}</div> -->
-        <BFormTextarea
-          id="post-content"
-          v-model="form.content"
-          :placeholder="$t('posts.placeholders.content')"
-          maxlength="2000"
-          required
-          rows="4"
-          :label="$t('posts.labels.content')"
-        ></BFormTextarea>
-        <div class="form-text character-count">
-          {{ form.content.length }}/2000
-        </div>
-      </BFormGroup>
+      <div class="post-card d-flex flex-column" :class="[`post-card--${form.type.toLowerCase()}`]">
+        <BFormGroup>
+          <!-- <div class="form-text">{{ $t('posts.labels.content') }}</div> -->
 
-      <BFormGroup v-if="isEdit">
-        <label class="form-checkbox-label">
-          <BFormCheckbox 
-            type="checkbox" 
+          <!-- content textarea -->
+          <BFormTextarea
+            id="post-content"
+            v-model="form.content"
+            :placeholder="$t('posts.placeholders.content')"
+            maxlength="2000"
+            required
+            rows="4"
+            :label="$t('posts.labels.content')"
+          ></BFormTextarea>
+          <div class="fs-6 text-end form-text text-muted character-count">{{ form.content.length }}/2000</div>
+        </BFormGroup>
+
+        <!-- isVisible flag checkbox -->
+        <BFormGroup v-if="isEdit">
+          <BFormCheckbox
+            type="checkbox"
             v-model="form.isVisible"
-            class="form-checkbox"
+            class="d-inline-block"
+            :label="$t('posts.labels.visibility')"
           />
           {{ $t('posts.labels.visibility') }}
-        </label>
-      </BFormGroup>
-
-      <div class="d-flex justify-content-end mt-3">
-        <BButton 
-          type="button" 
-          @click="$emit('cancel')"
-          variant="secondary"
-          class="me-2"
-          :disabled="isLoading"
-        >
-          {{ $t('posts.actions.cancel') }}
-        </BButton>
-        <BButton 
-          type="submit" 
-          variant="primary"
-          :disabled="isLoading || !isFormValid"
-        >
-          {{ isLoading ? $t('uicomponents.submitbutton.working') : saveButtonText }}
-        </BButton>
+        </BFormGroup>
       </div>
-    </BForm>
-  </div>
+
+      <!-- submit button -->
+    </PostIt>
+    <div class="d-flex justify-content-end mt-3">
+      <BButton
+        type="button"
+        @click="$emit('cancel')"
+        variant="link-secondary"
+        class="me-2"
+        :disabled="isLoading"
+      >
+        {{ $t('posts.actions.cancel') }}
+      </BButton>
+      <BButton type="submit" variant="primary" :disabled="isLoading || !isFormValid">
+        {{ isLoading ? $t('uicomponents.submitbutton.working') : saveButtonText }}
+      </BButton>
+    </div>
+  </BForm>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

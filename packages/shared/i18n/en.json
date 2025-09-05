@@ -357,9 +357,11 @@
     "actions": {
       "create": "Create Post",
       "edit": "Edit Post",
+      "hide": "Hide Post",
       "delete": "Delete Post",
       "save": "Save Post",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "contact": "Contact poster"
     },
     "placeholders": {
       "content": "Share what you're offering or looking for..."

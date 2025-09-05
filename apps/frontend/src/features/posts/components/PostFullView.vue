@@ -3,10 +3,8 @@ import { computed } from 'vue'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { useI18n } from 'vue-i18n'
 import type { PublicPostWithProfile, OwnerPost } from '@zod/post/post.dto'
-// Simple icons
-import PostCardPostIt from './PostCardPostIt.vue'
 
-import { UseTimeAgo } from '@vueuse/components'
+import PostCardPostIt from './PostCard.vue'
 
 const props = defineProps<{
   post: PublicPostWithProfile | OwnerPost
@@ -34,19 +32,7 @@ const handleDelete = () => {
 </script>
 
 <template>
-  <PostCardPostIt :post="post" :show-details="true" />
-
-  <div v-if="isOwn" class="post-meta-section">
-    <small class="text-muted">
-      <span class="meta-label">{{ $t('posts.labels.updated') }}:</span>
-      <span class="meta-value"> <UseTimeAgo :time="post.createdAt" /></span>
-    </small>
-  </div>
-
-  <div v-if="!isOwn" class="post-full-view__actions">
-    <!-- Future: Add contact/message buttons here -->
-    <BButton variant="primary" disabled> Contact (Coming Soon) </BButton>
-  </div>
+  <PostCardPostIt :post="post" :show-details="true" :class="{details:true}"/>
 </template>
 
 <style scoped></style>

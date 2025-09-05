@@ -3,9 +3,10 @@ import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import PostList from '../components/PostList.vue'
 import PostEdit from '../components/PostEdit.vue'
+import PostFullView from '../components/PostFullView.vue'
 import IconPencil2 from '@/assets/icons/interface/pencil-2.svg'
 
-import type { OwnerPost } from '@zod/post/post.dto'
+import type { OwnerPost, PublicPostWithProfile } from '@zod/post/post.dto'
 
 const { t } = useI18n()
 
@@ -89,6 +90,61 @@ onMounted(() => {
 })
 
 const isDetailView = ref(false)
+
+// View mode state for toggler
+const viewMode = ref('grid')
+
+// Modal state for post full view/edit
+const showFullView = ref(false)
+import type { Ref } from 'vue'
+const selectedPost: Ref<PublicPostWithProfile | OwnerPost | null> = ref(null)
+const editingPost: Ref<PublicPostWithProfile | OwnerPost | null> = ref(null)
+
+function handlePostListIntent(payload: { type: string; value?: any }) {
+  if (payload.type === 'viewMode') {
+    viewMode.value = payload.value
+  }
+  // You can add more intent types here, e.g. open modal, etc.
+}
+
+function openFullView(post: PublicPostWithProfile | OwnerPost) {
+  selectedPost.value = post
+  editingPost.value = null
+  showFullView.value = true
+}
+
+function openEditModal(post: PublicPostWithProfile | OwnerPost) {
+  editingPost.value = post
+  selectedPost.value = null
+  showFullView.value = true
+}
+
+function closeFullView() {
+  showFullView.value = false
+  selectedPost.value = null
+  editingPost.value = null
+}
+
+function handlePostEdit(post: PublicPostWithProfile | OwnerPost) {
+  openEditModal(post)
+}
+
+function handlePostClick(post: PublicPostWithProfile | OwnerPost) {
+  openFullView(post)
+}
+
+function handlePostDelete(post: PublicPostWithProfile | OwnerPost) {
+  // Optionally handle delete in parent
+  closeFullView()
+}
+
+function handlePostSaved(post: PublicPostWithProfile | OwnerPost) {
+  closeFullView()
+}
+
+function closeEditModal() {
+  closeFullView()
+}
 </script>
 
 <template>
@@ -107,6 +163,13 @@ const isDetailView = ref(false)
             scope="all"
             :show-filters="true"
             :empty-message="$t('posts.messages.no_posts')"
+            :view-mode="viewMode"
+            @intent="handlePostListIntent"
+            @edit="handlePostEdit"
+            @click="handlePostClick"
+            @delete="handlePostDelete"
+            @saved="handlePostSaved"
+            @close="closeFullView"
           />
         </BTab>
 
@@ -124,6 +187,13 @@ const isDetailView = ref(false)
             :nearby-params="nearbyParams"
             :show-filters="true"
             :empty-message="$t('posts.messages.no_nearby')"
+            :view-mode="viewMode"
+            @intent="handlePostListIntent"
+            @edit="handlePostEdit"
+            @click="handlePostClick"
+            @delete="handlePostDelete"
+            @saved="handlePostSaved"
+            @close="closeFullView"
           />
         </BTab>
 
@@ -133,12 +203,68 @@ const isDetailView = ref(false)
             scope="recent"
             :show-filters="true"
             :empty-message="$t('posts.messages.no_recent')"
+            :view-mode="viewMode"
+            @intent="handlePostListIntent"
+            @edit="handlePostEdit"
+            @click="handlePostClick"
+            @delete="handlePostDelete"
+            @saved="handlePostSaved"
+            @close="closeFullView"
           />
         </BTab>
 
         <!-- My Posts -->
         <BTab id="my" :title="t('posts.my_posts')" lazy>
-          <PostList scope="my" :show-filters="true" :empty-message="$t('posts.no_my_posts')" />
+          <PostList
+            scope="my"
+            :show-filters="true"
+            :empty-message="$t('posts.no_my_posts')"
+            :view-mode="viewMode"
+            @intent="handlePostListIntent"
+            @edit="handlePostEdit"
+            @click="handlePostClick"
+            @delete="handlePostDelete"
+            @saved="handlePostSaved"
+            @close="closeFullView"
+          />
+
+    <!-- Post Full View / Edit Modal -->
+    <BModal
+      title=""
+      v-if="showFullView"
+      :backdrop="'static'"
+      centered
+      size="lg"
+      button-size="sm"
+      fullscreen="sm"
+      :focus="false"
+      :no-header="false"
+      :no-footer="true"
+      :show="true"
+      body-class="d-flex flex-column align-items-center justify-content-center overflow-auto hide-scrollbar p-2 p-md-5"
+      :keyboard="false"
+      @close="closeFullView"
+    >
+      <!-- Post Edit Modal -->
+      <template v-if="editingPost">
+        <PostEdit
+          :post="editingPost"
+          :is-edit="true"
+          @cancel="closeEditModal"
+          @saved="handlePostSaved"
+        />
+      </template>
+
+      <!-- Post Full View Modal Content -->
+      <template v-else-if="selectedPost">
+        <PostFullView
+          :post="selectedPost"
+          @close="closeFullView"
+          @edit="handlePostEdit"
+          @delete="handlePostDelete"
+        />
+      </template>
+    </BModal>
         </BTab>
       </BTabs>
     </div>
@@ -175,12 +301,6 @@ const isDetailView = ref(false)
     >
       <PostEdit @cancel="closeCreateModal" @saved="handlePostCreated" />
     </BModal>
-    <!-- Create Post Modal -->
-    <!-- <div v-if="showCreateModal" class="modal-overlay" @click="closeCreateModal">
-      <div class="modal-content" @click.stop>
-        <PostEdit @cancel="closeCreateModal" @saved="handlePostCreated" />
-      </div>
-    </div> -->
   </main>
 </template>
 

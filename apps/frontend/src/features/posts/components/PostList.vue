@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { useInfiniteScroll } from '@vueuse/core'
 
-import PostCard from './PostCardPostIt.vue'
+import PostCard from './PostCard.vue'
 import PostEdit from './PostEdit.vue'
 import PostFullView from './PostFullView.vue'
 import { type PostTypeType } from '@zod/generated'
@@ -66,9 +66,8 @@ useInfiniteScroll(
 
 <template>
   <div class="post-list h-100">
-
     <!-- Filter -->
-    <div class="d-flex flex-row justify-content-end align-items-center">
+    <div class="d-flex flex-row justify-content-end align-items-center mb-3">
       <div>
         <div v-if="showFilters">
           <BInputGroup class="mt-3">
@@ -90,24 +89,29 @@ useInfiniteScroll(
       </div>
     </div>
 
-    <div v-if="postStore.isLoading && posts.length === 0" class="post-list__loading">
+    <div v-if="postStore.isLoading && posts.length === 0" class="mb-2">
       <div class="loading-spinner"></div>
       <p>{{ $t('uicomponents.loading.loading') }}</p>
     </div>
 
-    <div v-else-if="postStore.error" class="post-list__error">
+    <div v-else-if="postStore.error" class="text-danger mb-2">
       <p>{{ postStore.error }}</p>
       <BButton variant="warning" @click="handleRetry" class="btn btn-primary">
         {{ $t('uicomponents.error.retry') }}
       </BButton>
     </div>
 
-    <div v-else-if="posts.length === 0" class="post-list__empty">
+    <div v-else-if="posts.length === 0" class="mb-2">
       <p>{{ emptyMessage }}</p>
     </div>
 
     <div ref="scrollContainer" class="container-fluid overflow-auto hide-scrollbar h-100">
-      <BRow v-if="posts.length > 0" class="row-cols-1 g-2 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 gx-4 gy-4 mt-4">
+      <TransitionGroup
+        name="fade"
+        tag="div"
+        v-if="posts.length > 0"
+        class="row row-cols-1 g-2 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 gx-4 gy-4"
+      >
         <BCol v-for="post in posts" :key="post.id">
           <PostCard
             :post="post"
@@ -115,9 +119,10 @@ useInfiniteScroll(
             @click="handlePostClick"
             @edit="handlePostEdit"
             @delete="handlePostDelete"
+            class="clickable"
           />
         </BCol>
-      </BRow>
+      </TransitionGroup>
     </div>
 
     <div v-if="isLoadingMore" class="text-center py-3">
@@ -137,22 +142,11 @@ useInfiniteScroll(
       :focus="false"
       :no-header="false"
       :no-footer="true"
-      :modal-class="'transparent'"
       :show="true"
       body-class="d-flex flex-column align-items-center justify-content-center overflow-auto hide-scrollbar p-2 p-md-5"
       :keyboard="false"
       @close="closeFullView"
     >
-      <!-- Post Full View Modal Content -->
-      <template v-if="selectedPost">
-        <PostFullView
-          :post="selectedPost"
-          @close="closeFullView"
-          @edit="handlePostEdit"
-          @delete="handlePostDelete"
-        />
-      </template>
-
       <!-- Post Edit Modal -->
       <template v-if="editingPost">
         <PostEdit
@@ -162,9 +156,18 @@ useInfiniteScroll(
           @saved="handlePostSaved"
         />
       </template>
+
+      <!-- Post Full View Modal Content -->
+      <template v-else-if="selectedPost">
+        <PostFullView
+          :post="selectedPost"
+          @close="closeFullView"
+          @edit="handlePostEdit"
+          @delete="handlePostDelete"
+        />
+      </template>
     </BModal>
   </div>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

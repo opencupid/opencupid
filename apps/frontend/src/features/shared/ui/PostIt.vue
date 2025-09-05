@@ -29,7 +29,6 @@ defineProps({
 }
 .content {
   white-space: pre-wrap; /* Preserves whitespace and line breaks */
-  max-height: 5rem;
   overflow: hidden;
 }
 </style>
