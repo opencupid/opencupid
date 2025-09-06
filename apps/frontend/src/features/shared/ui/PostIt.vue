@@ -1,5 +1,5 @@
 <template>
-  <div class="post-it" :style="{ backgroundColor: color }">
+  <div class="post-it" :class="variant">
     <div class="content">
       <slot></slot>
     </div>
@@ -8,9 +8,9 @@
 
 <script setup lang="ts">
 defineProps({
-  color: {
+  variant: {
     type: String,
-    default: '#FFFFCC',
+    default: '',
   },
 })
 </script>
@@ -26,6 +26,9 @@ defineProps({
   width: 100%; /* Example width */
   min-height: 150px; /* Example minimum height */
   /* transform: rotate(3deg);  */
+}
+.post-it.accent {
+  background-color: #f9f586; /* Accent color */
 }
 .content {
   white-space: pre-wrap; /* Preserves whitespace and line breaks */
