@@ -42,8 +42,6 @@ export function usePostListViewModel(options: UsePostListOptions) {
     } else {
       isLoadingMore.value = true
     }
-console.log('loadPosts', { append, currentPage: currentPage.value, selectedType: selectedType.value })
-
     
     const fetched = await postStore.loadPosts(options.scope || 'all', {
       type: (selectedType.value as PostTypeType) || undefined,

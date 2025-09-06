@@ -135,10 +135,10 @@ const handleSubmit = async () => {
           <BFormCheckbox
             type="checkbox"
             v-model="form.isVisible"
-            class="d-inline-block"
             :label="$t('posts.labels.visibility')"
-          />
+          >
           {{ $t('posts.labels.visibility') }}
+          </BFormCheckbox>  
         </BFormGroup>
       </div>
 

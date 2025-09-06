@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { defineModel } from 'vue'
 import { useI18n } from 'vue-i18n'
 import GridButton from './GridButton.vue'
 import IconMap from '@/assets/icons/interface/map.svg'

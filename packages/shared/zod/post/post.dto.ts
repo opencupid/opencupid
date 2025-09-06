@@ -20,6 +20,11 @@ const ownerPostFields = {
   isVisible: true,
 } as const
 
+export const PostWithProfileSchema =  PostSchema.extend({
+  postedBy: PublicProfileSchema,
+})
+export type PostWithProfile = z.infer<typeof PostWithProfileSchema>
+
 // Public post schema (what other users see)
 export const PublicPostSchema = PostSchema.pick(publicPostFields)
 export type PublicPost = z.infer<typeof PublicPostSchema>

@@ -42,7 +42,13 @@ const messageIntent = () => {}
   <PostIt class="position-relative p-2">
     <div
       class="post-card d-flex flex-column"
-      :class="[`post-card--${post.type.toLowerCase()}`, { 'post-card--own': isOwn }]"
+      :class="[
+        `post-card--${post.type.toLowerCase()}`,
+        {
+          'post-card--own': isOwn,
+          'post-card--invisible': isOwn && !(post as any).isVisible,
+        },
+      ]"
       @click="$emit('click', post)"
     >
       <div class="flex-grow-0 flex-shrink-0 d-flex justify-content-between align-items-center mb-2">
@@ -63,36 +69,6 @@ const messageIntent = () => {}
         </div>
       </div>
 
-      <div
-        v-if="isOwn"
-        class="flex-grow-0 flex-shrink-0 d-flex align-items-center mt-2 justify-content-start gap-1"
-      >
-        <BButton
-          @click.stop="$emit('edit', post)"
-          variant="link-primary"
-          size="sm"
-          :title="$t('posts.actions.edit')"
-        >
-          <IconEdit class="svg-icon" />
-        </BButton>
-        <BButton
-          @click.stop="$emit('delete', post)"
-          variant="link-danger"
-          size="sm"
-          :title="$t('posts.actions.delete')"
-        >
-          <IconDelete class="svg-icon" />
-        </BButton>
-        <BButton
-          @click.stop="$emit('hide', post)"
-          variant="link-warning"
-          size="sm"
-          :title="$t('posts.actions.hide')"
-        >
-          <IconHide class="svg-icon" />
-        </BButton>
-      </div>
-
       <div v-if="isOwn && !(post as any).isVisible" class="text-warning mt-2">
         {{ $t('posts.messages.not_visible') }}
       </div>
@@ -110,6 +86,34 @@ const messageIntent = () => {}
       </BButton>
     </div>
   </PostIt>
+
+  <!-- owner toolbar -->
+  <div v-if="isOwn" class="w-100 d-flex align-items-center justify-content-end gap-1">
+    <BButton
+      @click.stop="$emit('edit', post)"
+      variant="link-primary"
+      size="sm"
+      :title="$t('posts.actions.edit')"
+    >
+      <IconEdit class="svg-icon" />
+    </BButton>
+    <BButton
+      @click.stop="$emit('delete', post)"
+      variant="link-danger"
+      size="sm"
+      :title="$t('posts.actions.delete')"
+    >
+      <IconDelete class="svg-icon" />
+    </BButton>
+    <BButton
+      @click.stop="$emit('hide', post)"
+      variant="link-warning"
+      size="sm"
+      :title="$t('posts.actions.hide')"
+    >
+      <IconHide class="svg-icon" />
+    </BButton>
+  </div>
 </template>
 
 <style scoped>
