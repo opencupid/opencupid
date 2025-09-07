@@ -5,9 +5,7 @@ const postedByInclude = {
   include: {
     postedBy: {
       include: {
-        profileImages: {
-          where: { position: 0 },
-        },
+        profileImages:true
       },
     },
   },
