@@ -1,0 +1,1 @@
+../frontend/vitest.config.ts
