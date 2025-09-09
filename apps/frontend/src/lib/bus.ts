@@ -9,6 +9,11 @@ type AppEvents = {
   'language:changed': { language: string }
   'api:offline': void
   'api:online': void
+  // Detail view events
+  'detail:profile:show': { id: string }
+  'detail:profile:hide': void
+  'detail:post:show': { id: string }
+  'detail:post:hide': void
 }
 
 type Events = AppEvents & WSEvents

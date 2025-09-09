@@ -168,6 +168,7 @@
       "invite_button": "Invite friends",
       "views": {
         "grid_view_button_title": "Grid view",
+        "grid_view_button_hint": "Toggle view mode",
         "map_view_button_title": "Map view"
       },
       "filters": {

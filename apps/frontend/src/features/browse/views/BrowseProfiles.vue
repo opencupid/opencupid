@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { computed, onMounted, onUnmounted, provide, ref } from 'vue'
+import { bus } from '@/lib/bus'
 import { useInfiniteScroll } from '@vueuse/core'
 
 import PublicProfile from '@/features/publicprofile/components/PublicProfile.vue'
@@ -17,12 +18,15 @@ import PlaceholdersGrid from '../components/PlaceholdersGrid.vue'
 import SocialFilterDisplay from '../components/SocialFilterDisplay.vue'
 import DatingPrefsDisplay from '../components/DatingPrefsDisplay.vue'
 import ScopeViewToggler from '@/features/shared/ui/ScopeViewToggler.vue'
+
 import OsmPoiMap from '../components/OsmPoiMap.vue'
 import { useI18n } from 'vue-i18n'
 import { useCountries } from '../../shared/composables/useCountries'
 
-import IconSquare from '@/assets/icons/interface/square.svg'
 import IconMap from '@/assets/icons/interface/map.svg'
+import IconSquare from '@/assets/icons/interface/square.svg'
+import ViewModeToggler from '@/features/shared/ui/ViewModeToggler.vue'
+// import GridButton from '@shared/ui/GridButton.vue'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -65,6 +69,7 @@ onUnmounted(() => {
 
 const handleCardClick = async (profileId: string) => {
   canGoBack.value = true
+  bus.emit('detail:profile:show', { id: profileId })
   openProfile(profileId)
 }
 
@@ -115,9 +120,9 @@ useInfiniteScroll(
       isLoadingMore: isLoadingMore.value,
       hasMoreProfiles: hasMoreProfiles.value,
       isInitialized: isInitialized.value,
-      currentScope: currentScope.value
+      currentScope: currentScope.value,
     })
-    
+
     if (isLoadingMore.value || !hasMoreProfiles.value || !isInitialized.value) {
       return
     }
@@ -133,25 +138,7 @@ useInfiniteScroll(
 
 <template>
   <main class="w-100 position-relative overflow-hidden">
-    <!-- this is the container for the detail view -->
-    <div
-      v-if="isDetailView"
-      class="detail-view position-absolute w-100 h-100"
-      :class="{ active: isDetailView }"
-    >
-      <div class="overflow-auto hide-scrollbar h-100 d-flex flex-column">
-        <MiddleColumn class="pt-sm-3 position-relative flex-grow-1" style="min-height: 100%">
-          <PublicProfile
-            v-if="selectedProfileId"
-            :id="selectedProfileId"
-            class="shadow-lg mb-3 pb-5"
-            @intent:back="handleCloseProfileView"
-            @intent:message="handleOpenConversation"
-            @hidden="(id: string) => handleHidden(id)"
-          />
-        </MiddleColumn>
-      </div>
-    </div>
+    <!-- Detail view handled globally by persistent component -->
 
     <div
       class="list-view d-flex flex-column justify-content-start"
@@ -174,30 +161,7 @@ useInfiniteScroll(
                 :viewerLocation="viewerProfile?.location"
                 @prefs:toggle="showPrefsModal = true"
               />
-              <BButtonGroup aria-label="Toggle view mode" size="sm">
-                <BButton
-                  variant="outline-secondary"
-                  :title="t('profiles.browse.views.grid_view_button_title')"
-                  :pressed="viewModeModel === 'grid'"
-                  @click="viewModeModel = 'grid'"
-                >
-                  <div class="icon-grid">
-                    <IconSquare class="svg-icon-sm" />
-                    <IconSquare class="svg-icon-sm" />
-                    <IconSquare class="svg-icon-sm" />
-                    <IconSquare class="svg-icon-sm" />
-                  </div>
-                </BButton>
-
-                <BButton
-                  variant="outline-secondary"
-                  :title="t('profiles.browse.views.map_view_button_title')"
-                  :pressed="viewModeModel === 'map'"
-                  @click="viewModeModel = 'map'"
-                >
-                  <IconMap class="svg-icon" />
-                </BButton>
-              </BButtonGroup>
+              <ViewModeToggler v-model="viewModeModel" />
             </div>
           </div>
           <div v-if="currentScope == 'dating'" class="filter-controls my-2">
@@ -271,13 +235,15 @@ useInfiniteScroll(
                 :showLocation="true"
                 @profile:select="handleCardClick"
               />
-              
+
               <!-- Infinite scroll loading indicator -->
               <div v-if="isLoadingMore" class="text-center py-3">
                 <BSpinner variant="primary" small />
-                <span class="ms-2 text-muted">{{  $t('profiles.browse.loading_more_profiles') }}</span>
+                <span class="ms-2 text-muted">{{
+                  $t('profiles.browse.loading_more_profiles')
+                }}</span>
               </div>
-              
+
               <!-- No more profiles indicator -->
               <!-- <div v-else-if="!hasMoreProfiles && profileList.length > 0" class="text-center py-3 text-muted">
               </div> -->
@@ -329,19 +295,19 @@ useInfiniteScroll(
 @import 'bootstrap/scss/mixins';
 @import '@/css/app-vars.scss';
 
-.detail-view {
-  // nav.fixed is on 1030 - on screens < md we put this above the navbar
-  z-index: 1050;
-  height: 100dvh;
-  inset: 0;
+// .detail-view {
+//   // nav.fixed is on 1030 - on screens < md we put this above the navbar
+//   z-index: 1050;
+//   height: 100dvh;
+//   inset: 0;
 
-  @include media-breakpoint-up(sm) {
-    // on screens > sm navbar stays visible
-    top: $navbar-height;
-    height: calc(100vh - $navbar-height);
-    z-index: 900;
-  }
-}
+//   @include media-breakpoint-up(sm) {
+//     // on screens > sm navbar stays visible
+//     top: $navbar-height;
+//     height: calc(100vh - $navbar-height);
+//     z-index: 900;
+//   }
+// }
 
 .list-view {
   height: calc(100vh - $navbar-height);

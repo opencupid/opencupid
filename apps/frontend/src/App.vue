@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 import Navbar from '@/features/app/components/Navbar.vue'
 import AppNotifier from '@/features/app/components/AppNotifier.vue'
+import ProfileDetail from '@/features/app/components/ProfileDetail.vue'
+// import PostDetail from '@/features/app/components/PostDetail.vue'
 import { useI18nStore } from './store/i18nStore'
 import { useCountries } from './features/shared/composables/useCountries'
 import { useLanguages } from './features/shared/composables/useLanguages'
@@ -30,6 +32,8 @@ useLanguages().initialize(i18nStore.getLanguage())
   <Navbar />
   <RouterView />
   <AppNotifier />
+  <ProfileDetail />
+  <!-- <PostDetail /> -->
   <!-- <router-view v-slot="{ Component }">
     <transition name="fade">
       <component :is="Component"
@@ -37,3 +41,24 @@ useLanguages().initialize(i18nStore.getLanguage())
     </transition>
   </router-view> -->
 </template>
+
+<style scoped lang="scss">
+@import 'bootstrap/scss/functions';
+@import 'bootstrap/scss/variables';
+@import 'bootstrap/scss/mixins';
+@import '@/css/app-vars.scss';
+
+.detail-view {
+  // nav.fixed is on 1030 - on screens < md we put this above the navbar
+  z-index: 1050;
+  height: 100dvh;
+  inset: 0;
+
+  @include media-breakpoint-up(sm) {
+    // on screens > sm navbar stays visible
+    top: $navbar-height;
+    height: calc(100vh - $navbar-height);
+    z-index: 900;
+  }
+}
+</style>
