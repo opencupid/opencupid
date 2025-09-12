@@ -4,9 +4,10 @@ import { mapProfileSummary } from "./profile.mappers"
 
 
 
-export function mapDbPostToPublic(post: PostWithProfile): PublicPostWithProfile {
+export function mapDbPostToPublic(post: PostWithProfile, viewerProfileId: string): PublicPostWithProfile {
   const { postedBy, ...rest } = post
   return {
+    isOwn: post.postedById === viewerProfileId,
     postedBy: mapProfileSummary(postedBy),
     ...PublicPostSchema.parse(rest),
   }

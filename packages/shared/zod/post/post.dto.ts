@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { PostSchema, PostTypeSchema, ProfileImageSchema } from '../generated'
 import { PostType } from '@prisma/client'
 import { ProfileSummarySchema, PublicProfileSchema } from '../profile/profile.dto'
+import { DbMinimalProfileSchema } from '../profile/profile.db'
 
 // Base fields that are public
 const publicPostFields = {
@@ -20,13 +21,16 @@ const ownerPostFields = {
   isVisible: true,
 } as const
 
-export const PostWithProfileSchema =  PostSchema.extend({
-  postedBy: PublicProfileSchema,
+export const PostWithProfileSchema = PostSchema.extend({
+  postedBy: DbMinimalProfileSchema,
 })
 export type PostWithProfile = z.infer<typeof PostWithProfileSchema>
 
 // Public post schema (what other users see)
-export const PublicPostSchema = PostSchema.pick(publicPostFields)
+export const PublicPostSchema = PostSchema.pick(publicPostFields).extend({
+  isOwn: z.boolean().optional(),
+})
+
 export type PublicPost = z.infer<typeof PublicPostSchema>
 
 // Owner post schema (what the post creator sees)

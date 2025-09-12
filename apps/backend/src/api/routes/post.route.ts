@@ -67,7 +67,7 @@ const postRoutes: FastifyPluginAsync = async fastify => {
         return sendError(reply, 404, 'Post not found')
       }
 
-      const post = mapDbPostToPublic(raw)
+      const post = mapDbPostToPublic(raw, viewerProfileId)
 
       // TODO filter non-public fields
       const response: PostResponse = { success: true, post }
@@ -159,7 +159,7 @@ const postRoutes: FastifyPluginAsync = async fastify => {
         offset: query.offset,
       })
       )
-      const posts = raw.map(post => mapDbPostToPublic(post))
+      const posts = raw.map(post => mapDbPostToPublic(post, req.session.profileId))
 
       const response: PostsResponse = { success: true, posts }
       return reply.code(200).send(response)
@@ -181,7 +181,7 @@ const postRoutes: FastifyPluginAsync = async fastify => {
         limit: query.limit,
         offset: query.offset,
       })
-      const posts = raw.map(post => mapDbPostToPublic(post))
+      const posts = raw.map(post => mapDbPostToPublic(post, req.session.profileId))
 
       const response: PostsResponse = { success: true, posts }
       return reply.code(200).send(response)
@@ -203,7 +203,7 @@ const postRoutes: FastifyPluginAsync = async fastify => {
         limit: query.limit,
         offset: query.offset,
       })
-      const posts = raw.map(post => mapDbPostToPublic(post))
+      const posts = raw.map(post => mapDbPostToPublic(post, req.session.profileId))
 
       const response: PostsResponse = { success: true, posts }
       return reply.code(200).send(response)
@@ -231,7 +231,7 @@ const postRoutes: FastifyPluginAsync = async fastify => {
         offset: query.offset,
         includeInvisible,
       })
-      const posts = raw.map(post => mapDbPostToPublic(post))
+      const posts = raw.map(post => mapDbPostToPublic(post, viewerProfileId))
 
       const response: PostsResponse = { success: true, posts }
       return reply.code(200).send(response)
