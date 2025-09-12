@@ -41,7 +41,13 @@ const messageIntent = () => {}
 
 <template>
   <div class="post-wrapper position-relative w-100">
-    <PostIt class="position-relative p-2" :variant="isOwn ? 'accent' : ''">
+    <PostIt class="position-relative p-2" :id="post.id" :variant="isOwn ? 'accent' : ''">
+      <template #header>
+        <div class="text-end">
+          <PostTypeBadge :type="post.type" />
+        </div>
+      </template>
+
       <div
         class="post-card d-flex flex-column"
         :class="[
@@ -53,12 +59,6 @@ const messageIntent = () => {}
         ]"
         @click="$emit('click', post)"
       >
-        <div
-          class="flex-grow-0 flex-shrink-0 d-flex justify-content-between align-items-center mb-2"
-        >
-          <PostTypeBadge :type="post.type" />
-        </div>
-
         <p class="post-content flex-grow-1 flex-shrink-1">{{ post.content }}</p>
 
         <div class="fs-6 text-muted flex-grow-0 flex-shrink-0" v-if="showDetails">
