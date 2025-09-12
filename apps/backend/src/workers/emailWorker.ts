@@ -1,7 +1,8 @@
 import { Worker } from 'bullmq'
 import IORedis from 'ioredis'
-import nodemailer from 'nodemailer'
 import { appConfig } from '@/lib/appconfig'
+import { createEmailProvider } from '@/services/providers/EmailProviderFactory'
+import type { TxPayload } from '@/types/email.types'
 
 const redisUrl = appConfig.REDIS_URL
 if (!redisUrl) {
@@ -9,32 +10,21 @@ if (!redisUrl) {
 }
 
 const connection = new IORedis(redisUrl, { maxRetriesPerRequest: null })
+const emailProvider = createEmailProvider()
 
-const transporter = nodemailer.createTransport({
-  host: appConfig.SMTP_HOST,
-  port: Number(appConfig.SMTP_PORT),
-  secure: false,
-  auth: {
-    user: appConfig.SMTP_USER,
-    pass: appConfig.SMTP_PASS,
-  },
-})
+// Email job format using TxPayload
+interface EmailJob {
+  type: 'legacy' | 'transactional'
+  payload: TxPayload
+}
 
 new Worker(
   'emails',
   async job => {
-    const { to, subject, html } = job.data as {
-      to: string
-      subject: string
-      html: string
-    }
+    const jobData = job.data as EmailJob
 
-    await transporter.sendMail({
-      from: appConfig.EMAIL_FROM,
-      to,
-      subject,
-      html,
-    })
+    // All jobs now use TxPayload format with provider system
+    await emailProvider.sendTransactional(jobData.payload)
   },
   { connection }
 )

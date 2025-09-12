@@ -7,6 +7,7 @@ import { rateLimitConfig, sendError, sendUnauthorizedError } from '../helpers'
 import { SmsService } from '@/services/sms.service'
 import { CaptchaService } from '@/services/captcha.service'
 import { appConfig } from '@/lib/appconfig'
+import { listmonkUserSyncService } from '@/services/listmonkUserSync.service'
 
 import { UserIdentifyPayloadSchema, OtpLoginPayloadSchema, type LoginUser } from '@zod/user/user.dto'
 import type { OtpLoginResponse, SendLoginLinkResponse, UserMeResponse } from '@zod/apiResponse.dto'
@@ -38,6 +39,16 @@ const userRoutes: FastifyPluginAsync = async fastify => {
 
       const { user, isNewUser } = result
       let profileId = null
+
+      // Sync user to Listmonk on login (best effort)
+      if (user.email) {
+        listmonkUserSyncService.syncUser({
+          id: user.id,
+          email: user.email,
+          displayName: user.displayName,
+          language: user.language,
+        }).catch(console.warn)
+      }
 
       // new user
       if (isNewUser) {
