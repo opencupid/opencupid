@@ -280,6 +280,9 @@ importers:
       '@fontsource/nunito':
         specifier: ^5.2.6
         version: 5.2.6
+      '@fontsource/reenie-beanie':
+        specifier: ^5.2.6
+        version: 5.2.6
       '@fontsource/rubik':
         specifier: ^5.2.6
         version: 5.2.6
@@ -1052,6 +1055,9 @@ packages:
 
   '@fontsource/nunito@5.2.6':
     resolution: {integrity: sha512-FjSPmzBFZ3za4w2USmCWrxDaZ1fTWowSpV9DXfs7Ll/150BI48epE6E69MtOx8GqOPimHNkVUkES22lqDw+bug==}
+
+  '@fontsource/reenie-beanie@5.2.6':
+    resolution: {integrity: sha512-hSXBI3Bpjy5Kpb8pOWuLhmeLvyNYbK1UjuRjig1FpZAhDriKJfX1JpkqaI9IFQfa8Y+WGEYmikpPS93jnBlQLA==}
 
   '@fontsource/rubik@5.2.6':
     resolution: {integrity: sha512-KNY87CIXAzmKMfL8gnQV0nbePn9g/kG3tF4GJoUEASSz+ECFWYoPir8TSySblYfXTInDL/kHJm6CMrrEW/U/ZA==}
@@ -7766,6 +7772,8 @@ snapshots:
   '@fontsource/fredoka-one@5.2.5': {}
 
   '@fontsource/nunito@5.2.6': {}
+
+  '@fontsource/reenie-beanie@5.2.6': {}
 
   '@fontsource/rubik@5.2.6': {}
 

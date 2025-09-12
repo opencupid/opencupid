@@ -1,5 +1,8 @@
 <template>
   <div class="post-it" :class="variant">
+    <div class="header">
+      <slot name="header"></slot>
+    </div>
     <div class="content">
       <slot></slot>
     </div>
@@ -16,6 +19,9 @@ defineProps({
 </script>
 
 <style scoped>
+.post-it .content {
+  font-family: 'Reenie Beanie', cursive;
+}
 .post-it {
   background-color: #ffffcc; /* Default yellow */
   /* padding: 0.5rem; */
