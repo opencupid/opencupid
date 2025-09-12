@@ -63,11 +63,6 @@ body.modal-open #app {
   transition: opacity 0.1s ease-in-out;
 }
 
-.modal-backdrop.show {
-  opacity: 0.75; // Set desired opacity here
-}
-
-
 .user-select-none {
   user-select: none;
 }
