@@ -26,4 +26,20 @@ Create the initial set of interest tags:
 
 Add a daily cron job or scheduled task for automatically renewing the TLS certificate.
 
-`docker compose run --rm certbot renew --nginx && docker exec ingress nginx -s reload`
+Run the SSL certificate renewal script once daily:
+
+```bash
+# Add this line to your crontab (run 'crontab -e' to edit)
+0 2 * * * /path/to/opencupid/scripts/renew-cert.sh >> /var/log/ssl-renewal.log 2>&1
+```
+
+Or run manually:
+
+```bash
+./scripts/renew-cert.sh
+```
+
+The renewal script will:
+1. Run certbot renewal using the webroot method
+2. Reload the nginx configuration if renewal is successful
+3. Log the process for monitoring
