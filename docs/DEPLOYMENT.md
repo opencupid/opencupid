@@ -10,7 +10,7 @@ docker volume create certbot-etc
 docker volume create certbot-webroot
 # obtain TLS cert from Letsencrypt via certbot (configure DOMAIN and EMAIL in .env)
 # https://eff-certbot.readthedocs.io/en/latest/install.html#running-with-docker
-docker compose -f docker-compose.production.yml run --rm certbot-init
+docker compose -f docker-compose.production.yml run --rm --service-ports certbot-init
 docker compose -f docker-compose.production.yml build
 docker compose -f docker-compose.production.yml up -d
 ```

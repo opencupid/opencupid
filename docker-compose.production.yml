@@ -100,11 +100,6 @@ services:
     entrypoint: certbot
     command:
       - certonly
-      - --webroot
-      - -w
-      - /var/www/html
-      - -d
-      - ${DOMAIN}
       - -d
       - ${DOMAIN}
       - --email
