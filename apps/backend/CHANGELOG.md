@@ -1,5 +1,11 @@
 # backend
 
+## 0.6.2
+
+### Minor Changes
+
+- Minor fixes, updates and chores.
+
 ## 0.6.1
 
 ### Patch Changes
