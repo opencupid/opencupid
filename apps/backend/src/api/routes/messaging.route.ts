@@ -23,7 +23,8 @@ import { InteractionService } from '../../services/interaction.service'
 import { notifierService } from '@/services/notifier.service'
 import { appConfig } from '@/lib/appconfig'
 import path from 'path'
-import fs from 'fs/promises'
+import fs, { createWriteStream } from 'fs'
+import { promises as fsPromises } from 'fs'
 
 // Route params for ID lookups
 const IdLookupParamsSchema = z.object({
@@ -247,7 +248,7 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
 
       // Create voice directory if it doesn't exist
       const voiceDir = path.join(appConfig.MEDIA_UPLOAD_DIR, 'voice', senderProfileId)
-      await fs.mkdir(voiceDir, { recursive: true })
+      await fsPromises.mkdir(voiceDir, { recursive: true })
 
       // Generate unique filename
       const fileExtension = path.extname(file.filename) || '.webm'
@@ -255,10 +256,10 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
       const filePath = path.join(voiceDir, fileName)
 
       // Save the file
-      await file.file.pipe(require('fs').createWriteStream(filePath))
+      await file.file.pipe(createWriteStream(filePath))
 
       // Get file stats
-      const stats = await fs.stat(filePath)
+      const stats = await fsPromises.stat(filePath)
 
       try {
         const { convoId, message } = await fastify.prisma.$transaction(async (tx) => {
@@ -315,7 +316,7 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
         }
       } catch (error: any) {
         // Clean up file if message creation fails
-        await fs.unlink(filePath).catch(() => {})
+        await fsPromises.unlink(filePath).catch(() => {})
         return sendError(reply, 403, error)
       }
 

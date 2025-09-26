@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { type MessageDTO } from '@zod/messaging/messaging.dto'
 import { nextTick, onMounted, ref, watch } from 'vue'
+import VoiceMessage from './VoiceMessage.vue'
 
 const props = defineProps<{ messages: MessageDTO[] }>()
 
@@ -31,8 +32,17 @@ watch(
         'bg-info align-self-start': !msg.isMine,
         'bg-secondary align-self-end': msg.isMine,
       }"
-      v-html="msg.content"
-    />
+    >
+      <!-- Voice message -->
+      <VoiceMessage 
+        v-if="msg.messageType === 'audio/voice' && msg.attachment"
+        :attachment="msg.attachment"
+        :is-mine="msg.isMine"
+      />
+      
+      <!-- Text message -->
+      <div v-else v-html="msg.content" />
+    </div>
   </div>
 </template>
 
