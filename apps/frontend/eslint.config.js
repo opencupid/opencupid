@@ -4,6 +4,17 @@ import tseslint from "typescript-eslint";
 import pluginVue from "eslint-plugin-vue";
 import { defineConfig } from "eslint/config";
 
+// Ensure TypeScript parser resolves tsconfig relative to this config file
+const tsconfigRootDir = path.dirname(fileURLToPath(import.meta.url));
+
+// Inject parserOptions.tsconfigRootDir into the TypeScript ESLint recommended config
+tseslint.configs.recommended.unshift({
+  languageOptions: {
+    parserOptions: {
+      tsconfigRootDir
+    }
+  }
+});
 
 export default defineConfig([
   { ignores: ["dist/**", "dev-dist/**", "node_modules/**"] },
