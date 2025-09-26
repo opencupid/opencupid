@@ -25,7 +25,12 @@ export const DbProfileWithImagesSchema = DbProfileSchema.extend({
 })
 export type DbProfileWithImages = z.infer<typeof DbProfileWithImagesSchema>;
 
-
+export const DbMinimalProfileSchema = z.object({
+  id: z.string(),
+  publicName: z.string(),
+  profileImages: z.array(z.object({ storagePath: z.string() }))
+})
+export type DbProfileSummary = z.infer<typeof DbMinimalProfileSchema>;
 
 export const DbProfileWithContextSchema = DbProfileWithImagesSchema.extend({
   conversationParticipants: z

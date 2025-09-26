@@ -178,9 +178,25 @@
   }
 }
 
+// <BModal ... :modal-class="'transparent'" />
+.modal.transparent {
+  .modal-content {
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+  }
 
-.modal-dialog .multiselect--above {
-  // margin-top: 250px;
+  .modal-header {
+    border: none;
+    padding: 0;
+    button.btn-close {
+      filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
+    }
+  }
+
+  .modal-body {
+    padding: 0;
+  }
 }
 
 @mixin nav-link-theme($color) {
