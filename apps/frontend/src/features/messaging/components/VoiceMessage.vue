@@ -2,6 +2,9 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import type { MessageAttachmentDTO } from '@zod/messaging/messaging.dto'
 
+import IconPlay from '@/assets/icons/interface/play.svg'
+import IconPause from '@/assets/icons/interface/pause.svg'
+
 const props = defineProps<{
   attachment: MessageAttachmentDTO
   isMine?: boolean
@@ -15,7 +18,9 @@ const error = ref<string | null>(null)
 
 // Computed properties
 const duration = computed(() => props.attachment.duration || 0)
-const progress = computed(() => duration.value > 0 ? (currentTime.value / duration.value) * 100 : 0)
+const progress = computed(() =>
+  duration.value > 0 ? (currentTime.value / duration.value) * 100 : 0
+)
 
 // Format time as MM:SS
 const formatTime = (seconds: number): string => {
@@ -53,7 +58,7 @@ const togglePlayback = () => {
     audioRef.value.pause()
     isPlaying.value = false
   } else {
-    audioRef.value.play().catch((err) => {
+    audioRef.value.play().catch(err => {
       console.error('Failed to play audio:', err)
       error.value = 'Failed to play voice message'
     })
@@ -63,18 +68,18 @@ const togglePlayback = () => {
 
 const seek = (event: Event) => {
   if (!audioRef.value || !duration.value) return
-  
+
   const target = event.target as HTMLInputElement
   const seekTime = (parseFloat(target.value) / 100) * duration.value
   audioRef.value.currentTime = seekTime
   currentTime.value = seekTime
 }
 
-// Construct audio URL - this should match your backend media serving setup
-const audioUrl = computed(() => {
-  // Assuming the backend serves media files from a /media endpoint
-  return `/api/media/${props.attachment.filePath}`
-})
+// // Construct audio URL - this should match your backend media serving setup
+// const audioUrl = computed(() => {
+//   // Assuming the backend serves media files from a /media endpoint
+//   return `/api/media/${props.attachment.filePath}`
+// })
 
 onMounted(() => {
   if (audioRef.value) {
@@ -98,12 +103,7 @@ onUnmounted(() => {
 <template>
   <div class="voice-message" :class="{ 'voice-message--mine': isMine }">
     <!-- Hidden audio element -->
-    <audio
-      ref="audioRef"
-      :src="audioUrl"
-      preload="metadata"
-      style="display: none"
-    />
+    <audio ref="audioRef" :src="attachment.url" preload="metadata" style="display: none" />
 
     <div class="voice-controls d-flex align-items-center gap-2">
       <!-- Play/Pause button -->
@@ -118,8 +118,8 @@ onUnmounted(() => {
           <span class="visually-hidden">Loading...</span>
         </div>
         <i v-else-if="error" class="fas fa-exclamation-triangle"></i>
-        <i v-else-if="isPlaying" class="fas fa-pause"></i>
-        <i v-else class="fas fa-play"></i>
+        <IconPause v-else-if="isPlaying" class="svg-icon"></IconPause>
+        <IconPlay v-else class="svg-icon"></IconPlay>
       </BButton>
 
       <!-- Waveform/Progress container -->
@@ -135,12 +135,12 @@ onUnmounted(() => {
             :disabled="isLoading || !!error || duration === 0"
             @input="seek"
           />
-          
+
           <!-- Visual waveform placeholder -->
           <div class="waveform-bars d-flex align-items-center gap-1">
-            <div 
-              v-for="i in 20" 
-              :key="i" 
+            <div
+              v-for="i in 20"
+              :key="i"
               class="waveform-bar"
               :style="{ height: `${Math.random() * 16 + 4}px` }"
             ></div>
