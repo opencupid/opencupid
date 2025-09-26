@@ -1,5 +1,4 @@
-import type WebSocket from 'ws'
-import { FastifyInstance, FastifyPluginAsync } from 'fastify'
+import {  FastifyPluginAsync } from 'fastify'
 import multipart from '@fastify/multipart'
 import { sendError } from '../helpers'
 import { MessageService } from '@/services/messaging.service'
@@ -201,7 +200,7 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
     const senderProfileId = req.session.profileId
     if (!senderProfileId) return sendError(reply, 401, 'Sender ID not found.')
 
-    let files: any[]
+    let files: any[] = []
     let fields: any = {}
 
     try {
