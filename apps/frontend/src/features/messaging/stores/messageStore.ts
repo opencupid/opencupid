@@ -148,7 +148,11 @@ export const useMessageStore = defineStore('message', {
       content: string
     ): Promise<StoreResponse<MessageDTO> | StoreError> {
       try {
-        const payload: SendMessagePayload = { profileId: recipientProfileId, content }
+        const payload: SendMessagePayload = { 
+          profileId: recipientProfileId, 
+          content,
+          messageType: 'text/plain'
+        }
         this.isSending = true
         this.error = null
         const res = await safeApiCall(() => api.post<SendMessageResponse>(`/messages/message`, payload))

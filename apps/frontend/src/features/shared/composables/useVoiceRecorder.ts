@@ -17,7 +17,11 @@ export function useVoiceRecorder(maxDuration: number = 120) {
 
   // Check if MediaRecorder is supported
   const checkSupport = () => {
-    isSupported.value = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder)
+    isSupported.value = !!(
+      navigator.mediaDevices && 
+      typeof navigator.mediaDevices.getUserMedia === 'function' && 
+      typeof window.MediaRecorder === 'function'
+    )
     return isSupported.value
   }
 
