@@ -1,0 +1,1 @@
+../frontend/eslint.config.js
