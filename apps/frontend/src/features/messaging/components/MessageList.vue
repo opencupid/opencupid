@@ -42,6 +42,7 @@ watch(
   border-radius: 15px;
   word-break: break-word;
   padding: 0.25rem 0.5rem;
-  font-size: 1rem;
+  font-size: 0.9rem;
+  color: white;
 }
 </style>
