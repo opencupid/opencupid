@@ -38,6 +38,23 @@ const MessageAttachmentDTOSchema = MessageAttachmentSchema.pick({
 
 export type MessageAttachmentDTO = z.infer<typeof MessageAttachmentDTOSchema>
 
+
+
+// this is used in the db layer
+const DbMessageInConversationSchema = MessageSchema.pick({
+  id: true,
+  conversationId: true,
+  senderId: true,
+  content: true,
+  messageType: true,
+  createdAt: true,
+}).extend({
+  sender: ProfileSummarySchema,
+  attachment: DbMessageAttachmentDTOSchema.nullable().optional(),
+})
+export type DbMessageInConversation = z.infer<typeof MessageInConversationSchema>
+
+
 // this is used in the db layer
 const MessageInConversationSchema = MessageSchema.pick({
   id: true,
@@ -48,7 +65,7 @@ const MessageInConversationSchema = MessageSchema.pick({
   createdAt: true,
 }).extend({
   sender: ProfileSummarySchema,
-  attachment: DbMessageAttachmentDTOSchema.nullable().optional(),
+  attachment: MessageAttachmentDTOSchema.nullable().optional(),
 })
 export type MessageInConversation = z.infer<typeof MessageInConversationSchema>
 
