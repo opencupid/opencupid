@@ -12,15 +12,30 @@ const conversationParticipantFields = {
   isArchived: true,
 } as const
 
-// Message attachment DTO
-const MessageAttachmentDTOSchema = MessageAttachmentSchema.pick({
+// Message attachment DB shape
+const DbMessageAttachmentDTOSchema = MessageAttachmentSchema.pick({
   id: true,
-  filePath: true,
   mimeType: true,
   fileSize: true,
   duration: true,
   createdAt: true,
+  filePath: true,
 })
+
+export type DbMessageAttachmentDTO = z.infer<typeof DbMessageAttachmentDTOSchema>
+
+
+// Message attachment DTO
+const MessageAttachmentDTOSchema = MessageAttachmentSchema.pick({
+  id: true,
+  mimeType: true,
+  fileSize: true,
+  duration: true,
+  createdAt: true,
+}).extend({
+  url: z.string()
+})
+
 export type MessageAttachmentDTO = z.infer<typeof MessageAttachmentDTOSchema>
 
 // this is used in the db layer
@@ -33,7 +48,7 @@ const MessageInConversationSchema = MessageSchema.pick({
   createdAt: true,
 }).extend({
   sender: ProfileSummarySchema,
-  attachment: MessageAttachmentDTOSchema.nullable().optional(),
+  attachment: DbMessageAttachmentDTOSchema.nullable().optional(),
 })
 export type MessageInConversation = z.infer<typeof MessageInConversationSchema>
 
@@ -41,6 +56,7 @@ export type MessageInConversation = z.infer<typeof MessageInConversationSchema>
 const MessageDTOSchema = MessageInConversationSchema.extend({
   sender: ProfileSummarySchema,
   isMine: z.boolean().optional(),
+  attachment: MessageAttachmentDTOSchema.nullable().optional(),
 })
 export type MessageDTO = z.infer<typeof MessageDTOSchema>
 
