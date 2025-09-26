@@ -13,6 +13,10 @@ import StoreErrorOverlay from '@/features/shared/ui/StoreErrorOverlay.vue'
 import VoiceRecorder from './VoiceRecorder.vue'
 import { useMessageStore } from '../stores/messageStore'
 
+import MicIcon from '@/assets/icons/interface/mic.svg'
+import Mic2Icon from '@/assets/icons/interface/mic-2.svg'
+
+
 const messageStore = useMessageStore()
 
 const props = defineProps<{
@@ -133,7 +137,7 @@ function handleVoiceRecordingError(error: string) {
             :title="$t('messaging.voice.record_voice_message')"
             class="mb-1"
           >
-            <i class="fas fa-microphone"></i>
+          <Mic2Icon class="svg-icon"></Mic2Icon>
           </BButton>
         </div>
       </div>

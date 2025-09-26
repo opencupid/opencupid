@@ -98,6 +98,7 @@ const handleRetryPermission = async () => {
                isCompleted ? $t('messaging.voice.record_again') : 
                $t('messaging.voice.record')"
       >
+      <Mic2Icon class="svg-icon"></Mic2Icon> XXX
         <component :is="isRecording ? Mic2Icon : MicIcon" width="16" height="16" />
         <span class="ms-1" v-if="isRecording">{{ formatDuration() }}</span>
         <span class="ms-1" v-else-if="isCompleted">{{ formatDuration() }}</span>
@@ -110,7 +111,7 @@ const handleRetryPermission = async () => {
         size="sm"
         @click="handleCancel"
         :title="$t('messaging.voice.cancel')"
-      >
+      >X
         <i class="fas fa-times"></i>
       </BButton>
     </div>
@@ -145,6 +146,7 @@ const handleRetryPermission = async () => {
     <!-- Error message -->
     <div v-if="isError && !permissionDenied && error" class="mt-2 p-2 bg-danger-subtle border border-danger rounded">
       <small class="text-danger-emphasis">
+        O
         <i class="fas fa-exclamation-circle me-1"></i>
         {{ error }}
       </small>
@@ -154,6 +156,7 @@ const handleRetryPermission = async () => {
     <div v-if="!isSupported" class="mt-2 p-2 bg-info-subtle border border-info rounded">
       <small class="text-info-emphasis">
         <i class="fas fa-info-circle me-1"></i>
+        O
         {{ $t('messaging.voice.unsupported_browser') }}
       </small>
     </div>
