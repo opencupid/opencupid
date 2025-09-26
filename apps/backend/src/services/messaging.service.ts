@@ -2,6 +2,7 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import type {
   ConversationParticipantWithConversationSummary,
+  DbMessageInConversation,
   MessageInConversation,
 } from '@zod/messaging/messaging.dto'
 import { Conversation, Message } from '@zod/generated'
@@ -125,7 +126,7 @@ export class MessageService {
    * @param conversationId - The ID of the conversation to list messages for.
    * @returns An array of messages in the conversation, including sender profile images.
    */
-  async listMessagesForConversation(conversationId: string): Promise<MessageInConversation[]> {
+  async listMessagesForConversation(conversationId: string): Promise<DbMessageInConversation[]> {
     return await prisma.message.findMany({
       where: {
         conversationId,
