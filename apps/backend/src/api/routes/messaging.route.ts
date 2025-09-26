@@ -21,6 +21,7 @@ import { SendMessagePayloadSchema, SendVoiceMessagePayloadSchema } from '@zod/me
 import { InteractionService } from '../../services/interaction.service'
 import { notifierService } from '@/services/notifier.service'
 import { appConfig } from '@/lib/appconfig'
+import { uploadTmpDir } from '@/lib/media'
 import path from 'path'
 import fs, { createWriteStream } from 'fs'
 import { promises as fsPromises } from 'fs'
@@ -254,8 +255,13 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
       const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}${fileExtension}`
       const filePath = path.join(voiceDir, fileName)
 
-      // Save the file
-      await file.file.pipe(createWriteStream(filePath))
+      // Save the file using Promise-based approach
+      await new Promise<void>((resolve, reject) => {
+        const writeStream = createWriteStream(filePath)
+        file.file.pipe(writeStream)
+        writeStream.on('finish', resolve)
+        writeStream.on('error', reject)
+      })
 
       // Get file stats
       const stats = await fsPromises.stat(filePath)
