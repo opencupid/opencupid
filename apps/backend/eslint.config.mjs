@@ -1,3 +1,5 @@
+import path from "path";
+import { fileURLToPath } from "url";
 import js from "@eslint/js";
 import globals from "globals";
 import tseslint from "typescript-eslint";
@@ -6,20 +8,23 @@ import { defineConfig } from "eslint/config";
 // Ensure TypeScript parser resolves tsconfig relative to this config file
 const tsconfigRootDir = path.dirname(fileURLToPath(import.meta.url));
 
-// Inject parserOptions.tsconfigRootDir into the TypeScript ESLint recommended config
-tseslint.configs.recommended.unshift({
-  languageOptions: {
-    parserOptions: {
-      tsconfigRootDir
+// Create a custom TypeScript ESLint recommended config with tsconfigRootDir
+const customTsConfig = [
+  {
+    languageOptions: {
+      parserOptions: {
+        tsconfigRootDir
+      }
     }
-  }
-});
+  },
+  ...tseslint.configs.recommended
+];
 
 export default defineConfig([
   { ignores: ["dist/**", "node_modules/**", "scripts/**", "prisma/seed/**"] },
   { files: ["**/*.{js,mjs,cjs,ts,mts,cts}"], plugins: { js }, extends: ["js/recommended"] },
   { files: ["**/*.{js,mjs,cjs,ts,mts,cts}"], languageOptions: { globals: globals.node } },
-  tseslint.configs.recommended,
+  customTsConfig,
   {
     files: ["**/*.{ts,mts,cts}"],
     rules: {
