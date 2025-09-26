@@ -336,13 +336,26 @@ model HiddenProfile {
 }
 
 model Message {
-  id             String       @id @default(cuid())
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  id             String             @id @default(cuid())
+  conversation   Conversation       @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   conversationId String
-  sender         Profile      @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  sender         Profile            @relation(fields: [senderId], references: [id], onDelete: Cascade)
   senderId       String
   content        String
-  createdAt      DateTime     @default(now())
+  messageType    String             @default("text/plain") // 'text/plain', 'audio/voice'
+  createdAt      DateTime           @default(now())
+  attachment     MessageAttachment?
+}
+
+model MessageAttachment {
+  id        String  @id @default(cuid())
+  message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  messageId String  @unique
+  filePath  String
+  mimeType  String
+  fileSize  Int?
+  duration  Int?    // duration in seconds for audio files
+  createdAt DateTime @default(now())
 }
 
 model SocialMatchFilter {

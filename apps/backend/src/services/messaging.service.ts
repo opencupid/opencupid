@@ -42,6 +42,7 @@ const sendInclude = {
       },
     },
   },
+  attachment: true,
 } satisfies Prisma.MessageInclude
 
 export class MessageService {
@@ -137,6 +138,7 @@ export class MessageService {
             },
           },
         },
+        attachment: true,
       },
       orderBy: {
         createdAt: 'asc',
@@ -200,13 +202,20 @@ export class MessageService {
     tx: Prisma.TransactionClient,
     senderProfileId: string,
     recipientProfileId: string,
-    content: string
+    content: string,
+    messageType: string = 'text/plain',
+    attachmentData?: {
+      filePath: string
+      mimeType: string
+      fileSize?: number
+      duration?: number
+    }
   ): Promise<{ convoId: string; message: Message }> {
 
-    // Clean and sanitize user input
-    const cleanContent = cleanUserInput(content).trim()
+    // Clean and sanitize user input for text messages
+    const cleanContent = messageType === 'text/plain' ? cleanUserInput(content).trim() : content
 
-    if (!cleanContent) {
+    if (messageType === 'text/plain' && !cleanContent) {
       throw {
         error: 'Message content cannot be empty',
         code: 'EMPTY_MESSAGE',
@@ -222,6 +231,12 @@ export class MessageService {
         conversationId: convo.id,
         senderId: senderProfileId,
         content: cleanContent,
+        messageType,
+        ...(attachmentData && {
+          attachment: {
+            create: attachmentData
+          }
+        })
       },
       include: sendInclude,
     })
@@ -293,7 +308,7 @@ export class MessageService {
       const content = simpleMarkdownToHtml(mdContent)
       console.error('Sending welcome message:', content)
       return await prisma.$transaction(async tx => {
-        await this.sendOrStartConversation(tx, senderId, recipientProfileId, content)
+        await this.sendOrStartConversation(tx, senderId, recipientProfileId, content, 'text/plain')
       })
     }
   }
