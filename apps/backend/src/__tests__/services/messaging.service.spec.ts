@@ -70,6 +70,7 @@ describe('MessageService.listMessagesForConversation', () => {
       where: { conversationId: 'c1' },
       include: {
         sender: { include: { profileImages: { where: { position: 0 } } } },
+        attachment: true,
       },
       orderBy: { createdAt: 'asc' },
     })

@@ -3,6 +3,7 @@ import fs from 'fs'
 
 import cuid from 'cuid'
 import { appConfig } from '@/lib/appconfig'
+import { createHmac } from 'crypto'
 
 export function uploadTmpDir() {
   return path.join(appConfig.MEDIA_UPLOAD_DIR, 'tmp')
@@ -30,6 +31,20 @@ export function checkImageRoot(): boolean {
     fs.mkdirSync(tmpDir, { recursive: true })
   }
   return true
+}
+
+type UrlSignature = {
+  exp: number
+  sig: string
+}
+
+export function signUrl(url: string): string {
+  const exp = Math.floor(Date.now() / 1000) + appConfig.IMAGE_URL_HMAC_TTL_SECONDS
+  const data = `${url}:${exp}`
+  const h = createHmac('sha256', appConfig.AUTH_IMG_HMAC_SECRET)
+    .update(data)
+    .digest('hex')
+  return `${url}?exp=${exp}&sig=${h}`
 }
 
 type ImageLocation = {
