@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { ProfileSummarySchema } from '../profile/profile.dto'
-import { ConversationParticipantSchema, ConversationSchema, MessageSchema } from '../generated'
+import { ConversationParticipantSchema, ConversationSchema, MessageSchema, MessageAttachmentSchema } from '../generated'
 import { Prisma } from '@prisma/client'
 
 const conversationParticipantFields = {
@@ -12,15 +12,28 @@ const conversationParticipantFields = {
   isArchived: true,
 } as const
 
+// Message attachment DTO
+const MessageAttachmentDTOSchema = MessageAttachmentSchema.pick({
+  id: true,
+  filePath: true,
+  mimeType: true,
+  fileSize: true,
+  duration: true,
+  createdAt: true,
+})
+export type MessageAttachmentDTO = z.infer<typeof MessageAttachmentDTOSchema>
+
 // this is used in the db layer
 const MessageInConversationSchema = MessageSchema.pick({
   id: true,
   conversationId: true,
   senderId: true,
   content: true,
+  messageType: true,
   createdAt: true,
 }).extend({
   sender: ProfileSummarySchema,
+  attachment: MessageAttachmentDTOSchema.nullable().optional(),
 })
 export type MessageInConversation = z.infer<typeof MessageInConversationSchema>
 
@@ -34,6 +47,7 @@ export type MessageDTO = z.infer<typeof MessageDTOSchema>
 
 const MessageInConversationSummarySchema = MessageSchema.pick({
   content: true,
+  messageType: true,
   createdAt: true,
 }).extend({
   isMine: z.boolean().optional(),
@@ -92,9 +106,20 @@ export type ConversationParticipantWithConversationSummary =
 export const SendMessagePayloadSchema = z.object({
   profileId: z.string().cuid(),
   content: z.string().min(1),
+  messageType: z.string().default('text/plain'),
 })
 
 export type SendMessagePayload = z.infer<typeof SendMessagePayloadSchema>
+
+// Schema for voice message payload
+export const SendVoiceMessagePayloadSchema = z.object({
+  profileId: z.string().cuid(),
+  content: z.string().default(''), // Can be empty for voice messages
+  messageType: z.literal('audio/voice'),
+  duration: z.number().int().min(1).max(120), // Duration in seconds, max 2 minutes
+})
+
+export type SendVoiceMessagePayload = z.infer<typeof SendVoiceMessagePayloadSchema>
 
 
 // export type ConversationParticipantWithExtras = ConversationParticipantWithConversationSummary & {
