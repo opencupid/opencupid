@@ -61,7 +61,7 @@ const handleSelectConvo = async (convo: ConversationSummary) => {
     return
   }
   router.push({ name: 'Messaging', params: { conversationId: convo.conversationId } })
-  await messageStore.setActiveConversation(convo)
+  // Let the watcher handle setActiveConversation to avoid double fetch
   setTimeout(async () => {
     await messageStore.markAsRead(convo.conversationId)
   }, 2000)
