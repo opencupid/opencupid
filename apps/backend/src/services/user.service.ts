@@ -73,7 +73,12 @@ export class UserService {
     user: User
     isNewUser: boolean
   }> {
-    const authIdField = authId.email ? { email: authId.email } : { phonenumber: authId.phonenumber }
+    // Normalize identifiers: lowercase email, remove whitespace from phone
+    const normalizedAuthId = authId.email 
+      ? { email: authId.email.toLowerCase() } 
+      : { phonenumber: authId.phonenumber?.replace(/\s+/g, '') }
+    
+    const authIdField = normalizedAuthId
     const userExists = await prisma.user.findUnique({ where: { ...authIdField } })
     // const emailConfirmationToken = generateOTP() // enerate email confirmation token
     const tokenExpiration = getTokenExpiration()
