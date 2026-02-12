@@ -128,7 +128,7 @@ const handleSubmit = async () => {
 
 <template>
   <BForm @submit.prevent="handleSubmit" class="w-100">
-    <PostIt class="position-relative p-2">
+    <PostIt class="position-relative p-2" :id="post?.id ?? 'new-post'">
       <BFormGroup class="mb-2">
         <label for="post-type" class="form-label">{{ $t('posts.labels.type') }}</label>
         <BFormRadioGroup v-model="form.type">

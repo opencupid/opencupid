@@ -38,7 +38,13 @@ const hasProfileData = (post: any): post is PublicPostWithProfile => {
 
 const postLocation = computed(() => {
   if ('location' in props.post && props.post.location) {
-    return props.post.location
+    const loc = props.post.location
+    return {
+      country: loc.country ?? '',
+      cityName: loc.cityName ?? undefined,
+      lat: loc.lat ?? undefined,
+      lon: loc.lon ?? undefined,
+    }
   }
   return null
 })
