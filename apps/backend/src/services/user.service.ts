@@ -76,7 +76,7 @@ export class UserService {
     // Normalize identifiers: lowercase email, remove whitespace from phone
     const normalizedAuthId = authId.email 
       ? { email: authId.email.toLowerCase() } 
-      : { phonenumber: authId.phonenumber?.replace(/\s+/g, '') }
+      : { phonenumber: authId.phonenumber!.replace(/\s+/g, '') }
     
     const authIdField = normalizedAuthId
     const userExists = await prisma.user.findUnique({ where: { ...authIdField } })
