@@ -4,9 +4,8 @@ import { useI18n } from 'vue-i18n'
 import PostList from '../components/PostList.vue'
 import PostEdit from '../components/PostEdit.vue'
 import PostFullView from '../components/PostFullView.vue'
-import IconPencil2 from '@/assets/icons/interface/pencil-2.svg'
-
-import type { OwnerPost } from '@zod/post/post.dto'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { faPenToSquare } from '@fortawesome/free-solid-svg-icons'
 
 const { t } = useI18n()
 
@@ -14,13 +13,6 @@ const activeTab = ref('all')
 const showCreateModal = ref(false)
 const locationPermission = ref(false)
 const userLocation = ref<{ lat: number; lon: number } | null>(null)
-
-// const tabs = computed(() => [
-//   { key: 'all', label: t('posts.filters.all') },
-//   { key: 'nearby', label: t('posts.filters.nearby') },
-//   { key: 'recent', label: t('posts.filters.recent') },
-//   { key: 'my', label: t('posts.my_posts') },
-// ])
 
 const nearbyParams = computed(() => {
   if (!userLocation.value) {
@@ -60,14 +52,6 @@ const getCurrentPosition = (): Promise<GeolocationPosition> => {
       maximumAge: 300000, // 5 minutes
     })
   })
-}
-
-const closeCreateModal = () => {
-  showCreateModal.value = false
-}
-
-const handlePostCreated = (post: OwnerPost) => {
-  closeCreateModal()
 }
 
 onMounted(() => {
@@ -138,8 +122,8 @@ function handlePostListIntent(event: string, post?: any) {
       :class="{ active: isDetailView }"
     ></div>
 
-    <div class="list-view d-flex align-items-center justify-content-between p-2">
-      <BTabs pills v-model="activeTab" lazy class="h-100 d-flex flex-column">
+    <div class="list-view d-flex flex-column">
+      <BTabs v-model="activeTab" lazy class="flex-grow-1 d-flex flex-column" nav-class="post-tabs px-2 pt-2">
         <!-- All posts -->
         <BTab id="all" :title="t('posts.filters.all')" lazy>
           <PostList
@@ -216,7 +200,7 @@ function handlePostListIntent(event: string, post?: any) {
         variant="primary"
         :title="$t('profiles.forms.edit_button_hint')"
       >
-        <IconPencil2 class="svg-icon-lg" />
+        <FontAwesomeIcon :icon="faPenToSquare" />
       </BButton>
     </div>
 
@@ -274,15 +258,14 @@ function handlePostListIntent(event: string, post?: any) {
 @import 'bootstrap/scss/variables';
 @import 'bootstrap/scss/mixins';
 @import '@/css/app-vars.scss';
+@import '@/css/theme.scss';
 
 .detail-view {
-  // nav.fixed is on 1030 - on screens < md we put this above the navbar
   z-index: 1050;
   height: 100dvh;
   inset: 0;
 
   @include media-breakpoint-up(sm) {
-    // on screens > sm navbar stays visible
     top: $navbar-height;
     height: calc(100vh - $navbar-height);
     z-index: 900;
@@ -291,16 +274,38 @@ function handlePostListIntent(event: string, post?: any) {
 
 .main-edit-button {
   position: fixed;
-  z-index: 5;
-  bottom: 1rem;
-  right: 1rem;
+  z-index: 1000;
+  bottom: 1.5rem;
+  right: 1.5rem;
 }
 
 .list-view {
   height: calc(100vh - $navbar-height);
 }
+
+:deep(.post-tabs) {
+  font-size: 0.85rem;
+  gap: 0.25rem;
+
+  .nav-link {
+    color: $social;
+    padding: 0.35rem 0.75rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+
+    &:hover {
+      background-color: transparentize($social, 0.9);
+    }
+
+    &.active {
+      background-color: $social;
+      color: $white;
+    }
+  }
+}
+
 :deep(.tab-content) {
-  height: 100%;
+  flex-grow: 1;
   overflow: hidden;
 }
 :deep(.tab-content .tab-pane) {

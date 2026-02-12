@@ -62,6 +62,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.34.0",
+    "@iconify/json": "^2.2.382",
     "@pinia/testing": "^1.0.2",
     "@playwright/test": "^1.53.2",
     "@popperjs/core": "^2.11.8",

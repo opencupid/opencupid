@@ -207,7 +207,6 @@ export const usePostStore = defineStore('posts', {
         )
         const response = r.data
 
-        console.log('Fetched posts response:', response)
         if (response.success) {
           if (query.offset === 0) {
             this.posts = response.posts

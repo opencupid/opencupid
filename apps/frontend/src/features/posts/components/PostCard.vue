@@ -32,7 +32,6 @@ const isOwn = computed(() => {
 })
 
 const hasProfileData = (post: any): post is PublicPostWithProfile => {
-  console.log('hasProfileData', post)
   return 'postedBy' in post && post.postedBy != null
 }
 
@@ -61,7 +60,7 @@ const messageIntent = () => {}
       >
         <p class="post-content flex-grow-1 flex-shrink-1">{{ post.content }}</p>
 
-        <div class="fs-6 text-muted flex-grow-0 flex-shrink-0" v-if="showDetails">
+        <div class="post-meta text-muted flex-grow-0 flex-shrink-0" v-if="showDetails">
           <div class="d-flex justify-content-start flex-row align-items-center">
             <div v-if="hasProfileData(post)" class="d-flex align-items-center">
               <ProfileThumbnail :profile="post.postedBy" class="me-2" />
@@ -71,6 +70,10 @@ const messageIntent = () => {}
               <UseTimeAgo v-slot="{ timeAgo }" :time="post.createdAt"> | {{ timeAgo }} </UseTimeAgo>
             </div>
           </div>
+        </div>
+
+        <div class="post-date text-muted flex-grow-0 flex-shrink-0" v-if="!showDetails">
+          <UseTimeAgo v-slot="{ timeAgo }" :time="post.createdAt">{{ timeAgo }}</UseTimeAgo>
         </div>
 
         <!-- <div v-if="isOwn && !(post as any).isVisible" class="text-warning mt-2">
@@ -138,5 +141,12 @@ const messageIntent = () => {}
 .details .post-content {
   max-height: 12rem;
   overflow: auto;
+}
+.post-date {
+  font-size: 0.7rem;
+  margin-top: 0.25rem;
+}
+.post-meta {
+  font-size: 0.8rem;
 }
 </style>
