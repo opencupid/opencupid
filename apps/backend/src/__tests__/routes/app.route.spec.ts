@@ -168,3 +168,47 @@ describe('GET /version', () => {
     // expect(version.backend).toBeTruthy()
   })
 })
+
+describe('GET /updateavailable', () => {
+  it('returns update not available when versions match', async () => {
+    const handler = fastify.routes['GET /updateavailable']
+    
+    await handler({
+      query: { v: '0.6.2' }
+    } as any, reply as any)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    expect(reply.payload.updateInfo.updateAvailable).toBe(false)
+    expect(reply.payload.updateInfo.currentVersion).toBe('0.6.2')
+    expect(reply.payload.updateInfo.latestVersion).toBeTruthy()
+  })
+
+  it('returns update available when versions differ', async () => {
+    const handler = fastify.routes['GET /updateavailable']
+    
+    await handler({
+      query: { v: '0.6.1' }
+    } as any, reply as any)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    expect(reply.payload.updateInfo.updateAvailable).toBe(true)
+    expect(reply.payload.updateInfo.currentVersion).toBe('0.6.1')
+    expect(reply.payload.updateInfo.latestVersion).toBeTruthy()
+  })
+
+  it('returns update not available when client version is unknown', async () => {
+    const handler = fastify.routes['GET /updateavailable']
+    
+    await handler({
+      query: {}
+    } as any, reply as any)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    expect(reply.payload.updateInfo.updateAvailable).toBe(false)
+    expect(reply.payload.updateInfo.currentVersion).toBe('unknown')
+    expect(reply.payload.updateInfo.latestVersion).toBeTruthy()
+  })
+})

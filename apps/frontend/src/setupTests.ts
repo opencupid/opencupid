@@ -7,5 +7,5 @@
 }
 
 (globalThis as any).__APP_VERSION__ = {
-  app: '0.6.2',
+  app: '0.5.0',
 }
