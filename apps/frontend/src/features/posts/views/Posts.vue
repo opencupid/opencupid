@@ -68,6 +68,34 @@ const showFullView = ref(false)
 const editingPost = ref(null)
 const selectedPost = ref(null)
 
+function toListPost(post: any) {
+  return {
+    ...post,
+    isOwn: true,
+  }
+}
+
+function upsertIntoActiveList(post: any) {
+  const normalized = toListPost(post)
+
+  if (activeTab.value === 'my') {
+    const idx = postStore.myPosts.findIndex(item => item.id === post.id)
+    if (idx === -1) {
+      postStore.myPosts.unshift(post)
+    } else {
+      postStore.myPosts[idx] = post
+    }
+    return
+  }
+
+  const idx = postStore.posts.findIndex(item => item.id === post.id)
+  if (idx === -1) {
+    postStore.posts.unshift(normalized as any)
+  } else {
+    postStore.posts[idx] = normalized as any
+  }
+}
+
 function closePostOverlays() {
   showFullView.value = false
   showCreateModal.value = false
@@ -129,6 +157,9 @@ async function handlePostListIntent(event: string, post?: any) {
       await handleDelete(post)
       break
     case 'saved':
+      if (post && (showCreateModal.value || editingPost.value)) {
+        upsertIntoActiveList(post)
+      }
       showFullView.value = false
       break
   }
