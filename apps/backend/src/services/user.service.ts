@@ -74,6 +74,7 @@ export class UserService {
     isNewUser: boolean
   }> {
     // Normalize identifiers: lowercase email, remove whitespace from phone
+    // Note: Callers ensure either email or phonenumber exists (validated at route level)
     const normalizedAuthId = authId.email 
       ? { email: authId.email.toLowerCase() } 
       : { phonenumber: authId.phonenumber!.replace(/\s+/g, '') }
