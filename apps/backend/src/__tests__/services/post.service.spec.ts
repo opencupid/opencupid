@@ -192,6 +192,23 @@ describe('PostService.update', () => {
       })
     )
   })
+
+  it('updates visibility when isVisible is provided', async () => {
+    mockPost.post.findFirst.mockResolvedValue(basePost)
+    mockPost.post.update.mockResolvedValue({ ...basePost, isVisible: false })
+
+    await service.update(basePost.id, basePost.postedById, {
+      isVisible: false,
+    })
+
+    expect(mockPost.post.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          isVisible: false,
+        }),
+      })
+    )
+  })
 })
 
 describe('PostService.findNearby', () => {

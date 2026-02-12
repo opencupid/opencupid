@@ -135,6 +135,41 @@ export const usePostStore = defineStore('posts', {
       }
     },
 
+    async hidePost(id: string) {
+      this.isLoading = true
+      this.error = null
+
+      try {
+        const r = await safeApiCall<{data:UpdatePostResponse}>(
+          () => api.patch(`/posts/${id}`, { isVisible: false })
+        )
+        const response = r.data
+
+        if (response.success) {
+          const index = this.myPosts.findIndex(post => post.id === id)
+          if (index !== -1) {
+            this.myPosts[index] = response.post
+          }
+
+          this.posts = this.posts.filter(post => post.id !== id)
+
+          if (this.currentPost?.id === id) {
+            this.currentPost = response.post
+          }
+
+          return response.post
+        } else {
+          this.error = 'Failed to hide post'
+          return null
+        }
+      } catch (error: any) {
+        this.error = error.message || 'Failed to hide post'
+        return null
+      } finally {
+        this.isLoading = false
+      }
+    },
+
     async loadPosts(scope: 'all' | 'nearby' | 'recent' | 'my', options: {
       type?: PostTypeType
       page?: number

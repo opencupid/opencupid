@@ -4,10 +4,12 @@ import { useI18n } from 'vue-i18n'
 import PostList from '../components/PostList.vue'
 import PostEdit from '../components/PostEdit.vue'
 import PostFullView from '../components/PostFullView.vue'
+import { usePostStore } from '../stores/postStore'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faPenToSquare } from '@fortawesome/free-solid-svg-icons'
 
 const { t } = useI18n()
+const postStore = usePostStore()
 
 const activeTab = ref('all')
 const showCreateModal = ref(false)
@@ -66,7 +68,36 @@ const showFullView = ref(false)
 const editingPost = ref(null)
 const selectedPost = ref(null)
 
-function handlePostListIntent(event: string, post?: any) {
+function closePostOverlays() {
+  showFullView.value = false
+  showCreateModal.value = false
+  editingPost.value = null
+  selectedPost.value = null
+}
+
+async function handleDelete(post?: any) {
+  if (!post || !confirm(t('posts.messages.confirm_delete'))) {
+    return
+  }
+
+  const success = await postStore.deletePost(post.id)
+  if (success) {
+    closePostOverlays()
+  }
+}
+
+async function handleHide(post?: any) {
+  if (!post) {
+    return
+  }
+
+  const hidden = await postStore.hidePost(post.id)
+  if (hidden) {
+    closePostOverlays()
+  }
+}
+
+async function handlePostListIntent(event: string, post?: any) {
   switch (event) {
     case 'fullview':
       selectedPost.value = post
@@ -85,17 +116,15 @@ function handlePostListIntent(event: string, post?: any) {
       showFullView.value = true
       break
     case 'close':
-      showFullView.value = false
-      showCreateModal.value = false
-      editingPost.value = null
-      selectedPost.value = null
+      closePostOverlays()
+      break
+    case 'hide':
+      await handleHide(post)
       break
     case 'delete':
-      showFullView.value = false
-      // Optionally handle delete intent here
+      await handleDelete(post)
       break
     case 'saved':
-      // Optionally handle saved intent here
       showFullView.value = false
       break
   }
@@ -121,6 +150,7 @@ function handlePostListIntent(event: string, post?: any) {
             @intent:fullview="post => handlePostListIntent('fullview', post)"
             @intent:edit="post => handlePostListIntent('edit', post)"
             @intent:close="() => handlePostListIntent('close')"
+            @intent:hide="post => handlePostListIntent('hide', post)"
             @intent:delete="post => handlePostListIntent('delete', post)"
             @intent:saved="post => handlePostListIntent('saved', post)"
           />
@@ -143,6 +173,7 @@ function handlePostListIntent(event: string, post?: any) {
             @intent:fullview="post => handlePostListIntent('fullview', post)"
             @intent:edit="post => handlePostListIntent('edit', post)"
             @intent:close="() => handlePostListIntent('close')"
+            @intent:hide="post => handlePostListIntent('hide', post)"
             @intent:delete="post => handlePostListIntent('delete', post)"
             @intent:saved="post => handlePostListIntent('saved', post)"
           />
@@ -157,6 +188,7 @@ function handlePostListIntent(event: string, post?: any) {
             @intent:fullview="post => handlePostListIntent('fullview', post)"
             @intent:edit="post => handlePostListIntent('edit', post)"
             @intent:close="() => handlePostListIntent('close')"
+            @intent:hide="post => handlePostListIntent('hide', post)"
             @intent:delete="post => handlePostListIntent('delete', post)"
             @intent:saved="post => handlePostListIntent('saved', post)"
           />
@@ -171,6 +203,7 @@ function handlePostListIntent(event: string, post?: any) {
             @intent:fullview="post => handlePostListIntent('fullview', post)"
             @intent:edit="post => handlePostListIntent('edit', post)"
             @intent:close="() => handlePostListIntent('close')"
+            @intent:hide="post => handlePostListIntent('hide', post)"
             @intent:delete="post => handlePostListIntent('delete', post)"
             @intent:saved="post => handlePostListIntent('saved', post)"
           />
@@ -234,6 +267,7 @@ function handlePostListIntent(event: string, post?: any) {
           :post="selectedPost"
           @close="handlePostListIntent('close')"
           @edit="handlePostListIntent('edit', $event)"
+          @hide="handlePostListIntent('hide', $event)"
           @delete="handlePostListIntent('delete', $event)"
         />
       </template>

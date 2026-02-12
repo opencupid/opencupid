@@ -86,7 +86,7 @@ export function usePostListViewModel(options: UsePostListOptions) {
   }
 
   const handlePostDelete = async (post: PublicPostWithProfile | OwnerPost) => {
-    if (confirm(t('posts.confirm_delete'))) {
+    if (confirm(t('posts.messages.confirm_delete'))) {
       const success = await postStore.deletePost(post.id)
       if (success) {
         closeFullView()
@@ -153,4 +153,3 @@ export function usePostListViewModel(options: UsePostListOptions) {
     closeEditModal,
   }
 }
-

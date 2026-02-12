@@ -26,6 +26,7 @@ const emit = defineEmits<{
   (e: 'intent:fullview', post: any): void
   (e: 'intent:edit', post: any): void
   (e: 'intent:close'): void
+  (e: 'intent:hide', post: any): void
   (e: 'intent:delete', post: any): void
   (e: 'intent:saved', post: any): void
 }>()
@@ -66,6 +67,9 @@ function handlePostEdit(post: any) {
 }
 function handlePostDelete(post: any) {
   emit('intent:delete', post)
+}
+function handlePostHide(post: any) {
+  emit('intent:hide', post)
 }
 function handlePostSaved(post: any) {
   emit('intent:saved', post)
@@ -129,6 +133,7 @@ function handleClose() {
             :show-details="false"
             @click="() => handlePostClick(post)"
             @edit="() => handlePostEdit(post)"
+            @hide="() => handlePostHide(post)"
             @delete="() => handlePostDelete(post)"
             class="clickable"
           />

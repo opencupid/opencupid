@@ -11,6 +11,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'close'): void
   (e: 'edit', post: PublicPostWithProfile | OwnerPost): void
+  (e: 'hide', post: PublicPostWithProfile | OwnerPost): void
   (e: 'delete', post: PublicPostWithProfile | OwnerPost): void
 }>()
 
@@ -26,6 +27,7 @@ const authStore = useAuthStore()
     :show-details="true"
     :class="{ details: true }"
     @edit="emit('edit', post)"
+    @hide="emit('hide', post)"
     @delete="emit('delete', post)"
   />
 </template>
