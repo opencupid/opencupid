@@ -35,7 +35,12 @@ const appRoutes: FastifyPluginAsync = async fastify => {
       const clientVersion = req.query.v as string | undefined
       
       // Get the latest deployed frontend version from the frontend package.json
-      const frontendPackagePath = path.join(__dirname, '..', '..', '..', '..', 'frontend', 'package.json')
+      // Determine if we're running from dist/ (production) or src/ (dev/test)
+      const isProduction = __dirname.includes('/dist')
+      const repoRoot = isProduction 
+        ? path.join(__dirname, '..', '..', '..') // From dist/ go up to repo root
+        : path.join(__dirname, '..', '..', '..', '..', '..') // From src/api/routes/ go up to repo root
+      const frontendPackagePath = path.join(repoRoot, 'apps', 'frontend', 'package.json')
       const latestVersion = getPackageVersion(frontendPackagePath)
       
       const updateInfo: UpdateAvailableDTO = {
