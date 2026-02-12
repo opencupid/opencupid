@@ -4,8 +4,8 @@
   IMAGE_URL_BASE: 'http://localhost/images',
   NODE_ENV: 'test',
   SENTRY_DSN: '',
-}
+};
 
 (globalThis as any).__APP_VERSION__ = {
   app: '0.5.0',
-}
+};

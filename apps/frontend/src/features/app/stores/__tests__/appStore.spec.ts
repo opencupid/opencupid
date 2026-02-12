@@ -38,7 +38,9 @@ describe('useAppStore - checkUpdateAvailable', () => {
     const result = await store.checkUpdateAvailable()
 
     expect(result.success).toBe(true)
-    expect(result.data?.updateAvailable).toBe(false)
+    if (result.success) {
+      expect(result.data?.updateAvailable).toBe(false)
+    }
     expect(store.updateAvailable).toBe(false)
     expect(store.latestVersion).toBe('0.5.0')
     expect(mockApi.get).toHaveBeenCalledWith('/app/updateavailable', {
@@ -63,7 +65,9 @@ describe('useAppStore - checkUpdateAvailable', () => {
     const result = await store.checkUpdateAvailable()
 
     expect(result.success).toBe(true)
-    expect(result.data?.updateAvailable).toBe(true)
+    if (result.success) {
+      expect(result.data?.updateAvailable).toBe(true)
+    }
     expect(store.updateAvailable).toBe(true)
     expect(store.latestVersion).toBe('0.6.0')
   })
@@ -76,7 +80,9 @@ describe('useAppStore - checkUpdateAvailable', () => {
     const result = await store.checkUpdateAvailable()
 
     expect(result.success).toBe(false)
-    expect(result.message).toBeTruthy()
+    if (!result.success) {
+      expect(result.message).toBeTruthy()
+    }
     expect(store.updateAvailable).toBe(false)
   })
 
