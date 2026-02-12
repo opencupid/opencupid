@@ -73,16 +73,17 @@ export class UserService {
     user: User
     isNewUser: boolean
   }> {
-    // Normalize identifiers: lowercase email, remove whitespace from phone
+    // Normalize identifiers: lowercase email, remove all whitespace from phone
     // Note: Callers ensure either email or phonenumber exists (validated at route level)
     let normalizedAuthId: { email: string } | { phonenumber: string }
     
     if (authId.email) {
       normalizedAuthId = { email: authId.email.toLowerCase() }
     } else if (authId.phonenumber) {
+      // Remove all whitespace characters (spaces, tabs, newlines) from phone number
       normalizedAuthId = { phonenumber: authId.phonenumber.replace(/\s+/g, '') }
     } else {
-      throw new Error('Either email or phonenumber must be provided')
+      throw new Error('Invalid authentication identifier: neither email nor phone number provided (should be validated at route level)')
     }
     
     const authIdField = normalizedAuthId
