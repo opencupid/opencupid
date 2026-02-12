@@ -6,6 +6,7 @@ import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
 import type { PublicPostWithProfile, OwnerPost } from '@zod/post/post.dto'
 
 import IconHide from '@/assets/icons/interface/hide.svg'
+import IconShow from '@/assets/icons/interface/unhide.svg'
 import IconDelete from '@/assets/icons/interface/delete.svg'
 import IconEdit from '@/assets/icons/interface/pencil-2.svg'
 import IconMessage from '@/assets/icons/interface/message.svg'
@@ -17,6 +18,7 @@ import { UseTimeAgo } from '@vueuse/components'
 const props = defineProps<{
   post: PublicPostWithProfile | OwnerPost
   showDetails: boolean
+  dimHidden?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -31,6 +33,8 @@ const authStore = useAuthStore()
 const isOwn = computed(() => {
   return authStore.profileId === props.post.postedById
 })
+
+const isVisible = computed(() => (props.post as any).isVisible !== false)
 
 const hasProfileData = (post: any): post is PublicPostWithProfile => {
   return 'postedBy' in post && post.postedBy != null
@@ -53,7 +57,10 @@ const messageIntent = () => {}
 </script>
 
 <template>
-  <div class="post-wrapper position-relative w-100">
+  <div
+    class="post-wrapper position-relative w-100"
+    :class="{ 'post-wrapper--invisible': isOwn && props.dimHidden && !(post as any).isVisible }"
+  >
     <PostIt class="position-relative p-2" :id="post.id" :variant="isOwn ? 'accent' : ''">
       <template #header>
         <div class="d-flex justify-content-between align-items-center">
@@ -76,7 +83,6 @@ const messageIntent = () => {}
           `post-card--${post.type.toLowerCase()}`,
           {
             'post-card--own': isOwn,
-            'post-card--invisible': isOwn && !(post as any).isVisible,
           },
         ]"
         @click="$emit('click', post)"
@@ -142,9 +148,10 @@ const messageIntent = () => {}
         @click.stop="$emit('hide', post)"
         variant="link-warning"
         size="sm"
-        :title="$t('posts.actions.hide')"
+        :title="isVisible ? $t('posts.actions.hide') : $t('posts.actions.show')"
       >
-        <IconHide class="svg-icon" />
+        <IconHide v-if="isVisible" class="svg-icon" />
+        <IconShow v-else class="svg-icon" />
       </BButton>
     </div>
   </div>
@@ -174,5 +181,8 @@ const messageIntent = () => {}
 }
 .post-location {
   font-size: 0.75rem;
+}
+.post-wrapper--invisible {
+  opacity: 0.75;
 }
 </style>

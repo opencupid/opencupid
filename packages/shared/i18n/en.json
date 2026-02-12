@@ -358,6 +358,7 @@
       "create": "Create Post",
       "edit": "Edit Post",
       "hide": "Hide Post",
+      "show": "Show Post",
       "delete": "Delete Post",
       "save": "Save Post",
       "cancel": "Cancel",

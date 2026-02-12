@@ -51,4 +51,21 @@ describe('postStore', () => {
     expect(store.posts.map(post => post.id)).toEqual(['post-2'])
     expect(store.currentPost).toEqual(hiddenPost)
   })
+
+  it('showPost updates visibility to true and keeps public cache intact', async () => {
+    const store = usePostStore()
+    const visiblePost = { id: 'post-1', isVisible: true } as any
+    store.myPosts = [{ id: 'post-1', isVisible: false } as any]
+    store.posts = [{ id: 'post-2' } as any]
+    store.currentPost = { id: 'post-1', isVisible: false } as any
+    mockApi.patch.mockResolvedValue({ data: { success: true, post: visiblePost } })
+
+    const result = await store.showPost('post-1')
+
+    expect(mockApi.patch).toHaveBeenCalledWith('/posts/post-1', { isVisible: true })
+    expect(result).toEqual(visiblePost)
+    expect(store.myPosts[0].isVisible).toBe(true)
+    expect(store.posts.map(post => post.id)).toEqual(['post-2'])
+    expect(store.currentPost).toEqual(visiblePost)
+  })
 })

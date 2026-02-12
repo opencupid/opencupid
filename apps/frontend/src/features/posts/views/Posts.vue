@@ -91,8 +91,12 @@ async function handleHide(post?: any) {
     return
   }
 
-  const hidden = await postStore.hidePost(post.id)
-  if (hidden) {
+  const isVisible = post?.isVisible !== false
+  const updatedPost = isVisible
+    ? await postStore.hidePost(post.id)
+    : await postStore.showPost(post.id)
+
+  if (updatedPost) {
     closePostOverlays()
   }
 }
@@ -199,7 +203,7 @@ async function handlePostListIntent(event: string, post?: any) {
           <PostList
             scope="my"
             :show-filters="true"
-            :empty-message="$t('posts.no_my_posts')"
+            :empty-message="$t('posts.messages.no_my_posts')"
             @intent:fullview="post => handlePostListIntent('fullview', post)"
             @intent:edit="post => handlePostListIntent('edit', post)"
             @intent:close="() => handlePostListIntent('close')"

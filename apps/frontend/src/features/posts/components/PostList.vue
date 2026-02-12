@@ -131,6 +131,7 @@ function handleClose() {
           <PostCard
             :post="post"
             :show-details="false"
+            :dim-hidden="scope === 'my'"
             @click="() => handlePostClick(post)"
             @edit="() => handlePostEdit(post)"
             @hide="() => handlePostHide(post)"
