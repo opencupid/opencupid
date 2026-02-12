@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import PostList from '../components/PostList.vue'
 import PostEdit from '../components/PostEdit.vue'
@@ -54,22 +54,10 @@ const getCurrentPosition = (): Promise<GeolocationPosition> => {
   })
 }
 
-onMounted(() => {
-  // Check if we already have location permission
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      position => {
-        userLocation.value = {
-          lat: position.coords.latitude,
-          lon: position.coords.longitude,
-        }
-        locationPermission.value = true
-      },
-      () => {
-        locationPermission.value = false
-      },
-      { timeout: 1000 }
-    )
+// Request location only when the Nearby tab is activated
+watch(activeTab, (newTab) => {
+  if (newTab === 'nearby' && !locationPermission.value) {
+    requestLocation()
   }
 })
 
