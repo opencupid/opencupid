@@ -35,6 +35,10 @@ export class PostService {
         content: data.content,
         type: data.type,
         postedById: profileId,
+        country: data.country ?? null,
+        cityName: data.cityName ?? null,
+        lat: data.lat ?? null,
+        lon: data.lon ?? null,
       },
       ...postedByInclude,
     })
@@ -121,10 +125,21 @@ export class PostService {
         isDeleted: false,
         isVisible: true,
         ...(type ? { type } : {}),
-        postedBy: {
-          lat: { gte: minLat, lte: maxLat },
-          lon: { gte: minLon, lte: maxLon },
-        },
+        OR: [
+          // Posts with their own location
+          {
+            lat: { gte: minLat, lte: maxLat },
+            lon: { gte: minLon, lte: maxLon },
+          },
+          // Posts without location — fall back to profile location
+          {
+            lat: null,
+            postedBy: {
+              lat: { gte: minLat, lte: maxLat },
+              lon: { gte: minLon, lte: maxLon },
+            },
+          },
+        ],
       },
       ...postedByInclude,
       orderBy: { createdAt: 'desc' },
@@ -172,6 +187,10 @@ export class PostService {
         ...(data.content !== undefined && { content: data.content }),
         ...(data.type !== undefined && { type: data.type }),
         ...(data.isVisible !== undefined && { isVisible: data.isVisible }),
+        ...(data.country !== undefined && { country: data.country }),
+        ...(data.cityName !== undefined && { cityName: data.cityName }),
+        ...(data.lat !== undefined && { lat: data.lat }),
+        ...(data.lon !== undefined && { lon: data.lon }),
         updatedAt: new Date(),
       },
       ...postedByInclude,

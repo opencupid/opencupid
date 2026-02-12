@@ -3,6 +3,16 @@ import { PostSchema, PostTypeSchema, ProfileImageSchema } from '../generated'
 import { PostType } from '@prisma/client'
 import { ProfileSummarySchema, PublicProfileSchema } from '../profile/profile.dto'
 import { DbMinimalProfileSchema } from '../profile/profile.db'
+import { LocationSchema } from '@zod/dto/location.dto'
+
+// Post location schema (nullable, for display)
+export const PostLocationSchema = z.object({
+  country: z.string().nullable(),
+  cityName: z.string().nullable(),
+  lat: z.number().nullable(),
+  lon: z.number().nullable(),
+})
+export type PostLocation = z.infer<typeof PostLocationSchema>
 
 // Base fields that are public
 const publicPostFields = {
@@ -12,6 +22,10 @@ const publicPostFields = {
   createdAt: true,
   updatedAt: true,
   postedById: true,
+  country: true,
+  cityName: true,
+  lat: true,
+  lon: true,
 } as const
 
 // Owner fields (includes all public fields)
@@ -40,6 +54,7 @@ export type OwnerPost = z.infer<typeof OwnerPostSchema>
 // Extended public post with profile info
 export const PublicPostWithProfileSchema = PublicPostSchema.extend({
   postedBy: ProfileSummarySchema,
+  location: PostLocationSchema.nullable().optional(),
 })
 export type PublicPostWithProfile = z.infer<typeof PublicPostWithProfileSchema>
 
@@ -47,6 +62,10 @@ export type PublicPostWithProfile = z.infer<typeof PublicPostWithProfileSchema>
 export const CreatePostPayloadSchema = z.object({
   content: z.string().min(1).max(2000),
   type: PostTypeSchema,
+  country: z.string().nullable().optional(),
+  cityName: z.string().nullable().optional(),
+  lat: z.number().nullable().optional(),
+  lon: z.number().nullable().optional(),
 })
 export type CreatePostPayload = z.infer<typeof CreatePostPayloadSchema>
 
@@ -55,6 +74,10 @@ export const UpdatePostPayloadSchema = z.object({
   content: z.string().min(1).max(2000).optional(),
   type: PostTypeSchema.optional(),
   isVisible: z.boolean().optional(),
+  country: z.string().nullable().optional(),
+  cityName: z.string().nullable().optional(),
+  lat: z.number().nullable().optional(),
+  lon: z.number().nullable().optional(),
 })
 export type UpdatePostPayload = z.infer<typeof UpdatePostPayloadSchema>
 

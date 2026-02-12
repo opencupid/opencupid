@@ -10,6 +10,7 @@ import IconDelete from '@/assets/icons/interface/delete.svg'
 import IconEdit from '@/assets/icons/interface/pencil-2.svg'
 import IconMessage from '@/assets/icons/interface/message.svg'
 import PostTypeBadge from './PostTypeBadge.vue'
+import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
 
 import { UseTimeAgo } from '@vueuse/components'
 
@@ -35,6 +36,13 @@ const hasProfileData = (post: any): post is PublicPostWithProfile => {
   return 'postedBy' in post && post.postedBy != null
 }
 
+const postLocation = computed(() => {
+  if ('location' in props.post && props.post.location) {
+    return props.post.location
+  }
+  return null
+})
+
 const messageIntent = () => {}
 </script>
 
@@ -42,7 +50,16 @@ const messageIntent = () => {}
   <div class="post-wrapper position-relative w-100">
     <PostIt class="position-relative p-2" :id="post.id" :variant="isOwn ? 'accent' : ''">
       <template #header>
-        <div class="text-end">
+        <div class="d-flex justify-content-between align-items-center">
+          <span v-if="postLocation" class="post-location text-muted">
+            <LocationLabel
+              :location="postLocation"
+              :show-country-label="false"
+              :show-city="true"
+              :show-country-icon="true"
+            />
+          </span>
+          <span v-else></span>
           <PostTypeBadge :type="post.type" />
         </div>
       </template>
@@ -148,5 +165,8 @@ const messageIntent = () => {}
 }
 .post-meta {
   font-size: 0.8rem;
+}
+.post-location {
+  font-size: 0.75rem;
 }
 </style>

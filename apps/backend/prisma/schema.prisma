@@ -391,6 +391,12 @@ model Post {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Location (optional, pre-filled from profile)
+  country   String?
+  cityName  String?
+  lat       Float?
+  lon       Float?
+
   // Relations
   postedBy  Profile @relation(fields: [postedById], references: [id], onDelete: Cascade)
   postedById String

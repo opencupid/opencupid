@@ -369,6 +369,7 @@
     "labels": {
       "type": "Post Type",
       "content": "Content",
+      "location": "Location",
       "visibility": "Visible to others",
       "updated": "Last updated"
     },
