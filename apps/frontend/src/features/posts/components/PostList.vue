@@ -13,6 +13,7 @@ interface Props {
   scope?: 'all' | 'nearby' | 'recent' | 'my'
   nearbyParams?: { lat: number; lon: number; radius: number }
   emptyMessage?: string
+  isActive?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -20,6 +21,7 @@ const props = withDefaults(defineProps<Props>(), {
   showFilters: true,
   scope: 'all',
   emptyMessage: 'No posts found',
+  isActive: true,
 })
 
 const emit = defineEmits<{

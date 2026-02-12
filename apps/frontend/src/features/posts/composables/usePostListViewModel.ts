@@ -1,4 +1,4 @@
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import type {
@@ -13,6 +13,7 @@ interface UsePostListOptions {
   scope?: 'all' | 'nearby' | 'recent' | 'my'
   type?: PostTypeType
   nearbyParams?: { lat: number; lon: number; radius: number }
+  isActive?: boolean
 }
 
 export function usePostListViewModel(options: UsePostListOptions) {
@@ -110,6 +111,16 @@ export function usePostListViewModel(options: UsePostListOptions) {
   }
 
   watch(
+    () => options.isActive,
+    isActive => {
+      if (isActive) {
+        loadPosts()
+      }
+    },
+    { immediate: true }
+  )
+
+  watch(
     () => options.type,
     newType => {
       selectedType.value = newType || ''
@@ -120,16 +131,12 @@ export function usePostListViewModel(options: UsePostListOptions) {
   watch(
     () => options.nearbyParams,
     () => {
-      if (options.scope === 'nearby') {
+      if (options.scope === 'nearby' && options.isActive) {
         loadPosts()
       }
     },
     { deep: true }
   )
-
-  onMounted(() => {
-    loadPosts()
-  })
 
   return {
     postStore,

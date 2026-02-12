@@ -149,6 +149,7 @@ async function handlePostListIntent(event: string, post?: any) {
         <BTab id="all" :title="t('posts.filters.all')" lazy>
           <PostList
             scope="all"
+            :is-active="activeTab === 'all'"
             :show-filters="true"
             :empty-message="$t('posts.messages.no_posts')"
             @intent:fullview="post => handlePostListIntent('fullview', post)"
@@ -171,6 +172,7 @@ async function handlePostListIntent(event: string, post?: any) {
           <PostList
             v-else
             scope="nearby"
+            :is-active="activeTab === 'nearby'"
             :nearby-params="nearbyParams"
             :show-filters="true"
             :empty-message="$t('posts.messages.no_nearby')"
@@ -187,6 +189,7 @@ async function handlePostListIntent(event: string, post?: any) {
         <BTab id="recent" :title="t('posts.filters.recent')" lazy>
           <PostList
             scope="recent"
+            :is-active="activeTab === 'recent'"
             :show-filters="true"
             :empty-message="$t('posts.messages.no_recent')"
             @intent:fullview="post => handlePostListIntent('fullview', post)"
@@ -202,6 +205,7 @@ async function handlePostListIntent(event: string, post?: any) {
         <BTab id="my" :title="t('posts.my_posts')" lazy>
           <PostList
             scope="my"
+            :is-active="activeTab === 'my'"
             :show-filters="true"
             :empty-message="$t('posts.messages.no_my_posts')"
             @intent:fullview="post => handlePostListIntent('fullview', post)"
