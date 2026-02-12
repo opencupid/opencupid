@@ -18,7 +18,7 @@ import type { ConversationSummary, MessageDTO } from '@zod/messaging/messaging.d
 import type { LoginUser, SettingsUser } from '@zod/user/user.dto'
 import type { PublicCity } from '@zod/dto/city.dto'
 import type { LocationDTO } from '@zod/dto/location.dto'
-import type { VersionDTO } from '@zod/dto/version.dto'
+import type { VersionDTO, UpdateAvailableDTO } from '@zod/dto/version.dto'
 import type { DatingPreferencesDTO, SocialMatchFilterDTO } from '@zod/match/filters.dto'
 import { AuthErrorCodes } from '@zod/user/auth.dto'
 import { type InteractionEdgePair, type InteractionEdge, type InteractionStats } from './interaction/interaction.dto'
@@ -44,6 +44,7 @@ export type CitiesResponse = ApiSuccess<{ cities: PublicCity[] }>
 export type CityResponse = ApiSuccess<{ city: PublicCity }>
 export type LocationResponse = ApiSuccess<{ location: LocationDTO }>
 export type VersionResponse = ApiSuccess<{ version: VersionDTO }>
+export type UpdateAvailableResponse = ApiSuccess<{ updateInfo: UpdateAvailableDTO }>
 
 export type MessagesResponse = ApiSuccess<{ messages: MessageDTO[] }>
 export type ConversationsResponse = ApiSuccess<{ conversations: ConversationSummary[] }>

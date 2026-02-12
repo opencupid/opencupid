@@ -5,7 +5,7 @@ import path from 'path'
 
 import { appConfig } from '@/lib/appconfig'
 import { LocationSchema, type LocationDTO } from '@zod/dto/location.dto'
-import { VersionSchema, type VersionDTO } from '@zod/dto/version.dto'
+import { VersionSchema, type VersionDTO, UpdateAvailableSchema, type UpdateAvailableDTO } from '@zod/dto/version.dto'
 import type { ApiError } from '@shared/zod/apiResponse.dto'
 import { rateLimitConfig } from '../helpers'
 import { getPackageVersion } from '../../../../../packages/shared/version'
@@ -25,6 +25,30 @@ const appRoutes: FastifyPluginAsync = async fastify => {
     } catch (err) {
       fastify.log.error(err)
       const out: ApiError = { success: false, message: 'Failed to read version info' }
+      return reply.code(500).send(out)
+    }
+  })
+
+  fastify.get('/updateavailable', async (req, reply) => {
+    try {
+      // Get the current frontend version from the client (via query param)
+      const clientVersion = req.query.v as string | undefined
+      
+      // Get the latest deployed frontend version from the frontend package.json
+      const frontendPackagePath = path.join(__dirname, '..', '..', '..', '..', 'frontend', 'package.json')
+      const latestVersion = getPackageVersion(frontendPackagePath)
+      
+      const updateInfo: UpdateAvailableDTO = {
+        updateAvailable: clientVersion !== undefined && clientVersion !== latestVersion,
+        currentVersion: clientVersion || 'unknown',
+        latestVersion,
+      }
+      
+      const payload = UpdateAvailableSchema.parse(updateInfo)
+      return reply.code(200).send({ success: true, updateInfo: payload })
+    } catch (err) {
+      fastify.log.error(err)
+      const out: ApiError = { success: false, message: 'Failed to check update availability' }
       return reply.code(500).send(out)
     }
   })
