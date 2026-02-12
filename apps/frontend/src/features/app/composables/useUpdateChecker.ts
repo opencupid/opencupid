@@ -17,7 +17,6 @@ export function useUpdateChecker() {
     if (result.success && result.data?.updateAvailable) {
       console.log('Frontend update available:', result.data.latestVersion)
       // Reload the page to get the new version
-      // Use location.reload(true) to bypass cache
       window.location.reload()
     }
   }
