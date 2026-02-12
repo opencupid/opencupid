@@ -75,9 +75,15 @@ export class UserService {
   }> {
     // Normalize identifiers: lowercase email, remove whitespace from phone
     // Note: Callers ensure either email or phonenumber exists (validated at route level)
-    const normalizedAuthId = authId.email 
-      ? { email: authId.email.toLowerCase() } 
-      : { phonenumber: authId.phonenumber!.replace(/\s+/g, '') }
+    let normalizedAuthId: { email: string } | { phonenumber: string }
+    
+    if (authId.email) {
+      normalizedAuthId = { email: authId.email.toLowerCase() }
+    } else if (authId.phonenumber) {
+      normalizedAuthId = { phonenumber: authId.phonenumber.replace(/\s+/g, '') }
+    } else {
+      throw new Error('Either email or phonenumber must be provided')
+    }
     
     const authIdField = normalizedAuthId
     const userExists = await prisma.user.findUnique({ where: { ...authIdField } })
