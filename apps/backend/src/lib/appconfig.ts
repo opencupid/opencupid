@@ -24,6 +24,12 @@ export const configSchema = z.object({
   SMTP_PASS: z.string(),
   EMAIL_FROM: z.string(),
 
+  LISTMONK_URL: z.string().url(),
+  LISTMONK_ADMIN_USER: z.string(),
+  LISTMONK_ADMIN_PASSWORD: z.string(),
+  LISTMONK_DB_PASSWORD: z.string(),
+  LISTMONK_LIST_ID: z.coerce.number().default(1),
+
   MEDIA_UPLOAD_DIR: z.string(),
   IMAGE_URL_BASE: z.string(),
   IMAGE_MAX_SIZE: z.coerce.number(),

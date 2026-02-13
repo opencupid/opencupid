@@ -25,6 +25,45 @@ services:
     ports:
       - '6379:6379'
 
+  listmonk-db:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: listmonk
+      POSTGRES_USER: listmonk
+      POSTGRES_PASSWORD: listmonk_dev_secret
+    ports:
+      - '5433:5432'
+    volumes:
+      - listmonk_data:/var/lib/postgresql/data
+
+  listmonk:
+    image: listmonk/listmonk:latest
+    restart: unless-stopped
+    depends_on:
+      - listmonk-db
+    command: [sh, -c, "./listmonk --install --idempotent --yes --config '' && ./listmonk --upgrade --yes --config '' && ./listmonk --config ''"]
+    environment:
+      LISTMONK_app__address: 0.0.0.0:9000
+      LISTMONK_db__user: listmonk
+      LISTMONK_db__password: listmonk_dev_secret
+      LISTMONK_db__database: listmonk
+      LISTMONK_db__host: listmonk-db
+      LISTMONK_db__port: 5432
+      LISTMONK_db__ssl_mode: disable
+      LISTMONK_db__max_open: 25
+      LISTMONK_db__max_idle: 25
+      LISTMONK_db__max_lifetime: 300s
+      TZ: Etc/UTC
+      LISTMONK_ADMIN_USER: admin
+      LISTMONK_ADMIN_PASSWORD: listmonk_dev_pass
+    volumes:
+      - listmonk_uploads:/listmonk/uploads:rw
+    ports:
+      - '9000:9000'
+
 
 volumes:
   postgres_data:
+  listmonk_data:
+  listmonk_uploads:

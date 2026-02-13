@@ -162,6 +162,7 @@ model User {
   updatedAt               DateTime   @updatedAt
   lastLoginAt             DateTime?
   language                String?    @default("en")
+  newsletterOptIn         Boolean    @default(false)
   roles                   UserRole[] @default([user])
 
   // relations
