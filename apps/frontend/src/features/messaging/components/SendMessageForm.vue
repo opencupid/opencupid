@@ -109,7 +109,7 @@ async function handleSendMessage() {
           @keydown="handleKeyPress"
           :placeholder="$t('messaging.message_input_placeholder')"
         />
-        <div class="form-text text-muted d-flex justify-content-between align-items-center">
+        <div class="form-text text-muted d-flex justify-content-end align-items-center gap-2">
           <BButton 
             v-if="sendMode === 'click'"
             variant="primary" 
@@ -122,16 +122,13 @@ async function handleSendMessage() {
           <BDropdown 
             variant="link" 
             no-caret 
-            toggle-class="text-decoration-none p-0" 
+            toggle-class="text-decoration-none p-0 text-muted" 
             size="sm"
             menu-class="send-mode-menu"
             end
           >
             <template #button-content>
-              <small class="text-primary">
-                {{ sendMode === 'enter' ? $t('messaging.send_mode_press_enter') : $t('messaging.send_mode_click') }}
-                <i class="bi bi-three-dots-vertical"></i>
-              </small>
+              <i class="bi bi-three-dots-vertical fs-5"></i>
             </template>
             <BDropdownItem @click="setSendMode('enter')" :active="sendMode === 'enter'">
               <i class="bi bi-record-circle-fill" v-if="sendMode === 'enter'"></i>
