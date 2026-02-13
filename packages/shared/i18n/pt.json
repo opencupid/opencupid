@@ -225,7 +225,10 @@
     "send_message_heading": "Enviar mensagem",
     "no_messages_cta": "Encontra pessoas com quem falar",
     "no_messages_title": "Ainda não tens mensagens",
-    "no_messages_placeholder": "As tuas conversas terão lugar aqui."
+    "no_messages_placeholder": "As tuas conversas terão lugar aqui.",
+    "send_mode_press_enter": "Pressiona Enter para enviar",
+    "send_mode_click": "Clique para enviar",
+    "message_input_hint_click": "Clique ENVIAR para enviar"
   },
   "onboarding": {
     "country_placeholder": "País",

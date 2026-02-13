@@ -201,14 +201,11 @@
     "social_intro_hint": "Leave this empty if you want to fill this in later.",
     "photos_title": "I look like...",
     "photos_subtitle": "Add a photo of yourself so others can see you.",
-
     "age_title": "I was born...",
     "age_subtitle": "I've been on this planet since",
-
     "gender_subtitle": "I identify as...",
     "relationship_title": "I am...",
     "relationship_subtitle": "My family situation is",
-
     "dating_intro_title": "I would like to find:",
     "dating_intro_subtitle": "This will be visible only to people who are looking for a relationship as well, not to those who are just looking for friends or social connections.",
     "dating_intro_placeholder": "Tell a bit about the kind of relationship you are looking for",
@@ -217,11 +214,9 @@
       "title": "All set!",
       "profile_hint": "See what other people see about me.",
       "profile_button": "My profile",
-
       "browse_hint": "See who else is on here",
       "browse_button": "Meet people"
     },
-
     "goals": {
       "socializing": "Socializing, hanging out, traveling, and meeting new people",
       "dating": "Dating, finding a partner, and exploring romantic relationships."
@@ -234,7 +229,6 @@
       "finish": "Finish",
       "cancel": "Nevermind"
     },
-
     "next_button": "Next",
     "back_button": "Back",
     "finish_button": "Finish"
@@ -296,7 +290,10 @@
     "send_message_heading": "Send Message",
     "no_messages_cta": "Find people",
     "no_messages_title": "No messages yet",
-    "no_messages_placeholder": "Your conversations will take place here."
+    "no_messages_placeholder": "Your conversations will take place here.",
+    "send_mode_press_enter": "Press enter to send",
+    "send_mode_click": "Click to send",
+    "message_input_hint_click": "Click SEND to send"
   },
   "settings": {
     "title": "Settings",

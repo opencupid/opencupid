@@ -1,7 +1,7 @@
 import type WebSocket from 'ws'
 import { FastifyInstance, FastifyPluginAsync } from 'fastify'
 import { sendError } from '../helpers'
-import { MessageService } from '@/services/messaging.service'
+import { MessageService, cleanMessageForNotification } from '@/services/messaging.service'
 import { WebPushService } from '@/services/webpush.service'
 
 import { z } from 'zod'
@@ -166,7 +166,7 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
       if (!isWsBroadcasted) {
         await notifierService.notifyProfile(profileId, 'new_message', {
           sender: messageDTO.sender.publicName,
-          message: messageDTO.content,
+          message: cleanMessageForNotification(messageDTO.content, 100),
           link: `${appConfig.FRONTEND_URL}/inbox`,
         })
       // webPushService.send(messageDTO)
