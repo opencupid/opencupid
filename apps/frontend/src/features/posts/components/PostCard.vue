@@ -24,6 +24,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'click', post: PublicPostWithProfile | OwnerPost): void
   (e: 'edit', post: PublicPostWithProfile | OwnerPost): void
+  (e: 'contact', post: PublicPostWithProfile | OwnerPost): void
   (e: 'hide', post: PublicPostWithProfile | OwnerPost): void
   (e: 'delete', post: PublicPostWithProfile | OwnerPost): void
 }>()
@@ -53,7 +54,6 @@ const postLocation = computed(() => {
   return null
 })
 
-const messageIntent = () => {}
 </script>
 
 <template>
@@ -114,7 +114,7 @@ const messageIntent = () => {}
           size="lg"
           class="contact-btn btn-icon-lg position-absolute bottom-0 end-0 m-2"
           key="save"
-          @click="messageIntent"
+          @click.stop="$emit('contact', post)"
           variant="primary"
           :title="$t('posts.actions.contact')"
         >
