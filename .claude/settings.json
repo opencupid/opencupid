@@ -1,6 +1,16 @@
 {
   "enabledPlugins": {
     "frontend-design@claude-code-plugins": true,
-    "ralph-wiggum@claude-code-plugins": true
+    "ralph-wiggum@claude-code-plugins": true,
+    "feature-dev@claude-code-plugins": true
+  },
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-playwright"
+      ]
+    }
   }
 }
