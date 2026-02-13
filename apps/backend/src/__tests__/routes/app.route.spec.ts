@@ -207,8 +207,8 @@ describe('GET /updateavailable', () => {
 
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
-    // When client version is unknown but we have a valid latest version, update is available
-    expect(reply.payload.updateInfo.updateAvailable).toBe(true)
+    // When client version is not provided, updateAvailable is false
+    expect(reply.payload.updateInfo.updateAvailable).toBe(false)
     expect(reply.payload.updateInfo.currentVersion).toBe('unknown')
     expect(reply.payload.updateInfo.latestVersion).toBeTruthy()
   })

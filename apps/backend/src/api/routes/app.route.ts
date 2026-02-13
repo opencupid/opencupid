@@ -46,13 +46,8 @@ const appRoutes: FastifyPluginAsync = async fastify => {
       const frontendPackagePath = path.join(repoRoot, 'apps', 'frontend', 'package.json')
       const latestVersion = getPackageVersion(frontendPackagePath)
       
-      // If client doesn't provide a version, treat it as needing an update
-      const updateAvailable = !clientVersion || clientVersion === 'unknown' 
-        ? latestVersion !== 'unknown' // Update available if we have a valid latest version
-        : clientVersion !== latestVersion
-      
       const updateInfo: UpdateAvailableDTO = {
-        updateAvailable,
+        updateAvailable: clientVersion !== undefined && clientVersion !== latestVersion,
         currentVersion: clientVersion || 'unknown',
         latestVersion,
       }
