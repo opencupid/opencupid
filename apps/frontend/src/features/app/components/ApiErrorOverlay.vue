@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { BOverlay } from 'bootstrap-vue-next'
-import ApiErrorImage from '@/assets/images/api-error.png'
+import ApiErrorImage from '@/assets/images/api-error.png?inline'
 
 defineProps<{
   show: boolean
