@@ -9,6 +9,9 @@ const msg: any = {
   senderId: 'p1',
   content: 'hi',
   createdAt: new Date(),
+  messageType: 'text/plain',
+  sender: { id: 'p1', publicName: 'Me', profileImages: [] },
+  attachment: null,
 }
 
 const participant: any = {
