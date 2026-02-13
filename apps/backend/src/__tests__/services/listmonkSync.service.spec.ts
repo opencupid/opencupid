@@ -76,9 +76,10 @@ describe('ListmonkSyncService', () => {
       expect(mockFetch).toHaveBeenCalledTimes(2)
       
       // Check getSubscriber call
+      const expectedQuery = encodeURIComponent("email LIKE 'test@example.com'")
       expect(mockFetch).toHaveBeenNthCalledWith(
         1,
-        'http://localhost:9000/api/subscribers?query=subscribers.email=\'test%40example.com\'',
+        `http://localhost:9000/api/subscribers?query=${expectedQuery}`,
         expect.objectContaining({
           method: 'GET',
         })

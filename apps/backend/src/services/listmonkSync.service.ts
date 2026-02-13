@@ -61,10 +61,12 @@ export class ListmonkSyncService {
 
   private async getSubscriber(email: string): Promise<ListmonkSubscriber | null> {
     try {
-      // Encode email for URL safety
+      // Use the query parameter to search for subscriber by email
+      // Listmonk's API accepts: ?query=email LIKE 'user@example.com'
       const encodedEmail = encodeURIComponent(email)
+      const encodedQuery = encodeURIComponent(`email LIKE '${email}'`)
       const response = await fetch(
-        `${this.baseUrl}/api/subscribers?query=subscribers.email='${encodedEmail}'`,
+        `${this.baseUrl}/api/subscribers?query=${encodedQuery}`,
         {
           method: 'GET',
           headers: {
