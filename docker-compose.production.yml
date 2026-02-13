@@ -67,23 +67,6 @@ services:
     env_file:
       - .env
 
-  certbot-renew:
-    image: certbot/certbot
-    restart: "no"
-    volumes:
-      - ${CERTBOT_ETCDIR}:/etc/letsencrypt
-      - certbot-webroot:/var/www/html
-    env_file:
-      - .env
-    entrypoint: certbot
-    command:
-      - renew
-      - --webroot
-      - -w
-      - /var/www/html
-      - --deploy-hook
-      - "echo 'Certificate renewed successfully'"
-
   # this obtains the initial cert from letsencrypt. Should be run once manually.
   certbot-init:
     image: certbot/certbot
@@ -100,6 +83,11 @@ services:
     entrypoint: certbot
     command:
       - certonly
+      - --webroot
+      - -w
+      - /var/www/html
+      - -d
+      - ${DOMAIN}
       - -d
       - ${DOMAIN}
       - --email

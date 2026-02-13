@@ -73,39 +73,11 @@ function ensureMap() {
   // OSM tiles + required attribution
   const tilesUrl = `${__APP_CONFIG__.API_BASE_URL}/tiles/{z}/{x}/{y}.png`
 
-  const tileLayer = L.tileLayer(tilesUrl, {
+  L.tileLayer(tilesUrl, {
     // L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    // Improve tile loading reliability - use a plain gray tile as fallback
-    errorTileUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNiIgZmlsbD0iIzk5OTk5OSI+VGlsZSBub3QgZm91bmQ8L3RleHQ+PC9zdmc+',
-    // Keep old tiles while loading new ones
-    keepBuffer: 2,
-    // More aggressive prefetching to reduce missing tiles
-    updateWhenZooming: false,
-    // Increase the number of tiles to load around the visible area
-    updateWhenIdle: true
   }).addTo(map)
-
-  // Add error handling for tile loading
-  tileLayer.on('tileerror', (error: any) => {
-    console.warn('Tile loading error:', error)
-    // Could emit an event to notify parent component of tile loading issues
-  })
-
-  // Add loading event handlers to monitor tile loading
-  let tilesLoading = 0
-  tileLayer.on('tileloadstart', () => {
-    tilesLoading++
-  })
-  
-  tileLayer.on('tileload', () => {
-    tilesLoading--
-  })
-  
-  tileLayer.on('tileerror', () => {
-    tilesLoading--
-  })
 
   markersLayer.addTo(map)
   emit('map-ready', map)

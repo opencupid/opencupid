@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from 'vue'
+import { nextTick, ref } from 'vue'
 
-import { type MessageDTO } from '@zod/messaging/messaging.dto'
 import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 
 import IconMessage from '@/assets/icons/interface/message.svg'
 import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
 import SendMessageForm from '@/features/messaging/components/SendMessageForm.vue'
+import { useMessageSentState } from '../composables/useMessageSentState'
 
 const showModal = defineModel<boolean>()
 
@@ -18,8 +18,13 @@ const emit = defineEmits<{
   (e: 'sent'): void
 }>()
 
-const messageSent = ref(false)
 const messageInput = ref()
+const { messageSent, handleMessageSent, resetMessageSent } = useMessageSentState({
+  onCompleted: () => {
+    showModal.value = false
+    emit('sent')
+  },
+})
 
 const handleModalShown = () => {
   nextTick(() => {
@@ -27,20 +32,6 @@ const handleModalShown = () => {
       messageInput.value?.focusTextarea()
     }, 50)
   })
-}
-
-const handleMessageSent = (message: MessageDTO | null) => {
-  messageSent.value = true
-  setTimeout(() => {
-    console.log('Hiding modal after message sent')
-    showModal.value = false
-    emit('sent')
-  }, 3000)
-  if (message) {
-    console.log('Message sent:', message)
-  } else {
-    console.log('Message sending failed or was cancelled.')
-  }
 }
 
 </script>
@@ -59,7 +50,7 @@ const handleMessageSent = (message: MessageDTO | null) => {
     @shown="handleModalShown"
     @hidden="
       () => {
-        messageSent = false
+        resetMessageSent()
       }
     "
   >

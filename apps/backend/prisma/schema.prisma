@@ -79,6 +79,11 @@ enum UserRole {
   moderator
 }
 
+enum PostType {
+  OFFER
+  REQUEST
+}
+
 model City {
   id      String @id @default(cuid())
   name    String
@@ -231,6 +236,9 @@ model Profile {
 
   hiddenProfiles HiddenProfile[] @relation("HiddenProfiles")
   hiddenBy       HiddenProfile[] @relation("HiddenBy")
+
+  // Posts
+  posts Post[]
 }
 
 model LocalizedProfileField {
@@ -372,4 +380,29 @@ model PushSubscription {
 
   deviceInfo String? // optional: "Firefox", "Chrome", etc.
   lastSeen   DateTime?
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  content   String
+  type      PostType
+  isDeleted Boolean  @default(false)
+  isVisible Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Location (optional, pre-filled from profile)
+  country   String?
+  cityName  String?
+  lat       Float?
+  lon       Float?
+
+  // Relations
+  postedBy  Profile @relation(fields: [postedById], references: [id], onDelete: Cascade)
+  postedById String
+
+  @@index([postedById])
+  @@index([type])
+  @@index([createdAt])
+  @@index([isVisible, isDeleted])
 }
