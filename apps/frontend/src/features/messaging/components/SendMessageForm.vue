@@ -110,12 +110,15 @@ async function handleSendMessage() {
           :placeholder="$t('messaging.message_input_placeholder')"
         />
         <div class="form-text text-muted d-flex justify-content-between align-items-center">
-          <div v-if="sendMode === 'click'">
-            <BButton variant="primary" size="sm" @click="handleSendMessage" :disabled="content.trim() === ''">
-              {{ $t('messaging.send_message_button').toUpperCase() }}
-            </BButton>
-          </div>
-          <div v-else></div>
+          <BButton 
+            v-if="sendMode === 'click'"
+            variant="primary" 
+            size="sm" 
+            @click="handleSendMessage" 
+            :disabled="content.trim() === ''"
+          >
+            {{ $t('messaging.send_message_button').toUpperCase() }}
+          </BButton>
           <BDropdown 
             variant="link" 
             no-caret 
@@ -131,7 +134,7 @@ async function handleSendMessage() {
               </small>
             </template>
             <BDropdownItem @click="setSendMode('enter')" :active="sendMode === 'enter'">
-              <i class="bi bi-record-circle" v-if="sendMode === 'enter'"></i>
+              <i class="bi bi-record-circle-fill" v-if="sendMode === 'enter'"></i>
               <i class="bi bi-circle" v-else></i>
               {{ $t('messaging.send_mode_press_enter') }}
             </BDropdownItem>
