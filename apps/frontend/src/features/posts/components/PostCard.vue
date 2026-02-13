@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, inject, ref, type Ref } from 'vue'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import PostIt from '@/features/shared/ui/PostIt.vue'
 import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
 import type { PublicPostWithProfile, OwnerPost } from '@zod/post/post.dto'
+import type { OwnerProfile } from '@zod/profile/profile.dto'
 
 import IconHide from '@/assets/icons/interface/hide.svg'
 import IconShow from '@/assets/icons/interface/unhide.svg'
@@ -20,6 +21,9 @@ const props = defineProps<{
   showDetails: boolean
   dimHidden?: boolean
 }>()
+
+const ownerProfile = inject<Ref<OwnerProfile>>('ownerProfile')
+const viewerLocation = ref(ownerProfile?.value?.location)
 
 const emit = defineEmits<{
   (e: 'click', post: PublicPostWithProfile | OwnerPost): void
@@ -66,6 +70,7 @@ const postLocation = computed(() => {
         <div class="d-flex justify-content-between align-items-center">
           <span v-if="postLocation" class="post-location text-muted">
             <LocationLabel
+              :viewerLocation="viewerLocation"
               :location="postLocation"
               :show-country-label="false"
               :show-city="true"
