@@ -280,6 +280,9 @@ importers:
       '@fontsource/nunito':
         specifier: ^5.2.6
         version: 5.2.6
+      '@fontsource/reenie-beanie':
+        specifier: ^5.2.6
+        version: 5.2.6
       '@fontsource/rubik':
         specifier: ^5.2.6
         version: 5.2.6
@@ -361,6 +364,9 @@ importers:
       remeda:
         specifier: ^2.24.0
         version: 2.30.0
+      timeago.js:
+        specifier: ^4.0.2
+        version: 4.0.2
       vue:
         specifier: ^3.5.17
         version: 3.5.17(typescript@5.8.3)
@@ -392,6 +398,9 @@ importers:
       '@eslint/js':
         specifier: ^9.34.0
         version: 9.34.0
+      '@iconify/json':
+        specifier: ^2.2.382
+        version: 2.2.382
       '@pinia/testing':
         specifier: ^1.0.2
         version: 1.0.2(pinia@3.0.3(typescript@5.8.3)(vue@3.5.17(typescript@5.8.3)))
@@ -1050,6 +1059,9 @@ packages:
   '@fontsource/nunito@5.2.6':
     resolution: {integrity: sha512-FjSPmzBFZ3za4w2USmCWrxDaZ1fTWowSpV9DXfs7Ll/150BI48epE6E69MtOx8GqOPimHNkVUkES22lqDw+bug==}
 
+  '@fontsource/reenie-beanie@5.2.6':
+    resolution: {integrity: sha512-hSXBI3Bpjy5Kpb8pOWuLhmeLvyNYbK1UjuRjig1FpZAhDriKJfX1JpkqaI9IFQfa8Y+WGEYmikpPS93jnBlQLA==}
+
   '@fontsource/rubik@5.2.6':
     resolution: {integrity: sha512-KNY87CIXAzmKMfL8gnQV0nbePn9g/kG3tF4GJoUEASSz+ECFWYoPir8TSySblYfXTInDL/kHJm6CMrrEW/U/ZA==}
 
@@ -1132,6 +1144,12 @@ packages:
   '@humanwhocodes/retry@0.4.3':
     resolution: {integrity: sha512-bV0Tgo9K4hfPCek+aMAn81RppFKv2ySDQeMoSZuvTASywNTnVJCArCZE2FWqpvIatKu7VMRLWlR1EazvVhDyhQ==}
     engines: {node: '>=18.18'}
+
+  '@iconify/json@2.2.382':
+    resolution: {integrity: sha512-1UT0ouWPVXNteS+kaQjtDvxKy/swWqB84fq9b+xbpE7nhgfak7ljYneWSXTDU+SyfL112F9978p7Mf3C3Q/8LQ==}
+
+  '@iconify/types@2.0.0':
+    resolution: {integrity: sha512-+wluvCrRhXrhyOmRDJ3q8mux9JkKy5SJ/v8ol2tu4FVjyYvtEzkc/3pK15ET6RKg4b4w4BmTk1+gsCUhf21Ykg==}
 
   '@img/sharp-darwin-arm64@0.34.3':
     resolution: {integrity: sha512-ryFMfvxxpQRsgZJqBd4wsttYQbCxsJksrv9Lw/v798JcQ8+w84mBWuXwl+TT0WJ/WrYOLaYpwQXi3sA9nTIaIg==}
@@ -6374,6 +6392,9 @@ packages:
   through@2.3.8:
     resolution: {integrity: sha512-w89qg7PI8wAdvX60bMDP+bFoD5Dvhm9oLheFp5O4a2QF0cSBGsBX4qZmadPMvVqlLJBBci+WqGGOAPvcDeNSVg==}
 
+  timeago.js@4.0.2:
+    resolution: {integrity: sha512-a7wPxPdVlQL7lqvitHGGRsofhdwtkoSXPGATFuSOA2i1ZNQEPLrGnj68vOp2sOJTCFAQVXPeNMX/GctBaO9L2w==}
+
   tiny-lru@11.3.3:
     resolution: {integrity: sha512-/ShxBZOgHXDdZi7FxajcsH0MfcBqwP+t7i4T3PGjI//NUA5aCpC7cB9bbdAYrAeQLBUTJfg2rk191fzZGeo7DA==}
     engines: {node: '>=12'}
@@ -7757,6 +7778,8 @@ snapshots:
 
   '@fontsource/nunito@5.2.6': {}
 
+  '@fontsource/reenie-beanie@5.2.6': {}
+
   '@fontsource/rubik@5.2.6': {}
 
   '@fortawesome/fontawesome-common-types@6.7.2': {}
@@ -7844,6 +7867,13 @@ snapshots:
   '@humanwhocodes/retry@0.3.1': {}
 
   '@humanwhocodes/retry@0.4.3': {}
+
+  '@iconify/json@2.2.382':
+    dependencies:
+      '@iconify/types': 2.0.0
+      pathe: 1.1.2
+
+  '@iconify/types@2.0.0': {}
 
   '@img/sharp-darwin-arm64@0.34.3':
     optionalDependencies:
@@ -13556,6 +13586,8 @@ snapshots:
       real-require: 0.2.0
 
   through@2.3.8: {}
+
+  timeago.js@4.0.2: {}
 
   tiny-lru@11.3.3: {}
 

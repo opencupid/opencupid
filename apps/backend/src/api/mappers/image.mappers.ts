@@ -18,7 +18,7 @@ function getSignedVariants(image: MinimalProfileImage) {
  * Add the public URL to the image object and sanitize it
  * by removing any non-public fields
  */
-export function toPublicProfileImage(image: ProfileImage): PublicProfileImage {
+export function toPublicProfileImage(image: MinimalProfileImage): PublicProfileImage {
   const variants = getSignedVariants(image)
   return PublicProfileImageSchema.parse({ ...image, variants })
 }

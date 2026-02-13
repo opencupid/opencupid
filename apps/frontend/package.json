@@ -21,6 +21,7 @@
     "@fontsource/caveat": "^5.2.6",
     "@fontsource/fredoka-one": "^5.2.5",
     "@fontsource/nunito": "^5.2.6",
+    "@fontsource/reenie-beanie": "^5.2.6",
     "@fontsource/rubik": "^5.2.6",
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
     "@fortawesome/free-brands-svg-icons": "^6.7.2",
@@ -48,6 +49,7 @@
     "pinia": "^3.0.3",
     "qrcode": "^1.5.4",
     "remeda": "^2.24.0",
+    "timeago.js": "^4.0.2",
     "vue": "^3.5.17",
     "vue-3-slider-component": "^1.0.2",
     "vue-draggable-next": "^2.2.1",
@@ -60,6 +62,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.34.0",
+    "@iconify/json": "^2.2.382",
     "@pinia/testing": "^1.0.2",
     "@playwright/test": "^1.53.2",
     "@popperjs/core": "^2.11.8",
