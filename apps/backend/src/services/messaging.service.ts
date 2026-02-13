@@ -203,8 +203,9 @@ export class MessageService {
     content: string
   ): Promise<{ convoId: string; message: Message }> {
 
-    // Clean and sanitize user input
-    const cleanContent = cleanUserInput(content).trim()
+    // Clean and sanitize user input, then convert newlines to <br> tags
+    const sanitized = cleanUserInput(content)
+    const cleanContent = sanitized.replace(/\n/g, '<br>').trim()
 
     if (!cleanContent) {
       throw {
@@ -349,8 +350,12 @@ export function simpleMarkdownToHtml(input: string): string {
 }
 
 function cleanUserInput(input: string): string {
-  const dom = new JSDOM('')
-  const div = dom.window.document.createElement('div')
-  div.innerHTML = input
-  return div.textContent || ''
+  // Sanitize HTML by escaping special characters while preserving newlines
+  return input
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;')
 }
