@@ -14,6 +14,15 @@ defineEmits<{
 }>()
 
 const { t } = useI18n()
+
+// Strip HTML tags and convert to single line for preview
+function cleanMessagePreview(content: string): string {
+  return content
+    .replace(/<br\s*\/?>/gi, ' ')  // Replace <br> tags with spaces
+    .replace(/<[^>]+>/g, '')        // Strip any other HTML tags
+    .replace(/\s+/g, ' ')           // Collapse multiple spaces
+    .trim()
+}
 </script>
 
 <template>
@@ -36,7 +45,7 @@ const { t } = useI18n()
           <small
             class="last-message text-truncate text-nowrap pe-2"
             v-if="convo.lastMessage"
-            >{{ convo.lastMessage.content }}</small
+            >{{ cleanMessagePreview(convo.lastMessage.content) }}</small
           >
         </div>
         <div class="flex-shrink-0 me-2 ">
