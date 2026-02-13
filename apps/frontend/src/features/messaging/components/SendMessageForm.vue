@@ -11,6 +11,7 @@ import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 import TagList from '@/features/shared/profiledisplay/TagList.vue'
 import LanguageList from '@/features/shared/profiledisplay/LanguageList.vue'
 import StoreErrorOverlay from '@/features/shared/ui/StoreErrorOverlay.vue'
+import IconMenuDotsVert from '@/assets/icons/interface/menu-dots-vert.svg'
 import { useMessageStore } from '../stores/messageStore'
 
 const messageStore = useMessageStore()
@@ -128,7 +129,7 @@ async function handleSendMessage() {
             end
           >
             <template #button-content>
-              <i class="bi bi-three-dots-vertical fs-5"></i>
+              <IconMenuDotsVert class="svg-icon-lg fs-4" />
             </template>
             <BDropdownItem @click="setSendMode('enter')" :active="sendMode === 'enter'">
               <i class="bi bi-record-circle-fill" v-if="sendMode === 'enter'"></i>
