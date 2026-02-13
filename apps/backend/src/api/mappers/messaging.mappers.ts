@@ -1,14 +1,11 @@
-import type { Prisma } from '@prisma/client';
 import type {
   ConversationParticipantWithConversationSummary,
   ConversationSummary,
-  DbMessageInConversation,
   MessageAttachmentDTO,
   MessageDTO,
-  MessageInConversation,
 } from '@zod/messaging/messaging.dto';
 import { mapProfileSummary } from './profile.mappers';
-import { canSendMessageInConversation } from '../../services/messaging.service';
+import { canSendMessageInConversation, type MessageWithSendInclude } from '../../services/messaging.service';
 import { appConfig } from '@/lib/appconfig'
 import { signUrl } from '../../lib/media';
 
@@ -58,7 +55,7 @@ export function mapConversationParticipantToSummary(
 }
 
 export function mapMessageDTO(
-  m: Prisma.MessageGetPayload<{}>,
+  m: MessageWithSendInclude,
   p: ConversationParticipantWithConversationSummary
 ): MessageDTO {
   const sender = extractSenderProfile(p, m.senderId)
@@ -69,29 +66,53 @@ export function mapMessageDTO(
     content: m.content,
     messageType: m.messageType,
     createdAt: m.createdAt,
+    attachment: m.attachment ? mapAttachmentDTO(m.attachment) : null,
     sender: mapProfileSummary(sender!)
   }
 }
 
-export function mapAttachmentDTO(dbAttachment: { filePath: string }): MessageAttachmentDTO {
+export function mapAttachmentDTO(dbAttachment: {
+  id: string
+  filePath: string
+  mimeType: string
+  fileSize: number | null
+  duration: number | null
+  createdAt: Date
+}): MessageAttachmentDTO {
   const urlBase = appConfig.IMAGE_URL_BASE
-  const { filePath, ...rest } = dbAttachment
-  const a = {
-    url: signUrl(`${urlBase}/${filePath}`),
-    ...rest,
+  return {
+    id: dbAttachment.id,
+    url: signUrl(`${urlBase}/${dbAttachment.filePath}`),
+    mimeType: dbAttachment.mimeType,
+    fileSize: dbAttachment.fileSize,
+    duration: dbAttachment.duration,
+    createdAt: dbAttachment.createdAt,
   }
-  return a
 }
 
 export function mapMessageForMessageList(
-  m: DbMessageInConversation, profileId: string
+  m: {
+    id: string
+    conversationId: string
+    senderId: string
+    content: string
+    messageType: string
+    createdAt: Date
+    sender: { id: string; publicName: string; profileImages: any[] }
+    attachment: { id: string; filePath: string; mimeType: string; fileSize: number | null; duration: number | null; createdAt: Date } | null
+  },
+  profileId: string
 ): MessageDTO {
-  console.error('Mapping message for list:', m.senderId, profileId)
-  const { attachment, ...msg } = m
   return {
-    attachment: attachment ? mapAttachmentDTO(attachment) : null,
+    id: m.id,
+    conversationId: m.conversationId,
+    senderId: m.senderId,
+    content: m.content,
+    messageType: m.messageType,
+    createdAt: m.createdAt,
+    sender: mapProfileSummary(m.sender),
+    attachment: m.attachment ? mapAttachmentDTO(m.attachment) : null,
     isMine: m.senderId === profileId,
-    ...msg,
   }
 }
 

@@ -2,10 +2,8 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import type {
   ConversationParticipantWithConversationSummary,
-  DbMessageInConversation,
-  MessageInConversation,
 } from '@zod/messaging/messaging.dto'
-import { Conversation, Message } from '@zod/generated'
+import { Conversation } from '@zod/generated'
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
 import i18next from 'i18next'
 import { JSDOM } from 'jsdom'
@@ -45,6 +43,8 @@ const sendInclude = {
   },
   attachment: true,
 } satisfies Prisma.MessageInclude
+
+export type MessageWithSendInclude = Prisma.MessageGetPayload<{ include: typeof sendInclude }>
 
 export class MessageService {
   private static instance: MessageService
@@ -126,7 +126,7 @@ export class MessageService {
    * @param conversationId - The ID of the conversation to list messages for.
    * @returns An array of messages in the conversation, including sender profile images.
    */
-  async listMessagesForConversation(conversationId: string): Promise<DbMessageInConversation[]> {
+  async listMessagesForConversation(conversationId: string) {
     return await prisma.message.findMany({
       where: {
         conversationId,
@@ -211,7 +211,7 @@ export class MessageService {
       fileSize?: number
       duration?: number
     }
-  ): Promise<{ convoId: string; message: Message }> {
+  ): Promise<{ convoId: string; message: MessageWithSendInclude }> {
 
     // Clean and sanitize user input for text messages, then convert newlines to <br> tags
     const cleanContent = messageType === 'text/plain'
@@ -331,7 +331,7 @@ export class MessageService {
 
 export type SendMessageSuccessResponse = {
   conversation: ConversationParticipantWithConversationSummary
-  message: MessageInConversation
+  message: MessageWithSendInclude
 }
 
 export type SendMessageErrorResponse = {

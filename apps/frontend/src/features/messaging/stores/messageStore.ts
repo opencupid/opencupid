@@ -7,8 +7,7 @@ import type {
   ConversationSummary,
   MessageDTO,
   MessageInConversation,
-  SendMessagePayload,
-  SendVoiceMessagePayload
+  SendMessagePayload
 } from '@zod/messaging/messaging.dto'
 import type {
   MessagesResponse,
@@ -151,10 +150,9 @@ export const useMessageStore = defineStore('message', {
       content: string
     ): Promise<StoreResponse<MessageDTO> | StoreError> {
       try {
-        const payload: SendMessagePayload = { 
-          profileId: recipientProfileId, 
+        const payload: SendMessagePayload = {
+          profileId: recipientProfileId,
           content,
-          messageType: 'text/plain'
         }
         this.isSending = true
         this.error = null

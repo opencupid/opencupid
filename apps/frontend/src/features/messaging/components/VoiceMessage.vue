@@ -13,11 +13,15 @@ const props = defineProps<{
 const audioRef = ref<HTMLAudioElement | null>(null)
 const isPlaying = ref(false)
 const currentTime = ref(0)
+const audioDuration = ref(0)
 const isLoading = ref(true)
 const error = ref<string | null>(null)
 
-// Computed properties
-const duration = computed(() => props.attachment.duration || 0)
+// Precompute stable waveform bar heights so they don't re-randomize on render
+const waveformHeights = Array.from({ length: 20 }, () => Math.random() * 16 + 4)
+
+// Use server-provided duration, falling back to audio element duration once loaded
+const duration = computed(() => props.attachment.duration || audioDuration.value || 0)
 const progress = computed(() =>
   duration.value > 0 ? (currentTime.value / duration.value) * 100 : 0
 )
@@ -32,6 +36,9 @@ const formatTime = (seconds: number): string => {
 // Audio event handlers
 const handleLoadedData = () => {
   isLoading.value = false
+  if (audioRef.value && isFinite(audioRef.value.duration)) {
+    audioDuration.value = audioRef.value.duration
+  }
 }
 
 const handleTimeUpdate = () => {
@@ -74,12 +81,6 @@ const seek = (event: Event) => {
   audioRef.value.currentTime = seekTime
   currentTime.value = seekTime
 }
-
-// // Construct audio URL - this should match your backend media serving setup
-// const audioUrl = computed(() => {
-//   // Assuming the backend serves media files from a /media endpoint
-//   return `/api/media/${props.attachment.filePath}`
-// })
 
 onMounted(() => {
   if (audioRef.value) {
@@ -139,10 +140,10 @@ onUnmounted(() => {
           <!-- Visual waveform placeholder -->
           <div class="waveform-bars d-flex align-items-center gap-1">
             <div
-              v-for="i in 20"
+              v-for="(h, i) in waveformHeights"
               :key="i"
               class="waveform-bar"
-              :style="{ height: `${Math.random() * 16 + 4}px` }"
+              :style="{ height: `${h}px` }"
             ></div>
           </div>
         </div>

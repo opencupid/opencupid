@@ -52,7 +52,7 @@ const DbMessageInConversationSchema = MessageSchema.pick({
   sender: ProfileSummarySchema,
   attachment: DbMessageAttachmentDTOSchema.nullable().optional(),
 })
-export type DbMessageInConversation = z.infer<typeof MessageInConversationSchema>
+export type DbMessageInConversation = z.infer<typeof DbMessageInConversationSchema>
 
 
 // this is used in the db layer
@@ -139,7 +139,6 @@ export type ConversationParticipantWithConversationSummary =
 export const SendMessagePayloadSchema = z.object({
   profileId: z.string().cuid(),
   content: z.string().min(1),
-  messageType: z.string().default('text/plain'),
 })
 
 export type SendMessagePayload = z.infer<typeof SendMessagePayloadSchema>
@@ -149,7 +148,7 @@ export const SendVoiceMessagePayloadSchema = z.object({
   profileId: z.string().cuid(),
   content: z.string().default(''), // Can be empty for voice messages
   messageType: z.literal('audio/voice'),
-  duration: z.number().int().min(1).max(120), // Duration in seconds, max 2 minutes
+  duration: z.number().int().min(1), // Duration in seconds; max enforced by backend config
 })
 
 export type SendVoiceMessagePayload = z.infer<typeof SendVoiceMessagePayloadSchema>
