@@ -21,9 +21,8 @@ import { SendMessagePayloadSchema, SendVoiceMessagePayloadSchema } from '@zod/me
 import { InteractionService } from '../../services/interaction.service'
 import { notifierService } from '@/services/notifier.service'
 import { appConfig } from '@/lib/appconfig'
-import { uploadTmpDir } from '@/lib/media'
 import path from 'path'
-import fs, { createWriteStream } from 'fs'
+import { createWriteStream } from 'fs'
 import { promises as fsPromises } from 'fs'
 
 // Route params for ID lookups
@@ -140,7 +139,7 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
     const body = SendMessagePayloadSchema.safeParse(req.body)
     if (!body.success) return sendError(reply, 401, 'Invalid parameters')
 
-    const { profileId, content, messageType } = body.data
+    const { profileId, content } = body.data
 
     try {
       const { convoId, message } = await fastify.prisma.$transaction(async (tx) => {
@@ -149,7 +148,7 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
           senderProfileId,
           profileId,
           content,
-          messageType
+          'text/plain'
         )
       })
 
@@ -168,10 +167,12 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
 
       const messageDTO = mapMessageDTO(message, conversation)
 
+      const messageWithMine = { ...messageDTO, isMine: true }
+
       const response: SendMessageResponse = {
         success: true,
         conversation: mapConversationParticipantToSummary(conversation, senderProfileId),
-        message: mapMessageForMessageList(messageDTO, senderProfileId),
+        message: messageWithMine,
       }
 
       reply.code(200).send(response)
@@ -188,7 +189,6 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
           message: messageDTO.content,
           link: `${appConfig.FRONTEND_URL}/inbox`,
         })
-      // webPushService.send(messageDTO)
       }
     } catch (error: any) {
       return sendError(reply, 403, error)
@@ -228,7 +228,7 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
         profileId: fields.profileId,
         content: fields.content || '',
         messageType: 'audio/voice',
-        duration: parseInt(fields.duration),
+        duration: Number(fields.duration) || 0,
       })
 
       if (!payload.success) {
@@ -297,11 +297,12 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
         }
 
         const messageDTO = mapMessageDTO(message, conversation)
+        const messageWithMine = { ...messageDTO, isMine: true }
 
         const response: SendMessageResponse = {
           success: true,
           conversation: mapConversationParticipantToSummary(conversation, senderProfileId),
-          message: mapMessageForMessageList(messageDTO, senderProfileId),
+          message: messageWithMine,
         }
 
         reply.code(200).send(response)

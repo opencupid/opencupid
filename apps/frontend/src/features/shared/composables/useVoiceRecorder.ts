@@ -36,11 +36,10 @@ export function useVoiceRecorder(maxDuration: number = 120) {
     try {
       error.value = null
       permissionDenied.value = false
-      state.value = 'recording'
       duration.value = 0
       chunks = []
 
-      // Request microphone access
+      // Request microphone access (may show permission prompt)
       stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
@@ -48,6 +47,9 @@ export function useVoiceRecorder(maxDuration: number = 120) {
           autoGainControl: true
         }
       })
+
+      // Microphone access granted - now enter recording state
+      state.value = 'recording'
 
       // Create MediaRecorder instance
       mediaRecorder = new MediaRecorder(stream, {
