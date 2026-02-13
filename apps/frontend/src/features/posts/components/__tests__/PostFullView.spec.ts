@@ -10,14 +10,27 @@ vi.mock('@/features/auth/stores/authStore', () => ({
   useAuthStore: () => ({ profileId: 'profile-1' }),
 }))
 vi.mock('@/features/publicprofile/composables/useMessageSentState', () => ({
-  useMessageSentState: () => ({
-    messageSent: ref(false),
-    handleMessageSent: vi.fn(),
-    resetMessageSent: vi.fn(),
-  }),
+  useMessageSentState: () => {
+    const messageSent = ref(false)
+    return {
+      messageSent,
+      handleMessageSent: vi.fn(() => {
+        messageSent.value = true
+      }),
+      resetMessageSent: vi.fn(() => {
+        messageSent.value = false
+      }),
+    }
+  },
 }))
 vi.mock('@/features/messaging/components/SendMessageForm.vue', () => ({
-  default: { template: '<div class="message-form" />' },
+  default: {
+    template: `
+      <div class="message-form">
+        <button class="send-message" @click="$emit('message:sent', { id: 'm-1' })">send</button>
+      </div>
+    `,
+  },
 }))
 vi.mock('@/assets/icons/interface/message.svg', () => ({
   default: { template: '<span />' },
@@ -89,5 +102,22 @@ describe('PostFullView', () => {
     await nextTick()
 
     expect(wrapper.find('.message-form').exists()).toBe(true)
+  })
+
+  it('replaces inline send form with success state after message is sent', async () => {
+    const wrapper = mount(PostFullView, {
+      props: { post },
+      global: { stubs },
+    })
+
+    await wrapper.find('button.contact').trigger('click')
+    await nextTick()
+    expect(wrapper.find('.message-form').exists()).toBe(true)
+
+    await wrapper.find('button.send-message').trigger('click')
+    await nextTick()
+
+    expect(wrapper.find('.message-form').exists()).toBe(false)
+    expect(wrapper.text()).toContain('messaging.message_sent_success')
   })
 })
