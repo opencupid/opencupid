@@ -29,7 +29,7 @@ const { t } = useI18n()
         <p class="fs-6">
           {{ t('uicomponents.connection_error.description') }}
         </p>
-        <img :src="ApiErrorImage" alt="" />
+        <img :src="ApiErrorImage" alt="API connection error illustration" />
       </div>
     </template>
   </BOverlay>
