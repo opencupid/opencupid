@@ -60,7 +60,10 @@ export const useMessageStore = defineStore('message', {
       }
       // If this is the active conversation, append to visible messages
       if (this.activeConversation?.conversationId === message.conversationId) {
-        this.messages.push(message)
+        // Check if message already exists to prevent duplicates
+        if (!this.messages.find(m => m.id === message.id)) {
+          this.messages.push(message)
+        }
       } else {
         // Emit notification for new message
         // this occurs here instead of the AppNotifier.vue handling it directly
@@ -160,7 +163,10 @@ export const useMessageStore = defineStore('message', {
           ...this.conversations.filter(c => c.conversationId !== conversation.conversationId),
         ]
         if (this.activeConversation?.conversationId === conversation.conversationId) {
-          this.messages.push(message)
+          // Check if message already exists to prevent duplicates
+          if (!this.messages.find(m => m.id === message.id)) {
+            this.messages.push(message)
+          }
         }
         return storeSuccess(message)
       } catch (error: any) {
