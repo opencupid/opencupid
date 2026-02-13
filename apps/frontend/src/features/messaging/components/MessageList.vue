@@ -26,7 +26,7 @@ watch(
     <div
       v-for="msg in messages"
       :key="msg.id"
-      class="message mb-2 me-2 message text-wrap animate__animated animate__zoomIn user-select-none"
+      class="message mb-2 me-2 pre-line text-wrap animate__animated animate__zoomIn user-select-none"
       :class="{
         'bg-info align-self-start': !msg.isMine,
         'bg-secondary align-self-end': msg.isMine,
