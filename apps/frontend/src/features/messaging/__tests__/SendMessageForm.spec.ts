@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
+import type { PublicProfileWithContext } from '@zod/profile/profile.dto'
 
 vi.mock('@/features/shared/profiledisplay/TagList.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('@/features/shared/profiledisplay/LanguageList.vue', () => ({ default: { template: '<div />' } }))
@@ -16,13 +17,34 @@ describe('SendMessageForm', () => {
     localStorage.clear()
   })
 
-  const mockRecipient = {
+  const mockRecipient: PublicProfileWithContext = {
     id: '123',
     publicName: 'Test User',
-    tags: [],
+    isDatingActive: false,
     languages: [],
+    tags: [],
     profileImages: [],
-    goals: []
+    location: {
+      country: 'US',
+      cityName: 'Test City',
+      lat: null,
+      lon: null,
+    },
+    introSocial: '',
+    introDating: '',
+    conversation: null,
+    interactionContext: {
+      likedByMe: false,
+      isMatch: false,
+      passedByMe: false,
+      canLike: false,
+      canPass: false,
+      canDate: false,
+      haveConversation: false,
+      canMessage: true,
+      conversationId: null,
+      initiated: false,
+    },
   }
 
   it('defaults to "enter" send mode', () => {
