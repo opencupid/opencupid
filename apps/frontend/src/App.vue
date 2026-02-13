@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import Navbar from '@/features/app/components/Navbar.vue'
 import AppNotifier from '@/features/app/components/AppNotifier.vue'
+import UpdateBanner from '@/features/app/components/UpdateBanner.vue'
 import { useI18nStore } from './store/i18nStore'
 import { useCountries } from './features/shared/composables/useCountries'
 import { useLanguages } from './features/shared/composables/useLanguages'
@@ -31,6 +32,7 @@ useUpdateChecker()
 
 <template>
   <!-- <ViewportSizeDebug class="position-absolute bg-dark" /> -->
+  <UpdateBanner />
   <Navbar />
   <RouterView />
   <AppNotifier />

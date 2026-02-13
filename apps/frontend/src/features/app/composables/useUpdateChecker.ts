@@ -3,7 +3,7 @@ import { useAppStore } from '../stores/appStore'
 
 /**
  * Composable to periodically check for frontend updates
- * Checks every 5 minutes and reloads the page when an update is available
+ * Checks every 5 minutes and sets appStore.updateAvailable when an update is detected
  */
 export function useUpdateChecker() {
   const appStore = useAppStore()
@@ -16,8 +16,8 @@ export function useUpdateChecker() {
     
     if (result.success && result.data?.updateAvailable) {
       console.log('Frontend update available:', result.data.latestVersion)
-      // Reload the page to get the new version
-      window.location.reload()
+      // The UpdateBanner component will display the notification
+      // and allow the user to reload when ready
     }
   }
 
