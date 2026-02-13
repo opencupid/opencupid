@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, watch, watchEffect } from 'vue'
+import { ref, watch, watchEffect, computed } from 'vue'
 import { funnel } from 'remeda'
 
 import { useLocalStore } from '@/store/localStore'
+import type { SendMode } from '@/store/localStore'
 
 import { type MessageDTO } from '@zod/messaging/messaging.dto'
 import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
@@ -56,6 +57,20 @@ defineExpose({
   focusTextarea,
 })
 
+// Send mode preference
+const sendMode = computed(() => localStore.getSendMode)
+
+const handleKeyPress = (event: KeyboardEvent) => {
+  if (sendMode.value === 'enter' && event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault()
+    handleSendMessage()
+  }
+}
+
+const setSendMode = (mode: SendMode) => {
+  localStore.setSendMode(mode)
+}
+
 async function handleSendMessage() {
   const trimmedContent = content.value.trim()
   if (trimmedContent === '') return
@@ -91,13 +106,49 @@ async function handleSendMessage() {
           rows="1"
           max-rows="5"
           no-resize
-          @keyup.enter="handleSendMessage"
+          @keydown="handleKeyPress"
           :placeholder="$t('messaging.message_input_placeholder')"
         />
-        <div class="form-text text-muted d-flex justify-content-end">
-          <small>{{ $t('messaging.message_input_hint') }}</small>
+        <div class="form-text text-muted d-flex justify-content-between align-items-center">
+          <div v-if="sendMode === 'click'">
+            <BButton variant="primary" size="sm" @click="handleSendMessage" :disabled="content.trim() === ''">
+              {{ $t('messaging.send_message_button').toUpperCase() }}
+            </BButton>
+          </div>
+          <div v-else></div>
+          <BDropdown 
+            variant="link" 
+            no-caret 
+            toggle-class="text-decoration-none p-0" 
+            size="sm"
+            menu-class="send-mode-menu"
+            end
+          >
+            <template #button-content>
+              <small class="text-primary">
+                {{ sendMode === 'enter' ? $t('messaging.send_mode_press_enter') : $t('messaging.send_mode_click') }}
+                <i class="bi bi-three-dots-vertical"></i>
+              </small>
+            </template>
+            <BDropdownItem @click="setSendMode('enter')" :active="sendMode === 'enter'">
+              <i class="bi bi-record-circle" v-if="sendMode === 'enter'"></i>
+              <i class="bi bi-circle" v-else></i>
+              {{ $t('messaging.send_mode_press_enter') }}
+            </BDropdownItem>
+            <BDropdownItem @click="setSendMode('click')" :active="sendMode === 'click'">
+              <i class="bi bi-record-circle-fill" v-if="sendMode === 'click'"></i>
+              <i class="bi bi-circle" v-else></i>
+              {{ $t('messaging.send_mode_click') }}
+            </BDropdownItem>
+          </BDropdown>
         </div>
       </BFormGroup>
     </div>
   </div>
 </template>
+
+<style scoped>
+.send-mode-menu {
+  min-width: 200px;
+}
+</style>

@@ -182,7 +182,10 @@
     "their_turn": "Sie sind dran",
     "no_messages_cta": "Menschen finden, mit denen du reden kannst",
     "no_messages_title": "Noch keine Nachrichten",
-    "no_messages_placeholder": "Deine Gespräche finden hier statt."
+    "no_messages_placeholder": "Deine Gespräche finden hier statt.",
+    "send_mode_press_enter": "Drücke Enter zum Senden",
+    "send_mode_click": "Klicken zum Senden",
+    "message_input_hint_click": "Klicke SENDEN zum Senden"
   },
   "onboarding": {
     "country_placeholder": "Land",

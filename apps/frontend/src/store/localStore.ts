@@ -3,11 +3,14 @@ import { defineStore } from 'pinia'
 import { bus } from '@/lib/bus'
 import type { ProfileScope } from '@zod/profile/profile.dto'
 
+export type SendMode = 'enter' | 'click'
+
 export interface LocalState {
   messageDrafts: Record<string, string>
   language: string |null
   theme: string
   currentScope: ProfileScope | null
+  sendMode: SendMode
 }
 
 export const useLocalStore = defineStore('local', {
@@ -16,12 +19,14 @@ export const useLocalStore = defineStore('local', {
     language: null,
     theme: 'light',
     currentScope: null,
+    sendMode: 'enter',
   }),
   getters: {
     getLanguage: state => state.language,
     getTheme: state => state.theme,
     getCurrentScope: state => state.currentScope,
     getMessageDraft: state => (id: string) => state.messageDrafts[id] || '',
+    getSendMode: state => state.sendMode,
   },
   actions: {
     setMessageDraft(profileId: string, message: string) {
@@ -44,6 +49,8 @@ export const useLocalStore = defineStore('local', {
       if (theme) this.theme = theme
       const scope = localStorage.getItem('currentScope')
       if (scope) this.currentScope = scope as ProfileScope
+      const sendMode = localStorage.getItem('sendMode')
+      if (sendMode === 'enter' || sendMode === 'click') this.sendMode = sendMode
 
       bus.on('auth:logout', this.cleanUp)
     },
@@ -52,6 +59,7 @@ export const useLocalStore = defineStore('local', {
       this.language = null
       this.theme = 'light'
       this.currentScope = null
+      this.sendMode = 'enter'
       localStorage.clear()
     },
     setLanguage(lang: string) {
@@ -66,6 +74,10 @@ export const useLocalStore = defineStore('local', {
       this.currentScope = scope
       if (scope) localStorage.setItem('currentScope', scope)
       else localStorage.removeItem('currentScope')
+    },
+    setSendMode(mode: SendMode) {
+      this.sendMode = mode
+      localStorage.setItem('sendMode', mode)
     }
     // setFlashMessage(message: string, type: string) {
     //   this.flashMessage = {
