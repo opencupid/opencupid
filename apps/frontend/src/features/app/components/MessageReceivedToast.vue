@@ -20,12 +20,12 @@ const cleanMessageContent = computed(() => {
     .replace(/\s+/g, ' ')            // Collapse multiple spaces
     .trim()
   
-  // Truncate at 300 chars, breaking at word boundary
-  if (cleaned.length > 300) {
-    cleaned = cleaned.substring(0, 300)
+  // Truncate at 100 chars, breaking at word boundary
+  if (cleaned.length > 100) {
+    cleaned = cleaned.substring(0, 100)
     // Find last space to break at word boundary
     const lastSpace = cleaned.lastIndexOf(' ')
-    if (lastSpace > 250) {  // Only break at word if we're close enough
+    if (lastSpace > 80) {  // Only break at word if we're close enough
       cleaned = cleaned.substring(0, lastSpace)
     }
     cleaned += '...'
