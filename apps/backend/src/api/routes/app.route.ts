@@ -1,6 +1,5 @@
 import { FastifyPluginAsync } from 'fastify'
 import { WebServiceClient } from '@maxmind/geoip2-node'
-import fs from 'fs'
 import path from 'path'
 
 import { appConfig } from '@/lib/appconfig'
@@ -34,17 +33,8 @@ const appRoutes: FastifyPluginAsync = async fastify => {
       // Get the current frontend version from the client (via query param)
       const clientVersion = req.query.v as string | undefined
       
-      // Get the latest deployed frontend version from the frontend package.json
-      // Check if we're running from compiled dist/ or source src/
-      // The __dirname in dist/ will be .../apps/backend/dist
-      // The __dirname in src/ will be .../apps/backend/src/api/routes
-      const runningFromDist = path.basename(__dirname) === 'dist' || 
-                              path.basename(path.dirname(__dirname)) === 'dist'
-      const repoRoot = runningFromDist
-        ? path.join(__dirname, '..', '..', '..') // From dist/ go up to repo root
-        : path.join(__dirname, '..', '..', '..', '..', '..') // From src/api/routes/ go up to repo root
-      const frontendPackagePath = path.join(repoRoot, 'apps', 'frontend', 'package.json')
-      const latestVersion = getPackageVersion(frontendPackagePath)
+      // Get the latest deployed frontend version (baked in at build time)
+      const latestVersion = __FRONTEND_VERSION__
       
       const updateInfo: UpdateAvailableDTO = {
         updateAvailable: clientVersion !== undefined && clientVersion !== latestVersion,

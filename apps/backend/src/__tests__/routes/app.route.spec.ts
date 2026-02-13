@@ -9,6 +9,9 @@ vi.mock('@maxmind/geoip2-node', () => ({
   WebServiceClient: vi.fn(() => mockMaxMindClient)
 }))
 
+// Mock the global __FRONTEND_VERSION__ constant
+vi.stubGlobal('__FRONTEND_VERSION__', '0.6.2')
+
 import appRoutes from '../../api/routes/app.route'
 import { MockFastify, MockReply } from '../../test-utils/fastify'
 
