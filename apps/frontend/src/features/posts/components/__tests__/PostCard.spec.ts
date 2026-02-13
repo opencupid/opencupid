@@ -43,13 +43,20 @@ describe('PostCard', () => {
           type: 'OFFER',
           content: 'visible',
           isVisible: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          isDeleted: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          country: null,
+          cityName: null,
+          lat: null,
+          lon: null,
         },
       },
       global: {
         stubs,
-        config: { globalProperties: { $t: (k: string) => k } },
+        mocks: {
+          $t: (key: string) => key,
+        },
       },
     })
 
@@ -67,13 +74,20 @@ describe('PostCard', () => {
           type: 'OFFER',
           content: 'hidden',
           isVisible: false,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          isDeleted: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          country: null,
+          cityName: null,
+          lat: null,
+          lon: null,
         },
       },
       global: {
         stubs,
-        config: { globalProperties: { $t: (k: string) => k } },
+        mocks: {
+          $t: (key: string) => key,
+        },
       },
     })
 
