@@ -120,6 +120,9 @@ async function handleSendMessage() {
           >
             {{ $t('messaging.send_message_button').toUpperCase() }}
           </BButton>
+          <small v-else class="text-muted">
+            {{ $t('messaging.send_mode_press_enter') }}
+          </small>
           <BDropdown 
             variant="link" 
             no-caret 
