@@ -9,8 +9,34 @@
         "."
       ]
     },
-    "my-mcp-server-622c2184": {
-      "url": "http://localhost:9999/sse"
+    "io.github.github/github-mcp-server": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "gallery": "https://api.mcp.github.com",
+      "version": "0.30.3"
     },
-  }
+    "microsoft/playwright-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
+      ],
+      "gallery": "https://api.mcp.github.com",
+      "version": "0.0.1-seed"
+    },
+    "io.github.ChromeDevTools/chrome-devtools-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "cwd": "${workspaceFolder}/apps/frontend",
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest",
+        "--no-usage-statistics",
+        "--headless"
+      ],
+      "gallery": "https://api.mcp.github.com",
+      "version": "0.17.0"
+    }
+  },
+  "inputs": []
 }
