@@ -1,0 +1,6 @@
+{
+  "enabledPlugins": {
+    "frontend-design@claude-code-plugins": true,
+    "ralph-wiggum@claude-code-plugins": true
+  }
+}

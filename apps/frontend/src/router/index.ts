@@ -13,6 +13,7 @@ import MatchesView from '@/features/interaction/views/Matches.vue'
 import AuthUserId from '@/features/auth/views/AuthUserId.vue'
 import AuthOtp from '@/features/auth/views/AuthOtp.vue'
 import Logout from '@/features/auth/views/Logout.vue'
+import PostsView from '@/features/posts/views/Posts.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -97,6 +98,13 @@ const routes: Array<RouteRecordRaw> = [
     path: '/matches/:profileId?',
     name: 'Matches',
     component: MatchesView,
+    props: true,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/posts',
+    name: 'Posts',
+    component: PostsView,
     props: true,
     meta: { requiresAuth: true },
   },

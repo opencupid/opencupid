@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "main": "dist/main.js",
-  "version": "0.6.2",
+  "version": "0.6.1",
   "scripts": {
     "dev": "tsup --watch --onSuccess \"node --inspect dist/main.js\"",
     "build": "tsup && tsup --config tsup.scripts.config.ts",
@@ -25,6 +25,7 @@
     "test": "vitest",
     "test:integration": "vitest --config vitest.integration.config.ts --mode test"
   },
+  "prisma": {},
   "dependencies": {
     "@fastify/cors": "^11.0.1",
     "@fastify/jwt": "^9.1.0",

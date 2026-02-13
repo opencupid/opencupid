@@ -10,7 +10,7 @@ docker volume create certbot-etc
 docker volume create certbot-webroot
 # obtain TLS cert from Letsencrypt via certbot (configure DOMAIN and EMAIL in .env)
 # https://eff-certbot.readthedocs.io/en/latest/install.html#running-with-docker
-docker compose -f docker-compose.production.yml run --rm --service-ports certbot-init
+docker compose -f docker-compose.production.yml run --rm certbot-init
 docker compose -f docker-compose.production.yml build
 docker compose -f docker-compose.production.yml up -d
 ```
@@ -26,20 +26,4 @@ Create the initial set of interest tags:
 
 Add a daily cron job or scheduled task for automatically renewing the TLS certificate.
 
-Run the SSL certificate renewal script once daily:
-
-```bash
-# Add this line to your crontab (run 'crontab -e' to edit)
-0 2 * * * /path/to/opencupid/scripts/renew-cert.sh >> /var/log/ssl-renewal.log 2>&1
-```
-
-Or run manually:
-
-```bash
-./scripts/renew-cert.sh
-```
-
-The renewal script will:
-1. Run certbot renewal using the webroot method
-2. Reload the nginx configuration if renewal is successful
-3. Log the process for monitoring
+`docker compose run --rm certbot renew --nginx && docker exec ingress nginx -s reload`

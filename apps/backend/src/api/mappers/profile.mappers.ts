@@ -6,17 +6,16 @@ import {
   type UpdateProfilePayload,
   OwnerScalarsSchema,
 } from '@zod/profile/profile.dto'
-import { DatingPreferencesDTOSchema, SocialMatchFilterDTOSchema, type DatingPreferencesDTO, type SocialMatchFilterDTO, type SocialMatchFilterWithTags } from '@zod/match/filters.dto'
-import { type DbProfileWithContext, type DbProfileWithImages } from '@zod/profile/profile.db'
-import { LocationSchema, type LocationDTO } from '@zod/dto/location.dto'
+import { type DbProfileSummary, type DbProfileWithContext, type DbProfileWithImages } from '@zod/profile/profile.db'
+import { LocationSchema } from '@zod/dto/location.dto'
 
 import {
   type OwnerProfileImage,
   type PublicProfileImage,
 } from '@zod/profile/profileimage.dto'
-import { DbTagToPublicTagTransform, mapProfileTagsTranslated } from './tag.mappers'
-import { Profile, ProfileImage, type SocialMatchFilter } from '@zod/generated'
-import { toOwnerProfileImage, toPublicProfileImage } from './image.mappers'
+import { mapProfileTagsTranslated } from './tag.mappers'
+import { ProfileImage } from '@zod/generated'
+import { toOwnerProfileImage, toPublicProfileImage, type MinimalProfileImage } from './image.mappers'
 import { mapInteractionContext } from './interaction.mappers'
 
 
@@ -52,7 +51,7 @@ export function mapProfileToPublic(dbProfile: DbProfileWithImages, includeDating
     if (preferredEntry && preferredEntry.value.trim() !== '') {
       return preferredEntry.value
     }
-    
+
     // Fallback to any locale with a non-empty value
     const fallbackEntry = dbProfile.localized.find(l => l.field === field && l.value.trim() !== '')
     return fallbackEntry?.value ?? ''
@@ -104,18 +103,13 @@ export function mapProfileImagesToPublic(images: ProfileImage[]): PublicProfileI
   return images.map((img: ProfileImage) => toPublicProfileImage(img))
 }
 
-export function mapProfileSummary(profile: {
-  id: string
-  publicName: string
-  profileImages: ProfileImage[]
-}): ProfileSummary {
+export function mapProfileSummary(profile: DbProfileSummary): ProfileSummary {
   return {
     id: profile.id,
     publicName: profile.publicName,
     profileImages: profile?.profileImages.map(toPublicProfileImage),
   }
 }
-
 
 export function mapToLocalizedUpserts(
   profileId: string,

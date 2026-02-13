@@ -93,7 +93,8 @@
     "browse": "Browse",
     "matches": "Matches",
     "inbox": "Inbox",
-    "settings": "Settings"
+    "settings": "Settings",
+    "bulletin": "Bulletin"
   },
   "authentication": {
     "login": "Login",
@@ -346,5 +347,59 @@
       "qr_hint": "Flash this at their phone"
     },
     "dialog_cancel_button": "Nevermind"
+  },
+  "posts": {
+    "title": "Bulletin board",
+    "types": {
+      "OFFER": "Offer",
+      "REQUEST": "Request"
+    },
+    "actions": {
+      "create": "Create Post",
+      "edit": "Edit Post",
+      "hide": "Hide Post",
+      "show": "Show Post",
+      "delete": "Delete Post",
+      "save": "Save Post",
+      "cancel": "Cancel",
+      "contact": "Contact poster"
+    },
+    "placeholders": {
+      "content": "Share what you're offering or looking for..."
+    },
+    "labels": {
+      "type": "Post Type",
+      "content": "Content",
+      "location": "Location",
+      "visibility": "Visible to others",
+      "updated": "Last updated"
+    },
+    "filters": {
+      "all": "All Posts",
+      "offers": "Offers",
+      "requests": "Requests",
+      "nearby": "Nearby",
+      "recent": "Recent"
+    },
+    "my_posts": "My Posts",
+    "location": {
+      "prompt": "Enable location to see nearby posts",
+      "enable": "Enable Location"
+    },
+    "messages": {
+      "created": "Post created successfully",
+      "updated": "Post updated successfully",
+      "deleted": "Post deleted successfully",
+      "error_create": "Failed to create post",
+      "error_update": "Failed to update post",
+      "error_delete": "Failed to delete post",
+      "error_load": "Failed to load posts",
+      "not_visible": "This post is not visible to others",
+      "confirm_delete": "Are you sure you want to delete this post?",
+      "no_posts": "No posts found",
+      "no_nearby": "No nearby posts found",
+      "no_recent": "No recent posts found",
+      "no_my_posts": "You haven't created any posts yet"
+    }
   }
 }

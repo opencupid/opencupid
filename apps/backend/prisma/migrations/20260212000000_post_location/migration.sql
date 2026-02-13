@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "public"."Post" ADD COLUMN "country" TEXT,
+ADD COLUMN "cityName" TEXT,
+ADD COLUMN "lat" DOUBLE PRECISION,
+ADD COLUMN "lon" DOUBLE PRECISION;

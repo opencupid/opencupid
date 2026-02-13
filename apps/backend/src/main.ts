@@ -67,7 +67,7 @@ async function main() {
 
   // Rate-limit only the tile route (be polite to OSM)
   app.register(async (f) => {
-    await f.register(rateLimit, { max: 100, timeWindow: '1 second' }) // Allow more requests for tile loading
+    await f.register(rateLimit, { max: 56, timeWindow: '1 second' }) // ~6 rps per client
     await f.register(tilesPlugin)
   })
 
