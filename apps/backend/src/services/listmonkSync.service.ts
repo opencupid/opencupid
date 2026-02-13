@@ -61,8 +61,10 @@ export class ListmonkSyncService {
 
   private async getSubscriber(email: string): Promise<ListmonkSubscriber | null> {
     try {
+      // Encode email for URL safety
+      const encodedEmail = encodeURIComponent(email)
       const response = await fetch(
-        `${this.baseUrl}/api/subscribers?query=subscribers.email='${email}'`,
+        `${this.baseUrl}/api/subscribers?query=subscribers.email='${encodedEmail}'`,
         {
           method: 'GET',
           headers: {

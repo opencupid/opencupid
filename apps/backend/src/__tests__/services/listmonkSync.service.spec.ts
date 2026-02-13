@@ -78,7 +78,7 @@ describe('ListmonkSyncService', () => {
       // Check getSubscriber call
       expect(mockFetch).toHaveBeenNthCalledWith(
         1,
-        'http://localhost:9000/api/subscribers?query=subscribers.email=\'test@example.com\'',
+        'http://localhost:9000/api/subscribers?query=subscribers.email=\'test%40example.com\'',
         expect.objectContaining({
           method: 'GET',
         })

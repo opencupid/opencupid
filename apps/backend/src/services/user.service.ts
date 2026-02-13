@@ -119,10 +119,10 @@ export class UserService {
         language,
       },
     })
-    
+
     // Sync new user to Listmonk
     await listmonkSyncService.syncUser(user)
-    
+
     return { user, isNewUser }
   }
 
@@ -155,10 +155,10 @@ export class UserService {
         ...user,
       },
     })
-    
+
     // Sync to Listmonk if email, language, or newsletterOptIn changed
     await listmonkSyncService.syncUser(updated)
-    
+
     return updated
   }
 
@@ -169,10 +169,10 @@ export class UserService {
         ...user,
       },
     })
-    
+
     // Sync to Listmonk if email, language, or newsletterOptIn changed
     await listmonkSyncService.syncUser(updated)
-    
+
     return updated
   }
 
