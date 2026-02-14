@@ -33,6 +33,7 @@ const viewerLocation = ref(viewerProfile?.value.location)
             :location="profile.location"
             :showCountryLabel="false"
             :showCity="false"
+            :showOnlyForeignCountry="true"
           />
         </span>
       </div>

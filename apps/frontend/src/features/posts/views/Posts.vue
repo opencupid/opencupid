@@ -1,169 +1,37 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { onMounted, provide } from 'vue'
 import { useI18n } from 'vue-i18n'
 import PostList from '../components/PostList.vue'
 import PostEdit from '../components/PostEdit.vue'
 import PostFullView from '../components/PostFullView.vue'
-import { usePostStore } from '../stores/postStore'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faPenToSquare } from '@fortawesome/free-solid-svg-icons'
 
+import { usePostsViewModel } from '../composables/usePostsViewModel'
+
 const { t } = useI18n()
-const postStore = usePostStore()
 
-const activeTab = ref('all')
-const showCreateModal = ref(false)
-const locationPermission = ref(false)
-const userLocation = ref<{ lat: number; lon: number } | null>(null)
+const {
+  activeTab,
+  showCreateModal,
+  locationPermission,
+  nearbyParams,
+  isDetailView,
+  showFullView,
+  editingPost,
+  selectedPost,
+  ownerProfile,
+  initialize,
+  requestLocation,
+  handlePostListIntent,
+} = usePostsViewModel()
 
-const nearbyParams = computed(() => {
-  if (!userLocation.value) {
-    return { lat: 0, lon: 0, radius: 50 }
-  }
-  return {
-    lat: userLocation.value.lat,
-    lon: userLocation.value.lon,
-    radius: 50,
-  }
+// Provide the ownerProfile object (current user's profile) to child components
+provide('ownerProfile', ownerProfile)
+
+onMounted(async () => {
+  await initialize()
 })
-
-const requestLocation = async () => {
-  try {
-    const position = await getCurrentPosition()
-    userLocation.value = {
-      lat: position.coords.latitude,
-      lon: position.coords.longitude,
-    }
-    locationPermission.value = true
-  } catch (error) {
-    console.error('Failed to get location:', error)
-    // Handle error - maybe show a message to the user
-  }
-}
-
-const getCurrentPosition = (): Promise<GeolocationPosition> => {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error('Geolocation is not supported'))
-      return
-    }
-
-    navigator.geolocation.getCurrentPosition(resolve, reject, {
-      enableHighAccuracy: false,
-      timeout: 5000,
-      maximumAge: 300000, // 5 minutes
-    })
-  })
-}
-
-// Request location only when the Nearby tab is activated
-watch(activeTab, (newTab) => {
-  if (newTab === 'nearby' && !locationPermission.value) {
-    requestLocation()
-  }
-})
-
-const isDetailView = ref(false)
-const showFullView = ref(false)
-const editingPost = ref(null)
-const selectedPost = ref(null)
-
-function toListPost(post: any) {
-  return {
-    ...post,
-    isOwn: true,
-  }
-}
-
-function upsertIntoActiveList(post: any) {
-  const normalized = toListPost(post)
-
-  if (activeTab.value === 'my') {
-    const idx = postStore.myPosts.findIndex(item => item.id === post.id)
-    if (idx === -1) {
-      postStore.myPosts.unshift(post)
-    } else {
-      postStore.myPosts[idx] = post
-    }
-    return
-  }
-
-  const idx = postStore.posts.findIndex(item => item.id === post.id)
-  if (idx === -1) {
-    postStore.posts.unshift(normalized as any)
-  } else {
-    postStore.posts[idx] = normalized as any
-  }
-}
-
-function closePostOverlays() {
-  showFullView.value = false
-  showCreateModal.value = false
-  editingPost.value = null
-  selectedPost.value = null
-}
-
-async function handleDelete(post?: any) {
-  if (!post || !confirm(t('posts.messages.confirm_delete'))) {
-    return
-  }
-
-  const success = await postStore.deletePost(post.id)
-  if (success) {
-    closePostOverlays()
-  }
-}
-
-async function handleHide(post?: any) {
-  if (!post) {
-    return
-  }
-
-  const isVisible = post?.isVisible !== false
-  const updatedPost = isVisible
-    ? await postStore.hidePost(post.id)
-    : await postStore.showPost(post.id)
-
-  if (updatedPost) {
-    closePostOverlays()
-  }
-}
-
-async function handlePostListIntent(event: string, post?: any) {
-  switch (event) {
-    case 'fullview':
-      selectedPost.value = post
-      editingPost.value = null
-      showCreateModal.value = false
-      showFullView.value = true
-      break
-    case 'create':
-      editingPost.value = null
-      showCreateModal.value = true
-      showFullView.value = true
-      break
-    case 'edit':
-      editingPost.value = post
-      showCreateModal.value = false
-      showFullView.value = true
-      break
-    case 'close':
-      closePostOverlays()
-      break
-    case 'hide':
-      await handleHide(post)
-      break
-    case 'delete':
-      await handleDelete(post)
-      break
-    case 'saved':
-      if (post && (showCreateModal.value || editingPost.value)) {
-        upsertIntoActiveList(post)
-      }
-      showFullView.value = false
-      break
-  }
-}
 </script>
 
 <template>
@@ -277,6 +145,7 @@ async function handlePostListIntent(event: string, post?: any) {
       :no-header="false"
       :no-footer="true"
       :show="true"
+      :no-close-on-esc="true"
       body-class="d-flex flex-column align-items-center justify-content-center overflow-auto hide-scrollbar p-2 p-md-5"
       :keyboard="false"
       @close="handlePostListIntent('close')"
