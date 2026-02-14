@@ -3,7 +3,7 @@ import { useRouter } from 'vue-router'
 import { computed, onMounted, onUnmounted, provide, ref } from 'vue'
 import { useInfiniteScroll } from '@vueuse/core'
 
-import PublicProfile from '@/features/publicprofile/components/PublicProfile.vue'
+import PublicProfileComponent from '@/features/publicprofile/components/PublicProfile.vue'
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 
 import { useFindMatchViewModel } from '../composables/useFindMatchViewModel'
@@ -145,7 +145,7 @@ useInfiniteScroll(
     >
       <div class="overflow-auto hide-scrollbar h-100 d-flex flex-column">
         <MiddleColumn class="pt-sm-3 position-relative flex-grow-1" style="min-height: 100%">
-          <PublicProfile
+          <PublicProfileComponent
             v-if="selectedProfileId"
             :id="selectedProfileId"
             class="shadow-lg mb-3 pb-5"
@@ -270,7 +270,7 @@ useInfiniteScroll(
               :get-title="(profile: PublicProfile) => profile.publicName"
               :popup-component="ProfileMapCard"
               class="map-view h-100"
-              @item:select="handleCardClick"
+              @item:select="(id: string | number) => handleCardClick(String(id))"
             />
           </div>
         </template>
