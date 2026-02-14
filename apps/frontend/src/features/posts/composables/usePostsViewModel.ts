@@ -137,7 +137,8 @@ export function usePostsViewModel() {
       return
     }
 
-    const isVisible = (post as OwnerPost).isVisible !== false
+    // Only OwnerPost has isVisible property
+    const isVisible = 'isVisible' in post ? post.isVisible !== false : true
     const updatedPost = isVisible
       ? await postStore.hidePost(post.id)
       : await postStore.showPost(post.id)

@@ -22,8 +22,8 @@ const props = defineProps<{
   dimHidden?: boolean
 }>()
 
-const ownerProfile = inject<Ref<OwnerProfile>>('ownerProfile')
-const viewerLocation = computed(() => ownerProfile?.value?.location)
+const ownerProfile = inject<Ref<OwnerProfile | null>>('ownerProfile', ref(null))
+const viewerLocation = computed(() => ownerProfile?.value?.location ?? undefined)
 
 const emit = defineEmits<{
   (e: 'click', post: PublicPostWithProfile | OwnerPost): void
