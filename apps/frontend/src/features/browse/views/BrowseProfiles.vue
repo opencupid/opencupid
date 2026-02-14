@@ -19,7 +19,7 @@ import DatingPrefsDisplay from '../components/DatingPrefsDisplay.vue'
 import ScopeViewToggler from '@/features/shared/ui/ScopeViewToggler.vue'
 import ViewModeToggler from '@/features/shared/ui/ViewModeToggler.vue'
 
-import OsmPoiMap from '../components/OsmPoiMap.vue'
+import OsmProfileMap from '../components/OsmProfileMap.vue'
 import { useI18n } from 'vue-i18n'
 import { useCountries } from '../../shared/composables/useCountries'
 
@@ -261,7 +261,7 @@ useInfiniteScroll(
               <!-- <div v-else-if="!hasMoreProfiles && profileList.length > 0" class="text-center py-3 text-muted">
               </div> -->
             </MiddleColumn>
-            <OsmPoiMap
+            <OsmProfileMap
               v-if="viewModeModel === 'map'"
               :profiles="profileList"
               class="map-view h-100"

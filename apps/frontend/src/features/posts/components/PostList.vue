@@ -2,9 +2,11 @@
 import { ref } from 'vue'
 import { useInfiniteScroll } from '@vueuse/core'
 import PostCard from './PostCard.vue'
+import OsmPostMap from './OsmPostMap.vue'
 import { type PostTypeType } from '@zod/generated'
 import { usePostListViewModel } from '../composables/usePostListViewModel'
 import IconFilter from '@/assets/icons/interface/filter.svg'
+import ViewModeToggler from '@/features/shared/ui/ViewModeToggler.vue'
 
 interface Props {
   title?: string
@@ -14,6 +16,7 @@ interface Props {
   nearbyParams?: { lat: number; lon: number; radius: number }
   emptyMessage?: string
   isActive?: boolean
+  viewMode?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -22,7 +25,10 @@ const props = withDefaults(defineProps<Props>(), {
   scope: 'all',
   emptyMessage: 'No posts found',
   isActive: true,
+  viewMode: 'grid',
 })
+
+const viewModeModel = defineModel<string>('viewMode', { default: 'grid' })
 
 const emit = defineEmits<{
   (e: 'intent:fullview', post: any): void
@@ -31,6 +37,7 @@ const emit = defineEmits<{
   (e: 'intent:hide', post: any): void
   (e: 'intent:delete', post: any): void
   (e: 'intent:saved', post: any): void
+  (e: 'intent:contact', post: any): void
 }>()
 
 const {
@@ -73,6 +80,9 @@ function handlePostDelete(post: any) {
 function handlePostHide(post: any) {
   emit('intent:hide', post)
 }
+function handlePostContact(post: any) {
+  emit('intent:contact', post)
+}
 function handlePostSaved(post: any) {
   emit('intent:saved', post)
 }
@@ -84,26 +94,21 @@ function handleClose() {
 <template>
   <div class="post-list h-100">
     <!-- Filter -->
-    <div class="d-flex flex-row justify-content-end align-items-center mb-3">
-      <div>
-        <div v-if="showFilters">
-          <BInputGroup class="mt-3">
-            <template #prepend>
-              <BInputGroupText><IconFilter class="svg-icon" /></BInputGroupText>
-            </template>
+    <div class="d-flex flex-row justify-content-between align-items-center mb-3 px-2 py-1 bg-light rounded">
+      <div v-if="showFilters">
+        <BInputGroup>
+          <template #prepend>
+            <BInputGroupText><IconFilter class="svg-icon" /></BInputGroupText>
+          </template>
 
-            <BFormSelect v-model="selectedType" @change="handleTypeFilter" size="sm">
-              <option value="">{{ $t('posts.filters.all') }}</option>
-              <option value="OFFER">{{ $t('posts.filters.offers') }}</option>
-              <option value="REQUEST">{{ $t('posts.filters.requests') }}</option>
-            </BFormSelect>
-          </BInputGroup>
-        </div>
+          <BFormSelect v-model="selectedType" @change="handleTypeFilter" size="sm">
+            <option value="">{{ $t('posts.filters.all') }}</option>
+            <option value="OFFER">{{ $t('posts.filters.offers') }}</option>
+            <option value="REQUEST">{{ $t('posts.filters.requests') }}</option>
+          </BFormSelect>
+        </BInputGroup>
       </div>
-      <div>
-        <!-- add viewModeTogglee -->
-        <!-- <ViewModeToggler/> -->
-      </div>
+      <ViewModeToggler v-model="viewModeModel" />
     </div>
 
     <div v-if="postStore.isLoading && posts.length === 0" class="mb-2">
@@ -122,7 +127,8 @@ function handleClose() {
       <p>{{ emptyMessage }}</p>
     </div>
 
-    <div ref="scrollContainer" class="container-fluid overflow-auto hide-scrollbar h-100">
+    <!-- Grid View -->
+    <div v-if="viewModeModel === 'grid'" ref="scrollContainer" class="container-fluid overflow-auto hide-scrollbar h-100">
       <TransitionGroup
         name="fade"
         tag="div"
@@ -138,11 +144,24 @@ function handleClose() {
             @edit="() => handlePostEdit(post)"
             @hide="() => handlePostHide(post)"
             @delete="() => handlePostDelete(post)"
+            @contact="() => handlePostContact(post)"
             class="clickable"
           />
         </BCol>
       </TransitionGroup>
     </div>
+
+    <!-- Map View -->
+    <OsmPostMap
+      v-if="viewModeModel === 'map' && posts.length > 0"
+      :posts="posts"
+      class="map-view h-100"
+      @post:select="handlePostClick"
+      @edit="handlePostEdit"
+      @contact="handlePostContact"
+      @hide="handlePostHide"
+      @delete="handlePostDelete"
+    />
 
     <div v-if="isLoadingMore" class="text-center py-3">
       <BSpinner small variant="primary" />

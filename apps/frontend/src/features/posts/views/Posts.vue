@@ -4,14 +4,17 @@ import { useI18n } from 'vue-i18n'
 import PostList from '../components/PostList.vue'
 import PostEdit from '../components/PostEdit.vue'
 import PostFullView from '../components/PostFullView.vue'
+import OsmPostMap from '../components/OsmPostMap.vue'
 import { usePostStore } from '../stores/postStore'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faPenToSquare } from '@fortawesome/free-solid-svg-icons'
+import ViewModeToggler from '@/features/shared/ui/ViewModeToggler.vue'
 
 const { t } = useI18n()
 const postStore = usePostStore()
 
 const activeTab = ref('all')
+const viewModeModel = ref('grid')
 const showCreateModal = ref(false)
 const locationPermission = ref(false)
 const userLocation = ref<{ lat: number; lon: number } | null>(null)
@@ -156,6 +159,10 @@ async function handlePostListIntent(event: string, post?: any) {
     case 'delete':
       await handleDelete(post)
       break
+    case 'contact':
+      // Handle contact - would typically open a message dialog or navigate to messaging
+      console.log('Contact intent for post:', post)
+      break
     case 'saved':
       if (post && (showCreateModal.value || editingPost.value)) {
         upsertIntoActiveList(post)
@@ -183,11 +190,13 @@ async function handlePostListIntent(event: string, post?: any) {
             :is-active="activeTab === 'all'"
             :show-filters="true"
             :empty-message="$t('posts.messages.no_posts')"
+            v-model:view-mode="viewModeModel"
             @intent:fullview="post => handlePostListIntent('fullview', post)"
             @intent:edit="post => handlePostListIntent('edit', post)"
             @intent:close="() => handlePostListIntent('close')"
             @intent:hide="post => handlePostListIntent('hide', post)"
             @intent:delete="post => handlePostListIntent('delete', post)"
+            @intent:contact="post => handlePostListIntent('contact', post)"
             @intent:saved="post => handlePostListIntent('saved', post)"
           />
         </BTab>
@@ -207,11 +216,13 @@ async function handlePostListIntent(event: string, post?: any) {
             :nearby-params="nearbyParams"
             :show-filters="true"
             :empty-message="$t('posts.messages.no_nearby')"
+            v-model:view-mode="viewModeModel"
             @intent:fullview="post => handlePostListIntent('fullview', post)"
             @intent:edit="post => handlePostListIntent('edit', post)"
             @intent:close="() => handlePostListIntent('close')"
             @intent:hide="post => handlePostListIntent('hide', post)"
             @intent:delete="post => handlePostListIntent('delete', post)"
+            @intent:contact="post => handlePostListIntent('contact', post)"
             @intent:saved="post => handlePostListIntent('saved', post)"
           />
         </BTab>
@@ -223,11 +234,13 @@ async function handlePostListIntent(event: string, post?: any) {
             :is-active="activeTab === 'recent'"
             :show-filters="true"
             :empty-message="$t('posts.messages.no_recent')"
+            v-model:view-mode="viewModeModel"
             @intent:fullview="post => handlePostListIntent('fullview', post)"
             @intent:edit="post => handlePostListIntent('edit', post)"
             @intent:close="() => handlePostListIntent('close')"
             @intent:hide="post => handlePostListIntent('hide', post)"
             @intent:delete="post => handlePostListIntent('delete', post)"
+            @intent:contact="post => handlePostListIntent('contact', post)"
             @intent:saved="post => handlePostListIntent('saved', post)"
           />
         </BTab>
@@ -239,11 +252,13 @@ async function handlePostListIntent(event: string, post?: any) {
             :is-active="activeTab === 'my'"
             :show-filters="true"
             :empty-message="$t('posts.messages.no_my_posts')"
+            v-model:view-mode="viewModeModel"
             @intent:fullview="post => handlePostListIntent('fullview', post)"
             @intent:edit="post => handlePostListIntent('edit', post)"
             @intent:close="() => handlePostListIntent('close')"
             @intent:hide="post => handlePostListIntent('hide', post)"
             @intent:delete="post => handlePostListIntent('delete', post)"
+            @intent:contact="post => handlePostListIntent('contact', post)"
             @intent:saved="post => handlePostListIntent('saved', post)"
           />
         </BTab>
