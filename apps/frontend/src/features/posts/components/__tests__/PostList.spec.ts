@@ -28,6 +28,12 @@ import PostList from '../PostList.vue'
 
 const stubs = {
   BCol: { template: '<div><slot /></div>' },
+  BFormSelect: { template: '<select><slot /></select>' },
+  BInputGroup: { template: '<div><slot /></div>' },
+  BInputGroupText: { template: '<div><slot /></div>' },
+  ViewModeToggler: { template: '<div></div>' },
+  OsmPostMap: { template: '<div></div>' },
+  IconFilter: { template: '<svg></svg>' },
   PostCard: {
     template: `
       <div>
