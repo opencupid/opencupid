@@ -19,7 +19,9 @@ import DatingPrefsDisplay from '../components/DatingPrefsDisplay.vue'
 import ScopeViewToggler from '@/features/shared/ui/ScopeViewToggler.vue'
 import ViewModeToggler from '@/features/shared/ui/ViewModeToggler.vue'
 
-import OsmPoiMap from '../components/OsmPoiMap.vue'
+import OsmPoiMap from '@/features/shared/components/OsmPoiMap.vue'
+import ProfileMapCard from '../components/ProfileMapCard.vue'
+import type { PublicProfile } from '@zod/profile/profile.dto'
 import { useI18n } from 'vue-i18n'
 import { useCountries } from '../../shared/composables/useCountries'
 
@@ -263,9 +265,12 @@ useInfiniteScroll(
             </MiddleColumn>
             <OsmPoiMap
               v-if="viewModeModel === 'map'"
-              :profiles="profileList"
+              :items="profileList"
+              :get-location="(profile: PublicProfile) => profile.location"
+              :get-title="(profile: PublicProfile) => profile.publicName"
+              :popup-component="ProfileMapCard"
               class="map-view h-100"
-              @profile:select="handleCardClick"
+              @item:select="handleCardClick"
             />
           </div>
         </template>
