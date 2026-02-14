@@ -12,11 +12,13 @@ const props = withDefaults(
     showCity?: boolean
     showCountryLabel?: boolean
     showCountryIcon?: boolean
+    showOnlyForeignCountry?: boolean
   }>(),
   {
     showCity: true,
     showCountryLabel: true,
     showCountryIcon: true,
+    showOnlyForeignCountry: true,
   }
 )
 
@@ -26,6 +28,7 @@ const countryName = computed(() => {
   return props.location.country ? countryCodeToName(props.location.country) : ''
 })
 
+
 const isSameCountry = computed(() => {
   return props.viewerLocation?.country === props.location.country
 })
@@ -34,9 +37,24 @@ const shouldRenderCity = computed(() => {
   return !!props.location.cityName && (isSameCountry.value || props.showCity)
 })
 
+// const shouldRenderCountry = computed(() => {
+//   return !!props.location.country && (!isSameCountry.value || props.showCountryLabel)
+// })
+
 const shouldRenderCountry = computed(() => {
-  return !!props.location.country && (!isSameCountry.value || props.showCountryLabel)
+  if (!props.location.country) return false
+
+  // If we only show foreign countries, block same-country cases
+  if (props.showOnlyForeignCountry) {
+    // If viewer country missing → treat as not foreign (strict)
+    if (!props.viewerLocation?.country) return false
+    if (isSameCountry.value) return false
+  }
+
+  // Still respect label/icon flags
+  return props.showCountryLabel || props.showCountryIcon
 })
+
 
 const countryCode = computed(() => {
   return props.location.country?.toLowerCase() 
@@ -46,24 +64,23 @@ const countryCode = computed(() => {
 <template>
   <span v-if="location">
     <span v-if="shouldRenderCity">{{ location.cityName }}</span>
-    <span v-if="shouldRenderCity && shouldRenderCountry">, </span>
+    <span v-if="shouldRenderCity && showCountryLabel && shouldRenderCountry">, </span>
+
     <span v-if="shouldRenderCountry">
-      <span v-if="showCountryLabel">
+      <template v-if="showCountryLabel">
         {{ countryName }}
-      </span>
+      </template>
+
       <span v-if="showCountryIcon" @click="$event.stopPropagation()">
         <BTooltip :delay="100" placement="top" :title="countryName">
           <template #target>
-            <CountryFlag 
-              :code="countryCode"
-              size="32"
-              circle
-              :title="countryName"
-            />
+            <CountryFlag :code="countryCode" size="32" circle :title="countryName" />
           </template>
           {{ countryName }}
         </BTooltip>
       </span>
     </span>
+
+
   </span>
 </template>

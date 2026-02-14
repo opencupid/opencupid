@@ -145,6 +145,7 @@ onMounted(async () => {
       :no-header="false"
       :no-footer="true"
       :show="true"
+      :no-close-on-esc="true"
       body-class="d-flex flex-column align-items-center justify-content-center overflow-auto hide-scrollbar p-2 p-md-5"
       :keyboard="false"
       @close="handlePostListIntent('close')"
