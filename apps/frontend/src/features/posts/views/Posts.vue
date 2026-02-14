@@ -57,7 +57,7 @@ const getPostLocation = (post: PublicPostWithProfile | OwnerPost) => {
 }
 
 const getPostTitle = (post: PublicPostWithProfile | OwnerPost) => {
-  const hasProfileData = (p: any): p is PublicPostWithProfile => 'postedBy' in p && p.postedBy != null
+  const hasProfileData = (p: PublicPostWithProfile | OwnerPost): p is PublicPostWithProfile => 'postedBy' in p && p.postedBy != null
   if (hasProfileData(post)) {
     return `${post.postedBy.publicName}: ${post.content.substring(0, 50)}...`
   }

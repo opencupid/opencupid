@@ -15,7 +15,7 @@ const props = defineProps<{
 const ownerProfile = inject<Ref<OwnerProfile | null>>('ownerProfile', ref(null))
 const viewerLocation = computed(() => ownerProfile?.value?.location ?? undefined)
 
-const hasProfileData = (post: any): post is PublicPostWithProfile => {
+const hasProfileData = (post: PublicPostWithProfile | OwnerPost): post is PublicPostWithProfile => {
   return 'postedBy' in post && post.postedBy != null
 }
 
