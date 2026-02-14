@@ -17,8 +17,8 @@ export function usePostsViewModel() {
   const userLocation = ref<{ lat: number; lon: number } | null>(null)
   const isDetailView = ref(false)
   const showFullView = ref(false)
-  const editingPost = ref(null)
-  const selectedPost = ref(null)
+  const editingPost = ref<OwnerPost | null>(null)
+  const selectedPost = ref<PublicPostWithProfile | OwnerPost | null>(null)
   const isInitialized = ref(false)
 
   // Computed properties
@@ -85,31 +85,31 @@ export function usePostsViewModel() {
   })
 
   // Post manipulation helpers
-  function toListPost(post: any) {
+  function toListPost(post: PublicPostWithProfile | OwnerPost) {
     return {
       ...post,
       isOwn: true,
     }
   }
 
-  function upsertIntoActiveList(post: any) {
+  function upsertIntoActiveList(post: PublicPostWithProfile | OwnerPost) {
     const normalized = toListPost(post)
 
     if (activeTab.value === 'my') {
       const idx = postStore.myPosts.findIndex(item => item.id === post.id)
       if (idx === -1) {
-        postStore.myPosts.unshift(post)
+        postStore.myPosts.unshift(post as OwnerPost)
       } else {
-        postStore.myPosts[idx] = post
+        postStore.myPosts[idx] = post as OwnerPost
       }
       return
     }
 
     const idx = postStore.posts.findIndex(item => item.id === post.id)
     if (idx === -1) {
-      postStore.posts.unshift(normalized as any)
+      postStore.posts.unshift(normalized as PublicPostWithProfile)
     } else {
-      postStore.posts[idx] = normalized as any
+      postStore.posts[idx] = normalized as PublicPostWithProfile
     }
   }
 
@@ -121,7 +121,7 @@ export function usePostsViewModel() {
     selectedPost.value = null
   }
 
-  async function handleDelete(post?: any) {
+  async function handleDelete(post?: PublicPostWithProfile | OwnerPost) {
     if (!post || !confirm(t('posts.messages.confirm_delete'))) {
       return
     }
@@ -132,12 +132,12 @@ export function usePostsViewModel() {
     }
   }
 
-  async function handleHide(post?: any) {
+  async function handleHide(post?: PublicPostWithProfile | OwnerPost) {
     if (!post) {
       return
     }
 
-    const isVisible = post?.isVisible !== false
+    const isVisible = (post as OwnerPost).isVisible !== false
     const updatedPost = isVisible
       ? await postStore.hidePost(post.id)
       : await postStore.showPost(post.id)
@@ -147,10 +147,10 @@ export function usePostsViewModel() {
     }
   }
 
-  async function handlePostListIntent(event: string, post?: any) {
+  async function handlePostListIntent(event: string, post?: PublicPostWithProfile | OwnerPost) {
     switch (event) {
       case 'fullview':
-        selectedPost.value = post
+        selectedPost.value = post ?? null
         editingPost.value = null
         showCreateModal.value = false
         showFullView.value = true
@@ -161,7 +161,7 @@ export function usePostsViewModel() {
         showFullView.value = true
         break
       case 'edit':
-        editingPost.value = post
+        editingPost.value = post as OwnerPost
         showCreateModal.value = false
         showFullView.value = true
         break

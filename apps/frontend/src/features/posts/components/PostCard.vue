@@ -23,7 +23,7 @@ const props = defineProps<{
 }>()
 
 const ownerProfile = inject<Ref<OwnerProfile>>('ownerProfile')
-const viewerLocation = ref(ownerProfile?.value?.location)
+const viewerLocation = computed(() => ownerProfile?.value?.location)
 
 const emit = defineEmits<{
   (e: 'click', post: PublicPostWithProfile | OwnerPost): void
