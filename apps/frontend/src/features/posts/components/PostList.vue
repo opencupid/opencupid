@@ -94,7 +94,7 @@ function handleClose() {
 <template>
   <div class="post-list h-100">
     <!-- Filter -->
-    <div class="d-flex flex-row justify-content-between align-items-center mb-3 px-2 py-1 bg-light rounded">
+    <div class="filter-bar">
       <div v-if="showFilters">
         <BInputGroup>
           <template #prepend>
@@ -170,4 +170,15 @@ function handleClose() {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.filter-bar {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  background-color: var(--bs-light);
+  border-radius: 0.25rem;
+}
+</style>

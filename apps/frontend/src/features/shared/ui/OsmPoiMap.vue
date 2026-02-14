@@ -246,7 +246,6 @@ watch(
 :deep(.leaflet-popup-content) {
   margin: 0;
   line-height: 1.3;
-  font-size: 13px;
   font-size: 1.08333em;
   min-height: 1px;
 }
