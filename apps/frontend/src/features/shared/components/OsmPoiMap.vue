@@ -79,12 +79,15 @@ function ensureMap() {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     // Use a plain gray tile as fallback (no text) - base64 encoded blank gray SVG
     errorTileUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iI2Y1ZjVmNSIvPjwvc3ZnPg==',
-    // Keep old tiles while loading new ones
-    keepBuffer: 2,
-    // More aggressive prefetching to reduce missing tiles
-    updateWhenZooming: false,
-    // Increase the number of tiles to load around the visible area
-    updateWhenIdle: true
+    // Reduce tile buffer to prevent excessive tile requests
+    keepBuffer: 1,
+    // Enable tile loading during zoom (default: true) - prevents overwhelming tile server
+    // Setting this to false causes all tiles to be requested at once during zoom
+    updateWhenZooming: true,
+    // Update tiles when map stops moving (default: true)
+    updateWhenIdle: true,
+    // Limit tile update frequency to prevent request flooding (default: 200ms)
+    updateInterval: 200
   }).addTo(map)
 
   // Add error handling for tile loading
