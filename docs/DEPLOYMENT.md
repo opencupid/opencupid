@@ -21,6 +21,22 @@ Create the initial set of interest tags:
 
 `docker compose exec backend npx node prisma/seed/Tags.js`
 
+## Listmonk Migration
+
+After deploying the Listmonk integration, run the one-time migration script to sync existing users to Listmonk:
+
+```bash
+docker compose exec backend pnpm listmonk:migrate
+```
+
+This will:
+1. Find all users with email addresses
+2. Sync them to Listmonk via the API
+3. Set their subscription status based on the `newsletterOptIn` flag
+4. Configure their language preference
+
+The script is idempotent and can be safely run multiple times.
+
 
 ### Configure cron jobs
 
