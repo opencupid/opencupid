@@ -314,8 +314,8 @@ importers:
         specifier: ^13.5.0
         version: 13.5.0(vue@3.5.28(typescript@5.8.3))
       '@vueuse/core':
-        specifier: ^13.5.0
-        version: 13.5.0(vue@3.5.28(typescript@5.8.3))
+        specifier: ^14.2.1
+        version: 14.2.1(vue@3.5.28(typescript@5.8.3))
       '@vueuse/integrations':
         specifier: ^13.5.0
         version: 13.5.0(axios@1.11.0)(qrcode@1.5.4)(sortablejs@1.15.6)(vue@3.5.28(typescript@5.8.3))
@@ -333,7 +333,7 @@ importers:
         version: 5.3.8(@popperjs/core@2.11.8)
       bootstrap-vue-next:
         specifier: ^0.30.4
-        version: 0.30.5(@vueuse/core@13.5.0(vue@3.5.28(typescript@5.8.3)))(vue-router@4.5.1(vue@3.5.28(typescript@5.8.3)))(vue@3.5.28(typescript@5.8.3))
+        version: 0.30.5(@vueuse/core@14.2.1(vue@3.5.28(typescript@5.8.3)))(vue-router@4.5.1(vue@3.5.28(typescript@5.8.3)))(vue@3.5.28(typescript@5.8.3))
       find-up:
         specifier: ^7.0.0
         version: 7.0.0
@@ -2707,6 +2707,11 @@ packages:
     peerDependencies:
       vue: ^3.5.0
 
+  '@vueuse/core@14.2.1':
+    resolution: {integrity: sha512-3vwDzV+GDUNpdegRY6kzpLm4Igptq+GA0QkJ3W61Iv27YWwW/ufSlOfgQIpN6FZRMG0mkaz4gglJRtq5SeJyIQ==}
+    peerDependencies:
+      vue: ^3.5.0
+
   '@vueuse/integrations@13.5.0':
     resolution: {integrity: sha512-7RACJySnlpl0MkSzxbtadioNGSX4TL5/Wl2cUy4nDq/XkeHwPYvVM880HJUSiap/FXhVEup9VKTM9y/n5UspAw==}
     peerDependencies:
@@ -2752,8 +2757,16 @@ packages:
   '@vueuse/metadata@13.5.0':
     resolution: {integrity: sha512-euhItU3b0SqXxSy8u1XHxUCdQ8M++bsRs+TYhOLDU/OykS7KvJnyIFfep0XM5WjIFry9uAPlVSjmVHiqeshmkw==}
 
+  '@vueuse/metadata@14.2.1':
+    resolution: {integrity: sha512-1ButlVtj5Sb/HDtIy1HFr1VqCP4G6Ypqt5MAo0lCgjokrk2mvQKsK2uuy0vqu/Ks+sHfuHo0B9Y9jn9xKdjZsw==}
+
   '@vueuse/shared@13.5.0':
     resolution: {integrity: sha512-K7GrQIxJ/ANtucxIXbQlUHdB0TPA8c+q5i+zbrjxuhJCnJ9GtBg75sBSnvmLSxHKPg2Yo8w62PWksl9kwH0Q8g==}
+    peerDependencies:
+      vue: ^3.5.0
+
+  '@vueuse/shared@14.2.1':
+    resolution: {integrity: sha512-shTJncjV9JTI4oVNyF1FQonetYAiTBd+Qj7cY89SWbXSkx7gyhrgtEdF2ZAVWS1S3SHlaROO6F2IesJxQEkZBw==}
     peerDependencies:
       vue: ^3.5.0
 
@@ -9694,6 +9707,13 @@ snapshots:
       '@vueuse/shared': 13.5.0(vue@3.5.28(typescript@5.8.3))
       vue: 3.5.28(typescript@5.8.3)
 
+  '@vueuse/core@14.2.1(vue@3.5.28(typescript@5.8.3))':
+    dependencies:
+      '@types/web-bluetooth': 0.0.21
+      '@vueuse/metadata': 14.2.1
+      '@vueuse/shared': 14.2.1(vue@3.5.28(typescript@5.8.3))
+      vue: 3.5.28(typescript@5.8.3)
+
   '@vueuse/integrations@13.5.0(axios@1.11.0)(qrcode@1.5.4)(sortablejs@1.15.6)(vue@3.5.28(typescript@5.8.3))':
     dependencies:
       '@vueuse/core': 13.5.0(vue@3.5.28(typescript@5.8.3))
@@ -9706,7 +9726,13 @@ snapshots:
 
   '@vueuse/metadata@13.5.0': {}
 
+  '@vueuse/metadata@14.2.1': {}
+
   '@vueuse/shared@13.5.0(vue@3.5.28(typescript@5.8.3))':
+    dependencies:
+      vue: 3.5.28(typescript@5.8.3)
+
+  '@vueuse/shared@14.2.1(vue@3.5.28(typescript@5.8.3))':
     dependencies:
       vue: 3.5.28(typescript@5.8.3)
 
@@ -9967,11 +9993,11 @@ snapshots:
 
   boolbase@1.0.0: {}
 
-  bootstrap-vue-next@0.30.5(@vueuse/core@13.5.0(vue@3.5.28(typescript@5.8.3)))(vue-router@4.5.1(vue@3.5.28(typescript@5.8.3)))(vue@3.5.28(typescript@5.8.3)):
+  bootstrap-vue-next@0.30.5(@vueuse/core@14.2.1(vue@3.5.28(typescript@5.8.3)))(vue-router@4.5.1(vue@3.5.28(typescript@5.8.3)))(vue@3.5.28(typescript@5.8.3)):
     dependencies:
       vue: 3.5.28(typescript@5.8.3)
     optionalDependencies:
-      '@vueuse/core': 13.5.0(vue@3.5.28(typescript@5.8.3))
+      '@vueuse/core': 14.2.1(vue@3.5.28(typescript@5.8.3))
       vue-router: 4.5.1(vue@3.5.28(typescript@5.8.3))
 
   bootstrap@5.3.8(@popperjs/core@2.11.8):
