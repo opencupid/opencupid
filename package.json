@@ -38,5 +38,10 @@
     "rollup": "4.44.2",
     "zod": "3.24.4"
   },
+  "pnpm": {
+    "overrides": {
+      "tsx": "4.21.0"
+    }
+  },
   "packageManager": "pnpm@10.15.1"
 }
