@@ -280,7 +280,8 @@
     "title": "Beállítások",
     "language_label": "Nyelv",
     "push_notifications": "Push értesítések",
-    "enable_push": "Push értesítések engedélyezése"
+    "enable_push": "Push értesítések engedélyezése",
+    "newsletter_opt_in": "Szívesen kapok alkalmi hírlevelet"
   },
   "uicomponents": {
     "error": {

@@ -54,6 +54,7 @@ export const SettingsUserSchema = UserSchema.pick({
   email: true,
   phonenumber: true,
   language: true,
+  newsletterOptIn: true,
 })
 export type SettingsUser = z.infer<typeof SettingsUserSchema>
 
@@ -62,6 +63,7 @@ export const LoginUserSchema = UserSchema.pick({
   email: true,
   phonenumber: true,
   language: true,
+  newsletterOptIn: true,
 })
 export type LoginUser = z.infer<typeof LoginUserSchema>
 
