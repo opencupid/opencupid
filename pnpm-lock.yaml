@@ -317,8 +317,8 @@ importers:
         specifier: ^14.2.1
         version: 14.2.1(vue@3.5.28(typescript@5.8.3))
       '@vueuse/integrations':
-        specifier: ^13.5.0
-        version: 13.5.0(axios@1.11.0)(qrcode@1.5.4)(sortablejs@1.15.6)(vue@3.5.28(typescript@5.8.3))
+        specifier: ^14.2.1
+        version: 14.2.1(axios@1.11.0)(qrcode@1.5.4)(sortablejs@1.15.6)(vue@3.5.28(typescript@5.8.3))
       altcha:
         specifier: ^2.0.5
         version: 2.2.3
@@ -2712,14 +2712,14 @@ packages:
     peerDependencies:
       vue: ^3.5.0
 
-  '@vueuse/integrations@13.5.0':
-    resolution: {integrity: sha512-7RACJySnlpl0MkSzxbtadioNGSX4TL5/Wl2cUy4nDq/XkeHwPYvVM880HJUSiap/FXhVEup9VKTM9y/n5UspAw==}
+  '@vueuse/integrations@14.2.1':
+    resolution: {integrity: sha512-2LIUpBi/67PoXJGqSDQUF0pgQWpNHh7beiA+KG2AbybcNm+pTGWT6oPGlBgUoDWmYwfeQqM/uzOHqcILpKL7nA==}
     peerDependencies:
       async-validator: ^4
       axios: ^1
       change-case: ^5
       drauu: ^0.4
-      focus-trap: ^7
+      focus-trap: ^7 || ^8
       fuse.js: ^7
       idb-keyval: ^6
       jwt-decode: ^4
@@ -9714,10 +9714,10 @@ snapshots:
       '@vueuse/shared': 14.2.1(vue@3.5.28(typescript@5.8.3))
       vue: 3.5.28(typescript@5.8.3)
 
-  '@vueuse/integrations@13.5.0(axios@1.11.0)(qrcode@1.5.4)(sortablejs@1.15.6)(vue@3.5.28(typescript@5.8.3))':
+  '@vueuse/integrations@14.2.1(axios@1.11.0)(qrcode@1.5.4)(sortablejs@1.15.6)(vue@3.5.28(typescript@5.8.3))':
     dependencies:
-      '@vueuse/core': 13.5.0(vue@3.5.28(typescript@5.8.3))
-      '@vueuse/shared': 13.5.0(vue@3.5.28(typescript@5.8.3))
+      '@vueuse/core': 14.2.1(vue@3.5.28(typescript@5.8.3))
+      '@vueuse/shared': 14.2.1(vue@3.5.28(typescript@5.8.3))
       vue: 3.5.28(typescript@5.8.3)
     optionalDependencies:
       axios: 1.11.0
