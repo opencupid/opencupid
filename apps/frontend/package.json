@@ -31,7 +31,7 @@
     "@intlify/unplugin-vue-i18n": "^6.0.8",
     "@sentry/vue": "^9.36.0",
     "@types/qrcode": "^1.5.5",
-    "@vueuse/components": "^13.5.0",
+    "@vueuse/components": "^14.2.1",
     "@vueuse/core": "^14.2.1",
     "@vueuse/integrations": "^14.2.1",
     "altcha": "^2.0.5",
