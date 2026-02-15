@@ -136,7 +136,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
     css: {
       preprocessorOptions: {
         scss: {
-          silenceDeprecations: ['import', 'mixed-decls', 'color-functions', 'global-builtin'],
+          silenceDeprecations: ['import', 'color-functions', 'global-builtin', 'if-function'],
           includePaths: ['node_modules'],
           quietDeps: true,
           additionalData: '',
