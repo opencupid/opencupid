@@ -9,6 +9,13 @@ vi.mock('../../lib/prisma', () => ({
   },
 }))
 
+// Mock the listmonkSync service to prevent actual HTTP calls in tests
+vi.mock('../../services/listmonkSync.service', () => ({
+  listmonkSyncService: {
+    syncUser: vi.fn().mockResolvedValue(undefined),
+  },
+}))
+
 let service: UserService
 
 beforeEach(() => {
