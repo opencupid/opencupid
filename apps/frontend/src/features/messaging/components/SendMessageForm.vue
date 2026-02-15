@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, watchEffect, computed } from 'vue'
+import { ref, watch, watchEffect, computed, nextTick } from 'vue'
 import { funnel } from 'remeda'
 
 import { useLocalStore } from '@/store/localStore'
@@ -15,7 +15,6 @@ import IconMenuDotsVert from '@/assets/icons/interface/menu-dots-vert.svg'
 import VoiceRecorder from './VoiceRecorder.vue'
 import { useMessageStore } from '../stores/messageStore'
 
-import MicIcon from '@/assets/icons/interface/mic.svg'
 import Mic2Icon from '@/assets/icons/interface/mic-2.svg'
 
 
@@ -32,7 +31,8 @@ const emit = defineEmits<{
 }>()
 
 const content = ref('')
-const isVoiceMode = ref(false)
+const isVoiceActive = ref(false)
+const voiceRecorderRef = ref<InstanceType<typeof VoiceRecorder> | null>(null)
 
 // Local store for managing message drafts
 const localStore = useLocalStore()
@@ -91,17 +91,23 @@ async function handleSendMessage() {
   }
 }
 
+async function handleMicClick() {
+  isVoiceActive.value = true
+  await nextTick()
+  voiceRecorderRef.value?.triggerStart()
+}
+
 // Voice message handlers
 async function handleVoiceRecordingCompleted(audioBlob: Blob, duration: number) {
   const result = await messageStore.sendVoiceMessage(props.recipientProfile.id, audioBlob, duration)
   if (result.success) {
     emit('message:sent', result.data!)
-    isVoiceMode.value = false
   }
+  isVoiceActive.value = false
 }
 
 function handleVoiceRecordingCancelled() {
-  isVoiceMode.value = false
+  isVoiceActive.value = false
 }
 
 function handleVoiceRecordingError(error: string) {
@@ -124,27 +130,38 @@ function handleVoiceRecordingError(error: string) {
         </div>
       </div>
 
-      <!-- Text input form -->
-      <div v-if="!isVoiceMode" class="d-flex align-items-end gap-2">
-        <BFormGroup label="" label-for="content-input" class="me-2 flex-grow-1 w-100">
-          <BFormTextarea
-            id="content-input"
-            ref="textarea"
-            v-model="content"
-            rows="1"
-            max-rows="5"
-            no-resize
-            @keydown="handleKeyPress"
-            :placeholder="$t('messaging.message_input_placeholder')"
-            :disabled="messageStore.isSending"
-          />
-          <div class="form-text text-muted d-flex justify-content-end align-items-center gap-2">
+      <!-- Message input form -->
+      <div>
+        <BFormTextarea
+          id="content-input"
+          ref="textarea"
+          v-model="content"
+          rows="1"
+          max-rows="5"
+          no-resize
+          @keydown="handleKeyPress"
+          :placeholder="$t('messaging.message_input_placeholder')"
+          :disabled="messageStore.isSending || isVoiceActive"
+        />
+        <div class="form-text text-muted d-flex justify-content-between align-items-center">
+          <!-- Voice recorder button (left) -->
+          <BButton
+            variant="outline-secondary"
+            size="sm"
+            @click="handleMicClick"
+            :disabled="messageStore.isSending || isVoiceActive"
+            :title="$t('messaging.voice.record_voice_message')"
+          >
+            <Mic2Icon class="svg-icon" />
+          </BButton>
+
+          <div class="d-flex align-items-center gap-2">
             <BButton
               v-if="sendMode === 'click'"
               variant="primary"
               size="sm"
               @click="handleSendMessage"
-              :disabled="content.trim() === ''"
+              :disabled="content.trim() === '' || isVoiceActive"
             >
               {{ $t('messaging.send_message_button').toUpperCase() }}
             </BButton>
@@ -174,45 +191,20 @@ function handleVoiceRecordingError(error: string) {
               </BDropdownItem>
             </BDropdown>
           </div>
-        </BFormGroup>
-
-        <!-- Voice recorder button -->
-        <div class="d-flex flex-column align-items-center">
-          <BButton
-            variant="outline-primary"
-            size="sm"
-            @click="isVoiceMode = true"
-            :disabled="messageStore.isSending"
-            :title="$t('messaging.voice.record_voice_message')"
-            class="mb-1"
-          >
-          <Mic2Icon class="svg-icon"></Mic2Icon>
-          </BButton>
         </div>
       </div>
 
-      <!-- Voice recording mode -->
-      <div v-else class="voice-mode-container">
-        <div class="d-flex align-items-center justify-content-between mb-2">
-          <h6 class="mb-0">{{ $t('messaging.voice.recording_mode') }}</h6>
-          <BButton
-            variant="outline-secondary"
-            size="sm"
-            @click="isVoiceMode = false"
-            :title="$t('messaging.voice.back_to_text')"
-          >
-            <i class="fas fa-keyboard"></i> {{ $t('messaging.voice.text') }}
-          </BButton>
-        </div>
-        
-        <VoiceRecorder
-          :disabled="messageStore.isSending"
-          :max-duration="120"
-          @recording:completed="handleVoiceRecordingCompleted"
-          @recording:cancelled="handleVoiceRecordingCancelled"
-          @recording:error="handleVoiceRecordingError"
-        />
-      </div>
+      <!-- Inline voice recorder (shown when active) -->
+      <VoiceRecorder
+        v-if="isVoiceActive"
+        ref="voiceRecorderRef"
+        :disabled="messageStore.isSending"
+        :max-duration="120"
+        :hide-idle-button="true"
+        @recording:completed="handleVoiceRecordingCompleted"
+        @recording:cancelled="handleVoiceRecordingCancelled"
+        @recording:error="handleVoiceRecordingError"
+      />
     </div>
   </div>
 </template>
@@ -222,14 +214,4 @@ function handleVoiceRecordingError(error: string) {
   min-width: 200px;
 }
 
-.voice-mode-container {
-  border: 2px dashed var(--bs-primary);
-  border-radius: 8px;
-  padding: 1rem;
-  background: var(--bs-primary-bg-subtle);
-}
-
-.voice-mode-container h6 {
-  color: var(--bs-primary);
-}
 </style>

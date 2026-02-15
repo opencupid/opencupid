@@ -9,6 +9,7 @@ import Mic2Icon from '@/assets/icons/interface/mic-2.svg'
 const props = defineProps<{
   disabled?: boolean
   maxDuration?: number
+  hideIdleButton?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -81,6 +82,8 @@ const handleCancel = () => {
 const handleRetryPermission = async () => {
   await startRecording()
 }
+
+defineExpose({ triggerStart: handleRecordClick })
 </script>
 
 <template>
@@ -88,7 +91,7 @@ const handleRetryPermission = async () => {
     <!-- Main record button -->
     <div class="d-flex align-items-center gap-2">
       <BButton
-        v-if="canRecord"
+        v-if="canRecord && !(props.hideIdleButton && isIdle)"
         :class="buttonClass"
         size="sm"
         :disabled="props.disabled"

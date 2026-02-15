@@ -196,12 +196,8 @@ export const useMessageStore = defineStore('message', {
         formData.append('content', '') // Empty content for voice messages
         formData.append('duration', duration.toString())
 
-        const res = await safeApiCall(() => 
-          api.post<SendMessageResponse>('/messages/voice', formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          })
+        const res = await safeApiCall(() =>
+          api.post<SendMessageResponse>('/messages/voice', formData)
         )
 
         const { conversation, message } = res.data
