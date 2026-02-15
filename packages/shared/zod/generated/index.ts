@@ -36,7 +36,9 @@ export const LikedProfileScalarFieldEnumSchema = z.enum(['id','fromId','toId','c
 
 export const HiddenProfileScalarFieldEnumSchema = z.enum(['id','fromId','toId','createdAt']);
 
-export const MessageScalarFieldEnumSchema = z.enum(['id','conversationId','senderId','content','createdAt']);
+export const MessageScalarFieldEnumSchema = z.enum(['id','conversationId','senderId','content','messageType','createdAt']);
+
+export const MessageAttachmentScalarFieldEnumSchema = z.enum(['id','messageId','filePath','mimeType','fileSize','duration','createdAt']);
 
 export const SocialMatchFilterScalarFieldEnumSchema = z.enum(['id','profileId','country','cityId','cityName','lat','lon','radius']);
 
@@ -327,10 +329,27 @@ export const MessageSchema = z.object({
   conversationId: z.string(),
   senderId: z.string(),
   content: z.string(),
+  messageType: z.string(),
   createdAt: z.coerce.date(),
 })
 
 export type Message = z.infer<typeof MessageSchema>
+
+/////////////////////////////////////////
+// MESSAGE ATTACHMENT SCHEMA
+/////////////////////////////////////////
+
+export const MessageAttachmentSchema = z.object({
+  id: z.string().cuid(),
+  messageId: z.string(),
+  filePath: z.string(),
+  mimeType: z.string(),
+  fileSize: z.number().int().nullable(),
+  duration: z.number().int().nullable(),
+  createdAt: z.coerce.date(),
+})
+
+export type MessageAttachment = z.infer<typeof MessageAttachmentSchema>
 
 /////////////////////////////////////////
 // SOCIAL MATCH FILTER SCHEMA
@@ -842,6 +861,7 @@ export const HiddenProfileSelectSchema: z.ZodType<Prisma.HiddenProfileSelect> = 
 export const MessageIncludeSchema: z.ZodType<Prisma.MessageInclude> = z.object({
   conversation: z.union([z.boolean(),z.lazy(() => ConversationArgsSchema)]).optional(),
   sender: z.union([z.boolean(),z.lazy(() => ProfileArgsSchema)]).optional(),
+  attachment: z.union([z.boolean(),z.lazy(() => MessageAttachmentArgsSchema)]).optional(),
 }).strict()
 
 export const MessageArgsSchema: z.ZodType<Prisma.MessageDefaultArgs> = z.object({
@@ -854,9 +874,34 @@ export const MessageSelectSchema: z.ZodType<Prisma.MessageSelect> = z.object({
   conversationId: z.boolean().optional(),
   senderId: z.boolean().optional(),
   content: z.boolean().optional(),
+  messageType: z.boolean().optional(),
   createdAt: z.boolean().optional(),
   conversation: z.union([z.boolean(),z.lazy(() => ConversationArgsSchema)]).optional(),
   sender: z.union([z.boolean(),z.lazy(() => ProfileArgsSchema)]).optional(),
+  attachment: z.union([z.boolean(),z.lazy(() => MessageAttachmentArgsSchema)]).optional(),
+}).strict()
+
+// MESSAGE ATTACHMENT
+//------------------------------------------------------
+
+export const MessageAttachmentIncludeSchema: z.ZodType<Prisma.MessageAttachmentInclude> = z.object({
+  message: z.union([z.boolean(),z.lazy(() => MessageArgsSchema)]).optional(),
+}).strict()
+
+export const MessageAttachmentArgsSchema: z.ZodType<Prisma.MessageAttachmentDefaultArgs> = z.object({
+  select: z.lazy(() => MessageAttachmentSelectSchema).optional(),
+  include: z.lazy(() => MessageAttachmentIncludeSchema).optional(),
+}).strict();
+
+export const MessageAttachmentSelectSchema: z.ZodType<Prisma.MessageAttachmentSelect> = z.object({
+  id: z.boolean().optional(),
+  messageId: z.boolean().optional(),
+  filePath: z.boolean().optional(),
+  mimeType: z.boolean().optional(),
+  fileSize: z.boolean().optional(),
+  duration: z.boolean().optional(),
+  createdAt: z.boolean().optional(),
+  message: z.union([z.boolean(),z.lazy(() => MessageArgsSchema)]).optional(),
 }).strict()
 
 // SOCIAL MATCH FILTER
@@ -2222,9 +2267,11 @@ export const MessageWhereInputSchema: z.ZodType<Prisma.MessageWhereInput> = z.ob
   conversationId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   senderId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   content: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  messageType: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   conversation: z.union([ z.lazy(() => ConversationScalarRelationFilterSchema),z.lazy(() => ConversationWhereInputSchema) ]).optional(),
   sender: z.union([ z.lazy(() => ProfileScalarRelationFilterSchema),z.lazy(() => ProfileWhereInputSchema) ]).optional(),
+  attachment: z.union([ z.lazy(() => MessageAttachmentNullableScalarRelationFilterSchema),z.lazy(() => MessageAttachmentWhereInputSchema) ]).optional().nullable(),
 }).strict();
 
 export const MessageOrderByWithRelationInputSchema: z.ZodType<Prisma.MessageOrderByWithRelationInput> = z.object({
@@ -2232,9 +2279,11 @@ export const MessageOrderByWithRelationInputSchema: z.ZodType<Prisma.MessageOrde
   conversationId: z.lazy(() => SortOrderSchema).optional(),
   senderId: z.lazy(() => SortOrderSchema).optional(),
   content: z.lazy(() => SortOrderSchema).optional(),
+  messageType: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   conversation: z.lazy(() => ConversationOrderByWithRelationInputSchema).optional(),
-  sender: z.lazy(() => ProfileOrderByWithRelationInputSchema).optional()
+  sender: z.lazy(() => ProfileOrderByWithRelationInputSchema).optional(),
+  attachment: z.lazy(() => MessageAttachmentOrderByWithRelationInputSchema).optional()
 }).strict();
 
 export const MessageWhereUniqueInputSchema: z.ZodType<Prisma.MessageWhereUniqueInput> = z.object({
@@ -2248,9 +2297,11 @@ export const MessageWhereUniqueInputSchema: z.ZodType<Prisma.MessageWhereUniqueI
   conversationId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   senderId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   content: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  messageType: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   conversation: z.union([ z.lazy(() => ConversationScalarRelationFilterSchema),z.lazy(() => ConversationWhereInputSchema) ]).optional(),
   sender: z.union([ z.lazy(() => ProfileScalarRelationFilterSchema),z.lazy(() => ProfileWhereInputSchema) ]).optional(),
+  attachment: z.union([ z.lazy(() => MessageAttachmentNullableScalarRelationFilterSchema),z.lazy(() => MessageAttachmentWhereInputSchema) ]).optional().nullable(),
 }).strict());
 
 export const MessageOrderByWithAggregationInputSchema: z.ZodType<Prisma.MessageOrderByWithAggregationInput> = z.object({
@@ -2258,6 +2309,7 @@ export const MessageOrderByWithAggregationInputSchema: z.ZodType<Prisma.MessageO
   conversationId: z.lazy(() => SortOrderSchema).optional(),
   senderId: z.lazy(() => SortOrderSchema).optional(),
   content: z.lazy(() => SortOrderSchema).optional(),
+  messageType: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   _count: z.lazy(() => MessageCountOrderByAggregateInputSchema).optional(),
   _max: z.lazy(() => MessageMaxOrderByAggregateInputSchema).optional(),
@@ -2272,6 +2324,86 @@ export const MessageScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.Messa
   conversationId: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   senderId: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   content: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
+  messageType: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
+  createdAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
+}).strict();
+
+export const MessageAttachmentWhereInputSchema: z.ZodType<Prisma.MessageAttachmentWhereInput> = z.object({
+  AND: z.union([ z.lazy(() => MessageAttachmentWhereInputSchema),z.lazy(() => MessageAttachmentWhereInputSchema).array() ]).optional(),
+  OR: z.lazy(() => MessageAttachmentWhereInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => MessageAttachmentWhereInputSchema),z.lazy(() => MessageAttachmentWhereInputSchema).array() ]).optional(),
+  id: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  messageId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  filePath: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  mimeType: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  fileSize: z.union([ z.lazy(() => IntNullableFilterSchema),z.number() ]).optional().nullable(),
+  duration: z.union([ z.lazy(() => IntNullableFilterSchema),z.number() ]).optional().nullable(),
+  createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  message: z.union([ z.lazy(() => MessageScalarRelationFilterSchema),z.lazy(() => MessageWhereInputSchema) ]).optional(),
+}).strict();
+
+export const MessageAttachmentOrderByWithRelationInputSchema: z.ZodType<Prisma.MessageAttachmentOrderByWithRelationInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  messageId: z.lazy(() => SortOrderSchema).optional(),
+  filePath: z.lazy(() => SortOrderSchema).optional(),
+  mimeType: z.lazy(() => SortOrderSchema).optional(),
+  fileSize: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
+  duration: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  message: z.lazy(() => MessageOrderByWithRelationInputSchema).optional()
+}).strict();
+
+export const MessageAttachmentWhereUniqueInputSchema: z.ZodType<Prisma.MessageAttachmentWhereUniqueInput> = z.union([
+  z.object({
+    id: z.string().cuid(),
+    messageId: z.string()
+  }),
+  z.object({
+    id: z.string().cuid(),
+  }),
+  z.object({
+    messageId: z.string(),
+  }),
+])
+.and(z.object({
+  id: z.string().cuid().optional(),
+  messageId: z.string().optional(),
+  AND: z.union([ z.lazy(() => MessageAttachmentWhereInputSchema),z.lazy(() => MessageAttachmentWhereInputSchema).array() ]).optional(),
+  OR: z.lazy(() => MessageAttachmentWhereInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => MessageAttachmentWhereInputSchema),z.lazy(() => MessageAttachmentWhereInputSchema).array() ]).optional(),
+  filePath: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  mimeType: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  fileSize: z.union([ z.lazy(() => IntNullableFilterSchema),z.number().int() ]).optional().nullable(),
+  duration: z.union([ z.lazy(() => IntNullableFilterSchema),z.number().int() ]).optional().nullable(),
+  createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  message: z.union([ z.lazy(() => MessageScalarRelationFilterSchema),z.lazy(() => MessageWhereInputSchema) ]).optional(),
+}).strict());
+
+export const MessageAttachmentOrderByWithAggregationInputSchema: z.ZodType<Prisma.MessageAttachmentOrderByWithAggregationInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  messageId: z.lazy(() => SortOrderSchema).optional(),
+  filePath: z.lazy(() => SortOrderSchema).optional(),
+  mimeType: z.lazy(() => SortOrderSchema).optional(),
+  fileSize: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
+  duration: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  _count: z.lazy(() => MessageAttachmentCountOrderByAggregateInputSchema).optional(),
+  _avg: z.lazy(() => MessageAttachmentAvgOrderByAggregateInputSchema).optional(),
+  _max: z.lazy(() => MessageAttachmentMaxOrderByAggregateInputSchema).optional(),
+  _min: z.lazy(() => MessageAttachmentMinOrderByAggregateInputSchema).optional(),
+  _sum: z.lazy(() => MessageAttachmentSumOrderByAggregateInputSchema).optional()
+}).strict();
+
+export const MessageAttachmentScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.MessageAttachmentScalarWhereWithAggregatesInput> = z.object({
+  AND: z.union([ z.lazy(() => MessageAttachmentScalarWhereWithAggregatesInputSchema),z.lazy(() => MessageAttachmentScalarWhereWithAggregatesInputSchema).array() ]).optional(),
+  OR: z.lazy(() => MessageAttachmentScalarWhereWithAggregatesInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => MessageAttachmentScalarWhereWithAggregatesInputSchema),z.lazy(() => MessageAttachmentScalarWhereWithAggregatesInputSchema).array() ]).optional(),
+  id: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
+  messageId: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
+  filePath: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
+  mimeType: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
+  fileSize: z.union([ z.lazy(() => IntNullableWithAggregatesFilterSchema),z.number() ]).optional().nullable(),
+  duration: z.union([ z.lazy(() => IntNullableWithAggregatesFilterSchema),z.number() ]).optional().nullable(),
   createdAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
 }).strict();
 
@@ -3706,9 +3838,11 @@ export const HiddenProfileUncheckedUpdateManyInputSchema: z.ZodType<Prisma.Hidde
 export const MessageCreateInputSchema: z.ZodType<Prisma.MessageCreateInput> = z.object({
   id: z.string().cuid().optional(),
   content: z.string(),
+  messageType: z.string().optional(),
   createdAt: z.coerce.date().optional(),
   conversation: z.lazy(() => ConversationCreateNestedOneWithoutMessagesInputSchema),
-  sender: z.lazy(() => ProfileCreateNestedOneWithoutMessageInputSchema)
+  sender: z.lazy(() => ProfileCreateNestedOneWithoutMessageInputSchema),
+  attachment: z.lazy(() => MessageAttachmentCreateNestedOneWithoutMessageInputSchema).optional()
 }).strict();
 
 export const MessageUncheckedCreateInputSchema: z.ZodType<Prisma.MessageUncheckedCreateInput> = z.object({
@@ -3716,15 +3850,19 @@ export const MessageUncheckedCreateInputSchema: z.ZodType<Prisma.MessageUnchecke
   conversationId: z.string(),
   senderId: z.string(),
   content: z.string(),
-  createdAt: z.coerce.date().optional()
+  messageType: z.string().optional(),
+  createdAt: z.coerce.date().optional(),
+  attachment: z.lazy(() => MessageAttachmentUncheckedCreateNestedOneWithoutMessageInputSchema).optional()
 }).strict();
 
 export const MessageUpdateInputSchema: z.ZodType<Prisma.MessageUpdateInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   content: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  messageType: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   conversation: z.lazy(() => ConversationUpdateOneRequiredWithoutMessagesNestedInputSchema).optional(),
-  sender: z.lazy(() => ProfileUpdateOneRequiredWithoutMessageNestedInputSchema).optional()
+  sender: z.lazy(() => ProfileUpdateOneRequiredWithoutMessageNestedInputSchema).optional(),
+  attachment: z.lazy(() => MessageAttachmentUpdateOneWithoutMessageNestedInputSchema).optional()
 }).strict();
 
 export const MessageUncheckedUpdateInputSchema: z.ZodType<Prisma.MessageUncheckedUpdateInput> = z.object({
@@ -3732,7 +3870,9 @@ export const MessageUncheckedUpdateInputSchema: z.ZodType<Prisma.MessageUnchecke
   conversationId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   senderId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   content: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  messageType: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  attachment: z.lazy(() => MessageAttachmentUncheckedUpdateOneWithoutMessageNestedInputSchema).optional()
 }).strict();
 
 export const MessageCreateManyInputSchema: z.ZodType<Prisma.MessageCreateManyInput> = z.object({
@@ -3740,12 +3880,14 @@ export const MessageCreateManyInputSchema: z.ZodType<Prisma.MessageCreateManyInp
   conversationId: z.string(),
   senderId: z.string(),
   content: z.string(),
+  messageType: z.string().optional(),
   createdAt: z.coerce.date().optional()
 }).strict();
 
 export const MessageUpdateManyMutationInputSchema: z.ZodType<Prisma.MessageUpdateManyMutationInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   content: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  messageType: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
@@ -3754,6 +3896,76 @@ export const MessageUncheckedUpdateManyInputSchema: z.ZodType<Prisma.MessageUnch
   conversationId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   senderId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   content: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  messageType: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+}).strict();
+
+export const MessageAttachmentCreateInputSchema: z.ZodType<Prisma.MessageAttachmentCreateInput> = z.object({
+  id: z.string().cuid().optional(),
+  filePath: z.string(),
+  mimeType: z.string(),
+  fileSize: z.number().int().optional().nullable(),
+  duration: z.number().int().optional().nullable(),
+  createdAt: z.coerce.date().optional(),
+  message: z.lazy(() => MessageCreateNestedOneWithoutAttachmentInputSchema)
+}).strict();
+
+export const MessageAttachmentUncheckedCreateInputSchema: z.ZodType<Prisma.MessageAttachmentUncheckedCreateInput> = z.object({
+  id: z.string().cuid().optional(),
+  messageId: z.string(),
+  filePath: z.string(),
+  mimeType: z.string(),
+  fileSize: z.number().int().optional().nullable(),
+  duration: z.number().int().optional().nullable(),
+  createdAt: z.coerce.date().optional()
+}).strict();
+
+export const MessageAttachmentUpdateInputSchema: z.ZodType<Prisma.MessageAttachmentUpdateInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  filePath: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  mimeType: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  fileSize: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  duration: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  message: z.lazy(() => MessageUpdateOneRequiredWithoutAttachmentNestedInputSchema).optional()
+}).strict();
+
+export const MessageAttachmentUncheckedUpdateInputSchema: z.ZodType<Prisma.MessageAttachmentUncheckedUpdateInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  messageId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  filePath: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  mimeType: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  fileSize: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  duration: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+}).strict();
+
+export const MessageAttachmentCreateManyInputSchema: z.ZodType<Prisma.MessageAttachmentCreateManyInput> = z.object({
+  id: z.string().cuid().optional(),
+  messageId: z.string(),
+  filePath: z.string(),
+  mimeType: z.string(),
+  fileSize: z.number().int().optional().nullable(),
+  duration: z.number().int().optional().nullable(),
+  createdAt: z.coerce.date().optional()
+}).strict();
+
+export const MessageAttachmentUpdateManyMutationInputSchema: z.ZodType<Prisma.MessageAttachmentUpdateManyMutationInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  filePath: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  mimeType: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  fileSize: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  duration: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+}).strict();
+
+export const MessageAttachmentUncheckedUpdateManyInputSchema: z.ZodType<Prisma.MessageAttachmentUncheckedUpdateManyInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  messageId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  filePath: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  mimeType: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  fileSize: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  duration: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
@@ -5100,11 +5312,17 @@ export const HiddenProfileMinOrderByAggregateInputSchema: z.ZodType<Prisma.Hidde
   createdAt: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
+export const MessageAttachmentNullableScalarRelationFilterSchema: z.ZodType<Prisma.MessageAttachmentNullableScalarRelationFilter> = z.object({
+  is: z.lazy(() => MessageAttachmentWhereInputSchema).optional().nullable(),
+  isNot: z.lazy(() => MessageAttachmentWhereInputSchema).optional().nullable()
+}).strict();
+
 export const MessageCountOrderByAggregateInputSchema: z.ZodType<Prisma.MessageCountOrderByAggregateInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
   conversationId: z.lazy(() => SortOrderSchema).optional(),
   senderId: z.lazy(() => SortOrderSchema).optional(),
   content: z.lazy(() => SortOrderSchema).optional(),
+  messageType: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
@@ -5113,6 +5331,7 @@ export const MessageMaxOrderByAggregateInputSchema: z.ZodType<Prisma.MessageMaxO
   conversationId: z.lazy(() => SortOrderSchema).optional(),
   senderId: z.lazy(() => SortOrderSchema).optional(),
   content: z.lazy(() => SortOrderSchema).optional(),
+  messageType: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
@@ -5121,7 +5340,53 @@ export const MessageMinOrderByAggregateInputSchema: z.ZodType<Prisma.MessageMinO
   conversationId: z.lazy(() => SortOrderSchema).optional(),
   senderId: z.lazy(() => SortOrderSchema).optional(),
   content: z.lazy(() => SortOrderSchema).optional(),
+  messageType: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const MessageScalarRelationFilterSchema: z.ZodType<Prisma.MessageScalarRelationFilter> = z.object({
+  is: z.lazy(() => MessageWhereInputSchema).optional(),
+  isNot: z.lazy(() => MessageWhereInputSchema).optional()
+}).strict();
+
+export const MessageAttachmentCountOrderByAggregateInputSchema: z.ZodType<Prisma.MessageAttachmentCountOrderByAggregateInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  messageId: z.lazy(() => SortOrderSchema).optional(),
+  filePath: z.lazy(() => SortOrderSchema).optional(),
+  mimeType: z.lazy(() => SortOrderSchema).optional(),
+  fileSize: z.lazy(() => SortOrderSchema).optional(),
+  duration: z.lazy(() => SortOrderSchema).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const MessageAttachmentAvgOrderByAggregateInputSchema: z.ZodType<Prisma.MessageAttachmentAvgOrderByAggregateInput> = z.object({
+  fileSize: z.lazy(() => SortOrderSchema).optional(),
+  duration: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const MessageAttachmentMaxOrderByAggregateInputSchema: z.ZodType<Prisma.MessageAttachmentMaxOrderByAggregateInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  messageId: z.lazy(() => SortOrderSchema).optional(),
+  filePath: z.lazy(() => SortOrderSchema).optional(),
+  mimeType: z.lazy(() => SortOrderSchema).optional(),
+  fileSize: z.lazy(() => SortOrderSchema).optional(),
+  duration: z.lazy(() => SortOrderSchema).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const MessageAttachmentMinOrderByAggregateInputSchema: z.ZodType<Prisma.MessageAttachmentMinOrderByAggregateInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  messageId: z.lazy(() => SortOrderSchema).optional(),
+  filePath: z.lazy(() => SortOrderSchema).optional(),
+  mimeType: z.lazy(() => SortOrderSchema).optional(),
+  fileSize: z.lazy(() => SortOrderSchema).optional(),
+  duration: z.lazy(() => SortOrderSchema).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const MessageAttachmentSumOrderByAggregateInputSchema: z.ZodType<Prisma.MessageAttachmentSumOrderByAggregateInput> = z.object({
+  fileSize: z.lazy(() => SortOrderSchema).optional(),
+  duration: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const SocialMatchFilterCountOrderByAggregateInputSchema: z.ZodType<Prisma.SocialMatchFilterCountOrderByAggregateInput> = z.object({
@@ -6743,6 +7008,18 @@ export const ProfileCreateNestedOneWithoutMessageInputSchema: z.ZodType<Prisma.P
   connect: z.lazy(() => ProfileWhereUniqueInputSchema).optional()
 }).strict();
 
+export const MessageAttachmentCreateNestedOneWithoutMessageInputSchema: z.ZodType<Prisma.MessageAttachmentCreateNestedOneWithoutMessageInput> = z.object({
+  create: z.union([ z.lazy(() => MessageAttachmentCreateWithoutMessageInputSchema),z.lazy(() => MessageAttachmentUncheckedCreateWithoutMessageInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => MessageAttachmentCreateOrConnectWithoutMessageInputSchema).optional(),
+  connect: z.lazy(() => MessageAttachmentWhereUniqueInputSchema).optional()
+}).strict();
+
+export const MessageAttachmentUncheckedCreateNestedOneWithoutMessageInputSchema: z.ZodType<Prisma.MessageAttachmentUncheckedCreateNestedOneWithoutMessageInput> = z.object({
+  create: z.union([ z.lazy(() => MessageAttachmentCreateWithoutMessageInputSchema),z.lazy(() => MessageAttachmentUncheckedCreateWithoutMessageInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => MessageAttachmentCreateOrConnectWithoutMessageInputSchema).optional(),
+  connect: z.lazy(() => MessageAttachmentWhereUniqueInputSchema).optional()
+}).strict();
+
 export const ConversationUpdateOneRequiredWithoutMessagesNestedInputSchema: z.ZodType<Prisma.ConversationUpdateOneRequiredWithoutMessagesNestedInput> = z.object({
   create: z.union([ z.lazy(() => ConversationCreateWithoutMessagesInputSchema),z.lazy(() => ConversationUncheckedCreateWithoutMessagesInputSchema) ]).optional(),
   connectOrCreate: z.lazy(() => ConversationCreateOrConnectWithoutMessagesInputSchema).optional(),
@@ -6757,6 +7034,40 @@ export const ProfileUpdateOneRequiredWithoutMessageNestedInputSchema: z.ZodType<
   upsert: z.lazy(() => ProfileUpsertWithoutMessageInputSchema).optional(),
   connect: z.lazy(() => ProfileWhereUniqueInputSchema).optional(),
   update: z.union([ z.lazy(() => ProfileUpdateToOneWithWhereWithoutMessageInputSchema),z.lazy(() => ProfileUpdateWithoutMessageInputSchema),z.lazy(() => ProfileUncheckedUpdateWithoutMessageInputSchema) ]).optional(),
+}).strict();
+
+export const MessageAttachmentUpdateOneWithoutMessageNestedInputSchema: z.ZodType<Prisma.MessageAttachmentUpdateOneWithoutMessageNestedInput> = z.object({
+  create: z.union([ z.lazy(() => MessageAttachmentCreateWithoutMessageInputSchema),z.lazy(() => MessageAttachmentUncheckedCreateWithoutMessageInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => MessageAttachmentCreateOrConnectWithoutMessageInputSchema).optional(),
+  upsert: z.lazy(() => MessageAttachmentUpsertWithoutMessageInputSchema).optional(),
+  disconnect: z.union([ z.boolean(),z.lazy(() => MessageAttachmentWhereInputSchema) ]).optional(),
+  delete: z.union([ z.boolean(),z.lazy(() => MessageAttachmentWhereInputSchema) ]).optional(),
+  connect: z.lazy(() => MessageAttachmentWhereUniqueInputSchema).optional(),
+  update: z.union([ z.lazy(() => MessageAttachmentUpdateToOneWithWhereWithoutMessageInputSchema),z.lazy(() => MessageAttachmentUpdateWithoutMessageInputSchema),z.lazy(() => MessageAttachmentUncheckedUpdateWithoutMessageInputSchema) ]).optional(),
+}).strict();
+
+export const MessageAttachmentUncheckedUpdateOneWithoutMessageNestedInputSchema: z.ZodType<Prisma.MessageAttachmentUncheckedUpdateOneWithoutMessageNestedInput> = z.object({
+  create: z.union([ z.lazy(() => MessageAttachmentCreateWithoutMessageInputSchema),z.lazy(() => MessageAttachmentUncheckedCreateWithoutMessageInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => MessageAttachmentCreateOrConnectWithoutMessageInputSchema).optional(),
+  upsert: z.lazy(() => MessageAttachmentUpsertWithoutMessageInputSchema).optional(),
+  disconnect: z.union([ z.boolean(),z.lazy(() => MessageAttachmentWhereInputSchema) ]).optional(),
+  delete: z.union([ z.boolean(),z.lazy(() => MessageAttachmentWhereInputSchema) ]).optional(),
+  connect: z.lazy(() => MessageAttachmentWhereUniqueInputSchema).optional(),
+  update: z.union([ z.lazy(() => MessageAttachmentUpdateToOneWithWhereWithoutMessageInputSchema),z.lazy(() => MessageAttachmentUpdateWithoutMessageInputSchema),z.lazy(() => MessageAttachmentUncheckedUpdateWithoutMessageInputSchema) ]).optional(),
+}).strict();
+
+export const MessageCreateNestedOneWithoutAttachmentInputSchema: z.ZodType<Prisma.MessageCreateNestedOneWithoutAttachmentInput> = z.object({
+  create: z.union([ z.lazy(() => MessageCreateWithoutAttachmentInputSchema),z.lazy(() => MessageUncheckedCreateWithoutAttachmentInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => MessageCreateOrConnectWithoutAttachmentInputSchema).optional(),
+  connect: z.lazy(() => MessageWhereUniqueInputSchema).optional()
+}).strict();
+
+export const MessageUpdateOneRequiredWithoutAttachmentNestedInputSchema: z.ZodType<Prisma.MessageUpdateOneRequiredWithoutAttachmentNestedInput> = z.object({
+  create: z.union([ z.lazy(() => MessageCreateWithoutAttachmentInputSchema),z.lazy(() => MessageUncheckedCreateWithoutAttachmentInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => MessageCreateOrConnectWithoutAttachmentInputSchema).optional(),
+  upsert: z.lazy(() => MessageUpsertWithoutAttachmentInputSchema).optional(),
+  connect: z.lazy(() => MessageWhereUniqueInputSchema).optional(),
+  update: z.union([ z.lazy(() => MessageUpdateToOneWithWhereWithoutAttachmentInputSchema),z.lazy(() => MessageUpdateWithoutAttachmentInputSchema),z.lazy(() => MessageUncheckedUpdateWithoutAttachmentInputSchema) ]).optional(),
 }).strict();
 
 export const TagCreateNestedManyWithoutFiltersInputSchema: z.ZodType<Prisma.TagCreateNestedManyWithoutFiltersInput> = z.object({
@@ -8586,15 +8897,19 @@ export const ConversationCreateManyProfileBInputEnvelopeSchema: z.ZodType<Prisma
 export const MessageCreateWithoutSenderInputSchema: z.ZodType<Prisma.MessageCreateWithoutSenderInput> = z.object({
   id: z.string().cuid().optional(),
   content: z.string(),
+  messageType: z.string().optional(),
   createdAt: z.coerce.date().optional(),
-  conversation: z.lazy(() => ConversationCreateNestedOneWithoutMessagesInputSchema)
+  conversation: z.lazy(() => ConversationCreateNestedOneWithoutMessagesInputSchema),
+  attachment: z.lazy(() => MessageAttachmentCreateNestedOneWithoutMessageInputSchema).optional()
 }).strict();
 
 export const MessageUncheckedCreateWithoutSenderInputSchema: z.ZodType<Prisma.MessageUncheckedCreateWithoutSenderInput> = z.object({
   id: z.string().cuid().optional(),
   conversationId: z.string(),
   content: z.string(),
-  createdAt: z.coerce.date().optional()
+  messageType: z.string().optional(),
+  createdAt: z.coerce.date().optional(),
+  attachment: z.lazy(() => MessageAttachmentUncheckedCreateNestedOneWithoutMessageInputSchema).optional()
 }).strict();
 
 export const MessageCreateOrConnectWithoutSenderInputSchema: z.ZodType<Prisma.MessageCreateOrConnectWithoutSenderInput> = z.object({
@@ -9223,6 +9538,7 @@ export const MessageScalarWhereInputSchema: z.ZodType<Prisma.MessageScalarWhereI
   conversationId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   senderId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   content: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  messageType: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
 }).strict();
 
@@ -10123,15 +10439,19 @@ export const ConversationParticipantCreateManyConversationInputEnvelopeSchema: z
 export const MessageCreateWithoutConversationInputSchema: z.ZodType<Prisma.MessageCreateWithoutConversationInput> = z.object({
   id: z.string().cuid().optional(),
   content: z.string(),
+  messageType: z.string().optional(),
   createdAt: z.coerce.date().optional(),
-  sender: z.lazy(() => ProfileCreateNestedOneWithoutMessageInputSchema)
+  sender: z.lazy(() => ProfileCreateNestedOneWithoutMessageInputSchema),
+  attachment: z.lazy(() => MessageAttachmentCreateNestedOneWithoutMessageInputSchema).optional()
 }).strict();
 
 export const MessageUncheckedCreateWithoutConversationInputSchema: z.ZodType<Prisma.MessageUncheckedCreateWithoutConversationInput> = z.object({
   id: z.string().cuid().optional(),
   senderId: z.string(),
   content: z.string(),
-  createdAt: z.coerce.date().optional()
+  messageType: z.string().optional(),
+  createdAt: z.coerce.date().optional(),
+  attachment: z.lazy(() => MessageAttachmentUncheckedCreateNestedOneWithoutMessageInputSchema).optional()
 }).strict();
 
 export const MessageCreateOrConnectWithoutConversationInputSchema: z.ZodType<Prisma.MessageCreateOrConnectWithoutConversationInput> = z.object({
@@ -11706,6 +12026,29 @@ export const ProfileCreateOrConnectWithoutMessageInputSchema: z.ZodType<Prisma.P
   create: z.union([ z.lazy(() => ProfileCreateWithoutMessageInputSchema),z.lazy(() => ProfileUncheckedCreateWithoutMessageInputSchema) ]),
 }).strict();
 
+export const MessageAttachmentCreateWithoutMessageInputSchema: z.ZodType<Prisma.MessageAttachmentCreateWithoutMessageInput> = z.object({
+  id: z.string().cuid().optional(),
+  filePath: z.string(),
+  mimeType: z.string(),
+  fileSize: z.number().int().optional().nullable(),
+  duration: z.number().int().optional().nullable(),
+  createdAt: z.coerce.date().optional()
+}).strict();
+
+export const MessageAttachmentUncheckedCreateWithoutMessageInputSchema: z.ZodType<Prisma.MessageAttachmentUncheckedCreateWithoutMessageInput> = z.object({
+  id: z.string().cuid().optional(),
+  filePath: z.string(),
+  mimeType: z.string(),
+  fileSize: z.number().int().optional().nullable(),
+  duration: z.number().int().optional().nullable(),
+  createdAt: z.coerce.date().optional()
+}).strict();
+
+export const MessageAttachmentCreateOrConnectWithoutMessageInputSchema: z.ZodType<Prisma.MessageAttachmentCreateOrConnectWithoutMessageInput> = z.object({
+  where: z.lazy(() => MessageAttachmentWhereUniqueInputSchema),
+  create: z.union([ z.lazy(() => MessageAttachmentCreateWithoutMessageInputSchema),z.lazy(() => MessageAttachmentUncheckedCreateWithoutMessageInputSchema) ]),
+}).strict();
+
 export const ConversationUpsertWithoutMessagesInputSchema: z.ZodType<Prisma.ConversationUpsertWithoutMessagesInput> = z.object({
   update: z.union([ z.lazy(() => ConversationUpdateWithoutMessagesInputSchema),z.lazy(() => ConversationUncheckedUpdateWithoutMessagesInputSchema) ]),
   create: z.union([ z.lazy(() => ConversationCreateWithoutMessagesInputSchema),z.lazy(() => ConversationUncheckedCreateWithoutMessagesInputSchema) ]),
@@ -11836,6 +12179,87 @@ export const ProfileUncheckedUpdateWithoutMessageInputSchema: z.ZodType<Prisma.P
   hiddenProfiles: z.lazy(() => HiddenProfileUncheckedUpdateManyWithoutFromNestedInputSchema).optional(),
   hiddenBy: z.lazy(() => HiddenProfileUncheckedUpdateManyWithoutToNestedInputSchema).optional(),
   posts: z.lazy(() => PostUncheckedUpdateManyWithoutPostedByNestedInputSchema).optional()
+}).strict();
+
+export const MessageAttachmentUpsertWithoutMessageInputSchema: z.ZodType<Prisma.MessageAttachmentUpsertWithoutMessageInput> = z.object({
+  update: z.union([ z.lazy(() => MessageAttachmentUpdateWithoutMessageInputSchema),z.lazy(() => MessageAttachmentUncheckedUpdateWithoutMessageInputSchema) ]),
+  create: z.union([ z.lazy(() => MessageAttachmentCreateWithoutMessageInputSchema),z.lazy(() => MessageAttachmentUncheckedCreateWithoutMessageInputSchema) ]),
+  where: z.lazy(() => MessageAttachmentWhereInputSchema).optional()
+}).strict();
+
+export const MessageAttachmentUpdateToOneWithWhereWithoutMessageInputSchema: z.ZodType<Prisma.MessageAttachmentUpdateToOneWithWhereWithoutMessageInput> = z.object({
+  where: z.lazy(() => MessageAttachmentWhereInputSchema).optional(),
+  data: z.union([ z.lazy(() => MessageAttachmentUpdateWithoutMessageInputSchema),z.lazy(() => MessageAttachmentUncheckedUpdateWithoutMessageInputSchema) ]),
+}).strict();
+
+export const MessageAttachmentUpdateWithoutMessageInputSchema: z.ZodType<Prisma.MessageAttachmentUpdateWithoutMessageInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  filePath: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  mimeType: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  fileSize: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  duration: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+}).strict();
+
+export const MessageAttachmentUncheckedUpdateWithoutMessageInputSchema: z.ZodType<Prisma.MessageAttachmentUncheckedUpdateWithoutMessageInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  filePath: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  mimeType: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  fileSize: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  duration: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+}).strict();
+
+export const MessageCreateWithoutAttachmentInputSchema: z.ZodType<Prisma.MessageCreateWithoutAttachmentInput> = z.object({
+  id: z.string().cuid().optional(),
+  content: z.string(),
+  messageType: z.string().optional(),
+  createdAt: z.coerce.date().optional(),
+  conversation: z.lazy(() => ConversationCreateNestedOneWithoutMessagesInputSchema),
+  sender: z.lazy(() => ProfileCreateNestedOneWithoutMessageInputSchema)
+}).strict();
+
+export const MessageUncheckedCreateWithoutAttachmentInputSchema: z.ZodType<Prisma.MessageUncheckedCreateWithoutAttachmentInput> = z.object({
+  id: z.string().cuid().optional(),
+  conversationId: z.string(),
+  senderId: z.string(),
+  content: z.string(),
+  messageType: z.string().optional(),
+  createdAt: z.coerce.date().optional()
+}).strict();
+
+export const MessageCreateOrConnectWithoutAttachmentInputSchema: z.ZodType<Prisma.MessageCreateOrConnectWithoutAttachmentInput> = z.object({
+  where: z.lazy(() => MessageWhereUniqueInputSchema),
+  create: z.union([ z.lazy(() => MessageCreateWithoutAttachmentInputSchema),z.lazy(() => MessageUncheckedCreateWithoutAttachmentInputSchema) ]),
+}).strict();
+
+export const MessageUpsertWithoutAttachmentInputSchema: z.ZodType<Prisma.MessageUpsertWithoutAttachmentInput> = z.object({
+  update: z.union([ z.lazy(() => MessageUpdateWithoutAttachmentInputSchema),z.lazy(() => MessageUncheckedUpdateWithoutAttachmentInputSchema) ]),
+  create: z.union([ z.lazy(() => MessageCreateWithoutAttachmentInputSchema),z.lazy(() => MessageUncheckedCreateWithoutAttachmentInputSchema) ]),
+  where: z.lazy(() => MessageWhereInputSchema).optional()
+}).strict();
+
+export const MessageUpdateToOneWithWhereWithoutAttachmentInputSchema: z.ZodType<Prisma.MessageUpdateToOneWithWhereWithoutAttachmentInput> = z.object({
+  where: z.lazy(() => MessageWhereInputSchema).optional(),
+  data: z.union([ z.lazy(() => MessageUpdateWithoutAttachmentInputSchema),z.lazy(() => MessageUncheckedUpdateWithoutAttachmentInputSchema) ]),
+}).strict();
+
+export const MessageUpdateWithoutAttachmentInputSchema: z.ZodType<Prisma.MessageUpdateWithoutAttachmentInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  content: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  messageType: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  conversation: z.lazy(() => ConversationUpdateOneRequiredWithoutMessagesNestedInputSchema).optional(),
+  sender: z.lazy(() => ProfileUpdateOneRequiredWithoutMessageNestedInputSchema).optional()
+}).strict();
+
+export const MessageUncheckedUpdateWithoutAttachmentInputSchema: z.ZodType<Prisma.MessageUncheckedUpdateWithoutAttachmentInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  conversationId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  senderId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  content: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  messageType: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const TagCreateWithoutFiltersInputSchema: z.ZodType<Prisma.TagCreateWithoutFiltersInput> = z.object({
@@ -12852,6 +13276,7 @@ export const MessageCreateManySenderInputSchema: z.ZodType<Prisma.MessageCreateM
   id: z.string().cuid().optional(),
   conversationId: z.string(),
   content: z.string(),
+  messageType: z.string().optional(),
   createdAt: z.coerce.date().optional()
 }).strict();
 
@@ -13097,21 +13522,26 @@ export const ConversationUncheckedUpdateManyWithoutProfileBInputSchema: z.ZodTyp
 export const MessageUpdateWithoutSenderInputSchema: z.ZodType<Prisma.MessageUpdateWithoutSenderInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   content: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  messageType: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  conversation: z.lazy(() => ConversationUpdateOneRequiredWithoutMessagesNestedInputSchema).optional()
+  conversation: z.lazy(() => ConversationUpdateOneRequiredWithoutMessagesNestedInputSchema).optional(),
+  attachment: z.lazy(() => MessageAttachmentUpdateOneWithoutMessageNestedInputSchema).optional()
 }).strict();
 
 export const MessageUncheckedUpdateWithoutSenderInputSchema: z.ZodType<Prisma.MessageUncheckedUpdateWithoutSenderInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   conversationId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   content: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  messageType: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  attachment: z.lazy(() => MessageAttachmentUncheckedUpdateOneWithoutMessageNestedInputSchema).optional()
 }).strict();
 
 export const MessageUncheckedUpdateManyWithoutSenderInputSchema: z.ZodType<Prisma.MessageUncheckedUpdateManyWithoutSenderInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   conversationId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   content: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  messageType: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
@@ -13535,6 +13965,7 @@ export const MessageCreateManyConversationInputSchema: z.ZodType<Prisma.MessageC
   id: z.string().cuid().optional(),
   senderId: z.string(),
   content: z.string(),
+  messageType: z.string().optional(),
   createdAt: z.coerce.date().optional()
 }).strict();
 
@@ -13565,21 +13996,26 @@ export const ConversationParticipantUncheckedUpdateManyWithoutConversationInputS
 export const MessageUpdateWithoutConversationInputSchema: z.ZodType<Prisma.MessageUpdateWithoutConversationInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   content: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  messageType: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  sender: z.lazy(() => ProfileUpdateOneRequiredWithoutMessageNestedInputSchema).optional()
+  sender: z.lazy(() => ProfileUpdateOneRequiredWithoutMessageNestedInputSchema).optional(),
+  attachment: z.lazy(() => MessageAttachmentUpdateOneWithoutMessageNestedInputSchema).optional()
 }).strict();
 
 export const MessageUncheckedUpdateWithoutConversationInputSchema: z.ZodType<Prisma.MessageUncheckedUpdateWithoutConversationInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   senderId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   content: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  messageType: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  attachment: z.lazy(() => MessageAttachmentUncheckedUpdateOneWithoutMessageNestedInputSchema).optional()
 }).strict();
 
 export const MessageUncheckedUpdateManyWithoutConversationInputSchema: z.ZodType<Prisma.MessageUncheckedUpdateManyWithoutConversationInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   senderId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   content: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  messageType: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
@@ -14437,6 +14873,68 @@ export const MessageFindUniqueOrThrowArgsSchema: z.ZodType<Prisma.MessageFindUni
   select: MessageSelectSchema.optional(),
   include: MessageIncludeSchema.optional(),
   where: MessageWhereUniqueInputSchema,
+}).strict() ;
+
+export const MessageAttachmentFindFirstArgsSchema: z.ZodType<Prisma.MessageAttachmentFindFirstArgs> = z.object({
+  select: MessageAttachmentSelectSchema.optional(),
+  include: MessageAttachmentIncludeSchema.optional(),
+  where: MessageAttachmentWhereInputSchema.optional(),
+  orderBy: z.union([ MessageAttachmentOrderByWithRelationInputSchema.array(),MessageAttachmentOrderByWithRelationInputSchema ]).optional(),
+  cursor: MessageAttachmentWhereUniqueInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ MessageAttachmentScalarFieldEnumSchema,MessageAttachmentScalarFieldEnumSchema.array() ]).optional(),
+}).strict() ;
+
+export const MessageAttachmentFindFirstOrThrowArgsSchema: z.ZodType<Prisma.MessageAttachmentFindFirstOrThrowArgs> = z.object({
+  select: MessageAttachmentSelectSchema.optional(),
+  include: MessageAttachmentIncludeSchema.optional(),
+  where: MessageAttachmentWhereInputSchema.optional(),
+  orderBy: z.union([ MessageAttachmentOrderByWithRelationInputSchema.array(),MessageAttachmentOrderByWithRelationInputSchema ]).optional(),
+  cursor: MessageAttachmentWhereUniqueInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ MessageAttachmentScalarFieldEnumSchema,MessageAttachmentScalarFieldEnumSchema.array() ]).optional(),
+}).strict() ;
+
+export const MessageAttachmentFindManyArgsSchema: z.ZodType<Prisma.MessageAttachmentFindManyArgs> = z.object({
+  select: MessageAttachmentSelectSchema.optional(),
+  include: MessageAttachmentIncludeSchema.optional(),
+  where: MessageAttachmentWhereInputSchema.optional(),
+  orderBy: z.union([ MessageAttachmentOrderByWithRelationInputSchema.array(),MessageAttachmentOrderByWithRelationInputSchema ]).optional(),
+  cursor: MessageAttachmentWhereUniqueInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ MessageAttachmentScalarFieldEnumSchema,MessageAttachmentScalarFieldEnumSchema.array() ]).optional(),
+}).strict() ;
+
+export const MessageAttachmentAggregateArgsSchema: z.ZodType<Prisma.MessageAttachmentAggregateArgs> = z.object({
+  where: MessageAttachmentWhereInputSchema.optional(),
+  orderBy: z.union([ MessageAttachmentOrderByWithRelationInputSchema.array(),MessageAttachmentOrderByWithRelationInputSchema ]).optional(),
+  cursor: MessageAttachmentWhereUniqueInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+}).strict() ;
+
+export const MessageAttachmentGroupByArgsSchema: z.ZodType<Prisma.MessageAttachmentGroupByArgs> = z.object({
+  where: MessageAttachmentWhereInputSchema.optional(),
+  orderBy: z.union([ MessageAttachmentOrderByWithAggregationInputSchema.array(),MessageAttachmentOrderByWithAggregationInputSchema ]).optional(),
+  by: MessageAttachmentScalarFieldEnumSchema.array(),
+  having: MessageAttachmentScalarWhereWithAggregatesInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+}).strict() ;
+
+export const MessageAttachmentFindUniqueArgsSchema: z.ZodType<Prisma.MessageAttachmentFindUniqueArgs> = z.object({
+  select: MessageAttachmentSelectSchema.optional(),
+  include: MessageAttachmentIncludeSchema.optional(),
+  where: MessageAttachmentWhereUniqueInputSchema,
+}).strict() ;
+
+export const MessageAttachmentFindUniqueOrThrowArgsSchema: z.ZodType<Prisma.MessageAttachmentFindUniqueOrThrowArgs> = z.object({
+  select: MessageAttachmentSelectSchema.optional(),
+  include: MessageAttachmentIncludeSchema.optional(),
+  where: MessageAttachmentWhereUniqueInputSchema,
 }).strict() ;
 
 export const SocialMatchFilterFindFirstArgsSchema: z.ZodType<Prisma.SocialMatchFilterFindFirstArgs> = z.object({
@@ -15324,6 +15822,60 @@ export const MessageUpdateManyAndReturnArgsSchema: z.ZodType<Prisma.MessageUpdat
 
 export const MessageDeleteManyArgsSchema: z.ZodType<Prisma.MessageDeleteManyArgs> = z.object({
   where: MessageWhereInputSchema.optional(),
+  limit: z.number().optional(),
+}).strict() ;
+
+export const MessageAttachmentCreateArgsSchema: z.ZodType<Prisma.MessageAttachmentCreateArgs> = z.object({
+  select: MessageAttachmentSelectSchema.optional(),
+  include: MessageAttachmentIncludeSchema.optional(),
+  data: z.union([ MessageAttachmentCreateInputSchema,MessageAttachmentUncheckedCreateInputSchema ]),
+}).strict() ;
+
+export const MessageAttachmentUpsertArgsSchema: z.ZodType<Prisma.MessageAttachmentUpsertArgs> = z.object({
+  select: MessageAttachmentSelectSchema.optional(),
+  include: MessageAttachmentIncludeSchema.optional(),
+  where: MessageAttachmentWhereUniqueInputSchema,
+  create: z.union([ MessageAttachmentCreateInputSchema,MessageAttachmentUncheckedCreateInputSchema ]),
+  update: z.union([ MessageAttachmentUpdateInputSchema,MessageAttachmentUncheckedUpdateInputSchema ]),
+}).strict() ;
+
+export const MessageAttachmentCreateManyArgsSchema: z.ZodType<Prisma.MessageAttachmentCreateManyArgs> = z.object({
+  data: z.union([ MessageAttachmentCreateManyInputSchema,MessageAttachmentCreateManyInputSchema.array() ]),
+  skipDuplicates: z.boolean().optional(),
+}).strict() ;
+
+export const MessageAttachmentCreateManyAndReturnArgsSchema: z.ZodType<Prisma.MessageAttachmentCreateManyAndReturnArgs> = z.object({
+  data: z.union([ MessageAttachmentCreateManyInputSchema,MessageAttachmentCreateManyInputSchema.array() ]),
+  skipDuplicates: z.boolean().optional(),
+}).strict() ;
+
+export const MessageAttachmentDeleteArgsSchema: z.ZodType<Prisma.MessageAttachmentDeleteArgs> = z.object({
+  select: MessageAttachmentSelectSchema.optional(),
+  include: MessageAttachmentIncludeSchema.optional(),
+  where: MessageAttachmentWhereUniqueInputSchema,
+}).strict() ;
+
+export const MessageAttachmentUpdateArgsSchema: z.ZodType<Prisma.MessageAttachmentUpdateArgs> = z.object({
+  select: MessageAttachmentSelectSchema.optional(),
+  include: MessageAttachmentIncludeSchema.optional(),
+  data: z.union([ MessageAttachmentUpdateInputSchema,MessageAttachmentUncheckedUpdateInputSchema ]),
+  where: MessageAttachmentWhereUniqueInputSchema,
+}).strict() ;
+
+export const MessageAttachmentUpdateManyArgsSchema: z.ZodType<Prisma.MessageAttachmentUpdateManyArgs> = z.object({
+  data: z.union([ MessageAttachmentUpdateManyMutationInputSchema,MessageAttachmentUncheckedUpdateManyInputSchema ]),
+  where: MessageAttachmentWhereInputSchema.optional(),
+  limit: z.number().optional(),
+}).strict() ;
+
+export const MessageAttachmentUpdateManyAndReturnArgsSchema: z.ZodType<Prisma.MessageAttachmentUpdateManyAndReturnArgs> = z.object({
+  data: z.union([ MessageAttachmentUpdateManyMutationInputSchema,MessageAttachmentUncheckedUpdateManyInputSchema ]),
+  where: MessageAttachmentWhereInputSchema.optional(),
+  limit: z.number().optional(),
+}).strict() ;
+
+export const MessageAttachmentDeleteManyArgsSchema: z.ZodType<Prisma.MessageAttachmentDeleteManyArgs> = z.object({
+  where: MessageAttachmentWhereInputSchema.optional(),
   limit: z.number().optional(),
 }).strict() ;
 

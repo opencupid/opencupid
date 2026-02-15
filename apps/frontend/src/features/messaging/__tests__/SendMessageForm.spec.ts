@@ -68,7 +68,13 @@ describe('SendMessageForm', () => {
           BDropdownItem: true,
           TagList: true,
           LanguageList: true,
-          StoreErrorOverlay: true
+          StoreErrorOverlay: true,
+          VoiceRecorder: true,
+          IconMenuDotsVert: true,
+          Mic2Icon: true,
+        },
+        mocks: {
+          $t: (key: string) => key,
         }
       }
     })

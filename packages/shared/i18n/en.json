@@ -293,7 +293,22 @@
     "no_messages_placeholder": "Your conversations will take place here.",
     "send_mode_press_enter": "Press enter to send",
     "send_mode_click": "Click to send",
-    "message_input_hint_click": "Click SEND to send"
+    "message_input_hint_click": "Click SEND to send",
+    "voice": {
+      "record_voice_message": "Record voice message",
+      "recording_mode": "Voice Message",
+      "back_to_text": "Back to text",
+      "text": "Text",
+      "start_recording": "Start recording",
+      "stop_recording": "Stop recording",
+      "record_again": "Record again",
+      "record": "Record",
+      "cancel": "Cancel",
+      "max_duration": "Max {duration}s",
+      "permission_denied": "Microphone permission denied. Please allow microphone access to record voice messages.",
+      "retry_permission": "Try Again",
+      "unsupported_browser": "Voice recording is not supported in this browser."
+    }
   },
   "settings": {
     "title": "Settings",

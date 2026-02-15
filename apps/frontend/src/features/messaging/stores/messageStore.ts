@@ -150,7 +150,10 @@ export const useMessageStore = defineStore('message', {
       content: string
     ): Promise<StoreResponse<MessageDTO> | StoreError> {
       try {
-        const payload: SendMessagePayload = { profileId: recipientProfileId, content }
+        const payload: SendMessagePayload = {
+          profileId: recipientProfileId,
+          content,
+        }
         this.isSending = true
         this.error = null
         const res = await safeApiCall(() => api.post<SendMessageResponse>(`/messages/message`, payload))
@@ -174,6 +177,47 @@ export const useMessageStore = defineStore('message', {
         return this.error
       } finally {
         this.isSending = false // Reset sending state
+      }
+    },
+
+    async sendVoiceMessage(
+      recipientProfileId: string,
+      audioBlob: Blob,
+      duration: number
+    ): Promise<StoreResponse<MessageDTO> | StoreError> {
+      try {
+        this.isSending = true
+        this.error = null
+
+        // Create FormData for multipart upload
+        const formData = new FormData()
+        formData.append('file', audioBlob, 'voice-message.webm')
+        formData.append('profileId', recipientProfileId)
+        formData.append('content', '') // Empty content for voice messages
+        formData.append('duration', duration.toString())
+
+        const res = await safeApiCall(() =>
+          api.post<SendMessageResponse>('/messages/voice', formData)
+        )
+
+        const { conversation, message } = res.data
+        if (!message)
+          return storeError(new Error('Voice message not sent'))
+
+        // Move conversation to top, remove any old instance
+        this.conversations = [
+          conversation,
+          ...this.conversations.filter(c => c.conversationId !== conversation.conversationId),
+        ]
+        if (this.activeConversation?.conversationId === conversation.conversationId) {
+          this.messages.push(message)
+        }
+        return storeSuccess(message)
+      } catch (error: any) {
+        this.error = storeError(error)
+        return this.error
+      } finally {
+        this.isSending = false
       }
     },
 

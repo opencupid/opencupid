@@ -43,6 +43,7 @@ declare module 'vue' {
     BPlaceholderCard: typeof import('bootstrap-vue-next/components/BPlaceholder')['BPlaceholderCard']
     BPlaceholderWrapper: typeof import('bootstrap-vue-next/components/BPlaceholder')['BPlaceholderWrapper']
     BPopover: typeof import('bootstrap-vue-next/components/BPopover')['BPopover']
+    BProgressBar: typeof import('bootstrap-vue-next/components/BProgress')['BProgressBar']
     BRow: typeof import('bootstrap-vue-next/components/BContainer')['BRow']
     BSpinner: typeof import('bootstrap-vue-next/components/BSpinner')['BSpinner']
     BTab: typeof import('bootstrap-vue-next/components/BTabs')['BTab']
