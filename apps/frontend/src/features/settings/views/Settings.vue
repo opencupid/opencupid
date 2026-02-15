@@ -30,6 +30,7 @@ const localStore = useLocalStore()
 
 const user = reactive({} as LoginUser)
 const isLoading = ref(true)
+const isSaving = ref(false)
 
 // const mode = useColorMode({
 //   selector: 'html',
@@ -67,6 +68,29 @@ onMounted(async () => {
 function handleClick() {
   authStore.logout()
   router.push({ name: 'Login' })
+}
+
+async function handleNewsletterOptInChange(event: Event) {
+  const checkbox = event.target as HTMLInputElement
+  const newValue = checkbox.checked
+  
+  isSaving.value = true
+  try {
+    const res = await authStore.updateUser({ newsletterOptIn: newValue })
+    if (res.success) {
+      user.newsletterOptIn = newValue
+    } else {
+      // Revert checkbox if update failed
+      checkbox.checked = !newValue
+      console.error('Failed to update newsletter preference:', res.message)
+    }
+  } catch (error) {
+    // Revert checkbox if update failed
+    checkbox.checked = !newValue
+    console.error('Failed to update newsletter preference:', error)
+  } finally {
+    isSaving.value = false
+  }
 }
 </script>
 
@@ -114,6 +138,22 @@ function handleClick() {
                 {{ t('settings.language_label') }}
               </legend>
               <LanguageSelectorDropdown size="md" />
+            </fieldset>
+            
+            <fieldset class="mb-3">
+              <div class="form-check">
+                <input
+                  id="newsletter-opt-in"
+                  type="checkbox"
+                  class="form-check-input"
+                  :checked="user.newsletterOptIn"
+                  :disabled="isSaving"
+                  @change="handleNewsletterOptInChange"
+                />
+                <label class="form-check-label" for="newsletter-opt-in">
+                  {{ t('settings.newsletter_opt_in') }}
+                </label>
+              </div>
             </fieldset>
           </BOverlay>
         </section>

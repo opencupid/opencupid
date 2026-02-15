@@ -25,6 +25,7 @@ const user = reactive<LoginUser>({
   email: '',
   phonenumber: '',
   language: i18nStore.getLanguage(),
+  newsletterOptIn: false,
 })
 
 // Method to handle sending login link

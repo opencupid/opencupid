@@ -13,6 +13,46 @@ services:
     volumes:
       - ${POSTGRES_DATADIR}:/var/lib/postgresql/data
 
+  listmonk-db:
+    image: postgres:15
+    restart: always
+    container_name: listmonk_db
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: listmonk
+      POSTGRES_USER: listmonk
+      POSTGRES_PASSWORD: ${LISTMONK_DB_PASSWORD}
+    volumes:
+      - listmonk-data:/var/lib/postgresql/data
+
+  listmonk:
+    image: listmonk/listmonk:latest
+    restart: always
+    depends_on:
+      - listmonk-db
+    env_file:
+      - .env
+    command: [sh, -c, "./listmonk --install --idempotent --yes --config '' && ./listmonk --upgrade --yes --config '' && ./listmonk --config ''"]
+    environment:
+      LISTMONK_app__address: 0.0.0.0:9000
+      LISTMONK_db__user: listmonk
+      LISTMONK_db__password: ${LISTMONK_DB_PASSWORD}
+      LISTMONK_db__database: listmonk
+      LISTMONK_db__host: listmonk_db
+      LISTMONK_db__port: 5432
+      LISTMONK_db__ssl_mode: disable
+      LISTMONK_db__max_open: 25
+      LISTMONK_db__max_idle: 25
+      LISTMONK_db__max_lifetime: 300s
+      TZ: Etc/UTC
+      LISTMONK_ADMIN_USER: ${LISTMONK_ADMIN_USER:-}
+      LISTMONK_ADMIN_PASSWORD: ${LISTMONK_ADMIN_PASSWORD:-}
+    volumes:
+      - listmonk-uploads:/listmonk/uploads:rw
+    ports:
+      - "9000:9000"
+
   backend:
     image: ghcr.io/opencupid/opencupid-backend
     build:
@@ -21,6 +61,7 @@ services:
     depends_on:
       - db
       - redis
+      - listmonk
     env_file:
       - .env
     volumes:
@@ -110,5 +151,9 @@ services:
 
 volumes:
   redis-data:
+    driver: local
+  listmonk-data:
+    driver: local
+  listmonk-uploads:
     driver: local
   certbot-webroot:

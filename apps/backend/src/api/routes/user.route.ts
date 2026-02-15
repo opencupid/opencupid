@@ -167,6 +167,7 @@ const userRoutes: FastifyPluginAsync = async fastify => {
             email: true,
             phonenumber: true,
             language: true,
+            newsletterOptIn: true,
           },
         })
 
@@ -189,20 +190,26 @@ const userRoutes: FastifyPluginAsync = async fastify => {
       onRequest: [fastify.authenticate],
     },
     async (req, reply) => {
-      const { language } = req.body as { language: string }
-      if (!language) {
-        return sendError(reply, 400, 'Language is required')
+      const { language, newsletterOptIn } = req.body as { language?: string; newsletterOptIn?: boolean }
+      if (!language && newsletterOptIn === undefined) {
+        return sendError(reply, 400, 'At least one field (language or newsletterOptIn) is required')
       }
       try {
-        await userService.update({
+        const updateData: Partial<User> = {
           id: req.user.userId,
-          language
-        } as User)
+        }
+        if (language) {
+          updateData.language = language
+        }
+        if (newsletterOptIn !== undefined) {
+          updateData.newsletterOptIn = newsletterOptIn
+        }
+        await userService.update(updateData as User)
         await req.deleteSession()
 
         return reply.code(200).send({ success: true })
       } catch (error) {
-        return sendError(reply, 500, 'Failed to update language')
+        return sendError(reply, 500, 'Failed to update user settings')
       }
     }
   )
