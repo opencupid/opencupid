@@ -7,16 +7,19 @@ const prisma = new PrismaClient()
 async function main() {
   console.log('🔄 Starting migration of existing users to Listmonk...')
 
-  // Fetch all users with email addresses
+  // Fetch all users with email addresses and active profiles
   const users = await prisma.user.findMany({
     where: {
       email: {
         not: null,
       },
+      profile: {
+        isActive: true,
+      },
     },
   })
 
-  console.log(`📊 Found ${users.length} users with email addresses`)
+  console.log(`📊 Found ${users.length} users with email addresses and active profiles`)
 
   let successCount = 0
   let failureCount = 0
