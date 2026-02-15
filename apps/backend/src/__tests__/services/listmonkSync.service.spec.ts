@@ -99,6 +99,7 @@ describe('ListmonkSyncService', () => {
             lists: [1],
             attribs: {
               language: 'en',
+              newsletterOptin: true,
             },
           }),
         })
@@ -150,6 +151,7 @@ describe('ListmonkSyncService', () => {
             lists: [1],
             attribs: {
               language: 'de',
+              newsletterOptin: true,
             },
           }),
         })
@@ -187,6 +189,7 @@ describe('ListmonkSyncService', () => {
             lists: [],
             attribs: {
               language: 'en',
+              newsletterOptin: false,
             },
           }),
         })
