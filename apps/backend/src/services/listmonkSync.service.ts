@@ -19,10 +19,8 @@ export class ListmonkSyncService {
 
   private constructor() {
     this.baseUrl = appConfig.LISTMONK_URL
-    const auth = Buffer.from(
-      `${appConfig.LISTMONK_ADMIN_USER}:${appConfig.LISTMONK_ADMIN_PASSWORD}`
-    ).toString('base64')
-    this.authHeader = `Basic ${auth}`
+    // Use token-based authentication: "token username:token_value"
+    this.authHeader = `token ${appConfig.LISTMONK_API_TOKEN}`
   }
 
   public static getInstance(): ListmonkSyncService {
