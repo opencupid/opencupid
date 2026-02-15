@@ -109,7 +109,8 @@ export class ListmonkSyncService {
     })
 
     if (!response.ok) {
-      throw new Error(`Failed to create subscriber: ${response.statusText}`)
+      const errorText = await response.text().catch(() => response.statusText)
+      throw new Error(`Failed to create subscriber (${response.status} ${response.statusText}): ${errorText}`)
     }
   }
 
@@ -134,7 +135,8 @@ export class ListmonkSyncService {
     })
 
     if (!response.ok) {
-      throw new Error(`Failed to update subscriber: ${response.statusText}`)
+      const errorText = await response.text().catch(() => response.statusText)
+      throw new Error(`Failed to update subscriber (${response.status} ${response.statusText}): ${errorText}`)
     }
   }
 }

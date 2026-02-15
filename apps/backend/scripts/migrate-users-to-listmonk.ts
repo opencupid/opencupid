@@ -20,6 +20,7 @@ async function main() {
 
   let successCount = 0
   let failureCount = 0
+  const errors: Array<{ userId: string; email: string; error: string }> = []
 
   for (const user of users) {
     try {
@@ -28,7 +29,13 @@ async function main() {
       console.log(`✅ Synced user ${user.id} (${user.email})`)
     } catch (error) {
       failureCount++
-      console.error(`❌ Failed to sync user ${user.id} (${user.email}):`, error)
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      errors.push({ 
+        userId: user.id, 
+        email: user.email!, 
+        error: errorMessage 
+      })
+      console.error(`❌ Failed to sync user ${user.id} (${user.email}): ${errorMessage}`)
     }
   }
 
@@ -36,7 +43,30 @@ async function main() {
   console.log(`  Total users: ${users.length}`)
   console.log(`  ✅ Successfully synced: ${successCount}`)
   console.log(`  ❌ Failed: ${failureCount}`)
+  
+  if (errors.length > 0) {
+    console.log('\n⚠️  Failed users details:')
+    const errorsByType = errors.reduce((acc, err) => {
+      acc[err.error] = (acc[err.error] || 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+    
+    Object.entries(errorsByType).forEach(([error, count]) => {
+      console.log(`  - ${error}: ${count} user(s)`)
+    })
+    
+    console.log('\n💡 Common issues:')
+    console.log('  - "Forbidden": Check LISTMONK_ADMIN_USER and LISTMONK_ADMIN_PASSWORD are correct')
+    console.log('  - "Connection refused": Ensure Listmonk service is running')
+    console.log('  - Check LISTMONK_URL is accessible from the backend')
+  }
+  
   console.log('\n✨ Migration complete!')
+  
+  // Exit with error code if any failures occurred
+  if (failureCount > 0) {
+    process.exit(1)
+  }
 }
 
 main()
