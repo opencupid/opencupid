@@ -47,7 +47,7 @@ describe('postStore', () => {
 
     expect(mockApi.patch).toHaveBeenCalledWith('/posts/post-1', { isVisible: false })
     expect(result).toEqual(hiddenPost)
-    expect(store.myPosts[0].isVisible).toBe(false)
+    expect(store.myPosts[0]!.isVisible).toBe(false)
     expect(store.posts.map(post => post.id)).toEqual(['post-2'])
     expect(store.currentPost).toEqual(hiddenPost)
   })
@@ -64,7 +64,7 @@ describe('postStore', () => {
 
     expect(mockApi.patch).toHaveBeenCalledWith('/posts/post-1', { isVisible: true })
     expect(result).toEqual(visiblePost)
-    expect(store.myPosts[0].isVisible).toBe(true)
+    expect(store.myPosts[0]!.isVisible).toBe(true)
     expect(store.posts.map(post => post.id)).toEqual(['post-2'])
     expect(store.currentPost).toEqual(visiblePost)
   })

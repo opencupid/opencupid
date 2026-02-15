@@ -59,7 +59,7 @@ describe('PostCard', () => {
     })
 
     const buttons = wrapper.findAll('button')
-    expect(buttons[2].attributes('title')).toBe('posts.actions.hide')
+    expect(buttons[2]!.attributes('title')).toBe('posts.actions.hide')
   })
 
   it('uses Show title when post is hidden', () => {
@@ -88,6 +88,6 @@ describe('PostCard', () => {
     })
 
     const buttons = wrapper.findAll('button')
-    expect(buttons[2].attributes('title')).toBe('posts.actions.show')
+    expect(buttons[2]!.attributes('title')).toBe('posts.actions.show')
   })
 })

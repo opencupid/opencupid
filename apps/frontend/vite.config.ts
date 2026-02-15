@@ -97,7 +97,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
         configureServer(server) {
           server.middlewares.use(
             '/images',
-            serveStatic(path.resolve(__dirname, rootEnv.MEDIA_UPLOAD_DIR)),
+            serveStatic(path.resolve(__dirname, rootEnv.MEDIA_UPLOAD_DIR!)),
           )
         },
       },

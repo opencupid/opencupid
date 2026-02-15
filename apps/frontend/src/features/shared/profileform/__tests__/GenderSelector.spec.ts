@@ -27,6 +27,6 @@ describe('GenderPickerComponent', () => {
     })
     ;(wrapper.vm as any).gender = 'male'
     await wrapper.vm.$nextTick()
-    expect(wrapper.emitted('update:modelValue')![0][0]).toEqual({ gender: 'male', pronouns: null })
+    expect(wrapper.emitted('update:modelValue')![0]![0]).toEqual({ gender: 'male', pronouns: null })
   })
 })

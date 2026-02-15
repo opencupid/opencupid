@@ -49,7 +49,7 @@ export const useMessageStore = defineStore('message', {
       if (convoIndex === -1) {
         await this.fetchConversations() // Fetch conversations if not found
       } else {
-        const [convo] = this.conversations.splice(convoIndex, 1)
+        const convo = this.conversations.splice(convoIndex, 1)[0]!
         // Update last message and unread count
         const updatedConvo: ConversationSummary = {
           ...convo,

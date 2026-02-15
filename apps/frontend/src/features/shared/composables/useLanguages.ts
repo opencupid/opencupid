@@ -68,9 +68,9 @@ export function useLanguages() {
   const getLanguageSelectorOptions = (): MultiselectOption[] => {
     const langs = languages.getNames(language)
     // console.log('Registering locales:', langs);
-    return Object.keys(langs).map((code, label) => ({
+    return Object.keys(langs).map((code) => ({
       value: code,
-      label: langs[code],
+      label: langs[code] ?? code,
     }))
   }
 
