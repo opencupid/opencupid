@@ -167,6 +167,7 @@ const userRoutes: FastifyPluginAsync = async fastify => {
             email: true,
             phonenumber: true,
             language: true,
+            newsletterOptIn: true,
           },
         })
 

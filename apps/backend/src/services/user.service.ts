@@ -149,11 +149,10 @@ export class UserService {
   }
 
   async updateUser(tx: Prisma.TransactionClient, user: User): Promise<User | null> {
+    const { id, ...dataToUpdate } = user
     const updated = await tx.user.update({
-      where: { id: user.id },
-      data: {
-        ...user,
-      },
+      where: { id },
+      data: dataToUpdate,
     })
 
     // Sync to Listmonk if email, language, or newsletterOptIn changed
@@ -163,11 +162,10 @@ export class UserService {
   }
 
   async update(user: User): Promise<User | null> {
+    const { id, ...dataToUpdate } = user
     const updated = await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        ...user,
-      },
+      where: { id },
+      data: dataToUpdate,
     })
 
     // Sync to Listmonk if email, language, or newsletterOptIn changed
