@@ -2,7 +2,8 @@
   "enabledPlugins": {
     "frontend-design@claude-code-plugins": true,
     "ralph-wiggum@claude-code-plugins": true,
-    "feature-dev@claude-code-plugins": true
+    "feature-dev@claude-code-plugins": true,
+    "vueuse-functions@vueuse-skills": true
   },
   "mcpServers": {
     "playwright": {
@@ -14,7 +15,10 @@
     },
     "chrome-devtools": {
       "command": "npx",
-      "args": ["-y", "chrome-devtools-mcp@latest"]
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest"
+      ]
     }
   }
 }
