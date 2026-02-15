@@ -10,8 +10,7 @@ global.fetch = mockFetch as any
 vi.mock('../../lib/appconfig', () => ({
   appConfig: {
     LISTMONK_URL: 'http://localhost:9000',
-    LISTMONK_ADMIN_USER: 'admin',
-    LISTMONK_ADMIN_PASSWORD: 'password',
+    LISTMONK_API_TOKEN: 'admin:password',
     LISTMONK_LIST_ID: 1,
   },
 }))

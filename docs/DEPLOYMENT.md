@@ -25,7 +25,7 @@ Create the initial set of interest tags:
 
 ### Creating an API Token
 
-The backend uses token-based authentication to communicate with Listmonk. To create an API token:
+The backend uses Basic Authentication with API tokens to communicate with Listmonk. To create an API token:
 
 1. **Access Listmonk Admin UI**: Navigate to `http://your-domain:9000` and log in with your admin credentials
 2. **Create API User**: Go to **Settings** → **Users** → Click **+ New**
@@ -34,13 +34,23 @@ The backend uses token-based authentication to communicate with Listmonk. To cre
    - Username: Choose a username (e.g., `api_user`)
    - Role: Assign appropriate permissions (typically "Manager" or create a custom role)
 4. **Save and Copy Token**: When you save, Listmonk will display the API token **once**. Copy it immediately.
-5. **Update Configuration**: Set `LISTMONK_API_TOKEN` in your `.env` file:
+5. **Update Configuration**: Set `LISTMONK_API_TOKEN` in your `.env` file in the format `username:token`:
    ```
-   LISTMONK_API_TOKEN=username:token_value
+   LISTMONK_API_TOKEN=api_user:abc123def456xyz789
    ```
-   For example: `LISTMONK_API_TOKEN=api_user:abc123def456xyz789`
+
+**Testing the API token with curl:**
+```bash
+# Test that your token works:
+curl -u "api_user:abc123def456xyz789" http://localhost:9000/api/lists
+```
 
 **Note**: The token is only shown once during creation. If you lose it, you'll need to create a new API user.
+
+**For development**: You can temporarily use your admin credentials in the same format:
+```
+LISTMONK_API_TOKEN=admin:your_admin_password
+```
 
 ### Listmonk Migration
 
