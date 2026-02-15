@@ -79,7 +79,7 @@ if (!['production', 'staging'].includes(process.env.NODE_ENV!)) {
     process.exit(1)
   }
 
-  const envConfig = dotenv.config({ path: envFile })
+  const envConfig = dotenv.config({ path: envFile, quiet: true })
   dotenvExpand.expand(envConfig)
 }
 
