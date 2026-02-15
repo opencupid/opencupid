@@ -136,6 +136,9 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
     css: {
       preprocessorOptions: {
         scss: {
+          // Silence Bootstrap and other dependency deprecation warnings
+          // These silence warnings from Bootstrap 5.3.x that haven't been fixed upstream yet
+          // When upgrading to Sass 1.95.0+, add 'if-function' to this list as well
           silenceDeprecations: ['import', 'mixed-decls', 'color-functions', 'global-builtin'],
           includePaths: ['node_modules'],
           quietDeps: true,
