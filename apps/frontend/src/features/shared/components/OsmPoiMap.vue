@@ -1,33 +1,34 @@
-<script setup lang="ts">
-import ProfileCardComponent from './ProfileCardComponent.vue'
-import { type PublicProfile } from '@zod/profile/profile.dto'
-
-import { onMounted, onBeforeUnmount, ref, watch } from 'vue'
+<script setup lang="ts" generic="T extends { id: string | number }">
+import { onMounted, onBeforeUnmount, ref, watch, type Component } from 'vue'
 import type { Ref } from 'vue'
 import L, { Map as LMap, Marker as LMarker } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
-/** Basic POI shape; extend as needed */
-export interface Poi {
+/** Basic POI shape for location data extraction */
+export interface PoiItem {
   id: string | number
-  name: string
-  lat: number
-  lng: number
-  /** Optional fields */
-  description?: string
-  category?: string
+  location?: {
+    lat?: number | null
+    lon?: number | null
+  }
 }
 
 const props = withDefaults(
   defineProps<{
-    profiles: PublicProfile[]
-    // pois: Poi[]
+    /** Items to display on the map (must have id and location with lat/lon) */
+    items: T[]
+    /** Function to extract location from an item */
+    getLocation: (item: T) => { lat?: number | null; lon?: number | null } | null | undefined
+    /** Function to get title for marker */
+    getTitle: (item: T) => string
+    /** Vue component to render in popup */
+    popupComponent: Component
     /** Optional starting center/zoom (used if we can't fit to bounds) */
     center?: [number, number]
     zoom?: number
-    /** ID of selected POI to highlight */
+    /** ID of selected item to highlight */
     selectedId?: string | number
-    /** Whether to auto-fit the map to show all POIs */
+    /** Whether to auto-fit the map to show all items */
     fitToPois?: boolean
   }>(),
   {
@@ -38,13 +39,13 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  (e: 'profile:select', id: string): void
+  (e: 'item:select', id: string | number): void
   (e: 'map-ready', map: LMap): void
 }>()
 
 const mapEl: Ref<HTMLDivElement | null> = ref(null)
 let map: LMap | null = null
-let markers = new Map<Poi['id'], LMarker>()
+let markers = new Map<string | number, LMarker>()
 const markersLayer = L.layerGroup()
 
 // Simple highlighted marker icon (selected)
@@ -74,7 +75,6 @@ function ensureMap() {
   const tilesUrl = `${__APP_CONFIG__.API_BASE_URL}/tiles/{z}/{x}/{y}.png`
 
   const tileLayer = L.tileLayer(tilesUrl, {
-    // L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     // Use a plain gray tile as fallback (no text) - base64 encoded blank gray SVG
@@ -93,7 +93,6 @@ function ensureMap() {
   // Add error handling for tile loading
   tileLayer.on('tileerror', (error: any) => {
     console.warn('Tile loading error:', error)
-    // Could emit an event to notify parent component of tile loading issues
   })
 
   // Add loading event handlers to monitor tile loading
@@ -115,29 +114,24 @@ function ensureMap() {
 }
 
 const popupTarget = ref<HTMLElement | null>(null)
-const popupProfile = ref<PublicProfile | null>(null)
+const popupItem = ref<T | null>(null)
 
 function updateMarkers() {
   if (!map) return
   markersLayer.clearLayers()
   markers.clear()
 
-  for (const profile of props.profiles) {
-    if (!(profile.location.lat && profile.location.lon)) continue
-    const m = L.marker([profile.location.lat, profile.location.lon], {
-      title: profile.publicName,
-      icon: profile.id === props.selectedId ? selectedIcon : defaultIcon,
+  for (const item of props.items) {
+    const location = props.getLocation(item)
+    if (!location || !(location.lat && location.lon)) continue
+    
+    const m = L.marker([location.lat, location.lon], {
+      title: props.getTitle(item),
+      icon: item.id === props.selectedId ? selectedIcon : defaultIcon,
       keyboard: true,
     })
-    // const popupHtml =
-    //   `<strong>${escapeHtml(profile.publicName)}</strong>` +
-    //   (profile.introSocial ? `<br>${escapeHtml(profile.introSocial)}` : '')
-    // m.bindPopup(popupHtml)
-    m.bindPopup('', { maxWidth: 420, autoPan: true, className: 'profile-popup' })
-
-    // m.on('click', () => {
-    //   emit('profile:select', profile.id)
-    // })
+    
+    m.bindPopup('', { maxWidth: 420, autoPan: true, className: 'item-popup' })
 
     m.on('popupopen', (e: L.PopupEvent) => {
       // Leaflet builds: <div class="leaflet-popup-content">…</div>
@@ -145,25 +139,32 @@ function updateMarkers() {
         .getElement()
         ?.querySelector('.leaflet-popup-content') as HTMLElement | null
       popupTarget.value = target
-      popupProfile.value = profile
+      popupItem.value = item
     })
     m.on('popupclose', () => {
       popupTarget.value = null
-      popupProfile.value = null
+      popupItem.value = null
     })
 
     m.on('click', () => m.openPopup())
 
     m.addTo(markersLayer)
-    // console.log('Added marker for profile', m)
-    markers.set(profile.id, m)
+    markers.set(item.id, m)
   }
 
-  // Fit bounds if requested and we have at least one POI
-  if (props.fitToPois && props.profiles.length > 0) {
-    const latlngs = props.profiles.map(p => [p.location.lat, p.location.lon]) as [number, number][]
-    const bounds = L.latLngBounds(latlngs)
-    map.fitBounds(bounds, { padding: [24, 24] })
+  // Fit bounds if requested and we have at least one item with location
+  if (props.fitToPois && props.items.length > 0) {
+    const latlngs: [number, number][] = []
+    for (const item of props.items) {
+      const location = props.getLocation(item)
+      if (location?.lat && location?.lon) {
+        latlngs.push([location.lat, location.lon])
+      }
+    }
+    if (latlngs.length > 0) {
+      const bounds = L.latLngBounds(latlngs)
+      map.fitBounds(bounds, { padding: [24, 24] })
+    }
   }
 }
 
@@ -182,10 +183,6 @@ function highlightSelected() {
   }
 }
 
-function escapeHtml(s: string) {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-}
-
 onMounted(() => {
   ensureMap()
   updateMarkers()
@@ -200,7 +197,7 @@ onBeforeUnmount(() => {
 })
 
 watch(
-  () => props.profiles,
+  () => props.items,
   () => {
     updateMarkers()
     highlightSelected()
@@ -220,13 +217,11 @@ watch(
   <div>
     <div class="osm-poi-map" ref="mapEl" />
 
-    <Teleport v-if="popupTarget" :to="popupTarget">
-      <ProfileCardComponent
-        v-if="popupProfile"
-        :profile="popupProfile"
-        :showTags="true"
-        :showLocation="true"
-        @click="$emit('profile:select', popupProfile.id)"
+    <Teleport v-if="popupTarget && popupItem" :to="popupTarget">
+      <component
+        :is="popupComponent"
+        :item="popupItem"
+        @click="$emit('item:select', popupItem.id)"
       />
     </Teleport>
   </div>
@@ -268,7 +263,6 @@ watch(
 :deep(.leaflet-popup-content) {
   margin: 0;
   line-height: 1.3;
-  font-size: 13px;
   font-size: 1.08333em;
   min-height: 1px;
 }

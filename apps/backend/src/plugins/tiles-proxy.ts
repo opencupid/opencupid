@@ -63,7 +63,7 @@ const tilesPlugin: FastifyPluginAsync = async fastify => {
         
         return response
       } catch (error: any) {
-        if (attempt < retries && (error.code === 'ABORT_ERR' || error.name === 'AbortError' || error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT')) {
+        if (attempt < retries && (error.code === 'ABORT_ERR' || error.name === 'AbortError' || error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT' || error.message === 'fetch failed')) {
           fastify.log.warn(`Tile fetch attempt ${attempt + 1} failed with error ${error.message}, retrying...`)
           await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000)) // exponential backoff
           continue

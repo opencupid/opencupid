@@ -3,7 +3,7 @@ import { useRouter } from 'vue-router'
 import { computed, onMounted, onUnmounted, provide, ref } from 'vue'
 import { useInfiniteScroll } from '@vueuse/core'
 
-import PublicProfile from '@/features/publicprofile/components/PublicProfile.vue'
+import PublicProfileComponent from '@/features/publicprofile/components/PublicProfile.vue'
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 
 import { useFindMatchViewModel } from '../composables/useFindMatchViewModel'
@@ -19,7 +19,9 @@ import DatingPrefsDisplay from '../components/DatingPrefsDisplay.vue'
 import ScopeViewToggler from '@/features/shared/ui/ScopeViewToggler.vue'
 import ViewModeToggler from '@/features/shared/ui/ViewModeToggler.vue'
 
-import OsmPoiMap from '../components/OsmPoiMap.vue'
+import OsmPoiMap from '@/features/shared/components/OsmPoiMap.vue'
+import ProfileMapCard from '../components/ProfileMapCard.vue'
+import type { PublicProfile } from '@zod/profile/profile.dto'
 import { useI18n } from 'vue-i18n'
 import { useCountries } from '../../shared/composables/useCountries'
 
@@ -143,7 +145,7 @@ useInfiniteScroll(
     >
       <div class="overflow-auto hide-scrollbar h-100 d-flex flex-column">
         <MiddleColumn class="pt-sm-3 position-relative flex-grow-1" style="min-height: 100%">
-          <PublicProfile
+          <PublicProfileComponent
             v-if="selectedProfileId"
             :id="selectedProfileId"
             class="shadow-lg mb-3 pb-5"
@@ -263,9 +265,12 @@ useInfiniteScroll(
             </MiddleColumn>
             <OsmPoiMap
               v-if="viewModeModel === 'map'"
-              :profiles="profileList"
+              :items="profileList"
+              :get-location="(profile: PublicProfile) => profile.location"
+              :get-title="(profile: PublicProfile) => profile.publicName"
+              :popup-component="ProfileMapCard"
               class="map-view h-100"
-              @profile:select="handleCardClick"
+              @item:select="(id: string | number) => handleCardClick(String(id))"
             />
           </div>
         </template>

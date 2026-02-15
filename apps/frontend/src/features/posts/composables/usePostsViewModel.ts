@@ -12,6 +12,7 @@ export function usePostsViewModel() {
 
   // State management
   const activeTab = ref('all')
+  const viewMode = ref('grid')
   const showCreateModal = ref(false)
   const locationPermission = ref(false)
   const userLocation = ref<{ lat: number; lon: number } | null>(null)
@@ -187,6 +188,7 @@ export function usePostsViewModel() {
   return {
     // State
     activeTab,
+    viewMode,
     showCreateModal,
     locationPermission,
     userLocation,

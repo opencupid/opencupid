@@ -1,11 +1,16 @@
 <script setup lang="ts">
-import { onMounted, provide } from 'vue'
+import { computed, onMounted, provide } from 'vue'
 import { useI18n } from 'vue-i18n'
 import PostList from '../components/PostList.vue'
 import PostEdit from '../components/PostEdit.vue'
 import PostFullView from '../components/PostFullView.vue'
+import PostMapCard from '../components/PostMapCard.vue'
+import OsmPoiMap from '@/features/shared/components/OsmPoiMap.vue'
+import ViewModeToggler from '@/features/shared/ui/ViewModeToggler.vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faPenToSquare } from '@fortawesome/free-solid-svg-icons'
+import { usePostStore } from '../stores/postStore'
+import type { PublicPostWithProfile, OwnerPost } from '@zod/post/post.dto'
 
 import { usePostsViewModel } from '../composables/usePostsViewModel'
 
@@ -13,6 +18,7 @@ const { t } = useI18n()
 
 const {
   activeTab,
+  viewMode,
   showCreateModal,
   locationPermission,
   nearbyParams,
@@ -29,6 +35,35 @@ const {
 // Provide the ownerProfile object (current user's profile) to child components
 provide('ownerProfile', ownerProfile)
 
+const postStore = usePostStore()
+
+// Get the posts for the active tab for map display
+const currentTabPosts = computed(() => {
+  if (activeTab.value === 'my') {
+    return postStore.myPosts
+  }
+  return postStore.posts
+})
+
+// Functions to extract location and title from posts for the map
+const getPostLocation = (post: PublicPostWithProfile | OwnerPost) => {
+  if ('location' in post && post.location) {
+    return {
+      lat: post.location.lat ?? undefined,
+      lon: post.location.lon ?? undefined,
+    }
+  }
+  return undefined
+}
+
+const getPostTitle = (post: PublicPostWithProfile | OwnerPost) => {
+  const hasProfileData = (p: PublicPostWithProfile | OwnerPost): p is PublicPostWithProfile => 'postedBy' in p && p.postedBy != null
+  if (hasProfileData(post)) {
+    return `${post.postedBy.publicName}: ${post.content.substring(0, 50)}...`
+  }
+  return post.content.substring(0, 50)
+}
+
 onMounted(async () => {
   await initialize()
 })
@@ -43,10 +78,18 @@ onMounted(async () => {
     ></div>
 
     <div class="list-view d-flex flex-column">
+      <!-- Filter controls with view mode toggler -->
+      <div class="filter-controls mx-3 my-2">
+        <div class="d-flex align-items-center justify-content-end w-100 px-2 py-1 bg-light rounded">
+          <ViewModeToggler v-model="viewMode" />
+        </div>
+      </div>
+
       <BTabs v-model="activeTab" lazy class="flex-grow-1 d-flex flex-column" nav-class="post-tabs px-2 pt-2">
         <!-- All posts -->
         <BTab id="all" :title="t('posts.filters.all')" lazy>
           <PostList
+            v-if="viewMode === 'grid'"
             scope="all"
             :is-active="activeTab === 'all'"
             :show-filters="true"
@@ -58,6 +101,15 @@ onMounted(async () => {
             @intent:delete="post => handlePostListIntent('delete', post)"
             @intent:saved="post => handlePostListIntent('saved', post)"
           />
+          <OsmPoiMap
+            v-else-if="viewMode === 'map'"
+            :items="currentTabPosts"
+            :get-location="getPostLocation"
+            :get-title="getPostTitle"
+            :popup-component="PostMapCard"
+            class="map-view h-100"
+            @item:select="(id) => handlePostListIntent('fullview', currentTabPosts.find(p => p.id === id))"
+          />
         </BTab>
 
         <!-- Nearby -->
@@ -68,25 +120,37 @@ onMounted(async () => {
               {{ $t('posts.location.enable') }}
             </BButton>
           </div>
-          <PostList
-            v-else
-            scope="nearby"
-            :is-active="activeTab === 'nearby'"
-            :nearby-params="nearbyParams"
-            :show-filters="true"
-            :empty-message="$t('posts.messages.no_nearby')"
-            @intent:fullview="post => handlePostListIntent('fullview', post)"
-            @intent:edit="post => handlePostListIntent('edit', post)"
-            @intent:close="() => handlePostListIntent('close')"
-            @intent:hide="post => handlePostListIntent('hide', post)"
-            @intent:delete="post => handlePostListIntent('delete', post)"
-            @intent:saved="post => handlePostListIntent('saved', post)"
-          />
+          <template v-else>
+            <PostList
+              v-if="viewMode === 'grid'"
+              scope="nearby"
+              :is-active="activeTab === 'nearby'"
+              :nearby-params="nearbyParams"
+              :show-filters="true"
+              :empty-message="$t('posts.messages.no_nearby')"
+              @intent:fullview="post => handlePostListIntent('fullview', post)"
+              @intent:edit="post => handlePostListIntent('edit', post)"
+              @intent:close="() => handlePostListIntent('close')"
+              @intent:hide="post => handlePostListIntent('hide', post)"
+              @intent:delete="post => handlePostListIntent('delete', post)"
+              @intent:saved="post => handlePostListIntent('saved', post)"
+            />
+            <OsmPoiMap
+              v-else-if="viewMode === 'map'"
+              :items="currentTabPosts"
+              :get-location="getPostLocation"
+              :get-title="getPostTitle"
+              :popup-component="PostMapCard"
+              class="map-view h-100"
+              @item:select="(id) => handlePostListIntent('fullview', currentTabPosts.find(p => p.id === id))"
+            />
+          </template>
         </BTab>
 
         <!-- Recent Posts -->
         <BTab id="recent" :title="t('posts.filters.recent')" lazy>
           <PostList
+            v-if="viewMode === 'grid'"
             scope="recent"
             :is-active="activeTab === 'recent'"
             :show-filters="true"
@@ -98,11 +162,21 @@ onMounted(async () => {
             @intent:delete="post => handlePostListIntent('delete', post)"
             @intent:saved="post => handlePostListIntent('saved', post)"
           />
+          <OsmPoiMap
+            v-else-if="viewMode === 'map'"
+            :items="currentTabPosts"
+            :get-location="getPostLocation"
+            :get-title="getPostTitle"
+            :popup-component="PostMapCard"
+            class="map-view h-100"
+            @item:select="(id) => handlePostListIntent('fullview', currentTabPosts.find(p => p.id === id))"
+          />
         </BTab>
 
         <!-- My Posts -->
         <BTab id="my" :title="t('posts.my_posts')" lazy>
           <PostList
+            v-if="viewMode === 'grid'"
             scope="my"
             :is-active="activeTab === 'my'"
             :show-filters="true"
@@ -113,6 +187,15 @@ onMounted(async () => {
             @intent:hide="post => handlePostListIntent('hide', post)"
             @intent:delete="post => handlePostListIntent('delete', post)"
             @intent:saved="post => handlePostListIntent('saved', post)"
+          />
+          <OsmPoiMap
+            v-else-if="viewMode === 'map'"
+            :items="currentTabPosts"
+            :get-location="getPostLocation"
+            :get-title="getPostTitle"
+            :popup-component="PostMapCard"
+            class="map-view h-100"
+            @item:select="(id) => handlePostListIntent('fullview', currentTabPosts.find(p => p.id === id))"
           />
         </BTab>
       </BTabs>
@@ -241,5 +324,17 @@ onMounted(async () => {
 :deep(.tab-content .tab-pane) {
   height: 100%;
   overflow: hidden;
+}
+
+.map-view {
+  min-height: 500px;
+}
+
+.filter-controls {
+  [data-bs-theme='dark'] & {
+    .bg-light {
+      background-color: var(--bs-gray-800) !important;
+    }
+  }
 }
 </style>
