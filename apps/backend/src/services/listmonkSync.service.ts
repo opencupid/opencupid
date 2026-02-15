@@ -50,8 +50,22 @@ export class ListmonkSyncService {
         // Update existing subscriber
         await this.updateSubscriber(existingSubscriber.id!, user)
       } else {
-        // Create new subscriber
-        await this.createSubscriber(user)
+        // Try to create new subscriber
+        try {
+          await this.createSubscriber(user)
+        } catch (createError: any) {
+          // If subscriber already exists (409 Conflict), fetch and update instead
+          if (createError.message?.includes('409') || createError.message?.includes('already exists')) {
+            const subscriber = await this.getSubscriber(user.email)
+            if (subscriber) {
+              await this.updateSubscriber(subscriber.id!, user)
+            } else {
+              throw createError
+            }
+          } else {
+            throw createError
+          }
+        }
       }
       return true
     } catch (error) {
