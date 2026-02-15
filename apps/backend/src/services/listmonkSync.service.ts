@@ -9,7 +9,7 @@ interface ListmonkSubscriber {
   lists: number[]
   attribs: {
     language?: string
-    newsletterOptin?: boolean
+    newsletterOptIn?: boolean
   }
 }
 
@@ -113,7 +113,7 @@ export class ListmonkSyncService {
       lists: user.newsletterOptIn ? [appConfig.LISTMONK_LIST_ID] : [],
       attribs: {
         language: user.language || 'en',
-        newsletterOptin: user.newsletterOptIn,
+        newsletterOptIn: user.newsletterOptIn,
       },
     }
 
@@ -140,7 +140,7 @@ export class ListmonkSyncService {
       lists: user.newsletterOptIn ? [appConfig.LISTMONK_LIST_ID] : [],
       attribs: {
         language: user.language || 'en',
-        newsletterOptin: user.newsletterOptIn,
+        newsletterOptIn: user.newsletterOptIn,
       },
     }
 
