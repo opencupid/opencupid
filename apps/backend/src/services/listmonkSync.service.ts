@@ -19,10 +19,9 @@ export class ListmonkSyncService {
 
   private constructor() {
     this.baseUrl = appConfig.LISTMONK_URL
-    // Use Basic Auth with API token: username is the API user, password is the token
-    // Token format in env: "username:token_value"
-    const auth = Buffer.from(appConfig.LISTMONK_API_TOKEN).toString('base64')
-    this.authHeader = `Basic ${auth}`
+    // Use Listmonk's custom token authentication: "token username:token_value"
+    // Token format in env: "username:token_value" (e.g., "api_user:BDqyWm3XX5jgEMrSqL")
+    this.authHeader = `token ${appConfig.LISTMONK_API_TOKEN}`
   }
 
   public static getInstance(): ListmonkSyncService {

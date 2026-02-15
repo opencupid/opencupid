@@ -25,7 +25,7 @@ Create the initial set of interest tags:
 
 ### Creating an API Token
 
-The backend uses Basic Authentication with API tokens to communicate with Listmonk. To create an API token:
+The backend uses Listmonk's custom token authentication to communicate with the API. To create an API token:
 
 1. **Access Listmonk Admin UI**: Navigate to `http://your-domain:9000` and log in with your admin credentials
 2. **Create API User**: Go to **Settings** → **Users** → Click **+ New**
@@ -33,24 +33,23 @@ The backend uses Basic Authentication with API tokens to communicate with Listmo
    - Type: Select "API" user type
    - Username: Choose a username (e.g., `api_user`)
    - Role: Assign appropriate permissions (typically "Manager" or create a custom role)
-4. **Save and Copy Token**: When you save, Listmonk will display the API token **once**. Copy it immediately.
+4. **Save and Copy Token**: When you save, Listmonk will display the API token **once**. Copy both the username and token immediately.
 5. **Update Configuration**: Set `LISTMONK_API_TOKEN` in your `.env` file in the format `username:token`:
    ```
-   LISTMONK_API_TOKEN=api_user:abc123def456xyz789
+   LISTMONK_API_TOKEN=api_user:BDqyWm3XX5jgEMrSqL5cRAt9VjGg23aU
    ```
+   Replace `api_user` with your API username and the token value with the one Listmonk generated.
 
 **Testing the API token with curl:**
 ```bash
-# Test that your token works:
-curl -u "api_user:abc123def456xyz789" http://localhost:9000/api/lists
+# Test that your token works (replace with your actual username and token):
+curl -H "Authorization: token api_user:BDqyWm3XX5jgEMrSqL5cRAt9VjGg23aU" http://localhost:9000/api/lists
 ```
 
-**Note**: The token is only shown once during creation. If you lose it, you'll need to create a new API user.
-
-**For development**: You can temporarily use your admin credentials in the same format:
-```
-LISTMONK_API_TOKEN=admin:your_admin_password
-```
+**Note**: 
+- The token is only shown once during creation. If you lose it, you'll need to create a new API user.
+- The format is `Authorization: token username:token_value` (lowercase "token")
+- Do NOT use the admin username/password - create a dedicated API user
 
 ### Listmonk Migration
 
