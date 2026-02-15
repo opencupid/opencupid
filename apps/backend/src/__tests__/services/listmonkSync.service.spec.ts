@@ -50,13 +50,14 @@ describe('ListmonkSyncService', () => {
   })
 
   describe('syncUser', () => {
-    it('should not sync user without email', async () => {
+    it('should return false for user without email', async () => {
       const user = createMockUser({ email: null })
-      await service.syncUser(user)
+      const result = await service.syncUser(user)
+      expect(result).toBe(false)
       expect(mockFetch).not.toHaveBeenCalled()
     })
 
-    it('should create new subscriber when user does not exist', async () => {
+    it('should return true when creating new subscriber succeeds', async () => {
       const user = createMockUser({ newsletterOptIn: true })
 
       // Mock getSubscriber to return null (user doesn't exist)
@@ -71,7 +72,8 @@ describe('ListmonkSyncService', () => {
         json: async () => ({ data: { id: 1 } }),
       })
 
-      await service.syncUser(user)
+      const result = await service.syncUser(user)
+      expect(result).toBe(true)
 
       expect(mockFetch).toHaveBeenCalledTimes(2)
       
@@ -104,7 +106,7 @@ describe('ListmonkSyncService', () => {
       )
     })
 
-    it('should update existing subscriber', async () => {
+    it('should return true when updating existing subscriber succeeds', async () => {
       const user = createMockUser({ newsletterOptIn: true, language: 'de' })
 
       // Mock getSubscriber to return existing subscriber
@@ -131,7 +133,8 @@ describe('ListmonkSyncService', () => {
         json: async () => ({ data: { id: 42 } }),
       })
 
-      await service.syncUser(user)
+      const result = await service.syncUser(user)
+      expect(result).toBe(true)
 
       expect(mockFetch).toHaveBeenCalledTimes(2)
 
@@ -169,7 +172,8 @@ describe('ListmonkSyncService', () => {
         json: async () => ({ data: { id: 1 } }),
       })
 
-      await service.syncUser(user)
+      const result = await service.syncUser(user)
+      expect(result).toBe(true)
 
       // Check that subscriber is created with disabled status and no lists
       expect(mockFetch).toHaveBeenNthCalledWith(
@@ -190,14 +194,14 @@ describe('ListmonkSyncService', () => {
       )
     })
 
-    it('should not throw error on sync failure', async () => {
+    it('should return false on sync failure', async () => {
       const user = createMockUser()
 
       // Mock fetch to fail
       mockFetch.mockRejectedValueOnce(new Error('Network error'))
 
-      // Should not throw
-      await expect(service.syncUser(user)).resolves.toBeUndefined()
+      const result = await service.syncUser(user)
+      expect(result).toBe(false)
 
       // Should log error
       expect(consoleErrorSpy).toHaveBeenCalledWith(

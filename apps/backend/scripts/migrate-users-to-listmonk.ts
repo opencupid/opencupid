@@ -20,22 +20,17 @@ async function main() {
 
   let successCount = 0
   let failureCount = 0
-  const errors: Array<{ userId: string; email: string; error: string }> = []
 
   for (const user of users) {
-    try {
-      await listmonkSyncService.syncUser(user)
+    const success = await listmonkSyncService.syncUser(user)
+    
+    if (success) {
       successCount++
       console.log(`✅ Synced user ${user.id} (${user.email})`)
-    } catch (error) {
+    } else {
       failureCount++
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      errors.push({ 
-        userId: user.id, 
-        email: user.email!, 
-        error: errorMessage 
-      })
-      console.error(`❌ Failed to sync user ${user.id} (${user.email}): ${errorMessage}`)
+      // The error details were already logged by syncUser
+      console.log(`❌ Failed to sync user ${user.id} (${user.email})`)
     }
   }
 
@@ -44,21 +39,12 @@ async function main() {
   console.log(`  ✅ Successfully synced: ${successCount}`)
   console.log(`  ❌ Failed: ${failureCount}`)
   
-  if (errors.length > 0) {
-    console.log('\n⚠️  Failed users details:')
-    const errorsByType = errors.reduce((acc, err) => {
-      acc[err.error] = (acc[err.error] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
-    
-    Object.entries(errorsByType).forEach(([error, count]) => {
-      console.log(`  - ${error}: ${count} user(s)`)
-    })
-    
+  if (failureCount > 0) {
     console.log('\n💡 Common issues:')
-    console.log('  - "Forbidden": Check LISTMONK_ADMIN_USER and LISTMONK_ADMIN_PASSWORD are correct')
+    console.log('  - "Forbidden" or "invalid API credentials": Check LISTMONK_ADMIN_USER and LISTMONK_ADMIN_PASSWORD')
     console.log('  - "Connection refused": Ensure Listmonk service is running')
     console.log('  - Check LISTMONK_URL is accessible from the backend')
+    console.log('\n⚠️  Review the error messages above for specific details about each failure.')
   }
   
   console.log('\n✨ Migration complete!')

@@ -35,11 +35,12 @@ export class ListmonkSyncService {
   /**
    * Synchronize a user to Listmonk
    * This is a best-effort operation - failures won't throw errors
+   * @returns true if sync succeeded, false if it failed
    */
-  async syncUser(user: User): Promise<void> {
+  async syncUser(user: User): Promise<boolean> {
     // Only sync if user has an email
     if (!user.email) {
-      return
+      return false
     }
 
     try {
@@ -53,9 +54,11 @@ export class ListmonkSyncService {
         // Create new subscriber
         await this.createSubscriber(user)
       }
+      return true
     } catch (error) {
       // Log error but don't throw - this is best-effort sync
       console.error('Listmonk sync failed for user', user.id, error)
+      return false
     }
   }
 
