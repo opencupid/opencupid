@@ -4,6 +4,7 @@ import { createPinia, setActivePinia } from 'pinia'
 const mockApi = vi.hoisted(() => ({
   delete: vi.fn(),
   patch: vi.fn(),
+  get: vi.fn(),
 }))
 
 vi.mock('@/lib/api', () => ({
@@ -67,5 +68,57 @@ describe('postStore', () => {
     expect(store.myPosts[0]!.isVisible).toBe(true)
     expect(store.posts.map(post => post.id)).toEqual(['post-2'])
     expect(store.currentPost).toEqual(visiblePost)
+  })
+
+  describe('pagination - fetchPosts', () => {
+    it('replaces posts on initial load (offset 0)', async () => {
+      const store = usePostStore()
+      store.posts = [{ id: 'old-1' } as any]
+      mockApi.get.mockResolvedValue({ data: { success: true, posts: [{ id: 'new-1' }, { id: 'new-2' }] } })
+
+      await store.fetchPosts({ limit: 20, offset: 0 })
+
+      expect(store.posts.map(p => p.id)).toEqual(['new-1', 'new-2'])
+    })
+
+    it('appends posts when offset > 0 (load more)', async () => {
+      const store = usePostStore()
+      store.posts = [{ id: 'existing-1' } as any]
+      mockApi.get.mockResolvedValue({ data: { success: true, posts: [{ id: 'new-1' }, { id: 'new-2' }] } })
+
+      await store.fetchPosts({ limit: 20, offset: 20 })
+
+      expect(store.posts.map(p => p.id)).toEqual(['existing-1', 'new-1', 'new-2'])
+    })
+
+    it('includes offset param in query when offset > 0', async () => {
+      const store = usePostStore()
+      mockApi.get.mockResolvedValue({ data: { success: true, posts: [] } })
+
+      await store.fetchPosts({ limit: 20, offset: 40 })
+
+      expect(mockApi.get).toHaveBeenCalledWith(expect.stringContaining('offset=40'))
+    })
+  })
+
+  describe('pagination - loadPosts', () => {
+    it('calculates offset from page * pageSize', async () => {
+      const store = usePostStore()
+      mockApi.get.mockResolvedValue({ data: { success: true, posts: [] } })
+
+      await store.loadPosts('all', { page: 2, pageSize: 20 })
+
+      expect(mockApi.get).toHaveBeenCalledWith(expect.stringContaining('offset=40'))
+    })
+
+    it('uses offset 0 for first page', async () => {
+      const store = usePostStore()
+      mockApi.get.mockResolvedValue({ data: { success: true, posts: [] } })
+
+      await store.loadPosts('all', { page: 0, pageSize: 20 })
+
+      // offset=0 is not appended to params (falsy check), so posts should be replaced
+      expect(store.posts).toEqual([])
+    })
   })
 })
