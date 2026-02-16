@@ -169,11 +169,14 @@ services:
       - --standalone
 
   # Separate certbot-init for admin domain
+  # IMPORTANT: Uncomment the ports section below ONLY when running certbot-init-admin
+  # to obtain the initial certificate. Comment it out again before starting ingress-admin.
   certbot-init-admin:
     image: certbot/certbot
     restart: "no" # don't auto start this
 
-    # enable this before running certbot-init-admin, and disable after so that ingress-admin can use port 80
+    # Uncomment these ports ONLY during initial certificate acquisition, then comment out
+    # so that ingress-admin can use port 8080 for HTTP->HTTPS redirects
 #    ports:
 #      - "8080:80"
     volumes:

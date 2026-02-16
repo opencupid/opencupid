@@ -61,7 +61,9 @@ http {
 
     # Proxy to Listmonk
     location /listmonk/ {
-      # Require client cert for Listmonk access
+      # Client certificate authentication check
+      # Note: Using 'if' for ssl_client_verify is the recommended pattern
+      # See: https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_verify_client
       if ($ssl_client_verify != SUCCESS) {
         return 403;
       }
@@ -84,7 +86,9 @@ http {
 
     # Serve admin home page
     location / {
-      # Require client cert for admin page
+      # Client certificate authentication check
+      # Note: Using 'if' for ssl_client_verify is the recommended pattern
+      # See: https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_verify_client
       if ($ssl_client_verify != SUCCESS) {
         return 403;
       }
