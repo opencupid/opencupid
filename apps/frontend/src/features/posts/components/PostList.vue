@@ -101,7 +101,7 @@ function handleClose() {
         name="fade"
         tag="div"
         v-if="posts.length > 0"
-        class="row row-cols-1 g-2 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 gx-4 gy-4"
+        class="row row-cols-1 g-2 row-cols-sm-2 row-cols-lg-3 gx-4 gy-4"
       >
         <BCol v-for="post in posts" :key="post.id">
           <PostCard
