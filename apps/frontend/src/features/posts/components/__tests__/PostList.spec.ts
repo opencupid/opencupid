@@ -24,11 +24,9 @@ vi.mock('@/features/publicprofile/composables/useMessageSentState', () => ({
 const mockVm = {
   postStore: { isLoading: false, error: null },
   posts: ref([{ id: 'post-1' }]),
-  selectedType: ref(''),
   isLoadingMore: ref(false),
   hasMorePosts: ref(false),
   isInitialized: ref(true),
-  handleTypeFilter: vi.fn(),
   handleLoadMore: vi.fn(),
   handleRetry: vi.fn(),
 }
@@ -142,5 +140,14 @@ describe('PostList', () => {
     const outer = wrapper.find('.post-list')
     expect(outer.classes()).toContain('d-flex')
     expect(outer.classes()).toContain('flex-column')
+  })
+
+  it('accepts type prop and passes it to the view model', () => {
+    const wrapper = mount(PostList, {
+      props: { showFilters: false, type: 'OFFER' },
+      global: globalOpts(),
+    })
+
+    expect(wrapper.props('type')).toBe('OFFER')
   })
 })

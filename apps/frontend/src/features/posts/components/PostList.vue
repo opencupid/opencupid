@@ -4,7 +4,6 @@ import { useInfiniteScroll } from '@vueuse/core'
 import PostCard from './PostCard.vue'
 import { type PostTypeType } from '@zod/generated'
 import { usePostListViewModel } from '../composables/usePostListViewModel'
-import IconFilter from '@/assets/icons/interface/filter.svg'
 
 interface Props {
   title?: string
@@ -18,7 +17,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   title: 'Posts',
-  showFilters: true,
+  showFilters: false,
   scope: 'all',
   emptyMessage: 'No posts found',
   isActive: true,
@@ -36,11 +35,9 @@ const emit = defineEmits<{
 const {
   postStore,
   posts,
-  selectedType,
   isLoadingMore,
   hasMorePosts,
   isInitialized,
-  handleTypeFilter,
   handleLoadMore,
   handleRetry,
 } = usePostListViewModel(props)
@@ -83,29 +80,6 @@ function handleClose() {
 
 <template>
   <div class="post-list h-100 d-flex flex-column">
-    <!-- Filter -->
-    <div class="d-flex flex-row justify-content-end align-items-center mb-3 flex-shrink-0 px-3">
-      <div>
-        <div v-if="showFilters">
-          <BInputGroup class="mt-3">
-            <template #prepend>
-              <BInputGroupText><IconFilter class="svg-icon" /></BInputGroupText>
-            </template>
-
-            <BFormSelect v-model="selectedType" @change="handleTypeFilter" size="sm">
-              <option value="">{{ $t('posts.filters.all') }}</option>
-              <option value="OFFER">{{ $t('posts.filters.offers') }}</option>
-              <option value="REQUEST">{{ $t('posts.filters.requests') }}</option>
-            </BFormSelect>
-          </BInputGroup>
-        </div>
-      </div>
-      <div>
-        <!-- add viewModeTogglee -->
-        <!-- <ViewModeToggler/> -->
-      </div>
-    </div>
-
     <div v-if="postStore.isLoading && posts.length === 0" class="mb-2 flex-shrink-0">
       <div class="loading-spinner"></div>
       <p>{{ $t('uicomponents.loading.loading') }}</p>
