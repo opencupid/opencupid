@@ -97,6 +97,23 @@ services:
       - ${CERTBOT_ETCDIR}:/etc/letsencrypt
       - certbot-webroot:/var/www/html
 
+  ingress-admin:
+    image: ghcr.io/opencupid/opencupid-ingress-admin
+    build:
+      context: apps/ingress-admin
+    restart: always
+    depends_on:
+      - listmonk
+    env_file:
+      - .env
+    ports:
+      - '8443:443'
+      - '8080:80'
+    volumes:
+      - ${CERTBOT_ETCDIR}:/etc/letsencrypt
+      - certbot-webroot:/var/www/html
+      - ${CLIENT_CERT_DIR:-./client-certs}:/etc/nginx/client-certs:ro
+
   certbot:
     image: certbot/certbot
     restart: always
@@ -126,6 +143,8 @@ services:
       - "echo 'Certificate renewed successfully'"
 
   # this obtains the initial cert from letsencrypt. Should be run once manually.
+  # For multiple domains, you can specify both domains in the command:
+  # certonly -d ${DOMAIN} -d ${ADMIN_DOMAIN}
   certbot-init:
     image: certbot/certbot
     restart: "no" # don't auto start this
@@ -143,6 +162,30 @@ services:
       - certonly
       - -d
       - ${DOMAIN}
+      - --email
+      - ${EMAIL}
+      - --agree-tos
+      - --no-eff-email
+      - --standalone
+
+  # Separate certbot-init for admin domain
+  certbot-init-admin:
+    image: certbot/certbot
+    restart: "no" # don't auto start this
+
+    # enable this before running certbot-init-admin, and disable after so that ingress-admin can use port 80
+#    ports:
+#      - "8080:80"
+    volumes:
+      - ${CERTBOT_ETCDIR}:/etc/letsencrypt
+      - certbot-webroot:/var/www/html
+    env_file:
+      - .env
+    entrypoint: certbot
+    command:
+      - certonly
+      - -d
+      - ${ADMIN_DOMAIN}
       - --email
       - ${EMAIL}
       - --agree-tos

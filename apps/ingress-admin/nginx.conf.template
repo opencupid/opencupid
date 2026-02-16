@@ -1,0 +1,97 @@
+worker_processes 1;
+
+events {
+  worker_connections 1024;
+}
+
+error_log /dev/stderr error;
+
+http {
+  include mime.types;
+  default_type application/octet-stream;
+
+  sendfile on;
+  keepalive_timeout 65;
+
+  # --- Enable Gzip ---
+  gzip on;
+  gzip_comp_level 6;
+  gzip_min_length 256;
+  gzip_vary on;
+  gzip_proxied any;
+  gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript font/woff2;
+
+  # --- Upstream for Listmonk ---
+  upstream listmonk {
+    server listmonk:9000;
+  }
+
+  # --- HTTP -> HTTPS Redirect ---
+  server {
+    listen 80;
+    server_name _;
+
+    location /.well-known/acme-challenge/ {
+      root /var/www/html;
+      try_files $uri =404;
+    }
+
+    location / {
+      return 301 https://$host$request_uri;
+    }
+  }
+
+  # --- HTTPS Server with Client Cert Authentication ---
+  server {
+    listen 443 ssl;
+    server_name _;
+
+    ssl_certificate     /etc/letsencrypt/live/${ADMIN_DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${ADMIN_DOMAIN}/privkey.pem;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    # Client certificate authentication
+    ssl_client_certificate /etc/nginx/client-certs/ca.crt;
+    ssl_verify_client optional;
+
+    # Default limit
+    client_max_body_size 1M;
+
+    # Proxy to Listmonk
+    location /listmonk/ {
+      # Require client cert for Listmonk access
+      if ($ssl_client_verify != SUCCESS) {
+        return 403;
+      }
+
+      proxy_pass http://listmonk/;
+      proxy_http_version 1.1;
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+      
+      # Remove /listmonk prefix when proxying
+      rewrite ^/listmonk/(.*) /$1 break;
+    }
+
+    # ACME challenge for Let's Encrypt
+    location /.well-known/acme-challenge/ {
+      root /var/www/html;
+    }
+
+    # Serve admin home page
+    location / {
+      # Require client cert for admin page
+      if ($ssl_client_verify != SUCCESS) {
+        return 403;
+      }
+
+      root /usr/local/openresty/nginx/html;
+      index index.html;
+      try_files $uri $uri/ /index.html;
+    }
+  }
+}
