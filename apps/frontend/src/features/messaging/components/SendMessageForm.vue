@@ -184,7 +184,7 @@ function handleVoiceRecordingError(error: string) {
                   type="radio" 
                   class="form-check-input me-2" 
                   :checked="sendMode === 'enter'"
-                  readonly
+                  disabled
                 />
                 {{ $t('messaging.send_mode_press_enter') }}
               </BDropdownItem>
@@ -193,7 +193,7 @@ function handleVoiceRecordingError(error: string) {
                   type="radio" 
                   class="form-check-input me-2" 
                   :checked="sendMode === 'click'"
-                  readonly
+                  disabled
                 />
                 {{ $t('messaging.send_mode_click') }}
               </BDropdownItem>
