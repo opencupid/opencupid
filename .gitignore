@@ -35,3 +35,5 @@ secrets/
 .config-cache/
 .json-autotranslate-cache/
 .env.staging
+# Test env files
+.env.test*
