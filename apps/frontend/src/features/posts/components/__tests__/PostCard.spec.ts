@@ -48,6 +48,7 @@ describe('PostCard', () => {
     const wrapper = mount(PostCard, {
       props: {
         showDetails: false,
+        showOwnerToolbar: true,
         post: {
           id: 'post-1',
           postedById: 'profile-1',
@@ -77,6 +78,7 @@ describe('PostCard', () => {
     const wrapper = mount(PostCard, {
       props: {
         showDetails: false,
+        showOwnerToolbar: true,
         post: {
           id: 'post-1',
           postedById: 'profile-1',

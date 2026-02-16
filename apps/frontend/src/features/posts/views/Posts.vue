@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, provide } from 'vue'
+import { computed, onMounted, provide, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import PostList from '../components/PostList.vue'
 import PostEdit from '../components/PostEdit.vue'
@@ -11,6 +11,7 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faPenToSquare } from '@fortawesome/free-solid-svg-icons'
 import { usePostStore } from '../stores/postStore'
 import type { PublicPostWithProfile, OwnerPost } from '@zod/post/post.dto'
+import type { PostTypeType } from '@zod/generated'
 
 import { usePostsViewModel } from '../composables/usePostsViewModel'
 
@@ -36,6 +37,17 @@ const {
 provide('ownerProfile', ownerProfile)
 
 const postStore = usePostStore()
+
+// Type filter state — owned here, passed to PostList as prop
+const selectedType = ref<PostTypeType | ''>('')
+
+// Scope tabs config
+const scopeTabs = [
+  { id: 'all', label: () => t('posts.filters.all') },
+  { id: 'nearby', label: () => t('posts.filters.nearby') },
+  { id: 'recent', label: () => t('posts.filters.recent') },
+  { id: 'my', label: () => t('posts.my_posts') },
+] as const
 
 // Get the posts for the active tab for map display
 const currentTabPosts = computed(() => {
@@ -78,21 +90,43 @@ onMounted(async () => {
     ></div>
 
     <div class="list-view d-flex flex-column">
-      <!-- Filter controls with view mode toggler -->
-      <div class="filter-controls mx-3 my-2">
-        <div class="d-flex align-items-center justify-content-end w-100 px-2 py-1 bg-light rounded">
-          <ViewModeToggler v-model="viewMode" />
+      <!-- Unified toolbar: scope pills + type filter + view toggle -->
+      <div class="posts-toolbar d-flex align-items-center gap-2 px-3 py-2 flex-shrink-0">
+        <div class="scope-pills d-flex gap-1 overflow-auto hide-scrollbar flex-grow-1">
+          <button
+            v-for="tab in scopeTabs"
+            :key="tab.id"
+            class="scope-pill btn btn-sm"
+            :class="activeTab === tab.id ? 'active' : ''"
+            @click="activeTab = tab.id"
+          >
+            {{ tab.label() }}
+          </button>
         </div>
+
+        <BFormSelect
+          v-model="selectedType"
+          size="sm"
+          class="type-filter"
+        >
+          <option value="">{{ t('posts.filters.all') }}</option>
+          <option value="OFFER">{{ t('posts.filters.offers') }}</option>
+          <option value="REQUEST">{{ t('posts.filters.requests') }}</option>
+        </BFormSelect>
+
+        <ViewModeToggler v-model="viewMode" />
       </div>
 
-      <BTabs v-model="activeTab" lazy class="flex-grow-1 d-flex flex-column" nav-class="post-tabs px-2 pt-2">
+      <!-- Tab content -->
+      <div class="tab-content flex-grow-1 overflow-hidden position-relative">
         <!-- All posts -->
-        <BTab id="all" :title="t('posts.filters.all')" lazy>
+        <div v-if="activeTab === 'all'" class="scope-pane h-100">
           <PostList
             v-if="viewMode === 'grid'"
             scope="all"
             :is-active="activeTab === 'all'"
-            :show-filters="true"
+            :type="selectedType || undefined"
+            :show-filters="false"
             :empty-message="$t('posts.messages.no_posts')"
             @intent:fullview="post => handlePostListIntent('fullview', post)"
             @intent:edit="post => handlePostListIntent('edit', post)"
@@ -110,10 +144,10 @@ onMounted(async () => {
             class="map-view h-100"
             @item:select="(id) => handlePostListIntent('fullview', currentTabPosts.find(p => p.id === id))"
           />
-        </BTab>
+        </div>
 
         <!-- Nearby -->
-        <BTab id="nearby" :title="t('posts.filters.nearby')" lazy>
+        <div v-if="activeTab === 'nearby'" class="scope-pane h-100">
           <div v-if="!locationPermission" class="location-prompt">
             <p>{{ $t('posts.location.prompt') }}</p>
             <BButton variant="info" @click="requestLocation" size="lg">
@@ -126,7 +160,8 @@ onMounted(async () => {
               scope="nearby"
               :is-active="activeTab === 'nearby'"
               :nearby-params="nearbyParams"
-              :show-filters="true"
+              :type="selectedType || undefined"
+              :show-filters="false"
               :empty-message="$t('posts.messages.no_nearby')"
               @intent:fullview="post => handlePostListIntent('fullview', post)"
               @intent:edit="post => handlePostListIntent('edit', post)"
@@ -145,15 +180,16 @@ onMounted(async () => {
               @item:select="(id) => handlePostListIntent('fullview', currentTabPosts.find(p => p.id === id))"
             />
           </template>
-        </BTab>
+        </div>
 
         <!-- Recent Posts -->
-        <BTab id="recent" :title="t('posts.filters.recent')" lazy>
+        <div v-if="activeTab === 'recent'" class="scope-pane h-100">
           <PostList
             v-if="viewMode === 'grid'"
             scope="recent"
             :is-active="activeTab === 'recent'"
-            :show-filters="true"
+            :type="selectedType || undefined"
+            :show-filters="false"
             :empty-message="$t('posts.messages.no_recent')"
             @intent:fullview="post => handlePostListIntent('fullview', post)"
             @intent:edit="post => handlePostListIntent('edit', post)"
@@ -171,15 +207,16 @@ onMounted(async () => {
             class="map-view h-100"
             @item:select="(id) => handlePostListIntent('fullview', currentTabPosts.find(p => p.id === id))"
           />
-        </BTab>
+        </div>
 
         <!-- My Posts -->
-        <BTab id="my" :title="t('posts.my_posts')" lazy>
+        <div v-if="activeTab === 'my'" class="scope-pane h-100">
           <PostList
             v-if="viewMode === 'grid'"
             scope="my"
             :is-active="activeTab === 'my'"
-            :show-filters="true"
+            :type="selectedType || undefined"
+            :show-filters="false"
             :empty-message="$t('posts.messages.no_my_posts')"
             @intent:fullview="post => handlePostListIntent('fullview', post)"
             @intent:edit="post => handlePostListIntent('edit', post)"
@@ -197,8 +234,8 @@ onMounted(async () => {
             class="map-view h-100"
             @item:select="(id) => handlePostListIntent('fullview', currentTabPosts.find(p => p.id === id))"
           />
-        </BTab>
-      </BTabs>
+        </div>
+      </div>
     </div>
 
     <!-- Create Post Button -->
@@ -296,15 +333,25 @@ onMounted(async () => {
   height: calc(100vh - $navbar-height);
 }
 
-:deep(.post-tabs) {
-  font-size: 0.85rem;
-  gap: 0.25rem;
+.posts-toolbar {
+  .scope-pills {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 
-  .nav-link {
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .scope-pill {
+    white-space: nowrap;
+    font-size: 0.85rem;
+    font-weight: 500;
     color: $social;
+    background: transparent;
+    border: none;
     padding: 0.35rem 0.75rem;
     border-radius: 0.5rem;
-    font-weight: 500;
 
     &:hover {
       background-color: transparentize($social, 0.9);
@@ -315,26 +362,49 @@ onMounted(async () => {
       color: $white;
     }
   }
+
+  .type-filter {
+    width: auto;
+    min-width: 0;
+    flex-shrink: 0;
+    font-size: 0.85rem;
+    border-color: transparent;
+    background-color: transparent;
+    padding-right: 1.75rem;
+
+    &:focus {
+      border-color: $social;
+      box-shadow: none;
+    }
+  }
+
+  [data-bs-theme='dark'] & {
+    .scope-pill {
+      color: lighten($social, 40%);
+
+      &:hover {
+        background-color: transparentize(lighten($social, 40%), 0.9);
+      }
+
+      &.active {
+        background-color: $social;
+        color: $white;
+      }
+    }
+  }
 }
 
-:deep(.tab-content) {
-  flex-grow: 1;
-  overflow: hidden;
+.tab-content {
+  min-height: 0;
 }
-:deep(.tab-content .tab-pane) {
-  height: 100%;
+
+.scope-pane {
   overflow: hidden;
+  position: absolute;
+  inset: 0;
 }
 
 .map-view {
   min-height: 500px;
-}
-
-.filter-controls {
-  [data-bs-theme='dark'] & {
-    .bg-light {
-      background-color: var(--bs-gray-800) !important;
-    }
-  }
 }
 </style>

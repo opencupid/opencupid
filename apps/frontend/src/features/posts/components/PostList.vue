@@ -4,7 +4,6 @@ import { useInfiniteScroll } from '@vueuse/core'
 import PostCard from './PostCard.vue'
 import { type PostTypeType } from '@zod/generated'
 import { usePostListViewModel } from '../composables/usePostListViewModel'
-import IconFilter from '@/assets/icons/interface/filter.svg'
 
 interface Props {
   title?: string
@@ -18,7 +17,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   title: 'Posts',
-  showFilters: true,
+  showFilters: false,
   scope: 'all',
   emptyMessage: 'No posts found',
   isActive: true,
@@ -36,11 +35,9 @@ const emit = defineEmits<{
 const {
   postStore,
   posts,
-  selectedType,
   isLoadingMore,
   hasMorePosts,
   isInitialized,
-  handleTypeFilter,
   handleLoadMore,
   handleRetry,
 } = usePostListViewModel(props)
@@ -82,47 +79,24 @@ function handleClose() {
 </script>
 
 <template>
-  <div class="post-list h-100">
-    <!-- Filter -->
-    <div class="d-flex flex-row justify-content-end align-items-center mb-3">
-      <div>
-        <div v-if="showFilters">
-          <BInputGroup class="mt-3">
-            <template #prepend>
-              <BInputGroupText><IconFilter class="svg-icon" /></BInputGroupText>
-            </template>
-
-            <BFormSelect v-model="selectedType" @change="handleTypeFilter" size="sm">
-              <option value="">{{ $t('posts.filters.all') }}</option>
-              <option value="OFFER">{{ $t('posts.filters.offers') }}</option>
-              <option value="REQUEST">{{ $t('posts.filters.requests') }}</option>
-            </BFormSelect>
-          </BInputGroup>
-        </div>
-      </div>
-      <div>
-        <!-- add viewModeTogglee -->
-        <!-- <ViewModeToggler/> -->
-      </div>
-    </div>
-
-    <div v-if="postStore.isLoading && posts.length === 0" class="mb-2">
+  <div class="post-list h-100 d-flex flex-column">
+    <div v-if="postStore.isLoading && posts.length === 0" class="mb-2 flex-shrink-0">
       <div class="loading-spinner"></div>
       <p>{{ $t('uicomponents.loading.loading') }}</p>
     </div>
 
-    <div v-else-if="postStore.error" class="text-danger mb-2">
+    <div v-else-if="postStore.error" class="text-danger mb-2 flex-shrink-0">
       <p>{{ postStore.error }}</p>
       <BButton variant="warning" @click="handleRetry" class="btn btn-primary">
         {{ $t('uicomponents.error.retry') }}
       </BButton>
     </div>
 
-    <div v-else-if="posts.length === 0" class="mb-2">
+    <div v-else-if="posts.length === 0" class="mb-2 flex-shrink-0">
       <p>{{ emptyMessage }}</p>
     </div>
 
-    <div ref="scrollContainer" class="container-fluid overflow-auto hide-scrollbar h-100">
+    <div ref="scrollContainer" class="container-fluid overflow-auto hide-scrollbar flex-grow-1 flex-shrink-1">
       <TransitionGroup
         name="fade"
         tag="div"
@@ -134,6 +108,7 @@ function handleClose() {
             :post="post"
             :show-details="false"
             :dim-hidden="scope === 'my'"
+            :show-owner-toolbar="scope === 'my'"
             @click="() => handlePostClick(post)"
             @edit="() => handlePostEdit(post)"
             @hide="() => handlePostHide(post)"
