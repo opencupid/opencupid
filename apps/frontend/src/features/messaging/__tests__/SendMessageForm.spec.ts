@@ -108,4 +108,47 @@ describe('SendMessageForm', () => {
 
     expect(newLocalStore.getSendMode).toBe('click')
   })
+
+  it('renders radio buttons in dropdown menu', async () => {
+    const localStore = useLocalStore()
+    const wrapper = mount(SendMessageForm, {
+      props: {
+        recipientProfile: mockRecipient,
+        conversationId: null
+      },
+      global: {
+        stubs: {
+          BFormGroup: true,
+          BFormTextarea: true,
+          BButton: true,
+          BDropdown: false,
+          BDropdownItem: false,
+          TagList: true,
+          LanguageList: true,
+          StoreErrorOverlay: true,
+          VoiceRecorder: true,
+          IconMenuDotsVert: true,
+          Mic2Icon: true,
+        },
+        mocks: {
+          $t: (key: string) => key,
+        }
+      }
+    })
+
+    // Find radio button inputs
+    const radioButtons = wrapper.findAll('input[type="radio"]')
+    expect(radioButtons.length).toBe(2)
+    
+    // First radio should be checked (enter mode is default)
+    expect(radioButtons[0]!.attributes('checked')).toBeDefined()
+    expect(radioButtons[1]!.attributes('checked')).toBeUndefined()
+
+    // Change mode and verify radio states
+    localStore.setSendMode('click')
+    await wrapper.vm.$nextTick()
+    
+    expect(radioButtons[0]!.attributes('checked')).toBeUndefined()
+    expect(radioButtons[1]!.attributes('checked')).toBeDefined()
+  })
 })

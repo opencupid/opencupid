@@ -180,13 +180,21 @@ function handleVoiceRecordingError(error: string) {
                 <IconMenuDotsVert class="svg-icon-lg fs-4" />
               </template>
               <BDropdownItem @click="setSendMode('enter')" :active="sendMode === 'enter'">
-                <i class="bi bi-record-circle-fill" v-if="sendMode === 'enter'"></i>
-                <i class="bi bi-circle" v-else></i>
+                <input 
+                  type="radio" 
+                  class="form-check-input me-2" 
+                  :checked="sendMode === 'enter'"
+                  disabled
+                />
                 {{ $t('messaging.send_mode_press_enter') }}
               </BDropdownItem>
               <BDropdownItem @click="setSendMode('click')" :active="sendMode === 'click'">
-                <i class="bi bi-record-circle-fill" v-if="sendMode === 'click'"></i>
-                <i class="bi bi-circle" v-else></i>
+                <input 
+                  type="radio" 
+                  class="form-check-input me-2" 
+                  :checked="sendMode === 'click'"
+                  disabled
+                />
                 {{ $t('messaging.send_mode_click') }}
               </BDropdownItem>
             </BDropdown>
