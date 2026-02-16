@@ -22,7 +22,6 @@ import { InteractionService } from '../../services/interaction.service'
 import { notifierService } from '@/services/notifier.service'
 import { appConfig } from '@/lib/appconfig'
 import path from 'path'
-import { createWriteStream } from 'fs'
 import { promises as fsPromises } from 'fs'
 
 // Route params for ID lookups
@@ -206,27 +205,27 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
     const senderProfileId = req.session.profileId
     if (!senderProfileId) return sendError(reply, 401, 'Sender ID not found.')
 
-    let files: any[] = []
+    let fileBuffer: Buffer | null = null
+    let fileMeta: { filename: string; mimetype: string; fieldname: string } | null = null
     let fields: any = {}
 
     try {
       // Process multipart form data
       const parts = req.parts()
-      
+
       for await (const part of parts) {
         if (part.type === 'file') {
-          files = [part]
+          fileBuffer = await part.toBuffer()  // consumes stream, unblocks next parts
+          fileMeta = { filename: part.filename, mimetype: part.mimetype, fieldname: part.fieldname }
         } else {
           // Handle form fields
           fields[part.fieldname] = part.value
         }
       }
 
-      if (!files || files.length === 0) {
+      if (!fileBuffer || !fileMeta) {
         return sendError(reply, 400, 'No voice file provided')
       }
-
-      const file = files[0]
 
       // Validate voice message payload
       const payload = SendVoiceMessagePayloadSchema.safeParse({
@@ -240,9 +239,10 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
         return sendError(reply, 400, 'Invalid voice message parameters')
       }
 
-      // Validate file type
+      // Validate file type (strip codec suffix before allowlist check)
+      const baseMimeType = fileMeta.mimetype.split(';')[0].trim()
       const allowedMimeTypes = ['audio/mpeg', 'audio/mp4', 'audio/wav', 'audio/webm', 'audio/ogg']
-      if (!allowedMimeTypes.includes(file.mimetype)) {
+      if (!allowedMimeTypes.includes(baseMimeType)) {
         return sendError(reply, 400, 'Invalid audio file type')
       }
 
@@ -256,17 +256,12 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
       await fsPromises.mkdir(voiceDir, { recursive: true })
 
       // Generate unique filename
-      const fileExtension = path.extname(file.filename) || '.webm'
+      const fileExtension = path.extname(fileMeta.filename) || '.webm'
       const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}${fileExtension}`
       const filePath = path.join(voiceDir, fileName)
 
-      // Save the file using Promise-based approach
-      await new Promise<void>((resolve, reject) => {
-        const writeStream = createWriteStream(filePath)
-        file.file.pipe(writeStream)
-        writeStream.on('finish', resolve)
-        writeStream.on('error', reject)
-      })
+      // Save the buffered file to disk
+      await fsPromises.writeFile(filePath, fileBuffer)
 
       // Get file stats
       const stats = await fsPromises.stat(filePath)
@@ -281,7 +276,7 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
             'audio/voice',
             {
               filePath: `voice/${senderProfileId}/${fileName}`,
-              mimeType: file.mimetype,
+              mimeType: fileMeta.mimetype,
               fileSize: stats.size,
               duration: payload.data.duration,
             }
