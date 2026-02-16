@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useRouter, useRoute } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { computed } from 'vue'
 
