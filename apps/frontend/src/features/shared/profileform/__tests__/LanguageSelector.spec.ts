@@ -12,6 +12,6 @@ describe('LanguageSelector', () => {
     const wrapper = mount(LanguageSelector, { props: { modelValue: [] } })
     ;(wrapper.vm as any).languagesComputed = [{ label: 'English', value: 'en' }]
     await wrapper.vm.$nextTick()
-    expect(wrapper.emitted('update:modelValue')![0][0]).toEqual(['en'])
+    expect(wrapper.emitted('update:modelValue')![0]![0]).toEqual(['en'])
   })
 })

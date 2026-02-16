@@ -84,7 +84,7 @@ function getBrowserLanguage(availableLocales: string[]): string {
   // TODO - handle multiple languages in navigator.languages
   // is navigator.language always == navigator.languages[0]?
   // const browserLanguage = navigator.language || navigator.languages[0] || 'en'
-  const browserLang = (navigator.language || 'en').split('-')[0]
+  const browserLang = (navigator.language || 'en').split('-')[0] ?? 'en'
   return availableLocales.includes(browserLang) ? browserLang : 'en'
 
 }

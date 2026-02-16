@@ -9,8 +9,8 @@ import GoalsSelector from '../GoalsSelector.vue'
 describe('GoalsSelector', () => {
   it('toggles flags when buttons clicked', async () => {
     const wrapper = mount(GoalsSelector)
-    await wrapper.findAll('.btn-social-toggle')[0].trigger('click')
-    await wrapper.findAll('.btn-dating-toggle')[0].trigger('click')
+    await wrapper.findAll('.btn-social-toggle')[0]!.trigger('click')
+    await wrapper.findAll('.btn-dating-toggle')[0]!.trigger('click')
     expect((wrapper.vm as any).model.isSocialActive).toBe(true)
     expect((wrapper.vm as any).model.isDatingActive).toBe(true)
   })

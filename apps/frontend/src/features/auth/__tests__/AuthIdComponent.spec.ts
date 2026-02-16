@@ -35,7 +35,7 @@ describe('AuthIdComponent', () => {
     })
     ;(wrapper.vm as any).authIdInput = 'test@example.com'
     await (wrapper.vm as any).handleSendLoginLink()
-    expect(wrapper.emitted('updated')![0][0]).toEqual({
+    expect(wrapper.emitted('updated')![0]![0]).toEqual({
       email: 'test@example.com',
       phonenumber: '',
       captchaSolution: '',

@@ -97,7 +97,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
         configureServer(server) {
           server.middlewares.use(
             '/images',
-            serveStatic(path.resolve(__dirname, rootEnv.MEDIA_UPLOAD_DIR)),
+            serveStatic(path.resolve(__dirname, rootEnv.MEDIA_UPLOAD_DIR!)),
           )
         },
       },
@@ -136,7 +136,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
     css: {
       preprocessorOptions: {
         scss: {
-          silenceDeprecations: ['import', 'mixed-decls', 'color-functions', 'global-builtin'],
+          silenceDeprecations: ['import', 'color-functions', 'global-builtin', 'if-function'],
           includePaths: ['node_modules'],
           quietDeps: true,
           additionalData: '',

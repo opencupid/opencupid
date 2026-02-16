@@ -31,7 +31,7 @@ const status = ref('idle')
 
 const langList = computed(() => sortLanguagesWithEnFirst(props.languages))
 
-const currentLanguage = ref(langList.value[0])
+const currentLanguage = ref(langList.value[0] ?? '')
 
 let recognition: SpeechRecognition | null = null
 
@@ -61,7 +61,8 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
 
   recognition.onresult = (event: SpeechRecognitionEvent) => {
     if (!model.value) return
-    const result = event.results[0][0]
+    const result = event.results[0]?.[0]
+    if (!result) return
     lastTranscript.value = result.transcript
     lastConfidence.value = result.confidence
     const current = model.value[currentLanguage.value] || ''

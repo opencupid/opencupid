@@ -39,7 +39,7 @@ describe('LanguageSelectorDropdown', () => {
     const wrapper = mount(LanguageSelectorDropdown, { global: { stubs } })
     const options = wrapper.findAll('option')
     expect(options).toHaveLength(2)
-    expect(options[0].text()).toBe('English')
+    expect(options[0]!.text()).toBe('English')
   })
 
   it('updates currentLanguage on change', async () => {

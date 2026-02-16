@@ -44,7 +44,7 @@ export const useAuthStore = defineStore('auth', {
 
       // Parse user data from token
       try {
-        const payload = JSON.parse(atob(token.split('.')[1])) as JwtPayload
+        const payload = JSON.parse(atob(token.split('.')[1]!)) as JwtPayload
         this.userId = payload.userId
         this.profileId = payload.profileId
       } catch (e) {
