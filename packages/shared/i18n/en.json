@@ -315,7 +315,8 @@
     "language_label": "Language",
     "push_notifications": "Push Notifications",
     "enable_push": "Enable Push Notifications",
-    "newsletter_opt_in": "I'm happy to receive the occasional email newsletter"
+    "newsletter_opt_in": "I'm happy to receive the occasional email newsletter",
+    "push_notify_messages": "I want notifications when someone messages me"
   },
   "uicomponents": {
     "connection_error": {

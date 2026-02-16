@@ -130,16 +130,17 @@ async function handleNewsletterOptInChange(event: Event) {
       <button class="btn btn-secondary" @click="changeColor">Toggle night or day</button>
     </div> -->
 
-            <div class="mb-3">
-              <PushPermissions />
-            </div>
             <fieldset class="mb-3">
               <legend for="language-selector" class="form-label">
                 {{ t('settings.language_label') }}
               </legend>
               <LanguageSelectorDropdown size="md" />
             </fieldset>
-            
+
+            <fieldset class="mb-3">
+              <PushPermissions v-model="user.isPushNotificationEnabled" />
+            </fieldset>
+
             <fieldset class="mb-3">
               <div class="form-check">
                 <input

@@ -39,6 +39,7 @@ export class WebPushService {
       include: { user: true },
     })
     if (!profile?.user) return
+    if (!profile.user.isPushNotificationEnabled) return
 
     const payload = {
       title: `New message from ${message.sender.publicName}`,
