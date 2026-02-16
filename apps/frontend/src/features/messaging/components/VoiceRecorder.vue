@@ -9,7 +9,6 @@ import Mic2Icon from '@/assets/icons/interface/mic-2.svg'
 const props = defineProps<{
   disabled?: boolean
   maxDuration?: number
-  hideIdleButton?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -41,11 +40,11 @@ const isCompleted = computed(() => state.value === 'completed')
 const isError = computed(() => state.value === 'error')
 const canRecord = computed(() => isSupported.value && !props.disabled)
 
-const buttonClass = computed(() => {
-  if (isRecording.value) return 'btn-danger'
-  if (isCompleted.value) return 'btn-success'
-  if (isError.value) return 'btn-warning'
-  return 'btn-outline-primary'
+const buttonVariant = computed(() => {
+  if (isRecording.value) return 'danger'
+  if (isCompleted.value) return 'success'
+  if (isError.value) return 'warning'
+  return 'outline-primary'
 })
 
 const progressPercentage = computed(() => {
@@ -83,7 +82,7 @@ const handleRetryPermission = async () => {
   await startRecording()
 }
 
-defineExpose({ triggerStart: handleRecordClick })
+defineExpose({ triggerStart: handleRecordClick, reset })
 </script>
 
 <template>
@@ -91,14 +90,14 @@ defineExpose({ triggerStart: handleRecordClick })
     <!-- Main record button -->
     <div class="d-flex align-items-center gap-2">
       <BButton
-        v-if="canRecord && !(props.hideIdleButton && isIdle)"
-        :class="buttonClass"
+        v-if="canRecord"
+        :variant="buttonVariant"
         size="sm"
         :disabled="props.disabled"
         @click="handleRecordClick"
-        :title="isIdle ? $t('messaging.voice.start_recording') : 
-               isRecording ? $t('messaging.voice.stop_recording') : 
-               isCompleted ? $t('messaging.voice.record_again') : 
+        :title="isIdle ? $t('messaging.voice.start_recording') :
+               isRecording ? $t('messaging.voice.stop_recording') :
+               isCompleted ? $t('messaging.voice.record_again') :
                $t('messaging.voice.record')"
       >
         <component :is="isRecording ? Mic2Icon : MicIcon" class="svg-icon" />
@@ -112,9 +111,8 @@ defineExpose({ triggerStart: handleRecordClick })
         variant="outline-secondary"
         size="sm"
         @click="handleCancel"
-        :title="$t('messaging.voice.cancel')"
       >
-        <i class="fas fa-times"></i>
+        {{ $t('messaging.voice.cancel') }}
       </BButton>
     </div>
 

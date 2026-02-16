@@ -70,16 +70,34 @@ const mediaRoutes: FastifyPluginAsync = async fastify => {
 
       // Derive Content-Type from the attachment record or file extension
       const ext = path.extname(filename).toLowerCase()
-      const contentType = attachment.mimeType || MIME_TYPE_MAP[ext] || 'application/octet-stream'
+      // Strip codec parameters (e.g. ";codecs=opus") — valid in HTML <source type> but not in HTTP Content-Type
+      const rawMime = attachment.mimeType || MIME_TYPE_MAP[ext] || 'application/octet-stream'
+      const contentType = rawMime.split(';')[0].trim()
+      const fileSize = stats.size
 
-      // Set appropriate headers
       reply.header('Content-Type', contentType)
-      reply.header('Content-Length', stats.size)
       reply.header('Accept-Ranges', 'bytes')
 
-      // Send the file
-      const stream = createReadStream(filePath)
-      return reply.send(stream)
+      // Handle byte-range requests (required for audio seeking and Safari playback)
+      const rangeHeader = (req.headers as Record<string, string | undefined>)['range']
+      if (rangeHeader) {
+        const match = rangeHeader.match(/^bytes=(\d*)-(\d*)$/)
+        if (!match) return sendError(reply, 416, 'Range Not Satisfiable')
+
+        const start = match[1] ? parseInt(match[1], 10) : 0
+        const end = match[2] ? parseInt(match[2], 10) : fileSize - 1
+
+        if (start > end || end >= fileSize) return sendError(reply, 416, 'Range Not Satisfiable')
+
+        reply.status(206)
+        reply.header('Content-Range', `bytes ${start}-${end}/${fileSize}`)
+        reply.header('Content-Length', end - start + 1)
+        return reply.send(createReadStream(filePath, { start, end }))
+      }
+
+      // Full file response
+      reply.header('Content-Length', fileSize)
+      return reply.send(createReadStream(filePath))
 
     } catch (error) {
       fastify.log.error('Error serving voice message:', error)

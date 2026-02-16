@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, watchEffect, computed, nextTick } from 'vue'
+import { ref, watch, watchEffect, computed } from 'vue'
 import { funnel } from 'remeda'
 
 import { useLocalStore } from '@/store/localStore'
@@ -14,8 +14,6 @@ import StoreErrorOverlay from '@/features/shared/ui/StoreErrorOverlay.vue'
 import IconMenuDotsVert from '@/assets/icons/interface/menu-dots-vert.svg'
 import VoiceRecorder from './VoiceRecorder.vue'
 import { useMessageStore } from '../stores/messageStore'
-
-import Mic2Icon from '@/assets/icons/interface/mic-2.svg'
 
 
 const messageStore = useMessageStore()
@@ -91,12 +89,6 @@ async function handleSendMessage() {
   }
 }
 
-async function handleMicClick() {
-  isVoiceActive.value = true
-  await nextTick()
-  voiceRecorderRef.value?.triggerStart()
-}
-
 // Voice message handlers
 async function handleVoiceRecordingCompleted(audioBlob: Blob, duration: number) {
   const result = await messageStore.sendVoiceMessage(props.recipientProfile.id, audioBlob, duration)
@@ -104,6 +96,7 @@ async function handleVoiceRecordingCompleted(audioBlob: Blob, duration: number) 
     emit('message:sent', result.data!)
   }
   isVoiceActive.value = false
+  voiceRecorderRef.value?.reset()
 }
 
 function handleVoiceRecordingCancelled() {
@@ -143,17 +136,17 @@ function handleVoiceRecordingError(error: string) {
           :placeholder="$t('messaging.message_input_placeholder')"
           :disabled="messageStore.isSending || isVoiceActive"
         />
-        <div class="form-text text-muted d-flex justify-content-between align-items-center">
-          <!-- Voice recorder button (left) -->
-          <BButton
-            variant="outline-secondary"
-            size="sm"
-            @click="handleMicClick"
-            :disabled="messageStore.isSending || isVoiceActive"
-            :title="$t('messaging.voice.record_voice_message')"
-          >
-            <Mic2Icon class="svg-icon" />
-          </BButton>
+        <div class="form-text text-muted d-flex justify-content-between align-items-start">
+          <!-- Unified voice recorder (left) -->
+          <VoiceRecorder
+            ref="voiceRecorderRef"
+            :disabled="messageStore.isSending"
+            :max-duration="120"
+            @recording:started="() => isVoiceActive = true"
+            @recording:completed="handleVoiceRecordingCompleted"
+            @recording:cancelled="handleVoiceRecordingCancelled"
+            @recording:error="handleVoiceRecordingError"
+          />
 
           <div class="d-flex align-items-center gap-2">
             <BButton
@@ -202,17 +195,6 @@ function handleVoiceRecordingError(error: string) {
         </div>
       </div>
 
-      <!-- Inline voice recorder (shown when active) -->
-      <VoiceRecorder
-        v-if="isVoiceActive"
-        ref="voiceRecorderRef"
-        :disabled="messageStore.isSending"
-        :max-duration="120"
-        :hide-idle-button="true"
-        @recording:completed="handleVoiceRecordingCompleted"
-        @recording:cancelled="handleVoiceRecordingCancelled"
-        @recording:error="handleVoiceRecordingError"
-      />
     </div>
   </div>
 </template>

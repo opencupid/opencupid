@@ -14,6 +14,7 @@ export function useVoiceRecorder(maxDuration: number = 120) {
   let stream: MediaStream | null = null
   let durationTimer: number | null = null
   let chunks: BlobPart[] = []
+  let cancelled = false
 
   // Check if MediaRecorder is supported
   const checkSupport = () => {
@@ -38,6 +39,7 @@ export function useVoiceRecorder(maxDuration: number = 120) {
       permissionDenied.value = false
       duration.value = 0
       chunks = []
+      cancelled = false
 
       // Request microphone access (may show permission prompt)
       stream = await navigator.mediaDevices.getUserMedia({
@@ -65,10 +67,14 @@ export function useVoiceRecorder(maxDuration: number = 120) {
 
       // Handle recording stop event
       mediaRecorder.onstop = () => {
-        audioBlob.value = new Blob(chunks, { type: getSupportedMimeType() })
-        state.value = 'completed'
         stopDurationTimer()
         cleanupStream()
+        // If cancelled, don't overwrite the idle state set by cancelRecording
+        if (cancelled) return
+        // Use the recorder's actual mimeType (includes codec, e.g. "audio/webm;codecs=opus")
+        // rather than re-querying getSupportedMimeType(), which strips codec info
+        audioBlob.value = new Blob(chunks, { type: mediaRecorder!.mimeType || getSupportedMimeType() })
+        state.value = 'completed'
       }
 
       // Handle errors
@@ -114,6 +120,7 @@ export function useVoiceRecorder(maxDuration: number = 120) {
 
   // Cancel recording and discard audio
   const cancelRecording = () => {
+    cancelled = true
     stopRecording()
     audioBlob.value = null
     chunks = []
