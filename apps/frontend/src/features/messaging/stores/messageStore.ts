@@ -51,9 +51,12 @@ export const useMessageStore = defineStore('message', {
       } else {
         const convo = this.conversations.splice(convoIndex, 1)[0]!
         // Update last message and unread count
+        // When we receive a message, it means the conversation is now in ACCEPTED state
+        // and we can reply (fixes bug where both "My turn" and "Their turn" badges show)
         const updatedConvo: ConversationSummary = {
           ...convo,
           lastMessage: message,
+          canReply: true,
         }
         this.conversations.unshift(updatedConvo)
         this.updateUnreadFlag()
