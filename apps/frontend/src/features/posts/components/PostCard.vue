@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { computed, inject, ref, type Ref } from 'vue'
+import { computed, inject, nextTick, ref, type Ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import PostIt from '@/features/shared/ui/PostIt.vue'
 import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
 import type { PublicPostWithProfile, OwnerPost } from '@zod/post/post.dto'
 import type { OwnerProfile } from '@zod/profile/profile.dto'
+import type { PublicProfileWithContext } from '@zod/profile/profile.dto'
 
 import IconHide from '@/assets/icons/interface/hide.svg'
 import IconShow from '@/assets/icons/interface/unhide.svg'
@@ -13,6 +15,8 @@ import IconEdit from '@/assets/icons/interface/pencil-2.svg'
 import IconMessage from '@/assets/icons/interface/message.svg'
 import PostTypeBadge from './PostTypeBadge.vue'
 import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
+import SendMessageForm from '@/features/messaging/components/SendMessageForm.vue'
+import { useMessageSentState } from '@/features/publicprofile/composables/useMessageSentState'
 
 import { UseTimeAgo } from '@vueuse/components'
 
@@ -57,6 +61,47 @@ const postLocation = computed(() => {
   }
   return null
 })
+
+const { t } = useI18n()
+const showMessageForm = ref(false)
+const messageInput = ref()
+const { messageSent, handleMessageSent, resetMessageSent } = useMessageSentState()
+
+const recipientProfile = computed<PublicProfileWithContext | null>(() => {
+  if (!hasProfileData(props.post)) {
+    return null
+  }
+  const profile = props.post.postedBy as any
+  return {
+    ...profile,
+    tags: profile.tags ?? [],
+    languages: profile.languages ?? [],
+    location: profile.location ?? { country: '', cityName: '', lat: null, lon: null },
+    introSocial: profile.introSocial ?? '',
+    introDating: profile.introDating ?? '',
+    conversation: profile.conversation ?? null,
+    interactionContext: profile.interactionContext ?? {
+      likedByMe: false,
+      isMatch: false,
+      passedByMe: false,
+      canLike: false,
+      canPass: false,
+      canDate: false,
+      haveConversation: false,
+      canMessage: true,
+      conversationId: null,
+      initiated: false,
+    },
+  } as PublicProfileWithContext
+})
+
+const handleContact = async () => {
+  if (!recipientProfile.value) return
+  resetMessageSent()
+  showMessageForm.value = true
+  await nextTick()
+  messageInput.value?.focusTextarea?.()
+}
 
 </script>
 
@@ -112,23 +157,48 @@ const postLocation = computed(() => {
           </div>
 
           <!-- location  in right column 50% can shrink -->
-          <div class="location d-flex flex-shrink-1 flex-grow-1 min-w-0 justify-content-end">
+          <div class="location d-flex flex-shrink-1 flex-grow-1 min-w-0 justify-content-end align-items-center gap-2">
             <span v-if="postLocation" class="post-location text-muted">
-              <LocationLabel 
+              <LocationLabel
                 :viewerLocation="viewerLocation"
-                :location="postLocation" 
+                :location="postLocation"
                 :show-country-label="false"
                 :show-city="true"
-                :show-country-icon="true" 
+                :show-country-icon="true"
                 :show-only-foreign-country="true" />
             </span>
+            <button
+              v-if="!isOwn && hasProfileData(post)"
+              class="contact-btn"
+              :title="t('posts.actions.contact')"
+              @click.stop="handleContact"
+            >
+              <IconMessage class="svg-icon" />
+            </button>
           </div>
         </div>
 
       </div>
     </PostIt>
 
-  
+    <div v-if="showMessageForm" class="mt-2 px-1">
+      <div v-if="!messageSent && recipientProfile">
+        <SendMessageForm
+          ref="messageInput"
+          :recipient-profile="recipientProfile"
+          :conversation-id="null"
+          @message:sent="handleMessageSent"
+        />
+      </div>
+      <div v-else class="d-flex flex-column align-items-center justify-content-center text-success py-3">
+        <div class="my-2 animate__animated animate__zoomIn" style="height: 3rem">
+          <IconMessage class="svg-icon-lg h-100 w-100" />
+        </div>
+        <h6 class="mb-2 text-center animate__animated animate__fadeInDown">
+          {{ t('messaging.message_sent_success') }}
+        </h6>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -171,5 +241,19 @@ const postLocation = computed(() => {
 
 .post-wrapper--invisible {
   opacity: 0.75;
+}
+
+.contact-btn {
+  background: none;
+  border: none;
+  padding: 2px 4px;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 150ms ease;
+  line-height: 1;
+}
+
+.contact-btn:hover {
+  opacity: 1;
 }
 </style>

@@ -10,6 +10,17 @@ vi.mock('vue-i18n', () => ({
   useI18n: () => ({ t: (k: string) => k }),
 }))
 
+vi.mock('@/features/messaging/components/SendMessageForm.vue', () => ({
+  default: { template: '<div />' },
+}))
+vi.mock('@/features/publicprofile/composables/useMessageSentState', () => ({
+  useMessageSentState: () => ({
+    messageSent: { value: false },
+    handleMessageSent: () => {},
+    resetMessageSent: () => {},
+  }),
+}))
+
 vi.mock('../../composables/usePostListViewModel', () => ({
   usePostListViewModel: () => ({
     postStore: { isLoading: false, error: null },
