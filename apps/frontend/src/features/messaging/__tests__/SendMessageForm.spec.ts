@@ -141,14 +141,14 @@ describe('SendMessageForm', () => {
     expect(radioButtons.length).toBe(2)
     
     // First radio should be checked (enter mode is default)
-    expect(radioButtons[0].attributes('checked')).toBeDefined()
-    expect(radioButtons[1].attributes('checked')).toBeUndefined()
+    expect(radioButtons[0]!.attributes('checked')).toBeDefined()
+    expect(radioButtons[1]!.attributes('checked')).toBeUndefined()
 
     // Change mode and verify radio states
     localStore.setSendMode('click')
     await wrapper.vm.$nextTick()
     
-    expect(radioButtons[0].attributes('checked')).toBeUndefined()
-    expect(radioButtons[1].attributes('checked')).toBeDefined()
+    expect(radioButtons[0]!.attributes('checked')).toBeUndefined()
+    expect(radioButtons[1]!.attributes('checked')).toBeDefined()
   })
 })
