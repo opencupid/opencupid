@@ -109,7 +109,7 @@ async function handleNewsletterOptInChange(event: Event) {
           </template>
         </SecondaryNav>
 
-        <section class="w-100 flex-grow-1">
+        <section v-if="!isLoading" class="w-100 flex-grow-1">
           <BOverlay :show="false" class="h-100 d-flex flex-column justify-content-center">
             <div class="mb-3">
               <div class="me-2">
