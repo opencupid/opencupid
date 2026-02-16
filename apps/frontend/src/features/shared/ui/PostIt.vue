@@ -67,10 +67,7 @@ function warpStyle(id: string) {
 </script>
 
 <style scoped lang="scss">
-.post-it .content {
-  font-family: 'Reenie Beanie', cursive;
-  line-height: 1.25;
-}
+
 
 .o-post-it {
   background-color: #ffffcc; /* Default yellow */
