@@ -9,18 +9,6 @@ const version = ref<VersionDTO | null>(null)
 const isLoading = ref(false)
 const error = ref<string | null>(null)
 
-const formatTimestamp = (timestamp: string) => {
-  try {
-    return new Date(timestamp).toLocaleString()
-  } catch {
-    return timestamp
-  }
-}
-
-const formatCommit = (commit: string) => {
-  return commit.substring(0, 8)
-}
-
 onMounted(async () => {
   isLoading.value = true
   error.value = null
@@ -45,15 +33,7 @@ onMounted(async () => {
       {{ error }}
     </div>
 
-    <code v-else-if="version" class="text-muted">
-      <span>v{{ version.version }}</span>
-      <template v-if="version.commit">
-        &nbsp;<strong>Commit:</strong> {{ formatCommit(version.commit) }}
-      </template>
-      <template v-if="version.timestamp">
-        &nbsp;<strong>Built:</strong> {{ formatTimestamp(version.timestamp) }}
-      </template>
-    </code>
+    <code v-else-if="version" class="text-muted">v{{ version.version }}</code>
   </div>
 </template>
 
