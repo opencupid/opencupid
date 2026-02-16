@@ -181,6 +181,7 @@ function warpStyle(id: string) {
 
 .header {
   position: relative;
+  font-family: var(--bs-body-font-family, sans-serif);
 }
 
 /* simple round pin/dent */

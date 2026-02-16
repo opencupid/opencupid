@@ -11,6 +11,16 @@ vi.mock('@/features/auth/stores/authStore', () => ({
 vi.mock('@/features/publicprofile/components/SendMessageDialog.vue', () => ({
   default: { template: '<div />' },
 }))
+vi.mock('@/features/messaging/components/SendMessageForm.vue', () => ({
+  default: { template: '<div />' },
+}))
+vi.mock('@/features/publicprofile/composables/useMessageSentState', () => ({
+  useMessageSentState: () => ({
+    messageSent: { value: false },
+    handleMessageSent: () => {},
+    resetMessageSent: () => {},
+  }),
+}))
 
 vi.mock('@/assets/icons/interface/hide.svg', () => ({ default: { template: '<span />' } }))
 vi.mock('@/assets/icons/interface/unhide.svg', () => ({ default: { template: '<span />' } }))
@@ -30,6 +40,7 @@ const stubs = {
     props: ['title'],
     template: '<button :title="title" @click="$emit(\'click\')"><slot /></button>',
   },
+  SendMessageForm: { template: '<div />' },
 }
 
 describe('PostCard', () => {
