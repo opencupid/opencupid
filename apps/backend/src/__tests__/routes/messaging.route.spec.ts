@@ -49,11 +49,19 @@ describe('GET /:id', () => {
   it('returns messages for conversation', async () => {
     const handler = fastify.routes['GET /:id']
     const msg = { id: 'm1', conversationId: 'c1', senderId: 'p1', content: 'hi', createdAt: new Date(), sender: { profileImages: [] } }
-    mockMessageService.listMessagesForConversation.mockResolvedValue([msg])
-    await handler({ session: { profileId: 'p1' }, params: { id: 'ck1234567890abcd12345678' } } as any, reply as any)
-    expect(mockMessageService.listMessagesForConversation).toHaveBeenCalledWith('ck1234567890abcd12345678')
+    mockMessageService.listMessagesForConversation.mockResolvedValue({ messages: [msg], hasMore: true })
+    await handler({
+      session: { profileId: 'p1' },
+      params: { id: 'ck1234567890abcd12345678' },
+      query: {},
+    } as any, reply as any)
+    expect(mockMessageService.listMessagesForConversation).toHaveBeenCalledWith(
+      'ck1234567890abcd12345678',
+      { limit: 10, before: undefined }
+    )
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
+    expect(reply.payload.hasMore).toBe(true)
     expect(reply.payload.messages[0].mapped).toBe(true)
   })
 })

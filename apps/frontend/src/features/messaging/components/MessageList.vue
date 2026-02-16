@@ -3,27 +3,99 @@ import { type MessageDTO } from '@zod/messaging/messaging.dto'
 import { nextTick, onMounted, ref, watch } from 'vue'
 import VoiceMessage from './VoiceMessage.vue'
 
-const props = defineProps<{ messages: MessageDTO[] }>()
+const props = defineProps<{
+  messages: MessageDTO[]
+  hasMore: boolean
+  isLoadingOlder: boolean
+}>()
+
+const emit = defineEmits<{
+  (e: 'load:older'): void
+}>()
 
 const messageListRef = ref<HTMLElement | null>(null)
+const loadThreshold = 80
+
+const scrollToBottom = () => {
+  if (!messageListRef.value) return
+  messageListRef.value.scrollTop = messageListRef.value.scrollHeight
+}
+
+const isNearBottom = () => {
+  if (!messageListRef.value) return true
+  const el = messageListRef.value
+  return el.scrollHeight - (el.scrollTop + el.clientHeight) < 80
+}
 
 onMounted(() => {
-  if (messageListRef.value) messageListRef.value.scrollTop = messageListRef.value.scrollHeight
+  scrollToBottom()
 })
 
 watch(
-  () => props.messages,
-  async () => {
+  () => props.messages.map(message => message.id),
+  async (newIds, oldIds = []) => {
+    const el = messageListRef.value
+    const previousScrollHeight = el?.scrollHeight ?? 0
+    const previousScrollTop = el?.scrollTop ?? 0
+    const shouldStickToBottom = isNearBottom()
+
+    const oldFirstId = oldIds[0]
+    const oldLastId = oldIds[oldIds.length - 1]
+    const newFirstId = newIds[0]
+    const newLastId = newIds[newIds.length - 1]
+
+    const prependedOlderMessages =
+      !!oldIds.length &&
+      newIds.length > oldIds.length &&
+      oldFirstId !== newFirstId &&
+      oldLastId === newLastId
+
+    const appendedNewMessage =
+      !!oldIds.length &&
+      newIds.length > oldIds.length &&
+      oldLastId !== newLastId
+
     await nextTick()
-    messageListRef.value?.scrollTo({ top: messageListRef.value.scrollHeight })
-  },{
-    deep: true,
-  }
+
+    if (!messageListRef.value) return
+
+    if (!oldIds.length && newIds.length) {
+      scrollToBottom()
+      return
+    }
+
+    if (prependedOlderMessages) {
+      const newScrollHeight = messageListRef.value.scrollHeight
+      messageListRef.value.scrollTop = newScrollHeight - previousScrollHeight + previousScrollTop
+      return
+    }
+
+    if (appendedNewMessage && shouldStickToBottom) {
+      scrollToBottom()
+    }
+  },
 )
+
+const handleScroll = () => {
+  const el = messageListRef.value
+  if (!el) return
+
+  if (
+    el.scrollTop <= loadThreshold &&
+    props.hasMore &&
+    !props.isLoadingOlder
+  ) {
+    emit('load:older')
+  }
+}
 </script>
 
 <template>
-  <div class="p-2 mb-2 hide-scrollbar overflow-auto d-flex flex-column" ref="messageListRef">
+  <div
+    class="p-2 mb-2 hide-scrollbar overflow-auto d-flex flex-column"
+    ref="messageListRef"
+    @scroll="handleScroll"
+  >
     <div
       v-for="msg in messages"
       :key="msg.id"

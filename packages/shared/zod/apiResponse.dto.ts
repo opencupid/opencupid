@@ -45,7 +45,7 @@ export type CityResponse = ApiSuccess<{ city: PublicCity }>
 export type LocationResponse = ApiSuccess<{ location: LocationDTO }>
 export type VersionResponse = ApiSuccess<{ version: VersionDTO }>
 
-export type MessagesResponse = ApiSuccess<{ messages: MessageDTO[] }>
+export type MessagesResponse = ApiSuccess<{ messages: MessageDTO[]; hasMore: boolean }>
 export type ConversationsResponse = ApiSuccess<{ conversations: ConversationSummary[] }>
 export type ConversationResponse = ApiSuccess<{ conversation: ConversationSummary }>
 export type SendMessageResponse = ApiSuccess<{

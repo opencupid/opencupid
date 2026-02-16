@@ -63,7 +63,7 @@ describe('MessageService.getConversationSummary', () => {
 })
 
 describe('MessageService.listMessagesForConversation', () => {
-  it('fetches messages ordered by creation', async () => {
+  it('fetches latest messages with pagination', async () => {
     mockPrisma.message.findMany.mockResolvedValue([])
     await service.listMessagesForConversation('c1')
     expect(mockPrisma.message.findMany).toHaveBeenCalledWith({
@@ -72,7 +72,23 @@ describe('MessageService.listMessagesForConversation', () => {
         sender: { include: { profileImages: { where: { position: 0 } } } },
         attachment: true,
       },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: 'desc' },
+      take: 11,
+    })
+  })
+
+  it('supports before cursor and custom limit', async () => {
+    mockPrisma.message.findMany.mockResolvedValue([])
+    const before = new Date('2025-01-01T00:00:00.000Z')
+    await service.listMessagesForConversation('c1', { before, limit: 5 })
+    expect(mockPrisma.message.findMany).toHaveBeenCalledWith({
+      where: { conversationId: 'c1', createdAt: { lt: before } },
+      include: {
+        sender: { include: { profileImages: { where: { position: 0 } } } },
+        attachment: true,
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 6,
     })
   })
 })

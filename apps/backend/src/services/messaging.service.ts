@@ -126,10 +126,20 @@ export class MessageService {
    * @param conversationId - The ID of the conversation to list messages for.
    * @returns An array of messages in the conversation, including sender profile images.
    */
-  async listMessagesForConversation(conversationId: string) {
-    return await prisma.message.findMany({
+  async listMessagesForConversation(
+    conversationId: string,
+    options?: {
+      limit?: number
+      before?: Date
+    }
+  ) {
+    const limit = options?.limit ?? 10
+    const before = options?.before
+
+    const rawMessages = await prisma.message.findMany({
       where: {
         conversationId,
+        ...(before ? { createdAt: { lt: before } } : {}),
       },
       include: {
         sender: {
@@ -142,9 +152,15 @@ export class MessageService {
         attachment: true,
       },
       orderBy: {
-        createdAt: 'asc',
+        createdAt: 'desc',
       },
+      take: limit + 1,
     })
+
+    const hasMore = rawMessages.length > limit
+    const messages = (hasMore ? rawMessages.slice(0, limit) : rawMessages).reverse()
+
+    return { messages, hasMore }
   }
 
   /**

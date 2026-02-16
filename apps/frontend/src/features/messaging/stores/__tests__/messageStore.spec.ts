@@ -156,4 +156,118 @@ describe('messageStore', () => {
       expect(store.conversations[1]!.conversationId).toBe('convo-1')
     })
   })
+
+  describe('message pagination', () => {
+    it('loads latest messages and tracks hasMore', async () => {
+      const store = useMessageStore()
+
+      const latestMessage: MessageDTO = {
+        id: 'm-latest',
+        conversationId: 'convo-1',
+        senderId: 'p2',
+        content: 'Latest',
+        messageType: 'text/html',
+        createdAt: new Date('2024-01-05'),
+        isMine: false,
+        sender: {
+          id: 'p2',
+          publicName: 'Partner',
+          profileImages: [],
+        },
+      }
+
+      mockApi.get.mockResolvedValue({
+        data: {
+          success: true,
+          messages: [latestMessage],
+          hasMore: true,
+        },
+      })
+
+      await store.fetchMessagesForConversation('convo-1')
+
+      expect(mockApi.get).toHaveBeenCalledWith('/messages/convo-1', {
+        params: { limit: 10 },
+      })
+      expect(store.messages).toEqual([latestMessage])
+      expect(store.messagesHasMore).toBe(true)
+    })
+
+    it('prepends older messages when loading up', async () => {
+      const store = useMessageStore()
+
+      store.activeConversation = {
+        id: 'participant-1',
+        profileId: 'p1',
+        conversationId: 'convo-1',
+        lastReadAt: new Date('2024-01-01'),
+        isMuted: false,
+        isArchived: false,
+        canReply: true,
+        conversation: {
+          id: 'convo-1',
+          updatedAt: new Date('2024-01-01'),
+          createdAt: new Date('2024-01-01'),
+        },
+        partnerProfile: {
+          id: 'p2',
+          publicName: 'Partner',
+          profileImages: [],
+        },
+        lastMessage: null,
+      }
+
+      const existingMessage: MessageDTO = {
+        id: 'm2',
+        conversationId: 'convo-1',
+        senderId: 'p1',
+        content: 'Existing',
+        messageType: 'text/html',
+        createdAt: new Date('2024-01-02T00:00:00.000Z'),
+        isMine: true,
+        sender: {
+          id: 'p1',
+          publicName: 'Me',
+          profileImages: [],
+        },
+      }
+
+      const olderMessage: MessageDTO = {
+        id: 'm1',
+        conversationId: 'convo-1',
+        senderId: 'p2',
+        content: 'Older',
+        messageType: 'text/html',
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        isMine: false,
+        sender: {
+          id: 'p2',
+          publicName: 'Partner',
+          profileImages: [],
+        },
+      }
+
+      store.messages = [existingMessage]
+      store.messagesHasMore = true
+
+      mockApi.get.mockResolvedValue({
+        data: {
+          success: true,
+          messages: [olderMessage],
+          hasMore: false,
+        },
+      })
+
+      await store.loadOlderMessages()
+
+      expect(mockApi.get).toHaveBeenCalledWith('/messages/convo-1', {
+        params: {
+          limit: 10,
+          before: '2024-01-02T00:00:00.000Z',
+        },
+      })
+      expect(store.messages.map(m => m.id)).toEqual(['m1', 'm2'])
+      expect(store.messagesHasMore).toBe(false)
+    })
+  })
 })

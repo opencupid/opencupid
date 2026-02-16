@@ -21,6 +21,8 @@ import { storeError, type StoreError, type StoreResponse, storeSuccess } from '@
 type MessageStoreState = {
   conversations: ConversationSummary[],
   messages: MessageDTO[],
+  messagesHasMore: boolean,
+  isLoadingMoreMessages: boolean,
   activeConversation: ConversationSummary | null,
   hasUnreadMessages: boolean,
   isSending: boolean,
@@ -32,6 +34,8 @@ export const useMessageStore = defineStore('message', {
   state: (): MessageStoreState => ({
     conversations: [] as ConversationSummary[],
     messages: [] as MessageDTO[],
+    messagesHasMore: false,
+    isLoadingMoreMessages: false,
     activeConversation: null as ConversationSummary | null,
     hasUnreadMessages: false,
     isSending: false,
@@ -97,24 +101,62 @@ export const useMessageStore = defineStore('message', {
         })
     },
 
-    async fetchMessagesForConversation(conversationId: string): Promise<MessageInConversation[]> {
+    async fetchMessagesForConversation(
+      conversationId: string,
+      options?: {
+        before?: string
+        appendOlder?: boolean
+      }
+    ): Promise<MessageInConversation[]> {
+      const before = options?.before
+      const appendOlder = options?.appendOlder ?? false
       try {
-        // console.log('Fetching messages for conversation:', conversationId)
-        this.isLoading = true // Set loading state
-        this.error = null // Reset error state
-        const res = await safeApiCall(() => api.get<MessagesResponse>(`/messages/${conversationId}`))
-        console.log('Fetched messages:', res.data)
+        this.isLoading = !appendOlder
+        this.isLoadingMoreMessages = appendOlder
+        this.error = null
+        const res = await safeApiCall(() =>
+          api.get<MessagesResponse>(`/messages/${conversationId}`, {
+            params: {
+              limit: 10,
+              ...(before ? { before } : {}),
+            },
+          })
+        )
         if (res.data.success) {
-          this.messages = res.data.messages
+          this.messages = appendOlder
+            ? [...res.data.messages, ...this.messages]
+            : res.data.messages
+          this.messagesHasMore = res.data.hasMore
           return res.data.messages
         }
       } catch (error: any) {
         this.error = storeError(error)
-        this.messages = []
+        if (!appendOlder) {
+          this.messages = []
+          this.messagesHasMore = false
+        }
       } finally {
-        this.isLoading = false // Reset loading state
+        this.isLoading = false
+        this.isLoadingMoreMessages = false
       }
       return []
+    },
+
+    async loadOlderMessages(): Promise<MessageInConversation[]> {
+      if (!this.activeConversation || !this.messagesHasMore || this.isLoadingMoreMessages) {
+        return []
+      }
+
+      const oldest = this.messages[0]
+      if (!oldest?.createdAt) return []
+
+      return await this.fetchMessagesForConversation(
+        this.activeConversation.conversationId,
+        {
+          before: new Date(oldest.createdAt).toISOString(),
+          appendOlder: true,
+        }
+      )
     },
 
     async fetchConversations(): Promise<ConversationSummary[]> {
@@ -235,6 +277,8 @@ export const useMessageStore = defineStore('message', {
 
     resetActiveConversation() {
       this.activeConversation = null
+      this.messages = []
+      this.messagesHasMore = false
     },
 
     async setActiveConversationById(conversationId: string) {
@@ -245,6 +289,7 @@ export const useMessageStore = defineStore('message', {
         console.warn('Conversation not found:', conversationId)
         this.activeConversation = null
         this.messages = []
+        this.messagesHasMore = false
       }
     },
 
@@ -258,6 +303,8 @@ export const useMessageStore = defineStore('message', {
       bus.off('ws:new_message', this.handleIncomingMessage)
       this.conversations = []
       this.messages = []
+      this.messagesHasMore = false
+      this.isLoadingMoreMessages = false
       this.activeConversation = null
       this.hasUnreadMessages = false
       this.isSending = false
