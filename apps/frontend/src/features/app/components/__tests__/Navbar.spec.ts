@@ -14,7 +14,14 @@ vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 vi.mock('@fortawesome/vue-fontawesome', () => ({
   FontAwesomeIcon: { template: '<div />' },
 }))
-vi.mock('vue-router', () => ({ useRouter: () => ({ push: vi.fn() }) }))
+
+const mockCurrentRoute = { value: { path: '/home' } }
+vi.mock('vue-router', () => ({ 
+  useRouter: () => ({ 
+    push: vi.fn(),
+    currentRoute: mockCurrentRoute
+  }) 
+}))
 vi.mock('@/features/shared/icons/DoodleIcons.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/message.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/search.svg', () => ({ default: { template: '<div />' } }))
@@ -165,6 +172,78 @@ describe('Navbar', () => {
     expect(wrapper.html()).not.toContain('nav.matches')
     expect(wrapper.html()).toContain('nav.inbox')
     expect(wrapper.html()).toContain('default-user-icon')
+  })
+
+  it('shows browse as active when on /browse route', () => {
+    mockIsLoggedIn.value = true
+    mockProfileRef.value = { isDatingActive: true, isOnboarded: true, profileImages: [] }
+    mockCurrentRoute.value.path = '/browse'
+    const wrapper = mount(Navbar, {
+      global: {
+        stubs: {
+          BNavbar: stub,
+          BNavItem: stub,
+          BNavbarNav: stub,
+          FontAwesomeIcon: stub
+        },
+        mocks: { $t: (msg: string) => msg },
+      }
+    })
+    expect(wrapper.vm.isBrowseActive).toBe(true)
+  })
+
+  it('shows browse as active when on /browse/buddy route', () => {
+    mockIsLoggedIn.value = true
+    mockProfileRef.value = { isDatingActive: true, isOnboarded: true, profileImages: [] }
+    mockCurrentRoute.value.path = '/browse/buddy'
+    const wrapper = mount(Navbar, {
+      global: {
+        stubs: {
+          BNavbar: stub,
+          BNavItem: stub,
+          BNavbarNav: stub,
+          FontAwesomeIcon: stub
+        },
+        mocks: { $t: (msg: string) => msg },
+      }
+    })
+    expect(wrapper.vm.isBrowseActive).toBe(true)
+  })
+
+  it('shows browse as active when on /browse/date route', () => {
+    mockIsLoggedIn.value = true
+    mockProfileRef.value = { isDatingActive: true, isOnboarded: true, profileImages: [] }
+    mockCurrentRoute.value.path = '/browse/date'
+    const wrapper = mount(Navbar, {
+      global: {
+        stubs: {
+          BNavbar: stub,
+          BNavItem: stub,
+          BNavbarNav: stub,
+          FontAwesomeIcon: stub
+        },
+        mocks: { $t: (msg: string) => msg },
+      }
+    })
+    expect(wrapper.vm.isBrowseActive).toBe(true)
+  })
+
+  it('does not show browse as active when on /home route', () => {
+    mockIsLoggedIn.value = true
+    mockProfileRef.value = { isDatingActive: true, isOnboarded: true, profileImages: [] }
+    mockCurrentRoute.value.path = '/home'
+    const wrapper = mount(Navbar, {
+      global: {
+        stubs: {
+          BNavbar: stub,
+          BNavItem: stub,
+          BNavbarNav: stub,
+          FontAwesomeIcon: stub
+        },
+        mocks: { $t: (msg: string) => msg },
+      }
+    })
+    expect(wrapper.vm.isBrowseActive).toBe(false)
   })
 
 })

@@ -21,6 +21,7 @@ import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileSt
 import ProfileImage from '@/features/images/components/ProfileImage.vue'
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 
+const router = useRouter()
 const authStore = useAuthStore()
 const profileStore = useOwnerProfileStore()
 const interactionStore = useInteractionStore()
@@ -29,6 +30,9 @@ const hasUnreadMessages = computed(() => useMessageStore().hasUnreadMessages)
 const hasMatchNotifications = computed(
   () => interactionStore.newMatchesCount > 0 || interactionStore.receivedLikesCount > 0
 )
+
+// Check if current route is a browse route (handles /browse and /browse/:scope)
+const isBrowseActive = computed(() => router.currentRoute.value.path.startsWith('/browse'))
 </script>
 
 <template>
@@ -49,7 +53,7 @@ const hasMatchNotifications = computed(
           <span class="d-none d-md-inline label">{{ $t('nav.bulletin') }}</span>
         </BNavItem>
         
-        <BNavItem to="/browse" active-class="active">
+        <BNavItem to="/browse" :active="isBrowseActive" active-class="active">
           <IconSearch class="svg-icon-lg" />
           <span class="d-none d-md-inline label">{{ $t('nav.browse') }}</span>
         </BNavItem>
