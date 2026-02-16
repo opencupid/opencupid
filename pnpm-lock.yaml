@@ -287,8 +287,8 @@ importers:
         specifier: 5.2.8
         version: 5.2.8
       '@fontsource/rubik':
-        specifier: 5.2.6
-        version: 5.2.6
+        specifier: 5.2.8
+        version: 5.2.8
       '@fortawesome/fontawesome-svg-core':
         specifier: 6.7.2
         version: 6.7.2
@@ -1268,8 +1268,8 @@ packages:
   '@fontsource/reenie-beanie@5.2.8':
     resolution: {integrity: sha512-fDPSpU64a8rVtu5NKRogzKx/fukotfpcet8gFDzHYctRX3xIZ8MCbCGGS4XxJuwhSuhRJX59Ur0eU0QpBQpTZg==}
 
-  '@fontsource/rubik@5.2.6':
-    resolution: {integrity: sha512-KNY87CIXAzmKMfL8gnQV0nbePn9g/kG3tF4GJoUEASSz+ECFWYoPir8TSySblYfXTInDL/kHJm6CMrrEW/U/ZA==}
+  '@fontsource/rubik@5.2.8':
+    resolution: {integrity: sha512-PIc8QR7FqWPcYhbdRiGff56vQlKqg/ytES1YqecSq1GkgxiH4TBshrFvDEOZ9JonUF9m1qQ+qXxJj7wD5zgXEw==}
 
   '@fortawesome/fontawesome-common-types@6.7.2':
     resolution: {integrity: sha512-Zs+YeHUC5fkt7Mg1l6XTniei3k4bwG/yo3iFUtZWd/pMx9g3fdvkSK9E0FOC+++phXOka78uJcYb8JaFkW52Xg==}
@@ -8177,7 +8177,7 @@ snapshots:
 
   '@fontsource/reenie-beanie@5.2.8': {}
 
-  '@fontsource/rubik@5.2.6': {}
+  '@fontsource/rubik@5.2.8': {}
 
   '@fortawesome/fontawesome-common-types@6.7.2': {}
 
