@@ -8,7 +8,6 @@ import { LocationSchema, type LocationDTO } from '@zod/dto/location.dto'
 import { VersionSchema, type VersionDTO } from '@zod/dto/version.dto'
 import type { ApiError } from '@shared/zod/apiResponse.dto'
 import { rateLimitConfig } from '../helpers'
-import { getPackageVersion } from '../../../../../packages/shared/version'
 
 function extractClientIp(headerValue: string | undefined, fallbackIp: string): string {
   const rawIp = headerValue?.split(',')[0].trim() ?? fallbackIp
@@ -18,10 +17,19 @@ function extractClientIp(headerValue: string | undefined, fallbackIp: string): s
 
 const appRoutes: FastifyPluginAsync = async fastify => {
   fastify.get('/version', async (req, reply) => {
-      try {
-    const versionString = getPackageVersion(path.join(__dirname, '..', 'package.json'))
-      const versionInfo: VersionDTO = { version: versionString }
-      return reply.code(200).send({ success: true, version: versionInfo })
+    try {
+      const versionPath = path.join(process.cwd(), 'dist', 'version.json')
+      if (fs.existsSync(versionPath)) {
+        const payload = VersionSchema.parse(JSON.parse(fs.readFileSync(versionPath, 'utf8')))
+        return reply.code(200).send({ success: true, version: payload })
+      }
+      // Dev fallback: version.json only exists after a production build
+      const fallback: VersionDTO = {
+        version: 'development',
+        commit: 'unknown',
+        timestamp: new Date().toISOString(),
+      }
+      return reply.code(200).send({ success: true, version: fallback })
     } catch (err) {
       fastify.log.error(err)
       const out: ApiError = { success: false, message: 'Failed to read version info' }
