@@ -2,7 +2,6 @@
 import IconDate from '@/assets/icons/app/cupid.svg'
 import IconSocialize from '@/assets/icons/app/socialize.svg'
 import { type ProfileScope } from '@zod/profile/profile.dto'
-import { T } from 'vitest/dist/chunks/reporters.d.BFLkQcL6.js'
 
 const currentScope = defineModel<ProfileScope | null>()
 </script>
