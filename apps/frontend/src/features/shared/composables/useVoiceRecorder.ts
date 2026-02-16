@@ -65,7 +65,9 @@ export function useVoiceRecorder(maxDuration: number = 120) {
 
       // Handle recording stop event
       mediaRecorder.onstop = () => {
-        audioBlob.value = new Blob(chunks, { type: getSupportedMimeType() })
+        // Use the recorder's actual mimeType (includes codec, e.g. "audio/webm;codecs=opus")
+        // rather than re-querying getSupportedMimeType(), which strips codec info
+        audioBlob.value = new Blob(chunks, { type: mediaRecorder!.mimeType || getSupportedMimeType() })
         state.value = 'completed'
         stopDurationTimer()
         cleanupStream()

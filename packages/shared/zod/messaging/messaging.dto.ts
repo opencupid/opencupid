@@ -148,7 +148,7 @@ export const SendVoiceMessagePayloadSchema = z.object({
   profileId: z.string().cuid(),
   content: z.string().default(''), // Can be empty for voice messages
   messageType: z.literal('audio/voice'),
-  duration: z.number().int().min(1), // Duration in seconds; max enforced by backend config
+  duration: z.number().int().min(0), // Duration in seconds; max enforced by backend config
 })
 
 export type SendVoiceMessagePayload = z.infer<typeof SendVoiceMessagePayloadSchema>

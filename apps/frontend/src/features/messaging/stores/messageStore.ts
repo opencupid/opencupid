@@ -193,8 +193,10 @@ export const useMessageStore = defineStore('message', {
         this.error = null
 
         // Create FormData for multipart upload
+        // Use the blob's actual MIME type to derive the extension (e.g. audio/mp4 → .mp4)
+        const ext = audioBlob.type.split('/')[1]?.split(';')[0] ?? 'webm'
         const formData = new FormData()
-        formData.append('file', audioBlob, 'voice-message.webm')
+        formData.append('file', audioBlob, `voice-message.${ext}`)
         formData.append('profileId', recipientProfileId)
         formData.append('content', '') // Empty content for voice messages
         formData.append('duration', duration.toString())
