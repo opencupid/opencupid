@@ -109,7 +109,7 @@ describe('SendMessageForm', () => {
     expect(newLocalStore.getSendMode).toBe('click')
   })
 
-  it('renders radio buttons in dropdown menu', () => {
+  it('renders radio buttons in dropdown menu', async () => {
     const localStore = useLocalStore()
     const wrapper = mount(SendMessageForm, {
       props: {
@@ -146,9 +146,9 @@ describe('SendMessageForm', () => {
 
     // Change mode and verify radio states
     localStore.setSendMode('click')
-    wrapper.vm.$nextTick().then(() => {
-      expect(radioButtons[0].attributes('checked')).toBeUndefined()
-      expect(radioButtons[1].attributes('checked')).toBeDefined()
-    })
+    await wrapper.vm.$nextTick()
+    
+    expect(radioButtons[0].attributes('checked')).toBeUndefined()
+    expect(radioButtons[1].attributes('checked')).toBeDefined()
   })
 })
