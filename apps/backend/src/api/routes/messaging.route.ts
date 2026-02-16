@@ -184,6 +184,11 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
       })
 
       if (!isWsBroadcasted) {
+        if (WebPushService.isWebPushConfigured()) {
+          webPushService.send(messageDTO, profileId).catch(err => {
+            fastify.log.error(err, 'Web push failed')
+          })
+        }
         await notifierService.notifyProfile(profileId, 'new_message', {
           sender: messageDTO.sender.publicName,
           message: cleanMessageForNotification(messageDTO.content, 100),
@@ -314,6 +319,11 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
         })
 
         if (!isWsBroadcasted) {
+          if (WebPushService.isWebPushConfigured()) {
+            webPushService.send(messageDTO, payload.data.profileId).catch(err => {
+              fastify.log.error(err, 'Web push failed')
+            })
+          }
           await notifierService.notifyProfile(payload.data.profileId, 'new_message', {
             sender: messageDTO.sender.publicName,
             message: 'Sent a voice message',

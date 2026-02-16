@@ -29,18 +29,26 @@ export class WebPushService {
     return WebPushService.instance
   }
 
-  async send(message: MessageDTO) {
+  async send(message: MessageDTO, recipientProfileId: string) {
     if (!WebPushService.isWebPushConfigured()) {
       throw new Error('Web push is not configured: VAPID keys are missing.')
     }
 
+    const profile = await prisma.profile.findUnique({
+      where: { id: recipientProfileId },
+      include: { user: true },
+    })
+    if (!profile?.user) return
+    if (!profile.user.isPushNotificationEnabled) return
+
     const payload = {
-      body: 'You got message',
+      title: `New message from ${message.sender.publicName}`,
+      body: message.content?.substring(0, 100) || 'You got a message',
       data: {
         url: `/inbox/${message.conversationId}`,
       }
     }
-    const subscriptions = await this.getSubscriptions()
+    const subscriptions = await this.getSubscriptions(profile.user.id)
 
     for (const sub of subscriptions) {
       try {
@@ -70,7 +78,7 @@ export class WebPushService {
 
   async getSubscriptions(userId?: string) {
     return await prisma.pushSubscription.findMany({
-      // where: { userId },
+      where: userId ? { userId } : undefined,
     })
   }
 

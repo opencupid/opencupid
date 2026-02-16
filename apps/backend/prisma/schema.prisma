@@ -173,6 +173,7 @@ model User {
   requestsReceived ConnectionRequest[] @relation("RequestsReceived")
 
   pushSubscription PushSubscription[]
+  isPushNotificationEnabled Boolean  @default(false)
 }
 
 model Profile {

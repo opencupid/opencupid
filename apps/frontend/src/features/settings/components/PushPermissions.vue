@@ -1,6 +1,22 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { api } from '@/lib/api'
 import { useI18n } from 'vue-i18n'
+
+const props = defineProps<{
+  modelValue: boolean
+  disabled?: boolean
+}>()
+
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: boolean): void
+}>()
+
+const { t } = useI18n()
+
+const isSupported = 'serviceWorker' in navigator && 'Notification' in window && 'PushManager' in window
+
+const isLoading = ref(false)
 
 function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
   const padding = '='.repeat((4 - (base64.length % 4)) % 4)
@@ -14,34 +30,58 @@ function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
   return new Uint8Array()
 }
 
-async function enablePushNotifications() {
-  if (!('Notification' in window) || !('serviceWorker' in navigator)) return
+async function handleChange(event: Event) {
+  const checkbox = event.target as HTMLInputElement
+  const checked = checkbox.checked
 
-  const permission = await Notification.requestPermission()
-  if (permission !== 'granted') return
+  isLoading.value = true
+  try {
+    if (checked) {
+      const permission = await Notification.requestPermission()
+      if (permission !== 'granted') {
+        checkbox.checked = false
+        return
+      }
 
-  const registration = await navigator.serviceWorker.ready
+      const registration = await navigator.serviceWorker.ready
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(__APP_CONFIG__.VAPID_PUBLIC_KEY),
+      })
 
-  const subscription = await registration.pushManager.subscribe({
-    userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array(__APP_CONFIG__.VAPID_PUBLIC_KEY),
-  })
-  console.log('Push subscription:', subscription)
-
-  // const payload = JSON.stringify(subscription)
-  // Send to your backend
-  const res = await api.post('/push/subscription', subscription)
-  console.log('Subscription saved:', res)
+      await api.post('/push/subscription', subscription)
+      await api.patch('/users/me', { isPushNotificationEnabled: true })
+      emit('update:modelValue', true)
+    } else {
+      const registration = await navigator.serviceWorker.ready
+      const subscription = await registration.pushManager.getSubscription()
+      if (subscription) {
+        await subscription.unsubscribe()
+      }
+      await api.patch('/users/me', { isPushNotificationEnabled: false })
+      emit('update:modelValue', false)
+    }
+  } catch (error) {
+    console.error('Push notification toggle failed:', error)
+    checkbox.checked = !checked
+  } finally {
+    isLoading.value = false
+  }
 }
-
-const { t } = useI18n()
 </script>
 
 <template>
-  <fieldset>
-    <legend>{{ t('settings.push_notifications') }}</legend>
-    <BButton variant="primary" size="sm" @click="enablePushNotifications">{{
-      t('settings.enable_push')
-    }}</BButton>
-  </fieldset>
+  <div v-if="isSupported" class="form-check">
+    <input
+      id="push-notify-messages"
+      type="checkbox"
+      class="form-check-input"
+      :checked="modelValue"
+      :disabled="disabled || isLoading"
+      @change="handleChange"
+    />
+    <label class="form-check-label" for="push-notify-messages">
+      {{ t('settings.push_notify_messages') }}
+    </label>
+  </div>
 </template>

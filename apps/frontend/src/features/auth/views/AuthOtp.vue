@@ -26,6 +26,7 @@ const user = reactive<LoginUser>({
   phonenumber: '',
   language: i18nStore.getLanguage(),
   newsletterOptIn: false,
+  isPushNotificationEnabled: false,
 })
 
 const OtpParamSchema = z.object({

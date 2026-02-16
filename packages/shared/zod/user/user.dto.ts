@@ -55,6 +55,7 @@ export const SettingsUserSchema = UserSchema.pick({
   phonenumber: true,
   language: true,
   newsletterOptIn: true,
+  isPushNotificationEnabled: true,
 })
 export type SettingsUser = z.infer<typeof SettingsUserSchema>
 
@@ -64,6 +65,7 @@ export const LoginUserSchema = UserSchema.pick({
   phonenumber: true,
   language: true,
   newsletterOptIn: true,
+  isPushNotificationEnabled: true,
 })
 export type LoginUser = z.infer<typeof LoginUserSchema>
 

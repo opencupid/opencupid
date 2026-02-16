@@ -6,7 +6,6 @@ import vueJsx from '@vitejs/plugin-vue-jsx'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 // import visualizer from 'vite-bundle-visualizer'
-// import { VitePWA } from 'vite-plugin-pwa'
 
 import Components from 'unplugin-vue-components/vite'
 import { BootstrapVueNextResolver } from 'bootstrap-vue-next'
@@ -118,20 +117,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       //     }
       //   }
       // }),
-      MetaInjectPlugin(mode)
-
-      // VitePWA({
-      //   registerType: 'autoUpdate',
-      //   injectRegister: 'auto',
-      //   workbox: {
-      //     clientsClaim: true,
-      //     skipWaiting: true,
-      //     maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
-      //   },
-      //   devOptions: {
-      //     enabled: true, 
-      //   },
-      // })
+      MetaInjectPlugin(mode),
     ],
     css: {
       preprocessorOptions: {

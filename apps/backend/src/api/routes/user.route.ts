@@ -122,6 +122,7 @@ const userRoutes: FastifyPluginAsync = async fastify => {
       phonenumber: user.phonenumber,
       language: user.language,
       newsletterOptIn: user.newsletterOptIn,
+      isPushNotificationEnabled: user.isPushNotificationEnabled,
     }
 
     // new user
@@ -169,6 +170,7 @@ const userRoutes: FastifyPluginAsync = async fastify => {
             phonenumber: true,
             language: true,
             newsletterOptIn: true,
+            isPushNotificationEnabled: true,
           },
         })
 
@@ -191,9 +193,9 @@ const userRoutes: FastifyPluginAsync = async fastify => {
       onRequest: [fastify.authenticate],
     },
     async (req, reply) => {
-      const { language, newsletterOptIn } = req.body as { language?: string; newsletterOptIn?: boolean }
-      if (!language && newsletterOptIn === undefined) {
-        return sendError(reply, 400, 'At least one field (language or newsletterOptIn) is required')
+      const { language, newsletterOptIn, isPushNotificationEnabled } = req.body as { language?: string; newsletterOptIn?: boolean; isPushNotificationEnabled?: boolean }
+      if (!language && newsletterOptIn === undefined && isPushNotificationEnabled === undefined) {
+        return sendError(reply, 400, 'At least one field (language, newsletterOptIn, or isPushNotificationEnabled) is required')
       }
       try {
         const updateData: Partial<User> = {
@@ -204,6 +206,12 @@ const userRoutes: FastifyPluginAsync = async fastify => {
         }
         if (newsletterOptIn !== undefined) {
           updateData.newsletterOptIn = newsletterOptIn
+        }
+        if (isPushNotificationEnabled !== undefined) {
+          updateData.isPushNotificationEnabled = isPushNotificationEnabled
+          if (isPushNotificationEnabled === false) {
+            await fastify.prisma.pushSubscription.deleteMany({ where: { userId: req.user.userId } })
+          }
         }
         await userService.update(updateData as User)
         await req.deleteSession()
