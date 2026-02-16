@@ -84,7 +84,7 @@ function handleClose() {
 <template>
   <div class="post-list h-100 d-flex flex-column">
     <!-- Filter -->
-    <div class="d-flex flex-row justify-content-end align-items-center mb-3 flex-shrink-0">
+    <div class="d-flex flex-row justify-content-end align-items-center mb-3 flex-shrink-0 px-3">
       <div>
         <div v-if="showFilters">
           <BInputGroup class="mt-3">
