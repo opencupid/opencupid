@@ -19,8 +19,8 @@ function extractClientIp(headerValue: string | undefined, fallbackIp: string): s
 const appRoutes: FastifyPluginAsync = async fastify => {
   fastify.get('/version', async (req, reply) => {
       try {
-    const versionInfo = getPackageVersion(path.join(__dirname, '..', 'package.json'))
-      
+    const versionString = getPackageVersion(path.join(__dirname, '..', 'package.json'))
+      const versionInfo: VersionDTO = { version: versionString }
       return reply.code(200).send({ success: true, version: versionInfo })
     } catch (err) {
       fastify.log.error(err)
