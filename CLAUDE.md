@@ -109,6 +109,17 @@ pnpm prisma:generate
 
 Schema: `apps/backend/prisma/schema.prisma`
 
+## Git workflow
+
+**Never commit directly to `main`.** Always work in a feature branch and open a PR.
+
+```bash
+git checkout -b your-branch-name
+# ... make changes, commit ...
+git push -u origin your-branch-name
+gh pr create
+```
+
 ## Formatting
 
 ```
