@@ -108,6 +108,7 @@ function handleClose() {
             :post="post"
             :show-details="false"
             :dim-hidden="scope === 'my'"
+            :show-owner-toolbar="scope === 'my'"
             @click="() => handlePostClick(post)"
             @edit="() => handlePostEdit(post)"
             @hide="() => handlePostHide(post)"

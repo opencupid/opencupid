@@ -24,6 +24,7 @@ const props = defineProps<{
   post: PublicPostWithProfile | OwnerPost
   showDetails: boolean
   dimHidden?: boolean
+  showOwnerToolbar?: boolean
 }>()
 
 const ownerProfile = inject<Ref<OwnerProfile | null>>('ownerProfile', ref(null))
@@ -109,7 +110,7 @@ const handleContact = async () => {
   <div class="post-wrapper position-relative w-100"
     :class="{ 'post-wrapper--invisible': isOwn && props.dimHidden && !(post as any).isVisible }">
       <!-- owner toolbar -->
-    <div v-if="isOwn"
+    <div v-if="isOwn && showOwnerToolbar"
       class="toolbar position-absolute z-3 w-100 d-flex align-items-center justify-content-end gap-1">
       <BButton @click.stop="$emit('edit', post)" variant="link-light" size="sm" :title="$t('posts.actions.edit')">
         <IconEdit class="svg-icon" />
