@@ -1,0 +1,54 @@
+worker_processes 1;
+
+events {
+  worker_connections 1024;
+}
+
+error_log /dev/stderr error;
+
+http {
+  include mime.types;
+  default_type application/octet-stream;
+
+  sendfile on;
+  keepalive_timeout 65;
+
+  upstream listmonk {
+    server listmonk:9000;
+  }
+
+  server {
+    listen 443 ssl;
+    server_name ${ADMIN_DOMAIN};
+
+    # Shared SAN certificate covers both $DOMAIN and $ADMIN_DOMAIN
+    ssl_certificate     /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    # TLS mutual authentication — only clients presenting a cert signed by
+    # the configured CA are allowed through
+    ssl_client_certificate /etc/nginx/client-ca.crt;
+    ssl_verify_client on;
+
+    client_max_body_size 10M;
+
+    # Minimal admin index page
+    location = / {
+      root /var/www/admin;
+      index index.html;
+      try_files $uri $uri/ =404;
+    }
+
+    location /listmonk/ {
+      proxy_pass http://listmonk/;
+      proxy_http_version 1.1;
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+    }
+  }
+}
