@@ -317,9 +317,13 @@ onMounted(async () => {
   }
 }
 
+:deep(.tabs) {
+  min-height: 0;
+}
 :deep(.tab-content) {
   flex-grow: 1;
   overflow: hidden;
+  min-height: 0;
 }
 :deep(.tab-content .tab-pane) {
   height: 100%;
