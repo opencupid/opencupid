@@ -51,12 +51,7 @@ describe('messageStore', () => {
         partnerProfile: {
           id: 'partner-profile-1',
           publicName: 'Partner',
-          userId: 'user-2',
-          primaryImageUrl: null,
-          orientation: 'STRAIGHT',
-          age: 30,
-          pronouns: 'they/them',
-          city: null,
+          profileImages: [],
         },
         lastMessage: {
           content: 'Initial message',
@@ -75,17 +70,11 @@ describe('messageStore', () => {
         content: 'Reply from partner',
         messageType: 'text/html',
         createdAt: new Date('2024-01-02'),
-        updatedAt: new Date('2024-01-02'),
         isMine: false,
         sender: {
           id: 'partner-profile-1',
           publicName: 'Partner',
-          userId: 'user-2',
-          primaryImageUrl: null,
-          orientation: 'STRAIGHT',
-          age: 30,
-          pronouns: 'they/them',
-          city: null,
+          profileImages: [],
         },
       }
 
@@ -117,12 +106,7 @@ describe('messageStore', () => {
         partnerProfile: {
           id: 'partner-1',
           publicName: 'Partner 1',
-          userId: 'user-2',
-          primaryImageUrl: null,
-          orientation: 'STRAIGHT',
-          age: 30,
-          pronouns: 'they/them',
-          city: null,
+          profileImages: [],
         },
         lastMessage: null,
       }
@@ -143,12 +127,7 @@ describe('messageStore', () => {
         partnerProfile: {
           id: 'partner-2',
           publicName: 'Partner 2',
-          userId: 'user-3',
-          primaryImageUrl: null,
-          orientation: 'STRAIGHT',
-          age: 28,
-          pronouns: 'she/her',
-          city: null,
+          profileImages: [],
         },
         lastMessage: null,
       }
@@ -162,17 +141,11 @@ describe('messageStore', () => {
         content: 'New message',
         messageType: 'text/html',
         createdAt: new Date('2024-01-03'),
-        updatedAt: new Date('2024-01-03'),
         isMine: false,
         sender: {
           id: 'partner-2',
           publicName: 'Partner 2',
-          userId: 'user-3',
-          primaryImageUrl: null,
-          orientation: 'STRAIGHT',
-          age: 28,
-          pronouns: 'she/her',
-          city: null,
+          profileImages: [],
         },
       }
 
