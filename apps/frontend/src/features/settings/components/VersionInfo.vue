@@ -45,10 +45,14 @@ onMounted(async () => {
       {{ error }}
     </div>
 
-    <code v-else-if="version" class="text-muted" >
-      <strong>Commit:</strong>
-      {{ formatCommit(version.commit) }} <strong>Built:</strong>
-      {{ formatTimestamp(version.timestamp) }}
+    <code v-else-if="version" class="text-muted">
+      <span>v{{ version.version }}</span>
+      <template v-if="version.commit">
+        &nbsp;<strong>Commit:</strong> {{ formatCommit(version.commit) }}
+      </template>
+      <template v-if="version.timestamp">
+        &nbsp;<strong>Built:</strong> {{ formatTimestamp(version.timestamp) }}
+      </template>
     </code>
   </div>
 </template>
