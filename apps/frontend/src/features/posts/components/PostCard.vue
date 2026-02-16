@@ -179,7 +179,7 @@ const handleContact = async () => {
                 :show-only-foreign-country="true" />
             </span>
             <button
-              v-if="!isOwn && hasProfileData(post)"
+              v-if="showDetails && !isOwn && hasProfileData(post)"
               class="contact-btn"
               :title="t('posts.actions.contact')"
               @click.stop="handleContact"
