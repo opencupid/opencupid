@@ -163,7 +163,6 @@ model User {
   lastLoginAt             DateTime?
   language                String?    @default("en")
   newsletterOptIn         Boolean    @default(false)
-  isPushNotificationEnabled Boolean  @default(false)
   roles                   UserRole[] @default([user])
 
   // relations
@@ -174,6 +173,7 @@ model User {
   requestsReceived ConnectionRequest[] @relation("RequestsReceived")
 
   pushSubscription PushSubscription[]
+  isPushNotificationEnabled Boolean  @default(false)
 }
 
 model Profile {
