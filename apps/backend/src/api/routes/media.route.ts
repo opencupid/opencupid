@@ -70,7 +70,9 @@ const mediaRoutes: FastifyPluginAsync = async fastify => {
 
       // Derive Content-Type from the attachment record or file extension
       const ext = path.extname(filename).toLowerCase()
-      const contentType = attachment.mimeType || MIME_TYPE_MAP[ext] || 'application/octet-stream'
+      // Strip codec parameters (e.g. ";codecs=opus") — valid in HTML <source type> but not in HTTP Content-Type
+      const rawMime = attachment.mimeType || MIME_TYPE_MAP[ext] || 'application/octet-stream'
+      const contentType = rawMime.split(';')[0].trim()
       const fileSize = stats.size
 
       reply.header('Content-Type', contentType)

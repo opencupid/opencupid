@@ -21,6 +21,10 @@ const error = ref<string | null>(null)
 const waveformHeights = Array.from({ length: 20 }, () => Math.random() * 16 + 4)
 
 // Use server-provided duration, falling back to audio element duration once loaded
+const baseMediaType = computed(() =>
+  (props.attachment.mimeType?.split(';')[0] ?? 'audio/webm').trim()
+)
+
 const duration = computed(() => props.attachment.duration || audioDuration.value || 0)
 const progress = computed(() =>
   duration.value > 0 ? (currentTime.value / duration.value) * 100 : 0
@@ -84,6 +88,12 @@ const seek = (event: Event) => {
 
 onMounted(() => {
   if (audioRef.value) {
+    const canPlay = audioRef.value.canPlayType(baseMediaType.value)
+    if (!canPlay) {
+      error.value = `Your browser does not support ${baseMediaType.value} audio playback`
+      isLoading.value = false
+    }
+
     audioRef.value.addEventListener('loadeddata', handleLoadedData)
     audioRef.value.addEventListener('timeupdate', handleTimeUpdate)
     audioRef.value.addEventListener('ended', handleEnded)
@@ -104,7 +114,9 @@ onUnmounted(() => {
 <template>
   <div class="voice-message" :class="{ 'voice-message--mine': isMine }">
     <!-- Hidden audio element -->
-    <audio ref="audioRef" :src="attachment.url" preload="metadata" style="display: none" />
+    <audio ref="audioRef" preload="metadata" style="display: none">
+      <source :src="attachment.url" :type="baseMediaType" />
+    </audio>
 
     <div class="voice-controls d-flex align-items-center gap-2">
       <!-- Play/Pause button -->
