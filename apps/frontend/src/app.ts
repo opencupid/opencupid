@@ -6,18 +6,12 @@ import registerToast from './lib/toast'
 import { useBootstrap } from './lib/bootstrap'
 import { appUseI18n } from './lib/i18n'
 
-// @ ts-expect-error: virtual:pwa-register is a Vite virtual module
-// import { registerSW } from 'virtual:pwa-register'
-
-// const updateSW = registerSW({
-//   immediate: true,
-//   onNeedRefresh() {
-//     // Show "new version available" prompt
-//   },
-//   onOfflineReady() {
-//     // Show "app is ready offline" message
-//   },
-// })
+// Register push-only service worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/push-sw.js').catch((err) => {
+    console.warn('SW registration failed:', err)
+  })
+}
 
 
 import { Settings } from 'luxon'

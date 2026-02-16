@@ -183,6 +183,13 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
         payload: messageDTO,
       })
 
+      // Always try web push (works even when the tab is open but not focused)
+      if (WebPushService.isWebPushConfigured()) {
+        webPushService.send(messageDTO, profileId).catch(err => {
+          fastify.log.error(err, 'Web push failed')
+        })
+      }
+
       if (!isWsBroadcasted) {
         await notifierService.notifyProfile(profileId, 'new_message', {
           sender: messageDTO.sender.publicName,
