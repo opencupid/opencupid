@@ -26,8 +26,11 @@ export const useAppStore = defineStore('app', {
       try {
         this.isLoading = true
         const res = await api.get<VersionResponse>('/app/version')
-        const parsed = VersionSchema.parse(res.data.version)
-        return storeSuccess(parsed)
+        const parsed = VersionSchema.safeParse(res.data.version)
+        if (!parsed.success) {
+          return storeError(new Error('Invalid version response'), 'Failed to fetch version')
+        }
+        return storeSuccess(parsed.data)
       } catch (err: unknown) {
         return storeError(err, 'Failed to fetch version')
       } finally {
