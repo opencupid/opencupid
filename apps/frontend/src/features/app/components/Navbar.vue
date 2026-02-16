@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { computed } from 'vue'
 
@@ -21,7 +21,7 @@ import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileSt
 import ProfileImage from '@/features/images/components/ProfileImage.vue'
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 
-const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 const profileStore = useOwnerProfileStore()
 const interactionStore = useInteractionStore()
@@ -31,8 +31,14 @@ const hasMatchNotifications = computed(
   () => interactionStore.newMatchesCount > 0 || interactionStore.receivedLikesCount > 0
 )
 
-// Check if current route is a browse route (handles /browse and /browse/:scope)
-const isBrowseActive = computed(() => router.currentRoute.value.path.startsWith('/browse'))
+// Use Vue Router's route matching for Browse nav item
+// Checks if current route is any of the browse-related routes
+const isBrowseActive = computed(() => {
+  const routeName = route.name
+  return routeName === 'BrowseProfiles' || 
+         routeName === 'BrowseProfilesScope' || 
+         routeName === 'PublicProfile'
+})
 </script>
 
 <template>

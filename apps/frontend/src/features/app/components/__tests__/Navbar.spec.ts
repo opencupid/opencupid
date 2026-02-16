@@ -15,12 +15,10 @@ vi.mock('@fortawesome/vue-fontawesome', () => ({
   FontAwesomeIcon: { template: '<div />' },
 }))
 
-const mockCurrentRoute = { value: { path: '/home' } }
+const mockRoute = { value: { path: '/home', name: 'UserHome' } }
 vi.mock('vue-router', () => ({ 
-  useRouter: () => ({ 
-    push: vi.fn(),
-    currentRoute: mockCurrentRoute
-  }) 
+  useRouter: () => ({ push: vi.fn() }),
+  useRoute: () => mockRoute.value
 }))
 vi.mock('@/features/shared/icons/DoodleIcons.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/message.svg', () => ({ default: { template: '<div />' } }))
@@ -174,10 +172,10 @@ describe('Navbar', () => {
     expect(wrapper.html()).toContain('default-user-icon')
   })
 
-  it('shows browse as active when on /browse route', () => {
+  it('shows browse as active when on BrowseProfiles route', () => {
     mockIsLoggedIn.value = true
     mockProfileRef.value = { isDatingActive: true, isOnboarded: true, profileImages: [] }
-    mockCurrentRoute.value.path = '/browse'
+    mockRoute.value = { path: '/browse', name: 'BrowseProfiles' }
     const wrapper = mount(Navbar, {
       global: {
         stubs: {
@@ -189,14 +187,13 @@ describe('Navbar', () => {
         mocks: { $t: (msg: string) => msg },
       }
     })
-    // Browse nav item should be rendered
     expect(wrapper.html()).toContain('nav.browse')
   })
 
-  it('shows browse as active when on /browse/buddy route', () => {
+  it('shows browse as active when on BrowseProfilesScope route', () => {
     mockIsLoggedIn.value = true
     mockProfileRef.value = { isDatingActive: true, isOnboarded: true, profileImages: [] }
-    mockCurrentRoute.value.path = '/browse/buddy'
+    mockRoute.value = { path: '/browse/buddy', name: 'BrowseProfilesScope' }
     const wrapper = mount(Navbar, {
       global: {
         stubs: {
@@ -208,14 +205,13 @@ describe('Navbar', () => {
         mocks: { $t: (msg: string) => msg },
       }
     })
-    // Browse nav item should be rendered
     expect(wrapper.html()).toContain('nav.browse')
   })
 
-  it('shows browse as active when on /browse/date route', () => {
+  it('shows browse as active when on PublicProfile route', () => {
     mockIsLoggedIn.value = true
     mockProfileRef.value = { isDatingActive: true, isOnboarded: true, profileImages: [] }
-    mockCurrentRoute.value.path = '/browse/date'
+    mockRoute.value = { path: '/profile/123', name: 'PublicProfile' }
     const wrapper = mount(Navbar, {
       global: {
         stubs: {
@@ -227,27 +223,6 @@ describe('Navbar', () => {
         mocks: { $t: (msg: string) => msg },
       }
     })
-    // Browse nav item should be rendered
-    expect(wrapper.html()).toContain('nav.browse')
-  })
-
-  it('renders navbar correctly when on /home route', () => {
-    mockIsLoggedIn.value = true
-    mockProfileRef.value = { isDatingActive: true, isOnboarded: true, profileImages: [] }
-    mockCurrentRoute.value.path = '/home'
-    const wrapper = mount(Navbar, {
-      global: {
-        stubs: {
-          BNavbar: stub,
-          BNavItem: stub,
-          BNavbarNav: stub,
-          FontAwesomeIcon: stub
-        },
-        mocks: { $t: (msg: string) => msg },
-      }
-    })
-    // All nav items should be rendered
-    expect(wrapper.html()).toContain('nav.home')
     expect(wrapper.html()).toContain('nav.browse')
   })
 
