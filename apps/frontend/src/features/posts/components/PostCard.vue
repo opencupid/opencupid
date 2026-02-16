@@ -63,6 +63,16 @@ const postLocation = computed(() => {
   return null
 })
 
+const GRID_TRUNCATE_LENGTH = 100
+
+const displayContent = computed(() => {
+  const content = props.post.content
+  if (props.showDetails || content.length <= GRID_TRUNCATE_LENGTH) return content
+  const truncated = content.substring(0, GRID_TRUNCATE_LENGTH)
+  const lastSpace = truncated.lastIndexOf(' ')
+  return (lastSpace > 0 ? truncated.substring(0, lastSpace) : truncated) + '\u2026'
+})
+
 const { t } = useI18n()
 const showMessageForm = ref(false)
 const messageInput = ref()
@@ -138,7 +148,7 @@ const handleContact = async () => {
           'post-card--own': isOwn,
         },
       ]" @click="$emit('click', post)">
-        <p class="post-content flex-grow-1 flex-shrink-1">{{ post.content }}</p>
+        <p class="post-content flex-grow-1 flex-shrink-1">{{ displayContent }}</p>
 
         <div class="post-meta d-flex align-items-center justify-content-start gap-2">
           <div class="text-muted " v-if="showDetails"> <!-- left col 50% can grow/shrink-->
@@ -226,8 +236,8 @@ const handleContact = async () => {
 }
 
 .details .post-content {
-  max-height: 12rem;
-  overflow: auto;
+  max-height: 40vh;
+  overflow-y: auto;
 }
 
 .post-date {
