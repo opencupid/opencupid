@@ -9,23 +9,11 @@ const version = ref<VersionDTO | null>(null)
 const isLoading = ref(false)
 const error = ref<string | null>(null)
 
-const formatTimestamp = (timestamp: string) => {
-  try {
-    return new Date(timestamp).toLocaleString()
-  } catch {
-    return timestamp
-  }
-}
-
-const formatCommit = (commit: string) => {
-  return commit.substring(0, 8)
-}
-
 onMounted(async () => {
   isLoading.value = true
   error.value = null
 
-  const result = await appStore.fetchVersion()
+  const result = await appStore.checkVersion()
 
   if (result.success) {
     version.value = result.data!
@@ -46,13 +34,7 @@ onMounted(async () => {
     </div>
 
     <code v-else-if="version" class="text-muted">
-      <span>v{{ version.version }}</span>
-      <template v-if="version.commit">
-        &nbsp;<strong>Commit:</strong> {{ formatCommit(version.commit) }}
-      </template>
-      <template v-if="version.timestamp">
-        &nbsp;<strong>Built:</strong> {{ formatTimestamp(version.timestamp) }}
-      </template>
+      <span>v{{ version.frontendVersion }}</span>
     </code>
   </div>
 </template>

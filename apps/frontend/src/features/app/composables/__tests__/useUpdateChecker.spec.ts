@@ -27,11 +27,11 @@ describe('useUpdateChecker', () => {
     vi.useRealTimers()
   })
 
-  it('calls checkUpdateAvailable immediately on mount', async () => {
+  it('calls checkVersion immediately on mount', async () => {
     const appStore = useAppStore()
-    const spy = vi.spyOn(appStore, 'checkUpdateAvailable').mockResolvedValue({
+    const spy = vi.spyOn(appStore, 'checkVersion').mockResolvedValue({
       success: true,
-      data: { updateAvailable: false, currentVersion: '0.5.0', latestVersion: '0.5.0' },
+      data: { updateAvailable: false, frontendVersion: '0.5.0', currentVersion: '0.5.0' },
     })
 
     mountWithChecker()
@@ -44,9 +44,9 @@ describe('useUpdateChecker', () => {
 
   it('schedules periodic checks after the initial call', async () => {
     const appStore = useAppStore()
-    const spy = vi.spyOn(appStore, 'checkUpdateAvailable').mockResolvedValue({
+    const spy = vi.spyOn(appStore, 'checkVersion').mockResolvedValue({
       success: true,
-      data: { updateAvailable: false, currentVersion: '0.5.0', latestVersion: '0.5.0' },
+      data: { updateAvailable: false, frontendVersion: '0.5.0', currentVersion: '0.5.0' },
     })
 
     mountWithChecker()
@@ -67,9 +67,9 @@ describe('useUpdateChecker', () => {
 
   it('clears timer on unmount — no further calls', async () => {
     const appStore = useAppStore()
-    const spy = vi.spyOn(appStore, 'checkUpdateAvailable').mockResolvedValue({
+    const spy = vi.spyOn(appStore, 'checkVersion').mockResolvedValue({
       success: true,
-      data: { updateAvailable: false, currentVersion: '0.5.0', latestVersion: '0.5.0' },
+      data: { updateAvailable: false, frontendVersion: '0.5.0', currentVersion: '0.5.0' },
     })
 
     const wrapper = mountWithChecker()
@@ -88,7 +88,7 @@ describe('useUpdateChecker', () => {
 
   it('handles API errors gracefully without unhandled rejections', async () => {
     const appStore = useAppStore()
-    const spy = vi.spyOn(appStore, 'checkUpdateAvailable').mockRejectedValue(new Error('Network error'))
+    const spy = vi.spyOn(appStore, 'checkVersion').mockRejectedValue(new Error('Network error'))
 
     mountWithChecker()
 
@@ -100,7 +100,7 @@ describe('useUpdateChecker', () => {
 
   it('uses exponential backoff on consecutive failures', async () => {
     const appStore = useAppStore()
-    const spy = vi.spyOn(appStore, 'checkUpdateAvailable').mockResolvedValue({
+    const spy = vi.spyOn(appStore, 'checkVersion').mockResolvedValue({
       success: false,
       message: 'Server error',
     })
@@ -130,18 +130,18 @@ describe('useUpdateChecker', () => {
 
   it('resets backoff on success after failures', async () => {
     const appStore = useAppStore()
-    const spy = vi.spyOn(appStore, 'checkUpdateAvailable')
+    const spy = vi.spyOn(appStore, 'checkVersion')
       // First call: failure
       .mockResolvedValueOnce({ success: false, message: 'error' })
       // Second call: success
       .mockResolvedValueOnce({
         success: true,
-        data: { updateAvailable: false, currentVersion: '0.5.0', latestVersion: '0.5.0' },
+        data: { updateAvailable: false, frontendVersion: '0.5.0', currentVersion: '0.5.0' },
       })
       // Third call: success
       .mockResolvedValueOnce({
         success: true,
-        data: { updateAvailable: false, currentVersion: '0.5.0', latestVersion: '0.5.0' },
+        data: { updateAvailable: false, frontendVersion: '0.5.0', currentVersion: '0.5.0' },
       })
 
     mountWithChecker()
@@ -160,7 +160,7 @@ describe('useUpdateChecker', () => {
 
   it('caps backoff at 30 minutes', async () => {
     const appStore = useAppStore()
-    const spy = vi.spyOn(appStore, 'checkUpdateAvailable').mockResolvedValue({
+    const spy = vi.spyOn(appStore, 'checkVersion').mockResolvedValue({
       success: false,
       message: 'error',
     })

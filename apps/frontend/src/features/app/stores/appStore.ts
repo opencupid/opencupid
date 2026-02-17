@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
 import { api } from '@/lib/api'
 import { LocationSchema, type LocationDTO } from '@zod/dto/location.dto'
-import { VersionSchema, type VersionDTO, UpdateAvailableSchema, type UpdateAvailableDTO } from '@zod/dto/version.dto'
-import type { LocationResponse, VersionResponse, UpdateAvailableResponse } from '@zod/apiResponse.dto'
+import { VersionSchema, type VersionDTO } from '@zod/dto/version.dto'
+import type { LocationResponse, VersionResponse } from '@zod/apiResponse.dto'
 import { storeSuccess, storeError, type StoreResponse } from '@/store/helpers'
 
 // Get the current frontend version
@@ -27,29 +27,17 @@ export const useAppStore = defineStore('app', {
         this.isLoading = false
       }
     },
-    async fetchVersion(): Promise<StoreResponse<VersionDTO>> {
+    async checkVersion(): Promise<StoreResponse<VersionDTO>> {
       try {
-        this.isLoading = true
-        const res = await api.get<VersionResponse>('/app/version')
-        const parsed = VersionSchema.parse(res.data.version)
-        return storeSuccess(parsed)
-      } catch (err: unknown) {
-        return storeError(err, 'Failed to fetch version')
-      } finally {
-        this.isLoading = false
-      }
-    },
-    async checkUpdateAvailable(): Promise<StoreResponse<UpdateAvailableDTO>> {
-      try {
-        const res = await api.get<UpdateAvailableResponse>('/app/updateavailable', {
+        const res = await api.get<VersionResponse>('/app/version', {
           params: { v: CURRENT_VERSION }
         })
-        const parsed = UpdateAvailableSchema.parse(res.data.updateInfo)
-        
+        const parsed = VersionSchema.parse(res.data.version)
+
         // Update state
         this.updateAvailable = parsed.updateAvailable
-        this.latestVersion = parsed.latestVersion
-        
+        this.latestVersion = parsed.frontendVersion
+
         return storeSuccess(parsed)
       } catch (err: unknown) {
         return storeError(err, 'Failed to check update availability')

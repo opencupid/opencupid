@@ -15,7 +15,7 @@ vi.stubGlobal('__APP_VERSION__', {
   app: '0.5.0'
 })
 
-describe('useAppStore - checkUpdateAvailable', () => {
+describe('useAppStore - checkVersion', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
@@ -26,16 +26,16 @@ describe('useAppStore - checkUpdateAvailable', () => {
     mockApi.get.mockResolvedValue({
       data: {
         success: true,
-        updateInfo: {
+        version: {
           updateAvailable: false,
-          currentVersion: '0.5.0',
-          latestVersion: '0.5.0'
+          frontendVersion: '0.5.0',
+          currentVersion: '0.5.0'
         }
       }
     })
 
     const store = useAppStore()
-    const result = await store.checkUpdateAvailable()
+    const result = await store.checkVersion()
 
     expect(result.success).toBe(true)
     if (result.success) {
@@ -43,7 +43,7 @@ describe('useAppStore - checkUpdateAvailable', () => {
     }
     expect(store.updateAvailable).toBe(false)
     expect(store.latestVersion).toBe('0.5.0')
-    expect(mockApi.get).toHaveBeenCalledWith('/app/updateavailable', {
+    expect(mockApi.get).toHaveBeenCalledWith('/app/version', {
       params: { v: '0.5.0' }
     })
   })
@@ -53,16 +53,16 @@ describe('useAppStore - checkUpdateAvailable', () => {
     mockApi.get.mockResolvedValue({
       data: {
         success: true,
-        updateInfo: {
+        version: {
           updateAvailable: true,
-          currentVersion: '0.5.0',
-          latestVersion: '0.6.0'
+          frontendVersion: '0.6.0',
+          currentVersion: '0.5.0'
         }
       }
     })
 
     const store = useAppStore()
-    const result = await store.checkUpdateAvailable()
+    const result = await store.checkVersion()
 
     expect(result.success).toBe(true)
     if (result.success) {
@@ -77,7 +77,7 @@ describe('useAppStore - checkUpdateAvailable', () => {
     mockApi.get.mockRejectedValue(new Error('Network error'))
 
     const store = useAppStore()
-    const result = await store.checkUpdateAvailable()
+    const result = await store.checkVersion()
 
     expect(result.success).toBe(false)
     if (!result.success) {
@@ -91,18 +91,18 @@ describe('useAppStore - checkUpdateAvailable', () => {
     mockApi.get.mockResolvedValue({
       data: {
         success: true,
-        updateInfo: {
+        version: {
           updateAvailable: false,
-          currentVersion: '0.5.0',
-          latestVersion: '0.5.0'
+          frontendVersion: '0.5.0',
+          currentVersion: '0.5.0'
         }
       }
     })
 
     const store = useAppStore()
-    await store.checkUpdateAvailable()
+    await store.checkVersion()
 
-    expect(mockApi.get).toHaveBeenCalledWith('/app/updateavailable', {
+    expect(mockApi.get).toHaveBeenCalledWith('/app/version', {
       params: { v: '0.5.0' }
     })
   })

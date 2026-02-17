@@ -25,12 +25,12 @@ export function useUpdateChecker() {
 
   async function checkForUpdate() {
     try {
-      const result = await appStore.checkUpdateAvailable()
+      const result = await appStore.checkVersion()
 
       if (result.success) {
         failureCount = 0
         if (result.data?.updateAvailable) {
-          console.log('Frontend update available:', result.data.latestVersion)
+          console.log('Frontend update available:', result.data.frontendVersion)
         }
       } else {
         failureCount++
