@@ -275,8 +275,8 @@ importers:
         specifier: 4.2.0
         version: 4.2.0
       '@fontsource/caveat':
-        specifier: 5.2.6
-        version: 5.2.6
+        specifier: 5.2.8
+        version: 5.2.8
       '@fontsource/fredoka-one':
         specifier: 5.2.5
         version: 5.2.5
@@ -1256,8 +1256,8 @@ packages:
   '@fastify/websocket@11.1.0':
     resolution: {integrity: sha512-BH6yZjbA5+DjuC9lMgv3hHuaSsf3snph6df9l1zIW6lvZLnYVmxN7OgmGlMKftsTOFB7NePXVCJZPzagunQK5Q==}
 
-  '@fontsource/caveat@5.2.6':
-    resolution: {integrity: sha512-OKS809xrwMZq7wFQFBQ5DfK7EL7Pd0dVl7/cKyx3bwplugYhwLDp/+/7/PJH9F6KCHuit9aVdxMCxAbxFgKhSA==}
+  '@fontsource/caveat@5.2.8':
+    resolution: {integrity: sha512-9fUUfFE2IQFKbx+xOcaeQxxmh8iJguEb8z+j1PeueO4UUx+XfT4pRm/B04ZDvFA794/iRxY/IibmP8ZKtIf4rw==}
 
   '@fontsource/fredoka-one@5.2.5':
     resolution: {integrity: sha512-Fan2k5pTOmmN8eydeUOk20/NALW+qtRu6WdqPBNhFq2WaquxKpBMUzdxFXgy9asICtbEhxTM51XHeU+OKfPQnQ==}
@@ -8154,7 +8154,7 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@fontsource/caveat@5.2.6': {}
+  '@fontsource/caveat@5.2.8': {}
 
   '@fontsource/fredoka-one@5.2.5': {}
 
