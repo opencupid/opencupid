@@ -2,7 +2,9 @@
   "name": "Node.js 22 + Docker DevContainer",
   "image": "mcr.microsoft.com/devcontainers/javascript-node:22", // Official Node 22 base
   "features": {
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "moby": false
+    }
   },
   // Optional settings
   "postCreateCommand": "pnpm install",
