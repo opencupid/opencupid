@@ -63,17 +63,45 @@ describe('MessageService.getConversationSummary', () => {
 })
 
 describe('MessageService.listMessagesForConversation', () => {
-  it('fetches messages ordered by creation', async () => {
-    mockPrisma.message.findMany.mockResolvedValue([])
-    await service.listMessagesForConversation('c1')
+  it('fetches latest page in descending order and returns ascending payload', async () => {
+    mockPrisma.message.findMany.mockResolvedValue([
+      { id: 'm3', createdAt: new Date('2024-01-03') },
+      { id: 'm2', createdAt: new Date('2024-01-02') },
+    ])
+
+    const result = await service.listMessagesForConversation('c1')
+
     expect(mockPrisma.message.findMany).toHaveBeenCalledWith({
       where: { conversationId: 'c1' },
       include: {
         sender: { include: { profileImages: { where: { position: 0 } } } },
         attachment: true,
       },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: 'desc' },
+      take: 11,
     })
+    expect(result.messages.map((m: any) => m.id)).toEqual(['m2', 'm3'])
+    expect(result.hasMore).toBe(false)
+    expect(result.nextCursor).toBeNull()
+  })
+
+  it('supports cursor pagination', async () => {
+    mockPrisma.message.findMany.mockResolvedValue([
+      { id: 'm9', createdAt: new Date('2024-01-09') },
+      { id: 'm8', createdAt: new Date('2024-01-08') },
+      { id: 'm7', createdAt: new Date('2024-01-07') },
+    ])
+
+    const result = await service.listMessagesForConversation('c1', { cursor: 'm10', take: 2 })
+
+    expect(mockPrisma.message.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      cursor: { id: 'm10' },
+      skip: 1,
+      take: 3,
+    }))
+    expect(result.messages.map((m: any) => m.id)).toEqual(['m8', 'm9'])
+    expect(result.hasMore).toBe(true)
+    expect(result.nextCursor).toBe('m8')
   })
 })
 
