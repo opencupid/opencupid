@@ -1,9 +1,9 @@
 import { z } from 'zod'
 
 export const VersionSchema = z.object({
-  version: z.string(),
-  commit: z.string().optional(),
-  timestamp: z.string().datetime().optional(),
+  frontendVersion: z.string(),
+  updateAvailable: z.boolean(),
+  currentVersion: z.string().optional(),
 })
 
 export type VersionDTO = z.infer<typeof VersionSchema>

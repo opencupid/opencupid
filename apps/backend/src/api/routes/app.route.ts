@@ -1,14 +1,11 @@
 import { FastifyPluginAsync } from 'fastify'
 import { WebServiceClient } from '@maxmind/geoip2-node'
-import fs from 'fs'
-import path from 'path'
 
 import { appConfig } from '@/lib/appconfig'
 import { LocationSchema, type LocationDTO } from '@zod/dto/location.dto'
 import { VersionSchema, type VersionDTO } from '@zod/dto/version.dto'
 import type { ApiError } from '@shared/zod/apiResponse.dto'
 import { rateLimitConfig } from '../helpers'
-import { getPackageVersion } from '../../../../../packages/shared/version'
 
 function extractClientIp(headerValue: string | undefined, fallbackIp: string): string {
   const rawIp = headerValue?.split(',')[0].trim() ?? fallbackIp
@@ -17,11 +14,24 @@ function extractClientIp(headerValue: string | undefined, fallbackIp: string): s
 }
 
 const appRoutes: FastifyPluginAsync = async fastify => {
-  fastify.get('/version', async (req, reply) => {
-      try {
-    const versionString = getPackageVersion(path.join(__dirname, '..', 'package.json'))
-      const versionInfo: VersionDTO = { version: versionString }
-      return reply.code(200).send({ success: true, version: versionInfo })
+  fastify.get('/version', {
+    config: { ...rateLimitConfig(fastify, '1 minute', 20) },
+  }, async (req, reply) => {
+    try {
+      const clientVersion = (req.query as Record<string, string>).v as string | undefined
+      const frontendVersion = __FRONTEND_VERSION__
+
+      const versionInfo: VersionDTO = {
+        frontendVersion,
+        updateAvailable: clientVersion !== undefined
+          && clientVersion !== 'unknown'
+          && frontendVersion !== 'unknown'
+          && clientVersion !== frontendVersion,
+        ...(clientVersion !== undefined ? { currentVersion: clientVersion } : {}),
+      }
+
+      const payload = VersionSchema.parse(versionInfo)
+      return reply.code(200).send({ success: true, version: payload })
     } catch (err) {
       fastify.log.error(err)
       const out: ApiError = { success: false, message: 'Failed to read version info' }
@@ -33,7 +43,7 @@ const appRoutes: FastifyPluginAsync = async fastify => {
     onRequest: [fastify.authenticate],
     // rate limiter
     config: {
-      ...rateLimitConfig(fastify, '5 minute', 5), 
+      ...rateLimitConfig(fastify, '5 minute', 5),
     },
   }, async (req, reply) => {
     const rawHeader = req.headers['x-forwarded-for'] as string | undefined

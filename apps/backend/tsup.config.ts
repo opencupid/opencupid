@@ -1,4 +1,9 @@
 import { defineConfig } from 'tsup'
+import { getPackageVersion } from '../../packages/shared/version'
+import path from 'path'
+
+// Read frontend version at build time
+const frontendVersion = getPackageVersion(path.join(__dirname, '..', '..', 'package.json'))
 
 export default defineConfig({
   entry: [
@@ -12,4 +17,7 @@ export default defineConfig({
   dts: false,
   target: 'es2020',
   shims: false,
+  define: {
+    __FRONTEND_VERSION__: JSON.stringify(frontendVersion),
+  },
 })

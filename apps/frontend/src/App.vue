@@ -1,9 +1,11 @@
 <script lang="ts" setup>
 import Navbar from '@/features/app/components/Navbar.vue'
 import AppNotifier from '@/features/app/components/AppNotifier.vue'
+import UpdateBanner from '@/features/app/components/UpdateBanner.vue'
 import { useI18nStore } from './store/i18nStore'
 import { useCountries } from './features/shared/composables/useCountries'
 import { useLanguages } from './features/shared/composables/useLanguages'
+import { useUpdateChecker } from './features/app/composables/useUpdateChecker'
 
 import ViewportSizeDebug from '@/features/app/components/ViewportSizeDebug.vue'
 import { computed } from 'vue'
@@ -23,10 +25,14 @@ const i18nStore = useI18nStore()
 useCountries().initialize(i18nStore.getLanguage())
 useLanguages().initialize(i18nStore.getLanguage())
 
+// Initialize update checker
+useUpdateChecker()
+
 </script>
 
 <template>
   <!-- <ViewportSizeDebug class="position-absolute bg-dark" /> -->
+  <UpdateBanner />
   <Navbar />
   <RouterView />
   <AppNotifier />
