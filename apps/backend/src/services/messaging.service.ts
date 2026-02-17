@@ -128,15 +128,15 @@ export class MessageService {
    */
   async listMessagesForConversation(
     conversationId: string,
-    options?: { limit?: number; before?: Date }
+    options?: { limit?: number; before?: string }
   ) {
     const limit = options?.limit ?? 10
 
     const messages = await prisma.message.findMany({
       where: {
         conversationId,
-        ...(options?.before && { createdAt: { lt: options.before } }),
       },
+      ...(options?.before && { cursor: { id: options.before }, skip: 1 }),
       include: {
         sender: {
           include: {

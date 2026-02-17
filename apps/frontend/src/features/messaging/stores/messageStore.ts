@@ -131,7 +131,7 @@ export const useMessageStore = defineStore('message', {
         const res = await safeApiCall(() =>
           api.get<MessagesResponse>(
             `/messages/${this.activeConversation!.conversationId}`,
-            { params: { before: new Date(oldestMessage.createdAt as unknown as string).toISOString() } }
+            { params: { before: oldestMessage.id } }
           )
         )
         if (res.data.success) {

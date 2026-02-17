@@ -31,7 +31,7 @@ const IdLookupParamsSchema = z.object({
 
 const MessageListQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).optional(),
-  before: z.coerce.date().optional(),
+  before: z.string().cuid().optional(),
 })
 
 
