@@ -30,6 +30,12 @@ const IdLookupParamsSchema = z.object({
 })
 
 
+const MessageListQuerySchema = z.object({
+  cursor: z.string().cuid().optional(),
+  take: z.coerce.number().int().min(1).max(50).optional(),
+})
+
+
 /**
  * Registers messaging-related routes for the Fastify server.
  *
@@ -72,11 +78,17 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
     if (!id.success) return sendError(reply, 404, 'Conversation not found')
     const conversationId = id.data.id
 
+    const query = MessageListQuerySchema.safeParse(req.query ?? {})
+    if (!query.success) return sendError(reply, 400, 'Invalid query parameters')
+
     try {
-      const raw = await messageService.listMessagesForConversation(conversationId)
+      const { messages: raw, nextCursor, hasMore } = await messageService.listMessagesForConversation(conversationId, {
+        cursor: query.data.cursor,
+        take: query.data.take,
+      })
 
       const messages = raw.map(m => mapMessageForMessageList(m, profileId))
-      const response: MessagesResponse = { success: true, messages }
+      const response: MessagesResponse = { success: true, messages, nextCursor, hasMore }
       return reply.code(200).send(response)
 
     } catch (error) {

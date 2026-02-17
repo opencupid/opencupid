@@ -26,6 +26,9 @@ type MessageStoreState = {
   isSending: boolean,
   isLoading: boolean,
   error: StoreError | null,
+  messageCursor: string | null,
+  hasMoreMessages: boolean,
+  isLoadingMoreMessages: boolean,
 }
 
 export const useMessageStore = defineStore('message', {
@@ -37,6 +40,9 @@ export const useMessageStore = defineStore('message', {
     isSending: false,
     isLoading: false,
     error: null,
+    messageCursor: null,
+    hasMoreMessages: false,
+    isLoadingMoreMessages: false,
   }),
 
   actions: {
@@ -97,24 +103,65 @@ export const useMessageStore = defineStore('message', {
         })
     },
 
-    async fetchMessagesForConversation(conversationId: string): Promise<MessageInConversation[]> {
+    async fetchMessagesForConversation(conversationId: string, options?: { cursor?: string; append?: boolean }): Promise<MessageInConversation[]> {
       try {
-        // console.log('Fetching messages for conversation:', conversationId)
-        this.isLoading = true // Set loading state
-        this.error = null // Reset error state
-        const res = await safeApiCall(() => api.get<MessagesResponse>(`/messages/${conversationId}`))
-        console.log('Fetched messages:', res.data)
+        const isLoadingOlder = Boolean(options?.append)
+        if (isLoadingOlder) {
+          this.isLoadingMoreMessages = true
+        } else {
+          this.isLoading = true
+          this.messages = []
+          this.messageCursor = null
+          this.hasMoreMessages = false
+        }
+
+        this.error = null
+        const res = await safeApiCall(() =>
+          api.get<MessagesResponse>(`/messages/${conversationId}`, {
+            params: {
+              take: 10,
+              ...(options?.cursor ? { cursor: options.cursor } : {}),
+            },
+          })
+        )
+
         if (res.data.success) {
-          this.messages = res.data.messages
+          this.messageCursor = res.data.nextCursor
+          this.hasMoreMessages = res.data.hasMore
+
+          if (isLoadingOlder) {
+            const existingIds = new Set(this.messages.map(message => message.id))
+            const olderMessages = res.data.messages.filter(message => !existingIds.has(message.id))
+            this.messages = [...olderMessages, ...this.messages]
+          } else {
+            this.messages = res.data.messages
+          }
+
           return res.data.messages
         }
       } catch (error: any) {
         this.error = storeError(error)
-        this.messages = []
+        if (!options?.append) {
+          this.messages = []
+          this.messageCursor = null
+          this.hasMoreMessages = false
+        }
       } finally {
-        this.isLoading = false // Reset loading state
+        this.isLoading = false
+        this.isLoadingMoreMessages = false
       }
       return []
+    },
+
+    async fetchOlderMessages(): Promise<MessageInConversation[]> {
+      if (!this.activeConversation || !this.hasMoreMessages || !this.messageCursor || this.isLoadingMoreMessages) {
+        return []
+      }
+
+      return this.fetchMessagesForConversation(this.activeConversation.conversationId, {
+        cursor: this.messageCursor,
+        append: true,
+      })
     },
 
     async fetchConversations(): Promise<ConversationSummary[]> {
@@ -263,6 +310,9 @@ export const useMessageStore = defineStore('message', {
       this.isSending = false
       this.isLoading = false
       this.error = null
+      this.messageCursor = null
+      this.hasMoreMessages = false
+      this.isLoadingMoreMessages = false
     }
 
   },
