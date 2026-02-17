@@ -57,20 +57,6 @@ async function main() {
   const wsRoutes = import('./api/routes/message-ws.route')
   app.register(wsRoutes, { prefix: '/ws' })
 
-  const rateLimit = import('@fastify/rate-limit')
-  const tilesPlugin = import('./plugins/tiles-proxy')
-
-  // Tiles proxy setup
-  await app.register(rateLimit, {
-    global: false, // we’ll apply to the route below
-  })
-
-  // Rate-limit only the tile route (be polite to OSM)
-  app.register(async (f) => {
-    await f.register(rateLimit, { max: 100, timeWindow: '1 second' }) // Allow more requests for tile loading
-    await f.register(tilesPlugin)
-  })
-
   // app.get('/healthz', async () => ({ ok: true }))
 
   const ok = checkImageRoot()
