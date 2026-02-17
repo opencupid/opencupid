@@ -62,7 +62,6 @@
   "devDependencies": {
     "@eslint/js": "9.34.0",
     "@iconify/json": "2.2.440",
-    "@pinia/testing": "1.0.3",
     "@playwright/test": "1.58.2",
     "@popperjs/core": "2.11.8",
     "@tsconfig/node22": "22.0.5",

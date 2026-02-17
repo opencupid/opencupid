@@ -100,6 +100,6 @@
     "vite-tsconfig-paths": "5.0.0",
     "vitest": "3.2.4",
     "wscat": "6.1.0",
-    "zod-prisma-types": "3.3.11"
+    "zod-prisma-types": "3.2.4"
   }
 }
