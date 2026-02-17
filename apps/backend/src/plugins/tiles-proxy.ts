@@ -76,7 +76,7 @@ const tilesPlugin: FastifyPluginAsync = async fastify => {
 
   fastify.get<{
     Params: { z: string; x: string; y: string }
-  }>('/api/tiles/:z/:x/:y.png', async (req, reply) => {
+  }>('/tiles/:z/:x/:y.png', async (req, reply) => {
     const { z, x, y } = req.params
 
     // simple bounds guard
