@@ -91,7 +91,7 @@
     "globals": "16.3.0",
     "jiti": "2.6.1",
     "jsdom": "26.1.0",
-    "npm-run-all2": "7.0.2",
+    "npm-run-all2": "8.0.4",
     "prettier": "3.8.1",
     "rollup-plugin-visualizer": "6.0.3",
     "sass": "1.97.3",
