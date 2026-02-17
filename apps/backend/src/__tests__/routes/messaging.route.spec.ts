@@ -64,14 +64,15 @@ describe('GET /:id', () => {
   it('passes limit and before query params to service', async () => {
     const handler = fastify.routes['GET /:id']
     mockMessageService.listMessagesForConversation.mockResolvedValue({ messages: [], hasMore: false })
+    const beforeDate = '2026-02-16T21:21:12.661Z'
     await handler({
       session: { profileId: 'p1' },
       params: { id: 'ck1234567890abcd12345678' },
-      query: { limit: '5', before: 'ck0000000000abcd00000000' },
+      query: { limit: '5', before: beforeDate },
     } as any, reply as any)
     expect(mockMessageService.listMessagesForConversation).toHaveBeenCalledWith(
       'ck1234567890abcd12345678',
-      { limit: 5, before: 'ck0000000000abcd00000000' }
+      { limit: 5, before: new Date(beforeDate) }
     )
     expect(reply.statusCode).toBe(200)
   })
@@ -81,7 +82,7 @@ describe('GET /:id', () => {
     await handler({
       session: { profileId: 'p1' },
       params: { id: 'ck1234567890abcd12345678' },
-      query: { before: 'not-a-cuid' },
+      query: { before: 'not-a-date' },
     } as any, reply as any)
     expect(reply.statusCode).toBe(400)
   })

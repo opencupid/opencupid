@@ -78,20 +78,19 @@ describe('MessageService.listMessagesForConversation', () => {
     expect(result).toEqual({ messages: [], hasMore: false })
   })
 
-  it('uses cursor when before param is provided', async () => {
+  it('uses createdAt filter when before param is provided', async () => {
     const msgs = [{ id: 'm1' }, { id: 'm2' }]
     mockPrisma.message.findMany.mockResolvedValue(msgs)
-    const result = await service.listMessagesForConversation('c1', { limit: 5, before: 'cursor-id' })
+    const before = new Date('2026-02-16T21:21:12.661Z')
+    const result = await service.listMessagesForConversation('c1', { limit: 5, before })
     expect(mockPrisma.message.findMany).toHaveBeenCalledWith({
-      where: { conversationId: 'c1' },
+      where: { conversationId: 'c1', createdAt: { lt: before } },
       include: {
         sender: { include: { profileImages: { where: { position: 0 } } } },
         attachment: true,
       },
       orderBy: { createdAt: 'desc' },
       take: 5,
-      cursor: { id: 'cursor-id' },
-      skip: 1,
     })
     // Messages are reversed for display (oldest first)
     expect(result.messages).toEqual([{ id: 'm2' }, { id: 'm1' }])
