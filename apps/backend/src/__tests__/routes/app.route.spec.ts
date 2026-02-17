@@ -2,11 +2,11 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 
 // Mock the MaxMind client
 const mockMaxMindClient = {
-  country: vi.fn()
+  country: vi.fn(),
 }
 
 vi.mock('@maxmind/geoip2-node', () => ({
-  WebServiceClient: vi.fn(() => mockMaxMindClient)
+  WebServiceClient: vi.fn(() => mockMaxMindClient),
 }))
 
 // Mock the global __FRONTEND_VERSION__ constant
@@ -22,11 +22,11 @@ let reply: MockReply
 const mockAppConfig = vi.hoisted(() => ({
   NODE_ENV: 'development',
   MAXMIND_ACCOUNT_ID: 'test-account',
-  MAXMIND_LICENSE_KEY: 'test-key'
+  MAXMIND_LICENSE_KEY: 'test-key',
 }))
 
 vi.mock('@/lib/appconfig', () => ({
-  appConfig: mockAppConfig
+  appConfig: mockAppConfig,
 }))
 
 beforeEach(async () => {
@@ -45,10 +45,13 @@ describe('GET /location', () => {
     mockAppConfig.NODE_ENV = 'development'
     const handler = fastify.routes['GET /location']
 
-    await handler({
-      headers: { 'x-forwarded-for': '192.168.1.1' },
-      ip: '127.0.0.1'
-    } as any, reply as any)
+    await handler(
+      {
+        headers: { 'x-forwarded-for': '192.168.1.1' },
+        ip: '127.0.0.1',
+      } as any,
+      reply as any
+    )
 
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
@@ -60,15 +63,18 @@ describe('GET /location', () => {
   it('calls MaxMind service when NODE_ENV is production', async () => {
     mockAppConfig.NODE_ENV = 'production'
     mockMaxMindClient.country.mockResolvedValue({
-      country: { isoCode: 'US' }
+      country: { isoCode: 'US' },
     })
 
     const handler = fastify.routes['GET /location']
 
-    await handler({
-      headers: { 'x-forwarded-for': '8.8.8.8' },
-      ip: '8.8.8.8'
-    } as any, reply as any)
+    await handler(
+      {
+        headers: { 'x-forwarded-for': '8.8.8.8' },
+        ip: '8.8.8.8',
+      } as any,
+      reply as any
+    )
 
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
@@ -79,15 +85,18 @@ describe('GET /location', () => {
   it('calls MaxMind service when NODE_ENV is test', async () => {
     mockAppConfig.NODE_ENV = 'test'
     mockMaxMindClient.country.mockResolvedValue({
-      country: { isoCode: 'CA' }
+      country: { isoCode: 'CA' },
     })
 
     const handler = fastify.routes['GET /location']
 
-    await handler({
-      headers: { 'x-forwarded-for': '1.2.3.4' },
-      ip: '1.2.3.4'
-    } as any, reply as any)
+    await handler(
+      {
+        headers: { 'x-forwarded-for': '1.2.3.4' },
+        ip: '1.2.3.4',
+      } as any,
+      reply as any
+    )
 
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
@@ -101,10 +110,13 @@ describe('GET /location', () => {
 
     const handler = fastify.routes['GET /location']
 
-    await handler({
-      headers: { 'x-forwarded-for': '8.8.8.8' },
-      ip: '8.8.8.8'
-    } as any, reply as any)
+    await handler(
+      {
+        headers: { 'x-forwarded-for': '8.8.8.8' },
+        ip: '8.8.8.8',
+      } as any,
+      reply as any
+    )
 
     expect(reply.statusCode).toBe(500)
     expect(reply.payload.success).toBe(false)
@@ -114,15 +126,18 @@ describe('GET /location', () => {
   it('extracts client IP from x-forwarded-for header', async () => {
     mockAppConfig.NODE_ENV = 'production'
     mockMaxMindClient.country.mockResolvedValue({
-      country: { isoCode: 'FR' }
+      country: { isoCode: 'FR' },
     })
 
     const handler = fastify.routes['GET /location']
 
-    await handler({
-      headers: { 'x-forwarded-for': '203.0.113.1, 198.51.100.1' },
-      ip: '192.168.1.1'
-    } as any, reply as any)
+    await handler(
+      {
+        headers: { 'x-forwarded-for': '203.0.113.1, 198.51.100.1' },
+        ip: '192.168.1.1',
+      } as any,
+      reply as any
+    )
 
     expect(mockMaxMindClient.country).toHaveBeenCalledWith('203.0.113.1')
   })
@@ -130,15 +145,18 @@ describe('GET /location', () => {
   it('strips IPv6 prefix from IPv4-mapped addresses', async () => {
     mockAppConfig.NODE_ENV = 'production'
     mockMaxMindClient.country.mockResolvedValue({
-      country: { isoCode: 'DE' }
+      country: { isoCode: 'DE' },
     })
 
     const handler = fastify.routes['GET /location']
 
-    await handler({
-      headers: { 'x-forwarded-for': '::ffff:203.0.113.1' },
-      ip: '192.168.1.1'
-    } as any, reply as any)
+    await handler(
+      {
+        headers: { 'x-forwarded-for': '::ffff:203.0.113.1' },
+        ip: '192.168.1.1',
+      } as any,
+      reply as any
+    )
 
     expect(mockMaxMindClient.country).toHaveBeenCalledWith('203.0.113.1')
   })
@@ -148,9 +166,12 @@ describe('GET /version', () => {
   it('returns version info without update when no client version provided', async () => {
     const handler = fastify.routes['GET /version']
 
-    await handler({
-      query: {}
-    } as any, reply as any)
+    await handler(
+      {
+        query: {},
+      } as any,
+      reply as any
+    )
 
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
@@ -162,9 +183,12 @@ describe('GET /version', () => {
   it('returns update not available when versions match', async () => {
     const handler = fastify.routes['GET /version']
 
-    await handler({
-      query: { v: '0.5.0' }
-    } as any, reply as any)
+    await handler(
+      {
+        query: { v: '0.5.0' },
+      } as any,
+      reply as any
+    )
 
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
@@ -176,9 +200,12 @@ describe('GET /version', () => {
   it('returns update available when versions differ', async () => {
     const handler = fastify.routes['GET /version']
 
-    await handler({
-      query: { v: '0.4.9' }
-    } as any, reply as any)
+    await handler(
+      {
+        query: { v: '0.4.9' },
+      } as any,
+      reply as any
+    )
 
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
@@ -190,9 +217,12 @@ describe('GET /version', () => {
   it('returns update not available when client version is "unknown"', async () => {
     const handler = fastify.routes['GET /version']
 
-    await handler({
-      query: { v: 'unknown' }
-    } as any, reply as any)
+    await handler(
+      {
+        query: { v: 'unknown' },
+      } as any,
+      reply as any
+    )
 
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)

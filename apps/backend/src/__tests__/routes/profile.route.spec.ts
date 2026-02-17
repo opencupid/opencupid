@@ -18,10 +18,23 @@ vi.mock('../../services/messaging.service', () => ({
   MessageService: { getInstance: () => mockMessageService },
 }))
 vi.mock('../../api/mappers/profile.mappers', () => ({
-  mapDbProfileToOwnerProfile: vi.fn((_locale, db) => ({ id: db.id, publicName: db.publicName || 'mapped' })),
-  mapProfileSummary: vi.fn(p => ({ id: p.id, publicName: p.publicName, profileImages: p.profileImages })),
-  mapProfileWithContext: vi.fn((db, _dating, _locale) => ({ id: db.id, publicName: db.publicName || 'mapped' })),
-  mapProfileToPublic: vi.fn((db, _dating, _locale) => ({ id: db.id, publicName: db.publicName || 'mapped' })),
+  mapDbProfileToOwnerProfile: vi.fn((_locale, db) => ({
+    id: db.id,
+    publicName: db.publicName || 'mapped',
+  })),
+  mapProfileSummary: vi.fn(p => ({
+    id: p.id,
+    publicName: p.publicName,
+    profileImages: p.profileImages,
+  })),
+  mapProfileWithContext: vi.fn((db, _dating, _locale) => ({
+    id: db.id,
+    publicName: db.publicName || 'mapped',
+  })),
+  mapProfileToPublic: vi.fn((db, _dating, _locale) => ({
+    id: db.id,
+    publicName: db.publicName || 'mapped',
+  })),
 }))
 vi.mock('@/lib/appconfig', () => ({
   appConfig: {
@@ -154,7 +167,12 @@ describe('GET /:id', () => {
 
     const req = makeReq({
       params: { id: 'cm000000000000000000000p2' },
-      session: { lang: 'en', profileId: 'p1', hasActiveProfile: false, profile: { isDatingActive: false } },
+      session: {
+        lang: 'en',
+        profileId: 'p1',
+        hasActiveProfile: false,
+        profile: { isDatingActive: false },
+      },
     })
     await handler(req, reply as any)
     expect(reply.statusCode).toBe(403)
@@ -213,7 +231,13 @@ describe('GET /blocked', () => {
 describe('PATCH /me', () => {
   it('updates profile and returns 200', async () => {
     const handler = fastify.routes['PATCH /me']
-    const updatedDb = { id: 'p1', publicName: 'Updated', tags: [], profileImages: [], localized: [] }
+    const updatedDb = {
+      id: 'p1',
+      publicName: 'Updated',
+      tags: [],
+      profileImages: [],
+      localized: [],
+    }
     mockProfileService.updateCompleteProfile.mockResolvedValue(updatedDb)
 
     const req = makeReq({ body: { publicName: 'Updated' } })

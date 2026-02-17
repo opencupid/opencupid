@@ -64,16 +64,31 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
     <div
       class="w-100 d-flex justify-content-between align-items-center position-absolute top-0 left-0"
     >
-      <BackButton :show="!isFirst && !isLast" @click="goToPrevious" />
+      <BackButton
+        :show="!isFirst && !isLast"
+        @click="goToPrevious"
+      />
 
-        <LogoutButton v-if="isFirst" variant="link" class="btn btn-link link-secondary text-decoration-non">
-          <IconLogout class="svg-icon" />
-        </LogoutButton>
+      <LogoutButton
+        v-if="isFirst"
+        variant="link"
+        class="btn btn-link link-secondary text-decoration-non"
+      >
+        <IconLogout class="svg-icon" />
+      </LogoutButton>
     </div>
 
     <div class="wizard d-flex align-items-center flex-grow-1 col-12 justify-content-center">
-      <BForm id="onboarding" novalidate class="w-100" @submit.prevent="handleSubmit">
-        <fieldset v-if="isCurrent('publicname')" class="w-100">
+      <BForm
+        id="onboarding"
+        novalidate
+        class="w-100"
+        @submit.prevent="handleSubmit"
+      >
+        <fieldset
+          v-if="isCurrent('publicname')"
+          class="w-100"
+        >
           <div
             class="col-6 mx-auto d-flex align-items-center justify-content-center text-success mb-2 mb-md-4 animate__animated animate__fadeIn"
           >
@@ -96,7 +111,10 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
             <!-- I am from... -->
             {{ t('onboarding.location_title') }}
           </legend>
-          <LocationSelectorComponent v-model="formData.location" :geoIp="true" />
+          <LocationSelectorComponent
+            v-model="formData.location"
+            :geoIp="true"
+          />
         </fieldset>
 
         <fieldset v-else-if="isCurrent('looking_for')">
@@ -132,7 +150,10 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
             <!-- Select the languages you speak to help others connect with you. -->
             {{ t('onboarding.languages_subtitle') }}
           </p>
-          <LanguageSelector v-model="formData.languages" :required="true" />
+          <LanguageSelector
+            v-model="formData.languages"
+            :required="true"
+          />
         </fieldset>
 
         <fieldset v-else-if="isCurrent('introSocial')">
@@ -163,7 +184,10 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
           <ImageEditor />
         </fieldset>
 
-        <DatingSteps v-model="formData" :isCurrent></DatingSteps>
+        <DatingSteps
+          v-model="formData"
+          :isCurrent
+        ></DatingSteps>
 
         <fieldset v-if="isCurrent('confirm')">
           <slot> </slot>

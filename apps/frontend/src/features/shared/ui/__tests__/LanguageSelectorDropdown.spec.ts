@@ -6,19 +6,19 @@ const store = {
   currentLanguage: ref('en'),
   getAvailableLocalesWithLabels: () => [
     { value: 'en', label: 'English' },
-    { value: 'de', label: 'Deutsch' }
-  ]
+    { value: 'de', label: 'Deutsch' },
+  ],
 }
 vi.mock('@/store/i18nStore', () => ({ useI18nStore: () => store }))
 vi.mock('@/store/i18nStore.ts', () => ({ useI18nStore: () => store }))
-vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k:string) => k }) }))
+vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 
 import LanguageSelectorDropdown from '../LanguageSelectorDropdown.vue'
 
 const SelectStub = defineComponent({
   props: ['modelValue'],
   emits: ['update:modelValue'],
-  template:'<select :value="modelValue" @change="onChange($event)"><slot /></select>',
+  template: '<select :value="modelValue" @change="onChange($event)"><slot /></select>',
   setup(_, { emit }) {
     const onChange = (e: Event) => {
       const val = (e.target as HTMLSelectElement).value
@@ -27,11 +27,14 @@ const SelectStub = defineComponent({
     }
     const changed = ref('')
     return { onChange, changed }
-  }
+  },
 })
 const stubs = {
   BFormSelect: SelectStub,
-  BFormSelectOption: defineComponent({ props:['value'], template:'<option :value="value"><slot /></option>' })
+  BFormSelectOption: defineComponent({
+    props: ['value'],
+    template: '<option :value="value"><slot /></option>',
+  }),
 }
 
 describe('LanguageSelectorDropdown', () => {

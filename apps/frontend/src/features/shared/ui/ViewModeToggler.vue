@@ -13,7 +13,10 @@ const modes = [
 </script>
 
 <template>
-  <BButtonGroup aria-label="Toggle view mode" size="sm">
+  <BButtonGroup
+    aria-label="Toggle view mode"
+    size="sm"
+  >
     <BButton
       v-for="mode in modes"
       :key="mode.value"
@@ -22,7 +25,10 @@ const modes = [
       :pressed="modelValue === mode.value"
       @click="modelValue = mode.value"
     >
-      <component :is="mode.icon" class="svg-icon" />
+      <component
+        :is="mode.icon"
+        class="svg-icon"
+      />
     </BButton>
   </BButtonGroup>
 </template>

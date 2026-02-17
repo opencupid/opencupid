@@ -89,14 +89,21 @@ const isDeletable = computed(() => {
 
 <template>
   <div class="image-editor">
-    <BOverlay :show="imageStore.isLoading" spinner-type="grow" spinner-variant="primary">
+    <BOverlay
+      :show="imageStore.isLoading"
+      spinner-type="grow"
+      spinner-variant="primary"
+    >
       <div class="row">
         <div class="col-sm-12">
-          <div v-if="!model || model.length === 0" class="position-absolute end-0 me-5">
-<!--            <HelpScribble :text="t('profiles.image_editor_help')" direction="w" /> -->
+          <div
+            v-if="!model || model.length === 0"
+            class="position-absolute end-0 me-5"
+          >
+            <!--            <HelpScribble :text="t('profiles.image_editor_help')" direction="w" /> -->
           </div>
           <VueDraggableNext
-            class="row row-cols-2 row-cols-sm-3 row-cols-md-3 g-4  mx-4 sortable-grid"
+            class="row row-cols-2 row-cols-sm-3 row-cols-md-3 g-4 mx-4 sortable-grid"
             v-model="model"
             ghost-class="ghost"
             :sort="true"
@@ -106,7 +113,12 @@ const isDeletable = computed(() => {
             @change="handleReorder"
           >
             <!-- <TransitionGroup name="fade"> -->
-            <div v-for="img in model" :key="img.id" class="col thumbnail" :id="img.id">
+            <div
+              v-for="img in model"
+              :key="img.id"
+              class="col thumbnail"
+              :id="img.id"
+            >
               <div class="actions nodrag">
                 <button
                   class="btn btn-sm btn-secondary rounded-circle"
@@ -120,15 +132,26 @@ const isDeletable = computed(() => {
               </div>
               <div :class="{ removing: isRemoving[img.id] }">
                 <div class="ratio ratio-1x1">
-                  <ImageTag :image="img" className="rounded" variant="card" />
+                  <ImageTag
+                    :image="img"
+                    className="rounded"
+                    variant="card"
+                  />
                 </div>
               </div>
             </div>
-            <div v-if="remainingSlots > 0" class="col nodrag">
+            <div
+              v-if="remainingSlots > 0"
+              class="col nodrag"
+            >
               <ImageUpload />
             </div>
 
-            <div v-for="(_, i) in placeholderSlots" :key="'placeholder-' + i" class="col nodrag">
+            <div
+              v-for="(_, i) in placeholderSlots"
+              :key="'placeholder-' + i"
+              class="col nodrag"
+            >
               <div class="opacity-25 placeholder ratio ratio-1x1 bg-light rounded">
                 <IconPhoto class="svg-icon-100" />
               </div>

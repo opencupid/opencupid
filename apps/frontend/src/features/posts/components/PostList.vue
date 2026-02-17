@@ -80,30 +80,49 @@ function handleClose() {
 
 <template>
   <div class="post-list h-100 d-flex flex-column">
-    <div v-if="postStore.isLoading && posts.length === 0" class="mb-2 flex-shrink-0">
+    <div
+      v-if="postStore.isLoading && posts.length === 0"
+      class="mb-2 flex-shrink-0"
+    >
       <div class="loading-spinner"></div>
       <p>{{ $t('uicomponents.loading.loading') }}</p>
     </div>
 
-    <div v-else-if="postStore.error" class="text-danger mb-2 flex-shrink-0">
+    <div
+      v-else-if="postStore.error"
+      class="text-danger mb-2 flex-shrink-0"
+    >
       <p>{{ postStore.error }}</p>
-      <BButton variant="warning" @click="handleRetry" class="btn btn-primary">
+      <BButton
+        variant="warning"
+        @click="handleRetry"
+        class="btn btn-primary"
+      >
         {{ $t('uicomponents.error.retry') }}
       </BButton>
     </div>
 
-    <div v-else-if="posts.length === 0" class="mb-2 flex-shrink-0">
+    <div
+      v-else-if="posts.length === 0"
+      class="mb-2 flex-shrink-0"
+    >
       <p>{{ emptyMessage }}</p>
     </div>
 
-    <div ref="scrollContainer" class="container-fluid overflow-auto hide-scrollbar flex-grow-1 flex-shrink-1">
+    <div
+      ref="scrollContainer"
+      class="container-fluid overflow-auto hide-scrollbar flex-grow-1 flex-shrink-1"
+    >
       <TransitionGroup
         name="fade"
         tag="div"
         v-if="posts.length > 0"
         class="row row-cols-1 g-2 row-cols-sm-2 row-cols-lg-3 gx-4 gy-4"
       >
-        <BCol v-for="post in posts" :key="post.id">
+        <BCol
+          v-for="post in posts"
+          :key="post.id"
+        >
           <PostCard
             :post="post"
             :show-details="false"
@@ -119,8 +138,14 @@ function handleClose() {
       </TransitionGroup>
     </div>
 
-    <div v-if="isLoadingMore" class="text-center py-3">
-      <BSpinner small variant="primary" />
+    <div
+      v-if="isLoadingMore"
+      class="text-center py-3"
+    >
+      <BSpinner
+        small
+        variant="primary"
+      />
       <span class="ms-2 text-muted">{{ $t('uicomponents.loading.loading') }}</span>
     </div>
   </div>

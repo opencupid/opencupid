@@ -18,14 +18,13 @@ describe('OtpLoginComponent', () => {
         user: {} as any,
         isLoading: false,
         validationError: null,
-        validationResult: null
-
+        validationResult: null,
       },
-      global: { stubs: { FormKit: stubFormKit } }
+      global: { stubs: { FormKit: stubFormKit } },
     })
-      ; (wrapper.vm as any).otpInput = '123456'
+    ;(wrapper.vm as any).otpInput = '123456'
     expect((wrapper.vm as any).inputState).toBe(true)
-      ; (wrapper.vm as any).otpInput = '12345'
+    ;(wrapper.vm as any).otpInput = '12345'
     expect((wrapper.vm as any).inputState).toBe(false)
   })
 
@@ -37,9 +36,9 @@ describe('OtpLoginComponent', () => {
         validationError: null,
         validationResult: null,
       },
-      global: { stubs: { FormKit: stubFormKit } }
+      global: { stubs: { FormKit: stubFormKit } },
     })
-      ; (wrapper.vm as any).otpInput = '654321'
+    ;(wrapper.vm as any).otpInput = '654321'
     await (wrapper.vm as any).handleOTPEntered()
     expect(wrapper.emitted('otp:submit')![0]).toEqual(['654321'])
   })

@@ -1,10 +1,12 @@
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi } from 'vitest'
 
-vi.mock('./composables/useEnumOptions', () => ({ useEnumOptions: () => ({
-  genderOptions: () => [{ value: 'male', label: 'Male' }],
-  pronounsOptions: () => [{ value: 'he', label: 'He' }]
-}) }))
+vi.mock('./composables/useEnumOptions', () => ({
+  useEnumOptions: () => ({
+    genderOptions: () => [{ value: 'male', label: 'Male' }],
+    pronounsOptions: () => [{ value: 'he', label: 'He' }],
+  }),
+}))
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 vi.mock('@/features/shared/ui/GenderSelectorTitle.vue')
 

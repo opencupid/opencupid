@@ -24,7 +24,11 @@ const languages = computed(() => {
     class="tags list-unstyled mb-0 d-inline-flex flex-wrap align-items-center user-select-none"
     v-if="languages && languages.length"
   >
-    <li v-for="lang in languages" :key="lang.value" class="me-2">
+    <li
+      v-for="lang in languages"
+      :key="lang.value"
+      class="me-2"
+    >
       <BBadge variant="secondary">{{ lang.label }}</BBadge>
     </li>
   </ul>

@@ -33,7 +33,7 @@ describe('messageStore', () => {
   describe('handleIncomingMessage', () => {
     it('updates canReply to true when receiving a message (fixes My turn/Their turn bug)', async () => {
       const store = useMessageStore()
-      
+
       // Setup: conversation exists in store with canReply = false (initiated by current user)
       const existingConvo: ConversationSummary = {
         id: 'participant-1',
@@ -89,7 +89,7 @@ describe('messageStore', () => {
 
     it('moves conversation to top of list when receiving message', async () => {
       const store = useMessageStore()
-      
+
       const convo1: ConversationSummary = {
         id: 'participant-1',
         profileId: 'profile-1',
@@ -158,48 +158,47 @@ describe('messageStore', () => {
   })
 })
 
-  describe('fetchMessagesForConversation pagination', () => {
-    it('loads latest 10 messages and stores cursor metadata', async () => {
-      const store = useMessageStore()
-      mockApi.get.mockResolvedValue({
-        data: {
-          success: true,
-          messages: [{ id: 'm1' }, { id: 'm2' }],
-          nextCursor: 'm1',
-          hasMore: true,
-        },
-      })
-
-      await store.fetchMessagesForConversation('convo-1')
-
-      expect(mockApi.get).toHaveBeenCalledWith('/messages/convo-1', {
-        params: { take: 10 },
-      })
-      expect(store.messages.map(m => m.id)).toEqual(['m1', 'm2'])
-      expect(store.messageCursor).toBe('m1')
-      expect(store.hasMoreMessages).toBe(true)
+describe('fetchMessagesForConversation pagination', () => {
+  it('loads latest 10 messages and stores cursor metadata', async () => {
+    const store = useMessageStore()
+    mockApi.get.mockResolvedValue({
+      data: {
+        success: true,
+        messages: [{ id: 'm1' }, { id: 'm2' }],
+        nextCursor: 'm1',
+        hasMore: true,
+      },
     })
 
-    it('prepends older messages when loading more', async () => {
-      const store = useMessageStore()
-      store.activeConversation = { conversationId: 'convo-1' } as ConversationSummary
-      store.messages = [{ id: 'm3' }, { id: 'm4' }] as MessageDTO[]
-      store.hasMoreMessages = true
-      store.messageCursor = 'm3'
+    await store.fetchMessagesForConversation('convo-1')
 
-      mockApi.get.mockResolvedValue({
-        data: {
-          success: true,
-          messages: [{ id: 'm1' }, { id: 'm2' }],
-          nextCursor: null,
-          hasMore: false,
-        },
-      })
-
-      await store.fetchOlderMessages()
-
-      expect(store.messages.map(m => m.id)).toEqual(['m1', 'm2', 'm3', 'm4'])
-      expect(store.hasMoreMessages).toBe(false)
+    expect(mockApi.get).toHaveBeenCalledWith('/messages/convo-1', {
+      params: { take: 10 },
     })
+    expect(store.messages.map((m) => m.id)).toEqual(['m1', 'm2'])
+    expect(store.messageCursor).toBe('m1')
+    expect(store.hasMoreMessages).toBe(true)
   })
 
+  it('prepends older messages when loading more', async () => {
+    const store = useMessageStore()
+    store.activeConversation = { conversationId: 'convo-1' } as ConversationSummary
+    store.messages = [{ id: 'm3' }, { id: 'm4' }] as MessageDTO[]
+    store.hasMoreMessages = true
+    store.messageCursor = 'm3'
+
+    mockApi.get.mockResolvedValue({
+      data: {
+        success: true,
+        messages: [{ id: 'm1' }, { id: 'm2' }],
+        nextCursor: null,
+        hasMore: false,
+      },
+    })
+
+    await store.fetchOlderMessages()
+
+    expect(store.messages.map((m) => m.id)).toEqual(['m1', 'm2', 'm3', 'm4'])
+    expect(store.hasMoreMessages).toBe(false)
+  })
+})

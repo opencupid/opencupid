@@ -11,7 +11,7 @@ import { useMessageSentState } from '../composables/useMessageSentState'
 const showModal = defineModel<boolean>()
 
 const props = defineProps<{
-  profile: PublicProfileWithContext,
+  profile: PublicProfileWithContext
 }>()
 
 const emit = defineEmits<{
@@ -33,7 +33,6 @@ const handleModalShown = () => {
     }, 50)
   })
 }
-
 </script>
 
 <template>
@@ -55,8 +54,14 @@ const handleModalShown = () => {
     "
   >
     <template #title>
-      <h6 class="d-flex align-items-center m-0" v-if="!messageSent">
-        <ProfileThumbnail :profile="profile" class="me-2" />
+      <h6
+        class="d-flex align-items-center m-0"
+        v-if="!messageSent"
+      >
+        <ProfileThumbnail
+          :profile="profile"
+          class="me-2"
+        />
         {{
           $t('messaging.send_message_to_user', {
             name: profile.publicName || 'them',
@@ -78,7 +83,10 @@ const handleModalShown = () => {
         <div
           class="d-flex flex-column align-items-center justify-content-center h-100 text-success"
         >
-          <div class="my-4 animate__animated animate__zoomIn" style="height: 5rem">
+          <div
+            class="my-4 animate__animated animate__zoomIn"
+            style="height: 5rem"
+          >
             <IconMessage class="svg-icon-lg h-100 w-100" />
           </div>
           <h5 class="mb-4 text-center animate__animated animate__fadeInDown">

@@ -172,7 +172,13 @@ describe('PostService.update', () => {
 
   it('allows clearing location by setting fields to null', async () => {
     mockPost.post.findFirst.mockResolvedValue(postWithLocation)
-    mockPost.post.update.mockResolvedValue({ ...postWithLocation, country: null, cityName: null, lat: null, lon: null })
+    mockPost.post.update.mockResolvedValue({
+      ...postWithLocation,
+      country: null,
+      cityName: null,
+      lat: null,
+      lon: null,
+    })
 
     await service.update(postWithLocation.id, postWithLocation.postedById, {
       country: null,
@@ -246,7 +252,7 @@ describe('PostService.findNearby', () => {
     await service.findNearby(lat, lon, radius)
 
     const expectedLatRange = radius / 111.0
-    const expectedLonRange = radius / (111.0 * Math.cos(lat * Math.PI / 180))
+    const expectedLonRange = radius / (111.0 * Math.cos((lat * Math.PI) / 180))
 
     const call = mockPost.post.findMany.mock.calls[0][0]
     const postClause = call.where.OR[0]

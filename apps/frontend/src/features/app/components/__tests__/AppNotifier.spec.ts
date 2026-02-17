@@ -2,13 +2,16 @@ import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { nextTick } from 'vue'
 
-
 vi.mock('@/lib/bus', () => {
   const listeners: Record<string, any> = {}
   const bus = {
-    on: vi.fn((event: string, cb: any) => { listeners[event] = cb }),
+    on: vi.fn((event: string, cb: any) => {
+      listeners[event] = cb
+    }),
     off: vi.fn(),
-    emit(event: string, payload: any) { listeners[event]?.(payload) },
+    emit(event: string, payload: any) {
+      listeners[event]?.(payload)
+    },
   }
   return { bus } // ✅ named export, like the real module
 })
@@ -17,8 +20,8 @@ vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 vi.mock('../ApiErrorOverlay.vue', () => ({
   default: {
     props: ['show'],
-    template: '<div v-if="show" class="api-offline-overlay">overlay</div>'
-  }
+    template: '<div v-if="show" class="api-offline-overlay">overlay</div>',
+  },
 }))
 vi.mock('../LikeReceivedToast.vue', () => ({ default: 'LikeToast' }))
 vi.mock('../MatchReceivedToast.vue', () => ({ default: 'MatchToast' }))
@@ -51,7 +54,11 @@ describe('AppNotifier', () => {
     expect(opts.component).toBe('MsgToast')
     const close = vi.fn()
     cfg.onClick(close)
-    expect(push).toHaveBeenCalledWith({ name: 'Messaging', params: { conversationId: '42' }, force: true })
+    expect(push).toHaveBeenCalledWith({
+      name: 'Messaging',
+      params: { conversationId: '42' },
+      force: true,
+    })
     expect(close).toHaveBeenCalled()
   })
 

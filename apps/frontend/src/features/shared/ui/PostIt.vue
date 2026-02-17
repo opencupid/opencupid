@@ -1,5 +1,9 @@
 <template>
-  <div class="post-it" :class="variant" :style="warpStyle(id)">
+  <div
+    class="post-it"
+    :class="variant"
+    :style="warpStyle(id)"
+  >
     <div class="header mb-2">
       <slot name="header"></slot>
       <div class="pin-marker"></div>
@@ -21,10 +25,6 @@ defineProps({
     required: true,
   },
 })
-
-
-
-
 
 /** Small seeded PRNG so the warp is stable per id */
 function seedRand(seed: string) {
@@ -62,13 +62,9 @@ function warpStyle(id: string) {
     '--shadow': (0.1 + r() * 0.06).toString(),
   } as Record<string, string>
 }
-
-
 </script>
 
 <style scoped lang="scss">
-
-
 .o-post-it {
   background-color: #ffffcc; /* Default yellow */
   /* padding: 0.5rem; */
@@ -80,8 +76,6 @@ function warpStyle(id: string) {
   min-height: 150px; /* Example minimum height */
   /* transform: rotate(3deg);  */
 }
-
-
 
 /* PostIt.vue (scoped or global) */
 .post-it {

@@ -28,7 +28,7 @@ export class InteractionService {
     return InteractionService.instance
   }
 
-  private constructor() { }
+  private constructor() {}
 
   async like(fromId: string, toId: string): Promise<InteractionEdgePair> {
     if (fromId === toId) throw new Error('Cannot like yourself')
@@ -187,9 +187,9 @@ export class InteractionService {
         where: {
           OR: [
             { fromId, toId },
-            { fromId: toId, toId: fromId }
-          ]
-        }
+            { fromId: toId, toId: fromId },
+          ],
+        },
       })
       // Hide the profile from view (unidirectional)
       await tx.hiddenProfile.upsert({
@@ -204,7 +204,6 @@ export class InteractionService {
     await prisma.hiddenProfile.deleteMany({ where: { fromId, toId } })
   }
 
-
   async getHiddenProfileIds(profileId: string): Promise<string[]> {
     const hidden = await prisma.hiddenProfile.findMany({
       where: { fromId: profileId },
@@ -212,5 +211,4 @@ export class InteractionService {
     })
     return hidden.map(h => h.toId)
   }
-
 }

@@ -3,7 +3,6 @@ import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
 import { tagsInclude } from '@/db/includes/profileIncludes'
 import { profileImageInclude } from '@/db/includes/profileIncludes'
 
-
 import { createMockPrisma } from '../../test-utils/prisma'
 
 let service: any
@@ -14,10 +13,9 @@ beforeEach(async () => {
   mockPrisma = createMockPrisma()
   vi.doMock('../../lib/prisma', () => ({ prisma: mockPrisma }))
   const module = await import('../../services/profileMatch.service')
-    ; (module.ProfileMatchService as any).instance = undefined
+  ;(module.ProfileMatchService as any).instance = undefined
   service = module.ProfileMatchService.getInstance()
 })
-
 
 vi.mock('@/db/includes/blocklistWhereClause', () => ({
   blocklistWhereClause: vi.fn(() => ({})),
@@ -29,7 +27,6 @@ vi.mock('@/db/includes/profileIncludes', () => ({
 
 const mockProfileId = 'profile-123'
 
-
 const mockProfiles = [
   { id: 'profile-2', isActive: true, isSocialActive: true },
   { id: 'profile-3', isActive: true, isSocialActive: true },
@@ -40,9 +37,8 @@ const mockProfiles = [
 ]
 
 describe('ProfileMatchService.findSocialProfilesFor', () => {
-
   it('returns empty array if no user preferences found', async () => {
-    (mockPrisma.socialMatchFilter.findUnique as any).mockResolvedValue(null)
+    ;(mockPrisma.socialMatchFilter.findUnique as any).mockResolvedValue(null)
     const result = await service.findSocialProfilesFor(mockProfileId)
     expect(result).toEqual([])
   })
@@ -56,7 +52,6 @@ describe('ProfileMatchService.findSocialProfilesFor', () => {
     const result = await service.findSocialProfilesFor(mockProfileId)
     expect(result).toBe(mockProfiles)
   })
-
 
   it('country filter', async () => {
     const mockUserPrefs = {
@@ -79,6 +74,4 @@ describe('ProfileMatchService.findSocialProfilesFor', () => {
     const result = await service.findSocialProfilesFor(mockProfileId)
     expect(result).toBe(mockProfiles)
   })
-
-
 })

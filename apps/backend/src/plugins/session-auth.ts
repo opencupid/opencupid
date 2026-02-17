@@ -3,7 +3,6 @@ import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import fastifyJwt from '@fastify/jwt'
 import Redis from 'ioredis'
 
-
 import { UserService, type UserWithProfile } from 'src/services/user.service'
 import { SessionService } from '../services/session.service'
 import { sendUnauthorizedError } from 'src/api/helpers'
@@ -64,11 +63,11 @@ export default fp(async (fastify: FastifyInstance) => {
       let user
 
       try {
-        user = await UserService.getInstance().getUserById(userId, {
+        user = (await UserService.getInstance().getUserById(userId, {
           include: {
             profile: true,
           },
-        }) as UserWithProfile
+        })) as UserWithProfile
         if (!user) return sendUnauthorizedError(reply, 'User not found')
       } catch (error) {
         fastify.log.error('Error fetching user for session refresh:', error)
@@ -83,7 +82,7 @@ export default fp(async (fastify: FastifyInstance) => {
         userId: user.id,
         profileId: user.profile?.id || '',
         hasActiveProfile: user.profile.isActive,
-        profile: profile
+        profile: profile,
       }
       sess = await sessionService.getOrCreate(sessionId, sessionData)
       console.error(`Created new session for user ${user.id} with session ID ${sessionId}`)

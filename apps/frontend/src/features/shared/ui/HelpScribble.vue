@@ -26,14 +26,20 @@ const icons = {
 </script>
 
 <template>
-  <div class="help-scribble d-flex" :class="`direction-${direction}`">
-    <component :is="icons[direction]" class="svg-icon animate__animated animate__swing" />
+  <div
+    class="help-scribble d-flex"
+    :class="`direction-${direction}`"
+  >
+    <component
+      :is="icons[direction]"
+      class="svg-icon animate__animated animate__swing"
+    />
     <span class="animate__animated animate__tada">{{ text }}</span>
   </div>
 </template>
 
 <style scoped>
-@import '@fontsource/caveat'; 
+@import '@fontsource/caveat';
 
 .help-scribble {
   font-family: 'Caveat', cursive;

@@ -23,13 +23,21 @@ const { t } = useI18n()
     <template #overlay>
       <div class="api-error-overlay-content text-center text-dark d-flex flex-column">
         <div>
-          <BSpinner variant="danger" type="grow" small></BSpinner>
+          <BSpinner
+            variant="danger"
+            type="grow"
+            small
+          ></BSpinner>
         </div>
         <h3>{{ t('uicomponents.connection_error.title') }}</h3>
         <p class="fs-6">
           {{ t('uicomponents.connection_error.description') }}
         </p>
-        <img :src="ApiErrorImage" alt="" class="" />
+        <img
+          :src="ApiErrorImage"
+          alt=""
+          class=""
+        />
       </div>
     </template>
   </BOverlay>
@@ -47,7 +55,7 @@ img {
   width: 100%;
   min-height: 0;
   flex: 1 1 auto;
-  object-fit: contain;   /* keep full image visible */
+  object-fit: contain; /* keep full image visible */
   object-position: center;
 }
 </style>

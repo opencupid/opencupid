@@ -7,7 +7,7 @@ precacheAndRoute(self.__WB_MANIFEST)
 
 // Handle incoming push messages
 self.addEventListener('push', (event) => {
-  console.log('sw Push event received:', event) 
+  console.log('sw Push event received:', event)
   if (!event.data) return
 
   const data = event.data.json()
@@ -22,9 +22,7 @@ self.addEventListener('push', (event) => {
     },
   }
 
-  event.waitUntil(
-    self.registration.showNotification(title, options)
-  )
+  event.waitUntil(self.registration.showNotification(title, options))
 })
 
 // Handle notification click

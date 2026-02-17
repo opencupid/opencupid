@@ -2,12 +2,7 @@ import { defineStore } from 'pinia'
 import { axios } from '@/lib/api'
 import type { FeatureCollection, Point } from 'geojson'
 
-const searchOSMTagFilters = [
-  'place:city',
-  'place:town',
-  'place:village',
-  'place:hamlet',
-]
+const searchOSMTagFilters = ['place:city', 'place:town', 'place:village', 'place:hamlet']
 export interface KomootLocation {
   name: string
   country: string
@@ -17,23 +12,23 @@ export interface KomootLocation {
 
 // Define Komoot API response interfaces
 interface KomootFeatureProperties {
-  name: string;
-  countrycode: string;
-  [key: string]: unknown;
+  name: string
+  countrycode: string
+  [key: string]: unknown
 }
 
 interface KomootFeature {
-  type: 'Feature';
+  type: 'Feature'
   geometry: {
-    type: 'Point';
-    coordinates: [number, number];
-  };
-  properties: KomootFeatureProperties;
+    type: 'Point'
+    coordinates: [number, number]
+  }
+  properties: KomootFeatureProperties
 }
 
 interface KomootFeatureCollection {
-  type: 'FeatureCollection';
-  features: KomootFeature[];
+  type: 'FeatureCollection'
+  features: KomootFeature[]
 }
 
 export const useKomootStore = defineStore('komoot', {
@@ -62,14 +57,11 @@ export const useKomootStore = defineStore('komoot', {
       }
 
       try {
-        const res = await axios.get<KomootFeatureCollection>(
-          'https://photon.komoot.io/api/',
-          {
-            params,
-          },
-        )
+        const res = await axios.get<KomootFeatureCollection>('https://photon.komoot.io/api/', {
+          params,
+        })
         const features = res.data.features ?? []
-        this.results = features.map(f => ({
+        this.results = features.map((f) => ({
           name: f.properties.name,
           country: f.properties.countrycode,
           lat: f.geometry?.coordinates[1] ?? 0,

@@ -18,6 +18,4 @@ const props = defineProps<{ show: boolean }>()
   </span>
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>

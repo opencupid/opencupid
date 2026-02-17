@@ -22,7 +22,10 @@ const idAttr = computed(() => 'image-upload-input' + (captureAttr.value ?? ''))
 
 <template>
   <div class="image-upload-button position-relative">
-    <label class="file-upload-label" :for="idAttr">
+    <label
+      class="file-upload-label"
+      :for="idAttr"
+    >
       <BFormFile
         :id="idAttr"
         accept=".jpg,.jpeg,.png"
@@ -37,9 +40,18 @@ const idAttr = computed(() => 'image-upload-input' + (captureAttr.value ?? ''))
       </BFormFile>
       <div class="ratio ratio-1x1">
         <div class="btn btn-outline-primary w-100 file-upload-label">
-          <IconCamera2 class="svg-icon" v-if="captureAttr" />
-          <AvatarUploadIcon class="svg-icon" v-else-if="genericIcon" />
-          <IconPhoto class="svg-icon" v-else />
+          <IconCamera2
+            class="svg-icon"
+            v-if="captureAttr"
+          />
+          <AvatarUploadIcon
+            class="svg-icon"
+            v-else-if="genericIcon"
+          />
+          <IconPhoto
+            class="svg-icon"
+            v-else
+          />
         </div>
       </div>
     </label>

@@ -120,7 +120,10 @@ onUnmounted(() => {
         </div>
       </template>
     </Multiselect>
-    <div class="mt-1 form-text text-muted hint" :class="{ 'opacity-0': !showHint }">
+    <div
+      class="mt-1 form-text text-muted hint"
+      :class="{ 'opacity-0': !showHint }"
+    >
       <!-- <small>{{ t('profiles.forms.city_start_typing') }}</small> -->
     </div>
   </div>

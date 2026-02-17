@@ -7,7 +7,7 @@ import type {
   ConversationSummary,
   MessageDTO,
   MessageInConversation,
-  SendMessagePayload
+  SendMessagePayload,
 } from '@zod/messaging/messaging.dto'
 import type {
   MessagesResponse,
@@ -17,18 +17,17 @@ import type {
 } from '@zod/apiResponse.dto'
 import { storeError, type StoreError, type StoreResponse, storeSuccess } from '@/store/helpers'
 
-
 type MessageStoreState = {
-  conversations: ConversationSummary[],
-  messages: MessageDTO[],
-  activeConversation: ConversationSummary | null,
-  hasUnreadMessages: boolean,
-  isSending: boolean,
-  isLoading: boolean,
-  error: StoreError | null,
-  messageCursor: string | null,
-  hasMoreMessages: boolean,
-  isLoadingMoreMessages: boolean,
+  conversations: ConversationSummary[]
+  messages: MessageDTO[]
+  activeConversation: ConversationSummary | null
+  hasUnreadMessages: boolean
+  isSending: boolean
+  isLoading: boolean
+  error: StoreError | null
+  messageCursor: string | null
+  hasMoreMessages: boolean
+  isLoadingMoreMessages: boolean
 }
 
 export const useMessageStore = defineStore('message', {
@@ -46,11 +45,11 @@ export const useMessageStore = defineStore('message', {
   }),
 
   actions: {
-
     async handleIncomingMessage(message: MessageDTO) {
-
       // Update conversation summary (and bump it to top)
-      const convoIndex = this.conversations.findIndex(c => c.conversationId === message.conversationId)
+      const convoIndex = this.conversations.findIndex(
+        (c) => c.conversationId === message.conversationId
+      )
 
       if (convoIndex === -1) {
         await this.fetchConversations() // Fetch conversations if not found
@@ -70,13 +69,13 @@ export const useMessageStore = defineStore('message', {
       // If this is the active conversation, append to visible messages
       if (this.activeConversation?.conversationId === message.conversationId) {
         // Check if message already exists to prevent duplicates
-        if (!this.messages.find(m => m.id === message.id)) {
+        if (!this.messages.find((m) => m.id === message.id)) {
           this.messages.push(message)
         }
       } else {
         // Emit notification for new message
         // this occurs here instead of the AppNotifier.vue handling it directly
-        // because we only want to send popup notifications 
+        // because we only want to send popup notifications
         // *if* the conversation it's in is not already open
         // (this is to avoid popup spam when the user is in the messaging view)
         bus.emit('notification:new_message', message)
@@ -85,7 +84,7 @@ export const useMessageStore = defineStore('message', {
 
     // Update a conversation in the list
     updateConvo(convo: ConversationSummary) {
-      const index = this.conversations.findIndex(c => c.conversationId === convo.conversationId)
+      const index = this.conversations.findIndex((c) => c.conversationId === convo.conversationId)
       if (index !== -1) {
         this.conversations[index] = convo
       } else {
@@ -96,14 +95,17 @@ export const useMessageStore = defineStore('message', {
     // Check last read timestamp against last message and update unread flag
     updateUnreadFlag() {
       this.hasUnreadMessages = this.conversations
-        .filter(c => c.lastMessage?.isMine !== true)
-        .some(c => {
+        .filter((c) => c.lastMessage?.isMine !== true)
+        .some((c) => {
           const lastMessage = c.lastMessage?.createdAt || new Date(0) // Fallback to epoch if no last message
           return c.lastReadAt ? c.lastReadAt < lastMessage : true
         })
     },
 
-    async fetchMessagesForConversation(conversationId: string, options?: { cursor?: string; append?: boolean }): Promise<MessageInConversation[]> {
+    async fetchMessagesForConversation(
+      conversationId: string,
+      options?: { cursor?: string; append?: boolean }
+    ): Promise<MessageInConversation[]> {
       try {
         const isLoadingOlder = Boolean(options?.append)
         if (isLoadingOlder) {
@@ -130,8 +132,10 @@ export const useMessageStore = defineStore('message', {
           this.hasMoreMessages = res.data.hasMore
 
           if (isLoadingOlder) {
-            const existingIds = new Set(this.messages.map(message => message.id))
-            const olderMessages = res.data.messages.filter(message => !existingIds.has(message.id))
+            const existingIds = new Set(this.messages.map((message) => message.id))
+            const olderMessages = res.data.messages.filter(
+              (message) => !existingIds.has(message.id)
+            )
             this.messages = [...olderMessages, ...this.messages]
           } else {
             this.messages = res.data.messages
@@ -154,7 +158,12 @@ export const useMessageStore = defineStore('message', {
     },
 
     async fetchOlderMessages(): Promise<MessageInConversation[]> {
-      if (!this.activeConversation || !this.hasMoreMessages || !this.messageCursor || this.isLoadingMoreMessages) {
+      if (
+        !this.activeConversation ||
+        !this.hasMoreMessages ||
+        !this.messageCursor ||
+        this.isLoadingMoreMessages
+      ) {
         return []
       }
 
@@ -168,7 +177,9 @@ export const useMessageStore = defineStore('message', {
       try {
         this.isLoading = true
         this.error = null
-        const res = await safeApiCall(() => api.get<ConversationsResponse>('/messages/conversations'))
+        const res = await safeApiCall(() =>
+          api.get<ConversationsResponse>('/messages/conversations')
+        )
         if (res.data.success) {
           this.conversations = res.data.conversations
           this.updateUnreadFlag()
@@ -184,7 +195,9 @@ export const useMessageStore = defineStore('message', {
 
     async markAsRead(convoId: string) {
       try {
-        const updateConvo = await safeApiCall(() => api.post<ConversationResponse>(`/messages/conversations/${convoId}/mark-read`))
+        const updateConvo = await safeApiCall(() =>
+          api.post<ConversationResponse>(`/messages/conversations/${convoId}/mark-read`)
+        )
         if (updateConvo.data.success) {
           const updatedConvo: ConversationSummary = updateConvo.data.conversation
           this.updateConvo(updatedConvo)
@@ -206,18 +219,19 @@ export const useMessageStore = defineStore('message', {
         }
         this.isSending = true
         this.error = null
-        const res = await safeApiCall(() => api.post<SendMessageResponse>(`/messages/message`, payload))
+        const res = await safeApiCall(() =>
+          api.post<SendMessageResponse>(`/messages/message`, payload)
+        )
         const { conversation, message } = res.data
-        if (!message)
-          return storeError(new Error('Message not sent'))
+        if (!message) return storeError(new Error('Message not sent'))
         // Move conversation to top, remove any old instance
         this.conversations = [
           conversation,
-          ...this.conversations.filter(c => c.conversationId !== conversation.conversationId),
+          ...this.conversations.filter((c) => c.conversationId !== conversation.conversationId),
         ]
         if (this.activeConversation?.conversationId === conversation.conversationId) {
           // Check if message already exists to prevent duplicates
-          if (!this.messages.find(m => m.id === message.id)) {
+          if (!this.messages.find((m) => m.id === message.id)) {
             this.messages.push(message)
           }
         }
@@ -253,13 +267,12 @@ export const useMessageStore = defineStore('message', {
         )
 
         const { conversation, message } = res.data
-        if (!message)
-          return storeError(new Error('Voice message not sent'))
+        if (!message) return storeError(new Error('Voice message not sent'))
 
         // Move conversation to top, remove any old instance
         this.conversations = [
           conversation,
-          ...this.conversations.filter(c => c.conversationId !== conversation.conversationId),
+          ...this.conversations.filter((c) => c.conversationId !== conversation.conversationId),
         ]
         if (this.activeConversation?.conversationId === conversation.conversationId) {
           this.messages.push(message)
@@ -285,7 +298,7 @@ export const useMessageStore = defineStore('message', {
     },
 
     async setActiveConversationById(conversationId: string) {
-      const convo = this.conversations.find(c => c.conversationId === conversationId)
+      const convo = this.conversations.find((c) => c.conversationId === conversationId)
       if (convo) {
         await this.setActiveConversation(convo)
       } else {
@@ -294,7 +307,6 @@ export const useMessageStore = defineStore('message', {
         this.messages = []
       }
     },
-
 
     async initialize() {
       await this.fetchConversations()
@@ -313,8 +325,7 @@ export const useMessageStore = defineStore('message', {
       this.messageCursor = null
       this.hasMoreMessages = false
       this.isLoadingMoreMessages = false
-    }
-
+    },
   },
 })
 

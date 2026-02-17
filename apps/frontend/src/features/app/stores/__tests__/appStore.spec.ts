@@ -6,13 +6,13 @@ import * as apiModule from '@/lib/api'
 // Mock the api module
 vi.mock('@/lib/api', () => ({
   api: {
-    get: vi.fn()
-  }
+    get: vi.fn(),
+  },
 }))
 
 // Mock __APP_VERSION__
 vi.stubGlobal('__APP_VERSION__', {
-  app: '0.5.0'
+  app: '0.5.0',
 })
 
 describe('useAppStore - checkVersion', () => {
@@ -29,9 +29,9 @@ describe('useAppStore - checkVersion', () => {
         version: {
           updateAvailable: false,
           frontendVersion: '0.5.0',
-          currentVersion: '0.5.0'
-        }
-      }
+          currentVersion: '0.5.0',
+        },
+      },
     })
 
     const store = useAppStore()
@@ -44,7 +44,7 @@ describe('useAppStore - checkVersion', () => {
     expect(store.updateAvailable).toBe(false)
     expect(store.latestVersion).toBe('0.5.0')
     expect(mockApi.get).toHaveBeenCalledWith('/app/version', {
-      params: { v: '0.5.0' }
+      params: { v: '0.5.0' },
     })
   })
 
@@ -56,9 +56,9 @@ describe('useAppStore - checkVersion', () => {
         version: {
           updateAvailable: true,
           frontendVersion: '0.6.0',
-          currentVersion: '0.5.0'
-        }
-      }
+          currentVersion: '0.5.0',
+        },
+      },
     })
 
     const store = useAppStore()
@@ -94,16 +94,16 @@ describe('useAppStore - checkVersion', () => {
         version: {
           updateAvailable: false,
           frontendVersion: '0.5.0',
-          currentVersion: '0.5.0'
-        }
-      }
+          currentVersion: '0.5.0',
+        },
+      },
     })
 
     const store = useAppStore()
     await store.checkVersion()
 
     expect(mockApi.get).toHaveBeenCalledWith('/app/version', {
-      params: { v: '0.5.0' }
+      params: { v: '0.5.0' },
     })
   })
 })

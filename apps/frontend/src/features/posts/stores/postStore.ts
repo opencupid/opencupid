@@ -28,14 +28,15 @@ export const usePostStore = defineStore('posts', {
 
   getters: {
     getPostById: (state) => (id: string) => {
-      return state.posts.find(post => post.id === id) ||
-        state.myPosts.find(post => post.id === id)
+      return (
+        state.posts.find((post) => post.id === id) || state.myPosts.find((post) => post.id === id)
+      )
     },
     getPostsByType: (state) => (type: PostTypeType) => {
-      return state.posts.filter(post => post.type === type)
+      return state.posts.filter((post) => post.type === type)
     },
-    getOffers: (state) => state.posts.filter(post => post.type === 'OFFER'),
-    getRequests: (state) => state.posts.filter(post => post.type === 'REQUEST'),
+    getOffers: (state) => state.posts.filter((post) => post.type === 'OFFER'),
+    getRequests: (state) => state.posts.filter((post) => post.type === 'REQUEST'),
   },
 
   actions: {
@@ -44,9 +45,7 @@ export const usePostStore = defineStore('posts', {
       this.error = null
 
       try {
-        const r = await safeApiCall<{ data: CreatePostResponse }>(
-          () => api.post('/posts', payload)
-        )
+        const r = await safeApiCall<{ data: CreatePostResponse }>(() => api.post('/posts', payload))
 
         const response = r.data
 
@@ -70,14 +69,14 @@ export const usePostStore = defineStore('posts', {
       this.error = null
 
       try {
-        const r = await safeApiCall<{data:UpdatePostResponse}>(
-          () => api.patch(`/posts/${id}`, payload)
+        const r = await safeApiCall<{ data: UpdatePostResponse }>(() =>
+          api.patch(`/posts/${id}`, payload)
         )
         const response = r.data
 
         if (response.success) {
           // Update in myPosts array
-          const index = this.myPosts.findIndex(post => post.id === id)
+          const index = this.myPosts.findIndex((post) => post.id === id)
           if (index !== -1) {
             this.myPosts[index] = response.post
           }
@@ -105,17 +104,15 @@ export const usePostStore = defineStore('posts', {
       this.error = null
 
       try {
-        const r = await safeApiCall<{data:DeletePostResponse}>(
-          () => api.delete(`/posts/${id}`)
-        )
+        const r = await safeApiCall<{ data: DeletePostResponse }>(() => api.delete(`/posts/${id}`))
         const response = r.data
 
         if (response.success) {
           // Remove from myPosts
-          this.myPosts = this.myPosts.filter(post => post.id !== id)
+          this.myPosts = this.myPosts.filter((post) => post.id !== id)
 
           // Remove from posts if it exists there
-          this.posts = this.posts.filter(post => post.id !== id)
+          this.posts = this.posts.filter((post) => post.id !== id)
 
           // Clear current post if it's the same
           if (this.currentPost?.id === id) {
@@ -140,19 +137,19 @@ export const usePostStore = defineStore('posts', {
       this.error = null
 
       try {
-        const r = await safeApiCall<{data:UpdatePostResponse}>(
-          () => api.patch(`/posts/${id}`, { isVisible })
+        const r = await safeApiCall<{ data: UpdatePostResponse }>(() =>
+          api.patch(`/posts/${id}`, { isVisible })
         )
         const response = r.data
 
         if (response.success) {
-          const index = this.myPosts.findIndex(post => post.id === id)
+          const index = this.myPosts.findIndex((post) => post.id === id)
           if (index !== -1) {
             this.myPosts[index] = response.post
           }
 
           if (!response.post.isVisible) {
-            this.posts = this.posts.filter(post => post.id !== id)
+            this.posts = this.posts.filter((post) => post.id !== id)
           }
 
           if (this.currentPost?.id === id) {
@@ -180,12 +177,15 @@ export const usePostStore = defineStore('posts', {
       return this.setPostVisibility(id, true)
     },
 
-    async loadPosts(scope: 'all' | 'nearby' | 'recent' | 'my', options: {
-      type?: PostTypeType
-      page?: number
-      pageSize?: number
-      nearbyParams?: { lat: number; lon: number; radius?: number }
-    } = {}) {
+    async loadPosts(
+      scope: 'all' | 'nearby' | 'recent' | 'my',
+      options: {
+        type?: PostTypeType
+        page?: number
+        pageSize?: number
+        nearbyParams?: { lat: number; lon: number; radius?: number }
+      } = {}
+    ) {
       const { type, page = 0, pageSize = 20, nearbyParams } = options
       const baseQuery: PostQueryInput = {
         type,
@@ -217,9 +217,7 @@ export const usePostStore = defineStore('posts', {
       this.error = null
 
       try {
-        const r = await safeApiCall<{data:PostResponse}>(
-          () => api.get(`/posts/${id}`)
-        )
+        const r = await safeApiCall<{ data: PostResponse }>(() => api.get(`/posts/${id}`))
         const response = r.data
 
         if (response.success) {
@@ -247,8 +245,8 @@ export const usePostStore = defineStore('posts', {
         if (query.limit) params.set('limit', query.limit.toString())
         if (query.offset) params.set('offset', query.offset.toString())
 
-        const r = await safeApiCall<{ data: PostsResponse }>(
-          () => api.get(`/posts?${params.toString()}`)
+        const r = await safeApiCall<{ data: PostsResponse }>(() =>
+          api.get(`/posts?${params.toString()}`)
         )
         const response = r.data
 
@@ -284,8 +282,8 @@ export const usePostStore = defineStore('posts', {
         if (query.limit) params.set('limit', query.limit.toString())
         if (query.offset) params.set('offset', query.offset.toString())
 
-        const r = await safeApiCall<{ data: PostsResponse }>(
-          () => api.get(`/posts/nearby?${params.toString()}`)
+        const r = await safeApiCall<{ data: PostsResponse }>(() =>
+          api.get(`/posts/nearby?${params.toString()}`)
         )
         const response = r.data
 
@@ -318,8 +316,8 @@ export const usePostStore = defineStore('posts', {
         if (query.limit) params.set('limit', query.limit.toString())
         if (query.offset) params.set('offset', query.offset.toString())
 
-        const r = await safeApiCall<{ data: PostsResponse }>(
-          () => api.get(`/posts/recent?${params.toString()}`)
+        const r = await safeApiCall<{ data: PostsResponse }>(() =>
+          api.get(`/posts/recent?${params.toString()}`)
         )
         const response = r.data
 
@@ -354,8 +352,8 @@ export const usePostStore = defineStore('posts', {
 
         // We'll need to get the current profile ID from auth store
         // For now, we'll use a placeholder endpoint
-        const r = await safeApiCall<{ data: PostsResponse }>(
-          () => api.get(`/posts/profile/me?${params.toString()}`)
+        const r = await safeApiCall<{ data: PostsResponse }>(() =>
+          api.get(`/posts/profile/me?${params.toString()}`)
         )
         const response = r.data
 

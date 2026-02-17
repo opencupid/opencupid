@@ -47,16 +47,30 @@ const handleBlock = async () => {
 </script>
 
 <template>
-  <div :class="{ dating: profile.isDatingActive }" class="public-profile" style="min-height: 100%">
-    <StoreErrorOverlay v-if="error" :error="error">
+  <div
+    :class="{ dating: profile.isDatingActive }"
+    class="public-profile"
+    style="min-height: 100%"
+  >
+    <StoreErrorOverlay
+      v-if="error"
+      :error="error"
+    >
       <template #default="{ error }">
-        <BButton v-if="error.status" variant="primary" @click="$emit('intent:back')">
+        <BButton
+          v-if="error.status"
+          variant="primary"
+          @click="$emit('intent:back')"
+        >
           Keep browsing though!
         </BButton>
       </template>
     </StoreErrorOverlay>
 
-    <div v-else class="h-100 position-relative">
+    <div
+      v-else
+      class="h-100 position-relative"
+    >
       <div class="secondary-nav position-absolute w-100 py-2 text-color-white">
         <PublicProfileSecondaryNav
           @intent:back="$emit('intent:back')"
@@ -65,10 +79,19 @@ const handleBlock = async () => {
       </div>
       <BPlaceholderWrapper :loading="isLoading">
         <template #loading>
-          <BPlaceholderCard class="w-100 opacity-50" img-height="250" animation="glow" no-button />
+          <BPlaceholderCard
+            class="w-100 opacity-50"
+            img-height="250"
+            animation="glow"
+            no-button
+          />
         </template>
 
-        <ProfileContent :profile :isLoading="isLoading" class="" />
+        <ProfileContent
+          :profile
+          :isLoading="isLoading"
+          class=""
+        />
 
         <div class="interactions position-fixed w-100">
           <ProfileInteractions

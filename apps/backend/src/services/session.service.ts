@@ -7,7 +7,7 @@ export class SessionService {
   constructor(
     private redis: Redis,
     private ttlSec = 60 * 60 * 24 * 7 // 7 days
-  ) { }
+  ) {}
 
   private sessionKey(id: string) {
     return `session:${id}`
@@ -22,11 +22,7 @@ export class SessionService {
   async getOrCreate(id: string, data: SessionData): Promise<SessionData> {
     const hkey = this.sessionKey(id)
 
-    await this.redis
-      .multi()
-      .set(hkey, JSON.stringify(data))
-      .expire(hkey, this.ttlSec)
-      .exec()
+    await this.redis.multi().set(hkey, JSON.stringify(data)).expire(hkey, this.ttlSec).exec()
 
     return data
   }

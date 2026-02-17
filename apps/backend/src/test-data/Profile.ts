@@ -3,10 +3,18 @@ import 'dotenv/config'
 import { faker } from '@faker-js/faker'
 import fs from 'fs'
 import path from 'path'
-import { allFakers } from '@faker-js/faker';
+import { allFakers } from '@faker-js/faker'
 
 import { randomBoolean } from './utils'
-import { Gender, HasKids, Prisma, PrismaClient, ProfileImage, Pronouns, RelationshipStatus } from '@prisma/client'
+import {
+  Gender,
+  HasKids,
+  Prisma,
+  PrismaClient,
+  ProfileImage,
+  Pronouns,
+  RelationshipStatus,
+} from '@prisma/client'
 
 import { ImageService } from '@/services/image.service'
 import { ProfileService } from '@/services/profile.service'
@@ -44,7 +52,6 @@ export function createRandomUser() {
     // roles: ['user'],
   }
 }
-
 
 let tags = [] as any[]
 let cities = [] as any[]
@@ -100,24 +107,25 @@ async function main() {
       isOnboarded: true,
     }
 
-
     const datingProfile = isDatingActive
       ? {
-        work: f.person.jobTitle(),
-        birthday: faker.date.birthdate({ min: 18, max: 35, mode: 'age' }),
-        gender: gender as Gender,
-        relationship: faker.helpers.enumValue(RelationshipStatus),
-        hasKids: faker.helpers.enumValue(HasKids) as HasKids,
-        pronouns: faker.helpers.enumValue(Pronouns) as Pronouns,
-      }
+          work: f.person.jobTitle(),
+          birthday: faker.date.birthdate({ min: 18, max: 35, mode: 'age' }),
+          gender: gender as Gender,
+          relationship: faker.helpers.enumValue(RelationshipStatus),
+          hasKids: faker.helpers.enumValue(HasKids) as HasKids,
+          pronouns: faker.helpers.enumValue(Pronouns) as Pronouns,
+        }
       : {}
 
-      const datingPrefs = isDatingActive? {
+    const datingPrefs = isDatingActive
+      ? {
           prefAgeMin: 18,
-        prefAgeMax: 100,
-        prefGender: [],
-        prefKids: []
-      } : {}
+          prefAgeMax: 100,
+          prefGender: [],
+          prefKids: [],
+        }
+      : {}
 
     const data: Prisma.ProfileCreateInput = {
       ...baseProfile,
@@ -126,8 +134,8 @@ async function main() {
       city: { connect: { id: city.id } },
       tags: {
         create: randomTags.map(tag => ({
-          tag: { connect: { id: tag.id } }
-        }))
+          tag: { connect: { id: tag.id } },
+        })),
       },
       localized: {
         create: langs.flatMap(locale => [
@@ -150,10 +158,9 @@ async function main() {
       // console.dir(data, { depth: null, colors: true })
 
       profile = await prisma.profile.create({
-        data: data
+        data: data,
       })
       // console.dir(profile, { depth: null, colors: true })
-
     } catch (error) {
       // console.dir(error, { depth: null, colors: true })
       console.error(`Error creating profile for user ${createdUser.email}:`, error)
@@ -166,10 +173,7 @@ async function main() {
     const profileImage = await attachRandomImage(profile, gender, createdUser.id)
     if (profileImage) {
       await profileService.addProfileImage(profile.id, profileImage?.id)
-    }
-    else throw new Error(`Failed to attach image to profile ${profile.id}`)
-   
-
+    } else throw new Error(`Failed to attach image to profile ${profile.id}`)
   }
 }
 
@@ -182,9 +186,6 @@ main()
     // await prisma.$disconnect()
     // process.exit(0)
   })
-
-
-
 
 async function fetchTags() {
   return await prisma.tag.findMany({
@@ -225,7 +226,11 @@ async function initializeImagePools() {
   }
 }
 
-async function attachRandomImage(profile: any, gender: string, userId: string): Promise<ProfileImage | null> {
+async function attachRandomImage(
+  profile: any,
+  gender: string,
+  userId: string
+): Promise<ProfileImage | null> {
   const genderKey = gender.toLowerCase()
   const pool = genderImagePool.get(genderKey)
 

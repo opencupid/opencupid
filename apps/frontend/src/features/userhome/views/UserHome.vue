@@ -54,7 +54,10 @@ const siteName = __APP_CONFIG__.SITE_NAME
         </h2>
         <LikesAndMatchesBanner class="my-3" />
 
-        <div v-if="newProfiles.length > 0" class="mb-4">
+        <div
+          v-if="newProfiles.length > 0"
+          class="mb-4"
+        >
           <h5>
             <!-- Meet new people -->
             {{ $t('home.meet_new_people') }}

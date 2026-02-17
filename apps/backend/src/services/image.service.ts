@@ -13,7 +13,6 @@ import sharp from 'sharp'
 
 import { ImageProcessor } from './imageprocessor'
 
-
 type Variant = {
   name: string
   width: number
@@ -33,7 +32,7 @@ export class ImageService {
   /**
    * Private constructor to prevent direct instantiation
    */
-  private constructor() { }
+  private constructor() {}
 
   /**
    * Get singleton instance
@@ -44,7 +43,6 @@ export class ImageService {
     }
     return ImageService.instance
   }
-
 
   /**
    * Get a single image by ID for the authenticated user
@@ -69,7 +67,10 @@ export class ImageService {
   getSignedUrls(image: { storagePath: string }): { size: string; url: string }[] {
     const urlBase = appConfig.IMAGE_URL_BASE
     const base = image.storagePath
-    const imgSet = variants.map(s => ({ size: s.name, url: signUrl(`${urlBase}/${base}-${s.name}.webp`) }))
+    const imgSet = variants.map(s => ({
+      size: s.name,
+      url: signUrl(`${urlBase}/${base}-${s.name}.webp`),
+    }))
     imgSet.push({ size: 'original', url: signUrl(`${urlBase}/${base}-original.jpg`) })
     return imgSet
   }
@@ -136,12 +137,9 @@ export class ImageService {
 
     const originalPath = path.join(outputDir, `${baseName}-original.jpg`)
 
-    const orientFix = await sharp(buffer)
-      .rotate()                // auto-orient pixels
+    const orientFix = await sharp(buffer).rotate() // auto-orient pixels
 
-    await orientFix.keepIccProfile()
-      .jpeg({ quality: 100 })
-      .toFile(originalPath)
+    await orientFix.keepIccProfile().jpeg({ quality: 100 }).toFile(originalPath)
 
     const processor = new ImageProcessor(await orientFix.toBuffer())
     await processor.analyze()
@@ -197,7 +195,6 @@ export class ImageService {
 
     return outputPaths
   }
-
 
   /**
    * Update an existing ProfileImage's metadata
@@ -284,8 +281,4 @@ export class ImageService {
     // Return them sorted by position
     return updated.sort((a: any, b: any) => a.position - b.position)
   }
-
-
-
-
 }

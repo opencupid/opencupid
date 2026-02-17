@@ -1,5 +1,5 @@
 import countries from 'i18n-iso-countries'
-import { bus } from '@/lib/bus';
+import { bus } from '@/lib/bus'
 
 import { useI18nStore } from '@/store/i18nStore'
 
@@ -20,7 +20,7 @@ const localeLoaders: Record<string, () => Promise<any>> = {
   pt: () => import('i18n-iso-countries/langs/pt.json'),
   ro: () => import('i18n-iso-countries/langs/ro.json'),
   sk: () => import('i18n-iso-countries/langs/sk.json'),
-};
+}
 
 let language = 'en'
 
@@ -28,28 +28,26 @@ let language = 'en'
 async function ensureCountryLocale(locale: string) {
   if (loadedLocales.has(locale)) return
 
-  const loader = localeLoaders[locale];
+  const loader = localeLoaders[locale]
   if (!loader) {
-    console.warn(`Unsupported locale: ${locale}`);
-    return;
+    console.warn(`Unsupported locale: ${locale}`)
+    return
   }
-  const mod = await loader();
+  const mod = await loader()
   // console.log(`Registering country locale: ${locale}`, mod.default);
-  countries.registerLocale(mod.default);
+  countries.registerLocale(mod.default)
   loadedLocales.add(locale)
   language = locale
 }
 
-
 export async function initialize(locale: string) {
   await ensureCountryLocale(locale)
   bus.on('language:changed', async ({ language }) => {
-    await useCountries().ensureCountryLocale(language);
+    await useCountries().ensureCountryLocale(language)
   })
 }
 
 export function useCountries() {
-
   const getCountryOptions = () => {
     const list = countries.getNames(language, {
       select: 'official',

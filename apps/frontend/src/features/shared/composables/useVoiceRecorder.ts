@@ -19,8 +19,8 @@ export function useVoiceRecorder(maxDuration: number = 120) {
   // Check if MediaRecorder is supported
   const checkSupport = () => {
     isSupported.value = !!(
-      navigator.mediaDevices && 
-      typeof navigator.mediaDevices.getUserMedia === 'function' && 
+      navigator.mediaDevices &&
+      typeof navigator.mediaDevices.getUserMedia === 'function' &&
       typeof window.MediaRecorder === 'function'
     )
     return isSupported.value
@@ -46,8 +46,8 @@ export function useVoiceRecorder(maxDuration: number = 120) {
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          autoGainControl: true
-        }
+          autoGainControl: true,
+        },
       })
 
       // Microphone access granted - now enter recording state
@@ -55,7 +55,7 @@ export function useVoiceRecorder(maxDuration: number = 120) {
 
       // Create MediaRecorder instance
       mediaRecorder = new MediaRecorder(stream, {
-        mimeType: getSupportedMimeType()
+        mimeType: getSupportedMimeType(),
       })
 
       // Handle data available event
@@ -73,7 +73,9 @@ export function useVoiceRecorder(maxDuration: number = 120) {
         if (cancelled) return
         // Use the recorder's actual mimeType (includes codec, e.g. "audio/webm;codecs=opus")
         // rather than re-querying getSupportedMimeType(), which strips codec info
-        audioBlob.value = new Blob(chunks, { type: mediaRecorder!.mimeType || getSupportedMimeType() })
+        audioBlob.value = new Blob(chunks, {
+          type: mediaRecorder!.mimeType || getSupportedMimeType(),
+        })
         state.value = 'completed'
       }
 
@@ -94,16 +96,17 @@ export function useVoiceRecorder(maxDuration: number = 120) {
       return true
     } catch (err: any) {
       console.error('Failed to start recording:', err)
-      
+
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        error.value = 'Microphone permission denied. Please allow microphone access to record voice messages.'
+        error.value =
+          'Microphone permission denied. Please allow microphone access to record voice messages.'
         permissionDenied.value = true
       } else if (err.name === 'NotFoundError') {
         error.value = 'No microphone found. Please check your audio input device.'
       } else {
         error.value = 'Failed to access microphone'
       }
-      
+
       state.value = 'error'
       cleanupStream()
       return false
@@ -138,7 +141,7 @@ export function useVoiceRecorder(maxDuration: number = 120) {
   const startDurationTimer = () => {
     durationTimer = window.setInterval(() => {
       duration.value += 1
-      
+
       // Auto-stop at max duration
       if (duration.value >= maxDuration) {
         stopRecording()
@@ -157,7 +160,7 @@ export function useVoiceRecorder(maxDuration: number = 120) {
   // Clean up media stream
   const cleanupStream = () => {
     if (stream) {
-      stream.getTracks().forEach(track => track.stop())
+      stream.getTracks().forEach((track) => track.stop())
       stream = null
     }
   }
@@ -197,13 +200,13 @@ export function useVoiceRecorder(maxDuration: number = 120) {
     audioBlob: readonly(audioBlob),
     error: readonly(error),
     permissionDenied: readonly(permissionDenied),
-    
+
     // Actions
     startRecording,
     stopRecording,
     cancelRecording,
     reset,
-    
+
     // Helpers
     formatDuration: (seconds?: number) => formatDuration(seconds ?? duration.value),
     maxDuration,

@@ -41,9 +41,7 @@ type UrlSignature = {
 export function signUrl(url: string): string {
   const exp = Math.floor(Date.now() / 1000) + appConfig.IMAGE_URL_HMAC_TTL_SECONDS
   const data = `${url}:${exp}`
-  const h = createHmac('sha256', appConfig.AUTH_IMG_HMAC_SECRET)
-    .update(data)
-    .digest('hex')
+  const h = createHmac('sha256', appConfig.AUTH_IMG_HMAC_SECRET).update(data).digest('hex')
   return `${url}?exp=${exp}&sig=${h}`
 }
 

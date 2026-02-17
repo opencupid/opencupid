@@ -11,26 +11,23 @@ import { sendError, addDebounceHeaders } from '../helpers'
 import { CityService } from 'src/services/city.service'
 import type { CityResponse, CitiesResponse } from '@zod/apiResponse.dto'
 
-
-
 const citiesRoutes: FastifyPluginAsync = async fastify => {
   const cityService = CityService.getInstance()
 
   /**
- * Get a city by ID
- */
+   * Get a city by ID
+   */
   fastify.get('/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-    const { id } = CityParamsSchema.parse(req.params);
+    const { id } = CityParamsSchema.parse(req.params)
     try {
-      const city = await cityService.findById(id);
-      if (!city) return sendError(reply, 404, 'City not found');
-      return reply.code(200).send({ success: true, city });
+      const city = await cityService.findById(id)
+      if (!city) return sendError(reply, 404, 'City not found')
+      return reply.code(200).send({ success: true, city })
     } catch (err) {
-      fastify.log.error(err);
-      return sendError(reply, 500, 'Failed to fetch city');
+      fastify.log.error(err)
+      return sendError(reply, 500, 'Failed to fetch city')
     }
-  });
-
+  })
 
   /**
    * Search cities by partial name -- for type-ahead multi-select with debounce headers
@@ -68,7 +65,7 @@ const citiesRoutes: FastifyPluginAsync = async fastify => {
           onExceeded: (req, key) => {
             fastify.log.warn(`Rate limit exceeded for user: ${key}`)
           },
-        }
+        },
       },
     },
     async (req, reply) => {
@@ -115,7 +112,6 @@ const citiesRoutes: FastifyPluginAsync = async fastify => {
   //     return sendError(reply, 500, 'Failed to list cities');
   //   }
   // });
-
 
   /**
    * Update a city

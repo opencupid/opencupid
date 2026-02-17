@@ -33,7 +33,7 @@ const pickUrl = (variant: string, variants: ImageVariant[]) => {
   if (!variants?.length) return ''
   // explicit override first
   if (variant) {
-    const v = variants.find(v => v.size === variant)
+    const v = variants.find((v) => v.size === variant)
     if (v) return v.url
   }
   console.warn('ImageTag: missing  explicit variant', variant)

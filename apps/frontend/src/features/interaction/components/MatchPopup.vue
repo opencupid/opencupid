@@ -51,14 +51,23 @@ const handleMessageSent = () => {
       </h1>
       <div class="d-flex flex-row align-items-center justify-content-center mb-4">
         <div class="image-wrapper">
-          <ProfileImage :profile="match.from.profile" variant="thumb"/>
+          <ProfileImage
+            :profile="match.from.profile"
+            variant="thumb"
+          />
         </div>
 
         <div class="image-wrapper right">
-          <ProfileImage :profile="match.to.profile" variant="thumb"/>
+          <ProfileImage
+            :profile="match.to.profile"
+            variant="thumb"
+          />
         </div>
       </div>
-      <div v-if="profile.interactionContext.canMessage" class="text-center mb-4">
+      <div
+        v-if="profile.interactionContext.canMessage"
+        class="text-center mb-4"
+      >
         <div v-if="!messageSent">
           <h5 class="text-center mb-3">
             <!-- send {them} a messages -->
@@ -70,12 +79,18 @@ const handleMessageSent = () => {
             :conversationId="null"
             @message:sent="handleMessageSent"
           />
-          <BButton class="btn btn-link text-decoration-none" @click="emit('close')">
+          <BButton
+            class="btn btn-link text-decoration-none"
+            @click="emit('close')"
+          >
             <!-- Maybe later -->
             {{ $t('interactions.cancel_button') }}
           </BButton>
         </div>
-        <div v-else class="text-center">
+        <div
+          v-else
+          class="text-center"
+        >
           <!-- Nice -->
           {{ $t('interactions.message_confirmation') }}
         </div>

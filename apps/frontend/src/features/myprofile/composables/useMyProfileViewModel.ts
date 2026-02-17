@@ -1,16 +1,14 @@
-import { useI18nStore } from "@/store/i18nStore"
-import { computed, reactive, ref, watch } from "vue"
+import { useI18nStore } from '@/store/i18nStore'
+import { computed, reactive, ref, watch } from 'vue'
 
-import { type PublicProfileWithContext } from "@zod/profile/profile.dto"
-import { type EditFieldProfileFormWithImages } from "@zod/profile/profile.form"
+import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
+import { type EditFieldProfileFormWithImages } from '@zod/profile/profile.form'
 
-import { useOwnerProfileStore } from "@/features/myprofile/stores/ownerProfileStore"
+import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 
 import { type ViewState } from './types'
 
-
 export function useMyProfileViewModel(isEditMode: boolean) {
-
   const profileStore = useOwnerProfileStore()
   const formData: EditFieldProfileFormWithImages = reactive({} as EditFieldProfileFormWithImages)
 
@@ -77,7 +75,7 @@ export function useMyProfileViewModel(isEditMode: boolean) {
       // Object.assign(formData, profileStore.profile)
       fetchPreview()
     },
-    {immediate: true}
+    { immediate: true }
   )
 
   watch(
@@ -85,7 +83,7 @@ export function useMyProfileViewModel(isEditMode: boolean) {
     () => {
       Object.assign(formData, profileStore.profile)
     },
-    {immediate: true}
+    { immediate: true }
   )
 
   // switch to dating scope when editable is turned on,
@@ -93,12 +91,10 @@ export function useMyProfileViewModel(isEditMode: boolean) {
   watch(
     () => viewState.isEditable,
     () => {
-      if (viewState.scopes.includes('dating'))
-        viewState.currentScope = 'dating'
+      if (viewState.scopes.includes('dating')) viewState.currentScope = 'dating'
     },
     {}
   )
-
 
   return {
     error: computed(() => profileStore.error),
@@ -112,5 +108,4 @@ export function useMyProfileViewModel(isEditMode: boolean) {
     updateScopes,
     updateProfile,
   }
-
 }

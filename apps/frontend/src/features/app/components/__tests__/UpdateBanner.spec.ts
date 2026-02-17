@@ -45,7 +45,7 @@ describe('UpdateBanner', () => {
     const reloadSpy = vi.fn()
     Object.defineProperty(window, 'location', {
       value: { reload: reloadSpy },
-      writable: true
+      writable: true,
     })
 
     const wrapper = mount(UpdateBanner)

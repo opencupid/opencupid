@@ -2,7 +2,7 @@ import type { LocationDTO, LocationPayload, SearchLocationDTO } from '@zod/dto/l
 import { useCountries } from './useCountries'
 
 interface UseLocationLabelOptions {
-  location: SearchLocationDTO 
+  location: SearchLocationDTO
   viewerLocation: LocationDTO | null
   showCity?: boolean
   showCountryLabel?: boolean
@@ -15,7 +15,6 @@ export function relativeLocationLabel({
   showCity = false,
   showCountryLabel = false,
 }: UseLocationLabelOptions): string {
-
   if (!location) return ''
 
   const isSameCountry = viewerLocation?.country === location.country

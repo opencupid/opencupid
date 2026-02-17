@@ -12,5 +12,11 @@ const animation = computed(() => (props.isAnimated ? 'wave' : undefined))
 </script>
 
 <template>
-  <BPlaceholderCard no-footer no-button no-header size="sm" :animation="animation" />
+  <BPlaceholderCard
+    no-footer
+    no-button
+    no-header
+    size="sm"
+    :animation="animation"
+  />
 </template>

@@ -27,7 +27,11 @@ const props = withDefaults(
 </script>
 
 <template>
-  <BButton  v-bind:variant="variant" size="sm" @click="handleClick">
+  <BButton
+    v-bind:variant="variant"
+    size="sm"
+    @click="handleClick"
+  >
     <slot>
       <IconLogout class="svg-icon" />
       {{ t('authentication.logout') }}

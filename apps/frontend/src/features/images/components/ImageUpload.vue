@@ -102,9 +102,16 @@ function onModalHidden() {
     >
       <AvatarUploadIcon class="svg-icon w-100 h-100" />
     </BButton>
-    <UploadButton v-else @file:change="handleFileChange" :genericIcon="true" />
+    <UploadButton
+      v-else
+      @file:change="handleFileChange"
+      :genericIcon="true"
+    />
 
-    <div v-if="error" class="text-danger mt-2">
+    <div
+      v-if="error"
+      class="text-danger mt-2"
+    >
       {{ error }}
     </div>
   </div>
@@ -124,12 +131,31 @@ function onModalHidden() {
     @hidden="onModalHidden"
   >
     <!-- Preview Modal -->
-    <div v-show="modalState === 'preview'" class="preview-container w-100">
-      <ErrorComponent :error="error" v-if="error" />
-      <div v-if="preview && !error" class="mb-3">
-        <BOverlay spinner-type="grow" :show="isLoading">
-          <div class="h-100 overflow-hidden" v-show="modalState === 'preview'">
-            <img :src="preview" alt="Preview" class="preview-image" />
+    <div
+      v-show="modalState === 'preview'"
+      class="preview-container w-100"
+    >
+      <ErrorComponent
+        :error="error"
+        v-if="error"
+      />
+      <div
+        v-if="preview && !error"
+        class="mb-3"
+      >
+        <BOverlay
+          spinner-type="grow"
+          :show="isLoading"
+        >
+          <div
+            class="h-100 overflow-hidden"
+            v-show="modalState === 'preview'"
+          >
+            <img
+              :src="preview"
+              alt="Preview"
+              class="preview-image"
+            />
           </div>
         </BOverlay>
       </div>
@@ -160,7 +186,11 @@ function onModalHidden() {
       <div class="d-flex flex-column align-items-center h-100 justify-content-center">
         <div class="mx-auto col-6 d-flex flex-column align-items-center">
           <div class="mb-3 d-flex flex-column align-items-center">
-            <UploadButton @file:change="handleFileChange" :key="'capture-none'" class="w-100" />
+            <UploadButton
+              @file:change="handleFileChange"
+              :key="'capture-none'"
+              class="w-100"
+            />
             <div class="mt-0 form-text text-mute text-center">
               {{ t('profiles.image_upload.add_from_phone') }}
             </div>

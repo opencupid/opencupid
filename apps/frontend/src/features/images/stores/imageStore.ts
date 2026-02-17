@@ -2,12 +2,15 @@ import z from 'zod'
 import { defineStore } from 'pinia'
 import { api, axios, safeApiCall } from '@/lib/api'
 import type { ApiError, ApiSuccess } from '@zod/apiResponse.dto'
-import { type ImageApiResponse, ImageApiResponseSchema, type OwnerProfileImage, type ProfileImagePosition } from '@zod/profile/profileimage.dto'
+import {
+  type ImageApiResponse,
+  ImageApiResponseSchema,
+  type OwnerProfileImage,
+  type ProfileImagePosition,
+} from '@zod/profile/profileimage.dto'
 import { bus } from '@/lib/bus'
 
-
 type ImageStoreResponse = ApiSuccess<{}> | ApiError
-
 
 export const useImageStore = defineStore('image', {
   state: () => ({
@@ -28,7 +31,6 @@ export const useImageStore = defineStore('image', {
         this.images = images
         return { success: true }
       } catch (err: unknown) {
-
         const out: ApiError = {
           success: false,
           message: 'An unexpected error occurred',
@@ -72,7 +74,9 @@ export const useImageStore = defineStore('image', {
     async reorderImages(imagesForUpdate: ProfileImagePosition[]): Promise<ImageStoreResponse> {
       try {
         this.isLoading = true // Set loading state
-        const { data } = await safeApiCall(() => api.patch<ImageApiResponse>('/image/order', { images: imagesForUpdate }))
+        const { data } = await safeApiCall(() =>
+          api.patch<ImageApiResponse>('/image/order', { images: imagesForUpdate })
+        )
         const { success, images } = ImageApiResponseSchema.parse(data)
         this.images = images
         return { success: true }
@@ -99,7 +103,7 @@ export const useImageStore = defineStore('image', {
         this.images = [] // Reset images on error
         return {
           success: false,
-          message: error.response?.data?.message || 'Failed to fetch profile images'
+          message: error.response?.data?.message || 'Failed to fetch profile images',
         }
       } finally {
         this.isLoading = false // Reset loading state
@@ -108,7 +112,7 @@ export const useImageStore = defineStore('image', {
 
     teardown() {
       this.images = []
-    }
+    },
   },
 })
 

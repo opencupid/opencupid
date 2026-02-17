@@ -20,7 +20,12 @@ const handleCloseClick = () => (showModal.value = false)
 
 <template>
   <div class="image-carousel">
-    <BCarousel controls v-model="slide" v-show="!showModal" class="h-100">
+    <BCarousel
+      controls
+      v-model="slide"
+      v-show="!showModal"
+      class="h-100"
+    >
       <BCarouselSlide
         v-for="img in props.profile.profileImages"
         :key="img.position"
@@ -29,7 +34,11 @@ const handleCloseClick = () => (showModal.value = false)
       >
         <template #img>
           <div class="ratio ratio-4x3">
-            <ImageTag :image="img" className="fitted-image" variant="profile" />
+            <ImageTag
+              :image="img"
+              className="fitted-image"
+              variant="profile"
+            />
           </div>
         </template>
       </BCarouselSlide>
@@ -50,7 +59,13 @@ const handleCloseClick = () => (showModal.value = false)
       <template #header-close>
         <IconCross class="svg-icon" />
       </template>
-      <BCarousel controls indicators v-model="slide" class="w-100 h-100" v-show="showModal">
+      <BCarousel
+        controls
+        indicators
+        v-model="slide"
+        class="w-100 h-100"
+        v-show="showModal"
+      >
         <BCarouselSlide
           v-for="img in props.profile.profileImages"
           :key="img.position"
@@ -61,7 +76,11 @@ const handleCloseClick = () => (showModal.value = false)
             <div
               class="w-100 h-100 d-flex justify-content-center align-items-center overflow-hidden"
             >
-              <ImageTag :image="img" className="fitted-image" variant="full" />
+              <ImageTag
+                :image="img"
+                className="fitted-image"
+                variant="full"
+              />
             </div>
           </template>
         </BCarouselSlide>

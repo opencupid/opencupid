@@ -63,13 +63,15 @@ describe('mapInteractionContext', () => {
   it('detects initiated conversation from the other profile', () => {
     const profile = makeProfile({
       id: 'p2',
-      conversationParticipants: [{
-        conversation: {
-          id: 'conv1',
-          status: 'INITIATED',
-          initiatorProfileId: 'p1', // someone else initiated
-        }
-      }] as any,
+      conversationParticipants: [
+        {
+          conversation: {
+            id: 'conv1',
+            status: 'INITIATED',
+            initiatorProfileId: 'p1', // someone else initiated
+          },
+        },
+      ] as any,
     })
     const result = mapInteractionContext(profile, false)
     expect(result.initiated).toBe(true)
@@ -79,13 +81,15 @@ describe('mapInteractionContext', () => {
   it('detects existing conversation (not initiated)', () => {
     const profile = makeProfile({
       id: 'p1',
-      conversationParticipants: [{
-        conversation: {
-          id: 'conv1',
-          status: 'ACCEPTED',
-          initiatorProfileId: 'p1', // I initiated
-        }
-      }] as any,
+      conversationParticipants: [
+        {
+          conversation: {
+            id: 'conv1',
+            status: 'ACCEPTED',
+            initiatorProfileId: 'p1', // I initiated
+          },
+        },
+      ] as any,
     })
     const result = mapInteractionContext(profile, false)
     expect(result.initiated).toBe(false)

@@ -9,14 +9,10 @@ import {
   type UpdateProfilePayload,
   type UpdateProfileScopePayload,
   UpdateProfilePayloadSchema,
-  UpdateProfileScopeSchemaPayload
+  UpdateProfileScopeSchemaPayload,
 } from '@zod/profile/profile.dto'
 
-import {
-  rateLimitConfig,
-  sendError,
-  sendForbiddenError
-} from '../helpers'
+import { rateLimitConfig, sendError, sendForbiddenError } from '../helpers'
 import {
   mapDbProfileToOwnerProfile,
   mapProfileSummary,
@@ -39,16 +35,12 @@ const IdLookupParamsSchema = z.object({
   id: z.string().cuid(),
 })
 
-
 const PreviewLookupParamsSchema = z.object({
   id: z.string().cuid(),
-  locale: z.string()
+  locale: z.string(),
 })
 
-
-
 const profileRoutes: FastifyPluginAsync = async fastify => {
-
   // instantiate services
   const profileService = ProfileService.getInstance()
   const profileMatchService = ProfileMatchService.getInstance()
@@ -79,7 +71,6 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
    * @param {string} id - The id of the profile to retrieve
    */
   fastify.get('/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-
     const myProfileId = req.session.profileId
     const locale = req.session.lang
 
@@ -100,7 +91,10 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
 
       let includeDatingContext = false
       if (raw.isDatingActive && req.session.profile.isDatingActive) {
-        includeDatingContext = await profileMatchService.areProfilesMutuallyCompatible(myProfileId, raw.id)
+        includeDatingContext = await profileMatchService.areProfilesMutuallyCompatible(
+          myProfileId,
+          raw.id
+        )
       }
 
       const profile = mapProfileWithContext(raw, includeDatingContext, locale)
@@ -113,7 +107,6 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
   })
 
   fastify.get('/preview/:locale/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-
     const myProfileId = req.session.profileId
 
     try {
@@ -137,7 +130,6 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
       return sendError(reply, 500, 'Failed to fetch profile')
     }
   })
-
 
   // fastify.get('/', { onRequest: [fastify.authenticate] }, async (req, reply) => {
 
@@ -163,8 +155,11 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
    * It sets the onboarding flag to true, indicating that the user has completed the onboarding process.
    */
   fastify.post('/me', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-
-    const data = await validateBody(UpdateProfilePayloadSchema, req, reply) as UpdateProfilePayload
+    const data = (await validateBody(
+      UpdateProfilePayloadSchema,
+      req,
+      reply
+    )) as UpdateProfilePayload
     if (!data) return
 
     // check if the user already has an onboarded profile. Since we're allowing the setting of
@@ -183,18 +178,21 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
 
     try {
       const updated = await fastify.prisma.$transaction(async tx => {
-
         // const datingPrefsFragment = data.isDatingActive ? profileMatchService.createDatingPrefsDefaults(data) : {}
         // const update = {
         //   ...data,
         //   ...datingPrefsFragment
         // }
 
-        const updatedProfile = await profileService.updateCompleteProfile(tx, locale, req.user.userId, data)
+        const updatedProfile = await profileService.updateCompleteProfile(
+          tx,
+          locale,
+          req.user.userId,
+          data
+        )
         const profile = mapDbProfileToOwnerProfile(locale, updatedProfile)
         // Create the default social match filter for the new profile
         await profileMatchService.createSocialMatchFilter(tx, updatedProfile.id, profile.location)
-
 
         return profile
       })
@@ -211,7 +209,6 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
       } catch (error) {
         fastify.log.warn('Failed to send welcome message', error)
       }
-
     } catch (err) {
       fastify.log.error(err)
       // profileService.updateProfile() returned null, which means the profile was not found
@@ -220,26 +217,38 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
       }
       return sendError(reply, 500, 'Failed to update profile')
     }
-
   })
 
   /**
    * Update the current user's profile
    */
   fastify.patch('/me', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-    const data = await validateBody(UpdateProfilePayloadSchema, req, reply) as UpdateProfilePayload
+    const data = (await validateBody(
+      UpdateProfilePayloadSchema,
+      req,
+      reply
+    )) as UpdateProfilePayload
     // destructure to remove isSocialActive and isDatingActive
     if (!data) return
     const { isSocialActive, isDatingActive, ...rest } = data
     return updateProfile(rest, req, reply)
   })
 
-  async function updateProfile(profileData: UpdateProfilePayload, req: FastifyRequest, reply: FastifyReply) {
+  async function updateProfile(
+    profileData: UpdateProfilePayload,
+    req: FastifyRequest,
+    reply: FastifyReply
+  ) {
     const locale = req.session.lang
 
     try {
       const updated = await fastify.prisma.$transaction(async tx => {
-        const updatedProfile = await profileService.updateCompleteProfile(tx, locale, req.user.userId, profileData)
+        const updatedProfile = await profileService.updateCompleteProfile(
+          tx,
+          locale,
+          req.user.userId,
+          profileData
+        )
         const profile = mapDbProfileToOwnerProfile(locale, updatedProfile)
         return profile
       })
@@ -256,63 +265,65 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
     }
   }
 
-  fastify.patch('/scopes', {
-    onRequest: [fastify.authenticate],
-    config: {
-      ...rateLimitConfig(fastify, '1 day', appConfig.RATE_LIMIT_PROFILE_SCOPES),
+  fastify.patch(
+    '/scopes',
+    {
+      onRequest: [fastify.authenticate],
+      config: {
+        ...rateLimitConfig(fastify, '1 day', appConfig.RATE_LIMIT_PROFILE_SCOPES),
+      },
     },
+    async (req, reply) => {
+      const data = (await validateBody(
+        UpdateProfileScopeSchemaPayload,
+        req,
+        reply
+      )) as UpdateProfileScopePayload
+      if (!data) return
+      const locale = req.session.lang
 
-  }, async (req, reply) => {
+      try {
+        const updated = await profileService.updateScopes(req.user.userId, data)
+        if (!updated) return sendError(reply, 404, 'Profile not found')
+        // Clear session to force re-fetch on next request, we need the roles updated
+        await req.deleteSession()
 
-    const data = await validateBody(UpdateProfileScopeSchemaPayload, req, reply) as UpdateProfileScopePayload
-    if (!data) return
-    const locale = req.session.lang
-
-    try {
-      const updated = await profileService.updateScopes(req.user.userId, data)
-      if (!updated) return sendError(reply, 404, 'Profile not found')
-      // Clear session to force re-fetch on next request, we need the roles updated
-      await req.deleteSession()
-
-      const profile = mapDbProfileToOwnerProfile(locale, updated)
-      const response: UpdateProfileResponse = { success: true, profile }
-      return reply.code(200).send(response)
-    } catch (error) {
-      fastify.log.error(error)
-      return sendError(reply, 500, 'Failed to update profile scopes')
+        const profile = mapDbProfileToOwnerProfile(locale, updated)
+        const response: UpdateProfileResponse = { success: true, profile }
+        return reply.code(200).send(response)
+      } catch (error) {
+        fastify.log.error(error)
+        return sendError(reply, 500, 'Failed to update profile scopes')
+      }
     }
-
-  })
-
+  )
 
   fastify.post('/:id/block', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const profileId = req.session.profileId
     try {
-      const { id } = IdLookupParamsSchema.parse(req.params);
+      const { id } = IdLookupParamsSchema.parse(req.params)
       if (profileId === id) {
-        return reply.code(400).send({ error: 'Cannot block yourself.' });
+        return reply.code(400).send({ error: 'Cannot block yourself.' })
       }
-      await profileService.blockProfile(profileId, id);
-      return reply.code(204).send();
-
+      await profileService.blockProfile(profileId, id)
+      return reply.code(204).send()
     } catch (error) {
-      fastify.log.error(error);
-      return sendError(reply, 500, 'Failed to block profile');
+      fastify.log.error(error)
+      return sendError(reply, 500, 'Failed to block profile')
     }
-  });
+  })
 
   fastify.post('/:id/unblock', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const profileId = req.session.profileId
     try {
-      const { id } = IdLookupParamsSchema.parse(req.params);
-      await profileService.unblockProfile(profileId, id);
-      return reply.code(204).send();
-
+      const { id } = IdLookupParamsSchema.parse(req.params)
+      await profileService.unblockProfile(profileId, id)
+      return reply.code(204).send()
     } catch (error) {
-      fastify.log.error(error);
-      return sendError(reply, 500, 'Failed to unblock profile');
+      fastify.log.error(error)
+      return sendError(reply, 500, 'Failed to unblock profile')
     }
-  });
+  })
 
   fastify.get('/blocked', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const profileId = req.session.profileId
@@ -321,12 +332,11 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
       const mappedProfiles = profiles.map(p => mapProfileSummary(p))
       const response: GetProfileSummariesResponse = { success: true, profiles: mappedProfiles }
       return reply.code(200).send(response)
-
     } catch (error) {
-      fastify.log.error(error);
-      return sendError(reply, 500, 'Failed to fetch blocked profiles');
+      fastify.log.error(error)
+      return sendError(reply, 500, 'Failed to fetch blocked profiles')
     }
-  });
+  })
 }
 
 export default profileRoutes

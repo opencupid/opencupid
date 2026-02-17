@@ -19,7 +19,10 @@ beforeEach(() => {
   post.mockClear()
   patch.mockClear()
   ;(global as any).PushManager = {}
-  ;(global as any).__APP_CONFIG__ = { VAPID_PUBLIC_KEY: 'BIgjb-IGNNSdDDw2DJ45-jBTUVjjmnxYZgmoo7LZsRMdg7Mj3M22bh9wjQdH9oqmP3GP5z1DmOZlw6vnGR36BJs' }
+  ;(global as any).__APP_CONFIG__ = {
+    VAPID_PUBLIC_KEY:
+      'BIgjb-IGNNSdDDw2DJ45-jBTUVjjmnxYZgmoo7LZsRMdg7Mj3M22bh9wjQdH9oqmP3GP5z1DmOZlw6vnGR36BJs',
+  }
 })
 
 describe('PushPermissions', () => {
@@ -45,7 +48,9 @@ describe('PushPermissions', () => {
     ;(global as any).Notification = { requestPermission: vi.fn().mockResolvedValue('granted') }
     ;(global as any).navigator = {
       serviceWorker: {
-        ready: Promise.resolve({ pushManager: { subscribe, getSubscription: vi.fn().mockResolvedValue(null) } }),
+        ready: Promise.resolve({
+          pushManager: { subscribe, getSubscription: vi.fn().mockResolvedValue(null) },
+        }),
       },
     }
     const wrapper = mount(PushPermissions, { props: { modelValue: false } })

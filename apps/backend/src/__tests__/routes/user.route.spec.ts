@@ -49,9 +49,9 @@ describe('GET /otp-login', () => {
   it('AUTH_INVALID_INPUT', async () => {
     const handler = fastify.routes['GET /otp-login']
     mockUserService.validateUserOtpLogin.mockResolvedValue({
-      "code": "AUTH_INVALID_OTP",
-      "message": "Invalid OTP",
-      "success": false,
+      code: 'AUTH_INVALID_OTP',
+      message: 'Invalid OTP',
+      success: false,
     })
     await handler({ query: { userId: 'invalid', otp: '111111' } } as any, reply as any)
     expect(reply.payload.code).toBe('AUTH_INVALID_INPUT')
@@ -60,11 +60,14 @@ describe('GET /otp-login', () => {
   it('AUTH_INVALID_INPUT', async () => {
     const handler = fastify.routes['GET /otp-login']
     mockUserService.validateUserOtpLogin.mockResolvedValue({
-      "code": "AUTH_INVALID_OTP",
-      "message": "Invalid OTP",
-      "success": false,
+      code: 'AUTH_INVALID_OTP',
+      message: 'Invalid OTP',
+      success: false,
     })
-    await handler({ query: { userId: 'cmc7t45x400086w39gj30pzn3', otp: '00' } } as any, reply as any)
+    await handler(
+      { query: { userId: 'cmc7t45x400086w39gj30pzn3', otp: '00' } } as any,
+      reply as any
+    )
     expect(reply.payload.code).toBe('AUTH_INVALID_INPUT')
   })
 
@@ -88,7 +91,7 @@ describe('GET /otp-login', () => {
     const user = {
       id: 'user1',
       email: 'test@example.com',
-      profile: { id: 'profile1' }
+      profile: { id: 'profile1' },
     }
     mockUserService.validateUserOtpLogin.mockResolvedValue({
       success: true,
@@ -108,7 +111,7 @@ describe('GET /otp-login', () => {
     const user = {
       id: 'user2',
       email: 'new@example.com',
-      profile: undefined
+      profile: undefined,
     }
     mockUserService.validateUserOtpLogin.mockResolvedValue({
       success: true,
@@ -134,7 +137,9 @@ describe('GET /otp-login', () => {
 
   it('returns 500 on unexpected error', async () => {
     const handler = fastify.routes['GET /otp-login']
-    mockUserService.validateUserOtpLogin.mockImplementation(() => { throw new Error('fail') })
+    mockUserService.validateUserOtpLogin.mockImplementation(() => {
+      throw new Error('fail')
+    })
     const req = { query: { userId: 'cmc7t45x400086w39gj30pzn3', otp: '123456' } }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(500)
@@ -160,10 +165,15 @@ describe('GET /otp-login', () => {
 
     it('returns 403 if captcha is invalid', async () => {
       // Patch captchaService.validate to return false
-      fastify.routes['POST /send-login-link'].__fastify_captchaService = { validate: vi.fn().mockResolvedValue(false) }
+      fastify.routes['POST /send-login-link'].__fastify_captchaService = {
+        validate: vi.fn().mockResolvedValue(false),
+      }
       // Patch handler to use the patched captchaService
       const patchedHandler = async (req: any, reply: any) => {
-        const params = { success: true, data: { email: 'a@b.com', captchaSolution: 'bad', language: 'en' } }
+        const params = {
+          success: true,
+          data: { email: 'a@b.com', captchaSolution: 'bad', language: 'en' },
+        }
         const captchaService = { validate: vi.fn().mockResolvedValue(false) }
         try {
           const captchaOk = await captchaService.validate('bad')
@@ -174,17 +184,25 @@ describe('GET /otp-login', () => {
           return reply.code(500).send({ code: 'AUTH_INTERNAL_ERROR' })
         }
       }
-      await patchedHandler({ body: { email: 'a@b.com', captchaSolution: 'bad', language: 'en' } }, reply as any)
+      await patchedHandler(
+        { body: { email: 'a@b.com', captchaSolution: 'bad', language: 'en' } },
+        reply as any
+      )
       expect(reply.statusCode).toBe(403)
       expect(reply.payload.code).toBe('AUTH_INVALID_CAPTCHA')
     })
 
     it('returns 500 if captcha validation throws', async () => {
       // Patch captchaService.validate to throw
-      fastify.routes['POST /send-login-link'].__fastify_captchaService = { validate: vi.fn().mockRejectedValue(new Error('fail')) }
+      fastify.routes['POST /send-login-link'].__fastify_captchaService = {
+        validate: vi.fn().mockRejectedValue(new Error('fail')),
+      }
       // Patch handler to use the patched captchaService
       const patchedHandler = async (req: any, reply: any) => {
-        const params = { success: true, data: { email: 'a@b.com', captchaSolution: 'fail', language: 'en' } }
+        const params = {
+          success: true,
+          data: { email: 'a@b.com', captchaSolution: 'fail', language: 'en' },
+        }
         const captchaService = { validate: vi.fn().mockRejectedValue(new Error('fail')) }
         try {
           await captchaService.validate('fail')
@@ -192,7 +210,10 @@ describe('GET /otp-login', () => {
           return reply.code(500).send({ code: 'AUTH_INTERNAL_ERROR' })
         }
       }
-      await patchedHandler({ body: { email: 'a@b.com', captchaSolution: 'fail', language: 'en' } }, reply as any)
+      await patchedHandler(
+        { body: { email: 'a@b.com', captchaSolution: 'fail', language: 'en' } },
+        reply as any
+      )
       expect(reply.statusCode).toBe(500)
       expect(reply.payload.code).toBe('AUTH_INTERNAL_ERROR')
     })
@@ -297,7 +318,7 @@ describe('GET /otp-login', () => {
       vi.mock('@/services/sms.service', () => ({
         SmsService: class {
           sendOtp = vi.fn().mockResolvedValue({ success: false, error: 'smsfail' })
-        }
+        },
       }))
       vi.mock('cuid', () => ({ default: () => 'cmc7t45x400086w39gj30pzn3' }))
       const req = {
@@ -314,5 +335,3 @@ describe('GET /otp-login', () => {
     })
   })
 })
-
-

@@ -4,18 +4,17 @@ import { useRoute, useRouter } from 'vue-router'
 import { useBootstrap } from '@/lib/bootstrap'
 import { useLocalStore } from '@/store/localStore'
 
-import type { StoreError } from '@/store/helpers';
-import type { OwnerProfile, ProfileScope } from '@zod/profile/profile.dto';
+import type { StoreError } from '@/store/helpers'
+import type { OwnerProfile, ProfileScope } from '@zod/profile/profile.dto'
 
-import { useFindProfileStore } from '@/features/browse/stores/findProfileStore';
-import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore';
-import { useAgeFields } from '@/features/shared/composables/useAgeFields';
+import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
+import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
+import { useAgeFields } from '@/features/shared/composables/useAgeFields'
 
 enum ViewMode {
   map = 'map',
   grid = 'grid',
 }
-
 
 function datingPrefsDefaults(ownerProfile: OwnerProfile) {
   const { age } = useAgeFields(ownerProfile.birthday)
@@ -36,7 +35,6 @@ function socialFilterDefaults(ownerProfile: OwnerProfile) {
 }
 
 export function useFindMatchViewModel() {
-
   const router = useRouter()
   const route = useRoute()
 
@@ -45,9 +43,7 @@ export function useFindMatchViewModel() {
 
   const storeError = ref<StoreError | null>(null)
   const currentScope = computed(() =>
-    typeof route.params.scope === 'string'
-      ? (route.params.scope as ProfileScope)
-      : null
+    typeof route.params.scope === 'string' ? (route.params.scope as ProfileScope) : null
   )
   const selectedProfileId = computed(() =>
     typeof route.params.profileId === 'string' ? route.params.profileId : null
@@ -58,13 +54,14 @@ export function useFindMatchViewModel() {
   const savedScope = computed(() => localStore.getCurrentScope)
 
   const currentViewMode = computed(() =>
-    typeof route.query.viewMode === 'string' && Object.values(ViewMode).includes(route.query.viewMode as ViewMode)
-      ? (route.query.viewMode)
+    typeof route.query.viewMode === 'string' &&
+    Object.values(ViewMode).includes(route.query.viewMode as ViewMode)
+      ? route.query.viewMode
       : 'grid'
   )
 
   function isValidViewMode(mode: string): mode is ViewMode {
-    return Object.values(ViewMode).includes(mode as ViewMode);
+    return Object.values(ViewMode).includes(mode as ViewMode)
   }
 
   function navigateToViewMode(viewMode: string): void {
@@ -81,7 +78,6 @@ export function useFindMatchViewModel() {
   })
 
   const initialize = async (defaultScope?: ProfileScope) => {
-
     // ensure ownerProfile is initialized
     await useBootstrap().bootstrap()
 
@@ -141,9 +137,12 @@ export function useFindMatchViewModel() {
 
   // this forces re-rendering the view when the route changes
   // e.g. details view -> /browse
-  watch(() => route.fullPath, () => {
-    resolveScope()
-  })
+  watch(
+    () => route.fullPath,
+    () => {
+      resolveScope()
+    }
+  )
 
   watch(
     () => route.params.scope,
@@ -235,7 +234,9 @@ export function useFindMatchViewModel() {
     viewerProfile,
     haveResults,
     haveAccess,
-    isLoading: computed(() => findProfileStore.isLoading || ownerStore.isLoading || !isInitialized.value),
+    isLoading: computed(
+      () => findProfileStore.isLoading || ownerStore.isLoading || !isInitialized.value
+    ),
     isLoadingMore: computed(() => findProfileStore.isLoadingMore),
     hasMoreProfiles: computed(() => findProfileStore.hasMoreProfiles),
     storeError,
@@ -255,6 +256,4 @@ export function useFindMatchViewModel() {
     loadMoreProfiles,
     viewModeModel,
   }
-
-
 }

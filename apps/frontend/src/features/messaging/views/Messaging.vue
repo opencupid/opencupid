@@ -103,8 +103,14 @@ const isDetailView = computed(() => !!messageStore.activeConversation)
     </div>
 
     <!-- List view -->
-    <div class="d-flex flex-column overflow-auto h-100" :class="{ 'd-none': isDetailView }">
-      <ViewTitle :icon="IconMessage" class="text-primary">
+    <div
+      class="d-flex flex-column overflow-auto h-100"
+      :class="{ 'd-none': isDetailView }"
+    >
+      <ViewTitle
+        :icon="IconMessage"
+        class="text-primary"
+      >
         {{ $t('messaging.page_title') }}
       </ViewTitle>
       <BOverlay

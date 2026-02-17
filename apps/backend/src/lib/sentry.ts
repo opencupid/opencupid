@@ -11,5 +11,4 @@ if (appConfig.NODE_ENV !== 'development') {
   })
 }
 
-
 export default Sentry

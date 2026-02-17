@@ -19,9 +19,10 @@ const emit = defineEmits<{
 
 const languageOptions = reactive([] as MultiselectOption[])
 const languagesComputed = computed({
-  get: () => (props.modelValue ?? []).map(lang => languageOptions.find(opt => opt.value === lang)),
+  get: () =>
+    (props.modelValue ?? []).map((lang) => languageOptions.find((opt) => opt.value === lang)),
   set: (options: MultiselectOption[]) => {
-    const newVal = options.map(opt => opt.value)
+    const newVal = options.map((opt) => opt.value)
     emit('update:modelValue', newVal)
   },
 })

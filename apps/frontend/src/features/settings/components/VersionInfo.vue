@@ -26,14 +26,28 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="text-center w-100" style="font-size: 0.5rem">
-    <div v-if="isLoading" class="text-muted">Loading version information...</div>
+  <div
+    class="text-center w-100"
+    style="font-size: 0.5rem"
+  >
+    <div
+      v-if="isLoading"
+      class="text-muted"
+    >
+      Loading version information...
+    </div>
 
-    <div v-else-if="error" class="text-danger">
+    <div
+      v-else-if="error"
+      class="text-danger"
+    >
       {{ error }}
     </div>
 
-    <code v-else-if="version" class="text-muted">
+    <code
+      v-else-if="version"
+      class="text-muted"
+    >
       <span>v{{ version.frontendVersion }}</span>
     </code>
   </div>

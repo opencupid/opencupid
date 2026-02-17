@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { type ImageVariant } from '@zod/profile/profileimage.dto';
+import { type ImageVariant } from '@zod/profile/profileimage.dto'
 import ProfileImage from './ProfileImage.vue'
 
 // Props & Emits
@@ -12,9 +12,11 @@ defineProps<{
 
 <template>
   <span class="profile-thumbnail d-inline-flex">
-    <ProfileImage :profile="profile" variant="thumb"/>
+    <ProfileImage
+      :profile="profile"
+      variant="thumb"
+    />
   </span>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

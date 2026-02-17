@@ -1,12 +1,11 @@
-import { computed, reactive, ref } from "vue"
+import { computed, reactive, ref } from 'vue'
 
-import { type StoreError } from "@/store/helpers"
-import { useOwnerProfileStore } from "@/features/myprofile/stores/ownerProfileStore"
-import { type PublicProfileWithContext } from "@zod/profile/profile.dto"
-import { usePublicProfileStore } from "../stores/publicProfileStore"
+import { type StoreError } from '@/store/helpers'
+import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
+import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
+import { usePublicProfileStore } from '../stores/publicProfileStore'
 
 export function usePublicProfile() {
-
   // const store = useOwnerProfileStore()
   const store = usePublicProfileStore()
 

@@ -31,10 +31,7 @@ export class UserService {
     return UserService.instance
   }
 
-  async validateUserOtpLogin(
-    userId: string,
-    otp: string
-  ): Promise<ValidateUserOtpLoginResponse> {
+  async validateUserOtpLogin(userId: string, otp: string): Promise<ValidateUserOtpLoginResponse> {
     const user = await prisma.user.findUnique({
       where: {
         id: userId,
@@ -80,16 +77,18 @@ export class UserService {
     // Normalize identifiers: lowercase email, remove all whitespace from phone
     // Note: Callers ensure either email or phonenumber exists (validated at route level)
     let normalizedAuthId: { email: string } | { phonenumber: string }
-    
+
     if (authId.email) {
       normalizedAuthId = { email: authId.email.toLowerCase() }
     } else if (authId.phonenumber) {
       // Remove all whitespace characters (spaces, tabs, newlines) from phone number
       normalizedAuthId = { phonenumber: authId.phonenumber.replace(/\s+/g, '') }
     } else {
-      throw new Error('Invalid authentication identifier: neither email nor phone number provided (should be validated at route level)')
+      throw new Error(
+        'Invalid authentication identifier: neither email nor phone number provided (should be validated at route level)'
+      )
     }
-    
+
     const authIdField = normalizedAuthId
     const userExists = await prisma.user.findUnique({ where: { ...authIdField } })
     // const emailConfirmationToken = generateOTP() // enerate email confirmation token
@@ -173,7 +172,6 @@ export class UserService {
 
     return updated
   }
-
 
   generateOTP() {
     // Generate a 6-digit OTP

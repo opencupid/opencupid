@@ -16,9 +16,7 @@ let retryTimeoutId: NodeJS.Timeout | null = null
 let waitForRecovery: (() => void)[] = []
 
 export const isApiOnline = () =>
-  isOffline
-    ? new Promise<void>((resolve) => waitForRecovery.push(resolve))
-    : Promise.resolve()
+  isOffline ? new Promise<void>((resolve) => waitForRecovery.push(resolve)) : Promise.resolve()
 
 // // Periodic retry mechanism to detect API recovery - only used in non-development environments
 function startRetryMechanism() {
@@ -60,7 +58,8 @@ api.interceptors.response.use(
     // TODO verify that this is really neccessary (== safeApiCall is used
     // *everywhere* to wrap api requests) and remove if redundant.
     const isNetworkError =
-      !error.response || [
+      !error.response ||
+      [
         'ECONNABORTED',
         'ENETUNREACH',
         'ENOTFOUND',
@@ -81,7 +80,6 @@ api.interceptors.response.use(
   }
 )
 
-
 export async function safeApiCall<T>(fn: () => Promise<T>): Promise<T> {
   while (isOffline) {
     await isApiOnline()
@@ -92,7 +90,8 @@ export async function safeApiCall<T>(fn: () => Promise<T>): Promise<T> {
     return result
   } catch (err: any) {
     const isNetworkError =
-      !err.response || [
+      !err.response ||
+      [
         'ECONNABORTED',
         'ENETUNREACH',
         'ENOTFOUND',
@@ -113,6 +112,5 @@ export async function safeApiCall<T>(fn: () => Promise<T>): Promise<T> {
     throw err
   }
 }
-
 
 export { axios }

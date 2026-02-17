@@ -95,14 +95,30 @@ defineExpose({ triggerStart: handleRecordClick, reset })
         size="sm"
         :disabled="props.disabled"
         @click="handleRecordClick"
-        :title="isIdle ? $t('messaging.voice.start_recording') :
-               isRecording ? $t('messaging.voice.stop_recording') :
-               isCompleted ? $t('messaging.voice.record_again') :
-               $t('messaging.voice.record')"
+        :title="
+          isIdle
+            ? $t('messaging.voice.start_recording')
+            : isRecording
+              ? $t('messaging.voice.stop_recording')
+              : isCompleted
+                ? $t('messaging.voice.record_again')
+                : $t('messaging.voice.record')
+        "
       >
-        <component :is="isRecording ? Mic2Icon : MicIcon" class="svg-icon" />
-        <span class="ms-1" v-if="isRecording">{{ formatDuration() }}</span>
-        <span class="ms-1" v-else-if="isCompleted">{{ formatDuration() }}</span>
+        <component
+          :is="isRecording ? Mic2Icon : MicIcon"
+          class="svg-icon"
+        />
+        <span
+          class="ms-1"
+          v-if="isRecording"
+          >{{ formatDuration() }}</span
+        >
+        <span
+          class="ms-1"
+          v-else-if="isCompleted"
+          >{{ formatDuration() }}</span
+        >
       </BButton>
 
       <!-- Cancel button when recording or completed -->
@@ -117,7 +133,10 @@ defineExpose({ triggerStart: handleRecordClick, reset })
     </div>
 
     <!-- Recording progress bar -->
-    <div v-if="isRecording" class="mt-2">
+    <div
+      v-if="isRecording"
+      class="mt-2"
+    >
       <BProgressBar
         :value="progressPercentage"
         variant="danger"
@@ -131,20 +150,30 @@ defineExpose({ triggerStart: handleRecordClick, reset })
     </div>
 
     <!-- Permission denied message -->
-    <div v-if="permissionDenied" class="mt-2 p-2 bg-warning-subtle border border-warning rounded">
+    <div
+      v-if="permissionDenied"
+      class="mt-2 p-2 bg-warning-subtle border border-warning rounded"
+    >
       <small class="text-warning-emphasis">
         <i class="fas fa-exclamation-triangle me-1"></i>
         {{ $t('messaging.voice.permission_denied') }}
       </small>
       <div class="mt-1">
-        <BButton size="sm" variant="outline-warning" @click="handleRetryPermission">
+        <BButton
+          size="sm"
+          variant="outline-warning"
+          @click="handleRetryPermission"
+        >
           {{ $t('messaging.voice.retry_permission') }}
         </BButton>
       </div>
     </div>
 
     <!-- Error message -->
-    <div v-if="isError && !permissionDenied && error" class="mt-2 p-2 bg-danger-subtle border border-danger rounded">
+    <div
+      v-if="isError && !permissionDenied && error"
+      class="mt-2 p-2 bg-danger-subtle border border-danger rounded"
+    >
       <small class="text-danger-emphasis">
         <i class="fas fa-exclamation-circle me-1"></i>
         {{ error }}
@@ -152,7 +181,10 @@ defineExpose({ triggerStart: handleRecordClick, reset })
     </div>
 
     <!-- Unsupported browser message -->
-    <div v-if="!isSupported" class="mt-2 p-2 bg-info-subtle border border-info rounded">
+    <div
+      v-if="!isSupported"
+      class="mt-2 p-2 bg-info-subtle border border-info rounded"
+    >
       <small class="text-info-emphasis">
         <i class="fas fa-info-circle me-1"></i>
         {{ $t('messaging.voice.unsupported_browser') }}
@@ -180,8 +212,14 @@ defineExpose({ triggerStart: handleRecordClick, reset })
 }
 
 @keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.7; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 </style>

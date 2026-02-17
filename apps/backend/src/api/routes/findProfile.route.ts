@@ -4,31 +4,41 @@ import { z } from 'zod'
 import { sendError, sendForbiddenError } from '../helpers'
 
 import { ProfileMatchService, type OrderBy } from '@/services/profileMatch.service'
-import { GetProfilesResponse, type GetDatingPreferencesResponse, type GetSocialMatchFilterResponse, type UpdateDatingPreferencesResponse } from '@zod/apiResponse.dto'
-import { DatingPreferencesDTOSchema, UpdateDatingPreferencesPayloadSchema, UpdateSocialMatchFilterPayloadSchema } from '../../../../../packages/shared/zod/match/filters.dto'
+import {
+  GetProfilesResponse,
+  type GetDatingPreferencesResponse,
+  type GetSocialMatchFilterResponse,
+  type UpdateDatingPreferencesResponse,
+} from '@zod/apiResponse.dto'
+import {
+  DatingPreferencesDTOSchema,
+  UpdateDatingPreferencesPayloadSchema,
+  UpdateSocialMatchFilterPayloadSchema,
+} from '../../../../../packages/shared/zod/match/filters.dto'
 import { ProfileService } from '../../services/profile.service'
 import { validateBody } from '../../utils/zodValidate'
 import { mapProfileToPublic } from '../mappers/profile.mappers'
-import { mapProfileToDatingPreferencesDTO, mapSocialMatchFilterToDTO } from '../mappers/profileMatch.mappers'
+import {
+  mapProfileToDatingPreferencesDTO,
+  mapSocialMatchFilterToDTO,
+} from '../mappers/profileMatch.mappers'
 
 // Pagination query schema for infinite scrolling
 const PaginationQuerySchema = z.object({
   skip: z.preprocess(
-    val => typeof val === 'string' ? parseInt(val, 10) : val,
+    val => (typeof val === 'string' ? parseInt(val, 10) : val),
     z.number().int().min(0).default(0)
   ),
   take: z.preprocess(
-    val => typeof val === 'string' ? parseInt(val, 10) : val,
+    val => (typeof val === 'string' ? parseInt(val, 10) : val),
     z.number().int().min(1).max(50).default(10)
   ),
 })
 
 const findProfileRoutes: FastifyPluginAsync = async fastify => {
-
   // instantiate services
   const profileMatchService = ProfileMatchService.getInstance()
   const profileService = ProfileService.getInstance()
-
 
   fastify.get('/social', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const { skip, take } = PaginationQuerySchema.parse(req.query)
@@ -42,7 +52,7 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
 
   fastify.get('/social/new', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const { skip, take } = PaginationQuerySchema.parse(req.query)
-    
+
     if (!req.session.profile.isSocialActive) {
       return sendForbiddenError(reply)
     }
@@ -51,7 +61,12 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
     const locale = req.session.lang
 
     try {
-      const profiles = await profileMatchService.findNewProfilesAnywhere(myProfileId, [{ createdAt: 'desc' }], take, skip)
+      const profiles = await profileMatchService.findNewProfilesAnywhere(
+        myProfileId,
+        [{ createdAt: 'desc' }],
+        take,
+        skip
+      )
       const mappedProfiles = profiles.map(p =>
         mapProfileToPublic(p, false /* includeDatingContext */, locale)
       )
@@ -63,9 +78,7 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
     }
   })
 
-
   fastify.get('/dating/filter', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-
     if (req.session.profile.isDatingActive === false) {
       return sendForbiddenError(reply, 'Dating preferences are not active for this profile')
     }
@@ -84,7 +97,6 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
   })
 
   fastify.patch('/dating/filter', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-
     const data = await validateBody(UpdateDatingPreferencesPayloadSchema, req, reply)
     if (!data) return
 
@@ -100,9 +112,7 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
     }
   })
 
-
   fastify.get('/social/filter', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-
     const locale = req.session.lang
     try {
       const fetched = await profileMatchService.getSocialMatchFilter(req.session.profileId)
@@ -119,7 +129,6 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
   })
 
   fastify.patch('/social/filter', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-
     const data = await validateBody(UpdateSocialMatchFilterPayloadSchema, req, reply)
     if (!data) return
     const locale = req.session.lang
@@ -152,7 +161,12 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
     const locale = req.session.lang
 
     try {
-      const profiles = await profileMatchService.findMutualMatchesFor(myProfileId, orderBy, take, skip)
+      const profiles = await profileMatchService.findMutualMatchesFor(
+        myProfileId,
+        orderBy,
+        take,
+        skip
+      )
       const mappedProfiles = profiles.map(p =>
         mapProfileToPublic(p, true /* includeDatingContext */, locale)
       )
@@ -163,7 +177,6 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
       return sendError(reply, 500, 'Failed to fetch profiles')
     }
   }
-
 
   const getSocialProfiles = async (
     req: FastifyRequest,
@@ -180,7 +193,12 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
     const locale = req.session.lang
 
     try {
-      const profiles = await profileMatchService.findSocialProfilesFor(myProfileId, orderBy, take, skip)
+      const profiles = await profileMatchService.findSocialProfilesFor(
+        myProfileId,
+        orderBy,
+        take,
+        skip
+      )
       const mappedProfiles = profiles.map(p =>
         mapProfileToPublic(p, false /* includeDatingContext */, locale)
       )
@@ -191,9 +209,6 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
       return sendError(reply, 500, 'Failed to fetch profiles')
     }
   }
-
 }
-
-
 
 export default findProfileRoutes

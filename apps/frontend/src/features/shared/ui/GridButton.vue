@@ -11,7 +11,6 @@ import IconSquare from '@/assets/icons/interface/square.svg'
   </div>
 </template>
 
-
 <style scoped>
 .icon-grid {
   display: grid;

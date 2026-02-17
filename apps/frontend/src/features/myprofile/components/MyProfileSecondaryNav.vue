@@ -25,18 +25,25 @@ const languagePreviewOptions = computed(() => {
 })
 
 const currentLanguage = computed(() => {
-  return (
-    languagePreviewOptions.value.find(lang => lang.value === model.value.previewLanguage)
-  )
+  return languagePreviewOptions.value.find((lang) => lang.value === model.value.previewLanguage)
 })
 </script>
 
 <template>
   <div class="d-flex justify-content-end align-items-center w-100">
-    <ul pills class="nav nav-pills w-100 d-flex align-items-center">
+    <ul
+      pills
+      class="nav nav-pills w-100 d-flex align-items-center"
+    >
       <li class="col-2 d-flex align-items-center">
-        <BNavItem to="/settings" class="p-0">
-          <BButton variant="link-secondary" class="p-0">
+        <BNavItem
+          to="/settings"
+          class="p-0"
+        >
+          <BButton
+            variant="link-secondary"
+            class="p-0"
+          >
             <IconSetting2 class="svg-icon-lg" />
           </BButton>
         </BNavItem>
@@ -55,7 +62,10 @@ const currentLanguage = computed(() => {
           right
         >
           <template #button-content>
-            <LanguageIcon v-if="currentLanguage" :countryCode="currentLanguage.value" />
+            <LanguageIcon
+              v-if="currentLanguage"
+              :countryCode="currentLanguage.value"
+            />
           </template>
           <BDropdownItem
             v-for="lang in languagePreviewOptions"

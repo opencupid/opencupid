@@ -121,7 +121,6 @@ const router = createRouter({
 
 // Register the navigation guard
 router.beforeEach(async (to, from, next) => {
-
   const authStore = useAuthStore()
 
   // if route requires authentication and the user is not logged in, redirect to login
@@ -137,9 +136,6 @@ router.beforeEach(async (to, from, next) => {
   next()
 })
 
-
-router.afterEach((to, from) => {
-
-})
+router.afterEach((to, from) => {})
 
 export default router

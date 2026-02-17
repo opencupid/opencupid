@@ -27,12 +27,12 @@ export class MessageService {
       console.log('WebSocket connected')
     }
 
-    this.socket.onmessage = event => {
+    this.socket.onmessage = (event) => {
       const data: Message = JSON.parse(event.data)
-      this.onMessageHandlers.forEach(cb => cb(data))
+      this.onMessageHandlers.forEach((cb) => cb(data))
     }
 
-    this.socket.onerror = e => {
+    this.socket.onerror = (e) => {
       console.error('WebSocket error', e)
     }
 

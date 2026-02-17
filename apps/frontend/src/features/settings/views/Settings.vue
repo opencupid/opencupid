@@ -73,7 +73,7 @@ function handleClick() {
 async function handleNewsletterOptInChange(event: Event) {
   const checkbox = event.target as HTMLInputElement
   const newValue = checkbox.checked
-  
+
   isSaving.value = true
   try {
     const res = await authStore.updateUser({ newsletterOptIn: newValue })
@@ -109,8 +109,14 @@ async function handleNewsletterOptInChange(event: Event) {
           </template>
         </SecondaryNav>
 
-        <section v-if="!isLoading" class="w-100 flex-grow-1">
-          <BOverlay :show="false" class="h-100 d-flex flex-column justify-content-center">
+        <section
+          v-if="!isLoading"
+          class="w-100 flex-grow-1"
+        >
+          <BOverlay
+            :show="false"
+            class="h-100 d-flex flex-column justify-content-center"
+          >
             <div class="mb-3">
               <div class="me-2">
                 <span v-if="user.email"> {{ $t('auth.email') }}: {{ user.email }}</span>
@@ -118,7 +124,11 @@ async function handleNewsletterOptInChange(event: Event) {
                   {{ $t('auth.phone_number') }}: {{ user.phonenumber }}</span
                 >
               </div>
-              <BButton variant="primary" size="sm" @click="handleClick">
+              <BButton
+                variant="primary"
+                size="sm"
+                @click="handleClick"
+              >
                 <IconLogout class="svg-icon" />
                 {{ $t('authentication.logout') }}</BButton
               >
@@ -131,7 +141,10 @@ async function handleNewsletterOptInChange(event: Event) {
     </div> -->
 
             <fieldset class="mb-3">
-              <legend for="language-selector" class="form-label">
+              <legend
+                for="language-selector"
+                class="form-label"
+              >
                 {{ t('settings.language_label') }}
               </legend>
               <LanguageSelectorDropdown size="md" />
@@ -151,7 +164,10 @@ async function handleNewsletterOptInChange(event: Event) {
                   :disabled="isSaving"
                   @change="handleNewsletterOptInChange"
                 />
-                <label class="form-check-label" for="newsletter-opt-in">
+                <label
+                  class="form-check-label"
+                  for="newsletter-opt-in"
+                >
                   {{ t('settings.newsletter_opt_in') }}
                 </label>
               </div>

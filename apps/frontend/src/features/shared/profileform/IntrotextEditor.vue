@@ -107,10 +107,10 @@ const toggleListening = () => {
 
 watch(
   () => model.value,
-  value => {
+  (value) => {
     if (!value) return
 
-    props.languages.forEach(lang => {
+    props.languages.forEach((lang) => {
       if (!(lang in value)) {
         value[lang] = ''
       }
@@ -121,7 +121,7 @@ watch(
 
 watch(
   () => currentLanguage.value,
-  lang => {
+  (lang) => {
     if (recognition) {
       recognition.lang = lang
     }
@@ -134,10 +134,17 @@ watch(
   <div class="d-flex flex-column">
     <div class="d-flex justify-content-start align-items-center mb-3">
       <ul class="nav nav-pills flex-grow-1">
-        <li class="nav-item me-2" style="width: 1rem; height: 1rem">
+        <li
+          class="nav-item me-2"
+          style="width: 1rem; height: 1rem"
+        >
           <IconGlobe class="svg-icon svg-icon-100" />
         </li>
-        <li class="nav-item me-2" v-for="lang in langList" :key="lang">
+        <li
+          class="nav-item me-2"
+          v-for="lang in langList"
+          :key="lang"
+        >
           <a
             class="nav-link"
             :class="{ active: currentLanguage === lang }"
@@ -162,9 +169,16 @@ watch(
         </BButton>
       </div>
     </div>
-    <div v-for="lang in props.languages" :key="lang">
+    <div
+      v-for="lang in props.languages"
+      :key="lang"
+    >
       <div v-if="currentLanguage === lang">
-        <BFormFloatingLabel :label="props.placeholder" label-for="publicName" v-if="model">
+        <BFormFloatingLabel
+          :label="props.placeholder"
+          label-for="publicName"
+          v-if="model"
+        >
           <BFormTextarea
             v-model="model[lang]"
             id="content-input"

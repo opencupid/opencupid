@@ -12,8 +12,13 @@ const logout = () => {
 }
 </script>
 <template>
-
   <main>
-  <BButton variant="primary" class="" @click="logout"> Logout </BButton>
+    <BButton
+      variant="primary"
+      class=""
+      @click="logout"
+    >
+      Logout
+    </BButton>
   </main>
 </template>

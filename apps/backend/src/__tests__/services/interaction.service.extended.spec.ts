@@ -137,10 +137,7 @@ describe('InteractionService.markMatchAsSeen', () => {
 
 describe('InteractionService.getHiddenProfileIds', () => {
   it('returns hidden profile IDs', async () => {
-    mockPrisma.hiddenProfile.findMany.mockResolvedValue([
-      { toId: 'p2' },
-      { toId: 'p3' },
-    ])
+    mockPrisma.hiddenProfile.findMany.mockResolvedValue([{ toId: 'p2' }, { toId: 'p3' }])
     const ids = await service.getHiddenProfileIds('p1')
     expect(ids).toEqual(['p2', 'p3'])
   })

@@ -15,8 +15,7 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
 export class WebPushService {
   private static instance: WebPushService
 
-
-  private constructor() { }
+  private constructor() {}
 
   public static isWebPushConfigured(): boolean {
     return !!(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY)
@@ -46,7 +45,7 @@ export class WebPushService {
       body: message.content?.substring(0, 100) || 'You got a message',
       data: {
         url: `/inbox/${message.conversationId}`,
-      }
+      },
     }
     const subscriptions = await this.getSubscriptions(profile.user.id)
 
@@ -75,11 +74,9 @@ export class WebPushService {
     return await webpush.sendNotification(subscription, JSON.stringify(payload))
   }
 
-
   async getSubscriptions(userId?: string) {
     return await prisma.pushSubscription.findMany({
       where: userId ? { userId } : undefined,
     })
   }
-
 }

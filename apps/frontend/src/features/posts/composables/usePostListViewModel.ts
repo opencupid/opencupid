@@ -1,10 +1,7 @@
 import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import type {
-  PublicPostWithProfile,
-  OwnerPost,
-} from '@zod/post/post.dto'
+import type { PublicPostWithProfile, OwnerPost } from '@zod/post/post.dto'
 import { type PostTypeType } from '@zod/generated'
 
 import { usePostStore } from '../stores/postStore'
@@ -43,7 +40,7 @@ export function usePostListViewModel(options: UsePostListOptions) {
     } else {
       isLoadingMore.value = true
     }
-    
+
     const fetched = await postStore.loadPosts(options.scope || 'all', {
       type: (selectedType.value as PostTypeType) || undefined,
       page: currentPage.value,
@@ -112,7 +109,7 @@ export function usePostListViewModel(options: UsePostListOptions) {
 
   watch(
     () => options.isActive,
-    isActive => {
+    (isActive) => {
       if (isActive) {
         loadPosts()
       }
@@ -122,7 +119,7 @@ export function usePostListViewModel(options: UsePostListOptions) {
 
   watch(
     () => options.type,
-    newType => {
+    (newType) => {
       selectedType.value = newType || ''
       loadPosts()
     }

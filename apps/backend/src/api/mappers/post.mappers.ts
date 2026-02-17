@@ -1,7 +1,10 @@
-
-import { OwnerPostSchema, PublicPostSchema, type PostWithProfile, type PublicPostWithProfile } from "@zod/post/post.dto"
-import { mapProfileSummary } from "./profile.mappers"
-
+import {
+  OwnerPostSchema,
+  PublicPostSchema,
+  type PostWithProfile,
+  type PublicPostWithProfile,
+} from '@zod/post/post.dto'
+import { mapProfileSummary } from './profile.mappers'
 
 function extractPostLocation(post: Record<string, unknown>) {
   if (!post.country && !post.cityName && post.lat == null && post.lon == null) {
@@ -15,7 +18,10 @@ function extractPostLocation(post: Record<string, unknown>) {
   }
 }
 
-export function mapDbPostToPublic(post: PostWithProfile, viewerProfileId: string): PublicPostWithProfile {
+export function mapDbPostToPublic(
+  post: PostWithProfile,
+  viewerProfileId: string
+): PublicPostWithProfile {
   const { postedBy, ...rest } = post
   return {
     isOwn: post.postedById === viewerProfileId,
@@ -24,7 +30,6 @@ export function mapDbPostToPublic(post: PostWithProfile, viewerProfileId: string
     location: extractPostLocation(rest),
   }
 }
-
 
 export function mapDbPostToOwner(post: PostWithProfile): PublicPostWithProfile {
   const { postedBy, ...rest } = post

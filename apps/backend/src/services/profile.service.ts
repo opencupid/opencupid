@@ -1,22 +1,22 @@
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
 
-
 import { Profile, ProfileImage } from '@zod/generated'
-import {
-  type UpdateProfilePayload,
-  type UpdateProfileScopePayload,
-} from '@zod/profile/profile.dto'
+import { type UpdateProfilePayload, type UpdateProfileScopePayload } from '@zod/profile/profile.dto'
 import {
   DbProfileWithContext,
   DbOwnerUpdateScalars,
-  DbProfileWithImages
+  DbProfileWithImages,
 } from '@zod/profile/profile.db'
 import { mapToLocalizedUpserts } from '@/api/mappers/profile.mappers'
-import { blockedContextInclude, conversationContextInclude, interactionContextInclude, profileImageInclude, tagsInclude } from '@/db/includes/profileIncludes'
+import {
+  blockedContextInclude,
+  conversationContextInclude,
+  interactionContextInclude,
+  profileImageInclude,
+  tagsInclude,
+} from '@/db/includes/profileIncludes'
 import { ProfileMatchService } from './profileMatch.service'
-
-
 
 export class ProfileService {
   private static instance: ProfileService
@@ -32,7 +32,10 @@ export class ProfileService {
     return ProfileService.instance
   }
 
-  async getProfileWithContextById(profileId: string, myProfileId: string,): Promise<DbProfileWithContext | null> {
+  async getProfileWithContextById(
+    profileId: string,
+    myProfileId: string
+  ): Promise<DbProfileWithContext | null> {
     const query = {
       where: { id: profileId },
       include: {
@@ -58,12 +61,11 @@ export class ProfileService {
     })
   }
 
-
   /**
-   * getProfileCompleteByUserId fetches a complete profile including 
+   * getProfileCompleteByUserId fetches a complete profile including
    * localized fields tags, images identified by userId.
-   * @param userId 
-   * @returns 
+   * @param userId
+   * @returns
    */
   async getProfileCompleteByUserId(userId: string): Promise<DbProfileWithImages | null> {
     return prisma.profile.findUnique({
@@ -89,9 +91,9 @@ export class ProfileService {
    * updateCompleteProfile updates a user's profile including related localized fields, tags, and images.
    * @param tx Prisma.TransactionClient - Prisma transaction client for atomic operations
    * @param locale  Used for returning the updated record with the correct localized fields.
-   * @param userId 
-   * @param data 
-   * @returns 
+   * @param userId
+   * @param data
+   * @returns
    */
   async updateCompleteProfile(
     tx: Prisma.TransactionClient,
@@ -100,12 +102,7 @@ export class ProfileService {
     data: UpdateProfilePayload
   ): Promise<DbProfileWithImages> {
     // 1) Pull out complex parts
-    const {
-      tags,
-      introSocialLocalized,
-      introDatingLocalized,
-      ...rest
-    } = data
+    const { tags, introSocialLocalized, introDatingLocalized, ...rest } = data
 
     // 2) Validate that the user has a profile
     const current = await tx.profile.findUnique({
@@ -152,8 +149,9 @@ export class ProfileService {
     // determine if the user has dating prefs already or we need to create defaults
     // awful hack. datingPrefs really needs to move out of the Profile table.
     const datingPrefsFragment =
-     (data.birthday && !current.prefAgeMax && !current.prefAgeMin) ?
-      profileMatchService.createDatingPrefsDefaults(data) : {}
+      data.birthday && !current.prefAgeMax && !current.prefAgeMin
+        ? profileMatchService.createDatingPrefsDefaults(data)
+        : {}
 
     // 5) Update all scalar fields
     const updated = await tx.profile.update({
@@ -171,14 +169,12 @@ export class ProfileService {
     return updated
   }
 
-
   async updateProfileScalars(userId: string, data: DbOwnerUpdateScalars) {
     return await prisma.profile.update({
       where: { userId },
       data: data,
     })
   }
-
 
   async upsertLocalizedProfileText(
     tx: Prisma.TransactionClient,
@@ -210,7 +206,7 @@ export class ProfileService {
 
   async updateScopes(
     userId: string,
-    scopes: UpdateProfileScopePayload,
+    scopes: UpdateProfileScopePayload
   ): Promise<DbProfileWithImages | null> {
     const data: Prisma.ProfileUpdateInput = {}
     if (typeof scopes.isDatingActive === 'boolean') {
@@ -232,17 +228,12 @@ export class ProfileService {
         },
       })
     } catch (err) {
-      if (
-        err instanceof Prisma.PrismaClientKnownRequestError &&
-        err.code === 'P2025'
-      ) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
         return null
       }
       throw err
     }
   }
-
-
 
   public async addProfileImage(
     profileId: string,
@@ -315,16 +306,15 @@ export class ProfileService {
     return newProfile
   }
 
-
   async blockProfile(blockingProfileId: string, blockedProfileId: string) {
     return prisma.profile.update({
       where: { id: blockingProfileId },
       data: {
         blockedProfiles: {
-          connect: { id: blockedProfileId }
-        }
-      }
-    });
+          connect: { id: blockedProfileId },
+        },
+      },
+    })
   }
 
   async unblockProfile(blockingProfileId: string, blockedProfileId: string) {
@@ -332,30 +322,30 @@ export class ProfileService {
       where: { id: blockingProfileId },
       data: {
         blockedProfiles: {
-          disconnect: { id: blockedProfileId }
-        }
-      }
-    });
+          disconnect: { id: blockedProfileId },
+        },
+      },
+    })
   }
 
   async getVisibleProfiles(forProfileId: string) {
     const blockedIds = await prisma.profile.findUnique({
       where: { id: forProfileId },
-      select: { blockedProfiles: { select: { id: true } } }
-    });
+      select: { blockedProfiles: { select: { id: true } } },
+    })
 
     return prisma.profile.findMany({
       where: {
         id: {
-          notIn: blockedIds?.blockedProfiles.map(p => p.id) || []
+          notIn: blockedIds?.blockedProfiles.map(p => p.id) || [],
         },
         blockedByProfiles: {
           none: {
-            id: forProfileId
-          }
-        }
-      }
-    });
+            id: forProfileId,
+          },
+        },
+      },
+    })
   }
 
   async canInteract(profileAId: string, profileBId: string): Promise<boolean> {
@@ -363,21 +353,23 @@ export class ProfileService {
       prisma.profile.findFirst({
         where: {
           id: profileAId,
-          blockedProfiles: { some: { id: profileBId } }
-        }
+          blockedProfiles: { some: { id: profileBId } },
+        },
       }),
       prisma.profile.findFirst({
         where: {
           id: profileBId,
-          blockedProfiles: { some: { id: profileAId } }
-        }
-      })
-    ]);
+          blockedProfiles: { some: { id: profileAId } },
+        },
+      }),
+    ])
 
-    return !(aBlocksB || bBlocksA);
+    return !(aBlocksB || bBlocksA)
   }
 
-  async getBlockedProfiles(profileId: string): Promise<{ id: string; publicName: string; profileImages: ProfileImage[] }[]> {
+  async getBlockedProfiles(
+    profileId: string
+  ): Promise<{ id: string; publicName: string; profileImages: ProfileImage[] }[]> {
     const result = await prisma.profile.findUnique({
       where: { id: profileId },
       include: {
@@ -389,8 +381,8 @@ export class ProfileService {
           },
         },
       },
-    });
-    return result?.blockedProfiles ?? [];
+    })
+    return result?.blockedProfiles ?? []
   }
 
   // async findProfilesFor(locale: string, profileId: string): Promise<DbProfileComplete[]> {

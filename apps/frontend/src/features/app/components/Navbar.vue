@@ -39,36 +39,55 @@ const hasMatchNotifications = computed(
   >
     <MiddleColumn>
       <BNavbarNav class="d-flex justify-content-between w-100">
-        <BNavItem to="/home" active-class="active">
+        <BNavItem
+          to="/home"
+          active-class="active"
+        >
           <IconHome class="svg-icon-lg" />
           <span class="d-none d-md-block label">{{ $t('nav.home') }}</span>
         </BNavItem>
 
-        <BNavItem to="/posts" active-class="active">
+        <BNavItem
+          to="/posts"
+          active-class="active"
+        >
           <IconNote class="svg-icon-lg" />
           <span class="d-none d-md-inline label">{{ $t('nav.bulletin') }}</span>
         </BNavItem>
-        
-        <BNavItem to="/browse" active-class="active">
+
+        <BNavItem
+          to="/browse"
+          active-class="active"
+        >
           <IconSearch class="svg-icon-lg" />
           <span class="d-none d-md-inline label">{{ $t('nav.browse') }}</span>
         </BNavItem>
 
-        <BNavItem to="/matches" active-class="active" v-if="profileStore.profile?.isDatingActive">
+        <BNavItem
+          to="/matches"
+          active-class="active"
+          v-if="profileStore.profile?.isDatingActive"
+        >
           <NotificationDot :show="hasMatchNotifications">
             <IconHeart class="svg-icon-lg" />
           </NotificationDot>
           <span class="d-none d-md-inline label">{{ $t('nav.matches') }}</span>
         </BNavItem>
 
-        <BNavItem to="/inbox" active-class="active">
+        <BNavItem
+          to="/inbox"
+          active-class="active"
+        >
           <NotificationDot :show="hasUnreadMessages">
             <IconMessage class="svg-icon-lg" />
           </NotificationDot>
           <span class="d-none d-md-inline label">{{ $t('nav.inbox') }}</span>
         </BNavItem>
 
-        <BNavItem to="/me" active-class="active">
+        <BNavItem
+          to="/me"
+          active-class="active"
+        >
           <span
             v-if="profileStore.profile?.profileImages?.length"
             class="profile-thumbnail d-flex overflow-hidden"
@@ -79,7 +98,10 @@ const hasMatchNotifications = computed(
               class="img-fluid rounded w-100 h-100"
             />
           </span>
-          <IconUser v-else class="svg-icon-lg" />
+          <IconUser
+            v-else
+            class="svg-icon-lg"
+          />
         </BNavItem>
       </BNavbarNav>
     </MiddleColumn>

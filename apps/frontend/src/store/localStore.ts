@@ -7,7 +7,7 @@ export type SendMode = 'enter' | 'click'
 
 export interface LocalState {
   messageDrafts: Record<string, string>
-  language: string |null
+  language: string | null
   theme: string
   currentScope: ProfileScope | null
   sendMode: SendMode
@@ -22,11 +22,11 @@ export const useLocalStore = defineStore('local', {
     sendMode: 'enter',
   }),
   getters: {
-    getLanguage: state => state.language,
-    getTheme: state => state.theme,
-    getCurrentScope: state => state.currentScope,
-    getMessageDraft: state => (id: string) => state.messageDrafts[id] || '',
-    getSendMode: state => state.sendMode,
+    getLanguage: (state) => state.language,
+    getTheme: (state) => state.theme,
+    getCurrentScope: (state) => state.currentScope,
+    getMessageDraft: (state) => (id: string) => state.messageDrafts[id] || '',
+    getSendMode: (state) => state.sendMode,
   },
   actions: {
     setMessageDraft(profileId: string, message: string) {
@@ -78,7 +78,7 @@ export const useLocalStore = defineStore('local', {
     setSendMode(mode: SendMode) {
       this.sendMode = mode
       localStorage.setItem('sendMode', mode)
-    }
+    },
     // setFlashMessage(message: string, type: string) {
     //   this.flashMessage = {
     //     message: message,

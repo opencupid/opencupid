@@ -17,7 +17,11 @@ const showModal = ref(false)
     <p class="text-muted">{{ t('profiles.browse.no_results_cta_description') }}</p>
 
     <!-- Invite friends -->
-    <BButton class="mb-3" variant="primary" @click="showModal = true">
+    <BButton
+      class="mb-3"
+      variant="primary"
+      @click="showModal = true"
+    >
       {{ t('profiles.browse.invite_button') }}
     </BButton>
   </div>

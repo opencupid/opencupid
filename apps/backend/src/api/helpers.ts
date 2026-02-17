@@ -21,7 +21,6 @@ export function sendUnauthorizedError(
   return sendError(reply, 401, message)
 }
 
-
 export function sendForbiddenError(
   reply: FastifyPluginAsync['prototype']['reply'],
   message: string = 'Forbidden'
@@ -33,9 +32,7 @@ export function getUserRoles(req: FastifyRequest): UserRole[] {
   return req.session?.roles || []
 }
 
-export function addDebounceHeaders(
-  reply: FastifyPluginAsync['prototype']['reply'],
-) {
+export function addDebounceHeaders(reply: FastifyPluginAsync['prototype']['reply']) {
   // disable caching and inform client of debounce interval
   reply.header('Cache-Control', 'no-cache, no-store, must-revalidate')
   reply.header('X-Debounce', appConfig.TYPEAHEAD_DEBOUNCE_MS.toString())

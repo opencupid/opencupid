@@ -3,12 +3,7 @@ import { appConfig } from '@/lib/appconfig'
 import i18next from 'i18next'
 import { dispatcher } from '@/queues/dispatcher'
 
-export type NotificationType =
-  | 'login_link'
-  | 'welcome'
-  | 'new_message'
-  | 'new_like'
-  | 'new_match'
+export type NotificationType = 'login_link' | 'welcome' | 'new_message' | 'new_like' | 'new_match'
 
 export interface NotificationTemplates {
   login_link: { otp: string; link: string }

@@ -97,7 +97,7 @@ export function usePostsViewModel() {
     const normalized = toListPost(post)
 
     if (activeTab.value === 'my') {
-      const idx = postStore.myPosts.findIndex(item => item.id === post.id)
+      const idx = postStore.myPosts.findIndex((item) => item.id === post.id)
       if (idx === -1) {
         postStore.myPosts.unshift(post as OwnerPost)
       } else {
@@ -106,7 +106,7 @@ export function usePostsViewModel() {
       return
     }
 
-    const idx = postStore.posts.findIndex(item => item.id === post.id)
+    const idx = postStore.posts.findIndex((item) => item.id === post.id)
     if (idx === -1) {
       postStore.posts.unshift(normalized as PublicPostWithProfile)
     } else {

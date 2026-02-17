@@ -75,7 +75,6 @@ watch(
     resetMessageSent()
   }
 )
-
 </script>
 
 <template>
@@ -90,7 +89,10 @@ watch(
       @delete="emit('delete', post)"
     />
 
-    <div v-if="showMessageForm" class="mt-3">
+    <div
+      v-if="showMessageForm"
+      class="mt-3"
+    >
       <div v-if="!messageSent && recipientProfile">
         <SendMessageForm
           ref="messageInput"
@@ -99,8 +101,14 @@ watch(
           @message:sent="handleMessageSent"
         />
       </div>
-      <div v-else class="d-flex flex-column align-items-center justify-content-center h-100 text-success">
-        <div class="my-4 animate__animated animate__zoomIn" style="height: 5rem">
+      <div
+        v-else
+        class="d-flex flex-column align-items-center justify-content-center h-100 text-success"
+      >
+        <div
+          class="my-4 animate__animated animate__zoomIn"
+          style="height: 5rem"
+        >
           <IconMessage class="svg-icon-lg h-100 w-100" />
         </div>
         <h5 class="mb-4 text-center animate__animated animate__fadeInDown">

@@ -1,5 +1,9 @@
 import { describe, it, expect, vi } from 'vitest'
-import { mapMessageDTO, mapMessageForMessageList, mapConversationParticipantToSummary } from '../../api/mappers/messaging.mappers'
+import {
+  mapMessageDTO,
+  mapMessageForMessageList,
+  mapConversationParticipantToSummary,
+} from '../../api/mappers/messaging.mappers'
 vi.mock('@prisma/client', () => ({ Prisma: {}, PrismaClient: class {} }))
 vi.mock('@shared/config/appconfig', () => ({ appConfig: { IMAGE_URL_BASE: 'http://img' } }))
 

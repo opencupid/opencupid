@@ -15,9 +15,15 @@ withDefaults(
 
 <template>
   <BContainer>
-
-    <BRow cols="1" cols-sm="2" >
-      <BCol v-for="n in howMany" :key="n" class="mb-3">
+    <BRow
+      cols="1"
+      cols-sm="2"
+    >
+      <BCol
+        v-for="n in howMany"
+        :key="n"
+        class="mb-3"
+      >
         <ProfileCardPlaceholder :isAnimated="isAnimated" />
       </BCol>
     </BRow>

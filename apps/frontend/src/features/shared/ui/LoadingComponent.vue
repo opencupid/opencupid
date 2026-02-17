@@ -6,7 +6,10 @@ const { t } = useI18n()
 <template>
   <div class="loading-spinner">
     <div class="text-center">
-      <div class="spinner-border" role="status">
+      <div
+        class="spinner-border"
+        role="status"
+      >
         <span class="visually-hidden">{{ t('uicomponents.loading.loading') }}</span>
       </div>
     </div>

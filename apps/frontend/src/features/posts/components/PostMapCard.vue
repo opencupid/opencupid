@@ -35,38 +35,61 @@ const postLocation = computed(() => {
 
 <template>
   <div class="post-wrapper position-relative w-100">
-    <PostIt class="position-relative p-2" :id="item.id" variant="">
+    <PostIt
+      class="position-relative p-2"
+      :id="item.id"
+      variant=""
+    >
       <template #header>
         <div class="d-flex justify-content-end align-items-center">
           <PostTypeBadge :type="item.type" />
         </div>
       </template>
 
-      <div class="post-card d-flex flex-column" :class="`post-card--${item.type.toLowerCase()}`" @click="$emit('click', item.id)">
+      <div
+        class="post-card d-flex flex-column"
+        :class="`post-card--${item.type.toLowerCase()}`"
+        @click="$emit('click', item.id)"
+      >
         <p class="post-content flex-grow-1 flex-shrink-1">{{ item.content }}</p>
 
         <div class="post-meta d-flex align-items-center justify-content-start gap-2">
           <div class="text-muted flex-shrink-0">
             <div class="d-flex justify-content-start flex-row align-items-center">
-              <div v-if="hasProfileData(item)" class="d-flex align-items-center">
-                <ProfileThumbnail :profile="item.postedBy" class="me-2" />
+              <div
+                v-if="hasProfileData(item)"
+                class="d-flex align-items-center"
+              >
+                <ProfileThumbnail
+                  :profile="item.postedBy"
+                  class="me-2"
+                />
                 <div>{{ item.postedBy.publicName }}</div>
               </div>
               <div>
-                <UseTimeAgo v-slot="{ timeAgo }" :time="item.createdAt"> | {{ timeAgo }} </UseTimeAgo>
+                <UseTimeAgo
+                  v-slot="{ timeAgo }"
+                  :time="item.createdAt"
+                >
+                  | {{ timeAgo }}
+                </UseTimeAgo>
               </div>
             </div>
           </div>
 
           <div class="location d-flex flex-shrink-1 flex-grow-1 min-w-0 justify-content-end">
-            <span v-if="postLocation" class="post-location text-muted">
-              <LocationLabel 
+            <span
+              v-if="postLocation"
+              class="post-location text-muted"
+            >
+              <LocationLabel
                 :viewerLocation="viewerLocation"
-                :location="postLocation" 
+                :location="postLocation"
                 :show-country-label="false"
                 :show-city="true"
-                :show-country-icon="true" 
-                :show-only-foreign-country="true" />
+                :show-country-icon="true"
+                :show-only-foreign-country="true"
+              />
             </span>
           </div>
         </div>

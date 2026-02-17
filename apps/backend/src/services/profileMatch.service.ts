@@ -1,12 +1,15 @@
 import { prisma } from '../lib/prisma'
 
-import { type DbProfileWithImages } from '@zod/profile/profile.db';
-import type { SocialMatchFilterWithTags, UpdateSocialMatchFilterPayload } from '@zod/match/filters.dto';
+import { type DbProfileWithImages } from '@zod/profile/profile.db'
+import type {
+  SocialMatchFilterWithTags,
+  UpdateSocialMatchFilterPayload,
+} from '@zod/match/filters.dto'
 
-import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause';
-import { profileImageInclude, tagsInclude } from '@/db/includes/profileIncludes';
-import type { LocationDTO } from '@zod/dto/location.dto';
-import { Gender, HasKids, type Prisma } from '@prisma/client';
+import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
+import { profileImageInclude, tagsInclude } from '@/db/includes/profileIncludes'
+import type { LocationDTO } from '@zod/dto/location.dto'
+import { Gender, HasKids, type Prisma } from '@prisma/client'
 
 const tagInclude = {
   // city: true,
@@ -15,12 +18,13 @@ const tagInclude = {
       translations: {
         select: { name: true, locale: true },
       },
-    }
+    },
   },
 }
 
-
-export type OrderBy = Prisma.Enumerable<Prisma.ProfileOrderByWithRelationInput> | Prisma.ProfileOrderByWithRelationInput
+export type OrderBy =
+  | Prisma.Enumerable<Prisma.ProfileOrderByWithRelationInput>
+  | Prisma.ProfileOrderByWithRelationInput
 
 const defaultOrderBy: OrderBy = {
   updatedAt: 'desc',
@@ -32,9 +36,12 @@ const statusFlags = {
 }
 
 export class ProfileMatchService {
-
-  async findNewProfilesAnywhere(profileId: string, orderBy: OrderBy = defaultOrderBy, take: number = 10, skip: number = 0): Promise<DbProfileWithImages[]> {
-
+  async findNewProfilesAnywhere(
+    profileId: string,
+    orderBy: OrderBy = defaultOrderBy,
+    take: number = 10,
+    skip: number = 0
+  ): Promise<DbProfileWithImages[]> {
     const profiles = await prisma.profile.findMany({
       where: {
         ...statusFlags,
@@ -56,16 +63,15 @@ export class ProfileMatchService {
     return profiles
   }
 
-  private static instance: ProfileMatchService;
+  private static instance: ProfileMatchService
 
-  private constructor() {
-  }
+  private constructor() {}
 
   public static getInstance(): ProfileMatchService {
     if (!ProfileMatchService.instance) {
-      ProfileMatchService.instance = new ProfileMatchService();
+      ProfileMatchService.instance = new ProfileMatchService()
     }
-    return ProfileMatchService.instance;
+    return ProfileMatchService.instance
   }
 
   async getSocialMatchFilter(profileId: string): Promise<SocialMatchFilterWithTags | null> {
@@ -73,11 +79,14 @@ export class ProfileMatchService {
       where: { profileId },
       include: {
         ...tagInclude,
-      }
+      },
     })
   }
 
-  async updateSocialMatchFilter(profileId: string, data: UpdateSocialMatchFilterPayload): Promise<SocialMatchFilterWithTags | null> {
+  async updateSocialMatchFilter(
+    profileId: string,
+    data: UpdateSocialMatchFilterPayload
+  ): Promise<SocialMatchFilterWithTags | null> {
     const tagIds = (data.tags ?? []).map(id => ({ id }))
     const update = {
       profileId,
@@ -103,18 +112,21 @@ export class ProfileMatchService {
       },
     }
 
-
     return await prisma.socialMatchFilter.upsert({
       where: { profileId },
       update,
       create,
       include: {
         ...tagInclude,
-      }
+      },
     })
   }
 
-  async createSocialMatchFilter(tx: Prisma.TransactionClient, profileId: string, location: LocationDTO): Promise<SocialMatchFilterWithTags | null> {
+  async createSocialMatchFilter(
+    tx: Prisma.TransactionClient,
+    profileId: string,
+    location: LocationDTO
+  ): Promise<SocialMatchFilterWithTags | null> {
     return await tx.socialMatchFilter.create({
       data: {
         profileId,
@@ -122,11 +134,10 @@ export class ProfileMatchService {
       },
       include: {
         ...tagInclude,
-      }
+      },
     })
   }
-  createDatingPrefsDefaults(profile: { birthday?: Date | null, gender?: Gender | null }) {
-
+  createDatingPrefsDefaults(profile: { birthday?: Date | null; gender?: Gender | null }) {
     if (!profile.birthday) return {}
     const currentYear = new Date().getFullYear()
     const age = currentYear - new Date(profile.birthday).getFullYear()
@@ -148,10 +159,12 @@ export class ProfileMatchService {
       */
   }
 
-
-
-  async findSocialProfilesFor(profileId: string, orderBy: OrderBy = defaultOrderBy, take: number = 10, skip: number = 0): Promise<DbProfileWithImages[]> {
-
+  async findSocialProfilesFor(
+    profileId: string,
+    orderBy: OrderBy = defaultOrderBy,
+    take: number = 10,
+    skip: number = 0
+  ): Promise<DbProfileWithImages[]> {
     const userPrefs = await this.getSocialMatchFilter(profileId)
 
     if (!userPrefs) {
@@ -162,13 +175,15 @@ export class ProfileMatchService {
 
     const filters = {
       ...(userPrefs.country ? { country: userPrefs.country } : {}),
-      ...(userPrefs.tags?.length ? {
-        tags: {
-          some: {
-            id: { in: tagIds },
-          },
-        },
-      } : {}),
+      ...(userPrefs.tags?.length
+        ? {
+            tags: {
+              some: {
+                id: { in: tagIds },
+              },
+            },
+          }
+        : {}),
     }
 
     const profiles = await prisma.profile.findMany({
@@ -193,9 +208,12 @@ export class ProfileMatchService {
     return profiles
   }
 
-
-  async findLocalProfiles(profileId: string, orderBy: OrderBy = defaultOrderBy, take: number = 10, skip: number = 0): Promise<DbProfileWithImages[]> {
-
+  async findLocalProfiles(
+    profileId: string,
+    orderBy: OrderBy = defaultOrderBy,
+    take: number = 10,
+    skip: number = 0
+  ): Promise<DbProfileWithImages[]> {
     const userPrefs = await this.getSocialMatchFilter(profileId)
 
     if (!userPrefs) {
@@ -228,8 +246,12 @@ export class ProfileMatchService {
     return profiles
   }
 
-
-  async findMutualMatchesFor(profileId: string, orderBy: OrderBy = defaultOrderBy, take: number = 10, skip: number = 0): Promise<DbProfileWithImages[]> {
+  async findMutualMatchesFor(
+    profileId: string,
+    orderBy: OrderBy = defaultOrderBy,
+    take: number = 10,
+    skip: number = 0
+  ): Promise<DbProfileWithImages[]> {
     const profile = await prisma.profile.findUnique({
       where: { id: profileId },
     })
@@ -247,7 +269,7 @@ export class ProfileMatchService {
       ...statusFlags,
       isDatingActive: true,
       id: {
-        not: profile.id
+        not: profile.id,
       },
       ...blocklistWhereClause(profileId),
       birthday: {
@@ -301,11 +323,7 @@ export class ProfileMatchService {
 
     return aMatchesB && bMatchesA
   }
-
 }
-
-
-
 
 export function calculateAge(birthday: Date): number {
   const today = new Date()

@@ -17,7 +17,10 @@ defineProps<{
 <template>
   <div class="d-flex align-items-center clickable">
     <div class="profile-thumbnail me-2">
-      <ProfileImage :profile="edge.profile" variant="thumb" />
+      <ProfileImage
+        :profile="edge.profile"
+        variant="thumb"
+      />
     </div>
     <span>
       <!-- You matched with someone! -->

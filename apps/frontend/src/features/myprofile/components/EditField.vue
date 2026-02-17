@@ -37,8 +37,15 @@ const fieldProxy = getModelProxy(props.fieldName)
 </script>
 
 <template>
-  <span v-if="isEditable" class="editable-field" v-bind:class="props.wrapperClass">
-    <span @click="handleButtonClick" class="clickable">
+  <span
+    v-if="isEditable"
+    class="editable-field"
+    v-bind:class="props.wrapperClass"
+  >
+    <span
+      @click="handleButtonClick"
+      class="clickable"
+    >
       <slot name="placeholder"> </slot>
     </span>
     <a
@@ -51,7 +58,10 @@ const fieldProxy = getModelProxy(props.fieldName)
         <IconPencil2 class="svg-icon" />
       </slot>
     </a>
-    <Teleport to="#field-edit-modal" v-if="fieldEditState.fieldEditModal">
+    <Teleport
+      to="#field-edit-modal"
+      v-if="fieldEditState.fieldEditModal"
+    >
       <component
         :is="editComponent"
         v-bind="editProps"

@@ -15,7 +15,7 @@ import {
  */
 export function useEnumOptions(t: (key: string) => string) {
   function enumOptions<T extends Record<string, string | number>>(enumObj: T, prefix: string) {
-    return Object.values(enumObj).map(value => ({
+    return Object.values(enumObj).map((value) => ({
       value,
       label: t(`${prefix}.${value}`),
     }))

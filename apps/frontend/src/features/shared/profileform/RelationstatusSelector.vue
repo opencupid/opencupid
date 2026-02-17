@@ -6,7 +6,7 @@ import { useEnumOptions } from '../composables/useEnumOptions'
 // i18n
 const { t } = useI18n()
 
-const model = defineModel<RelationshipStatusType|null>({
+const model = defineModel<RelationshipStatusType | null>({
   default: () => 'unspecified',
 })
 const { relationshipStatusOptions } = useEnumOptions(t)

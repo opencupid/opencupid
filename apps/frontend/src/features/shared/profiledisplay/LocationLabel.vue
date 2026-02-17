@@ -3,7 +3,7 @@ import { computed } from 'vue'
 
 import { type SearchLocationDTO, type LocationDTO } from '@zod/dto/location.dto'
 import { useCountries } from '@/features/shared/composables/useCountries'
-import CountryFlag from '@/features/shared/ui/CountryFlag.vue';
+import CountryFlag from '@/features/shared/ui/CountryFlag.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -27,7 +27,6 @@ const { countryCodeToName } = useCountries()
 const countryName = computed(() => {
   return props.location.country ? countryCodeToName(props.location.country) : ''
 })
-
 
 const isSameCountry = computed(() => {
   return props.viewerLocation?.country === props.location.country
@@ -55,9 +54,8 @@ const shouldRenderCountry = computed(() => {
   return props.showCountryLabel || props.showCountryIcon
 })
 
-
 const countryCode = computed(() => {
-  return props.location.country?.toLowerCase() 
+  return props.location.country?.toLowerCase()
 })
 </script>
 
@@ -71,16 +69,26 @@ const countryCode = computed(() => {
         {{ countryName }}
       </template>
 
-      <span v-if="showCountryIcon" @click="$event.stopPropagation()">
-        <BTooltip :delay="100" placement="top" :title="countryName">
+      <span
+        v-if="showCountryIcon"
+        @click="$event.stopPropagation()"
+      >
+        <BTooltip
+          :delay="100"
+          placement="top"
+          :title="countryName"
+        >
           <template #target>
-            <CountryFlag :code="countryCode" size="32" circle :title="countryName" />
+            <CountryFlag
+              :code="countryCode"
+              size="32"
+              circle
+              :title="countryName"
+            />
           </template>
           {{ countryName }}
         </BTooltip>
       </span>
     </span>
-
-
   </span>
 </template>

@@ -37,13 +37,22 @@ const { current, isFirst, isLast, goToNext, goToPrevious, isCurrent } =
   <div
     class="d-flex justify-content-start align-items-center w-100 flex-grow-0 position-absolute top-0 start-0"
   >
-    <BackButton :show="!isFirst && !isLast" @click="goToPrevious" />
+    <BackButton
+      :show="!isFirst && !isLast"
+      @click="goToPrevious"
+    />
   </div>
 
   <div class="flex-grow-1 d-flex flex-column justify-content-center w-100">
-    <DatingSteps v-model="formData" :isCurrent />
+    <DatingSteps
+      v-model="formData"
+      :isCurrent
+    />
 
-    <fieldset v-if="isCurrent('confirm')" class="position-relative py-5 px-3">
+    <fieldset
+      v-if="isCurrent('confirm')"
+      class="position-relative py-5 px-3"
+    >
       <legend>{{ t('onboarding.wizard.all_set') }}</legend>
       <p class="text-muted">
         {{ t('onboarding.wizard.appear_message') }}
@@ -75,7 +84,12 @@ const { current, isFirst, isLast, goToNext, goToPrevious, isCurrent } =
       </BButton>
     </div>
     <div>
-      <BButton v-if="!isLast" @click="$emit('cancel')" variant="link" class="link-secondary">
+      <BButton
+        v-if="!isLast"
+        @click="$emit('cancel')"
+        variant="link"
+        class="link-secondary"
+      >
         {{ t('onboarding.wizard.cancel') }}
       </BButton>
     </div>

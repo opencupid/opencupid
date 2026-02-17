@@ -20,11 +20,23 @@
     :aria-owns="'listbox-' + id"
     :aria-activedescendant="isOpen && pointer !== null ? id + '-' + pointer : null"
   >
-    <slot name="caret" :toggle="toggle">
-      <div @mousedown.prevent.stop="toggle()" class="multiselect__select"></div>
+    <slot
+      name="caret"
+      :toggle="toggle"
+    >
+      <div
+        @mousedown.prevent.stop="toggle()"
+        class="multiselect__select"
+      ></div>
     </slot>
-    <slot name="clear" :search="search"></slot>
-    <div ref="tags" class="multiselect__tags">
+    <slot
+      name="clear"
+      :search="search"
+    ></slot>
+    <div
+      ref="tags"
+      class="multiselect__tags"
+    >
       <slot
         name="selection"
         :search="search"
@@ -32,10 +44,22 @@
         :values="visibleValues"
         :is-open="isOpen"
       >
-        <div class="multiselect__tags-wrap" v-show="visibleValues.length > 0">
+        <div
+          class="multiselect__tags-wrap"
+          v-show="visibleValues.length > 0"
+        >
           <template v-for="(option, index) of visibleValues">
-            <slot name="tag" :option="option" :search="search" :remove="removeElement">
-              <span class="multiselect__tag" :key="index" @mousedown.prevent>
+            <slot
+              name="tag"
+              :option="option"
+              :search="search"
+              :remove="removeElement"
+            >
+              <span
+                class="multiselect__tag"
+                :key="index"
+                @mousedown.prevent
+              >
                 <span v-text="getOptionLabel(option)"></span>
                 <i
                   tabindex="1"
@@ -49,13 +73,19 @@
         </div>
         <template v-if="internalValue && internalValue.length > limit">
           <slot name="limit">
-            <strong class="multiselect__strong" v-text="limitText(internalValue.length - limit)" />
+            <strong
+              class="multiselect__strong"
+              v-text="limitText(internalValue.length - limit)"
+            />
           </slot>
         </template>
       </slot>
       <transition name="multiselect__loading">
         <slot name="loading">
-          <div v-show="loading" class="multiselect__spinner" />
+          <div
+            v-show="loading"
+            class="multiselect__spinner"
+          />
         </slot>
       </transition>
       <input
@@ -84,8 +114,15 @@
         class="multiselect__input"
         :aria-controls="'listbox-' + id"
       />
-      <span v-if="isSingleLabelVisible" class="multiselect__single" @mousedown.prevent="toggle">
-        <slot name="singleLabel" :option="singleValue">
+      <span
+        v-if="isSingleLabelVisible"
+        class="multiselect__single"
+        @mousedown.prevent="toggle"
+      >
+        <slot
+          name="singleLabel"
+          :option="singleValue"
+        >
           {{ currentOptionLabel }}
         </slot>
       </span>
@@ -145,7 +182,12 @@
                 :data-deselect="deselectLabelText"
                 class="multiselect__option"
               >
-                <slot name="option" :option="option" :search="search" :index="index">
+                <slot
+                  name="option"
+                  :option="option"
+                  :search="search"
+                  :index="index"
+                >
                   <span>{{ getOptionLabel(option) }}</span>
                 </slot>
               </span>
@@ -158,7 +200,12 @@
                 @mousedown.prevent="selectGroup(option)"
                 class="multiselect__option"
               >
-                <slot name="option" :option="option" :search="search" :index="index">
+                <slot
+                  name="option"
+                  :option="option"
+                  :search="search"
+                  :index="index"
+                >
                   <span>{{ getOptionLabel(option) }}</span>
                 </slot>
               </span>
@@ -166,7 +213,9 @@
           </template>
           <li v-show="showNoResults && filteredOptions.length === 0 && search && !loading">
             <span class="multiselect__option">
-              <slot name="noResult" :search="search"
+              <slot
+                name="noResult"
+                :search="search"
                 >No elements found. Consider changing the search query.</slot
               >
             </span>
@@ -302,7 +351,7 @@ export default {
      */
     limitText: {
       type: Function,
-      default: count => `and ${count} more`,
+      default: (count) => `and ${count} more`,
     },
     /**
      * Set true to trigger the loading spinner.

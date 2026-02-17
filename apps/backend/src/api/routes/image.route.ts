@@ -6,13 +6,10 @@ import { ProfileService } from 'src/services/profile.service'
 import { ImageService } from 'src/services/image.service'
 import { uploadTmpDir } from '@/lib/media'
 import { sendError, sendForbiddenError } from '../helpers'
-import {
-  mapProfileImagesToOwner,
-} from '@/api/mappers/profile.mappers'
+import { mapProfileImagesToOwner } from '@/api/mappers/profile.mappers'
 import { ReorderProfileImagesPayloadSchema } from '@zod/profile/profileimage.dto'
 import { appConfig } from '@/lib/appconfig'
 import type { ImageApiResponse } from '@zod/profile/profileimage.dto'
-
 
 // Route params for ID lookups
 const IdLookupParamsSchema = z.object({
@@ -38,7 +35,6 @@ const imageRoutes: FastifyPluginAsync = async fastify => {
   const imageService = ImageService.getInstance()
 
   fastify.get('/me', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-
     try {
       const rawImages = await imageService.listImages(req.user.userId)
       const images = mapProfileImagesToOwner(rawImages)
@@ -58,7 +54,6 @@ const imageRoutes: FastifyPluginAsync = async fastify => {
       onRequest: [fastify.authenticate],
     },
     async (req, reply) => {
-
       let files
 
       try {
@@ -125,7 +120,6 @@ const imageRoutes: FastifyPluginAsync = async fastify => {
    * Delete a profile image
    */
   fastify.delete('/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-
     const { id: profileImageId } = IdLookupParamsSchema.parse(req.params)
 
     try {
@@ -150,7 +144,6 @@ const imageRoutes: FastifyPluginAsync = async fastify => {
    * Reorder profile images
    */
   fastify.patch('/order', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-
     const { images } = ReorderProfileImagesPayloadSchema.parse(req.body)
 
     try {

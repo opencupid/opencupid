@@ -20,7 +20,11 @@ onMounted(() => {
 </script>
 
 <template>
-  <BFormFloatingLabel :label="t('profiles.forms.name_label')" label-for="publicName" class="my-2">
+  <BFormFloatingLabel
+    :label="t('profiles.forms.name_label')"
+    label-for="publicName"
+    class="my-2"
+  >
     <BInput
       size="lg"
       v-model.trim="model"

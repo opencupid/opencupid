@@ -29,7 +29,7 @@ const showAll = ref(false)
 
 const gender = computed({
   get: () => model.value.gender,
-  set: val => {
+  set: (val) => {
     model.value = {
       ...model.value,
       gender: val,
@@ -40,7 +40,7 @@ const gender = computed({
 
 const pronouns = computed({
   get: () => model.value.pronouns,
-  set: val => {
+  set: (val) => {
     model.value = {
       ...model.value,
       pronouns: val,
@@ -51,17 +51,17 @@ const pronouns = computed({
 const { genderOptions, pronounsOptions } = useEnumOptions(t)
 
 const allGenderOptions = genderOptions().filter(
-  o => o.value !== 'unspecified'
+  (o) => o.value !== 'unspecified'
 ) as MultiselectOption[]
 const defaultGenderOptions = ['male', 'female']
 
 const sortedOptions = computed(() => {
-  const current = allGenderOptions.find(o => o.value === gender.value)
+  const current = allGenderOptions.find((o) => o.value === gender.value)
 
   if (showAll.value) return allGenderOptions
 
   if (gender.value === 'unspecified')
-    return allGenderOptions.filter(o => defaultGenderOptions.includes(o.value))
+    return allGenderOptions.filter((o) => defaultGenderOptions.includes(o.value))
 
   return current ? [current] : []
 })
@@ -72,7 +72,10 @@ const showPronouns = computed(() => {
 </script>
 <template>
   <div>
-    <GenderSelector :sortedOptions="sortedOptions" v-model="gender" />
+    <GenderSelector
+      :sortedOptions="sortedOptions"
+      v-model="gender"
+    />
     <BButton
       v-if="!showAll"
       @click="() => (showAll = !showAll)"
@@ -82,7 +85,10 @@ const showPronouns = computed(() => {
       {{ t('profiles.forms.more_options') }}
     </BButton>
 
-    <div v-if="showPronouns && !showAll" class="mt-3">
+    <div
+      v-if="showPronouns && !showAll"
+      class="mt-3"
+    >
       <PronounSelector v-model="pronouns" />
     </div>
   </div>

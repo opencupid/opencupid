@@ -7,7 +7,10 @@ const currentScope = defineModel<ProfileScope | null>()
 </script>
 
 <template>
-  <div class="btn-group btn-group-toggle" data-bs-toggle="buttons">
+  <div
+    class="btn-group btn-group-toggle"
+    data-bs-toggle="buttons"
+  >
     <input
       type="radio"
       class="btn-check"
@@ -17,8 +20,11 @@ const currentScope = defineModel<ProfileScope | null>()
       :checked="currentScope === 'social'"
       @click="currentScope = 'social'"
     />
-    <label class="social btn btn-outline-social d-flex align-items-center flex-row justify-content-right" for="social"
-      :title="$t('general.connectiontypes.socializing')">
+    <label
+      class="social btn btn-outline-social d-flex align-items-center flex-row justify-content-right"
+      for="social"
+      :title="$t('general.connectiontypes.socializing')"
+    >
       <span class="d-none d-sm-inline">{{ $t('general.connectiontypes.socializing') }}</span>
       <IconSocialize class="svg-icon-100"
     /></label>
@@ -32,8 +38,11 @@ const currentScope = defineModel<ProfileScope | null>()
       :checked="currentScope === 'dating'"
       @click="currentScope = 'dating'"
     />
-    <label class="dating btn btn-outline-dating d-flex align-items-center flex-row justify-content-left" for="dating"
-          :title="$t('general.connectiontypes.dating')">
+    <label
+      class="dating btn btn-outline-dating d-flex align-items-center flex-row justify-content-left"
+      for="dating"
+      :title="$t('general.connectiontypes.dating')"
+    >
       <span class="d-none d-sm-inline">{{ $t('general.connectiontypes.dating') }}</span>
       <IconDate class="svg-icon-100" />
     </label>

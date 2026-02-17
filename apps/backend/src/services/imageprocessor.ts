@@ -8,8 +8,6 @@ import { type Crop } from 'smartcrop'
 
 type FaceBox = { x: number; y: number; width: number; height: number }
 
-
-
 function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n))
 }
@@ -36,7 +34,6 @@ function toValidExtractRect(r: Rect, iw: number, ih: number): IntRect {
     height: clBottom - clTop,
   }
 }
-
 
 function intersectClampToImage(r: Rect, iw: number, ih: number): Rect {
   const left = clamp(r.left, 0, iw)
@@ -66,11 +63,7 @@ function rectFromCenterSize(cx: number, cy: number, w: number, h: number): Rect 
   return { left: cx - w / 2, top: cy - h / 2, width: w, height: h }
 }
 
-function ensureAspectEnclosing(
-  r: Rect,
-  targetW: number,
-  targetH: number
-): Rect {
+function ensureAspectEnclosing(r: Rect, targetW: number, targetH: number): Rect {
   const targetAR = targetW / targetH
   const rAR = r.width / r.height
   if (Math.abs(rAR - targetAR) < 1e-6) return r
@@ -89,11 +82,7 @@ function ensureAspectEnclosing(
   }
 }
 
-function maximizeInsideImageKeepingCenter(
-  r: Rect,
-  iw: number,
-  ih: number
-): Rect {
+function maximizeInsideImageKeepingCenter(r: Rect, iw: number, ih: number): Rect {
   // Try to grow r uniformly until it hits image bounds.
   const cx = r.left + r.width / 2
   const cy = r.top + r.height / 2
@@ -118,8 +107,6 @@ function maximizeInsideImageKeepingCenter(
 function area(r: Rect) {
   return r.width * r.height
 }
-
-
 
 // ImageProcessor.ts
 export class ImageProcessor {
@@ -161,7 +148,9 @@ export class ImageProcessor {
 
   private async detectFaces(): Promise<FaceBox[]> {
     const { data, info } = await sharp(this.buffer)
-      .removeAlpha().raw().toBuffer({ resolveWithObject: true })
+      .removeAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true })
 
     const tensor = tf.tensor3d(new Uint8Array(data), [info.height, info.width, 3])
     const preds = await this.detector.estimateFaces(tensor, false)
@@ -183,7 +172,6 @@ export class ImageProcessor {
     return result.topCrop
   }
 
-
   async extractAndResize(
     crop: { x: number; y: number; width: number; height: number } | Rect,
     width: number,
@@ -194,9 +182,8 @@ export class ImageProcessor {
     const ih = this.metadata?.height ?? 0
 
     // normalize incoming crop
-    const r: Rect = ('x' in crop)
-      ? { left: crop.x, top: crop.y, width: crop.width, height: crop.height }
-      : crop
+    const r: Rect =
+      'x' in crop ? { left: crop.x, top: crop.y, width: crop.width, height: crop.height } : crop
 
     const rect =
       iw > 0 && ih > 0 && r.width > 0 && r.height > 0
@@ -211,7 +198,12 @@ export class ImageProcessor {
       .toFile(outputPath)
   }
 
-  async resizeOriginal(width: number, height: number | undefined, fit: keyof sharp.FitEnum, outputPath: string) {
+  async resizeOriginal(
+    width: number,
+    height: number | undefined,
+    fit: keyof sharp.FitEnum,
+    outputPath: string
+  ) {
     await this.sharpInstance
       .clone()
       .resize({ width, height, fit })
@@ -223,21 +215,20 @@ export class ImageProcessor {
     return `image/${this.metadata?.format ?? 'jpeg'}`
   }
 
-  getOriginalSize(): { width?: number, height?: number } {
+  getOriginalSize(): { width?: number; height?: number } {
     return {
       width: this.metadata?.width,
       height: this.metadata?.height,
     }
   }
 
-
   /**
-  * Face-aware crop for thumbnails.
-  * - Expands by paddingRatio around face
-  * - Adjusts to target aspect
-  * - Maximizes inside image bounds to reduce upscaling
-  * - Fallback: smartcrop with boost region (or plain smartcrop)
-  */
+   * Face-aware crop for thumbnails.
+   * - Expands by paddingRatio around face
+   * - Adjusts to target aspect
+   * - Maximizes inside image bounds to reduce upscaling
+   * - Fallback: smartcrop with boost region (or plain smartcrop)
+   */
   async getFaceAwareCrop(
     targetW: number,
     targetH: number,
@@ -323,5 +314,4 @@ export class ImageProcessor {
     const { x, y, width, height } = result.topCrop
     return { left: x, top: y, width, height }
   }
-
 }
