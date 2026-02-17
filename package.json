@@ -18,7 +18,7 @@
     "turbo": "2.5.6"
   },
   "scripts": {
-    "ci:test": "pnpm install && pnpm --filter backend prisma:generate && pnpm --filter backend lint && pnpm test && pnpm --filter frontend type-check",
+    "ci:test": "pnpm install && pnpm --filter backend prisma:generate && pnpm lint && pnpm test && pnpm --filter frontend type-check",
     "dev": "turbo run dev",
     "build": "turbo run build",
     "lint": "turbo run lint",
