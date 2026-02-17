@@ -59,7 +59,10 @@ const viewerLocation = ref(viewerProfile?.value?.location)
       <div class="d-flex flex-row align-items-center mt-2">
         <div class="flex-grow-1 d-inline-flex align-items-center">
           <span class="fw-bolder fs-2 me-1"> {{ props.profile.publicName }}</span>
-          <EditField fieldName="publicName" :editComponent="PublicNameInput" />
+          <EditField
+            fieldName="publicName"
+            :editComponent="PublicNameInput"
+          />
         </div>
         <GenderPronounLabel :profile="props.profile" />
       </div>
@@ -73,15 +76,24 @@ const viewerLocation = ref(viewerProfile?.value?.location)
             :showCountryIcon="false"
           />
         </span>
-        <EditField fieldName="location" :editComponent="LocationSelector" />
+        <EditField
+          fieldName="location"
+          :editComponent="LocationSelector"
+        />
       </div>
 
       <div class="mb-3">
         <div class="d-inline-block">
           <TagList :tags="profile.tags" />
-          <EditField fieldName="tags" :editComponent="TagSelectComponent">
+          <EditField
+            fieldName="tags"
+            :editComponent="TagSelectComponent"
+          >
             <template #placeholder>
-              <div class="editable-placeholder" v-if="!props.profile.tags?.length">
+              <div
+                class="editable-placeholder"
+                v-if="!props.profile.tags?.length"
+              >
                 {{ t('profiles.forms.tags_placeholder') }}
               </div>
             </template>
@@ -90,7 +102,10 @@ const viewerLocation = ref(viewerProfile?.value?.location)
 
         <div class="d-inline-flex align-items-center">
           <LanguageList :languages="profile.languages" />
-          <EditField fieldName="languages" :editComponent="LanguageSelector" />
+          <EditField
+            fieldName="languages"
+            :editComponent="LanguageSelector"
+          />
         </div>
       </div>
       <div class="mb-3">
@@ -120,7 +135,10 @@ const viewerLocation = ref(viewerProfile?.value?.location)
       </div>
 
       <div class="mb-3">
-        <div class="mb-3 dating-field" v-if="props.profile.isDatingActive">
+        <div
+          class="mb-3 dating-field"
+          v-if="props.profile.isDatingActive"
+        >
           <span class="opacity-25">
             <hr />
           </span>

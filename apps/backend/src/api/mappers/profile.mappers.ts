@@ -6,18 +6,22 @@ import {
   type UpdateProfilePayload,
   OwnerScalarsSchema,
 } from '@zod/profile/profile.dto'
-import { type DbProfileSummary, type DbProfileWithContext, type DbProfileWithImages } from '@zod/profile/profile.db'
+import {
+  type DbProfileSummary,
+  type DbProfileWithContext,
+  type DbProfileWithImages,
+} from '@zod/profile/profile.db'
 import { LocationSchema } from '@zod/dto/location.dto'
 
-import {
-  type OwnerProfileImage,
-  type PublicProfileImage,
-} from '@zod/profile/profileimage.dto'
+import { type OwnerProfileImage, type PublicProfileImage } from '@zod/profile/profileimage.dto'
 import { mapProfileTagsTranslated } from './tag.mappers'
 import { ProfileImage } from '@zod/generated'
-import { toOwnerProfileImage, toPublicProfileImage, type MinimalProfileImage } from './image.mappers'
+import {
+  toOwnerProfileImage,
+  toPublicProfileImage,
+  type MinimalProfileImage,
+} from './image.mappers'
 import { mapInteractionContext } from './interaction.mappers'
-
 
 export function mapDbProfileToOwnerProfile(locale: string, db: DbProfileWithImages): OwnerProfile {
   const scalars = OwnerScalarsSchema.parse(db)
@@ -25,11 +29,14 @@ export function mapDbProfileToOwnerProfile(locale: string, db: DbProfileWithImag
   const images = db.profileImages ? mapProfileImagesToOwner(db.profileImages) : []
   const location = LocationSchema.parse(db)
 
-  const localizedMap = db.localized.reduce((acc, l) => {
-    if (!acc[l.field]) acc[l.field] = {}
-    acc[l.field][l.locale] = l.value
-    return acc
-  }, {} as Record<string, Record<string, string>>)
+  const localizedMap = db.localized.reduce(
+    (acc, l) => {
+      if (!acc[l.field]) acc[l.field] = {}
+      acc[l.field][l.locale] = l.value
+      return acc
+    },
+    {} as Record<string, Record<string, string>>
+  )
 
   return {
     ...scalars,
@@ -41,9 +48,11 @@ export function mapDbProfileToOwnerProfile(locale: string, db: DbProfileWithImag
   }
 }
 
-
-export function mapProfileToPublic(dbProfile: DbProfileWithImages, includeDatingContext: boolean, locale: string): PublicProfileWithContext {
-
+export function mapProfileToPublic(
+  dbProfile: DbProfileWithImages,
+  includeDatingContext: boolean,
+  locale: string
+): PublicProfileWithContext {
   // map localized fields with fallback to first available locale
   const get = (field: string): string => {
     // First try to find the preferred locale with a non-empty value
@@ -63,7 +72,9 @@ export function mapProfileToPublic(dbProfile: DbProfileWithImages, includeDating
     isDatingActive: includeDatingContext,
   }
   const scalars = ProfileUnionSchema.parse(dProf)
-  const publicImages = dbProfile.profileImages ? mapProfileImagesToPublic(dbProfile.profileImages) : []
+  const publicImages = dbProfile.profileImages
+    ? mapProfileImagesToPublic(dbProfile.profileImages)
+    : []
   const publicTags = dbProfile.tags ? mapProfileTagsTranslated(dbProfile.tags, locale) : []
 
   return {
@@ -81,10 +92,11 @@ export function mapProfileToPublic(dbProfile: DbProfileWithImages, includeDating
   } as PublicProfileWithContext
 }
 
-
-
-export function mapProfileWithContext(dbProfile: DbProfileWithContext, includeDatingContext: boolean, locale: string): PublicProfileWithContext {
-
+export function mapProfileWithContext(
+  dbProfile: DbProfileWithContext,
+  includeDatingContext: boolean,
+  locale: string
+): PublicProfileWithContext {
   const mapped = mapProfileToPublic(dbProfile, includeDatingContext, locale)
   const conversation = dbProfile.conversationParticipants?.[0]?.conversation ?? null
   const interactionContext = mapInteractionContext(dbProfile, includeDatingContext)
@@ -132,5 +144,3 @@ export function mapToLocalizedUpserts(
     updates,
   }))
 }
-
-

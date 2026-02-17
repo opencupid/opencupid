@@ -31,7 +31,10 @@ watch(
 
     const oldLength = oldMessages?.length ?? previousMessageCount.value
     const newLength = newMessages.length
-    const prependedMessages = newLength > oldLength && oldMessages && newMessages[newLength - 1]?.id === oldMessages[oldLength - 1]?.id
+    const prependedMessages =
+      newLength > oldLength &&
+      oldMessages &&
+      newMessages[newLength - 1]?.id === oldMessages[oldLength - 1]?.id
 
     if (!hasDoneInitialScroll.value && newLength === 0) {
       previousMessageCount.value = newLength
@@ -67,8 +70,17 @@ const handleScroll = () => {
 </script>
 
 <template>
-  <div class="p-2 mb-2 hide-scrollbar overflow-auto d-flex flex-column" ref="messageListRef" @scroll="handleScroll">
-    <div v-if="isLoadingMore" class="text-center text-muted small py-2">Loading older messages…</div>
+  <div
+    class="p-2 mb-2 hide-scrollbar overflow-auto d-flex flex-column"
+    ref="messageListRef"
+    @scroll="handleScroll"
+  >
+    <div
+      v-if="isLoadingMore"
+      class="text-center text-muted small py-2"
+    >
+      Loading older messages…
+    </div>
     <div
       v-for="msg in messages"
       :key="msg.id"
@@ -79,14 +91,17 @@ const handleScroll = () => {
       }"
     >
       <!-- Voice message -->
-      <VoiceMessage 
+      <VoiceMessage
         v-if="msg.messageType === 'audio/voice' && msg.attachment"
         :attachment="msg.attachment"
         :is-mine="msg.isMine"
       />
-      
+
       <!-- Text message -->
-      <div v-else v-html="msg.content" />
+      <div
+        v-else
+        v-html="msg.content"
+      />
     </div>
   </div>
 </template>

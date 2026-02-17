@@ -4,14 +4,14 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 const mockEmit = vi.fn()
 vi.mock('../bus', () => ({
   bus: {
-    emit: mockEmit
-  }
+    emit: mockEmit,
+  },
 }))
 
 // Mock __APP_CONFIG__ - this will be overridden in specific tests
 vi.stubGlobal('__APP_CONFIG__', {
   API_BASE_URL: 'http://localhost:3000',
-  NODE_ENV: 'production' // Default to production for existing tests
+  NODE_ENV: 'production', // Default to production for existing tests
 })
 
 describe('api error handling', () => {
@@ -58,8 +58,6 @@ describe('api error handling', () => {
     })
   })
 
-
-
   it('handles various network error codes', () => {
     const errorCodes = [
       'ECONNABORTED',
@@ -91,7 +89,4 @@ describe('api error handling', () => {
       expect(isNetworkError).toBe(true)
     }
   })
-
-
-
 })

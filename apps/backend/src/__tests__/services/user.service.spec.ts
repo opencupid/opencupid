@@ -49,12 +49,11 @@ describe('UserService.otpLogin', () => {
     mockPrisma.user.findUnique.mockResolvedValue(null)
     const result = await service.validateUserOtpLogin('id', 'otp')
     expect(result).toEqual({
-      "code": "AUTH_INVALID_OTP",
-      "message": "Invalid OTP",
-      "success": false,
+      code: 'AUTH_INVALID_OTP',
+      message: 'Invalid OTP',
+      success: false,
     })
     expect(mockPrisma.user.update).not.toHaveBeenCalled()
-
   })
 
   it('updates user and returns result', async () => {
@@ -105,7 +104,7 @@ describe('UserService.setUserOTP', () => {
     mockPrisma.user.findUnique.mockResolvedValue(user)
     await service.setUserOTP({ email: 'Test@Example.COM' }, '123', 'en')
     expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
-      where: { email: 'test@example.com' }
+      where: { email: 'test@example.com' },
     })
   })
 
@@ -118,8 +117,8 @@ describe('UserService.setUserOTP', () => {
         email: 'new@example.com',
         loginToken: '123',
         loginTokenExp: expect.any(Date),
-        language: 'en'
-      }
+        language: 'en',
+      },
     })
   })
 
@@ -128,7 +127,7 @@ describe('UserService.setUserOTP', () => {
     mockPrisma.user.findUnique.mockResolvedValue(user)
     await service.setUserOTP({ phonenumber: '+1 234 567 8901' }, '456', 'en')
     expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
-      where: { phonenumber: '+12345678901' }
+      where: { phonenumber: '+12345678901' },
     })
   })
 
@@ -141,8 +140,8 @@ describe('UserService.setUserOTP', () => {
         phonenumber: '+12345678901',
         loginToken: '456',
         loginTokenExp: expect.any(Date),
-        language: 'en'
-      }
+        language: 'en',
+      },
     })
   })
 })

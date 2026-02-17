@@ -1,12 +1,13 @@
 /** @type {import("prettier").Config} */
 export default {
-  semi: false,              // ⛔ no semicolons
-  singleQuote: true,        // ✅ use single quotes
-  trailingComma: 'es5',     // ✅ add trailing commas where valid in ES5 (objects, arrays, etc.)
-  tabWidth: 2,              // ✅ 2 spaces per indent
-  useTabs: false,           // ✅ use spaces, not tabs
-  bracketSpacing: true,     // ✅ { foo: bar }
-  arrowParens: 'avoid',     // ✅ omit parens for single-arg arrow funcs: x => x
-  printWidth: 100,          // ✅ wrap at 100 columns
-  endOfLine: 'lf',          // ✅ Unix line endings
+  semi: false,
+  singleQuote: true,
+  trailingComma: 'es5',
+  tabWidth: 2,
+  useTabs: false,
+  bracketSpacing: true,
+  arrowParens: 'always',
+  printWidth: 100,
+  endOfLine: 'lf',
+  singleAttributePerLine: true,
 }

@@ -23,7 +23,7 @@ import {
   storeError,
   type StoreVoidSuccess,
   type StoreResponse,
-  type StoreError
+  type StoreError,
 } from '../../../store/helpers'
 import { type EditProfileForm, ProfileFormToPayloadTransform } from '@zod/profile/profile.form'
 
@@ -31,7 +31,7 @@ export type PublicProfileResponse = StoreResponse<PublicProfileWithContext> | St
 
 interface ProfileStoreState {
   profile: OwnerProfile | null
-  profileScopes: ProfileScope[],
+  profileScopes: ProfileScope[]
   isLoading: boolean
   error: StoreError | null
 }
@@ -41,7 +41,7 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
     profile: null as OwnerProfile | null,
     profileScopes: [],
     isLoading: false,
-    error: null
+    error: null,
   }),
 
   getters: {
@@ -101,16 +101,20 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
     },
 
     // Update the current user's social profile
-    async updateProfileScopes(profileFragment: UpdateProfileScopePayload): Promise<StoreVoidSuccess | StoreError> {
+    async updateProfileScopes(
+      profileFragment: UpdateProfileScopePayload
+    ): Promise<StoreVoidSuccess | StoreError> {
       const parsed = UpdateProfileScopeSchemaPayload.safeParse(profileFragment)
 
-      if (!parsed.success) return storeError(new Error('Invalid profile data'), 'Failed to update profile')
+      if (!parsed.success)
+        return storeError(new Error('Invalid profile data'), 'Failed to update profile')
       try {
         this.isLoading = true // Set loading state
-        const res = await safeApiCall(() => api.patch<UpdateProfileResponse>('/profiles/scopes', parsed.data))
+        const res = await safeApiCall(() =>
+          api.patch<UpdateProfileResponse>('/profiles/scopes', parsed.data)
+        )
         const fetched = OwnerProfileSchema.parse(res.data.profile)
-        if (this.profile)
-          Object.assign(this.profile, fetched) // Update local state with new data  
+        if (this.profile) Object.assign(this.profile, fetched) // Update local state with new data
         return storeSuccess()
       } catch (error: any) {
         this.profile = null // Reset profile on error
@@ -121,11 +125,12 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
       }
     },
 
-
     async persistOwnerProfile(): Promise<StoreVoidSuccess | StoreError> {
       try {
         this.isLoading = true // Set loading state
-        const res = await safeApiCall(() => api.patch<UpdateProfileResponse>('/profiles/me', this.profile))
+        const res = await safeApiCall(() =>
+          api.patch<UpdateProfileResponse>('/profiles/me', this.profile)
+        )
         const updated = OwnerProfileSchema.parse(res.data.profile)
         this.profile = updated
         return storeSuccess()
@@ -136,19 +141,23 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
       }
     },
 
-
     /**
      * Fetch a profile preview by ID and locale.  Returns the shape of a PublicProfile, with all dating
      * fields.
-     * @param profileId 
-     * @param locale 
-     * @returns 
+     * @param profileId
+     * @param locale
+     * @returns
      */
 
-    async getProfilePreview(profileId: string, locale: string): Promise<StoreResponse<PublicProfile> | StoreError> {
+    async getProfilePreview(
+      profileId: string,
+      locale: string
+    ): Promise<StoreResponse<PublicProfile> | StoreError> {
       try {
         this.isLoading = true // Set loading state
-        const res = await safeApiCall(() => api.get<GetPublicProfileResponse>(`/profiles/preview/${locale}/${profileId}`))
+        const res = await safeApiCall(() =>
+          api.get<GetPublicProfileResponse>(`/profiles/preview/${locale}/${profileId}`)
+        )
         const fetched = PublicProfileSchema.parse(res.data.profile)
         return storeSuccess(fetched)
       } catch (error: any) {
@@ -158,15 +167,12 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
       }
     },
 
-
     reset() {
       this.profile = null // Reset profile
       this.isLoading = false // Reset loading state
     },
-
   },
 })
-
 
 bus.on('auth:logout', () => {
   useOwnerProfileStore().reset()

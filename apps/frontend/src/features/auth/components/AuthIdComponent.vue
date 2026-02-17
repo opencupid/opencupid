@@ -60,7 +60,6 @@ const validated = computed(() => {
 function handleCaptchaUpdatePayload(payload: string) {
   captchaPayload.value = payload
 }
-
 </script>
 
 <template>
@@ -97,19 +96,34 @@ function handleCaptchaUpdatePayload(payload: string) {
           >
           </BInput>
           <div class="suffix-icon">
-            <span class="text-success" v-if="inputState">
+            <span
+              class="text-success"
+              v-if="inputState"
+            >
               <IconTick class="svg-icon" />
             </span>
-            <span class="text-muted" v-else>
-              <IconMail class="svg-icon" v-if="authIdInput.includes('@')" />
-              <IconPhone class="svg-icon" v-else-if="authIdInput.startsWith('+')" />
+            <span
+              class="text-muted"
+              v-else
+            >
+              <IconMail
+                class="svg-icon"
+                v-if="authIdInput.includes('@')"
+              />
+              <IconPhone
+                class="svg-icon"
+                v-else-if="authIdInput.startsWith('+')"
+              />
             </span>
           </div>
         </BFormFloatingLabel>
       </div>
 
       <div class="mb-1 mb-md-3 user-select-none">
-        <CaptchaWidget v-if="!props.isLoading" @update:payload="handleCaptchaUpdatePayload" />
+        <CaptchaWidget
+          v-if="!props.isLoading"
+          @update:payload="handleCaptchaUpdatePayload"
+        />
       </div>
       <BButton
         type="submit"

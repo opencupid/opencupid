@@ -42,10 +42,7 @@ describe('SessionService.getOrCreate', () => {
     const result = await service.getOrCreate('sess1', sessionData as any)
     expect(result).toEqual(sessionData)
     expect(redis.multi).toHaveBeenCalled()
-    expect(redis._chain.set).toHaveBeenCalledWith(
-      'session:sess1',
-      JSON.stringify(sessionData)
-    )
+    expect(redis._chain.set).toHaveBeenCalledWith('session:sess1', JSON.stringify(sessionData))
     expect(redis._chain.expire).toHaveBeenCalledWith('session:sess1', 604800)
   })
 })

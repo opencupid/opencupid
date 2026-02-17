@@ -18,7 +18,10 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <div v-if="error" class="d-flex align-items-center justify-content-center h-100 flex-column">
+  <div
+    v-if="error"
+    class="d-flex align-items-center justify-content-center h-100 flex-column"
+  >
     <div
       class="d-flex align-items-center justify-content-center mb-5 mt-5 text-danger"
       style="height: 10rem"

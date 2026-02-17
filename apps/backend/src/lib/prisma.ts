@@ -11,17 +11,19 @@ declare global {
   // eslint-disable-next-line no-var
   var prisma: PrismaClient | undefined
 }
-const txOptions = process.env.NODE_ENV === 'development' ?
-  {
-    transactionOptions: {
-      maxWait: 10_000,  // optional: wait 10s for connection
-      timeout: 300_000, // 5 minutes for interactive transaction
-    }
-  } : undefined
+const txOptions =
+  process.env.NODE_ENV === 'development'
+    ? {
+        transactionOptions: {
+          maxWait: 10_000, // optional: wait 10s for connection
+          timeout: 300_000, // 5 minutes for interactive transaction
+        },
+      }
+    : undefined
 
 // Create the PrismaClient instance
 const prismaClientSingleton = () => {
-  console.error("DATABASE_URL -> ", process.env.DATABASE_URL)
+  console.error('DATABASE_URL -> ', process.env.DATABASE_URL)
   return new PrismaClient({
     log: logLevels,
     ...txOptions,

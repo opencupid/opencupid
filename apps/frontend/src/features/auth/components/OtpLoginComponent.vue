@@ -39,7 +39,7 @@ const validated = computed(() => {
   return inputState.value && props.validationResult === true
 })
 
-watch(inputState, state => {
+watch(inputState, (state) => {
   if (state === true) {
     emit('otp:submit', otpInput.value)
   }
@@ -49,8 +49,18 @@ watch(inputState, state => {
 <template>
   <div>
     <div class="fs-4 mb-3">
-      <ViewTitle v-if="user.phonenumber" :icon="IconMessage" title="" class="text-primary" />
-      <ViewTitle v-else :icon="IconMail" title="" class="text-primary" />
+      <ViewTitle
+        v-if="user.phonenumber"
+        :icon="IconMessage"
+        title=""
+        class="text-primary"
+      />
+      <ViewTitle
+        v-else
+        :icon="IconMail"
+        title=""
+        class="text-primary"
+      />
 
       {{ t('auth.otp_check_messages') }}
     </div>
@@ -63,39 +73,40 @@ watch(inputState, state => {
       </div>
     </div>
     <div class="px-3">
-    <BForm
-      @submit.prevent="handleOTPEntered"
-      :novalidate="true"
-      :disabled="isLoading || !inputState"
-    >
-      <div class="d-flex flex-column align-items-center position-relative">
-        <BFormFloatingLabel :label="t('auth.otp_input_label')" label-for="otpInput" 
-        >
-          <BInput
-            size="lg"
-            v-model.trim="otpInput"
-            id="otp"
-            type="text"
-            placeholder=""
-            label="otpInput"
-            maxlength="25"
-            aria-autocomplete="none"
-            autofocus
-            autocomplete="off"
-            lazy
-            required
-            :state="validated"
-
+      <BForm
+        @submit.prevent="handleOTPEntered"
+        :novalidate="true"
+        :disabled="isLoading || !inputState"
+      >
+        <div class="d-flex flex-column align-items-center position-relative">
+          <BFormFloatingLabel
+            :label="t('auth.otp_input_label')"
+            label-for="otpInput"
           >
-          </BInput>
-          <BFormInvalidFeedback v-if="!isLoading">
-            <span v-if="!inputState"> {{ t('auth.otp_invalid_feedback') }}</span>
-            <span v-if="validationResult === false && inputState">{{ validationError }}</span>
-          </BFormInvalidFeedback>
-        </BFormFloatingLabel>
-      </div>
-    </BForm>
-  </div>
+            <BInput
+              size="lg"
+              v-model.trim="otpInput"
+              id="otp"
+              type="text"
+              placeholder=""
+              label="otpInput"
+              maxlength="25"
+              aria-autocomplete="none"
+              autofocus
+              autocomplete="off"
+              lazy
+              required
+              :state="validated"
+            >
+            </BInput>
+            <BFormInvalidFeedback v-if="!isLoading">
+              <span v-if="!inputState"> {{ t('auth.otp_invalid_feedback') }}</span>
+              <span v-if="validationResult === false && inputState">{{ validationError }}</span>
+            </BFormInvalidFeedback>
+          </BFormFloatingLabel>
+        </div>
+      </BForm>
+    </div>
   </div>
 </template>
 

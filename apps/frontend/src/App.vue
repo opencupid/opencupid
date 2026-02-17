@@ -27,7 +27,6 @@ useLanguages().initialize(i18nStore.getLanguage())
 
 // Initialize update checker
 useUpdateChecker()
-
 </script>
 
 <template>

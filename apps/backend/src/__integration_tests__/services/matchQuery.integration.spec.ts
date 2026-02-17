@@ -1,8 +1,7 @@
 import { beforeAll, afterAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 process.env.DATABASE_URL =
-  process.env.DATABASE_URL_TEST ||
-  'postgresql://appuser:secret@localhost:5432/app_test'
+  process.env.DATABASE_URL_TEST || 'postgresql://appuser:secret@localhost:5432/app_test'
 process.env.NODE_ENV = 'test'
 
 import { prisma } from '../../lib/prisma'
@@ -31,10 +30,38 @@ describe('MatchQueryService.findSocialProfilesFor', () => {
   it('returns only active profiles excluding the current one', async () => {
     await prisma.user.createMany({
       data: [
-        { id: 'u1', email: 'u1@test', isRegistrationConfirmed: true, hasActiveProfile: true, isActive: true, isOnboarded: true },
-        { id: 'u2', email: 'u2@test', isRegistrationConfirmed: true, hasActiveProfile: true, isActive: true, isOnboarded: true },
-        { id: 'u3', email: 'u3@test', isRegistrationConfirmed: true, hasActiveProfile: true, isActive: true, isOnboarded: true },
-        { id: 'u4', email: 'u4@test', isRegistrationConfirmed: true, hasActiveProfile: true, isActive: true, isOnboarded: true },
+        {
+          id: 'u1',
+          email: 'u1@test',
+          isRegistrationConfirmed: true,
+          hasActiveProfile: true,
+          isActive: true,
+          isOnboarded: true,
+        },
+        {
+          id: 'u2',
+          email: 'u2@test',
+          isRegistrationConfirmed: true,
+          hasActiveProfile: true,
+          isActive: true,
+          isOnboarded: true,
+        },
+        {
+          id: 'u3',
+          email: 'u3@test',
+          isRegistrationConfirmed: true,
+          hasActiveProfile: true,
+          isActive: true,
+          isOnboarded: true,
+        },
+        {
+          id: 'u4',
+          email: 'u4@test',
+          isRegistrationConfirmed: true,
+          hasActiveProfile: true,
+          isActive: true,
+          isOnboarded: true,
+        },
       ],
     })
     await prisma.profile.create({
@@ -94,10 +121,24 @@ describe('MatchQueryService.findMutualMatchesFor', () => {
 
   it('returns empty array when profile lacks data', async () => {
     await prisma.user.create({
-      data: { id: 'u1', email: 'u1@test', isRegistrationConfirmed: true, hasActiveProfile: true, isActive: true, isOnboarded: true },
+      data: {
+        id: 'u1',
+        email: 'u1@test',
+        isRegistrationConfirmed: true,
+        hasActiveProfile: true,
+        isActive: true,
+        isOnboarded: true,
+      },
     })
     await prisma.profile.create({
-      data: { id: 'p1', userId: 'u1', publicName: 'p1', country: 'US', cityName: '', isDatingActive: false },
+      data: {
+        id: 'p1',
+        userId: 'u1',
+        publicName: 'p1',
+        country: 'US',
+        cityName: '',
+        isDatingActive: false,
+      },
     })
     const res = await service.findMutualMatchesFor('p1')
     expect(res).toEqual([])
@@ -107,8 +148,22 @@ describe('MatchQueryService.findMutualMatchesFor', () => {
     vi.setSystemTime(new Date('2024-05-20'))
     await prisma.user.createMany({
       data: [
-        { id: 'u1', email: 'u1@test', isRegistrationConfirmed: true, hasActiveProfile: true, isActive: true, isOnboarded: true },
-        { id: 'u2', email: 'u2@test', isRegistrationConfirmed: true, hasActiveProfile: true, isActive: true, isOnboarded: true },
+        {
+          id: 'u1',
+          email: 'u1@test',
+          isRegistrationConfirmed: true,
+          hasActiveProfile: true,
+          isActive: true,
+          isOnboarded: true,
+        },
+        {
+          id: 'u2',
+          email: 'u2@test',
+          isRegistrationConfirmed: true,
+          hasActiveProfile: true,
+          isActive: true,
+          isOnboarded: true,
+        },
       ],
     })
 
@@ -158,8 +213,22 @@ describe('MatchQueryService.findMutualMatchesFor', () => {
     vi.setSystemTime(new Date('2024-05-20'))
     await prisma.user.createMany({
       data: [
-        { id: 'u3', email: 'u3@test', isRegistrationConfirmed: true, hasActiveProfile: true, isActive: true, isOnboarded: true },
-        { id: 'u4', email: 'u4@test', isRegistrationConfirmed: true, hasActiveProfile: true, isActive: true, isOnboarded: true },
+        {
+          id: 'u3',
+          email: 'u3@test',
+          isRegistrationConfirmed: true,
+          hasActiveProfile: true,
+          isActive: true,
+          isOnboarded: true,
+        },
+        {
+          id: 'u4',
+          email: 'u4@test',
+          isRegistrationConfirmed: true,
+          hasActiveProfile: true,
+          isActive: true,
+          isOnboarded: true,
+        },
       ],
     })
 

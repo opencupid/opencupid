@@ -7,9 +7,9 @@ vi.mock('@/store/i18nStore', () => ({
     currentLanguage: 'en',
     getAvailableLocalesWithLabels: () => [
       { value: 'en', label: 'English' },
-      { value: 'de', label: 'Deutsch' }
-    ]
-  })
+      { value: 'de', label: 'Deutsch' },
+    ],
+  }),
 }))
 
 import LocaleSelector from '../../shared/ui/LocaleSelector.vue'
@@ -20,6 +20,6 @@ describe('LocaleSelector', () => {
     const link = wrapper.find('a')
     expect(link.exists()).toBe(true)
     await link.trigger('click')
-    expect(wrapper.emitted('language:select')).toEqual([[ 'de' ]])
+    expect(wrapper.emitted('language:select')).toEqual([['de']])
   })
 })

@@ -26,7 +26,6 @@ export class EmailService {
 
     return this.transporter.sendMail(mailOptions)
   }
-
 }
 
 export const emailService = new EmailService()

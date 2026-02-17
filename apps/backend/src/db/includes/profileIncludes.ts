@@ -1,11 +1,10 @@
-import { Prisma } from "@prisma/client"
+import { Prisma } from '@prisma/client'
 
 export function tagTranslationsInclude(locale: string) {
   return {
-    translations: true
+    translations: true,
   }
 }
-
 
 export function translationWhereClause(term: string, locale: string) {
   return {
@@ -20,7 +19,6 @@ export function translationWhereClause(term: string, locale: string) {
     },
   }
 }
-
 
 export function profileImageInclude() {
   return {
@@ -42,7 +40,6 @@ export function tagsInclude() {
       },
     },
     localized: true,
-
   } satisfies Prisma.ProfileInclude
 
   return clause
@@ -54,7 +51,7 @@ export function blockedContextInclude(myProfileId: string) {
       where: { id: myProfileId }, // Did I block them?
     },
     blockedProfiles: {
-      where: { id: myProfileId },   // Did they block me?
+      where: { id: myProfileId }, // Did they block me?
     },
   } satisfies Prisma.ProfileInclude
 }
@@ -74,8 +71,7 @@ export const conversationContextInclude = (myProfileId: string) => ({
       conversation: true,
     },
   },
-});
-
+})
 
 export const interactionContextInclude = (myProfileId: string) => {
   return {
@@ -83,7 +79,7 @@ export const interactionContextInclude = (myProfileId: string) => {
       where: { fromId: myProfileId }, // Did I like them?
     },
     likesSent: {
-      where: { toId: myProfileId },   // Did they like me?
+      where: { toId: myProfileId }, // Did they like me?
     },
     hiddenBy: {
       where: { fromId: myProfileId }, // Did I pass them?

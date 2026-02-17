@@ -3,7 +3,6 @@ import 'vue-toastification/dist/index.css'
 
 const theme = document.documentElement.getAttribute('data-bs-theme')
 
-
 export const defaultOptions: PluginOptions = {
   position: POSITION.TOP_CENTER,
   timeout: 3000,
@@ -24,5 +23,4 @@ export default function registerToast(app: any) {
     ...defaultOptions,
     shareAppContext: true,
   })
-
 }

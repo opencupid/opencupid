@@ -20,13 +20,20 @@ onMounted(async () => {
 <template>
   <main class="pt-5 dating overflow-auto">
     <div class="container">
-      <ViewTitle :icon="IconDate" title="" class="text-dating" />
+      <ViewTitle
+        :icon="IconDate"
+        title=""
+        class="text-dating"
+      />
       <MiddleColumn>
         <div class="d-flex flex-column align-items-center justify-content-center text-center">
           <BPlaceholderWrapper :loading="isLoading">
             <template #loading>
               <BCol cols="6">
-                <ProfileChipListPlaceholder :howMany="4" :isAnimated="true" />
+                <ProfileChipListPlaceholder
+                  :howMany="4"
+                  :isAnimated="true"
+                />
               </BCol>
             </template>
 
@@ -101,14 +108,17 @@ onMounted(async () => {
                 <MatchesList
                   :edges="matches"
                   @select:profile="
-                    profileId => $router.push({ name: 'PublicProfile', params: { profileId } })
+                    (profileId) => $router.push({ name: 'PublicProfile', params: { profileId } })
                   "
                 />
               </div>
             </template>
             <template v-else>
               <!-- any condition not covered above (this should be dead code)-->
-              <ProfileChipListPlaceholder :howMany="4" :isAnimated="false" />
+              <ProfileChipListPlaceholder
+                :howMany="4"
+                :isAnimated="false"
+              />
             </template>
           </BPlaceholderWrapper>
         </div>

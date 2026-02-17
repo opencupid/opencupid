@@ -127,21 +127,41 @@ const handleSubmit = async () => {
 </script>
 
 <template>
-  <BForm @submit.prevent="handleSubmit" class="w-100">
-    <PostIt class="position-relative p-2" :id="post?.id ?? 'new-post'">
+  <BForm
+    @submit.prevent="handleSubmit"
+    class="w-100"
+  >
+    <PostIt
+      class="position-relative p-2"
+      :id="post?.id ?? 'new-post'"
+    >
       <BFormGroup class="mb-2">
-        <label for="post-type" class="form-label">{{ $t('posts.labels.type') }}</label>
+        <label
+          for="post-type"
+          class="form-label"
+          >{{ $t('posts.labels.type') }}</label
+        >
         <BFormRadioGroup v-model="form.type">
-          <BFormRadio id="post-type-offer" value="OFFER" class="me-3">
+          <BFormRadio
+            id="post-type-offer"
+            value="OFFER"
+            class="me-3"
+          >
             <PostTypeBadge :type="'OFFER'" />
           </BFormRadio>
-          <BFormRadio id="post-type-request" value="REQUEST">
+          <BFormRadio
+            id="post-type-request"
+            value="REQUEST"
+          >
             <PostTypeBadge :type="'REQUEST'" />
           </BFormRadio>
         </BFormRadioGroup>
       </BFormGroup>
 
-      <div class="post-card d-flex flex-column" :class="[`post-card--${form.type.toLowerCase()}`]">
+      <div
+        class="post-card d-flex flex-column"
+        :class="[`post-card--${form.type.toLowerCase()}`]"
+      >
         <BFormGroup>
           <!-- content textarea -->
           <BFormTextarea
@@ -153,12 +173,17 @@ const handleSubmit = async () => {
             rows="4"
             :label="$t('posts.labels.content')"
           ></BFormTextarea>
-          <div class="fs-6 text-end form-text text-muted character-count">{{ form.content.length }}/2000</div>
+          <div class="fs-6 text-end form-text text-muted character-count">
+            {{ form.content.length }}/2000
+          </div>
         </BFormGroup>
 
         <BFormGroup class="mb-2">
           <label class="form-label">{{ $t('posts.labels.location') }}</label>
-          <LocationSelector v-model="form.location" :allow-empty="true" />
+          <LocationSelector
+            v-model="form.location"
+            :allow-empty="true"
+          />
         </BFormGroup>
 
         <!-- isVisible flag checkbox -->
@@ -168,7 +193,7 @@ const handleSubmit = async () => {
             v-model="form.isVisible"
             :label="$t('posts.labels.visibility')"
           >
-          {{ $t('posts.labels.visibility') }}
+            {{ $t('posts.labels.visibility') }}
           </BFormCheckbox>
         </BFormGroup>
       </div>
@@ -185,7 +210,11 @@ const handleSubmit = async () => {
       >
         {{ $t('posts.actions.cancel') }}
       </BButton>
-      <BButton type="submit" variant="primary" :disabled="isLoading || !isFormValid">
+      <BButton
+        type="submit"
+        variant="primary"
+        :disabled="isLoading || !isFormValid"
+      >
         {{ isLoading ? $t('uicomponents.submitbutton.working') : saveButtonText }}
       </BButton>
     </div>

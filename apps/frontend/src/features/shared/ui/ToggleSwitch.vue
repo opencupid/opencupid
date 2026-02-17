@@ -25,7 +25,10 @@ function toggleHandler(event: Event) {
 </script>
 
 <template>
-  <label class="toggleswitch__outer" :class="{ disabled: disabled }">
+  <label
+    class="toggleswitch__outer"
+    :class="{ disabled: disabled }"
+  >
     <input
       class="input"
       type="checkbox"

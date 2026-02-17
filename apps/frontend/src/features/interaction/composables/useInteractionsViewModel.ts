@@ -1,9 +1,8 @@
-import { computed } from "vue"
-import { useInteractionStore } from "../stores/useInteractionStore"
+import { computed } from 'vue'
+import { useInteractionStore } from '../stores/useInteractionStore'
 
 export function useInteractionsViewModel() {
   const store = useInteractionStore()
-
 
   return {
     likesSent: computed(() => store.sent),

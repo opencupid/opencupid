@@ -82,12 +82,12 @@ onMounted(async () => {
   // obtain GeoIP info
   appStore
     .fetchLocation()
-    .then(res => {
+    .then((res) => {
       if (res.success && res.data && !formData.location.country) {
         formData.location = res.data
       }
     })
-    .catch(error => {
+    .catch((error) => {
       console.error('Failed to fetch GeoIP info:', error)
     })
 })
@@ -96,12 +96,21 @@ onMounted(async () => {
 <template>
   <main class="container">
     <MiddleColumn class="d-flex flex-column align-items-center justify-content-center h-100">
-      <OnboardWizard v-model="formData" @finished="handleWizardFinish">
-        <div v-if="profileStore.isLoading" class="text-center">
+      <OnboardWizard
+        v-model="formData"
+        @finished="handleWizardFinish"
+      >
+        <div
+          v-if="profileStore.isLoading"
+          class="text-center"
+        >
           <SpinnerComponent />
         </div>
         <div v-else>
-          <ErrorComponent v-if="error" :error="error" />
+          <ErrorComponent
+            v-if="error"
+            :error="error"
+          />
           <div v-else>
             <!-- onboarding wizard finish title -->
             <div
@@ -114,13 +123,21 @@ onMounted(async () => {
               </h2>
             </div>
 
-            <div v-if="!profileStore.isLoading" class="d-flex flex-column gap-3">
+            <div
+              v-if="!profileStore.isLoading"
+              class="d-flex flex-column gap-3"
+            >
               <div class="mb-2 d-flex flex-column align-items-center">
                 <div class="wizard-step-subtitle mb-1 mb-sm-2 mb-md-3 text-center">
                   <!-- See who else is on here -->
                   {{ t('onboarding.confirmation.browse_hint') }}
                 </div>
-                <BButton @click="handleGoToBrowse" variant="success" size="lg" pill>
+                <BButton
+                  @click="handleGoToBrowse"
+                  variant="success"
+                  size="lg"
+                  pill
+                >
                   <!-- Meet people -->
                   {{ t('onboarding.confirmation.browse_button') }}
                 </BButton>
@@ -130,7 +147,12 @@ onMounted(async () => {
                   <!-- See what other people see about me. -->
                   {{ t('onboarding.confirmation.profile_hint') }}
                 </div>
-                <BButton @click="handleGoToProfile" variant="primary" size="lg" pill>
+                <BButton
+                  @click="handleGoToProfile"
+                  variant="primary"
+                  size="lg"
+                  pill
+                >
                   <!-- My profile -->
                   {{ t('onboarding.confirmation.profile_button') }}
                 </BButton>

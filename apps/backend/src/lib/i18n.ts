@@ -1,8 +1,6 @@
-
 import i18next from 'i18next'
 import FsBackend from 'i18next-fs-backend'
 import path from 'path'
-
 
 const translationsPath = path.join(
   __dirname,
@@ -30,14 +28,11 @@ const labels: Record<string, string> = {
   nl: 'Nederlands',
 }
 
-
-i18next
-  .use(FsBackend)
-  .init({
-    fallbackLng: 'en',
-    preload: Object.keys(labels),
-    initImmediate: false,
-    backend: {
-      loadPath: translationsPath,
-    },
-  })
+i18next.use(FsBackend).init({
+  fallbackLng: 'en',
+  preload: Object.keys(labels),
+  initImmediate: false,
+  backend: {
+    loadPath: translationsPath,
+  },
+})

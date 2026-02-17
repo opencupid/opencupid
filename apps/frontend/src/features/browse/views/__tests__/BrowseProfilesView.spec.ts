@@ -4,31 +4,79 @@ import { ref, computed } from 'vue'
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 
 // stub child components
-vi.mock('../../components/ProfileCardGrid.vue', () => ({ default: { template: '<div class="profile-grid" />', props: ['profiles'] } }))
-vi.mock('../../components/PlaceholdersGrid.vue', () => ({ default: { template: '<div class="placeholders-grid" />', props: ['howMany', 'loading'] } }))
-vi.mock('../../components/NoAccessCTA.vue', () => ({ default: { template: '<div class="no-access" />', props: ['modelValue'] } }))
-vi.mock('../../components/NoResultsCTA.vue', () => ({ default: { template: '<div class="no-results" />' } }))
-vi.mock('../../components/DatingPreferencesForm.vue', () => ({ default: { template: '<div class="prefs-form" />', props: ['modelValue'] } }))
-vi.mock('../../components/SocialFilterForm.vue', () => ({ default: { template: '<div class="social-filter-form" />', props: ['modelValue', 'viewerProfile'] } }))
-vi.mock('../../components/SocialFilterDisplay.vue', () => ({ default: { template: '<div class="social-filter-display" />', props: ['modelValue', 'viewerLocation'] } }))
-vi.mock('../../components/DatingPrefsDisplay.vue', () => ({ default: { template: '<div class="dating-prefs-display" />', props: ['modelValue', 'viewerLocation'] } }))
-vi.mock('../../components/MiddleColumn.vue', () => ({ default: { template: '<div class="middle"><slot /></div>' } }))
-vi.mock('../../components/OsmPoiMap.vue', () => ({ default: { template: '<div class="osm-poi-map" />', props: ['profiles'] } }))
-vi.mock('@/features/publicprofile/components/PublicProfile.vue', () => ({ default: { template: '<div class="public-profile" />', props: ['id'] } }))
-vi.mock('@/features/interaction/components/ReceivedLikesCount.vue', () => ({ default: { template: '<div class="received-likes" />' } }))
-vi.mock('@/features/shared/ui/SecondaryNav.vue', () => ({ default: { template: '<div class="secondary-nav" />' } }))
-vi.mock('@/features/shared/ui/ScopeViewToggler.vue', () => ({ default: { template: '<div class="scope-view-toggler" />', props: ['modelValue'] } }))
-vi.mock('@/features/shared/ui/StoreErrorOverlay.vue', () => ({ default: { template: '<div class="store-error"><slot /></div>', props: ['error'] } }))
+vi.mock('../../components/ProfileCardGrid.vue', () => ({
+  default: { template: '<div class="profile-grid" />', props: ['profiles'] },
+}))
+vi.mock('../../components/PlaceholdersGrid.vue', () => ({
+  default: { template: '<div class="placeholders-grid" />', props: ['howMany', 'loading'] },
+}))
+vi.mock('../../components/NoAccessCTA.vue', () => ({
+  default: { template: '<div class="no-access" />', props: ['modelValue'] },
+}))
+vi.mock('../../components/NoResultsCTA.vue', () => ({
+  default: { template: '<div class="no-results" />' },
+}))
+vi.mock('../../components/DatingPreferencesForm.vue', () => ({
+  default: { template: '<div class="prefs-form" />', props: ['modelValue'] },
+}))
+vi.mock('../../components/SocialFilterForm.vue', () => ({
+  default: {
+    template: '<div class="social-filter-form" />',
+    props: ['modelValue', 'viewerProfile'],
+  },
+}))
+vi.mock('../../components/SocialFilterDisplay.vue', () => ({
+  default: {
+    template: '<div class="social-filter-display" />',
+    props: ['modelValue', 'viewerLocation'],
+  },
+}))
+vi.mock('../../components/DatingPrefsDisplay.vue', () => ({
+  default: {
+    template: '<div class="dating-prefs-display" />',
+    props: ['modelValue', 'viewerLocation'],
+  },
+}))
+vi.mock('../../components/MiddleColumn.vue', () => ({
+  default: { template: '<div class="middle"><slot /></div>' },
+}))
+vi.mock('../../components/OsmPoiMap.vue', () => ({
+  default: { template: '<div class="osm-poi-map" />', props: ['profiles'] },
+}))
+vi.mock('@/features/publicprofile/components/PublicProfile.vue', () => ({
+  default: { template: '<div class="public-profile" />', props: ['id'] },
+}))
+vi.mock('@/features/interaction/components/ReceivedLikesCount.vue', () => ({
+  default: { template: '<div class="received-likes" />' },
+}))
+vi.mock('@/features/shared/ui/SecondaryNav.vue', () => ({
+  default: { template: '<div class="secondary-nav" />' },
+}))
+vi.mock('@/features/shared/ui/ScopeViewToggler.vue', () => ({
+  default: { template: '<div class="scope-view-toggler" />', props: ['modelValue'] },
+}))
+vi.mock('@/features/shared/ui/StoreErrorOverlay.vue', () => ({
+  default: { template: '<div class="store-error"><slot /></div>', props: ['error'] },
+}))
 vi.mock('@/assets/icons/interface/square.svg', () => ({ default: 'IconSquare' }))
 vi.mock('@/assets/icons/interface/map.svg', () => ({ default: 'IconMap' }))
-vi.mock('../../shared/composables/useCountries', () => ({ useCountries: () => ({ countryCodeToName: vi.fn(() => 'Test Country') }) }))
-vi.mock('vue-router', () => ({ useRouter: () => ({ push: vi.fn(), back: vi.fn(), replace: vi.fn() }) }))
+vi.mock('../../shared/composables/useCountries', () => ({
+  useCountries: () => ({ countryCodeToName: vi.fn(() => 'Test Country') }),
+}))
+vi.mock('vue-router', () => ({
+  useRouter: () => ({ push: vi.fn(), back: vi.fn(), replace: vi.fn() }),
+}))
 
 const vmState = {
   viewerProfile: ref({ isDatingActive: true }),
   haveAccess: ref(true),
   haveResults: ref(true),
-  isLoading: computed((): boolean => vmState.findProfileStoreLoading.value || vmState.ownerStoreLoading.value || !vmState.isInitialized.value),
+  isLoading: computed(
+    (): boolean =>
+      vmState.findProfileStoreLoading.value ||
+      vmState.ownerStoreLoading.value ||
+      !vmState.isInitialized.value
+  ),
   findProfileStoreLoading: ref(false),
   ownerStoreLoading: ref(false),
   currentScope: ref('dating'),
@@ -47,14 +95,14 @@ const vmState = {
   hasMoreProfiles: ref(true),
   initialize: vi.fn(),
   reset: vi.fn(),
-  loadMoreProfiles: vi.fn()
+  loadMoreProfiles: vi.fn(),
 }
 
 vi.mock('../../composables/useFindMatchViewModel', () => ({ useFindMatchViewModel: () => vmState }))
 
 const BPlaceholderWrapper = {
   props: ['loading'],
-  template: `<div><slot v-if="!loading" /><slot name="loading" v-else /></div>`
+  template: `<div><slot v-if="!loading" /><slot name="loading" v-else /></div>`,
 }
 const BOverlay = { template: '<div class="b-overlay"><slot /><slot name="overlay" /></div>' }
 const BModal = { template: '<div class="b-modal"><slot /></div>', props: ['modelValue'] }
@@ -87,9 +135,9 @@ describe('BrowseProfiles view', () => {
           BModal,
           BButton,
           BContainer,
-          BSpinner
-        }
-      }
+          BSpinner,
+        },
+      },
     })
   }
 
@@ -126,14 +174,18 @@ describe('BrowseProfiles view', () => {
 
   it('renders profile grid when in grid view mode', () => {
     vmState.viewModeModel.value = 'grid'
-    const wrapper = mount(BrowseProfiles, { global: { stubs: { BPlaceholderWrapper, BOverlay, BModal, BButton } } })
+    const wrapper = mount(BrowseProfiles, {
+      global: { stubs: { BPlaceholderWrapper, BOverlay, BModal, BButton } },
+    })
     expect(wrapper.find('.profile-grid').exists()).toBe(true)
     expect(wrapper.find('.osm-poi-map').exists()).toBe(false)
   })
 
   it('renders map when in map view mode', () => {
     vmState.viewModeModel.value = 'map'
-    const wrapper = mount(BrowseProfiles, { global: { stubs: { BPlaceholderWrapper, BOverlay, BModal, BButton } } })
+    const wrapper = mount(BrowseProfiles, {
+      global: { stubs: { BPlaceholderWrapper, BOverlay, BModal, BButton } },
+    })
     expect(wrapper.find('.profile-grid').exists()).toBe(false)
     expect(wrapper.find('.osm-poi-map').exists()).toBe(true)
   })
@@ -282,30 +334,36 @@ describe('BrowseProfiles view', () => {
       const osmPoiMapMock = mount({
         template: '<OsmPoiMap :profiles="testProfiles" />',
         components: {
-          OsmPoiMap: { template: '<div class="osm-poi-map" />', props: ['profiles', 'selectedProfile'] }
+          OsmPoiMap: {
+            template: '<div class="osm-poi-map" />',
+            props: ['profiles', 'selectedProfile'],
+          },
         },
         data() {
           return {
-            testProfiles: [{ id: '1', name: 'Test Profile' }]
+            testProfiles: [{ id: '1', name: 'Test Profile' }],
           }
-        }
+        },
       })
 
       expect(osmPoiMapMock.find('.osm-poi-map').exists()).toBe(true)
     })
 
     it('OsmPoiMap mock accepts selectedProfile prop', () => {
-      // Test the mock component directly  
+      // Test the mock component directly
       const osmPoiMapMock = mount({
         template: '<OsmPoiMap :selectedProfile="selectedProfile" />',
         components: {
-          OsmPoiMap: { template: '<div class="osm-poi-map" />', props: ['profiles', 'selectedProfile'] }
+          OsmPoiMap: {
+            template: '<div class="osm-poi-map" />',
+            props: ['profiles', 'selectedProfile'],
+          },
         },
         data() {
           return {
-            selectedProfile: { id: '1', name: 'Selected Profile' }
+            selectedProfile: { id: '1', name: 'Selected Profile' },
           }
-        }
+        },
       })
 
       expect(osmPoiMapMock.find('.osm-poi-map').exists()).toBe(true)

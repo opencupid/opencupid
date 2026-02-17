@@ -1,5 +1,5 @@
-import { bus } from '@/lib/bus';
-import { type MultiselectOption } from '@/types/multiselect';
+import { bus } from '@/lib/bus'
+import { type MultiselectOption } from '@/types/multiselect'
 import languages from '@cospired/i18n-iso-languages'
 
 // https://www.npmjs.com/package/@cospired/i18n-iso-languages
@@ -21,8 +21,6 @@ import languages from '@cospired/i18n-iso-languages'
 
 let language = 'en'
 
-
-
 const localeLoaders: Record<string, () => Promise<any>> = {
   de: () => import('@cospired/i18n-iso-languages/langs/de.json'),
   es: () => import('@cospired/i18n-iso-languages/langs/es.json'),
@@ -34,7 +32,7 @@ const localeLoaders: Record<string, () => Promise<any>> = {
   pt: () => import('@cospired/i18n-iso-languages/langs/pt.json'),
   ro: () => import('@cospired/i18n-iso-languages/langs/ro.json'),
   sk: () => import('@cospired/i18n-iso-languages/langs/sk.json'),
-};
+}
 const loadedLocales = new Set(['en'])
 
 import lang from '@cospired/i18n-iso-languages/langs/en.json'
@@ -44,14 +42,14 @@ languages.registerLocale(lang)
 async function ensureCountryLocale(locale: string) {
   if (loadedLocales.has(locale)) return
 
-  const loader = localeLoaders[locale];
+  const loader = localeLoaders[locale]
   if (!loader) {
-    console.warn(`Unsupported locale: ${locale}`);
-    return;
+    console.warn(`Unsupported locale: ${locale}`)
+    return
   }
-  const mod = await loader();
+  const mod = await loader()
   // console.log(`Registering country locale: ${locale}`, mod.default);
-  languages.registerLocale(mod.default);
+  languages.registerLocale(mod.default)
   loadedLocales.add(locale)
   language = locale
 }
@@ -59,10 +57,9 @@ async function ensureCountryLocale(locale: string) {
 export async function initialize(locale: string) {
   await ensureCountryLocale(locale)
   bus.on('language:changed', async ({ language }) => {
-    await useLanguages().ensureCountryLocale(language);
+    await useLanguages().ensureCountryLocale(language)
   })
 }
-
 
 export function useLanguages() {
   const getLanguageSelectorOptions = (): MultiselectOption[] => {
@@ -79,7 +76,7 @@ export function useLanguages() {
       return []
     }
     const langs = languages.getNames(language)
-    return codes.map(code => ({
+    return codes.map((code) => ({
       value: code,
       label: langs[code] || code,
     }))

@@ -1,6 +1,6 @@
 let socket: WebSocket | null = null
 
-self.onmessage = e => {
+self.onmessage = (e) => {
   const { type, payload } = e.data
 
   switch (type) {
@@ -11,10 +11,10 @@ self.onmessage = e => {
         self.postMessage({ type: 'connected' })
       }
 
-      socket.onmessage = event => {
+      socket.onmessage = (event) => {
         self.postMessage({ type: 'message', payload: JSON.parse(event.data) })
       }
-      socket.onerror = event => {
+      socket.onerror = (event) => {
         const err = event as ErrorEvent
         self.postMessage({
           type: 'error',

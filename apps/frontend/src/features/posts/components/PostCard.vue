@@ -113,70 +113,129 @@ const handleContact = async () => {
   await nextTick()
   messageInput.value?.focusTextarea?.()
 }
-
 </script>
 
 <template>
-  <div class="post-wrapper position-relative w-100"
-    :class="{ 'post-wrapper--invisible': isOwn && props.dimHidden && !(post as any).isVisible }">
-      <!-- owner toolbar -->
-    <div v-if="isOwn && showOwnerToolbar"
-      class="toolbar position-absolute z-3 w-100 d-flex align-items-center justify-content-end gap-1">
-      <BButton @click.stop="$emit('edit', post)" variant="link-light" size="sm" :title="$t('posts.actions.edit')">
+  <div
+    class="post-wrapper position-relative w-100"
+    :class="{ 'post-wrapper--invisible': isOwn && props.dimHidden && !(post as any).isVisible }"
+  >
+    <!-- owner toolbar -->
+    <div
+      v-if="isOwn && showOwnerToolbar"
+      class="toolbar position-absolute z-3 w-100 d-flex align-items-center justify-content-end gap-1"
+    >
+      <BButton
+        @click.stop="$emit('edit', post)"
+        variant="link-light"
+        size="sm"
+        :title="$t('posts.actions.edit')"
+      >
         <IconEdit class="svg-icon" />
       </BButton>
-      <BButton @click.stop="$emit('delete', post)" variant="link-light" size="sm" :title="$t('posts.actions.delete')">
+      <BButton
+        @click.stop="$emit('delete', post)"
+        variant="link-light"
+        size="sm"
+        :title="$t('posts.actions.delete')"
+      >
         <IconDelete class="svg-icon" />
       </BButton>
-      <BButton @click.stop="$emit('hide', post)" variant="link-light" size="sm"
-        :title="isVisible ? $t('posts.actions.hide') : $t('posts.actions.show')">
-        <IconHide v-if="isVisible" class="svg-icon" />
-        <IconShow v-else class="svg-icon" />
+      <BButton
+        @click.stop="$emit('hide', post)"
+        variant="link-light"
+        size="sm"
+        :title="isVisible ? $t('posts.actions.hide') : $t('posts.actions.show')"
+      >
+        <IconHide
+          v-if="isVisible"
+          class="svg-icon"
+        />
+        <IconShow
+          v-else
+          class="svg-icon"
+        />
       </BButton>
     </div>
 
-    <PostIt class="position-relative p-2" :id="post.id" :variant="isOwn ? 'accent' : ''">
+    <PostIt
+      class="position-relative p-2"
+      :id="post.id"
+      :variant="isOwn ? 'accent' : ''"
+    >
       <template #header>
         <div class="d-flex justify-content-end align-items-center">
           <PostTypeBadge :type="post.type" />
         </div>
       </template>
 
-      <div class="post-card d-flex flex-column" :class="[
-        `post-card--${post.type.toLowerCase()}`,
-        {
-          'post-card--own': isOwn,
-        },
-      ]" @click="$emit('click', post)">
+      <div
+        class="post-card d-flex flex-column"
+        :class="[
+          `post-card--${post.type.toLowerCase()}`,
+          {
+            'post-card--own': isOwn,
+          },
+        ]"
+        @click="$emit('click', post)"
+      >
         <p class="post-content flex-grow-1 flex-shrink-1">{{ displayContent }}</p>
 
         <div class="post-meta d-flex align-items-center justify-content-start gap-2">
-          <div class="text-muted " v-if="showDetails"> <!-- left col 50% can grow/shrink-->
+          <div
+            class="text-muted"
+            v-if="showDetails"
+          >
+            <!-- left col 50% can grow/shrink-->
             <div class="d-flex justify-content-start flex-row align-items-center">
-              <div v-if="hasProfileData(post)" class="d-flex align-items-center">
-                <ProfileThumbnail :profile="post.postedBy" class="me-2" />
+              <div
+                v-if="hasProfileData(post)"
+                class="d-flex align-items-center"
+              >
+                <ProfileThumbnail
+                  :profile="post.postedBy"
+                  class="me-2"
+                />
                 <div>{{ post.postedBy.publicName }}</div>
               </div>
               <div>
-                <UseTimeAgo v-slot="{ timeAgo }" :time="post.createdAt"> | {{ timeAgo }} </UseTimeAgo>
+                <UseTimeAgo
+                  v-slot="{ timeAgo }"
+                  :time="post.createdAt"
+                >
+                  | {{ timeAgo }}
+                </UseTimeAgo>
               </div>
             </div>
           </div>
 
-          <div class="post-date text-muted flex-grow-1 d-flex align-items-center" v-if="!showDetails"> 
-            <UseTimeAgo v-slot="{ timeAgo }" :time="post.createdAt">{{ timeAgo }}</UseTimeAgo>
+          <div
+            class="post-date text-muted flex-grow-1 d-flex align-items-center"
+            v-if="!showDetails"
+          >
+            <UseTimeAgo
+              v-slot="{ timeAgo }"
+              :time="post.createdAt"
+              >{{ timeAgo }}</UseTimeAgo
+            >
           </div>
 
           <!-- location  in right column 50% can shrink -->
-          <div class="location d-flex flex-shrink-1 flex-grow-1 min-w-0 justify-content-end align-items-center gap-2">
-            <span v-if="postLocation" class="post-location text-muted">
+          <div
+            class="location d-flex flex-shrink-1 flex-grow-1 min-w-0 justify-content-end align-items-center gap-2"
+          >
+            <span
+              v-if="postLocation"
+              class="post-location text-muted"
+            >
               <LocationLabel
                 :viewerLocation="viewerLocation"
                 :location="postLocation"
                 :show-country-label="false"
                 :show-city="true"
                 :show-country-icon="true"
-                :show-only-foreign-country="true" />
+                :show-only-foreign-country="true"
+              />
             </span>
             <button
               v-if="showDetails && !isOwn && hasProfileData(post)"
@@ -188,11 +247,13 @@ const handleContact = async () => {
             </button>
           </div>
         </div>
-
       </div>
     </PostIt>
 
-    <div v-if="showMessageForm" class="mt-2 px-1">
+    <div
+      v-if="showMessageForm"
+      class="mt-2 px-1"
+    >
       <div v-if="!messageSent && recipientProfile">
         <SendMessageForm
           ref="messageInput"
@@ -201,8 +262,14 @@ const handleContact = async () => {
           @message:sent="handleMessageSent"
         />
       </div>
-      <div v-else class="d-flex flex-column align-items-center justify-content-center text-success py-3">
-        <div class="my-2 animate__animated animate__zoomIn" style="height: 3rem">
+      <div
+        v-else
+        class="d-flex flex-column align-items-center justify-content-center text-success py-3"
+      >
+        <div
+          class="my-2 animate__animated animate__zoomIn"
+          style="height: 3rem"
+        >
           <IconMessage class="svg-icon-lg h-100 w-100" />
         </div>
         <h6 class="mb-2 text-center animate__animated animate__fadeInDown">
@@ -217,7 +284,9 @@ const handleContact = async () => {
 .toolbar {
   opacity: 0;
   visibility: hidden;
-  transition: opacity 180ms ease-in-out, visibility 0s linear 180ms;
+  transition:
+    opacity 180ms ease-in-out,
+    visibility 0s linear 180ms;
 }
 
 .post-wrapper:hover .toolbar {

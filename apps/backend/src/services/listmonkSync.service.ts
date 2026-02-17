@@ -56,7 +56,10 @@ export class ListmonkSyncService {
           await this.createSubscriber(user)
         } catch (createError: any) {
           // If subscriber already exists (409 Conflict), fetch and update instead
-          if (createError.message?.includes('409') || createError.message?.includes('already exists')) {
+          if (
+            createError.message?.includes('409') ||
+            createError.message?.includes('already exists')
+          ) {
             const subscriber = await this.getSubscriber(user.email)
             if (subscriber) {
               await this.updateSubscriber(subscriber.id!, user)
@@ -82,16 +85,13 @@ export class ListmonkSyncService {
       // Listmonk's API accepts: ?query=email LIKE 'user@example.com'
       const encodedEmail = encodeURIComponent(email)
       const encodedQuery = encodeURIComponent(`email LIKE '${email}'`)
-      const response = await fetch(
-        `${this.baseUrl}/api/subscribers?query=${encodedQuery}`,
-        {
-          method: 'GET',
-          headers: {
-            Authorization: this.authHeader,
-            'Content-Type': 'application/json',
-          },
-        }
-      )
+      const response = await fetch(`${this.baseUrl}/api/subscribers?query=${encodedQuery}`, {
+        method: 'GET',
+        headers: {
+          Authorization: this.authHeader,
+          'Content-Type': 'application/json',
+        },
+      })
 
       if (!response.ok) {
         return null
@@ -128,7 +128,9 @@ export class ListmonkSyncService {
 
     if (!response.ok) {
       const errorText = await response.text().catch(() => response.statusText)
-      throw new Error(`Failed to create subscriber (${response.status} ${response.statusText}): ${errorText}`)
+      throw new Error(
+        `Failed to create subscriber (${response.status} ${response.statusText}): ${errorText}`
+      )
     }
   }
 
@@ -155,7 +157,9 @@ export class ListmonkSyncService {
 
     if (!response.ok) {
       const errorText = await response.text().catch(() => response.statusText)
-      throw new Error(`Failed to update subscriber (${response.status} ${response.statusText}): ${errorText}`)
+      throw new Error(
+        `Failed to update subscriber (${response.status} ${response.statusText}): ${errorText}`
+      )
     }
   }
 }

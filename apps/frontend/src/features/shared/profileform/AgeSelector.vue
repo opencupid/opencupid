@@ -5,7 +5,7 @@ import { useAgeFields } from '../composables/useAgeFields'
 import VueSlider from 'vue-3-slider-component'
 
 const model = defineModel<Date | null>({
-  default: ()=> new Date(new Date().getFullYear() - 18, 1, 1),
+  default: () => new Date(new Date().getFullYear() - 18, 1, 1),
 })
 
 const birthYear = computed({
@@ -40,7 +40,11 @@ const { birthYearMin, birthYearMax } = useAgeFields(model.value)
           :min="birthYearMin"
           :max="birthYearMax"
         ></vue-slider>
-        <div class="text-center fs-1 text-muted mt-2" :class="birthYear ? 'visible' : 'invisible'" style="height: 2rem;">
+        <div
+          class="text-center fs-1 text-muted mt-2"
+          :class="birthYear ? 'visible' : 'invisible'"
+          style="height: 2rem"
+        >
           {{ birthYear }}
         </div>
       </div>

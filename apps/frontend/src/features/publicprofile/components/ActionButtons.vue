@@ -1,5 +1,4 @@
 <script setup lang="ts">
-
 import { inject, nextTick, ref } from 'vue'
 import { type MessageDTO } from '@zod/messaging/messaging.dto'
 import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
@@ -20,9 +19,6 @@ const emit = defineEmits<{
 
 const showMessageModal = ref(false)
 
-
-
-
 const handleMessageIntent = () => {
   if (!props.profile.conversation) {
     showMessageModal.value = true
@@ -32,7 +28,6 @@ const handleMessageIntent = () => {
     emit('intent:conversation:open', props.profile.conversation.id)
   }
 }
-
 </script>
 
 <template>
@@ -49,7 +44,7 @@ const handleMessageIntent = () => {
       </BButton>
     </div>
 
-   <SendMessageDialog/>
+    <SendMessageDialog />
   </div>
 </template>
 

@@ -18,7 +18,7 @@ describe('AuthIdComponent', () => {
   it('validates identifier input', () => {
     const wrapper = mount(AuthIdComponent, {
       props: { isLoading: false },
-      global: { stubs: {  CaptchaWidget } }
+      global: { stubs: { CaptchaWidget } },
     })
     ;(wrapper.vm as any).authIdInput = 'bad'
     expect((wrapper.vm as any).inputState).toBe(false)
@@ -31,7 +31,7 @@ describe('AuthIdComponent', () => {
   it('emits updated with computed identifier', async () => {
     const wrapper = mount(AuthIdComponent, {
       props: { isLoading: false },
-      global: { stubs: {  CaptchaWidget } }
+      global: { stubs: { CaptchaWidget } },
     })
     ;(wrapper.vm as any).authIdInput = 'test@example.com'
     await (wrapper.vm as any).handleSendLoginLink()
@@ -39,14 +39,14 @@ describe('AuthIdComponent', () => {
       email: 'test@example.com',
       phonenumber: '',
       captchaSolution: '',
-      language: ''
+      language: '',
     })
   })
 
   it('sets error when identifier empty', async () => {
     const wrapper = mount(AuthIdComponent, {
       props: { isLoading: false },
-      global: { stubs: {  CaptchaWidget } }
+      global: { stubs: { CaptchaWidget } },
     })
     await (wrapper.vm as any).handleSendLoginLink()
     expect((wrapper.vm as any).error).toBe('auth.auth_id_input_empty')

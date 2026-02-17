@@ -16,9 +16,11 @@ defineEmits<{
         :key="locale.value"
         class="list-inline-item me-3"
       >
-        <span v-if="i18nStore.currentLanguage === locale.value" class="text-primary">{{
-          locale.label
-        }}</span>
+        <span
+          v-if="i18nStore.currentLanguage === locale.value"
+          class="text-primary"
+          >{{ locale.label }}</span
+        >
         <a
           v-else
           class="text-decoration-none text-muted"
@@ -28,7 +30,12 @@ defineEmits<{
         >
       </li>
     </ul>
-    <div class="text-center text-muted mt-3" style="font-size: 0.75rem;">Help wanted translating</div>
+    <div
+      class="text-center text-muted mt-3"
+      style="font-size: 0.75rem"
+    >
+      Help wanted translating
+    </div>
   </div>
 </template>
 

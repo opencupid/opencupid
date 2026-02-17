@@ -11,32 +11,26 @@ import { useOwnerProfileStore } from '../features/myprofile/stores/ownerProfileS
 import { useLocalStore } from '../store/localStore'
 
 export const useBootstrap = defineStore('bootstrap', () => {
-
   const bootstrapPromise = ref<Promise<void> | null>(null)
   const isBootstrapped = ref(false)
 
   async function bootstrap() {
-
     if (bootstrapPromise.value) return bootstrapPromise.value
 
     bootstrapPromise.value = (async () => {
-
       const localStore = useLocalStore()
       localStore.initialize()
 
       const authStore = useAuthStore()
       authStore.initialize()
 
-      if (!authStore.isLoggedIn)
-        return
+      if (!authStore.isLoggedIn) return
 
       const ownerProfileStore = useOwnerProfileStore()
       const messagingStore = useMessageStore()
       const interactionStore = useInteractionStore()
 
-      await Promise.all([
-        ownerProfileStore.fetchOwnerProfile(),
-      ])
+      await Promise.all([ownerProfileStore.fetchOwnerProfile()])
 
       isBootstrapped.value = true
 

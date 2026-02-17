@@ -119,9 +119,9 @@ useInfiniteScroll(
       isLoadingMore: isLoadingMore.value,
       hasMoreProfiles: hasMoreProfiles.value,
       isInitialized: isInitialized.value,
-      currentScope: currentScope.value
+      currentScope: currentScope.value,
     })
-    
+
     if (isLoadingMore.value || !hasMoreProfiles.value || !isInitialized.value) {
       return
     }
@@ -144,7 +144,10 @@ useInfiniteScroll(
       :class="{ active: isDetailView }"
     >
       <div class="overflow-auto hide-scrollbar h-100 d-flex flex-column">
-        <MiddleColumn class="pt-sm-3 position-relative flex-grow-1" style="min-height: 100%">
+        <MiddleColumn
+          class="pt-sm-3 position-relative flex-grow-1"
+          style="min-height: 100%"
+        >
           <PublicProfileComponent
             v-if="selectedProfileId"
             :id="selectedProfileId"
@@ -168,7 +171,10 @@ useInfiniteScroll(
               <ScopeViewToggler v-model="scopeModel" />
             </template>
           </SecondaryNav>
-          <div v-if="currentScope == 'social'" class="filter-controls my-2">
+          <div
+            v-if="currentScope == 'social'"
+            class="filter-controls my-2"
+          >
             <div
               class="d-flex align-items-center justify-content-between w-100 px-2 py-1 bg-light rounded"
             >
@@ -181,7 +187,10 @@ useInfiniteScroll(
               <ViewModeToggler v-model="viewModeModel" />
             </div>
           </div>
-          <div v-if="currentScope == 'dating'" class="filter-controls my-2">
+          <div
+            v-if="currentScope == 'dating'"
+            class="filter-controls my-2"
+          >
             <DatingPrefsDisplay
               v-if="datingPrefs && haveAccess"
               v-model="datingPrefs"
@@ -205,7 +214,10 @@ useInfiniteScroll(
           >
             <!-- Placeholders while loading -->
             <MiddleColumn class="overflow-hidden">
-              <PlaceholdersGrid :howMany="6" :isAnimated="true" />
+              <PlaceholdersGrid
+                :howMany="6"
+                :isAnimated="true"
+              />
             </MiddleColumn>
           </BOverlay>
         </template>
@@ -241,24 +253,35 @@ useInfiniteScroll(
 
         <!-- Main profile results -->
         <template v-else-if="isInitialized && haveResults">
-          <div 
+          <div
             ref="scrollContainer"
             class="overflow-auto hide-scrollbar pb-5 flex-grow-1"
           >
-            <MiddleColumn v-if="viewModeModel === 'grid'" class="grid-view">
+            <MiddleColumn
+              v-if="viewModeModel === 'grid'"
+              class="grid-view"
+            >
               <ProfileCardGrid
                 :profiles="profileList"
                 :showTags="true"
                 :showLocation="true"
                 @profile:select="handleCardClick"
               />
-              
+
               <!-- Infinite scroll loading indicator -->
-              <div v-if="isLoadingMore" class="text-center py-3">
-                <BSpinner variant="primary" small />
-                <span class="ms-2 text-muted">{{  $t('profiles.browse.loading_more_profiles') }}</span>
+              <div
+                v-if="isLoadingMore"
+                class="text-center py-3"
+              >
+                <BSpinner
+                  variant="primary"
+                  small
+                />
+                <span class="ms-2 text-muted">{{
+                  $t('profiles.browse.loading_more_profiles')
+                }}</span>
               </div>
-              
+
               <!-- No more profiles indicator -->
               <!-- <div v-else-if="!hasMoreProfiles && profileList.length > 0" class="text-center py-3 text-muted">
               </div> -->

@@ -29,7 +29,7 @@ const tagsRoutes: FastifyPluginAsync = async fastify => {
         const response: TagsResponse = { success: true, tags: [] }
         return reply.code(200).send(response)
       }
-      const publicTags = tags.map(tag => DbTagToPublicTagTransform(tag,locale))
+      const publicTags = tags.map(tag => DbTagToPublicTagTransform(tag, locale))
       const response: TagsResponse = { success: true, tags: publicTags }
       return reply.code(200).send(response)
     } catch (err) {
@@ -47,7 +47,7 @@ const tagsRoutes: FastifyPluginAsync = async fastify => {
       onRequest: [fastify.authenticate],
       // rate limiter
       config: {
-       ...rateLimitConfig(fastify, '5 minute', 10), // 10 requests per minute
+        ...rateLimitConfig(fastify, '5 minute', 10), // 10 requests per minute
       },
     },
     async (req, reply) => {

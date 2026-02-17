@@ -37,34 +37,45 @@ const tilesPlugin: FastifyPluginAsync = async fastify => {
       try {
         const controller = new AbortController()
         const timeoutId = setTimeout(() => controller.abort(), TILE_TIMEOUT)
-        
+
         const response = await fetch(url, {
           ...options,
-          signal: controller.signal
+          signal: controller.signal,
         })
-        
+
         clearTimeout(timeoutId)
-        
+
         if (response.ok || response.status === 304) {
           return response
         }
-        
+
         // Don't retry on client errors (4xx)
         if (response.status >= 400 && response.status < 500) {
           return response
         }
-        
+
         // For server errors (5xx) or network errors, retry if attempts remain
         if (attempt < retries) {
-          fastify.log.warn(`Tile fetch attempt ${attempt + 1} failed with status ${response.status}, retrying...`)
+          fastify.log.warn(
+            `Tile fetch attempt ${attempt + 1} failed with status ${response.status}, retrying...`
+          )
           await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000)) // exponential backoff
           continue
         }
-        
+
         return response
       } catch (error: any) {
-        if (attempt < retries && (error.code === 'ABORT_ERR' || error.name === 'AbortError' || error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT' || error.message === 'fetch failed')) {
-          fastify.log.warn(`Tile fetch attempt ${attempt + 1} failed with error ${error.message}, retrying...`)
+        if (
+          attempt < retries &&
+          (error.code === 'ABORT_ERR' ||
+            error.name === 'AbortError' ||
+            error.code === 'ECONNRESET' ||
+            error.code === 'ETIMEDOUT' ||
+            error.message === 'fetch failed')
+        ) {
+          fastify.log.warn(
+            `Tile fetch attempt ${attempt + 1} failed with error ${error.message}, retrying...`
+          )
           await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000)) // exponential backoff
           continue
         }
@@ -163,7 +174,7 @@ const tilesPlugin: FastifyPluginAsync = async fastify => {
       return reply.send(buf)
     } catch (error: any) {
       fastify.log.error(`Tile request failed: ${error.message}`)
-      
+
       // Try to serve from cache if available
       if (cached) {
         fastify.log.warn('Serving stale tile from cache due to upstream error')
@@ -174,7 +185,7 @@ const tilesPlugin: FastifyPluginAsync = async fastify => {
           .header('Access-Control-Allow-Origin', '*')
         return reply.send(cached.body)
       }
-      
+
       // No cache available, return error
       return reply.code(502).send('tile unavailable')
     }

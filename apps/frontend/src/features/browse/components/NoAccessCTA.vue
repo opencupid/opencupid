@@ -8,7 +8,6 @@ const currentScope = defineModel<ProfileScope | null>()
 defineEmits(['edit:profile'])
 
 const { t } = useI18n()
-
 </script>
 
 <template>

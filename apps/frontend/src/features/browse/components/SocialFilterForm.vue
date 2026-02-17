@@ -28,7 +28,13 @@ const setLocationFromProfile = () => {
 const toggleDisabled = () => {
   if (!model.value.location) return
   if (locationDisabled.value) {
-    Object.assign(model.value.location, { country: '', cityId: '', cityName: '', lat: null, lon: null } as LocationDTO)
+    Object.assign(model.value.location, {
+      country: '',
+      cityId: '',
+      cityName: '',
+      lat: null,
+      lon: null,
+    } as LocationDTO)
   } else {
     model.value.location.country = props.viewerProfile?.location?.country || ''
     model.value.location.cityName = props.viewerProfile?.location?.cityName || ''
@@ -47,7 +53,10 @@ const toggleDisabled = () => {
     <div class="mb-2">
       <div class="d-flex flex-row">
         <div class="flex-grow-1">
-          <BFormCheckbox v-model="locationDisabled" @change="toggleDisabled">
+          <BFormCheckbox
+            v-model="locationDisabled"
+            @change="toggleDisabled"
+          >
             <!-- Anywhere -->
             {{ $t('profiles.browse.filters.anywhere') }}
           </BFormCheckbox>
@@ -59,13 +68,23 @@ const toggleDisabled = () => {
             class="p-0"
             :title="$t('profiles.browse.filters.locate_button_title')"
           >
-            <IconTarget2 class="svg-icon-lg" @click="setLocationFromProfile" />
+            <IconTarget2
+              class="svg-icon-lg"
+              @click="setLocationFromProfile"
+            />
           </BButton>
         </div>
       </div>
     </div>
-    <fieldset class="mb-2 mb-md-4" :disabled="locationDisabled">
-      <LocationSelector v-model="model.location as LocationDTO" v-if="model.location" :allowEmpty="true" />
+    <fieldset
+      class="mb-2 mb-md-4"
+      :disabled="locationDisabled"
+    >
+      <LocationSelector
+        v-model="model.location as LocationDTO"
+        v-if="model.location"
+        :allowEmpty="true"
+      />
     </fieldset>
 
     <div>
@@ -73,7 +92,10 @@ const toggleDisabled = () => {
         <!-- Interested in... -->
         {{ $t('profiles.browse.filters.tags_label') }}
       </label>
-      <TagSelectComponent v-model="model.tags" :taggable="false" />
+      <TagSelectComponent
+        v-model="model.tags"
+        :taggable="false"
+      />
     </div>
   </div>
 </template>

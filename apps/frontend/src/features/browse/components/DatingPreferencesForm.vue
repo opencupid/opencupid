@@ -14,7 +14,6 @@ const model = defineModel<DatingPreferencesDTO>({
   default: () => DatingPreferencesFormSchema.parse({}),
 })
 
-
 // const { age } = useAgeFields(props.profile?.birthday ?? null)
 
 const { t } = useI18n()
@@ -48,9 +47,11 @@ const prefAge = computed({
 
     <div class="mb-3">
       <div>
-        <label for="ageRange" class="form-text text-muted">{{
-          t('profiles.forms.age_range')
-        }}</label>
+        <label
+          for="ageRange"
+          class="form-text text-muted"
+          >{{ t('profiles.forms.age_range') }}</label
+        >
         <div class="d-flex flex-row align-items-center">
           <div class="fs-2 me-2 px-4">{{ prefAge[0] }} - {{ prefAge[1] }}</div>
           <div class="flex-grow-1 px-3">
@@ -69,7 +70,10 @@ const prefAge = computed({
       </div>
     </div>
 
-    <div class="mb-3" style="min-height: 0; flex: 0 1 auto">
+    <div
+      class="mb-3"
+      style="min-height: 0; flex: 0 1 auto"
+    >
       <GenderPreferenceSelector v-model="model.prefGender" />
     </div>
 

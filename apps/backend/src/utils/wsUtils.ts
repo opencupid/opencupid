@@ -1,7 +1,7 @@
 import { JwtPayload } from '@zod/user/user.dto'
 import { FastifyRequest } from 'fastify'
 import { z } from 'zod'
-import { FastifyInstance } from "fastify"
+import { FastifyInstance } from 'fastify'
 
 export function broadcastToProfile(
   fastify: FastifyInstance,
@@ -20,7 +20,6 @@ export function broadcastToProfile(
   })
   return true
 }
-
 
 const TokenQuerySchema = z.object({
   token: z.string().min(1),

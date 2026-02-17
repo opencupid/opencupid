@@ -5,7 +5,6 @@ import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
 import IconArrowSingleLeft from '@/assets/icons/arrows/arrow-single-left.svg'
 import IconMenuDotsVert from '@/assets/icons/interface/menu-dots-vert.svg'
 
-
 defineProps<{
   recipient: ProfileSummary
 }>()
@@ -20,7 +19,10 @@ defineEmits<{
 <template>
   <div class="d-flex align-items-center justify-content-between p-2">
     <div class="back-button">
-      <a class="btn btn-secondary-outline fs-1" @click="$emit('deselect:convo')">
+      <a
+        class="btn btn-secondary-outline fs-1"
+        @click="$emit('deselect:convo')"
+      >
         <IconArrowSingleLeft class="svg-icon" />
       </a>
     </div>
@@ -38,7 +40,10 @@ defineEmits<{
     </div>
 
     <div class="action-button">
-      <a class="btn btn-secondary-outline" @click="$emit('modal:open')">
+      <a
+        class="btn btn-secondary-outline"
+        @click="$emit('modal:open')"
+      >
         <IconMenuDotsVert class="svg-icon-lg fs-4" />
       </a>
     </div>

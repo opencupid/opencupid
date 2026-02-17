@@ -7,7 +7,6 @@ import IconCopy from '@/assets/icons/interface/copy.svg'
 
 const { t } = useI18n()
 
-
 const showModal = defineModel<boolean>({
   default: false,
   type: Boolean,
@@ -47,7 +46,10 @@ const handleSelect = (event: Event) => {
           @click="handleSelect"
         />
       </div>
-      <UseClipboard v-slot="{ copy, copied }" :source="shareUrl">
+      <UseClipboard
+        v-slot="{ copy, copied }"
+        :source="shareUrl"
+      >
         <BButton
           @click="copy()"
           size="lg"
@@ -56,12 +58,20 @@ const handleSelect = (event: Event) => {
           class="flex-grow-1 flex-shrink-0 ms-3"
         >
           <IconCopy class="svg-icon" />
-          {{ copied ? t('uicomponents.share_dialog.button_copied') : t('uicomponents.share_dialog.button_copy') }}
+          {{
+            copied
+              ? t('uicomponents.share_dialog.button_copied')
+              : t('uicomponents.share_dialog.button_copy')
+          }}
         </BButton>
       </UseClipboard>
     </BFormGroup>
     <div class="col-12 text-center">
-      <img :src="qrcode" alt="QR Code" class="img-fluid w-100" />
+      <img
+        :src="qrcode"
+        alt="QR Code"
+        class="img-fluid w-100"
+      />
       <div class="text-muted">
         {{ t('uicomponents.share_dialog.qr_hint') }}
       </div>

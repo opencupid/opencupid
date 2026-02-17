@@ -10,8 +10,11 @@ const props = defineProps<{
 const lang = computed(() => {
   return props.countryCode == 'en' ? 'gb' : props.countryCode
 })
-
 </script>
 <template>
-  <CountryFlag :size="size ?? '36'" :code="lang" title="" />
+  <CountryFlag
+    :size="size ?? '36'"
+    :code="lang"
+    title=""
+  />
 </template>

@@ -3,12 +3,22 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { ref } from 'vue'
 
 vi.mock('@/assets/icons/app/cupid.svg', () => ({ default: { template: '<div />' } }))
-vi.mock('@/features/shared/ui/MiddleColumn.vue', () => ({ default: { template: '<div class="middle"><slot /></div>' } }))
-vi.mock('@/features/shared/ui/ViewTitle.vue', () => ({ default: { template: '<div />', props: ['icon', 'title', 'class'] } }))
-vi.mock('@/features/browse/components/PlaceholdersGrid.vue', () => ({ default: { template: '<div />' } }))
+vi.mock('@/features/shared/ui/MiddleColumn.vue', () => ({
+  default: { template: '<div class="middle"><slot /></div>' },
+}))
+vi.mock('@/features/shared/ui/ViewTitle.vue', () => ({
+  default: { template: '<div />', props: ['icon', 'title', 'class'] },
+}))
+vi.mock('@/features/browse/components/PlaceholdersGrid.vue', () => ({
+  default: { template: '<div />' },
+}))
 vi.mock('../../components/ReceivedLikesCount.vue', () => ({ default: { template: '<div />' } }))
-vi.mock('../../components/MatchesList.vue', () => ({ default: { template: '<div class="matches-list" />', props: ['edges'] } }))
-vi.mock('@/features/publicprofile/components/ProfileChipListPlaceholder.vue', () => ({ default: { template: '<div class="placeholder" />', props: ['howMany'] } }))
+vi.mock('../../components/MatchesList.vue', () => ({
+  default: { template: '<div class="matches-list" />', props: ['edges'] },
+}))
+vi.mock('@/features/publicprofile/components/ProfileChipListPlaceholder.vue', () => ({
+  default: { template: '<div class="placeholder" />', props: ['howMany'] },
+}))
 
 const push = vi.fn()
 vi.mock('vue-router', () => ({ useRouter: () => ({ push }) }))
@@ -22,11 +32,13 @@ const mockState = {
   isLoading: ref(false),
 }
 
-vi.mock('../../composables/useInteractionsViewModel', () => ({ useInteractionsViewModel: () => mockState }))
+vi.mock('../../composables/useInteractionsViewModel', () => ({
+  useInteractionsViewModel: () => mockState,
+}))
 
 const BPlaceholderWrapper = {
   props: ['loading'],
-  template: `<div><slot v-if="!loading" /><slot name="loading" v-else /></div>`
+  template: `<div><slot v-if="!loading" /><slot name="loading" v-else /></div>`,
 }
 const BButton = { template: '<button><slot /></button>' }
 const BCol = { props: ['cols'], template: '<div><slot /></div>' }
@@ -44,12 +56,10 @@ describe('Matches view', () => {
     push.mockClear()
   })
 
-
-
   it('TODO needs fixing', () => {
     expect(true).toBe(true) // Placeholder test to ensure setup works
   })
-/*
+  /*
 
 TODO update the tests to match the current logic and expected i18n strings
 

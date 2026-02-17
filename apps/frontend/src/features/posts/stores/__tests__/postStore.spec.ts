@@ -49,7 +49,7 @@ describe('postStore', () => {
     expect(mockApi.patch).toHaveBeenCalledWith('/posts/post-1', { isVisible: false })
     expect(result).toEqual(hiddenPost)
     expect(store.myPosts[0]!.isVisible).toBe(false)
-    expect(store.posts.map(post => post.id)).toEqual(['post-2'])
+    expect(store.posts.map((post) => post.id)).toEqual(['post-2'])
     expect(store.currentPost).toEqual(hiddenPost)
   })
 
@@ -66,7 +66,7 @@ describe('postStore', () => {
     expect(mockApi.patch).toHaveBeenCalledWith('/posts/post-1', { isVisible: true })
     expect(result).toEqual(visiblePost)
     expect(store.myPosts[0]!.isVisible).toBe(true)
-    expect(store.posts.map(post => post.id)).toEqual(['post-2'])
+    expect(store.posts.map((post) => post.id)).toEqual(['post-2'])
     expect(store.currentPost).toEqual(visiblePost)
   })
 
@@ -74,21 +74,25 @@ describe('postStore', () => {
     it('replaces posts on initial load (offset 0)', async () => {
       const store = usePostStore()
       store.posts = [{ id: 'old-1' } as any]
-      mockApi.get.mockResolvedValue({ data: { success: true, posts: [{ id: 'new-1' }, { id: 'new-2' }] } })
+      mockApi.get.mockResolvedValue({
+        data: { success: true, posts: [{ id: 'new-1' }, { id: 'new-2' }] },
+      })
 
       await store.fetchPosts({ limit: 20, offset: 0 })
 
-      expect(store.posts.map(p => p.id)).toEqual(['new-1', 'new-2'])
+      expect(store.posts.map((p) => p.id)).toEqual(['new-1', 'new-2'])
     })
 
     it('appends posts when offset > 0 (load more)', async () => {
       const store = usePostStore()
       store.posts = [{ id: 'existing-1' } as any]
-      mockApi.get.mockResolvedValue({ data: { success: true, posts: [{ id: 'new-1' }, { id: 'new-2' }] } })
+      mockApi.get.mockResolvedValue({
+        data: { success: true, posts: [{ id: 'new-1' }, { id: 'new-2' }] },
+      })
 
       await store.fetchPosts({ limit: 20, offset: 20 })
 
-      expect(store.posts.map(p => p.id)).toEqual(['existing-1', 'new-1', 'new-2'])
+      expect(store.posts.map((p) => p.id)).toEqual(['existing-1', 'new-1', 'new-2'])
     })
 
     it('includes offset param in query when offset > 0', async () => {

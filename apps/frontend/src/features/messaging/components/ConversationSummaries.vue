@@ -18,21 +18,21 @@ const { t } = useI18n()
 // Strip HTML tags and convert to single line for preview
 function cleanMessagePreview(content: string): string {
   return content
-    .replace(/<br\s*\/?>/gi, ' ')  // Replace <br> tags with spaces
-    .replace(/<[^>]+>/g, '')        // Strip any other HTML tags
-    .replace(/\s+/g, ' ')           // Collapse multiple spaces
+    .replace(/<br\s*\/?>/gi, ' ') // Replace <br> tags with spaces
+    .replace(/<[^>]+>/g, '') // Strip any other HTML tags
+    .replace(/\s+/g, ' ') // Collapse multiple spaces
     .trim()
 }
 </script>
 
 <template>
   <div class="mb-3 px-3">
-    <BListGroup >
+    <BListGroup>
       <BListGroupItem
         v-for="convo in conversations"
         :key="convo.conversationId"
         :active="activeConversation?.conversationId === convo.conversationId"
-        :class="{disabled: !convo.canReply}"
+        :class="{ disabled: !convo.canReply }"
         variant="light"
         class="d-flex justify-content-start align-items-center mb-3 p-2 border-0 rounded-3 shadow cursor-pointer user-select-none"
         @click="$emit('convo:select', convo)"
@@ -48,9 +48,16 @@ function cleanMessagePreview(content: string): string {
             >{{ cleanMessagePreview(convo.lastMessage.content) }}</small
           >
         </div>
-        <div class="flex-shrink-0 me-2 ">
-          <small v-if="!convo.lastMessage?.isMine" class="badge bg-danger">{{ t('messaging.my_turn') }}</small>
-          <small v-if="!convo.canReply" class="badge bg-secondary">
+        <div class="flex-shrink-0 me-2">
+          <small
+            v-if="!convo.lastMessage?.isMine"
+            class="badge bg-danger"
+            >{{ t('messaging.my_turn') }}</small
+          >
+          <small
+            v-if="!convo.canReply"
+            class="badge bg-secondary"
+          >
             <!-- Their turn -->
             {{ t('messaging.their_turn') }}
           </small>

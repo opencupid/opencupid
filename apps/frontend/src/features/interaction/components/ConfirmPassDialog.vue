@@ -22,7 +22,10 @@ defineEmits<{
       class="d-flex align-items-center flex-column justify-content-center mb-2"
     >
       <!-- interactions match pass confirmation  dialog -->
-      <div style="width: 5rem; height: 5rem" class="mb-2">
+      <div
+        style="width: 5rem; height: 5rem"
+        class="mb-2"
+      >
         <IconSurprisedEmoji class="svg-icon-100 text-warning" />
       </div>
       <h3 class="text-center">
@@ -34,19 +37,33 @@ defineEmits<{
         {{ t('matches.pass_confirm_dialog.question_matched') }}
       </p>
 
-      <BButton variant="danger" size="sm" @click="$emit('yes')" class="mb-2 px-3">
+      <BButton
+        variant="danger"
+        size="sm"
+        @click="$emit('yes')"
+        class="mb-2 px-3"
+      >
         <!-- Yes, unmatch -->
         {{ t('matches.pass_confirm_dialog.matched_button_yes') }}
       </BButton>
-      <BButton class="btn btn-link link-secondary text-decoration-none" @click="$emit('no')">
+      <BButton
+        class="btn btn-link link-secondary text-decoration-none"
+        @click="$emit('no')"
+      >
         <!-- No! -->
         {{ t('matches.pass_confirm_dialog.matched_button_no') }}
       </BButton>
     </div>
 
     <!-- interactions match pass confirmation  dialog -->
-    <div v-else class="d-flex align-items-center flex-column justify-content-center mb-2">
-      <div style="width: 5rem; height: 5rem" class="mb-2">
+    <div
+      v-else
+      class="d-flex align-items-center flex-column justify-content-center mb-2"
+    >
+      <div
+        style="width: 5rem; height: 5rem"
+        class="mb-2"
+      >
         <IconConfusedEmoji class="svg-icon-100 text-warning" />
       </div>
       <h3 class="text-center">
@@ -58,11 +75,19 @@ defineEmits<{
         {{ t('matches.pass_confirm_dialog.question_liked') }}
       </p>
 
-      <BButton variant="danger" size="sm" @click="$emit('yes')" class="mb-2 px-3">
+      <BButton
+        variant="danger"
+        size="sm"
+        @click="$emit('yes')"
+        class="mb-2 px-3"
+      >
         <!-- Yes, pass -->
         {{ t('matches.pass_confirm_dialog.liked_button_yes') }}
       </BButton>
-      <BButton class="btn btn-link link-secondary text-decoration-none" @click="$emit('no')">
+      <BButton
+        class="btn btn-link link-secondary text-decoration-none"
+        @click="$emit('no')"
+      >
         <!-- No, don't pass -->
         {{ t('matches.pass_confirm_dialog.liked_button_no') }}
       </BButton>

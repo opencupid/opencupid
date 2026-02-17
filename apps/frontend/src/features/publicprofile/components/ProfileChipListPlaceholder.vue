@@ -11,10 +11,13 @@ const props = withDefaults(
 </script>
 
 <template>
-  <div v-for="n in howMany" :key="n" class="w-100">
+  <div
+    v-for="n in howMany"
+    :key="n"
+    class="w-100"
+  >
     <ProfileChipPlaceholder :isAnimated="isAnimated" />
   </div>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

@@ -10,7 +10,10 @@ const editState = defineModel<boolean>({
 </script>
 
 <template>
-  <Transition name="scale" mode="out-in">
+  <Transition
+    name="scale"
+    mode="out-in"
+  >
     <BButton
       v-if="editState"
       size="lg"
@@ -31,7 +34,10 @@ const editState = defineModel<boolean>({
       variant="primary"
       :title="$t('profiles.forms.edit_button_hint')"
     >
-      <FontAwesomeIcon :icon="faPenToSquare" class="animate__animated animate__fadeIn" />
+      <FontAwesomeIcon
+        :icon="faPenToSquare"
+        class="animate__animated animate__fadeIn"
+      />
       <!-- <IconPencil2 class="svg-icon-lg" /> -->
     </BButton>
   </Transition>

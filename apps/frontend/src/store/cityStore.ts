@@ -12,10 +12,6 @@
 //   deletePath: id => `/cities/${id}`,
 // })
 
-
-
-
-
 import { defineStore } from 'pinia'
 import { api, axios } from '@/lib/api'
 
@@ -107,7 +103,7 @@ export const useCitiesStore = defineStore('cities', {
     async updateCity(id: string, input: Partial<City>): Promise<PublicCity> {
       try {
         const res = await api.patch<CityResponse>(`/cities/${id}`, input)
-        const idx = this.cities.findIndex(t => t.id === id)
+        const idx = this.cities.findIndex((t) => t.id === id)
         if (idx !== -1) this.cities.splice(idx, 1, res.data.city)
         return res.data.city
       } catch (error: any) {
@@ -122,12 +118,11 @@ export const useCitiesStore = defineStore('cities', {
     async deleteCity(id: string): Promise<void> {
       try {
         await api.delete(`/cities/${id}`)
-        this.cities = this.cities.filter(t => t.id !== id)
+        this.cities = this.cities.filter((t) => t.id !== id)
       } catch (error: any) {
         console.error(`Failed to delete city ${id}:`, error)
         throw error.response?.data?.message || 'Failed to delete city'
       }
     },
-
   },
 })

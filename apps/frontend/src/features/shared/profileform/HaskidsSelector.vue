@@ -6,13 +6,11 @@ import { useEnumOptions } from '../composables/useEnumOptions'
 // i18n
 const { t } = useI18n()
 
-const model = defineModel<HasKidsType|null>({
+const model = defineModel<HasKidsType | null>({
   default: () => 'unspecified',
 })
 const { hasKidsOptions } = useEnumOptions(t)
-const checkboxOptions = hasKidsOptions().filter(
-  (option) => option.value !== 'unspecified'
-)
+const checkboxOptions = hasKidsOptions().filter((option) => option.value !== 'unspecified')
 </script>
 
 <template>
@@ -29,7 +27,7 @@ const checkboxOptions = hasKidsOptions().filter(
           v-model="model"
           :id="`list-haskids-${s.value}`"
           :value="s.value"
-        class="clickable"
+          class="clickable"
           >{{ s.label }}</BFormRadio
         >
       </BListGroupItem>

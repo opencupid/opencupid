@@ -130,7 +130,8 @@ describe('useUpdateChecker', () => {
 
   it('resets backoff on success after failures', async () => {
     const appStore = useAppStore()
-    const spy = vi.spyOn(appStore, 'checkVersion')
+    const spy = vi
+      .spyOn(appStore, 'checkVersion')
       // First call: failure
       .mockResolvedValueOnce({ success: false, message: 'error' })
       // Second call: success

@@ -9,7 +9,6 @@ declare global {
 import { Settings } from 'luxon'
 Settings.defaultZone = 'Europe/Berlin'
 
-
 import messages from './i18n-messages'
 
 import { useLocalStore } from '@/store/localStore'
@@ -28,7 +27,6 @@ export function sortLanguagesWithEnFirst(codes: string[]): string[] {
   })
 }
 
-
 export function appCreateI18n() {
   return createI18n({
     legacy: false,
@@ -40,7 +38,6 @@ export function appCreateI18n() {
   })
 }
 
-
 export function appUseI18n(app: any) {
   const i18n = window.__APP_I18N__ || appCreateI18n()
   window.__APP_I18N__ = i18n as any
@@ -48,12 +45,12 @@ export function appUseI18n(app: any) {
 
   const defaultLocale = getLocale() || 'en'
   if (defaultLocale) {
-    (i18n.global as Composer).locale.value = defaultLocale
+    ;(i18n.global as Composer).locale.value = defaultLocale
     Settings.defaultLocale = defaultLocale
   }
 
   bus.on('language:changed', ({ language }) => {
-    (i18n.global as Composer).locale.value = language
+    ;(i18n.global as Composer).locale.value = language
     Settings.defaultLocale = language
   })
 }

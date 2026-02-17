@@ -153,12 +153,11 @@ const postRoutes: FastifyPluginAsync = async fastify => {
     const query = PostQuerySchema.parse(req.query)
 
     try {
-      const raw = (await postService.findAll({
+      const raw = await postService.findAll({
         type: query.type,
         limit: query.limit,
         offset: query.offset,
       })
-      )
       const posts = raw.map(post => mapDbPostToPublic(post, req.session.profileId))
 
       const response: PostsResponse = { success: true, posts }

@@ -50,7 +50,6 @@ describe('MessageService.canSendMessageInConversation', () => {
   })
 })
 
-
 describe('MessageService.getConversationSummary', () => {
   it('queries prisma with correct args', async () => {
     mockPrisma.conversationParticipant.findFirst.mockResolvedValue({ id: 'cp' })
@@ -94,11 +93,13 @@ describe('MessageService.listMessagesForConversation', () => {
 
     const result = await service.listMessagesForConversation('c1', { cursor: 'm10', take: 2 })
 
-    expect(mockPrisma.message.findMany).toHaveBeenCalledWith(expect.objectContaining({
-      cursor: { id: 'm10' },
-      skip: 1,
-      take: 3,
-    }))
+    expect(mockPrisma.message.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        cursor: { id: 'm10' },
+        skip: 1,
+        take: 3,
+      })
+    )
     expect(result.messages.map((m: any) => m.id)).toEqual(['m8', 'm9'])
     expect(result.hasMore).toBe(true)
     expect(result.nextCursor).toBe('m8')
@@ -133,44 +134,44 @@ describe('MessageService.acceptConversationOnMatch', () => {
     const result = await service.acceptConversationOnMatch('p1', 'p2')
     expect(result).toBeNull()
     expect(mockPrisma.conversation.findUnique).toHaveBeenCalledWith({
-      where: { profileAId_profileBId: { profileAId: 'p1', profileBId: 'p2' } }
+      where: { profileAId_profileBId: { profileAId: 'p1', profileBId: 'p2' } },
     })
   })
 
   it('updates conversation status to ACCEPTED when status is INITIATED', async () => {
     const existingConvo = { id: 'c1', status: 'INITIATED', profileAId: 'p1', profileBId: 'p2' }
     const updatedConvo = { ...existingConvo, status: 'ACCEPTED' }
-    
+
     mockPrisma.conversation.findUnique.mockResolvedValue(existingConvo)
     mockPrisma.conversation.update.mockResolvedValue(updatedConvo)
-    
+
     const result = await service.acceptConversationOnMatch('p1', 'p2')
-    
+
     expect(mockPrisma.conversation.update).toHaveBeenCalledWith({
       where: { profileAId_profileBId: { profileAId: 'p1', profileBId: 'p2' } },
-      data: { status: 'ACCEPTED', updatedAt: expect.any(Date) }
+      data: { status: 'ACCEPTED', updatedAt: expect.any(Date) },
     })
     expect(result.status).toBe('ACCEPTED')
   })
 
   it('does not update conversation when status is already ACCEPTED', async () => {
     const existingConvo = { id: 'c1', status: 'ACCEPTED', profileAId: 'p1', profileBId: 'p2' }
-    
+
     mockPrisma.conversation.findUnique.mockResolvedValue(existingConvo)
-    
+
     const result = await service.acceptConversationOnMatch('p1', 'p2')
-    
+
     expect(mockPrisma.conversation.update).not.toHaveBeenCalled()
     expect(result).toBe(existingConvo)
   })
 
   it('sorts profile IDs consistently', async () => {
     mockPrisma.conversation.findUnique.mockResolvedValue(null)
-    
+
     await service.acceptConversationOnMatch('p2', 'p1')
-    
+
     expect(mockPrisma.conversation.findUnique).toHaveBeenCalledWith({
-      where: { profileAId_profileBId: { profileAId: 'p1', profileBId: 'p2' } }
+      where: { profileAId_profileBId: { profileAId: 'p1', profileBId: 'p2' } },
     })
   })
 })

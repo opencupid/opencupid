@@ -14,7 +14,8 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-const isSupported = 'serviceWorker' in navigator && 'Notification' in window && 'PushManager' in window
+const isSupported =
+  'serviceWorker' in navigator && 'Notification' in window && 'PushManager' in window
 
 const isLoading = ref(false)
 
@@ -23,7 +24,7 @@ function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
   const base64url = (base64 + padding).replace(/-/g, '+').replace(/_/g, '/')
   try {
     const raw = atob(base64url)
-    return Uint8Array.from([...raw].map(char => char.charCodeAt(0)))
+    return Uint8Array.from([...raw].map((char) => char.charCodeAt(0)))
   } catch (error) {
     console.error('Failed to decode base64 string:', error)
   }
@@ -71,7 +72,10 @@ async function handleChange(event: Event) {
 </script>
 
 <template>
-  <div v-if="isSupported" class="form-check">
+  <div
+    v-if="isSupported"
+    class="form-check"
+  >
     <input
       id="push-notify-messages"
       type="checkbox"
@@ -80,7 +84,10 @@ async function handleChange(event: Event) {
       :disabled="disabled || isLoading"
       @change="handleChange"
     />
-    <label class="form-check-label" for="push-notify-messages">
+    <label
+      class="form-check-label"
+      for="push-notify-messages"
+    >
       {{ t('settings.push_notify_messages') }}
     </label>
   </div>

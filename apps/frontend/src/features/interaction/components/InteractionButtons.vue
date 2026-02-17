@@ -74,14 +74,25 @@ const handleMessageClick = () => {
             <IconCross class="svg-icon-lg" />
           </BButton>
         </template>
-        <ConfirmPassDialog @yes="handleConfirmClick" @no="passPopover = false" :context="context" />
+        <ConfirmPassDialog
+          @yes="handleConfirmClick"
+          @no="passPopover = false"
+          :context="context"
+        />
       </BPopover>
     </div>
 
     <!-- interaction action buttons popovers, message action -->
-    <BPopover placement="top" title="" title-class="d-none">
+    <BPopover
+      placement="top"
+      title=""
+      title-class="d-none"
+    >
       <template #target>
-        <BButton class="btn-icon-lg btn-info me-2" @click="handleMessageClick">
+        <BButton
+          class="btn-icon-lg btn-info me-2"
+          @click="handleMessageClick"
+        >
           <IconMessage class="svg-icon-lg p-0" />
         </BButton>
       </template>
@@ -96,9 +107,17 @@ const handleMessageClick = () => {
     </BPopover>
 
     <!-- interaction action buttons popovers, 'like' action -->
-    <BPopover v-if="context.canDate" placement="top" title="" title-class="d-none">
+    <BPopover
+      v-if="context.canDate"
+      placement="top"
+      title=""
+      title-class="d-none"
+    >
       <template #target>
-        <BButton class="btn-icon-lg btn-dating" @click="handleLikeClick">
+        <BButton
+          class="btn-icon-lg btn-dating"
+          @click="handleLikeClick"
+        >
           <IconHeart class="svg-icon-lg" />
         </BButton>
       </template>

@@ -1,8 +1,8 @@
-import { defineStore } from "pinia";
-import { useI18n } from "vue-i18n";
-import { ref, watch } from "vue";
-import { bus } from "@/lib/bus";
-import { useLocalStore } from "@/store/localStore";
+import { defineStore } from 'pinia'
+import { useI18n } from 'vue-i18n'
+import { ref, watch } from 'vue'
+import { bus } from '@/lib/bus'
+import { useLocalStore } from '@/store/localStore'
 
 const labels: Record<string, string> = {
   en: 'English',
@@ -18,20 +18,23 @@ const labels: Record<string, string> = {
   // nl: 'Nederlands',
 }
 
-
 export const useI18nStore = defineStore('i18n', () => {
-
   const localStore = useLocalStore()
 
   const { locale } = useI18n()
 
-  const preferredLanguage = (localStore.getLanguage ?? getBrowserLanguage(Object.keys(labels))) ?? 'en'
+  const preferredLanguage =
+    localStore.getLanguage ?? getBrowserLanguage(Object.keys(labels)) ?? 'en'
   const currentLanguage = ref(preferredLanguage)
 
   // Sync changes vue-i18n
-  watch(currentLanguage, (newLang) => {
-    setLanguage(newLang)
-  }, { immediate: true })
+  watch(
+    currentLanguage,
+    (newLang) => {
+      setLanguage(newLang)
+    },
+    { immediate: true }
+  )
 
   // sync changes from vue-i18n to localStore
   watch(locale, (newLocale) => {
@@ -43,7 +46,6 @@ export const useI18nStore = defineStore('i18n', () => {
   }
 
   function setLanguage(lang: string) {
-
     if (!labels[lang]) {
       console.error(`Unsupported language: ${lang}`)
       return
@@ -86,5 +88,4 @@ function getBrowserLanguage(availableLocales: string[]): string {
   // const browserLanguage = navigator.language || navigator.languages[0] || 'en'
   const browserLang = (navigator.language || 'en').split('-')[0] ?? 'en'
   return availableLocales.includes(browserLang) ? browserLang : 'en'
-
 }

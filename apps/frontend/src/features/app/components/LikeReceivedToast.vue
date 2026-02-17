@@ -12,7 +12,7 @@ defineProps<{
   <div class="d-flex align-items-center clickable">
     <span>
       <!-- You have received a new like! -->
-       {{ $t('matches.you_received_like') }}
+      {{ $t('matches.you_received_like') }}
     </span>
   </div>
 </template>

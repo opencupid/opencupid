@@ -1,10 +1,10 @@
-import type { LocationDTO } from "@zod/dto/location.dto";
+import type { LocationDTO } from '@zod/dto/location.dto'
 
 export type DbLocation = {
-  country: string | null;
-  cityName: string | null;
-  lat?: number | null;
-  lon?: number | null;
+  country: string | null
+  cityName: string | null
+  lat?: number | null
+  lon?: number | null
 }
 
 export function DbLocationToLocationDTO(dbLocation: DbLocation): LocationDTO {
@@ -15,4 +15,3 @@ export function DbLocationToLocationDTO(dbLocation: DbLocation): LocationDTO {
     lon: dbLocation.lon ?? null,
   }
 }
-

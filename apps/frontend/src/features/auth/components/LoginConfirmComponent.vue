@@ -12,11 +12,12 @@ const { t } = useI18n()
       <div class="icon-inner text-success animate__animated animate__fadeIn">
         <IconSun class="svg-icon welcome-icon" />
       </div>
-      <div class="text-success fs-3 animate__animated animate__fadeIn">{{ t('auth.login_confirm_welcome') }}</div>
+      <div class="text-success fs-3 animate__animated animate__fadeIn">
+        {{ t('auth.login_confirm_welcome') }}
+      </div>
     </div>
   </div>
 </template>
-
 
 <style scoped>
 .icon-inner {
@@ -32,5 +33,3 @@ const { t } = useI18n()
   height: 10rem;
 }
 </style>
-
-

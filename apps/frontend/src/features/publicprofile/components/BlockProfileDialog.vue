@@ -39,7 +39,10 @@ defineEmits<{
     body-class="d-flex flex-row align-items-center justify-content-center overflow-hidden"
     :keyboard="false"
   >
-    <BOverlay :show="loading" class="w-100 h-100">
+    <BOverlay
+      :show="loading"
+      class="w-100 h-100"
+    >
       <p>
         <!--  If this person is bothering you, you can block them. This will prevent them from sending you
         messages or interacting with your profile. They will also not be shown to you anywhere on

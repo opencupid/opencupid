@@ -30,7 +30,7 @@ export const useAppStore = defineStore('app', {
     async checkVersion(): Promise<StoreResponse<VersionDTO>> {
       try {
         const res = await api.get<VersionResponse>('/app/version', {
-          params: { v: CURRENT_VERSION }
+          params: { v: CURRENT_VERSION },
         })
         const parsed = VersionSchema.parse(res.data.version)
 

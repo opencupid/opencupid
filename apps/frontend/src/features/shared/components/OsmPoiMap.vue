@@ -78,7 +78,8 @@ function ensureMap() {
     maxZoom: 19,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     // Use a plain gray tile as fallback (no text) - base64 encoded blank gray SVG
-    errorTileUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iI2Y1ZjVmNSIvPjwvc3ZnPg==',
+    errorTileUrl:
+      'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iI2Y1ZjVmNSIvPjwvc3ZnPg==',
     // Reduce tile buffer to prevent excessive tile requests
     keepBuffer: 1,
     // Enable tile loading during zoom (default: true) - prevents overwhelming tile server
@@ -87,7 +88,7 @@ function ensureMap() {
     // Update tiles when map stops moving (default: true)
     updateWhenIdle: true,
     // Limit tile update frequency to prevent request flooding (default: 200ms)
-    updateInterval: 200
+    updateInterval: 200,
   }).addTo(map)
 
   // Add error handling for tile loading
@@ -100,11 +101,11 @@ function ensureMap() {
   tileLayer.on('tileloadstart', () => {
     tilesLoading++
   })
-  
+
   tileLayer.on('tileload', () => {
     tilesLoading--
   })
-  
+
   tileLayer.on('tileerror', () => {
     tilesLoading--
   })
@@ -124,13 +125,13 @@ function updateMarkers() {
   for (const item of props.items) {
     const location = props.getLocation(item)
     if (!location || !(location.lat && location.lon)) continue
-    
+
     const m = L.marker([location.lat, location.lon], {
       title: props.getTitle(item),
       icon: item.id === props.selectedId ? selectedIcon : defaultIcon,
       keyboard: true,
     })
-    
+
     m.bindPopup('', { maxWidth: 420, autoPan: true, className: 'item-popup' })
 
     m.on('popupopen', (e: L.PopupEvent) => {
@@ -215,9 +216,15 @@ watch(
 
 <template>
   <div>
-    <div class="osm-poi-map" ref="mapEl" />
+    <div
+      class="osm-poi-map"
+      ref="mapEl"
+    />
 
-    <Teleport v-if="popupTarget && popupItem" :to="popupTarget">
+    <Teleport
+      v-if="popupTarget && popupItem"
+      :to="popupTarget"
+    >
       <component
         :is="popupComponent"
         :item="popupItem"

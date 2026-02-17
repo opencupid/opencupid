@@ -28,15 +28,22 @@ const options = computed(() => {
   <div class="w-100">
     <GenderSelectorTitle class="mb-3" />
 
-    <BListGroup class="overflow-scroll" style="max-height: 40vh">
+    <BListGroup
+      class="overflow-scroll"
+      style="max-height: 40vh"
+    >
       <BListGroupItem
         v-for="g in options"
         :key="g.value"
         class="d-flex justify-content-between align-items-center clickable"
       >
-        <BFormRadio name="gender" v-model="model" :id="`list-gender-${g.value}`" :value="g.value">{{
-          g.label
-        }}</BFormRadio>
+        <BFormRadio
+          name="gender"
+          v-model="model"
+          :id="`list-gender-${g.value}`"
+          :value="g.value"
+          >{{ g.label }}</BFormRadio
+        >
       </BListGroupItem>
     </BListGroup>
   </div>

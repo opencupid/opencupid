@@ -96,16 +96,29 @@ const hint = computed(() => history?.state?.hint || null)
     class="w-100 position-relative overflow-hidden"
     :class="[viewState.currentScope, { editable: viewState.isEditable }]"
   >
-    <EditableFields v-model="formData" :editState="viewState.isEditable" @updated="updateProfile">
-      <StoreErrorOverlay v-if="error" :error />
-      <div v-else class="d-flex flex-column justify-content-center h-100">
+    <EditableFields
+      v-model="formData"
+      :editState="viewState.isEditable"
+      @updated="updateProfile"
+    >
+      <StoreErrorOverlay
+        v-if="error"
+        :error
+      />
+      <div
+        v-else
+        class="d-flex flex-column justify-content-center h-100"
+      >
         <MiddleColumn class="pt-sm-3 position-relative">
           <div class="d-flex flex-row justify-content-between align-items-center my-2">
             <div
               style="height: 3rem"
               class="w-100 d-flex align-items-center justify-content-center"
             >
-              <div v-if="viewState.isEditable" class="d-flex">
+              <div
+                v-if="viewState.isEditable"
+                class="d-flex"
+              >
                 <span
                   class="btn-social-toggle px-4 py-1 rounded-4 me-2"
                   @click="toggleSocial"
@@ -146,7 +159,10 @@ const hint = computed(() => history?.state?.hint || null)
           </div>
         </MiddleColumn>
         <div class="overflow-auto h-100">
-          <MiddleColumn class="pt-sm-3 position-relative flex-grow-1" style="min-height: 100%">
+          <MiddleColumn
+            class="pt-sm-3 position-relative flex-grow-1"
+            style="min-height: 100%"
+          >
             <ProfileContent
               v-if="profilePreview"
               :isLoading="isLoading"

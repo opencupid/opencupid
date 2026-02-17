@@ -3,11 +3,14 @@ import type {
   ConversationSummary,
   MessageAttachmentDTO,
   MessageDTO,
-} from '@zod/messaging/messaging.dto';
-import { mapProfileSummary } from './profile.mappers';
-import { canSendMessageInConversation, type MessageWithSendInclude } from '../../services/messaging.service';
+} from '@zod/messaging/messaging.dto'
+import { mapProfileSummary } from './profile.mappers'
+import {
+  canSendMessageInConversation,
+  type MessageWithSendInclude,
+} from '../../services/messaging.service'
 import { appConfig } from '@/lib/appconfig'
-import { signUrl } from '../../lib/media';
+import { signUrl } from '../../lib/media'
 
 function mapConversationMeta(c: { id: string; updatedAt: Date; createdAt: Date }) {
   return {
@@ -43,12 +46,14 @@ export function mapConversationParticipantToSummary(
     isMuted: p.isMuted,
     isArchived: p.isArchived,
     canReply,
-    lastMessage: lastMessage ? {
-      content: lastMessage.content,
-      createdAt: lastMessage.createdAt,
-      messageType: lastMessage.messageType,
-      isMine: lastMessage.senderId === currentProfileId,
-    } : null,
+    lastMessage: lastMessage
+      ? {
+          content: lastMessage.content,
+          createdAt: lastMessage.createdAt,
+          messageType: lastMessage.messageType,
+          isMine: lastMessage.senderId === currentProfileId,
+        }
+      : null,
     conversation: mapConversationMeta(p.conversation),
     partnerProfile: mapProfileSummary(partner.profile),
   }
@@ -67,7 +72,7 @@ export function mapMessageDTO(
     messageType: m.messageType,
     createdAt: m.createdAt,
     attachment: m.attachment ? mapAttachmentDTO(m.attachment) : null,
-    sender: mapProfileSummary(sender!)
+    sender: mapProfileSummary(sender!),
   }
 }
 
@@ -99,7 +104,14 @@ export function mapMessageForMessageList(
     messageType: string
     createdAt: Date
     sender: { id: string; publicName: string; profileImages: any[] }
-    attachment: { id: string; filePath: string; mimeType: string; fileSize: number | null; duration: number | null; createdAt: Date } | null
+    attachment: {
+      id: string
+      filePath: string
+      mimeType: string
+      fileSize: number | null
+      duration: number | null
+      createdAt: Date
+    } | null
   },
   profileId: string
 ): MessageDTO {
@@ -115,4 +127,3 @@ export function mapMessageForMessageList(
     isMine: m.senderId === profileId,
   }
 }
-

@@ -8,7 +8,7 @@
     "dev:depcruise": "depcruise   --output-type json src > docs/deps.json && depcruise   --output-type dot src | dot -T svg > docs/deps.svg",
     "build": "NODE_OPTIONS='--max-old-space-size=4096' run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
-    "test": "vitest",
+    "test": "vitest --run",
     "test:e2e": "playwright test",
     "build-only": "vite build",
     "type-check": "vue-tsc --build",

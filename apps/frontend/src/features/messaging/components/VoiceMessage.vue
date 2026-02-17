@@ -69,7 +69,7 @@ const togglePlayback = () => {
     audioRef.value.pause()
     isPlaying.value = false
   } else {
-    audioRef.value.play().catch(err => {
+    audioRef.value.play().catch((err) => {
       console.error('Failed to play audio:', err)
       error.value = 'Failed to play voice message'
     })
@@ -112,10 +112,20 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="voice-message" :class="{ 'voice-message--mine': isMine }">
+  <div
+    class="voice-message"
+    :class="{ 'voice-message--mine': isMine }"
+  >
     <!-- Hidden audio element -->
-    <audio ref="audioRef" preload="metadata" style="display: none">
-      <source :src="attachment.url" :type="baseMediaType" />
+    <audio
+      ref="audioRef"
+      preload="metadata"
+      style="display: none"
+    >
+      <source
+        :src="attachment.url"
+        :type="baseMediaType"
+      />
     </audio>
 
     <div class="voice-controls d-flex align-items-center gap-2">
@@ -127,12 +137,25 @@ onUnmounted(() => {
         :disabled="isLoading || !!error"
         @click="togglePlayback"
       >
-        <div v-if="isLoading" class="spinner-border spinner-border-sm" role="status">
+        <div
+          v-if="isLoading"
+          class="spinner-border spinner-border-sm"
+          role="status"
+        >
           <span class="visually-hidden">Loading...</span>
         </div>
-        <i v-else-if="error" class="fas fa-exclamation-triangle"></i>
-        <IconPause v-else-if="isPlaying" class="svg-icon"></IconPause>
-        <IconPlay v-else class="svg-icon"></IconPlay>
+        <i
+          v-else-if="error"
+          class="fas fa-exclamation-triangle"
+        ></i>
+        <IconPause
+          v-else-if="isPlaying"
+          class="svg-icon"
+        ></IconPause>
+        <IconPlay
+          v-else
+          class="svg-icon"
+        ></IconPlay>
       </BButton>
 
       <!-- Waveform/Progress container -->
@@ -169,7 +192,10 @@ onUnmounted(() => {
     </div>
 
     <!-- Error message -->
-    <div v-if="error" class="voice-error mt-1">
+    <div
+      v-if="error"
+      class="voice-error mt-1"
+    >
       <small class="text-danger">{{ error }}</small>
     </div>
   </div>

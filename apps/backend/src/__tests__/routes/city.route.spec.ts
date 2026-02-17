@@ -21,8 +21,13 @@ beforeEach(async () => {
 describe('GET /search', () => {
   it('returns mapped cities and sets debounce headers', async () => {
     const handler = fastify.routes['GET /search']
-    mockCityService.search.mockResolvedValue([{ id: 'ckcity1234567890abcd123456', name: 'Test', country: 'US' }])
-    await handler({ query: { q: 'Te', country: 'US' }, user: { userId: 'u1' } } as any, reply as any)
+    mockCityService.search.mockResolvedValue([
+      { id: 'ckcity1234567890abcd123456', name: 'Test', country: 'US' },
+    ])
+    await handler(
+      { query: { q: 'Te', country: 'US' }, user: { userId: 'u1' } } as any,
+      reply as any
+    )
     expect(reply.headers['X-Debounce']).toBe('300')
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.cities[0].name).toBe('Test')
@@ -31,7 +36,10 @@ describe('GET /search', () => {
   it('returns empty list when no cities found', async () => {
     const handler = fastify.routes['GET /search']
     mockCityService.search.mockResolvedValue([])
-    await handler({ query: { q: 'zz', country: 'US' }, user: { userId: 'u1' } } as any, reply as any)
+    await handler(
+      { query: { q: 'zz', country: 'US' }, user: { userId: 'u1' } } as any,
+      reply as any
+    )
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.cities).toEqual([])
   })
@@ -40,9 +48,21 @@ describe('GET /search', () => {
 describe('POST /', () => {
   it('creates city for user', async () => {
     const handler = fastify.routes['POST /']
-    mockCityService.create.mockResolvedValue({ id: 'ckcity234567890abcd123457', name: 'Foo', country: 'US' })
-    await handler({ user: { userId: 'u1' }, body: { name: 'Foo', country: 'US' } } as any, reply as any)
-    expect(mockCityService.create).toHaveBeenCalledWith({ name: 'Foo', country: 'US', createdBy: 'u1', isUserCreated: true })
+    mockCityService.create.mockResolvedValue({
+      id: 'ckcity234567890abcd123457',
+      name: 'Foo',
+      country: 'US',
+    })
+    await handler(
+      { user: { userId: 'u1' }, body: { name: 'Foo', country: 'US' } } as any,
+      reply as any
+    )
+    expect(mockCityService.create).toHaveBeenCalledWith({
+      name: 'Foo',
+      country: 'US',
+      createdBy: 'u1',
+      isUserCreated: true,
+    })
     expect(reply.payload.success).toBe(true)
   })
 })

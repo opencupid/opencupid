@@ -1,6 +1,11 @@
-import { ProfileImage } from "@prisma/client"
-import { ImageService } from "@/services/image.service"
-import { PublicProfileImage, PublicProfileImageSchema, OwnerProfileImage, OwnerProfileImageSchema } from "@zod/profile/profileimage.dto"
+import { ProfileImage } from '@prisma/client'
+import { ImageService } from '@/services/image.service'
+import {
+  PublicProfileImage,
+  PublicProfileImageSchema,
+  OwnerProfileImage,
+  OwnerProfileImageSchema,
+} from '@zod/profile/profileimage.dto'
 
 export interface MinimalProfileImage {
   storagePath: string
@@ -31,4 +36,3 @@ export function toOwnerProfileImage(image: ProfileImage): OwnerProfileImage {
   const variants = getSignedVariants(image)
   return OwnerProfileImageSchema.parse({ ...image, variants })
 }
-

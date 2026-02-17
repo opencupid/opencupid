@@ -1,9 +1,12 @@
-import { vi } from "vitest"
-vi.mock("vue-i18n", () => ({ useI18n: () => ({ t: (k: string) => k }) }))
+import { vi } from 'vitest'
+vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 import { mount } from '@vue/test-utils'
 import { describe, it, expect } from 'vitest'
 
-const ShareDialog = { props: ['modelValue'], template: '<div class="share-dialog" :data-show="modelValue" />' }
+const ShareDialog = {
+  props: ['modelValue'],
+  template: '<div class="share-dialog" :data-show="modelValue" />',
+}
 const BButton = { template: '<button @click="$emit(\'click\')"><slot /></button>' }
 
 import NoResultsCTA from '../NoResultsCTA.vue'

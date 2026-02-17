@@ -25,7 +25,7 @@ const challengeurl = computed(() => {
   return challengeUrl
 })
 
-watch(internalValue, v => {
+watch(internalValue, (v) => {
   emit('update:payload', v || '')
 })
 

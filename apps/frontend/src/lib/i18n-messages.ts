@@ -2,13 +2,16 @@ let messages: Record<string, any> = {}
 
 import prodMessages from '@intlify/unplugin-vue-i18n/messages'
 
-  if (import.meta.env.PROD) {
+if (import.meta.env.PROD) {
   // Production: use statically bundled messages
-    messages = prodMessages || {}
+  messages = prodMessages || {}
 } else {
   // Dev: eagerly import locale files so Vite can watch them
   // it's not happening no matter what I do
-  const modules = import.meta.glob('@shared/i18n/*.json', { eager: true }) as Record<string, { default: any }>
+  const modules = import.meta.glob('@shared/i18n/*.json', { eager: true }) as Record<
+    string,
+    { default: any }
+  >
 
   messages = {}
 

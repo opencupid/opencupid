@@ -16,7 +16,6 @@
 
 ## Tests
 
-
 Full test suite. Use this whilst working on a task.
 ```
 pnpm test
@@ -39,4 +38,10 @@ pnpm build
 
 * All completed work must pass full test suite
 * For all new frontend components, API routes and services test files must be added in the `__tests__` subdirectory closest to the new file or existing file being modified
+* Format new code using `prettier --write`. Never reformat existing code that is not in the current change set.
+* From the package root you can just call `pnpm test`. The commit should pass all tests before you merge.
+* To focus on one step, add the Vitest pattern: `pnpm vitest run -t "<test name>"`.
+* Fix any test or type errors until the whole suite is green.
+* After moving files or changing imports, run `pnpm lint --filter <project_name>` to be sure ESLint and TypeScript rules still pass.
+* Add or update tests for the code you change, even if nobody asked.
 

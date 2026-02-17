@@ -19,7 +19,6 @@ export interface StoreError {
 
 export type StoreResponse<T> = StoreSuccess<T> | StoreError
 
-
 export function storeSuccess<T>(data?: T): StoreSuccess<T> {
   return {
     success: true,
@@ -36,11 +35,14 @@ export function storeError(error: unknown, fallbackMessage = 'Request failed'): 
   if (error instanceof ZodError) {
     message = 'Validation failed'
     const raw = error.flatten().fieldErrors
-    fieldErrors = Object.keys(raw).reduce((acc, key) => {
-      const val = raw[key]
-      if (val !== undefined) acc[key] = val
-      return acc
-    }, {} as Record<string, string[]>)
+    fieldErrors = Object.keys(raw).reduce(
+      (acc, key) => {
+        const val = raw[key]
+        if (val !== undefined) acc[key] = val
+        return acc
+      },
+      {} as Record<string, string[]>
+    )
   }
 
   // Handle Axios response errors
@@ -58,8 +60,7 @@ export function storeError(error: unknown, fallbackMessage = 'Request failed'): 
   }
 
   //   // TODO hook this up to a global debug flag
-  if (__APP_CONFIG__.NODE_ENV === 'development')
-    console.error(message, status, message)
+  if (__APP_CONFIG__.NODE_ENV === 'development') console.error(message, status, message)
 
   return {
     success: false,

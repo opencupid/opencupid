@@ -14,8 +14,11 @@ import IntrotextEditor from '../IntrotextEditor.vue'
 
 describe('IntrotextEditor', () => {
   it('updates status when speech not supported', () => {
-    const wrapper = mount(IntrotextEditor, { props: { languages: ['en'], placeholder: 'blah' }, global: { stubs: { BFormTextarea: true, BFormFloatingLabel: true, BButton: true } } })
-      ; (wrapper.vm as any).toggleListening()
+    const wrapper = mount(IntrotextEditor, {
+      props: { languages: ['en'], placeholder: 'blah' },
+      global: { stubs: { BFormTextarea: true, BFormFloatingLabel: true, BButton: true } },
+    })
+    ;(wrapper.vm as any).toggleListening()
     expect((wrapper.vm as any).status).toBe('SpeechRecognition not supported')
   })
 })

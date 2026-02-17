@@ -12,10 +12,6 @@
 //   deletePath: id => `/tags/${id}`,
 // })
 
-
-
-
-
 import { defineStore } from 'pinia'
 import { api, axios } from '@/lib/api'
 
@@ -107,7 +103,7 @@ export const useTagsStore = defineStore('tags', {
     async updateTag(id: string, input: Partial<Tag>): Promise<PublicTag> {
       try {
         const res = await api.patch<TagResponse>(`/tags/${id}`, input)
-        const idx = this.tags.findIndex(t => t.id === id)
+        const idx = this.tags.findIndex((t) => t.id === id)
         if (idx !== -1) this.tags.splice(idx, 1, res.data.tag)
         return res.data.tag
       } catch (error: any) {
@@ -122,12 +118,11 @@ export const useTagsStore = defineStore('tags', {
     async deleteTag(id: string): Promise<void> {
       try {
         await api.delete(`/tags/${id}`)
-        this.tags = this.tags.filter(t => t.id !== id)
+        this.tags = this.tags.filter((t) => t.id !== id)
       } catch (error: any) {
         console.error(`Failed to delete tag ${id}:`, error)
         throw error.response?.data?.message || 'Failed to delete tag'
       }
     },
-
   },
 })

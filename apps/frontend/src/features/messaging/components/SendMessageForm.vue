@@ -15,7 +15,6 @@ import IconMenuDotsVert from '@/assets/icons/interface/menu-dots-vert.svg'
 import VoiceRecorder from './VoiceRecorder.vue'
 import { useMessageStore } from '../stores/messageStore'
 
-
 const messageStore = useMessageStore()
 
 const props = defineProps<{
@@ -44,7 +43,7 @@ const debouncer = funnel<[string], string>(
 )
 
 // Watch message input field and save draft in localStore
-watch(content, val => debouncer.call(val))
+watch(content, (val) => debouncer.call(val))
 
 watchEffect(() => {
   // Load the draft message from local store when the component is mounted
@@ -111,15 +110,27 @@ function handleVoiceRecordingError(error: string) {
 
 <template>
   <div class="w-100">
-    <StoreErrorOverlay v-if="messageStore.error" :error="messageStore.error" />
+    <StoreErrorOverlay
+      v-if="messageStore.error"
+      :error="messageStore.error"
+    />
 
     <div class="mb-2">
-      <div v-if="showTags" class="mb-2 opacity-75">
+      <div
+        v-if="showTags"
+        class="mb-2 opacity-75"
+      >
         <div class="d-inline-block">
-          <TagList :tags="props.recipientProfile.tags" class="d-inline-block" />
+          <TagList
+            :tags="props.recipientProfile.tags"
+            class="d-inline-block"
+          />
         </div>
         <div class="d-inline-block">
-          <LanguageList :languages="props.recipientProfile.languages" class="d-inline-block" />
+          <LanguageList
+            :languages="props.recipientProfile.languages"
+            class="d-inline-block"
+          />
         </div>
       </div>
 
@@ -142,7 +153,7 @@ function handleVoiceRecordingError(error: string) {
             ref="voiceRecorderRef"
             :disabled="messageStore.isSending"
             :max-duration="120"
-            @recording:started="() => isVoiceActive = true"
+            @recording:started="() => (isVoiceActive = true)"
             @recording:completed="handleVoiceRecordingCompleted"
             @recording:cancelled="handleVoiceRecordingCancelled"
             @recording:error="handleVoiceRecordingError"
@@ -158,7 +169,10 @@ function handleVoiceRecordingError(error: string) {
             >
               {{ $t('messaging.send_message_button').toUpperCase() }}
             </BButton>
-            <small v-else class="text-muted">
+            <small
+              v-else
+              class="text-muted"
+            >
               {{ $t('messaging.send_mode_press_enter') }}
             </small>
             <BDropdown
@@ -172,19 +186,25 @@ function handleVoiceRecordingError(error: string) {
               <template #button-content>
                 <IconMenuDotsVert class="svg-icon-lg fs-4" />
               </template>
-              <BDropdownItem @click="setSendMode('enter')" :active="sendMode === 'enter'">
-                <input 
-                  type="radio" 
-                  class="form-check-input me-2" 
+              <BDropdownItem
+                @click="setSendMode('enter')"
+                :active="sendMode === 'enter'"
+              >
+                <input
+                  type="radio"
+                  class="form-check-input me-2"
                   :checked="sendMode === 'enter'"
                   disabled
                 />
                 {{ $t('messaging.send_mode_press_enter') }}
               </BDropdownItem>
-              <BDropdownItem @click="setSendMode('click')" :active="sendMode === 'click'">
-                <input 
-                  type="radio" 
-                  class="form-check-input me-2" 
+              <BDropdownItem
+                @click="setSendMode('click')"
+                :active="sendMode === 'click'"
+              >
+                <input
+                  type="radio"
+                  class="form-check-input me-2"
                   :checked="sendMode === 'click'"
                   disabled
                 />
@@ -194,7 +214,6 @@ function handleVoiceRecordingError(error: string) {
           </div>
         </div>
       </div>
-
     </div>
   </div>
 </template>
@@ -203,5 +222,4 @@ function handleVoiceRecordingError(error: string) {
 .send-mode-menu {
   min-width: 200px;
 }
-
 </style>

@@ -172,9 +172,7 @@ describe('ProfileService.canInteract', () => {
   })
 
   it('returns false when profileB blocks profileA', async () => {
-    mockPrisma.profile.findFirst
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({ id: 'p2' }) // bBlocksA
+    mockPrisma.profile.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: 'p2' }) // bBlocksA
     const result = await service.canInteract('p1', 'p2')
     expect(result).toBe(false)
   })

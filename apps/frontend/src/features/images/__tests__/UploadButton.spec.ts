@@ -28,7 +28,7 @@ describe('UploadButton', () => {
   it('applies capture attribute when capture prop is provided', () => {
     const wrapper = mount(UploadButton, {
       props: {
-        capture: 'user'
+        capture: 'user',
       },
       global: {
         stubs: {
@@ -49,7 +49,7 @@ describe('UploadButton', () => {
   it('applies environment capture attribute when specified', () => {
     const wrapper = mount(UploadButton, {
       props: {
-        capture: 'environment'
+        capture: 'environment',
       },
       global: {
         stubs: {

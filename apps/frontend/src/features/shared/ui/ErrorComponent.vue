@@ -9,7 +9,10 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <div v-if="props.error" class="alert alert-danger mb-4">
+  <div
+    v-if="props.error"
+    class="alert alert-danger mb-4"
+  >
     <h4>{{ t('uicomponents.error.title') }}</h4>
     {{ props.error }}
   </div>

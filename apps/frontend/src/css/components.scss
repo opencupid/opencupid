@@ -3,19 +3,18 @@
 @import '@bootstrap/scss/mixins';
 @import '@/css/theme';
 
-
 // Form validation styles
 // fix dancing fields
 .invalid-feedback {
   display: block !important;
 }
 
-.form-control~.invalid-feedback,
-.is-valid~.invalid-feedback {
+.form-control ~ .invalid-feedback,
+.is-valid ~ .invalid-feedback {
   visibility: hidden;
 }
 
-.is-invalid~.invalid-feedback {
+.is-invalid ~ .invalid-feedback {
   visibility: visible;
 }
 
@@ -28,7 +27,7 @@
   align-items: center;
   justify-content: center;
   width: 3rem;
-  height: 3rem
+  height: 3rem;
 }
 
 .btn-shaded {
@@ -163,7 +162,6 @@
   background-color: transparentize($social, 0.9);
 }
 
-
 // List group checkbox/radio lists
 // expand clickable area to the whole list item
 // to improve UX on mobile devices
@@ -233,7 +231,6 @@
 .nav-link-dating {
   @include nav-link-theme($dating);
 }
-
 
 .profile-thumbnail {
   width: 2rem;

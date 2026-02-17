@@ -40,12 +40,18 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
 </script>
 
 <template>
-  <div style="min-height: 100%" class="bg-light posiion-relative">
+  <div
+    style="min-height: 100%"
+    class="bg-light posiion-relative"
+  >
     <header
       class="position-absolute top-0 start-0 w-100 pt-2"
       style="z-index: 1000; background-color: inherit"
     >
-      <BContainer fluid="md" class="d-flex flex-column justify-content-between">
+      <BContainer
+        fluid="md"
+        class="d-flex flex-column justify-content-between"
+      >
         <BRow>
           <BCol
             cols="12"
@@ -70,13 +76,22 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
       </BContainer>
     </header>
 
-    <main class="overflow-auto hide-scrollbar position-relative" style="padding-top: 4rem">
+    <main
+      class="overflow-auto hide-scrollbar position-relative"
+      style="padding-top: 4rem"
+    >
       <BContainer>
         <div class="text-success w-100 d-flex align-items-center flex-column mb-3 mb-lg-4">
-          <Logo class="svg-icon-100 logo text-success" style="width: 6rem" />
+          <Logo
+            class="svg-icon-100 logo text-success"
+            style="width: 6rem"
+          />
         </div>
         <BRow class="d-flex flex-column align-items-center">
-          <BCol md="12" lg="8">
+          <BCol
+            md="12"
+            lg="8"
+          >
             <h1 class="text-center mb-3 mb-lg-4">
               <span class="d-none d-md-inline-block">
                 {{ t('landingpage.title_lg', { siteName: siteName }) }}
@@ -85,14 +100,17 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
                 {{ t('landingpage.title', { siteName: siteName }) }}
               </span>
             </h1>
-            <div class="my-md-3 fs-5 pre-line" >
+            <div class="my-md-3 fs-5 pre-line">
               <!-- This is a meeting point in the online realm for us to find each other and connect. -->
               {{ t('landingpage.subtitle_1') }}
             </div>
           </BCol>
         </BRow>
         <BRow class="d-flex flex-column align-items-center fs-4">
-          <BCol md="12" lg="8">
+          <BCol
+            md="12"
+            lg="8"
+          >
             <BRow>
               <BCol md="6">
                 <div class="d-flex flex-column align-items-center py-3 text-center">
@@ -121,7 +139,10 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
           </BCol>
         </BRow>
 
-        <div class="w-100 text-center text-muted mt-3" style="font-size: 1rem; margin-bottom: 8rem">
+        <div
+          class="w-100 text-center text-muted mt-3"
+          style="font-size: 1rem; margin-bottom: 8rem"
+        >
           <div>
             <!-- Made by gaians with -->
             {{ t('landingpage.footer_madeby') }}
@@ -134,7 +155,10 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
               target="_blank"
               rel="noopener noreferrer"
             >
-              <FontAwesomeIcon :icon="faGithub" class="text-decoration-none text-muted fs-4" />
+              <FontAwesomeIcon
+                :icon="faGithub"
+                class="text-decoration-none text-muted fs-4"
+              />
             </a>
           </div>
           <div>

@@ -10,7 +10,7 @@ const model = defineModel<HasKidsType[] | null>({
   default: () => 'unspecified',
 })
 const { hasKidsOptions } = useEnumOptions(t)
-const checkboxOptions = hasKidsOptions().filter(o => o.value !== 'unspecified')
+const checkboxOptions = hasKidsOptions().filter((o) => o.value !== 'unspecified')
 </script>
 
 <template>

@@ -16,7 +16,11 @@ defineEmits<{
 <template>
   <BContainer>
     <BRow v-bind="{ cols: 1, 'cols-sm': 2, 'gutter-y': 4, ...$attrs }">
-      <BCol v-for="profile in profiles" :key="profile.id" class="col">
+      <BCol
+        v-for="profile in profiles"
+        :key="profile.id"
+        class="col"
+      >
         <ProfileCardComponent
           :profile
           v-bind="{ showTags: $props.showTags, showLocation: $props.showLocation }"

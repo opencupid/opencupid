@@ -15,14 +15,20 @@ beforeEach(async () => {
 
 describe('TagService', () => {
   it('searches tags', async () => {
-    mockPrisma.tag.findMany.mockResolvedValue([{ id: 'cksearchtagid1234567890', name: 'foo', slug: 'foo' }])
+    mockPrisma.tag.findMany.mockResolvedValue([
+      { id: 'cksearchtagid1234567890', name: 'foo', slug: 'foo' },
+    ])
     const result = await service.search('en', 'foo')
     expect(mockPrisma.tag.findMany).toHaveBeenCalled()
     expect(result[0].name).toBe('foo')
   })
 
   it('creates a tag', async () => {
-    mockPrisma.tag.create.mockResolvedValue({ id: 'ck1234567890abcd12345670', name: 'Bar', slug: 'bar' })
+    mockPrisma.tag.create.mockResolvedValue({
+      id: 'ck1234567890abcd12345670',
+      name: 'Bar',
+      slug: 'bar',
+    })
     const tag = await service.create('en', { name: 'Bar', createdBy: 'u1', originalLocale: 'en' })
     expect(tag.slug).toBe('bar')
     expect(mockPrisma.tag.create).toHaveBeenCalled()

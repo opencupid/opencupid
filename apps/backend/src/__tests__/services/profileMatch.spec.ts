@@ -13,7 +13,6 @@ beforeEach(async () => {
   service = module.ProfileMatchService.getInstance()
 })
 
-
 describe('MatchQueryService.findMutualMatchesFor', () => {
   it('returns empty array when profile is missing', async () => {
     mockPrisma.profile.findUnique.mockResolvedValue(null)
@@ -53,7 +52,6 @@ describe('MatchQueryService.findMutualMatchesFor', () => {
     lte.setFullYear(lte.getFullYear() - 25)
     const age = 28
 
- 
     expect(res[0].id).toBe('p2')
   })
 
@@ -78,6 +76,5 @@ describe('MatchQueryService.findMutualMatchesFor', () => {
     gte.setFullYear(gte.getFullYear() - 30)
     const lte = new Date('2024-05-20')
     lte.setFullYear(lte.getFullYear() - 20)
-    
   })
 })

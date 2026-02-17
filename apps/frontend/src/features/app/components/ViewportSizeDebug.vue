@@ -16,11 +16,9 @@ onUnmounted(() => {
   window.removeEventListener('resize', updateViewportSize)
 })
 
-
 const osk = computed(() => {
   return 'virtualKeyboard' in navigator
 })
-
 </script>
 
 <template>
@@ -30,7 +28,6 @@ const osk = computed(() => {
     <p>Viewport Height: {{ viewportHeight }}px</p>
   </div>
 </template>
-
 
 <style scoped>
 .viewport-size-debug {

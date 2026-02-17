@@ -2,13 +2,15 @@
 import { useI18n } from 'vue-i18n'
 defineProps<{
   type: 'OFFER' | 'REQUEST'
-
 }>()
 const { t } = useI18n()
 </script>
 
 <template>
-  <span class="badge post-type-badge" :class="`post-type-badge--${type.toLowerCase()}`">
+  <span
+    class="badge post-type-badge"
+    :class="`post-type-badge--${type.toLowerCase()}`"
+  >
     {{ t(`posts.types.${type}`) }}
   </span>
 </template>

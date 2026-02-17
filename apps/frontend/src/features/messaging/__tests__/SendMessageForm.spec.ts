@@ -3,8 +3,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import type { PublicProfileWithContext } from '@zod/profile/profile.dto'
 
-vi.mock('@/features/shared/profiledisplay/TagList.vue', () => ({ default: { template: '<div />' } }))
-vi.mock('@/features/shared/profiledisplay/LanguageList.vue', () => ({ default: { template: '<div />' } }))
+vi.mock('@/features/shared/profiledisplay/TagList.vue', () => ({
+  default: { template: '<div />' },
+}))
+vi.mock('@/features/shared/profiledisplay/LanguageList.vue', () => ({
+  default: { template: '<div />' },
+}))
 vi.mock('@/features/shared/ui/StoreErrorOverlay.vue', () => ({ default: { template: '<div />' } }))
 
 import SendMessageForm from '../components/SendMessageForm.vue'
@@ -57,7 +61,7 @@ describe('SendMessageForm', () => {
     const wrapper = mount(SendMessageForm, {
       props: {
         recipientProfile: mockRecipient,
-        conversationId: null
+        conversationId: null,
       },
       global: {
         stubs: {
@@ -75,8 +79,8 @@ describe('SendMessageForm', () => {
         },
         mocks: {
           $t: (key: string) => key,
-        }
-      }
+        },
+      },
     })
 
     // Change to click mode
@@ -114,7 +118,7 @@ describe('SendMessageForm', () => {
     const wrapper = mount(SendMessageForm, {
       props: {
         recipientProfile: mockRecipient,
-        conversationId: null
+        conversationId: null,
       },
       global: {
         stubs: {
@@ -132,14 +136,14 @@ describe('SendMessageForm', () => {
         },
         mocks: {
           $t: (key: string) => key,
-        }
-      }
+        },
+      },
     })
 
     // Find radio button inputs
     const radioButtons = wrapper.findAll('input[type="radio"]')
     expect(radioButtons.length).toBe(2)
-    
+
     // First radio should be checked (enter mode is default)
     expect(radioButtons[0]!.attributes('checked')).toBeDefined()
     expect(radioButtons[1]!.attributes('checked')).toBeUndefined()
@@ -147,7 +151,7 @@ describe('SendMessageForm', () => {
     // Change mode and verify radio states
     localStore.setSendMode('click')
     await wrapper.vm.$nextTick()
-    
+
     expect(radioButtons[0]!.attributes('checked')).toBeUndefined()
     expect(radioButtons[1]!.attributes('checked')).toBeDefined()
   })

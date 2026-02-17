@@ -27,11 +27,11 @@ const { getCountryOptions } = useCountries()
 const countrySelectOptions = getCountryOptions()
 
 const country = computed({
-  get: () => countrySelectOptions.find(o => o.value === model.value.country),
+  get: () => countrySelectOptions.find((o) => o.value === model.value.country),
   set: (opt: any) => {
     model.value = {
       ...model.value,
-      country: opt?.value ?? ''
+      country: opt?.value ?? '',
     }
   },
 })

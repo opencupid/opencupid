@@ -5,7 +5,7 @@ import { faker, SexType } from '@faker-js/faker'
 import cuid from 'cuid'
 import fs from 'fs'
 import path, { basename } from 'path'
-import { allFakers, allLocales } from '@faker-js/faker';
+import { allFakers, allLocales } from '@faker-js/faker'
 // import { prisma } from '@/lib/prisma'
 
 import { downloadImage, randomBoolean } from './utils'
@@ -56,7 +56,6 @@ export function createRandomUser() {
     // roles: ['user'],
   }
 }
-
 
 let tags = [] as any[]
 let cities = [] as any[]
@@ -122,17 +121,16 @@ async function main() {
       isOnboarded: true,
     }
 
-
     const datingProfile = isDatingActive
       ? {
-        work: f.person.jobTitle(),
-        // introDating: f.person.bio() + ' ' + f.lorem.sentences({ min: 1, max: 6 }),
-        birthday: faker.date.birthdate({ min: 18, max: 35, mode: 'age' }),
-        gender: gender as Gender,
-        relationship: faker.helpers.enumValue(RelationshipStatus),
-        hasKids: faker.helpers.enumValue(HasKids) as HasKids,
-        pronouns: faker.helpers.enumValue(Pronouns) as Pronouns,
-      }
+          work: f.person.jobTitle(),
+          // introDating: f.person.bio() + ' ' + f.lorem.sentences({ min: 1, max: 6 }),
+          birthday: faker.date.birthdate({ min: 18, max: 35, mode: 'age' }),
+          gender: gender as Gender,
+          relationship: faker.helpers.enumValue(RelationshipStatus),
+          hasKids: faker.helpers.enumValue(HasKids) as HasKids,
+          pronouns: faker.helpers.enumValue(Pronouns) as Pronouns,
+        }
       : {}
 
     const data: Prisma.ProfileCreateInput = {
@@ -142,8 +140,8 @@ async function main() {
       city: { connect: { id: city.id } },
       tags: {
         create: randomTags.map(tag => ({
-          tag: { connect: { id: tag.id } }
-        }))
+          tag: { connect: { id: tag.id } },
+        })),
       },
       localized: {
         create: langs.flatMap(locale => [
@@ -161,18 +159,15 @@ async function main() {
       },
     }
 
-
-
     // console.log(JSON.stringify(data, null, 2))
     let profile
     try {
       // console.dir(data, { depth: null, colors: true })
 
       profile = await prisma.profile.create({
-        data: data
+        data: data,
       })
       // console.dir(profile, { depth: null, colors: true })
-
     } catch (error) {
       // console.dir(error, { depth: null, colors: true })
       console.error(`Error creating profile for user ${createdUser.email}:`, error)
@@ -185,13 +180,12 @@ async function main() {
     await attachRandomImage(profile, gender, createdUser.id)
 
     // TODO attach a random image to profile
-    // images are located 
-//     ls test-data/images/avatar/
-// 0c7fwqk.female.jpg  m60xwo6.male.jpg	v89awrs.female.jpg
-// 0g9fw60.male.jpg    nj74w4v.male.jpg	vpcaw56.female.jpg
-// 0kbfwea.female.jpg  nrb4wg4.female.jpg	vxeaw58.male.jpg
-// 0ndfwie.female.jpg  ...
-
+    // images are located
+    //     ls test-data/images/avatar/
+    // 0c7fwqk.female.jpg  m60xwo6.male.jpg	v89awrs.female.jpg
+    // 0g9fw60.male.jpg    nj74w4v.male.jpg	vpcaw56.female.jpg
+    // 0kbfwea.female.jpg  nrb4wg4.female.jpg	vxeaw58.male.jpg
+    // 0ndfwie.female.jpg  ...
 
     // pick one random image from the test-data/images/avatar/ directory
     // don't use the same image more than once
@@ -202,8 +196,6 @@ async function main() {
     //     tmpFile,
     //     faker.lorem.sentence({ min: 1, max: 2 })
     //   )
-
-
   }
 }
 
@@ -216,9 +208,6 @@ main()
     // await prisma.$disconnect()
     // process.exit(0)
   })
-
-
-
 
 async function fetchTags() {
   return await prisma.tag.findMany({
@@ -237,10 +226,10 @@ async function fetchCities() {
   })
 }
 
-const  avatarDir = path.resolve('test-data/images/avatar')
-let files:string[]
-async function loadImages(){
-   files = await fs.promises.readdir(avatarDir)
+const avatarDir = path.resolve('test-data/images/avatar')
+let files: string[]
+async function loadImages() {
+  files = await fs.promises.readdir(avatarDir)
 }
 
 // Keep track of used images across runs

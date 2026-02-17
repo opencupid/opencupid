@@ -3,20 +3,23 @@ import { api, axios, safeApiCall } from '@/lib/api'
 import { bus } from '@/lib/bus'
 import { type UserRoleType } from '@zod/generated'
 
-import {
-  LoginUserSchema,
-  type SettingsUser,
-  SettingsUserSchema,
-} from '@zod/user/user.dto'
+import { LoginUserSchema, type SettingsUser, SettingsUserSchema } from '@zod/user/user.dto'
 
 import type { UserIdentifier, JwtPayload, SessionData, LoginUser } from '@zod/user/user.dto'
 
-import type { ApiError, OtpLoginResponse, SendLoginLinkResponse, UserMeResponse } from '@zod/apiResponse.dto'
+import type {
+  ApiError,
+  OtpLoginResponse,
+  SendLoginLinkResponse,
+  UserMeResponse,
+} from '@zod/apiResponse.dto'
 import { AuthErrorCodes } from '@zod/user/auth.dto'
 
 type SuccessResponse<T> = { success: true } & T
 
-type AuthStoreResponse<T> = SuccessResponse<T> | ApiError & { code: AuthErrorCodes, restart: 'otp' | 'userid' }
+type AuthStoreResponse<T> =
+  | SuccessResponse<T>
+  | (ApiError & { code: AuthErrorCodes; restart: 'otp' | 'userid' })
 type UserStoreResponse<T> = SuccessResponse<T> | ApiError
 
 export const useAuthStore = defineStore('auth', {
@@ -30,9 +33,9 @@ export const useAuthStore = defineStore('auth', {
   }),
 
   getters: {
-    isLoggedIn: state => state.jwt !== '',
-    getUserId: state => state.userId,
-    getEmail: state => state.email,
+    isLoggedIn: (state) => state.jwt !== '',
+    getUserId: (state) => state.userId,
+    getEmail: (state) => state.email,
   },
 
   actions: {
@@ -71,7 +74,8 @@ export const useAuthStore = defineStore('auth', {
           success: false,
           restart: 'userid',
           code: 'AUTH_INVALID_INPUT',
-          message: 'Something is off with this browser. Please try again in a different one (or try clearing your browser storage.)'
+          message:
+            'Something is off with this browser. Please try again in a different one (or try clearing your browser storage.)',
         }
       }
 
@@ -81,7 +85,7 @@ export const useAuthStore = defineStore('auth', {
           success: false,
           code: 'AUTH_INVALID_INPUT',
           message: 'Something went wrong here, you started on a different phone or computer?',
-          restart: 'userid'
+          restart: 'userid',
         }
       }
       if (!otp) {
@@ -90,13 +94,15 @@ export const useAuthStore = defineStore('auth', {
           success: false,
           code: 'AUTH_INVALID_INPUT',
           message: "Oops, that link in the message didn't work, try entering the code.",
-          restart: 'otp'
+          restart: 'otp',
         }
       }
       try {
-        const res = await safeApiCall(() => api.get<OtpLoginResponse>('/users/otp-login', {
-          params: { userId, otp },
-        }))
+        const res = await safeApiCall(() =>
+          api.get<OtpLoginResponse>('/users/otp-login', {
+            params: { userId, otp },
+          })
+        )
 
         if (res.data.success === true) {
           this.setAuthState(res.data.token)
@@ -106,7 +112,7 @@ export const useAuthStore = defineStore('auth', {
             success: false,
             code: 'AUTH_INTERNAL_ERROR',
             message: 'An internal error occurred during login',
-            restart: 'userid'
+            restart: 'userid',
           }
         }
       } catch (error: any) {
@@ -119,19 +125,23 @@ export const useAuthStore = defineStore('auth', {
           success: false,
           code: error.response?.data?.code || 'AUTH_INTERNAL_ERROR',
           message: message || 'An error occurred during login',
-          restart: 'otp'
+          restart: 'otp',
         }
       }
       bus.emit('auth:login', { token: this.jwt })
       return { success: true, status: '' }
     },
 
-    async sendLoginLink(authId: UserIdentifier): Promise<AuthStoreResponse<{
-      user: LoginUser,
-    }>> {
+    async sendLoginLink(authId: UserIdentifier): Promise<
+      AuthStoreResponse<{
+        user: LoginUser
+      }>
+    > {
       // console.log('Sending login link with data:', authId)
       try {
-        const res = await safeApiCall(() => api.post<SendLoginLinkResponse>('/users/send-login-link', authId))
+        const res = await safeApiCall(() =>
+          api.post<SendLoginLinkResponse>('/users/send-login-link', authId)
+        )
         const params = LoginUserSchema.safeParse(res.data.user)
         if (!params.success) {
           console.error('Invalid user data received:', params.error)
@@ -139,7 +149,7 @@ export const useAuthStore = defineStore('auth', {
             success: false,
             code: 'AUTH_INTERNAL_ERROR',
             message: 'Invalid user data received',
-            restart: 'userid'
+            restart: 'userid',
           }
         }
         const user = params.data
@@ -147,7 +157,8 @@ export const useAuthStore = defineStore('auth', {
         localStorage.setItem('uid', user.id)
         // Return the status flag for the frontend to handle
         return {
-          success: true, user,
+          success: true,
+          user,
         }
       } catch (error: any) {
         console.error('Sending login link failed:', error)
@@ -155,7 +166,7 @@ export const useAuthStore = defineStore('auth', {
           success: false,
           code: error.response?.data?.code || 'AUTH_INTERNAL_ERROR',
           message: error.message,
-          restart: 'userid'
+          restart: 'userid',
         }
       }
     },
@@ -177,7 +188,7 @@ export const useAuthStore = defineStore('auth', {
         console.error('Could not fetch user:', error)
         return {
           success: false,
-          message: error.message
+          message: error.message,
         }
       }
     },
@@ -188,11 +199,13 @@ export const useAuthStore = defineStore('auth', {
     },
 
     // Update the current user
-    async updateUser(userData: Record<string, any>): Promise<UserStoreResponse<{
-      user: SettingsUser
-    }>> {
+    async updateUser(userData: Record<string, any>): Promise<
+      UserStoreResponse<{
+        user: SettingsUser
+      }>
+    > {
       try {
-        const res = await safeApiCall(() => api.patch("/users/me", userData))
+        const res = await safeApiCall(() => api.patch('/users/me', userData))
         return { success: true, user: res.data.user }
       } catch (error: any) {
         console.error('Failed to update profile:', error)
@@ -212,12 +225,9 @@ export const useAuthStore = defineStore('auth', {
   },
 })
 
-
 bus.on('language:changed', async ({ language }) => {
   const store = useAuthStore()
   if (!store.isLoggedIn) return
   // TODO move this into the settings view
   await store.updateUser({ language })
 })
-
-

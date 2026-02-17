@@ -37,7 +37,7 @@ function handleMessageReceived(message: MessageDTO) {
       },
     },
     {
-      onClick: closeToast => {
+      onClick: (closeToast) => {
         router.push({
           name: 'Messaging',
           params: { conversationId: message.conversationId },
@@ -58,7 +58,7 @@ function handleLikeReceived() {
       },
     },
     {
-      onClick: closeToast => {
+      onClick: (closeToast) => {
         // router.push({ name: 'Messaging', params: { conversationId: message.conversationId },force: true })
         closeToast()
       },
@@ -77,7 +77,7 @@ function handleMatchReceived(edge: InteractionEdge) {
       },
     },
     {
-      onClick: closeToast => {
+      onClick: (closeToast) => {
         router.push({
           name: 'Matches',
           params: { profileId: edge.profile.id },
@@ -125,6 +125,9 @@ onUnmounted(() => {
 <template>
   <slot> </slot>
 
-  <ApiErrorOverlay :show="showApiOfflineOverlay" class="api-offline-overlay" />
+  <ApiErrorOverlay
+    :show="showApiOfflineOverlay"
+    class="api-offline-overlay"
+  />
 </template>
 <style scoped></style>

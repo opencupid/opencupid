@@ -1,7 +1,12 @@
 import { defineStore } from 'pinia'
 import { api, safeApiCall } from '@/lib/api'
 import { bus } from '@/lib/bus'
-import { InteractionEdgePairSchema, InteractionStatsSchema, type InteractionEdge, type InteractionEdgePair } from '@zod/interaction/interaction.dto'
+import {
+  InteractionEdgePairSchema,
+  InteractionStatsSchema,
+  type InteractionEdge,
+  type InteractionEdgePair,
+} from '@zod/interaction/interaction.dto'
 import { storeError, storeSuccess, type StoreError, type StoreResponse } from '@/store/helpers'
 
 interface InteractionState {
@@ -28,19 +33,17 @@ export const useInteractionStore = defineStore('interaction', {
   }),
 
   actions: {
-
     onNewLike() {
       // // Push to sent only if not already there
       // if (!this.sent.some(e => e.profile.id === edge.profile.id)) {
       //   this.sent.unshift(edge)
       // }
-
       // if (edge.isMatch && !this.matches.some(e => e.profile.id === edge.profile.id)) {
       //   this.matches.unshift(edge)
       // }
     },
     onNewMatch(edge: InteractionEdge) {
-      if (edge.isMatch && !this.matches.some(e => e.profile.id === edge.profile.id)) {
+      if (edge.isMatch && !this.matches.some((e) => e.profile.id === edge.profile.id)) {
         this.matches.unshift(edge)
         this.newMatchesCount++
       }
@@ -66,9 +69,9 @@ export const useInteractionStore = defineStore('interaction', {
 
     async sendLike(targetId: string): Promise<StoreResponse<InteractionEdgePair>> {
       try {
-        const res = await safeApiCall(() => api.post<{ success: true; pair: unknown }>(
-          `/interactions/like/${targetId}`
-        ))
+        const res = await safeApiCall(() =>
+          api.post<{ success: true; pair: unknown }>(`/interactions/like/${targetId}`)
+        )
 
         // Parse and validate the response shape
         const pair = InteractionEdgePairSchema.parse(res.data.pair)
@@ -89,8 +92,8 @@ export const useInteractionStore = defineStore('interaction', {
     async removeLike(targetId: string): Promise<StoreResponse<void>> {
       try {
         await safeApiCall(() => api.delete(`/interactions/like/${targetId}`))
-        this.sent = this.sent.filter(e => e.profile.id !== targetId)
-        this.matches = this.matches.filter(e => e.profile.id !== targetId)
+        this.sent = this.sent.filter((e) => e.profile.id !== targetId)
+        this.matches = this.matches.filter((e) => e.profile.id !== targetId)
         return storeSuccess()
       } catch (error) {
         console.error('Failed to unlike profile:', error)
@@ -105,8 +108,8 @@ export const useInteractionStore = defineStore('interaction', {
           this.passed.push(targetId)
         }
         // Optionally: remove from sent/matches if previously liked
-        this.sent = this.sent.filter(e => e.profile.id !== targetId)
-        this.matches = this.matches.filter(e => e.profile.id !== targetId)
+        this.sent = this.sent.filter((e) => e.profile.id !== targetId)
+        this.matches = this.matches.filter((e) => e.profile.id !== targetId)
         return storeSuccess()
       } catch (error) {
         console.error('Failed to pass profile:', error)
@@ -117,7 +120,7 @@ export const useInteractionStore = defineStore('interaction', {
     async unpassProfile(targetId: string): Promise<StoreResponse<void>> {
       try {
         await safeApiCall(() => api.delete(`/interactions/pass/${targetId}`))
-        this.passed = this.passed.filter(id => id !== targetId)
+        this.passed = this.passed.filter((id) => id !== targetId)
         return storeSuccess()
       } catch (error) {
         console.error('Failed to unpass profile:', error)
@@ -144,11 +147,10 @@ export const useInteractionStore = defineStore('interaction', {
       this.loading = false
       this.initialized = false
       this.error = null
-    }
+    },
   },
 })
 
 bus.on('auth:logout', () => {
   useInteractionStore().teardown()
 })
-

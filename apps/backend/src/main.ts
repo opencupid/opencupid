@@ -11,7 +11,7 @@ import './workers/emailWorker' // ← side‐effect: starts the worker
 import { checkImageRoot } from '@/lib/media'
 
 import { ImageProcessor } from './services/imageprocessor'
-import { getPackageVersion } from "../../../packages/shared/version";
+import { getPackageVersion } from '../../../packages/shared/version'
 
 async function main() {
   const app = Fastify({
@@ -21,13 +21,13 @@ async function main() {
         appConfig.NODE_ENV === 'production'
           ? undefined
           : {
-            target: 'pino-pretty',
-            options: {
-              colorize: true,
-              translateTime: 'HH:MM:ss Z',
-              ignore: 'pid,hostname',
+              target: 'pino-pretty',
+              options: {
+                colorize: true,
+                translateTime: 'HH:MM:ss Z',
+                ignore: 'pid,hostname',
+              },
             },
-          },
     },
   })
 
@@ -66,7 +66,7 @@ async function main() {
   })
 
   // Rate-limit only the tile route (be polite to OSM)
-  app.register(async (f) => {
+  app.register(async f => {
     await f.register(rateLimit, { max: 100, timeWindow: '1 second' }) // Allow more requests for tile loading
     await f.register(tilesPlugin)
   })
@@ -95,8 +95,6 @@ async function main() {
     }
   )
 }
-
-
 
 main().catch(err => {
   console.error(err)

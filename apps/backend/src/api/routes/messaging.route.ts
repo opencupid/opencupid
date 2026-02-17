@@ -1,4 +1,4 @@
-import {  FastifyPluginAsync } from 'fastify'
+import { FastifyPluginAsync } from 'fastify'
 import multipart from '@fastify/multipart'
 import { sendError } from '../helpers'
 import { MessageService, cleanMessageForNotification } from '@/services/messaging.service'
@@ -17,7 +17,10 @@ import type {
   SendMessageResponse,
 } from '@zod/apiResponse.dto'
 import { broadcastToProfile } from '@/utils/wsUtils'
-import { SendMessagePayloadSchema, SendVoiceMessagePayloadSchema } from '@zod/messaging/messaging.dto'
+import {
+  SendMessagePayloadSchema,
+  SendVoiceMessagePayloadSchema,
+} from '@zod/messaging/messaging.dto'
 import { InteractionService } from '../../services/interaction.service'
 import { notifierService } from '@/services/notifier.service'
 import { appConfig } from '@/lib/appconfig'
@@ -29,12 +32,10 @@ const IdLookupParamsSchema = z.object({
   id: z.string().cuid(),
 })
 
-
 const MessageListQuerySchema = z.object({
   cursor: z.string().cuid().optional(),
   take: z.coerce.number().int().min(1).max(50).optional(),
 })
-
 
 /**
  * Registers messaging-related routes for the Fastify server.
@@ -82,7 +83,11 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
     if (!query.success) return sendError(reply, 400, 'Invalid query parameters')
 
     try {
-      const { messages: raw, nextCursor, hasMore } = await messageService.listMessagesForConversation(conversationId, {
+      const {
+        messages: raw,
+        nextCursor,
+        hasMore,
+      } = await messageService.listMessagesForConversation(conversationId, {
         cursor: query.data.cursor,
         take: query.data.take,
       })
@@ -90,7 +95,6 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
       const messages = raw.map(m => mapMessageForMessageList(m, profileId))
       const response: MessagesResponse = { success: true, messages, nextCursor, hasMore }
       return reply.code(200).send(response)
-
     } catch (error) {
       fastify.log.error(error)
       return sendError(reply, 500, 'Failed to fetch conversations')
@@ -113,37 +117,38 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
   })
 
   /**
-   * Marks a conversation as read.  
+   * Marks a conversation as read.
    * @param :id - conversation ID
    */
-  fastify.post('/conversations/:id/mark-read', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-    const profileId = req.session.profileId
-    if (!profileId) return sendError(reply, 401, 'Profile not found.')
+  fastify.post(
+    '/conversations/:id/mark-read',
+    { onRequest: [fastify.authenticate] },
+    async (req, reply) => {
+      const profileId = req.session.profileId
+      if (!profileId) return sendError(reply, 401, 'Profile not found.')
 
-    const id = IdLookupParamsSchema.safeParse(req.params)
-    if (!id.success) return sendError(reply, 404, 'Conversation not found')
-    const conversationId = id.data.id
+      const id = IdLookupParamsSchema.safeParse(req.params)
+      if (!id.success) return sendError(reply, 404, 'Conversation not found')
+      const conversationId = id.data.id
 
-    try {
+      try {
+        await messageService.markConversationRead(conversationId, profileId)
+        const updated = await messageService.getConversationSummary(conversationId, profileId)
+        if (!updated) return sendError(reply, 404, 'Conversation not found')
 
-      await messageService.markConversationRead(conversationId, profileId)
-      const updated = await messageService.getConversationSummary(conversationId, profileId)
-      if (!updated) return sendError(reply, 404, 'Conversation not found')
-
-      const response: ConversationResponse = {
-        success: true,
-        conversation: mapConversationParticipantToSummary(updated, profileId),
+        const response: ConversationResponse = {
+          success: true,
+          conversation: mapConversationParticipantToSummary(updated, profileId),
+        }
+        return reply.code(200).send(response)
+      } catch (error) {
+        fastify.log.error(error)
+        return sendError(reply, 500, 'Failed to mark conversation as read')
       }
-      return reply.code(200).send(response)
-
-    } catch (error) {
-      fastify.log.error(error)
-      return sendError(reply, 500, 'Failed to mark conversation as read')
     }
-  })
+  )
 
   fastify.post('/message', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-
     const senderProfileId = req.session.profileId
     if (!senderProfileId) return sendError(reply, 401, 'Sender ID not found.')
 
@@ -153,7 +158,7 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
     const { profileId, content } = body.data
 
     try {
-      const { convoId, message } = await fastify.prisma.$transaction(async (tx) => {
+      const { convoId, message } = await fastify.prisma.$transaction(async tx => {
         return await messageService.sendOrStartConversation(
           tx,
           senderProfileId,
@@ -163,10 +168,7 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
         )
       })
 
-      const conversation = await messageService.getConversationSummary(
-        convoId,
-        senderProfileId
-      )
+      const conversation = await messageService.getConversationSummary(convoId, senderProfileId)
       if (conversation?.conversation.status !== 'INITIATED') {
         await interactionService.markMatchAsSeen(senderProfileId, profileId)
       }
@@ -174,7 +176,6 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
       if (!conversation) {
         throw new Error('Conversation summary not found')
       }
-
 
       const messageDTO = mapMessageDTO(message, conversation)
 
@@ -209,7 +210,6 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
     } catch (error: any) {
       return sendError(reply, 403, error)
     }
-
   })
 
   // Voice message upload endpoint
@@ -227,7 +227,7 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
 
       for await (const part of parts) {
         if (part.type === 'file') {
-          fileBuffer = await part.toBuffer()  // consumes stream, unblocks next parts
+          fileBuffer = await part.toBuffer() // consumes stream, unblocks next parts
           fileMeta = { filename: part.filename, mimetype: part.mimetype, fieldname: part.fieldname }
         } else {
           // Handle form fields
@@ -260,7 +260,11 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
 
       // Validate duration
       if (payload.data.duration > appConfig.VOICE_MESSAGE_MAX_DURATION) {
-        return sendError(reply, 400, `Voice message too long. Maximum duration is ${appConfig.VOICE_MESSAGE_MAX_DURATION} seconds`)
+        return sendError(
+          reply,
+          400,
+          `Voice message too long. Maximum duration is ${appConfig.VOICE_MESSAGE_MAX_DURATION} seconds`
+        )
       }
 
       // Create voice directory if it doesn't exist
@@ -279,7 +283,7 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
       const stats = await fsPromises.stat(filePath)
 
       try {
-        const { convoId, message } = await fastify.prisma.$transaction(async (tx) => {
+        const { convoId, message } = await fastify.prisma.$transaction(async tx => {
           return await messageService.sendOrStartConversation(
             tx,
             senderProfileId,
@@ -295,10 +299,7 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
           )
         })
 
-        const conversation = await messageService.getConversationSummary(
-          convoId,
-          senderProfileId
-        )
+        const conversation = await messageService.getConversationSummary(convoId, senderProfileId)
 
         if (conversation?.conversation.status !== 'INITIATED') {
           await interactionService.markMatchAsSeen(senderProfileId, payload.data.profileId)
@@ -342,14 +343,11 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
         await fsPromises.unlink(filePath).catch(() => {})
         return sendError(reply, 403, error)
       }
-
     } catch (err: any) {
       fastify.log.warn('Voice upload error:', err)
       return sendError(reply, 400, 'Failed to upload voice message')
     }
   })
-
-
 }
 
 export default messageRoutes

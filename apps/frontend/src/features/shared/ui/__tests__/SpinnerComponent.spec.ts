@@ -8,7 +8,7 @@ import SpinnerComponent from '../SpinnerComponent.vue'
 describe('SpinnerComponent', () => {
   it('passes label to BSpinner', () => {
     const wrapper = mount(SpinnerComponent, {
-      global: { stubs: { BSpinner: { template: '<div :label="label" />', props: ['label'] } } }
+      global: { stubs: { BSpinner: { template: '<div :label="label" />', props: ['label'] } } },
     })
     expect(wrapper.html()).toContain('label="uicomponents.spinner.spinning"')
   })

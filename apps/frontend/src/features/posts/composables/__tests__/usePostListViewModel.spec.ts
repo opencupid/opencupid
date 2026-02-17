@@ -90,7 +90,7 @@ describe('usePostListViewModel', () => {
     // Type filter should reset to page 0
     mockLoadPosts.mockResolvedValueOnce([])
     vm.handleTypeFilter()
-    await new Promise(resolve => setTimeout(resolve, 0))
+    await new Promise((resolve) => setTimeout(resolve, 0))
 
     expect(mockLoadPosts).toHaveBeenLastCalledWith('all', expect.objectContaining({ page: 0 }))
   })

@@ -5,7 +5,7 @@ const postedByInclude = {
   include: {
     postedBy: {
       include: {
-        profileImages:true
+        profileImages: true,
       },
     },
   },
@@ -62,12 +62,15 @@ export class PostService {
     return post
   }
 
-  async findByProfileId(profileId: string, options: {
-    type?: PostType
-    limit?: number
-    offset?: number
-    includeInvisible?: boolean
-  } = {}) {
+  async findByProfileId(
+    profileId: string,
+    options: {
+      type?: PostType
+      limit?: number
+      offset?: number
+      includeInvisible?: boolean
+    } = {}
+  ) {
     const { type, limit = 20, offset = 0, includeInvisible = false } = options
 
     return this.prisma.post.findMany({
@@ -84,11 +87,13 @@ export class PostService {
     })
   }
 
-  async findAll(options: {
-    type?: PostType
-    limit?: number
-    offset?: number
-  } = {}) {
+  async findAll(
+    options: {
+      type?: PostType
+      limit?: number
+      offset?: number
+    } = {}
+  ) {
     const { type, limit = 20, offset = 0 } = options
 
     return this.prisma.post.findMany({
@@ -104,16 +109,21 @@ export class PostService {
     })
   }
 
-  async findNearby(lat: number, lon: number, radius: number, options: {
-    type?: PostType
-    limit?: number
-    offset?: number
-  } = {}) {
+  async findNearby(
+    lat: number,
+    lon: number,
+    radius: number,
+    options: {
+      type?: PostType
+      limit?: number
+      offset?: number
+    } = {}
+  ) {
     const { type, limit = 20, offset = 0 } = options
 
     // Calculate bounding box for efficiency (approximate)
     const latRange = radius / 111.0 // 1 degree lat ≈ 111 km
-    const lonRange = radius / (111.0 * Math.cos(lat * Math.PI / 180))
+    const lonRange = radius / (111.0 * Math.cos((lat * Math.PI) / 180))
 
     const minLat = lat - latRange
     const maxLat = lat + latRange
@@ -148,11 +158,13 @@ export class PostService {
     })
   }
 
-  async findRecent(options: {
-    type?: PostType
-    limit?: number
-    offset?: number
-  } = {}) {
+  async findRecent(
+    options: {
+      type?: PostType
+      limit?: number
+      offset?: number
+    } = {}
+  ) {
     const { type, limit = 20, offset = 0 } = options
     const oneWeekAgo = new Date()
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)

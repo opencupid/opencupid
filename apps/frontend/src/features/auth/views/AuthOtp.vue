@@ -38,7 +38,7 @@ onMounted(async () => {
   // TODO this logic needs fixing.
   // no query params -> do nothing here and display form
   if (!route.query.otp) {
-    // call method on authStore to look up user 
+    // call method on authStore to look up user
     // obtain login user ID (phone or email)
     return
   }
@@ -100,7 +100,10 @@ function handleBackButton() {
   <main class="container d-flex justify-content-center align-items-center flex-column">
     <div class="d-flex flex-column align-items-center justify-content-center overflow-hidden">
       <div class="back-button">
-        <a class="btn btn-secondary-outline" @click="handleBackButton">
+        <a
+          class="btn btn-secondary-outline"
+          @click="handleBackButton"
+        >
           <ChevronLeftIcon class="svg-icon" />
         </a>
       </div>

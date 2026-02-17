@@ -25,15 +25,13 @@ nav.navbar {
   height: $navbar-height;
 }
 
-
 main {
   height: 100dvh;
   min-height: 0; // prevents flex item overflow clipping (iOS)
   position: relative;
 }
 
-
-nav.navbar+main {
+nav.navbar + main {
   // navbar is fixed at the top, so we need to offset the main content
   padding-top: $navbar-height;
   // height: 100%;

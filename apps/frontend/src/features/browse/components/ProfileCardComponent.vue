@@ -12,7 +12,7 @@ defineProps<{
   showLocation?: boolean
 }>()
 
-const viewerProfile = inject<Ref<OwnerProfile>>('viewerProfile') 
+const viewerProfile = inject<Ref<OwnerProfile>>('viewerProfile')
 const viewerLocation = ref(viewerProfile?.value.location)
 </script>
 
@@ -22,12 +22,19 @@ const viewerLocation = ref(viewerProfile?.value.location)
     @click="$emit('click', profile.id)"
   >
     <div class="ratio ratio-1x1">
-      <ProfileImage :profile="profile" className="" variant="card"/>
+      <ProfileImage
+        :profile="profile"
+        className=""
+        variant="card"
+      />
     </div>
     <div class="overlay d-flex flex-column flex-grow-1">
       <div class="card-title mb-0 pb-0 d-flex align-items-center justify-content-between flex-row">
         <div class="flex-grow-1 fs-6 fw-bold m-0">{{ profile.publicName }}</div>
-        <span v-if="showLocation" class="location position-absolute end-0 top-0 me-2 mt-2">
+        <span
+          v-if="showLocation"
+          class="location position-absolute end-0 top-0 me-2 mt-2"
+        >
           <LocationLabel
             :viewerLocation="viewerLocation"
             :location="profile.location"
@@ -37,7 +44,10 @@ const viewerLocation = ref(viewerProfile?.value.location)
           />
         </span>
       </div>
-      <div v-if="showTags" class="p-2 flex-grow-1 tags-wrapper">
+      <div
+        v-if="showTags"
+        class="p-2 flex-grow-1 tags-wrapper"
+      >
         <TagList :tags="profile.tags" />
       </div>
       <!-- <p class="card-text" :class="{ 'truncated-text': profile.introSocial.length > 100 }">

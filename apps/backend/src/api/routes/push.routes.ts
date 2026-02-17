@@ -1,7 +1,6 @@
 // routes/sendMessage.ts
 import { FastifyPluginAsync } from 'fastify'
 
-
 interface PushRequestBody {
   subscription: PushSubscription
   message: string
@@ -13,7 +12,6 @@ function bufferToBase64(buffer: ArrayBuffer | null): string {
 }
 
 const pushRoutes: FastifyPluginAsync = async fastify => {
-
   // fastify.post<{ Body: PushRequestBody }>('/send', async (req, reply) => {
 
   //   const { subscription, message } = req.body
@@ -35,8 +33,10 @@ const pushRoutes: FastifyPluginAsync = async fastify => {
   // })
 
   fastify.post('/subscription', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-
-    const { endpoint, keys } = req.body as { endpoint: string; keys: { p256dh: string; auth: string } }
+    const { endpoint, keys } = req.body as {
+      endpoint: string
+      keys: { p256dh: string; auth: string }
+    }
 
     const userId = req.user.userId
 
@@ -60,9 +60,6 @@ const pushRoutes: FastifyPluginAsync = async fastify => {
 
     reply.code(200).send({ success: true, updated: update })
   })
-
-
 }
-
 
 export default pushRoutes

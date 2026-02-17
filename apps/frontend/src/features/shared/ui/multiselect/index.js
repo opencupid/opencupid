@@ -5,4 +5,3 @@ import pointerMixin from './pointerMixin.js'
 export default Multiselect
 
 export { Multiselect, multiselectMixin, pointerMixin }
-

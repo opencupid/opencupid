@@ -1,26 +1,20 @@
 import z from 'zod'
 import { defineStore } from 'pinia'
 import { api, safeApiCall } from '@/lib/api'
-import type {
-  ProfileSummary,
-  PublicProfileWithContext,
-} from '@zod/profile/profile.dto'
-import {
-  ProfileSummarySchema,
-  PublicProfileWithContextSchema,
-} from '@zod/profile/profile.dto'
+import type { ProfileSummary, PublicProfileWithContext } from '@zod/profile/profile.dto'
+import { ProfileSummarySchema, PublicProfileWithContextSchema } from '@zod/profile/profile.dto'
 import {
   storeSuccess,
   storeError,
   type StoreVoidSuccess,
   type StoreResponse,
-  type StoreError
+  type StoreError,
 } from '@/store/helpers'
 import type { GetProfileSummariesResponse, GetPublicProfileResponse } from '@zod/apiResponse.dto'
 
 type PublicProfileStoreState = {
-  profile: PublicProfileWithContext | null; // Current public profile
-  isLoading: boolean; // Loading state
+  profile: PublicProfileWithContext | null // Current public profile
+  isLoading: boolean // Loading state
 }
 export const usePublicProfileStore = defineStore('publicProfile', {
   state: (): PublicProfileStoreState => ({
@@ -29,13 +23,13 @@ export const usePublicProfileStore = defineStore('publicProfile', {
   }),
 
   actions: {
-
-
     // Fetch a profile by ID
     async getPublicProfile(profileId: string): Promise<StoreResponse<PublicProfileWithContext>> {
       try {
         this.isLoading = true // Set loading state
-        const res = await safeApiCall(() => api.get<GetPublicProfileResponse>(`/profiles/${profileId}`))
+        const res = await safeApiCall(() =>
+          api.get<GetPublicProfileResponse>(`/profiles/${profileId}`)
+        )
         const fetched = PublicProfileWithContextSchema.parse(res.data.profile)
         return storeSuccess(fetched)
       } catch (error: any) {
@@ -44,7 +38,6 @@ export const usePublicProfileStore = defineStore('publicProfile', {
         this.isLoading = false // Reset loading state
       }
     },
-
 
     async blockProfile(targetId: string): Promise<StoreVoidSuccess | StoreError> {
       try {
@@ -83,7 +76,9 @@ export const usePublicProfileStore = defineStore('publicProfile', {
     async listBlockedProfiles(): Promise<StoreResponse<ProfileSummary[]>> {
       try {
         this.isLoading = true // Set loading state
-        const res = await safeApiCall(() => api.get<GetProfileSummariesResponse>('/profiles/blocked'))
+        const res = await safeApiCall(() =>
+          api.get<GetProfileSummariesResponse>('/profiles/blocked')
+        )
         const fetched = z.array(ProfileSummarySchema).parse(res.data.profiles)
         return storeSuccess(fetched)
       } catch (error: any) {
@@ -92,7 +87,5 @@ export const usePublicProfileStore = defineStore('publicProfile', {
         this.isLoading = false // Reset loading state
       }
     },
-
   },
 })
-

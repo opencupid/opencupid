@@ -15,7 +15,6 @@ const emit = defineEmits<{
   (e: 'updated'): void
 }>()
 
-
 const fieldEditState: FieldEditState = reactive({
   currentField: null, // Field being edited
   fieldEditModal: false,
@@ -69,10 +68,18 @@ provide('isEditable', toRef(props, 'editState'))
     :keyboard="false"
   >
     <template #cancel="{ close }">
-      <BButton class="btn btn-link text-decoration-none" @click="close" variant="link" size="sm"
-        >{{ $t('uicomponents.dialog_cancel_button') }}</BButton>
+      <BButton
+        class="btn btn-link text-decoration-none"
+        @click="close"
+        variant="link"
+        size="sm"
+        >{{ $t('uicomponents.dialog_cancel_button') }}</BButton
+      >
     </template>
-    <div id="field-edit-modal" class="w-100 py-5"></div>
+    <div
+      id="field-edit-modal"
+      class="w-100 py-5"
+    ></div>
   </BModal>
   <slot> </slot>
 </template>

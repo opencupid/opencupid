@@ -10,7 +10,7 @@ const props = defineProps<{
   item: PublicProfile
 }>()
 
-const viewerProfile = inject<Ref<OwnerProfile>>('viewerProfile') 
+const viewerProfile = inject<Ref<OwnerProfile>>('viewerProfile')
 const viewerLocation = ref(viewerProfile?.value.location)
 </script>
 
@@ -20,7 +20,11 @@ const viewerLocation = ref(viewerProfile?.value.location)
     @click="$emit('click', item.id)"
   >
     <div class="ratio ratio-1x1">
-      <ProfileImage :profile="item" className="" variant="card"/>
+      <ProfileImage
+        :profile="item"
+        className=""
+        variant="card"
+      />
     </div>
     <div class="overlay d-flex flex-column flex-grow-1">
       <div class="card-title mb-0 pb-0 d-flex align-items-center justify-content-between flex-row">
