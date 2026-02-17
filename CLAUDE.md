@@ -39,7 +39,7 @@ apps/
   backend/      Fastify + Prisma + WebSocket API
   ingress/      Reverse proxy / ingress config
 packages/
-  shared/       Shared types, validation, i18n, utilities
+  shared/       Shared types, validation, i18n, utilities and reused UI components
 ```
 
 ### Frontend (`apps/frontend`)
@@ -77,14 +77,25 @@ packages/
 
 ## Tests
 
-Run the full CI suite (install, prisma generate, lint, test, type-check):
-```
-pnpm run ci:test
-```
 
-Run tests only:
+Full test suite. Use this whilst working on a task.
 ```
 pnpm test
+```
+Frontend tests:
+```
+pnpm --filter frontend test
+```
+
+Backend tests:
+```
+pnpm --filter backend test
+```
+
+
+Full CI suite (install, prisma generate, lint, test, type-check). This is expensive to run and takes a long time, run this only near/after completing a task and when `pnpm test` does not fail.
+```
+pnpm run ci:test
 ```
 
 Run with coverage:
@@ -98,7 +109,10 @@ pnpm build
 ```
 
 
-All new components, API routes, and services must have test files in the nearest `__tests__` directory.
+* All completed work must pass full test suite
+* For all new frontend components, API routes and services test files must be added in the `__tests__` subdirectory closest to the new file or existing file being modified
+
+
 
 ## Database
 
@@ -111,7 +125,8 @@ Schema: `apps/backend/prisma/schema.prisma`
 
 ## Git workflow
 
-**Never commit directly to `main`.** Always work in a feature branch and open a PR.
+**Never work in main branch and never commit directly to `main`.** 
+Always work in a feature branch and open a Github pull request once task is complete and tests succeed.
 
 ```bash
 git checkout -b your-branch-name
