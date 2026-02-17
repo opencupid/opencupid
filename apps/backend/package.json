@@ -6,7 +6,7 @@
     "dev": "tsup --watch --onSuccess \"node --inspect dist/main.js\"",
     "build": "tsup && tsup --config tsup.scripts.config.ts",
     "start": "node dist/main.js",
-    "prisma:generate": "prisma generate",
+    "prisma:generate": "prisma generate && tsx scripts/fix-zod-compat.ts",
     "prisma:migrate": "prisma migrate  dev",
     "prisma:seed": "prisma db seed",
     "prisma:deploy": "prisma migrate deploy",
