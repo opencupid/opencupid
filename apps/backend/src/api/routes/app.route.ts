@@ -28,16 +28,21 @@ const appRoutes: FastifyPluginAsync = async fastify => {
     }
   })
 
-  fastify.get('/updateavailable', async (req, reply) => {
+  fastify.get('/updateavailable', {
+    config: { ...rateLimitConfig(fastify, '1 minute', 20) },
+  }, async (req, reply) => {
     try {
       // Get the current frontend version from the client (via query param)
       const clientVersion = req.query.v as string | undefined
-      
+
       // Get the latest deployed frontend version (baked in at build time)
       const latestVersion = __FRONTEND_VERSION__
-      
+
       const updateInfo: UpdateAvailableDTO = {
-        updateAvailable: clientVersion !== undefined && clientVersion !== latestVersion,
+        updateAvailable: clientVersion !== undefined
+          && clientVersion !== 'unknown'
+          && latestVersion !== 'unknown'
+          && clientVersion !== latestVersion,
         currentVersion: clientVersion || 'unknown',
         latestVersion,
       }

@@ -10,7 +10,7 @@ vi.mock('@maxmind/geoip2-node', () => ({
 }))
 
 // Mock the global __FRONTEND_VERSION__ constant
-vi.stubGlobal('__FRONTEND_VERSION__', '0.6.2')
+vi.stubGlobal('__FRONTEND_VERSION__', '0.5.0')
 
 import appRoutes from '../../api/routes/app.route'
 import { MockFastify, MockReply } from '../../test-utils/fastify'
@@ -177,13 +177,13 @@ describe('GET /updateavailable', () => {
     const handler = fastify.routes['GET /updateavailable']
     
     await handler({
-      query: { v: '0.6.2' }
+      query: { v: '0.5.0' }
     } as any, reply as any)
 
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.updateInfo.updateAvailable).toBe(false)
-    expect(reply.payload.updateInfo.currentVersion).toBe('0.6.2')
+    expect(reply.payload.updateInfo.currentVersion).toBe('0.5.0')
     expect(reply.payload.updateInfo.latestVersion).toBeTruthy()
   })
 
@@ -191,28 +191,40 @@ describe('GET /updateavailable', () => {
     const handler = fastify.routes['GET /updateavailable']
     
     await handler({
-      query: { v: '0.6.1' }
+      query: { v: '0.4.9' }
     } as any, reply as any)
 
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.updateInfo.updateAvailable).toBe(true)
-    expect(reply.payload.updateInfo.currentVersion).toBe('0.6.1')
+    expect(reply.payload.updateInfo.currentVersion).toBe('0.4.9')
     expect(reply.payload.updateInfo.latestVersion).toBeTruthy()
   })
 
-  it('returns update not available when client version is unknown', async () => {
+  it('returns update not available when client version is missing', async () => {
     const handler = fastify.routes['GET /updateavailable']
-    
+
     await handler({
       query: {}
     } as any, reply as any)
 
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
-    // When client version is not provided, updateAvailable is false
     expect(reply.payload.updateInfo.updateAvailable).toBe(false)
     expect(reply.payload.updateInfo.currentVersion).toBe('unknown')
     expect(reply.payload.updateInfo.latestVersion).toBeTruthy()
+  })
+
+  it('returns update not available when client version is "unknown"', async () => {
+    const handler = fastify.routes['GET /updateavailable']
+
+    await handler({
+      query: { v: 'unknown' }
+    } as any, reply as any)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    expect(reply.payload.updateInfo.updateAvailable).toBe(false)
+    expect(reply.payload.updateInfo.currentVersion).toBe('unknown')
   })
 })

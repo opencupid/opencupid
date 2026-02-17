@@ -3,7 +3,7 @@ import { getPackageVersion } from '../../packages/shared/version'
 import path from 'path'
 
 // Read frontend version at build time
-const frontendVersion = getPackageVersion(path.join(__dirname, '..', 'frontend', 'package.json'))
+const frontendVersion = getPackageVersion(path.join(__dirname, '..', '..', 'package.json'))
 
 export default defineConfig({
   entry: [

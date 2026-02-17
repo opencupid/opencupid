@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useAppStore } from '../stores/appStore'
 
 const appStore = useAppStore()
+const dismissed = ref(false)
 
 function reloadApp() {
   window.location.reload()
@@ -10,18 +12,26 @@ function reloadApp() {
 
 <template>
   <div
-    v-if="appStore.updateAvailable"
+    v-if="appStore.updateAvailable && !dismissed"
     class="alert alert-info mb-0 rounded-0 d-flex align-items-center justify-content-between"
     role="alert"
   >
     <span>An update is available.</span>
-    <button
-      type="button"
-      class="btn btn-sm btn-primary"
-      @click="reloadApp"
-    >
-      Reload
-    </button>
+    <div class="d-flex align-items-center gap-2">
+      <button
+        type="button"
+        class="btn btn-sm btn-primary"
+        @click="reloadApp"
+      >
+        Reload
+      </button>
+      <button
+        type="button"
+        class="btn-close"
+        aria-label="Close"
+        @click="dismissed = true"
+      />
+    </div>
   </div>
 </template>
 
