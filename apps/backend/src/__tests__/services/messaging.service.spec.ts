@@ -63,17 +63,46 @@ describe('MessageService.getConversationSummary', () => {
 })
 
 describe('MessageService.listMessagesForConversation', () => {
-  it('fetches messages ordered by creation', async () => {
+  it('fetches latest messages with default limit', async () => {
     mockPrisma.message.findMany.mockResolvedValue([])
-    await service.listMessagesForConversation('c1')
+    const result = await service.listMessagesForConversation('c1')
     expect(mockPrisma.message.findMany).toHaveBeenCalledWith({
       where: { conversationId: 'c1' },
       include: {
         sender: { include: { profileImages: { where: { position: 0 } } } },
         attachment: true,
       },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
     })
+    expect(result).toEqual({ messages: [], hasMore: false })
+  })
+
+  it('uses cursor when before param is provided', async () => {
+    const msgs = [{ id: 'm1' }, { id: 'm2' }]
+    mockPrisma.message.findMany.mockResolvedValue(msgs)
+    const result = await service.listMessagesForConversation('c1', { limit: 5, before: 'cursor-id' })
+    expect(mockPrisma.message.findMany).toHaveBeenCalledWith({
+      where: { conversationId: 'c1' },
+      include: {
+        sender: { include: { profileImages: { where: { position: 0 } } } },
+        attachment: true,
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+      cursor: { id: 'cursor-id' },
+      skip: 1,
+    })
+    // Messages are reversed for display (oldest first)
+    expect(result.messages).toEqual([{ id: 'm2' }, { id: 'm1' }])
+    expect(result.hasMore).toBe(false) // 2 < 5
+  })
+
+  it('returns hasMore true when result count equals limit', async () => {
+    const msgs = Array.from({ length: 10 }, (_, i) => ({ id: `m${i}` }))
+    mockPrisma.message.findMany.mockResolvedValue(msgs)
+    const result = await service.listMessagesForConversation('c1')
+    expect(result.hasMore).toBe(true)
   })
 })
 

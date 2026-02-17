@@ -73,7 +73,12 @@ const handleBlockProfile = async () => {
           :text-size="'sm'"/>
         </template> 
     </BPlaceholderWrapper> -->
-      <MessageList :messages="messageStore.messages" />
+      <MessageList
+        :messages="messageStore.messages"
+        :has-more="messageStore.hasMoreMessages"
+        :is-loading-older="messageStore.isLoadingOlder"
+        @load-older="messageStore.fetchOlderMessages()"
+      />
     </div>
 
     <div class="send-message-wrapper d-flex flex-column align-items-center w-100 py-3 px-2">

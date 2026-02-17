@@ -23,6 +23,8 @@ type MessageStoreState = {
   messages: MessageDTO[],
   activeConversation: ConversationSummary | null,
   hasUnreadMessages: boolean,
+  hasMoreMessages: boolean,
+  isLoadingOlder: boolean,
   isSending: boolean,
   isLoading: boolean,
   error: StoreError | null,
@@ -34,6 +36,8 @@ export const useMessageStore = defineStore('message', {
     messages: [] as MessageDTO[],
     activeConversation: null as ConversationSummary | null,
     hasUnreadMessages: false,
+    hasMoreMessages: false,
+    isLoadingOlder: false,
     isSending: false,
     isLoading: false,
     error: null,
@@ -99,20 +103,46 @@ export const useMessageStore = defineStore('message', {
 
     async fetchMessagesForConversation(conversationId: string): Promise<MessageInConversation[]> {
       try {
-        // console.log('Fetching messages for conversation:', conversationId)
-        this.isLoading = true // Set loading state
-        this.error = null // Reset error state
+        this.isLoading = true
+        this.error = null
+        this.hasMoreMessages = false
         const res = await safeApiCall(() => api.get<MessagesResponse>(`/messages/${conversationId}`))
-        console.log('Fetched messages:', res.data)
         if (res.data.success) {
           this.messages = res.data.messages
+          this.hasMoreMessages = res.data.hasMore
           return res.data.messages
         }
       } catch (error: any) {
         this.error = storeError(error)
         this.messages = []
       } finally {
-        this.isLoading = false // Reset loading state
+        this.isLoading = false
+      }
+      return []
+    },
+
+    async fetchOlderMessages(): Promise<MessageDTO[]> {
+      if (!this.activeConversation || !this.hasMoreMessages || this.isLoadingOlder) return []
+      const oldestMessage = this.messages[0]
+      if (!oldestMessage) return []
+
+      try {
+        this.isLoadingOlder = true
+        const res = await safeApiCall(() =>
+          api.get<MessagesResponse>(
+            `/messages/${this.activeConversation!.conversationId}`,
+            { params: { before: oldestMessage.id } }
+          )
+        )
+        if (res.data.success) {
+          this.messages = [...res.data.messages, ...this.messages]
+          this.hasMoreMessages = res.data.hasMore
+          return res.data.messages
+        }
+      } catch (error: any) {
+        console.error('Failed to fetch older messages:', error)
+      } finally {
+        this.isLoadingOlder = false
       }
       return []
     },
@@ -260,6 +290,8 @@ export const useMessageStore = defineStore('message', {
       this.messages = []
       this.activeConversation = null
       this.hasUnreadMessages = false
+      this.hasMoreMessages = false
+      this.isLoadingOlder = false
       this.isSending = false
       this.isLoading = false
       this.error = null

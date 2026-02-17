@@ -49,12 +49,41 @@ describe('GET /:id', () => {
   it('returns messages for conversation', async () => {
     const handler = fastify.routes['GET /:id']
     const msg = { id: 'm1', conversationId: 'c1', senderId: 'p1', content: 'hi', createdAt: new Date(), sender: { profileImages: [] } }
-    mockMessageService.listMessagesForConversation.mockResolvedValue([msg])
-    await handler({ session: { profileId: 'p1' }, params: { id: 'ck1234567890abcd12345678' } } as any, reply as any)
-    expect(mockMessageService.listMessagesForConversation).toHaveBeenCalledWith('ck1234567890abcd12345678')
+    mockMessageService.listMessagesForConversation.mockResolvedValue({ messages: [msg], hasMore: false })
+    await handler({ session: { profileId: 'p1' }, params: { id: 'ck1234567890abcd12345678' }, query: {} } as any, reply as any)
+    expect(mockMessageService.listMessagesForConversation).toHaveBeenCalledWith(
+      'ck1234567890abcd12345678',
+      { limit: undefined, before: undefined }
+    )
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.messages[0].mapped).toBe(true)
+    expect(reply.payload.hasMore).toBe(false)
+  })
+
+  it('passes limit and before query params to service', async () => {
+    const handler = fastify.routes['GET /:id']
+    mockMessageService.listMessagesForConversation.mockResolvedValue({ messages: [], hasMore: false })
+    await handler({
+      session: { profileId: 'p1' },
+      params: { id: 'ck1234567890abcd12345678' },
+      query: { limit: '5', before: 'ck0000000000abcd00000000' },
+    } as any, reply as any)
+    expect(mockMessageService.listMessagesForConversation).toHaveBeenCalledWith(
+      'ck1234567890abcd12345678',
+      { limit: 5, before: 'ck0000000000abcd00000000' }
+    )
+    expect(reply.statusCode).toBe(200)
+  })
+
+  it('returns 400 for invalid query params', async () => {
+    const handler = fastify.routes['GET /:id']
+    await handler({
+      session: { profileId: 'p1' },
+      params: { id: 'ck1234567890abcd12345678' },
+      query: { before: 'not-a-cuid' },
+    } as any, reply as any)
+    expect(reply.statusCode).toBe(400)
   })
 })
 
