@@ -365,8 +365,8 @@ importers:
         specifier: 1.5.4
         version: 1.5.4
       remeda:
-        specifier: 2.24.0
-        version: 2.24.0
+        specifier: 2.33.6
+        version: 2.33.6
       timeago.js:
         specifier: 4.0.2
         version: 4.0.2
@@ -5906,8 +5906,8 @@ packages:
     resolution: {integrity: sha512-gUAyHVHPPC5wdqX/LG4LWtRYtgjxyX78oanFNTMMyFEfOqdC54s3eE82imuWKbOeqYht2CrNf64Qb8vgmmtZGA==}
     engines: {node: '>=4'}
 
-  remeda@2.24.0:
-    resolution: {integrity: sha512-EGC3ZG304e3S1ZMdkhBjIPFn0NdI6d/NWqcxe34+TfG+c3cv6TcVavn/z17am8aQsrGZPX+fx4U6mTQvNRv4MQ==}
+  remeda@2.33.6:
+    resolution: {integrity: sha512-tazDGH7s75kUPGBKLvhgBEHMgW+TdDFhjUAMdQj57IoWz6HsGa5D2RX5yDUz6IIqiRRvZiaEHzCzWdTeixc/Kg==}
 
   replace-string@3.1.0:
     resolution: {integrity: sha512-yPpxc4ZR2makceA9hy/jHNqc7QVkd4Je/N0WRHm6bs3PtivPuPynxE5ejU/mp5EhnCv8+uZL7vhz8rkluSlx+Q==}
@@ -6842,10 +6842,6 @@ packages:
   type-fest@0.8.1:
     resolution: {integrity: sha512-4dbzIzqvjtgiM5rw1k5rEHtBANKmdudhGyBEajN01fEyhaAIhsoKNy6y7+IN93IfpFtwY9iqi7kD+xwKhQsNJA==}
     engines: {node: '>=8'}
-
-  type-fest@4.41.0:
-    resolution: {integrity: sha512-TeTSQ6H5YHvpqVwBRcnLDCBnDOHWYu7IvGbHT6N8AOymcr9PJGjc1GTtiWZTYg0NCgYwvnYWEkVChQAr9bjfwA==}
-    engines: {node: '>=16'}
 
   type-is@2.0.1:
     resolution: {integrity: sha512-OZs6gsjF4vMp32qrCbiVSkrFmXtG/AZhY3t0iAMrMBiAZyV9oALtXO8hsrHbMXF9x6L3grlFuwW2oAz7cav+Gw==}
@@ -13441,9 +13437,7 @@ snapshots:
     dependencies:
       es6-error: 4.1.1
 
-  remeda@2.24.0:
-    dependencies:
-      type-fest: 4.41.0
+  remeda@2.33.6: {}
 
   replace-string@3.1.0: {}
 
@@ -14457,8 +14451,6 @@ snapshots:
   type-fest@0.6.0: {}
 
   type-fest@0.8.1: {}
-
-  type-fest@4.41.0: {}
 
   type-is@2.0.1:
     dependencies:
