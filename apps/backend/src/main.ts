@@ -57,19 +57,7 @@ async function main() {
   const wsRoutes = import('./api/routes/message-ws.route')
   app.register(wsRoutes, { prefix: '/ws' })
 
-  const rateLimit = import('@fastify/rate-limit')
-  const tilesPlugin = import('./plugins/tiles-proxy')
-
-  // Tiles proxy setup
-  await app.register(rateLimit, {
-    global: false, // we’ll apply to the route below
-  })
-
-  // Rate-limit only the tile route (be polite to OSM)
-  app.register(async f => {
-    await f.register(rateLimit, { max: 100, timeWindow: '1 second' }) // Allow more requests for tile loading
-    await f.register(tilesPlugin)
-  })
+  app.register(import('./plugins/tiles-proxy'))
 
   // app.get('/healthz', async () => ({ ok: true }))
 
@@ -87,7 +75,7 @@ async function main() {
       port: appConfig.API_PORT,
       host: '0.0.0.0', // Listen on all interfaces
     },
-    err => {
+    (err) => {
       if (err) {
         app.log.error(err)
         process.exit(1)
@@ -96,7 +84,7 @@ async function main() {
   )
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error(err)
   Sentry.captureException(err)
   process.exit(1)
