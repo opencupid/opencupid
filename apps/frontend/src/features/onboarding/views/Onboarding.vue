@@ -111,51 +111,43 @@ onMounted(async () => {
             v-if="error"
             :error="error"
           />
-          <div v-else>
-            <!-- onboarding wizard finish title -->
-            <div
-              class="col-6 mx-auto d-flex flex-column align-items-center justify-content-center text-success mb-2 mb-md-4 animate__animated animate__fadeIn"
-            >
-              <IconOkHand class="svg-icon-100 opacity-25 mb-1 mb-md-3" />
-              <h2>
-                <!-- All set! -->
-                {{ t('onboarding.confirmation.title') }}
-              </h2>
-            </div>
+          <div v-else class="animate__animated animate__fadeIn">
+            <!-- finish screen: horizontal on lg+, vertical on smaller screens -->
+            <div class="d-flex flex-column flex-lg-row align-items-center gap-4 gap-lg-5">
 
-            <div
-              v-if="!profileStore.isLoading"
-              class="d-flex flex-column gap-3"
-            >
-              <div class="mb-2 d-flex flex-column align-items-center">
-                <div class="wizard-step-subtitle mb-1 mb-sm-2 mb-md-3 text-center">
-                  <!-- See who else is on here -->
-                  {{ t('onboarding.confirmation.browse_hint') }}
-                </div>
-                <BButton
-                  @click="handleGoToBrowse"
-                  variant="success"
-                  size="lg"
-                  pill
-                >
-                  <!-- Meet people -->
-                  {{ t('onboarding.confirmation.browse_button') }}
-                </BButton>
+              <!-- Left: icon + heading -->
+              <div class="d-flex flex-column align-items-center justify-content-center text-success flex-shrink-0">
+                <IconOkHand style="width: 5rem; height: 5rem" class="svg-icon opacity-25 mb-2" />
+                <h2 class="mb-0">{{ t('onboarding.confirmation.title') }}</h2>
               </div>
-              <div class="d-flex flex-column align-items-center">
-                <div class="wizard-step-subtitle mb-1 mb-sm-2 mb-md-3 text-center">
-                  <!-- See what other people see about me. -->
-                  {{ t('onboarding.confirmation.profile_hint') }}
+
+              <!-- Vertical divider, visible only on lg+ -->
+              <div class="d-none d-lg-block border-start" style="height: 8rem; align-self: center"></div>
+
+              <!-- Right: CTAs -->
+              <div
+                v-if="!profileStore.isLoading"
+                class="d-flex flex-column gap-3 flex-grow-1 w-100"
+              >
+                <!-- Browse CTA -->
+                <div class="d-flex flex-column align-items-center align-items-lg-start gap-2">
+                  <div class="text-center text-lg-start">
+                    {{ t('onboarding.confirmation.browse_hint') }}
+                  </div>
+                  <BButton @click="handleGoToBrowse" variant="success" size="lg" pill class="w-100">
+                    {{ t('onboarding.confirmation.browse_button') }}
+                  </BButton>
                 </div>
-                <BButton
-                  @click="handleGoToProfile"
-                  variant="primary"
-                  size="lg"
-                  pill
-                >
-                  <!-- My profile -->
-                  {{ t('onboarding.confirmation.profile_button') }}
-                </BButton>
+
+                <!-- Profile CTA -->
+                <div class="d-flex flex-column align-items-center align-items-lg-start gap-2">
+                  <div class="text-center text-lg-start">
+                    {{ t('onboarding.confirmation.profile_hint') }}
+                  </div>
+                  <BButton @click="handleGoToProfile" variant="primary" size="lg" pill class="w-100">
+                    {{ t('onboarding.confirmation.profile_button') }}
+                  </BButton>
+                </div>
               </div>
             </div>
           </div>
