@@ -87,7 +87,7 @@ export class ProfileMatchService {
     profileId: string,
     data: UpdateSocialMatchFilterPayload
   ): Promise<SocialMatchFilterWithTags | null> {
-    const tagIds = (data.tags ?? []).map(id => ({ id }))
+    const tagIds = (data.tags ?? []).map((id) => ({ id }))
     const update = {
       profileId,
       country: data.location?.country || null,
@@ -127,10 +127,28 @@ export class ProfileMatchService {
     profileId: string,
     location: LocationDTO
   ): Promise<SocialMatchFilterWithTags | null> {
+    let country = location.country ?? ''
+
+    if (country) {
+      const nearbyCount = await tx.profile.count({
+        where: {
+          country,
+          isSocialActive: true,
+          isOnboarded: true,
+          isActive: true,
+          id: { not: profileId },
+        },
+      })
+
+      if (nearbyCount === 0) {
+        country = ''
+      }
+    }
+
     return await tx.socialMatchFilter.create({
       data: {
         profileId,
-        country: location.country ?? '',
+        country,
       },
       include: {
         ...tagInclude,
@@ -171,7 +189,7 @@ export class ProfileMatchService {
       return [] // no preferences set, return empty array
     }
 
-    const tagIds = userPrefs.tags?.map(tag => tag.id)
+    const tagIds = userPrefs.tags?.map((tag) => tag.id)
 
     const filters = {
       ...(userPrefs.country ? { country: userPrefs.country } : {}),
