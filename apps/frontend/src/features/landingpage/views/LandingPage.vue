@@ -100,7 +100,7 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
             </h1>
             <div class="my-md-3 fs-5 lp-body-text">
               <!-- This is a meeting point in the online realm for us to find each other and connect. -->
-              {{ t('landingpage.subtitle_1') }}
+              {{ t('landingpage.subtitle_1', { siteName: siteName }) }}
             </div>
           </BCol>
         </BRow>
@@ -241,6 +241,8 @@ button {
 }
 footer {
   line-height: 1;
+  background: linear-gradient(to top, rgba(#c9a97a, 0.97) 55%, transparent);
+  padding-top: 2rem;
 }
 
 main {
@@ -260,13 +262,13 @@ main::after {
 }
 
 .site-name {
-  color: map-get($theme-colors, 'primary');
+  color: #5e4b2c;
   font-weight: 700;
 }
 
 .lp-body-text {
-  line-height: 1.8;
-  color: map-get($theme-colors, 'dark');
+  line-height: 1.55;
+  color: #2e2c26;
   white-space: pre-line;
 }
 
@@ -277,8 +279,10 @@ main::after {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: rgba(#faf4ea, 0.75);
-  box-shadow: 0 2px 12px rgba(#5e4b2c, 0.12);
+  background: rgba(#b8904a, 0.18);
+  box-shadow:
+    0 4px 20px rgba(#5e4b2c, 0.2),
+    0 1px 4px rgba(#5e4b2c, 0.12);
   padding: 0.75rem;
 }
 
