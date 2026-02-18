@@ -16,10 +16,18 @@ vi.mock('@/store/i18nStore', () => ({
   useI18nStore: () => ({ setLanguage: vi.fn() }),
 }))
 
-vi.mock('@/assets/icons/app/cupid.svg', () => ({ default: defineComponent({ template: '<svg />' }) }))
-vi.mock('@/assets/icons/app/socialize.svg', () => ({ default: defineComponent({ template: '<svg />' }) }))
-vi.mock('@/assets/icons/interface/globe.svg', () => ({ default: defineComponent({ template: '<svg />' }) }))
-vi.mock('@/assets/icons/app/logo.svg', () => ({ default: defineComponent({ template: '<svg />' }) }))
+vi.mock('@/assets/icons/app/cupid.svg', () => ({
+  default: defineComponent({ template: '<svg />' }),
+}))
+vi.mock('@/assets/icons/app/socialize.svg', () => ({
+  default: defineComponent({ template: '<svg />' }),
+}))
+vi.mock('@/assets/icons/interface/globe.svg', () => ({
+  default: defineComponent({ template: '<svg />' }),
+}))
+vi.mock('@/assets/icons/app/logo.svg', () => ({
+  default: defineComponent({ template: '<svg />' }),
+}))
 
 const bStubs = {
   BContainer: defineComponent({ template: '<div><slot /></div>' }),

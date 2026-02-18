@@ -40,9 +40,7 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
 </script>
 
 <template>
-  <div
-    class="lp-wrapper"
-  >
+  <div class="lp-wrapper">
     <header
       class="position-absolute top-0 start-0 w-100 pt-2"
       style="z-index: 1000; background-color: inherit"
@@ -93,7 +91,10 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
           >
             <h1 class="text-center mb-3 mb-lg-4">
               <span class="d-none d-md-inline-block">
-                {{ t('landingpage.title_lg', { siteName: '' }).trim() }}&nbsp;<span class="site-name">{{ siteName }}</span>
+                {{ t('landingpage.title_lg', { siteName: '' }).trim() }}&nbsp;<span
+                  class="site-name"
+                  >{{ siteName }}</span
+                >
               </span>
               <span class="d-inline-block d-md-none site-name">{{ siteName }}</span>
             </h1>
@@ -229,6 +230,8 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
   }
 }
 button {
+  box-shadow: 0 4px 20px rgba(#5e4b2c, 0.25);
+
   @include media-breakpoint-up(md) {
     font-size: 3rem;
   }
