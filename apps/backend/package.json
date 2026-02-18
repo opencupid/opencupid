@@ -53,7 +53,7 @@
     "find-up": "7.0.0",
     "i18next": "25.2.1",
     "i18next-fs-backend": "2.6.1",
-    "ioredis": "5.6.1",
+    "ioredis": "5.9.3",
     "jsdom": "26.1.0",
     "lru-cache": "11.1.0",
     "nodemailer": "8.0.1",
