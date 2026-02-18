@@ -12,6 +12,15 @@
     "code-simplifier@claude-plugins-official": true
   },
   "mcpServers": {
+    "typescript-lsp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@mizchi/lsmcp",
+        "-p",
+        "typescript"
+      ]
+    },
     "playwright": {
       "command": "npx",
       "args": [
