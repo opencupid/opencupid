@@ -126,6 +126,7 @@ const isDeletable = computed(() => {
                   @click="handleDelete(img)"
                   :disabled="isRemoving[img.id]"
                   v-if="isDeletable"
+                  :title="t('profiles.image_editor.delete_button_title')"
                 >
                   <FontAwesomeIcon :icon="faXmark" />
                 </button>

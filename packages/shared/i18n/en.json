@@ -106,6 +106,9 @@
   },
   "profiles": {
     "send_message_button": "Message",
+    "image_editor": {
+      "delete_button_title": "Remove photo"
+    },
     "profile_photos": "{name}'s photos",
     "no_profile_title": "Please fill in your profile",
     "no_profile_create": "Create Profile",
@@ -261,6 +264,9 @@
     }
   },
   "interactions": {
+    "pass_button_title": "Pass",
+    "like_button_title": "Like",
+    "message_button_title": "Message",
     "send_a_message": "Send a message",
     "you_messaged_them": "You messaged them",
     "you_liked_them": "You liked them",
@@ -319,6 +325,7 @@
     "push_notify_messages": "I want notifications when someone messages me"
   },
   "uicomponents": {
+    "back_button_title": "Go back",
     "connection_error": {
       "title": "It's not you, it's us.",
       "description": "Apologies for the interruption.  The Machine Elves need a few seconds to sort things out, we'll be back in a bit."
