@@ -163,6 +163,7 @@ defineExpose({ triggerStart: handleRecordClick, reset })
           size="sm"
           variant="outline-warning"
           @click="handleRetryPermission"
+          :title="$t('messaging.voice.retry_permission')"
         >
           {{ $t('messaging.voice.retry_permission') }}
         </BButton>

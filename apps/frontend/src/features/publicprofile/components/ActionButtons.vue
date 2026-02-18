@@ -38,6 +38,7 @@ const handleMessageIntent = () => {
         :pill="true"
         class="btn-overlay"
         @click="handleMessageIntent"
+        :title="$t('profiles.send_message_button')"
       >
         <IconMessage class="svg-icon-lg p-0" />
         <!-- {{ $t('profiles.send_message_button') }} -->

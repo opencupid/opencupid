@@ -166,6 +166,7 @@ function handleVoiceRecordingError(error: string) {
               size="sm"
               @click="handleSendMessage"
               :disabled="content.trim() === '' || isVoiceActive"
+              :title="$t('messaging.send_message_button')"
             >
               {{ $t('messaging.send_message_button').toUpperCase() }}
             </BButton>

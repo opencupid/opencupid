@@ -18,6 +18,7 @@ defineEmits<{
     variant="link-secondary"
     class="d-flex align-items-center mt-2"
     size="lg"
+    :title="$t('onboarding.back_button')"
   >
     <IconArrowSingleLeft class="svg-icon-lg" />
   </BButton>

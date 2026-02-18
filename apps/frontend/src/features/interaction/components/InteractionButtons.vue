@@ -70,6 +70,7 @@ const handleMessageClick = () => {
             class="btn-icon-lg me-2"
             @click="handlePassClick"
             :disabled="!context.canPass"
+            :title="$t('interactions.pass_button_title')"
           >
             <IconCross class="svg-icon-lg" />
           </BButton>
@@ -92,6 +93,7 @@ const handleMessageClick = () => {
         <BButton
           class="btn-icon-lg btn-info me-2"
           @click="handleMessageClick"
+          :title="$t('interactions.message_button_title')"
         >
           <IconMessage class="svg-icon-lg p-0" />
         </BButton>
@@ -117,6 +119,7 @@ const handleMessageClick = () => {
         <BButton
           class="btn-icon-lg btn-dating"
           @click="handleLikeClick"
+          :title="$t('interactions.like_button_title')"
         >
           <IconHeart class="svg-icon-lg" />
         </BButton>

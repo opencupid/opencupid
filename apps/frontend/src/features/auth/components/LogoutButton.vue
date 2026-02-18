@@ -31,6 +31,7 @@ const props = withDefaults(
     v-bind:variant="variant"
     size="sm"
     @click="handleClick"
+    :title="t('authentication.logout')"
   >
     <slot>
       <IconLogout class="svg-icon" />
