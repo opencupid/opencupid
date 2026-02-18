@@ -8,9 +8,9 @@
   "landingpage": {
     "title_lg": "Welcome to {siteName}",
     "title": "{siteName}",
-    "subtitle_1": "We’re all looking for different kinds of connections – a companion, a partner, like-minded folks nearby, a teacher, a mentor, friends, a soulmate. It’s not always easy – we’re scattered all over the country, in villages, towns, and remote homesteads. Sometimes it turns out, after ages, that we finally meet someone who lives just a couple of villages away, but our paths have never crossed. Or they’re in the next apartment block, but you’d never know they’re also hunting for a small farm and binge-watching permaculture videos on YouTube.\n\nThis is a safe space to help us connect and find each other.",
-    "socialize_1": "",
-    "date_1": "",
+    "subtitle_1": "We're all looking for different kinds of connections – a companion, a partner, like-minded folks nearby, a teacher, a mentor, friends, a soulmate.\n\nIt's not always easy – we're scattered all over the country, in villages, towns, and remote homesteads. Sometimes it turns out, after ages, that we finally meet someone who lives just a couple of villages away, but our paths have never crossed. Or they're in the next apartment block, but you'd never know they're also hunting for a small farm and binge-watching permaculture videos on YouTube.\n\n{siteName} is created and run by fellow Gaian volunteers with no profit motive. It is a safe space made to help us connect and find each other.",
+    "socialize_1": "Find travel companions, local friends, and like-minded souls nearby",
+    "date_1": "Meet a soulmate, a partner, or someone to share the journey with",
     "footer_madeby": "Made with ❤️ by the Gaians",
     "footer_contribute": "Anyone can contribute on",
     "enter_button": "Enter",

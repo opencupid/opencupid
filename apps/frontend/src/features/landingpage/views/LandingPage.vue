@@ -40,10 +40,7 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
 </script>
 
 <template>
-  <div
-    style="min-height: 100%"
-    class="bg-light posiion-relative"
-  >
+  <div class="lp-wrapper">
     <header
       class="position-absolute top-0 start-0 w-100 pt-2"
       style="z-index: 1000; background-color: inherit"
@@ -94,15 +91,16 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
           >
             <h1 class="text-center mb-3 mb-lg-4">
               <span class="d-none d-md-inline-block">
-                {{ t('landingpage.title_lg', { siteName: siteName }) }}
+                {{ t('landingpage.title_lg', { siteName: '' }).trim() }}&nbsp;<span
+                  class="site-name"
+                  >{{ siteName }}</span
+                >
               </span>
-              <span class="d-inline-block d-md-none">
-                {{ t('landingpage.title', { siteName: siteName }) }}
-              </span>
+              <span class="d-inline-block d-md-none site-name">{{ siteName }}</span>
             </h1>
-            <div class="my-md-3 fs-5 pre-line">
+            <div class="my-md-3 fs-5 lp-body-text">
               <!-- This is a meeting point in the online realm for us to find each other and connect. -->
-              {{ t('landingpage.subtitle_1') }}
+              {{ t('landingpage.subtitle_1', { siteName: siteName }) }}
             </div>
           </BCol>
         </BRow>
@@ -113,11 +111,13 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
           >
             <BRow>
               <BCol md="6">
-                <div class="d-flex flex-column align-items-center py-3 text-center">
-                  <div class="icon-wrapper text-social mb-lg-3">
-                    <IconSocialize class="svg-icon-100" />
+                <div class="d-flex flex-column align-items-center py-3 text-center lp-feature-card">
+                  <div class="icon-wrapper mb-lg-3">
+                    <div class="icon-circle">
+                      <IconSocialize class="svg-icon-100 text-social" />
+                    </div>
                   </div>
-                  <div>
+                  <div class="lp-feature-text">
                     <!-- Exchange ideas, connect on our travels, find like-minded souls nearby to hang out
                 with -->
                     {{ t('landingpage.socialize_1') }}
@@ -125,11 +125,13 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
                 </div>
               </BCol>
               <BCol md="6">
-                <div class="d-flex flex-column align-items-center py-3 text-center">
-                  <div class="icon-wrapper text-dating mb-lg-3">
-                    <IconDate class="svg-icon-100" />
+                <div class="d-flex flex-column align-items-center py-3 text-center lp-feature-card">
+                  <div class="icon-wrapper mb-lg-3">
+                    <div class="icon-circle">
+                      <IconDate class="svg-icon-100 text-dating" />
+                    </div>
                   </div>
-                  <div>
+                  <div class="lp-feature-text">
                     <!-- Find a soulmate or playmate -->
                     {{ t('landingpage.date_1') }}
                   </div>
@@ -188,19 +190,65 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
 @import 'bootstrap/scss/variables';
 @import 'bootstrap/scss/mixins';
 
+.lp-wrapper {
+  min-height: 100%;
+  overflow: clip;
+  background: radial-gradient(ellipse at 50% 40%, #faf4ea 0%, #e0c99a 55%, #c9a97a 100%);
+  position: relative;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  &::before {
+    width: 28rem;
+    height: 20rem;
+    bottom: -6rem;
+    left: -8rem;
+    background: rgba(#a43d30, 0.07);
+    filter: blur(3rem);
+  }
+
+  &::after {
+    width: 22rem;
+    height: 18rem;
+    top: -4rem;
+    right: -6rem;
+    background: rgba(#6b8e23, 0.08);
+    filter: blur(2.5rem);
+  }
+}
+
 .icon-wrapper {
+  width: 5rem;
   height: 5rem;
   @include media-breakpoint-up(md) {
+    width: 8rem;
     height: 8rem;
   }
 }
 button {
+  box-shadow: 0 4px 20px rgba(#5e4b2c, 0.25);
+
   @include media-breakpoint-up(md) {
     font-size: 3rem;
   }
 }
 footer {
   line-height: 1;
+  background: linear-gradient(to top, rgba(#c9a97a, 0.97) 55%, transparent);
+  padding-top: 2rem;
+  z-index: 1000;
+}
+
+main {
+  position: relative;
+  z-index: 1;
 }
 
 main::after {
@@ -210,11 +258,39 @@ main::after {
   display: block;
   height: 5rem;
   width: 100%;
-  background: linear-gradient(
-    to top,
-    transparentize(map-get($theme-colors, 'light'), 0),
-    transparentize(map-get($theme-colors, 'light'), 1)
-  );
-  pointer-events: none; /* let clicks pass through */
+  background: linear-gradient(to top, rgba(#c9a97a, 0.85), rgba(#c9a97a, 0));
+  pointer-events: none;
+}
+
+.site-name {
+  color: #5e4b2c;
+  font-weight: 700;
+}
+
+.lp-body-text {
+  line-height: 1.55;
+  color: #2e2c26;
+  white-space: pre-line;
+}
+
+.icon-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: rgba(#b8904a, 0.18);
+  box-shadow:
+    0 4px 20px rgba(#5e4b2c, 0.2),
+    0 1px 4px rgba(#5e4b2c, 0.12);
+  padding: 0.75rem;
+}
+
+.lp-feature-text {
+  font-size: $font-size-sm;
+  color: map-get($theme-colors, 'secondary');
+  line-height: 1.5;
+  max-width: 16rem;
 }
 </style>
