@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 
 import { BCarousel } from 'bootstrap-vue-next'
 import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
@@ -10,20 +10,35 @@ const props = defineProps<{
   profile: PublicProfileWithContext
 }>()
 
-const showModal = ref(false)
-const slide = ref(0)
+const showFullscreen = ref(false)
+const inlineSlide = ref(0)
+const fullSlide = ref(0)
 
-const handleImageClick = () => (showModal.value = true)
+const handleImageClick = () => {
+  fullSlide.value = inlineSlide.value
+  showFullscreen.value = true
+}
 
-const handleCloseClick = () => (showModal.value = false)
+const handleCloseClick = () => {
+  inlineSlide.value = fullSlide.value
+  showFullscreen.value = false
+}
+
+// Reset carousel to first slide when images change (e.g. after reorder in editor)
+watch(
+  () => props.profile.profileImages,
+  () => {
+    inlineSlide.value = 0
+  }
+)
 </script>
 
 <template>
   <div class="image-carousel">
     <BCarousel
       controls
-      v-model="slide"
-      v-show="!showModal"
+      v-model="inlineSlide"
+      v-show="!showFullscreen"
       class="h-100"
     >
       <BCarouselSlide
@@ -43,8 +58,9 @@ const handleCloseClick = () => (showModal.value = false)
         </template>
       </BCarouselSlide>
     </BCarousel>
+
     <BModal
-      v-model="showModal"
+      v-model="showFullscreen"
       centered
       modal-class="carousel-modal"
       :no-close-on-backdrop="false"
@@ -62,15 +78,13 @@ const handleCloseClick = () => (showModal.value = false)
       <BCarousel
         controls
         indicators
-        v-model="slide"
+        v-model="fullSlide"
         class="w-100 h-100"
-        v-show="showModal"
       >
         <BCarouselSlide
           v-for="img in props.profile.profileImages"
           :key="img.position"
-          @click="handleCloseClick"
-          class="bg-black d-flex justify-content-center align-items-center flex-column h-100"
+          class="bg-black h-100"
         >
           <template #img>
             <div
@@ -94,6 +108,7 @@ const handleCloseClick = () => (showModal.value = false)
   flex: 1;
   height: 100%;
 }
+
 .modal.carousel-modal {
   .fitted-image {
     max-width: 100%;
@@ -148,6 +163,7 @@ const handleCloseClick = () => (showModal.value = false)
 
   background-color: transparent;
 }
+
 .image-carousel {
   height: 100% !important;
   .carousel-inner {
