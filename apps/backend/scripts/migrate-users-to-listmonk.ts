@@ -1,147 +1,8 @@
 import 'dotenv/config'
-import { PrismaClient, User } from '@prisma/client'
+import { PrismaClient } from '@prisma/client'
+import { listmonkSyncService } from '../src/services/listmonkSync.service'
 
 const prisma = new PrismaClient()
-
-// Listmonk API configuration
-const LISTMONK_URL = process.env.LISTMONK_URL || 'http://localhost:9000'
-const LISTMONK_API_TOKEN = process.env.LISTMONK_API_TOKEN || ''
-const LISTMONK_LIST_ID = parseInt(process.env.LISTMONK_LIST_ID || '1', 10)
-
-interface ListmonkSubscriber {
-  id?: number
-  email: string
-  name: string
-  status: 'enabled' | 'disabled' | 'blocklisted'
-  lists: number[]
-  attribs: {
-    language?: string
-    newsletterOptIn?: boolean
-  }
-}
-
-async function getSubscriber(email: string): Promise<ListmonkSubscriber | null> {
-  try {
-    const encodedQuery = encodeURIComponent(`email LIKE '${email}'`)
-    const response = await fetch(`${LISTMONK_URL}/api/subscribers?query=${encodedQuery}`, {
-      method: 'GET',
-      headers: {
-        Authorization: `token ${LISTMONK_API_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-    })
-
-    if (!response.ok) {
-      return null
-    }
-
-    const data = await response.json()
-    return data.data?.results?.[0] || null
-  } catch (error) {
-    console.error('Failed to get subscriber from Listmonk:', error)
-    return null
-  }
-}
-
-async function createSubscriber(user: User): Promise<void> {
-  const subscriber: ListmonkSubscriber = {
-    email: user.email!,
-    name: user.email!,
-    status: user.newsletterOptIn ? 'enabled' : 'disabled',
-    lists: user.newsletterOptIn ? [LISTMONK_LIST_ID] : [],
-    attribs: {
-      language: user.language || 'en',
-      newsletterOptIn: user.newsletterOptIn,
-    },
-  }
-
-  const response = await fetch(`${LISTMONK_URL}/api/subscribers`, {
-    method: 'POST',
-    headers: {
-      Authorization: `token ${LISTMONK_API_TOKEN}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(subscriber),
-  })
-
-  if (!response.ok) {
-    const errorText = await response.text().catch(() => response.statusText)
-    throw new Error(
-      `Failed to create subscriber (${response.status} ${response.statusText}): ${errorText}`
-    )
-  }
-}
-
-async function updateSubscriber(subscriberId: number, user: User): Promise<void> {
-  const subscriber: Partial<ListmonkSubscriber> = {
-    email: user.email!,
-    name: user.email!,
-    status: user.newsletterOptIn ? 'enabled' : 'disabled',
-    lists: user.newsletterOptIn ? [LISTMONK_LIST_ID] : [],
-    attribs: {
-      language: user.language || 'en',
-      newsletterOptIn: user.newsletterOptIn,
-    },
-  }
-
-  const response = await fetch(`${LISTMONK_URL}/api/subscribers/${subscriberId}`, {
-    method: 'PUT',
-    headers: {
-      Authorization: `token ${LISTMONK_API_TOKEN}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(subscriber),
-  })
-
-  if (!response.ok) {
-    const errorText = await response.text().catch(() => response.statusText)
-    throw new Error(
-      `Failed to update subscriber (${response.status} ${response.statusText}): ${errorText}`
-    )
-  }
-}
-
-async function syncUser(user: User): Promise<boolean> {
-  // Only sync if user has an email
-  if (!user.email) {
-    return false
-  }
-
-  try {
-    // Check if subscriber exists
-    const existingSubscriber = await getSubscriber(user.email)
-
-    if (existingSubscriber) {
-      // Update existing subscriber
-      await updateSubscriber(existingSubscriber.id!, user)
-    } else {
-      // Try to create new subscriber
-      try {
-        await createSubscriber(user)
-      } catch (createError: any) {
-        // If subscriber already exists (409 Conflict), fetch and update instead
-        if (
-          createError.message?.includes('409') ||
-          createError.message?.includes('already exists')
-        ) {
-          const subscriber = await getSubscriber(user.email)
-          if (subscriber) {
-            await updateSubscriber(subscriber.id!, user)
-          } else {
-            throw createError
-          }
-        } else {
-          throw createError
-        }
-      }
-    }
-    return true
-  } catch (error) {
-    // Log error but don't throw - this is best-effort sync
-    console.error('Listmonk sync failed for user', user.id, error)
-    return false
-  }
-}
 
 async function main() {
   console.log('🔄 Starting migration of existing users to Listmonk...')
@@ -164,7 +25,7 @@ async function main() {
   let failureCount = 0
 
   for (const user of users) {
-    const success = await syncUser(user)
+    const success = await listmonkSyncService.syncUser(user)
     
     if (success) {
       successCount++
