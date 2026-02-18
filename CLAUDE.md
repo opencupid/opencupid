@@ -121,7 +121,7 @@ pnpm build
 
 Generate Prisma client after schema changes:
 ```
-pnpm prisma:generate
+pnpm --filter backend prisma:generate
 ```
 
 Schema: `apps/backend/prisma/schema.prisma`
