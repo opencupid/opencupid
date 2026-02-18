@@ -11,7 +11,6 @@ import Components from 'unplugin-vue-components/vite'
 import { BootstrapVueNextResolver } from 'bootstrap-vue-next'
 import svgLoader from 'vite-svg-loader'
 import serveStatic from 'serve-static'
-// import VitePluginBrowserSync from 'vite-plugin-browser-sync'
 import { server, define } from './vite.common'
 import MetaInjectPlugin from './vite/vite-plugin-meta-inject'
 
@@ -100,23 +99,6 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
           )
         },
       },
-      // VitePluginBrowserSync({
-      //   dev: {
-      //     bs: {
-      //       https: {
-      //         key: '../../certs/privkey.pem',
-      //         cert: '../../certs/fullchain.pem',
-      //       },
-      //       open: false,
-      //       port: 5174,
-      //       cors: true,
-      //       ui: {
-      //         port: 8081,
-      //       },
-      //       notify: true
-      //     }
-      //   }
-      // }),
       MetaInjectPlugin(mode),
     ],
     css: {
