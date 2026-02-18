@@ -1,7 +1,6 @@
 {
   "enabledPlugins": {
     "frontend-design@claude-code-plugins": true,
-    "ralph-wiggum@claude-code-plugins": true,
     "feature-dev@claude-code-plugins": true,
     "vueuse-functions@vueuse-skills": true,
     "frontend-design@claude-plugins-official": true,
@@ -12,6 +11,15 @@
     "code-simplifier@claude-plugins-official": true
   },
   "mcpServers": {
+    "typescript-lsp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@mizchi/lsmcp",
+        "-p",
+        "typescript"
+      ]
+    },
     "playwright": {
       "command": "npx",
       "args": [
@@ -25,6 +33,23 @@
         "-y",
         "chrome-devtools-mcp@latest"
       ]
+    },
+    "context7": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ]
+    },
+    "sentry": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@sentry/mcp-server"
+      ],
+      "env": {
+        "SENTRY_AUTH_TOKEN": "${SENTRY_AUTH_TOKEN}"
+      }
     }
   }
 }
