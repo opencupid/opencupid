@@ -1,5 +1,9 @@
 # CLAUDE.md
 
+## Workflow rules
+
+**NEVER use superpowers skills** (brainstorming, writing-plans, subagent-driven-development, executing-plans, etc.) unless the user explicitly asks for them. Implement tasks directly and efficiently.
+
 ## Running the app
 
 Start all services (frontend + backend + infrastructure):
