@@ -243,6 +243,7 @@ footer {
   line-height: 1;
   background: linear-gradient(to top, rgba(#c9a97a, 0.97) 55%, transparent);
   padding-top: 2rem;
+  z-index: 1000;
 }
 
 main {
