@@ -90,43 +90,61 @@ onMounted(async () => {
       :class="{ active: isDetailView }"
     ></div>
 
-    <div class="list-view d-flex flex-column">
+    <div class="list-view d-flex flex-column" :class="{ 'map-mode': viewMode === 'map' }">
       <!-- Unified toolbar: scope pills + type filter + view toggle -->
-      <div class="posts-toolbar d-flex align-items-center gap-2 px-3 py-2 flex-shrink-0">
-        <div class="scope-pills d-flex gap-1 overflow-auto hide-scrollbar flex-grow-1">
-          <button
-            v-for="tab in scopeTabs"
-            :key="tab.id"
-            class="scope-pill btn btn-sm"
-            :class="activeTab === tab.id ? 'active' : ''"
-            @click="activeTab = tab.id"
+      <div class="controls-overlay">
+        <div class="posts-toolbar d-flex align-items-center gap-2 px-3 py-2 flex-shrink-0">
+          <div class="scope-pills d-flex gap-1 overflow-auto hide-scrollbar flex-grow-1">
+            <button
+              v-for="tab in scopeTabs"
+              :key="tab.id"
+              class="scope-pill btn btn-sm"
+              :class="activeTab === tab.id ? 'active' : ''"
+              @click="activeTab = tab.id"
+            >
+              {{ tab.label() }}
+            </button>
+          </div>
+
+          <BFormSelect
+            v-model="selectedType"
+            size="sm"
+            class="type-filter"
           >
-            {{ tab.label() }}
-          </button>
+            <option value="">{{ t('posts.filters.all') }}</option>
+            <option value="OFFER">{{ t('posts.filters.offers') }}</option>
+            <option value="REQUEST">{{ t('posts.filters.requests') }}</option>
+          </BFormSelect>
+
+          <ViewModeToggler v-model="viewMode" />
         </div>
-
-        <BFormSelect
-          v-model="selectedType"
-          size="sm"
-          class="type-filter"
-        >
-          <option value="">{{ t('posts.filters.all') }}</option>
-          <option value="OFFER">{{ t('posts.filters.offers') }}</option>
-          <option value="REQUEST">{{ t('posts.filters.requests') }}</option>
-        </BFormSelect>
-
-        <ViewModeToggler v-model="viewMode" />
       </div>
 
+      <!-- Full-size map — shown for all tabs when in map mode -->
+      <OsmPoiMap
+        v-if="viewMode === 'map'"
+        :items="currentTabPosts"
+        :get-location="getPostLocation"
+        :get-title="getPostTitle"
+        :popup-component="PostMapCard"
+        class="map-fullscreen"
+        @item:select="
+          (id) =>
+            handlePostListIntent(
+              'fullview',
+              currentTabPosts.find((p) => p.id === id)
+            )
+        "
+      />
+
       <!-- Tab content -->
-      <div class="tab-content flex-grow-1 overflow-hidden position-relative">
+      <div v-if="viewMode !== 'map'" class="tab-content flex-grow-1 overflow-hidden position-relative">
         <!-- All posts -->
         <div
           v-if="activeTab === 'all'"
           class="scope-pane h-100"
         >
           <PostList
-            v-if="viewMode === 'grid'"
             scope="all"
             :is-active="activeTab === 'all'"
             :type="selectedType || undefined"
@@ -138,21 +156,6 @@ onMounted(async () => {
             @intent:hide="(post) => handlePostListIntent('hide', post)"
             @intent:delete="(post) => handlePostListIntent('delete', post)"
             @intent:saved="(post) => handlePostListIntent('saved', post)"
-          />
-          <OsmPoiMap
-            v-else-if="viewMode === 'map'"
-            :items="currentTabPosts"
-            :get-location="getPostLocation"
-            :get-title="getPostTitle"
-            :popup-component="PostMapCard"
-            class="map-view h-100"
-            @item:select="
-              (id) =>
-                handlePostListIntent(
-                  'fullview',
-                  currentTabPosts.find((p) => p.id === id)
-                )
-            "
           />
         </div>
 
@@ -176,7 +179,6 @@ onMounted(async () => {
           </div>
           <template v-else>
             <PostList
-              v-if="viewMode === 'grid'"
               scope="nearby"
               :is-active="activeTab === 'nearby'"
               :nearby-params="nearbyParams"
@@ -190,21 +192,6 @@ onMounted(async () => {
               @intent:delete="(post) => handlePostListIntent('delete', post)"
               @intent:saved="(post) => handlePostListIntent('saved', post)"
             />
-            <OsmPoiMap
-              v-else-if="viewMode === 'map'"
-              :items="currentTabPosts"
-              :get-location="getPostLocation"
-              :get-title="getPostTitle"
-              :popup-component="PostMapCard"
-              class="map-view h-100"
-              @item:select="
-                (id) =>
-                  handlePostListIntent(
-                    'fullview',
-                    currentTabPosts.find((p) => p.id === id)
-                  )
-              "
-            />
           </template>
         </div>
 
@@ -214,7 +201,6 @@ onMounted(async () => {
           class="scope-pane h-100"
         >
           <PostList
-            v-if="viewMode === 'grid'"
             scope="recent"
             :is-active="activeTab === 'recent'"
             :type="selectedType || undefined"
@@ -227,21 +213,6 @@ onMounted(async () => {
             @intent:delete="(post) => handlePostListIntent('delete', post)"
             @intent:saved="(post) => handlePostListIntent('saved', post)"
           />
-          <OsmPoiMap
-            v-else-if="viewMode === 'map'"
-            :items="currentTabPosts"
-            :get-location="getPostLocation"
-            :get-title="getPostTitle"
-            :popup-component="PostMapCard"
-            class="map-view h-100"
-            @item:select="
-              (id) =>
-                handlePostListIntent(
-                  'fullview',
-                  currentTabPosts.find((p) => p.id === id)
-                )
-            "
-          />
         </div>
 
         <!-- My Posts -->
@@ -250,7 +221,6 @@ onMounted(async () => {
           class="scope-pane h-100"
         >
           <PostList
-            v-if="viewMode === 'grid'"
             scope="my"
             :is-active="activeTab === 'my'"
             :type="selectedType || undefined"
@@ -262,21 +232,6 @@ onMounted(async () => {
             @intent:hide="(post) => handlePostListIntent('hide', post)"
             @intent:delete="(post) => handlePostListIntent('delete', post)"
             @intent:saved="(post) => handlePostListIntent('saved', post)"
-          />
-          <OsmPoiMap
-            v-else-if="viewMode === 'map'"
-            :items="currentTabPosts"
-            :get-location="getPostLocation"
-            :get-title="getPostTitle"
-            :popup-component="PostMapCard"
-            class="map-view h-100"
-            @item:select="
-              (id) =>
-                handlePostListIntent(
-                  'fullview',
-                  currentTabPosts.find((p) => p.id === id)
-                )
-            "
           />
         </div>
       </div>
