@@ -118,7 +118,7 @@ function onModalHidden() {
   </div>
 
   <BModal
-    :show="showModal"
+    v-model="showModal"
     centered
     button-size="sm"
     :focus="false"
@@ -142,7 +142,7 @@ function onModalHidden() {
       />
       <div
         v-if="preview && !error"
-        class="mb-3"
+        class="mb-3 preview-image-wrapper"
       >
         <BOverlay
           spinner-type="grow"
@@ -174,7 +174,7 @@ function onModalHidden() {
         <BButton
           variant="link-secondary"
           @click.prevent="backFromPreview"
-          class="link-secondary mt-3"
+          class="link-secondary"
           size="sm"
         >
           {{ t('profiles.image_upload.nevermind') }}
@@ -230,20 +230,41 @@ img {
 .form-text {
   line-height: 1.125;
 }
-.preview-image {
-  object-fit: cover;
-  width: 100%;
-  height: 100%;
-  display: block;
+
+.preview-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
-.spinner-overlay {
-  position: absolute;
-  inset: 0;
+.preview-image-wrapper {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.5); // semi-transparent layer
-  z-index: 10;
+  flex-direction: column;
+
+  // BOverlay renders wrapper divs that must also flex-shrink
+  :deep(> *) {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  :deep(> * > *) {
+    flex: 1 1 0;
+    min-height: 0;
+  }
+}
+
+.preview-image {
+  object-fit: contain;
+  max-width: 100%;
+  max-height: 100%;
+  display: block;
+  margin: 0 auto;
 }
 </style>
