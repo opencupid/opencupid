@@ -4,7 +4,6 @@ import type { User } from '@zod/generated'
 import { ValidateUserOtpLoginResponse } from '@zod/user/auth.dto'
 import type { UserIdentifier, SessionProfile } from '@zod/user/user.dto'
 import otpGenerator from 'otp-generator'
-import { listmonkSyncService } from './listmonkSync.service'
 
 // Define types for service return values
 export type UserWithProfile = User & { profile: SessionProfile }
@@ -59,9 +58,6 @@ export class UserService {
       },
       include: profileInclude,
     })
-
-    // Sync to Listmonk (best-effort, won't fail login on error)
-    await listmonkSyncService.syncUser(userUpdated)
 
     return { user: userUpdated, isNewUser, success: true }
   }
@@ -119,9 +115,6 @@ export class UserService {
       },
     })
 
-    // Sync new user to Listmonk
-    await listmonkSyncService.syncUser(user)
-
     return { user, isNewUser }
   }
 
@@ -154,9 +147,6 @@ export class UserService {
       data: dataToUpdate,
     })
 
-    // Sync to Listmonk if email, language, or newsletterOptIn changed
-    await listmonkSyncService.syncUser(updated)
-
     return updated
   }
 
@@ -166,9 +156,6 @@ export class UserService {
       where: { id },
       data: dataToUpdate,
     })
-
-    // Sync to Listmonk if email, language, or newsletterOptIn changed
-    await listmonkSyncService.syncUser(updated)
 
     return updated
   }
