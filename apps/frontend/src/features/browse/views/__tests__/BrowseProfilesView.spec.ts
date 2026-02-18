@@ -321,6 +321,45 @@ describe('BrowseProfiles view', () => {
     })
   })
 
+  describe('map mode layout', () => {
+    it('adds map-mode class to list-view when in map mode with results', () => {
+      vmState.viewModeModel.value = 'map'
+      vmState.isInitialized.value = true
+      vmState.haveResults.value = true
+      const wrapper = mount(BrowseProfiles, {
+        global: { stubs: { BPlaceholderWrapper, BOverlay, BModal, BButton, BContainer, BSpinner } },
+      })
+      expect(wrapper.find('.list-view').classes()).toContain('map-mode')
+    })
+
+    it('does not add map-mode class in grid mode', () => {
+      vmState.viewModeModel.value = 'grid'
+      const wrapper = mountComponent()
+      expect(wrapper.find('.list-view').classes()).not.toContain('map-mode')
+    })
+
+    it('renders OsmPoiMap with map-fullscreen class in map mode', () => {
+      vmState.viewModeModel.value = 'map'
+      vmState.isInitialized.value = true
+      vmState.haveResults.value = true
+      const wrapper = mount(BrowseProfiles, {
+        global: { stubs: { BPlaceholderWrapper, BOverlay, BModal, BButton, BContainer, BSpinner } },
+      })
+      expect(wrapper.find('.map-fullscreen').exists()).toBe(true)
+    })
+
+    it('hides grid and placeholders in map mode', () => {
+      vmState.viewModeModel.value = 'map'
+      vmState.isInitialized.value = true
+      vmState.haveResults.value = true
+      const wrapper = mount(BrowseProfiles, {
+        global: { stubs: { BPlaceholderWrapper, BOverlay, BModal, BButton, BContainer, BSpinner } },
+      })
+      expect(wrapper.find('.profile-grid').exists()).toBe(false)
+      expect(wrapper.find('.placeholders-grid').exists()).toBe(false)
+    })
+  })
+
   // OsmPoiMap Tests
   describe('OsmPoiMap Component', () => {
     it('renders OsmPoiMap component when mocked', () => {
