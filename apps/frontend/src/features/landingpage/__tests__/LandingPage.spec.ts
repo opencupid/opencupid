@@ -41,14 +41,14 @@ import LandingPage from '../views/LandingPage.vue'
 describe('LandingPage', () => {
   it('mounts without errors', () => {
     const wrapper = mount(LandingPage, { global: { stubs: bStubs } })
-    expect(wrapper.exists()).toBe(true)
+    expect(wrapper.html()).not.toBe('')
   })
 
   it('renders the Enter button', () => {
     const wrapper = mount(LandingPage, { global: { stubs: bStubs } })
-    const btn = wrapper.find('button')
+    const btn = wrapper.find('footer button')
     expect(btn.exists()).toBe(true)
-    expect(btn.text()).toContain('landingpage.enter_button')
+    expect(btn.attributes('disabled')).toBeUndefined()
   })
 
   it('renders the socialize feature text', () => {
