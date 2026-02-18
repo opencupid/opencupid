@@ -20,6 +20,7 @@
   "scripts": {
     "ci:test": "pnpm install && pnpm --filter backend prisma:generate && pnpm lint && pnpm test && pnpm --filter frontend type-check",
     "dev": "turbo run dev",
+    "dev:stop": "pkill -f 'turbo run dev'; pkill -f 'tsup --watch'; pkill -f 'node --inspect dist/main.js'; pkill -f 'vite.*--port'; echo 'All dev processes stopped'",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "test": "turbo run test",
