@@ -109,6 +109,10 @@ provide('viewerProfile', viewerProfile)
 
 const isDetailView = computed(() => !!selectedProfileId.value)
 
+const isMapMode = computed(
+  () => viewModeModel.value === 'map' && isInitialized.value && haveResults.value
+)
+
 // Infinite scroll setup
 const scrollContainer = ref<HTMLElement>()
 
@@ -162,45 +166,50 @@ useInfiniteScroll(
 
     <div
       class="list-view d-flex flex-column justify-content-start"
-      :class="[currentScope, { inactive: isDetailView }]"
+      :class="[currentScope, { inactive: isDetailView, 'map-mode': isMapMode }]"
     >
-      <MiddleColumn class="my-2">
-        <div class="container d-flex flex-column">
-          <SecondaryNav>
-            <template #items-center>
-              <ScopeViewToggler v-model="scopeModel" />
-            </template>
-          </SecondaryNav>
-          <div
-            v-if="currentScope == 'social'"
-            class="filter-controls my-2"
-          >
+      <div class="controls-overlay">
+        <MiddleColumn class="my-2">
+          <div class="container d-flex flex-column">
+            <SecondaryNav>
+              <template #items-center>
+                <ScopeViewToggler v-model="scopeModel" />
+              </template>
+            </SecondaryNav>
             <div
-              class="d-flex align-items-center justify-content-between w-100 px-2 py-1 bg-light rounded"
+              v-if="currentScope == 'social'"
+              class="filter-controls my-2"
             >
-              <SocialFilterDisplay
-                v-if="socialFilter && haveAccess"
-                v-model="socialFilter"
+              <div
+                class="d-flex align-items-center justify-content-between w-100 px-2 py-1 bg-light rounded"
+              >
+                <SocialFilterDisplay
+                  v-if="socialFilter && haveAccess"
+                  v-model="socialFilter"
+                  :viewerLocation="viewerProfile?.location"
+                  @prefs:toggle="showPrefsModal = true"
+                />
+                <ViewModeToggler v-model="viewModeModel" />
+              </div>
+            </div>
+            <div
+              v-if="currentScope == 'dating'"
+              class="filter-controls my-2"
+            >
+              <DatingPrefsDisplay
+                v-if="datingPrefs && haveAccess"
+                v-model="datingPrefs"
                 :viewerLocation="viewerProfile?.location"
                 @prefs:toggle="showPrefsModal = true"
               />
-              <ViewModeToggler v-model="viewModeModel" />
             </div>
           </div>
-          <div
-            v-if="currentScope == 'dating'"
-            class="filter-controls my-2"
-          >
-            <DatingPrefsDisplay
-              v-if="datingPrefs && haveAccess"
-              v-model="datingPrefs"
-              :viewerLocation="viewerProfile?.location"
-              @prefs:toggle="showPrefsModal = true"
-            />
-          </div>
-        </div>
-      </MiddleColumn>
-      <BPlaceholderWrapper :loading="isLoading">
+        </MiddleColumn>
+      </div>
+      <BPlaceholderWrapper
+        v-if="!isMapMode"
+        :loading="isLoading"
+      >
         <template #loading>
           <BOverlay
             show
@@ -257,10 +266,7 @@ useInfiniteScroll(
             ref="scrollContainer"
             class="overflow-auto hide-scrollbar pb-5 flex-grow-1"
           >
-            <MiddleColumn
-              v-if="viewModeModel === 'grid'"
-              class="grid-view"
-            >
+            <MiddleColumn class="grid-view">
               <ProfileCardGrid
                 :profiles="profileList"
                 :showTags="true"
@@ -286,19 +292,19 @@ useInfiniteScroll(
               <!-- <div v-else-if="!hasMoreProfiles && profileList.length > 0" class="text-center py-3 text-muted">
               </div> -->
             </MiddleColumn>
-            <OsmPoiMap
-              v-if="viewModeModel === 'map'"
-              :items="profileList"
-              :get-location="(profile: PublicProfile) => profile.location"
-              :get-title="(profile: PublicProfile) => profile.publicName"
-              :popup-component="ProfileMapCard"
-              class="map-view h-100"
-              @item:select="(id: string | number) => handleCardClick(String(id))"
-            />
           </div>
         </template>
       </BPlaceholderWrapper>
 
+      <OsmPoiMap
+        v-if="isMapMode"
+        :items="profileList"
+        :get-location="(profile: PublicProfile) => profile.location"
+        :get-title="(profile: PublicProfile) => profile.publicName"
+        :popup-component="ProfileMapCard"
+        class="map-fullscreen"
+        @item:select="(id: string | number) => handleCardClick(String(id))"
+      />
       <BModal
         v-model="showPrefsModal"
         centered
