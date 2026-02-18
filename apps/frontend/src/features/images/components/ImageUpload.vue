@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { detectMobile } from '@/lib/mobile-detect'
@@ -19,7 +19,7 @@ const captionText = ref<string>('')
 
 const isLoading = ref(false)
 const error = ref<string | null>(null)
-const fileInput = ref<HTMLInputElement | null>(null)
+const uploadButtonKey = ref(0)
 
 // Detect device type
 const isMobile = computed(() => detectMobile())
@@ -87,7 +87,7 @@ function onModalHidden() {
   captionText.value = ''
   error.value = null
   isLoading.value = false
-  if (fileInput.value) fileInput.value.value = ''
+  uploadButtonKey.value++
 }
 </script>
 
@@ -104,6 +104,7 @@ function onModalHidden() {
     </BButton>
     <UploadButton
       v-else
+      :key="uploadButtonKey"
       @file:change="handleFileChange"
       :genericIcon="true"
     />
