@@ -128,7 +128,8 @@ Schema: `apps/backend/prisma/schema.prisma`
 
 ## Git workflow
 
-**Never work in main branch and never commit directly to `main`.** 
+> **HARD RULE — NO EXCEPTIONS:** You MUST NEVER commit anything to the `main` branch. Not documentation, not design files, not a single line. Every commit goes on a feature branch. If you are on `main`, stop and create a branch before touching anything.
+
 Always work in a feature branch and open a Github pull request once task is complete and tests succeed.
 
 ```bash
