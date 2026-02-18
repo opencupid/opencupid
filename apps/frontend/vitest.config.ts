@@ -5,17 +5,22 @@ import path from 'path'
 import { server, define } from './vite.common'
 import Components from 'unplugin-vue-components/vite'
 import { BootstrapVueNextResolver } from 'bootstrap-vue-next'
+import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 
 export default defineConfig(({ mode }: ConfigEnv): ViteUserConfig => {
 
   return {
     ...define(mode),
     ...server(mode),
-    plugins: [vue(),
-    Components({
-      resolvers: [BootstrapVueNextResolver()],
-      // exclude: [/\/__tests__\//],
-    }),
+    plugins: [
+      vue(),
+      Components({
+        resolvers: [BootstrapVueNextResolver()],
+        // exclude: [/\/__tests__\//],
+      }),
+      VueI18nPlugin({
+        include: [path.resolve(__dirname, '../../packages/shared/i18n/*')],
+      }),
     ],
     resolve: {
       alias: {
