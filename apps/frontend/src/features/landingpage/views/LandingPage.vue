@@ -93,13 +93,11 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
           >
             <h1 class="text-center mb-3 mb-lg-4">
               <span class="d-none d-md-inline-block">
-                {{ t('landingpage.title_lg', { siteName: siteName }) }}
+                {{ t('landingpage.title_lg', { siteName: '' }).trim() }}&nbsp;<span class="site-name">{{ siteName }}</span>
               </span>
-              <span class="d-inline-block d-md-none">
-                {{ t('landingpage.title', { siteName: siteName }) }}
-              </span>
+              <span class="d-inline-block d-md-none site-name">{{ siteName }}</span>
             </h1>
-            <div class="my-md-3 fs-5 pre-line">
+            <div class="my-md-3 fs-5 lp-body-text">
               <!-- This is a meeting point in the online realm for us to find each other and connect. -->
               {{ t('landingpage.subtitle_1') }}
             </div>
@@ -217,5 +215,16 @@ main::after {
   width: 100%;
   background: linear-gradient(to top, rgba(#c9a97a, 0.85), rgba(#c9a97a, 0));
   pointer-events: none;
+}
+
+.site-name {
+  color: map-get($theme-colors, 'primary');
+  font-weight: 700;
+}
+
+.lp-body-text {
+  line-height: 1.8;
+  color: map-get($theme-colors, 'dark');
+  white-space: pre-line;
 }
 </style>
