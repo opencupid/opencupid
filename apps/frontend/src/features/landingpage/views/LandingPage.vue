@@ -110,11 +110,13 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
           >
             <BRow>
               <BCol md="6">
-                <div class="d-flex flex-column align-items-center py-3 text-center">
-                  <div class="icon-wrapper text-social mb-lg-3">
-                    <IconSocialize class="svg-icon-100" />
+                <div class="d-flex flex-column align-items-center py-3 text-center lp-feature-card">
+                  <div class="icon-wrapper mb-lg-3">
+                    <div class="icon-circle">
+                      <IconSocialize class="svg-icon-100 text-social" />
+                    </div>
                   </div>
-                  <div>
+                  <div class="lp-feature-text">
                     <!-- Exchange ideas, connect on our travels, find like-minded souls nearby to hang out
                 with -->
                     {{ t('landingpage.socialize_1') }}
@@ -122,11 +124,13 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
                 </div>
               </BCol>
               <BCol md="6">
-                <div class="d-flex flex-column align-items-center py-3 text-center">
-                  <div class="icon-wrapper text-dating mb-lg-3">
-                    <IconDate class="svg-icon-100" />
+                <div class="d-flex flex-column align-items-center py-3 text-center lp-feature-card">
+                  <div class="icon-wrapper mb-lg-3">
+                    <div class="icon-circle">
+                      <IconDate class="svg-icon-100 text-dating" />
+                    </div>
                   </div>
-                  <div>
+                  <div class="lp-feature-text">
                     <!-- Find a soulmate or playmate -->
                     {{ t('landingpage.date_1') }}
                   </div>
@@ -226,5 +230,24 @@ main::after {
   line-height: 1.8;
   color: map-get($theme-colors, 'dark');
   white-space: pre-line;
+}
+
+.icon-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: rgba(#faf4ea, 0.75);
+  box-shadow: 0 2px 12px rgba(#5e4b2c, 0.12);
+  padding: 0.75rem;
+}
+
+.lp-feature-text {
+  font-size: $font-size-sm;
+  color: map-get($theme-colors, 'secondary');
+  line-height: 1.5;
+  max-width: 16rem;
 }
 </style>
