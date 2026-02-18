@@ -37,8 +37,8 @@ importers:
         specifier: 8.15.0
         version: 8.15.0
       dotenv-expand:
-        specifier: 12.0.2
-        version: 12.0.2
+        specifier: 12.0.3
+        version: 12.0.3
       find-up:
         specifier: 7.0.0
         version: 7.0.0
@@ -112,8 +112,8 @@ importers:
         specifier: 17.3.1
         version: 17.3.1
       dotenv-expand:
-        specifier: 12.0.2
-        version: 12.0.2
+        specifier: 12.0.3
+        version: 12.0.3
       fastify:
         specifier: 5.4.0
         version: 5.4.0
@@ -3773,8 +3773,8 @@ packages:
     resolution: {integrity: sha512-xHF8EP4XH/Ba9fvAF2LDd5O3IITVolerVV6xvkxoM8zlGEiCUrggpAnHyOoKJKCrhvPcGATFAUwIujj7bRG5UA==}
     hasBin: true
 
-  dotenv-expand@12.0.2:
-    resolution: {integrity: sha512-lXpXz2ZE1cea1gL4sz2Ipj8y4PiVjytYr3Ij0SWoms1PGxIv7m2CRKuRuCRtHdVuvM/hNJPMxt5PbhboNC4dPQ==}
+  dotenv-expand@12.0.3:
+    resolution: {integrity: sha512-uc47g4b+4k/M/SeaW1y4OApx+mtLWl92l5LMPP0GNXctZqELk+YGgOPIIC5elYmUH4OuoK3JLhuRUYegeySiFA==}
     engines: {node: '>=12'}
 
   dotenv@16.0.3:
@@ -11072,7 +11072,7 @@ snapshots:
       commander: 6.2.1
       glob: 7.2.3
 
-  dotenv-expand@12.0.2:
+  dotenv-expand@12.0.3:
     dependencies:
       dotenv: 16.6.1
 
