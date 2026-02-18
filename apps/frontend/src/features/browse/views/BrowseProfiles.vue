@@ -357,7 +357,28 @@ useInfiniteScroll(
 }
 
 .list-view {
+  position: relative;
   height: calc(100vh - $navbar-height);
+}
+
+.controls-overlay {
+  position: relative;
+  z-index: 10;
+}
+
+.map-mode .controls-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(var(--bs-body-bg-rgb), 0.85);
+  backdrop-filter: blur(4px);
+}
+
+.map-fullscreen {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
 }
 
 .inactive {
