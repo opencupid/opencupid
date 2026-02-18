@@ -193,6 +193,33 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
   min-height: 100%;
   background: radial-gradient(ellipse at 50% 40%, #faf4ea 0%, #e0c99a 55%, #c9a97a 100%);
   position: relative;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  &::before {
+    width: 28rem;
+    height: 20rem;
+    bottom: -6rem;
+    left: -8rem;
+    background: rgba(#a43d30, 0.07);
+    filter: blur(3rem);
+  }
+
+  &::after {
+    width: 22rem;
+    height: 18rem;
+    top: -4rem;
+    right: -6rem;
+    background: rgba(#6b8e23, 0.08);
+    filter: blur(2.5rem);
+  }
 }
 
 .icon-wrapper {
@@ -208,6 +235,11 @@ button {
 }
 footer {
   line-height: 1;
+}
+
+main {
+  position: relative;
+  z-index: 1;
 }
 
 main::after {
