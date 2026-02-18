@@ -192,6 +192,7 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
 
 .lp-wrapper {
   min-height: 100%;
+  overflow: clip;
   background: radial-gradient(ellipse at 50% 40%, #faf4ea 0%, #e0c99a 55%, #c9a97a 100%);
   position: relative;
 
@@ -224,8 +225,10 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
 }
 
 .icon-wrapper {
+  width: 5rem;
   height: 5rem;
   @include media-breakpoint-up(md) {
+    width: 8rem;
     height: 8rem;
   }
 }
