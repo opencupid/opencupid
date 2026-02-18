@@ -117,7 +117,7 @@ onMounted(async () => {
 
               <!-- Left: icon + heading -->
               <div class="d-flex flex-column align-items-center justify-content-center text-success flex-shrink-0">
-                <IconOkHand style="width: 5rem; height: 5rem" class="opacity-25 mb-2" />
+                <IconOkHand style="width: 5rem; height: 5rem" class="svg-icon opacity-25 mb-2" />
                 <h2 class="mb-0">{{ t('onboarding.confirmation.title') }}</h2>
               </div>
 
