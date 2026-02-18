@@ -41,8 +41,7 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
 
 <template>
   <div
-    style="min-height: 100%"
-    class="bg-light posiion-relative"
+    class="lp-wrapper"
   >
     <header
       class="position-absolute top-0 start-0 w-100 pt-2"
@@ -188,6 +187,12 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
 @import 'bootstrap/scss/variables';
 @import 'bootstrap/scss/mixins';
 
+.lp-wrapper {
+  min-height: 100%;
+  background: radial-gradient(ellipse at 50% 40%, #faf4ea 0%, #e0c99a 55%, #c9a97a 100%);
+  position: relative;
+}
+
 .icon-wrapper {
   height: 5rem;
   @include media-breakpoint-up(md) {
@@ -210,11 +215,7 @@ main::after {
   display: block;
   height: 5rem;
   width: 100%;
-  background: linear-gradient(
-    to top,
-    transparentize(map-get($theme-colors, 'light'), 0),
-    transparentize(map-get($theme-colors, 'light'), 1)
-  );
-  pointer-events: none; /* let clicks pass through */
+  background: linear-gradient(to top, rgba(#c9a97a, 0.85), rgba(#c9a97a, 0));
+  pointer-events: none;
 }
 </style>
