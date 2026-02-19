@@ -1,4 +1,5 @@
 import sharp from 'sharp'
+import { encode as encodeBlurhashRaw } from 'blurhash'
 
 import * as tf from '@tensorflow/tfjs'
 import '@tensorflow/tfjs-backend-cpu'
@@ -155,7 +156,7 @@ export class ImageProcessor {
     const tensor = tf.tensor3d(new Uint8Array(data), [info.height, info.width, 3])
     const preds = await this.detector.estimateFaces(tensor, false)
 
-    return preds.map(p => {
+    return preds.map((p) => {
       const [x1, y1] = p.topLeft as [number, number]
       const [x2, y2] = p.bottomRight as [number, number]
       return { x: x1, y: y1, width: x2 - x1, height: y2 - y1 }
@@ -163,7 +164,7 @@ export class ImageProcessor {
   }
 
   async getCropRegion(width: number, height: number): Promise<Crop> {
-    const boosts = this.faces.map(f => ({ ...f, weight: 1 }))
+    const boosts = this.faces.map((f) => ({ ...f, weight: 1 }))
     const result = await smartcrop.crop(this.buffer, {
       width,
       height,
@@ -313,5 +314,20 @@ export class ImageProcessor {
     })
     const { x, y, width, height } = result.topCrop
     return { left: x, top: y, width, height }
+  }
+
+  async encodeBlurhash(componentX = 4, componentY = 3): Promise<string> {
+    const { data, info } = await sharp(this.buffer)
+      .resize(32, 32, { fit: 'inside' })
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true })
+    return encodeBlurhashRaw(
+      new Uint8ClampedArray(data),
+      info.width,
+      info.height,
+      componentX,
+      componentY
+    )
   }
 }

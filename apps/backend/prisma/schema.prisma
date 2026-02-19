@@ -273,6 +273,7 @@ model ProfileImage {
   updatedAt DateTime @updatedAt
 
   contentHash String?
+  blurhash    String?
   isModerated Boolean @default(false)
   isFlagged   Boolean @default(false)
 

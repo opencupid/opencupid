@@ -26,7 +26,7 @@ export const ProfileScalarFieldEnumSchema = z.enum(['id','publicName','country',
 
 export const LocalizedProfileFieldScalarFieldEnumSchema = z.enum(['id','profileId','field','locale','value']);
 
-export const ProfileImageScalarFieldEnumSchema = z.enum(['id','userId','profileId','position','altText','storagePath','url','width','height','mimeType','createdAt','updatedAt','contentHash','isModerated','isFlagged']);
+export const ProfileImageScalarFieldEnumSchema = z.enum(['id','userId','profileId','position','altText','storagePath','url','width','height','mimeType','createdAt','updatedAt','contentHash','blurhash','isModerated','isFlagged']);
 
 export const ConversationScalarFieldEnumSchema = z.enum(['id','createdAt','updatedAt','profileAId','profileBId','status','initiatorProfileId']);
 
@@ -257,6 +257,7 @@ export const ProfileImageSchema = z.object({
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
   contentHash: z.string().nullable(),
+  blurhash: z.string().nullable(),
   isModerated: z.boolean(),
   isFlagged: z.boolean(),
 })
@@ -740,6 +741,7 @@ export const ProfileImageSelectSchema: z.ZodType<Prisma.ProfileImageSelect> = z.
   createdAt: z.boolean().optional(),
   updatedAt: z.boolean().optional(),
   contentHash: z.boolean().optional(),
+  blurhash: z.boolean().optional(),
   isModerated: z.boolean().optional(),
   isFlagged: z.boolean().optional(),
   user: z.union([z.boolean(),z.lazy(() => UserArgsSchema)]).optional(),
@@ -1858,6 +1860,7 @@ export const ProfileImageWhereInputSchema: z.ZodType<Prisma.ProfileImageWhereInp
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   contentHash: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
+  blurhash: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   isModerated: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
   isFlagged: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
   user: z.union([ z.lazy(() => UserScalarRelationFilterSchema),z.lazy(() => UserWhereInputSchema) ]).optional(),
@@ -1878,6 +1881,7 @@ export const ProfileImageOrderByWithRelationInputSchema: z.ZodType<Prisma.Profil
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
   contentHash: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
+  blurhash: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   isModerated: z.lazy(() => SortOrderSchema).optional(),
   isFlagged: z.lazy(() => SortOrderSchema).optional(),
   user: z.lazy(() => UserOrderByWithRelationInputSchema).optional(),
@@ -1913,6 +1917,7 @@ export const ProfileImageWhereUniqueInputSchema: z.ZodType<Prisma.ProfileImageWh
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   contentHash: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
+  blurhash: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   isModerated: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
   isFlagged: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
   user: z.union([ z.lazy(() => UserScalarRelationFilterSchema),z.lazy(() => UserWhereInputSchema) ]).optional(),
@@ -1933,6 +1938,7 @@ export const ProfileImageOrderByWithAggregationInputSchema: z.ZodType<Prisma.Pro
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
   contentHash: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
+  blurhash: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   isModerated: z.lazy(() => SortOrderSchema).optional(),
   isFlagged: z.lazy(() => SortOrderSchema).optional(),
   _count: z.lazy(() => ProfileImageCountOrderByAggregateInputSchema).optional(),
@@ -1959,6 +1965,7 @@ export const ProfileImageScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.
   createdAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
   contentHash: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema),z.string() ]).optional().nullable(),
+  blurhash: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema),z.string() ]).optional().nullable(),
   isModerated: z.union([ z.lazy(() => BoolWithAggregatesFilterSchema),z.boolean() ]).optional(),
   isFlagged: z.union([ z.lazy(() => BoolWithAggregatesFilterSchema),z.boolean() ]).optional(),
 }).strict();
@@ -3500,6 +3507,7 @@ export const ProfileImageCreateInputSchema: z.ZodType<Prisma.ProfileImageCreateI
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   contentHash: z.string().optional().nullable(),
+  blurhash: z.string().optional().nullable(),
   isModerated: z.boolean().optional(),
   isFlagged: z.boolean().optional(),
   user: z.lazy(() => UserCreateNestedOneWithoutProfileImageInputSchema),
@@ -3520,6 +3528,7 @@ export const ProfileImageUncheckedCreateInputSchema: z.ZodType<Prisma.ProfileIma
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   contentHash: z.string().optional().nullable(),
+  blurhash: z.string().optional().nullable(),
   isModerated: z.boolean().optional(),
   isFlagged: z.boolean().optional()
 }).strict();
@@ -3536,6 +3545,7 @@ export const ProfileImageUpdateInputSchema: z.ZodType<Prisma.ProfileImageUpdateI
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   contentHash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  blurhash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   isModerated: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isFlagged: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   user: z.lazy(() => UserUpdateOneRequiredWithoutProfileImageNestedInputSchema).optional(),
@@ -3556,6 +3566,7 @@ export const ProfileImageUncheckedUpdateInputSchema: z.ZodType<Prisma.ProfileIma
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   contentHash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  blurhash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   isModerated: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isFlagged: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
@@ -3574,6 +3585,7 @@ export const ProfileImageCreateManyInputSchema: z.ZodType<Prisma.ProfileImageCre
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   contentHash: z.string().optional().nullable(),
+  blurhash: z.string().optional().nullable(),
   isModerated: z.boolean().optional(),
   isFlagged: z.boolean().optional()
 }).strict();
@@ -3590,6 +3602,7 @@ export const ProfileImageUpdateManyMutationInputSchema: z.ZodType<Prisma.Profile
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   contentHash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  blurhash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   isModerated: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isFlagged: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
@@ -3608,6 +3621,7 @@ export const ProfileImageUncheckedUpdateManyInputSchema: z.ZodType<Prisma.Profil
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   contentHash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  blurhash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   isModerated: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isFlagged: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
@@ -5133,6 +5147,7 @@ export const ProfileImageCountOrderByAggregateInputSchema: z.ZodType<Prisma.Prof
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
   contentHash: z.lazy(() => SortOrderSchema).optional(),
+  blurhash: z.lazy(() => SortOrderSchema).optional(),
   isModerated: z.lazy(() => SortOrderSchema).optional(),
   isFlagged: z.lazy(() => SortOrderSchema).optional()
 }).strict();
@@ -5157,6 +5172,7 @@ export const ProfileImageMaxOrderByAggregateInputSchema: z.ZodType<Prisma.Profil
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
   contentHash: z.lazy(() => SortOrderSchema).optional(),
+  blurhash: z.lazy(() => SortOrderSchema).optional(),
   isModerated: z.lazy(() => SortOrderSchema).optional(),
   isFlagged: z.lazy(() => SortOrderSchema).optional()
 }).strict();
@@ -5175,6 +5191,7 @@ export const ProfileImageMinOrderByAggregateInputSchema: z.ZodType<Prisma.Profil
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
   contentHash: z.lazy(() => SortOrderSchema).optional(),
+  blurhash: z.lazy(() => SortOrderSchema).optional(),
   isModerated: z.lazy(() => SortOrderSchema).optional(),
   isFlagged: z.lazy(() => SortOrderSchema).optional()
 }).strict();
@@ -8335,6 +8352,7 @@ export const ProfileImageCreateWithoutUserInputSchema: z.ZodType<Prisma.ProfileI
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   contentHash: z.string().optional().nullable(),
+  blurhash: z.string().optional().nullable(),
   isModerated: z.boolean().optional(),
   isFlagged: z.boolean().optional(),
   profile: z.lazy(() => ProfileCreateNestedOneWithoutProfileImagesInputSchema).optional()
@@ -8353,6 +8371,7 @@ export const ProfileImageUncheckedCreateWithoutUserInputSchema: z.ZodType<Prisma
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   contentHash: z.string().optional().nullable(),
+  blurhash: z.string().optional().nullable(),
   isModerated: z.boolean().optional(),
   isFlagged: z.boolean().optional()
 }).strict();
@@ -8583,6 +8602,7 @@ export const ProfileImageScalarWhereInputSchema: z.ZodType<Prisma.ProfileImageSc
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   contentHash: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
+  blurhash: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   isModerated: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
   isFlagged: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
 }).strict();
@@ -8799,6 +8819,7 @@ export const ProfileImageCreateWithoutProfileInputSchema: z.ZodType<Prisma.Profi
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   contentHash: z.string().optional().nullable(),
+  blurhash: z.string().optional().nullable(),
   isModerated: z.boolean().optional(),
   isFlagged: z.boolean().optional(),
   user: z.lazy(() => UserCreateNestedOneWithoutProfileImageInputSchema)
@@ -8817,6 +8838,7 @@ export const ProfileImageUncheckedCreateWithoutProfileInputSchema: z.ZodType<Pri
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   contentHash: z.string().optional().nullable(),
+  blurhash: z.string().optional().nullable(),
   isModerated: z.boolean().optional(),
   isFlagged: z.boolean().optional()
 }).strict();
@@ -13103,6 +13125,7 @@ export const ProfileImageCreateManyUserInputSchema: z.ZodType<Prisma.ProfileImag
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   contentHash: z.string().optional().nullable(),
+  blurhash: z.string().optional().nullable(),
   isModerated: z.boolean().optional(),
   isFlagged: z.boolean().optional()
 }).strict();
@@ -13146,6 +13169,7 @@ export const ProfileImageUpdateWithoutUserInputSchema: z.ZodType<Prisma.ProfileI
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   contentHash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  blurhash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   isModerated: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isFlagged: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   profile: z.lazy(() => ProfileUpdateOneWithoutProfileImagesNestedInputSchema).optional()
@@ -13164,6 +13188,7 @@ export const ProfileImageUncheckedUpdateWithoutUserInputSchema: z.ZodType<Prisma
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   contentHash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  blurhash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   isModerated: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isFlagged: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
@@ -13181,6 +13206,7 @@ export const ProfileImageUncheckedUpdateManyWithoutUserInputSchema: z.ZodType<Pr
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   contentHash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  blurhash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   isModerated: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isFlagged: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
@@ -13279,6 +13305,7 @@ export const ProfileImageCreateManyProfileInputSchema: z.ZodType<Prisma.ProfileI
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   contentHash: z.string().optional().nullable(),
+  blurhash: z.string().optional().nullable(),
   isModerated: z.boolean().optional(),
   isFlagged: z.boolean().optional()
 }).strict();
@@ -13431,6 +13458,7 @@ export const ProfileImageUpdateWithoutProfileInputSchema: z.ZodType<Prisma.Profi
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   contentHash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  blurhash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   isModerated: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isFlagged: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   user: z.lazy(() => UserUpdateOneRequiredWithoutProfileImageNestedInputSchema).optional()
@@ -13449,6 +13477,7 @@ export const ProfileImageUncheckedUpdateWithoutProfileInputSchema: z.ZodType<Pri
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   contentHash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  blurhash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   isModerated: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isFlagged: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
@@ -13466,6 +13495,7 @@ export const ProfileImageUncheckedUpdateManyWithoutProfileInputSchema: z.ZodType
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   contentHash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  blurhash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   isModerated: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isFlagged: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();

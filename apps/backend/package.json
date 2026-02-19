@@ -42,6 +42,7 @@
     "@tensorflow/tfjs-backend-cpu": "4.22.0",
     "altcha-lib": "1.2.0",
     "bcrypt": "6.0.0",
+    "blurhash": "^2.0.5",
     "bullmq": "5.52.2",
     "canvas": "3.1.2",
     "cuid": "3.0.0",

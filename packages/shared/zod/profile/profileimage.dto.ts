@@ -1,6 +1,6 @@
 // TODO: review usage; copied for both db and dto layers
-import { z } from "zod"
-import { ProfileImageSchema, ProfileSchema } from "../generated"
+import { z } from 'zod'
+import { ProfileImageSchema, ProfileSchema } from '../generated'
 
 export const ImageVariantSchema = z.object({
   size: z.string(),
@@ -14,6 +14,7 @@ const publicFields = {
   mimeType: true,
   altText: true,
   position: true,
+  blurhash: true,
 } as const
 
 // Public schema
@@ -22,7 +23,6 @@ export const PublicProfileImageSchema = ProfileImageSchema.pick(publicFields).ex
 })
 
 export type PublicProfileImage = z.infer<typeof PublicProfileImageSchema>
-
 
 // Owner fields
 const ownerFields = {
@@ -35,13 +35,11 @@ export const OwnerProfileImageScalarSchema = ProfileImageSchema.pick(ownerFields
 })
 export type OwnerProfileImageScalar = z.infer<typeof OwnerProfileImageScalarSchema>
 
-export const OwnerProfileImageSchema = OwnerProfileImageScalarSchema
-  .extend({
-    primaryForProfile: ProfileSchema.optional(),
-    otherForProfiles: z.array(ProfileSchema).optional(),
-  })
+export const OwnerProfileImageSchema = OwnerProfileImageScalarSchema.extend({
+  primaryForProfile: ProfileSchema.optional(),
+  otherForProfiles: z.array(ProfileSchema).optional(),
+})
 export type OwnerProfileImage = z.infer<typeof OwnerProfileImageSchema>
-
 
 const ProfileImagePositionSchema = z.object({
   id: z.string().cuid(),
@@ -50,35 +48,30 @@ const ProfileImagePositionSchema = z.object({
 export type ProfileImagePosition = z.infer<typeof ProfileImagePositionSchema>
 
 export const ReorderProfileImagesPayloadSchema = z.object({
-  images: z.array(ProfileImagePositionSchema)
-    .nonempty("At least one image must be provided")
+  images: z
+    .array(ProfileImagePositionSchema)
+    .nonempty('At least one image must be provided')
     .min(1),
 })
 export type ReorderProfileImagesPayload = z.infer<typeof ReorderProfileImagesPayloadSchema>
-
-
-
-
 
 // API response schemas
 
 export const ApiSuccessSchema = z.object({
   success: z.boolean(),
-});
+})
 
 export const ProfileImagesResponseSchema = z.object({
   images: z.array(OwnerProfileImageSchema).default([]),
-});
+})
 
 export const ImageApiResponseSchema = ApiSuccessSchema.merge(ProfileImagesResponseSchema)
 export type ImageApiResponse = z.infer<typeof ImageApiResponseSchema>
 
-export type ProfileImagesResponse = z.infer<typeof ProfileImagesResponseSchema>;
-
-
+export type ProfileImagesResponse = z.infer<typeof ProfileImagesResponseSchema>
 
 // XXX this dooesn't work with the present multipart setup
-// without the `attachFieldsToBody: true` option, 
+// without the `attachFieldsToBody: true` option,
 // the file is not attached to the body. Leaving this here for now but it's unused
 // export const UploadImageSchema = z.object({
 //   file: z.instanceof(File).refine(
@@ -97,6 +90,3 @@ export type ProfileImagesResponse = z.infer<typeof ProfileImagesResponseSchema>;
 //     { message: 'File must be JPEG, PNG, or WebP' }
 //   ),
 // });
-
-
-

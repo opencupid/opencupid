@@ -11,4 +11,12 @@ describe('ImageTag', () => {
     expect(wrapper.find('img').attributes('src')).toContain('/path/img-card.jpg')
     expect(wrapper.html()).toContain('jpg')
   })
+
+  it('emits load event when image loads', async () => {
+    const wrapper = mount(ImageTag, {
+      props: { image: { variants: [{ size: 'card', url: '/path/img-card.jpg' }] } },
+    })
+    await wrapper.find('img').trigger('load')
+    expect(wrapper.emitted('load')).toHaveLength(1)
+  })
 })
