@@ -4,7 +4,6 @@ import { useI18n } from 'vue-i18n'
 
 import { detectMobile } from '@/lib/mobile-detect'
 
-import ErrorComponent from '@/features/shared/ui/ErrorComponent.vue'
 import UploadButton from './UploadButton.vue'
 import AvatarUploadIcon from '@/assets/icons/files/avatar-upload.svg'
 import { useImageStore } from '@/features/images/stores/imageStore'
@@ -20,6 +19,7 @@ const captionText = ref<string>('')
 const isLoading = ref(false)
 const error = ref<string | null>(null)
 const uploadButtonKey = ref(0)
+const retryFileInput = ref<HTMLInputElement | null>(null)
 
 // Detect device type
 const isMobile = computed(() => detectMobile())
@@ -46,7 +46,9 @@ const handleUpload = async () => {
 
   const res = await imageStore.uploadProfileImage(selectedFile.value, captionText.value)
   if (!res.success) {
-    error.value = res.message
+    const code = res.message ?? 'unknown'
+    const key = `profiles.image_upload.errors.${code}`
+    error.value = t(key, t('profiles.image_upload.errors.unknown'))
     isLoading.value = false
     return
   }
@@ -57,6 +59,7 @@ const handleFileChange = (event: Event) => {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0] ?? null
   selectedFile.value = file
+  error.value = null
 
   if (!file) {
     preview.value = null
@@ -136,10 +139,12 @@ function onModalHidden() {
       v-show="modalState === 'preview'"
       class="preview-container w-100"
     >
-      <ErrorComponent
-        :error="error"
+      <div
         v-if="error"
-      />
+        class="alert alert-danger mb-3"
+      >
+        {{ error }}
+      </div>
       <div
         v-if="preview && !error"
         class="mb-3 preview-image-wrapper"
@@ -162,12 +167,29 @@ function onModalHidden() {
       </div>
 
       <div class="mb-3 justify-content-center d-flex flex-column gap-2 align-items-center">
+        <input
+          v-if="error"
+          ref="retryFileInput"
+          type="file"
+          accept=".jpg,.jpeg,.png"
+          class="d-none"
+          @change="handleFileChange"
+        />
         <BButton
+          v-if="error"
+          variant="primary"
+          size="lg"
+          @click.prevent="retryFileInput?.click()"
+        >
+          {{ t('profiles.image_upload.try_another') }}
+        </BButton>
+        <BButton
+          v-else
           variant="primary"
           size="lg"
           @click.prevent="handleUpload"
           :label="t('profiles.image_upload.looks_good')"
-          :disabled="isLoading || !!error"
+          :disabled="isLoading"
         >
           {{ t('profiles.image_upload.looks_good') }}
         </BButton>

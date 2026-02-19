@@ -16,7 +16,7 @@ const IdLookupParamsSchema = z.object({
   id: z.string().cuid(),
 })
 
-const imageRoutes: FastifyPluginAsync = async fastify => {
+const imageRoutes: FastifyPluginAsync = async (fastify) => {
   await fastify.register(multipart, {
     limits: {
       fieldNameSize: 100, // Max field name size in bytes
@@ -67,12 +67,9 @@ const imageRoutes: FastifyPluginAsync = async fastify => {
         })
       } catch (err: any) {
         fastify.log.warn('Upload error:', err, err.code)
-        const maxSizeMiB = appConfig.IMAGE_MAX_SIZE / (1024 * 1024) // Convert bytes to MB
 
         const reason =
-          err.code === 'FST_ERR_MULTIPART_FILE_TOO_LARGE'
-            ? `The uploaded image is too large. Maximum size is ${maxSizeMiB}MB.`
-            : 'Failed to upload image.'
+          err.code === 'FST_REQ_FILE_TOO_LARGE' ? 'IMAGE_TOO_LARGE' : 'IMAGE_UPLOAD_FAILED'
 
         return sendError(reply, 400, reason)
       }

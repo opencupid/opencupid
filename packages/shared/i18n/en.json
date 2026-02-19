@@ -118,7 +118,13 @@
       "looks_good": "Looks good!",
       "add_from_phone": "Add a photo from your phone",
       "take_photo": "Or take a photo with your camera",
-      "nevermind": "Nevermind"
+      "nevermind": "Nevermind",
+      "try_another": "Choose a different photo",
+      "errors": {
+        "IMAGE_TOO_LARGE": "The image is too large. Please choose a smaller photo (max 10MB).",
+        "IMAGE_UPLOAD_FAILED": "Failed to upload image. Please try again.",
+        "unknown": "Something went wrong. Please try again."
+      }
     },
     "pronouns_edit_label": "pronouns",
     "forms": {
