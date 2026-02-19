@@ -61,7 +61,8 @@ provide('isEditable', toRef(props, 'editState'))
     :ok-title="'OK'"
     :ok-class="'btn btn-primary px-5'"
     :initial-animation="false"
-    body-class="d-flex flex-row align-items-center justify-content-center overflow-hidden"
+    body-class="d-flex flex-row align-items-center justify-content-center overflow-hidden flex-grow-1 min-h-0"
+    modal-class="field-edit-modal"
     @ok="handleUpdate"
     @cancel="handleCancelEdit"
     @close="handleCancelEdit"
@@ -78,8 +79,27 @@ provide('isEditable', toRef(props, 'editState'))
     </template>
     <div
       id="field-edit-modal"
-      class="w-100 py-5"
+      class="w-100 py-2"
     ></div>
   </BModal>
   <slot> </slot>
 </template>
+
+<style lang="scss">
+.field-edit-modal .modal-dialog {
+  max-height: calc(100dvh - 2rem);
+  display: flex;
+  flex-direction: column;
+}
+
+.field-edit-modal .modal-content {
+  max-height: inherit;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.field-edit-modal .modal-body {
+  min-height: 0;
+}
+</style>
