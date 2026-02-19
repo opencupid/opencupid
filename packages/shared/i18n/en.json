@@ -101,8 +101,9 @@
     "logout": "Logout"
   },
   "home": {
-    "welcome_title": "Welcome to {siteName}!",
-    "meet_new_people": "Meet new people"
+    "explore_interests": "Explore interests",
+    "meet_new_people": "Meet new people",
+    "welcome_title": "Welcome to {siteName}!"
   },
   "profiles": {
     "send_message_button": "Message",

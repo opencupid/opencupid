@@ -14,8 +14,44 @@ vi.mock('../../services/tag.service', () => ({
 beforeEach(async () => {
   fastify = new MockFastify()
   reply = new MockReply()
-  mockTagService = { search: vi.fn(), create: vi.fn() }
+  mockTagService = { search: vi.fn(), create: vi.fn(), getPopularTags: vi.fn() }
   await tagsRoutes(fastify as any, {})
+})
+
+describe('GET /popular', () => {
+  it('returns popular tags', async () => {
+    const handler = fastify.routes['GET /popular']
+    mockTagService.getPopularTags.mockResolvedValue([
+      { id: 't1', name: 'Hiking', slug: 'hiking', count: 5 },
+      { id: 't2', name: 'Music', slug: 'music', count: 3 },
+    ])
+    await handler(
+      { query: {}, user: { userId: 'u1' }, session: { lang: 'en' } } as any,
+      reply as any
+    )
+    expect(reply.payload.success).toBe(true)
+    expect(reply.payload.tags).toHaveLength(2)
+    expect(reply.payload.tags[0].count).toBe(5)
+  })
+
+  it('passes query params to service', async () => {
+    const handler = fastify.routes['GET /popular']
+    mockTagService.getPopularTags.mockResolvedValue([])
+    await handler(
+      {
+        query: { limit: '10', country: 'DE', cityName: 'Berlin' },
+        user: { userId: 'u1' },
+        session: { lang: 'de' },
+      } as any,
+      reply as any
+    )
+    expect(mockTagService.getPopularTags).toHaveBeenCalledWith({
+      limit: 10,
+      country: 'DE',
+      cityName: 'Berlin',
+      locale: 'de',
+    })
+  })
 })
 
 describe('GET /search', () => {

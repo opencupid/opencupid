@@ -45,6 +45,19 @@ export type CreateTagPayload = z.infer<typeof CreateTagPayloadSchema>
 
 
 
+// Popular tag (includes usage count)
+export const PopularTagSchema = PublicTagSchema.extend({
+  count: z.number().int().min(0),
+})
+export type PopularTag = z.infer<typeof PopularTagSchema>
+
+export const PopularTagsQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(200).optional(),
+  country: z.string().optional(),
+  cityName: z.string().optional(),
+})
+export type PopularTagsQuery = z.infer<typeof PopularTagsQuerySchema>
+
 // Route schemas
 export const SearchQuerySchema = z.object({
   q: z.string().min(1),
