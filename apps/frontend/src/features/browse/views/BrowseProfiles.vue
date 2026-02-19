@@ -183,6 +183,7 @@ useInfiniteScroll(
                 v-model="socialFilter"
                 :viewerLocation="viewerProfile?.location"
                 @prefs:toggle="showPrefsModal = true"
+                @filter:changed="updatePrefs"
               />
               <ViewModeToggler v-model="viewModeModel" />
             </div>
