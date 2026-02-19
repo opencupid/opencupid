@@ -79,10 +79,8 @@ describe('ProfileMatchService.findSocialProfilesFor', () => {
 })
 
 describe('ProfileMatchService.createSocialMatchFilter', () => {
-  const createdFilter = { profileId: mockProfileId, country: 'US', tags: [] }
-
-  it('keeps country when other members exist in the same country', async () => {
-    mockTx.profile.count.mockResolvedValue(3)
+  it('creates filter with full location data', async () => {
+    const createdFilter = { profileId: mockProfileId, country: 'US', tags: [] }
     mockTx.socialMatchFilter.create.mockResolvedValue(createdFilter)
 
     const result = await service.createSocialMatchFilter(mockTx, mockProfileId, {
@@ -92,15 +90,6 @@ describe('ProfileMatchService.createSocialMatchFilter', () => {
       lon: -74.0,
     })
 
-    expect(mockTx.profile.count).toHaveBeenCalledWith({
-      where: {
-        country: 'US',
-        isSocialActive: true,
-        isOnboarded: true,
-        isActive: true,
-        id: { not: mockProfileId },
-      },
-    })
     expect(mockTx.socialMatchFilter.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: {
@@ -113,65 +102,5 @@ describe('ProfileMatchService.createSocialMatchFilter', () => {
       })
     )
     expect(result).toBe(createdFilter)
-  })
-
-  it('sets country to empty when no other members in the same country', async () => {
-    const anywhereFilter = { profileId: mockProfileId, country: '', tags: [] }
-    mockTx.profile.count.mockResolvedValue(0)
-    mockTx.socialMatchFilter.create.mockResolvedValue(anywhereFilter)
-
-    const result = await service.createSocialMatchFilter(mockTx, mockProfileId, {
-      country: 'US',
-      cityName: 'New York',
-      lat: 40.7,
-      lon: -74.0,
-    })
-
-    expect(mockTx.profile.count).toHaveBeenCalledWith({
-      where: {
-        country: 'US',
-        isSocialActive: true,
-        isOnboarded: true,
-        isActive: true,
-        id: { not: mockProfileId },
-      },
-    })
-    expect(mockTx.socialMatchFilter.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: {
-          profileId: mockProfileId,
-          country: '',
-          cityName: 'New York',
-          lat: 40.7,
-          lon: -74.0,
-        },
-      })
-    )
-    expect(result).toBe(anywhereFilter)
-  })
-
-  it('skips count query when country is empty', async () => {
-    const anywhereFilter = { profileId: mockProfileId, country: '', tags: [] }
-    mockTx.socialMatchFilter.create.mockResolvedValue(anywhereFilter)
-
-    await service.createSocialMatchFilter(mockTx, mockProfileId, {
-      country: '',
-      cityName: null,
-      lat: null,
-      lon: null,
-    })
-
-    expect(mockTx.profile.count).not.toHaveBeenCalled()
-    expect(mockTx.socialMatchFilter.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: {
-          profileId: mockProfileId,
-          country: '',
-          cityName: null,
-          lat: null,
-          lon: null,
-        },
-      })
-    )
   })
 })

@@ -40,7 +40,7 @@ const PreviewLookupParamsSchema = z.object({
   locale: z.string(),
 })
 
-const profileRoutes: FastifyPluginAsync = async fastify => {
+const profileRoutes: FastifyPluginAsync = async (fastify) => {
   // instantiate services
   const profileService = ProfileService.getInstance()
   const profileMatchService = ProfileMatchService.getInstance()
@@ -177,7 +177,7 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
     const locale = req.session.lang
 
     try {
-      const updated = await fastify.prisma.$transaction(async tx => {
+      const updated = await fastify.prisma.$transaction(async (tx) => {
         // const datingPrefsFragment = data.isDatingActive ? profileMatchService.createDatingPrefsDefaults(data) : {}
         // const update = {
         //   ...data,
@@ -191,8 +191,27 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
           data
         )
         const profile = mapDbProfileToOwnerProfile(locale, updatedProfile)
-        // Create the default social match filter for the new profile
-        await profileMatchService.createSocialMatchFilter(tx, updatedProfile.id, profile.location)
+        // Create the default social match filter for the new profile.
+        // If no other active social members in the same country, set to Anywhere.
+        const location = { ...profile.location }
+        if (location.country) {
+          const nearbyCount = await tx.profile.count({
+            where: {
+              country: location.country,
+              isSocialActive: true,
+              isOnboarded: true,
+              isActive: true,
+              id: { not: updatedProfile.id },
+            },
+          })
+          if (nearbyCount === 0) {
+            location.country = ''
+            location.cityName = ''
+            location.lat = null
+            location.lon = null
+          }
+        }
+        await profileMatchService.createSocialMatchFilter(tx, updatedProfile.id, location)
 
         return profile
       })
@@ -242,7 +261,7 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
     const locale = req.session.lang
 
     try {
-      const updated = await fastify.prisma.$transaction(async tx => {
+      const updated = await fastify.prisma.$transaction(async (tx) => {
         const updatedProfile = await profileService.updateCompleteProfile(
           tx,
           locale,
@@ -329,7 +348,7 @@ const profileRoutes: FastifyPluginAsync = async fastify => {
     const profileId = req.session.profileId
     try {
       const profiles = await profileService.getBlockedProfiles(profileId)
-      const mappedProfiles = profiles.map(p => mapProfileSummary(p))
+      const mappedProfiles = profiles.map((p) => mapProfileSummary(p))
       const response: GetProfileSummariesResponse = { success: true, profiles: mappedProfiles }
       return reply.code(200).send(response)
     } catch (error) {

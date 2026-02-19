@@ -127,28 +127,10 @@ export class ProfileMatchService {
     profileId: string,
     location: LocationDTO
   ): Promise<SocialMatchFilterWithTags | null> {
-    let country = location.country ?? ''
-
-    if (country) {
-      const nearbyCount = await tx.profile.count({
-        where: {
-          country,
-          isSocialActive: true,
-          isOnboarded: true,
-          isActive: true,
-          id: { not: profileId },
-        },
-      })
-
-      if (nearbyCount === 0) {
-        country = ''
-      }
-    }
-
     return await tx.socialMatchFilter.create({
       data: {
         profileId,
-        country,
+        country: location.country ?? '',
         cityName: location.cityName || null,
         lat: location.lat ?? null,
         lon: location.lon ?? null,
