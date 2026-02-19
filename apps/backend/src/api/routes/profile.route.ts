@@ -193,12 +193,14 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
         const profile = mapDbProfileToOwnerProfile(locale, updatedProfile)
         // Create the default social match filter for the new profile.
         // If no other active social members in the same country, set to Anywhere.
+        // TODO: the count() query below should call profileMatchService.findSocialProfilesFor
+        // to avoid duplicating the matching logic, but that refactor is out of scope for now.
         const location = { ...profile.location }
         if (location.country) {
           const nearbyCount = await tx.profile.count({
             where: {
               country: location.country,
-              isSocialActive: true,
+              isSocialActive: true, 
               isOnboarded: true,
               isActive: true,
               id: { not: updatedProfile.id },
