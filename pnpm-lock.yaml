@@ -380,8 +380,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(vue@3.5.28(typescript@5.9.3))
       vue-draggable-next:
-        specifier: 2.2.1
-        version: 2.2.1(sortablejs@1.15.6)(vue@3.5.28(typescript@5.9.3))
+        specifier: 2.3.0
+        version: 2.3.0(sortablejs@1.15.6)(vue@3.5.28(typescript@5.9.3))
       vue-i18n:
         specifier: 11.1.9
         version: 11.1.9(vue@3.5.28(typescript@5.9.3))
@@ -6890,11 +6890,11 @@ packages:
   vue-component-type-helpers@2.2.12:
     resolution: {integrity: sha512-YbGqHZ5/eW4SnkPNR44mKVc6ZKQoRs/Rux1sxC6rdwXb4qpbOSYfDr9DsTHolOTGmIKgM9j141mZbBeg05R1pw==}
 
-  vue-draggable-next@2.2.1:
-    resolution: {integrity: sha512-EAMS1IRHF0kZO0o5PMOinsQsXIqsrKT1hKmbICxG3UEtn7zLFkLxlAtajcCcUTisNvQ6TtCB5COjD9a1raNADw==}
+  vue-draggable-next@2.3.0:
+    resolution: {integrity: sha512-ymbY0UIwfSdg0iDN/iyNNwUrTqZ/6KbPryzsvTNXBLuDCuOBdNijSK8yynNtmiSj6RapTPQfjLGQdJrZkzBd2w==}
     peerDependencies:
       sortablejs: ^1.14.0
-      vue: ^3.2.2
+      vue: ^3.5.17
 
   vue-eslint-parser@10.4.0:
     resolution: {integrity: sha512-Vxi9pJdbN3ZnVGLODVtZ7y4Y2kzAAE2Cm0CZ3ZDRvydVYxZ6VrnBhLikBsRS+dpwj4Jv4UCv21PTEwF5rQ9WXg==}
@@ -13975,7 +13975,7 @@ snapshots:
 
   vue-component-type-helpers@2.2.12: {}
 
-  vue-draggable-next@2.2.1(sortablejs@1.15.6)(vue@3.5.28(typescript@5.9.3)):
+  vue-draggable-next@2.3.0(sortablejs@1.15.6)(vue@3.5.28(typescript@5.9.3)):
     dependencies:
       sortablejs: 1.15.6
       vue: 3.5.28(typescript@5.9.3)
