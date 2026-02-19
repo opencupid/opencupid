@@ -11,9 +11,50 @@ import { sendError, addDebounceHeaders, rateLimitConfig } from '../helpers'
 import { TagService } from 'src/services/tag.service'
 import type { TagResponse, TagsResponse, PopularTagsResponse } from '@zod/apiResponse.dto'
 import { DbTagToPublicTagTransform } from '../mappers/tag.mappers'
+import { getCachedSvgPath, isCacheStale, regenerateTagCloud } from 'src/services/tagcloud.service'
+import fs from 'fs'
 
 const tagsRoutes: FastifyPluginAsync = async (fastify) => {
   const tagService = TagService.getInstance()
+
+  /**
+   * Public SVG word cloud image — unauthenticated.
+   * Serves a cached static SVG. If stale (>24h), serves the stale file
+   * then triggers background regeneration.
+   */
+  fastify.get('/cloud.svg', async (_req, reply) => {
+    const cachedPath = getCachedSvgPath()
+
+    if (cachedPath) {
+      if (isCacheStale()) {
+        regenerateTagCloud().catch((err) => fastify.log.error(err, 'Tag cloud regeneration failed'))
+      }
+      const stream = fs.createReadStream(cachedPath)
+      return reply
+        .code(200)
+        .header('Content-Type', 'image/svg+xml')
+        .header('Cache-Control', 'public, max-age=3600')
+        .send(stream)
+    }
+
+    // No cached file — generate synchronously for first request
+    try {
+      await regenerateTagCloud()
+      const freshPath = getCachedSvgPath()
+      if (freshPath) {
+        const stream = fs.createReadStream(freshPath)
+        return reply
+          .code(200)
+          .header('Content-Type', 'image/svg+xml')
+          .header('Cache-Control', 'public, max-age=3600')
+          .send(stream)
+      }
+      return sendError(reply, 500, 'Failed to generate tag cloud')
+    } catch (err) {
+      fastify.log.error(err)
+      return sendError(reply, 500, 'Failed to generate tag cloud')
+    }
+  })
 
   /**
    * Get popular tags ordered by usage count

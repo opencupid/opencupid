@@ -53,6 +53,11 @@ const siteName = __APP_CONFIG__.SITE_NAME
           <!-- Welcome to site_name -->
           <!-- {{ $t('home.welcome_title', { siteName: siteName }) }} -->
         </h2>
+        <div class="mb-4">
+          <h5>{{ $t('home.explore_interests') }}</h5>
+          <TagCloud />
+        </div>
+
         <LikesAndMatchesBanner class="my-3" />
 
         <div
@@ -73,10 +78,6 @@ const siteName = __APP_CONFIG__.SITE_NAME
               gap="2"
             />
           </BRow>
-        </div>
-        <div class="mb-4">
-          <h5>{{ $t('home.explore_interests') }}</h5>
-          <TagCloud />
         </div>
       </MiddleColumn>
     </div>
