@@ -37,7 +37,6 @@ const handleSetLanguage = (lang: string) => {
 }
 
 const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
-const apiBaseUrl = __APP_CONFIG__.API_BASE_URL
 </script>
 
 <template>
@@ -139,21 +138,6 @@ const apiBaseUrl = __APP_CONFIG__.API_BASE_URL
                 </div>
               </BCol>
             </BRow>
-          </BCol>
-        </BRow>
-
-        <BRow class="d-flex flex-column align-items-center mt-4">
-          <BCol
-            md="12"
-            lg="8"
-            class="text-center"
-          >
-            <h2 class="mb-3">{{ t('landingpage.who_are_we') }}</h2>
-            <img
-              :src="`${apiBaseUrl}/tags/cloud.svg`"
-              :alt="t('landingpage.who_are_we')"
-              class="img-fluid tag-cloud-img"
-            />
           </BCol>
         </BRow>
 

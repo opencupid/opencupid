@@ -44,7 +44,6 @@ const bStubs = {
 
 vi.stubGlobal('__APP_CONFIG__', {
   SITE_NAME: 'TestSite',
-  API_BASE_URL: 'http://localhost:3000/api',
 })
 
 import LandingPage from '../views/LandingPage.vue'
@@ -72,11 +71,4 @@ describe('LandingPage', () => {
     expect(wrapper.text()).toContain('landingpage.date_1')
   })
 
-  it('renders the who are we section with tag cloud image', () => {
-    const wrapper = mount(LandingPage, { global: { stubs: bStubs } })
-    expect(wrapper.text()).toContain('landingpage.who_are_we')
-    const img = wrapper.find('.tag-cloud-img')
-    expect(img.exists()).toBe(true)
-    expect(img.attributes('src')).toContain('tags/cloud.svg')
-  })
 })

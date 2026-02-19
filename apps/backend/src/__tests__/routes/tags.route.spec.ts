@@ -11,12 +11,6 @@ vi.mock('../../services/tag.service', () => ({
   TagService: { getInstance: () => mockTagService },
 }))
 
-vi.mock('../../services/tagcloud.service', () => ({
-  getCachedSvgPath: () => null,
-  isCacheStale: () => true,
-  regenerateTagCloud: vi.fn().mockRejectedValue(new Error('no db in test')),
-}))
-
 beforeEach(async () => {
   fastify = new MockFastify()
   reply = new MockReply()

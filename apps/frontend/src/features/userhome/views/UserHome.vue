@@ -54,7 +54,6 @@ const siteName = __APP_CONFIG__.SITE_NAME
           <!-- {{ $t('home.welcome_title', { siteName: siteName }) }} -->
         </h2>
         <div class="mb-4">
-          <h5>{{ $t('home.explore_interests') }}</h5>
           <TagCloud />
         </div>
 
