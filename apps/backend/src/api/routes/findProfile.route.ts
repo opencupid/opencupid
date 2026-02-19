@@ -119,16 +119,6 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
 
       if (!fetched) return sendError(reply, 404, 'Profile not found')
 
-      // Backfill missing location details from profile
-      if (fetched.country && !fetched.cityName) {
-        const profile = await profileService.getProfileById(req.session.profileId)
-        if (profile && profile.country === fetched.country) {
-          fetched.cityName = profile.cityName
-          fetched.lat = profile.lat
-          fetched.lon = profile.lon
-        }
-      }
-
       const filter = mapSocialMatchFilterToDTO(fetched, locale)
       const response: GetSocialMatchFilterResponse = { success: true, filter }
       return reply.code(200).send(response)

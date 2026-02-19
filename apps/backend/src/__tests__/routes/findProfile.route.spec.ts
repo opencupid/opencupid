@@ -64,27 +64,19 @@ beforeEach(async () => {
 })
 
 describe('GET /social/filter', () => {
-  it('backfills cityName from profile when filter has country but no cityName', async () => {
+  it('returns the filter as-is from the database', async () => {
     mockProfileMatchService.getSocialMatchFilter.mockResolvedValue({
       profileId: 'p1',
-      country: 'HU',
-      cityName: null,
-      lat: null,
-      lon: null,
-      radius: 50,
-      tags: [],
-    })
-    mockProfileService.getProfileById.mockResolvedValue({
-      id: 'p1',
       country: 'HU',
       cityName: 'Budapest',
       lat: 47.497,
       lon: 19.04,
+      radius: 50,
+      tags: [],
     })
 
     await fastify.routes['GET /social/filter'](makeReq(), reply)
 
-    expect(mockProfileService.getProfileById).toHaveBeenCalledWith('p1')
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.filter.location).toEqual({
       country: 'HU',
@@ -94,38 +86,11 @@ describe('GET /social/filter', () => {
     })
   })
 
-  it('does not backfill when filter already has cityName', async () => {
-    mockProfileMatchService.getSocialMatchFilter.mockResolvedValue({
-      profileId: 'p1',
-      country: 'HU',
-      cityName: 'Debrecen',
-      lat: 47.531,
-      lon: 21.625,
-      radius: 50,
-      tags: [],
-    })
+  it('returns 404 when no filter exists', async () => {
+    mockProfileMatchService.getSocialMatchFilter.mockResolvedValue(null)
 
     await fastify.routes['GET /social/filter'](makeReq(), reply)
 
-    expect(mockProfileService.getProfileById).not.toHaveBeenCalled()
-    expect(reply.statusCode).toBe(200)
-    expect(reply.payload.filter.location.cityName).toBe('Debrecen')
-  })
-
-  it('does not backfill when filter has no country (Anywhere)', async () => {
-    mockProfileMatchService.getSocialMatchFilter.mockResolvedValue({
-      profileId: 'p1',
-      country: '',
-      cityName: null,
-      lat: null,
-      lon: null,
-      radius: 50,
-      tags: [],
-    })
-
-    await fastify.routes['GET /social/filter'](makeReq(), reply)
-
-    expect(mockProfileService.getProfileById).not.toHaveBeenCalled()
-    expect(reply.statusCode).toBe(200)
+    expect(reply.statusCode).toBe(404)
   })
 })
