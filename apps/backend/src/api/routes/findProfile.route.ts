@@ -26,16 +26,16 @@ import {
 // Pagination query schema for infinite scrolling
 const PaginationQuerySchema = z.object({
   skip: z.preprocess(
-    val => (typeof val === 'string' ? parseInt(val, 10) : val),
+    (val) => (typeof val === 'string' ? parseInt(val, 10) : val),
     z.number().int().min(0).default(0)
   ),
   take: z.preprocess(
-    val => (typeof val === 'string' ? parseInt(val, 10) : val),
+    (val) => (typeof val === 'string' ? parseInt(val, 10) : val),
     z.number().int().min(1).max(50).default(10)
   ),
 })
 
-const findProfileRoutes: FastifyPluginAsync = async fastify => {
+const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
   // instantiate services
   const profileMatchService = ProfileMatchService.getInstance()
   const profileService = ProfileService.getInstance()
@@ -67,7 +67,7 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
         take,
         skip
       )
-      const mappedProfiles = profiles.map(p =>
+      const mappedProfiles = profiles.map((p) =>
         mapProfileToPublic(p, false /* includeDatingContext */, locale)
       )
       const response: GetProfilesResponse = { success: true, profiles: mappedProfiles }
@@ -119,6 +119,16 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
 
       if (!fetched) return sendError(reply, 404, 'Profile not found')
 
+      // Backfill missing location details from profile
+      if (fetched.country && !fetched.cityName) {
+        const profile = await profileService.getProfileById(req.session.profileId)
+        if (profile && profile.country === fetched.country) {
+          fetched.cityName = profile.cityName
+          fetched.lat = profile.lat
+          fetched.lon = profile.lon
+        }
+      }
+
       const filter = mapSocialMatchFilterToDTO(fetched, locale)
       const response: GetSocialMatchFilterResponse = { success: true, filter }
       return reply.code(200).send(response)
@@ -167,7 +177,7 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
         take,
         skip
       )
-      const mappedProfiles = profiles.map(p =>
+      const mappedProfiles = profiles.map((p) =>
         mapProfileToPublic(p, true /* includeDatingContext */, locale)
       )
       const response: GetProfilesResponse = { success: true, profiles: mappedProfiles }
@@ -199,7 +209,7 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
         take,
         skip
       )
-      const mappedProfiles = profiles.map(p =>
+      const mappedProfiles = profiles.map((p) =>
         mapProfileToPublic(p, false /* includeDatingContext */, locale)
       )
       const response: GetProfilesResponse = { success: true, profiles: mappedProfiles }
