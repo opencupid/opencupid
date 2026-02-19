@@ -42,9 +42,7 @@ const bStubs = {
   LanguageSelectorDropdown: defineComponent({ template: '<div />' }),
 }
 
-vi.stubGlobal('__APP_CONFIG__', {
-  SITE_NAME: 'TestSite',
-})
+vi.stubGlobal('__APP_CONFIG__', { SITE_NAME: 'TestSite' })
 
 import LandingPage from '../views/LandingPage.vue'
 
@@ -70,5 +68,4 @@ describe('LandingPage', () => {
     const wrapper = mount(LandingPage, { global: { stubs: bStubs } })
     expect(wrapper.text()).toContain('landingpage.date_1')
   })
-
 })
