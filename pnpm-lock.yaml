@@ -91,8 +91,8 @@ importers:
         specifier: 4.22.0
         version: 4.22.0(@tensorflow/tfjs-core@4.22.0)
       altcha-lib:
-        specifier: 1.2.0
-        version: 1.2.0
+        specifier: 1.4.1
+        version: 1.4.1
       bcrypt:
         specifier: 6.0.0
         version: 6.0.0
@@ -2981,8 +2981,8 @@ packages:
   all-the-cities@3.1.0:
     resolution: {integrity: sha512-Jx+mZR7lUVSX+qk785T3MRkAJYMvUpOmeNQSCbUl1WcCNpBUKJsQJ6uZzOl3/bWXVIUx1UhDFs8ASDHSI3rvzg==}
 
-  altcha-lib@1.2.0:
-    resolution: {integrity: sha512-S5WF8QLNRaM1hvK24XPhOLfu9is2EBCvH7+nv50sM5CaIdUCqQCd0WV/qm/ZZFGTdSoKLuDp+IapZxBLvC+SNg==}
+  altcha-lib@1.4.1:
+    resolution: {integrity: sha512-MAXP9tkQOA2SE9Gwoe3LAcZbcDpp3XzYc5GDVej/y3eMNaFG/eVnRY1/7SGFW0RPsViEjPf+hi5eANjuZrH1xA==}
 
   altcha@2.0.5:
     resolution: {integrity: sha512-pjHXPceaVcD/d8QuNAYYfc2TX3u/3mPKbS1yONj8FwKJOuhbS35Do7JcdDSMYtnZKEECK0Ugknbr/ervYbuNmA==}
@@ -9786,7 +9786,7 @@ snapshots:
     dependencies:
       pbf: 3.3.0
 
-  altcha-lib@1.2.0: {}
+  altcha-lib@1.4.1: {}
 
   altcha@2.0.5:
     dependencies:
