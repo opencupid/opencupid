@@ -7,10 +7,12 @@ import { createMockPrisma } from '../../test-utils/prisma'
 
 let service: any
 let mockPrisma: any
+let mockTx: any
 
 beforeEach(async () => {
   vi.resetModules()
   mockPrisma = createMockPrisma()
+  mockTx = createMockPrisma()
   vi.doMock('../../lib/prisma', () => ({ prisma: mockPrisma }))
   const module = await import('../../services/profileMatch.service')
   ;(module.ProfileMatchService as any).instance = undefined
@@ -73,5 +75,32 @@ describe('ProfileMatchService.findSocialProfilesFor', () => {
     mockPrisma.profile.findMany.mockResolvedValue(mockProfiles)
     const result = await service.findSocialProfilesFor(mockProfileId)
     expect(result).toBe(mockProfiles)
+  })
+})
+
+describe('ProfileMatchService.createSocialMatchFilter', () => {
+  it('creates filter with full location data', async () => {
+    const createdFilter = { profileId: mockProfileId, country: 'US', tags: [] }
+    mockTx.socialMatchFilter.create.mockResolvedValue(createdFilter)
+
+    const result = await service.createSocialMatchFilter(mockTx, mockProfileId, {
+      country: 'US',
+      cityName: 'New York',
+      lat: 40.7,
+      lon: -74.0,
+    })
+
+    expect(mockTx.socialMatchFilter.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: {
+          profileId: mockProfileId,
+          country: 'US',
+          cityName: 'New York',
+          lat: 40.7,
+          lon: -74.0,
+        },
+      })
+    )
+    expect(result).toBe(createdFilter)
   })
 })

@@ -15,6 +15,7 @@ export function createMockPrisma() {
       findMany: vi.fn(),
       update: vi.fn(),
       create: vi.fn(),
+      count: vi.fn(),
     },
     profileImage: {
       findUnique: vi.fn(),
@@ -47,6 +48,7 @@ export function createMockPrisma() {
       findMany: vi.fn(),
       findUnique: vi.fn(),
       upsert: vi.fn(),
+      create: vi.fn(),
     },
     conversationParticipant: {
       findFirst: vi.fn(),
@@ -71,6 +73,6 @@ export function createMockPrisma() {
       create: vi.fn(),
       update: vi.fn(),
     },
-    $transaction: vi.fn(fn => fn(this)),
+    $transaction: vi.fn((fn) => fn(this)),
   }
 }
