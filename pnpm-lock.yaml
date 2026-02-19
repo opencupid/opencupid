@@ -320,8 +320,8 @@ importers:
         specifier: 14.2.1
         version: 14.2.1(axios@1.11.0)(qrcode@1.5.4)(sortablejs@1.15.6)(vue@3.5.28(typescript@5.9.3))
       altcha:
-        specifier: 2.0.5
-        version: 2.0.5
+        specifier: 2.3.0
+        version: 2.3.0
       animate.css:
         specifier: 4.1.1
         version: 4.1.1
@@ -2984,8 +2984,8 @@ packages:
   altcha-lib@1.4.1:
     resolution: {integrity: sha512-MAXP9tkQOA2SE9Gwoe3LAcZbcDpp3XzYc5GDVej/y3eMNaFG/eVnRY1/7SGFW0RPsViEjPf+hi5eANjuZrH1xA==}
 
-  altcha@2.0.5:
-    resolution: {integrity: sha512-pjHXPceaVcD/d8QuNAYYfc2TX3u/3mPKbS1yONj8FwKJOuhbS35Do7JcdDSMYtnZKEECK0Ugknbr/ervYbuNmA==}
+  altcha@2.3.0:
+    resolution: {integrity: sha512-vl8I0dQvSQB7/Mx09XuWZ1+LdSP7vEda6OLbg9kUQ2ZO2LT7MzgUyLK7Iips+GAV6c0ntVcS1XWOqhEPpwbDhQ==}
 
   animate.css@4.1.1:
     resolution: {integrity: sha512-+mRmCTv6SbCmtYJCN4faJMNFVNN5EuCTTprDTAo7YzIGji2KADmakjVA3+8mVDkZ2Bf09vayB35lSQIex2+QaQ==}
@@ -9788,7 +9788,7 @@ snapshots:
 
   altcha-lib@1.4.1: {}
 
-  altcha@2.0.5:
+  altcha@2.3.0:
     dependencies:
       '@altcha/crypto': 0.0.1
     optionalDependencies:
