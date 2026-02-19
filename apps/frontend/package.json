@@ -53,7 +53,7 @@
     "timeago.js": "4.0.2",
     "vue": "3.5.28",
     "vue-3-slider-component": "1.0.2",
-    "vue-draggable-next": "2.2.1",
+    "vue-draggable-next": "2.3.0",
     "vue-i18n": "11.1.9",
     "vue-multiselect": "github:peterzen/vue-multiselect",
     "vue-router": "4.5.1",
