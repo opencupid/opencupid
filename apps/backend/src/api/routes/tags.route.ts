@@ -4,15 +4,32 @@ import {
   SearchQuerySchema,
   CreateTagPayloadSchema,
   CreateTagPayload,
+  PopularTagsQuerySchema,
 } from '@zod/tag/tag.dto'
 import { FastifyPluginAsync } from 'fastify'
 import { sendError, addDebounceHeaders, rateLimitConfig } from '../helpers'
 import { TagService } from 'src/services/tag.service'
-import type { TagResponse, TagsResponse } from '@zod/apiResponse.dto'
+import type { TagResponse, TagsResponse, PopularTagsResponse } from '@zod/apiResponse.dto'
 import { DbTagToPublicTagTransform } from '../mappers/tag.mappers'
-
-const tagsRoutes: FastifyPluginAsync = async fastify => {
+const tagsRoutes: FastifyPluginAsync = async (fastify) => {
   const tagService = TagService.getInstance()
+
+  /**
+   * Get popular tags ordered by usage count
+   */
+  fastify.get('/popular', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const { limit, country, cityName } = PopularTagsQuerySchema.parse(req.query)
+    const locale = req.session.lang
+
+    try {
+      const tags = await tagService.getPopularTags({ limit, country, cityName, locale })
+      const response: PopularTagsResponse = { success: true, tags }
+      return reply.code(200).send(response)
+    } catch (err) {
+      fastify.log.error(err)
+      return sendError(reply, 500, 'Failed to fetch popular tags')
+    }
+  })
 
   /**
    * Search tags by partial name -- for type-ahead multi-select with debounce headers
@@ -29,7 +46,7 @@ const tagsRoutes: FastifyPluginAsync = async fastify => {
         const response: TagsResponse = { success: true, tags: [] }
         return reply.code(200).send(response)
       }
-      const publicTags = tags.map(tag => DbTagToPublicTagTransform(tag, locale))
+      const publicTags = tags.map((tag) => DbTagToPublicTagTransform(tag, locale))
       const response: TagsResponse = { success: true, tags: publicTags }
       return reply.code(200).send(response)
     } catch (err) {

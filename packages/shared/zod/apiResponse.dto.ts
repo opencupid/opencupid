@@ -13,7 +13,7 @@ import type {
   ProfileSummary,
   PublicProfileWithContext,
 } from '@zod/profile/profile.dto'
-import type { PublicTag } from '@zod/tag/tag.dto'
+import type { PublicTag, PopularTag } from '@zod/tag/tag.dto'
 import type { ConversationSummary, MessageDTO } from '@zod/messaging/messaging.dto'
 import type { LoginUser, SettingsUser } from '@zod/user/user.dto'
 import type { PublicCity } from '@zod/dto/city.dto'
@@ -39,6 +39,7 @@ export type UpdateProfileResponse = ApiSuccess<{ profile: OwnerProfile }>
 
 export type TagsResponse = ApiSuccess<{ tags: PublicTag[] }>
 export type TagResponse = ApiSuccess<{ tag: PublicTag }>
+export type PopularTagsResponse = ApiSuccess<{ tags: PopularTag[] }>
 
 export type CitiesResponse = ApiSuccess<{ cities: PublicCity[] }>
 export type CityResponse = ApiSuccess<{ city: PublicCity }>

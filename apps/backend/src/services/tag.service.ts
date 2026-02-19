@@ -1,7 +1,7 @@
 import slugify from 'slugify'
 import { prisma } from '../lib/prisma'
 import { Tag } from '@zod/generated'
-import { CreateTagInput } from '@zod/tag/tag.dto'
+import { CreateTagInput, type PopularTag } from '@zod/tag/tag.dto'
 import { TagWithTranslations } from '@zod/tag/tag.db'
 import { tagTranslationsInclude, translationWhereClause } from '@/db/includes/profileIncludes'
 
@@ -91,6 +91,48 @@ export class TagService {
       where: { id },
       data: updateData,
     })
+  }
+
+  public async getPopularTags(opts: {
+    limit?: number
+    country?: string
+    cityName?: string
+    locale?: string
+  }): Promise<PopularTag[]> {
+    const limit = opts.limit ?? 50
+
+    const profileWhere: Record<string, unknown> = {}
+    if (opts.country) profileWhere.country = opts.country
+    if (opts.cityName) profileWhere.cityName = opts.cityName
+
+    const tags = await prisma.tag.findMany({
+      where: {
+        isApproved: true,
+        isHidden: false,
+        isDeleted: false,
+        profiles: { some: profileWhere },
+      },
+      include: {
+        _count: { select: { profiles: { where: profileWhere } } },
+        translations: opts.locale ? { where: { locale: opts.locale } } : true,
+      },
+      orderBy: { profiles: { _count: 'desc' } },
+    })
+
+    return tags
+      .filter((tag) => tag._count.profiles >= 2)
+      .slice(0, limit)
+      .map((tag) => {
+        const translation = opts.locale
+          ? tag.translations.find((t) => t.locale === opts.locale)
+          : undefined
+        return {
+          id: tag.id,
+          name: translation?.name ?? tag.name,
+          slug: tag.slug,
+          count: tag._count.profiles,
+        }
+      })
   }
 
   public async remove(id: string): Promise<void> {

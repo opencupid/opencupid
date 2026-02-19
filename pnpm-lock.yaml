@@ -334,6 +334,12 @@ importers:
       bootstrap-vue-next:
         specifier: 0.30.4
         version: 0.30.4(@vueuse/core@14.2.1(vue@3.5.28(typescript@5.9.3)))(vue-router@4.5.1(vue@3.5.28(typescript@5.9.3)))(vue@3.5.28(typescript@5.9.3))
+      d3-cloud:
+        specifier: ^1.2.8
+        version: 1.2.8
+      d3-dispatch:
+        specifier: ^3.0.1
+        version: 3.0.1
       find-up:
         specifier: 7.0.0
         version: 7.0.0
@@ -413,6 +419,9 @@ importers:
       '@types/bootstrap':
         specifier: 5.2.10
         version: 5.2.10
+      '@types/d3-cloud':
+        specifier: ^1.2.9
+        version: 1.2.9
       '@types/jsdom':
         specifier: 21.1.7
         version: 21.1.7
@@ -2438,6 +2447,12 @@ packages:
   '@types/cross-spawn@6.0.2':
     resolution: {integrity: sha512-KuwNhp3eza+Rhu8IFI5HUXRP0LIhqH5cAjubUvGXXthh4YYBuP2ntwEX+Cz8GJoZUHlKo247wPWOfA9LYEq4cw==}
 
+  '@types/d3-cloud@1.2.9':
+    resolution: {integrity: sha512-5EWJvnlCrqTThGp8lYHx+DL00sOjx2HTlXH1WRe93k5pfOIhPQaL63NttaKYIbT7bTXp/USiunjNS/N4ipttIQ==}
+
+  '@types/d3@3.5.53':
+    resolution: {integrity: sha512-8yKQA9cAS6+wGsJpBysmnhlaaxlN42Qizqkw+h2nILSlS+MAG2z4JdO6p+PJrJ+ACvimkmLJL281h157e52psQ==}
+
   '@types/debug@4.1.8':
     resolution: {integrity: sha512-/vPO1EPOs306Cvhwv7KfVfYvOJqA/S/AXjaHQiJboCZzcNDb+TIJFN9/2C9DZ//ijSKWioNyUxD792QmDJ+HKQ==}
 
@@ -3486,6 +3501,16 @@ packages:
   cuid@3.0.0:
     resolution: {integrity: sha512-WZYYkHdIDnaxdeP8Misq3Lah5vFjJwGuItJuV+tvMafosMzw0nF297T7mrm8IOWiPJkV6gc7sa8pzx27+w25Zg==}
     deprecated: Cuid and other k-sortable and non-cryptographic ids (Ulid, ObjectId, KSUID, all UUIDs) are all insecure. Use @paralleldrive/cuid2 instead.
+
+  d3-cloud@1.2.8:
+    resolution: {integrity: sha512-K0qBFkgystNlgFW/ufdwIES5kDiC8cGJxMw4ULzN9UU511v89A6HXs1X8vUPxqurehzqJZS5KzZI4c8McT+4UA==}
+
+  d3-dispatch@1.0.6:
+    resolution: {integrity: sha512-fVjoElzjhCEy+Hbn8KygnmMS7Or0a9sI2UzGwoB7cCtvI1XpVN9GpoYlnb3xt2YV66oXYb1fLJ8GMvP4hdU1RA==}
+
+  d3-dispatch@3.0.1:
+    resolution: {integrity: sha512-rzUyPU/S7rwUflMyLc1ETDeBj0NRuHKKAcvukozwhshr6g6c5d8zh4c2gQjY2bZ0dXeGLWc1PF174P2tVvKhfg==}
+    engines: {node: '>=12'}
 
   data-uri-to-buffer@4.0.1:
     resolution: {integrity: sha512-0R9ikRb668HB7QDxT1vkpuUBtqc53YyAwMwGeUFKRojY/NWKvdZ+9UYtRfGmhqNbRkTSVpMbmyhXipFFv2cb/A==}
@@ -9084,6 +9109,12 @@ snapshots:
     dependencies:
       '@types/node': 22.16.1
 
+  '@types/d3-cloud@1.2.9':
+    dependencies:
+      '@types/d3': 3.5.53
+
+  '@types/d3@3.5.53': {}
+
   '@types/debug@4.1.8':
     dependencies:
       '@types/ms': 2.1.0
@@ -10269,6 +10300,14 @@ snapshots:
   csstype@3.2.3: {}
 
   cuid@3.0.0: {}
+
+  d3-cloud@1.2.8:
+    dependencies:
+      d3-dispatch: 1.0.6
+
+  d3-dispatch@1.0.6: {}
+
+  d3-dispatch@3.0.1: {}
 
   data-uri-to-buffer@4.0.1: {}
 

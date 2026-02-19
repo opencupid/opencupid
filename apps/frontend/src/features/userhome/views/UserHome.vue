@@ -9,6 +9,7 @@ import { type PublicProfile } from '@zod/profile/profile.dto'
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 import ProfileCardGrid from '@/features/browse/components/ProfileCardGrid.vue'
 import LikesAndMatchesBanner from '@/features/interaction/components/LikesAndMatchesBanner.vue'
+import TagCloud from '@/features/shared/components/TagCloud.vue'
 
 const profileStore = useOwnerProfileStore()
 const viewerProfile = computed(() => profileStore.profile)
@@ -52,6 +53,10 @@ const siteName = __APP_CONFIG__.SITE_NAME
           <!-- Welcome to site_name -->
           <!-- {{ $t('home.welcome_title', { siteName: siteName }) }} -->
         </h2>
+        <div class="mb-4">
+          <TagCloud />
+        </div>
+
         <LikesAndMatchesBanner class="my-3" />
 
         <div

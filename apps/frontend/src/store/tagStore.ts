@@ -15,9 +15,9 @@
 import { defineStore } from 'pinia'
 import { api, axios } from '@/lib/api'
 
-import type { PublicTag, CreateTagInput, CreateTagPayload } from '@zod/tag/tag.dto'
+import type { PublicTag, CreateTagInput, CreateTagPayload, PopularTag } from '@zod/tag/tag.dto'
 import type { Tag } from '@zod/generated'
-import type { TagResponse, TagsResponse, ApiError } from '@zod/apiResponse.dto'
+import type { TagResponse, TagsResponse, PopularTagsResponse, ApiError } from '@zod/apiResponse.dto'
 
 interface ServiceError {
   success: false
@@ -32,9 +32,30 @@ export const useTagsStore = defineStore('tags', {
     tags: [] as PublicTag[],
     searchResults: [] as PublicTag[],
     currentTag: null as PublicTag | null,
+    popularTags: [] as PopularTag[],
   }),
 
   actions: {
+    /**
+     * Fetch popular tags for the tag cloud
+     */
+    async fetchPopularTags(opts?: {
+      country?: string
+      cityName?: string
+      limit?: number
+    }): Promise<PopularTag[]> {
+      try {
+        const res = await api.get<PopularTagsResponse>('/tags/popular', {
+          params: opts,
+        })
+        this.popularTags = res.data.tags
+        return this.popularTags
+      } catch (error: any) {
+        console.error('Failed to fetch popular tags:', error)
+        throw error.response?.data?.message || 'Failed to fetch popular tags'
+      }
+    },
+
     /**
      * Fetch all tags
      */
