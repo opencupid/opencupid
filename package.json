@@ -19,8 +19,8 @@
   },
   "scripts": {
     "ci:test": "pnpm install && pnpm --filter backend prisma:generate && pnpm lint && pnpm test && pnpm --filter frontend type-check",
-    "dev": "turbo run dev",
-    "dev:stop": "{ lsof -ti :5173; lsof -ti :3000; } | xargs -r kill -9 || true",
+    "dev": "./scripts/dev-start.sh",
+    "dev:stop": "./scripts/dev-stop.sh",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "test": "turbo run test",

@@ -35,3 +35,4 @@ secrets/
 .config-cache/
 .json-autotranslate-cache/
 .env.staging
+.dev.pid
