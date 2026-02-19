@@ -419,6 +419,9 @@ importers:
       '@types/bootstrap':
         specifier: 5.2.10
         version: 5.2.10
+      '@types/d3-cloud':
+        specifier: ^1.2.9
+        version: 1.2.9
       '@types/jsdom':
         specifier: 21.1.7
         version: 21.1.7
@@ -2443,6 +2446,12 @@ packages:
 
   '@types/cross-spawn@6.0.2':
     resolution: {integrity: sha512-KuwNhp3eza+Rhu8IFI5HUXRP0LIhqH5cAjubUvGXXthh4YYBuP2ntwEX+Cz8GJoZUHlKo247wPWOfA9LYEq4cw==}
+
+  '@types/d3-cloud@1.2.9':
+    resolution: {integrity: sha512-5EWJvnlCrqTThGp8lYHx+DL00sOjx2HTlXH1WRe93k5pfOIhPQaL63NttaKYIbT7bTXp/USiunjNS/N4ipttIQ==}
+
+  '@types/d3@3.5.53':
+    resolution: {integrity: sha512-8yKQA9cAS6+wGsJpBysmnhlaaxlN42Qizqkw+h2nILSlS+MAG2z4JdO6p+PJrJ+ACvimkmLJL281h157e52psQ==}
 
   '@types/debug@4.1.8':
     resolution: {integrity: sha512-/vPO1EPOs306Cvhwv7KfVfYvOJqA/S/AXjaHQiJboCZzcNDb+TIJFN9/2C9DZ//ijSKWioNyUxD792QmDJ+HKQ==}
@@ -9099,6 +9108,12 @@ snapshots:
   '@types/cross-spawn@6.0.2':
     dependencies:
       '@types/node': 22.16.1
+
+  '@types/d3-cloud@1.2.9':
+    dependencies:
+      '@types/d3': 3.5.53
+
+  '@types/d3@3.5.53': {}
 
   '@types/debug@4.1.8':
     dependencies:
