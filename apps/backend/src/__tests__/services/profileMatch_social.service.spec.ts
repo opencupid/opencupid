@@ -103,7 +103,13 @@ describe('ProfileMatchService.createSocialMatchFilter', () => {
     })
     expect(mockTx.socialMatchFilter.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ country: 'US' }),
+        data: {
+          profileId: mockProfileId,
+          country: 'US',
+          cityName: 'New York',
+          lat: 40.7,
+          lon: -74.0,
+        },
       })
     )
     expect(result).toBe(createdFilter)
@@ -132,7 +138,13 @@ describe('ProfileMatchService.createSocialMatchFilter', () => {
     })
     expect(mockTx.socialMatchFilter.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ country: '' }),
+        data: {
+          profileId: mockProfileId,
+          country: '',
+          cityName: 'New York',
+          lat: 40.7,
+          lon: -74.0,
+        },
       })
     )
     expect(result).toBe(anywhereFilter)
@@ -152,7 +164,13 @@ describe('ProfileMatchService.createSocialMatchFilter', () => {
     expect(mockTx.profile.count).not.toHaveBeenCalled()
     expect(mockTx.socialMatchFilter.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ country: '' }),
+        data: {
+          profileId: mockProfileId,
+          country: '',
+          cityName: null,
+          lat: null,
+          lon: null,
+        },
       })
     )
   })

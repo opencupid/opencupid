@@ -149,6 +149,9 @@ export class ProfileMatchService {
       data: {
         profileId,
         country,
+        cityName: location.cityName || null,
+        lat: location.lat ?? null,
+        lon: location.lon ?? null,
       },
       include: {
         ...tagInclude,
