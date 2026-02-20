@@ -256,7 +256,7 @@ useInfiniteScroll(
         <template v-else-if="isInitialized && haveResults">
           <div
             ref="scrollContainer"
-            class="overflow-auto hide-scrollbar pb-5 flex-grow-1"
+            class="overflow-auto hide-scrollbar flex-grow-1"
           >
             <MiddleColumn
               v-if="viewModeModel === 'grid'"
