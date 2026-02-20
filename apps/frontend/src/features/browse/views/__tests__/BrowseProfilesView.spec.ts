@@ -92,6 +92,7 @@ const vmState = {
   hideProfile: vi.fn(),
   updatePrefs: vi.fn(),
   openProfile: vi.fn(),
+  closeProfile: vi.fn(),
   hasMoreProfiles: ref(true),
   initialize: vi.fn(),
   reset: vi.fn(),
