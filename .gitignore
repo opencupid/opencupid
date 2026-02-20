@@ -30,6 +30,11 @@ turbo/
 # Coverage reports
 coverage/
 
+# Playwright
+e2e/.auth/
+test-results/
+playwright-report/
+
 apps/frontend/dev-dist/
 secrets/
 .config-cache/

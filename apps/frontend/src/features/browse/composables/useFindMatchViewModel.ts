@@ -3,6 +3,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { useBootstrap } from '@/lib/bootstrap'
 import { useLocalStore } from '@/store/localStore'
+import { getPreviousUrl } from '@/router'
 
 import type { StoreError } from '@/store/helpers'
 import type { OwnerProfile, ProfileScope } from '@zod/profile/profile.dto'
@@ -45,7 +46,7 @@ export function useFindMatchViewModel() {
   const currentScope = computed(() =>
     typeof route.params.scope === 'string' ? (route.params.scope as ProfileScope) : null
   )
-  const selectedProfileId = computed(() =>
+  const selectedProfileId = ref<string | null>(
     typeof route.params.profileId === 'string' ? route.params.profileId : null
   )
   const isInitialized = ref(false)
@@ -128,19 +129,24 @@ export function useFindMatchViewModel() {
         return
       }
     }
+    lastFetchedScope = currentScope.value
   }
 
+  let lastFetchedScope: ProfileScope | null = null
+
   watch(currentScope, (newScope) => {
-    if (!newScope) return // No scope selected
+    if (!newScope) return
+    if (newScope === lastFetchedScope) return
+    lastFetchedScope = newScope
     fetchResults()
   })
 
-  // this forces re-rendering the view when the route changes
-  // e.g. details view -> /browse
   watch(
     () => route.fullPath,
     () => {
-      resolveScope()
+      if (!selectedProfileId.value) {
+        resolveScope()
+      }
     }
   )
 
@@ -156,7 +162,20 @@ export function useFindMatchViewModel() {
   }
 
   function openProfile(profileId: string): void {
-    router.push({ name: 'PublicProfile', params: { profileId } })
+    selectedProfileId.value = profileId
+    router.replace({ name: 'PublicProfile', params: { profileId } })
+  }
+
+  function closeProfile(): void {
+    selectedProfileId.value = null
+    const returnUrl = getPreviousUrl()
+    if (returnUrl.startsWith('/profile/')) {
+      const scope =
+        savedScope.value ?? (ownerStore.scopes.length > 0 ? ownerStore.scopes[0] : 'social')
+      router.replace({ name: 'BrowseProfilesScope', params: { scope } })
+    } else {
+      router.replace(returnUrl)
+    }
   }
 
   const scopeModel = computed({
@@ -168,9 +187,11 @@ export function useFindMatchViewModel() {
 
   const viewerProfile = computed(() => ownerStore.profile)
 
+  const effectiveScope = computed(() => currentScope.value ?? savedScope.value ?? null)
+
   const haveAccess = computed(() => {
     if (!viewerProfile.value) return false // Ensure viewerProfile is loaded
-    switch (currentScope.value) {
+    switch (effectiveScope.value) {
       case 'social':
         return viewerProfile.value.isSocialActive
       case 'dating':
@@ -192,6 +213,7 @@ export function useFindMatchViewModel() {
     findProfileStore.teardown()
     storeError.value = null
     isInitialized.value = false
+    lastFetchedScope = null
   }
 
   const updatePrefs = async () => {
@@ -251,6 +273,7 @@ export function useFindMatchViewModel() {
     updatePrefs,
     scopeModel,
     openProfile,
+    closeProfile,
     profileList: computed(() => findProfileStore.profileList),
     isInitialized: computed(() => isInitialized.value),
     loadMoreProfiles,

@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import IconArrowSingleLeft from '@/assets/icons/arrows/arrow-single-left.svg'
 import IconMenuDotsVert from '@/assets/icons/interface/menu-dots-vert.svg'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 defineEmits<{
   (e: 'intent:back'): void
@@ -14,6 +17,9 @@ defineEmits<{
       <li class="col-2">
         <a
           class="btn btn-shaded"
+          role="button"
+          :title="t('profiles.back_button_title')"
+          :aria-label="t('profiles.back_button_title')"
           @click="$emit('intent:back')"
         >
           <IconArrowSingleLeft class="svg-icon" />
@@ -25,6 +31,9 @@ defineEmits<{
       <li class="col-2 d-flex justify-content-end">
         <a
           class="btn btn-shaded"
+          role="button"
+          :title="t('profiles.more_options_button_title')"
+          :aria-label="t('profiles.more_options_button_title')"
           @click="$emit('intent:block')"
         >
           <IconMenuDotsVert class="svg-icon-lg" />
