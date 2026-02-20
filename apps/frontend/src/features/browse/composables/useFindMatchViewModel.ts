@@ -187,9 +187,11 @@ export function useFindMatchViewModel() {
 
   const viewerProfile = computed(() => ownerStore.profile)
 
+  const effectiveScope = computed(() => currentScope.value ?? savedScope.value ?? null)
+
   const haveAccess = computed(() => {
     if (!viewerProfile.value) return false // Ensure viewerProfile is loaded
-    switch (currentScope.value) {
+    switch (effectiveScope.value) {
       case 'social':
         return viewerProfile.value.isSocialActive
       case 'dating':

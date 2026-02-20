@@ -357,6 +357,7 @@ useInfiniteScroll(
 }
 
 .inactive {
+  visibility: hidden;
   pointer-events: none;
   overflow: hidden;
 }

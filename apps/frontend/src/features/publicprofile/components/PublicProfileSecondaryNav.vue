@@ -14,6 +14,9 @@ defineEmits<{
       <li class="col-2">
         <a
           class="btn btn-shaded"
+          role="button"
+          title="Back"
+          aria-label="Back"
           @click="$emit('intent:back')"
         >
           <IconArrowSingleLeft class="svg-icon" />
@@ -25,6 +28,9 @@ defineEmits<{
       <li class="col-2 d-flex justify-content-end">
         <a
           class="btn btn-shaded"
+          role="button"
+          title="More options"
+          aria-label="More options"
           @click="$emit('intent:block')"
         >
           <IconMenuDotsVert class="svg-icon-lg" />
