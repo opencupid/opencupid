@@ -57,9 +57,18 @@ test.describe('Login flow (e2e)', () => {
     const otp = await getLatestOtp()
     expect(otp).toMatch(/^\d{6}$/)
 
-    // 7. Enter OTP code
+    // 7. Enter OTP code — the input auto-submits on valid 6-digit input,
+    //    so dispatch change to trigger the watcher; ignore detach errors
+    //    since the element disappears during navigation.
     await page.locator('#otp').fill(otp)
-    await page.locator('#otp').press('Enter')
+    await page
+      .locator('#otp')
+      .evaluate((el: HTMLInputElement) => {
+        el.dispatchEvent(new Event('change', { bubbles: true }))
+      })
+      .catch(() => {
+        /* navigated away — expected */
+      })
 
     // 8. Should redirect to home (or onboarding for new users)
     await page.waitForURL(/\/(home|onboarding)/, { timeout: 10000 })

@@ -5,9 +5,14 @@ const mockMaxMindClient = {
   country: vi.fn(),
 }
 
-vi.mock('@maxmind/geoip2-node', () => ({
-  WebServiceClient: vi.fn(() => mockMaxMindClient),
-}))
+vi.mock('@maxmind/geoip2-node', () => {
+  // In Vitest v4, vi.fn() as constructor ignores return value from
+  // the implementation function.  Use a class-based mock instead.
+  class MockWebServiceClient {
+    country = mockMaxMindClient.country
+  }
+  return { WebServiceClient: MockWebServiceClient }
+})
 
 // Mock the global __FRONTEND_VERSION__ constant
 vi.stubGlobal('__FRONTEND_VERSION__', '0.5.0')
@@ -17,6 +22,7 @@ import { MockFastify, MockReply } from '../../test-utils/fastify'
 
 let fastify: MockFastify
 let reply: MockReply
+
 
 // We'll mock appConfig per test case since it's imported by the route
 const mockAppConfig = vi.hoisted(() => ({
