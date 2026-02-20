@@ -44,7 +44,7 @@
     "bcrypt": "6.0.0",
     "blurhash": "^2.0.5",
     "bullmq": "5.52.2",
-    "canvas": "3.1.2",
+    "canvas": "3.2.1",
     "cuid": "3.0.0",
     "deepl-node": "1.19.0",
     "dotenv": "17.3.1",
