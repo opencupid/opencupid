@@ -28,6 +28,7 @@ RUN pnpm run prisma:generate && pnpm run build
 RUN pnpm prune --prod
 
 FROM node:22-bookworm
+LABEL org.opencontainers.image.source=https://github.com/opencupid/opencupid
 WORKDIR /app
 
 COPY --from=builder /app .

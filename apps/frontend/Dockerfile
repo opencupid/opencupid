@@ -18,6 +18,7 @@ WORKDIR /app/apps/frontend
 RUN pnpm run build-only
 
 FROM nginx:bookworm
+LABEL org.opencontainers.image.source=https://github.com/opencupid/opencupid
 COPY apps/frontend/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/apps/frontend/dist /var/www
 
