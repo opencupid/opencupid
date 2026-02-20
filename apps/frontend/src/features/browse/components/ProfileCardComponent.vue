@@ -1,3 +1,8 @@
+<script lang="ts">
+const loadedUrls = new Set<string>()
+export default { __test_loadedUrls: loadedUrls }
+</script>
+
 <script setup lang="ts">
 import { inject, ref, type Ref } from 'vue'
 import type { OwnerProfile, PublicProfile } from '@zod/profile/profile.dto'
@@ -13,7 +18,15 @@ const props = defineProps<{
   showLocation?: boolean
 }>()
 
-const imageLoaded = ref(false)
+const primaryUrl =
+  props.profile.profileImages?.[0]?.variants?.find((v) => v.size === 'card')?.url ?? null
+
+const imageLoaded = ref(primaryUrl ? loadedUrls.has(primaryUrl) : false)
+
+const handleImageLoad = () => {
+  imageLoaded.value = true
+  if (primaryUrl) loadedUrls.add(primaryUrl)
+}
 
 const primaryBlurhash = ref(props.profile.profileImages?.[0]?.blurhash ?? null)
 
@@ -36,7 +49,7 @@ const viewerLocation = ref(viewerProfile?.value.location)
         :profile="profile"
         className=""
         variant="card"
-        @load="imageLoaded = true"
+        @load="handleImageLoad"
       />
     </div>
     <div class="overlay d-flex flex-column flex-grow-1">
