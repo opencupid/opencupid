@@ -151,6 +151,8 @@ services:
       - ${DOMAIN}
       - -d
       - ${ADMIN_DOMAIN}
+      - -d
+      - ${LISTMONK_DOMAIN}
       - --email
       - ${EMAIL}
       - --agree-tos
