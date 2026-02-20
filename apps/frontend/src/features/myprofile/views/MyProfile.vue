@@ -158,7 +158,7 @@ const hint = computed(() => history?.state?.hint || null)
             </div>
           </div>
         </MiddleColumn>
-        <div class="overflow-auto h-100">
+        <div class="overflow-auto hide-scrollbar h-100">
           <MiddleColumn
             class="pt-sm-3 position-relative flex-grow-1"
             style="min-height: 100%"
