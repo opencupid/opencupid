@@ -256,14 +256,15 @@ img {
 .preview-container {
   display: flex;
   flex-direction: column;
-  flex: 1 1 0;
+  flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
 }
 
 .preview-image-wrapper {
-  flex: 1 1 0;
+  flex: 1 1 auto;
   min-height: 0;
+  max-height: 60vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
