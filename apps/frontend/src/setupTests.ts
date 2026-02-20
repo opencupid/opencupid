@@ -5,6 +5,7 @@
   NODE_ENV: 'test',
   SENTRY_DSN: '',
 }
+import rootPackageJson from '../../../package.json'
 ;(globalThis as any).__APP_VERSION__ = {
-  app: '0.5.0',
+  app: rootPackageJson.version,
 }

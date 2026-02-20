@@ -2,6 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useAppStore } from '../appStore'
 import * as apiModule from '@/lib/api'
+import rootPackageJson from '../../../../../../../package.json'
+
+const APP_VERSION = rootPackageJson.version
 
 // Mock the api module
 vi.mock('@/lib/api', () => ({
@@ -9,11 +12,6 @@ vi.mock('@/lib/api', () => ({
     get: vi.fn(),
   },
 }))
-
-// Mock __APP_VERSION__
-vi.stubGlobal('__APP_VERSION__', {
-  app: '0.5.0',
-})
 
 describe('useAppStore - checkVersion', () => {
   beforeEach(() => {
@@ -28,8 +26,8 @@ describe('useAppStore - checkVersion', () => {
         success: true,
         version: {
           updateAvailable: false,
-          frontendVersion: '0.5.0',
-          currentVersion: '0.5.0',
+          frontendVersion: APP_VERSION,
+          currentVersion: APP_VERSION,
         },
       },
     })
@@ -42,9 +40,9 @@ describe('useAppStore - checkVersion', () => {
       expect(result.data?.updateAvailable).toBe(false)
     }
     expect(store.updateAvailable).toBe(false)
-    expect(store.latestVersion).toBe('0.5.0')
+    expect(store.latestVersion).toBe(APP_VERSION)
     expect(mockApi.get).toHaveBeenCalledWith('/app/version', {
-      params: { v: '0.5.0' },
+      params: { v: APP_VERSION },
     })
   })
 
@@ -56,7 +54,7 @@ describe('useAppStore - checkVersion', () => {
         version: {
           updateAvailable: true,
           frontendVersion: '0.6.0',
-          currentVersion: '0.5.0',
+          currentVersion: APP_VERSION,
         },
       },
     })
@@ -93,8 +91,8 @@ describe('useAppStore - checkVersion', () => {
         success: true,
         version: {
           updateAvailable: false,
-          frontendVersion: '0.5.0',
-          currentVersion: '0.5.0',
+          frontendVersion: APP_VERSION,
+          currentVersion: APP_VERSION,
         },
       },
     })
@@ -103,7 +101,7 @@ describe('useAppStore - checkVersion', () => {
     await store.checkVersion()
 
     expect(mockApi.get).toHaveBeenCalledWith('/app/version', {
-      params: { v: '0.5.0' },
+      params: { v: APP_VERSION },
     })
   })
 })
