@@ -76,8 +76,8 @@ importers:
         specifier: 6.3.4
         version: 6.3.4
       '@prisma/client':
-        specifier: 6.15.0
-        version: 6.15.0(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3)
+        specifier: 7.4.1
+        version: 7.4.1(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3)
       '@sentry/node':
         specifier: 10.39.0
         version: 10.39.0
@@ -270,7 +270,7 @@ importers:
         version: 6.1.0
       zod-prisma-types:
         specifier: 3.2.4
-        version: 3.2.4(@prisma/client@6.15.0(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3))(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.3))
+        version: 3.2.4(@prisma/client@7.4.1(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3))(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.3))
 
   apps/frontend:
     dependencies:
@@ -549,8 +549,8 @@ importers:
   packages/shared:
     devDependencies:
       '@prisma/client':
-        specifier: 6.15.0
-        version: 6.15.0(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3)
+        specifier: 7.4.1
+        version: 7.4.1(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3)
 
 packages:
 
@@ -1952,6 +1952,9 @@ packages:
   '@popperjs/core@2.11.8':
     resolution: {integrity: sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==}
 
+  '@prisma/client-runtime-utils@7.4.1':
+    resolution: {integrity: sha512-8fy74OMYC7mt9cJ2MncIDk1awPRgmtXVvwTN2FlW4JVhbck8Dgt0wTkhPG85myfj4ZeP2stjF9Sdg12n5HrpQg==}
+
   '@prisma/client@4.16.2':
     resolution: {integrity: sha512-qCoEyxv1ZrQ4bKy39GnylE8Zq31IRmm8bNhNbZx7bF2cU5aiCCnSa93J2imF88MBjn7J9eUQneNxUQVJdl/rPQ==}
     engines: {node: '>=14.17'}
@@ -1961,12 +1964,12 @@ packages:
       prisma:
         optional: true
 
-  '@prisma/client@6.15.0':
-    resolution: {integrity: sha512-wR2LXUbOH4cL/WToatI/Y2c7uzni76oNFND7+23ypLllBmIS8e3ZHhO+nud9iXSXKFt1SoM3fTZvHawg63emZw==}
-    engines: {node: '>=18.18'}
+  '@prisma/client@7.4.1':
+    resolution: {integrity: sha512-pgIll2W1NVdof37xLeyySW+yfQ4rI+ERGCRwnO3BjVOx42GpYq6jhTyuALK8VKirvJJIvImgfGDA2qwhYVvMuA==}
+    engines: {node: ^20.19 || ^22.12 || >=24.0}
     peerDependencies:
       prisma: '*'
-      typescript: '>=5.1.0'
+      typescript: '>=5.4.0'
     peerDependenciesMeta:
       prisma:
         optional: true
@@ -8604,13 +8607,17 @@ snapshots:
 
   '@popperjs/core@2.11.8': {}
 
+  '@prisma/client-runtime-utils@7.4.1': {}
+
   '@prisma/client@4.16.2(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.3))':
     dependencies:
       '@prisma/engines-version': 4.16.1-1.4bc8b6e1b66cb932731fb1bdbbc550d1e010de81
     optionalDependencies:
       prisma: 6.15.0(magicast@0.3.5)(typescript@5.9.3)
 
-  '@prisma/client@6.15.0(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3)':
+  '@prisma/client@7.4.1(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3)':
+    dependencies:
+      '@prisma/client-runtime-utils': 7.4.1
     optionalDependencies:
       prisma: 6.15.0(magicast@0.3.5)(typescript@5.9.3)
       typescript: 5.9.3
@@ -14181,9 +14188,9 @@ snapshots:
       compress-commons: 4.1.2
       readable-stream: 3.6.2
 
-  zod-prisma-types@3.2.4(@prisma/client@6.15.0(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3))(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.3)):
+  zod-prisma-types@3.2.4(@prisma/client@7.4.1(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3))(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.3)):
     dependencies:
-      '@prisma/client': 6.15.0(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3)
+      '@prisma/client': 7.4.1(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3)
       '@prisma/generator-helper': 6.19.2
       code-block-writer: 12.0.0
       lodash: 4.17.23
