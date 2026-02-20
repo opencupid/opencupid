@@ -50,21 +50,19 @@ const toggleDisabled = () => {
       <!-- I 'm looking for connections... -->
       {{ $t('profiles.browse.filters.social_title') }}
     </h5>
-    <div class="mb-2">
+    <div class="mb-2 mb-md-4">
       <label>
         {{ $t('profiles.browse.filters.near_label') }}
       </label>
-      <div class="d-flex flex-row">
-        <div class="flex-grow-1">
-          <BFormCheckbox
-            v-model="locationDisabled"
-            @change="toggleDisabled"
-          >
-            <!-- Anywhere -->
-            {{ $t('profiles.browse.filters.anywhere') }}
-          </BFormCheckbox>
-        </div>
-        <div class="text-end">
+      <div class="d-flex flex-row align-items-center">
+        <fieldset :disabled="locationDisabled" class="flex-grow-1">
+          <LocationSelector
+            v-model="model.location as LocationDTO"
+            v-if="model.location"
+            :allowEmpty="true"
+          />
+        </fieldset>
+        <div class="ms-2">
           <BButton
             variant="link-success"
             :disabled="locationDisabled"
@@ -78,17 +76,14 @@ const toggleDisabled = () => {
           </BButton>
         </div>
       </div>
+      <BFormCheckbox
+        v-model="locationDisabled"
+        @change="toggleDisabled"
+        class="mt-1"
+      >
+        {{ $t('profiles.browse.filters.anywhere') }}
+      </BFormCheckbox>
     </div>
-    <fieldset
-      class="mb-2 mb-md-4"
-      :disabled="locationDisabled"
-    >
-      <LocationSelector
-        v-model="model.location as LocationDTO"
-        v-if="model.location"
-        :allowEmpty="true"
-      />
-    </fieldset>
 
     <div>
       <label>
