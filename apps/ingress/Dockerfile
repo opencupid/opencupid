@@ -1,4 +1,5 @@
 FROM openresty/openresty:alpine-fat
+LABEL org.opencontainers.image.source=https://github.com/opencupid/opencupid
 
 RUN apk add --no-cache gettext
 # Install lua-resty-openssl from OPM
