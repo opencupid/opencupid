@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 
 // Mock bus first to prevent side effects from the interaction store
 vi.mock('@/lib/bus', () => ({
@@ -14,7 +14,11 @@ vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 vi.mock('@fortawesome/vue-fontawesome', () => ({
   FontAwesomeIcon: { template: '<div />' },
 }))
-vi.mock('vue-router', () => ({ useRouter: () => ({ push: vi.fn() }) }))
+const mockRoute = { path: '/home' }
+vi.mock('vue-router', () => ({
+  useRouter: () => ({ push: vi.fn() }),
+  useRoute: () => mockRoute,
+}))
 vi.mock('@/features/shared/icons/DoodleIcons.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/message.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/search.svg', () => ({ default: { template: '<div />' } }))
@@ -73,6 +77,27 @@ vi.mock('@/features/interaction/stores/useInteractionStore', () => ({
 
 import Navbar from '../Navbar.vue'
 const stub = { template: '<div><slot /></div>' }
+const BNavItemStub = {
+  template: '<div :class="{ active: active }" :data-to="to"><slot /></div>',
+  props: ['to', 'active', 'activeClass'],
+}
+
+function mountNavbar(stubs?: Record<string, unknown>) {
+  mockIsLoggedIn.value = true
+  mockProfileRef.value = { isDatingActive: true, isOnboarded: true, profileImages: [] }
+  return mount(Navbar, {
+    global: {
+      stubs: {
+        BNavbar: stub,
+        BNavItem: BNavItemStub,
+        BNavbarNav: stub,
+        FontAwesomeIcon: stub,
+        ...stubs,
+      },
+      mocks: { $t: (msg: string) => msg },
+    },
+  })
+}
 
 describe('Navbar', () => {
   it('does not render when no logged in', () => {
@@ -180,5 +205,42 @@ describe('Navbar', () => {
     expect(wrapper.html()).not.toContain('nav.matches')
     expect(wrapper.html()).toContain('nav.inbox')
     expect(wrapper.html()).toContain('default-user-icon')
+  })
+
+  describe('browse active state', () => {
+    it('marks Browse as active on /browse/social', () => {
+      mockRoute.path = '/browse/social'
+      const wrapper = mountNavbar()
+      const browseItem = wrapper.find('[data-to="/browse"]')
+      expect(browseItem.classes()).toContain('active')
+    })
+
+    it('marks Browse as active on /browse/dating', () => {
+      mockRoute.path = '/browse/dating'
+      const wrapper = mountNavbar()
+      const browseItem = wrapper.find('[data-to="/browse"]')
+      expect(browseItem.classes()).toContain('active')
+    })
+
+    it('marks Browse as active on /profile/:id', () => {
+      mockRoute.path = '/profile/some-uuid'
+      const wrapper = mountNavbar()
+      const browseItem = wrapper.find('[data-to="/browse"]')
+      expect(browseItem.classes()).toContain('active')
+    })
+
+    it('does not mark Browse as active on /home', () => {
+      mockRoute.path = '/home'
+      const wrapper = mountNavbar()
+      const browseItem = wrapper.find('[data-to="/browse"]')
+      expect(browseItem.classes()).not.toContain('active')
+    })
+
+    it('does not mark Browse as active on /inbox', () => {
+      mockRoute.path = '/inbox'
+      const wrapper = mountNavbar()
+      const browseItem = wrapper.find('[data-to="/browse"]')
+      expect(browseItem.classes()).not.toContain('active')
+    })
   })
 })
