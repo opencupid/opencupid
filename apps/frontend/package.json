@@ -38,7 +38,7 @@
     "axios": "1.11.0",
     "blurhash": "^2.0.5",
     "bootstrap": "5.3.7",
-    "bootstrap-vue-next": "0.30.4",
+    "bootstrap-vue-next": "0.43.5",
     "d3-cloud": "^1.2.8",
     "d3-dispatch": "^3.0.1",
     "find-up": "7.0.0",
