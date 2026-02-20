@@ -264,29 +264,13 @@ img {
 .preview-image-wrapper {
   flex: 1 1 auto;
   min-height: 0;
-  max-height: 60vh;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
-
-  // BOverlay renders wrapper divs that must also flex-shrink
-  :deep(> *) {
-    flex: 1 1 0;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-  }
-
-  :deep(> * > *) {
-    flex: 1 1 0;
-    min-height: 0;
-  }
 }
 
 .preview-image {
   object-fit: contain;
   max-width: 100%;
-  max-height: 100%;
+  max-height: 60vh;
   display: block;
   margin: 0 auto;
 }
