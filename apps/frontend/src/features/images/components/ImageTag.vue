@@ -39,6 +39,8 @@ const pickUrl = (variant: string, variants: ImageVariant[]) => {
   console.warn('ImageTag: missing  explicit variant', variant)
 }
 
+const emit = defineEmits<{ load: [] }>()
+
 const url = computed(() => pickUrl(props.variant, props.image.variants))
 </script>
 
@@ -49,6 +51,7 @@ const url = computed(() => pickUrl(props.variant, props.image.variants))
     :class="['fitted-image', className]"
     :loading="loading"
     :decoding="decoding"
+    @load="emit('load')"
   />
 </template>
 

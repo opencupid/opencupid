@@ -30,6 +30,7 @@ const image: any = {
   createdAt: new Date(),
   updatedAt: new Date(),
   contentHash: null,
+  blurhash: null,
   isModerated: false,
   isFlagged: false,
 }

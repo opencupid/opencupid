@@ -67,7 +67,7 @@ export class ImageService {
   getSignedUrls(image: { storagePath: string }): { size: string; url: string }[] {
     const urlBase = appConfig.IMAGE_URL_BASE
     const base = image.storagePath
-    const imgSet = variants.map(s => ({
+    const imgSet = variants.map((s) => ({
       size: s.name,
       url: signUrl(`${urlBase}/${base}-${s.name}.webp`),
     }))
@@ -122,6 +122,7 @@ export class ImageService {
           storagePath: path.join(imageLocation.relPath, imageLocation.base),
           isModerated: false,
           contentHash: contentHash,
+          blurhash: processed.blurhash,
           position: position,
         },
       })
@@ -144,6 +145,8 @@ export class ImageService {
     const processor = new ImageProcessor(await orientFix.toBuffer())
     await processor.analyze()
 
+    const blurhash = await processor.encodeBlurhash()
+
     const outputPaths = await this.generateAllVariants(processor, outputDir, baseName)
     outputPaths.original = originalPath
 
@@ -151,6 +154,7 @@ export class ImageService {
       ...processor.getOriginalSize(),
       mime: processor.getMime(),
       variants: outputPaths,
+      blurhash,
     }
   }
 
@@ -238,7 +242,7 @@ export class ImageService {
     const filesToDelete = [
       `${baseFile}-original.jpg`,
       `${baseFile}-face.jpg`,
-      ...variants.map(size => `${baseFile}-${size.name}.webp`),
+      ...variants.map((size) => `${baseFile}-${size.name}.webp`),
     ]
 
     for (const f of filesToDelete) {
@@ -260,17 +264,17 @@ export class ImageService {
    */
   async reorderImages(userId: string, items: ProfileImagePosition[]) {
     const valid = await prisma.profileImage.findMany({
-      where: { userId, id: { in: items.map(i => i.id) } },
+      where: { userId, id: { in: items.map((i) => i.id) } },
       select: { id: true },
     })
 
     const validIds = new Set(valid.map((v: any) => v.id))
-    if (items.some(i => !validIds.has(i.id))) {
+    if (items.some((i) => !validIds.has(i.id))) {
       throw new Error('Invalid image ID')
     }
 
     // Bulk‐update positions in a single transaction
-    const ops = items.map(item =>
+    const ops = items.map((item) =>
       prisma.profileImage.update({
         where: { id: item.id },
         data: { position: item.position },
