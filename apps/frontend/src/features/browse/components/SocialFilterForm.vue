@@ -51,6 +51,9 @@ const toggleDisabled = () => {
       {{ $t('profiles.browse.filters.social_title') }}
     </h5>
     <div class="mb-2">
+      <label>
+        {{ $t('profiles.browse.filters.near_label') }}
+      </label>
       <div class="d-flex flex-row">
         <div class="flex-grow-1">
           <BFormCheckbox
