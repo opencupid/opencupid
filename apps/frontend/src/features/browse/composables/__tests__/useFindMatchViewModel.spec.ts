@@ -138,7 +138,7 @@ describe('useFindMatchViewModel', () => {
 
   it('route.fullPath watcher skips resolveScope when selectedProfileId is set', async () => {
     routeRef.value.params = { profileId: 'abc-123' }
-    const vm = useFindMatchViewModel()
+    useFindMatchViewModel()
 
     // Change fullPath — should NOT trigger router.replace for scope resolution
     routerReplace.mockClear()
