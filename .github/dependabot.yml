@@ -1,14 +1,72 @@
 version: 2
 updates:
-  - package-ecosystem: npm 
-    directory: "/" 
+  - package-ecosystem: npm
+    directory: "/"
     schedule:
-      interval: daily
+      interval: weekly
+      day: monday
     versioning-strategy: increase-if-necessary
     open-pull-requests-limit: 10
+
     groups:
-      dev-deps:
+      # ── Vendor families (grouped including majors) ──────────
+      fortawesome:
+        patterns: ["@fortawesome/*"]
+
+      sentry:
+        patterns: ["@sentry/*"]
+
+      fastify:
+        patterns: ["fastify", "fastify-plugin", "@fastify/*"]
+
+      prisma:
+        patterns: ["prisma", "@prisma/*", "prisma-*", "zod-prisma-*"]
+
+      vue-ecosystem:
+        patterns: ["vue", "vue-router", "vue-i18n", "@vue/*", "@vueuse/*", "pinia"]
+
+      bootstrap:
+        patterns: ["bootstrap", "bootstrap-vue-next", "@popperjs/*"]
+
+      tensorflow:
+        patterns: ["@tensorflow/*", "@tensorflow-models/*"]
+
+      fontsource:
+        patterns: ["@fontsource/*"]
+
+      # ── Tooling families (grouped including majors) ─────────
+      eslint:
+        patterns: ["eslint", "eslint-*", "@eslint/*", "@typescript-eslint/*", "@vue/eslint-*"]
+
+      vite:
+        patterns: ["vite", "@vitejs/*", "vite-*"]
+
+      testing:
+        patterns: ["vitest", "@vitest/*", "@vue/test-utils", "@playwright/*", "happy-dom", "jsdom"]
+
+      types:
+        patterns: ["@types/*"]
+        update-types: ["minor", "patch"]
+
+      i18n:
+        patterns: ["i18next", "i18next-*", "vue-i18n-*", "i18n-*", "@cospired/i18n-*", "@intlify/*"]
+
+      # ── Catch-all: remaining minor+patch ────────────────────
+      dev-deps-minor-patch:
+        applies-to: version-updates
         dependency-type: development
         update-types: ["minor", "patch"]
-      eslint:
-        patterns: ["eslint*", "@typescript-eslint/*"]
+
+      prod-deps-minor-patch:
+        applies-to: version-updates
+        dependency-type: production
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      github-actions:
+        patterns: ["*"]
