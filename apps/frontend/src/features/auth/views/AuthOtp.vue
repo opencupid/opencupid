@@ -102,6 +102,8 @@ function handleBackButton() {
       <div class="back-button">
         <a
           class="btn btn-secondary-outline"
+          role="button"
+          :title="$t('uicomponents.back_button_title')"
           @click="handleBackButton"
         >
           <ChevronLeftIcon class="svg-icon" />

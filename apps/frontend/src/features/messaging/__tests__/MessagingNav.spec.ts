@@ -14,7 +14,10 @@ describe('MessagingNav', () => {
   it('emits events on icon clicks', async () => {
     const wrapper = mount(MessagingNav, {
       props: { recipient: { id: '1', publicName: 'B', profileImages: [] } },
-      global: { stubs: { BButton: true, ProfileThumbnail: true } },
+      global: {
+        stubs: { BButton: true, ProfileThumbnail: true },
+        mocks: { $t: (key: string) => key },
+      },
     })
     await wrapper.find('.back-button a').trigger('click')
     await wrapper.find('.action-button a').trigger('click')

@@ -121,6 +121,8 @@ const hint = computed(() => history?.state?.hint || null)
               >
                 <span
                   class="btn-social-toggle px-4 py-1 rounded-4 me-2"
+                  role="button"
+                  :title="$t('general.connectiontypes.socializing')"
                   @click="toggleSocial"
                   :class="{ active: formData.isSocialActive }"
                 >
@@ -137,6 +139,8 @@ const hint = computed(() => history?.state?.hint || null)
                 </span>
                 <span
                   class="btn-dating-toggle px-4 py-1 rounded-4"
+                  role="button"
+                  :title="$t('general.connectiontypes.dating')"
                   @click="toggleDating"
                   :class="{ active: formData.isDatingActive }"
                 >

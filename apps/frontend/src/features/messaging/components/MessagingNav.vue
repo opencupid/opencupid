@@ -21,6 +21,8 @@ defineEmits<{
     <div class="back-button">
       <a
         class="btn btn-secondary-outline fs-1"
+        role="button"
+        :title="$t('uicomponents.back_button_title')"
         @click="$emit('deselect:convo')"
       >
         <IconArrowSingleLeft class="svg-icon" />
@@ -42,6 +44,8 @@ defineEmits<{
     <div class="action-button">
       <a
         class="btn btn-secondary-outline"
+        role="button"
+        :title="$t('messaging.conversation_options_title')"
         @click="$emit('modal:open')"
       >
         <IconMenuDotsVert class="svg-icon-lg fs-4" />
