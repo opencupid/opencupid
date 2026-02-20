@@ -139,6 +139,48 @@ git push -u origin your-branch-name
 gh pr create
 ```
 
+## Releases
+
+### Versioning strategy
+
+- **Bugfix-only releases**: bump the patch version (e.g. 0.7.1 → 0.7.2)
+- **New features or enhancements**: bump the minor version (e.g. 0.7.2 → 0.8.0)
+- If the user specifies an explicit version, use that instead
+
+### Release process
+
+Run these steps in order:
+
+1. **Bump `version` in `package.json`** on a feature branch, create a PR, and merge it:
+   ```bash
+   git checkout main && git pull
+   git checkout -b chore/bump-version-X.Y.Z
+   # edit package.json version field
+   git add package.json && git commit -m "chore: bump version to X.Y.Z"
+   git push -u origin chore/bump-version-X.Y.Z
+   gh pr create --title "chore: bump version to X.Y.Z" --body "Bump package.json version ahead of release."
+   # merge the PR
+   ```
+
+2. **Create the GitHub release** targeting `main` with release notes:
+   ```bash
+   gh release create vX.Y.Z --target main --title "vX.Y.Z" --notes "<release notes>"
+   ```
+   - Generate release notes from `git log <previous-tag>..main --oneline --no-merges`
+   - Include only new features and enhancements, not bug fixes
+   - Keep summaries brief
+   - End with a full changelog link: `**Full Changelog**: https://github.com/opencupid/opencupid/compare/<previous-tag>...vX.Y.Z`
+
+3. **Trigger the Docker build** on main:
+   ```bash
+   gh workflow run docker.yml --ref main
+   ```
+
+4. **Watch the build** and confirm all images push successfully:
+   ```bash
+   gh run watch <run-id> --exit-status
+   ```
+
 ## Formatting
 
 ```
