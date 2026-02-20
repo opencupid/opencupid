@@ -26,7 +26,6 @@ import ProfileCardComponent from '../ProfileCardComponent.vue'
 
 // Access the module-level loadedUrls set so we can seed / clear it between tests
 const getLoadedUrls = (): Set<string> => {
-  // The set is exported as a module-level binding; we reach it via the component module
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (ProfileCardComponent as any).__test_loadedUrls
 }
@@ -52,23 +51,12 @@ const mountCard = (blurhash: string | null = null) =>
 
 describe('ProfileCardComponent', () => {
   beforeEach(() => {
-    // Clear the module-level cache between tests
     getLoadedUrls()?.clear()
   })
 
-  it('shows blurhash placeholder before image loads', () => {
+  it('shows blurhash placeholder when hash is present', () => {
     const wrapper = mountCard('LEHV6nWB2yk8pyo0adR*.7kCMdnj')
     expect(wrapper.find('.blurhash-stub').exists()).toBe(true)
-  })
-
-  it('hides blurhash placeholder after image loads', async () => {
-    const wrapper = mountCard('LEHV6nWB2yk8pyo0adR*.7kCMdnj')
-    expect(wrapper.find('.blurhash-stub').exists()).toBe(true)
-
-    const profileImage = wrapper.findComponent({ name: 'ProfileImage' })
-    await profileImage.vm.$emit('load')
-    await wrapper.vm.$nextTick()
-    expect(wrapper.find('.blurhash-stub').exists()).toBe(false)
   })
 
   it('does not render blurhash when hash is null', () => {
@@ -76,19 +64,27 @@ describe('ProfileCardComponent', () => {
     expect(wrapper.find('.blurhash-stub').exists()).toBe(false)
   })
 
-  it('emits click with profile id on card click', async () => {
-    const wrapper = mountCard()
-    await wrapper.find('.profile-card').trigger('click')
-    expect(wrapper.emitted('click')![0]).toEqual(['1'])
+  it('image starts hidden and fades in after load', async () => {
+    const wrapper = mountCard('LEHV6nWB2yk8pyo0adR*.7kCMdnj')
+    const profileImage = wrapper.findComponent({ name: 'ProfileImage' })
+
+    expect(profileImage.classes()).toContain('card-image')
+    expect(profileImage.classes()).not.toContain('card-image-loaded')
+
+    await profileImage.vm.$emit('load')
+    await wrapper.vm.$nextTick()
+
+    expect(profileImage.classes()).toContain('card-image-loaded')
   })
 
-  it('skips blurhash when the image URL is already cached', () => {
-    // Seed the cache with the card URL
+  it('skips fade transition when image URL is already cached', () => {
     getLoadedUrls().add('/img0')
 
     const wrapper = mountCard('LEHV6nWB2yk8pyo0adR*.7kCMdnj')
-    // Blurhash should NOT appear because the URL was already loaded
-    expect(wrapper.find('.blurhash-stub').exists()).toBe(false)
+    const profileImage = wrapper.findComponent({ name: 'ProfileImage' })
+
+    expect(profileImage.classes()).toContain('card-image-loaded')
+    expect(profileImage.classes()).toContain('card-image-cached')
   })
 
   it('populates the cache after image loads', async () => {
@@ -99,5 +95,11 @@ describe('ProfileCardComponent', () => {
     await wrapper.vm.$nextTick()
 
     expect(getLoadedUrls().has('/img0')).toBe(true)
+  })
+
+  it('emits click with profile id on card click', async () => {
+    const wrapper = mountCard()
+    await wrapper.find('.profile-card').trigger('click')
+    expect(wrapper.emitted('click')![0]).toEqual(['1'])
   })
 })

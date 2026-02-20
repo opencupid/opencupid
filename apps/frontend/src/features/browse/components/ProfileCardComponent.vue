@@ -21,7 +21,8 @@ const props = defineProps<{
 const primaryUrl =
   props.profile.profileImages?.[0]?.variants?.find((v) => v.size === 'card')?.url ?? null
 
-const imageLoaded = ref(primaryUrl ? loadedUrls.has(primaryUrl) : false)
+const alreadyCached = primaryUrl ? loadedUrls.has(primaryUrl) : true
+const imageLoaded = ref(alreadyCached)
 
 const handleImageLoad = () => {
   imageLoaded.value = true
@@ -41,7 +42,7 @@ const viewerLocation = ref(viewerProfile?.value.location)
   >
     <div class="ratio ratio-1x1">
       <BlurhashCanvas
-        v-if="primaryBlurhash && !imageLoaded"
+        v-if="primaryBlurhash"
         :blurhash="primaryBlurhash"
         class="blurhash-placeholder"
       />
@@ -49,6 +50,8 @@ const viewerLocation = ref(viewerProfile?.value.location)
         :profile="profile"
         className=""
         variant="card"
+        class="card-image"
+        :class="{ 'card-image-loaded': imageLoaded, 'card-image-cached': alreadyCached }"
         @load="handleImageLoad"
       />
     </div>
@@ -96,6 +99,20 @@ const viewerLocation = ref(viewerProfile?.value.location)
   z-index: 10;
 }
 
+.card-image {
+  opacity: 0;
+  transition: opacity 0.3s ease-in;
+  z-index: 2;
+
+  &.card-image-loaded {
+    opacity: 1;
+  }
+
+  &.card-image-cached {
+    transition: none;
+  }
+}
+
 .card {
   font-size: 0.9rem;
   &:hover {
@@ -115,6 +132,7 @@ const viewerLocation = ref(viewerProfile?.value.location)
   bottom: 0rem;
   max-height: 4rem;
   background-color: rgba(80, 80, 80, 0.5);
+  z-index: 3;
 }
 .tags-wrapper {
   font-size: 0.75rem;
