@@ -3,29 +3,21 @@ import { type LocationDTO } from '@zod/dto/location.dto'
 import { type SocialMatchFilterDTO } from '@zod/match/filters.dto'
 import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
 import type { PublicTag } from '@zod/tag/tag.dto'
-import IconSetting from '@/assets/icons/interface/setting.svg'
-import IconSquare from '@/assets/icons/interface/square.svg'
-import IconMap from '@/assets/icons/interface/map.svg'
-import IconSearch from '@/assets/icons/interface/search.svg'
 
 const socialFilter = defineModel<SocialMatchFilterDTO | null>({
   default: null,
 })
 const props = defineProps<{
   viewerLocation?: LocationDTO | null
-  prefsButtonDisabled?: boolean
 }>()
 
 const emit = defineEmits<{
-  (event: 'prefs:toggle'): void
   (event: 'filter:changed'): void
 }>()
 
 function removeTag(tag: PublicTag) {
   if (socialFilter.value) {
-    socialFilter.value.tags = socialFilter.value.tags.filter(
-      (t) => t.slug !== tag.slug,
-    )
+    socialFilter.value.tags = socialFilter.value.tags.filter((t) => t.slug !== tag.slug)
     emit('filter:changed')
   }
 }
@@ -45,20 +37,7 @@ function clearLocation() {
 </script>
 
 <template>
-  <BButton
-    variant="primary"
-    pill
-    :title="$t('profiles.browse.filters.search_button_title_social')"
-    @click="$emit('prefs:toggle')"
-  >
-    <!-- <IconSearch class="svg-icon" /> -->
-    <IconSetting class="svg-icon" />
-  </BButton>
-  <span class="ms-2 d-none">
-    <!-- Looking:  -->
-    {{ $t('profiles.browse.filters.filter_display_label') }}
-  </span>
-  <div class="filter-chips flex-grow-1 ms-2">
+  <div class="filter-chips flex-grow-1">
     <span class="filter-chip badge text-bg-info me-1">
       <template v-if="socialFilter?.location?.country && viewerLocation">
         <LocationLabel
@@ -72,7 +51,7 @@ function clearLocation() {
           type="button"
           class="btn-close btn-close-sm ms-1"
           aria-label="Remove"
-          @click="clearLocation"
+          @click.stop="clearLocation"
         />
       </template>
       <template v-else>
@@ -90,7 +69,7 @@ function clearLocation() {
         type="button"
         class="btn-close btn-close-sm ms-1"
         aria-label="Remove"
-        @click="removeTag(tag)"
+        @click.stop="removeTag(tag)"
       />
     </span>
   </div>

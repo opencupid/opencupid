@@ -3,12 +3,17 @@ import IconDate from '@/assets/icons/app/cupid.svg'
 import IconSocialize from '@/assets/icons/app/socialize.svg'
 import { type ProfileScope } from '@zod/profile/profile.dto'
 
+const props = defineProps<{
+  compact?: boolean
+}>()
+
 const currentScope = defineModel<ProfileScope | null>()
 </script>
 
 <template>
   <div
     class="btn-group btn-group-toggle"
+    :class="{ compact }"
     data-bs-toggle="buttons"
   >
     <input
@@ -25,7 +30,11 @@ const currentScope = defineModel<ProfileScope | null>()
       for="social"
       :title="$t('general.connectiontypes.socializing')"
     >
-      <span class="d-none d-sm-inline">{{ $t('general.connectiontypes.socializing') }}</span>
+      <span
+        v-if="!compact"
+        class="d-none d-sm-inline"
+        >{{ $t('general.connectiontypes.socializing') }}</span
+      >
       <IconSocialize class="svg-icon-100"
     /></label>
 
@@ -43,7 +52,11 @@ const currentScope = defineModel<ProfileScope | null>()
       for="dating"
       :title="$t('general.connectiontypes.dating')"
     >
-      <span class="d-none d-sm-inline">{{ $t('general.connectiontypes.dating') }}</span>
+      <span
+        v-if="!compact"
+        class="d-none d-sm-inline"
+        >{{ $t('general.connectiontypes.dating') }}</span
+      >
       <IconDate class="svg-icon-100" />
     </label>
   </div>
@@ -74,5 +87,14 @@ $radius: 2rem;
 .dating {
   border-top-right-radius: $radius;
   border-bottom-right-radius: $radius;
+}
+
+.compact {
+  height: 2rem;
+}
+.compact .btn {
+  padding-left: 0.6rem;
+  padding-right: 0.6rem;
+  font-size: 0.75rem;
 }
 </style>

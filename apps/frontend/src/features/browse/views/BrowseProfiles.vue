@@ -9,7 +9,6 @@ import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 import { useFindMatchViewModel } from '../composables/useFindMatchViewModel'
 import DatingPreferencesForm from '../components/DatingPreferencesForm.vue'
 import SocialFilterForm from '../components/SocialFilterForm.vue'
-import SecondaryNav from '../../shared/ui/SecondaryNav.vue'
 import ProfileCardGrid from '../components/ProfileCardGrid.vue'
 import NoAccessCTA from '../components/NoAccessCTA.vue'
 import NoResultsCTA from '../components/NoResultsCTA.vue'
@@ -24,9 +23,6 @@ import ProfileMapCard from '../components/ProfileMapCard.vue'
 import type { PublicProfile } from '@zod/profile/profile.dto'
 import { useI18n } from 'vue-i18n'
 import { useCountries } from '../../shared/composables/useCountries'
-
-import IconMap from '@/assets/icons/interface/map.svg'
-import GridButton from '../../shared/ui/GridButton.vue'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -166,40 +162,43 @@ useInfiniteScroll(
       :class="[currentScope, { inactive: isDetailView }]"
     >
       <MiddleColumn class="my-2">
-        <div class="container d-flex flex-column">
-          <SecondaryNav>
-            <template #items-center>
-              <ScopeViewToggler v-model="scopeModel" />
-            </template>
-          </SecondaryNav>
+        <div
+          class="subnav-bar d-flex align-items-center gap-2 px-2 py-1 bg-light rounded"
+          :class="currentScope"
+          @click="showPrefsModal = true"
+        >
+          <ScopeViewToggler
+            v-model="scopeModel"
+            compact
+            @click.stop
+          />
+
           <div
-            v-if="currentScope == 'social'"
-            class="filter-controls my-2"
+            v-if="currentScope === 'social'"
+            class="filter-area flex-grow-1"
           >
-            <div
-              class="d-flex align-items-center justify-content-between w-100 px-2 py-1 bg-light rounded"
-            >
-              <SocialFilterDisplay
-                v-if="socialFilter && haveAccess"
-                v-model="socialFilter"
-                :viewerLocation="viewerProfile?.location"
-                @prefs:toggle="showPrefsModal = true"
-                @filter:changed="updatePrefs"
-              />
-              <ViewModeToggler v-model="viewModeModel" />
-            </div>
+            <SocialFilterDisplay
+              v-if="socialFilter && haveAccess"
+              v-model="socialFilter"
+              :viewerLocation="viewerProfile?.location"
+              @filter:changed="updatePrefs"
+            />
           </div>
           <div
-            v-if="currentScope == 'dating'"
-            class="filter-controls my-2"
+            v-if="currentScope === 'dating'"
+            class="filter-area flex-grow-1"
           >
             <DatingPrefsDisplay
               v-if="datingPrefs && haveAccess"
               v-model="datingPrefs"
-              :viewerLocation="viewerProfile?.location"
-              @prefs:toggle="showPrefsModal = true"
             />
           </div>
+
+          <ViewModeToggler
+            v-if="currentScope === 'social'"
+            v-model="viewModeModel"
+            @click.stop
+          />
         </div>
       </MiddleColumn>
       <BPlaceholderWrapper :loading="isLoading">
@@ -337,6 +336,7 @@ useInfiniteScroll(
 @import 'bootstrap/scss/variables';
 @import 'bootstrap/scss/mixins';
 @import '@/css/app-vars.scss';
+@import '@/css/theme.scss';
 
 .detail-view {
   // nav.fixed is on 1030 - on screens < md we put this above the navbar
@@ -363,9 +363,34 @@ useInfiniteScroll(
 }
 main {
   width: 100%;
-  // height: 100vh;
 }
-.filter-controls {
+.subnav-bar {
   font-size: 0.75rem;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+
+  &.social {
+    background-color: transparentize($social, 0.95) !important;
+
+    &:hover {
+      background-color: transparentize($social, 0.88) !important;
+      border-bottom-color: $social;
+      box-shadow: 0 2px 24px transparentize($social, 0.9);
+    }
+  }
+
+  &.dating {
+    background-color: transparentize($dating, 0.95) !important;
+
+    &:hover {
+      background-color: transparentize($dating, 0.88) !important;
+      border-bottom-color: $dating;
+      box-shadow: 0 2px 24px transparentize($dating, 0.9);
+    }
+  }
 }
 </style>
