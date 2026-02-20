@@ -33,7 +33,11 @@ useUpdateChecker()
   <!-- <ViewportSizeDebug class="position-absolute bg-dark" /> -->
   <UpdateBanner />
   <Navbar />
-  <RouterView />
+  <RouterView v-slot="{ Component }">
+    <KeepAlive include="UserHome">
+      <component :is="Component" />
+    </KeepAlive>
+  </RouterView>
   <AppNotifier />
   <!-- <router-view v-slot="{ Component }">
     <transition name="fade">
