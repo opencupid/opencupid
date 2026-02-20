@@ -1,4 +1,5 @@
 [![Test](https://github.com/opencupid/opencupid/actions/workflows/test.yml/badge.svg)](https://github.com/opencupid/opencupid/actions/workflows/test.yml)
+[![CodeQL Analysis](https://github.com/opencupid/opencupid/actions/workflows/codeql.yml/badge.svg)](https://github.com/opencupid/opencupid/actions/workflows/codeql.yml)
 
 # OpenCupid
 
