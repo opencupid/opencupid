@@ -2,15 +2,20 @@
 import { inject, ref, type Ref } from 'vue'
 import type { OwnerProfile, PublicProfile } from '@zod/profile/profile.dto'
 import ProfileImage from '@/features/images/components/ProfileImage.vue'
+import BlurhashCanvas from '@/features/images/components/BlurhashCanvas.vue'
 import TagList from '@/features/shared/profiledisplay/TagList.vue'
 import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
 
 // Props & Emits
-defineProps<{
+const props = defineProps<{
   profile: PublicProfile
   showTags?: boolean
   showLocation?: boolean
 }>()
+
+const imageLoaded = ref(false)
+
+const primaryBlurhash = ref(props.profile.profileImages?.[0]?.blurhash ?? null)
 
 const viewerProfile = inject<Ref<OwnerProfile>>('viewerProfile')
 const viewerLocation = ref(viewerProfile?.value.location)
@@ -22,10 +27,16 @@ const viewerLocation = ref(viewerProfile?.value.location)
     @click="$emit('click', profile.id)"
   >
     <div class="ratio ratio-1x1">
+      <BlurhashCanvas
+        v-if="primaryBlurhash && !imageLoaded"
+        :blurhash="primaryBlurhash"
+        class="blurhash-placeholder"
+      />
       <ProfileImage
         :profile="profile"
         className=""
         variant="card"
+        @load="imageLoaded = true"
       />
     </div>
     <div class="overlay d-flex flex-column flex-grow-1">
@@ -58,6 +69,13 @@ const viewerLocation = ref(viewerProfile?.value.location)
 </template>
 
 <style scoped lang="scss">
+.blurhash-placeholder {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
 .icons {
   position: absolute;
   top: 0.5rem;

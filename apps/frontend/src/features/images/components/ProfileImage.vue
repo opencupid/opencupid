@@ -9,11 +9,13 @@ import { type VariantName } from './types'
 const props = defineProps<{
   variant?: VariantName
   profile: {
-    profileImages: { variants: ImageVariant[] }[]
+    profileImages: { variants: ImageVariant[]; blurhash?: string | null }[]
   }
 }>()
 
-const image = ref<{ variants: ImageVariant[] }>()
+const emit = defineEmits<{ load: [] }>()
+
+const image = ref<{ variants: ImageVariant[]; blurhash?: string | null }>()
 
 watchEffect(() => {
   if (props.profile && props.profile.profileImages && props.profile.profileImages.length > 0) {
@@ -28,5 +30,6 @@ watchEffect(() => {
     v-if="image"
     className="img-fluid rounded"
     :variant="props.variant"
+    @load="emit('load')"
   />
 </template>

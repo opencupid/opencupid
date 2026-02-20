@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, reactive, watch } from 'vue'
 
 import { BCarousel } from 'bootstrap-vue-next'
 import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 import IconCross from '@/assets/icons/interface/cross.svg'
 import ImageTag from '@/features/images/components/ImageTag.vue'
+import BlurhashCanvas from '@/features/images/components/BlurhashCanvas.vue'
+import { blurhashToDataUrl } from '@/features/images/composables/useBlurhashDataUrl'
 
 const props = defineProps<{
   profile: PublicProfileWithContext
@@ -13,6 +15,12 @@ const props = defineProps<{
 const showFullscreen = ref(false)
 const inlineSlide = ref(0)
 const fullSlide = ref(0)
+
+const loadedImages = reactive<Record<number, boolean>>({})
+
+const handleImageLoad = (position: number) => {
+  loadedImages[position] = true
+}
 
 const handleImageClick = () => {
   fullSlide.value = inlineSlide.value
@@ -29,6 +37,7 @@ watch(
   () => props.profile.profileImages,
   () => {
     inlineSlide.value = 0
+    Object.keys(loadedImages).forEach((key) => delete loadedImages[Number(key)])
   }
 )
 </script>
@@ -49,10 +58,16 @@ watch(
       >
         <template #img>
           <div class="ratio ratio-4x3">
+            <BlurhashCanvas
+              v-if="img.blurhash && !loadedImages[img.position]"
+              :blurhash="img.blurhash"
+              class="blurhash-placeholder"
+            />
             <ImageTag
               :image="img"
               className="fitted-image"
               variant="profile"
+              @load="handleImageLoad(img.position)"
             />
           </div>
         </template>
@@ -89,6 +104,15 @@ watch(
           <template #img>
             <div
               class="w-100 h-100 d-flex justify-content-center align-items-center overflow-hidden"
+              :style="
+                img.blurhash
+                  ? {
+                      backgroundImage: `url(${blurhashToDataUrl(img.blurhash)})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                    }
+                  : undefined
+              "
             >
               <ImageTag
                 :image="img"
@@ -111,6 +135,8 @@ watch(
 
 .modal.carousel-modal {
   .fitted-image {
+    width: auto;
+    height: auto;
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
@@ -170,5 +196,12 @@ watch(
     width: 100%;
     height: 100% !important;
   }
+}
+
+.blurhash-placeholder {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
 }
 </style>
