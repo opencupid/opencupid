@@ -106,6 +106,8 @@
     "welcome_title": "Welcome to {siteName}!"
   },
   "profiles": {
+    "back_button_title": "Back",
+    "more_options_button_title": "More options",
     "send_message_button": "Message",
     "image_editor": {
       "delete_button_title": "Remove photo"
