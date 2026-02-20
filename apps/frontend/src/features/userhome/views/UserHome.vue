@@ -1,7 +1,16 @@
 <script setup lang="ts">
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
-import { computed, onMounted, provide, ref, toRef } from 'vue'
-import { useRouter } from 'vue-router'
+import {
+  computed,
+  onActivated,
+  onMounted,
+  provide,
+  ref,
+  toRef,
+  useTemplateRef,
+  nextTick,
+} from 'vue'
+import { onBeforeRouteLeave, useRouter } from 'vue-router'
 import { useBootstrap } from '@/lib/bootstrap'
 import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 import { type PublicProfile } from '@zod/profile/profile.dto'
@@ -11,10 +20,20 @@ import ProfileCardGrid from '@/features/browse/components/ProfileCardGrid.vue'
 import LikesAndMatchesBanner from '@/features/interaction/components/LikesAndMatchesBanner.vue'
 import TagCloud from '@/features/shared/components/TagCloud.vue'
 
+defineOptions({ name: 'UserHome' })
+
 const profileStore = useOwnerProfileStore()
 const viewerProfile = computed(() => profileStore.profile)
 const router = useRouter()
 const newProfiles = ref([] as PublicProfile[])
+const mainEl = useTemplateRef<HTMLElement>('mainEl')
+let savedScrollTop = 0
+
+onBeforeRouteLeave(() => {
+  if (mainEl.value) {
+    savedScrollTop = mainEl.value.scrollTop
+  }
+})
 
 onMounted(async () => {
   await useBootstrap().bootstrap()
@@ -23,11 +42,18 @@ onMounted(async () => {
     router.push({ name: 'Onboarding' })
     return
   }
+})
 
+onActivated(async () => {
   const findProfileStore = useFindProfileStore()
   const result = await findProfileStore.fetchNewSocial()
   if (result.success && result.data) {
     newProfiles.value = result.data.result as PublicProfile[]
+  }
+
+  if (mainEl.value && savedScrollTop > 0) {
+    await nextTick()
+    mainEl.value.scrollTop = savedScrollTop
   }
 })
 
@@ -46,7 +72,10 @@ const siteName = __APP_CONFIG__.SITE_NAME
 </script>
 
 <template>
-  <main class="overflow-auto">
+  <main
+    ref="mainEl"
+    class="overflow-auto"
+  >
     <div class="container">
       <MiddleColumn>
         <h2 class="mt-3">
