@@ -40,8 +40,7 @@ export default defineConfig({
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
 
-    /* Only on CI systems run the tests headless */
-    headless: !!process.env.CI,
+    headless: true,
   },
 
   /* Configure projects for major browsers */
@@ -58,7 +57,14 @@ export default defineConfig({
         storageState: 'e2e/.auth/user.json',
       },
       dependencies: ['setup'],
-      testIgnore: /auth\.setup\.ts/,
+      testIgnore: [/auth\.setup\.ts/, /login\.spec\.ts/, /registration\.spec\.ts/],
+    },
+    {
+      name: 'chromium-noauth',
+      use: {
+        ...devices['Desktop Chrome'],
+      },
+      testMatch: [/login\.spec\.ts/, /registration\.spec\.ts/],
     },
     // {
     //   name: 'firefox',
