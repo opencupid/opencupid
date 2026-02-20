@@ -56,6 +56,7 @@ updates:
         applies-to: version-updates
         dependency-type: development
         update-types: ["minor", "patch"]
+        exclude-patterns: ["zod-prisma-*"]
 
       prod-deps-minor-patch:
         applies-to: version-updates
