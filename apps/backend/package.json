@@ -34,7 +34,7 @@
     "@fastify/static": "9.0.0",
     "@fastify/websocket": "11.2.0",
     "@google-cloud/translate": "9.3.0",
-    "@maxmind/geoip2-node": "6.1.0",
+    "@maxmind/geoip2-node": "6.3.4",
     "@prisma/client": "6.15.0",
     "@sentry/node": "10.39.0",
     "@tensorflow-models/blazeface": "0.1.0",
