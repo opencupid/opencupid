@@ -78,6 +78,14 @@ jobs:
           ${{ secrets.PRODUCTION_ENV_FILE }}
           ENVEOF
 
+      - name: Extract frontend build args
+        id: frontend-args
+        run: |
+          set -a && source .env && set +a
+          for var in VAPID_PUBLIC_KEY SENTRY_DSN SITE_NAME OG_TITLE OG_DESCRIPTION OG_IMAGE OG_URL OG_TYPE; do
+            echo "${var}=${!var}" >> "$GITHUB_OUTPUT"
+          done
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -115,6 +123,15 @@ jobs:
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            VAPID_PUBLIC_KEY=${{ steps.frontend-args.outputs.VAPID_PUBLIC_KEY }}
+            SENTRY_DSN=${{ steps.frontend-args.outputs.SENTRY_DSN }}
+            SITE_NAME=${{ steps.frontend-args.outputs.SITE_NAME }}
+            OG_TITLE=${{ steps.frontend-args.outputs.OG_TITLE }}
+            OG_DESCRIPTION=${{ steps.frontend-args.outputs.OG_DESCRIPTION }}
+            OG_IMAGE=${{ steps.frontend-args.outputs.OG_IMAGE }}
+            OG_URL=${{ steps.frontend-args.outputs.OG_URL }}
+            OG_TYPE=${{ steps.frontend-args.outputs.OG_TYPE }}
           tags: |
             ghcr.io/${{ github.repository }}-frontend:latest
             ghcr.io/${{ github.repository }}-frontend:${{ needs.version.outputs.app-version }}
