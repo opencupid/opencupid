@@ -31,6 +31,8 @@ const toggleDating = () => {
   <div class="d-flex gap-2 flex-column justify-content-between w-100 mb-1 mb-sm-3 mb-md-3">
     <div
       class="card btn-social-toggle clickable mb-2 mb-sm-2 mb-md-4"
+      role="button"
+      :title="t('onboarding.goals.socializing')"
       :class="{ active: model.isSocialActive }"
       @click="toggleSocial"
     >
@@ -56,6 +58,8 @@ const toggleDating = () => {
 
     <div
       class="card btn-dating-toggle clickable"
+      role="button"
+      :title="t('onboarding.goals.dating')"
       :class="{ active: model.isDatingActive }"
       @click="toggleDating"
     >

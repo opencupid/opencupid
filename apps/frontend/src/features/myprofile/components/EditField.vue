@@ -50,6 +50,8 @@ const fieldProxy = getModelProxy(props.fieldName)
     </span>
     <a
       href="#"
+      role="button"
+      :title="$t('uicomponents.edit_button_title')"
       @click="handleButtonClick"
       v-bind:class="props.buttonClass"
       class="edit-button me-2"

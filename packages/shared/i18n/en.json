@@ -299,6 +299,7 @@
     "message_sent_success": "Message sent successfully!",
     "my_turn": "My turn",
     "their_turn": "Their turn",
+    "conversation_options_title": "Conversation options",
     "block_report_unmatch": "Block/report/unmatch",
     "block_user_ok": "Block {name}",
     "nevermind": "Nevermind",
@@ -335,6 +336,7 @@
   },
   "uicomponents": {
     "back_button_title": "Go back",
+    "edit_button_title": "Edit",
     "connection_error": {
       "title": "It's not you, it's us.",
       "description": "Apologies for the interruption.  The Machine Elves need a few seconds to sort things out, we'll be back in a bit."
