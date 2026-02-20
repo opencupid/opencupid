@@ -49,11 +49,8 @@ vi.mock('@/features/publicprofile/components/PublicProfile.vue', () => ({
 vi.mock('@/features/interaction/components/ReceivedLikesCount.vue', () => ({
   default: { template: '<div class="received-likes" />' },
 }))
-vi.mock('@/features/shared/ui/SecondaryNav.vue', () => ({
-  default: { template: '<div class="secondary-nav" />' },
-}))
 vi.mock('@/features/shared/ui/ScopeViewToggler.vue', () => ({
-  default: { template: '<div class="scope-view-toggler" />', props: ['modelValue'] },
+  default: { template: '<div class="scope-view-toggler" />', props: ['modelValue', 'compact'] },
 }))
 vi.mock('@/features/shared/ui/StoreErrorOverlay.vue', () => ({
   default: { template: '<div class="store-error"><slot /></div>', props: ['error'] },
@@ -242,7 +239,7 @@ describe('BrowseProfiles view', () => {
       vmState.selectedProfileId.value = null
       const wrapper = mountComponent()
 
-      expect(wrapper.find('.secondary-nav').exists()).toBe(true)
+      expect(wrapper.find('.scope-view-toggler').exists()).toBe(true)
     })
 
     it('shows filter controls in grid view for dating scope', () => {
