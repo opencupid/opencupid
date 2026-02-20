@@ -36,6 +36,12 @@ const routes: Array<RouteRecordRaw> = [
     component: Logout,
     meta: { requiresAuth: true },
   },
+  // Browse-related routes: /browse, /browse/:scope, and /profile/:profileId all render
+  // the same BrowseProfiles component but are defined as flat sibling routes rather than
+  // nested children of /browse. This means Vue Router's built-in active-link prefix
+  // matching won't highlight the Browse navbar item on /browse/social, /browse/dating,
+  // or /profile/:id. The Navbar uses a manual `isBrowseActive` computed to compensate
+  // (see Navbar.vue).
   {
     path: '/browse',
     name: 'BrowseProfiles',
