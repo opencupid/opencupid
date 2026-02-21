@@ -119,7 +119,7 @@ describe('CallService', () => {
   describe('updateCallableStatus', () => {
     it('updates conversation participant callable status', async () => {
       mockPrisma.conversationParticipant.update.mockResolvedValue({ id: 'cp1', isCallable: false })
-      const result = await service.updateCallableStatus('c1', 'p1', false)
+      await service.updateCallableStatus('c1', 'p1', false)
       expect(mockPrisma.conversationParticipant.update).toHaveBeenCalledWith({
         where: { profileId_conversationId: { profileId: 'p1', conversationId: 'c1' } },
         data: { isCallable: false },
