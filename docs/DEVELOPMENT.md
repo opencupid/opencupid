@@ -1,5 +1,11 @@
 # Development
 
+## Dependencies
+
+```bash
+sudo apt-get install ripgrep
+```
+
 ## Getting started with development
 
 ```bash
