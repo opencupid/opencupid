@@ -16,6 +16,14 @@ vi.mock('../../utils/wsUtils', () => ({
   broadcastToProfile: vi.fn(() => true),
 }))
 
+vi.mock('../../api/mappers/profile.mappers', () => ({
+  mapProfileSummary: vi.fn((p: any) => ({
+    id: p.id,
+    publicName: p.publicName,
+    profileImages: [],
+  })),
+}))
+
 beforeEach(async () => {
   fastify = new MockFastify()
   fastify.prisma = {
@@ -100,7 +108,18 @@ describe('POST /:conversationId/decline', () => {
     const handler = fastify.routes['POST /:conversationId/decline']
     fastify.prisma.conversation.findUnique = vi.fn().mockResolvedValue({
       id: 'ck1234567890abcd12345678',
-      participants: [{ profileId: 'p1' }, { profileId: 'p2' }],
+      participants: [
+        { profileId: 'p1', profile: { id: 'p1', publicName: 'Alice', profileImages: [] } },
+        { profileId: 'p2', profile: { id: 'p2', publicName: 'Bob', profileImages: [] } },
+      ],
+    })
+    mockCallService.insertMissedCallMessage.mockResolvedValue({
+      id: 'msg-1',
+      conversationId: 'ck1234567890abcd12345678',
+      senderId: 'p2',
+      content: 'Missed call',
+      messageType: 'call/missed',
+      createdAt: new Date(),
     })
     fastify.prisma.$transaction = vi.fn((fn: any) => fn({}))
 
@@ -121,7 +140,18 @@ describe('POST /:conversationId/cancel', () => {
     const handler = fastify.routes['POST /:conversationId/cancel']
     fastify.prisma.conversation.findUnique = vi.fn().mockResolvedValue({
       id: 'ck1234567890abcd12345678',
-      participants: [{ profileId: 'p1' }, { profileId: 'p2' }],
+      participants: [
+        { profileId: 'p1', profile: { id: 'p1', publicName: 'Alice', profileImages: [] } },
+        { profileId: 'p2', profile: { id: 'p2', publicName: 'Bob', profileImages: [] } },
+      ],
+    })
+    mockCallService.insertMissedCallMessage.mockResolvedValue({
+      id: 'msg-1',
+      conversationId: 'ck1234567890abcd12345678',
+      senderId: 'p1',
+      content: 'Missed call',
+      messageType: 'call/missed',
+      createdAt: new Date(),
     })
     fastify.prisma.$transaction = vi.fn((fn: any) => fn({}))
 

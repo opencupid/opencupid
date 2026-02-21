@@ -3,6 +3,8 @@ import { z } from 'zod'
 import { sendError } from '../helpers'
 import { CallService } from '@/services/call.service'
 import { broadcastToProfile } from '@/utils/wsUtils'
+import { mapProfileSummary } from '@/api/mappers/profile.mappers'
+import type { MessageDTO } from '@zod/messaging/messaging.dto'
 
 const ConversationIdParamsSchema = z.object({
   conversationId: z.string().cuid(),
@@ -107,7 +109,11 @@ const callRoutes: FastifyPluginAsync = async (fastify) => {
       try {
         const conversation = await fastify.prisma.conversation.findUnique({
           where: { id: params.data.conversationId },
-          include: { participants: true },
+          include: {
+            participants: {
+              include: { profile: { include: { profileImages: true } } },
+            },
+          },
         })
 
         if (!conversation) return sendError(reply, 404, 'Conversation not found')
@@ -121,14 +127,32 @@ const callRoutes: FastifyPluginAsync = async (fastify) => {
           payload: { conversationId: params.data.conversationId },
         })
 
-        // Insert missed call message
-        await fastify.prisma.$transaction(async (tx) => {
-          await callService.insertMissedCallMessage(
+        // Insert missed call message and broadcast to both participants
+        const missedMsg = await fastify.prisma.$transaction(async (tx) => {
+          return await callService.insertMissedCallMessage(
             tx,
             params.data.conversationId,
             callerParticipant.profileId
           )
         })
+
+        const messageDTO: MessageDTO = {
+          id: missedMsg.id,
+          conversationId: missedMsg.conversationId,
+          senderId: missedMsg.senderId,
+          content: missedMsg.content,
+          messageType: missedMsg.messageType,
+          createdAt: missedMsg.createdAt,
+          sender: mapProfileSummary(callerParticipant.profile),
+          attachment: null,
+        }
+
+        for (const p of conversation.participants) {
+          broadcastToProfile(fastify, p.profileId, {
+            type: 'ws:new_message',
+            payload: messageDTO,
+          })
+        }
 
         return reply.code(200).send({ success: true })
       } catch (error: any) {
@@ -152,7 +176,11 @@ const callRoutes: FastifyPluginAsync = async (fastify) => {
       try {
         const conversation = await fastify.prisma.conversation.findUnique({
           where: { id: params.data.conversationId },
-          include: { participants: true },
+          include: {
+            participants: {
+              include: { profile: { include: { profileImages: true } } },
+            },
+          },
         })
 
         if (!conversation) return sendError(reply, 404, 'Conversation not found')
@@ -160,15 +188,40 @@ const callRoutes: FastifyPluginAsync = async (fastify) => {
         const calleeParticipant = conversation.participants.find((p) => p.profileId !== profileId)
         if (!calleeParticipant) return sendError(reply, 404, 'Callee not found')
 
+        const callerParticipant = conversation.participants.find((p) => p.profileId === profileId)
+        if (!callerParticipant) return sendError(reply, 404, 'Caller not found')
+
         broadcastToProfile(fastify, calleeParticipant.profileId, {
           type: 'ws:call_cancelled',
           payload: { conversationId: params.data.conversationId },
         })
 
-        // Insert missed call message
-        await fastify.prisma.$transaction(async (tx) => {
-          await callService.insertMissedCallMessage(tx, params.data.conversationId, profileId)
+        // Insert missed call message and broadcast to both participants
+        const missedMsg = await fastify.prisma.$transaction(async (tx) => {
+          return await callService.insertMissedCallMessage(
+            tx,
+            params.data.conversationId,
+            profileId
+          )
         })
+
+        const messageDTO: MessageDTO = {
+          id: missedMsg.id,
+          conversationId: missedMsg.conversationId,
+          senderId: missedMsg.senderId,
+          content: missedMsg.content,
+          messageType: missedMsg.messageType,
+          createdAt: missedMsg.createdAt,
+          sender: mapProfileSummary(callerParticipant.profile),
+          attachment: null,
+        }
+
+        for (const p of conversation.participants) {
+          broadcastToProfile(fastify, p.profileId, {
+            type: 'ws:new_message',
+            payload: messageDTO,
+          })
+        }
 
         return reply.code(200).send({ success: true })
       } catch (error: any) {
