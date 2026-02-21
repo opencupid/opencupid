@@ -37,6 +37,10 @@ const canCall = computed(() => {
   return props.conversation.canReply && props.conversation.isCallable
 })
 
+const myIsCallable = computed(() => {
+  return props.conversation?.myIsCallable ?? true
+})
+
 watchEffect(async () => {
   if (props.conversation) {
     const res = await profileStore.getPublicProfile(props.conversation.partnerProfile.id)
@@ -80,11 +84,11 @@ async function handleToggleCallable(event: Event) {
       class="messaging-nav w-100"
       v-if="conversationPartner"
       :recipient="conversationPartner"
-      :canCall="canCall"
+      :allowCalls="myIsCallable"
       @deselect:convo="emit('deselect:convo')"
       @profile:select="emit('profile:select', conversationPartner)"
-      @modal:open="showModal = true"
-      @call:start="handleStartCall"
+      @block:open="showModal = true"
+      @callable:toggle="handleToggleCallable"
     />
 
     <div class="flex-grow-1 overflow-hidden d-flex flex-column">
@@ -101,6 +105,8 @@ async function handleToggleCallable(event: Event) {
         v-if="conversationPartner && conversation"
         :recipientProfile="conversationPartner"
         :conversationId="conversation.conversationId"
+        :canCall="canCall"
+        @call:start="handleStartCall"
       />
     </div>
 

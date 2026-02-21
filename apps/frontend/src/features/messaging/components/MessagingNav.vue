@@ -7,14 +7,14 @@ import IconMenuDotsVert from '@/assets/icons/interface/menu-dots-vert.svg'
 
 defineProps<{
   recipient: ProfileSummary
-  canCall?: boolean
+  allowCalls?: boolean
 }>()
 
 defineEmits<{
-  (e: 'modal:open'): void
+  (e: 'block:open'): void
   (e: 'deselect:convo'): void
   (e: 'profile:select', val: ProfileSummary): void
-  (e: 'call:start'): void
+  (e: 'callable:toggle', event: Event): void
 }>()
 </script>
 
@@ -44,23 +44,37 @@ defineEmits<{
     </div>
 
     <div class="d-flex align-items-center gap-1">
-      <a
-        v-if="canCall"
-        class="btn btn-secondary-outline call-button"
-        role="button"
-        :title="$t('calls.call_button_title')"
-        @click="$emit('call:start')"
+      <BDropdown
+        variant="link"
+        no-caret
+        toggle-class="text-decoration-none p-0 text-muted btn btn-secondary-outline action-button"
+        end
       >
-        <i class="bi bi-telephone-fill"></i>
-      </a>
-      <a
-        class="btn btn-secondary-outline action-button"
-        role="button"
-        :title="$t('messaging.conversation_options_title')"
-        @click="$emit('modal:open')"
-      >
-        <IconMenuDotsVert class="svg-icon-lg fs-4" />
-      </a>
+        <template #button-content>
+          <IconMenuDotsVert class="svg-icon-lg fs-4" />
+        </template>
+        <BDropdownItem @click="$emit('block:open')">
+          {{ $t('messaging.block_member') }}
+        </BDropdownItem>
+        <BDropdownDivider />
+        <BDropdownForm>
+          <div class="form-check">
+            <input
+              id="allow-calls-check"
+              type="checkbox"
+              class="form-check-input"
+              :checked="allowCalls"
+              @change="$emit('callable:toggle', $event)"
+            />
+            <label
+              class="form-check-label"
+              for="allow-calls-check"
+            >
+              {{ $t('calls.allow_calls_label') }}
+            </label>
+          </div>
+        </BDropdownForm>
+      </BDropdown>
     </div>
   </div>
 </template>

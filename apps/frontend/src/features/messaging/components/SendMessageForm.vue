@@ -21,10 +21,12 @@ const props = defineProps<{
   recipientProfile: PublicProfileWithContext
   conversationId: string | null
   showTags?: boolean
+  canCall?: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'message:sent', message: MessageDTO | null): void
+  (e: 'call:start'): void
 }>()
 
 const content = ref('')
@@ -148,16 +150,27 @@ function handleVoiceRecordingError(error: string) {
           :disabled="messageStore.isSending || isVoiceActive"
         />
         <div class="form-text text-muted d-flex justify-content-between align-items-start">
-          <!-- Unified voice recorder (left) -->
-          <VoiceRecorder
-            ref="voiceRecorderRef"
-            :disabled="messageStore.isSending"
-            :max-duration="120"
-            @recording:started="() => (isVoiceActive = true)"
-            @recording:completed="handleVoiceRecordingCompleted"
-            @recording:cancelled="handleVoiceRecordingCancelled"
-            @recording:error="handleVoiceRecordingError"
-          />
+          <div class="d-flex align-items-center gap-1">
+            <!-- Unified voice recorder (left) -->
+            <VoiceRecorder
+              ref="voiceRecorderRef"
+              :disabled="messageStore.isSending"
+              :max-duration="120"
+              @recording:started="() => (isVoiceActive = true)"
+              @recording:completed="handleVoiceRecordingCompleted"
+              @recording:cancelled="handleVoiceRecordingCancelled"
+              @recording:error="handleVoiceRecordingError"
+            />
+            <a
+              v-if="canCall"
+              class="btn btn-outline-secondary btn-sm call-button rounded-circle p-1"
+              role="button"
+              :title="$t('calls.call_button_title')"
+              @click="emit('call:start')"
+            >
+              <i class="bi bi-telephone-fill"></i>
+            </a>
+          </div>
 
           <div class="d-flex align-items-center gap-2">
             <BButton

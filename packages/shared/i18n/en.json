@@ -301,6 +301,7 @@
     "my_turn": "My turn",
     "their_turn": "Their turn",
     "conversation_options_title": "Conversation options",
+    "block_member": "Block member",
     "block_report_unmatch": "Block/report/unmatch",
     "block_user_ok": "Block {name}",
     "nevermind": "Nevermind",
