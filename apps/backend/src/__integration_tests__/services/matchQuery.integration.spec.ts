@@ -34,33 +34,25 @@ describe('MatchQueryService.findSocialProfilesFor', () => {
           id: 'u1',
           email: 'u1@test',
           isRegistrationConfirmed: true,
-          hasActiveProfile: true,
           isActive: true,
-          isOnboarded: true,
         },
         {
           id: 'u2',
           email: 'u2@test',
           isRegistrationConfirmed: true,
-          hasActiveProfile: true,
           isActive: true,
-          isOnboarded: true,
         },
         {
           id: 'u3',
           email: 'u3@test',
           isRegistrationConfirmed: true,
-          hasActiveProfile: true,
           isActive: true,
-          isOnboarded: true,
         },
         {
           id: 'u4',
           email: 'u4@test',
           isRegistrationConfirmed: true,
-          hasActiveProfile: true,
           isActive: true,
-          isOnboarded: true,
         },
       ],
     })
@@ -109,7 +101,7 @@ describe('MatchQueryService.findSocialProfilesFor', () => {
       },
     })
     const res = await service.findSocialProfilesFor('p1')
-    expect(res.map(p => p.id)).toEqual(['p2'])
+    expect(res.map((p) => p.id)).toEqual(['p2'])
   })
 })
 
@@ -125,9 +117,7 @@ describe('MatchQueryService.findMutualMatchesFor', () => {
         id: 'u1',
         email: 'u1@test',
         isRegistrationConfirmed: true,
-        hasActiveProfile: true,
         isActive: true,
-        isOnboarded: true,
       },
     })
     await prisma.profile.create({
@@ -152,17 +142,13 @@ describe('MatchQueryService.findMutualMatchesFor', () => {
           id: 'u1',
           email: 'u1@test',
           isRegistrationConfirmed: true,
-          hasActiveProfile: true,
           isActive: true,
-          isOnboarded: true,
         },
         {
           id: 'u2',
           email: 'u2@test',
           isRegistrationConfirmed: true,
-          hasActiveProfile: true,
           isActive: true,
-          isOnboarded: true,
         },
       ],
     })
@@ -206,7 +192,7 @@ describe('MatchQueryService.findMutualMatchesFor', () => {
     })
 
     const res = await service.findMutualMatchesFor('p1')
-    expect(res.map(p => p.id)).toEqual(['p2'])
+    expect(res.map((p) => p.id)).toEqual(['p2'])
   })
 
   it('omits prefKids filter when profile.hasKids is null', async () => {
@@ -217,17 +203,13 @@ describe('MatchQueryService.findMutualMatchesFor', () => {
           id: 'u3',
           email: 'u3@test',
           isRegistrationConfirmed: true,
-          hasActiveProfile: true,
           isActive: true,
-          isOnboarded: true,
         },
         {
           id: 'u4',
           email: 'u4@test',
           isRegistrationConfirmed: true,
-          hasActiveProfile: true,
           isActive: true,
-          isOnboarded: true,
         },
       ],
     })
@@ -271,6 +253,6 @@ describe('MatchQueryService.findMutualMatchesFor', () => {
     })
 
     const res = await service.findMutualMatchesFor('p3')
-    expect(res.map(p => p.id)).toEqual(['p4'])
+    expect(res.map((p) => p.id)).toEqual(['p4'])
   })
 })

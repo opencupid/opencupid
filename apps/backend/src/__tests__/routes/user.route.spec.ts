@@ -165,7 +165,7 @@ describe('GET /otp-login', () => {
 
     it('returns 403 if captcha is invalid', async () => {
       // Patch captchaService.validate to return false
-      fastify.routes['POST /send-login-link'].__fastify_captchaService = {
+      ;(fastify.routes['POST /send-login-link'] as any).__fastify_captchaService = {
         validate: vi.fn().mockResolvedValue(false),
       }
       // Patch handler to use the patched captchaService
@@ -194,7 +194,7 @@ describe('GET /otp-login', () => {
 
     it('returns 500 if captcha validation throws', async () => {
       // Patch captchaService.validate to throw
-      fastify.routes['POST /send-login-link'].__fastify_captchaService = {
+      ;(fastify.routes['POST /send-login-link'] as any).__fastify_captchaService = {
         validate: vi.fn().mockRejectedValue(new Error('fail')),
       }
       // Patch handler to use the patched captchaService

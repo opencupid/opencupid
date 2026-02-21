@@ -37,16 +37,20 @@ const tilesPlugin: FastifyPluginAsync = async (fastify) => {
   }
 
   // Retry function for failed requests
-  async function fetchWithRetry(url: string, options: any, retries: number): Promise<Response> {
+  async function fetchWithRetry(
+    url: string,
+    options: any,
+    retries: number
+  ): Promise<globalThis.Response> {
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
         const controller = new AbortController()
         const timeoutId = setTimeout(() => controller.abort(), TILE_TIMEOUT)
 
-        const response = await fetch(url, {
+        const response = (await fetch(url, {
           ...options,
           signal: controller.signal,
-        })
+        })) as unknown as globalThis.Response
 
         clearTimeout(timeoutId)
 

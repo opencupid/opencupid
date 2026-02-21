@@ -51,8 +51,8 @@ export class NotifierService {
     const t = i18next.getFixedT(user.language || 'en')
     const siteName = appConfig.SITE_NAME || 'OpenCupid'
     const tmpl = this.templateName(type)
-    const subject = t(`emails.${tmpl}.subject`, { siteName, ...(args as any) })
-    const html = t(`emails.${tmpl}.html`, { siteName, ...(args as any) })
+    const subject = t(`emails.${tmpl}.subject`, { siteName, ...(args as any) }) as string
+    const html = t(`emails.${tmpl}.html`, { siteName, ...(args as any) }) as string
 
     await this.disp.sendEmail(user.email, subject, html)
   }

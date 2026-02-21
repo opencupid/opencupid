@@ -56,7 +56,7 @@ const messageWsRoutes: FastifyPluginAsync = async (fastify) => {
       try {
         data = JSON.parse(raw.toString()) as WsMessage
       } catch (err) {
-        fastify.log.warn('Malformed JSON received on WebSocket', err)
+        fastify.log.warn({ err }, 'Malformed JSON received on WebSocket')
         return
       }
 
@@ -67,7 +67,7 @@ const messageWsRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       if (!data.to || !data.content) {
-        fastify.log.warn('WS message missing required fields', data)
+        fastify.log.warn({ msg: data }, 'WS message missing required fields')
         return
       }
 

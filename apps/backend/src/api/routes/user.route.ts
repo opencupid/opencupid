@@ -17,7 +17,7 @@ import type { OtpLoginResponse, SendLoginLinkResponse, UserMeResponse } from '@z
 import { UserIdentifier, JwtPayload } from '@zod/user/user.dto'
 import { User } from '@zod/generated'
 
-const userRoutes: FastifyPluginAsync = async fastify => {
+const userRoutes: FastifyPluginAsync = async (fastify) => {
   const userService = UserService.getInstance()
   const profileService = ProfileService.getInstance()
   const captchaService = new CaptchaService(appConfig.ALTCHA_HMAC_KEY)
@@ -56,7 +56,7 @@ const userRoutes: FastifyPluginAsync = async fastify => {
           profileId = newProfile.id
         } else {
           // TODO FIXME otpLogin return a User which has no profile on it.
-          profileId = user.profile.id
+          profileId = (user as any).profile.id
         }
 
         const payload: JwtPayload = { userId: user.id, profileId: profileId }
@@ -189,7 +189,7 @@ const userRoutes: FastifyPluginAsync = async fastify => {
         const response: UserMeResponse = { success: true, user }
         return reply.code(200).send(response)
       } catch (error) {
-        fastify.log.error('Error fetching user:', error)
+        fastify.log.error({ err: error }, 'Error fetching user')
         return sendError(reply, 500, 'Failed to fetch user')
       }
     }

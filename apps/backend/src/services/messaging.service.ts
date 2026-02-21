@@ -4,6 +4,7 @@ import type { ConversationParticipantWithConversationSummary } from '@zod/messag
 import { Conversation } from '@zod/generated'
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
 import i18next from 'i18next'
+// @ts-expect-error jsdom does not ship type declarations
 import { JSDOM } from 'jsdom'
 import { appConfig } from '../lib/appconfig'
 

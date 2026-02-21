@@ -13,14 +13,13 @@ import { rateLimitConfig, sendError } from '../helpers'
 import { PostService } from '@/services/post.service'
 import type {
   PostsResponse,
-  PostResponse,
   CreatePostResponse,
   UpdatePostResponse,
   DeletePostResponse,
 } from '@zod/apiResponse.dto'
 import { mapDbPostToOwner, mapDbPostToPublic } from '../mappers/post.mappers'
 
-const postRoutes: FastifyPluginAsync = async fastify => {
+const postRoutes: FastifyPluginAsync = async (fastify) => {
   const postService = PostService.getInstance(fastify.prisma)
 
   /**
@@ -69,9 +68,7 @@ const postRoutes: FastifyPluginAsync = async fastify => {
 
       const post = mapDbPostToPublic(raw, viewerProfileId)
 
-      // TODO filter non-public fields
-      const response: PostResponse = { success: true, post }
-      return reply.code(200).send(response)
+      return reply.code(200).send({ success: true, post })
     } catch (err) {
       fastify.log.error(err)
       return sendError(reply, 500, 'Failed to fetch post')
@@ -158,7 +155,7 @@ const postRoutes: FastifyPluginAsync = async fastify => {
         limit: query.limit,
         offset: query.offset,
       })
-      const posts = raw.map(post => mapDbPostToPublic(post, req.session.profileId))
+      const posts = raw.map((post) => mapDbPostToPublic(post, req.session.profileId))
 
       const response: PostsResponse = { success: true, posts }
       return reply.code(200).send(response)
@@ -180,7 +177,7 @@ const postRoutes: FastifyPluginAsync = async fastify => {
         limit: query.limit,
         offset: query.offset,
       })
-      const posts = raw.map(post => mapDbPostToPublic(post, req.session.profileId))
+      const posts = raw.map((post) => mapDbPostToPublic(post, req.session.profileId))
 
       const response: PostsResponse = { success: true, posts }
       return reply.code(200).send(response)
@@ -202,7 +199,7 @@ const postRoutes: FastifyPluginAsync = async fastify => {
         limit: query.limit,
         offset: query.offset,
       })
-      const posts = raw.map(post => mapDbPostToPublic(post, req.session.profileId))
+      const posts = raw.map((post) => mapDbPostToPublic(post, req.session.profileId))
 
       const response: PostsResponse = { success: true, posts }
       return reply.code(200).send(response)
@@ -230,7 +227,7 @@ const postRoutes: FastifyPluginAsync = async fastify => {
         offset: query.offset,
         includeInvisible,
       })
-      const posts = raw.map(post => mapDbPostToPublic(post, viewerProfileId))
+      const posts = raw.map((post) => mapDbPostToPublic(post, viewerProfileId))
 
       const response: PostsResponse = { success: true, posts }
       return reply.code(200).send(response)
@@ -258,7 +255,7 @@ const postRoutes: FastifyPluginAsync = async fastify => {
         offset: query.offset,
         includeInvisible: true, // Always include invisible posts for own profile
       })
-      const posts = raw.map(post => mapDbPostToOwner(post))
+      const posts = raw.map((post) => mapDbPostToOwner(post))
 
       const response: PostsResponse = { success: true, posts }
       return reply.code(200).send(response)

@@ -200,7 +200,7 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
           const nearbyCount = await tx.profile.count({
             where: {
               country: location.country,
-              isSocialActive: true, 
+              isSocialActive: true,
               isOnboarded: true,
               isActive: true,
               id: { not: updatedProfile.id },
@@ -228,7 +228,7 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
       try {
         await messageService.sendWelcomeMessage(updated.id, req.session.lang)
       } catch (error) {
-        fastify.log.warn('Failed to send welcome message', error)
+        fastify.log.warn({ err: error }, 'Failed to send welcome message')
       }
     } catch (err) {
       fastify.log.error(err)

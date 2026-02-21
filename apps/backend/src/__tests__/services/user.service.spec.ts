@@ -65,7 +65,7 @@ describe('UserService.otpLogin', () => {
       loginTokenExp: null,
     })
     const res = await service.validateUserOtpLogin('u1', 'otp')
-    expect(res.isNewUser).toBe(true)
+    expect(res.success && res.isNewUser).toBe(true)
     expect(mockPrisma.user.update).toHaveBeenCalled()
   })
 })

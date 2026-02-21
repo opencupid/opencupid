@@ -107,7 +107,7 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
         const response: ImageApiResponse = { success: true, images }
         return reply.code(200).send(response)
       } catch (err) {
-        fastify.log.error('Error storing image:', err)
+        fastify.log.error({ err }, 'Error storing image')
         return sendError(reply, 500, 'Failed to store image')
       }
     }

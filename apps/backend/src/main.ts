@@ -36,7 +36,7 @@ async function main() {
     const version = getPackageVersion(path.join(__dirname, '..', 'package.json'))
     app.log.info(`🚀 Starting server, version ${version}`)
   } catch (err) {
-    app.log.warn('Could not read version info at startup:', err)
+    app.log.warn({ err }, 'Could not read version info at startup')
   }
 
   // Register CORS plugin
