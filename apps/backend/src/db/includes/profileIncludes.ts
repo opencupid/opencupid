@@ -30,7 +30,6 @@ export function profileImageInclude() {
 
 export function tagsInclude() {
   const clause = {
-    city: true,
     tags: {
       include: {
         translations: {

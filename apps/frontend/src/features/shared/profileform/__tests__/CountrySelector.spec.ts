@@ -18,7 +18,7 @@ describe('CountrySelector', () => {
   it('emits update:modelValue when country selection changes', async () => {
     const wrapper = mount(CountrySelector, {
       props: {
-        modelValue: { country: '', cityId: '', cityName: '' },
+        modelValue: { country: '', cityName: '' },
       },
     })
 
@@ -33,6 +33,6 @@ describe('CountrySelector', () => {
     const emitted = wrapper.emitted('update:modelValue')
 
     expect(emitted).toBeTruthy()
-    expect(emitted![0]).toEqual([{ country: 'US', cityId: '', cityName: '' }])
+    expect(emitted![0]).toEqual([{ country: 'US', cityName: '' }])
   })
 })

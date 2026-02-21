@@ -9,7 +9,6 @@ const { t } = useI18n()
 
 const model = defineModel<LocationPayload>({
   default: () => ({
-    cityId: '',
     cityName: '',
     country: '',
   }),

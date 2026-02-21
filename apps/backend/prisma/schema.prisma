@@ -84,29 +84,6 @@ enum PostType {
   REQUEST
 }
 
-model City {
-  id      String @id @default(cuid())
-  name    String
-  country String // ISO2 code e.g. "US", "DE"
-  lat     Float?
-  lon     Float?
-
-  profiles      Profile[]
-  socialFilters SocialMatchFilter[]
-
-  isUserCreated Boolean  @default(false)
-  isApproved    Boolean  @default(false)
-  isHidden      Boolean  @default(false)
-  isDeleted     Boolean  @default(false)
-  createdBy     String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  // indexes to speed up lookups
-  @@index([name])
-  @@index([country, name])
-}
-
 model Tag {
   id             String              @id @default(cuid())
   slug           String              @unique
@@ -181,9 +158,6 @@ model Profile {
   publicName String
   country    String  @default("")
   cityName   String  @default("")
-  cityId     String?
-  city       City?   @relation(fields: [cityId], references: [id])
-
   isSocialActive Boolean @default(false)
   isDatingActive Boolean @default(false)
   isActive       Boolean @default(false)
@@ -377,13 +351,11 @@ model SocialMatchFilter {
   id        String  @id @default(cuid())
   profileId String  @unique
   country   String?
-  cityId    String?
   cityName  String?
   lat       Float?
   lon       Float?
   radius    Int?    @default(50) // in km
   tags      Tag[]
-  city      City?   @relation(fields: [cityId], references: [id])
 }
 
 model PushSubscription {
