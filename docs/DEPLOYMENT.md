@@ -2,12 +2,7 @@
 
 ## Prerequisites
 
-The production server needs only two tools installed:
-
-- **Docker** (with Compose v2)
-- **pnpm** (for running management scripts)
-
-Everything else runs inside containers.
+The production server needs only **Docker** (with Compose v2) installed. Everything else runs inside containers.
 
 ## Domain name configuration
 
@@ -37,9 +32,6 @@ cp .env.example .env
 #   POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB
 #   JWT_SECRET, AUTH_IMG_HMAC_SECRET
 #   JVB_ADVERTISE_IPS (public IP of the host)
-
-# install pnpm dependencies (needed for management scripts)
-pnpm install
 
 # create data volumes
 docker volume create postgres_data
@@ -81,40 +73,39 @@ DATABASE_URL=postgresql://appuser:<password>@db:5432/app
 - **Prisma / backend app** reads `DATABASE_URL` from the environment
 - **Management scripts** (`db:psql`, `db:dump`, etc.) read `POSTGRES_USER` and `POSTGRES_DB` from the container's environment — no hardcoded credentials
 
-## Management scripts
+## Management commands
 
-Run these from the project root with `pnpm --filter backend <script>`:
+All management commands run inside containers via `docker compose exec`.
 
 ### Database
 
 ```bash
-pnpm --filter backend db:psql              # Interactive psql shell
-pnpm --filter backend db:dump > dump.sql   # Data-only dump (stdout)
-pnpm --filter backend db:backup > bak.sql  # Full dump with DROP/CREATE
-pnpm --filter backend db:restore < bak.sql # Restore from dump
+docker compose exec db sh -c 'psql -U $POSTGRES_USER $POSTGRES_DB'            # Interactive psql
+docker compose exec db sh -c 'pg_dump --data-only -U $POSTGRES_USER $POSTGRES_DB' > dump.sql  # Data-only dump
+docker compose exec db sh -c 'pg_dump --clean -U $POSTGRES_USER $POSTGRES_DB' > bak.sql       # Full backup
+docker compose exec -T db sh -c 'psql -U $POSTGRES_USER $POSTGRES_DB' < bak.sql               # Restore
 ```
 
 ### Redis
 
 ```bash
-pnpm --filter backend redis:flush          # FLUSHALL
-pnpm --filter backend redis:sessions       # List all keys
+docker compose exec redis redis-cli FLUSHALL    # Flush all data
+docker compose exec redis redis-cli KEYS '*'    # List all keys
 ```
 
 ### Prisma (migrations)
 
 ```bash
-pnpm --filter backend prisma:deploy        # Run pending migrations (production)
-pnpm --filter backend prisma:migrate       # Create new migration (development)
-pnpm --filter backend prisma:generate      # Regenerate Prisma client
+docker compose exec backend npx prisma migrate deploy   # Run pending migrations (production)
+docker compose exec backend npx prisma generate          # Regenerate Prisma client
 ```
 
 ### Other
 
 ```bash
-pnpm --filter backend images:reprocess     # Reprocess all profile images
-pnpm --filter backend tags:translate       # Translate interest tags via DeepL
-pnpm --filter backend listmonk:migrate     # One-time sync of users to Listmonk
+docker compose exec backend npx tsx scripts/reprocess-images.ts          # Reprocess profile images
+docker compose exec backend npx node scripts/translate-tags-deepl.js     # Translate tags via DeepL
+docker compose exec backend pnpm listmonk:migrate                        # One-time user sync to Listmonk
 ```
 
 ## Seeding database
