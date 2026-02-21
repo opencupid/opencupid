@@ -34,6 +34,10 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Generate Prisma
         run: pnpm --filter backend exec npx prisma generate
+      - name: Validate docker-compose (dev)
+        run: docker compose config --quiet
+      - name: Validate docker-compose (production)
+        run: docker compose -f docker-compose.production.yml config --quiet
       - name: Run lint
         run: pnpm lint
       # - name: Initialize test database
