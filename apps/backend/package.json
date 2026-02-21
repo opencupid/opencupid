@@ -24,8 +24,7 @@
     "db:dump": "docker compose exec db sh -c 'pg_dump --data-only --no-privileges --disable-triggers -U $POSTGRES_USER $POSTGRES_DB'",
     "db:backup": "docker compose exec db sh -c 'pg_dump --clean -U $POSTGRES_USER $POSTGRES_DB'",
     "type-check": "tsc --noEmit",
-    "test": "vitest --run",
-    "test:integration": "vitest --config vitest.integration.config.ts --mode test"
+    "test": "vitest --run"
   },
   "dependencies": {
     "@fastify/cors": "11.2.0",
