@@ -71,6 +71,19 @@ async function startJitsi() {
   jitsiApi.addListener('readyToClose', () => {
     callStore.endCall()
   })
+
+  // Auto-close when local user leaves the conference (e.g. clicks hangup)
+  jitsiApi.addListener('videoConferenceLeft', () => {
+    callStore.endCall()
+  })
+
+  // Auto-close when the remote participant leaves (1-1 call)
+  jitsiApi.addListener('participantLeft', () => {
+    const count = jitsiApi?.getNumberOfParticipants?.() ?? 0
+    if (count <= 1) {
+      callStore.endCall()
+    }
+  })
 }
 
 watch(isActive, async (active) => {
