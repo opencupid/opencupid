@@ -4,6 +4,7 @@ import { sendError } from '../helpers'
 import { CallService } from '@/services/call.service'
 import { broadcastToProfile } from '@/utils/wsUtils'
 import { mapProfileSummary } from '@/api/mappers/profile.mappers'
+import { WebPushService } from '@/services/webpush.service'
 import type { MessageDTO } from '@zod/messaging/messaging.dto'
 
 const ConversationIdParamsSchema = z.object({
@@ -20,6 +21,7 @@ const InitiateCallBodySchema = z.object({
 
 const callRoutes: FastifyPluginAsync = async (fastify) => {
   const callService = CallService.getInstance()
+  const webPushService = WebPushService.getInstance()
 
   // POST / — initiate a call
   fastify.post('/', { onRequest: [fastify.authenticate] }, async (req, reply) => {
@@ -36,8 +38,8 @@ const callRoutes: FastifyPluginAsync = async (fastify) => {
         }
       )
 
-      // Notify callee via WS
-      broadcastToProfile(fastify, calleeProfileId, {
+      // Notify callee via WS, fall back to push notification if offline
+      const isWsBroadcasted = broadcastToProfile(fastify, calleeProfileId, {
         type: 'ws:incoming_call',
         payload: {
           conversationId: body.data.conversationId,
@@ -45,6 +47,14 @@ const callRoutes: FastifyPluginAsync = async (fastify) => {
           caller: { id: profileId, publicName: callerPublicName },
         },
       })
+
+      if (!isWsBroadcasted && WebPushService.isWebPushConfigured()) {
+        webPushService
+          .sendCallNotification(calleeProfileId, callerPublicName, body.data.conversationId)
+          .catch((err) => {
+            fastify.log.error(err, 'Call push notification failed')
+          })
+      }
 
       return reply.code(200).send({
         success: true,

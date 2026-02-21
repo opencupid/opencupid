@@ -20,17 +20,12 @@ self.addEventListener('push', (event) => {
 })
 
 self.addEventListener('notificationclick', (event) => {
+  console.log('[SW] notificationclick fired', event.notification.data)
   event.notification.close()
 
-  const targetUrl = event.notification.data?.url || '/'
-  event.waitUntil(
-    self.clients.matchAll({ type: 'window' }).then((clientsArr) => {
-      const client = clientsArr.find((c) => c.focused) || clientsArr[0]
-      if (client) {
-        return client.navigate(targetUrl).then(() => client.focus())
-      } else {
-        return self.clients.openWindow(targetUrl)
-      }
-    })
-  )
+  const path = event.notification.data?.url || '/'
+  const absoluteUrl = new URL(path, self.registration.scope).href
+  console.log('[SW] Opening URL:', absoluteUrl)
+
+  event.waitUntil(self.clients.openWindow(absoluteUrl))
 })

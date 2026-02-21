@@ -124,6 +124,16 @@ Generate Prisma client after schema changes:
 pnpm --filter backend prisma:generate
 ```
 
+Interactive psql shell (via Docker):
+```
+pnpm --filter backend db:psql
+```
+
+Run a single query:
+```
+pnpm --filter backend db:psql -c 'SELECT ...'
+```
+
 Schema: `apps/backend/prisma/schema.prisma`
 
 ## Git workflow

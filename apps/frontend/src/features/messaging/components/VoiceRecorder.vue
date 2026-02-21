@@ -3,7 +3,6 @@ import { computed, watch } from 'vue'
 import { useVoiceRecorder } from '@/features/shared/composables/useVoiceRecorder'
 
 // Import icons
-import MicIcon from '@/assets/icons/interface/mic.svg'
 import Mic2Icon from '@/assets/icons/interface/mic-2.svg'
 
 const props = defineProps<{
@@ -44,7 +43,7 @@ const buttonVariant = computed(() => {
   if (isRecording.value) return 'danger'
   if (isCompleted.value) return 'success'
   if (isError.value) return 'warning'
-  return 'outline-primary'
+  return 'outline-secondary'
 })
 
 const progressPercentage = computed(() => {
@@ -93,6 +92,7 @@ defineExpose({ triggerStart: handleRecordClick, reset })
         v-if="canRecord"
         :variant="buttonVariant"
         size="sm"
+        :class="{ 'icon-btn-round': isIdle }"
         :disabled="props.disabled"
         @click="handleRecordClick"
         :title="
@@ -106,7 +106,7 @@ defineExpose({ triggerStart: handleRecordClick, reset })
         "
       >
         <component
-          :is="isRecording ? Mic2Icon : MicIcon"
+          :is="Mic2Icon"
           class="svg-icon"
         />
         <span
@@ -206,6 +206,16 @@ defineExpose({ triggerStart: handleRecordClick, reset })
 
 .btn {
   transition: all 0.2s ease;
+}
+
+.icon-btn-round {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-danger {

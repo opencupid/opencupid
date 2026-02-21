@@ -12,6 +12,7 @@ import TagList from '@/features/shared/profiledisplay/TagList.vue'
 import LanguageList from '@/features/shared/profiledisplay/LanguageList.vue'
 import StoreErrorOverlay from '@/features/shared/ui/StoreErrorOverlay.vue'
 import IconMenuDotsVert from '@/assets/icons/interface/menu-dots-vert.svg'
+import IconCall from '@/assets/icons/interface/call.svg'
 import VoiceRecorder from './VoiceRecorder.vue'
 import { useMessageStore } from '../stores/messageStore'
 
@@ -163,12 +164,12 @@ function handleVoiceRecordingError(error: string) {
             />
             <a
               v-if="canCall"
-              class="btn btn-outline-secondary btn-sm call-button rounded-circle p-1"
+              class="btn btn-outline-secondary btn-sm icon-btn-round"
               role="button"
               :title="$t('calls.call_button_title')"
               @click="emit('call:start')"
             >
-              <i class="bi bi-telephone-fill"></i>
+              <IconCall class="svg-icon" />
             </a>
           </div>
 
@@ -235,5 +236,15 @@ function handleVoiceRecordingError(error: string) {
 <style scoped>
 .send-mode-menu {
   min-width: 200px;
+}
+
+.icon-btn-round {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>
