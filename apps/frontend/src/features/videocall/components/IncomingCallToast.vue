@@ -1,47 +1,43 @@
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n'
+import { useToast } from 'vue-toastification'
 import { useCallStore } from '../stores/callStore'
 
-const { t } = useI18n()
 const callStore = useCallStore()
+const toast = useToast()
 
-defineProps<{
+const props = defineProps<{
   callerName: string
   toastId: number | string
 }>()
 
-defineEmits<{
-  (e: 'closeToast'): void
-}>()
-
-function handleAccept(closeToast: () => void) {
+function handleAccept() {
   callStore.acceptCall()
-  closeToast()
+  toast.dismiss(props.toastId)
 }
 
-function handleDecline(closeToast: () => void) {
+function handleDecline() {
   callStore.declineCall()
-  closeToast()
+  toast.dismiss(props.toastId)
 }
 </script>
 
 <template>
   <div class="d-flex flex-column">
     <div class="fw-bold mb-2">
-      {{ t('calls.incoming_call_from', { name: callerName }) }}
+      {{ $t('calls.incoming_call_from', { name: callerName }) }}
     </div>
     <div class="d-flex gap-2">
       <button
         class="btn btn-success btn-sm"
-        @click="handleAccept($parent?.$emit?.bind($parent, 'close-toast') || (() => {}))"
+        @click="handleAccept"
       >
-        {{ t('calls.accept') }}
+        {{ $t('calls.accept') }}
       </button>
       <button
         class="btn btn-danger btn-sm"
-        @click="handleDecline($parent?.$emit?.bind($parent, 'close-toast') || (() => {}))"
+        @click="handleDecline"
       >
-        {{ t('calls.decline') }}
+        {{ $t('calls.decline') }}
       </button>
     </div>
   </div>

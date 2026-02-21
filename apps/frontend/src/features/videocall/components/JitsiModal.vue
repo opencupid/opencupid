@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref, computed, watch, onUnmounted, nextTick } from 'vue'
 import { useCallStore } from '../stores/callStore'
+import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 
 const callStore = useCallStore()
+const ownerProfileStore = useOwnerProfileStore()
 const jitsiContainer = ref<HTMLDivElement | null>(null)
 let jitsiApi: any = null
 let scriptLoaded = false
@@ -53,10 +55,13 @@ async function startJitsi() {
     parentNode: jitsiContainer.value,
     width: '100%',
     height: '100%',
+    userInfo: {
+      displayName: ownerProfileStore.profile?.publicName || '',
+    },
     configOverwrite: {
       startWithAudioMuted: false,
       startWithVideoMuted: false,
-      prejoinPageEnabled: false,
+      prejoinConfig: { enabled: false },
     },
     interfaceConfigOverwrite: {
       SHOW_JITSI_WATERMARK: false,

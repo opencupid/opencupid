@@ -98,15 +98,17 @@ function handleIncomingCall(payload: {
   caller: { id: string; publicName: string }
 }) {
   callStore.handleIncomingCall(payload)
+  const id = toastId()
   toast(
     {
       component: IncomingCallToast,
       props: {
-        toastId: toastId(),
+        toastId: id,
         callerName: payload.caller.publicName,
       },
     },
     {
+      id,
       timeout: 30000,
       closeOnClick: false,
     }
