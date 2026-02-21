@@ -131,9 +131,7 @@ async function main() {
       ...baseProfile,
       ...datingProfile,
       tags: {
-        create: randomTags.map((tag) => ({
-          tag: { connect: { id: tag.id } },
-        })),
+        connect: randomTags.map((tag) => ({ id: tag.id })),
       },
       localized: {
         create: langs.flatMap((locale) => [

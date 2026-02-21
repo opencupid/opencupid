@@ -52,7 +52,7 @@ const MessageListQuerySchema = z.object({
  *
  * @param fastify - The Fastify instance to decorate with messaging routes.
  */
-const messageRoutes: FastifyPluginAsync = async fastify => {
+const messageRoutes: FastifyPluginAsync = async (fastify) => {
   // Register multipart support for voice message uploads
   await fastify.register(multipart, {
     limits: {
@@ -92,7 +92,7 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
         take: query.data.take,
       })
 
-      const messages = raw.map(m => mapMessageForMessageList(m, profileId))
+      const messages = raw.map((m) => mapMessageForMessageList(m, profileId))
       const response: MessagesResponse = { success: true, messages, nextCursor, hasMore }
       return reply.code(200).send(response)
     } catch (error) {
@@ -107,7 +107,7 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
 
     try {
       const raw = await messageService.listConversationsForProfile(profileId)
-      const conversations = raw.map(p => mapConversationParticipantToSummary(p, profileId))
+      const conversations = raw.map((p) => mapConversationParticipantToSummary(p, profileId))
       const response: ConversationsResponse = { success: true, conversations }
       return reply.code(200).send(response)
     } catch (error) {
@@ -158,7 +158,7 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
     const { profileId, content } = body.data
 
     try {
-      const { convoId, message } = await fastify.prisma.$transaction(async tx => {
+      const { convoId, message } = await fastify.prisma.$transaction(async (tx) => {
         return await messageService.sendOrStartConversation(
           tx,
           senderProfileId,
@@ -197,7 +197,7 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
 
       if (!isWsBroadcasted) {
         if (WebPushService.isWebPushConfigured()) {
-          webPushService.send(messageDTO, profileId).catch(err => {
+          webPushService.send(messageDTO, profileId).catch((err) => {
             fastify.log.error(err, 'Web push failed')
           })
         }
@@ -239,6 +239,10 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
         return sendError(reply, 400, 'No voice file provided')
       }
 
+      // fileMeta is guaranteed non-null after the check above; bind to a const
+      // so TypeScript narrows the type for the rest of the scope.
+      const meta = fileMeta
+
       // Validate voice message payload
       const payload = SendVoiceMessagePayloadSchema.safeParse({
         profileId: fields.profileId,
@@ -252,7 +256,7 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
       }
 
       // Validate file type (strip codec suffix before allowlist check)
-      const baseMimeType = fileMeta.mimetype.split(';')[0].trim()
+      const baseMimeType = meta.mimetype.split(';')[0].trim()
       const allowedMimeTypes = ['audio/mpeg', 'audio/mp4', 'audio/wav', 'audio/webm', 'audio/ogg']
       if (!allowedMimeTypes.includes(baseMimeType)) {
         return sendError(reply, 400, 'Invalid audio file type')
@@ -272,7 +276,7 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
       await fsPromises.mkdir(voiceDir, { recursive: true })
 
       // Generate unique filename
-      const fileExtension = path.extname(fileMeta.filename) || '.webm'
+      const fileExtension = path.extname(meta.filename) || '.webm'
       const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}${fileExtension}`
       const filePath = path.join(voiceDir, fileName)
 
@@ -283,7 +287,7 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
       const stats = await fsPromises.stat(filePath)
 
       try {
-        const { convoId, message } = await fastify.prisma.$transaction(async tx => {
+        const { convoId, message } = await fastify.prisma.$transaction(async (tx) => {
           return await messageService.sendOrStartConversation(
             tx,
             senderProfileId,
@@ -292,7 +296,7 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
             'audio/voice',
             {
               filePath: `voice/${senderProfileId}/${fileName}`,
-              mimeType: fileMeta.mimetype,
+              mimeType: meta.mimetype,
               fileSize: stats.size,
               duration: payload.data.duration,
             }
@@ -328,7 +332,7 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
 
         if (!isWsBroadcasted) {
           if (WebPushService.isWebPushConfigured()) {
-            webPushService.send(messageDTO, payload.data.profileId).catch(err => {
+            webPushService.send(messageDTO, payload.data.profileId).catch((err) => {
               fastify.log.error(err, 'Web push failed')
             })
           }

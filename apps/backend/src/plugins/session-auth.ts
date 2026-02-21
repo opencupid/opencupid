@@ -70,7 +70,7 @@ export default fp(async (fastify: FastifyInstance) => {
         })) as UserWithProfile
         if (!user) return sendUnauthorizedError(reply, 'User not found')
       } catch (error) {
-        fastify.log.error('Error fetching user for session refresh:', error)
+        fastify.log.error({ err: error }, 'Error fetching user for session refresh')
         return sendUnauthorizedError(reply, 'Session refresh failed')
       }
 

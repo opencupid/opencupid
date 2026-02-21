@@ -1,7 +1,7 @@
 import { vi } from 'vitest'
 
 export function createMockPrisma() {
-  return {
+  const mock: any = {
     user: {
       findUnique: vi.fn(),
       update: vi.fn(),
@@ -73,6 +73,7 @@ export function createMockPrisma() {
       create: vi.fn(),
       update: vi.fn(),
     },
-    $transaction: vi.fn((fn) => fn(this)),
+    $transaction: vi.fn((fn: (client: any) => any) => fn(mock)),
   }
+  return mock
 }

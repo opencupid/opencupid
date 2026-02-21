@@ -44,6 +44,7 @@ describe('ListmonkSyncService', () => {
     lastLoginAt: new Date(),
     language: 'en',
     newsletterOptIn: false,
+    isPushNotificationEnabled: false,
     roles: [],
     ...overrides,
   })

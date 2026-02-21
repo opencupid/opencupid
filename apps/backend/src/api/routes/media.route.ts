@@ -24,7 +24,7 @@ const MIME_TYPE_MAP: Record<string, string> = {
   '.mp3': 'audio/mpeg',
 }
 
-const mediaRoutes: FastifyPluginAsync = async fastify => {
+const mediaRoutes: FastifyPluginAsync = async (fastify) => {
   // Serve voice message files - only accessible by conversation participants
   fastify.get(
     '/voice/:profileId/:filename',
@@ -102,7 +102,7 @@ const mediaRoutes: FastifyPluginAsync = async fastify => {
         reply.header('Content-Length', fileSize)
         return reply.send(createReadStream(filePath))
       } catch (error) {
-        fastify.log.error('Error serving voice message:', error)
+        fastify.log.error({ err: error }, 'Error serving voice message')
         return sendError(reply, 500, 'Failed to serve voice message')
       }
     }

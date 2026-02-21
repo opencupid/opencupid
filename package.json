@@ -18,7 +18,7 @@
     "turbo": "2.8.10"
   },
   "scripts": {
-    "ci:test": "pnpm install && pnpm --filter backend prisma:generate && pnpm lint && pnpm test && pnpm --filter frontend type-check",
+    "ci:test": "pnpm install && pnpm --filter backend prisma:generate && pnpm lint && pnpm test && turbo run type-check --concurrency 1",
     "dev": "./scripts/dev-start.sh",
     "dev:stop": "./scripts/dev-stop.sh",
     "build": "turbo run build",
@@ -27,7 +27,7 @@
     "format": "turbo run format",
     "gen-certs": "openssl req -x509 -nodes -days 365   -newkey rsa:2048   -keyout certs/localhost-key.pem   -out certs/localhost-cert.pem   -subj \"/C=US/ST=Dev/L=Local/O=Dev/CN=localhost\"",
     "mcp-server": "npx -y supergateway --stdio \"npx -y @modelcontextprotocol/server-filesystem $(pwd)\" --port 9999",
-    "test:integration": "turbo run test:integration",
+
     "test:coverage": "pnpm run test:coverage:frontend && pnpm run test:coverage:backend",
     "test:coverage:frontend": "pnpm --filter frontend run test:unit --coverage --run",
     "test:coverage:backend": "pnpm --filter backend run test --coverage --run",
