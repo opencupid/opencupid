@@ -85,7 +85,7 @@ export function mapProfileToPublic(
     tags: publicTags,
     location: {
       country: dbProfile.country || '',
-      cityName: dbProfile.city?.name || dbProfile.cityName || '',
+      cityName: dbProfile.cityName || '',
       lat: dbProfile.lat ?? null,
       lon: dbProfile.lon ?? null,
     },
