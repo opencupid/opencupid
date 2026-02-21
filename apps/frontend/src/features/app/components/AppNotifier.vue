@@ -138,7 +138,6 @@ onMounted(() => {
   bus.on('ws:incoming_call', handleIncomingCall)
   bus.on('api:offline', handleApiOffline)
   bus.on('api:online', handleApiOnline)
-  callStore.initialize()
 })
 
 onUnmounted(() => {
@@ -148,7 +147,6 @@ onUnmounted(() => {
   bus.off('ws:incoming_call', handleIncomingCall)
   bus.off('api:offline', handleApiOffline)
   bus.off('api:online', handleApiOnline)
-  callStore.teardown()
 })
 </script>
 

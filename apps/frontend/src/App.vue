@@ -29,6 +29,10 @@ useLanguages().initialize(i18nStore.getLanguage())
 
 // Initialize update checker
 useUpdateChecker()
+
+// Initialize call store (WebRTC / call state)
+import { useCallStore } from '@/features/videocall/stores/callStore'
+useCallStore().initialize()
 </script>
 
 <template>
