@@ -133,12 +133,12 @@ async function main() {
       ...datingPrefs,
       city: { connect: { id: city.id } },
       tags: {
-        create: randomTags.map((tag) => ({
+        create: randomTags.map(tag => ({
           tag: { connect: { id: tag.id } },
         })),
       },
       localized: {
-        create: langs.flatMap((locale) => [
+        create: langs.flatMap(locale => [
           {
             locale,
             field: 'introDating',
@@ -178,7 +178,7 @@ async function main() {
 }
 
 main()
-  .catch((e) => {
+  .catch(e => {
     console.error(e)
     process.exit(1)
   })

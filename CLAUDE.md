@@ -109,7 +109,7 @@ pnpm build
 
 * All completed work must pass full test suite
 * For all new frontend components, API routes and services test files must be added in the `__tests__` subdirectory closest to the new file or existing file being modified
-* Format new code using `prettier --write`. Never reformat existing code that is not in the current change set.
+* Format **only files you added or modified** using `prettier --write <file1> <file2> ...`. Never run `pnpm format` or `prettier --write .` on the whole codebase — this creates noise in PRs with unrelated formatting changes.
 * From the package root you can just call `pnpm test`. The commit should pass all tests before you merge.
 * To focus on one step, add the Vitest pattern: `pnpm vitest run -t "<test name>"`.
 * Fix any test or type errors until the whole suite is green.
@@ -193,8 +193,9 @@ Run these steps in order:
 
 ## Formatting
 
+Format only the files you changed — never the entire codebase:
 ```
-pnpm format
+prettier --write <file1> <file2> ...
 ```
 
 Uses Prettier (config: `prettier.config.js`).

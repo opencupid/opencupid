@@ -19,8 +19,8 @@ export async function generateContentHash(filePath: string): Promise<string> {
     const hash = createHash('sha256')
     const stream = createReadStream(filePath)
 
-    stream.on('error', (err) => reject(err))
-    stream.on('data', (chunk) => hash.update(chunk))
+    stream.on('error', err => reject(err))
+    stream.on('data', chunk => hash.update(chunk))
     stream.on('end', () => resolve(hash.digest('hex')))
   })
 }

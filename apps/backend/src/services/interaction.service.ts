@@ -33,7 +33,7 @@ export class InteractionService {
   async like(fromId: string, toId: string): Promise<InteractionEdgePair> {
     if (fromId === toId) throw new Error('Cannot like yourself')
 
-    const { like } = await prisma.$transaction(async (tx) => {
+    const { like } = await prisma.$transaction(async tx => {
       await tx.hiddenProfile.deleteMany({ where: { fromId, toId } }) // remove pass if exists
 
       const like = await tx.likedProfile.upsert({
@@ -105,7 +105,7 @@ export class InteractionService {
       },
     })
 
-    return likes.map((like) => {
+    return likes.map(like => {
       const isMatch = false // Optional: calculate mutual like if needed
       return toLikeEdge(like.from, like.createdAt, isMatch)
     })
@@ -121,7 +121,7 @@ export class InteractionService {
       },
     })
 
-    return likes.map((like) => {
+    return likes.map(like => {
       const isMatch = false // Optional: calculate mutual like if needed
       return toLikeEdge(like.to, like.createdAt, isMatch)
     })
@@ -144,7 +144,7 @@ export class InteractionService {
       },
     })
 
-    return matches.map((like) => toLikeEdge(like.to, like.createdAt, true))
+    return matches.map(like => toLikeEdge(like.to, like.createdAt, true))
   }
 
   async getNewMatchesCount(profileId: string): Promise<number> {
@@ -181,7 +181,7 @@ export class InteractionService {
   async pass(fromId: string, toId: string): Promise<void> {
     if (fromId === toId) throw new Error('Cannot pass yourself')
 
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async tx => {
       // Remove likes in both directions if a match exists
       await tx.likedProfile.deleteMany({
         where: {
@@ -209,6 +209,6 @@ export class InteractionService {
       where: { fromId: profileId },
       select: { toId: true },
     })
-    return hidden.map((h) => h.toId)
+    return hidden.map(h => h.toId)
   }
 }

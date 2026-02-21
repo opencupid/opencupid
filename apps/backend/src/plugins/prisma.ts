@@ -4,6 +4,6 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-export default fp(async (fastify) => {
+export default fp(async fastify => {
   fastify.decorate('prisma', prisma)
 })

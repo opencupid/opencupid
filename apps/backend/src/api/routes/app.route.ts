@@ -13,7 +13,7 @@ function extractClientIp(headerValue: string | undefined, fallbackIp: string): s
   return rawIp.startsWith('::ffff:') ? rawIp.substring(7) : rawIp
 }
 
-const appRoutes: FastifyPluginAsync = async (fastify) => {
+const appRoutes: FastifyPluginAsync = async fastify => {
   fastify.get(
     '/version',
     {

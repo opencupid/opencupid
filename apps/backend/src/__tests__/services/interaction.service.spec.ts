@@ -32,7 +32,7 @@ describe('InteractionService.like', () => {
     const toId = 'user2'
 
     // Mock the transaction to return a like
-    mockPrisma.$transaction.mockImplementation(async (fn) => {
+    mockPrisma.$transaction.mockImplementation(async fn => {
       await fn({
         hiddenProfile: { deleteMany: vi.fn() },
         likedProfile: {
@@ -67,7 +67,7 @@ describe('InteractionService.like', () => {
     const toId = 'user2'
 
     // Mock the transaction to return a like
-    mockPrisma.$transaction.mockImplementation(async (fn) => {
+    mockPrisma.$transaction.mockImplementation(async fn => {
       await fn({
         hiddenProfile: { deleteMany: vi.fn() },
         likedProfile: {

@@ -200,7 +200,7 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
           const nearbyCount = await tx.profile.count({
             where: {
               country: location.country,
-              isSocialActive: true,
+              isSocialActive: true, 
               isOnboarded: true,
               isActive: true,
               id: { not: updatedProfile.id },

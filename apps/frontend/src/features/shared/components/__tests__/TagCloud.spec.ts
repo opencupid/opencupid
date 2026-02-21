@@ -12,7 +12,16 @@ let endCallback: ((words: any[]) => void) | null = null
 vi.mock('d3-cloud', () => {
   const chainable = () => {
     const api: any = {}
-    const methods = ['size', 'words', 'font', 'fontSize', 'rotate', 'padding', 'random', 'canvas']
+    const methods = [
+      'size',
+      'words',
+      'font',
+      'fontSize',
+      'rotate',
+      'padding',
+      'random',
+      'canvas',
+    ]
     let inputWords: any[] = []
 
     for (const m of methods) {

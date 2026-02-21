@@ -22,7 +22,7 @@ const transporter = nodemailer.createTransport({
 
 new Worker(
   'emails',
-  async (job) => {
+  async job => {
     const { to, subject, html } = job.data as {
       to: string
       subject: string

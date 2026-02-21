@@ -23,6 +23,7 @@ import { MockFastify, MockReply } from '../../test-utils/fastify'
 let fastify: MockFastify
 let reply: MockReply
 
+
 // We'll mock appConfig per test case since it's imported by the route
 const mockAppConfig = vi.hoisted(() => ({
   NODE_ENV: 'development',

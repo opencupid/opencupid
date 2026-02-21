@@ -15,8 +15,8 @@ describe('mapToLocalizedUpserts', () => {
     })
 
     expect(result).toHaveLength(2)
-    const en = result.find((r) => r.locale === 'en')!
-    const de = result.find((r) => r.locale === 'de')!
+    const en = result.find(r => r.locale === 'en')!
+    const de = result.find(r => r.locale === 'de')!
 
     expect(en.updates).toEqual({ introSocial: 'hello', introDating: 'dating hello' })
     expect(de.updates).toEqual({ introSocial: 'hallo', introDating: 'dating hallo' })

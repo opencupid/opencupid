@@ -124,7 +124,7 @@ export class ProfileService {
           isActive: [data.isDatingActive, data.isSocialActive].some(Boolean),
           tags: {
             set: [],
-            connect: tags.map((tagId) => ({ id: tagId })),
+            connect: tags.map(tagId => ({ id: tagId })),
           },
         },
       })
@@ -337,7 +337,7 @@ export class ProfileService {
     return prisma.profile.findMany({
       where: {
         id: {
-          notIn: blockedIds?.blockedProfiles.map((p) => p.id) || [],
+          notIn: blockedIds?.blockedProfiles.map(p => p.id) || [],
         },
         blockedByProfiles: {
           none: {

@@ -139,12 +139,12 @@ async function main() {
       ...datingProfile,
       city: { connect: { id: city.id } },
       tags: {
-        create: randomTags.map((tag) => ({
+        create: randomTags.map(tag => ({
           tag: { connect: { id: tag.id } },
         })),
       },
       localized: {
-        create: langs.flatMap((locale) => [
+        create: langs.flatMap(locale => [
           {
             locale,
             field: 'introDating',
@@ -200,7 +200,7 @@ async function main() {
 }
 
 main()
-  .catch((e) => {
+  .catch(e => {
     console.error(e)
     process.exit(1)
   })
@@ -239,7 +239,7 @@ async function attachRandomImage(profile: any, gender: string, userId: string) {
   // const gender = profile.gender?.toLowerCase() ?? 'unspecified'
 
   // Filter by gender
-  const matching = files.filter((file) => {
+  const matching = files.filter(file => {
     return file.endsWith(`.${gender}.jpg`) && !usedImages.has(file)
   })
 

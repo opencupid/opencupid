@@ -24,7 +24,7 @@ const MIME_TYPE_MAP: Record<string, string> = {
   '.mp3': 'audio/mpeg',
 }
 
-const mediaRoutes: FastifyPluginAsync = async (fastify) => {
+const mediaRoutes: FastifyPluginAsync = async fastify => {
   // Serve voice message files - only accessible by conversation participants
   fastify.get(
     '/voice/:profileId/:filename',
