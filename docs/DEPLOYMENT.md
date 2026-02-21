@@ -68,6 +68,28 @@ This will:
 The script is idempotent and can be safely run multiple times.
 
 
+## Jitsi Video Calls
+
+Jitsi Meet is proxied through the ingress on port 443 using a subdomain (`meet.<DOMAIN>`).
+
+### Prerequisites
+
+1. **DNS**: Create an A or CNAME record for `meet.<DOMAIN>` pointing to the same server as `<DOMAIN>`.
+2. **TLS certificate**: The cert must cover the Jitsi subdomain. Either:
+   - Use a wildcard cert (`*.<DOMAIN>`) — no extra steps needed.
+   - Or add the subdomain when obtaining the cert:
+     ```bash
+     docker compose -f docker-compose.production.yml run --rm certbot certonly \
+       --webroot -w /var/www/html \
+       -d ${DOMAIN} -d meet.${DOMAIN} \
+       --email ${EMAIL} --agree-tos --no-eff-email
+     ```
+3. **Environment**: Set `JITSI_DOMAIN=meet.<DOMAIN>` in `.env` (no port number — traffic goes through 443 via the ingress).
+
+### JVB (media routing)
+
+Set `JVB_ADVERTISE_IPS` in `.env` to the public IP of the Docker host so that the Jitsi Videobridge can route media traffic correctly. Port `10000/udp` must be open in the firewall.
+
 ### Configure cron jobs
 
 Add a daily cron job or scheduled task for automatically renewing the TLS certificate.
