@@ -1,6 +1,34 @@
 // custom variables
 @import './theme.scss';
 
+// Radix Colors — CSS custom properties for fine-grained use
+@import '@radix-ui/colors/sand.css';
+@import '@radix-ui/colors/bronze.css';
+@import '@radix-ui/colors/olive.css';
+
+// Design tokens (shadows, radii, component tokens)
+:root {
+  // ─── Elevation / shadows ──────────────────────────────────────────
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.06), 0 4px 6px rgba(0, 0, 0, 0.04);
+
+  // ─── Border radii ────────────────────────────────────────────────
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+
+  // ─── Component tokens ────────────────────────────────────────────
+  --postit-bg: #fff587;
+  --postit-bg-alt: #f9f586;
+  --overlay-dark: rgba(0, 0, 0, 0.75);
+  --overlay-medium: rgba(0, 0, 0, 0.5);
+
+  // ─── Focus ring ──────────────────────────────────────────────────
+  --focus-ring-color: var(--sand-8);
+}
+
 @import './layout.scss';
 @import './utils.scss';
 @import './components.scss';

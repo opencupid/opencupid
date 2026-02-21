@@ -111,10 +111,7 @@ const hint = computed(() => history?.state?.hint || null)
       >
         <MiddleColumn class="pt-sm-3 position-relative">
           <div class="d-flex flex-row justify-content-between align-items-center my-2">
-            <div
-              style="height: 3rem"
-              class="w-100 d-flex align-items-center justify-content-center"
-            >
+            <div class="toggle-bar w-100 d-flex align-items-center justify-content-center">
               <div
                 v-if="viewState.isEditable"
                 class="d-flex"
@@ -208,6 +205,10 @@ const hint = computed(() => history?.state?.hint || null)
 
 <style scoped lang="scss">
 @import '@/css/theme.scss';
+
+.toggle-bar {
+  height: 3rem;
+}
 
 .main-edit-button {
   position: fixed;

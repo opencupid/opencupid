@@ -115,12 +115,14 @@ const viewerLocation = ref(viewerProfile?.value.location)
 
 .card {
   font-size: 0.9rem;
+  border-radius: var(--radius-md);
+
   &:hover {
-    border-color: var(--bs-primary);
+    border-color: var(--bronze-9);
   }
 }
 .card-title {
-  text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
+  text-shadow: 0 0 0.25rem rgba(0, 0, 0, 0.8);
   color: var(--bs-light);
   padding: 0.5rem;
   width: 100%;
@@ -129,9 +131,9 @@ const viewerLocation = ref(viewerProfile?.value.location)
 .overlay {
   width: 100%;
   position: absolute;
-  bottom: 0rem;
+  bottom: 0;
   max-height: 4rem;
-  background-color: rgba(80, 80, 80, 0.5);
+  background-color: var(--overlay-medium);
   z-index: 3;
 }
 .tags-wrapper {

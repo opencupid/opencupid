@@ -66,9 +66,9 @@ function warpStyle(id: string) {
 
 <style scoped lang="scss">
 .o-post-it {
-  background-color: #ffffcc; /* Default yellow */
+  background-color: var(--postit-bg); /* Default yellow */
   /* padding: 0.5rem; */
-  border: 1px solid #ccc;
+  border: 1px solid var(--sand-6);
   box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
   /* display: inline-block; */
   /* margin: 0.25rem; */
@@ -89,9 +89,9 @@ function warpStyle(id: string) {
   width: 100%; /* Example width */
   min-height: 150px;
 
-  background: #fff587;
-  border-radius: 10px;
-  padding: 14px 16px 18px;
+  background: var(--postit-bg);
+  border-radius: var(--radius-md);
+  padding: 0.7rem 0.8rem 0.9rem;
   position: relative;
   transform-origin: 50% 45%;
   /* slight perspective + micro skew for “warped paper” feel */
@@ -178,10 +178,10 @@ function warpStyle(id: string) {
 /* simple round pin/dent */
 .pin-marker {
   position: absolute;
-  top: 6px;
-  left: 6px;
-  width: 14px;
-  height: 14px;
+  top: 0.3rem;
+  left: 0.3rem;
+  width: 0.7rem;
+  height: 0.7rem;
   border-radius: 50%;
   background: radial-gradient(circle at 30% 30%, #000 0 35%, transparent 36%);
   opacity: 0.12;
@@ -192,7 +192,7 @@ function warpStyle(id: string) {
 /* end warp */
 
 .accent {
-  background-color: #f9f586; /* Accent color */
+  background-color: var(--postit-bg-alt);
 }
 .content {
   white-space: pre-wrap; /* Preserves whitespace and line breaks */

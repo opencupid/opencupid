@@ -39,7 +39,7 @@ const hasMatchNotifications = computed(
 <template>
   <BNavbar
     v-if="authStore.isLoggedIn && profileStore.profile?.isOnboarded"
-    class="bg-dark"
+    class="navbar-soft"
     data-testid="navbar"
   >
     <MiddleColumn>
@@ -47,6 +47,7 @@ const hasMatchNotifications = computed(
         <BNavItem
           to="/home"
           active-class="active"
+          :aria-label="$t('nav.home')"
         >
           <IconHome class="svg-icon-lg" />
           <span class="d-none d-md-block label">{{ $t('nav.home') }}</span>
@@ -55,6 +56,7 @@ const hasMatchNotifications = computed(
         <BNavItem
           to="/posts"
           active-class="active"
+          :aria-label="$t('nav.bulletin')"
         >
           <IconNote class="svg-icon-lg" />
           <span class="d-none d-md-inline label">{{ $t('nav.bulletin') }}</span>
@@ -64,6 +66,7 @@ const hasMatchNotifications = computed(
           to="/browse"
           active-class="active"
           :active="isBrowseActive"
+          :aria-label="$t('nav.browse')"
         >
           <IconSearch class="svg-icon-lg" />
           <span class="d-none d-md-inline label">{{ $t('nav.browse') }}</span>
@@ -73,6 +76,7 @@ const hasMatchNotifications = computed(
           to="/matches"
           active-class="active"
           v-if="profileStore.profile?.isDatingActive"
+          :aria-label="$t('nav.matches')"
         >
           <NotificationDot :show="hasMatchNotifications">
             <IconHeart class="svg-icon-lg" />
@@ -83,6 +87,7 @@ const hasMatchNotifications = computed(
         <BNavItem
           to="/inbox"
           active-class="active"
+          :aria-label="$t('nav.inbox')"
         >
           <NotificationDot :show="hasUnreadMessages">
             <IconMessage class="svg-icon-lg" />
@@ -93,6 +98,7 @@ const hasMatchNotifications = computed(
         <BNavItem
           to="/me"
           active-class="active"
+          :aria-label="$t('nav.profile')"
         >
           <span
             v-if="profileStore.profile?.profileImages?.length"
@@ -116,24 +122,41 @@ const hasMatchNotifications = computed(
 
 <style scoped lang="scss">
 @import '@/css/app-vars.scss';
+
+.navbar-soft {
+  background-color: var(--sand-2);
+  border-bottom: 1px solid var(--sand-6);
+}
+
 :deep(.nav-link) {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: var(--bs-light);
-  &.active {
-    color: var(--bs-secondary);
-  }
+  color: var(--sand-11);
+  border-radius: var(--radius-md);
+  transition:
+    color 150ms ease,
+    background-color 150ms ease;
 
   &:hover {
-    color: var(--bs-primary);
+    color: var(--bronze-11);
+    background-color: var(--sand-3);
+  }
+
+  &.active {
+    color: var(--bronze-9);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-ring-color);
+    outline-offset: 2px;
   }
 }
 .nav-link .label {
   font-size: 0.85rem;
   margin-top: 0.25rem;
-  color: var(--bs-secondary-text);
+  color: var(--sand-11);
 }
 .nav-item {
   display: flex;

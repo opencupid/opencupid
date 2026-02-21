@@ -19,7 +19,7 @@
 }
 
 .btn-overlay {
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: var(--overlay-medium);
   color: #fff;
   border: none;
   border-radius: 50%;
@@ -45,7 +45,7 @@
     height: 3rem;
     background-color: rgba(0, 0, 0, 0.15);
     border-radius: 50%;
-    filter: blur(15px);
+    filter: blur(0.9375rem);
   }
 }
 
@@ -245,4 +245,51 @@
   .form-check-label {
     cursor: pointer;
   }
+}
+
+// ─── Elevation system ────────────────────────────────────────────────
+
+// Cards: subtle shadow + radius
+.card {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border-color: var(--sand-6);
+}
+
+// Interactive cards: hover lift
+.card.cursor-pointer,
+.card[role='button'] {
+  transition:
+    box-shadow 200ms ease,
+    transform 200ms ease;
+
+  &:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+  }
+}
+
+// Modals
+.modal-content {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+// Dropdowns
+.dropdown-menu {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  border-color: var(--sand-6);
+}
+
+// Toasts
+.toast {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+// Focus-visible outline (a11y)
+:focus-visible {
+  outline: 2px solid var(--focus-ring-color, var(--sand-8));
+  outline-offset: 2px;
 }

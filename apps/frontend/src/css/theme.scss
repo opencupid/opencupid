@@ -1,6 +1,28 @@
 @import '../../node_modules/bootstrap/scss/functions';
 @import '../../node_modules/bootstrap/scss/variables';
 
+// ─── Radix Colors (light-mode hex values) ────────────────────────────
+// Sand scale (warm neutral gray)
+$sand-1: #fdfdfc;
+$sand-2: #f9f9f8;
+$sand-3: #f1f0ef;
+$sand-4: #e9e8e6;
+$sand-5: #e2e1de;
+$sand-6: #dad9d6;
+$sand-7: #cfceca;
+$sand-8: #bcbbb5;
+$sand-9: #8d8d86;
+$sand-10: #82827c;
+$sand-11: #63635e;
+$sand-12: #21201c;
+
+// Bronze scale (warm earthy accent)
+$bronze-9: #a18072;
+$bronze-10: #957468;
+$bronze-11: #7d5e54;
+$bronze-12: #43302b;
+
+// ─── Typography ──────────────────────────────────────────────────────
 $happy-sans: 'Nunito', 'Poppins', sans-serif;
 $headings-font-family: 'Rubik', 'Mukta', sans-serif;
 
@@ -13,12 +35,14 @@ $font-size-base: 1.125rem; // default body text size
 $font-size-sm: $font-size-base * 0.875;
 $font-size-lg: $font-size-base * 1.25;
 
-// color scheme
+// ─── Body overrides ─────────────────────────────────────────────────
+$body-bg: $sand-2;
+$body-color: $sand-12;
+
+// ─── Theme color map ────────────────────────────────────────────────
 $theme-colors: (
-  'primary': #5e4b2c,
-  // Earth brown
-  'secondary': #7c6f64,
-  // Weathered stone
+  'primary': $bronze-9,
+  'secondary': $sand-8,
   'success': #6b8e23,
   // Olive green
   'danger': #a43d30,
@@ -27,12 +51,9 @@ $theme-colors: (
   // Dry straw
   'info': #3b6d8a,
   // River blue
-  'light': #e9e3d7,
-  // Dusty beige
-  'dark': #2e2c26,
-  // Dark soil
-  'muted': #9c8975,
-  // Driftwood
+  'light': $sand-3,
+  'dark': $sand-12,
+  'muted': $sand-9,
   'highlight': #56806f, // Mossy green
 );
 
@@ -62,8 +83,3 @@ $aspect-ratios: map-merge(
 
 // Enable negative margins for Bootstrap
 $enable-negative-margins: true;
-
-// 🌕 Light mode input styling
-// $input-bg: #fcfcfc;
-// $input-color: #212529;
-// $input-border-color: #ced4da;
