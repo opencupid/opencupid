@@ -43,6 +43,8 @@ describe('messageStore', () => {
         isMuted: false,
         isArchived: false,
         canReply: false, // User initiated, waiting for reply
+        isCallable: true,
+        myIsCallable: true,
         conversation: {
           id: 'convo-1',
           updatedAt: new Date('2024-01-01'),
@@ -98,6 +100,8 @@ describe('messageStore', () => {
         isMuted: false,
         isArchived: false,
         canReply: true,
+        isCallable: true,
+        myIsCallable: true,
         conversation: {
           id: 'convo-1',
           updatedAt: new Date('2024-01-01'),
@@ -119,6 +123,8 @@ describe('messageStore', () => {
         isMuted: false,
         isArchived: false,
         canReply: true,
+        isCallable: true,
+        myIsCallable: true,
         conversation: {
           id: 'convo-2',
           updatedAt: new Date('2024-01-02'),

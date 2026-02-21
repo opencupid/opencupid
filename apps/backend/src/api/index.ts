@@ -12,8 +12,9 @@ import findProfileRoutes from './routes/findProfile.route'
 import appRoutes from './routes/app.route'
 import interactionRoutes from './routes/interaction.route'
 import postRoutes from './routes/post.route'
+import callRoutes from './routes/call.route'
 
-const api: FastifyPluginAsync = async fastify => {
+const api: FastifyPluginAsync = async (fastify) => {
   fastify.register(userRoutes, { prefix: '/users' })
   fastify.register(tagsRoutes, { prefix: '/tags' })
   fastify.register(profileRoutes, { prefix: '/profiles' })
@@ -27,6 +28,7 @@ const api: FastifyPluginAsync = async fastify => {
   fastify.register(findProfileRoutes, { prefix: '/find' })
   fastify.register(appRoutes, { prefix: '/app' })
   fastify.register(postRoutes, { prefix: '/posts' })
+  fastify.register(callRoutes, { prefix: '/calls' })
 }
 
 export default api

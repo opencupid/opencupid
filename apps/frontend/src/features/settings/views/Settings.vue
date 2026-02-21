@@ -6,6 +6,7 @@ import { type LoginUser } from '@zod/user/user.dto'
 
 import { useMessageStore } from '@/features/messaging/stores/messageStore'
 import { useAuthStore } from '@/features/auth/stores/authStore'
+import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { useLocalStore } from '@/store/localStore'
 
 import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
@@ -25,6 +26,7 @@ import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 
 const authStore = useAuthStore()
+const ownerProfileStore = useOwnerProfileStore()
 const router = useRouter()
 const localStore = useLocalStore()
 
@@ -52,8 +54,7 @@ const isSaving = ref(false)
 
 onMounted(async () => {
   isLoading.value = true
-  // mode.value = localStore.getTheme as any
-  const res = await authStore.fetchUser()
+  const [res] = await Promise.all([authStore.fetchUser(), ownerProfileStore.fetchOwnerProfile()])
 
   if (res.success) {
     const { user: fetched } = res
@@ -68,6 +69,26 @@ onMounted(async () => {
 function handleClick() {
   authStore.logout()
   router.push({ name: 'Login' })
+}
+
+async function handleCallableChange(event: Event) {
+  const checkbox = event.target as HTMLInputElement
+  const newValue = checkbox.checked
+
+  isSaving.value = true
+  try {
+    if (ownerProfileStore.profile) {
+      ownerProfileStore.profile.isCallable = newValue
+    }
+    const res = await ownerProfileStore.persistOwnerProfile()
+    if (!res.success) {
+      checkbox.checked = !newValue
+    }
+  } catch {
+    checkbox.checked = !newValue
+  } finally {
+    isSaving.value = false
+  }
 }
 
 async function handleNewsletterOptInChange(event: Event) {
@@ -152,6 +173,25 @@ async function handleNewsletterOptInChange(event: Event) {
 
             <fieldset class="mb-3">
               <PushPermissions v-model="user.isPushNotificationEnabled" />
+            </fieldset>
+
+            <fieldset class="mb-3">
+              <div class="form-check">
+                <input
+                  id="callable-opt-in"
+                  type="checkbox"
+                  class="form-check-input"
+                  :checked="ownerProfileStore.profile?.isCallable ?? true"
+                  :disabled="isSaving"
+                  @change="handleCallableChange"
+                />
+                <label
+                  class="form-check-label"
+                  for="callable-opt-in"
+                >
+                  {{ t('calls.open_to_calls_setting') }}
+                </label>
+              </div>
             </fieldset>
 
             <fieldset class="mb-3">

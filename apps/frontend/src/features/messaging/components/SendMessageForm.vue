@@ -12,6 +12,7 @@ import TagList from '@/features/shared/profiledisplay/TagList.vue'
 import LanguageList from '@/features/shared/profiledisplay/LanguageList.vue'
 import StoreErrorOverlay from '@/features/shared/ui/StoreErrorOverlay.vue'
 import IconMenuDotsVert from '@/assets/icons/interface/menu-dots-vert.svg'
+import IconCall from '@/assets/icons/interface/call.svg'
 import VoiceRecorder from './VoiceRecorder.vue'
 import { useMessageStore } from '../stores/messageStore'
 
@@ -21,10 +22,12 @@ const props = defineProps<{
   recipientProfile: PublicProfileWithContext
   conversationId: string | null
   showTags?: boolean
+  canCall?: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'message:sent', message: MessageDTO | null): void
+  (e: 'call:start'): void
 }>()
 
 const content = ref('')
@@ -148,16 +151,27 @@ function handleVoiceRecordingError(error: string) {
           :disabled="messageStore.isSending || isVoiceActive"
         />
         <div class="form-text text-muted d-flex justify-content-between align-items-start">
-          <!-- Unified voice recorder (left) -->
-          <VoiceRecorder
-            ref="voiceRecorderRef"
-            :disabled="messageStore.isSending"
-            :max-duration="120"
-            @recording:started="() => (isVoiceActive = true)"
-            @recording:completed="handleVoiceRecordingCompleted"
-            @recording:cancelled="handleVoiceRecordingCancelled"
-            @recording:error="handleVoiceRecordingError"
-          />
+          <div class="d-flex align-items-center gap-1">
+            <!-- Unified voice recorder (left) -->
+            <VoiceRecorder
+              ref="voiceRecorderRef"
+              :disabled="messageStore.isSending"
+              :max-duration="120"
+              @recording:started="() => (isVoiceActive = true)"
+              @recording:completed="handleVoiceRecordingCompleted"
+              @recording:cancelled="handleVoiceRecordingCancelled"
+              @recording:error="handleVoiceRecordingError"
+            />
+            <a
+              v-if="canCall"
+              class="btn btn-outline-secondary btn-sm icon-btn-round"
+              role="button"
+              :title="$t('calls.call_button_title')"
+              @click="emit('call:start')"
+            >
+              <IconCall class="svg-icon" />
+            </a>
+          </div>
 
           <div class="d-flex align-items-center gap-2">
             <BButton
@@ -222,5 +236,15 @@ function handleVoiceRecordingError(error: string) {
 <style scoped>
 .send-mode-menu {
   min-width: 200px;
+}
+
+.icon-btn-round {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>

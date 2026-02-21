@@ -23,6 +23,7 @@ declare const __APP_CONFIG__: {
   readonly VAPID_PUBLIC_KEY: string
   readonly SITE_NAME: string
   readonly SENTRY_DSN: string
+  readonly JITSI_DOMAIN: string
 }
 
 declare const __APP_VERSION__: {

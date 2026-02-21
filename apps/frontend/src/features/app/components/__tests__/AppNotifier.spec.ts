@@ -1,6 +1,20 @@
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { nextTick } from 'vue'
+import { createPinia, setActivePinia } from 'pinia'
+
+vi.mock('@/lib/api', () => ({
+  api: { post: vi.fn(), patch: vi.fn() },
+  safeApiCall: async <T>(fn: () => Promise<T>) => fn(),
+}))
+
+vi.mock('@/features/videocall/api/calls.api', () => ({
+  initiateCall: vi.fn(),
+  acceptCall: vi.fn(),
+  declineCall: vi.fn(),
+  cancelCall: vi.fn(),
+  updateCallable: vi.fn(),
+}))
 
 vi.mock('@/lib/bus', () => {
   const listeners: Record<string, any> = {}
@@ -41,6 +55,7 @@ import { bus } from '@/lib/bus'
 
 describe('AppNotifier', () => {
   beforeEach(() => {
+    setActivePinia(createPinia())
     vi.clearAllMocks()
   })
 

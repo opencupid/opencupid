@@ -67,6 +67,40 @@ export class WebPushService {
     }
   }
 
+  async sendCallNotification(recipientProfileId: string, callerName: string, conversationId: string) {
+    if (!WebPushService.isWebPushConfigured()) return
+
+    const profile = await prisma.profile.findUnique({
+      where: { id: recipientProfileId },
+      include: { user: true },
+    })
+    if (!profile?.user) return
+    if (!profile.user.isPushNotificationEnabled) return
+
+    const payload = {
+      title: `Incoming call from ${callerName}`,
+      body: 'Tap to answer',
+      data: {
+        url: `/inbox/${conversationId}`,
+      },
+    }
+    const subscriptions = await this.getSubscriptions(profile.user.id)
+
+    for (const sub of subscriptions) {
+      try {
+        await webpush.sendNotification(
+          {
+            endpoint: sub.endpoint,
+            keys: { p256dh: sub.p256dh, auth: sub.auth },
+          },
+          JSON.stringify(payload)
+        )
+      } catch (err) {
+        console.error('Call push notification failed:', err)
+      }
+    }
+  }
+
   async sendPushNotification(subscription: webpush.PushSubscription, payload: any) {
     if (!WebPushService.isWebPushConfigured()) {
       throw new Error('Web push is not configured: VAPID keys are missing.')

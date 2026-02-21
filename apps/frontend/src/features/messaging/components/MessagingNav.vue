@@ -7,12 +7,14 @@ import IconMenuDotsVert from '@/assets/icons/interface/menu-dots-vert.svg'
 
 defineProps<{
   recipient: ProfileSummary
+  allowCalls?: boolean
 }>()
 
 defineEmits<{
-  (e: 'modal:open'): void
+  (e: 'block:open'): void
   (e: 'deselect:convo'): void
   (e: 'profile:select', val: ProfileSummary): void
+  (e: 'callable:toggle', event: Event): void
 }>()
 </script>
 
@@ -41,15 +43,38 @@ defineEmits<{
       </div>
     </div>
 
-    <div class="action-button">
-      <a
-        class="btn btn-secondary-outline"
-        role="button"
-        :title="$t('messaging.conversation_options_title')"
-        @click="$emit('modal:open')"
+    <div class="d-flex align-items-center gap-1">
+      <BDropdown
+        variant="link"
+        no-caret
+        toggle-class="text-decoration-none p-0 text-muted btn btn-secondary-outline action-button"
+        end
       >
-        <IconMenuDotsVert class="svg-icon-lg fs-4" />
-      </a>
+        <template #button-content>
+          <IconMenuDotsVert class="svg-icon-lg fs-4" />
+        </template>
+        <BDropdownItem @click="$emit('block:open')">
+          {{ $t('messaging.block_member') }}
+        </BDropdownItem>
+        <BDropdownDivider />
+        <BDropdownForm>
+          <div class="form-check">
+            <input
+              id="allow-calls-check"
+              type="checkbox"
+              class="form-check-input"
+              :checked="allowCalls"
+              @change="$emit('callable:toggle', $event)"
+            />
+            <label
+              class="form-check-label"
+              for="allow-calls-check"
+            >
+              {{ $t('calls.allow_calls_label') }}
+            </label>
+          </div>
+        </BDropdownForm>
+      </BDropdown>
     </div>
   </div>
 </template>

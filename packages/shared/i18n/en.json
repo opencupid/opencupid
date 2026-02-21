@@ -301,6 +301,7 @@
     "my_turn": "My turn",
     "their_turn": "Their turn",
     "conversation_options_title": "Conversation options",
+    "block_member": "Block member",
     "block_report_unmatch": "Block/report/unmatch",
     "block_user_ok": "Block {name}",
     "nevermind": "Nevermind",
@@ -326,6 +327,17 @@
       "retry_permission": "Try Again",
       "unsupported_browser": "Voice recording is not supported in this browser."
     }
+  },
+  "calls": {
+    "call_button_title": "Start video call",
+    "calling": "Calling...",
+    "cancel_call": "Cancel",
+    "incoming_call_from": "Incoming call from {name}",
+    "accept": "Accept",
+    "decline": "Decline",
+    "missed_call_message": "Missed call",
+    "allow_calls_label": "Allow calls",
+    "open_to_calls_setting": "Open to video calls"
   },
   "settings": {
     "title": "Settings",

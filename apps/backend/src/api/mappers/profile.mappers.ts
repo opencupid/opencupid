@@ -56,13 +56,15 @@ export function mapProfileToPublic(
   // map localized fields with fallback to first available locale
   const get = (field: string): string => {
     // First try to find the preferred locale with a non-empty value
-    const preferredEntry = dbProfile.localized.find(l => l.field === field && l.locale === locale)
+    const preferredEntry = dbProfile.localized.find((l) => l.field === field && l.locale === locale)
     if (preferredEntry && preferredEntry.value.trim() !== '') {
       return preferredEntry.value
     }
 
     // Fallback to any locale with a non-empty value
-    const fallbackEntry = dbProfile.localized.find(l => l.field === field && l.value.trim() !== '')
+    const fallbackEntry = dbProfile.localized.find(
+      (l) => l.field === field && l.value.trim() !== ''
+    )
     return fallbackEntry?.value ?? ''
   }
 
@@ -108,7 +110,7 @@ export function mapProfileWithContext(
 }
 
 export function mapProfileImagesToOwner(images: ProfileImage[]): OwnerProfileImage[] {
-  return images.map(img => toOwnerProfileImage(img))
+  return images.map((img) => toOwnerProfileImage(img))
 }
 
 export function mapProfileImagesToPublic(images: ProfileImage[]): PublicProfileImage[] {

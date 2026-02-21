@@ -24,20 +24,24 @@ export function extractSenderProfile(
   p: ConversationParticipantWithConversationSummary,
   senderProfileId: string
 ) {
-  return p.conversation.participants.find(p => p.profileId === senderProfileId)?.profile
+  return p.conversation.participants.find((p) => p.profileId === senderProfileId)?.profile
 }
 
 export function mapConversationParticipantToSummary(
   p: ConversationParticipantWithConversationSummary,
   currentProfileId: string
 ): ConversationSummary {
-  const partner = p.conversation.participants.find(cp => cp.profileId !== currentProfileId)
+  const partner = p.conversation.participants.find((cp) => cp.profileId !== currentProfileId)
 
   if (!partner) throw new Error('Partner profile not found in conversation')
 
   const lastMessage = p.conversation.messages[0] ?? null
 
   const canReply = canSendMessageInConversation(p.conversation, currentProfileId)
+  const myParticipant = p.conversation.participants.find((cp) => cp.profileId === currentProfileId)
+  const isCallable =
+    (partner as any).isCallable !== false && (partner.profile as any).isCallable !== false
+  const myIsCallable = (myParticipant as any)?.isCallable !== false
   return {
     id: p.id,
     profileId: p.profileId,
@@ -46,6 +50,8 @@ export function mapConversationParticipantToSummary(
     isMuted: p.isMuted,
     isArchived: p.isArchived,
     canReply,
+    isCallable,
+    myIsCallable,
     lastMessage: lastMessage
       ? {
           content: lastMessage.content,

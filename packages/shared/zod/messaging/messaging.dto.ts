@@ -101,6 +101,8 @@ const ConversationSummarySchema = ConversationParticipantSchema.pick({
     createdAt: true,
   }),
   canReply: z.boolean().default(false),
+  isCallable: z.boolean().default(true),
+  myIsCallable: z.boolean().default(true),
   partnerProfile: ProfileSummarySchema,
   lastMessage: MessageInConversationSummarySchema.nullable(),
 })

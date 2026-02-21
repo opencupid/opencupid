@@ -102,6 +102,7 @@ export const UpdateProfilePayloadSchema = ProfileSchema.pick({
   cityName: true,
   lat: true,
   lon: true,
+  isCallable: true,
 })
   .extend({
     tags: z.array(z.string().cuid()),

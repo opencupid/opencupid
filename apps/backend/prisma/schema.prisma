@@ -190,6 +190,7 @@ model Profile {
   isReported     Boolean @default(false)
   isBlocked      Boolean @default(false)
   isOnboarded    Boolean @default(false)
+  isCallable     Boolean @default(true)
 
   userId String @unique
   user   User   @relation(fields: [userId], references: [id])
@@ -298,6 +299,8 @@ model Conversation {
   initiatorProfileId String
   initiator          Profile @relation(fields: [initiatorProfileId], references: [id])
 
+  jitsiRoomId String?
+
   @@unique([profileAId, profileBId], name: "profileAId_profileBId")
 }
 
@@ -312,6 +315,7 @@ model ConversationParticipant {
   lastReadAt DateTime?
   isMuted    Boolean   @default(false)
   isArchived Boolean   @default(false)
+  isCallable Boolean   @default(true)
 
   @@unique([profileId, conversationId])
 }

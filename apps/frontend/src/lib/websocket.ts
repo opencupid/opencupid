@@ -14,34 +14,39 @@ export function connectWebSocket(token: string): void {
   socket = useWebSocket(url, {
     immediate: true,
     autoReconnect: true,
-  })
-
-  socket.ws.value?.addEventListener('message', (event: MessageEvent) => {
-    try {
-      const data: WSMessage = JSON.parse(event.data)
-      console.log('[WS] Received message:', data)
-      switch (data.type) {
-        case 'ws:new_like':
-          bus.emit('ws:new_like')
-          break
-        case 'ws:new_message':
-        case 'ws:new_match':
-        case 'ws:app_notification':
-          bus.emit(data.type, data.payload)
-          break
-        default:
-          console.warn('[WS] Unknown message type:', data)
+    onConnected: () => {
+      console.log('[WS] Connected')
+    },
+    onDisconnected: () => {
+      console.warn('[WS] Connection closed.')
+    },
+    onMessage: (_ws, event) => {
+      try {
+        const data: WSMessage = JSON.parse(event.data)
+        console.log('[WS] Received message:', data)
+        switch (data.type) {
+          case 'ws:new_like':
+            bus.emit('ws:new_like')
+            break
+          case 'ws:new_message':
+          case 'ws:new_match':
+          case 'ws:app_notification':
+            bus.emit(data.type, data.payload)
+            break
+          case 'ws:incoming_call':
+          case 'ws:call_accepted':
+          case 'ws:call_declined':
+          case 'ws:call_cancelled':
+            bus.emit(data.type, data.payload)
+            break
+          default:
+            console.warn('[WS] Unknown message type:', data)
+        }
+      } catch (err) {
+        console.error('WebSocket parse error:', err)
       }
-    } catch (err) {
-      console.error('WebSocket parse error:', err)
-    }
+    },
   })
-
-  socket.ws.value?.addEventListener('close', () => {
-    console.warn('[WS] Connection closed.')
-  })
-
-  console.log('[WS] Connected:', socket.ws.value)
 }
 
 export function disconnectWebSocket() {

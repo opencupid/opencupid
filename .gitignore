@@ -34,6 +34,10 @@ coverage/
 e2e/.auth/
 test-results/
 playwright-report/
+.playwright-mcp/
+
+# Screenshots (debug/temp)
+*.png
 
 apps/frontend/dev-dist/
 secrets/

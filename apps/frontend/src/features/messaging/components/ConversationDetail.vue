@@ -1,20 +1,22 @@
 <script setup lang="ts">
-import { ref, watchEffect } from 'vue'
-import { useI18n } from 'vue-i18n'
+import { ref, computed, watchEffect } from 'vue'
 
 import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 import { type ConversationSummary } from '@zod/messaging/messaging.dto'
 
 import { useMessageStore } from '@/features/messaging/stores/messageStore'
 import { usePublicProfileStore } from '@/features/publicprofile/stores/publicProfileStore'
+import { useCallStore } from '@/features/videocall/stores/callStore'
 import BlockProfileDialog from '@/features/publicprofile/components/BlockProfileDialog.vue'
 
 import SendMessage from './SendMessageForm.vue'
 import MessageList from './MessageList.vue'
 import MessagingNav from './MessagingNav.vue'
+import * as callsApi from '@/features/videocall/api/calls.api'
 
 const profileStore = usePublicProfileStore()
 const messageStore = useMessageStore()
+const callStore = useCallStore()
 
 const props = defineProps<{
   conversation: ConversationSummary | null
@@ -29,6 +31,15 @@ const emit = defineEmits<{
 
 const showModal = ref(false)
 const conversationPartner = ref<PublicProfileWithContext | null>(null)
+
+const canCall = computed(() => {
+  if (!props.conversation) return false
+  return props.conversation.canReply && props.conversation.isCallable
+})
+
+const myIsCallable = computed(() => {
+  return props.conversation?.myIsCallable ?? true
+})
 
 watchEffect(async () => {
   if (props.conversation) {
@@ -49,6 +60,22 @@ const handleBlockProfile = async () => {
     emit('updated')
   }
 }
+
+function handleStartCall() {
+  if (!props.conversation) return
+  callStore.initiateCall(props.conversation.conversationId)
+}
+
+async function handleToggleCallable(event: Event) {
+  if (!props.conversation) return
+  const checkbox = event.target as HTMLInputElement
+  const isCallable = checkbox.checked
+  try {
+    await callsApi.updateCallable(props.conversation.conversationId, isCallable)
+  } catch {
+    checkbox.checked = !isCallable
+  }
+}
 </script>
 
 <template>
@@ -57,22 +84,14 @@ const handleBlockProfile = async () => {
       class="messaging-nav w-100"
       v-if="conversationPartner"
       :recipient="conversationPartner"
+      :allowCalls="myIsCallable"
       @deselect:convo="emit('deselect:convo')"
       @profile:select="emit('profile:select', conversationPartner)"
-      @modal:open="showModal = true"
+      @block:open="showModal = true"
+      @callable:toggle="handleToggleCallable"
     />
 
     <div class="flex-grow-1 overflow-hidden d-flex flex-column">
-      <!-- <BPlaceholderWrapper :loading="loading" class="mb-3">
-      <template #loading>
-        <div class="h-10-0 bg-danger"></div>
-        <BPlaceholderCard
-          class="w-100 h-100"
-          :loading="loading"
-          :text="t('messaging.loading_conversation')"
-          :text-size="'sm'"/>
-        </template> 
-    </BPlaceholderWrapper> -->
       <MessageList
         :messages="messageStore.messages"
         :has-more="messageStore.hasMoreMessages"
@@ -86,6 +105,8 @@ const handleBlockProfile = async () => {
         v-if="conversationPartner && conversation"
         :recipientProfile="conversationPartner"
         :conversationId="conversation.conversationId"
+        :canCall="canCall"
+        @call:start="handleStartCall"
       />
     </div>
 
@@ -106,9 +127,6 @@ const handleBlockProfile = async () => {
   background-color: var(--bs-body-bg);
 }
 .send-message-wrapper {
-  /* bottom: 4rem; */
-  /* margin-bottom: 1rem; */
   background-color: var(--bs-body-bg);
-  /* border-top: 1px solid var(--bs-border-color); */
 }
 </style>

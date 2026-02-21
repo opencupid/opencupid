@@ -78,6 +78,7 @@ export const define = (mode: string) => {
         VAPID_PUBLIC_KEY: env.VAPID_PUBLIC_KEY,
         SENTRY_DSN: env.SENTRY_DSN,
         SITE_NAME: env.SITE_NAME,
+        JITSI_DOMAIN: env.JITSI_DOMAIN,
       }),
       __APP_VERSION__: JSON.stringify(versions),
     }

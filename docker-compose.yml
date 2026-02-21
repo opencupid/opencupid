@@ -63,7 +63,92 @@ services:
       - '9000:9000'
 
 
+  jitsi-web:
+    image: jitsi/web:stable
+    restart: unless-stopped
+    ports:
+      - '8443:443'
+    volumes:
+      - ./certs/fullchain.pem:/config/keys/cert.crt:ro
+      - ./certs/privkey.pem:/config/keys/cert.key:ro
+      - jitsi-meet-cfg-web:/config
+    environment:
+      - ENABLE_AUTH=0
+      - ENABLE_GUESTS=1
+      - ENABLE_XMPP_WEBSOCKET=1
+      - PUBLIC_URL=https://oc.dev.froggle.org:8443
+      - XMPP_DOMAIN=meet.jitsi
+      - XMPP_AUTH_DOMAIN=auth.meet.jitsi
+      - XMPP_BOSH_URL_BASE=http://jitsi-prosody:5280
+      - XMPP_MUC_DOMAIN=muc.meet.jitsi
+      - XMPP_INTERNAL_MUC_DOMAIN=internal-muc.meet.jitsi
+      - JICOFO_AUTH_USER=focus
+      - JVB_BREWERY_MUC=jvbbrewery
+      - TZ=UTC
+    depends_on:
+      - jitsi-prosody
+
+  jitsi-prosody:
+    image: jitsi/prosody:stable
+    restart: unless-stopped
+    volumes:
+      - jitsi-meet-cfg-prosody:/config
+    environment:
+      - ENABLE_AUTH=0
+      - ENABLE_GUESTS=1
+      - XMPP_DOMAIN=meet.jitsi
+      - XMPP_AUTH_DOMAIN=auth.meet.jitsi
+      - XMPP_MUC_DOMAIN=muc.meet.jitsi
+      - XMPP_INTERNAL_MUC_DOMAIN=internal-muc.meet.jitsi
+      - JICOFO_AUTH_USER=focus
+      - JICOFO_AUTH_PASSWORD=jicofo_secret
+      - JVB_AUTH_USER=jvb
+      - JVB_AUTH_PASSWORD=jvb_secret
+      - TZ=UTC
+
+  jitsi-jicofo:
+    image: jitsi/jicofo:stable
+    restart: unless-stopped
+    volumes:
+      - jitsi-meet-cfg-jicofo:/config
+    environment:
+      - XMPP_DOMAIN=meet.jitsi
+      - XMPP_AUTH_DOMAIN=auth.meet.jitsi
+      - XMPP_INTERNAL_MUC_DOMAIN=internal-muc.meet.jitsi
+      - XMPP_MUC_DOMAIN=muc.meet.jitsi
+      - XMPP_SERVER=jitsi-prosody
+      - JICOFO_AUTH_USER=focus
+      - JICOFO_AUTH_PASSWORD=jicofo_secret
+      - JVB_BREWERY_MUC=jvbbrewery
+      - TZ=UTC
+    depends_on:
+      - jitsi-prosody
+
+  jitsi-jvb:
+    image: jitsi/jvb:stable
+    restart: unless-stopped
+    ports:
+      - '10000:10000/udp'
+    volumes:
+      - jitsi-meet-cfg-jvb:/config
+    environment:
+      - XMPP_AUTH_DOMAIN=auth.meet.jitsi
+      - XMPP_INTERNAL_MUC_DOMAIN=internal-muc.meet.jitsi
+      - XMPP_SERVER=jitsi-prosody
+      - JVB_AUTH_USER=jvb
+      - JVB_AUTH_PASSWORD=jvb_secret
+      - JVB_BREWERY_MUC=jvbbrewery
+      - JVB_PORT=10000
+      - DOCKER_HOST_ADDRESS=host.docker.internal
+      - TZ=UTC
+    depends_on:
+      - jitsi-prosody
+
 volumes:
   postgres_data:
   listmonk_data:
   listmonk_uploads:
+  jitsi-meet-cfg-web:
+  jitsi-meet-cfg-prosody:
+  jitsi-meet-cfg-jicofo:
+  jitsi-meet-cfg-jvb:
