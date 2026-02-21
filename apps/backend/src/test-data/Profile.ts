@@ -54,13 +54,11 @@ export function createRandomUser() {
 }
 
 let tags = [] as any[]
-let cities = [] as any[]
 let files: string[] = []
 
 async function main() {
   let locale = ''
   tags = await fetchTags()
-  cities = await fetchCities()
   const users = faker.helpers.multiple(createRandomUser, {
     count: howMany,
   })
@@ -88,15 +86,13 @@ async function main() {
 
     const randomTags = faker.helpers.arrayElements(tags, faker.number.int({ min: 1, max: 5 }))
 
-    const city = faker.helpers.arrayElement(cities)
-
     const f = (allFakers as any)[locale as any]
 
     const baseProfile = {
       user: { connect: { id: createdUser.id } },
       publicName: f.person.firstName(gender as any),
-      country: city.country,
-      cityName: city.name,
+      country: faker.location.countryCode(),
+      cityName: faker.location.city(),
       languages: langs,
 
       isDatingActive: isDatingActive,
@@ -131,14 +127,13 @@ async function main() {
       ...baseProfile,
       ...datingProfile,
       ...datingPrefs,
-      city: { connect: { id: city.id } },
       tags: {
-        create: randomTags.map(tag => ({
+        create: randomTags.map((tag) => ({
           tag: { connect: { id: tag.id } },
         })),
       },
       localized: {
-        create: langs.flatMap(locale => [
+        create: langs.flatMap((locale) => [
           {
             locale,
             field: 'introDating',
@@ -178,7 +173,7 @@ async function main() {
 }
 
 main()
-  .catch(e => {
+  .catch((e) => {
     console.error(e)
     process.exit(1)
   })
@@ -194,16 +189,6 @@ async function fetchTags() {
     },
   })
 }
-async function fetchCities() {
-  return await prisma.city.findMany({
-    select: {
-      id: true,
-      name: true,
-      country: true,
-    },
-  })
-}
-
 const avatarDir = path.resolve('test-data/images/avatar')
 
 // Keep track of used images across runs

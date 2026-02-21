@@ -58,7 +58,6 @@ export function createRandomUser() {
 }
 
 let tags = [] as any[]
-let cities = [] as any[]
 // const storagePrefix = generateStorageDirPrefix();
 // const uploadBaseDir = getUploadBaseDir();
 // const uploadDir = path.join(uploadBaseDir, storagePrefix)
@@ -69,7 +68,6 @@ let cities = [] as any[]
 async function main() {
   let locale = ''
   tags = await fetchTags()
-  cities = await fetchCities()
   const users = faker.helpers.multiple(createRandomUser, {
     count: howMany,
   })
@@ -97,18 +95,13 @@ async function main() {
 
     const randomTags = faker.helpers.arrayElements(tags, faker.number.int({ min: 1, max: 5 }))
 
-    const city = faker.helpers.arrayElement(cities)
-
     const f = (allFakers as any)[locale as any]
 
     const baseProfile = {
-      // id: cuid(),
       user: { connect: { id: createdUser.id } },
-      // userId: createdUser.id,
       publicName: f.person.firstName(gender as any),
-      country: city.country,
-      cityName: city.name,
-      // city: { connect: { id: city.id } },
+      country: faker.location.countryCode(),
+      cityName: faker.location.city(),
       languages: langs,
       // tags: randomTags,
       // introSocial: f.person.bio() + ' ' + f.lorem.sentences({ min: 1, max: 5 }),
@@ -137,14 +130,13 @@ async function main() {
       // const data = {
       ...baseProfile,
       ...datingProfile,
-      city: { connect: { id: city.id } },
       tags: {
-        create: randomTags.map(tag => ({
+        create: randomTags.map((tag) => ({
           tag: { connect: { id: tag.id } },
         })),
       },
       localized: {
-        create: langs.flatMap(locale => [
+        create: langs.flatMap((locale) => [
           {
             locale,
             field: 'introDating',
@@ -200,7 +192,7 @@ async function main() {
 }
 
 main()
-  .catch(e => {
+  .catch((e) => {
     console.error(e)
     process.exit(1)
   })
@@ -216,16 +208,6 @@ async function fetchTags() {
     },
   })
 }
-async function fetchCities() {
-  return await prisma.city.findMany({
-    select: {
-      id: true,
-      name: true,
-      country: true,
-    },
-  })
-}
-
 const avatarDir = path.resolve('test-data/images/avatar')
 let files: string[]
 async function loadImages() {
@@ -239,7 +221,7 @@ async function attachRandomImage(profile: any, gender: string, userId: string) {
   // const gender = profile.gender?.toLowerCase() ?? 'unspecified'
 
   // Filter by gender
-  const matching = files.filter(file => {
+  const matching = files.filter((file) => {
     return file.endsWith(`.${gender}.jpg`) && !usedImages.has(file)
   })
 
