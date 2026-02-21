@@ -11,7 +11,7 @@ function bufferToBase64(buffer: ArrayBuffer | null): string {
   return btoa(String.fromCharCode(...new Uint8Array(buffer)))
 }
 
-const pushRoutes: FastifyPluginAsync = async fastify => {
+const pushRoutes: FastifyPluginAsync = async (fastify) => {
   // fastify.post<{ Body: PushRequestBody }>('/send', async (req, reply) => {
 
   //   const { subscription, message } = req.body

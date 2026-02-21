@@ -29,6 +29,12 @@ export function connectWebSocket(token: string): void {
         case 'ws:app_notification':
           bus.emit(data.type, data.payload)
           break
+        case 'ws:incoming_call':
+        case 'ws:call_accepted':
+        case 'ws:call_declined':
+        case 'ws:call_cancelled':
+          bus.emit(data.type, data.payload)
+          break
         default:
           console.warn('[WS] Unknown message type:', data)
       }

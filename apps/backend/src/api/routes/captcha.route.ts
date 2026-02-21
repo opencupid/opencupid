@@ -4,7 +4,7 @@ import { sendError } from '../helpers'
 import { appConfig } from '@/lib/appconfig'
 import type { CaptchaChallengeResponse } from '@zod/apiResponse.dto'
 
-const captchaRoutes: FastifyPluginAsync = async fastify => {
+const captchaRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/challenge', async (request, reply) => {
     try {
       const challenge = await createChallenge({

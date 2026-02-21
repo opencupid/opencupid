@@ -25,13 +25,22 @@ const participant: any = {
   lastReadAt: null,
   isMuted: false,
   isArchived: false,
+  isCallable: true,
   conversation: {
     id: 'c1',
     updatedAt: new Date(),
     createdAt: new Date(),
     participants: [
-      { profileId: 'p1', profile: { id: 'p1', publicName: 'Me', profileImages: [] } },
-      { profileId: 'p2', profile: { id: 'p2', publicName: 'Them', profileImages: [] } },
+      {
+        profileId: 'p1',
+        isCallable: true,
+        profile: { id: 'p1', publicName: 'Me', profileImages: [], isCallable: true },
+      },
+      {
+        profileId: 'p2',
+        isCallable: true,
+        profile: { id: 'p2', publicName: 'Them', profileImages: [], isCallable: true },
+      },
     ],
     messages: [msg],
   },
@@ -52,5 +61,82 @@ describe('messaging mappers', () => {
   it('maps message dto with sender profile', () => {
     const dto = mapMessageDTO(msg, participant)
     expect(dto.sender.publicName).toBe('Me')
+  })
+
+  describe('isCallable mapping', () => {
+    it('returns isCallable true when partner profile and participant are callable', () => {
+      const summary = mapConversationParticipantToSummary(participant, 'p1')
+      expect(summary.isCallable).toBe(true)
+      expect(summary.myIsCallable).toBe(true)
+    })
+
+    it('returns isCallable false when partner profile isCallable is false', () => {
+      const p: any = {
+        ...participant,
+        conversation: {
+          ...participant.conversation,
+          participants: [
+            {
+              profileId: 'p1',
+              isCallable: true,
+              profile: { id: 'p1', publicName: 'Me', profileImages: [], isCallable: true },
+            },
+            {
+              profileId: 'p2',
+              isCallable: true,
+              profile: { id: 'p2', publicName: 'Them', profileImages: [], isCallable: false },
+            },
+          ],
+        },
+      }
+      const summary = mapConversationParticipantToSummary(p, 'p1')
+      expect(summary.isCallable).toBe(false)
+    })
+
+    it('returns isCallable false when partner participant isCallable is false', () => {
+      const p: any = {
+        ...participant,
+        conversation: {
+          ...participant.conversation,
+          participants: [
+            {
+              profileId: 'p1',
+              isCallable: true,
+              profile: { id: 'p1', publicName: 'Me', profileImages: [], isCallable: true },
+            },
+            {
+              profileId: 'p2',
+              isCallable: false,
+              profile: { id: 'p2', publicName: 'Them', profileImages: [], isCallable: true },
+            },
+          ],
+        },
+      }
+      const summary = mapConversationParticipantToSummary(p, 'p1')
+      expect(summary.isCallable).toBe(false)
+    })
+
+    it('returns myIsCallable false when my participant isCallable is false', () => {
+      const p: any = {
+        ...participant,
+        conversation: {
+          ...participant.conversation,
+          participants: [
+            {
+              profileId: 'p1',
+              isCallable: false,
+              profile: { id: 'p1', publicName: 'Me', profileImages: [], isCallable: true },
+            },
+            {
+              profileId: 'p2',
+              isCallable: true,
+              profile: { id: 'p2', publicName: 'Them', profileImages: [], isCallable: true },
+            },
+          ],
+        },
+      }
+      const summary = mapConversationParticipantToSummary(p, 'p1')
+      expect(summary.myIsCallable).toBe(false)
+    })
   })
 })

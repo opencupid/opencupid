@@ -109,7 +109,7 @@ describe('MatchQueryService.findSocialProfilesFor', () => {
       },
     })
     const res = await service.findSocialProfilesFor('p1')
-    expect(res.map(p => p.id)).toEqual(['p2'])
+    expect(res.map((p) => p.id)).toEqual(['p2'])
   })
 })
 
@@ -206,7 +206,7 @@ describe('MatchQueryService.findMutualMatchesFor', () => {
     })
 
     const res = await service.findMutualMatchesFor('p1')
-    expect(res.map(p => p.id)).toEqual(['p2'])
+    expect(res.map((p) => p.id)).toEqual(['p2'])
   })
 
   it('omits prefKids filter when profile.hasKids is null', async () => {
@@ -271,6 +271,6 @@ describe('MatchQueryService.findMutualMatchesFor', () => {
     })
 
     const res = await service.findMutualMatchesFor('p3')
-    expect(res.map(p => p.id)).toEqual(['p4'])
+    expect(res.map((p) => p.id)).toEqual(['p4'])
   })
 })

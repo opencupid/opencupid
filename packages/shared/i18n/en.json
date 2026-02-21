@@ -327,6 +327,17 @@
       "unsupported_browser": "Voice recording is not supported in this browser."
     }
   },
+  "calls": {
+    "call_button_title": "Start video call",
+    "calling": "Calling...",
+    "cancel_call": "Cancel",
+    "incoming_call_from": "Incoming call from {name}",
+    "accept": "Accept",
+    "decline": "Decline",
+    "missed_call_message": "Missed call",
+    "allow_calls_label": "Allow calls",
+    "open_to_calls_setting": "Open to video calls"
+  },
   "settings": {
     "title": "Settings",
     "language_label": "Language",

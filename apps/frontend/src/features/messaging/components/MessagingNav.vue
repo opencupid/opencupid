@@ -7,12 +7,14 @@ import IconMenuDotsVert from '@/assets/icons/interface/menu-dots-vert.svg'
 
 defineProps<{
   recipient: ProfileSummary
+  canCall?: boolean
 }>()
 
 defineEmits<{
   (e: 'modal:open'): void
   (e: 'deselect:convo'): void
   (e: 'profile:select', val: ProfileSummary): void
+  (e: 'call:start'): void
 }>()
 </script>
 
@@ -41,9 +43,18 @@ defineEmits<{
       </div>
     </div>
 
-    <div class="action-button">
+    <div class="d-flex align-items-center gap-1">
       <a
-        class="btn btn-secondary-outline"
+        v-if="canCall"
+        class="btn btn-secondary-outline call-button"
+        role="button"
+        :title="$t('calls.call_button_title')"
+        @click="$emit('call:start')"
+      >
+        <i class="bi bi-telephone-fill"></i>
+      </a>
+      <a
+        class="btn btn-secondary-outline action-button"
         role="button"
         :title="$t('messaging.conversation_options_title')"
         @click="$emit('modal:open')"

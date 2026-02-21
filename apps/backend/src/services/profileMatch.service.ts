@@ -87,7 +87,7 @@ export class ProfileMatchService {
     profileId: string,
     data: UpdateSocialMatchFilterPayload
   ): Promise<SocialMatchFilterWithTags | null> {
-    const tagIds = (data.tags ?? []).map(id => ({ id }))
+    const tagIds = (data.tags ?? []).map((id) => ({ id }))
     const update = {
       profileId,
       country: data.location?.country || null,
@@ -174,7 +174,7 @@ export class ProfileMatchService {
       return [] // no preferences set, return empty array
     }
 
-    const tagIds = userPrefs.tags?.map(tag => tag.id)
+    const tagIds = userPrefs.tags?.map((tag) => tag.id)
 
     const filters = {
       ...(userPrefs.country ? { country: userPrefs.country } : {}),

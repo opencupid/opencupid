@@ -52,7 +52,7 @@ const MessageListQuerySchema = z.object({
  *
  * @param fastify - The Fastify instance to decorate with messaging routes.
  */
-const messageRoutes: FastifyPluginAsync = async fastify => {
+const messageRoutes: FastifyPluginAsync = async (fastify) => {
   // Register multipart support for voice message uploads
   await fastify.register(multipart, {
     limits: {
@@ -92,7 +92,7 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
         take: query.data.take,
       })
 
-      const messages = raw.map(m => mapMessageForMessageList(m, profileId))
+      const messages = raw.map((m) => mapMessageForMessageList(m, profileId))
       const response: MessagesResponse = { success: true, messages, nextCursor, hasMore }
       return reply.code(200).send(response)
     } catch (error) {
@@ -107,7 +107,7 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
 
     try {
       const raw = await messageService.listConversationsForProfile(profileId)
-      const conversations = raw.map(p => mapConversationParticipantToSummary(p, profileId))
+      const conversations = raw.map((p) => mapConversationParticipantToSummary(p, profileId))
       const response: ConversationsResponse = { success: true, conversations }
       return reply.code(200).send(response)
     } catch (error) {
@@ -158,7 +158,7 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
     const { profileId, content } = body.data
 
     try {
-      const { convoId, message } = await fastify.prisma.$transaction(async tx => {
+      const { convoId, message } = await fastify.prisma.$transaction(async (tx) => {
         return await messageService.sendOrStartConversation(
           tx,
           senderProfileId,
@@ -197,7 +197,7 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
 
       if (!isWsBroadcasted) {
         if (WebPushService.isWebPushConfigured()) {
-          webPushService.send(messageDTO, profileId).catch(err => {
+          webPushService.send(messageDTO, profileId).catch((err) => {
             fastify.log.error(err, 'Web push failed')
           })
         }
@@ -283,7 +283,7 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
       const stats = await fsPromises.stat(filePath)
 
       try {
-        const { convoId, message } = await fastify.prisma.$transaction(async tx => {
+        const { convoId, message } = await fastify.prisma.$transaction(async (tx) => {
           return await messageService.sendOrStartConversation(
             tx,
             senderProfileId,
@@ -328,7 +328,7 @@ const messageRoutes: FastifyPluginAsync = async fastify => {
 
         if (!isWsBroadcasted) {
           if (WebPushService.isWebPushConfigured()) {
-            webPushService.send(messageDTO, payload.data.profileId).catch(err => {
+            webPushService.send(messageDTO, payload.data.profileId).catch((err) => {
               fastify.log.error(err, 'Web push failed')
             })
           }

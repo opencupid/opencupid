@@ -11,7 +11,7 @@ import { sendError, addDebounceHeaders } from '../helpers'
 import { CityService } from 'src/services/city.service'
 import type { CityResponse, CitiesResponse } from '@zod/apiResponse.dto'
 
-const citiesRoutes: FastifyPluginAsync = async fastify => {
+const citiesRoutes: FastifyPluginAsync = async (fastify) => {
   const cityService = CityService.getInstance()
 
   /**
@@ -41,7 +41,7 @@ const citiesRoutes: FastifyPluginAsync = async fastify => {
         const response: CitiesResponse = { success: true, cities: [] }
         return reply.code(200).send(response)
       }
-      const publicCities = cities.map(city => PublicCitySchema.parse(city))
+      const publicCities = cities.map((city) => PublicCitySchema.parse(city))
       const response: CitiesResponse = { success: true, cities: publicCities }
       return reply.code(200).send(response)
     } catch (err) {

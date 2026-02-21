@@ -55,7 +55,10 @@ const toggleDisabled = () => {
         {{ $t('profiles.browse.filters.near_label') }}
       </label>
       <div class="d-flex flex-row align-items-center">
-        <fieldset :disabled="locationDisabled" class="flex-grow-1">
+        <fieldset
+          :disabled="locationDisabled"
+          class="flex-grow-1"
+        >
           <LocationSelector
             v-model="model.location as LocationDTO"
             v-if="model.location"

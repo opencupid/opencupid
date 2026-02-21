@@ -8,7 +8,7 @@ interface WsMessage {
   content: string // message content
 }
 
-const messageWsRoutes: FastifyPluginAsync = async fastify => {
+const messageWsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/message', { websocket: true }, (socket: WebSocket, req) => {
     const { profileId } = verifyWsToken(req, fastify.jwt)
 

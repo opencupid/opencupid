@@ -17,7 +17,7 @@ import type { OtpLoginResponse, SendLoginLinkResponse, UserMeResponse } from '@z
 import { UserIdentifier, JwtPayload } from '@zod/user/user.dto'
 import { User } from '@zod/generated'
 
-const userRoutes: FastifyPluginAsync = async fastify => {
+const userRoutes: FastifyPluginAsync = async (fastify) => {
   const userService = UserService.getInstance()
   const profileService = ProfileService.getInstance()
   const captchaService = new CaptchaService(appConfig.ALTCHA_HMAC_KEY)

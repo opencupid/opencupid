@@ -14,11 +14,14 @@ import ApiErrorOverlay from './ApiErrorOverlay.vue'
 import LikeReceivedToast from './LikeReceivedToast.vue'
 import MatchReceivedToast from './MatchReceivedToast.vue'
 import MessageReceivedToast from './MessageReceivedToast.vue'
+import IncomingCallToast from '@/features/videocall/components/IncomingCallToast.vue'
 
 import { useI18n } from 'vue-i18n'
+import { useCallStore } from '@/features/videocall/stores/callStore'
 
 const toast = useToast()
 const { t } = useI18n()
+const callStore = useCallStore()
 
 // API status overlay
 const showApiOfflineOverlay = ref(false)
@@ -89,6 +92,27 @@ function handleMatchReceived(edge: InteractionEdge) {
   )
 }
 
+function handleIncomingCall(payload: {
+  conversationId: string
+  roomName: string
+  caller: { id: string; publicName: string }
+}) {
+  callStore.handleIncomingCall(payload)
+  toast(
+    {
+      component: IncomingCallToast,
+      props: {
+        toastId: toastId(),
+        callerName: payload.caller.publicName,
+      },
+    },
+    {
+      timeout: 30000,
+      closeOnClick: false,
+    }
+  )
+}
+
 function handleApiOffline() {
   showApiOfflineOverlay.value = true
   // toast.error('Connection lost. Trying to reconnect...', {
@@ -109,16 +133,20 @@ onMounted(() => {
   bus.on('notification:new_message', handleMessageReceived)
   bus.on('ws:new_like', handleLikeReceived)
   bus.on('ws:new_match', handleMatchReceived)
+  bus.on('ws:incoming_call', handleIncomingCall)
   bus.on('api:offline', handleApiOffline)
   bus.on('api:online', handleApiOnline)
+  callStore.initialize()
 })
 
 onUnmounted(() => {
   bus.off('notification:new_message', handleMessageReceived)
   bus.off('ws:new_like', handleLikeReceived)
   bus.off('ws:new_match', handleMatchReceived)
+  bus.off('ws:incoming_call', handleIncomingCall)
   bus.off('api:offline', handleApiOffline)
   bus.off('api:online', handleApiOnline)
+  callStore.teardown()
 })
 </script>
 

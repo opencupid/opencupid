@@ -18,7 +18,7 @@ const TargetLookupParamsSchema = z.object({
   targetId: z.string().cuid(),
 })
 
-const interactionRoutes: FastifyPluginAsync = async fastify => {
+const interactionRoutes: FastifyPluginAsync = async (fastify) => {
   const service = InteractionService.getInstance()
 
   // GET /interactions

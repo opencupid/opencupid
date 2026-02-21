@@ -68,6 +68,8 @@ export const configSchema = z.object({
   DOMAIN: z.string().default('example.org'),
 
   SITE_NAME: z.string().default('OpenCupid'),
+
+  JITSI_DOMAIN: z.string().default('meet.jit.si'),
 })
 
 if (!['production', 'staging'].includes(process.env.NODE_ENV!)) {

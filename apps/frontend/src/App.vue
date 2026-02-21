@@ -2,6 +2,8 @@
 import Navbar from '@/features/app/components/Navbar.vue'
 import AppNotifier from '@/features/app/components/AppNotifier.vue'
 import UpdateBanner from '@/features/app/components/UpdateBanner.vue'
+import CallingOverlay from '@/features/videocall/components/CallingOverlay.vue'
+import JitsiModal from '@/features/videocall/components/JitsiModal.vue'
 import { useI18nStore } from './store/i18nStore'
 import { useCountries } from './features/shared/composables/useCountries'
 import { useLanguages } from './features/shared/composables/useLanguages'
@@ -39,6 +41,8 @@ useUpdateChecker()
     </KeepAlive>
   </RouterView>
   <AppNotifier />
+  <CallingOverlay />
+  <JitsiModal />
   <!-- <router-view v-slot="{ Component }">
     <transition name="fade">
       <component :is="Component"

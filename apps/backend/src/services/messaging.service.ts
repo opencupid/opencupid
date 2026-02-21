@@ -329,7 +329,7 @@ export class MessageService {
       const mdContent = t('messages.welcome_message', { siteName })
       const content = simpleMarkdownToHtml(mdContent)
       console.error('Sending welcome message:', content)
-      return await prisma.$transaction(async tx => {
+      return await prisma.$transaction(async (tx) => {
         await this.sendOrStartConversation(tx, senderId, recipientProfileId, content, 'text/plain')
       })
     }
@@ -366,7 +366,7 @@ Checks if the sender is allowed to reply to a conversation.
 | status = `BLOCKED` or anything else      | ❌ No                     |
 */
 export function canSendMessageInConversation(
-  conversation: Conversation | null,
+  conversation: Pick<Conversation, 'status' | 'initiatorProfileId'> | null,
   senderProfileId: string
 ): boolean {
   if (!conversation) return true // no conversation yet → allowed to start one

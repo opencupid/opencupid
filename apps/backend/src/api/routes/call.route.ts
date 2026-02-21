@@ -1,0 +1,210 @@
+import { FastifyPluginAsync } from 'fastify'
+import { z } from 'zod'
+import { sendError } from '../helpers'
+import { CallService } from '@/services/call.service'
+import { broadcastToProfile } from '@/utils/wsUtils'
+
+const ConversationIdParamsSchema = z.object({
+  conversationId: z.string().cuid(),
+})
+
+const CallableBodySchema = z.object({
+  isCallable: z.boolean(),
+})
+
+const InitiateCallBodySchema = z.object({
+  conversationId: z.string().cuid(),
+})
+
+const callRoutes: FastifyPluginAsync = async (fastify) => {
+  const callService = CallService.getInstance()
+
+  // POST / — initiate a call
+  fastify.post('/', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const profileId = req.session.profileId
+    if (!profileId) return sendError(reply, 401, 'Profile not found.')
+
+    const body = InitiateCallBodySchema.safeParse(req.body)
+    if (!body.success) return sendError(reply, 400, 'Invalid parameters')
+
+    try {
+      const { roomName, calleeProfileId, callerPublicName } = await fastify.prisma.$transaction(
+        async (tx) => {
+          return await callService.initiateCall(tx, body.data.conversationId, profileId)
+        }
+      )
+
+      // Notify callee via WS
+      broadcastToProfile(fastify, calleeProfileId, {
+        type: 'ws:incoming_call',
+        payload: {
+          conversationId: body.data.conversationId,
+          roomName,
+          caller: { id: profileId, publicName: callerPublicName },
+        },
+      })
+
+      return reply.code(200).send({
+        success: true,
+        conversationId: body.data.conversationId,
+        roomName,
+      })
+    } catch (error: any) {
+      fastify.log.error(error)
+      return sendError(reply, 403, error?.error || 'Failed to initiate call')
+    }
+  })
+
+  // POST /:conversationId/accept — accept an incoming call
+  fastify.post(
+    '/:conversationId/accept',
+    { onRequest: [fastify.authenticate] },
+    async (req, reply) => {
+      const profileId = req.session.profileId
+      if (!profileId) return sendError(reply, 401, 'Profile not found.')
+
+      const params = ConversationIdParamsSchema.safeParse(req.params)
+      if (!params.success) return sendError(reply, 400, 'Invalid parameters')
+
+      try {
+        const conversation = await fastify.prisma.conversation.findUnique({
+          where: { id: params.data.conversationId },
+          include: { participants: true },
+        })
+
+        if (!conversation) return sendError(reply, 404, 'Conversation not found')
+
+        const callerParticipant = conversation.participants.find((p) => p.profileId !== profileId)
+        if (!callerParticipant) return sendError(reply, 404, 'Caller not found')
+
+        broadcastToProfile(fastify, callerParticipant.profileId, {
+          type: 'ws:call_accepted',
+          payload: {
+            conversationId: params.data.conversationId,
+            roomName: conversation.jitsiRoomId,
+          },
+        })
+
+        return reply.code(200).send({ success: true })
+      } catch (error: any) {
+        fastify.log.error(error)
+        return sendError(reply, 500, 'Failed to accept call')
+      }
+    }
+  )
+
+  // POST /:conversationId/decline — decline an incoming call
+  fastify.post(
+    '/:conversationId/decline',
+    { onRequest: [fastify.authenticate] },
+    async (req, reply) => {
+      const profileId = req.session.profileId
+      if (!profileId) return sendError(reply, 401, 'Profile not found.')
+
+      const params = ConversationIdParamsSchema.safeParse(req.params)
+      if (!params.success) return sendError(reply, 400, 'Invalid parameters')
+
+      try {
+        const conversation = await fastify.prisma.conversation.findUnique({
+          where: { id: params.data.conversationId },
+          include: { participants: true },
+        })
+
+        if (!conversation) return sendError(reply, 404, 'Conversation not found')
+
+        const callerParticipant = conversation.participants.find((p) => p.profileId !== profileId)
+        if (!callerParticipant) return sendError(reply, 404, 'Caller not found')
+
+        // Send decline as generic "declined" to caller (looks same as timeout)
+        broadcastToProfile(fastify, callerParticipant.profileId, {
+          type: 'ws:call_declined',
+          payload: { conversationId: params.data.conversationId },
+        })
+
+        // Insert missed call message
+        await fastify.prisma.$transaction(async (tx) => {
+          await callService.insertMissedCallMessage(
+            tx,
+            params.data.conversationId,
+            callerParticipant.profileId
+          )
+        })
+
+        return reply.code(200).send({ success: true })
+      } catch (error: any) {
+        fastify.log.error(error)
+        return sendError(reply, 500, 'Failed to decline call')
+      }
+    }
+  )
+
+  // POST /:conversationId/cancel — caller cancels outgoing call
+  fastify.post(
+    '/:conversationId/cancel',
+    { onRequest: [fastify.authenticate] },
+    async (req, reply) => {
+      const profileId = req.session.profileId
+      if (!profileId) return sendError(reply, 401, 'Profile not found.')
+
+      const params = ConversationIdParamsSchema.safeParse(req.params)
+      if (!params.success) return sendError(reply, 400, 'Invalid parameters')
+
+      try {
+        const conversation = await fastify.prisma.conversation.findUnique({
+          where: { id: params.data.conversationId },
+          include: { participants: true },
+        })
+
+        if (!conversation) return sendError(reply, 404, 'Conversation not found')
+
+        const calleeParticipant = conversation.participants.find((p) => p.profileId !== profileId)
+        if (!calleeParticipant) return sendError(reply, 404, 'Callee not found')
+
+        broadcastToProfile(fastify, calleeParticipant.profileId, {
+          type: 'ws:call_cancelled',
+          payload: { conversationId: params.data.conversationId },
+        })
+
+        // Insert missed call message
+        await fastify.prisma.$transaction(async (tx) => {
+          await callService.insertMissedCallMessage(tx, params.data.conversationId, profileId)
+        })
+
+        return reply.code(200).send({ success: true })
+      } catch (error: any) {
+        fastify.log.error(error)
+        return sendError(reply, 500, 'Failed to cancel call')
+      }
+    }
+  )
+
+  // PATCH /:conversationId/callable — update callable status
+  fastify.patch(
+    '/:conversationId/callable',
+    { onRequest: [fastify.authenticate] },
+    async (req, reply) => {
+      const profileId = req.session.profileId
+      if (!profileId) return sendError(reply, 401, 'Profile not found.')
+
+      const params = ConversationIdParamsSchema.safeParse(req.params)
+      if (!params.success) return sendError(reply, 400, 'Invalid parameters')
+
+      const body = CallableBodySchema.safeParse(req.body)
+      if (!body.success) return sendError(reply, 400, 'Invalid parameters')
+
+      try {
+        await callService.updateCallableStatus(
+          params.data.conversationId,
+          profileId,
+          body.data.isCallable
+        )
+        return reply.code(200).send({ success: true })
+      } catch (error: any) {
+        fastify.log.error(error)
+        return sendError(reply, 500, 'Failed to update callable status')
+      }
+    }
+  )
+}
+
+export default callRoutes
