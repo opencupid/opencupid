@@ -4,8 +4,24 @@ import { type PublicProfile } from '@zod/profile/profile.dto'
 
 import { onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import type { Ref } from 'vue'
-import L, { Map as LMap, Marker as LMarker } from 'leaflet'
+import L, { type DivIcon, Map as LMap, Marker as LMarker } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+
+const DEFAULT_AVATAR_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#9ca3af" width="18" height="18"><path d="M12 12c2.67 0 4.8-2.13 4.8-4.8S14.67 2.4 12 2.4 7.2 4.53 7.2 7.2 9.33 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8V21.6h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>`
+
+function getProfileIcon(profile: PublicProfile, isSelected: boolean): DivIcon {
+  const thumbUrl = profile.profileImages?.[0]?.variants?.find((v) => v.size === 'thumb')?.url
+  const size = isSelected ? 36 : 32
+  const inner = thumbUrl
+    ? `<img src="${thumbUrl.replace(/"/g, '%22')}" />`
+    : DEFAULT_AVATAR_SVG
+  return L.divIcon({
+    className: '',
+    html: `<div class="avatar-marker${isSelected ? ' selected' : ''}" style="width:${size}px;height:${size}px">${inner}</div>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  })
+}
 
 /** Basic POI shape; extend as needed */
 export interface Poi {
@@ -44,23 +60,9 @@ const emit = defineEmits<{
 
 const mapEl: Ref<HTMLDivElement | null> = ref(null)
 let map: LMap | null = null
-let markers = new Map<Poi['id'], LMarker>()
+let markers = new Map<string | number, LMarker>()
+let profilesById = new Map<string | number, PublicProfile>()
 const markersLayer = L.layerGroup()
-
-// Simple highlighted marker icon (selected)
-const selectedIcon = L.divIcon({
-  className: 'poi-selected-icon',
-  html: `<div class="poi-dot selected"></div>`,
-  iconSize: [20, 20],
-  iconAnchor: [10, 10],
-})
-
-const defaultIcon = L.divIcon({
-  className: 'poi-default-icon',
-  html: `<div class="poi-dot"></div>`,
-  iconSize: [16, 16],
-  iconAnchor: [8, 8],
-})
 
 function ensureMap() {
   if (map || !mapEl.value) return
@@ -122,12 +124,14 @@ function updateMarkers() {
   if (!map) return
   markersLayer.clearLayers()
   markers.clear()
+  profilesById.clear()
 
   for (const profile of props.profiles) {
     if (!(profile.location.lat && profile.location.lon)) continue
+    profilesById.set(profile.id, profile)
     const m = L.marker([profile.location.lat, profile.location.lon], {
       title: profile.publicName,
-      icon: profile.id === props.selectedId ? selectedIcon : defaultIcon,
+      icon: getProfileIcon(profile, profile.id === props.selectedId),
       keyboard: true,
     })
     // const popupHtml =
@@ -174,7 +178,10 @@ function updateMarkers() {
 function highlightSelected() {
   if (!map) return
   for (const [id, marker] of markers) {
-    marker.setIcon(id === props.selectedId ? selectedIcon : defaultIcon)
+    const profile = profilesById.get(id)
+    if (profile) {
+      marker.setIcon(getProfileIcon(profile, id === props.selectedId))
+    }
   }
   if (props.selectedId != null) {
     const m = markers.get(props.selectedId)
@@ -249,20 +256,27 @@ watch(
   width: 100%;
 }
 
-/* Simple circular dot markers */
-:deep(.poi-dot) {
-  width: 12px;
-  height: 12px;
+/* Circular avatar marker */
+:deep(.avatar-marker) {
   border-radius: 50%;
-  outline: 2px solid rgba(0, 0, 0, 0.25);
-  background: #3a86ff; /* default */
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  background: #dee2e6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-:deep(.poi-dot.selected) {
-  width: 16px;
-  height: 16px;
-  background: #ff006e;
+:deep(.avatar-marker.selected) {
+  border-color: #ff006e;
+  box-shadow: 0 0 0 2px #ff006e, 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+:deep(.avatar-marker img) {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* Remove default Leaflet icon images spacing */

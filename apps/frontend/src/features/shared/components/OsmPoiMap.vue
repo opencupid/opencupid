@@ -1,7 +1,7 @@
 <script setup lang="ts" generic="T extends { id: string | number }">
 import { onMounted, onBeforeUnmount, ref, watch, type Component } from 'vue'
 import type { Ref } from 'vue'
-import L, { Map as LMap, Marker as LMarker } from 'leaflet'
+import L, { type Icon, type DivIcon, Map as LMap, Marker as LMarker } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
 /** Basic POI shape for location data extraction */
@@ -23,6 +23,8 @@ const props = withDefaults(
     getTitle: (item: T) => string
     /** Vue component to render in popup */
     popupComponent: Component
+    /** Optional icon factory; if omitted the default dot marker is used */
+    getItemIcon?: (item: T, isSelected: boolean) => Icon | DivIcon
     /** Optional starting center/zoom (used if we can't fit to bounds) */
     center?: [number, number]
     zoom?: number
@@ -46,6 +48,7 @@ const emit = defineEmits<{
 const mapEl: Ref<HTMLDivElement | null> = ref(null)
 let map: LMap | null = null
 let markers = new Map<string | number, LMarker>()
+let itemsById = new Map<string | number, T>()
 const markersLayer = L.layerGroup()
 
 // Simple highlighted marker icon (selected)
@@ -121,14 +124,22 @@ function updateMarkers() {
   if (!map) return
   markersLayer.clearLayers()
   markers.clear()
+  itemsById.clear()
 
   for (const item of props.items) {
     const location = props.getLocation(item)
     if (!location || !(location.lat && location.lon)) continue
 
+    itemsById.set(item.id, item)
+    const isSelected = item.id === props.selectedId
+    const icon = props.getItemIcon
+      ? props.getItemIcon(item, isSelected)
+      : isSelected
+        ? selectedIcon
+        : defaultIcon
     const m = L.marker([location.lat, location.lon], {
       title: props.getTitle(item),
-      icon: item.id === props.selectedId ? selectedIcon : defaultIcon,
+      icon,
       keyboard: true,
     })
 
@@ -172,7 +183,14 @@ function updateMarkers() {
 function highlightSelected() {
   if (!map) return
   for (const [id, marker] of markers) {
-    marker.setIcon(id === props.selectedId ? selectedIcon : defaultIcon)
+    if (props.getItemIcon) {
+      const item = itemsById.get(id)
+      if (item) {
+        marker.setIcon(props.getItemIcon(item, id === props.selectedId))
+      }
+    } else {
+      marker.setIcon(id === props.selectedId ? selectedIcon : defaultIcon)
+    }
   }
   if (props.selectedId != null) {
     const m = markers.get(props.selectedId)

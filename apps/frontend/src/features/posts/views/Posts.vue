@@ -12,10 +12,32 @@ import { faPenToSquare } from '@fortawesome/free-solid-svg-icons'
 import { usePostStore } from '../stores/postStore'
 import type { PublicPostWithProfile, OwnerPost } from '@zod/post/post.dto'
 import type { PostTypeType } from '@zod/generated'
+import L, { type DivIcon } from 'leaflet'
 
 import { usePostsViewModel } from '../composables/usePostsViewModel'
 
 const { t } = useI18n()
+
+// Post-it note icon for map markers
+const POST_IT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="26" height="28" viewBox="0 0 26 28"><polygon points="2,2 24,2 24,20 18,28 2,28" fill="#fff587" stroke="#c8a800" stroke-width="1.5" stroke-linejoin="round"/><polygon points="18,28 18,20 24,20" fill="#e6d200" stroke="#c8a800" stroke-width="1" stroke-linejoin="round"/><line x1="6" y1="9" x2="20" y2="9" stroke="#666" stroke-width="1.2" stroke-linecap="round"/><line x1="6" y1="14" x2="20" y2="14" stroke="#666" stroke-width="1.2" stroke-linecap="round"/><line x1="6" y1="19" x2="15" y2="19" stroke="#666" stroke-width="1.2" stroke-linecap="round"/></svg>`
+const POST_IT_SVG_SELECTED = `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="32" viewBox="0 0 30 32"><polygon points="2,2 28,2 28,22 21,32 2,32" fill="#fff587" stroke="#ff006e" stroke-width="2" stroke-linejoin="round"/><polygon points="21,32 21,22 28,22" fill="#e6d200" stroke="#ff006e" stroke-width="1.5" stroke-linejoin="round"/><line x1="6" y1="10" x2="24" y2="10" stroke="#666" stroke-width="1.2" stroke-linecap="round"/><line x1="6" y1="16" x2="24" y2="16" stroke="#666" stroke-width="1.2" stroke-linecap="round"/><line x1="6" y1="22" x2="17" y2="22" stroke="#666" stroke-width="1.2" stroke-linecap="round"/></svg>`
+
+const postItIcon: DivIcon = L.divIcon({
+  className: '',
+  html: POST_IT_SVG,
+  iconSize: [26, 28],
+  iconAnchor: [13, 28],
+})
+
+const postItIconSelected: DivIcon = L.divIcon({
+  className: '',
+  html: POST_IT_SVG_SELECTED,
+  iconSize: [30, 32],
+  iconAnchor: [15, 32],
+})
+
+const getPostIcon = (_: PublicPostWithProfile | OwnerPost, isSelected: boolean): DivIcon =>
+  isSelected ? postItIconSelected : postItIcon
 
 const {
   activeTab,
@@ -145,6 +167,7 @@ onMounted(async () => {
             :get-location="getPostLocation"
             :get-title="getPostTitle"
             :popup-component="PostMapCard"
+            :get-item-icon="getPostIcon"
             class="map-view h-100"
             @item:select="
               (id) =>
@@ -196,6 +219,7 @@ onMounted(async () => {
               :get-location="getPostLocation"
               :get-title="getPostTitle"
               :popup-component="PostMapCard"
+              :get-item-icon="getPostIcon"
               class="map-view h-100"
               @item:select="
                 (id) =>
@@ -233,6 +257,7 @@ onMounted(async () => {
             :get-location="getPostLocation"
             :get-title="getPostTitle"
             :popup-component="PostMapCard"
+            :get-item-icon="getPostIcon"
             class="map-view h-100"
             @item:select="
               (id) =>
@@ -269,6 +294,7 @@ onMounted(async () => {
             :get-location="getPostLocation"
             :get-title="getPostTitle"
             :popup-component="PostMapCard"
+            :get-item-icon="getPostIcon"
             class="map-view h-100"
             @item:select="
               (id) =>
