@@ -1,9 +1,23 @@
 # Production deployment
 
+## Domain name configuration
+
+The app uses three domain names, configured in `.env`:
+
+| Variable | Example | Purpose |
+|----------|---------|---------|
+| `DOMAIN` | `example.org` | Main app (frontend + API) |
+| `ADMIN_DOMAIN` | `admin.example.org` | Admin panel (mTLS-protected, hosts Listmonk admin) |
+| `LISTMONK_DOMAIN` | `lists.example.org` | Public Listmonk URLs (subscription/campaign pages) |
+
+Create DNS CNAME records pointing `ADMIN_DOMAIN` and `LISTMONK_DOMAIN` to `DOMAIN` (or A records to the same IP). All three domains are included in a single SAN certificate obtained by certbot.
+
+## Getting started
+
 ```bash
 # create default configuration
-cp .env.example .env  
-# edit .env to customize the instance
+cp .env.example .env
+# edit .env to customize the instance (set DOMAIN, ADMIN_DOMAIN, LISTMONK_DOMAIN, EMAIL)
 # create data volumes
 docker volume create postgres_data
 docker volume create certbot-etc

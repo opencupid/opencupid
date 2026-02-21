@@ -55,8 +55,6 @@ services:
       LISTMONK_ADMIN_PASSWORD: ${LISTMONK_ADMIN_PASSWORD:-}
     volumes:
       - listmonk-uploads:/listmonk/uploads:rw
-    ports:
-      - '9000:9000'
 
   backend:
     image: ghcr.io/opencupid/opencupid-backend
@@ -102,6 +100,8 @@ services:
       - ${MEDIA_UPLOAD_DIR}:/var/www
       - ${CERTBOT_ETCDIR}:/etc/letsencrypt
       - certbot-webroot:/var/www/html
+      - ${ADMIN_CA_CERT_FILE}:/etc/nginx/client-ca.crt:ro
+      - ./apps/admin:/var/www/admin:ro
 
   certbot:
     image: certbot/certbot
@@ -149,6 +149,10 @@ services:
       - certonly
       - -d
       - ${DOMAIN}
+      - -d
+      - ${ADMIN_DOMAIN}
+      - -d
+      - ${LISTMONK_DOMAIN}
       - --email
       - ${EMAIL}
       - --agree-tos
