@@ -9,7 +9,6 @@ import { useCountries } from './features/shared/composables/useCountries'
 import { useLanguages } from './features/shared/composables/useLanguages'
 import { useUpdateChecker } from './features/app/composables/useUpdateChecker'
 
-import ViewportSizeDebug from '@/features/app/components/ViewportSizeDebug.vue'
 import { computed } from 'vue'
 // FIXME
 // This is a workaround to ensure the page scrolls down
@@ -36,7 +35,6 @@ useCallStore().initialize()
 </script>
 
 <template>
-  <!-- <ViewportSizeDebug class="position-absolute bg-dark" /> -->
   <UpdateBanner />
   <Navbar />
   <RouterView v-slot="{ Component }">
