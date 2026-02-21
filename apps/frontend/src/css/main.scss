@@ -1,18 +1,16 @@
 // custom variables
 @import './theme.scss';
 
-// Radix Colors — CSS custom properties for fine-grained use
-@import '@radix-ui/colors/sand.css';
-@import '@radix-ui/colors/bronze.css';
-@import '@radix-ui/colors/olive.css';
+// Open Props — shadow tokens only
+@import 'open-props/shadows.min.css';
 
-// Design tokens (shadows, radii, component tokens)
+// Design tokens
 :root {
-  // ─── Elevation / shadows ──────────────────────────────────────────
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.06), 0 4px 6px rgba(0, 0, 0, 0.04);
+  // ─── Elevation aliases ────────────────────────────────────────────
+  --shadow-xs: var(--shadow-1);
+  --shadow-sm: var(--shadow-2);
+  --shadow-md: var(--shadow-3);
+  --shadow-lg: var(--shadow-4);
 
   // ─── Border radii ────────────────────────────────────────────────
   --radius-sm: 0.25rem;
@@ -24,9 +22,6 @@
   --postit-bg-alt: #f9f586;
   --overlay-dark: rgba(0, 0, 0, 0.75);
   --overlay-medium: rgba(0, 0, 0, 0.5);
-
-  // ─── Focus ring ──────────────────────────────────────────────────
-  --focus-ring-color: var(--sand-8);
 }
 
 @import './layout.scss';

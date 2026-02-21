@@ -373,19 +373,20 @@ main {
 .subnav-bar {
   font-size: 0.75rem;
   cursor: pointer;
-  border-bottom: 2px solid transparent;
+  box-shadow: var(--shadow-xs);
   transition:
     background-color 0.2s ease,
-    border-color 0.2s ease,
     box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: var(--shadow-1), var(--shadow-1);
+  }
 
   &.social {
     background-color: transparentize($social, 0.95) !important;
 
     &:hover {
       background-color: transparentize($social, 0.88) !important;
-      border-bottom-color: $social;
-      box-shadow: 0 2px 24px transparentize($social, 0.9);
     }
   }
 
@@ -394,8 +395,6 @@ main {
 
     &:hover {
       background-color: transparentize($dating, 0.88) !important;
-      border-bottom-color: $dating;
-      box-shadow: 0 2px 24px transparentize($dating, 0.9);
     }
   }
 }

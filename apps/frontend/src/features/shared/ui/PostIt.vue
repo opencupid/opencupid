@@ -1,15 +1,19 @@
 <template>
   <div
-    class="post-it"
-    :class="variant"
+    class="post-it-wrapper"
     :style="warpStyle(id)"
   >
-    <div class="header mb-2">
-      <slot name="header"></slot>
-      <div class="pin-marker"></div>
-    </div>
-    <div class="content fs-4">
-      <slot></slot>
+    <div
+      class="post-it"
+      :class="variant"
+    >
+      <div class="header mb-2">
+        <slot name="header"></slot>
+        <div class="pin-marker"></div>
+      </div>
+      <div class="content fs-4">
+        <slot></slot>
+      </div>
     </div>
   </div>
 </template>
@@ -68,7 +72,7 @@ function warpStyle(id: string) {
 .o-post-it {
   background-color: var(--postit-bg); /* Default yellow */
   /* padding: 0.5rem; */
-  border: 1px solid var(--sand-6);
+  border: 1px solid var(--bs-border-color);
   box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
   /* display: inline-block; */
   /* margin: 0.25rem; */
@@ -77,32 +81,34 @@ function warpStyle(id: string) {
   /* transform: rotate(3deg);  */
 }
 
-/* PostIt.vue (scoped or global) */
-.post-it {
-  --rot: 0deg; /* overall rotation */
-  --rx: 0deg; /* perspective tilt X */
-  --ry: 0deg; /* perspective tilt Y */
-  --skx: 0deg; /* tiny skew */
-  --skv: 0; /* 0..1, controls edge warp strength */
-  --shadow: 0.12; /* base shadow opacity */
+/* Wrapper holds transform + shadow so clip-path on inner doesn't clip the shadow */
+.post-it-wrapper {
+  --rot: 0deg;
+  --rx: 0deg;
+  --ry: 0deg;
+  --skx: 0deg;
+  --skv: 0;
+  --shadow: 0.12;
 
-  width: 100%; /* Example width */
+  width: 100%;
   min-height: 150px;
+  position: relative;
+  transform-origin: 50% 45%;
+  transform: perspective(900px) rotate(var(--rot)) rotateX(var(--rx)) rotateY(var(--ry))
+    skewX(var(--skx));
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.1)) drop-shadow(0 3px 8px rgba(0, 0, 0, 0.08));
+  transition: filter 150ms ease;
 
+  &:hover {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.14)) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.12));
+  }
+}
+
+.post-it {
   background: var(--postit-bg);
   border-radius: var(--radius-md);
   padding: 0.7rem 0.8rem 0.9rem;
   position: relative;
-  transform-origin: 50% 45%;
-  /* slight perspective + micro skew for “warped paper” feel */
-  transform: perspective(900px) rotate(var(--rot)) rotateX(var(--rx)) rotateY(var(--ry))
-    skewX(var(--skx));
-
-  /* layered soft shadows (paper on board) */
-  box-shadow:
-    0 1.5px 0 rgba(0, 0, 0, calc(var(--shadow) * 0.7)),
-    0 12px 18px -8px rgba(0, 0, 0, calc(var(--shadow))),
-    0 30px 35px -26px rgba(0, 0, 0, calc(var(--shadow)));
 
   /* very subtle noise so it’s less “flat” */
   &::after {
@@ -164,10 +170,6 @@ function warpStyle(id: string) {
     100% calc(100% - 0.4% * var(--skv)),
     0% calc(100% - 0.2% * var(--skv))
   );
-}
-
-.post-it {
-  position: relative;
 }
 
 .header {

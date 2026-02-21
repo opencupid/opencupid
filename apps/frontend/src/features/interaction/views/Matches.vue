@@ -18,7 +18,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main class="pt-5 dating overflow-auto">
+  <main class="pt-5 dating overflow-auto hide-scrollbar">
     <div class="container">
       <ViewTitle
         :icon="IconDate"

@@ -124,8 +124,9 @@ const hasMatchNotifications = computed(
 @import '@/css/app-vars.scss';
 
 .navbar-soft {
-  background-color: var(--sand-2);
-  border-bottom: 1px solid var(--sand-6);
+  background-color: #dfd7ca; // Sandstone gray-300 — warm sand
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-xs);
 }
 
 :deep(.nav-link) {
@@ -133,30 +134,30 @@ const hasMatchNotifications = computed(
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: var(--sand-11);
+  color: var(--bs-secondary);
   border-radius: var(--radius-md);
   transition:
     color 150ms ease,
     background-color 150ms ease;
 
   &:hover {
-    color: var(--bronze-11);
-    background-color: var(--sand-3);
+    color: var(--bs-dark);
+    background-color: rgba(0, 0, 0, 0.06);
   }
 
   &.active {
-    color: var(--bronze-9);
+    color: var(--bs-primary);
   }
 
   &:focus-visible {
-    outline: 2px solid var(--focus-ring-color);
+    outline: 2px solid var(--bs-secondary);
     outline-offset: 2px;
   }
 }
 .nav-link .label {
   font-size: 0.85rem;
   margin-top: 0.25rem;
-  color: var(--sand-11);
+  color: var(--bs-secondary);
 }
 .nav-item {
   display: flex;

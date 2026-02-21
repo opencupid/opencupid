@@ -253,7 +253,7 @@
 .card {
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
-  border-color: var(--sand-6);
+  border-color: var(--bs-border-color);
 }
 
 // Interactive cards: hover lift
@@ -279,7 +279,7 @@
 .dropdown-menu {
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
-  border-color: var(--sand-6);
+  border-color: var(--bs-border-color);
 }
 
 // Toasts
@@ -290,6 +290,6 @@
 
 // Focus-visible outline (a11y)
 :focus-visible {
-  outline: 2px solid var(--focus-ring-color, var(--sand-8));
+  outline: 2px solid var(--bs-secondary);
   outline-offset: 2px;
 }

@@ -10,7 +10,7 @@ defineEmits<{
 
 <template>
   <div>
-    <ul class="language-selector list-inline text-muted mt-3">
+    <ul class="language-selector list-inline mt-3">
       <li
         v-for="locale in i18nStore.getAvailableLocalesWithLabels()"
         :key="locale.value"
@@ -30,12 +30,7 @@ defineEmits<{
         >
       </li>
     </ul>
-    <div
-      class="text-center text-muted mt-3"
-      style="font-size: 0.75rem"
-    >
-      Help wanted translating
-    </div>
+    <div class="text-center mt-3 help-text">Help wanted translating</div>
   </div>
 </template>
 
@@ -44,6 +39,18 @@ defineEmits<{
   list-style: none;
   padding: 0;
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  color: var(--bs-secondary);
+  opacity: 0.6;
+
+  a {
+    color: var(--bs-secondary);
+  }
+}
+
+.help-text {
+  font-size: 0.7rem;
+  color: var(--bs-secondary);
+  opacity: 0.4;
 }
 </style>

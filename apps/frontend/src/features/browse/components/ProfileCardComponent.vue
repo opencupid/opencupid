@@ -99,6 +99,11 @@ const viewerLocation = ref(viewerProfile?.value.location)
   z-index: 10;
 }
 
+// TODO: remove this debug override
+.ratio-1x1 {
+  background: linear-gradient(135deg, #dfd7ca 0%, #f8f5f0 100%);
+}
+
 .card-image {
   opacity: 0;
   transition: opacity 0.3s ease-in;
@@ -118,7 +123,7 @@ const viewerLocation = ref(viewerProfile?.value.location)
   border-radius: var(--radius-md);
 
   &:hover {
-    border-color: var(--bronze-9);
+    border-color: var(--bs-primary);
   }
 }
 .card-title {

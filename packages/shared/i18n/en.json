@@ -103,7 +103,8 @@
   "home": {
     "explore_interests": "Explore interests",
     "meet_new_people": "Meet new people",
-    "welcome_title": "Welcome to {siteName}!"
+    "welcome_title": "Welcome to {siteName}!",
+    "more_people": "More people..."
   },
   "profiles": {
     "back_button_title": "Back",
@@ -317,7 +318,7 @@
       "recording_mode": "Voice Message",
       "back_to_text": "Back to text",
       "text": "Text",
-      "start_recording": "Start recording",
+      "start_recording": "Leave voice message",
       "stop_recording": "Stop recording",
       "record_again": "Record again",
       "record": "Record",
@@ -442,7 +443,7 @@
       "not_visible": "This post is not visible to others",
       "confirm_delete": "Are you sure you want to delete this post?",
       "no_posts": "No posts found",
-      "no_nearby": "No nearby posts found",
+      "no_nearby": "No posts found nearby",
       "no_recent": "No recent posts found",
       "no_my_posts": "You haven't created any posts yet"
     }

@@ -19,6 +19,7 @@ import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 import ProfileCardGrid from '@/features/browse/components/ProfileCardGrid.vue'
 import LikesAndMatchesBanner from '@/features/interaction/components/LikesAndMatchesBanner.vue'
 import TagCloud from '@/features/shared/components/TagCloud.vue'
+import IconSearch from '@/assets/icons/interface/search.svg'
 
 defineOptions({ name: 'UserHome' })
 
@@ -74,7 +75,7 @@ const siteName = __APP_CONFIG__.SITE_NAME
 <template>
   <main
     ref="mainEl"
-    class="overflow-auto"
+    class="overflow-auto hide-scrollbar"
   >
     <div class="container">
       <MiddleColumn>
@@ -106,8 +107,30 @@ const siteName = __APP_CONFIG__.SITE_NAME
               gap="2"
             />
           </BRow>
+          <RouterLink
+            :to="{ name: 'BrowseProfiles' }"
+            class="more-people-link mt-2"
+            role="button"
+          >
+            <IconSearch class="svg-icon-sm me-1" />
+            {{ $t('home.more_people') }}
+          </RouterLink>
         </div>
       </MiddleColumn>
     </div>
   </main>
 </template>
+
+<style scoped lang="scss">
+.more-people-link {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.9rem;
+  color: var(--bs-primary);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+</style>

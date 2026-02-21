@@ -171,19 +171,19 @@ onMounted(async () => {
           class="scope-pane h-100"
         >
           <div
-            v-if="!locationPermission"
-            class="location-prompt"
+            v-if="locationPermission === false"
+            class="location-prompt d-flex flex-column align-items-center justify-content-center h-100"
           >
-            <p>{{ $t('posts.location.prompt') }}</p>
             <BButton
-              variant="info"
+              variant="primary"
               @click="requestLocation"
               size="lg"
             >
               {{ $t('posts.location.enable') }}
             </BButton>
+            <p class="text-muted mt-2 mb-0 small">{{ $t('posts.location.prompt') }}</p>
           </div>
-          <template v-else>
+          <template v-else-if="locationPermission === true">
             <PostList
               v-if="viewMode === 'grid'"
               scope="nearby"
@@ -311,7 +311,7 @@ onMounted(async () => {
     <BModal
       title=""
       v-if="showFullView"
-      :backdrop="'static'"
+      :backdrop="true"
       centered
       size="lg"
       button-size="sm"
@@ -320,10 +320,10 @@ onMounted(async () => {
       :no-header="false"
       :no-footer="true"
       :show="true"
-      :no-close-on-esc="true"
+      :no-close-on-esc="false"
       body-class="d-flex flex-column align-items-center justify-content-center overflow-auto hide-scrollbar p-2 p-md-5"
-      :keyboard="false"
       @close="handlePostListIntent('close')"
+      @hidden="handlePostListIntent('close')"
     >
       <!-- Post Edit Modal -->
       <template v-if="showCreateModal">

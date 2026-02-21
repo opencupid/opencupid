@@ -247,7 +247,7 @@ const handleContact = async () => {
               :aria-label="t('posts.actions.contact')"
               @click.stop="handleContact"
             >
-              <IconMessage class="svg-icon" />
+              <IconMessage class="svg-icon-lg" />
             </button>
           </div>
         </div>
@@ -335,7 +335,8 @@ const handleContact = async () => {
   border: none;
   padding: 0.1rem 0.2rem;
   cursor: pointer;
-  opacity: 0.5;
+  color: var(--bs-dark);
+  opacity: 0.7;
   transition: opacity 150ms ease;
   line-height: 1;
 }

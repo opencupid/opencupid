@@ -10,6 +10,7 @@ body {
 
 body {
   overflow: hidden;
+  background: linear-gradient(180deg, #f8f5f0 0%, #fff 100%) fixed;
 }
 
 #app {
@@ -29,6 +30,7 @@ main {
   height: 100dvh;
   min-height: 0; // prevents flex item overflow clipping (iOS)
   position: relative;
+  background: transparent;
 }
 
 nav.navbar + main {
