@@ -44,11 +44,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Get git commit short SHA and tag suffix
+      - name: Get version, commit SHA, and tag suffix
         id: git-info
         run: |
           echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
           echo "tag-suffix=${{ github.event.inputs.tag || 'manual' }}" >> $GITHUB_OUTPUT
+          echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
       # Build and push backend image
       - name: Build and push backend image
@@ -61,6 +62,7 @@ jobs:
           cache-to: type=gha,mode=max
           tags: |
             ghcr.io/${{ github.repository }}-backend:${{ steps.git-info.outputs.tag-suffix }}
+            ghcr.io/${{ github.repository }}-backend:${{ steps.git-info.outputs.version }}
             ghcr.io/${{ github.repository }}-backend:${{ steps.git-info.outputs.sha }}
 
       # Build and push frontend image
@@ -83,6 +85,7 @@ jobs:
             OG_TYPE=${{ steps.frontend-args.outputs.OG_TYPE }}
           tags: |
             ghcr.io/${{ github.repository }}-frontend:${{ steps.git-info.outputs.tag-suffix }}
+            ghcr.io/${{ github.repository }}-frontend:${{ steps.git-info.outputs.version }}
             ghcr.io/${{ github.repository }}-frontend:${{ steps.git-info.outputs.sha }}
 
       # Build and push ingress image
@@ -96,4 +99,5 @@ jobs:
           cache-to: type=gha,mode=max
           tags: |
             ghcr.io/${{ github.repository }}-ingress:${{ steps.git-info.outputs.tag-suffix }}
+            ghcr.io/${{ github.repository }}-ingress:${{ steps.git-info.outputs.version }}
             ghcr.io/${{ github.repository }}-ingress:${{ steps.git-info.outputs.sha }}
