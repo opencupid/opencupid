@@ -104,6 +104,11 @@ const countryName = computed(() => {
 // Provide the viewerProfile object (current user's profile) to child components
 provide('viewerProfile', viewerProfile)
 
+const getProfileImageUrl = (profile: PublicProfile) => {
+  const variants = profile.profileImages?.[0]?.variants
+  return variants?.find((v) => v.size === 'thumb')?.url
+}
+
 const isDetailView = computed(() => !!selectedProfileId.value)
 
 // Infinite scroll setup
@@ -292,6 +297,7 @@ useInfiniteScroll(
               :items="profileList"
               :get-location="(profile: PublicProfile) => profile.location"
               :get-title="(profile: PublicProfile) => profile.publicName"
+              :get-image-url="getProfileImageUrl"
               :popup-component="ProfileMapCard"
               class="map-view h-100"
               @item:select="(id: string | number) => handleCardClick(String(id))"

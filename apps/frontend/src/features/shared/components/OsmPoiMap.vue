@@ -26,6 +26,8 @@ const props = withDefaults(
     /** Optional starting center/zoom (used if we can't fit to bounds) */
     center?: [number, number]
     zoom?: number
+    /** Optional function to get a thumbnail image URL for an item */
+    getImageUrl?: (item: T) => string | undefined
     /** ID of selected item to highlight */
     selectedId?: string | number
     /** Whether to auto-fit the map to show all items */
@@ -46,6 +48,7 @@ const emit = defineEmits<{
 const mapEl: Ref<HTMLDivElement | null> = ref(null)
 let map: LMap | null = null
 let markers = new Map<string | number, LMarker>()
+let itemsById = new Map<string | number, T>()
 const markersLayer = L.layerGroup()
 
 // Simple highlighted marker icon (selected)
@@ -62,6 +65,22 @@ const defaultIcon = L.divIcon({
   iconSize: [16, 16],
   iconAnchor: [8, 8],
 })
+
+function avatarIcon(url: string, isSelected: boolean): L.DivIcon {
+  const size = isSelected ? 40 : 32
+  return L.divIcon({
+    className: 'poi-avatar-icon',
+    html: `<img src="${encodeURI(url)}" class="poi-avatar${isSelected ? ' selected' : ''}" />`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  })
+}
+
+function iconForItem(item: T, isSelected: boolean): L.DivIcon {
+  const imageUrl = props.getImageUrl?.(item)
+  if (imageUrl) return avatarIcon(imageUrl, isSelected)
+  return isSelected ? selectedIcon : defaultIcon
+}
 
 function ensureMap() {
   if (map || !mapEl.value) return
@@ -121,14 +140,16 @@ function updateMarkers() {
   if (!map) return
   markersLayer.clearLayers()
   markers.clear()
+  itemsById.clear()
 
   for (const item of props.items) {
     const location = props.getLocation(item)
     if (!location || !(location.lat && location.lon)) continue
 
+    const isSelected = item.id === props.selectedId
     const m = L.marker([location.lat, location.lon], {
       title: props.getTitle(item),
-      icon: item.id === props.selectedId ? selectedIcon : defaultIcon,
+      icon: iconForItem(item, isSelected),
       keyboard: true,
     })
 
@@ -151,6 +172,7 @@ function updateMarkers() {
 
     m.addTo(markersLayer)
     markers.set(item.id, m)
+    itemsById.set(item.id, item)
   }
 
   // Fit bounds if requested and we have at least one item with location
@@ -172,7 +194,9 @@ function updateMarkers() {
 function highlightSelected() {
   if (!map) return
   for (const [id, marker] of markers) {
-    marker.setIcon(id === props.selectedId ? selectedIcon : defaultIcon)
+    const item = itemsById.get(id)
+    if (!item) continue
+    marker.setIcon(iconForItem(item, id === props.selectedId))
   }
   if (props.selectedId != null) {
     const m = markers.get(props.selectedId)
@@ -255,6 +279,30 @@ watch(
   width: 16px;
   height: 16px;
   background: #ff006e;
+}
+
+/* Avatar thumbnail markers */
+:deep(.poi-avatar-icon) {
+  background: transparent;
+  border: none;
+}
+
+:deep(.poi-avatar) {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid white;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+:deep(.poi-avatar.selected) {
+  width: 40px;
+  height: 40px;
+  border-color: #ff006e;
+  box-shadow:
+    0 0 0 2px #ff006e,
+    0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 /* Remove default Leaflet icon images spacing */
