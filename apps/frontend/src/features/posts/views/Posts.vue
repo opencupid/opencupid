@@ -68,6 +68,14 @@ const getPostLocation = (post: PublicPostWithProfile | OwnerPost) => {
   return undefined
 }
 
+const getPostImageUrl = (post: PublicPostWithProfile | OwnerPost) => {
+  if ('postedBy' in post && post.postedBy) {
+    const variants = post.postedBy.profileImages?.[0]?.variants
+    return variants?.find((v) => v.size === 'thumb')?.url
+  }
+  return undefined
+}
+
 const getPostTitle = (post: PublicPostWithProfile | OwnerPost) => {
   const hasProfileData = (p: PublicPostWithProfile | OwnerPost): p is PublicPostWithProfile =>
     'postedBy' in p && p.postedBy != null
@@ -144,6 +152,7 @@ onMounted(async () => {
             :items="currentTabPosts"
             :get-location="getPostLocation"
             :get-title="getPostTitle"
+            :get-image-url="getPostImageUrl"
             :popup-component="PostMapCard"
             class="map-view h-100"
             @item:select="
@@ -232,6 +241,7 @@ onMounted(async () => {
             :items="currentTabPosts"
             :get-location="getPostLocation"
             :get-title="getPostTitle"
+            :get-image-url="getPostImageUrl"
             :popup-component="PostMapCard"
             class="map-view h-100"
             @item:select="
@@ -268,6 +278,7 @@ onMounted(async () => {
             :items="currentTabPosts"
             :get-location="getPostLocation"
             :get-title="getPostTitle"
+            :get-image-url="getPostImageUrl"
             :popup-component="PostMapCard"
             class="map-view h-100"
             @item:select="
