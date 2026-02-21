@@ -18,7 +18,7 @@
     "turbo": "2.8.10"
   },
   "scripts": {
-    "ci:test": "pnpm install && pnpm --filter backend prisma:generate && pnpm lint && pnpm test && pnpm --filter frontend type-check && pnpm --filter backend type-check",
+    "ci:test": "pnpm install && pnpm --filter backend prisma:generate && pnpm lint && pnpm test && turbo run type-check --concurrency 1",
     "dev": "./scripts/dev-start.sh",
     "dev:stop": "./scripts/dev-stop.sh",
     "build": "turbo run build",

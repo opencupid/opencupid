@@ -24,6 +24,7 @@
     },
     "format": {
       "outputs": []
-    }
+    },
+    "type-check": {}
   }
 }
