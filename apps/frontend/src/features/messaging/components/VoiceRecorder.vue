@@ -58,6 +58,8 @@ watch(state, (newState) => {
     emit('recording:completed', audioBlob.value, duration.value)
   } else if (newState === 'error' && error.value) {
     emit('recording:error', error.value)
+    // Auto-reset to idle so the button returns to normal
+    reset()
   }
 })
 
@@ -75,10 +77,6 @@ const handleRecordClick = async () => {
 const handleCancel = () => {
   cancelRecording()
   emit('recording:cancelled')
-}
-
-const handleRetryPermission = async () => {
-  await startRecording()
 }
 
 defineExpose({ triggerStart: handleRecordClick, reset })
@@ -146,49 +144,6 @@ defineExpose({ triggerStart: handleRecordClick, reset })
       />
       <small class="text-muted">
         {{ $t('messaging.voice.max_duration', { duration: recorderMaxDuration }) }}
-      </small>
-    </div>
-
-    <!-- Permission denied message -->
-    <div
-      v-if="permissionDenied"
-      class="mt-2 p-2 bg-warning-subtle border border-warning rounded"
-    >
-      <small class="text-warning-emphasis">
-        <i class="fas fa-exclamation-triangle me-1"></i>
-        {{ $t('messaging.voice.permission_denied') }}
-      </small>
-      <div class="mt-1">
-        <BButton
-          size="sm"
-          variant="outline-warning"
-          @click="handleRetryPermission"
-          :title="$t('messaging.voice.retry_permission')"
-        >
-          {{ $t('messaging.voice.retry_permission') }}
-        </BButton>
-      </div>
-    </div>
-
-    <!-- Error message -->
-    <div
-      v-if="isError && !permissionDenied && error"
-      class="mt-2 p-2 bg-danger-subtle border border-danger rounded"
-    >
-      <small class="text-danger-emphasis">
-        <i class="fas fa-exclamation-circle me-1"></i>
-        {{ error }}
-      </small>
-    </div>
-
-    <!-- Unsupported browser message -->
-    <div
-      v-if="!isSupported"
-      class="mt-2 p-2 bg-info-subtle border border-info rounded"
-    >
-      <small class="text-info-emphasis">
-        <i class="fas fa-info-circle me-1"></i>
-        {{ $t('messaging.voice.unsupported_browser') }}
       </small>
     </div>
   </div>

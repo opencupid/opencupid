@@ -13,8 +13,11 @@ import LanguageList from '@/features/shared/profiledisplay/LanguageList.vue'
 import StoreErrorOverlay from '@/features/shared/ui/StoreErrorOverlay.vue'
 import IconMenuDotsVert from '@/assets/icons/interface/menu-dots-vert.svg'
 import IconCall from '@/assets/icons/interface/call.svg'
+import { useToast } from 'vue-toastification'
 import VoiceRecorder from './VoiceRecorder.vue'
 import { useMessageStore } from '../stores/messageStore'
+
+const toast = useToast()
 
 const messageStore = useMessageStore()
 
@@ -106,8 +109,7 @@ function handleVoiceRecordingCancelled() {
 }
 
 function handleVoiceRecordingError(error: string) {
-  console.error('Voice recording error:', error)
-  // You might want to show a toast notification here
+  toast.error(error)
 }
 </script>
 
