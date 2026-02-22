@@ -2,7 +2,7 @@ import path from 'path'
 import fs from 'fs'
 
 import { prisma } from '../lib/prisma'
-import { getMediaRoot, makeImageLocation, signUrl } from '@/lib/media'
+import { getMediaRoot, imageBasePath, makeImageLocation, signUrl } from '@/lib/media'
 import { appConfig } from '@/lib/appconfig'
 
 import { generateContentHash } from '@/utils/hash'
@@ -66,7 +66,7 @@ export class ImageService {
    */
   getSignedUrls(image: { storagePath: string }): { size: string; url: string }[] {
     const urlBase = appConfig.MEDIA_URL_BASE
-    const base = image.storagePath
+    const base = imageBasePath(image.storagePath)
     const imgSet = variants.map((s) => ({
       size: s.name,
       url: signUrl(`${urlBase}/${base}-${s.name}.webp`),
@@ -238,7 +238,7 @@ export class ImageService {
     }
 
     // Delete all generated image files from the filesystem
-    const baseFile = path.join(getMediaRoot(), image.storagePath)
+    const baseFile = path.join(getMediaRoot(), imageBasePath(image.storagePath))
     const filesToDelete = [
       `${baseFile}-original.jpg`,
       `${baseFile}-face.jpg`,

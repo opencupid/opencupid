@@ -9,7 +9,31 @@ vi.mock('@/lib/appconfig', () => ({
   },
 }))
 
-import { signUrl } from '../../lib/media'
+import { imageBasePath, voiceBasePath, MEDIA_SUBDIR, signUrl } from '../../lib/media'
+
+describe('MEDIA_SUBDIR', () => {
+  it('defines expected subdirectory names', () => {
+    expect(MEDIA_SUBDIR.IMAGES).toBe('images')
+    expect(MEDIA_SUBDIR.VOICE).toBe('voice')
+    expect(MEDIA_SUBDIR.TMP).toBe('tmp')
+  })
+})
+
+describe('imageBasePath', () => {
+  it('prepends images/ to a storagePath', () => {
+    expect(imageBasePath('cmXXX/abc123')).toBe('images/cmXXX/abc123')
+  })
+
+  it('handles nested paths', () => {
+    expect(imageBasePath('userA/subdir/slug')).toBe('images/userA/subdir/slug')
+  })
+})
+
+describe('voiceBasePath', () => {
+  it('prepends voice/ to a storagePath', () => {
+    expect(voiceBasePath('p1/msg-abc.webm')).toBe('voice/p1/msg-abc.webm')
+  })
+})
 
 describe('signUrl', () => {
   beforeEach(() => {
