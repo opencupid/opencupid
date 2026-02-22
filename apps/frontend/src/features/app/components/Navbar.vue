@@ -134,14 +134,13 @@ const hasMatchNotifications = computed(
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: var(--bs-secondary);
+  color: var(--bs-dark);
   border-radius: var(--radius-md);
   transition:
     color 150ms ease,
     background-color 150ms ease;
 
   &:hover {
-    color: var(--bs-dark);
     background-color: rgba(0, 0, 0, 0.06);
   }
 
@@ -157,7 +156,7 @@ const hasMatchNotifications = computed(
 .nav-link .label {
   font-size: 0.85rem;
   margin-top: 0.25rem;
-  color: var(--bs-secondary);
+  color: inherit;
 }
 .nav-item {
   display: flex;

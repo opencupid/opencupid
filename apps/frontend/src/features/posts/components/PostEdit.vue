@@ -68,7 +68,7 @@ if (props.isEdit && props.post) {
 }
 
 const isFormValid = computed(() => {
-  return form.value.content.trim().length > 0 && form.value.content.length <= 2000
+  return form.value.content.trim().length > 0 && form.value.content.length <= 150
 })
 
 const saveButtonText = computed(() => {
@@ -136,11 +136,6 @@ const handleSubmit = async () => {
       :id="post?.id ?? 'new-post'"
     >
       <BFormGroup class="mb-2">
-        <label
-          for="post-type"
-          class="form-label"
-          >{{ $t('posts.labels.type') }}</label
-        >
         <BFormRadioGroup v-model="form.type">
           <BFormRadio
             id="post-type-offer"
@@ -168,18 +163,17 @@ const handleSubmit = async () => {
             id="post-content"
             v-model="form.content"
             :placeholder="$t('posts.placeholders.content')"
-            maxlength="2000"
+            maxlength="150"
             required
             rows="4"
             :label="$t('posts.labels.content')"
           ></BFormTextarea>
           <div class="fs-6 text-end form-text text-muted character-count">
-            {{ form.content.length }}/2000
+            {{ form.content.length }}/150
           </div>
         </BFormGroup>
 
         <BFormGroup class="mb-2">
-          <label class="form-label">{{ $t('posts.labels.location') }}</label>
           <LocationSelector
             v-model="form.location"
             :allow-empty="true"

@@ -174,7 +174,7 @@ const hint = computed(() => history?.state?.hint || null)
           </MiddleColumn>
         </div>
       </div>
-      <div class="main-edit-button">
+      <div class="main-edit-button btn-shadow">
         <EditButton v-model="viewState.isEditable" />
       </div>
     </EditableFields>
@@ -210,12 +210,6 @@ const hint = computed(() => history?.state?.hint || null)
   height: 3rem;
 }
 
-.main-edit-button {
-  position: fixed;
-  z-index: 5;
-  bottom: 1rem;
-  right: 1rem;
-}
 
 .editable {
   background-color: var(--bs-light);
@@ -225,6 +219,7 @@ const hint = computed(() => history?.state?.hint || null)
   position: relative;
   display: flex;
   flex-direction: column;
+  align-items: stretch !important;
   width: 100%;
   :deep(.editable-placeholder) {
     height: 4rem;
@@ -236,7 +231,11 @@ const hint = computed(() => history?.state?.hint || null)
   right: 0;
   bottom: 0.5rem;
 }
-:deep(.editable-placeholder + .edit-button) {
+:deep(.editable-textarea .editable-placeholder ) {
+  display: flex;
+  padding: 0.25rem;
+}
+:deep(.editable-textarea .editable-placeholder + .edit-button) {
   position: absolute;
   right: 0;
   bottom: 0.25rem;
@@ -256,8 +255,7 @@ const hint = computed(() => history?.state?.hint || null)
   background-color: var(--bs-dating-light);
 }
 :deep(.editable-field) {
-  position: relative;
   display: inline-flex;
-  flex-direction: column;
+  align-items: center;
 }
 </style>

@@ -37,7 +37,7 @@ const viewerLocation = ref(viewerProfile?.value.location)
 
 <template>
   <div
-    class="card h-100 profile-card cursor-pointer position-relative overflow-hidden d-flex flex-column user-select-none shadow"
+    class="card h-100 profile-card cursor-pointer position-relative overflow-hidden d-flex flex-column user-select-none"
     @click="$emit('click', profile.id)"
   >
     <div class="ratio ratio-1x1">
@@ -121,10 +121,6 @@ const viewerLocation = ref(viewerProfile?.value.location)
 .card {
   font-size: 0.9rem;
   border-radius: var(--radius-md);
-
-  &:hover {
-    border-color: var(--bs-primary);
-  }
 }
 .card-title {
   text-shadow: 0 0 0.25rem rgba(0, 0, 0, 0.8);

@@ -52,7 +52,7 @@ $theme-colors: (
 );
 
 // ─── Accent colors ──────────────────────────────────────────────────
-$social: $gray-800; // Dark neutral
+$social: #325d88; // Sandstone blue
 $dating: #d9534f; // Sandstone red
 $dating-light: lighten($dating, 30%);
 $tag: #b8860b; // Muted goldenrod — tags/interests
@@ -83,10 +83,12 @@ $card-cap-bg: rgba($gray-200, 0.25);
 $dropdown-link-color: $gray-600;
 $dropdown-link-hover-bg: $gray-200;
 $dropdown-link-active-bg: $gray-200;
+$dropdown-link-active-color: $gray-800;
 $modal-content-border-color: $gray-300;
 $list-group-border-color: $gray-300;
 $list-group-hover-bg: $gray-200;
 $list-group-active-bg: $gray-200;
 $list-group-active-border-color: $gray-300;
 $nav-link-disabled-color: $gray-300;
+$modal-backdrop-opacity: 0.8;
 $min-contrast-ratio: 2;

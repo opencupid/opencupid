@@ -297,7 +297,7 @@ onMounted(async () => {
     <div class="main-edit-button">
       <BButton
         size="lg"
-        class="btn-icon-lg"
+        class="btn-icon-lg btn-shadow"
         key="save"
         @click="(post) => handlePostListIntent('create')"
         variant="primary"
@@ -309,7 +309,7 @@ onMounted(async () => {
 
     <!-- Post Full View / Edit Modal -->
     <BModal
-      title=""
+      :title="$t('posts.create_title')"
       v-if="showFullView"
       :backdrop="true"
       centered
@@ -321,7 +321,7 @@ onMounted(async () => {
       :no-footer="true"
       :show="true"
       :no-close-on-esc="false"
-      body-class="d-flex flex-column align-items-center justify-content-center overflow-auto hide-scrollbar p-2 p-md-5"
+      body-class="d-flex flex-column align-items-center justify-content-center overflow-auto hide-scrollbar p-2 p-md-2"
       @close="handlePostListIntent('close')"
       @hidden="handlePostListIntent('close')"
     >
@@ -375,13 +375,6 @@ onMounted(async () => {
     height: calc(100vh - $navbar-height);
     z-index: 900;
   }
-}
-
-.main-edit-button {
-  position: fixed;
-  z-index: 1000;
-  bottom: 1.5rem;
-  right: 1.5rem;
 }
 
 .list-view {

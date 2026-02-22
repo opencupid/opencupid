@@ -146,6 +146,7 @@ function handleVoiceRecordingError(error: string) {
           rows="1"
           max-rows="5"
           no-resize
+          class="mb-2"
           @keydown="handleKeyPress"
           :placeholder="$t('messaging.message_input_placeholder')"
           :disabled="messageStore.isSending || isVoiceActive"

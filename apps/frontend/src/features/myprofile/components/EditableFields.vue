@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { provide, reactive, toRef, watch } from 'vue'
+import { computed, provide, reactive, toRef, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import { type EditFieldProfileFormWithImages } from '@zod/profile/profile.form'
 import { type FieldEditState } from '../composables/types'
+
+const { t } = useI18n()
 
 const model = defineModel<EditFieldProfileFormWithImages>()
 const formData: EditFieldProfileFormWithImages = reactive({} as EditFieldProfileFormWithImages)
@@ -18,6 +21,12 @@ const emit = defineEmits<{
 const fieldEditState: FieldEditState = reactive({
   currentField: null, // Field being edited
   fieldEditModal: false,
+})
+
+const modalTitle = computed(() => {
+  const field = fieldEditState.currentField
+  if (!field) return ''
+  return t(`profiles.forms.edit_titles.${field}`)
 })
 
 const handleCancelEdit = () => {
@@ -49,7 +58,7 @@ provide('isEditable', toRef(props, 'editState'))
 <template>
   <BModal
     v-model="fieldEditState.fieldEditModal"
-    title=""
+    :title="modalTitle"
     :backdrop="'static'"
     centered
     size="lg"

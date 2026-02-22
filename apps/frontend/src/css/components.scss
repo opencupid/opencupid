@@ -9,12 +9,12 @@
   display: block !important;
 }
 
-.form-control ~ .invalid-feedback,
-.is-valid ~ .invalid-feedback {
+.form-control~.invalid-feedback,
+.is-valid~.invalid-feedback {
   visibility: hidden;
 }
 
-.is-invalid ~ .invalid-feedback {
+.is-invalid~.invalid-feedback {
   visibility: visible;
 }
 
@@ -187,6 +187,7 @@
   .modal-header {
     border: none;
     padding: 0;
+
     button.btn-close {
       filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
     }
@@ -253,7 +254,7 @@
 .card {
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
-  border-color: var(--bs-border-color);
+  border: none;
 }
 
 // Interactive cards: hover lift
@@ -286,6 +287,23 @@
 .toast {
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
+}
+
+// Floating action button
+.main-edit-button {
+  position: fixed;
+  z-index: 1000;
+  bottom: 1.5rem;
+  right: 1.5rem;
+}
+
+.btn-shadow {
+  box-shadow: var(--shadow-2);
+  transition: box-shadow 150ms ease;
+
+  &:hover {
+    box-shadow: var(--shadow-3);
+  }
 }
 
 // Focus-visible outline (a11y)

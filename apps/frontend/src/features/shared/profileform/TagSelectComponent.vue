@@ -88,7 +88,9 @@ const selectHeight = computed(() => {
       :tag-placeholder="t('profiles.forms.tag_add_placeholder')"
       :placeholder="t('profiles.forms.tag_search_placeholder')"
       @search-change="asyncFind"
-    />
+    >
+      <template #noResult>{{ t('profiles.forms.tag_no_results') }}</template>
+    </Multiselect>
   </div>
 </template>
 
