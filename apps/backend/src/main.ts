@@ -1,5 +1,3 @@
-import path from 'path'
-
 import Sentry from '@/lib/sentry' // keep this at the top
 
 import Fastify from 'fastify'
@@ -11,8 +9,6 @@ import './workers/emailWorker' // ← side‐effect: starts the worker
 import { checkImageRoot } from '@/lib/media'
 
 import { ImageProcessor } from './services/imageprocessor'
-import { getPackageVersion } from '../../../packages/shared/version'
-
 async function main() {
   const app = Fastify({
     trustProxy: true,
@@ -31,13 +27,7 @@ async function main() {
     },
   })
 
-  // Log version information at startup
-  try {
-    const version = getPackageVersion(path.join(__dirname, '..', 'package.json'))
-    app.log.info(`🚀 Starting server, version ${version}`)
-  } catch (err) {
-    app.log.warn({ err }, 'Could not read version info at startup')
-  }
+  app.log.info(`🚀 Starting server, version ${__APP_VERSION__}`)
 
   // Register CORS plugin
   app.register(cors, {
