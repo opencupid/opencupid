@@ -61,20 +61,22 @@ packages/
 
 ### Key frontend routes
 
-| Route                     | View                  |
-| ------------------------- | --------------------- |
-| `/home`                   | User home / dashboard |
-| `/auth`                   | Login (email entry)   |
-| `/auth/otp`               | OTP token entry       |
-| `/browse`                 | Browse profiles       |
-| `/profile/:profileId`     | Public profile        |
-| `/me`                     | My profile            |
-| `/me/edit`                | Edit profile          |
-| `/inbox/:conversationId?` | Messaging             |
-| `/matches/:profileId?`    | Matches               |
-| `/posts`                  | Posts                 |
-| `/settings`               | Settings              |
-| `/onboarding`             | Onboarding            |
+| Route                    | View                                               |
+| ------------------------ | -------------------------------------------------- |
+| `/home`                  | User home / dashboard                              |
+| `/auth`                  | Login (email entry)                                |
+| `/auth/otp`              | OTP token entry                                    |
+| `/browse/social`         | Browse profiles (social)                           |
+| `/browse/dating`         | Browse profiles (dating)                           |
+| `/profile/:profileId`    | Public profile                                     |
+| `/me`                    | My profile                                         |
+| `/me/edit`               | Edit profile                                       |
+| `/inbox`                 | Conversation list                                  |
+| `/inbox/:conversationId` | Messaging                                          |
+| `/matches/:profileId?`   | Matches                                            |
+| `/posts`                 | Posts                                              |
+| `/settings`              | Settings                                           |
+| `/onboarding`            | Onboarding (only when profile `isActive` is false) |
 
 ## Tests
 
@@ -206,20 +208,23 @@ Run these steps in order:
 
 ## Production deployment
 
-> **HARD RULE — NO EXCEPTIONS:** You MUST NEVER commit production configuration to the repository. This includes `.env` files, TLS certificates, secrets, API keys, or any host-specific configuration. The `.env.production` file in the repo is a **template/reference only** with dummy values — the real production `.env` lives only on the production host.
+> **HARD RULE — NO EXCEPTIONS:** You MUST NEVER commit production configuration to the repository. This includes `.env` files, TLS certificates, secrets, API keys, or any host-specific configuration. Only `.env.example` exists in the repo as a reference template. The real production `.env` lives only on the production host — always preserve existing configuration when updating it (do not remove variables).
 
 1. **Always ask for the hostname** before deploying
 2. **SSH access**: `ssh -A <hostname>` as current user (not root), sudo without password
 3. **Repo clone on host**: `~/opencupid` — read-only git access, used for `docker-compose.production.yml` and config
-4. **Build images** (from local dev machine via GitHub Actions):
+4. **Build and push images** (from local dev machine):
    ```bash
-   gh workflow run docker.yml --ref main
-   gh run list --workflow=docker.yml -L 1
-   gh run watch <run-id> --exit-status
+   docker build -t ghcr.io/opencupid/opencupid-backend apps/backend
+   docker build -t ghcr.io/opencupid/opencupid-frontend apps/frontend
+   docker build -t ghcr.io/opencupid/opencupid-ingress apps/ingress
+   docker push ghcr.io/opencupid/opencupid-backend
+   docker push ghcr.io/opencupid/opencupid-frontend
+   docker push ghcr.io/opencupid/opencupid-ingress
    ```
-5. **Deploy on host** (via SSH):
+5. **Deploy on host** (via SSH — always deploy a release tag, never main):
    ```bash
-   cd ~/opencupid && git pull
+   cd ~/opencupid && git fetch --tags && git checkout vX.Y.Z
    sudo docker compose -f docker-compose.production.yml pull
    sudo docker compose -f docker-compose.production.yml up -d
    ```
