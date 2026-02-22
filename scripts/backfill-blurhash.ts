@@ -14,6 +14,8 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
+const IMAGES_SUBDIR = 'images'
+
 async function encodeBlurhash(buffer: Buffer): Promise<string> {
   const { data, info } = await sharp(buffer)
     .resize(32, 32, { fit: 'inside' })
@@ -41,7 +43,7 @@ async function main() {
   let skipped = 0
 
   for (const img of images) {
-    const originalPath = path.join(mediaDir, `${img.storagePath}-original.jpg`)
+    const originalPath = path.join(mediaDir, IMAGES_SUBDIR, `${img.storagePath}-original.jpg`)
 
     if (!fs.existsSync(originalPath)) {
       console.warn(`Skipping ${img.id}: file not found at ${originalPath}`)

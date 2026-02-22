@@ -1,4 +1,4 @@
-import path, { dirname } from 'path'
+import path from 'path'
 import fs from 'fs'
 
 import cuid from 'cuid'
@@ -13,6 +13,23 @@ export function getMediaRoot(): string {
   return appConfig.MEDIA_UPLOAD_DIR
 }
 
+/** Subdirectory names under the media root — single source of truth. */
+export const MEDIA_SUBDIR = {
+  TMP: 'tmp',
+  IMAGES: 'images',
+  VOICE: 'voice',
+} as const
+
+/** Resolve a DB storagePath to its on-disk path relative to mediaRoot. */
+export function imageBasePath(storagePath: string): string {
+  return path.posix.join(MEDIA_SUBDIR.IMAGES, storagePath)
+}
+
+/** Resolve a DB voice filePath to its on-disk path relative to mediaRoot. */
+export function voiceBasePath(storagePath: string): string {
+  return path.posix.join(MEDIA_SUBDIR.VOICE, storagePath)
+}
+
 export function checkUserContentRoot(): boolean {
   const root = getMediaRoot()
   if (!fs.existsSync(root)) {
@@ -24,7 +41,7 @@ export function checkUserContentRoot(): boolean {
     return false
   }
   // Ensure subdirectories exist
-  for (const sub of ['tmp', 'images', 'voice']) {
+  for (const sub of Object.values(MEDIA_SUBDIR)) {
     const dir = path.join(root, sub)
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true })
@@ -54,10 +71,11 @@ export async function makeImageLocation(storagePrefix: string): Promise<ImageLoc
   const base = cuid.slug()
 
   const mediaRoot = getMediaRoot()
-  // Store images under images/ subdirectory
-  const relPath = path.posix.join('images', storagePrefix)
-  const absPath = path.join(mediaRoot, relPath)
-  await fs.promises.mkdir(dirname(absPath), { recursive: true })
+  // relPath is what gets stored in DB — no images/ prefix
+  const relPath = storagePrefix
+  // absPath is the filesystem location — under images/ subdirectory
+  const absPath = path.join(mediaRoot, MEDIA_SUBDIR.IMAGES, relPath)
+  await fs.promises.mkdir(absPath, { recursive: true })
 
   return {
     base,

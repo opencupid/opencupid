@@ -24,6 +24,7 @@ import {
 import { InteractionService } from '../../services/interaction.service'
 import { notifierService } from '@/services/notifier.service'
 import { appConfig } from '@/lib/appconfig'
+import { MEDIA_SUBDIR } from '@/lib/media'
 import path from 'path'
 import { promises as fsPromises } from 'fs'
 
@@ -272,7 +273,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       // Create voice directory if it doesn't exist
-      const voiceDir = path.join(appConfig.MEDIA_UPLOAD_DIR, 'voice', senderProfileId)
+      const voiceDir = path.join(appConfig.MEDIA_UPLOAD_DIR, MEDIA_SUBDIR.VOICE, senderProfileId)
       await fsPromises.mkdir(voiceDir, { recursive: true })
 
       // Generate unique filename
@@ -295,7 +296,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
             payload.data.content,
             'audio/voice',
             {
-              filePath: `voice/${senderProfileId}/${fileName}`,
+              filePath: `${MEDIA_SUBDIR.VOICE}/${senderProfileId}/${fileName}`,
               mimeType: meta.mimetype,
               fileSize: stats.size,
               duration: payload.data.duration,
