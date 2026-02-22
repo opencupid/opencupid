@@ -243,3 +243,7 @@ npx prettier --write <file1> <file2> ...
 ```
 
 Uses Prettier (config: `prettier.config.js`).
+
+## Data integrity
+
+When storage formats, path conventions, or data schemas change, always migrate the existing data to match the new format. Never add backwards-compatibility shims, fallback paths, or conditional logic to handle legacy data alongside new data. Fix the data, not the code.
