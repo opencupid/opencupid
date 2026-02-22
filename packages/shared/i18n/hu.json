@@ -135,7 +135,6 @@
       "dictate": "Diktálj",
       "intro_placeholder": "Mesélj egy kicsit magadról",
       "intro_who_placeholder": "Kivel szeretnél találkozni?",
-      "publicname_hint": "Csak a keresztnevedet",
       "save_changes_hint": "Kész a szerkesztés",
       "edit_button_hint": "Változtatás",
       "city_deselect_label": "Eltávolítás"
@@ -195,7 +194,6 @@
     "connections_subtitle": "Teljes vagyok, de jól jönne egy kis társaság.",
     "interests_title": "Mi érdekel?",
     "interests_hint": "Kezdj el beírni egy érdeklődési kört, majd válaszd ki a listából.  Több címkét is hozzáadhatsz.",
-    "interests_subtitle": "Érdeklődési köreim, számomra fontos dolgok",
     "languages_title": "Nyelvek",
     "languages_subtitle": "Ezeken a nyelveken beszélek:",
     "social_intro_title": "Pár szóban magamról",
