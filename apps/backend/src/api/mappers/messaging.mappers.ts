@@ -90,10 +90,15 @@ export function mapAttachmentDTO(dbAttachment: {
   duration: number | null
   createdAt: Date
 }): MessageAttachmentDTO {
-  const urlBase = appConfig.IMAGE_URL_BASE
+  // Voice messages are served by the backend media route (JWT-authenticated),
+  // not through the HMAC-signed image path
+  const isVoice = dbAttachment.filePath.startsWith('voice/')
+  const url = isVoice
+    ? `${appConfig.API_BASE_URL}/media/${dbAttachment.filePath}`
+    : signUrl(`${appConfig.IMAGE_URL_BASE}/${dbAttachment.filePath}`)
   return {
     id: dbAttachment.id,
-    url: signUrl(`${urlBase}/${dbAttachment.filePath}`),
+    url,
     mimeType: dbAttachment.mimeType,
     fileSize: dbAttachment.fileSize,
     duration: dbAttachment.duration,
