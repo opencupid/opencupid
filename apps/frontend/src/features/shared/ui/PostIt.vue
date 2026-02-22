@@ -1,15 +1,19 @@
 <template>
   <div
-    class="post-it"
-    :class="variant"
+    class="post-it-wrapper"
     :style="warpStyle(id)"
   >
-    <div class="header mb-2">
-      <slot name="header"></slot>
-      <div class="pin-marker"></div>
-    </div>
-    <div class="content fs-4">
-      <slot></slot>
+    <div
+      class="post-it"
+      :class="variant"
+    >
+      <div class="header mb-2">
+        <slot name="header"></slot>
+        <div class="pin-marker"></div>
+      </div>
+      <div class="content fs-4">
+        <slot></slot>
+      </div>
     </div>
   </div>
 </template>
@@ -66,9 +70,9 @@ function warpStyle(id: string) {
 
 <style scoped lang="scss">
 .o-post-it {
-  background-color: #ffffcc; /* Default yellow */
+  background-color: var(--postit-bg); /* Default yellow */
   /* padding: 0.5rem; */
-  border: 1px solid #ccc;
+  border: 1px solid var(--bs-border-color);
   box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
   /* display: inline-block; */
   /* margin: 0.25rem; */
@@ -77,32 +81,34 @@ function warpStyle(id: string) {
   /* transform: rotate(3deg);  */
 }
 
-/* PostIt.vue (scoped or global) */
-.post-it {
-  --rot: 0deg; /* overall rotation */
-  --rx: 0deg; /* perspective tilt X */
-  --ry: 0deg; /* perspective tilt Y */
-  --skx: 0deg; /* tiny skew */
-  --skv: 0; /* 0..1, controls edge warp strength */
-  --shadow: 0.12; /* base shadow opacity */
+/* Wrapper holds transform + shadow so clip-path on inner doesn't clip the shadow */
+.post-it-wrapper {
+  --rot: 0deg;
+  --rx: 0deg;
+  --ry: 0deg;
+  --skx: 0deg;
+  --skv: 0;
+  --shadow: 0.12;
 
-  width: 100%; /* Example width */
+  width: 100%;
   min-height: 150px;
-
-  background: #fff587;
-  border-radius: 10px;
-  padding: 14px 16px 18px;
   position: relative;
   transform-origin: 50% 45%;
-  /* slight perspective + micro skew for “warped paper” feel */
   transform: perspective(900px) rotate(var(--rot)) rotateX(var(--rx)) rotateY(var(--ry))
     skewX(var(--skx));
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.1)) drop-shadow(0 3px 8px rgba(0, 0, 0, 0.08));
+  transition: filter 150ms ease;
 
-  /* layered soft shadows (paper on board) */
-  box-shadow:
-    0 1.5px 0 rgba(0, 0, 0, calc(var(--shadow) * 0.7)),
-    0 12px 18px -8px rgba(0, 0, 0, calc(var(--shadow))),
-    0 30px 35px -26px rgba(0, 0, 0, calc(var(--shadow)));
+  &:hover {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.14)) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.12));
+  }
+}
+
+.post-it {
+  background: var(--postit-bg);
+  border-radius: var(--radius-md);
+  padding: 0.7rem 0.8rem 0.9rem;
+  position: relative;
 
   /* very subtle noise so it’s less “flat” */
   &::after {
@@ -166,10 +172,6 @@ function warpStyle(id: string) {
   );
 }
 
-.post-it {
-  position: relative;
-}
-
 .header {
   position: relative;
   font-family: var(--bs-body-font-family, sans-serif);
@@ -178,10 +180,10 @@ function warpStyle(id: string) {
 /* simple round pin/dent */
 .pin-marker {
   position: absolute;
-  top: 6px;
-  left: 6px;
-  width: 14px;
-  height: 14px;
+  top: 0.3rem;
+  left: 0.3rem;
+  width: 0.7rem;
+  height: 0.7rem;
   border-radius: 50%;
   background: radial-gradient(circle at 30% 30%, #000 0 35%, transparent 36%);
   opacity: 0.12;
@@ -192,7 +194,7 @@ function warpStyle(id: string) {
 /* end warp */
 
 .accent {
-  background-color: #f9f586; /* Accent color */
+  background-color: var(--postit-bg-alt);
 }
 .content {
   white-space: pre-wrap; /* Preserves whitespace and line breaks */

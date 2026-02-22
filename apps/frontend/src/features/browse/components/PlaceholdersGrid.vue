@@ -14,10 +14,11 @@ withDefaults(
 </script>
 
 <template>
-  <BContainer>
+  <BContainer fluid>
     <BRow
       cols="1"
       cols-sm="2"
+      cols-lg="3"
     >
       <BCol
         v-for="n in howMany"

@@ -90,7 +90,7 @@ const handleBlock = async () => {
         <ProfileContent
           :profile
           :isLoading="isLoading"
-          class=""
+          class="mb-5"
         />
 
         <div class="interactions position-fixed w-100">

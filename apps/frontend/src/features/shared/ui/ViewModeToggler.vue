@@ -20,7 +20,7 @@ const modes = [
     <BButton
       v-for="mode in modes"
       :key="mode.value"
-      variant="outline-secondary"
+      variant="outline-dark"
       :title="t(mode.title)"
       :pressed="modelValue === mode.value"
       @click="modelValue = mode.value"

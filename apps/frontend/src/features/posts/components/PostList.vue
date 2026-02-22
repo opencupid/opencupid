@@ -104,9 +104,9 @@ function handleClose() {
 
     <div
       v-else-if="posts.length === 0"
-      class="mb-2 flex-shrink-0"
+      class="d-flex align-items-center justify-content-center flex-grow-1"
     >
-      <p>{{ emptyMessage }}</p>
+      <p class="text-muted mb-0">{{ emptyMessage }}</p>
     </div>
 
     <div

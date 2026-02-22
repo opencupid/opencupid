@@ -130,6 +130,7 @@ const handleContact = async () => {
         variant="link-light"
         size="sm"
         :title="$t('posts.actions.edit')"
+        :aria-label="$t('posts.actions.edit')"
       >
         <IconEdit class="svg-icon" />
       </BButton>
@@ -138,6 +139,7 @@ const handleContact = async () => {
         variant="link-light"
         size="sm"
         :title="$t('posts.actions.delete')"
+        :aria-label="$t('posts.actions.delete')"
       >
         <IconDelete class="svg-icon" />
       </BButton>
@@ -146,6 +148,7 @@ const handleContact = async () => {
         variant="link-light"
         size="sm"
         :title="isVisible ? $t('posts.actions.hide') : $t('posts.actions.show')"
+        :aria-label="isVisible ? $t('posts.actions.hide') : $t('posts.actions.show')"
       >
         <IconHide
           v-if="isVisible"
@@ -241,9 +244,10 @@ const handleContact = async () => {
               v-if="showDetails && !isOwn && hasProfileData(post)"
               class="contact-btn"
               :title="t('posts.actions.contact')"
+              :aria-label="t('posts.actions.contact')"
               @click.stop="handleContact"
             >
-              <IconMessage class="svg-icon" />
+              <IconMessage class="svg-icon-lg" />
             </button>
           </div>
         </div>
@@ -293,7 +297,7 @@ const handleContact = async () => {
   opacity: 1;
   visibility: visible;
   transition: opacity 250ms ease-in-out;
-  background-color: #000000c0;
+  background-color: var(--overlay-dark);
 }
 
 .post-content {
@@ -329,9 +333,10 @@ const handleContact = async () => {
 .contact-btn {
   background: none;
   border: none;
-  padding: 2px 4px;
+  padding: 0.1rem 0.2rem;
   cursor: pointer;
-  opacity: 0.5;
+  color: var(--bs-dark);
+  opacity: 0.7;
   transition: opacity 150ms ease;
   line-height: 1;
 }

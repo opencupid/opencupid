@@ -18,13 +18,11 @@ defineEmits<{
 <template>
   <BModal
     size="md"
-    :backdrop="'static'"
     centered
     button-size="md"
     :show="show"
     :focus="false"
     :busy="loading"
-    :no-close-on-backdrop="true"
     :no-header="false"
     :title="$t('profiles.blocklist.dialog_title', { name: profile.publicName })"
     :ok-title="$t('profiles.blocklist.confirmation_yes')"
@@ -35,9 +33,9 @@ defineEmits<{
     header-variant="danger"
     @ok.prevent="$emit('block')"
     @cancel="show = false"
+    @hidden="show = false"
     initial-animation
     body-class="d-flex flex-row align-items-center justify-content-center overflow-hidden"
-    :keyboard="false"
   >
     <BOverlay
       :show="loading"

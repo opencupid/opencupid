@@ -104,7 +104,7 @@ const isDetailView = computed(() => !!messageStore.activeConversation)
 
     <!-- List view -->
     <div
-      class="d-flex flex-column overflow-auto h-100"
+      class="d-flex flex-column overflow-auto hide-scrollbar h-100"
       :class="{ 'd-none': isDetailView }"
     >
       <ViewTitle
@@ -141,7 +141,7 @@ const isDetailView = computed(() => !!messageStore.activeConversation)
         </template>
 
         <!-- Conversation summaries -->
-        <div class="flex-grow-1 overflow-auto pt-5">
+        <div class="flex-grow-1 overflow-auto hide-scrollbar pt-5">
           <MiddleColumn>
             <ConversationSummaries
               :loading="messageStore.isLoading"

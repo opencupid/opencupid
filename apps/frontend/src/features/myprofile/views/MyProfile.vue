@@ -111,10 +111,7 @@ const hint = computed(() => history?.state?.hint || null)
       >
         <MiddleColumn class="pt-sm-3 position-relative">
           <div class="d-flex flex-row justify-content-between align-items-center my-2">
-            <div
-              style="height: 3rem"
-              class="w-100 d-flex align-items-center justify-content-center"
-            >
+            <div class="toggle-bar w-100 d-flex align-items-center justify-content-center">
               <div
                 v-if="viewState.isEditable"
                 class="d-flex"
@@ -177,7 +174,7 @@ const hint = computed(() => history?.state?.hint || null)
           </MiddleColumn>
         </div>
       </div>
-      <div class="main-edit-button">
+      <div class="main-edit-button btn-shadow">
         <EditButton v-model="viewState.isEditable" />
       </div>
     </EditableFields>
@@ -209,12 +206,10 @@ const hint = computed(() => history?.state?.hint || null)
 <style scoped lang="scss">
 @import '@/css/theme.scss';
 
-.main-edit-button {
-  position: fixed;
-  z-index: 5;
-  bottom: 1rem;
-  right: 1rem;
+.toggle-bar {
+  height: 3rem;
 }
+
 
 .editable {
   background-color: var(--bs-light);
@@ -224,6 +219,7 @@ const hint = computed(() => history?.state?.hint || null)
   position: relative;
   display: flex;
   flex-direction: column;
+  align-items: stretch !important;
   width: 100%;
   :deep(.editable-placeholder) {
     height: 4rem;
@@ -235,7 +231,11 @@ const hint = computed(() => history?.state?.hint || null)
   right: 0;
   bottom: 0.5rem;
 }
-:deep(.editable-placeholder + .edit-button) {
+:deep(.editable-textarea .editable-placeholder ) {
+  display: flex;
+  padding: 0.25rem;
+}
+:deep(.editable-textarea .editable-placeholder + .edit-button) {
   position: absolute;
   right: 0;
   bottom: 0.25rem;
@@ -255,8 +255,7 @@ const hint = computed(() => history?.state?.hint || null)
   background-color: var(--bs-dating-light);
 }
 :deep(.editable-field) {
-  position: relative;
   display: inline-flex;
-  flex-direction: column;
+  align-items: center;
 }
 </style>

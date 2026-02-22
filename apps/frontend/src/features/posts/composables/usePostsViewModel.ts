@@ -14,7 +14,7 @@ export function usePostsViewModel() {
   const activeTab = ref('all')
   const viewMode = ref('grid')
   const showCreateModal = ref(false)
-  const locationPermission = ref(false)
+  const locationPermission = ref<boolean | null>(null)
   const userLocation = ref<{ lat: number; lon: number } | null>(null)
   const isDetailView = ref(false)
   const showFullView = ref(false)
@@ -36,6 +36,24 @@ export function usePostsViewModel() {
 
   const ownerProfile = computed(() => ownerStore.profile)
 
+  // Check if geolocation permission was already granted
+  const checkLocationPermission = async () => {
+    if (!navigator.permissions) {
+      locationPermission.value = false
+      return
+    }
+    try {
+      const status = await navigator.permissions.query({ name: 'geolocation' })
+      if (status.state === 'granted') {
+        await requestLocation()
+      } else {
+        locationPermission.value = false
+      }
+    } catch {
+      locationPermission.value = false
+    }
+  }
+
   // Bootstrap mechanism
   const initialize = async () => {
     // Ensure ownerProfile is initialized
@@ -46,6 +64,7 @@ export function usePostsViewModel() {
       return
     }
 
+    await checkLocationPermission()
     isInitialized.value = true
   }
 

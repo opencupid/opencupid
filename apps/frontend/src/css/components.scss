@@ -9,17 +9,17 @@
   display: block !important;
 }
 
-.form-control ~ .invalid-feedback,
-.is-valid ~ .invalid-feedback {
+.form-control~.invalid-feedback,
+.is-valid~.invalid-feedback {
   visibility: hidden;
 }
 
-.is-invalid ~ .invalid-feedback {
+.is-invalid~.invalid-feedback {
   visibility: visible;
 }
 
 .btn-overlay {
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: var(--overlay-medium);
   color: #fff;
   border: none;
   border-radius: 50%;
@@ -187,6 +187,7 @@
   .modal-header {
     border: none;
     padding: 0;
+
     button.btn-close {
       filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
     }
@@ -245,4 +246,68 @@
   .form-check-label {
     cursor: pointer;
   }
+}
+
+// ─── Elevation system ────────────────────────────────────────────────
+
+// Cards: subtle shadow + radius
+.card {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: none;
+}
+
+// Interactive cards: hover lift
+.card.cursor-pointer,
+.card[role='button'] {
+  transition:
+    box-shadow 200ms ease,
+    transform 200ms ease;
+
+  &:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+  }
+}
+
+// Modals
+.modal-content {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+// Dropdowns
+.dropdown-menu {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  border-color: var(--bs-border-color);
+}
+
+// Toasts
+.toast {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+// Floating action button
+.main-edit-button {
+  position: fixed;
+  z-index: 1000;
+  bottom: 1.5rem;
+  right: 1.5rem;
+}
+
+.btn-shadow {
+  box-shadow: var(--shadow-2);
+  transition: box-shadow 150ms ease;
+
+  &:hover {
+    box-shadow: var(--shadow-3);
+  }
+}
+
+// Focus-visible outline (a11y)
+:focus-visible {
+  outline: 2px solid var(--bs-secondary);
+  outline-offset: 2px;
 }

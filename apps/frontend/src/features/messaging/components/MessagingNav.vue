@@ -58,21 +58,19 @@ defineEmits<{
         </BDropdownItem>
         <BDropdownDivider />
         <BDropdownForm>
-          <div class="form-check">
+          <label
+            for="allow-calls-check"
+            class="d-flex align-items-center justify-content-between w-100 mb-0"
+          >
+            {{ $t('calls.allow_calls_label') }}
             <input
               id="allow-calls-check"
               type="checkbox"
-              class="form-check-input"
+              class="form-check-input m-0"
               :checked="allowCalls"
               @change="$emit('callable:toggle', $event)"
             />
-            <label
-              class="form-check-label"
-              for="allow-calls-check"
-            >
-              {{ $t('calls.allow_calls_label') }}
-            </label>
-          </div>
+          </label>
         </BDropdownForm>
       </BDropdown>
     </div>

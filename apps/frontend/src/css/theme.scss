@@ -1,6 +1,17 @@
 @import '../../node_modules/bootstrap/scss/functions';
 @import '../../node_modules/bootstrap/scss/variables';
 
+// ─── Bootswatch Sandstone warm gray scale ───────────────────────────
+$gray-200: #f8f5f0; // warm off-white
+$gray-300: #dfd7ca; // warm sand border
+$gray-400: #ced4da;
+$gray-500: #98978b; // muted stone
+$gray-600: #8e8c84; // secondary text
+$gray-700: #495057;
+$gray-800: #3e3f3a; // dark soil
+$gray-900: #212529;
+
+// ─── Typography ──────────────────────────────────────────────────────
 $happy-sans: 'Nunito', 'Poppins', sans-serif;
 $headings-font-family: 'Rubik', 'Mukta', sans-serif;
 
@@ -13,36 +24,38 @@ $font-size-base: 1.125rem; // default body text size
 $font-size-sm: $font-size-base * 0.875;
 $font-size-lg: $font-size-base * 1.25;
 
-// color scheme
+// ─── Body ───────────────────────────────────────────────────────────
+$body-bg: $gray-200;
+$body-color: $gray-800;
+
+// ─── Theme colors ───────────────────────────────────────────────────
 $theme-colors: (
-  'primary': #5e4b2c,
-  // Earth brown
-  'secondary': #7c6f64,
-  // Weathered stone
-  'success': #6b8e23,
-  // Olive green
-  'danger': #a43d30,
-  // Clay red
-  'warning': #c2a14d,
-  // Dry straw
-  'info': #3b6d8a,
-  // River blue
-  'light': #e9e3d7,
-  // Dusty beige
-  'dark': #2e2c26,
+  'primary': #325d88,
+  // Sandstone blue
+  'secondary': $gray-600,
+  // Warm stone
+  'success': #93c54b,
+  // Same green
+  'danger': #d9534f,
+  // Sandstone red
+  'warning': #f47c3c,
+  // Sandstone orange
+  'info': #29abe0,
+  // Sandstone cyan
+  'light': $gray-200,
+  // Warm off-white
+  'dark': $gray-800,
   // Dark soil
-  'muted': #9c8975,
+  'muted': $gray-500,
   // Driftwood
   'highlight': #56806f, // Mossy green
 );
 
-// https://coolors.co/palette/003049-d62828-f77f00-fcbf49-eae2b7
-
-$social: #003049;
-// $social : rgb(0, 0, 191);
-
-$dating: #d62828; // Custom dating color
-$dating-light: lighten($dating, 40%); // Lightened version of dating color
+// ─── Accent colors ──────────────────────────────────────────────────
+$social: #325d88; // Sandstone blue
+$dating: #d9534f; // Sandstone red
+$dating-light: lighten($dating, 30%);
+$tag: #b8860b; // Muted goldenrod — tags/interests
 
 $theme-colors: map-merge(
   $theme-colors,
@@ -50,6 +63,7 @@ $theme-colors: map-merge(
     'dating': $dating,
     'dating-light': $dating-light,
     'social': $social,
+    'tag': $tag,
   )
 );
 
@@ -63,7 +77,18 @@ $aspect-ratios: map-merge(
 // Enable negative margins for Bootstrap
 $enable-negative-margins: true;
 
-// 🌕 Light mode input styling
-// $input-bg: #fcfcfc;
-// $input-color: #212529;
-// $input-border-color: #ced4da;
+// ─── Sandstone-inspired component overrides ─────────────────────────
+$card-border-color: rgba($gray-300, 0.75);
+$card-cap-bg: rgba($gray-200, 0.25);
+$dropdown-link-color: $gray-600;
+$dropdown-link-hover-bg: $gray-200;
+$dropdown-link-active-bg: $gray-200;
+$dropdown-link-active-color: $gray-800;
+$modal-content-border-color: $gray-300;
+$list-group-border-color: $gray-300;
+$list-group-hover-bg: $gray-200;
+$list-group-active-bg: $gray-200;
+$list-group-active-border-color: $gray-300;
+$nav-link-disabled-color: $gray-300;
+$modal-backdrop-opacity: 0.8;
+$min-contrast-ratio: 2;

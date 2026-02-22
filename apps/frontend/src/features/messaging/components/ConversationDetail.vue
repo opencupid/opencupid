@@ -127,6 +127,6 @@ async function handleToggleCallable(event: Event) {
   background-color: var(--bs-body-bg);
 }
 .send-message-wrapper {
-  background-color: var(--bs-body-bg);
+  background-color: transparent;
 }
 </style>

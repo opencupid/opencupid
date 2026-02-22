@@ -78,6 +78,6 @@ onUnmounted(() => {
 <style scoped>
 :deep(.altcha) {
   border: none;
-  color: var(--bs-secondary);
+  color: var(--bs-body-color);
 }
 </style>

@@ -32,7 +32,7 @@ const currentScope = defineModel<ProfileScope | null>()
     >
       <span
         v-if="!compact"
-        class="d-none d-sm-inline"
+        class="d-none d-sm-inline me-1"
         >{{ $t('general.connectiontypes.socializing') }}</span
       >
       <IconSocialize class="svg-icon-100"
@@ -54,7 +54,7 @@ const currentScope = defineModel<ProfileScope | null>()
     >
       <span
         v-if="!compact"
-        class="d-none d-sm-inline"
+        class="d-none d-sm-inline me-1"
         >{{ $t('general.connectiontypes.dating') }}</span
       >
       <IconDate class="svg-icon-100" />

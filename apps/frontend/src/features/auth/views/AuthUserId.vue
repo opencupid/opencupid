@@ -61,13 +61,12 @@ const handleSetLanguage = (lang: string) => {
 
 <template>
   <main class="container d-flex justify-content-center align-items-center flex-column">
-    <LogoComponent class="w-25 mb-2 mb-md-4" />
+    <LogoComponent class="w-25 mb-2 mb-md-4 auth-logo" />
 
     <ErrorComponent :error="error" />
 
     <AuthIdComponent
       :isLoading="isLoading"
-      v-model="user"
       @updated="handleSendOtp"
     />
 
@@ -76,3 +75,11 @@ const handleSetLanguage = (lang: string) => {
     </div>
   </main>
 </template>
+
+<style scoped>
+@media (min-width: 992px) {
+  .auth-logo {
+    width: 12.5% !important;
+  }
+}
+</style>
