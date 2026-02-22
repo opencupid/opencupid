@@ -381,7 +381,11 @@
       "button_copied": "Másolva",
       "qr_hint": "Villantsd ezt a telefonjukra"
     },
-    "dialog_cancel_button": "Bezár"
+    "dialog_cancel_button": "Bezár",
+    "update_banner": {
+      "message": "Frissítés érhető el.",
+      "reload": "Újratöltés"
+    }
   },
   "landingpage": {
     "title_lg": "Ez itt a {siteName}",

@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import UpdateBanner from '../UpdateBanner.vue'
@@ -26,7 +27,7 @@ describe('UpdateBanner', () => {
     await wrapper.vm.$nextTick()
 
     expect(wrapper.find('.alert').exists()).toBe(true)
-    expect(wrapper.text()).toContain('An update is available.')
+    expect(wrapper.text()).toContain('uicomponents.update_banner.message')
   })
 
   it('should have a reload button', async () => {
@@ -38,7 +39,7 @@ describe('UpdateBanner', () => {
 
     const button = wrapper.find('.btn-primary')
     expect(button.exists()).toBe(true)
-    expect(button.text()).toBe('Reload')
+    expect(button.text()).toBe('uicomponents.update_banner.reload')
   })
 
   it('should call window.location.reload when reload button is clicked', async () => {

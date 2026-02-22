@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useAppStore } from '../stores/appStore'
 
+const { t } = useI18n()
 const appStore = useAppStore()
 const dismissed = ref(false)
 
@@ -16,14 +18,14 @@ function reloadApp() {
     class="alert alert-info mb-0 rounded-0 d-flex align-items-center justify-content-between"
     role="alert"
   >
-    <span>An update is available.</span>
+    <span>{{ t('uicomponents.update_banner.message') }}</span>
     <div class="d-flex align-items-center gap-2">
       <button
         type="button"
         class="btn btn-sm btn-primary"
         @click="reloadApp"
       >
-        Reload
+        {{ t('uicomponents.update_banner.reload') }}
       </button>
       <button
         type="button"
