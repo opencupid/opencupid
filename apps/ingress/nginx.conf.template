@@ -218,9 +218,7 @@ http {
     client_max_body_size 10M;
 
     location = / {
-      root /var/www/admin;
-      index index.html;
-      try_files $uri $uri/ =404;
+      return 302 /listmonk/;
     }
 
     location /listmonk/ {
