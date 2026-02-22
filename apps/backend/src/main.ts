@@ -8,7 +8,7 @@ import { appConfig } from '@/lib/appconfig'
 import './lib/i18n' // Initialize i18next with translations
 
 import './workers/emailWorker' // ← side‐effect: starts the worker
-import { checkImageRoot } from '@/lib/media'
+import { checkUserContentRoot } from '@/lib/media'
 
 import { ImageProcessor } from './services/imageprocessor'
 import { getPackageVersion } from '../../../packages/shared/version'
@@ -61,7 +61,7 @@ async function main() {
 
   // app.get('/healthz', async () => ({ ok: true }))
 
-  const ok = checkImageRoot()
+  const ok = checkUserContentRoot()
   if (!ok) {
     app.log.error('Media upload directory cannot be created or is not writable')
     process.exit(1)

@@ -6,7 +6,7 @@ import {
 } from '../../api/mappers/profile.mappers'
 vi.mock('@/lib/appconfig', () => ({
   appConfig: {
-    IMAGE_URL_BASE: 'http://img',
+    MEDIA_URL_BASE: '/user-content',
     IMAGE_URL_HMAC_TTL_SECONDS: 3600,
     AUTH_IMG_HMAC_SECRET: 'x',
   },

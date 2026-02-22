@@ -32,7 +32,7 @@ export const configSchema = z.object({
   LISTMONK_LIST_ID: z.coerce.number().default(1),
 
   MEDIA_UPLOAD_DIR: z.string(),
-  IMAGE_URL_BASE: z.string(),
+  MEDIA_URL_BASE: z.string(),
   IMAGE_MAX_SIZE: z.coerce.number(),
   IMAGE_URL_HMAC_TTL_SECONDS: z.coerce.number().default(60 * 60 * 6),
   AUTH_IMG_HMAC_SECRET: z.string().min(10),

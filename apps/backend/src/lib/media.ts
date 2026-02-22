@@ -9,39 +9,34 @@ export function uploadTmpDir() {
   return path.join(appConfig.MEDIA_UPLOAD_DIR, 'tmp')
 }
 
-export function getImageRoot(): string {
-  // Get the directory where the uploads are stored
+export function getMediaRoot(): string {
   return appConfig.MEDIA_UPLOAD_DIR
 }
 
-export function checkImageRoot(): boolean {
-  // Check if the upload directory exists, and create it if it doesn't
-  const uploadDir = getImageRoot()
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true })
+export function checkUserContentRoot(): boolean {
+  const root = getMediaRoot()
+  if (!fs.existsSync(root)) {
+    fs.mkdirSync(root, { recursive: true })
   }
-  // Check if the directory is writable
   try {
-    fs.accessSync(uploadDir, fs.constants.W_OK)
+    fs.accessSync(root, fs.constants.W_OK)
   } catch (error) {
     return false
   }
-  const tmpDir = uploadTmpDir()
-  if (!fs.existsSync(tmpDir)) {
-    fs.mkdirSync(tmpDir, { recursive: true })
+  // Ensure subdirectories exist
+  for (const sub of ['tmp', 'images', 'voice']) {
+    const dir = path.join(root, sub)
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true })
+    }
   }
   return true
 }
 
-type UrlSignature = {
-  exp: number
-  sig: string
-}
-
 export function signUrl(url: string): string {
   const exp = Math.floor(Date.now() / 1000) + appConfig.IMAGE_URL_HMAC_TTL_SECONDS
-  // Sign only the relative path (strip IMAGE_URL_BASE prefix) to match nginx lua verification
-  const pathToSign = url.replace(new RegExp(`^${appConfig.IMAGE_URL_BASE}/`), '')
+  // Sign only the relative path (strip MEDIA_URL_BASE prefix) to match nginx lua verification
+  const pathToSign = url.replace(new RegExp(`^${appConfig.MEDIA_URL_BASE}/`), '')
   const data = `${pathToSign}:${exp}`
   const h = createHmac('sha256', appConfig.AUTH_IMG_HMAC_SECRET).update(data).digest('hex')
   return `${url}?exp=${exp}&sig=${h}`
@@ -57,9 +52,10 @@ export async function makeImageLocation(storagePrefix: string): Promise<ImageLoc
   // Generate a CUID for the ProfileImage
   const base = cuid.slug()
 
-  const imageRoot = getImageRoot()
-  const relPath = path.posix.join(storagePrefix)
-  const absPath = path.join(imageRoot, relPath)
+  const mediaRoot = getMediaRoot()
+  // Store images under images/ subdirectory
+  const relPath = path.posix.join('images', storagePrefix)
+  const absPath = path.join(mediaRoot, relPath)
   await fs.promises.mkdir(dirname(absPath), { recursive: true })
 
   return {

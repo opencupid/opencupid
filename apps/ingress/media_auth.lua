@@ -19,7 +19,7 @@ if exp < ngx.time() then
   return ngx.exit(ngx.HTTP_UNAUTHORIZED)
 end
 
-local image_path = ngx.var.uri:gsub('^/images/', '')
+local image_path = ngx.var.uri:gsub('^/user%-content/', '')
 local data = image_path .. ':' .. exp
 
 local hmac_sha = hmac:new(secret, hmac.ALGOS.SHA256)

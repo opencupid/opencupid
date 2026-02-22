@@ -1,8 +1,8 @@
-import path from "path";
+import path from 'path'
 import fs from 'fs'
-import { loadEnv } from "vite";
+import { loadEnv } from 'vite'
 import { findUpSync } from 'find-up'
-import { getPackageVersion } from "../../packages/shared/version";
+import { getPackageVersion } from '../../packages/shared/version'
 
 export const server = (mode: string) => {
   if (mode !== 'development') return {}
@@ -17,11 +17,11 @@ export const server = (mode: string) => {
           secure: false, // accept self-signed TLS
           configure: (proxy: any, _options: any) => {
             proxy.on('proxyReq', (proxyReq: any, req: any) => {
-              const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+              const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress
               if (clientIp) {
-                proxyReq.setHeader('X-Forwarded-For', clientIp);
+                proxyReq.setHeader('X-Forwarded-For', clientIp)
               }
-            });
+            })
           },
         },
         '/ws': {
@@ -42,12 +42,11 @@ export const server = (mode: string) => {
           path.resolve(__dirname, '../../node_modules'),
         ],
       },
-    }
+    },
   }
 }
 
 export const define = (mode: string) => {
-
   const envFile = findUpSync('.env') ?? findUpSync('.env.example')
 
   if (!envFile) {
@@ -73,7 +72,7 @@ export const define = (mode: string) => {
       __APP_CONFIG__: JSON.stringify({
         API_BASE_URL: env.API_BASE_URL,
         WS_BASE_URL: env.WS_BASE_URL,
-        IMAGE_URL_BASE: env.IMAGE_URL_BASE,
+        MEDIA_URL_BASE: env.MEDIA_URL_BASE,
         NODE_ENV: env.NODE_ENV,
         VAPID_PUBLIC_KEY: env.VAPID_PUBLIC_KEY,
         SENTRY_DSN: env.SENTRY_DSN,
@@ -81,6 +80,6 @@ export const define = (mode: string) => {
         JITSI_DOMAIN: env.JITSI_DOMAIN,
       }),
       __APP_VERSION__: JSON.stringify(versions),
-    }
+    },
   }
 }
