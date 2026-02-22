@@ -21,14 +21,14 @@ onMounted(async () => {
   <main class="pt-5 dating overflow-auto hide-scrollbar d-flex flex-column flex-grow-1">
     <div class="container d-flex flex-column flex-grow-1">
       <MiddleColumn class="d-flex flex-column flex-grow-1">
-        <ViewTitle
-          :icon="IconDate"
-          title=""
-          class="text-dating w-100"
-        />
         <div
           class="d-flex flex-column align-items-center justify-content-center text-center flex-grow-1"
         >
+          <ViewTitle
+            :icon="IconDate"
+            title=""
+            class="text-dating w-100"
+          />
           <BPlaceholderWrapper :loading="isLoading">
             <template #loading>
               <BCol cols="6">
