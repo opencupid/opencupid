@@ -175,7 +175,7 @@
         "dialog_cancel_button": "Mégse",
         "social_title": "Itt keresek...",
         "tags_label": "Érdeklődési körök...",
-        "near_label": "Közel:",
+        "near_label": "Errefelé:",
         "anywhere": "Bárhol",
         "locate_button_title": "Keress körülöttem",
         "search_button_title_social": "Keresés",
@@ -203,7 +203,7 @@
     "photos_title": "Képeim",
     "photos_subtitle": "Tölts fel egy képet magadról, hogy mások is láthassanak.",
     "age_title": "Ekkor születtem:",
-    "age_subtitle": "Ennyi ideje vagyok ezen a bolygón",
+    "age_subtitle": "Ennyi ideje élek ezen a bolygón",
     "gender_subtitle": "Így azonosítom magam",
     "relationship_title": "Családi helyzetem:",
     "relationship_subtitle": "A családi helyzetem:",
@@ -311,7 +311,7 @@
       "record": "Felvétel",
       "cancel": "Mégse",
       "max_duration": "Max. {duration}mp",
-      "permission_denied": "A mikrofon hozzáférés megtagadva. Kérjük, engedélyezd a mikrofon használatát a hangüzenetek rögzítéséhez.",
+      "permission_denied": "A mikrofon hozzáférés megtagadva. Engedélyezd a mikrofon használatát.",
       "retry_permission": "Próbáld újra",
       "unsupported_browser": "A hangrögzítés nem támogatott ebben a böngészőben."
     }
@@ -396,7 +396,7 @@
   "posts": {
     "title": "Hirdetőtábla",
     "types": {
-      "OFFER": "Ajánlat",
+      "OFFER": "Felajánlás",
       "REQUEST": "Keresés"
     },
     "actions": {
