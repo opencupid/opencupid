@@ -160,6 +160,8 @@ git push -u origin your-branch-name
 gh pr create
 ```
 
+Each PR must contain **one logical change** — don't bundle unrelated fixes, features, or refactors into a single branch. If you discover something unrelated while working (e.g. a typo, a small bug, a cleanup opportunity), finish your current PR first, then open a separate one. If in doubt whether a change belongs on the current branch, ask before committing.
+
 ## Releases
 
 ### Versioning strategy
