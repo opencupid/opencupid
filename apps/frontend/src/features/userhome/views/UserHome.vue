@@ -15,7 +15,6 @@ import { useBootstrap } from '@/lib/bootstrap'
 import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 import { type PublicProfile } from '@zod/profile/profile.dto'
 
-import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 import ProfileCardGrid from '@/features/browse/components/ProfileCardGrid.vue'
 import LikesAndMatchesBanner from '@/features/interaction/components/LikesAndMatchesBanner.vue'
 import TagCloud from '@/features/shared/components/TagCloud.vue'
@@ -68,8 +67,6 @@ const handleCardClick = async (profileId: string) => {
 }
 
 provide('viewerProfile', toRef(viewerProfile))
-
-const siteName = __APP_CONFIG__.SITE_NAME
 </script>
 
 <template>
@@ -77,36 +74,20 @@ const siteName = __APP_CONFIG__.SITE_NAME
     ref="mainEl"
     class="overflow-auto hide-scrollbar"
   >
-    <div class="container">
-      <MiddleColumn>
-        <h2 class="mt-3">
-          <!-- Welcome to site_name -->
-          <!-- {{ $t('home.welcome_title', { siteName: siteName }) }} -->
-        </h2>
-        <div class="mb-4">
-          <TagCloud />
-        </div>
-
+    <div class="container-xl px-3">
+      <!-- sm/xs: stacked single column -->
+      <div class="d-lg-none col-12 col-sm-10 mx-auto mt-3">
         <LikesAndMatchesBanner class="my-3" />
-
         <div
           v-if="newProfiles.length > 0"
           class="mb-4"
         >
-          <h5>
-            <!-- Meet new people -->
-            {{ $t('home.meet_new_people') }}
-          </h5>
-          <BRow>
-            <ProfileCardGrid
-              :profiles="newProfiles"
-              @profile:select="handleCardClick"
-              :showTags="false"
-              cols="2"
-              gutter="2"
-              gap="2"
-            />
-          </BRow>
+          <h5>{{ $t('home.meet_new_people') }}</h5>
+          <ProfileCardGrid
+            :profiles="newProfiles"
+            @profile:select="handleCardClick"
+            :showTags="false"
+          />
           <RouterLink
             :to="{ name: 'BrowseProfiles' }"
             class="more-people-link mt-2"
@@ -116,7 +97,46 @@ const siteName = __APP_CONFIG__.SITE_NAME
             {{ $t('home.more_people') }}
           </RouterLink>
         </div>
-      </MiddleColumn>
+        <h5>{{ $t('home.explore_interests') }}</h5>
+        <div class="mb-4">
+          <TagCloud />
+        </div>
+      </div>
+
+      <!-- lg+: two-column layout -->
+      <BRow class="d-none d-lg-flex mt-3">
+        <BCol
+          lg="9"
+          class="pe-lg-3"
+        >
+          <LikesAndMatchesBanner class="mb-3" />
+          <div
+            v-if="newProfiles.length > 0"
+            class="mb-4"
+          >
+            <h5>{{ $t('home.meet_new_people') }}</h5>
+            <ProfileCardGrid
+              :profiles="newProfiles"
+              @profile:select="handleCardClick"
+              :showTags="false"
+            />
+            <RouterLink
+              :to="{ name: 'BrowseProfiles' }"
+              class="more-people-link mt-2"
+              role="button"
+            >
+              <IconSearch class="svg-icon-sm me-1" />
+              {{ $t('home.more_people') }}
+            </RouterLink>
+          </div>
+        </BCol>
+        <BCol lg="3">
+          <div class="tag-cloud-sidebar">
+            <h5>{{ $t('home.explore_interests') }}</h5>
+            <TagCloud />
+          </div>
+        </BCol>
+      </BRow>
     </div>
   </main>
 </template>
@@ -132,5 +152,10 @@ const siteName = __APP_CONFIG__.SITE_NAME
   &:hover {
     text-decoration: underline;
   }
+}
+
+.tag-cloud-sidebar {
+  position: sticky;
+  top: 1rem;
 }
 </style>

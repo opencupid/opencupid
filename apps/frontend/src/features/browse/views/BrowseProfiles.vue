@@ -5,6 +5,7 @@ import { useInfiniteScroll } from '@vueuse/core'
 
 import PublicProfileComponent from '@/features/publicprofile/components/PublicProfile.vue'
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
+import FluidColumn from '@/features/shared/ui/FluidColumn.vue'
 
 import { useFindMatchViewModel } from '../composables/useFindMatchViewModel'
 import DatingPreferencesForm from '../components/DatingPreferencesForm.vue'
@@ -166,7 +167,7 @@ useInfiniteScroll(
       class="list-view d-flex flex-column justify-content-start"
       :class="[currentScope, { inactive: isDetailView }]"
     >
-      <MiddleColumn class="my-2">
+      <FluidColumn class="my-2">
         <div
           class="subnav-bar d-flex align-items-center gap-2 px-2 py-1 bg-light rounded"
           :class="currentScope"
@@ -205,7 +206,7 @@ useInfiniteScroll(
             @click.stop
           />
         </div>
-      </MiddleColumn>
+      </FluidColumn>
       <BPlaceholderWrapper :loading="isLoading">
         <template #loading>
           <BOverlay
@@ -219,12 +220,12 @@ useInfiniteScroll(
             spinner-type="grow"
           >
             <!-- Placeholders while loading -->
-            <MiddleColumn class="overflow-hidden">
+            <FluidColumn class="overflow-hidden">
               <PlaceholdersGrid
                 :howMany="6"
                 :isAnimated="true"
               />
-            </MiddleColumn>
+            </FluidColumn>
           </BOverlay>
         </template>
 
@@ -263,7 +264,7 @@ useInfiniteScroll(
             ref="scrollContainer"
             class="overflow-auto hide-scrollbar flex-grow-1"
           >
-            <MiddleColumn
+            <FluidColumn
               v-if="viewModeModel === 'grid'"
               class="grid-view"
             >
@@ -291,7 +292,7 @@ useInfiniteScroll(
               <!-- No more profiles indicator -->
               <!-- <div v-else-if="!hasMoreProfiles && profileList.length > 0" class="text-center py-3 text-muted">
               </div> -->
-            </MiddleColumn>
+            </FluidColumn>
             <OsmPoiMap
               v-if="viewModeModel === 'map'"
               :items="profileList"
