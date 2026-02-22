@@ -213,23 +213,25 @@ Run these steps in order:
 > **HARD RULE — NO EXCEPTIONS:** You MUST NEVER commit production configuration to the repository. This includes `.env` files, TLS certificates, secrets, API keys, or any host-specific configuration. Only `.env.example` exists in the repo as a reference template. The real production `.env` lives only on the production host — always preserve existing configuration when updating it (do not remove variables).
 
 1. **Always ask for the hostname** before deploying
-2. **SSH access**: `ssh -A <hostname>` as current user (not root), sudo without password
+2. **SSH access**: `ssh -A <hostname>` as current user (not root). The user is in the docker group so `sudo` is not needed for docker commands — only use `sudo` for system-level commands or accessing files outside `~/opencupid`
 3. **Repo clone on host**: `~/opencupid` — read-only git access, used for `docker-compose.production.yml` and config
 4. **Deploy on host** (via SSH — always deploy a release tag, never main):
    ```bash
    cd ~/opencupid && git fetch --tags && git checkout vX.Y.Z
-   sudo docker compose -f docker-compose.production.yml build
-   sudo docker compose -f docker-compose.production.yml up -d
+   docker compose -f docker-compose.production.yml build
+   docker compose -f docker-compose.production.yml up -d --no-deps backend
+   docker compose -f docker-compose.production.yml up -d --no-deps frontend ingress
    ```
+   > **Deploy order matters:** The backend (Node + TensorFlow model) takes several seconds to start, while the frontend (nginx) starts instantly. By restarting the backend first and then the frontend, users continue hitting the old frontend until the new backend is ready. If done the other way around, the new frontend's version-check call to `/app/version` can hit the still-running old backend, causing a transient "update available" banner.
 5. **Run migrations** (if schema changes were included):
    ```bash
-   sudo docker compose -f docker-compose.production.yml exec backend npx prisma migrate deploy
+   docker compose -f docker-compose.production.yml exec backend npx prisma migrate deploy
    ```
 6. **Verify**:
    ```bash
-   sudo docker compose -f docker-compose.production.yml ps
-   sudo docker compose -f docker-compose.production.yml logs --tail=50 backend
-   sudo docker compose -f docker-compose.production.yml logs --tail=50 ingress
+   docker compose -f docker-compose.production.yml ps
+   docker compose -f docker-compose.production.yml logs --tail=50 backend
+   docker compose -f docker-compose.production.yml logs --tail=50 ingress
    ```
 
 ## Formatting
