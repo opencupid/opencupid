@@ -2,13 +2,11 @@ import { defineConfig } from 'tsup'
 import { getPackageVersion } from '../../packages/shared/version'
 import path from 'path'
 
-// Read frontend version at build time
-const frontendVersion = getPackageVersion(path.join(__dirname, '..', '..', 'package.json'))
+// Read app version from root package.json at build time
+const appVersion = getPackageVersion(path.join(__dirname, '..', '..', 'package.json'))
 
 export default defineConfig({
-  entry: [
-    'src/main.ts',
-  ],
+  entry: ['src/main.ts'],
   outDir: 'dist',
   format: ['cjs'],
   splitting: false,
@@ -18,6 +16,7 @@ export default defineConfig({
   target: 'es2020',
   shims: false,
   define: {
-    __FRONTEND_VERSION__: JSON.stringify(frontendVersion),
+    __APP_VERSION__: JSON.stringify(appVersion),
+    __FRONTEND_VERSION__: JSON.stringify(appVersion),
   },
 })
