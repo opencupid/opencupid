@@ -213,26 +213,17 @@ Run these steps in order:
 1. **Always ask for the hostname** before deploying
 2. **SSH access**: `ssh -A <hostname>` as current user (not root), sudo without password
 3. **Repo clone on host**: `~/opencupid` — read-only git access, used for `docker-compose.production.yml` and config
-4. **Build and push images** (from local dev machine):
-   ```bash
-   docker build -t ghcr.io/opencupid/opencupid-backend apps/backend
-   docker build -t ghcr.io/opencupid/opencupid-frontend apps/frontend
-   docker build -t ghcr.io/opencupid/opencupid-ingress apps/ingress
-   docker push ghcr.io/opencupid/opencupid-backend
-   docker push ghcr.io/opencupid/opencupid-frontend
-   docker push ghcr.io/opencupid/opencupid-ingress
-   ```
-5. **Deploy on host** (via SSH — always deploy a release tag, never main):
+4. **Deploy on host** (via SSH — always deploy a release tag, never main):
    ```bash
    cd ~/opencupid && git fetch --tags && git checkout vX.Y.Z
-   sudo docker compose -f docker-compose.production.yml pull
+   sudo docker compose -f docker-compose.production.yml build
    sudo docker compose -f docker-compose.production.yml up -d
    ```
-6. **Run migrations** (if schema changes were included):
+5. **Run migrations** (if schema changes were included):
    ```bash
    sudo docker compose -f docker-compose.production.yml exec backend npx prisma migrate deploy
    ```
-7. **Verify**:
+6. **Verify**:
    ```bash
    sudo docker compose -f docker-compose.production.yml ps
    sudo docker compose -f docker-compose.production.yml logs --tail=50 backend
