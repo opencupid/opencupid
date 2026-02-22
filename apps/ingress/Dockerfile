@@ -7,7 +7,7 @@ RUN opm get xiaocang/lua-resty-openssl
 RUN opm get jkeys089/lua-resty-hmac
 
 COPY nginx.conf.template /usr/local/openresty/nginx/conf/nginx.conf.template
-COPY image_auth.lua /usr/local/openresty/nginx/
+COPY media_auth.lua /usr/local/openresty/nginx/
 
 CMD ["/bin/sh", "-c", "envsubst '${DOMAIN} ${ADMIN_DOMAIN} ${LISTMONK_DOMAIN} ${EMAIL} ${AUTH_IMG_HMAC_SECRET}' <  /usr/local/openresty/nginx/conf/nginx.conf.template >  /usr/local/openresty/nginx/conf/nginx.conf && exec openresty -g 'daemon off;'"]
 

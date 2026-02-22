@@ -5,7 +5,7 @@ WORKDIR /app
 # None of these are secrets — they are safe to appear in image layers.
 ARG API_BASE_URL="/api"
 ARG WS_BASE_URL="/ws"
-ARG IMAGE_URL_BASE="/images"
+ARG MEDIA_URL_BASE="/user-content"
 ARG NODE_ENV="production"
 ARG VAPID_PUBLIC_KEY=""
 ARG SENTRY_DSN=""
@@ -35,7 +35,7 @@ WORKDIR /app/apps/frontend
 RUN printf '%s\n' \
   "API_BASE_URL=${API_BASE_URL}" \
   "WS_BASE_URL=${WS_BASE_URL}" \
-  "IMAGE_URL_BASE=${IMAGE_URL_BASE}" \
+  "MEDIA_URL_BASE=${MEDIA_URL_BASE}" \
   "NODE_ENV=${NODE_ENV}" \
   "VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}" \
   "SENTRY_DSN=${SENTRY_DSN}" \

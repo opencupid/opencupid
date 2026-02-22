@@ -68,8 +68,18 @@ http {
       # Default limit for everything else (1MB by default, or set explicitly)
     client_max_body_size 1M;
 
-    # Restrict override only for image upload route
+    # Image and voice message upload endpoints (larger body size for file uploads)
     location /api/image {
+      client_max_body_size 20M;
+
+      proxy_pass http://backend;
+      proxy_http_version 1.1;
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    location /api/messages/voice {
       client_max_body_size 20M;
 
       proxy_pass http://backend;
@@ -111,8 +121,8 @@ http {
       add_header 'Access-Control-Allow-Origin' '*' always;
     }
 
-    location /images/ {
-      access_by_lua_file image_auth.lua;
+    location /user-content/ {
+      access_by_lua_file media_auth.lua;
       alias /var/www/;
       autoindex off;
       try_files $uri =404;

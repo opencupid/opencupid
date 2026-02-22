@@ -8,8 +8,7 @@ import {
 vi.mock('@prisma/client', () => ({ Prisma: {}, PrismaClient: class {} }))
 vi.mock('@shared/config/appconfig', () => ({
   appConfig: {
-    IMAGE_URL_BASE: 'http://img',
-    API_BASE_URL: '/api',
+    MEDIA_URL_BASE: '/user-content',
     IMAGE_URL_HMAC_TTL_SECONDS: 3600,
     AUTH_IMG_HMAC_SECRET: 'test-secret',
   },
@@ -149,7 +148,7 @@ describe('messaging mappers', () => {
   })
 
   describe('mapAttachmentDTO', () => {
-    it('uses API media route for voice attachments (no HMAC signing)', () => {
+    it('uses HMAC-signed URL for voice attachments', () => {
       const attachment: any = {
         id: 'a1',
         filePath: 'voice/p1/msg-abc.webm',
@@ -159,22 +158,22 @@ describe('messaging mappers', () => {
         createdAt: new Date(),
       }
       const dto = mapAttachmentDTO(attachment)
-      expect(dto.url).toBe('/api/media/voice/p1/msg-abc.webm')
-      expect(dto.url).not.toContain('sig=')
-      expect(dto.url).not.toContain('exp=')
+      expect(dto.url).toMatch(/^\/user-content\/voice\/p1\/msg-abc\.webm\?exp=\d+&sig=[a-f0-9]+$/)
     })
 
-    it('uses HMAC-signed image URL for non-voice attachments', () => {
+    it('uses HMAC-signed URL for image attachments', () => {
       const attachment: any = {
         id: 'a2',
-        filePath: 'cmXXX/abc-card.webp',
+        filePath: 'images/cmXXX/abc-card.webp',
         mimeType: 'image/webp',
         fileSize: 2048,
         duration: null,
         createdAt: new Date(),
       }
       const dto = mapAttachmentDTO(attachment)
-      expect(dto.url).toMatch(/cmXXX\/abc-card\.webp\?exp=\d+&sig=[a-f0-9]+$/)
+      expect(dto.url).toMatch(
+        /^\/user-content\/images\/cmXXX\/abc-card\.webp\?exp=\d+&sig=[a-f0-9]+$/
+      )
     })
   })
 })

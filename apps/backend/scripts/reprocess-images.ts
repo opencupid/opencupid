@@ -3,15 +3,13 @@ import path from 'path'
 import fs from 'fs'
 import { PrismaClient } from '@prisma/client'
 import { ImageService } from '../src/services/image.service'
-import { getImageRoot } from '../src/lib/media'
+import { getMediaRoot } from '../src/lib/media'
 import { ImageProcessor } from '../src/services/imageprocessor'
 
 const prisma = new PrismaClient()
 const imageService = ImageService.getInstance()
 
-
 async function main() {
-
   await ImageProcessor.initialize()
 
   const images = await prisma.profileImage.findMany({
@@ -21,7 +19,7 @@ async function main() {
   })
 
   for (const img of images) {
-    const basePath = path.join(getImageRoot(), img.storagePath)
+    const basePath = path.join(getMediaRoot(), img.storagePath)
     const originalFile = `${basePath}-original.jpg`
     const outputDir = path.dirname(basePath)
     const baseName = path.basename(basePath)
@@ -42,7 +40,7 @@ async function main() {
 }
 
 main()
-  .catch(err => {
+  .catch((err) => {
     console.error(err)
   })
   .finally(() => prisma.$disconnect())
