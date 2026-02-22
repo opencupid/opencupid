@@ -3,6 +3,7 @@
 ## Running the app
 
 Start all services (frontend + backend + infrastructure):
+
 ```
 pnpm dev
 ```
@@ -11,11 +12,11 @@ This uses Turbo to run both the frontend (Vite, port 5173) and backend (Fastify,
 
 ### Local URLs
 
-| Service | URL |
-|---------|-----|
+| Service                | URL                                  |
+| ---------------------- | ------------------------------------ |
 | Frontend (entry point) | https://oc.dev.froggle.org:5173/home |
-| Backend API | https://oc.dev.froggle.org:3000 |
-| MailDev (email inbox) | http://oc.dev.froggle.org:1080/#/ |
+| Backend API            | https://oc.dev.froggle.org:3000      |
+| MailDev (email inbox)  | http://oc.dev.froggle.org:1080/#/    |
 
 ### Login flow
 
@@ -60,76 +61,84 @@ packages/
 
 ### Key frontend routes
 
-| Route | View |
-|-------|------|
-| `/home` | User home / dashboard |
-| `/auth` | Login (email entry) |
-| `/auth/otp` | OTP token entry |
-| `/browse` | Browse profiles |
-| `/profile/:profileId` | Public profile |
-| `/me` | My profile |
-| `/me/edit` | Edit profile |
-| `/inbox/:conversationId?` | Messaging |
-| `/matches/:profileId?` | Matches |
-| `/posts` | Posts |
-| `/settings` | Settings |
-| `/onboarding` | Onboarding |
+| Route                     | View                  |
+| ------------------------- | --------------------- |
+| `/home`                   | User home / dashboard |
+| `/auth`                   | Login (email entry)   |
+| `/auth/otp`               | OTP token entry       |
+| `/browse`                 | Browse profiles       |
+| `/profile/:profileId`     | Public profile        |
+| `/me`                     | My profile            |
+| `/me/edit`                | Edit profile          |
+| `/inbox/:conversationId?` | Messaging             |
+| `/matches/:profileId?`    | Matches               |
+| `/posts`                  | Posts                 |
+| `/settings`               | Settings              |
+| `/onboarding`             | Onboarding            |
 
 ## Tests
 
 Full test suite. Use this whilst working on a task.
+
 ```
 pnpm test
 ```
+
 Frontend tests:
+
 ```
 pnpm --filter frontend test
 ```
 
 Backend tests:
+
 ```
 pnpm --filter backend test
 ```
 
-
 Full CI suite (install, prisma generate, lint, test, type-check). This is expensive to run and takes a long time, run this only near/after completing a task and when `pnpm test` does not fail.
+
 ```
 pnpm run ci:test
 ```
 
 Run with coverage:
+
 ```
 pnpm run test:coverage
 ```
 
 Run build and type check:
+
 ```
 pnpm build
 ```
 
-* All completed work must pass full test suite
-* For all new frontend components, API routes and services test files must be added in the `__tests__` subdirectory closest to the new file or existing file being modified
-* Format **only files you added or modified** using `npx prettier --write <file1> <file2> ...`. Never run `pnpm format` or `prettier --write .` on the whole codebase — this creates noise in PRs with unrelated formatting changes.
-* From the package root you can just call `pnpm test`. The commit should pass all tests before you merge.
-* To focus on one step, run Vitest directly: `cd apps/frontend && npx vitest run -t "<test name>"`.
-* Fix any test or type errors until the whole suite is green.
-* After moving files or changing imports, run `pnpm lint --filter <project_name>` to be sure ESLint and TypeScript rules still pass.
-* Add or update tests for the code you change, even if nobody asked.
-
+- All completed work must pass full test suite
+- For all new frontend components, API routes and services test files must be added in the `__tests__` subdirectory closest to the new file or existing file being modified
+- Format **only files you added or modified** using `npx prettier --write <file1> <file2> ...`. Never run `pnpm format` or `prettier --write .` on the whole codebase — this creates noise in PRs with unrelated formatting changes.
+- From the package root you can just call `pnpm test`. The commit should pass all tests before you merge.
+- To focus on one step, run Vitest directly: `cd apps/frontend && npx vitest run -t "<test name>"`.
+- Fix any test or type errors until the whole suite is green.
+- After moving files or changing imports, run `pnpm lint --filter <project_name>` to be sure ESLint and TypeScript rules still pass.
+- Add or update tests for the code you change, even if nobody asked.
 
 ## Database
 
 Generate Prisma client after schema changes:
+
 ```
 pnpm --filter backend prisma:generate
 ```
 
 Interactive psql shell (via Docker):
+
 ```
 pnpm --filter backend db:psql
 ```
 
 Run a single query:
+
 ```
 pnpm --filter backend db:psql -c 'SELECT ...'
 ```
@@ -162,6 +171,7 @@ gh pr create
 Run these steps in order:
 
 1. **Bump `version` in `package.json`** on a feature branch, create a PR, and merge it:
+
    ```bash
    git checkout main && git pull
    git checkout -b chore/bump-version-X.Y.Z
@@ -173,15 +183,18 @@ Run these steps in order:
    ```
 
 2. **Create the GitHub release** targeting `main` with release notes:
+
    ```bash
    gh release create vX.Y.Z --target main --title "vX.Y.Z" --notes "<release notes>"
    ```
+
    - Generate release notes from `git log <previous-tag>..main --oneline --no-merges`
    - Include only new features and enhancements, not bug fixes
    - Keep summaries brief
    - End with a full changelog link: `**Full Changelog**: https://github.com/opencupid/opencupid/compare/<previous-tag>...vX.Y.Z`
 
 3. **Trigger the Docker build** on main:
+
    ```bash
    gh workflow run docker.yml --ref main
    ```
@@ -191,9 +204,40 @@ Run these steps in order:
    gh run watch <run-id> --exit-status
    ```
 
+## Production deployment
+
+> **HARD RULE — NO EXCEPTIONS:** You MUST NEVER commit production configuration to the repository. This includes `.env` files, TLS certificates, secrets, API keys, or any host-specific configuration. The `.env.production` file in the repo is a **template/reference only** with dummy values — the real production `.env` lives only on the production host.
+
+1. **Always ask for the hostname** before deploying
+2. **SSH access**: `ssh -A <hostname>` as current user (not root), sudo without password
+3. **Repo clone on host**: `~/opencupid` — read-only git access, used for `docker-compose.production.yml` and config
+4. **Build images** (from local dev machine via GitHub Actions):
+   ```bash
+   gh workflow run docker.yml --ref main
+   gh run list --workflow=docker.yml -L 1
+   gh run watch <run-id> --exit-status
+   ```
+5. **Deploy on host** (via SSH):
+   ```bash
+   cd ~/opencupid && git pull
+   sudo docker compose -f docker-compose.production.yml pull
+   sudo docker compose -f docker-compose.production.yml up -d
+   ```
+6. **Run migrations** (if schema changes were included):
+   ```bash
+   sudo docker compose -f docker-compose.production.yml exec backend npx prisma migrate deploy
+   ```
+7. **Verify**:
+   ```bash
+   sudo docker compose -f docker-compose.production.yml ps
+   sudo docker compose -f docker-compose.production.yml logs --tail=50 backend
+   sudo docker compose -f docker-compose.production.yml logs --tail=50 ingress
+   ```
+
 ## Formatting
 
 Format only the files you changed — never the entire codebase:
+
 ```
 npx prettier --write <file1> <file2> ...
 ```
