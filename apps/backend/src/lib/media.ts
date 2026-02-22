@@ -40,7 +40,9 @@ type UrlSignature = {
 
 export function signUrl(url: string): string {
   const exp = Math.floor(Date.now() / 1000) + appConfig.IMAGE_URL_HMAC_TTL_SECONDS
-  const data = `${url}:${exp}`
+  // Sign only the relative path (strip IMAGE_URL_BASE prefix) to match nginx lua verification
+  const pathToSign = url.replace(new RegExp(`^${appConfig.IMAGE_URL_BASE}/`), '')
+  const data = `${pathToSign}:${exp}`
   const h = createHmac('sha256', appConfig.AUTH_IMG_HMAC_SECRET).update(data).digest('hex')
   return `${url}?exp=${exp}&sig=${h}`
 }
