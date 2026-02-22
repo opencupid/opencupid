@@ -76,6 +76,15 @@ services:
     build:
       context: .
       dockerfile: apps/frontend/Dockerfile
+      args:
+        SITE_NAME: ${SITE_NAME:-OpenCupid}
+        VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+        SENTRY_DSN: ${SENTRY_DSN:-}
+        OG_TITLE: ${OG_TITLE:-OpenCupid}
+        OG_DESCRIPTION: ${OG_DESCRIPTION:-OpenCupid is an open-source dating platform.}
+        OG_IMAGE: ${OG_IMAGE:-}
+        OG_URL: ${OG_URL:-}
+        OG_TYPE: ${OG_TYPE:-website}
     restart: always
     env_file:
       - .env
