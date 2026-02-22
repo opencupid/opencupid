@@ -36,7 +36,8 @@ export function checkUserContentRoot(): boolean {
 export function signUrl(url: string): string {
   const exp = Math.floor(Date.now() / 1000) + appConfig.IMAGE_URL_HMAC_TTL_SECONDS
   // Sign only the relative path (strip MEDIA_URL_BASE prefix) to match nginx lua verification
-  const pathToSign = url.replace(new RegExp(`^${appConfig.MEDIA_URL_BASE}/`), '')
+  const prefix = appConfig.MEDIA_URL_BASE + '/'
+  const pathToSign = url.startsWith(prefix) ? url.slice(prefix.length) : url
   const data = `${pathToSign}:${exp}`
   const h = createHmac('sha256', appConfig.AUTH_IMG_HMAC_SECRET).update(data).digest('hex')
   return `${url}?exp=${exp}&sig=${h}`
