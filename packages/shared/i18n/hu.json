@@ -81,18 +81,25 @@
     "browse": "Böngészés",
     "matches": "Egyezések",
     "inbox": "Üzenetek",
-    "settings": "Beállítások"
+    "settings": "Beállítások",
+    "bulletin": "Hirdetőtábla"
   },
   "authentication": {
     "login": "Belépés",
     "logout": "Kilépés"
   },
   "home": {
+    "explore_interests": "Érdeklődési körök felfedezése",
     "welcome_title": "Légy üdvözölve nálunk.",
     "meet_new_people": "Nemrég csatlakoztak:"
   },
   "profiles": {
+    "back_button_title": "Vissza",
+    "more_options_button_title": "További lehetőségek",
     "send_message_button": "Üzenet",
+    "image_editor": {
+      "delete_button_title": "Kép eltávolítása"
+    },
     "profile_photos": "{name} fotói",
     "no_profile_title": "Töltsd ki a profilodat",
     "no_profile_create": "Profil létrehozása",
@@ -102,7 +109,13 @@
       "looks_good": "Jól lesz, mehet",
       "add_from_phone": "Kép egy albumból",
       "take_photo": "Lövök egy fotót",
-      "nevermind": "Mégse"
+      "nevermind": "Mégse",
+      "try_another": "Válassz másik képet",
+      "errors": {
+        "IMAGE_TOO_LARGE": "A kép túl nagy. Kérjük, válassz kisebb fotót (max. 10MB).",
+        "IMAGE_UPLOAD_FAILED": "A kép feltöltése nem sikerült. Kérjük, próbáld újra.",
+        "unknown": "Valami hiba történt. Kérjük, próbáld újra."
+      }
     },
     "forms": {
       "my_preferences": "Preferenciáim",
@@ -122,7 +135,6 @@
       "dictate": "Diktálj",
       "intro_placeholder": "Mesélj egy kicsit magadról",
       "intro_who_placeholder": "Kivel szeretnél találkozni?",
-      "publicname_hint": "Csak a keresztnevedet",
       "save_changes_hint": "Kész a szerkesztés",
       "edit_button_hint": "Változtatás",
       "city_deselect_label": "Eltávolítás"
@@ -163,6 +175,7 @@
         "dialog_cancel_button": "Mégse",
         "social_title": "Itt keresek...",
         "tags_label": "Érdeklődési körök...",
+        "near_label": "Errefelé:",
         "anywhere": "Bárhol",
         "locate_button_title": "Keress körülöttem",
         "search_button_title_social": "Keresés",
@@ -178,9 +191,9 @@
     "welcome_subtitle": "Hogy hívnak?",
     "location_title": "Hol laksz?",
     "connections_title": "Kivel kapcsolódnál?",
+    "connections_subtitle": "Teljes vagyok, de jól jönne egy kis társaság.",
     "interests_title": "Mi érdekel?",
     "interests_hint": "Kezdj el beírni egy érdeklődési kört, majd válaszd ki a listából.  Több címkét is hozzáadhatsz.",
-    "interests_subtitle": "Érdeklődési köreim, számomra fontos dolgok",
     "languages_title": "Nyelvek",
     "languages_subtitle": "Ezeken a nyelveken beszélek:",
     "social_intro_title": "Pár szóban magamról",
@@ -188,10 +201,14 @@
     "social_intro_placeholder": "Mit érdemes rólam tudni...fontos számomra... mivel töltöm az időmet szívesen...",
     "social_intro_hint": "Ha inkább későbbre hagynád ezt, hagyd üresen.",
     "photos_title": "Képeim",
+    "photos_subtitle": "Tölts fel egy képet magadról, hogy mások is láthassanak.",
     "age_title": "Ekkor születtem:",
+    "age_subtitle": "Ennyi ideje élek ezen a bolygón",
     "gender_subtitle": "Így azonosítom magam",
     "relationship_title": "Családi helyzetem:",
+    "relationship_subtitle": "A családi helyzetem:",
     "dating_intro_title": "Kit keresek",
+    "dating_intro_subtitle": "Ezt csak olyanok látják, akik szintén párkapcsolatot keresnek, nem azok, akik csak barátokat vagy társaságot keresnek.",
     "dating_intro_placeholder": "Milyen kapcsolódást keresek...",
     "dating_intro_hint": "Ezt csak olyanok fogják olvasni, akik szintén párt (is) keresnek.  Ha inkább későbbre hagynád ezt, hagyd üresen.",
     "confirmation": {
@@ -245,6 +262,9 @@
     }
   },
   "interactions": {
+    "pass_button_title": "Passzolok",
+    "like_button_title": "Tetszik",
+    "message_button_title": "Üzenet",
     "send_a_message": "Üzenet küldése",
     "you_messaged_them": "Üzenetet küldtél nekik",
     "you_liked_them": "Tetszett neked",
@@ -268,22 +288,60 @@
     "message_sent_success": "Elküldve!",
     "my_turn": "Én jövök",
     "their_turn": "Ő jön",
+    "conversation_options_title": "Beszélgetés beállításai",
+    "block_member": "Tag letiltása",
     "block_report_unmatch": "Letiltás/jelentés",
     "block_user_ok": "{name} letiltása",
     "nevermind": "Mégse",
     "send_message_heading": "Üzenet küldése",
     "no_messages_cta": "Böngészés",
     "no_messages_title": "Még nincsenek üzenetek",
-    "no_messages_placeholder": "A beszélgetések itt fognak zajlani."
+    "no_messages_placeholder": "A beszélgetések itt fognak zajlani.",
+    "send_mode_press_enter": "Enter-rel küldés",
+    "send_mode_click": "Kattintással küldés",
+    "message_input_hint_click": "Kattints a KÜLDÉS gombra",
+    "voice": {
+      "record_voice_message": "Hangüzenet rögzítése",
+      "recording_mode": "Hangüzenet",
+      "back_to_text": "Vissza a szöveghez",
+      "text": "Szöveg",
+      "start_recording": "Felvétel indítása",
+      "stop_recording": "Felvétel leállítása",
+      "record_again": "Újra felvétel",
+      "record": "Felvétel",
+      "cancel": "Mégse",
+      "max_duration": "Max. {duration}mp",
+      "permission_denied": "A mikrofon hozzáférés megtagadva. Engedélyezd a mikrofon használatát.",
+      "retry_permission": "Próbáld újra",
+      "unsupported_browser": "A hangrögzítés nem támogatott ebben a böngészőben."
+    }
+  },
+  "calls": {
+    "call_button_title": "Videóhívás indítása",
+    "calling": "Hívás...",
+    "cancel_call": "Mégse",
+    "incoming_call_from": "Bejövő hívás: {name}",
+    "accept": "Fogadás",
+    "decline": "Elutasítás",
+    "missed_call_message": "Nem fogadott hívás",
+    "allow_calls_label": "Hívások engedélyezése",
+    "open_to_calls_setting": "Elérhető vagyok videóhívásra"
   },
   "settings": {
     "title": "Beállítások",
     "language_label": "Nyelv",
     "push_notifications": "Push értesítések",
     "enable_push": "Push értesítések engedélyezése",
-    "newsletter_opt_in": "Szívesen kapok alkalmi hírlevelet"
+    "newsletter_opt_in": "Szívesen kapok alkalmi hírlevelet",
+    "push_notify_messages": "Értesítést kérek, ha üzenetet kapok"
   },
   "uicomponents": {
+    "back_button_title": "Vissza",
+    "edit_button_title": "Szerkesztés",
+    "connection_error": {
+      "title": "Nem te vagy az oka, mi vagyunk.",
+      "description": "Elnézést a fennakadásért. A gépmanók dolgoznak rajta, mindjárt visszatérünk."
+    },
     "error": {
       "title": "Itt elakadtunk.",
       "message": "Hiba történt. Kérjük, próbálja meg később újra.",
@@ -334,5 +392,59 @@
     "enter_button": "Belépés",
     "enter_button_loading": "Egy pillanat...",
     "select_language": "Másik nyelv"
+  },
+  "posts": {
+    "title": "Hirdetőtábla",
+    "types": {
+      "OFFER": "Felajánlás",
+      "REQUEST": "Keresés"
+    },
+    "actions": {
+      "create": "Hirdetés létrehozása",
+      "edit": "Hirdetés szerkesztése",
+      "hide": "Hirdetés elrejtése",
+      "show": "Hirdetés megjelenítése",
+      "delete": "Hirdetés törlése",
+      "save": "Hirdetés mentése",
+      "cancel": "Mégse",
+      "contact": "Kapcsolatfelvétel"
+    },
+    "placeholders": {
+      "content": "Írd le, mit kínálsz vagy mit keresel..."
+    },
+    "labels": {
+      "type": "Típus",
+      "content": "Tartalom",
+      "location": "Helyszín",
+      "visibility": "Látható mások számára",
+      "updated": "Utoljára frissítve"
+    },
+    "filters": {
+      "all": "Összes hirdetés",
+      "offers": "Ajánlatok",
+      "requests": "Keresések",
+      "nearby": "A közelben",
+      "recent": "Legújabb"
+    },
+    "my_posts": "Hirdetéseim",
+    "location": {
+      "prompt": "Engedélyezd a helymeghatározást a közeli hirdetések megtekintéséhez",
+      "enable": "Helymeghatározás engedélyezése"
+    },
+    "messages": {
+      "created": "Hirdetés sikeresen létrehozva",
+      "updated": "Hirdetés sikeresen frissítve",
+      "deleted": "Hirdetés sikeresen törölve",
+      "error_create": "Nem sikerült létrehozni a hirdetést",
+      "error_update": "Nem sikerült frissíteni a hirdetést",
+      "error_delete": "Nem sikerült törölni a hirdetést",
+      "error_load": "Nem sikerült betölteni a hirdetéseket",
+      "not_visible": "Ez a hirdetés nem látható mások számára",
+      "confirm_delete": "Biztosan törölni szeretnéd ezt a hirdetést?",
+      "no_posts": "Nincsenek hirdetések",
+      "no_nearby": "Nincsenek közeli hirdetések",
+      "no_recent": "Nincsenek friss hirdetések",
+      "no_my_posts": "Még nem hoztál létre hirdetést"
+    }
   }
 }
