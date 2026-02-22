@@ -1,6 +1,29 @@
 // custom variables
 @import './theme.scss';
 
+// Open Props — shadow tokens only
+@import 'open-props/shadows.min.css';
+
+// Design tokens
+:root {
+  // ─── Elevation aliases ────────────────────────────────────────────
+  --shadow-xs: var(--shadow-1);
+  --shadow-sm: var(--shadow-2);
+  --shadow-md: var(--shadow-3);
+  --shadow-lg: var(--shadow-4);
+
+  // ─── Border radii ────────────────────────────────────────────────
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+
+  // ─── Component tokens ────────────────────────────────────────────
+  --postit-bg: #fff587;
+  --postit-bg-alt: #f9f586;
+  --overlay-dark: rgba(0, 0, 0, 0.75);
+  --overlay-medium: rgba(0, 0, 0, 0.5);
+}
+
 @import './layout.scss';
 @import './utils.scss';
 @import './components.scss';

@@ -67,7 +67,7 @@ const handleMessageClick = () => {
         <template #target>
           <BButton
             variant="secondary"
-            class="btn-icon-lg me-2"
+            class="btn-icon-lg me-2 btn-shadow"
             @click="handlePassClick"
             :disabled="!context.canPass"
             :title="$t('interactions.pass_button_title')"
@@ -91,7 +91,7 @@ const handleMessageClick = () => {
     >
       <template #target>
         <BButton
-          class="btn-icon-lg btn-info me-2"
+          class="btn-icon-lg btn-info me-2 btn-shadow"
           @click="handleMessageClick"
           :title="$t('interactions.message_button_title')"
         >
@@ -117,7 +117,7 @@ const handleMessageClick = () => {
     >
       <template #target>
         <BButton
-          class="btn-icon-lg btn-dating"
+          class="btn-icon-lg btn-dating btn-shadow"
           @click="handleLikeClick"
           :title="$t('interactions.like_button_title')"
         >

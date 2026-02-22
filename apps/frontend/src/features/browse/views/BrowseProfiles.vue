@@ -5,6 +5,7 @@ import { useInfiniteScroll } from '@vueuse/core'
 
 import PublicProfileComponent from '@/features/publicprofile/components/PublicProfile.vue'
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
+import FluidColumn from '@/features/shared/ui/FluidColumn.vue'
 
 import { useFindMatchViewModel } from '../composables/useFindMatchViewModel'
 import DatingPreferencesForm from '../components/DatingPreferencesForm.vue'
@@ -166,7 +167,7 @@ useInfiniteScroll(
       class="list-view d-flex flex-column justify-content-start"
       :class="[currentScope, { inactive: isDetailView }]"
     >
-      <MiddleColumn class="my-2">
+      <FluidColumn class="my-2">
         <div
           class="subnav-bar d-flex align-items-center gap-2 px-2 py-1 bg-light rounded"
           :class="currentScope"
@@ -205,7 +206,7 @@ useInfiniteScroll(
             @click.stop
           />
         </div>
-      </MiddleColumn>
+      </FluidColumn>
       <BPlaceholderWrapper :loading="isLoading">
         <template #loading>
           <BOverlay
@@ -219,12 +220,12 @@ useInfiniteScroll(
             spinner-type="grow"
           >
             <!-- Placeholders while loading -->
-            <MiddleColumn class="overflow-hidden">
+            <FluidColumn class="overflow-hidden">
               <PlaceholdersGrid
                 :howMany="6"
                 :isAnimated="true"
               />
-            </MiddleColumn>
+            </FluidColumn>
           </BOverlay>
         </template>
 
@@ -263,7 +264,7 @@ useInfiniteScroll(
             ref="scrollContainer"
             class="overflow-auto hide-scrollbar flex-grow-1"
           >
-            <MiddleColumn
+            <FluidColumn
               v-if="viewModeModel === 'grid'"
               class="grid-view"
             >
@@ -291,7 +292,7 @@ useInfiniteScroll(
               <!-- No more profiles indicator -->
               <!-- <div v-else-if="!hasMoreProfiles && profileList.length > 0" class="text-center py-3 text-muted">
               </div> -->
-            </MiddleColumn>
+            </FluidColumn>
             <OsmPoiMap
               v-if="viewModeModel === 'map'"
               :items="profileList"
@@ -373,19 +374,20 @@ main {
 .subnav-bar {
   font-size: 0.75rem;
   cursor: pointer;
-  border-bottom: 2px solid transparent;
+  box-shadow: var(--shadow-xs);
   transition:
     background-color 0.2s ease,
-    border-color 0.2s ease,
     box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: var(--shadow-1), var(--shadow-1);
+  }
 
   &.social {
     background-color: transparentize($social, 0.95) !important;
 
     &:hover {
       background-color: transparentize($social, 0.88) !important;
-      border-bottom-color: $social;
-      box-shadow: 0 2px 24px transparentize($social, 0.9);
     }
   }
 
@@ -394,8 +396,6 @@ main {
 
     &:hover {
       background-color: transparentize($dating, 0.88) !important;
-      border-bottom-color: $dating;
-      box-shadow: 0 2px 24px transparentize($dating, 0.9);
     }
   }
 }

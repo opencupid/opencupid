@@ -138,15 +138,15 @@ async function handleNewsletterOptInChange(event: Event) {
             :show="false"
             class="h-100 d-flex flex-column justify-content-center"
           >
-            <div class="mb-3">
-              <div class="me-2">
+            <div class="mb-3 mt-2 d-flex align-items-center justify-content-between">
+              <div>
                 <span v-if="user.email"> {{ $t('auth.email') }}: {{ user.email }}</span>
                 <span v-if="user.phonenumber">
                   {{ $t('auth.phone_number') }}: {{ user.phonenumber }}</span
                 >
               </div>
               <BButton
-                variant="primary"
+                variant="secondary"
                 size="sm"
                 @click="handleClick"
               >
@@ -155,8 +155,6 @@ async function handleNewsletterOptInChange(event: Event) {
               >
             </div>
 
-            <div class="mb-3"></div>
-
             <!-- <div class="mb-3">
       <button class="btn btn-secondary" @click="changeColor">Toggle night or day</button>
     </div> -->
@@ -164,7 +162,7 @@ async function handleNewsletterOptInChange(event: Event) {
             <fieldset class="mb-3">
               <legend
                 for="language-selector"
-                class="form-label"
+                class="h5"
               >
                 {{ t('settings.language_label') }}
               </legend>

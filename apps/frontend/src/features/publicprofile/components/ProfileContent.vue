@@ -83,7 +83,7 @@ const viewerLocation = ref(viewerProfile?.value?.location)
       </div>
 
       <div class="mb-3">
-        <div class="d-inline-block">
+        <div class="d-inline-flex align-items-center flex-wrap">
           <TagList :tags="profile.tags" />
           <EditField
             fieldName="tags"
@@ -187,8 +187,5 @@ const viewerLocation = ref(viewerProfile?.value?.location)
   margin-top: -4rem;
   right: 1rem;
   z-index: 5;
-}
-.carousel-wrapper {
-  /* height: 50vh; */
 }
 </style>

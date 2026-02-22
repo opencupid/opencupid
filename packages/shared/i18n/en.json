@@ -103,7 +103,8 @@
   "home": {
     "explore_interests": "Explore interests",
     "meet_new_people": "Meet new people",
-    "welcome_title": "Welcome to {siteName}!"
+    "welcome_title": "Welcome to {siteName}!",
+    "more_people": "More people..."
   },
   "profiles": {
     "back_button_title": "Back",
@@ -145,12 +146,26 @@
       "city_start_typing": "Start typing to search for your city",
       "tag_search_placeholder": "Search interests...",
       "tag_add_placeholder": "Add this as new tag",
+      "tag_no_results": "Can't find anything similar.",
       "dictate_listening": "Listening…",
       "dictate": "Dictate",
       "intro_placeholder": "Tell a bit about yourself",
       "intro_who_placeholder": "Who would you like to meet?",
       "save_changes_hint": "Done editing",
-      "edit_button_hint": "Edit your info"
+      "edit_button_hint": "Edit your info",
+      "edit_titles": {
+        "publicName": "Name",
+        "location": "Location",
+        "tags": "Interests",
+        "languages": "Languages",
+        "introSocialLocalized": "About me",
+        "introDatingLocalized": "Who I'd like to meet",
+        "profileImages": "Photos",
+        "genderIdentity": "Gender",
+        "pronouns": "Pronouns",
+        "relationshipStatus": "Relationship status",
+        "hasKids": "Kids"
+      }
     },
     "blocklist": {
       "title": "Blocked users",
@@ -189,7 +204,7 @@
         "dialog_cancel_button": "Nevermind",
         "social_title": "I 'm looking for connections...",
         "tags_label": "Interested in...",
-        "near_label": "Near:",
+        "near_label": "Near...",
         "anywhere": "Anywhere",
         "locate_button_title": "Set to my country",
         "search_button_title_social": "Find people",
@@ -317,7 +332,7 @@
       "recording_mode": "Voice Message",
       "back_to_text": "Back to text",
       "text": "Text",
-      "start_recording": "Start recording",
+      "start_recording": "Leave voice message",
       "stop_recording": "Stop recording",
       "record_again": "Record again",
       "record": "Record",
@@ -337,7 +352,7 @@
     "decline": "Decline",
     "missed_call_message": "Missed call",
     "allow_calls_label": "Allow calls",
-    "open_to_calls_setting": "Open to video calls"
+    "open_to_calls_setting": "I'm open to video calls"
   },
   "settings": {
     "title": "Settings",
@@ -395,6 +410,7 @@
   },
   "posts": {
     "title": "Bulletin board",
+    "create_title": "Post something",
     "types": {
       "OFFER": "Offer",
       "REQUEST": "Request"
@@ -442,7 +458,7 @@
       "not_visible": "This post is not visible to others",
       "confirm_delete": "Are you sure you want to delete this post?",
       "no_posts": "No posts found",
-      "no_nearby": "No nearby posts found",
+      "no_nearby": "No posts found nearby",
       "no_recent": "No recent posts found",
       "no_my_posts": "You haven't created any posts yet"
     }

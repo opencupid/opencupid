@@ -334,6 +334,9 @@ importers:
       bootstrap-vue-next:
         specifier: 0.43.5
         version: 0.43.5(@vueuse/core@14.2.1(vue@3.5.28(typescript@5.9.3)))(vue-router@5.0.3(@vue/compiler-sfc@3.5.28)(pinia@3.0.4(typescript@5.9.3)(vue@3.5.28(typescript@5.9.3)))(vue@3.5.28(typescript@5.9.3)))(vue@3.5.28(typescript@5.9.3))
+      bootswatch:
+        specifier: ^5.3.8
+        version: 5.3.8
       d3-cloud:
         specifier: ^1.2.8
         version: 1.2.8
@@ -361,6 +364,9 @@ importers:
       mobile-detect:
         specifier: 1.4.5
         version: 1.4.5
+      open-props:
+        specifier: ^1.7.23
+        version: 1.7.23
       pinia:
         specifier: 3.0.4
         version: 3.0.4(typescript@5.9.3)(vue@3.5.28(typescript@5.9.3))
@@ -3328,6 +3334,9 @@ packages:
     peerDependencies:
       '@popperjs/core': ^2.11.8
 
+  bootswatch@5.3.8:
+    resolution: {integrity: sha512-88mnH9tv+x6DV+scBxYFOpM4YSDVhyfEgbhqaEfvkHNctKI9qRcACxIP9nmBZ5mSeLXtsgax1VsRkUs1eWjlAQ==}
+
   brace-expansion@1.1.12:
     resolution: {integrity: sha512-9T9UjW3r0UW5c1Q7GTwllptXwhvYmEzFhzMfZ9H7FQWt+uZePjZPjBP/W1ZEyZ1twGWom5/56TF4lPcqjnDHcg==}
 
@@ -5453,6 +5462,9 @@ packages:
   onetime@5.1.2:
     resolution: {integrity: sha512-kbpaSSGJTWdAY5KPVeMOKXSrPtr8C8C7wodJbcsd51jRnmD+GZu8Y0VoU6Dm5Z4vWr0Ig/1NKuWRKf7j5aaYSg==}
     engines: {node: '>=6'}
+
+  open-props@1.7.23:
+    resolution: {integrity: sha512-+xyrJmxV9QUBFbSwPROYhOg/FLXry+uuPr4R+B5EaE4556Oc18/8ZC/fL5A+/lbRSwNvA0Alh+C0KpyFWLmLZg==}
 
   open@10.2.0:
     resolution: {integrity: sha512-YgBpdJHPyQ2UE5x+hlSXcnejzAvD0b22U2OuAP+8OnlJT+PjWPxtgmGqKKc+RgTM63U9gN0YzrYc71R2WT/hTA==}
@@ -10294,6 +10306,8 @@ snapshots:
     dependencies:
       '@popperjs/core': 2.11.8
 
+  bootswatch@5.3.8: {}
+
   brace-expansion@1.1.12:
     dependencies:
       balanced-match: 1.0.2
@@ -12510,6 +12524,8 @@ snapshots:
   onetime@5.1.2:
     dependencies:
       mimic-fn: 2.1.0
+
+  open-props@1.7.23: {}
 
   open@10.2.0:
     dependencies:
