@@ -10,9 +10,16 @@
     a { display: inline-block; padding: 0.5rem 1rem; background: #333; color: #fff; text-decoration: none; border-radius: 4px; }
     a:hover { background: #555; }
   </style>
+  <script>
+    // Derive lists domain from current admin domain (admin.x.y → lists.x.y)
+    document.addEventListener('DOMContentLoaded', () => {
+      const listsDomain = location.hostname.replace(/^admin\./, 'lists.');
+      document.getElementById('listmonk-link').href = 'https://' + listsDomain + '/admin/';
+    });
+  </script>
 </head>
 <body>
   <h1>Admin</h1>
-  <a href="/listmonk/">Listmonk</a>
+  <a id="listmonk-link" href="/admin/">Listmonk</a>
 </body>
 </html>

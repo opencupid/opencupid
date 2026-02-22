@@ -24,7 +24,8 @@ RUN pnpm install --no-frozen-lockfile
 # Generate Prisma client and build application
 RUN pnpm run prisma:generate && pnpm run build
 
-# Remove dev dependencies
+# Remove dev dependencies (CI=true needed for pnpm v10+ non-TTY confirmation)
+ENV CI=true
 RUN pnpm prune --prod
 
 FROM node:22-bookworm
