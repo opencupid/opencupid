@@ -6,8 +6,9 @@ import '@/css/fonts.scss'
 import '@/css/bootstrap.scss'
 import '@/css/main.scss'
 import { useLocalStore } from './store/localStore'
+import { shouldShowLandingPage } from './lib/bootstrapRoute'
 
-if (window.location.pathname === '/') {
+if (shouldShowLandingPage(window.location.pathname, !!localStorage.getItem('token'))) {
   import('@/features/landingpage/views/LandingPage.vue').then(({ default: Landing }) => {
     const app = createApp(Landing)
     app.use(createPinia())
