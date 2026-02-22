@@ -10,7 +10,8 @@ body {
 
 body {
   overflow: hidden;
-  background: linear-gradient(180deg, #f8f5f0 0%, #fff 100%) fixed;
+  background-image: linear-gradient(170deg, #d5b98a 0%, #e8d5b5 40%, #faf4ea 100%) !important;
+  background-attachment: fixed;
 }
 
 #app {
@@ -30,10 +31,10 @@ main {
   height: 100dvh;
   min-height: 0; // prevents flex item overflow clipping (iOS)
   position: relative;
-  background: transparent;
 }
 
 nav.navbar + main {
+  background-color: var(--bs-body-bg);
   // navbar is fixed at the top, so we need to offset the main content
   padding-top: $navbar-height;
   // height: 100%;
