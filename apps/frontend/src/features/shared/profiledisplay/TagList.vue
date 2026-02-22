@@ -17,7 +17,7 @@ defineProps<{
       class="me-2"
     >
       <BBadge
-        variant="tag"
+        class="bg-tag"
         :title="tag.name"
         >#{{ tag.name }}</BBadge
       >
