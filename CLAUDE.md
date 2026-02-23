@@ -147,6 +147,10 @@ pnpm --filter backend db:psql -c 'SELECT ...'
 
 Schema: `apps/backend/prisma/schema.prisma`
 
+### Database queries (Claude MCP)
+
+The `postgres` MCP server provides direct SQL access to the dev database during debugging. Use it instead of `docker exec` / `psql` commands for faster iteration. The server is configured in `.claude/settings.json` and connects to the local dev DB automatically.
+
 ## Git workflow
 
 > **HARD RULE — NO EXCEPTIONS:** You MUST NEVER commit anything to the `main` branch. Not documentation, not design files, not a single line. Every commit goes on a feature branch. If you are on `main`, stop and create a branch before touching anything.

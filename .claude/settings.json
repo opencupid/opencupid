@@ -47,6 +47,13 @@
       "env": {
         "SENTRY_AUTH_TOKEN": "${SENTRY_AUTH_TOKEN}"
       }
+    },
+    "postgres": {
+      "command": "/home/user/.venvs/postgres-mcp/bin/postgres-mcp",
+      "args": [
+        "postgresql://appuser:secret@localhost:5432/app",
+        "--access-mode=unrestricted"
+      ]
     }
   }
 }
