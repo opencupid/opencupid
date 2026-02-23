@@ -14,9 +14,7 @@ self.addEventListener('push', (event) => {
     },
   }
 
-  event.waitUntil(
-    self.registration.showNotification(title, options)
-  )
+  event.waitUntil(self.registration.showNotification(title, options))
 })
 
 self.addEventListener('notificationclick', (event) => {
@@ -28,4 +26,8 @@ self.addEventListener('notificationclick', (event) => {
   console.log('[SW] Opening URL:', absoluteUrl)
 
   event.waitUntil(self.clients.openWindow(absoluteUrl))
+})
+
+self.addEventListener('fetch', (event) => {
+  event.respondWith(fetch(event.request))
 })
