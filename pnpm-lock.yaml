@@ -335,8 +335,8 @@ importers:
         specifier: 5.3.8
         version: 5.3.8(@popperjs/core@2.11.8)
       bootstrap-vue-next:
-        specifier: 0.43.5
-        version: 0.43.5(@vueuse/core@14.2.1(vue@3.5.28(typescript@5.9.3)))(vue-router@5.0.3(@vue/compiler-sfc@3.5.28)(pinia@3.0.4(typescript@5.9.3)(vue@3.5.28(typescript@5.9.3)))(vue@3.5.28(typescript@5.9.3)))(vue@3.5.28(typescript@5.9.3))
+        specifier: 0.43.7
+        version: 0.43.7(@vueuse/core@14.2.1(vue@3.5.28(typescript@5.9.3)))(vue-router@5.0.3(@vue/compiler-sfc@3.5.28)(pinia@3.0.4(typescript@5.9.3)(vue@3.5.28(typescript@5.9.3)))(vue@3.5.28(typescript@5.9.3)))(vue@3.5.28(typescript@5.9.3))
       bootswatch:
         specifier: ^5.3.8
         version: 5.3.8
@@ -3430,8 +3430,8 @@ packages:
   boolbase@1.0.0:
     resolution: {integrity: sha512-JZOSA7Mo9sNGB8+UjSgzdLtokWAky1zbztM3WRLCbZ70/3cTANmQmOdR7y2g+J0e2WXywy1yS468tY+IruqEww==}
 
-  bootstrap-vue-next@0.43.5:
-    resolution: {integrity: sha512-HY5rd0zPVtgouM86ceYZVXYHoYQr15dTZeHcC7udrDl4zmb1iSWAYfecrH9LehrvHkBdnS+qYjRl/rnDNTK2yA==}
+  bootstrap-vue-next@0.43.7:
+    resolution: {integrity: sha512-ZwQ23t8zIjWx1ebIXGD9OHHniZwFIXv09jrEi+JMWmNKDWShbQzwbNVL3uEi0kHuw0lgvAfw8+HhkRq3OPm3lw==}
     peerDependencies:
       '@floating-ui/vue': '*'
       '@vueuse/core': '*'
@@ -10788,7 +10788,7 @@ snapshots:
 
   boolbase@1.0.0: {}
 
-  bootstrap-vue-next@0.43.5(@vueuse/core@14.2.1(vue@3.5.28(typescript@5.9.3)))(vue-router@5.0.3(@vue/compiler-sfc@3.5.28)(pinia@3.0.4(typescript@5.9.3)(vue@3.5.28(typescript@5.9.3)))(vue@3.5.28(typescript@5.9.3)))(vue@3.5.28(typescript@5.9.3)):
+  bootstrap-vue-next@0.43.7(@vueuse/core@14.2.1(vue@3.5.28(typescript@5.9.3)))(vue-router@5.0.3(@vue/compiler-sfc@3.5.28)(pinia@3.0.4(typescript@5.9.3)(vue@3.5.28(typescript@5.9.3)))(vue@3.5.28(typescript@5.9.3)))(vue@3.5.28(typescript@5.9.3)):
     dependencies:
       vue: 3.5.28(typescript@5.9.3)
     optionalDependencies:
