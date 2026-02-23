@@ -285,27 +285,21 @@ const handleContact = async () => {
 </template>
 
 <style scoped>
+.post-wrapper .toolbar {
+  z-index: 10;
+  opacity: 0;
+}
+
 .toolbar {
   top: 0.3rem;
   right: 0.3rem;
-  opacity: 0;
-  visibility: hidden;
   border-radius: var(--radius-md);
-  transition:
-    opacity 180ms ease-in-out,
-    visibility 0s linear 180ms;
-}
-
-.post-wrapper:hover {
-  z-index: 10;
 }
 
 .post-wrapper:hover .toolbar {
-  opacity: 1;
-  visibility: visible;
-  transition: opacity 250ms ease-in-out;
+  opacity: 1 !important;
   background-color: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(6px);
+  transition: opacity 180ms ease-in-out;
 }
 
 .post-content {
