@@ -43,7 +43,8 @@ jobs:
       - name: Build frontend
         run: pnpm --filter frontend exec pnpm build
       - name: Backend tests
-        run: pnpm --filter backend exec vitest run 
+        run: pnpm --filter backend exec vitest run
       - name: Frontend unit tests
         run: pnpm --filter frontend exec vitest run
-        
+      - name: Check i18n keys
+        run: pnpm i18n:check && pnpm i18n:check:api
