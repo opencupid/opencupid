@@ -10,6 +10,9 @@ vi.mock('@/features/shared/profiledisplay/LanguageList.vue', () => ({
   default: { template: '<div />' },
 }))
 vi.mock('@/features/shared/ui/StoreErrorOverlay.vue', () => ({ default: { template: '<div />' } }))
+vi.mock('@/assets/icons/interface/call.svg', () => ({
+  default: { template: '<span data-testid="icon-call" />' },
+}))
 
 import SendMessageForm from '../components/SendMessageForm.vue'
 import { useLocalStore } from '@/store/localStore'
@@ -111,6 +114,57 @@ describe('SendMessageForm', () => {
     newLocalStore.initialize()
 
     expect(newLocalStore.getSendMode).toBe('click')
+  })
+
+  function mountForm(props: Record<string, unknown> = {}) {
+    return mount(SendMessageForm, {
+      props: {
+        recipientProfile: mockRecipient,
+        conversationId: 'conv-1',
+        ...props,
+      },
+      global: {
+        stubs: {
+          BFormGroup: true,
+          BFormTextarea: true,
+          BButton: true,
+          BDropdown: true,
+          BDropdownItem: true,
+          TagList: true,
+          LanguageList: true,
+          StoreErrorOverlay: true,
+          VoiceRecorder: true,
+          IconMenuDotsVert: true,
+          IconCall: true,
+          Mic2Icon: true,
+        },
+        mocks: {
+          $t: (key: string) => key,
+        },
+      },
+    })
+  }
+
+  it('shows call button when canCall is true', () => {
+    const wrapper = mountForm({ canCall: true })
+    expect(wrapper.find('[title="calls.call_button_title"]').exists()).toBe(true)
+  })
+
+  it('hides call button when canCall is false', () => {
+    const wrapper = mountForm({ canCall: false })
+    expect(wrapper.find('[title="calls.call_button_title"]').exists()).toBe(false)
+  })
+
+  it('hides call button while recording voice message', async () => {
+    const wrapper = mountForm({ canCall: true })
+    expect(wrapper.find('[title="calls.call_button_title"]').exists()).toBe(true)
+
+    // Simulate recording started
+    const voiceRecorder = wrapper.findComponent({ name: 'VoiceRecorder' })
+    await voiceRecorder.vm.$emit('recording:started')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('[title="calls.call_button_title"]').exists()).toBe(false)
   })
 
   it('renders radio buttons in dropdown menu', async () => {
