@@ -12,10 +12,15 @@ const props = defineProps<{ show: boolean }>()
     <FontAwesomeIcon
       v-if="props.show"
       :icon="faCircle"
-      class="text-danger position-absolute top-0 start-55 translate-middle"
+      class="text-danger position-absolute start-55 translate-middle notification-dot"
       style="font-size: 0.75rem"
     />
   </span>
 </template>
 
-<style scoped></style>
+<style scoped>
+:deep(.notification-dot) {
+  top: 5px !important;
+}
+
+</style>
