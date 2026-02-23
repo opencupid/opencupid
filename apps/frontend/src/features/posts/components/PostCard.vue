@@ -286,14 +286,18 @@ const handleContact = async () => {
 
 <style scoped>
 .toolbar {
-  top: 0;
-  right: 0;
+  top: 0.3rem;
+  right: 0.3rem;
   opacity: 0;
   visibility: hidden;
-  border-radius: 0 0 0 0.5rem;
+  border-radius: var(--radius-md);
   transition:
     opacity 180ms ease-in-out,
     visibility 0s linear 180ms;
+}
+
+.post-wrapper:hover {
+  z-index: 10;
 }
 
 .post-wrapper:hover .toolbar {
