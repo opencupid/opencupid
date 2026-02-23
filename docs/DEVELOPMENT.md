@@ -6,6 +6,18 @@
 sudo apt-get install ripgrep
 ```
 
+### Optional: postgres-mcp (for Claude Code)
+
+Gives Claude direct SQL access to the dev database via MCP. Requires Python 3.12+.
+
+```bash
+uv python install 3.12
+uv venv --python 3.12 ~/.venvs/postgres-mcp
+VIRTUAL_ENV=~/.venvs/postgres-mcp uv pip install postgres-mcp
+```
+
+Already configured in `.claude/settings.json` — no further setup needed after install.
+
 ## Getting started with development
 
 ```bash
