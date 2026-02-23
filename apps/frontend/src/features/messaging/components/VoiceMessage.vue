@@ -119,7 +119,7 @@ onUnmounted(() => {
     <!-- Hidden audio element -->
     <audio
       ref="audioRef"
-      preload="metadata"
+      preload="auto"
       style="display: none"
     >
       <source
