@@ -2,8 +2,18 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import messageRoutes, { transcodeToWebm } from '../../api/routes/messaging.route'
 import { MockFastify, MockReply } from '../../test-utils/fastify'
 import { promises as fsPromises } from 'fs'
+import { execFileSync } from 'child_process'
 import path from 'path'
 import os from 'os'
+
+function hasFfmpeg(): boolean {
+  try {
+    execFileSync('ffmpeg', ['-version'], { stdio: 'ignore' })
+    return true
+  } catch {
+    return false
+  }
+}
 
 vi.mock('@prisma/client', () => ({ Prisma: {}, PrismaClient: class {} }))
 
@@ -118,7 +128,7 @@ describe('POST /conversations/:id/mark-read', () => {
   })
 })
 
-describe('transcodeToWebm', () => {
+describe.skipIf(!hasFfmpeg())('transcodeToWebm', () => {
   it('transcodes a WAV file to webm and removes the original', async () => {
     // Create a minimal valid WAV file (44-byte header + 0 data bytes)
     const header = Buffer.alloc(44)
