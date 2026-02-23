@@ -408,7 +408,11 @@
       "button_copied": "Copied",
       "qr_hint": "Flash this at their phone"
     },
-    "dialog_cancel_button": "Nevermind"
+    "dialog_cancel_button": "Nevermind",
+    "update_banner": {
+      "message": "An update is available.",
+      "reload": "Reload"
+    }
   },
   "posts": {
     "title": "Bulletin board",

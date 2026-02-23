@@ -7,6 +7,18 @@
     "welcome": {
       "subject": "{{siteName}} Üdv az oldalon!",
       "html": "<p>Üdv a fedélzeten!</p><a href=\"{{link}}\">Kapcsolódj</a></p>"
+    },
+    "new_message": {
+      "subject": "[{{siteName}}] Új üzeneted érkezett",
+      "html": "<p>Szia,</p><p>Új üzeneted érkezett tőle: <strong>{{sender}}</strong>:</p><blockquote>{{message}}</blockquote><p><a href=\"{{link}}\">Kattints ide az olvasáshoz</a></p>"
+    },
+    "new_like": {
+      "subject": "[{{siteName}}] Valaki kedvelt téged",
+      "html": "<p>Szia,</p>Valaki küldött neked egy ❤️-et<p><p><a href=\"{{link}}\">Nézd meg, ki volt az</a></p>"
+    },
+    "new_match": {
+      "subject": "[{{siteName}}] Új egyezésed van!",
+      "html": "<p>Szia,</p><p>Tetszetek egymásnak! {{name}}<p><a href=\"{{link}}\">Kattints ide</a></p>"
     }
   },
   "messages": {

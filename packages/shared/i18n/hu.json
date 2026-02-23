@@ -91,7 +91,8 @@
   "home": {
     "explore_interests": "Érdeklődési körök felfedezése",
     "welcome_title": "Légy üdvözölve nálunk.",
-    "meet_new_people": "Nemrég csatlakoztak:"
+    "meet_new_people": "Nemrég csatlakoztak:",
+    "more_people": "Még többen..."
   },
   "profiles": {
     "back_button_title": "Vissza",
@@ -137,7 +138,21 @@
       "intro_who_placeholder": "Kivel szeretnél találkozni?",
       "save_changes_hint": "Kész a szerkesztés",
       "edit_button_hint": "Változtatás",
-      "city_deselect_label": "Eltávolítás"
+      "city_deselect_label": "Eltávolítás",
+      "tag_no_results": "Nem találtam hasonlót.",
+      "edit_titles": {
+        "publicName": "Név",
+        "location": "Hely",
+        "tags": "Érdeklődési körök",
+        "languages": "Nyelvek",
+        "introSocialLocalized": "Rólam",
+        "introDatingLocalized": "Kivel találkoznék",
+        "profileImages": "Fotók",
+        "genderIdentity": "Nem",
+        "pronouns": "Névmások",
+        "relationshipStatus": "Kapcsolati állapot",
+        "hasKids": "Gyerekek"
+      }
     },
     "blocklist": {
       "title": "Letiltott felhasználók",
@@ -381,14 +396,18 @@
       "button_copied": "Másolva",
       "qr_hint": "Villantsd ezt a telefonjukra"
     },
-    "dialog_cancel_button": "Bezár"
+    "dialog_cancel_button": "Bezár",
+    "update_banner": {
+      "message": "Frissítés érhető el.",
+      "reload": "Újratöltés"
+    }
   },
   "landingpage": {
     "title_lg": "Ez itt a {siteName}",
     "title": "Ez itt a {siteName}",
     "subtitle_1": "Mindannyian keressük a különféle kapcsolódásokat - társat, párt, hasonszőrűeket a környékről, tanítót, mentort, barátokat. Nem könnyű ez - szét vagyunk szóródva az ország különböző pontjain, falvakban, városokban, tanyákon. Gyakori, hogy hosszú idő után találkozunk először valakivel, aki csak pár faluval arrébb lakik ugyan, de nem keresztezik egymást útjaink. Vagy a szomszéd lépcsőházban, de sosem derül ki, hogy Ő is éppen tanyát keres és permakultúra videókat bingel a Youtubeon.\n\nEz itt egy biztonságos tér, ami segít a kapcsolódásban, ahol rátalálhatunk egymásra.",
-    "socialize_1": "",
-    "date_1": "",
+    "socialize_1": "Találj útitársakat, helyi barátokat és hasonló gondolkodásúakat a közeledben",
+    "date_1": "Ismerj meg egy lelki társat, partnert, vagy valakit, akivel együtt járhatod az utat",
     "footer_madeby": "Sok ❤️-tel készíti néhány önkéntes",
     "footer_contribute": "Nyílt forráskód. Csatlakozz ",
     "enter_button": "Belépés",
