@@ -49,7 +49,7 @@ describe('ConversationSummaries', () => {
             lastMessage: {
               content: '',
               messageType: 'audio/voice',
-              createdAt: new Date().toISOString(),
+              createdAt: new Date(),
               isMine: false,
             },
           }),
@@ -70,7 +70,7 @@ describe('ConversationSummaries', () => {
             lastMessage: {
               content: '<b>Bold</b> and <i>italic</i>',
               messageType: 'text/html',
-              createdAt: new Date().toISOString(),
+              createdAt: new Date(),
               isMine: false,
             },
           }),
