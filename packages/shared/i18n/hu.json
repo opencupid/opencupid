@@ -397,6 +397,7 @@
   },
   "posts": {
     "title": "Hirdetőtábla",
+    "create_title": "Új hirdetés",
     "types": {
       "OFFER": "Felajánlás",
       "REQUEST": "Keresés"
