@@ -6,7 +6,7 @@ import { appUseI18n } from './lib/i18n'
 
 // Register push-only service worker
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/push-sw.js').catch((err) => {
+  navigator.serviceWorker.register('/sw.js').catch((err) => {
     console.warn('SW registration failed:', err)
   })
 }
