@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import messageRoutes from '../../api/routes/messaging.route'
+import messageRoutes, { transcodeToWebm } from '../../api/routes/messaging.route'
 import { MockFastify, MockReply } from '../../test-utils/fastify'
+import { promises as fsPromises } from 'fs'
+import path from 'path'
+import os from 'os'
 
 vi.mock('@prisma/client', () => ({ Prisma: {}, PrismaClient: class {} }))
 
@@ -112,5 +115,46 @@ describe('POST /conversations/:id/mark-read', () => {
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.conversation.id).toBe('summary')
+  })
+})
+
+describe('transcodeToWebm', () => {
+  it('transcodes a WAV file to webm and removes the original', async () => {
+    // Create a minimal valid WAV file (44-byte header + 0 data bytes)
+    const header = Buffer.alloc(44)
+    // RIFF header
+    header.write('RIFF', 0)
+    header.writeUInt32LE(36, 4) // file size - 8
+    header.write('WAVE', 8)
+    // fmt sub-chunk
+    header.write('fmt ', 12)
+    header.writeUInt32LE(16, 16) // sub-chunk size
+    header.writeUInt16LE(1, 20) // PCM format
+    header.writeUInt16LE(1, 22) // mono
+    header.writeUInt32LE(48000, 24) // sample rate
+    header.writeUInt32LE(96000, 28) // byte rate
+    header.writeUInt16LE(2, 32) // block align
+    header.writeUInt16LE(16, 34) // bits per sample
+    // data sub-chunk (empty)
+    header.write('data', 36)
+    header.writeUInt32LE(0, 40)
+
+    const tmpDir = await fsPromises.mkdtemp(path.join(os.tmpdir(), 'transcode-test-'))
+    const wavPath = path.join(tmpDir, 'test.wav')
+    await fsPromises.writeFile(wavPath, header)
+
+    const result = await transcodeToWebm(wavPath)
+
+    expect(result.path).toBe(path.join(tmpDir, 'test.webm'))
+    expect(result.size).toBeGreaterThan(0)
+
+    // Original WAV should be deleted
+    await expect(fsPromises.access(wavPath)).rejects.toThrow()
+
+    // webm file should exist
+    await expect(fsPromises.access(result.path)).resolves.toBeUndefined()
+
+    // Cleanup
+    await fsPromises.rm(tmpDir, { recursive: true })
   })
 })

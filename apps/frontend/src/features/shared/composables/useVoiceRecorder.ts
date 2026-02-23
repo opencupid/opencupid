@@ -1,6 +1,16 @@
 import { ref, onUnmounted, readonly } from 'vue'
+import { MediaRecorder, register, type IMediaRecorder } from 'extendable-media-recorder'
+import { connect } from 'extendable-media-recorder-wav-encoder'
 
 export type RecordingState = 'idle' | 'recording' | 'paused' | 'completed' | 'error'
+
+// Register the WAV encoder once (idempotent — the library ignores duplicate registrations)
+let encoderRegistered = false
+async function ensureEncoder() {
+  if (encoderRegistered) return
+  await register(await connect())
+  encoderRegistered = true
+}
 
 export function useVoiceRecorder(maxDuration: number = 120) {
   const isSupported = ref(false)
@@ -10,18 +20,16 @@ export function useVoiceRecorder(maxDuration: number = 120) {
   const error = ref<string | null>(null)
   const permissionDenied = ref(false)
 
-  let mediaRecorder: MediaRecorder | null = null
+  let recorder: IMediaRecorder | null = null
   let stream: MediaStream | null = null
   let durationTimer: number | null = null
-  let chunks: BlobPart[] = []
+  let dataChunks: Blob[] = []
   let cancelled = false
 
-  // Check if MediaRecorder is supported
+  // Check if recording is supported
   const checkSupport = () => {
     isSupported.value = !!(
-      navigator.mediaDevices &&
-      typeof navigator.mediaDevices.getUserMedia === 'function' &&
-      typeof window.MediaRecorder === 'function'
+      navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function'
     )
     return isSupported.value
   }
@@ -38,10 +46,13 @@ export function useVoiceRecorder(maxDuration: number = 120) {
       error.value = null
       permissionDenied.value = false
       duration.value = 0
-      chunks = []
+      dataChunks = []
       cancelled = false
 
-      // Request microphone access (may show permission prompt)
+      // Ensure WAV encoder is registered before creating the recorder
+      await ensureEncoder()
+
+      // Get mic stream
       stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
@@ -50,45 +61,49 @@ export function useVoiceRecorder(maxDuration: number = 120) {
         },
       })
 
+      // Create MediaRecorder that records WAV (PCM).
+      // WAV is a raw format that cannot have container metadata issues,
+      // unlike webm which breaks on QtWebEngine browsers.
+      // The backend will transcode to webm/opus after upload.
+      recorder = new MediaRecorder(stream, { mimeType: 'audio/wav' })
+
       // Microphone access granted - now enter recording state
       state.value = 'recording'
 
-      // Create MediaRecorder instance
-      mediaRecorder = new MediaRecorder(stream, {
-        mimeType: getSupportedMimeType(),
+      console.debug('[VoiceRecorder] Created WAV MediaRecorder:', {
+        mimeType: recorder.mimeType,
+        state: recorder.state,
+        userAgent: navigator.userAgent,
       })
 
       // Handle data available event
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          chunks.push(event.data)
+      recorder.ondataavailable = (e: BlobEvent) => {
+        if (e.data.size > 0) {
+          dataChunks.push(e.data)
         }
       }
 
       // Handle recording stop event
-      mediaRecorder.onstop = () => {
+      recorder.onstop = () => {
         stopDurationTimer()
         cleanupStream()
         // If cancelled, don't overwrite the idle state set by cancelRecording
         if (cancelled) return
-        // Use the recorder's actual mimeType (includes codec, e.g. "audio/webm;codecs=opus")
-        // rather than re-querying getSupportedMimeType(), which strips codec info
-        audioBlob.value = new Blob(chunks, {
-          type: mediaRecorder!.mimeType || getSupportedMimeType(),
-        })
+        audioBlob.value = new Blob(dataChunks, { type: 'audio/wav' })
+        dataChunks = []
         state.value = 'completed'
       }
 
       // Handle errors
-      mediaRecorder.onerror = (event) => {
-        console.error('MediaRecorder error:', event)
+      recorder.onerror = () => {
+        console.error('[VoiceRecorder] error')
         error.value = 'Recording failed'
         state.value = 'error'
         stopRecording()
       }
 
       // Start recording
-      mediaRecorder.start(100) // Collect data every 100ms
+      recorder.start(100) // Collect data every 100ms
 
       // Start duration timer
       startDurationTimer()
@@ -115,8 +130,8 @@ export function useVoiceRecorder(maxDuration: number = 120) {
 
   // Stop recording
   const stopRecording = () => {
-    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-      mediaRecorder.stop()
+    if (recorder && recorder.state !== 'inactive') {
+      recorder.stop()
     }
     stopDurationTimer()
   }
@@ -126,7 +141,7 @@ export function useVoiceRecorder(maxDuration: number = 120) {
     cancelled = true
     stopRecording()
     audioBlob.value = null
-    chunks = []
+    dataChunks = []
     duration.value = 0
     state.value = 'idle'
     error.value = null
@@ -163,17 +178,6 @@ export function useVoiceRecorder(maxDuration: number = 120) {
       stream.getTracks().forEach((track) => track.stop())
       stream = null
     }
-  }
-
-  // Get supported MIME type for recording
-  const getSupportedMimeType = (): string => {
-    const types = ['audio/webm', 'audio/mp4', 'audio/ogg', 'audio/wav']
-    for (const type of types) {
-      if (MediaRecorder.isTypeSupported(type)) {
-        return type
-      }
-    }
-    return 'audio/webm' // Fallback
   }
 
   // Format duration as MM:SS

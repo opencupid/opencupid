@@ -13,6 +13,14 @@ vi.mock('@/features/shared/ui/StoreErrorOverlay.vue', () => ({ default: { templa
 vi.mock('@/assets/icons/interface/call.svg', () => ({
   default: { template: '<span data-testid="icon-call" />' },
 }))
+vi.mock('extendable-media-recorder', () => ({
+  MediaRecorder: vi.fn(),
+  register: vi.fn(),
+  IMediaRecorder: {},
+}))
+vi.mock('extendable-media-recorder-wav-encoder', () => ({
+  connect: vi.fn(),
+}))
 
 import SendMessageForm from '../components/SendMessageForm.vue'
 import { useLocalStore } from '@/store/localStore'

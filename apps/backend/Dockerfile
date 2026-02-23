@@ -30,6 +30,9 @@ RUN pnpm prune --prod
 
 FROM node:22-bookworm
 LABEL org.opencontainers.image.source=https://github.com/opencupid/opencupid
+
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 COPY --from=builder /app .
