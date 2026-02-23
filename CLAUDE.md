@@ -156,9 +156,23 @@ Always work in a feature branch and open a Github pull request once task is comp
 ```bash
 git checkout -b your-branch-name
 # ... make changes, commit ...
+pnpm test                    # MUST pass before push
 git push -u origin your-branch-name
 gh pr create
 ```
+
+> **HARD RULE — NO EXCEPTIONS:** After every `git push`, you MUST watch the CI workflow run and act on failures. Do not move on to other work or report success until CI is green. Use the following procedure:
+>
+> ```bash
+> gh run watch --exit-status    # blocks until the run finishes
+> ```
+>
+> - If the run **passes**, you're done.
+> - If the run **fails**, download the logs, diagnose the failure, fix the code, commit, push, and watch again:
+>   ```bash
+>   gh run view --log-failed     # show only the failed step logs
+>   ```
+>   Repeat until CI is green. Never leave a branch with a failing CI run.
 
 Each PR must contain **one logical change** — don't bundle unrelated fixes, features, or refactors into a single branch. If you discover something unrelated while working (e.g. a typo, a small bug, a cleanup opportunity), finish your current PR first, then open a separate one. If in doubt whether a change belongs on the current branch, ask before committing.
 
