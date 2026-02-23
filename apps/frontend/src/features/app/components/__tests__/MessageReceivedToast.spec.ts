@@ -1,5 +1,10 @@
-import { describe, it, expect, vi } from 'vitest'
-vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
+import { describe, it, expect, beforeEach } from 'vitest'
+
+beforeEach(() => {
+  ;(window as any).__APP_I18N__ = {
+    global: { t: (k: string) => k },
+  }
+})
 import { mount } from '@vue/test-utils'
 import MessageReceivedToast from '../MessageReceivedToast.vue'
 import { type MessageDTO } from '@zod/messaging/messaging.dto'
