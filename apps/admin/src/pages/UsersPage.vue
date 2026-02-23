@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { useApi } from '../composables/useApi'
+import { apiRequest } from '../composables/useApi'
 
 interface AdminUser {
   id: string
@@ -29,9 +30,13 @@ const page = ref(1)
 const pageSize = 25
 const search = ref('')
 const selectedUser = ref<AdminUser | null>(null)
+const editActive = ref(false)
+const editBlocked = ref(false)
+const saving = ref(false)
+const saveError = ref<string | null>(null)
 
 async function fetchUsers() {
-  const res = await call<UsersResponse>('/api/admin/users', {
+  const res = await call<UsersResponse>('/admin/users', {
     params: { page: page.value, pageSize, search: search.value || undefined },
   })
   if (res) {
@@ -40,24 +45,31 @@ async function fetchUsers() {
   }
 }
 
-async function toggleActive(user: AdminUser) {
-  await call('/api/admin/users/' + user.id, {
-    method: 'PATCH',
-    body: { isActive: !user.isActive },
-  })
-  await fetchUsers()
-}
-
-async function toggleBlocked(user: AdminUser) {
-  await call('/api/admin/users/' + user.id, {
-    method: 'PATCH',
-    body: { isBlocked: !user.isBlocked },
-  })
-  await fetchUsers()
-}
-
 function viewUser(user: AdminUser) {
   selectedUser.value = user
+  editActive.value = user.isActive
+  editBlocked.value = user.isBlocked
+  saveError.value = null
+}
+
+async function saveUser() {
+  if (!selectedUser.value) return
+  saving.value = true
+  saveError.value = null
+  try {
+    await apiRequest(`/admin/users/${selectedUser.value.id}`, {
+      method: 'PATCH',
+      body: { isActive: editActive.value, isBlocked: editBlocked.value },
+    })
+    // Update local data
+    selectedUser.value.isActive = editActive.value
+    selectedUser.value.isBlocked = editBlocked.value
+    selectedUser.value = null
+  } catch (err: unknown) {
+    saveError.value = err instanceof Error ? err.message : 'Failed to save'
+  } finally {
+    saving.value = false
+  }
 }
 
 const totalPages = ref(0)
@@ -127,7 +139,7 @@ onMounted(fetchUsers)
             <th>Active</th>
             <th>Blocked</th>
             <th>Created</th>
-            <th>Actions</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -151,22 +163,10 @@ onMounted(fetchUsers)
             <td>{{ new Date(user.createdAt).toLocaleDateString() }}</td>
             <td>
               <button
-                class="btn btn-sm btn-outline-primary me-1"
+                class="btn btn-sm btn-outline-primary"
                 @click="viewUser(user)"
               >
                 View
-              </button>
-              <button
-                class="btn btn-sm btn-outline-warning me-1"
-                @click="toggleActive(user)"
-              >
-                {{ user.isActive ? 'Deactivate' : 'Activate' }}
-              </button>
-              <button
-                class="btn btn-sm btn-outline-danger"
-                @click="toggleBlocked(user)"
-              >
-                {{ user.isBlocked ? 'Unblock' : 'Block' }}
               </button>
             </td>
           </tr>
@@ -233,6 +233,12 @@ onMounted(fetchUsers)
             ></button>
           </div>
           <div class="modal-body">
+            <div
+              v-if="saveError"
+              class="alert alert-danger mb-3"
+            >
+              {{ saveError }}
+            </div>
             <dl class="row mb-0">
               <dt class="col-sm-4">ID</dt>
               <dd class="col-sm-8">
@@ -245,9 +251,37 @@ onMounted(fetchUsers)
               <dt class="col-sm-4">Roles</dt>
               <dd class="col-sm-8">{{ selectedUser.roles.join(', ') }}</dd>
               <dt class="col-sm-4">Active</dt>
-              <dd class="col-sm-8">{{ selectedUser.isActive ? 'Yes' : 'No' }}</dd>
+              <dd class="col-sm-8">
+                <div class="form-check">
+                  <input
+                    id="editActive"
+                    v-model="editActive"
+                    class="form-check-input"
+                    type="checkbox"
+                  />
+                  <label
+                    class="form-check-label"
+                    for="editActive"
+                    >Active</label
+                  >
+                </div>
+              </dd>
               <dt class="col-sm-4">Blocked</dt>
-              <dd class="col-sm-8">{{ selectedUser.isBlocked ? 'Yes' : 'No' }}</dd>
+              <dd class="col-sm-8">
+                <div class="form-check">
+                  <input
+                    id="editBlocked"
+                    v-model="editBlocked"
+                    class="form-check-input"
+                    type="checkbox"
+                  />
+                  <label
+                    class="form-check-label"
+                    for="editBlocked"
+                    >Blocked</label
+                  >
+                </div>
+              </dd>
               <dt class="col-sm-4">Created</dt>
               <dd class="col-sm-8">{{ new Date(selectedUser.createdAt).toLocaleString() }}</dd>
               <dt class="col-sm-4">Last Login</dt>
@@ -270,6 +304,13 @@ onMounted(fetchUsers)
               @click="selectedUser = null"
             >
               Close
+            </button>
+            <button
+              class="btn btn-primary"
+              :disabled="saving"
+              @click="saveUser"
+            >
+              {{ saving ? 'Saving...' : 'Save' }}
             </button>
           </div>
         </div>

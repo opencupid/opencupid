@@ -1,13 +1,57 @@
 import { FastifyPluginAsync } from 'fastify'
-import { sendError, sendForbiddenError } from '../helpers'
+import { sendError } from '../helpers'
 import { prisma } from '@/lib/prisma'
 
+function getLast7Days(): string[] {
+  const dates: string[] = []
+  const now = new Date()
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000)
+    dates.push(d.toISOString().slice(0, 10))
+  }
+  return dates
+}
+
+function fillZeroDays(
+  rows: { date: string; count: bigint }[],
+  days: string[]
+): { date: string; count: number }[] {
+  const map = new Map(rows.map((r) => [r.date, Number(r.count)]))
+  return days.map((date) => ({ date, count: map.get(date) ?? 0 }))
+}
+
 const adminRoutes: FastifyPluginAsync = async (fastify) => {
-  // All admin routes require authentication + admin role
-  fastify.addHook('onRequest', fastify.authenticate)
-  fastify.addHook('onRequest', async (req, reply) => {
-    if (!req.session?.roles?.includes('admin')) {
-      return sendForbiddenError(reply, 'Admin access required')
+  // GET /admin/stats/daily — Daily signups & logins (last 7 days)
+  fastify.get('/stats/daily', async (_req, reply) => {
+    try {
+      const days = getLast7Days()
+      const since = days[0]
+
+      const [signupRows, loginRows] = await Promise.all([
+        prisma.$queryRaw<{ date: string; count: bigint }[]>`
+          SELECT DATE("createdAt")::text AS date, COUNT(*)::bigint AS count
+          FROM "User"
+          WHERE "createdAt" >= ${since}::date
+          GROUP BY DATE("createdAt")
+          ORDER BY date
+        `,
+        prisma.$queryRaw<{ date: string; count: bigint }[]>`
+          SELECT DATE("lastLoginAt")::text AS date, COUNT(*)::bigint AS count
+          FROM "User"
+          WHERE "lastLoginAt" >= ${since}::date
+          GROUP BY DATE("lastLoginAt")
+          ORDER BY date
+        `,
+      ])
+
+      return reply.code(200).send({
+        success: true,
+        dailySignups: fillZeroDays(signupRows, days),
+        dailyLogins: fillZeroDays(loginRows, days),
+      })
+    } catch (err) {
+      fastify.log.error({ err }, 'Error fetching daily stats')
+      return sendError(reply, 500, 'Failed to fetch daily stats')
     }
   })
 
@@ -142,13 +186,13 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
     }
   })
 
-  // PATCH /admin/users/:id — Toggle isActive / isBlocked
+  // PATCH /admin/users/:id — Update user fields
   fastify.patch('/users/:id', async (req, reply) => {
     try {
       const { id } = req.params as { id: string }
       const body = req.body as { isActive?: boolean; isBlocked?: boolean }
 
-      const data: Record<string, boolean> = {}
+      const data: { isActive?: boolean; isBlocked?: boolean } = {}
       if (typeof body.isActive === 'boolean') data.isActive = body.isActive
       if (typeof body.isBlocked === 'boolean') data.isBlocked = body.isBlocked
 
@@ -157,35 +201,57 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const user = await prisma.user.update({ where: { id }, data })
-      return reply
-        .code(200)
-        .send({
-          success: true,
-          user: { id: user.id, isActive: user.isActive, isBlocked: user.isBlocked },
-        })
+
+      return reply.code(200).send({ success: true, user })
     } catch (err) {
       fastify.log.error({ err }, 'Error updating admin user')
       return sendError(reply, 500, 'Failed to update user')
     }
   })
 
+  // GET /admin/profiles/countries — Distinct country list
+  fastify.get('/profiles/countries', async (_req, reply) => {
+    try {
+      const groups = await prisma.profile.groupBy({
+        by: ['country'],
+        where: { country: { not: '' } },
+        orderBy: { country: 'asc' },
+      })
+      const countries = groups.map((g) => g.country)
+      return reply.code(200).send({ success: true, countries })
+    } catch (err) {
+      fastify.log.error({ err }, 'Error fetching countries')
+      return sendError(reply, 500, 'Failed to fetch countries')
+    }
+  })
+
   // GET /admin/profiles — Paginated profile list
   fastify.get('/profiles', async (req, reply) => {
     try {
-      const { page = '1', pageSize = '25', search = '' } = req.query as Record<string, string>
+      const {
+        page = '1',
+        pageSize = '25',
+        search = '',
+        country = '',
+      } = req.query as Record<string, string>
       const pageNum = Math.max(1, parseInt(page, 10) || 1)
       const size = Math.min(100, Math.max(1, parseInt(pageSize, 10) || 25))
       const skip = (pageNum - 1) * size
 
-      const where = search
-        ? {
-            OR: [
-              { publicName: { contains: search, mode: 'insensitive' as const } },
-              { cityName: { contains: search, mode: 'insensitive' as const } },
-              { country: { contains: search, mode: 'insensitive' as const } },
-            ],
-          }
-        : {}
+      const conditions: any[] = []
+      if (search) {
+        conditions.push({
+          OR: [
+            { publicName: { contains: search, mode: 'insensitive' as const } },
+            { cityName: { contains: search, mode: 'insensitive' as const } },
+            { country: { contains: search, mode: 'insensitive' as const } },
+          ],
+        })
+      }
+      if (country) {
+        conditions.push({ country })
+      }
+      const where = conditions.length > 0 ? { AND: conditions } : {}
 
       const [profiles, total] = await Promise.all([
         prisma.profile.findMany({

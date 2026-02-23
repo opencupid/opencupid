@@ -36,8 +36,8 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
   }
 
   if (mode === 'development') {
-    const keyPath = path.resolve(__dirname, '../../certs/privkey.pem')
-    const certPath = path.resolve(__dirname, '../../certs/fullchain.pem')
+    const keyPath = path.resolve(__dirname, '../../certs/localhost-key.pem')
+    const certPath = path.resolve(__dirname, '../../certs/localhost-cert.pem')
     const hasDevCerts = fs.existsSync(keyPath) && fs.existsSync(certPath)
 
     config.server = {

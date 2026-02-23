@@ -51,7 +51,7 @@ const listmonkUrl = computed(() => {
       <div class="mt-auto text-white-50 small">v{{ version }}</div>
     </nav>
     <main
-      class="flex-grow-1 p-4 bg-light"
+      class="flex-grow-1 p-4 pb-5 bg-light"
       style="min-height: 100vh"
     >
       <router-view />

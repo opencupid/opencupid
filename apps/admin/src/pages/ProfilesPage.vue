@@ -34,10 +34,22 @@ const page = ref(1)
 const pageSize = 25
 const search = ref('')
 const selectedProfile = ref<AdminProfile | null>(null)
+const countries = ref<string[]>([])
+const selectedCountry = ref('')
+
+async function fetchCountries() {
+  const res = await call<{ success: boolean; countries: string[] }>('/admin/profiles/countries')
+  if (res) countries.value = res.countries
+}
 
 async function fetchProfiles() {
-  const res = await call<ProfilesResponse>('/api/admin/profiles', {
-    params: { page: page.value, pageSize, search: search.value || undefined },
+  const res = await call<ProfilesResponse>('/admin/profiles', {
+    params: {
+      page: page.value,
+      pageSize,
+      search: search.value || undefined,
+      country: selectedCountry.value || undefined,
+    },
   })
   if (res) {
     profiles.value = res.profiles
@@ -73,7 +85,15 @@ function onSearchInput() {
   }, 300)
 }
 
-onMounted(fetchProfiles)
+function onCountryChange() {
+  page.value = 1
+  fetchProfiles()
+}
+
+onMounted(() => {
+  fetchCountries()
+  fetchProfiles()
+})
 </script>
 
 <template>
@@ -87,14 +107,29 @@ onMounted(fetchProfiles)
       {{ error }}
     </div>
 
-    <div class="mb-3">
+    <div class="mb-3 d-flex gap-2">
       <input
         v-model="search"
         type="text"
         class="form-control"
-        placeholder="Search by name, city, or country..."
+        placeholder="Search by name or city..."
         @input="onSearchInput"
       />
+      <select
+        v-model="selectedCountry"
+        class="form-select"
+        style="max-width: 200px"
+        @change="onCountryChange"
+      >
+        <option value="">All Countries</option>
+        <option
+          v-for="c in countries"
+          :key="c"
+          :value="c"
+        >
+          {{ c }}
+        </option>
+      </select>
     </div>
 
     <div class="table-container p-3">
@@ -116,7 +151,6 @@ onMounted(fetchProfiles)
             <th>Social</th>
             <th>Dating</th>
             <th>Active</th>
-            <th>Flags</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -144,23 +178,6 @@ onMounted(fetchProfiles)
               </span>
             </td>
             <td>
-              <span
-                v-if="profile.isReported"
-                class="badge bg-warning me-1"
-                >Reported</span
-              >
-              <span
-                v-if="profile.isBlocked"
-                class="badge bg-danger"
-                >Blocked</span
-              >
-              <span
-                v-if="!profile.isReported && !profile.isBlocked"
-                class="text-muted"
-                >-</span
-              >
-            </td>
-            <td>
               <button
                 class="btn btn-sm btn-outline-primary"
                 @click="viewProfile(profile)"
@@ -171,7 +188,7 @@ onMounted(fetchProfiles)
           </tr>
           <tr v-if="profiles.length === 0">
             <td
-              colspan="8"
+              colspan="7"
               class="text-center text-muted"
             >
               No profiles found

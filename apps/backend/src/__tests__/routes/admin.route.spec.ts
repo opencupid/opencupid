@@ -11,7 +11,9 @@ const mockPrisma = vi.hoisted(() => ({
     count: vi.fn(),
     findMany: vi.fn(),
     findUnique: vi.fn(),
+    groupBy: vi.fn(),
   },
+  $queryRaw: vi.fn(),
 }))
 
 vi.mock('@/lib/prisma', () => ({
@@ -25,17 +27,10 @@ vi.mock('@/lib/appconfig', () => ({
 import adminRoutes from '../../api/routes/admin.route'
 import { MockReply } from '../../test-utils/fastify'
 
-// Extended mock that supports addHook
 class AdminMockFastify {
   public routes: Record<string, any> = {}
-  public hooks: Record<string, any[]> = {}
   public log = { error: vi.fn(), warn: vi.fn(), info: vi.fn() }
-  public authenticate = vi.fn()
 
-  addHook(name: string, fn: any) {
-    if (!this.hooks[name]) this.hooks[name] = []
-    this.hooks[name].push(fn)
-  }
   get(path: string, opts: any, handler?: any) {
     this.routes[`GET ${path}`] = typeof opts === 'function' ? opts : handler
   }
@@ -44,9 +39,6 @@ class AdminMockFastify {
   }
   patch(path: string, opts: any, handler?: any) {
     this.routes[`PATCH ${path}`] = typeof opts === 'function' ? opts : handler
-  }
-  delete(path: string, opts: any, handler?: any) {
-    this.routes[`DELETE ${path}`] = typeof opts === 'function' ? opts : handler
   }
   register() {}
 }
@@ -62,27 +54,6 @@ beforeEach(async () => {
 
 afterEach(() => {
   vi.clearAllMocks()
-})
-
-describe('admin hooks', () => {
-  it('registers authenticate and admin role check hooks', () => {
-    expect(fastify.hooks['onRequest']).toHaveLength(2)
-  })
-
-  it('admin role check rejects non-admin users', async () => {
-    const roleCheck = fastify.hooks['onRequest'][1]
-    const req = { session: { roles: ['user'] } }
-    await roleCheck(req, reply)
-    expect(reply.statusCode).toBe(403)
-  })
-
-  it('admin role check allows admin users', async () => {
-    const roleCheck = fastify.hooks['onRequest'][1]
-    const req = { session: { roles: ['user', 'admin'] } }
-    await roleCheck(req, reply)
-    // Should not set status 403
-    expect(reply.statusCode).toBe(200) // default
-  })
 })
 
 describe('GET /stats', () => {
@@ -115,6 +86,53 @@ describe('GET /stats', () => {
     mockPrisma.user.count.mockRejectedValueOnce(new Error('DB error'))
 
     const handler = fastify.routes['GET /stats']
+    await handler({}, reply)
+
+    expect(reply.statusCode).toBe(500)
+    expect(reply.payload.success).toBe(false)
+  })
+})
+
+describe('GET /stats/daily', () => {
+  it('returns daily signups and logins with zero-filled days', async () => {
+    mockPrisma.$queryRaw
+      .mockResolvedValueOnce([{ date: '2026-02-20', count: BigInt(3) }]) // signups
+      .mockResolvedValueOnce([
+        { date: '2026-02-19', count: BigInt(7) },
+        { date: '2026-02-21', count: BigInt(2) },
+      ]) // logins
+
+    const handler = fastify.routes['GET /stats/daily']
+    await handler({}, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    expect(reply.payload.dailySignups).toHaveLength(7)
+    expect(reply.payload.dailyLogins).toHaveLength(7)
+
+    // Verify zero-fill: each entry has date and count
+    for (const entry of reply.payload.dailySignups) {
+      expect(entry).toHaveProperty('date')
+      expect(entry).toHaveProperty('count')
+      expect(typeof entry.count).toBe('number')
+    }
+  })
+
+  it('returns all zeros when no data exists', async () => {
+    mockPrisma.$queryRaw.mockResolvedValueOnce([]).mockResolvedValueOnce([])
+
+    const handler = fastify.routes['GET /stats/daily']
+    await handler({}, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.dailySignups.every((d: any) => d.count === 0)).toBe(true)
+    expect(reply.payload.dailyLogins.every((d: any) => d.count === 0)).toBe(true)
+  })
+
+  it('handles errors gracefully', async () => {
+    mockPrisma.$queryRaw.mockRejectedValueOnce(new Error('DB error'))
+
+    const handler = fastify.routes['GET /stats/daily']
     await handler({}, reply)
 
     expect(reply.statusCode).toBe(500)
@@ -193,38 +211,52 @@ describe('GET /users/:id', () => {
 })
 
 describe('PATCH /users/:id', () => {
-  it('toggles isActive', async () => {
-    mockPrisma.user.update.mockResolvedValue({ id: 'user1', isActive: false, isBlocked: false })
+  it('updates user isActive and isBlocked', async () => {
+    const updatedUser = { id: 'user1', isActive: false, isBlocked: true }
+    mockPrisma.user.update.mockResolvedValue(updatedUser)
 
     const handler = fastify.routes['PATCH /users/:id']
-    await handler({ params: { id: 'user1' }, body: { isActive: false } }, reply)
+    await handler({ params: { id: 'user1' }, body: { isActive: false, isBlocked: true } }, reply)
 
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
     expect(mockPrisma.user.update).toHaveBeenCalledWith({
       where: { id: 'user1' },
-      data: { isActive: false },
+      data: { isActive: false, isBlocked: true },
     })
   })
 
-  it('toggles isBlocked', async () => {
-    mockPrisma.user.update.mockResolvedValue({ id: 'user1', isActive: true, isBlocked: true })
-
-    const handler = fastify.routes['PATCH /users/:id']
-    await handler({ params: { id: 'user1' }, body: { isBlocked: true } }, reply)
-
-    expect(reply.statusCode).toBe(200)
-    expect(mockPrisma.user.update).toHaveBeenCalledWith({
-      where: { id: 'user1' },
-      data: { isBlocked: true },
-    })
-  })
-
-  it('rejects empty body', async () => {
+  it('returns 400 when no valid fields provided', async () => {
     const handler = fastify.routes['PATCH /users/:id']
     await handler({ params: { id: 'user1' }, body: {} }, reply)
 
     expect(reply.statusCode).toBe(400)
+  })
+
+  it('handles errors gracefully', async () => {
+    mockPrisma.user.update.mockRejectedValueOnce(new Error('DB error'))
+
+    const handler = fastify.routes['PATCH /users/:id']
+    await handler({ params: { id: 'user1' }, body: { isActive: true } }, reply)
+
+    expect(reply.statusCode).toBe(500)
+  })
+})
+
+describe('GET /profiles/countries', () => {
+  it('returns distinct country list', async () => {
+    mockPrisma.profile.groupBy.mockResolvedValue([
+      { country: 'DE' },
+      { country: 'FR' },
+      { country: 'GB' },
+    ])
+
+    const handler = fastify.routes['GET /profiles/countries']
+    await handler({}, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    expect(reply.payload.countries).toEqual(['DE', 'FR', 'GB'])
   })
 })
 
@@ -249,6 +281,20 @@ describe('GET /profiles', () => {
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.profiles).toEqual(mockProfiles)
     expect(reply.payload.total).toBe(1)
+  })
+
+  it('filters by country when provided', async () => {
+    mockPrisma.profile.findMany.mockResolvedValue([])
+    mockPrisma.profile.count.mockResolvedValue(0)
+
+    const handler = fastify.routes['GET /profiles']
+    await handler({ query: { page: '1', pageSize: '25', search: '', country: 'DE' } }, reply)
+
+    expect(mockPrisma.profile.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { AND: [{ country: 'DE' }] },
+      })
+    )
   })
 })
 
