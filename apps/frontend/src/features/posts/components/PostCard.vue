@@ -123,7 +123,7 @@ const handleContact = async () => {
     <!-- owner toolbar -->
     <div
       v-if="isOwn && showOwnerToolbar"
-      class="toolbar position-absolute z-3 w-100 d-flex align-items-center justify-content-end gap-1"
+      class="toolbar position-absolute z-3 d-flex align-items-center justify-content-end gap-1"
     >
       <BButton
         @click.stop="$emit('edit', post)"
@@ -285,19 +285,21 @@ const handleContact = async () => {
 </template>
 
 <style scoped>
-.toolbar {
+.post-wrapper .toolbar {
+  z-index: 10;
   opacity: 0;
-  visibility: hidden;
-  transition:
-    opacity 180ms ease-in-out,
-    visibility 0s linear 180ms;
+}
+
+.toolbar {
+  top: 0.3rem;
+  right: 0.3rem;
+  border-radius: var(--radius-md);
 }
 
 .post-wrapper:hover .toolbar {
-  opacity: 1;
-  visibility: visible;
-  transition: opacity 250ms ease-in-out;
-  background-color: var(--overlay-dark);
+  opacity: 1 !important;
+  background-color: rgba(0, 0, 0, 0.45);
+  transition: opacity 180ms ease-in-out;
 }
 
 .post-content {
