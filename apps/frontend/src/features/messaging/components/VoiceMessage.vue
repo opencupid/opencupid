@@ -20,11 +20,11 @@ const error = ref<string | null>(null)
 // Precompute stable waveform bar heights so they don't re-randomize on render
 const waveformHeights = Array.from({ length: 20 }, () => Math.random() * 16 + 4)
 
-// Use server-provided duration, falling back to audio element duration once loaded
 const baseMediaType = computed(() =>
   (props.attachment.mimeType?.split(';')[0] ?? 'audio/webm').trim()
 )
 
+// Use server-provided duration, falling back to audio element duration once loaded
 const duration = computed(() => props.attachment.duration || audioDuration.value || 0)
 const progress = computed(() =>
   duration.value > 0 ? (currentTime.value / duration.value) * 100 : 0
@@ -120,13 +120,9 @@ onUnmounted(() => {
     <audio
       ref="audioRef"
       preload="auto"
+      :src="attachment.url"
       style="display: none"
-    >
-      <source
-        :src="attachment.url"
-        :type="baseMediaType"
-      />
-    </audio>
+    ></audio>
 
     <div class="voice-controls d-flex align-items-center gap-2">
       <!-- Play/Pause button -->

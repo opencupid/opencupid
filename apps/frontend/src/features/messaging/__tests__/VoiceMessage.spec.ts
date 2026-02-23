@@ -20,23 +20,13 @@ describe('VoiceMessage', () => {
     expect(audio.attributes('preload')).toBe('auto')
   })
 
-  it('sets correct source type from attachment mimeType', () => {
+  it('sets audio src directly from attachment url', () => {
     const wrapper = mount(VoiceMessage, {
       props: { attachment: mockAttachment },
     })
-    const source = wrapper.find('source')
-    expect(source.attributes('type')).toBe('audio/webm')
-    expect(source.attributes('src')).toBe(mockAttachment.url)
-  })
-
-  it('strips codec suffix from mimeType for source type', () => {
-    const wrapper = mount(VoiceMessage, {
-      props: {
-        attachment: { ...mockAttachment, mimeType: 'audio/webm;codecs=opus' },
-      },
-    })
-    const source = wrapper.find('source')
-    expect(source.attributes('type')).toBe('audio/webm')
+    const audio = wrapper.find('audio')
+    expect(audio.attributes('src')).toBe(mockAttachment.url)
+    expect(wrapper.find('source').exists()).toBe(false)
   })
 
   it('displays server-provided duration', () => {
