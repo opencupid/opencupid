@@ -106,7 +106,7 @@ provide('viewerProfile', toRef(viewerProfile))
       <!-- lg+: two-column layout -->
       <BRow class="d-none d-lg-flex mt-3">
         <BCol
-          lg="9"
+          lg="8"
           class="pe-lg-3"
         >
           <LikesAndMatchesBanner class="mb-3" />
@@ -130,7 +130,7 @@ provide('viewerProfile', toRef(viewerProfile))
             </RouterLink>
           </div>
         </BCol>
-        <BCol lg="3">
+        <BCol lg="4">
           <div class="tag-cloud-sidebar">
             <h5>{{ $t('home.explore_interests') }}</h5>
             <TagCloud />
