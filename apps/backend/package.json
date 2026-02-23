@@ -73,7 +73,7 @@
   "devDependencies": {
     "@eslint/js": "9.28.0",
     "@faker-js/faker": "9.8.0",
-    "@types/bcrypt": "5.0.2",
+    "@types/bcrypt": "6.0.0",
     "@types/mime-types": "3.0.1",
     "@types/node": "22.16.1",
     "@types/nodemailer": "6.4.17",
