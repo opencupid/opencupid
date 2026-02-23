@@ -48,6 +48,7 @@ const { t } = useI18n()
 .api-error-overlay-content {
   width: min(80vw, 400px);
   margin-inline: auto;
+  padding-block: 15vh 5vh;
 }
 
 img {
