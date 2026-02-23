@@ -166,7 +166,7 @@ function handleVoiceRecordingError(error: string) {
               @recording:error="handleVoiceRecordingError"
             />
             <a
-              v-if="canCall"
+              v-if="canCall && !isVoiceActive"
               class="btn btn-outline-secondary btn-sm icon-btn-round"
               role="button"
               :title="$t('calls.call_button_title')"
