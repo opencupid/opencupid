@@ -21,7 +21,9 @@ const { t } = useI18n()
     :opacity="0.9"
   >
     <template #overlay>
-      <div class="api-error-overlay-content text-center text-dark d-flex flex-column">
+      <div
+        class="api-error-overlay-content text-center text-dark d-flex flex-column align-items-center justify-content-center"
+      >
         <div>
           <BSpinner
             variant="danger"
@@ -36,7 +38,6 @@ const { t } = useI18n()
         <img
           :src="ApiErrorImage"
           alt=""
-          class=""
         />
       </div>
     </template>
@@ -45,17 +46,13 @@ const { t } = useI18n()
 
 <style scoped>
 .api-error-overlay-content {
-  width: 50vw;
-  height: 50vw;
+  width: min(80vw, 400px);
   margin-inline: auto;
-  overflow: hidden;
 }
 
 img {
   width: 100%;
-  min-height: 0;
-  flex: 1 1 auto;
-  object-fit: contain; /* keep full image visible */
-  object-position: center;
+  max-width: 280px;
+  object-fit: contain;
 }
 </style>
