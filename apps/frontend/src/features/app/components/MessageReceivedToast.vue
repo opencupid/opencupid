@@ -2,6 +2,7 @@
 import { type MessageDTO } from '@zod/messaging/messaging.dto'
 import ProfileImage from '@/features/images/components/ProfileImage.vue'
 import { computed } from 'vue'
+import type { Composer } from 'vue-i18n'
 
 defineEmits<{
   (e: 'closeToast'): void
@@ -12,8 +13,16 @@ const props = defineProps<{
   toastId: number | string
 }>()
 
+// vue-toastification renders toasts outside the app's component tree,
+// so useI18n() fails. Use the global i18n instance directly.
+const t = (window.__APP_I18N__!.global as Composer).t
+
 // Clean message for toast display: strip HTML tags, convert <br> to spaces, truncate
 const cleanMessageContent = computed(() => {
+  if (props.message.messageType === 'audio/voice') {
+    return t('messaging.voice.voice_message_notification')
+  }
+
   let cleaned = props.message.content
     .replace(/<br\s*\/?>/gi, ' ') // Replace <br> with spaces
     .replace(/<[^>]+>/g, '') // Strip other HTML tags

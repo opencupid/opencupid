@@ -45,7 +45,11 @@ function cleanMessagePreview(content: string): string {
           <small
             class="last-message text-truncate text-nowrap pe-2"
             v-if="convo.lastMessage"
-            >{{ cleanMessagePreview(convo.lastMessage.content) }}</small
+            >{{
+              convo.lastMessage.messageType === 'audio/voice'
+                ? t('messaging.voice.voice_message_preview')
+                : cleanMessagePreview(convo.lastMessage.content)
+            }}</small
           >
         </div>
         <div class="flex-shrink-0 me-2">

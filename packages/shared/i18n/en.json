@@ -340,7 +340,9 @@
       "max_duration": "Max {duration}s",
       "permission_denied": "Microphone permission denied. Please allow microphone access to record voice messages.",
       "retry_permission": "Try Again",
-      "unsupported_browser": "Voice recording is not supported in this browser."
+      "unsupported_browser": "Voice recording is not supported in this browser.",
+      "voice_message_notification": "sent you a voice message",
+      "voice_message_preview": "Voice message"
     }
   },
   "calls": {
