@@ -313,7 +313,9 @@
       "max_duration": "Max. {duration}mp",
       "permission_denied": "A mikrofon hozzáférés megtagadva. Engedélyezd a mikrofon használatát.",
       "retry_permission": "Próbáld újra",
-      "unsupported_browser": "A hangrögzítés nem támogatott ebben a böngészőben."
+      "unsupported_browser": "A hangrögzítés nem támogatott ebben a böngészőben.",
+      "voice_message_notification": "hangüzenetet küldött",
+      "voice_message_preview": "Hangüzenet"
     }
   },
   "calls": {

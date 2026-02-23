@@ -2,6 +2,7 @@
 import { type MessageDTO } from '@zod/messaging/messaging.dto'
 import ProfileImage from '@/features/images/components/ProfileImage.vue'
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 defineEmits<{
   (e: 'closeToast'): void
@@ -12,8 +13,14 @@ const props = defineProps<{
   toastId: number | string
 }>()
 
+const { t } = useI18n()
+
 // Clean message for toast display: strip HTML tags, convert <br> to spaces, truncate
 const cleanMessageContent = computed(() => {
+  if (props.message.messageType === 'audio/voice') {
+    return t('messaging.voice.voice_message_notification')
+  }
+
   let cleaned = props.message.content
     .replace(/<br\s*\/?>/gi, ' ') // Replace <br> with spaces
     .replace(/<[^>]+>/g, '') // Strip other HTML tags
