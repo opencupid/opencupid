@@ -72,9 +72,9 @@ const handleScroll = () => {
 function htmlToText(html: string): string {
   return html
     .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&')
     .replace(/&quot;/g, '"')
     .replace(/&#x27;/g, "'")
     .replace(/&#x2F;/g, '/')
