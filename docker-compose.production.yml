@@ -57,7 +57,7 @@ services:
       - listmonk-uploads:/listmonk/uploads:rw
 
   backend:
-    image: ghcr.io/opencupid/opencupid-backend
+    image: ${DOCKER_IMAGE_PREFIX:-ghcr.io/opencupid/opencupid}-backend:${DOCKER_IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: apps/backend/Dockerfile
@@ -81,14 +81,12 @@ services:
       - backend
 
   frontend:
-    image: ghcr.io/opencupid/opencupid-frontend
+    image: ${DOCKER_IMAGE_PREFIX:-ghcr.io/opencupid/opencupid}-frontend:${DOCKER_IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: apps/frontend/Dockerfile
       args:
         SITE_NAME: ${SITE_NAME:-OpenCupid}
-        VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
-        SENTRY_DSN: ${SENTRY_DSN:-}
         OG_TITLE: ${OG_TITLE:-OpenCupid}
         OG_DESCRIPTION: ${OG_DESCRIPTION:-OpenCupid is an open-source dating platform.}
         OG_IMAGE: ${OG_IMAGE:-}
@@ -100,8 +98,19 @@ services:
     depends_on:
       - backend
 
+  admin:
+    image: ${DOCKER_IMAGE_PREFIX:-ghcr.io/opencupid/opencupid}-admin:${DOCKER_IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: apps/admin/Dockerfile
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - backend
+
   ingress:
-    image: ghcr.io/opencupid/opencupid-ingress
+    image: ${DOCKER_IMAGE_PREFIX:-ghcr.io/opencupid/opencupid}-ingress:${DOCKER_IMAGE_TAG:-latest}
     build:
       context: apps/ingress
     restart: always
@@ -109,6 +118,7 @@ services:
       - admin
       - frontend
       - backend
+      - admin
       - jitsi-web
     env_file:
       - .env

@@ -1,6 +1,8 @@
-name: Manual Docker Build
+name: Docker Build
 
 on:
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
       tag:
@@ -30,7 +32,7 @@ jobs:
         id: frontend-args
         run: |
           set -a && source .env && set +a
-          for var in VAPID_PUBLIC_KEY SENTRY_DSN SITE_NAME OG_TITLE OG_DESCRIPTION OG_IMAGE OG_URL OG_TYPE; do
+          for var in SITE_NAME OG_TITLE OG_DESCRIPTION OG_IMAGE OG_URL OG_TYPE; do
             echo "${var}=${!var}" >> "$GITHUB_OUTPUT"
           done
 
@@ -44,12 +46,50 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Get version, commit SHA, and tag suffix
-        id: git-info
+      - name: Compute image tags
+        id: tags
         run: |
-          echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-          echo "tag-suffix=${{ github.event.inputs.tag || 'manual' }}" >> $GITHUB_OUTPUT
-          echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+          SHA=$(git rev-parse --short HEAD)
+          VERSION=$(node -p "require('./package.json').version")
+          PREFIX="ghcr.io/${{ github.repository }}"
+
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            TAG="${{ github.event.release.tag_name }}"
+            # For releases: version tag + sha + latest
+            for SVC in backend frontend admin ingress; do
+              {
+                echo "${PREFIX}-${SVC}:${TAG}"
+                echo "${PREFIX}-${SVC}:${SHA}"
+                echo "${PREFIX}-${SVC}:latest"
+              } >> "tags-${SVC}.txt"
+            done
+          else
+            TAG="${{ github.event.inputs.tag || 'manual' }}"
+            # For manual: tag suffix + version + sha
+            for SVC in backend frontend admin ingress; do
+              {
+                echo "${PREFIX}-${SVC}:${TAG}"
+                echo "${PREFIX}-${SVC}:${VERSION}"
+                echo "${PREFIX}-${SVC}:${SHA}"
+              } >> "tags-${SVC}.txt"
+            done
+          fi
+
+          # Set multiline outputs
+          {
+            echo "backend<<EOF"
+            cat tags-backend.txt
+            echo "EOF"
+            echo "frontend<<EOF"
+            cat tags-frontend.txt
+            echo "EOF"
+            echo "admin<<EOF"
+            cat tags-admin.txt
+            echo "EOF"
+            echo "ingress<<EOF"
+            cat tags-ingress.txt
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       # Build and push backend image
       - name: Build and push backend image
@@ -60,10 +100,7 @@ jobs:
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          tags: |
-            ghcr.io/${{ github.repository }}-backend:${{ steps.git-info.outputs.tag-suffix }}
-            ghcr.io/${{ github.repository }}-backend:${{ steps.git-info.outputs.version }}
-            ghcr.io/${{ github.repository }}-backend:${{ steps.git-info.outputs.sha }}
+          tags: ${{ steps.tags.outputs.backend }}
 
       # Build and push frontend image
       - name: Build and push frontend image
@@ -75,18 +112,13 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            VAPID_PUBLIC_KEY=${{ steps.frontend-args.outputs.VAPID_PUBLIC_KEY }}
-            SENTRY_DSN=${{ steps.frontend-args.outputs.SENTRY_DSN }}
             SITE_NAME=${{ steps.frontend-args.outputs.SITE_NAME }}
             OG_TITLE=${{ steps.frontend-args.outputs.OG_TITLE }}
             OG_DESCRIPTION=${{ steps.frontend-args.outputs.OG_DESCRIPTION }}
             OG_IMAGE=${{ steps.frontend-args.outputs.OG_IMAGE }}
             OG_URL=${{ steps.frontend-args.outputs.OG_URL }}
             OG_TYPE=${{ steps.frontend-args.outputs.OG_TYPE }}
-          tags: |
-            ghcr.io/${{ github.repository }}-frontend:${{ steps.git-info.outputs.tag-suffix }}
-            ghcr.io/${{ github.repository }}-frontend:${{ steps.git-info.outputs.version }}
-            ghcr.io/${{ github.repository }}-frontend:${{ steps.git-info.outputs.sha }}
+          tags: ${{ steps.tags.outputs.frontend }}
 
       # Build and push admin image
       - name: Build and push admin image
@@ -97,10 +129,7 @@ jobs:
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          tags: |
-            ghcr.io/${{ github.repository }}-admin:${{ steps.git-info.outputs.tag-suffix }}
-            ghcr.io/${{ github.repository }}-admin:${{ steps.git-info.outputs.version }}
-            ghcr.io/${{ github.repository }}-admin:${{ steps.git-info.outputs.sha }}
+          tags: ${{ steps.tags.outputs.admin }}
 
       # Build and push ingress image
       - name: Build and push ingress image
@@ -111,7 +140,4 @@ jobs:
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          tags: |
-            ghcr.io/${{ github.repository }}-ingress:${{ steps.git-info.outputs.tag-suffix }}
-            ghcr.io/${{ github.repository }}-ingress:${{ steps.git-info.outputs.version }}
-            ghcr.io/${{ github.repository }}-ingress:${{ steps.git-info.outputs.sha }}
+          tags: ${{ steps.tags.outputs.ingress }}
