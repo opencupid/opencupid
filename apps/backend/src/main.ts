@@ -31,7 +31,7 @@ async function main() {
 
   // Register CORS plugin
   app.register(cors, {
-    origin: appConfig.NODE_ENV === 'production' ? appConfig.FRONTEND_URL : '*',
+    origin: appConfig.NODE_ENV === 'production' ? appConfig.FRONTEND_URL : true,
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
     methods: ['GET', 'PUT', 'POST', 'DELETE', 'PATCH'],

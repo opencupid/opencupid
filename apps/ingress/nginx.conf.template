@@ -115,13 +115,6 @@ http {
       proxy_set_header X-Real-IP $remote_addr;
       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
       proxy_set_header X-Admin-Authenticated "";
-
-      add_header 'Access-Control-Allow-Origin' '*' always;
-      add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS' always;
-      add_header 'Access-Control-Allow-Headers' 'Origin, Content-Type, Accept, Authorization' always;
-      if ($request_method = OPTIONS) {
-        return 204;
-      }
     }
 
     location /ws/ {
@@ -136,7 +129,6 @@ http {
       proxy_read_timeout 3600;
       proxy_send_timeout 3600;
 
-      add_header 'Access-Control-Allow-Origin' '*' always;
     }
 
     location /user-content/ {
