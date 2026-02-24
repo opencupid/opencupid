@@ -116,9 +116,4 @@ watch(inputState, (state) => {
   top: 0.75em;
   right: 1em;
 }
-
-input.form-control.is-valid,
-input.form-control.is-invalid {
-  background-image: none !important;
-}
 </style>

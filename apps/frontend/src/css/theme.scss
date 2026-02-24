@@ -1,6 +1,8 @@
 @import '../../node_modules/bootstrap/scss/functions';
 @import '../../node_modules/bootstrap/scss/variables';
 
+$enable-validation-icons: false;
+
 // ─── Bootswatch Sandstone warm gray scale ───────────────────────────
 $gray-200: #f8f5f0; // warm off-white
 $gray-300: #dfd7ca; // warm sand border
