@@ -110,7 +110,7 @@ services:
       - ${CERTBOT_ETCDIR}:/etc/letsencrypt
       - certbot-webroot:/var/www/html
       - ${ADMIN_CA_CERT_FILE}:/etc/nginx/client-ca.crt:ro
-      - ./apps/admin:/var/www/admin:ro
+      - ./apps/admin/dist:/var/www/admin:ro
 
   certbot:
     image: certbot/certbot
@@ -145,9 +145,6 @@ services:
     image: certbot/certbot
     restart: 'no' # don't auto start this
 
-    # enable this before running certbot-init, and disable after so that ingress can use port 80
-    #    ports:
-    #      - "80:80"
     volumes:
       - ${CERTBOT_ETCDIR}:/etc/letsencrypt
       - certbot-webroot:/var/www/html
