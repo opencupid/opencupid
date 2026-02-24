@@ -2,11 +2,6 @@
 import { computed } from 'vue'
 
 const version = computed(() => __APP_VERSION__.app)
-const listmonkUrl = computed(() => {
-  const host = window.location.hostname
-  const listsDomain = host.replace(/^admin\./, 'lists.')
-  return `https://${listsDomain}/admin/`
-})
 </script>
 
 <template>
@@ -36,15 +31,6 @@ const listmonkUrl = computed(() => {
             class="nav-link"
             to="/profiles"
             >Profiles</router-link
-          >
-        </li>
-        <li class="nav-item mt-3">
-          <a
-            class="nav-link"
-            :href="listmonkUrl"
-            target="_blank"
-            rel="noopener"
-            >Listmonk</a
           >
         </li>
       </ul>
