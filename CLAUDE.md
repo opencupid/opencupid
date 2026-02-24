@@ -233,9 +233,9 @@ Run these steps in order:
 4. **Deploy on host** (via SSH — always deploy a release tag, never main):
    ```bash
    cd ~/opencupid && git fetch --tags && git checkout vX.Y.Z
-   docker compose -f docker-compose.production.yml pull backend frontend ingress
+   docker compose -f docker-compose.production.yml pull backend frontend admin ingress
    docker compose -f docker-compose.production.yml up -d --no-deps backend
-   docker compose -f docker-compose.production.yml up -d --no-deps frontend ingress
+   docker compose -f docker-compose.production.yml up -d --no-deps frontend admin ingress
    ```
    > **Deploy order matters:** The backend (Node + TensorFlow model) takes several seconds to start, while the frontend (nginx) starts instantly. By restarting the backend first and then the frontend, users continue hitting the old frontend until the new backend is ready. If done the other way around, the new frontend's version-check call to `/app/version` can hit the still-running old backend, causing a transient "update available" banner.
 5. **Run migrations** (if schema changes were included):

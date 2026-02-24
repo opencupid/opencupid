@@ -56,7 +56,7 @@ jobs:
           if [[ "${{ github.event_name }}" == "release" ]]; then
             TAG="${{ github.event.release.tag_name }}"
             # For releases: version tag + sha + latest
-            for SVC in backend frontend ingress; do
+            for SVC in backend frontend admin ingress; do
               {
                 echo "${PREFIX}-${SVC}:${TAG}"
                 echo "${PREFIX}-${SVC}:${SHA}"
@@ -66,7 +66,7 @@ jobs:
           else
             TAG="${{ github.event.inputs.tag || 'manual' }}"
             # For manual: tag suffix + version + sha
-            for SVC in backend frontend ingress; do
+            for SVC in backend frontend admin ingress; do
               {
                 echo "${PREFIX}-${SVC}:${TAG}"
                 echo "${PREFIX}-${SVC}:${VERSION}"
@@ -82,6 +82,9 @@ jobs:
             echo "EOF"
             echo "frontend<<EOF"
             cat tags-frontend.txt
+            echo "EOF"
+            echo "admin<<EOF"
+            cat tags-admin.txt
             echo "EOF"
             echo "ingress<<EOF"
             cat tags-ingress.txt
@@ -126,10 +129,7 @@ jobs:
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          tags: |
-            ghcr.io/${{ github.repository }}-admin:${{ steps.git-info.outputs.tag-suffix }}
-            ghcr.io/${{ github.repository }}-admin:${{ steps.git-info.outputs.version }}
-            ghcr.io/${{ github.repository }}-admin:${{ steps.git-info.outputs.sha }}
+          tags: ${{ steps.tags.outputs.admin }}
 
       # Build and push ingress image
       - name: Build and push ingress image

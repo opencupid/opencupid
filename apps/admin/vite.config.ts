@@ -1,9 +1,29 @@
 import path from 'path'
 import fs from 'fs'
-import { defineConfig, loadEnv, type ConfigEnv, type UserConfig } from 'vite'
+import { defineConfig, loadEnv, type ConfigEnv, type Plugin, type UserConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { findUpSync } from 'find-up'
 import { getPackageVersion } from '../../packages/shared/version'
+
+/**
+ * In development, serve /config.js with the runtime config so the <script>
+ * tag in index.html works the same as in the Docker container.
+ */
+function runtimeConfigPlugin(env: Record<string, string | undefined>): Plugin {
+  const configJs = `window.__APP_CONFIG__ = ${JSON.stringify({
+    API_BASE_URL: env.API_BASE_URL ?? '/api',
+  })};`
+
+  return {
+    name: 'admin-runtime-config',
+    configureServer(server) {
+      server.middlewares.use('/config.js', (_req, res) => {
+        res.setHeader('Content-Type', 'application/javascript')
+        res.end(configJs)
+      })
+    },
+  }
+}
 
 export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
   const envFile = findUpSync('.env') ?? findUpSync('.env.example')
@@ -15,12 +35,9 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
 
   const config: UserConfig = {
     define: {
-      __APP_CONFIG__: JSON.stringify({
-        API_BASE_URL: env.API_BASE_URL,
-      }),
       __APP_VERSION__: JSON.stringify(appVersion),
     },
-    plugins: [vue()],
+    plugins: [vue(), runtimeConfigPlugin(env)],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),

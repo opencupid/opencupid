@@ -98,6 +98,17 @@ services:
     depends_on:
       - backend
 
+  admin:
+    image: ${DOCKER_IMAGE_PREFIX:-ghcr.io/opencupid/opencupid}-admin:${DOCKER_IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: apps/admin/Dockerfile
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - backend
+
   ingress:
     image: ${DOCKER_IMAGE_PREFIX:-ghcr.io/opencupid/opencupid}-ingress:${DOCKER_IMAGE_TAG:-latest}
     build:
@@ -107,6 +118,7 @@ services:
       - admin
       - frontend
       - backend
+      - admin
       - jitsi-web
     env_file:
       - .env
