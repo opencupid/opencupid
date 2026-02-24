@@ -57,7 +57,7 @@ services:
       - listmonk-uploads:/listmonk/uploads:rw
 
   backend:
-    image: ghcr.io/opencupid/opencupid-backend
+    image: ${DOCKER_IMAGE_PREFIX:-ghcr.io/opencupid/opencupid}-backend:${DOCKER_IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: apps/backend/Dockerfile
@@ -81,7 +81,7 @@ services:
       - backend
 
   frontend:
-    image: ghcr.io/opencupid/opencupid-frontend
+    image: ${DOCKER_IMAGE_PREFIX:-ghcr.io/opencupid/opencupid}-frontend:${DOCKER_IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: apps/frontend/Dockerfile
@@ -99,7 +99,7 @@ services:
       - backend
 
   ingress:
-    image: ghcr.io/opencupid/opencupid-ingress
+    image: ${DOCKER_IMAGE_PREFIX:-ghcr.io/opencupid/opencupid}-ingress:${DOCKER_IMAGE_TAG:-latest}
     build:
       context: apps/ingress
     restart: always

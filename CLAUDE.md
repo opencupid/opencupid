@@ -218,15 +218,9 @@ Run these steps in order:
    - Keep summaries brief
    - End with a full changelog link: `**Full Changelog**: https://github.com/opencupid/opencupid/compare/<previous-tag>...vX.Y.Z`
 
-3. **Trigger the Docker build** on main:
-
+3. **Watch the Docker build** — creating the release auto-triggers the Docker workflow. Confirm all images push successfully:
    ```bash
-   gh workflow run docker.yml --ref main
-   ```
-
-4. **Watch the build** and confirm all images push successfully:
-   ```bash
-   gh run watch <run-id> --exit-status
+   gh run watch --exit-status
    ```
 
 ## Production deployment
@@ -239,7 +233,7 @@ Run these steps in order:
 4. **Deploy on host** (via SSH — always deploy a release tag, never main):
    ```bash
    cd ~/opencupid && git fetch --tags && git checkout vX.Y.Z
-   docker compose -f docker-compose.production.yml build
+   docker compose -f docker-compose.production.yml pull backend frontend ingress
    docker compose -f docker-compose.production.yml up -d --no-deps backend
    docker compose -f docker-compose.production.yml up -d --no-deps frontend ingress
    ```
