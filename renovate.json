@@ -1,6 +1,23 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
+    "config:recommended",
+    "group:monorepos",
+    "group:recommended",
+    "schedule:earlyMondays"
+  ],
+  "platformAutomerge": true,
+  "packageRules": [
+    {
+      "description": "Group all non-major updates into one PR",
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "groupName": "all non-major",
+      "automerge": true
+    },
+    {
+      "description": "Pin Prisma to v6",
+      "matchPackagePatterns": ["^prisma", "^@prisma/"],
+      "allowedVersions": "<7.0.0"
+    }
   ]
 }
