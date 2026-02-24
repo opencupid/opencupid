@@ -64,7 +64,7 @@ export function useVoiceRecorder(maxDuration: number = 120) {
       // Create MediaRecorder that records WAV (PCM).
       // WAV is a raw format that cannot have container metadata issues,
       // unlike webm which breaks on QtWebEngine browsers.
-      // The backend will transcode to webm/opus after upload.
+      // The backend will transcode to MP3 after upload.
       recorder = new MediaRecorder(stream, { mimeType: 'audio/wav' })
 
       // Microphone access granted - now enter recording state

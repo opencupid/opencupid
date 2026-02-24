@@ -292,7 +292,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
       // Save the buffered file to disk
       await fsPromises.writeFile(filePath, fileBuffer)
 
-      // Transcode WAV to webm/opus for smaller size and proper container metadata
+      // Transcode WAV to MP3 for smaller size and universal browser compatibility
       let finalPath = filePath
       let finalFileName = fileName
       let finalMimeType = meta.mimetype
