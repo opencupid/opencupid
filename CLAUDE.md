@@ -38,6 +38,7 @@ Monorepo managed with pnpm workspaces and Turborepo.
 apps/
   frontend/     Vue 3 + Bootstrap 5 + SCSS SPA
   backend/      Fastify + Prisma + WebSocket API
+  admin/        Vue 3 + Bootstrap 5 + SCSS SPA admin GUI
   ingress/      Reverse proxy / ingress config
 packages/
   shared/       Shared types, validation, i18n, utilities and reused UI components
@@ -119,7 +120,7 @@ pnpm build
 - All completed work must pass full test suite
 - For all new frontend components, API routes and services test files must be added in the `__tests__` subdirectory closest to the new file or existing file being modified
 - Format **only files you added or modified** using `pnpm exec prettier --write <file1> <file2> ...`. Never run `pnpm format` or `prettier --write .` on the whole codebase — this creates noise in PRs with unrelated formatting changes.
-- From the package root you can just call `pnpm test`. The commit should pass all tests before you merge.
+- From the package root run `pnpm test`. The commit should pass all tests before you merge.
 - To focus on one step, run Vitest directly: `pnpm --filter frontend exec vitest run -t "<test name>"`.
 - Fix any test or type errors until the whole suite is green.
 - After moving files or changing imports, run `pnpm lint` to be sure ESLint and TypeScript rules still pass.
@@ -133,7 +134,9 @@ Generate Prisma client after schema changes:
 pnpm --filter backend prisma:generate
 ```
 
-Interactive psql shell (via Docker):
+During development, use MCP to access the database.
+
+In production, run interactive psql shell (via Docker):
 
 ```
 pnpm --filter backend db:psql
@@ -165,7 +168,7 @@ git push -u origin your-branch-name
 gh pr create
 ```
 
-> **HARD RULE — NO EXCEPTIONS:** After every `git push`, you MUST watch the CI workflow run and act on failures. Do not move on to other work or report success until CI is green. Use the following procedure:
+> **HARD RULE — NO EXCEPTIONS:** After every `git push`, you MUST watch the CI workflow run in the background, and act on failures until CI is green. Use the following procedure:
 >
 > ```bash
 > gh run watch --exit-status    # blocks until the run finishes
