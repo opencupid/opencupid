@@ -29,6 +29,7 @@ import { MockReply } from '../../test-utils/fastify'
 
 class AdminMockFastify {
   public routes: Record<string, any> = {}
+  public hooks: Record<string, any[]> = {}
   public log = { error: vi.fn(), warn: vi.fn(), info: vi.fn() }
 
   get(path: string, opts: any, handler?: any) {
@@ -39,6 +40,10 @@ class AdminMockFastify {
   }
   patch(path: string, opts: any, handler?: any) {
     this.routes[`PATCH ${path}`] = typeof opts === 'function' ? opts : handler
+  }
+  addHook(name: string, fn: any) {
+    if (!this.hooks[name]) this.hooks[name] = []
+    this.hooks[name].push(fn)
   }
   register() {}
 }
@@ -318,5 +323,30 @@ describe('GET /profiles/:id', () => {
     await handler({ params: { id: 'nonexistent' } }, reply)
 
     expect(reply.statusCode).toBe(404)
+  })
+})
+
+describe('X-Admin-Authenticated header check', () => {
+  it('returns 403 when header is missing', async () => {
+    const hook = fastify.hooks['onRequest']?.[0]
+    expect(hook).toBeDefined()
+
+    const req = { headers: {} }
+    await hook(req, reply)
+
+    expect(reply.statusCode).toBe(403)
+    expect(reply.payload.success).toBe(false)
+    expect(reply.payload.message).toBe('Forbidden')
+  })
+
+  it('allows requests with X-Admin-Authenticated header', async () => {
+    const hook = fastify.hooks['onRequest']?.[0]
+    const req = { headers: { 'x-admin-authenticated': 'true' } }
+    const freshReply = new MockReply()
+
+    await hook(req, freshReply)
+
+    // Hook does not override the default status code when allowing through
+    expect(freshReply.statusCode).toBe(200)
   })
 })

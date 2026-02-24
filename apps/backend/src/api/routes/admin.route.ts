@@ -21,6 +21,13 @@ function fillZeroDays(
 }
 
 const adminRoutes: FastifyPluginAsync = async (fastify) => {
+  // Defense in depth: require trusted header set by nginx mTLS admin proxy
+  fastify.addHook('onRequest', async (req, reply) => {
+    if (req.headers['x-admin-authenticated'] !== 'true') {
+      return reply.code(403).send({ success: false, message: 'Forbidden' })
+    }
+  })
+
   // GET /admin/stats/daily — Daily signups & logins (last 7 days)
   fastify.get('/stats/daily', async (_req, reply) => {
     try {
