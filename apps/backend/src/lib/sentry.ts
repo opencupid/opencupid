@@ -5,6 +5,7 @@ import { appConfig } from './appconfig'
 if (appConfig.NODE_ENV !== 'development') {
   Sentry.init({
     dsn: appConfig.SENTRY_DSN,
+    release: `api@${__APP_VERSION__}`,
     environment: appConfig.NODE_ENV,
     tracesSampleRate: 1.0,
     sendDefaultPii: true,

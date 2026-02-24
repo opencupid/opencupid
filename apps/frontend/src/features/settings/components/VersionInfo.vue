@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const version = __APP_VERSION__?.app || 'unknown'
+const version = __APP_VERSION__
 </script>
 
 <template>
