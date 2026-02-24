@@ -63,7 +63,7 @@
     "vue-toastification": "2.0.0-rc.5"
   },
   "devDependencies": {
-    "@eslint/js": "9.34.0",
+    "@eslint/js": "10.0.1",
     "@iconify/json": "2.2.442",
     "@playwright/test": "1.58.2",
     "@popperjs/core": "2.11.8",
