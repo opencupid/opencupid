@@ -70,6 +70,12 @@ services:
     volumes:
       - '${MEDIA_UPLOAD_DIR}:${MEDIA_UPLOAD_DIR}'
       - '${PWD}/secrets:/secrets'
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/healthz', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
 
   frontend:
     image: ghcr.io/opencupid/opencupid-frontend
@@ -90,6 +96,12 @@ services:
       - .env
     depends_on:
       - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
 
   ingress:
     image: ghcr.io/opencupid/opencupid-ingress

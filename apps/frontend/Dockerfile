@@ -51,8 +51,13 @@ RUN pnpm run build-only
 
 FROM nginx:bookworm
 LABEL org.opencontainers.image.source=https://github.com/opencupid/opencupid
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 COPY apps/frontend/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/apps/frontend/dist /var/www
 
 EXPOSE 3001
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:3001/ || exit 1
+
 CMD ["nginx", "-g", "daemon off;"]

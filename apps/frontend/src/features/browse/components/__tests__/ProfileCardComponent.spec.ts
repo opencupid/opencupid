@@ -26,7 +26,6 @@ import ProfileCardComponent from '../ProfileCardComponent.vue'
 
 // Access the module-level loadedUrls set so we can seed / clear it between tests
 const getLoadedUrls = (): Set<string> => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (ProfileCardComponent as any).__test_loadedUrls
 }
 

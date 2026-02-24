@@ -49,7 +49,7 @@ async function main() {
 
   app.register(import('./plugins/tiles-proxy'))
 
-  // app.get('/healthz', async () => ({ ok: true }))
+  app.get('/healthz', async () => ({ ok: true }))
 
   const ok = checkUserContentRoot()
   if (!ok) {
