@@ -151,9 +151,4 @@ function handleCaptchaUpdatePayload(payload: string) {
     height: 1.5rem;
   }
 }
-
-input.form-control.is-valid,
-input.form-control.is-invalid {
-  background-image: none !important;
-}
 </style>
