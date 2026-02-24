@@ -3,6 +3,6 @@
   "version": "0.5.0",
   "main": "index.ts",
   "devDependencies": {
-    "@prisma/client": "6.15.0"
+    "@prisma/client": "7.4.1"
   }
 }
