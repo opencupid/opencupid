@@ -41,7 +41,7 @@
     "extendable-media-recorder": "^9.2.36",
     "extendable-media-recorder-wav-encoder": "^7.0.136",
     "rollup": "4.59.0",
-    "zod": "3.24.4"
+    "zod": "4.3.6"
   },
   "pnpm": {
     "overrides": {

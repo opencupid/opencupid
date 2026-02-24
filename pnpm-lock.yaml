@@ -24,8 +24,8 @@ importers:
         specifier: 4.59.0
         version: 4.59.0
       zod:
-        specifier: 3.24.4
-        version: 3.24.4
+        specifier: 4.3.6
+        version: 4.3.6
     devDependencies:
       '@changesets/cli':
         specifier: 2.29.8
@@ -38,7 +38,7 @@ importers:
         version: 0.8.19(@vue/compiler-core@3.5.28)(vue@3.5.28(typescript@5.9.3))
       '@modelcontextprotocol/server-filesystem':
         specifier: 2026.1.14
-        version: 2026.1.14(zod@3.24.4)
+        version: 2026.1.14(zod@4.3.6)
       '@types/geojson':
         specifier: 7946.0.16
         version: 7946.0.16
@@ -184,8 +184,8 @@ importers:
         specifier: 8.19.0
         version: 8.19.0
       zod:
-        specifier: 3.24.4
-        version: 3.24.4
+        specifier: 4.3.6
+        version: 4.3.6
     devDependencies:
       '@eslint/js':
         specifier: 9.28.0
@@ -7773,6 +7773,9 @@ packages:
   zod@3.24.4:
     resolution: {integrity: sha512-OdqJE9UDRPwWsrHjLN2F8bPxvwJBK22EHLWtanu0LSYr5YqzsaaW3RMgmjwr8Rypg5k+meEJdSPXJZXE/yqOMg==}
 
+  zod@4.3.6:
+    resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
+
 snapshots:
 
   '@acemir/cssom@0.9.31': {}
@@ -8998,7 +9001,7 @@ snapshots:
     dependencies:
       maxmind: 5.0.5
 
-  '@modelcontextprotocol/sdk@1.26.0(zod@3.24.4)':
+  '@modelcontextprotocol/sdk@1.26.0(zod@4.3.6)':
     dependencies:
       '@hono/node-server': 1.19.9(hono@4.11.10)
       ajv: 8.18.0
@@ -9015,18 +9018,18 @@ snapshots:
       json-schema-typed: 8.0.2
       pkce-challenge: 5.0.1
       raw-body: 3.0.2
-      zod: 3.24.4
-      zod-to-json-schema: 3.25.1(zod@3.24.4)
+      zod: 4.3.6
+      zod-to-json-schema: 3.25.1(zod@4.3.6)
     transitivePeerDependencies:
       - supports-color
 
-  '@modelcontextprotocol/server-filesystem@2026.1.14(zod@3.24.4)':
+  '@modelcontextprotocol/server-filesystem@2026.1.14(zod@4.3.6)':
     dependencies:
-      '@modelcontextprotocol/sdk': 1.26.0(zod@3.24.4)
+      '@modelcontextprotocol/sdk': 1.26.0(zod@4.3.6)
       diff: 5.2.2
       glob: 10.5.0
       minimatch: 10.2.1
-      zod-to-json-schema: 3.25.1(zod@3.24.4)
+      zod-to-json-schema: 3.25.1(zod@4.3.6)
     transitivePeerDependencies:
       - '@cfworker/json-schema'
       - supports-color
@@ -15585,8 +15588,10 @@ snapshots:
       prisma: 6.15.0(magicast@0.3.5)(typescript@5.9.3)
       zod: 3.24.4
 
-  zod-to-json-schema@3.25.1(zod@3.24.4):
+  zod-to-json-schema@3.25.1(zod@4.3.6):
     dependencies:
-      zod: 3.24.4
+      zod: 4.3.6
 
   zod@3.24.4: {}
+
+  zod@4.3.6: {}
