@@ -71,6 +71,15 @@ services:
       - '${MEDIA_UPLOAD_DIR}:${MEDIA_UPLOAD_DIR}'
       - '${PWD}/secrets:/secrets'
 
+  admin:
+    image: ghcr.io/opencupid/opencupid-admin
+    build:
+      context: .
+      dockerfile: apps/admin/Dockerfile
+    restart: always
+    depends_on:
+      - backend
+
   frontend:
     image: ghcr.io/opencupid/opencupid-frontend
     build:
@@ -97,6 +106,7 @@ services:
       context: apps/ingress
     restart: always
     depends_on:
+      - admin
       - frontend
       - backend
       - jitsi-web
@@ -110,7 +120,6 @@ services:
       - ${CERTBOT_ETCDIR}:/etc/letsencrypt
       - certbot-webroot:/var/www/html
       - ${ADMIN_CA_CERT_FILE}:/etc/nginx/client-ca.crt:ro
-      - ./apps/admin/dist:/var/www/admin:ro
 
   certbot:
     image: certbot/certbot
