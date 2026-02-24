@@ -88,6 +88,20 @@ jobs:
             ghcr.io/${{ github.repository }}-frontend:${{ steps.git-info.outputs.version }}
             ghcr.io/${{ github.repository }}-frontend:${{ steps.git-info.outputs.sha }}
 
+      # Build and push admin image
+      - name: Build and push admin image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/admin/Dockerfile
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: |
+            ghcr.io/${{ github.repository }}-admin:${{ steps.git-info.outputs.tag-suffix }}
+            ghcr.io/${{ github.repository }}-admin:${{ steps.git-info.outputs.version }}
+            ghcr.io/${{ github.repository }}-admin:${{ steps.git-info.outputs.sha }}
+
       # Build and push ingress image
       - name: Build and push ingress image
         uses: docker/build-push-action@v6

@@ -35,6 +35,10 @@ http {
     server jitsi-web:80;
   }
 
+  upstream admin {
+    server admin:3002;
+  }
+
   upstream listmonk {
     server listmonk:9000;
   }
@@ -239,8 +243,11 @@ http {
     }
 
     location / {
-      root /var/www/admin;
-      try_files $uri $uri/ /index.html;
+      proxy_pass http://admin;
+      proxy_http_version 1.1;
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     }
   }
 }
