@@ -26,16 +26,16 @@ import {
 // Pagination query schema for infinite scrolling
 const PaginationQuerySchema = z.object({
   skip: z.preprocess(
-    val => (typeof val === 'string' ? parseInt(val, 10) : val),
+    (val) => (typeof val === 'string' ? parseInt(val, 10) : val),
     z.number().int().min(0).default(0)
   ),
   take: z.preprocess(
-    val => (typeof val === 'string' ? parseInt(val, 10) : val),
+    (val) => (typeof val === 'string' ? parseInt(val, 10) : val),
     z.number().int().min(1).max(50).default(10)
   ),
 })
 
-const findProfileRoutes: FastifyPluginAsync = async fastify => {
+const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
   // instantiate services
   const profileMatchService = ProfileMatchService.getInstance()
   const profileService = ProfileService.getInstance()
@@ -43,6 +43,40 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
   fastify.get('/social', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const { skip, take } = PaginationQuerySchema.parse(req.query)
     return getSocialProfiles(req, reply, [{ updatedAt: 'desc' }], take, skip)
+  })
+
+  fastify.get('/social/map', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    if (!req.session.profile.isSocialActive) {
+      return sendForbiddenError(reply)
+    }
+
+    const myProfileId = req.session.profileId
+    const locale = req.session.lang
+    const query = req.query as Record<string, string>
+
+    const bounds =
+      query.south && query.north && query.west && query.east
+        ? {
+            south: parseFloat(query.south),
+            north: parseFloat(query.north),
+            west: parseFloat(query.west),
+            east: parseFloat(query.east),
+          }
+        : undefined
+
+    try {
+      const profiles = await profileMatchService.findSocialProfilesWithLocation(
+        myProfileId,
+        [{ updatedAt: 'desc' }],
+        bounds
+      )
+      const mappedProfiles = profiles.map((p) => mapProfileToPublic(p, false, locale))
+      const response: GetProfilesResponse = { success: true, profiles: mappedProfiles }
+      return reply.code(200).send(response)
+    } catch (err) {
+      req.log.error(err)
+      return sendError(reply, 500, 'Failed to fetch map profiles')
+    }
   })
 
   fastify.get('/dating', { onRequest: [fastify.authenticate] }, async (req, reply) => {
@@ -67,7 +101,7 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
         take,
         skip
       )
-      const mappedProfiles = profiles.map(p =>
+      const mappedProfiles = profiles.map((p) =>
         mapProfileToPublic(p, false /* includeDatingContext */, locale)
       )
       const response: GetProfilesResponse = { success: true, profiles: mappedProfiles }
@@ -167,7 +201,7 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
         take,
         skip
       )
-      const mappedProfiles = profiles.map(p =>
+      const mappedProfiles = profiles.map((p) =>
         mapProfileToPublic(p, true /* includeDatingContext */, locale)
       )
       const response: GetProfilesResponse = { success: true, profiles: mappedProfiles }
@@ -199,7 +233,7 @@ const findProfileRoutes: FastifyPluginAsync = async fastify => {
         take,
         skip
       )
-      const mappedProfiles = profiles.map(p =>
+      const mappedProfiles = profiles.map((p) =>
         mapProfileToPublic(p, false /* includeDatingContext */, locale)
       )
       const response: GetProfilesResponse = { success: true, profiles: mappedProfiles }

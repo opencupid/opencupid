@@ -42,6 +42,7 @@ const mockFindProfileStore = {
   datingPrefs: null,
   socialFilter: null,
   findSocial: vi.fn(),
+  findSocialForMap: vi.fn(),
   findDating: vi.fn(),
   fetchSocialFilter: vi.fn(),
   fetchDatingPrefs: vi.fn(),
@@ -154,6 +155,53 @@ describe('useFindMatchViewModel', () => {
       (call) => call[0]?.name === 'BrowseProfilesScope'
     )
     expect(scopeCalls).toHaveLength(0)
+  })
+
+  it('fetchResults calls findSocial for grid viewMode', async () => {
+    routeRef.value = {
+      params: { scope: 'social' },
+      query: { viewMode: 'grid' },
+      fullPath: '/browse/social?viewMode=grid',
+    }
+    const vm = useFindMatchViewModel()
+    await vm.initialize()
+
+    expect(mockFindProfileStore.findSocial).toHaveBeenCalled()
+    expect(mockFindProfileStore.findSocialForMap).not.toHaveBeenCalled()
+  })
+
+  it('fetchResults calls findSocialForMap for map viewMode', async () => {
+    routeRef.value = {
+      params: { scope: 'social' },
+      query: { viewMode: 'map' },
+      fullPath: '/browse/social?viewMode=map',
+    }
+    const vm = useFindMatchViewModel()
+    await vm.initialize()
+
+    expect(mockFindProfileStore.findSocialForMap).toHaveBeenCalled()
+    expect(mockFindProfileStore.findSocial).not.toHaveBeenCalled()
+  })
+
+  it('re-fetches when viewMode changes from grid to map', async () => {
+    routeRef.value = {
+      params: { scope: 'social' },
+      query: { viewMode: 'grid' },
+      fullPath: '/browse/social?viewMode=grid',
+    }
+    const vm = useFindMatchViewModel()
+    await vm.initialize()
+
+    mockFindProfileStore.findSocial.mockClear()
+    mockFindProfileStore.findSocialForMap.mockClear()
+
+    // Switch to map — mutate existing reactive object to preserve proxy connection
+    routeRef.value.query = { viewMode: 'map' }
+    routeRef.value.fullPath = '/browse/social?viewMode=map'
+    await nextTick()
+
+    expect(mockFindProfileStore.findSocialForMap).toHaveBeenCalled()
+    expect(mockFindProfileStore.findSocial).not.toHaveBeenCalled()
   })
 
   it('currentScope watcher skips re-fetch when scope has not actually changed', async () => {

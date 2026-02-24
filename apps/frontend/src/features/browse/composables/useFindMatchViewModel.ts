@@ -117,7 +117,11 @@ export function useFindMatchViewModel() {
   const fetchResults = async () => {
     switch (currentScope.value) {
       case 'social': {
-        await findProfileStore.findSocial()
+        if (currentViewMode.value === 'map') {
+          await findProfileStore.findSocialForMap()
+        } else {
+          await findProfileStore.findSocial()
+        }
         break
       }
       case 'dating': {
@@ -130,14 +134,22 @@ export function useFindMatchViewModel() {
       }
     }
     lastFetchedScope = currentScope.value
+    lastFetchedViewMode = currentViewMode.value
   }
 
   let lastFetchedScope: ProfileScope | null = null
+  let lastFetchedViewMode: string | null = null
 
   watch(currentScope, (newScope) => {
     if (!newScope) return
     if (newScope === lastFetchedScope) return
     lastFetchedScope = newScope
+    fetchResults()
+  })
+
+  watch(currentViewMode, (newMode) => {
+    if (!isInitialized.value || !currentScope.value) return
+    if (newMode === lastFetchedViewMode) return
     fetchResults()
   })
 

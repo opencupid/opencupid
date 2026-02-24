@@ -118,6 +118,24 @@ export const useFindProfileStore = defineStore('findProfile', {
       }
     },
 
+    async findSocialForMap(): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
+      try {
+        this.isLoading = true
+        this.hasMoreProfiles = false
+
+        const res = await safeApiCall(() => api.get<GetProfilesResponse>('/find/social/map'))
+        const fetched = PublicProfileArraySchema.parse(res.data.profiles)
+        this.profileList = fetched
+
+        return storeSuccess()
+      } catch (error: any) {
+        this.profileList = []
+        return storeError(error, 'Failed to fetch map profiles')
+      } finally {
+        this.isLoading = false
+      }
+    },
+
     async fetchNewSocial(): Promise<StoreProfileListResponse> {
       try {
         const res = await safeApiCall(() => api.get<GetProfilesResponse>('/find/social/new'))

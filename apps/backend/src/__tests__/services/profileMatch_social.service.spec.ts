@@ -78,6 +78,95 @@ describe('ProfileMatchService.findSocialProfilesFor', () => {
   })
 })
 
+describe('ProfileMatchService.findSocialProfilesWithLocation', () => {
+  it('returns empty array if no user preferences found', async () => {
+    mockPrisma.socialMatchFilter.findUnique.mockResolvedValue(null)
+    const result = await service.findSocialProfilesWithLocation(mockProfileId)
+    expect(result).toEqual([])
+  })
+
+  it('requires lat and lon to be non-null in the where clause', async () => {
+    const mockUserPrefs = { profileId: mockProfileId }
+    mockPrisma.socialMatchFilter.findUnique.mockResolvedValue(mockUserPrefs)
+    mockPrisma.profile.findMany.mockResolvedValue(mockProfiles)
+
+    await service.findSocialProfilesWithLocation(mockProfileId)
+
+    expect(mockPrisma.profile.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          lat: { not: null },
+          lon: { not: null },
+        }),
+      })
+    )
+  })
+
+  it('applies country filter from user preferences', async () => {
+    const mockUserPrefs = { profileId: mockProfileId, country: 'HU' }
+    mockPrisma.socialMatchFilter.findUnique.mockResolvedValue(mockUserPrefs)
+    mockPrisma.profile.findMany.mockResolvedValue(mockProfiles)
+
+    await service.findSocialProfilesWithLocation(mockProfileId)
+
+    expect(mockPrisma.profile.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          country: 'HU',
+          lat: { not: null },
+          lon: { not: null },
+        }),
+      })
+    )
+  })
+
+  it('applies tag filter from user preferences', async () => {
+    const mockUserPrefs = { profileId: mockProfileId, tags: [{ id: 'tag-1' }] }
+    mockPrisma.socialMatchFilter.findUnique.mockResolvedValue(mockUserPrefs)
+    mockPrisma.profile.findMany.mockResolvedValue(mockProfiles)
+
+    await service.findSocialProfilesWithLocation(mockProfileId)
+
+    expect(mockPrisma.profile.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          tags: { some: { id: { in: ['tag-1'] } } },
+        }),
+      })
+    )
+  })
+
+  it('applies bounding box when provided', async () => {
+    const mockUserPrefs = { profileId: mockProfileId }
+    mockPrisma.socialMatchFilter.findUnique.mockResolvedValue(mockUserPrefs)
+    mockPrisma.profile.findMany.mockResolvedValue(mockProfiles)
+
+    const bounds = { south: 45.0, north: 48.0, west: 16.0, east: 23.0 }
+    await service.findSocialProfilesWithLocation(mockProfileId, undefined, bounds)
+
+    expect(mockPrisma.profile.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          lat: { not: null, gte: 45.0, lte: 48.0 },
+          lon: { not: null, gte: 16.0, lte: 23.0 },
+        }),
+      })
+    )
+  })
+
+  it('has no skip/take when no bounds provided', async () => {
+    const mockUserPrefs = { profileId: mockProfileId }
+    mockPrisma.socialMatchFilter.findUnique.mockResolvedValue(mockUserPrefs)
+    mockPrisma.profile.findMany.mockResolvedValue(mockProfiles)
+
+    await service.findSocialProfilesWithLocation(mockProfileId)
+
+    const call = mockPrisma.profile.findMany.mock.calls[0][0]
+    expect(call.take).toBe(500)
+    expect(call).not.toHaveProperty('skip')
+  })
+})
+
 describe('ProfileMatchService.createSocialMatchFilter', () => {
   it('creates filter with full location data', async () => {
     const createdFilter = { profileId: mockProfileId, country: 'US', tags: [] }

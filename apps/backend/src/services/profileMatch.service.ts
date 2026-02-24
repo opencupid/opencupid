@@ -87,7 +87,7 @@ export class ProfileMatchService {
     profileId: string,
     data: UpdateSocialMatchFilterPayload
   ): Promise<SocialMatchFilterWithTags | null> {
-    const tagIds = (data.tags ?? []).map(id => ({ id }))
+    const tagIds = (data.tags ?? []).map((id) => ({ id }))
     const update = {
       profileId,
       country: data.location?.country || null,
@@ -162,53 +162,67 @@ export class ProfileMatchService {
       */
   }
 
+  private async buildSocialWhereClause(profileId: string) {
+    const userPrefs = await this.getSocialMatchFilter(profileId)
+    if (!userPrefs) return null
+
+    const tagIds = userPrefs.tags?.map((tag) => tag.id)
+
+    return {
+      ...statusFlags,
+      isSocialActive: true,
+      id: { not: profileId },
+      ...(userPrefs.country ? { country: userPrefs.country } : {}),
+      ...(userPrefs.tags?.length ? { tags: { some: { id: { in: tagIds } } } } : {}),
+      ...blocklistWhereClause(profileId),
+    }
+  }
+
   async findSocialProfilesFor(
     profileId: string,
     orderBy: OrderBy = defaultOrderBy,
     take: number = 10,
     skip: number = 0
   ): Promise<DbProfileWithImages[]> {
-    const userPrefs = await this.getSocialMatchFilter(profileId)
+    const where = await this.buildSocialWhereClause(profileId)
+    if (!where) return []
 
-    if (!userPrefs) {
-      return [] // no preferences set, return empty array
-    }
-
-    const tagIds = userPrefs.tags?.map(tag => tag.id)
-
-    const filters = {
-      ...(userPrefs.country ? { country: userPrefs.country } : {}),
-      ...(userPrefs.tags?.length
-        ? {
-            tags: {
-              some: {
-                id: { in: tagIds },
-              },
-            },
-          }
-        : {}),
-    }
-
-    const profiles = await prisma.profile.findMany({
-      where: {
-        ...statusFlags,
-        isSocialActive: true,
-        id: {
-          not: profileId,
-        },
-        ...filters,
-        ...blocklistWhereClause(profileId),
-      },
+    return await prisma.profile.findMany({
+      where,
       include: {
         ...tagsInclude(),
         ...profileImageInclude(),
       },
-      take: take,
-      skip: skip,
-      orderBy: orderBy,
+      take,
+      skip,
+      orderBy,
     })
+  }
 
-    return profiles
+  async findSocialProfilesWithLocation(
+    profileId: string,
+    orderBy: OrderBy = defaultOrderBy,
+    bounds?: { south: number; north: number; west: number; east: number }
+  ): Promise<DbProfileWithImages[]> {
+    const where = await this.buildSocialWhereClause(profileId)
+    if (!where) return []
+
+    const locationFilter = bounds
+      ? {
+          lat: { not: null, gte: bounds.south, lte: bounds.north },
+          lon: { not: null, gte: bounds.west, lte: bounds.east },
+        }
+      : { lat: { not: null }, lon: { not: null } }
+
+    return await prisma.profile.findMany({
+      where: { ...where, ...locationFilter },
+      include: {
+        ...tagsInclude(),
+        ...profileImageInclude(),
+      },
+      take: 500,
+      orderBy,
+    })
   }
 
   async findLocalProfiles(
