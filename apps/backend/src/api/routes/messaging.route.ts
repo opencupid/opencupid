@@ -24,6 +24,7 @@ import {
 import { InteractionService } from '../../services/interaction.service'
 import { notifierService } from '@/services/notifier.service'
 import { appConfig } from '@/lib/appconfig'
+import i18next from 'i18next'
 import { MEDIA_SUBDIR } from '@/lib/media'
 import path from 'path'
 import { promises as fsPromises } from 'fs'
@@ -359,9 +360,14 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
               fastify.log.error(err, 'Web push failed')
             })
           }
+          const recipientProfile = await fastify.prisma.profile.findUnique({
+            where: { id: payload.data.profileId },
+            select: { user: { select: { language: true } } },
+          })
+          const t = i18next.getFixedT(recipientProfile?.user?.language || 'en')
           await notifierService.notifyProfile(payload.data.profileId, 'new_message', {
             sender: messageDTO.sender.publicName,
-            message: 'Sent a voice message',
+            message: t('notifications.voice_message_sent'),
             link: `${appConfig.FRONTEND_URL}/inbox`,
           })
         }

@@ -1,4 +1,7 @@
 {
+  "notifications": {
+    "voice_message_sent": "Hangüzenetet küldött"
+  },
   "emails": {
     "loginLink": {
       "subject": "{{siteName}} belépő link",
