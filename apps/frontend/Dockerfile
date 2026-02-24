@@ -1,14 +1,10 @@
 FROM node:22-bookworm AS builder
 WORKDIR /app
 
-# Build-time variables embedded into the frontend bundle by Vite.
-# None of these are secrets — they are safe to appear in image layers.
-ARG API_BASE_URL="/api"
-ARG WS_BASE_URL="/ws"
-ARG MEDIA_URL_BASE="/user-content"
+# Build-time variables for HTML meta injection only.
+# Runtime config (API_BASE_URL, SENTRY_DSN, etc.) is injected at container
+# startup via docker-entrypoint.sh — no rebuild needed to change them.
 ARG NODE_ENV="production"
-ARG VAPID_PUBLIC_KEY=""
-ARG SENTRY_DSN=""
 ARG SITE_NAME="OpenCupid"
 ARG OG_TITLE="OpenCupid"
 ARG OG_DESCRIPTION="OpenCupid is an open-source dating platform."
@@ -29,16 +25,11 @@ COPY apps/frontend ./apps/frontend
 COPY packages ./packages
 WORKDIR /app/apps/frontend
 
-# Generate a minimal .env with only the non-secret build-time variables.
-# This replaces the previous `COPY .env ./` which leaked all production secrets
-# into the Docker build cache.
+# Generate a minimal .env with only the build-time variables needed for
+# MetaInjectPlugin (OG tags, SITE_NAME). Runtime config vars are no longer
+# baked into the JS bundle.
 RUN printf '%s\n' \
-  "API_BASE_URL=${API_BASE_URL}" \
-  "WS_BASE_URL=${WS_BASE_URL}" \
-  "MEDIA_URL_BASE=${MEDIA_URL_BASE}" \
   "NODE_ENV=${NODE_ENV}" \
-  "VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}" \
-  "SENTRY_DSN=${SENTRY_DSN}" \
   "SITE_NAME=${SITE_NAME}" \
   "OG_TITLE=${OG_TITLE}" \
   "OG_DESCRIPTION=${OG_DESCRIPTION}" \
@@ -52,7 +43,9 @@ RUN pnpm run build-only
 FROM nginx:bookworm
 LABEL org.opencontainers.image.source=https://github.com/opencupid/opencupid
 COPY apps/frontend/nginx.conf /etc/nginx/conf.d/default.conf
+COPY apps/frontend/docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 COPY --from=builder /app/apps/frontend/dist /var/www
 
 EXPOSE 3001
-CMD ["nginx", "-g", "daemon off;"]
+ENTRYPOINT ["/docker-entrypoint.sh"]

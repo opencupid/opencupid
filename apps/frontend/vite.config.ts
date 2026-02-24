@@ -1,6 +1,5 @@
-import fs from 'fs'
 import path from 'path'
-import { type ConfigEnv, defineConfig, loadEnv, type PluginOption, type UserConfig } from 'vite'
+import { type ConfigEnv, defineConfig, loadEnv, type UserConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import vueDevTools from 'vite-plugin-vue-devtools'
@@ -12,7 +11,7 @@ import { BootstrapVueNextResolver } from 'bootstrap-vue-next'
 import svgLoader from 'vite-svg-loader'
 import serveStatic from 'serve-static'
 // import VitePluginBrowserSync from 'vite-plugin-browser-sync'
-import { server, define } from './vite.common'
+import { server, define, runtimeConfigPlugin } from './vite.common'
 import MetaInjectPlugin from './vite/vite-plugin-meta-inject'
 
 process.env.DEBUG = 'vite:*' // Add this to force verbose output
@@ -40,15 +39,15 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
             if (id.includes('flag-icons')) {
               return 'flags'
             }
-          }
-        }
-      }
+          },
+        },
+      },
     },
     esbuild: {
       sourcemap: true,
     },
     optimizeDeps: {
-      include: ['qrcode']
+      include: ['qrcode'],
     },
     plugins: [
       {
@@ -56,7 +55,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
         resolveId(source) {
           if (source.includes('__tests__')) return '\0ignored'
           return null
-        }
+        },
       },
 
       vue({
@@ -84,7 +83,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       vueJsx(),
       vueDevTools(),
       VueI18nPlugin({
-        include: [path.resolve(__dirname, '../../packages/shared/i18n/*')]
+        include: [path.resolve(__dirname, '../../packages/shared/i18n/*')],
       }),
       svgLoader(),
       Components({
@@ -96,7 +95,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
         configureServer(server) {
           server.middlewares.use(
             rootEnv.MEDIA_URL_BASE!,
-            serveStatic(path.resolve(__dirname, rootEnv.MEDIA_UPLOAD_DIR!)),
+            serveStatic(path.resolve(__dirname, rootEnv.MEDIA_UPLOAD_DIR!))
           )
         },
       },
@@ -118,6 +117,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       //   }
       // }),
       MetaInjectPlugin(mode),
+      runtimeConfigPlugin(mode),
     ],
     css: {
       preprocessorOptions: {

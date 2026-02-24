@@ -1,6 +1,6 @@
 import path from 'path'
 import fs from 'fs'
-import { loadEnv } from 'vite'
+import { loadEnv, type Plugin } from 'vite'
 import { findUpSync } from 'find-up'
 import { getPackageVersion } from '../../packages/shared/version'
 
@@ -46,7 +46,7 @@ export const server = (mode: string) => {
   }
 }
 
-export const define = (mode: string) => {
+export const loadProjectEnv = (mode: string) => {
   const envFile = findUpSync('.env') ?? findUpSync('.env.example')
 
   if (!envFile) {
@@ -55,29 +55,51 @@ export const define = (mode: string) => {
   }
   const envDir = path.dirname(envFile)
 
-  const env = {
+  return {
     ...process.env,
     ...loadEnv(mode, envDir, ''),
   }
+}
 
-  // Read package version
+export const define = (_mode: string) => {
   const repoRoot = path.resolve(__dirname, '../..')
   const appVersion = getPackageVersion(path.join(repoRoot, 'package.json'))
 
   return {
     envDir: '../../',
     define: {
-      __APP_CONFIG__: JSON.stringify({
-        API_BASE_URL: env.API_BASE_URL,
-        WS_BASE_URL: env.WS_BASE_URL,
-        MEDIA_URL_BASE: env.MEDIA_URL_BASE,
-        NODE_ENV: env.NODE_ENV,
-        VAPID_PUBLIC_KEY: env.VAPID_PUBLIC_KEY,
-        SENTRY_DSN: env.SENTRY_DSN,
-        SITE_NAME: env.SITE_NAME,
-        JITSI_DOMAIN: env.JITSI_DOMAIN,
-      }),
       __APP_VERSION__: JSON.stringify(appVersion),
+    },
+  }
+}
+
+export const runtimeConfigPlugin = (mode: string): Plugin => {
+  const env = loadProjectEnv(mode)
+
+  const configJs = `window.__APP_CONFIG__ = ${JSON.stringify({
+    API_BASE_URL: env.API_BASE_URL ?? '/api',
+    WS_BASE_URL: env.WS_BASE_URL ?? '/ws',
+    MEDIA_URL_BASE: env.MEDIA_URL_BASE ?? '/user-content',
+    NODE_ENV: env.NODE_ENV ?? 'development',
+    VAPID_PUBLIC_KEY: env.VAPID_PUBLIC_KEY ?? '',
+    SENTRY_DSN: env.SENTRY_DSN ?? '',
+    SITE_NAME: env.SITE_NAME ?? 'OpenCupid',
+    JITSI_DOMAIN: env.JITSI_DOMAIN ?? '',
+  })};
+`
+
+  return {
+    name: 'runtime-config',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (req.url === '/config.js') {
+          res.setHeader('Content-Type', 'application/javascript')
+          res.setHeader('Cache-Control', 'no-cache')
+          res.end(configJs)
+          return
+        }
+        next()
+      })
     },
   }
 }
