@@ -21,7 +21,7 @@ const error = ref<string | null>(null)
 const waveformHeights = Array.from({ length: 20 }, () => Math.random() * 16 + 4)
 
 const baseMediaType = computed(() =>
-  (props.attachment.mimeType?.split(';')[0] ?? 'audio/webm').trim()
+  (props.attachment.mimeType?.split(';')[0] ?? 'audio/mpeg').trim()
 )
 
 // Use server-provided duration, falling back to audio element duration once loaded

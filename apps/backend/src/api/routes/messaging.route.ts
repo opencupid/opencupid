@@ -27,23 +27,7 @@ import { appConfig } from '@/lib/appconfig'
 import { MEDIA_SUBDIR } from '@/lib/media'
 import path from 'path'
 import { promises as fsPromises } from 'fs'
-import { execFile } from 'child_process'
-import { promisify } from 'util'
-
-const execFileAsync = promisify(execFile)
-
-/**
- * Transcodes a WAV file to webm/opus using ffmpeg.
- * Returns the path and size of the transcoded file.
- * The original WAV file is deleted after successful transcode.
- */
-export async function transcodeToWebm(inputPath: string): Promise<{ path: string; size: number }> {
-  const outputPath = inputPath.replace(/\.wav$/i, '.webm')
-  await execFileAsync('ffmpeg', ['-i', inputPath, '-c:a', 'libopus', '-b:a', '48k', outputPath])
-  const stats = await fsPromises.stat(outputPath)
-  await fsPromises.unlink(inputPath)
-  return { path: outputPath, size: stats.size }
-}
+import { transcodeToMp3 } from '@/services/audioTranscoder'
 
 // Route params for ID lookups
 const IdLookupParamsSchema = z.object({
@@ -315,10 +299,10 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
       let finalSize: number
 
       if (baseMimeType === 'audio/wav' || baseMimeType === 'audio/wave') {
-        const result = await transcodeToWebm(filePath)
+        const result = await transcodeToMp3(filePath)
         finalPath = result.path
         finalFileName = path.basename(result.path)
-        finalMimeType = 'audio/webm;codecs=opus'
+        finalMimeType = 'audio/mpeg'
         finalSize = result.size
       } else {
         const stats = await fsPromises.stat(filePath)
