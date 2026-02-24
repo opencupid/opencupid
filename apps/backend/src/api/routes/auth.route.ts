@@ -107,10 +107,10 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         return sendUnauthorizedError(reply, 'Invalid Authorization format')
       }
 
-      // Decode JWT without verifying expiration to get userId
+      // Verify JWT signature but ignore expiration to get userId
       let jwtPayload: JwtPayload
       try {
-        jwtPayload = fastify.jwt.decode(expiredJwt) as JwtPayload
+        jwtPayload = fastify.jwt.verify(expiredJwt, { ignoreExpiration: true }) as JwtPayload
         if (!jwtPayload?.userId) {
           return sendUnauthorizedError(reply, 'Invalid token')
         }

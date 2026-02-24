@@ -59,8 +59,7 @@ describe('broadcastToProfile', () => {
 describe('verifyWsTicket', () => {
   function createMockRedis(data: Record<string, string | null> = {}) {
     return {
-      get: vi.fn((key: string) => Promise.resolve(data[key] ?? null)),
-      del: vi.fn(() => Promise.resolve(1)),
+      getdel: vi.fn((key: string) => Promise.resolve(data[key] ?? null)),
     } as any
   }
 
@@ -93,7 +92,7 @@ describe('verifyWsTicket', () => {
 
     const result = await verifyWsTicket(req, redis)
     expect(result).toEqual(ticketData)
-    expect(redis.del).toHaveBeenCalledWith(`ws-ticket:${ticket}`)
+    expect(redis.getdel).toHaveBeenCalledWith(`ws-ticket:${ticket}`)
   })
 
   it('throws when ticket payload is missing userId', async () => {

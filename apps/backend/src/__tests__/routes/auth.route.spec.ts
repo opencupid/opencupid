@@ -327,7 +327,7 @@ describe('POST /refresh', () => {
     mockRefreshTokenService.validate.mockResolvedValue(null)
     fastify.jwt = {
       sign: vi.fn(),
-      decode: vi.fn().mockReturnValue({ userId: 'user1', profileId: 'p1', tokenVersion: 0 }),
+      verify: vi.fn().mockReturnValue({ userId: 'user1', profileId: 'p1', tokenVersion: 0 }),
     }
     const req = {
       body: { refreshToken: '550e8400-e29b-41d4-a716-446655440000' },
@@ -347,7 +347,7 @@ describe('POST /refresh', () => {
     })
     fastify.jwt = {
       sign: vi.fn(),
-      decode: vi.fn().mockReturnValue({ userId: 'user1', profileId: 'p1', tokenVersion: 1 }),
+      verify: vi.fn().mockReturnValue({ userId: 'user1', profileId: 'p1', tokenVersion: 1 }),
     }
     const req = {
       body: { refreshToken: '550e8400-e29b-41d4-a716-446655440000' },
@@ -372,7 +372,7 @@ describe('POST /refresh', () => {
     })
     fastify.jwt = {
       sign: vi.fn().mockReturnValue('new-jwt'),
-      decode: vi.fn().mockReturnValue({ userId: 'user1', profileId: 'p1', tokenVersion: 0 }),
+      verify: vi.fn().mockReturnValue({ userId: 'user1', profileId: 'p1', tokenVersion: 0 }),
     }
     const req = {
       body: { refreshToken: '550e8400-e29b-41d4-a716-446655440000' },

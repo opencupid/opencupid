@@ -35,13 +35,11 @@ export async function verifyWsTicket(
   }
 
   const key = `ws-ticket:${parsed.data.ticket}`
-  const raw = await redis.get(key)
+  // Atomic get-and-delete to prevent race conditions (single-use ticket)
+  const raw = await redis.getdel(key)
   if (!raw) {
     throw new Error('Invalid or expired ticket')
   }
-
-  // Delete ticket after first use (one-time)
-  await redis.del(key)
 
   const data = JSON.parse(raw)
   if (!data?.userId || !data?.profileId) {
