@@ -54,6 +54,12 @@ http {
     }
   }
 
+  # --- Reject unknown Host headers ---
+  server {
+    listen 443 ssl default_server;
+    ssl_reject_handshake on;
+  }
+
   # --- HTTPS Server ---
   server {
     listen 443 ssl;
@@ -82,6 +88,7 @@ http {
       proxy_set_header Host $host;
       proxy_set_header X-Real-IP $remote_addr;
       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Admin-Authenticated "";
     }
 
     location /api/messages/voice {
@@ -92,8 +99,9 @@ http {
       proxy_set_header Host $host;
       proxy_set_header X-Real-IP $remote_addr;
       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Admin-Authenticated "";
     }
-  
+
     location /api/ {
       proxy_pass http://backend;
       proxy_http_version 1.1;
@@ -102,6 +110,7 @@ http {
       proxy_set_header Host $host;
       proxy_set_header X-Real-IP $remote_addr;
       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Admin-Authenticated "";
 
       add_header 'Access-Control-Allow-Origin' '*' always;
       add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS' always;
