@@ -1,5 +1,6 @@
 worker_processes 1;
 env AUTH_IMG_HMAC_SECRET;
+env CSP_REPORT_URI;
 
 events {
   worker_connections 1024;
@@ -75,7 +76,35 @@ http {
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_ciphers HIGH:!aNULL:!MD5;
 
-      # Default limit for everything else (1MB by default, or set explicitly)
+    # Security headers (set via Lua to apply to all locations including those with add_header)
+    header_filter_by_lua_block {
+      ngx.header["X-Content-Type-Options"] = "nosniff"
+      ngx.header["X-Frame-Options"] = "DENY"
+      ngx.header["Referrer-Policy"] = "strict-origin-when-cross-origin"
+      ngx.header["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+
+      local csp = "default-src 'self'"
+        .. "; script-src 'self' https://${JITSI_DOMAIN}"
+        .. "; style-src 'self' 'unsafe-inline'"
+        .. "; img-src 'self' data: blob:"
+        .. "; font-src 'self'"
+        .. "; connect-src 'self' wss://${DOMAIN} https://*.sentry.io"
+        .. "; media-src 'self'"
+        .. "; frame-src https://${JITSI_DOMAIN}"
+        .. "; object-src 'none'"
+        .. "; base-uri 'self'"
+        .. "; form-action 'self'"
+        .. "; frame-ancestors 'none'"
+
+      local report_uri = os.getenv("CSP_REPORT_URI")
+      if report_uri and report_uri ~= "" then
+        csp = csp .. "; report-uri " .. report_uri
+      end
+
+      ngx.header["Content-Security-Policy"] = csp
+    }
+
+    # Default limit for everything else (1MB by default, or set explicitly)
     client_max_body_size 1M;
 
     # Block admin API on public domain — only accessible via mTLS admin domain
@@ -224,6 +253,24 @@ http {
 
     ssl_client_certificate /etc/nginx/client-ca.crt;
     ssl_verify_client on;
+
+    # Security headers for admin
+    header_filter_by_lua_block {
+      ngx.header["X-Content-Type-Options"] = "nosniff"
+      ngx.header["X-Frame-Options"] = "DENY"
+      ngx.header["Referrer-Policy"] = "strict-origin-when-cross-origin"
+      ngx.header["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+      ngx.header["Content-Security-Policy"] = "default-src 'self'"
+        .. "; script-src 'self'"
+        .. "; style-src 'self' 'unsafe-inline'"
+        .. "; img-src 'self' data: blob:"
+        .. "; font-src 'self'"
+        .. "; connect-src 'self' https://*.sentry.io"
+        .. "; object-src 'none'"
+        .. "; base-uri 'self'"
+        .. "; form-action 'self'"
+        .. "; frame-ancestors 'none'"
+    }
 
     location /api/ {
       proxy_pass http://backend;

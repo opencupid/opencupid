@@ -67,6 +67,18 @@ const handleScroll = () => {
     emit('load-older')
   }
 }
+
+/** Convert backend HTML-encoded message content back to plain text for safe rendering. */
+function htmlToText(html: string): string {
+  return html
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#x27;/g, "'")
+    .replace(/&#x2F;/g, '/')
+}
 </script>
 
 <template>
@@ -100,8 +112,10 @@ const handleScroll = () => {
       <!-- Text message -->
       <div
         v-else
-        v-html="msg.content"
-      />
+        class="message-text"
+      >
+        {{ htmlToText(msg.content) }}
+      </div>
     </div>
   </div>
 </template>
@@ -114,5 +128,9 @@ const handleScroll = () => {
   padding: 0.25rem 0.5rem;
   font-size: 0.9rem;
   color: white;
+}
+
+.message-text {
+  white-space: pre-wrap;
 }
 </style>
