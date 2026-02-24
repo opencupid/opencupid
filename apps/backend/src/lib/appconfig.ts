@@ -9,7 +9,7 @@ export const configSchema = z.object({
   API_PORT: z.coerce.number().default(3000),
   FRONTEND_PORT: z.coerce.number().default(5173),
 
-  FRONTEND_URL: z.string(),
+  FRONTEND_URL: z.string().url(),
   API_BASE_URL: z.string(),
   WS_BASE_URL: z.string(),
 
