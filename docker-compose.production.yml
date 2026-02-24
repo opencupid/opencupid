@@ -71,15 +71,6 @@ services:
       - '${MEDIA_UPLOAD_DIR}:${MEDIA_UPLOAD_DIR}'
       - '${PWD}/secrets:/secrets'
 
-  admin:
-    image: ghcr.io/opencupid/opencupid-admin
-    build:
-      context: .
-      dockerfile: apps/admin/Dockerfile
-    restart: always
-    depends_on:
-      - backend
-
   frontend:
     image: ${DOCKER_IMAGE_PREFIX:-ghcr.io/opencupid/opencupid}-frontend:${DOCKER_IMAGE_TAG:-latest}
     build:
@@ -118,7 +109,6 @@ services:
       - admin
       - frontend
       - backend
-      - admin
       - jitsi-web
     env_file:
       - .env
