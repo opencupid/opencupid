@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useApi } from '../composables/useApi'
 
 interface AdminProfile {
@@ -36,6 +36,50 @@ const search = ref('')
 const selectedProfile = ref<AdminProfile | null>(null)
 const countries = ref<string[]>([])
 const selectedCountry = ref('')
+
+type SortColumn =
+  | 'publicName'
+  | 'country'
+  | 'gender'
+  | 'isSocialActive'
+  | 'isDatingActive'
+  | 'isActive'
+const sortColumn = ref<SortColumn | null>(null)
+const sortDirection = ref<'asc' | 'desc'>('asc')
+
+const sortedProfiles = computed(() => {
+  if (!sortColumn.value) return profiles.value
+  const col = sortColumn.value
+  const dir = sortDirection.value === 'asc' ? 1 : -1
+  return [...profiles.value].sort((a, b) => {
+    let aVal: string | number
+    let bVal: string | number
+    if (col === 'isSocialActive' || col === 'isDatingActive' || col === 'isActive') {
+      aVal = a[col] ? 1 : 0
+      bVal = b[col] ? 1 : 0
+    } else {
+      aVal = (a[col] ?? '').toLowerCase()
+      bVal = (b[col] ?? '').toLowerCase()
+    }
+    if (aVal < bVal) return -1 * dir
+    if (aVal > bVal) return 1 * dir
+    return 0
+  })
+})
+
+function toggleSort(col: SortColumn) {
+  if (sortColumn.value === col) {
+    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    sortColumn.value = col
+    sortDirection.value = 'asc'
+  }
+}
+
+function sortIndicator(col: SortColumn) {
+  if (sortColumn.value !== col) return ''
+  return sortDirection.value === 'asc' ? ' ▲' : ' ▼'
+}
 
 async function fetchCountries() {
   const res = await call<{ success: boolean; countries: string[] }>('/admin/profiles/countries')
@@ -145,18 +189,48 @@ onMounted(() => {
       >
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Location</th>
-            <th>Gender</th>
-            <th>Social</th>
-            <th>Dating</th>
-            <th>Active</th>
+            <th
+              style="cursor: pointer"
+              @click="toggleSort('publicName')"
+            >
+              Name{{ sortIndicator('publicName') }}
+            </th>
+            <th
+              style="cursor: pointer"
+              @click="toggleSort('country')"
+            >
+              Location{{ sortIndicator('country') }}
+            </th>
+            <th
+              style="cursor: pointer"
+              @click="toggleSort('gender')"
+            >
+              Gender{{ sortIndicator('gender') }}
+            </th>
+            <th
+              style="cursor: pointer"
+              @click="toggleSort('isSocialActive')"
+            >
+              Social{{ sortIndicator('isSocialActive') }}
+            </th>
+            <th
+              style="cursor: pointer"
+              @click="toggleSort('isDatingActive')"
+            >
+              Dating{{ sortIndicator('isDatingActive') }}
+            </th>
+            <th
+              style="cursor: pointer"
+              @click="toggleSort('isActive')"
+            >
+              Active{{ sortIndicator('isActive') }}
+            </th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr
-            v-for="profile in profiles"
+            v-for="profile in sortedProfiles"
             :key="profile.id"
           >
             <td>{{ profile.publicName || '-' }}</td>

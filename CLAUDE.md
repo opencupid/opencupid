@@ -168,7 +168,7 @@ git push -u origin your-branch-name
 gh pr create
 ```
 
-> **HARD RULE — NO EXCEPTIONS:** After every `git push`, you MUST watch the CI workflow run in the background, and act on failures until CI is green. Use the following procedure:
+> **CI workflow:** Only watch CI when **finalizing** a PR (all work done, ready for review/merge). Do NOT watch CI after every intermediate push — it wastes time and CI minutes. When finalizing:
 >
 > ```bash
 > gh run watch --exit-status    # blocks until the run finishes
@@ -179,7 +179,7 @@ gh pr create
 >   ```bash
 >   gh run view --log-failed     # show only the failed step logs
 >   ```
->   Repeat until CI is green. Never leave a branch with a failing CI run.
+>   Repeat until CI is green. Never leave a finalized PR with a failing CI run.
 
 Each PR must contain **one logical change** — don't bundle unrelated fixes, features, or refactors into a single branch. If you discover something unrelated while working (e.g. a typo, a small bug, a cleanup opportunity), finish your current PR first, then open a separate one. If in doubt whether a change belongs on the current branch, ask before committing.
 
