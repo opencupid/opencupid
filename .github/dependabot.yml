@@ -20,7 +20,7 @@ updates:
         patterns: ["fastify", "fastify-plugin", "@fastify/*"]
 
       prisma:
-        patterns: ["prisma", "@prisma/*", "prisma-*", "zod-prisma-*"]
+        patterns: ["prisma", "@prisma/*", "prisma-*", "prisma-zod-generator", "zod-prisma-*"]
 
       vue-ecosystem:
         patterns: ["vue", "vue-router", "vue-i18n", "@vue/*", "@vueuse/*", "pinia"]
@@ -56,7 +56,7 @@ updates:
         applies-to: version-updates
         dependency-type: development
         update-types: ["minor", "patch"]
-        exclude-patterns: ["zod-prisma-*"]
+        exclude-patterns: ["zod-prisma-*", "prisma-zod-*"]
 
       prod-deps-minor-patch:
         applies-to: version-updates
