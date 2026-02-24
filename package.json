@@ -37,11 +37,11 @@
     "translate:i18next": "npx json-autotranslate -i packages/shared/i18n/api --directory-structure ngx-translate -d --type key-based -m i18next -s deepl-free -c ${DEEPL_API_KEY},less,1000"
   },
   "dependencies": {
-    "@types/node": "22.16.1",
+    "@types/node": "25.3.0",
     "extendable-media-recorder": "^9.2.36",
     "extendable-media-recorder-wav-encoder": "^7.0.136",
     "rollup": "4.59.0",
-    "zod": "3.24.4"
+    "zod": "4.3.6"
   },
   "pnpm": {
     "overrides": {
