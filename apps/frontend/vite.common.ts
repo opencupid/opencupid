@@ -60,11 +60,9 @@ export const define = (mode: string) => {
     ...loadEnv(mode, envDir, ''),
   }
 
-  // Read package versions
+  // Read package version
   const repoRoot = path.resolve(__dirname, '../..')
-  const versions = {
-    app: getPackageVersion(path.join(repoRoot, 'package.json')),
-  }
+  const appVersion = getPackageVersion(path.join(repoRoot, 'package.json'))
 
   return {
     envDir: '../../',
@@ -79,7 +77,7 @@ export const define = (mode: string) => {
         SITE_NAME: env.SITE_NAME,
         JITSI_DOMAIN: env.JITSI_DOMAIN,
       }),
-      __APP_VERSION__: JSON.stringify(versions),
+      __APP_VERSION__: JSON.stringify(appVersion),
     },
   }
 }

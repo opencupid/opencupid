@@ -6,7 +6,7 @@ import type { LocationResponse, VersionResponse } from '@zod/apiResponse.dto'
 import { storeSuccess, storeError, type StoreResponse } from '@/store/helpers'
 
 // Get the current frontend version
-const CURRENT_VERSION = __APP_VERSION__?.app || 'unknown'
+const CURRENT_VERSION = __APP_VERSION__
 
 export const useAppStore = defineStore('app', {
   state: () => ({

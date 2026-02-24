@@ -11,16 +11,14 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
   const env = { ...process.env, ...loadEnv(mode, envDir, '') }
 
   const repoRoot = path.resolve(__dirname, '../..')
-  const versions = {
-    app: getPackageVersion(path.join(repoRoot, 'package.json')),
-  }
+  const appVersion = getPackageVersion(path.join(repoRoot, 'package.json'))
 
   const config: UserConfig = {
     define: {
       __APP_CONFIG__: JSON.stringify({
         API_BASE_URL: env.API_BASE_URL,
       }),
-      __APP_VERSION__: JSON.stringify(versions),
+      __APP_VERSION__: JSON.stringify(appVersion),
     },
     plugins: [vue()],
     resolve: {

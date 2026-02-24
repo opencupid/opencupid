@@ -26,6 +26,4 @@ declare const __APP_CONFIG__: {
   readonly JITSI_DOMAIN: string
 }
 
-declare const __APP_VERSION__: {
-  readonly app: string
-}
+declare const __APP_VERSION__: string

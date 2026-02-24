@@ -31,7 +31,7 @@ export async function bootstrapApp() {
     Sentry.init({
       app,
       dsn: __APP_CONFIG__.SENTRY_DSN,
-      release: `frontend@${__APP_VERSION__?.app}`,
+      release: `frontend@${__APP_VERSION__}`,
       // Setting this option to true will send default PII data to Sentry.
       // For example, automatic IP address collection on events
       sendDefaultPii: true,

@@ -6,6 +6,4 @@
   SENTRY_DSN: '',
 }
 import rootPackageJson from '../../../package.json'
-;(globalThis as any).__APP_VERSION__ = {
-  app: rootPackageJson.version,
-}
+;(globalThis as any).__APP_VERSION__ = rootPackageJson.version

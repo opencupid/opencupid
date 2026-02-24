@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-const version = computed(() => __APP_VERSION__.app)
+const version = computed(() => __APP_VERSION__)
 </script>
 
 <template>
