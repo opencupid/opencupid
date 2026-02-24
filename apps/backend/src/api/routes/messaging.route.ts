@@ -27,6 +27,7 @@ import { appConfig } from '@/lib/appconfig'
 import { MEDIA_SUBDIR } from '@/lib/media'
 import path from 'path'
 import { promises as fsPromises } from 'fs'
+import { transcodeToMp3 } from '@/services/audioTranscoder'
 
 // Route params for ID lookups
 const IdLookupParamsSchema = z.object({
@@ -258,7 +259,14 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
 
       // Validate file type (strip codec suffix before allowlist check)
       const baseMimeType = meta.mimetype.split(';')[0].trim()
-      const allowedMimeTypes = ['audio/mpeg', 'audio/mp4', 'audio/wav', 'audio/webm', 'audio/ogg']
+      const allowedMimeTypes = [
+        'audio/mpeg',
+        'audio/mp4',
+        'audio/wav',
+        'audio/wave',
+        'audio/webm',
+        'audio/ogg',
+      ]
       if (!allowedMimeTypes.includes(baseMimeType)) {
         return sendError(reply, 400, 'Invalid audio file type')
       }
@@ -278,14 +286,28 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
 
       // Generate unique filename
       const fileExtension = path.extname(meta.filename) || '.webm'
-      const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}${fileExtension}`
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 11)}${fileExtension}`
       const filePath = path.join(voiceDir, fileName)
 
       // Save the buffered file to disk
       await fsPromises.writeFile(filePath, fileBuffer)
 
-      // Get file stats
-      const stats = await fsPromises.stat(filePath)
+      // Transcode WAV to MP3 for smaller size and universal browser compatibility
+      let finalPath = filePath
+      let finalFileName = fileName
+      let finalMimeType = meta.mimetype
+      let finalSize: number
+
+      if (baseMimeType === 'audio/wav' || baseMimeType === 'audio/wave') {
+        const result = await transcodeToMp3(filePath)
+        finalPath = result.path
+        finalFileName = path.basename(result.path)
+        finalMimeType = 'audio/mpeg'
+        finalSize = result.size
+      } else {
+        const stats = await fsPromises.stat(filePath)
+        finalSize = stats.size
+      }
 
       try {
         const { convoId, message } = await fastify.prisma.$transaction(async (tx) => {
@@ -296,9 +318,9 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
             payload.data.content,
             'audio/voice',
             {
-              filePath: `${MEDIA_SUBDIR.VOICE}/${senderProfileId}/${fileName}`,
-              mimeType: meta.mimetype,
-              fileSize: stats.size,
+              filePath: `${MEDIA_SUBDIR.VOICE}/${senderProfileId}/${finalFileName}`,
+              mimeType: finalMimeType,
+              fileSize: finalSize,
               duration: payload.data.duration,
             }
           )
@@ -345,7 +367,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
         }
       } catch (error: any) {
         // Clean up file if message creation fails
-        await fsPromises.unlink(filePath).catch(() => {})
+        await fsPromises.unlink(finalPath).catch(() => {})
         return sendError(reply, 403, error)
       }
     } catch (err: any) {
