@@ -12,56 +12,68 @@ updates:
       # ── Vendor families (grouped including majors) ──────────
       fortawesome:
         patterns: ["@fortawesome/*"]
+        update-types: ["major", "minor", "patch"]
 
       sentry:
         patterns: ["@sentry/*"]
+        update-types: ["major", "minor", "patch"]
 
       fastify:
         patterns: ["fastify", "fastify-plugin", "@fastify/*"]
+        update-types: ["major", "minor", "patch"]
 
       prisma:
         patterns: ["prisma", "@prisma/*", "prisma-*", "prisma-zod-generator", "zod-prisma-*"]
+        update-types: ["major", "minor", "patch"]
 
       vue-ecosystem:
         patterns: ["vue", "vue-router", "vue-i18n", "@vue/*", "@vueuse/*", "pinia"]
+        update-types: ["major", "minor", "patch"]
 
       bootstrap:
         patterns: ["bootstrap", "bootstrap-vue-next", "@popperjs/*"]
+        update-types: ["major", "minor", "patch"]
 
       tensorflow:
         patterns: ["@tensorflow/*", "@tensorflow-models/*"]
+        update-types: ["major", "minor", "patch"]
 
       fontsource:
         patterns: ["@fontsource/*"]
+        update-types: ["major", "minor", "patch"]
 
       # ── Tooling families (grouped including majors) ─────────
       eslint:
         patterns: ["eslint", "eslint-*", "@eslint/*", "@typescript-eslint/*", "@vue/eslint-*"]
+        update-types: ["major", "minor", "patch"]
 
       vite:
         patterns: ["vite", "@vitejs/*", "vite-*"]
+        update-types: ["major", "minor", "patch"]
 
       testing:
         patterns: ["vitest", "@vitest/*", "@vue/test-utils", "@playwright/*", "happy-dom", "jsdom"]
+        update-types: ["major", "minor", "patch"]
 
       types:
         patterns: ["@types/*"]
-        update-types: ["minor", "patch"]
+        update-types: ["major", "minor", "patch"]
 
       i18n:
         patterns: ["i18next", "i18next-*", "vue-i18n-*", "i18n-*", "@cospired/i18n-*", "@intlify/*"]
+        update-types: ["major", "minor", "patch"]
 
-      # ── Catch-all: remaining minor+patch ────────────────────
-      dev-deps-minor-patch:
+      # ── Catch-all: remaining deps (including majors) ───────
+      dev-deps:
         applies-to: version-updates
         dependency-type: development
-        update-types: ["minor", "patch"]
+        update-types: ["major", "minor", "patch"]
         exclude-patterns: ["zod-prisma-*", "prisma-zod-*"]
 
-      prod-deps-minor-patch:
+      prod-deps:
         applies-to: version-updates
         dependency-type: production
-        update-types: ["minor", "patch"]
+        update-types: ["major", "minor", "patch"]
 
   - package-ecosystem: github-actions
     directory: "/"
