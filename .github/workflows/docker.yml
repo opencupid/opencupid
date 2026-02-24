@@ -68,12 +68,13 @@ jobs:
             done
           else
             TAG="${{ github.event.inputs.tag || 'manual' }}"
-            # For manual: tag suffix + version + sha
+            # For manual: tag suffix + version + sha + latest
             for SVC in backend frontend admin ingress; do
               {
                 echo "${PREFIX}-${SVC}:${TAG}"
                 echo "${PREFIX}-${SVC}:${VERSION}"
                 echo "${PREFIX}-${SVC}:${SHA}"
+                echo "${PREFIX}-${SVC}:latest"
               } >> "tags-${SVC}.txt"
             done
           fi
