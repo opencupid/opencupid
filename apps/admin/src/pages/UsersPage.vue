@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useApi } from '../composables/useApi'
 import { apiRequest } from '../composables/useApi'
 
@@ -34,6 +34,82 @@ const editActive = ref(false)
 const editBlocked = ref(false)
 const saving = ref(false)
 const saveError = ref<string | null>(null)
+
+type SortColumn = 'publicName' | 'isActive' | 'isBlocked' | 'createdAt'
+const sortColumn = ref<SortColumn | null>(null)
+const sortDirection = ref<'asc' | 'desc'>('asc')
+
+const sortedUsers = computed(() => {
+  if (!sortColumn.value) return users.value
+  const col = sortColumn.value
+  const dir = sortDirection.value === 'asc' ? 1 : -1
+  return [...users.value].sort((a, b) => {
+    let aVal: string | boolean | number
+    let bVal: string | boolean | number
+    if (col === 'publicName') {
+      aVal = a.profile?.publicName?.toLowerCase() ?? ''
+      bVal = b.profile?.publicName?.toLowerCase() ?? ''
+    } else if (col === 'createdAt') {
+      aVal = new Date(a.createdAt).getTime()
+      bVal = new Date(b.createdAt).getTime()
+    } else {
+      aVal = a[col] ? 1 : 0
+      bVal = b[col] ? 1 : 0
+    }
+    if (aVal < bVal) return -1 * dir
+    if (aVal > bVal) return 1 * dir
+    return 0
+  })
+})
+
+function toggleSort(col: SortColumn) {
+  if (sortColumn.value === col) {
+    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    sortColumn.value = col
+    sortDirection.value = 'asc'
+  }
+}
+
+function sortIndicator(col: SortColumn) {
+  if (sortColumn.value !== col) return ''
+  return sortDirection.value === 'asc' ? ' ▲' : ' ▼'
+}
+
+interface AdminProfile {
+  id: string
+  publicName: string
+  country: string
+  cityName: string
+  isSocialActive: boolean
+  isDatingActive: boolean
+  isActive: boolean
+  isReported: boolean
+  isBlocked: boolean
+  isOnboarded: boolean
+  gender: string | null
+  createdAt: string
+  userId: string
+  user: { email: string | null; phonenumber: string | null } | null
+}
+
+const selectedProfile = ref<AdminProfile | null>(null)
+const profileLoading = ref(false)
+
+async function viewProfile(profileId: string) {
+  profileLoading.value = true
+  try {
+    const res = await apiRequest(`/admin/profiles/${profileId}`)
+    const data = res as { success: boolean; profile: AdminProfile }
+    if (data.success) {
+      selectedProfile.value = data.profile
+    }
+  } catch {
+    // Profile fetch failed silently — user can retry
+  } finally {
+    profileLoading.value = false
+  }
+}
 
 async function fetchUsers() {
   const res = await call<UsersResponse>('/admin/users', {
@@ -134,22 +210,40 @@ onMounted(fetchUsers)
         <thead>
           <tr>
             <th>Email / Phone</th>
-            <th>Profile</th>
-            <th>Roles</th>
-            <th>Active</th>
-            <th>Blocked</th>
-            <th>Created</th>
+            <th
+              style="cursor: pointer"
+              @click="toggleSort('publicName')"
+            >
+              Public name{{ sortIndicator('publicName') }}
+            </th>
+            <th
+              style="cursor: pointer"
+              @click="toggleSort('isActive')"
+            >
+              Active{{ sortIndicator('isActive') }}
+            </th>
+            <th
+              style="cursor: pointer"
+              @click="toggleSort('isBlocked')"
+            >
+              Blocked{{ sortIndicator('isBlocked') }}
+            </th>
+            <th
+              style="cursor: pointer"
+              @click="toggleSort('createdAt')"
+            >
+              Created{{ sortIndicator('createdAt') }}
+            </th>
             <th></th>
           </tr>
         </thead>
         <tbody>
           <tr
-            v-for="user in users"
+            v-for="user in sortedUsers"
             :key="user.id"
           >
             <td>{{ user.email || user.phonenumber || '-' }}</td>
             <td>{{ user.profile?.publicName || '-' }}</td>
-            <td>{{ user.roles.join(', ') }}</td>
             <td>
               <span :class="user.isActive ? 'badge bg-success' : 'badge bg-secondary'">
                 {{ user.isActive ? 'Yes' : 'No' }}
@@ -161,7 +255,15 @@ onMounted(fetchUsers)
               </span>
             </td>
             <td>{{ new Date(user.createdAt).toLocaleDateString() }}</td>
-            <td>
+            <td class="text-nowrap">
+              <button
+                v-if="user.profile"
+                class="btn btn-sm btn-outline-secondary me-1"
+                :disabled="profileLoading"
+                @click="viewProfile(user.profile.id)"
+              >
+                Profile
+              </button>
               <button
                 class="btn btn-sm btn-outline-primary"
                 @click="viewUser(user)"
@@ -172,7 +274,7 @@ onMounted(fetchUsers)
           </tr>
           <tr v-if="users.length === 0">
             <td
-              colspan="7"
+              colspan="6"
               class="text-center text-muted"
             >
               No users found
@@ -318,6 +420,73 @@ onMounted(fetchUsers)
     </div>
     <div
       v-if="selectedUser"
+      class="modal-backdrop show"
+    ></div>
+
+    <!-- Profile Detail Modal -->
+    <div
+      v-if="selectedProfile"
+      class="modal d-block"
+      tabindex="-1"
+      @click.self="selectedProfile = null"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Profile Detail</h5>
+            <button
+              type="button"
+              class="btn-close"
+              @click="selectedProfile = null"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <dl class="row mb-0">
+              <dt class="col-sm-4">ID</dt>
+              <dd class="col-sm-8">
+                <code>{{ selectedProfile.id }}</code>
+              </dd>
+              <dt class="col-sm-4">Name</dt>
+              <dd class="col-sm-8">{{ selectedProfile.publicName || '-' }}</dd>
+              <dt class="col-sm-4">User Email</dt>
+              <dd class="col-sm-8">{{ selectedProfile.user?.email || '-' }}</dd>
+              <dt class="col-sm-4">User Phone</dt>
+              <dd class="col-sm-8">{{ selectedProfile.user?.phonenumber || '-' }}</dd>
+              <dt class="col-sm-4">Country</dt>
+              <dd class="col-sm-8">{{ selectedProfile.country || '-' }}</dd>
+              <dt class="col-sm-4">City</dt>
+              <dd class="col-sm-8">{{ selectedProfile.cityName || '-' }}</dd>
+              <dt class="col-sm-4">Gender</dt>
+              <dd class="col-sm-8">{{ selectedProfile.gender || '-' }}</dd>
+              <dt class="col-sm-4">Social Active</dt>
+              <dd class="col-sm-8">{{ selectedProfile.isSocialActive ? 'Yes' : 'No' }}</dd>
+              <dt class="col-sm-4">Dating Active</dt>
+              <dd class="col-sm-8">{{ selectedProfile.isDatingActive ? 'Yes' : 'No' }}</dd>
+              <dt class="col-sm-4">Onboarded</dt>
+              <dd class="col-sm-8">{{ selectedProfile.isOnboarded ? 'Yes' : 'No' }}</dd>
+              <dt class="col-sm-4">Active</dt>
+              <dd class="col-sm-8">{{ selectedProfile.isActive ? 'Yes' : 'No' }}</dd>
+              <dt class="col-sm-4">Reported</dt>
+              <dd class="col-sm-8">{{ selectedProfile.isReported ? 'Yes' : 'No' }}</dd>
+              <dt class="col-sm-4">Blocked</dt>
+              <dd class="col-sm-8">{{ selectedProfile.isBlocked ? 'Yes' : 'No' }}</dd>
+              <dt class="col-sm-4">Created</dt>
+              <dd class="col-sm-8">{{ new Date(selectedProfile.createdAt).toLocaleString() }}</dd>
+            </dl>
+          </div>
+          <div class="modal-footer">
+            <button
+              class="btn btn-secondary"
+              @click="selectedProfile = null"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      v-if="selectedProfile"
       class="modal-backdrop show"
     ></div>
   </div>
