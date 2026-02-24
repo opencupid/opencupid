@@ -2,20 +2,33 @@
 
 ## Prerequisites
 
-The production server needs only **Docker** (with Compose v2) installed. Everything else runs inside containers.
+The production server requires **Docker** (with Compose v2) installed.
 
-## Domain name configuration
+## DNS configuration
 
 The app uses multiple domain names, configured in `.env`:
 
-| Variable | Example | Purpose |
-|----------|---------|---------|
-| `DOMAIN` | `example.org` | Main app (frontend + API) |
-| `ADMIN_DOMAIN` | `admin.example.org` | Admin panel (mTLS-protected, hosts Listmonk admin) |
+| Variable          | Example             | Purpose                                            |
+| ----------------- | ------------------- | -------------------------------------------------- |
+| `DOMAIN`          | `example.org`       | Main app (frontend + API)                          |
+| `ADMIN_DOMAIN`    | `admin.example.org` | Admin panel (mTLS-protected)                       |
 | `LISTMONK_DOMAIN` | `lists.example.org` | Public Listmonk URLs (subscription/campaign pages) |
-| `JITSI_DOMAIN` | `meet.example.org` | Jitsi Meet video calls (proxied through ingress) |
+| `JITSI_DOMAIN`    | `meet.example.org`  | Jitsi Meet video calls (proxied through ingress)   |
 
-Create DNS A/CNAME records for all subdomains pointing to the same server. All domains share a single SAN certificate obtained by certbot.
+### DNS setup
+
+All domains must resolve to the production server. A typical configuration:
+
+| Record              | Type  | Value         |
+| ------------------- | ----- | ------------- |
+| `example.org`       | A     | `<server-ip>` |
+| `admin.example.org` | CNAME | `example.org` |
+| `lists.example.org` | CNAME | `example.org` |
+| `meet.example.org`  | CNAME | `example.org` |
+
+The root domain uses an A record pointing to the server's public IP. All subdomains use CNAME records pointing to the root domain.
+
+All domains share a single SAN certificate obtained by certbot (see [Getting started](#getting-started)).
 
 ## Getting started
 
@@ -46,66 +59,39 @@ docker compose build
 docker compose up -d
 ```
 
-> **Key**: Setting `COMPOSE_FILE=docker-compose.production.yml` in `.env` means all
-> `docker compose` commands automatically use the production file — no `-f` flag needed.
-
-## Docker Compose file selection
-
-Docker Compose reads `COMPOSE_FILE` from `.env` in the project root automatically.
-
-| Environment | `COMPOSE_FILE` in `.env` | Effect |
-|-------------|--------------------------|--------|
-| Development | *(unset)* | Uses `docker-compose.yml` (infrastructure only) |
-| Production | `docker-compose.production.yml` | Full stack with ingress, certbot, Jitsi |
-
-## Database configuration
-
-Database credentials are configured once in `.env` and flow everywhere automatically:
-
-```
-POSTGRES_DB=app
-POSTGRES_USER=appuser
-POSTGRES_PASSWORD=<strong-password>
-DATABASE_URL=postgresql://appuser:<password>@db:5432/app
-```
-
-- **Docker Compose** injects `POSTGRES_*` vars into the `db` container
-- **Prisma / backend app** reads `DATABASE_URL` from the environment
-- **Management scripts** (`db:psql`, `db:dump`, etc.) read `POSTGRES_USER` and `POSTGRES_DB` from the container's environment — no hardcoded credentials
-
 ## Management commands
 
-All management commands run inside containers via `docker compose exec`.
+All management commands are defined as pnpm scripts in `apps/backend/package.json` and run inside containers via `docker compose exec`.
 
 ### Database
 
 ```bash
-docker compose exec db sh -c 'psql -U $POSTGRES_USER $POSTGRES_DB'            # Interactive psql
-docker compose exec db sh -c 'pg_dump --data-only -U $POSTGRES_USER $POSTGRES_DB' > dump.sql  # Data-only dump
-docker compose exec db sh -c 'pg_dump --clean -U $POSTGRES_USER $POSTGRES_DB' > bak.sql       # Full backup
-docker compose exec -T db sh -c 'psql -U $POSTGRES_USER $POSTGRES_DB' < bak.sql               # Restore
+pnpm --filter backend db:psql                    # Interactive psql
+pnpm --filter backend db:dump > dump.sql         # Data-only dump
+pnpm --filter backend db:backup > bak.sql        # Full backup (schema + data)
+pnpm --filter backend db:restore < bak.sql       # Restore from backup
 ```
 
 ### Redis
 
 ```bash
-docker compose exec redis redis-cli FLUSHALL    # Flush all data
-docker compose exec redis redis-cli KEYS '*'    # List all keys
+pnpm --filter backend redis:flush                # Flush all data
+pnpm --filter backend redis:sessions             # List all keys
 ```
 
 ### Prisma (migrations)
 
 ```bash
-docker compose exec backend npx prisma migrate deploy   # Run pending migrations (production)
-docker compose exec backend npx prisma generate          # Regenerate Prisma client
+pnpm --filter backend prisma:deploy              # Run pending migrations (production)
+pnpm --filter backend prisma:generate            # Regenerate Prisma client
 ```
 
 ### Other
 
 ```bash
-docker compose exec backend npx tsx scripts/reprocess-images.ts          # Reprocess profile images
-docker compose exec backend npx node scripts/translate-tags-deepl.js     # Translate tags via DeepL
-docker compose exec backend pnpm listmonk:migrate                        # One-time user sync to Listmonk
+pnpm --filter backend images:reprocess           # Reprocess profile images
+pnpm --filter backend tags:translate             # Translate tags via DeepL
+pnpm --filter backend listmonk:migrate           # One-time user sync to Listmonk
 ```
 
 ## Seeding database
@@ -113,7 +99,7 @@ docker compose exec backend pnpm listmonk:migrate                        # One-t
 Create the initial set of interest tags:
 
 ```bash
-docker compose exec backend npx node prisma/seed/Tags.js
+pnpm --filter backend prisma:seed
 ```
 
 ## Listmonk Configuration
@@ -135,6 +121,7 @@ The backend uses Listmonk's custom token authentication to communicate with the 
    ```
 
 **Note**:
+
 - The token is only shown once during creation. If you lose it, create a new API user.
 - The format is `Authorization: token username:token_value` (lowercase "token")
 - Do NOT use the admin username/password — create a dedicated API user
@@ -144,10 +131,11 @@ The backend uses Listmonk's custom token authentication to communicate with the 
 After deploying the Listmonk integration, run the one-time migration script to sync existing users to Listmonk:
 
 ```bash
-docker compose exec backend pnpm listmonk:migrate
+pnpm --filter backend listmonk:migrate
 ```
 
 This will:
+
 1. Find all users with email addresses
 2. Sync them to Listmonk via the API
 3. Set their subscription status based on the `newsletterOptIn` flag
@@ -155,79 +143,47 @@ This will:
 
 The script is idempotent and can be safely run multiple times.
 
-## Jitsi Video Calls
+## Admin Panel
 
-Jitsi Meet is proxied through the ingress on port 443 using a subdomain (`meet.<DOMAIN>`).
+The admin panel is a standalone Vue SPA served at `https://<ADMIN_DOMAIN>/`.
 
-### Prerequisites
+### Access control
 
-1. **DNS**: Create an A or CNAME record for `meet.<DOMAIN>` pointing to the same server.
-2. **TLS certificate**: The cert must cover the Jitsi subdomain. Either:
-   - Use a wildcard cert (`*.<DOMAIN>`) — no extra steps needed.
-   - Or add the subdomain when obtaining the cert:
-     ```bash
-     docker compose run --rm certbot certonly \
-       --webroot -w /var/www/html \
-       -d ${DOMAIN} -d meet.${DOMAIN} \
-       --email ${EMAIL} --agree-tos --no-eff-email
-     ```
-3. **Environment**: Set `JITSI_DOMAIN=meet.<DOMAIN>` in `.env` (no port number — traffic goes through 443 via the ingress).
+The admin domain is protected by **mutual TLS (mTLS)** — only clients presenting a valid certificate signed by the trusted CA can connect.
 
-### JVB (media routing)
+### Client certificate setup
 
-Set `JVB_ADVERTISE_IPS` in `.env` to the public IP of the Docker host so that the Jitsi Videobridge can route media traffic correctly. Port `10000/udp` must be open in the firewall.
+1. **Generate a CA** (one-time):
 
-## TLS certificate renewal
+   ```bash
+   openssl genrsa -out ca.key 4096
+   openssl req -new -x509 -days 3650 -key ca.key -out ca.crt -subj "/CN=Admin CA"
+   ```
 
-Add a daily cron job for automatic certificate renewal:
+2. **Issue a client certificate**:
 
-```bash
-# Add to crontab (crontab -e)
-0 2 * * * /path/to/opencupid/scripts/renew-cert.sh >> /var/log/ssl-renewal.log 2>&1
-```
+   ```bash
+   openssl genrsa -out client.key 2048
+   openssl req -new -key client.key -out client.csr -subj "/CN=admin-user"
+   openssl x509 -req -days 365 -in client.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out client.crt
+   ```
 
-Or run manually:
+3. **Export as PKCS#12** for browser import:
 
-```bash
-./scripts/renew-cert.sh
-```
+   ```bash
+   openssl pkcs12 -export -out client.p12 -inkey client.key -in client.crt -certfile ca.crt
+   ```
 
-The renewal script uses `docker compose` (which reads `COMPOSE_FILE` from `.env`) to:
-1. Run certbot renewal using the webroot method
-2. Reload the nginx configuration if renewal is successful
+4. **Deploy the CA cert** as `/etc/nginx/client-ca.crt` on the server (mounted into the ingress container).
 
-## CD Pipeline (recommendations)
+5. **Import `client.p12`** into your browser's certificate store.
 
-The app currently uses a manual deploy workflow: merge to main → GHA builds Docker images → SSH to server → pull and restart. Below are options for automating this.
+## Firewall
 
-### Option A: GitHub Actions SSH deploy (recommended)
+The following ports must be open on the production server:
 
-Add a deploy job to `release.yml` that SSHes to the production server after images are built:
-
-```
-merge to main → GHA builds images → GHA SSHes to prod → deploy.sh
-```
-
-A `deploy.sh` on the server would:
-
-1. `docker compose pull` — pull the new images
-2. `docker compose exec backend npx prisma migrate deploy` — run pending DB migrations
-3. `docker compose up -d` — restart with new images
-
-**Prisma `migrate deploy`** is production-safe: it only applies pending migrations forward, is non-interactive, and never generates or modifies migration files. It can run against the live database before restarting the app.
-
-**Pros**: Full control, migration-aware, uses existing GHA infrastructure.
-**Cons**: Requires SSH key management (store as GitHub secret).
-
-### Option B: Watchtower (simplest)
-
-[Watchtower](https://github.com/containrrr/watchtower) runs as a container and auto-pulls new `:latest` images, restarting services when updates are detected.
-
-**Pros**: Zero-config, no SSH keys, just add a container.
-**Cons**: No migration step — would need a separate mechanism (e.g., entrypoint script in the backend container that runs `prisma migrate deploy` on startup).
-
-### Migration safety notes
-
-- Always back up the database before deploying migrations that drop columns or tables
-- Prisma migrations are append-only and versioned — they can be reviewed in PRs before merging
-- For zero-downtime deploys: ensure new code is backward-compatible with the old schema, deploy migrations first, then roll out new containers
+| Port  | Protocol | Purpose                                           |
+| ----- | -------- | ------------------------------------------------- |
+| 80    | TCP      | HTTP (certbot ACME challenges, redirect to HTTPS) |
+| 443   | TCP      | HTTPS (all web traffic including Jitsi)           |
+| 10000 | UDP      | Jitsi Videobridge media traffic                   |
