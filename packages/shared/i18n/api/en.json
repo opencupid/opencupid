@@ -2,6 +2,9 @@
   "messages": {
     "welcome_message": "Welcome to {{siteName}}!\nI am Mookie, your host.\nThis is a place for us to connect, meet new people, and find like-minded souls. I hope you enjoy your stay here.\nHappy connecting!\n- Mookie"
   },
+  "notifications": {
+    "voice_message_sent": "Sent a voice message"
+  },
   "emails": {
     "loginLink": {
       "subject": "[{{siteName}}] Your login link",
@@ -11,15 +14,15 @@
       "subject": "[{{siteName}}] Welcome!",
       "html": "<p>Hey there, welcome aboard!</p><a href=\"{{link}}\">Go connect with people</a></p>"
     },
-    "new_message":{
+    "new_message": {
       "subject": "[{{siteName}}] You have a new message",
       "html": "<p>Hey there,</p><p>You have a new message from <strong>{{sender}}</strong>:</p><blockquote>{{message}}</blockquote><p><a href=\"{{link}}\">Click here to read it</a></p>"
     },
-    "new_like":{
+    "new_like": {
       "subject": "[{{siteName}}] You have a new like",
       "html": "<p>Hey there,</p>Someone sent you a ❤️<p><p><a href=\"{{link}}\">Find out who</a></p>"
     },
-    "new_match":{
+    "new_match": {
       "subject": "[{{siteName}}] You have a new match!",
       "html": "<p>Hey there,</p><p>You matched with {{name}}<p><a href=\"{{link}}\">Click here to read it</a></p>"
     }
