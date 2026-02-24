@@ -257,8 +257,8 @@ importers:
         specifier: 6.3.5
         version: 6.3.5(@types/node@22.16.1)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.43.1)(tsx@4.21.0)(yaml@2.8.2)
       vite-tsconfig-paths:
-        specifier: 5.0.0
-        version: 5.0.0(typescript@5.9.3)(vite@6.3.5(@types/node@22.16.1)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.43.1)(tsx@4.21.0)(yaml@2.8.2))
+        specifier: 6.1.1
+        version: 6.1.1(typescript@5.9.3)(vite@6.3.5(@types/node@22.16.1)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.43.1)(tsx@4.21.0)(yaml@2.8.2))
       vitest:
         specifier: 4.0.18
         version: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@22.16.1)(jiti@2.6.1)(jsdom@28.1.0(canvas@3.2.1))(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.43.1)(tsx@4.21.0)(yaml@2.8.2)
@@ -7326,13 +7326,10 @@ packages:
     peerDependencies:
       vue: '>=3.2.13'
 
-  vite-tsconfig-paths@5.0.0:
-    resolution: {integrity: sha512-sCdKc6uC7ir102lW8deBiMnS0NGEs0100OJX8WZQmf3Uf7tJ/T3uQnzznq/tZWph7tkG+44JYOsKE7YTZjDn+Q==}
+  vite-tsconfig-paths@6.1.1:
+    resolution: {integrity: sha512-2cihq7zliibCCZ8P9cKJrQBkfgdvcFkOOc3Y02o3GWUDLgqjWsZudaoiuOwO/gzTzy17cS5F7ZPo4bsnS4DGkg==}
     peerDependencies:
       vite: '*'
-    peerDependenciesMeta:
-      vite:
-        optional: true
 
   vite@6.3.5:
     resolution: {integrity: sha512-cZn6NDFE7wdTpINgs++ZJ4N49W2vRp8LCKrn3Ob1kYNtOo21vfDoaV5GzBfLU4MovSAB8uNRm4jgzVQZ+mBzPQ==}
@@ -15001,12 +14998,11 @@ snapshots:
       svgo: 3.3.2
       vue: 3.5.28(typescript@5.9.3)
 
-  vite-tsconfig-paths@5.0.0(typescript@5.9.3)(vite@6.3.5(@types/node@22.16.1)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.43.1)(tsx@4.21.0)(yaml@2.8.2)):
+  vite-tsconfig-paths@6.1.1(typescript@5.9.3)(vite@6.3.5(@types/node@22.16.1)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.43.1)(tsx@4.21.0)(yaml@2.8.2)):
     dependencies:
       debug: 4.4.3
       globrex: 0.1.2
       tsconfck: 3.1.6(typescript@5.9.3)
-    optionalDependencies:
       vite: 6.3.5(@types/node@22.16.1)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.43.1)(tsx@4.21.0)(yaml@2.8.2)
     transitivePeerDependencies:
       - supports-color
