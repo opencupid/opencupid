@@ -34,7 +34,7 @@ export const useBootstrap = defineStore('bootstrap', () => {
 
       isBootstrapped.value = true
 
-      connectWebSocket(authStore.jwt)
+      connectWebSocket()
       messagingStore.initialize()
       interactionStore.initialize()
     })()

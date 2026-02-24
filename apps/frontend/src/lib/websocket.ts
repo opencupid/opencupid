@@ -1,6 +1,8 @@
 import { useWebSocket } from '@vueuse/core'
 import { bus } from '@/lib/bus'
+import { api } from '@/lib/api'
 import type { WSMessage } from '@zod/dto/websocket.dto'
+import type { WsTicketResponse } from '@zod/apiResponse.dto'
 
 let socket: ReturnType<typeof useWebSocket> | null = null
 
@@ -8,12 +10,25 @@ bus.on('auth:logout', () => {
   disconnectWebSocket()
 })
 
-export function connectWebSocket(token: string): void {
-  const url = `${__APP_CONFIG__.WS_BASE_URL}/message?token=${token}`
+export async function connectWebSocket(): Promise<void> {
+  // Fetch a short-lived ticket from the API
+  let ticket: string
+  try {
+    const res = await api.get<WsTicketResponse>('/auth/ws-ticket')
+    ticket = res.data.ticket
+  } catch (err) {
+    console.error('[WS] Failed to fetch ticket:', err)
+    return
+  }
+
+  const url = `${__APP_CONFIG__.WS_BASE_URL}/message?ticket=${ticket}`
 
   socket = useWebSocket(url, {
     immediate: true,
-    autoReconnect: true,
+    autoReconnect: {
+      retries: 3,
+      delay: 3000,
+    },
     onConnected: () => {
       console.log('[WS] Connected')
     },

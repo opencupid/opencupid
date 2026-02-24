@@ -6,9 +6,9 @@ import { OwnerProfileSchema } from '@zod/profile/profile.dto'
 export const JwtPayloadSchema = z.object({
   userId: z.string().cuid(),
   profileId: z.string().cuid(),
+  tokenVersion: z.number().int(),
 })
 export type JwtPayload = z.infer<typeof JwtPayloadSchema>
-
 
 export const UserIdentifierSchema = z.object({
   email: z.string().optional(),
@@ -16,19 +16,13 @@ export const UserIdentifierSchema = z.object({
 })
 export type UserIdentifier = z.infer<typeof UserIdentifierSchema>
 
-
-export const UserIdentifyPayloadSchema = UserIdentifierSchema
-  .extend({
-    captchaSolution: z.string().min(1, 'Captcha solution is required'),
-    language: z.string(),
-  })
-  .refine(
-    (data) => !!data.email || !!data.phonenumber,
-    {
-      message: 'Either email or phone number is required.',
-      path: ['email'], // mark the error on the email field (or 'phonenumber')
-    }
-  )
+export const UserIdentifyPayloadSchema = UserIdentifierSchema.extend({
+  captchaSolution: z.string().min(1, 'Captcha solution is required'),
+  language: z.string(),
+}).refine((data) => !!data.email || !!data.phonenumber, {
+  message: 'Either email or phone number is required.',
+  path: ['email'], // mark the error on the email field (or 'phonenumber')
+})
 export type UserIdentifyPayload = z.infer<typeof UserIdentifyPayloadSchema>
 
 export const SessionProfileSchema = ProfileSchema.pick({
@@ -42,13 +36,13 @@ export type SessionProfile = z.infer<typeof SessionProfileSchema>
 export const SessionDataSchema = z.object({
   userId: z.string(),
   profileId: z.string(),
+  tokenVersion: z.number().int(),
   lang: z.string().default('en'),
   roles: z.array(UserRoleSchema),
   hasActiveProfile: z.boolean().default(false),
   profile: SessionProfileSchema,
 })
 export type SessionData = z.infer<typeof SessionDataSchema>
-
 
 export const SettingsUserSchema = UserSchema.pick({
   email: true,
@@ -69,13 +63,19 @@ export const LoginUserSchema = UserSchema.pick({
 })
 export type LoginUser = z.infer<typeof LoginUserSchema>
 
-
 export const OtpLoginPayloadSchema = z.object({
   userId: z.string().cuid(),
-  otp: z.string().min(6, 'OTP must be at least 6 characters long').max(6, 'OTP must be exactly 6 characters long'),
+  otp: z
+    .string()
+    .min(6, 'OTP must be at least 6 characters long')
+    .max(6, 'OTP must be exactly 6 characters long'),
 })
 export type OtpLoginPayload = z.infer<typeof OtpLoginPayloadSchema>
 
+export const RefreshTokenPayloadSchema = z.object({
+  refreshToken: z.string().uuid(),
+})
+export type RefreshTokenPayload = z.infer<typeof RefreshTokenPayloadSchema>
 
 export const UserWithProfileSchema = UserSchema.extend({
   profile: OwnerProfileSchema,

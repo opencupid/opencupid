@@ -68,12 +68,15 @@ export type InteractionStatsResponse = ApiSuccess<{ stats: InteractionStats }>
 export type AuthResponse<T> = ApiSuccess<T> | (ApiError & { code: AuthErrorCodes })
 export type UserMeResponse = ApiSuccess<{ user: SettingsUser }>
 export type SendLoginLinkResponse = ApiSuccess<{ user: LoginUser; status: string }>
-export type OtpLoginSuccess = AuthResponse<{ token: string }>
+export type OtpLoginSuccess = AuthResponse<{ token: string; refreshToken: string }>
 export interface OtpLoginFailure {
   success: false
   status: string
 }
 export type OtpLoginResponse = OtpLoginSuccess | OtpLoginFailure
+
+export type RefreshTokenResponse = ApiSuccess<{ token: string; refreshToken: string }>
+export type WsTicketResponse = ApiSuccess<{ ticket: string }>
 
 export type CaptchaChallengeResponse = ApiSuccess<any> // altcha challenge shape
 

@@ -39,11 +39,15 @@ export const useAuthStore = defineStore('auth', {
   },
 
   actions: {
-    setAuthState(token: string) {
+    setAuthState(token: string, refreshToken?: string) {
       // Set JWT in localStorage and axios headers
       this.jwt = token
       localStorage.setItem('token', token)
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`
+
+      if (refreshToken) {
+        localStorage.setItem('refreshToken', refreshToken)
+      }
 
       // Parse user data from token
       try {
@@ -99,13 +103,13 @@ export const useAuthStore = defineStore('auth', {
       }
       try {
         const res = await safeApiCall(() =>
-          api.get<OtpLoginResponse>('/users/otp-login', {
+          api.get<OtpLoginResponse>('/auth/otp-login', {
             params: { userId, otp },
           })
         )
 
         if (res.data.success === true) {
-          this.setAuthState(res.data.token)
+          this.setAuthState(res.data.token, res.data.refreshToken)
           localStorage.removeItem('uid') // Clear userId after successful login
         } else {
           return {
@@ -120,7 +124,6 @@ export const useAuthStore = defineStore('auth', {
           ? error.response?.data?.message || error.message
           : 'Unexpected error'
 
-        // console.error('Login failed:', error)
         return {
           success: false,
           code: error.response?.data?.code || 'AUTH_INTERNAL_ERROR',
@@ -137,10 +140,9 @@ export const useAuthStore = defineStore('auth', {
         user: LoginUser
       }>
     > {
-      // console.log('Sending login link with data:', authId)
       try {
         const res = await safeApiCall(() =>
-          api.post<SendLoginLinkResponse>('/users/send-login-link', authId)
+          api.post<SendLoginLinkResponse>('/auth/send-login-link', authId)
         )
         const params = LoginUserSchema.safeParse(res.data.user)
         if (!params.success) {
@@ -215,14 +217,25 @@ export const useAuthStore = defineStore('auth', {
     },
 
     logout() {
+      // Try to call server-side logout (fire-and-forget)
+      if (this.jwt) {
+        api.post('/auth/logout').catch(() => {})
+      }
+
       this.userId = null
       this.email = null
       this.jwt = ''
       localStorage.removeItem('token')
+      localStorage.removeItem('refreshToken')
       delete api.defaults.headers.common['Authorization']
       bus.emit('auth:logout')
     },
   },
+})
+
+bus.on('auth:token-refreshed', ({ token, refreshToken }) => {
+  const store = useAuthStore()
+  store.setAuthState(token, refreshToken)
 })
 
 bus.on('language:changed', async ({ language }) => {

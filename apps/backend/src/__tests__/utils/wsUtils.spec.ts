@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { broadcastToProfile, verifyWsToken } from '../../utils/wsUtils'
+import { broadcastToProfile, verifyWsTicket } from '../../utils/wsUtils'
 
 describe('broadcastToProfile', () => {
   it('returns false when no connections exist', () => {
@@ -56,31 +56,53 @@ describe('broadcastToProfile', () => {
   })
 })
 
-describe('verifyWsToken', () => {
-  it('throws on missing token query param', () => {
+describe('verifyWsTicket', () => {
+  function createMockRedis(data: Record<string, string | null> = {}) {
+    return {
+      get: vi.fn((key: string) => Promise.resolve(data[key] ?? null)),
+      del: vi.fn(() => Promise.resolve(1)),
+    } as any
+  }
+
+  it('throws on missing ticket query param', async () => {
     const req = { query: {} } as any
-    const jwt = { verify: vi.fn() }
-    expect(() => verifyWsToken(req, jwt)).toThrow('Missing or malformed token')
+    const redis = createMockRedis()
+    await expect(verifyWsTicket(req, redis)).rejects.toThrow('Missing or malformed ticket')
   })
 
-  it('throws on empty token', () => {
-    const req = { query: { token: '' } } as any
-    const jwt = { verify: vi.fn() }
-    expect(() => verifyWsToken(req, jwt)).toThrow('Missing or malformed token')
+  it('throws on invalid UUID ticket', async () => {
+    const req = { query: { ticket: 'not-a-uuid' } } as any
+    const redis = createMockRedis()
+    await expect(verifyWsTicket(req, redis)).rejects.toThrow('Missing or malformed ticket')
   })
 
-  it('throws when jwt payload has no userId', () => {
-    const req = { query: { token: 'valid-token' } } as any
-    const jwt = { verify: vi.fn().mockReturnValue({}) }
-    expect(() => verifyWsToken(req, jwt)).toThrow('Invalid token payload')
+  it('throws when ticket not found in Redis', async () => {
+    const ticket = '550e8400-e29b-41d4-a716-446655440000'
+    const req = { query: { ticket } } as any
+    const redis = createMockRedis()
+    await expect(verifyWsTicket(req, redis)).rejects.toThrow('Invalid or expired ticket')
   })
 
-  it('returns payload on valid token', () => {
-    const payload = { userId: 'user1' }
-    const req = { query: { token: 'valid-token' } } as any
-    const jwt = { verify: vi.fn().mockReturnValue(payload) }
-    const result = verifyWsToken(req, jwt)
-    expect(result).toEqual(payload)
-    expect(jwt.verify).toHaveBeenCalledWith('valid-token')
+  it('returns payload and deletes ticket on valid ticket', async () => {
+    const ticket = '550e8400-e29b-41d4-a716-446655440000'
+    const ticketData = { userId: 'user1', profileId: 'profile1' }
+    const req = { query: { ticket } } as any
+    const redis = createMockRedis({
+      [`ws-ticket:${ticket}`]: JSON.stringify(ticketData),
+    })
+
+    const result = await verifyWsTicket(req, redis)
+    expect(result).toEqual(ticketData)
+    expect(redis.del).toHaveBeenCalledWith(`ws-ticket:${ticket}`)
+  })
+
+  it('throws when ticket payload is missing userId', async () => {
+    const ticket = '550e8400-e29b-41d4-a716-446655440000'
+    const req = { query: { ticket } } as any
+    const redis = createMockRedis({
+      [`ws-ticket:${ticket}`]: JSON.stringify({ profileId: 'profile1' }),
+    })
+
+    await expect(verifyWsTicket(req, redis)).rejects.toThrow('Invalid ticket payload')
   })
 })

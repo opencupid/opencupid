@@ -9,7 +9,7 @@ import otpGenerator from 'otp-generator'
 export type UserWithProfile = User & { profile: SessionProfile }
 
 function getTokenExpiration() {
-  return new Date(Date.now() + 1000 * 60 * 60 * 240)
+  return new Date(Date.now() + 1000 * 60 * 15) // 15 minutes
 }
 
 const profileInclude = {
@@ -158,6 +158,13 @@ export class UserService {
     })
 
     return updated
+  }
+
+  async bumpTokenVersion(userId: string): Promise<void> {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { tokenVersion: { increment: 1 } },
+    })
   }
 
   generateOTP() {

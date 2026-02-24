@@ -1,7 +1,7 @@
-import { JwtPayload } from '@zod/user/user.dto'
 import { FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { FastifyInstance } from 'fastify'
+import Redis from 'ioredis'
 
 export function broadcastToProfile(
   fastify: FastifyInstance,
@@ -21,21 +21,32 @@ export function broadcastToProfile(
   return true
 }
 
-const TokenQuerySchema = z.object({
-  token: z.string().min(1),
+const TicketQuerySchema = z.object({
+  ticket: z.string().uuid(),
 })
 
-export function verifyWsToken(req: FastifyRequest, jwt: any): JwtPayload {
-  const parsed = TokenQuerySchema.safeParse(req.query)
-  // console.log('Parsed token query:', parsed)
+export async function verifyWsTicket(
+  req: FastifyRequest,
+  redis: Redis
+): Promise<{ userId: string; profileId: string }> {
+  const parsed = TicketQuerySchema.safeParse(req.query)
   if (!parsed.success) {
-    throw new Error('Missing or malformed token')
+    throw new Error('Missing or malformed ticket')
   }
 
-  const payload = jwt.verify(parsed.data.token)
-  if (!payload?.userId) {
-    throw new Error('Invalid token payload')
+  const key = `ws-ticket:${parsed.data.ticket}`
+  const raw = await redis.get(key)
+  if (!raw) {
+    throw new Error('Invalid or expired ticket')
   }
 
-  return payload
+  // Delete ticket after first use (one-time)
+  await redis.del(key)
+
+  const data = JSON.parse(raw)
+  if (!data?.userId || !data?.profileId) {
+    throw new Error('Invalid ticket payload')
+  }
+
+  return { userId: data.userId, profileId: data.profileId }
 }

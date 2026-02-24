@@ -3,11 +3,10 @@ import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import fastifyJwt from '@fastify/jwt'
 import Redis from 'ioredis'
 
-import { UserService, type UserWithProfile } from 'src/services/user.service'
 import { SessionService } from '../services/session.service'
 import { sendUnauthorizedError } from 'src/api/helpers'
 import { appConfig } from '@/lib/appconfig'
-import { SessionData, SessionProfile, SessionProfileSchema } from '@zod/user/user.dto'
+import { SessionData } from '@zod/user/user.dto'
 
 // Extend Fastify types
 declare module 'fastify' {
@@ -28,6 +27,7 @@ if (!redisUrl) {
 export default fp(async (fastify: FastifyInstance) => {
   fastify.register(fastifyJwt, {
     secret: appConfig.JWT_SECRET,
+    sign: { expiresIn: '1h' },
   })
 
   // Initialize Redis client
@@ -53,43 +53,19 @@ export default fp(async (fastify: FastifyInstance) => {
     }
 
     // Try to fetch an existing session from Redis
-    let sess = await sessionService.get(sessionId)
+    const sess = await sessionService.get(sessionId)
     if (!sess) {
-      const userId = req.user?.userId
-      if (!userId) {
-        return sendUnauthorizedError(reply, 'Invalid session')
-      }
-
-      let user
-
-      try {
-        user = (await UserService.getInstance().getUserById(userId, {
-          include: {
-            profile: true,
-          },
-        })) as UserWithProfile
-        if (!user) return sendUnauthorizedError(reply, 'User not found')
-      } catch (error) {
-        fastify.log.error({ err: error }, 'Error fetching user for session refresh')
-        return sendUnauthorizedError(reply, 'Session refresh failed')
-      }
-
-      const profile = SessionProfileSchema.parse(user.profile || null)
-
-      const sessionData: SessionData = {
-        lang: user.language || 'en', // Default to 'en' if no language is set
-        roles: user.roles,
-        userId: user.id,
-        profileId: user.profile?.id || '',
-        hasActiveProfile: user.profile.isActive,
-        profile: profile,
-      }
-      sess = await sessionService.getOrCreate(sessionId, sessionData)
-      console.error(`Created new session for user ${user.id} with session ID ${sessionId}`)
-    } else {
-      // Refresh TTL on simple reads
-      await sessionService.refreshTtl(sessionId)
+      return sendUnauthorizedError(reply, 'Session expired')
     }
+
+    // Verify tokenVersion matches between JWT and session
+    if (req.user.tokenVersion !== sess.tokenVersion) {
+      return sendUnauthorizedError(reply, 'Token revoked')
+    }
+
+    // Refresh TTL on simple reads
+    await sessionService.refreshTtl(sessionId)
+
     req.session = sess
     req.deleteSession = async () => {
       return await sessionService.delete(sessionId)
