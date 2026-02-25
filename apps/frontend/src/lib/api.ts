@@ -123,9 +123,18 @@ api.interceptors.response.use(
           localStorage.removeItem('refreshToken')
           delete api.defaults.headers.common['Authorization']
           bus.emit('auth:logout')
+          window.location.href = '/auth'
 
           return Promise.reject(refreshError)
         }
+      } else {
+        // No refresh token — unrecoverable 401
+        localStorage.removeItem('token')
+        localStorage.removeItem('refreshToken')
+        delete api.defaults.headers.common['Authorization']
+        bus.emit('auth:logout')
+        window.location.href = '/auth'
+        return Promise.reject(error)
       }
     }
 

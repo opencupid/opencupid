@@ -17,6 +17,7 @@ declare module 'fastify' {
   interface FastifyRequest {
     session: SessionData
     deleteSession: () => Promise<void>
+    updateSession: (data: Partial<SessionData>) => Promise<void>
   }
 }
 
@@ -74,6 +75,9 @@ export default fp(async (fastify: FastifyInstance) => {
     req.session = sess
     req.deleteSession = async () => {
       return await sessionService.delete(sessionId)
+    }
+    req.updateSession = async (data: Partial<SessionData>) => {
+      return await sessionService.patch(sessionId, data)
     }
   })
 })

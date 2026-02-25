@@ -63,18 +63,21 @@ describe('PATCH /me', () => {
     expect(reply.statusCode).toBe(400)
   })
 
-  it('updates language and deletes session', async () => {
+  it('updates language and patches session instead of deleting it', async () => {
     const handler = fastify.routes['PATCH /me']
+    const updateSession = vi.fn()
     const deleteSession = vi.fn()
     const req = {
       user: { userId: 'u1' },
       body: { language: 'de' },
+      updateSession,
       deleteSession,
     }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
     expect(mockUserService.update).toHaveBeenCalled()
-    expect(deleteSession).toHaveBeenCalled()
+    expect(updateSession).toHaveBeenCalledWith({ lang: 'de' })
+    expect(deleteSession).not.toHaveBeenCalled()
   })
 })

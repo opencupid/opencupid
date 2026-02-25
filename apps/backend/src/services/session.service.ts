@@ -49,6 +49,17 @@ export class SessionService {
   }
 
   /**
+   * Merge partial data into an existing session without deleting it
+   */
+  async patch(id: string, data: Partial<SessionData>): Promise<void> {
+    const existing = await this.get(id)
+    if (!existing) return
+    const merged = { ...existing, ...data }
+    const hkey = this.sessionKey(id)
+    await this.redis.multi().set(hkey, JSON.stringify(merged)).expire(hkey, this.ttlSec).exec()
+  }
+
+  /**
    * Delete a session and its roles
    */
   async delete(id: string): Promise<void> {
