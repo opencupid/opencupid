@@ -37,7 +37,13 @@ const editBlocked = ref(false)
 const saving = ref(false)
 const saveError = ref<string | null>(null)
 
-type SortColumn = 'publicName' | 'isActive' | 'isBlocked' | 'createdAt' | 'isRegistrationConfirmed' | 'newsletterOptIn'
+type SortColumn =
+  | 'publicName'
+  | 'isActive'
+  | 'isBlocked'
+  | 'createdAt'
+  | 'isRegistrationConfirmed'
+  | 'newsletterOptIn'
 const sortColumn = ref<SortColumn | null>(null)
 const sortDirection = ref<'asc' | 'desc'>('asc')
 
@@ -349,6 +355,8 @@ onMounted(fetchUsers)
       class="modal d-block"
       tabindex="-1"
       @click.self="selectedUser = null"
+      @keydown.escape="selectedUser = null"
+      @keydown.enter.prevent="saveUser"
     >
       <div class="modal-dialog">
         <div class="modal-content">
@@ -455,6 +463,8 @@ onMounted(fetchUsers)
       class="modal d-block"
       tabindex="-1"
       @click.self="selectedProfile = null"
+      @keydown.escape="selectedProfile = null"
+      @keydown.enter.prevent="selectedProfile = null"
     >
       <div class="modal-dialog">
         <div class="modal-content">

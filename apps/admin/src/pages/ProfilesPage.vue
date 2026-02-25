@@ -313,6 +313,8 @@ onMounted(() => {
       class="modal d-block"
       tabindex="-1"
       @click.self="selectedProfile = null"
+      @keydown.escape="selectedProfile = null"
+      @keydown.enter.prevent="selectedProfile = null"
     >
       <div class="modal-dialog">
         <div class="modal-content">

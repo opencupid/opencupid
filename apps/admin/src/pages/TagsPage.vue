@@ -359,6 +359,8 @@ onMounted(fetchTags)
       class="modal d-block"
       tabindex="-1"
       @click.self="selectedTag = null"
+      @keydown.escape="selectedTag = null"
+      @keydown.enter.prevent="saveTag"
     >
       <div class="modal-dialog">
         <div class="modal-content">
