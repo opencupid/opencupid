@@ -72,7 +72,12 @@ const userRoutes: FastifyPluginAsync = async (fastify) => {
           }
         }
         await userService.update(updateData as User)
-        await req.deleteSession()
+
+        // Update session data instead of deleting it — deleteSession would
+        // nuke the Redis entry, causing 401s for any concurrent requests.
+        if (language) {
+          await req.updateSession({ lang: language })
+        }
 
         return reply.code(200).send({ success: true })
       } catch (error) {

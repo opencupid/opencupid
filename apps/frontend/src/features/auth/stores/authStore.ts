@@ -255,9 +255,12 @@ bus.on('auth:token-refreshed', ({ token, refreshToken }) => {
   store.setAuthState(token, refreshToken)
 })
 
+let lastSyncedLanguage: string | null = null
 bus.on('language:changed', async ({ language }) => {
   const store = useAuthStore()
   if (!store.isLoggedIn) return
+  if (language === lastSyncedLanguage) return
+  lastSyncedLanguage = language
   // TODO move this into the settings view
   await store.updateUser({ language })
 })

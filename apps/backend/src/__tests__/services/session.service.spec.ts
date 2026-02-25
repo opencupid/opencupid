@@ -79,6 +79,25 @@ describe('SessionService.refreshTtl', () => {
   })
 })
 
+describe('SessionService.patch', () => {
+  it('merges partial data into existing session', async () => {
+    redis.get.mockResolvedValue(JSON.stringify(sessionData))
+    await service.patch('sess1', { lang: 'hu' })
+
+    // Zod reorders keys when parsing, so compare as parsed objects
+    const storedJson = redis._chain.set.mock.calls[0][1]
+    expect(JSON.parse(storedJson)).toEqual({ ...sessionData, lang: 'hu' })
+    expect(redis._chain.expire).toHaveBeenCalledWith('session:sess1', 604800)
+  })
+
+  it('does nothing when session does not exist', async () => {
+    redis.get.mockResolvedValue(null)
+    await service.patch('missing', { lang: 'hu' })
+
+    expect(redis.multi).not.toHaveBeenCalled()
+  })
+})
+
 describe('SessionService.delete', () => {
   it('deletes session and roles keys', async () => {
     await service.delete('sess1')
