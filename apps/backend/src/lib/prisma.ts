@@ -8,7 +8,6 @@ const logLevels: Prisma.LogLevel[] =
 
 // In development, use global to prevent multiple instances during hot reloading
 declare global {
-  // eslint-disable-next-line no-var
   var prisma: PrismaClient | undefined
 }
 const txOptions =
@@ -23,7 +22,6 @@ const txOptions =
 
 // Create the PrismaClient instance
 const prismaClientSingleton = () => {
-  console.error('DATABASE_URL -> ', process.env.DATABASE_URL)
   return new PrismaClient({
     log: logLevels,
     ...txOptions,
