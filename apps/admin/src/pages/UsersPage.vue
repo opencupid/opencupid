@@ -9,6 +9,8 @@ interface AdminUser {
   phonenumber: string | null
   isActive: boolean
   isBlocked: boolean
+  newsletterOptIn: boolean
+  isRegistrationConfirmed: boolean
   roles: string[]
   createdAt: string
   lastLoginAt: string | null
@@ -35,7 +37,7 @@ const editBlocked = ref(false)
 const saving = ref(false)
 const saveError = ref<string | null>(null)
 
-type SortColumn = 'publicName' | 'isActive' | 'isBlocked' | 'createdAt'
+type SortColumn = 'publicName' | 'isActive' | 'isBlocked' | 'createdAt' | 'isRegistrationConfirmed' | 'newsletterOptIn'
 const sortColumn = ref<SortColumn | null>(null)
 const sortDirection = ref<'asc' | 'desc'>('asc')
 
@@ -218,6 +220,12 @@ onMounted(fetchUsers)
             </th>
             <th
               style="cursor: pointer"
+              @click="toggleSort('isRegistrationConfirmed')"
+            >
+              Confirmed{{ sortIndicator('isRegistrationConfirmed') }}
+            </th>
+            <th
+              style="cursor: pointer"
               @click="toggleSort('isActive')"
             >
               Active{{ sortIndicator('isActive') }}
@@ -227,6 +235,12 @@ onMounted(fetchUsers)
               @click="toggleSort('isBlocked')"
             >
               Blocked{{ sortIndicator('isBlocked') }}
+            </th>
+            <th
+              style="cursor: pointer"
+              @click="toggleSort('newsletterOptIn')"
+            >
+              Newsletter{{ sortIndicator('newsletterOptIn') }}
             </th>
             <th
               style="cursor: pointer"
@@ -245,6 +259,11 @@ onMounted(fetchUsers)
             <td>{{ user.email || user.phonenumber || '-' }}</td>
             <td>{{ user.profile?.publicName || '-' }}</td>
             <td>
+              <span :class="user.isRegistrationConfirmed ? 'badge bg-success' : 'badge bg-warning'">
+                {{ user.isRegistrationConfirmed ? 'Yes' : 'No' }}
+              </span>
+            </td>
+            <td>
               <span :class="user.isActive ? 'badge bg-success' : 'badge bg-secondary'">
                 {{ user.isActive ? 'Yes' : 'No' }}
               </span>
@@ -252,6 +271,11 @@ onMounted(fetchUsers)
             <td>
               <span :class="user.isBlocked ? 'badge bg-danger' : 'badge bg-secondary'">
                 {{ user.isBlocked ? 'Yes' : 'No' }}
+              </span>
+            </td>
+            <td>
+              <span :class="user.newsletterOptIn ? 'badge bg-success' : 'badge bg-secondary'">
+                {{ user.newsletterOptIn ? 'Yes' : 'No' }}
               </span>
             </td>
             <td>{{ new Date(user.createdAt).toLocaleDateString() }}</td>
@@ -274,7 +298,7 @@ onMounted(fetchUsers)
           </tr>
           <tr v-if="users.length === 0">
             <td
-              colspan="6"
+              colspan="8"
               class="text-center text-muted"
             >
               No users found
