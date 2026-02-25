@@ -126,20 +126,18 @@ const router = createRouter({
 })
 
 // Register the navigation guard
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to) => {
   const authStore = useAuthStore()
 
   // if route requires authentication and the user is not logged in, redirect to login
   if (to.meta.requiresAuth && !authStore.isLoggedIn) {
-    return next({ name: 'Login' })
+    return { name: 'Login' }
   }
 
   // user is logged in and tries to access the login page, redirect to UserHome
   if (!to.meta.requiresAuth && authStore.isLoggedIn) {
-    return next({ name: 'UserHome' })
+    return { name: 'UserHome' }
   }
-
-  next()
 })
 
 let previousUrl: string = '/browse'
