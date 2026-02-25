@@ -63,6 +63,23 @@ export const useAuthStore = defineStore('auth', {
     initialize() {
       const token = localStorage.getItem('token')
       if (token) {
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]!))
+          const isExpired = payload.exp && payload.exp * 1000 < Date.now()
+          const refreshToken = localStorage.getItem('refreshToken')
+
+          if (isExpired && !refreshToken) {
+            // Expired JWT with no refresh token — unrecoverable, clear state
+            localStorage.removeItem('token')
+            this.isInitialized = true
+            return
+          }
+        } catch {
+          // Malformed JWT — clear it
+          localStorage.removeItem('token')
+          this.isInitialized = true
+          return
+        }
         this.setAuthState(token)
       }
       this.isInitialized = true
