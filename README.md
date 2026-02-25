@@ -1,5 +1,6 @@
 [![Test](https://github.com/opencupid/opencupid/actions/workflows/test.yml/badge.svg)](https://github.com/opencupid/opencupid/actions/workflows/test.yml)
 [![CodeQL Analysis](https://github.com/opencupid/opencupid/actions/workflows/codeql.yml/badge.svg)](https://github.com/opencupid/opencupid/actions/workflows/codeql.yml)
+[![Docker Build](https://github.com/opencupid/opencupid/actions/workflows/docker.yml/badge.svg)](https://github.com/opencupid/opencupid/actions/workflows/docker.yml)
 
 # OpenCupid
 
