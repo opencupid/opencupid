@@ -32,6 +32,7 @@ i18next.use(FsBackend).init({
   fallbackLng: 'en',
   preload: Object.keys(labels),
   initImmediate: false,
+  showSupportNotice: false,
   backend: {
     loadPath: translationsPath,
   },
