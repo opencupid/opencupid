@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import axios, { AxiosError, AxiosHeaders } from 'axios'
+import axios, { AxiosHeaders } from 'axios'
 
 const mockEmit = vi.fn()
 vi.mock('../bus', () => ({
@@ -17,6 +17,10 @@ describe('api refresh interceptor', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     localStorage.clear()
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
   })
 
   it('stores and retrieves refresh token from localStorage', () => {
@@ -42,5 +46,45 @@ describe('api refresh interceptor', () => {
     expect(config._retry).toBe(false)
     config._retry = true
     expect(config._retry).toBe(true)
+  })
+
+  it('rejects queued requests when refresh fails', async () => {
+    const postSpy = vi.spyOn(axios, 'post').mockRejectedValue(new Error('refresh failed'))
+
+    const { api } = await import('../api')
+    const rejected = api.interceptors.response.handlers[0].rejected
+
+    localStorage.setItem('token', 'expired-token')
+    localStorage.setItem('refreshToken', 'refresh-token')
+
+    const originalRequest = {
+      _retry: false,
+      headers: new AxiosHeaders(),
+      method: 'get',
+      url: '/protected',
+    }
+
+    const firstRefresh = rejected({
+      config: originalRequest,
+      response: { status: 401 },
+    })
+
+    const secondRefresh = rejected({
+      config: {
+        _retry: false,
+        headers: new AxiosHeaders(),
+        method: 'get',
+        url: '/another',
+      },
+      response: { status: 401 },
+    })
+
+    await expect(firstRefresh).rejects.toThrow('refresh failed')
+    await expect(secondRefresh).rejects.toThrow('refresh failed')
+
+    expect(postSpy).toHaveBeenCalledTimes(1)
+    expect(localStorage.getItem('token')).toBeNull()
+    expect(localStorage.getItem('refreshToken')).toBeNull()
+    expect(mockEmit).toHaveBeenCalledWith('auth:logout')
   })
 })

@@ -41,15 +41,23 @@ function startRetryMechanism() {
 
 // --- Silent token refresh interceptor ---
 let isRefreshing = false
-let refreshSubscribers: ((token: string) => void)[] = []
+let refreshSubscribers: Array<{
+  resolve: (token: string) => void
+  reject: (error: unknown) => void
+}> = []
 
 function onTokenRefreshed(token: string) {
-  refreshSubscribers.forEach((cb) => cb(token))
+  refreshSubscribers.forEach(({ resolve }) => resolve(token))
   refreshSubscribers = []
 }
 
-function addRefreshSubscriber(callback: (token: string) => void) {
-  refreshSubscribers.push(callback)
+function onRefreshFailed(error: unknown) {
+  refreshSubscribers.forEach(({ reject }) => reject(error))
+  refreshSubscribers = []
+}
+
+function addRefreshSubscriber(resolve: (token: string) => void, reject: (error: unknown) => void) {
+  refreshSubscribers.push({ resolve, reject })
 }
 
 api.interceptors.response.use(
@@ -79,11 +87,11 @@ api.interceptors.response.use(
       if (refreshToken && token) {
         if (isRefreshing) {
           // Another refresh is in progress — queue this request
-          return new Promise((resolve) => {
+          return new Promise((resolve, reject) => {
             addRefreshSubscriber((newToken: string) => {
               originalRequest.headers['Authorization'] = `Bearer ${newToken}`
               resolve(api(originalRequest))
-            })
+            }, reject)
           })
         }
 
@@ -116,7 +124,7 @@ api.interceptors.response.use(
           return api(originalRequest)
         } catch (refreshError) {
           isRefreshing = false
-          refreshSubscribers = []
+          onRefreshFailed(refreshError)
 
           // Refresh failed — clear auth state and redirect to login
           localStorage.removeItem('token')
