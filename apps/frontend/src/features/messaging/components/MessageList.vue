@@ -2,6 +2,7 @@
 import { type MessageDTO } from '@zod/messaging/messaging.dto'
 import { nextTick, ref, watch } from 'vue'
 import VoiceMessage from './VoiceMessage.vue'
+import { renderMessage } from '@/lib/renderMessage'
 
 const props = defineProps<{
   messages: MessageDTO[]
@@ -67,6 +68,7 @@ const handleScroll = () => {
     emit('load-older')
   }
 }
+
 </script>
 
 <template>
@@ -100,8 +102,10 @@ const handleScroll = () => {
       <!-- Text message -->
       <div
         v-else
-        v-html="msg.content"
-      />
+        class="message-text"
+      >
+        <span v-html="renderMessage(msg.content)" />
+      </div>
     </div>
   </div>
 </template>
@@ -114,5 +118,14 @@ const handleScroll = () => {
   padding: 0.25rem 0.5rem;
   font-size: 0.9rem;
   color: white;
+}
+
+.message-text :deep(p) {
+  margin: 0;
+}
+
+.message-text :deep(a) {
+  color: inherit;
+  text-decoration: underline;
 }
 </style>

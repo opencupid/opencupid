@@ -2,6 +2,7 @@
 import { type ConversationSummary } from '@zod/messaging/messaging.dto'
 import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
 import { useI18n } from 'vue-i18n'
+import { stripForPreview } from '@/lib/renderMessage'
 
 defineProps<{
   conversations: ConversationSummary[]
@@ -14,15 +15,6 @@ defineEmits<{
 }>()
 
 const { t } = useI18n()
-
-// Strip HTML tags and convert to single line for preview
-function cleanMessagePreview(content: string): string {
-  return content
-    .replace(/<br\s*\/?>/gi, ' ') // Replace <br> tags with spaces
-    .replace(/<[^>]+>/g, '') // Strip any other HTML tags
-    .replace(/\s+/g, ' ') // Collapse multiple spaces
-    .trim()
-}
 </script>
 
 <template>
@@ -48,7 +40,7 @@ function cleanMessagePreview(content: string): string {
             >{{
               convo.lastMessage.messageType === 'audio/voice'
                 ? t('messaging.voice.voice_message_preview')
-                : cleanMessagePreview(convo.lastMessage.content)
+                : stripForPreview(convo.lastMessage.content)
             }}</small
           >
         </div>
