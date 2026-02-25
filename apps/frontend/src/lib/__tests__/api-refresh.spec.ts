@@ -32,7 +32,6 @@ describe('api refresh interceptor', () => {
     localStorage.setItem('token', 'jwt')
     localStorage.setItem('refreshToken', 'refresh')
 
-    // Simulate what happens on logout
     localStorage.removeItem('token')
     localStorage.removeItem('refreshToken')
 
@@ -41,7 +40,6 @@ describe('api refresh interceptor', () => {
   })
 
   it('retry flag prevents infinite loops', () => {
-    // Test that _retry flag logic works
     const config = { _retry: false }
     expect(config._retry).toBe(false)
     config._retry = true
@@ -51,9 +49,7 @@ describe('api refresh interceptor', () => {
   it('rejects queued requests when refresh fails', async () => {
     const postSpy = vi.spyOn(axios, 'post').mockRejectedValue(new Error('refresh failed'))
 
-    const { api } = await import('../api')
-    const rejected = api.interceptors.response.handlers?.[0]?.rejected
-    expect(rejected).toBeTypeOf('function')
+    const { handleApiError } = await import('../api')
 
     localStorage.setItem('token', 'expired-token')
     localStorage.setItem('refreshToken', 'refresh-token')
@@ -65,12 +61,12 @@ describe('api refresh interceptor', () => {
       url: '/protected',
     }
 
-    const firstRefresh = rejected!({
+    const firstRefresh = handleApiError({
       config: originalRequest,
       response: { status: 401 },
     })
 
-    const secondRefresh = rejected!({
+    const secondRefresh = handleApiError({
       config: {
         _retry: false,
         headers: new AxiosHeaders(),
@@ -90,14 +86,12 @@ describe('api refresh interceptor', () => {
   })
 
   it('logs out on 401 when token exists but refresh token is missing', async () => {
-    const { api } = await import('../api')
-    const rejected = api.interceptors.response.handlers?.[0]?.rejected
-    expect(rejected).toBeTypeOf('function')
+    const { handleApiError } = await import('../api')
 
     localStorage.setItem('token', 'expired-token')
 
     await expect(
-      rejected!({
+      handleApiError({
         config: {
           _retry: false,
           headers: new AxiosHeaders(),

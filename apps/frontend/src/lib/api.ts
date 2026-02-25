@@ -67,117 +67,116 @@ function addRefreshSubscriber(resolve: (token: string) => void, reject: (error: 
   refreshSubscribers.push({ resolve, reject })
 }
 
-api.interceptors.response.use(
-  (response) => {
-    if (isOffline) {
-      isOffline = false
-      bus.emit('api:online')
-      waitForRecovery.forEach((fn) => fn())
-      waitForRecovery = []
+async function handleApiError(error: any) {
+  const originalRequest = error?.config
 
-      if (retryTimeoutId) {
-        clearTimeout(retryTimeoutId)
-        retryTimeoutId = null
-      }
-    }
+  // Handle 401 with silent refresh
+  if (error?.response?.status === 401) {
+    const refreshToken = localStorage.getItem('refreshToken')
+    const token = localStorage.getItem('token')
 
-    return response
-  },
-  async (error) => {
-    const originalRequest = error?.config
-
-    // Handle 401 with silent refresh
-    if (error?.response?.status === 401) {
-      const refreshToken = localStorage.getItem('refreshToken')
-      const token = localStorage.getItem('token')
-
-      if (!originalRequest) {
-        if (token) {
-          clearAuthState()
-        }
-        return Promise.reject(error)
-      }
-
-      if (refreshToken && token && !originalRequest._retry) {
-        if (isRefreshing) {
-          // Another refresh is in progress — queue this request
-          return new Promise((resolve, reject) => {
-            addRefreshSubscriber((newToken: string) => {
-              originalRequest.headers = originalRequest.headers || {}
-              originalRequest.headers['Authorization'] = `Bearer ${newToken}`
-              resolve(api(originalRequest))
-            }, reject)
-          })
-        }
-
-        originalRequest._retry = true
-        isRefreshing = true
-
-        try {
-          const res = await axios.post(
-            `${baseURL}/auth/refresh`,
-            { refreshToken },
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          )
-
-          const newToken = res.data.token
-          const newRefreshToken = res.data.refreshToken
-
-          localStorage.setItem('token', newToken)
-          localStorage.setItem('refreshToken', newRefreshToken)
-          api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`
-
-          isRefreshing = false
-          onTokenRefreshed(newToken)
-
-          // Notify auth store of new tokens
-          bus.emit('auth:token-refreshed', { token: newToken, refreshToken: newRefreshToken })
-
-          originalRequest.headers = originalRequest.headers || {}
-          originalRequest.headers['Authorization'] = `Bearer ${newToken}`
-          return api(originalRequest)
-        } catch (refreshError) {
-          isRefreshing = false
-          onRefreshFailed(refreshError)
-
-          // Refresh failed — clear auth state and redirect to login
-          clearAuthState()
-
-          return Promise.reject(refreshError)
-        }
-      }
-
-      // Existing token but no refresh token (or refresh already retried) => force local logout
+    if (!originalRequest) {
       if (token) {
         clearAuthState()
       }
+      return Promise.reject(error)
     }
 
-    // Network error handling
-    const isNetworkError =
-      !error.response ||
-      [
-        'ECONNABORTED',
-        'ENETUNREACH',
-        'ENOTFOUND',
-        'ECONNREFUSED',
-        'ETIMEDOUT',
-        'ECONNRESET',
-        'ERR_NETWORK',
-        'ERR_BAD_RESPONSE',
-      ].includes(error.code)
+    if (refreshToken && token && !originalRequest._retry) {
+      if (isRefreshing) {
+        // Another refresh is in progress — queue this request
+        return new Promise((resolve, reject) => {
+          addRefreshSubscriber((newToken: string) => {
+            originalRequest.headers = originalRequest.headers || {}
+            originalRequest.headers['Authorization'] = `Bearer ${newToken}`
+            resolve(api(originalRequest))
+          }, reject)
+        })
+      }
 
-    if (isNetworkError && !isOffline) {
-      isOffline = true
-      bus.emit('api:offline')
-      startRetryMechanism()
+      originalRequest._retry = true
+      isRefreshing = true
+
+      try {
+        const res = await axios.post(
+          `${baseURL}/auth/refresh`,
+          { refreshToken },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        )
+
+        const newToken = res.data.token
+        const newRefreshToken = res.data.refreshToken
+
+        localStorage.setItem('token', newToken)
+        localStorage.setItem('refreshToken', newRefreshToken)
+        api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`
+
+        isRefreshing = false
+        onTokenRefreshed(newToken)
+
+        // Notify auth store of new tokens
+        bus.emit('auth:token-refreshed', { token: newToken, refreshToken: newRefreshToken })
+
+        originalRequest.headers = originalRequest.headers || {}
+        originalRequest.headers['Authorization'] = `Bearer ${newToken}`
+        return api(originalRequest)
+      } catch (refreshError) {
+        isRefreshing = false
+        onRefreshFailed(refreshError)
+
+        // Refresh failed — clear auth state and redirect to login
+        clearAuthState()
+
+        return Promise.reject(refreshError)
+      }
     }
 
-    return Promise.reject(error)
+    // Existing token but no refresh token (or refresh already retried) => force local logout
+    if (token) {
+      clearAuthState()
+    }
   }
-)
+
+  // Network error handling
+  const isNetworkError =
+    !error.response ||
+    [
+      'ECONNABORTED',
+      'ENETUNREACH',
+      'ENOTFOUND',
+      'ECONNREFUSED',
+      'ETIMEDOUT',
+      'ECONNRESET',
+      'ERR_NETWORK',
+      'ERR_BAD_RESPONSE',
+    ].includes(error.code)
+
+  if (isNetworkError && !isOffline) {
+    isOffline = true
+    bus.emit('api:offline')
+    startRetryMechanism()
+  }
+
+  return Promise.reject(error)
+}
+
+api.interceptors.response.use((response) => {
+  if (isOffline) {
+    isOffline = false
+    bus.emit('api:online')
+    waitForRecovery.forEach((fn) => fn())
+    waitForRecovery = []
+
+    if (retryTimeoutId) {
+      clearTimeout(retryTimeoutId)
+      retryTimeoutId = null
+    }
+  }
+
+  return response
+}, handleApiError)
 
 export async function safeApiCall<T>(fn: () => Promise<T>): Promise<T> {
   while (isOffline) {
@@ -213,3 +212,4 @@ export async function safeApiCall<T>(fn: () => Promise<T>): Promise<T> {
 }
 
 export { axios }
+export { handleApiError }
