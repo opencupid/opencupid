@@ -109,7 +109,9 @@ describe('GET /otp-login', () => {
       id: 'user1',
       email: 'test@example.com',
       tokenVersion: 0,
-      profile: { id: 'profile1' },
+      roles: [],
+      language: 'en',
+      profile: { id: 'profile1', isDatingActive: false, isSocialActive: false, isActive: false },
     }
     mockUserService.validateUserOtpLogin.mockResolvedValue({
       success: true,
@@ -132,6 +134,8 @@ describe('GET /otp-login', () => {
       id: 'user2',
       email: 'new@example.com',
       tokenVersion: 0,
+      roles: [],
+      language: 'en',
       profile: undefined,
     }
     mockUserService.validateUserOtpLogin.mockResolvedValue({
@@ -139,7 +143,12 @@ describe('GET /otp-login', () => {
       user,
       isNewUser: true,
     })
-    const newProfile = { id: 'profile2' }
+    const newProfile = {
+      id: 'profile2',
+      isDatingActive: false,
+      isSocialActive: false,
+      isActive: false,
+    }
     mockProfileService.initializeProfiles.mockResolvedValue(newProfile)
     fastify.jwt = { sign: vi.fn().mockReturnValue('jwt-token2') }
     const notifier = (await import('../../services/notifier.service')).notifierService
@@ -369,6 +378,9 @@ describe('POST /refresh', () => {
     mockUserService.getUserById.mockResolvedValue({
       id: 'user1',
       tokenVersion: 0,
+      roles: [],
+      language: 'en',
+      profile: { id: 'p1', isDatingActive: false, isSocialActive: false, isActive: false },
     })
     fastify.jwt = {
       sign: vi.fn().mockReturnValue('new-jwt'),

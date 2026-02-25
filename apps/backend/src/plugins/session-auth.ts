@@ -12,6 +12,7 @@ import { SessionData } from '@zod/user/user.dto'
 declare module 'fastify' {
   interface FastifyInstance {
     redis: Redis
+    createSession: (token: string, data: SessionData) => Promise<void>
   }
   interface FastifyRequest {
     session: SessionData
@@ -34,6 +35,10 @@ export default fp(async (fastify: FastifyInstance) => {
   const redis = new Redis(redisUrl)
   fastify.decorate('redis', redis)
   const sessionService = new SessionService(redis)
+
+  fastify.decorate('createSession', async (token: string, data: SessionData): Promise<void> => {
+    await sessionService.getOrCreate(token, data)
+  })
 
   // Auth hook reads Bearer token as session ID
   fastify.decorate('authenticate', async (req: FastifyRequest, reply: FastifyReply) => {

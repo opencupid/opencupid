@@ -15,6 +15,7 @@ import {
   OtpLoginPayloadSchema,
   RefreshTokenPayloadSchema,
   type LoginUser,
+  type SessionData,
 } from '@zod/user/user.dto'
 import type {
   OtpLoginResponse,
@@ -52,7 +53,13 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         }
 
         const { user, isNewUser } = result
-        let profileId = null
+        let profileId: string
+        let sessionProfile: {
+          id: string
+          isDatingActive: boolean
+          isSocialActive: boolean
+          isActive: boolean
+        }
 
         // new user
         if (isNewUser) {
@@ -63,9 +70,12 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
           // If the user is new, initialize their profiles
           const newProfile = await profileService.initializeProfiles(user.id)
           profileId = newProfile.id
+          sessionProfile = newProfile
         } else {
           // TODO FIXME otpLogin return a User which has no profile on it.
-          profileId = (user as any).profile.id
+          const existingProfile = (user as any).profile
+          profileId = existingProfile.id
+          sessionProfile = existingProfile
         }
 
         const payload: JwtPayload = {
@@ -74,6 +84,23 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
           tokenVersion: user.tokenVersion,
         }
         const jwt = fastify.jwt.sign(payload)
+
+        const sessionData: SessionData = {
+          userId: user.id,
+          profileId,
+          tokenVersion: user.tokenVersion,
+          lang: user.language || 'en',
+          roles: user.roles,
+          hasActiveProfile: sessionProfile.isActive,
+          profile: {
+            id: sessionProfile.id,
+            isDatingActive: sessionProfile.isDatingActive,
+            isSocialActive: sessionProfile.isSocialActive,
+            isActive: sessionProfile.isActive,
+          },
+        }
+        await fastify.createSession(jwt, sessionData)
+
         const refreshToken = await refreshTokenService.create(user.id, profileId, user.tokenVersion)
         const response: OtpLoginResponse = { success: true, token: jwt, refreshToken }
         reply.code(200).send(response)
@@ -131,7 +158,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       // Fetch current user to verify tokenVersion hasn't been bumped
-      const user = await userService.getUserById(tokenData.userId)
+      const user = await userService.getUserById(tokenData.userId, { include: { profile: true } })
       if (!user) {
         return sendUnauthorizedError(reply, 'User not found')
       }
@@ -149,6 +176,24 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         tokenVersion: user.tokenVersion,
       }
       const newJwt = fastify.jwt.sign(newPayload)
+
+      const userWithProfile = user as any
+      const refreshedSessionData: SessionData = {
+        userId: user.id,
+        profileId: tokenData.profileId,
+        tokenVersion: user.tokenVersion,
+        lang: (user as any).language || 'en',
+        roles: (user as any).roles,
+        hasActiveProfile: userWithProfile.profile?.isActive ?? false,
+        profile: {
+          id: tokenData.profileId,
+          isDatingActive: userWithProfile.profile?.isDatingActive ?? false,
+          isSocialActive: userWithProfile.profile?.isSocialActive ?? false,
+          isActive: userWithProfile.profile?.isActive ?? false,
+        },
+      }
+      await fastify.createSession(newJwt, refreshedSessionData)
+
       const newRefreshToken = await refreshTokenService.create(
         user.id,
         tokenData.profileId,
