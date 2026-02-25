@@ -391,10 +391,15 @@ export function cleanMessageForNotification(content: string, maxLength: number =
     .replace(/__(.+?)__/g, '$1') // __bold__
     .replace(/_(.+?)_/g, '$1') // _italic_
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // [text](url)
-    .replace(/<[^>]+>/g, '') // strip any stray HTML tags
-    .replace(/\n/g, ' ') // newlines to spaces
-    .replace(/\s+/g, ' ') // collapse whitespace
-    .trim()
+
+  // Loop tag stripping to handle nested fragments like <scr<script>ipt>
+  let prev = ''
+  while (prev !== cleaned) {
+    prev = cleaned
+    cleaned = cleaned.replace(/<[^>]*>/g, '')
+  }
+
+  cleaned = cleaned.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim()
 
   // Truncate at maxLength chars, breaking at word boundary
   if (cleaned.length > maxLength) {

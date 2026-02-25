@@ -32,14 +32,19 @@ export function renderMessage(content: string): string {
 
 /** Strip markdown and HTML for plain-text previews (conversation list, etc.) */
 export function stripForPreview(content: string): string {
-  return content
+  let text = content
     .replace(/\*\*(.+?)\*\*/g, '$1') // **bold**
     .replace(/\*(.+?)\*/g, '$1') // *italic*
     .replace(/__(.+?)__/g, '$1') // __bold__
     .replace(/_(.+?)_/g, '$1') // _italic_
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // [text](url)
-    .replace(/<[^>]+>/g, '') // strip any HTML tags
-    .replace(/\n/g, ' ') // newlines to spaces
-    .replace(/\s+/g, ' ') // collapse whitespace
-    .trim()
+
+  // Loop tag stripping to handle nested fragments like <scr<script>ipt>
+  let prev = ''
+  while (prev !== text) {
+    prev = text
+    text = text.replace(/<[^>]*>/g, '')
+  }
+
+  return text.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim()
 }
