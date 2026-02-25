@@ -2,6 +2,8 @@ import sharp from 'sharp'
 import { encode as encodeBlurhashRaw } from 'blurhash'
 
 import * as tf from '@tensorflow/tfjs'
+// Suppress "install tfjs-node for speed" console warning — we intentionally use the CPU backend
+tf.env().set('IS_NODE', false)
 import '@tensorflow/tfjs-backend-cpu'
 import * as blazeface from '@tensorflow-models/blazeface'
 import smartcrop from 'smartcrop-sharp'
