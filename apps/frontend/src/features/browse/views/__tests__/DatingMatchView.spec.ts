@@ -64,7 +64,7 @@ const vmState = {
   initialize: vi.fn(),
   reset: vi.fn(),
   loadMoreProfiles: vi.fn(),
-  matches: ref([]),
+  matches: ref([] as { id: string; profile: { id: string } }[]),
   haveMatches: ref(false),
   haveNewMatches: ref(false),
   haveReceivedLikes: ref(true),
