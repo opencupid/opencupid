@@ -262,6 +262,30 @@ describe('PATCH /users/:id', () => {
     expect(mockPrisma.user.update).toHaveBeenCalledWith({
       where: { id: 'user1' },
       data: { isActive: false, isBlocked: true },
+      select: {
+        id: true,
+        email: true,
+        phonenumber: true,
+        isActive: true,
+        isBlocked: true,
+        isRegistrationConfirmed: true,
+        roles: true,
+        createdAt: true,
+        updatedAt: true,
+        lastLoginAt: true,
+        language: true,
+        newsletterOptIn: true,
+        isPushNotificationEnabled: true,
+        profile: {
+          select: {
+            id: true,
+            publicName: true,
+            isActive: true,
+            isSocialActive: true,
+            isDatingActive: true,
+          },
+        },
+      },
     })
   })
 
