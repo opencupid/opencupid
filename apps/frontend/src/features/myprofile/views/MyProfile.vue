@@ -23,17 +23,18 @@ const props = defineProps<{
 }>()
 
 const showModal = ref(false)
+const _vm = useMyProfileViewModel(props.editMode)
 const {
   error,
   isLoading,
   viewState,
-  formData,
   profilePreview,
   isDatingOnboarded,
   isOnboarded,
   updateScopes,
   updateProfile,
-} = useMyProfileViewModel(props.editMode)
+} = _vm
+let { formData } = _vm
 
 const isDatingWizardActive = ref(false)
 const toggleDating = async () => {

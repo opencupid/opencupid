@@ -24,7 +24,7 @@ const { t } = useI18n()
 const profileStore = useOwnerProfileStore()
 const i18nStore = useI18nStore()
 
-const formData = reactive({
+let formData = reactive({
   publicName: '',
   birthday: null,
   tags: [],
