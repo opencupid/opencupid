@@ -13,6 +13,11 @@ const mockPrisma = vi.hoisted(() => ({
     findUnique: vi.fn(),
     groupBy: vi.fn(),
   },
+  tag: {
+    findMany: vi.fn(),
+    count: vi.fn(),
+    update: vi.fn(),
+  },
   $queryRaw: vi.fn(),
 }))
 
@@ -323,6 +328,142 @@ describe('GET /profiles/:id', () => {
     await handler({ params: { id: 'nonexistent' } }, reply)
 
     expect(reply.statusCode).toBe(404)
+  })
+})
+
+describe('GET /tags', () => {
+  it('returns paginated tag list', async () => {
+    const mockTags = [
+      {
+        id: 'tag1',
+        slug: 'hiking',
+        name: 'Hiking',
+        isUserCreated: false,
+        isApproved: true,
+        createdAt: new Date(),
+        translations: [{ locale: 'en', name: 'Hiking' }],
+        _count: { profiles: 5 },
+      },
+    ]
+    mockPrisma.tag.findMany.mockResolvedValue(mockTags)
+    mockPrisma.tag.count.mockResolvedValue(1)
+
+    const handler = fastify.routes['GET /tags']
+    await handler({ query: { page: '1', pageSize: '25', search: '' } }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    expect(reply.payload.tags).toEqual(mockTags)
+    expect(reply.payload.total).toBe(1)
+  })
+
+  it('applies search filter', async () => {
+    mockPrisma.tag.findMany.mockResolvedValue([])
+    mockPrisma.tag.count.mockResolvedValue(0)
+
+    const handler = fastify.routes['GET /tags']
+    await handler({ query: { page: '1', pageSize: '25', search: 'hike' } }, reply)
+
+    expect(mockPrisma.tag.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          isDeleted: false,
+          OR: [
+            { name: { contains: 'hike', mode: 'insensitive' } },
+            { slug: { contains: 'hike', mode: 'insensitive' } },
+            { translations: { some: { name: { contains: 'hike', mode: 'insensitive' } } } },
+          ],
+        },
+      })
+    )
+  })
+
+  it('handles errors gracefully', async () => {
+    mockPrisma.tag.findMany.mockRejectedValueOnce(new Error('DB error'))
+
+    const handler = fastify.routes['GET /tags']
+    await handler({ query: { page: '1', pageSize: '25', search: '' } }, reply)
+
+    expect(reply.statusCode).toBe(500)
+    expect(reply.payload.success).toBe(false)
+  })
+})
+
+describe('PATCH /tags/:id', () => {
+  it('updates tag fields', async () => {
+    const updatedTag = {
+      id: 'tag1',
+      slug: 'hiking-updated',
+      name: 'Hiking Updated',
+      translations: [],
+    }
+    mockPrisma.tag.update.mockResolvedValue(updatedTag)
+
+    const handler = fastify.routes['PATCH /tags/:id']
+    await handler(
+      { params: { id: 'tag1' }, body: { slug: 'hiking-updated', name: 'Hiking Updated' } },
+      reply
+    )
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    expect(mockPrisma.tag.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'tag1' },
+        data: expect.objectContaining({ slug: 'hiking-updated', name: 'Hiking Updated' }),
+      })
+    )
+  })
+
+  it('upserts translations', async () => {
+    const updatedTag = {
+      id: 'tag1',
+      slug: 'hiking',
+      translations: [{ locale: 'en', name: 'Hiking' }],
+    }
+    mockPrisma.tag.update.mockResolvedValue(updatedTag)
+
+    const handler = fastify.routes['PATCH /tags/:id']
+    await handler(
+      {
+        params: { id: 'tag1' },
+        body: { translations: [{ locale: 'en', name: 'Hiking' }] },
+      },
+      reply
+    )
+
+    expect(reply.statusCode).toBe(200)
+    expect(mockPrisma.tag.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          translations: {
+            upsert: [
+              {
+                where: { tagId_locale: { tagId: 'tag1', locale: 'en' } },
+                update: { name: 'Hiking' },
+                create: { locale: 'en', name: 'Hiking' },
+              },
+            ],
+          },
+        }),
+      })
+    )
+  })
+
+  it('returns 400 when no valid fields provided', async () => {
+    const handler = fastify.routes['PATCH /tags/:id']
+    await handler({ params: { id: 'tag1' }, body: {} }, reply)
+
+    expect(reply.statusCode).toBe(400)
+  })
+
+  it('handles errors gracefully', async () => {
+    mockPrisma.tag.update.mockRejectedValueOnce(new Error('DB error'))
+
+    const handler = fastify.routes['PATCH /tags/:id']
+    await handler({ params: { id: 'tag1' }, body: { name: 'Test' } }, reply)
+
+    expect(reply.statusCode).toBe(500)
   })
 })
 

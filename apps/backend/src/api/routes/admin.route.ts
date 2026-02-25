@@ -284,6 +284,97 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
     }
   })
 
+  // GET /admin/tags — Paginated tag list
+  fastify.get('/tags', async (req, reply) => {
+    try {
+      const { page = '1', pageSize = '25', search = '' } = req.query as Record<string, string>
+      const pageNum = Math.max(1, parseInt(page, 10) || 1)
+      const size = Math.min(100, Math.max(1, parseInt(pageSize, 10) || 25))
+      const skip = (pageNum - 1) * size
+
+      const where: any = { isDeleted: false }
+      if (search) {
+        where.OR = [
+          { name: { contains: search, mode: 'insensitive' as const } },
+          { slug: { contains: search, mode: 'insensitive' as const } },
+          { translations: { some: { name: { contains: search, mode: 'insensitive' as const } } } },
+        ]
+      }
+
+      const [tags, total] = await Promise.all([
+        prisma.tag.findMany({
+          where,
+          skip,
+          take: size,
+          orderBy: { createdAt: 'desc' },
+          include: {
+            translations: { select: { locale: true, name: true } },
+            _count: { select: { profiles: true } },
+          },
+        }),
+        prisma.tag.count({ where }),
+      ])
+
+      return reply.code(200).send({
+        success: true,
+        tags,
+        total,
+        page: pageNum,
+        pageSize: size,
+      })
+    } catch (err) {
+      fastify.log.error({ err }, 'Error fetching admin tags')
+      return sendError(reply, 500, 'Failed to fetch tags')
+    }
+  })
+
+  // PATCH /admin/tags/:id — Update tag fields
+  fastify.patch('/tags/:id', async (req, reply) => {
+    try {
+      const { id } = req.params as { id: string }
+      const body = req.body as {
+        slug?: string
+        name?: string
+        isApproved?: boolean
+        isHidden?: boolean
+        isDeleted?: boolean
+        translations?: { locale: string; name: string }[]
+      }
+
+      const data: any = {}
+      if (typeof body.slug === 'string') data.slug = body.slug
+      if (typeof body.name === 'string') data.name = body.name
+      if (typeof body.isApproved === 'boolean') data.isApproved = body.isApproved
+      if (typeof body.isHidden === 'boolean') data.isHidden = body.isHidden
+      if (typeof body.isDeleted === 'boolean') data.isDeleted = body.isDeleted
+
+      if (Array.isArray(body.translations) && body.translations.length > 0) {
+        data.translations = {
+          upsert: body.translations.map((t) => ({
+            where: { tagId_locale: { tagId: id, locale: t.locale } },
+            update: { name: t.name },
+            create: { locale: t.locale, name: t.name },
+          })),
+        }
+      }
+
+      if (Object.keys(data).length === 0) {
+        return sendError(reply, 400, 'No valid fields to update')
+      }
+
+      const tag = await prisma.tag.update({
+        where: { id },
+        data,
+        include: { translations: { select: { locale: true, name: true } } },
+      })
+
+      return reply.code(200).send({ success: true, tag })
+    } catch (err) {
+      fastify.log.error({ err }, 'Error updating admin tag')
+      return sendError(reply, 500, 'Failed to update tag')
+    }
+  })
+
   // GET /admin/profiles/:id — Profile detail
   fastify.get('/profiles/:id', async (req, reply) => {
     try {

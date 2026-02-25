@@ -232,6 +232,8 @@ onMounted(() => {
           <tr
             v-for="profile in sortedProfiles"
             :key="profile.id"
+            style="cursor: pointer"
+            @click="viewProfile(profile)"
           >
             <td>{{ profile.publicName || '-' }}</td>
             <td>{{ [profile.cityName, profile.country].filter(Boolean).join(', ') || '-' }}</td>
@@ -254,7 +256,7 @@ onMounted(() => {
             <td>
               <button
                 class="btn btn-sm btn-outline-primary"
-                @click="viewProfile(profile)"
+                @click.stop="viewProfile(profile)"
               >
                 View
               </button>

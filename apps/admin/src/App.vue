@@ -33,6 +33,13 @@ const version = computed(() => __APP_VERSION__)
             >Profiles</router-link
           >
         </li>
+        <li class="nav-item">
+          <router-link
+            class="nav-link"
+            to="/tags"
+            >Tags</router-link
+          >
+        </li>
       </ul>
       <div class="mt-auto text-white-50 small">v{{ version }}</div>
     </nav>

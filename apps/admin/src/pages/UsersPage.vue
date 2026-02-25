@@ -255,6 +255,8 @@ onMounted(fetchUsers)
           <tr
             v-for="user in sortedUsers"
             :key="user.id"
+            style="cursor: pointer"
+            @click="viewUser(user)"
           >
             <td>{{ user.email || user.phonenumber || '-' }}</td>
             <td>{{ user.profile?.publicName || '-' }}</td>
@@ -284,13 +286,13 @@ onMounted(fetchUsers)
                 v-if="user.profile"
                 class="btn btn-sm btn-outline-secondary me-1"
                 :disabled="profileLoading"
-                @click="viewProfile(user.profile.id)"
+                @click.stop="viewProfile(user.profile.id)"
               >
                 Profile
               </button>
               <button
                 class="btn btn-sm btn-outline-primary"
-                @click="viewUser(user)"
+                @click.stop="viewUser(user)"
               >
                 View
               </button>
