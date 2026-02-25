@@ -204,29 +204,10 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
       const user = await prisma.user.update({
         where: { id },
         data,
-        select: {
-          id: true,
-          email: true,
-          phonenumber: true,
-          isActive: true,
-          isBlocked: true,
-          isRegistrationConfirmed: true,
-          roles: true,
-          createdAt: true,
-          updatedAt: true,
-          lastLoginAt: true,
-          language: true,
-          newsletterOptIn: true,
-          isPushNotificationEnabled: true,
-          profile: {
-            select: {
-              id: true,
-              publicName: true,
-              isActive: true,
-              isSocialActive: true,
-              isDatingActive: true,
-            },
-          },
+        omit: {
+          tokenVersion: true,
+          loginToken: true,
+          loginTokenExp: true,
         },
       })
 
