@@ -1,3 +1,5 @@
+import type { SessionData } from '@zod/user/user.dto'
+
 export type RouteHandler = (req: any, reply: any) => any
 
 export class MockFastify {
@@ -10,7 +12,7 @@ export class MockFastify {
   public prisma: any = {}
   public log = { error: () => {}, warn: () => {}, info: () => {} }
   public authenticate = (_req: any, _reply: any) => {}
-  public createSession = (_token: string, _data: any): Promise<void> => Promise.resolve()
+  public createSession = (_token: string, _data: SessionData): Promise<void> => Promise.resolve()
 
   get(path: string, opts: any | RouteHandler, handler?: RouteHandler) {
     this.routes[`GET ${path}`] = (typeof opts === 'function' ? opts : handler) as RouteHandler
