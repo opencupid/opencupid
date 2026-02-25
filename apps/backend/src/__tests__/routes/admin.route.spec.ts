@@ -25,9 +25,23 @@ vi.mock('@/lib/prisma', () => ({
   prisma: mockPrisma,
 }))
 
-vi.mock('@/lib/appconfig', () => ({
-  appConfig: {},
+const mockAppConfig = vi.hoisted(() => ({
+  DEEPL_API_KEY: 'test-deepl-key',
 }))
+
+vi.mock('@/lib/appconfig', () => ({
+  appConfig: mockAppConfig,
+}))
+
+const mockTranslateText = vi.hoisted(() => vi.fn())
+
+vi.mock('deepl-node', () => {
+  return {
+    DeepLClient: class {
+      translateText = mockTranslateText
+    },
+  }
+})
 
 import adminRoutes from '../../api/routes/admin.route'
 import { MockReply } from '../../test-utils/fastify'
@@ -462,6 +476,57 @@ describe('PATCH /tags/:id', () => {
 
     const handler = fastify.routes['PATCH /tags/:id']
     await handler({ params: { id: 'tag1' }, body: { name: 'Test' } }, reply)
+
+    expect(reply.statusCode).toBe(500)
+  })
+})
+
+describe('POST /tags/translate', () => {
+  it('translates text to target locales', async () => {
+    mockTranslateText
+      .mockResolvedValueOnce({ text: 'Wandern' })
+      .mockResolvedValueOnce({ text: 'Túrázás' })
+
+    const handler = fastify.routes['POST /tags/translate']
+    await handler({ body: { text: 'Hiking', targetLocales: ['de', 'hu'] } }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    expect(reply.payload.translations).toEqual({ de: 'Wandern', hu: 'Túrázás' })
+  })
+
+  it('maps en to en-GB for DeepL', async () => {
+    mockTranslateText.mockResolvedValueOnce({ text: 'Hiking' })
+
+    const handler = fastify.routes['POST /tags/translate']
+    await handler({ body: { text: 'Wandern', targetLocales: ['en'] } }, reply)
+
+    expect(mockTranslateText).toHaveBeenCalledWith('Wandern', null, 'en-GB')
+  })
+
+  it('returns 400 when text or targetLocales missing', async () => {
+    const handler = fastify.routes['POST /tags/translate']
+    await handler({ body: {} }, reply)
+
+    expect(reply.statusCode).toBe(400)
+  })
+
+  it('returns 503 when DEEPL_API_KEY is not configured', async () => {
+    const originalKey = mockAppConfig.DEEPL_API_KEY
+    mockAppConfig.DEEPL_API_KEY = ''
+
+    const handler = fastify.routes['POST /tags/translate']
+    await handler({ body: { text: 'Hiking', targetLocales: ['de'] } }, reply)
+
+    expect(reply.statusCode).toBe(503)
+    mockAppConfig.DEEPL_API_KEY = originalKey
+  })
+
+  it('handles DeepL errors gracefully', async () => {
+    mockTranslateText.mockRejectedValueOnce(new Error('DeepL quota exceeded'))
+
+    const handler = fastify.routes['POST /tags/translate']
+    await handler({ body: { text: 'Hiking', targetLocales: ['de'] } }, reply)
 
     expect(reply.statusCode).toBe(500)
   })

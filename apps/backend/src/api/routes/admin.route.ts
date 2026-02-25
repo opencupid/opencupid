@@ -1,7 +1,15 @@
 import { FastifyPluginAsync } from 'fastify'
+import { DeepLClient } from 'deepl-node'
 import { sendError } from '../helpers'
 import { prisma } from '@/lib/prisma'
+import { appConfig } from '@/lib/appconfig'
 import { getLast7Days, fillZeroDays } from '../adminHelpers'
+
+// DeepL locale codes require region suffixes for some languages
+const DEEPL_LOCALE_MAP: Record<string, string> = {
+  en: 'en-GB',
+  pt: 'pt-PT',
+}
 
 const adminRoutes: FastifyPluginAsync = async (fastify) => {
   // Defense in depth: require trusted header set by nginx mTLS admin proxy
@@ -372,6 +380,38 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
     } catch (err) {
       fastify.log.error({ err }, 'Error updating admin tag')
       return sendError(reply, 500, 'Failed to update tag')
+    }
+  })
+
+  // POST /admin/tags/translate — Translate tag name via DeepL
+  fastify.post('/tags/translate', async (req, reply) => {
+    try {
+      const { text, targetLocales } = req.body as {
+        text?: string
+        targetLocales?: string[]
+      }
+
+      if (!text || !Array.isArray(targetLocales) || targetLocales.length === 0) {
+        return sendError(reply, 400, 'text and targetLocales[] are required')
+      }
+
+      if (!appConfig.DEEPL_API_KEY) {
+        return sendError(reply, 503, 'DeepL API key is not configured')
+      }
+
+      const client = new DeepLClient(appConfig.DEEPL_API_KEY)
+
+      const translations: Record<string, string> = {}
+      for (const locale of targetLocales) {
+        const deeplLocale = DEEPL_LOCALE_MAP[locale] || locale
+        const result = await client.translateText(text, null, deeplLocale as any)
+        translations[locale] = result.text
+      }
+
+      return reply.code(200).send({ success: true, translations })
+    } catch (err) {
+      fastify.log.error({ err }, 'Error translating tag via DeepL')
+      return sendError(reply, 500, 'Translation failed')
     }
   })
 

@@ -45,6 +45,7 @@ const editName = ref('')
 const editTranslations = ref<Record<string, string>>({})
 const saving = ref(false)
 const saveError = ref<string | null>(null)
+const translating = ref(false)
 
 type SortColumn = 'slug' | 'name' | 'createdAt' | 'isUserCreated' | 'profiles' | 'en' | 'hu'
 const sortColumn = ref<SortColumn | null>(null)
@@ -146,6 +147,31 @@ async function saveTag() {
     saveError.value = err instanceof Error ? err.message : 'Failed to save'
   } finally {
     saving.value = false
+  }
+}
+
+const untranslatedLocales = computed(() =>
+  LANGUAGES.map((l) => l.code).filter((code) => !editTranslations.value[code])
+)
+
+async function translateTag() {
+  if (!editName.value || untranslatedLocales.value.length === 0) return
+  translating.value = true
+  saveError.value = null
+  try {
+    const res = (await apiRequest('/admin/tags/translate', {
+      method: 'POST',
+      body: { text: editName.value, targetLocales: untranslatedLocales.value },
+    })) as { success: boolean; translations: Record<string, string> }
+    if (res.success) {
+      for (const [locale, name] of Object.entries(res.translations)) {
+        editTranslations.value[locale] = name
+      }
+    }
+  } catch (err: unknown) {
+    saveError.value = err instanceof Error ? err.message : 'Translation failed'
+  } finally {
+    translating.value = false
   }
 }
 
@@ -351,6 +377,12 @@ onMounted(fetchTags)
             >
               {{ saveError }}
             </div>
+            <dl class="row mb-3">
+              <dt class="col-sm-4">ID</dt>
+              <dd class="col-sm-8">
+                <code>{{ selectedTag.id }}</code>
+              </dd>
+            </dl>
             <div class="mb-3">
               <label
                 for="editSlug"
@@ -401,6 +433,13 @@ onMounted(fetchTags)
               @click="selectedTag = null"
             >
               Cancel
+            </button>
+            <button
+              class="btn btn-outline-info"
+              :disabled="translating || untranslatedLocales.length === 0"
+              @click="translateTag"
+            >
+              {{ translating ? 'Translating...' : 'Translate' }}
             </button>
             <button
               class="btn btn-primary"
