@@ -34,9 +34,6 @@ vi.mock('@/features/interaction/components/LikesAndMatchesBanner.vue', () => ({
 vi.mock('@/features/interaction/components/MatchesList.vue', () => ({
   default: { template: '<div class="matches-list" />', props: ['edges'] },
 }))
-vi.mock('../../shared/composables/useCountries', () => ({
-  useCountries: () => ({ countryCodeToName: vi.fn(() => 'Test Country') }),
-}))
 vi.mock('vue-router', () => ({
   useRouter: () => ({ push: vi.fn(), back: vi.fn(), replace: vi.fn() }),
 }))

@@ -43,7 +43,6 @@ onMounted(async () => {
 onUnmounted(() => {
   reset()
 })
-
 </script>
 
 <template>
@@ -58,7 +57,6 @@ onUnmounted(() => {
     :haveAccess="haveAccess"
     :haveResults="haveResults"
     currentScope="dating"
-    countryName=""
     @load-more="loadMoreProfiles"
     @profile:open="openProfile"
     @profile:close="closeProfile"

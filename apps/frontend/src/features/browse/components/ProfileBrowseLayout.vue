@@ -24,7 +24,6 @@ const props = defineProps<{
   haveAccess: boolean
   haveResults: boolean
   currentScope: ProfileScope
-  countryName: string
 }>()
 
 const emit = defineEmits<{
@@ -165,13 +164,7 @@ useInfiniteScroll(
         <template v-if="isInitialized && !haveResults && haveAccess">
           <BContainer class="flex-grow-1 d-flex align-items-center justify-content-center">
             <MiddleColumn>
-              <div class="mb-3">
-                {{
-                  t('profiles.browse.social_no_results', {
-                    country: countryName,
-                  })
-                }}
-              </div>
+              <slot name="no-results" />
               <NoResultsCTA />
             </MiddleColumn>
           </BContainer>

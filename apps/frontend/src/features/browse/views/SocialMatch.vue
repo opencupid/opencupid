@@ -49,8 +49,9 @@ onUnmounted(() => {
 const { countryCodeToName } = useCountries()
 
 const countryName = computed(() => {
-  if (!socialFilter.value) return ''
-  return countryCodeToName(socialFilter.value.location.country ?? '')
+  const country = socialFilter.value?.location.country
+  if (!country) return ''
+  return countryCodeToName(country)
 })
 
 const getProfileImageUrl = (profile: PublicProfile) => {
@@ -71,13 +72,18 @@ const getProfileImageUrl = (profile: PublicProfile) => {
     :haveAccess="haveAccess"
     :haveResults="haveResults"
     currentScope="social"
-    :countryName="countryName"
     @load-more="loadMoreProfiles"
     @profile:open="openProfile"
     @profile:close="closeProfile"
     @profile:hidden="hideProfile"
     @prefs:update="updatePrefs"
   >
+    <template #no-results>
+      <div class="mb-3">
+        {{ t('profiles.browse.social_no_results', { country: countryName }) }}
+      </div>
+    </template>
+
     <template #filter-bar>
       <div class="filter-area flex-grow-1">
         <SocialFilterDisplay
