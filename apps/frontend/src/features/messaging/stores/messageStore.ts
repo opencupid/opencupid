@@ -302,7 +302,6 @@ export const useMessageStore = defineStore('message', {
       if (convo) {
         await this.setActiveConversation(convo)
       } else {
-        console.warn('Conversation not found:', conversationId)
         this.activeConversation = null
         this.messages = []
       }
