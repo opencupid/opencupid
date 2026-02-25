@@ -38,6 +38,20 @@ function startRetryMechanism() {
     }
   }, 10000) // Retry every 10 seconds
 }
+
+// --- Silent token refresh interceptor ---
+let isRefreshing = false
+let refreshSubscribers: ((token: string) => void)[] = []
+
+function onTokenRefreshed(token: string) {
+  refreshSubscribers.forEach((cb) => cb(token))
+  refreshSubscribers = []
+}
+
+function addRefreshSubscriber(callback: (token: string) => void) {
+  refreshSubscribers.push(callback)
+}
+
 api.interceptors.response.use(
   (response) => {
     if (isOffline) {
@@ -54,9 +68,68 @@ api.interceptors.response.use(
 
     return response
   },
-  (error) => {
-    // TODO verify that this is really neccessary (== safeApiCall is used
-    // *everywhere* to wrap api requests) and remove if redundant.
+  async (error) => {
+    const originalRequest = error.config
+
+    // Handle 401 with silent refresh
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      const refreshToken = localStorage.getItem('refreshToken')
+      const token = localStorage.getItem('token')
+
+      if (refreshToken && token) {
+        if (isRefreshing) {
+          // Another refresh is in progress — queue this request
+          return new Promise((resolve) => {
+            addRefreshSubscriber((newToken: string) => {
+              originalRequest.headers['Authorization'] = `Bearer ${newToken}`
+              resolve(api(originalRequest))
+            })
+          })
+        }
+
+        originalRequest._retry = true
+        isRefreshing = true
+
+        try {
+          const res = await axios.post(
+            `${baseURL}/auth/refresh`,
+            { refreshToken },
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          )
+
+          const newToken = res.data.token
+          const newRefreshToken = res.data.refreshToken
+
+          localStorage.setItem('token', newToken)
+          localStorage.setItem('refreshToken', newRefreshToken)
+          api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`
+
+          isRefreshing = false
+          onTokenRefreshed(newToken)
+
+          // Notify auth store of new tokens
+          bus.emit('auth:token-refreshed', { token: newToken, refreshToken: newRefreshToken })
+
+          originalRequest.headers['Authorization'] = `Bearer ${newToken}`
+          return api(originalRequest)
+        } catch (refreshError) {
+          isRefreshing = false
+          refreshSubscribers = []
+
+          // Refresh failed — clear auth state and redirect to login
+          localStorage.removeItem('token')
+          localStorage.removeItem('refreshToken')
+          delete api.defaults.headers.common['Authorization']
+          bus.emit('auth:logout')
+
+          return Promise.reject(refreshError)
+        }
+      }
+    }
+
+    // Network error handling
     const isNetworkError =
       !error.response ||
       [

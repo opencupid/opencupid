@@ -1,7 +1,7 @@
 import type WebSocket from 'ws'
 import { FastifyPluginAsync } from 'fastify'
 
-import { verifyWsToken } from '@/utils/wsUtils'
+import { verifyWsTicket } from '@/utils/wsUtils'
 
 interface WsMessage {
   to: string // recipient userId
@@ -9,8 +9,16 @@ interface WsMessage {
 }
 
 const messageWsRoutes: FastifyPluginAsync = async (fastify) => {
-  fastify.get('/message', { websocket: true }, (socket: WebSocket, req) => {
-    const { profileId } = verifyWsToken(req, fastify.jwt)
+  fastify.get('/message', { websocket: true }, async (socket: WebSocket, req) => {
+    let profileId: string
+    try {
+      const ticket = await verifyWsTicket(req, fastify.redis)
+      profileId = ticket.profileId
+    } catch (err: any) {
+      fastify.log.warn(`WebSocket ticket verification failed: ${err.message}`)
+      socket.close()
+      return
+    }
 
     if (!profileId) {
       fastify.log.warn('WebSocket connection without userId, closing')
@@ -19,7 +27,6 @@ const messageWsRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     fastify.log.info(`WebSocket connection established for user ${profileId}`)
-    // fastify.connections.set(profileId, socket)
     // Add socket to profile's set
     let sockets = fastify.connections.get(profileId)
     if (!sockets) {
@@ -70,21 +77,6 @@ const messageWsRoutes: FastifyPluginAsync = async (fastify) => {
         fastify.log.warn({ msg: data }, 'WS message missing required fields')
         return
       }
-
-      // try {
-      //   const msg = await messageService.sendMessage(userId, data.to, data.content)
-      //   const receiver = fastify.connections.get(data.to)
-      //   if (receiver && receiver.readyState === receiver.OPEN) {
-      //     receiver.send(JSON.stringify({
-      //       id: msg.id,
-      //       from: userId,
-      //       content: msg.content,
-      //       createdAt: msg.createdAt
-      //     }))
-      //   }
-      // } catch (err) {
-      //   fastify.log.error('Failed to persist or forward WS message', err)
-      // }
     })
   })
 }

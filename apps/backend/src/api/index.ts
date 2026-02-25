@@ -1,4 +1,5 @@
 import { FastifyPluginAsync } from 'fastify'
+import authRoutes from './routes/auth.route'
 import userRoutes from './routes/user.route'
 import profileRoutes from './routes/profile.route'
 import tagsRoutes from './routes/tags.route'
@@ -14,6 +15,7 @@ import callRoutes from './routes/call.route'
 import adminRoutes from './routes/admin.route'
 
 const api: FastifyPluginAsync = async (fastify) => {
+  fastify.register(authRoutes, { prefix: '/auth' })
   fastify.register(userRoutes, { prefix: '/users' })
   fastify.register(tagsRoutes, { prefix: '/tags' })
   fastify.register(profileRoutes, { prefix: '/profiles' })

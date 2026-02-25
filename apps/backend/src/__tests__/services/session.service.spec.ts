@@ -28,6 +28,7 @@ const sessionData = {
   roles: ['user'],
   userId: 'cm000000000000000000user1',
   profileId: 'cm000000000000000000prof1',
+  tokenVersion: 0,
   hasActiveProfile: true,
   profile: {
     id: 'cm000000000000000000prof1',

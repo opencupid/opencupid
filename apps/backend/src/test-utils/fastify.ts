@@ -2,9 +2,11 @@ export type RouteHandler = (req: any, reply: any) => any
 
 export class MockFastify {
   public routes: Record<string, RouteHandler> = {}
-  public jwt = {
+  public jwt: Record<string, any> = {
     sign: (payload: any) => JSON.stringify(payload),
+    decode: (token: any) => null,
   }
+  public redis: any = {}
   public prisma: any = {}
   public log = { error: () => {}, warn: () => {}, info: () => {} }
   public authenticate = (_req: any, _reply: any) => {}
