@@ -2,6 +2,7 @@
 import { type MessageDTO } from '@zod/messaging/messaging.dto'
 import { nextTick, ref, watch } from 'vue'
 import VoiceMessage from './VoiceMessage.vue'
+import { renderMessage } from '@/lib/renderMessage'
 
 const props = defineProps<{
   messages: MessageDTO[]
@@ -68,17 +69,6 @@ const handleScroll = () => {
   }
 }
 
-/** Convert backend HTML-encoded message content back to plain text for safe rendering. */
-function htmlToText(html: string): string {
-  return html
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#x27;/g, "'")
-    .replace(/&#x2F;/g, '/')
-}
 </script>
 
 <template>
@@ -114,7 +104,7 @@ function htmlToText(html: string): string {
         v-else
         class="message-text"
       >
-        {{ htmlToText(msg.content) }}
+        <span v-html="renderMessage(msg.content)" />
       </div>
     </div>
   </div>
@@ -130,7 +120,12 @@ function htmlToText(html: string): string {
   color: white;
 }
 
-.message-text {
-  white-space: pre-wrap;
+.message-text :deep(p) {
+  margin: 0;
+}
+
+.message-text :deep(a) {
+  color: inherit;
+  text-decoration: underline;
 }
 </style>

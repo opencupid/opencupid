@@ -19,50 +19,49 @@ function makeMessage(overrides: Partial<MessageDTO> = {}): MessageDTO {
 }
 
 describe('MessageList', () => {
-  it('renders text messages safely without v-html', () => {
-    const xssPayload = '&lt;img src=x onerror=&quot;alert(1)&quot;&gt;'
+  it('renders XSS payloads as escaped text via DOMPurify', () => {
     const wrapper = mount(MessageList, {
       props: {
-        messages: [makeMessage({ content: xssPayload })],
+        messages: [makeMessage({ content: '<img src=x onerror="alert(1)">' })],
         hasMore: false,
         isLoadingMore: false,
       },
     })
 
-    // The XSS payload should be rendered as visible text, not as an HTML element
+    // markdown-it escapes HTML, DOMPurify strips anything remaining
     expect(wrapper.find('img').exists()).toBe(false)
-    expect(wrapper.text()).toContain('<img src=x onerror="alert(1)">')
+    expect(wrapper.find('.message-text').element.innerHTML).not.toContain('<img')
   })
 
-  it('converts <br> tags to line breaks in text content', () => {
+  it('renders plain text messages', () => {
     const wrapper = mount(MessageList, {
       props: {
-        messages: [makeMessage({ content: 'line1<br>line2' })],
+        messages: [makeMessage({ content: 'line1\nline2' })],
         hasMore: false,
         isLoadingMore: false,
       },
     })
 
     const messageText = wrapper.find('.message-text')
-    expect(messageText.exists()).toBe(true)
-    // pre-wrap CSS renders \n as visual line breaks; check the text content has both lines
     expect(messageText.text()).toContain('line1')
     expect(messageText.text()).toContain('line2')
   })
 
-  it('unescapes HTML entities in message content', () => {
+  it('renders markdown bold and italic', () => {
     const wrapper = mount(MessageList, {
       props: {
-        messages: [makeMessage({ content: '1 &amp; 2 &lt; 3' })],
+        messages: [makeMessage({ content: '**bold** and *italic*' })],
         hasMore: false,
         isLoadingMore: false,
       },
     })
 
-    expect(wrapper.find('.message-text').text()).toBe('1 & 2 < 3')
+    const html = wrapper.find('.message-text').element.innerHTML
+    expect(html).toContain('<strong>bold</strong>')
+    expect(html).toContain('<em>italic</em>')
   })
 
-  it('does not use v-html for text messages', () => {
+  it('strips script tags from message content', () => {
     const wrapper = mount(MessageList, {
       props: {
         messages: [makeMessage({ content: '<script>alert("xss")</script>' })],
@@ -71,10 +70,8 @@ describe('MessageList', () => {
       },
     })
 
-    // The raw script tag should appear as text, not be executed/rendered as HTML
     const messageEl = wrapper.find('.message-text')
     expect(messageEl.element.innerHTML).not.toContain('<script>')
-    expect(messageEl.text()).toContain('<script>alert("xss")</script>')
   })
 
   it('shows loading indicator when loading older messages', () => {

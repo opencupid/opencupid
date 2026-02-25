@@ -240,9 +240,8 @@ export class MessageService {
       duration?: number
     }
   ): Promise<{ convoId: string; message: MessageWithSendInclude }> {
-    // Clean and sanitize user input for text messages, then convert newlines to <br> tags
-    const cleanContent =
-      messageType === 'text/plain' ? cleanUserInput(content).replace(/\n/g, '<br>').trim() : content
+    // Trim user input for text messages; markdown rendering + sanitization happens on the frontend
+    const cleanContent = messageType === 'text/plain' ? content.trim() : content
 
     if (messageType === 'text/plain' && !cleanContent) {
       throw {
@@ -378,38 +377,23 @@ export function canSendMessageInConversation(
   )
 }
 
+/** Welcome messages are stored as plain text; markdown rendering happens on the frontend. */
 export function simpleMarkdownToHtml(input: string): string {
   return input
-    .replace(/&/g, '&amp;') // escape HTML entities
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/\n/g, '<br><br>')
-}
-
-function cleanUserInput(input: string): string {
-  // Sanitize HTML by escaping special characters while preserving newlines
-  return input
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
-    .replace(/\//g, '&#x2F;')
 }
 
 // Clean message content for email/notification display
-// Strips HTML tags, converts <br> to spaces, collapses whitespace, and truncates
+// Strips markdown syntax, collapses whitespace, and truncates
 export function cleanMessageForNotification(content: string, maxLength: number = 100): string {
   let cleaned = content
-    .replace(/<br\s*\/?>/gi, ' ') // Replace <br> tags with spaces
-    .replace(/<[^>]+>/g, '') // Strip any other HTML tags
-    .replace(/&lt;/g, '<') // Unescape HTML entities
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"')
-    .replace(/&#x27;/g, "'")
-    .replace(/&#x2F;/g, '/')
-    .replace(/\s+/g, ' ') // Collapse multiple spaces
+    .replace(/\*\*(.+?)\*\*/g, '$1') // **bold**
+    .replace(/\*(.+?)\*/g, '$1') // *italic*
+    .replace(/__(.+?)__/g, '$1') // __bold__
+    .replace(/_(.+?)_/g, '$1') // _italic_
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // [text](url)
+    .replace(/<[^>]+>/g, '') // strip any stray HTML tags
+    .replace(/\n/g, ' ') // newlines to spaces
+    .replace(/\s+/g, ' ') // collapse whitespace
     .trim()
 
   // Truncate at maxLength chars, breaking at word boundary
