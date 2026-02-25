@@ -52,7 +52,8 @@ describe('api refresh interceptor', () => {
     const postSpy = vi.spyOn(axios, 'post').mockRejectedValue(new Error('refresh failed'))
 
     const { api } = await import('../api')
-    const rejected = api.interceptors.response.handlers[0].rejected
+    const rejected = api.interceptors.response.handlers?.[0]?.rejected
+    expect(rejected).toBeTypeOf('function')
 
     localStorage.setItem('token', 'expired-token')
     localStorage.setItem('refreshToken', 'refresh-token')
@@ -64,12 +65,12 @@ describe('api refresh interceptor', () => {
       url: '/protected',
     }
 
-    const firstRefresh = rejected({
+    const firstRefresh = rejected!({
       config: originalRequest,
       response: { status: 401 },
     })
 
-    const secondRefresh = rejected({
+    const secondRefresh = rejected!({
       config: {
         _retry: false,
         headers: new AxiosHeaders(),
@@ -83,6 +84,30 @@ describe('api refresh interceptor', () => {
     await expect(secondRefresh).rejects.toThrow('refresh failed')
 
     expect(postSpy).toHaveBeenCalledTimes(1)
+    expect(localStorage.getItem('token')).toBeNull()
+    expect(localStorage.getItem('refreshToken')).toBeNull()
+    expect(mockEmit).toHaveBeenCalledWith('auth:logout')
+  })
+
+  it('logs out on 401 when token exists but refresh token is missing', async () => {
+    const { api } = await import('../api')
+    const rejected = api.interceptors.response.handlers?.[0]?.rejected
+    expect(rejected).toBeTypeOf('function')
+
+    localStorage.setItem('token', 'expired-token')
+
+    await expect(
+      rejected!({
+        config: {
+          _retry: false,
+          headers: new AxiosHeaders(),
+          method: 'get',
+          url: '/profiles/me',
+        },
+        response: { status: 401 },
+      })
+    ).rejects.toMatchObject({ response: { status: 401 } })
+
     expect(localStorage.getItem('token')).toBeNull()
     expect(localStorage.getItem('refreshToken')).toBeNull()
     expect(mockEmit).toHaveBeenCalledWith('auth:logout')

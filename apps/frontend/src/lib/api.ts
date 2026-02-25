@@ -39,6 +39,13 @@ function startRetryMechanism() {
   }, 10000) // Retry every 10 seconds
 }
 
+function clearAuthState() {
+  localStorage.removeItem('token')
+  localStorage.removeItem('refreshToken')
+  delete api.defaults.headers.common['Authorization']
+  bus.emit('auth:logout')
+}
+
 // --- Silent token refresh interceptor ---
 let isRefreshing = false
 let refreshSubscribers: Array<{
@@ -77,18 +84,26 @@ api.interceptors.response.use(
     return response
   },
   async (error) => {
-    const originalRequest = error.config
+    const originalRequest = error?.config
 
     // Handle 401 with silent refresh
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error?.response?.status === 401) {
       const refreshToken = localStorage.getItem('refreshToken')
       const token = localStorage.getItem('token')
 
-      if (refreshToken && token) {
+      if (!originalRequest) {
+        if (token) {
+          clearAuthState()
+        }
+        return Promise.reject(error)
+      }
+
+      if (refreshToken && token && !originalRequest._retry) {
         if (isRefreshing) {
           // Another refresh is in progress — queue this request
           return new Promise((resolve, reject) => {
             addRefreshSubscriber((newToken: string) => {
+              originalRequest.headers = originalRequest.headers || {}
               originalRequest.headers['Authorization'] = `Bearer ${newToken}`
               resolve(api(originalRequest))
             }, reject)
@@ -120,6 +135,7 @@ api.interceptors.response.use(
           // Notify auth store of new tokens
           bus.emit('auth:token-refreshed', { token: newToken, refreshToken: newRefreshToken })
 
+          originalRequest.headers = originalRequest.headers || {}
           originalRequest.headers['Authorization'] = `Bearer ${newToken}`
           return api(originalRequest)
         } catch (refreshError) {
@@ -127,13 +143,15 @@ api.interceptors.response.use(
           onRefreshFailed(refreshError)
 
           // Refresh failed — clear auth state and redirect to login
-          localStorage.removeItem('token')
-          localStorage.removeItem('refreshToken')
-          delete api.defaults.headers.common['Authorization']
-          bus.emit('auth:logout')
+          clearAuthState()
 
           return Promise.reject(refreshError)
         }
+      }
+
+      // Existing token but no refresh token (or refresh already retried) => force local logout
+      if (token) {
+        clearAuthState()
       }
     }
 
