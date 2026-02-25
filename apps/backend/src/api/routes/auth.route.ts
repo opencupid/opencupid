@@ -2,7 +2,7 @@ import cuid from 'cuid'
 import { randomUUID } from 'crypto'
 import { FastifyPluginAsync } from 'fastify'
 import { notifierService } from '@/services/notifier.service'
-import { UserService } from 'src/services/user.service'
+import { UserService, type UserWithProfile } from 'src/services/user.service'
 import { ProfileService } from 'src/services/profile.service'
 import { RefreshTokenService } from 'src/services/refresh-token.service'
 import { rateLimitConfig, sendError, sendUnauthorizedError } from '../helpers'
@@ -16,6 +16,7 @@ import {
   RefreshTokenPayloadSchema,
   type LoginUser,
   type SessionData,
+  type SessionProfile,
 } from '@zod/user/user.dto'
 import type {
   OtpLoginResponse,
@@ -24,8 +25,26 @@ import type {
   WsTicketResponse,
 } from '@zod/apiResponse.dto'
 import { UserIdentifier, JwtPayload } from '@zod/user/user.dto'
+import type { User } from '@zod/generated'
 
 const WS_TICKET_TTL = 30 // seconds
+
+function buildSessionData(user: User, profileId: string, profile: SessionProfile): SessionData {
+  return {
+    userId: user.id,
+    profileId,
+    tokenVersion: user.tokenVersion,
+    lang: user.language || 'en',
+    roles: user.roles,
+    hasActiveProfile: profile.isActive,
+    profile: {
+      id: profile.id,
+      isDatingActive: profile.isDatingActive,
+      isSocialActive: profile.isSocialActive,
+      isActive: profile.isActive,
+    },
+  }
+}
 
 const authRoutes: FastifyPluginAsync = async (fastify) => {
   const userService = UserService.getInstance()
@@ -54,12 +73,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
         const { user, isNewUser } = result
         let profileId: string
-        let sessionProfile: {
-          id: string
-          isDatingActive: boolean
-          isSocialActive: boolean
-          isActive: boolean
-        }
+        let sessionProfile: SessionProfile
 
         // new user
         if (isNewUser) {
@@ -84,22 +98,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
           tokenVersion: user.tokenVersion,
         }
         const jwt = fastify.jwt.sign(payload)
-
-        const sessionData: SessionData = {
-          userId: user.id,
-          profileId,
-          tokenVersion: user.tokenVersion,
-          lang: user.language || 'en',
-          roles: user.roles,
-          hasActiveProfile: sessionProfile.isActive,
-          profile: {
-            id: sessionProfile.id,
-            isDatingActive: sessionProfile.isDatingActive,
-            isSocialActive: sessionProfile.isSocialActive,
-            isActive: sessionProfile.isActive,
-          },
-        }
-        await fastify.createSession(jwt, sessionData)
+        await fastify.createSession(jwt, buildSessionData(user, profileId, sessionProfile))
 
         const refreshToken = await refreshTokenService.create(user.id, profileId, user.tokenVersion)
         const response: OtpLoginResponse = { success: true, token: jwt, refreshToken }
@@ -177,22 +176,17 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       }
       const newJwt = fastify.jwt.sign(newPayload)
 
-      const userWithProfile = user as any
-      const refreshedSessionData: SessionData = {
-        userId: user.id,
-        profileId: tokenData.profileId,
-        tokenVersion: user.tokenVersion,
-        lang: (user as any).language || 'en',
-        roles: (user as any).roles,
-        hasActiveProfile: userWithProfile.profile?.isActive ?? false,
-        profile: {
-          id: tokenData.profileId,
-          isDatingActive: userWithProfile.profile?.isDatingActive ?? false,
-          isSocialActive: userWithProfile.profile?.isSocialActive ?? false,
-          isActive: userWithProfile.profile?.isActive ?? false,
-        },
+      const userWithProfile = user as UserWithProfile
+      const sessionProfile = userWithProfile.profile ?? {
+        id: tokenData.profileId,
+        isDatingActive: false,
+        isSocialActive: false,
+        isActive: false,
       }
-      await fastify.createSession(newJwt, refreshedSessionData)
+      await fastify.createSession(
+        newJwt,
+        buildSessionData(user, tokenData.profileId, sessionProfile)
+      )
 
       const newRefreshToken = await refreshTokenService.create(
         user.id,
