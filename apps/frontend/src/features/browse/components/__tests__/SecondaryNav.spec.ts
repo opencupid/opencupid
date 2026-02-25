@@ -6,7 +6,6 @@ vi.mock('@/assets/icons/app/socialize.svg', () => ({ default: { template: '<div 
 vi.mock('@/assets/icons/app/cupid.svg', () => ({ default: { template: '<div />' } }))
 
 import SecondaryNav from '../../../shared/ui/SecondaryNav.vue'
-import ScopeViewToggler from '@/features/shared/ui/ScopeViewToggler.vue'
 
 describe('SecondaryNav', () => {
   it('renders nav with correct classes', () => {

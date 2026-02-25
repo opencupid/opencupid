@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
-import { useI18n } from 'vue-i18n'
 import { computed } from 'vue'
 
 import IconMessage from '@/assets/icons/interface/message.svg'
@@ -21,14 +19,9 @@ import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileSt
 import ProfileImage from '@/features/images/components/ProfileImage.vue'
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 
-const route = useRoute()
 const authStore = useAuthStore()
 const profileStore = useOwnerProfileStore()
 const interactionStore = useInteractionStore()
-
-const isBrowseActive = computed(
-  () => route.path.startsWith('/browse') || route.path.startsWith('/profile/')
-)
 
 const hasUnreadMessages = computed(() => useMessageStore().hasUnreadMessages)
 const hasMatchNotifications = computed(
@@ -65,7 +58,6 @@ const hasMatchNotifications = computed(
         <BNavItem
           to="/browse"
           active-class="active"
-          :active="isBrowseActive"
           :aria-label="$t('nav.browse')"
         >
           <IconSearch class="svg-icon-lg" />

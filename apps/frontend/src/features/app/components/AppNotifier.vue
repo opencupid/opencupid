@@ -87,7 +87,7 @@ function handleMatchReceived(edge: InteractionEdge) {
     {
       onClick: (closeToast) => {
         router.push({
-          name: 'Matches',
+          name: 'DatingMatch',
           params: { profileId: edge.profile.id },
           force: true,
         })

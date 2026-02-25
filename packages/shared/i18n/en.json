@@ -90,8 +90,8 @@
   "nav": {
     "home": "Home",
     "profile": "Profile",
-    "browse": "Browse",
-    "matches": "Matches",
+    "browse": "Buddies",
+    "matches": "Dating",
     "inbox": "Inbox",
     "settings": "Settings",
     "bulletin": "Bulletin"

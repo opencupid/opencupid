@@ -89,7 +89,7 @@ provide('viewerProfile', toRef(viewerProfile))
             :showTags="false"
           />
           <RouterLink
-            :to="{ name: 'BrowseProfiles' }"
+            :to="{ name: 'SocialMatch' }"
             class="more-people-link mt-2"
             role="button"
           >
@@ -121,7 +121,7 @@ provide('viewerProfile', toRef(viewerProfile))
               :showTags="false"
             />
             <RouterLink
-              :to="{ name: 'BrowseProfiles' }"
+              :to="{ name: 'SocialMatch' }"
               class="more-people-link mt-2"
               role="button"
             >

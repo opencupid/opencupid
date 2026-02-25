@@ -9,7 +9,7 @@ import NoAccessCTA from '../NoAccessCTA.vue'
 describe('NoAccessCTA', () => {
   it('emits edit event when button clicked', async () => {
     const wrapper = mount(NoAccessCTA, {
-      props: { modelValue: 'dating' },
+      props: { scope: 'dating' },
       global: { stubs: { BButton }, config: {} },
     })
     await wrapper.find('button').trigger('click')
@@ -18,9 +18,17 @@ describe('NoAccessCTA', () => {
 
   it('shows dating scope message', () => {
     const wrapper = mount(NoAccessCTA, {
-      props: { modelValue: 'dating' },
+      props: { scope: 'dating' },
       global: { stubs: { BButton }, config: {} },
     })
     expect(wrapper.text()).toContain('profiles.browse.no_access_dating_title')
+  })
+
+  it('shows social scope message', () => {
+    const wrapper = mount(NoAccessCTA, {
+      props: { scope: 'social' },
+      global: { stubs: { BButton }, config: {} },
+    })
+    expect(wrapper.text()).toContain('profiles.browse.no_access_social_title')
   })
 })

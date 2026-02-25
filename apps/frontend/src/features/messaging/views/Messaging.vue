@@ -131,7 +131,7 @@ const isDetailView = computed(() => !!messageStore.activeConversation)
               variant="primary"
               size="lg"
               pill
-              @click="router.push({ name: 'BrowseProfiles' })"
+              @click="router.push({ name: 'SocialMatch' })"
             >
               <IconSearch class="svg-icon" />
               <!-- Find people to talk to -->

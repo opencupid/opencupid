@@ -7,9 +7,9 @@ import MessagingView from '@/features/messaging/views/Messaging.vue'
 import UserHome from '@/features/userhome/views/UserHome.vue'
 import Settings from '@/features/settings/views/Settings.vue'
 import MyProfile from '@/features/myprofile/views/MyProfile.vue'
-import BrowseProfiles from '@/features/browse/views/BrowseProfiles.vue'
+import SocialMatch from '@/features/browse/views/SocialMatch.vue'
+import DatingMatch from '@/features/browse/views/DatingMatch.vue'
 import OnboardingView from '@/features/onboarding/views/Onboarding.vue'
-import MatchesView from '@/features/interaction/views/Matches.vue'
 import AuthUserId from '@/features/auth/views/AuthUserId.vue'
 import AuthOtp from '@/features/auth/views/AuthOtp.vue'
 import Logout from '@/features/auth/views/Logout.vue'
@@ -19,14 +19,12 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/auth',
     name: 'Login',
-    // component: () => import('@/features/auth/views/AuthUserId.vue'),
     component: AuthUserId,
     meta: { requiresAuth: false },
   },
   {
     path: '/auth/otp',
     name: 'LoginOTP',
-    // component: () => import('@/features/auth/views/AuthOtp.vue'),
     component: AuthOtp,
     meta: { requiresAuth: false },
   },
@@ -36,29 +34,16 @@ const routes: Array<RouteRecordRaw> = [
     component: Logout,
     meta: { requiresAuth: true },
   },
-  // Browse-related routes: /browse, /browse/:scope, and /profile/:profileId all render
-  // the same BrowseProfiles component but are defined as flat sibling routes rather than
-  // nested children of /browse. This means Vue Router's built-in active-link prefix
-  // matching won't highlight the Browse navbar item on /browse/social, /browse/dating,
-  // or /profile/:id. The Navbar uses a manual `isBrowseActive` computed to compensate
-  // (see Navbar.vue).
   {
     path: '/browse',
-    name: 'BrowseProfiles',
-    component: BrowseProfiles,
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/browse/:scope',
-    name: 'BrowseProfilesScope',
-    component: BrowseProfiles,
-    props: true,
+    name: 'SocialMatch',
+    component: SocialMatch,
     meta: { requiresAuth: true },
   },
   {
     path: '/profile/:profileId',
     name: 'PublicProfile',
-    component: BrowseProfiles,
+    component: SocialMatch,
     props: true,
     meta: { requiresAuth: true },
   },
@@ -102,8 +87,8 @@ const routes: Array<RouteRecordRaw> = [
   },
   {
     path: '/matches/:profileId?',
-    name: 'Matches',
-    component: MatchesView,
+    name: 'DatingMatch',
+    component: DatingMatch,
     props: true,
     meta: { requiresAuth: true },
   },
