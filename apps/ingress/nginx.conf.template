@@ -23,6 +23,39 @@ http {
   gzip_proxied any;
   gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript font/woff2;
 
+  # --- Shared security headers (called from each server block) ---
+  init_by_lua_block {
+    function set_security_headers(extra_csp)
+      ngx.header["X-Content-Type-Options"] = "nosniff"
+      ngx.header["X-Frame-Options"] = "DENY"
+      ngx.header["Referrer-Policy"] = "strict-origin-when-cross-origin"
+      ngx.header["Permissions-Policy"] = "camera=(), microphone=(self), geolocation=(self)"
+
+      local csp = "default-src 'self'"
+        .. "; script-src 'self' https://*.${DOMAIN}"
+        .. "; style-src 'self' 'unsafe-inline'"
+        .. "; img-src 'self' data: blob:"
+        .. "; font-src 'self'"
+        .. "; object-src 'none'"
+        .. "; base-uri 'self'"
+        .. "; form-action 'self'"
+        .. "; frame-ancestors 'none'"
+
+      if extra_csp and extra_csp ~= "" then
+        csp = csp .. "; " .. extra_csp
+      end
+
+      local report_uri = os.getenv("CSP_REPORT_URI")
+      if report_uri and report_uri ~= "" then
+        csp = csp .. "; report-uri " .. report_uri
+      end
+
+      csp = csp .. "; upgrade-insecure-requests"
+
+      ngx.header["Content-Security-Policy"] = csp
+    end
+  }
+
   # --- Upstreams ---
   upstream backend {
     server backend:3000;
@@ -78,31 +111,12 @@ http {
 
     # Security headers (set via Lua to apply to all locations including those with add_header)
     header_filter_by_lua_block {
-      ngx.header["X-Content-Type-Options"] = "nosniff"
-      ngx.header["X-Frame-Options"] = "DENY"
-      ngx.header["Referrer-Policy"] = "strict-origin-when-cross-origin"
-      ngx.header["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
-
-      local csp = "default-src 'self'"
-        .. "; script-src 'self' https://${DOMAIN}"
-	      .. "; worker-src 'self' blob:"
-        .. "; style-src 'self' 'unsafe-inline'"
-        .. "; img-src 'self' data: blob:"
-        .. "; font-src 'self'"
-        .. "; connect-src 'self' wss://${DOMAIN} https://*.${DOMAIN}"
+      set_security_headers(
+        "worker-src 'self' blob:"
         .. "; media-src 'self'"
-        .. "; frame-src https://${JITSI_DOMAIN}"
-        .. "; object-src 'none'"
-        .. "; base-uri 'self'"
-        .. "; form-action 'self'"
-        .. "; frame-ancestors 'none'"
-
-      local report_uri = os.getenv("CSP_REPORT_URI")
-      if report_uri and report_uri ~= "" then
-        csp = csp .. "; report-uri " .. report_uri
-      end
-
-      ngx.header["Content-Security-Policy"] = csp
+        .. "; frame-src https://*.${DOMAIN}"
+        .. "; connect-src 'self' wss://${DOMAIN} https://*.${DOMAIN}"
+      )
     }
 
     # Default limit for everything else (1MB by default, or set explicitly)
@@ -257,19 +271,7 @@ http {
 
     # Security headers for admin
     header_filter_by_lua_block {
-      ngx.header["X-Content-Type-Options"] = "nosniff"
-      ngx.header["X-Frame-Options"] = "DENY"
-      ngx.header["Referrer-Policy"] = "strict-origin-when-cross-origin"
-      ngx.header["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
-      ngx.header["Content-Security-Policy"] = "default-src 'self'"
-        .. "; script-src 'self' https://*.${DOMAIN}"
-        .. "; style-src 'self' 'unsafe-inline'"
-        .. "; img-src 'self' data: blob:"
-        .. "; font-src 'self'"
-        .. "; object-src 'none'"
-        .. "; base-uri 'self'"
-        .. "; form-action 'self'"
-        .. "; frame-ancestors 'none'"
+      set_security_headers("connect-src 'self'")
     }
 
     location /api/ {
