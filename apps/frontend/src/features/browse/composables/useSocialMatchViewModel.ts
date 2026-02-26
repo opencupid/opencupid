@@ -39,7 +39,7 @@ export function useSocialMatchViewModel() {
     typeof route.query.viewMode === 'string' &&
     Object.values(ViewMode).includes(route.query.viewMode as ViewMode)
       ? route.query.viewMode
-      : 'grid'
+      : 'map'
   )
 
   function isValidViewMode(mode: string): mode is ViewMode {
