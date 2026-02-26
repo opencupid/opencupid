@@ -29,7 +29,7 @@ http {
       ngx.header["X-Content-Type-Options"] = "nosniff"
       ngx.header["X-Frame-Options"] = "DENY"
       ngx.header["Referrer-Policy"] = "strict-origin-when-cross-origin"
-      ngx.header["Permissions-Policy"] = "camera=(), microphone=(self), geolocation=(self)"
+      ngx.header["Permissions-Policy"] = "camera=(self https://meet.${DOMAIN}), microphone=(self https://meet.${DOMAIN}), geolocation=(self)"
 
       local csp = "default-src 'self'"
         .. "; script-src 'self' https://*.${DOMAIN}"

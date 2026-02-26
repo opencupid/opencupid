@@ -68,6 +68,12 @@ async function startJitsi() {
     },
   })
 
+  // Ensure the Jitsi iframe has permission to access camera and microphone
+  const iframe = jitsiApi.getIFrame()
+  if (iframe) {
+    iframe.setAttribute('allow', 'camera; microphone; display-capture; autoplay')
+  }
+
   jitsiApi.addListener('readyToClose', () => {
     callStore.endCall()
   })
