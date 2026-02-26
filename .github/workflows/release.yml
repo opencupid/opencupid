@@ -1,72 +1,22 @@
 name: Release
 
 on:
-  push:
-    branches:
-      - main
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Docker tag suffix (e.g., "hotfix", "test")'
+        required: false
+        default: 'manual'
 
 permissions:
-  contents: write
+  contents: read
   packages: write
-  pull-requests: write
 
 jobs:
-  version:
-    runs-on: ubuntu-latest
-
-    outputs:
-      has-changesets: ${{ steps.changesets.outputs.hasChangesets }}
-      app-version: ${{ steps.get-versions.outputs.app }}
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-        with:
-          # This makes Actions fetch all git history so that Changesets can generate changelogs with the correct commits
-          fetch-depth: 0
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.30.1
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '22'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Create Release Pull Request or Publish to npm
-        id: changesets
-        uses: changesets/action@v1
-        with:
-          # This expects you to have a script called release which does a build for your packages and calls changeset publish
-          version: pnpm changeset version
-          publish: echo "No npm publish - this is a monorepo release"
-          commit: 'chore: version packages'
-          title: 'chore: version packages'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Get current versions
-        id: get-versions
-        run: |
-          APP_VERSION=$(node -p "require('./package.json').version")
-          echo "app=$APP_VERSION" >> $GITHUB_OUTPUT
-
-      - name: Create tags if versions were bumped
-        if: steps.changesets.outputs.published == 'true'
-        run: |
-          git tag "app-v${{ steps.get-versions.outputs.app }}"
-          git push origin --tags
-
   docker:
-    needs: version
     runs-on: ubuntu-latest
-    if: needs.version.outputs.has-changesets == 'false'
 
     steps:
       - name: Checkout code
@@ -86,6 +36,9 @@ jobs:
             echo "${var}=${!var}" >> "$GITHUB_OUTPUT"
           done
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -96,30 +49,69 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Get git commit short SHA
-        id: git-sha
-        run: echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+      - name: Compute image tags
+        id: tags
+        run: |
+          SHA=$(git rev-parse --short HEAD)
+          VERSION=$(node -p "require('./package.json').version")
+          PREFIX="ghcr.io/${{ github.repository }}"
 
-      # Build and push backend image
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            TAG="${{ github.event.release.tag_name }}"
+            # For releases: version tag + sha + latest
+            for SVC in backend frontend admin ingress; do
+              {
+                echo "${PREFIX}-${SVC}:${TAG}"
+                echo "${PREFIX}-${SVC}:${SHA}"
+                echo "${PREFIX}-${SVC}:latest"
+              } >> "tags-${SVC}.txt"
+            done
+          else
+            TAG="${{ github.event.inputs.tag || 'manual' }}"
+            # For manual: tag suffix + version + sha + latest
+            for SVC in backend frontend admin ingress; do
+              {
+                echo "${PREFIX}-${SVC}:${TAG}"
+                echo "${PREFIX}-${SVC}:${VERSION}"
+                echo "${PREFIX}-${SVC}:${SHA}"
+                echo "${PREFIX}-${SVC}:latest"
+              } >> "tags-${SVC}.txt"
+            done
+          fi
+
+          # Set multiline outputs
+          {
+            echo "backend<<EOF"
+            cat tags-backend.txt
+            echo "EOF"
+            echo "frontend<<EOF"
+            cat tags-frontend.txt
+            echo "EOF"
+            echo "admin<<EOF"
+            cat tags-admin.txt
+            echo "EOF"
+            echo "ingress<<EOF"
+            cat tags-ingress.txt
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Build and push backend image
         uses: docker/build-push-action@v6
         with:
           context: .
           file: apps/backend/Dockerfile
+          platforms: linux/amd64,linux/arm64
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          tags: |
-            ghcr.io/${{ github.repository }}-backend:latest
-            ghcr.io/${{ github.repository }}-backend:${{ needs.version.outputs.app-version }}
-            ghcr.io/${{ github.repository }}-backend:${{ steps.git-sha.outputs.sha }}
+          tags: ${{ steps.tags.outputs.backend }}
 
-      # Build and push frontend image
       - name: Build and push frontend image
         uses: docker/build-push-action@v6
         with:
           context: .
           file: apps/frontend/Dockerfile
+          platforms: linux/amd64,linux/arm64
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -132,21 +124,78 @@ jobs:
             OG_IMAGE=${{ steps.frontend-args.outputs.OG_IMAGE }}
             OG_URL=${{ steps.frontend-args.outputs.OG_URL }}
             OG_TYPE=${{ steps.frontend-args.outputs.OG_TYPE }}
-          tags: |
-            ghcr.io/${{ github.repository }}-frontend:latest
-            ghcr.io/${{ github.repository }}-frontend:${{ needs.version.outputs.app-version }}
-            ghcr.io/${{ github.repository }}-frontend:${{ steps.git-sha.outputs.sha }}
+          tags: ${{ steps.tags.outputs.frontend }}
 
-      # Build and push ingress image
+      - name: Build and push admin image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/admin/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: ${{ steps.tags.outputs.admin }}
+
       - name: Build and push ingress image
         uses: docker/build-push-action@v6
         with:
           context: apps/ingress
           file: apps/ingress/Dockerfile
+          platforms: linux/amd64,linux/arm64
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          tags: |
-            ghcr.io/${{ github.repository }}-ingress:latest
-            ghcr.io/${{ github.repository }}-ingress:${{ needs.version.outputs.app-version }}
-            ghcr.io/${{ github.repository }}-ingress:${{ steps.git-sha.outputs.sha }}
+          tags: ${{ steps.tags.outputs.ingress }}
+
+  sentry-sourcemaps:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.30.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Extract version
+        id: version
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Build frontend
+        run: pnpm --filter frontend build-only
+
+      - name: Build backend
+        run: pnpm --filter backend prisma:generate && pnpm --filter backend build
+
+      - name: Upload frontend sourcemaps
+        run: |
+          pnpm exec sentry-cli --url ${{ secrets.SENTRY_URL }} sourcemaps inject ./apps/frontend/dist
+          pnpm exec sentry-cli --url ${{ secrets.SENTRY_URL }} sourcemaps upload \
+            --org gaians_org --project gaians \
+            --release "frontend@${{ steps.version.outputs.version }}" \
+            ./apps/frontend/dist
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+
+      - name: Upload backend sourcemaps
+        run: |
+          pnpm exec sentry-cli --url ${{ secrets.SENTRY_URL }} sourcemaps inject ./apps/backend/dist
+          pnpm exec sentry-cli --url ${{ secrets.SENTRY_URL }} sourcemaps upload \
+            --org gaians_org --project gaians \
+            --release "api@${{ steps.version.outputs.version }}" \
+            ./apps/backend/dist
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
