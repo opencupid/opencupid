@@ -108,10 +108,9 @@ describe('TagCloud', () => {
     await hikingEl!.trigger('click')
     await flushPromises()
 
-    const emitted = wrapper.emitted('tag:select')
-    expect(emitted).toBeDefined()
+    const emitted = wrapper.emitted('tag:select') as unknown[][]
     expect(emitted).toHaveLength(1)
-    expect(emitted![0][0]).toEqual(mockTags[0])
+    expect(emitted[0][0]).toEqual(mockTags[0])
   })
 
   it('passes location prop to fetchPopularTags', async () => {
