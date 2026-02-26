@@ -42,6 +42,7 @@ vi.mock('leaflet', () => {
   const layerGroup = vi.fn(() => ({ ...layerGroupProto }))
 
   const latLngBounds = vi.fn(() => ({}))
+  const point = vi.fn((x: number, y: number) => ({ x, y }))
 
   const mapProto = {
     setView: vi.fn().mockReturnThis(),
@@ -75,6 +76,7 @@ vi.mock('leaflet', () => {
       latLngBounds,
       tileLayer,
       markerClusterGroup,
+      point,
     },
     Map: mapFn,
     Marker: marker,
@@ -85,6 +87,7 @@ vi.mock('leaflet', () => {
     latLngBounds,
     tileLayer,
     markerClusterGroup,
+    point,
   }
 })
 

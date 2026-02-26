@@ -183,7 +183,12 @@ function updateMarkers() {
       keyboard: true,
     })
 
-    m.bindPopup('', { maxWidth: 420, autoPan: true, className: 'item-popup' })
+    m.bindPopup('', {
+      maxWidth: 420,
+      autoPan: true,
+      autoPanPadding: L.point(40, 120),
+      className: 'item-popup',
+    })
 
     m.on('popupopen', (e: L.PopupEvent) => {
       const target = e.popup
