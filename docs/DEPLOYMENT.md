@@ -178,6 +178,42 @@ The admin domain is protected by **mutual TLS (mTLS)** — only clients presenti
 
 5. **Import `client.p12`** into your browser's certificate store.
 
+## Sentry / GlitchTip Sourcemap Uploads
+
+The release workflow uploads frontend and backend sourcemaps to GlitchTip so that error stack traces show original source code instead of minified bundles.
+
+### How it works
+
+The `sentry-sourcemaps` job in `.github/workflows/release.yml` runs in parallel with the Docker build on every release. It:
+
+1. Builds frontend and backend locally to produce `dist/` with sourcemaps
+2. Runs `sentry-cli sourcemaps inject` to stamp debug IDs into the files
+3. Runs `sentry-cli sourcemaps upload` to push the artifact bundle to GlitchTip
+
+The job is marked `continue-on-error: true` — if the upload fails, Docker images are still pushed and the release succeeds.
+
+### GitHub configuration
+
+The workflow reads Sentry config from GitHub secrets and variables:
+
+| Type     | Name                | Value                         |
+| -------- | ------------------- | ----------------------------- |
+| Secret   | `SENTRY_AUTH_TOKEN` | GlitchTip API auth token      |
+| Variable | `SENTRY_URL`        | `https://lsentry.example.org` |
+| Variable | `SENTRY_ORG`        | `example_org`                 |
+| Variable | `SENTRY_PROJECT`    | `example_proj`                |
+
+### Release naming
+
+Sourcemaps are tagged with release names that match the Sentry SDK configuration:
+
+| App      | Release format       | Example           |
+| -------- | -------------------- | ----------------- |
+| Frontend | `frontend@{version}` | `frontend@0.12.2` |
+| Backend  | `api@{version}`      | `api@0.12.2`      |
+
+The version is read from the root `package.json`.
+
 ## Firewall
 
 The following ports must be open on the production server:
