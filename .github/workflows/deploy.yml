@@ -61,7 +61,7 @@ jobs:
           CURRENT_MAJOR=$(echo "$TAG" | sed 's/^v//' | cut -d. -f1)
 
           # Fetch previous release tag
-          PREV_TAG=$(gh release list --limit 2 --json tagName --jq '.[1].tagName // empty')
+          PREV_TAG=$(gh release list --repo "${{ github.repository }}" --limit 2 --json tagName --jq '.[1].tagName // empty')
           if [[ -z "$PREV_TAG" ]]; then
             echo "No previous release found — proceeding with deploy."
             echo "should_deploy=true" >> "$GITHUB_OUTPUT"
