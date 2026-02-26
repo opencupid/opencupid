@@ -18,6 +18,12 @@ export async function transcodeToMp3(inputPath: string): Promise<{ path: string;
   await fsPromises.mkdir(tmpDir, { recursive: true })
   const tmpPath = path.join(tmpDir, path.basename(finalPath))
 
+  /*
+    The loudnorm filter's I parameter is the target integrated loudness in LUFS. -16 is the EBU
+  R128 broadcast standard (fairly aggressive normalization). -24 is significantly quieter/less   
+  compressed — roughly "half" the normalization effect, letting more of the original dynamic   
+  range through. LRA=11 (loudness range) and TP=-1.5 (true peak ceiling) stay the same.
+  */
   try {
     await execFileAsync('ffmpeg', [
       '-y',
