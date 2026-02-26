@@ -46,6 +46,13 @@ const editTranslations = ref<Record<string, string>>({})
 const saving = ref(false)
 const saveError = ref<string | null>(null)
 const translating = ref(false)
+const deleting = ref(false)
+const showMerge = ref(false)
+const mergeSearch = ref('')
+const mergeResults = ref<AdminTag[]>([])
+const mergeLoserTags = ref<AdminTag[]>([])
+const merging = ref(false)
+let mergeSearchTimeout: ReturnType<typeof setTimeout>
 
 type SortColumn = 'slug' | 'name' | 'createdAt' | 'isUserCreated' | 'profiles' | 'en' | 'hu'
 const sortColumn = ref<SortColumn | null>(null)
@@ -121,6 +128,10 @@ function editTag(tag: AdminTag) {
     editTranslations.value[lang.code] = getTranslation(tag, lang.code)
   }
   saveError.value = null
+  showMerge.value = false
+  mergeLoserTags.value = []
+  mergeSearch.value = ''
+  mergeResults.value = []
 }
 
 async function saveTag() {
@@ -172,6 +183,81 @@ async function translateTag() {
     saveError.value = err instanceof Error ? err.message : 'Translation failed'
   } finally {
     translating.value = false
+  }
+}
+
+async function deleteTag() {
+  if (!selectedTag.value || !confirm('Delete this tag? This will soft-delete it.')) return
+  deleting.value = true
+  saveError.value = null
+  try {
+    await apiRequest(`/admin/tags/${selectedTag.value.id}`, {
+      method: 'PATCH',
+      body: { isDeleted: true },
+    })
+    selectedTag.value = null
+    await fetchTags()
+  } catch (err: unknown) {
+    saveError.value = err instanceof Error ? err.message : 'Failed to delete'
+  } finally {
+    deleting.value = false
+  }
+}
+
+function onMergeSearchInput() {
+  clearTimeout(mergeSearchTimeout)
+  mergeSearchTimeout = setTimeout(async () => {
+    if (!mergeSearch.value) {
+      mergeResults.value = []
+      return
+    }
+    const res = await call<TagsResponse>('/admin/tags', {
+      params: { page: 1, pageSize: 10, search: mergeSearch.value },
+    })
+    if (res) {
+      const excludeIds = new Set([selectedTag.value?.id, ...mergeLoserTags.value.map((t) => t.id)])
+      mergeResults.value = res.tags.filter((t) => !excludeIds.has(t.id))
+    }
+  }, 300)
+}
+
+function addMergeLoser(tag: AdminTag) {
+  mergeLoserTags.value.push(tag)
+  mergeSearch.value = ''
+  mergeResults.value = []
+}
+
+function removeMergeLoser(tagId: string) {
+  mergeLoserTags.value = mergeLoserTags.value.filter((t) => t.id !== tagId)
+}
+
+async function confirmMerge() {
+  if (!selectedTag.value || mergeLoserTags.value.length === 0) return
+  merging.value = true
+  saveError.value = null
+  try {
+    const res = (await apiRequest('/admin/tags/merge', {
+      method: 'POST',
+      body: {
+        winnerTagId: selectedTag.value.id,
+        loserTagIds: mergeLoserTags.value.map((t) => t.id),
+      },
+    })) as { success: boolean; tag: AdminTag }
+    if (res.success) {
+      selectedTag.value = res.tag
+      editSlug.value = res.tag.slug
+      editName.value = res.tag.name
+      for (const lang of LANGUAGES) {
+        editTranslations.value[lang.code] = getTranslation(res.tag, lang.code)
+      }
+      mergeLoserTags.value = []
+      showMerge.value = false
+      await fetchTags()
+    }
+  } catch (err: unknown) {
+    saveError.value = err instanceof Error ? err.message : 'Merge failed'
+  } finally {
+    merging.value = false
   }
 }
 
@@ -428,13 +514,86 @@ onMounted(fetchTags)
                 class="form-control"
               />
             </div>
+            <!-- Merge Section -->
+            <div
+              v-if="showMerge"
+              class="border-top pt-3 mt-3"
+            >
+              <h6>Merge other tags into this one</h6>
+              <p class="text-muted small mb-2">
+                Search for tags to absorb. Their profiles and translations will be moved here.
+              </p>
+              <input
+                v-model="mergeSearch"
+                type="text"
+                class="form-control form-control-sm mb-2"
+                placeholder="Search tags to merge..."
+                @input="onMergeSearchInput"
+                @keydown.enter.stop
+              />
+              <div
+                v-if="mergeResults.length > 0"
+                class="list-group list-group-flush mb-2"
+              >
+                <button
+                  v-for="result in mergeResults"
+                  :key="result.id"
+                  type="button"
+                  class="list-group-item list-group-item-action py-1 small"
+                  @click="addMergeLoser(result)"
+                >
+                  {{ result.name }}
+                  <span class="text-muted"
+                    >({{ result.slug }}, {{ result._count.profiles }} profiles)</span
+                  >
+                </button>
+              </div>
+              <div
+                v-if="mergeLoserTags.length > 0"
+                class="mb-2"
+              >
+                <span
+                  v-for="loser in mergeLoserTags"
+                  :key="loser.id"
+                  class="badge bg-warning text-dark me-1"
+                >
+                  {{ loser.name }}
+                  <button
+                    type="button"
+                    class="btn-close btn-close-sm ms-1"
+                    style="font-size: 0.5em"
+                    @click="removeMergeLoser(loser.id)"
+                  ></button>
+                </span>
+              </div>
+              <button
+                class="btn btn-sm btn-warning"
+                :disabled="merging || mergeLoserTags.length === 0"
+                @click="confirmMerge"
+              >
+                {{ merging ? 'Merging...' : `Confirm Merge (${mergeLoserTags.length})` }}
+              </button>
+            </div>
           </div>
           <div class="modal-footer">
+            <button
+              class="btn btn-outline-danger me-auto"
+              :disabled="deleting"
+              @click="deleteTag"
+            >
+              {{ deleting ? 'Deleting...' : 'Delete' }}
+            </button>
             <button
               class="btn btn-secondary"
               @click="selectedTag = null"
             >
               Cancel
+            </button>
+            <button
+              class="btn btn-outline-warning"
+              @click="showMerge = !showMerge"
+            >
+              {{ showMerge ? 'Hide Merge' : 'Merge' }}
             </button>
             <button
               class="btn btn-outline-info"

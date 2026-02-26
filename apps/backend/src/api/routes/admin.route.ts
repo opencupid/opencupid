@@ -383,6 +383,101 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
     }
   })
 
+  // POST /admin/tags/merge — Merge loser tags into a winner tag
+  fastify.post('/tags/merge', async (req, reply) => {
+    try {
+      const { winnerTagId, loserTagIds } = req.body as {
+        winnerTagId?: string
+        loserTagIds?: string[]
+      }
+
+      if (!winnerTagId || !Array.isArray(loserTagIds) || loserTagIds.length === 0) {
+        return sendError(reply, 400, 'winnerTagId and loserTagIds[] are required')
+      }
+
+      if (loserTagIds.includes(winnerTagId)) {
+        return sendError(reply, 400, 'winnerTagId must not be in loserTagIds')
+      }
+
+      const tag = await prisma.$transaction(async (tx) => {
+        // 1. Move translations from losers to winner (skip existing locales)
+        const winnerTranslations = await tx.tagTranslation.findMany({
+          where: { tagId: winnerTagId },
+          select: { locale: true },
+        })
+        const existingLocales = new Set(winnerTranslations.map((t) => t.locale))
+
+        const loserTranslations = await tx.tagTranslation.findMany({
+          where: { tagId: { in: loserTagIds } },
+        })
+
+        for (const t of loserTranslations) {
+          if (!existingLocales.has(t.locale)) {
+            await tx.tagTranslation.update({
+              where: { id: t.id },
+              data: { tagId: winnerTagId },
+            })
+            existingLocales.add(t.locale)
+          } else {
+            await tx.tagTranslation.delete({ where: { id: t.id } })
+          }
+        }
+
+        // 2. Reassign profile associations
+        await tx.$executeRawUnsafe(
+          `INSERT INTO "_ProfileTags" ("A", "B")
+           SELECT "A", $1 FROM "_ProfileTags"
+           WHERE "B" = ANY($2::text[])
+           ON CONFLICT DO NOTHING`,
+          winnerTagId,
+          loserTagIds
+        )
+        await tx.$executeRawUnsafe(
+          `DELETE FROM "_ProfileTags" WHERE "B" = ANY($1::text[])`,
+          loserTagIds
+        )
+
+        // 3. Reassign filter associations
+        await tx.$executeRawUnsafe(
+          `INSERT INTO "_SocialMatchFilterToTag" ("A", "B")
+           SELECT "A", $1 FROM "_SocialMatchFilterToTag"
+           WHERE "B" = ANY($2::text[])
+           ON CONFLICT DO NOTHING`,
+          winnerTagId,
+          loserTagIds
+        )
+        await tx.$executeRawUnsafe(
+          `DELETE FROM "_SocialMatchFilterToTag" WHERE "B" = ANY($1::text[])`,
+          loserTagIds
+        )
+
+        // 4. Soft-delete losers
+        await tx.tag.updateMany({
+          where: { id: { in: loserTagIds } },
+          data: { isDeleted: true },
+        })
+
+        // Return updated winner
+        return tx.tag.findUnique({
+          where: { id: winnerTagId },
+          include: {
+            translations: { select: { locale: true, name: true } },
+            _count: { select: { profiles: true } },
+          },
+        })
+      })
+
+      return reply.code(200).send({
+        success: true,
+        mergedCount: loserTagIds.length,
+        tag,
+      })
+    } catch (err) {
+      fastify.log.error({ err }, 'Error merging admin tags')
+      return sendError(reply, 500, 'Failed to merge tags')
+    }
+  })
+
   // POST /admin/tags/translate — Translate tag name via DeepL
   fastify.post('/tags/translate', async (req, reply) => {
     try {

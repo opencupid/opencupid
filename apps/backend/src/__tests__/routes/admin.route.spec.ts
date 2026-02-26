@@ -1,25 +1,39 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 
-const mockPrisma = vi.hoisted(() => ({
-  user: {
-    count: vi.fn(),
-    findMany: vi.fn(),
-    findUnique: vi.fn(),
-    update: vi.fn(),
-  },
-  profile: {
-    count: vi.fn(),
-    findMany: vi.fn(),
-    findUnique: vi.fn(),
-    groupBy: vi.fn(),
-  },
-  tag: {
-    findMany: vi.fn(),
-    count: vi.fn(),
-    update: vi.fn(),
-  },
-  $queryRaw: vi.fn(),
-}))
+const mockPrisma = vi.hoisted(() => {
+  const mock: any = {
+    user: {
+      count: vi.fn(),
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+    },
+    profile: {
+      count: vi.fn(),
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      groupBy: vi.fn(),
+    },
+    tag: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      count: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+    },
+    tagTranslation: {
+      findMany: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    },
+    $executeRawUnsafe: vi.fn(),
+    $queryRaw: vi.fn(),
+    $transaction: vi.fn(),
+  }
+  // $transaction passes the same mock as the tx argument
+  mock.$transaction.mockImplementation((fn: any) => fn(mock))
+  return mock
+})
 
 vi.mock('@/lib/prisma', () => ({
   prisma: mockPrisma,
@@ -476,6 +490,81 @@ describe('PATCH /tags/:id', () => {
 
     const handler = fastify.routes['PATCH /tags/:id']
     await handler({ params: { id: 'tag1' }, body: { name: 'Test' } }, reply)
+
+    expect(reply.statusCode).toBe(500)
+  })
+})
+
+describe('POST /tags/merge', () => {
+  it('merges loser tags into winner', async () => {
+    mockPrisma.tagTranslation.findMany
+      .mockResolvedValueOnce([{ locale: 'en' }]) // winner translations
+      .mockResolvedValueOnce([{ id: 10, locale: 'hu', tagId: 'loser1' }]) // loser translations
+    mockPrisma.tagTranslation.update.mockResolvedValue({})
+    mockPrisma.$executeRawUnsafe.mockResolvedValue(0)
+    mockPrisma.tag.updateMany.mockResolvedValue({ count: 1 })
+    mockPrisma.tag.findUnique.mockResolvedValue({
+      id: 'winner1',
+      slug: 'hiking',
+      translations: [
+        { locale: 'en', name: 'Hiking' },
+        { locale: 'hu', name: 'Túrázás' },
+      ],
+      _count: { profiles: 10 },
+    })
+
+    const handler = fastify.routes['POST /tags/merge']
+    await handler({ body: { winnerTagId: 'winner1', loserTagIds: ['loser1'] } }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    expect(reply.payload.mergedCount).toBe(1)
+    expect(reply.payload.tag.id).toBe('winner1')
+  })
+
+  it('returns 400 when winnerTagId is missing', async () => {
+    const handler = fastify.routes['POST /tags/merge']
+    await handler({ body: { loserTagIds: ['a'] } }, reply)
+
+    expect(reply.statusCode).toBe(400)
+  })
+
+  it('returns 400 when loserTagIds is empty', async () => {
+    const handler = fastify.routes['POST /tags/merge']
+    await handler({ body: { winnerTagId: 'a', loserTagIds: [] } }, reply)
+
+    expect(reply.statusCode).toBe(400)
+  })
+
+  it('returns 400 when winner is in loserTagIds', async () => {
+    const handler = fastify.routes['POST /tags/merge']
+    await handler({ body: { winnerTagId: 'a', loserTagIds: ['a', 'b'] } }, reply)
+
+    expect(reply.statusCode).toBe(400)
+  })
+
+  it('deletes duplicate translations instead of moving', async () => {
+    mockPrisma.tagTranslation.findMany
+      .mockResolvedValueOnce([{ locale: 'en' }]) // winner already has 'en'
+      .mockResolvedValueOnce([{ id: 20, locale: 'en', tagId: 'loser1' }]) // loser also has 'en'
+    mockPrisma.tagTranslation.delete.mockResolvedValue({})
+    mockPrisma.$executeRawUnsafe.mockResolvedValue(0)
+    mockPrisma.tag.updateMany.mockResolvedValue({ count: 1 })
+    mockPrisma.tag.findUnique.mockResolvedValue({ id: 'winner1' })
+
+    const handler = fastify.routes['POST /tags/merge']
+    await handler({ body: { winnerTagId: 'winner1', loserTagIds: ['loser1'] } }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(mockPrisma.tagTranslation.delete).toHaveBeenCalledWith({ where: { id: 20 } })
+    expect(mockPrisma.tagTranslation.update).not.toHaveBeenCalled()
+  })
+
+  it('handles errors gracefully', async () => {
+    mockPrisma.$transaction.mockRejectedValueOnce(new Error('DB error'))
+
+    const handler = fastify.routes['POST /tags/merge']
+    await handler({ body: { winnerTagId: 'winner1', loserTagIds: ['loser1'] } }, reply)
 
     expect(reply.statusCode).toBe(500)
   })
