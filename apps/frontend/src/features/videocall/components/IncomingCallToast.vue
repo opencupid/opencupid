@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { watch } from 'vue'
 import { useToast } from 'vue-toastification'
 import { useCallStore } from '../stores/callStore'
 
@@ -9,6 +10,16 @@ const props = defineProps<{
   callerName: string
   toastId: number | string
 }>()
+
+// Auto-dismiss when call is cancelled by the caller (status leaves 'ringing')
+watch(
+  () => callStore.status,
+  (status) => {
+    if (status !== 'ringing') {
+      toast.dismiss(props.toastId)
+    }
+  }
+)
 
 function handleAccept() {
   callStore.acceptCall()

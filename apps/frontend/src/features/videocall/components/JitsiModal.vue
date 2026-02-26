@@ -62,11 +62,20 @@ async function startJitsi() {
       startWithAudioMuted: false,
       startWithVideoMuted: false,
       prejoinConfig: { enabled: false },
+      deeplinking: { disabled: true },
+      hangupConfirmation: { enabled: false },
     },
     interfaceConfigOverwrite: {
       SHOW_JITSI_WATERMARK: false,
+      MOBILE_APP_PROMO: false,
     },
   })
+
+  // Ensure the Jitsi iframe has permission to access camera and microphone
+  const iframe = jitsiApi.getIFrame()
+  if (iframe) {
+    iframe.setAttribute('allow', 'camera; microphone; display-capture; autoplay')
+  }
 
   jitsiApi.addListener('readyToClose', () => {
     callStore.endCall()
@@ -127,9 +136,8 @@ onUnmounted(() => {
   justify-content: center;
 }
 .jitsi-modal-content {
-  width: 95vw;
-  height: 90vh;
-  max-width: 1200px;
+  width: 100vw;
+  height: 100vh;
 }
 .jitsi-container {
   width: 100%;
