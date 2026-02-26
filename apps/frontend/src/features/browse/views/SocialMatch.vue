@@ -94,10 +94,10 @@ const getProfileImageUrl = (profile: PublicProfile) => {
         />
       </div>
 
-      <ViewModeToggler
+      <!-- <ViewModeToggler
         v-model="viewModeModel"
         @click.stop
-      />
+      /> -->
     </template>
 
     <template #results="{ onProfileSelect }">
