@@ -7,6 +7,8 @@ import type { CreatePostPayload, UpdatePostPayload, OwnerPost } from '@zod/post/
 import type { LocationDTO } from '@zod/dto/location.dto'
 import { type PostTypeType } from '@zod/generated'
 
+const POST_CONTENT_MAX_LENGTH = 300
+
 import PostIt from '@/features/shared/ui/PostIt.vue'
 import PostTypeBadge from './PostTypeBadge.vue'
 import LocationSelector from '@/features/shared/profileform/LocationSelector.vue'
@@ -163,13 +165,13 @@ const handleSubmit = async () => {
             id="post-content"
             v-model="form.content"
             :placeholder="$t('posts.placeholders.content')"
-            maxlength="150"
+            :maxlength="POST_CONTENT_MAX_LENGTH"
             required
             rows="4"
             :label="$t('posts.labels.content')"
           ></BFormTextarea>
           <div class="fs-6 text-end form-text text-muted character-count">
-            {{ form.content.length }}/150
+            {{ form.content.length }}/{{ POST_CONTENT_MAX_LENGTH }}
           </div>
         </BFormGroup>
 
