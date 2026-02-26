@@ -4,6 +4,14 @@ import { defineComponent, h } from 'vue'
 // Track created markers and their icons
 const createdMarkers: { latLng: [number, number]; opts: any; icon?: any }[] = []
 
+// Track cluster group interactions
+const clusterGroupProto = {
+  addLayer: vi.fn(),
+  clearLayers: vi.fn(),
+  on: vi.fn().mockReturnThis(),
+  getBounds: vi.fn(() => ({})),
+}
+
 // Mock leaflet before imports
 vi.mock('leaflet', () => {
   const divIcon = vi.fn((opts: any) => ({ _type: 'divIcon', ...opts }))
@@ -40,6 +48,7 @@ vi.mock('leaflet', () => {
     fitBounds: vi.fn().mockReturnThis(),
     getZoom: vi.fn(() => 10),
     remove: vi.fn(),
+    addLayer: vi.fn(),
   }
   const mapFn = vi.fn(() => ({ ...mapProto }))
 
@@ -49,6 +58,14 @@ vi.mock('leaflet', () => {
   }
   const tileLayer = vi.fn(() => ({ ...tileLayerProto }))
 
+  const markerClusterGroup = vi.fn(() => ({
+    ...clusterGroupProto,
+    addLayer: vi.fn(),
+    clearLayers: vi.fn(),
+    on: vi.fn().mockReturnThis(),
+    getBounds: vi.fn(() => ({})),
+  }))
+
   return {
     default: {
       map: mapFn,
@@ -57,6 +74,7 @@ vi.mock('leaflet', () => {
       layerGroup,
       latLngBounds,
       tileLayer,
+      markerClusterGroup,
     },
     Map: mapFn,
     Marker: marker,
@@ -66,8 +84,14 @@ vi.mock('leaflet', () => {
     layerGroup,
     latLngBounds,
     tileLayer,
+    markerClusterGroup,
   }
 })
+
+// Mock leaflet.markercluster (it mutates L as a side effect)
+vi.mock('leaflet.markercluster', () => ({}))
+vi.mock('leaflet.markercluster/dist/MarkerCluster.css', () => ({}))
+vi.mock('leaflet.markercluster/dist/MarkerCluster.Default.css', () => ({}))
 
 import { mount, flushPromises } from '@vue/test-utils'
 import OsmPoiMap from '../OsmPoiMap.vue'
@@ -178,5 +202,30 @@ describe('OsmPoiMap', () => {
     for (const call of (L.marker as any).mock.calls) {
       expect(call[1].icon.html).toContain('poi-dot')
     }
+  })
+
+  it('initializes a markerClusterGroup and adds markers to it', async () => {
+    mountMap()
+    await flushPromises()
+
+    // Should have created a cluster group
+    expect((L as any).markerClusterGroup).toHaveBeenCalledTimes(1)
+    const clusterOpts = (L as any).markerClusterGroup.mock.calls[0][0]
+    expect(clusterOpts.maxClusterRadius).toBe(40)
+    expect(clusterOpts.zoomToBoundsOnClick).toBe(true)
+
+    // Markers should be added to the cluster group, not directly to the map
+    expect(L.marker).toHaveBeenCalledTimes(3)
+  })
+
+  it('registers hover-to-spiderfy event handlers on cluster group', async () => {
+    mountMap()
+    await flushPromises()
+
+    const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
+    const onCalls = clusterInstance.on.mock.calls
+    const eventNames = onCalls.map((c: any) => c[0])
+    expect(eventNames).toContain('clustermouseover')
+    expect(eventNames).toContain('clustermouseout')
   })
 })
