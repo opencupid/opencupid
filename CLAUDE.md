@@ -166,7 +166,7 @@ gh pr create
 
 ## CI workflow
 
-Only watch CI when **finalizing** a PR (all work done, ready for review/merge). Do NOT watch CI after every intermediate push — it wastes time. When finalizing:
+Only watch CI when **finalizing** a PR (all work done, ready for review/merge). Always watch in the background, do not wait in foreground.  Do NOT watch CI after every intermediate push — it wastes time. When finalizing:
 
 ```bash
 gh run list --limit 1
@@ -174,7 +174,7 @@ gh run watch --exit-status    # blocks until the run finishes
 ```
 
 - If the run **passes**, you're done.
-- If the run **fails**, download the logs, diagnose the failure, fix the code, commit, push, and watch again:
+- If the run **fails**, download the logs, diagnose the failure, fix the code, commit, push, and watch again (in the background):
 
 ```bash
 gh run view --log-failed     # show only the failed step logs
@@ -219,7 +219,7 @@ Run these steps in order:
    - Keep summaries brief
    - End with a full changelog link: `**Full Changelog**: https://github.com/opencupid/opencupid/compare/<previous-tag>...vX.Y.Z`
 
-3. **Watch the Docker build** — creating the release auto-triggers the Docker workflow. Confirm all images push successfully:
+3. **Watch the Docker build in the background** — creating the release auto-triggers the Docker workflow. Confirm all images push successfully:
 
 ```bash
 gh run watch --exit-status
