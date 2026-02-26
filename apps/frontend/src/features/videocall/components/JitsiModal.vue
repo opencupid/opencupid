@@ -62,9 +62,11 @@ async function startJitsi() {
       startWithAudioMuted: false,
       startWithVideoMuted: false,
       prejoinConfig: { enabled: false },
+      deeplinking: { disabled: true },
     },
     interfaceConfigOverwrite: {
       SHOW_JITSI_WATERMARK: false,
+      MOBILE_APP_PROMO: false,
     },
   })
 
