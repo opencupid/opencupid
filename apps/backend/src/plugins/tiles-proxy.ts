@@ -102,7 +102,7 @@ const tilesPlugin: FastifyPluginAsync = async (fastify) => {
       config: {
         rateLimit: {
           max: 100,
-          timeWindow: '1 second',
+          timeWindow: '5 second',
         },
       },
     },

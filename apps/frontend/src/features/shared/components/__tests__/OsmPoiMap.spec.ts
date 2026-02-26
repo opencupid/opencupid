@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
-import { defineComponent, h } from 'vue'
+import { defineComponent, h, nextTick } from 'vue'
 
 // Track created markers and their icons
 const createdMarkers: { latLng: [number, number]; opts: any; icon?: any }[] = []
@@ -29,8 +29,10 @@ vi.mock('leaflet', () => {
     _icon: null as any,
   }
 
+  /** Each marker gets its own `on` spy so we can extract per-marker handlers. */
   const marker = vi.fn((latLng: [number, number], opts: any) => {
-    const m = { ...markerProto, _icon: opts?.icon }
+    const perMarkerOn = vi.fn().mockReturnThis()
+    const m = { ...markerProto, on: perMarkerOn, _icon: opts?.icon }
     createdMarkers.push({ latLng, opts, icon: opts?.icon })
     return m
   })
@@ -230,5 +232,42 @@ describe('OsmPoiMap', () => {
     const eventNames = onCalls.map((c: any) => c[0])
     expect(eventNames).toContain('clustermouseover')
     expect(eventNames).toContain('clustermouseout')
+  })
+
+  it('calls popup.update() on nextTick after popupopen to re-measure teleported content', async () => {
+    mountMap()
+    await flushPromises()
+
+    // Get the first created marker instance
+    const markerInstance = (L.marker as any).mock.results[0].value
+    const onCalls = markerInstance.on.mock.calls
+
+    // Find the popupopen handler
+    const popupopenCall = onCalls.find((c: any) => c[0] === 'popupopen')
+    expect(popupopenCall).toBeDefined()
+    const handler = popupopenCall[1]
+
+    // Create a fake popup event with an update spy
+    const popupUpdate = vi.fn()
+    const fakeEvent = {
+      popup: {
+        getElement: () => {
+          const el = document.createElement('div')
+          const content = document.createElement('div')
+          content.className = 'leaflet-popup-content'
+          el.appendChild(content)
+          return el
+        },
+        update: popupUpdate,
+      },
+    }
+
+    // Fire the handler — update() should NOT have been called yet (it waits for nextTick)
+    handler(fakeEvent)
+    expect(popupUpdate).not.toHaveBeenCalled()
+
+    // After nextTick, popup.update() should be called
+    await nextTick()
+    expect(popupUpdate).toHaveBeenCalledOnce()
   })
 })

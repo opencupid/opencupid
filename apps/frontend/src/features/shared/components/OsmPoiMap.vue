@@ -1,5 +1,5 @@
 <script setup lang="ts" generic="T extends { id: string | number }">
-import { onMounted, onBeforeUnmount, ref, watch, type Component } from 'vue'
+import { onMounted, onBeforeUnmount, ref, watch, nextTick, type Component } from 'vue'
 import type { Ref } from 'vue'
 import L, { Map as LMap, Marker as LMarker } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -186,7 +186,7 @@ function updateMarkers() {
     m.bindPopup('', {
       maxWidth: 420,
       autoPan: true,
-      autoPanPadding: L.point(40, 120),
+      autoPanPadding: L.point(20, 20),
       className: 'item-popup',
     })
 
@@ -196,6 +196,9 @@ function updateMarkers() {
         ?.querySelector('.leaflet-popup-content') as HTMLElement | null
       popupTarget.value = target
       popupItem.value = item
+      // After Vue renders the teleported popup content, re-measure so
+      // Leaflet's autoPan accounts for the actual popup dimensions.
+      nextTick(() => e.popup.update())
     })
     m.on('popupclose', () => {
       popupTarget.value = null
