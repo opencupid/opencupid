@@ -25,7 +25,7 @@ export async function transcodeToMp3(inputPath: string): Promise<{ path: string;
       inputPath,
       '-vn',
       '-af',
-      'loudnorm=I=-16:LRA=11:TP=-1.5',
+      'loudnorm=I=-24:LRA=11:TP=-1.5',
       '-ac',
       '1',
       '-ar',
