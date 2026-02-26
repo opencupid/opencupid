@@ -147,6 +147,7 @@ jobs:
           tags: ${{ steps.tags.outputs.ingress }}
 
   sentry-sourcemaps:
+    needs: docker
     runs-on: ubuntu-latest
     continue-on-error: true
 
