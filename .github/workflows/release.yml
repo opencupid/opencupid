@@ -184,7 +184,7 @@ jobs:
         run: |
           pnpm exec sentry-cli --url ${{ secrets.SENTRY_URL }} sourcemaps inject ./apps/frontend/dist
           pnpm exec sentry-cli --url ${{ secrets.SENTRY_URL }} sourcemaps upload \
-            --org gaians_org --project gaians \
+            --org gaiansnet --project gaians \
             --release "frontend@${{ steps.version.outputs.version }}" \
             ./apps/frontend/dist
         env:
@@ -194,7 +194,7 @@ jobs:
         run: |
           pnpm exec sentry-cli --url ${{ secrets.SENTRY_URL }} sourcemaps inject ./apps/backend/dist
           pnpm exec sentry-cli --url ${{ secrets.SENTRY_URL }} sourcemaps upload \
-            --org gaians_org --project gaians \
+            --org gaiansnet --project gaians \
             --release "api@${{ steps.version.outputs.version }}" \
             ./apps/backend/dist
         env:
