@@ -201,7 +201,15 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
         return sendError(reply, 400, 'No valid fields to update')
       }
 
-      const user = await prisma.user.update({ where: { id }, data })
+      const user = await prisma.user.update({
+        where: { id },
+        data,
+        omit: {
+          tokenVersion: true,
+          loginToken: true,
+          loginTokenExp: true,
+        },
+      })
 
       return reply.code(200).send({ success: true, user })
     } catch (err) {
