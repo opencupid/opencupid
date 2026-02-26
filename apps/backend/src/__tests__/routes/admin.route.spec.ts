@@ -1,28 +1,62 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 
-const mockPrisma = vi.hoisted(() => ({
-  user: {
-    count: vi.fn(),
-    findMany: vi.fn(),
-    findUnique: vi.fn(),
-    update: vi.fn(),
-  },
-  profile: {
-    count: vi.fn(),
-    findMany: vi.fn(),
-    findUnique: vi.fn(),
-    groupBy: vi.fn(),
-  },
-  $queryRaw: vi.fn(),
-}))
+const mockPrisma = vi.hoisted(() => {
+  const mock: any = {
+    user: {
+      count: vi.fn(),
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+    },
+    profile: {
+      count: vi.fn(),
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      groupBy: vi.fn(),
+    },
+    tag: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      count: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+    },
+    tagTranslation: {
+      findMany: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    },
+    $executeRawUnsafe: vi.fn(),
+    $queryRaw: vi.fn(),
+    $transaction: vi.fn(),
+  }
+  // $transaction passes the same mock as the tx argument
+  mock.$transaction.mockImplementation((fn: any) => fn(mock))
+  return mock
+})
 
 vi.mock('@/lib/prisma', () => ({
   prisma: mockPrisma,
 }))
 
-vi.mock('@/lib/appconfig', () => ({
-  appConfig: {},
+const mockAppConfig = vi.hoisted(() => ({
+  DEEPL_API_KEY: 'test-deepl-key',
 }))
+
+vi.mock('@/lib/appconfig', () => ({
+  appConfig: mockAppConfig,
+}))
+
+const mockTranslateText = vi.hoisted(() => vi.fn())
+
+vi.mock('deepl-node', () => {
+  return {
+    DeepLClient: class {
+      translateText = mockTranslateText
+    },
+  }
+})
 
 import adminRoutes from '../../api/routes/admin.route'
 import { MockReply } from '../../test-utils/fastify'
@@ -323,6 +357,317 @@ describe('GET /profiles/:id', () => {
     await handler({ params: { id: 'nonexistent' } }, reply)
 
     expect(reply.statusCode).toBe(404)
+  })
+})
+
+describe('POST /tags', () => {
+  it('creates a new tag', async () => {
+    const mockTag = {
+      id: 'tag-new',
+      slug: 'hiking',
+      name: 'Hiking',
+      translations: [{ locale: 'en', name: 'Hiking' }],
+      _count: { profiles: 0 },
+    }
+    mockPrisma.tag.create.mockResolvedValue(mockTag)
+
+    const handler = fastify.routes['POST /tags']
+    await handler({ body: { name: 'Hiking' } }, reply)
+
+    expect(reply.statusCode).toBe(201)
+    expect(reply.payload.success).toBe(true)
+    expect(reply.payload.tag).toEqual(mockTag)
+  })
+
+  it('uses provided slug if given', async () => {
+    mockPrisma.tag.create.mockResolvedValue({ id: 'tag-new' })
+
+    const handler = fastify.routes['POST /tags']
+    await handler({ body: { name: 'Hiking', slug: 'custom-slug' } }, reply)
+
+    expect(mockPrisma.tag.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ slug: 'custom-slug' }),
+      })
+    )
+  })
+
+  it('returns 400 when name is missing', async () => {
+    const handler = fastify.routes['POST /tags']
+    await handler({ body: {} }, reply)
+
+    expect(reply.statusCode).toBe(400)
+  })
+
+  it('handles errors gracefully', async () => {
+    mockPrisma.tag.create.mockRejectedValueOnce(new Error('Unique constraint'))
+
+    const handler = fastify.routes['POST /tags']
+    await handler({ body: { name: 'Duplicate' } }, reply)
+
+    expect(reply.statusCode).toBe(500)
+  })
+})
+
+describe('GET /tags', () => {
+  it('returns paginated tag list', async () => {
+    const mockTags = [
+      {
+        id: 'tag1',
+        slug: 'hiking',
+        name: 'Hiking',
+        isUserCreated: false,
+        isApproved: true,
+        createdAt: new Date(),
+        translations: [{ locale: 'en', name: 'Hiking' }],
+        _count: { profiles: 5 },
+      },
+    ]
+    mockPrisma.tag.findMany.mockResolvedValue(mockTags)
+    mockPrisma.tag.count.mockResolvedValue(1)
+
+    const handler = fastify.routes['GET /tags']
+    await handler({ query: { page: '1', pageSize: '25', search: '' } }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    expect(reply.payload.tags).toEqual(mockTags)
+    expect(reply.payload.total).toBe(1)
+  })
+
+  it('applies search filter', async () => {
+    mockPrisma.tag.findMany.mockResolvedValue([])
+    mockPrisma.tag.count.mockResolvedValue(0)
+
+    const handler = fastify.routes['GET /tags']
+    await handler({ query: { page: '1', pageSize: '25', search: 'hike' } }, reply)
+
+    expect(mockPrisma.tag.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          isDeleted: false,
+          OR: [
+            { name: { contains: 'hike', mode: 'insensitive' } },
+            { slug: { contains: 'hike', mode: 'insensitive' } },
+            { translations: { some: { name: { contains: 'hike', mode: 'insensitive' } } } },
+          ],
+        },
+      })
+    )
+  })
+
+  it('handles errors gracefully', async () => {
+    mockPrisma.tag.findMany.mockRejectedValueOnce(new Error('DB error'))
+
+    const handler = fastify.routes['GET /tags']
+    await handler({ query: { page: '1', pageSize: '25', search: '' } }, reply)
+
+    expect(reply.statusCode).toBe(500)
+    expect(reply.payload.success).toBe(false)
+  })
+})
+
+describe('PATCH /tags/:id', () => {
+  it('updates tag fields', async () => {
+    const updatedTag = {
+      id: 'tag1',
+      slug: 'hiking-updated',
+      name: 'Hiking Updated',
+      translations: [],
+    }
+    mockPrisma.tag.update.mockResolvedValue(updatedTag)
+
+    const handler = fastify.routes['PATCH /tags/:id']
+    await handler(
+      { params: { id: 'tag1' }, body: { slug: 'hiking-updated', name: 'Hiking Updated' } },
+      reply
+    )
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    expect(mockPrisma.tag.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'tag1' },
+        data: expect.objectContaining({ slug: 'hiking-updated', name: 'Hiking Updated' }),
+      })
+    )
+  })
+
+  it('upserts translations', async () => {
+    const updatedTag = {
+      id: 'tag1',
+      slug: 'hiking',
+      translations: [{ locale: 'en', name: 'Hiking' }],
+    }
+    mockPrisma.tag.update.mockResolvedValue(updatedTag)
+
+    const handler = fastify.routes['PATCH /tags/:id']
+    await handler(
+      {
+        params: { id: 'tag1' },
+        body: { translations: [{ locale: 'en', name: 'Hiking' }] },
+      },
+      reply
+    )
+
+    expect(reply.statusCode).toBe(200)
+    expect(mockPrisma.tag.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          translations: {
+            upsert: [
+              {
+                where: { tagId_locale: { tagId: 'tag1', locale: 'en' } },
+                update: { name: 'Hiking' },
+                create: { locale: 'en', name: 'Hiking' },
+              },
+            ],
+          },
+        }),
+      })
+    )
+  })
+
+  it('returns 400 when no valid fields provided', async () => {
+    const handler = fastify.routes['PATCH /tags/:id']
+    await handler({ params: { id: 'tag1' }, body: {} }, reply)
+
+    expect(reply.statusCode).toBe(400)
+  })
+
+  it('handles errors gracefully', async () => {
+    mockPrisma.tag.update.mockRejectedValueOnce(new Error('DB error'))
+
+    const handler = fastify.routes['PATCH /tags/:id']
+    await handler({ params: { id: 'tag1' }, body: { name: 'Test' } }, reply)
+
+    expect(reply.statusCode).toBe(500)
+  })
+})
+
+describe('POST /tags/merge', () => {
+  it('merges loser tags into winner', async () => {
+    mockPrisma.tagTranslation.findMany
+      .mockResolvedValueOnce([{ locale: 'en' }]) // winner translations
+      .mockResolvedValueOnce([{ id: 10, locale: 'hu', tagId: 'loser1' }]) // loser translations
+    mockPrisma.tagTranslation.update.mockResolvedValue({})
+    mockPrisma.$executeRawUnsafe.mockResolvedValue(0)
+    mockPrisma.tag.updateMany.mockResolvedValue({ count: 1 })
+    mockPrisma.tag.findUnique.mockResolvedValue({
+      id: 'winner1',
+      slug: 'hiking',
+      translations: [
+        { locale: 'en', name: 'Hiking' },
+        { locale: 'hu', name: 'Túrázás' },
+      ],
+      _count: { profiles: 10 },
+    })
+
+    const handler = fastify.routes['POST /tags/merge']
+    await handler({ body: { winnerTagId: 'winner1', loserTagIds: ['loser1'] } }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    expect(reply.payload.mergedCount).toBe(1)
+    expect(reply.payload.tag.id).toBe('winner1')
+  })
+
+  it('returns 400 when winnerTagId is missing', async () => {
+    const handler = fastify.routes['POST /tags/merge']
+    await handler({ body: { loserTagIds: ['a'] } }, reply)
+
+    expect(reply.statusCode).toBe(400)
+  })
+
+  it('returns 400 when loserTagIds is empty', async () => {
+    const handler = fastify.routes['POST /tags/merge']
+    await handler({ body: { winnerTagId: 'a', loserTagIds: [] } }, reply)
+
+    expect(reply.statusCode).toBe(400)
+  })
+
+  it('returns 400 when winner is in loserTagIds', async () => {
+    const handler = fastify.routes['POST /tags/merge']
+    await handler({ body: { winnerTagId: 'a', loserTagIds: ['a', 'b'] } }, reply)
+
+    expect(reply.statusCode).toBe(400)
+  })
+
+  it('deletes duplicate translations instead of moving', async () => {
+    mockPrisma.tagTranslation.findMany
+      .mockResolvedValueOnce([{ locale: 'en' }]) // winner already has 'en'
+      .mockResolvedValueOnce([{ id: 20, locale: 'en', tagId: 'loser1' }]) // loser also has 'en'
+    mockPrisma.tagTranslation.delete.mockResolvedValue({})
+    mockPrisma.$executeRawUnsafe.mockResolvedValue(0)
+    mockPrisma.tag.updateMany.mockResolvedValue({ count: 1 })
+    mockPrisma.tag.findUnique.mockResolvedValue({ id: 'winner1' })
+
+    const handler = fastify.routes['POST /tags/merge']
+    await handler({ body: { winnerTagId: 'winner1', loserTagIds: ['loser1'] } }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(mockPrisma.tagTranslation.delete).toHaveBeenCalledWith({ where: { id: 20 } })
+    expect(mockPrisma.tagTranslation.update).not.toHaveBeenCalled()
+  })
+
+  it('handles errors gracefully', async () => {
+    mockPrisma.$transaction.mockRejectedValueOnce(new Error('DB error'))
+
+    const handler = fastify.routes['POST /tags/merge']
+    await handler({ body: { winnerTagId: 'winner1', loserTagIds: ['loser1'] } }, reply)
+
+    expect(reply.statusCode).toBe(500)
+  })
+})
+
+describe('POST /tags/translate', () => {
+  it('translates text to target locales', async () => {
+    mockTranslateText
+      .mockResolvedValueOnce({ text: 'Wandern' })
+      .mockResolvedValueOnce({ text: 'Túrázás' })
+
+    const handler = fastify.routes['POST /tags/translate']
+    await handler({ body: { text: 'Hiking', targetLocales: ['de', 'hu'] } }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    expect(reply.payload.translations).toEqual({ de: 'Wandern', hu: 'Túrázás' })
+  })
+
+  it('maps en to en-GB for DeepL', async () => {
+    mockTranslateText.mockResolvedValueOnce({ text: 'Hiking' })
+
+    const handler = fastify.routes['POST /tags/translate']
+    await handler({ body: { text: 'Wandern', targetLocales: ['en'] } }, reply)
+
+    expect(mockTranslateText).toHaveBeenCalledWith('Wandern', null, 'en-GB')
+  })
+
+  it('returns 400 when text or targetLocales missing', async () => {
+    const handler = fastify.routes['POST /tags/translate']
+    await handler({ body: {} }, reply)
+
+    expect(reply.statusCode).toBe(400)
+  })
+
+  it('returns 503 when DEEPL_API_KEY is not configured', async () => {
+    const originalKey = mockAppConfig.DEEPL_API_KEY
+    mockAppConfig.DEEPL_API_KEY = ''
+
+    const handler = fastify.routes['POST /tags/translate']
+    await handler({ body: { text: 'Hiking', targetLocales: ['de'] } }, reply)
+
+    expect(reply.statusCode).toBe(503)
+    mockAppConfig.DEEPL_API_KEY = originalKey
+  })
+
+  it('handles DeepL errors gracefully', async () => {
+    mockTranslateText.mockRejectedValueOnce(new Error('DeepL quota exceeded'))
+
+    const handler = fastify.routes['POST /tags/translate']
+    await handler({ body: { text: 'Hiking', targetLocales: ['de'] } }, reply)
+
+    expect(reply.statusCode).toBe(500)
   })
 })
 
