@@ -314,7 +314,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
           where,
           skip,
           take: size,
-          orderBy: { createdAt: 'desc' },
+          orderBy: { profiles: { _count: 'desc' } },
           include: {
             translations: { select: { locale: true, name: true } },
             _count: { select: { profiles: true } },
