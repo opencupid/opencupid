@@ -85,6 +85,7 @@ export const runtimeConfigPlugin = (mode: string): Plugin => {
     SENTRY_DSN: env.SENTRY_DSN ?? '',
     SITE_NAME: env.SITE_NAME ?? 'OpenCupid',
     JITSI_DOMAIN: env.JITSI_DOMAIN ?? '',
+    VOICE_MESSAGE_MAX_DURATION: Number(env.VOICE_MESSAGE_MAX_DURATION) || 120,
   })};
 `
 

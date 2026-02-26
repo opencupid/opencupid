@@ -25,6 +25,14 @@ vi.mock('extendable-media-recorder-wav-encoder', () => ({
 import SendMessageForm from '../components/SendMessageForm.vue'
 import { useLocalStore } from '@/store/localStore'
 
+// VoiceRecorder stub that exposes reset() like the real component
+const VoiceRecorderStub = {
+  name: 'VoiceRecorder',
+  template: '<div />',
+  methods: { reset() {} },
+  props: ['disabled', 'maxDuration'],
+}
+
 describe('SendMessageForm', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -140,8 +148,10 @@ describe('SendMessageForm', () => {
           BDropdownItem: true,
           TagList: true,
           LanguageList: true,
+          BModal: true,
           StoreErrorOverlay: true,
-          VoiceRecorder: true,
+          VoiceRecorder: VoiceRecorderStub,
+          VoiceMessage: true,
           IconMenuDotsVert: true,
           IconCall: true,
           Mic2Icon: true,
@@ -173,6 +183,72 @@ describe('SendMessageForm', () => {
     await wrapper.vm.$nextTick()
 
     expect(wrapper.find('[title="calls.call_button_title"]').exists()).toBe(false)
+  })
+
+  it('hides send controls while voice recording is active', async () => {
+    const wrapper = mountForm()
+
+    // Send controls should be visible initially
+    expect(wrapper.find('[data-testid="send-controls"]').exists()).toBe(true)
+
+    // Simulate recording started
+    const voiceRecorder = wrapper.findComponent({ name: 'VoiceRecorder' })
+    await voiceRecorder.vm.$emit('recording:started')
+    await wrapper.vm.$nextTick()
+
+    // Send controls should be hidden during recording
+    expect(wrapper.find('[data-testid="send-controls"]').exists()).toBe(false)
+
+    // Simulate recording cancelled
+    await voiceRecorder.vm.$emit('recording:cancelled')
+    await wrapper.vm.$nextTick()
+
+    // Send controls should be visible again
+    expect(wrapper.find('[data-testid="send-controls"]').exists()).toBe(true)
+  })
+
+  it('passes VOICE_MESSAGE_MAX_DURATION config to VoiceRecorder', () => {
+    const wrapper = mountForm()
+    const voiceRecorder = wrapper.findComponent({ name: 'VoiceRecorder' })
+    expect(voiceRecorder.props('maxDuration')).toBe(120)
+  })
+
+  it('shows confirmation modal on recording:maxed event', async () => {
+    const wrapper = mountForm()
+
+    // Modal should not be shown initially
+    const modal = wrapper.findComponent({ name: 'BModal' })
+    expect(modal.props('show')).toBeFalsy()
+
+    // Simulate max duration reached (auto-stop)
+    const voiceRecorder = wrapper.findComponent({ name: 'VoiceRecorder' })
+    const fakeBlob = new Blob(['audio'], { type: 'audio/wav' })
+    await voiceRecorder.vm.$emit('recording:maxed', fakeBlob, 120)
+    await wrapper.vm.$nextTick()
+
+    // Modal should be shown
+    expect(modal.props('show')).toBe(true)
+  })
+
+  it('cleans up when confirm modal is cancelled', async () => {
+    const wrapper = mountForm()
+
+    // Simulate max duration reached
+    const voiceRecorder = wrapper.findComponent({ name: 'VoiceRecorder' })
+    const fakeBlob = new Blob(['audio'], { type: 'audio/wav' })
+    await voiceRecorder.vm.$emit('recording:maxed', fakeBlob, 120)
+    await wrapper.vm.$nextTick()
+
+    const modal = wrapper.findComponent({ name: 'BModal' })
+    expect(modal.props('show')).toBe(true)
+
+    // Emit cancel from modal
+    await modal.vm.$emit('cancel')
+    await wrapper.vm.$nextTick()
+
+    // Modal should be dismissed and controls restored
+    expect(modal.props('show')).toBe(false)
+    expect(wrapper.find('[data-testid="send-controls"]').exists()).toBe(true)
   })
 
   it('renders radio buttons in dropdown menu', async () => {

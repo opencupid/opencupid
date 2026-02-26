@@ -23,6 +23,7 @@ export function useVoiceRecorder(maxDuration: number) {
   const error = ref<string | null>(null)
   const permissionDenied = ref(false)
   const micNotFound = ref(false)
+  const stoppedAtMax = ref(false)
 
   let recorder: IMediaRecorder | null = null
   let stream: MediaStream | null = null
@@ -52,6 +53,7 @@ export function useVoiceRecorder(maxDuration: number) {
       duration.value = 0
       dataChunks = []
       cancelled = false
+      stoppedAtMax.value = false
 
       // Ensure WAV encoder is registered before creating the recorder
       await ensureEncoder()
@@ -150,6 +152,7 @@ export function useVoiceRecorder(maxDuration: number) {
     duration.value = 0
     state.value = 'idle'
     error.value = null
+    stoppedAtMax.value = false
   }
 
   // Reset to initial state
@@ -169,6 +172,7 @@ export function useVoiceRecorder(maxDuration: number) {
 
       // Auto-stop at max duration
       if (duration.value >= maxDuration) {
+        stoppedAtMax.value = true
         stopRecording()
       }
     }, 1000)
@@ -215,6 +219,7 @@ export function useVoiceRecorder(maxDuration: number) {
     error: readonly(error),
     permissionDenied: readonly(permissionDenied),
     micNotFound: readonly(micNotFound),
+    stoppedAtMax: readonly(stoppedAtMax),
 
     // Actions
     startRecording,

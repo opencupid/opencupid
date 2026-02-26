@@ -56,13 +56,17 @@ const MessageListQuerySchema = z.object({
  * @param fastify - The Fastify instance to decorate with messaging routes.
  */
 const messageRoutes: FastifyPluginAsync = async (fastify) => {
+  // Calculate max file size from configured max duration.
+  // WAV at 48kHz, 16-bit, stereo = duration × 48000 × 2 bytes/sample × 2 channels + 10% buffer
+  const voiceFileSize = Math.ceil(appConfig.VOICE_MESSAGE_MAX_DURATION * 48000 * 2 * 2 * 1.1)
+
   // Register multipart support for voice message uploads
   await fastify.register(multipart, {
     limits: {
       fieldNameSize: 100,
       fieldSize: 1000,
       fields: 10,
-      fileSize: 10 * 1024 * 1024, // 10MB max for voice files
+      fileSize: voiceFileSize,
       files: 1,
       headerPairs: 2000,
       parts: 1000,
