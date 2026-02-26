@@ -4,6 +4,9 @@ import { useRouter } from 'vue-router'
 
 import { bus } from '@/lib/bus'
 import { useToast } from 'vue-toastification'
+import messageReceivedUrl from '@/assets/audio/message-received.mp3'
+
+const messageSound = new Audio(messageReceivedUrl)
 
 const router = useRouter()
 
@@ -31,6 +34,8 @@ function toastId() {
 }
 
 function handleMessageReceived(message: MessageDTO) {
+  messageSound.currentTime = 0
+  messageSound.play().catch(() => {})
   toast(
     {
       component: MessageReceivedToast,

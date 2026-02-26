@@ -49,6 +49,15 @@ toast.success = vi.fn()
 toast.dismiss = vi.fn()
 vi.mock('vue-toastification', () => ({ useToast: () => toast }))
 vi.mock('../MessageReceivedToast.vue', () => ({ default: 'MsgToast' }))
+vi.mock('@/assets/audio/message-received.mp3', () => ({ default: 'message-received.mp3' }))
+
+const playMock = vi.fn().mockResolvedValue(undefined)
+vi.stubGlobal(
+  'Audio',
+  vi.fn(function () {
+    return { play: playMock, currentTime: 0 }
+  })
+)
 
 import AppNotifier from '../AppNotifier.vue'
 import { bus } from '@/lib/bus'
@@ -57,6 +66,7 @@ describe('AppNotifier', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
+    playMock.mockResolvedValue(undefined)
   })
 
   it('shows toast when message received and handles click', () => {
@@ -101,6 +111,22 @@ describe('AppNotifier', () => {
     expect(wrapper.find('.api-offline-overlay').exists()).toBe(false)
     expect(toast.dismiss).not.toHaveBeenCalled()
     expect(toast.success).not.toHaveBeenCalled()
+  })
+
+  it('plays notification sound when message received', () => {
+    mount(AppNotifier)
+    const message = { id: '1', conversationId: '42' } as any
+    bus.emit('notification:new_message', message)
+
+    expect(playMock).toHaveBeenCalledOnce()
+  })
+
+  it('silently ignores autoplay restrictions', () => {
+    playMock.mockRejectedValue(new DOMException('NotAllowedError'))
+    mount(AppNotifier)
+    const message = { id: '1', conversationId: '42' } as any
+
+    expect(() => bus.emit('notification:new_message', message)).not.toThrow()
   })
 
   it('cleans up listener on unmount', () => {
