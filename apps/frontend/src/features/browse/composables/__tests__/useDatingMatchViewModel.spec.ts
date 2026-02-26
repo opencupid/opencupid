@@ -106,7 +106,7 @@ describe('useDatingMatchViewModel', () => {
     openProfile('profile-42')
     expect(selectedProfileId.value).toBe('profile-42')
     expect(routerReplace).toHaveBeenCalledWith({
-      name: 'PublicProfile',
+      name: 'DatingMatch',
       params: { profileId: 'profile-42' },
     })
   })
@@ -124,7 +124,7 @@ describe('useDatingMatchViewModel', () => {
 
   it('closeProfile navigates to DatingMatch when previousUrl is a profile URL', () => {
     routeRef.value.params = { profileId: 'abc-123' }
-    mockGetPreviousUrl.mockReturnValue('/profile/other-id')
+    mockGetPreviousUrl.mockReturnValue('/matches/other-id')
 
     const { closeProfile } = useDatingMatchViewModel()
     closeProfile()
