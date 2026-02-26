@@ -1,6 +1,7 @@
 import { ref, onUnmounted, readonly } from 'vue'
 import { MediaRecorder, register, type IMediaRecorder } from 'extendable-media-recorder'
 import { connect } from 'extendable-media-recorder-wav-encoder'
+import voiceRecordingEndUrl from '@/assets/audio/voice-recording-end.mp3'
 
 export type RecordingState = 'idle' | 'recording' | 'paused' | 'completed' | 'error'
 
@@ -11,6 +12,8 @@ async function ensureEncoder() {
   await register(await connect())
   encoderRegistered = true
 }
+
+const endBeep = new Audio(voiceRecordingEndUrl)
 
 export function useVoiceRecorder(maxDuration: number = 120) {
   const isSupported = ref(false)
@@ -156,6 +159,11 @@ export function useVoiceRecorder(maxDuration: number = 120) {
   const startDurationTimer = () => {
     durationTimer = window.setInterval(() => {
       duration.value += 1
+
+      // Play warning beep 5 seconds before max duration
+      if (duration.value === maxDuration - 5) {
+        endBeep.play().catch(() => {})
+      }
 
       // Auto-stop at max duration
       if (duration.value >= maxDuration) {
