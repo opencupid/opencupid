@@ -1,6 +1,7 @@
 import { ref, onUnmounted, readonly } from 'vue'
 import { MediaRecorder, register, type IMediaRecorder } from 'extendable-media-recorder'
 import { connect } from 'extendable-media-recorder-wav-encoder'
+import voiceRecordingEndUrl from '@/assets/audio/voice-recording-end.mp3'
 
 export type RecordingState = 'idle' | 'recording' | 'paused' | 'completed' | 'error'
 
@@ -12,13 +13,16 @@ async function ensureEncoder() {
   encoderRegistered = true
 }
 
-export function useVoiceRecorder(maxDuration: number = 120) {
+const endBeep = new Audio(voiceRecordingEndUrl)
+
+export function useVoiceRecorder(maxDuration: number) {
   const isSupported = ref(false)
   const state = ref<RecordingState>('idle')
   const duration = ref(0)
   const audioBlob = ref<Blob | null>(null)
   const error = ref<string | null>(null)
   const permissionDenied = ref(false)
+  const micNotFound = ref(false)
 
   let recorder: IMediaRecorder | null = null
   let stream: MediaStream | null = null
@@ -118,6 +122,7 @@ export function useVoiceRecorder(maxDuration: number = 120) {
         permissionDenied.value = true
       } else if (err.name === 'NotFoundError') {
         error.value = 'No microphone found. Please check your audio input device.'
+        micNotFound.value = true
       } else {
         error.value = 'Failed to access microphone'
       }
@@ -156,6 +161,11 @@ export function useVoiceRecorder(maxDuration: number = 120) {
   const startDurationTimer = () => {
     durationTimer = window.setInterval(() => {
       duration.value += 1
+
+      // Play warning beep 5 seconds before max duration
+      if (duration.value === maxDuration - 5) {
+        endBeep.play().catch(() => {})
+      }
 
       // Auto-stop at max duration
       if (duration.value >= maxDuration) {
@@ -204,6 +214,7 @@ export function useVoiceRecorder(maxDuration: number = 120) {
     audioBlob: readonly(audioBlob),
     error: readonly(error),
     permissionDenied: readonly(permissionDenied),
+    micNotFound: readonly(micNotFound),
 
     // Actions
     startRecording,
