@@ -135,9 +135,8 @@ onUnmounted(() => {
   justify-content: center;
 }
 .jitsi-modal-content {
-  width: 95vw;
-  height: 90vh;
-  max-width: 1200px;
+  width: 100vw;
+  height: 100vh;
 }
 .jitsi-container {
   width: 100%;
