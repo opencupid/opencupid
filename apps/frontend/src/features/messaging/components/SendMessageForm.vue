@@ -5,7 +5,7 @@ import { funnel } from 'remeda'
 import { useLocalStore } from '@/store/localStore'
 import type { SendMode } from '@/store/localStore'
 
-import { type MessageDTO } from '@zod/messaging/messaging.dto'
+import { type MessageDTO, type MessageAttachmentDTO } from '@zod/messaging/messaging.dto'
 import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 
 import TagList from '@/features/shared/profiledisplay/TagList.vue'
@@ -15,6 +15,7 @@ import IconMenuDotsVert from '@/assets/icons/interface/menu-dots-vert.svg'
 import IconCall from '@/assets/icons/interface/call.svg'
 import { useToast } from 'vue-toastification'
 import VoiceRecorder from './VoiceRecorder.vue'
+import VoiceMessage from './VoiceMessage.vue'
 import { useMessageStore } from '../stores/messageStore'
 
 const toast = useToast()
@@ -36,6 +37,23 @@ const emit = defineEmits<{
 const content = ref('')
 const isVoiceActive = ref(false)
 const voiceRecorderRef = ref<InstanceType<typeof VoiceRecorder> | null>(null)
+const voiceMaxDuration = __APP_CONFIG__.VOICE_MESSAGE_MAX_DURATION
+
+// Voice confirmation modal state (shown when recording auto-stops at max duration)
+const showVoiceConfirmModal = ref(false)
+const pendingVoiceBlob = ref<Blob | null>(null)
+const pendingVoiceDuration = ref(0)
+const pendingVoiceAttachment = computed<MessageAttachmentDTO | null>(() => {
+  if (!pendingVoiceBlob.value) return null
+  return {
+    id: 'preview',
+    url: URL.createObjectURL(pendingVoiceBlob.value),
+    mimeType: 'audio/wav',
+    fileSize: pendingVoiceBlob.value.size,
+    duration: pendingVoiceDuration.value,
+    createdAt: new Date(),
+  }
+})
 
 // Local store for managing message drafts
 const localStore = useLocalStore()
@@ -104,6 +122,38 @@ async function handleVoiceRecordingCompleted(audioBlob: Blob, duration: number) 
   voiceRecorderRef.value?.reset()
 }
 
+// Auto-stop at max duration: show confirmation modal instead of auto-sending
+function handleVoiceRecordingMaxed(audioBlob: Blob, duration: number) {
+  pendingVoiceBlob.value = audioBlob
+  pendingVoiceDuration.value = duration
+  showVoiceConfirmModal.value = true
+}
+
+async function handleVoiceConfirmSend() {
+  if (!pendingVoiceBlob.value) return
+  showVoiceConfirmModal.value = false
+  const result = await messageStore.sendVoiceMessage(
+    props.recipientProfile.id,
+    pendingVoiceBlob.value,
+    pendingVoiceDuration.value
+  )
+  if (result.success) {
+    emit('message:sent', result.data!)
+  }
+  pendingVoiceBlob.value = null
+  pendingVoiceDuration.value = 0
+  isVoiceActive.value = false
+  voiceRecorderRef.value?.reset()
+}
+
+function handleVoiceConfirmCancel() {
+  showVoiceConfirmModal.value = false
+  pendingVoiceBlob.value = null
+  pendingVoiceDuration.value = 0
+  isVoiceActive.value = false
+  voiceRecorderRef.value?.reset()
+}
+
 function handleVoiceRecordingCancelled() {
   isVoiceActive.value = false
 }
@@ -159,9 +209,10 @@ function handleVoiceRecordingError(error: string) {
             <VoiceRecorder
               ref="voiceRecorderRef"
               :disabled="messageStore.isSending"
-              :max-duration="120"
+              :max-duration="voiceMaxDuration"
               @recording:started="() => (isVoiceActive = true)"
               @recording:completed="handleVoiceRecordingCompleted"
+              @recording:maxed="handleVoiceRecordingMaxed"
               @recording:cancelled="handleVoiceRecordingCancelled"
               @recording:error="handleVoiceRecordingError"
             />
@@ -176,7 +227,11 @@ function handleVoiceRecordingError(error: string) {
             </a>
           </div>
 
-          <div class="d-flex align-items-center gap-2">
+          <div
+            v-if="!isVoiceActive"
+            data-testid="send-controls"
+            class="d-flex align-items-center gap-2"
+          >
             <BButton
               v-if="sendMode === 'click'"
               variant="primary"
@@ -233,6 +288,34 @@ function handleVoiceRecordingError(error: string) {
         </div>
       </div>
     </div>
+
+    <!-- Voice message confirmation modal (shown on auto-stop at max duration) -->
+    <BModal
+      :show="showVoiceConfirmModal"
+      :title="$t('messaging.voice.confirm_send_title')"
+      :ok-title="$t('messaging.voice.confirm_send_button')"
+      :cancel-title="$t('messaging.voice.confirm_cancel_button')"
+      ok-variant="primary"
+      cancel-variant="link"
+      cancel-class="link-secondary"
+      centered
+      size="sm"
+      data-testid="voice-confirm-modal"
+      @ok.prevent="handleVoiceConfirmSend"
+      @cancel="handleVoiceConfirmCancel"
+      @hidden="handleVoiceConfirmCancel"
+    >
+      <div
+        v-if="pendingVoiceAttachment"
+        class="bg-secondary text-white p-2"
+        style="border-radius: 15px"
+      >
+        <VoiceMessage
+          :attachment="pendingVoiceAttachment"
+          :is-mine="true"
+        />
+      </div>
+    </BModal>
   </div>
 </template>
 

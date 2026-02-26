@@ -131,4 +131,36 @@ describe('useVoiceRecorder warning beep', () => {
     expect(recorder.duration.value).toBe(25)
     expect(playMock).toHaveBeenCalledOnce()
   })
+
+  it('sets stoppedAtMax to true when auto-stopped at max duration', async () => {
+    const recorder = await mountRecorder(10)
+    await startMockRecording(recorder)
+
+    expect(recorder.stoppedAtMax.value).toBe(false)
+
+    // Advance to max duration — auto-stop triggers
+    vi.advanceTimersByTime(10000)
+    expect(recorder.stoppedAtMax.value).toBe(true)
+  })
+
+  it('keeps stoppedAtMax false when manually stopped', async () => {
+    const recorder = await mountRecorder(10)
+    await startMockRecording(recorder)
+
+    vi.advanceTimersByTime(5000)
+    recorder.stopRecording()
+
+    expect(recorder.stoppedAtMax.value).toBe(false)
+  })
+
+  it('resets stoppedAtMax on reset', async () => {
+    const recorder = await mountRecorder(10)
+    await startMockRecording(recorder)
+
+    vi.advanceTimersByTime(10000)
+    expect(recorder.stoppedAtMax.value).toBe(true)
+
+    recorder.reset()
+    expect(recorder.stoppedAtMax.value).toBe(false)
+  })
 })

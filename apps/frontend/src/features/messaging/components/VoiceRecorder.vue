@@ -13,6 +13,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'recording:started'): void
   (e: 'recording:completed', blob: Blob, duration: number): void
+  (e: 'recording:maxed', blob: Blob, duration: number): void
   (e: 'recording:cancelled'): void
   (e: 'recording:error', error: string): void
 }>()
@@ -25,6 +26,7 @@ const {
   error,
   permissionDenied,
   micNotFound,
+  stoppedAtMax,
   startRecording,
   stopRecording,
   cancelRecording,
@@ -56,7 +58,11 @@ watch(state, (newState) => {
   if (newState === 'recording') {
     emit('recording:started')
   } else if (newState === 'completed' && audioBlob.value) {
-    emit('recording:completed', audioBlob.value, duration.value)
+    if (stoppedAtMax.value) {
+      emit('recording:maxed', audioBlob.value, duration.value)
+    } else {
+      emit('recording:completed', audioBlob.value, duration.value)
+    }
   } else if (newState === 'error' && error.value) {
     emit('recording:error', error.value)
     // Auto-reset to idle so the button returns to normal
@@ -137,7 +143,7 @@ defineExpose({ triggerStart: handleRecordClick, reset })
       v-if="isRecording"
       class="mt-2"
     >
-      <BProgressBar
+      <BProgress
         :value="progressPercentage"
         variant="danger"
         :max="100"
