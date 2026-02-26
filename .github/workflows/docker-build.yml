@@ -1,4 +1,4 @@
-name: Release
+name: Docker Build
 
 on:
   release:
@@ -145,62 +145,3 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           tags: ${{ steps.tags.outputs.ingress }}
-
-  sentry-sourcemaps:
-    needs: docker
-    runs-on: ubuntu-latest
-    continue-on-error: true
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.30.1
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '22'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Extract version
-        id: version
-        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
-
-      - name: Build frontend
-        run: pnpm --filter frontend build-only
-
-      - name: Build backend
-        run: pnpm --filter backend prisma:generate && pnpm --filter backend build
-
-      - name: Upload frontend sourcemaps
-        run: |
-          pnpm exec sentry-cli --url $SENTRY_URL sourcemaps inject ./apps/frontend/dist
-          pnpm exec sentry-cli --url $SENTRY_URL sourcemaps upload \
-            --org $SENTRY_ORG --project $SENTRY_PROJECT \
-            --release "frontend@${{ steps.version.outputs.version }}" \
-            ./apps/frontend/dist
-        env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_URL: ${{ vars.SENTRY_URL }}
-          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
-          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
-
-      - name: Upload backend sourcemaps
-        run: |
-          pnpm exec sentry-cli --url $SENTRY_URL sourcemaps inject ./apps/backend/dist
-          pnpm exec sentry-cli --url $SENTRY_URL sourcemaps upload \
-            --org $SENTRY_ORG --project $SENTRY_PROJECT \
-            --release "api@${{ steps.version.outputs.version }}" \
-            ./apps/backend/dist
-        env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_URL: ${{ vars.SENTRY_URL }}
-          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
-          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}

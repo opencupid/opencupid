@@ -1,0 +1,90 @@
+name: Sentry Sourcemaps
+
+on:
+  workflow_run:
+    workflows: ['Docker Build']
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sentry-sourcemaps:
+    runs-on: ubuntu-latest
+    if: >-
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event.workflow_run.conclusion == 'success')
+    continue-on-error: true
+    steps:
+      - name: Check Sentry secrets
+        id: secrets-check
+        run: |
+          if [[ -z "${{ secrets.SENTRY_AUTH_TOKEN }}" ]]; then
+            echo "::notice::SENTRY_AUTH_TOKEN not configured — skipping sourcemap upload."
+            echo "has_secrets=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_secrets=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout code
+        if: steps.secrets-check.outputs.has_secrets == 'true'
+        uses: actions/checkout@v6
+
+      - name: Install pnpm
+        if: steps.secrets-check.outputs.has_secrets == 'true'
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.30.1
+
+      - name: Setup Node.js
+        if: steps.secrets-check.outputs.has_secrets == 'true'
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        if: steps.secrets-check.outputs.has_secrets == 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Extract version
+        if: steps.secrets-check.outputs.has_secrets == 'true'
+        id: version
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Build frontend
+        if: steps.secrets-check.outputs.has_secrets == 'true'
+        run: pnpm --filter frontend build-only
+
+      - name: Build backend
+        if: steps.secrets-check.outputs.has_secrets == 'true'
+        run: pnpm --filter backend prisma:generate && pnpm --filter backend build
+
+      - name: Upload frontend sourcemaps
+        if: steps.secrets-check.outputs.has_secrets == 'true'
+        run: |
+          pnpm exec sentry-cli --url $SENTRY_URL sourcemaps inject ./apps/frontend/dist
+          pnpm exec sentry-cli --url $SENTRY_URL sourcemaps upload \
+            --org $SENTRY_ORG --project $SENTRY_PROJECT \
+            --release "frontend@${{ steps.version.outputs.version }}" \
+            ./apps/frontend/dist
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_URL: ${{ vars.SENTRY_URL }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
+
+      - name: Upload backend sourcemaps
+        if: steps.secrets-check.outputs.has_secrets == 'true'
+        run: |
+          pnpm exec sentry-cli --url $SENTRY_URL sourcemaps inject ./apps/backend/dist
+          pnpm exec sentry-cli --url $SENTRY_URL sourcemaps upload \
+            --org $SENTRY_ORG --project $SENTRY_PROJECT \
+            --release "api@${{ steps.version.outputs.version }}" \
+            ./apps/backend/dist
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_URL: ${{ vars.SENTRY_URL }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}

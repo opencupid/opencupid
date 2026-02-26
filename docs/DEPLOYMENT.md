@@ -180,11 +180,11 @@ The admin domain is protected by **mutual TLS (mTLS)** — only clients presenti
 
 ## Sentry / GlitchTip Sourcemap Uploads
 
-The release workflow uploads frontend and backend sourcemaps to GlitchTip so that error stack traces show original source code instead of minified bundles.
+The Sentry Sourcemaps workflow (`.github/workflows/sentry-sourcemaps.yml`) uploads frontend and backend sourcemaps to GlitchTip so that error stack traces show original source code instead of minified bundles. It runs automatically after the Docker Build workflow completes and is **secrets-gated** — it skips gracefully when `SENTRY_AUTH_TOKEN` is not configured (e.g. in forks).
 
 ### How it works
 
-The `sentry-sourcemaps` job in `.github/workflows/release.yml` runs in parallel with the Docker build on every release. It:
+The workflow:
 
 1. Builds frontend and backend locally to produce `dist/` with sourcemaps
 2. Runs `sentry-cli sourcemaps inject` to stamp debug IDs into the files
@@ -213,6 +213,58 @@ Sourcemaps are tagged with release names that match the Sentry SDK configuration
 | Backend  | `api@{version}`      | `api@0.12.2`      |
 
 The version is read from the root `package.json`.
+
+## Continuous Deployment
+
+The release pipeline consists of three independent GitHub Actions workflows:
+
+| Workflow          | File                    | Trigger                | Purpose                        |
+| ----------------- | ----------------------- | ---------------------- | ------------------------------ |
+| Docker Build      | `docker-build.yml`      | `release: published`   | Build and push images to GHCR  |
+| Sentry Sourcemaps | `sentry-sourcemaps.yml` | Docker Build completes | Upload sourcemaps to GlitchTip |
+| Deploy            | `deploy.yml`            | Docker Build completes | SSH deploy to production       |
+
+Sentry and Deploy run in parallel after Docker Build. Both are **secrets-gated** — they skip gracefully when required secrets are not configured (e.g. in forks).
+
+### Enabling auto-deploy
+
+1. Generate an SSH keypair for deployment:
+
+   ```bash
+   ssh-keygen -t ed25519 -f deploy_key -N "" -C "github-actions-deploy"
+   ```
+
+2. Add the public key to the production server:
+
+   ```bash
+   cat deploy_key.pub >> ~/.ssh/authorized_keys
+   ```
+
+3. Add these GitHub repository secrets (Settings > Secrets > Actions):
+
+   | Secret           | Value                                  |
+   | ---------------- | -------------------------------------- |
+   | `DEPLOY_HOST`    | Production server hostname             |
+   | `DEPLOY_USER`    | SSH username                           |
+   | `DEPLOY_SSH_KEY` | Contents of `deploy_key` (private key) |
+
+4. The deploy workflow will now run automatically on each release.
+
+### Semver gating
+
+- **Patch/minor** releases (e.g. 0.13.5 > 0.13.6): auto-deployed
+- **Major** releases (e.g. 0.x > 1.0): skipped with a warning — deploy manually and run migrations:
+  ```bash
+  ssh example.org
+  cd ~/opencupid && git fetch --tags && git checkout vX.Y.Z
+  docker compose -f docker-compose.production.yml pull backend frontend admin ingress
+  docker compose -f docker-compose.production.yml up -d
+  docker compose -f docker-compose.production.yml exec backend npx prisma migrate deploy
+  ```
+
+### Manual deploy trigger
+
+The deploy workflow can be triggered manually via GitHub Actions UI (`workflow_dispatch`) with a specific release tag, regardless of semver gating.
 
 ## Firewall
 
