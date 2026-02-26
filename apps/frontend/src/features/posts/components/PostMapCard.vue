@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, inject, ref, type Ref } from 'vue'
-import PostIt from '@/features/shared/ui/PostIt.vue'
+import PostItPopover from '@/features/shared/ui/PostItPopover.vue'
 import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
 import type { PublicPostWithProfile, OwnerPost } from '@zod/post/post.dto'
 import type { OwnerProfile } from '@zod/profile/profile.dto'
@@ -35,10 +35,9 @@ const postLocation = computed(() => {
 
 <template>
   <div class="post-wrapper position-relative w-100">
-    <PostIt
+    <PostItPopover
       class="position-relative p-2"
       :id="item.id"
-      variant=""
     >
       <template #header>
         <div class="d-flex justify-content-end align-items-center">
@@ -94,7 +93,7 @@ const postLocation = computed(() => {
           </div>
         </div>
       </div>
-    </PostIt>
+    </PostItPopover>
   </div>
 </template>
 
