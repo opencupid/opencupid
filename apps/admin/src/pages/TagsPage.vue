@@ -47,15 +47,35 @@ const saving = ref(false)
 const saveError = ref<string | null>(null)
 const translating = ref(false)
 const deleting = ref(false)
-const showAddModal = ref(false)
-const newTagName = ref('')
-const addingTag = ref(false)
 const showMerge = ref(false)
+
+const isNewTag = computed(() => selectedTag.value?.id === '')
 const mergeSearch = ref('')
 const mergeResults = ref<AdminTag[]>([])
 const mergeLoserTags = ref<AdminTag[]>([])
 const merging = ref(false)
 let mergeSearchTimeout: ReturnType<typeof setTimeout>
+let slugifyTimeout: ReturnType<typeof setTimeout>
+
+function toSlug(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+watch(editName, (name) => {
+  clearTimeout(slugifyTimeout)
+  if (!editSlug.value && name) {
+    slugifyTimeout = setTimeout(() => {
+      if (!editSlug.value) {
+        editSlug.value = toSlug(name)
+      }
+    }, 1000)
+  }
+})
 
 type SortColumn = 'slug' | 'name' | 'createdAt' | 'isUserCreated' | 'profiles' | 'en' | 'hu'
 const sortColumn = ref<SortColumn | null>(null)
@@ -122,23 +142,29 @@ async function fetchTags() {
   }
 }
 
-async function addTag() {
-  if (!newTagName.value) return
-  addingTag.value = true
-  saveError.value = null
-  try {
-    await apiRequest('/admin/tags', {
-      method: 'POST',
-      body: { name: newTagName.value },
-    })
-    showAddModal.value = false
-    newTagName.value = ''
-    await fetchTags()
-  } catch (err: unknown) {
-    saveError.value = err instanceof Error ? err.message : 'Failed to create tag'
-  } finally {
-    addingTag.value = false
+function openAddModal() {
+  selectedTag.value = {
+    id: '',
+    slug: '',
+    name: '',
+    isUserCreated: false,
+    isApproved: false,
+    isHidden: false,
+    createdAt: new Date().toISOString(),
+    translations: [],
+    _count: { profiles: 0 },
   }
+  editSlug.value = ''
+  editName.value = ''
+  editTranslations.value = {}
+  for (const lang of LANGUAGES) {
+    editTranslations.value[lang.code] = ''
+  }
+  saveError.value = null
+  showMerge.value = false
+  mergeLoserTags.value = []
+  mergeSearch.value = ''
+  mergeResults.value = []
 }
 
 function editTag(tag: AdminTag) {
@@ -166,14 +192,25 @@ async function saveTag() {
       name: editTranslations.value[lang.code] || '',
     })).filter((t) => t.name)
 
-    await apiRequest(`/admin/tags/${selectedTag.value.id}`, {
-      method: 'PATCH',
-      body: {
-        slug: editSlug.value,
-        name: editName.value,
-        translations,
-      },
-    })
+    if (isNewTag.value) {
+      await apiRequest('/admin/tags', {
+        method: 'POST',
+        body: {
+          name: editName.value,
+          slug: editSlug.value || undefined,
+          translations,
+        },
+      })
+    } else {
+      await apiRequest(`/admin/tags/${selectedTag.value.id}`, {
+        method: 'PATCH',
+        body: {
+          slug: editSlug.value,
+          name: editName.value,
+          translations,
+        },
+      })
+    }
     selectedTag.value = null
     await fetchTags()
   } catch (err: unknown) {
@@ -331,7 +368,7 @@ onMounted(fetchTags)
       />
       <button
         class="btn btn-primary text-nowrap"
-        @click="showAddModal = true"
+        @click="openAddModal"
       >
         Add Tag
       </button>
@@ -352,15 +389,15 @@ onMounted(fetchTags)
           <tr>
             <th
               style="cursor: pointer"
-              @click="toggleSort('slug')"
-            >
-              Slug{{ sortIndicator('slug') }}
-            </th>
-            <th
-              style="cursor: pointer"
               @click="toggleSort('name')"
             >
               Original Title{{ sortIndicator('name') }}
+            </th>
+            <th
+              style="cursor: pointer"
+              @click="toggleSort('slug')"
+            >
+              Slug{{ sortIndicator('slug') }}
             </th>
             <th
               style="cursor: pointer"
@@ -398,8 +435,8 @@ onMounted(fetchTags)
             style="cursor: pointer"
             @click="editTag(tag)"
           >
-            <td>{{ tag.slug }}</td>
             <td>{{ tag.name }}</td>
+            <td>{{ tag.slug }}</td>
             <td>{{ new Date(tag.createdAt).toLocaleDateString() }}</td>
             <td>
               <span :class="tag.isUserCreated ? 'badge bg-info' : 'badge bg-secondary'">
@@ -479,7 +516,7 @@ onMounted(fetchTags)
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Edit Tag</h5>
+            <h5 class="modal-title">{{ isNewTag ? 'Add Tag' : 'Edit Tag' }}</h5>
             <button
               type="button"
               class="btn-close"
@@ -493,25 +530,15 @@ onMounted(fetchTags)
             >
               {{ saveError }}
             </div>
-            <dl class="row mb-3">
+            <dl
+              v-if="!isNewTag"
+              class="row mb-3"
+            >
               <dt class="col-sm-4">ID</dt>
               <dd class="col-sm-8">
                 <code>{{ selectedTag.id }}</code>
               </dd>
             </dl>
-            <div class="mb-3">
-              <label
-                for="editSlug"
-                class="form-label"
-                >Slug</label
-              >
-              <input
-                id="editSlug"
-                v-model="editSlug"
-                type="text"
-                class="form-control"
-              />
-            </div>
             <div class="mb-3">
               <label
                 for="editName"
@@ -521,6 +548,19 @@ onMounted(fetchTags)
               <input
                 id="editName"
                 v-model="editName"
+                type="text"
+                class="form-control"
+              />
+            </div>
+            <div class="mb-3">
+              <label
+                for="editSlug"
+                class="form-label"
+                >Slug</label
+              >
+              <input
+                id="editSlug"
+                v-model="editSlug"
                 type="text"
                 class="form-control"
               />
@@ -605,6 +645,7 @@ onMounted(fetchTags)
           </div>
           <div class="modal-footer">
             <button
+              v-if="!isNewTag"
               class="btn btn-outline-danger me-auto"
               :disabled="deleting"
               @click="deleteTag"
@@ -618,6 +659,7 @@ onMounted(fetchTags)
               Cancel
             </button>
             <button
+              v-if="!isNewTag"
               class="btn btn-outline-warning"
               @click="showMerge = !showMerge"
             >
@@ -635,7 +677,7 @@ onMounted(fetchTags)
               :disabled="saving"
               @click="saveTag"
             >
-              {{ saving ? 'Saving...' : 'Save' }}
+              {{ saving ? 'Saving...' : isNewTag ? 'Create' : 'Save' }}
             </button>
           </div>
         </div>
@@ -643,70 +685,6 @@ onMounted(fetchTags)
     </div>
     <div
       v-if="selectedTag"
-      class="modal-backdrop show"
-    ></div>
-
-    <!-- Add Tag Modal -->
-    <div
-      v-if="showAddModal"
-      class="modal d-block"
-      tabindex="-1"
-      @click.self="showAddModal = false"
-      @keydown.escape="showAddModal = false"
-      @keydown.enter.prevent="addTag"
-    >
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Add Tag</h5>
-            <button
-              type="button"
-              class="btn-close"
-              @click="showAddModal = false"
-            ></button>
-          </div>
-          <div class="modal-body">
-            <div
-              v-if="saveError"
-              class="alert alert-danger mb-3"
-            >
-              {{ saveError }}
-            </div>
-            <div class="mb-3">
-              <label
-                for="newTagName"
-                class="form-label"
-                >Name</label
-              >
-              <input
-                id="newTagName"
-                v-model="newTagName"
-                type="text"
-                class="form-control"
-                placeholder="e.g. Hiking"
-              />
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button
-              class="btn btn-secondary"
-              @click="showAddModal = false"
-            >
-              Cancel
-            </button>
-            <button
-              class="btn btn-primary"
-              :disabled="addingTag || !newTagName"
-              @click="addTag"
-            >
-              {{ addingTag ? 'Creating...' : 'Create' }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div
-      v-if="showAddModal"
       class="modal-backdrop show"
     ></div>
   </div>

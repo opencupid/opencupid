@@ -296,7 +296,11 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /admin/tags — Create a new tag
   fastify.post('/tags', async (req, reply) => {
     try {
-      const body = req.body as { name?: string; slug?: string }
+      const body = req.body as {
+        name?: string
+        slug?: string
+        translations?: { locale: string; name: string }[]
+      }
 
       if (!body.name) {
         return sendError(reply, 400, 'name is required')
@@ -304,13 +308,25 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
 
       const slug = body.slug || slugify(body.name, { lower: true, strict: true })
 
+      // Build translation creates: always include 'en' from name, plus any extra provided
+      const translationCreates: { locale: string; name: string }[] = [
+        { locale: 'en', name: body.name },
+      ]
+      if (body.translations) {
+        for (const t of body.translations) {
+          if (t.locale && t.name && t.locale !== 'en') {
+            translationCreates.push({ locale: t.locale, name: t.name })
+          }
+        }
+      }
+
       const tag = await prisma.tag.create({
         data: {
           name: body.name,
           slug,
           isApproved: true,
           translations: {
-            create: { locale: 'en', name: body.name },
+            create: translationCreates,
           },
         },
         include: {
