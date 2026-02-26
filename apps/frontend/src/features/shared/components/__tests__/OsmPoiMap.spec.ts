@@ -1,8 +1,16 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
-import { defineComponent, h } from 'vue'
+import { defineComponent, h, nextTick } from 'vue'
 
 // Track created markers and their icons
 const createdMarkers: { latLng: [number, number]; opts: any; icon?: any }[] = []
+
+// Track cluster group interactions
+const clusterGroupProto = {
+  addLayer: vi.fn(),
+  clearLayers: vi.fn(),
+  on: vi.fn().mockReturnThis(),
+  getBounds: vi.fn(() => ({})),
+}
 
 // Mock leaflet before imports
 vi.mock('leaflet', () => {
@@ -21,8 +29,10 @@ vi.mock('leaflet', () => {
     _icon: null as any,
   }
 
+  /** Each marker gets its own `on` spy so we can extract per-marker handlers. */
   const marker = vi.fn((latLng: [number, number], opts: any) => {
-    const m = { ...markerProto, _icon: opts?.icon }
+    const perMarkerOn = vi.fn().mockReturnThis()
+    const m = { ...markerProto, on: perMarkerOn, _icon: opts?.icon }
     createdMarkers.push({ latLng, opts, icon: opts?.icon })
     return m
   })
@@ -34,12 +44,14 @@ vi.mock('leaflet', () => {
   const layerGroup = vi.fn(() => ({ ...layerGroupProto }))
 
   const latLngBounds = vi.fn(() => ({}))
+  const point = vi.fn((x: number, y: number) => ({ x, y }))
 
   const mapProto = {
     setView: vi.fn().mockReturnThis(),
     fitBounds: vi.fn().mockReturnThis(),
     getZoom: vi.fn(() => 10),
     remove: vi.fn(),
+    addLayer: vi.fn(),
   }
   const mapFn = vi.fn(() => ({ ...mapProto }))
 
@@ -49,6 +61,14 @@ vi.mock('leaflet', () => {
   }
   const tileLayer = vi.fn(() => ({ ...tileLayerProto }))
 
+  const markerClusterGroup = vi.fn(() => ({
+    ...clusterGroupProto,
+    addLayer: vi.fn(),
+    clearLayers: vi.fn(),
+    on: vi.fn().mockReturnThis(),
+    getBounds: vi.fn(() => ({})),
+  }))
+
   return {
     default: {
       map: mapFn,
@@ -57,6 +77,8 @@ vi.mock('leaflet', () => {
       layerGroup,
       latLngBounds,
       tileLayer,
+      markerClusterGroup,
+      point,
     },
     Map: mapFn,
     Marker: marker,
@@ -66,8 +88,15 @@ vi.mock('leaflet', () => {
     layerGroup,
     latLngBounds,
     tileLayer,
+    markerClusterGroup,
+    point,
   }
 })
+
+// Mock leaflet.markercluster (it mutates L as a side effect)
+vi.mock('leaflet.markercluster', () => ({}))
+vi.mock('leaflet.markercluster/dist/MarkerCluster.css', () => ({}))
+vi.mock('leaflet.markercluster/dist/MarkerCluster.Default.css', () => ({}))
 
 import { mount, flushPromises } from '@vue/test-utils'
 import OsmPoiMap from '../OsmPoiMap.vue'
@@ -178,5 +207,67 @@ describe('OsmPoiMap', () => {
     for (const call of (L.marker as any).mock.calls) {
       expect(call[1].icon.html).toContain('poi-dot')
     }
+  })
+
+  it('initializes a markerClusterGroup and adds markers to it', async () => {
+    mountMap()
+    await flushPromises()
+
+    // Should have created a cluster group
+    expect((L as any).markerClusterGroup).toHaveBeenCalledTimes(1)
+    const clusterOpts = (L as any).markerClusterGroup.mock.calls[0][0]
+    expect(clusterOpts.maxClusterRadius).toBe(40)
+    expect(clusterOpts.zoomToBoundsOnClick).toBe(true)
+
+    // Markers should be added to the cluster group, not directly to the map
+    expect(L.marker).toHaveBeenCalledTimes(3)
+  })
+
+  it('registers hover-to-spiderfy event handlers on cluster group', async () => {
+    mountMap()
+    await flushPromises()
+
+    const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
+    const onCalls = clusterInstance.on.mock.calls
+    const eventNames = onCalls.map((c: any) => c[0])
+    expect(eventNames).toContain('clustermouseover')
+    expect(eventNames).toContain('clustermouseout')
+  })
+
+  it('calls popup.update() on nextTick after popupopen to re-measure teleported content', async () => {
+    mountMap()
+    await flushPromises()
+
+    // Get the first created marker instance
+    const markerInstance = (L.marker as any).mock.results[0].value
+    const onCalls = markerInstance.on.mock.calls
+
+    // Find the popupopen handler
+    const popupopenCall = onCalls.find((c: any) => c[0] === 'popupopen')
+    expect(popupopenCall).toBeDefined()
+    const handler = popupopenCall[1]
+
+    // Create a fake popup event with an update spy
+    const popupUpdate = vi.fn()
+    const fakeEvent = {
+      popup: {
+        getElement: () => {
+          const el = document.createElement('div')
+          const content = document.createElement('div')
+          content.className = 'leaflet-popup-content'
+          el.appendChild(content)
+          return el
+        },
+        update: popupUpdate,
+      },
+    }
+
+    // Fire the handler — update() should NOT have been called yet (it waits for nextTick)
+    handler(fakeEvent)
+    expect(popupUpdate).not.toHaveBeenCalled()
+
+    // After nextTick, popup.update() should be called
+    await nextTick()
+    expect(popupUpdate).toHaveBeenCalledOnce()
   })
 })

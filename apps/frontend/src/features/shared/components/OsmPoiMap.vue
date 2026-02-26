@@ -1,8 +1,11 @@
 <script setup lang="ts" generic="T extends { id: string | number }">
-import { onMounted, onBeforeUnmount, ref, watch, type Component } from 'vue'
+import { onMounted, onBeforeUnmount, ref, watch, nextTick, type Component } from 'vue'
 import type { Ref } from 'vue'
 import L, { Map as LMap, Marker as LMarker } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import 'leaflet.markercluster'
+import 'leaflet.markercluster/dist/MarkerCluster.css'
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 
 /** Basic POI shape for location data extraction */
 export interface PoiItem {
@@ -49,7 +52,18 @@ const mapEl: Ref<HTMLDivElement | null> = ref(null)
 let map: LMap | null = null
 let markers = new Map<string | number, LMarker>()
 let itemsById = new Map<string | number, T>()
-const markersLayer = L.layerGroup()
+
+function customClusterIcon(cluster: any): L.DivIcon {
+  const count = cluster.getChildCount()
+  return L.divIcon({
+    html: `<div class="poi-cluster-badge">${count}</div>`,
+    className: 'poi-cluster-icon',
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+  })
+}
+
+let clusterGroup: any = null
 
 // Simple highlighted marker icon (selected)
 const selectedIcon = L.divIcon({
@@ -129,7 +143,23 @@ function ensureMap() {
     tilesLoading--
   })
 
-  markersLayer.addTo(map)
+  clusterGroup = (L as any).markerClusterGroup({
+    spiderfyOnMaxZoom: false,
+    showCoverageOnHover: false,
+    zoomToBoundsOnClick: true,
+    maxClusterRadius: 40,
+    spiderfyDistanceMultiplier: 1.5,
+    iconCreateFunction: customClusterIcon,
+  })
+
+  clusterGroup.on('clustermouseover', (e: any) => {
+    e.layer.spiderfy()
+  })
+  clusterGroup.on('clustermouseout', (e: any) => {
+    e.layer.unspiderfy()
+  })
+
+  map.addLayer(clusterGroup)
   emit('map-ready', map)
 }
 
@@ -137,8 +167,8 @@ const popupTarget = ref<HTMLElement | null>(null)
 const popupItem = ref<T | null>(null)
 
 function updateMarkers() {
-  if (!map) return
-  markersLayer.clearLayers()
+  if (!map || !clusterGroup) return
+  clusterGroup.clearLayers()
   markers.clear()
   itemsById.clear()
 
@@ -153,15 +183,22 @@ function updateMarkers() {
       keyboard: true,
     })
 
-    m.bindPopup('', { maxWidth: 420, autoPan: true, className: 'item-popup' })
+    m.bindPopup('', {
+      maxWidth: 420,
+      autoPan: true,
+      autoPanPadding: L.point(20, 20),
+      className: 'item-popup',
+    })
 
     m.on('popupopen', (e: L.PopupEvent) => {
-      // Leaflet builds: <div class="leaflet-popup-content">…</div>
       const target = e.popup
         .getElement()
         ?.querySelector('.leaflet-popup-content') as HTMLElement | null
       popupTarget.value = target
       popupItem.value = item
+      // After Vue renders the teleported popup content, re-measure so
+      // Leaflet's autoPan accounts for the actual popup dimensions.
+      nextTick(() => e.popup.update())
     })
     m.on('popupclose', () => {
       popupTarget.value = null
@@ -170,7 +207,7 @@ function updateMarkers() {
 
     m.on('click', () => m.openPopup())
 
-    m.addTo(markersLayer)
+    clusterGroup.addLayer(m)
     markers.set(item.id, m)
     itemsById.set(item.id, item)
   }
@@ -303,6 +340,37 @@ watch(
   box-shadow:
     0 0 0 2px #ff006e,
     0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Cluster badge */
+:deep(.poi-cluster-icon) {
+  background: transparent;
+  border: none;
+}
+
+:deep(.poi-cluster-badge) {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #3a86ff;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Hide default markercluster styles we don't use */
+:deep(.marker-cluster) {
+  background: transparent !important;
+  border: none !important;
+}
+
+:deep(.marker-cluster div) {
+  background: transparent !important;
 }
 
 /* Remove default Leaflet icon images spacing */
