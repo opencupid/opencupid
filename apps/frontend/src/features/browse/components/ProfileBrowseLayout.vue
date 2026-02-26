@@ -120,7 +120,7 @@ useInfiniteScroll(
         <div
           class="subnav-bar d-flex align-items-center gap-2 px-2 py-1 bg-light rounded"
           :class="currentScope"
-          @click="showPrefsModal = true"
+          @click="currentScope !== 'social' && (showPrefsModal = true)"
         >
           <slot
             name="filter-bar"
@@ -265,9 +265,11 @@ main {
 
   &.social {
     background-color: transparentize($social, 0.95) !important;
+    cursor: default;
 
     &:hover {
-      background-color: transparentize($social, 0.88) !important;
+      background-color: transparentize($social, 0.95) !important;
+      box-shadow: var(--shadow-xs);
     }
   }
 

@@ -16,18 +16,6 @@ vi.mock('../../components/NoAccessCTA.vue', () => ({
 vi.mock('../../components/NoResultsCTA.vue', () => ({
   default: { template: '<div class="no-results" />' },
 }))
-vi.mock('../../components/SocialFilterForm.vue', () => ({
-  default: {
-    template: '<div class="social-filter-form" />',
-    props: ['modelValue', 'viewerProfile'],
-  },
-}))
-vi.mock('../../components/SocialFilterDisplay.vue', () => ({
-  default: {
-    template: '<div class="social-filter-display" />',
-    props: ['modelValue', 'viewerLocation'],
-  },
-}))
 vi.mock('@/features/publicprofile/components/PublicProfile.vue', () => ({
   default: { template: '<div class="public-profile" />', props: ['id'] },
 }))
@@ -39,6 +27,27 @@ vi.mock('@/features/shared/ui/ViewModeToggler.vue', () => ({
 }))
 vi.mock('../../components/ProfileMapCard.vue', () => ({
   default: { template: '<div class="profile-map-card" />' },
+}))
+vi.mock('@/features/shared/profileform/LocationSelector.vue', () => ({
+  default: {
+    template: '<div class="location-selector" />',
+    props: ['modelValue', 'allowEmpty'],
+  },
+}))
+vi.mock('@/features/shared/profileform/TagSelectComponent.vue', () => ({
+  default: {
+    template: '<div class="tag-select-component" />',
+    props: ['modelValue', 'taggable'],
+  },
+}))
+vi.mock('@/features/shared/components/TagCloud.vue', () => ({
+  default: { template: '<div class="tag-cloud" />' },
+}))
+vi.mock('@/assets/icons/interface/target-2.svg', () => ({
+  default: { template: '<svg class="icon-target" />' },
+}))
+vi.mock('@/assets/icons/interface/cloud.svg', () => ({
+  default: { template: '<svg class="icon-cloud" />' },
 }))
 vi.mock('../../shared/composables/useCountries', () => ({
   useCountries: () => ({ countryCodeToName: vi.fn(() => 'Test Country') }),
@@ -62,7 +71,10 @@ const vmState = {
   viewModeModel: ref('grid'),
   profileList: ref([{ id: '1' }]),
   storeError: ref(null),
-  socialFilter: ref<{ location: { country: string }; radius: number } | null>(null),
+  socialFilter: ref<{
+    location: { country: string; cityName: string; lat: null; lon: null }
+    tags: { id: string; name: string; slug: string }[]
+  } | null>(null),
   selectedProfileId: ref<string | null>(null),
   isInitialized: ref(true),
   isLoadingMore: ref(false),
@@ -89,6 +101,10 @@ const BModal = { template: '<div class="b-modal"><slot /></div>', props: ['model
 const BButton = { template: '<button><slot /></button>' }
 const BContainer = { template: '<div class="container"><slot /></div>' }
 const BSpinner = { template: '<div class="spinner" />', props: ['variant', 'small'] }
+const BFormCheckbox = {
+  template: '<label class="form-checkbox"><input type="checkbox" /><slot /></label>',
+  props: ['modelValue'],
+}
 
 import SocialMatch from '../SocialMatch.vue'
 
@@ -103,6 +119,7 @@ describe('SocialMatch view', () => {
     vmState.isLoadingMore.value = false
     vmState.hasMoreProfiles.value = true
     vmState.viewModeModel.value = 'grid'
+    vmState.socialFilter.value = null
   })
 
   const mountComponent = () => {
@@ -115,6 +132,7 @@ describe('SocialMatch view', () => {
           BButton,
           BContainer,
           BSpinner,
+          BFormCheckbox,
         },
       },
     })
@@ -164,10 +182,20 @@ describe('SocialMatch view', () => {
     expect(wrapper.find('.osm-poi-map').exists()).toBe(true)
   })
 
-  it('shows social filter display when access is granted', () => {
-    vmState.socialFilter.value = { location: { country: 'US' }, radius: 50 }
+  it('renders inline LocationSelector and TagSelectComponent when filter is set', () => {
+    vmState.socialFilter.value = {
+      location: { country: 'US', cityName: 'New York', lat: null, lon: null },
+      tags: [],
+    }
     const wrapper = mountComponent()
-    expect(wrapper.find('.social-filter-display').exists()).toBe(true)
+    expect(wrapper.find('.location-selector').exists()).toBe(true)
+    expect(wrapper.find('.tag-select-component').exists()).toBe(true)
+  })
+
+  it('renders TagCloud modal markup', () => {
+    const wrapper = mountComponent()
+    expect(wrapper.find('.b-modal').exists()).toBe(true)
+    expect(wrapper.find('.tag-cloud').exists()).toBe(true)
   })
 
   describe('ViewMode - Detail View', () => {

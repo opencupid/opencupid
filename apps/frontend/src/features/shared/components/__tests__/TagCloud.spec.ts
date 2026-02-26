@@ -1,27 +1,13 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 
-const push = vi.fn()
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
-vi.mock('vue-router', () => ({
-  useRouter: () => ({ push }),
-  RouterLink: { template: '<a :href="to?.path || to"><slot /></a>', props: ['to'] },
-}))
 
 // Mock d3-cloud — jsdom has no canvas, so we simulate the layout synchronously
 let endCallback: ((words: any[]) => void) | null = null
 vi.mock('d3-cloud', () => {
   const chainable = () => {
     const api: any = {}
-    const methods = [
-      'size',
-      'words',
-      'font',
-      'fontSize',
-      'rotate',
-      'padding',
-      'random',
-      'canvas',
-    ]
+    const methods = ['size', 'words', 'font', 'fontSize', 'rotate', 'padding', 'random', 'canvas']
     let inputWords: any[] = []
 
     for (const m of methods) {
@@ -56,7 +42,6 @@ import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import TagCloud from '../TagCloud.vue'
 import { useTagsStore } from '@/store/tagStore'
-import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 
 vi.mock('@/lib/api', () => ({
   api: { get: vi.fn(), patch: vi.fn() },
@@ -73,7 +58,6 @@ const mockTags = [
 
 beforeEach(() => {
   setActivePinia(createPinia())
-  push.mockClear()
   endCallback = null
   const tagStore = useTagsStore()
   tagStore.fetchPopularTags = vi.fn().mockResolvedValue([])
@@ -108,35 +92,26 @@ describe('TagCloud', () => {
     expect(wrapper.find('[data-testid="tag-cloud"]').exists()).toBe(false)
   })
 
-  it('navigates to /browse/social on tag click', async () => {
+  it('emits tag:select on tag click', async () => {
     const tagStore = useTagsStore()
     tagStore.popularTags = mockTags
     tagStore.fetchPopularTags = vi.fn().mockImplementation(async () => {
       tagStore.popularTags = mockTags
     })
 
-    const findProfileStore = useFindProfileStore()
-    findProfileStore.socialFilter = {
-      location: { country: '', cityName: '', lat: null, lon: null },
-      tags: [],
-    }
-    findProfileStore.persistSocialFilter = vi.fn().mockResolvedValue({ success: true })
-
     const wrapper = mount(TagCloud)
     await flushPromises()
 
     const texts = wrapper.findAll('.tag-cloud-word')
-    // Find the Hiking text element and click it
     const hikingEl = texts.find((t) => t.text().trim() === 'Hiking')
     expect(hikingEl).toBeDefined()
     await hikingEl!.trigger('click')
     await flushPromises()
 
-    expect(findProfileStore.socialFilter!.tags).toEqual([
-      { id: 't1', name: 'Hiking', slug: 'hiking' },
-    ])
-    expect(findProfileStore.persistSocialFilter).toHaveBeenCalled()
-    expect(push).toHaveBeenCalledWith({ path: '/browse/social', query: { tag: 'hiking' } })
+    const emitted = wrapper.emitted('tag:select')
+    expect(emitted).toBeDefined()
+    expect(emitted).toHaveLength(1)
+    expect(emitted![0][0]).toEqual(mockTags[0])
   })
 
   it('passes location prop to fetchPopularTags', async () => {

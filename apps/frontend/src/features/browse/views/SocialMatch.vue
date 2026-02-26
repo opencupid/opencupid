@@ -1,19 +1,24 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useDebounceFn } from '@vueuse/core'
 
 import ProfileBrowseLayout from '../components/ProfileBrowseLayout.vue'
 import ProfileCardGrid from '../components/ProfileCardGrid.vue'
-import SocialFilterDisplay from '../components/SocialFilterDisplay.vue'
-import SocialFilterForm from '../components/SocialFilterForm.vue'
-import ViewModeToggler from '@/features/shared/ui/ViewModeToggler.vue'
 import OsmPoiMap from '@/features/shared/components/OsmPoiMap.vue'
 import ProfileMapCard from '../components/ProfileMapCard.vue'
 import FluidColumn from '@/features/shared/ui/FluidColumn.vue'
+import LocationSelector from '@/features/shared/profileform/LocationSelector.vue'
+import TagSelectComponent from '@/features/shared/profileform/TagSelectComponent.vue'
+import TagCloud from '@/features/shared/components/TagCloud.vue'
+import IconTarget2 from '@/assets/icons/interface/target-2.svg'
+import IconCloud from '@/assets/icons/interface/cloud.svg'
 
 import { useSocialMatchViewModel } from '../composables/useSocialMatchViewModel'
 import { useCountries } from '../../shared/composables/useCountries'
 import type { PublicProfile } from '@zod/profile/profile.dto'
+import type { LocationDTO } from '@zod/dto/location.dto'
+import type { PopularTag } from '@zod/tag/tag.dto'
 
 const { t } = useI18n()
 
@@ -58,6 +63,71 @@ const getProfileImageUrl = (profile: PublicProfile) => {
   const variants = profile.profileImages?.[0]?.variants
   return variants?.find((v) => v.size === 'thumb')?.url
 }
+
+// --- Inline filter logic ---
+
+const showTagCloud = ref(false)
+
+const locationDisabled = computed(() => !socialFilter.value?.location.country)
+
+function toggleLocation() {
+  if (!socialFilter.value?.location) return
+  if (socialFilter.value.location.country) {
+    // Clearing → set to "anywhere"
+    Object.assign(socialFilter.value.location, {
+      country: '',
+      cityId: '',
+      cityName: '',
+      lat: null,
+      lon: null,
+    } as LocationDTO)
+  } else {
+    // Restoring → copy from viewer profile
+    socialFilter.value.location.country = viewerProfile.value?.location?.country || ''
+    socialFilter.value.location.cityName = viewerProfile.value?.location?.cityName || ''
+    socialFilter.value.location.lat = viewerProfile.value?.location?.lat || null
+    socialFilter.value.location.lon = viewerProfile.value?.location?.lon || null
+  }
+  updatePrefs()
+}
+
+function setLocationFromProfile() {
+  if (viewerProfile.value?.location && socialFilter.value?.location) {
+    Object.assign(socialFilter.value.location, viewerProfile.value.location)
+    updatePrefs()
+  }
+}
+
+function handleTagCloudSelect(tag: PopularTag) {
+  if (!socialFilter.value) return
+  const exists = socialFilter.value.tags.some((t) => t.id === tag.id)
+  if (!exists) {
+    socialFilter.value.tags = [
+      ...socialFilter.value.tags,
+      { id: tag.id, name: tag.name, slug: tag.slug },
+    ]
+  }
+  showTagCloud.value = false
+  updatePrefs()
+}
+
+const debouncedUpdatePrefs = useDebounceFn(() => updatePrefs(), 500)
+
+// Watch for inline filter changes (location/tags edits via the selectors)
+watch(
+  () =>
+    socialFilter.value && {
+      country: socialFilter.value.location.country,
+      cityName: socialFilter.value.location.cityName,
+      tags: socialFilter.value.tags.map((t) => t.id).join(','),
+    },
+  (newVal, oldVal) => {
+    if (!oldVal || !newVal) return
+    if (JSON.stringify(newVal) !== JSON.stringify(oldVal)) {
+      debouncedUpdatePrefs()
+    }
+  }
+)
 </script>
 
 <template>
@@ -76,7 +146,6 @@ const getProfileImageUrl = (profile: PublicProfile) => {
     @profile:open="openProfile"
     @profile:close="closeProfile"
     @profile:hidden="hideProfile"
-    @prefs:update="updatePrefs"
   >
     <template #no-results>
       <div class="mb-3">
@@ -85,19 +154,66 @@ const getProfileImageUrl = (profile: PublicProfile) => {
     </template>
 
     <template #filter-bar>
-      <div class="filter-area flex-grow-1">
-        <SocialFilterDisplay
-          v-if="socialFilter && haveAccess"
-          v-model="socialFilter"
-          :viewerLocation="viewerProfile?.location"
-          @filter:changed="updatePrefs"
-        />
-      </div>
-
-      <!-- <ViewModeToggler
-        v-model="viewModeModel"
+      <div
+        class="filter-area flex-grow-1"
         @click.stop
-      /> -->
+      >
+        <div
+          class="row g-2"
+          v-if="socialFilter && haveAccess"
+        >
+          <!-- Location column -->
+          <div class="col-12 col-md-6">
+            <div class="d-flex align-items-center gap-2">
+              <BFormCheckbox
+                :modelValue="locationDisabled"
+                @change="toggleLocation"
+              >
+                {{ t('profiles.browse.filters.anywhere') }}
+              </BFormCheckbox>
+              <fieldset
+                :disabled="locationDisabled"
+                class="flex-grow-1"
+              >
+                <LocationSelector
+                  v-model="socialFilter.location as LocationDTO"
+                  :allowEmpty="true"
+                  v-if="socialFilter"
+                />
+              </fieldset>
+              <BButton
+                variant="link-success"
+                :disabled="locationDisabled"
+                class="p-0"
+                :title="t('profiles.browse.filters.locate_button_title')"
+                @click="setLocationFromProfile"
+              >
+                <IconTarget2 class="svg-icon-lg" />
+              </BButton>
+            </div>
+          </div>
+          <!-- Tags column -->
+          <div class="col-12 col-md-6">
+            <div class="d-flex align-items-center gap-2">
+              <div class="flex-grow-1">
+                <TagSelectComponent
+                  v-model="socialFilter.tags"
+                  :taggable="false"
+                  v-if="socialFilter"
+                />
+              </div>
+              <BButton
+                variant="outline-secondary"
+                size="sm"
+                @click="showTagCloud = true"
+                :title="t('profiles.browse.filters.explore_tags')"
+              >
+                <IconCloud class="svg-icon-sm" />
+              </BButton>
+            </div>
+          </div>
+        </div>
+      </div>
     </template>
 
     <template #results="{ onProfileSelect }">
@@ -123,13 +239,16 @@ const getProfileImageUrl = (profile: PublicProfile) => {
         @item:select="(id: string | number) => onProfileSelect(String(id))"
       />
     </template>
-
-    <template #prefs-modal>
-      <SocialFilterForm
-        v-model="socialFilter"
-        :viewerProfile="viewerProfile"
-        v-if="socialFilter"
-      />
-    </template>
   </ProfileBrowseLayout>
+
+  <BModal
+    v-model="showTagCloud"
+    centered
+    :no-header="false"
+    :no-footer="true"
+    :title="t('profiles.browse.filters.explore_tags')"
+    size="lg"
+  >
+    <TagCloud @tag:select="handleTagCloudSelect" />
+  </BModal>
 </template>
