@@ -47,6 +47,9 @@ const saving = ref(false)
 const saveError = ref<string | null>(null)
 const translating = ref(false)
 const deleting = ref(false)
+const showAddModal = ref(false)
+const newTagName = ref('')
+const addingTag = ref(false)
 const showMerge = ref(false)
 const mergeSearch = ref('')
 const mergeResults = ref<AdminTag[]>([])
@@ -116,6 +119,25 @@ async function fetchTags() {
   if (res) {
     tags.value = res.tags
     total.value = res.total
+  }
+}
+
+async function addTag() {
+  if (!newTagName.value) return
+  addingTag.value = true
+  saveError.value = null
+  try {
+    await apiRequest('/admin/tags', {
+      method: 'POST',
+      body: { name: newTagName.value },
+    })
+    showAddModal.value = false
+    newTagName.value = ''
+    await fetchTags()
+  } catch (err: unknown) {
+    saveError.value = err instanceof Error ? err.message : 'Failed to create tag'
+  } finally {
+    addingTag.value = false
   }
 }
 
@@ -299,7 +321,7 @@ onMounted(fetchTags)
       {{ error }}
     </div>
 
-    <div class="mb-3">
+    <div class="mb-3 d-flex gap-2">
       <input
         v-model="search"
         type="text"
@@ -307,6 +329,12 @@ onMounted(fetchTags)
         placeholder="Search by name, slug, or translation..."
         @input="onSearchInput"
       />
+      <button
+        class="btn btn-primary text-nowrap"
+        @click="showAddModal = true"
+      >
+        Add Tag
+      </button>
     </div>
 
     <div class="table-container p-3">
@@ -615,6 +643,70 @@ onMounted(fetchTags)
     </div>
     <div
       v-if="selectedTag"
+      class="modal-backdrop show"
+    ></div>
+
+    <!-- Add Tag Modal -->
+    <div
+      v-if="showAddModal"
+      class="modal d-block"
+      tabindex="-1"
+      @click.self="showAddModal = false"
+      @keydown.escape="showAddModal = false"
+      @keydown.enter.prevent="addTag"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Add Tag</h5>
+            <button
+              type="button"
+              class="btn-close"
+              @click="showAddModal = false"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div
+              v-if="saveError"
+              class="alert alert-danger mb-3"
+            >
+              {{ saveError }}
+            </div>
+            <div class="mb-3">
+              <label
+                for="newTagName"
+                class="form-label"
+                >Name</label
+              >
+              <input
+                id="newTagName"
+                v-model="newTagName"
+                type="text"
+                class="form-control"
+                placeholder="e.g. Hiking"
+              />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              class="btn btn-secondary"
+              @click="showAddModal = false"
+            >
+              Cancel
+            </button>
+            <button
+              class="btn btn-primary"
+              :disabled="addingTag || !newTagName"
+              @click="addTag"
+            >
+              {{ addingTag ? 'Creating...' : 'Create' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      v-if="showAddModal"
       class="modal-backdrop show"
     ></div>
   </div>

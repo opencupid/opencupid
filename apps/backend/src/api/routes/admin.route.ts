@@ -1,5 +1,6 @@
 import { FastifyPluginAsync } from 'fastify'
 import { DeepLClient } from 'deepl-node'
+import slugify from 'slugify'
 import { sendError } from '../helpers'
 import { prisma } from '@/lib/prisma'
 import { appConfig } from '@/lib/appconfig'
@@ -289,6 +290,39 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
     } catch (err) {
       fastify.log.error({ err }, 'Error fetching admin profiles')
       return sendError(reply, 500, 'Failed to fetch profiles')
+    }
+  })
+
+  // POST /admin/tags — Create a new tag
+  fastify.post('/tags', async (req, reply) => {
+    try {
+      const body = req.body as { name?: string; slug?: string }
+
+      if (!body.name) {
+        return sendError(reply, 400, 'name is required')
+      }
+
+      const slug = body.slug || slugify(body.name, { lower: true, strict: true })
+
+      const tag = await prisma.tag.create({
+        data: {
+          name: body.name,
+          slug,
+          isApproved: true,
+          translations: {
+            create: { locale: 'en', name: body.name },
+          },
+        },
+        include: {
+          translations: { select: { locale: true, name: true } },
+          _count: { select: { profiles: true } },
+        },
+      })
+
+      return reply.code(201).send({ success: true, tag })
+    } catch (err) {
+      fastify.log.error({ err }, 'Error creating admin tag')
+      return sendError(reply, 500, 'Failed to create tag')
     }
   })
 

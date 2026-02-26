@@ -18,6 +18,7 @@ const mockPrisma = vi.hoisted(() => {
       findMany: vi.fn(),
       findUnique: vi.fn(),
       count: vi.fn(),
+      create: vi.fn(),
       update: vi.fn(),
       updateMany: vi.fn(),
     },
@@ -356,6 +357,55 @@ describe('GET /profiles/:id', () => {
     await handler({ params: { id: 'nonexistent' } }, reply)
 
     expect(reply.statusCode).toBe(404)
+  })
+})
+
+describe('POST /tags', () => {
+  it('creates a new tag', async () => {
+    const mockTag = {
+      id: 'tag-new',
+      slug: 'hiking',
+      name: 'Hiking',
+      translations: [{ locale: 'en', name: 'Hiking' }],
+      _count: { profiles: 0 },
+    }
+    mockPrisma.tag.create.mockResolvedValue(mockTag)
+
+    const handler = fastify.routes['POST /tags']
+    await handler({ body: { name: 'Hiking' } }, reply)
+
+    expect(reply.statusCode).toBe(201)
+    expect(reply.payload.success).toBe(true)
+    expect(reply.payload.tag).toEqual(mockTag)
+  })
+
+  it('uses provided slug if given', async () => {
+    mockPrisma.tag.create.mockResolvedValue({ id: 'tag-new' })
+
+    const handler = fastify.routes['POST /tags']
+    await handler({ body: { name: 'Hiking', slug: 'custom-slug' } }, reply)
+
+    expect(mockPrisma.tag.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ slug: 'custom-slug' }),
+      })
+    )
+  })
+
+  it('returns 400 when name is missing', async () => {
+    const handler = fastify.routes['POST /tags']
+    await handler({ body: {} }, reply)
+
+    expect(reply.statusCode).toBe(400)
+  })
+
+  it('handles errors gracefully', async () => {
+    mockPrisma.tag.create.mockRejectedValueOnce(new Error('Unique constraint'))
+
+    const handler = fastify.routes['POST /tags']
+    await handler({ body: { name: 'Duplicate' } }, reply)
+
+    expect(reply.statusCode).toBe(500)
   })
 })
 
