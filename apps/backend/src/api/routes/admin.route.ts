@@ -115,7 +115,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
           where,
           skip,
           take: size,
-          orderBy: { createdAt: 'desc' },
+          orderBy: [{ isRegistrationConfirmed: 'desc' }, { createdAt: 'desc' }],
           select: {
             id: true,
             email: true,
@@ -259,7 +259,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
           where,
           skip,
           take: size,
-          orderBy: { createdAt: 'desc' },
+          orderBy: [{ isActive: 'desc' }, { createdAt: 'desc' }],
           select: {
             id: true,
             publicName: true,
