@@ -28,6 +28,3 @@ self.addEventListener('notificationclick', (event) => {
   event.waitUntil(self.clients.openWindow(absoluteUrl))
 })
 
-self.addEventListener('fetch', (event) => {
-  event.respondWith(fetch(event.request))
-})
