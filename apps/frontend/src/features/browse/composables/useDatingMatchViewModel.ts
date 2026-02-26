@@ -60,13 +60,13 @@ export function useDatingMatchViewModel() {
 
   function openProfile(profileId: string): void {
     selectedProfileId.value = profileId
-    router.replace({ name: 'PublicProfile', params: { profileId } })
+    router.replace({ name: 'DatingMatch', params: { profileId } })
   }
 
   function closeProfile(): void {
     selectedProfileId.value = null
     const returnUrl = getPreviousUrl()
-    if (returnUrl.startsWith('/profile/')) {
+    if (returnUrl.startsWith('/matches/')) {
       router.replace({ name: 'DatingMatch' })
     } else {
       router.replace(returnUrl)
