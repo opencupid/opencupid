@@ -63,6 +63,7 @@ async function startJitsi() {
       startWithVideoMuted: false,
       prejoinConfig: { enabled: false },
       deeplinking: { disabled: true },
+      hangupConfirmation: { enabled: false },
     },
     interfaceConfigOverwrite: {
       SHOW_JITSI_WATERMARK: false,
