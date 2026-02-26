@@ -18,7 +18,7 @@ async function fetchTicketUrl(): Promise<boolean> {
     ticketUrl = `${__APP_CONFIG__.WS_BASE_URL}/message?ticket=${res.data.ticket}`
     return true
   } catch (err) {
-    console.error('[WS] Failed to fetch ticket:', err)
+    console.warn('[WS] Failed to fetch ticket')
     return false
   }
 }
