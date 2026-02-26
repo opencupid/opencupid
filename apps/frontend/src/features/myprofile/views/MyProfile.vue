@@ -65,7 +65,7 @@ const handleFinishDatingOnboarding = async () => {
   await updateScopes()
   if (res.success) {
     isDatingWizardActive.value = false
-    router.push({ name: 'BrowseProfilesScope', params: { scope: 'dating' } })
+    router.push({ name: 'DatingMatch' })
   }
 }
 
@@ -210,7 +210,6 @@ const hint = computed(() => history?.state?.hint || null)
   height: 3rem;
 }
 
-
 .editable {
   background-color: var(--bs-light);
 }
@@ -231,7 +230,7 @@ const hint = computed(() => history?.state?.hint || null)
   right: 0;
   bottom: 0.5rem;
 }
-:deep(.editable-textarea .editable-placeholder ) {
+:deep(.editable-textarea .editable-placeholder) {
   display: flex;
   padding: 0.25rem;
 }

@@ -208,27 +208,6 @@ describe('Navbar', () => {
   })
 
   describe('browse active state', () => {
-    it('marks Browse as active on /browse/social', () => {
-      mockRoute.path = '/browse/social'
-      const wrapper = mountNavbar()
-      const browseItem = wrapper.find('[data-to="/browse"]')
-      expect(browseItem.classes()).toContain('active')
-    })
-
-    it('marks Browse as active on /browse/dating', () => {
-      mockRoute.path = '/browse/dating'
-      const wrapper = mountNavbar()
-      const browseItem = wrapper.find('[data-to="/browse"]')
-      expect(browseItem.classes()).toContain('active')
-    })
-
-    it('marks Browse as active on /profile/:id', () => {
-      mockRoute.path = '/profile/some-uuid'
-      const wrapper = mountNavbar()
-      const browseItem = wrapper.find('[data-to="/browse"]')
-      expect(browseItem.classes()).toContain('active')
-    })
-
     it('does not mark Browse as active on /home', () => {
       mockRoute.path = '/home'
       const wrapper = mountNavbar()

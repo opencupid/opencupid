@@ -78,8 +78,8 @@
   "nav": {
     "home": "Főoldal",
     "profile": "Profilom",
-    "browse": "Böngészés",
-    "matches": "Egyezések",
+    "browse": "Komakereső",
+    "matches": "Pártaláló",
     "inbox": "Üzenetek",
     "settings": "Beállítások",
     "bulletin": "Hirdetőtábla"
