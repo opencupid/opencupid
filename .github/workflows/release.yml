@@ -182,20 +182,26 @@ jobs:
 
       - name: Upload frontend sourcemaps
         run: |
-          pnpm exec sentry-cli --url ${{ secrets.SENTRY_URL }} sourcemaps inject ./apps/frontend/dist
-          pnpm exec sentry-cli --url ${{ secrets.SENTRY_URL }} sourcemaps upload \
-            --org gaiansnet --project gaians \
+          pnpm exec sentry-cli --url $SENTRY_URL sourcemaps inject ./apps/frontend/dist
+          pnpm exec sentry-cli --url $SENTRY_URL sourcemaps upload \
+            --org $SENTRY_ORG --project $SENTRY_PROJECT \
             --release "frontend@${{ steps.version.outputs.version }}" \
             ./apps/frontend/dist
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_URL: ${{ vars.SENTRY_URL }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
 
       - name: Upload backend sourcemaps
         run: |
-          pnpm exec sentry-cli --url ${{ secrets.SENTRY_URL }} sourcemaps inject ./apps/backend/dist
-          pnpm exec sentry-cli --url ${{ secrets.SENTRY_URL }} sourcemaps upload \
-            --org gaiansnet --project gaians \
+          pnpm exec sentry-cli --url $SENTRY_URL sourcemaps inject ./apps/backend/dist
+          pnpm exec sentry-cli --url $SENTRY_URL sourcemaps upload \
+            --org $SENTRY_ORG --project $SENTRY_PROJECT \
             --release "api@${{ steps.version.outputs.version }}" \
             ./apps/backend/dist
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_URL: ${{ vars.SENTRY_URL }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
