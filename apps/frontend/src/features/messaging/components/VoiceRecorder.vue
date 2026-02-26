@@ -7,7 +7,7 @@ import Mic2Icon from '@/assets/icons/interface/mic-2.svg'
 
 const props = defineProps<{
   disabled?: boolean
-  maxDuration?: number
+  maxDuration: number
 }>()
 
 const emit = defineEmits<{
@@ -24,13 +24,14 @@ const {
   audioBlob,
   error,
   permissionDenied,
+  micNotFound,
   startRecording,
   stopRecording,
   cancelRecording,
   reset,
   formatDuration,
   maxDuration: recorderMaxDuration,
-} = useVoiceRecorder(props.maxDuration || 120)
+} = useVoiceRecorder(props.maxDuration)
 
 // Computed properties
 const isIdle = computed(() => state.value === 'idle')
@@ -65,6 +66,7 @@ watch(state, (newState) => {
 
 // Methods
 const handleRecordClick = async () => {
+  if (micNotFound.value) return
   if (isIdle.value) {
     await startRecording()
   } else if (isRecording.value) {
@@ -91,7 +93,7 @@ defineExpose({ triggerStart: handleRecordClick, reset })
         :variant="buttonVariant"
         size="sm"
         :class="{ 'icon-btn-round': isIdle }"
-        :disabled="props.disabled"
+        :disabled="props.disabled || micNotFound"
         @click="handleRecordClick"
         :title="
           isIdle

@@ -36,7 +36,7 @@ vi.stubGlobal(
 )
 
 /** Mount a thin wrapper that calls the composable and exposes its return value. */
-async function mountRecorder(maxDuration?: number) {
+async function mountRecorder(maxDuration: number) {
   const mod = await import('../useVoiceRecorder')
   let result: ReturnType<typeof mod.useVoiceRecorder>
   const Wrapper = defineComponent({
