@@ -239,7 +239,7 @@ export class MessageService {
       fileSize?: number
       duration?: number
     }
-  ): Promise<{ convoId: string; message: MessageWithSendInclude }> {
+  ): Promise<{ convoId: string; message: MessageWithSendInclude; isDuplicate: boolean }> {
     // Trim user input for text messages; markdown rendering + sanitization happens on the frontend
     const cleanContent = messageType === 'text/plain' ? content.trim() : content
 
@@ -253,6 +253,20 @@ export class MessageService {
     const [profileAId, profileBId] = this.sortProfilePair(senderProfileId, recipientProfileId)
 
     const convo = await this.findOrCreateConversation(tx, profileAId, profileBId, senderProfileId)
+
+    // Dedup: check for identical message within a 5-second window
+    const fiveSecondsAgo = new Date(Date.now() - 5000)
+    const duplicate = await tx.message.findFirst({
+      where: {
+        conversationId: convo.id,
+        senderId: senderProfileId,
+        content: cleanContent,
+        messageType,
+        createdAt: { gte: fiveSecondsAgo },
+      },
+      include: sendInclude,
+    })
+    if (duplicate) return { convoId: convo.id, message: duplicate, isDuplicate: true }
 
     const message = await tx.message.create({
       data: {
@@ -269,7 +283,7 @@ export class MessageService {
       include: sendInclude,
     })
 
-    return { convoId: convo.id, message }
+    return { convoId: convo.id, message, isDuplicate: false }
   }
 
   private async findOrCreateConversation(

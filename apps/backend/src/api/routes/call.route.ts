@@ -1,6 +1,6 @@
 import { FastifyPluginAsync } from 'fastify'
 import { z } from 'zod'
-import { sendError } from '../helpers'
+import { rateLimitConfig, sendError } from '../helpers'
 import { CallService } from '@/services/call.service'
 import { broadcastToProfile } from '@/utils/wsUtils'
 import { mapProfileSummary } from '@/api/mappers/profile.mappers'
@@ -24,53 +24,57 @@ const callRoutes: FastifyPluginAsync = async (fastify) => {
   const webPushService = WebPushService.getInstance()
 
   // POST / — initiate a call
-  fastify.post('/', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-    const profileId = req.session.profileId
-    if (!profileId) return sendError(reply, 401, 'Profile not found.')
+  fastify.post(
+    '/',
+    { onRequest: [fastify.authenticate], config: rateLimitConfig(fastify, '1 minute', 5) },
+    async (req, reply) => {
+      const profileId = req.session.profileId
+      if (!profileId) return sendError(reply, 401, 'Profile not found.')
 
-    const body = InitiateCallBodySchema.safeParse(req.body)
-    if (!body.success) return sendError(reply, 400, 'Invalid parameters')
+      const body = InitiateCallBodySchema.safeParse(req.body)
+      if (!body.success) return sendError(reply, 400, 'Invalid parameters')
 
-    try {
-      const { roomName, calleeProfileId, callerPublicName } = await fastify.prisma.$transaction(
-        async (tx) => {
-          return await callService.initiateCall(tx, body.data.conversationId, profileId)
+      try {
+        const { roomName, calleeProfileId, callerPublicName } = await fastify.prisma.$transaction(
+          async (tx) => {
+            return await callService.initiateCall(tx, body.data.conversationId, profileId)
+          }
+        )
+
+        // Notify callee via WS, fall back to push notification if offline
+        const isWsBroadcasted = broadcastToProfile(fastify, calleeProfileId, {
+          type: 'ws:incoming_call',
+          payload: {
+            conversationId: body.data.conversationId,
+            roomName,
+            caller: { id: profileId, publicName: callerPublicName },
+          },
+        })
+
+        if (!isWsBroadcasted && WebPushService.isWebPushConfigured()) {
+          webPushService
+            .sendCallNotification(calleeProfileId, callerPublicName, body.data.conversationId)
+            .catch((err) => {
+              fastify.log.error(err, 'Call push notification failed')
+            })
         }
-      )
 
-      // Notify callee via WS, fall back to push notification if offline
-      const isWsBroadcasted = broadcastToProfile(fastify, calleeProfileId, {
-        type: 'ws:incoming_call',
-        payload: {
+        return reply.code(200).send({
+          success: true,
           conversationId: body.data.conversationId,
           roomName,
-          caller: { id: profileId, publicName: callerPublicName },
-        },
-      })
-
-      if (!isWsBroadcasted && WebPushService.isWebPushConfigured()) {
-        webPushService
-          .sendCallNotification(calleeProfileId, callerPublicName, body.data.conversationId)
-          .catch((err) => {
-            fastify.log.error(err, 'Call push notification failed')
-          })
+        })
+      } catch (error: any) {
+        fastify.log.error(error)
+        return sendError(reply, 403, error?.error || 'Failed to initiate call')
       }
-
-      return reply.code(200).send({
-        success: true,
-        conversationId: body.data.conversationId,
-        roomName,
-      })
-    } catch (error: any) {
-      fastify.log.error(error)
-      return sendError(reply, 403, error?.error || 'Failed to initiate call')
     }
-  })
+  )
 
   // POST /:conversationId/accept — accept an incoming call
   fastify.post(
     '/:conversationId/accept',
-    { onRequest: [fastify.authenticate] },
+    { onRequest: [fastify.authenticate], config: rateLimitConfig(fastify, '1 minute', 5) },
     async (req, reply) => {
       const profileId = req.session.profileId
       if (!profileId) return sendError(reply, 401, 'Profile not found.')
@@ -108,7 +112,7 @@ const callRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /:conversationId/decline — decline an incoming call
   fastify.post(
     '/:conversationId/decline',
-    { onRequest: [fastify.authenticate] },
+    { onRequest: [fastify.authenticate], config: rateLimitConfig(fastify, '1 minute', 5) },
     async (req, reply) => {
       const profileId = req.session.profileId
       if (!profileId) return sendError(reply, 401, 'Profile not found.')
@@ -138,30 +142,34 @@ const callRoutes: FastifyPluginAsync = async (fastify) => {
         })
 
         // Insert missed call message and broadcast to both participants
-        const missedMsg = await fastify.prisma.$transaction(async (tx) => {
-          return await callService.insertMissedCallMessage(
-            tx,
-            params.data.conversationId,
-            callerParticipant.profileId
-          )
-        })
+        const { message: missedMsg, isDuplicate } = await fastify.prisma.$transaction(
+          async (tx) => {
+            return await callService.insertMissedCallMessage(
+              tx,
+              params.data.conversationId,
+              callerParticipant.profileId
+            )
+          }
+        )
 
-        const messageDTO: MessageDTO = {
-          id: missedMsg.id,
-          conversationId: missedMsg.conversationId,
-          senderId: missedMsg.senderId,
-          content: missedMsg.content,
-          messageType: missedMsg.messageType,
-          createdAt: missedMsg.createdAt,
-          sender: mapProfileSummary(callerParticipant.profile),
-          attachment: null,
-        }
+        if (!isDuplicate) {
+          const messageDTO: MessageDTO = {
+            id: missedMsg.id,
+            conversationId: missedMsg.conversationId,
+            senderId: missedMsg.senderId,
+            content: missedMsg.content,
+            messageType: missedMsg.messageType,
+            createdAt: missedMsg.createdAt,
+            sender: mapProfileSummary(callerParticipant.profile),
+            attachment: null,
+          }
 
-        for (const p of conversation.participants) {
-          broadcastToProfile(fastify, p.profileId, {
-            type: 'ws:new_message',
-            payload: messageDTO,
-          })
+          for (const p of conversation.participants) {
+            broadcastToProfile(fastify, p.profileId, {
+              type: 'ws:new_message',
+              payload: messageDTO,
+            })
+          }
         }
 
         return reply.code(200).send({ success: true })
@@ -175,7 +183,7 @@ const callRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /:conversationId/cancel — caller cancels outgoing call
   fastify.post(
     '/:conversationId/cancel',
-    { onRequest: [fastify.authenticate] },
+    { onRequest: [fastify.authenticate], config: rateLimitConfig(fastify, '1 minute', 5) },
     async (req, reply) => {
       const profileId = req.session.profileId
       if (!profileId) return sendError(reply, 401, 'Profile not found.')
@@ -207,30 +215,33 @@ const callRoutes: FastifyPluginAsync = async (fastify) => {
         })
 
         // Insert missed call message and broadcast to both participants
-        const missedMsg = await fastify.prisma.$transaction(async (tx) => {
-          return await callService.insertMissedCallMessage(
-            tx,
-            params.data.conversationId,
-            profileId
-          )
-        })
-
-        const messageDTO: MessageDTO = {
-          id: missedMsg.id,
-          conversationId: missedMsg.conversationId,
-          senderId: missedMsg.senderId,
-          content: missedMsg.content,
-          messageType: missedMsg.messageType,
-          createdAt: missedMsg.createdAt,
-          sender: mapProfileSummary(callerParticipant.profile),
-          attachment: null,
-        }
-
-        for (const p of conversation.participants) {
-          broadcastToProfile(fastify, p.profileId, {
-            type: 'ws:new_message',
-            payload: messageDTO,
+        const { message: cancelMissedMsg, isDuplicate: cancelIsDuplicate } =
+          await fastify.prisma.$transaction(async (tx) => {
+            return await callService.insertMissedCallMessage(
+              tx,
+              params.data.conversationId,
+              profileId
+            )
           })
+
+        if (!cancelIsDuplicate) {
+          const messageDTO: MessageDTO = {
+            id: cancelMissedMsg.id,
+            conversationId: cancelMissedMsg.conversationId,
+            senderId: cancelMissedMsg.senderId,
+            content: cancelMissedMsg.content,
+            messageType: cancelMissedMsg.messageType,
+            createdAt: cancelMissedMsg.createdAt,
+            sender: mapProfileSummary(callerParticipant.profile),
+            attachment: null,
+          }
+
+          for (const p of conversation.participants) {
+            broadcastToProfile(fastify, p.profileId, {
+              type: 'ws:new_message',
+              payload: messageDTO,
+            })
+          }
         }
 
         return reply.code(200).send({ success: true })

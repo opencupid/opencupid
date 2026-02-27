@@ -30,6 +30,7 @@ const makeReq = (overrides: any = {}) => ({
 })
 
 beforeEach(async () => {
+  vi.clearAllMocks()
   fastify = new MockFastify()
   reply = new MockReply()
   mockService = {
@@ -72,6 +73,7 @@ describe('POST /like/:targetId', () => {
     const handler = fastify.routes['POST /like/:targetId']
     const pair = {
       isMatch: false,
+      isNewLike: true,
       to: { profile: { id: 'p2' }, isMatch: false, createdAt: new Date().toISOString() },
       from: { profile: { id: 'p1' }, isMatch: false, createdAt: new Date().toISOString() },
     }
@@ -81,7 +83,51 @@ describe('POST /like/:targetId', () => {
     await handler(req, reply as any)
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
-    expect(reply.payload.pair).toBe(pair)
+    // isNewLike is stripped from the response (internal only)
+    const { isNewLike: _, ...expectedPair } = pair
+    expect(reply.payload.pair).toStrictEqual(expectedPair)
+  })
+
+  it('sends notifications when isNewLike is true', async () => {
+    const { notifierService } = await import('../../services/notifier.service')
+    const handler = fastify.routes['POST /like/:targetId']
+    const pair = {
+      isMatch: false,
+      isNewLike: true,
+      to: { profile: { id: 'p2' }, isMatch: false, createdAt: new Date().toISOString() },
+      from: {
+        profile: { id: 'p1', publicName: 'Alice' },
+        isMatch: false,
+        createdAt: new Date().toISOString(),
+      },
+    }
+    mockService.like.mockResolvedValue(pair)
+
+    const req = makeReq({ params: { targetId: 'cm000000000000000000000p2' } })
+    await handler(req, reply as any)
+    expect(reply.statusCode).toBe(200)
+    expect(notifierService.notifyProfile).toHaveBeenCalled()
+  })
+
+  it('skips notifications when isNewLike is false', async () => {
+    const { notifierService } = await import('../../services/notifier.service')
+    const handler = fastify.routes['POST /like/:targetId']
+    const pair = {
+      isMatch: false,
+      isNewLike: false,
+      to: { profile: { id: 'p2' }, isMatch: false, createdAt: new Date().toISOString() },
+      from: {
+        profile: { id: 'p1', publicName: 'Alice' },
+        isMatch: false,
+        createdAt: new Date().toISOString(),
+      },
+    }
+    mockService.like.mockResolvedValue(pair)
+
+    const req = makeReq({ params: { targetId: 'cm000000000000000000000p2' } })
+    await handler(req, reply as any)
+    expect(reply.statusCode).toBe(200)
+    expect(notifierService.notifyProfile).not.toHaveBeenCalled()
   })
 
   it('returns 500 on error', async () => {

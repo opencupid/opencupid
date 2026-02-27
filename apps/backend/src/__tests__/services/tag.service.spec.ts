@@ -34,6 +34,24 @@ describe('TagService', () => {
     expect(mockPrisma.tag.create).toHaveBeenCalled()
   })
 
+  it('returns existing tag on duplicate name/slug (P2002)', async () => {
+    const { Prisma } = await import('@prisma/client')
+    const p2002Error = new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+      code: 'P2002',
+      clientVersion: '5.0.0',
+    })
+    mockPrisma.tag.create.mockRejectedValue(p2002Error)
+    mockPrisma.tag.findFirst.mockResolvedValue({
+      id: 'existing-tag-id',
+      name: 'Bar',
+      slug: 'bar',
+    })
+
+    const tag = await service.create('en', { name: 'Bar', createdBy: 'u1', originalLocale: 'en' })
+    expect(tag.id).toBe('existing-tag-id')
+    expect(mockPrisma.tag.findFirst).toHaveBeenCalled()
+  })
+
   it('updates slug when name provided', async () => {
     mockPrisma.tag.update.mockResolvedValue({ id: 't1', name: 'New', slug: 'new' })
     await service.update('t1', { name: 'New' } as any)

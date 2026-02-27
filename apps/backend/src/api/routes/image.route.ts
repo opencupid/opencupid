@@ -5,7 +5,7 @@ import multipart, { MultipartValue } from '@fastify/multipart'
 import { ProfileService } from 'src/services/profile.service'
 import { ImageService } from 'src/services/image.service'
 import { uploadTmpDir } from '@/lib/media'
-import { sendError, sendForbiddenError } from '../helpers'
+import { rateLimitConfig, sendError, sendForbiddenError } from '../helpers'
 import { mapProfileImagesToOwner } from '@/api/mappers/profile.mappers'
 import { ReorderProfileImagesPayloadSchema } from '@zod/profile/profileimage.dto'
 import { appConfig } from '@/lib/appconfig'
@@ -52,6 +52,7 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
     '/',
     {
       onRequest: [fastify.authenticate],
+      config: rateLimitConfig(fastify, '1 minute', 10),
     },
     async (req, reply) => {
       let files

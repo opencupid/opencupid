@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client'
+import { Prisma, Message } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import crypto from 'crypto'
 
@@ -56,8 +56,20 @@ export class CallService {
     tx: Prisma.TransactionClient,
     conversationId: string,
     callerProfileId: string
-  ) {
-    return await tx.message.create({
+  ): Promise<{ message: Message; isDuplicate: boolean }> {
+    // Dedup: check for recent missed call message within 30 seconds
+    const thirtySecondsAgo = new Date(Date.now() - 30000)
+    const existing = await tx.message.findFirst({
+      where: {
+        conversationId,
+        senderId: callerProfileId,
+        messageType: 'call/missed',
+        createdAt: { gte: thirtySecondsAgo },
+      },
+    })
+    if (existing) return { message: existing, isDuplicate: true }
+
+    const message = await tx.message.create({
       data: {
         conversationId,
         senderId: callerProfileId,
@@ -65,6 +77,7 @@ export class CallService {
         messageType: 'call/missed',
       },
     })
+    return { message, isDuplicate: false }
   }
 
   async updateCallableStatus(conversationId: string, profileId: string, isCallable: boolean) {

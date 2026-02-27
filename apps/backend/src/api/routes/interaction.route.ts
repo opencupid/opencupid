@@ -18,7 +18,7 @@ const TargetLookupParamsSchema = z.object({
   targetId: z.string().cuid(),
 })
 
-const interactionRoutes: FastifyPluginAsync = async fastify => {
+const interactionRoutes: FastifyPluginAsync = async (fastify) => {
   const service = InteractionService.getInstance()
 
   // GET /interactions
@@ -62,28 +62,28 @@ const interactionRoutes: FastifyPluginAsync = async fastify => {
       const myId = req.session.profileId
 
       try {
-        const likeResult = await service.like(myId, targetId)
+        const { isNewLike, ...likeResult } = await service.like(myId, targetId)
         const response: InteractionEdgeResponse = { success: true, pair: likeResult }
         reply.code(200).send(response)
 
-        // Broadcast the new message to the recipient
-        const ok = broadcastToProfile(fastify, targetId, {
-          type: likeResult.isMatch ? 'ws:new_match' : 'ws:new_like',
-          payload: likeResult.to,
-        })
+        if (isNewLike) {
+          // Broadcast the new message to the recipient
+          broadcastToProfile(fastify, targetId, {
+            type: likeResult.isMatch ? 'ws:new_match' : 'ws:new_like',
+            payload: likeResult.to,
+          })
 
-        if (likeResult.isMatch) {
-          await notifierService.notifyProfile(targetId, 'new_match', {
-            name: likeResult.from.profile.publicName,
-            link: `${appConfig.FRONTEND_URL}/matches`,
-          })
-        } else {
-          await notifierService.notifyProfile(targetId, 'new_like', {
-            link: `${appConfig.FRONTEND_URL}/browse/dating`,
-          })
+          if (likeResult.isMatch) {
+            await notifierService.notifyProfile(targetId, 'new_match', {
+              name: likeResult.from.profile.publicName,
+              link: `${appConfig.FRONTEND_URL}/matches`,
+            })
+          } else {
+            await notifierService.notifyProfile(targetId, 'new_like', {
+              link: `${appConfig.FRONTEND_URL}/browse/dating`,
+            })
+          }
         }
-
-        // webPushService.send(edge)
       } catch (err) {
         fastify.log.error(err)
         return sendError(reply, 500, 'Failed to like profile')

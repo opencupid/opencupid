@@ -199,6 +199,7 @@ describe('POST /voice', () => {
     mockMessageService.sendOrStartConversation.mockResolvedValue({
       convoId: 'conv1',
       message: { id: 'm1', senderId: 'p1' },
+      isDuplicate: false,
     })
     mockMessageService.getConversationSummary.mockResolvedValue({
       conversation: { status: 'ACTIVE' },

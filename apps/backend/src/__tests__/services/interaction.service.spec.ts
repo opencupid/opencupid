@@ -27,15 +27,64 @@ beforeEach(async () => {
 })
 
 describe('InteractionService.like', () => {
+  it('returns isNewLike: true on first like', async () => {
+    const fromId = 'user1'
+    const toId = 'user2'
+
+    mockPrisma.$transaction.mockImplementation(async (fn: (tx: any) => any) => {
+      const result = await fn({
+        hiddenProfile: { deleteMany: vi.fn() },
+        likedProfile: {
+          findUnique: vi.fn().mockResolvedValue(null), // no existing like
+          upsert: vi.fn().mockResolvedValue({ fromId, toId, createdAt: new Date() }),
+        },
+      })
+      return result
+    })
+
+    mockPrisma.profile.findUniqueOrThrow
+      .mockResolvedValueOnce({ id: toId, profileImages: [] })
+      .mockResolvedValueOnce({ id: fromId, profileImages: [] })
+    mockPrisma.likedProfile.findUnique.mockResolvedValue(null)
+
+    const result = await service.like(fromId, toId)
+    expect(result.isNewLike).toBe(true)
+  })
+
+  it('returns isNewLike: false on replay like', async () => {
+    const fromId = 'user1'
+    const toId = 'user2'
+
+    mockPrisma.$transaction.mockImplementation(async (fn: (tx: any) => any) => {
+      const result = await fn({
+        hiddenProfile: { deleteMany: vi.fn() },
+        likedProfile: {
+          findUnique: vi.fn().mockResolvedValue({ fromId, toId, createdAt: new Date() }), // already exists
+          upsert: vi.fn().mockResolvedValue({ fromId, toId, createdAt: new Date() }),
+        },
+      })
+      return result
+    })
+
+    mockPrisma.profile.findUniqueOrThrow
+      .mockResolvedValueOnce({ id: toId, profileImages: [] })
+      .mockResolvedValueOnce({ id: fromId, profileImages: [] })
+    mockPrisma.likedProfile.findUnique.mockResolvedValue(null)
+
+    const result = await service.like(fromId, toId)
+    expect(result.isNewLike).toBe(false)
+  })
+
   it('calls acceptConversationOnMatch when a match occurs', async () => {
     const fromId = 'user1'
     const toId = 'user2'
 
     // Mock the transaction to return a like
     mockPrisma.$transaction.mockImplementation(async (fn: (tx: any) => any) => {
-      await fn({
+      const result = await fn({
         hiddenProfile: { deleteMany: vi.fn() },
         likedProfile: {
+          findUnique: vi.fn().mockResolvedValue(null),
           upsert: vi.fn().mockResolvedValue({
             fromId,
             toId,
@@ -43,7 +92,7 @@ describe('InteractionService.like', () => {
           }),
         },
       })
-      return { like: { fromId, toId, createdAt: new Date() } }
+      return result
     })
 
     // Mock profile fetches
@@ -68,9 +117,10 @@ describe('InteractionService.like', () => {
 
     // Mock the transaction to return a like
     mockPrisma.$transaction.mockImplementation(async (fn: (tx: any) => any) => {
-      await fn({
+      const result = await fn({
         hiddenProfile: { deleteMany: vi.fn() },
         likedProfile: {
+          findUnique: vi.fn().mockResolvedValue(null),
           upsert: vi.fn().mockResolvedValue({
             fromId,
             toId,
@@ -78,7 +128,7 @@ describe('InteractionService.like', () => {
           }),
         },
       })
-      return { like: { fromId, toId, createdAt: new Date() } }
+      return result
     })
 
     // Mock profile fetches

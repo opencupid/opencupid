@@ -61,6 +61,92 @@ describe('MessageService.getConversationSummary', () => {
   })
 })
 
+describe('MessageService.sendOrStartConversation dedup', () => {
+  it('returns isDuplicate: true for recent identical message', async () => {
+    const existingMsg = {
+      id: 'm-existing',
+      conversationId: 'c1',
+      senderId: 'sender',
+      content: 'hello',
+      messageType: 'text/plain',
+      createdAt: new Date(),
+      sender: { id: 'sender', publicName: 'Test', profileImages: [] },
+      attachment: null,
+    }
+
+    const tx: any = {
+      conversation: {
+        findUnique: vi.fn().mockResolvedValue({
+          id: 'c1',
+          status: 'ACCEPTED',
+          initiatorProfileId: 'other',
+          profileAId: 'recipient',
+          profileBId: 'sender',
+        }),
+        update: vi.fn(),
+      },
+      conversationParticipant: {},
+      message: {
+        findFirst: vi.fn().mockResolvedValue(existingMsg), // duplicate found
+        create: vi.fn(),
+      },
+    }
+
+    const result = await service.sendOrStartConversation(
+      tx,
+      'sender',
+      'recipient',
+      'hello',
+      'text/plain'
+    )
+    expect(result.isDuplicate).toBe(true)
+    expect(result.message.id).toBe('m-existing')
+    expect(tx.message.create).not.toHaveBeenCalled()
+  })
+
+  it('returns isDuplicate: false for new message', async () => {
+    const newMsg = {
+      id: 'm-new',
+      conversationId: 'c1',
+      senderId: 'sender',
+      content: 'hello',
+      messageType: 'text/plain',
+      createdAt: new Date(),
+      sender: { id: 'sender', publicName: 'Test', profileImages: [] },
+      attachment: null,
+    }
+
+    const tx: any = {
+      conversation: {
+        findUnique: vi.fn().mockResolvedValue({
+          id: 'c1',
+          status: 'ACCEPTED',
+          initiatorProfileId: 'other',
+          profileAId: 'recipient',
+          profileBId: 'sender',
+        }),
+        update: vi.fn(),
+      },
+      conversationParticipant: {},
+      message: {
+        findFirst: vi.fn().mockResolvedValue(null), // no duplicate
+        create: vi.fn().mockResolvedValue(newMsg),
+      },
+    }
+
+    const result = await service.sendOrStartConversation(
+      tx,
+      'sender',
+      'recipient',
+      'hello',
+      'text/plain'
+    )
+    expect(result.isDuplicate).toBe(false)
+    expect(result.message.id).toBe('m-new')
+    expect(tx.message.create).toHaveBeenCalled()
+  })
+})
+
 describe('MessageService.listMessagesForConversation', () => {
   it('fetches latest page in descending order and returns ascending payload', async () => {
     mockPrisma.message.findMany.mockResolvedValue([
