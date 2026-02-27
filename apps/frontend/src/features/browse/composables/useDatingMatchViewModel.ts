@@ -2,7 +2,7 @@ import { computed, ref, toRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useBootstrap } from '@/lib/bootstrap'
-import { getPreviousUrl } from '@/router'
+import { getPreviousUrl } from '@/router/history'
 
 import type { StoreError } from '@/store/helpers'
 import type { OwnerProfile } from '@zod/profile/profile.dto'

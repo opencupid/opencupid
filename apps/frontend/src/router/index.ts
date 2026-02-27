@@ -125,14 +125,12 @@ router.beforeEach(async (to) => {
   }
 })
 
-let previousUrl: string = '/browse'
+import { setPreviousUrl } from './history'
 
 router.afterEach((to, from) => {
-  previousUrl = from.fullPath
+  setPreviousUrl(from.fullPath)
 })
 
-export function getPreviousUrl(): string {
-  return previousUrl
-}
+export { getPreviousUrl } from './history'
 
 export default router
