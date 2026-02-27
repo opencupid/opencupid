@@ -65,6 +65,10 @@ export const configSchema = z.object({
   JITSI_DOMAIN: z.string().default('meet.jit.si'),
 
   DEEPL_API_KEY: z.string().optional(),
+
+  // Activity segmentation
+  ACTIVITY_SESSION_GAP_MINUTES: z.coerce.number().default(30),
+  ACTIVITY_DISTILL_CRON: z.string().default('0 3 * * *'),
 })
 
 if (!['production', 'staging'].includes(process.env.NODE_ENV!)) {
