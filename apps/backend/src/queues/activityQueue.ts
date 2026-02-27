@@ -6,6 +6,8 @@ const connection = new IORedis(appConfig.REDIS_URL, {
   maxRetriesPerRequest: null,
 })
 
+const DISTILL_CRON = '0 3 * * *' // daily at 03:00
+
 export const activityQueue = new Queue('activity-distill', { connection })
 
 /**
@@ -13,9 +15,5 @@ export const activityQueue = new Queue('activity-distill', { connection })
  * Safe to call on every startup — BullMQ deduplicates by cron pattern.
  */
 export async function registerDistillJob(): Promise<void> {
-  await activityQueue.upsertJobScheduler(
-    'distill',
-    { pattern: appConfig.ACTIVITY_DISTILL_CRON },
-    { name: 'distill' }
-  )
+  await activityQueue.upsertJobScheduler('distill', { pattern: DISTILL_CRON }, { name: 'distill' })
 }

@@ -199,7 +199,7 @@ describe('distillActivitySegments', () => {
         create: expect.objectContaining({ segment: 'returning' }),
       })
     )
-    // profile3: returning (1 active day, lastSessionAt=today, firstSeenAt=today → new requires firstSeen within 3 days AND activeDays ≤ 2, but default segment is dormant so it promotes to returning)
+    // profile3: new (1 active day, firstSeenAt=today within 3-day window, activeDays ≤ 2, promoted from dormant)
     expect(mockedPrisma.profileActivitySummary.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { profileId: 'profile3' },

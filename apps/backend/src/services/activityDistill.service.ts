@@ -8,7 +8,7 @@ const NEW_MAX_ACTIVE_DAYS = 2
 const FREQUENT_MIN_ACTIVE_DAYS = 8
 const HYSTERESIS_K = 2
 const RETENTION_DAYS = 28
-const BATCH_SIZE = 500
+const BATCH_SIZE = 10
 
 /** Ordered from highest to lowest priority for comparison. */
 const SEGMENT_RANK: Record<ActivitySegment, number> = {

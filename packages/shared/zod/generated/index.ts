@@ -44,7 +44,7 @@ export const PushSubscriptionScalarFieldEnumSchema = z.enum(['id','userId','endp
 
 export const PostScalarFieldEnumSchema = z.enum(['id','content','type','isDeleted','isVisible','createdAt','updatedAt','country','cityName','lat','lon','postedById']);
 
-export const ProfileSessionLogScalarFieldEnumSchema = z.enum(['id','profileId','startedAt','endedAt']);
+export const ProfileSessionLogScalarFieldEnumSchema = z.enum(['id','profileId','startedAt']);
 
 export const ProfileActivitySummaryScalarFieldEnumSchema = z.enum(['profileId','firstSeenAt','lastSeenAt','activeDays28','sessions28','segment','demotionStreak','segmentUpdatedAt']);
 
@@ -403,7 +403,6 @@ export const ProfileSessionLogSchema = z.object({
   id: z.string().cuid(),
   profileId: z.string(),
   startedAt: z.coerce.date(),
-  endedAt: z.coerce.date().nullable(),
 })
 
 export type ProfileSessionLog = z.infer<typeof ProfileSessionLogSchema>
@@ -990,7 +989,6 @@ export const ProfileSessionLogSelectSchema: z.ZodType<Prisma.ProfileSessionLogSe
   id: z.boolean().optional(),
   profileId: z.boolean().optional(),
   startedAt: z.boolean().optional(),
-  endedAt: z.boolean().optional(),
   profile: z.union([z.boolean(),z.lazy(() => ProfileArgsSchema)]).optional(),
 }).strict()
 
@@ -2625,7 +2623,6 @@ export const ProfileSessionLogWhereInputSchema: z.ZodType<Prisma.ProfileSessionL
   id: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   profileId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   startedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
-  endedAt: z.union([ z.lazy(() => DateTimeNullableFilterSchema),z.coerce.date() ]).optional().nullable(),
   profile: z.union([ z.lazy(() => ProfileScalarRelationFilterSchema),z.lazy(() => ProfileWhereInputSchema) ]).optional(),
 }).strict();
 
@@ -2633,7 +2630,6 @@ export const ProfileSessionLogOrderByWithRelationInputSchema: z.ZodType<Prisma.P
   id: z.lazy(() => SortOrderSchema).optional(),
   profileId: z.lazy(() => SortOrderSchema).optional(),
   startedAt: z.lazy(() => SortOrderSchema).optional(),
-  endedAt: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   profile: z.lazy(() => ProfileOrderByWithRelationInputSchema).optional()
 }).strict();
 
@@ -2647,7 +2643,6 @@ export const ProfileSessionLogWhereUniqueInputSchema: z.ZodType<Prisma.ProfileSe
   NOT: z.union([ z.lazy(() => ProfileSessionLogWhereInputSchema),z.lazy(() => ProfileSessionLogWhereInputSchema).array() ]).optional(),
   profileId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   startedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
-  endedAt: z.union([ z.lazy(() => DateTimeNullableFilterSchema),z.coerce.date() ]).optional().nullable(),
   profile: z.union([ z.lazy(() => ProfileScalarRelationFilterSchema),z.lazy(() => ProfileWhereInputSchema) ]).optional(),
 }).strict());
 
@@ -2655,7 +2650,6 @@ export const ProfileSessionLogOrderByWithAggregationInputSchema: z.ZodType<Prism
   id: z.lazy(() => SortOrderSchema).optional(),
   profileId: z.lazy(() => SortOrderSchema).optional(),
   startedAt: z.lazy(() => SortOrderSchema).optional(),
-  endedAt: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   _count: z.lazy(() => ProfileSessionLogCountOrderByAggregateInputSchema).optional(),
   _max: z.lazy(() => ProfileSessionLogMaxOrderByAggregateInputSchema).optional(),
   _min: z.lazy(() => ProfileSessionLogMinOrderByAggregateInputSchema).optional()
@@ -2668,7 +2662,6 @@ export const ProfileSessionLogScalarWhereWithAggregatesInputSchema: z.ZodType<Pr
   id: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   profileId: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   startedAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
-  endedAt: z.union([ z.lazy(() => DateTimeNullableWithAggregatesFilterSchema),z.coerce.date() ]).optional().nullable(),
 }).strict();
 
 export const ProfileActivitySummaryWhereInputSchema: z.ZodType<Prisma.ProfileActivitySummaryWhereInput> = z.object({
@@ -4227,21 +4220,18 @@ export const PostUncheckedUpdateManyInputSchema: z.ZodType<Prisma.PostUncheckedU
 export const ProfileSessionLogCreateInputSchema: z.ZodType<Prisma.ProfileSessionLogCreateInput> = z.object({
   id: z.string().cuid().optional(),
   startedAt: z.coerce.date().optional(),
-  endedAt: z.coerce.date().optional().nullable(),
   profile: z.lazy(() => ProfileCreateNestedOneWithoutSessionLogsInputSchema)
 }).strict();
 
 export const ProfileSessionLogUncheckedCreateInputSchema: z.ZodType<Prisma.ProfileSessionLogUncheckedCreateInput> = z.object({
   id: z.string().cuid().optional(),
   profileId: z.string(),
-  startedAt: z.coerce.date().optional(),
-  endedAt: z.coerce.date().optional().nullable()
+  startedAt: z.coerce.date().optional()
 }).strict();
 
 export const ProfileSessionLogUpdateInputSchema: z.ZodType<Prisma.ProfileSessionLogUpdateInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   startedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  endedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   profile: z.lazy(() => ProfileUpdateOneRequiredWithoutSessionLogsNestedInputSchema).optional()
 }).strict();
 
@@ -4249,27 +4239,23 @@ export const ProfileSessionLogUncheckedUpdateInputSchema: z.ZodType<Prisma.Profi
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   profileId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   startedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  endedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
 
 export const ProfileSessionLogCreateManyInputSchema: z.ZodType<Prisma.ProfileSessionLogCreateManyInput> = z.object({
   id: z.string().cuid().optional(),
   profileId: z.string(),
-  startedAt: z.coerce.date().optional(),
-  endedAt: z.coerce.date().optional().nullable()
+  startedAt: z.coerce.date().optional()
 }).strict();
 
 export const ProfileSessionLogUpdateManyMutationInputSchema: z.ZodType<Prisma.ProfileSessionLogUpdateManyMutationInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   startedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  endedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
 
 export const ProfileSessionLogUncheckedUpdateManyInputSchema: z.ZodType<Prisma.ProfileSessionLogUncheckedUpdateManyInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   profileId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   startedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  endedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
 
 export const ProfileActivitySummaryCreateInputSchema: z.ZodType<Prisma.ProfileActivitySummaryCreateInput> = z.object({
@@ -5621,22 +5607,19 @@ export const EnumPostTypeWithAggregatesFilterSchema: z.ZodType<Prisma.EnumPostTy
 export const ProfileSessionLogCountOrderByAggregateInputSchema: z.ZodType<Prisma.ProfileSessionLogCountOrderByAggregateInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
   profileId: z.lazy(() => SortOrderSchema).optional(),
-  startedAt: z.lazy(() => SortOrderSchema).optional(),
-  endedAt: z.lazy(() => SortOrderSchema).optional()
+  startedAt: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const ProfileSessionLogMaxOrderByAggregateInputSchema: z.ZodType<Prisma.ProfileSessionLogMaxOrderByAggregateInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
   profileId: z.lazy(() => SortOrderSchema).optional(),
-  startedAt: z.lazy(() => SortOrderSchema).optional(),
-  endedAt: z.lazy(() => SortOrderSchema).optional()
+  startedAt: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const ProfileSessionLogMinOrderByAggregateInputSchema: z.ZodType<Prisma.ProfileSessionLogMinOrderByAggregateInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
   profileId: z.lazy(() => SortOrderSchema).optional(),
-  startedAt: z.lazy(() => SortOrderSchema).optional(),
-  endedAt: z.lazy(() => SortOrderSchema).optional()
+  startedAt: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const EnumActivitySegmentFilterSchema: z.ZodType<Prisma.EnumActivitySegmentFilter> = z.object({
@@ -9303,14 +9286,12 @@ export const PostCreateManyPostedByInputEnvelopeSchema: z.ZodType<Prisma.PostCre
 
 export const ProfileSessionLogCreateWithoutProfileInputSchema: z.ZodType<Prisma.ProfileSessionLogCreateWithoutProfileInput> = z.object({
   id: z.string().cuid().optional(),
-  startedAt: z.coerce.date().optional(),
-  endedAt: z.coerce.date().optional().nullable()
+  startedAt: z.coerce.date().optional()
 }).strict();
 
 export const ProfileSessionLogUncheckedCreateWithoutProfileInputSchema: z.ZodType<Prisma.ProfileSessionLogUncheckedCreateWithoutProfileInput> = z.object({
   id: z.string().cuid().optional(),
-  startedAt: z.coerce.date().optional(),
-  endedAt: z.coerce.date().optional().nullable()
+  startedAt: z.coerce.date().optional()
 }).strict();
 
 export const ProfileSessionLogCreateOrConnectWithoutProfileInputSchema: z.ZodType<Prisma.ProfileSessionLogCreateOrConnectWithoutProfileInput> = z.object({
@@ -9774,7 +9755,6 @@ export const ProfileSessionLogScalarWhereInputSchema: z.ZodType<Prisma.ProfileSe
   id: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   profileId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   startedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
-  endedAt: z.union([ z.lazy(() => DateTimeNullableFilterSchema),z.coerce.date() ]).optional().nullable(),
 }).strict();
 
 export const ProfileActivitySummaryUpsertWithoutProfileInputSchema: z.ZodType<Prisma.ProfileActivitySummaryUpsertWithoutProfileInput> = z.object({
@@ -13666,8 +13646,7 @@ export const PostCreateManyPostedByInputSchema: z.ZodType<Prisma.PostCreateManyP
 
 export const ProfileSessionLogCreateManyProfileInputSchema: z.ZodType<Prisma.ProfileSessionLogCreateManyProfileInput> = z.object({
   id: z.string().cuid().optional(),
-  startedAt: z.coerce.date().optional(),
-  endedAt: z.coerce.date().optional().nullable()
+  startedAt: z.coerce.date().optional()
 }).strict();
 
 export const TagUpdateWithoutProfilesInputSchema: z.ZodType<Prisma.TagUpdateWithoutProfilesInput> = z.object({
@@ -14313,19 +14292,16 @@ export const PostUncheckedUpdateManyWithoutPostedByInputSchema: z.ZodType<Prisma
 export const ProfileSessionLogUpdateWithoutProfileInputSchema: z.ZodType<Prisma.ProfileSessionLogUpdateWithoutProfileInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   startedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  endedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
 
 export const ProfileSessionLogUncheckedUpdateWithoutProfileInputSchema: z.ZodType<Prisma.ProfileSessionLogUncheckedUpdateWithoutProfileInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   startedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  endedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
 
 export const ProfileSessionLogUncheckedUpdateManyWithoutProfileInputSchema: z.ZodType<Prisma.ProfileSessionLogUncheckedUpdateManyWithoutProfileInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   startedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  endedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
 
 export const ConversationParticipantCreateManyConversationInputSchema: z.ZodType<Prisma.ConversationParticipantCreateManyConversationInput> = z.object({

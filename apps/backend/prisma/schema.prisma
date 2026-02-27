@@ -412,11 +412,10 @@ model Post {
 }
 
 model ProfileSessionLog {
-  id        String    @id @default(cuid())
-  profile   Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  id        String   @id @default(cuid())
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
   profileId String
-  startedAt DateTime  @default(now())
-  endedAt   DateTime?
+  startedAt DateTime @default(now())
 
   @@index([profileId, startedAt])
 }
