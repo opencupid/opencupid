@@ -15,6 +15,7 @@ http {
   sendfile on;
   keepalive_timeout 65;
   server_tokens off;
+  more_clear_headers Server;
 
   # --- Rate / connection limiting ---
   limit_req_zone  $binary_remote_addr  zone=req_per_ip:10m  rate=10r/s;
