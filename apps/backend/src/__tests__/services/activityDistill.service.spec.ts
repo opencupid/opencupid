@@ -150,6 +150,66 @@ describe('distillActivitySegments', () => {
     vi.useRealTimers()
   })
 
+  it('processes multiple users in a single batch', async () => {
+    const now = new Date()
+    vi.useFakeTimers()
+    vi.setSystemTime(now)
+
+    mockedPrisma.$queryRaw.mockResolvedValue([
+      { userId: 'user1', activeDays28: 10, sessions28: 20, lastSessionAt: daysAgo(1, now) },
+      { userId: 'user2', activeDays28: 3, sessions28: 5, lastSessionAt: daysAgo(0, now) },
+      { userId: 'user3', activeDays28: 1, sessions28: 1, lastSessionAt: daysAgo(0, now) },
+    ])
+    // user1: existing frequent user
+    // user2: no existing summary
+    // user3: no existing summary, firstSeen 1 day ago → new
+    mockedPrisma.userActivitySummary.findUnique
+      .mockResolvedValueOnce({
+        userId: 'user1',
+        firstSeenAt: daysAgo(30, now),
+        lastSeenAt: daysAgo(2, now),
+        activeDays28: 8,
+        sessions28: 15,
+        segment: 'frequent',
+        demotionStreak: 0,
+        segmentUpdatedAt: daysAgo(1, now),
+      })
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(null)
+    mockedPrisma.userActivitySummary.upsert.mockResolvedValue({} as any)
+    mockedPrisma.userActivitySummary.updateMany.mockResolvedValue({ count: 0 })
+    mockedPrisma.userSessionLog.deleteMany.mockResolvedValue({ count: 0 })
+
+    await distillActivitySegments()
+
+    // All three users should have been upserted
+    expect(mockedPrisma.userActivitySummary.upsert).toHaveBeenCalledTimes(3)
+
+    // user1: stays frequent (10 active days >= 8)
+    expect(mockedPrisma.userActivitySummary.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId: 'user1' },
+        update: expect.objectContaining({ segment: 'frequent' }),
+      })
+    )
+    // user2: returning (3 active days, no existing summary → default dormant, promoted)
+    expect(mockedPrisma.userActivitySummary.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId: 'user2' },
+        create: expect.objectContaining({ segment: 'returning' }),
+      })
+    )
+    // user3: returning (1 active day, lastSessionAt=today, firstSeenAt=today → new requires firstSeen within 3 days AND activeDays ≤ 2, but default segment is dormant so it promotes to returning)
+    expect(mockedPrisma.userActivitySummary.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId: 'user3' },
+        create: expect.objectContaining({ segment: 'new' }),
+      })
+    )
+
+    vi.useRealTimers()
+  })
+
   it('runs dormant sweep for stale summaries', async () => {
     mockedPrisma.$queryRaw.mockResolvedValue([])
     mockedPrisma.userActivitySummary.updateMany.mockResolvedValue({ count: 2 })

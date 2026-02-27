@@ -8,6 +8,7 @@ const NEW_MAX_ACTIVE_DAYS = 2
 const FREQUENT_MIN_ACTIVE_DAYS = 8
 const HYSTERESIS_K = 2
 const RETENTION_DAYS = 28
+const BATCH_SIZE = 500
 
 /** Ordered from highest to lowest priority for comparison. */
 const SEGMENT_RANK: Record<ActivitySegment, number> = {
@@ -67,6 +68,54 @@ export function applyHysteresis(
 }
 
 /**
+ * Process a single user's session stats: look up existing summary,
+ * compute segment with hysteresis, and upsert the result.
+ */
+async function processUserStats(
+  row: { userId: string; activeDays28: number; sessions28: number; lastSessionAt: Date },
+  now: Date
+): Promise<void> {
+  const existing = await prisma.userActivitySummary.findUnique({
+    where: { userId: row.userId },
+  })
+
+  const firstSeenAt = existing?.firstSeenAt ?? row.lastSessionAt
+  const lastSeenAt =
+    row.lastSessionAt > (existing?.lastSeenAt ?? new Date(0))
+      ? row.lastSessionAt
+      : existing!.lastSeenAt
+
+  const rawSegment = computeRawSegment(lastSeenAt, firstSeenAt, row.activeDays28, now)
+  const currentSegment = existing?.segment ?? 'dormant'
+  const currentStreak = existing?.demotionStreak ?? 0
+
+  const { segment, demotionStreak } = applyHysteresis(currentSegment, rawSegment, currentStreak)
+  const segmentChanged = segment !== currentSegment
+
+  await prisma.userActivitySummary.upsert({
+    where: { userId: row.userId },
+    create: {
+      userId: row.userId,
+      firstSeenAt,
+      lastSeenAt,
+      activeDays28: row.activeDays28,
+      sessions28: row.sessions28,
+      segment,
+      demotionStreak,
+      segmentUpdatedAt: now,
+    },
+    update: {
+      lastSeenAt,
+      activeDays28: row.activeDays28,
+      sessions28: row.sessions28,
+      segment,
+      demotionStreak,
+      ...(segmentChanged ? { segmentUpdatedAt: now } : {}),
+    },
+  })
+}
+
+/**
  * Run the full distillation process for all users with recent activity.
  */
 export async function distillActivitySegments(): Promise<void> {
@@ -91,46 +140,10 @@ export async function distillActivitySegments(): Promise<void> {
     GROUP BY "userId"
   `
 
-  // 2. Process each user
-  for (const row of stats) {
-    const existing = await prisma.userActivitySummary.findUnique({
-      where: { userId: row.userId },
-    })
-
-    const firstSeenAt = existing?.firstSeenAt ?? row.lastSessionAt
-    const lastSeenAt =
-      row.lastSessionAt > (existing?.lastSeenAt ?? new Date(0))
-        ? row.lastSessionAt
-        : existing!.lastSeenAt
-
-    const rawSegment = computeRawSegment(lastSeenAt, firstSeenAt, row.activeDays28, now)
-    const currentSegment = existing?.segment ?? 'dormant'
-    const currentStreak = existing?.demotionStreak ?? 0
-
-    const { segment, demotionStreak } = applyHysteresis(currentSegment, rawSegment, currentStreak)
-    const segmentChanged = segment !== currentSegment
-
-    await prisma.userActivitySummary.upsert({
-      where: { userId: row.userId },
-      create: {
-        userId: row.userId,
-        firstSeenAt,
-        lastSeenAt,
-        activeDays28: row.activeDays28,
-        sessions28: row.sessions28,
-        segment,
-        demotionStreak,
-        segmentUpdatedAt: now,
-      },
-      update: {
-        lastSeenAt,
-        activeDays28: row.activeDays28,
-        sessions28: row.sessions28,
-        segment,
-        demotionStreak,
-        ...(segmentChanged ? { segmentUpdatedAt: now } : {}),
-      },
-    })
+  // 2. Process users in batches (concurrent within batch, sequential between batches)
+  for (let i = 0; i < stats.length; i += BATCH_SIZE) {
+    const batch = stats.slice(i, i + BATCH_SIZE)
+    await Promise.all(batch.map((row) => processUserStats(row, now)))
   }
 
   // 3. Dormant sweep: mark users whose lastSeenAt is stale and who aren't already dormant
