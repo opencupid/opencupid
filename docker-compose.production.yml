@@ -116,18 +116,16 @@ services:
       - certbot-webroot:/var/www/html
     env_file:
       - .env
-    entrypoint: certbot
+    entrypoint: /bin/sh
     command:
-      - certonly
-      - -d
-      - ${DOMAIN}
-      - -d
-      - ${ADMIN_DOMAIN}
-      - --email
-      - ${EMAIL}
-      - --agree-tos
-      - --no-eff-email
-      - --standalone
+      - -c
+      - |
+        CERT="/etc/letsencrypt/live/$$DOMAIN/fullchain.pem"
+        if [ -f "$$CERT" ] && openssl x509 -checkend 2592000 -noout -in "$$CERT" 2>/dev/null; then
+          echo "Certificate already exists and is not near expiry, skipping."
+          exit 0
+        fi
+        exec certbot certonly -d $$DOMAIN -d $$ADMIN_DOMAIN --email $$EMAIL --agree-tos --no-eff-email --standalone
 
   jitsi-web:
     image: jitsi/web:stable
