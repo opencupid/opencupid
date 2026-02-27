@@ -17,7 +17,7 @@ http {
   server_tokens off;
 
   # --- Rate / connection limiting ---
-  limit_req_zone  $binary_remote_addr  zone=req_per_ip:10m  rate=5r/s;
+  limit_req_zone  $binary_remote_addr  zone=req_per_ip:10m  rate=10r/s;
   limit_conn_zone $binary_remote_addr  zone=conn_per_ip:10m;
 
   # --- Enable Gzip ---
@@ -111,7 +111,9 @@ http {
     ssl_ciphers HIGH:!aNULL:!MD5;
 
     limit_conn conn_per_ip 20;
-    limit_req  zone=req_per_ip burst=20 nodelay;
+    limit_req  zone=req_per_ip burst=50 nodelay;
+    limit_req_status 429;
+    limit_conn_status 429;
 
     # Security headers (set via Lua to apply to all locations including those with add_header)
     header_filter_by_lua_block {
