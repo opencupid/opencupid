@@ -73,10 +73,6 @@ http {
     server admin:3002;
   }
 
-  upstream listmonk {
-    server listmonk:9000;
-  }
-
   # --- HTTP -> HTTPS Redirect ---
   server {
     listen 80;
@@ -232,27 +228,6 @@ http {
       proxy_set_header Host $host;
       proxy_set_header X-Real-IP $remote_addr;
       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
-  }
-
-  # --- HTTPS Listmonk Public Server ---
-  server {
-    listen 443 ssl;
-    server_name ${LISTMONK_DOMAIN};
-
-    ssl_certificate     /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers HIGH:!aNULL:!MD5;
-    client_max_body_size 10M;
-
-    location / {
-      proxy_pass http://listmonk;
-      proxy_http_version 1.1;
-      proxy_set_header Host $host;
-      proxy_set_header X-Real-IP $remote_addr;
-      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-      proxy_set_header X-Forwarded-Proto $scheme;
     }
   }
 

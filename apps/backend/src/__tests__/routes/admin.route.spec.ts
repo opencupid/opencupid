@@ -676,6 +676,97 @@ describe('POST /tags/translate', () => {
   })
 })
 
+describe('GET /subscribers', () => {
+  it('returns subscribers with correct shape', async () => {
+    mockPrisma.user.findMany.mockResolvedValue([
+      {
+        id: 'user1',
+        email: 'alice@example.com',
+        language: 'de',
+        newsletterOptIn: true,
+        profile: { publicName: 'Alice' },
+      },
+      {
+        id: 'user2',
+        email: 'bob@example.com',
+        language: null,
+        newsletterOptIn: false,
+        profile: { publicName: 'Bob' },
+      },
+    ])
+
+    const handler = fastify.routes['GET /subscribers']
+    await handler({}, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    expect(reply.payload.subscribers).toEqual([
+      {
+        id: 'user1',
+        email: 'alice@example.com',
+        name: 'Alice',
+        language: 'de',
+        newsletterOptIn: true,
+      },
+      {
+        id: 'user2',
+        email: 'bob@example.com',
+        name: 'Bob',
+        language: 'en',
+        newsletterOptIn: false,
+      },
+    ])
+  })
+
+  it('only queries users with email and active profile', async () => {
+    mockPrisma.user.findMany.mockResolvedValue([])
+
+    const handler = fastify.routes['GET /subscribers']
+    await handler({}, reply)
+
+    expect(mockPrisma.user.findMany).toHaveBeenCalledWith({
+      where: {
+        email: { not: null },
+        profile: { isActive: true },
+      },
+      select: {
+        id: true,
+        email: true,
+        language: true,
+        newsletterOptIn: true,
+        profile: { select: { publicName: true } },
+      },
+    })
+  })
+
+  it('defaults name to empty string when profile is null', async () => {
+    mockPrisma.user.findMany.mockResolvedValue([
+      {
+        id: 'user3',
+        email: 'noname@example.com',
+        language: 'en',
+        newsletterOptIn: true,
+        profile: null,
+      },
+    ])
+
+    const handler = fastify.routes['GET /subscribers']
+    await handler({}, reply)
+
+    expect(reply.payload.subscribers[0].name).toBe('')
+  })
+
+  it('handles errors gracefully', async () => {
+    mockPrisma.user.findMany.mockRejectedValueOnce(new Error('DB error'))
+
+    const handler = fastify.routes['GET /subscribers']
+    await handler({}, reply)
+
+    expect(reply.statusCode).toBe(500)
+    expect(reply.payload.success).toBe(false)
+  })
+})
+
 describe('X-Admin-Authenticated header check', () => {
   it('returns 403 when header is missing', async () => {
     const hook = fastify.hooks['onRequest']?.[0]
