@@ -115,7 +115,7 @@ http {
         "worker-src 'self' blob:"
         .. "; media-src 'self'"
         .. "; frame-src https://*.${DOMAIN}"
-        .. "; connect-src 'self' blob: wss://${DOMAIN} https://*.${DOMAIN}"
+        .. "; connect-src 'self' blob: wss://${DOMAIN} https://*.${DOMAIN} https://photon.komoot.io"
       )
     }
 
