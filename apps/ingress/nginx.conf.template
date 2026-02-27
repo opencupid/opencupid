@@ -131,6 +131,14 @@ http {
       return 404;
     }
 
+    # --- Scanner / exploit-probe honeypots (return 444 = drop connection) ---
+    location ~* \.(php|asp|aspx|cgi|pl|py|rb|jsp|jspx|env|git|sql|bak|old|zip|tar|gz)$ {
+      return 444;
+    }
+    location ~* ^/(wp-admin|wp-login\.php|xmlrpc\.php|wp-content|wp-includes|phpmyadmin|pma|\.git|\.env) {
+      return 444;
+    }
+
     # Image and voice message upload endpoints (larger body size for file uploads)
     location /api/image {
       client_max_body_size 20M;
