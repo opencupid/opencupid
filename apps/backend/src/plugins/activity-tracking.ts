@@ -4,8 +4,8 @@ import { recordActivity } from '@/services/activity.service'
 
 /**
  * Piggybacks on the authenticate hook to record user sessions.
- * Runs after successful auth — fires-and-forgets the recording so it
- * never blocks or fails the original request.
+ * Runs in the onResponse hook (after the response is sent to the client)
+ * so it never delays the original request. Errors are caught and logged.
  */
 export default fp(async (fastify: FastifyInstance) => {
   fastify.addHook('onResponse', async (req) => {

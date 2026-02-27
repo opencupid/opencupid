@@ -6,7 +6,6 @@ CREATE TABLE "public"."ProfileSessionLog" (
     "id" TEXT NOT NULL,
     "profileId" TEXT NOT NULL,
     "startedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "endedAt" TIMESTAMP(3),
 
     CONSTRAINT "ProfileSessionLog_pkey" PRIMARY KEY ("id")
 );
