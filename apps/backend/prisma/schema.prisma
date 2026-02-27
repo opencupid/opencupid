@@ -84,6 +84,13 @@ enum PostType {
   REQUEST
 }
 
+enum ActivitySegment {
+  new
+  returning
+  frequent
+  dormant
+}
+
 model Tag {
   id             String              @id @default(cuid())
   slug           String              @unique
@@ -151,6 +158,7 @@ model User {
 
   pushSubscription PushSubscription[]
   isPushNotificationEnabled Boolean  @default(false)
+
 }
 
 model Profile {
@@ -216,6 +224,10 @@ model Profile {
 
   // Posts
   posts Post[]
+
+  // Activity tracking
+  sessionLogs     ProfileSessionLog[]
+  activitySummary ProfileActivitySummary?
 }
 
 model LocalizedProfileField {
@@ -397,4 +409,25 @@ model Post {
   @@index([type])
   @@index([createdAt])
   @@index([isVisible, isDeleted])
+}
+
+model ProfileSessionLog {
+  id        String   @id @default(cuid())
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId String
+  startedAt DateTime @default(now())
+
+  @@index([profileId, startedAt])
+}
+
+model ProfileActivitySummary {
+  profileId        String          @id
+  profile          Profile         @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  firstSeenAt      DateTime
+  lastSeenAt       DateTime
+  activeDays28     Int             @default(0)
+  sessions28       Int             @default(0)
+  segment          ActivitySegment @default(dormant)
+  demotionStreak   Int             @default(0)
+  segmentUpdatedAt DateTime        @default(now())
 }

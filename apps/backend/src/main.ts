@@ -6,6 +6,7 @@ import { appConfig } from '@/lib/appconfig'
 import './lib/i18n' // Initialize i18next with translations
 
 import './workers/emailWorker' // ← side‐effect: starts the worker
+import './workers/activityWorker' // ← side-effect: starts the activity distill worker
 import { checkUserContentRoot } from '@/lib/media'
 
 import { ImageProcessor } from './services/imageprocessor'
@@ -40,6 +41,7 @@ async function main() {
   app.register(import('./plugins/websockets'))
   app.register(import('./plugins/prisma'))
   app.register(import('./plugins/session-auth'))
+  app.register(import('./plugins/activity-tracking'))
   // API routes
   app.register(import('./api'), { prefix: '/api' })
 

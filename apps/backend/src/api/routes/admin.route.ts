@@ -67,6 +67,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
         recentSignups,
         blockedUsers,
         reportedProfiles,
+        segmentGroups,
       ] = await Promise.all([
         prisma.user.count(),
         prisma.profile.count(),
@@ -74,7 +75,16 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
         prisma.user.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
         prisma.user.count({ where: { isBlocked: true } }),
         prisma.profile.count({ where: { isReported: true } }),
+        prisma.profileActivitySummary.groupBy({
+          by: ['segment'],
+          _count: { segment: true },
+        }),
       ])
+
+      const segmentCounts = segmentGroups.map((g) => ({
+        segment: g.segment,
+        count: g._count.segment,
+      }))
 
       return reply.code(200).send({
         success: true,
@@ -85,6 +95,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
           recentSignups,
           blockedUsers,
           reportedProfiles,
+          segmentCounts,
         },
       })
     } catch (err) {
@@ -283,6 +294,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
             createdAt: true,
             userId: true,
             user: { select: { email: true, phonenumber: true } },
+            activitySummary: { select: { segment: true } },
           },
         }),
         prisma.profile.count({ where }),
