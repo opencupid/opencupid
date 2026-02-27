@@ -14,6 +14,9 @@ const mockPrisma = vi.hoisted(() => {
       findUnique: vi.fn(),
       groupBy: vi.fn(),
     },
+    profileActivitySummary: {
+      groupBy: vi.fn(),
+    },
     tag: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
@@ -105,6 +108,12 @@ describe('GET /stats', () => {
       .mockResolvedValueOnce(90) // totalProfiles
       .mockResolvedValueOnce(80) // activeProfiles
       .mockResolvedValueOnce(3) // reportedProfiles
+    mockPrisma.profileActivitySummary.groupBy.mockResolvedValueOnce([
+      { segment: 'new', _count: { segment: 10 } },
+      { segment: 'returning', _count: { segment: 30 } },
+      { segment: 'frequent', _count: { segment: 20 } },
+      { segment: 'dormant', _count: { segment: 40 } },
+    ])
 
     const handler = fastify.routes['GET /stats']
     await handler({}, reply)
@@ -118,6 +127,12 @@ describe('GET /stats', () => {
       recentSignups: 5,
       blockedUsers: 2,
       reportedProfiles: 3,
+      segmentCounts: [
+        { segment: 'new', count: 10 },
+        { segment: 'returning', count: 30 },
+        { segment: 'frequent', count: 20 },
+        { segment: 'dormant', count: 40 },
+      ],
     })
   })
 

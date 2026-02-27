@@ -17,6 +17,7 @@ interface AdminProfile {
   createdAt: string
   userId: string
   user: { email: string | null; phonenumber: string | null } | null
+  activitySummary: { segment: string } | null
 }
 
 interface ProfilesResponse {
@@ -44,6 +45,8 @@ type SortColumn =
   | 'isSocialActive'
   | 'isDatingActive'
   | 'isActive'
+  | 'segment'
+  | 'createdAt'
 const sortColumn = ref<SortColumn | null>(null)
 const sortDirection = ref<'asc' | 'desc'>('asc')
 
@@ -57,6 +60,12 @@ const sortedProfiles = computed(() => {
     if (col === 'isSocialActive' || col === 'isDatingActive' || col === 'isActive') {
       aVal = a[col] ? 1 : 0
       bVal = b[col] ? 1 : 0
+    } else if (col === 'segment') {
+      aVal = (a.activitySummary?.segment ?? '').toLowerCase()
+      bVal = (b.activitySummary?.segment ?? '').toLowerCase()
+    } else if (col === 'createdAt') {
+      aVal = a.createdAt
+      bVal = b.createdAt
     } else {
       aVal = (a[col] ?? '').toLowerCase()
       bVal = (b[col] ?? '').toLowerCase()
@@ -99,6 +108,17 @@ async function fetchProfiles() {
     profiles.value = res.profiles
     total.value = res.total
   }
+}
+
+const segmentColors: Record<string, string> = {
+  new: 'bg-primary',
+  returning: 'bg-success',
+  frequent: 'bg-info',
+  dormant: 'bg-secondary',
+}
+
+function segmentBadgeClass(segment: string) {
+  return `badge ${segmentColors[segment] ?? 'bg-secondary'}`
 }
 
 function viewProfile(profile: AdminProfile) {
@@ -225,6 +245,18 @@ onMounted(() => {
             >
               Active{{ sortIndicator('isActive') }}
             </th>
+            <th
+              style="cursor: pointer"
+              @click="toggleSort('segment')"
+            >
+              Segment{{ sortIndicator('segment') }}
+            </th>
+            <th
+              style="cursor: pointer"
+              @click="toggleSort('createdAt')"
+            >
+              Created{{ sortIndicator('createdAt') }}
+            </th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -254,6 +286,16 @@ onMounted(() => {
               </span>
             </td>
             <td>
+              <span
+                v-if="profile.activitySummary?.segment"
+                :class="segmentBadgeClass(profile.activitySummary.segment)"
+              >
+                {{ profile.activitySummary.segment }}
+              </span>
+              <span v-else>—</span>
+            </td>
+            <td>{{ new Date(profile.createdAt).toLocaleDateString() }}</td>
+            <td>
               <button
                 class="btn btn-sm btn-outline-primary"
                 @click.stop="viewProfile(profile)"
@@ -264,7 +306,7 @@ onMounted(() => {
           </tr>
           <tr v-if="profiles.length === 0">
             <td
-              colspan="7"
+              colspan="9"
               class="text-center text-muted"
             >
               No profiles found
@@ -356,6 +398,8 @@ onMounted(() => {
               <dd class="col-sm-8">{{ selectedProfile.isReported ? 'Yes' : 'No' }}</dd>
               <dt class="col-sm-4">Blocked</dt>
               <dd class="col-sm-8">{{ selectedProfile.isBlocked ? 'Yes' : 'No' }}</dd>
+              <dt class="col-sm-4">Activity Segment</dt>
+              <dd class="col-sm-8">{{ selectedProfile.activitySummary?.segment || '—' }}</dd>
               <dt class="col-sm-4">Created</dt>
               <dd class="col-sm-8">{{ new Date(selectedProfile.createdAt).toLocaleString() }}</dd>
             </dl>

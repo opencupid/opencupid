@@ -1,10 +1,23 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useApi } from '../composables/useApi'
-import { Bar } from 'vue-chartjs'
-import { Chart as ChartJS, BarElement, CategoryScale, LinearScale, Tooltip, Legend } from 'chart.js'
+import { Bar, Pie } from 'vue-chartjs'
+import {
+  Chart as ChartJS,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+  Legend,
+  ArcElement,
+} from 'chart.js'
 
-ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend)
+ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend, ArcElement)
+
+interface SegmentCount {
+  segment: string
+  count: number
+}
 
 interface Stats {
   totalUsers: number
@@ -13,6 +26,7 @@ interface Stats {
   recentSignups: number
   blockedUsers: number
   reportedProfiles: number
+  segmentCounts: SegmentCount[]
 }
 
 interface DailyEntry {
@@ -47,6 +61,31 @@ function buildChartData(entries: DailyEntry[], color: string) {
         data: entries.map((e) => e.count),
         backgroundColor: color,
         borderRadius: 4,
+      },
+    ],
+  }
+}
+
+const segmentColorMap: Record<string, string> = {
+  new: '#0d6efd',
+  returning: '#198754',
+  frequent: '#0dcaf0',
+  dormant: '#6c757d',
+}
+
+const pieOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: { legend: { position: 'bottom' as const } },
+}
+
+function buildSegmentPieData(counts: SegmentCount[]) {
+  return {
+    labels: counts.map((c) => c.segment),
+    datasets: [
+      {
+        data: counts.map((c) => c.count),
+        backgroundColor: counts.map((c) => segmentColorMap[c.segment] ?? '#adb5bd'),
       },
     ],
   }
@@ -135,11 +174,14 @@ onMounted(async () => {
     </div>
 
     <div
-      v-if="dailyStats"
+      v-if="dailyStats || stats?.segmentCounts?.length"
       class="row g-3 mt-2"
     >
-      <div class="col-md-6">
-        <div class="card">
+      <div
+        v-if="dailyStats"
+        class="col-md-4"
+      >
+        <div class="card h-100">
           <div class="card-body">
             <h6 class="card-title mb-3">Daily Signups (Last 7 Days)</h6>
             <div style="height: 250px">
@@ -151,14 +193,33 @@ onMounted(async () => {
           </div>
         </div>
       </div>
-      <div class="col-md-6">
-        <div class="card">
+      <div
+        v-if="dailyStats"
+        class="col-md-4"
+      >
+        <div class="card h-100">
           <div class="card-body">
             <h6 class="card-title mb-3">Daily Logins (Last 7 Days)</h6>
             <div style="height: 250px">
               <Bar
                 :data="buildChartData(dailyStats.dailyLogins, '#198754')"
                 :options="chartOptions"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        v-if="stats?.segmentCounts?.length"
+        class="col-md-4"
+      >
+        <div class="card h-100">
+          <div class="card-body">
+            <h6 class="card-title mb-3">Activity Segments</h6>
+            <div style="height: 250px">
+              <Pie
+                :data="buildSegmentPieData(stats.segmentCounts)"
+                :options="pieOptions"
               />
             </div>
           </div>
