@@ -14,6 +14,11 @@ http {
 
   sendfile on;
   keepalive_timeout 65;
+  server_tokens off;
+
+  # --- Rate / connection limiting ---
+  limit_req_zone  $binary_remote_addr  zone=req_per_ip:10m  rate=5r/s;
+  limit_conn_zone $binary_remote_addr  zone=conn_per_ip:10m;
 
   # --- Enable Gzip ---
   gzip on;
@@ -104,6 +109,9 @@ http {
 
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_ciphers HIGH:!aNULL:!MD5;
+
+    limit_conn conn_per_ip 20;
+    limit_req  zone=req_per_ip burst=20 nodelay;
 
     # Security headers (set via Lua to apply to all locations including those with add_header)
     header_filter_by_lua_block {
