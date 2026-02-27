@@ -146,6 +146,12 @@ pnpm --filter backend db:psql
 
 Schema: `apps/backend/prisma/schema.prisma`
 
+### Running arbitrary SQL against dev database
+
+```bash
+docker compose exec db psql -U appuser -d app -c "<SQL>"
+```
+
 ### Database queries (Claude MCP)
 
 The `postgres` MCP server provides direct SQL access to the dev database during debugging. Prefer this instead of `docker exec` / `psql` commands for faster iteration.
