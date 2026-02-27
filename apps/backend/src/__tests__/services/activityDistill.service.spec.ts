@@ -4,12 +4,12 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 vi.mock('../../lib/prisma', () => ({
   prisma: {
     $queryRaw: vi.fn(),
-    userActivitySummary: {
+    profileActivitySummary: {
       findUnique: vi.fn(),
       upsert: vi.fn(),
       updateMany: vi.fn(),
     },
-    userSessionLog: {
+    profileSessionLog: {
       deleteMany: vi.fn(),
     },
   },
@@ -111,16 +111,16 @@ describe('distillActivitySegments', () => {
     vi.clearAllMocks()
   })
 
-  it('upserts summaries for users with session data', async () => {
+  it('upserts summaries for profiles with session data', async () => {
     const now = new Date()
     vi.useFakeTimers()
     vi.setSystemTime(now)
 
     mockedPrisma.$queryRaw.mockResolvedValue([
-      { userId: 'user1', activeDays28: 10, sessions28: 20, lastSessionAt: daysAgo(1, now) },
+      { profileId: 'profile1', activeDays28: 10, sessions28: 20, lastSessionAt: daysAgo(1, now) },
     ])
-    mockedPrisma.userActivitySummary.findUnique.mockResolvedValue({
-      userId: 'user1',
+    mockedPrisma.profileActivitySummary.findUnique.mockResolvedValue({
+      profileId: 'profile1',
       firstSeenAt: daysAgo(30, now),
       lastSeenAt: daysAgo(2, now),
       activeDays28: 8,
@@ -129,15 +129,15 @@ describe('distillActivitySegments', () => {
       demotionStreak: 0,
       segmentUpdatedAt: daysAgo(1, now),
     })
-    mockedPrisma.userActivitySummary.upsert.mockResolvedValue({} as any)
-    mockedPrisma.userActivitySummary.updateMany.mockResolvedValue({ count: 0 })
-    mockedPrisma.userSessionLog.deleteMany.mockResolvedValue({ count: 0 })
+    mockedPrisma.profileActivitySummary.upsert.mockResolvedValue({} as any)
+    mockedPrisma.profileActivitySummary.updateMany.mockResolvedValue({ count: 0 })
+    mockedPrisma.profileSessionLog.deleteMany.mockResolvedValue({ count: 0 })
 
     await distillActivitySegments()
 
-    expect(mockedPrisma.userActivitySummary.upsert).toHaveBeenCalledWith(
+    expect(mockedPrisma.profileActivitySummary.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { userId: 'user1' },
+        where: { profileId: 'profile1' },
         update: expect.objectContaining({
           activeDays28: 10,
           sessions28: 20,
@@ -150,22 +150,22 @@ describe('distillActivitySegments', () => {
     vi.useRealTimers()
   })
 
-  it('processes multiple users in a single batch', async () => {
+  it('processes multiple profiles in a single batch', async () => {
     const now = new Date()
     vi.useFakeTimers()
     vi.setSystemTime(now)
 
     mockedPrisma.$queryRaw.mockResolvedValue([
-      { userId: 'user1', activeDays28: 10, sessions28: 20, lastSessionAt: daysAgo(1, now) },
-      { userId: 'user2', activeDays28: 3, sessions28: 5, lastSessionAt: daysAgo(0, now) },
-      { userId: 'user3', activeDays28: 1, sessions28: 1, lastSessionAt: daysAgo(0, now) },
+      { profileId: 'profile1', activeDays28: 10, sessions28: 20, lastSessionAt: daysAgo(1, now) },
+      { profileId: 'profile2', activeDays28: 3, sessions28: 5, lastSessionAt: daysAgo(0, now) },
+      { profileId: 'profile3', activeDays28: 1, sessions28: 1, lastSessionAt: daysAgo(0, now) },
     ])
-    // user1: existing frequent user
-    // user2: no existing summary
-    // user3: no existing summary, firstSeen 1 day ago → new
-    mockedPrisma.userActivitySummary.findUnique
+    // profile1: existing frequent profile
+    // profile2: no existing summary
+    // profile3: no existing summary, firstSeen 1 day ago → new
+    mockedPrisma.profileActivitySummary.findUnique
       .mockResolvedValueOnce({
-        userId: 'user1',
+        profileId: 'profile1',
         firstSeenAt: daysAgo(30, now),
         lastSeenAt: daysAgo(2, now),
         activeDays28: 8,
@@ -176,33 +176,33 @@ describe('distillActivitySegments', () => {
       })
       .mockResolvedValueOnce(null)
       .mockResolvedValueOnce(null)
-    mockedPrisma.userActivitySummary.upsert.mockResolvedValue({} as any)
-    mockedPrisma.userActivitySummary.updateMany.mockResolvedValue({ count: 0 })
-    mockedPrisma.userSessionLog.deleteMany.mockResolvedValue({ count: 0 })
+    mockedPrisma.profileActivitySummary.upsert.mockResolvedValue({} as any)
+    mockedPrisma.profileActivitySummary.updateMany.mockResolvedValue({ count: 0 })
+    mockedPrisma.profileSessionLog.deleteMany.mockResolvedValue({ count: 0 })
 
     await distillActivitySegments()
 
-    // All three users should have been upserted
-    expect(mockedPrisma.userActivitySummary.upsert).toHaveBeenCalledTimes(3)
+    // All three profiles should have been upserted
+    expect(mockedPrisma.profileActivitySummary.upsert).toHaveBeenCalledTimes(3)
 
-    // user1: stays frequent (10 active days >= 8)
-    expect(mockedPrisma.userActivitySummary.upsert).toHaveBeenCalledWith(
+    // profile1: stays frequent (10 active days >= 8)
+    expect(mockedPrisma.profileActivitySummary.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { userId: 'user1' },
+        where: { profileId: 'profile1' },
         update: expect.objectContaining({ segment: 'frequent' }),
       })
     )
-    // user2: returning (3 active days, no existing summary → default dormant, promoted)
-    expect(mockedPrisma.userActivitySummary.upsert).toHaveBeenCalledWith(
+    // profile2: returning (3 active days, no existing summary → default dormant, promoted)
+    expect(mockedPrisma.profileActivitySummary.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { userId: 'user2' },
+        where: { profileId: 'profile2' },
         create: expect.objectContaining({ segment: 'returning' }),
       })
     )
-    // user3: returning (1 active day, lastSessionAt=today, firstSeenAt=today → new requires firstSeen within 3 days AND activeDays ≤ 2, but default segment is dormant so it promotes to returning)
-    expect(mockedPrisma.userActivitySummary.upsert).toHaveBeenCalledWith(
+    // profile3: returning (1 active day, lastSessionAt=today, firstSeenAt=today → new requires firstSeen within 3 days AND activeDays ≤ 2, but default segment is dormant so it promotes to returning)
+    expect(mockedPrisma.profileActivitySummary.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { userId: 'user3' },
+        where: { profileId: 'profile3' },
         create: expect.objectContaining({ segment: 'new' }),
       })
     )
@@ -212,12 +212,12 @@ describe('distillActivitySegments', () => {
 
   it('runs dormant sweep for stale summaries', async () => {
     mockedPrisma.$queryRaw.mockResolvedValue([])
-    mockedPrisma.userActivitySummary.updateMany.mockResolvedValue({ count: 2 })
-    mockedPrisma.userSessionLog.deleteMany.mockResolvedValue({ count: 0 })
+    mockedPrisma.profileActivitySummary.updateMany.mockResolvedValue({ count: 2 })
+    mockedPrisma.profileSessionLog.deleteMany.mockResolvedValue({ count: 0 })
 
     await distillActivitySegments()
 
-    expect(mockedPrisma.userActivitySummary.updateMany).toHaveBeenCalledWith(
+    expect(mockedPrisma.profileActivitySummary.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           segment: { not: 'dormant' },
@@ -232,12 +232,12 @@ describe('distillActivitySegments', () => {
 
   it('cleans up old session logs', async () => {
     mockedPrisma.$queryRaw.mockResolvedValue([])
-    mockedPrisma.userActivitySummary.updateMany.mockResolvedValue({ count: 0 })
-    mockedPrisma.userSessionLog.deleteMany.mockResolvedValue({ count: 5 })
+    mockedPrisma.profileActivitySummary.updateMany.mockResolvedValue({ count: 0 })
+    mockedPrisma.profileSessionLog.deleteMany.mockResolvedValue({ count: 5 })
 
     await distillActivitySegments()
 
-    expect(mockedPrisma.userSessionLog.deleteMany).toHaveBeenCalledWith(
+    expect(mockedPrisma.profileSessionLog.deleteMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { startedAt: { lt: expect.any(Date) } },
       })

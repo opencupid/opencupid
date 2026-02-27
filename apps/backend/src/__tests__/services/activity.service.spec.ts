@@ -11,7 +11,7 @@ vi.mock('../../lib/appconfig', () => ({
 // Mock prisma
 vi.mock('../../lib/prisma', () => ({
   prisma: {
-    userSessionLog: {
+    profileSessionLog: {
       updateMany: vi.fn(),
       create: vi.fn(),
     },
@@ -35,8 +35,8 @@ let redis: ReturnType<typeof createMockRedis>
 beforeEach(() => {
   vi.clearAllMocks()
   redis = createMockRedis()
-  mockedPrisma.userSessionLog.updateMany.mockResolvedValue({ count: 0 })
-  mockedPrisma.userSessionLog.create.mockResolvedValue({} as any)
+  mockedPrisma.profileSessionLog.updateMany.mockResolvedValue({ count: 0 })
+  mockedPrisma.profileSessionLog.create.mockResolvedValue({} as any)
   redis.set.mockResolvedValue('OK')
 })
 
@@ -44,19 +44,24 @@ describe('recordActivity', () => {
   it('creates a new session when no Redis key exists', async () => {
     redis.get.mockResolvedValue(null)
 
-    await recordActivity(redis as any, 'user1')
+    await recordActivity(redis as any, 'profile1')
 
-    expect(mockedPrisma.userSessionLog.updateMany).toHaveBeenCalledWith(
+    expect(mockedPrisma.profileSessionLog.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { userId: 'user1', endedAt: null },
+        where: { profileId: 'profile1', endedAt: null },
       })
     )
-    expect(mockedPrisma.userSessionLog.create).toHaveBeenCalledWith(
+    expect(mockedPrisma.profileSessionLog.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ userId: 'user1' }),
+        data: expect.objectContaining({ profileId: 'profile1' }),
       })
     )
-    expect(redis.set).toHaveBeenCalledWith('activity:last:user1', expect.any(String), 'EX', 86400)
+    expect(redis.set).toHaveBeenCalledWith(
+      'activity:last:profile1',
+      expect.any(String),
+      'EX',
+      86400
+    )
   })
 
   it('skips when Redis key is fresh (within gap)', async () => {
@@ -64,9 +69,9 @@ describe('recordActivity', () => {
     const tenMinutesAgo = String(Date.now() - 10 * 60 * 1000)
     redis.get.mockResolvedValue(tenMinutesAgo)
 
-    await recordActivity(redis as any, 'user1')
+    await recordActivity(redis as any, 'profile1')
 
-    expect(mockedPrisma.userSessionLog.create).not.toHaveBeenCalled()
+    expect(mockedPrisma.profileSessionLog.create).not.toHaveBeenCalled()
     expect(redis.set).not.toHaveBeenCalled()
   })
 
@@ -75,21 +80,21 @@ describe('recordActivity', () => {
     const thirtyFiveMinutesAgo = String(Date.now() - 35 * 60 * 1000)
     redis.get.mockResolvedValue(thirtyFiveMinutesAgo)
 
-    await recordActivity(redis as any, 'user1')
+    await recordActivity(redis as any, 'profile1')
 
-    expect(mockedPrisma.userSessionLog.updateMany).toHaveBeenCalled()
-    expect(mockedPrisma.userSessionLog.create).toHaveBeenCalled()
+    expect(mockedPrisma.profileSessionLog.updateMany).toHaveBeenCalled()
+    expect(mockedPrisma.profileSessionLog.create).toHaveBeenCalled()
     expect(redis.set).toHaveBeenCalled()
   })
 
   it('closes previous open session before starting a new one', async () => {
     redis.get.mockResolvedValue(null)
 
-    await recordActivity(redis as any, 'user1')
+    await recordActivity(redis as any, 'profile1')
 
     // updateMany should be called BEFORE create
-    const updateCall = mockedPrisma.userSessionLog.updateMany.mock.invocationCallOrder[0]
-    const createCall = mockedPrisma.userSessionLog.create.mock.invocationCallOrder[0]
+    const updateCall = mockedPrisma.profileSessionLog.updateMany.mock.invocationCallOrder[0]
+    const createCall = mockedPrisma.profileSessionLog.create.mock.invocationCallOrder[0]
     expect(updateCall).toBeLessThan(createCall)
   })
 })

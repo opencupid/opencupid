@@ -159,9 +159,6 @@ model User {
   pushSubscription PushSubscription[]
   isPushNotificationEnabled Boolean  @default(false)
 
-  // Activity tracking
-  sessionLogs     UserSessionLog[]
-  activitySummary UserActivitySummary?
 }
 
 model Profile {
@@ -227,6 +224,10 @@ model Profile {
 
   // Posts
   posts Post[]
+
+  // Activity tracking
+  sessionLogs     ProfileSessionLog[]
+  activitySummary ProfileActivitySummary?
 }
 
 model LocalizedProfileField {
@@ -410,19 +411,19 @@ model Post {
   @@index([isVisible, isDeleted])
 }
 
-model UserSessionLog {
+model ProfileSessionLog {
   id        String    @id @default(cuid())
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String
+  profile   Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId String
   startedAt DateTime  @default(now())
   endedAt   DateTime?
 
-  @@index([userId, startedAt])
+  @@index([profileId, startedAt])
 }
 
-model UserActivitySummary {
-  userId           String          @id
-  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+model ProfileActivitySummary {
+  profileId        String          @id
+  profile          Profile         @relation(fields: [profileId], references: [id], onDelete: Cascade)
   firstSeenAt      DateTime
   lastSeenAt       DateTime
   activeDays28     Int             @default(0)

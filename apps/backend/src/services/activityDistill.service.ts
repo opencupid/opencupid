@@ -68,15 +68,15 @@ export function applyHysteresis(
 }
 
 /**
- * Process a single user's session stats: look up existing summary,
+ * Process a single profile's session stats: look up existing summary,
  * compute segment with hysteresis, and upsert the result.
  */
-async function processUserStats(
-  row: { userId: string; activeDays28: number; sessions28: number; lastSessionAt: Date },
+async function processProfileStats(
+  row: { profileId: string; activeDays28: number; sessions28: number; lastSessionAt: Date },
   now: Date
 ): Promise<void> {
-  const existing = await prisma.userActivitySummary.findUnique({
-    where: { userId: row.userId },
+  const existing = await prisma.profileActivitySummary.findUnique({
+    where: { profileId: row.profileId },
   })
 
   const firstSeenAt = existing?.firstSeenAt ?? row.lastSessionAt
@@ -92,10 +92,10 @@ async function processUserStats(
   const { segment, demotionStreak } = applyHysteresis(currentSegment, rawSegment, currentStreak)
   const segmentChanged = segment !== currentSegment
 
-  await prisma.userActivitySummary.upsert({
-    where: { userId: row.userId },
+  await prisma.profileActivitySummary.upsert({
+    where: { profileId: row.profileId },
     create: {
-      userId: row.userId,
+      profileId: row.profileId,
       firstSeenAt,
       lastSeenAt,
       activeDays28: row.activeDays28,
@@ -116,39 +116,39 @@ async function processUserStats(
 }
 
 /**
- * Run the full distillation process for all users with recent activity.
+ * Run the full distillation process for all profiles with recent activity.
  */
 export async function distillActivitySegments(): Promise<void> {
   const now = new Date()
   const windowStart = new Date(now.getTime() - RETENTION_DAYS * 24 * 60 * 60 * 1000)
 
-  // 1. Aggregate session data for users with activity in the 28-day window.
+  // 1. Aggregate session data for profiles with activity in the 28-day window.
   //    Uses raw SQL for the DATE-distinct count which Prisma can't express natively.
   const stats: Array<{
-    userId: string
+    profileId: string
     activeDays28: number
     sessions28: number
     lastSessionAt: Date
   }> = await prisma.$queryRaw`
     SELECT
-      "userId",
+      "profileId",
       COUNT(DISTINCT DATE("startedAt"))::int AS "activeDays28",
       COUNT(*)::int AS "sessions28",
       MAX("startedAt") AS "lastSessionAt"
-    FROM "UserSessionLog"
+    FROM "ProfileSessionLog"
     WHERE "startedAt" >= ${windowStart}
-    GROUP BY "userId"
+    GROUP BY "profileId"
   `
 
-  // 2. Process users in batches (concurrent within batch, sequential between batches)
+  // 2. Process profiles in batches (concurrent within batch, sequential between batches)
   for (let i = 0; i < stats.length; i += BATCH_SIZE) {
     const batch = stats.slice(i, i + BATCH_SIZE)
-    await Promise.all(batch.map((row) => processUserStats(row, now)))
+    await Promise.all(batch.map((row) => processProfileStats(row, now)))
   }
 
-  // 3. Dormant sweep: mark users whose lastSeenAt is stale and who aren't already dormant
+  // 3. Dormant sweep: mark profiles whose lastSeenAt is stale and who aren't already dormant
   const dormantThreshold = new Date(now.getTime() - DORMANT_THRESHOLD_DAYS * 24 * 60 * 60 * 1000)
-  await prisma.userActivitySummary.updateMany({
+  await prisma.profileActivitySummary.updateMany({
     where: {
       lastSeenAt: { lt: dormantThreshold },
       segment: { not: 'dormant' },
@@ -161,7 +161,7 @@ export async function distillActivitySegments(): Promise<void> {
   })
 
   // 4. Cleanup: delete session logs older than the retention window
-  await prisma.userSessionLog.deleteMany({
+  await prisma.profileSessionLog.deleteMany({
     where: { startedAt: { lt: windowStart } },
   })
 }
