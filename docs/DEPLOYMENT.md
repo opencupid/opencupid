@@ -8,12 +8,11 @@ The production server requires **Docker** (with Compose v2) installed.
 
 The app uses multiple domain names, configured in `.env`:
 
-| Variable          | Example             | Purpose                                            |
-| ----------------- | ------------------- | -------------------------------------------------- |
-| `DOMAIN`          | `example.org`       | Main app (frontend + API)                          |
-| `ADMIN_DOMAIN`    | `admin.example.org` | Admin panel (mTLS-protected)                       |
-| `LISTMONK_DOMAIN` | `lists.example.org` | Public Listmonk URLs (subscription/campaign pages) |
-| `JITSI_DOMAIN`    | `meet.example.org`  | Jitsi Meet video calls (proxied through ingress)   |
+| Variable       | Example             | Purpose                                          |
+| -------------- | ------------------- | ------------------------------------------------ |
+| `DOMAIN`       | `example.org`       | Main app (frontend + API)                        |
+| `ADMIN_DOMAIN` | `admin.example.org` | Admin panel (mTLS-protected)                     |
+| `JITSI_DOMAIN` | `meet.example.org`  | Jitsi Meet video calls (proxied through ingress) |
 
 ### DNS setup
 
@@ -23,7 +22,6 @@ All domains must resolve to the production server. A typical configuration:
 | ------------------- | ----- | ------------- |
 | `example.org`       | A     | `<server-ip>` |
 | `admin.example.org` | CNAME | `example.org` |
-| `lists.example.org` | CNAME | `example.org` |
 | `meet.example.org`  | CNAME | `example.org` |
 
 The root domain uses an A record pointing to the server's public IP. All subdomains use CNAME records pointing to the root domain.
@@ -41,7 +39,7 @@ cp .env.example .env
 
 # edit .env — at minimum set:
 #   COMPOSE_FILE=docker-compose.production.yml
-#   DOMAIN, ADMIN_DOMAIN, LISTMONK_DOMAIN, EMAIL
+#   DOMAIN, ADMIN_DOMAIN, EMAIL
 #   POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB
 #   JWT_SECRET, AUTH_IMG_HMAC_SECRET
 #   JVB_ADVERTISE_IPS (public IP of the host)
@@ -91,7 +89,6 @@ pnpm --filter backend prisma:generate            # Regenerate Prisma client
 ```bash
 pnpm --filter backend images:reprocess           # Reprocess profile images
 pnpm --filter backend tags:translate             # Translate tags via DeepL
-pnpm --filter backend listmonk:migrate           # One-time user sync to Listmonk
 ```
 
 ## Seeding database
@@ -101,47 +98,6 @@ Create the initial set of interest tags:
 ```bash
 pnpm --filter backend prisma:seed
 ```
-
-## Listmonk Configuration
-
-### Creating an API Token
-
-The backend uses Listmonk's custom token authentication to communicate with the API. To create an API token:
-
-1. **Access Listmonk Admin UI**: Navigate to `https://<ADMIN_DOMAIN>/listmonk/` and log in with your admin credentials
-2. **Create API User**: Go to **Settings** → **Users** → Click **+ New**
-3. **Configure User**:
-   - Type: Select "API" user type
-   - Username: Choose a username (e.g., `api_user`)
-   - Role: Assign appropriate permissions (typically "Manager" or create a custom role)
-4. **Save and Copy Token**: When you save, Listmonk will display the API token **once**. Copy both the username and token immediately.
-5. **Update Configuration**: Set `LISTMONK_API_TOKEN` in your `.env` file in the format `username:token`:
-   ```
-   LISTMONK_API_TOKEN=api_user:BDqyWm3XX5jgEMrSqL5cRAt9VjGg23aU
-   ```
-
-**Note**:
-
-- The token is only shown once during creation. If you lose it, create a new API user.
-- The format is `Authorization: token username:token_value` (lowercase "token")
-- Do NOT use the admin username/password — create a dedicated API user
-
-### Listmonk Migration
-
-After deploying the Listmonk integration, run the one-time migration script to sync existing users to Listmonk:
-
-```bash
-pnpm --filter backend listmonk:migrate
-```
-
-This will:
-
-1. Find all users with email addresses
-2. Sync them to Listmonk via the API
-3. Set their subscription status based on the `newsletterOptIn` flag
-4. Configure their language preference
-
-The script is idempotent and can be safely run multiple times.
 
 ## Admin Panel
 

@@ -568,6 +568,38 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
     }
   })
 
+  // GET /admin/subscribers — Subscriber data for external newsletter sync
+  fastify.get('/subscribers', async (_req, reply) => {
+    try {
+      const users = await prisma.user.findMany({
+        where: {
+          email: { not: null },
+          profile: { isActive: true },
+        },
+        select: {
+          id: true,
+          email: true,
+          language: true,
+          newsletterOptIn: true,
+          profile: { select: { publicName: true } },
+        },
+      })
+
+      const subscribers = users.map((u) => ({
+        id: u.id,
+        email: u.email,
+        name: u.profile?.publicName ?? '',
+        language: u.language ?? 'en',
+        newsletterOptIn: u.newsletterOptIn,
+      }))
+
+      return reply.code(200).send({ success: true, subscribers })
+    } catch (err) {
+      fastify.log.error({ err }, 'Error fetching subscribers')
+      return sendError(reply, 500, 'Failed to fetch subscribers')
+    }
+  })
+
   // GET /admin/profiles/:id — Profile detail
   fastify.get('/profiles/:id', async (req, reply) => {
     try {
