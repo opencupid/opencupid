@@ -1,6 +1,6 @@
 import { FastifyPluginAsync } from 'fastify'
 import multipart from '@fastify/multipart'
-import { sendError } from '../helpers'
+import { rateLimitConfig, sendError } from '../helpers'
 import { MessageService, cleanMessageForNotification } from '@/services/messaging.service'
 import { WebPushService } from '@/services/webpush.service'
 
@@ -155,186 +155,32 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
     }
   )
 
-  fastify.post('/message', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-    const senderProfileId = req.session.profileId
-    if (!senderProfileId) return sendError(reply, 401, 'Sender ID not found.')
+  fastify.post(
+    '/message',
+    { onRequest: [fastify.authenticate], config: rateLimitConfig(fastify, '1 minute', 30) },
+    async (req, reply) => {
+      const senderProfileId = req.session.profileId
+      if (!senderProfileId) return sendError(reply, 401, 'Sender ID not found.')
 
-    const body = SendMessagePayloadSchema.safeParse(req.body)
-    if (!body.success) return sendError(reply, 401, 'Invalid parameters')
+      const body = SendMessagePayloadSchema.safeParse(req.body)
+      if (!body.success) return sendError(reply, 401, 'Invalid parameters')
 
-    const { profileId, content } = body.data
-
-    try {
-      const { convoId, message } = await fastify.prisma.$transaction(async (tx) => {
-        return await messageService.sendOrStartConversation(
-          tx,
-          senderProfileId,
-          profileId,
-          content,
-          'text/plain'
-        )
-      })
-
-      const conversation = await messageService.getConversationSummary(convoId, senderProfileId)
-      if (conversation?.conversation.status !== 'INITIATED') {
-        await interactionService.markMatchAsSeen(senderProfileId, profileId)
-      }
-
-      if (!conversation) {
-        throw new Error('Conversation summary not found')
-      }
-
-      const messageDTO = mapMessageDTO(message, conversation)
-
-      const messageWithMine = { ...messageDTO, isMine: true }
-
-      const response: SendMessageResponse = {
-        success: true,
-        conversation: mapConversationParticipantToSummary(conversation, senderProfileId),
-        message: messageWithMine,
-      }
-
-      reply.code(200).send(response)
-
-      // Broadcast the new message to the recipient's WebSocket connections
-      const isWsBroadcasted = broadcastToProfile(fastify, profileId, {
-        type: 'ws:new_message',
-        payload: messageDTO,
-      })
-
-      if (!isWsBroadcasted) {
-        if (WebPushService.isWebPushConfigured()) {
-          webPushService.send(messageDTO, profileId).catch((err) => {
-            fastify.log.error(err, 'Web push failed')
-          })
-        }
-        await notifierService.notifyProfile(profileId, 'new_message', {
-          sender: messageDTO.sender.publicName,
-          message: cleanMessageForNotification(messageDTO.content, 100),
-          link: `${appConfig.FRONTEND_URL}/inbox`,
-        })
-      }
-    } catch (error: any) {
-      return sendError(reply, 403, error)
-    }
-  })
-
-  // Voice message upload endpoint
-  fastify.post('/voice', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-    const senderProfileId = req.session.profileId
-    if (!senderProfileId) return sendError(reply, 401, 'Sender ID not found.')
-
-    let fileBuffer: Buffer | null = null
-    let fileMeta: { filename: string; mimetype: string; fieldname: string } | null = null
-    let fields: any = {}
-
-    try {
-      // Process multipart form data
-      const parts = req.parts()
-
-      for await (const part of parts) {
-        if (part.type === 'file') {
-          fileBuffer = await part.toBuffer() // consumes stream, unblocks next parts
-          fileMeta = { filename: part.filename, mimetype: part.mimetype, fieldname: part.fieldname }
-        } else {
-          // Handle form fields
-          fields[part.fieldname] = part.value
-        }
-      }
-
-      if (!fileBuffer || !fileMeta) {
-        return sendError(reply, 400, 'No voice file provided')
-      }
-
-      // fileMeta is guaranteed non-null after the check above; bind to a const
-      // so TypeScript narrows the type for the rest of the scope.
-      const meta = fileMeta
-
-      // Validate voice message payload
-      const payload = SendVoiceMessagePayloadSchema.safeParse({
-        profileId: fields.profileId,
-        content: fields.content || '',
-        messageType: 'audio/voice',
-        duration: Number(fields.duration) || 0,
-      })
-
-      if (!payload.success) {
-        return sendError(reply, 400, 'Invalid voice message parameters')
-      }
-
-      // Validate file type (strip codec suffix before allowlist check)
-      const baseMimeType = meta.mimetype.split(';')[0].trim()
-      const allowedMimeTypes = [
-        'audio/mpeg',
-        'audio/mp4',
-        'audio/wav',
-        'audio/wave',
-        'audio/webm',
-        'audio/ogg',
-      ]
-      if (!allowedMimeTypes.includes(baseMimeType)) {
-        return sendError(reply, 400, 'Invalid audio file type')
-      }
-
-      // Validate duration
-      if (payload.data.duration > appConfig.VOICE_MESSAGE_MAX_DURATION) {
-        return sendError(
-          reply,
-          400,
-          `Voice message too long. Maximum duration is ${appConfig.VOICE_MESSAGE_MAX_DURATION} seconds`
-        )
-      }
-
-      // Create voice directory if it doesn't exist
-      const voiceDir = path.join(appConfig.MEDIA_UPLOAD_DIR, MEDIA_SUBDIR.VOICE, senderProfileId)
-      await fsPromises.mkdir(voiceDir, { recursive: true })
-
-      // Generate unique filename
-      const fileExtension = path.extname(meta.filename) || '.webm'
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 11)}${fileExtension}`
-      const filePath = path.join(voiceDir, fileName)
-
-      // Save the buffered file to disk
-      await fsPromises.writeFile(filePath, fileBuffer)
-
-      // Transcode WAV to MP3 for smaller size and universal browser compatibility
-      let finalPath = filePath
-      let finalFileName = fileName
-      let finalMimeType = meta.mimetype
-      let finalSize: number
-
-      if (baseMimeType === 'audio/wav' || baseMimeType === 'audio/wave') {
-        const result = await transcodeToMp3(filePath)
-        finalPath = result.path
-        finalFileName = path.basename(result.path)
-        finalMimeType = 'audio/mpeg'
-        finalSize = result.size
-      } else {
-        const stats = await fsPromises.stat(filePath)
-        finalSize = stats.size
-      }
+      const { profileId, content } = body.data
 
       try {
-        const { convoId, message } = await fastify.prisma.$transaction(async (tx) => {
+        const { convoId, message, isDuplicate } = await fastify.prisma.$transaction(async (tx) => {
           return await messageService.sendOrStartConversation(
             tx,
             senderProfileId,
-            payload.data.profileId,
-            payload.data.content,
-            'audio/voice',
-            {
-              filePath: `${MEDIA_SUBDIR.VOICE}/${senderProfileId}/${finalFileName}`,
-              mimeType: finalMimeType,
-              fileSize: finalSize,
-              duration: payload.data.duration,
-            }
+            profileId,
+            content,
+            'text/plain'
           )
         })
 
         const conversation = await messageService.getConversationSummary(convoId, senderProfileId)
-
-        if (conversation?.conversation.status !== 'INITIATED') {
-          await interactionService.markMatchAsSeen(senderProfileId, payload.data.profileId)
+        if (!isDuplicate && conversation?.conversation.status !== 'INITIATED') {
+          await interactionService.markMatchAsSeen(senderProfileId, profileId)
         }
 
         if (!conversation) {
@@ -342,6 +188,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
         }
 
         const messageDTO = mapMessageDTO(message, conversation)
+
         const messageWithMine = { ...messageDTO, isMine: true }
 
         const response: SendMessageResponse = {
@@ -352,39 +199,210 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
 
         reply.code(200).send(response)
 
-        // Broadcast the new voice message to the recipient's WebSocket connections
-        const isWsBroadcasted = broadcastToProfile(fastify, payload.data.profileId, {
-          type: 'ws:new_message',
-          payload: messageDTO,
-        })
+        if (!isDuplicate) {
+          // Broadcast the new message to the recipient's WebSocket connections
+          const isWsBroadcasted = broadcastToProfile(fastify, profileId, {
+            type: 'ws:new_message',
+            payload: messageDTO,
+          })
 
-        if (!isWsBroadcasted) {
-          if (WebPushService.isWebPushConfigured()) {
-            webPushService.send(messageDTO, payload.data.profileId).catch((err) => {
-              fastify.log.error(err, 'Web push failed')
+          if (!isWsBroadcasted) {
+            if (WebPushService.isWebPushConfigured()) {
+              webPushService.send(messageDTO, profileId).catch((err) => {
+                fastify.log.error(err, 'Web push failed')
+              })
+            }
+            await notifierService.notifyProfile(profileId, 'new_message', {
+              sender: messageDTO.sender.publicName,
+              message: cleanMessageForNotification(messageDTO.content, 100),
+              link: `${appConfig.FRONTEND_URL}/inbox`,
             })
           }
-          const recipientProfile = await fastify.prisma.profile.findUnique({
-            where: { id: payload.data.profileId },
-            select: { user: { select: { language: true } } },
-          })
-          const t = i18next.getFixedT(recipientProfile?.user?.language || 'en')
-          await notifierService.notifyProfile(payload.data.profileId, 'new_message', {
-            sender: messageDTO.sender.publicName,
-            message: t('notifications.voice_message_sent'),
-            link: `${appConfig.FRONTEND_URL}/inbox`,
-          })
         }
       } catch (error: any) {
-        // Clean up file if message creation fails
-        await fsPromises.unlink(finalPath).catch(() => {})
         return sendError(reply, 403, error)
       }
-    } catch (err: any) {
-      fastify.log.warn('Voice upload error:', err)
-      return sendError(reply, 400, 'Failed to upload voice message')
     }
-  })
+  )
+
+  // Voice message upload endpoint
+  fastify.post(
+    '/voice',
+    { onRequest: [fastify.authenticate], config: rateLimitConfig(fastify, '1 minute', 10) },
+    async (req, reply) => {
+      const senderProfileId = req.session.profileId
+      if (!senderProfileId) return sendError(reply, 401, 'Sender ID not found.')
+
+      let fileBuffer: Buffer | null = null
+      let fileMeta: { filename: string; mimetype: string; fieldname: string } | null = null
+      let fields: any = {}
+
+      try {
+        // Process multipart form data
+        const parts = req.parts()
+
+        for await (const part of parts) {
+          if (part.type === 'file') {
+            fileBuffer = await part.toBuffer() // consumes stream, unblocks next parts
+            fileMeta = {
+              filename: part.filename,
+              mimetype: part.mimetype,
+              fieldname: part.fieldname,
+            }
+          } else {
+            // Handle form fields
+            fields[part.fieldname] = part.value
+          }
+        }
+
+        if (!fileBuffer || !fileMeta) {
+          return sendError(reply, 400, 'No voice file provided')
+        }
+
+        // fileMeta is guaranteed non-null after the check above; bind to a const
+        // so TypeScript narrows the type for the rest of the scope.
+        const meta = fileMeta
+
+        // Validate voice message payload
+        const payload = SendVoiceMessagePayloadSchema.safeParse({
+          profileId: fields.profileId,
+          content: fields.content || '',
+          messageType: 'audio/voice',
+          duration: Number(fields.duration) || 0,
+        })
+
+        if (!payload.success) {
+          return sendError(reply, 400, 'Invalid voice message parameters')
+        }
+
+        // Validate file type (strip codec suffix before allowlist check)
+        const baseMimeType = meta.mimetype.split(';')[0].trim()
+        const allowedMimeTypes = [
+          'audio/mpeg',
+          'audio/mp4',
+          'audio/wav',
+          'audio/wave',
+          'audio/webm',
+          'audio/ogg',
+        ]
+        if (!allowedMimeTypes.includes(baseMimeType)) {
+          return sendError(reply, 400, 'Invalid audio file type')
+        }
+
+        // Validate duration
+        if (payload.data.duration > appConfig.VOICE_MESSAGE_MAX_DURATION) {
+          return sendError(
+            reply,
+            400,
+            `Voice message too long. Maximum duration is ${appConfig.VOICE_MESSAGE_MAX_DURATION} seconds`
+          )
+        }
+
+        // Create voice directory if it doesn't exist
+        const voiceDir = path.join(appConfig.MEDIA_UPLOAD_DIR, MEDIA_SUBDIR.VOICE, senderProfileId)
+        await fsPromises.mkdir(voiceDir, { recursive: true })
+
+        // Generate unique filename
+        const fileExtension = path.extname(meta.filename) || '.webm'
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 11)}${fileExtension}`
+        const filePath = path.join(voiceDir, fileName)
+
+        // Save the buffered file to disk
+        await fsPromises.writeFile(filePath, fileBuffer)
+
+        // Transcode WAV to MP3 for smaller size and universal browser compatibility
+        let finalPath = filePath
+        let finalFileName = fileName
+        let finalMimeType = meta.mimetype
+        let finalSize: number
+
+        if (baseMimeType === 'audio/wav' || baseMimeType === 'audio/wave') {
+          const result = await transcodeToMp3(filePath)
+          finalPath = result.path
+          finalFileName = path.basename(result.path)
+          finalMimeType = 'audio/mpeg'
+          finalSize = result.size
+        } else {
+          const stats = await fsPromises.stat(filePath)
+          finalSize = stats.size
+        }
+
+        try {
+          const { convoId, message, isDuplicate } = await fastify.prisma.$transaction(
+            async (tx) => {
+              return await messageService.sendOrStartConversation(
+                tx,
+                senderProfileId,
+                payload.data.profileId,
+                payload.data.content,
+                'audio/voice',
+                {
+                  filePath: `${MEDIA_SUBDIR.VOICE}/${senderProfileId}/${finalFileName}`,
+                  mimeType: finalMimeType,
+                  fileSize: finalSize,
+                  duration: payload.data.duration,
+                }
+              )
+            }
+          )
+
+          const conversation = await messageService.getConversationSummary(convoId, senderProfileId)
+
+          if (!isDuplicate && conversation?.conversation.status !== 'INITIATED') {
+            await interactionService.markMatchAsSeen(senderProfileId, payload.data.profileId)
+          }
+
+          if (!conversation) {
+            throw new Error('Conversation summary not found')
+          }
+
+          const messageDTO = mapMessageDTO(message, conversation)
+          const messageWithMine = { ...messageDTO, isMine: true }
+
+          const response: SendMessageResponse = {
+            success: true,
+            conversation: mapConversationParticipantToSummary(conversation, senderProfileId),
+            message: messageWithMine,
+          }
+
+          reply.code(200).send(response)
+
+          if (!isDuplicate) {
+            // Broadcast the new voice message to the recipient's WebSocket connections
+            const isWsBroadcasted = broadcastToProfile(fastify, payload.data.profileId, {
+              type: 'ws:new_message',
+              payload: messageDTO,
+            })
+
+            if (!isWsBroadcasted) {
+              if (WebPushService.isWebPushConfigured()) {
+                webPushService.send(messageDTO, payload.data.profileId).catch((err) => {
+                  fastify.log.error(err, 'Web push failed')
+                })
+              }
+              const recipientProfile = await fastify.prisma.profile.findUnique({
+                where: { id: payload.data.profileId },
+                select: { user: { select: { language: true } } },
+              })
+              const t = i18next.getFixedT(recipientProfile?.user?.language || 'en')
+              await notifierService.notifyProfile(payload.data.profileId, 'new_message', {
+                sender: messageDTO.sender.publicName,
+                message: t('notifications.voice_message_sent'),
+                link: `${appConfig.FRONTEND_URL}/inbox`,
+              })
+            }
+          }
+        } catch (error: any) {
+          // Clean up file if message creation fails
+          await fsPromises.unlink(finalPath).catch(() => {})
+          return sendError(reply, 403, error)
+        }
+      } catch (err: any) {
+        fastify.log.warn('Voice upload error:', err)
+        return sendError(reply, 400, 'Failed to upload voice message')
+      }
+    }
+  )
 }
 
 export default messageRoutes

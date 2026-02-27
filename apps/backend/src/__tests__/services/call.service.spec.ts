@@ -99,9 +99,12 @@ describe('CallService', () => {
   })
 
   describe('insertMissedCallMessage', () => {
-    it('creates a missed call message', async () => {
+    it('creates a missed call message and returns isDuplicate: false', async () => {
       const tx: any = {
-        message: { create: vi.fn().mockResolvedValue({ id: 'm1' }) },
+        message: {
+          findFirst: vi.fn().mockResolvedValue(null), // no recent duplicate
+          create: vi.fn().mockResolvedValue({ id: 'm1' }),
+        },
       }
       const result = await service.insertMissedCallMessage(tx, 'c1', 'caller')
       expect(tx.message.create).toHaveBeenCalledWith({
@@ -112,7 +115,22 @@ describe('CallService', () => {
           messageType: 'call/missed',
         },
       })
-      expect(result.id).toBe('m1')
+      expect(result.message.id).toBe('m1')
+      expect(result.isDuplicate).toBe(false)
+    })
+
+    it('returns existing message and isDuplicate: true for recent missed call', async () => {
+      const existingMsg = { id: 'm-existing', conversationId: 'c1', senderId: 'caller' }
+      const tx: any = {
+        message: {
+          findFirst: vi.fn().mockResolvedValue(existingMsg), // recent duplicate found
+          create: vi.fn(),
+        },
+      }
+      const result = await service.insertMissedCallMessage(tx, 'c1', 'caller')
+      expect(result.message.id).toBe('m-existing')
+      expect(result.isDuplicate).toBe(true)
+      expect(tx.message.create).not.toHaveBeenCalled()
     })
   })
 

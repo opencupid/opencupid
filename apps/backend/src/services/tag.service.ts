@@ -1,4 +1,5 @@
 import slugify from 'slugify'
+import { Prisma } from '@prisma/client'
 import { prisma } from '../lib/prisma'
 import { Tag } from '@zod/generated'
 import { CreateTagInput, type PopularTag } from '@zod/tag/tag.dto'
@@ -59,24 +60,40 @@ export class TagService {
 
   public async create(locale: string, data: CreateTagInput): Promise<TagWithTranslations> {
     const slug = slugify(data.name, { lower: true, strict: true })
-    const tag = await prisma.tag.create({
-      data: {
-        name: data.name,
-        slug,
-        createdBy: data.createdBy,
-        originalLocale: data.originalLocale ?? locale,
-        isApproved: true,
-        isUserCreated: data.isUserCreated,
-        translations: {
-          create: {
-            locale,
-            name: data.name,
+    try {
+      const tag = await prisma.tag.create({
+        data: {
+          name: data.name,
+          slug,
+          createdBy: data.createdBy,
+          originalLocale: data.originalLocale ?? locale,
+          isApproved: true,
+          isUserCreated: data.isUserCreated,
+          translations: {
+            create: {
+              locale,
+              name: data.name,
+            },
           },
         },
-      },
-      include: tagTranslationsInclude(locale),
-    })
-    return tag
+        include: tagTranslationsInclude(locale),
+      })
+      return tag
+    } catch (err) {
+      // P2002 = unique constraint violation on slug or name.
+      // Return the existing tag instead of failing — makes creation idempotent.
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+        const existing = await prisma.tag.findFirst({
+          where: {
+            OR: [{ slug }, { name: data.name }],
+            isDeleted: false,
+          },
+          include: tagTranslationsInclude(locale),
+        })
+        if (existing) return existing
+      }
+      throw err
+    }
   }
 
   public async update(id: string, data: Tag): Promise<Tag> {

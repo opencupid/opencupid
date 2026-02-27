@@ -114,12 +114,15 @@ describe('POST /:conversationId/decline', () => {
       ],
     })
     mockCallService.insertMissedCallMessage.mockResolvedValue({
-      id: 'msg-1',
-      conversationId: 'ck1234567890abcd12345678',
-      senderId: 'p2',
-      content: 'Missed call',
-      messageType: 'call/missed',
-      createdAt: new Date(),
+      message: {
+        id: 'msg-1',
+        conversationId: 'ck1234567890abcd12345678',
+        senderId: 'p2',
+        content: 'Missed call',
+        messageType: 'call/missed',
+        createdAt: new Date(),
+      },
+      isDuplicate: false,
     })
     fastify.prisma.$transaction = vi.fn((fn: any) => fn({}))
 
@@ -132,6 +135,45 @@ describe('POST /:conversationId/decline', () => {
     )
     expect(reply.statusCode).toBe(200)
     expect(mockCallService.insertMissedCallMessage).toHaveBeenCalled()
+  })
+
+  it('skips WS broadcast when isDuplicate is true', async () => {
+    const { broadcastToProfile } = await import('../../utils/wsUtils')
+    const handler = fastify.routes['POST /:conversationId/decline']
+    fastify.prisma.conversation.findUnique = vi.fn().mockResolvedValue({
+      id: 'ck1234567890abcd12345678',
+      participants: [
+        { profileId: 'p1', profile: { id: 'p1', publicName: 'Alice', profileImages: [] } },
+        { profileId: 'p2', profile: { id: 'p2', publicName: 'Bob', profileImages: [] } },
+      ],
+    })
+    mockCallService.insertMissedCallMessage.mockResolvedValue({
+      message: {
+        id: 'msg-1',
+        conversationId: 'ck1234567890abcd12345678',
+        senderId: 'p2',
+        content: 'Missed call',
+        messageType: 'call/missed',
+        createdAt: new Date(),
+      },
+      isDuplicate: true,
+    })
+    fastify.prisma.$transaction = vi.fn((fn: any) => fn({}))
+    ;(broadcastToProfile as any).mockClear()
+
+    await handler(
+      {
+        session: { profileId: 'p1' },
+        params: { conversationId: 'ck1234567890abcd12345678' },
+      } as any,
+      reply as any
+    )
+    expect(reply.statusCode).toBe(200)
+    // broadcastToProfile is called once for ws:call_declined but NOT for ws:new_message
+    const newMessageCalls = (broadcastToProfile as any).mock.calls.filter(
+      (c: any) => c[2]?.type === 'ws:new_message'
+    )
+    expect(newMessageCalls).toHaveLength(0)
   })
 })
 
@@ -146,12 +188,15 @@ describe('POST /:conversationId/cancel', () => {
       ],
     })
     mockCallService.insertMissedCallMessage.mockResolvedValue({
-      id: 'msg-1',
-      conversationId: 'ck1234567890abcd12345678',
-      senderId: 'p1',
-      content: 'Missed call',
-      messageType: 'call/missed',
-      createdAt: new Date(),
+      message: {
+        id: 'msg-1',
+        conversationId: 'ck1234567890abcd12345678',
+        senderId: 'p1',
+        content: 'Missed call',
+        messageType: 'call/missed',
+        createdAt: new Date(),
+      },
+      isDuplicate: false,
     })
     fastify.prisma.$transaction = vi.fn((fn: any) => fn({}))
 
