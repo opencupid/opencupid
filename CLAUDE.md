@@ -166,7 +166,7 @@ gh pr create
 
 ## CI workflow
 
-Only watch CI when **finalizing** a PR (all work done, ready for review/merge). Always watch in the background, do not wait in foreground.  Do NOT watch CI after every intermediate push — it wastes time. When finalizing:
+Only watch CI when **finalizing** a PR (all work done, ready for review/merge). Always watch in the background, do not wait in foreground. Do NOT watch CI after every intermediate push — it wastes time. When finalizing:
 
 ```bash
 gh run list --limit 1
@@ -269,37 +269,11 @@ Uses Prettier (config: `prettier.config.mjs`).
 
 When storage formats, path conventions, or data schemas change, always migrate the existing data to match the new format. Never add backwards-compatibility shims, fallback paths, or conditional logic to handle legacy data alongside new data. Fix the data, not the code.
 
-## Development Guidelines
+## Coding Guidelines
 
 Development guidelines and best practices for this project.
 
-### SOLID Principles
-
-Five design principles that make software more maintainable, flexible, and scalable. Always adhere to these.
-
-## DRY Principle (Don't Repeat Yourself)
-
-- Extract repeated UI patterns into reusable components
-- Never hardcode a value more than once
-- Separate business logic from UI components
-- Create utility functions for common operations
-
-## KISS Principle (Keep It Simple, Stupid)
-
-- Write self-explanatory code with clear variable/function names
-- Avoid over-engineering simple problems
-- Minimize external dependencies
-- Break down complex widgets into smaller, manageable pieces
-- Start simple, add complexity only when necessary
-
----
-
-## YAGNI Principle (You Aren't Gonna Need It)
-
-- Don't implement functionality until it's actually needed.
-- Resist the urge to build features "just in case" they might be useful later
-- Focus on current requirements, not hypothetical future needs
-- Don't create abstract layers for one implementation
-- Avoid premature optimization before measuring performance
-- Don't build configuration systems until you need configurability
-- Wait for actual use cases before adding flexibility
+- always adhere to SOLID Principles (DRY, KISS, YAGNI)
+- avoid over-engineering - always make an effort to find the simplest solution and be on the lookup for opportunities to simplify code
+- always try to use stock solutions - prefer integrating a mature 3rd party library instead of reimplementing the wheel. 
+- watch out for stinky code and flag if you see such
