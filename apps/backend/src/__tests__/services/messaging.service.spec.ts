@@ -145,6 +145,49 @@ describe('MessageService.sendOrStartConversation dedup', () => {
     expect(result.message.id).toBe('m-new')
     expect(tx.message.create).toHaveBeenCalled()
   })
+
+  it('skips dedup for non-text messages (voice)', async () => {
+    const newMsg = {
+      id: 'm-voice',
+      conversationId: 'c1',
+      senderId: 'sender',
+      content: '',
+      messageType: 'audio/voice',
+      createdAt: new Date(),
+      sender: { id: 'sender', publicName: 'Test', profileImages: [] },
+      attachment: null,
+    }
+
+    const tx: any = {
+      conversation: {
+        findUnique: vi.fn().mockResolvedValue({
+          id: 'c1',
+          status: 'ACCEPTED',
+          initiatorProfileId: 'other',
+          profileAId: 'recipient',
+          profileBId: 'sender',
+        }),
+        update: vi.fn(),
+      },
+      conversationParticipant: {},
+      message: {
+        findFirst: vi.fn(),
+        create: vi.fn().mockResolvedValue(newMsg),
+      },
+    }
+
+    const result = await service.sendOrStartConversation(
+      tx,
+      'sender',
+      'recipient',
+      '',
+      'audio/voice',
+      { filePath: 'voice/test.opus', mimeType: 'audio/ogg', fileSize: 1000, duration: 5 }
+    )
+    expect(result.isDuplicate).toBe(false)
+    expect(tx.message.findFirst).not.toHaveBeenCalled()
+    expect(tx.message.create).toHaveBeenCalled()
+  })
 })
 
 describe('MessageService.listMessagesForConversation', () => {

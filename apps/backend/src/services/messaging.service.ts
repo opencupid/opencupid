@@ -254,19 +254,23 @@ export class MessageService {
 
     const convo = await this.findOrCreateConversation(tx, profileAId, profileBId, senderProfileId)
 
-    // Dedup: check for identical message within a 5-second window
-    const fiveSecondsAgo = new Date(Date.now() - 5000)
-    const duplicate = await tx.message.findFirst({
-      where: {
-        conversationId: convo.id,
-        senderId: senderProfileId,
-        content: cleanContent,
-        messageType,
-        createdAt: { gte: fiveSecondsAgo },
-      },
-      include: sendInclude,
-    })
-    if (duplicate) return { convoId: convo.id, message: duplicate, isDuplicate: true }
+    // Dedup: check for identical text message within a 5-second window.
+    // Scoped to text-only — non-text messages (voice, etc.) have empty content
+    // so distinct uploads would incorrectly match each other.
+    if (messageType === 'text/plain' && !attachmentData) {
+      const fiveSecondsAgo = new Date(Date.now() - 5000)
+      const duplicate = await tx.message.findFirst({
+        where: {
+          conversationId: convo.id,
+          senderId: senderProfileId,
+          content: cleanContent,
+          messageType,
+          createdAt: { gte: fiveSecondsAgo },
+        },
+        include: sendInclude,
+      })
+      if (duplicate) return { convoId: convo.id, message: duplicate, isDuplicate: true }
+    }
 
     const message = await tx.message.create({
       data: {

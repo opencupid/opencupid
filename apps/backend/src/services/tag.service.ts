@@ -80,9 +80,14 @@ export class TagService {
       })
       return tag
     } catch (err) {
+      // P2002 = unique constraint violation on slug or name.
+      // Return the existing tag instead of failing — makes creation idempotent.
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
         const existing = await prisma.tag.findFirst({
-          where: { OR: [{ slug }, { name: data.name }] },
+          where: {
+            OR: [{ slug }, { name: data.name }],
+            isDeleted: false,
+          },
           include: tagTranslationsInclude(locale),
         })
         if (existing) return existing
