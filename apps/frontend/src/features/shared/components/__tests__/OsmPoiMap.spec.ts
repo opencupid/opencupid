@@ -55,12 +55,6 @@ vi.mock('leaflet', () => {
   }
   const mapFn = vi.fn(() => ({ ...mapProto }))
 
-  const tileLayerProto = {
-    addTo: vi.fn().mockReturnThis(),
-    on: vi.fn().mockReturnThis(),
-  }
-  const tileLayer = vi.fn(() => ({ ...tileLayerProto }))
-
   const markerClusterGroup = vi.fn(() => ({
     ...clusterGroupProto,
     addLayer: vi.fn(),
@@ -76,7 +70,6 @@ vi.mock('leaflet', () => {
       divIcon,
       layerGroup,
       latLngBounds,
-      tileLayer,
       markerClusterGroup,
       point,
     },
@@ -87,7 +80,6 @@ vi.mock('leaflet', () => {
     divIcon,
     layerGroup,
     latLngBounds,
-    tileLayer,
     markerClusterGroup,
     point,
   }
@@ -97,6 +89,14 @@ vi.mock('leaflet', () => {
 vi.mock('leaflet.markercluster', () => ({}))
 vi.mock('leaflet.markercluster/dist/MarkerCluster.css', () => ({}))
 vi.mock('leaflet.markercluster/dist/MarkerCluster.Default.css', () => ({}))
+
+// Mock MapTiler layer and CSS
+vi.mock('@maptiler/leaflet-maptilersdk', () => ({
+  MaptilerLayer: class {
+    addTo = vi.fn().mockReturnThis()
+  },
+}))
+vi.mock('@maptiler/sdk/dist/maptiler-sdk.css', () => ({}))
 
 import { mount, flushPromises } from '@vue/test-utils'
 import OsmPoiMap from '../OsmPoiMap.vue'
