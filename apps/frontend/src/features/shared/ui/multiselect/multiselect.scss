@@ -278,7 +278,7 @@ fieldset[disabled] .multiselect {
 }
 
 .multiselect__content-wrapper {
-  // position: absolute;
+  position: absolute;
   display: block;
   background: var(--bs-body-bg);
   width: 100%;

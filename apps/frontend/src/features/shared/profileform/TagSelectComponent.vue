@@ -13,9 +13,11 @@ const model = defineModel<PublicTag[]>({
 
 const props = withDefaults(
   defineProps<{
-    taggable?: boolean
+    taggable?: boolean,
+    openDirection?: 'top' | 'bottom'
   }>(),
   {
+    openDirection: 'top',
     taggable: true,
   }
 )
@@ -81,7 +83,7 @@ const selectHeight = computed(() => {
       :show-no-results="true"
       :show-no-options="false"
       :maxHeight="selectHeight"
-      open-direction="top"
+      :open-direction="props.openDirection"
       @tag="addTag"
       label="name"
       track-by="id"
