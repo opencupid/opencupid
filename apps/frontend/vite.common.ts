@@ -62,8 +62,7 @@ export const loadProjectEnv = (mode: string) => {
 }
 
 export const define = (_mode: string) => {
-  const repoRoot = path.resolve(__dirname, '../..')
-  const appVersion = getPackageVersion(path.join(repoRoot, 'package.json'))
+  const appVersion = getPackageVersion(path.join(__dirname, 'package.json'))
 
   return {
     envDir: '../../',

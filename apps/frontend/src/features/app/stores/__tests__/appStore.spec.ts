@@ -2,9 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useAppStore } from '../appStore'
 import * as apiModule from '@/lib/api'
-import rootPackageJson from '../../../../../../../package.json'
+import packageJson from '../../../../../package.json'
 
-const APP_VERSION = rootPackageJson.version
+const APP_VERSION = packageJson.version
 
 // Mock the api module
 vi.mock('@/lib/api', () => ({

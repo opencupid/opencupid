@@ -2,8 +2,8 @@ import { defineConfig } from 'tsup'
 import { getPackageVersion } from '../../packages/shared/version'
 import path from 'path'
 
-// Read app version from root package.json at build time
-const appVersion = getPackageVersion(path.join(__dirname, '..', '..', 'package.json'))
+const appVersion = getPackageVersion(path.join(__dirname, 'package.json'))
+const frontendVersion = getPackageVersion(path.join(__dirname, '..', 'frontend', 'package.json'))
 
 export default defineConfig({
   entry: ['src/main.ts'],
@@ -17,6 +17,6 @@ export default defineConfig({
   shims: false,
   define: {
     __APP_VERSION__: JSON.stringify(appVersion),
-    __FRONTEND_VERSION__: JSON.stringify(appVersion),
+    __FRONTEND_VERSION__: JSON.stringify(frontendVersion),
   },
 })

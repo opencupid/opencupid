@@ -22,7 +22,7 @@ import {
   JITSI_DOMAIN: '',
   VOICE_MESSAGE_MAX_DURATION: 120,
 }
-import rootPackageJson from '../../../../package.json'
-;(globalThis as any).__APP_VERSION__ = rootPackageJson.version
+import packageJson from '../../package.json'
+;(globalThis as any).__APP_VERSION__ = packageJson.version
 
 config.global.components = {}

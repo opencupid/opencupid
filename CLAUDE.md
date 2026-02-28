@@ -194,23 +194,37 @@ Each PR must contain **one logical change** — don't bundle unrelated fixes, fe
 
 ### Versioning strategy
 
-- **Bugfix-only releases**: bump the patch version (e.g. 0.7.1 → 0.7.2)
-- **New features or enhancements**: bump the minor version (e.g. 0.7.2 → 0.8.0)
+Each Docker image has its own semver version in its `apps/<service>/package.json`. Versions are managed with [Changesets](https://github.com/changesets/changesets).
+
+- **Bugfix-only changes**: patch bump (e.g. 1.0.0 → 1.0.1)
+- **New features or enhancements**: minor bump (e.g. 1.0.1 → 1.1.0)
 - If the user specifies an explicit version, use that instead
+
+### Changesets workflow
+
+Each PR that changes a service should include a changeset file:
+
+```bash
+pnpm changeset
+# Select affected packages (@opencupid/backend, @opencupid/frontend, etc.)
+# Choose bump type (patch/minor/major)
+# Write a summary of the change
+```
 
 ### Release process
 
 Run these steps in order:
 
-1. **Bump `version` in `package.json`** on a feature branch, create a PR, and merge it:
+1. **Apply version bumps** from accumulated changesets:
 
    ```bash
    git checkout main && git pull
-   git checkout -b chore/bump-version-X.Y.Z
-   # edit package.json version field
-   git add package.json && git commit -m "chore: bump version to X.Y.Z"
-   git push -u origin chore/bump-version-X.Y.Z
-   gh pr create --title "chore: bump version to X.Y.Z" --body "Bump package.json version ahead of release."
+   git checkout -b chore/release
+   pnpm changeset version    # bumps affected package.json versions, writes CHANGELOGs
+   # Also bump root package.json version if desired
+   git add . && git commit -m "chore: version packages"
+   git push -u origin chore/release
+   gh pr create --title "chore: release" --body "Apply changeset version bumps."
    # merge the PR
    ```
 
@@ -225,7 +239,7 @@ Run these steps in order:
    - Keep summaries brief
    - End with a full changelog link: `**Full Changelog**: https://github.com/opencupid/opencupid/compare/<previous-tag>...vX.Y.Z`
 
-3. **Watch the Docker build in the background** — creating the release auto-triggers the Docker workflow. Confirm all images push successfully:
+3. **Watch the Docker build in the background** — creating the release auto-triggers the Docker workflow. CI detects which images have new version tags and only builds those:
 
 ```bash
 gh run watch --exit-status
@@ -242,6 +256,8 @@ gh run watch --exit-status
 
    ```bash
    cd ~/opencupid && git fetch --tags && git checkout vX.Y.Z
+   # Update per-image version vars in .env (only changed images):
+   # BACKEND_VERSION=1.0.1  FRONTEND_VERSION=1.0.2  etc.
    docker compose -f docker-compose.production.yml pull backend frontend admin ingress
    docker compose -f docker-compose.production.yml up -d --no-deps frontend ingress admin
    docker compose -f docker-compose.production.yml up -d --no-deps backend

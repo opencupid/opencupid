@@ -15,7 +15,7 @@ services:
       - ${POSTGRES_DATADIR}:/var/lib/postgresql/data
 
   backend:
-    image: ${DOCKER_IMAGE_PREFIX:-ghcr.io/opencupid/opencupid}-backend:${DOCKER_IMAGE_TAG:-latest}
+    image: ${DOCKER_IMAGE_PREFIX:-ghcr.io/opencupid/opencupid}-backend:${BACKEND_VERSION:-latest}
     build:
       context: .
       dockerfile: apps/backend/Dockerfile
@@ -29,7 +29,7 @@ services:
       - '${PWD}/secrets:/secrets'
 
   frontend:
-    image: ${DOCKER_IMAGE_PREFIX:-ghcr.io/opencupid/opencupid}-frontend:${DOCKER_IMAGE_TAG:-latest}
+    image: ${DOCKER_IMAGE_PREFIX:-ghcr.io/opencupid/opencupid}-frontend:${FRONTEND_VERSION:-latest}
     build:
       context: .
       dockerfile: apps/frontend/Dockerfile
@@ -47,7 +47,7 @@ services:
       - backend
 
   admin:
-    image: ${DOCKER_IMAGE_PREFIX:-ghcr.io/opencupid/opencupid}-admin:${DOCKER_IMAGE_TAG:-latest}
+    image: ${DOCKER_IMAGE_PREFIX:-ghcr.io/opencupid/opencupid}-admin:${ADMIN_VERSION:-latest}
     build:
       context: .
       dockerfile: apps/admin/Dockerfile
@@ -58,7 +58,7 @@ services:
       - backend
 
   ingress:
-    image: ${DOCKER_IMAGE_PREFIX:-ghcr.io/opencupid/opencupid}-ingress:${DOCKER_IMAGE_TAG:-latest}
+    image: ${DOCKER_IMAGE_PREFIX:-ghcr.io/opencupid/opencupid}-ingress:${INGRESS_VERSION:-latest}
     build:
       context: apps/ingress
     restart: always
