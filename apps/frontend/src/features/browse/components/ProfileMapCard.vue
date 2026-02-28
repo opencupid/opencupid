@@ -10,7 +10,7 @@ const props = defineProps<{
   item: PublicProfile
 }>()
 
-const viewerProfile = inject<Ref<OwnerProfile>>('viewerProfile')
+const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
 const viewerLocation = computed(() => viewerProfile?.value?.location)
 </script>
 
