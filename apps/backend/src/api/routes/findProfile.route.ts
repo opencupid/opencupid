@@ -7,6 +7,7 @@ import { ProfileMatchService, type OrderBy } from '@/services/profileMatch.servi
 import {
   GetProfilesResponse,
   type GetDatingPreferencesResponse,
+  type GetMatchIdsResponse,
   type GetSocialMatchFilterResponse,
   type UpdateDatingPreferencesResponse,
 } from '@zod/apiResponse.dto'
@@ -82,6 +83,22 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/dating', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const { skip, take } = PaginationQuerySchema.parse(req.query)
     return getDatingProfiles(req, reply, [{ updatedAt: 'desc' }], take, skip)
+  })
+
+  fastify.get('/dating/match-ids', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    if (!req.session.profile.isDatingActive) {
+      const response: GetMatchIdsResponse = { success: true, ids: [] }
+      return reply.code(200).send(response)
+    }
+
+    try {
+      const ids = await profileMatchService.findMutualMatchIds(req.session.profileId)
+      const response: GetMatchIdsResponse = { success: true, ids }
+      return reply.code(200).send(response)
+    } catch (err) {
+      req.log.error(err)
+      return sendError(reply, 500, 'Failed to fetch match IDs')
+    }
   })
 
   fastify.get('/social/new', { onRequest: [fastify.authenticate] }, async (req, reply) => {

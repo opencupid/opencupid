@@ -27,6 +27,7 @@ const {
   haveResults,
   isLoading,
   profileList,
+  matchedProfileIds,
   socialFilter,
   isInitialized,
   hideProfile,
@@ -182,6 +183,7 @@ watch(
         :get-location="(profile: PublicProfile) => profile.location"
         :get-title="(profile: PublicProfile) => profile.publicName"
         :get-image-url="getProfileImageUrl"
+        :is-highlighted="(profile: PublicProfile) => matchedProfileIds.has(profile.id)"
         :popup-component="ProfileMapCard"
         class="map-view h-100"
         @item:select="(id: string | number) => onProfileSelect(String(id))"

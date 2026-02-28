@@ -16,9 +16,11 @@ vi.mock('@/lib/bootstrap', () => ({
 const mockFindProfileStore = {
   isLoading: false,
   profileList: [],
+  matchedProfileIds: new Set<string>(),
   socialFilter: null,
   findSocialForMap: vi.fn(),
   fetchSocialFilter: vi.fn(),
+  fetchDatingMatchIds: vi.fn(),
   persistSocialFilter: vi.fn(),
   hide: vi.fn(),
   teardown: vi.fn(),
@@ -57,12 +59,13 @@ describe('useSocialMatchViewModel', () => {
     })
   })
 
-  it('initialize fetches social filter and calls findSocialForMap', async () => {
+  it('initialize fetches social filter, map profiles, and match IDs', async () => {
     const vm = useSocialMatchViewModel()
     await vm.initialize()
 
     expect(mockFindProfileStore.fetchSocialFilter).toHaveBeenCalled()
     expect(mockFindProfileStore.findSocialForMap).toHaveBeenCalled()
+    expect(mockFindProfileStore.fetchDatingMatchIds).toHaveBeenCalled()
   })
 
   it('initialize sets isInitialized to true', async () => {
@@ -89,5 +92,14 @@ describe('useSocialMatchViewModel', () => {
     const vm = useSocialMatchViewModel()
     expect(vm.haveAccess.value).toBe(false)
     mockOwnerStore.profile = original
+  })
+
+  it('exposes matchedProfileIds from store', () => {
+    mockFindProfileStore.matchedProfileIds = new Set(['p1', 'p2'])
+    const vm = useSocialMatchViewModel()
+    expect(vm.matchedProfileIds.value.has('p1')).toBe(true)
+    expect(vm.matchedProfileIds.value.has('p2')).toBe(true)
+    expect(vm.matchedProfileIds.value.has('p3')).toBe(false)
+    mockFindProfileStore.matchedProfileIds = new Set()
   })
 })

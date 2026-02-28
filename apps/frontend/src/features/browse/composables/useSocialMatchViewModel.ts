@@ -40,7 +40,7 @@ export function useSocialMatchViewModel() {
     }
 
     await findProfileStore.fetchSocialFilter(socialFilterDefaults(ownerProfile))
-    await fetchResults()
+    await Promise.all([fetchResults(), findProfileStore.fetchDatingMatchIds()])
     isInitialized.value = true
   }
 
@@ -91,6 +91,7 @@ export function useSocialMatchViewModel() {
     updatePrefs,
     openProfile,
     profileList: computed(() => findProfileStore.profileList),
+    matchedProfileIds: computed(() => findProfileStore.matchedProfileIds),
     isInitialized: computed(() => isInitialized.value),
   }
 }

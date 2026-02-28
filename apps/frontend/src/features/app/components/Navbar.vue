@@ -47,15 +47,6 @@ const hasMatchNotifications = computed(
         </BNavItem>
 
         <BNavItem
-          to="/posts"
-          active-class="active"
-          :aria-label="$t('nav.bulletin')"
-        >
-          <IconNote class="svg-icon-lg" />
-          <span class="d-none d-md-inline label">{{ $t('nav.bulletin') }}</span>
-        </BNavItem>
-
-        <BNavItem
           to="/browse"
           active-class="active"
           :aria-label="$t('nav.browse')"
@@ -64,7 +55,15 @@ const hasMatchNotifications = computed(
           <span class="d-none d-md-inline label">{{ $t('nav.browse') }}</span>
         </BNavItem>
 
-
+        <BNavItem
+          to="/posts"
+          active-class="active"
+          :aria-label="$t('nav.bulletin')"
+        >
+          <IconNote class="svg-icon-lg" />
+          <span class="d-none d-md-inline label">{{ $t('nav.bulletin') }}</span>
+        </BNavItem>
+        
         <BNavItem
           to="/inbox"
           active-class="active"

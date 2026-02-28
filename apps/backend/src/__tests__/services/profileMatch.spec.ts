@@ -55,6 +55,32 @@ describe('MatchQueryService.findMutualMatchesFor', () => {
     expect(res[0].id).toBe('p2')
   })
 
+  it('findMutualMatchIds returns only IDs', async () => {
+    vi.setSystemTime(new Date('2024-05-20'))
+    const profile = {
+      id: 'p1',
+      birthday: new Date('1995-05-21'),
+      gender: 'male',
+      isDatingActive: true,
+      prefAgeMin: 25,
+      prefAgeMax: 35,
+      prefGender: ['female'],
+      prefKids: ['no'],
+      hasKids: 'yes' as const,
+    }
+    mockPrisma.profile.findUnique.mockResolvedValue(profile)
+    mockPrisma.profile.findMany.mockResolvedValue([{ id: 'p2' }, { id: 'p3' }])
+
+    const ids = await service.findMutualMatchIds('p1')
+    expect(ids).toEqual(['p2', 'p3'])
+  })
+
+  it('findMutualMatchIds returns empty array when not dating active', async () => {
+    mockPrisma.profile.findUnique.mockResolvedValue({ id: 'p1', isDatingActive: false })
+    const ids = await service.findMutualMatchIds('p1')
+    expect(ids).toEqual([])
+  })
+
   it('omits prefKids when profile.hasKids is null', async () => {
     vi.setSystemTime(new Date('2024-05-20'))
     const profile = {

@@ -315,6 +315,11 @@ export class ProfileMatchService {
     return profiles
   }
 
+  async findMutualMatchIds(profileId: string): Promise<string[]> {
+    const matches = await this.findMutualMatchesFor(profileId, { updatedAt: 'desc' }, 1000, 0)
+    return matches.map((p) => p.id)
+  }
+
   async areProfilesMutuallyCompatible(aId: string, bId: string): Promise<boolean> {
     const [a, b] = await prisma.profile.findMany({
       where: { id: { in: [aId, bId] } },
