@@ -36,8 +36,6 @@ test-results/
 playwright-report/
 .playwright-mcp/
 
-# Screenshots (debug/temp)
-*.png
 
 apps/frontend/dev-dist/
 secrets/
