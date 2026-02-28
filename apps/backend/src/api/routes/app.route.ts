@@ -13,7 +13,7 @@ function extractClientIp(headerValue: string | undefined, fallbackIp: string): s
   return rawIp.startsWith('::ffff:') ? rawIp.substring(7) : rawIp
 }
 
-const appRoutes: FastifyPluginAsync = async fastify => {
+const appRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
     '/version',
     {
@@ -22,7 +22,7 @@ const appRoutes: FastifyPluginAsync = async fastify => {
     async (req, reply) => {
       try {
         const clientVersion = (req.query as Record<string, string>).v as string | undefined
-        const frontendVersion = __FRONTEND_VERSION__
+        const frontendVersion = appConfig.FRONTEND_VERSION
 
         const versionInfo: VersionDTO = {
           frontendVersion,
