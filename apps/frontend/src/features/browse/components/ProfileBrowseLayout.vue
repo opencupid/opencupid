@@ -3,7 +3,6 @@ import { computed, provide, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 
-import PublicProfileComponent from '@/features/publicprofile/components/PublicProfile.vue'
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 import FluidColumn from '@/features/shared/ui/FluidColumn.vue'
 import NoAccessCTA from '../components/NoAccessCTA.vue'
@@ -15,7 +14,6 @@ import type { OwnerProfile, ProfileScope } from '@zod/profile/profile.dto'
 const props = defineProps<{
   viewerProfile: OwnerProfile | null
   profileList: { id: string }[]
-  selectedProfileId: string | null
   isLoading: boolean
   isInitialized: boolean
   haveAccess: boolean
@@ -25,7 +23,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'profile:open': [profileId: string]
-  'profile:close': []
   'profile:hidden': [profileId: string]
   'prefs:update': []
 }>()
@@ -34,67 +31,26 @@ const router = useRouter()
 const { t } = useI18n()
 
 const showPrefsModal = ref(false)
-const canGoBack = ref(false)
 
 provide(
   'viewerProfile',
   computed(() => props.viewerProfile)
 )
 
-const isDetailView = computed(() => !!props.selectedProfileId)
-
 const handleCardClick = (profileId: string) => {
-  canGoBack.value = true
   emit('profile:open', profileId)
-}
-
-const handleCloseProfileView = () => {
-  emit('profile:close')
-}
-
-const handleOpenConversation = (conversationId: string) => {
-  router.push({ name: 'Messaging', params: { conversationId } })
-}
-
-const handleHidden = (id: string) => {
-  emit('profile:hidden', id)
-  canGoBack.value = false
 }
 
 const handleEditProfileIntent = () => {
   router.push({ name: 'EditProfile', state: { hint: 'scope' } })
 }
-
 </script>
 
 <template>
   <main class="w-100 position-relative overflow-hidden">
-    <!-- Detail view overlay -->
-    <div
-      v-if="isDetailView"
-      class="detail-view position-absolute w-100 h-100"
-      :class="{ active: isDetailView }"
-    >
-      <div class="overflow-auto hide-scrollbar h-100 d-flex flex-column">
-        <MiddleColumn
-          class="pt-sm-3 position-relative flex-grow-1"
-          style="min-height: 100%"
-        >
-          <PublicProfileComponent
-            v-if="selectedProfileId"
-            :id="selectedProfileId"
-            class="shadow-lg mb-3 pb-5"
-            @intent:back="handleCloseProfileView"
-            @intent:message="handleOpenConversation"
-            @hidden="(id: string) => handleHidden(id)"
-          />
-        </MiddleColumn>
-      </div>
-    </div>
-
     <div
       class="list-view d-flex flex-column justify-content-start"
-      :class="[currentScope, { inactive: isDetailView }]"
+      :class="[currentScope]"
     >
       <FluidColumn class="my-2">
         <div
@@ -189,26 +145,8 @@ const handleEditProfileIntent = () => {
 @import '@/css/app-vars.scss';
 @import '@/css/theme.scss';
 
-.detail-view {
-  z-index: 1050;
-  height: 100dvh;
-  inset: 0;
-
-  @include media-breakpoint-up(sm) {
-    top: $navbar-height;
-    height: calc(100vh - $navbar-height);
-    z-index: 900;
-  }
-}
-
 .list-view {
   height: calc(100vh - $navbar-height);
-}
-
-.inactive {
-  visibility: hidden;
-  pointer-events: none;
-  overflow: hidden;
 }
 
 main {

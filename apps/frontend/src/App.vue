@@ -38,7 +38,7 @@ useCallStore().initialize()
   <UpdateBanner />
   <Navbar />
   <RouterView v-slot="{ Component }">
-    <KeepAlive include="UserHome">
+    <KeepAlive include="UserHome,SocialMatch,Messaging">
       <component :is="Component" />
     </KeepAlive>
   </RouterView>

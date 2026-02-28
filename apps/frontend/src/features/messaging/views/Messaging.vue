@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onMounted, onUnmounted, toRef } from 'vue'
+import { onMounted, toRef } from 'vue'
 
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 import IconMessage from '@/assets/icons/interface/message.svg'
@@ -12,6 +12,8 @@ import LikesAndMatchesBanner from '@/features/interaction/components/LikesAndMat
 import MatchesList from '@/features/interaction/components/MatchesList.vue'
 
 import { useMessagingViewModel } from '../composables/useMessagingViewModel'
+
+defineOptions({ name: 'Messaging' })
 
 const props = defineProps<{
   conversationId?: string
@@ -29,17 +31,12 @@ const {
   handleProfileSelect,
   fetchConversations,
   initialize,
-  reset,
   matches,
   haveMatches,
 } = useMessagingViewModel(toRef(props, 'conversationId'))
 
 onMounted(async () => {
   await initialize()
-})
-
-onUnmounted(() => {
-  reset()
 })
 </script>
 

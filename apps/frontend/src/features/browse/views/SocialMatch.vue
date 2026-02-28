@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDebounceFn } from '@vueuse/core'
 
@@ -10,12 +10,14 @@ import LocationSelector from '@/features/shared/profileform/LocationSelector.vue
 import TagSelector from '@/features/shared/profileform/TagSelector.vue'
 import TagCloud from '@/features/shared/components/TagCloud.vue'
 import IconTarget2 from '@/assets/icons/interface/target-2.svg'
-import IconTag  from '@/assets/icons/e-commerce/tag.svg'
+import IconTag from '@/assets/icons/e-commerce/tag.svg'
 
 import { useSocialMatchViewModel } from '../composables/useSocialMatchViewModel'
 import { useCountries } from '../../shared/composables/useCountries'
 import type { PublicProfile } from '@zod/profile/profile.dto'
 import type { PopularTag } from '@zod/tag/tag.dto'
+
+defineOptions({ name: 'SocialMatch' })
 
 const { t } = useI18n()
 
@@ -25,23 +27,16 @@ const {
   haveResults,
   isLoading,
   profileList,
-  selectedProfileId,
   socialFilter,
   isInitialized,
   hideProfile,
   updatePrefs,
   openProfile,
-  closeProfile,
   initialize,
-  reset,
 } = useSocialMatchViewModel()
 
 onMounted(async () => {
   await initialize()
-})
-
-onUnmounted(() => {
-  reset()
 })
 
 const { countryCodeToName } = useCountries()
@@ -110,14 +105,12 @@ watch(
   <ProfileBrowseLayout
     :viewerProfile="viewerProfile"
     :profileList="profileList"
-    :selectedProfileId="selectedProfileId"
     :isLoading="isLoading"
     :isInitialized="isInitialized"
     :haveAccess="haveAccess"
     :haveResults="haveResults"
     currentScope="social"
     @profile:open="openProfile"
-    @profile:close="closeProfile"
     @profile:hidden="hideProfile"
   >
     <template #no-results>
@@ -138,7 +131,6 @@ watch(
           <!-- Location column -->
           <div class="col-12 col-md-6">
             <div class="d-flex align-items-center gap-2">
-             
               <div class="flex-grow-1">
                 <LocationSelector
                   v-model="socialFilter.location"
@@ -147,7 +139,7 @@ watch(
                   v-if="socialFilter"
                 />
               </div>
-               <BButton
+              <BButton
                 variant="link-success"
                 size="sm"
                 class="p-0"

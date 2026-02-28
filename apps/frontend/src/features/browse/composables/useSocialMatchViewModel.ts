@@ -1,8 +1,7 @@
 import { computed, ref, toRef } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 
 import { useBootstrap } from '@/lib/bootstrap'
-import { getPreviousUrl } from '@/router/history'
 
 import type { StoreError } from '@/store/helpers'
 import type { OwnerProfile } from '@zod/profile/profile.dto'
@@ -20,15 +19,11 @@ function socialFilterDefaults(ownerProfile: OwnerProfile) {
 
 export function useSocialMatchViewModel() {
   const router = useRouter()
-  const route = useRoute()
 
   const ownerStore = useOwnerProfileStore()
   const findProfileStore = useFindProfileStore()
 
   const storeError = ref<StoreError | null>(null)
-  const selectedProfileId = ref<string | null>(
-    typeof route.params.profileId === 'string' ? route.params.profileId : null
-  )
   const isInitialized = ref(false)
 
   const initialize = async () => {
@@ -54,18 +49,7 @@ export function useSocialMatchViewModel() {
   }
 
   function openProfile(profileId: string): void {
-    selectedProfileId.value = profileId
-    router.replace({ name: 'PublicProfile', params: { profileId } })
-  }
-
-  function closeProfile(): void {
-    selectedProfileId.value = null
-    const returnUrl = getPreviousUrl()
-    if (returnUrl.startsWith('/profile/')) {
-      router.replace({ name: 'SocialMatch' })
-    } else {
-      router.replace(returnUrl)
-    }
+    router.push({ name: 'PublicProfile', params: { profileId } })
   }
 
   const viewerProfile = computed(() => ownerStore.profile)
@@ -81,12 +65,6 @@ export function useSocialMatchViewModel() {
 
   const hideProfile = (profileId: string) => {
     findProfileStore.hide(profileId)
-  }
-
-  const reset = () => {
-    findProfileStore.teardown()
-    storeError.value = null
-    isInitialized.value = false
   }
 
   const updatePrefs = async () => {
@@ -109,12 +87,9 @@ export function useSocialMatchViewModel() {
     storeError,
     initialize,
     hideProfile,
-    reset,
-    selectedProfileId,
     socialFilter: toRef(findProfileStore, 'socialFilter'),
     updatePrefs,
     openProfile,
-    closeProfile,
     profileList: computed(() => findProfileStore.profileList),
     isInitialized: computed(() => isInitialized.value),
   }

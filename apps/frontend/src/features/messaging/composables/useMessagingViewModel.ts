@@ -38,10 +38,6 @@ export function useMessagingViewModel(conversationId: Ref<string | undefined>) {
     }
   }
 
-  const reset = () => {
-    messageStore.setActiveConversation(null)
-  }
-
   const handleSelectConvo = async (convo: ConversationSummary) => {
     if (messageStore.activeConversation?.conversationId === convo.conversationId) {
       return
@@ -84,7 +80,6 @@ export function useMessagingViewModel(conversationId: Ref<string | undefined>) {
 
     // Lifecycle
     initialize,
-    reset,
 
     // Interactions (matches/likes)
     matches: interactions.matches,
