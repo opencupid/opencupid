@@ -72,6 +72,10 @@ fieldset[disabled] .multiselect {
   color: var(--bs-body-color);
 }
 
+.modal-content .multiselect {
+  position: relative;
+}
+
 .multiselect * {
   box-sizing: border-box;
 }
