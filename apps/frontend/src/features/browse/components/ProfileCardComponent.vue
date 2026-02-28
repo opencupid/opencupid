@@ -32,7 +32,7 @@ const handleImageLoad = () => {
 const primaryBlurhash = ref(props.profile.profileImages?.[0]?.blurhash ?? null)
 
 const viewerProfile = inject<Ref<OwnerProfile>>('viewerProfile')
-const viewerLocation = ref(viewerProfile?.value.location)
+const viewerLocation = ref(viewerProfile?.value?.location)
 </script>
 
 <template>

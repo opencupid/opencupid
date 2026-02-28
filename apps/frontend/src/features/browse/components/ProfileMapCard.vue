@@ -11,7 +11,7 @@ const props = defineProps<{
 }>()
 
 const viewerProfile = inject<Ref<OwnerProfile>>('viewerProfile')
-const viewerLocation = ref(viewerProfile?.value.location)
+const viewerLocation = ref(viewerProfile?.value?.location)
 </script>
 
 <template>
