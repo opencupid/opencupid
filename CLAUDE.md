@@ -101,7 +101,7 @@ Backend tests:
 pnpm --filter backend test
 ```
 
-Full CI suite (install, prisma generate, lint, test, type-check). This is expensive to run and takes a long time, run this only near/after completing a task and when `pnpm test` does not fail.
+Full CI suite (install, prisma generate, lint, test, type-check). This is expensive to run and takes a long time, run this only near/after completing a task and when `pnpm test` and `pnpm lint` are green.
 
 ```bash
 pnpm run ci:test
@@ -172,7 +172,7 @@ gh pr create
 
 ## CI workflow
 
-Only watch CI when **finalizing** a PR (all work done, ready for review/merge). Always watch in the background, do not wait in foreground. Do NOT watch CI after every intermediate push — it wastes time. When finalizing:
+Only watch CI when **finalizing** a PR (all work done, ready for review/merge). Always start a subagent watching CI tests to finish, do not wait in foreground. Assign subagent to watch CI after every intermediate push:
 
 ```bash
 gh run list --limit 1
