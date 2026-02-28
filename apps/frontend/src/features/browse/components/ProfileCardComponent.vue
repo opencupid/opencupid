@@ -4,7 +4,7 @@ export default { __test_loadedUrls: loadedUrls }
 </script>
 
 <script setup lang="ts">
-import { inject, ref, type Ref } from 'vue'
+import { computed, inject, ref, type Ref } from 'vue'
 import type { OwnerProfile, PublicProfile } from '@zod/profile/profile.dto'
 import ProfileImage from '@/features/images/components/ProfileImage.vue'
 import BlurhashCanvas from '@/features/images/components/BlurhashCanvas.vue'
@@ -32,7 +32,7 @@ const handleImageLoad = () => {
 const primaryBlurhash = ref(props.profile.profileImages?.[0]?.blurhash ?? null)
 
 const viewerProfile = inject<Ref<OwnerProfile>>('viewerProfile')
-const viewerLocation = ref(viewerProfile?.value?.location)
+const viewerLocation = computed(() => viewerProfile?.value?.location)
 </script>
 
 <template>
