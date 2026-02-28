@@ -34,7 +34,7 @@ vi.mock('@/features/shared/profileform/LocationSelector.vue', () => ({
     props: ['modelValue', 'allowEmpty'],
   },
 }))
-vi.mock('@/features/shared/profileform/TagSelectComponent.vue', () => ({
+vi.mock('@/features/shared/profileform/TagSelector.vue', () => ({
   default: {
     template: '<div class="tag-select-component" />',
     props: ['modelValue', 'taggable'],
@@ -182,7 +182,7 @@ describe('SocialMatch view', () => {
     expect(wrapper.find('.osm-poi-map').exists()).toBe(true)
   })
 
-  it('renders inline LocationSelector and TagSelectComponent when filter is set', () => {
+  it('renders inline LocationSelector and TagSelector when filter is set', () => {
     vmState.socialFilter.value = {
       location: { country: 'US', cityName: 'New York', lat: null, lon: null },
       tags: [],

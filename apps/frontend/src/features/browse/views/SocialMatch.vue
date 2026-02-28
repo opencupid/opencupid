@@ -7,7 +7,7 @@ import ProfileBrowseLayout from '../components/ProfileBrowseLayout.vue'
 import OsmPoiMap from '@/features/shared/components/OsmPoiMap.vue'
 import ProfileMapCard from '../components/ProfileMapCard.vue'
 import LocationSelector from '@/features/shared/profileform/LocationSelector.vue'
-import TagSelectComponent from '@/features/shared/profileform/TagSelectComponent.vue'
+import TagSelector from '@/features/shared/profileform/TagSelector.vue'
 import TagCloud from '@/features/shared/components/TagCloud.vue'
 import IconTarget2 from '@/assets/icons/interface/target-2.svg'
 import IconCloud from '@/assets/icons/interface/cloud.svg'
@@ -160,7 +160,7 @@ watch(
           <div class="col-12 col-md-6">
             <div class="d-flex align-items-center gap-2">
               <div class="flex-grow-1">
-                <TagSelectComponent
+                <TagSelector
                   v-model="socialFilter.tags"
                   :taggable="false"
                   open-direction="bottom"

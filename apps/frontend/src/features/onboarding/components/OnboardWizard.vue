@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { type EditProfileForm } from '@zod/profile/profile.form'
 
 import LanguageSelector from '@/features/shared/profileform/LanguageSelector.vue'
-import TagSelectComponent from '@/features/shared/profileform/TagSelectComponent.vue'
+import TagSelector from '@/features/shared/profileform/TagSelector.vue'
 import IntrotextEditor from '@/features/shared/profileform/IntrotextEditor.vue'
 import ImageEditor from '@/features/images/components/ImageEditor.vue'
 import DatingSteps from '../components/DatingSteps.vue'
@@ -131,7 +131,7 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
             <!-- I'm into... -->
             {{ t('onboarding.interests_title') }}
           </legend>
-          <TagSelectComponent
+          <TagSelector
             v-model="formData.tags"
             :required="true"
           />

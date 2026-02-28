@@ -11,7 +11,7 @@ import EditField from '@/features/myprofile/components/EditField.vue'
 import PublicNameInput from '@/features/shared/profileform/PublicNameInput.vue'
 import LocationSelector from '@/features/shared/profileform/LocationSelector.vue'
 import LanguageSelector from '@/features/shared/profileform/LanguageSelector.vue'
-import TagSelectComponent from '@/features/shared/profileform/TagSelectComponent.vue'
+import TagSelector from '@/features/shared/profileform/TagSelector.vue'
 import IntrotextEditor from '@/features/shared/profileform/IntrotextEditor.vue'
 import GenderPronounLabel from '@/features/shared/profiledisplay/GenderPronounLabel.vue'
 import RelationshipTags from '@/features/shared/profiledisplay/RelationshipTags.vue'
@@ -87,7 +87,7 @@ const viewerLocation = ref(viewerProfile?.value?.location)
           <TagList :tags="profile.tags" />
           <EditField
             fieldName="tags"
-            :editComponent="TagSelectComponent"
+            :editComponent="TagSelector"
           >
             <template #placeholder>
               <div

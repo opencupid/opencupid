@@ -8,11 +8,11 @@ const create = vi.fn().mockResolvedValue({ id: '2', name: 'new' })
 vi.mock('@/store/tagStore', () => ({ useTagsStore: () => ({ search, create }) }))
 vi.mock('vue-multiselect', () => ({ default: { template: '<div />' } }))
 
-import TagSelectComponent from '../TagSelectComponent.vue'
+import TagSelector from '../TagSelector.vue'
 
-describe('TagSelectComponent', () => {
+describe('TagSelector', () => {
   it('searches and adds tags', async () => {
-    const wrapper = mount(TagSelectComponent, { props: { modelValue: [] } })
+    const wrapper = mount(TagSelector, { props: { modelValue: [] } })
     await (wrapper.vm as any).asyncFind('vue')
     expect(search).toHaveBeenCalledWith('vue')
     await (wrapper.vm as any).addTag('new')
