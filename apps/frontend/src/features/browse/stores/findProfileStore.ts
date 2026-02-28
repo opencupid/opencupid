@@ -23,7 +23,7 @@ import {
   type SocialMatchFilterDTO,
   type UpdateSocialMatchFilterPayload,
 } from '@zod/match/filters.dto'
-import type { LocationPayload, SearchLocationDTO } from '@zod/dto/location.dto'
+import type { LocationDTO, LocationPayload } from '@zod/dto/location.dto'
 
 type FindProfileStoreState = {
   datingPrefs: DatingPreferencesDTO | null
@@ -40,7 +40,7 @@ type FindProfileStoreState = {
 
 type StoreProfileListResponse = StoreSuccess<{ result: PublicProfile[] }> | StoreError
 
-function mapLocationToPayload(dto: SearchLocationDTO): LocationPayload {
+function mapLocationToPayload(dto: LocationDTO): LocationPayload {
   const country = dto.country && dto.country !== '' ? dto.country : null
   const cityName = dto.cityName ?? ''
 

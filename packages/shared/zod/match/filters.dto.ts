@@ -1,6 +1,6 @@
 import { ProfileSchema, SocialMatchFilterSchema, TagSchema } from '@zod/generated'
 import { z } from 'zod'
-import { LocationSchema, LocationPayloadSchema, SearchLocationSchema } from '../dto/location.dto'
+import { LocationSchema, LocationPayloadSchema } from '../dto/location.dto'
 import { PublicTagSchema } from '../tag/tag.dto'
 import { TagWithTranslationsSchema } from '../tag/tag.db'
 
@@ -30,7 +30,7 @@ export const SocialMatchFilterWithTagsSchema = SocialMatchFilterSchema.extend({
 export type SocialMatchFilterWithTags = z.infer<typeof SocialMatchFilterWithTagsSchema>
 
 export const SocialMatchFilterDTOSchema = z.object({
-  location: SearchLocationSchema,
+  location: LocationSchema,
   radius: z.number().optional(),
   tags: z.array(PublicTagSchema).default([]),
 })

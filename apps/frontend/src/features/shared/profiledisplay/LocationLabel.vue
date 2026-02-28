@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { type SearchLocationDTO, type LocationDTO } from '@zod/dto/location.dto'
+import { type LocationDTO } from '@zod/dto/location.dto'
 import { useCountries } from '@/features/shared/composables/useCountries'
 import CountryFlag from '@/features/shared/ui/CountryFlag.vue'
 
 const props = withDefaults(
   defineProps<{
-    location: LocationDTO | SearchLocationDTO
+    location: LocationDTO
     viewerLocation?: LocationDTO
     showCity?: boolean
     showCountryLabel?: boolean

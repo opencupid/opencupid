@@ -1,8 +1,8 @@
-import type { LocationDTO, LocationPayload, SearchLocationDTO } from '@zod/dto/location.dto'
+import type { LocationDTO } from '@zod/dto/location.dto'
 import { useCountries } from './useCountries'
 
 interface UseLocationLabelOptions {
-  location: SearchLocationDTO
+  location: LocationDTO
   viewerLocation: LocationDTO | null
   showCity?: boolean
   showCountryLabel?: boolean

@@ -17,7 +17,6 @@ import IconCloud from '@/assets/icons/interface/cloud.svg'
 import { useSocialMatchViewModel } from '../composables/useSocialMatchViewModel'
 import { useCountries } from '../../shared/composables/useCountries'
 import type { PublicProfile } from '@zod/profile/profile.dto'
-import type { LocationDTO } from '@zod/dto/location.dto'
 import type { PopularTag } from '@zod/tag/tag.dto'
 
 const { t } = useI18n()
@@ -67,29 +66,6 @@ const getProfileImageUrl = (profile: PublicProfile) => {
 // --- Inline filter logic ---
 
 const showTagCloud = ref(false)
-
-const locationDisabled = computed(() => !socialFilter.value?.location.country)
-
-function toggleLocation() {
-  if (!socialFilter.value?.location) return
-  if (socialFilter.value.location.country) {
-    // Clearing → set to "anywhere"
-    Object.assign(socialFilter.value.location, {
-      country: '',
-      cityId: '',
-      cityName: '',
-      lat: null,
-      lon: null,
-    } as LocationDTO)
-  } else {
-    // Restoring → copy from viewer profile
-    socialFilter.value.location.country = viewerProfile.value?.location?.country || ''
-    socialFilter.value.location.cityName = viewerProfile.value?.location?.cityName || ''
-    socialFilter.value.location.lat = viewerProfile.value?.location?.lat || null
-    socialFilter.value.location.lon = viewerProfile.value?.location?.lon || null
-  }
-  updatePrefs()
-}
 
 function setLocationFromProfile() {
   if (viewerProfile.value?.location && socialFilter.value?.location) {
@@ -165,31 +141,23 @@ watch(
           <!-- Location column -->
           <div class="col-12 col-md-6">
             <div class="d-flex align-items-center gap-2">
-              <BFormCheckbox
-                :modelValue="locationDisabled"
-                @change="toggleLocation"
-              >
-                {{ t('profiles.browse.filters.anywhere') }}
-              </BFormCheckbox>
-              <fieldset
-                :disabled="locationDisabled"
-                class="flex-grow-1"
-              >
-                <LocationSelector
-                  v-model="socialFilter.location as LocationDTO"
-                  :allowEmpty="true"
-                  v-if="socialFilter"
-                />
-              </fieldset>
-              <BButton
+                <BButton
                 variant="link-success"
-                :disabled="locationDisabled"
                 class="p-0"
                 :title="t('profiles.browse.filters.locate_button_title')"
                 @click="setLocationFromProfile"
               >
                 <IconTarget2 class="svg-icon-lg" />
               </BButton>
+              <div class="flex-grow-1">
+                <LocationSelector
+                  v-model="socialFilter.location"
+                  open-direction="bottom"
+                  :allowEmpty="true"
+                  v-if="socialFilter"
+                />
+              </div>
+            
             </div>
           </div>
           <!-- Tags column -->
@@ -199,6 +167,7 @@ watch(
                 <TagSelectComponent
                   v-model="socialFilter.tags"
                   :taggable="false"
+                  open-direction="bottom"
                   v-if="socialFilter"
                 />
               </div>
