@@ -10,7 +10,7 @@ import LocationSelector from '@/features/shared/profileform/LocationSelector.vue
 import TagSelector from '@/features/shared/profileform/TagSelector.vue'
 import TagCloud from '@/features/shared/components/TagCloud.vue'
 import IconTarget2 from '@/assets/icons/interface/target-2.svg'
-import IconCloud from '@/assets/icons/interface/cloud.svg'
+import IconTag  from '@/assets/icons/e-commerce/tag.svg'
 
 import { useSocialMatchViewModel } from '../composables/useSocialMatchViewModel'
 import { useCountries } from '../../shared/composables/useCountries'
@@ -138,14 +138,7 @@ watch(
           <!-- Location column -->
           <div class="col-12 col-md-6">
             <div class="d-flex align-items-center gap-2">
-              <BButton
-                variant="link-success"
-                class="p-0"
-                :title="t('profiles.browse.filters.locate_button_title')"
-                @click="setLocationFromProfile"
-              >
-                <IconTarget2 class="svg-icon-lg" />
-              </BButton>
+             
               <div class="flex-grow-1">
                 <LocationSelector
                   v-model="socialFilter.location"
@@ -154,12 +147,21 @@ watch(
                   v-if="socialFilter"
                 />
               </div>
+               <BButton
+                variant="link-success"
+                size="sm"
+                class="p-0"
+                :title="t('profiles.browse.filters.locate_button_title')"
+                @click="setLocationFromProfile"
+              >
+                <IconTarget2 class="svg-icon-lg" />
+              </BButton>
             </div>
           </div>
           <!-- Tags column -->
           <div class="col-12 col-md-6">
             <div class="d-flex align-items-center gap-2">
-              <div class="flex-grow-1">
+              <div class="flex-grow-1 fs-6">
                 <TagSelector
                   v-model="socialFilter.tags"
                   :taggable="false"
@@ -168,12 +170,12 @@ watch(
                 />
               </div>
               <BButton
-                variant="outline-secondary"
+                variant="link-secondary"
                 size="sm"
                 @click="showTagCloud = true"
                 :title="t('profiles.browse.filters.explore_tags')"
               >
-                <IconCloud class="svg-icon-sm" />
+                <IconTag class="svg-icon-lg" />
               </BButton>
             </div>
           </div>
