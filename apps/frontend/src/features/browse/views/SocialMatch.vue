@@ -61,6 +61,12 @@ const getProfileImageUrl = (profile: PublicProfile) => {
   return variants?.find((v) => v.size === 'thumb')?.url
 }
 
+const mapCenter = computed<[number, number]>(() => {
+  const loc = socialFilter.value?.location
+  if (loc?.lat && loc?.lon) return [loc.lat, loc.lon]
+  return [47.0, 19.0] // default: Central Europe
+})
+
 // --- Inline filter logic ---
 
 const showTagCloud = ref(false)
@@ -185,6 +191,7 @@ watch(
     <template #results="{ onProfileSelect }">
       <OsmPoiMap
         :items="profileList"
+        :center="mapCenter"
         :get-location="(profile: PublicProfile) => profile.location"
         :get-title="(profile: PublicProfile) => profile.publicName"
         :get-image-url="getProfileImageUrl"

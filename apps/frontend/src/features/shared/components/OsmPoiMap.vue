@@ -241,6 +241,15 @@ watch(
     highlightSelected()
   }
 )
+
+watch(
+  () => props.center,
+  (newCenter) => {
+    if (map && newCenter) {
+      map.flyTo(newCenter, map.getZoom(), { duration: 1 })
+    }
+  }
+)
 </script>
 
 <template>
