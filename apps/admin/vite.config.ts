@@ -30,8 +30,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
   const envDir = envFile ? path.dirname(envFile) : '../../'
   const env = { ...process.env, ...loadEnv(mode, envDir, '') }
 
-  const repoRoot = path.resolve(__dirname, '../..')
-  const appVersion = getPackageVersion(path.join(repoRoot, 'package.json'))
+  const appVersion = getPackageVersion(path.join(__dirname, 'package.json'))
 
   const config: UserConfig = {
     define: {

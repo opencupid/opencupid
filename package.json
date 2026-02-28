@@ -7,6 +7,7 @@
     "packages/*"
   ],
   "devDependencies": {
+    "@changesets/cli": "^2.29.8",
     "@intlify/unplugin-vue-i18n": "6.0.8",
     "@lingual/i18n-check": "^0.8.19",
     "@modelcontextprotocol/server-filesystem": "2026.1.14",
@@ -34,7 +35,10 @@
     "i18n:check": "npx i18n-check --locales packages/shared/i18n/ -s en --only missingKeys --exclude **/api/** **/de.json **/es.json **/fr.json **/it.json **/nl.json **/pl.json **/pt.json **/ro.json **/sk.json",
     "i18n:check:api": "npx i18n-check --locales packages/shared/i18n/api/ -s en --only missingKeys --exclude **/de.json **/es.json **/fr.json **/it.json **/nl.json **/pl.json **/pt.json **/ro.json **/sk.json",
     "translate:icu": "npx json-autotranslate -i packages/shared/i18n/ --directory-structure ngx-translate -d --type key-based -m icu -s deepl-free -c ${DEEPL_API_KEY},less,1000",
-    "translate:i18next": "npx json-autotranslate -i packages/shared/i18n/api --directory-structure ngx-translate -d --type key-based -m i18next -s deepl-free -c ${DEEPL_API_KEY},less,1000"
+    "translate:i18next": "npx json-autotranslate -i packages/shared/i18n/api --directory-structure ngx-translate -d --type key-based -m i18next -s deepl-free -c ${DEEPL_API_KEY},less,1000",
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:status": "changeset status"
   },
   "dependencies": {
     "@types/node": "22.16.1",

@@ -1,6 +1,6 @@
 {
-  "name": "admin",
-  "version": "0.1.0",
+  "name": "@opencupid/admin",
+  "version": "0.16.1",
   "private": true,
   "type": "module",
   "scripts": {

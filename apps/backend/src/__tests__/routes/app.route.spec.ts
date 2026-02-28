@@ -14,21 +14,18 @@ vi.mock('@maxmind/geoip2-node', () => {
   return { WebServiceClient: MockWebServiceClient }
 })
 
-// Mock the global __FRONTEND_VERSION__ constant
-vi.stubGlobal('__FRONTEND_VERSION__', '0.5.0')
-
 import appRoutes from '../../api/routes/app.route'
 import { MockFastify, MockReply } from '../../test-utils/fastify'
 
 let fastify: MockFastify
 let reply: MockReply
 
-
 // We'll mock appConfig per test case since it's imported by the route
 const mockAppConfig = vi.hoisted(() => ({
   NODE_ENV: 'development',
   MAXMIND_ACCOUNT_ID: 'test-account',
   MAXMIND_LICENSE_KEY: 'test-key',
+  FRONTEND_VERSION: '0.5.0',
 }))
 
 vi.mock('@/lib/appconfig', () => ({
