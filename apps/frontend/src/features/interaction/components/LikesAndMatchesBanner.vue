@@ -9,7 +9,7 @@ const { receivedLikesCount, haveReceivedLikes, haveNewMatches, newMatchesCount }
 <template>
   <div
     class="rounded shadow clickable d-flex align-items-center gap-1 dating p-4"
-    @click="$router.push({ name: 'DatingMatch' })"
+    @click="$router.push({ name: 'Messaging' })"
     v-if="haveNewMatches || haveReceivedLikes"
   >
     <div class="">

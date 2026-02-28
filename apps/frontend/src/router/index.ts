@@ -8,7 +8,6 @@ import UserHome from '@/features/userhome/views/UserHome.vue'
 import Settings from '@/features/settings/views/Settings.vue'
 import MyProfile from '@/features/myprofile/views/MyProfile.vue'
 import SocialMatch from '@/features/browse/views/SocialMatch.vue'
-import DatingMatch from '@/features/browse/views/DatingMatch.vue'
 import PublicProfileView from '@/features/publicprofile/views/PublicProfileView.vue'
 import OnboardingView from '@/features/onboarding/views/Onboarding.vue'
 import AuthUserId from '@/features/auth/views/AuthUserId.vue'
@@ -86,13 +85,7 @@ const routes: Array<RouteRecordRaw> = [
     props: true,
     meta: { requiresAuth: true },
   },
-  {
-    path: '/matches/:profileId?',
-    name: 'DatingMatch',
-    component: DatingMatch,
-    props: true,
-    meta: { requiresAuth: true },
-  },
+
   {
     path: '/posts',
     name: 'Posts',
