@@ -275,6 +275,10 @@ Uses Prettier (config: `prettier.config.mjs`).
 
 When storage formats, path conventions, or data schemas change, always migrate the existing data to match the new format. Never add backwards-compatibility shims, fallback paths, or conditional logic to handle legacy data alongside new data. Fix the data, not the code.
 
+## Debugging
+
+When debugging any problem, after you found an issue that looks suspect, do not immediately go in and impose a fix on the symptom. Instead, take one step back, look at the bigger picture, look at commit history and try to find the root cause and fix THAT.  Use `git blame`. Never add workaround, silence errors to make an error message go away.
+
 ## Coding Guidelines
 
 Development guidelines and best practices for this project.
