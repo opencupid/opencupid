@@ -6,6 +6,10 @@
 
 Location data entry uses the [Komoot Photon API](https://photon.komoot.io/) for geocoding. The frontend sends a search query and receives structured location results (city name, country, coordinates). Selected locations are stored as scalar fields on `Profile` and `Post`: `cityName`, `country`, `lat`, `lon`. There is no internal city/location table — all geocoding is delegated to Photon.
 
+### Map tiles — MapTiler
+
+The maps use [MapTiler](https://www.maptiler.com/) vector tiles loaded directly. This requires an API key from [Maptiler](https://cloud.maptiler.com/account/keys/)
+
 ## Dating interactions
 
 | Action     | User intent              | Visibility consequence     | Reversible?           | Mutual effect? | UX semantics        |

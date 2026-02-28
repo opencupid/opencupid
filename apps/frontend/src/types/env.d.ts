@@ -25,6 +25,7 @@ declare const __APP_CONFIG__: {
   readonly SENTRY_DSN: string
   readonly JITSI_DOMAIN: string
   readonly VOICE_MESSAGE_MAX_DURATION: number
+  readonly MAPTILER_API_KEY: string
 }
 
 declare const __APP_VERSION__: string

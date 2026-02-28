@@ -49,8 +49,6 @@ async function main() {
   const wsRoutes = import('./api/routes/message-ws.route')
   app.register(wsRoutes, { prefix: '/ws' })
 
-  app.register(import('./plugins/tiles-proxy'))
-
   // app.get('/healthz', async () => ({ ok: true }))
 
   const ok = checkUserContentRoot()

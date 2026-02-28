@@ -6,6 +6,8 @@ import 'leaflet/dist/leaflet.css'
 import 'leaflet.markercluster'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
+import { MaptilerLayer } from '@maptiler/leaflet-maptilersdk'
+import '@maptiler/sdk/dist/maptiler-sdk.css'
 
 /** Basic POI shape for location data extraction */
 export interface PoiItem {
@@ -101,47 +103,13 @@ function ensureMap() {
   map = L.map(mapEl.value, {
     center: props.center,
     zoom: props.zoom,
+    maxZoom: 19,
     preferCanvas: true,
   })
 
-  // OSM tiles + required attribution
-  const tilesUrl = `${__APP_CONFIG__.API_BASE_URL}/tiles/{z}/{x}/{y}.png`
-
-  const tileLayer = L.tileLayer(tilesUrl, {
-    maxZoom: 19,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    // Use a plain gray tile as fallback (no text) - base64 encoded blank gray SVG
-    errorTileUrl:
-      'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iI2Y1ZjVmNSIvPjwvc3ZnPg==',
-    // Reduce tile buffer to prevent excessive tile requests
-    keepBuffer: 1,
-    // Enable tile loading during zoom (default: true) - prevents overwhelming tile server
-    // Setting this to false causes all tiles to be requested at once during zoom
-    updateWhenZooming: true,
-    // Update tiles when map stops moving (default: true)
-    updateWhenIdle: true,
-    // Limit tile update frequency to prevent request flooding (default: 200ms)
-    updateInterval: 200,
+  new MaptilerLayer({
+    apiKey: __APP_CONFIG__.MAPTILER_API_KEY,
   }).addTo(map)
-
-  // Add error handling for tile loading
-  tileLayer.on('tileerror', (error: any) => {
-    console.warn('Tile loading error:', error)
-  })
-
-  // Add loading event handlers to monitor tile loading
-  let tilesLoading = 0
-  tileLayer.on('tileloadstart', () => {
-    tilesLoading++
-  })
-
-  tileLayer.on('tileload', () => {
-    tilesLoading--
-  })
-
-  tileLayer.on('tileerror', () => {
-    tilesLoading--
-  })
 
   clusterGroup = (L as any).markerClusterGroup({
     spiderfyOnMaxZoom: false,
