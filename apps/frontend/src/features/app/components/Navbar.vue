@@ -47,15 +47,6 @@ const hasMatchNotifications = computed(
         </BNavItem>
 
         <BNavItem
-          to="/posts"
-          active-class="active"
-          :aria-label="$t('nav.bulletin')"
-        >
-          <IconNote class="svg-icon-lg" />
-          <span class="d-none d-md-inline label">{{ $t('nav.bulletin') }}</span>
-        </BNavItem>
-
-        <BNavItem
           to="/browse"
           active-class="active"
           :aria-label="$t('nav.browse')"
@@ -65,23 +56,20 @@ const hasMatchNotifications = computed(
         </BNavItem>
 
         <BNavItem
-          to="/matches"
+          to="/posts"
           active-class="active"
-          v-if="profileStore.profile?.isDatingActive"
-          :aria-label="$t('nav.matches')"
+          :aria-label="$t('nav.bulletin')"
         >
-          <NotificationDot :show="hasMatchNotifications">
-            <IconHeart class="svg-icon-lg" />
-          </NotificationDot>
-          <span class="d-none d-md-inline label">{{ $t('nav.matches') }}</span>
+          <IconNote class="svg-icon-lg" />
+          <span class="d-none d-md-inline label">{{ $t('nav.bulletin') }}</span>
         </BNavItem>
-
+        
         <BNavItem
           to="/inbox"
           active-class="active"
           :aria-label="$t('nav.inbox')"
         >
-          <NotificationDot :show="hasUnreadMessages">
+          <NotificationDot :show="hasUnreadMessages || hasMatchNotifications">
             <IconMessage class="svg-icon-lg" />
           </NotificationDot>
           <span class="d-none d-md-inline label">{{ $t('nav.inbox') }}</span>

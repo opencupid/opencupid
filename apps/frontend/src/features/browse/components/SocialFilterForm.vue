@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-import TagSelectComponent from '@/features/shared/profileform/TagSelectComponent.vue'
+import TagSelector from '@/features/shared/profileform/TagSelector.vue'
 import LocationSelector from '@/features/shared/profileform/LocationSelector.vue'
 import IconTarget2 from '@/assets/icons/interface/target-2.svg'
 
@@ -91,7 +91,7 @@ const toggleDisabled = () => {
         <!-- Interested in... -->
         {{ $t('profiles.browse.filters.tags_label') }}
       </label>
-      <TagSelectComponent
+      <TagSelector
         v-model="model.tags"
         :taggable="false"
       />

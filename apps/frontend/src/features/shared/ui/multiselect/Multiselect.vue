@@ -14,7 +14,7 @@
     @keydown.self.up.prevent="pointerBackward()"
     @keypress.enter.tab.stop.self="addPointerElement($event)"
     @keyup.esc="deactivate()"
-    class="multiselect position-relative"
+    class="multiselect"
     role="combobox"
     :aria-expanded="isOpen"
     :aria-owns="'listbox-' + id"

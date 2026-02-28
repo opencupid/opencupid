@@ -14,6 +14,7 @@ import { onBeforeRouteLeave, useRouter } from 'vue-router'
 import { useBootstrap } from '@/lib/bootstrap'
 import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 import { type PublicProfile } from '@zod/profile/profile.dto'
+import type { PopularTag } from '@zod/tag/tag.dto'
 
 import ProfileCardGrid from '@/features/browse/components/ProfileCardGrid.vue'
 import LikesAndMatchesBanner from '@/features/interaction/components/LikesAndMatchesBanner.vue'
@@ -66,6 +67,15 @@ const handleCardClick = async (profileId: string) => {
   })
 }
 
+const handleTagSelect = async (tag: PopularTag) => {
+  const findProfileStore = useFindProfileStore()
+  if (findProfileStore.socialFilter) {
+    findProfileStore.socialFilter.tags = [{ id: tag.id, name: tag.name, slug: tag.slug }]
+    await findProfileStore.persistSocialFilter()
+  }
+  router.push({ path: '/browse/social', query: { tag: tag.slug } })
+}
+
 provide('viewerProfile', toRef(viewerProfile))
 </script>
 
@@ -99,7 +109,7 @@ provide('viewerProfile', toRef(viewerProfile))
         </div>
         <h5>{{ $t('home.explore_interests') }}</h5>
         <div class="mb-4">
-          <TagCloud />
+          <TagCloud @tag:select="handleTagSelect" />
         </div>
       </div>
 
@@ -133,7 +143,7 @@ provide('viewerProfile', toRef(viewerProfile))
         <BCol lg="4">
           <div class="tag-cloud-sidebar">
             <h5>{{ $t('home.explore_interests') }}</h5>
-            <TagCloud />
+            <TagCloud @tag:select="handleTagSelect" />
           </div>
         </BCol>
       </BRow>

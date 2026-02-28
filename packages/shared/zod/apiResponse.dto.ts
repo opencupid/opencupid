@@ -37,6 +37,7 @@ export type UpdateDatingPreferencesResponse = ApiSuccess<{ prefs: DatingPreferen
 export type GetMyProfileResponse = ApiSuccess<{ profile: OwnerProfile }>
 export type GetPublicProfileResponse = ApiSuccess<{ profile: PublicProfileWithContext }>
 export type GetProfilesResponse = ApiSuccess<{ profiles: PublicProfileWithContext[] }>
+export type GetMatchIdsResponse = ApiSuccess<{ ids: string[] }>
 export type UpdateProfileResponse = ApiSuccess<{ profile: OwnerProfile }>
 
 export type TagsResponse = ApiSuccess<{ tags: PublicTag[] }>

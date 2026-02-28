@@ -158,8 +158,6 @@ describe('Navbar', () => {
     expect(wrapper.html()).toContain('nav.home')
     expect(wrapper.html()).toContain('nav.inbox')
     expect(wrapper.html()).toContain('nav.browse')
-    expect(wrapper.html()).toContain('nav.matches')
-    expect(wrapper.html()).toContain('nav.inbox')
     expect(wrapper.html()).toContain('profile-thumbnail')
   })
 
@@ -180,30 +178,6 @@ describe('Navbar', () => {
     expect(wrapper.html()).toContain('nav.home')
     expect(wrapper.html()).toContain('nav.inbox')
     expect(wrapper.html()).toContain('nav.browse')
-    expect(wrapper.html()).toContain('nav.matches')
-    expect(wrapper.html()).toContain('nav.inbox')
-    expect(wrapper.html()).toContain('default-user-icon')
-  })
-
-  it('renders when logged in and no matches menu', () => {
-    mockIsLoggedIn.value = true
-    mockProfileRef.value = { isDatingActive: false, isOnboarded: true, profileImages: [] }
-    const wrapper = mount(Navbar, {
-      global: {
-        stubs: {
-          BNavbar: stub,
-          BNavItem: stub,
-          BNavbarNav: stub,
-          FontAwesomeIcon: stub,
-        },
-        mocks: { $t: (msg: string) => msg },
-      },
-    })
-    expect(wrapper.html()).toContain('nav.home')
-    expect(wrapper.html()).toContain('nav.inbox')
-    expect(wrapper.html()).toContain('nav.browse')
-    expect(wrapper.html()).not.toContain('nav.matches')
-    expect(wrapper.html()).toContain('nav.inbox')
     expect(wrapper.html()).toContain('default-user-icon')
   })
 

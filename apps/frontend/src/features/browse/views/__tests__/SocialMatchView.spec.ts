@@ -4,9 +4,6 @@ import { ref, computed } from 'vue'
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 
 // stub child components
-vi.mock('../../components/ProfileCardGrid.vue', () => ({
-  default: { template: '<div class="profile-grid" />', props: ['profiles'] },
-}))
 vi.mock('../../components/PlaceholdersGrid.vue', () => ({
   default: { template: '<div class="placeholders-grid" />', props: ['howMany', 'loading'] },
 }))
@@ -16,29 +13,32 @@ vi.mock('../../components/NoAccessCTA.vue', () => ({
 vi.mock('../../components/NoResultsCTA.vue', () => ({
   default: { template: '<div class="no-results" />' },
 }))
-vi.mock('../../components/SocialFilterForm.vue', () => ({
-  default: {
-    template: '<div class="social-filter-form" />',
-    props: ['modelValue', 'viewerProfile'],
-  },
-}))
-vi.mock('../../components/SocialFilterDisplay.vue', () => ({
-  default: {
-    template: '<div class="social-filter-display" />',
-    props: ['modelValue', 'viewerLocation'],
-  },
-}))
-vi.mock('@/features/publicprofile/components/PublicProfile.vue', () => ({
-  default: { template: '<div class="public-profile" />', props: ['id'] },
-}))
 vi.mock('@/features/shared/components/OsmPoiMap.vue', () => ({
   default: { template: '<div class="osm-poi-map" />', props: ['items'] },
 }))
-vi.mock('@/features/shared/ui/ViewModeToggler.vue', () => ({
-  default: { template: '<div class="view-mode-toggler" />', props: ['modelValue'] },
-}))
 vi.mock('../../components/ProfileMapCard.vue', () => ({
   default: { template: '<div class="profile-map-card" />' },
+}))
+vi.mock('@/features/shared/profileform/LocationSelector.vue', () => ({
+  default: {
+    template: '<div class="location-selector" />',
+    props: ['modelValue', 'allowEmpty'],
+  },
+}))
+vi.mock('@/features/shared/profileform/TagSelector.vue', () => ({
+  default: {
+    template: '<div class="tag-select-component" />',
+    props: ['modelValue', 'taggable'],
+  },
+}))
+vi.mock('@/features/shared/components/TagCloud.vue', () => ({
+  default: { template: '<div class="tag-cloud" />' },
+}))
+vi.mock('@/assets/icons/interface/target-2.svg', () => ({
+  default: { template: '<svg class="icon-target" />' },
+}))
+vi.mock('@/assets/icons/e-commerce/tag.svg', () => ({
+  default: { template: '<svg class="icon-tag" />' },
 }))
 vi.mock('../../shared/composables/useCountries', () => ({
   useCountries: () => ({ countryCodeToName: vi.fn(() => 'Test Country') }),
@@ -59,21 +59,17 @@ const vmState = {
   ),
   findProfileStoreLoading: ref(false),
   ownerStoreLoading: ref(false),
-  viewModeModel: ref('grid'),
   profileList: ref([{ id: '1' }]),
   storeError: ref(null),
-  socialFilter: ref<{ location: { country: string }; radius: number } | null>(null),
-  selectedProfileId: ref<string | null>(null),
+  socialFilter: ref<{
+    location: { country: string; cityName: string; lat: null; lon: null }
+    tags: { id: string; name: string; slug: string }[]
+  } | null>(null),
   isInitialized: ref(true),
-  isLoadingMore: ref(false),
   hideProfile: vi.fn(),
   updatePrefs: vi.fn(),
   openProfile: vi.fn(),
-  closeProfile: vi.fn(),
-  hasMoreProfiles: ref(true),
   initialize: vi.fn(),
-  reset: vi.fn(),
-  loadMoreProfiles: vi.fn(),
 }
 
 vi.mock('../../composables/useSocialMatchViewModel', () => ({
@@ -88,7 +84,6 @@ const BOverlay = { template: '<div class="b-overlay"><slot /><slot name="overlay
 const BModal = { template: '<div class="b-modal"><slot /></div>', props: ['modelValue'] }
 const BButton = { template: '<button><slot /></button>' }
 const BContainer = { template: '<div class="container"><slot /></div>' }
-const BSpinner = { template: '<div class="spinner" />', props: ['variant', 'small'] }
 
 import SocialMatch from '../SocialMatch.vue'
 
@@ -99,10 +94,7 @@ describe('SocialMatch view', () => {
     vmState.findProfileStoreLoading.value = false
     vmState.ownerStoreLoading.value = false
     vmState.isInitialized.value = true
-    vmState.selectedProfileId.value = null
-    vmState.isLoadingMore.value = false
-    vmState.hasMoreProfiles.value = true
-    vmState.viewModeModel.value = 'grid'
+    vmState.socialFilter.value = null
   })
 
   const mountComponent = () => {
@@ -114,7 +106,6 @@ describe('SocialMatch view', () => {
           BModal,
           BButton,
           BContainer,
-          BSpinner,
         },
       },
     })
@@ -125,7 +116,6 @@ describe('SocialMatch view', () => {
     vmState.isInitialized.value = true
     const wrapper = mountComponent()
     expect(wrapper.find('.placeholders-grid').exists()).toBe(true)
-    expect(wrapper.find('.profile-grid').exists()).toBe(false)
   })
 
   it('displays placeholders while initializing', () => {
@@ -150,52 +140,30 @@ describe('SocialMatch view', () => {
     expect(wrapper.find('.no-results').exists()).toBe(true)
   })
 
-  it('renders profile grid when in grid view mode', () => {
-    vmState.viewModeModel.value = 'grid'
+  it('renders map view with OsmPoiMap', () => {
     const wrapper = mountComponent()
-    expect(wrapper.find('.profile-grid').exists()).toBe(true)
-    expect(wrapper.find('.osm-poi-map').exists()).toBe(false)
-  })
-
-  it('renders map when in map view mode', () => {
-    vmState.viewModeModel.value = 'map'
-    const wrapper = mountComponent()
-    expect(wrapper.find('.profile-grid').exists()).toBe(false)
     expect(wrapper.find('.osm-poi-map').exists()).toBe(true)
   })
 
-  it('shows social filter display when access is granted', () => {
-    vmState.socialFilter.value = { location: { country: 'US' }, radius: 50 }
+  it('renders inline LocationSelector and TagSelector when filter is set', () => {
+    vmState.socialFilter.value = {
+      location: { country: 'US', cityName: 'New York', lat: null, lon: null },
+      tags: [],
+    }
     const wrapper = mountComponent()
-    expect(wrapper.find('.social-filter-display').exists()).toBe(true)
+    expect(wrapper.find('.location-selector').exists()).toBe(true)
+    expect(wrapper.find('.tag-select-component').exists()).toBe(true)
   })
 
-  describe('ViewMode - Detail View', () => {
-    it('displays detail view when a profile is selected', () => {
-      vmState.selectedProfileId.value = 'profile-123'
-      const wrapper = mountComponent()
-      expect(wrapper.find('.detail-view').exists()).toBe(true)
-      expect(wrapper.find('.list-view').classes()).toContain('inactive')
-    })
+  it('renders TagCloud modal markup', () => {
+    const wrapper = mountComponent()
+    expect(wrapper.find('.b-modal').exists()).toBe(true)
+    expect(wrapper.find('.tag-cloud').exists()).toBe(true)
+  })
 
-    it('shows public profile component in detail view', () => {
-      vmState.selectedProfileId.value = 'profile-123'
-      const wrapper = mountComponent()
-      expect(wrapper.find('.public-profile').exists()).toBe(true)
-    })
-
-    it('transitions from grid to detail view', async () => {
-      vmState.selectedProfileId.value = null
-      const wrapper = mountComponent()
-
-      expect(wrapper.find('.list-view').classes()).not.toContain('inactive')
-      expect(wrapper.find('.detail-view').exists()).toBe(false)
-
-      vmState.selectedProfileId.value = 'profile-456'
-      await wrapper.vm.$nextTick()
-
-      expect(wrapper.find('.list-view').classes()).toContain('inactive')
-      expect(wrapper.find('.detail-view').exists()).toBe(true)
-    })
+  it('no detail overlay exists (profiles are now route-based)', () => {
+    const wrapper = mountComponent()
+    expect(wrapper.find('.detail-view').exists()).toBe(false)
+    expect(wrapper.find('.public-profile').exists()).toBe(false)
   })
 })

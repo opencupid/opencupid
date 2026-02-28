@@ -2,12 +2,14 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 const mockFindSocialProfilesWithLocation = vi.fn()
 const mockFindSocialProfilesFor = vi.fn()
+const mockFindMutualMatchIds = vi.fn()
 
 vi.mock('@/services/profileMatch.service', () => ({
   ProfileMatchService: {
     getInstance: () => ({
       findSocialProfilesFor: mockFindSocialProfilesFor,
       findSocialProfilesWithLocation: mockFindSocialProfilesWithLocation,
+      findMutualMatchIds: mockFindMutualMatchIds,
       getSocialMatchFilter: vi.fn(),
       updateSocialMatchFilter: vi.fn(),
     }),
@@ -125,6 +127,44 @@ describe('GET /social/map', () => {
     mockFindSocialProfilesWithLocation.mockRejectedValue(new Error('DB error'))
 
     await handler()({ session: mockSession, query: {}, log: { error: vi.fn() } }, reply)
+
+    expect(reply.statusCode).toBe(500)
+  })
+})
+
+describe('GET /dating/match-ids', () => {
+  const handler = () => fastify.routes['GET /dating/match-ids']
+
+  it('returns match IDs when dating is active', async () => {
+    mockFindMutualMatchIds.mockResolvedValue(['p1', 'p2', 'p3'])
+    const datingSession = {
+      ...mockSession,
+      profile: { ...mockSession.profile, isDatingActive: true },
+    }
+
+    await handler()({ session: datingSession, log: { error: vi.fn() } }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload).toEqual({ success: true, ids: ['p1', 'p2', 'p3'] })
+    expect(mockFindMutualMatchIds).toHaveBeenCalledWith('profile-123')
+  })
+
+  it('returns empty array when dating is not active', async () => {
+    await handler()({ session: mockSession, log: { error: vi.fn() } }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload).toEqual({ success: true, ids: [] })
+    expect(mockFindMutualMatchIds).not.toHaveBeenCalled()
+  })
+
+  it('returns 500 on service error', async () => {
+    mockFindMutualMatchIds.mockRejectedValue(new Error('DB error'))
+    const datingSession = {
+      ...mockSession,
+      profile: { ...mockSession.profile, isDatingActive: true },
+    }
+
+    await handler()({ session: datingSession, log: { error: vi.fn() } }, reply)
 
     expect(reply.statusCode).toBe(500)
   })

@@ -22,41 +22,21 @@ function removeTag(tag: PublicTag) {
   }
 }
 
-function clearLocation() {
-  if (socialFilter.value) {
-    Object.assign(socialFilter.value.location, {
-      country: '',
-      cityId: '',
-      cityName: '',
-      lat: null,
-      lon: null,
-    })
-    emit('filter:changed')
-  }
-}
 </script>
 
 <template>
   <div class="filter-chips flex-grow-1">
-    <span class="filter-chip badge text-bg-info me-1">
-      <template v-if="socialFilter?.location?.country && viewerLocation">
-        <LocationLabel
-          :location="socialFilter.location"
-          :viewerLocation="viewerLocation"
-          :showCity="false"
-          :showCountryLabel="true"
-          :showCountryIcon="false"
-        />
-        <button
-          type="button"
-          class="btn-close btn-close-sm ms-1"
-          aria-label="Remove"
-          @click.stop="clearLocation"
-        />
-      </template>
-      <template v-else>
-        {{ $t('profiles.browse.filters.anywhere') }}
-      </template>
+    <span
+      class="filter-chip badge text-bg-info me-1"
+      v-if="socialFilter?.location?.country && viewerLocation"
+    >
+      <LocationLabel
+        :location="socialFilter.location"
+        :viewerLocation="viewerLocation"
+        :showCity="false"
+        :showCountryLabel="true"
+        :showCountryIcon="false"
+      />
     </span>
 
     <span

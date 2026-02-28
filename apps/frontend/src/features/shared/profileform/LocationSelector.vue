@@ -7,6 +7,7 @@ import Multiselect from '@/features/shared/ui/multiselect'
 
 import { useDebounceFn } from '@vueuse/core'
 import CountryFlag from '../ui/CountryFlag.vue'
+import { prop } from 'remeda'
 
 const debouncedAsyncFind = useDebounceFn(async (query: string) => {
   if (!query) {
@@ -27,10 +28,14 @@ const model = defineModel<LocationDTO>({
 
 const props = withDefaults(
   defineProps<{
-    allowEmpty?: boolean
+    allowEmpty?: boolean,
+    closeOnSelect?: boolean,
+    openDirection?: 'top' | 'bottom'
   }>(),
   {
+    openDirection: 'top',
     allowEmpty: false,
+    closeOnSelect: false,
   }
 )
 
@@ -80,9 +85,10 @@ onUnmounted(() => {
     <Multiselect
       v-model="selected"
       v-bind:allow-empty="props.allowEmpty"
+      :open-direction="props.openDirection"
       :options="options"
       :searchable="true"
-      :close-on-select="true"
+      :close-on-select="props.closeOnSelect"
       :clear-on-select="true"
       :internal-search="false"
       :show-no-results="false"
@@ -91,7 +97,6 @@ onUnmounted(() => {
       select-label=""
       selected-label=""
       deselect-label=""
-      open-direction="top"
       label="name"
       track-by="name"
       @search-change="debouncedAsyncFind"

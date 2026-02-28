@@ -4,6 +4,7 @@ import type { PublicProfile } from '@zod/profile/profile.dto'
 import { PublicProfileArraySchema } from '@zod/profile/profile.dto'
 import type {
   GetDatingPreferencesResponse,
+  GetMatchIdsResponse,
   GetProfilesResponse,
   GetSocialMatchFilterResponse,
 } from '@zod/apiResponse.dto'
@@ -23,12 +24,13 @@ import {
   type SocialMatchFilterDTO,
   type UpdateSocialMatchFilterPayload,
 } from '@zod/match/filters.dto'
-import type { LocationPayload, SearchLocationDTO } from '@zod/dto/location.dto'
+import type { LocationDTO, LocationPayload } from '@zod/dto/location.dto'
 
 type FindProfileStoreState = {
   datingPrefs: DatingPreferencesDTO | null
   socialFilter: SocialMatchFilterDTO | null // Social match filter preferences
   profileList: PublicProfile[] // List of public profiles
+  matchedProfileIds: Set<string> // IDs of mutual dating preference matches
   socialSearch: SocialMatchFilterDTO | null // Current social search query
   isLoading: boolean // Loading state
   // Infinite scroll state
@@ -40,7 +42,7 @@ type FindProfileStoreState = {
 
 type StoreProfileListResponse = StoreSuccess<{ result: PublicProfile[] }> | StoreError
 
-function mapLocationToPayload(dto: SearchLocationDTO): LocationPayload {
+function mapLocationToPayload(dto: LocationDTO): LocationPayload {
   const country = dto.country && dto.country !== '' ? dto.country : null
   const cityName = dto.cityName ?? ''
 
@@ -68,6 +70,7 @@ export const useFindProfileStore = defineStore('findProfile', {
     datingPrefs: null,
     socialFilter: null,
     profileList: [] as PublicProfile[],
+    matchedProfileIds: new Set<string>(),
     socialSearch: null as SocialMatchFilterDTO | null, // Current social search query
     isLoading: false,
     // Infinite scroll state
@@ -133,6 +136,15 @@ export const useFindProfileStore = defineStore('findProfile', {
         return storeError(error, 'Failed to fetch map profiles')
       } finally {
         this.isLoading = false
+      }
+    },
+
+    async fetchDatingMatchIds(): Promise<void> {
+      try {
+        const res = await safeApiCall(() => api.get<GetMatchIdsResponse>('/find/dating/match-ids'))
+        this.matchedProfileIds = new Set(res.data.ids)
+      } catch {
+        this.matchedProfileIds = new Set()
       }
     },
 
@@ -293,6 +305,7 @@ export const useFindProfileStore = defineStore('findProfile', {
 
     teardown() {
       this.profileList = []
+      this.matchedProfileIds = new Set()
       this.socialSearch = null
       this.datingPrefs = null
       this.isLoading = false

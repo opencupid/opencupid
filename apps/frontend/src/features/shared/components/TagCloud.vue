@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
 import { useTagsStore } from '@/store/tagStore'
-import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 import type { PopularTag } from '@zod/tag/tag.dto'
 import cloud from 'd3-cloud'
 
@@ -14,9 +12,9 @@ const props = withDefaults(
   { limit: 50 }
 )
 
+const emit = defineEmits<{ 'tag:select': [tag: PopularTag] }>()
+
 const tagStore = useTagsStore()
-const findProfileStore = useFindProfileStore()
-const router = useRouter()
 
 const WIDTH = 600
 const HEIGHT = 400
@@ -74,12 +72,8 @@ function runLayout(tags: PopularTag[]) {
     .start()
 }
 
-async function handleTagClick(tag: PopularTag) {
-  if (findProfileStore.socialFilter) {
-    findProfileStore.socialFilter.tags = [{ id: tag.id, name: tag.name, slug: tag.slug }]
-    await findProfileStore.persistSocialFilter()
-  }
-  router.push({ path: '/browse/social', query: { tag: tag.slug } })
+function handleTagClick(tag: PopularTag) {
+  emit('tag:select', tag)
 }
 
 onMounted(async () => {

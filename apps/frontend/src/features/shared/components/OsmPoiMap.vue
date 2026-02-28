@@ -37,6 +37,8 @@ const props = withDefaults(
     selectedId?: string | number
     /** Whether to auto-fit the map to show all items */
     fitToPois?: boolean
+    /** Optional callback to determine if an item should have a highlight halo */
+    isHighlighted?: (item: T) => boolean
   }>(),
   {
     center: () => [47.0, 19.0], // Central Europe-ish default
@@ -82,20 +84,36 @@ const defaultIcon = L.divIcon({
   iconAnchor: [8, 8],
 })
 
-function avatarIcon(url: string, isSelected: boolean): L.DivIcon {
+function avatarIcon(url: string, isSelected: boolean, isHighlighted: boolean): L.DivIcon {
   const size = isSelected ? 40 : 32
+  const classes = ['poi-avatar']
+  if (isSelected) classes.push('selected')
+  if (isHighlighted) classes.push('highlighted')
   return L.divIcon({
     className: 'poi-avatar-icon',
-    html: `<img src="${encodeURI(url)}" class="poi-avatar${isSelected ? ' selected' : ''}" />`,
+    html: `<img src="${encodeURI(url)}" class="${classes.join(' ')}" />`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
   })
 }
 
+function dotIcon(isSelected: boolean, isHighlighted: boolean): L.DivIcon {
+  const classes = ['poi-dot']
+  if (isSelected) classes.push('selected')
+  if (isHighlighted) classes.push('highlighted')
+  return L.divIcon({
+    className: isSelected ? 'poi-selected-icon' : 'poi-default-icon',
+    html: `<div class="${classes.join(' ')}"></div>`,
+    iconSize: isSelected ? [20, 20] : [16, 16],
+    iconAnchor: isSelected ? [10, 10] : [8, 8],
+  })
+}
+
 function iconForItem(item: T, isSelected: boolean): L.DivIcon {
+  const highlighted = props.isHighlighted?.(item) ?? false
   const imageUrl = props.getImageUrl?.(item)
-  if (imageUrl) return avatarIcon(imageUrl, isSelected)
-  return isSelected ? selectedIcon : defaultIcon
+  if (imageUrl) return avatarIcon(imageUrl, isSelected, highlighted)
+  return dotIcon(isSelected, highlighted)
 }
 
 function ensureMap() {
@@ -151,11 +169,12 @@ function updateMarkers() {
       keyboard: true,
     })
 
+    const highlighted = props.isHighlighted?.(item) ?? false
     m.bindPopup('', {
       maxWidth: 420,
       autoPan: true,
       autoPanPadding: L.point(20, 20),
-      className: 'item-popup',
+      className: highlighted ? 'item-popup item-popup-highlighted' : 'item-popup',
     })
 
     m.on('popupopen', (e: L.PopupEvent) => {
@@ -241,6 +260,15 @@ watch(
     highlightSelected()
   }
 )
+
+watch(
+  () => props.center,
+  (newCenter) => {
+    if (map && newCenter) {
+      map.flyTo(newCenter, map.getZoom(), { duration: 1 })
+    }
+  }
+)
 </script>
 
 <template>
@@ -310,6 +338,19 @@ watch(
     0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
+:deep(.poi-avatar.highlighted) {
+  box-shadow:
+    0 0 6px 3px rgba(217, 83, 79, 0.7);
+  filter: drop-shadow(0 0 6px rgba(217, 83, 79, 0.6));
+}
+
+:deep(.poi-dot.highlighted) {
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.9),
+    0 0 10px 3px rgba(217, 83, 79, 0.4);
+  filter: drop-shadow(0 0 6px rgba(217, 83, 79, 0.5));
+}
+
 /* Cluster badge */
 :deep(.poi-cluster-icon) {
   background: transparent;
@@ -345,6 +386,14 @@ watch(
 :deep(.leaflet-div-icon) {
   background: transparent;
   border: none;
+}
+
+:deep(.item-popup-highlighted .leaflet-popup-content-wrapper) {
+  box-shadow: 0 3px 13px rgba(217, 83, 79, 0.9);
+}
+
+:deep(.item-popup-highlighted .leaflet-popup-tip) {
+  box-shadow: 0 3px 14px rgba(217, 83, 79, 0.3);
 }
 
 :deep(.leaflet-popup) {
