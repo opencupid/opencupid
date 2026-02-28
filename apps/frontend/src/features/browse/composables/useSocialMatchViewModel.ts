@@ -81,9 +81,7 @@ export function useSocialMatchViewModel() {
     viewerProfile,
     haveResults,
     haveAccess,
-    isLoading: computed(
-      () => findProfileStore.isLoading || ownerStore.isLoading || !isInitialized.value
-    ),
+    isLoading: computed(() => ownerStore.isLoading || !isInitialized.value),
     storeError,
     initialize,
     hideProfile,

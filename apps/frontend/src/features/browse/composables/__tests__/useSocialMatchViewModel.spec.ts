@@ -94,6 +94,16 @@ describe('useSocialMatchViewModel', () => {
     mockOwnerStore.profile = original
   })
 
+  it('isLoading is false after initialization even when findProfileStore.isLoading is true', async () => {
+    const vm = useSocialMatchViewModel()
+    await vm.initialize()
+    expect(vm.isInitialized.value).toBe(true)
+    // Simulate a background store reload (filter update)
+    mockFindProfileStore.isLoading = true
+    expect(vm.isLoading.value).toBe(false)
+    mockFindProfileStore.isLoading = false
+  })
+
   it('exposes matchedProfileIds from store', () => {
     mockFindProfileStore.matchedProfileIds = new Set(['p1', 'p2'])
     const vm = useSocialMatchViewModel()
