@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, provide, ref } from 'vue'
+import { computed, provide, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 
@@ -31,6 +31,18 @@ const router = useRouter()
 const { t } = useI18n()
 
 const showPrefsModal = ref(false)
+const noResultsDismissed = ref(false)
+
+watch(
+  () => props.haveResults,
+  () => {
+    noResultsDismissed.value = false
+  }
+)
+
+const showNoResultsCTA = computed(
+  () => props.isInitialized && !props.haveResults && props.haveAccess && !noResultsDismissed.value
+)
 
 provide(
   'viewerProfile',
@@ -97,21 +109,30 @@ const handleEditProfileIntent = () => {
           </BContainer>
         </template>
 
-        <template v-if="isInitialized && !haveResults && haveAccess">
+        <template v-if="isInitialized && !haveResults && haveAccess && currentScope !== 'social'">
           <BContainer class="flex-grow-1 d-flex align-items-center justify-content-center">
             <MiddleColumn>
               <slot name="no-results" />
-              <NoResultsCTA />
+              <NoResultsCTA @close="noResultsDismissed = true" />
             </MiddleColumn>
           </BContainer>
         </template>
 
-        <template v-else-if="isInitialized && haveResults">
-          <div class="overflow-auto hide-scrollbar flex-grow-1">
+        <template v-if="isInitialized && haveAccess && (haveResults || currentScope === 'social')">
+          <div class="overflow-auto hide-scrollbar flex-grow-1 position-relative">
             <slot
               name="results"
               :onProfileSelect="handleCardClick"
             />
+            <div
+              v-if="showNoResultsCTA && currentScope === 'social'"
+              class="no-results-overlay"
+            >
+              <MiddleColumn>
+                <slot name="no-results" />
+                <NoResultsCTA @close="noResultsDismissed = true" />
+              </MiddleColumn>
+            </div>
           </div>
         </template>
       </BPlaceholderWrapper>
@@ -151,6 +172,21 @@ const handleEditProfileIntent = () => {
 
 main {
   width: 100%;
+}
+
+.no-results-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 600; // above map tiles, below subnav-bar (800)
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+
+  > * {
+    pointer-events: auto;
+  }
 }
 
 .subnav-bar {

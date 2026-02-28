@@ -8,14 +8,27 @@ const ShareDialog = {
   template: '<div class="share-dialog" :data-show="modelValue" />',
 }
 const BButton = { template: '<button @click="$emit(\'click\')"><slot /></button>' }
+const BCloseButton = { template: '<button class="btn-close" @click="$emit(\'click\')" />' }
 
 import NoResultsCTA from '../NoResultsCTA.vue'
 
 describe('NoResultsCTA', () => {
-  it('opens modal when button clicked', async () => {
-    const wrapper = mount(NoResultsCTA, { global: { stubs: { ShareDialog, BButton } } })
+  const mountCTA = () =>
+    mount(NoResultsCTA, { global: { stubs: { ShareDialog, BButton, BCloseButton } } })
+
+  it('opens share dialog when invite button is clicked', async () => {
+    const wrapper = mountCTA()
     expect(wrapper.find('.share-dialog').attributes('data-show')).toBe('false')
-    await wrapper.find('button').trigger('click')
+    await wrapper
+      .findAll('button')
+      .find((b) => b.text().includes('invite'))!
+      .trigger('click')
     expect(wrapper.find('.share-dialog').attributes('data-show')).toBe('true')
+  })
+
+  it('emits close when close button is clicked', async () => {
+    const wrapper = mountCTA()
+    await wrapper.find('.btn-close').trigger('click')
+    expect(wrapper.emitted('close')!.length).toBeGreaterThanOrEqual(1)
   })
 })
