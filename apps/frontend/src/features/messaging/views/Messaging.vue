@@ -1,86 +1,46 @@
 <script lang="ts" setup>
-import { useRouter } from 'vue-router'
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-
-import type { ConversationSummary } from '@zod/messaging/messaging.dto'
-import type { ProfileSummary } from '@zod/profile/profile.dto'
+import { onMounted, onUnmounted, toRef } from 'vue'
 
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 import IconMessage from '@/assets/icons/interface/message.svg'
 import IconSearch from '@/assets/icons/interface/search.svg'
 
 import ConversationDetail from '../components/ConversationDetail.vue'
-import { useMessageStore } from '../stores/messageStore'
 import ConversationSummaries from '../components/ConversationSummaries.vue'
 import ViewTitle from '../../shared/ui/ViewTitle.vue'
-import { useBootstrap } from '@/lib/bootstrap'
+import LikesAndMatchesBanner from '@/features/interaction/components/LikesAndMatchesBanner.vue'
+import MatchesList from '@/features/interaction/components/MatchesList.vue'
 
-const router = useRouter()
-const messageStore = useMessageStore()
+import { useMessagingViewModel } from '../composables/useMessagingViewModel'
 
 const props = defineProps<{
   conversationId?: string
 }>()
 
-// Watch for changes in conversationId router prop so we can update
-// the active conversation
-watch(
-  () => props.conversationId,
-  async (newId, oldId) => {
-    if (newId !== oldId) {
-      if (!newId) {
-        await messageStore.setActiveConversation(null)
-      } else {
-        await messageStore.setActiveConversationById(newId)
-      }
-    }
-  },
-  { immediate: true }
-)
-
-const isInitialized = ref(false)
+const {
+  conversations,
+  activeConversation,
+  isLoading,
+  haveConversations,
+  isDetailView,
+  isInitialized,
+  handleSelectConvo,
+  handleDeselectConvo,
+  handleProfileSelect,
+  fetchConversations,
+  initialize,
+  reset,
+  matches,
+  haveMatches,
+} = useMessagingViewModel(toRef(props, 'conversationId'))
 
 onMounted(async () => {
-  // ensure ownerProfile is initialized
-  await useBootstrap().bootstrap()
-
-  await messageStore.fetchConversations()
-  isInitialized.value = true
-  if (props.conversationId) {
-    await messageStore.setActiveConversationById(props.conversationId)
-  }
+  await initialize()
 })
 
 onUnmounted(() => {
-  // Clear active conversation when component is unmounted
-  messageStore.setActiveConversation(null)
+  reset()
 })
-
-const handleSelectConvo = async (convo: ConversationSummary) => {
-  if (messageStore.activeConversation?.conversationId === convo.conversationId) {
-    return
-  }
-  router.push({ name: 'Messaging', params: { conversationId: convo.conversationId } })
-  // Let the watcher handle setActiveConversation to avoid double fetch
-  setTimeout(async () => {
-    await messageStore.markAsRead(convo.conversationId)
-  }, 2000)
-}
-
-const handleDeselectConvo = async () => {
-  router.back()
-  messageStore.resetActiveConversation()
-}
-
-const handleProfileSelect = (profile: ProfileSummary) => {
-  router.push({ name: 'PublicProfile', params: { profileId: profile.id } })
-}
-
-const haveConversations = computed(() => {
-  return messageStore.conversations.length > 0
-})
-
-const isDetailView = computed(() => !!messageStore.activeConversation)
 </script>
 
 <template>
@@ -93,11 +53,11 @@ const isDetailView = computed(() => !!messageStore.activeConversation)
     >
       <MiddleColumn class="h-100">
         <ConversationDetail
-          :loading="messageStore.isLoading"
-          :conversation="messageStore.activeConversation"
+          :loading="isLoading"
+          :conversation="activeConversation"
           @deselect:convo="handleDeselectConvo"
           @profile:select="handleProfileSelect"
-          @updated="messageStore.fetchConversations"
+          @updated="fetchConversations"
         />
       </MiddleColumn>
     </div>
@@ -124,17 +84,15 @@ const isDetailView = computed(() => !!messageStore.activeConversation)
         <template #overlay>
           <div class="d-flex flex-column align-items-center justify-content-center h-100">
             <p class="text-muted mb-4 mt-4 text-center">
-              <!-- Your conversations will take place here. -->
               {{ $t('messaging.no_messages_placeholder') }}
             </p>
             <BButton
               variant="primary"
               size="lg"
               pill
-              @click="router.push({ name: 'SocialMatch' })"
+              @click="$router.push({ name: 'SocialMatch' })"
             >
               <IconSearch class="svg-icon" />
-              <!-- Find people to talk to -->
               {{ $t('messaging.no_messages_cta') }}
             </BButton>
           </div>
@@ -143,10 +101,22 @@ const isDetailView = computed(() => !!messageStore.activeConversation)
         <!-- Conversation summaries -->
         <div class="flex-grow-1 overflow-auto hide-scrollbar pt-5">
           <MiddleColumn>
+            <LikesAndMatchesBanner class="mb-3" />
+
+            <template v-if="haveMatches">
+              <p class="px-2">{{ $t('matches.matches_list_title') }}</p>
+              <div class="px-2 mb-3">
+                <MatchesList
+                  :edges="matches"
+                  @select:profile="handleProfileSelect"
+                />
+              </div>
+            </template>
+
             <ConversationSummaries
-              :loading="messageStore.isLoading"
-              :conversations="messageStore.conversations"
-              :activeConversation="messageStore.activeConversation"
+              :loading="isLoading"
+              :conversations="conversations"
+              :activeConversation="activeConversation"
               @convo:select="handleSelectConvo"
             />
           </MiddleColumn>

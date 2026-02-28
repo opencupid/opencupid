@@ -65,6 +65,7 @@ onUnmounted(() => {
   >
     <template #filter-bar>
       <div class="filter-area flex-grow-1">
+        <!-- claude: dont remove this component -->
         <DatingPrefsDisplay
           v-if="datingPrefs && haveAccess"
           v-model="datingPrefs"
@@ -74,8 +75,11 @@ onUnmounted(() => {
 
     <template #results="{ onProfileSelect }">
       <FluidColumn class="grid-view">
+        
+        <!-- claude: copy into Messagine.vue -->
         <LikesAndMatchesBanner class="mb-3" />
 
+        <!-- claude: copy into Messagine.vue -->
         <template v-if="haveMatches">
           <p class="px-2">{{ $t('matches.matches_list_title') }}</p>
           <div class="px-2 mb-3">
