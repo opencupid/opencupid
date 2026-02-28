@@ -216,10 +216,8 @@ main {
 }
 
 .subnav-bar {
-  // font-size: 0.75rem;
-  // cursor: pointer;
   position: relative;
-  z-index: 100;
+  z-index: 800; // above Leaflet map panes (max ~700)
   box-shadow: var(--shadow-xs);
   transition:
     background-color 0.2s ease,

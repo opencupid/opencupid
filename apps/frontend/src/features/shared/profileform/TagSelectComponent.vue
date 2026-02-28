@@ -14,9 +14,11 @@ const model = defineModel<PublicTag[]>({
 const props = withDefaults(
   defineProps<{
     taggable?: boolean,
+    closeOnSelect?: boolean,
     openDirection?: 'top' | 'bottom'
   }>(),
   {
+    closeOnSelect: false,
     openDirection: 'top',
     taggable: true,
   }
@@ -76,7 +78,7 @@ const selectHeight = computed(() => {
       :multiple="true"
       :loading="isLoading"
       :searchable="true"
-      :close-on-select="false"
+      :close-on-select="props.closeOnSelect"
       :clear-on-select="true"
       :internal-search="false"
       :show-labels="false"
