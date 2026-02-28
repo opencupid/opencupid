@@ -7,7 +7,7 @@ import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 import FluidColumn from '@/features/shared/ui/FluidColumn.vue'
 import NoAccessCTA from '../components/NoAccessCTA.vue'
 import NoResultsCTA from '../components/NoResultsCTA.vue'
-import PlaceholdersGrid from '../components/PlaceholdersGrid.vue'
+import MapPlaceholder from '../components/MapPlaceholder.vue'
 
 import type { OwnerProfile, ProfileScope } from '@zod/profile/profile.dto'
 
@@ -77,12 +77,7 @@ const handleEditProfileIntent = () => {
             spinner-variant="primary"
             spinner-type="grow"
           >
-            <FluidColumn class="overflow-hidden">
-              <PlaceholdersGrid
-                :howMany="6"
-                :isAnimated="true"
-              />
-            </FluidColumn>
+            <MapPlaceholder :isAnimated="true" />
           </BOverlay>
         </template>
 

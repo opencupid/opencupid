@@ -4,8 +4,8 @@ import { ref, computed } from 'vue'
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 
 // stub child components
-vi.mock('../../components/PlaceholdersGrid.vue', () => ({
-  default: { template: '<div class="placeholders-grid" />', props: ['howMany', 'loading'] },
+vi.mock('../../components/MapPlaceholder.vue', () => ({
+  default: { template: '<div class="map-placeholder" />', props: ['isAnimated'] },
 }))
 vi.mock('../../components/NoAccessCTA.vue', () => ({
   default: { template: '<div class="no-access" />', props: ['scope'] },
@@ -115,7 +115,7 @@ describe('SocialMatch view', () => {
     vmState.findProfileStoreLoading.value = true
     vmState.isInitialized.value = true
     const wrapper = mountComponent()
-    expect(wrapper.find('.placeholders-grid').exists()).toBe(true)
+    expect(wrapper.find('.map-placeholder').exists()).toBe(true)
   })
 
   it('displays placeholders while initializing', () => {
@@ -123,7 +123,7 @@ describe('SocialMatch view', () => {
     vmState.ownerStoreLoading.value = false
     vmState.isInitialized.value = false
     const wrapper = mountComponent()
-    expect(wrapper.find('.placeholders-grid').exists()).toBe(true)
+    expect(wrapper.find('.map-placeholder').exists()).toBe(true)
   })
 
   it('shows no-access overlay when viewer lacks access', () => {
