@@ -1,4 +1,4 @@
-import { computed, ref, toRef, watch } from 'vue'
+import { computed, ref, toRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useBootstrap } from '@/lib/bootstrap'
@@ -9,10 +9,6 @@ import type { OwnerProfile } from '@zod/profile/profile.dto'
 
 import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
-enum ViewMode {
-  map = 'map',
-  grid = 'grid',
-}
 
 function socialFilterDefaults(ownerProfile: OwnerProfile) {
   return {
@@ -35,30 +31,6 @@ export function useSocialMatchViewModel() {
   )
   const isInitialized = ref(false)
 
-  const currentViewMode = computed(() =>
-    typeof route.query.viewMode === 'string' &&
-    Object.values(ViewMode).includes(route.query.viewMode as ViewMode)
-      ? route.query.viewMode
-      : 'map'
-  )
-
-  function isValidViewMode(mode: string): mode is ViewMode {
-    return Object.values(ViewMode).includes(mode as ViewMode)
-  }
-
-  function navigateToViewMode(viewMode: string): void {
-    if (isValidViewMode(viewMode)) {
-      router.replace({ query: { ...route.query, viewMode } })
-    }
-  }
-
-  const viewModeModel = computed({
-    get: () => currentViewMode.value,
-    set: (mode: string) => {
-      navigateToViewMode(mode)
-    },
-  })
-
   const initialize = async () => {
     await useBootstrap().bootstrap()
 
@@ -78,21 +50,8 @@ export function useSocialMatchViewModel() {
   }
 
   const fetchResults = async () => {
-    if (currentViewMode.value === 'map') {
-      await findProfileStore.findSocialForMap()
-    } else {
-      await findProfileStore.findSocial()
-    }
-    lastFetchedViewMode = currentViewMode.value
+    await findProfileStore.findSocialForMap()
   }
-
-  let lastFetchedViewMode: string | null = null
-
-  watch(currentViewMode, (newMode) => {
-    if (!isInitialized.value) return
-    if (newMode === lastFetchedViewMode) return
-    fetchResults()
-  })
 
   function openProfile(profileId: string): void {
     selectedProfileId.value = profileId
@@ -128,7 +87,6 @@ export function useSocialMatchViewModel() {
     findProfileStore.teardown()
     storeError.value = null
     isInitialized.value = false
-    lastFetchedViewMode = null
   }
 
   const updatePrefs = async () => {
@@ -141,10 +99,6 @@ export function useSocialMatchViewModel() {
     fetchResults()
   }
 
-  const loadMoreProfiles = async () => {
-    return await findProfileStore.loadMoreSocial()
-  }
-
   return {
     viewerProfile,
     haveResults,
@@ -152,8 +106,6 @@ export function useSocialMatchViewModel() {
     isLoading: computed(
       () => findProfileStore.isLoading || ownerStore.isLoading || !isInitialized.value
     ),
-    isLoadingMore: computed(() => findProfileStore.isLoadingMore),
-    hasMoreProfiles: computed(() => findProfileStore.hasMoreProfiles),
     storeError,
     initialize,
     hideProfile,
@@ -165,7 +117,5 @@ export function useSocialMatchViewModel() {
     closeProfile,
     profileList: computed(() => findProfileStore.profileList),
     isInitialized: computed(() => isInitialized.value),
-    loadMoreProfiles,
-    viewModeModel,
   }
 }

@@ -24,12 +24,9 @@ const {
   haveAccess,
   haveResults,
   isLoading,
-  isLoadingMore,
-  hasMoreProfiles,
   profileList,
   selectedProfileId,
   socialFilter,
-  viewModeModel,
   isInitialized,
   hideProfile,
   updatePrefs,
@@ -37,7 +34,6 @@ const {
   closeProfile,
   initialize,
   reset,
-  loadMoreProfiles,
 } = useSocialMatchViewModel()
 
 onMounted(async () => {
@@ -116,13 +112,10 @@ watch(
     :profileList="profileList"
     :selectedProfileId="selectedProfileId"
     :isLoading="isLoading"
-    :isLoadingMore="isLoadingMore"
     :isInitialized="isInitialized"
-    :hasMoreProfiles="hasMoreProfiles"
     :haveAccess="haveAccess"
     :haveResults="haveResults"
     currentScope="social"
-    @load-more="loadMoreProfiles"
     @profile:open="openProfile"
     @profile:close="closeProfile"
     @profile:hidden="hideProfile"

@@ -174,7 +174,6 @@ const handleEditProfileIntent = () => {
         ok-title="Search"
         initial-animation
         :body-scrolling="false"
-        title="Add a photo"
         @ok="$emit('prefs:update')"
       >
         <slot name="prefs-modal" />
