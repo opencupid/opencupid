@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, provide, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useInfiniteScroll } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
 
 import PublicProfileComponent from '@/features/publicprofile/components/PublicProfile.vue'
@@ -18,16 +17,13 @@ const props = defineProps<{
   profileList: { id: string }[]
   selectedProfileId: string | null
   isLoading: boolean
-  isLoadingMore: boolean
   isInitialized: boolean
-  hasMoreProfiles: boolean
   haveAccess: boolean
   haveResults: boolean
   currentScope: ProfileScope
 }>()
 
 const emit = defineEmits<{
-  'load-more': []
   'profile:open': [profileId: string]
   'profile:close': []
   'profile:hidden': [profileId: string]
@@ -69,22 +65,6 @@ const handleEditProfileIntent = () => {
   router.push({ name: 'EditProfile', state: { hint: 'scope' } })
 }
 
-// Infinite scroll
-const scrollContainer = ref<HTMLElement>()
-
-useInfiniteScroll(
-  scrollContainer,
-  async () => {
-    if (props.isLoadingMore || !props.hasMoreProfiles || !props.isInitialized) {
-      return
-    }
-    emit('load-more')
-  },
-  {
-    distance: 300,
-    canLoadMore: () => props.hasMoreProfiles && !props.isLoadingMore && props.isInitialized,
-  }
-)
 </script>
 
 <template>
@@ -171,26 +151,11 @@ useInfiniteScroll(
         </template>
 
         <template v-else-if="isInitialized && haveResults">
-          <div
-            ref="scrollContainer"
-            class="overflow-auto hide-scrollbar flex-grow-1"
-          >
+          <div class="overflow-auto hide-scrollbar flex-grow-1">
             <slot
               name="results"
               :onProfileSelect="handleCardClick"
             />
-
-            <!-- Infinite scroll loading indicator -->
-            <div
-              v-if="isLoadingMore"
-              class="text-center py-3"
-            >
-              <BSpinner
-                variant="primary"
-                small
-              />
-              <span class="ms-2 text-muted">{{ $t('profiles.browse.loading_more_profiles') }}</span>
-            </div>
           </div>
         </template>
       </BPlaceholderWrapper>
@@ -252,33 +217,35 @@ main {
 }
 
 .subnav-bar {
-  font-size: 0.75rem;
-  cursor: pointer;
+  // font-size: 0.75rem;
+  // cursor: pointer;
+  position: relative;
+  z-index: 100;
   box-shadow: var(--shadow-xs);
   transition:
     background-color 0.2s ease,
     box-shadow 0.2s ease;
 
   &:hover {
-    box-shadow: var(--shadow-1), var(--shadow-1);
+    // box-shadow: var(--shadow-1), var(--shadow-1);
   }
 
-  &.social {
-    background-color: transparentize($social, 0.95) !important;
-    cursor: default;
+  // &.social {
+  //   background-color: transparentize($social, 0.95) !important;
+  //   cursor: default;
 
-    &:hover {
-      background-color: transparentize($social, 0.95) !important;
-      box-shadow: var(--shadow-xs);
-    }
-  }
+  //   &:hover {
+  //     background-color: transparentize($social, 0.95) !important;
+  //     box-shadow: var(--shadow-xs);
+  //   }
+  // }
 
-  &.dating {
-    background-color: transparentize($dating, 0.95) !important;
+  // &.dating {
+  //   background-color: transparentize($dating, 0.95) !important;
 
-    &:hover {
-      background-color: transparentize($dating, 0.88) !important;
-    }
-  }
+  //   &:hover {
+  //     background-color: transparentize($dating, 0.88) !important;
+  //   }
+  // }
 }
 </style>

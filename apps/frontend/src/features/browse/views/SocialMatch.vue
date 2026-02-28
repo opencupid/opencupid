@@ -4,10 +4,8 @@ import { useI18n } from 'vue-i18n'
 import { useDebounceFn } from '@vueuse/core'
 
 import ProfileBrowseLayout from '../components/ProfileBrowseLayout.vue'
-import ProfileCardGrid from '../components/ProfileCardGrid.vue'
 import OsmPoiMap from '@/features/shared/components/OsmPoiMap.vue'
 import ProfileMapCard from '../components/ProfileMapCard.vue'
-import FluidColumn from '@/features/shared/ui/FluidColumn.vue'
 import LocationSelector from '@/features/shared/profileform/LocationSelector.vue'
 import TagSelectComponent from '@/features/shared/profileform/TagSelectComponent.vue'
 import TagCloud from '@/features/shared/components/TagCloud.vue'
@@ -141,7 +139,7 @@ watch(
           <!-- Location column -->
           <div class="col-12 col-md-6">
             <div class="d-flex align-items-center gap-2">
-                <BButton
+              <BButton
                 variant="link-success"
                 class="p-0"
                 :title="t('profiles.browse.filters.locate_button_title')"
@@ -157,7 +155,6 @@ watch(
                   v-if="socialFilter"
                 />
               </div>
-            
             </div>
           </div>
           <!-- Tags column -->
@@ -186,19 +183,7 @@ watch(
     </template>
 
     <template #results="{ onProfileSelect }">
-      <FluidColumn
-        v-if="viewModeModel === 'grid'"
-        class="grid-view"
-      >
-        <ProfileCardGrid
-          :profiles="profileList"
-          :showTags="true"
-          :showLocation="true"
-          @profile:select="onProfileSelect"
-        />
-      </FluidColumn>
       <OsmPoiMap
-        v-if="viewModeModel === 'map'"
         :items="profileList"
         :get-location="(profile: PublicProfile) => profile.location"
         :get-title="(profile: PublicProfile) => profile.publicName"
