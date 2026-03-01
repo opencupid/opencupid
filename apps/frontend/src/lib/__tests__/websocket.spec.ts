@@ -7,10 +7,10 @@ const mockUseWebSocket = vi.fn(() => ({ close: mockClose }))
 vi.mock('@vueuse/core', () => ({ useWebSocket: mockUseWebSocket }))
 
 const mockApiGet = vi.fn()
-vi.mock('../api', () => ({ api: { get: mockApiGet } }))
+vi.mock('@/lib/api', () => ({ api: { get: mockApiGet } }))
 
 const mockBusOn = vi.fn()
-vi.mock('../bus', () => ({ bus: { on: mockBusOn, emit: vi.fn() } }))
+vi.mock('@/lib/bus', () => ({ bus: { on: mockBusOn, emit: vi.fn() } }))
 
 vi.stubGlobal('__APP_CONFIG__', {
   WS_BASE_URL: 'wss://example.com',
