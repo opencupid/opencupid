@@ -32,23 +32,14 @@ useUpdateChecker()
 // Initialize call store (WebRTC / call state)
 import { useCallStore } from '@/features/videocall/stores/callStore'
 useCallStore().initialize()
+
 </script>
 
 <template>
   <UpdateBanner />
   <Navbar />
-  <RouterView v-slot="{ Component }">
-    <KeepAlive include="UserHome,SocialMatch,Messaging">
-      <component :is="Component" />
-    </KeepAlive>
-  </RouterView>
+  <RouterView />
   <AppNotifier />
   <CallingOverlay />
   <JitsiModal />
-  <!-- <router-view v-slot="{ Component }">
-    <transition name="fade">
-      <component :is="Component"
-                 :key="$route.path" />
-    </transition>
-  </router-view> -->
 </template>
