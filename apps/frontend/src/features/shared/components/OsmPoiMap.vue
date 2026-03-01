@@ -115,7 +115,7 @@ function webGLSupported(): boolean {
 
 function initRasterFallback(map: LMap): void {
   L.tileLayer(
-    `https://api.maptiler.com/maps/basic-v2/{z}/{x}/{y}.png?key=${__APP_CONFIG__.MAPTILER_API_KEY}`,
+    `https://api.maptiler.com/maps/dataviz/{z}/{x}/{y}.png?key=${__APP_CONFIG__.MAPTILER_API_KEY}`,
     { maxZoom: 19, attribution: '© MapTiler © OpenStreetMap contributors' }
   ).addTo(map)
 }

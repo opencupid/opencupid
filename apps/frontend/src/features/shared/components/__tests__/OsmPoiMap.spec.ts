@@ -235,7 +235,7 @@ describe('OsmPoiMap', () => {
 
     expect(L.tileLayer).toHaveBeenCalledOnce()
     const [url] = (L.tileLayer as any).mock.calls[0]
-    expect(url).toContain('maptiler.com/maps/basic-v2')
+    expect(url).toContain('maptiler.com/maps/dataviz')
     expect(url).toContain('{z}/{x}/{y}.png')
   })
 
@@ -253,7 +253,7 @@ describe('OsmPoiMap', () => {
 
     expect(L.tileLayer).toHaveBeenCalledOnce()
     const [url] = (L.tileLayer as any).mock.calls[0]
-    expect(url).toContain('maptiler.com/maps/basic-v2')
+    expect(url).toContain('maptiler.com/maps/dataviz')
 
     vi.restoreAllMocks()
   })
