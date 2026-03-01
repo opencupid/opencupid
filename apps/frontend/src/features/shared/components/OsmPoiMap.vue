@@ -176,7 +176,7 @@ function createMarker(item: T): LMarker | null {
       .getElement()
       ?.querySelector('.leaflet-popup-content') as HTMLElement | null
     popupTarget.value = target
-    popupItem.value = item
+    popupItem.value = itemsById.get(item.id) ?? null
     nextTick(() => e.popup.update())
   })
   m.on('popupclose', () => {
