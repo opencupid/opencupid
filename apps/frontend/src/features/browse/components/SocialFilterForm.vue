@@ -63,7 +63,10 @@ const toggleDisabled = () => {
         </BFormCheckbox>
       </div>
       <div class="d-flex flex-row align-items-center">
-        <fieldset :disabled="locationDisabled" class="flex-grow-1">
+        <fieldset
+          :disabled="locationDisabled"
+          class="flex-grow-1"
+        >
           <LocationSelector
             v-model="model.location as LocationDTO"
             v-if="model.location"
@@ -94,6 +97,7 @@ const toggleDisabled = () => {
       <TagSelector
         v-model="model.tags"
         :taggable="false"
+        :initialOptions="viewerProfile?.tags ?? []"
       />
     </div>
   </div>

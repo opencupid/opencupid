@@ -20,4 +20,20 @@ describe('TagSelector', () => {
     expect(create).toHaveBeenCalledWith({ name: 'new' })
     expect((wrapper.vm as any).model.length).toBe(1)
   })
+
+  it('shows initialOptions when query is empty', async () => {
+    const initialOptions = [
+      { id: 'a', name: 'hiking' },
+      { id: 'b', name: 'music' },
+    ]
+    const wrapper = mount(TagSelector, { props: { modelValue: [], initialOptions } })
+    await (wrapper.vm as any).asyncFind('')
+    expect((wrapper.vm as any).tags).toEqual(initialOptions)
+  })
+
+  it('shows empty options when query is empty and no initialOptions provided', async () => {
+    const wrapper = mount(TagSelector, { props: { modelValue: [] } })
+    await (wrapper.vm as any).asyncFind('')
+    expect((wrapper.vm as any).tags).toEqual([])
+  })
 })

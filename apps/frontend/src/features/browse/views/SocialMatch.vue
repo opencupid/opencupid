@@ -143,6 +143,8 @@ watch(
                   v-model="socialFilter.tags"
                   :taggable="false"
                   open-direction="bottom"
+                  :closeOnSelect="true"
+                  :initialOptions="viewerProfile?.tags ?? []"
                   v-if="socialFilter"
                 />
               </div>
