@@ -1,5 +1,12 @@
 # frontend
 
+## 0.17.2
+
+### Patch Changes
+
+- 7aca55a: 841/#843 (browse/map fixes)
+- 7aca55a: #855 (version display)
+
 ## 0.17.1
 
 ### Patch Changes
