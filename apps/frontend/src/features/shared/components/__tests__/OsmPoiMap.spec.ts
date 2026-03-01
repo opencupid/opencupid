@@ -94,6 +94,7 @@ vi.mock('leaflet.markercluster/dist/MarkerCluster.Default.css', () => ({}))
 vi.mock('@maptiler/leaflet-maptilersdk', () => ({
   MaptilerLayer: class {
     addTo = vi.fn().mockReturnThis()
+    getMaptilerSDKMap = vi.fn(() => ({ once: vi.fn() }))
   },
 }))
 vi.mock('@maptiler/sdk/dist/maptiler-sdk.css', () => ({}))
