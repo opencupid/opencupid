@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, ref, type Ref } from 'vue'
+import { computed, inject, type Ref } from 'vue'
 import type { OwnerProfile, PublicProfile } from '@zod/profile/profile.dto'
 import ProfileImage from '@/features/images/components/ProfileImage.vue'
 import TagList from '@/features/shared/profiledisplay/TagList.vue'
@@ -10,8 +10,8 @@ const props = defineProps<{
   item: PublicProfile
 }>()
 
-const viewerProfile = inject<Ref<OwnerProfile>>('viewerProfile')
-const viewerLocation = ref(viewerProfile?.value.location)
+const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
+const viewerLocation = computed(() => viewerProfile?.value?.location)
 </script>
 
 <template>

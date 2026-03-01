@@ -31,7 +31,6 @@ import ProfileCardComponent from '../ProfileCardComponent.vue'
 
 // Access the module-level loadedUrls set so we can seed / clear it between tests
 const getLoadedUrls = (): Set<string> => {
-   
   return (ProfileCardComponent as any).__test_loadedUrls
 }
 
@@ -58,16 +57,23 @@ const makeViewerProfile = () => ({
 
 const mountCard = (
   blurhash: string | null = null,
-  opts?: { showLocation?: boolean; viewerProfile?: any; profileLocation?: any }
+  opts?: {
+    showLocation?: boolean
+    viewerProfile?: any
+    viewerProfileRef?: any
+    profileLocation?: any
+  }
 ) =>
   mount(ProfileCardComponent, {
     props: {
       profile: makeProfile(blurhash, opts?.profileLocation) as any,
       showLocation: opts?.showLocation,
     },
-    global: opts?.viewerProfile
-      ? { provide: { viewerProfile: ref(opts.viewerProfile) } }
-      : undefined,
+    global: opts?.viewerProfileRef
+      ? { provide: { viewerProfile: opts.viewerProfileRef } }
+      : opts?.viewerProfile
+        ? { provide: { viewerProfile: ref(opts.viewerProfile) } }
+        : undefined,
   })
 
 describe('ProfileCardComponent', () => {
@@ -122,6 +128,11 @@ describe('ProfileCardComponent', () => {
     const wrapper = mountCard()
     await wrapper.find('.profile-card').trigger('click')
     expect(wrapper.emitted('click')![0]).toEqual(['1'])
+  })
+
+  it('renders without error when viewerProfile is ref(null)', () => {
+    const wrapper = mountCard(null, { viewerProfileRef: ref(null) })
+    expect(wrapper.find('.profile-card').exists()).toBe(true)
   })
 
   describe('with viewerProfile provided', () => {
