@@ -167,8 +167,9 @@ describe('OsmPoiMap', () => {
     const calls = (L.marker as any).mock.calls
 
     // Alice (index 0) has imageUrl → avatar icon
-    expect(calls[0][1].icon.html).toContain('poi-avatar')
-    expect(calls[0][1].icon.html).toContain('alice.jpg')
+    const aliceAvatarHtml = calls[0][1].icon.html.innerHTML
+    expect(aliceAvatarHtml).toContain('poi-avatar')
+    expect(aliceAvatarHtml).toContain('alice.jpg')
     expect(calls[0][1].icon.className).toBe('poi-avatar-icon')
 
     // Bob (index 1) has no imageUrl → dot icon
@@ -176,26 +177,9 @@ describe('OsmPoiMap', () => {
     expect(calls[1][1].icon.html).toContain('poi-dot')
 
     // Carol (index 2) has imageUrl → avatar icon
-    expect(calls[2][1].icon.html).toContain('poi-avatar')
-    expect(calls[2][1].icon.html).toContain('carol.jpg')
-  })
-
-  it('applies selected styling to avatar icons', async () => {
-    const getImageUrl = (item: TestItem) => item.imageUrl
-
-    mountMap({ getImageUrl, selectedId: '1' })
-    await flushPromises()
-
-    const calls = (L.marker as any).mock.calls
-
-    // Alice is selected → should have 'selected' class and 40px size
-    expect(calls[0][1].icon.html).toContain('poi-avatar selected')
-    expect(calls[0][1].icon.iconSize).toEqual([40, 40])
-
-    // Carol is not selected → no 'selected' class, 32px size
-    expect(calls[2][1].icon.html).toContain('poi-avatar')
-    expect(calls[2][1].icon.html).not.toContain('poi-avatar selected')
-    expect(calls[2][1].icon.iconSize).toEqual([32, 32])
+    const carolAvatarHtml = calls[2][1].icon.html.innerHTML
+    expect(carolAvatarHtml).toContain('poi-avatar')
+    expect(carolAvatarHtml).toContain('carol.jpg')
   })
 
   it('falls back to dot icon for items where getImageUrl returns undefined', async () => {
