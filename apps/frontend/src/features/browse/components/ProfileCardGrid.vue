@@ -15,7 +15,7 @@ defineEmits<{
 
 <template>
   <BContainer fluid>
-    <BRow v-bind="{ cols: 1, 'cols-sm': 2, 'cols-lg': 2, 'gutter-y': 4, ...$attrs }">
+    <BRow v-bind="{ cols: 2, 'cols-sm':3,'cols-md': 4, 'cols-lg': 3, 'cols-xl': 4,'gutter-y': 4 }">
       <BCol
         v-for="profile in profiles"
         :key="profile.id"

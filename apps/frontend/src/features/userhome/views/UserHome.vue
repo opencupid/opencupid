@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { computed, onMounted, provide, ref, toRef, useTemplateRef } from 'vue'
-import { onBeforeRouteLeave, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { useBootstrap } from '@/lib/bootstrap'
 import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 import { type PublicProfile } from '@zod/profile/profile.dto'
@@ -12,13 +12,10 @@ import LikesAndMatchesBanner from '@/features/interaction/components/LikesAndMat
 import TagCloud from '@/features/shared/components/TagCloud.vue'
 import IconSearch from '@/assets/icons/interface/search.svg'
 
-defineOptions({ name: 'UserHome' })
-
 const profileStore = useOwnerProfileStore()
 const viewerProfile = computed(() => profileStore.profile)
 const router = useRouter()
 const newProfiles = ref([] as PublicProfile[])
-const mainEl = useTemplateRef<HTMLElement>('mainEl')
 
 onMounted(async () => {
   await useBootstrap().bootstrap()
@@ -50,7 +47,7 @@ const handleTagSelect = async (tag: PopularTag) => {
     findProfileStore.socialFilter.tags = [{ id: tag.id, name: tag.name, slug: tag.slug }]
     await findProfileStore.persistSocialFilter()
   }
-  router.push({ path: '/browse', query: { tag: tag.slug } })
+  router.push({ name: 'SocialMatch' })
 }
 
 provide('viewerProfile', toRef(viewerProfile))
@@ -58,17 +55,14 @@ provide('viewerProfile', toRef(viewerProfile))
 
 <template>
   <main class="overflow-auto hide-scrollbar">
-    <div class="container-xl px-3">
+    <BContainer fluid>
+      <LikesAndMatchesBanner
+        class="clickable my-3"
+        @click="router.push({ name: 'Messaging' })"
+      />
       <!-- lg+: two-column layout -->
       <BRow class="d-flex mt-3">
-        <BCol
-          lg="6"
-          class="pe-lg-3"
-        >
-          <LikesAndMatchesBanner
-            class="clickable my-3"
-            @click="router.push({ name: 'Messaging' })"
-          />
+        <BCol lg="6">
           <div
             v-if="newProfiles.length > 0"
             class="mb-4"
@@ -89,14 +83,11 @@ provide('viewerProfile', toRef(viewerProfile))
             </RouterLink>
           </div>
         </BCol>
-        <BCol lg="4">
-          <div class="tag-cloud-sidebar">
-            <h5>{{ $t('home.explore_interests') }}</h5>
-            <TagCloud @tag:select="handleTagSelect" />
-          </div>
+        <BCol lg="6">
+          <TagCloud @tag:select="handleTagSelect" />
         </BCol>
       </BRow>
-    </div>
+    </BContainer>
   </main>
 </template>
 
