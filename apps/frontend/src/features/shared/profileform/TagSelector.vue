@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useTagsStore } from '@/store/tagStore'
 import { useI18n } from 'vue-i18n'
 import type { PublicTag } from '@zod/tag/tag.dto'
@@ -13,14 +13,16 @@ const model = defineModel<PublicTag[]>({
 
 const props = withDefaults(
   defineProps<{
-    taggable?: boolean,
-    closeOnSelect?: boolean,
+    taggable?: boolean
+    closeOnSelect?: boolean
     openDirection?: 'top' | 'bottom'
+    initialOptions?: PublicTag[]
   }>(),
   {
     closeOnSelect: false,
     openDirection: 'top',
     taggable: true,
+    initialOptions: () => [],
   }
 )
 
@@ -28,16 +30,28 @@ const props = withDefaults(
 const tagStore = useTagsStore()
 
 // State
-const tags = ref<PublicTag[]>([])
+const tags = ref<PublicTag[]>(props.initialOptions)
 const isLoading = ref(false)
 const { t } = useI18n()
+const activeQuery = ref('')
+
+// Keep initial options in sync when the parent loads them asynchronously
+watch(
+  () => props.initialOptions,
+  (newOptions) => {
+    if (!activeQuery.value) {
+      tags.value = newOptions
+    }
+  }
+)
 
 /**
  * Called when the user types in the search input
  */
 async function asyncFind(query: string) {
+  activeQuery.value = query
   if (!query) {
-    tags.value = []
+    tags.value = props.initialOptions
     return
   }
   isLoading.value = true
