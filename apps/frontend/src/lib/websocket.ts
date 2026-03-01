@@ -5,25 +5,32 @@ import type { WSMessage } from '@zod/dto/websocket.dto'
 import type { WsTicketResponse } from '@zod/apiResponse.dto'
 
 let socket: ReturnType<typeof useWebSocket> | null = null
+let ticketUrl = ''
+let isIntentionalClose = false
 
 bus.on('auth:logout', () => {
   disconnectWebSocket()
 })
 
-export async function connectWebSocket(): Promise<void> {
-  // Fetch a short-lived ticket from the API
-  let ticket: string
+async function fetchTicketUrl(): Promise<boolean> {
   try {
     const res = await api.get<WsTicketResponse>('/auth/ws-ticket')
-    ticket = res.data.ticket
+    ticketUrl = `${__APP_CONFIG__.WS_BASE_URL}/message?ticket=${res.data.ticket}`
+    return true
   } catch (err) {
-    console.error('[WS] Failed to fetch ticket:', err)
-    return
+    console.warn('[WS] Failed to fetch ticket', err)
+    return false
   }
+}
 
-  const url = `${__APP_CONFIG__.WS_BASE_URL}/message?ticket=${ticket}`
+export async function connectWebSocket(): Promise<void> {
+  disconnectWebSocket()
+  isIntentionalClose = false
 
-  socket = useWebSocket(url, {
+  const fetched = await fetchTicketUrl()
+  if (!fetched) return
+
+  socket = useWebSocket(() => ticketUrl, {
     immediate: true,
     autoReconnect: {
       retries: 3,
@@ -34,6 +41,9 @@ export async function connectWebSocket(): Promise<void> {
     },
     onDisconnected: () => {
       console.warn('[WS] Connection closed.')
+      if (!isIntentionalClose) {
+        fetchTicketUrl()
+      }
     },
     onMessage: (_ws, event) => {
       try {
@@ -65,6 +75,7 @@ export async function connectWebSocket(): Promise<void> {
 }
 
 export function disconnectWebSocket() {
+  isIntentionalClose = true
   if (socket) {
     socket.close()
     socket = null
