@@ -26,6 +26,7 @@ const appRoutes: FastifyPluginAsync = async (fastify) => {
 
         const versionInfo: VersionDTO = {
           frontendVersion,
+          backendVersion: __APP_VERSION__,
           updateAvailable:
             clientVersion !== undefined &&
             clientVersion !== 'unknown' &&

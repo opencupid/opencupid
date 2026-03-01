@@ -27,6 +27,7 @@ describe('useAppStore - checkVersion', () => {
         version: {
           updateAvailable: false,
           frontendVersion: APP_VERSION,
+          backendVersion: '1.0.0',
           currentVersion: APP_VERSION,
         },
       },
@@ -54,6 +55,7 @@ describe('useAppStore - checkVersion', () => {
         version: {
           updateAvailable: true,
           frontendVersion: '0.6.0',
+          backendVersion: '1.0.0',
           currentVersion: APP_VERSION,
         },
       },
@@ -92,6 +94,7 @@ describe('useAppStore - checkVersion', () => {
         version: {
           updateAvailable: false,
           frontendVersion: APP_VERSION,
+          backendVersion: '1.0.0',
           currentVersion: APP_VERSION,
         },
       },

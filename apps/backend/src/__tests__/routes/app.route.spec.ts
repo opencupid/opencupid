@@ -179,6 +179,7 @@ describe('GET /version', () => {
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.version.frontendVersion).toBe('0.5.0')
+    expect(reply.payload.version.backendVersion).toBe(__APP_VERSION__)
     expect(reply.payload.version.updateAvailable).toBe(false)
     expect(reply.payload.version.currentVersion).toBeUndefined()
   })

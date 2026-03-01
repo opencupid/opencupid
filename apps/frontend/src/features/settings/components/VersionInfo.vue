@@ -1,5 +1,17 @@
 <script setup lang="ts">
-const version = __APP_VERSION__
+import { ref, onMounted } from 'vue'
+import { useAppStore } from '@/features/app/stores/appStore'
+
+const frontendVersion = __APP_VERSION__
+const backendVersion = ref('')
+const appStore = useAppStore()
+
+onMounted(async () => {
+  const result = await appStore.checkVersion()
+  if (result.success && result.data) {
+    backendVersion.value = result.data.backendVersion
+  }
+})
 </script>
 
 <template>
@@ -8,7 +20,13 @@ const version = __APP_VERSION__
     style="font-size: 0.5rem"
   >
     <code class="text-muted">
-      <span>v{{ version }}</span>
+      <span>frontend v{{ frontendVersion }}</span>
+      <span
+        v-if="backendVersion"
+        class="ms-2"
+      >
+        backend v{{ backendVersion }}
+      </span>
     </code>
   </div>
 </template>
