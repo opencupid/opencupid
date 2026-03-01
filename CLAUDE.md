@@ -104,7 +104,7 @@ pnpm --filter backend test
 Type-check only (vue-tsc / tsc across frontend, admin and backend, including test files):
 
 ```bash
-turbo run type-check --concurrency 1  # --concurrency 1 avoids tsc incremental build conflicts
+pnpm type-check
 ```
 
 Full CI suite — mirrors GitHub Actions PR checks (install, prisma generate, lint, type-check, build, tests, i18n). Run before finalizing a PR, once `pnpm test` and `pnpm lint` are green:
@@ -166,7 +166,7 @@ Always work in a feature branch and open a Github pull request once task is comp
 git checkout -b your-branch-name
 # ... make changes, commit ...
 pnpm test                              # MUST pass before push
-turbo run type-check --concurrency 1  # MUST pass before finalizing PR
+pnpm type-check                        # MUST pass before finalizing PR
 git push -u origin your-branch-name
 gh pr create
 ```
