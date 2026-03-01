@@ -93,7 +93,7 @@ export function usePostsViewModel() {
       }
       locationPermission.value = true
     } catch (error) {
-      console.error('Failed to get location:', error)
+      console.warn('Cannot get location:', error)
     }
   }
 
@@ -207,6 +207,7 @@ export function usePostsViewModel() {
   return {
     // State
     activeTab,
+    // TODO clean up viewMode
     viewMode,
     showCreateModal,
     locationPermission,

@@ -1,5 +1,5 @@
 <script setup lang="ts" generic="T extends { id: string | number }">
-import { onMounted, onBeforeUnmount, ref, watch, nextTick, type Component } from 'vue'
+import { onMounted, onBeforeUnmount, ref, watch, nextTick, type Component, render, h } from 'vue'
 import type { Ref } from 'vue'
 import L, { Map as LMap, Marker as LMarker } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -8,6 +8,8 @@ import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 import { MaptilerLayer } from '@maptiler/leaflet-maptilersdk'
 import '@maptiler/sdk/dist/maptiler-sdk.css'
+
+import AvatarIcon from './AvatarIcon.vue'
 
 /** Basic POI shape for location data extraction */
 export interface PoiItem {
@@ -29,7 +31,7 @@ const props = withDefaults(
     /** Vue component to render in popup */
     popupComponent: Component
     /** Optional starting center/zoom (used if we can't fit to bounds) */
-    center?: [number, number]
+    center: [number, number]
     zoom?: number
     /** Optional function to get a thumbnail image URL for an item */
     getImageUrl?: (item: T) => string | undefined
@@ -41,7 +43,6 @@ const props = withDefaults(
     isHighlighted?: (item: T) => boolean
   }>(),
   {
-    center: () => [47.0, 19.0], // Central Europe-ish default
     zoom: 7,
     fitToPois: false,
   }
@@ -69,34 +70,20 @@ function customClusterIcon(cluster: any): L.DivIcon {
 
 let clusterGroup: any = null
 
-// Simple highlighted marker icon (selected)
-const selectedIcon = L.divIcon({
-  className: 'poi-selected-icon',
-  html: `<div class="poi-dot selected"></div>`,
-  iconSize: [20, 20],
-  iconAnchor: [10, 10],
-})
-
-const defaultIcon = L.divIcon({
-  className: 'poi-default-icon',
-  html: `<div class="poi-dot"></div>`,
-  iconSize: [16, 16],
-  iconAnchor: [8, 8],
-})
-
 function avatarIcon(url: string, isSelected: boolean, isHighlighted: boolean): L.DivIcon {
-  const size = isSelected ? 40 : 32
-  const classes = ['poi-avatar']
-  if (isSelected) classes.push('selected')
-  if (isHighlighted) classes.push('highlighted')
+  const size = 50
+
+  const container = document.createElement('span')
+  render(h(AvatarIcon, { url: encodeURI(url), isHighlighted, isSelected }), container)
   return L.divIcon({
     className: 'poi-avatar-icon',
-    html: `<img src="${encodeURI(url)}" class="${classes.join(' ')}" />`,
+    html: container,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
   })
 }
 
+// TODO - refactor this the same way as avatarIcon
 function dotIcon(isSelected: boolean, isHighlighted: boolean): L.DivIcon {
   const classes = ['poi-dot']
   if (isSelected) classes.push('selected')
@@ -152,80 +139,51 @@ function ensureMap() {
 const popupTarget = ref<HTMLElement | null>(null)
 const popupItem = ref<T | null>(null)
 
-function createMarker(item: T): LMarker | null {
-  const location = props.getLocation(item)
-  if (!location || !(location.lat && location.lon)) return null
-
-  const isSelected = item.id === props.selectedId
-  const m = L.marker([location.lat, location.lon], {
-    title: props.getTitle(item),
-    icon: iconForItem(item, isSelected),
-    keyboard: true,
-  })
-
-  const highlighted = props.isHighlighted?.(item) ?? false
-  m.bindPopup('', {
-    maxWidth: 420,
-    autoPan: true,
-    autoPanPadding: L.point(20, 20),
-    className: highlighted ? 'item-popup item-popup-highlighted' : 'item-popup',
-  })
-
-  m.on('popupopen', (e: L.PopupEvent) => {
-    const target = e.popup
-      .getElement()
-      ?.querySelector('.leaflet-popup-content') as HTMLElement | null
-    popupTarget.value = target
-    popupItem.value = itemsById.get(item.id) ?? null
-    nextTick(() => e.popup.update())
-  })
-  m.on('popupclose', () => {
-    popupTarget.value = null
-    popupItem.value = null
-  })
-
-  m.on('click', () => m.openPopup())
-  return m
-}
-
 function updateMarkers() {
   if (!map || !clusterGroup) return
-
-  const incomingIds = new Set<string | number>()
+  clusterGroup.clearLayers()
+  markers.clear()
+  itemsById.clear()
 
   for (const item of props.items) {
     const location = props.getLocation(item)
     if (!location || !(location.lat && location.lon)) continue
-    incomingIds.add(item.id)
 
-    const existing = markers.get(item.id)
-    if (existing) {
-      // Update position if changed
-      const cur = existing.getLatLng()
-      if (cur.lat !== location.lat || cur.lng !== location.lon) {
-        existing.setLatLng([location.lat, location.lon])
-      }
-      // Update icon (selection/highlight state may have changed)
-      existing.setIcon(iconForItem(item, item.id === props.selectedId))
-      itemsById.set(item.id, item)
-    } else {
-      // Add new marker
-      const m = createMarker(item)
-      if (m) {
-        clusterGroup.addLayer(m)
-        markers.set(item.id, m)
-        itemsById.set(item.id, item)
-      }
-    }
-  }
+    const isSelected = item.id === props.selectedId
+    const m = L.marker([location.lat, location.lon], {
+      title: props.getTitle(item),
+      icon: iconForItem(item, isSelected),
+      keyboard: true,
+    })
 
-  // Remove markers that are no longer in the list
-  for (const [id, marker] of markers) {
-    if (!incomingIds.has(id)) {
-      clusterGroup.removeLayer(marker)
-      markers.delete(id)
-      itemsById.delete(id)
-    }
+    const highlighted = props.isHighlighted?.(item) ?? false
+    m.bindPopup('', {
+      maxWidth: 420,
+      autoPan: true,
+      autoPanPadding: L.point(20, 20),
+      className: highlighted ? 'item-popup item-popup-highlighted' : 'item-popup',
+    })
+
+    m.on('popupopen', (e: L.PopupEvent) => {
+      const target = e.popup
+        .getElement()
+        ?.querySelector('.leaflet-popup-content') as HTMLElement | null
+      popupTarget.value = target
+      popupItem.value = item
+      // After Vue renders the teleported popup content, re-measure so
+      // Leaflet's autoPan accounts for the actual popup dimensions.
+      nextTick(() => e.popup.update())
+    })
+    m.on('popupclose', () => {
+      popupTarget.value = null
+      popupItem.value = null
+    })
+
+    m.on('click', () => m.openPopup())
+
+    clusterGroup.addLayer(m)
+    markers.set(item.id, m)
+    itemsById.set(item.id, item)
   }
 
   // Fit bounds if requested and we have at least one item with location
@@ -267,12 +225,12 @@ onMounted(() => {
   highlightSelected()
 })
 
-onBeforeUnmount(() => {
-  if (map) {
-    map.remove()
-    map = null
-  }
-})
+// onBeforeUnmount(() => {
+//   if (map) {
+//     map.remove()
+//     map = null
+//   }
+// })
 
 watch(
   () => props.items,
@@ -321,7 +279,7 @@ watch(
 </template>
 
 <style scoped>
-:deep(.osm-poi-map) {
+.osm-poi-map {
   /* Set an explicit height, or it won't be visible */
   height: 100%;
   width: 100%;
@@ -343,34 +301,6 @@ watch(
   background: #ff006e;
 }
 
-/* Avatar thumbnail markers */
-:deep(.poi-avatar-icon) {
-  background: transparent;
-  border: none;
-}
-
-:deep(.poi-avatar) {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid white;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-}
-
-:deep(.poi-avatar.selected) {
-  width: 40px;
-  height: 40px;
-  border-color: #ff006e;
-  box-shadow:
-    0 0 0 2px #ff006e,
-    0 2px 8px rgba(0, 0, 0, 0.3);
-}
-
-:deep(.poi-avatar.highlighted) {
-  box-shadow: 0 0 6px 3px rgba(217, 83, 79, 0.7);
-  filter: drop-shadow(0 0 6px rgba(217, 83, 79, 0.6));
-}
 
 :deep(.poi-dot.highlighted) {
   box-shadow:
@@ -417,10 +347,12 @@ watch(
 }
 
 :deep(.item-popup-highlighted .leaflet-popup-content-wrapper) {
+  /* TODO remove hardcoded color - replace with semantic value */
   box-shadow: 0 3px 13px rgba(217, 83, 79, 0.9);
 }
 
 :deep(.item-popup-highlighted .leaflet-popup-tip) {
+  /* TODO remove hardcoded color - replace with semantic value */
   box-shadow: 0 3px 14px rgba(217, 83, 79, 0.3);
 }
 
@@ -431,7 +363,6 @@ watch(
 :deep(.leaflet-popup-content) {
   margin: 0;
   line-height: 1.3;
-  font-size: 1.08333em;
   min-height: 1px;
 }
 </style>
