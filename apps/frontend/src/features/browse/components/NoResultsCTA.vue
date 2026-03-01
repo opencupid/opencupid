@@ -2,14 +2,21 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ShareDialog from './ShareDialog.vue'
+
+const emit = defineEmits<{ close: [] }>()
 const { t } = useI18n()
 const showModal = ref(false)
 </script>
 
 <template>
   <div
-    class="d-flex flex-column align-items-center shadow-lg bg-theme user-select-none justify-content-center px-4 py-4 text-center"
+    class="d-flex flex-column align-items-center shadow-lg bg-theme user-select-none justify-content-center px-4 py-4 text-center position-relative"
   >
+    <BCloseButton
+      class="position-absolute top-0 end-0 m-2"
+      @click="emit('close')"
+    />
+
     <!-- This community is still growing -->
     <h5>{{ t('profiles.browse.no_results_cta_title') }}</h5>
 

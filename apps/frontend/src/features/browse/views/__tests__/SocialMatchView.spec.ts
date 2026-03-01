@@ -1,7 +1,10 @@
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { ref, computed } from 'vue'
+import { nextTick, ref, computed } from 'vue'
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
+
+const toastInfo = vi.fn()
+vi.mock('vue-toastification', () => ({ useToast: () => ({ info: toastInfo }) }))
 
 // stub child components
 vi.mock('../../components/PlaceholdersGrid.vue', () => ({
@@ -9,9 +12,6 @@ vi.mock('../../components/PlaceholdersGrid.vue', () => ({
 }))
 vi.mock('../../components/NoAccessCTA.vue', () => ({
   default: { template: '<div class="no-access" />', props: ['scope'] },
-}))
-vi.mock('../../components/NoResultsCTA.vue', () => ({
-  default: { template: '<div class="no-results" />' },
 }))
 vi.mock('@/features/shared/components/OsmPoiMap.vue', () => ({
   default: { template: '<div class="osm-poi-map" />', props: ['items'] },
@@ -39,9 +39,6 @@ vi.mock('@/assets/icons/interface/target-2.svg', () => ({
 }))
 vi.mock('@/assets/icons/e-commerce/tag.svg', () => ({
   default: { template: '<svg class="icon-tag" />' },
-}))
-vi.mock('../../shared/composables/useCountries', () => ({
-  useCountries: () => ({ countryCodeToName: vi.fn(() => 'Test Country') }),
 }))
 vi.mock('vue-router', () => ({
   useRouter: () => ({ push: vi.fn(), back: vi.fn(), replace: vi.fn() }),
@@ -95,6 +92,7 @@ describe('SocialMatch view', () => {
     vmState.ownerStoreLoading.value = false
     vmState.isInitialized.value = true
     vmState.socialFilter.value = null
+    toastInfo.mockClear()
   })
 
   const mountComponent = () => {
@@ -133,11 +131,13 @@ describe('SocialMatch view', () => {
     expect(wrapper.find('.no-access').exists()).toBe(true)
   })
 
-  it('shows no-results overlay when there are no results', () => {
+  it('shows info toast when there are no results', async () => {
     vmState.haveAccess.value = true
+    vmState.haveResults.value = true
+    mountComponent()
     vmState.haveResults.value = false
-    const wrapper = mountComponent()
-    expect(wrapper.find('.no-results').exists()).toBe(true)
+    await nextTick()
+    expect(toastInfo).toHaveBeenCalledWith('profiles.browse.no_results_cta_title')
   })
 
   it('renders map view with OsmPoiMap', () => {

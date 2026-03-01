@@ -13,7 +13,6 @@ import IconTarget2 from '@/assets/icons/interface/target-2.svg'
 import IconTag from '@/assets/icons/e-commerce/tag.svg'
 
 import { useSocialMatchViewModel } from '../composables/useSocialMatchViewModel'
-import { useCountries } from '../../shared/composables/useCountries'
 import type { PublicProfile } from '@zod/profile/profile.dto'
 import type { PopularTag } from '@zod/tag/tag.dto'
 
@@ -38,14 +37,6 @@ const {
 
 onMounted(async () => {
   await initialize()
-})
-
-const { countryCodeToName } = useCountries()
-
-const countryName = computed(() => {
-  const country = socialFilter.value?.location.country
-  if (!country) return ''
-  return countryCodeToName(country)
 })
 
 const getProfileImageUrl = (profile: PublicProfile) => {
@@ -110,16 +101,9 @@ watch(
     :isInitialized="isInitialized"
     :haveAccess="haveAccess"
     :haveResults="haveResults"
-    currentScope="social"
     @profile:open="openProfile"
     @profile:hidden="hideProfile"
   >
-    <template #no-results>
-      <div class="mb-3">
-        {{ t('profiles.browse.social_no_results', { country: countryName }) }}
-      </div>
-    </template>
-
     <template #filter-bar>
       <div
         class="filter-area flex-grow-1"
