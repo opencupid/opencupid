@@ -63,6 +63,11 @@ vi.mock('leaflet', () => {
     getBounds: vi.fn(() => ({})),
   }))
 
+  const tileLayerProto = {
+    addTo: vi.fn().mockReturnThis(),
+  }
+  const tileLayer = vi.fn(() => ({ ...tileLayerProto }))
+
   return {
     default: {
       map: mapFn,
@@ -72,6 +77,7 @@ vi.mock('leaflet', () => {
       latLngBounds,
       markerClusterGroup,
       point,
+      tileLayer,
     },
     Map: mapFn,
     Marker: marker,
@@ -82,6 +88,7 @@ vi.mock('leaflet', () => {
     latLngBounds,
     markerClusterGroup,
     point,
+    tileLayer,
   }
 })
 
@@ -91,12 +98,13 @@ vi.mock('leaflet.markercluster/dist/MarkerCluster.css', () => ({}))
 vi.mock('leaflet.markercluster/dist/MarkerCluster.Default.css', () => ({}))
 
 // Mock MapTiler layer and CSS
-vi.mock('@maptiler/leaflet-maptilersdk', () => ({
-  MaptilerLayer: class {
-    addTo = vi.fn().mockReturnThis()
-    getMaptilerSDKMap = vi.fn(() => ({ once: vi.fn() }))
-  },
-}))
+vi.mock('@maptiler/leaflet-maptilersdk', () => {
+  const MaptilerLayer = vi.fn().mockImplementation(() => ({
+    addTo: vi.fn().mockReturnThis(),
+    getMaptilerSDKMap: vi.fn(() => ({ once: vi.fn() })),
+  }))
+  return { MaptilerLayer }
+})
 vi.mock('@maptiler/sdk/dist/maptiler-sdk.css', () => ({}))
 
 import { mount, flushPromises } from '@vue/test-utils'
@@ -217,6 +225,37 @@ describe('OsmPoiMap', () => {
     const eventNames = onCalls.map((c: any) => c[0])
     expect(eventNames).toContain('clustermouseover')
     expect(eventNames).toContain('clustermouseout')
+  })
+
+  it('uses raster tile layer when WebGL is not supported', async () => {
+    // jsdom does not implement WebGL, so canvas.getContext('webgl') returns null
+    // by default — this test confirms the fallback path is taken.
+    mountMap()
+    await flushPromises()
+
+    expect(L.tileLayer).toHaveBeenCalledOnce()
+    const [url] = (L.tileLayer as any).mock.calls[0]
+    expect(url).toContain('maptiler.com/maps/basic-v2')
+    expect(url).toContain('{z}/{x}/{y}.png')
+  })
+
+  it('falls back to raster tiles when MaptilerLayer throws at runtime', async () => {
+    // Make webGLSupported() return true so the GL path is attempted
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({} as any)
+
+    const { MaptilerLayer } = await import('@maptiler/leaflet-maptilersdk')
+    vi.mocked(MaptilerLayer).mockImplementationOnce(() => {
+      throw new Error('WebGL context lost')
+    })
+
+    mountMap()
+    await flushPromises()
+
+    expect(L.tileLayer).toHaveBeenCalledOnce()
+    const [url] = (L.tileLayer as any).mock.calls[0]
+    expect(url).toContain('maptiler.com/maps/basic-v2')
+
+    vi.restoreAllMocks()
   })
 
   it('calls popup.update() on nextTick after popupopen to re-measure teleported content', async () => {

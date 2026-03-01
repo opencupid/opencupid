@@ -7,6 +7,7 @@ import 'leaflet.markercluster'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 import { MaptilerLayer } from '@maptiler/leaflet-maptilersdk'
+import { MapStyle } from '@maptiler/sdk'
 import '@maptiler/sdk/dist/maptiler-sdk.css'
 
 import AvatarIcon from './AvatarIcon.vue'
@@ -103,6 +104,22 @@ function iconForItem(item: T, isSelected: boolean): L.DivIcon {
   return dotIcon(isSelected, highlighted)
 }
 
+function webGLSupported(): boolean {
+  try {
+    const canvas = document.createElement('canvas')
+    return !!(canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))
+  } catch {
+    return false
+  }
+}
+
+function initRasterFallback(map: LMap): void {
+  L.tileLayer(
+    `https://api.maptiler.com/maps/basic-v2/{z}/{x}/{y}.png?key=${__APP_CONFIG__.MAPTILER_API_KEY}`,
+    { maxZoom: 19, attribution: '© MapTiler © OpenStreetMap contributors' }
+  ).addTo(map)
+}
+
 function ensureMap() {
   if (map || !mapEl.value) return
   map = L.map(mapEl.value, {
@@ -112,13 +129,27 @@ function ensureMap() {
     preferCanvas: true,
   })
 
-  const maptilerLayer = new MaptilerLayer({
-    apiKey: __APP_CONFIG__.MAPTILER_API_KEY,
-  }).addTo(map)
-
-  // Fire map:ready only after the underlying MapLibre map is idle —
-  // meaning all tiles in the viewport have fully loaded and rendered.
-  maptilerLayer.getMaptilerSDKMap().once('idle', () => emit('map:ready', map!))
+  if (!webGLSupported()) {
+    initRasterFallback(map)
+    emit('map:ready', map)
+  } else {
+    try {
+      const maptilerLayer = new MaptilerLayer({
+        apiKey: __APP_CONFIG__.MAPTILER_API_KEY,
+        style: MapStyle.BASIC,
+      }).addTo(map)
+      // Fire map:ready only after the underlying MapLibre map is idle —
+      // meaning all tiles in the viewport have fully loaded and rendered.
+      maptilerLayer.getMaptilerSDKMap().once('idle', () => emit('map:ready', map!))
+    } catch (err) {
+      console.error(
+        '[OsmPoiMap] WebGL map initialization failed, falling back to raster tiles:',
+        err
+      )
+      initRasterFallback(map)
+      emit('map:ready', map)
+    }
+  }
 
   clusterGroup = (L as any).markerClusterGroup({
     spiderfyOnMaxZoom: false,
@@ -303,7 +334,6 @@ watch(
   height: 16px;
   background: #ff006e;
 }
-
 
 :deep(.poi-dot.highlighted) {
   box-shadow:
