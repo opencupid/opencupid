@@ -101,13 +101,13 @@ Backend tests:
 pnpm --filter backend test
 ```
 
-Type-check only (vue-tsc across all packages, including test files):
+Type-check only (vue-tsc / tsc across frontend, admin and backend, including test files):
 
 ```bash
-turbo run type-check --concurrency 1
+turbo run type-check --concurrency 1  # --concurrency 1 avoids tsc incremental build conflicts
 ```
 
-Full CI suite — mirrors GitHub Actions exactly (install, prisma generate, lint, type-check, build, tests, i18n). Run before finalizing a PR, once `pnpm test` and `pnpm lint` are green:
+Full CI suite — mirrors GitHub Actions PR checks (install, prisma generate, lint, type-check, build, tests, i18n). Run before finalizing a PR, once `pnpm test` and `pnpm lint` are green:
 
 ```bash
 pnpm run ci:test
