@@ -202,14 +202,25 @@ Each Docker image has its own semver version in its `apps/<service>/package.json
 
 ### Changesets workflow
 
-Each PR that changes a service should include a changeset file:
+> **HARD RULE — NO EXCEPTIONS:** Every PR that changes a service **must** include a changeset file before it is merged, as part of the finalization workflow. Never finalise a PR without one.
+
+Since `pnpm changeset` requires an interactive TTY that is unavailable in Claude Code, write the file directly instead:
 
 ```bash
-pnpm changeset
-# Select affected packages (@opencupid/backend, @opencupid/frontend, etc.)
-# Choose bump type (patch/minor/major)
-# Write a summary of the change
+# filename: .changeset/<adjective-noun-verb>.md  (three random words, kebab-case)
+cat > .changeset/silver-tags-bloom.md << 'EOF'
+---
+'@opencupid/frontend': patch
+---
+
+Short description of the change (#issue-number)
+EOF
 ```
+
+Bump type guide:
+- `patch` — bug fixes, non-visible improvements
+- `minor` — new features or enhancements
+- `major` — breaking changes
 
 ### Release process
 
