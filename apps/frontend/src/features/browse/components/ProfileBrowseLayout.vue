@@ -12,7 +12,6 @@ const props = defineProps<{
   profileList: { id: string }[]
   isLoading: boolean
   isInitialized: boolean
-  haveAccess: boolean
   haveResults: boolean
 }>()
 
@@ -31,7 +30,7 @@ const showPrefsModal = ref(false)
 watch(
   () => props.haveResults,
   (hasResults) => {
-    if (!hasResults && props.isInitialized && props.haveAccess) {
+    if (!hasResults && props.isInitialized) {
       toast.info(t('profiles.browse.no_results_cta_title'))
     }
   }
@@ -45,7 +44,6 @@ provide(
 const handleCardClick = (profileId: string) => {
   emit('profile:open', profileId)
 }
-
 </script>
 
 <template>
@@ -60,9 +58,11 @@ const handleCardClick = (profileId: string) => {
         </div>
       </FluidColumn>
 
-      <div class="overflow-auto hide-scrollbar flex-grow-1 position-relative" :class="{ loading: isLoading }">
+      <div
+        class="overflow-auto hide-scrollbar flex-grow-1 position-relative"
+        :class="{ loading: isLoading }"
+      >
         <slot
-          v-if="haveAccess"
           name="results"
           :onProfileSelect="handleCardClick"
         />

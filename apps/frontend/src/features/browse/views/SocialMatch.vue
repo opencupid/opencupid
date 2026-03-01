@@ -23,7 +23,6 @@ const { t } = useI18n()
 
 const {
   viewerProfile,
-  haveAccess,
   haveResults,
   isLoading,
   profileList,
@@ -105,7 +104,6 @@ watch(
     :profileList="profileList"
     :isLoading="isLoading"
     :isInitialized="isInitialized"
-    :haveAccess="haveAccess"
     :haveResults="haveResults"
     @profile:open="openProfile"
     @profile:hidden="hideProfile"
@@ -117,11 +115,9 @@ watch(
       >
         <div
           class="row g-2"
-          v-if="socialFilter && haveAccess"
+          v-if="socialFilter"
         >
-         
-        
-        <!-- Location column -->
+          <!-- Location column -->
           <div class="col-12 col-md-6">
             <div class="d-flex align-items-center gap-2">
               <div class="flex-grow-1">

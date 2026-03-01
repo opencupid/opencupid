@@ -55,13 +55,8 @@ export function useSocialMatchViewModel() {
 
   const viewerProfile = computed(() => ownerStore.profile)
 
-  const haveAccess = computed(() => {
-    if (!viewerProfile.value) return false
-    return viewerProfile.value.isSocialActive
-  })
-
   const haveResults = computed(() => {
-    return findProfileStore.profileList.length > 0 && haveAccess.value
+    return findProfileStore.profileList.length > 0
   })
 
   const hideProfile = (profileId: string) => {
@@ -86,7 +81,6 @@ export function useSocialMatchViewModel() {
   return {
     viewerProfile,
     haveResults,
-    haveAccess,
     isLoading: isLoading,
     storeError,
     initialize,

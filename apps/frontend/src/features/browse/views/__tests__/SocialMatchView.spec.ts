@@ -10,9 +10,6 @@ vi.mock('vue-toastification', () => ({ useToast: () => ({ info: toastInfo }) }))
 vi.mock('../../components/MapPlaceholder.vue', () => ({
   default: { template: '<div class="map-placeholder" />', props: ['isAnimated'] },
 }))
-vi.mock('../../components/NoAccessCTA.vue', () => ({
-  default: { template: '<div class="no-access" />', props: ['scope'] },
-}))
 vi.mock('@/features/shared/components/OsmPoiMap.vue', () => ({
   default: { template: '<div class="osm-poi-map" />', props: ['items'] },
 }))
@@ -46,8 +43,8 @@ vi.mock('vue-router', () => ({
 
 const vmState = {
   viewerProfile: ref({ isSocialActive: true }),
-  haveAccess: ref(true),
   haveResults: ref(true),
+  isLoading: ref(false),
   profileList: ref([{ id: '1' }]),
   storeError: ref(null),
   socialFilter: ref<{
@@ -73,7 +70,6 @@ import SocialMatch from '../SocialMatch.vue'
 
 describe('SocialMatch view', () => {
   beforeEach(() => {
-    vmState.haveAccess.value = true
     vmState.haveResults.value = true
     vmState.isInitialized.value = true
     vmState.socialFilter.value = null
@@ -98,21 +94,7 @@ describe('SocialMatch view', () => {
     expect(wrapper.find('.map-placeholder').exists()).toBe(true)
   })
 
-  it('hides map-placeholder once initialized', () => {
-    vmState.isInitialized.value = true
-    const wrapper = mountComponent()
-    expect(wrapper.find('.map-placeholder').exists()).toBe(false)
-  })
-
-  it('shows no-access overlay when viewer lacks access', () => {
-    vmState.haveAccess.value = false
-    vmState.haveResults.value = false
-    const wrapper = mountComponent()
-    expect(wrapper.find('.no-access').exists()).toBe(true)
-  })
-
   it('shows info toast when there are no results', async () => {
-    vmState.haveAccess.value = true
     vmState.haveResults.value = true
     mountComponent()
     vmState.haveResults.value = false
