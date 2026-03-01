@@ -171,7 +171,7 @@ export class ProfileMatchService {
     return {
       ...statusFlags,
       isSocialActive: true,
-      id: { not: profileId },
+      // id: { not: profileId }, // exclude user's own profile
       ...(userPrefs.country ? { country: userPrefs.country } : {}),
       ...(userPrefs.tags?.length ? { tags: { some: { id: { in: tagIds } } } } : {}),
       ...blocklistWhereClause(profileId),
