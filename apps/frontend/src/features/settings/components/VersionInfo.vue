@@ -1,9 +1,17 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import { useAppStore } from '@/features/app/stores/appStore'
-import { storeToRefs } from 'pinia'
 
 const frontendVersion = __APP_VERSION__
-const { backendVersion } = storeToRefs(useAppStore())
+const backendVersion = ref('')
+const appStore = useAppStore()
+
+onMounted(async () => {
+  const result = await appStore.checkVersion()
+  if (result.success && result.data) {
+    backendVersion.value = result.data.backendVersion
+  }
+})
 </script>
 
 <template>

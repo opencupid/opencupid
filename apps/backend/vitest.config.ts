@@ -1,7 +1,14 @@
 import { defineConfig } from 'vitest/config'
 import tsconfigPaths from 'vite-tsconfig-paths'
+import { getPackageVersion } from '../../packages/shared/version'
+import path from 'path'
+
+const appVersion = getPackageVersion(path.join(__dirname, 'package.json'))
 
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(appVersion),
+  },
   test: {
     environment: 'node',
     globals: true,

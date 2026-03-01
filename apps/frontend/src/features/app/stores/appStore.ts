@@ -13,7 +13,6 @@ export const useAppStore = defineStore('app', {
     isLoading: false,
     updateAvailable: false,
     latestVersion: '',
-    backendVersion: '',
   }),
   actions: {
     async fetchLocation(): Promise<StoreResponse<LocationDTO>> {
@@ -38,7 +37,6 @@ export const useAppStore = defineStore('app', {
         // Update state
         this.updateAvailable = parsed.updateAvailable
         this.latestVersion = parsed.frontendVersion
-        this.backendVersion = parsed.backendVersion
 
         return storeSuccess(parsed)
       } catch (err: unknown) {

@@ -26,7 +26,6 @@ const mockAppConfig = vi.hoisted(() => ({
   MAXMIND_ACCOUNT_ID: 'test-account',
   MAXMIND_LICENSE_KEY: 'test-key',
   FRONTEND_VERSION: '0.5.0',
-  BACKEND_VERSION: '1.2.0',
 }))
 
 vi.mock('@/lib/appconfig', () => ({
@@ -180,7 +179,7 @@ describe('GET /version', () => {
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.version.frontendVersion).toBe('0.5.0')
-    expect(reply.payload.version.backendVersion).toBe('1.2.0')
+    expect(reply.payload.version.backendVersion).toBe(__APP_VERSION__)
     expect(reply.payload.version.updateAvailable).toBe(false)
     expect(reply.payload.version.currentVersion).toBeUndefined()
   })

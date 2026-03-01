@@ -42,7 +42,6 @@ describe('useAppStore - checkVersion', () => {
     }
     expect(store.updateAvailable).toBe(false)
     expect(store.latestVersion).toBe(APP_VERSION)
-    expect(store.backendVersion).toBe('1.0.0')
     expect(mockApi.get).toHaveBeenCalledWith('/app/version', {
       params: { v: APP_VERSION },
     })
