@@ -7,7 +7,7 @@ import { useToast } from 'vue-toastification'
 import FluidColumn from '@/features/shared/ui/FluidColumn.vue'
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 import NoAccessCTA from '../components/NoAccessCTA.vue'
-import PlaceholdersGrid from '../components/PlaceholdersGrid.vue'
+import MapPlaceholder from '../components/MapPlaceholder.vue'
 
 import type { OwnerProfile } from '@zod/profile/profile.dto'
 
@@ -68,28 +68,9 @@ const handleEditProfileIntent = () => {
         </div>
       </FluidColumn>
 
-      <BPlaceholderWrapper :loading="isLoading">
-        <template #loading>
-          <BOverlay
-            show
-            no-spinner
-            no-center
-            :blur="null"
-            bg-color="inherit"
-            class="h-100 overlay"
-            spinner-variant="primary"
-            spinner-type="grow"
-          >
-            <FluidColumn class="overflow-hidden">
-              <PlaceholdersGrid
-                :howMany="6"
-                :isAnimated="true"
-              />
-            </FluidColumn>
-          </BOverlay>
-        </template>
-
-        <template v-if="isInitialized && !haveAccess">
+      <div class="overflow-auto hide-scrollbar flex-grow-1 position-relative" :class="{loading:isLoading}">
+    
+        <!-- <template v-if="isInitialized && !haveAccess">
           <BContainer class="flex-grow-1 d-flex align-items-center justify-content-center">
             <MiddleColumn>
               <NoAccessCTA
@@ -98,17 +79,14 @@ const handleEditProfileIntent = () => {
               />
             </MiddleColumn>
           </BContainer>
-        </template>
+        </template> -->
 
-        <template v-if="isInitialized && haveAccess">
-          <div class="overflow-auto hide-scrollbar flex-grow-1 position-relative">
-            <slot
-              name="results"
-              :onProfileSelect="handleCardClick"
-            />
-          </div>
-        </template>
-      </BPlaceholderWrapper>
+        <slot
+          v-if="haveAccess"
+          name="results"
+          :onProfileSelect="handleCardClick"
+        />
+      </div>
 
       <BModal
         v-model="showPrefsModal"

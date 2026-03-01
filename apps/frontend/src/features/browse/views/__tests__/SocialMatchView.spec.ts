@@ -1,14 +1,14 @@
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { nextTick, ref, computed } from 'vue'
+import { nextTick, ref } from 'vue'
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 
 const toastInfo = vi.fn()
 vi.mock('vue-toastification', () => ({ useToast: () => ({ info: toastInfo }) }))
 
 // stub child components
-vi.mock('../../components/PlaceholdersGrid.vue', () => ({
-  default: { template: '<div class="placeholders-grid" />', props: ['howMany', 'loading'] },
+vi.mock('../../components/MapPlaceholder.vue', () => ({
+  default: { template: '<div class="map-placeholder" />', props: ['isAnimated'] },
 }))
 vi.mock('../../components/NoAccessCTA.vue', () => ({
   default: { template: '<div class="no-access" />', props: ['scope'] },
@@ -48,14 +48,6 @@ const vmState = {
   viewerProfile: ref({ isSocialActive: true }),
   haveAccess: ref(true),
   haveResults: ref(true),
-  isLoading: computed(
-    (): boolean =>
-      vmState.findProfileStoreLoading.value ||
-      vmState.ownerStoreLoading.value ||
-      !vmState.isInitialized.value
-  ),
-  findProfileStoreLoading: ref(false),
-  ownerStoreLoading: ref(false),
   profileList: ref([{ id: '1' }]),
   storeError: ref(null),
   socialFilter: ref<{
@@ -73,11 +65,6 @@ vi.mock('../../composables/useSocialMatchViewModel', () => ({
   useSocialMatchViewModel: () => vmState,
 }))
 
-const BPlaceholderWrapper = {
-  props: ['loading'],
-  template: `<div><slot v-if="!loading" /><slot name="loading" v-else /></div>`,
-}
-const BOverlay = { template: '<div class="b-overlay"><slot /><slot name="overlay" /></div>' }
 const BModal = { template: '<div class="b-modal"><slot /></div>', props: ['modelValue'] }
 const BButton = { template: '<button><slot /></button>' }
 const BContainer = { template: '<div class="container"><slot /></div>' }
@@ -88,8 +75,6 @@ describe('SocialMatch view', () => {
   beforeEach(() => {
     vmState.haveAccess.value = true
     vmState.haveResults.value = true
-    vmState.findProfileStoreLoading.value = false
-    vmState.ownerStoreLoading.value = false
     vmState.isInitialized.value = true
     vmState.socialFilter.value = null
     toastInfo.mockClear()
@@ -99,8 +84,6 @@ describe('SocialMatch view', () => {
     return mount(SocialMatch, {
       global: {
         stubs: {
-          BPlaceholderWrapper,
-          BOverlay,
           BModal,
           BButton,
           BContainer,
@@ -109,19 +92,16 @@ describe('SocialMatch view', () => {
     })
   }
 
-  it('displays placeholders while loading', () => {
-    vmState.findProfileStoreLoading.value = true
-    vmState.isInitialized.value = true
-    const wrapper = mountComponent()
-    expect(wrapper.find('.placeholders-grid').exists()).toBe(true)
-  })
-
-  it('displays placeholders while initializing', () => {
-    vmState.findProfileStoreLoading.value = false
-    vmState.ownerStoreLoading.value = false
+  it('shows map-placeholder while not initialized', () => {
     vmState.isInitialized.value = false
     const wrapper = mountComponent()
-    expect(wrapper.find('.placeholders-grid').exists()).toBe(true)
+    expect(wrapper.find('.map-placeholder').exists()).toBe(true)
+  })
+
+  it('hides map-placeholder once initialized', () => {
+    vmState.isInitialized.value = true
+    const wrapper = mountComponent()
+    expect(wrapper.find('.map-placeholder').exists()).toBe(false)
   })
 
   it('shows no-access overlay when viewer lacks access', () => {

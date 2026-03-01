@@ -11,6 +11,7 @@ import TagSelector from '@/features/shared/profileform/TagSelector.vue'
 import TagCloud from '@/features/shared/components/TagCloud.vue'
 import IconTarget2 from '@/assets/icons/interface/target-2.svg'
 import IconTag from '@/assets/icons/e-commerce/tag.svg'
+import MapPlaceholder from '../components/MapPlaceholder.vue'
 
 import { useSocialMatchViewModel } from '../composables/useSocialMatchViewModel'
 import type { PublicProfile } from '@zod/profile/profile.dto'
@@ -163,6 +164,18 @@ watch(
     </template>
 
     <template #results="{ onProfileSelect }">
+      <!-- TODO show-if the *map* while map is loading -->
+      <MapPlaceholder
+        :isAnimated="true"
+        class="map-placeholder position-absolute top-0 start-0 w-100 h-100 opacity-25"
+      />
+
+      <!--
+       claude TODO set opacity to 0 before the *map* loads (not the results) to show MapPlaceholder,
+        then set it to 100 
+
+        set opacity to 25 and disable mouse events while results are loading. 
+       -->
       <OsmPoiMap
         :items="profileList"
         :center="mapCenter"
