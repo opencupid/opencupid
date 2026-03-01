@@ -3,8 +3,8 @@ import { describe, it, expect, vi } from 'vitest'
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 
-const search = vi.fn().mockResolvedValue([{ id: '1', name: 'vue' }])
-const create = vi.fn().mockResolvedValue({ id: '2', name: 'new' })
+const search = vi.fn().mockResolvedValue([{ id: '1', slug: 'vue', name: 'vue' }])
+const create = vi.fn().mockResolvedValue({ id: '2', slug: 'new', name: 'new' })
 vi.mock('@/store/tagStore', () => ({ useTagsStore: () => ({ search, create }) }))
 vi.mock('vue-multiselect', () => ({ default: { template: '<div />' } }))
 
@@ -23,8 +23,8 @@ describe('TagSelector', () => {
 
   it('shows initialOptions when query is empty', async () => {
     const initialOptions = [
-      { id: 'a', name: 'hiking' },
-      { id: 'b', name: 'music' },
+      { id: 'a', slug: 'hiking', name: 'hiking' },
+      { id: 'b', slug: 'music', name: 'music' },
     ]
     const wrapper = mount(TagSelector, { props: { modelValue: [], initialOptions } })
     await (wrapper.vm as any).asyncFind('')
