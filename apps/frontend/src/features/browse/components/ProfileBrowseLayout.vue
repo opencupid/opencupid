@@ -2,14 +2,14 @@
 import { computed, provide, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { useToast } from 'vue-toastification'
 
-import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 import FluidColumn from '@/features/shared/ui/FluidColumn.vue'
+import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 import NoAccessCTA from '../components/NoAccessCTA.vue'
-import NoResultsCTA from '../components/NoResultsCTA.vue'
 import PlaceholdersGrid from '../components/PlaceholdersGrid.vue'
 
-import type { OwnerProfile, ProfileScope } from '@zod/profile/profile.dto'
+import type { OwnerProfile } from '@zod/profile/profile.dto'
 
 const props = defineProps<{
   viewerProfile: OwnerProfile | null
@@ -18,7 +18,6 @@ const props = defineProps<{
   isInitialized: boolean
   haveAccess: boolean
   haveResults: boolean
-  currentScope: ProfileScope
 }>()
 
 const emit = defineEmits<{
@@ -29,19 +28,18 @@ const emit = defineEmits<{
 
 const router = useRouter()
 const { t } = useI18n()
+const toast = useToast()
 
 const showPrefsModal = ref(false)
-const noResultsDismissed = ref(false)
 
+// TODO(#847): Replace toast with proper no-results UX — see issue for design discussion
 watch(
   () => props.haveResults,
-  () => {
-    noResultsDismissed.value = false
+  (hasResults) => {
+    if (!hasResults && props.isInitialized && props.haveAccess) {
+      toast.info(t('profiles.browse.no_results_cta_title'))
+    }
   }
-)
-
-const showNoResultsCTA = computed(
-  () => props.isInitialized && !props.haveResults && props.haveAccess && !noResultsDismissed.value
 )
 
 provide(
@@ -60,16 +58,9 @@ const handleEditProfileIntent = () => {
 
 <template>
   <main class="w-100 position-relative overflow-hidden">
-    <div
-      class="list-view d-flex flex-column justify-content-start"
-      :class="[currentScope]"
-    >
+    <div class="list-view d-flex flex-column justify-content-start">
       <FluidColumn class="my-2">
-        <div
-          class="subnav-bar d-flex align-items-center gap-2 px-2 py-1 bg-light rounded"
-          :class="currentScope"
-          @click="currentScope !== 'social' && (showPrefsModal = true)"
-        >
+        <div class="subnav-bar d-flex align-items-center gap-2 px-2 py-1 bg-light rounded">
           <slot
             name="filter-bar"
             :showPrefsModal="showPrefsModal"
@@ -102,37 +93,19 @@ const handleEditProfileIntent = () => {
           <BContainer class="flex-grow-1 d-flex align-items-center justify-content-center">
             <MiddleColumn>
               <NoAccessCTA
-                :scope="currentScope"
+                scope="social"
                 @edit:profile="handleEditProfileIntent"
               />
             </MiddleColumn>
           </BContainer>
         </template>
 
-        <template v-if="isInitialized && !haveResults && haveAccess && currentScope !== 'social'">
-          <BContainer class="flex-grow-1 d-flex align-items-center justify-content-center">
-            <MiddleColumn>
-              <slot name="no-results" />
-              <NoResultsCTA @close="noResultsDismissed = true" />
-            </MiddleColumn>
-          </BContainer>
-        </template>
-
-        <template v-if="isInitialized && haveAccess && (haveResults || currentScope === 'social')">
+        <template v-if="isInitialized && haveAccess">
           <div class="overflow-auto hide-scrollbar flex-grow-1 position-relative">
             <slot
               name="results"
               :onProfileSelect="handleCardClick"
             />
-            <div
-              v-if="showNoResultsCTA && currentScope === 'social'"
-              class="no-results-overlay"
-            >
-              <MiddleColumn>
-                <slot name="no-results" />
-                <NoResultsCTA @close="noResultsDismissed = true" />
-              </MiddleColumn>
-            </div>
           </div>
         </template>
       </BPlaceholderWrapper>
@@ -174,49 +147,9 @@ main {
   width: 100%;
 }
 
-.no-results-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 600; // above map tiles, below subnav-bar (800)
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-
-  > * {
-    pointer-events: auto;
-  }
-}
-
 .subnav-bar {
   position: relative;
   z-index: 800; // above Leaflet map panes (max ~700)
   box-shadow: var(--shadow-xs);
-  transition:
-    background-color 0.2s ease,
-    box-shadow 0.2s ease;
-
-  &:hover {
-    // box-shadow: var(--shadow-1), var(--shadow-1);
-  }
-
-  // &.social {
-  //   background-color: transparentize($social, 0.95) !important;
-  //   cursor: default;
-
-  //   &:hover {
-  //     background-color: transparentize($social, 0.95) !important;
-  //     box-shadow: var(--shadow-xs);
-  //   }
-  // }
-
-  // &.dating {
-  //   background-color: transparentize($dating, 0.95) !important;
-
-  //   &:hover {
-  //     background-color: transparentize($dating, 0.88) !important;
-  //   }
-  // }
 }
 </style>
