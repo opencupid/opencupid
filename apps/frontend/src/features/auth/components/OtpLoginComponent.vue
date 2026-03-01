@@ -88,12 +88,14 @@ watch(inputState, (state) => {
               v-model.trim="otpInput"
               id="otp"
               type="text"
+              inputmode="numeric"
+              pattern="[0-9]*"
               placeholder=""
               label="otpInput"
-              maxlength="25"
+              maxlength="6"
               aria-autocomplete="none"
               autofocus
-              autocomplete="off"
+              autocomplete="one-time-code"
               lazy
               required
               :state="validated"
