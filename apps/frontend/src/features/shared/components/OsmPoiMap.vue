@@ -50,7 +50,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (e: 'item:select', id: string | number): void
-  (e: 'map-ready', map: LMap): void
+  (e: 'map:ready', map: LMap): void
 }>()
 
 const mapEl: Ref<HTMLDivElement | null> = ref(null)
@@ -112,9 +112,13 @@ function ensureMap() {
     preferCanvas: true,
   })
 
-  new MaptilerLayer({
+  const maptilerLayer = new MaptilerLayer({
     apiKey: __APP_CONFIG__.MAPTILER_API_KEY,
   }).addTo(map)
+
+  // Fire map:ready only after the underlying MapLibre map is idle —
+  // meaning all tiles in the viewport have fully loaded and rendered.
+  maptilerLayer.getMaptilerSDKMap().once('idle', () => emit('map:ready', map!))
 
   clusterGroup = (L as any).markerClusterGroup({
     spiderfyOnMaxZoom: false,
@@ -133,7 +137,6 @@ function ensureMap() {
   })
 
   map.addLayer(clusterGroup)
-  emit('map-ready', map)
 }
 
 const popupTarget = ref<HTMLElement | null>(null)

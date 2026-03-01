@@ -1,13 +1,9 @@
 <script setup lang="ts">
 import { computed, provide, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useToast } from 'vue-toastification'
 
 import FluidColumn from '@/features/shared/ui/FluidColumn.vue'
-import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
-import NoAccessCTA from '../components/NoAccessCTA.vue'
-import MapPlaceholder from '../components/MapPlaceholder.vue'
 
 import type { OwnerProfile } from '@zod/profile/profile.dto'
 
@@ -26,7 +22,6 @@ const emit = defineEmits<{
   'prefs:update': []
 }>()
 
-const router = useRouter()
 const { t } = useI18n()
 const toast = useToast()
 
@@ -51,9 +46,6 @@ const handleCardClick = (profileId: string) => {
   emit('profile:open', profileId)
 }
 
-const handleEditProfileIntent = () => {
-  router.push({ name: 'EditProfile', state: { hint: 'scope' } })
-}
 </script>
 
 <template>
@@ -68,19 +60,7 @@ const handleEditProfileIntent = () => {
         </div>
       </FluidColumn>
 
-      <div class="overflow-auto hide-scrollbar flex-grow-1 position-relative" :class="{loading:isLoading}">
-    
-        <!-- <template v-if="isInitialized && !haveAccess">
-          <BContainer class="flex-grow-1 d-flex align-items-center justify-content-center">
-            <MiddleColumn>
-              <NoAccessCTA
-                scope="social"
-                @edit:profile="handleEditProfileIntent"
-              />
-            </MiddleColumn>
-          </BContainer>
-        </template> -->
-
+      <div class="overflow-auto hide-scrollbar flex-grow-1 position-relative" :class="{ loading: isLoading }">
         <slot
           v-if="haveAccess"
           name="results"

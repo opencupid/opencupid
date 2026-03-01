@@ -54,6 +54,11 @@ const mapCenter = computed<[number, number]>(() => {
 // --- Inline filter logic ---
 
 const showTagCloud = ref(false)
+const mapReady = ref(false)
+
+function onMapReady() {
+  mapReady.value = true
+}
 
 function setLocationFromProfile() {
   if (viewerProfile.value?.location && socialFilter.value?.location) {
@@ -114,7 +119,12 @@ watch(
           class="row g-2"
           v-if="socialFilter && haveAccess"
         >
-          <!-- Location column -->
+         
+        
+     <h4 class=""> mapready {{   mapReady}} isLoading {{isLoading}}</h4>
+        
+        
+        <!-- Location column -->
           <div class="col-12 col-md-6">
             <div class="d-flex align-items-center gap-2">
               <div class="flex-grow-1">
@@ -164,29 +174,32 @@ watch(
     </template>
 
     <template #results="{ onProfileSelect }">
-      <!-- TODO show-if the *map* while map is loading -->
       <MapPlaceholder
         :isAnimated="true"
-        class="map-placeholder position-absolute top-0 start-0 w-100 h-100 opacity-25"
+        v-show="!mapReady"
+        class="position-absolute top-0 start-0 w-100 h-100"
       />
 
-      <!--
-       claude TODO set opacity to 0 before the *map* loads (not the results) to show MapPlaceholder,
-        then set it to 100 
-
-        set opacity to 25 and disable mouse events while results are loading. 
-       -->
-      <OsmPoiMap
-        :items="profileList"
-        :center="mapCenter"
-        :get-location="(profile: PublicProfile) => profile.location"
-        :get-title="(profile: PublicProfile) => profile.publicName"
-        :get-image-url="getProfileImageUrl"
-        :is-highlighted="(profile: PublicProfile) => matchedProfileIds.has(profile.id)"
-        :popup-component="ProfileMapCard"
+      <div
         class="map-view h-100"
-        @item:select="(id: string | number) => onProfileSelect(String(id))"
-      />
+        :class="{
+          // 'opacity-0': !mapReady,
+          'opacity-25 pe-none': mapReady && isLoading,
+        }"
+      >
+        <OsmPoiMap
+          :items="profileList"
+          :center="mapCenter"
+          :get-location="(profile: PublicProfile) => profile.location"
+          :get-title="(profile: PublicProfile) => profile.publicName"
+          :get-image-url="getProfileImageUrl"
+          :is-highlighted="(profile: PublicProfile) => matchedProfileIds.has(profile.id)"
+          :popup-component="ProfileMapCard"
+          class="h-100"
+          @map:ready="onMapReady"
+          @item:select="(id: string | number) => onProfileSelect(String(id))"
+        />
+      </div>
     </template>
   </ProfileBrowseLayout>
 
