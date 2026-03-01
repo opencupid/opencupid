@@ -101,7 +101,13 @@ Backend tests:
 pnpm --filter backend test
 ```
 
-Full CI suite (install, prisma generate, lint, test, type-check). This is expensive to run and takes a long time, run this only near/after completing a task and when `pnpm test` and `pnpm lint` are green.
+Type-check only (vue-tsc across all packages, including test files):
+
+```bash
+turbo run type-check --concurrency 1
+```
+
+Full CI suite — mirrors GitHub Actions exactly (install, prisma generate, lint, type-check, build, tests, i18n). Run before finalizing a PR, once `pnpm test` and `pnpm lint` are green:
 
 ```bash
 pnpm run ci:test
@@ -111,12 +117,6 @@ Run with coverage:
 
 ```bash
 pnpm run test:coverage
-```
-
-Run build and type check:
-
-```bash
-pnpm build
 ```
 
 - All completed work must pass full test suite
@@ -165,7 +165,8 @@ Always work in a feature branch and open a Github pull request once task is comp
 ```bash
 git checkout -b your-branch-name
 # ... make changes, commit ...
-pnpm test                    # MUST pass before push
+pnpm test                              # MUST pass before push
+turbo run type-check --concurrency 1  # MUST pass before finalizing PR
 git push -u origin your-branch-name
 gh pr create
 ```
