@@ -182,11 +182,6 @@
       "confirmation_yes": "Yes, block them"
     },
     "browse": {
-      "no_access_dating_title": "Your own dating profile is currently private.",
-      "no_access_dating_description": "When others can't see you, you can't see them - it's only fair.  To find matches, please make your dating profile public.",
-      "no_access_social_title": "Your own social profile is currently private.",
-      "no_access_social_description": "When others can't see you, you can't see them - it's only fair.  To see and meet others, please make your profile public.",
-      "cta_button_label": "Go to my profile",
       "social_no_results": "We haven't found anyone in {country} yet.",
       "social_no_results_city": "Haven't found anyone in {cityName} yet.",
       "social_no_results_tags": "Haven't found anyone with those interests.",
