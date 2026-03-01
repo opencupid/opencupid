@@ -48,10 +48,15 @@ jobs:
         if: steps.secrets-check.outputs.has_secrets == 'true'
         run: pnpm install --frozen-lockfile
 
-      - name: Extract version
+      - name: Extract frontend version
         if: steps.secrets-check.outputs.has_secrets == 'true'
-        id: version
-        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+        id: frontend-version
+        run: echo "version=$(node -p "require('./apps/frontend/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Extract backend version
+        if: steps.secrets-check.outputs.has_secrets == 'true'
+        id: backend-version
+        run: echo "version=$(node -p "require('./apps/backend/package.json').version")" >> "$GITHUB_OUTPUT"
 
       - name: Build frontend
         if: steps.secrets-check.outputs.has_secrets == 'true'
@@ -64,7 +69,7 @@ jobs:
       - name: Upload frontend sourcemaps
         if: steps.secrets-check.outputs.has_secrets == 'true'
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
+          VERSION="${{ steps.frontend-version.outputs.version }}"
           pnpm exec sentry-cli --url $SENTRY_URL releases \
             --org $SENTRY_ORG new --project $SENTRY_PROJECT "frontend@${VERSION}"
           pnpm exec sentry-cli --url $SENTRY_URL releases \
@@ -83,7 +88,7 @@ jobs:
       - name: Upload backend sourcemaps
         if: steps.secrets-check.outputs.has_secrets == 'true'
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
+          VERSION="${{ steps.backend-version.outputs.version }}"
           pnpm exec sentry-cli --url $SENTRY_URL releases \
             --org $SENTRY_ORG new --project $SENTRY_PROJECT "api@${VERSION}"
           pnpm exec sentry-cli --url $SENTRY_URL releases \
