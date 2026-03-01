@@ -1,5 +1,11 @@
 # backend
 
+## 0.17.2
+
+### Patch Changes
+
+- 7aca55a: #855 (version display)
+
 ## 0.6.2
 
 ### Minor Changes
