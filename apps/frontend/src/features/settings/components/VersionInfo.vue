@@ -1,5 +1,9 @@
 <script setup lang="ts">
-const version = __APP_VERSION__
+import { useAppStore } from '@/features/app/stores/appStore'
+import { storeToRefs } from 'pinia'
+
+const frontendVersion = __APP_VERSION__
+const { backendVersion } = storeToRefs(useAppStore())
 </script>
 
 <template>
@@ -8,7 +12,13 @@ const version = __APP_VERSION__
     style="font-size: 0.5rem"
   >
     <code class="text-muted">
-      <span>v{{ version }}</span>
+      <span>frontend v{{ frontendVersion }}</span>
+      <span
+        v-if="backendVersion"
+        class="ms-2"
+      >
+        backend v{{ backendVersion }}
+      </span>
     </code>
   </div>
 </template>

@@ -67,6 +67,7 @@ export const configSchema = z.object({
   DEEPL_API_KEY: z.string().optional(),
 
   FRONTEND_VERSION: z.string().default('unknown'),
+  BACKEND_VERSION: z.string().default('unknown'),
 })
 
 if (!['production', 'staging'].includes(process.env.NODE_ENV!)) {

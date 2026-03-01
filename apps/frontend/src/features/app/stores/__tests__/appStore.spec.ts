@@ -27,6 +27,7 @@ describe('useAppStore - checkVersion', () => {
         version: {
           updateAvailable: false,
           frontendVersion: APP_VERSION,
+          backendVersion: '1.0.0',
           currentVersion: APP_VERSION,
         },
       },
@@ -41,6 +42,7 @@ describe('useAppStore - checkVersion', () => {
     }
     expect(store.updateAvailable).toBe(false)
     expect(store.latestVersion).toBe(APP_VERSION)
+    expect(store.backendVersion).toBe('1.0.0')
     expect(mockApi.get).toHaveBeenCalledWith('/app/version', {
       params: { v: APP_VERSION },
     })
@@ -54,6 +56,7 @@ describe('useAppStore - checkVersion', () => {
         version: {
           updateAvailable: true,
           frontendVersion: '0.6.0',
+          backendVersion: '1.0.0',
           currentVersion: APP_VERSION,
         },
       },
@@ -92,6 +95,7 @@ describe('useAppStore - checkVersion', () => {
         version: {
           updateAvailable: false,
           frontendVersion: APP_VERSION,
+          backendVersion: '1.0.0',
           currentVersion: APP_VERSION,
         },
       },
