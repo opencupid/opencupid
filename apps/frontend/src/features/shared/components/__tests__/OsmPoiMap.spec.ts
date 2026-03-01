@@ -1,6 +1,8 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { defineComponent, h, nextTick } from 'vue'
 
+vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
+
 // Track created markers and their icons
 const createdMarkers: { latLng: [number, number]; opts: any; icon?: any }[] = []
 
@@ -91,9 +93,16 @@ vi.mock('leaflet.markercluster/dist/MarkerCluster.css', () => ({}))
 vi.mock('leaflet.markercluster/dist/MarkerCluster.Default.css', () => ({}))
 
 // Mock MapTiler layer and CSS
-vi.mock('@maptiler/leaflet-maptilersdk', () => ({
-  MaptilerLayer: class {
-    addTo = vi.fn().mockReturnThis()
+vi.mock('@maptiler/leaflet-maptilersdk', () => {
+  const MaptilerLayer = vi.fn(function (this: any, opts: any) {
+    this._opts = opts
+    this.addTo = vi.fn().mockReturnThis()
+  })
+  return { MaptilerLayer }
+})
+vi.mock('@maptiler/sdk', () => ({
+  MapStyle: {
+    BASIC: 'basic-v2',
   },
 }))
 vi.mock('@maptiler/sdk/dist/maptiler-sdk.css', () => ({}))
@@ -269,5 +278,33 @@ describe('OsmPoiMap', () => {
     // After nextTick, popup.update() should be called
     await nextTick()
     expect(popupUpdate).toHaveBeenCalledOnce()
+  })
+
+  it('uses MapStyle.BASIC when creating the Maptiler layer', async () => {
+    const { MaptilerLayer } = await import('@maptiler/leaflet-maptilersdk')
+    const { MapStyle } = await import('@maptiler/sdk')
+
+    mountMap()
+    await flushPromises()
+
+    expect((MaptilerLayer as any).mock.calls).toHaveLength(1)
+    const ctorCall = (MaptilerLayer as any).mock.calls[0][0]
+    expect(ctorCall.style).toBe(MapStyle.BASIC)
+  })
+
+  it('shows error message when map initialization throws', async () => {
+    const mapFn = (L as any).map as ReturnType<typeof vi.fn>
+    mapFn.mockImplementationOnce(() => {
+      throw new Error('WebGL not supported')
+    })
+
+    const wrapper = mountMap()
+    await flushPromises()
+
+    // Should show the error message, not the map element
+    expect(wrapper.find('.osm-poi-map-error').exists()).toBe(true)
+    // The map container div should not be rendered
+    const mapDivs = wrapper.findAll('.osm-poi-map').filter((el) => !el.classes('osm-poi-map-error'))
+    expect(mapDivs.length).toBe(0)
   })
 })

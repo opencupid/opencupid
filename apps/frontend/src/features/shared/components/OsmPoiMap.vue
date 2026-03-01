@@ -7,7 +7,11 @@ import 'leaflet.markercluster'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 import { MaptilerLayer } from '@maptiler/leaflet-maptilersdk'
+import { MapStyle } from '@maptiler/sdk'
 import '@maptiler/sdk/dist/maptiler-sdk.css'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 /** Basic POI shape for location data extraction */
 export interface PoiItem {
@@ -53,6 +57,7 @@ const emit = defineEmits<{
 }>()
 
 const mapEl: Ref<HTMLDivElement | null> = ref(null)
+const mapError = ref(false)
 let map: LMap | null = null
 let markers = new Map<string | number, LMarker>()
 let itemsById = new Map<string | number, T>()
@@ -118,35 +123,45 @@ function iconForItem(item: T, isSelected: boolean): L.DivIcon {
 
 function ensureMap() {
   if (map || !mapEl.value) return
-  map = L.map(mapEl.value, {
-    center: props.center,
-    zoom: props.zoom,
-    maxZoom: 19,
-    preferCanvas: true,
-  })
+  try {
+    map = L.map(mapEl.value, {
+      center: props.center,
+      zoom: props.zoom,
+      maxZoom: 19,
+      preferCanvas: true,
+    })
 
-  new MaptilerLayer({
-    apiKey: __APP_CONFIG__.MAPTILER_API_KEY,
-  }).addTo(map)
+    new MaptilerLayer({
+      apiKey: __APP_CONFIG__.MAPTILER_API_KEY,
+      style: MapStyle.BASIC,
+    }).addTo(map)
 
-  clusterGroup = (L as any).markerClusterGroup({
-    spiderfyOnMaxZoom: false,
-    showCoverageOnHover: false,
-    zoomToBoundsOnClick: true,
-    maxClusterRadius: 40,
-    spiderfyDistanceMultiplier: 1.5,
-    iconCreateFunction: customClusterIcon,
-  })
+    clusterGroup = (L as any).markerClusterGroup({
+      spiderfyOnMaxZoom: false,
+      showCoverageOnHover: false,
+      zoomToBoundsOnClick: true,
+      maxClusterRadius: 40,
+      spiderfyDistanceMultiplier: 1.5,
+      iconCreateFunction: customClusterIcon,
+    })
 
-  clusterGroup.on('clustermouseover', (e: any) => {
-    e.layer.spiderfy()
-  })
-  clusterGroup.on('clustermouseout', (e: any) => {
-    e.layer.unspiderfy()
-  })
+    clusterGroup.on('clustermouseover', (e: any) => {
+      e.layer.spiderfy()
+    })
+    clusterGroup.on('clustermouseout', (e: any) => {
+      e.layer.unspiderfy()
+    })
 
-  map.addLayer(clusterGroup)
-  emit('map-ready', map)
+    map.addLayer(clusterGroup)
+    emit('map-ready', map)
+  } catch (err) {
+    if (map) {
+      map.remove()
+      map = null
+    }
+    console.error('[OsmPoiMap] Map initialization failed:', err)
+    mapError.value = true
+  }
 }
 
 const popupTarget = ref<HTMLElement | null>(null)
@@ -303,6 +318,13 @@ watch(
 <template>
   <div>
     <div
+      v-if="mapError"
+      class="osm-poi-map osm-poi-map-error d-flex align-items-center justify-content-center text-muted"
+    >
+      {{ t('uicomponents.osm_poi_map.error') }}
+    </div>
+    <div
+      v-else
       class="osm-poi-map"
       ref="mapEl"
     />
@@ -325,6 +347,14 @@ watch(
   /* Set an explicit height, or it won't be visible */
   height: 100%;
   width: 100%;
+}
+
+.osm-poi-map-error {
+  height: 100%;
+  width: 100%;
+  min-height: 4rem;
+  text-align: center;
+  padding: 1rem;
 }
 
 /* Simple circular dot markers */

@@ -416,6 +416,9 @@
     "update_banner": {
       "message": "An update is available.",
       "reload": "Reload"
+    },
+    "osm_poi_map": {
+      "error": "Hmm, it looks like the map cannot be shown.  Try in another browser?"
     }
   },
   "posts": {
