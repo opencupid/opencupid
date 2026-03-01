@@ -1,5 +1,11 @@
 # frontend
 
+## 0.17.1
+
+### Patch Changes
+
+- 1c20615: WS ticket refresh fix
+
 ## 0.6.2
 
 ### Minor Changes
