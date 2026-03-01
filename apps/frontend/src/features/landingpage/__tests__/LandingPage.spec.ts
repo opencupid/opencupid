@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils'
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, afterAll } from 'vitest'
 import { defineComponent } from 'vue'
 
 // mocks must come before the component import
@@ -43,6 +43,7 @@ const bStubs = {
 }
 
 vi.stubGlobal('__APP_CONFIG__', { SITE_NAME: 'TestSite' })
+afterAll(() => vi.unstubAllGlobals())
 
 import LandingPage from '../views/LandingPage.vue'
 

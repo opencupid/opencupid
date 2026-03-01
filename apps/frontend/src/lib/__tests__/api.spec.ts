@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from 'vitest'
 
 // Mock the bus module
 const mockEmit = vi.fn()
@@ -13,6 +13,7 @@ vi.stubGlobal('__APP_CONFIG__', {
   API_BASE_URL: 'http://localhost:3000',
   NODE_ENV: 'production', // Default to production for existing tests
 })
+afterAll(() => vi.unstubAllGlobals())
 
 describe('api error handling', () => {
   beforeEach(() => {

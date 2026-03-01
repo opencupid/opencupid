@@ -7,21 +7,21 @@ import Components from 'unplugin-vue-components/vite'
 import { BootstrapVueNextResolver } from 'bootstrap-vue-next'
 
 export default defineConfig(({ mode }: ConfigEnv): ViteUserConfig => {
-
   return {
     ...define(mode),
     ...server(mode),
-    plugins: [vue(),
-    Components({
-      resolvers: [BootstrapVueNextResolver()],
-      // exclude: [/\/__tests__\//],
-    }),
+    plugins: [
+      vue(),
+      Components({
+        resolvers: [BootstrapVueNextResolver()],
+        // exclude: [/\/__tests__\//],
+      }),
     ],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
         '@shared': path.resolve(__dirname, '../../packages/shared'),
-        '@zod': path.resolve(__dirname, '../../packages/shared/zod')
+        '@zod': path.resolve(__dirname, '../../packages/shared/zod'),
       },
     },
     test: {
@@ -33,12 +33,8 @@ export default defineConfig(({ mode }: ConfigEnv): ViteUserConfig => {
       coverage: {
         provider: 'v8',
         reporter: ['text', 'json', 'html'],
-        exclude: [
-          'node_modules/',
-          'src/tests/',
-          '**/*.d.ts'
-        ]
-      }
-    }
+        exclude: ['node_modules/', 'src/tests/', '**/*.d.ts'],
+      },
+    },
   }
 })
