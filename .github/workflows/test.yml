@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TURBO_NO_UPDATE_NOTIFIER: 1
+      PRISMA_DISABLE_WARNINGS: "true"
     # services:
       # postgres:
       #   image: postgres:15

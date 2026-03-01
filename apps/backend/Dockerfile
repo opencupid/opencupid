@@ -22,6 +22,8 @@ RUN pnpm install --no-frozen-lockfile
 # RUN apk add --no-cache libc6-compat
 
 # Generate Prisma client and build application
+ENV PRISMA_DISABLE_WARNINGS=true
+ENV TURBO_NO_UPDATE_NOTIFIER=1
 RUN pnpm run prisma:generate && pnpm run build
 
 # Remove dev dependencies (CI=true needed for pnpm v10+ non-TTY confirmation)
