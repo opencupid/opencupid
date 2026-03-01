@@ -152,51 +152,80 @@ function ensureMap() {
 const popupTarget = ref<HTMLElement | null>(null)
 const popupItem = ref<T | null>(null)
 
+function createMarker(item: T): LMarker | null {
+  const location = props.getLocation(item)
+  if (!location || !(location.lat && location.lon)) return null
+
+  const isSelected = item.id === props.selectedId
+  const m = L.marker([location.lat, location.lon], {
+    title: props.getTitle(item),
+    icon: iconForItem(item, isSelected),
+    keyboard: true,
+  })
+
+  const highlighted = props.isHighlighted?.(item) ?? false
+  m.bindPopup('', {
+    maxWidth: 420,
+    autoPan: true,
+    autoPanPadding: L.point(20, 20),
+    className: highlighted ? 'item-popup item-popup-highlighted' : 'item-popup',
+  })
+
+  m.on('popupopen', (e: L.PopupEvent) => {
+    const target = e.popup
+      .getElement()
+      ?.querySelector('.leaflet-popup-content') as HTMLElement | null
+    popupTarget.value = target
+    popupItem.value = itemsById.get(item.id) ?? null
+    nextTick(() => e.popup.update())
+  })
+  m.on('popupclose', () => {
+    popupTarget.value = null
+    popupItem.value = null
+  })
+
+  m.on('click', () => m.openPopup())
+  return m
+}
+
 function updateMarkers() {
   if (!map || !clusterGroup) return
-  clusterGroup.clearLayers()
-  markers.clear()
-  itemsById.clear()
+
+  const incomingIds = new Set<string | number>()
 
   for (const item of props.items) {
     const location = props.getLocation(item)
     if (!location || !(location.lat && location.lon)) continue
+    incomingIds.add(item.id)
 
-    const isSelected = item.id === props.selectedId
-    const m = L.marker([location.lat, location.lon], {
-      title: props.getTitle(item),
-      icon: iconForItem(item, isSelected),
-      keyboard: true,
-    })
+    const existing = markers.get(item.id)
+    if (existing) {
+      // Update position if changed
+      const cur = existing.getLatLng()
+      if (cur.lat !== location.lat || cur.lng !== location.lon) {
+        existing.setLatLng([location.lat, location.lon])
+      }
+      // Update icon (selection/highlight state may have changed)
+      existing.setIcon(iconForItem(item, item.id === props.selectedId))
+      itemsById.set(item.id, item)
+    } else {
+      // Add new marker
+      const m = createMarker(item)
+      if (m) {
+        clusterGroup.addLayer(m)
+        markers.set(item.id, m)
+        itemsById.set(item.id, item)
+      }
+    }
+  }
 
-    const highlighted = props.isHighlighted?.(item) ?? false
-    m.bindPopup('', {
-      maxWidth: 420,
-      autoPan: true,
-      autoPanPadding: L.point(20, 20),
-      className: highlighted ? 'item-popup item-popup-highlighted' : 'item-popup',
-    })
-
-    m.on('popupopen', (e: L.PopupEvent) => {
-      const target = e.popup
-        .getElement()
-        ?.querySelector('.leaflet-popup-content') as HTMLElement | null
-      popupTarget.value = target
-      popupItem.value = item
-      // After Vue renders the teleported popup content, re-measure so
-      // Leaflet's autoPan accounts for the actual popup dimensions.
-      nextTick(() => e.popup.update())
-    })
-    m.on('popupclose', () => {
-      popupTarget.value = null
-      popupItem.value = null
-    })
-
-    m.on('click', () => m.openPopup())
-
-    clusterGroup.addLayer(m)
-    markers.set(item.id, m)
-    itemsById.set(item.id, item)
+  // Remove markers that are no longer in the list
+  for (const [id, marker] of markers) {
+    if (!incomingIds.has(id)) {
+      clusterGroup.removeLayer(marker)
+      markers.delete(id)
+      itemsById.delete(id)
+    }
   }
 
   // Fit bounds if requested and we have at least one item with location
@@ -339,8 +368,7 @@ watch(
 }
 
 :deep(.poi-avatar.highlighted) {
-  box-shadow:
-    0 0 6px 3px rgba(217, 83, 79, 0.7);
+  box-shadow: 0 0 6px 3px rgba(217, 83, 79, 0.7);
   filter: drop-shadow(0 0 6px rgba(217, 83, 79, 0.6));
 }
 
