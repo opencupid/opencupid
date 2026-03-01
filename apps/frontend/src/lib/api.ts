@@ -128,12 +128,16 @@ api.interceptors.response.use(
           return Promise.reject(refreshError)
         }
       } else {
-        // No refresh token — unrecoverable 401
+        // No valid token pair — clear any stale state
         localStorage.removeItem('token')
         localStorage.removeItem('refreshToken')
         delete api.defaults.headers.common['Authorization']
-        bus.emit('auth:logout')
-        window.location.href = '/auth'
+        // Only redirect to /auth if the user was previously authenticated.
+        // When neither token exists (e.g. OTP validation), just propagate the error.
+        if (token || refreshToken) {
+          bus.emit('auth:logout')
+          window.location.href = '/auth'
+        }
         return Promise.reject(error)
       }
     }

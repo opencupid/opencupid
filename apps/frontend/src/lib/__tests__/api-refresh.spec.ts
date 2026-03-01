@@ -86,6 +86,27 @@ describe('api refresh interceptor', () => {
     expect(config._retry).toBe(true)
   })
 
+  it('does not redirect to /auth when 401 received with no token or refresh token', async () => {
+    const { api } = await import('../api')
+
+    // No token or refreshToken — simulates an unauthenticated request (e.g. OTP validation)
+    const mockAdapter = vi.fn().mockRejectedValue({
+      response: { status: 401, data: { code: 'AUTH_INVALID_OTP' } },
+      config: { headers: new AxiosHeaders(), _retry: false },
+      isAxiosError: true,
+    })
+    api.defaults.adapter = mockAdapter
+
+    try {
+      await api.get('/auth/otp-login')
+    } catch {
+      // expected
+    }
+
+    expect(mockEmit).not.toHaveBeenCalledWith('auth:logout')
+    expect(locationHref).not.toBe('/auth')
+  })
+
   it('redirects to /auth when 401 received with no refresh token', async () => {
     const { api } = await import('../api')
 
