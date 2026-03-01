@@ -219,6 +219,7 @@ EOF
 ```
 
 Bump type guide:
+
 - `patch` — bug fixes, non-visible improvements
 - `minor` — new features or enhancements
 - `major` — breaking changes
@@ -313,5 +314,5 @@ Development guidelines and best practices for this project.
 
 - always adhere to SOLID Principles (DRY, KISS, YAGNI)
 - avoid over-engineering - always make an effort to find the simplest solution and be on the lookup for opportunities to simplify code
-- always try to use stock solutions - prefer integrating a mature 3rd party library instead of reimplementing the wheel. 
+- always try to use stock solutions - prefer integrating a mature 3rd party library instead of reimplementing the wheel.
 - watch out for stinky code and flag if you see such
