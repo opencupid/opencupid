@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from 'vitest'
 
 // --- Mocks -----------------------------------------------------------
 
@@ -15,6 +15,7 @@ vi.mock('@/lib/bus', () => ({ bus: { on: mockBusOn, emit: vi.fn() } }))
 vi.stubGlobal('__APP_CONFIG__', {
   WS_BASE_URL: 'wss://example.com',
 })
+afterAll(() => vi.unstubAllGlobals())
 
 // --- Helpers ---------------------------------------------------------
 

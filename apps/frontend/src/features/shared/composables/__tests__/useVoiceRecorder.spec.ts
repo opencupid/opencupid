@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from 'vitest'
 import { defineComponent } from 'vue'
 import { mount } from '@vue/test-utils'
 
@@ -34,6 +34,7 @@ vi.stubGlobal(
     return { play: playMock, currentTime: 0 }
   })
 )
+afterAll(() => vi.unstubAllGlobals())
 
 /** Mount a thin wrapper that calls the composable and exposes its return value. */
 async function mountRecorder(maxDuration: number) {

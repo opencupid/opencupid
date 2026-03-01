@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterAll } from 'vitest'
 import { nextTick } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 
@@ -58,6 +58,7 @@ vi.stubGlobal(
     return { play: playMock, currentTime: 0 }
   })
 )
+afterAll(() => vi.unstubAllGlobals())
 
 import AppNotifier from '../AppNotifier.vue'
 import { bus } from '@/lib/bus'

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterAll } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 
 vi.mock('@/lib/bus', () => ({
@@ -9,6 +9,7 @@ vi.stubGlobal('__APP_CONFIG__', {
   API_BASE_URL: 'http://localhost:3000',
   NODE_ENV: 'production',
 })
+afterAll(() => vi.unstubAllGlobals())
 
 function makeJwt(payload: Record<string, unknown>): string {
   const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))

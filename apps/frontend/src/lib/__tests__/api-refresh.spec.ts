@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach, beforeAll } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach, beforeAll, afterAll } from 'vitest'
 import { AxiosHeaders } from 'axios'
 import axios from 'axios'
 
@@ -13,6 +13,7 @@ vi.stubGlobal('__APP_CONFIG__', {
   API_BASE_URL: 'http://localhost:3000',
   NODE_ENV: 'production',
 })
+afterAll(() => vi.unstubAllGlobals())
 
 describe('api refresh interceptor', () => {
   let locationHref: string
