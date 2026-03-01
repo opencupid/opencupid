@@ -41,12 +41,12 @@ export function useSocialMatchViewModel() {
     }
 
     await findProfileStore.fetchSocialFilter(socialFilterDefaults(ownerProfile))
-    await Promise.all([fetchResults(), findProfileStore.fetchDatingMatchIds()])
+    await fetchResults()
     isInitialized.value = true
   }
 
   const fetchResults = async () => {
-    await findProfileStore.findSocialForMap()
+    await Promise.all([findProfileStore.findSocialForMap(), findProfileStore.fetchDatingMatchIds()])
   }
 
   function openProfile(profileId: string): void {
@@ -96,6 +96,6 @@ export function useSocialMatchViewModel() {
     openProfile,
     profileList: computed(() => findProfileStore.profileList),
     matchedProfileIds: computed(() => findProfileStore.matchedProfileIds),
-    isInitialized:  isInitialized,
+    isInitialized: isInitialized,
   }
 }

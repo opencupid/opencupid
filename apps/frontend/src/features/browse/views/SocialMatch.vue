@@ -177,14 +177,14 @@ watch(
       <MapPlaceholder
         :isAnimated="true"
         v-show="!mapReady"
-        class="position-absolute top-0 start-0 w-100 h-100"
+        class="position-absolute top-0 start-0 w-100 h-100 opacity-25"
       />
 
       <div
         class="map-view h-100"
         :class="{
-          // 'opacity-0': !mapReady,
-          'opacity-25 pe-none': mapReady && isLoading,
+          'opacity-0': !mapReady,
+          'opacity-75': mapReady && isLoading,
         }"
       >
         <OsmPoiMap
