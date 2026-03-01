@@ -40,7 +40,9 @@ jobs:
       - name: Run lint
         run: pnpm lint
       - name: Type check
+        # All changes arrive via PR; skip redundant re-check on push-to-main
         if: github.event_name == 'pull_request'
+        # --concurrency 1 avoids TypeScript incremental build file conflicts across packages
         run: turbo run type-check --concurrency 1
       # - name: Initialize test database
       #   run: pnpm --filter backend exec npx prisma db push
