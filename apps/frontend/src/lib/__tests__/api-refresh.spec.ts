@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach, beforeAll } from 'vitest'
 import { AxiosHeaders } from 'axios'
 import axios from 'axios'
 
@@ -16,14 +16,26 @@ vi.stubGlobal('__APP_CONFIG__', {
 
 describe('api refresh interceptor', () => {
   let locationHref: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let originalAdapter: any
+  let originalLocationDescriptor: PropertyDescriptor | undefined
 
-  beforeEach(() => {
+  beforeAll(() => {
+    originalLocationDescriptor = Object.getOwnPropertyDescriptor(window, 'location')
+  })
+
+  beforeEach(async () => {
     vi.clearAllMocks()
     localStorage.clear()
+
+    // Save original adapter before any test can override it
+    const { api } = await import('../api')
+    originalAdapter = api.defaults.adapter
 
     // Mock window.location.href to capture redirects
     locationHref = ''
     Object.defineProperty(window, 'location', {
+      configurable: true,
       writable: true,
       value: {
         ...window.location,
@@ -35,6 +47,17 @@ describe('api refresh interceptor', () => {
         },
       },
     })
+  })
+
+  afterEach(async () => {
+    // Restore original adapter to prevent cross-test contamination
+    const { api } = await import('../api')
+    api.defaults.adapter = originalAdapter
+
+    // Restore window.location to prevent cross-file contamination
+    if (originalLocationDescriptor) {
+      Object.defineProperty(window, 'location', originalLocationDescriptor)
+    }
   })
 
   it('stores and retrieves refresh token from localStorage', () => {

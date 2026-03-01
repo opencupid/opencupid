@@ -27,6 +27,7 @@ export default defineConfig(({ mode }: ConfigEnv): ViteUserConfig => {
     test: {
       environment: 'jsdom',
       globals: true,
+      unstubGlobals: true,
       setupFiles: ['./src/tests/setup.ts'],
       include: ['src/**/__tests__/**/*.{spec,test}.ts'],
       exclude: ['e2e/**'],
