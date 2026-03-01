@@ -101,7 +101,13 @@ Backend tests:
 pnpm --filter backend test
 ```
 
-Full CI suite (install, prisma generate, lint, test, type-check). This is expensive to run and takes a long time, run this only near/after completing a task and when `pnpm test` and `pnpm lint` are green.
+Type-check only (vue-tsc / tsc across frontend, admin and backend, including test files):
+
+```bash
+pnpm type-check
+```
+
+Full CI suite — mirrors GitHub Actions PR checks (install, prisma generate, lint, type-check, build, tests, i18n). Run before finalizing a PR, once `pnpm test` and `pnpm lint` are green:
 
 ```bash
 pnpm run ci:test
@@ -111,12 +117,6 @@ Run with coverage:
 
 ```bash
 pnpm run test:coverage
-```
-
-Run build and type check:
-
-```bash
-pnpm build
 ```
 
 - All completed work must pass full test suite
@@ -165,7 +165,8 @@ Always work in a feature branch and open a Github pull request once task is comp
 ```bash
 git checkout -b your-branch-name
 # ... make changes, commit ...
-pnpm test                    # MUST pass before push
+pnpm test                              # MUST pass before push
+pnpm type-check                        # MUST pass before finalizing PR
 git push -u origin your-branch-name
 gh pr create
 ```
@@ -218,6 +219,7 @@ EOF
 ```
 
 Bump type guide:
+
 - `patch` — bug fixes, non-visible improvements
 - `minor` — new features or enhancements
 - `major` — breaking changes
@@ -312,5 +314,5 @@ Development guidelines and best practices for this project.
 
 - always adhere to SOLID Principles (DRY, KISS, YAGNI)
 - avoid over-engineering - always make an effort to find the simplest solution and be on the lookup for opportunities to simplify code
-- always try to use stock solutions - prefer integrating a mature 3rd party library instead of reimplementing the wheel. 
+- always try to use stock solutions - prefer integrating a mature 3rd party library instead of reimplementing the wheel.
 - watch out for stinky code and flag if you see such

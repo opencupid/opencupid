@@ -39,12 +39,17 @@ jobs:
         run: pnpm --filter backend exec npx prisma generate
       - name: Run lint
         run: pnpm lint
+      - name: Type check
+        # All changes arrive via PR; skip redundant re-check on push-to-main
+        if: github.event_name == 'pull_request'
+        # --concurrency 1 avoids TypeScript incremental build file conflicts across packages
+        run: pnpm type-check
       # - name: Initialize test database
       #   run: pnpm --filter backend exec npx prisma db push
       #   env:
       #     DATABASE_URL: postgresql://appuser:secret@localhost:5432/app_test
       - name: Build frontend
-        run: pnpm --filter frontend exec pnpm build
+        run: pnpm --filter frontend exec pnpm build-only
       - name: Backend tests
         run: pnpm --filter backend exec vitest run
       - name: Frontend unit tests

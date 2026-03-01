@@ -12,7 +12,7 @@ function createMockRedis() {
       keys.forEach((k) => delete store[k])
       return keys.length
     }),
-    scan: vi.fn(async () => ['0', []]),
+    scan: vi.fn(async (): Promise<[string, string[]]> => ['0', []]),
     _store: store,
   }
 }
