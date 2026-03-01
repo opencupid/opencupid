@@ -64,11 +64,16 @@ jobs:
       - name: Upload frontend sourcemaps
         if: steps.secrets-check.outputs.has_secrets == 'true'
         run: |
-          pnpm exec sentry-cli --url $SENTRY_URL sourcemaps inject ./apps/frontend/dist
-          pnpm exec sentry-cli --url $SENTRY_URL sourcemaps upload \
-            --org $SENTRY_ORG --project $SENTRY_PROJECT \
-            --release "frontend@${{ steps.version.outputs.version }}" \
+          VERSION="${{ steps.version.outputs.version }}"
+          pnpm exec sentry-cli --url $SENTRY_URL releases \
+            --org $SENTRY_ORG new --project $SENTRY_PROJECT "frontend@${VERSION}"
+          pnpm exec sentry-cli --url $SENTRY_URL releases \
+            --org $SENTRY_ORG files "frontend@${VERSION}" upload-sourcemaps \
+            --project $SENTRY_PROJECT \
+            --url-prefix '~/' \
             ./apps/frontend/dist
+          pnpm exec sentry-cli --url $SENTRY_URL releases \
+            --org $SENTRY_ORG finalize "frontend@${VERSION}"
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_URL: ${{ vars.SENTRY_URL }}
@@ -78,11 +83,16 @@ jobs:
       - name: Upload backend sourcemaps
         if: steps.secrets-check.outputs.has_secrets == 'true'
         run: |
-          pnpm exec sentry-cli --url $SENTRY_URL sourcemaps inject ./apps/backend/dist
-          pnpm exec sentry-cli --url $SENTRY_URL sourcemaps upload \
-            --org $SENTRY_ORG --project $SENTRY_PROJECT \
-            --release "api@${{ steps.version.outputs.version }}" \
+          VERSION="${{ steps.version.outputs.version }}"
+          pnpm exec sentry-cli --url $SENTRY_URL releases \
+            --org $SENTRY_ORG new --project $SENTRY_PROJECT "api@${VERSION}"
+          pnpm exec sentry-cli --url $SENTRY_URL releases \
+            --org $SENTRY_ORG files "api@${VERSION}" upload-sourcemaps \
+            --project $SENTRY_PROJECT \
+            --url-prefix '~/' \
             ./apps/backend/dist
+          pnpm exec sentry-cli --url $SENTRY_URL releases \
+            --org $SENTRY_ORG finalize "api@${VERSION}"
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_URL: ${{ vars.SENTRY_URL }}
