@@ -31,7 +31,7 @@ describe('useUpdateChecker', () => {
     const appStore = useAppStore()
     const spy = vi.spyOn(appStore, 'checkVersion').mockResolvedValue({
       success: true,
-      data: { updateAvailable: false, frontendVersion: '0.5.0', currentVersion: '0.5.0' },
+      data: { updateAvailable: false, frontendVersion: '0.5.0', backendVersion: '1.0.0', currentVersion: '0.5.0' },
     })
 
     mountWithChecker()
@@ -46,7 +46,7 @@ describe('useUpdateChecker', () => {
     const appStore = useAppStore()
     const spy = vi.spyOn(appStore, 'checkVersion').mockResolvedValue({
       success: true,
-      data: { updateAvailable: false, frontendVersion: '0.5.0', currentVersion: '0.5.0' },
+      data: { updateAvailable: false, frontendVersion: '0.5.0', backendVersion: '1.0.0', currentVersion: '0.5.0' },
     })
 
     mountWithChecker()
@@ -69,7 +69,7 @@ describe('useUpdateChecker', () => {
     const appStore = useAppStore()
     const spy = vi.spyOn(appStore, 'checkVersion').mockResolvedValue({
       success: true,
-      data: { updateAvailable: false, frontendVersion: '0.5.0', currentVersion: '0.5.0' },
+      data: { updateAvailable: false, frontendVersion: '0.5.0', backendVersion: '1.0.0', currentVersion: '0.5.0' },
     })
 
     const wrapper = mountWithChecker()
@@ -137,12 +137,12 @@ describe('useUpdateChecker', () => {
       // Second call: success
       .mockResolvedValueOnce({
         success: true,
-        data: { updateAvailable: false, frontendVersion: '0.5.0', currentVersion: '0.5.0' },
+        data: { updateAvailable: false, frontendVersion: '0.5.0', backendVersion: '1.0.0', currentVersion: '0.5.0' },
       })
       // Third call: success
       .mockResolvedValueOnce({
         success: true,
-        data: { updateAvailable: false, frontendVersion: '0.5.0', currentVersion: '0.5.0' },
+        data: { updateAvailable: false, frontendVersion: '0.5.0', backendVersion: '1.0.0', currentVersion: '0.5.0' },
       })
 
     mountWithChecker()
