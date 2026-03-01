@@ -121,9 +121,6 @@ watch(
         >
          
         
-     <h4 class=""> mapready {{   mapReady}} isLoading {{isLoading}}</h4>
-        
-        
         <!-- Location column -->
           <div class="col-12 col-md-6">
             <div class="d-flex align-items-center gap-2">
