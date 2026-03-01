@@ -76,6 +76,7 @@ jobs:
             --org $SENTRY_ORG files "frontend@${VERSION}" upload-sourcemaps \
             --project $SENTRY_PROJECT \
             --url-prefix '~/' \
+            --log-level=debug \
             ./apps/frontend/dist
           pnpm exec sentry-cli --url $SENTRY_URL releases \
             --org $SENTRY_ORG finalize "frontend@${VERSION}"
@@ -95,6 +96,7 @@ jobs:
             --org $SENTRY_ORG files "api@${VERSION}" upload-sourcemaps \
             --project $SENTRY_PROJECT \
             --url-prefix '~/' \
+            --log-level=debug \
             ./apps/backend/dist
           pnpm exec sentry-cli --url $SENTRY_URL releases \
             --org $SENTRY_ORG finalize "api@${VERSION}"
