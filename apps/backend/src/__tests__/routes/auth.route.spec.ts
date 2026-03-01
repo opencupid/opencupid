@@ -89,7 +89,7 @@ describe('GET /otp-login', () => {
     expect(reply.payload.code).toBe('AUTH_INVALID_INPUT')
   })
 
-  it('returns 401 if OTP is invalid', async () => {
+  it('returns 422 if OTP is invalid', async () => {
     const handler = fastify.routes['GET /otp-login']
     mockUserService.validateUserOtpLogin.mockResolvedValue({
       code: 'AUTH_INVALID_OTP',
@@ -98,7 +98,7 @@ describe('GET /otp-login', () => {
     })
     const req = { query: { userId: 'cmc7t45x400086w39gj30pzn3', otp: '123456' } }
     await handler(req as any, reply as any)
-    expect(reply.statusCode).toBe(401)
+    expect(reply.statusCode).toBe(422)
     expect(reply.payload.code).toBe('AUTH_INVALID_OTP')
     expect(reply.payload.message).toBe('Invalid OTP')
   })

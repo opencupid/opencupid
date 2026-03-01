@@ -68,7 +68,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         const { userId, otp } = params.data
         const result = await userService.validateUserOtpLogin(userId, otp)
         if (!result.success) {
-          return reply.code(401).send({ code: result.code, message: result.message })
+          return reply.code(422).send({ code: result.code, message: result.message })
         }
 
         const { user, isNewUser } = result
