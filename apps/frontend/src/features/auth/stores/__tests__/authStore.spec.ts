@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterAll } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
+import { useAuthStore } from '../authStore'
 
 vi.mock('@/lib/bus', () => ({
   bus: { emit: vi.fn(), on: vi.fn() },
@@ -25,7 +26,6 @@ describe('authStore initialize', () => {
   })
 
   it('clears expired JWT without refresh token on initialize', async () => {
-    const { useAuthStore } = await import('../authStore')
     const expiredToken = makeJwt({
       userId: 'u1',
       profileId: 'p1',
@@ -42,7 +42,6 @@ describe('authStore initialize', () => {
   })
 
   it('keeps expired JWT with refresh token on initialize', async () => {
-    const { useAuthStore } = await import('../authStore')
     const expiredToken = makeJwt({
       userId: 'u1',
       profileId: 'p1',
@@ -60,7 +59,6 @@ describe('authStore initialize', () => {
   })
 
   it('keeps valid JWT on initialize', async () => {
-    const { useAuthStore } = await import('../authStore')
     const validToken = makeJwt({
       userId: 'u1',
       profileId: 'p1',
@@ -77,7 +75,6 @@ describe('authStore initialize', () => {
   })
 
   it('clears malformed JWT on initialize', async () => {
-    const { useAuthStore } = await import('../authStore')
     localStorage.setItem('token', 'not-a-valid-jwt')
 
     const store = useAuthStore()
