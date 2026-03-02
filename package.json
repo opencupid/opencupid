@@ -12,6 +12,7 @@
     "@lingual/i18n-check": "^0.8.19",
     "@modelcontextprotocol/server-filesystem": "2026.1.14",
     "@sentry/cli": "1.77.3",
+    "@tolgee/cli": "^2.16.1",
     "@types/geojson": "7946.0.16",
     "acorn": "8.16.0",
     "dotenv-expand": "12.0.3",
@@ -39,7 +40,9 @@
     "translate:i18next": "npx json-autotranslate -i packages/shared/i18n/api --directory-structure ngx-translate -d --type key-based -m i18next -s deepl-free -c ${DEEPL_API_KEY},less,1000",
     "changeset": "changeset",
     "changeset:version": "changeset version",
-    "changeset:status": "changeset status"
+    "changeset:status": "changeset status",
+    "tolgee:push": "tolgee push",
+    "tolgee:pull": "tolgee pull"
   },
   "dependencies": {
     "@types/node": "22.16.1",
