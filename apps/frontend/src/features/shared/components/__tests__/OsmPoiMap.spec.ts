@@ -227,6 +227,72 @@ describe('OsmPoiMap', () => {
     expect(eventNames).toContain('clustermouseout')
   })
 
+  it('delays cluster collapse on mouseout so child points remain reachable', async () => {
+    vi.useFakeTimers()
+    try {
+      mountMap()
+      await flushPromises()
+
+      const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
+      const onCalls = clusterInstance.on.mock.calls
+
+      const mouseoverHandler = onCalls.find((c: any) => c[0] === 'clustermouseover')[1]
+      const mouseoutHandler = onCalls.find((c: any) => c[0] === 'clustermouseout')[1]
+
+      const spiderfyMock = vi.fn()
+      const unspiderfyMock = vi.fn()
+      const fakeLayer = { spiderfy: spiderfyMock, unspiderfy: unspiderfyMock }
+
+      mouseoverHandler({ layer: fakeLayer })
+      expect(spiderfyMock).toHaveBeenCalledOnce()
+
+      // Mouseout must NOT immediately collapse
+      mouseoutHandler({ layer: fakeLayer })
+      expect(unspiderfyMock).not.toHaveBeenCalled()
+
+      // After the grace period the cluster collapses
+      vi.advanceTimersByTime(300)
+      expect(unspiderfyMock).toHaveBeenCalledOnce()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('cancels collapse when mouse re-enters cluster before grace period expires', async () => {
+    vi.useFakeTimers()
+    try {
+      mountMap()
+      await flushPromises()
+
+      const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
+      const onCalls = clusterInstance.on.mock.calls
+
+      const mouseoverHandler = onCalls.find((c: any) => c[0] === 'clustermouseover')[1]
+      const mouseoutHandler = onCalls.find((c: any) => c[0] === 'clustermouseout')[1]
+
+      const unspiderfyMock = vi.fn()
+      const fakeLayer = { spiderfy: vi.fn(), unspiderfy: unspiderfyMock }
+
+      // Fan out, then start moving away
+      mouseoverHandler({ layer: fakeLayer })
+      mouseoutHandler({ layer: fakeLayer })
+      expect(unspiderfyMock).not.toHaveBeenCalled()
+
+      // Advance partially — still within grace period
+      vi.advanceTimersByTime(150)
+      expect(unspiderfyMock).not.toHaveBeenCalled()
+
+      // Mouse re-enters cluster (e.g. from child back to center)
+      mouseoverHandler({ layer: fakeLayer })
+
+      // Advance past the original deadline — collapse must NOT fire
+      vi.advanceTimersByTime(300)
+      expect(unspiderfyMock).not.toHaveBeenCalled()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('uses raster tile layer when WebGL is not supported', async () => {
     // jsdom does not implement WebGL, so canvas.getContext('webgl') returns null
     // by default — this test confirms the fallback path is taken.
