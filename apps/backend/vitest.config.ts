@@ -4,10 +4,12 @@ import { getPackageVersion } from '../../packages/shared/version'
 import path from 'path'
 
 const appVersion = getPackageVersion(path.join(__dirname, 'package.json'))
+const frontendVersion = getPackageVersion(path.join(__dirname, '../frontend/package.json'))
 
 export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(appVersion),
+    __FRONTEND_VERSION__: JSON.stringify(frontendVersion),
   },
   test: {
     environment: 'node',
