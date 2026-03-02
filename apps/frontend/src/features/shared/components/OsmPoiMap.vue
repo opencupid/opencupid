@@ -172,6 +172,11 @@ function ensureMap() {
     e.layer.spiderfy()
   })
   clusterGroup.on('clustermouseout', (e: any) => {
+    // Clear any existing pending timer before scheduling a new one
+    if (collapseTimer !== null) {
+      clearTimeout(collapseTimer)
+      collapseTimer = null
+    }
     // Delay collapse so the cursor has time to reach a fanned-out child point
     const layer = e.layer
     collapseTimer = setTimeout(() => {
