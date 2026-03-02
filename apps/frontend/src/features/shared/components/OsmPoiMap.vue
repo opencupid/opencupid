@@ -6,9 +6,10 @@ import 'leaflet/dist/leaflet.css'
 import 'leaflet.markercluster'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
-import { MaptilerLayer } from '@maptiler/leaflet-maptilersdk'
-import { MapStyle } from '@maptiler/sdk'
 import '@maptiler/sdk/dist/maptiler-sdk.css'
+
+import { MaptilerLayer } from '@maptiler/leaflet-maptilersdk'
+import { config as maptilerConfig, MapStyle } from '@maptiler/sdk'
 
 import AvatarIcon from './AvatarIcon.vue'
 
@@ -20,6 +21,8 @@ export interface PoiItem {
     lon?: number | null
   }
 }
+
+maptilerConfig.telemetry = false
 
 const props = withDefaults(
   defineProps<{
@@ -70,13 +73,22 @@ function customClusterIcon(cluster: any): L.DivIcon {
   })
 }
 
-// --- Spiderfy hover region (no timers, no per-child handlers) ---
+// Spiderfy hover region
 type MCCluster = any
 
 const SPIDER_HOVER_PADDING_PX = 18
 
 let activeSpiderCluster: MCCluster | null = null
 let activeSpiderHoverBounds: L.LatLngBounds | null = null
+
+function computeViewportMultiplier(map: L.Map) {
+  const { x: w, y: h } = map.getSize()
+  const minDim = Math.min(w, h)
+
+  // Heuristic: on a ~800px tall map => multiplier ~1.6
+  // Tune the divisor to your liking.
+  return Math.max(0.8, Math.min(4, minDim / 400))
+}
 
 function computeSpiderHoverBounds(
   map: LMap,
@@ -124,7 +136,6 @@ function closeSpider() {
 }
 
 let clusterGroup: any = null
-let collapseTimer: ReturnType<typeof setTimeout> | null = null
 
 function avatarIcon(url: string, isSelected: boolean, isHighlighted: boolean): L.DivIcon {
   const size = 50
@@ -251,6 +262,10 @@ function initClusters(map: LMap) {
 function onClusterMouseOver(e: any) {
   // If another cluster is open, close it first (prevents multiple open states)
   if (activeSpiderCluster && activeSpiderCluster !== e.layer) closeSpider()
+
+  // scale spiderfy distance with viewport
+  clusterGroup.options.spiderfyDistanceMultiplier = computeViewportMultiplier(map!)
+
   e.layer.spiderfy()
 }
 
