@@ -73,7 +73,7 @@ export const define = (_mode: string) => {
 }
 
 export const runtimeConfigPlugin = (mode: string): Plugin => {
-  const env = loadProjectEnv(mode)
+  const env = mode === 'development' ? loadProjectEnv(mode) : process.env
 
   const configJs = `window.__APP_CONFIG__ = ${JSON.stringify({
     API_BASE_URL: env.API_BASE_URL ?? '/api',
