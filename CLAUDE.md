@@ -17,6 +17,7 @@ This uses Turbo to run both the frontend (Vite, port 5173, 5174) and backend (Fa
 | Frontend (entry point) | <https://oc.dev.froggle.org:5173/home> |
 | Backend API            | <https://oc.dev.froggle.org:3000>      |
 | MailDev (email inbox)  | <http://oc.dev.froggle.org:1080/#/>    |
+| Tolgee (translation UI) | <http://localhost:8085>               |
 
 ### Login flow
 
@@ -29,6 +30,24 @@ The app uses magic link (OTP) authentication — no passwords.
 5. Paste the token back on the login page at `/auth/otp`
 
 MailDev captures all transactional emails sent by the app (login tokens, notifications, etc.) regardless of recipient address.
+
+### Tolgee (translation management)
+
+Tolgee is a self-hosted translation management UI. It starts alongside other dev services and auto-imports all strings from `packages/shared/i18n/` on first boot — no manual setup needed.
+
+```bash
+docker compose up -d tolgee   # starts tolgee + tolgee-db
+# UI at http://localhost:8085  (admin / admin)
+```
+
+The API key in `.env.development.local` is pre-configured. Push/pull workflow:
+
+```bash
+pnpm tolgee:push   # upload local JSON → Tolgee (after adding new keys in code)
+pnpm tolgee:pull   # download translated JSON ← Tolgee (after translating in UI)
+```
+
+Commit updated JSON files in `packages/shared/i18n/` after pulling.
 
 ## Project structure
 

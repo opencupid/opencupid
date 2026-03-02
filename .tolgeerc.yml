@@ -1,0 +1,10 @@
+# Tolgee CLI configuration — dev environment
+# Docs: https://tolgee.io/tolgee-cli/project-configuration
+apiUrl: http://localhost:8085
+projectId: 1
+files:
+  - path: packages/shared/i18n/{language}.json
+    language: '{language}'
+  - path: packages/shared/i18n/api/{language}.json
+    language: '{language}'
+    namespace: api
