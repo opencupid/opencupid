@@ -5,7 +5,7 @@ import PostList from '../components/PostList.vue'
 import PostEdit from '../components/PostEdit.vue'
 import PostFullView from '../components/PostFullView.vue'
 import PostMapCard from '../components/PostMapCard.vue'
-import OsmPoiMap from '@/features/shared/components/OsmPoiMap.vue'
+import MapView from '@/features/shared/components/MapView.vue'
 import ViewModeToggler from '@/features/shared/ui/ViewModeToggler.vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faPenToSquare } from '@fortawesome/free-solid-svg-icons'
@@ -21,15 +21,12 @@ const {
   activeTab,
   viewMode,
   showCreateModal,
-  locationPermission,
-  nearbyParams,
   isDetailView,
   showFullView,
   editingPost,
   selectedPost,
   ownerProfile,
   initialize,
-  requestLocation,
   handlePostListIntent,
 } = usePostsViewModel()
 
@@ -44,7 +41,6 @@ const selectedType = ref<PostTypeType | ''>('')
 // Scope tabs config
 const scopeTabs = [
   { id: 'all', label: () => t('posts.filters.all') },
-  { id: 'nearby', label: () => t('posts.filters.nearby') },
   { id: 'recent', label: () => t('posts.filters.recent') },
   { id: 'my', label: () => t('posts.my_posts') },
 ] as const
@@ -147,14 +143,14 @@ onMounted(async () => {
             @intent:delete="(post) => handlePostListIntent('delete', post)"
             @intent:saved="(post) => handlePostListIntent('saved', post)"
           />
-          <OsmPoiMap
+          <MapView
             v-else-if="viewMode === 'map'"
             :items="currentTabPosts"
             :get-location="getPostLocation"
             :get-title="getPostTitle"
             :get-image-url="getPostImageUrl"
             :popup-component="PostMapCard"
-            class="map-view h-100"
+            class="h-100"
             @item:select="
               (id) =>
                 handlePostListIntent(
@@ -163,58 +159,6 @@ onMounted(async () => {
                 )
             "
           />
-        </div>
-
-        <!-- Nearby -->
-        <div
-          v-if="activeTab === 'nearby'"
-          class="scope-pane h-100"
-        >
-          <div
-            v-if="locationPermission === false"
-            class="location-prompt d-flex flex-column align-items-center justify-content-center h-100"
-          >
-            <BButton
-              variant="primary"
-              @click="requestLocation"
-              size="lg"
-            >
-              {{ $t('posts.location.enable') }}
-            </BButton>
-            <p class="text-muted mt-2 mb-0 small">{{ $t('posts.location.prompt') }}</p>
-          </div>
-          <template v-else-if="locationPermission === true">
-            <PostList
-              v-if="viewMode === 'grid'"
-              scope="nearby"
-              :is-active="activeTab === 'nearby'"
-              :nearby-params="nearbyParams"
-              :type="selectedType || undefined"
-              :show-filters="false"
-              :empty-message="$t('posts.messages.no_nearby')"
-              @intent:fullview="(post) => handlePostListIntent('fullview', post)"
-              @intent:edit="(post) => handlePostListIntent('edit', post)"
-              @intent:close="() => handlePostListIntent('close')"
-              @intent:hide="(post) => handlePostListIntent('hide', post)"
-              @intent:delete="(post) => handlePostListIntent('delete', post)"
-              @intent:saved="(post) => handlePostListIntent('saved', post)"
-            />
-            <OsmPoiMap
-              v-else-if="viewMode === 'map'"
-              :items="currentTabPosts"
-              :get-location="getPostLocation"
-              :get-title="getPostTitle"
-              :popup-component="PostMapCard"
-              class="map-view h-100"
-              @item:select="
-                (id) =>
-                  handlePostListIntent(
-                    'fullview',
-                    currentTabPosts.find((p) => p.id === id)
-                  )
-              "
-            />
-          </template>
         </div>
 
         <!-- Recent Posts -->
@@ -236,14 +180,14 @@ onMounted(async () => {
             @intent:delete="(post) => handlePostListIntent('delete', post)"
             @intent:saved="(post) => handlePostListIntent('saved', post)"
           />
-          <OsmPoiMap
+          <MapView
             v-else-if="viewMode === 'map'"
             :items="currentTabPosts"
             :get-location="getPostLocation"
             :get-title="getPostTitle"
             :get-image-url="getPostImageUrl"
             :popup-component="PostMapCard"
-            class="map-view h-100"
+            class="h-100"
             @item:select="
               (id) =>
                 handlePostListIntent(
@@ -273,14 +217,14 @@ onMounted(async () => {
             @intent:delete="(post) => handlePostListIntent('delete', post)"
             @intent:saved="(post) => handlePostListIntent('saved', post)"
           />
-          <OsmPoiMap
+          <MapView
             v-else-if="viewMode === 'map'"
             :items="currentTabPosts"
             :get-location="getPostLocation"
             :get-title="getPostTitle"
             :get-image-url="getPostImageUrl"
             :popup-component="PostMapCard"
-            class="map-view h-100"
+            class="h-100"
             @item:select="
               (id) =>
                 handlePostListIntent(

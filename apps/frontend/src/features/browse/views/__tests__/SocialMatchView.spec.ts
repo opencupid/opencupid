@@ -7,11 +7,12 @@ const toastInfo = vi.fn()
 vi.mock('vue-toastification', () => ({ useToast: () => ({ info: toastInfo }) }))
 
 // stub child components
-vi.mock('../../components/MapPlaceholder.vue', () => ({
-  default: { template: '<div class="map-placeholder" />', props: ['isAnimated'] },
-}))
-vi.mock('@/features/shared/components/OsmPoiMap.vue', () => ({
-  default: { template: '<div class="osm-poi-map" />', props: ['items'] },
+vi.mock('@/features/shared/components/MapView.vue', () => ({
+  default: {
+    template:
+      '<div class="map-view"><div class="map-placeholder" /><div class="osm-poi-map" /></div>',
+    props: ['items'],
+  },
 }))
 vi.mock('../../components/ProfileMapCard.vue', () => ({
   default: { template: '<div class="profile-map-card" />' },
