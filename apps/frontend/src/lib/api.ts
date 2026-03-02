@@ -15,6 +15,44 @@ let isOffline = false
 let retryTimeoutId: NodeJS.Timeout | null = null
 let waitForRecovery: (() => void)[] = []
 
+function markApiOnline() {
+  if (!isOffline) return
+
+  isOffline = false
+  bus.emit('api:online')
+  waitForRecovery.forEach((fn) => fn())
+  waitForRecovery = []
+
+  if (retryTimeoutId) {
+    clearTimeout(retryTimeoutId)
+    retryTimeoutId = null
+  }
+}
+
+function markApiOffline() {
+  if (isOffline) return
+
+  isOffline = true
+  bus.emit('api:offline')
+  startRetryMechanism()
+}
+
+export function isNetworkError(error: { response?: unknown; code?: string }) {
+  return (
+    !error.response ||
+    [
+      'ECONNABORTED',
+      'ENETUNREACH',
+      'ENOTFOUND',
+      'ECONNREFUSED',
+      'ETIMEDOUT',
+      'ECONNRESET',
+      'ERR_NETWORK',
+      'ERR_BAD_RESPONSE',
+    ].includes(error.code ?? '')
+  )
+}
+
 export const isApiOnline = () =>
   isOffline ? new Promise<void>((resolve) => waitForRecovery.push(resolve)) : Promise.resolve()
 
@@ -54,22 +92,18 @@ function addRefreshSubscriber(callback: (token: string) => void) {
 
 api.interceptors.response.use(
   (response) => {
-    if (isOffline) {
-      isOffline = false
-      bus.emit('api:online')
-      waitForRecovery.forEach((fn) => fn())
-      waitForRecovery = []
-
-      if (retryTimeoutId) {
-        clearTimeout(retryTimeoutId)
-        retryTimeoutId = null
-      }
-    }
+    markApiOnline()
 
     return response
   },
   async (error) => {
     const originalRequest = error.config
+
+    // If the backend is responding again (even with a non-2xx status),
+    // clear the offline overlay and resume pending calls.
+    if (isOffline && error.response) {
+      markApiOnline()
+    }
 
     // Handle 401 with silent refresh
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -139,23 +173,8 @@ api.interceptors.response.use(
     }
 
     // Network error handling
-    const isNetworkError =
-      !error.response ||
-      [
-        'ECONNABORTED',
-        'ENETUNREACH',
-        'ENOTFOUND',
-        'ECONNREFUSED',
-        'ETIMEDOUT',
-        'ECONNRESET',
-        'ERR_NETWORK',
-        'ERR_BAD_RESPONSE',
-      ].includes(error.code)
-
-    if (isNetworkError && !isOffline) {
-      isOffline = true
-      bus.emit('api:offline')
-      startRetryMechanism()
+    if (isNetworkError(error)) {
+      markApiOffline()
     }
 
     return Promise.reject(error)
@@ -171,22 +190,8 @@ export async function safeApiCall<T>(fn: () => Promise<T>): Promise<T> {
     const result = await fn()
     return result
   } catch (err: any) {
-    const isNetworkError =
-      !err.response ||
-      [
-        'ECONNABORTED',
-        'ENETUNREACH',
-        'ENOTFOUND',
-        'ECONNREFUSED',
-        'ETIMEDOUT',
-        'ECONNRESET',
-        'ERR_NETWORK',
-        'ERR_BAD_RESPONSE',
-      ].includes(err.code)
-
-    if (isNetworkError) {
-      isOffline = true
-      startRetryMechanism()
+    if (isNetworkError(err)) {
+      markApiOffline()
       await isApiOnline()
       return safeApiCall(fn) // try again after recovery
     }
