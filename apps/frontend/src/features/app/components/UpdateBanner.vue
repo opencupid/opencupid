@@ -1,11 +1,21 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '../stores/appStore'
 
 const { t } = useI18n()
 const appStore = useAppStore()
 const dismissed = ref(false)
+
+// Reset dismissed state whenever a new (different) version is detected
+watch(
+  () => appStore.latestVersion,
+  (newVersion, oldVersion) => {
+    if (oldVersion && newVersion !== oldVersion) {
+      dismissed.value = false
+    }
+  },
+)
 
 function reloadApp() {
   window.location.reload()

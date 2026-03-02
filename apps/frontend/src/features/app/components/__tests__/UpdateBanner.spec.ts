@@ -77,4 +77,24 @@ describe('UpdateBanner', () => {
 
     expect(wrapper.find('.alert').exists()).toBe(false)
   })
+
+  it('should re-show the banner after dismissal when a new version is detected', async () => {
+    const wrapper = mount(UpdateBanner)
+    const appStore = useAppStore()
+
+    // First update: show and dismiss
+    appStore.updateAvailable = true
+    appStore.latestVersion = '0.19.0'
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('.alert').exists()).toBe(true)
+
+    await wrapper.find('.btn-close').trigger('click')
+    expect(wrapper.find('.alert').exists()).toBe(false)
+
+    // A newer version is detected
+    appStore.latestVersion = '0.20.0'
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('.alert').exists()).toBe(true)
+  })
 })
