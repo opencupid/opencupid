@@ -22,7 +22,7 @@ const appRoutes: FastifyPluginAsync = async (fastify) => {
     async (req, reply) => {
       try {
         const clientVersion = (req.query as Record<string, string>).v as string | undefined
-        const frontendVersion = appConfig.FRONTEND_VERSION
+        const frontendVersion = __FRONTEND_VERSION__
 
         const versionInfo: VersionDTO = {
           frontendVersion,
