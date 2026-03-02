@@ -21,6 +21,7 @@ export function usePostsViewModel() {
   const editingPost = ref<OwnerPost | null>(null)
   const selectedPost = ref<PublicPostWithProfile | OwnerPost | null>(null)
   const isInitialized = ref(false)
+  const isLoading = ref(false)
 
   // Computed properties
   const nearbyParams = computed(() => {
@@ -56,16 +57,21 @@ export function usePostsViewModel() {
 
   // Bootstrap mechanism
   const initialize = async () => {
-    // Ensure ownerProfile is initialized
-    await useBootstrap().bootstrap()
+    isLoading.value = true
+    try {
+      // Ensure ownerProfile is initialized
+      await useBootstrap().bootstrap()
 
-    if (!ownerProfile.value) {
-      console.error('Owner profile not found')
-      return
+      if (!ownerProfile.value) {
+        console.error('Owner profile not found')
+        return
+      }
+
+      await checkLocationPermission()
+      isInitialized.value = true
+    } finally {
+      isLoading.value = false
     }
-
-    await checkLocationPermission()
-    isInitialized.value = true
   }
 
   // Location handling
@@ -207,7 +213,6 @@ export function usePostsViewModel() {
   return {
     // State
     activeTab,
-    // TODO clean up viewMode
     viewMode,
     showCreateModal,
     locationPermission,
@@ -218,6 +223,7 @@ export function usePostsViewModel() {
     editingPost,
     selectedPost,
     isInitialized,
+    isLoading,
     ownerProfile,
 
     // Methods

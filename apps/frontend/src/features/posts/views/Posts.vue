@@ -26,6 +26,7 @@ const {
   editingPost,
   selectedPost,
   ownerProfile,
+  isLoading,
   initialize,
   handlePostListIntent,
 } = usePostsViewModel()
@@ -38,12 +39,6 @@ const postStore = usePostStore()
 // Type filter state — owned here, passed to PostList as prop
 const selectedType = ref<PostTypeType | ''>('')
 
-// Scope tabs config
-const scopeTabs = [
-  { id: 'all', label: () => t('posts.filters.all') },
-  { id: 'recent', label: () => t('posts.filters.recent') },
-  { id: 'my', label: () => t('posts.my_posts') },
-] as const
 
 // Get the posts for the active tab for map display
 const currentTabPosts = computed(() => {
@@ -52,6 +47,8 @@ const currentTabPosts = computed(() => {
   }
   return postStore.posts
 })
+
+const isViewLoading = computed(() => isLoading.value || postStore.isLoading)
 
 // Functions to extract location and title from posts for the map
 const getPostLocation = (post: PublicPostWithProfile | OwnerPost) => {
@@ -94,19 +91,45 @@ onMounted(async () => {
       :class="{ active: isDetailView }"
     ></div>
 
-    <div class="list-view d-flex flex-column">
+    <div
+      class="list-view d-flex flex-column"
+    >
       <!-- Unified toolbar: scope pills + type filter + view toggle -->
       <div class="posts-toolbar d-flex align-items-center gap-2 px-3 py-2 flex-shrink-0">
         <div class="scope-pills d-flex gap-1 overflow-auto hide-scrollbar flex-grow-1">
-          <button
-            v-for="tab in scopeTabs"
-            :key="tab.id"
-            class="scope-pill btn btn-sm"
-            :class="activeTab === tab.id ? 'active' : ''"
-            @click="activeTab = tab.id"
-          >
-            {{ tab.label() }}
-          </button>
+<!-- TODO -->
+         <ul class="nav nav-pills small">
+          <li class="nav-item">
+            <button
+              type="button"
+              class="nav-link py-1"
+              :class="{ active: activeTab === 'all' }"
+              @click="activeTab = 'all'"
+            >
+              {{ t('posts.filters.all') }}
+            </button>
+          </li>
+          <li class="nav-item">
+            <button
+              type="button"
+              class="nav-link py-1"
+              :class="{ active: activeTab === 'recent' }"
+              @click="activeTab = 'recent'"
+            >
+              {{ t('posts.filters.recent') }}
+            </button>
+          </li>
+          <li class="nav-item">
+            <button
+              type="button"
+              class="nav-link py-1"
+              :class="{ active: activeTab === 'my' }"
+              @click="activeTab = 'my'"
+            >
+              {{ t('posts.my_posts') }}
+            </button>
+          </li>
+        </ul>
         </div>
 
         <BFormSelect
@@ -114,16 +137,18 @@ onMounted(async () => {
           size="sm"
           class="type-filter"
         >
-          <option value="">{{ t('posts.filters.all') }}</option>
-          <option value="OFFER">{{ t('posts.filters.offers') }}</option>
-          <option value="REQUEST">{{ t('posts.filters.requests') }}</option>
+          <BFormSelectOption value="">{{ t('posts.filters.all') }}</BFormSelectOption>
+          <BFormSelectOption value="OFFER">{{ t('posts.filters.offers') }}</BFormSelectOption>
+          <BFormSelectOption value="REQUEST">{{ t('posts.filters.requests') }}</BFormSelectOption>
         </BFormSelect>
 
         <ViewModeToggler v-model="viewMode" />
       </div>
 
       <!-- Tab content -->
-      <div class="tab-content flex-grow-1 overflow-hidden position-relative">
+      <div class="tab-content flex-grow-1 overflow-hidden position-relative"
+      :class="{ 'opacity-50': isViewLoading }"
+      >
         <!-- All posts -->
         <div
           v-if="activeTab === 'all'"
@@ -150,6 +175,7 @@ onMounted(async () => {
             :get-title="getPostTitle"
             :get-image-url="getPostImageUrl"
             :popup-component="PostMapCard"
+            :is-loading="isViewLoading"
             class="h-100"
             @item:select="
               (id) =>
@@ -187,6 +213,7 @@ onMounted(async () => {
             :get-title="getPostTitle"
             :get-image-url="getPostImageUrl"
             :popup-component="PostMapCard"
+            :is-loading="isViewLoading"
             class="h-100"
             @item:select="
               (id) =>
@@ -224,6 +251,7 @@ onMounted(async () => {
             :get-title="getPostTitle"
             :get-image-url="getPostImageUrl"
             :popup-component="PostMapCard"
+            :is-loading="isViewLoading"
             class="h-100"
             @item:select="
               (id) =>
@@ -370,20 +398,7 @@ onMounted(async () => {
     }
   }
 
-  [data-bs-theme='dark'] & {
-    .scope-pill {
-      color: lighten($social, 40%);
 
-      &:hover {
-        background-color: transparentize(lighten($social, 40%), 0.9);
-      }
-
-      &.active {
-        background-color: $social;
-        color: $white;
-      }
-    }
-  }
 }
 
 .tab-content {
