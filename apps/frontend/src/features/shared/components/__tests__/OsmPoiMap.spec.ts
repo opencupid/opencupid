@@ -225,72 +225,135 @@ describe('OsmPoiMap', () => {
     const eventNames = onCalls.map((c: any) => c[0])
     expect(eventNames).toContain('clustermouseover')
     expect(eventNames).toContain('clustermouseout')
+    expect(eventNames).toContain('spiderfied')
+    expect(eventNames).toContain('unspiderfied')
   })
 
-  it('delays cluster collapse on mouseout so child points remain reachable', async () => {
-    vi.useFakeTimers()
-    try {
-      mountMap()
-      await flushPromises()
+  it('immediately unspiderfies cluster on mouseout when relatedTarget is not a spiderfied child', async () => {
+    mountMap()
+    await flushPromises()
 
-      const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
-      const onCalls = clusterInstance.on.mock.calls
+    const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
+    const onCalls = clusterInstance.on.mock.calls
 
-      const mouseoverHandler = onCalls.find((c: any) => c[0] === 'clustermouseover')[1]
-      const mouseoutHandler = onCalls.find((c: any) => c[0] === 'clustermouseout')[1]
+    const mouseoverHandler = onCalls.find((c: any) => c[0] === 'clustermouseover')[1]
+    const mouseoutHandler = onCalls.find((c: any) => c[0] === 'clustermouseout')[1]
+    const spiderfiedHandler = onCalls.find((c: any) => c[0] === 'spiderfied')[1]
 
-      const spiderfyMock = vi.fn()
-      const unspiderfyMock = vi.fn()
-      const fakeLayer = { spiderfy: spiderfyMock, unspiderfy: unspiderfyMock }
-
-      mouseoverHandler({ layer: fakeLayer })
-      expect(spiderfyMock).toHaveBeenCalledOnce()
-
-      // Mouseout must NOT immediately collapse
-      mouseoutHandler({ layer: fakeLayer })
-      expect(unspiderfyMock).not.toHaveBeenCalled()
-
-      // After the grace period the cluster collapses
-      vi.advanceTimersByTime(300)
-      expect(unspiderfyMock).toHaveBeenCalledOnce()
-    } finally {
-      vi.useRealTimers()
+    const spiderfyMock = vi.fn()
+    const unspiderfyMock = vi.fn()
+    const clusterEl = document.createElement('div')
+    const childEl = document.createElement('div')
+    const childMarkerMock = { getElement: vi.fn(() => childEl), on: vi.fn() }
+    const fakeCluster = {
+      spiderfy: spiderfyMock,
+      unspiderfy: unspiderfyMock,
+      getElement: vi.fn(() => clusterEl),
     }
+
+    mouseoverHandler({ layer: fakeCluster })
+    expect(spiderfyMock).toHaveBeenCalledOnce()
+
+    spiderfiedHandler({ cluster: fakeCluster, markers: [childMarkerMock] })
+
+    // Mouseout to unrelated element → immediate unspiderfy
+    mouseoutHandler({
+      layer: fakeCluster,
+      originalEvent: { relatedTarget: document.createElement('span') },
+    })
+    expect(unspiderfyMock).toHaveBeenCalledOnce()
   })
 
-  it('cancels collapse when mouse re-enters cluster before grace period expires', async () => {
-    vi.useFakeTimers()
-    try {
-      mountMap()
-      await flushPromises()
+  it('does not unspiderfy when mouseout relatedTarget is a spiderfied child marker', async () => {
+    mountMap()
+    await flushPromises()
 
-      const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
-      const onCalls = clusterInstance.on.mock.calls
+    const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
+    const onCalls = clusterInstance.on.mock.calls
 
-      const mouseoverHandler = onCalls.find((c: any) => c[0] === 'clustermouseover')[1]
-      const mouseoutHandler = onCalls.find((c: any) => c[0] === 'clustermouseout')[1]
+    const mouseoverHandler = onCalls.find((c: any) => c[0] === 'clustermouseover')[1]
+    const mouseoutHandler = onCalls.find((c: any) => c[0] === 'clustermouseout')[1]
+    const spiderfiedHandler = onCalls.find((c: any) => c[0] === 'spiderfied')[1]
 
-      const unspiderfyMock = vi.fn()
-      const fakeLayer = { spiderfy: vi.fn(), unspiderfy: unspiderfyMock }
-
-      // Fan out, then start moving away
-      mouseoverHandler({ layer: fakeLayer })
-      mouseoutHandler({ layer: fakeLayer })
-      expect(unspiderfyMock).not.toHaveBeenCalled()
-
-      // Advance partially — still within grace period
-      vi.advanceTimersByTime(150)
-      expect(unspiderfyMock).not.toHaveBeenCalled()
-
-      // Mouse re-enters cluster (e.g. from child back to center)
-      mouseoverHandler({ layer: fakeLayer })
-
-      // Advance past the original deadline — collapse must NOT fire
-      vi.advanceTimersByTime(300)
-      expect(unspiderfyMock).not.toHaveBeenCalled()
-    } finally {
-      vi.useRealTimers()
+    const unspiderfyMock = vi.fn()
+    const childEl = document.createElement('div')
+    const childMarkerMock = { getElement: vi.fn(() => childEl), on: vi.fn() }
+    const fakeCluster = {
+      spiderfy: vi.fn(),
+      unspiderfy: unspiderfyMock,
+      getElement: vi.fn(() => document.createElement('div')),
     }
+
+    mouseoverHandler({ layer: fakeCluster })
+    spiderfiedHandler({ cluster: fakeCluster, markers: [childMarkerMock] })
+
+    // Mouseout to a spiderfied child's element → must NOT unspiderfy
+    mouseoutHandler({ layer: fakeCluster, originalEvent: { relatedTarget: childEl } })
+    expect(unspiderfyMock).not.toHaveBeenCalled()
+  })
+
+  it('unspiderfies when mouse leaves a spiderfied child to an unrelated element', async () => {
+    mountMap()
+    await flushPromises()
+
+    const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
+    const onCalls = clusterInstance.on.mock.calls
+
+    const mouseoverHandler = onCalls.find((c: any) => c[0] === 'clustermouseover')[1]
+    const spiderfiedHandler = onCalls.find((c: any) => c[0] === 'spiderfied')[1]
+
+    const unspiderfyMock = vi.fn()
+    let capturedMouseoutHandler: ((me: any) => void) | null = null
+    const childEl = document.createElement('div')
+    const childMarkerMock = {
+      getElement: vi.fn(() => childEl),
+      on: vi.fn((event: string, handler: (me: any) => void) => {
+        if (event === 'mouseout') capturedMouseoutHandler = handler
+      }),
+    }
+    const fakeCluster = {
+      spiderfy: vi.fn(),
+      unspiderfy: unspiderfyMock,
+      getElement: vi.fn(() => document.createElement('div')),
+    }
+
+    mouseoverHandler({ layer: fakeCluster })
+    spiderfiedHandler({ cluster: fakeCluster, markers: [childMarkerMock] })
+    expect(capturedMouseoutHandler).not.toBeNull()
+
+    // Mouse leaves the child to an unrelated element → unspiderfy
+    capturedMouseoutHandler!({ originalEvent: { relatedTarget: document.createElement('span') } })
+    expect(unspiderfyMock).toHaveBeenCalledOnce()
+  })
+
+  it('does not unspiderfy when mouseout relatedTarget is a nested element inside a spiderfied child', async () => {
+    mountMap()
+    await flushPromises()
+
+    const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
+    const onCalls = clusterInstance.on.mock.calls
+
+    const mouseoverHandler = onCalls.find((c: any) => c[0] === 'clustermouseover')[1]
+    const mouseoutHandler = onCalls.find((c: any) => c[0] === 'clustermouseout')[1]
+    const spiderfiedHandler = onCalls.find((c: any) => c[0] === 'spiderfied')[1]
+
+    const unspiderfyMock = vi.fn()
+    const childEl = document.createElement('div')
+    const nestedEl = document.createElement('span')
+    childEl.appendChild(nestedEl)
+    const childMarkerMock = { getElement: vi.fn(() => childEl), on: vi.fn() }
+    const fakeCluster = {
+      spiderfy: vi.fn(),
+      unspiderfy: unspiderfyMock,
+      getElement: vi.fn(() => document.createElement('div')),
+    }
+
+    mouseoverHandler({ layer: fakeCluster })
+    spiderfiedHandler({ cluster: fakeCluster, markers: [childMarkerMock] })
+
+    // Mouse moves to a nested element inside the child marker → must NOT unspiderfy
+    mouseoutHandler({ layer: fakeCluster, originalEvent: { relatedTarget: nestedEl } })
+    expect(unspiderfyMock).not.toHaveBeenCalled()
   })
 
   it('uses raster tile layer when WebGL is not supported', async () => {

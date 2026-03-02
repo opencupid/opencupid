@@ -1,5 +1,5 @@
 <script setup lang="ts" generic="T extends { id: string | number }">
-import { onMounted, onBeforeUnmount, ref, watch, nextTick, type Component, render, h } from 'vue'
+import { onMounted, ref, watch, nextTick, type Component, render, h } from 'vue'
 import type { Ref } from 'vue'
 import L, { Map as LMap, Marker as LMarker } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -71,15 +71,19 @@ function customClusterIcon(cluster: any): L.DivIcon {
 }
 
 let clusterGroup: any = null
-let collapseTimer: ReturnType<typeof setTimeout> | null = null
-const SPIDERFY_COLLAPSE_DELAY_MS = 300
+let spiderfiedCluster: any = null
+let spiderfiedMarkers: any[] = []
+let spiderfiedMarkerHandlers: Array<{ marker: any; handler: (me: any) => void }> = []
 
-onBeforeUnmount(() => {
-  if (collapseTimer !== null) {
-    clearTimeout(collapseTimer)
-    collapseTimer = null
-  }
-})
+function isPartOfSpiderfiedCluster(element: Element | null): boolean {
+  if (!element) return false
+  const clusterEl = spiderfiedCluster?.getElement?.()
+  if (clusterEl && (clusterEl === element || clusterEl.contains(element))) return true
+  return spiderfiedMarkers.some((m: any) => {
+    const el = m.getElement?.()
+    return el && (el === element || el.contains(element))
+  })
+}
 function avatarIcon(url: string, isSelected: boolean, isHighlighted: boolean): L.DivIcon {
   const size = 50
 
@@ -170,20 +174,36 @@ function ensureMap() {
   })
 
   clusterGroup.on('clustermouseover', (e: any) => {
-    // Cancel any pending collapse so re-entering the cluster prevents dismissal
-    if (collapseTimer !== null) {
-      clearTimeout(collapseTimer)
-      collapseTimer = null
-    }
     e.layer.spiderfy()
   })
   clusterGroup.on('clustermouseout', (e: any) => {
-    // Delay collapse so the cursor has time to reach a fanned-out child point
-    const layer = e.layer
-    collapseTimer = setTimeout(() => {
-      layer.unspiderfy()
-      collapseTimer = null
-    }, SPIDERFY_COLLAPSE_DELAY_MS)
+    const relatedTarget = e.originalEvent?.relatedTarget as Element | null
+    if (!isPartOfSpiderfiedCluster(relatedTarget)) {
+      e.layer.unspiderfy()
+    }
+  })
+  clusterGroup.on('spiderfied', (e: any) => {
+    spiderfiedCluster = e.cluster
+    spiderfiedMarkers = e.markers || []
+    spiderfiedMarkerHandlers = []
+    for (const marker of spiderfiedMarkers) {
+      const handler = (e: any) => {
+        const relatedTarget = e.originalEvent?.relatedTarget as Element | null
+        if (!isPartOfSpiderfiedCluster(relatedTarget)) {
+          spiderfiedCluster?.unspiderfy()
+        }
+      }
+      marker.on('mouseout', handler)
+      spiderfiedMarkerHandlers.push({ marker, handler })
+    }
+  })
+  clusterGroup.on('unspiderfied', () => {
+    for (const { marker, handler } of spiderfiedMarkerHandlers) {
+      marker.off('mouseout', handler)
+    }
+    spiderfiedMarkerHandlers = []
+    spiderfiedCluster = null
+    spiderfiedMarkers = []
   })
 
   map.addLayer(clusterGroup)
