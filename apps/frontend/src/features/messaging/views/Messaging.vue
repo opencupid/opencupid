@@ -64,12 +64,6 @@ onMounted(async () => {
       class="d-flex flex-column overflow-auto hide-scrollbar h-100"
       :class="{ 'd-none': isDetailView }"
     >
-      <ViewTitle
-        :icon="IconMessage"
-        class="text-primary"
-      >
-        {{ $t('messaging.page_title') }}
-      </ViewTitle>
       <BOverlay
         :show="!haveConversations && isInitialized"
         no-spinner
@@ -79,6 +73,13 @@ onMounted(async () => {
         class="h-100 overlay"
       >
         <template #overlay>
+          <ViewTitle
+            :icon="IconMessage"
+            class="text-primary"
+          >
+            {{ $t('messaging.page_title') }}
+          </ViewTitle>
+          
           <div class="d-flex flex-column align-items-center justify-content-center h-100">
             <p class="text-muted mb-4 mt-4 text-center">
               {{ $t('messaging.no_messages_placeholder') }}

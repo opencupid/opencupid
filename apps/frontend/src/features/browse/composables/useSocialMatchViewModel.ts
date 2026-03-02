@@ -25,6 +25,7 @@ export function useSocialMatchViewModel() {
 
   const storeError = ref<StoreError | null>(null)
   const isInitialized = ref(false)
+  const isLoading = ref(false)
 
   const initialize = async () => {
     await useBootstrap().bootstrap()
@@ -40,12 +41,12 @@ export function useSocialMatchViewModel() {
     }
 
     await findProfileStore.fetchSocialFilter(socialFilterDefaults(ownerProfile))
-    await Promise.all([fetchResults(), findProfileStore.fetchDatingMatchIds()])
+    await fetchResults()
     isInitialized.value = true
   }
 
   const fetchResults = async () => {
-    await findProfileStore.findSocialForMap()
+    await Promise.all([findProfileStore.findSocialForMap(), findProfileStore.fetchDatingMatchIds()])
   }
 
   function openProfile(profileId: string): void {
@@ -54,13 +55,8 @@ export function useSocialMatchViewModel() {
 
   const viewerProfile = computed(() => ownerStore.profile)
 
-  const haveAccess = computed(() => {
-    if (!viewerProfile.value) return false
-    return viewerProfile.value.isSocialActive
-  })
-
   const haveResults = computed(() => {
-    return findProfileStore.profileList.length > 0 && haveAccess.value
+    return findProfileStore.profileList.length > 0
   })
 
   const hideProfile = (profileId: string) => {
@@ -68,22 +64,24 @@ export function useSocialMatchViewModel() {
   }
 
   const updatePrefs = async () => {
-    const res = await findProfileStore.persistSocialFilter()
-    if (!res.success) {
-      storeError.value = res
-      return
+    isLoading.value = true
+    try {
+      const res = await findProfileStore.persistSocialFilter()
+      if (!res.success) {
+        storeError.value = res
+        return
+      }
+      storeError.value = null
+      await fetchResults()
+    } finally {
+      isLoading.value = false
     }
-    storeError.value = null
-    fetchResults()
   }
 
   return {
     viewerProfile,
     haveResults,
-    haveAccess,
-    isLoading: computed(
-      () => findProfileStore.isLoading || ownerStore.isLoading || !isInitialized.value
-    ),
+    isLoading: isLoading,
     storeError,
     initialize,
     hideProfile,
@@ -92,6 +90,6 @@ export function useSocialMatchViewModel() {
     openProfile,
     profileList: computed(() => findProfileStore.profileList),
     matchedProfileIds: computed(() => findProfileStore.matchedProfileIds),
-    isInitialized: computed(() => isInitialized.value),
+    isInitialized: isInitialized,
   }
 }

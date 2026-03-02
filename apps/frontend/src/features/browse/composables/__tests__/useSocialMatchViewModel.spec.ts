@@ -81,19 +81,6 @@ describe('useSocialMatchViewModel', () => {
     expect(mockFindProfileStore.hide).toHaveBeenCalledWith('abc')
   })
 
-  it('haveAccess is true when profile isSocialActive', () => {
-    const vm = useSocialMatchViewModel()
-    expect(vm.haveAccess.value).toBe(true)
-  })
-
-  it('haveAccess is false when profile is null', () => {
-    const original = mockOwnerStore.profile
-    mockOwnerStore.profile = null as any
-    const vm = useSocialMatchViewModel()
-    expect(vm.haveAccess.value).toBe(false)
-    mockOwnerStore.profile = original
-  })
-
   it('exposes matchedProfileIds from store', () => {
     mockFindProfileStore.matchedProfileIds = new Set(['p1', 'p2'])
     const vm = useSocialMatchViewModel()

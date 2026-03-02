@@ -11,6 +11,7 @@ import TagSelector from '@/features/shared/profileform/TagSelector.vue'
 import TagCloud from '@/features/shared/components/TagCloud.vue'
 import IconTarget2 from '@/assets/icons/interface/target-2.svg'
 import IconTag from '@/assets/icons/e-commerce/tag.svg'
+import MapPlaceholder from '../components/MapPlaceholder.vue'
 
 import { useSocialMatchViewModel } from '../composables/useSocialMatchViewModel'
 import type { PublicProfile } from '@zod/profile/profile.dto'
@@ -22,7 +23,6 @@ const { t } = useI18n()
 
 const {
   viewerProfile,
-  haveAccess,
   haveResults,
   isLoading,
   profileList,
@@ -53,6 +53,11 @@ const mapCenter = computed<[number, number]>(() => {
 // --- Inline filter logic ---
 
 const showTagCloud = ref(false)
+const mapReady = ref(false)
+
+function onMapReady() {
+  mapReady.value = true
+}
 
 function setLocationFromProfile() {
   if (viewerProfile.value?.location && socialFilter.value?.location) {
@@ -99,7 +104,6 @@ watch(
     :profileList="profileList"
     :isLoading="isLoading"
     :isInitialized="isInitialized"
-    :haveAccess="haveAccess"
     :haveResults="haveResults"
     @profile:open="openProfile"
     @profile:hidden="hideProfile"
@@ -111,7 +115,7 @@ watch(
       >
         <div
           class="row g-2"
-          v-if="socialFilter && haveAccess"
+          v-if="socialFilter"
         >
           <!-- Location column -->
           <div class="col-12 col-md-6">
@@ -163,17 +167,32 @@ watch(
     </template>
 
     <template #results="{ onProfileSelect }">
-      <OsmPoiMap
-        :items="profileList"
-        :center="mapCenter"
-        :get-location="(profile: PublicProfile) => profile.location"
-        :get-title="(profile: PublicProfile) => profile.publicName"
-        :get-image-url="getProfileImageUrl"
-        :is-highlighted="(profile: PublicProfile) => matchedProfileIds.has(profile.id)"
-        :popup-component="ProfileMapCard"
-        class="map-view h-100"
-        @item:select="(id: string | number) => onProfileSelect(String(id))"
+      <MapPlaceholder
+        :isAnimated="true"
+        v-show="!mapReady"
+        class="position-absolute top-0 start-0 w-100 h-100 opacity-25"
       />
+
+      <div
+        class="map-view h-100"
+        :class="{
+          'opacity-0': !mapReady,
+          'opacity-75': mapReady && isLoading,
+        }"
+      >
+        <OsmPoiMap
+          :items="profileList"
+          :center="mapCenter"
+          :get-location="(profile: PublicProfile) => profile.location"
+          :get-title="(profile: PublicProfile) => profile.publicName"
+          :get-image-url="getProfileImageUrl"
+          :is-highlighted="(profile: PublicProfile) => matchedProfileIds.has(profile.id)"
+          :popup-component="ProfileMapCard"
+          class="h-100"
+          @map:ready="onMapReady"
+          @item:select="(id: string | number) => onProfileSelect(String(id))"
+        />
+      </div>
     </template>
   </ProfileBrowseLayout>
 

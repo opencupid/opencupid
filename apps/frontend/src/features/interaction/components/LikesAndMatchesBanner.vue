@@ -1,14 +1,18 @@
 <script setup lang="ts">
-import IconHeart from '@/assets/icons/interface/heart.svg'
 import { useInteractionsViewModel } from '../composables/useInteractionsViewModel'
 
 const { receivedLikesCount, haveReceivedLikes, haveNewMatches, newMatchesCount } =
   useInteractionsViewModel()
+
+const emit = defineEmits<{
+  (e: 'click'): void
+}>()
 </script>
 
 <template>
   <div
     class="rounded shadow d-flex align-items-center gap-1 dating p-4"
+    @click="emit('click')"
     v-if="haveNewMatches || haveReceivedLikes"
   >
     <div class="">

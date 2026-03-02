@@ -1,13 +1,9 @@
 <script setup lang="ts">
 import { computed, provide, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useToast } from 'vue-toastification'
 
 import FluidColumn from '@/features/shared/ui/FluidColumn.vue'
-import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
-import NoAccessCTA from '../components/NoAccessCTA.vue'
-import PlaceholdersGrid from '../components/PlaceholdersGrid.vue'
 
 import type { OwnerProfile } from '@zod/profile/profile.dto'
 
@@ -16,7 +12,6 @@ const props = defineProps<{
   profileList: { id: string }[]
   isLoading: boolean
   isInitialized: boolean
-  haveAccess: boolean
   haveResults: boolean
 }>()
 
@@ -26,7 +21,6 @@ const emit = defineEmits<{
   'prefs:update': []
 }>()
 
-const router = useRouter()
 const { t } = useI18n()
 const toast = useToast()
 
@@ -36,7 +30,7 @@ const showPrefsModal = ref(false)
 watch(
   () => props.haveResults,
   (hasResults) => {
-    if (!hasResults && props.isInitialized && props.haveAccess) {
+    if (!hasResults && props.isInitialized) {
       toast.info(t('profiles.browse.no_results_cta_title'))
     }
   }
@@ -49,10 +43,6 @@ provide(
 
 const handleCardClick = (profileId: string) => {
   emit('profile:open', profileId)
-}
-
-const handleEditProfileIntent = () => {
-  router.push({ name: 'EditProfile', state: { hint: 'scope' } })
 }
 </script>
 
@@ -68,47 +58,15 @@ const handleEditProfileIntent = () => {
         </div>
       </FluidColumn>
 
-      <BPlaceholderWrapper :loading="isLoading">
-        <template #loading>
-          <BOverlay
-            show
-            no-spinner
-            no-center
-            :blur="null"
-            bg-color="inherit"
-            class="h-100 overlay"
-            spinner-variant="primary"
-            spinner-type="grow"
-          >
-            <FluidColumn class="overflow-hidden">
-              <PlaceholdersGrid
-                :howMany="6"
-                :isAnimated="true"
-              />
-            </FluidColumn>
-          </BOverlay>
-        </template>
-
-        <template v-if="isInitialized && !haveAccess">
-          <BContainer class="flex-grow-1 d-flex align-items-center justify-content-center">
-            <MiddleColumn>
-              <NoAccessCTA
-                scope="social"
-                @edit:profile="handleEditProfileIntent"
-              />
-            </MiddleColumn>
-          </BContainer>
-        </template>
-
-        <template v-if="isInitialized && haveAccess">
-          <div class="overflow-auto hide-scrollbar flex-grow-1 position-relative">
-            <slot
-              name="results"
-              :onProfileSelect="handleCardClick"
-            />
-          </div>
-        </template>
-      </BPlaceholderWrapper>
+      <div
+        class="overflow-auto hide-scrollbar flex-grow-1 position-relative"
+        :class="{ loading: isLoading }"
+      >
+        <slot
+          name="results"
+          :onProfileSelect="handleCardClick"
+        />
+      </div>
 
       <BModal
         v-model="showPrefsModal"
@@ -150,6 +108,6 @@ main {
 .subnav-bar {
   position: relative;
   z-index: 800; // above Leaflet map panes (max ~700)
-  box-shadow: var(--shadow-xs);
+  // box-shadow: var(--shadow-xs);
 }
 </style>

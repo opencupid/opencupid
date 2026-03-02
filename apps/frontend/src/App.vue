@@ -9,19 +9,6 @@ import { useCountries } from './features/shared/composables/useCountries'
 import { useLanguages } from './features/shared/composables/useLanguages'
 import { useUpdateChecker } from './features/app/composables/useUpdateChecker'
 
-import { computed } from 'vue'
-// FIXME
-// This is a workaround to ensure the page scrolls down
-// on initial load. in order to ensure on mobile devices
-// the browser address/status bar gets scrolled out of view.
-// and the page takes up the full height of the viewport.
-// onMounted(() => {
-//   setTimeout(() => {
-//     document.documentElement.scrollTop = 100
-//     document.body.scrollTop = 100
-//     // window.scr 100) // fallback
-//   }, 1000)
-// })
 const i18nStore = useI18nStore()
 useCountries().initialize(i18nStore.getLanguage())
 useLanguages().initialize(i18nStore.getLanguage())
@@ -37,18 +24,8 @@ useCallStore().initialize()
 <template>
   <UpdateBanner />
   <Navbar />
-  <RouterView v-slot="{ Component }">
-    <KeepAlive include="UserHome,SocialMatch,Messaging">
-      <component :is="Component" />
-    </KeepAlive>
-  </RouterView>
+  <RouterView />
   <AppNotifier />
   <CallingOverlay />
   <JitsiModal />
-  <!-- <router-view v-slot="{ Component }">
-    <transition name="fade">
-      <component :is="Component"
-                 :key="$route.path" />
-    </transition>
-  </router-view> -->
 </template>

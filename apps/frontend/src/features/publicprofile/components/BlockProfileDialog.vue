@@ -18,6 +18,7 @@ defineEmits<{
 <template>
   <BModal
     size="md"
+    fullscreen="sm"
     centered
     button-size="md"
     :show="show"

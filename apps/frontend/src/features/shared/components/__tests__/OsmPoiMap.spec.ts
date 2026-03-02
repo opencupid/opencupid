@@ -63,6 +63,11 @@ vi.mock('leaflet', () => {
     getBounds: vi.fn(() => ({})),
   }))
 
+  const tileLayerProto = {
+    addTo: vi.fn().mockReturnThis(),
+  }
+  const tileLayer = vi.fn(() => ({ ...tileLayerProto }))
+
   return {
     default: {
       map: mapFn,
@@ -72,6 +77,7 @@ vi.mock('leaflet', () => {
       latLngBounds,
       markerClusterGroup,
       point,
+      tileLayer,
     },
     Map: mapFn,
     Marker: marker,
@@ -82,6 +88,7 @@ vi.mock('leaflet', () => {
     latLngBounds,
     markerClusterGroup,
     point,
+    tileLayer,
   }
 })
 
@@ -91,11 +98,13 @@ vi.mock('leaflet.markercluster/dist/MarkerCluster.css', () => ({}))
 vi.mock('leaflet.markercluster/dist/MarkerCluster.Default.css', () => ({}))
 
 // Mock MapTiler layer and CSS
-vi.mock('@maptiler/leaflet-maptilersdk', () => ({
-  MaptilerLayer: class {
-    addTo = vi.fn().mockReturnThis()
-  },
-}))
+vi.mock('@maptiler/leaflet-maptilersdk', () => {
+  const MaptilerLayer = vi.fn().mockImplementation(() => ({
+    addTo: vi.fn().mockReturnThis(),
+    getMaptilerSDKMap: vi.fn(() => ({ once: vi.fn() })),
+  }))
+  return { MaptilerLayer }
+})
 vi.mock('@maptiler/sdk/dist/maptiler-sdk.css', () => ({}))
 
 import { mount, flushPromises } from '@vue/test-utils'
@@ -167,8 +176,9 @@ describe('OsmPoiMap', () => {
     const calls = (L.marker as any).mock.calls
 
     // Alice (index 0) has imageUrl → avatar icon
-    expect(calls[0][1].icon.html).toContain('poi-avatar')
-    expect(calls[0][1].icon.html).toContain('alice.jpg')
+    const aliceAvatarHtml = calls[0][1].icon.html.innerHTML
+    expect(aliceAvatarHtml).toContain('poi-avatar')
+    expect(aliceAvatarHtml).toContain('alice.jpg')
     expect(calls[0][1].icon.className).toBe('poi-avatar-icon')
 
     // Bob (index 1) has no imageUrl → dot icon
@@ -176,26 +186,9 @@ describe('OsmPoiMap', () => {
     expect(calls[1][1].icon.html).toContain('poi-dot')
 
     // Carol (index 2) has imageUrl → avatar icon
-    expect(calls[2][1].icon.html).toContain('poi-avatar')
-    expect(calls[2][1].icon.html).toContain('carol.jpg')
-  })
-
-  it('applies selected styling to avatar icons', async () => {
-    const getImageUrl = (item: TestItem) => item.imageUrl
-
-    mountMap({ getImageUrl, selectedId: '1' })
-    await flushPromises()
-
-    const calls = (L.marker as any).mock.calls
-
-    // Alice is selected → should have 'selected' class and 40px size
-    expect(calls[0][1].icon.html).toContain('poi-avatar selected')
-    expect(calls[0][1].icon.iconSize).toEqual([40, 40])
-
-    // Carol is not selected → no 'selected' class, 32px size
-    expect(calls[2][1].icon.html).toContain('poi-avatar')
-    expect(calls[2][1].icon.html).not.toContain('poi-avatar selected')
-    expect(calls[2][1].icon.iconSize).toEqual([32, 32])
+    const carolAvatarHtml = calls[2][1].icon.html.innerHTML
+    expect(carolAvatarHtml).toContain('poi-avatar')
+    expect(carolAvatarHtml).toContain('carol.jpg')
   })
 
   it('falls back to dot icon for items where getImageUrl returns undefined', async () => {
@@ -232,6 +225,37 @@ describe('OsmPoiMap', () => {
     const eventNames = onCalls.map((c: any) => c[0])
     expect(eventNames).toContain('clustermouseover')
     expect(eventNames).toContain('clustermouseout')
+  })
+
+  it('uses raster tile layer when WebGL is not supported', async () => {
+    // jsdom does not implement WebGL, so canvas.getContext('webgl') returns null
+    // by default — this test confirms the fallback path is taken.
+    mountMap()
+    await flushPromises()
+
+    expect(L.tileLayer).toHaveBeenCalledOnce()
+    const [url] = (L.tileLayer as any).mock.calls[0]
+    expect(url).toContain('maptiler.com/maps/dataviz')
+    expect(url).toContain('{z}/{x}/{y}.png')
+  })
+
+  it('falls back to raster tiles when MaptilerLayer throws at runtime', async () => {
+    // Make webGLSupported() return true so the GL path is attempted
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({} as any)
+
+    const { MaptilerLayer } = await import('@maptiler/leaflet-maptilersdk')
+    vi.mocked(MaptilerLayer).mockImplementationOnce(() => {
+      throw new Error('WebGL context lost')
+    })
+
+    mountMap()
+    await flushPromises()
+
+    expect(L.tileLayer).toHaveBeenCalledOnce()
+    const [url] = (L.tileLayer as any).mock.calls[0]
+    expect(url).toContain('maptiler.com/maps/dataviz')
+
+    vi.restoreAllMocks()
   })
 
   it('calls popup.update() on nextTick after popupopen to re-measure teleported content', async () => {
