@@ -1,5 +1,12 @@
 # frontend
 
+## 0.19.1
+
+### Patch Changes
+
+- 7fc8f03: Fix CI docker build
+- 7904623: Improve accessibility of map clusters (#881)
+
 ## 0.19.0
 
 ### Minor Changes
