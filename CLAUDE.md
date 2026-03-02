@@ -177,7 +177,7 @@ The `postgres` MCP server provides direct SQL access to the dev database during 
 
 ## Git workflow
 
-> **HARD RULE — NO EXCEPTIONS:** You MUST NEVER commit anything to the `main` branch. Not documentation, not design files, not a single line. Every commit goes on a feature branch. If you are on `main`, stop and create a branch before touching anything.
+> **HARD RULE — NO EXCEPTIONS:** You MUST NEVER commit anything to the `main` branch. Not documentation, not design files, not a single line. Every commit goes on a feature branch. If you are on `main`, stop and create a branch before touching anything.  When creating a new feature branch, **always** create off of `main`.  Always check before creating.
 
 Always work in a feature branch and open a Github pull request once task is complete and tests succeed.
 
