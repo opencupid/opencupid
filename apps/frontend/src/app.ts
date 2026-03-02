@@ -43,6 +43,16 @@ export async function bootstrapApp() {
       // Session Replay
       replaysSessionSampleRate: 0.1, // This sets the sample rate at 10%. You may want to change it to 100% while in development and then sample at a lower rate in production.
       replaysOnErrorSampleRate: 1.0, // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.
+      beforeSend(event, hint) {
+        // Filter out DOMException NetworkErrors from third-party fetch() calls (e.g. map tile
+        // loading via MapLibre/MapTiler in Firefox). The app's own API calls use Axios (XHR)
+        // which produces AxiosError instead of DOMException, so this filter is safe.
+        const error = hint?.originalException
+        if (error instanceof DOMException && error.name === 'NetworkError') {
+          return null
+        }
+        return event
+      },
     })
   }
 

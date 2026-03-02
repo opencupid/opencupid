@@ -223,13 +223,21 @@ function initBaseLayer(map: LMap): void {
       style: MapStyle.BASIC,
     }).addTo(map)
 
+    const sdkMap = maptilerLayer.getMaptilerSDKMap()
+
     // If you still want the "idle = ready" semantics, move emit('map:ready') out of ensureMap()
     // and do it here instead.
-    // maptilerLayer.getMaptilerSDKMap().once('idle', () => emit('map:ready', map))
+    // sdkMap.once('idle', () => emit('map:ready', map))
 
     // Otherwise keep this for debugging/telemetry and treat the map as ready immediately.
-    maptilerLayer.getMaptilerSDKMap().once('idle', () => {
+    sdkMap.once('idle', () => {
       // optional: console.debug('[OsmPoiMap] MapLibre idle')
+    })
+
+    // Catch async tile/style load errors (e.g. network failures, blocked requests in Firefox).
+    // Without this handler the errors surface as unhandled rejections and get captured by Sentry.
+    sdkMap.on('error', (e: { error?: Error }) => {
+      console.warn('[OsmPoiMap] Map error:', e.error?.message ?? String(e.error))
     })
   } catch (err) {
     console.error('[OsmPoiMap] WebGL init failed, falling back to raster:', err)

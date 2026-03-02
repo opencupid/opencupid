@@ -121,7 +121,7 @@ vi.mock('@maptiler/leaflet-maptilersdk', () => {
   const MaptilerLayer = vi.fn(function MaptilerLayerMock() {
     return {
       addTo: vi.fn().mockReturnThis(),
-      getMaptilerSDKMap: vi.fn(() => ({ once: vi.fn() })),
+      getMaptilerSDKMap: vi.fn(() => ({ once: vi.fn(), on: vi.fn() })),
     }
   })
   return { MaptilerLayer }
@@ -339,6 +339,37 @@ describe('OsmPoiMap', () => {
     expect(L.tileLayer).toHaveBeenCalledOnce()
     const [url] = (L.tileLayer as any).mock.calls[0]
     expect(url).toContain('maptiler.com/maps/dataviz')
+
+    vi.restoreAllMocks()
+  })
+
+  it('registers an error handler on the MapLibre SDK map when WebGL is supported', async () => {
+    // Make webGLSupported() return true so the GL path is attempted
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({} as any)
+
+    const sdkMapOn = vi.fn().mockReturnThis()
+    const sdkMapOnce = vi.fn().mockReturnThis()
+
+    const { MaptilerLayer } = await import('@maptiler/leaflet-maptilersdk')
+    vi.mocked(MaptilerLayer).mockImplementationOnce(function () {
+      return {
+        addTo: vi.fn().mockReturnThis(),
+        getMaptilerSDKMap: vi.fn(() => ({ once: sdkMapOnce, on: sdkMapOn })),
+      } as any
+    })
+
+    mountMap()
+    await flushPromises()
+
+    // An 'error' handler must be registered so async tile/style load errors
+    // (DOMException NetworkError in Firefox) are handled and don't reach Sentry
+    const errorHandlerCall = sdkMapOn.mock.calls.find((c: any) => c[0] === 'error')
+    expect(errorHandlerCall).toBeDefined()
+
+    // The handler must not throw when invoked
+    const handler = errorHandlerCall![1]
+    expect(() => handler({ error: new Error('tile load failed') })).not.toThrow()
+    expect(() => handler({})).not.toThrow()
 
     vi.restoreAllMocks()
   })
