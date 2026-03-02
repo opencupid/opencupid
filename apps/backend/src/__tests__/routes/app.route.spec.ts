@@ -25,7 +25,6 @@ const mockAppConfig = vi.hoisted(() => ({
   NODE_ENV: 'development',
   MAXMIND_ACCOUNT_ID: 'test-account',
   MAXMIND_LICENSE_KEY: 'test-key',
-  FRONTEND_VERSION: '0.5.0',
 }))
 
 vi.mock('@/lib/appconfig', () => ({
@@ -178,7 +177,7 @@ describe('GET /version', () => {
 
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
-    expect(reply.payload.version.frontendVersion).toBe('0.5.0')
+    expect(reply.payload.version.frontendVersion).toBe(__FRONTEND_VERSION__)
     expect(reply.payload.version.backendVersion).toBe(__APP_VERSION__)
     expect(reply.payload.version.updateAvailable).toBe(false)
     expect(reply.payload.version.currentVersion).toBeUndefined()
@@ -189,7 +188,7 @@ describe('GET /version', () => {
 
     await handler(
       {
-        query: { v: '0.5.0' },
+        query: { v: __FRONTEND_VERSION__ },
       } as any,
       reply as any
     )
@@ -197,8 +196,8 @@ describe('GET /version', () => {
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.version.updateAvailable).toBe(false)
-    expect(reply.payload.version.currentVersion).toBe('0.5.0')
-    expect(reply.payload.version.frontendVersion).toBe('0.5.0')
+    expect(reply.payload.version.currentVersion).toBe(__FRONTEND_VERSION__)
+    expect(reply.payload.version.frontendVersion).toBe(__FRONTEND_VERSION__)
   })
 
   it('returns update available when versions differ', async () => {
@@ -215,7 +214,7 @@ describe('GET /version', () => {
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.version.updateAvailable).toBe(true)
     expect(reply.payload.version.currentVersion).toBe('0.4.9')
-    expect(reply.payload.version.frontendVersion).toBe('0.5.0')
+    expect(reply.payload.version.frontendVersion).toBe(__FRONTEND_VERSION__)
   })
 
   it('returns update not available when client version is "unknown"', async () => {
