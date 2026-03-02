@@ -10,6 +10,7 @@ pnpm-debug.log*
 # Env
 .env
 .env.production
+.env.staging
 
 # Build output
 dist/
@@ -41,5 +42,4 @@ apps/frontend/dev-dist/
 secrets/
 .config-cache/
 .json-autotranslate-cache/
-.env.staging
 .dev.pid
