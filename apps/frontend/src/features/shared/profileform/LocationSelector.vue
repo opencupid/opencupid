@@ -35,7 +35,7 @@ const props = withDefaults(
   {
     openDirection: 'top',
     allowEmpty: false,
-    closeOnSelect: false,
+    closeOnSelect: true,
   }
 )
 

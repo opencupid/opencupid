@@ -54,6 +54,7 @@ vi.mock('leaflet', () => {
     setView: vi.fn().mockReturnThis(),
     flyTo: vi.fn().mockReturnThis(),
     fitBounds: vi.fn().mockReturnThis(),
+    flyTo: vi.fn().mockReturnThis(),
     getZoom: vi.fn(() => 10),
     getSize: vi.fn(() => ({ x: 1000, y: 800 })),
     getCenter: vi.fn(() => ({ lat: 47, lng: 19 })),
@@ -69,6 +70,7 @@ vi.mock('leaflet', () => {
     off: vi.fn().mockReturnThis(),
     remove: vi.fn(),
     addLayer: vi.fn(),
+    on: vi.fn().mockReturnThis(),
   }
   const mapFn = vi.fn(() => ({ ...mapProto }))
 
@@ -378,5 +380,31 @@ describe('OsmPoiMap', () => {
     // After nextTick, popup.update() should be called
     await nextTick()
     expect(popupUpdate).toHaveBeenCalledOnce()
+  })
+
+  it('flyTo uses lastStableZoom from zoomend, not mid-animation getZoom', async () => {
+    const wrapper = mountMap({ center: [47.0, 19.0] as [number, number], zoom: 7 })
+    await flushPromises()
+
+    // The map instance returned by L.map shares mapProto references
+    const mapInstance = (L.map as any).mock.results[0].value
+
+    // Find the zoomend handler registered during ensureMap()
+    const zoomendCall = mapInstance.on.mock.calls.find((c: any) => c[0] === 'zoomend')
+    expect(zoomendCall).toBeDefined()
+    const zoomendHandler = zoomendCall[1]
+
+    // Simulate user zooming to 15: getZoom returns 15 when zoomend fires
+    mapInstance.getZoom.mockReturnValue(15)
+    zoomendHandler()
+
+    // Simulate a mid-flyTo state where getZoom would return an intermediate value
+    mapInstance.getZoom.mockReturnValue(3)
+
+    // Change center — flyTo should use lastStableZoom (15), not the mid-animation value (3)
+    await wrapper.setProps({ center: [48.0, 20.0] as [number, number] })
+    await nextTick()
+
+    expect(mapInstance.flyTo).toHaveBeenCalledWith([48.0, 20.0], 15, { duration: 1 })
   })
 })
