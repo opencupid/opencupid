@@ -1,5 +1,11 @@
 # frontend
 
+## 0.19.0
+
+### Minor Changes
+
+- bc3e49e: Fix OG tags baked at build time — substitute them at container startup via envsubst (#885)
+
 ## 0.18.0
 
 ### Minor Changes

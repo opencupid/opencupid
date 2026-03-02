@@ -1,5 +1,11 @@
 # backend
 
+## 0.17.3
+
+### Patch Changes
+
+- 1d5d8b9: Fix version endpoint returning "latest" instead of real frontend semver (#882)
+
 ## 0.17.2
 
 ### Patch Changes

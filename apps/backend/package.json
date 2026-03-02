@@ -1,7 +1,7 @@
 {
   "name": "@opencupid/backend",
   "main": "dist/main.js",
-  "version": "0.17.2",
+  "version": "0.17.3",
   "scripts": {
     "dev": "tsup --watch --onSuccess \"node --inspect dist/main.js\"",
     "build": "tsup && tsup --config tsup.scripts.config.ts",
