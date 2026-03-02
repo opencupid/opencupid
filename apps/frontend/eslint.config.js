@@ -22,7 +22,7 @@ const customTsConfig = [
 ];
 
 export default defineConfig([
-  { ignores: ["dist/**", "dev-dist/**", "node_modules/**"] },
+  { ignores: ["dist/**", "dev-dist/**", "node_modules/**", "config.template.js"] },
   { files: ["**/*.{js,mjs,cjs,ts,mts,cts,vue}"], plugins: { js }, extends: ["js/recommended"] },
   { files: ["**/*.{js,mjs,cjs,ts,mts,cts,vue}"], languageOptions: { globals: globals.browser } },
   ...customTsConfig,

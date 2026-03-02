@@ -37,7 +37,7 @@ const emit = defineEmits<{
 const content = ref('')
 const isVoiceActive = ref(false)
 const voiceRecorderRef = ref<InstanceType<typeof VoiceRecorder> | null>(null)
-const voiceMaxDuration = __APP_CONFIG__.VOICE_MESSAGE_MAX_DURATION
+const voiceMaxDuration = parseInt(__APP_CONFIG__.VOICE_MESSAGE_MAX_DURATION, 10)
 
 // Voice confirmation modal state (shown when recording auto-stops at max duration)
 const showVoiceConfirmModal = ref(false)

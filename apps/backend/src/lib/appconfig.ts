@@ -52,12 +52,6 @@ export const configSchema = z.object({
 
   WELCOME_MESSAGE_SENDER_PROFILE_ID: z.string().optional(),
 
-  OG_TITLE: z.string(),
-  OG_DESCRIPTION: z.string(),
-  OG_IMAGE: z.string(),
-  OG_URL: z.string(),
-  OG_TYPE: z.string(),
-
   DOMAIN: z.string().default('example.org'),
 
   SITE_NAME: z.string().default('OpenCupid'),

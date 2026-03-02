@@ -125,22 +125,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Create .env from secret
-        if: matrix.service == 'frontend'
-        run: |
-          cat <<'ENVEOF' > .env
-          ${{ secrets.PRODUCTION_ENV_FILE }}
-          ENVEOF
-
-      - name: Extract frontend build args
-        if: matrix.service == 'frontend'
-        id: frontend-args
-        run: |
-          set -a && source .env && set +a
-          for var in SITE_NAME OG_TITLE OG_DESCRIPTION OG_IMAGE OG_URL OG_TYPE; do
-            echo "${var}=${!var}" >> "$GITHUB_OUTPUT"
-          done
-
       - name: Compute image tags
         id: tags
         run: |
@@ -188,4 +172,3 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
           tags: ${{ steps.tags.outputs.tags }}
-          build-args: ${{ matrix.service == 'frontend' && format('SITE_NAME={0}\nOG_TITLE={1}\nOG_DESCRIPTION={2}\nOG_IMAGE={3}\nOG_URL={4}\nOG_TYPE={5}', steps.frontend-args.outputs.SITE_NAME, steps.frontend-args.outputs.OG_TITLE, steps.frontend-args.outputs.OG_DESCRIPTION, steps.frontend-args.outputs.OG_IMAGE, steps.frontend-args.outputs.OG_URL, steps.frontend-args.outputs.OG_TYPE) || '' }}
