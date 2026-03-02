@@ -1,0 +1,15 @@
+# Hetzner Cloud API token — https://console.hetzner.cloud → project → Security → API Tokens
+hcloud_token = "FILL_IN"
+
+# Your current public IP in CIDR notation — https://ifconfig.me → append /32
+management_cidr = "1.2.3.4/32"
+
+# Full staging domain — must be a subdomain of a zone in Hetzner Console → DNS
+# Zone is derived automatically: "staging.example.org" → zone "example.org", record "staging"
+staging_domain = "staging.example.org"
+
+# Server size. cx32 = 4 vCPU / 8 GB RAM. Minimum for full stack.
+server_type = "cx32"
+
+# Datacenter. fsn1=Falkenstein, nbg1=Nuremberg, hel1=Helsinki, ash=Ashburn
+server_location = "fsn1"

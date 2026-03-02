@@ -1,0 +1,5 @@
+# Terraform state — never commit
+terraform/.terraform/
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/terraform.tfvars
