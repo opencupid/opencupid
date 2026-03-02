@@ -32,7 +32,7 @@ const props = withDefaults(
     /** Vue component to render in popup */
     popupComponent: Component
     /** Optional starting center/zoom (used if we can't fit to bounds) */
-    center: [number, number]
+    center?: [number, number]
     zoom?: number
     /** Optional function to get a thumbnail image URL for an item */
     getImageUrl?: (item: T) => string | undefined
@@ -44,6 +44,7 @@ const props = withDefaults(
     isHighlighted?: (item: T) => boolean
   }>(),
   {
+    center: () => [47.0, 19.0] as [number, number],
     zoom: 7,
     fitToPois: false,
   }
@@ -123,7 +124,7 @@ function initRasterFallback(map: LMap): void {
 function ensureMap() {
   if (map || !mapEl.value) return
   map = L.map(mapEl.value, {
-    center: props.center,
+    center: props.center ?? [47.0, 19.0],
     zoom: props.zoom,
     maxZoom: 19,
     preferCanvas: true,
