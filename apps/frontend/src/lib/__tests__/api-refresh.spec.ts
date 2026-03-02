@@ -17,7 +17,7 @@ afterAll(() => vi.unstubAllGlobals())
 
 describe('api refresh interceptor', () => {
   let locationHref: string
-   
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let originalAdapter: any
   let originalLocationDescriptor: PropertyDescriptor | undefined
 
