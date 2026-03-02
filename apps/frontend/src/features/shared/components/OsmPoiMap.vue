@@ -6,9 +6,10 @@ import 'leaflet/dist/leaflet.css'
 import 'leaflet.markercluster'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
-import { MaptilerLayer } from '@maptiler/leaflet-maptilersdk'
-import { MapStyle } from '@maptiler/sdk'
 import '@maptiler/sdk/dist/maptiler-sdk.css'
+
+import { MaptilerLayer } from '@maptiler/leaflet-maptilersdk'
+import { config as maptilerConfig, MapStyle } from '@maptiler/sdk'
 
 import AvatarIcon from './AvatarIcon.vue'
 
@@ -20,6 +21,8 @@ export interface PoiItem {
     lon?: number | null
   }
 }
+
+maptilerConfig.telemetry = false
 
 const props = withDefaults(
   defineProps<{
@@ -68,6 +71,68 @@ function customClusterIcon(cluster: any): L.DivIcon {
     iconSize: [28, 28],
     iconAnchor: [14, 14],
   })
+}
+
+// Spiderfy hover region
+type MCCluster = any
+
+const SPIDER_HOVER_PADDING_PX = 18
+
+let activeSpiderCluster: MCCluster | null = null
+let activeSpiderHoverBounds: L.LatLngBounds | null = null
+
+function computeViewportMultiplier(map: L.Map) {
+  const { x: w, y: h } = map.getSize()
+  const minDim = Math.min(w, h)
+
+  // Heuristic: on a ~800px tall map => multiplier ~1.6
+  // Tune the divisor to your liking.
+  return Math.max(0.8, Math.min(4, minDim / 400))
+}
+
+function computeSpiderHoverBounds(
+  map: LMap,
+  cluster: MCCluster,
+  paddingPx = SPIDER_HOVER_PADDING_PX
+): L.LatLngBounds {
+  const children: LMarker[] = cluster.getAllChildMarkers?.() ?? []
+  if (!children.length) {
+    // Defensive guard: if plugin reports no children (transient state / API mismatch),
+    // return a valid bounds around the cluster center (avoids Infinity bounds).
+    const ll = cluster.getLatLng?.() ?? map.getCenter()
+    return L.latLngBounds(ll, ll)
+  }
+
+  let minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity
+  for (const m of children) {
+    const p = map.latLngToLayerPoint(m.getLatLng())
+    if (p.x < minX) minX = p.x
+    if (p.y < minY) minY = p.y
+    if (p.x > maxX) maxX = p.x
+    if (p.y > maxY) maxY = p.y
+  }
+
+  minX -= paddingPx
+  minY -= paddingPx
+  maxX += paddingPx
+  maxY += paddingPx
+
+  // Convert back to LatLng bounds.
+  // y grows downward in layer points: (minX, maxY) is bottom-left, (maxX, minY) is top-right.
+  const sw = map.layerPointToLatLng(L.point(minX, maxY))
+  const ne = map.layerPointToLatLng(L.point(maxX, minY))
+  return L.latLngBounds(sw, ne)
+}
+
+function closeSpider() {
+  if (activeSpiderCluster) {
+    activeSpiderCluster.unspiderfy?.()
+  }
+  activeSpiderCluster = null
+  activeSpiderHoverBounds = null
 }
 
 let clusterGroup: any = null
@@ -120,38 +185,61 @@ function initRasterFallback(map: LMap): void {
     { maxZoom: 19, attribution: '© MapTiler © OpenStreetMap contributors' }
   ).addTo(map)
 }
+// --- map init orchestration -------------------------------------------------
 
 function ensureMap() {
   if (map || !mapEl.value) return
-  map = L.map(mapEl.value, {
+
+  map = createLeafletMap(mapEl.value)
+  initBaseLayer(map)
+  initClusters(map)
+
+  emit('map:ready', map)
+}
+
+function createLeafletMap(el: HTMLDivElement): LMap {
+  return L.map(el, {
     center: props.center,
     zoom: props.zoom,
     maxZoom: 19,
     preferCanvas: true,
   })
+}
 
+/**
+ * Adds either WebGL (MapTiler SDK) or raster tiles.
+ * Note: if you truly need "ready only after idle", you should NOT emit map:ready here.
+ * Instead, emit it from the idle callback and do NOT emit at end of ensureMap().
+ */
+function initBaseLayer(map: LMap): void {
   if (!webGLSupported()) {
     initRasterFallback(map)
-    emit('map:ready', map)
-  } else {
-    try {
-      const maptilerLayer = new MaptilerLayer({
-        apiKey: __APP_CONFIG__.MAPTILER_API_KEY,
-        style: MapStyle.BASIC,
-      }).addTo(map)
-      // Fire map:ready only after the underlying MapLibre map is idle —
-      // meaning all tiles in the viewport have fully loaded and rendered.
-      maptilerLayer.getMaptilerSDKMap().once('idle', () => emit('map:ready', map!))
-    } catch (err) {
-      console.error(
-        '[OsmPoiMap] WebGL map initialization failed, falling back to raster tiles:',
-        err
-      )
-      initRasterFallback(map)
-      emit('map:ready', map)
-    }
+    return
   }
 
+  try {
+    const maptilerLayer = new MaptilerLayer({
+      apiKey: __APP_CONFIG__.MAPTILER_API_KEY,
+      style: MapStyle.BASIC,
+    }).addTo(map)
+
+    // If you still want the "idle = ready" semantics, move emit('map:ready') out of ensureMap()
+    // and do it here instead.
+    // maptilerLayer.getMaptilerSDKMap().once('idle', () => emit('map:ready', map))
+
+    // Otherwise keep this for debugging/telemetry and treat the map as ready immediately.
+    maptilerLayer.getMaptilerSDKMap().once('idle', () => {
+      // optional: console.debug('[OsmPoiMap] MapLibre idle')
+    })
+  } catch (err) {
+    console.error('[OsmPoiMap] WebGL init failed, falling back to raster:', err)
+    initRasterFallback(map)
+  }
+}
+
+// --- clusters + spider hover region ----------------------------------------
+
+function initClusters(map: LMap) {
   clusterGroup = (L as any).markerClusterGroup({
     spiderfyOnMaxZoom: false,
     showCoverageOnHover: false,
@@ -161,14 +249,43 @@ function ensureMap() {
     iconCreateFunction: customClusterIcon,
   })
 
-  clusterGroup.on('clustermouseover', (e: any) => {
-    e.layer.spiderfy()
-  })
-  clusterGroup.on('clustermouseout', (e: any) => {
-    e.layer.unspiderfy()
-  })
+  clusterGroup.on('clustermouseover', onClusterMouseOver)
+  clusterGroup.on('spiderfied', onClusterSpiderfied)
+  clusterGroup.on('unspiderfied', onClusterUnspiderfied)
+
+  map.on('mousemove', onMapMouseMove)
+  map.on('zoomstart movestart', closeSpider)
 
   map.addLayer(clusterGroup)
+}
+
+function onClusterMouseOver(e: any) {
+  // If another cluster is open, close it first (prevents multiple open states)
+  if (activeSpiderCluster && activeSpiderCluster !== e.layer) closeSpider()
+
+  // scale spiderfy distance with viewport
+  clusterGroup.options.spiderfyDistanceMultiplier = computeViewportMultiplier(map!)
+
+  e.layer.spiderfy()
+}
+
+function onClusterSpiderfied(e: any) {
+  activeSpiderCluster = e.cluster
+  activeSpiderHoverBounds = computeSpiderHoverBounds(
+    map!,
+    activeSpiderCluster,
+    SPIDER_HOVER_PADDING_PX
+  )
+}
+
+function onClusterUnspiderfied() {
+  activeSpiderCluster = null
+  activeSpiderHoverBounds = null
+}
+
+function onMapMouseMove(ev: L.LeafletMouseEvent) {
+  if (!activeSpiderCluster || !activeSpiderHoverBounds) return
+  if (!activeSpiderHoverBounds.contains(ev.latlng)) closeSpider()
 }
 
 const popupTarget = ref<HTMLElement | null>(null)
@@ -260,12 +377,23 @@ onMounted(() => {
   highlightSelected()
 })
 
-// onBeforeUnmount(() => {
-//   if (map) {
-//     map.remove()
-//     map = null
-//   }
-// })
+function destroyMap() {
+  if (!map) return
+  map.off('mousemove', onMapMouseMove)
+  map.off('zoomstart movestart', closeSpider)
+
+  clusterGroup?.off('clustermouseover', onClusterMouseOver)
+  clusterGroup?.off('spiderfied', onClusterSpiderfied)
+  clusterGroup?.off('unspiderfied', onClusterUnspiderfied)
+
+  map.remove()
+  map = null
+  clusterGroup = null
+}
+
+onBeforeUnmount(() => {
+  destroyMap()
+})
 
 watch(
   () => props.items,
