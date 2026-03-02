@@ -1,5 +1,17 @@
 # frontend
 
+## 0.18.0
+
+### Minor Changes
+
+- b537c96: Add PNG raster tile fallback for OsmPoiMap when WebGL is unavailable (#872)
+
+### Patch Changes
+
+- 18b25c7: Fix flaky authStore test: bump @vitest/coverage-v8 to match vitest@4.0.18, add afterAll cleanup for module-scope stubs in test files, and restore api adapter and window.location in api-refresh tests (#856)
+- d81bb63: Fix invalid OTP returning 401 (now 422) and improve OTP input UX (#870)
+- c7b4ee3: Pre-populate TagSelector dropdown with viewer's profile tags as initial suggestions (#862)
+
 ## 0.17.2
 
 ### Patch Changes
