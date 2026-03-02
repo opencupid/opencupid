@@ -74,6 +74,12 @@ let clusterGroup: any = null
 let collapseTimer: ReturnType<typeof setTimeout> | null = null
 const SPIDERFY_COLLAPSE_DELAY_MS = 300
 
+onBeforeUnmount(() => {
+  if (collapseTimer !== null) {
+    clearTimeout(collapseTimer)
+    collapseTimer = null
+  }
+})
 function avatarIcon(url: string, isSelected: boolean, isHighlighted: boolean): L.DivIcon {
   const size = 50
 
