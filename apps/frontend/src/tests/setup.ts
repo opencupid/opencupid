@@ -20,7 +20,7 @@ import {
   SENTRY_DSN: '',
   SITE_NAME: 'OpenCupid',
   JITSI_DOMAIN: '',
-  VOICE_MESSAGE_MAX_DURATION: 120,
+  VOICE_MESSAGE_MAX_DURATION: '120',
 }
 import packageJson from '../../package.json'
 ;(globalThis as any).__APP_VERSION__ = packageJson.version
