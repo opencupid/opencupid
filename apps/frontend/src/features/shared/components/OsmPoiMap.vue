@@ -71,6 +71,8 @@ function customClusterIcon(cluster: any): L.DivIcon {
 }
 
 let clusterGroup: any = null
+let collapseTimer: ReturnType<typeof setTimeout> | null = null
+const SPIDERFY_COLLAPSE_DELAY_MS = 300
 
 function avatarIcon(url: string, isSelected: boolean, isHighlighted: boolean): L.DivIcon {
   const size = 50
@@ -162,10 +164,20 @@ function ensureMap() {
   })
 
   clusterGroup.on('clustermouseover', (e: any) => {
+    // Cancel any pending collapse so re-entering the cluster prevents dismissal
+    if (collapseTimer !== null) {
+      clearTimeout(collapseTimer)
+      collapseTimer = null
+    }
     e.layer.spiderfy()
   })
   clusterGroup.on('clustermouseout', (e: any) => {
-    e.layer.unspiderfy()
+    // Delay collapse so the cursor has time to reach a fanned-out child point
+    const layer = e.layer
+    collapseTimer = setTimeout(() => {
+      layer.unspiderfy()
+      collapseTimer = null
+    }, SPIDERFY_COLLAPSE_DELAY_MS)
   })
 
   map.addLayer(clusterGroup)
