@@ -105,11 +105,16 @@ vi.mock('@maptiler/leaflet-maptilersdk', () => {
   }))
   return { MaptilerLayer }
 })
+vi.mock('@maptiler/sdk', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@maptiler/sdk')>()
+  return { ...actual, config: { telemetry: true }, MapStyle: actual.MapStyle }
+})
 vi.mock('@maptiler/sdk/dist/maptiler-sdk.css', () => ({}))
 
 import { mount, flushPromises } from '@vue/test-utils'
 import OsmPoiMap from '../OsmPoiMap.vue'
 import L from 'leaflet'
+import { config as maptilerConfig } from '@maptiler/sdk'
 
 const DummyPopup = defineComponent({
   props: ['item'],
@@ -293,5 +298,9 @@ describe('OsmPoiMap', () => {
     // After nextTick, popup.update() should be called
     await nextTick()
     expect(popupUpdate).toHaveBeenCalledOnce()
+  })
+
+  it('disables MapTiler SDK telemetry at module load time', () => {
+    expect(maptilerConfig.telemetry).toBe(false)
   })
 })

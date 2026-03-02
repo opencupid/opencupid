@@ -7,8 +7,10 @@ import 'leaflet.markercluster'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 import { MaptilerLayer } from '@maptiler/leaflet-maptilersdk'
-import { MapStyle } from '@maptiler/sdk'
+import { config as maptilerConfig, MapStyle } from '@maptiler/sdk'
 import '@maptiler/sdk/dist/maptiler-sdk.css'
+
+maptilerConfig.telemetry = false
 
 import AvatarIcon from './AvatarIcon.vue'
 
