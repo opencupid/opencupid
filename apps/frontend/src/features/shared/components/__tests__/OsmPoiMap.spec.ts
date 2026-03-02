@@ -9,7 +9,9 @@ const clusterGroupProto = {
   addLayer: vi.fn(),
   clearLayers: vi.fn(),
   on: vi.fn().mockReturnThis(),
+  off: vi.fn().mockReturnThis(),
   getBounds: vi.fn(() => ({})),
+  options: {},
 }
 
 // Mock leaflet before imports
@@ -43,13 +45,28 @@ vi.mock('leaflet', () => {
   }
   const layerGroup = vi.fn(() => ({ ...layerGroupProto }))
 
-  const latLngBounds = vi.fn(() => ({}))
+  const latLngBounds = vi.fn(() => ({
+    contains: vi.fn((latlng: { lat?: number }) => latlng?.lat === 47),
+  }))
   const point = vi.fn((x: number, y: number) => ({ x, y }))
 
   const mapProto = {
     setView: vi.fn().mockReturnThis(),
+    flyTo: vi.fn().mockReturnThis(),
     fitBounds: vi.fn().mockReturnThis(),
     getZoom: vi.fn(() => 10),
+    getSize: vi.fn(() => ({ x: 1000, y: 800 })),
+    getCenter: vi.fn(() => ({ lat: 47, lng: 19 })),
+    latLngToLayerPoint: vi.fn((latlng: { lat: number; lng: number }) => ({
+      x: latlng.lng * 10,
+      y: latlng.lat * 10,
+    })),
+    layerPointToLatLng: vi.fn((p: { x: number; y: number }) => ({
+      lat: p.y / 10,
+      lng: p.x / 10,
+    })),
+    on: vi.fn().mockReturnThis(),
+    off: vi.fn().mockReturnThis(),
     remove: vi.fn(),
     addLayer: vi.fn(),
   }
@@ -60,7 +77,9 @@ vi.mock('leaflet', () => {
     addLayer: vi.fn(),
     clearLayers: vi.fn(),
     on: vi.fn().mockReturnThis(),
+    off: vi.fn().mockReturnThis(),
     getBounds: vi.fn(() => ({})),
+    options: {},
   }))
 
   const tileLayerProto = {
@@ -99,10 +118,12 @@ vi.mock('leaflet.markercluster/dist/MarkerCluster.Default.css', () => ({}))
 
 // Mock MapTiler layer and CSS
 vi.mock('@maptiler/leaflet-maptilersdk', () => {
-  const MaptilerLayer = vi.fn().mockImplementation(() => ({
-    addTo: vi.fn().mockReturnThis(),
-    getMaptilerSDKMap: vi.fn(() => ({ once: vi.fn() })),
-  }))
+  const MaptilerLayer = vi.fn(function MaptilerLayerMock() {
+    return {
+      addTo: vi.fn().mockReturnThis(),
+      getMaptilerSDKMap: vi.fn(() => ({ once: vi.fn() })),
+    }
+  })
   return { MaptilerLayer }
 })
 vi.mock('@maptiler/sdk/dist/maptiler-sdk.css', () => ({}))
@@ -216,81 +237,79 @@ describe('OsmPoiMap', () => {
     expect(L.marker).toHaveBeenCalledTimes(3)
   })
 
-  it('registers hover-to-spiderfy event handlers on cluster group', async () => {
+  it('registers spider and map movement event handlers', async () => {
+    mountMap()
+    await flushPromises()
+
+    const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
+    const clusterOnCalls = clusterInstance.on.mock.calls
+    const clusterEventNames = clusterOnCalls.map((c: any) => c[0])
+    expect(clusterEventNames).toContain('clustermouseover')
+    expect(clusterEventNames).toContain('spiderfied')
+    expect(clusterEventNames).toContain('unspiderfied')
+
+    const mapInstance = (L.map as any).mock.results[0].value
+    const mapEventNames = mapInstance.on.mock.calls.map((c: any) => c[0])
+    expect(mapEventNames).toContain('mousemove')
+    expect(mapEventNames).toContain('zoomstart movestart')
+  })
+
+  it('spiderfies cluster on clustermouseover', async () => {
     mountMap()
     await flushPromises()
 
     const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
     const onCalls = clusterInstance.on.mock.calls
-    const eventNames = onCalls.map((c: any) => c[0])
-    expect(eventNames).toContain('clustermouseover')
-    expect(eventNames).toContain('clustermouseout')
+    const mouseoverHandler = onCalls.find((c: any) => c[0] === 'clustermouseover')[1]
+
+    const spiderfyMock = vi.fn()
+    mouseoverHandler({ layer: { spiderfy: spiderfyMock } })
+
+    expect(spiderfyMock).toHaveBeenCalledOnce()
   })
 
-  it('delays cluster collapse on mouseout so child points remain reachable', async () => {
-    vi.useFakeTimers()
-    try {
-      mountMap()
-      await flushPromises()
+  it('closes active spider when mouse leaves hover bounds', async () => {
+    mountMap()
+    await flushPromises()
 
-      const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
-      const onCalls = clusterInstance.on.mock.calls
+    const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
+    const spiderfiedHandler = clusterInstance.on.mock.calls.find((c: any) => c[0] === 'spiderfied')[1]
+    const mapInstance = (L.map as any).mock.results[0].value
+    const mousemoveHandler = mapInstance.on.mock.calls.find((c: any) => c[0] === 'mousemove')[1]
 
-      const mouseoverHandler = onCalls.find((c: any) => c[0] === 'clustermouseover')[1]
-      const mouseoutHandler = onCalls.find((c: any) => c[0] === 'clustermouseout')[1]
+    const unspiderfyMock = vi.fn()
+    spiderfiedHandler({
+      cluster: {
+        getAllChildMarkers: () => [],
+        getLatLng: () => ({ lat: 47, lng: 19 }),
+        unspiderfy: unspiderfyMock,
+      },
+    })
 
-      const spiderfyMock = vi.fn()
-      const unspiderfyMock = vi.fn()
-      const fakeLayer = { spiderfy: spiderfyMock, unspiderfy: unspiderfyMock }
-
-      mouseoverHandler({ layer: fakeLayer })
-      expect(spiderfyMock).toHaveBeenCalledOnce()
-
-      // Mouseout must NOT immediately collapse
-      mouseoutHandler({ layer: fakeLayer })
-      expect(unspiderfyMock).not.toHaveBeenCalled()
-
-      // After the grace period the cluster collapses
-      vi.advanceTimersByTime(300)
-      expect(unspiderfyMock).toHaveBeenCalledOnce()
-    } finally {
-      vi.useRealTimers()
-    }
+    mousemoveHandler({ latlng: { lat: 0, lng: 0 } })
+    expect(unspiderfyMock).toHaveBeenCalledOnce()
   })
 
-  it('cancels collapse when mouse re-enters cluster before grace period expires', async () => {
-    vi.useFakeTimers()
-    try {
-      mountMap()
-      await flushPromises()
+  it('keeps active spider when mouse stays inside hover bounds', async () => {
+    mountMap()
+    await flushPromises()
 
-      const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
-      const onCalls = clusterInstance.on.mock.calls
+    const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
+    const spiderfiedHandler = clusterInstance.on.mock.calls.find((c: any) => c[0] === 'spiderfied')[1]
+    const mapInstance = (L.map as any).mock.results[0].value
+    const mousemoveHandler = mapInstance.on.mock.calls.find((c: any) => c[0] === 'mousemove')[1]
 
-      const mouseoverHandler = onCalls.find((c: any) => c[0] === 'clustermouseover')[1]
-      const mouseoutHandler = onCalls.find((c: any) => c[0] === 'clustermouseout')[1]
+    const unspiderfyMock = vi.fn()
+    spiderfiedHandler({
+      cluster: {
+        getAllChildMarkers: () => [],
+        getLatLng: () => ({ lat: 47, lng: 19 }),
+        unspiderfy: unspiderfyMock,
+      },
+    })
 
-      const unspiderfyMock = vi.fn()
-      const fakeLayer = { spiderfy: vi.fn(), unspiderfy: unspiderfyMock }
-
-      // Fan out, then start moving away
-      mouseoverHandler({ layer: fakeLayer })
-      mouseoutHandler({ layer: fakeLayer })
-      expect(unspiderfyMock).not.toHaveBeenCalled()
-
-      // Advance partially — still within grace period
-      vi.advanceTimersByTime(150)
-      expect(unspiderfyMock).not.toHaveBeenCalled()
-
-      // Mouse re-enters cluster (e.g. from child back to center)
-      mouseoverHandler({ layer: fakeLayer })
-
-      // Advance past the original deadline — collapse must NOT fire
-      vi.advanceTimersByTime(300)
-      expect(unspiderfyMock).not.toHaveBeenCalled()
-    } finally {
-      vi.useRealTimers()
-    }
+    mousemoveHandler({ latlng: { lat: 47, lng: 19 } })
+    expect(unspiderfyMock).not.toHaveBeenCalled()
   })
 
   it('uses raster tile layer when WebGL is not supported', async () => {
