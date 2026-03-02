@@ -47,8 +47,12 @@ services:
       SPRING_DATASOURCE_PASSWORD: tolgee
       TOLGEE_AUTHENTICATION_INITIAL_USERNAME: admin
       TOLGEE_AUTHENTICATION_INITIAL_PASSWORD: admin
+      TOLGEE_AUTHENTICATION_CREATE_DEMO_FOR_INITIAL_USER: false
+      TOLGEE_IMPORT_DIR: /import
+      TOLGEE_IMPORT_CREATE_IMPLICIT_API_KEY: true
     volumes:
       - tolgee_data:/data
+      - ./packages/shared/i18n:/import/opencupid:ro
     depends_on:
       - tolgee-db
 
