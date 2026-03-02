@@ -3,7 +3,8 @@ import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from 'vites
 // --- Mocks -----------------------------------------------------------
 
 const mockClose = vi.fn()
-const mockUseWebSocket = vi.fn(() => ({ close: mockClose }))
+// Default socket mock: status CLOSED (not yet open)
+const mockUseWebSocket = vi.fn(() => ({ close: mockClose, status: { value: 'CLOSED' } }))
 vi.mock('@vueuse/core', () => ({ useWebSocket: mockUseWebSocket }))
 
 const mockApiGet = vi.fn()
@@ -29,6 +30,12 @@ function wsOptions() {
 function wsUrlGetter() {
   const lastCall = mockUseWebSocket.mock.calls.at(-1) as unknown[]
   return lastCall[0] as () => string
+}
+
+/** Return the handler registered for a given bus event */
+function getBusHandler(event: string): ((...args: unknown[]) => void | Promise<void>) | undefined {
+  const call = mockBusOn.mock.calls.find(([evt]) => evt === event)
+  return call?.[1] as ((...args: unknown[]) => void | Promise<void>) | undefined
 }
 
 // --- Tests -----------------------------------------------------------
@@ -140,5 +147,59 @@ describe('websocket', () => {
   it('is safe to call when no socket exists', () => {
     // Should not throw
     expect(() => disconnectWebSocket()).not.toThrow()
+  })
+
+  // ── api:online reconnect ───────────────────────────────────────────
+
+  it('registers an api:online handler', () => {
+    const handler = getBusHandler('api:online')
+    expect(handler).toBeDefined()
+  })
+
+  it('reconnects WebSocket on api:online when socket is closed', async () => {
+    await connectWebSocket()
+    mockApiGet.mockClear()
+    mockApiGet.mockResolvedValue({ data: { ticket: 'ticket-recovery' } })
+
+    const handler = getBusHandler('api:online')
+    await handler!()
+
+    // Should have fetched a fresh ticket and created a new socket
+    expect(mockApiGet).toHaveBeenCalledWith('/auth/ws-ticket')
+    expect(mockUseWebSocket).toHaveBeenCalledTimes(2)
+  })
+
+  it('reconnects WebSocket on api:online when no socket exists yet', async () => {
+    // No prior connectWebSocket call — simulate cold start where WS never connected
+    mockApiGet.mockResolvedValue({ data: { ticket: 'ticket-cold' } })
+
+    const handler = getBusHandler('api:online')
+    await handler!()
+
+    expect(mockApiGet).toHaveBeenCalledWith('/auth/ws-ticket')
+    expect(mockUseWebSocket).toHaveBeenCalledTimes(1)
+  })
+
+  it('does NOT reconnect on api:online after intentional disconnectWebSocket()', async () => {
+    await connectWebSocket()
+    disconnectWebSocket()
+    mockApiGet.mockClear()
+
+    const handler = getBusHandler('api:online')
+    await handler!()
+
+    expect(mockApiGet).not.toHaveBeenCalled()
+  })
+
+  it('does NOT reconnect on api:online when socket is already OPEN', async () => {
+    // Mock socket with OPEN status (already connected)
+    mockUseWebSocket.mockReturnValueOnce({ close: mockClose, status: { value: 'OPEN' } })
+    await connectWebSocket()
+    mockApiGet.mockClear()
+
+    const handler = getBusHandler('api:online')
+    await handler!()
+
+    expect(mockApiGet).not.toHaveBeenCalled()
   })
 })
