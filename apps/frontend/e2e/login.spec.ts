@@ -1,24 +1,29 @@
 import { test, expect } from '@playwright/test'
 
-const MAILDEV_API = process.env.MAILDEV_URL || 'http://localhost:1080'
+const MAILPIT_API = process.env.MAILPIT_URL || 'http://localhost:1080'
 const TEST_EMAIL = 'e2e-login@froggle.org'
 
 async function deleteAllEmails() {
-  await fetch(`${MAILDEV_API}/email/all`, { method: 'DELETE' })
+  await fetch(`${MAILPIT_API}/api/v1/messages`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ IDs: [] }),
+  })
 }
 
 async function getLatestOtp(): Promise<string> {
   for (let i = 0; i < 20; i++) {
-    const res = await fetch(`${MAILDEV_API}/email`)
-    const emails = await res.json()
-    const match = emails.find(
+    const res = await fetch(`${MAILPIT_API}/api/v1/messages`)
+    const data = await res.json()
+    const match = (data.messages ?? []).find(
       (e: any) =>
-        e.to?.[0]?.address === TEST_EMAIL &&
-        e.subject?.toLowerCase().includes('login')
+        e.To?.[0]?.Address === TEST_EMAIL &&
+        e.Subject?.toLowerCase().includes('login')
     )
     if (match) {
-      // OTP may be in text or html body
-      const body = match.text || match.html || ''
+      const msgRes = await fetch(`${MAILPIT_API}/api/v1/message/${match.ID}`)
+      const msg = await msgRes.json()
+      const body = msg.Text || msg.HTML || ''
       const otpMatch = body.match(/\b(\d{6})\b/)
       if (otpMatch) return otpMatch[1]
     }
@@ -53,7 +58,7 @@ test.describe('Login flow (e2e)', () => {
     // 5. Should redirect to OTP page
     await page.waitForURL('**/auth/otp', { timeout: 10000 })
 
-    // 6. Fetch OTP from MailDev
+    // 6. Fetch OTP from Mailpit
     const otp = await getLatestOtp()
     expect(otp).toMatch(/^\d{6}$/)
 

@@ -1,28 +1,34 @@
 import { test, expect } from '@playwright/test'
 
-const MAILDEV_API = process.env.MAILDEV_URL || 'http://localhost:1080'
+const MAILPIT_API = process.env.MAILPIT_URL || 'http://localhost:1080'
 // Use a timestamped email (dots only, no +) so each run creates a fresh unregistered user
 const TEST_EMAIL = `e2e.register.${Date.now()}@froggle.org`
 
 async function deleteEmailsForAddress(address: string) {
-  const res = await fetch(`${MAILDEV_API}/email`)
-  const emails = await res.json()
-  const toDelete = emails.filter((e: any) => e.to?.[0]?.address === address)
-  for (const email of toDelete) {
-    await fetch(`${MAILDEV_API}/email/${email.id}`, { method: 'DELETE' })
+  const res = await fetch(`${MAILPIT_API}/api/v1/messages`)
+  const data = await res.json()
+  const toDelete = (data.messages ?? []).filter((e: any) => e.To?.[0]?.Address === address)
+  if (toDelete.length > 0) {
+    await fetch(`${MAILPIT_API}/api/v1/messages`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ IDs: toDelete.map((e: any) => e.ID) }),
+    })
   }
 }
 
 async function getLatestOtpForAddress(address: string): Promise<string> {
   for (let i = 0; i < 30; i++) {
-    const res = await fetch(`${MAILDEV_API}/email`)
-    const emails = await res.json()
-    const match = emails.find(
+    const res = await fetch(`${MAILPIT_API}/api/v1/messages`)
+    const data = await res.json()
+    const match = (data.messages ?? []).find(
       (e: any) =>
-        e.to?.[0]?.address === address && e.subject?.toLowerCase().includes('login')
+        e.To?.[0]?.Address === address && e.Subject?.toLowerCase().includes('login')
     )
     if (match) {
-      const body = match.text || match.html || ''
+      const msgRes = await fetch(`${MAILPIT_API}/api/v1/message/${match.ID}`)
+      const msg = await msgRes.json()
+      const body = msg.Text || msg.HTML || ''
       const otpMatch = body.match(/\b(\d{6})\b/)
       if (otpMatch) return otpMatch[1]
     }

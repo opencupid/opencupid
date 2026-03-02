@@ -8,7 +8,7 @@ Start all services (frontend apps + backend):
 pnpm dev
 ```
 
-This uses Turbo to run both the frontend (Vite, port 5173, 5174) and backend (Fastify, port 3000) in parallel. Infrastructure services (Postgres, Redis, MailDev) run via Docker.
+This uses Turbo to run both the frontend (Vite, port 5173, 5174) and backend (Fastify, port 3000) in parallel. Infrastructure services (Postgres, Redis, Mailpit) run via Docker.
 
 ### Local URLs
 
@@ -16,7 +16,7 @@ This uses Turbo to run both the frontend (Vite, port 5173, 5174) and backend (Fa
 | ---------------------- | -------------------------------------- |
 | Frontend (entry point) | <https://oc.dev.froggle.org:5173/home> |
 | Backend API            | <https://oc.dev.froggle.org:3000>      |
-| MailDev (email inbox)  | <http://oc.dev.froggle.org:1080/#/>    |
+| Mailpit (email inbox)  | <http://oc.dev.froggle.org:1080/>      |
 | Tolgee (translation UI) | <http://localhost:8085>               |
 
 ### Login flow
@@ -25,11 +25,11 @@ The app uses magic link (OTP) authentication — no passwords.
 
 1. Go to <https://oc.dev.froggle.org:5173/auth>
 2. Enter email: `mookie@froggle.org`
-3. Open MailDev at <http://oc.dev.froggle.org:1080/#/>
+3. Open Mailpit at <http://oc.dev.froggle.org:1080/>
 4. Find the login email, copy the OTP token
 5. Paste the token back on the login page at `/auth/otp`
 
-MailDev captures all transactional emails sent by the app (login tokens, notifications, etc.) regardless of recipient address.
+Mailpit captures all transactional emails sent by the app (login tokens, notifications, etc.) regardless of recipient address.
 
 ### Tolgee (translation management)
 

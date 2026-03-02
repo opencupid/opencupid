@@ -12,7 +12,7 @@ OpenCupid is a free, open-source matchmaking application built as a Vue 3 + Node
 - **Backend**: Node.js + Fastify + Prisma ORM + TypeScript
 - **Database**: PostgreSQL
 - **Cache**: Redis
-- **Email**: SMTP (MailDev for development)
+- **Email**: SMTP (Mailpit for development)
 - **Package Manager**: pnpm (required)
 - **Build Tool**: Turbo (monorepo orchestration)
 - **Testing**: Vitest (unit tests), Playwright (E2E tests)
