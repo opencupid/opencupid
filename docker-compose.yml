@@ -25,6 +25,33 @@ services:
     ports:
       - '6379:6379'
 
+  tolgee-db:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: tolgee
+      POSTGRES_USER: tolgee
+      POSTGRES_PASSWORD: tolgee
+    volumes:
+      - tolgee_postgres_data:/var/lib/postgresql/data
+
+  tolgee:
+    image: tolgee/tolgee
+    restart: unless-stopped
+    ports:
+      - '8085:8080'
+    environment:
+      tolgee_postgres_autostart_enabled: false
+      SPRING_DATASOURCE_URL: jdbc:postgresql://tolgee-db:5432/tolgee
+      SPRING_DATASOURCE_USERNAME: tolgee
+      SPRING_DATASOURCE_PASSWORD: tolgee
+      TOLGEE_AUTHENTICATION_INITIAL_USERNAME: admin
+      TOLGEE_AUTHENTICATION_INITIAL_PASSWORD: admin
+    volumes:
+      - tolgee_data:/data
+    depends_on:
+      - tolgee-db
+
   jitsi-web:
     image: jitsi/web:stable
     restart: unless-stopped
@@ -112,3 +139,5 @@ volumes:
   jitsi-meet-cfg-prosody:
   jitsi-meet-cfg-jicofo:
   jitsi-meet-cfg-jvb:
+  tolgee_postgres_data:
+  tolgee_data:
