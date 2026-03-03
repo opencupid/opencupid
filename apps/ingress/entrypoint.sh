@@ -3,7 +3,7 @@ set -eu
 
 CONF=/usr/local/openresty/nginx/conf
 
-envsubst '${DOMAIN} ${ADMIN_DOMAIN}' \
+envsubst '${DOMAIN} ${ADMIN_DOMAIN} ${CSP_ALLOWED_DOMAINS}' \
   < "$CONF/conf.d/https.conf.tmpl" \
   > "$CONF/conf.d/https.conf"
 

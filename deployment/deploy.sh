@@ -71,6 +71,19 @@ $SSH "cd ~/opencupid && docker compose  pull --quiet"
 # ── Start services ────────────────────────────────────────────────────────
 $SSH "cd ~/opencupid && docker compose  up -d"
 
+# ── Obtain TLS cert from LetsEncrypt ───────────────────────────────────────────────────────────────
+$SSH "cd ~/opencupid && source .env && docker compose run --rm --service-ports certbot certonly \
+  --webroot -w /var/www/html \
+  --email '$EMAIL' \
+  --agree-tos \
+  --no-eff-email \
+  -d '$DOMAIN' \
+  -d '$ADMIN_DOMAIN' \
+  -d '$JITSI_DOMAIN'"
+
+# ── Restart ingress  to apply cert ───────────────────────────────────────────────────────────────
+$SSH "cd ~/opencupid && docker compose restart ingress"
+
 # ── Run database migrations ───────────────────────────────────────────────────
 
 echo "Running database migrations..."
