@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { type LocationDTO } from '@zod/dto/location.dto'
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
 import { type GenderType, type PronounsType } from '@zod/generated'
 import { type EditProfileForm } from '@zod/profile/profile.form'
+import type { ProfileOptInSettings } from '@zod/profile/profile.dto'
 
 import SpinnerComponent from '@/features/shared/ui/SpinnerComponent.vue'
 import ErrorComponent from '@/features/shared/ui/ErrorComponent.vue'
@@ -48,6 +49,20 @@ const formData = reactive({
 } as EditProfileForm)
 
 const error = ref('')
+const optInModel = computed<ProfileOptInSettings>({
+  get() {
+    return (
+      profileStore.optInSettings ?? {
+        isCallable: true,
+        newsletterOptIn: false,
+        isPushNotificationEnabled: false,
+      }
+    )
+  },
+  set(value) {
+    profileStore.optInSettings = value
+  },
+})
 
 const router = useRouter()
 
@@ -136,10 +151,8 @@ onMounted(async () => {
               ></div>
 
               <!-- Right: opt-ins + CTAs -->
-              <div
-                class="d-flex flex-column gap-3 flex-grow-1 w-100"
-              >
-                <OptInCheckboxes />
+              <div class="d-flex flex-column gap-3 flex-grow-1 w-100">
+                <OptInCheckboxes v-model="optInModel" />
 
                 <!-- Browse CTA -->
                 <div class="d-flex flex-column align-items-center align-items-lg-start gap-2">

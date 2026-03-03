@@ -3,6 +3,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 
 import { useColorMode } from 'bootstrap-vue-next'
 import { type LoginUser } from '@zod/user/user.dto'
+import type { ProfileOptInSettings } from '@zod/profile/profile.dto'
 
 import { useMessageStore } from '@/features/messaging/stores/messageStore'
 import { useAuthStore } from '@/features/auth/stores/authStore'
@@ -32,6 +33,20 @@ const localStore = useLocalStore()
 
 const user = reactive({} as LoginUser)
 const isLoading = ref(true)
+const optInModel = computed<ProfileOptInSettings>({
+  get() {
+    return (
+      ownerProfileStore.optInSettings ?? {
+        isCallable: true,
+        newsletterOptIn: false,
+        isPushNotificationEnabled: false,
+      }
+    )
+  },
+  set(value) {
+    ownerProfileStore.optInSettings = value
+  },
+})
 
 // const mode = useColorMode({
 //   selector: 'html',
@@ -125,7 +140,7 @@ function handleClick() {
               <LanguageSelectorDropdown size="md" />
             </fieldset>
 
-            <OptInCheckboxes />
+            <OptInCheckboxes v-model="optInModel" />
           </BOverlay>
         </section>
         <div class="position-fixed bottom-0 w-100 p-2">

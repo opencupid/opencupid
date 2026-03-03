@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import PushPermissions from './PushPermissions.vue'
@@ -11,16 +11,15 @@ defineProps<{
 
 const { t } = useI18n()
 const ownerProfileStore = useOwnerProfileStore()
+const model = defineModel<ProfileOptInSettings>({
+  default: () => ({
+    isCallable: true,
+    newsletterOptIn: false,
+    isPushNotificationEnabled: false,
+  }),
+})
 
 const isSaving = ref(false)
-const optIn = reactive({} as ProfileOptInSettings)
-
-onMounted(async () => {
-  const res = await ownerProfileStore.fetchOptInSettings()
-  if (res.success && res.data) {
-    Object.assign(optIn, res.data)
-  }
-})
 
 async function handleCallableChange(event: Event) {
   const checkbox = event.target as HTMLInputElement
@@ -32,7 +31,7 @@ async function handleCallableChange(event: Event) {
     if (!res.success) {
       checkbox.checked = !newValue
     } else if (res.data) {
-      Object.assign(optIn, res.data)
+      model.value = res.data
     }
   } catch {
     checkbox.checked = !newValue
@@ -50,7 +49,7 @@ async function handleNewsletterOptInChange(event: Event) {
     const res = await ownerProfileStore.updateOptInSettings({ newsletterOptIn: newValue })
     if (res.success) {
       if (res.data) {
-        Object.assign(optIn, res.data)
+        model.value = res.data
       }
     } else {
       checkbox.checked = !newValue
@@ -63,13 +62,21 @@ async function handleNewsletterOptInChange(event: Event) {
     isSaving.value = false
   }
 }
+
+async function handlePushChange(value: boolean) {
+  const res = await ownerProfileStore.updateOptInSettings({ isPushNotificationEnabled: value })
+  if (res.success && res.data) {
+    model.value = res.data
+  }
+}
 </script>
 
 <template>
   <fieldset class="mb-3">
     <PushPermissions
-      v-model="optIn.isPushNotificationEnabled"
+      :model-value="model.isPushNotificationEnabled"
       :disabled="disabled || isSaving"
+      @update:modelValue="handlePushChange"
     />
   </fieldset>
 
@@ -79,7 +86,7 @@ async function handleNewsletterOptInChange(event: Event) {
         id="callable-opt-in"
         type="checkbox"
         class="form-check-input"
-        :checked="ownerProfileStore.profile?.isCallable ?? true"
+        :checked="model.isCallable"
         :disabled="disabled || isSaving"
         @change="handleCallableChange"
       />
@@ -98,7 +105,7 @@ async function handleNewsletterOptInChange(event: Event) {
         id="newsletter-opt-in"
         type="checkbox"
         class="form-check-input"
-        :checked="optIn.newsletterOptIn"
+        :checked="model.newsletterOptIn"
         :disabled="disabled || isSaving"
         @change="handleNewsletterOptInChange"
       />
