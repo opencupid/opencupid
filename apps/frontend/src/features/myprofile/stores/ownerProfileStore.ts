@@ -3,19 +3,25 @@ import { bus } from '@/lib/bus'
 import { api, isApiOnline, safeApiCall } from '@/lib/api'
 import type {
   OwnerProfile,
+  ProfileOptInSettings,
   ProfileScope,
   PublicProfile,
   PublicProfileWithContext,
+  UpdateProfileOptInPayload,
   UpdateProfileScopePayload,
 } from '@zod/profile/profile.dto'
 import {
+  ProfileOptInSettingsSchema,
   OwnerProfileSchema,
+  UpdateProfileOptInPayloadSchema,
   PublicProfileSchema,
   UpdateProfileScopeSchemaPayload,
 } from '@zod/profile/profile.dto'
 import type {
+  GetProfileOptInResponse,
   GetMyProfileResponse,
   GetPublicProfileResponse,
+  UpdateProfileOptInResponse,
   UpdateProfileResponse,
 } from '@zod/apiResponse.dto'
 import {
@@ -31,6 +37,7 @@ export type PublicProfileResponse = StoreResponse<PublicProfileWithContext> | St
 
 interface ProfileStoreState {
   profile: OwnerProfile | null
+  optInSettings: ProfileOptInSettings | null
   profileScopes: ProfileScope[]
   isLoading: boolean
   error: StoreError | null
@@ -39,6 +46,7 @@ interface ProfileStoreState {
 export const useOwnerProfileStore = defineStore('ownerProfile', {
   state: (): ProfileStoreState => ({
     profile: null as OwnerProfile | null,
+    optInSettings: null,
     profileScopes: [],
     isLoading: false,
     error: null,
@@ -125,6 +133,57 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
       }
     },
 
+    async fetchOptInSettings(): Promise<StoreResponse<ProfileOptInSettings> | StoreError> {
+      try {
+        this.isLoading = true
+        const res = await safeApiCall(() => api.get<GetProfileOptInResponse>('/profiles/me/optin'))
+        const parsed = ProfileOptInSettingsSchema.safeParse(res.data.optIn)
+        if (!parsed.success) {
+          return storeError(parsed.error, 'Invalid opt-in settings received')
+        }
+        this.optInSettings = parsed.data
+        if (this.profile) {
+          this.profile.isCallable = parsed.data.isCallable
+        }
+        return storeSuccess(parsed.data)
+      } catch (error: any) {
+        return storeError(error, 'Failed to fetch opt-in settings')
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    async updateOptInSettings(
+      payload: UpdateProfileOptInPayload
+    ): Promise<StoreResponse<ProfileOptInSettings> | StoreError> {
+      const parsedPayload = UpdateProfileOptInPayloadSchema.safeParse(payload)
+      if (!parsedPayload.success) {
+        return storeError(parsedPayload.error, 'Invalid opt-in settings update payload')
+      }
+
+      try {
+        this.isLoading = true
+        const res = await safeApiCall(() =>
+          api.patch<UpdateProfileOptInResponse>('/profiles/me/optin', parsedPayload.data)
+        )
+        const parsed = ProfileOptInSettingsSchema.safeParse(res.data.optIn)
+        if (!parsed.success) {
+          return storeError(parsed.error, 'Invalid opt-in settings received')
+        }
+
+        this.optInSettings = parsed.data
+        if (this.profile) {
+          this.profile.isCallable = parsed.data.isCallable
+        }
+
+        return storeSuccess(parsed.data)
+      } catch (error: any) {
+        return storeError(error, 'Failed to update opt-in settings')
+      } finally {
+        this.isLoading = false
+      }
+    },
+
     async persistOwnerProfile(): Promise<StoreVoidSuccess | StoreError> {
       try {
         this.isLoading = true // Set loading state
@@ -169,6 +228,7 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
 
     reset() {
       this.profile = null // Reset profile
+      this.optInSettings = null
       this.isLoading = false // Reset loading state
     },
   },

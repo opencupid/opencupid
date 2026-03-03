@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { api } from '@/lib/api'
 import { useI18n } from 'vue-i18n'
+import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 
 const props = defineProps<{
   modelValue: boolean
@@ -13,6 +14,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const ownerProfileStore = useOwnerProfileStore()
 
 const isSupported =
   'serviceWorker' in navigator && 'Notification' in window && 'PushManager' in window
@@ -51,7 +53,12 @@ async function handleChange(event: Event) {
       })
 
       await api.post('/push/subscription', subscription)
-      await api.patch('/users/me', { isPushNotificationEnabled: true })
+      const updateRes = await ownerProfileStore.updateOptInSettings({
+        isPushNotificationEnabled: true,
+      })
+      if (!updateRes.success) {
+        throw new Error(updateRes.message)
+      }
       emit('update:modelValue', true)
     } else {
       const registration = await navigator.serviceWorker.ready
@@ -59,7 +66,12 @@ async function handleChange(event: Event) {
       if (subscription) {
         await subscription.unsubscribe()
       }
-      await api.patch('/users/me', { isPushNotificationEnabled: false })
+      const updateRes = await ownerProfileStore.updateOptInSettings({
+        isPushNotificationEnabled: false,
+      })
+      if (!updateRes.success) {
+        throw new Error(updateRes.message)
+      }
       emit('update:modelValue', false)
     }
   } catch (error) {

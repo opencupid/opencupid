@@ -66,7 +66,10 @@ const makeReq = (overrides: any = {}) => ({
 
 beforeEach(async () => {
   fastify = new MockFastify()
-  const mockTx = { profile: { count: vi.fn().mockResolvedValue(0) } }
+  const mockTx = {
+    profile: { count: vi.fn().mockResolvedValue(0) },
+    pushSubscription: { deleteMany: vi.fn().mockResolvedValue({ count: 0 }) },
+  }
   fastify.prisma = { $transaction: vi.fn((fn: any) => fn(mockTx)) }
   reply = new MockReply()
   mockProfileService = {
@@ -75,6 +78,8 @@ beforeEach(async () => {
     getProfileWithContextById: vi.fn(),
     getProfileByUserId: vi.fn(),
     updateCompleteProfile: vi.fn(),
+    getOptInSettingsByUserId: vi.fn(),
+    updateOptInSettingsByUserId: vi.fn(),
     updateScopes: vi.fn(),
     blockProfile: vi.fn(),
     unblockProfile: vi.fn(),
@@ -117,6 +122,34 @@ describe('GET /me', () => {
 
     await handler(makeReq(), reply as any)
     expect(reply.statusCode).toBe(500)
+  })
+})
+
+describe('GET /me/optin', () => {
+  it('returns 200 with opt-in settings', async () => {
+    const handler = fastify.routes['GET /me/optin']
+    mockProfileService.getOptInSettingsByUserId.mockResolvedValue({
+      isCallable: false,
+      newsletterOptIn: true,
+      isPushNotificationEnabled: true,
+    })
+
+    await handler(makeReq(), reply as any)
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    expect(reply.payload.optIn).toEqual({
+      isCallable: false,
+      newsletterOptIn: true,
+      isPushNotificationEnabled: true,
+    })
+  })
+
+  it('returns 404 when profile is not found', async () => {
+    const handler = fastify.routes['GET /me/optin']
+    mockProfileService.getOptInSettingsByUserId.mockResolvedValue(null)
+
+    await handler(makeReq(), reply as any)
+    expect(reply.statusCode).toBe(404)
   })
 })
 
@@ -251,6 +284,43 @@ describe('PATCH /me', () => {
     await handler(req, reply as any)
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
+  })
+})
+
+describe('PATCH /me/optin', () => {
+  it('updates opt-in settings and returns 200', async () => {
+    const handler = fastify.routes['PATCH /me/optin']
+    mockProfileService.updateOptInSettingsByUserId.mockResolvedValue({
+      isCallable: true,
+      newsletterOptIn: false,
+      isPushNotificationEnabled: true,
+    })
+
+    const req = makeReq({ body: { isCallable: true, newsletterOptIn: false } })
+    await handler(req, reply as any)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    expect(mockProfileService.updateOptInSettingsByUserId).toHaveBeenCalled()
+  })
+
+  it('clears push subscriptions when push is disabled', async () => {
+    const handler = fastify.routes['PATCH /me/optin']
+    const tx = {
+      pushSubscription: { deleteMany: vi.fn().mockResolvedValue({ count: 1 }) },
+    }
+    fastify.prisma.$transaction.mockImplementation(async (fn: any) => fn(tx))
+    mockProfileService.updateOptInSettingsByUserId.mockResolvedValue({
+      isCallable: true,
+      newsletterOptIn: false,
+      isPushNotificationEnabled: false,
+    })
+
+    const req = makeReq({ body: { isPushNotificationEnabled: false } })
+    await handler(req, reply as any)
+
+    expect(tx.pushSubscription.deleteMany).toHaveBeenCalledWith({ where: { userId: 'u1' } })
+    expect(reply.statusCode).toBe(200)
   })
 })
 

@@ -11,6 +11,7 @@ import SpinnerComponent from '@/features/shared/ui/SpinnerComponent.vue'
 import ErrorComponent from '@/features/shared/ui/ErrorComponent.vue'
 import OnboardWizard from '@/features/onboarding/components/OnboardWizard.vue'
 import ViewTitle from '@/features/shared/ui/ViewTitle.vue'
+import OptInCheckboxes from '@/features/settings/components/OptInCheckboxes.vue'
 import IconOkHand from '@/assets/icons/hand_gestures/ok.svg'
 
 import { useAppStore } from '@/features/app/stores/appStore'
@@ -134,11 +135,13 @@ onMounted(async () => {
                 style="height: 8rem; align-self: center"
               ></div>
 
-              <!-- Right: CTAs -->
+              <!-- Right: opt-ins + CTAs -->
               <div
                 v-if="!profileStore.isLoading"
                 class="d-flex flex-column gap-3 flex-grow-1 w-100"
               >
+                <OptInCheckboxes />
+
                 <!-- Browse CTA -->
                 <div class="d-flex flex-column align-items-center align-items-lg-start gap-2">
                   <div class="text-center text-lg-start">

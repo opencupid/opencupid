@@ -2,7 +2,12 @@ import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
 
 import { Profile, ProfileImage } from '@zod/generated'
-import { type UpdateProfilePayload, type UpdateProfileScopePayload } from '@zod/profile/profile.dto'
+import {
+  type ProfileOptInSettings,
+  type UpdateProfileOptInPayload,
+  type UpdateProfilePayload,
+  type UpdateProfileScopePayload,
+} from '@zod/profile/profile.dto'
 import {
   DbProfileWithContext,
   DbOwnerUpdateScalars,
@@ -87,6 +92,97 @@ export class ProfileService {
     })
   }
 
+  async getOptInSettingsByUserId(userId: string): Promise<ProfileOptInSettings | null> {
+    const profile = await prisma.profile.findUnique({
+      where: { userId },
+      select: {
+        isCallable: true,
+        user: {
+          select: {
+            newsletterOptIn: true,
+            isPushNotificationEnabled: true,
+          },
+        },
+      },
+    })
+
+    if (!profile) return null
+
+    return {
+      isCallable: profile.isCallable,
+      newsletterOptIn: profile.user.newsletterOptIn,
+      isPushNotificationEnabled: profile.user.isPushNotificationEnabled,
+    }
+  }
+
+  async updateOptInSettingsByUserId(
+    tx: Prisma.TransactionClient,
+    userId: string,
+    data: UpdateProfileOptInPayload
+  ): Promise<ProfileOptInSettings> {
+    const profileUpdateData: Prisma.ProfileUpdateInput = {}
+    if (typeof data.isCallable === 'boolean') {
+      profileUpdateData.isCallable = data.isCallable
+    }
+
+    const userUpdateData: Prisma.UserUpdateInput = {}
+    if (typeof data.newsletterOptIn === 'boolean') {
+      userUpdateData.newsletterOptIn = data.newsletterOptIn
+    }
+    if (typeof data.isPushNotificationEnabled === 'boolean') {
+      userUpdateData.isPushNotificationEnabled = data.isPushNotificationEnabled
+    }
+
+    let isCallable: boolean
+    if (Object.keys(profileUpdateData).length > 0) {
+      const profile = await tx.profile.update({
+        where: { userId },
+        data: profileUpdateData,
+        select: { isCallable: true },
+      })
+      isCallable = profile.isCallable
+    } else {
+      const profile = await tx.profile.findUnique({
+        where: { userId },
+        select: { isCallable: true },
+      })
+      if (!profile) throw new Error(`Profile not found for userId: ${userId}`)
+      isCallable = profile.isCallable
+    }
+
+    let userFlags: {
+      newsletterOptIn: boolean
+      isPushNotificationEnabled: boolean
+    } | null = null
+
+    if (Object.keys(userUpdateData).length > 0) {
+      userFlags = await tx.user.update({
+        where: { id: userId },
+        data: userUpdateData,
+        select: {
+          newsletterOptIn: true,
+          isPushNotificationEnabled: true,
+        },
+      })
+    } else {
+      userFlags = await tx.user.findUnique({
+        where: { id: userId },
+        select: {
+          newsletterOptIn: true,
+          isPushNotificationEnabled: true,
+        },
+      })
+    }
+
+    if (!userFlags) throw new Error(`User not found: ${userId}`)
+
+    return {
+      isCallable,
+      newsletterOptIn: userFlags.newsletterOptIn,
+      isPushNotificationEnabled: userFlags.isPushNotificationEnabled,
+    }
+  }
+
   /**
    * updateCompleteProfile updates a user's profile including related localized fields, tags, and images.
    * @param tx Prisma.TransactionClient - Prisma transaction client for atomic operations
@@ -124,7 +220,7 @@ export class ProfileService {
           isActive: [data.isDatingActive, data.isSocialActive].some(Boolean),
           tags: {
             set: [],
-            connect: tags.map(tagId => ({ id: tagId })),
+            connect: tags.map((tagId) => ({ id: tagId })),
           },
         },
       })
@@ -337,7 +433,7 @@ export class ProfileService {
     return prisma.profile.findMany({
       where: {
         id: {
-          notIn: blockedIds?.blockedProfiles.map(p => p.id) || [],
+          notIn: blockedIds?.blockedProfiles.map((p) => p.id) || [],
         },
         blockedByProfiles: {
           none: {
