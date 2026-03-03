@@ -12,6 +12,14 @@ bus.on('auth:logout', () => {
   disconnectWebSocket()
 })
 
+bus.on('api:online', async () => {
+  // Reconnect WebSocket when the API comes back online after an outage,
+  // unless the user explicitly logged out.
+  if (!isIntentionalClose && socket?.status.value !== 'OPEN') {
+    await connectWebSocket()
+  }
+})
+
 async function fetchTicketUrl(): Promise<boolean> {
   try {
     const res = await api.get<WsTicketResponse>('/auth/ws-ticket')
