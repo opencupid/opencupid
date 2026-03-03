@@ -73,54 +73,12 @@ services:
 
   certbot:
     image: certbot/certbot
-    restart: always
+    profiles: ["tools"]
+    env_file:
+      - .env
     volumes:
       - ${CERTBOT_ETCDIR}:/etc/letsencrypt
       - certbot-webroot:/var/www/html
-    entrypoint: /bin/sh
-    command: -c "sleep infinity"
-    env_file:
-      - .env
-
-  certbot-renew:
-    image: certbot/certbot
-    restart: 'no'
-    volumes:
-      - ${CERTBOT_ETCDIR}:/etc/letsencrypt
-      - certbot-webroot:/var/www/html
-    env_file:
-      - .env
-    entrypoint: certbot
-    command:
-      - renew
-      - --webroot
-      - -w
-      - /var/www/html
-      - --deploy-hook
-      - "echo 'Certificate renewed successfully'"
-
-  # this obtains the initial cert from letsencrypt. Should be run once manually.
-  certbot-init:
-    image: certbot/certbot
-    restart: 'no' # don't auto start this
-
-    volumes:
-      - ${CERTBOT_ETCDIR}:/etc/letsencrypt
-      - certbot-webroot:/var/www/html
-    env_file:
-      - .env
-    entrypoint: certbot
-    command:
-      - certonly
-      - -d
-      - ${DOMAIN}
-      - -d
-      - ${ADMIN_DOMAIN}
-      - --email
-      - ${EMAIL}
-      - --agree-tos
-      - --no-eff-email
-      - --standalone
 
   jitsi-web:
     image: jitsi/web:stable

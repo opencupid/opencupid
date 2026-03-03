@@ -2,14 +2,13 @@ FROM openresty/openresty:alpine-fat
 LABEL org.opencontainers.image.source=https://github.com/opencupid/opencupid
 
 RUN apk add --no-cache gettext
-# Install lua-resty-openssl from OPM
 RUN opm get xiaocang/lua-resty-openssl
 RUN opm get jkeys089/lua-resty-hmac
 
-COPY nginx.conf.template /usr/local/openresty/nginx/conf/nginx.conf.template
-COPY media_auth.lua /usr/local/openresty/nginx/
+COPY entrypoint.sh /entrypoint.sh
+COPY nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
+COPY conf.d/ /usr/local/openresty/nginx/conf/conf.d/
+COPY media_auth.lua /usr/local/openresty/nginx/media_auth.lua
 
-CMD ["/bin/sh", "-c", "envsubst '${DOMAIN} ${ADMIN_DOMAIN} ${EMAIL} ${AUTH_IMG_HMAC_SECRET} ${JITSI_DOMAIN}' <  /usr/local/openresty/nginx/conf/nginx.conf.template >  /usr/local/openresty/nginx/conf/nginx.conf && exec openresty -g 'daemon off;'"]
-
-EXPOSE 443
-EXPOSE 80
+EXPOSE 443 80
+ENTRYPOINT ["/bin/sh", "/entrypoint.sh"]
