@@ -23,6 +23,7 @@ prisma/dev.db
 # Mac/Linux
 .DS_Store
 Thumbs.db
+*.swp
 
 # Turbo
 turbo/

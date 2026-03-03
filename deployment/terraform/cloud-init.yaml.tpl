@@ -34,6 +34,15 @@ write_files:
     owner: root:root
     permissions: '0644'
 
+  - path: /etc/profile.d/set-bg.sh
+    content: |
+      if [ "$SSH_CONNECTION" != "" ]; then
+        # Set background
+        echo -ne "\033]11;#000055\007"
+      fi
+    owner: root:root
+    permissions: '0644'
+
 runcmd:
   # 4 GB swap — essential: Jitsi + Postgres + Redis fills 8 GB RAM under load
   - fallocate -l 4G /swapfile

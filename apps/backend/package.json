@@ -22,7 +22,7 @@
     "db:restore": "docker compose exec -T db sh -c 'psql -U $POSTGRES_USER $POSTGRES_DB'",
     "db:dump": "docker compose exec db sh -c 'pg_dump --data-only --no-privileges --disable-triggers -U $POSTGRES_USER $POSTGRES_DB'",
     "db:backup": "docker compose exec db sh -c 'pg_dump --clean -U $POSTGRES_USER $POSTGRES_DB'",
-    "dump:tags": "node scripts/dump-tags.js",
+    "dump:tags": "docker compose exec backend node scripts/dump-tags.js",
     "type-check": "tsc --noEmit",
     "test": "vitest --run"
   },

@@ -66,18 +66,19 @@ services:
       - '443:443'
       - '80:80'
     volumes:
-      - ${MEDIA_UPLOAD_DIR}:/var/www
-      - ${CERTBOT_ETCDIR}:/etc/letsencrypt
-      - certbot-webroot:/var/www/html
       - ${ADMIN_CA_CERT_FILE}:/etc/nginx/client-ca.crt:ro
+      - ${MEDIA_UPLOAD_DIR}:/var/www
+      - certbot-webroot:/var/www/html
+      - certbot-etcdir:/etc/letsencrypt
 
   certbot:
     image: certbot/certbot
-    profiles: ["tools"]
     env_file:
       - .env
+    depends_on:
+      - ingress
     volumes:
-      - ${CERTBOT_ETCDIR}:/etc/letsencrypt
+      - certbot-etcdir:/etc/letsencrypt
       - certbot-webroot:/var/www/html
 
   jitsi-web:
@@ -168,3 +169,4 @@ volumes:
   jitsi-meet-cfg-jicofo:
   jitsi-meet-cfg-jvb:
   certbot-webroot:
+  certbot-etcdir:
