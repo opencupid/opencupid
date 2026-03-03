@@ -35,6 +35,9 @@ const user = reactive({} as LoginUser)
 const isLoading = ref(true)
 const optInModel = computed<ProfileOptInSettings>({
   get() {
+    // TODO defaults should not be set here. This is a band-aid to silence typing errors.
+    // see also apps/frontend/src/features/onboarding/views/Onboarding.vue
+    // and implement the same fix in both places when refactoring.
     return (
       ownerProfileStore.optInSettings ?? {
         isCallable: true,
@@ -48,23 +51,9 @@ const optInModel = computed<ProfileOptInSettings>({
   },
 })
 
-// const mode = useColorMode({
-//   selector: 'html',
-//   attribute: 'data-bs-theme',
-//   storageKey: 'theme',
-//   modes: {
-//     light: 'light',
-//     dark: 'dark',
-//   },
-// })
-
-// watch(mode, newMode => {
-//   localStore.setTheme(newMode)
-// })
-
-// const changeColor = () => {
-//   mode.value = mode.value === 'dark' ? 'light' : 'dark'
-// }
+onMounted(() => {
+  ownerProfileStore.fetchOptInSettings()
+})
 
 onMounted(async () => {
   isLoading.value = true

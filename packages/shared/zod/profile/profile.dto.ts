@@ -102,10 +102,11 @@ export const UpdateProfilePayloadSchema = ProfileSchema.pick({
 
 export type UpdateProfilePayload = z.infer<typeof UpdateProfilePayloadSchema>
 
+// TODO #tech-debt - code duplication with OwnerProfileSchema
 export const ProfileOptInSettingsSchema = z.object({
-  isCallable: ProfileSchema.shape.isCallable,
-  newsletterOptIn: UserSchema.shape.newsletterOptIn,
-  isPushNotificationEnabled: UserSchema.shape.isPushNotificationEnabled,
+  isCallable: z.boolean(),
+  newsletterOptIn: z.boolean(),
+  isPushNotificationEnabled: z.boolean(),
 })
 export type ProfileOptInSettings = z.infer<typeof ProfileOptInSettingsSchema>
 

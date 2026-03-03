@@ -11,8 +11,7 @@ defineProps<{
 
 const { t } = useI18n()
 
-// TODO refactor - it's against Vue canonical pattern to pass
-// the store down as a prop.
+
 const ownerProfileStore = useOwnerProfileStore()
 const model = defineModel<ProfileOptInSettings>({
   default: () => ({
@@ -85,7 +84,6 @@ function handlePushChange(value: boolean) {
 
   <fieldset class="mb-3">
     <div class="form-check">
-      <!-- TODO use BFormCheckbox to reduce boilerplate -->
       <input
         id="callable-opt-in"
         type="checkbox"
@@ -104,7 +102,6 @@ function handlePushChange(value: boolean) {
   </fieldset>
 
   <fieldset class="mb-3">
-    <!-- TODO use BFormCheckbox to reduce boilerplate -->
     <div class="form-check">
       <input
         id="newsletter-opt-in"

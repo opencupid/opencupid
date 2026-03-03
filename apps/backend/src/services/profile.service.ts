@@ -115,6 +115,16 @@ export class ProfileService {
     }
   }
 
+  /*
+  TODO  #tech-debt - The updateOptInSettingsByUserId method executes separate queries for profile 
+  and user updates, followed by separate findUnique queries when no updates are needed
+   (lines 145-150, 168-174). Use a single query with a select that includes both profile
+    and user fields in a join, reducing the number of database round trips from potentially
+     4 queries to 2 (one for update, one for fallback read).
+
+     This function is AI slop that needs to be drastically simplified.
+    
+  */
   async updateOptInSettingsByUserId(
     tx: Prisma.TransactionClient,
     userId: string,

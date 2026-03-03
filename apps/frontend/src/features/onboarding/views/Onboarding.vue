@@ -27,7 +27,7 @@ const profileStore = useOwnerProfileStore()
 const i18nStore = useI18nStore()
 
 // TODO - refactor this as per canonical Vue pattern. This initialization
-// logic doesn't feel right in the view component.  This should happen 
+// logic doesn't feel right in the view component. This should happen 
 // elsewhere, e.g. in ownerProfileStore 
 const formData = reactive({
   publicName: '',
@@ -54,6 +54,14 @@ const formData = reactive({
 const error = ref('')
 const optInModel = computed<ProfileOptInSettings>({
   get() {
+    // TODO refactor this as per canonical Vue patterns.  
+    // Defaults should not be set here - is a band-aid to 
+    // silence typing errors.
+    // When refactoring this, see also apps/frontend/src/features/settings/views/Settings.vue
+    // and apply the same pattern in both places.
+
+    // This only works because we're dealing with a new profile and have the defaults 
+    // set in schema.prisma but in fact this is buggy.
     return (
       profileStore.optInSettings ?? {
         isCallable: true,
