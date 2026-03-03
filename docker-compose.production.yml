@@ -75,8 +75,7 @@ services:
     image: certbot/certbot
     env_file:
       - .env
-    depends_on:
-      - ingress
+
     volumes:
       - certbot-etcdir:/etc/letsencrypt
       - certbot-webroot:/var/www/html
