@@ -1,9 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
+import type { VueWrapper } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { defineComponent } from 'vue'
 import { useUpdateChecker } from '../useUpdateChecker'
 import { useAppStore } from '../../stores/appStore'
+import { bus } from '@/lib/bus'
 
 // Helper component to trigger lifecycle hooks
 function mountWithChecker() {
@@ -18,12 +20,22 @@ function mountWithChecker() {
 }
 
 describe('useUpdateChecker', () => {
+  const wrappers: VueWrapper[] = []
+
   beforeEach(() => {
     vi.useFakeTimers()
     setActivePinia(createPinia())
   })
 
   afterEach(() => {
+    while (wrappers.length > 0) {
+      const wrapper = wrappers.pop()
+      try {
+        wrapper?.unmount()
+      } catch {
+        // ignore already-unmounted wrappers
+      }
+    }
     vi.useRealTimers()
   })
 
@@ -31,10 +43,15 @@ describe('useUpdateChecker', () => {
     const appStore = useAppStore()
     const spy = vi.spyOn(appStore, 'checkVersion').mockResolvedValue({
       success: true,
-      data: { updateAvailable: false, frontendVersion: '0.5.0', backendVersion: '1.0.0', currentVersion: '0.5.0' },
+      data: {
+        updateAvailable: false,
+        frontendVersion: '0.5.0',
+        backendVersion: '1.0.0',
+        currentVersion: '0.5.0',
+      },
     })
 
-    mountWithChecker()
+    wrappers.push(mountWithChecker())
 
     // flush the microtask from the immediate call
     await flushPromises()
@@ -42,14 +59,87 @@ describe('useUpdateChecker', () => {
     expect(spy).toHaveBeenCalledTimes(1)
   })
 
+  it('calls checkVersion immediately when api:online is emitted', async () => {
+    const appStore = useAppStore()
+    const spy = vi.spyOn(appStore, 'checkVersion').mockResolvedValue({
+      success: true,
+      data: {
+        updateAvailable: false,
+        frontendVersion: '0.5.0',
+        backendVersion: '1.0.0',
+        currentVersion: '0.5.0',
+      },
+    })
+
+    wrappers.push(mountWithChecker())
+    await flushPromises()
+    expect(spy).toHaveBeenCalledTimes(1)
+
+    bus.emit('api:online')
+    await flushPromises()
+
+    expect(spy).toHaveBeenCalledTimes(2)
+  })
+
+  it('queues a follow-up check when api:online fires during an in-flight check', async () => {
+    const appStore = useAppStore()
+    let resolveFirstCheck!: () => void
+    const firstCheck = new Promise<void>((resolve) => {
+      resolveFirstCheck = resolve
+    })
+
+    const spy = vi
+      .spyOn(appStore, 'checkVersion')
+      .mockImplementationOnce(async () => {
+        await firstCheck
+        return {
+          success: true,
+          data: {
+            updateAvailable: false,
+            frontendVersion: '0.5.0',
+            backendVersion: '1.0.0',
+            currentVersion: '0.5.0',
+          },
+        }
+      })
+      .mockResolvedValue({
+        success: true,
+        data: {
+          updateAvailable: false,
+          frontendVersion: '0.5.0',
+          backendVersion: '1.0.0',
+          currentVersion: '0.5.0',
+        },
+      })
+
+    wrappers.push(mountWithChecker())
+    await flushPromises()
+    expect(spy).toHaveBeenCalledTimes(1)
+
+    bus.emit('api:online')
+    await flushPromises()
+    expect(spy).toHaveBeenCalledTimes(1)
+
+    resolveFirstCheck()
+    await flushPromises()
+    await flushPromises()
+
+    expect(spy).toHaveBeenCalledTimes(2)
+  })
+
   it('schedules periodic checks after the initial call', async () => {
     const appStore = useAppStore()
     const spy = vi.spyOn(appStore, 'checkVersion').mockResolvedValue({
       success: true,
-      data: { updateAvailable: false, frontendVersion: '0.5.0', backendVersion: '1.0.0', currentVersion: '0.5.0' },
+      data: {
+        updateAvailable: false,
+        frontendVersion: '0.5.0',
+        backendVersion: '1.0.0',
+        currentVersion: '0.5.0',
+      },
     })
 
-    mountWithChecker()
+    wrappers.push(mountWithChecker())
     await flushPromises()
 
     expect(spy).toHaveBeenCalledTimes(1)
@@ -69,10 +159,16 @@ describe('useUpdateChecker', () => {
     const appStore = useAppStore()
     const spy = vi.spyOn(appStore, 'checkVersion').mockResolvedValue({
       success: true,
-      data: { updateAvailable: false, frontendVersion: '0.5.0', backendVersion: '1.0.0', currentVersion: '0.5.0' },
+      data: {
+        updateAvailable: false,
+        frontendVersion: '0.5.0',
+        backendVersion: '1.0.0',
+        currentVersion: '0.5.0',
+      },
     })
 
     const wrapper = mountWithChecker()
+    wrappers.push(wrapper)
     await flushPromises()
 
     expect(spy).toHaveBeenCalledTimes(1)
@@ -90,7 +186,7 @@ describe('useUpdateChecker', () => {
     const appStore = useAppStore()
     const spy = vi.spyOn(appStore, 'checkVersion').mockRejectedValue(new Error('Network error'))
 
-    mountWithChecker()
+    wrappers.push(mountWithChecker())
 
     // Should not throw
     await flushPromises()
@@ -105,7 +201,7 @@ describe('useUpdateChecker', () => {
       message: 'Server error',
     })
 
-    mountWithChecker()
+    wrappers.push(mountWithChecker())
     await flushPromises()
 
     // First call done
@@ -137,15 +233,25 @@ describe('useUpdateChecker', () => {
       // Second call: success
       .mockResolvedValueOnce({
         success: true,
-        data: { updateAvailable: false, frontendVersion: '0.5.0', backendVersion: '1.0.0', currentVersion: '0.5.0' },
+        data: {
+          updateAvailable: false,
+          frontendVersion: '0.5.0',
+          backendVersion: '1.0.0',
+          currentVersion: '0.5.0',
+        },
       })
       // Third call: success
       .mockResolvedValueOnce({
         success: true,
-        data: { updateAvailable: false, frontendVersion: '0.5.0', backendVersion: '1.0.0', currentVersion: '0.5.0' },
+        data: {
+          updateAvailable: false,
+          frontendVersion: '0.5.0',
+          backendVersion: '1.0.0',
+          currentVersion: '0.5.0',
+        },
       })
 
-    mountWithChecker()
+    wrappers.push(mountWithChecker())
     await flushPromises()
 
     // First call (failure) done — next delay = 10 min
@@ -166,7 +272,7 @@ describe('useUpdateChecker', () => {
       message: 'error',
     })
 
-    mountWithChecker()
+    wrappers.push(mountWithChecker())
     await flushPromises()
 
     // Failure 1 done. Next delays: 10min, 20min, 30min (capped), 30min, ...

@@ -1,12 +1,9 @@
 import { defineStore } from 'pinia'
-import { api } from '@/lib/api'
+import { api, getVersionInfo } from '@/lib/api'
 import { LocationSchema, type LocationDTO } from '@zod/dto/location.dto'
-import { VersionSchema, type VersionDTO } from '@zod/dto/version.dto'
-import type { LocationResponse, VersionResponse } from '@zod/apiResponse.dto'
+import { type VersionDTO } from '@zod/dto/version.dto'
+import type { LocationResponse } from '@zod/apiResponse.dto'
 import { storeSuccess, storeError, type StoreResponse } from '@/store/helpers'
-
-// Get the current frontend version
-const CURRENT_VERSION = __APP_VERSION__
 
 export const useAppStore = defineStore('app', {
   state: () => ({
@@ -29,10 +26,7 @@ export const useAppStore = defineStore('app', {
     },
     async checkVersion(): Promise<StoreResponse<VersionDTO>> {
       try {
-        const res = await api.get<VersionResponse>('/app/version', {
-          params: { v: CURRENT_VERSION },
-        })
-        const parsed = VersionSchema.parse(res.data.version)
+        const parsed = await getVersionInfo()
 
         // Update state
         this.updateAvailable = parsed.updateAvailable

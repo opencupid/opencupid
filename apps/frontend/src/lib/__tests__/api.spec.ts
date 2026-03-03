@@ -1,7 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from 'vitest'
+import { getVersionInfo, api } from '../api'
+import packageJson from '../../../package.json'
 
 // Mock the bus module
-const mockEmit = vi.fn()
+const { mockEmit } = vi.hoisted(() => ({
+  mockEmit: vi.fn(),
+}))
 vi.mock('../bus', () => ({
   bus: {
     emit: mockEmit,
@@ -89,5 +93,51 @@ describe('api error handling', () => {
 
       expect(isNetworkError).toBe(true)
     }
+  })
+
+  it('getVersionInfo requests /app/version and parses response', async () => {
+    const getSpy = vi.spyOn(api, 'get').mockResolvedValue({
+      data: {
+        version: {
+          updateAvailable: false,
+          frontendVersion: packageJson.version,
+          backendVersion: '1.0.0',
+          currentVersion: packageJson.version,
+        },
+      },
+    } as any)
+
+    const result = await getVersionInfo()
+
+    expect(result).toEqual({
+      updateAvailable: false,
+      frontendVersion: packageJson.version,
+      backendVersion: '1.0.0',
+      currentVersion: packageJson.version,
+    })
+    expect(getSpy).toHaveBeenCalledWith('/app/version', {
+      params: { v: packageJson.version },
+      timeout: undefined,
+    })
+  })
+
+  it('getVersionInfo forwards timeout option', async () => {
+    const getSpy = vi.spyOn(api, 'get').mockResolvedValue({
+      data: {
+        version: {
+          updateAvailable: true,
+          frontendVersion: '9.9.9',
+          backendVersion: '1.0.0',
+          currentVersion: packageJson.version,
+        },
+      },
+    } as any)
+
+    await getVersionInfo({ timeout: 5000 })
+
+    expect(getSpy).toHaveBeenCalledWith('/app/version', {
+      params: { v: packageJson.version },
+      timeout: 5000,
+    })
   })
 })
