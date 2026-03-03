@@ -46,8 +46,6 @@ export const configSchema = z.object({
 
   VOICE_MESSAGE_MAX_DURATION: z.coerce.number().default(120), // Max duration in seconds
 
-  GOOGLE_APPLICATION_CREDENTIALS: z.string(),
-
   RATE_LIMIT_PROFILE_SCOPES: z.coerce.number().default(1),
 
   WELCOME_MESSAGE_SENDER_PROFILE_ID: z.string().optional(),
