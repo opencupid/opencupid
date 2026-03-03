@@ -23,7 +23,7 @@
   ],
   "portsAttributes": {
     "1080": {
-      "label": "Maildev",
+      "label": "Mailpit",
       "visibility": "private",
       "protocol": "http"
     },

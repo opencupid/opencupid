@@ -11,12 +11,19 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  maildev:
+  mailpit:
+    image: axllent/mailpit
+    container_name: mailpit
     restart: unless-stopped
-    image: maildev/maildev
+    volumes:
+      - mailpit_data:/data
     ports:
-      - '1080:1080'
+      - '1080:8025'
       - '1025:1025'
+    environment:
+      MP_MAX_MESSAGES: 5000
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
 
   redis:
     image: redis:8
@@ -139,6 +146,7 @@ services:
 
 volumes:
   postgres_data:
+  mailpit_data:
   jitsi-meet-cfg-web:
   jitsi-meet-cfg-prosody:
   jitsi-meet-cfg-jicofo:

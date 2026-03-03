@@ -21,7 +21,7 @@ Already configured in `.claude/settings.json` — no further setup needed after 
 ## Getting started with development
 
 ```bash
-docker compose up -d   # start DB, Redis and Maildev
+docker compose up -d   # start DB, Redis and Mailpit
 pnpm install
 cp .env.example .env   # create default configuration
 set -a; source .env; set +a  # import configuration into current shell
