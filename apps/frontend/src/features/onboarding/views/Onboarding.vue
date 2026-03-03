@@ -54,7 +54,7 @@ const optInModel = computed<ProfileOptInSettings>({
     return (
       profileStore.optInSettings ?? {
         isCallable: true,
-        newsletterOptIn: false,
+        newsletterOptIn: true,
         isPushNotificationEnabled: false,
       }
     )

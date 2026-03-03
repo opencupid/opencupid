@@ -63,10 +63,10 @@ async function handleNewsletterOptInChange(event: Event) {
   }
 }
 
-async function handlePushChange(value: boolean) {
-  const res = await ownerProfileStore.updateOptInSettings({ isPushNotificationEnabled: value })
-  if (res.success && res.data) {
-    model.value = res.data
+function handlePushChange(value: boolean) {
+  model.value = {
+    ...model.value,
+    isPushNotificationEnabled: value,
   }
 }
 </script>

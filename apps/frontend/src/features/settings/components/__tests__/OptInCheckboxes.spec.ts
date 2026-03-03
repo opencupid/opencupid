@@ -5,7 +5,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 
 vi.mock('../PushPermissions.vue', () => ({
-  default: { template: '<div data-testid="push-permissions" />' },
+  default: {
+    props: ['modelValue', 'disabled'],
+    emits: ['update:modelValue'],
+    template:
+      '<button data-testid="push-permissions" @click="$emit(\'update:modelValue\', true)">Push</button>',
+  },
 }))
 
 import OptInCheckboxes from '../OptInCheckboxes.vue'
@@ -51,6 +56,18 @@ beforeEach(() => {
 })
 
 describe('OptInCheckboxes', () => {
+  describe('push checkbox', () => {
+    it('does not call ownerProfileStore.updateOptInSettings when push emits update', async () => {
+      const wrapper = mountComponent()
+      const store = useOwnerProfileStore()
+      store.updateOptInSettings = vi.fn().mockResolvedValue({ success: true })
+
+      await wrapper.get('[data-testid="push-permissions"]').trigger('click')
+
+      expect(store.updateOptInSettings).not.toHaveBeenCalled()
+    })
+  })
+
   describe('callable checkbox', () => {
     it('calls persistOwnerProfile when toggled', async () => {
       const wrapper = mountComponent()
