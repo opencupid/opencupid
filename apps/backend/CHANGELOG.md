@@ -1,5 +1,11 @@
 # backend
 
+## 0.17.6
+
+### Patch Changes
+
+- a519521: Added opt-in checkboxes to Onboarding wizard sequence
+
 ## 0.17.5
 
 ### Patch Changes

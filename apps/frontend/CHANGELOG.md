@@ -1,5 +1,12 @@
 # frontend
 
+## 0.19.4
+
+### Patch Changes
+
+- 87bedb9: Refactor update detection and API offline detection
+- a519521: Added opt-in checkboxes to Onboarding wizard sequence
+
 ## 0.19.3
 
 ### Patch Changes
