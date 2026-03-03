@@ -41,7 +41,7 @@ server {
       "worker-src 'self' blob:"
       .. "; media-src 'self'"
       .. "; frame-src https://*.${DOMAIN}"
-      .. "; connect-src 'self' blob: wss://${DOMAIN} https://*.${DOMAIN} https://photon.komoot.io https://api.maptiler.com"
+      .. "; connect-src 'self' blob: wss://${DOMAIN} https://*.${DOMAIN} ${CSP_ALLOWED_DOMAINS}"
     )
   }
 
