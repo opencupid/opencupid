@@ -1,24 +1,18 @@
-import { z } from "zod";
+import { z } from 'zod'
 
+import { ProfileSchema, ConversationSchema, UserSchema } from '../generated'
 
-import {
-  ProfileSchema,
-  ConversationSchema,
-} from "../generated";
-
-
-
-import { PublicTagSchema } from "../tag/tag.dto";
-import { PublicProfileImageSchema } from "./profileimage.dto";
-import { LocationSchema } from "@zod/dto/location.dto";
-import { baseFields, socialFields, datingFields, ownerFields } from "./profile.fields";
-import { InteractionContextSchema } from "@zod/interaction/interactionContext.dto";
+import { PublicTagSchema } from '../tag/tag.dto'
+import { PublicProfileImageSchema } from './profileimage.dto'
+import { LocationSchema } from '@zod/dto/location.dto'
+import { baseFields, socialFields, datingFields, ownerFields } from './profile.fields'
+import { InteractionContextSchema } from '@zod/interaction/interactionContext.dto'
 
 const PublicScalarsSchema = ProfileSchema.pick({
   ...baseFields,
   ...socialFields,
 }).extend({
-  isDatingActive: z.literal(false)
+  isDatingActive: z.literal(false),
 })
 
 const PublicDatingScalarsSchema = ProfileSchema.pick({
@@ -26,7 +20,7 @@ const PublicDatingScalarsSchema = ProfileSchema.pick({
   ...socialFields,
   ...datingFields,
 }).extend({
-  isDatingActive: z.literal(true)
+  isDatingActive: z.literal(true),
 })
 
 export const ProfileUnionSchema = z.discriminatedUnion('isDatingActive', [
@@ -44,10 +38,8 @@ export const PublicProfileSchema = ProfileUnionSchema.and(
     introSocial: z.string().default(''),
     introDating: z.string().default(''),
   })
-);
-export type PublicProfile = z.infer<typeof PublicProfileSchema>;
-
-
+)
+export type PublicProfile = z.infer<typeof PublicProfileSchema>
 
 export const PublicProfileWithContextSchema = ProfileUnionSchema.and(
   z.object({
@@ -60,29 +52,28 @@ export const PublicProfileWithContextSchema = ProfileUnionSchema.and(
     interactionContext: InteractionContextSchema,
   })
 )
-export const PublicProfileArraySchema = z.array(PublicProfileSchema);
+export const PublicProfileArraySchema = z.array(PublicProfileSchema)
 
-export type PublicProfileWithContext = z.infer<typeof PublicProfileWithContextSchema>;
-
+export type PublicProfileWithContext = z.infer<typeof PublicProfileWithContextSchema>
 
 export const OwnerScalarsSchema = ProfileSchema.pick({
   ...baseFields,
   ...socialFields,
   ...datingFields,
   ...ownerFields,
-});
+})
 
 export const LocalizedStringSchema = z.record(z.string(), z.string()).default({})
-// API -> client DTO 
+// API -> client DTO
 export const OwnerProfileSchema = OwnerScalarsSchema.extend({
   introSocialLocalized: LocalizedStringSchema,
   introDatingLocalized: LocalizedStringSchema,
 
   profileImages: z.array(PublicProfileImageSchema).default([]),
   tags: z.array(PublicTagSchema).default([]),
-  location: LocationSchema
+  location: LocationSchema,
 })
-export type OwnerProfile = z.infer<typeof OwnerProfileSchema>;
+export type OwnerProfile = z.infer<typeof OwnerProfileSchema>
 
 export type OwnerOrPublicProfile = OwnerProfile | PublicProfileWithContext
 
@@ -91,9 +82,7 @@ export const editableFields = {
   ...datingFields,
   isDatingActive: true,
   isSocialActive: true,
-
-} as const;
-
+} as const
 
 // Client -> API DTO profile editing payload
 export const UpdateProfilePayloadSchema = ProfileSchema.pick({
@@ -111,37 +100,48 @@ export const UpdateProfilePayloadSchema = ProfileSchema.pick({
   })
   .partial()
 
-export type UpdateProfilePayload = z.infer<typeof UpdateProfilePayloadSchema>;
+export type UpdateProfilePayload = z.infer<typeof UpdateProfilePayloadSchema>
 
+// TODO #tech-debt - code duplication with OwnerProfileSchema
+export const ProfileOptInSettingsSchema = z.object({
+  isCallable: z.boolean(),
+  newsletterOptIn: z.boolean(),
+  isPushNotificationEnabled: z.boolean(),
+})
+export type ProfileOptInSettings = z.infer<typeof ProfileOptInSettingsSchema>
 
+export const UpdateProfileOptInPayloadSchema = ProfileOptInSettingsSchema.partial()
+  .strict()
+  .refine((data) => Object.keys(data).length > 0, {
+    message:
+      'At least one field (isCallable, newsletterOptIn, or isPushNotificationEnabled) is required',
+  })
+export type UpdateProfileOptInPayload = z.infer<typeof UpdateProfileOptInPayloadSchema>
 
 // Client -> API DTO used in conversations
 export const ProfileSummarySchema = z.object({
   id: z.string(),
   publicName: z.string(),
-  profileImages: z.array(PublicProfileImageSchema)
+  profileImages: z.array(PublicProfileImageSchema),
 })
 
-export type ProfileSummary = z.infer<typeof ProfileSummarySchema>;
-
+export type ProfileSummary = z.infer<typeof ProfileSummarySchema>
 
 export const ProfileScopeSchema = z.enum(['social', 'dating'])
 
 export type ProfileScope = z.infer<typeof ProfileScopeSchema>
 
-
-export const UpdateProfileScopeSchemaPayload = z.object({
-  isDatingActive: z.boolean(),
-  isSocialActive: z.boolean(),
-}).partial()
+export const UpdateProfileScopeSchemaPayload = z
+  .object({
+    isDatingActive: z.boolean(),
+    isSocialActive: z.boolean(),
+  })
+  .partial()
 
 export type UpdateProfileScopePayload = z.infer<typeof UpdateProfileScopeSchemaPayload>
 
-
 export const BlockProfilePayloadSchema = z.object({
   targetId: z.string().cuid(), // The profile being blocked/unblocked
-});
+})
 
-export type BlockProfilePayload = z.infer<typeof BlockProfilePayloadSchema>;
-
-
+export type BlockProfilePayload = z.infer<typeof BlockProfilePayloadSchema>

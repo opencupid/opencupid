@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import { type LocationDTO } from '@zod/dto/location.dto'
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
 import { type GenderType, type PronounsType } from '@zod/generated'
 import { type EditProfileForm } from '@zod/profile/profile.form'
+import type { ProfileOptInSettings } from '@zod/profile/profile.dto'
 
 import SpinnerComponent from '@/features/shared/ui/SpinnerComponent.vue'
 import ErrorComponent from '@/features/shared/ui/ErrorComponent.vue'
 import OnboardWizard from '@/features/onboarding/components/OnboardWizard.vue'
 import ViewTitle from '@/features/shared/ui/ViewTitle.vue'
+import OptInCheckboxes from '@/features/settings/components/OptInCheckboxes.vue'
 import IconOkHand from '@/assets/icons/hand_gestures/ok.svg'
 
 import { useAppStore } from '@/features/app/stores/appStore'
@@ -24,6 +26,9 @@ const { t } = useI18n()
 const profileStore = useOwnerProfileStore()
 const i18nStore = useI18nStore()
 
+// TODO - refactor this as per canonical Vue pattern. This initialization
+// logic doesn't feel right in the view component. This should happen 
+// elsewhere, e.g. in ownerProfileStore 
 const formData = reactive({
   publicName: '',
   birthday: null,
@@ -47,6 +52,28 @@ const formData = reactive({
 } as EditProfileForm)
 
 const error = ref('')
+const optInModel = computed<ProfileOptInSettings>({
+  get() {
+    // TODO refactor this as per canonical Vue patterns.  
+    // Defaults should not be set here - is a band-aid to 
+    // silence typing errors.
+    // When refactoring this, see also apps/frontend/src/features/settings/views/Settings.vue
+    // and apply the same pattern in both places.
+
+    // This only works because we're dealing with a new profile and have the defaults 
+    // set in schema.prisma but in fact this is buggy.
+    return (
+      profileStore.optInSettings ?? {
+        isCallable: true,
+        newsletterOptIn: true,
+        isPushNotificationEnabled: false,
+      }
+    )
+  },
+  set(value) {
+    profileStore.optInSettings = value
+  },
+})
 
 const router = useRouter()
 
@@ -134,11 +161,10 @@ onMounted(async () => {
                 style="height: 8rem; align-self: center"
               ></div>
 
-              <!-- Right: CTAs -->
-              <div
-                v-if="!profileStore.isLoading"
-                class="d-flex flex-column gap-3 flex-grow-1 w-100"
-              >
+              <!-- Right: opt-ins + CTAs -->
+              <div class="d-flex flex-column gap-3 flex-grow-1 w-100">
+                <OptInCheckboxes v-model="optInModel" />
+
                 <!-- Browse CTA -->
                 <div class="d-flex flex-column align-items-center align-items-lg-start gap-2">
                   <div class="text-center text-lg-start">

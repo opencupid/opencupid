@@ -3,6 +3,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 
 import { useColorMode } from 'bootstrap-vue-next'
 import { type LoginUser } from '@zod/user/user.dto'
+import type { ProfileOptInSettings } from '@zod/profile/profile.dto'
 
 import { useMessageStore } from '@/features/messaging/stores/messageStore'
 import { useAuthStore } from '@/features/auth/stores/authStore'
@@ -16,7 +17,7 @@ import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 import LoadingComponent from '@/features/shared/ui/LoadingComponent.vue'
 import LogoutButton from '@/features/auth/components/LogoutButton.vue'
 import LanguageSelectorDropdown from '../../shared/ui/LanguageSelectorDropdown.vue'
-import PushPermissions from '../components/PushPermissions.vue'
+import OptInCheckboxes from '../components/OptInCheckboxes.vue'
 import VersionInfo from '../components/VersionInfo.vue'
 import RouterBackButton from '@/features/shared/ui/RouterBackButton.vue'
 import SecondaryNav from '@/features/shared/ui/SecondaryNav.vue'
@@ -32,25 +33,27 @@ const localStore = useLocalStore()
 
 const user = reactive({} as LoginUser)
 const isLoading = ref(true)
-const isSaving = ref(false)
+const optInModel = computed<ProfileOptInSettings>({
+  get() {
+    // TODO defaults should not be set here. This is a band-aid to silence typing errors.
+    // see also apps/frontend/src/features/onboarding/views/Onboarding.vue
+    // and implement the same fix in both places when refactoring.
+    return (
+      ownerProfileStore.optInSettings ?? {
+        isCallable: true,
+        newsletterOptIn: false,
+        isPushNotificationEnabled: false,
+      }
+    )
+  },
+  set(value) {
+    ownerProfileStore.optInSettings = value
+  },
+})
 
-// const mode = useColorMode({
-//   selector: 'html',
-//   attribute: 'data-bs-theme',
-//   storageKey: 'theme',
-//   modes: {
-//     light: 'light',
-//     dark: 'dark',
-//   },
-// })
-
-// watch(mode, newMode => {
-//   localStore.setTheme(newMode)
-// })
-
-// const changeColor = () => {
-//   mode.value = mode.value === 'dark' ? 'light' : 'dark'
-// }
+onMounted(() => {
+  ownerProfileStore.fetchOptInSettings()
+})
 
 onMounted(async () => {
   isLoading.value = true
@@ -69,49 +72,6 @@ onMounted(async () => {
 function handleClick() {
   authStore.logout()
   router.push({ name: 'Login' })
-}
-
-async function handleCallableChange(event: Event) {
-  const checkbox = event.target as HTMLInputElement
-  const newValue = checkbox.checked
-
-  isSaving.value = true
-  try {
-    if (ownerProfileStore.profile) {
-      ownerProfileStore.profile.isCallable = newValue
-    }
-    const res = await ownerProfileStore.persistOwnerProfile()
-    if (!res.success) {
-      checkbox.checked = !newValue
-    }
-  } catch {
-    checkbox.checked = !newValue
-  } finally {
-    isSaving.value = false
-  }
-}
-
-async function handleNewsletterOptInChange(event: Event) {
-  const checkbox = event.target as HTMLInputElement
-  const newValue = checkbox.checked
-
-  isSaving.value = true
-  try {
-    const res = await authStore.updateUser({ newsletterOptIn: newValue })
-    if (res.success) {
-      user.newsletterOptIn = newValue
-    } else {
-      // Revert checkbox if update failed
-      checkbox.checked = !newValue
-      console.error('Failed to update newsletter preference:', res.message)
-    }
-  } catch (error) {
-    // Revert checkbox if update failed
-    checkbox.checked = !newValue
-    console.error('Failed to update newsletter preference:', error)
-  } finally {
-    isSaving.value = false
-  }
 }
 </script>
 
@@ -169,47 +129,7 @@ async function handleNewsletterOptInChange(event: Event) {
               <LanguageSelectorDropdown size="md" />
             </fieldset>
 
-            <fieldset class="mb-3">
-              <PushPermissions v-model="user.isPushNotificationEnabled" />
-            </fieldset>
-
-            <fieldset class="mb-3">
-              <div class="form-check">
-                <input
-                  id="callable-opt-in"
-                  type="checkbox"
-                  class="form-check-input"
-                  :checked="ownerProfileStore.profile?.isCallable ?? true"
-                  :disabled="isSaving"
-                  @change="handleCallableChange"
-                />
-                <label
-                  class="form-check-label"
-                  for="callable-opt-in"
-                >
-                  {{ t('calls.open_to_calls_setting') }}
-                </label>
-              </div>
-            </fieldset>
-
-            <fieldset class="mb-3">
-              <div class="form-check">
-                <input
-                  id="newsletter-opt-in"
-                  type="checkbox"
-                  class="form-check-input"
-                  :checked="user.newsletterOptIn"
-                  :disabled="isSaving"
-                  @change="handleNewsletterOptInChange"
-                />
-                <label
-                  class="form-check-label"
-                  for="newsletter-opt-in"
-                >
-                  {{ t('settings.newsletter_opt_in') }}
-                </label>
-              </div>
-            </fieldset>
+            <OptInCheckboxes v-model="optInModel" />
           </BOverlay>
         </section>
         <div class="position-fixed bottom-0 w-100 p-2">

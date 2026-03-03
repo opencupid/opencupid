@@ -6,8 +6,10 @@ import { appConfig } from '@/lib/appconfig'
 import { validateBody } from '@/utils/zodValidate'
 
 import {
+  type UpdateProfileOptInPayload,
   type UpdateProfilePayload,
   type UpdateProfileScopePayload,
+  UpdateProfileOptInPayloadSchema,
   UpdateProfilePayloadSchema,
   UpdateProfileScopeSchemaPayload,
 } from '@zod/profile/profile.dto'
@@ -20,8 +22,10 @@ import {
   mapProfileWithContext,
 } from '@/api/mappers/profile.mappers'
 import type {
+  GetProfileOptInResponse,
   GetMyProfileResponse,
   GetPublicProfileResponse,
+  UpdateProfileOptInResponse,
   UpdateProfileResponse,
 } from '@zod/apiResponse.dto'
 import { GetProfileSummariesResponse } from '@zod/apiResponse.dto'
@@ -63,6 +67,50 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
     } catch (err) {
       fastify.log.error(err)
       return sendError(reply, 500, 'Failed to load profile')
+    }
+  })
+
+  /**
+   * Get opt-in flags for the current user/profile.
+   */
+  fastify.get('/me/optin', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    try {
+      const optIn = await profileService.getOptInSettingsByProfileId(req.session.profileId)
+      if (!optIn) return sendError(reply, 404, 'Social profile not found')
+      const response: GetProfileOptInResponse = { success: true, optIn }
+      return reply.code(200).send(response)
+    } catch (err) {
+      fastify.log.error(err)
+      return sendError(reply, 500, 'Failed to load opt-in settings')
+    }
+  })
+
+  /**
+   * Update opt-in flags for the current user/profile.
+   */
+  fastify.patch('/me/optin', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const data = (await validateBody(
+      UpdateProfileOptInPayloadSchema,
+      req,
+      reply
+    )) as UpdateProfileOptInPayload
+    if (!data) return
+
+    try {
+      const optIn = await fastify.prisma.$transaction(async (tx) => {
+        if (data.isPushNotificationEnabled === false) {
+          await tx.pushSubscription.deleteMany({ where: { userId: req.user.userId } })
+        }
+        return profileService.updateOptInSettingsByUserId(tx, req.user.userId, data)
+      })
+      const response: UpdateProfileOptInResponse = { success: true, optIn }
+      return reply.code(200).send(response)
+    } catch (err) {
+      fastify.log.error(err)
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
+        return sendError(reply, 404, 'Profile not found')
+      }
+      return sendError(reply, 500, 'Failed to update opt-in settings')
     }
   })
 

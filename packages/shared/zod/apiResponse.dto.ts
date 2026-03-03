@@ -10,6 +10,7 @@ export type ApiResponse<T> = ApiSuccess<T> | ApiError
 // Profile responses
 import type {
   OwnerProfile,
+  ProfileOptInSettings,
   ProfileSummary,
   PublicProfileWithContext,
 } from '@zod/profile/profile.dto'
@@ -35,10 +36,12 @@ export type GetDatingPreferencesResponse = ApiSuccess<{ prefs: DatingPreferences
 export type UpdateDatingPreferencesResponse = ApiSuccess<{ prefs: DatingPreferencesDTO }>
 
 export type GetMyProfileResponse = ApiSuccess<{ profile: OwnerProfile }>
+export type GetProfileOptInResponse = ApiSuccess<{ optIn: ProfileOptInSettings }>
 export type GetPublicProfileResponse = ApiSuccess<{ profile: PublicProfileWithContext }>
 export type GetProfilesResponse = ApiSuccess<{ profiles: PublicProfileWithContext[] }>
 export type GetMatchIdsResponse = ApiSuccess<{ ids: string[] }>
 export type UpdateProfileResponse = ApiSuccess<{ profile: OwnerProfile }>
+export type UpdateProfileOptInResponse = ApiSuccess<{ optIn: ProfileOptInSettings }>
 
 export type TagsResponse = ApiSuccess<{ tags: PublicTag[] }>
 export type TagResponse = ApiSuccess<{ tag: PublicTag }>

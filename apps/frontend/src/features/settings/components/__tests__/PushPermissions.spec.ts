@@ -5,19 +5,31 @@ vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 
 vi.mock('@/lib/api', () => {
   const post = vi.fn().mockResolvedValue({})
-  const patch = vi.fn().mockResolvedValue({})
-  return { api: { post, patch } }
+  return { api: { post } }
 })
 
 import { api } from '@/lib/api'
 import PushPermissions from '../PushPermissions.vue'
 
 const post = api.post as ReturnType<typeof vi.fn>
-const patch = api.patch as ReturnType<typeof vi.fn>
+const updateOptInSettings = vi.fn().mockResolvedValue({
+  success: true,
+  data: {
+    isCallable: true,
+    newsletterOptIn: false,
+    isPushNotificationEnabled: true,
+  },
+})
+
+vi.mock('@/features/myprofile/stores/ownerProfileStore', () => ({
+  useOwnerProfileStore: () => ({
+    updateOptInSettings,
+  }),
+}))
 
 beforeEach(() => {
   post.mockClear()
-  patch.mockClear()
+  updateOptInSettings.mockClear()
   ;(global as any).PushManager = {}
   ;(global as any).__APP_CONFIG__ = {
     VAPID_PUBLIC_KEY:
@@ -64,7 +76,7 @@ describe('PushPermissions', () => {
     expect((Notification as any).requestPermission).toHaveBeenCalled()
     expect(subscribe).toHaveBeenCalled()
     expect(post).toHaveBeenCalledWith('/push/subscription', 'sub')
-    expect(patch).toHaveBeenCalledWith('/users/me', { isPushNotificationEnabled: true })
+    expect(updateOptInSettings).toHaveBeenCalledWith({ isPushNotificationEnabled: true })
     delete (global as any).Notification
   })
 })
