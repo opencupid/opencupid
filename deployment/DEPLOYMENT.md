@@ -34,27 +34,38 @@ All domains share a single SAN certificate obtained by certbot (see [Getting sta
 # clone the repo
 git clone https://github.com/opencupid/opencupid.git && cd opencupid
 
-# create configuration from template
+# Pull production images
+docker compose pull
+
+# Create configuration from template
 cp .env.example .env
 
-# edit .env — at minimum set:
-#   COMPOSE_FILE=docker-compose.production.yml
-#   DOMAIN, ADMIN_DOMAIN, EMAIL
-#   POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB
-#   JWT_SECRET, AUTH_IMG_HMAC_SECRET
-#   JVB_ADVERTISE_IPS (public IP of the host)
+# Edit .env
 
-# create data volumes
-docker volume create postgres_data
-docker volume create certbot-etc
-docker volume create certbot-webroot
-
-# obtain TLS cert from Letsencrypt
-docker compose run --rm --service-ports certbot-init
-
-# build and start
-docker compose build
+# Start services
 docker compose up -d
+
+source .env
+
+# Obtain TLS cert from Letsencrypt
+docker compose run --rm --service-ports certbot certonly \
+  --webroot -w /var/www/html \
+  --email "$EMAIL" \
+  --agree-tos \
+  --no-eff-email \
+  -d "$DOMAIN" \
+  -d "$ADMIN_DOMAIN" \
+  -d "$JITSI_DOMAIN"
+
+# start services
+docker compose restart ingress
+```
+
+### Add cronjob for periodic cert renewal
+
+```bash
+0 3 * * * cd /srv/your-stack && /usr/bin/docker compose run --rm certbot renew
+
 ```
 
 ## Management commands

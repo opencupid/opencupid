@@ -18,7 +18,7 @@ TF_DIR="$SCRIPT_DIR/terraform"
 # : "${GHCR_TOKEN:?GHCR_TOKEN is required (GitHub PAT with read:packages scope)}"
 # : "${GHCR_USER:?GHCR_USER is required (your GitHub username)}"
 
-ENV_FILE="${ENV_FILE:-$SCRIPT_DIR/../../.env.staging}"
+ENV_FILE="${ENV_FILE:-$SCRIPT_DIR/../.env.staging}"
 if [ ! -f "$ENV_FILE" ]; then
   echo "ERROR: $ENV_FILE not found. Copy .env.example to .env.staging and fill it in."
   exit 1
@@ -66,23 +66,23 @@ if [ -f "secrets/ca.crt" ]; then
 fi
 
 # ── Pull images ───────────────────────────────────────────────────────────────
-$SSH "cd ~/opencupid && docker compose -f docker-compose.production.yml pull --quiet"
+$SSH "cd ~/opencupid && docker compose  pull --quiet"
 
 # ── Start services ────────────────────────────────────────────────────────
-$SSH "cd ~/opencupid && docker compose -f docker-compose.production.yml up -d"
+$SSH "cd ~/opencupid && docker compose  up -d"
 
 # ── Run database migrations ───────────────────────────────────────────────────
 
 echo "Running database migrations..."
-$SSH "cd ~/opencupid && docker compose -f docker-compose.production.yml exec backend npx prisma migrate deploy"
+$SSH "cd ~/opencupid && docker compose exec backend npx prisma migrate deploy"
 
 echo "Running database seeds..."
-$SSH "cd ~/opencupid && docker compose -f docker-compose.production.yml exec backend npx prisma db seed"
+$SSH "cd ~/opencupid && docker compose exec backend npx prisma db seed"
 
 
 # ── Done ──────────────────────────────────────────────────────────────────────
 STAGING_URL=$(terraform -chdir="$TF_DIR" output -raw staging_url)
 echo ""
-echo "✓ Staging deployed successfully"
+echo "✓ Deployment completed successfully"
 echo "  URL: $STAGING_URL"
 echo "  SSH: ssh $SSH_USER@$SERVER_IP"
