@@ -50,8 +50,6 @@ function startRetryMechanism() {
   retryTimeoutId = setTimeout(async () => {
     try {
       const version = await getVersionInfo()
-      // TODO this doens't reliably emit 
-      // the event for some reason
       updateAvailable = version.updateAvailable
       if (updateAvailable) {
         bus.emit('app:updateavailable')
@@ -81,7 +79,6 @@ function addRefreshSubscriber(callback: (token: string) => void) {
 
 api.interceptors.response.use(
   (response) => {
-    // console.log('API response:', isOffline, response.data)
     if (isOffline) {
       isOffline = false
 
