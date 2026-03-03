@@ -127,7 +127,6 @@ function handleApiOffline() {
 
 function handleApiOnline() {
   showApiOfflineOverlay.value = false
-
 }
 
 function handleUpdateAvailable() {

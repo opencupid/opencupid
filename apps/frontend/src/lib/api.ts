@@ -76,11 +76,9 @@ function addRefreshSubscriber(callback: (token: string) => void) {
 
 api.interceptors.response.use(
   (response) => {
+    console.log('API response:', isOffline, response.data)
     if (isOffline) {
       isOffline = false
-      bus.emit('api:online')
-      if (updateAvailable.value)
-        bus.emit('app:updateavailable')
 
       waitForRecovery.forEach((fn) => fn())
       waitForRecovery = []
@@ -88,6 +86,10 @@ api.interceptors.response.use(
       if (retryTimeoutId) {
         clearTimeout(retryTimeoutId)
         retryTimeoutId = null
+      }
+      bus.emit('api:online')
+      if (updateAvailable.value) {
+        bus.emit('app:updateavailable')
       }
     }
 

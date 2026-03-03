@@ -7,7 +7,7 @@ const MAX_INTERVAL = 30 * 60 * 1000 // 30 minutes
 
 /**
  * Composable to periodically check for frontend updates.
- * Checks every 5 minutes and sets appStore.updateAvailable when an update is detected.
+ * Checks every 5 minutes and emits 'app:updateavailable' event if an update is available.
  * Uses exponential backoff on consecutive failures (capped at 30 min).
  */
 export function useUpdateChecker() {
