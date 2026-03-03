@@ -52,6 +52,10 @@ function startRetryMechanism() {
     try {
       const version = await getVersionInfo()
       updateAvailable.value = version.updateAvailable
+      if (updateAvailable.value) {
+        bus.emit('app:updateavailable')
+      }
+
     } catch (error) {
       // Still offline, retry again
       if (isOffline) {
@@ -88,9 +92,6 @@ api.interceptors.response.use(
         retryTimeoutId = null
       }
       bus.emit('api:online')
-      if (updateAvailable.value) {
-        bus.emit('app:updateavailable')
-      }
     }
 
     return response
