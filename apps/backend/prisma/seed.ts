@@ -1,1 +1,1 @@
-import './seed/ProfileTags'
+import './seed/tags'
