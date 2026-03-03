@@ -1,5 +1,11 @@
 # @opencupid/ingress
 
+## 0.17.3
+
+### Patch Changes
+
+- e19b607: Consolidate CSP allowed domains into single config option
+
 ## 0.17.2
 
 ### Patch Changes
