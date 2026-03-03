@@ -1,5 +1,11 @@
 # backend
 
+## 0.17.5
+
+### Patch Changes
+
+- 0e19851: fix(deployment): Finalize deployment scripts
+
 ## 0.17.4
 
 ### Patch Changes

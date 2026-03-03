@@ -1,5 +1,12 @@
 # frontend
 
+## 0.19.3
+
+### Patch Changes
+
+- 903e180: Minor refactoring
+- f83a371: Replace maildev with mailpit for local email capture
+
 ## 0.19.2
 
 ### Patch Changes
