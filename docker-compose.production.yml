@@ -75,7 +75,8 @@ services:
     image: certbot/certbot
     env_file:
       - .env
-
+    profiles:
+      - certbot
     volumes:
       - certbot-etcdir:/etc/letsencrypt
       - certbot-webroot:/var/www/html

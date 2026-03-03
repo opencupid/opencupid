@@ -40,7 +40,7 @@ docker compose pull
 # Create configuration from template
 cp .env.example .env
 
-# Edit .env 
+# Edit .env
 
 # Start services
 docker compose up -d
@@ -59,6 +59,13 @@ docker compose run --rm --service-ports certbot certonly \
 
 # start services
 docker compose restart ingress
+```
+
+### Add cronjob for periodic cert renewal
+
+```bash
+0 3 * * * cd /srv/your-stack && /usr/bin/docker compose run --rm certbot renew
+
 ```
 
 ## Management commands
