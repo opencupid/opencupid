@@ -14,7 +14,8 @@ export function useUpdateChecker() {
   const appStore = useAppStore()
   let timeoutId: ReturnType<typeof setTimeout> | null = null
   let failureCount = 0
-  let isChecking = false
+  let activeCheck: Promise<void> | null = null
+  let pendingCheck = false
 
   function getNextDelay(): number {
     return Math.min(BASE_INTERVAL * Math.pow(2, failureCount), MAX_INTERVAL)
@@ -25,10 +26,7 @@ export function useUpdateChecker() {
     timeoutId = setTimeout(checkForUpdate, getNextDelay())
   }
 
-  async function checkForUpdate() {
-    if (isChecking) return
-    isChecking = true
-
+  async function runVersionCheck() {
     try {
       const result = await appStore.checkVersion()
 
@@ -42,11 +40,27 @@ export function useUpdateChecker() {
       }
     } catch {
       failureCount++
-    } finally {
-      isChecking = false
     }
 
     scheduleNextCheck()
+  }
+
+  function checkForUpdate() {
+    if (activeCheck) {
+      pendingCheck = true
+      return activeCheck
+    }
+
+    activeCheck = runVersionCheck().finally(async () => {
+      while (pendingCheck) {
+        pendingCheck = false
+        await runVersionCheck()
+      }
+
+      activeCheck = null
+    })
+
+    return activeCheck
   }
 
   function handleApiOnline() {

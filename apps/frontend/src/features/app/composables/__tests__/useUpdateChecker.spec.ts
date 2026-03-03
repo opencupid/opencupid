@@ -70,6 +70,52 @@ describe('useUpdateChecker', () => {
     expect(spy).toHaveBeenCalledTimes(2)
   })
 
+  it('queues a follow-up check when api:online fires during an in-flight check', async () => {
+    const appStore = useAppStore()
+    let resolveFirstCheck: (() => void) | null = null
+    const firstCheck = new Promise<void>((resolve) => {
+      resolveFirstCheck = resolve
+    })
+
+    const spy = vi
+      .spyOn(appStore, 'checkVersion')
+      .mockImplementationOnce(async () => {
+        await firstCheck
+        return {
+          success: true,
+          data: {
+            updateAvailable: false,
+            frontendVersion: '0.5.0',
+            backendVersion: '1.0.0',
+            currentVersion: '0.5.0',
+          },
+        }
+      })
+      .mockResolvedValue({
+        success: true,
+        data: {
+          updateAvailable: false,
+          frontendVersion: '0.5.0',
+          backendVersion: '1.0.0',
+          currentVersion: '0.5.0',
+        },
+      })
+
+    mountWithChecker()
+    await flushPromises()
+    expect(spy).toHaveBeenCalledTimes(1)
+
+    bus.emit('api:online')
+    await flushPromises()
+    expect(spy).toHaveBeenCalledTimes(1)
+
+    resolveFirstCheck?.()
+    await flushPromises()
+    await flushPromises()
+
+    expect(spy).toHaveBeenCalledTimes(2)
+  })
+
   it('schedules periodic checks after the initial call', async () => {
     const appStore = useAppStore()
     const spy = vi.spyOn(appStore, 'checkVersion').mockResolvedValue({
