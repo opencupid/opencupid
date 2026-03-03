@@ -1,5 +1,11 @@
 # backend
 
+## 0.17.4
+
+### Patch Changes
+
+- b81a2e4: Implement production/staging deployment tools (#908)
+
 ## 0.17.3
 
 ### Patch Changes
