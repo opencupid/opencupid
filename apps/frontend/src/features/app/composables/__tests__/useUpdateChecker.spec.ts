@@ -42,6 +42,27 @@ describe('useUpdateChecker', () => {
     expect(spy).toHaveBeenCalledTimes(1)
   })
 
+  it('stops polling once an update is detected', async () => {
+    const appStore = useAppStore()
+    const spy = vi.spyOn(appStore, 'checkVersion').mockResolvedValue({
+      success: true,
+      data: { updateAvailable: true, frontendVersion: '0.6.0', backendVersion: '1.0.0', currentVersion: '0.5.0' },
+    })
+
+    mountWithChecker()
+    await flushPromises()
+
+    // Initial check detected an update
+    expect(spy).toHaveBeenCalledTimes(1)
+
+    // Even after the normal polling interval, no further calls should be made
+    await vi.advanceTimersByTimeAsync(5 * 60 * 1000)
+    expect(spy).toHaveBeenCalledTimes(1)
+
+    await vi.advanceTimersByTimeAsync(30 * 60 * 1000)
+    expect(spy).toHaveBeenCalledTimes(1)
+  })
+
   it('schedules periodic checks after the initial call', async () => {
     const appStore = useAppStore()
     const spy = vi.spyOn(appStore, 'checkVersion').mockResolvedValue({

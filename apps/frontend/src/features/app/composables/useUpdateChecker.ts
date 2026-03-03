@@ -31,6 +31,9 @@ export function useUpdateChecker() {
         failureCount = 0
         if (result.data?.updateAvailable) {
           console.log('Frontend update available:', result.data.frontendVersion)
+          // Update detected — stop polling so the banner stays visible and is never
+          // inadvertently reset by a later poll returning a different value.
+          return
         }
       } else {
         failureCount++

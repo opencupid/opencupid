@@ -34,8 +34,12 @@ export const useAppStore = defineStore('app', {
         })
         const parsed = VersionSchema.parse(res.data.version)
 
-        // Update state
-        this.updateAvailable = parsed.updateAvailable
+        // Update state — once an update has been flagged, keep it set so the
+        // banner stays visible until the user refreshes. Never reset it back to
+        // false via polling (a new bundle only loads after a page reload).
+        if (parsed.updateAvailable) {
+          this.updateAvailable = true
+        }
         this.latestVersion = parsed.frontendVersion
 
         return storeSuccess(parsed)

@@ -72,6 +72,43 @@ describe('useAppStore - checkVersion', () => {
     expect(store.latestVersion).toBe('0.6.0')
   })
 
+  it('does not reset updateAvailable to false once it has been set to true', async () => {
+    const mockApi = apiModule.api as any
+
+    // First call: versions differ → update available
+    mockApi.get.mockResolvedValueOnce({
+      data: {
+        success: true,
+        version: {
+          updateAvailable: true,
+          frontendVersion: '0.6.0',
+          backendVersion: '1.0.0',
+          currentVersion: APP_VERSION,
+        },
+      },
+    })
+    // Second call: versions now match (e.g. backend was redeployed mid-session)
+    mockApi.get.mockResolvedValueOnce({
+      data: {
+        success: true,
+        version: {
+          updateAvailable: false,
+          frontendVersion: APP_VERSION,
+          backendVersion: '1.0.0',
+          currentVersion: APP_VERSION,
+        },
+      },
+    })
+
+    const store = useAppStore()
+    await store.checkVersion()
+    expect(store.updateAvailable).toBe(true)
+
+    // A subsequent poll returning false must not hide the banner
+    await store.checkVersion()
+    expect(store.updateAvailable).toBe(true)
+  })
+
   it('handles API errors gracefully', async () => {
     const mockApi = apiModule.api as any
     mockApi.get.mockRejectedValue(new Error('Network error'))
