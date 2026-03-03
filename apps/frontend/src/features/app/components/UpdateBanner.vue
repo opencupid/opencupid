@@ -7,7 +7,7 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{
-  dismiss: []
+  (e: 'dismiss'): void
 }>()
 
 function reloadApp() {

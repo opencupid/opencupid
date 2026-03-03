@@ -2,6 +2,7 @@ import axios from 'axios'
 import { bus } from './bus'
 import { VersionSchema, type VersionDTO } from '@zod/dto/version.dto'
 import type { VersionResponse } from '@zod/apiResponse.dto'
+import { ref } from 'vue'
 
 const baseURL = __APP_CONFIG__?.API_BASE_URL
 
@@ -29,6 +30,8 @@ let isOffline = false
 let retryTimeoutId: NodeJS.Timeout | null = null
 let waitForRecovery: (() => void)[] = []
 
+const updateAvailable = ref(false)
+
 export const isApiOnline = () =>
   isOffline ? new Promise<void>((resolve) => waitForRecovery.push(resolve)) : Promise.resolve()
 
@@ -48,9 +51,7 @@ function startRetryMechanism() {
   retryTimeoutId = setTimeout(async () => {
     try {
       const version = await getVersionInfo()
-      if (version.updateAvailable) {
-        bus.emit('app:updateavailable')
-      }
+      updateAvailable.value = version.updateAvailable
     } catch (error) {
       // Still offline, retry again
       if (isOffline) {
@@ -78,6 +79,9 @@ api.interceptors.response.use(
     if (isOffline) {
       isOffline = false
       bus.emit('api:online')
+      if (updateAvailable.value)
+        bus.emit('app:updateavailable')
+
       waitForRecovery.forEach((fn) => fn())
       waitForRecovery = []
 
@@ -89,6 +93,7 @@ api.interceptors.response.use(
 
     return response
   },
+
   async (error) => {
     const originalRequest = error.config
 
