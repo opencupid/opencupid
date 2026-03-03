@@ -1,5 +1,6 @@
 import { onMounted, onUnmounted } from 'vue'
 import { useAppStore } from '../stores/appStore'
+import { bus } from '@/lib/bus'
 
 const BASE_INTERVAL = 5 * 60 * 1000 // 5 minutes
 const MAX_INTERVAL = 30 * 60 * 1000 // 30 minutes
@@ -30,7 +31,7 @@ export function useUpdateChecker() {
       if (result.success) {
         failureCount = 0
         if (result.data?.updateAvailable) {
-          console.log('Frontend update available:', result.data.frontendVersion)
+          bus.emit('app:updateavailable')
         }
       } else {
         failureCount++

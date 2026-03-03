@@ -23,7 +23,7 @@ vi.mock('@/lib/bus', () => {
       listeners[event] = cb
     }),
     off: vi.fn(),
-    emit(event: string, payload: any) {
+    emit(event: string, payload?: any) {
       listeners[event]?.(payload)
     },
   }
@@ -112,6 +112,16 @@ describe('AppNotifier', () => {
     expect(wrapper.find('.api-offline-overlay').exists()).toBe(false)
     expect(toast.dismiss).not.toHaveBeenCalled()
     expect(toast.success).not.toHaveBeenCalled()
+  })
+
+  it('shows update banner when app:updateavailable is emitted', async () => {
+    const wrapper = mount(AppNotifier)
+    expect(wrapper.find('.alert').exists()).toBe(false)
+
+    bus.emit('app:updateavailable')
+    await nextTick()
+
+    expect(wrapper.find('.alert').exists()).toBe(true)
   })
 
   it('plays notification sound when message received', () => {

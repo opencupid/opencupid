@@ -1,29 +1,21 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 import { mount } from '@vue/test-utils'
-import { createPinia, setActivePinia } from 'pinia'
 import UpdateBanner from '../UpdateBanner.vue'
-import { useAppStore } from '../../stores/appStore'
 
 describe('UpdateBanner', () => {
   beforeEach(() => {
-    setActivePinia(createPinia())
+    vi.restoreAllMocks()
   })
 
   it('should not be visible when no update is available', () => {
-    const wrapper = mount(UpdateBanner)
-    const appStore = useAppStore()
-
-    appStore.updateAvailable = false
+    const wrapper = mount(UpdateBanner, { props: { show: false } })
 
     expect(wrapper.find('.alert').exists()).toBe(false)
   })
 
   it('should be visible when update is available', async () => {
-    const wrapper = mount(UpdateBanner)
-    const appStore = useAppStore()
-
-    appStore.updateAvailable = true
+    const wrapper = mount(UpdateBanner, { props: { show: true } })
     await wrapper.vm.$nextTick()
 
     expect(wrapper.find('.alert').exists()).toBe(true)
@@ -31,10 +23,7 @@ describe('UpdateBanner', () => {
   })
 
   it('should have a reload button', async () => {
-    const wrapper = mount(UpdateBanner)
-    const appStore = useAppStore()
-
-    appStore.updateAvailable = true
+    const wrapper = mount(UpdateBanner, { props: { show: true } })
     await wrapper.vm.$nextTick()
 
     const button = wrapper.find('.btn-primary')
@@ -49,10 +38,7 @@ describe('UpdateBanner', () => {
       writable: true,
     })
 
-    const wrapper = mount(UpdateBanner)
-    const appStore = useAppStore()
-
-    appStore.updateAvailable = true
+    const wrapper = mount(UpdateBanner, { props: { show: true } })
     await wrapper.vm.$nextTick()
 
     const button = wrapper.find('.btn-primary')
@@ -61,20 +47,13 @@ describe('UpdateBanner', () => {
     expect(reloadSpy).toHaveBeenCalled()
   })
 
-  it('should hide the banner when dismiss button is clicked', async () => {
-    const wrapper = mount(UpdateBanner)
-    const appStore = useAppStore()
-
-    appStore.updateAvailable = true
-    await wrapper.vm.$nextTick()
-
-    expect(wrapper.find('.alert').exists()).toBe(true)
-
+  it('should emit dismiss when close button is clicked', async () => {
+    const wrapper = mount(UpdateBanner, { props: { show: true } })
     const closeButton = wrapper.find('.btn-close')
     expect(closeButton.exists()).toBe(true)
 
     await closeButton.trigger('click')
 
-    expect(wrapper.find('.alert').exists()).toBe(false)
+    expect(wrapper.emitted('dismiss')).toBeTruthy()
   })
 })

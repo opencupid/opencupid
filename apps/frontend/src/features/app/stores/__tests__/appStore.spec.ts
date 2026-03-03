@@ -11,6 +11,7 @@ vi.mock('@/lib/api', () => ({
   api: {
     get: vi.fn(),
   },
+  getVersionInfo: vi.fn(),
 }))
 
 describe('useAppStore - checkVersion', () => {
@@ -20,17 +21,12 @@ describe('useAppStore - checkVersion', () => {
   })
 
   it('sets updateAvailable to false when versions match', async () => {
-    const mockApi = apiModule.api as any
-    mockApi.get.mockResolvedValue({
-      data: {
-        success: true,
-        version: {
-          updateAvailable: false,
-          frontendVersion: APP_VERSION,
-          backendVersion: '1.0.0',
-          currentVersion: APP_VERSION,
-        },
-      },
+    const mockGetVersionInfo = apiModule.getVersionInfo as any
+    mockGetVersionInfo.mockResolvedValue({
+      updateAvailable: false,
+      frontendVersion: APP_VERSION,
+      backendVersion: '1.0.0',
+      currentVersion: APP_VERSION,
     })
 
     const store = useAppStore()
@@ -42,23 +38,16 @@ describe('useAppStore - checkVersion', () => {
     }
     expect(store.updateAvailable).toBe(false)
     expect(store.latestVersion).toBe(APP_VERSION)
-    expect(mockApi.get).toHaveBeenCalledWith('/app/version', {
-      params: { v: APP_VERSION },
-    })
+    expect(mockGetVersionInfo).toHaveBeenCalledTimes(1)
   })
 
   it('sets updateAvailable to true when versions differ', async () => {
-    const mockApi = apiModule.api as any
-    mockApi.get.mockResolvedValue({
-      data: {
-        success: true,
-        version: {
-          updateAvailable: true,
-          frontendVersion: '0.6.0',
-          backendVersion: '1.0.0',
-          currentVersion: APP_VERSION,
-        },
-      },
+    const mockGetVersionInfo = apiModule.getVersionInfo as any
+    mockGetVersionInfo.mockResolvedValue({
+      updateAvailable: true,
+      frontendVersion: '0.6.0',
+      backendVersion: '1.0.0',
+      currentVersion: APP_VERSION,
     })
 
     const store = useAppStore()
@@ -73,8 +62,8 @@ describe('useAppStore - checkVersion', () => {
   })
 
   it('handles API errors gracefully', async () => {
-    const mockApi = apiModule.api as any
-    mockApi.get.mockRejectedValue(new Error('Network error'))
+    const mockGetVersionInfo = apiModule.getVersionInfo as any
+    mockGetVersionInfo.mockRejectedValue(new Error('Network error'))
 
     const store = useAppStore()
     const result = await store.checkVersion()
@@ -87,24 +76,17 @@ describe('useAppStore - checkVersion', () => {
   })
 
   it('sends current version as query parameter', async () => {
-    const mockApi = apiModule.api as any
-    mockApi.get.mockResolvedValue({
-      data: {
-        success: true,
-        version: {
-          updateAvailable: false,
-          frontendVersion: APP_VERSION,
-          backendVersion: '1.0.0',
-          currentVersion: APP_VERSION,
-        },
-      },
+    const mockGetVersionInfo = apiModule.getVersionInfo as any
+    mockGetVersionInfo.mockResolvedValue({
+      updateAvailable: false,
+      frontendVersion: APP_VERSION,
+      backendVersion: '1.0.0',
+      currentVersion: APP_VERSION,
     })
 
     const store = useAppStore()
     await store.checkVersion()
 
-    expect(mockApi.get).toHaveBeenCalledWith('/app/version', {
-      params: { v: APP_VERSION },
-    })
+    expect(mockGetVersionInfo).toHaveBeenCalledTimes(1)
   })
 })

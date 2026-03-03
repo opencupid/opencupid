@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useAppStore } from '../stores/appStore'
 
 const { t } = useI18n()
-const appStore = useAppStore()
-const dismissed = ref(false)
+defineProps<{
+  show: boolean
+}>()
+
+const emit = defineEmits<{
+  dismiss: []
+}>()
 
 function reloadApp() {
   window.location.reload()
@@ -14,7 +17,7 @@ function reloadApp() {
 
 <template>
   <div
-    v-if="appStore.updateAvailable && !dismissed"
+    v-if="show"
     class="alert alert-info mb-0 rounded-0 d-flex align-items-center justify-content-between"
     role="alert"
   >
@@ -31,7 +34,7 @@ function reloadApp() {
         type="button"
         class="btn-close"
         aria-label="Close"
-        @click="dismissed = true"
+        @click="emit('dismiss')"
       />
     </div>
   </div>

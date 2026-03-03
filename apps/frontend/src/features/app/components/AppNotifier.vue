@@ -18,6 +18,7 @@ import LikeReceivedToast from './LikeReceivedToast.vue'
 import MatchReceivedToast from './MatchReceivedToast.vue'
 import MessageReceivedToast from './MessageReceivedToast.vue'
 import IncomingCallToast from '@/features/videocall/components/IncomingCallToast.vue'
+import UpdateBanner from './UpdateBanner.vue'
 
 import { useI18n } from 'vue-i18n'
 import { useCallStore } from '@/features/videocall/stores/callStore'
@@ -28,6 +29,7 @@ const callStore = useCallStore()
 
 // API status overlay
 const showApiOfflineOverlay = ref(false)
+const showUpdateBanner = ref(false)
 
 function toastId() {
   return new Date().getUTCMilliseconds()
@@ -121,18 +123,15 @@ function handleIncomingCall(payload: {
 
 function handleApiOffline() {
   showApiOfflineOverlay.value = true
-  // toast.error('Connection lost. Trying to reconnect...', {
-  //   timeout: false,
-  //   id: 'api-offline'
-  // })
 }
 
 function handleApiOnline() {
   showApiOfflineOverlay.value = false
-  // toast.dismiss('api-offline')
-  // toast.success('Connection restored!', {
-  //   timeout: 3000
-  // })
+
+}
+
+function handleUpdateAvailable() {
+  showUpdateBanner.value = true
 }
 
 onMounted(() => {
@@ -142,6 +141,7 @@ onMounted(() => {
   bus.on('ws:incoming_call', handleIncomingCall)
   bus.on('api:offline', handleApiOffline)
   bus.on('api:online', handleApiOnline)
+  bus.on('app:updateavailable', handleUpdateAvailable)
 })
 
 onUnmounted(() => {
@@ -151,11 +151,15 @@ onUnmounted(() => {
   bus.off('ws:incoming_call', handleIncomingCall)
   bus.off('api:offline', handleApiOffline)
   bus.off('api:online', handleApiOnline)
+  bus.off('app:updateavailable', handleUpdateAvailable)
 })
 </script>
 
 <template>
-  <slot> </slot>
+  <UpdateBanner
+    :show="showUpdateBanner"
+    @dismiss="showUpdateBanner = false"
+  />
 
   <ApiErrorOverlay
     :show="showApiOfflineOverlay"

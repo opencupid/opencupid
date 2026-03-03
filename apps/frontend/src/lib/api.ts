@@ -1,5 +1,7 @@
 import axios from 'axios'
 import { bus } from './bus'
+import { VersionSchema, type VersionDTO } from '@zod/dto/version.dto'
+import type { VersionResponse } from '@zod/apiResponse.dto'
 
 const baseURL = __APP_CONFIG__?.API_BASE_URL
 
@@ -21,6 +23,7 @@ const ERROR_CODES = [
   'ERR_NETWORK',
   'ERR_BAD_RESPONSE',
 ]
+const CURRENT_VERSION = __APP_VERSION__
 
 let isOffline = false
 let retryTimeoutId: NodeJS.Timeout | null = null
@@ -28,6 +31,13 @@ let waitForRecovery: (() => void)[] = []
 
 export const isApiOnline = () =>
   isOffline ? new Promise<void>((resolve) => waitForRecovery.push(resolve)) : Promise.resolve()
+
+export async function getVersionInfo(): Promise<VersionDTO> {
+  const res = await api.get<VersionResponse>('/app/version', {
+    params: { v: CURRENT_VERSION },
+  })
+  return VersionSchema.parse(res.data.version)
+}
 
 // // Periodic retry mechanism to detect API recovery - only used in non-development environments
 function startRetryMechanism() {
@@ -37,10 +47,10 @@ function startRetryMechanism() {
 
   retryTimeoutId = setTimeout(async () => {
     try {
-      // Make a lightweight request to check if API is back online
-      await api.get('/app/version', { timeout: 5000 })
-      // If we reach here, the API is back online
-      // The success will be handled by the response interceptor
+      const version = await getVersionInfo()
+      if (version.updateAvailable) {
+        bus.emit('app:updateavailable')
+      }
     } catch (error) {
       // Still offline, retry again
       if (isOffline) {
@@ -150,9 +160,7 @@ api.interceptors.response.use(
     }
 
     // Network error handling
-    const isNetworkError =
-      !error.response ||
-      ERROR_CODES.includes(error.code)
+    const isNetworkError = !error.response || ERROR_CODES.includes(error.code)
 
     if (isNetworkError && !isOffline) {
       isOffline = true
@@ -173,9 +181,7 @@ export async function safeApiCall<T>(fn: () => Promise<T>): Promise<T> {
     const result = await fn()
     return result
   } catch (err: any) {
-    const isNetworkError =
-      !err.response ||
-      ERROR_CODES.includes(err.code)
+    const isNetworkError = !err.response || ERROR_CODES.includes(err.code)
 
     if (isNetworkError) {
       isOffline = true
