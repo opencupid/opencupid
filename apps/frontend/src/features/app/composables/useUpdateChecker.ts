@@ -1,5 +1,6 @@
 import { onMounted, onUnmounted } from 'vue'
 import { useAppStore } from '../stores/appStore'
+import { bus } from '@/lib/bus'
 
 const BASE_INTERVAL = 5 * 60 * 1000 // 5 minutes
 const MAX_INTERVAL = 30 * 60 * 1000 // 30 minutes
@@ -13,6 +14,7 @@ export function useUpdateChecker() {
   const appStore = useAppStore()
   let timeoutId: ReturnType<typeof setTimeout> | null = null
   let failureCount = 0
+  let isChecking = false
 
   function getNextDelay(): number {
     return Math.min(BASE_INTERVAL * Math.pow(2, failureCount), MAX_INTERVAL)
@@ -24,6 +26,9 @@ export function useUpdateChecker() {
   }
 
   async function checkForUpdate() {
+    if (isChecking) return
+    isChecking = true
+
     try {
       const result = await appStore.checkVersion()
 
@@ -37,16 +42,25 @@ export function useUpdateChecker() {
       }
     } catch {
       failureCount++
+    } finally {
+      isChecking = false
     }
 
     scheduleNextCheck()
   }
 
+  function handleApiOnline() {
+    failureCount = 0
+    void checkForUpdate()
+  }
+
   onMounted(() => {
+    bus.on('api:online', handleApiOnline)
     checkForUpdate()
   })
 
   onUnmounted(() => {
+    bus.off('api:online', handleApiOnline)
     if (timeoutId) {
       clearTimeout(timeoutId)
       timeoutId = null

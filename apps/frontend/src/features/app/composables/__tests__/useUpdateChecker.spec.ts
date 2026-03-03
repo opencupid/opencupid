@@ -4,6 +4,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { defineComponent } from 'vue'
 import { useUpdateChecker } from '../useUpdateChecker'
 import { useAppStore } from '../../stores/appStore'
+import { bus } from '@/lib/bus'
 
 // Helper component to trigger lifecycle hooks
 function mountWithChecker() {
@@ -31,7 +32,12 @@ describe('useUpdateChecker', () => {
     const appStore = useAppStore()
     const spy = vi.spyOn(appStore, 'checkVersion').mockResolvedValue({
       success: true,
-      data: { updateAvailable: false, frontendVersion: '0.5.0', backendVersion: '1.0.0', currentVersion: '0.5.0' },
+      data: {
+        updateAvailable: false,
+        frontendVersion: '0.5.0',
+        backendVersion: '1.0.0',
+        currentVersion: '0.5.0',
+      },
     })
 
     mountWithChecker()
@@ -42,11 +48,38 @@ describe('useUpdateChecker', () => {
     expect(spy).toHaveBeenCalledTimes(1)
   })
 
+  it('calls checkVersion immediately when api:online is emitted', async () => {
+    const appStore = useAppStore()
+    const spy = vi.spyOn(appStore, 'checkVersion').mockResolvedValue({
+      success: true,
+      data: {
+        updateAvailable: false,
+        frontendVersion: '0.5.0',
+        backendVersion: '1.0.0',
+        currentVersion: '0.5.0',
+      },
+    })
+
+    mountWithChecker()
+    await flushPromises()
+    expect(spy).toHaveBeenCalledTimes(1)
+
+    bus.emit('api:online')
+    await flushPromises()
+
+    expect(spy).toHaveBeenCalledTimes(2)
+  })
+
   it('schedules periodic checks after the initial call', async () => {
     const appStore = useAppStore()
     const spy = vi.spyOn(appStore, 'checkVersion').mockResolvedValue({
       success: true,
-      data: { updateAvailable: false, frontendVersion: '0.5.0', backendVersion: '1.0.0', currentVersion: '0.5.0' },
+      data: {
+        updateAvailable: false,
+        frontendVersion: '0.5.0',
+        backendVersion: '1.0.0',
+        currentVersion: '0.5.0',
+      },
     })
 
     mountWithChecker()
@@ -69,7 +102,12 @@ describe('useUpdateChecker', () => {
     const appStore = useAppStore()
     const spy = vi.spyOn(appStore, 'checkVersion').mockResolvedValue({
       success: true,
-      data: { updateAvailable: false, frontendVersion: '0.5.0', backendVersion: '1.0.0', currentVersion: '0.5.0' },
+      data: {
+        updateAvailable: false,
+        frontendVersion: '0.5.0',
+        backendVersion: '1.0.0',
+        currentVersion: '0.5.0',
+      },
     })
 
     const wrapper = mountWithChecker()
@@ -137,12 +175,22 @@ describe('useUpdateChecker', () => {
       // Second call: success
       .mockResolvedValueOnce({
         success: true,
-        data: { updateAvailable: false, frontendVersion: '0.5.0', backendVersion: '1.0.0', currentVersion: '0.5.0' },
+        data: {
+          updateAvailable: false,
+          frontendVersion: '0.5.0',
+          backendVersion: '1.0.0',
+          currentVersion: '0.5.0',
+        },
       })
       // Third call: success
       .mockResolvedValueOnce({
         success: true,
-        data: { updateAvailable: false, frontendVersion: '0.5.0', backendVersion: '1.0.0', currentVersion: '0.5.0' },
+        data: {
+          updateAvailable: false,
+          frontendVersion: '0.5.0',
+          backendVersion: '1.0.0',
+          currentVersion: '0.5.0',
+        },
       })
 
     mountWithChecker()

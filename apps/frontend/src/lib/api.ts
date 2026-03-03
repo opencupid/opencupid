@@ -1,5 +1,7 @@
 import axios from 'axios'
 import { bus } from './bus'
+import { VersionSchema, type VersionDTO } from '@zod/dto/version.dto'
+import type { VersionResponse } from '@zod/apiResponse.dto'
 
 const baseURL = __APP_CONFIG__?.API_BASE_URL
 
@@ -10,6 +12,7 @@ if (!baseURL) {
 export const api = axios.create({
   baseURL,
 })
+const CURRENT_VERSION = __APP_VERSION__
 
 const ERROR_CODES = [
   'ECONNABORTED',
@@ -37,8 +40,7 @@ function startRetryMechanism() {
 
   retryTimeoutId = setTimeout(async () => {
     try {
-      // Make a lightweight request to check if API is back online
-      await api.get('/app/version', { timeout: 5000 })
+      await getVersionInfo({ timeout: 5000 })
       // If we reach here, the API is back online
       // The success will be handled by the response interceptor
     } catch (error) {
@@ -61,6 +63,14 @@ function onTokenRefreshed(token: string) {
 
 function addRefreshSubscriber(callback: (token: string) => void) {
   refreshSubscribers.push(callback)
+}
+
+export async function getVersionInfo(options?: { timeout?: number }): Promise<VersionDTO> {
+  const res = await api.get<VersionResponse>('/app/version', {
+    params: { v: CURRENT_VERSION },
+    timeout: options?.timeout,
+  })
+  return VersionSchema.parse(res.data.version)
 }
 
 api.interceptors.response.use(
@@ -150,9 +160,7 @@ api.interceptors.response.use(
     }
 
     // Network error handling
-    const isNetworkError =
-      !error.response ||
-      ERROR_CODES.includes(error.code)
+    const isNetworkError = !error.response || ERROR_CODES.includes(error.code)
 
     if (isNetworkError && !isOffline) {
       isOffline = true
@@ -173,9 +181,7 @@ export async function safeApiCall<T>(fn: () => Promise<T>): Promise<T> {
     const result = await fn()
     return result
   } catch (err: any) {
-    const isNetworkError =
-      !err.response ||
-      ERROR_CODES.includes(err.code)
+    const isNetworkError = !err.response || ERROR_CODES.includes(err.code)
 
     if (isNetworkError) {
       isOffline = true
