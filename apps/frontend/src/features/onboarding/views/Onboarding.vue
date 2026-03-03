@@ -26,6 +26,9 @@ const { t } = useI18n()
 const profileStore = useOwnerProfileStore()
 const i18nStore = useI18nStore()
 
+// TODO - refactor this as per canonical Vue pattern. This initialization
+// logic doesn't feel right in the view component.  This should happen 
+// elsewhere, e.g. in ownerProfileStore 
 const formData = reactive({
   publicName: '',
   birthday: null,
