@@ -11,6 +11,17 @@ export const api = axios.create({
   baseURL,
 })
 
+const ERROR_CODES = [
+  'ECONNABORTED',
+  'ENETUNREACH',
+  'ENOTFOUND',
+  'ECONNREFUSED',
+  'ETIMEDOUT',
+  'ECONNRESET',
+  'ERR_NETWORK',
+  'ERR_BAD_RESPONSE',
+]
+
 let isOffline = false
 let retryTimeoutId: NodeJS.Timeout | null = null
 let waitForRecovery: (() => void)[] = []
@@ -141,16 +152,7 @@ api.interceptors.response.use(
     // Network error handling
     const isNetworkError =
       !error.response ||
-      [
-        'ECONNABORTED',
-        'ENETUNREACH',
-        'ENOTFOUND',
-        'ECONNREFUSED',
-        'ETIMEDOUT',
-        'ECONNRESET',
-        'ERR_NETWORK',
-        'ERR_BAD_RESPONSE',
-      ].includes(error.code)
+      ERROR_CODES.includes(error.code)
 
     if (isNetworkError && !isOffline) {
       isOffline = true
@@ -173,16 +175,7 @@ export async function safeApiCall<T>(fn: () => Promise<T>): Promise<T> {
   } catch (err: any) {
     const isNetworkError =
       !err.response ||
-      [
-        'ECONNABORTED',
-        'ENETUNREACH',
-        'ENOTFOUND',
-        'ECONNREFUSED',
-        'ETIMEDOUT',
-        'ECONNRESET',
-        'ERR_NETWORK',
-        'ERR_BAD_RESPONSE',
-      ].includes(err.code)
+      ERROR_CODES.includes(err.code)
 
     if (isNetworkError) {
       isOffline = true
