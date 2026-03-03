@@ -72,7 +72,7 @@ describe('useUpdateChecker', () => {
 
   it('queues a follow-up check when api:online fires during an in-flight check', async () => {
     const appStore = useAppStore()
-    let resolveFirstCheck: (() => void) | null = null
+    let resolveFirstCheck!: () => void
     const firstCheck = new Promise<void>((resolve) => {
       resolveFirstCheck = resolve
     })
@@ -109,7 +109,7 @@ describe('useUpdateChecker', () => {
     await flushPromises()
     expect(spy).toHaveBeenCalledTimes(1)
 
-    resolveFirstCheck?.()
+    resolveFirstCheck()
     await flushPromises()
     await flushPromises()
 
