@@ -137,7 +137,6 @@ onMounted(async () => {
 
               <!-- Right: opt-ins + CTAs -->
               <div
-                v-if="!profileStore.isLoading"
                 class="d-flex flex-column gap-3 flex-grow-1 w-100"
               >
                 <OptInCheckboxes />
