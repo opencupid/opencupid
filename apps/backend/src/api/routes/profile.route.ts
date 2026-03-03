@@ -75,7 +75,7 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
    */
   fastify.get('/me/optin', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     try {
-      const optIn = await profileService.getOptInSettingsByUserId(req.user.userId)
+      const optIn = await profileService.getOptInSettingsByProfileId(req.session.profileId)
       if (!optIn) return sendError(reply, 404, 'Social profile not found')
       const response: GetProfileOptInResponse = { success: true, optIn }
       return reply.code(200).send(response)

@@ -92,9 +92,9 @@ export class ProfileService {
     })
   }
 
-  async getOptInSettingsByUserId(userId: string): Promise<ProfileOptInSettings | null> {
+  async getOptInSettingsByProfileId(profileId: string): Promise<ProfileOptInSettings | null> {
     const profile = await prisma.profile.findUnique({
-      where: { userId },
+      where: { id: profileId },
       select: {
         isCallable: true,
         user: {

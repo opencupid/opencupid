@@ -78,7 +78,7 @@ beforeEach(async () => {
     getProfileWithContextById: vi.fn(),
     getProfileByUserId: vi.fn(),
     updateCompleteProfile: vi.fn(),
-    getOptInSettingsByUserId: vi.fn(),
+    getOptInSettingsByProfileId: vi.fn(),
     updateOptInSettingsByUserId: vi.fn(),
     updateScopes: vi.fn(),
     blockProfile: vi.fn(),
@@ -128,7 +128,7 @@ describe('GET /me', () => {
 describe('GET /me/optin', () => {
   it('returns 200 with opt-in settings', async () => {
     const handler = fastify.routes['GET /me/optin']
-    mockProfileService.getOptInSettingsByUserId.mockResolvedValue({
+    mockProfileService.getOptInSettingsByProfileId.mockResolvedValue({
       isCallable: false,
       newsletterOptIn: true,
       isPushNotificationEnabled: true,
@@ -146,7 +146,7 @@ describe('GET /me/optin', () => {
 
   it('returns 404 when profile is not found', async () => {
     const handler = fastify.routes['GET /me/optin']
-    mockProfileService.getOptInSettingsByUserId.mockResolvedValue(null)
+    mockProfileService.getOptInSettingsByProfileId.mockResolvedValue(null)
 
     await handler(makeReq(), reply as any)
     expect(reply.statusCode).toBe(404)
