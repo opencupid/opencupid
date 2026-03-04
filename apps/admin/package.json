@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --host --port 5174",
+    "dev": "vite --port 5174",
     "build": "vite build",
     "type-check": "vue-tsc --build",
     "test": "vitest --run --passWithNoTests"
@@ -23,6 +23,7 @@
     "find-up": "8.0.0",
     "typescript": "5.9.3",
     "vite": "6.3.5",
+    "vite-plugin-mkcert": "1.17.10",
     "vitest": "4.0.18",
     "vue-tsc": "3.2.4"
   }

@@ -12,20 +12,20 @@ This uses Turbo to run both the frontend (Vite, port 5173, 5174) and backend (Fa
 
 ### Local URLs
 
-| Service                | URL                                    |
-| ---------------------- | -------------------------------------- |
-| Frontend (entry point) | <https://oc.dev.froggle.org:5173/home> |
-| Backend API            | <https://oc.dev.froggle.org:3000>      |
-| Mailpit (email inbox)  | <http://oc.dev.froggle.org:1080/>      |
-| Tolgee (translation UI) | <http://localhost:8085>               |
+| Service                 | URL                           |
+| ----------------------- | ----------------------------- |
+| Frontend (entry point)  | <https://localhost:5173/home> |
+| Backend API             | <https://localhost:3000>      |
+| Mailpit (email inbox)   | <http://localhost:1080/>      |
+| Tolgee (translation UI) | <http://localhost:8085>       |
 
 ### Login flow
 
 The app uses magic link (OTP) authentication — no passwords.
 
-1. Go to <https://oc.dev.froggle.org:5173/auth>
-2. Enter email: `mookie@froggle.org`
-3. Open Mailpit at <http://oc.dev.froggle.org:1080/>
+1. Go to <https://localhost:5173/auth>
+2. Enter email: `me@example.org`
+3. Open Mailpit at <http://localhost:1080/>
 4. Find the login email, copy the OTP token
 5. Paste the token back on the login page at `/auth/otp`
 
@@ -177,7 +177,7 @@ The `postgres` MCP server provides direct SQL access to the dev database during 
 
 ## Git workflow
 
-> **HARD RULE — NO EXCEPTIONS:** You MUST NEVER commit anything to the `main` branch. Not documentation, not design files, not a single line. Every commit goes on a feature branch. If you are on `main`, stop and create a branch before touching anything.  When creating a new feature branch, **always** create off of `main`.  Always check before creating.
+> **HARD RULE — NO EXCEPTIONS:** You MUST NEVER commit anything to the `main` branch. Not documentation, not design files, not a single line. Every commit goes on a feature branch. If you are on `main`, stop and create a branch before touching anything. When creating a new feature branch, **always** create off of `main`. Always check before creating.
 
 Always work in a feature branch and open a Github pull request once task is complete and tests succeed.
 
@@ -325,7 +325,7 @@ When storage formats, path conventions, or data schemas change, always migrate t
 
 ## Debugging
 
-When debugging any problem, after you found an issue that looks suspect, do not immediately go in and impose a fix on the symptom. Instead, take one step back, look at the bigger picture, look at commit history and try to find the root cause and fix THAT.  Use `git blame`. Never add workaround, silence errors to make an error message go away.
+When debugging any problem, after you found an issue that looks suspect, do not immediately go in and impose a fix on the symptom. Instead, take one step back, look at the bigger picture, look at commit history and try to find the root cause and fix THAT. Use `git blame`. Never add workaround, silence errors to make an error message go away.
 
 ## Coding Guidelines
 

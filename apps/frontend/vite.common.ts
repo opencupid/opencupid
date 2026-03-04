@@ -1,20 +1,38 @@
 import path from 'path'
-import fs from 'fs'
+import os from 'os'
 import { loadEnv, type Plugin } from 'vite'
 import { findUpSync } from 'find-up'
+import mkcert from 'vite-plugin-mkcert'
 import { getPackageVersion } from '../../packages/shared/version'
 
-export const server = (mode: string) => {
+export const hostname = os.hostname()
+export const mdnsName = hostname + '.local'
+
+export const devCertPlugin = () =>
+  mkcert({
+    hosts: ['localhost', '127.0.0.1', hostname, mdnsName],
+    savePath: path.join(__dirname, '../../certs'),
+    keyFileName: hostname + '-key.pem',
+    certFileName: hostname + '-cert.pem',
+    autoUpgrade: false,
+  })
+
+export const server = (mode: string, env: Record<string, string | undefined>, appDir: string) => {
   if (mode !== 'development') return {}
+
+  const backendPort = env.BACKEND_PORT ?? '3000'
 
   return {
     server: {
-      allowedHosts: ['localhost', 'oc.dev.froggle.org', 'gaians.net'],
+      host: true,
+      allowedHosts: ['localhost', '127.0.0.1', hostname, mdnsName],
       proxy: {
         '/api': {
-          target: 'http://localhost:3000', // or https://localhost:3000 if backend runs TLS
+          target: `http://localhost:${backendPort}`,
           changeOrigin: true,
           secure: false, // accept self-signed TLS
+          // for admin app
+          headers: { 'X-Admin-Authenticated': 'true' },
           configure: (proxy: any, _options: any) => {
             proxy.on('proxyReq', (proxyReq: any, req: any) => {
               const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress
@@ -25,21 +43,17 @@ export const server = (mode: string) => {
           },
         },
         '/ws': {
-          target: 'ws://localhost:3000',
+          target: `ws://localhost:${backendPort}`,
           rewriteWsOrigin: true,
           ws: true,
           secure: false, // accept self-signed TLS
         },
       },
-      https: {
-        key: fs.readFileSync(path.resolve(__dirname, '../../certs/privkey.pem')),
-        cert: fs.readFileSync(path.resolve(__dirname, '../../certs/fullchain.pem')),
-      },
       fs: {
         allow: [
-          path.resolve(__dirname, './'),
-          path.resolve(__dirname, '../../packages/shared'),
-          path.resolve(__dirname, '../../node_modules'),
+          appDir,
+          path.resolve(appDir, '../../packages/shared'),
+          path.resolve(appDir, '../../node_modules'),
         ],
       },
     },

@@ -76,7 +76,7 @@ services:
       - ENABLE_AUTH=0
       - ENABLE_GUESTS=1
       - ENABLE_XMPP_WEBSOCKET=1
-      - PUBLIC_URL=https://oc.dev.froggle.org:8443
+      - PUBLIC_URL=https://localhost:8443
       - XMPP_DOMAIN=meet.jitsi
       - XMPP_AUTH_DOMAIN=auth.meet.jitsi
       - XMPP_BOSH_URL_BASE=http://jitsi-prosody:5280

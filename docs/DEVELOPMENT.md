@@ -3,22 +3,10 @@
 ## Dependencies
 
 ```bash
-sudo apt-get install ripgrep
+sudo apt-get install mkcert
 ```
 
-### Optional: postgres-mcp (for Claude Code)
-
-Gives Claude direct SQL access to the dev database via MCP. Requires Python 3.12+.
-
-```bash
-uv python install 3.12
-uv venv --python 3.12 ~/.venvs/postgres-mcp
-VIRTUAL_ENV=~/.venvs/postgres-mcp uv pip install postgres-mcp
-```
-
-Already configured in `.claude/settings.json` — no further setup needed after install.
-
-## Getting started with development
+## Getting started
 
 ```bash
 docker compose up -d   # start DB, Redis and Mailpit
@@ -56,11 +44,13 @@ To add a new translation key, add it to `packages/shared/i18n/en.json` first (En
 
 ```bash
 pnpm install
-pnpm --filter backend prisma:generate  # generate prisma client
 
-pnpm test  # this runs all of the tests in backend/frontend
+# generate prisma client
+pnpm --filter backend prisma:generate
 
-# lint
-pnpm lint
-pnpm --filter frontend type-check
+ # run full test suite
+pnpm test
+
+# type-check + lint
+pnpm type-check
 ```
