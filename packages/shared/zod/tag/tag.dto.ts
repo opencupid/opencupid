@@ -54,7 +54,6 @@ export type PopularTag = z.infer<typeof PopularTagSchema>
 export const PopularTagsQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(200).optional(),
   country: z.string().optional(),
-  cityName: z.string().optional(),
 })
 export type PopularTagsQuery = z.infer<typeof PopularTagsQuerySchema>
 
@@ -62,5 +61,4 @@ export type PopularTagsQuery = z.infer<typeof PopularTagsQuerySchema>
 export const SearchQuerySchema = z.object({
   q: z.string().min(1),
 });
-
 

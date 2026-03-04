@@ -41,7 +41,6 @@ export const useTagsStore = defineStore('tags', {
      */
     async fetchPopularTags(opts?: {
       country?: string
-      cityName?: string
       limit?: number
     }): Promise<PopularTag[]> {
       try {
@@ -52,6 +51,7 @@ export const useTagsStore = defineStore('tags', {
         return this.popularTags
       } catch (error: any) {
         console.error('Failed to fetch popular tags:', error)
+        // TODO don't rethrow here.
         throw error.response?.data?.message || 'Failed to fetch popular tags'
       }
     },

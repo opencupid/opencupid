@@ -6,7 +6,7 @@ import cloud from 'd3-cloud'
 
 const props = withDefaults(
   defineProps<{
-    location?: { country?: string; cityName?: string }
+    location?: { country?: string }
     limit?: number
   }>(),
   { limit: 50 }
@@ -79,7 +79,6 @@ function handleTagClick(tag: PopularTag) {
 onMounted(async () => {
   await tagStore.fetchPopularTags({
     country: props.location?.country,
-    cityName: props.location?.cityName,
     limit: props.limit,
   })
   runLayout(tagStore.popularTags)

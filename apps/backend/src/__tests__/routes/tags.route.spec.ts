@@ -39,7 +39,7 @@ describe('GET /popular', () => {
     mockTagService.getPopularTags.mockResolvedValue([])
     await handler(
       {
-        query: { limit: '10', country: 'DE', cityName: 'Berlin' },
+        query: { limit: '10', country: 'DE' },
         user: { userId: 'u1' },
         session: { lang: 'de' },
       } as any,
@@ -48,7 +48,6 @@ describe('GET /popular', () => {
     expect(mockTagService.getPopularTags).toHaveBeenCalledWith({
       limit: 10,
       country: 'DE',
-      cityName: 'Berlin',
       locale: 'de',
     })
   })

@@ -120,13 +120,12 @@ describe('TagCloud', () => {
     tagStore.fetchPopularTags = vi.fn().mockResolvedValue([])
 
     mount(TagCloud, {
-      props: { location: { country: 'DE', cityName: 'Berlin' } },
+      props: { location: { country: 'DE' } },
     })
     await flushPromises()
 
     expect(tagStore.fetchPopularTags).toHaveBeenCalledWith({
       country: 'DE',
-      cityName: 'Berlin',
       limit: 50,
     })
   })
