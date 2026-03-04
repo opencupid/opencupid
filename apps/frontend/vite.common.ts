@@ -31,6 +31,8 @@ export const server = (mode: string, env: Record<string, string | undefined>, ap
           target: `http://localhost:${backendPort}`,
           changeOrigin: true,
           secure: false, // accept self-signed TLS
+          // for admin app
+          headers: { 'X-Admin-Authenticated': 'true' },
           configure: (proxy: any, _options: any) => {
             proxy.on('proxyReq', (proxyReq: any, req: any) => {
               const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress

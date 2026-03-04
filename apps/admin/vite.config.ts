@@ -51,18 +51,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
   }
 
   if (mode === 'development') {
-    const backendPort = env.BACKEND_PORT ?? '3000'
-    config.server = {
-      ...server(mode, env, __dirname).server,
-      proxy: {
-        '/api': {
-          target: `http://localhost:${backendPort}`,
-          changeOrigin: true,
-          secure: false,
-          headers: { 'X-Admin-Authenticated': 'true' },
-        },
-      },
-    }
+    config.server = server(mode, env, __dirname).server
   }
 
   return config
