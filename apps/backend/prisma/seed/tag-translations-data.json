@@ -1,0 +1,9392 @@
+[
+  {
+    "tagId": "cmcarqrr200016wqmz3kh3rqn",
+    "locale": "en",
+    "name": "Regenerative Agriculture"
+  },
+  {
+    "tagId": "cmcarqrrd00026wqm1frjoqcb",
+    "locale": "en",
+    "name": "Composting"
+  },
+  {
+    "tagId": "cmcarqrrj00036wqmzl8la13a",
+    "locale": "en",
+    "name": "Organic Gardening"
+  },
+  {
+    "tagId": "cmcarqrrr00046wqmgje1w7a6",
+    "locale": "en",
+    "name": "No-Dig Gardening"
+  },
+  {
+    "tagId": "cmcarqrsc00056wqmfkan0is7",
+    "locale": "en",
+    "name": "Food Forests"
+  },
+  {
+    "tagId": "cmcarqrvu000g6wqmthdhd01n",
+    "locale": "en",
+    "name": "Agroforestry"
+  },
+  {
+    "tagId": "cmcarqrwe00106wqmuy1njbvh",
+    "locale": "en",
+    "name": "Aquaponics"
+  },
+  {
+    "tagId": "cmcarqrwo001c6wqmv06omqjc",
+    "locale": "en",
+    "name": "Rainwater Harvesting"
+  },
+  {
+    "tagId": "cmcarqrxg00286wqmt6hzsym1",
+    "locale": "en",
+    "name": "Earthships"
+  },
+  {
+    "tagId": "cmcarqrz400336wqmj0032a1x",
+    "locale": "en",
+    "name": "Tiny Houses"
+  },
+  {
+    "tagId": "cmcarqrzm00346wqmzpbgca22",
+    "locale": "en",
+    "name": "Off-Grid Living"
+  },
+  {
+    "tagId": "cmcarqs0000356wqmmw4r2ymx",
+    "locale": "en",
+    "name": "Solar Power"
+  },
+  {
+    "tagId": "cmcarqs0600366wqmdlxjlu7l",
+    "locale": "en",
+    "name": "Wind Energy"
+  },
+  {
+    "tagId": "cmcarqs0b00376wqmsggf2fu9",
+    "locale": "en",
+    "name": "Zero Waste"
+  },
+  {
+    "tagId": "cmcarqs0j00386wqmzhxxo2bc",
+    "locale": "en",
+    "name": "DIY"
+  },
+  {
+    "tagId": "cmcarqs0o00396wqmibc1eq35",
+    "locale": "en",
+    "name": "Seed Saving"
+  },
+  {
+    "tagId": "cmcarqs0w003a6wqmaoekuy0l",
+    "locale": "en",
+    "name": "Beekeeping"
+  },
+  {
+    "tagId": "cmcarqs12003b6wqmie74j4h1",
+    "locale": "en",
+    "name": "Fermentation"
+  },
+  {
+    "tagId": "cmcarqs19003c6wqmsn130vwi",
+    "locale": "en",
+    "name": "Canning & Preserving"
+  },
+  {
+    "tagId": "cmcarqs1e003d6wqmk05gwrgh",
+    "locale": "en",
+    "name": "Foraging"
+  },
+  {
+    "tagId": "cmcarqs1k003e6wqm0b9kigsf",
+    "locale": "en",
+    "name": "Eco Villages"
+  },
+  {
+    "tagId": "cmcarqs1q003f6wqmb8s5x1jw",
+    "locale": "en",
+    "name": "Slow Food"
+  },
+  {
+    "tagId": "cmcarqs1w003g6wqm0cde23cf",
+    "locale": "en",
+    "name": "Local Food"
+  },
+  {
+    "tagId": "cmcarqs21003h6wqm7cbcjpm7",
+    "locale": "en",
+    "name": "Farmers Markets"
+  },
+  {
+    "tagId": "cmcarqs27003i6wqmt3yji6fy",
+    "locale": "en",
+    "name": "CSA (Community Supported Agriculture)"
+  },
+  {
+    "tagId": "cmcarqs2c003j6wqmtftaq17z",
+    "locale": "en",
+    "name": "Urban Gardening"
+  },
+  {
+    "tagId": "cmcarqs2h003k6wqm2xo4fkut",
+    "locale": "en",
+    "name": "Compost Toilets"
+  },
+  {
+    "tagId": "cmcarqs2m003l6wqmv1hbnlw9",
+    "locale": "en",
+    "name": "Bokashi Composting"
+  },
+  {
+    "tagId": "cmcarqs2s003m6wqmz8tujp18",
+    "locale": "en",
+    "name": "Greywater Systems"
+  },
+  {
+    "tagId": "cmcarqs2x003n6wqm6p5rivxm",
+    "locale": "en",
+    "name": "Animal Rescue"
+  },
+  {
+    "tagId": "cmcarqs33003o6wqmfqxvo0vi",
+    "locale": "en",
+    "name": "Wildlife Conservation"
+  },
+  {
+    "tagId": "cmcarqs38003p6wqmqiw7mvfq",
+    "locale": "en",
+    "name": "Birdwatching"
+  },
+  {
+    "tagId": "cmcarqs3e003q6wqmcxa2r3jf",
+    "locale": "en",
+    "name": "Dog Lovers"
+  },
+  {
+    "tagId": "cmcarqs3j003r6wqm3dl3boto",
+    "locale": "en",
+    "name": "Cat Lovers"
+  },
+  {
+    "tagId": "cmcarqs3q003s6wqm75rip8z1",
+    "locale": "en",
+    "name": "Horseback Riding"
+  },
+  {
+    "tagId": "cmcarqs3w003t6wqmw1kdy4h8",
+    "locale": "en",
+    "name": "Herpetology"
+  },
+  {
+    "tagId": "cmcarqs45003u6wqm31e0nf68",
+    "locale": "en",
+    "name": "Marine Life"
+  },
+  {
+    "tagId": "cmcarqs4b003v6wqmnm1f2uqj",
+    "locale": "en",
+    "name": "Butterfly Gardening"
+  },
+  {
+    "tagId": "cmcarqs4k003w6wqmpjnreo38",
+    "locale": "en",
+    "name": "Chicken Keeping"
+  },
+  {
+    "tagId": "cmcarqs4r003x6wqms2c2o2qs",
+    "locale": "en",
+    "name": "Goat Keeping"
+  },
+  {
+    "tagId": "cmcarqs4x003y6wqmnk1v06m5",
+    "locale": "en",
+    "name": "Sheep Herding"
+  },
+  {
+    "tagId": "cmcarqs52003z6wqmk5lgcfxw",
+    "locale": "en",
+    "name": "Veganism"
+  },
+  {
+    "tagId": "cmcarqs5a00406wqm7s31l2a4",
+    "locale": "en",
+    "name": "Vegetarianism"
+  },
+  {
+    "tagId": "cmcarqs5g00416wqm5jwksq50",
+    "locale": "en",
+    "name": "Pet Training"
+  },
+  {
+    "tagId": "cmcarqs5p00426wqms8vrhp8f",
+    "locale": "en",
+    "name": "Animal Tracking"
+  },
+  {
+    "tagId": "cmcarqs5v00436wqmvmtw74c2",
+    "locale": "en",
+    "name": "Animal Photography"
+  },
+  {
+    "tagId": "cmcarqs6000446wqmovsmee9w",
+    "locale": "en",
+    "name": "Animal Behavior"
+  },
+  {
+    "tagId": "cmcarqs6600456wqmcgiccd22",
+    "locale": "en",
+    "name": "Live Music"
+  },
+  {
+    "tagId": "cmcarqs6b00466wqmyqojdbts",
+    "locale": "en",
+    "name": "Folk Music"
+  },
+  {
+    "tagId": "cmcarqs6h00476wqm6m9vy81t",
+    "locale": "en",
+    "name": "Acoustic Guitar"
+  },
+  {
+    "tagId": "cmcarqs6v00486wqmj9nxqogf",
+    "locale": "en",
+    "name": "World Music"
+  },
+  {
+    "tagId": "cmcarqs7300496wqmvwnqf244",
+    "locale": "en",
+    "name": "Music Festivals"
+  },
+  {
+    "tagId": "cmcarqs78004a6wqmxu4l30sx",
+    "locale": "en",
+    "name": "Singing"
+  },
+  {
+    "tagId": "cmcarqs7d004b6wqmawyc6jxn",
+    "locale": "en",
+    "name": "Drumming"
+  },
+  {
+    "tagId": "cmcarqs7i004c6wqmbk6xul98",
+    "locale": "en",
+    "name": "Handpan"
+  },
+  {
+    "tagId": "cmcarqs7n004d6wqmz8x16s7x",
+    "locale": "en",
+    "name": "Ukulele"
+  },
+  {
+    "tagId": "cmcarqs7t004e6wqmo8v6fnce",
+    "locale": "en",
+    "name": "Improvisation"
+  },
+  {
+    "tagId": "cmcarqs7y004f6wqmzyrc3i6g",
+    "locale": "en",
+    "name": "Choir"
+  },
+  {
+    "tagId": "cmcarqs82004g6wqm1fn3vvvm",
+    "locale": "en",
+    "name": "Sound Healing"
+  },
+  {
+    "tagId": "cmcarqs87004h6wqm7kd3y45q",
+    "locale": "en",
+    "name": "Vinyl Records"
+  },
+  {
+    "tagId": "cmcarqs8c004i6wqmtgxkvm8y",
+    "locale": "en",
+    "name": "DJing"
+  },
+  {
+    "tagId": "cmcarqs8i004j6wqmjck1behh",
+    "locale": "en",
+    "name": "Songwriting"
+  },
+  {
+    "tagId": "cmcarqs8p004k6wqmt5cu5t04",
+    "locale": "en",
+    "name": "Jazz"
+  },
+  {
+    "tagId": "cmcarqs8v004l6wqm0lxo3tqn",
+    "locale": "en",
+    "name": "Classical Music"
+  },
+  {
+    "tagId": "cmcarqs90004m6wqmepxqiqg3",
+    "locale": "en",
+    "name": "Experimental Music"
+  },
+  {
+    "tagId": "cmcarqs96004n6wqmxmxe1cwx",
+    "locale": "en",
+    "name": "Storytelling"
+  },
+  {
+    "tagId": "cmcarqs9b004o6wqmgmax2isn",
+    "locale": "en",
+    "name": "Folk Art"
+  },
+  {
+    "tagId": "cmcarqs9g004p6wqmhpdkwlep",
+    "locale": "en",
+    "name": "Pottery"
+  },
+  {
+    "tagId": "cmcarqs9n004q6wqmvr6mojf0",
+    "locale": "en",
+    "name": "Knitting"
+  },
+  {
+    "tagId": "cmcarqs9s004r6wqm2laiooik",
+    "locale": "en",
+    "name": "Fiber Arts"
+  },
+  {
+    "tagId": "cmcarqsa8004t6wqm5w8k2aov",
+    "locale": "en",
+    "name": "Photography"
+  },
+  {
+    "tagId": "cmcarqsaf004u6wqm6o8dmk8x",
+    "locale": "en",
+    "name": "Painting"
+  },
+  {
+    "tagId": "cmcarqsam004v6wqmjpv5jvyt",
+    "locale": "en",
+    "name": "Dance"
+  },
+  {
+    "tagId": "cmcarqsat004w6wqmd9sdos8o",
+    "locale": "en",
+    "name": "Circus Arts"
+  },
+  {
+    "tagId": "cmcarqsay004x6wqmkvii2exy",
+    "locale": "en",
+    "name": "Theatre"
+  },
+  {
+    "tagId": "cmcarqsb3004y6wqmcivduh2e",
+    "locale": "en",
+    "name": "Poetry"
+  },
+  {
+    "tagId": "cmcarqsb9004z6wqm1xso5v4p",
+    "locale": "en",
+    "name": "Zines"
+  },
+  {
+    "tagId": "cmcarqsbf00506wqmydd9ifkp",
+    "locale": "en",
+    "name": "Traditional Crafts"
+  },
+  {
+    "tagId": "cmcarqsbk00516wqm5h2o8myo",
+    "locale": "en",
+    "name": "Cultural Exchange"
+  },
+  {
+    "tagId": "cmcarqsbq00526wqmapleu7y7",
+    "locale": "en",
+    "name": "Language Learning"
+  },
+  {
+    "tagId": "cmcarqsbv00536wqmpwa47yf2",
+    "locale": "en",
+    "name": "History"
+  },
+  {
+    "tagId": "cmcarqsc000546wqm1a5phv4q",
+    "locale": "en",
+    "name": "Backpacking"
+  },
+  {
+    "tagId": "cmcarqsc500556wqmxelymotq",
+    "locale": "en",
+    "name": "Hitchhiking"
+  },
+  {
+    "tagId": "cmcarqsca00566wqm89i3s11u",
+    "locale": "en",
+    "name": "Couchsurfing"
+  },
+  {
+    "tagId": "cmcarqscf00576wqmeos5u831",
+    "locale": "en",
+    "name": "Bike Touring"
+  },
+  {
+    "tagId": "cmcarqsck00586wqmkpo5h9qe",
+    "locale": "en",
+    "name": "Train Travel"
+  },
+  {
+    "tagId": "cmcarqscp00596wqm2e637vpw",
+    "locale": "en",
+    "name": "Slow Travel"
+  },
+  {
+    "tagId": "cmcarqsct005a6wqmuj1q8aed",
+    "locale": "en",
+    "name": "Travel Writing"
+  },
+  {
+    "tagId": "cmcarqsd3005c6wqm8r2tiqba",
+    "locale": "en",
+    "name": "Eco Tourism"
+  },
+  {
+    "tagId": "cmcarqsd9005d6wqmunee4dqa",
+    "locale": "en",
+    "name": "Nature Walks"
+  },
+  {
+    "tagId": "cmcarqsdf005e6wqmh477big1",
+    "locale": "en",
+    "name": "Volunteering Abroad"
+  },
+  {
+    "tagId": "cmcarqsdk005f6wqm73tfjrsv",
+    "locale": "en",
+    "name": "Hostelling"
+  },
+  {
+    "tagId": "cmcarqsdo005g6wqmp7tmb6hf",
+    "locale": "en",
+    "name": "Wilderness Survival"
+  },
+  {
+    "tagId": "cmcarqsds005h6wqmq300yaw0",
+    "locale": "en",
+    "name": "Pilgrimages"
+  },
+  {
+    "tagId": "cmcarqsdw005i6wqmff13gi59",
+    "locale": "en",
+    "name": "Nomadic Living"
+  },
+  {
+    "tagId": "cmcarqse3005j6wqmx7owfzf8",
+    "locale": "en",
+    "name": "Geocaching"
+  },
+  {
+    "tagId": "cmcarqs9z004s6wqms7wgczqc",
+    "locale": "en",
+    "name": "Street Art"
+  },
+  {
+    "tagId": "cmcarqscy005b6wqmhcwkidch",
+    "locale": "en",
+    "name": "Adventure Travel"
+  },
+  {
+    "tagId": "cmcarqrql00006wqmb3vph9qh",
+    "locale": "fr",
+    "name": "Permaculture"
+  },
+  {
+    "tagId": "cmcarqrql00006wqmb3vph9qh",
+    "locale": "de",
+    "name": "Permakultur"
+  },
+  {
+    "tagId": "cmcarqrql00006wqmb3vph9qh",
+    "locale": "es",
+    "name": "Permacultura"
+  },
+  {
+    "tagId": "cmcarqrx2001w6wqm2fqlx8er",
+    "locale": "en",
+    "name": "Natural Building"
+  },
+  {
+    "tagId": "cmcarqrql00006wqmb3vph9qh",
+    "locale": "it",
+    "name": "Permacultura"
+  },
+  {
+    "tagId": "cmcarqrql00006wqmb3vph9qh",
+    "locale": "pt",
+    "name": "Permacultura"
+  },
+  {
+    "tagId": "cmcarqrql00006wqmb3vph9qh",
+    "locale": "sk",
+    "name": "Permakultúra"
+  },
+  {
+    "tagId": "cmcarqrql00006wqmb3vph9qh",
+    "locale": "pl",
+    "name": "Permakultura"
+  },
+  {
+    "tagId": "cmcarqrql00006wqmb3vph9qh",
+    "locale": "ro",
+    "name": "Permacultură"
+  },
+  {
+    "tagId": "cmcarqrql00006wqmb3vph9qh",
+    "locale": "nl",
+    "name": "Permacultuur"
+  },
+  {
+    "tagId": "cmcarqs2s003m6wqmz8tujp18",
+    "locale": "de",
+    "name": "Grauwasser-Systeme"
+  },
+  {
+    "tagId": "cmcarqs2s003m6wqmz8tujp18",
+    "locale": "hu",
+    "name": "Szürkevíz rendszerek"
+  },
+  {
+    "tagId": "cmcarqs2s003m6wqmz8tujp18",
+    "locale": "es",
+    "name": "Sistemas de aguas grises"
+  },
+  {
+    "tagId": "cmcarqs2s003m6wqmz8tujp18",
+    "locale": "fr",
+    "name": "Systèmes d'eaux grises"
+  },
+  {
+    "tagId": "cmcarqs2s003m6wqmz8tujp18",
+    "locale": "it",
+    "name": "Sistemi per acque grigie"
+  },
+  {
+    "tagId": "cmcarqs2s003m6wqmz8tujp18",
+    "locale": "pt",
+    "name": "Sistemas de águas cinzentas"
+  },
+  {
+    "tagId": "cmcarqs2s003m6wqmz8tujp18",
+    "locale": "sk",
+    "name": "Systémy zelenej vody"
+  },
+  {
+    "tagId": "cmcarqs2s003m6wqmz8tujp18",
+    "locale": "pl",
+    "name": "Systemy wody szarej"
+  },
+  {
+    "tagId": "cmcarqs2s003m6wqmz8tujp18",
+    "locale": "ro",
+    "name": "Sisteme de apă gri"
+  },
+  {
+    "tagId": "cmcarqs2s003m6wqmz8tujp18",
+    "locale": "nl",
+    "name": "Grijswater-systemen"
+  },
+  {
+    "tagId": "cmcarqs2x003n6wqm6p5rivxm",
+    "locale": "de",
+    "name": "Tierrettung"
+  },
+  {
+    "tagId": "cmcarqs2x003n6wqm6p5rivxm",
+    "locale": "hu",
+    "name": "Állatmentés"
+  },
+  {
+    "tagId": "cmcarqs2x003n6wqm6p5rivxm",
+    "locale": "es",
+    "name": "Rescate de animales"
+  },
+  {
+    "tagId": "cmcarqs2x003n6wqm6p5rivxm",
+    "locale": "fr",
+    "name": "Sauvetage des animaux"
+  },
+  {
+    "tagId": "cmcarqs2x003n6wqm6p5rivxm",
+    "locale": "it",
+    "name": "Soccorso animali"
+  },
+  {
+    "tagId": "cmcarqs2x003n6wqm6p5rivxm",
+    "locale": "pt",
+    "name": "Resgate de animais"
+  },
+  {
+    "tagId": "cmcarqs2x003n6wqm6p5rivxm",
+    "locale": "sk",
+    "name": "Záchrana zvierat"
+  },
+  {
+    "tagId": "cmcarqs2x003n6wqm6p5rivxm",
+    "locale": "pl",
+    "name": "Ratowanie zwierząt"
+  },
+  {
+    "tagId": "cmcarqs2x003n6wqm6p5rivxm",
+    "locale": "ro",
+    "name": "Salvarea animalelor"
+  },
+  {
+    "tagId": "cmcarqs2x003n6wqm6p5rivxm",
+    "locale": "nl",
+    "name": "Dieren redden"
+  },
+  {
+    "tagId": "cmcarqs33003o6wqmfqxvo0vi",
+    "locale": "de",
+    "name": "Schutz der Wildtiere"
+  },
+  {
+    "tagId": "cmcarqs33003o6wqmfqxvo0vi",
+    "locale": "hu",
+    "name": "Vadvilág megőrzése"
+  },
+  {
+    "tagId": "cmcarqs33003o6wqmfqxvo0vi",
+    "locale": "es",
+    "name": "Conservación de la fauna"
+  },
+  {
+    "tagId": "cmcarqs33003o6wqmfqxvo0vi",
+    "locale": "fr",
+    "name": "Conservation de la faune et de la flore"
+  },
+  {
+    "tagId": "cmcarqs33003o6wqmfqxvo0vi",
+    "locale": "it",
+    "name": "Conservazione della fauna selvatica"
+  },
+  {
+    "tagId": "cmcarqs33003o6wqmfqxvo0vi",
+    "locale": "pt",
+    "name": "Conservação da vida selvagem"
+  },
+  {
+    "tagId": "cmcarqs33003o6wqmfqxvo0vi",
+    "locale": "sk",
+    "name": "Ochrana voľne žijúcich živočíchov a rastlín"
+  },
+  {
+    "tagId": "cmcarqs33003o6wqmfqxvo0vi",
+    "locale": "pl",
+    "name": "Ochrona dzikiej przyrody"
+  },
+  {
+    "tagId": "cmcarqs33003o6wqmfqxvo0vi",
+    "locale": "ro",
+    "name": "Conservarea vieții sălbatice"
+  },
+  {
+    "tagId": "cmcarqs33003o6wqmfqxvo0vi",
+    "locale": "nl",
+    "name": "Behoud van wilde dieren"
+  },
+  {
+    "tagId": "cmcarqs38003p6wqmqiw7mvfq",
+    "locale": "de",
+    "name": "Vogelbeobachtung"
+  },
+  {
+    "tagId": "cmcarqs38003p6wqmqiw7mvfq",
+    "locale": "hu",
+    "name": "Madármegfigyelés"
+  },
+  {
+    "tagId": "cmcarqs38003p6wqmqiw7mvfq",
+    "locale": "es",
+    "name": "Observación de aves"
+  },
+  {
+    "tagId": "cmcarqs38003p6wqmqiw7mvfq",
+    "locale": "fr",
+    "name": "Observation des oiseaux"
+  },
+  {
+    "tagId": "cmcarqs38003p6wqmqiw7mvfq",
+    "locale": "it",
+    "name": "Osservazione degli uccelli"
+  },
+  {
+    "tagId": "cmcarqs38003p6wqmqiw7mvfq",
+    "locale": "pt",
+    "name": "Observação de aves"
+  },
+  {
+    "tagId": "cmcarqs38003p6wqmqiw7mvfq",
+    "locale": "sk",
+    "name": "Pozorovanie vtákov"
+  },
+  {
+    "tagId": "cmcarqs38003p6wqmqiw7mvfq",
+    "locale": "pl",
+    "name": "Obserwacja ptaków"
+  },
+  {
+    "tagId": "cmcarqs38003p6wqmqiw7mvfq",
+    "locale": "ro",
+    "name": "Observarea păsărilor"
+  },
+  {
+    "tagId": "cmcarqs38003p6wqmqiw7mvfq",
+    "locale": "nl",
+    "name": "Vogels kijken"
+  },
+  {
+    "tagId": "cmcarqs3e003q6wqmcxa2r3jf",
+    "locale": "de",
+    "name": "Hundeliebhaber"
+  },
+  {
+    "tagId": "cmcarqs3e003q6wqmcxa2r3jf",
+    "locale": "hu",
+    "name": "Kutyabarátok"
+  },
+  {
+    "tagId": "cmcarqs3e003q6wqmcxa2r3jf",
+    "locale": "es",
+    "name": "Amantes de los perros"
+  },
+  {
+    "tagId": "cmcarqs3e003q6wqmcxa2r3jf",
+    "locale": "fr",
+    "name": "Amoureux des chiens"
+  },
+  {
+    "tagId": "cmcarqs3e003q6wqmcxa2r3jf",
+    "locale": "it",
+    "name": "Amanti dei cani"
+  },
+  {
+    "tagId": "cmcarqs3e003q6wqmcxa2r3jf",
+    "locale": "pt",
+    "name": "Amantes de cães"
+  },
+  {
+    "tagId": "cmcarqs3e003q6wqmcxa2r3jf",
+    "locale": "sk",
+    "name": "Milovníci psov"
+  },
+  {
+    "tagId": "cmcarqs3e003q6wqmcxa2r3jf",
+    "locale": "pl",
+    "name": "Miłośnicy psów"
+  },
+  {
+    "tagId": "cmcarqs3e003q6wqmcxa2r3jf",
+    "locale": "ro",
+    "name": "Iubitori de câini"
+  },
+  {
+    "tagId": "cmcarqs3e003q6wqmcxa2r3jf",
+    "locale": "nl",
+    "name": "Hondenliefhebbers"
+  },
+  {
+    "tagId": "cmcarqs3j003r6wqm3dl3boto",
+    "locale": "de",
+    "name": "Katzenliebhaber"
+  },
+  {
+    "tagId": "cmcarqs3j003r6wqm3dl3boto",
+    "locale": "hu",
+    "name": "Macskabarátok"
+  },
+  {
+    "tagId": "cmcarqs3j003r6wqm3dl3boto",
+    "locale": "es",
+    "name": "Amantes de los gatos"
+  },
+  {
+    "tagId": "cmcarqs3j003r6wqm3dl3boto",
+    "locale": "fr",
+    "name": "Amoureux des chats"
+  },
+  {
+    "tagId": "cmcarqs3j003r6wqm3dl3boto",
+    "locale": "it",
+    "name": "Amanti dei gatti"
+  },
+  {
+    "tagId": "cmcarqs3j003r6wqm3dl3boto",
+    "locale": "pt",
+    "name": "Amantes de gatos"
+  },
+  {
+    "tagId": "cmcarqs3j003r6wqm3dl3boto",
+    "locale": "sk",
+    "name": "Milovníci mačiek"
+  },
+  {
+    "tagId": "cmcarqs3j003r6wqm3dl3boto",
+    "locale": "pl",
+    "name": "Miłośnicy kotów"
+  },
+  {
+    "tagId": "cmcarqs3j003r6wqm3dl3boto",
+    "locale": "ro",
+    "name": "Iubitorii de pisici"
+  },
+  {
+    "tagId": "cmcarqs3j003r6wqm3dl3boto",
+    "locale": "nl",
+    "name": "Kattenliefhebbers"
+  },
+  {
+    "tagId": "cmcarqs3q003s6wqm75rip8z1",
+    "locale": "de",
+    "name": "Reiten"
+  },
+  {
+    "tagId": "cmcarqs3q003s6wqm75rip8z1",
+    "locale": "hu",
+    "name": "Lovaglás"
+  },
+  {
+    "tagId": "cmcarqs3q003s6wqm75rip8z1",
+    "locale": "es",
+    "name": "Equitación"
+  },
+  {
+    "tagId": "cmcarqs3q003s6wqm75rip8z1",
+    "locale": "fr",
+    "name": "Équitation"
+  },
+  {
+    "tagId": "cmcarqs3q003s6wqm75rip8z1",
+    "locale": "it",
+    "name": "Equitazione"
+  },
+  {
+    "tagId": "cmcarqs3q003s6wqm75rip8z1",
+    "locale": "pt",
+    "name": "Equitação"
+  },
+  {
+    "tagId": "cmcarqs3q003s6wqm75rip8z1",
+    "locale": "sk",
+    "name": "Jazda na koni"
+  },
+  {
+    "tagId": "cmcarqs3q003s6wqm75rip8z1",
+    "locale": "pl",
+    "name": "Jazda konna"
+  },
+  {
+    "tagId": "cmcarqs3q003s6wqm75rip8z1",
+    "locale": "ro",
+    "name": "Echitație"
+  },
+  {
+    "tagId": "cmcarqs3q003s6wqm75rip8z1",
+    "locale": "nl",
+    "name": "Paardrijden"
+  },
+  {
+    "tagId": "cmcarqs3w003t6wqmw1kdy4h8",
+    "locale": "de",
+    "name": "Herpetologie"
+  },
+  {
+    "tagId": "cmcarqs3w003t6wqmw1kdy4h8",
+    "locale": "hu",
+    "name": "Herpetológia"
+  },
+  {
+    "tagId": "cmcarqs3w003t6wqmw1kdy4h8",
+    "locale": "es",
+    "name": "Herpetología"
+  },
+  {
+    "tagId": "cmcarqs3w003t6wqmw1kdy4h8",
+    "locale": "fr",
+    "name": "Herpétologie"
+  },
+  {
+    "tagId": "cmcarqs3w003t6wqmw1kdy4h8",
+    "locale": "it",
+    "name": "Erpetologia"
+  },
+  {
+    "tagId": "cmcarqs3w003t6wqmw1kdy4h8",
+    "locale": "pt",
+    "name": "Herpetologia"
+  },
+  {
+    "tagId": "cmcarqs3w003t6wqmw1kdy4h8",
+    "locale": "sk",
+    "name": "Herpetológia"
+  },
+  {
+    "tagId": "cmcarqs3w003t6wqmw1kdy4h8",
+    "locale": "pl",
+    "name": "Herpetologia"
+  },
+  {
+    "tagId": "cmcarqs3w003t6wqmw1kdy4h8",
+    "locale": "ro",
+    "name": "Herpetologie"
+  },
+  {
+    "tagId": "cmcarqs3w003t6wqmw1kdy4h8",
+    "locale": "nl",
+    "name": "Herpetologie"
+  },
+  {
+    "tagId": "cmcarqs45003u6wqm31e0nf68",
+    "locale": "de",
+    "name": "Meeresleben"
+  },
+  {
+    "tagId": "cmcarqs45003u6wqm31e0nf68",
+    "locale": "hu",
+    "name": "Tengeri élet"
+  },
+  {
+    "tagId": "cmcarqs45003u6wqm31e0nf68",
+    "locale": "es",
+    "name": "Vida marina"
+  },
+  {
+    "tagId": "cmcarqs45003u6wqm31e0nf68",
+    "locale": "fr",
+    "name": "Vie marine"
+  },
+  {
+    "tagId": "cmcarqs45003u6wqm31e0nf68",
+    "locale": "it",
+    "name": "Vita marina"
+  },
+  {
+    "tagId": "cmcarqs45003u6wqm31e0nf68",
+    "locale": "pt",
+    "name": "Vida marinha"
+  },
+  {
+    "tagId": "cmcarqs45003u6wqm31e0nf68",
+    "locale": "sk",
+    "name": "Morský život"
+  },
+  {
+    "tagId": "cmcarqs45003u6wqm31e0nf68",
+    "locale": "pl",
+    "name": "Życie morskie"
+  },
+  {
+    "tagId": "cmcarqs45003u6wqm31e0nf68",
+    "locale": "ro",
+    "name": "Viața marină"
+  },
+  {
+    "tagId": "cmcarqs45003u6wqm31e0nf68",
+    "locale": "nl",
+    "name": "Zeeleven"
+  },
+  {
+    "tagId": "cmcarqs4b003v6wqmnm1f2uqj",
+    "locale": "de",
+    "name": "Schmetterling Gartenarbeit"
+  },
+  {
+    "tagId": "cmcarqrr200016wqmz3kh3rqn",
+    "locale": "de",
+    "name": "Regenerative Landwirtschaft"
+  },
+  {
+    "tagId": "cmcarqrr200016wqmz3kh3rqn",
+    "locale": "hu",
+    "name": "Regeneratív mezőgazdaság"
+  },
+  {
+    "tagId": "cmcarqrr200016wqmz3kh3rqn",
+    "locale": "es",
+    "name": "Agricultura regenerativa"
+  },
+  {
+    "tagId": "cmcarqrr200016wqmz3kh3rqn",
+    "locale": "fr",
+    "name": "Agriculture régénératrice"
+  },
+  {
+    "tagId": "cmcarqrr200016wqmz3kh3rqn",
+    "locale": "it",
+    "name": "Agricoltura rigenerativa"
+  },
+  {
+    "tagId": "cmcarqrr200016wqmz3kh3rqn",
+    "locale": "pt",
+    "name": "Agricultura regenerativa"
+  },
+  {
+    "tagId": "cmcarqrr200016wqmz3kh3rqn",
+    "locale": "sk",
+    "name": "Regeneračné poľnohospodárstvo"
+  },
+  {
+    "tagId": "cmcarqrr200016wqmz3kh3rqn",
+    "locale": "pl",
+    "name": "Rolnictwo regeneracyjne"
+  },
+  {
+    "tagId": "cmcarqrr200016wqmz3kh3rqn",
+    "locale": "ro",
+    "name": "Agricultura regenerativă"
+  },
+  {
+    "tagId": "cmcarqrr200016wqmz3kh3rqn",
+    "locale": "nl",
+    "name": "Regeneratieve landbouw"
+  },
+  {
+    "tagId": "cmcarqrrd00026wqm1frjoqcb",
+    "locale": "de",
+    "name": "Kompostierung"
+  },
+  {
+    "tagId": "cmcarqrrd00026wqm1frjoqcb",
+    "locale": "hu",
+    "name": "Komposztálás"
+  },
+  {
+    "tagId": "cmcarqrrd00026wqm1frjoqcb",
+    "locale": "es",
+    "name": "Compostaje"
+  },
+  {
+    "tagId": "cmcarqrrd00026wqm1frjoqcb",
+    "locale": "fr",
+    "name": "Compostage"
+  },
+  {
+    "tagId": "cmcarqrrd00026wqm1frjoqcb",
+    "locale": "it",
+    "name": "Compostaggio"
+  },
+  {
+    "tagId": "cmcarqrrd00026wqm1frjoqcb",
+    "locale": "pt",
+    "name": "Compostagem"
+  },
+  {
+    "tagId": "cmcarqrrd00026wqm1frjoqcb",
+    "locale": "sk",
+    "name": "Kompostovanie"
+  },
+  {
+    "tagId": "cmcarqrrd00026wqm1frjoqcb",
+    "locale": "pl",
+    "name": "Kompostowanie"
+  },
+  {
+    "tagId": "cmcarqrrd00026wqm1frjoqcb",
+    "locale": "ro",
+    "name": "Compostarea"
+  },
+  {
+    "tagId": "cmcarqrrd00026wqm1frjoqcb",
+    "locale": "nl",
+    "name": "Compost"
+  },
+  {
+    "tagId": "cmcarqrrj00036wqmzl8la13a",
+    "locale": "de",
+    "name": "Ökologischer Gartenbau"
+  },
+  {
+    "tagId": "cmcarqrrj00036wqmzl8la13a",
+    "locale": "hu",
+    "name": "Biokertészet"
+  },
+  {
+    "tagId": "cmcarqrrj00036wqmzl8la13a",
+    "locale": "es",
+    "name": "Jardinería ecológica"
+  },
+  {
+    "tagId": "cmcarqrrj00036wqmzl8la13a",
+    "locale": "fr",
+    "name": "Jardinage biologique"
+  },
+  {
+    "tagId": "cmcarqrrj00036wqmzl8la13a",
+    "locale": "it",
+    "name": "Giardinaggio biologico"
+  },
+  {
+    "tagId": "cmcarqrrj00036wqmzl8la13a",
+    "locale": "pt",
+    "name": "Jardinagem biológica"
+  },
+  {
+    "tagId": "cmcarqrrj00036wqmzl8la13a",
+    "locale": "sk",
+    "name": "Ekologické záhradníctvo"
+  },
+  {
+    "tagId": "cmcarqrrj00036wqmzl8la13a",
+    "locale": "pl",
+    "name": "Ogrodnictwo ekologiczne"
+  },
+  {
+    "tagId": "cmcarqrrj00036wqmzl8la13a",
+    "locale": "ro",
+    "name": "Grădinăritul ecologic"
+  },
+  {
+    "tagId": "cmcarqrrj00036wqmzl8la13a",
+    "locale": "nl",
+    "name": "Biologisch tuinieren"
+  },
+  {
+    "tagId": "cmcarqrrr00046wqmgje1w7a6",
+    "locale": "de",
+    "name": "No-Dig Gardening"
+  },
+  {
+    "tagId": "cmcarqrrr00046wqmgje1w7a6",
+    "locale": "hu",
+    "name": "No-Dig kertészkedés"
+  },
+  {
+    "tagId": "cmcarqrrr00046wqmgje1w7a6",
+    "locale": "es",
+    "name": "Jardinería sin excavar"
+  },
+  {
+    "tagId": "cmcarqrrr00046wqmgje1w7a6",
+    "locale": "fr",
+    "name": "Le jardinage sans creusage"
+  },
+  {
+    "tagId": "cmcarqrrr00046wqmgje1w7a6",
+    "locale": "it",
+    "name": "Giardinaggio senza scavo"
+  },
+  {
+    "tagId": "cmcarqrrr00046wqmgje1w7a6",
+    "locale": "pt",
+    "name": "Jardinagem sem escavação"
+  },
+  {
+    "tagId": "cmcarqrrr00046wqmgje1w7a6",
+    "locale": "sk",
+    "name": "Záhradkárstvo bez výkopových prác"
+  },
+  {
+    "tagId": "cmcarqrrr00046wqmgje1w7a6",
+    "locale": "pl",
+    "name": "Ogrodnictwo bez kopania"
+  },
+  {
+    "tagId": "cmcarqrrr00046wqmgje1w7a6",
+    "locale": "ro",
+    "name": "Grădinărit fără săpături"
+  },
+  {
+    "tagId": "cmcarqrrr00046wqmgje1w7a6",
+    "locale": "nl",
+    "name": "Tuinieren zonder graven"
+  },
+  {
+    "tagId": "cmcarqrsc00056wqmfkan0is7",
+    "locale": "de",
+    "name": "Lebensmittel-Wälder"
+  },
+  {
+    "tagId": "cmcarqrsc00056wqmfkan0is7",
+    "locale": "hu",
+    "name": "Élelmiszer-erdők"
+  },
+  {
+    "tagId": "cmcarqrsc00056wqmfkan0is7",
+    "locale": "es",
+    "name": "Bosques alimentarios"
+  },
+  {
+    "tagId": "cmcarqrsc00056wqmfkan0is7",
+    "locale": "fr",
+    "name": "Forêts nourricières"
+  },
+  {
+    "tagId": "cmcarqrsc00056wqmfkan0is7",
+    "locale": "it",
+    "name": "Foreste alimentari"
+  },
+  {
+    "tagId": "cmcarqrsc00056wqmfkan0is7",
+    "locale": "pt",
+    "name": "Florestas alimentares"
+  },
+  {
+    "tagId": "cmcarqrsc00056wqmfkan0is7",
+    "locale": "sk",
+    "name": "Potravinové lesy"
+  },
+  {
+    "tagId": "cmcarqrsc00056wqmfkan0is7",
+    "locale": "pl",
+    "name": "Lasy żywnościowe"
+  },
+  {
+    "tagId": "cmcarqrsc00056wqmfkan0is7",
+    "locale": "ro",
+    "name": "Păduri alimentare"
+  },
+  {
+    "tagId": "cmcarqrsc00056wqmfkan0is7",
+    "locale": "nl",
+    "name": "Voedselbossen"
+  },
+  {
+    "tagId": "cmcarqrvu000g6wqmthdhd01n",
+    "locale": "de",
+    "name": "Agroforstwirtschaft"
+  },
+  {
+    "tagId": "cmcarqrvu000g6wqmthdhd01n",
+    "locale": "hu",
+    "name": "Agroerdészet"
+  },
+  {
+    "tagId": "cmcarqrvu000g6wqmthdhd01n",
+    "locale": "es",
+    "name": "Agroforestería"
+  },
+  {
+    "tagId": "cmcarqrvu000g6wqmthdhd01n",
+    "locale": "fr",
+    "name": "Agroforesterie"
+  },
+  {
+    "tagId": "cmcarqrvu000g6wqmthdhd01n",
+    "locale": "it",
+    "name": "Agroforestale"
+  },
+  {
+    "tagId": "cmcarqrvu000g6wqmthdhd01n",
+    "locale": "pt",
+    "name": "Agroflorestação"
+  },
+  {
+    "tagId": "cmcarqrvu000g6wqmthdhd01n",
+    "locale": "sk",
+    "name": "Agrolesníctvo"
+  },
+  {
+    "tagId": "cmcarqrvu000g6wqmthdhd01n",
+    "locale": "pl",
+    "name": "Agroleśnictwo"
+  },
+  {
+    "tagId": "cmcarqrvu000g6wqmthdhd01n",
+    "locale": "ro",
+    "name": "Agroforestiere"
+  },
+  {
+    "tagId": "cmcarqrvu000g6wqmthdhd01n",
+    "locale": "nl",
+    "name": "Agrobosbouw"
+  },
+  {
+    "tagId": "cmcarqrwe00106wqmuy1njbvh",
+    "locale": "de",
+    "name": "Aquaponik"
+  },
+  {
+    "tagId": "cmcarqrwe00106wqmuy1njbvh",
+    "locale": "hu",
+    "name": "Akvapónia"
+  },
+  {
+    "tagId": "cmcarqrwe00106wqmuy1njbvh",
+    "locale": "es",
+    "name": "Acuaponía"
+  },
+  {
+    "tagId": "cmcarqrwe00106wqmuy1njbvh",
+    "locale": "fr",
+    "name": "Aquaponie"
+  },
+  {
+    "tagId": "cmcarqrwe00106wqmuy1njbvh",
+    "locale": "it",
+    "name": "Acquaponica"
+  },
+  {
+    "tagId": "cmcarqrwe00106wqmuy1njbvh",
+    "locale": "pt",
+    "name": "Aquaponia"
+  },
+  {
+    "tagId": "cmcarqrwe00106wqmuy1njbvh",
+    "locale": "sk",
+    "name": "Akvaponika"
+  },
+  {
+    "tagId": "cmcarqrwe00106wqmuy1njbvh",
+    "locale": "pl",
+    "name": "Akwaponika"
+  },
+  {
+    "tagId": "cmcarqrwe00106wqmuy1njbvh",
+    "locale": "ro",
+    "name": "Aquaponică"
+  },
+  {
+    "tagId": "cmcarqrwe00106wqmuy1njbvh",
+    "locale": "nl",
+    "name": "Aquaponics"
+  },
+  {
+    "tagId": "cmcarqrwo001c6wqmv06omqjc",
+    "locale": "de",
+    "name": "Regenwasserernte"
+  },
+  {
+    "tagId": "cmcarqrwo001c6wqmv06omqjc",
+    "locale": "hu",
+    "name": "Esővízgyűjtés"
+  },
+  {
+    "tagId": "cmcarqrwo001c6wqmv06omqjc",
+    "locale": "es",
+    "name": "Recogida de agua de lluvia"
+  },
+  {
+    "tagId": "cmcarqrwo001c6wqmv06omqjc",
+    "locale": "fr",
+    "name": "Récupération de l'eau de pluie"
+  },
+  {
+    "tagId": "cmcarqrwo001c6wqmv06omqjc",
+    "locale": "it",
+    "name": "Raccolta dell'acqua piovana"
+  },
+  {
+    "tagId": "cmcarqrwo001c6wqmv06omqjc",
+    "locale": "pt",
+    "name": "Recolha de águas pluviais"
+  },
+  {
+    "tagId": "cmcarqrwo001c6wqmv06omqjc",
+    "locale": "sk",
+    "name": "Zber dažďovej vody"
+  },
+  {
+    "tagId": "cmcarqrwo001c6wqmv06omqjc",
+    "locale": "pl",
+    "name": "Zbieranie wody deszczowej"
+  },
+  {
+    "tagId": "cmcarqrwo001c6wqmv06omqjc",
+    "locale": "ro",
+    "name": "Colectarea apei de ploaie"
+  },
+  {
+    "tagId": "cmcarqrwo001c6wqmv06omqjc",
+    "locale": "nl",
+    "name": "Regenwateropvang"
+  },
+  {
+    "tagId": "cmcarqrx2001w6wqm2fqlx8er",
+    "locale": "de",
+    "name": "Natürliches Bauen"
+  },
+  {
+    "tagId": "cmcarqrx2001w6wqm2fqlx8er",
+    "locale": "es",
+    "name": "Construcción natural"
+  },
+  {
+    "tagId": "cmcarqrx2001w6wqm2fqlx8er",
+    "locale": "fr",
+    "name": "Bâtiment naturel"
+  },
+  {
+    "tagId": "cmcarqrx2001w6wqm2fqlx8er",
+    "locale": "it",
+    "name": "Edificio naturale"
+  },
+  {
+    "tagId": "cmcarqrx2001w6wqm2fqlx8er",
+    "locale": "pt",
+    "name": "Construção natural"
+  },
+  {
+    "tagId": "cmcarqrx2001w6wqm2fqlx8er",
+    "locale": "sk",
+    "name": "Prírodné budovy"
+  },
+  {
+    "tagId": "cmcarqrx2001w6wqm2fqlx8er",
+    "locale": "pl",
+    "name": "Naturalny budynek"
+  },
+  {
+    "tagId": "cmcarqs4b003v6wqmnm1f2uqj",
+    "locale": "hu",
+    "name": "Pillangó kertészkedés"
+  },
+  {
+    "tagId": "cmcarqs4b003v6wqmnm1f2uqj",
+    "locale": "es",
+    "name": "Jardinería de mariposas"
+  },
+  {
+    "tagId": "cmcarqs4b003v6wqmnm1f2uqj",
+    "locale": "fr",
+    "name": "Jardinage des papillons"
+  },
+  {
+    "tagId": "cmcarqs4b003v6wqmnm1f2uqj",
+    "locale": "it",
+    "name": "Giardinaggio delle farfalle"
+  },
+  {
+    "tagId": "cmcarqs4b003v6wqmnm1f2uqj",
+    "locale": "pt",
+    "name": "Jardinagem de borboletas"
+  },
+  {
+    "tagId": "cmcarqs4b003v6wqmnm1f2uqj",
+    "locale": "sk",
+    "name": "Záhradkárstvo pre motýle"
+  },
+  {
+    "tagId": "cmcarqs4b003v6wqmnm1f2uqj",
+    "locale": "pl",
+    "name": "Ogrodnictwo motyli"
+  },
+  {
+    "tagId": "cmcarqrx2001w6wqm2fqlx8er",
+    "locale": "ro",
+    "name": "Clădire naturală"
+  },
+  {
+    "tagId": "cmcarqrx2001w6wqm2fqlx8er",
+    "locale": "nl",
+    "name": "Natuurlijk bouwen"
+  },
+  {
+    "tagId": "cmcarqrxg00286wqmt6hzsym1",
+    "locale": "de",
+    "name": "Erdschiffe"
+  },
+  {
+    "tagId": "cmcwb6q880022l601616wqoe9",
+    "locale": "pl",
+    "name": "blah"
+  },
+  {
+    "tagId": "cmcarqrxg00286wqmt6hzsym1",
+    "locale": "hu",
+    "name": "Földhajók"
+  },
+  {
+    "tagId": "cmcarqrxg00286wqmt6hzsym1",
+    "locale": "es",
+    "name": "Naves terrestres"
+  },
+  {
+    "tagId": "cmcarqrxg00286wqmt6hzsym1",
+    "locale": "fr",
+    "name": "Earthships (en anglais)"
+  },
+  {
+    "tagId": "cmcarqrxg00286wqmt6hzsym1",
+    "locale": "it",
+    "name": "Navi di terra"
+  },
+  {
+    "tagId": "cmcarqrxg00286wqmt6hzsym1",
+    "locale": "pt",
+    "name": "Naves terrestres"
+  },
+  {
+    "tagId": "cmcarqrxg00286wqmt6hzsym1",
+    "locale": "sk",
+    "name": "Pozemské lode"
+  },
+  {
+    "tagId": "cmcarqrxg00286wqmt6hzsym1",
+    "locale": "pl",
+    "name": "Statki kosmiczne"
+  },
+  {
+    "tagId": "cmcarqrxg00286wqmt6hzsym1",
+    "locale": "ro",
+    "name": "Nave terestre"
+  },
+  {
+    "tagId": "cmcarqrxg00286wqmt6hzsym1",
+    "locale": "nl",
+    "name": "Earthships"
+  },
+  {
+    "tagId": "cmcarqrz400336wqmj0032a1x",
+    "locale": "de",
+    "name": "Winzige Häuser"
+  },
+  {
+    "tagId": "cmcarqrz400336wqmj0032a1x",
+    "locale": "hu",
+    "name": "Apró házak"
+  },
+  {
+    "tagId": "cmcarqrz400336wqmj0032a1x",
+    "locale": "es",
+    "name": "Casas pequeñas"
+  },
+  {
+    "tagId": "cmcarqrz400336wqmj0032a1x",
+    "locale": "fr",
+    "name": "Petites maisons"
+  },
+  {
+    "tagId": "cmcarqrz400336wqmj0032a1x",
+    "locale": "it",
+    "name": "Case minuscole"
+  },
+  {
+    "tagId": "cmcarqrz400336wqmj0032a1x",
+    "locale": "pt",
+    "name": "Casas minúsculas"
+  },
+  {
+    "tagId": "cmcarqrz400336wqmj0032a1x",
+    "locale": "sk",
+    "name": "Drobné domčeky"
+  },
+  {
+    "tagId": "cmcarqrz400336wqmj0032a1x",
+    "locale": "pl",
+    "name": "Małe domy"
+  },
+  {
+    "tagId": "cmcarqrz400336wqmj0032a1x",
+    "locale": "ro",
+    "name": "Case mici"
+  },
+  {
+    "tagId": "cmcarqrz400336wqmj0032a1x",
+    "locale": "nl",
+    "name": "Kleine huizen"
+  },
+  {
+    "tagId": "cmcarqrzm00346wqmzpbgca22",
+    "locale": "de",
+    "name": "Off-Grid Leben"
+  },
+  {
+    "tagId": "cmcarqrzm00346wqmzpbgca22",
+    "locale": "hu",
+    "name": "Off-Grid Living"
+  },
+  {
+    "tagId": "cmcarqrzm00346wqmzpbgca22",
+    "locale": "es",
+    "name": "Vivir sin red eléctrica"
+  },
+  {
+    "tagId": "cmcarqrzm00346wqmzpbgca22",
+    "locale": "fr",
+    "name": "Vivre hors réseau"
+  },
+  {
+    "tagId": "cmcarqrzm00346wqmzpbgca22",
+    "locale": "it",
+    "name": "Vivere fuori dalla rete"
+  },
+  {
+    "tagId": "cmcarqrzm00346wqmzpbgca22",
+    "locale": "pt",
+    "name": "Vida fora da rede"
+  },
+  {
+    "tagId": "cmcarqrzm00346wqmzpbgca22",
+    "locale": "sk",
+    "name": "Život mimo siete"
+  },
+  {
+    "tagId": "cmcarqrzm00346wqmzpbgca22",
+    "locale": "pl",
+    "name": "Życie poza siecią"
+  },
+  {
+    "tagId": "cmcarqrzm00346wqmzpbgca22",
+    "locale": "ro",
+    "name": "Viața în afara rețelei"
+  },
+  {
+    "tagId": "cmcarqrzm00346wqmzpbgca22",
+    "locale": "nl",
+    "name": "Off-Grid leven"
+  },
+  {
+    "tagId": "cmcarqs0000356wqmmw4r2ymx",
+    "locale": "de",
+    "name": "Solarenergie"
+  },
+  {
+    "tagId": "cmcarqs0000356wqmmw4r2ymx",
+    "locale": "hu",
+    "name": "Napenergia"
+  },
+  {
+    "tagId": "cmcarqs0000356wqmmw4r2ymx",
+    "locale": "es",
+    "name": "Energía solar"
+  },
+  {
+    "tagId": "cmcarqs0000356wqmmw4r2ymx",
+    "locale": "fr",
+    "name": "Énergie solaire"
+  },
+  {
+    "tagId": "cmcarqs0000356wqmmw4r2ymx",
+    "locale": "it",
+    "name": "Energia solare"
+  },
+  {
+    "tagId": "cmcarqs0000356wqmmw4r2ymx",
+    "locale": "pt",
+    "name": "Energia solar"
+  },
+  {
+    "tagId": "cmcarqs0000356wqmmw4r2ymx",
+    "locale": "sk",
+    "name": "Solárna energia"
+  },
+  {
+    "tagId": "cmcarqs0000356wqmmw4r2ymx",
+    "locale": "pl",
+    "name": "Energia słoneczna"
+  },
+  {
+    "tagId": "cmcarqs0000356wqmmw4r2ymx",
+    "locale": "ro",
+    "name": "Energie solară"
+  },
+  {
+    "tagId": "cmcarqs0000356wqmmw4r2ymx",
+    "locale": "nl",
+    "name": "Zonne-energie"
+  },
+  {
+    "tagId": "cmcarqs0600366wqmdlxjlu7l",
+    "locale": "de",
+    "name": "Windenergie"
+  },
+  {
+    "tagId": "cmcarqs0600366wqmdlxjlu7l",
+    "locale": "hu",
+    "name": "Szélenergia"
+  },
+  {
+    "tagId": "cmcarqs0600366wqmdlxjlu7l",
+    "locale": "es",
+    "name": "Energía eólica"
+  },
+  {
+    "tagId": "cmcarqs0600366wqmdlxjlu7l",
+    "locale": "fr",
+    "name": "Énergie éolienne"
+  },
+  {
+    "tagId": "cmcarqs0600366wqmdlxjlu7l",
+    "locale": "it",
+    "name": "Energia eolica"
+  },
+  {
+    "tagId": "cmcarqs0600366wqmdlxjlu7l",
+    "locale": "pt",
+    "name": "Energia eólica"
+  },
+  {
+    "tagId": "cmcarqs0600366wqmdlxjlu7l",
+    "locale": "sk",
+    "name": "Veterná energia"
+  },
+  {
+    "tagId": "cmcarqs0600366wqmdlxjlu7l",
+    "locale": "pl",
+    "name": "Energia wiatrowa"
+  },
+  {
+    "tagId": "cmcarqs0600366wqmdlxjlu7l",
+    "locale": "ro",
+    "name": "Energia eoliană"
+  },
+  {
+    "tagId": "cmcarqs0600366wqmdlxjlu7l",
+    "locale": "nl",
+    "name": "Windenergie"
+  },
+  {
+    "tagId": "cmcarqs0b00376wqmsggf2fu9",
+    "locale": "de",
+    "name": "Null Abfall"
+  },
+  {
+    "tagId": "cmcarqs0b00376wqmsggf2fu9",
+    "locale": "hu",
+    "name": "Nulla hulladék"
+  },
+  {
+    "tagId": "cmcarqs0b00376wqmsggf2fu9",
+    "locale": "es",
+    "name": "Residuos cero"
+  },
+  {
+    "tagId": "cmcarqs0b00376wqmsggf2fu9",
+    "locale": "fr",
+    "name": "Zéro déchet"
+  },
+  {
+    "tagId": "cmcarqs0b00376wqmsggf2fu9",
+    "locale": "it",
+    "name": "Rifiuti zero"
+  },
+  {
+    "tagId": "cmcarqs0b00376wqmsggf2fu9",
+    "locale": "pt",
+    "name": "Zero Resíduos"
+  },
+  {
+    "tagId": "cmcarqs0b00376wqmsggf2fu9",
+    "locale": "sk",
+    "name": "Nulový odpad"
+  },
+  {
+    "tagId": "cmcarqs0b00376wqmsggf2fu9",
+    "locale": "pl",
+    "name": "Zero odpadów"
+  },
+  {
+    "tagId": "cmcarqs0b00376wqmsggf2fu9",
+    "locale": "ro",
+    "name": "Zero deșeuri"
+  },
+  {
+    "tagId": "cmcarqs0b00376wqmsggf2fu9",
+    "locale": "nl",
+    "name": "Nul afval"
+  },
+  {
+    "tagId": "cmcarqs0j00386wqmzhxxo2bc",
+    "locale": "de",
+    "name": "DIY"
+  },
+  {
+    "tagId": "cmcarqs0j00386wqmzhxxo2bc",
+    "locale": "hu",
+    "name": "DIY"
+  },
+  {
+    "tagId": "cmcarqs0j00386wqmzhxxo2bc",
+    "locale": "es",
+    "name": "BRICOLAJE"
+  },
+  {
+    "tagId": "cmcarqs0j00386wqmzhxxo2bc",
+    "locale": "fr",
+    "name": "BRICOLAGE"
+  },
+  {
+    "tagId": "cmcarqs0j00386wqmzhxxo2bc",
+    "locale": "it",
+    "name": "FAI DA TE"
+  },
+  {
+    "tagId": "cmcarqs0j00386wqmzhxxo2bc",
+    "locale": "pt",
+    "name": "BRICOLAGE"
+  },
+  {
+    "tagId": "cmcarqs0j00386wqmzhxxo2bc",
+    "locale": "sk",
+    "name": "UROB SI SÁM"
+  },
+  {
+    "tagId": "cmcarqs0j00386wqmzhxxo2bc",
+    "locale": "pl",
+    "name": "DIY"
+  },
+  {
+    "tagId": "cmcarqs0j00386wqmzhxxo2bc",
+    "locale": "ro",
+    "name": "DIY"
+  },
+  {
+    "tagId": "cmcarqs0j00386wqmzhxxo2bc",
+    "locale": "nl",
+    "name": "DOE-HET-ZELF"
+  },
+  {
+    "tagId": "cmcarqs0o00396wqmibc1eq35",
+    "locale": "de",
+    "name": "Saatguterhaltung"
+  },
+  {
+    "tagId": "cmcarqs0o00396wqmibc1eq35",
+    "locale": "hu",
+    "name": "Vetőmag-takarékosság"
+  },
+  {
+    "tagId": "cmcarqs0o00396wqmibc1eq35",
+    "locale": "es",
+    "name": "Ahorro de semillas"
+  },
+  {
+    "tagId": "cmcarqs0o00396wqmibc1eq35",
+    "locale": "fr",
+    "name": "Conservation des semences"
+  },
+  {
+    "tagId": "cmcarqs0o00396wqmibc1eq35",
+    "locale": "it",
+    "name": "Risparmio di semi"
+  },
+  {
+    "tagId": "cmcarqs0o00396wqmibc1eq35",
+    "locale": "pt",
+    "name": "Armazenamento de sementes"
+  },
+  {
+    "tagId": "cmcarqs0o00396wqmibc1eq35",
+    "locale": "sk",
+    "name": "Úspora osiva"
+  },
+  {
+    "tagId": "cmcarqs0o00396wqmibc1eq35",
+    "locale": "pl",
+    "name": "Oszczędzanie nasion"
+  },
+  {
+    "tagId": "cmcarqs0o00396wqmibc1eq35",
+    "locale": "ro",
+    "name": "Păstrarea semințelor"
+  },
+  {
+    "tagId": "cmcarqs0o00396wqmibc1eq35",
+    "locale": "nl",
+    "name": "Zaden sparen"
+  },
+  {
+    "tagId": "cmcarqs0w003a6wqmaoekuy0l",
+    "locale": "de",
+    "name": "Imkerei"
+  },
+  {
+    "tagId": "cmcarqs0w003a6wqmaoekuy0l",
+    "locale": "hu",
+    "name": "Méhészet"
+  },
+  {
+    "tagId": "cmcarqs0w003a6wqmaoekuy0l",
+    "locale": "es",
+    "name": "Apicultura"
+  },
+  {
+    "tagId": "cmcarqs0w003a6wqmaoekuy0l",
+    "locale": "fr",
+    "name": "Apiculture"
+  },
+  {
+    "tagId": "cmcarqs0w003a6wqmaoekuy0l",
+    "locale": "it",
+    "name": "Apicoltura"
+  },
+  {
+    "tagId": "cmcarqs0w003a6wqmaoekuy0l",
+    "locale": "pt",
+    "name": "Apicultura"
+  },
+  {
+    "tagId": "cmcarqs0w003a6wqmaoekuy0l",
+    "locale": "sk",
+    "name": "Včelárstvo"
+  },
+  {
+    "tagId": "cmcarqs0w003a6wqmaoekuy0l",
+    "locale": "pl",
+    "name": "Pszczelarstwo"
+  },
+  {
+    "tagId": "cmcarqs0w003a6wqmaoekuy0l",
+    "locale": "ro",
+    "name": "Apicultura"
+  },
+  {
+    "tagId": "cmcarqs0w003a6wqmaoekuy0l",
+    "locale": "nl",
+    "name": "Bijenteelt"
+  },
+  {
+    "tagId": "cmcarqs12003b6wqmie74j4h1",
+    "locale": "de",
+    "name": "Gärung"
+  },
+  {
+    "tagId": "cmcarqs12003b6wqmie74j4h1",
+    "locale": "hu",
+    "name": "Erjesztés"
+  },
+  {
+    "tagId": "cmcarqs12003b6wqmie74j4h1",
+    "locale": "es",
+    "name": "Fermentación"
+  },
+  {
+    "tagId": "cmcarqs12003b6wqmie74j4h1",
+    "locale": "fr",
+    "name": "Fermentation"
+  },
+  {
+    "tagId": "cmcarqs12003b6wqmie74j4h1",
+    "locale": "it",
+    "name": "Fermentazione"
+  },
+  {
+    "tagId": "cmcarqs12003b6wqmie74j4h1",
+    "locale": "pt",
+    "name": "Fermentação"
+  },
+  {
+    "tagId": "cmcarqs12003b6wqmie74j4h1",
+    "locale": "sk",
+    "name": "Fermentácia"
+  },
+  {
+    "tagId": "cmcarqs12003b6wqmie74j4h1",
+    "locale": "pl",
+    "name": "Fermentacja"
+  },
+  {
+    "tagId": "cmcarqs12003b6wqmie74j4h1",
+    "locale": "ro",
+    "name": "Fermentare"
+  },
+  {
+    "tagId": "cmcarqs12003b6wqmie74j4h1",
+    "locale": "nl",
+    "name": "Gisting"
+  },
+  {
+    "tagId": "cmcarqs4b003v6wqmnm1f2uqj",
+    "locale": "ro",
+    "name": "Grădinăritul fluturelui"
+  },
+  {
+    "tagId": "cmcarqs4b003v6wqmnm1f2uqj",
+    "locale": "nl",
+    "name": "Vlindertuinieren"
+  },
+  {
+    "tagId": "cmcarqs4k003w6wqmpjnreo38",
+    "locale": "de",
+    "name": "Hühnerhaltung"
+  },
+  {
+    "tagId": "cmcarqs4k003w6wqmpjnreo38",
+    "locale": "hu",
+    "name": "Csirketartás"
+  },
+  {
+    "tagId": "cmcarqs4k003w6wqmpjnreo38",
+    "locale": "es",
+    "name": "Cría de pollos"
+  },
+  {
+    "tagId": "cmcarqs4k003w6wqmpjnreo38",
+    "locale": "fr",
+    "name": "L'élevage de poulets"
+  },
+  {
+    "tagId": "cmcarqs4k003w6wqmpjnreo38",
+    "locale": "it",
+    "name": "Allevamento di polli"
+  },
+  {
+    "tagId": "cmcarqs6600456wqmcgiccd22",
+    "locale": "es",
+    "name": "Música en directo"
+  },
+  {
+    "tagId": "cmcarqs6600456wqmcgiccd22",
+    "locale": "it",
+    "name": "Musica dal vivo"
+  },
+  {
+    "tagId": "cmcarqs6600456wqmcgiccd22",
+    "locale": "pt",
+    "name": "Música ao vivo"
+  },
+  {
+    "tagId": "cmcarqs6600456wqmcgiccd22",
+    "locale": "sk",
+    "name": "Živá hudba"
+  },
+  {
+    "tagId": "cmcarqs6600456wqmcgiccd22",
+    "locale": "pl",
+    "name": "Muzyka na żywo"
+  },
+  {
+    "tagId": "cmcarqs6600456wqmcgiccd22",
+    "locale": "ro",
+    "name": "Muzică live"
+  },
+  {
+    "tagId": "cmcarqs6600456wqmcgiccd22",
+    "locale": "nl",
+    "name": "Live Muziek"
+  },
+  {
+    "tagId": "cmcarqs6b00466wqmyqojdbts",
+    "locale": "de",
+    "name": "Volksmusik"
+  },
+  {
+    "tagId": "cmcarqs6b00466wqmyqojdbts",
+    "locale": "hu",
+    "name": "Népzene"
+  },
+  {
+    "tagId": "cmcarqs6b00466wqmyqojdbts",
+    "locale": "es",
+    "name": "Música folclórica"
+  },
+  {
+    "tagId": "cmcarqs6b00466wqmyqojdbts",
+    "locale": "fr",
+    "name": "Musique folklorique"
+  },
+  {
+    "tagId": "cmcarqs6b00466wqmyqojdbts",
+    "locale": "it",
+    "name": "Musica popolare"
+  },
+  {
+    "tagId": "cmcarqs6b00466wqmyqojdbts",
+    "locale": "pt",
+    "name": "Música folclórica"
+  },
+  {
+    "tagId": "cmcarqs6b00466wqmyqojdbts",
+    "locale": "sk",
+    "name": "Ľudová hudba"
+  },
+  {
+    "tagId": "cmcarqs6b00466wqmyqojdbts",
+    "locale": "pl",
+    "name": "Muzyka ludowa"
+  },
+  {
+    "tagId": "cmcarqs6b00466wqmyqojdbts",
+    "locale": "ro",
+    "name": "Muzică populară"
+  },
+  {
+    "tagId": "cmcarqs6b00466wqmyqojdbts",
+    "locale": "nl",
+    "name": "Volksmuziek"
+  },
+  {
+    "tagId": "cmcarqs6h00476wqm6m9vy81t",
+    "locale": "de",
+    "name": "Akustische Gitarre"
+  },
+  {
+    "tagId": "cmcarqs6h00476wqm6m9vy81t",
+    "locale": "hu",
+    "name": "Akusztikus gitár"
+  },
+  {
+    "tagId": "cmcarqs6h00476wqm6m9vy81t",
+    "locale": "es",
+    "name": "Guitarra acústica"
+  },
+  {
+    "tagId": "cmcarqs6h00476wqm6m9vy81t",
+    "locale": "fr",
+    "name": "Guitare acoustique"
+  },
+  {
+    "tagId": "cmcarqs6h00476wqm6m9vy81t",
+    "locale": "it",
+    "name": "Chitarra acustica"
+  },
+  {
+    "tagId": "cmcarqs6h00476wqm6m9vy81t",
+    "locale": "pt",
+    "name": "Guitarra acústica"
+  },
+  {
+    "tagId": "cmcarqs6h00476wqm6m9vy81t",
+    "locale": "sk",
+    "name": "Akustická gitara"
+  },
+  {
+    "tagId": "cmcarqs6h00476wqm6m9vy81t",
+    "locale": "pl",
+    "name": "Gitara akustyczna"
+  },
+  {
+    "tagId": "cmcarqs6h00476wqm6m9vy81t",
+    "locale": "ro",
+    "name": "Chitară acustică"
+  },
+  {
+    "tagId": "cmcarqs6h00476wqm6m9vy81t",
+    "locale": "nl",
+    "name": "Akoestische gitaar"
+  },
+  {
+    "tagId": "cmcarqs6v00486wqmj9nxqogf",
+    "locale": "de",
+    "name": "Weltmusik"
+  },
+  {
+    "tagId": "cmcarqs6v00486wqmj9nxqogf",
+    "locale": "hu",
+    "name": "Világzene"
+  },
+  {
+    "tagId": "cmcarqs6v00486wqmj9nxqogf",
+    "locale": "es",
+    "name": "Música del mundo"
+  },
+  {
+    "tagId": "cmcarqs6v00486wqmj9nxqogf",
+    "locale": "fr",
+    "name": "Musique du monde"
+  },
+  {
+    "tagId": "cmcarqs6v00486wqmj9nxqogf",
+    "locale": "it",
+    "name": "Musica mondiale"
+  },
+  {
+    "tagId": "cmcarqs6v00486wqmj9nxqogf",
+    "locale": "pt",
+    "name": "Música do mundo"
+  },
+  {
+    "tagId": "cmcarqs6v00486wqmj9nxqogf",
+    "locale": "sk",
+    "name": "Svetová hudba"
+  },
+  {
+    "tagId": "cmcarqs6v00486wqmj9nxqogf",
+    "locale": "pl",
+    "name": "Muzyka świata"
+  },
+  {
+    "tagId": "cmcarqs6v00486wqmj9nxqogf",
+    "locale": "ro",
+    "name": "Muzică mondială"
+  },
+  {
+    "tagId": "cmcarqs6v00486wqmj9nxqogf",
+    "locale": "nl",
+    "name": "Wereldmuziek"
+  },
+  {
+    "tagId": "cmcarqs7300496wqmvwnqf244",
+    "locale": "de",
+    "name": "Musikfestivals"
+  },
+  {
+    "tagId": "cmcarqs7300496wqmvwnqf244",
+    "locale": "hu",
+    "name": "Zenei fesztiválok"
+  },
+  {
+    "tagId": "cmcarqs7300496wqmvwnqf244",
+    "locale": "es",
+    "name": "Festivales de música"
+  },
+  {
+    "tagId": "cmcarqs7300496wqmvwnqf244",
+    "locale": "fr",
+    "name": "Festivals de musique"
+  },
+  {
+    "tagId": "cmcarqs7300496wqmvwnqf244",
+    "locale": "it",
+    "name": "Festival musicali"
+  },
+  {
+    "tagId": "cmcarqs7300496wqmvwnqf244",
+    "locale": "pt",
+    "name": "Festivais de música"
+  },
+  {
+    "tagId": "cmcarqs7300496wqmvwnqf244",
+    "locale": "sk",
+    "name": "Hudobné festivaly"
+  },
+  {
+    "tagId": "cmcarqs7300496wqmvwnqf244",
+    "locale": "pl",
+    "name": "Festiwale muzyczne"
+  },
+  {
+    "tagId": "cmcarqs7300496wqmvwnqf244",
+    "locale": "ro",
+    "name": "Festivaluri de muzică"
+  },
+  {
+    "tagId": "cmcarqs7300496wqmvwnqf244",
+    "locale": "nl",
+    "name": "Muziekfestivals"
+  },
+  {
+    "tagId": "cmcarqs78004a6wqmxu4l30sx",
+    "locale": "de",
+    "name": "Singen"
+  },
+  {
+    "tagId": "cmcarqs78004a6wqmxu4l30sx",
+    "locale": "hu",
+    "name": "Éneklés"
+  },
+  {
+    "tagId": "cmcarqs78004a6wqmxu4l30sx",
+    "locale": "es",
+    "name": "Cantando"
+  },
+  {
+    "tagId": "cmcarqs78004a6wqmxu4l30sx",
+    "locale": "fr",
+    "name": "Chanter"
+  },
+  {
+    "tagId": "cmcarqs78004a6wqmxu4l30sx",
+    "locale": "it",
+    "name": "Canto"
+  },
+  {
+    "tagId": "cmcarqs78004a6wqmxu4l30sx",
+    "locale": "pt",
+    "name": "Cantar"
+  },
+  {
+    "tagId": "cmcarqs78004a6wqmxu4l30sx",
+    "locale": "sk",
+    "name": "Spev"
+  },
+  {
+    "tagId": "cmcarqs78004a6wqmxu4l30sx",
+    "locale": "pl",
+    "name": "Śpiew"
+  },
+  {
+    "tagId": "cmcarqs78004a6wqmxu4l30sx",
+    "locale": "ro",
+    "name": "Cântând"
+  },
+  {
+    "tagId": "cmcarqs78004a6wqmxu4l30sx",
+    "locale": "nl",
+    "name": "Zingen"
+  },
+  {
+    "tagId": "cmcarqs7d004b6wqmawyc6jxn",
+    "locale": "de",
+    "name": "Trommeln"
+  },
+  {
+    "tagId": "cmcarqs7d004b6wqmawyc6jxn",
+    "locale": "hu",
+    "name": "Dobolás"
+  },
+  {
+    "tagId": "cmcarqs7d004b6wqmawyc6jxn",
+    "locale": "es",
+    "name": "Tambores"
+  },
+  {
+    "tagId": "cmcarqs7d004b6wqmawyc6jxn",
+    "locale": "fr",
+    "name": "Tambour"
+  },
+  {
+    "tagId": "cmcarqs7d004b6wqmawyc6jxn",
+    "locale": "it",
+    "name": "Tamburellare"
+  },
+  {
+    "tagId": "cmcarqs7d004b6wqmawyc6jxn",
+    "locale": "pt",
+    "name": "Bateria"
+  },
+  {
+    "tagId": "cmcarqs7d004b6wqmawyc6jxn",
+    "locale": "sk",
+    "name": "Bubnovanie"
+  },
+  {
+    "tagId": "cmcarqs7d004b6wqmawyc6jxn",
+    "locale": "pl",
+    "name": "Perkusja"
+  },
+  {
+    "tagId": "cmcarqs7d004b6wqmawyc6jxn",
+    "locale": "ro",
+    "name": "Drumming"
+  },
+  {
+    "tagId": "cmcarqs7d004b6wqmawyc6jxn",
+    "locale": "nl",
+    "name": "Drummen"
+  },
+  {
+    "tagId": "cmcarqs7i004c6wqmbk6xul98",
+    "locale": "de",
+    "name": "Handpan"
+  },
+  {
+    "tagId": "cmcarqs7i004c6wqmbk6xul98",
+    "locale": "hu",
+    "name": "Handpan"
+  },
+  {
+    "tagId": "cmcarqs7i004c6wqmbk6xul98",
+    "locale": "es",
+    "name": "Flauta de mano"
+  },
+  {
+    "tagId": "cmcarqs7i004c6wqmbk6xul98",
+    "locale": "fr",
+    "name": "Handpan"
+  },
+  {
+    "tagId": "cmcarqs7i004c6wqmbk6xul98",
+    "locale": "it",
+    "name": "Handpan"
+  },
+  {
+    "tagId": "cmcarqs7i004c6wqmbk6xul98",
+    "locale": "pt",
+    "name": "Pandeiro"
+  },
+  {
+    "tagId": "cmcarqs7i004c6wqmbk6xul98",
+    "locale": "sk",
+    "name": "Handpan"
+  },
+  {
+    "tagId": "cmcarqs7i004c6wqmbk6xul98",
+    "locale": "pl",
+    "name": "Handpan"
+  },
+  {
+    "tagId": "cmcarqs7i004c6wqmbk6xul98",
+    "locale": "ro",
+    "name": "Handpan"
+  },
+  {
+    "tagId": "cmcarqs7i004c6wqmbk6xul98",
+    "locale": "nl",
+    "name": "Handpan"
+  },
+  {
+    "tagId": "cmcarqs7n004d6wqmz8x16s7x",
+    "locale": "de",
+    "name": "Ukulele"
+  },
+  {
+    "tagId": "cmcarqs7n004d6wqmz8x16s7x",
+    "locale": "hu",
+    "name": "Ukulele"
+  },
+  {
+    "tagId": "cmcarqs7n004d6wqmz8x16s7x",
+    "locale": "es",
+    "name": "Ukelele"
+  },
+  {
+    "tagId": "cmcarqs7n004d6wqmz8x16s7x",
+    "locale": "fr",
+    "name": "Ukulélé"
+  },
+  {
+    "tagId": "cmcarqs7n004d6wqmz8x16s7x",
+    "locale": "it",
+    "name": "Ukulele"
+  },
+  {
+    "tagId": "cmcarqs7n004d6wqmz8x16s7x",
+    "locale": "pt",
+    "name": "Ukulele"
+  },
+  {
+    "tagId": "cmcarqs7n004d6wqmz8x16s7x",
+    "locale": "sk",
+    "name": "Ukulele"
+  },
+  {
+    "tagId": "cmcarqs7n004d6wqmz8x16s7x",
+    "locale": "pl",
+    "name": "Ukulele"
+  },
+  {
+    "tagId": "cmcarqs7n004d6wqmz8x16s7x",
+    "locale": "ro",
+    "name": "Ukulele"
+  },
+  {
+    "tagId": "cmcarqs7n004d6wqmz8x16s7x",
+    "locale": "nl",
+    "name": "Ukulele"
+  },
+  {
+    "tagId": "cmcarqs7t004e6wqmo8v6fnce",
+    "locale": "de",
+    "name": "Improvisation"
+  },
+  {
+    "tagId": "cmcarqs7t004e6wqmo8v6fnce",
+    "locale": "hu",
+    "name": "Improvizáció"
+  },
+  {
+    "tagId": "cmcarqs7t004e6wqmo8v6fnce",
+    "locale": "es",
+    "name": "Improvisación"
+  },
+  {
+    "tagId": "cmcarqs7t004e6wqmo8v6fnce",
+    "locale": "fr",
+    "name": "Improvisation"
+  },
+  {
+    "tagId": "cmcarqs7t004e6wqmo8v6fnce",
+    "locale": "it",
+    "name": "Improvvisazione"
+  },
+  {
+    "tagId": "cmcarqs7t004e6wqmo8v6fnce",
+    "locale": "pt",
+    "name": "Improvisação"
+  },
+  {
+    "tagId": "cmcarqs7t004e6wqmo8v6fnce",
+    "locale": "sk",
+    "name": "Improvizácia"
+  },
+  {
+    "tagId": "cmcarqs19003c6wqmsn130vwi",
+    "locale": "de",
+    "name": "Einmachen und Konservieren"
+  },
+  {
+    "tagId": "cmcarqs19003c6wqmsn130vwi",
+    "locale": "hu",
+    "name": "Konzerválás és tartósítás"
+  },
+  {
+    "tagId": "cmcarqs19003c6wqmsn130vwi",
+    "locale": "es",
+    "name": "Conservas"
+  },
+  {
+    "tagId": "cmcarqs19003c6wqmsn130vwi",
+    "locale": "fr",
+    "name": "Mise en conserve et conservation"
+  },
+  {
+    "tagId": "cmcarqs19003c6wqmsn130vwi",
+    "locale": "it",
+    "name": "Inscatolamento e conservazione"
+  },
+  {
+    "tagId": "cmdbr1z000003qq01hnbwk7c1",
+    "locale": "hu",
+    "name": "zene"
+  },
+  {
+    "tagId": "cmcarqs19003c6wqmsn130vwi",
+    "locale": "pt",
+    "name": "Conservas e preservação"
+  },
+  {
+    "tagId": "cmcarqs19003c6wqmsn130vwi",
+    "locale": "sk",
+    "name": "Konzervovanie a konzervovanie"
+  },
+  {
+    "tagId": "cmcarqs19003c6wqmsn130vwi",
+    "locale": "pl",
+    "name": "Puszkowanie i konserwowanie"
+  },
+  {
+    "tagId": "cmcarqs19003c6wqmsn130vwi",
+    "locale": "ro",
+    "name": "Conserve și păstrare"
+  },
+  {
+    "tagId": "cmcarqs19003c6wqmsn130vwi",
+    "locale": "nl",
+    "name": "Conserven"
+  },
+  {
+    "tagId": "cmcarqs1e003d6wqmk05gwrgh",
+    "locale": "de",
+    "name": "Futtersuche"
+  },
+  {
+    "tagId": "cmcarqs1e003d6wqmk05gwrgh",
+    "locale": "hu",
+    "name": "Keresés"
+  },
+  {
+    "tagId": "cmcarqs1e003d6wqmk05gwrgh",
+    "locale": "es",
+    "name": "En busca de comida"
+  },
+  {
+    "tagId": "cmcarqs1e003d6wqmk05gwrgh",
+    "locale": "fr",
+    "name": "Recherche de nourriture"
+  },
+  {
+    "tagId": "cmcarqs1e003d6wqmk05gwrgh",
+    "locale": "it",
+    "name": "Foraggiamento"
+  },
+  {
+    "tagId": "cmcarqs1e003d6wqmk05gwrgh",
+    "locale": "pt",
+    "name": "Forrageamento"
+  },
+  {
+    "tagId": "cmcarqs1e003d6wqmk05gwrgh",
+    "locale": "sk",
+    "name": "Hľadanie potravy"
+  },
+  {
+    "tagId": "cmcarqs1e003d6wqmk05gwrgh",
+    "locale": "pl",
+    "name": "Żerowanie"
+  },
+  {
+    "tagId": "cmcarqs1e003d6wqmk05gwrgh",
+    "locale": "ro",
+    "name": "Căutarea hranei"
+  },
+  {
+    "tagId": "cmcarqs1e003d6wqmk05gwrgh",
+    "locale": "nl",
+    "name": "Foerageren"
+  },
+  {
+    "tagId": "cmcarqs1k003e6wqm0b9kigsf",
+    "locale": "de",
+    "name": "Öko-Dörfer"
+  },
+  {
+    "tagId": "cmcarqs1k003e6wqm0b9kigsf",
+    "locale": "hu",
+    "name": "Öko falvak"
+  },
+  {
+    "tagId": "cmcarqs1k003e6wqm0b9kigsf",
+    "locale": "es",
+    "name": "Ecoaldeas"
+  },
+  {
+    "tagId": "cmcarqs1k003e6wqm0b9kigsf",
+    "locale": "fr",
+    "name": "Eco Villages"
+  },
+  {
+    "tagId": "cmcarqs1k003e6wqm0b9kigsf",
+    "locale": "it",
+    "name": "Villaggi ecologici"
+  },
+  {
+    "tagId": "cmcarqs1k003e6wqm0b9kigsf",
+    "locale": "pt",
+    "name": "Aldeias ecológicas"
+  },
+  {
+    "tagId": "cmcarqs1k003e6wqm0b9kigsf",
+    "locale": "sk",
+    "name": "Eko dediny"
+  },
+  {
+    "tagId": "cmcarqs1k003e6wqm0b9kigsf",
+    "locale": "pl",
+    "name": "Wioski ekologiczne"
+  },
+  {
+    "tagId": "cmcarqs1k003e6wqm0b9kigsf",
+    "locale": "ro",
+    "name": "Sate ecologice"
+  },
+  {
+    "tagId": "cmcarqs1k003e6wqm0b9kigsf",
+    "locale": "nl",
+    "name": "Eco Dorpen"
+  },
+  {
+    "tagId": "cmcarqs1q003f6wqmb8s5x1jw",
+    "locale": "de",
+    "name": "Slow Food"
+  },
+  {
+    "tagId": "cmcarqs1q003f6wqmb8s5x1jw",
+    "locale": "hu",
+    "name": "Slow Food"
+  },
+  {
+    "tagId": "cmcarqs1q003f6wqmb8s5x1jw",
+    "locale": "es",
+    "name": "Slow Food"
+  },
+  {
+    "tagId": "cmcarqs1q003f6wqmb8s5x1jw",
+    "locale": "fr",
+    "name": "Slow Food"
+  },
+  {
+    "tagId": "cmcarqs1q003f6wqmb8s5x1jw",
+    "locale": "it",
+    "name": "Slow Food"
+  },
+  {
+    "tagId": "cmcarqs1q003f6wqmb8s5x1jw",
+    "locale": "pt",
+    "name": "Slow Food"
+  },
+  {
+    "tagId": "cmcarqs1q003f6wqmb8s5x1jw",
+    "locale": "sk",
+    "name": "Slow Food"
+  },
+  {
+    "tagId": "cmcarqs1q003f6wqmb8s5x1jw",
+    "locale": "pl",
+    "name": "Slow Food"
+  },
+  {
+    "tagId": "cmcarqs1q003f6wqmb8s5x1jw",
+    "locale": "ro",
+    "name": "Slow Food"
+  },
+  {
+    "tagId": "cmcarqs1q003f6wqmb8s5x1jw",
+    "locale": "nl",
+    "name": "Slow Food"
+  },
+  {
+    "tagId": "cmcarqs1w003g6wqm0cde23cf",
+    "locale": "de",
+    "name": "Lokale Lebensmittel"
+  },
+  {
+    "tagId": "cmcarqs1w003g6wqm0cde23cf",
+    "locale": "hu",
+    "name": "Helyi élelmiszer"
+  },
+  {
+    "tagId": "cmcarqs1w003g6wqm0cde23cf",
+    "locale": "es",
+    "name": "Alimentos locales"
+  },
+  {
+    "tagId": "cmcarqs1w003g6wqm0cde23cf",
+    "locale": "fr",
+    "name": "Alimentation locale"
+  },
+  {
+    "tagId": "cmcarqs1w003g6wqm0cde23cf",
+    "locale": "it",
+    "name": "Cibo locale"
+  },
+  {
+    "tagId": "cmcarqs1w003g6wqm0cde23cf",
+    "locale": "pt",
+    "name": "Alimentação local"
+  },
+  {
+    "tagId": "cmcarqs1w003g6wqm0cde23cf",
+    "locale": "sk",
+    "name": "Miestne potraviny"
+  },
+  {
+    "tagId": "cmcarqs1w003g6wqm0cde23cf",
+    "locale": "pl",
+    "name": "Lokalna żywność"
+  },
+  {
+    "tagId": "cmcarqs1w003g6wqm0cde23cf",
+    "locale": "ro",
+    "name": "Alimente locale"
+  },
+  {
+    "tagId": "cmcarqs1w003g6wqm0cde23cf",
+    "locale": "nl",
+    "name": "Lokaal voedsel"
+  },
+  {
+    "tagId": "cmcarqs21003h6wqm7cbcjpm7",
+    "locale": "de",
+    "name": "Bauernmärkte"
+  },
+  {
+    "tagId": "cmcarqs21003h6wqm7cbcjpm7",
+    "locale": "hu",
+    "name": "Mezőgazdasági piacok"
+  },
+  {
+    "tagId": "cmcarqs21003h6wqm7cbcjpm7",
+    "locale": "es",
+    "name": "Mercados agrícolas"
+  },
+  {
+    "tagId": "cmcarqs21003h6wqm7cbcjpm7",
+    "locale": "fr",
+    "name": "Marchés de producteurs"
+  },
+  {
+    "tagId": "cmcarqs21003h6wqm7cbcjpm7",
+    "locale": "it",
+    "name": "Mercati contadini"
+  },
+  {
+    "tagId": "cmcarqs21003h6wqm7cbcjpm7",
+    "locale": "pt",
+    "name": "Mercados agrícolas"
+  },
+  {
+    "tagId": "cmcarqs21003h6wqm7cbcjpm7",
+    "locale": "sk",
+    "name": "Farmárske trhy"
+  },
+  {
+    "tagId": "cmcarqs21003h6wqm7cbcjpm7",
+    "locale": "pl",
+    "name": "Rynki rolne"
+  },
+  {
+    "tagId": "cmcarqs21003h6wqm7cbcjpm7",
+    "locale": "ro",
+    "name": "Piețele fermierilor"
+  },
+  {
+    "tagId": "cmcarqs21003h6wqm7cbcjpm7",
+    "locale": "nl",
+    "name": "Boerenmarkten"
+  },
+  {
+    "tagId": "cmcarqs27003i6wqmt3yji6fy",
+    "locale": "de",
+    "name": "CSA (Gemeinschaftlich unterstützte Landwirtschaft)"
+  },
+  {
+    "tagId": "cmcarqs27003i6wqmt3yji6fy",
+    "locale": "hu",
+    "name": "CSA (Közösség által támogatott mezőgazdaság)"
+  },
+  {
+    "tagId": "cmcarqs27003i6wqmt3yji6fy",
+    "locale": "es",
+    "name": "CSA (Agricultura Apoyada por la Comunidad)"
+  },
+  {
+    "tagId": "cmcarqs27003i6wqmt3yji6fy",
+    "locale": "fr",
+    "name": "CSA (Community Supported Agriculture)"
+  },
+  {
+    "tagId": "cmcarqs27003i6wqmt3yji6fy",
+    "locale": "it",
+    "name": "CSA (agricoltura sostenuta dalla comunità)"
+  },
+  {
+    "tagId": "cmcarqs27003i6wqmt3yji6fy",
+    "locale": "pt",
+    "name": "CSA (Agricultura apoiada pela comunidade)"
+  },
+  {
+    "tagId": "cmcarqs27003i6wqmt3yji6fy",
+    "locale": "sk",
+    "name": "CSA (komunitou podporované poľnohospodárstvo)"
+  },
+  {
+    "tagId": "cmcarqs27003i6wqmt3yji6fy",
+    "locale": "pl",
+    "name": "CSA (Rolnictwo Wspierane przez Społeczność)"
+  },
+  {
+    "tagId": "cmcarqs27003i6wqmt3yji6fy",
+    "locale": "ro",
+    "name": "CSA (Agricultură susținută de comunitate)"
+  },
+  {
+    "tagId": "cmcarqs27003i6wqmt3yji6fy",
+    "locale": "nl",
+    "name": "CSA (Gemeenschapslandbouw)"
+  },
+  {
+    "tagId": "cmcarqs2c003j6wqmtftaq17z",
+    "locale": "de",
+    "name": "Urbanes Gärtnern"
+  },
+  {
+    "tagId": "cmcarqs2c003j6wqmtftaq17z",
+    "locale": "hu",
+    "name": "Városi kertészkedés"
+  },
+  {
+    "tagId": "cmcarqs2c003j6wqmtftaq17z",
+    "locale": "es",
+    "name": "Jardinería urbana"
+  },
+  {
+    "tagId": "cmcarqs2c003j6wqmtftaq17z",
+    "locale": "fr",
+    "name": "Jardinage urbain"
+  },
+  {
+    "tagId": "cmcarqs2c003j6wqmtftaq17z",
+    "locale": "it",
+    "name": "Giardinaggio urbano"
+  },
+  {
+    "tagId": "cmcarqs2c003j6wqmtftaq17z",
+    "locale": "pt",
+    "name": "Jardinagem urbana"
+  },
+  {
+    "tagId": "cmcarqs2c003j6wqmtftaq17z",
+    "locale": "sk",
+    "name": "Mestské záhradkárstvo"
+  },
+  {
+    "tagId": "cmcarqs2c003j6wqmtftaq17z",
+    "locale": "pl",
+    "name": "Ogrodnictwo miejskie"
+  },
+  {
+    "tagId": "cmcarqs2c003j6wqmtftaq17z",
+    "locale": "ro",
+    "name": "Grădinăritul urban"
+  },
+  {
+    "tagId": "cmcarqs2c003j6wqmtftaq17z",
+    "locale": "nl",
+    "name": "Stedelijk tuinieren"
+  },
+  {
+    "tagId": "cmcarqs2h003k6wqm2xo4fkut",
+    "locale": "de",
+    "name": "Kompost-Toiletten"
+  },
+  {
+    "tagId": "cmcarqs2h003k6wqm2xo4fkut",
+    "locale": "hu",
+    "name": "Komposzt WC-k"
+  },
+  {
+    "tagId": "cmcarqs2h003k6wqm2xo4fkut",
+    "locale": "es",
+    "name": "Inodoros de compost"
+  },
+  {
+    "tagId": "cmcarqs2h003k6wqm2xo4fkut",
+    "locale": "fr",
+    "name": "Toilettes à compost"
+  },
+  {
+    "tagId": "cmcarqs2h003k6wqm2xo4fkut",
+    "locale": "it",
+    "name": "Toilette a compost"
+  },
+  {
+    "tagId": "cmcarqs2h003k6wqm2xo4fkut",
+    "locale": "pt",
+    "name": "Sanitas de compostagem"
+  },
+  {
+    "tagId": "cmcarqs2h003k6wqm2xo4fkut",
+    "locale": "sk",
+    "name": "Kompostovacie toalety"
+  },
+  {
+    "tagId": "cmcarqs2h003k6wqm2xo4fkut",
+    "locale": "pl",
+    "name": "Toalety kompostowe"
+  },
+  {
+    "tagId": "cmcarqs2h003k6wqm2xo4fkut",
+    "locale": "ro",
+    "name": "Toalete cu compost"
+  },
+  {
+    "tagId": "cmcarqs2h003k6wqm2xo4fkut",
+    "locale": "nl",
+    "name": "Composttoiletten"
+  },
+  {
+    "tagId": "cmcarqs2m003l6wqmv1hbnlw9",
+    "locale": "de",
+    "name": "Bokashi Kompostierung"
+  },
+  {
+    "tagId": "cmcarqs2m003l6wqmv1hbnlw9",
+    "locale": "hu",
+    "name": "Bokashi komposztálás"
+  },
+  {
+    "tagId": "cmcarqs2m003l6wqmv1hbnlw9",
+    "locale": "es",
+    "name": "Compostaje Bokashi"
+  },
+  {
+    "tagId": "cmcarqs2m003l6wqmv1hbnlw9",
+    "locale": "fr",
+    "name": "Le compostage Bokashi"
+  },
+  {
+    "tagId": "cmcarqs2m003l6wqmv1hbnlw9",
+    "locale": "it",
+    "name": "Compostaggio Bokashi"
+  },
+  {
+    "tagId": "cmcarqs2m003l6wqmv1hbnlw9",
+    "locale": "pt",
+    "name": "Compostagem Bokashi"
+  },
+  {
+    "tagId": "cmcarqs2m003l6wqmv1hbnlw9",
+    "locale": "sk",
+    "name": "Kompostovanie Bokashi"
+  },
+  {
+    "tagId": "cmcarqs2m003l6wqmv1hbnlw9",
+    "locale": "pl",
+    "name": "Kompostowanie Bokashi"
+  },
+  {
+    "tagId": "cmcarqs2m003l6wqmv1hbnlw9",
+    "locale": "ro",
+    "name": "Compostarea Bokashi"
+  },
+  {
+    "tagId": "cmcarqs2m003l6wqmv1hbnlw9",
+    "locale": "nl",
+    "name": "Composteren met Bokashi"
+  },
+  {
+    "tagId": "cmcarqs4k003w6wqmpjnreo38",
+    "locale": "pt",
+    "name": "Criação de galinhas"
+  },
+  {
+    "tagId": "cmcarqs4k003w6wqmpjnreo38",
+    "locale": "sk",
+    "name": "Chov kurčiat"
+  },
+  {
+    "tagId": "cmcarqs4k003w6wqmpjnreo38",
+    "locale": "pl",
+    "name": "Hodowla kurczaków"
+  },
+  {
+    "tagId": "cmcarqs4k003w6wqmpjnreo38",
+    "locale": "ro",
+    "name": "Creșterea găinilor"
+  },
+  {
+    "tagId": "cmcarqs4k003w6wqmpjnreo38",
+    "locale": "nl",
+    "name": "Kippen houden"
+  },
+  {
+    "tagId": "cmcarqs4r003x6wqms2c2o2qs",
+    "locale": "de",
+    "name": "Ziegenhaltung"
+  },
+  {
+    "tagId": "cmcarqs4r003x6wqms2c2o2qs",
+    "locale": "hu",
+    "name": "Kecsketartás"
+  },
+  {
+    "tagId": "cmcarqs4r003x6wqms2c2o2qs",
+    "locale": "es",
+    "name": "Cría de cabras"
+  },
+  {
+    "tagId": "cmcarqs4r003x6wqms2c2o2qs",
+    "locale": "fr",
+    "name": "Élevage de chèvres"
+  },
+  {
+    "tagId": "cmcarqs4r003x6wqms2c2o2qs",
+    "locale": "it",
+    "name": "Allevamento di capre"
+  },
+  {
+    "tagId": "cmcarqs4r003x6wqms2c2o2qs",
+    "locale": "pt",
+    "name": "Criação de cabras"
+  },
+  {
+    "tagId": "cmcarqs4r003x6wqms2c2o2qs",
+    "locale": "sk",
+    "name": "Chov kôz"
+  },
+  {
+    "tagId": "cmcarqs4r003x6wqms2c2o2qs",
+    "locale": "pl",
+    "name": "Hodowla kóz"
+  },
+  {
+    "tagId": "cmcarqs4r003x6wqms2c2o2qs",
+    "locale": "ro",
+    "name": "Păstrarea caprelor"
+  },
+  {
+    "tagId": "cmcarqs4r003x6wqms2c2o2qs",
+    "locale": "nl",
+    "name": "Geiten houden"
+  },
+  {
+    "tagId": "cmcarqs4x003y6wqmnk1v06m5",
+    "locale": "de",
+    "name": "Schafhüten"
+  },
+  {
+    "tagId": "cmcarqs4x003y6wqmnk1v06m5",
+    "locale": "hu",
+    "name": "Birkapásztorkodás"
+  },
+  {
+    "tagId": "cmcarqs4x003y6wqmnk1v06m5",
+    "locale": "es",
+    "name": "Pastoreo de ovejas"
+  },
+  {
+    "tagId": "cmcarqs4x003y6wqmnk1v06m5",
+    "locale": "fr",
+    "name": "L'élevage de moutons"
+  },
+  {
+    "tagId": "cmcarqs4x003y6wqmnk1v06m5",
+    "locale": "it",
+    "name": "Pastorizia"
+  },
+  {
+    "tagId": "cmcarqs4x003y6wqmnk1v06m5",
+    "locale": "pt",
+    "name": "Pastoreio de ovelhas"
+  },
+  {
+    "tagId": "cmcarqs4x003y6wqmnk1v06m5",
+    "locale": "sk",
+    "name": "Pasenie oviec"
+  },
+  {
+    "tagId": "cmcarqs4x003y6wqmnk1v06m5",
+    "locale": "pl",
+    "name": "Pasterstwo owiec"
+  },
+  {
+    "tagId": "cmcarqs4x003y6wqmnk1v06m5",
+    "locale": "ro",
+    "name": "Păstoritul oilor"
+  },
+  {
+    "tagId": "cmcarqs4x003y6wqmnk1v06m5",
+    "locale": "nl",
+    "name": "Schapendrijven"
+  },
+  {
+    "tagId": "cmcarqs52003z6wqmk5lgcfxw",
+    "locale": "de",
+    "name": "Veganismus"
+  },
+  {
+    "tagId": "cmcarqs52003z6wqmk5lgcfxw",
+    "locale": "hu",
+    "name": "Veganizmus"
+  },
+  {
+    "tagId": "cmcarqs52003z6wqmk5lgcfxw",
+    "locale": "es",
+    "name": "Veganismo"
+  },
+  {
+    "tagId": "cmcarqs52003z6wqmk5lgcfxw",
+    "locale": "fr",
+    "name": "Le véganisme"
+  },
+  {
+    "tagId": "cmcarqs52003z6wqmk5lgcfxw",
+    "locale": "it",
+    "name": "Veganismo"
+  },
+  {
+    "tagId": "cmcarqs52003z6wqmk5lgcfxw",
+    "locale": "pt",
+    "name": "Veganismo"
+  },
+  {
+    "tagId": "cmcarqs52003z6wqmk5lgcfxw",
+    "locale": "sk",
+    "name": "Vegánstvo"
+  },
+  {
+    "tagId": "cmcarqs52003z6wqmk5lgcfxw",
+    "locale": "pl",
+    "name": "Weganizm"
+  },
+  {
+    "tagId": "cmcarqs52003z6wqmk5lgcfxw",
+    "locale": "ro",
+    "name": "Veganismul"
+  },
+  {
+    "tagId": "cmcarqs52003z6wqmk5lgcfxw",
+    "locale": "nl",
+    "name": "Veganisme"
+  },
+  {
+    "tagId": "cmcarqs5a00406wqm7s31l2a4",
+    "locale": "de",
+    "name": "Vegetarismus"
+  },
+  {
+    "tagId": "cmcarqs5a00406wqm7s31l2a4",
+    "locale": "hu",
+    "name": "Vegetarianizmus"
+  },
+  {
+    "tagId": "cmcarqs5a00406wqm7s31l2a4",
+    "locale": "es",
+    "name": "Vegetarianismo"
+  },
+  {
+    "tagId": "cmcarqs5a00406wqm7s31l2a4",
+    "locale": "fr",
+    "name": "Le végétarisme"
+  },
+  {
+    "tagId": "cmcarqs5a00406wqm7s31l2a4",
+    "locale": "it",
+    "name": "Vegetarianismo"
+  },
+  {
+    "tagId": "cmcarqs5a00406wqm7s31l2a4",
+    "locale": "pt",
+    "name": "Vegetarianismo"
+  },
+  {
+    "tagId": "cmcarqs5a00406wqm7s31l2a4",
+    "locale": "sk",
+    "name": "Vegetariánstvo"
+  },
+  {
+    "tagId": "cmcarqs5a00406wqm7s31l2a4",
+    "locale": "pl",
+    "name": "Wegetarianizm"
+  },
+  {
+    "tagId": "cmcarqs5a00406wqm7s31l2a4",
+    "locale": "ro",
+    "name": "Vegetarianismul"
+  },
+  {
+    "tagId": "cmcarqs5a00406wqm7s31l2a4",
+    "locale": "nl",
+    "name": "Vegetarisme"
+  },
+  {
+    "tagId": "cmcarqs5g00416wqm5jwksq50",
+    "locale": "de",
+    "name": "Haustier-Training"
+  },
+  {
+    "tagId": "cmcarqs5g00416wqm5jwksq50",
+    "locale": "hu",
+    "name": "Kisállat képzés"
+  },
+  {
+    "tagId": "cmcarqs5g00416wqm5jwksq50",
+    "locale": "es",
+    "name": "Adiestramiento de mascotas"
+  },
+  {
+    "tagId": "cmcarqs5g00416wqm5jwksq50",
+    "locale": "fr",
+    "name": "Entraînement des animaux de compagnie"
+  },
+  {
+    "tagId": "cmcarqs5g00416wqm5jwksq50",
+    "locale": "it",
+    "name": "Addestramento degli animali domestici"
+  },
+  {
+    "tagId": "cmcarqs5g00416wqm5jwksq50",
+    "locale": "pt",
+    "name": "Treino de animais de estimação"
+  },
+  {
+    "tagId": "cmcarqs5g00416wqm5jwksq50",
+    "locale": "sk",
+    "name": "Výcvik domácich zvierat"
+  },
+  {
+    "tagId": "cmcarqs5g00416wqm5jwksq50",
+    "locale": "pl",
+    "name": "Szkolenie zwierząt domowych"
+  },
+  {
+    "tagId": "cmcarqs5g00416wqm5jwksq50",
+    "locale": "ro",
+    "name": "Dresajul animalelor de companie"
+  },
+  {
+    "tagId": "cmcarqs5g00416wqm5jwksq50",
+    "locale": "nl",
+    "name": "Training voor huisdieren"
+  },
+  {
+    "tagId": "cmcarqs5p00426wqms8vrhp8f",
+    "locale": "de",
+    "name": "Tierverfolgung"
+  },
+  {
+    "tagId": "cmcarqs5p00426wqms8vrhp8f",
+    "locale": "hu",
+    "name": "Állatok nyomkövetése"
+  },
+  {
+    "tagId": "cmcarqs5p00426wqms8vrhp8f",
+    "locale": "es",
+    "name": "Seguimiento de animales"
+  },
+  {
+    "tagId": "cmcarqs5p00426wqms8vrhp8f",
+    "locale": "fr",
+    "name": "Suivi des animaux"
+  },
+  {
+    "tagId": "cmcarqs5p00426wqms8vrhp8f",
+    "locale": "it",
+    "name": "Tracciamento degli animali"
+  },
+  {
+    "tagId": "cmcarqs5p00426wqms8vrhp8f",
+    "locale": "pt",
+    "name": "Seguimento de animais"
+  },
+  {
+    "tagId": "cmcarqs5p00426wqms8vrhp8f",
+    "locale": "sk",
+    "name": "Sledovanie zvierat"
+  },
+  {
+    "tagId": "cmcarqs5p00426wqms8vrhp8f",
+    "locale": "pl",
+    "name": "Śledzenie zwierząt"
+  },
+  {
+    "tagId": "cmcarqs5p00426wqms8vrhp8f",
+    "locale": "ro",
+    "name": "Urmărirea animalelor"
+  },
+  {
+    "tagId": "cmcarqs5p00426wqms8vrhp8f",
+    "locale": "nl",
+    "name": "Opsporen van dieren"
+  },
+  {
+    "tagId": "cmcarqs5v00436wqmvmtw74c2",
+    "locale": "de",
+    "name": "Tierfotografie"
+  },
+  {
+    "tagId": "cmcarqs5v00436wqmvmtw74c2",
+    "locale": "hu",
+    "name": "Állati fényképezés"
+  },
+  {
+    "tagId": "cmcarqs5v00436wqmvmtw74c2",
+    "locale": "es",
+    "name": "Fotografía de animales"
+  },
+  {
+    "tagId": "cmcarqs5v00436wqmvmtw74c2",
+    "locale": "fr",
+    "name": "Photographie d'animaux"
+  },
+  {
+    "tagId": "cmcarqs5v00436wqmvmtw74c2",
+    "locale": "it",
+    "name": "Fotografia di animali"
+  },
+  {
+    "tagId": "cmcarqs5v00436wqmvmtw74c2",
+    "locale": "pt",
+    "name": "Fotografia de animais"
+  },
+  {
+    "tagId": "cmcarqs5v00436wqmvmtw74c2",
+    "locale": "sk",
+    "name": "Fotografovanie zvierat"
+  },
+  {
+    "tagId": "cmcarqs5v00436wqmvmtw74c2",
+    "locale": "pl",
+    "name": "Fotografia zwierząt"
+  },
+  {
+    "tagId": "cmcarqs5v00436wqmvmtw74c2",
+    "locale": "ro",
+    "name": "Fotografia animalelor"
+  },
+  {
+    "tagId": "cmcarqs5v00436wqmvmtw74c2",
+    "locale": "nl",
+    "name": "Dierenfotografie"
+  },
+  {
+    "tagId": "cmcarqs6000446wqmovsmee9w",
+    "locale": "de",
+    "name": "Tierisches Verhalten"
+  },
+  {
+    "tagId": "cmcarqs6000446wqmovsmee9w",
+    "locale": "hu",
+    "name": "Állati viselkedés"
+  },
+  {
+    "tagId": "cmcarqs6000446wqmovsmee9w",
+    "locale": "es",
+    "name": "Comportamiento animal"
+  },
+  {
+    "tagId": "cmcarqs6000446wqmovsmee9w",
+    "locale": "fr",
+    "name": "Comportement animal"
+  },
+  {
+    "tagId": "cmcarqs6000446wqmovsmee9w",
+    "locale": "it",
+    "name": "Comportamento animale"
+  },
+  {
+    "tagId": "cmcarqs6000446wqmovsmee9w",
+    "locale": "pt",
+    "name": "Comportamento animal"
+  },
+  {
+    "tagId": "cmcarqs6000446wqmovsmee9w",
+    "locale": "sk",
+    "name": "Správanie zvierat"
+  },
+  {
+    "tagId": "cmcarqs6000446wqmovsmee9w",
+    "locale": "pl",
+    "name": "Zachowanie zwierząt"
+  },
+  {
+    "tagId": "cmcarqs6000446wqmovsmee9w",
+    "locale": "ro",
+    "name": "Comportamentul animalelor"
+  },
+  {
+    "tagId": "cmcarqs6000446wqmovsmee9w",
+    "locale": "nl",
+    "name": "Dierlijk gedrag"
+  },
+  {
+    "tagId": "cmcarqs6600456wqmcgiccd22",
+    "locale": "de",
+    "name": "Live-Musik"
+  },
+  {
+    "tagId": "cmcarqs6600456wqmcgiccd22",
+    "locale": "hu",
+    "name": "Élő zene"
+  },
+  {
+    "tagId": "cmcarqs6600456wqmcgiccd22",
+    "locale": "fr",
+    "name": "Musique en direct"
+  },
+  {
+    "tagId": "cmcarqs7t004e6wqmo8v6fnce",
+    "locale": "pl",
+    "name": "Improwizacja"
+  },
+  {
+    "tagId": "cmcarqs7t004e6wqmo8v6fnce",
+    "locale": "ro",
+    "name": "Improvizație"
+  },
+  {
+    "tagId": "cmcarqs7t004e6wqmo8v6fnce",
+    "locale": "nl",
+    "name": "Improvisatie"
+  },
+  {
+    "tagId": "cmcarqs7y004f6wqmzyrc3i6g",
+    "locale": "de",
+    "name": "Chor"
+  },
+  {
+    "tagId": "cmcarqs7y004f6wqmzyrc3i6g",
+    "locale": "hu",
+    "name": "Kórus"
+  },
+  {
+    "tagId": "cmcarqs7y004f6wqmzyrc3i6g",
+    "locale": "es",
+    "name": "Coro"
+  },
+  {
+    "tagId": "cmcarqs7y004f6wqmzyrc3i6g",
+    "locale": "fr",
+    "name": "Chorale"
+  },
+  {
+    "tagId": "cmcarqs7y004f6wqmzyrc3i6g",
+    "locale": "it",
+    "name": "Coro"
+  },
+  {
+    "tagId": "cmcarqs7y004f6wqmzyrc3i6g",
+    "locale": "pt",
+    "name": "Coro"
+  },
+  {
+    "tagId": "cmcarqs7y004f6wqmzyrc3i6g",
+    "locale": "sk",
+    "name": "Zbor"
+  },
+  {
+    "tagId": "cmcarqs7y004f6wqmzyrc3i6g",
+    "locale": "pl",
+    "name": "Chór"
+  },
+  {
+    "tagId": "cmcarqs7y004f6wqmzyrc3i6g",
+    "locale": "ro",
+    "name": "Corul"
+  },
+  {
+    "tagId": "cmcarqs7y004f6wqmzyrc3i6g",
+    "locale": "nl",
+    "name": "Koor"
+  },
+  {
+    "tagId": "cmcarqs82004g6wqm1fn3vvvm",
+    "locale": "de",
+    "name": "Klangheilung"
+  },
+  {
+    "tagId": "cmcarqs82004g6wqm1fn3vvvm",
+    "locale": "hu",
+    "name": "Hanggyógyítás"
+  },
+  {
+    "tagId": "cmcarqs82004g6wqm1fn3vvvm",
+    "locale": "es",
+    "name": "Curación por el sonido"
+  },
+  {
+    "tagId": "cmcarqs82004g6wqm1fn3vvvm",
+    "locale": "fr",
+    "name": "Guérison par le son"
+  },
+  {
+    "tagId": "cmcarqs82004g6wqm1fn3vvvm",
+    "locale": "it",
+    "name": "Guarigione del suono"
+  },
+  {
+    "tagId": "cmcarqs82004g6wqm1fn3vvvm",
+    "locale": "pt",
+    "name": "Cura pelo som"
+  },
+  {
+    "tagId": "cmcarqs82004g6wqm1fn3vvvm",
+    "locale": "sk",
+    "name": "Liečenie zvukom"
+  },
+  {
+    "tagId": "cmcarqs82004g6wqm1fn3vvvm",
+    "locale": "pl",
+    "name": "Uzdrawianie dźwiękiem"
+  },
+  {
+    "tagId": "cmcarqs82004g6wqm1fn3vvvm",
+    "locale": "ro",
+    "name": "Vindecarea prin sunet"
+  },
+  {
+    "tagId": "cmcarqs82004g6wqm1fn3vvvm",
+    "locale": "nl",
+    "name": "Klankgenezing"
+  },
+  {
+    "tagId": "cmcarqs87004h6wqm7kd3y45q",
+    "locale": "de",
+    "name": "Vinyl-Schallplatten"
+  },
+  {
+    "tagId": "cmcarqs87004h6wqm7kd3y45q",
+    "locale": "hu",
+    "name": "Vinyl Records"
+  },
+  {
+    "tagId": "cmcarqs87004h6wqm7kd3y45q",
+    "locale": "es",
+    "name": "Discos de vinilo"
+  },
+  {
+    "tagId": "cmcarqs87004h6wqm7kd3y45q",
+    "locale": "fr",
+    "name": "Disques vinyles"
+  },
+  {
+    "tagId": "cmcarqs87004h6wqm7kd3y45q",
+    "locale": "it",
+    "name": "Dischi in vinile"
+  },
+  {
+    "tagId": "cmcarqs87004h6wqm7kd3y45q",
+    "locale": "pt",
+    "name": "Discos de vinil"
+  },
+  {
+    "tagId": "cmcarqs87004h6wqm7kd3y45q",
+    "locale": "sk",
+    "name": "Vinylové platne"
+  },
+  {
+    "tagId": "cmcarqs87004h6wqm7kd3y45q",
+    "locale": "pl",
+    "name": "Płyty winylowe"
+  },
+  {
+    "tagId": "cmcarqs87004h6wqm7kd3y45q",
+    "locale": "ro",
+    "name": "Discuri de vinil"
+  },
+  {
+    "tagId": "cmcarqs87004h6wqm7kd3y45q",
+    "locale": "nl",
+    "name": "Vinyl platen"
+  },
+  {
+    "tagId": "cmcarqs8c004i6wqmtgxkvm8y",
+    "locale": "de",
+    "name": "DJing"
+  },
+  {
+    "tagId": "cmcarqs8c004i6wqmtgxkvm8y",
+    "locale": "hu",
+    "name": "DJing"
+  },
+  {
+    "tagId": "cmcarqs8c004i6wqmtgxkvm8y",
+    "locale": "es",
+    "name": "DJing"
+  },
+  {
+    "tagId": "cmcarqs8c004i6wqmtgxkvm8y",
+    "locale": "fr",
+    "name": "DJing"
+  },
+  {
+    "tagId": "cmcarqs8c004i6wqmtgxkvm8y",
+    "locale": "it",
+    "name": "DJing"
+  },
+  {
+    "tagId": "cmcarqs8c004i6wqmtgxkvm8y",
+    "locale": "pt",
+    "name": "DJing"
+  },
+  {
+    "tagId": "cmcarqs8c004i6wqmtgxkvm8y",
+    "locale": "sk",
+    "name": "DJing"
+  },
+  {
+    "tagId": "cmcarqs8c004i6wqmtgxkvm8y",
+    "locale": "pl",
+    "name": "DJing"
+  },
+  {
+    "tagId": "cmcarqs8c004i6wqmtgxkvm8y",
+    "locale": "ro",
+    "name": "DJing"
+  },
+  {
+    "tagId": "cmcarqs8c004i6wqmtgxkvm8y",
+    "locale": "nl",
+    "name": "DJ-en"
+  },
+  {
+    "tagId": "cmcarqs8i004j6wqmjck1behh",
+    "locale": "de",
+    "name": "Songwriting"
+  },
+  {
+    "tagId": "cmcarqs8i004j6wqmjck1behh",
+    "locale": "hu",
+    "name": "Dalszerzés"
+  },
+  {
+    "tagId": "cmcarqs8i004j6wqmjck1behh",
+    "locale": "es",
+    "name": "Composición"
+  },
+  {
+    "tagId": "cmcarqs8i004j6wqmjck1behh",
+    "locale": "fr",
+    "name": "L'écriture de chansons"
+  },
+  {
+    "tagId": "cmcarqs8i004j6wqmjck1behh",
+    "locale": "it",
+    "name": "Canzone d'autore"
+  },
+  {
+    "tagId": "cmcarqs8i004j6wqmjck1behh",
+    "locale": "pt",
+    "name": "Composição de canções"
+  },
+  {
+    "tagId": "cmcarqs8i004j6wqmjck1behh",
+    "locale": "sk",
+    "name": "Písanie piesní"
+  },
+  {
+    "tagId": "cmcarqs8i004j6wqmjck1behh",
+    "locale": "pl",
+    "name": "Pisanie piosenek"
+  },
+  {
+    "tagId": "cmcarqs8i004j6wqmjck1behh",
+    "locale": "ro",
+    "name": "Scriere de cântece"
+  },
+  {
+    "tagId": "cmcarqs8i004j6wqmjck1behh",
+    "locale": "nl",
+    "name": "Songwriting"
+  },
+  {
+    "tagId": "cmcarqs8p004k6wqmt5cu5t04",
+    "locale": "de",
+    "name": "Jazz"
+  },
+  {
+    "tagId": "cmcarqs8p004k6wqmt5cu5t04",
+    "locale": "hu",
+    "name": "Jazz"
+  },
+  {
+    "tagId": "cmcarqs8p004k6wqmt5cu5t04",
+    "locale": "es",
+    "name": "Jazz"
+  },
+  {
+    "tagId": "cmcarqs8p004k6wqmt5cu5t04",
+    "locale": "fr",
+    "name": "Le jazz"
+  },
+  {
+    "tagId": "cmcarqs8p004k6wqmt5cu5t04",
+    "locale": "it",
+    "name": "Jazz"
+  },
+  {
+    "tagId": "cmcarqs8p004k6wqmt5cu5t04",
+    "locale": "pt",
+    "name": "Jazz"
+  },
+  {
+    "tagId": "cmcarqs8p004k6wqmt5cu5t04",
+    "locale": "sk",
+    "name": "Jazz"
+  },
+  {
+    "tagId": "cmcarqs8p004k6wqmt5cu5t04",
+    "locale": "pl",
+    "name": "Jazz"
+  },
+  {
+    "tagId": "cmcarqs8p004k6wqmt5cu5t04",
+    "locale": "ro",
+    "name": "Jazz"
+  },
+  {
+    "tagId": "cmcarqs8p004k6wqmt5cu5t04",
+    "locale": "nl",
+    "name": "Jazz"
+  },
+  {
+    "tagId": "cmcarqs8v004l6wqm0lxo3tqn",
+    "locale": "de",
+    "name": "Klassische Musik"
+  },
+  {
+    "tagId": "cmcarqs8v004l6wqm0lxo3tqn",
+    "locale": "hu",
+    "name": "Klasszikus zene"
+  },
+  {
+    "tagId": "cmcarqs8v004l6wqm0lxo3tqn",
+    "locale": "es",
+    "name": "Música clásica"
+  },
+  {
+    "tagId": "cmcarqs8v004l6wqm0lxo3tqn",
+    "locale": "fr",
+    "name": "Musique classique"
+  },
+  {
+    "tagId": "cmcarqs8v004l6wqm0lxo3tqn",
+    "locale": "it",
+    "name": "Musica classica"
+  },
+  {
+    "tagId": "cmcarqs8v004l6wqm0lxo3tqn",
+    "locale": "pt",
+    "name": "Música clássica"
+  },
+  {
+    "tagId": "cmcarqs8v004l6wqm0lxo3tqn",
+    "locale": "sk",
+    "name": "Klasická hudba"
+  },
+  {
+    "tagId": "cmcarqs8v004l6wqm0lxo3tqn",
+    "locale": "pl",
+    "name": "Muzyka klasyczna"
+  },
+  {
+    "tagId": "cmcarqs8v004l6wqm0lxo3tqn",
+    "locale": "ro",
+    "name": "Muzică clasică"
+  },
+  {
+    "tagId": "cmcarqs8v004l6wqm0lxo3tqn",
+    "locale": "nl",
+    "name": "Klassieke muziek"
+  },
+  {
+    "tagId": "cmcarqs90004m6wqmepxqiqg3",
+    "locale": "de",
+    "name": "Experimentelle Musik"
+  },
+  {
+    "tagId": "cmcarqs90004m6wqmepxqiqg3",
+    "locale": "hu",
+    "name": "Kísérleti zene"
+  },
+  {
+    "tagId": "cmcarqs90004m6wqmepxqiqg3",
+    "locale": "es",
+    "name": "Música experimental"
+  },
+  {
+    "tagId": "cmcarqs90004m6wqmepxqiqg3",
+    "locale": "fr",
+    "name": "Musique expérimentale"
+  },
+  {
+    "tagId": "cmcarqs90004m6wqmepxqiqg3",
+    "locale": "it",
+    "name": "Musica sperimentale"
+  },
+  {
+    "tagId": "cmcarqs90004m6wqmepxqiqg3",
+    "locale": "pt",
+    "name": "Música experimental"
+  },
+  {
+    "tagId": "cmcarqs90004m6wqmepxqiqg3",
+    "locale": "sk",
+    "name": "Experimentálna hudba"
+  },
+  {
+    "tagId": "cmcarqs90004m6wqmepxqiqg3",
+    "locale": "pl",
+    "name": "Muzyka eksperymentalna"
+  },
+  {
+    "tagId": "cmcarqs90004m6wqmepxqiqg3",
+    "locale": "ro",
+    "name": "Muzică experimentală"
+  },
+  {
+    "tagId": "cmcarqs90004m6wqmepxqiqg3",
+    "locale": "nl",
+    "name": "Experimentele muziek"
+  },
+  {
+    "tagId": "cmcarqs96004n6wqmxmxe1cwx",
+    "locale": "de",
+    "name": "Geschichtenerzählen"
+  },
+  {
+    "tagId": "cmcarqs96004n6wqmxmxe1cwx",
+    "locale": "hu",
+    "name": "Mesemondás"
+  },
+  {
+    "tagId": "cmcarqs96004n6wqmxmxe1cwx",
+    "locale": "es",
+    "name": "Cuentacuentos"
+  },
+  {
+    "tagId": "cmcarqs96004n6wqmxmxe1cwx",
+    "locale": "fr",
+    "name": "Récit de l'histoire"
+  },
+  {
+    "tagId": "cmcarqs96004n6wqmxmxe1cwx",
+    "locale": "it",
+    "name": "La narrazione"
+  },
+  {
+    "tagId": "cmcarqs96004n6wqmxmxe1cwx",
+    "locale": "pt",
+    "name": "Contar histórias"
+  },
+  {
+    "tagId": "cmcarqs96004n6wqmxmxe1cwx",
+    "locale": "sk",
+    "name": "Rozprávanie príbehov"
+  },
+  {
+    "tagId": "cmcarqs96004n6wqmxmxe1cwx",
+    "locale": "pl",
+    "name": "Opowiadanie historii"
+  },
+  {
+    "tagId": "cmcarqs96004n6wqmxmxe1cwx",
+    "locale": "ro",
+    "name": "Storytelling"
+  },
+  {
+    "tagId": "cmcarqs96004n6wqmxmxe1cwx",
+    "locale": "nl",
+    "name": "Verhalen vertellen"
+  },
+  {
+    "tagId": "cmcarqs9b004o6wqmgmax2isn",
+    "locale": "de",
+    "name": "Volkskunst"
+  },
+  {
+    "tagId": "cmcarqs9b004o6wqmgmax2isn",
+    "locale": "hu",
+    "name": "Népművészet"
+  },
+  {
+    "tagId": "cmcarqs9b004o6wqmgmax2isn",
+    "locale": "es",
+    "name": "Arte popular"
+  },
+  {
+    "tagId": "cmcarqs9b004o6wqmgmax2isn",
+    "locale": "fr",
+    "name": "Art populaire"
+  },
+  {
+    "tagId": "cmcarqs9b004o6wqmgmax2isn",
+    "locale": "it",
+    "name": "Arte popolare"
+  },
+  {
+    "tagId": "cmcarqs9b004o6wqmgmax2isn",
+    "locale": "pt",
+    "name": "Arte popular"
+  },
+  {
+    "tagId": "cmcarqs9b004o6wqmgmax2isn",
+    "locale": "sk",
+    "name": "Ľudové umenie"
+  },
+  {
+    "tagId": "cmcarqs9b004o6wqmgmax2isn",
+    "locale": "pl",
+    "name": "Sztuka ludowa"
+  },
+  {
+    "tagId": "cmcarqs9b004o6wqmgmax2isn",
+    "locale": "ro",
+    "name": "Artă populară"
+  },
+  {
+    "tagId": "cmcarqs9b004o6wqmgmax2isn",
+    "locale": "nl",
+    "name": "Volkskunst"
+  },
+  {
+    "tagId": "cmcarqs9g004p6wqmhpdkwlep",
+    "locale": "de",
+    "name": "Töpferei"
+  },
+  {
+    "tagId": "cmcarqs9g004p6wqmhpdkwlep",
+    "locale": "hu",
+    "name": "Kerámia"
+  },
+  {
+    "tagId": "cmcarqs9g004p6wqmhpdkwlep",
+    "locale": "es",
+    "name": "Cerámica"
+  },
+  {
+    "tagId": "cmcarqs9g004p6wqmhpdkwlep",
+    "locale": "fr",
+    "name": "Poterie"
+  },
+  {
+    "tagId": "cmcarqs9g004p6wqmhpdkwlep",
+    "locale": "it",
+    "name": "Ceramica"
+  },
+  {
+    "tagId": "cmcarqs9g004p6wqmhpdkwlep",
+    "locale": "pt",
+    "name": "Cerâmica"
+  },
+  {
+    "tagId": "cmcarqs9g004p6wqmhpdkwlep",
+    "locale": "sk",
+    "name": "Keramika"
+  },
+  {
+    "tagId": "cmcarqs9g004p6wqmhpdkwlep",
+    "locale": "pl",
+    "name": "Ceramika"
+  },
+  {
+    "tagId": "cmcarqs9g004p6wqmhpdkwlep",
+    "locale": "ro",
+    "name": "Ceramică"
+  },
+  {
+    "tagId": "cmcarqs9g004p6wqmhpdkwlep",
+    "locale": "nl",
+    "name": "Aardewerk"
+  },
+  {
+    "tagId": "cmcarqs9n004q6wqmvr6mojf0",
+    "locale": "de",
+    "name": "Stricken"
+  },
+  {
+    "tagId": "cmcarqs9n004q6wqmvr6mojf0",
+    "locale": "hu",
+    "name": "Kötés"
+  },
+  {
+    "tagId": "cmcarqs9n004q6wqmvr6mojf0",
+    "locale": "es",
+    "name": "Punto"
+  },
+  {
+    "tagId": "cmcarqs9n004q6wqmvr6mojf0",
+    "locale": "fr",
+    "name": "Tricot"
+  },
+  {
+    "tagId": "cmcarqs9n004q6wqmvr6mojf0",
+    "locale": "it",
+    "name": "Lavoro a maglia"
+  },
+  {
+    "tagId": "cmcarqs9n004q6wqmvr6mojf0",
+    "locale": "pt",
+    "name": "Tricotar"
+  },
+  {
+    "tagId": "cmcarqs9n004q6wqmvr6mojf0",
+    "locale": "sk",
+    "name": "Pletenie"
+  },
+  {
+    "tagId": "cmcarqs9n004q6wqmvr6mojf0",
+    "locale": "pl",
+    "name": "Dziewiarstwo"
+  },
+  {
+    "tagId": "cmcarqs9n004q6wqmvr6mojf0",
+    "locale": "ro",
+    "name": "Tricotat"
+  },
+  {
+    "tagId": "cmcarqs9n004q6wqmvr6mojf0",
+    "locale": "nl",
+    "name": "Breien"
+  },
+  {
+    "tagId": "cmcarqs9s004r6wqm2laiooik",
+    "locale": "de",
+    "name": "Faserkunst"
+  },
+  {
+    "tagId": "cmcarqs9s004r6wqm2laiooik",
+    "locale": "hu",
+    "name": "Fiber Arts"
+  },
+  {
+    "tagId": "cmcarqs9s004r6wqm2laiooik",
+    "locale": "es",
+    "name": "Artes de la fibra"
+  },
+  {
+    "tagId": "cmcarqs9s004r6wqm2laiooik",
+    "locale": "fr",
+    "name": "Arts de la fibre"
+  },
+  {
+    "tagId": "cmcarqs9s004r6wqm2laiooik",
+    "locale": "it",
+    "name": "Arti della fibra"
+  },
+  {
+    "tagId": "cmcarqs9s004r6wqm2laiooik",
+    "locale": "pt",
+    "name": "Artes de fibra"
+  },
+  {
+    "tagId": "cmcarqs9s004r6wqm2laiooik",
+    "locale": "sk",
+    "name": "Umenie vlákien"
+  },
+  {
+    "tagId": "cmcarqs9s004r6wqm2laiooik",
+    "locale": "pl",
+    "name": "Fiber Arts"
+  },
+  {
+    "tagId": "cmcarqs9s004r6wqm2laiooik",
+    "locale": "ro",
+    "name": "Arte din fibre"
+  },
+  {
+    "tagId": "cmcarqs9s004r6wqm2laiooik",
+    "locale": "nl",
+    "name": "Vezelkunst"
+  },
+  {
+    "tagId": "cmcarqs9z004s6wqms7wgczqc",
+    "locale": "de",
+    "name": "Straßenkunst"
+  },
+  {
+    "tagId": "cmcarqs9z004s6wqms7wgczqc",
+    "locale": "hu",
+    "name": "Utcai művészet"
+  },
+  {
+    "tagId": "cmcarqs9z004s6wqms7wgczqc",
+    "locale": "es",
+    "name": "Arte callejero"
+  },
+  {
+    "tagId": "cmcarqs9z004s6wqms7wgczqc",
+    "locale": "fr",
+    "name": "Art de la rue"
+  },
+  {
+    "tagId": "cmcarqs9z004s6wqms7wgczqc",
+    "locale": "it",
+    "name": "Arte di strada"
+  },
+  {
+    "tagId": "cmcarqs9z004s6wqms7wgczqc",
+    "locale": "pt",
+    "name": "Arte de rua"
+  },
+  {
+    "tagId": "cmcarqs9z004s6wqms7wgczqc",
+    "locale": "sk",
+    "name": "Pouličné umenie"
+  },
+  {
+    "tagId": "cmcarqs9z004s6wqms7wgczqc",
+    "locale": "pl",
+    "name": "Sztuka uliczna"
+  },
+  {
+    "tagId": "cmcarqs9z004s6wqms7wgczqc",
+    "locale": "ro",
+    "name": "Artă stradală"
+  },
+  {
+    "tagId": "cmcarqs9z004s6wqms7wgczqc",
+    "locale": "nl",
+    "name": "Straatkunst"
+  },
+  {
+    "tagId": "cmcarqsa8004t6wqm5w8k2aov",
+    "locale": "de",
+    "name": "Fotografie"
+  },
+  {
+    "tagId": "cmcarqsa8004t6wqm5w8k2aov",
+    "locale": "hu",
+    "name": "Fényképezés"
+  },
+  {
+    "tagId": "cmcarqsa8004t6wqm5w8k2aov",
+    "locale": "es",
+    "name": "Fotografía"
+  },
+  {
+    "tagId": "cmcarqsa8004t6wqm5w8k2aov",
+    "locale": "fr",
+    "name": "Photographie"
+  },
+  {
+    "tagId": "cmcarqsa8004t6wqm5w8k2aov",
+    "locale": "it",
+    "name": "Fotografia"
+  },
+  {
+    "tagId": "cmcarqsa8004t6wqm5w8k2aov",
+    "locale": "pt",
+    "name": "Fotografia"
+  },
+  {
+    "tagId": "cmcarqsa8004t6wqm5w8k2aov",
+    "locale": "sk",
+    "name": "Fotografovanie"
+  },
+  {
+    "tagId": "cmcarqsa8004t6wqm5w8k2aov",
+    "locale": "pl",
+    "name": "Fotografia"
+  },
+  {
+    "tagId": "cmcarqsa8004t6wqm5w8k2aov",
+    "locale": "ro",
+    "name": "Fotografie"
+  },
+  {
+    "tagId": "cmcarqsa8004t6wqm5w8k2aov",
+    "locale": "nl",
+    "name": "Fotografie"
+  },
+  {
+    "tagId": "cmcarqsaf004u6wqm6o8dmk8x",
+    "locale": "de",
+    "name": "Malerei"
+  },
+  {
+    "tagId": "cmcarqsaf004u6wqm6o8dmk8x",
+    "locale": "hu",
+    "name": "Festés"
+  },
+  {
+    "tagId": "cmcarqsaf004u6wqm6o8dmk8x",
+    "locale": "es",
+    "name": "Pintura"
+  },
+  {
+    "tagId": "cmcarqsaf004u6wqm6o8dmk8x",
+    "locale": "fr",
+    "name": "Peinture"
+  },
+  {
+    "tagId": "cmcarqsaf004u6wqm6o8dmk8x",
+    "locale": "it",
+    "name": "Pittura"
+  },
+  {
+    "tagId": "cmcarqsaf004u6wqm6o8dmk8x",
+    "locale": "pt",
+    "name": "Pintura"
+  },
+  {
+    "tagId": "cmcarqsaf004u6wqm6o8dmk8x",
+    "locale": "sk",
+    "name": "Maľovanie"
+  },
+  {
+    "tagId": "cmcarqsaf004u6wqm6o8dmk8x",
+    "locale": "pl",
+    "name": "Malowanie"
+  },
+  {
+    "tagId": "cmcarqsaf004u6wqm6o8dmk8x",
+    "locale": "ro",
+    "name": "Pictura"
+  },
+  {
+    "tagId": "cmcarqsaf004u6wqm6o8dmk8x",
+    "locale": "nl",
+    "name": "Schilderen"
+  },
+  {
+    "tagId": "cmcarqsam004v6wqmjpv5jvyt",
+    "locale": "de",
+    "name": "Tanz"
+  },
+  {
+    "tagId": "cmcarqsam004v6wqmjpv5jvyt",
+    "locale": "hu",
+    "name": "Tánc"
+  },
+  {
+    "tagId": "cmcarqsam004v6wqmjpv5jvyt",
+    "locale": "es",
+    "name": "Danza"
+  },
+  {
+    "tagId": "cmcarqsam004v6wqmjpv5jvyt",
+    "locale": "fr",
+    "name": "La danse"
+  },
+  {
+    "tagId": "cmcarqsam004v6wqmjpv5jvyt",
+    "locale": "it",
+    "name": "Danza"
+  },
+  {
+    "tagId": "cmcarqsam004v6wqmjpv5jvyt",
+    "locale": "pt",
+    "name": "Dança"
+  },
+  {
+    "tagId": "cmcarqsam004v6wqmjpv5jvyt",
+    "locale": "sk",
+    "name": "Tanec"
+  },
+  {
+    "tagId": "cmcarqsam004v6wqmjpv5jvyt",
+    "locale": "pl",
+    "name": "Taniec"
+  },
+  {
+    "tagId": "cmcarqsam004v6wqmjpv5jvyt",
+    "locale": "ro",
+    "name": "Dans"
+  },
+  {
+    "tagId": "cmcarqsam004v6wqmjpv5jvyt",
+    "locale": "nl",
+    "name": "Dans"
+  },
+  {
+    "tagId": "cmcarqsat004w6wqmd9sdos8o",
+    "locale": "de",
+    "name": "Zirkuskünste"
+  },
+  {
+    "tagId": "cmcarqsat004w6wqmd9sdos8o",
+    "locale": "hu",
+    "name": "Cirkuszművészet"
+  },
+  {
+    "tagId": "cmcarqsat004w6wqmd9sdos8o",
+    "locale": "es",
+    "name": "Artes circenses"
+  },
+  {
+    "tagId": "cmcarqsat004w6wqmd9sdos8o",
+    "locale": "fr",
+    "name": "Arts du cirque"
+  },
+  {
+    "tagId": "cmcarqsat004w6wqmd9sdos8o",
+    "locale": "it",
+    "name": "Arti circensi"
+  },
+  {
+    "tagId": "cmcarqsat004w6wqmd9sdos8o",
+    "locale": "pt",
+    "name": "Artes circenses"
+  },
+  {
+    "tagId": "cmcarqsat004w6wqmd9sdos8o",
+    "locale": "sk",
+    "name": "Cirkusové umenie"
+  },
+  {
+    "tagId": "cmcarqsat004w6wqmd9sdos8o",
+    "locale": "pl",
+    "name": "Sztuka cyrkowa"
+  },
+  {
+    "tagId": "cmcarqsat004w6wqmd9sdos8o",
+    "locale": "ro",
+    "name": "Artele circului"
+  },
+  {
+    "tagId": "cmcarqsat004w6wqmd9sdos8o",
+    "locale": "nl",
+    "name": "Circus Kunsten"
+  },
+  {
+    "tagId": "cmcarqsay004x6wqmkvii2exy",
+    "locale": "de",
+    "name": "Theater"
+  },
+  {
+    "tagId": "cmcarqsay004x6wqmkvii2exy",
+    "locale": "hu",
+    "name": "Színház"
+  },
+  {
+    "tagId": "cmcarqsay004x6wqmkvii2exy",
+    "locale": "es",
+    "name": "Teatro"
+  },
+  {
+    "tagId": "cmcarqsay004x6wqmkvii2exy",
+    "locale": "fr",
+    "name": "Théâtre"
+  },
+  {
+    "tagId": "cmcarqsay004x6wqmkvii2exy",
+    "locale": "it",
+    "name": "Teatro"
+  },
+  {
+    "tagId": "cmcarqsay004x6wqmkvii2exy",
+    "locale": "pt",
+    "name": "Teatro"
+  },
+  {
+    "tagId": "cmcarqsay004x6wqmkvii2exy",
+    "locale": "sk",
+    "name": "Divadlo"
+  },
+  {
+    "tagId": "cmcarqsay004x6wqmkvii2exy",
+    "locale": "pl",
+    "name": "Teatr"
+  },
+  {
+    "tagId": "cmcarqsay004x6wqmkvii2exy",
+    "locale": "ro",
+    "name": "Teatru"
+  },
+  {
+    "tagId": "cmcarqsay004x6wqmkvii2exy",
+    "locale": "nl",
+    "name": "Theater"
+  },
+  {
+    "tagId": "cmcarqsb3004y6wqmcivduh2e",
+    "locale": "de",
+    "name": "Poesie"
+  },
+  {
+    "tagId": "cmcarqsb3004y6wqmcivduh2e",
+    "locale": "hu",
+    "name": "Költészet"
+  },
+  {
+    "tagId": "cmcarqsb3004y6wqmcivduh2e",
+    "locale": "es",
+    "name": "Poesía"
+  },
+  {
+    "tagId": "cmcarqsb3004y6wqmcivduh2e",
+    "locale": "fr",
+    "name": "Poésie"
+  },
+  {
+    "tagId": "cmcarqsb3004y6wqmcivduh2e",
+    "locale": "it",
+    "name": "Poesia"
+  },
+  {
+    "tagId": "cmcarqsb3004y6wqmcivduh2e",
+    "locale": "pt",
+    "name": "Poesia"
+  },
+  {
+    "tagId": "cmcarqsb3004y6wqmcivduh2e",
+    "locale": "sk",
+    "name": "Poézia"
+  },
+  {
+    "tagId": "cmcarqsb3004y6wqmcivduh2e",
+    "locale": "pl",
+    "name": "Poezja"
+  },
+  {
+    "tagId": "cmcarqsb3004y6wqmcivduh2e",
+    "locale": "ro",
+    "name": "Poezie"
+  },
+  {
+    "tagId": "cmcarqsb3004y6wqmcivduh2e",
+    "locale": "nl",
+    "name": "Poëzie"
+  },
+  {
+    "tagId": "cmcarqsb9004z6wqm1xso5v4p",
+    "locale": "de",
+    "name": "Zines"
+  },
+  {
+    "tagId": "cmcarqsb9004z6wqm1xso5v4p",
+    "locale": "hu",
+    "name": "Zines"
+  },
+  {
+    "tagId": "cmcarqsb9004z6wqm1xso5v4p",
+    "locale": "es",
+    "name": "Zines"
+  },
+  {
+    "tagId": "cmcarqsb9004z6wqm1xso5v4p",
+    "locale": "fr",
+    "name": "Zines"
+  },
+  {
+    "tagId": "cmcarqsb9004z6wqm1xso5v4p",
+    "locale": "it",
+    "name": "Zines"
+  },
+  {
+    "tagId": "cmcarqsb9004z6wqm1xso5v4p",
+    "locale": "pt",
+    "name": "Zines"
+  },
+  {
+    "tagId": "cmcarqsb9004z6wqm1xso5v4p",
+    "locale": "sk",
+    "name": "Ziny"
+  },
+  {
+    "tagId": "cmcarqsb9004z6wqm1xso5v4p",
+    "locale": "pl",
+    "name": "Ziny"
+  },
+  {
+    "tagId": "cmcarqsb9004z6wqm1xso5v4p",
+    "locale": "ro",
+    "name": "Zine"
+  },
+  {
+    "tagId": "cmcarqsb9004z6wqm1xso5v4p",
+    "locale": "nl",
+    "name": "Zines"
+  },
+  {
+    "tagId": "cmcarqsbf00506wqmydd9ifkp",
+    "locale": "de",
+    "name": "Traditionelles Kunsthandwerk"
+  },
+  {
+    "tagId": "cmcarqsbf00506wqmydd9ifkp",
+    "locale": "hu",
+    "name": "Hagyományos kézművesség"
+  },
+  {
+    "tagId": "cmcarqsbf00506wqmydd9ifkp",
+    "locale": "es",
+    "name": "Artesanía tradicional"
+  },
+  {
+    "tagId": "cmcarqsbf00506wqmydd9ifkp",
+    "locale": "fr",
+    "name": "Artisanat traditionnel"
+  },
+  {
+    "tagId": "cmcarqsbf00506wqmydd9ifkp",
+    "locale": "it",
+    "name": "Artigianato tradizionale"
+  },
+  {
+    "tagId": "cmcarqsbf00506wqmydd9ifkp",
+    "locale": "pt",
+    "name": "Artesanato tradicional"
+  },
+  {
+    "tagId": "cmcarqsbf00506wqmydd9ifkp",
+    "locale": "sk",
+    "name": "Tradičné remeslá"
+  },
+  {
+    "tagId": "cmcarqsbf00506wqmydd9ifkp",
+    "locale": "pl",
+    "name": "Tradycyjne rzemiosło"
+  },
+  {
+    "tagId": "cmcarqsbf00506wqmydd9ifkp",
+    "locale": "ro",
+    "name": "Meșteșuguri tradiționale"
+  },
+  {
+    "tagId": "cmcarqsbf00506wqmydd9ifkp",
+    "locale": "nl",
+    "name": "Traditionele ambachten"
+  },
+  {
+    "tagId": "cmcarqsbk00516wqm5h2o8myo",
+    "locale": "de",
+    "name": "Kultureller Austausch"
+  },
+  {
+    "tagId": "cmcarqsbk00516wqm5h2o8myo",
+    "locale": "hu",
+    "name": "Kulturális csere"
+  },
+  {
+    "tagId": "cmcarqsbk00516wqm5h2o8myo",
+    "locale": "es",
+    "name": "Intercambio cultural"
+  },
+  {
+    "tagId": "cmcarqsbk00516wqm5h2o8myo",
+    "locale": "fr",
+    "name": "Échange culturel"
+  },
+  {
+    "tagId": "cmcarqsbk00516wqm5h2o8myo",
+    "locale": "it",
+    "name": "Scambio culturale"
+  },
+  {
+    "tagId": "cmcarqsbk00516wqm5h2o8myo",
+    "locale": "pt",
+    "name": "Intercâmbio cultural"
+  },
+  {
+    "tagId": "cmcarqsbk00516wqm5h2o8myo",
+    "locale": "sk",
+    "name": "Kultúrna výmena"
+  },
+  {
+    "tagId": "cmcarqsbk00516wqm5h2o8myo",
+    "locale": "pl",
+    "name": "Wymiana kulturalna"
+  },
+  {
+    "tagId": "cmcarqsbk00516wqm5h2o8myo",
+    "locale": "ro",
+    "name": "Schimb cultural"
+  },
+  {
+    "tagId": "cmcarqsbk00516wqm5h2o8myo",
+    "locale": "nl",
+    "name": "Culturele uitwisseling"
+  },
+  {
+    "tagId": "cmcarqsbq00526wqmapleu7y7",
+    "locale": "de",
+    "name": "Sprachen lernen"
+  },
+  {
+    "tagId": "cmcarqsbq00526wqmapleu7y7",
+    "locale": "hu",
+    "name": "Nyelvtanulás"
+  },
+  {
+    "tagId": "cmcarqsbq00526wqmapleu7y7",
+    "locale": "es",
+    "name": "Aprendizaje de idiomas"
+  },
+  {
+    "tagId": "cmcarqsbq00526wqmapleu7y7",
+    "locale": "fr",
+    "name": "Apprentissage des langues"
+  },
+  {
+    "tagId": "cmcarqsbq00526wqmapleu7y7",
+    "locale": "it",
+    "name": "Apprendimento della lingua"
+  },
+  {
+    "tagId": "cmcarqsbq00526wqmapleu7y7",
+    "locale": "pt",
+    "name": "Aprendizagem de línguas"
+  },
+  {
+    "tagId": "cmcarqsbq00526wqmapleu7y7",
+    "locale": "sk",
+    "name": "Učenie sa jazykov"
+  },
+  {
+    "tagId": "cmcarqsbq00526wqmapleu7y7",
+    "locale": "pl",
+    "name": "Nauka języków"
+  },
+  {
+    "tagId": "cmcarqsbq00526wqmapleu7y7",
+    "locale": "ro",
+    "name": "Învățarea limbilor străine"
+  },
+  {
+    "tagId": "cmcarqsbq00526wqmapleu7y7",
+    "locale": "nl",
+    "name": "Taal Leren"
+  },
+  {
+    "tagId": "cmcarqsbv00536wqmpwa47yf2",
+    "locale": "de",
+    "name": "Geschichte"
+  },
+  {
+    "tagId": "cmcarqsbv00536wqmpwa47yf2",
+    "locale": "hu",
+    "name": "Történelem"
+  },
+  {
+    "tagId": "cmcarqsbv00536wqmpwa47yf2",
+    "locale": "es",
+    "name": "Historia"
+  },
+  {
+    "tagId": "cmcarqsbv00536wqmpwa47yf2",
+    "locale": "fr",
+    "name": "L'histoire"
+  },
+  {
+    "tagId": "cmcarqsbv00536wqmpwa47yf2",
+    "locale": "it",
+    "name": "La storia"
+  },
+  {
+    "tagId": "cmcarqsbv00536wqmpwa47yf2",
+    "locale": "pt",
+    "name": "História"
+  },
+  {
+    "tagId": "cmcarqsbv00536wqmpwa47yf2",
+    "locale": "sk",
+    "name": "História"
+  },
+  {
+    "tagId": "cmcarqsbv00536wqmpwa47yf2",
+    "locale": "pl",
+    "name": "Historia"
+  },
+  {
+    "tagId": "cmcarqsbv00536wqmpwa47yf2",
+    "locale": "ro",
+    "name": "Istoric"
+  },
+  {
+    "tagId": "cmcarqsbv00536wqmpwa47yf2",
+    "locale": "nl",
+    "name": "Geschiedenis"
+  },
+  {
+    "tagId": "cmcarqsc000546wqm1a5phv4q",
+    "locale": "de",
+    "name": "Rucksacktourismus"
+  },
+  {
+    "tagId": "cmcarqsc000546wqm1a5phv4q",
+    "locale": "hu",
+    "name": "Hátizsákos utazás"
+  },
+  {
+    "tagId": "cmcarqsc000546wqm1a5phv4q",
+    "locale": "es",
+    "name": "De mochilero"
+  },
+  {
+    "tagId": "cmcarqsc000546wqm1a5phv4q",
+    "locale": "fr",
+    "name": "Sac à dos"
+  },
+  {
+    "tagId": "cmcarqsc000546wqm1a5phv4q",
+    "locale": "it",
+    "name": "Zaino in spalla"
+  },
+  {
+    "tagId": "cmcarqsc000546wqm1a5phv4q",
+    "locale": "pt",
+    "name": "Mochila"
+  },
+  {
+    "tagId": "cmcarqsc000546wqm1a5phv4q",
+    "locale": "sk",
+    "name": "Turistický batoh"
+  },
+  {
+    "tagId": "cmcarqsc000546wqm1a5phv4q",
+    "locale": "pl",
+    "name": "Backpacking"
+  },
+  {
+    "tagId": "cmcarqsc000546wqm1a5phv4q",
+    "locale": "ro",
+    "name": "Rucsac"
+  },
+  {
+    "tagId": "cmcarqsc000546wqm1a5phv4q",
+    "locale": "nl",
+    "name": "Rugzak"
+  },
+  {
+    "tagId": "cmcarqsc500556wqmxelymotq",
+    "locale": "de",
+    "name": "Per Anhalter fahren"
+  },
+  {
+    "tagId": "cmcarqsc500556wqmxelymotq",
+    "locale": "hu",
+    "name": "Stoppolás"
+  },
+  {
+    "tagId": "cmcarqsc500556wqmxelymotq",
+    "locale": "es",
+    "name": "En autostop"
+  },
+  {
+    "tagId": "cmcarqsc500556wqmxelymotq",
+    "locale": "fr",
+    "name": "L'auto-stop"
+  },
+  {
+    "tagId": "cmcarqsc500556wqmxelymotq",
+    "locale": "it",
+    "name": "Autostop"
+  },
+  {
+    "tagId": "cmcarqsc500556wqmxelymotq",
+    "locale": "pt",
+    "name": "Pedir boleia"
+  },
+  {
+    "tagId": "cmcarqsc500556wqmxelymotq",
+    "locale": "sk",
+    "name": "Stopovanie"
+  },
+  {
+    "tagId": "cmcarqsc500556wqmxelymotq",
+    "locale": "pl",
+    "name": "Autostop"
+  },
+  {
+    "tagId": "cmcarqsc500556wqmxelymotq",
+    "locale": "ro",
+    "name": "Autostopul"
+  },
+  {
+    "tagId": "cmcarqsc500556wqmxelymotq",
+    "locale": "nl",
+    "name": "Liften"
+  },
+  {
+    "tagId": "cmcarqsca00566wqm89i3s11u",
+    "locale": "de",
+    "name": "Couchsurfing"
+  },
+  {
+    "tagId": "cmcarqsca00566wqm89i3s11u",
+    "locale": "hu",
+    "name": "Couchsurfing"
+  },
+  {
+    "tagId": "cmcarqsca00566wqm89i3s11u",
+    "locale": "es",
+    "name": "Couchsurfing"
+  },
+  {
+    "tagId": "cmcarqsca00566wqm89i3s11u",
+    "locale": "fr",
+    "name": "Couchsurfing"
+  },
+  {
+    "tagId": "cmcarqsca00566wqm89i3s11u",
+    "locale": "it",
+    "name": "Couchsurfing"
+  },
+  {
+    "tagId": "cmcarqsca00566wqm89i3s11u",
+    "locale": "pt",
+    "name": "Couchsurfing"
+  },
+  {
+    "tagId": "cmcarqsca00566wqm89i3s11u",
+    "locale": "sk",
+    "name": "Couchsurfing"
+  },
+  {
+    "tagId": "cmcarqsca00566wqm89i3s11u",
+    "locale": "pl",
+    "name": "Couchsurfing"
+  },
+  {
+    "tagId": "cmcarqsca00566wqm89i3s11u",
+    "locale": "ro",
+    "name": "Couchsurfing"
+  },
+  {
+    "tagId": "cmcarqsca00566wqm89i3s11u",
+    "locale": "nl",
+    "name": "Couchsurfing"
+  },
+  {
+    "tagId": "cmcarqscf00576wqmeos5u831",
+    "locale": "de",
+    "name": "Fahrradtourismus"
+  },
+  {
+    "tagId": "cmcarqscf00576wqmeos5u831",
+    "locale": "hu",
+    "name": "Kerékpár túrázás"
+  },
+  {
+    "tagId": "cmcarqscf00576wqmeos5u831",
+    "locale": "es",
+    "name": "Cicloturismo"
+  },
+  {
+    "tagId": "cmcarqscf00576wqmeos5u831",
+    "locale": "fr",
+    "name": "Cyclotourisme"
+  },
+  {
+    "tagId": "cmcarqscf00576wqmeos5u831",
+    "locale": "it",
+    "name": "Cicloturismo"
+  },
+  {
+    "tagId": "cmcarqscf00576wqmeos5u831",
+    "locale": "pt",
+    "name": "Passeio de bicicleta"
+  },
+  {
+    "tagId": "cmcarqscf00576wqmeos5u831",
+    "locale": "sk",
+    "name": "Cykloturistika"
+  },
+  {
+    "tagId": "cmcarqscf00576wqmeos5u831",
+    "locale": "pl",
+    "name": "Turystyka rowerowa"
+  },
+  {
+    "tagId": "cmcarqscf00576wqmeos5u831",
+    "locale": "ro",
+    "name": "Tur cu bicicleta"
+  },
+  {
+    "tagId": "cmcarqscf00576wqmeos5u831",
+    "locale": "nl",
+    "name": "Fietsen"
+  },
+  {
+    "tagId": "cmcarqsck00586wqmkpo5h9qe",
+    "locale": "de",
+    "name": "Zugreisen"
+  },
+  {
+    "tagId": "cmcarqsck00586wqmkpo5h9qe",
+    "locale": "hu",
+    "name": "Vonatos utazás"
+  },
+  {
+    "tagId": "cmcarqsck00586wqmkpo5h9qe",
+    "locale": "es",
+    "name": "Viajes en tren"
+  },
+  {
+    "tagId": "cmcarqsck00586wqmkpo5h9qe",
+    "locale": "fr",
+    "name": "Voyage en train"
+  },
+  {
+    "tagId": "cmcarqsck00586wqmkpo5h9qe",
+    "locale": "it",
+    "name": "Viaggi in treno"
+  },
+  {
+    "tagId": "cmcarqsck00586wqmkpo5h9qe",
+    "locale": "pt",
+    "name": "Viagens de comboio"
+  },
+  {
+    "tagId": "cmcarqsck00586wqmkpo5h9qe",
+    "locale": "sk",
+    "name": "Cestovanie vlakom"
+  },
+  {
+    "tagId": "cmcarqsck00586wqmkpo5h9qe",
+    "locale": "pl",
+    "name": "Podróż pociągiem"
+  },
+  {
+    "tagId": "cmcarqsck00586wqmkpo5h9qe",
+    "locale": "ro",
+    "name": "Călătorii cu trenul"
+  },
+  {
+    "tagId": "cmcarqsck00586wqmkpo5h9qe",
+    "locale": "nl",
+    "name": "Treinreizen"
+  },
+  {
+    "tagId": "cmcarqscp00596wqm2e637vpw",
+    "locale": "de",
+    "name": "Langsames Reisen"
+  },
+  {
+    "tagId": "cmcarqscp00596wqm2e637vpw",
+    "locale": "hu",
+    "name": "Lassú utazás"
+  },
+  {
+    "tagId": "cmcarqscp00596wqm2e637vpw",
+    "locale": "es",
+    "name": "Viajar despacio"
+  },
+  {
+    "tagId": "cmcarqscp00596wqm2e637vpw",
+    "locale": "fr",
+    "name": "Voyage lent"
+  },
+  {
+    "tagId": "cmcarqscp00596wqm2e637vpw",
+    "locale": "it",
+    "name": "Viaggio lento"
+  },
+  {
+    "tagId": "cmcarqscp00596wqm2e637vpw",
+    "locale": "pt",
+    "name": "Viagem lenta"
+  },
+  {
+    "tagId": "cmcarqscp00596wqm2e637vpw",
+    "locale": "sk",
+    "name": "Pomalé cestovanie"
+  },
+  {
+    "tagId": "cmcarqscp00596wqm2e637vpw",
+    "locale": "pl",
+    "name": "Slow Travel"
+  },
+  {
+    "tagId": "cmcarqscp00596wqm2e637vpw",
+    "locale": "ro",
+    "name": "Călătorii lente"
+  },
+  {
+    "tagId": "cmcarqscp00596wqm2e637vpw",
+    "locale": "nl",
+    "name": "Langzaam reizen"
+  },
+  {
+    "tagId": "cmcarqsct005a6wqmuj1q8aed",
+    "locale": "de",
+    "name": "Schreiben auf Reisen"
+  },
+  {
+    "tagId": "cmcarqsct005a6wqmuj1q8aed",
+    "locale": "hu",
+    "name": "Utazási írás"
+  },
+  {
+    "tagId": "cmcarqsct005a6wqmuj1q8aed",
+    "locale": "es",
+    "name": "Escritura de viajes"
+  },
+  {
+    "tagId": "cmcarqsct005a6wqmuj1q8aed",
+    "locale": "fr",
+    "name": "Rédaction d'articles de voyage"
+  },
+  {
+    "tagId": "cmcarqsct005a6wqmuj1q8aed",
+    "locale": "it",
+    "name": "Scrittura di viaggio"
+  },
+  {
+    "tagId": "cmcarqsct005a6wqmuj1q8aed",
+    "locale": "pt",
+    "name": "Escrita de viagens"
+  },
+  {
+    "tagId": "cmcarqsct005a6wqmuj1q8aed",
+    "locale": "sk",
+    "name": "Cestovateľské písanie"
+  },
+  {
+    "tagId": "cmcarqsct005a6wqmuj1q8aed",
+    "locale": "pl",
+    "name": "Pisarstwo podróżnicze"
+  },
+  {
+    "tagId": "cmcarqsct005a6wqmuj1q8aed",
+    "locale": "ro",
+    "name": "Scrieri de călătorie"
+  },
+  {
+    "tagId": "cmcarqsct005a6wqmuj1q8aed",
+    "locale": "nl",
+    "name": "Schrijven over reizen"
+  },
+  {
+    "tagId": "cmcarqscy005b6wqmhcwkidch",
+    "locale": "de",
+    "name": "Abenteuerreisen"
+  },
+  {
+    "tagId": "cmcarqscy005b6wqmhcwkidch",
+    "locale": "hu",
+    "name": "Kalandos utazás"
+  },
+  {
+    "tagId": "cmcarqscy005b6wqmhcwkidch",
+    "locale": "es",
+    "name": "Viajes de aventura"
+  },
+  {
+    "tagId": "cmcarqscy005b6wqmhcwkidch",
+    "locale": "fr",
+    "name": "Voyages d'aventure"
+  },
+  {
+    "tagId": "cmcarqscy005b6wqmhcwkidch",
+    "locale": "it",
+    "name": "Viaggi d'avventura"
+  },
+  {
+    "tagId": "cmcarqscy005b6wqmhcwkidch",
+    "locale": "pt",
+    "name": "Viagens de aventura"
+  },
+  {
+    "tagId": "cmcarqscy005b6wqmhcwkidch",
+    "locale": "sk",
+    "name": "Dobrodružné cestovanie"
+  },
+  {
+    "tagId": "cmcarqscy005b6wqmhcwkidch",
+    "locale": "pl",
+    "name": "Podróż pełna przygód"
+  },
+  {
+    "tagId": "cmcarqscy005b6wqmhcwkidch",
+    "locale": "ro",
+    "name": "Călătorii de aventură"
+  },
+  {
+    "tagId": "cmcarqscy005b6wqmhcwkidch",
+    "locale": "nl",
+    "name": "Avontuurlijke reizen"
+  },
+  {
+    "tagId": "cmcarqsd3005c6wqm8r2tiqba",
+    "locale": "de",
+    "name": "Öko-Tourismus"
+  },
+  {
+    "tagId": "cmcarqsd3005c6wqm8r2tiqba",
+    "locale": "hu",
+    "name": "Ökoturizmus"
+  },
+  {
+    "tagId": "cmcarqsd3005c6wqm8r2tiqba",
+    "locale": "es",
+    "name": "Ecoturismo"
+  },
+  {
+    "tagId": "cmcarqsd3005c6wqm8r2tiqba",
+    "locale": "fr",
+    "name": "L'écotourisme"
+  },
+  {
+    "tagId": "cmcarqsd3005c6wqm8r2tiqba",
+    "locale": "it",
+    "name": "Eco Turismo"
+  },
+  {
+    "tagId": "cmcarqsd3005c6wqm8r2tiqba",
+    "locale": "pt",
+    "name": "Turismo ecológico"
+  },
+  {
+    "tagId": "cmcarqsd3005c6wqm8r2tiqba",
+    "locale": "sk",
+    "name": "Ekologický cestovný ruch"
+  },
+  {
+    "tagId": "cmcarqsd3005c6wqm8r2tiqba",
+    "locale": "pl",
+    "name": "Turystyka ekologiczna"
+  },
+  {
+    "tagId": "cmcarqsd3005c6wqm8r2tiqba",
+    "locale": "ro",
+    "name": "Turism ecologic"
+  },
+  {
+    "tagId": "cmcarqsd3005c6wqm8r2tiqba",
+    "locale": "nl",
+    "name": "Eco Toerisme"
+  },
+  {
+    "tagId": "cmcarqsd9005d6wqmunee4dqa",
+    "locale": "de",
+    "name": "Naturspaziergänge"
+  },
+  {
+    "tagId": "cmcarqsd9005d6wqmunee4dqa",
+    "locale": "hu",
+    "name": "Természetjárás"
+  },
+  {
+    "tagId": "cmcarqsd9005d6wqmunee4dqa",
+    "locale": "es",
+    "name": "Paseos por la naturaleza"
+  },
+  {
+    "tagId": "cmcarqsd9005d6wqmunee4dqa",
+    "locale": "fr",
+    "name": "Promenades dans la nature"
+  },
+  {
+    "tagId": "cmcarqsd9005d6wqmunee4dqa",
+    "locale": "it",
+    "name": "Passeggiate nella natura"
+  },
+  {
+    "tagId": "cmcarqsd9005d6wqmunee4dqa",
+    "locale": "pt",
+    "name": "Passeios na natureza"
+  },
+  {
+    "tagId": "cmcarqsd9005d6wqmunee4dqa",
+    "locale": "sk",
+    "name": "Prechádzky v prírode"
+  },
+  {
+    "tagId": "cmcarqsd9005d6wqmunee4dqa",
+    "locale": "pl",
+    "name": "Spacery przyrodnicze"
+  },
+  {
+    "tagId": "cmcarqsd9005d6wqmunee4dqa",
+    "locale": "ro",
+    "name": "Plimbări în natură"
+  },
+  {
+    "tagId": "cmcarqsd9005d6wqmunee4dqa",
+    "locale": "nl",
+    "name": "Natuurwandelingen"
+  },
+  {
+    "tagId": "cmcarqsdf005e6wqmh477big1",
+    "locale": "de",
+    "name": "Freiwilligenarbeit im Ausland"
+  },
+  {
+    "tagId": "cmcarqsdf005e6wqmh477big1",
+    "locale": "hu",
+    "name": "Önkéntesség külföldön"
+  },
+  {
+    "tagId": "cmcarqsdf005e6wqmh477big1",
+    "locale": "es",
+    "name": "Voluntariado en el extranjero"
+  },
+  {
+    "tagId": "cmcarqsdf005e6wqmh477big1",
+    "locale": "fr",
+    "name": "Volontariat à l'étranger"
+  },
+  {
+    "tagId": "cmcarqsdf005e6wqmh477big1",
+    "locale": "it",
+    "name": "Volontariato all'estero"
+  },
+  {
+    "tagId": "cmcarqsdf005e6wqmh477big1",
+    "locale": "pt",
+    "name": "Voluntariado no estrangeiro"
+  },
+  {
+    "tagId": "cmcarqsdf005e6wqmh477big1",
+    "locale": "sk",
+    "name": "Dobrovoľníctvo v zahraničí"
+  },
+  {
+    "tagId": "cmcarqsdf005e6wqmh477big1",
+    "locale": "pl",
+    "name": "Wolontariat za granicą"
+  },
+  {
+    "tagId": "cmcarqsdf005e6wqmh477big1",
+    "locale": "ro",
+    "name": "Voluntariat în străinătate"
+  },
+  {
+    "tagId": "cmcarqsdf005e6wqmh477big1",
+    "locale": "nl",
+    "name": "Vrijwilligerswerk in het buitenland"
+  },
+  {
+    "tagId": "cmcarqsdk005f6wqm73tfjrsv",
+    "locale": "de",
+    "name": "Herberge"
+  },
+  {
+    "tagId": "cmcarqsdk005f6wqm73tfjrsv",
+    "locale": "hu",
+    "name": "Hostelling"
+  },
+  {
+    "tagId": "cmcarqsdk005f6wqm73tfjrsv",
+    "locale": "es",
+    "name": "Albergue"
+  },
+  {
+    "tagId": "cmcarqsdk005f6wqm73tfjrsv",
+    "locale": "fr",
+    "name": "Hébergement"
+  },
+  {
+    "tagId": "cmcarqsdk005f6wqm73tfjrsv",
+    "locale": "it",
+    "name": "Ostello"
+  },
+  {
+    "tagId": "cmcarqsdk005f6wqm73tfjrsv",
+    "locale": "pt",
+    "name": "Albergue"
+  },
+  {
+    "tagId": "cmcarqsdk005f6wqm73tfjrsv",
+    "locale": "sk",
+    "name": "Ubytovňa"
+  },
+  {
+    "tagId": "cmcarqsdk005f6wqm73tfjrsv",
+    "locale": "pl",
+    "name": "Hosting"
+  },
+  {
+    "tagId": "cmcarqsdk005f6wqm73tfjrsv",
+    "locale": "ro",
+    "name": "Hostelling"
+  },
+  {
+    "tagId": "cmcarqsdk005f6wqm73tfjrsv",
+    "locale": "nl",
+    "name": "Hostel"
+  },
+  {
+    "tagId": "cmcarqsdo005g6wqmp7tmb6hf",
+    "locale": "de",
+    "name": "Überleben in der Wildnis"
+  },
+  {
+    "tagId": "cmcarqsdo005g6wqmp7tmb6hf",
+    "locale": "hu",
+    "name": "Vadonban való túlélés"
+  },
+  {
+    "tagId": "cmcarqsdo005g6wqmp7tmb6hf",
+    "locale": "es",
+    "name": "Supervivencia en la naturaleza"
+  },
+  {
+    "tagId": "cmcarqsdo005g6wqmp7tmb6hf",
+    "locale": "fr",
+    "name": "Survie en milieu sauvage"
+  },
+  {
+    "tagId": "cmcarqsdo005g6wqmp7tmb6hf",
+    "locale": "it",
+    "name": "Sopravvivenza in natura"
+  },
+  {
+    "tagId": "cmcarqsdo005g6wqmp7tmb6hf",
+    "locale": "pt",
+    "name": "Sobrevivência na Natureza"
+  },
+  {
+    "tagId": "cmcarqsdo005g6wqmp7tmb6hf",
+    "locale": "sk",
+    "name": "Prežitie v divočine"
+  },
+  {
+    "tagId": "cmcarqsdo005g6wqmp7tmb6hf",
+    "locale": "pl",
+    "name": "Przetrwanie w dziczy"
+  },
+  {
+    "tagId": "cmcarqsdo005g6wqmp7tmb6hf",
+    "locale": "ro",
+    "name": "Supraviețuirea în sălbăticie"
+  },
+  {
+    "tagId": "cmcarqsdo005g6wqmp7tmb6hf",
+    "locale": "nl",
+    "name": "Overleven in de wildernis"
+  },
+  {
+    "tagId": "cmcarqsds005h6wqmq300yaw0",
+    "locale": "de",
+    "name": "Pilgerreisen"
+  },
+  {
+    "tagId": "cmcarqsds005h6wqmq300yaw0",
+    "locale": "hu",
+    "name": "Zarándoklatok"
+  },
+  {
+    "tagId": "cmcarqsds005h6wqmq300yaw0",
+    "locale": "es",
+    "name": "Peregrinaciones"
+  },
+  {
+    "tagId": "cmcarqsds005h6wqmq300yaw0",
+    "locale": "fr",
+    "name": "Pèlerinages"
+  },
+  {
+    "tagId": "cmcarqsds005h6wqmq300yaw0",
+    "locale": "it",
+    "name": "Pellegrinaggi"
+  },
+  {
+    "tagId": "cmcarqsds005h6wqmq300yaw0",
+    "locale": "pt",
+    "name": "Peregrinações"
+  },
+  {
+    "tagId": "cmcarqsds005h6wqmq300yaw0",
+    "locale": "sk",
+    "name": "Púte"
+  },
+  {
+    "tagId": "cmcarqsds005h6wqmq300yaw0",
+    "locale": "pl",
+    "name": "Pielgrzymki"
+  },
+  {
+    "tagId": "cmcarqsds005h6wqmq300yaw0",
+    "locale": "ro",
+    "name": "Pelerinaje"
+  },
+  {
+    "tagId": "cmcarqsds005h6wqmq300yaw0",
+    "locale": "nl",
+    "name": "Bedevaarten"
+  },
+  {
+    "tagId": "cmcarqsdw005i6wqmff13gi59",
+    "locale": "de",
+    "name": "Nomadisches Leben"
+  },
+  {
+    "tagId": "cmcarqsdw005i6wqmff13gi59",
+    "locale": "hu",
+    "name": "Nomád életmód"
+  },
+  {
+    "tagId": "cmcarqsdw005i6wqmff13gi59",
+    "locale": "es",
+    "name": "Vida nómada"
+  },
+  {
+    "tagId": "cmcarqsdw005i6wqmff13gi59",
+    "locale": "fr",
+    "name": "Vie nomade"
+  },
+  {
+    "tagId": "cmcarqsdw005i6wqmff13gi59",
+    "locale": "it",
+    "name": "Vita nomade"
+  },
+  {
+    "tagId": "cmcarqsdw005i6wqmff13gi59",
+    "locale": "pt",
+    "name": "Vida nómada"
+  },
+  {
+    "tagId": "cmcarqsdw005i6wqmff13gi59",
+    "locale": "sk",
+    "name": "Kočovné bývanie"
+  },
+  {
+    "tagId": "cmcarqsdw005i6wqmff13gi59",
+    "locale": "pl",
+    "name": "Nomadyczne życie"
+  },
+  {
+    "tagId": "cmcarqsdw005i6wqmff13gi59",
+    "locale": "ro",
+    "name": "Viața nomadă"
+  },
+  {
+    "tagId": "cmcarqsdw005i6wqmff13gi59",
+    "locale": "nl",
+    "name": "Nomadisch leven"
+  },
+  {
+    "tagId": "cmcarqse3005j6wqmx7owfzf8",
+    "locale": "de",
+    "name": "Geocaching"
+  },
+  {
+    "tagId": "cmcarqse3005j6wqmx7owfzf8",
+    "locale": "hu",
+    "name": "Geocaching"
+  },
+  {
+    "tagId": "cmcarqse3005j6wqmx7owfzf8",
+    "locale": "fr",
+    "name": "Géocaching"
+  },
+  {
+    "tagId": "cmcarqse3005j6wqmx7owfzf8",
+    "locale": "es",
+    "name": "Geocaching"
+  },
+  {
+    "tagId": "cmcarqse3005j6wqmx7owfzf8",
+    "locale": "it",
+    "name": "Geocaching"
+  },
+  {
+    "tagId": "cmcarqse3005j6wqmx7owfzf8",
+    "locale": "pt",
+    "name": "Geocaching"
+  },
+  {
+    "tagId": "cmcarqse3005j6wqmx7owfzf8",
+    "locale": "sk",
+    "name": "Geocaching"
+  },
+  {
+    "tagId": "cmcarqse3005j6wqmx7owfzf8",
+    "locale": "pl",
+    "name": "Geocaching"
+  },
+  {
+    "tagId": "cmcarqse3005j6wqmx7owfzf8",
+    "locale": "ro",
+    "name": "Geocaching"
+  },
+  {
+    "tagId": "cmcarqse3005j6wqmx7owfzf8",
+    "locale": "nl",
+    "name": "Geocaching"
+  },
+  {
+    "tagId": "cmcwb31md001yl601offb9t07",
+    "locale": "pl",
+    "name": "Literatura"
+  },
+  {
+    "tagId": "cmcxg8dg9000ko901qhcr2etd",
+    "locale": "en",
+    "name": "Psychedelics"
+  },
+  {
+    "tagId": "cmcxg8haa000lo901ayd7h06l",
+    "locale": "en",
+    "name": "Ayahuasca"
+  },
+  {
+    "tagId": "cmcxg9uab001qo901icam4m14",
+    "locale": "en",
+    "name": "Visionary arts"
+  },
+  {
+    "tagId": "cmcxg9ytu001ro9013ipl1koh",
+    "locale": "en",
+    "name": "Making music"
+  },
+  {
+    "tagId": "cmcxgb61x002co9016hd2yz43",
+    "locale": "en",
+    "name": "Psy trance"
+  },
+  {
+    "tagId": "cmcv49bup0003o801llkgnael",
+    "locale": "de",
+    "name": "Programmierung"
+  },
+  {
+    "tagId": "cmcv49bup0003o801llkgnael",
+    "locale": "hu",
+    "name": "Programozás"
+  },
+  {
+    "tagId": "cmcv49bup0003o801llkgnael",
+    "locale": "es",
+    "name": "Programación"
+  },
+  {
+    "tagId": "cmcv49bup0003o801llkgnael",
+    "locale": "fr",
+    "name": "Programmation"
+  },
+  {
+    "tagId": "cmcv49bup0003o801llkgnael",
+    "locale": "it",
+    "name": "Programmazione"
+  },
+  {
+    "tagId": "cmcv49bup0003o801llkgnael",
+    "locale": "pt",
+    "name": "Programação"
+  },
+  {
+    "tagId": "cmcv49bup0003o801llkgnael",
+    "locale": "sk",
+    "name": "Programovanie"
+  },
+  {
+    "tagId": "cmcv49bup0003o801llkgnael",
+    "locale": "pl",
+    "name": "Programowanie"
+  },
+  {
+    "tagId": "cmcv49bup0003o801llkgnael",
+    "locale": "ro",
+    "name": "Programare"
+  },
+  {
+    "tagId": "cmcv49bup0003o801llkgnael",
+    "locale": "nl",
+    "name": "Programmeren"
+  },
+  {
+    "tagId": "cmcwb31md001yl601offb9t07",
+    "locale": "de",
+    "name": "Literatura"
+  },
+  {
+    "tagId": "cmcwb31md001yl601offb9t07",
+    "locale": "hu",
+    "name": "Literatura"
+  },
+  {
+    "tagId": "cmcwb31md001yl601offb9t07",
+    "locale": "es",
+    "name": "Literatura"
+  },
+  {
+    "tagId": "cmcwb31md001yl601offb9t07",
+    "locale": "fr",
+    "name": "Littérature"
+  },
+  {
+    "tagId": "cmcwb31md001yl601offb9t07",
+    "locale": "it",
+    "name": "Letteratura"
+  },
+  {
+    "tagId": "cmcwb31md001yl601offb9t07",
+    "locale": "pt",
+    "name": "Literatura"
+  },
+  {
+    "tagId": "cmcwb31md001yl601offb9t07",
+    "locale": "sk",
+    "name": "Literatura"
+  },
+  {
+    "tagId": "cmcwb31md001yl601offb9t07",
+    "locale": "ro",
+    "name": "Literatură"
+  },
+  {
+    "tagId": "cmcwb31md001yl601offb9t07",
+    "locale": "nl",
+    "name": "Literatuur"
+  },
+  {
+    "tagId": "cmcwb37x6001zl601ao92of7d",
+    "locale": "it",
+    "name": "Cibo"
+  },
+  {
+    "tagId": "cmcwb6q880022l601616wqoe9",
+    "locale": "de",
+    "name": "blah"
+  },
+  {
+    "tagId": "cmcwb6q880022l601616wqoe9",
+    "locale": "hu",
+    "name": "blah"
+  },
+  {
+    "tagId": "cmcwb6q880022l601616wqoe9",
+    "locale": "es",
+    "name": "bla"
+  },
+  {
+    "tagId": "cmcwb6q880022l601616wqoe9",
+    "locale": "fr",
+    "name": "bla-bla"
+  },
+  {
+    "tagId": "cmcwb6q880022l601616wqoe9",
+    "locale": "it",
+    "name": "blah"
+  },
+  {
+    "tagId": "cmcwb6q880022l601616wqoe9",
+    "locale": "pt",
+    "name": "blá"
+  },
+  {
+    "tagId": "cmcwb6q880022l601616wqoe9",
+    "locale": "sk",
+    "name": "bla"
+  },
+  {
+    "tagId": "cmcwb6q880022l601616wqoe9",
+    "locale": "ro",
+    "name": "bla"
+  },
+  {
+    "tagId": "cmcwb6q880022l601616wqoe9",
+    "locale": "nl",
+    "name": "blah"
+  },
+  {
+    "tagId": "cmcxg8dg9000ko901qhcr2etd",
+    "locale": "de",
+    "name": "Psychedelika"
+  },
+  {
+    "tagId": "cmcxg8dg9000ko901qhcr2etd",
+    "locale": "hu",
+    "name": "Pszichedelikus szerek"
+  },
+  {
+    "tagId": "cmcxg8dg9000ko901qhcr2etd",
+    "locale": "es",
+    "name": "Psicodélicos"
+  },
+  {
+    "tagId": "cmcxg8dg9000ko901qhcr2etd",
+    "locale": "fr",
+    "name": "Psychédéliques"
+  },
+  {
+    "tagId": "cmcxg8dg9000ko901qhcr2etd",
+    "locale": "it",
+    "name": "Psichedelici"
+  },
+  {
+    "tagId": "cmcxg8dg9000ko901qhcr2etd",
+    "locale": "pt",
+    "name": "Psicadélicos"
+  },
+  {
+    "tagId": "cmcxg8dg9000ko901qhcr2etd",
+    "locale": "sk",
+    "name": "Psychedeliká"
+  },
+  {
+    "tagId": "cmcxg8dg9000ko901qhcr2etd",
+    "locale": "pl",
+    "name": "Psychodeliki"
+  },
+  {
+    "tagId": "cmcxg8dg9000ko901qhcr2etd",
+    "locale": "ro",
+    "name": "Psihedelice"
+  },
+  {
+    "tagId": "cmcxg8dg9000ko901qhcr2etd",
+    "locale": "nl",
+    "name": "Psychedelica"
+  },
+  {
+    "tagId": "cmcxg8haa000lo901ayd7h06l",
+    "locale": "de",
+    "name": "Ayahuasca"
+  },
+  {
+    "tagId": "cmcxg8haa000lo901ayd7h06l",
+    "locale": "hu",
+    "name": "Ayahuasca"
+  },
+  {
+    "tagId": "cmcxg8haa000lo901ayd7h06l",
+    "locale": "es",
+    "name": "Ayahuasca"
+  },
+  {
+    "tagId": "cmcxg8haa000lo901ayd7h06l",
+    "locale": "fr",
+    "name": "Ayahuasca"
+  },
+  {
+    "tagId": "cmcxg8haa000lo901ayd7h06l",
+    "locale": "it",
+    "name": "Ayahuasca"
+  },
+  {
+    "tagId": "cmcxg8haa000lo901ayd7h06l",
+    "locale": "pt",
+    "name": "Ayahuasca"
+  },
+  {
+    "tagId": "cmcxg8haa000lo901ayd7h06l",
+    "locale": "sk",
+    "name": "Ayahuasca"
+  },
+  {
+    "tagId": "cmcxg8haa000lo901ayd7h06l",
+    "locale": "pl",
+    "name": "Ayahuasca"
+  },
+  {
+    "tagId": "cmcxg8haa000lo901ayd7h06l",
+    "locale": "ro",
+    "name": "Ayahuasca"
+  },
+  {
+    "tagId": "cmcxg8haa000lo901ayd7h06l",
+    "locale": "nl",
+    "name": "Ayahuasca"
+  },
+  {
+    "tagId": "cmcxg9uab001qo901icam4m14",
+    "locale": "de",
+    "name": "Visionäre Kunst"
+  },
+  {
+    "tagId": "cmcxg9uab001qo901icam4m14",
+    "locale": "hu",
+    "name": "Látomásos művészetek"
+  },
+  {
+    "tagId": "cmcxg9uab001qo901icam4m14",
+    "locale": "es",
+    "name": "Artes visionarias"
+  },
+  {
+    "tagId": "cmcxg9uab001qo901icam4m14",
+    "locale": "fr",
+    "name": "Arts visionnaires"
+  },
+  {
+    "tagId": "cmcxg9uab001qo901icam4m14",
+    "locale": "it",
+    "name": "Arti visionarie"
+  },
+  {
+    "tagId": "cmcxg9uab001qo901icam4m14",
+    "locale": "pt",
+    "name": "Artes visionárias"
+  },
+  {
+    "tagId": "cmcxg9uab001qo901icam4m14",
+    "locale": "sk",
+    "name": "Vizionárske umenie"
+  },
+  {
+    "tagId": "cmcxg9uab001qo901icam4m14",
+    "locale": "pl",
+    "name": "Sztuka wizjonerska"
+  },
+  {
+    "tagId": "cmcxg9uab001qo901icam4m14",
+    "locale": "ro",
+    "name": "Arte vizionare"
+  },
+  {
+    "tagId": "cmcxg9uab001qo901icam4m14",
+    "locale": "nl",
+    "name": "Visionaire kunsten"
+  },
+  {
+    "tagId": "cmcxg9ytu001ro9013ipl1koh",
+    "locale": "hu",
+    "name": "Zenélés"
+  },
+  {
+    "tagId": "cmcxg9ytu001ro9013ipl1koh",
+    "locale": "es",
+    "name": "Hacer música"
+  },
+  {
+    "tagId": "cmcxg9ytu001ro9013ipl1koh",
+    "locale": "fr",
+    "name": "Faire de la musique"
+  },
+  {
+    "tagId": "cmcxg9ytu001ro9013ipl1koh",
+    "locale": "it",
+    "name": "Fare musica"
+  },
+  {
+    "tagId": "cmcxg9ytu001ro9013ipl1koh",
+    "locale": "pt",
+    "name": "Fazer música"
+  },
+  {
+    "tagId": "cmcxg9ytu001ro9013ipl1koh",
+    "locale": "sk",
+    "name": "Tvorba hudby"
+  },
+  {
+    "tagId": "cmcxg9ytu001ro9013ipl1koh",
+    "locale": "pl",
+    "name": "Tworzenie muzyki"
+  },
+  {
+    "tagId": "cmcxg9ytu001ro9013ipl1koh",
+    "locale": "ro",
+    "name": "Realizarea muzicii"
+  },
+  {
+    "tagId": "cmcxg9ytu001ro9013ipl1koh",
+    "locale": "nl",
+    "name": "Muziek maken"
+  },
+  {
+    "tagId": "cmcxgb61x002co9016hd2yz43",
+    "locale": "de",
+    "name": "Psy-Trance"
+  },
+  {
+    "tagId": "cmcxgb61x002co9016hd2yz43",
+    "locale": "hu",
+    "name": "Psy trance"
+  },
+  {
+    "tagId": "cmcxgb61x002co9016hd2yz43",
+    "locale": "es",
+    "name": "Trance psíquico"
+  },
+  {
+    "tagId": "cmcxgb61x002co9016hd2yz43",
+    "locale": "fr",
+    "name": "Trance psy"
+  },
+  {
+    "tagId": "cmcxgb61x002co9016hd2yz43",
+    "locale": "it",
+    "name": "Psy trance"
+  },
+  {
+    "tagId": "cmcxgb61x002co9016hd2yz43",
+    "locale": "pt",
+    "name": "Psy trance"
+  },
+  {
+    "tagId": "cmcxgb61x002co9016hd2yz43",
+    "locale": "sk",
+    "name": "Psy trance"
+  },
+  {
+    "tagId": "cmcxgb61x002co9016hd2yz43",
+    "locale": "pl",
+    "name": "Psy trance"
+  },
+  {
+    "tagId": "cmcxgb61x002co9016hd2yz43",
+    "locale": "ro",
+    "name": "Psy trance"
+  },
+  {
+    "tagId": "cmcxgb61x002co9016hd2yz43",
+    "locale": "nl",
+    "name": "Psy trance"
+  },
+  {
+    "tagId": "cmcxg9ytu001ro9013ipl1koh",
+    "locale": "de",
+    "name": "Musik machen"
+  },
+  {
+    "tagId": "cmcwb37x6001zl601ao92of7d",
+    "locale": "de",
+    "name": "Lebensmittel"
+  },
+  {
+    "tagId": "cmcwb37x6001zl601ao92of7d",
+    "locale": "hu",
+    "name": "Élelmiszer"
+  },
+  {
+    "tagId": "cmcwb37x6001zl601ao92of7d",
+    "locale": "es",
+    "name": "Alimentación"
+  },
+  {
+    "tagId": "cmcwb37x6001zl601ao92of7d",
+    "locale": "fr",
+    "name": "Alimentation"
+  },
+  {
+    "tagId": "cmcwb37x6001zl601ao92of7d",
+    "locale": "pt",
+    "name": "Alimentação"
+  },
+  {
+    "tagId": "cmcwb37x6001zl601ao92of7d",
+    "locale": "sk",
+    "name": "Potraviny"
+  },
+  {
+    "tagId": "cmcwb37x6001zl601ao92of7d",
+    "locale": "ro",
+    "name": "Alimente"
+  },
+  {
+    "tagId": "cmcwb37x6001zl601ao92of7d",
+    "locale": "nl",
+    "name": "Voedsel"
+  },
+  {
+    "tagId": "cmcyikw9g0005lv01vpnuj184",
+    "locale": "en",
+    "name": "Writing "
+  },
+  {
+    "tagId": "cmcyil0ml0006lv013et9k9q6",
+    "locale": "en",
+    "name": "Reading"
+  },
+  {
+    "tagId": "cmcz7tfph000mrz01rk7p0343",
+    "locale": "hu",
+    "name": "Egyensúly "
+  },
+  {
+    "tagId": "cmcz7u98z000nrz01zkr3cikq",
+    "locale": "hu",
+    "name": "Viselkedés elemzés "
+  },
+  {
+    "tagId": "cmcz7xkcj000orz01r939wb5k",
+    "locale": "hu",
+    "name": "Lelkünk útja "
+  },
+  {
+    "tagId": "cmdr4l8zl001qqq01i6lfkqn5",
+    "locale": "hu",
+    "name": "közösség"
+  },
+  {
+    "tagId": "cme9zp2fi001kmn01cxe0oab4",
+    "locale": "en",
+    "name": "Contact Dancing"
+  },
+  {
+    "tagId": "cme9zpag5001lmn01mn1wm05b",
+    "locale": "en",
+    "name": "Hiking"
+  },
+  {
+    "tagId": "cmea0g2aa0023mn011b6qu1g9",
+    "locale": "hu",
+    "name": "környezeti nevelés"
+  },
+  {
+    "tagId": "cmeciwz7j0039mn01jn23yiv2",
+    "locale": "hu",
+    "name": "Jóga"
+  },
+  {
+    "tagId": "cmee952ag003wmn01g8ore2qs",
+    "locale": "en",
+    "name": "Activism"
+  },
+  {
+    "tagId": "cmeidbj250040mn0111pdu4iu",
+    "locale": "hu",
+    "name": "Párka"
+  },
+  {
+    "tagId": "cmeidbtbx0041mn01bouflq9p",
+    "locale": "hu",
+    "name": "Párkapcsolat"
+  },
+  {
+    "tagId": "cmemthcmc005omn014cf9knvq",
+    "locale": "en",
+    "name": "Surf"
+  },
+  {
+    "tagId": "cmemthesq005pmn018kh6i42s",
+    "locale": "en",
+    "name": "yoga"
+  },
+  {
+    "tagId": "cmeqw298v007jmn015oqmasci",
+    "locale": "hu",
+    "name": "Önellátás"
+  },
+  {
+    "tagId": "cmeqw2h2f007kmn011t4xe674",
+    "locale": "hu",
+    "name": "Fermentálás"
+  },
+  {
+    "tagId": "cmeqw2ky8007lmn01rl4t21kg",
+    "locale": "hu",
+    "name": "Gomba termesztése "
+  },
+  {
+    "tagId": "cmeqw2nxr007mmn0146srgrjh",
+    "locale": "hu",
+    "name": "Kombucha"
+  },
+  {
+    "tagId": "cmeqwacl5007qmn01dia3325n",
+    "locale": "en",
+    "name": "Natural Farming"
+  },
+  {
+    "tagId": "cmeqwbhem007rmn01f7917gun",
+    "locale": "en",
+    "name": "Természetes Gazdálkodás"
+  },
+  {
+    "tagId": "cmeqwby6y007smn01m5am5ch6",
+    "locale": "en",
+    "name": "Family self-sufficiency"
+  },
+  {
+    "tagId": "cmea0drau0022mn01epyqpcox",
+    "locale": "hu",
+    "name": "Állattartás"
+  },
+  {
+    "tagId": "cmeqwde87007tmn01x9i3goo0",
+    "locale": "en",
+    "name": "Családi Önellátás"
+  },
+  {
+    "tagId": "cmeqwh8nw007xmn01epf1d490",
+    "locale": "hu",
+    "name": "Kemence építés, kenyérsütés"
+  },
+  {
+    "tagId": "cmeqwi0c7007ymn01o69q8f6u",
+    "locale": "hu",
+    "name": "Szép pergola építés, bontott téglából"
+  },
+  {
+    "tagId": "cmeqwk261007zmn01hqbhgf6x",
+    "locale": "hu",
+    "name": "Kölcsös és közös munka egymás kertjében az önfenntartás jegyében, szomszédközösségek"
+  },
+  {
+    "tagId": "cmeqwkn6p0081mn0170wvt1ak",
+    "locale": "hu",
+    "name": "Konyhakert építés"
+  },
+  {
+    "tagId": "cmeqwkyg80082mn013sx1g9t5",
+    "locale": "hu",
+    "name": "Borospince felújítás"
+  },
+  {
+    "tagId": "cmeqwy4bh008dmn01o4ccb1lt",
+    "locale": "hu",
+    "name": "Kovászolás"
+  },
+  {
+    "tagId": "cmeqwyo2p008gmn01wcixbpzi",
+    "locale": "hu",
+    "name": "Főzés"
+  },
+  {
+    "tagId": "cmeqwzirj008kmn01d7smu3tz",
+    "locale": "hu",
+    "name": "Táncház"
+  },
+  {
+    "tagId": "cmeqx5kgu00a1mn017l4tdhnn",
+    "locale": "hu",
+    "name": "Zumba"
+  },
+  {
+    "tagId": "cmeqxllo600agmn01v2gtiaxo",
+    "locale": "hu",
+    "name": "Önfentartas"
+  },
+  {
+    "tagId": "cmeqytker00gmmn01bj0jagkw",
+    "locale": "hu",
+    "name": "ökoépítészet"
+  },
+  {
+    "tagId": "cmeqyu4rq00gnmn01hygvv4w1",
+    "locale": "hu",
+    "name": "Túrázás"
+  },
+  {
+    "tagId": "cmeqyv64x00gomn019w6j7gqw",
+    "locale": "hu",
+    "name": "Cserekereskedelem"
+  },
+  {
+    "tagId": "cmer0pxkj0000mn01p5ebuwz6",
+    "locale": "hu",
+    "name": "Önismeret"
+  },
+  {
+    "tagId": "cmer0qumd0001mn01b29q7k8g",
+    "locale": "hu",
+    "name": "Vadkempingezés"
+  },
+  {
+    "tagId": "cmer0r1q40002mn01y9x9y3q2",
+    "locale": "hu",
+    "name": "Sportok"
+  },
+  {
+    "tagId": "cmer0rfaw0003mn014trkx4el",
+    "locale": "hu",
+    "name": "Kertészkedés"
+  },
+  {
+    "tagId": "cmcyikw9g0005lv01vpnuj184",
+    "locale": "de",
+    "name": "Schreiben"
+  },
+  {
+    "tagId": "cmcyikw9g0005lv01vpnuj184",
+    "locale": "hu",
+    "name": "Írás"
+  },
+  {
+    "tagId": "cmcyikw9g0005lv01vpnuj184",
+    "locale": "es",
+    "name": "Escribir"
+  },
+  {
+    "tagId": "cmcyikw9g0005lv01vpnuj184",
+    "locale": "fr",
+    "name": "Rédaction"
+  },
+  {
+    "tagId": "cmcyikw9g0005lv01vpnuj184",
+    "locale": "it",
+    "name": "Scrittura"
+  },
+  {
+    "tagId": "cmcyikw9g0005lv01vpnuj184",
+    "locale": "pt",
+    "name": "Escrita"
+  },
+  {
+    "tagId": "cmcyikw9g0005lv01vpnuj184",
+    "locale": "sk",
+    "name": "Písanie"
+  },
+  {
+    "tagId": "cmcyikw9g0005lv01vpnuj184",
+    "locale": "pl",
+    "name": "Pisanie"
+  },
+  {
+    "tagId": "cmcyikw9g0005lv01vpnuj184",
+    "locale": "ro",
+    "name": "Scriere"
+  },
+  {
+    "tagId": "cmcyikw9g0005lv01vpnuj184",
+    "locale": "nl",
+    "name": "Schrijven"
+  },
+  {
+    "tagId": "cmcyil0ml0006lv013et9k9q6",
+    "locale": "de",
+    "name": "Lesen"
+  },
+  {
+    "tagId": "cmcyil0ml0006lv013et9k9q6",
+    "locale": "hu",
+    "name": "Olvasás"
+  },
+  {
+    "tagId": "cmcyil0ml0006lv013et9k9q6",
+    "locale": "es",
+    "name": "Lectura"
+  },
+  {
+    "tagId": "cmcyil0ml0006lv013et9k9q6",
+    "locale": "fr",
+    "name": "Lecture"
+  },
+  {
+    "tagId": "cmcyil0ml0006lv013et9k9q6",
+    "locale": "it",
+    "name": "Lettura"
+  },
+  {
+    "tagId": "cmcyil0ml0006lv013et9k9q6",
+    "locale": "pt",
+    "name": "Leitura"
+  },
+  {
+    "tagId": "cmcyil0ml0006lv013et9k9q6",
+    "locale": "sk",
+    "name": "Čítanie"
+  },
+  {
+    "tagId": "cmcyil0ml0006lv013et9k9q6",
+    "locale": "pl",
+    "name": "Czytanie"
+  },
+  {
+    "tagId": "cmcyil0ml0006lv013et9k9q6",
+    "locale": "ro",
+    "name": "Lectura"
+  },
+  {
+    "tagId": "cmcyil0ml0006lv013et9k9q6",
+    "locale": "nl",
+    "name": "Lezen"
+  },
+  {
+    "tagId": "cmcz7tfph000mrz01rk7p0343",
+    "locale": "de",
+    "name": "Bilanz"
+  },
+  {
+    "tagId": "cmcz7tfph000mrz01rk7p0343",
+    "locale": "es",
+    "name": "Saldo"
+  },
+  {
+    "tagId": "cmcz7tfph000mrz01rk7p0343",
+    "locale": "fr",
+    "name": "Équilibre"
+  },
+  {
+    "tagId": "cmcz7tfph000mrz01rk7p0343",
+    "locale": "it",
+    "name": "Equilibrio"
+  },
+  {
+    "tagId": "cmcz7tfph000mrz01rk7p0343",
+    "locale": "pt",
+    "name": "Equilíbrio"
+  },
+  {
+    "tagId": "cmcz7tfph000mrz01rk7p0343",
+    "locale": "sk",
+    "name": "Bilancia"
+  },
+  {
+    "tagId": "cmcz7tfph000mrz01rk7p0343",
+    "locale": "pl",
+    "name": "Równowaga"
+  },
+  {
+    "tagId": "cmcz7tfph000mrz01rk7p0343",
+    "locale": "ro",
+    "name": "Echilibru"
+  },
+  {
+    "tagId": "cmcz7tfph000mrz01rk7p0343",
+    "locale": "nl",
+    "name": "Saldo"
+  },
+  {
+    "tagId": "cmcz7u98z000nrz01zkr3cikq",
+    "locale": "de",
+    "name": "Verhaltensanalyse"
+  },
+  {
+    "tagId": "cmcz7u98z000nrz01zkr3cikq",
+    "locale": "es",
+    "name": "Análisis del comportamiento"
+  },
+  {
+    "tagId": "cmcz7u98z000nrz01zkr3cikq",
+    "locale": "fr",
+    "name": "Analyse comportementale"
+  },
+  {
+    "tagId": "cmcz7u98z000nrz01zkr3cikq",
+    "locale": "it",
+    "name": "Analisi comportamentale"
+  },
+  {
+    "tagId": "cmcz7u98z000nrz01zkr3cikq",
+    "locale": "pt",
+    "name": "Análise comportamental"
+  },
+  {
+    "tagId": "cmcz7u98z000nrz01zkr3cikq",
+    "locale": "sk",
+    "name": "Analýza správania"
+  },
+  {
+    "tagId": "cmcz7u98z000nrz01zkr3cikq",
+    "locale": "pl",
+    "name": "Analiza behawioralna"
+  },
+  {
+    "tagId": "cmcz7u98z000nrz01zkr3cikq",
+    "locale": "ro",
+    "name": "Analiza comportamentală"
+  },
+  {
+    "tagId": "cmcz7u98z000nrz01zkr3cikq",
+    "locale": "nl",
+    "name": "Gedragsanalyse"
+  },
+  {
+    "tagId": "cmcz7xkcj000orz01r939wb5k",
+    "locale": "de",
+    "name": "Die Reise unserer Seelen"
+  },
+  {
+    "tagId": "cmcz7xkcj000orz01r939wb5k",
+    "locale": "es",
+    "name": "El viaje de nuestras almas"
+  },
+  {
+    "tagId": "cmcz7xkcj000orz01r939wb5k",
+    "locale": "fr",
+    "name": "Le voyage de nos âmes"
+  },
+  {
+    "tagId": "cmcz7xkcj000orz01r939wb5k",
+    "locale": "it",
+    "name": "Il viaggio delle nostre anime"
+  },
+  {
+    "tagId": "cmcz7xkcj000orz01r939wb5k",
+    "locale": "pt",
+    "name": "A viagem das nossas almas"
+  },
+  {
+    "tagId": "cmcz7xkcj000orz01r939wb5k",
+    "locale": "sk",
+    "name": "Cesta našich duší"
+  },
+  {
+    "tagId": "cmcz7xkcj000orz01r939wb5k",
+    "locale": "pl",
+    "name": "Podróż naszych dusz"
+  },
+  {
+    "tagId": "cmcz7xkcj000orz01r939wb5k",
+    "locale": "ro",
+    "name": "Călătoria sufletelor noastre"
+  },
+  {
+    "tagId": "cmcz7xkcj000orz01r939wb5k",
+    "locale": "nl",
+    "name": "De reis van onze ziel"
+  },
+  {
+    "tagId": "cmdbr1z000003qq01hnbwk7c1",
+    "locale": "de",
+    "name": "Musik"
+  },
+  {
+    "tagId": "cmdbr1z000003qq01hnbwk7c1",
+    "locale": "es",
+    "name": "Música"
+  },
+  {
+    "tagId": "cmdbr1z000003qq01hnbwk7c1",
+    "locale": "fr",
+    "name": "Musique"
+  },
+  {
+    "tagId": "cmdbr1z000003qq01hnbwk7c1",
+    "locale": "it",
+    "name": "Musica"
+  },
+  {
+    "tagId": "cmdbr1z000003qq01hnbwk7c1",
+    "locale": "pt",
+    "name": "Música"
+  },
+  {
+    "tagId": "cmdbr1z000003qq01hnbwk7c1",
+    "locale": "sk",
+    "name": "Hudba"
+  },
+  {
+    "tagId": "cmdbr1z000003qq01hnbwk7c1",
+    "locale": "pl",
+    "name": "Muzyka"
+  },
+  {
+    "tagId": "cmdbr1z000003qq01hnbwk7c1",
+    "locale": "ro",
+    "name": "Muzică"
+  },
+  {
+    "tagId": "cmdbr1z000003qq01hnbwk7c1",
+    "locale": "nl",
+    "name": "Muziek"
+  },
+  {
+    "tagId": "cmdr4l8zl001qqq01i6lfkqn5",
+    "locale": "de",
+    "name": "Gemeinschaft"
+  },
+  {
+    "tagId": "cmdr4l8zl001qqq01i6lfkqn5",
+    "locale": "es",
+    "name": "Comunidad"
+  },
+  {
+    "tagId": "cmdr4l8zl001qqq01i6lfkqn5",
+    "locale": "fr",
+    "name": "Communauté"
+  },
+  {
+    "tagId": "cmdr4l8zl001qqq01i6lfkqn5",
+    "locale": "it",
+    "name": "Comunità"
+  },
+  {
+    "tagId": "cmdr4l8zl001qqq01i6lfkqn5",
+    "locale": "pt",
+    "name": "Comunidade"
+  },
+  {
+    "tagId": "cmdr4l8zl001qqq01i6lfkqn5",
+    "locale": "sk",
+    "name": "Komunita"
+  },
+  {
+    "tagId": "cmdr4l8zl001qqq01i6lfkqn5",
+    "locale": "pl",
+    "name": "Wspólnota"
+  },
+  {
+    "tagId": "cmdr4l8zl001qqq01i6lfkqn5",
+    "locale": "ro",
+    "name": "Comunitate"
+  },
+  {
+    "tagId": "cmdr4l8zl001qqq01i6lfkqn5",
+    "locale": "nl",
+    "name": "Gemeenschap"
+  },
+  {
+    "tagId": "cme9jglph0015mn0117xdaso6",
+    "locale": "de",
+    "name": "Tanya"
+  },
+  {
+    "tagId": "cme9jglph0015mn0117xdaso6",
+    "locale": "fr",
+    "name": "Tanya"
+  },
+  {
+    "tagId": "cme9jglph0015mn0117xdaso6",
+    "locale": "it",
+    "name": "Tanya"
+  },
+  {
+    "tagId": "cme9jglph0015mn0117xdaso6",
+    "locale": "pt",
+    "name": "Tanya"
+  },
+  {
+    "tagId": "cme9jglph0015mn0117xdaso6",
+    "locale": "sk",
+    "name": "Tanya"
+  },
+  {
+    "tagId": "cme9jglph0015mn0117xdaso6",
+    "locale": "pl",
+    "name": "Tanya"
+  },
+  {
+    "tagId": "cme9jglph0015mn0117xdaso6",
+    "locale": "ro",
+    "name": "Tanya"
+  },
+  {
+    "tagId": "cme9jglph0015mn0117xdaso6",
+    "locale": "nl",
+    "name": "Tanya"
+  },
+  {
+    "tagId": "cme9zp2fi001kmn01cxe0oab4",
+    "locale": "de",
+    "name": "Kontakt Tanzen"
+  },
+  {
+    "tagId": "cme9zp2fi001kmn01cxe0oab4",
+    "locale": "hu",
+    "name": "Kapcsolat Tánc"
+  },
+  {
+    "tagId": "cme9zp2fi001kmn01cxe0oab4",
+    "locale": "es",
+    "name": "Contacto Baile"
+  },
+  {
+    "tagId": "cme9zp2fi001kmn01cxe0oab4",
+    "locale": "fr",
+    "name": "Contact Dancing"
+  },
+  {
+    "tagId": "cme9zp2fi001kmn01cxe0oab4",
+    "locale": "it",
+    "name": "Contatto Dancing"
+  },
+  {
+    "tagId": "cme9zp2fi001kmn01cxe0oab4",
+    "locale": "pt",
+    "name": "Contacto Dancing"
+  },
+  {
+    "tagId": "cme9zp2fi001kmn01cxe0oab4",
+    "locale": "sk",
+    "name": "Kontakt Tancovanie"
+  },
+  {
+    "tagId": "cme9zp2fi001kmn01cxe0oab4",
+    "locale": "pl",
+    "name": "Kontakt Taniec"
+  },
+  {
+    "tagId": "cme9zp2fi001kmn01cxe0oab4",
+    "locale": "ro",
+    "name": "Contact Dans"
+  },
+  {
+    "tagId": "cme9zp2fi001kmn01cxe0oab4",
+    "locale": "nl",
+    "name": "Contact Dansen"
+  },
+  {
+    "tagId": "cme9zpag5001lmn01mn1wm05b",
+    "locale": "de",
+    "name": "Wandern"
+  },
+  {
+    "tagId": "cme9zpag5001lmn01mn1wm05b",
+    "locale": "hu",
+    "name": "Túrázás"
+  },
+  {
+    "tagId": "cme9zpag5001lmn01mn1wm05b",
+    "locale": "es",
+    "name": "Senderismo"
+  },
+  {
+    "tagId": "cme9zpag5001lmn01mn1wm05b",
+    "locale": "fr",
+    "name": "Randonnée"
+  },
+  {
+    "tagId": "cme9zpag5001lmn01mn1wm05b",
+    "locale": "it",
+    "name": "Escursioni"
+  },
+  {
+    "tagId": "cme9zpag5001lmn01mn1wm05b",
+    "locale": "pt",
+    "name": "Caminhadas"
+  },
+  {
+    "tagId": "cme9zpag5001lmn01mn1wm05b",
+    "locale": "sk",
+    "name": "Turistika"
+  },
+  {
+    "tagId": "cme9zpag5001lmn01mn1wm05b",
+    "locale": "pl",
+    "name": "Turystyka piesza"
+  },
+  {
+    "tagId": "cme9zpag5001lmn01mn1wm05b",
+    "locale": "ro",
+    "name": "Drumeții"
+  },
+  {
+    "tagId": "cme9zpag5001lmn01mn1wm05b",
+    "locale": "nl",
+    "name": "Wandelen"
+  },
+  {
+    "tagId": "cmea0drau0022mn01epyqpcox",
+    "locale": "de",
+    "name": "Tierhaltung"
+  },
+  {
+    "tagId": "cmea0drau0022mn01epyqpcox",
+    "locale": "es",
+    "name": "ganadería"
+  },
+  {
+    "tagId": "cmea0drau0022mn01epyqpcox",
+    "locale": "fr",
+    "name": "l'élevage"
+  },
+  {
+    "tagId": "cmea0drau0022mn01epyqpcox",
+    "locale": "it",
+    "name": "zootecnia"
+  },
+  {
+    "tagId": "cmea0drau0022mn01epyqpcox",
+    "locale": "pt",
+    "name": "criação de animais"
+  },
+  {
+    "tagId": "cmea0drau0022mn01epyqpcox",
+    "locale": "sk",
+    "name": "chov zvierat"
+  },
+  {
+    "tagId": "cmea0drau0022mn01epyqpcox",
+    "locale": "pl",
+    "name": "hodowla zwierząt"
+  },
+  {
+    "tagId": "cmea0drau0022mn01epyqpcox",
+    "locale": "ro",
+    "name": "creșterea animalelor"
+  },
+  {
+    "tagId": "cmea0drau0022mn01epyqpcox",
+    "locale": "nl",
+    "name": "veeteelt"
+  },
+  {
+    "tagId": "cmea0g2aa0023mn011b6qu1g9",
+    "locale": "de",
+    "name": "Umwelterziehung"
+  },
+  {
+    "tagId": "cmea0g2aa0023mn011b6qu1g9",
+    "locale": "es",
+    "name": "educación medioambiental"
+  },
+  {
+    "tagId": "cmea0g2aa0023mn011b6qu1g9",
+    "locale": "fr",
+    "name": "l'éducation à l'environnement"
+  },
+  {
+    "tagId": "cmea0g2aa0023mn011b6qu1g9",
+    "locale": "it",
+    "name": "educazione ambientale"
+  },
+  {
+    "tagId": "cmea0g2aa0023mn011b6qu1g9",
+    "locale": "pt",
+    "name": "educação ambiental"
+  },
+  {
+    "tagId": "cmea0g2aa0023mn011b6qu1g9",
+    "locale": "sk",
+    "name": "environmentálna výchova"
+  },
+  {
+    "tagId": "cmea0g2aa0023mn011b6qu1g9",
+    "locale": "pl",
+    "name": "edukacja ekologiczna"
+  },
+  {
+    "tagId": "cmea0g2aa0023mn011b6qu1g9",
+    "locale": "ro",
+    "name": "educație ecologică"
+  },
+  {
+    "tagId": "cmea0g2aa0023mn011b6qu1g9",
+    "locale": "nl",
+    "name": "milieueducatie"
+  },
+  {
+    "tagId": "cmeciwz7j0039mn01jn23yiv2",
+    "locale": "de",
+    "name": "Yoga"
+  },
+  {
+    "tagId": "cmeciwz7j0039mn01jn23yiv2",
+    "locale": "es",
+    "name": "Yoga"
+  },
+  {
+    "tagId": "cmeciwz7j0039mn01jn23yiv2",
+    "locale": "fr",
+    "name": "Yoga"
+  },
+  {
+    "tagId": "cmeciwz7j0039mn01jn23yiv2",
+    "locale": "it",
+    "name": "Lo yoga"
+  },
+  {
+    "tagId": "cmeciwz7j0039mn01jn23yiv2",
+    "locale": "pt",
+    "name": "Ioga"
+  },
+  {
+    "tagId": "cmeciwz7j0039mn01jn23yiv2",
+    "locale": "sk",
+    "name": "Joga"
+  },
+  {
+    "tagId": "cmeciwz7j0039mn01jn23yiv2",
+    "locale": "pl",
+    "name": "Joga"
+  },
+  {
+    "tagId": "cmeciwz7j0039mn01jn23yiv2",
+    "locale": "ro",
+    "name": "Yoga"
+  },
+  {
+    "tagId": "cmeciwz7j0039mn01jn23yiv2",
+    "locale": "nl",
+    "name": "Yoga"
+  },
+  {
+    "tagId": "cmee952ag003wmn01g8ore2qs",
+    "locale": "de",
+    "name": "Aktivismus"
+  },
+  {
+    "tagId": "cmee952ag003wmn01g8ore2qs",
+    "locale": "hu",
+    "name": "Aktivizmus"
+  },
+  {
+    "tagId": "cmee952ag003wmn01g8ore2qs",
+    "locale": "es",
+    "name": "Activismo"
+  },
+  {
+    "tagId": "cmee952ag003wmn01g8ore2qs",
+    "locale": "fr",
+    "name": "Activisme"
+  },
+  {
+    "tagId": "cmee952ag003wmn01g8ore2qs",
+    "locale": "it",
+    "name": "Attivismo"
+  },
+  {
+    "tagId": "cmee952ag003wmn01g8ore2qs",
+    "locale": "pt",
+    "name": "Ativismo"
+  },
+  {
+    "tagId": "cmee952ag003wmn01g8ore2qs",
+    "locale": "sk",
+    "name": "Aktivizmus"
+  },
+  {
+    "tagId": "cmee952ag003wmn01g8ore2qs",
+    "locale": "pl",
+    "name": "Aktywizm"
+  },
+  {
+    "tagId": "cmee952ag003wmn01g8ore2qs",
+    "locale": "ro",
+    "name": "Activism"
+  },
+  {
+    "tagId": "cmee952ag003wmn01g8ore2qs",
+    "locale": "nl",
+    "name": "Activisme"
+  },
+  {
+    "tagId": "cmeidbj250040mn0111pdu4iu",
+    "locale": "de",
+    "name": "Kopfkissen"
+  },
+  {
+    "tagId": "cmeidbj250040mn0111pdu4iu",
+    "locale": "es",
+    "name": "Almohada"
+  },
+  {
+    "tagId": "cmeidbj250040mn0111pdu4iu",
+    "locale": "fr",
+    "name": "Oreiller"
+  },
+  {
+    "tagId": "cmeidbj250040mn0111pdu4iu",
+    "locale": "it",
+    "name": "Cuscino"
+  },
+  {
+    "tagId": "cmeidbj250040mn0111pdu4iu",
+    "locale": "pt",
+    "name": "Almofada"
+  },
+  {
+    "tagId": "cmeidbj250040mn0111pdu4iu",
+    "locale": "sk",
+    "name": "Vankúš"
+  },
+  {
+    "tagId": "cmeidbj250040mn0111pdu4iu",
+    "locale": "pl",
+    "name": "Poduszka"
+  },
+  {
+    "tagId": "cmeidbj250040mn0111pdu4iu",
+    "locale": "ro",
+    "name": "Pernă"
+  },
+  {
+    "tagId": "cmeidbj250040mn0111pdu4iu",
+    "locale": "nl",
+    "name": "Kussen"
+  },
+  {
+    "tagId": "cmeidbtbx0041mn01bouflq9p",
+    "locale": "de",
+    "name": "Beziehung"
+  },
+  {
+    "tagId": "cmeidbtbx0041mn01bouflq9p",
+    "locale": "es",
+    "name": "Relación"
+  },
+  {
+    "tagId": "cmeidbtbx0041mn01bouflq9p",
+    "locale": "fr",
+    "name": "Relation"
+  },
+  {
+    "tagId": "cmeidbtbx0041mn01bouflq9p",
+    "locale": "it",
+    "name": "Relazione"
+  },
+  {
+    "tagId": "cmeidbtbx0041mn01bouflq9p",
+    "locale": "pt",
+    "name": "Relacionamento"
+  },
+  {
+    "tagId": "cmeidbtbx0041mn01bouflq9p",
+    "locale": "sk",
+    "name": "Vzťah"
+  },
+  {
+    "tagId": "cmeidbtbx0041mn01bouflq9p",
+    "locale": "pl",
+    "name": "Związek"
+  },
+  {
+    "tagId": "cmeidbtbx0041mn01bouflq9p",
+    "locale": "ro",
+    "name": "Relația"
+  },
+  {
+    "tagId": "cmeidbtbx0041mn01bouflq9p",
+    "locale": "nl",
+    "name": "Relatie"
+  },
+  {
+    "tagId": "cmemthcmc005omn014cf9knvq",
+    "locale": "de",
+    "name": "Surfen"
+  },
+  {
+    "tagId": "cmemthcmc005omn014cf9knvq",
+    "locale": "hu",
+    "name": "Surf"
+  },
+  {
+    "tagId": "cmemthcmc005omn014cf9knvq",
+    "locale": "es",
+    "name": "Surf"
+  },
+  {
+    "tagId": "cmemthcmc005omn014cf9knvq",
+    "locale": "fr",
+    "name": "Surf"
+  },
+  {
+    "tagId": "cmemthcmc005omn014cf9knvq",
+    "locale": "it",
+    "name": "Surf"
+  },
+  {
+    "tagId": "cmemthcmc005omn014cf9knvq",
+    "locale": "pt",
+    "name": "Surf"
+  },
+  {
+    "tagId": "cmemthcmc005omn014cf9knvq",
+    "locale": "sk",
+    "name": "Surf"
+  },
+  {
+    "tagId": "cmemthcmc005omn014cf9knvq",
+    "locale": "pl",
+    "name": "Surf"
+  },
+  {
+    "tagId": "cmemthcmc005omn014cf9knvq",
+    "locale": "ro",
+    "name": "Surf"
+  },
+  {
+    "tagId": "cmemthcmc005omn014cf9knvq",
+    "locale": "nl",
+    "name": "Surf"
+  },
+  {
+    "tagId": "cmemthesq005pmn018kh6i42s",
+    "locale": "de",
+    "name": "Yoga"
+  },
+  {
+    "tagId": "cmemthesq005pmn018kh6i42s",
+    "locale": "hu",
+    "name": "jóga"
+  },
+  {
+    "tagId": "cmemthesq005pmn018kh6i42s",
+    "locale": "es",
+    "name": "yoga"
+  },
+  {
+    "tagId": "cmemthesq005pmn018kh6i42s",
+    "locale": "fr",
+    "name": "yoga"
+  },
+  {
+    "tagId": "cmemthesq005pmn018kh6i42s",
+    "locale": "it",
+    "name": "yoga"
+  },
+  {
+    "tagId": "cmemthesq005pmn018kh6i42s",
+    "locale": "pt",
+    "name": "ioga"
+  },
+  {
+    "tagId": "cmemthesq005pmn018kh6i42s",
+    "locale": "sk",
+    "name": "joga"
+  },
+  {
+    "tagId": "cmemthesq005pmn018kh6i42s",
+    "locale": "pl",
+    "name": "joga"
+  },
+  {
+    "tagId": "cmemthesq005pmn018kh6i42s",
+    "locale": "ro",
+    "name": "yoga"
+  },
+  {
+    "tagId": "cmemthesq005pmn018kh6i42s",
+    "locale": "nl",
+    "name": "yoga"
+  },
+  {
+    "tagId": "cmeqw298v007jmn015oqmasci",
+    "locale": "de",
+    "name": "Selbstverpflegung"
+  },
+  {
+    "tagId": "cmeqw298v007jmn015oqmasci",
+    "locale": "es",
+    "name": "Albergue"
+  },
+  {
+    "tagId": "cmeqw298v007jmn015oqmasci",
+    "locale": "fr",
+    "name": "Restauration"
+  },
+  {
+    "tagId": "cmeqw298v007jmn015oqmasci",
+    "locale": "it",
+    "name": "Agriturismo"
+  },
+  {
+    "tagId": "cmeqw298v007jmn015oqmasci",
+    "locale": "pt",
+    "name": "Auto-alimentação"
+  },
+  {
+    "tagId": "cmeqw298v007jmn015oqmasci",
+    "locale": "sk",
+    "name": "Vlastné stravovanie"
+  },
+  {
+    "tagId": "cmeqw298v007jmn015oqmasci",
+    "locale": "pl",
+    "name": "Wyżywienie we własnym zakresie"
+  },
+  {
+    "tagId": "cmeqw298v007jmn015oqmasci",
+    "locale": "ro",
+    "name": "Self-catering"
+  },
+  {
+    "tagId": "cmeqw298v007jmn015oqmasci",
+    "locale": "nl",
+    "name": "Self-catering"
+  },
+  {
+    "tagId": "cmeqw2h2f007kmn011t4xe674",
+    "locale": "de",
+    "name": "Gärung"
+  },
+  {
+    "tagId": "cmeqw2h2f007kmn011t4xe674",
+    "locale": "es",
+    "name": "Fermentación"
+  },
+  {
+    "tagId": "cmeqw2h2f007kmn011t4xe674",
+    "locale": "fr",
+    "name": "Fermentation"
+  },
+  {
+    "tagId": "cmeqw2h2f007kmn011t4xe674",
+    "locale": "it",
+    "name": "Fermentazione"
+  },
+  {
+    "tagId": "cmeqw2h2f007kmn011t4xe674",
+    "locale": "pt",
+    "name": "Fermentação"
+  },
+  {
+    "tagId": "cmeqw2h2f007kmn011t4xe674",
+    "locale": "sk",
+    "name": "Fermentácia"
+  },
+  {
+    "tagId": "cmeqw2h2f007kmn011t4xe674",
+    "locale": "pl",
+    "name": "Fermentacja"
+  },
+  {
+    "tagId": "cmeqw2h2f007kmn011t4xe674",
+    "locale": "ro",
+    "name": "Fermentare"
+  },
+  {
+    "tagId": "cmeqw2h2f007kmn011t4xe674",
+    "locale": "nl",
+    "name": "Gisting"
+  },
+  {
+    "tagId": "cmeqw2ky8007lmn01rl4t21kg",
+    "locale": "de",
+    "name": "Pilze züchten"
+  },
+  {
+    "tagId": "cmeqw2ky8007lmn01rl4t21kg",
+    "locale": "es",
+    "name": "Cultivo de setas"
+  },
+  {
+    "tagId": "cmeqw2ky8007lmn01rl4t21kg",
+    "locale": "fr",
+    "name": "Cultiver des champignons"
+  },
+  {
+    "tagId": "cmeqw2ky8007lmn01rl4t21kg",
+    "locale": "it",
+    "name": "Coltivazione di funghi"
+  },
+  {
+    "tagId": "cmeqw2ky8007lmn01rl4t21kg",
+    "locale": "pt",
+    "name": "Cultivo de cogumelos"
+  },
+  {
+    "tagId": "cmeqw2ky8007lmn01rl4t21kg",
+    "locale": "sk",
+    "name": "Pestovanie húb"
+  },
+  {
+    "tagId": "cmeqw2ky8007lmn01rl4t21kg",
+    "locale": "pl",
+    "name": "Uprawa grzybów"
+  },
+  {
+    "tagId": "cmeqw2ky8007lmn01rl4t21kg",
+    "locale": "ro",
+    "name": "Cultivarea ciupercilor"
+  },
+  {
+    "tagId": "cmeqw2ky8007lmn01rl4t21kg",
+    "locale": "nl",
+    "name": "Paddenstoelen kweken"
+  },
+  {
+    "tagId": "cmeqw2nxr007mmn0146srgrjh",
+    "locale": "de",
+    "name": "Kombucha"
+  },
+  {
+    "tagId": "cmeqw2nxr007mmn0146srgrjh",
+    "locale": "es",
+    "name": "Kombucha"
+  },
+  {
+    "tagId": "cmeqw2nxr007mmn0146srgrjh",
+    "locale": "fr",
+    "name": "Kombucha"
+  },
+  {
+    "tagId": "cmeqw2nxr007mmn0146srgrjh",
+    "locale": "it",
+    "name": "Kombucha"
+  },
+  {
+    "tagId": "cmeqw2nxr007mmn0146srgrjh",
+    "locale": "pt",
+    "name": "Kombucha"
+  },
+  {
+    "tagId": "cmeqw2nxr007mmn0146srgrjh",
+    "locale": "sk",
+    "name": "Kombucha"
+  },
+  {
+    "tagId": "cmeqw2nxr007mmn0146srgrjh",
+    "locale": "pl",
+    "name": "Kombucha"
+  },
+  {
+    "tagId": "cmeqw2nxr007mmn0146srgrjh",
+    "locale": "ro",
+    "name": "Kombucha"
+  },
+  {
+    "tagId": "cmeqw2nxr007mmn0146srgrjh",
+    "locale": "nl",
+    "name": "Kombucha"
+  },
+  {
+    "tagId": "cmeqwacl5007qmn01dia3325n",
+    "locale": "de",
+    "name": "Natürliche Bewirtschaftung"
+  },
+  {
+    "tagId": "cmeqwacl5007qmn01dia3325n",
+    "locale": "hu",
+    "name": "Természetes gazdálkodás"
+  },
+  {
+    "tagId": "cmeqwacl5007qmn01dia3325n",
+    "locale": "es",
+    "name": "Agricultura natural"
+  },
+  {
+    "tagId": "cmeqwacl5007qmn01dia3325n",
+    "locale": "fr",
+    "name": "L'agriculture naturelle"
+  },
+  {
+    "tagId": "cmeqwacl5007qmn01dia3325n",
+    "locale": "it",
+    "name": "Agricoltura naturale"
+  },
+  {
+    "tagId": "cmeqwacl5007qmn01dia3325n",
+    "locale": "pt",
+    "name": "Agricultura natural"
+  },
+  {
+    "tagId": "cmeqwacl5007qmn01dia3325n",
+    "locale": "sk",
+    "name": "Prírodné poľnohospodárstvo"
+  },
+  {
+    "tagId": "cmeqwacl5007qmn01dia3325n",
+    "locale": "pl",
+    "name": "Rolnictwo naturalne"
+  },
+  {
+    "tagId": "cmeqwacl5007qmn01dia3325n",
+    "locale": "ro",
+    "name": "Agricultură naturală"
+  },
+  {
+    "tagId": "cmeqwacl5007qmn01dia3325n",
+    "locale": "nl",
+    "name": "Natuurlijke landbouw"
+  },
+  {
+    "tagId": "cmeqwbhem007rmn01f7917gun",
+    "locale": "de",
+    "name": "Természetes Gazdálkodás"
+  },
+  {
+    "tagId": "cmeqwbhem007rmn01f7917gun",
+    "locale": "hu",
+    "name": "Természetes Gazdálkodás"
+  },
+  {
+    "tagId": "cmeqwbhem007rmn01f7917gun",
+    "locale": "es",
+    "name": "Természetes Gazdálkodás"
+  },
+  {
+    "tagId": "cmeqwbhem007rmn01f7917gun",
+    "locale": "fr",
+    "name": "Természetes Gazdálkodás"
+  },
+  {
+    "tagId": "cmeqwbhem007rmn01f7917gun",
+    "locale": "it",
+    "name": "Természetes Gazdálkodás"
+  },
+  {
+    "tagId": "cmeqwbhem007rmn01f7917gun",
+    "locale": "pt",
+    "name": "Termos de referência"
+  },
+  {
+    "tagId": "cmeqwbhem007rmn01f7917gun",
+    "locale": "sk",
+    "name": "Természetes Gazdálkodás"
+  },
+  {
+    "tagId": "cmeqwbhem007rmn01f7917gun",
+    "locale": "pl",
+    "name": "Természetes Gazdálkodás"
+  },
+  {
+    "tagId": "cmeqwbhem007rmn01f7917gun",
+    "locale": "ro",
+    "name": "Természetes Gazdálkodás"
+  },
+  {
+    "tagId": "cmeqwbhem007rmn01f7917gun",
+    "locale": "nl",
+    "name": "Természetes Gazdálkodás"
+  },
+  {
+    "tagId": "cmeqwby6y007smn01m5am5ch6",
+    "locale": "de",
+    "name": "Selbstversorgung der Familie"
+  },
+  {
+    "tagId": "cmeqwby6y007smn01m5am5ch6",
+    "locale": "hu",
+    "name": "Családi önellátás"
+  },
+  {
+    "tagId": "cmeqwby6y007smn01m5am5ch6",
+    "locale": "es",
+    "name": "Autosuficiencia familiar"
+  },
+  {
+    "tagId": "cmeqwby6y007smn01m5am5ch6",
+    "locale": "fr",
+    "name": "Autosuffisance familiale"
+  },
+  {
+    "tagId": "cmeqwby6y007smn01m5am5ch6",
+    "locale": "it",
+    "name": "Autosufficienza della famiglia"
+  },
+  {
+    "tagId": "cmeqwby6y007smn01m5am5ch6",
+    "locale": "pt",
+    "name": "Autossuficiência da família"
+  },
+  {
+    "tagId": "cmeqwby6y007smn01m5am5ch6",
+    "locale": "sk",
+    "name": "sebestačnosť rodiny"
+  },
+  {
+    "tagId": "cmeqwby6y007smn01m5am5ch6",
+    "locale": "pl",
+    "name": "Samowystarczalność rodziny"
+  },
+  {
+    "tagId": "cmeqwby6y007smn01m5am5ch6",
+    "locale": "ro",
+    "name": "Autosuficiența familială"
+  },
+  {
+    "tagId": "cmeqwby6y007smn01m5am5ch6",
+    "locale": "nl",
+    "name": "Zelfredzaamheid van het gezin"
+  },
+  {
+    "tagId": "cmeqwde87007tmn01x9i3goo0",
+    "locale": "de",
+    "name": "Családi Önellátás"
+  },
+  {
+    "tagId": "cmeqwde87007tmn01x9i3goo0",
+    "locale": "hu",
+    "name": "Családi Önellátás"
+  },
+  {
+    "tagId": "cmeqwde87007tmn01x9i3goo0",
+    "locale": "es",
+    "name": "Családi Önellátás"
+  },
+  {
+    "tagId": "cmeqwde87007tmn01x9i3goo0",
+    "locale": "fr",
+    "name": "Családi Önellátás"
+  },
+  {
+    "tagId": "cmeqwde87007tmn01x9i3goo0",
+    "locale": "it",
+    "name": "Családi Önellátás"
+  },
+  {
+    "tagId": "cmeqwde87007tmn01x9i3goo0",
+    "locale": "pt",
+    "name": "Családi Önellátás"
+  },
+  {
+    "tagId": "cmeqwde87007tmn01x9i3goo0",
+    "locale": "sk",
+    "name": "Családi Önellátás"
+  },
+  {
+    "tagId": "cmeqwde87007tmn01x9i3goo0",
+    "locale": "pl",
+    "name": "Családi Önellátás"
+  },
+  {
+    "tagId": "cmeqwde87007tmn01x9i3goo0",
+    "locale": "ro",
+    "name": "Családi Önellátás"
+  },
+  {
+    "tagId": "cmeqwde87007tmn01x9i3goo0",
+    "locale": "nl",
+    "name": "Családi Önellátás"
+  },
+  {
+    "tagId": "cmeqwh8nw007xmn01epf1d490",
+    "locale": "de",
+    "name": "Einen Ofen bauen, Brot backen"
+  },
+  {
+    "tagId": "cmeqwh8nw007xmn01epf1d490",
+    "locale": "es",
+    "name": "Construir un horno, hornear pan"
+  },
+  {
+    "tagId": "cmeqwh8nw007xmn01epf1d490",
+    "locale": "fr",
+    "name": "Construction d'un four, cuisson du pain"
+  },
+  {
+    "tagId": "cmeqwh8nw007xmn01epf1d490",
+    "locale": "it",
+    "name": "Costruire un forno, cuocere il pane"
+  },
+  {
+    "tagId": "cmeqwh8nw007xmn01epf1d490",
+    "locale": "pt",
+    "name": "Construir um forno, cozer pão"
+  },
+  {
+    "tagId": "cmeqwh8nw007xmn01epf1d490",
+    "locale": "sk",
+    "name": "Stavba pece, pečenie chleba"
+  },
+  {
+    "tagId": "cmeqwh8nw007xmn01epf1d490",
+    "locale": "pl",
+    "name": "Budowa pieca, pieczenie chleba"
+  },
+  {
+    "tagId": "cmeqwh8nw007xmn01epf1d490",
+    "locale": "ro",
+    "name": "Construirea unui cuptor, coacerea pâinii"
+  },
+  {
+    "tagId": "cmeqwh8nw007xmn01epf1d490",
+    "locale": "nl",
+    "name": "Een oven bouwen, brood bakken"
+  },
+  {
+    "tagId": "cmeqwi0c7007ymn01o69q8f6u",
+    "locale": "de",
+    "name": "Schöne Pergola-Konstruktion, aus abgerissenen Ziegeln"
+  },
+  {
+    "tagId": "cmeqwi0c7007ymn01o69q8f6u",
+    "locale": "es",
+    "name": "Bonita construcción de pérgola, a partir de ladrillos demolidos"
+  },
+  {
+    "tagId": "cmeqwi0c7007ymn01o69q8f6u",
+    "locale": "fr",
+    "name": "Construction d'une pergola à partir de briques démolies"
+  },
+  {
+    "tagId": "cmeqwi0c7007ymn01o69q8f6u",
+    "locale": "it",
+    "name": "Bella costruzione di pergola, da mattoni demoliti"
+  },
+  {
+    "tagId": "cmeqwi0c7007ymn01o69q8f6u",
+    "locale": "pt",
+    "name": "Bela construção de pérgola, a partir de tijolos demolidos"
+  },
+  {
+    "tagId": "cmeqwi0c7007ymn01o69q8f6u",
+    "locale": "sk",
+    "name": "Pekná konštrukcia pergoly z rozobratých tehál"
+  },
+  {
+    "tagId": "cmeqwi0c7007ymn01o69q8f6u",
+    "locale": "pl",
+    "name": "Ładna konstrukcja pergoli z rozebranych cegieł"
+  },
+  {
+    "tagId": "cmeqwi0c7007ymn01o69q8f6u",
+    "locale": "ro",
+    "name": "Construcție frumoasă de pergolă, din cărămizi demolate"
+  },
+  {
+    "tagId": "cmeqwi0c7007ymn01o69q8f6u",
+    "locale": "nl",
+    "name": "Mooie pergolaconstructie, van gesloopte bakstenen"
+  },
+  {
+    "tagId": "cmeqwk261007zmn01hqbhgf6x",
+    "locale": "de",
+    "name": "Harte und gemeinsame Arbeit in den Gärten der anderen für die Selbsterhaltung, Nachbarschaftsgemeinschaften"
+  },
+  {
+    "tagId": "cmeqwk261007zmn01hqbhgf6x",
+    "locale": "es",
+    "name": "Trabajar duro y juntos en los huertos de los demás para la autosostenibilidad, comunidades de vecinos"
+  },
+  {
+    "tagId": "cmeqwk261007zmn01hqbhgf6x",
+    "locale": "fr",
+    "name": "Travailler dur et ensemble dans les jardins des autres pour l'autosuffisance, les communautés de voisinage"
+  },
+  {
+    "tagId": "cmeqwk261007zmn01hqbhgf6x",
+    "locale": "it",
+    "name": "Lavorare sodo e insieme negli orti degli altri per l'autosostenibilità, le comunità di quartiere"
+  },
+  {
+    "tagId": "cmeqwk261007zmn01hqbhgf6x",
+    "locale": "pt",
+    "name": "Trabalhar arduamente e em conjunto nas hortas uns dos outros para a auto-sustentabilidade, comunidades de bairro"
+  },
+  {
+    "tagId": "cmeqwk261007zmn01hqbhgf6x",
+    "locale": "sk",
+    "name": "Tvrdá a spoločná práca v záhradách pre sebestačnosť, susedské komunity"
+  },
+  {
+    "tagId": "cmeqwk261007zmn01hqbhgf6x",
+    "locale": "pl",
+    "name": "Ciężka i wspólna praca w ogrodach na rzecz samowystarczalności, społeczności sąsiedzkich"
+  },
+  {
+    "tagId": "cmeqwk261007zmn01hqbhgf6x",
+    "locale": "ro",
+    "name": "Să lucrăm din greu și împreună în grădinile celorlalți pentru auto-sustenabilitate, comunități de cartier"
+  },
+  {
+    "tagId": "cmeqwk261007zmn01hqbhgf6x",
+    "locale": "nl",
+    "name": "Hard en samen werken in elkaars tuinen voor zelfvoorziening, buurtgemeenschappen"
+  },
+  {
+    "tagId": "cmeqwkn6p0081mn0170wvt1ak",
+    "locale": "de",
+    "name": "Bau eines Küchengartens"
+  },
+  {
+    "tagId": "cmeqwkn6p0081mn0170wvt1ak",
+    "locale": "es",
+    "name": "Construcción de huertos"
+  },
+  {
+    "tagId": "cmeqwkn6p0081mn0170wvt1ak",
+    "locale": "fr",
+    "name": "Construction d'un jardin potager"
+  },
+  {
+    "tagId": "cmeqwkn6p0081mn0170wvt1ak",
+    "locale": "it",
+    "name": "Costruzione di un orto"
+  },
+  {
+    "tagId": "cmeqwkn6p0081mn0170wvt1ak",
+    "locale": "pt",
+    "name": "Construção de uma horta"
+  },
+  {
+    "tagId": "cmeqwkn6p0081mn0170wvt1ak",
+    "locale": "sk",
+    "name": "Výstavba kuchynskej záhrady"
+  },
+  {
+    "tagId": "cmeqwkn6p0081mn0170wvt1ak",
+    "locale": "pl",
+    "name": "Budowa ogrodu kuchennego"
+  },
+  {
+    "tagId": "cmeqwkn6p0081mn0170wvt1ak",
+    "locale": "ro",
+    "name": "Construcția grădinii de bucătărie"
+  },
+  {
+    "tagId": "cmeqwkn6p0081mn0170wvt1ak",
+    "locale": "nl",
+    "name": "Aanleg moestuin"
+  },
+  {
+    "tagId": "cmeqwkyg80082mn013sx1g9t5",
+    "locale": "de",
+    "name": "Renovierung des Weinkellers"
+  },
+  {
+    "tagId": "cmeqwkyg80082mn013sx1g9t5",
+    "locale": "es",
+    "name": "Renovación de la bodega"
+  },
+  {
+    "tagId": "cmeqwkyg80082mn013sx1g9t5",
+    "locale": "fr",
+    "name": "Rénovation d'une cave à vin"
+  },
+  {
+    "tagId": "cmeqwkyg80082mn013sx1g9t5",
+    "locale": "it",
+    "name": "Ristrutturazione della cantina"
+  },
+  {
+    "tagId": "cmeqwkyg80082mn013sx1g9t5",
+    "locale": "pt",
+    "name": "Renovação da adega"
+  },
+  {
+    "tagId": "cmeqwkyg80082mn013sx1g9t5",
+    "locale": "sk",
+    "name": "Renovácia vínnej pivnice"
+  },
+  {
+    "tagId": "cmeqwkyg80082mn013sx1g9t5",
+    "locale": "pl",
+    "name": "Renowacja piwniczki na wino"
+  },
+  {
+    "tagId": "cmeqwkyg80082mn013sx1g9t5",
+    "locale": "ro",
+    "name": "Renovarea pivniței de vinuri"
+  },
+  {
+    "tagId": "cmeqwkyg80082mn013sx1g9t5",
+    "locale": "nl",
+    "name": "Renovatie wijnkelder"
+  },
+  {
+    "tagId": "cmeqwlp6s0083mn01a786pivi",
+    "locale": "de",
+    "name": "Pflege von Obstbäumen und Beerenobst,"
+  },
+  {
+    "tagId": "cmeqwlp6s0083mn01a786pivi",
+    "locale": "es",
+    "name": "Cuidado de las bayas de los árboles frutales,"
+  },
+  {
+    "tagId": "cmeqwlp6s0083mn01a786pivi",
+    "locale": "fr",
+    "name": "Arbre fruitier, baies, soins des fruits,"
+  },
+  {
+    "tagId": "cmeqwlp6s0083mn01a786pivi",
+    "locale": "it",
+    "name": "Cura degli alberi da frutto e delle bacche,"
+  },
+  {
+    "tagId": "cmeqwlp6s0083mn01a786pivi",
+    "locale": "pt",
+    "name": "Cuidados com as árvores de fruto e as bagas,"
+  },
+  {
+    "tagId": "cmeqwlp6s0083mn01a786pivi",
+    "locale": "sk",
+    "name": "Starostlivosť o bobuľové ovocie ovocných stromov,"
+  },
+  {
+    "tagId": "cmeqwlp6s0083mn01a786pivi",
+    "locale": "pl",
+    "name": "Pielęgnacja owoców jagodowych,"
+  },
+  {
+    "tagId": "cmeqwlp6s0083mn01a786pivi",
+    "locale": "ro",
+    "name": "Îngrijirea fructelor de pădure,"
+  },
+  {
+    "tagId": "cmeqwlp6s0083mn01a786pivi",
+    "locale": "nl",
+    "name": "Verzorging van fruitbomen en bessen,"
+  },
+  {
+    "tagId": "cmeqwy4bh008dmn01o4ccb1lt",
+    "locale": "de",
+    "name": "Aushärtung"
+  },
+  {
+    "tagId": "cmeqwy4bh008dmn01o4ccb1lt",
+    "locale": "es",
+    "name": "Curado"
+  },
+  {
+    "tagId": "cmeqwy4bh008dmn01o4ccb1lt",
+    "locale": "fr",
+    "name": "Durcissement"
+  },
+  {
+    "tagId": "cmeqwy4bh008dmn01o4ccb1lt",
+    "locale": "it",
+    "name": "Polimerizzazione"
+  },
+  {
+    "tagId": "cmeqwy4bh008dmn01o4ccb1lt",
+    "locale": "pt",
+    "name": "Cura"
+  },
+  {
+    "tagId": "cmeqwy4bh008dmn01o4ccb1lt",
+    "locale": "sk",
+    "name": "Liečba"
+  },
+  {
+    "tagId": "cmeqwy4bh008dmn01o4ccb1lt",
+    "locale": "pl",
+    "name": "Utwardzanie"
+  },
+  {
+    "tagId": "cmeqwy4bh008dmn01o4ccb1lt",
+    "locale": "ro",
+    "name": "Curățare"
+  },
+  {
+    "tagId": "cmeqwy4bh008dmn01o4ccb1lt",
+    "locale": "nl",
+    "name": "Genezen"
+  },
+  {
+    "tagId": "cmeqwyo2p008gmn01wcixbpzi",
+    "locale": "de",
+    "name": "Kochen"
+  },
+  {
+    "tagId": "cmeqwyo2p008gmn01wcixbpzi",
+    "locale": "es",
+    "name": "Cocinar"
+  },
+  {
+    "tagId": "cmeqwyo2p008gmn01wcixbpzi",
+    "locale": "fr",
+    "name": "La cuisine"
+  },
+  {
+    "tagId": "cmeqwyo2p008gmn01wcixbpzi",
+    "locale": "it",
+    "name": "Cucina"
+  },
+  {
+    "tagId": "cmeqwyo2p008gmn01wcixbpzi",
+    "locale": "pt",
+    "name": "Cozinhar"
+  },
+  {
+    "tagId": "cmeqwyo2p008gmn01wcixbpzi",
+    "locale": "sk",
+    "name": "Varenie"
+  },
+  {
+    "tagId": "cmeqwyo2p008gmn01wcixbpzi",
+    "locale": "pl",
+    "name": "Gotowanie"
+  },
+  {
+    "tagId": "cmeqwyo2p008gmn01wcixbpzi",
+    "locale": "ro",
+    "name": "Gătitul"
+  },
+  {
+    "tagId": "cmeqwyo2p008gmn01wcixbpzi",
+    "locale": "nl",
+    "name": "Koken"
+  },
+  {
+    "tagId": "cmeqwzirj008kmn01d7smu3tz",
+    "locale": "de",
+    "name": "Tanzhaus"
+  },
+  {
+    "tagId": "cmeqwzirj008kmn01d7smu3tz",
+    "locale": "es",
+    "name": "Casa de baile"
+  },
+  {
+    "tagId": "cmeqwzirj008kmn01d7smu3tz",
+    "locale": "fr",
+    "name": "Maison de la danse"
+  },
+  {
+    "tagId": "cmeqwzirj008kmn01d7smu3tz",
+    "locale": "it",
+    "name": "Casa da ballo"
+  },
+  {
+    "tagId": "cmeqwzirj008kmn01d7smu3tz",
+    "locale": "pt",
+    "name": "Casa de dança"
+  },
+  {
+    "tagId": "cmeqwzirj008kmn01d7smu3tz",
+    "locale": "sk",
+    "name": "Tanečný dom"
+  },
+  {
+    "tagId": "cmeqwzirj008kmn01d7smu3tz",
+    "locale": "pl",
+    "name": "Dom tańca"
+  },
+  {
+    "tagId": "cmeqwzirj008kmn01d7smu3tz",
+    "locale": "ro",
+    "name": "Casa de dans"
+  },
+  {
+    "tagId": "cmeqwzirj008kmn01d7smu3tz",
+    "locale": "nl",
+    "name": "Dans huis"
+  },
+  {
+    "tagId": "cmeqx5kgu00a1mn017l4tdhnn",
+    "locale": "de",
+    "name": "Zumba"
+  },
+  {
+    "tagId": "cmeqx5kgu00a1mn017l4tdhnn",
+    "locale": "es",
+    "name": "Zumba"
+  },
+  {
+    "tagId": "cmeqx5kgu00a1mn017l4tdhnn",
+    "locale": "fr",
+    "name": "Zumba"
+  },
+  {
+    "tagId": "cmeqx5kgu00a1mn017l4tdhnn",
+    "locale": "it",
+    "name": "Zumba"
+  },
+  {
+    "tagId": "cmeqx5kgu00a1mn017l4tdhnn",
+    "locale": "pt",
+    "name": "Zumba"
+  },
+  {
+    "tagId": "cmeqx5kgu00a1mn017l4tdhnn",
+    "locale": "sk",
+    "name": "Zumba"
+  },
+  {
+    "tagId": "cmeqx5kgu00a1mn017l4tdhnn",
+    "locale": "pl",
+    "name": "Zumba"
+  },
+  {
+    "tagId": "cmeqx5kgu00a1mn017l4tdhnn",
+    "locale": "ro",
+    "name": "Zumba"
+  },
+  {
+    "tagId": "cmeqx5kgu00a1mn017l4tdhnn",
+    "locale": "nl",
+    "name": "Zumba"
+  },
+  {
+    "tagId": "cmeqxllo600agmn01v2gtiaxo",
+    "locale": "de",
+    "name": "Oenophentartas"
+  },
+  {
+    "tagId": "cmeqxllo600agmn01v2gtiaxo",
+    "locale": "es",
+    "name": "Oenophentartas"
+  },
+  {
+    "tagId": "cmeqxllo600agmn01v2gtiaxo",
+    "locale": "fr",
+    "name": "Oenophentartas"
+  },
+  {
+    "tagId": "cmeqxllo600agmn01v2gtiaxo",
+    "locale": "it",
+    "name": "Enoteche"
+  },
+  {
+    "tagId": "cmeqxllo600agmn01v2gtiaxo",
+    "locale": "pt",
+    "name": "Oenophentartas"
+  },
+  {
+    "tagId": "cmeqxllo600agmn01v2gtiaxo",
+    "locale": "sk",
+    "name": "Oenophentartas"
+  },
+  {
+    "tagId": "cmeqxllo600agmn01v2gtiaxo",
+    "locale": "pl",
+    "name": "Oenophentartas"
+  },
+  {
+    "tagId": "cmeqxllo600agmn01v2gtiaxo",
+    "locale": "ro",
+    "name": "Oenophentartas"
+  },
+  {
+    "tagId": "cmeqxllo600agmn01v2gtiaxo",
+    "locale": "nl",
+    "name": "Oenophentartas"
+  },
+  {
+    "tagId": "cmeqytker00gmmn01bj0jagkw",
+    "locale": "de",
+    "name": "Öko-Architektur"
+  },
+  {
+    "tagId": "cmeqytker00gmmn01bj0jagkw",
+    "locale": "es",
+    "name": "eco-arquitectura"
+  },
+  {
+    "tagId": "cmeqytker00gmmn01bj0jagkw",
+    "locale": "fr",
+    "name": "éco-architecture"
+  },
+  {
+    "tagId": "cmeqytker00gmmn01bj0jagkw",
+    "locale": "it",
+    "name": "eco-architettura"
+  },
+  {
+    "tagId": "cmeqytker00gmmn01bj0jagkw",
+    "locale": "pt",
+    "name": "eco-arquitetura"
+  },
+  {
+    "tagId": "cmeqytker00gmmn01bj0jagkw",
+    "locale": "sk",
+    "name": "ekoarchitektúra"
+  },
+  {
+    "tagId": "cmeqytker00gmmn01bj0jagkw",
+    "locale": "pl",
+    "name": "eko-architektura"
+  },
+  {
+    "tagId": "cmeqytker00gmmn01bj0jagkw",
+    "locale": "ro",
+    "name": "eco-arhitectură"
+  },
+  {
+    "tagId": "cmeqytker00gmmn01bj0jagkw",
+    "locale": "nl",
+    "name": "eco-architectuur"
+  },
+  {
+    "tagId": "cmeqyu4rq00gnmn01hygvv4w1",
+    "locale": "de",
+    "name": "Wandern"
+  },
+  {
+    "tagId": "cmeqyu4rq00gnmn01hygvv4w1",
+    "locale": "es",
+    "name": "Senderismo"
+  },
+  {
+    "tagId": "cmeqyu4rq00gnmn01hygvv4w1",
+    "locale": "fr",
+    "name": "Randonnée"
+  },
+  {
+    "tagId": "cmeqyu4rq00gnmn01hygvv4w1",
+    "locale": "it",
+    "name": "Escursioni"
+  },
+  {
+    "tagId": "cmeqyu4rq00gnmn01hygvv4w1",
+    "locale": "pt",
+    "name": "Caminhadas"
+  },
+  {
+    "tagId": "cmeqyu4rq00gnmn01hygvv4w1",
+    "locale": "sk",
+    "name": "Turistika"
+  },
+  {
+    "tagId": "cmeqyu4rq00gnmn01hygvv4w1",
+    "locale": "pl",
+    "name": "Turystyka piesza"
+  },
+  {
+    "tagId": "cmeqyu4rq00gnmn01hygvv4w1",
+    "locale": "ro",
+    "name": "Drumeții"
+  },
+  {
+    "tagId": "cmeqyu4rq00gnmn01hygvv4w1",
+    "locale": "nl",
+    "name": "Wandelen"
+  },
+  {
+    "tagId": "cmeqyv64x00gomn019w6j7gqw",
+    "locale": "de",
+    "name": "Tauschhandel"
+  },
+  {
+    "tagId": "cmeqyv64x00gomn019w6j7gqw",
+    "locale": "es",
+    "name": "Comercio de trueque"
+  },
+  {
+    "tagId": "cmeqyv64x00gomn019w6j7gqw",
+    "locale": "fr",
+    "name": "Commerce de troc"
+  },
+  {
+    "tagId": "cmeqyv64x00gomn019w6j7gqw",
+    "locale": "it",
+    "name": "Commercio di baratto"
+  },
+  {
+    "tagId": "cmeqyv64x00gomn019w6j7gqw",
+    "locale": "pt",
+    "name": "Troca direta"
+  },
+  {
+    "tagId": "cmeqyv64x00gomn019w6j7gqw",
+    "locale": "sk",
+    "name": "Barterový obchod"
+  },
+  {
+    "tagId": "cmeqyv64x00gomn019w6j7gqw",
+    "locale": "pl",
+    "name": "Handel barterowy"
+  },
+  {
+    "tagId": "cmeqyv64x00gomn019w6j7gqw",
+    "locale": "ro",
+    "name": "Comerț de barter"
+  },
+  {
+    "tagId": "cmeqyv64x00gomn019w6j7gqw",
+    "locale": "nl",
+    "name": "Ruilhandel"
+  },
+  {
+    "tagId": "cmer0pxkj0000mn01p5ebuwz6",
+    "locale": "de",
+    "name": "Önismeret"
+  },
+  {
+    "tagId": "cmer0pxkj0000mn01p5ebuwz6",
+    "locale": "es",
+    "name": "Önismeret"
+  },
+  {
+    "tagId": "cmer0pxkj0000mn01p5ebuwz6",
+    "locale": "fr",
+    "name": "Önismeret"
+  },
+  {
+    "tagId": "cmer0pxkj0000mn01p5ebuwz6",
+    "locale": "it",
+    "name": "Önismeret"
+  },
+  {
+    "tagId": "cmer0pxkj0000mn01p5ebuwz6",
+    "locale": "pt",
+    "name": "Önismeret"
+  },
+  {
+    "tagId": "cmer0pxkj0000mn01p5ebuwz6",
+    "locale": "sk",
+    "name": "Önismeret"
+  },
+  {
+    "tagId": "cmer0pxkj0000mn01p5ebuwz6",
+    "locale": "pl",
+    "name": "Önismeret"
+  },
+  {
+    "tagId": "cmer0pxkj0000mn01p5ebuwz6",
+    "locale": "ro",
+    "name": "Önismeret"
+  },
+  {
+    "tagId": "cmer0pxkj0000mn01p5ebuwz6",
+    "locale": "nl",
+    "name": "Önismeret"
+  },
+  {
+    "tagId": "cmer0qumd0001mn01b29q7k8g",
+    "locale": "de",
+    "name": "Wildes Camping"
+  },
+  {
+    "tagId": "cmer0qumd0001mn01b29q7k8g",
+    "locale": "es",
+    "name": "Camping salvaje"
+  },
+  {
+    "tagId": "cmer0qumd0001mn01b29q7k8g",
+    "locale": "fr",
+    "name": "Camping sauvage"
+  },
+  {
+    "tagId": "cmer0qumd0001mn01b29q7k8g",
+    "locale": "it",
+    "name": "Campeggio selvaggio"
+  },
+  {
+    "tagId": "cmer0qumd0001mn01b29q7k8g",
+    "locale": "pt",
+    "name": "Acampamento selvagem"
+  },
+  {
+    "tagId": "cmer0qumd0001mn01b29q7k8g",
+    "locale": "sk",
+    "name": "Divoké kempovanie"
+  },
+  {
+    "tagId": "cmer0qumd0001mn01b29q7k8g",
+    "locale": "pl",
+    "name": "Dziki kemping"
+  },
+  {
+    "tagId": "cmer0qumd0001mn01b29q7k8g",
+    "locale": "ro",
+    "name": "Camping sălbatic"
+  },
+  {
+    "tagId": "cmer0qumd0001mn01b29q7k8g",
+    "locale": "nl",
+    "name": "Wild kamperen"
+  },
+  {
+    "tagId": "cmer0r1q40002mn01y9x9y3q2",
+    "locale": "de",
+    "name": "Sport"
+  },
+  {
+    "tagId": "cmer0r1q40002mn01y9x9y3q2",
+    "locale": "es",
+    "name": "Deportes"
+  },
+  {
+    "tagId": "cmer0r1q40002mn01y9x9y3q2",
+    "locale": "fr",
+    "name": "Sports"
+  },
+  {
+    "tagId": "cmer0r1q40002mn01y9x9y3q2",
+    "locale": "it",
+    "name": "Sport"
+  },
+  {
+    "tagId": "cmer0r1q40002mn01y9x9y3q2",
+    "locale": "pt",
+    "name": "Desporto"
+  },
+  {
+    "tagId": "cmer0r1q40002mn01y9x9y3q2",
+    "locale": "sk",
+    "name": "Šport"
+  },
+  {
+    "tagId": "cmer0r1q40002mn01y9x9y3q2",
+    "locale": "pl",
+    "name": "Sport"
+  },
+  {
+    "tagId": "cmer0r1q40002mn01y9x9y3q2",
+    "locale": "ro",
+    "name": "Sport"
+  },
+  {
+    "tagId": "cmer0r1q40002mn01y9x9y3q2",
+    "locale": "nl",
+    "name": "Sport"
+  },
+  {
+    "tagId": "cmer0rfaw0003mn014trkx4el",
+    "locale": "de",
+    "name": "Gartenarbeit"
+  },
+  {
+    "tagId": "cmer0rfaw0003mn014trkx4el",
+    "locale": "es",
+    "name": "Jardinería"
+  },
+  {
+    "tagId": "cmer0rfaw0003mn014trkx4el",
+    "locale": "fr",
+    "name": "Jardinage"
+  },
+  {
+    "tagId": "cmer0rfaw0003mn014trkx4el",
+    "locale": "it",
+    "name": "Giardinaggio"
+  },
+  {
+    "tagId": "cmer0rfaw0003mn014trkx4el",
+    "locale": "pt",
+    "name": "Jardinagem"
+  },
+  {
+    "tagId": "cmer0rfaw0003mn014trkx4el",
+    "locale": "sk",
+    "name": "Záhradkárstvo"
+  },
+  {
+    "tagId": "cmer0rfaw0003mn014trkx4el",
+    "locale": "pl",
+    "name": "Ogrodnictwo"
+  },
+  {
+    "tagId": "cmer0rfaw0003mn014trkx4el",
+    "locale": "ro",
+    "name": "Grădinărit"
+  },
+  {
+    "tagId": "cmer0rfaw0003mn014trkx4el",
+    "locale": "nl",
+    "name": "Tuinieren"
+  },
+  {
+    "tagId": "cmer7enyi0060mn01grdn34dn",
+    "locale": "hu",
+    "name": "Természet"
+  },
+  {
+    "tagId": "cmcwb37x6001zl601ao92of7d",
+    "locale": "en",
+    "name": "Food"
+  },
+  {
+    "tagId": "cmcz7tfph000mrz01rk7p0343",
+    "locale": "en",
+    "name": "Balance"
+  },
+  {
+    "tagId": "cmcz7u98z000nrz01zkr3cikq",
+    "locale": "en",
+    "name": "Behavioural analysis"
+  },
+  {
+    "tagId": "cmcz7xkcj000orz01r939wb5k",
+    "locale": "en",
+    "name": "The journey of our souls"
+  },
+  {
+    "tagId": "cmdbr1z000003qq01hnbwk7c1",
+    "locale": "en",
+    "name": "Music"
+  },
+  {
+    "tagId": "cmdr4l8zl001qqq01i6lfkqn5",
+    "locale": "en",
+    "name": "Community"
+  },
+  {
+    "tagId": "cme9jglph0015mn0117xdaso6",
+    "locale": "es",
+    "name": "Tanya"
+  },
+  {
+    "tagId": "cmea0g2aa0023mn011b6qu1g9",
+    "locale": "en",
+    "name": "environmental education"
+  },
+  {
+    "tagId": "cmeciwz7j0039mn01jn23yiv2",
+    "locale": "en",
+    "name": "Yoga"
+  },
+  {
+    "tagId": "cmeidbj250040mn0111pdu4iu",
+    "locale": "en",
+    "name": "Pillow"
+  },
+  {
+    "tagId": "cmeidbtbx0041mn01bouflq9p",
+    "locale": "en",
+    "name": "Relationship"
+  },
+  {
+    "tagId": "cmeqw298v007jmn015oqmasci",
+    "locale": "en",
+    "name": "Self-catering"
+  },
+  {
+    "tagId": "cmeqw2h2f007kmn011t4xe674",
+    "locale": "en",
+    "name": "Fermentation"
+  },
+  {
+    "tagId": "cmeqw2ky8007lmn01rl4t21kg",
+    "locale": "en",
+    "name": "Growing mushrooms"
+  },
+  {
+    "tagId": "cmeqw2nxr007mmn0146srgrjh",
+    "locale": "en",
+    "name": "Kombucha"
+  },
+  {
+    "tagId": "cmeqwh8nw007xmn01epf1d490",
+    "locale": "en",
+    "name": "Building an oven, baking bread"
+  },
+  {
+    "tagId": "cmeqwi0c7007ymn01o69q8f6u",
+    "locale": "en",
+    "name": "Nice pergola construction, from demolished bricks"
+  },
+  {
+    "tagId": "cmeqwk261007zmn01hqbhgf6x",
+    "locale": "en",
+    "name": "Working hard and together in each other's gardens for self-sustainability, neighbourhood communities"
+  },
+  {
+    "tagId": "cmeqwkn6p0081mn0170wvt1ak",
+    "locale": "en",
+    "name": "Kitchen garden construction"
+  },
+  {
+    "tagId": "cmeqwkyg80082mn013sx1g9t5",
+    "locale": "en",
+    "name": "Wine cellar renovation"
+  },
+  {
+    "tagId": "cmeqwy4bh008dmn01o4ccb1lt",
+    "locale": "en",
+    "name": "Curing"
+  },
+  {
+    "tagId": "cmeqwyo2p008gmn01wcixbpzi",
+    "locale": "en",
+    "name": "Cooking"
+  },
+  {
+    "tagId": "cmeqwzirj008kmn01d7smu3tz",
+    "locale": "en",
+    "name": "Dance house"
+  },
+  {
+    "tagId": "cmeqx5kgu00a1mn017l4tdhnn",
+    "locale": "en",
+    "name": "Zumba"
+  },
+  {
+    "tagId": "cmeqxllo600agmn01v2gtiaxo",
+    "locale": "en",
+    "name": "Oenophentartas"
+  },
+  {
+    "tagId": "cmeqytker00gmmn01bj0jagkw",
+    "locale": "en",
+    "name": "eco-architecture"
+  },
+  {
+    "tagId": "cmeqyu4rq00gnmn01hygvv4w1",
+    "locale": "en",
+    "name": "Hiking"
+  },
+  {
+    "tagId": "cmeqyv64x00gomn019w6j7gqw",
+    "locale": "en",
+    "name": "Barter trade"
+  },
+  {
+    "tagId": "cmer0pxkj0000mn01p5ebuwz6",
+    "locale": "en",
+    "name": "Önismeret"
+  },
+  {
+    "tagId": "cmer0qumd0001mn01b29q7k8g",
+    "locale": "en",
+    "name": "Wild Camping"
+  },
+  {
+    "tagId": "cmer0r1q40002mn01y9x9y3q2",
+    "locale": "en",
+    "name": "Sports"
+  },
+  {
+    "tagId": "cmer0rfaw0003mn014trkx4el",
+    "locale": "en",
+    "name": "Gardening"
+  },
+  {
+    "tagId": "cmer7enyi0060mn01grdn34dn",
+    "locale": "en",
+    "name": "Nature"
+  },
+  {
+    "tagId": "cmer7enyi0060mn01grdn34dn",
+    "locale": "de",
+    "name": "Natur"
+  },
+  {
+    "tagId": "cmer7enyi0060mn01grdn34dn",
+    "locale": "es",
+    "name": "Naturaleza"
+  },
+  {
+    "tagId": "cmer7enyi0060mn01grdn34dn",
+    "locale": "fr",
+    "name": "Nature"
+  },
+  {
+    "tagId": "cmer7enyi0060mn01grdn34dn",
+    "locale": "it",
+    "name": "Natura"
+  },
+  {
+    "tagId": "cmer7enyi0060mn01grdn34dn",
+    "locale": "pt",
+    "name": "Natureza"
+  },
+  {
+    "tagId": "cmer7enyi0060mn01grdn34dn",
+    "locale": "sk",
+    "name": "Príroda"
+  },
+  {
+    "tagId": "cmer7enyi0060mn01grdn34dn",
+    "locale": "pl",
+    "name": "Natura"
+  },
+  {
+    "tagId": "cmer7enyi0060mn01grdn34dn",
+    "locale": "ro",
+    "name": "Natura"
+  },
+  {
+    "tagId": "cmer7enyi0060mn01grdn34dn",
+    "locale": "nl",
+    "name": "Natuur"
+  },
+  {
+    "tagId": "cmeriziv00004nu01410zy19p",
+    "locale": "hu",
+    "name": "Vályog"
+  },
+  {
+    "tagId": "cmerizl8y0005nu01wl8wcn6n",
+    "locale": "hu",
+    "name": "Szalmaépítészet"
+  },
+  {
+    "tagId": "cmetzoybn000ok301t42geyh1",
+    "locale": "hu",
+    "name": "Közösségi kert"
+  },
+  {
+    "tagId": "cmetzp7sw000pk3019gap2p38",
+    "locale": "hu",
+    "name": "Társasjáték "
+  },
+  {
+    "tagId": "cmetzpgcc000qk301ftai11tu",
+    "locale": "hu",
+    "name": "Női kör"
+  },
+  {
+    "tagId": "cmetzqc25000rk301dd8k24d7",
+    "locale": "hu",
+    "name": "Meditáció"
+  },
+  {
+    "tagId": "cmeu5qpyx0002nt01hnusm63x",
+    "locale": "hu",
+    "name": "Fenntarthatóság"
+  },
+  {
+    "tagId": "cmeu5qxih0003nt012ua2ebv2",
+    "locale": "hu",
+    "name": "Elektronikus zene"
+  },
+  {
+    "tagId": "cmeu5rf8z0004nt01pnrd1wz2",
+    "locale": "hu",
+    "name": "Alternatív építészet"
+  },
+  {
+    "tagId": "cmeriziv00004nu01410zy19p",
+    "locale": "en",
+    "name": "Trough"
+  },
+  {
+    "tagId": "cmeriziv00004nu01410zy19p",
+    "locale": "de",
+    "name": "Trog"
+  },
+  {
+    "tagId": "cmeriziv00004nu01410zy19p",
+    "locale": "es",
+    "name": "Comedero"
+  },
+  {
+    "tagId": "cmeriziv00004nu01410zy19p",
+    "locale": "fr",
+    "name": "Auge"
+  },
+  {
+    "tagId": "cmeriziv00004nu01410zy19p",
+    "locale": "it",
+    "name": "Trogolo"
+  },
+  {
+    "tagId": "cmeriziv00004nu01410zy19p",
+    "locale": "pt",
+    "name": "Calha"
+  },
+  {
+    "tagId": "cmeriziv00004nu01410zy19p",
+    "locale": "sk",
+    "name": "Žľab"
+  },
+  {
+    "tagId": "cmeriziv00004nu01410zy19p",
+    "locale": "pl",
+    "name": "Koryto"
+  },
+  {
+    "tagId": "cmeriziv00004nu01410zy19p",
+    "locale": "ro",
+    "name": "Cuvă"
+  },
+  {
+    "tagId": "cmeriziv00004nu01410zy19p",
+    "locale": "nl",
+    "name": "Trog"
+  },
+  {
+    "tagId": "cmerizl8y0005nu01wl8wcn6n",
+    "locale": "en",
+    "name": "Straw architecture"
+  },
+  {
+    "tagId": "cmerizl8y0005nu01wl8wcn6n",
+    "locale": "de",
+    "name": "Architektur aus Stroh"
+  },
+  {
+    "tagId": "cmerizl8y0005nu01wl8wcn6n",
+    "locale": "es",
+    "name": "Arquitectura de paja"
+  },
+  {
+    "tagId": "cmerizl8y0005nu01wl8wcn6n",
+    "locale": "fr",
+    "name": "Architecture en paille"
+  },
+  {
+    "tagId": "cmerizl8y0005nu01wl8wcn6n",
+    "locale": "it",
+    "name": "Architettura della paglia"
+  },
+  {
+    "tagId": "cmerizl8y0005nu01wl8wcn6n",
+    "locale": "pt",
+    "name": "Arquitetura em palha"
+  },
+  {
+    "tagId": "cmea0drau0022mn01epyqpcox",
+    "locale": "en",
+    "name": "Animal husbandry"
+  },
+  {
+    "tagId": "cmeqwlp6s0083mn01a786pivi",
+    "locale": "en",
+    "name": "Berry fruit care"
+  },
+  {
+    "tagId": "cmerizl8y0005nu01wl8wcn6n",
+    "locale": "sk",
+    "name": "Slamená architektúra"
+  },
+  {
+    "tagId": "cmerizl8y0005nu01wl8wcn6n",
+    "locale": "pl",
+    "name": "Słomiana architektura"
+  },
+  {
+    "tagId": "cmerizl8y0005nu01wl8wcn6n",
+    "locale": "ro",
+    "name": "Arhitectura de paie"
+  },
+  {
+    "tagId": "cmerizl8y0005nu01wl8wcn6n",
+    "locale": "nl",
+    "name": "Architectuur van stro"
+  },
+  {
+    "tagId": "cmetzoybn000ok301t42geyh1",
+    "locale": "en",
+    "name": "Community garden"
+  },
+  {
+    "tagId": "cmetzoybn000ok301t42geyh1",
+    "locale": "de",
+    "name": "Gemeinschaftsgarten"
+  },
+  {
+    "tagId": "cmetzoybn000ok301t42geyh1",
+    "locale": "es",
+    "name": "Huerto comunitario"
+  },
+  {
+    "tagId": "cmetzoybn000ok301t42geyh1",
+    "locale": "fr",
+    "name": "Jardin communautaire"
+  },
+  {
+    "tagId": "cmetzoybn000ok301t42geyh1",
+    "locale": "it",
+    "name": "Giardino comunitario"
+  },
+  {
+    "tagId": "cmetzoybn000ok301t42geyh1",
+    "locale": "pt",
+    "name": "Horta comunitária"
+  },
+  {
+    "tagId": "cmetzoybn000ok301t42geyh1",
+    "locale": "sk",
+    "name": "Komunitná záhrada"
+  },
+  {
+    "tagId": "cmetzoybn000ok301t42geyh1",
+    "locale": "pl",
+    "name": "Ogród społecznościowy"
+  },
+  {
+    "tagId": "cmetzoybn000ok301t42geyh1",
+    "locale": "ro",
+    "name": "Grădină comunitară"
+  },
+  {
+    "tagId": "cmetzoybn000ok301t42geyh1",
+    "locale": "nl",
+    "name": "Gemeenschapstuin"
+  },
+  {
+    "tagId": "cmetzp7sw000pk3019gap2p38",
+    "locale": "en",
+    "name": "Board game"
+  },
+  {
+    "tagId": "cmetzp7sw000pk3019gap2p38",
+    "locale": "de",
+    "name": "Brettspiel"
+  },
+  {
+    "tagId": "cmetzp7sw000pk3019gap2p38",
+    "locale": "es",
+    "name": "Juego de mesa"
+  },
+  {
+    "tagId": "cmetzp7sw000pk3019gap2p38",
+    "locale": "fr",
+    "name": "Jeu de société"
+  },
+  {
+    "tagId": "cmetzp7sw000pk3019gap2p38",
+    "locale": "it",
+    "name": "Gioco da tavolo"
+  },
+  {
+    "tagId": "cmetzp7sw000pk3019gap2p38",
+    "locale": "pt",
+    "name": "Jogo de tabuleiro"
+  },
+  {
+    "tagId": "cmetzp7sw000pk3019gap2p38",
+    "locale": "sk",
+    "name": "Stolová hra"
+  },
+  {
+    "tagId": "cmetzp7sw000pk3019gap2p38",
+    "locale": "pl",
+    "name": "Gra planszowa"
+  },
+  {
+    "tagId": "cmetzp7sw000pk3019gap2p38",
+    "locale": "ro",
+    "name": "Joc de societate"
+  },
+  {
+    "tagId": "cmetzp7sw000pk3019gap2p38",
+    "locale": "nl",
+    "name": "Bordspel"
+  },
+  {
+    "tagId": "cmetzpgcc000qk301ftai11tu",
+    "locale": "en",
+    "name": "Women's round"
+  },
+  {
+    "tagId": "cmetzpgcc000qk301ftai11tu",
+    "locale": "de",
+    "name": "Runde der Frauen"
+  },
+  {
+    "tagId": "cmetzpgcc000qk301ftai11tu",
+    "locale": "es",
+    "name": "Ronda femenina"
+  },
+  {
+    "tagId": "cmetzpgcc000qk301ftai11tu",
+    "locale": "fr",
+    "name": "Tour féminin"
+  },
+  {
+    "tagId": "cmetzpgcc000qk301ftai11tu",
+    "locale": "it",
+    "name": "Turno femminile"
+  },
+  {
+    "tagId": "cmetzpgcc000qk301ftai11tu",
+    "locale": "pt",
+    "name": "Ronda feminina"
+  },
+  {
+    "tagId": "cmetzpgcc000qk301ftai11tu",
+    "locale": "sk",
+    "name": "Ženské kolo"
+  },
+  {
+    "tagId": "cmetzpgcc000qk301ftai11tu",
+    "locale": "pl",
+    "name": "Runda kobiet"
+  },
+  {
+    "tagId": "cmetzpgcc000qk301ftai11tu",
+    "locale": "ro",
+    "name": "Runda feminină"
+  },
+  {
+    "tagId": "cmetzpgcc000qk301ftai11tu",
+    "locale": "nl",
+    "name": "Vrouwen ronde"
+  },
+  {
+    "tagId": "cmetzqc25000rk301dd8k24d7",
+    "locale": "en",
+    "name": "Meditation"
+  },
+  {
+    "tagId": "cmetzqc25000rk301dd8k24d7",
+    "locale": "de",
+    "name": "Meditation"
+  },
+  {
+    "tagId": "cmetzqc25000rk301dd8k24d7",
+    "locale": "es",
+    "name": "Meditación"
+  },
+  {
+    "tagId": "cmetzqc25000rk301dd8k24d7",
+    "locale": "fr",
+    "name": "Méditation"
+  },
+  {
+    "tagId": "cmetzqc25000rk301dd8k24d7",
+    "locale": "it",
+    "name": "Meditazione"
+  },
+  {
+    "tagId": "cmetzqc25000rk301dd8k24d7",
+    "locale": "pt",
+    "name": "Meditação"
+  },
+  {
+    "tagId": "cmetzqc25000rk301dd8k24d7",
+    "locale": "sk",
+    "name": "Meditácia"
+  },
+  {
+    "tagId": "cmetzqc25000rk301dd8k24d7",
+    "locale": "pl",
+    "name": "Medytacja"
+  },
+  {
+    "tagId": "cmetzqc25000rk301dd8k24d7",
+    "locale": "ro",
+    "name": "Meditație"
+  },
+  {
+    "tagId": "cmetzqc25000rk301dd8k24d7",
+    "locale": "nl",
+    "name": "Meditatie"
+  },
+  {
+    "tagId": "cmeu5qpyx0002nt01hnusm63x",
+    "locale": "en",
+    "name": "Sustainability"
+  },
+  {
+    "tagId": "cmeu5qpyx0002nt01hnusm63x",
+    "locale": "de",
+    "name": "Nachhaltigkeit"
+  },
+  {
+    "tagId": "cmeu5qpyx0002nt01hnusm63x",
+    "locale": "es",
+    "name": "Sostenibilidad"
+  },
+  {
+    "tagId": "cmeu5qpyx0002nt01hnusm63x",
+    "locale": "fr",
+    "name": "Durabilité"
+  },
+  {
+    "tagId": "cmeu5qpyx0002nt01hnusm63x",
+    "locale": "it",
+    "name": "Sostenibilità"
+  },
+  {
+    "tagId": "cmeu5qpyx0002nt01hnusm63x",
+    "locale": "pt",
+    "name": "Sustentabilidade"
+  },
+  {
+    "tagId": "cmeu5qpyx0002nt01hnusm63x",
+    "locale": "sk",
+    "name": "Udržateľnosť"
+  },
+  {
+    "tagId": "cmeu5qpyx0002nt01hnusm63x",
+    "locale": "nl",
+    "name": "Duurzaamheid"
+  },
+  {
+    "tagId": "cmeu5qxih0003nt012ua2ebv2",
+    "locale": "en",
+    "name": "Electronic music"
+  },
+  {
+    "tagId": "cmeu5qxih0003nt012ua2ebv2",
+    "locale": "de",
+    "name": "Elektronische Musik"
+  },
+  {
+    "tagId": "cmeu5qxih0003nt012ua2ebv2",
+    "locale": "es",
+    "name": "Música electrónica"
+  },
+  {
+    "tagId": "cmeu5qxih0003nt012ua2ebv2",
+    "locale": "fr",
+    "name": "Musique électronique"
+  },
+  {
+    "tagId": "cmeu5qxih0003nt012ua2ebv2",
+    "locale": "it",
+    "name": "Musica elettronica"
+  },
+  {
+    "tagId": "cmeu5qxih0003nt012ua2ebv2",
+    "locale": "pt",
+    "name": "Música eletrónica"
+  },
+  {
+    "tagId": "cmeu5qxih0003nt012ua2ebv2",
+    "locale": "sk",
+    "name": "Elektronická hudba"
+  },
+  {
+    "tagId": "cmeu5qxih0003nt012ua2ebv2",
+    "locale": "pl",
+    "name": "Muzyka elektroniczna"
+  },
+  {
+    "tagId": "cmeu5qxih0003nt012ua2ebv2",
+    "locale": "ro",
+    "name": "Muzică electronică"
+  },
+  {
+    "tagId": "cmeu5qxih0003nt012ua2ebv2",
+    "locale": "nl",
+    "name": "Elektronische muziek"
+  },
+  {
+    "tagId": "cmeu5rf8z0004nt01pnrd1wz2",
+    "locale": "en",
+    "name": "Alternative architecture"
+  },
+  {
+    "tagId": "cmeu5rf8z0004nt01pnrd1wz2",
+    "locale": "de",
+    "name": "Alternative Architektur"
+  },
+  {
+    "tagId": "cmeu5rf8z0004nt01pnrd1wz2",
+    "locale": "es",
+    "name": "Arquitectura alternativa"
+  },
+  {
+    "tagId": "cmeu5rf8z0004nt01pnrd1wz2",
+    "locale": "fr",
+    "name": "Architecture alternative"
+  },
+  {
+    "tagId": "cmeu5rf8z0004nt01pnrd1wz2",
+    "locale": "it",
+    "name": "Architettura alternativa"
+  },
+  {
+    "tagId": "cmeu5rf8z0004nt01pnrd1wz2",
+    "locale": "pt",
+    "name": "Arquitetura alternativa"
+  },
+  {
+    "tagId": "cmeu5rf8z0004nt01pnrd1wz2",
+    "locale": "sk",
+    "name": "Alternatívna architektúra"
+  },
+  {
+    "tagId": "cmeu5rf8z0004nt01pnrd1wz2",
+    "locale": "pl",
+    "name": "Alternatywna architektura"
+  },
+  {
+    "tagId": "cmeu5rf8z0004nt01pnrd1wz2",
+    "locale": "ro",
+    "name": "Arhitectură alternativă"
+  },
+  {
+    "tagId": "cmeu5rf8z0004nt01pnrd1wz2",
+    "locale": "nl",
+    "name": "Alternatieve architectuur"
+  },
+  {
+    "tagId": "cmevbmzon003pnt01o4bo2tdd",
+    "locale": "en",
+    "name": "creation"
+  },
+  {
+    "tagId": "cmevbsiar003qnt01am6nyqbg",
+    "locale": "en",
+    "name": "sociocracy"
+  },
+  {
+    "tagId": "cmevszl4e006mnt01a40p1fcd",
+    "locale": "hu",
+    "name": "Prepperkedés"
+  },
+  {
+    "tagId": "cmevxszuv006rnt0117j6c72j",
+    "locale": "hu",
+    "name": "Mese terápia"
+  },
+  {
+    "tagId": "cmewze2ku00bint01jejhyvhb",
+    "locale": "hu",
+    "name": "Kaláka"
+  },
+  {
+    "tagId": "cmewzed3f00bjnt01duf9he7m",
+    "locale": "hu",
+    "name": "Kapcsolódásom"
+  },
+  {
+    "tagId": "cmexzu8ld00fsnt01ofld0r4m",
+    "locale": "hu",
+    "name": "Művészet, barátok, kert, utazás "
+  },
+  {
+    "tagId": "cmexzwqpc00ftnt01ms3kc67e",
+    "locale": "hu",
+    "name": "Beszélgetés"
+  },
+  {
+    "tagId": "cmeye1vlo00icnt01sqk99uap",
+    "locale": "hu",
+    "name": "vallás"
+  },
+  {
+    "tagId": "cmezgg4hq00kknt01dwwra8ig",
+    "locale": "hu",
+    "name": "Otthon tanulás"
+  },
+  {
+    "tagId": "cmeuylbi7002ynt01s07suewy",
+    "locale": "hu",
+    "name": "Erdőjárás"
+  },
+  {
+    "tagId": "cmewzdaub00bgnt014r36i1cr",
+    "locale": "hu",
+    "name": "Labirintus"
+  },
+  {
+    "tagId": "cmewy5qdy00asnt01immmofbm",
+    "locale": "hu",
+    "name": "Tyúk"
+  },
+  {
+    "tagId": "cmewzem1l00bknt0174xtse92",
+    "locale": "hu",
+    "name": "Kapcsolódások"
+  },
+  {
+    "tagId": "cmewzf55o00blnt01hnypobbl",
+    "locale": "hu",
+    "name": "Fotózás-videózás"
+  },
+  {
+    "tagId": "cmewzfucw00bmnt0113vnyrzt",
+    "locale": "hu",
+    "name": "Emberek"
+  },
+  {
+    "tagId": "cmeuylxft002znt01ph2tx4u0",
+    "locale": "hu",
+    "name": "Ehető vadnövények"
+  },
+  {
+    "tagId": "cmeuy6mg50029nt01vun0gx1g",
+    "locale": "hu",
+    "name": "Spirituális fejlődés"
+  },
+  {
+    "tagId": "cmewkxbqh009rnt01euh2z1os",
+    "locale": "hu",
+    "name": "Asztalos"
+  },
+  {
+    "tagId": "cmevxsi1y006qnt01pkwfg419",
+    "locale": "hu",
+    "name": "Művészet"
+  },
+  {
+    "tagId": "cmevxtb45006snt01ab7a9fwu",
+    "locale": "hu",
+    "name": "Meseterápia"
+  },
+  {
+    "tagId": "cmewzd4s200bfnt01tvsnsygv",
+    "locale": "hu",
+    "name": "Sup"
+  },
+  {
+    "tagId": "cmevrn5ih0050nt01hvv609y6",
+    "locale": "hu",
+    "name": "Szőlő termesztés"
+  },
+  {
+    "tagId": "cmevsy9ep006knt018ofcp33f",
+    "locale": "hu",
+    "name": "Bicikli"
+  },
+  {
+    "tagId": "cmewkx643009qnt01cn3bjwzt",
+    "locale": "hu",
+    "name": "Famegmunkálás"
+  },
+  {
+    "tagId": "cmevsyxzg006lnt01dvd3d87d",
+    "locale": "hu",
+    "name": "Futás"
+  },
+  {
+    "tagId": "cmf421ee8003hp301cqu9pu7s",
+    "locale": "en",
+    "name": "entrepreneurshop"
+  },
+  {
+    "tagId": "cmf421odd003ip301k8dxn0f9",
+    "locale": "en",
+    "name": "entrepreneurship"
+  },
+  {
+    "tagId": "cmf421y6x003jp301pzktp35z",
+    "locale": "en",
+    "name": "self"
+  },
+  {
+    "tagId": "cmewzdllb00bhnt01yrjrc1qx",
+    "locale": "en",
+    "name": "Alternative economy"
+  },
+  {
+    "tagId": "cmewzdllb00bhnt01yrjrc1qx",
+    "locale": "hu",
+    "name": "Alternatív gazdaság"
+  },
+  {
+    "tagId": "cml2f6qyb007wo301cix1iwsb",
+    "locale": "en",
+    "name": "Environmental protection"
+  },
+  {
+    "tagId": "cml2f6qyb007wo301cix1iwsb",
+    "locale": "hu",
+    "name": "környezetvédelem"
+  },
+  {
+    "tagId": "cml2f735m007xo301xkdr250m",
+    "locale": "en",
+    "name": "Excursion "
+  },
+  {
+    "tagId": "cml2f735m007xo301xkdr250m",
+    "locale": "hu",
+    "name": "Kirándulás "
+  },
+  {
+    "tagId": "cml8yfo2t008po301ips93lmu",
+    "locale": "en",
+    "name": "Films"
+  },
+  {
+    "tagId": "cml8yfo2t008po301ips93lmu",
+    "locale": "hu",
+    "name": "film"
+  },
+  {
+    "tagId": "cmfwy0v7m008xp301jxahdkib",
+    "locale": "en",
+    "name": "Health and wellness"
+  },
+  {
+    "tagId": "cmfwy0v7m008xp301jxahdkib",
+    "locale": "hu",
+    "name": "egészségfejlesztés"
+  },
+  {
+    "tagId": "cmfgx8uj7006rp301nswztk97",
+    "locale": "en",
+    "name": "Deep mulching"
+  },
+  {
+    "tagId": "cmfgx8uj7006rp301nswztk97",
+    "locale": "hu",
+    "name": "Mélymulcs"
+  },
+  {
+    "tagId": "cmgjgu4cy0046o301sd6fhd05",
+    "locale": "en",
+    "name": "Community building"
+  },
+  {
+    "tagId": "cmgjgu4cy0046o301sd6fhd05",
+    "locale": "hu",
+    "name": "Közösség építés"
+  },
+  {
+    "tagId": "cmfwy1rr0008zp301rw0nzej9",
+    "locale": "en",
+    "name": "Self development"
+  },
+  {
+    "tagId": "cmfwy1rr0008zp301rw0nzej9",
+    "locale": "hu",
+    "name": "önfejlesztés "
+  },
+  {
+    "tagId": "cmfwy1nf6008yp301sxidrqdt",
+    "locale": "en",
+    "name": "Self-awareness"
+  },
+  {
+    "tagId": "cmfwy1nf6008yp301sxidrqdt",
+    "locale": "hu",
+    "name": "tudatosság"
+  },
+  {
+    "tagId": "cmeqwlp6s0083mn01a786pivi",
+    "locale": "hu",
+    "name": "Gyümölcsfa bogyós gyümölcs gondozás, "
+  },
+  {
+    "tagId": "cmfgx98ce006sp301g6iho3h0",
+    "locale": "en",
+    "name": "Scything"
+  },
+  {
+    "tagId": "cmfgx98ce006sp301g6iho3h0",
+    "locale": "hu",
+    "name": "Kaszálás"
+  },
+  {
+    "tagId": "cmf82wo6z003sp30147hwquxi",
+    "locale": "en",
+    "name": "Non-growth"
+  },
+  {
+    "tagId": "cmf82wo6z003sp30147hwquxi",
+    "locale": "hu",
+    "name": "Nemnövekedés"
+  },
+  {
+    "tagId": "cmf04sq47002eqn01zate21mu",
+    "locale": "en",
+    "name": "Community development"
+  },
+  {
+    "tagId": "cmf04sq47002eqn01zate21mu",
+    "locale": "hu",
+    "name": "közösségfejlesztés"
+  },
+  {
+    "tagId": "cmf82y2vv003tp301lipagy50",
+    "locale": "en",
+    "name": "Lifestyle medicine"
+  },
+  {
+    "tagId": "cmf82y2vv003tp301lipagy50",
+    "locale": "hu",
+    "name": "Életmódorvoslás"
+  },
+  {
+    "tagId": "cmfgx8l04006qp301m1lf7vgw",
+    "locale": "en",
+    "name": "Natural building materials"
+  },
+  {
+    "tagId": "cmfgx8l04006qp301m1lf7vgw",
+    "locale": "hu",
+    "name": "Természetes építőanyagok"
+  },
+  {
+    "tagId": "cmf82z74n003up301oxl4idu6",
+    "locale": "en",
+    "name": "Car-free living"
+  },
+  {
+    "tagId": "cmf82z74n003up301oxl4idu6",
+    "locale": "hu",
+    "name": "Autómentes élet"
+  },
+  {
+    "tagId": "cmfgx82rv006pp301wan2a0ga",
+    "locale": "en",
+    "name": "Fruit growing"
+  },
+  {
+    "tagId": "cmfgx82rv006pp301wan2a0ga",
+    "locale": "hu",
+    "name": "Gyümölcsészet"
+  },
+  {
+    "tagId": "cmexzwqpc00ftnt01ms3kc67e",
+    "locale": "en",
+    "name": "Conversation"
+  },
+  {
+    "tagId": "cmf04sbte002dqn01b94o8ru4",
+    "locale": "en",
+    "name": "Mind training"
+  },
+  {
+    "tagId": "cmf04sbte002dqn01b94o8ru4",
+    "locale": "hu",
+    "name": "tudatedzés"
+  },
+  {
+    "tagId": "cmeye1vlo00icnt01sqk99uap",
+    "locale": "en",
+    "name": "Religion"
+  },
+  {
+    "tagId": "cmezgg4hq00kknt01dwwra8ig",
+    "locale": "en",
+    "name": "Learning at home"
+  },
+  {
+    "tagId": "cmeznnfa800l6nt01v0vh1csj",
+    "locale": "en",
+    "name": "Gardening"
+  },
+  {
+    "tagId": "cmeznnfa800l6nt01v0vh1csj",
+    "locale": "hu",
+    "name": "Kert"
+  },
+  {
+    "tagId": "cmf41pdoo003gp301v623reic",
+    "locale": "en",
+    "name": "Ecology"
+  },
+  {
+    "tagId": "cmf41pdoo003gp301v623reic",
+    "locale": "hu",
+    "name": "Ökológia"
+  },
+  {
+    "tagId": "cmeuylbi7002ynt01s07suewy",
+    "locale": "en",
+    "name": "Forest walks"
+  },
+  {
+    "tagId": "cmewzdaub00bgnt014r36i1cr",
+    "locale": "en",
+    "name": "Labyrinth"
+  },
+  {
+    "tagId": "cmewy5qdy00asnt01immmofbm",
+    "locale": "en",
+    "name": "Chickens"
+  },
+  {
+    "tagId": "cmewzem1l00bknt0174xtse92",
+    "locale": "en",
+    "name": "Connections"
+  },
+  {
+    "tagId": "cmewzf55o00blnt01hnypobbl",
+    "locale": "en",
+    "name": "Photography and videography"
+  },
+  {
+    "tagId": "cmewzfucw00bmnt0113vnyrzt",
+    "locale": "en",
+    "name": "People"
+  },
+  {
+    "tagId": "cmeuylxft002znt01ph2tx4u0",
+    "locale": "en",
+    "name": "Edible wild plants"
+  },
+  {
+    "tagId": "cmeuy6mg50029nt01vun0gx1g",
+    "locale": "en",
+    "name": "Spiritual development"
+  },
+  {
+    "tagId": "cmewkxbqh009rnt01euh2z1os",
+    "locale": "en",
+    "name": "Carpenter"
+  },
+  {
+    "tagId": "cmevxsi1y006qnt01pkwfg419",
+    "locale": "en",
+    "name": "Art"
+  },
+  {
+    "tagId": "cmevxtb45006snt01ab7a9fwu",
+    "locale": "en",
+    "name": "Storytelling therapy"
+  },
+  {
+    "tagId": "cmevrnz7n0051nt014uwb6drj",
+    "locale": "en",
+    "name": "Medicinal herbs"
+  },
+  {
+    "tagId": "cmevrnz7n0051nt014uwb6drj",
+    "locale": "hu",
+    "name": "Gyógynövények"
+  },
+  {
+    "tagId": "cmewzd4s200bfnt01tvsnsygv",
+    "locale": "en",
+    "name": "Sup"
+  },
+  {
+    "tagId": "cmevsy9ep006knt018ofcp33f",
+    "locale": "en",
+    "name": "Cycling"
+  },
+  {
+    "tagId": "cmewkx643009qnt01cn3bjwzt",
+    "locale": "en",
+    "name": "Woodworking"
+  },
+  {
+    "tagId": "cmevrn5ih0050nt01hvv609y6",
+    "locale": "en",
+    "name": "Grape growing"
+  },
+  {
+    "tagId": "cme9jglph0015mn0117xdaso6",
+    "locale": "en",
+    "name": "Homesteading"
+  },
+  {
+    "tagId": "cme9jglph0015mn0117xdaso6",
+    "locale": "hu",
+    "name": "Tanya"
+  },
+  {
+    "tagId": "cmevsyxzg006lnt01dvd3d87d",
+    "locale": "en",
+    "name": "Running"
+  },
+  {
+    "tagId": "cmcarqrql00006wqmb3vph9qh",
+    "locale": "en",
+    "name": "Permaculture"
+  },
+  {
+    "tagId": "cmcarqrql00006wqmb3vph9qh",
+    "locale": "hu",
+    "name": "Permakultúra"
+  },
+  {
+    "tagId": "cmm2pk83g00006wx33pir2zut",
+    "locale": "en",
+    "name": "Software development"
+  },
+  {
+    "tagId": "cmcarqrx2001w6wqm2fqlx8er",
+    "locale": "hu",
+    "name": "Természetes építkezés"
+  },
+  {
+    "tagId": "cmm2ptcja00006w30swqiewy5",
+    "locale": "en",
+    "name": "Healing plants"
+  },
+  {
+    "tagId": "cmm2ptcja00006w30swqiewy5",
+    "locale": "hu",
+    "name": "Gyógyító növények"
+  }
+]

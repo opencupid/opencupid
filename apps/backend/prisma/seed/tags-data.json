@@ -1,0 +1,1022 @@
+[
+  {
+    "id": "cmcarqrr200016wqmz3kh3rqn",
+    "slug": "regenerative-agriculture",
+    "name": "Regenerative Agriculture",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqrrd00026wqm1frjoqcb",
+    "slug": "composting",
+    "name": "Composting",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqrrj00036wqmzl8la13a",
+    "slug": "organic-gardening",
+    "name": "Organic Gardening",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqrrr00046wqmgje1w7a6",
+    "slug": "no-dig-gardening",
+    "name": "No-Dig Gardening",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqrsc00056wqmfkan0is7",
+    "slug": "food-forests",
+    "name": "Food Forests",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqrvu000g6wqmthdhd01n",
+    "slug": "agroforestry",
+    "name": "Agroforestry",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqrwe00106wqmuy1njbvh",
+    "slug": "aquaponics",
+    "name": "Aquaponics",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqrwo001c6wqmv06omqjc",
+    "slug": "rainwater-harvesting",
+    "name": "Rainwater Harvesting",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqrxg00286wqmt6hzsym1",
+    "slug": "earthships",
+    "name": "Earthships",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqrz400336wqmj0032a1x",
+    "slug": "tiny-houses",
+    "name": "Tiny Houses",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqrzm00346wqmzpbgca22",
+    "slug": "off-grid-living",
+    "name": "Off-Grid Living",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs0000356wqmmw4r2ymx",
+    "slug": "solar-power",
+    "name": "Solar Power",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs0600366wqmdlxjlu7l",
+    "slug": "wind-energy",
+    "name": "Wind Energy",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs0b00376wqmsggf2fu9",
+    "slug": "zero-waste",
+    "name": "Zero Waste",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs0j00386wqmzhxxo2bc",
+    "slug": "diy",
+    "name": "DIY",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs0o00396wqmibc1eq35",
+    "slug": "seed-saving",
+    "name": "Seed Saving",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs0w003a6wqmaoekuy0l",
+    "slug": "beekeeping",
+    "name": "Beekeeping",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs12003b6wqmie74j4h1",
+    "slug": "fermentation",
+    "name": "Fermentation",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs19003c6wqmsn130vwi",
+    "slug": "canning-and-preserving",
+    "name": "Canning & Preserving",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs1e003d6wqmk05gwrgh",
+    "slug": "foraging",
+    "name": "Foraging",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs1k003e6wqm0b9kigsf",
+    "slug": "eco-villages",
+    "name": "Eco Villages",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs1q003f6wqmb8s5x1jw",
+    "slug": "slow-food",
+    "name": "Slow Food",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs1w003g6wqm0cde23cf",
+    "slug": "local-food",
+    "name": "Local Food",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs21003h6wqm7cbcjpm7",
+    "slug": "farmers-markets",
+    "name": "Farmers Markets",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs27003i6wqmt3yji6fy",
+    "slug": "csa-(community-supported-agriculture)",
+    "name": "CSA (Community Supported Agriculture)",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs2c003j6wqmtftaq17z",
+    "slug": "urban-gardening",
+    "name": "Urban Gardening",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs2h003k6wqm2xo4fkut",
+    "slug": "compost-toilets",
+    "name": "Compost Toilets",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs2m003l6wqmv1hbnlw9",
+    "slug": "bokashi-composting",
+    "name": "Bokashi Composting",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs2s003m6wqmz8tujp18",
+    "slug": "greywater-systems",
+    "name": "Greywater Systems",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs2x003n6wqm6p5rivxm",
+    "slug": "animal-rescue",
+    "name": "Animal Rescue",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs33003o6wqmfqxvo0vi",
+    "slug": "wildlife-conservation",
+    "name": "Wildlife Conservation",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs38003p6wqmqiw7mvfq",
+    "slug": "birdwatching",
+    "name": "Birdwatching",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs3e003q6wqmcxa2r3jf",
+    "slug": "dog-lovers",
+    "name": "Dog Lovers",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs3j003r6wqm3dl3boto",
+    "slug": "cat-lovers",
+    "name": "Cat Lovers",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs3q003s6wqm75rip8z1",
+    "slug": "horseback-riding",
+    "name": "Horseback Riding",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs3w003t6wqmw1kdy4h8",
+    "slug": "herpetology",
+    "name": "Herpetology",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs45003u6wqm31e0nf68",
+    "slug": "marine-life",
+    "name": "Marine Life",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs4b003v6wqmnm1f2uqj",
+    "slug": "butterfly-gardening",
+    "name": "Butterfly Gardening",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs4k003w6wqmpjnreo38",
+    "slug": "chicken-keeping",
+    "name": "Chicken Keeping",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs4r003x6wqms2c2o2qs",
+    "slug": "goat-keeping",
+    "name": "Goat Keeping",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs4x003y6wqmnk1v06m5",
+    "slug": "sheep-herding",
+    "name": "Sheep Herding",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs52003z6wqmk5lgcfxw",
+    "slug": "veganism",
+    "name": "Veganism",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs5a00406wqm7s31l2a4",
+    "slug": "vegetarianism",
+    "name": "Vegetarianism",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs5g00416wqm5jwksq50",
+    "slug": "pet-training",
+    "name": "Pet Training",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs5p00426wqms8vrhp8f",
+    "slug": "animal-tracking",
+    "name": "Animal Tracking",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs5v00436wqmvmtw74c2",
+    "slug": "animal-photography",
+    "name": "Animal Photography",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs6000446wqmovsmee9w",
+    "slug": "animal-behavior",
+    "name": "Animal Behavior",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs6600456wqmcgiccd22",
+    "slug": "live-music",
+    "name": "Live Music",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs6b00466wqmyqojdbts",
+    "slug": "folk-music",
+    "name": "Folk Music",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs6h00476wqm6m9vy81t",
+    "slug": "acoustic-guitar",
+    "name": "Acoustic Guitar",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs6v00486wqmj9nxqogf",
+    "slug": "world-music",
+    "name": "World Music",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs7300496wqmvwnqf244",
+    "slug": "music-festivals",
+    "name": "Music Festivals",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs78004a6wqmxu4l30sx",
+    "slug": "singing",
+    "name": "Singing",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs7d004b6wqmawyc6jxn",
+    "slug": "drumming",
+    "name": "Drumming",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs7i004c6wqmbk6xul98",
+    "slug": "handpan",
+    "name": "Handpan",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs7n004d6wqmz8x16s7x",
+    "slug": "ukulele",
+    "name": "Ukulele",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs7t004e6wqmo8v6fnce",
+    "slug": "improvisation",
+    "name": "Improvisation",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs7y004f6wqmzyrc3i6g",
+    "slug": "choir",
+    "name": "Choir",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs82004g6wqm1fn3vvvm",
+    "slug": "sound-healing",
+    "name": "Sound Healing",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs87004h6wqm7kd3y45q",
+    "slug": "vinyl-records",
+    "name": "Vinyl Records",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs8c004i6wqmtgxkvm8y",
+    "slug": "djing",
+    "name": "DJing",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs8i004j6wqmjck1behh",
+    "slug": "songwriting",
+    "name": "Songwriting",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs8p004k6wqmt5cu5t04",
+    "slug": "jazz",
+    "name": "Jazz",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs8v004l6wqm0lxo3tqn",
+    "slug": "classical-music",
+    "name": "Classical Music",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs90004m6wqmepxqiqg3",
+    "slug": "experimental-music",
+    "name": "Experimental Music",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqrx2001w6wqm2fqlx8er",
+    "slug": "natural-building",
+    "name": "Natural Building",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs96004n6wqmxmxe1cwx",
+    "slug": "storytelling",
+    "name": "Storytelling",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs9b004o6wqmgmax2isn",
+    "slug": "folk-art",
+    "name": "Folk Art",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs9g004p6wqmhpdkwlep",
+    "slug": "pottery",
+    "name": "Pottery",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs9n004q6wqmvr6mojf0",
+    "slug": "knitting",
+    "name": "Knitting",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs9s004r6wqm2laiooik",
+    "slug": "fiber-arts",
+    "name": "Fiber Arts",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqs9z004s6wqms7wgczqc",
+    "slug": "street-art",
+    "name": "Street Art",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqsa8004t6wqm5w8k2aov",
+    "slug": "photography",
+    "name": "Photography",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqsaf004u6wqm6o8dmk8x",
+    "slug": "painting",
+    "name": "Painting",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqsam004v6wqmjpv5jvyt",
+    "slug": "dance",
+    "name": "Dance",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqsat004w6wqmd9sdos8o",
+    "slug": "circus-arts",
+    "name": "Circus Arts",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqsay004x6wqmkvii2exy",
+    "slug": "theatre",
+    "name": "Theatre",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqsb3004y6wqmcivduh2e",
+    "slug": "poetry",
+    "name": "Poetry",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqsb9004z6wqm1xso5v4p",
+    "slug": "zines",
+    "name": "Zines",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqsbf00506wqmydd9ifkp",
+    "slug": "traditional-crafts",
+    "name": "Traditional Crafts",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqsbk00516wqm5h2o8myo",
+    "slug": "cultural-exchange",
+    "name": "Cultural Exchange",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqsbq00526wqmapleu7y7",
+    "slug": "language-learning",
+    "name": "Language Learning",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqsbv00536wqmpwa47yf2",
+    "slug": "history",
+    "name": "History",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqsc000546wqm1a5phv4q",
+    "slug": "backpacking",
+    "name": "Backpacking",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqsc500556wqmxelymotq",
+    "slug": "hitchhiking",
+    "name": "Hitchhiking",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqsca00566wqm89i3s11u",
+    "slug": "couchsurfing",
+    "name": "Couchsurfing",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqscf00576wqmeos5u831",
+    "slug": "bike-touring",
+    "name": "Bike Touring",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqsck00586wqmkpo5h9qe",
+    "slug": "train-travel",
+    "name": "Train Travel",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqscp00596wqm2e637vpw",
+    "slug": "slow-travel",
+    "name": "Slow Travel",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqsct005a6wqmuj1q8aed",
+    "slug": "travel-writing",
+    "name": "Travel Writing",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqscy005b6wqmhcwkidch",
+    "slug": "adventure-travel",
+    "name": "Adventure Travel",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqsd3005c6wqm8r2tiqba",
+    "slug": "eco-tourism",
+    "name": "Eco Tourism",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqsd9005d6wqmunee4dqa",
+    "slug": "nature-walks",
+    "name": "Nature Walks",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqsdf005e6wqmh477big1",
+    "slug": "volunteering-abroad",
+    "name": "Volunteering Abroad",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqsdk005f6wqm73tfjrsv",
+    "slug": "hostelling",
+    "name": "Hostelling",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqsdo005g6wqmp7tmb6hf",
+    "slug": "wilderness-survival",
+    "name": "Wilderness Survival",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqsds005h6wqmq300yaw0",
+    "slug": "pilgrimages",
+    "name": "Pilgrimages",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqsdw005i6wqmff13gi59",
+    "slug": "nomadic-living",
+    "name": "Nomadic Living",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqse3005j6wqmx7owfzf8",
+    "slug": "geocaching",
+    "name": "Geocaching",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmm2ptcja00006w30swqiewy5",
+    "slug": "healing-plants",
+    "name": "Healing plants",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmcarqrql00006wqmb3vph9qh",
+    "slug": "permaculture",
+    "name": "Permaculture",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  },
+  {
+    "id": "cmm2pk83g00006wx33pir2zut",
+    "slug": "software-development",
+    "name": "Software development",
+    "originalLocale": "en",
+    "isUserCreated": false,
+    "isApproved": true,
+    "isHidden": false,
+    "isDeleted": false
+  }
+]
