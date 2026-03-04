@@ -23,6 +23,11 @@ output "ssh_command" {
 }
 
 output "staging_url" {
-  value       = "https://${var.subdomain_fqdn}"
+  value       = "https://${local.generated_subdomain_fqdn}"
   description = "Staging application URL."
+}
+
+output "subdomain_fqdn" {
+  value       = local.generated_subdomain_fqdn
+  description = "Generated deployment hostname used for DOMAIN, ADMIN_DOMAIN, and JITSI_DOMAIN."
 }

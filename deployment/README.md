@@ -14,7 +14,7 @@ Terraform setup for provisioning a VPS instance in staging or production environ
 ```bash
 cd deployment/terraform
 cp terraform.tfvars.example terraform.tfvars
-# Edit terraform.tfvars — fill in hcloud_token, ssh_public_key, management_cidr, subdomain_fqdn
+# Edit terraform.tfvars — fill in hcloud_token, management_cidr, subdomain_fqdn
 terraform init
 terraform apply
 ```
@@ -41,4 +41,6 @@ terraform destroy
 ## Notes
 
 - Port 80 is open to the world for Let's Encrypt ACME HTTP-01 challenges. All other ports (22, 443, 10000) are restricted to `management_cidr`.
-- The wildcard CNAME `*.staging.example.org → staging.example.org` covers `admin.*` and `meet.*` without extra A records. The DNS records are provisioned via Terraform.
+- Terraform generates a random 8-character host and creates `<random>.<derived-zone>` as the deployment FQDN.
+- `derived-zone` comes from `subdomain_fqdn`: `example.org → example.org`, `staging.example.org → example.org`.
+- The wildcard CNAME `*.<random> → <random>.<derived-zone>` covers `admin.*` and `meet.*` without extra A records. The DNS records are provisioned via Terraform.
