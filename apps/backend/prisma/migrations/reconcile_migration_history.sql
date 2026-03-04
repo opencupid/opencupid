@@ -22,7 +22,7 @@ INSERT INTO "_prisma_migrations" (
   applied_steps_count
 ) VALUES (
   gen_random_uuid()::text,
-  '50f40c86f4764b40046d6a22cc4eb42d1efb9e07345bc42c7940a5088deb6081',
+  'cd90e000094d534b95242f56c00c6e8e6fe95372bc619008dc5e56b6d0d28847',
   now(),
   '20250704205603_init',
   NULL,
