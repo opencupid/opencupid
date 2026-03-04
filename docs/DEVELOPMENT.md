@@ -30,6 +30,20 @@ pnpm  --filter backend prisma:deploy           # create/init DB
 pnpm dev
 ```
 
+## HTTPS in development
+
+The dev servers (frontend on port 5173, admin on port 5174) serve over HTTPS using certificates
+generated automatically by [vite-plugin-mkcert](https://www.npmjs.com/package/vite-plugin-mkcert).
+
+Certificates are generated for `localhost`, `127.0.0.1`, and the machine's hostname (via
+`os.hostname()`). They are stored in `~/.vite-plugin-mkcert/` and are not committed to the repo.
+
+On first run, `mkcert` will install a local CA into your system trust store. You may be prompted for
+your password. Once installed, subsequent runs are seamless and no browser warnings will appear.
+
+To access the dev server by hostname (e.g. `mymachine.local`), the hostname is automatically added
+to `allowedHosts`. No manual certificate management or `.pem` files in `certs/` are required.
+
 ## Internationalization (i18n)
 
 Translation strings live in `packages/shared/i18n/` as JSON files (`en.json`, `hu.json`, and an `api/` subdirectory for backend error messages).
@@ -60,7 +74,5 @@ pnpm --filter backend prisma:generate  # generate prisma client
 
 pnpm test  # this runs all of the tests in backend/frontend
 
-# lint
-pnpm lint
-pnpm --filter frontend type-check
+pnpm --filter frontend type-check  # type-check + lint
 ```

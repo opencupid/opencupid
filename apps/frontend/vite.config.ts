@@ -1,5 +1,5 @@
 import path from 'path'
-import { type ConfigEnv, defineConfig, loadEnv, type UserConfig } from 'vite'
+import { type ConfigEnv, defineConfig, type UserConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import vueDevTools from 'vite-plugin-vue-devtools'
@@ -11,15 +11,15 @@ import { BootstrapVueNextResolver } from 'bootstrap-vue-next'
 import svgLoader from 'vite-svg-loader'
 import serveStatic from 'serve-static'
 // import VitePluginBrowserSync from 'vite-plugin-browser-sync'
-import { server, define, runtimeConfigPlugin } from './vite.common'
+import { server, define, runtimeConfigPlugin, loadProjectEnv, devCertPlugin } from './vite.common'
 
 process.env.DEBUG = 'vite:*' // Add this to force verbose output
 // https://vite.dev/config/
 export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
-  const rootEnv = loadEnv(mode, '../../', '')
+  const env = loadProjectEnv(mode)
   return {
     ...define(mode),
-    ...server(mode),
+    ...server(mode, env, __dirname),
     build: {
       sourcemap: true,
       rollupOptions: {
@@ -93,8 +93,8 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
         name: 'serve-static-media',
         configureServer(server) {
           server.middlewares.use(
-            rootEnv.MEDIA_URL_BASE!,
-            serveStatic(path.resolve(__dirname, rootEnv.MEDIA_UPLOAD_DIR!))
+            env.MEDIA_URL_BASE!,
+            serveStatic(path.resolve(__dirname, env.MEDIA_UPLOAD_DIR!))
           )
         },
       },
@@ -115,6 +115,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       //     }
       //   }
       // }),
+      ...(mode === 'development' ? [devCertPlugin()] : []),
       runtimeConfigPlugin(mode),
     ],
     css: {
