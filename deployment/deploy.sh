@@ -64,7 +64,8 @@ fi
 TMP_ENV_FILE=$(mktemp)
 trap 'rm -f "$TMP_ENV_FILE"' EXIT
 export SUBDOMAIN_FQDN
-envsubst '${SUBDOMAIN_FQDN}' < "$ENV_FILE" > "$TMP_ENV_FILE"
+export SERVER_IP
+envsubst '${SUBDOMAIN_FQDN} ${SERVER_IP}' < "$ENV_FILE" > "$TMP_ENV_FILE"
 
 $SCP "$TMP_ENV_FILE" "$SSH_USER@$SERVER_IP:~/opencupid/.env"
 echo "Uploaded .env"
