@@ -1,6 +1,8 @@
 FROM node:22-bookworm AS builder
 
 WORKDIR /app
+ENV CI=true
+ENV PNPM_UPDATE_NOTIFIER=false
 
 RUN apt-get update && apt-get -y install build-essential python3 && \
   ln -sf /usr/bin/python3 /usr/bin/python
@@ -24,11 +26,11 @@ RUN pnpm install --no-frozen-lockfile
 
 # Generate Prisma client and build application
 ENV PRISMA_DISABLE_WARNINGS=true
+ENV PRISMA_HIDE_UPDATE_MESSAGE=1
 ENV TURBO_NO_UPDATE_NOTIFIER=1
 RUN pnpm run prisma:generate && pnpm run build
 
-# Remove dev dependencies (CI=true needed for pnpm v10+ non-TTY confirmation)
-ENV CI=true
+# Remove dev dependencies
 RUN pnpm prune --prod
 
 FROM node:22-bookworm

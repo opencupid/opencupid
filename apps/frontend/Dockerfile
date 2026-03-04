@@ -1,5 +1,7 @@
 FROM node:22-bookworm AS builder
 WORKDIR /app
+ENV CI=true
+ENV PNPM_UPDATE_NOTIFIER=false
 
 RUN apt-get update && apt-get -y install build-essential python3 && \
   ln -sf /usr/bin/python3 /usr/bin/python
