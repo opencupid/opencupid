@@ -4,16 +4,15 @@ import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
-// import visualizer from 'vite-bundle-visualizer'
 
 import Components from 'unplugin-vue-components/vite'
 import { BootstrapVueNextResolver } from 'bootstrap-vue-next'
 import svgLoader from 'vite-svg-loader'
 import serveStatic from 'serve-static'
-// import VitePluginBrowserSync from 'vite-plugin-browser-sync'
 import { server, define, runtimeConfigPlugin, loadProjectEnv, devCertPlugin } from './vite.common'
 
 process.env.DEBUG = 'vite:*' // Add this to force verbose output
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
   const env = loadProjectEnv(mode)
@@ -64,21 +63,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
           },
         },
       }),
-      // ...(mode === 'development'
-      //   ? [visualizer({
-      //     open: true,
-      //     gzipSize: true,
-      //     emitFile: true,
-      //     filename: "stats.html",
-      //     template: 'sunburst'
-      //   }) as PluginOption]
-      //   : [visualizer({
-      //     open: false,
-      //     gzipSize: true,
-      //     emitFile: true,
-      //     filename: "stats.html",
-      //     template: 'sunburst'
-      //   })]),
+
       vueJsx(),
       vueDevTools(),
       VueI18nPlugin({
@@ -87,7 +72,6 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       svgLoader(),
       Components({
         resolvers: [BootstrapVueNextResolver()],
-        // exclude: [/\/__tests__\//],
       }),
       {
         name: 'serve-static-media',
@@ -98,23 +82,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
           )
         },
       },
-      // VitePluginBrowserSync({
-      //   dev: {
-      //     bs: {
-      //       https: {
-      //         key: '../../certs/privkey.pem',
-      //         cert: '../../certs/fullchain.pem',
-      //       },
-      //       open: false,
-      //       port: 5174,
-      //       cors: true,
-      //       ui: {
-      //         port: 8081,
-      //       },
-      //       notify: true
-      //     }
-      //   }
-      // }),
+
       ...(mode === 'development' ? [devCertPlugin()] : []),
       runtimeConfigPlugin(mode),
     ],

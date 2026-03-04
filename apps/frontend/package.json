@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --host",
+    "dev": "vite",
     "dev:depcruise": "depcruise   --output-type json src > docs/deps.json && depcruise   --output-type dot src | dot -T svg > docs/deps.svg",
     "build": "NODE_OPTIONS='--max-old-space-size=4096' run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",

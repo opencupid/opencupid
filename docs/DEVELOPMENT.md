@@ -3,22 +3,10 @@
 ## Dependencies
 
 ```bash
-sudo apt-get install ripgrep
+sudo apt-get install mkcert
 ```
 
-### Optional: postgres-mcp (for Claude Code)
-
-Gives Claude direct SQL access to the dev database via MCP. Requires Python 3.12+.
-
-```bash
-uv python install 3.12
-uv venv --python 3.12 ~/.venvs/postgres-mcp
-VIRTUAL_ENV=~/.venvs/postgres-mcp uv pip install postgres-mcp
-```
-
-Already configured in `.claude/settings.json` — no further setup needed after install.
-
-## Getting started with development
+## Getting started
 
 ```bash
 docker compose up -d   # start DB, Redis and Mailpit
@@ -29,20 +17,6 @@ pnpm  --filter backend prisma:generate         # generate prisma client code
 pnpm  --filter backend prisma:deploy           # create/init DB
 pnpm dev
 ```
-
-## HTTPS in development
-
-The dev servers (frontend on port 5173, admin on port 5174) serve over HTTPS using certificates
-generated automatically by [vite-plugin-mkcert](https://www.npmjs.com/package/vite-plugin-mkcert).
-
-Certificates are generated for `localhost`, `127.0.0.1`, and the machine's hostname (via
-`os.hostname()`). They are stored in `~/.vite-plugin-mkcert/` and are not committed to the repo.
-
-On first run, `mkcert` will install a local CA into your system trust store. You may be prompted for
-your password. Once installed, subsequent runs are seamless and no browser warnings will appear.
-
-To access the dev server by hostname (e.g. `mymachine.local`), the hostname is automatically added
-to `allowedHosts`. No manual certificate management or `.pem` files in `certs/` are required.
 
 ## Internationalization (i18n)
 
@@ -70,9 +44,13 @@ To add a new translation key, add it to `packages/shared/i18n/en.json` first (En
 
 ```bash
 pnpm install
-pnpm --filter backend prisma:generate  # generate prisma client
 
-pnpm test  # this runs all of the tests in backend/frontend
+# generate prisma client
+pnpm --filter backend prisma:generate
 
-pnpm --filter frontend type-check  # type-check + lint
+ # run full test suite
+pnpm test
+
+# type-check + lint
+pnpm type-check
 ```

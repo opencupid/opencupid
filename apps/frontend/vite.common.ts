@@ -5,12 +5,16 @@ import { findUpSync } from 'find-up'
 import mkcert from 'vite-plugin-mkcert'
 import { getPackageVersion } from '../../packages/shared/version'
 
-export const machineHostname = os.hostname()
+export const hostname = os.hostname()
+export const mdnsName = hostname + '.local'
 
 export const devCertPlugin = () =>
   mkcert({
-    hosts: ['localhost', '127.0.0.1', machineHostname],
-    autoUpgrade: true,
+    hosts: ['localhost', '127.0.0.1', hostname, mdnsName],
+    savePath: path.join(__dirname, '../../certs'),
+    keyFileName: hostname + '-key.pem',
+    certFileName: hostname + '-cert.pem',
+    autoUpgrade: false,
   })
 
 export const server = (mode: string, env: Record<string, string | undefined>, appDir: string) => {
@@ -20,7 +24,8 @@ export const server = (mode: string, env: Record<string, string | undefined>, ap
 
   return {
     server: {
-      allowedHosts: ['localhost', '127.0.0.1', machineHostname],
+      host: true,
+      allowedHosts: ['localhost', '127.0.0.1', hostname, mdnsName],
       proxy: {
         '/api': {
           target: `http://localhost:${backendPort}`,
