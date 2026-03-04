@@ -28,12 +28,14 @@ fi
 
 SERVER_IP=$(terraform -chdir="$TF_DIR" output -raw server_ip)
 SSH_KEY_FILE=$(terraform -chdir="$TF_DIR" output -raw ssh_private_key_file)
+SUBDOMAIN_FQDN=$(terraform -chdir="$TF_DIR" output -raw subdomain_fqdn)
 SSH_USER="user"
 SSH_OPTS="-q -i $SSH_KEY_FILE -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=5"
 SSH="ssh $SSH_OPTS $SSH_USER@$SERVER_IP"
 SCP="scp $SSH_OPTS"
 
 echo "Server: $SERVER_IP"
+echo "Subdomain FQDN: $SUBDOMAIN_FQDN"
 
 # # ── Wait for cloud-init to finish ─────────────────────────────────────────────
 # # cloud-init runs on first boot and takes ~3-5 minutes.
@@ -54,7 +56,17 @@ $SSH '
 
 # ── Upload .env ───────────────────────────────────────────────────────────────
 
-$SCP "$ENV_FILE" "$SSH_USER@$SERVER_IP:~/opencupid/.env"
+if ! command -v envsubst >/dev/null 2>&1; then
+  echo "ERROR: envsubst is required. Install gettext (e.g. apt install gettext-base)."
+  exit 1
+fi
+
+TMP_ENV_FILE=$(mktemp)
+trap 'rm -f "$TMP_ENV_FILE"' EXIT
+export SUBDOMAIN_FQDN
+envsubst '${SUBDOMAIN_FQDN}' < "$ENV_FILE" > "$TMP_ENV_FILE"
+
+$SCP "$TMP_ENV_FILE" "$SSH_USER@$SERVER_IP:~/opencupid/.env"
 echo "Uploaded .env"
 
 # ── Upload admin CA cert (if present) ────────────────────────────────────────

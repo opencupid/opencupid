@@ -22,7 +22,7 @@ variable "management_cidr" {
 }
 
 variable "subdomain_fqdn" {
-  description = "FQDN (e.g. 'staging.example.org'). Used for nginx, certbot, and reverse DNS. Must be a subdomain of dns_zone."
+  description = "Domain used to derive DNS zone (e.g. 'example.org' or 'staging.example.org')."
   type        = string
 }
 

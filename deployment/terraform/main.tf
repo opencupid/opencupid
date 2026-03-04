@@ -14,6 +14,10 @@ terraform {
       source  = "hashicorp/local"
       version = "~> 2.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.7"
+    }
   }
 }
 
@@ -22,14 +26,21 @@ provider "hcloud" {
 }
 
 locals {
-  # Split subdomain_fqdn into record name and DNS zone.
-  # e.g. "staging.example.org" → record_name="staging", zone="example.org"
-  _parts          = split(".", var.subdomain_fqdn)
-  dns_record_name = local._parts[0]
-  dns_zone        = join(".", slice(local._parts, 1, length(local._parts)))
+  _parts                   = split(".", var.subdomain_fqdn)
+  subdomain_prefix         = length(local._parts) > 2 ? local._parts[0] : ""
+  dns_record_name          = local.subdomain_prefix != "" ? "${random_string.subdomain_host.result}.${local.subdomain_prefix}" : random_string.subdomain_host.result
+  dns_zone                 = length(local._parts) > 2 ? join(".", slice(local._parts, 1, length(local._parts))) : var.subdomain_fqdn
+  generated_subdomain_fqdn = "${local.dns_record_name}.${local.dns_zone}"
+
   ssh_key_name    = "deploy-${var.project}-${var.environment}"
   ssh_key_relpath = "secrets"
   ssh_key_path    = "${path.module}/../../${local.ssh_key_relpath}/${local.ssh_key_name}"
+}
+
+resource "random_string" "subdomain_host" {
+  length  = 8
+  upper   = false
+  special = false
 }
 
 # ── SSH Key ───────────────────────────────────────────────────────────────────
@@ -138,5 +149,5 @@ resource "hcloud_zone_rrset" "staging_wildcard" {
   name    = "*.${local.dns_record_name}"
   type    = "CNAME"
   ttl     = 60
-  records = [{ value = "${var.subdomain_fqdn}." }]
+  records = [{ value = "${local.generated_subdomain_fqdn}." }]
 }
