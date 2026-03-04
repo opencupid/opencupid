@@ -124,7 +124,7 @@ describe('TagService', () => {
       const call = mockPrisma.tag.findMany.mock.calls[0][0]
       expect(call.where.profiles).toBeUndefined()
       expect(call.include._count.select.profiles).toBe(true)
-      expect(call.orderBy).toBeUndefined()
+      expect(call.orderBy).toEqual({ profiles: { _count: 'desc' } })
     })
   })
 })

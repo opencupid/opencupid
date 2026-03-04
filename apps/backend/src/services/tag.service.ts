@@ -147,6 +147,7 @@ export class TagService {
             },
             translations: translationsInclude,
           },
+          orderBy: { profiles: { _count: 'desc' } },
         })
       : await prisma.tag.findMany({
           where: baseWhere,
@@ -154,10 +155,10 @@ export class TagService {
             _count: { select: { profiles: true } },
             translations: translationsInclude,
           },
+          orderBy: { profiles: { _count: 'desc' } },
         })
 
     return tags
-      .sort((a, b) => b._count.profiles - a._count.profiles)
       .filter((tag) => tag._count.profiles >= 2)
       .slice(0, limit)
       .map((tag) => {
