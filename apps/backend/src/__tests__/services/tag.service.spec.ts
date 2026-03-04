@@ -9,7 +9,7 @@ beforeEach(async () => {
   mockPrisma = createMockPrisma()
   vi.doMock('../../lib/prisma', () => ({ prisma: mockPrisma }))
   const module = await import('../../services/tag.service')
-  ;(module.TagService as any).instance = undefined
+    ; (module.TagService as any).instance = undefined
   service = module.TagService.getInstance()
 })
 
@@ -104,14 +104,27 @@ describe('TagService', () => {
       expect(result[0].name).toBe('Wandern')
     })
 
-    it('passes location filters to prisma query', async () => {
+    it('passes country filter to prisma query', async () => {
       mockPrisma.tag.findMany.mockResolvedValue([])
 
-      await service.getPopularTags({ country: 'DE', cityName: 'Berlin', locale: 'en' })
+      await service.getPopularTags({ country: 'DE', locale: 'en' })
 
       const call = mockPrisma.tag.findMany.mock.calls[0][0]
       expect(call.where.profiles.some.country).toBe('DE')
-      expect(call.where.profiles.some.cityName).toBe('Berlin')
+      expect(call.include._count.select.profiles.where).toEqual({
+        country: 'DE',
+      })
+    })
+
+    it('does not pass empty WHERE for profile count when no location filters are set', async () => {
+      mockPrisma.tag.findMany.mockResolvedValue([])
+
+      await service.getPopularTags({ locale: 'en' })
+
+      const call = mockPrisma.tag.findMany.mock.calls[0][0]
+      expect(call.where.profiles).toBeUndefined()
+      expect(call.include._count.select.profiles).toBe(true)
+      expect(call.orderBy).toEqual({ profiles: { _count: 'desc' } })
     })
   })
 })

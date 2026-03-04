@@ -18,11 +18,11 @@ const tagsRoutes: FastifyPluginAsync = async (fastify) => {
    * Get popular tags ordered by usage count
    */
   fastify.get('/popular', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-    const { limit, country, cityName } = PopularTagsQuerySchema.parse(req.query)
+    const { limit, country } = PopularTagsQuerySchema.parse(req.query)
     const locale = req.session.lang
 
     try {
-      const tags = await tagService.getPopularTags({ limit, country, cityName, locale })
+      const tags = await tagService.getPopularTags({ limit, country, locale })
       const response: PopularTagsResponse = { success: true, tags }
       return reply.code(200).send(response)
     } catch (err) {

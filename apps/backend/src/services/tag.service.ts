@@ -113,28 +113,50 @@ export class TagService {
   public async getPopularTags(opts: {
     limit?: number
     country?: string
-    cityName?: string
     locale?: string
   }): Promise<PopularTag[]> {
     const limit = opts.limit ?? 50
 
-    const profileWhere: Record<string, unknown> = {}
-    if (opts.country) profileWhere.country = opts.country
-    if (opts.cityName) profileWhere.cityName = opts.cityName
+    const hasLocationFilter = Boolean(opts.country)
+    const baseWhere: Prisma.TagWhereInput = {
+      isApproved: true,
+      isHidden: false,
+      isDeleted: false,
+    }
+    const translationsInclude = opts.locale ? { where: { locale: opts.locale } } : true
 
-    const tags = await prisma.tag.findMany({
-      where: {
-        isApproved: true,
-        isHidden: false,
-        isDeleted: false,
-        profiles: { some: profileWhere },
-      },
-      include: {
-        _count: { select: { profiles: { where: profileWhere } } },
-        translations: opts.locale ? { where: { locale: opts.locale } } : true,
-      },
-      orderBy: { profiles: { _count: 'desc' } },
-    })
+    const tags = hasLocationFilter
+      ? await prisma.tag.findMany({
+        where: {
+          ...baseWhere,
+          profiles: {
+            some: {
+              country: opts.country,
+            },
+          },
+        },
+        include: {
+          _count: {
+            select: {
+              profiles: {
+                where: {
+                  country: opts.country,
+                },
+              },
+            },
+          },
+          translations: translationsInclude,
+        },
+        orderBy: { profiles: { _count: 'desc' } },
+      })
+      : await prisma.tag.findMany({
+        where: baseWhere,
+        include: {
+          _count: { select: { profiles: true } },
+          translations: translationsInclude,
+        },
+        orderBy: { profiles: { _count: 'desc' } },
+      })
 
     return tags
       .filter((tag) => tag._count.profiles >= 2)
