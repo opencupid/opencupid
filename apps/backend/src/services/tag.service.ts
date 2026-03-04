@@ -131,7 +131,7 @@ export class TagService {
             ...baseWhere,
             profiles: {
               some: {
-                ...(opts.country ? { country: opts.country } : {}),
+                country: opts.country,
               },
             },
           },
@@ -140,7 +140,7 @@ export class TagService {
               select: {
                 profiles: {
                   where: {
-                    ...(opts.country ? { country: opts.country } : {}),
+                    country: opts.country,
                   },
                 },
               },
