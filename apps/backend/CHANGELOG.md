@@ -1,5 +1,11 @@
 # backend
 
+## 0.17.7
+
+### Patch Changes
+
+- 3a519a1: Added initial set of interest tags
+
 ## 0.17.6
 
 ### Patch Changes
