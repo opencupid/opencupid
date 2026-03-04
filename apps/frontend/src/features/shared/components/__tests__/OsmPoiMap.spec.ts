@@ -54,7 +54,7 @@ vi.mock('leaflet', () => {
     setView: vi.fn().mockReturnThis(),
     flyTo: vi.fn().mockReturnThis(),
     fitBounds: vi.fn().mockReturnThis(),
-    flyTo: vi.fn().mockReturnThis(),
+
     getZoom: vi.fn(() => 10),
     getSize: vi.fn(() => ({ x: 1000, y: 800 })),
     getCenter: vi.fn(() => ({ lat: 47, lng: 19 })),
@@ -70,7 +70,6 @@ vi.mock('leaflet', () => {
     off: vi.fn().mockReturnThis(),
     remove: vi.fn(),
     addLayer: vi.fn(),
-    on: vi.fn().mockReturnThis(),
   }
   const mapFn = vi.fn(() => ({ ...mapProto }))
 
