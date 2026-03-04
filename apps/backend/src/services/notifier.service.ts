@@ -45,11 +45,19 @@ export class NotifierService {
     type: T,
     args: NotificationTemplates[T]
   ): Promise<void> {
+
+    // TODO - we need to be able to access Profile.publicName as well as User.email and User.language here
+    // Introduce an EmailRecipient Zod type that includes all the info we need to send an email, 
+    // and use that instead of just userId.
     const user = await prisma.user.findUnique({ where: { id: userId } })
     if (!user || !user.email) return
 
+    // TODO - tighten the Prisma schema (so that User.language is non-nullable (make sure it's set at user registration), 
+    // then remove the fallback here.
+    // This is a large refactoring affecting a lot of code - this is out of scope for the HTML email
+    // implementation.
     const t = i18next.getFixedT(user.language || 'en')
-    const siteName = appConfig.SITE_NAME || 'OpenCupid'
+    const siteName = appConfig.SITE_NAME 
     const tmpl = this.templateName(type)
     const subject = t(`emails.${tmpl}.subject`, { siteName, ...(args as any) }) as string
     const html = t(`emails.${tmpl}.html`, { siteName, ...(args as any) }) as string

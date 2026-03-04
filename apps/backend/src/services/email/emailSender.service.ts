@@ -1,5 +1,7 @@
 import { appConfig } from '@/lib/appconfig'
 import nodemailer from 'nodemailer'
+import { renderEmail } from './emailRenderer';
+import EmailTemplate from './EmailTemplate.vue'
 
 export class EmailService {
   private transporter: nodemailer.Transporter
@@ -16,7 +18,17 @@ export class EmailService {
     })
   }
 
-  async sendMail(to: string, subject: string, html: string, from?: string) {
+  async sendMail(to: string, subject: string, content: string, from?: string) {
+
+
+    const html = await renderEmail(EmailTemplate, {
+      // TODO remove hardcoded value, it's for testing only
+      publicName: "Peter",
+      callToActionLabel: "Example button label",
+      callToActionUrl: "https://opencupid.com",
+      contentBody: content,
+    });
+
     const mailOptions = {
       from: from || appConfig.EMAIL_FROM,
       to,

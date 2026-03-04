@@ -43,6 +43,7 @@
     "@tensorflow-models/blazeface": "0.1.0",
     "@tensorflow/tfjs": "4.22.0",
     "@tensorflow/tfjs-backend-cpu": "4.22.0",
+    "@vue/server-renderer": "^3.5.29",
     "altcha-lib": "1.4.1",
     "bcrypt": "6.0.0",
     "blurhash": "^2.0.5",
@@ -59,6 +60,7 @@
     "i18next-fs-backend": "2.6.1",
     "ioredis": "5.9.3",
     "jsdom": "28.1.0",
+    "juice": "^11.1.1",
     "nodemailer": "8.0.1",
     "otp-generator": "4.0.1",
     "prisma": "6.15.0",
@@ -68,6 +70,7 @@
     "smartcrop-sharp": "2.0.8",
     "ts-node": "10.9.2",
     "undici": "7.22.0",
+    "vue": "3.5.28",
     "web-push": "3.6.7",
     "ws": "8.19.0",
     "zod": "3.24.4"
