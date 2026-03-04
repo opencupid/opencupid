@@ -13,19 +13,21 @@
 // })
 
 import { defineStore } from 'pinia'
-import { api, axios } from '@/lib/api'
+import { api } from '@/lib/api'
+import {
+  storeError,
+  storeSuccess,
+  type StoreError,
+  type StoreSuccess,
+  type StoreVoidSuccess,
+} from '@/store/helpers'
 
-import type { PublicTag, CreateTagInput, CreateTagPayload, PopularTag } from '@zod/tag/tag.dto'
+import type { PublicTag, CreateTagPayload, PopularTag } from '@zod/tag/tag.dto'
 import type { Tag } from '@zod/generated'
-import type { TagResponse, TagsResponse, PopularTagsResponse, ApiError } from '@zod/apiResponse.dto'
+import type { TagResponse, TagsResponse, PopularTagsResponse } from '@zod/apiResponse.dto'
 
-interface ServiceError {
-  success: false
-  message: string
-  fieldErrors?: Record<string, string[]>
-}
-
-type ServiceResponse<T> = { success: true; data: T } | ServiceError
+type TagStoreListResponse<T> = StoreSuccess<{ result: T[] }> | StoreError
+type TagStoreItemResponse<T> = StoreSuccess<{ result: T }> | StoreError
 
 export const useTagsStore = defineStore('tags', {
   state: () => ({
@@ -42,107 +44,101 @@ export const useTagsStore = defineStore('tags', {
     async fetchPopularTags(opts?: {
       country?: string
       limit?: number
-    }): Promise<PopularTag[]> {
+    }): Promise<TagStoreListResponse<PopularTag>> {
       try {
         const res = await api.get<PopularTagsResponse>('/tags/popular', {
           params: opts,
         })
         this.popularTags = res.data.tags
-        return this.popularTags
+        return storeSuccess({ result: this.popularTags })
       } catch (error: any) {
-        console.error('Failed to fetch popular tags:', error)
-        // TODO don't rethrow here.
-        throw error.response?.data?.message || 'Failed to fetch popular tags'
+        this.popularTags = []
+        return storeError(error, 'Failed to fetch popular tags')
       }
     },
 
     /**
      * Fetch all tags
      */
-    async fetchAll(): Promise<PublicTag[]> {
+    async fetchAll(): Promise<TagStoreListResponse<PublicTag>> {
       try {
         const res = await api.get<TagsResponse>('/tags')
         this.tags = res.data.tags
-        return this.tags
+        return storeSuccess({ result: this.tags })
       } catch (error: any) {
-        console.error('Failed to fetch tags:', error)
-        throw error.response?.data?.message || 'Failed to fetch tags'
+        this.tags = []
+        return storeError(error, 'Failed to fetch tags')
       }
     },
 
     /**
      * Search tags for autocomplete
      */
-    async search(q: string): Promise<PublicTag[]> {
+    async search(q: string): Promise<TagStoreListResponse<PublicTag>> {
       try {
         const res = await api.get<TagsResponse>('/tags/search', {
           params: { q },
         })
         this.searchResults = res.data.tags
-        return this.searchResults
+        return storeSuccess({ result: this.searchResults })
       } catch (error: any) {
-        console.error('Failed to search tags:', error)
-        throw error.response?.data?.message || 'Failed to search tags'
+        this.searchResults = []
+        return storeError(error, 'Failed to search tags')
       }
     },
 
     /**
      * Get a single tag by ID
      */
-    async getTag(id: string): Promise<PublicTag> {
+    async getTag(id: string): Promise<TagStoreItemResponse<PublicTag>> {
       try {
         const res = await api.get<TagResponse>(`/tags/${id}`)
-        this.currentTag = res.data.tag
-        return this.currentTag
+        const tag = res.data.tag
+        this.currentTag = tag
+        return storeSuccess({ result: tag })
       } catch (error: any) {
-        console.error(`Failed to fetch tag ${id}:`, error)
-        throw error.response?.data?.message || 'Failed to fetch tag'
+        this.currentTag = null
+        return storeError(error, 'Failed to fetch tag')
       }
     },
 
     /**
      * Create a new tag
      */
-    async create(input: CreateTagPayload): Promise<PublicTag> {
+    async create(input: CreateTagPayload): Promise<TagStoreItemResponse<PublicTag>> {
       try {
         const res = await api.post<TagResponse>('/tags', input)
         this.tags.push(res.data.tag)
-        return res.data.tag
+        return storeSuccess({ result: res.data.tag })
       } catch (error: any) {
-        console.error('Failed to create tag:', error)
-        if (axios.isAxiosError(error) && error.response) {
-          const errData = error.response.data as ServiceError
-          throw errData.message
-        }
-        throw 'Failed to create tag'
+        return storeError(error, 'Failed to create tag')
       }
     },
 
     /**
      * Update an existing tag
      */
-    async updateTag(id: string, input: Partial<Tag>): Promise<PublicTag> {
+    async updateTag(id: string, input: Partial<Tag>): Promise<TagStoreItemResponse<PublicTag>> {
       try {
         const res = await api.patch<TagResponse>(`/tags/${id}`, input)
         const idx = this.tags.findIndex((t) => t.id === id)
         if (idx !== -1) this.tags.splice(idx, 1, res.data.tag)
-        return res.data.tag
+        return storeSuccess({ result: res.data.tag })
       } catch (error: any) {
-        console.error(`Failed to update tag ${id}:`, error)
-        throw error.response?.data?.message || 'Failed to update tag'
+        return storeError(error, 'Failed to update tag')
       }
     },
 
     /**
      * Soft delete a tag
      */
-    async deleteTag(id: string): Promise<void> {
+    async deleteTag(id: string): Promise<StoreVoidSuccess | StoreError> {
       try {
         await api.delete(`/tags/${id}`)
         this.tags = this.tags.filter((t) => t.id !== id)
+        return storeSuccess()
       } catch (error: any) {
-        console.error(`Failed to delete tag ${id}:`, error)
-        throw error.response?.data?.message || 'Failed to delete tag'
+        return storeError(error, 'Failed to delete tag')
       }
     },
   },

@@ -55,26 +55,28 @@ async function asyncFind(query: string) {
     return
   }
   isLoading.value = true
-  try {
-    tags.value = await tagStore.search(query)
-  } catch (error) {
-    console.error('Failed to search tags:', error)
-  } finally {
-    isLoading.value = false
+  const response = await tagStore.search(query)
+  if (response.success) {
+    tags.value = response.data?.result ?? []
+  } else {
+    console.error('Failed to search tags:', response.message)
   }
+  isLoading.value = false
 }
 
 async function addTag(name: string) {
   isLoading.value = true
-  try {
-    const newTag = await tagStore.create({ name })
-    tags.value.push(newTag)
-    model.value.push(newTag)
-  } catch (error) {
-    console.error('Failed to add tag:', error)
-  } finally {
-    isLoading.value = false
+  const response = await tagStore.create({ name })
+  if (response.success) {
+    const newTag = response.data?.result
+    if (newTag) {
+      tags.value.push(newTag)
+      model.value.push(newTag)
+    }
+  } else {
+    console.error('Failed to add tag:', response.message)
   }
+  isLoading.value = false
 }
 const { width, height } = useWindowSize()
 
