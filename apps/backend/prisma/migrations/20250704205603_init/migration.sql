@@ -1,50 +1,42 @@
--- CreateEnum
-CREATE TYPE "ConnectionType" AS ENUM ('friend', 'dating');
+-- CreateSchema
+CREATE SCHEMA IF NOT EXISTS "public";
 
 -- CreateEnum
-CREATE TYPE "ConnectionStatus" AS ENUM ('pending', 'accepted', 'rejected', 'blocked');
+CREATE TYPE "public"."ConnectionType" AS ENUM ('friend', 'dating');
 
 -- CreateEnum
-CREATE TYPE "Gender" AS ENUM ('male', 'female', 'agender', 'androgynous', 'bigender', 'cis_man', 'cis_woman', 'genderfluid', 'genderqueer', 'gender_nonconforming', 'hijra', 'intersex', 'pangender', 'transfeminine', 'trans_man', 'transmasculine', 'transsexual', 'trans_woman', 'two_spirit', 'non_binary', 'other', 'unspecified');
+CREATE TYPE "public"."ConnectionStatus" AS ENUM ('pending', 'accepted', 'rejected', 'blocked');
 
 -- CreateEnum
-CREATE TYPE "Pronouns" AS ENUM ('he_him', 'she_her', 'they_them', 'unspecified');
+CREATE TYPE "public"."Gender" AS ENUM ('male', 'female', 'agender', 'androgynous', 'bigender', 'cis_man', 'cis_woman', 'genderfluid', 'genderqueer', 'gender_nonconforming', 'hijra', 'intersex', 'pangender', 'transfeminine', 'trans_man', 'transmasculine', 'transsexual', 'trans_woman', 'two_spirit', 'non_binary', 'other', 'unspecified');
 
 -- CreateEnum
-CREATE TYPE "HasKids" AS ENUM ('yes', 'no', 'unspecified');
+CREATE TYPE "public"."Pronouns" AS ENUM ('he_him', 'she_her', 'they_them', 'unspecified');
 
 -- CreateEnum
-CREATE TYPE "RelationshipStatus" AS ENUM ('single', 'in_relationship', 'married', 'divorced', 'widowed', 'other', 'unspecified');
+CREATE TYPE "public"."HasKids" AS ENUM ('yes', 'no', 'unspecified');
 
 -- CreateEnum
-CREATE TYPE "UserRole" AS ENUM ('user', 'user_dating', 'admin', 'moderator');
+CREATE TYPE "public"."RelationshipStatus" AS ENUM ('single', 'in_relationship', 'married', 'divorced', 'widowed', 'other', 'unspecified');
 
 -- CreateEnum
-CREATE TYPE "ConversationStatus" AS ENUM ('INITIATED', 'ACCEPTED', 'BLOCKED', 'ARCHIVED');
+CREATE TYPE "public"."UserRole" AS ENUM ('user', 'user_dating', 'admin', 'moderator');
+
+-- CreateEnum
+CREATE TYPE "public"."PostType" AS ENUM ('OFFER', 'REQUEST');
+
+-- CreateEnum
+CREATE TYPE "public"."ActivitySegment" AS ENUM ('new', 'returning', 'frequent', 'dormant');
+
+-- CreateEnum
+CREATE TYPE "public"."ConversationStatus" AS ENUM ('INITIATED', 'ACCEPTED', 'BLOCKED', 'ARCHIVED');
 
 -- CreateTable
-CREATE TABLE "City" (
-    "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "country" TEXT NOT NULL,
-    "lat" DOUBLE PRECISION,
-    "lon" DOUBLE PRECISION,
-    "isUserCreated" BOOLEAN NOT NULL DEFAULT false,
-    "isApproved" BOOLEAN NOT NULL DEFAULT false,
-    "isHidden" BOOLEAN NOT NULL DEFAULT false,
-    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
-    "createdBy" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "City_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "Tag" (
+CREATE TABLE "public"."Tag" (
     "id" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "name" TEXT NOT NULL,
+    "originalLocale" TEXT NOT NULL DEFAULT 'en',
     "isUserCreated" BOOLEAN NOT NULL DEFAULT false,
     "isApproved" BOOLEAN NOT NULL DEFAULT false,
     "isHidden" BOOLEAN NOT NULL DEFAULT false,
@@ -57,7 +49,7 @@ CREATE TABLE "Tag" (
 );
 
 -- CreateTable
-CREATE TABLE "TagTranslation" (
+CREATE TABLE "public"."TagTranslation" (
     "id" SERIAL NOT NULL,
     "tagId" TEXT NOT NULL,
     "locale" TEXT NOT NULL,
@@ -67,19 +59,19 @@ CREATE TABLE "TagTranslation" (
 );
 
 -- CreateTable
-CREATE TABLE "ConnectionRequest" (
+CREATE TABLE "public"."ConnectionRequest" (
     "id" TEXT NOT NULL,
     "fromUserId" TEXT NOT NULL,
     "toUserId" TEXT NOT NULL,
-    "scope" "ConnectionType" NOT NULL,
-    "status" "ConnectionStatus" NOT NULL,
+    "scope" "public"."ConnectionType" NOT NULL,
+    "status" "public"."ConnectionStatus" NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "ConnectionRequest_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "User" (
+CREATE TABLE "public"."User" (
     "id" TEXT NOT NULL,
     "email" TEXT,
     "phonenumber" TEXT,
@@ -93,36 +85,40 @@ CREATE TABLE "User" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "lastLoginAt" TIMESTAMP(3),
     "language" TEXT DEFAULT 'en',
-    "roles" "UserRole"[] DEFAULT ARRAY['user']::"UserRole"[],
+    "newsletterOptIn" BOOLEAN NOT NULL DEFAULT true,
+    "roles" "public"."UserRole"[] DEFAULT ARRAY['user']::"public"."UserRole"[],
+    "isPushNotificationEnabled" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "Profile" (
+CREATE TABLE "public"."Profile" (
     "id" TEXT NOT NULL,
     "publicName" TEXT NOT NULL,
     "country" TEXT NOT NULL DEFAULT '',
     "cityName" TEXT NOT NULL DEFAULT '',
-    "cityId" TEXT,
     "isSocialActive" BOOLEAN NOT NULL DEFAULT false,
     "isDatingActive" BOOLEAN NOT NULL DEFAULT false,
     "isActive" BOOLEAN NOT NULL DEFAULT false,
     "isReported" BOOLEAN NOT NULL DEFAULT false,
     "isBlocked" BOOLEAN NOT NULL DEFAULT false,
     "isOnboarded" BOOLEAN NOT NULL DEFAULT false,
+    "isCallable" BOOLEAN NOT NULL DEFAULT true,
     "userId" TEXT NOT NULL,
     "work" TEXT NOT NULL DEFAULT '',
     "languages" TEXT[] DEFAULT ARRAY[]::TEXT[],
     "birthday" TIMESTAMP(3),
-    "gender" "Gender",
-    "pronouns" "Pronouns",
-    "relationship" "RelationshipStatus",
-    "hasKids" "HasKids",
+    "gender" "public"."Gender",
+    "pronouns" "public"."Pronouns",
+    "relationship" "public"."RelationshipStatus",
+    "hasKids" "public"."HasKids",
     "prefAgeMin" INTEGER,
     "prefAgeMax" INTEGER,
-    "prefGender" "Gender"[] DEFAULT ARRAY[]::"Gender"[],
-    "prefKids" "HasKids"[] DEFAULT ARRAY[]::"HasKids"[],
+    "prefGender" "public"."Gender"[] DEFAULT ARRAY[]::"public"."Gender"[],
+    "prefKids" "public"."HasKids"[] DEFAULT ARRAY[]::"public"."HasKids"[],
+    "lat" DOUBLE PRECISION,
+    "lon" DOUBLE PRECISION,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -130,7 +126,7 @@ CREATE TABLE "Profile" (
 );
 
 -- CreateTable
-CREATE TABLE "LocalizedProfileField" (
+CREATE TABLE "public"."LocalizedProfileField" (
     "id" TEXT NOT NULL,
     "profileId" TEXT NOT NULL,
     "field" TEXT NOT NULL,
@@ -141,7 +137,7 @@ CREATE TABLE "LocalizedProfileField" (
 );
 
 -- CreateTable
-CREATE TABLE "ProfileImage" (
+CREATE TABLE "public"."ProfileImage" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "profileId" TEXT,
@@ -155,6 +151,7 @@ CREATE TABLE "ProfileImage" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "contentHash" TEXT,
+    "blurhash" TEXT,
     "isModerated" BOOLEAN NOT NULL DEFAULT false,
     "isFlagged" BOOLEAN NOT NULL DEFAULT false,
 
@@ -162,42 +159,45 @@ CREATE TABLE "ProfileImage" (
 );
 
 -- CreateTable
-CREATE TABLE "Conversation" (
+CREATE TABLE "public"."Conversation" (
     "id" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "profileAId" TEXT NOT NULL,
     "profileBId" TEXT NOT NULL,
-    "status" "ConversationStatus" NOT NULL DEFAULT 'INITIATED',
+    "status" "public"."ConversationStatus" NOT NULL DEFAULT 'INITIATED',
     "initiatorProfileId" TEXT NOT NULL,
+    "jitsiRoomId" TEXT,
 
     CONSTRAINT "Conversation_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "ConversationParticipant" (
+CREATE TABLE "public"."ConversationParticipant" (
     "id" TEXT NOT NULL,
     "profileId" TEXT NOT NULL,
     "conversationId" TEXT NOT NULL,
     "lastReadAt" TIMESTAMP(3),
     "isMuted" BOOLEAN NOT NULL DEFAULT false,
     "isArchived" BOOLEAN NOT NULL DEFAULT false,
+    "isCallable" BOOLEAN NOT NULL DEFAULT true,
 
     CONSTRAINT "ConversationParticipant_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "LikedProfile" (
+CREATE TABLE "public"."LikedProfile" (
     "id" TEXT NOT NULL,
     "fromId" TEXT NOT NULL,
     "toId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "isNew" BOOLEAN NOT NULL DEFAULT true,
 
     CONSTRAINT "LikedProfile_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "HiddenProfile" (
+CREATE TABLE "public"."HiddenProfile" (
     "id" TEXT NOT NULL,
     "fromId" TEXT NOT NULL,
     "toId" TEXT NOT NULL,
@@ -207,29 +207,45 @@ CREATE TABLE "HiddenProfile" (
 );
 
 -- CreateTable
-CREATE TABLE "Message" (
+CREATE TABLE "public"."Message" (
     "id" TEXT NOT NULL,
     "conversationId" TEXT NOT NULL,
     "senderId" TEXT NOT NULL,
     "content" TEXT NOT NULL,
+    "messageType" TEXT NOT NULL DEFAULT 'text/plain',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Message_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "SocialMatchFilter" (
+CREATE TABLE "public"."MessageAttachment" (
+    "id" TEXT NOT NULL,
+    "messageId" TEXT NOT NULL,
+    "filePath" TEXT NOT NULL,
+    "mimeType" TEXT NOT NULL,
+    "fileSize" INTEGER,
+    "duration" INTEGER,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "MessageAttachment_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."SocialMatchFilter" (
     "id" TEXT NOT NULL,
     "profileId" TEXT NOT NULL,
     "country" TEXT,
-    "cityId" TEXT,
+    "cityName" TEXT,
+    "lat" DOUBLE PRECISION,
+    "lon" DOUBLE PRECISION,
     "radius" INTEGER DEFAULT 50,
 
     CONSTRAINT "SocialMatchFilter_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "PushSubscription" (
+CREATE TABLE "public"."PushSubscription" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "endpoint" TEXT NOT NULL,
@@ -244,7 +260,48 @@ CREATE TABLE "PushSubscription" (
 );
 
 -- CreateTable
-CREATE TABLE "_ProfileTags" (
+CREATE TABLE "public"."Post" (
+    "id" TEXT NOT NULL,
+    "content" TEXT NOT NULL,
+    "type" "public"."PostType" NOT NULL,
+    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
+    "isVisible" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "country" TEXT,
+    "cityName" TEXT,
+    "lat" DOUBLE PRECISION,
+    "lon" DOUBLE PRECISION,
+    "postedById" TEXT NOT NULL,
+
+    CONSTRAINT "Post_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."ProfileSessionLog" (
+    "id" TEXT NOT NULL,
+    "profileId" TEXT NOT NULL,
+    "startedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ProfileSessionLog_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."ProfileActivitySummary" (
+    "profileId" TEXT NOT NULL,
+    "firstSeenAt" TIMESTAMP(3) NOT NULL,
+    "lastSeenAt" TIMESTAMP(3) NOT NULL,
+    "activeDays28" INTEGER NOT NULL DEFAULT 0,
+    "sessions28" INTEGER NOT NULL DEFAULT 0,
+    "segment" "public"."ActivitySegment" NOT NULL DEFAULT 'dormant',
+    "demotionStreak" INTEGER NOT NULL DEFAULT 0,
+    "segmentUpdatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ProfileActivitySummary_pkey" PRIMARY KEY ("profileId")
+);
+
+-- CreateTable
+CREATE TABLE "public"."_ProfileTags" (
     "A" TEXT NOT NULL,
     "B" TEXT NOT NULL,
 
@@ -252,7 +309,7 @@ CREATE TABLE "_ProfileTags" (
 );
 
 -- CreateTable
-CREATE TABLE "_BlockedProfiles" (
+CREATE TABLE "public"."_BlockedProfiles" (
     "A" TEXT NOT NULL,
     "B" TEXT NOT NULL,
 
@@ -260,7 +317,7 @@ CREATE TABLE "_BlockedProfiles" (
 );
 
 -- CreateTable
-CREATE TABLE "_SocialMatchFilterToTag" (
+CREATE TABLE "public"."_SocialMatchFilterToTag" (
     "A" TEXT NOT NULL,
     "B" TEXT NOT NULL,
 
@@ -268,148 +325,167 @@ CREATE TABLE "_SocialMatchFilterToTag" (
 );
 
 -- CreateIndex
-CREATE INDEX "City_name_idx" ON "City"("name");
+CREATE UNIQUE INDEX "Tag_slug_key" ON "public"."Tag"("slug");
 
 -- CreateIndex
-CREATE INDEX "City_country_name_idx" ON "City"("country", "name");
+CREATE UNIQUE INDEX "Tag_name_key" ON "public"."Tag"("name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Tag_slug_key" ON "Tag"("slug");
+CREATE UNIQUE INDEX "TagTranslation_tagId_locale_key" ON "public"."TagTranslation"("tagId", "locale");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Tag_name_key" ON "Tag"("name");
+CREATE UNIQUE INDEX "ConnectionRequest_fromUserId_toUserId_scope_key" ON "public"."ConnectionRequest"("fromUserId", "toUserId", "scope");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "TagTranslation_tagId_locale_key" ON "TagTranslation"("tagId", "locale");
+CREATE UNIQUE INDEX "User_email_key" ON "public"."User"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "ConnectionRequest_fromUserId_toUserId_scope_key" ON "ConnectionRequest"("fromUserId", "toUserId", "scope");
+CREATE UNIQUE INDEX "User_phonenumber_key" ON "public"."User"("phonenumber");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+CREATE UNIQUE INDEX "User_loginToken_key" ON "public"."User"("loginToken");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "User_phonenumber_key" ON "User"("phonenumber");
+CREATE UNIQUE INDEX "Profile_userId_key" ON "public"."Profile"("userId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "User_loginToken_key" ON "User"("loginToken");
+CREATE UNIQUE INDEX "LocalizedProfileField_profileId_field_locale_key" ON "public"."LocalizedProfileField"("profileId", "field", "locale");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Profile_userId_key" ON "Profile"("userId");
+CREATE UNIQUE INDEX "ProfileImage_storagePath_key" ON "public"."ProfileImage"("storagePath");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "LocalizedProfileField_profileId_field_locale_key" ON "LocalizedProfileField"("profileId", "field", "locale");
+CREATE INDEX "ProfileImage_userId_idx" ON "public"."ProfileImage"("userId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "ProfileImage_storagePath_key" ON "ProfileImage"("storagePath");
+CREATE UNIQUE INDEX "Conversation_profileAId_profileBId_key" ON "public"."Conversation"("profileAId", "profileBId");
 
 -- CreateIndex
-CREATE INDEX "ProfileImage_userId_idx" ON "ProfileImage"("userId");
+CREATE UNIQUE INDEX "ConversationParticipant_profileId_conversationId_key" ON "public"."ConversationParticipant"("profileId", "conversationId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Conversation_profileAId_profileBId_key" ON "Conversation"("profileAId", "profileBId");
+CREATE UNIQUE INDEX "LikedProfile_fromId_toId_key" ON "public"."LikedProfile"("fromId", "toId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "ConversationParticipant_profileId_conversationId_key" ON "ConversationParticipant"("profileId", "conversationId");
+CREATE UNIQUE INDEX "HiddenProfile_fromId_toId_key" ON "public"."HiddenProfile"("fromId", "toId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "LikedProfile_fromId_toId_key" ON "LikedProfile"("fromId", "toId");
+CREATE UNIQUE INDEX "MessageAttachment_messageId_key" ON "public"."MessageAttachment"("messageId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "HiddenProfile_fromId_toId_key" ON "HiddenProfile"("fromId", "toId");
+CREATE UNIQUE INDEX "SocialMatchFilter_profileId_key" ON "public"."SocialMatchFilter"("profileId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "SocialMatchFilter_profileId_key" ON "SocialMatchFilter"("profileId");
+CREATE UNIQUE INDEX "PushSubscription_endpoint_key" ON "public"."PushSubscription"("endpoint");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "PushSubscription_endpoint_key" ON "PushSubscription"("endpoint");
+CREATE INDEX "Post_postedById_idx" ON "public"."Post"("postedById");
 
 -- CreateIndex
-CREATE INDEX "_ProfileTags_B_index" ON "_ProfileTags"("B");
+CREATE INDEX "Post_type_idx" ON "public"."Post"("type");
 
 -- CreateIndex
-CREATE INDEX "_BlockedProfiles_B_index" ON "_BlockedProfiles"("B");
+CREATE INDEX "Post_createdAt_idx" ON "public"."Post"("createdAt");
 
 -- CreateIndex
-CREATE INDEX "_SocialMatchFilterToTag_B_index" ON "_SocialMatchFilterToTag"("B");
+CREATE INDEX "Post_isVisible_isDeleted_idx" ON "public"."Post"("isVisible", "isDeleted");
+
+-- CreateIndex
+CREATE INDEX "ProfileSessionLog_profileId_startedAt_idx" ON "public"."ProfileSessionLog"("profileId", "startedAt");
+
+-- CreateIndex
+CREATE INDEX "_ProfileTags_B_index" ON "public"."_ProfileTags"("B");
+
+-- CreateIndex
+CREATE INDEX "_BlockedProfiles_B_index" ON "public"."_BlockedProfiles"("B");
+
+-- CreateIndex
+CREATE INDEX "_SocialMatchFilterToTag_B_index" ON "public"."_SocialMatchFilterToTag"("B");
 
 -- AddForeignKey
-ALTER TABLE "TagTranslation" ADD CONSTRAINT "TagTranslation_tagId_fkey" FOREIGN KEY ("tagId") REFERENCES "Tag"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."TagTranslation" ADD CONSTRAINT "TagTranslation_tagId_fkey" FOREIGN KEY ("tagId") REFERENCES "public"."Tag"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ConnectionRequest" ADD CONSTRAINT "ConnectionRequest_fromUserId_fkey" FOREIGN KEY ("fromUserId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."ConnectionRequest" ADD CONSTRAINT "ConnectionRequest_fromUserId_fkey" FOREIGN KEY ("fromUserId") REFERENCES "public"."User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ConnectionRequest" ADD CONSTRAINT "ConnectionRequest_toUserId_fkey" FOREIGN KEY ("toUserId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."ConnectionRequest" ADD CONSTRAINT "ConnectionRequest_toUserId_fkey" FOREIGN KEY ("toUserId") REFERENCES "public"."User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Profile" ADD CONSTRAINT "Profile_cityId_fkey" FOREIGN KEY ("cityId") REFERENCES "City"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "public"."Profile" ADD CONSTRAINT "Profile_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Profile" ADD CONSTRAINT "Profile_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "public"."LocalizedProfileField" ADD CONSTRAINT "LocalizedProfileField_profileId_fkey" FOREIGN KEY ("profileId") REFERENCES "public"."Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "LocalizedProfileField" ADD CONSTRAINT "LocalizedProfileField_profileId_fkey" FOREIGN KEY ("profileId") REFERENCES "Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."ProfileImage" ADD CONSTRAINT "ProfileImage_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ProfileImage" ADD CONSTRAINT "ProfileImage_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "public"."ProfileImage" ADD CONSTRAINT "ProfileImage_profileId_fkey" FOREIGN KEY ("profileId") REFERENCES "public"."Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ProfileImage" ADD CONSTRAINT "ProfileImage_profileId_fkey" FOREIGN KEY ("profileId") REFERENCES "Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."Conversation" ADD CONSTRAINT "Conversation_profileAId_fkey" FOREIGN KEY ("profileAId") REFERENCES "public"."Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Conversation" ADD CONSTRAINT "Conversation_profileAId_fkey" FOREIGN KEY ("profileAId") REFERENCES "Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."Conversation" ADD CONSTRAINT "Conversation_profileBId_fkey" FOREIGN KEY ("profileBId") REFERENCES "public"."Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Conversation" ADD CONSTRAINT "Conversation_profileBId_fkey" FOREIGN KEY ("profileBId") REFERENCES "Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."Conversation" ADD CONSTRAINT "Conversation_initiatorProfileId_fkey" FOREIGN KEY ("initiatorProfileId") REFERENCES "public"."Profile"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Conversation" ADD CONSTRAINT "Conversation_initiatorProfileId_fkey" FOREIGN KEY ("initiatorProfileId") REFERENCES "Profile"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "public"."ConversationParticipant" ADD CONSTRAINT "ConversationParticipant_profileId_fkey" FOREIGN KEY ("profileId") REFERENCES "public"."Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ConversationParticipant" ADD CONSTRAINT "ConversationParticipant_profileId_fkey" FOREIGN KEY ("profileId") REFERENCES "Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."ConversationParticipant" ADD CONSTRAINT "ConversationParticipant_conversationId_fkey" FOREIGN KEY ("conversationId") REFERENCES "public"."Conversation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ConversationParticipant" ADD CONSTRAINT "ConversationParticipant_conversationId_fkey" FOREIGN KEY ("conversationId") REFERENCES "Conversation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."LikedProfile" ADD CONSTRAINT "LikedProfile_fromId_fkey" FOREIGN KEY ("fromId") REFERENCES "public"."Profile"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "LikedProfile" ADD CONSTRAINT "LikedProfile_fromId_fkey" FOREIGN KEY ("fromId") REFERENCES "Profile"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "public"."LikedProfile" ADD CONSTRAINT "LikedProfile_toId_fkey" FOREIGN KEY ("toId") REFERENCES "public"."Profile"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "LikedProfile" ADD CONSTRAINT "LikedProfile_toId_fkey" FOREIGN KEY ("toId") REFERENCES "Profile"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "public"."HiddenProfile" ADD CONSTRAINT "HiddenProfile_fromId_fkey" FOREIGN KEY ("fromId") REFERENCES "public"."Profile"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "HiddenProfile" ADD CONSTRAINT "HiddenProfile_fromId_fkey" FOREIGN KEY ("fromId") REFERENCES "Profile"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "public"."HiddenProfile" ADD CONSTRAINT "HiddenProfile_toId_fkey" FOREIGN KEY ("toId") REFERENCES "public"."Profile"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "HiddenProfile" ADD CONSTRAINT "HiddenProfile_toId_fkey" FOREIGN KEY ("toId") REFERENCES "Profile"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "public"."Message" ADD CONSTRAINT "Message_conversationId_fkey" FOREIGN KEY ("conversationId") REFERENCES "public"."Conversation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Message" ADD CONSTRAINT "Message_conversationId_fkey" FOREIGN KEY ("conversationId") REFERENCES "Conversation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."Message" ADD CONSTRAINT "Message_senderId_fkey" FOREIGN KEY ("senderId") REFERENCES "public"."Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Message" ADD CONSTRAINT "Message_senderId_fkey" FOREIGN KEY ("senderId") REFERENCES "Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."MessageAttachment" ADD CONSTRAINT "MessageAttachment_messageId_fkey" FOREIGN KEY ("messageId") REFERENCES "public"."Message"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "SocialMatchFilter" ADD CONSTRAINT "SocialMatchFilter_cityId_fkey" FOREIGN KEY ("cityId") REFERENCES "City"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "public"."PushSubscription" ADD CONSTRAINT "PushSubscription_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "PushSubscription" ADD CONSTRAINT "PushSubscription_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."Post" ADD CONSTRAINT "Post_postedById_fkey" FOREIGN KEY ("postedById") REFERENCES "public"."Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "_ProfileTags" ADD CONSTRAINT "_ProfileTags_A_fkey" FOREIGN KEY ("A") REFERENCES "Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."ProfileSessionLog" ADD CONSTRAINT "ProfileSessionLog_profileId_fkey" FOREIGN KEY ("profileId") REFERENCES "public"."Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "_ProfileTags" ADD CONSTRAINT "_ProfileTags_B_fkey" FOREIGN KEY ("B") REFERENCES "Tag"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."ProfileActivitySummary" ADD CONSTRAINT "ProfileActivitySummary_profileId_fkey" FOREIGN KEY ("profileId") REFERENCES "public"."Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "_BlockedProfiles" ADD CONSTRAINT "_BlockedProfiles_A_fkey" FOREIGN KEY ("A") REFERENCES "Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."_ProfileTags" ADD CONSTRAINT "_ProfileTags_A_fkey" FOREIGN KEY ("A") REFERENCES "public"."Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "_BlockedProfiles" ADD CONSTRAINT "_BlockedProfiles_B_fkey" FOREIGN KEY ("B") REFERENCES "Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."_ProfileTags" ADD CONSTRAINT "_ProfileTags_B_fkey" FOREIGN KEY ("B") REFERENCES "public"."Tag"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "_SocialMatchFilterToTag" ADD CONSTRAINT "_SocialMatchFilterToTag_A_fkey" FOREIGN KEY ("A") REFERENCES "SocialMatchFilter"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."_BlockedProfiles" ADD CONSTRAINT "_BlockedProfiles_A_fkey" FOREIGN KEY ("A") REFERENCES "public"."Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "_SocialMatchFilterToTag" ADD CONSTRAINT "_SocialMatchFilterToTag_B_fkey" FOREIGN KEY ("B") REFERENCES "Tag"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."_BlockedProfiles" ADD CONSTRAINT "_BlockedProfiles_B_fkey" FOREIGN KEY ("B") REFERENCES "public"."Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."_SocialMatchFilterToTag" ADD CONSTRAINT "_SocialMatchFilterToTag_A_fkey" FOREIGN KEY ("A") REFERENCES "public"."SocialMatchFilter"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."_SocialMatchFilterToTag" ADD CONSTRAINT "_SocialMatchFilterToTag_B_fkey" FOREIGN KEY ("B") REFERENCES "public"."Tag"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
