@@ -1,5 +1,12 @@
 # frontend
 
+## 0.19.6
+
+### Patch Changes
+
+- a58f108: Fix TagCloud exceptions in a newly deployed site
+- 782ec3d: Add Dockerfile environment variables to suppress pnpm/prisma update notifications during image builds.
+
 ## 0.19.5
 
 ### Patch Changes

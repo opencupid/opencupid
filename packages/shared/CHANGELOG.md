@@ -1,5 +1,11 @@
 # @opencupid/shared
 
+## 0.5.3
+
+### Patch Changes
+
+- a58f108: Fix TagCloud exceptions in a newly deployed site
+
 ## 0.5.2
 
 ### Patch Changes
