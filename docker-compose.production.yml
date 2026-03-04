@@ -16,6 +16,7 @@ services:
 
   backend:
     image: ${DOCKER_IMAGE_PREFIX:-ghcr.io/opencupid/opencupid}-backend:${BACKEND_VERSION:-latest}
+    restart: always
     build:
       context: .
       dockerfile: apps/backend/Dockerfile
@@ -26,7 +27,6 @@ services:
       - .env
     volumes:
       - '${MEDIA_UPLOAD_DIR}:${MEDIA_UPLOAD_DIR}'
-      - '${PWD}/secrets:/secrets'
 
   frontend:
     image: ${DOCKER_IMAGE_PREFIX:-ghcr.io/opencupid/opencupid}-frontend:${FRONTEND_VERSION:-latest}
