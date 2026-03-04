@@ -1,3 +1,15 @@
+variable "project" {
+  description = "Project name for tagging resources in Hetzner Cloud."
+  type        = string
+  default     = "opencupid"
+}
+
+variable "environment" {
+  description = "Environment name for tagging resources in Hetzner Cloud."
+  type        = string
+  default     = "staging"
+}
+
 variable "hcloud_token" {
   description = "Hetzner Cloud API token (read+write). Get from: https://console.hetzner.cloud → project → Security → API Tokens."
   type        = string
@@ -9,8 +21,8 @@ variable "management_cidr" {
   type        = string
 }
 
-variable "staging_domain" {
-  description = "Full staging domain (e.g. 'staging.example.org'). Used for nginx, certbot, and reverse DNS. Must be a subdomain of dns_zone_name."
+variable "subdomain_fqdn" {
+  description = "FQDN (e.g. 'staging.example.org'). Used for nginx, certbot, and reverse DNS. Must be a subdomain of dns_zone."
   type        = string
 }
 

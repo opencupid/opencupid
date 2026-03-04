@@ -22,32 +22,36 @@ provider "hcloud" {
 }
 
 locals {
-  # Split staging_domain into record prefix and DNS zone.
-  # e.g. "staging.opencupid.org" → prefix="staging", zone="opencupid.org"
-  _parts            = split(".", var.staging_domain)
-  dns_record_prefix = local._parts[0]
-  dns_zone_name     = join(".", slice(local._parts, 1, length(local._parts)))
+  # Split subdomain_fqdn into record name and DNS zone.
+  # e.g. "staging.example.org" → record_name="staging", zone="example.org"
+  _parts          = split(".", var.subdomain_fqdn)
+  dns_record_name = local._parts[0]
+  dns_zone        = join(".", slice(local._parts, 1, length(local._parts)))
+  ssh_key_name    = "deploy-${var.project}-${var.environment}"
+  ssh_key_relpath = "secrets"
+  ssh_key_path    = "${path.module}/../../${local.ssh_key_relpath}/${local.ssh_key_name}"
 }
 
 # ── SSH Key ───────────────────────────────────────────────────────────────────
 resource "tls_private_key" "staging" {
   algorithm = "ED25519"
 }
-resource "local_sensitive_file" "staging_private_key" {
-  filename        = "${path.module}/../secrets/opencupid-staging-ed25519"
+
+resource "local_sensitive_file" "ssh_private_key" {
+  filename        = local.ssh_key_path
   content         = tls_private_key.staging.private_key_openssh
   file_permission = "0600"
 }
 
-resource "local_file" "staging_public_key" {
-  filename        = "${path.module}/../../secrets/opencupid-staging-ed25519.pub"
+resource "local_file" "ssh_public_key" {
+  filename        = "${local.ssh_key_path}.pub"
   content         = tls_private_key.staging.public_key_openssh
   file_permission = "0644"
 }
 
 resource "hcloud_ssh_key" "this" {
   name       = "opencupid-staging"
-  public_key = tls_private_key.staging.public_key_openssh # is this correct?
+  public_key = tls_private_key.staging.public_key_openssh
 }
 
 
@@ -56,7 +60,7 @@ resource "hcloud_ssh_key" "this" {
 # Port 80: public — required for Let's Encrypt ACME HTTP-01 challenge.
 
 resource "hcloud_firewall" "this" {
-  name = "opencupid-staging"
+  name = "${var.project}-${var.environment}-fw"
 
   rule {
     direction  = "in"
@@ -106,8 +110,8 @@ resource "hcloud_server" "this" {
   firewall_ids = [hcloud_firewall.this.id]
 
   labels = {
-    environment = "staging"
-    project     = "opencupid"
+    environment = var.environment
+    project     = var.project
   }
 }
 
@@ -118,12 +122,12 @@ resource "hcloud_server" "this" {
 #
 # A record for the staging apex + wildcard CNAME for all subdomains.
 data "hcloud_zone" "this" {
-  name = local.dns_zone_name
+  name = local.dns_zone
 }
 
 resource "hcloud_zone_rrset" "staging" {
   zone    = data.hcloud_zone.this.id
-  name    = local.dns_record_prefix
+  name    = local.dns_record_name
   type    = "A"
   ttl     = 60
   records = [{ value = hcloud_server.this.ipv4_address }]
@@ -131,26 +135,9 @@ resource "hcloud_zone_rrset" "staging" {
 
 resource "hcloud_zone_rrset" "staging_wildcard" {
   zone    = data.hcloud_zone.this.id
-  name    = "*.${local.dns_record_prefix}"
+  name    = "*.${local.dns_record_name}"
   type    = "CNAME"
   ttl     = 60
-  records = [{ value = "${var.staging_domain}." }]
+  records = [{ value = "${var.subdomain_fqdn}." }]
 }
 
-
-# resource "hcloud_zone_rrset" "staging" {
-#   zone    = local.dns_zone_name
-#   name    = local.dns_record_prefix
-#   type    = "A"
-#   ttl     = 60
-#   records = [{ value = hcloud_server.this.ipv4_address }]
-# }
-
-# # admin.staging.* and meet.staging.* resolve via CNAME → staging.* → server IP.
-# resource "hcloud_zone_rrset" "staging_wildcard" {
-#   zone    = local.dns_zone_name
-#   name    = "*.${local.dns_record_prefix}"
-#   type    = "CNAME"
-#   ttl     = 60
-#   records = [{ value = "${var.staging_domain}." }]
-# }

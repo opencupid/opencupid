@@ -14,7 +14,7 @@ Terraform setup for provisioning a VPS instance in staging or production environ
 ```bash
 cd deployment/terraform
 cp terraform.tfvars.example terraform.tfvars
-# Edit terraform.tfvars — fill in hcloud_token, ssh_public_key, management_cidr, staging_domain
+# Edit terraform.tfvars — fill in hcloud_token, ssh_public_key, management_cidr, subdomain_fqdn
 terraform init
 terraform apply
 ```

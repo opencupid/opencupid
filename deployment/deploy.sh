@@ -29,7 +29,7 @@ fi
 SERVER_IP=$(terraform -chdir="$TF_DIR" output -raw server_ip)
 SSH_KEY_FILE=$(terraform -chdir="$TF_DIR" output -raw ssh_private_key_file)
 SSH_USER="user"
-SSH_OPTS="-i terraform/$SSH_KEY_FILE -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=5"
+SSH_OPTS="-q -i $SSH_KEY_FILE -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=5"
 SSH="ssh $SSH_OPTS $SSH_USER@$SERVER_IP"
 SCP="scp $SSH_OPTS"
 
@@ -74,12 +74,12 @@ $SSH "cd ~/opencupid && docker compose  up -d"
 # ── Obtain TLS cert from LetsEncrypt ───────────────────────────────────────────────────────────────
 $SSH "cd ~/opencupid && source .env && docker compose run --rm --service-ports certbot certonly \
   --webroot -w /var/www/html \
-  --email '$EMAIL' \
+  --email \"\$EMAIL\" \
   --agree-tos \
   --no-eff-email \
-  -d '$DOMAIN' \
-  -d '$ADMIN_DOMAIN' \
-  -d '$JITSI_DOMAIN'"
+  -d \"\$DOMAIN\" \
+  -d \"\$ADMIN_DOMAIN\" \
+  -d \"\$JITSI_DOMAIN\""
 
 # ── Restart ingress  to apply cert ───────────────────────────────────────────────────────────────
 $SSH "cd ~/opencupid && docker compose restart ingress"
