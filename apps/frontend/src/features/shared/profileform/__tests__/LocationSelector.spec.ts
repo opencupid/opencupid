@@ -29,4 +29,20 @@ describe('LocationSelectorComponent', () => {
     await wrapper.vm.$nextTick()
     expect(wrapper.emitted('update:modelValue')!.length).toBeGreaterThanOrEqual(1)
   })
+
+  it('defaults closeOnSelect to true so the dropdown closes after selection', () => {
+    const wrapper = mount(LocationSelectorComponent, {
+      props: { modelValue: { country: '', cityName: '' } as any },
+    })
+    // When no closeOnSelect prop is passed the default must be true so that
+    // selecting a city closes the dropdown and the singleLabel slot renders.
+    expect(wrapper.props('closeOnSelect')).toBe(true)
+  })
+
+  it('accepts a false closeOnSelect prop to keep the dropdown open', () => {
+    const wrapper = mount(LocationSelectorComponent, {
+      props: { modelValue: { country: '', cityName: '' } as any, closeOnSelect: false },
+    })
+    expect(wrapper.props('closeOnSelect')).toBe(false)
+  })
 })

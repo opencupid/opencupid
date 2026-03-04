@@ -62,6 +62,9 @@ const mapEl: Ref<HTMLDivElement | null> = ref(null)
 let map: LMap | null = null
 let markers = new Map<string | number, LMarker>()
 let itemsById = new Map<string | number, T>()
+// Tracks the zoom level from the last completed zoom animation. Used by the
+// center watcher to avoid capturing a mid-flyTo intermediate zoom value.
+let lastStableZoom: number = props.zoom
 
 function customClusterIcon(cluster: any): L.DivIcon {
   const count = cluster.getChildCount()
@@ -212,6 +215,12 @@ function createLeafletMap(el: HTMLDivElement): LMap {
  * Instead, emit it from the idle callback and do NOT emit at end of ensureMap().
  */
 function initBaseLayer(map: LMap): void {
+  // Keep lastStableZoom in sync with the map so the center watcher always
+  // uses the zoom from the last *completed* animation, never a mid-flyTo value.
+  map.on('zoomend', () => {
+    if (map) lastStableZoom = map.getZoom()
+  })
+
   if (!webGLSupported()) {
     initRasterFallback(map)
     return
@@ -415,7 +424,7 @@ watch(
   () => props.center,
   (newCenter) => {
     if (map && newCenter) {
-      map.flyTo(newCenter, map.getZoom(), { duration: 1 })
+      map.flyTo(newCenter, lastStableZoom, { duration: 1 })
     }
   }
 )
