@@ -85,7 +85,7 @@ CREATE TABLE "public"."User" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "lastLoginAt" TIMESTAMP(3),
     "language" TEXT DEFAULT 'en',
-    "newsletterOptIn" BOOLEAN NOT NULL DEFAULT false,
+    "newsletterOptIn" BOOLEAN NOT NULL DEFAULT true,
     "roles" "public"."UserRole"[] DEFAULT ARRAY['user']::"public"."UserRole"[],
     "isPushNotificationEnabled" BOOLEAN NOT NULL DEFAULT false,
 

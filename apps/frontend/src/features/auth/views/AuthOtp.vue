@@ -20,12 +20,13 @@ const route = useRoute()
 const authStore = useAuthStore()
 const i18nStore = useI18nStore()
 
+// TODO duplicate in apps/frontend/src/features/auth/views/AuthUserId.vue
 const user = reactive<LoginUser>({
   id: '',
   email: '',
   phonenumber: '',
   language: i18nStore.getLanguage(),
-  newsletterOptIn: false,
+  newsletterOptIn: true,
   isPushNotificationEnabled: false,
 })
 
