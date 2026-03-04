@@ -24,7 +24,7 @@ INSERT INTO "_prisma_migrations" (
   gen_random_uuid()::text,
   '50f40c86f4764b40046d6a22cc4eb42d1efb9e07345bc42c7940a5088deb6081',
   now(),
-  '20260303000000_init',
+  '20250704205603_init',
   NULL,
   NULL,
   now(),
