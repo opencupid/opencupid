@@ -1,5 +1,11 @@
 # backend
 
+## 0.17.8
+
+### Patch Changes
+
+- 0549505: Fixed interest tag seed dump, Prisma seed and .json files to import cleanly.
+
 ## 0.17.7
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # frontend
 
+## 0.19.5
+
+### Patch Changes
+
+- 99802bd: Fix LocationSelector close-on-select behavior and map zoom persistence (#878)
+
 ## 0.19.4
 
 ### Patch Changes
