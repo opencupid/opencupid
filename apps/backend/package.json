@@ -26,6 +26,9 @@
     "type-check": "tsc --noEmit",
     "test": "vitest --run"
   },
+  "prisma": {
+    "seed": "node prisma/seed/tags.js"
+  },
   "dependencies": {
     "@fastify/cors": "11.2.0",
     "@fastify/jwt": "10.0.0",

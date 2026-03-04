@@ -5,9 +5,10 @@ const { join } = require('path')
 const prisma = new PrismaClient()
 
 async function main() {
+  const whereClause = { isUserCreated: false, isHidden: false, isDeleted: false } 
   const [tags, tagTranslations] = await Promise.all([
     prisma.tag.findMany({
-      where: { isUserCreated: false, isHidden: false, isDeleted: false },
+      where: whereClause,
       select: {
         id: true,
         slug: true,
@@ -20,6 +21,9 @@ async function main() {
       },
     }),
     prisma.tagTranslation.findMany({
+      where: {
+        tag: whereClause,
+      },
       select: { tagId: true, locale: true, name: true },
     }),
   ])
