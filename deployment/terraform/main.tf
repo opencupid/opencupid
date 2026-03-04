@@ -95,7 +95,7 @@ resource "hcloud_firewall" "this" {
 
 resource "hcloud_server" "this" {
   name        = "opencupid-staging"
-  image       = "ubuntu-24.04"
+  image       = "debian-13"
   server_type = var.server_type
   location    = var.server_location
   ssh_keys    = [hcloud_ssh_key.this.id]
@@ -140,4 +140,3 @@ resource "hcloud_zone_rrset" "staging_wildcard" {
   ttl     = 60
   records = [{ value = "${var.subdomain_fqdn}." }]
 }
-
