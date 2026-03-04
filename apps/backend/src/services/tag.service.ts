@@ -127,36 +127,36 @@ export class TagService {
 
     const tags = hasLocationFilter
       ? await prisma.tag.findMany({
-          where: {
-            ...baseWhere,
-            profiles: {
-              some: {
-                country: opts.country,
-              },
+        where: {
+          ...baseWhere,
+          profiles: {
+            some: {
+              country: opts.country,
             },
           },
-          include: {
-            _count: {
-              select: {
-                profiles: {
-                  where: {
-                    country: opts.country,
-                  },
+        },
+        include: {
+          _count: {
+            select: {
+              profiles: {
+                where: {
+                  country: opts.country,
                 },
               },
             },
-            translations: translationsInclude,
           },
-          orderBy: { profiles: { _count: 'desc' } },
-        })
+          translations: translationsInclude,
+        },
+        orderBy: { profiles: { _count: 'desc' } },
+      })
       : await prisma.tag.findMany({
-          where: baseWhere,
-          include: {
-            _count: { select: { profiles: true } },
-            translations: translationsInclude,
-          },
-          orderBy: { profiles: { _count: 'desc' } },
-        })
+        where: baseWhere,
+        include: {
+          _count: { select: { profiles: true } },
+          translations: translationsInclude,
+        },
+        orderBy: { profiles: { _count: 'desc' } },
+      })
 
     return tags
       .filter((tag) => tag._count.profiles >= 2)

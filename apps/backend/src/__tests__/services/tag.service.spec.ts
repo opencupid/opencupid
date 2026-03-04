@@ -9,7 +9,7 @@ beforeEach(async () => {
   mockPrisma = createMockPrisma()
   vi.doMock('../../lib/prisma', () => ({ prisma: mockPrisma }))
   const module = await import('../../services/tag.service')
-  ;(module.TagService as any).instance = undefined
+    ; (module.TagService as any).instance = undefined
   service = module.TagService.getInstance()
 })
 
