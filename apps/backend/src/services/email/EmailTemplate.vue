@@ -7,7 +7,7 @@ defineProps<EmailTemplateProps>()
 <template>
   <div style="margin: 0; padding: 0; background: #f6f7f9">
     <!-- Preheader (hidden, shows in some inbox previews) -->
-    <div
+    <!-- <div
       style="
         display: none;
         max-height: 0;
@@ -18,7 +18,7 @@ defineProps<EmailTemplateProps>()
       "
     >
       Hello {{ publicName }} — quick action needed.
-    </div>
+    </div> -->
 
     <table
       role="presentation"
