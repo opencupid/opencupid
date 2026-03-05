@@ -31,7 +31,6 @@ export class Dispatcher {
       },
       { attempts: 5, backoff: { type: 'exponential', delay: 5000 } }
     )
-    console.warn(`Queued email to ${to} with subject "${subject}"`)
   }
 }
 
