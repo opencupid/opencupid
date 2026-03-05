@@ -34,7 +34,7 @@ function buildSessionData(user: User, profileId: string, profile: SessionProfile
     userId: user.id,
     profileId,
     tokenVersion: user.tokenVersion,
-    lang: user.language || 'en',
+    lang: user.language,
     roles: user.roles,
     hasActiveProfile: profile.isActive,
     profile: {

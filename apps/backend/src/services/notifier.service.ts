@@ -48,7 +48,7 @@ export class NotifierService {
     const user = await prisma.user.findUnique({ where: { id: userId } })
     if (!user || !user.email) return
 
-    const t = i18next.getFixedT(user.language || 'en')
+    const t = i18next.getFixedT(user.language)
     const siteName = appConfig.SITE_NAME || 'OpenCupid'
     const tmpl = this.templateName(type)
     const subject = t(`emails.${tmpl}.subject`, { siteName, ...(args as any) }) as string
