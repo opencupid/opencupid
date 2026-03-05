@@ -14,15 +14,17 @@ beforeEach(async () => {
   dispatcher = mod.dispatcher
 })
 
-describe('Dispatcher.sendEmail', () => {
+describe('Dispatcher.queueEmail', () => {
   it('adds a job to the email queue with correct params', async () => {
-    await dispatcher.sendEmail(
+    await dispatcher.queueEmail(
       'user@example.com',
       'Welcome',
       'Alice',
       'Open app',
       'https://example.com/app',
-      'Hello'
+      'Hello',
+      'OpenCupid',
+      'If you did not request this, ignore this email.'
     )
 
     expect(mockAdd).toHaveBeenCalledWith(
@@ -34,19 +36,23 @@ describe('Dispatcher.sendEmail', () => {
         callToActionLabel: 'Open app',
         callToActionUrl: 'https://example.com/app',
         contentBody: 'Hello',
+        siteName: 'OpenCupid',
+        footer: 'If you did not request this, ignore this email.',
       },
       { attempts: 3, backoff: { type: 'exponential', delay: 5000 } }
     )
   })
 
   it('passes through different email content', async () => {
-    await dispatcher.sendEmail(
+    await dispatcher.queueEmail(
       'other@example.com',
       'Reset',
       'Bob',
       'Reset password',
       'https://example.com/reset',
-      'Reset link'
+      'Reset link',
+      'Gaia',
+      'Need help? Contact support.'
     )
 
     expect(mockAdd).toHaveBeenCalledWith(
@@ -58,6 +64,8 @@ describe('Dispatcher.sendEmail', () => {
         callToActionLabel: 'Reset password',
         callToActionUrl: 'https://example.com/reset',
         contentBody: 'Reset link',
+        siteName: 'Gaia',
+        footer: 'Need help? Contact support.',
       },
       expect.objectContaining({ attempts: 3 })
     )
