@@ -39,7 +39,7 @@ describe('Dispatcher.queueEmail', () => {
         siteName: 'OpenCupid',
         footer: 'If you did not request this, ignore this email.',
       },
-      { attempts: 3, backoff: { type: 'exponential', delay: 5000 } }
+      { attempts: 5, backoff: { type: 'exponential', delay: 5000 } }
     )
   })
 
@@ -67,7 +67,7 @@ describe('Dispatcher.queueEmail', () => {
         siteName: 'Gaia',
         footer: 'Need help? Contact support.',
       },
-      expect.objectContaining({ attempts: 3 })
+      expect.objectContaining({ attempts: 5 })
     )
   })
 })
