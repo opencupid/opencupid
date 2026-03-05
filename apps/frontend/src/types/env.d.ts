@@ -17,6 +17,7 @@ declare module '*.json' {
 
 declare const __APP_CONFIG__: {
   readonly API_BASE_URL: string
+  readonly FRONTEND_URL: string
   readonly WS_BASE_URL: string
   readonly MEDIA_URL_BASE: string
   readonly NODE_ENV: string
