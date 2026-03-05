@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [vue()],
   build: {
     ssr: path.resolve(__dirname, "src/services/email/EmailTemplate.vue"),
-    outDir: "dist-email",
+    outDir: "dist-ssr",
     emptyOutDir: true,
     rollupOptions: {
       // keep deps external so the output stays small and fast

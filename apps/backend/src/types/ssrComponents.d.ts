@@ -1,4 +1,4 @@
-declare module "../../../ssr-dist/EmailTemplate.ssr.mjs" {
+declare module "../../../dist-ssr/EmailTemplate.ssr.mjs" {
   type DefineComponent = import("vue").DefineComponent;
   type SimpleEmailProps = import("../services/email/types").SimpleEmailProps;
 
