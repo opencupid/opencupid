@@ -33,9 +33,6 @@
       "@shared/*": [
         "../../packages/shared/*"
       ],
-      "@backend/*": [
-        "../backend/src"
-      ],
     }
   }
 }
