@@ -76,11 +76,11 @@ const interactionRoutes: FastifyPluginAsync = async (fastify) => {
           if (likeResult.isMatch) {
             await notifierService.notifyProfile(targetId, 'new_match', {
               name: likeResult.from.profile.publicName,
-              link: `${appConfig.FRONTEND_URL}/matches`,
+              link: `${appConfig.FRONTEND_URL}/inbox`,
             })
           } else {
             await notifierService.notifyProfile(targetId, 'new_like', {
-              link: `${appConfig.FRONTEND_URL}/browse/dating`,
+              link: `${appConfig.FRONTEND_URL}/browse`,
             })
           }
         }
