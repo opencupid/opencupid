@@ -102,6 +102,8 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
         '@shared': path.resolve(__dirname, '../../packages/shared'),
         '@zod': path.resolve(__dirname, '../../packages/shared/zod'),
         '@bootstrap': path.resolve(__dirname, 'node_modules/bootstrap'),
+        // for email template SSR dev
+        "@backend": path.resolve(__dirname, '../backend/src'),
       },
     },
   }

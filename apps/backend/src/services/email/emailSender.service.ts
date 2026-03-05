@@ -36,7 +36,7 @@ export class EmailService {
     })
 
     const mailOptions = {
-      from: from || appConfig.EMAIL_FROM,
+      from: from,
       to,
       subject,
       html,
