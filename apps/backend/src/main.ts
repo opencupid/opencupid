@@ -13,6 +13,7 @@ import { ImageProcessor } from './services/imageprocessor'
 async function main() {
   const app = Fastify({
     trustProxy: true,
+    disableRequestLogging: true,
     logger: {
       transport:
         appConfig.NODE_ENV === 'production'
