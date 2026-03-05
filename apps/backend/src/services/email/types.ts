@@ -4,5 +4,12 @@ export type EmailTemplateProps = {
   contentBody: string
   callToActionLabel: string
   callToActionUrl: string
+  fallbackHint: string
   footer?: string
+}
+
+export type EmailPayload = {
+  to: string
+  subject: string
+  templateProps: EmailTemplateProps
 }
