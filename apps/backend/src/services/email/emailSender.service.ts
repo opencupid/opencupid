@@ -1,11 +1,7 @@
 import { appConfig } from '@/lib/appconfig'
 import nodemailer from 'nodemailer'
 import { renderEmail } from './emailRenderer'
-// TODO FIXME
-/*
-Could not find a declaration file for module '../../../dist-ssr/EmailTemplate.ssr.mjs'. '/home/user/opencupid/apps/backend/dist-ssr/EmailTemplate.ssr.mjs' implicitly has an 'any' type.ts(7016)
-*/
-import EmailTemplate from '../../../dist-ssr/EmailTemplate.ssr.mjs'
+import EmailTemplate from './EmailTemplate.ssr.mjs'
 
 export class EmailService {
   private transporter: nodemailer.Transporter
