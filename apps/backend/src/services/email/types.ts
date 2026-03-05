@@ -4,6 +4,7 @@ export type EmailTemplateProps = {
   contentBody: string
   callToActionLabel: string
   callToActionUrl: string
+  fallbackHint: string
   footer?: string
 }
 

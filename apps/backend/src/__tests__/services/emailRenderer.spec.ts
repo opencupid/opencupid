@@ -19,6 +19,7 @@ const defaultProps: EmailTemplateProps = {
   contentBody: '<p>Welcome to the platform!</p>',
   callToActionLabel: 'Get Started',
   callToActionUrl: 'https://example.com/start',
+  fallbackHint: 'If the button does not work, copy and paste the URL.',
   footer: 'You received this because you signed up.',
 }
 const defaultPayload: EmailPayload = {
@@ -110,6 +111,7 @@ describe('renderEmail', () => {
       contentBody: '<p>Hello Bob!</p>',
       callToActionLabel: 'Click Me',
       callToActionUrl: 'https://example.com/action',
+      fallbackHint: 'Fallback hint text',
     }
     const result = await renderEmail(SimpleComponent, {
       to: 'bob@example.com',
@@ -128,6 +130,7 @@ describe('renderEmail', () => {
       contentBody: '<p>No footer here.</p>',
       callToActionLabel: 'Go',
       callToActionUrl: 'https://example.com',
+      fallbackHint: 'Fallback hint text',
     }
     const result = await renderEmail(SimpleComponent, {
       to: 'carol@example.com',

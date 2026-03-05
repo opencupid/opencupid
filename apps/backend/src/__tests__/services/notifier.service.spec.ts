@@ -131,6 +131,7 @@ describe('NotifierService', () => {
         contentBody: 'emails.new_like.contentBody-translated',
         callToActionLabel: 'emails.new_like.callToActionLabel-translated',
         callToActionUrl: 'https://frontend.test/browse',
+        fallbackHint: 'emails.fallback_hint-translated',
         footer: 'emails.new_like.footer-translated',
       },
     })
@@ -156,6 +157,7 @@ describe('NotifierService', () => {
         contentBody: 'emails.welcome.contentBody-translated',
         callToActionLabel: 'emails.welcome.callToActionLabel-translated',
         callToActionUrl: 'https://frontend.test/me',
+        fallbackHint: 'emails.fallback_hint-translated',
         footer: 'emails.welcome.footer-translated',
       },
     })

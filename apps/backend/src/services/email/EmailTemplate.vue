@@ -40,8 +40,6 @@ defineProps<EmailTemplateProps>()
 
                 <tr>
                   <td class="body">
-                    <h1 class="title">Hi {{ publicName }},</h1>
-
                     <div
                       class="content"
                       v-html="contentBody"
@@ -66,7 +64,8 @@ defineProps<EmailTemplateProps>()
                     </table>
 
                     <p class="fallback">
-                      If the button doesn’t work, copy and paste this URL:<br />
+                      {{ fallbackHint }}
+                      <br />
                       <a
                         :href="callToActionUrl"
                         class="link"

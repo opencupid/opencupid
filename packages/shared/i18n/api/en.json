@@ -6,6 +6,7 @@
     "voice_message_sent": "Sent a voice message"
   },
   "emails": {
+    "fallback_hint": "If the button doesn’t work, copy and paste this URL:",
     "loginLink": {
       "subject": "[{{siteName}}] Your login link",
       "contentBody": "Hey there, this is your login code: <h2>{{otp}}</h2>",

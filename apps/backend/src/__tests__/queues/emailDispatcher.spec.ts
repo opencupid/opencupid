@@ -24,6 +24,7 @@ describe('EmailDispatcher.dispatchEmail', () => {
         callToActionUrl: 'https://example.com/app',
         contentBody: 'Hello',
         siteName: 'OpenCupid',
+        fallbackHint: 'If the button does not work, copy and paste the URL.',
         footer: 'If you did not request this, ignore this email.',
       },
     }
@@ -47,6 +48,7 @@ describe('EmailDispatcher.dispatchEmail', () => {
         callToActionUrl: 'https://example.com/reset',
         contentBody: 'Reset link',
         siteName: 'Gaia',
+        fallbackHint: 'If the button does not work, copy and paste the URL.',
         footer: 'Need help? Contact support.',
       },
     }

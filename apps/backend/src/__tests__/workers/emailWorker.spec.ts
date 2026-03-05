@@ -13,6 +13,7 @@ describe('processEmailJob', () => {
         contentBody: 'Hello',
         callToActionLabel: 'Open app',
         callToActionUrl: 'https://example.org/app',
+        fallbackHint: 'If the button does not work, copy and paste the URL.',
         footer: '',
       },
     }
