@@ -3,8 +3,9 @@
   "main": "dist/main.js",
   "version": "0.17.9",
   "scripts": {
-    "dev": "tsup --watch --onSuccess \"node --inspect dist/main.js\"",
+    "dev": "vite build && tsup --watch --onSuccess \"node --inspect dist/main.js\"",
     "build": "tsup && tsup --config tsup.scripts.config.ts",
+    "build:ssr": "vite build",
     "start": "node dist/main.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate  dev",
@@ -85,6 +86,7 @@
     "@types/otp-generator": "4.0.2",
     "@types/web-push": "3.6.4",
     "@types/ws": "8.18.1",
+    "@vitejs/plugin-vue": "6.0.4",
     "@vitest/coverage-v8": "4.0.18",
     "axios": "1.13.5",
     "eslint": "10.0.2",

@@ -45,24 +45,42 @@ export class NotifierService {
     type: T,
     args: NotificationTemplates[T]
   ): Promise<void> {
-
-    // TODO - we need to be able to access Profile.publicName as well as User.email and User.language here
-    // Introduce an EmailRecipient Zod type that includes all the info we need to send an email, 
-    // and use that instead of just userId.
-    const user = await prisma.user.findUnique({ where: { id: userId } })
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        profile: {
+          select: {
+            publicName: true,
+          },
+        },
+      },
+    })
     if (!user || !user.email) return
 
-    // TODO - tighten the Prisma schema (so that User.language is non-nullable (make sure it's set at user registration), 
+    // TODO - tighten the Prisma schema (so that User.language is non-nullable (make sure it's set at user registration),
     // then remove the fallback here.
     // This is a large refactoring affecting a lot of code - this is out of scope for the HTML email
     // implementation.
     const t = i18next.getFixedT(user.language || 'en')
-    const siteName = appConfig.SITE_NAME 
+    const siteName = appConfig.SITE_NAME
     const tmpl = this.templateName(type)
     const subject = t(`emails.${tmpl}.subject`, { siteName, ...(args as any) }) as string
-    const html = t(`emails.${tmpl}.html`, { siteName, ...(args as any) }) as string
+    const contentBody = t(`emails.${tmpl}.contentBody`, { siteName, ...(args as any) }) as string
+    const callToActionLabel = t(`emails.${tmpl}.callToActionLabel`, {
+      siteName,
+      ...(args as any),
+    }) as string
+    const callToActionUrl = ((args as any).link || appConfig.FRONTEND_URL) as string
+    const publicName = user.profile?.publicName || 'there'
 
-    await this.disp.sendEmail(user.email, subject, html)
+    await this.disp.sendEmail(
+      user.email,
+      subject,
+      publicName,
+      callToActionLabel,
+      callToActionUrl,
+      contentBody
+    )
   }
 
   async notifyProfile<T extends NotificationType>(

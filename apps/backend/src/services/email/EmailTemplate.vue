@@ -1,10 +1,7 @@
 <script setup lang="ts">
-export type SimpleEmailProps = {
-  publicName: string
-  contentBody: string
-  callToActionLabel: string
-  callToActionUrl: string
-}
+import type { SimpleEmailProps } from './types';
+
+
 
 defineProps<SimpleEmailProps>()
 </script>

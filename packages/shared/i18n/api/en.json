@@ -8,23 +8,28 @@
   "emails": {
     "loginLink": {
       "subject": "[{{siteName}}] Your login link",
-      "html": "<p>Hey there,</p><p>This is your login code:</p><h1>{{otp}}</h1><p>Or <a href=\"{{link}}\">click this link</a> to jump right in</p>"
+      "contentBody": "Hey there, this is your login code: {{otp}}",
+      "callToActionLabel": "Use login link"
     },
     "welcome": {
       "subject": "[{{siteName}}] Welcome!",
-      "html": "<p>Hey there, welcome aboard!</p><a href=\"{{link}}\">Go connect with people</a></p>"
+      "contentBody": "Hey there, welcome aboard!",
+      "callToActionLabel": "Go connect with people"
     },
     "new_message": {
       "subject": "[{{siteName}}] You have a new message",
-      "html": "<p>Hey there,</p><p>You have a new message from <strong>{{sender}}</strong>:</p><blockquote>{{message}}</blockquote><p><a href=\"{{link}}\">Click here to read it</a></p>"
+      "contentBody": "Hey there, you have a new message from {{sender}}: {{message}}",
+      "callToActionLabel": "Read message"
     },
     "new_like": {
       "subject": "[{{siteName}}] You have a new like",
-      "html": "<p>Hey there,</p>Someone sent you a ❤️<p><p><a href=\"{{link}}\">Find out who</a></p>"
+      "contentBody": "Hey there, someone sent you a  ❤️.",
+      "callToActionLabel": "Find out who"
     },
     "new_match": {
       "subject": "[{{siteName}}] You have a new match!",
-      "html": "<p>Hey there,</p><p>You matched with {{name}}<p><a href=\"{{link}}\">Click here to read it</a></p>"
+      "contentBody": "Hey there, you matched with {{name}}.",
+      "callToActionLabel": "Open matches"
     }
   }
 }

@@ -16,21 +16,49 @@ beforeEach(async () => {
 
 describe('Dispatcher.sendEmail', () => {
   it('adds a job to the email queue with correct params', async () => {
-    await dispatcher.sendEmail('user@example.com', 'Welcome', '<h1>Hello</h1>')
+    await dispatcher.sendEmail(
+      'user@example.com',
+      'Welcome',
+      'Alice',
+      'Open app',
+      'https://example.com/app',
+      'Hello'
+    )
 
     expect(mockAdd).toHaveBeenCalledWith(
       'sendEmail',
-      { to: 'user@example.com', subject: 'Welcome', html: '<h1>Hello</h1>' },
+      {
+        to: 'user@example.com',
+        subject: 'Welcome',
+        publicName: 'Alice',
+        callToActionLabel: 'Open app',
+        callToActionUrl: 'https://example.com/app',
+        contentBody: 'Hello',
+      },
       { attempts: 3, backoff: { type: 'exponential', delay: 5000 } }
     )
   })
 
   it('passes through different email content', async () => {
-    await dispatcher.sendEmail('other@example.com', 'Reset', '<p>Reset link</p>')
+    await dispatcher.sendEmail(
+      'other@example.com',
+      'Reset',
+      'Bob',
+      'Reset password',
+      'https://example.com/reset',
+      'Reset link'
+    )
 
     expect(mockAdd).toHaveBeenCalledWith(
       'sendEmail',
-      { to: 'other@example.com', subject: 'Reset', html: '<p>Reset link</p>' },
+      {
+        to: 'other@example.com',
+        subject: 'Reset',
+        publicName: 'Bob',
+        callToActionLabel: 'Reset password',
+        callToActionUrl: 'https://example.com/reset',
+        contentBody: 'Reset link',
+      },
       expect.objectContaining({ attempts: 3 })
     )
   })
