@@ -15,22 +15,26 @@
     "welcome": {
       "subject": "[{{siteName}}] Welcome!",
       "contentBody": "Hey there, welcome aboard!",
-      "callToActionLabel": "Go connect with people"
+      "callToActionLabel": "Go connect with people",
+      "footer": ""
     },
     "new_message": {
       "subject": "[{{siteName}}] You have a new message",
       "contentBody": "Hey there, you have a new message from {{sender}}: {{message}}",
-      "callToActionLabel": "Read message"
+      "callToActionLabel": "Read message",
+      "footer": ""
     },
     "new_like": {
       "subject": "[{{siteName}}] You have a new like",
       "contentBody": "Hey there, someone sent you a  ❤️.",
-      "callToActionLabel": "Find out who"
+      "callToActionLabel": "Find out who",
+      "footer": ""
     },
     "new_match": {
       "subject": "[{{siteName}}] You have a new match!",
       "contentBody": "Hey there, you matched with {{name}}.",
-      "callToActionLabel": "Open matches"
+      "callToActionLabel": "Open matches",
+      "footer": ""
     }
   }
 }

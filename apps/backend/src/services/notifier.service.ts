@@ -40,6 +40,25 @@ export class NotifierService {
     }
   }
 
+  // TODO refactor notifyUser method and notifyProfile
+  // Currently notifyProfile is called when no profile is available for a user yet
+  // when in fact notifyUser should be called in that scenario.
+  // notifyProfile should be called in all other scenarios, ie when a Profile
+  // is already available.  This does work as is, but it's confusing.
+
+  async notifyProfile<T extends NotificationType>(
+    profileId: string,
+    type: T,
+    args: NotificationTemplates[T]
+  ): Promise<void> {
+    const profile = await prisma.profile.findUnique({
+      where: { id: profileId },
+      include: { user: true },
+    })
+    if (!profile?.user) return
+    await this.notifyUser(profile.user.id, type, args)
+  }
+
   async notifyUser<T extends NotificationType>(
     userId: string,
     type: T,
@@ -88,18 +107,6 @@ export class NotifierService {
     )
   }
 
-  async notifyProfile<T extends NotificationType>(
-    profileId: string,
-    type: T,
-    args: NotificationTemplates[T]
-  ): Promise<void> {
-    const profile = await prisma.profile.findUnique({
-      where: { id: profileId },
-      include: { user: true },
-    })
-    if (!profile?.user) return
-    await this.notifyUser(profile.user.id, type, args)
-  }
 }
 
 export const notifierService = NotifierService.getInstance()
