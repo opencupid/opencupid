@@ -1,15 +1,17 @@
-import path from 'path'
 import { type ConfigEnv, defineConfig, type UserConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import vueDevTools from 'vite-plugin-vue-devtools'
-import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
-
-import Components from 'unplugin-vue-components/vite'
-import { BootstrapVueNextResolver } from 'bootstrap-vue-next'
-import svgLoader from 'vite-svg-loader'
 import serveStatic from 'serve-static'
-import { server, define, runtimeConfigPlugin, loadProjectEnv, devCertPlugin } from './vite.common'
+import path from 'path'
+import {
+  server,
+  define,
+  runtimeConfigPlugin,
+  loadProjectEnv,
+  devCertPlugin,
+  sharedPlugins,
+  sharedResolve,
+} from './vite.common'
 
 process.env.DEBUG = 'vite:*' // Add this to force verbose output
 
@@ -55,24 +57,9 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
           return null
         },
       },
-
-      vue({
-        template: {
-          compilerOptions: {
-            isCustomElement: (tag) => tag === 'altcha-widget',
-          },
-        },
-      }),
-
+      ...sharedPlugins(__dirname),
       vueJsx(),
       vueDevTools(),
-      VueI18nPlugin({
-        include: [path.resolve(__dirname, '../../packages/shared/i18n/*')],
-      }),
-      svgLoader(),
-      Components({
-        resolvers: [BootstrapVueNextResolver()],
-      }),
       {
         name: 'serve-static-media',
         configureServer(server) {
@@ -82,7 +69,6 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
           )
         },
       },
-
       ...(mode === 'development' ? [devCertPlugin()] : []),
       runtimeConfigPlugin(mode),
     ],
@@ -96,13 +82,6 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
         },
       },
     },
-    resolve: {
-      alias: {
-        '@': path.resolve(__dirname, './src'),
-        '@shared': path.resolve(__dirname, '../../packages/shared'),
-        '@zod': path.resolve(__dirname, '../../packages/shared/zod'),
-        '@bootstrap': path.resolve(__dirname, 'node_modules/bootstrap'),
-      },
-    },
+    resolve: sharedResolve(__dirname),
   }
 })

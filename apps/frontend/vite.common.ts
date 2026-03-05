@@ -4,6 +4,11 @@ import { loadEnv, type Plugin } from 'vite'
 import { findUpSync } from 'find-up'
 import mkcert from 'vite-plugin-mkcert'
 import { getPackageVersion } from '../../packages/shared/version'
+import vue from '@vitejs/plugin-vue'
+import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
+import svgLoader from 'vite-svg-loader'
+import Components from 'unplugin-vue-components/vite'
+import { BootstrapVueNextResolver } from 'bootstrap-vue-next'
 
 export const hostname = os.hostname()
 export const mdnsName = hostname + '.local'
@@ -86,21 +91,49 @@ export const define = (_mode: string) => {
   }
 }
 
+export const buildAppConfig = (env: Record<string, string | undefined>) => ({
+  API_BASE_URL: env.API_BASE_URL ?? '/api',
+  WS_BASE_URL: env.WS_BASE_URL ?? '/ws',
+  MEDIA_URL_BASE: env.MEDIA_URL_BASE ?? '/user-content',
+  NODE_ENV: env.NODE_ENV ?? 'development',
+  VAPID_PUBLIC_KEY: env.VAPID_PUBLIC_KEY ?? '',
+  SENTRY_DSN: env.SENTRY_DSN ?? '',
+  SITE_NAME: env.SITE_NAME ?? 'OpenCupid',
+  JITSI_DOMAIN: env.JITSI_DOMAIN ?? '',
+  VOICE_MESSAGE_MAX_DURATION: Number(env.VOICE_MESSAGE_MAX_DURATION) || 120,
+  MAPTILER_API_KEY: env.MAPTILER_API_KEY ?? '',
+})
+
+export const sharedPlugins = (appDir: string) => [
+  vue({
+    template: {
+      compilerOptions: {
+        isCustomElement: (tag) => tag === 'altcha-widget',
+      },
+    },
+  }),
+  VueI18nPlugin({
+    include: [path.resolve(appDir, '../../packages/shared/i18n/*')],
+  }),
+  svgLoader(),
+  Components({
+    resolvers: [BootstrapVueNextResolver()],
+  }),
+]
+
+export const sharedResolve = (appDir: string) => ({
+  alias: {
+    '@': path.resolve(appDir, './src'),
+    '@shared': path.resolve(appDir, '../../packages/shared'),
+    '@zod': path.resolve(appDir, '../../packages/shared/zod'),
+    '@bootstrap': path.resolve(appDir, 'node_modules/bootstrap'),
+  },
+})
+
 export const runtimeConfigPlugin = (mode: string): Plugin => {
   const env = mode === 'development' ? loadProjectEnv(mode) : process.env
 
-  const configJs = `window.__APP_CONFIG__ = ${JSON.stringify({
-    API_BASE_URL: env.API_BASE_URL ?? '/api',
-    WS_BASE_URL: env.WS_BASE_URL ?? '/ws',
-    MEDIA_URL_BASE: env.MEDIA_URL_BASE ?? '/user-content',
-    NODE_ENV: env.NODE_ENV ?? 'development',
-    VAPID_PUBLIC_KEY: env.VAPID_PUBLIC_KEY ?? '',
-    SENTRY_DSN: env.SENTRY_DSN ?? '',
-    SITE_NAME: env.SITE_NAME ?? 'OpenCupid',
-    JITSI_DOMAIN: env.JITSI_DOMAIN ?? '',
-    VOICE_MESSAGE_MAX_DURATION: Number(env.VOICE_MESSAGE_MAX_DURATION) || 120,
-    MAPTILER_API_KEY: env.MAPTILER_API_KEY ?? '',
-  })};
+  const configJs = `window.__APP_CONFIG__ = ${JSON.stringify(buildAppConfig(env))};
 `
 
   return {
