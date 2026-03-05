@@ -1,4 +1,4 @@
-FROM node:22-bookworm AS builder
+FROM node:22-trixie AS builder
 WORKDIR /app
 
 ARG NODE_ENV="production"
@@ -20,7 +20,7 @@ RUN printf '%s\n' "NODE_ENV=${NODE_ENV}" > /app/.env
 
 RUN pnpm run build
 
-FROM nginx:bookworm
+FROM nginx:trixie
 LABEL org.opencontainers.image.source=https://github.com/opencupid/opencupid
 COPY apps/admin/nginx.conf /etc/nginx/conf.d/default.conf
 COPY apps/admin/docker-entrypoint.sh /docker-entrypoint.sh

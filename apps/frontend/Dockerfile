@@ -1,4 +1,4 @@
-FROM node:22-bookworm AS builder
+FROM node:22-trixie AS builder
 WORKDIR /app
 ENV CI=true
 ENV PNPM_UPDATE_NOTIFIER=false
@@ -18,7 +18,7 @@ WORKDIR /app/apps/frontend
 
 RUN pnpm run build-only
 
-FROM nginx:bookworm
+FROM nginx:trixie
 LABEL org.opencontainers.image.source=https://github.com/opencupid/opencupid
 COPY apps/frontend/nginx.conf /etc/nginx/conf.d/default.conf
 COPY apps/frontend/docker-entrypoint.sh /docker-entrypoint.sh
