@@ -2,13 +2,28 @@ import { prisma } from '@/lib/prisma'
 import { appConfig } from '@/lib/appconfig'
 import i18next from 'i18next'
 import { dispatcher } from '@/queues/dispatcher'
-import type { NotifiableUser, EmailPayload } from './email/types'
 
-export type NotificationType = 'login_link' | 'welcome' | 'new_message' | 'new_like' | 'new_match'
+type NotificationType = 'login_link' | 'welcome' | 'new_message' | 'new_like' | 'new_match'
 
-export interface NotificationTemplates {
+type NotifiableUser = {
+  id: string
+  email: string | null
+  language: string | null
+  profile?: { publicName: string }
+}
+
+type EmailPayload = {
+  subject: string
+  publicName?: string
+  contentBody: string
+  footer: string
+  callToActionLabel: string
+  callToActionUrl: string
+}
+
+interface NotificationTemplates {
   login_link: { otp: string; link: string }
-  welcome: { link: string }
+  welcome: { link: string;  }
   new_message: { sender: string; message: string; link: string }
   new_like: { link: string }
   new_match: { name: string; link: string }
@@ -80,33 +95,26 @@ export class NotifierService {
   ): Promise<void> {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      include: {
-        profile: {
-          select: {
-            publicName: true,
-          },
-        },
-      },
     })
-    await this.notifyResolvedUser(user as NotifiableUser | null, type, args)
+    if (!user) return
+    await this.notifyResolvedUser(user as NotifiableUser, type, args)
   }
 
   private createEmailPayload<T extends NotificationType>(
     type: T,
     args: NotificationTemplates[T],
-    language: string | null
+    language: string 
   ): EmailPayload {
     const t = i18next.getFixedT(language || 'en')
     const siteName = appConfig.SITE_NAME
     const tmpl = this.templateName(type)
-    const subject = t(`emails.${tmpl}.subject`, { siteName, ...(args as any) }) as string
-    const contentBody = t(`emails.${tmpl}.contentBody`, { siteName, ...(args as any) }) as string
-    const footer = (t(`emails.${tmpl}.footer`) as string) || ''
+    const subject = t(`emails.${tmpl}.subject`, { siteName }) as string
+    const contentBody = t(`emails.${tmpl}.contentBody`, { siteName, publicName }) as string
+    const footer = t(`emails.${tmpl}.footer`, { defaultValue: '' }) as string
     const callToActionLabel = t(`emails.${tmpl}.callToActionLabel`, {
       siteName,
-      ...(args as any),
     }) as string
-    const callToActionUrl = ((args as any).link || appConfig.FRONTEND_URL) as string
+    const callToActionUrl = (args as any).link as string
 
     return {
       subject,
