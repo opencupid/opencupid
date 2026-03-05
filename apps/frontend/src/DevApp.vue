@@ -4,10 +4,12 @@ import EmailTemplate from '@backend/services/email/EmailTemplate.vue'
 <template>
   <div>
     <EmailTemplate
+      siteName="OpenCupid"
       publicName="John Doe"
       contentBody="We received a request to reset your password. Click the button below to proceed."
-      callToActionUrl="https://example.com/reset-password?token=abc123"
+      callToActionUrl="https://example.org/reset-password?token=abc123"
       callToActionLabel="Reset Password"
+      footer="If you didn’t request this, you can ignore this email."
     >
     </EmailTemplate>
   </div>

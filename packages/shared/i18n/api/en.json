@@ -9,7 +9,8 @@
     "loginLink": {
       "subject": "[{{siteName}}] Your login link",
       "contentBody": "Hey there, this is your login code: {{otp}}",
-      "callToActionLabel": "Use login link"
+      "callToActionLabel": "Use login link",
+      "footer": "If you didn’t request this, you can ignore this email."
     },
     "welcome": {
       "subject": "[{{siteName}}] Welcome!",

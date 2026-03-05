@@ -6,7 +6,8 @@
     "loginLink": {
       "subject": "{{siteName}} belépő link",
       "contentBody": "Szia, ezzel a kóddal tudsz belépni: {{otp}}",
-      "callToActionLabel": "Belépő link megnyitása"
+      "callToActionLabel": "Belépő link megnyitása",
+      "footer": "Ha nem Te kérted ezt az emailt, hagyd figyelmen kívül."
     },
     "welcome": {
       "subject": "{{siteName}} Üdv az oldalon!",

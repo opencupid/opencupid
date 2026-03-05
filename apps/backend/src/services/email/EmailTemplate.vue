@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { SimpleEmailProps } from './types'
+import type { EmailTemplateProps } from './types'
 
-defineProps<SimpleEmailProps>()
+defineProps<EmailTemplateProps>()
 </script>
 
 <template>
@@ -24,64 +24,66 @@ defineProps<SimpleEmailProps>()
       role="presentation"
       class="outer"
     >
-    <tbody>
-      <tr>
-        <td class="center">
-          <table
-            role="presentation"
-            class="card"
-          >
-          <tbody>
-            <tr>
-              <td class="header">
-                <div class="appName">Your App</div>
-              </td>
-            </tr>
+      <tbody>
+        <tr>
+          <td class="center">
+            <table
+              role="presentation"
+              class="card"
+            >
+              <tbody>
+                <tr>
+                  <td class="header">
+                    <div class="appName">{{  siteName  }}</div>
+                  </td>
+                </tr>
 
-            <tr>
-              <td class="body">
-                <h1 class="title">Hi {{ publicName }},</h1>
+                <tr>
+                  <td class="body">
+                    <h1 class="title">Hi {{ publicName }},</h1>
 
-                <p class="content">
-                  {{ contentBody }}
-                </p>
+                    <p class="content">
+                      {{ contentBody }}
+                    </p>
 
-                <table
-                  role="presentation"
-                  class="ctaTable"
-                >
-          <tbody>
-                  <tr>
-                    <td class="ctaCell">
+                    <table
+                      role="presentation"
+                      class="ctaTable"
+                    >
+                      <tbody>
+                        <tr>
+                          <td class="ctaCell">
+                            <a
+                              :href="callToActionUrl"
+                              class="ctaButton"
+                            >
+                              {{ callToActionLabel }}
+                            </a>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+
+                    <p class="fallback">
+                      If the button doesn’t work, copy and paste this URL:<br>
                       <a
                         :href="callToActionUrl"
-                        class="ctaButton"
+                        class="link"
                       >
-                        {{ callToActionLabel }}
+                        {{ callToActionUrl }}
                       </a>
-                    </td>
-                  </tr>
-                  </tbody>
-                </table>
-
-                <p class="fallback">
-                  If the button doesn’t work, copy and paste this URL:
-                  <a
-                    :href="callToActionUrl"
-                    class="link"
-                  >
-                    {{ callToActionUrl }}
-                  </a>
-                </p>
-              </td>
-            </tr>
-            <tr>
-              <td class="footer">If you didn’t request this, you can ignore this email.</td>
-            </tr>
-            </tbody>
-          </table>
-        </td>
-      </tr>
+                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="footer">
+                    {{ footer}}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </td>
+        </tr>
       </tbody>
     </table>
   </div>
@@ -169,8 +171,7 @@ body {
   display: inline-block;
   padding: 12px 20px;
   border-radius: 8px;
-  border: 1px solid #325d88;
-  background-color: #325d88;
+  background-color: rgb(147, 197, 75);
   color: #ffffff;
   font-size: 16px;
   font-weight: 700;

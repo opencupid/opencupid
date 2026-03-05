@@ -1,3 +1,8 @@
+
+/* TODO FIXME
+Cannot find module '@vitejs/plugin-vue' or its corresponding type declarations.
+  There are types at '/home/user/opencupid/apps/backend/node_modules/@vitejs/plugin-vue/dist/index.d.mts', but this result could not be resolved under your current 'moduleResolution' setting. Consider updating to 'node16', 'nodenext', or 'bundler'.
+  */
 import { defineConfig } from "vite";
 import vue from '@vitejs/plugin-vue'
 import path from "node:path"
