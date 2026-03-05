@@ -3,6 +3,7 @@
 // envsubst substitutes ${VAR} placeholders at container startup.
 window.__APP_CONFIG__ = {
   API_BASE_URL: "${API_BASE_URL}",
+  FRONTEND_URL: "${FRONTEND_URL}",
   WS_BASE_URL: "${WS_BASE_URL}",
   MEDIA_URL_BASE: "${MEDIA_URL_BASE}",
   NODE_ENV: "${NODE_ENV}",

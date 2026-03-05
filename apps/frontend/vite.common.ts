@@ -91,6 +91,7 @@ export const runtimeConfigPlugin = (mode: string): Plugin => {
 
   const configJs = `window.__APP_CONFIG__ = ${JSON.stringify({
     API_BASE_URL: env.API_BASE_URL ?? '/api',
+    FRONTEND_URL: env.FRONTEND_URL ?? '',
     WS_BASE_URL: env.WS_BASE_URL ?? '/ws',
     MEDIA_URL_BASE: env.MEDIA_URL_BASE ?? '/user-content',
     NODE_ENV: env.NODE_ENV ?? 'development',
