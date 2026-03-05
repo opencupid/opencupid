@@ -110,6 +110,7 @@ export class NotifierService {
         contentBody: t(`emails.${tmpl}.contentBody`, { siteName, ...args, ...user }),
         callToActionLabel: t(`emails.${tmpl}.callToActionLabel`),
         callToActionUrl: args.link,
+        fallbackHint: t(`emails.fallback_hint`),
         footer: t(`emails.${tmpl}.footer`, { defaultValue: '' }),
       },
     }
