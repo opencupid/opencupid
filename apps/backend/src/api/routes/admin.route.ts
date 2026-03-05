@@ -601,7 +601,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
         id: u.id,
         email: u.email,
         name: u.profile?.publicName ?? '',
-        language: u.language ?? 'en',
+        language: u.language,
         newsletterOptIn: u.newsletterOptIn,
       }))
 

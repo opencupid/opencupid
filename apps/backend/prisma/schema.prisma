@@ -145,7 +145,7 @@ model User {
   createdAt               DateTime   @default(now())
   updatedAt               DateTime   @updatedAt
   lastLoginAt             DateTime?
-  language                String?    @default("en")
+  language                String     @default("en")
   newsletterOptIn         Boolean    @default(true)
   roles                   UserRole[] @default([user])
 
