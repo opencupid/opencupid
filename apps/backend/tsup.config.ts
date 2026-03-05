@@ -19,4 +19,7 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(appVersion),
     __FRONTEND_VERSION__: JSON.stringify(frontendVersion),
   },
+  loader: {
+    '.css': 'text',
+  },
 })

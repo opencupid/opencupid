@@ -1,7 +1,7 @@
 import { Worker } from 'bullmq'
 import IORedis from 'ioredis'
-import nodemailer from 'nodemailer'
 import { appConfig } from '@/lib/appconfig'
+import { emailService } from '@/services/email/emailSender.service'
 
 const redisUrl = appConfig.REDIS_URL
 if (!redisUrl) {
@@ -10,31 +10,40 @@ if (!redisUrl) {
 
 const connection = new IORedis(redisUrl, { maxRetriesPerRequest: null })
 
-const transporter = nodemailer.createTransport({
-  host: appConfig.SMTP_HOST,
-  port: Number(appConfig.SMTP_PORT),
-  secure: false,
-  auth: {
-    user: appConfig.SMTP_USER,
-    pass: appConfig.SMTP_PASS,
-  },
-})
-
 new Worker(
   'emails',
-  async job => {
-    const { to, subject, html } = job.data as {
-      to: string
-      subject: string
-      html: string
-    }
-
-    await transporter.sendMail({
-      from: appConfig.EMAIL_FROM,
+  async (job) => {
+    const {
       to,
       subject,
-      html,
-    })
+      publicName,
+      callToActionLabel,
+      callToActionUrl,
+      contentBody,
+      siteName,
+      footer,
+    } = job.data as {
+      to: string
+      subject: string
+      publicName: string
+      callToActionLabel: string
+      callToActionUrl: string
+      contentBody: string
+      siteName: string
+      footer: string
+    }
+
+    await emailService.sendMail(
+      to,
+      subject,
+      publicName,
+      callToActionLabel,
+      callToActionUrl,
+      contentBody,
+      siteName,
+      footer,
+      appConfig.EMAIL_FROM
+    )
   },
   { connection }
 )

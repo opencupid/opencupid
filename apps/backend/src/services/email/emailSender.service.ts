@@ -1,5 +1,7 @@
 import { appConfig } from '@/lib/appconfig'
 import nodemailer from 'nodemailer'
+import { renderEmail } from './emailRenderer'
+import EmailTemplate from './EmailTemplate.ssr.mjs'
 
 export class EmailService {
   private transporter: nodemailer.Transporter
@@ -16,9 +18,30 @@ export class EmailService {
     })
   }
 
-  async sendMail(to: string, subject: string, html: string, from?: string) {
+  // TODO - refactor - introduce a shared type for the email payload
+  // see apps/backend/src/queues/dispatcher.ts
+  async sendMail(
+    to: string,
+    subject: string,
+    publicName: string,
+    callToActionLabel: string,
+    callToActionUrl: string,
+    contentBody: string,
+    siteName: string,
+    footer: string,
+    from: string
+  ) {
+    const html = await renderEmail(EmailTemplate, {
+      siteName,
+      publicName,
+      callToActionLabel,
+      callToActionUrl,
+      contentBody,
+      footer,
+    })
+
     const mailOptions = {
-      from: from || appConfig.EMAIL_FROM,
+      from,
       to,
       subject,
       html,

@@ -4,7 +4,11 @@ import { Prisma, PrismaClient } from '@prisma/client'
 const logLevels: Prisma.LogLevel[] =
   process.env.NODE_ENV === 'production'
     ? ['error'] // In production, log only errors
-    : ['query', 'error', 'warn']
+    : [
+      // 'query',
+      'error',
+      'warn'
+    ]
 
 // In development, use global to prevent multiple instances during hot reloading
 declare global {
@@ -13,11 +17,11 @@ declare global {
 const txOptions =
   process.env.NODE_ENV === 'development'
     ? {
-        transactionOptions: {
-          maxWait: 10_000, // optional: wait 10s for connection
-          timeout: 300_000, // 5 minutes for interactive transaction
-        },
-      }
+      transactionOptions: {
+        maxWait: 10_000, // optional: wait 10s for connection
+        timeout: 300_000, // 5 minutes for interactive transaction
+      },
+    }
     : undefined
 
 // Create the PrismaClient instance

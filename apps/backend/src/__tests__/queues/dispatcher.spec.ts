@@ -14,24 +14,60 @@ beforeEach(async () => {
   dispatcher = mod.dispatcher
 })
 
-describe('Dispatcher.sendEmail', () => {
+describe('Dispatcher.queueEmail', () => {
   it('adds a job to the email queue with correct params', async () => {
-    await dispatcher.sendEmail('user@example.com', 'Welcome', '<h1>Hello</h1>')
+    await dispatcher.queueEmail(
+      'user@example.com',
+      'Welcome',
+      'Alice',
+      'Open app',
+      'https://example.com/app',
+      'Hello',
+      'OpenCupid',
+      'If you did not request this, ignore this email.'
+    )
 
     expect(mockAdd).toHaveBeenCalledWith(
       'sendEmail',
-      { to: 'user@example.com', subject: 'Welcome', html: '<h1>Hello</h1>' },
-      { attempts: 3, backoff: { type: 'exponential', delay: 5000 } }
+      {
+        to: 'user@example.com',
+        subject: 'Welcome',
+        publicName: 'Alice',
+        callToActionLabel: 'Open app',
+        callToActionUrl: 'https://example.com/app',
+        contentBody: 'Hello',
+        siteName: 'OpenCupid',
+        footer: 'If you did not request this, ignore this email.',
+      },
+      { attempts: 5, backoff: { type: 'exponential', delay: 5000 } }
     )
   })
 
   it('passes through different email content', async () => {
-    await dispatcher.sendEmail('other@example.com', 'Reset', '<p>Reset link</p>')
+    await dispatcher.queueEmail(
+      'other@example.com',
+      'Reset',
+      'Bob',
+      'Reset password',
+      'https://example.com/reset',
+      'Reset link',
+      'Gaia',
+      'Need help? Contact support.'
+    )
 
     expect(mockAdd).toHaveBeenCalledWith(
       'sendEmail',
-      { to: 'other@example.com', subject: 'Reset', html: '<p>Reset link</p>' },
-      expect.objectContaining({ attempts: 3 })
+      {
+        to: 'other@example.com',
+        subject: 'Reset',
+        publicName: 'Bob',
+        callToActionLabel: 'Reset password',
+        callToActionUrl: 'https://example.com/reset',
+        contentBody: 'Reset link',
+        siteName: 'Gaia',
+        footer: 'Need help? Contact support.',
+      },
+      expect.objectContaining({ attempts: 5 })
     )
   })
 })

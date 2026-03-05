@@ -5,23 +5,33 @@
   "emails": {
     "loginLink": {
       "subject": "{{siteName}} belépő link",
-      "html": "<p>Szia,</p><p>ezzel a kóddal tudsz belépni:</p><h1>{{otp}}</h1><p>Vagy <a href=\"{{link}}\">kattints ide</a> </p>"
+      "contentBody": "Szia, ezzel a kóddal tudsz belépni: <h2>{{otp}}</h2>",
+      "callToActionLabel": "Belépő link megnyitása",
+      "footer": "Ha nem Te kérted ezt az emailt, hagyd figyelmen kívül."
     },
     "welcome": {
       "subject": "{{siteName}} Üdv az oldalon!",
-      "html": "<p>Üdv a fedélzeten!</p><a href=\"{{link}}\">Kapcsolódj</a></p>"
+      "contentBody": "Üdv a fedélzeten!",
+      "callToActionLabel": "Kapcsolódj",
+      "footer": " "
     },
     "new_message": {
       "subject": "[{{siteName}}] Új üzeneted érkezett",
-      "html": "<p>Szia,</p><p>Új üzeneted érkezett tőle: <strong>{{sender}}</strong>:</p><blockquote>{{message}}</blockquote><p><a href=\"{{link}}\">Kattints ide az olvasáshoz</a></p>"
+      "contentBody": "Szia, új üzeneted érkezett tőle: {{sender}}: {{message}}",
+      "callToActionLabel": "Üzenet megnyitása",
+      "footer": " "
     },
     "new_like": {
       "subject": "[{{siteName}}] Valaki kedvelt téged",
-      "html": "<p>Szia,</p>Valaki küldött neked egy ❤️-et<p><p><a href=\"{{link}}\">Nézd meg, ki volt az</a></p>"
+      "contentBody": "Szia, valaki küldött neked egy kedvelést.",
+      "callToActionLabel": "Nézd meg, ki volt az",
+      "footer": " "
     },
     "new_match": {
       "subject": "[{{siteName}}] Új egyezésed van!",
-      "html": "<p>Szia,</p><p>Tetszetek egymásnak! {{name}}<p><a href=\"{{link}}\">Kattints ide</a></p>"
+      "contentBody": "Szia, tetszetek egymásnak {{name}} felhasználóval.",
+      "callToActionLabel": "Egyezések megnyitása",
+      "footer": " "
     }
   },
   "messages": {

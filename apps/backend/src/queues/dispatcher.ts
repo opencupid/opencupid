@@ -1,11 +1,35 @@
 import { emailQueue } from './emailQueue'
 
+// TODO refactor - extract queueEmail signature into a shared type.
+// implement a generalized type (Zod schema) to be used across the email queue/rendering
+// code, using slightly different shape. Use 
+// related code:
+// apps/backend/src/services/email/emailSender.service.ts
+// apps/backend/src/services/notifier.service.ts
 export class Dispatcher {
-  async sendEmail(to: string, subject: string, html: string) {
+  async queueEmail(
+    to: string,
+    subject: string,
+    publicName: string,
+    callToActionLabel: string,
+    callToActionUrl: string,
+    contentBody: string,
+    siteName: string,
+    footer: string
+  ) {
     await emailQueue.add(
       'sendEmail',
-      { to, subject, html },
-      { attempts: 3, backoff: { type: 'exponential', delay: 5000 } }
+      {
+        to,
+        subject,
+        publicName,
+        callToActionLabel,
+        callToActionUrl,
+        contentBody,
+        siteName,
+        footer,
+      },
+      { attempts: 5, backoff: { type: 'exponential', delay: 5000 } }
     )
   }
 }

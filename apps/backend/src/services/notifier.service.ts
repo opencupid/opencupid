@@ -23,7 +23,7 @@ export class NotifierService {
     return NotifierService.instance
   }
 
-  constructor(private disp = dispatcher) {}
+  constructor(private disp = dispatcher) { }
 
   private templateName(type: NotificationType): string {
     switch (type) {
@@ -40,22 +40,11 @@ export class NotifierService {
     }
   }
 
-  async notifyUser<T extends NotificationType>(
-    userId: string,
-    type: T,
-    args: NotificationTemplates[T]
-  ): Promise<void> {
-    const user = await prisma.user.findUnique({ where: { id: userId } })
-    if (!user || !user.email) return
-
-    const t = i18next.getFixedT(user.language || 'en')
-    const siteName = appConfig.SITE_NAME || 'OpenCupid'
-    const tmpl = this.templateName(type)
-    const subject = t(`emails.${tmpl}.subject`, { siteName, ...(args as any) }) as string
-    const html = t(`emails.${tmpl}.html`, { siteName, ...(args as any) }) as string
-
-    await this.disp.sendEmail(user.email, subject, html)
-  }
+  // TODO refactor notifyUser method and notifyProfile
+  // Currently notifyProfile is called when no profile is available for a user yet
+  // when in fact notifyUser should be called in that scenario.
+  // notifyProfile should be called in all other scenarios, ie when a Profile
+  // is already available.  This does work as is, but it's confusing.
 
   async notifyProfile<T extends NotificationType>(
     profileId: string,
@@ -69,6 +58,55 @@ export class NotifierService {
     if (!profile?.user) return
     await this.notifyUser(profile.user.id, type, args)
   }
+
+  async notifyUser<T extends NotificationType>(
+    userId: string,
+    type: T,
+    args: NotificationTemplates[T]
+  ): Promise<void> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        profile: {
+          select: {
+            publicName: true,
+          },
+        },
+      },
+    })
+    if (!user || !user.email) return
+
+    // TODO - tighten the User Prisma schema (so that User.language is non-nullable (make sure it's set at user registration),
+    // then remove the fallback here.
+    // This is a large refactoring affecting a lot of code - this is out of scope for the HTML email
+    // implementation.
+    const t = i18next.getFixedT(user.language || 'en')
+    const siteName = appConfig.SITE_NAME
+    const tmpl = this.templateName(type)
+    const subject = t(`emails.${tmpl}.subject`, { siteName, ...(args as any) }) as string
+    const contentBody = t(`emails.${tmpl}.contentBody`, { siteName, ...(args as any) }) as string
+    const footer = t(`emails.${tmpl}.footer`) || ''
+    const callToActionLabel = t(`emails.${tmpl}.callToActionLabel`, {
+      siteName,
+      ...(args as any),
+    }) as string
+    const callToActionUrl = ((args as any).link || appConfig.FRONTEND_URL) as string
+    const publicName = user.profile?.publicName || 'there'
+
+    // TODO - refactor - introduce a shared type for the email payload 
+    // see apps/backend/src/queues/dispatcher.ts
+    await this.disp.queueEmail(
+      user.email,
+      subject,
+      publicName,
+      callToActionLabel,
+      callToActionUrl,
+      contentBody,
+      siteName,
+      footer
+    )
+  }
+
 }
 
 export const notifierService = NotifierService.getInstance()

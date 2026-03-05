@@ -12,9 +12,8 @@ pnpm-debug.log*
 .env.production
 .env.staging
 
-# Build output
+# Build outputs
 dist/
-build/
 
 # Prisma
 prisma/dev.db

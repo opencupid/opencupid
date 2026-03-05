@@ -24,11 +24,15 @@
       "@shared/*": [
         "../../packages/shared/*"
       ]
-    }
+    },
+    "types": [
+      "node"
+    ]
   },
   "include": [
     "src",
     "types",
     "scripts",
+    "src/**/*.vue"
   ]
 }
