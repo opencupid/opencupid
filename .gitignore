@@ -14,7 +14,6 @@ pnpm-debug.log*
 
 # Build outputs
 dist/
-dist-ssr/
 
 # Prisma
 prisma/dev.db
