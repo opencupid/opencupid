@@ -13,15 +13,25 @@ const connection = new IORedis(redisUrl, { maxRetriesPerRequest: null })
 new Worker(
   'emails',
   async (job) => {
-    const { to, subject, publicName, callToActionLabel, callToActionUrl, contentBody } =
-      job.data as {
-        to: string
-        subject: string
-        publicName: string
-        callToActionLabel: string
-        callToActionUrl: string
-        contentBody: string
-      }
+    const {
+      to,
+      subject,
+      publicName,
+      callToActionLabel,
+      callToActionUrl,
+      contentBody,
+      siteName,
+      footer,
+    } = job.data as {
+      to: string
+      subject: string
+      publicName: string
+      callToActionLabel: string
+      callToActionUrl: string
+      contentBody: string
+      siteName: string
+      footer: string
+    }
 
     await emailService.sendMail(
       to,
@@ -30,6 +40,8 @@ new Worker(
       callToActionLabel,
       callToActionUrl,
       contentBody,
+      siteName,
+      footer,
       appConfig.EMAIL_FROM
     )
   },

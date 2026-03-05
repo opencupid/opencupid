@@ -34,7 +34,7 @@ defineProps<EmailTemplateProps>()
               <tbody>
                 <tr>
                   <td class="header">
-                    <div class="appName">{{  siteName  }}</div>
+                    <div class="appName">{{ siteName }}</div>
                   </td>
                 </tr>
 
@@ -42,9 +42,10 @@ defineProps<EmailTemplateProps>()
                   <td class="body">
                     <h1 class="title">Hi {{ publicName }},</h1>
 
-                    <p class="content">
-                      {{ contentBody }}
-                    </p>
+                    <p
+                      class="content"
+                      v-html="contentBody"
+                    />
 
                     <table
                       role="presentation"
@@ -65,7 +66,7 @@ defineProps<EmailTemplateProps>()
                     </table>
 
                     <p class="fallback">
-                      If the button doesn’t work, copy and paste this URL:<br>
+                      If the button doesn’t work, copy and paste this URL:<br />
                       <a
                         :href="callToActionUrl"
                         class="link"
@@ -77,7 +78,7 @@ defineProps<EmailTemplateProps>()
                 </tr>
                 <tr>
                   <td class="footer">
-                    {{ footer}}
+                    {{ footer }}
                   </td>
                 </tr>
               </tbody>

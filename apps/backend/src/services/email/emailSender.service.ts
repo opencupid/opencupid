@@ -1,5 +1,3 @@
-
-
 import { appConfig } from '@/lib/appconfig'
 import nodemailer from 'nodemailer'
 import { renderEmail } from './emailRenderer'
@@ -7,9 +5,7 @@ import { renderEmail } from './emailRenderer'
 /*
 Could not find a declaration file for module '../../../dist-ssr/EmailTemplate.ssr.mjs'. '/home/user/opencupid/apps/backend/dist-ssr/EmailTemplate.ssr.mjs' implicitly has an 'any' type.ts(7016)
 */
-import EmailTemplate from "../../../dist-ssr/EmailTemplate.ssr.mjs";
-
-
+import EmailTemplate from '../../../dist-ssr/EmailTemplate.ssr.mjs'
 
 export class EmailService {
   private transporter: nodemailer.Transporter
@@ -26,7 +22,7 @@ export class EmailService {
     })
   }
 
-  // TODO - refactor - introduce a shared type for the email payload 
+  // TODO - refactor - introduce a shared type for the email payload
   // see apps/backend/src/queues/dispatcher.ts
   async sendMail(
     to: string,
@@ -35,11 +31,12 @@ export class EmailService {
     callToActionLabel: string,
     callToActionUrl: string,
     contentBody: string,
+    siteName: string,
     footer: string,
     from: string
   ) {
     const html = await renderEmail(EmailTemplate, {
-      siteName: appConfig.SITE_NAME,
+      siteName,
       publicName,
       callToActionLabel,
       callToActionUrl,
