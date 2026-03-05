@@ -23,7 +23,7 @@ export class NotifierService {
     return NotifierService.instance
   }
 
-  constructor(private disp = dispatcher) { }
+  constructor(private disp = dispatcher) {}
 
   private templateName(type: NotificationType): string {
     switch (type) {
@@ -76,11 +76,7 @@ export class NotifierService {
     })
     if (!user || !user.email) return
 
-    // TODO - tighten the User Prisma schema (so that User.language is non-nullable (make sure it's set at user registration),
-    // then remove the fallback here.
-    // This is a large refactoring affecting a lot of code - this is out of scope for the HTML email
-    // implementation.
-    const t = i18next.getFixedT(user.language || 'en')
+    const t = i18next.getFixedT(user.language)
     const siteName = appConfig.SITE_NAME
     const tmpl = this.templateName(type)
     const subject = t(`emails.${tmpl}.subject`, { siteName, ...(args as any) }) as string
@@ -93,7 +89,7 @@ export class NotifierService {
     const callToActionUrl = ((args as any).link || appConfig.FRONTEND_URL) as string
     const publicName = user.profile?.publicName || 'there'
 
-    // TODO - refactor - introduce a shared type for the email payload 
+    // TODO - refactor - introduce a shared type for the email payload
     // see apps/backend/src/queues/dispatcher.ts
     await this.disp.queueEmail(
       user.email,
@@ -106,7 +102,6 @@ export class NotifierService {
       footer
     )
   }
-
 }
 
 export const notifierService = NotifierService.getInstance()

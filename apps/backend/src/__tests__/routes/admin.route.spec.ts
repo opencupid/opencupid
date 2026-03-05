@@ -704,7 +704,7 @@ describe('GET /subscribers', () => {
       {
         id: 'user2',
         email: 'bob@example.com',
-        language: null,
+        language: 'en',
         newsletterOptIn: false,
         profile: { publicName: 'Bob' },
       },
