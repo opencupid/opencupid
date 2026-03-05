@@ -160,4 +160,26 @@ describe('NotifierService', () => {
       },
     })
   })
+
+  it('notifyUser: supports users without profile', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({
+      id: 'user-2',
+      email: 'user2@example.com',
+      language: 'en',
+      profile: null,
+    })
+
+    const service = new NotifierService({ dispatchEmail: mockDispatchEmail } as any)
+    await service.notifyUser('user-2', 'welcome', { link: 'https://frontend.test/me' })
+
+    expect(mockDispatchEmail).toHaveBeenCalledWith({
+      to: 'user2@example.com',
+      subject: 'emails.welcome.subject-translated',
+      templateProps: expect.objectContaining({
+        publicName: '',
+        callToActionLabel: 'emails.welcome.callToActionLabel-translated',
+        callToActionUrl: 'https://frontend.test/me',
+      }),
+    })
+  })
 })

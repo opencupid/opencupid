@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { h } from 'vue'
 import type { Component } from 'vue'
-import type { EmailTemplateProps } from '../../services/email/types'
+import type { EmailPayload, EmailTemplateProps } from '../../services/email/types'
 
 // Mock the CSS import so the test environment has known CSS to inline
 vi.mock('../../services/email/emailTemplate.css', () => ({
@@ -21,6 +21,11 @@ const defaultProps: EmailTemplateProps = {
   callToActionUrl: 'https://example.com/start',
   footer: 'You received this because you signed up.',
 }
+const defaultPayload: EmailPayload = {
+  to: 'alice@example.com',
+  subject: 'Welcome',
+  templateProps: defaultProps,
+}
 
 // A minimal component using a render function (no template compiler required)
 const SimpleComponent: Component = {
@@ -34,7 +39,7 @@ const SimpleComponent: Component = {
 }
 
 describe('renderEmail', () => {
-  let renderEmail: (component: Component, props: EmailTemplateProps) => Promise<string>
+  let renderEmail: (component: Component, payload: EmailPayload) => Promise<string>
 
   beforeEach(async () => {
     vi.resetModules()
@@ -43,12 +48,12 @@ describe('renderEmail', () => {
   })
 
   it('returns a string', async () => {
-    const result = await renderEmail(SimpleComponent, defaultProps)
+    const result = await renderEmail(SimpleComponent, defaultPayload)
     expect(typeof result).toBe('string')
   })
 
   it('returns well-formed HTML with doctype, html, head, and body tags', async () => {
-    const result = await renderEmail(SimpleComponent, defaultProps)
+    const result = await renderEmail(SimpleComponent, defaultPayload)
     expect(result).toMatch(/<!doctype html>/i)
     expect(result).toMatch(/<html[\s>]/i)
     expect(result).toMatch(/<head[\s>]/i)
@@ -58,17 +63,17 @@ describe('renderEmail', () => {
   })
 
   it('includes a meta charset tag in the head', async () => {
-    const result = await renderEmail(SimpleComponent, defaultProps)
+    const result = await renderEmail(SimpleComponent, defaultPayload)
     expect(result).toContain('charset="utf-8"')
   })
 
   it('includes a viewport meta tag in the head', async () => {
-    const result = await renderEmail(SimpleComponent, defaultProps)
+    const result = await renderEmail(SimpleComponent, defaultPayload)
     expect(result).toContain('name="viewport"')
   })
 
   it('renders the component output inside the body', async () => {
-    const result = await renderEmail(SimpleComponent, defaultProps)
+    const result = await renderEmail(SimpleComponent, defaultPayload)
     // The component renders publicName inside a span
     expect(result).toContain(defaultProps.publicName)
     // And the CTA href
@@ -76,14 +81,14 @@ describe('renderEmail', () => {
   })
 
   it('inlines CSS styles from class-based rules into style attributes', async () => {
-    const result = await renderEmail(SimpleComponent, defaultProps)
+    const result = await renderEmail(SimpleComponent, defaultPayload)
     // The .outer class has `width: 100%` in the mocked CSS
     // juice should inline it as a style attribute on the element with class="outer"
     expect(result).toMatch(/style="[^"]*width:\s*100%[^"]*"/)
   })
 
   it('removes <style> tags after inlining non-media-query rules', async () => {
-    const result = await renderEmail(SimpleComponent, defaultProps)
+    const result = await renderEmail(SimpleComponent, defaultPayload)
     // juice with removeStyleTags:true removes the <style> block;
     // any retained <style> only contains preserved @media rules
     const allStyleTags = result.match(/<style[^>]*>([\s\S]*?)<\/style>/gi) ?? []
@@ -92,7 +97,7 @@ describe('renderEmail', () => {
   })
 
   it('preserves @media queries in a retained <style> block', async () => {
-    const result = await renderEmail(SimpleComponent, defaultProps)
+    const result = await renderEmail(SimpleComponent, defaultPayload)
     // The mocked CSS contains an @media rule; juice with preserveMediaQueries:true
     // keeps it in a retained <style> block even after removeStyleTags
     expect(result).toContain('@media')
@@ -106,7 +111,11 @@ describe('renderEmail', () => {
       callToActionLabel: 'Click Me',
       callToActionUrl: 'https://example.com/action',
     }
-    const result = await renderEmail(SimpleComponent, props)
+    const result = await renderEmail(SimpleComponent, {
+      to: 'bob@example.com',
+      subject: 'Hello',
+      templateProps: props,
+    })
     expect(result).toContain('Bob')
     expect(result).toContain('https://example.com/action')
     expect(result).toContain('Click Me')
@@ -120,7 +129,11 @@ describe('renderEmail', () => {
       callToActionLabel: 'Go',
       callToActionUrl: 'https://example.com',
     }
-    const result = await renderEmail(SimpleComponent, props)
+    const result = await renderEmail(SimpleComponent, {
+      to: 'carol@example.com',
+      subject: 'No footer',
+      templateProps: props,
+    })
     expect(result).toBeDefined()
     expect(result.length).toBeGreaterThan(0)
   })

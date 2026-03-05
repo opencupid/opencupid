@@ -2,14 +2,11 @@ import { createSSRApp } from 'vue'
 import type { Component } from 'vue'
 import { renderToString } from '@vue/server-renderer'
 import juice from 'juice'
-import type { EmailTemplateProps } from './types'
+import type { EmailPayload } from './types'
 import emailCss from './emailTemplate.css'
 
-export async function renderEmail(
-  component: Component,
-  props: EmailTemplateProps
-): Promise<string> {
-  const app = createSSRApp(component, props)
+export async function renderEmail(component: Component, payload: EmailPayload): Promise<string> {
+  const app = createSSRApp(component, payload.templateProps)
   const bodyInner = await renderToString(app)
 
   const doc = `<!doctype html>
