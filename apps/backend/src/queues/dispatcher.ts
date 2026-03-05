@@ -29,7 +29,7 @@ export class Dispatcher {
         siteName,
         footer,
       },
-      { attempts: 3, backoff: { type: 'exponential', delay: 5000 } }
+      { attempts: 5, backoff: { type: 'exponential', delay: 5000 } }
     )
     console.warn(`Queued email to ${to} with subject "${subject}"`)
   }
