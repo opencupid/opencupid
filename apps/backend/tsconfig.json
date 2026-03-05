@@ -33,7 +33,6 @@
     "src",
     "types",
     "scripts",
-    "src/**/*.vue",
-    "vite.config.ts"
+    "src/**/*.vue"
   ]
 }
