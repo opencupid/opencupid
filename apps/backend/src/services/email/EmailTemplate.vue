@@ -89,96 +89,50 @@ defineProps<SimpleEmailProps>()
 <style>
 
 body {
-  margin: 0;
-  padding: 0;
-  font-family: Arial, sans-serif;
 }
+
 
 
 .outer {
-  width: 100%;
-  border-collapse: collapse;
-  background: #f6f7f9;
 }
 
 .center {
-  padding: 24px 12px;
-  text-align: center;
 }
 
 .card {
-  width: 600px;
-  max-width: 600px;
-  border-collapse: collapse;
-  background: #ffffff;
 }
 
 .header {
-  padding: 20px 24px;
-  border-bottom: 1px solid #e9edf2;
-  font-family: Arial, sans-serif;
 }
 
 .appName {
-  font-size: 14px;
-  line-height: 20px;
-  color: #667085;
 }
 
 .body {
-  padding: 24px;
-  font-family: Arial, sans-serif;
-  color: #101828;
 }
 
 .title {
-  margin: 0 0 12px;
-  font-size: 20px;
 }
 
 .content {
-  margin: 0 0 18px;
 }
 
 .ctaTable {
-  border-collapse: collapse;
 }
 
 .ctaCell {
-  border-radius: 10px;
-  background: #2563eb;
 }
 
 .ctaButton {
-  display: inline-block;
-  padding: 12px 16px;
-  font-family: Arial, sans-serif;
-  font-size: 14px;
-  line-height: 18px;
-  font-weight: 700;
-  color: #ffffff;
-  text-decoration: none;
-  border-radius: 10px;
 }
 
 .fallback {
-  margin: 18px 0 0;
-  font-size: 12px;
-  line-height: 18px;
-  color: #667085;
 }
 
 .link {
-  color: #2563eb;
-  text-decoration: underline;
 }
 
 .footer {
-  padding: 16px 24px;
-  border-top: 1px solid #e9edf2;
-  font-family: Arial, sans-serif;
-  color: #98a2b3;
-  font-size: 12px;
-  line-height: 18px;
+
 }
 </style>
