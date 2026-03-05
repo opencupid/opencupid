@@ -4,7 +4,7 @@
   "version": "0.17.9",
   "scripts": {
     "dev": "vite build && tsup --watch --onSuccess \"node --inspect dist/main.js\"",
-    "build": "tsup && tsup --config tsup.scripts.config.ts",
+    "build": "vite build && tsup && tsup --config tsup.scripts.config.ts",
     "build:ssr": "vite build",
     "start": "node dist/main.js",
     "prisma:generate": "prisma generate",
