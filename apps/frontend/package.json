@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "test": "vitest --run",
     "test:e2e": "playwright test",
-    "build-only": "vite build",
+    "build-only": "vite build && vite build --config vite.ssr.config.ts && tsx scripts/prerender-landing.ts",
     "type-check": "vue-tsc --build",
     "lint": "eslint . --fix",
     "format": "prettier --write src/",
@@ -117,7 +117,9 @@
     "vite-svg-loader": "5.1.0",
     "vitest": "4.0.18",
     "vue-i18n-extract": "2.0.7",
-    "vue-tsc": "3.2.5"
+    "vue-tsc": "3.2.5",
+    "tsx": "4.21.0",
+    "@vue/server-renderer": "3.5.28"
   },
   "packageManager": "pnpm@10.15.1"
 }
