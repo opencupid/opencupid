@@ -6,3 +6,9 @@ export type EmailTemplateProps = {
   callToActionUrl: string
   footer?: string
 }
+
+export type EmailPayload = {
+  to: string
+  subject: string
+  templateProps: EmailTemplateProps
+}

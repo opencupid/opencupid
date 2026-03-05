@@ -10,11 +10,11 @@ let dispatcher: any
 
 beforeEach(async () => {
   mockAdd.mockClear()
-  const mod = await import('../../queues/dispatcher')
+  const mod = await import('../../queues/emailDispatcher')
   dispatcher = mod.dispatcher
 })
 
-describe('Dispatcher.queueEmail', () => {
+describe('EmailDispatcher.dispatchEmail', () => {
   it('adds a job to the email queue with correct params', async () => {
     await dispatcher.queueEmail(
       'user@example.com',

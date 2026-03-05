@@ -1,29 +1,21 @@
 import { prisma } from '@/lib/prisma'
 import { appConfig } from '@/lib/appconfig'
 import i18next from 'i18next'
-import { dispatcher } from '@/queues/dispatcher'
+import { dispatcher } from '@/queues/emailDispatcher'
+import type { EmailPayload } from './email/types'
 
 type NotificationType = 'login_link' | 'welcome' | 'new_message' | 'new_like' | 'new_match'
 
 type NotifiableUser = {
   id: string
-  email: string | null
-  language: string | null
+  email: string
+  language: string
   profile?: { publicName: string }
 }
 
-type EmailPayload = {
-  subject: string
-  publicName?: string
-  contentBody: string
-  footer: string
-  callToActionLabel: string
-  callToActionUrl: string
-}
-
-interface NotificationTemplates {
+interface NotificationParams {
   login_link: { otp: string; link: string }
-  welcome: { link: string;  }
+  welcome: { link: string }
   new_message: { sender: string; message: string; link: string }
   new_like: { link: string }
   new_match: { name: string; link: string }
@@ -64,7 +56,7 @@ export class NotifierService {
   async notifyProfile<T extends NotificationType>(
     profileId: string,
     type: T,
-    args: NotificationTemplates[T]
+    args: NotificationParams[T]
   ): Promise<void> {
     const profile = await prisma.profile.findUnique({
       where: { id: profileId },
@@ -90,64 +82,49 @@ export class NotifierService {
    */
   async notifyUser<T extends NotificationType>(
     userId: string,
-    type: T,
-    args: NotificationTemplates[T]
+    emailType: T,
+    args: NotificationParams[T]
   ): Promise<void> {
     const user = await prisma.user.findUnique({
       where: { id: userId },
     })
     if (!user) return
-    await this.notifyResolvedUser(user as NotifiableUser, type, args)
+    await this.notifyResolvedUser(user as NotifiableUser, emailType, args)
   }
 
   private createEmailPayload<T extends NotificationType>(
-    type: T,
-    args: NotificationTemplates[T],
-    language: string 
+    emailType: T,
+    args: NotificationParams[T],
+    user: NotifiableUser
   ): EmailPayload {
-    const t = i18next.getFixedT(language || 'en')
     const siteName = appConfig.SITE_NAME
-    const tmpl = this.templateName(type)
-    const subject = t(`emails.${tmpl}.subject`, { siteName }) as string
-    const contentBody = t(`emails.${tmpl}.contentBody`, { siteName, publicName }) as string
-    const footer = t(`emails.${tmpl}.footer`, { defaultValue: '' }) as string
-    const callToActionLabel = t(`emails.${tmpl}.callToActionLabel`, {
-      siteName,
-    }) as string
-    const callToActionUrl = (args as any).link as string
+    const t = i18next.getFixedT(user.language)
+    const tmpl = this.templateName(emailType)
 
     return {
-      subject,
-      contentBody,
-      footer,
-      callToActionLabel,
-      callToActionUrl,
+      to: user.email,
+      subject: t(`emails.${tmpl}.subject`, { siteName }),
+      templateProps: {
+        siteName,
+        publicName: user.profile?.publicName || '',
+        contentBody: t(`emails.${tmpl}.contentBody`, { siteName, ...args, ...user }),
+        callToActionLabel: t(`emails.${tmpl}.callToActionLabel`),
+        callToActionUrl: args.link,
+        footer: t(`emails.${tmpl}.footer`, { defaultValue: '' }),
+      },
     }
   }
 
   private async notifyResolvedUser<T extends NotificationType>(
-    user: NotifiableUser | null,
-    type: T,
-    args: NotificationTemplates[T]
+    user: NotifiableUser,
+    emailType: T,
+    args: NotificationParams[T]
   ): Promise<void> {
     if (!user || !user.email) return
 
-    const siteName = appConfig.SITE_NAME
-    const emailPayload = this.createEmailPayload(type, args, user.language)
-    const publicName = user.profile?.publicName || 'there'
+    const emailPayload = this.createEmailPayload(emailType, args, user)
 
-    // TODO - refactor - introduce a shared type for the email payload
-    // see apps/backend/src/queues/dispatcher.ts
-    await this.disp.queueEmail(
-      user.email,
-      emailPayload.subject,
-      publicName,
-      emailPayload.callToActionLabel,
-      emailPayload.callToActionUrl,
-      emailPayload.contentBody,
-      siteName,
-      emailPayload.footer
-    )
+    await this.disp.dispatchEmail(emailPayload)
   }
 }
 
