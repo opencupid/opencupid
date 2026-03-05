@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { appConfig } from '@/lib/appconfig'
 import i18next from 'i18next'
 import { dispatcher } from '@/queues/dispatcher'
+import type { NotifiableUser, EmailPayload } from './email/types'
 
 export type NotificationType = 'login_link' | 'welcome' | 'new_message' | 'new_like' | 'new_match'
 
@@ -40,11 +41,10 @@ export class NotifierService {
     }
   }
 
-  // TODO refactor notifyUser method and notifyProfile
-  // Currently notifyProfile is called when no profile is available for a user yet
-  // when in fact notifyUser should be called in that scenario.
-  // notifyProfile should be called in all other scenarios, ie when a Profile
-  // is already available.  This does work as is, but it's confusing.
+  /**
+   * Notify a user by their profile identifier.
+   * Use this only when profile existence is already guaranteed by the caller's flow.
+   */
 
   async notifyProfile<T extends NotificationType>(
     profileId: string,
@@ -53,12 +53,26 @@ export class NotifierService {
   ): Promise<void> {
     const profile = await prisma.profile.findUnique({
       where: { id: profileId },
-      include: { user: true },
+      include: {
+        user: {
+          include: {
+            profile: {
+              select: {
+                publicName: true,
+              },
+            },
+          },
+        },
+      },
     })
     if (!profile?.user) return
-    await this.notifyUser(profile.user.id, type, args)
+    await this.notifyResolvedUser(profile.user as NotifiableUser, type, args)
   }
 
+  /**
+   * Notify a user by their user identifier.
+   * Use this for user-level notifications regardless of profile existence.
+   */
   async notifyUser<T extends NotificationType>(
     userId: string,
     type: T,
@@ -74,32 +88,57 @@ export class NotifierService {
         },
       },
     })
-    if (!user || !user.email) return
+    await this.notifyResolvedUser(user as NotifiableUser | null, type, args)
+  }
 
-    const t = i18next.getFixedT(user.language)
+  private createEmailPayload<T extends NotificationType>(
+    type: T,
+    args: NotificationTemplates[T],
+    language: string | null
+  ): EmailPayload {
+    const t = i18next.getFixedT(language || 'en')
     const siteName = appConfig.SITE_NAME
     const tmpl = this.templateName(type)
     const subject = t(`emails.${tmpl}.subject`, { siteName, ...(args as any) }) as string
     const contentBody = t(`emails.${tmpl}.contentBody`, { siteName, ...(args as any) }) as string
-    const footer = t(`emails.${tmpl}.footer`) || ''
+    const footer = (t(`emails.${tmpl}.footer`) as string) || ''
     const callToActionLabel = t(`emails.${tmpl}.callToActionLabel`, {
       siteName,
       ...(args as any),
     }) as string
     const callToActionUrl = ((args as any).link || appConfig.FRONTEND_URL) as string
+
+    return {
+      subject,
+      contentBody,
+      footer,
+      callToActionLabel,
+      callToActionUrl,
+    }
+  }
+
+  private async notifyResolvedUser<T extends NotificationType>(
+    user: NotifiableUser | null,
+    type: T,
+    args: NotificationTemplates[T]
+  ): Promise<void> {
+    if (!user || !user.email) return
+
+    const siteName = appConfig.SITE_NAME
+    const emailPayload = this.createEmailPayload(type, args, user.language)
     const publicName = user.profile?.publicName || 'there'
 
     // TODO - refactor - introduce a shared type for the email payload
     // see apps/backend/src/queues/dispatcher.ts
     await this.disp.queueEmail(
       user.email,
-      subject,
+      emailPayload.subject,
       publicName,
-      callToActionLabel,
-      callToActionUrl,
-      contentBody,
+      emailPayload.callToActionLabel,
+      emailPayload.callToActionUrl,
+      emailPayload.contentBody,
       siteName,
-      footer
+      emailPayload.footer
     )
   }
 }
