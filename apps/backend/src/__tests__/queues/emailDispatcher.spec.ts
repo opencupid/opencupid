@@ -1,37 +1,24 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { dispatcher } from '../../queues/emailDispatcher'
 
-const mockAdd = vi.fn()
+const { mockAdd } = vi.hoisted(() => ({
+  mockAdd: vi.fn(),
+}))
 
 vi.mock('../../queues/emailQueue', () => ({
   emailQueue: { add: mockAdd },
 }))
 
-let dispatcher: any
-
-beforeEach(async () => {
+beforeEach(() => {
   mockAdd.mockClear()
-  const mod = await import('../../queues/emailDispatcher')
-  dispatcher = mod.dispatcher
 })
 
 describe('EmailDispatcher.dispatchEmail', () => {
   it('adds a job to the email queue with correct params', async () => {
-    await dispatcher.queueEmail(
-      'user@example.com',
-      'Welcome',
-      'Alice',
-      'Open app',
-      'https://example.com/app',
-      'Hello',
-      'OpenCupid',
-      'If you did not request this, ignore this email.'
-    )
-
-    expect(mockAdd).toHaveBeenCalledWith(
-      'sendEmail',
-      {
-        to: 'user@example.com',
-        subject: 'Welcome',
+    const payload = {
+      to: 'user@example.com',
+      subject: 'Welcome',
+      templateProps: {
         publicName: 'Alice',
         callToActionLabel: 'Open app',
         callToActionUrl: 'https://example.com/app',
@@ -39,27 +26,22 @@ describe('EmailDispatcher.dispatchEmail', () => {
         siteName: 'OpenCupid',
         footer: 'If you did not request this, ignore this email.',
       },
+    }
+
+    await dispatcher.dispatchEmail(payload)
+
+    expect(mockAdd).toHaveBeenCalledWith(
+      'sendEmail',
+      payload,
       { attempts: 5, backoff: { type: 'exponential', delay: 5000 } }
     )
   })
 
   it('passes through different email content', async () => {
-    await dispatcher.queueEmail(
-      'other@example.com',
-      'Reset',
-      'Bob',
-      'Reset password',
-      'https://example.com/reset',
-      'Reset link',
-      'Gaia',
-      'Need help? Contact support.'
-    )
-
-    expect(mockAdd).toHaveBeenCalledWith(
-      'sendEmail',
-      {
-        to: 'other@example.com',
-        subject: 'Reset',
+    const payload = {
+      to: 'other@example.com',
+      subject: 'Reset',
+      templateProps: {
         publicName: 'Bob',
         callToActionLabel: 'Reset password',
         callToActionUrl: 'https://example.com/reset',
@@ -67,6 +49,13 @@ describe('EmailDispatcher.dispatchEmail', () => {
         siteName: 'Gaia',
         footer: 'Need help? Contact support.',
       },
+    }
+
+    await dispatcher.dispatchEmail(payload)
+
+    expect(mockAdd).toHaveBeenCalledWith(
+      'sendEmail',
+      payload,
       expect.objectContaining({ attempts: 5 })
     )
   })
