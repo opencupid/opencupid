@@ -42,10 +42,10 @@ defineProps<EmailTemplateProps>()
                   <td class="body">
                     <h1 class="title">Hi {{ publicName }},</h1>
 
-                    <p
+                    <div
                       class="content"
                       v-html="contentBody"
-                    />
+                    ></div>
 
                     <table
                       role="presentation"
