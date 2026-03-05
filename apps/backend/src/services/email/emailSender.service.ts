@@ -22,6 +22,10 @@ export class EmailService {
     })
   }
 
+  async sendMailRaw(to: string, subject: string, html: string, from: string) {
+    return this.transporter.sendMail({ from, to, subject, html })
+  }
+
   // TODO - refactor - introduce a shared type for the email payload
   // see apps/backend/src/queues/dispatcher.ts
   async sendMail(

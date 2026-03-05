@@ -10,9 +10,39 @@ if (!redisUrl) {
 
 const connection = new IORedis(redisUrl, { maxRetriesPerRequest: null })
 
+type LegacyEmailJobData = {
+  to: string
+  subject: string
+  html: string
+}
+
+type EmailJobData = {
+  to: string
+  subject: string
+  publicName: string
+  callToActionLabel: string
+  callToActionUrl: string
+  contentBody: string
+  siteName: string
+  footer: string
+}
+
+function isLegacyEmailJob(data: unknown): data is LegacyEmailJobData {
+  const d = data as LegacyEmailJobData
+  return typeof d.html === 'string' && typeof d.to === 'string' && typeof d.subject === 'string'
+}
+
 new Worker(
   'emails',
   async (job) => {
+    const data = job.data as LegacyEmailJobData | EmailJobData
+
+    if (isLegacyEmailJob(data)) {
+      // Backward compatibility: handle jobs enqueued before the template-based rendering was introduced
+      await emailService.sendMailRaw(data.to, data.subject, data.html, appConfig.EMAIL_FROM)
+      return
+    }
+
     const {
       to,
       subject,
@@ -22,16 +52,7 @@ new Worker(
       contentBody,
       siteName,
       footer,
-    } = job.data as {
-      to: string
-      subject: string
-      publicName: string
-      callToActionLabel: string
-      callToActionUrl: string
-      contentBody: string
-      siteName: string
-      footer: string
-    }
+    } = data
 
     await emailService.sendMail(
       to,
