@@ -66,6 +66,17 @@ jobs:
             fi
           done
 
+          # The backend bakes __FRONTEND_VERSION__ at compile time (tsup.config.ts reads
+          # apps/frontend/package.json). If the frontend version changed and its image is
+          # being rebuilt, the existing backend image will contain a stale __FRONTEND_VERSION__,
+          # causing a false "update available" on a freshly-deployed instance.
+          # Force a backend rebuild whenever the frontend is being rebuilt.
+          if [[ " ${SERVICES[*]} " =~ " frontend " && ! " ${SERVICES[*]} " =~ " backend " ]]; then
+            BACKEND_VERSION=$(node -p "require('./apps/backend/package.json').version")
+            echo "✅ backend@${BACKEND_VERSION} — forced rebuild because frontend version changed (stale __FRONTEND_VERSION__)"
+            SERVICES+=("backend")
+          fi
+
           # Build the matrix JSON
           if [[ ${#SERVICES[@]} -eq 0 ]]; then
             echo "matrix={\"include\":[]}" >> "$GITHUB_OUTPUT"
@@ -97,6 +108,8 @@ jobs:
           echo "### Build matrix" >> "$GITHUB_STEP_SUMMARY"
           echo "| Service | Version | Build? |" >> "$GITHUB_STEP_SUMMARY"
           echo "|---------|---------|--------|" >> "$GITHUB_STEP_SUMMARY"
+          FRONTEND_NEEDS_BUILD=false
+          BACKEND_NEEDS_BUILD=false
           for SVC in backend frontend admin ingress; do
             VERSION=$(node -p "require('./apps/${SVC}/package.json').version")
             TAG="${PREFIX}-${SVC}:${VERSION}"
@@ -110,8 +123,15 @@ jobs:
                 BUILD="✅"
               fi
             fi
+            [[ "$SVC" == "frontend" && "$BUILD" == "✅" ]] && FRONTEND_NEEDS_BUILD=true
+            [[ "$SVC" == "backend" && "$BUILD" == "✅" ]] && BACKEND_NEEDS_BUILD=true
             echo "| ${SVC} | ${VERSION} | ${BUILD} |" >> "$GITHUB_STEP_SUMMARY"
           done
+          # Mirror the forced-backend-rebuild logic from the check step above
+          if [[ "$FRONTEND_NEEDS_BUILD" == "true" && "$BACKEND_NEEDS_BUILD" == "false" ]]; then
+            BACKEND_VERSION=$(node -p "require('./apps/backend/package.json').version")
+            echo "| backend | ${BACKEND_VERSION} | ✅ (forced: frontend changed) |" >> "$GITHUB_STEP_SUMMARY"
+          fi
 
   build:
     needs: detect
