@@ -30,6 +30,7 @@
     "format": "turbo run format",
     "gen-certs": "openssl req -x509 -nodes -days 365   -newkey rsa:2048   -keyout certs/localhost-key.pem   -out certs/localhost-cert.pem   -subj \"/C=US/ST=Dev/L=Local/O=Dev/CN=localhost\"",
     "test": "turbo run test",
+    "test:watch": "turbo run test:watch",
     "test:coverage": "turbo run test:coverage",
     "test:i18n": "turbo run test:i18n",
     "translate:icu": "npx json-autotranslate -i packages/shared/i18n/ --directory-structure ngx-translate -d --type key-based -m icu -s deepl-free -c ${DEEPL_API_KEY},less,1000",

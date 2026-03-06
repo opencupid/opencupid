@@ -25,6 +25,7 @@
     "dump:tags": "docker compose exec backend node scripts/dump-tags.js",
     "type-check": "tsc --noEmit",
     "test": "vitest --run",
+    "test:watch": "vitest",
     "test:i18n": "npx i18n-check --locales ../../packages/shared/i18n/api/ -s en --only missingKeys",
     "test:coverage": "pnpm run test --coverage --run"
   },

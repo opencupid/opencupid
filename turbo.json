@@ -12,6 +12,10 @@
       "persistent": true
     },
     "test": {},
+    "test:watch": {
+      "cache": false,
+      "persistent": true
+    },
     "test:coverage": {},
     "test:i18n": {},
     "lint": {},
