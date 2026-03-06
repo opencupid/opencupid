@@ -49,17 +49,6 @@ onMounted(() => {
       lazy
     >
     </BInput>
-    <!-- public name hint  -->
-    <!-- <div class="form-text text-muted"> -->
-    <!-- First name only please. -->
-    <!-- {{ t('profiles.forms.publicname_hint') }} -->
-    <!-- </div> -->
-    <div
-      v-if="validationError === 'contains_whitespace'"
-      class="form-text text-muted"
-    >
-      Just your first name please
-    </div>
     <BFormInvalidFeedback>{{ inputFeedbackText }}</BFormInvalidFeedback>
   </BFormFloatingLabel>
 </template>
