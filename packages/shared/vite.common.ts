@@ -2,11 +2,20 @@ import path from 'path'
 import os from 'os'
 import { loadEnv, type Plugin } from 'vite'
 import { findUpSync } from 'find-up'
-import { getPackageVersion } from '../../packages/shared/version'
+import mkcert from 'vite-plugin-mkcert'
+import { getPackageVersion } from './version'
 
 export const hostname = os.hostname()
 export const mdnsName = hostname + '.local'
 
+export const devCertPlugin = () =>
+  mkcert({
+    hosts: ['localhost', '127.0.0.1', hostname, mdnsName],
+    savePath: path.join(__dirname, '../../certs'),
+    keyFileName: hostname + '-key.pem',
+    certFileName: hostname + '-cert.pem',
+    autoUpgrade: false,
+  })
 
 export const server = (mode: string, env: Record<string, string | undefined>, appDir: string) => {
   if (mode !== 'development') return {}
@@ -21,10 +30,9 @@ export const server = (mode: string, env: Record<string, string | undefined>, ap
         '/api': {
           target: `http://localhost:${backendPort}`,
           changeOrigin: true,
-          secure: false, // accept self-signed TLS
-          // for admin app
+          secure: false,
           headers: { 'X-Admin-Authenticated': 'true' },
-          configure: (proxy: any, _options: any) => {
+          configure: (proxy: any) => {
             proxy.on('proxyReq', (proxyReq: any, req: any) => {
               const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress
               if (clientIp) {
@@ -37,7 +45,7 @@ export const server = (mode: string, env: Record<string, string | undefined>, ap
           target: `ws://localhost:${backendPort}`,
           rewriteWsOrigin: true,
           ws: true,
-          secure: false, // accept self-signed TLS
+          secure: false,
         },
       },
       fs: {
@@ -55,9 +63,11 @@ export const loadProjectEnv = (mode: string) => {
   const envFile = findUpSync('.env') ?? findUpSync('.env.example')
 
   if (!envFile) {
-    console.error('Could not find a .env file')
-    process.exit(1)
+    return {
+      ...process.env,
+    }
   }
+
   const envDir = path.dirname(envFile)
 
   return {
@@ -66,8 +76,8 @@ export const loadProjectEnv = (mode: string) => {
   }
 }
 
-export const define = (_mode: string) => {
-  const appVersion = getPackageVersion(path.join(__dirname, 'package.json'))
+export const define = (appDir: string) => {
+  const appVersion = getPackageVersion(path.join(appDir, 'package.json'))
 
   return {
     envDir: '../../',

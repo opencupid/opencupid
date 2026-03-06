@@ -2,7 +2,7 @@ import path from 'path'
 import { defineConfig, type ConfigEnv, type Plugin, type UserConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { getPackageVersion } from '../../packages/shared/version'
-import { loadProjectEnv, server, devCertPlugin } from '../frontend/vite.common'
+import { loadProjectEnv, server, devCertPlugin } from '../../packages/shared/vite.common'
 
 /**
  * In development, serve /config.js with the runtime config so the <script>
@@ -25,7 +25,7 @@ function runtimeConfigPlugin(env: Record<string, string | undefined>): Plugin {
 }
 
 export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
-  const env = loadProjectEnv(mode)
+  const env = mode === 'development' ? loadProjectEnv(mode) : process.env
 
   const appVersion = getPackageVersion(path.join(__dirname, 'package.json'))
 

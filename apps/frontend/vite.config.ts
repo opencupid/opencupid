@@ -9,15 +9,21 @@ import Components from 'unplugin-vue-components/vite'
 import { BootstrapVueNextResolver } from 'bootstrap-vue-next'
 import svgLoader from 'vite-svg-loader'
 import serveStatic from 'serve-static'
-import { server, define, runtimeConfigPlugin, loadProjectEnv, devCertPlugin } from './vite.common'
+import {
+  server,
+  define,
+  runtimeConfigPlugin,
+  loadProjectEnv,
+  devCertPlugin,
+} from '../../packages/shared/vite.common'
 
 process.env.DEBUG = 'vite:*' // Add this to force verbose output
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
-  const env = loadProjectEnv(mode)
+  const env = mode === 'development' ? loadProjectEnv(mode) : process.env
   return {
-    ...define(mode),
+    ...define(__dirname),
     ...server(mode, env, __dirname),
     build: {
       sourcemap: true,
