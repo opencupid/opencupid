@@ -12,7 +12,7 @@ const publicNameAllowedCharactersRegex = regex`^[\p{Letter}\p{Mark}]+$`
 export const validatePublicName = (publicName: string): PublicNameValidationError => {
   const value = publicName.trim()
 
-  if (value.length <= 3) {
+  if (value.length <= 0) {
     return 'too_short'
   }
 
@@ -22,6 +22,10 @@ export const validatePublicName = (publicName: string): PublicNameValidationErro
 
   if (!publicNameAllowedCharactersRegex.test(value)) {
     return 'invalid_characters'
+  }
+
+  if (Array.from(value).length <= 3) {
+    return 'too_short'
   }
 
   return null
