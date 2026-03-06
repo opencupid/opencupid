@@ -1,5 +1,11 @@
 # frontend
 
+## 0.19.10
+
+### Patch Changes
+
+- fb36113: Add release automation, tighten PR checks
+
 ## 0.19.9
 
 ### Patch Changes
