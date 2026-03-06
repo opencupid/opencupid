@@ -101,9 +101,13 @@ watch(inputState, (state) => {
               :state="validated"
             >
             </BInput>
-            <BFormInvalidFeedback v-if="!isLoading">
+            <BFormInvalidFeedback
+              v-if="!isLoading"
+              force-show
+            >
               <span v-if="!inputState"> {{ t('auth.otp_invalid_feedback') }}</span>
               <span v-if="validationResult === false && inputState">{{ validationError }}</span>
+              &nbsp;
             </BFormInvalidFeedback>
           </BFormFloatingLabel>
         </div>

@@ -216,7 +216,7 @@
   },
   "onboarding": {
     "welcome_title": "Welcome to {siteName}!",
-    "welcome_subtitle": "Let's get you set up so you can start meeting people.",
+    "welcome_subtitle": "Please fill in some info about yourself. You can always change this later.",
     "location_title": "I'm from...",
     "connections_title": "I am looking for...",
     "connections_subtitle": "I feel complete but could use some company.",

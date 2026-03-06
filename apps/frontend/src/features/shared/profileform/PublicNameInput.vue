@@ -13,14 +13,14 @@ const model = defineModel<string>({
 const isMobile = detectMobile()
 const inputRef = ref<HTMLInputElement | null>(null)
 
-const validationError = computed(() => validatePublicName(model.value))
-
+const validationResult = computed(() => validatePublicName(model.value))
+const validated = computed(() => validationResult.value === null)
 const inputFeedbackText = computed(() => {
-  if (validationError.value === 'contains_whitespace') {
+  if (validationResult.value === 'contains_whitespace') {
     return t('profiles.forms.name_first_name_only')
   }
 
-  return t('profiles.forms.name_invalid')
+  return ''
 })
 
 onMounted(() => {
@@ -32,9 +32,11 @@ onMounted(() => {
 
 <template>
   <BFormFloatingLabel
+    floating
     :label="t('profiles.forms.name_label')"
     label-for="publicName"
     class="my-2"
+    :state="null"
   >
     <BInput
       size="lg"
@@ -47,8 +49,15 @@ onMounted(() => {
       autocomplete="off"
       ref="inputRef"
       lazy
+      :state="validated"
     >
     </BInput>
-    <BFormInvalidFeedback>{{ inputFeedbackText }}</BFormInvalidFeedback>
+    <BFormInvalidFeedback
+      force-show
+      class="text-center"
+      :class="{ invisible: validated }"
+    >
+      {{ inputFeedbackText }} &nbsp;</BFormInvalidFeedback
+    >
   </BFormFloatingLabel>
 </template>
