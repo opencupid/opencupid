@@ -1,13 +1,10 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "noUpdateNotifier": true,
   "tasks": {
     "build": {
-      "dependsOn": [
-        "^build"
-      ],
-      "outputs": [
-        "dist/**"
-      ],
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"],
       "cache": false
     },
     "dev": {
