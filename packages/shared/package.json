@@ -3,6 +3,8 @@
   "version": "0.5.4",
   "main": "index.ts",
   "devDependencies": {
-    "@prisma/client": "6.15.0"
+    "@prisma/client": "6.15.0",
+    "vite": "6.3.5",
+    "vite-plugin-mkcert": "1.17.10"
   }
 }

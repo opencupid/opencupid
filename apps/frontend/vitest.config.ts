@@ -2,14 +2,14 @@ import { type ConfigEnv, defineConfig, type ViteUserConfig } from 'vitest/config
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
 
-import { server, define, loadProjectEnv } from './vite.common'
+import { server, define, loadProjectEnv } from '../../packages/shared/vite.common'
 import Components from 'unplugin-vue-components/vite'
 import { BootstrapVueNextResolver } from 'bootstrap-vue-next'
 
 export default defineConfig(({ mode }: ConfigEnv): ViteUserConfig => {
   const env = loadProjectEnv(mode)
   return {
-    ...define(mode),
+    ...define(__dirname),
     ...server(mode, env, __dirname),
     plugins: [
       vue(),
