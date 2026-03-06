@@ -14,7 +14,6 @@
     "watch": "tsc-watch",
     "lint": "eslint . --ext .ts",
     "format": "prettier --write src/",
-    "test-data": "npx tsx src/test-data/Profile.ts",
     "images:reprocess": "npx tsx scripts/reprocess-images.ts",
     "redis:flush": "docker compose exec redis redis-cli FLUSHALL",
     "redis:sessions": "docker compose exec redis  redis-cli KEYS '*'",
@@ -25,7 +24,9 @@
     "db:backup": "docker compose exec db sh -c 'pg_dump --clean -U $POSTGRES_USER $POSTGRES_DB'",
     "dump:tags": "docker compose exec backend node scripts/dump-tags.js",
     "type-check": "tsc --noEmit",
-    "test": "vitest --run"
+    "test": "vitest --run",
+    "test:i18n": "npx i18n-check --locales ../../packages/shared/i18n/api/ -s en --only missingKeys",
+    "test:coverage": "pnpm run test --coverage --run"
   },
   "prisma": {
     "seed": "node prisma/seed/tags.js"

@@ -52,7 +52,7 @@ jobs:
         run: pnpm --filter frontend exec vitest run
 
       - name: Check i18n keys
-        run: pnpm i18n:check && pnpm i18n:check:api
+        run: pnpm test:i18n
 
       - name: Check for existence of a changeset
         if: github.event_name == 'pull_request'

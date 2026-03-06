@@ -12,6 +12,7 @@
       "persistent": true
     },
     "test": {},
+    "test:i18n": {},
     "lint": {},
     "generate": {
       "outputs": []
