@@ -12,6 +12,7 @@
       "persistent": true
     },
     "test": {},
+    "test:coverage": {},
     "test:i18n": {},
     "lint": {},
     "generate": {
