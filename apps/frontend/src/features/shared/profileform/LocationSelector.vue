@@ -81,7 +81,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="interests-multiselect">
+  <div class="location-selector">
     <Multiselect
       v-model="selected"
       v-bind:allow-empty="props.allowEmpty"

@@ -70,6 +70,8 @@ fieldset[disabled] .multiselect {
   min-height: 40px;
   text-align: left;
   color: var(--bs-body-color);
+  background-color: var(--bs-body-bg);
+  border-radius: 5px;
 }
 
 .modal-content .multiselect {
@@ -130,6 +132,7 @@ fieldset[disabled] .multiselect {
 }
 
 .multiselect__input::placeholder {
+  // font-size: 0.75em;
 }
 
 .multiselect__placeholder {
