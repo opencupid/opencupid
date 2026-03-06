@@ -1,13 +1,10 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "noUpdateNotifier": true,
   "tasks": {
     "build": {
-      "dependsOn": [
-        "^build"
-      ],
-      "outputs": [
-        "dist/**"
-      ],
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"],
       "cache": false
     },
     "dev": {
@@ -15,6 +12,12 @@
       "persistent": true
     },
     "test": {},
+    "test:watch": {
+      "cache": false,
+      "persistent": true
+    },
+    "test:coverage": {},
+    "test:i18n": {},
     "lint": {},
     "generate": {
       "outputs": []

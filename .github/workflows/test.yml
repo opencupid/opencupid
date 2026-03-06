@@ -12,47 +12,47 @@ jobs:
     env:
       TURBO_NO_UPDATE_NOTIFIER: 1
       PRISMA_DISABLE_WARNINGS: "true"
-    # services:
-      # postgres:
-      #   image: postgres:15
-      #   env:
-      #     POSTGRES_DB: app_test
-      #     POSTGRES_USER: appuser
-      #     POSTGRES_PASSWORD: secret
-      #   ports:
-      #     - 5432:5432
-      #   options: >-
-      #     --health-cmd="pg_isready" --health-interval=10s --health-timeout=5s --health-retries=5
+      CI: "true"
+
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
       - uses: pnpm/action-setup@v4
         with:
-          version: 10.30.1
           run_install: false
+
       - uses: actions/setup-node@v6
         with:
-          node-version: '22'
-          cache: 'pnpm'
+          node-version: "22"
+          cache: "pnpm"
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
       - name: Generate Prisma
         run: pnpm --filter backend exec npx prisma generate
+
+      - name: Check i18n keys
+        run: pnpm test:i18n
+
       - name: Run lint
         run: pnpm lint
-      - name: Type check
-        # All changes arrive via PR; skip redundant re-check on push-to-main
-        if: github.event_name == 'pull_request'
-        # --concurrency 1 avoids TypeScript incremental build file conflicts across packages
-        run: pnpm type-check
-      # - name: Initialize test database
-      #   run: pnpm --filter backend exec npx prisma db push
-      #   env:
-      #     DATABASE_URL: postgresql://appuser:secret@localhost:5432/app_test
-      - name: Build frontend
-        run: pnpm --filter frontend exec pnpm build-only
+
       - name: Backend tests
         run: pnpm --filter backend exec vitest run
+
       - name: Frontend unit tests
         run: pnpm --filter frontend exec vitest run
-      - name: Check i18n keys
-        run: pnpm i18n:check && pnpm i18n:check:api
+
+      - name: Type check
+        if: github.event_name == 'pull_request'
+        run: pnpm type-check
+
+      - name: Build frontend
+        run: pnpm --filter frontend exec pnpm build-only
+
+      - name: Check for existence of a changeset
+        if: github.event_name == 'pull_request'
+        run: pnpm changeset status --since="origin/${{ github.base_ref }}"
