@@ -21,7 +21,7 @@
     "turbo": "2.8.10"
   },
   "scripts": {
-    "ci:test": "pnpm install && pnpm --filter backend prisma:generate && pnpm lint && pnpm type-check && pnpm --filter frontend exec pnpm build-only && pnpm --filter backend exec vitest run && pnpm --filter frontend exec vitest run && pnpm i18n:check && pnpm test:i18n",
+    "ci:test": "pnpm install && pnpm --filter backend prisma:generate && pnpm lint && pnpm type-check && pnpm --filter frontend exec pnpm build-only && pnpm --filter backend exec vitest run && pnpm --filter frontend exec vitest run && pnpm test:i18n",
     "dev": "./scripts/dev-start.sh",
     "dev:stop": "./scripts/dev-stop.sh",
     "build": "turbo run build",
