@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import type { App } from 'vue'
 
 const busHandlers: Record<string, (payload: unknown) => void> = {}
 
@@ -38,7 +39,7 @@ describe('i18n', () => {
     getLanguageMock.mockReturnValue('de')
 
     const { appUseI18n } = await import('../i18n')
-    const app = { use: vi.fn() }
+    const app = { use: vi.fn() } as unknown as App
 
     appUseI18n(app)
 
