@@ -1,5 +1,12 @@
 # frontend
 
+## 0.19.9
+
+### Patch Changes
+
+- 665d437: Implement validation on publicName in onboarding
+- 997cf21: Fixed some tech debt in translation infra
+
 ## 0.19.8
 
 ### Patch Changes
