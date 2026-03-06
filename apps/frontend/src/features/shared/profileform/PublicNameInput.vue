@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { detectMobile } from '@/lib/mobile-detect'
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { validatePublicName } from './publicNameValidation'
 
 const { t } = useI18n()
 
@@ -11,6 +12,16 @@ const model = defineModel<string>({
 
 const isMobile = detectMobile()
 const inputRef = ref<HTMLInputElement | null>(null)
+
+const validationError = computed(() => validatePublicName(model.value))
+
+const inputFeedbackText = computed(() => {
+  if (validationError.value === 'contains_whitespace') {
+    return t('profiles.forms.name_first_name_only')
+  }
+
+  return t('profiles.forms.name_invalid')
+})
 
 onMounted(() => {
   if (!isMobile && inputRef.value) {
@@ -43,6 +54,12 @@ onMounted(() => {
     <!-- First name only please. -->
     <!-- {{ t('profiles.forms.publicname_hint') }} -->
     <!-- </div> -->
-    <BFormInvalidFeedback>{{ t('profiles.forms.name_invalid') }}</BFormInvalidFeedback>
+    <div
+      v-if="validationError === 'contains_whitespace'"
+      class="form-text text-muted"
+    >
+      Just your first name please
+    </div>
+    <BFormInvalidFeedback>{{ inputFeedbackText }}</BFormInvalidFeedback>
   </BFormFloatingLabel>
 </template>
