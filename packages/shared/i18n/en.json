@@ -139,6 +139,7 @@
       "pronouns_label": "They refer to me as...",
       "name_label": "My first name is...",
       "name_invalid": "Enter at least 3 letters",
+      "name_first_name_only": "Just your first name please",
       "more_options": "More options...",
       "city_search_placeholder": "Search locations",
       "city_add_placeholder": "Add this as new city",

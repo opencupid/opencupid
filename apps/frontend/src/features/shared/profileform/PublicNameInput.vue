@@ -17,7 +17,7 @@ const validationError = computed(() => validatePublicName(model.value))
 
 const inputFeedbackText = computed(() => {
   if (validationError.value === 'contains_whitespace') {
-    return 'Just your first name please'
+    return t('profiles.forms.name_first_name_only')
   }
 
   return t('profiles.forms.name_invalid')

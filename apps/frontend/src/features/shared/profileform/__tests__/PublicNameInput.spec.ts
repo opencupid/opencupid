@@ -20,18 +20,16 @@ describe('NameInput', () => {
   it('updates model on input', async () => {
     const wrapper = mountComponent()
 
-    ;(wrapper.vm as { model: string }).model = 'John'
-    await wrapper.vm.$nextTick()
+    await wrapper.setProps({ modelValue: 'John' })
 
-    expect((wrapper.vm as { model: string }).model).toBe('John')
+    expect((wrapper.props('modelValue') as string)).toBe('John')
   })
 
   it('shows first-name-only hint when whitespace is entered', async () => {
     const wrapper = mountComponent()
 
-    ;(wrapper.vm as { model: string }).model = 'John Doe'
-    await wrapper.vm.$nextTick()
+    await wrapper.setProps({ modelValue: 'John Doe' })
 
-    expect(wrapper.text()).toContain('Just your first name please')
+    expect(wrapper.text()).toContain('profiles.forms.name_first_name_only')
   })
 })
