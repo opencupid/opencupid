@@ -1,13 +1,16 @@
+import type { App } from 'vue'
 import { createI18n, type Composer } from 'vue-i18n'
 import { Settings } from 'luxon'
 import { useLocalStore } from '@/store/localStore'
 import { bus } from './bus'
 
-type LocaleMessages = Record<string, Record<string, unknown>>
+type LocaleMessages = Record<string, Record<string, any>>
+
+type AppI18n = ReturnType<typeof appCreateI18n>
 
 declare global {
   interface Window {
-    __APP_I18N__?: ReturnType<typeof createI18n>
+    __APP_I18N__?: AppI18n
   }
 }
 
@@ -23,7 +26,7 @@ function loadDevMessages(): LocaleMessages {
   const modules = import.meta.glob('@shared/i18n/*.json', {
     eager: true,
     import: 'default',
-  }) as Record<string, Record<string, unknown>>
+  }) as Record<string, Record<string, any>>
 
   return Object.entries(modules).reduce<LocaleMessages>((acc, [path, localeMessages]) => {
     const locale = extractLocaleFromPath(path)
@@ -38,7 +41,7 @@ function loadDevMessages(): LocaleMessages {
 
 export const messages: LocaleMessages = loadDevMessages()
 
-let cachedI18n: ReturnType<typeof createI18n> | null = null
+let cachedI18n: AppI18n | undefined
 let languageListenerAttached = false
 
 export function getLocale(): string | null {
@@ -74,12 +77,12 @@ function getI18nInstance() {
   return cachedI18n
 }
 
-function setLocale(i18n: ReturnType<typeof createI18n>, locale: string) {
+function setLocale(i18n: AppI18n, locale: string) {
   ;(i18n.global as Composer).locale.value = locale
   Settings.defaultLocale = locale
 }
 
-export function appUseI18n(app: { use: (plugin: unknown) => void }) {
+export function appUseI18n(app: App) {
   const i18n = getI18nInstance()
   app.use(i18n)
 
