@@ -1,5 +1,11 @@
 # frontend
 
+## 0.19.8
+
+### Patch Changes
+
+- f07d5f0: Fix production build - share vite.common
+
 ## 0.19.7
 
 ### Patch Changes

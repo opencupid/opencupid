@@ -1,5 +1,11 @@
 # @opencupid/admin
 
+## 0.17.2
+
+### Patch Changes
+
+- f07d5f0: Fix production build - share vite.common
+
 ## 0.17.1
 
 ### Patch Changes
