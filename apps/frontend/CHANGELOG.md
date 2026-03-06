@@ -1,5 +1,13 @@
 # frontend
 
+## 0.19.7
+
+### Patch Changes
+
+- 4d4da9d: Improve email template
+- 45581f3: Fix hardcoded sentry tracePropagationTargets option
+- 77b43d9: Dev server cleanups
+
 ## 0.19.6
 
 ### Patch Changes

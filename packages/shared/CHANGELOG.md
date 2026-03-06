@@ -1,5 +1,13 @@
 # @opencupid/shared
 
+## 0.5.4
+
+### Patch Changes
+
+- 4d4da9d: Improve email template
+- eef5366: Code cleanups - improve robustness and maintainability of the email service
+- 81bc4cb: Make User.language non-nullable, update consumer code
+
 ## 0.5.3
 
 ### Patch Changes
