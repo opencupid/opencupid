@@ -2,20 +2,11 @@ import path from 'path'
 import os from 'os'
 import { loadEnv, type Plugin } from 'vite'
 import { findUpSync } from 'find-up'
-import mkcert from 'vite-plugin-mkcert'
 import { getPackageVersion } from '../../packages/shared/version'
 
 export const hostname = os.hostname()
 export const mdnsName = hostname + '.local'
 
-export const devCertPlugin = () =>
-  mkcert({
-    hosts: ['localhost', '127.0.0.1', hostname, mdnsName],
-    savePath: path.join(__dirname, '../../certs'),
-    keyFileName: hostname + '-key.pem',
-    certFileName: hostname + '-cert.pem',
-    autoUpgrade: false,
-  })
 
 export const server = (mode: string, env: Record<string, string | undefined>, appDir: string) => {
   if (mode !== 'development') return {}
