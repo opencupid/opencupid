@@ -35,15 +35,11 @@ jobs:
       - name: Generate Prisma
         run: pnpm --filter backend exec npx prisma generate
 
+      - name: Check i18n keys
+        run: pnpm test:i18n
+
       - name: Run lint
         run: pnpm lint
-
-      - name: Type check
-        if: github.event_name == 'pull_request'
-        run: pnpm type-check
-
-      - name: Build frontend
-        run: pnpm --filter frontend exec pnpm build-only
 
       - name: Backend tests
         run: pnpm --filter backend exec vitest run
@@ -51,8 +47,12 @@ jobs:
       - name: Frontend unit tests
         run: pnpm --filter frontend exec vitest run
 
-      - name: Check i18n keys
-        run: pnpm test:i18n
+      - name: Type check
+        if: github.event_name == 'pull_request'
+        run: pnpm type-check
+
+      - name: Build frontend
+        run: pnpm --filter frontend exec pnpm build-only
 
       - name: Check for existence of a changeset
         if: github.event_name == 'pull_request'
