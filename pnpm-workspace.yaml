@@ -18,3 +18,4 @@ onlyBuiltDependencies:
   - sharp
   - vue-demi
 strictPeerDependencies: false
+updateNotifier: false
