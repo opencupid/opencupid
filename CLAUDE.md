@@ -335,3 +335,5 @@ Development guidelines and best practices for this project.
 - avoid over-engineering - always make an effort to find the simplest solution and be on the lookup for opportunities to simplify code
 - always try to use stock solutions - prefer integrating a mature 3rd party library instead of reimplementing the wheel.
 - watch out for stinky code and flag if you see such
+
+- Before implementing a fix, check whether the problem originates from a pattern, repeated configuration, or systemic weakness. If so, implement a structural solution that removes the root cause or prevents recurrence. Avoid local patches, duplicated logic, and hidden fallbacks when a centralized or enforceable mechanism can solve the problem. Avoid adding fallback values - ask for permission before adding such.
