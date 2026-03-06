@@ -56,4 +56,4 @@ jobs:
 
       - name: Check for existence of a changeset
         if: github.event_name == 'pull_request'
-        run: pnpm changeset status --since=origin/main
+        run: pnpm changeset status --since="origin/${{ github.base_ref }}"
