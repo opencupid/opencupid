@@ -44,9 +44,11 @@ async function handleSendOtp(authIdCaptcha: UserIdentifyPayload) {
       Object.assign(user, res.user)
       router.push({ name: 'LoginOTP' })
     } else {
+      // TODO i18n these error messages
       error.value = 'An unknown error occurred, please try again a bit later.'
     }
   } catch (err: any) {
+    // TODO i18n these error messages
     error.value = err || 'An unexpected error occurred.'
     console.error('Login error:', err)
   } finally {

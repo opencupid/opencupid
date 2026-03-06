@@ -67,7 +67,8 @@
     "unspecified": "I'd rather not say"
   },
   "auth": {
-    "login": "Login",
+    "login": "Continue",
+    "auth_id_intro": "Enter your email address to register or login",
     "auth_id_input_empty": "Please enter your email address.",
     "auth_id_input_label": "Email",
     "auth_id_input_placeholder": " ",
@@ -407,6 +408,9 @@
       "button_copy": "Copy",
       "button_copied": "Copied",
       "qr_hint": "Flash this at their phone"
+    },
+    "locale_selector": {
+      "help_wanted_translating": "Help wanted translating"
     },
     "dialog_cancel_button": "Nevermind",
     "update_banner": {

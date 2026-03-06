@@ -62,7 +62,7 @@ watch(inputState, (state) => {
         class="text-primary"
       />
 
-      {{ t('auth.otp_check_messages') }}
+      <div class="text-center">{{ t('auth.otp_check_messages') }}</div>
     </div>
     <div class="mb-3 form-text mb-3">
       <div v-if="user.phonenumber">

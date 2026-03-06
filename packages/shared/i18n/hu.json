@@ -55,7 +55,8 @@
     "unspecified": "Inkább nem mondom meg"
   },
   "auth": {
-    "login": "Belépés",
+    "login": "Tovább",
+    "auth_id_intro": "Add meg az e-mail-címedet a regisztrációhoz vagy belépéshez",
     "auth_id_input_empty": "Add meg e-mail címedet.",
     "auth_id_input_label": "E-mail",
     "auth_id_input_placeholder": " ",
@@ -66,7 +67,7 @@
     "captcha_refresh": "Próbáld újra",
     "captcha_error": "Valami zökkenő van, próbáld újra?",
     "login_confirm_welcome": "Légy üdvözölve!",
-    "otp_check_messages": "Nézd rá az üzeneteidre",
+    "otp_check_messages": "Nézz rá az üzeneteidre",
     "otp_sent_phone": "A telefonodra küldtünk egy üzenetet, az abban levő kódot írd be ide.",
     "otp_sent_email": "Emailen küldtünk egy linket, arra kattints rá (vagy írd be a kódot).  Ha nem látod az emailt, nézz rá a spam mappára is.",
     "otp_input_label": "Írd ide a kódot",
@@ -395,6 +396,9 @@
       "button_copy": "Másolás",
       "button_copied": "Másolva",
       "qr_hint": "Villantsd ezt a telefonjukra"
+    },
+    "locale_selector": {
+      "help_wanted_translating": "Segíts a fordításban"
     },
     "dialog_cancel_button": "Bezár",
     "update_banner": {

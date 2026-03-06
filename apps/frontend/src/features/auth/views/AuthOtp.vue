@@ -48,6 +48,7 @@ onMounted(async () => {
   const params = OtpParamSchema.safeParse(route.query)
   if (!params.success) {
     error.value =
+    // TODO i18n this
       "Hmm that link in the email didn't look right. Please enter the code in the message."
     return
   }
@@ -72,9 +73,11 @@ async function doOtpLogin(otp: string) {
       console.log('OTP login failed:', res)
       switch (res.code) {
         case 'AUTH_EXPIRED_OTP':
+          // TODO i18n this
           error.value = 'This code has expired. Please request a new one.'
           break
         case 'AUTH_INVALID_OTP':
+          // TODO i18n this
           error.value = 'The OTP is invalid. Please try again.'
           break
         default:
@@ -84,6 +87,7 @@ async function doOtpLogin(otp: string) {
       return
     }
   } catch (err: any) {
+    // TODO i18n this
     error.value = err.response?.data?.message || 'Failed to confirm email.'
   } finally {
     isLoading.value = false

@@ -64,6 +64,7 @@ function handleCaptchaUpdatePayload(payload: string) {
 
 <template>
   <div>
+    <div class="text-center">{{ t('auth.auth_id_intro') }}</div>
     <BForm
       @submit.prevent="handleSendLoginLink"
       class="userIdForm"
