@@ -163,7 +163,7 @@ onMounted(async () => {
 
               <!-- Right: opt-ins + CTAs -->
               <div class="d-flex flex-column gap-3 flex-grow-1 w-100">
-                <OptInCheckboxes v-model="optInModel" />
+                <!-- <OptInCheckboxes v-model="optInModel" /> -->
 
                 <!-- Browse CTA -->
                 <div class="d-flex flex-column align-items-center align-items-lg-start gap-2">

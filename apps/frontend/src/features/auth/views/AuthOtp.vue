@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { type LoginUser } from '@zod/user/user.dto'
 import { useI18nStore } from '@/store/i18nStore'
+import { useI18n } from 'vue-i18n'
 
 import { useAuthStore } from '../stores/authStore'
 import OtpLoginComponent from '../components/OtpLoginComponent.vue'
@@ -19,6 +20,7 @@ const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 const i18nStore = useI18nStore()
+const { t } = useI18n()
 
 // TODO duplicate in apps/frontend/src/features/auth/views/AuthUserId.vue
 const user = reactive<LoginUser>({
@@ -47,8 +49,7 @@ onMounted(async () => {
   // if query params, parse and validate
   const params = OtpParamSchema.safeParse(route.query)
   if (!params.success) {
-    error.value =
-      "Hmm that link in the email didn't look right. Please enter the code in the message."
+    error.value = t('auth.otp_invalid_link')
     return
   }
   await doOtpLogin(params.data.otp)
@@ -72,10 +73,10 @@ async function doOtpLogin(otp: string) {
       console.log('OTP login failed:', res)
       switch (res.code) {
         case 'AUTH_EXPIRED_OTP':
-          error.value = 'This code has expired. Please request a new one.'
+          error.value = t('auth.otp_expired')
           break
         case 'AUTH_INVALID_OTP':
-          error.value = 'The OTP is invalid. Please try again.'
+          error.value = t('auth.otp_invalid')
           break
         default:
           error.value = res.message || 'An unknown error occurred. Please try again later.'
@@ -84,6 +85,8 @@ async function doOtpLogin(otp: string) {
       return
     }
   } catch (err: any) {
+    // TODO validate under what conditions this branch is hit.
+    // if it's dead, remove, if not i18n the error messages and handle different error cases properly
     error.value = err.response?.data?.message || 'Failed to confirm email.'
   } finally {
     isLoading.value = false

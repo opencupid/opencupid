@@ -7,7 +7,10 @@ import Multiselect from '@/features/shared/ui/multiselect'
 
 import { useDebounceFn } from '@vueuse/core'
 import CountryFlag from '../ui/CountryFlag.vue'
-import { prop } from 'remeda'
+
+const emit = defineEmits<{
+  (e: 'selected', value: LocationDTO): void
+}>()
 
 const debouncedAsyncFind = useDebounceFn(async (query: string) => {
   if (!query) {
@@ -28,8 +31,8 @@ const model = defineModel<LocationDTO>({
 
 const props = withDefaults(
   defineProps<{
-    allowEmpty?: boolean,
-    closeOnSelect?: boolean,
+    allowEmpty?: boolean
+    closeOnSelect?: boolean
     openDirection?: 'top' | 'bottom'
   }>(),
   {
@@ -73,6 +76,7 @@ const selected = computed<KomootLocation | null>({
 
 function handleSelected() {
   komoot.results = []
+  emit('selected', model.value)
 }
 
 onUnmounted(() => {
@@ -81,7 +85,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="interests-multiselect">
+  <div class="location-selector">
     <Multiselect
       v-model="selected"
       v-bind:allow-empty="props.allowEmpty"

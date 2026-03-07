@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { computed } from 'vue'
 
 import { type EditProfileForm } from '@zod/profile/profile.form'
+import { type PublicTag } from '@zod/tag/tag.dto'
 
 import LanguageSelector from '@/features/shared/profileform/LanguageSelector.vue'
 import TagSelector from '@/features/shared/profileform/TagSelector.vue'
@@ -19,6 +21,7 @@ import LogoutButton from '@/features/auth/components/LogoutButton.vue'
 import { useStepper } from '@vueuse/core'
 
 import { useWizardSteps } from '@/features/onboarding/composables/useWizardSteps'
+import { useTagsStore } from '@/store/tagStore'
 
 const { t } = useI18n()
 
@@ -56,7 +59,18 @@ const handleSubmit = () => {
   }
 }
 
-const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
+const tagStore = useTagsStore()
+
+const handleLocationSelected = async (location: { country: string }) => {
+  await tagStore.fetchPopularTags({
+    country: location.country,
+    limit: 50,
+  })
+}
+
+const siteName = __APP_CONFIG__.SITE_NAME
+
+const popularTags = computed(() => tagStore.popularTags ?? ([] as PublicTag[]))
 </script>
 
 <template>
@@ -114,7 +128,12 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
           <LocationSelectorComponent
             v-model="formData.location"
             :geoIp="true"
+            @selected="handleLocationSelected"
           />
+          <p class="form-text text-muted mt-2">
+            <!-- Start typing.... -->
+            {{ t('onboarding.location_hint') }}
+          </p>
         </fieldset>
 
         <fieldset v-else-if="isCurrent('looking_for')">
@@ -134,6 +153,7 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
           <TagSelector
             v-model="formData.tags"
             :required="true"
+            :initialOptions="popularTags"
           />
           <div class="form-text text-muted">
             <!-- Start typing to search for tags. You can add new tags if you don't find what you're looking for. -->
@@ -159,7 +179,7 @@ const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
         <fieldset v-else-if="isCurrent('introSocial')">
           <legend>
             <!-- About me... -->
-            {{ t('onboarding.social_intro_title') }}
+            <!-- {{ t('onboarding.social_intro_title') }} -->
           </legend>
           <p class="wizard-step-subtitle">
             <!-- Write a short introduction to help others get to know you. -->

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { type UserIdentifyPayload } from '@zod/user/user.dto'
 import { type LoginUser } from '@zod/user/user.dto'
@@ -44,9 +44,11 @@ async function handleSendOtp(authIdCaptcha: UserIdentifyPayload) {
       Object.assign(user, res.user)
       router.push({ name: 'LoginOTP' })
     } else {
+      // TODO i18n these error messages
       error.value = 'An unknown error occurred, please try again a bit later.'
     }
   } catch (err: any) {
+    // TODO i18n these error messages
     error.value = err || 'An unexpected error occurred.'
     console.error('Login error:', err)
   } finally {
@@ -58,6 +60,12 @@ const handleSetLanguage = (lang: string) => {
   user.language = lang
   i18nStore.setLanguage(lang)
 }
+
+const defaultAuthId = ref('')
+
+onMounted(() => {
+  defaultAuthId.value = localStorage.getItem('authId') || ''
+})
 </script>
 
 <template>
@@ -68,6 +76,7 @@ const handleSetLanguage = (lang: string) => {
 
     <AuthIdComponent
       :isLoading="isLoading"
+      :defaultAuthId="defaultAuthId"
       @updated="handleSendOtp"
     />
 

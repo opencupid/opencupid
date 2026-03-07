@@ -67,7 +67,8 @@
     "unspecified": "I'd rather not say"
   },
   "auth": {
-    "login": "Login",
+    "login": "Continue",
+    "auth_id_intro": "Enter your email address to register or login",
     "auth_id_input_empty": "Please enter your email address.",
     "auth_id_input_label": "Email",
     "auth_id_input_placeholder": " ",
@@ -81,6 +82,9 @@
     "otp_check_messages": "Check your messages",
     "otp_sent_phone": "We have sent you a little code to your phone number, please enter it below.",
     "otp_sent_email": "We have sent you a login link, check your inbox. If you don't see it, please check your spam folder.",
+    "otp_invalid_link": "Hmm that link in the email didn't look right. Please enter the code in the message.",
+    "otp_expired": "This code has expired. Please request a new one.",
+    "otp_invalid": "The code is invalid. Please try again.",
     "otp_input_label": "Enter code",
     "otp_invalid_feedback": "Code should be 6 digits",
     "email": "Email",
@@ -131,6 +135,7 @@
       }
     },
     "pronouns_edit_label": "pronouns",
+    "gender_edit_label": "gender",
     "forms": {
       "my_preferences": "My preferences",
       "age_range": "Age range",
@@ -162,7 +167,7 @@
         "introSocialLocalized": "About me",
         "introDatingLocalized": "Who I'd like to meet",
         "profileImages": "Photos",
-        "genderIdentity": "Gender",
+        "gender_identity": "Gender",
         "pronouns": "Pronouns",
         "relationshipStatus": "Relationship status",
         "hasKids": "Kids"
@@ -212,8 +217,9 @@
   },
   "onboarding": {
     "welcome_title": "Welcome to {siteName}!",
-    "welcome_subtitle": "Let's get you set up so you can start meeting people.",
+    "welcome_subtitle": "Please fill in some info about yourself. You can always change this later.",
     "location_title": "I'm from...",
+    "location_hint": "Start typing your city or village, and select from the list.",
     "connections_title": "I am looking for...",
     "connections_subtitle": "I feel complete but could use some company.",
     "interests_title": "I'm into...",
@@ -359,6 +365,7 @@
   "settings": {
     "title": "Settings",
     "language_label": "Language",
+    "notifications_label": "Notifications",
     "push_notifications": "Push Notifications",
     "enable_push": "Enable Push Notifications",
     "newsletter_opt_in": "I'm happy to receive the occasional email newsletter",
@@ -407,6 +414,9 @@
       "button_copy": "Copy",
       "button_copied": "Copied",
       "qr_hint": "Flash this at their phone"
+    },
+    "locale_selector": {
+      "help_wanted_translating": "Help wanted translating"
     },
     "dialog_cancel_button": "Nevermind",
     "update_banner": {

@@ -16,7 +16,13 @@ import LocaleSelector from '../../shared/ui/LocaleSelector.vue'
 
 describe('LocaleSelector', () => {
   it('emits selected locale when clicked', async () => {
-    const wrapper = mount(LocaleSelector)
+    const wrapper = mount(LocaleSelector, {
+      global: {
+        mocks: {
+          $t: (k: string) => k,
+        },
+      },
+    })
     const link = wrapper.find('a')
     expect(link.exists()).toBe(true)
     await link.trigger('click')

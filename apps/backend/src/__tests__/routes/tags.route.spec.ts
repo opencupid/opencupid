@@ -36,7 +36,9 @@ describe('GET /popular', () => {
 
   it('passes query params to service', async () => {
     const handler = fastify.routes['GET /popular']
-    mockTagService.getPopularTags.mockResolvedValue([])
+    mockTagService.getPopularTags.mockResolvedValue([
+      { id: 't1', name: 'Hiking', slug: 'hiking', count: 5 },
+    ])
     await handler(
       {
         query: { limit: '10', country: 'DE' },
@@ -50,6 +52,34 @@ describe('GET /popular', () => {
       country: 'DE',
       locale: 'de',
     })
+    expect(mockTagService.getPopularTags).toHaveBeenCalledTimes(1)
+  })
+
+  it('falls back to no country when country-filtered results are empty', async () => {
+    const handler = fastify.routes['GET /popular']
+    mockTagService.getPopularTags
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ id: 't2', name: 'Music', slug: 'music', count: 3 }])
+    await handler(
+      {
+        query: { limit: '10', country: 'DE' },
+        user: { userId: 'u1' },
+        session: { lang: 'de' },
+      } as any,
+      reply as any
+    )
+    expect(mockTagService.getPopularTags).toHaveBeenNthCalledWith(1, {
+      limit: 10,
+      country: 'DE',
+      locale: 'de',
+    })
+    expect(mockTagService.getPopularTags).toHaveBeenNthCalledWith(2, {
+      limit: 10,
+      country: undefined,
+      locale: 'de',
+    })
+    expect(reply.payload.success).toBe(true)
+    expect(reply.payload.tags).toEqual([{ id: 't2', name: 'Music', slug: 'music', count: 3 }])
   })
 })
 

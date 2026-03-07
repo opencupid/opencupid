@@ -30,11 +30,10 @@ const toggleDating = () => {
 <template>
   <div class="d-flex gap-2 flex-column justify-content-between w-100 mb-1 mb-sm-3 mb-md-3">
     <div
-      class="card btn-social-toggle clickable mb-2 mb-sm-2 mb-md-4"
+      class="card btn-social-toggle  mb-2 mb-sm-2 mb-md-4"
       role="button"
       :title="t('onboarding.goals.socializing')"
       :class="{ active: model.isSocialActive }"
-      @click="toggleSocial"
     >
       <div class="card-body d-flex flex-row align-items-center">
         <div class="col-4 col-sm-3 flex-shrink-0 flex-grow-0">
@@ -48,7 +47,8 @@ const toggleDating = () => {
             <input
               type="checkbox"
               class="form-check-input"
-              :checked="model.isSocialActive"
+              checked
+              disabled
               value="true"
             />
           </div>

@@ -22,7 +22,11 @@ const tagsRoutes: FastifyPluginAsync = async (fastify) => {
     const locale = req.session.lang
 
     try {
-      const tags = await tagService.getPopularTags({ limit, country, locale })
+      let tags = await tagService.getPopularTags({ limit, country, locale })
+      // if no tags found with country filter, broaden the query without country 
+      if (tags.length === 0) {
+        tags = await tagService.getPopularTags({ limit, country: undefined, locale })
+      }
       const response: PopularTagsResponse = { success: true, tags }
       return reply.code(200).send(response)
     } catch (err) {

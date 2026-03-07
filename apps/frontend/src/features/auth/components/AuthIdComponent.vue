@@ -13,7 +13,8 @@ import IconLogin from '@/assets/icons/interface/login.svg'
 const { t } = useI18n()
 
 const props = defineProps<{
-  isLoading: boolean
+  isLoading: boolean,
+  defaultAuthId?: string,
 }>()
 
 const emit = defineEmits<{
@@ -64,6 +65,7 @@ function handleCaptchaUpdatePayload(payload: string) {
 
 <template>
   <div>
+    <div class="text-center">{{ t('auth.auth_id_intro') }}</div>
     <BForm
       @submit.prevent="handleSendLoginLink"
       class="userIdForm"
@@ -92,6 +94,7 @@ function handleCaptchaUpdatePayload(payload: string) {
             autofocus
             autocomplete="off"
             :state="inputState"
+            :value="defaultAuthId"
             lazy
           >
           </BInput>

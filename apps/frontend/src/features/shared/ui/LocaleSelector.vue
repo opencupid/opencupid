@@ -30,7 +30,14 @@ defineEmits<{
         >
       </li>
     </ul>
-    <div class="text-center mt-3 help-text">Help wanted translating</div>
+    <div class="text-center mt-3 help-text">
+      <a
+        href="https://github.com/opencupid/opencupid/discussions/965"
+        target="_blank"
+      >
+        {{ $t('uicomponents.locale_selector.help_wanted_translating') }}
+      </a>
+    </div>
   </div>
 </template>
 

@@ -11,7 +11,8 @@ describe('GoalsSelector', () => {
     const wrapper = mount(GoalsSelector)
     await wrapper.findAll('.btn-social-toggle')[0]!.trigger('click')
     await wrapper.findAll('.btn-dating-toggle')[0]!.trigger('click')
-    expect((wrapper.vm as any).model.isSocialActive).toBe(true)
+    // isSocialactive checkbox is disabled in the code
+    expect((wrapper.vm as any).model.isSocialActive).toBe(false)
     expect((wrapper.vm as any).model.isDatingActive).toBe(true)
   })
 })

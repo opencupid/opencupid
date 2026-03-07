@@ -29,7 +29,6 @@ const { t } = useI18n()
 const authStore = useAuthStore()
 const ownerProfileStore = useOwnerProfileStore()
 const router = useRouter()
-const localStore = useLocalStore()
 
 const user = reactive({} as LoginUser)
 const isLoading = ref(true)
@@ -51,12 +50,9 @@ const optInModel = computed<ProfileOptInSettings>({
   },
 })
 
-onMounted(() => {
-  ownerProfileStore.fetchOptInSettings()
-})
-
 onMounted(async () => {
   isLoading.value = true
+  await ownerProfileStore.fetchOptInSettings()
   const [res] = await Promise.all([authStore.fetchUser(), ownerProfileStore.fetchOwnerProfile()])
 
   if (res.success) {
@@ -91,45 +87,44 @@ function handleClick() {
         </SecondaryNav>
 
         <section
-          v-if="!isLoading"
           class="w-100 flex-grow-1"
         >
           <BOverlay
-            :show="false"
+            :show="isLoading"
             class="h-100 d-flex flex-column justify-content-center"
           >
-            <div class="mb-3 mt-2 d-flex align-items-center justify-content-between">
-              <div>
+            <div class="row mb-3 mb-md-4 d-flex align-items-center justify-content-between">
+              <div class="col-md-8">
                 <span v-if="user.email"> {{ $t('auth.email') }}: {{ user.email }}</span>
                 <span v-if="user.phonenumber">
                   {{ $t('auth.phone_number') }}: {{ user.phonenumber }}</span
                 >
               </div>
-              <BButton
-                variant="secondary"
-                size="sm"
-                @click="handleClick"
-              >
-                <IconLogout class="svg-icon" />
-                {{ $t('authentication.logout') }}</BButton
-              >
+              <div class="col-md-4">
+                <BButton
+                  variant="secondary"
+                  size="sm"
+                  @click="handleClick"
+                >
+                  <IconLogout class="svg-icon" />
+                  {{ $t('authentication.logout') }}</BButton
+                >
+              </div>
             </div>
 
-            <!-- <div class="mb-3">
-      <button class="btn btn-secondary" @click="changeColor">Toggle night or day</button>
-    </div> -->
-
-            <fieldset class="mb-3">
-              <legend
-                for="language-selector"
-                class="h5"
-              >
+            <fieldset class="mb-3 mb-md-4">
+              <legend class="h5">
                 {{ t('settings.language_label') }}
               </legend>
               <LanguageSelectorDropdown size="md" />
             </fieldset>
 
-            <OptInCheckboxes v-model="optInModel" />
+            <fieldset>
+              <legend class="h5">
+                {{ t('settings.notifications_label') }}
+              </legend>
+              <OptInCheckboxes v-model="optInModel" />
+            </fieldset>
           </BOverlay>
         </section>
         <div class="position-fixed bottom-0 w-100 p-2">
