@@ -13,12 +13,12 @@
     "test:e2e": "playwright test",
     "test:i18n": "npx i18n-check --locales ../../packages/shared/i18n/ -s en --only missingKeys --exclude **/api/**",
     "test:coverage": "pnpm run test --coverage --run",
-    "build-only": "vite build && vite build --ssr src/entry-landing-ssr.ts --outDir dist-ssr && pnpm run prerender",
-    "prerender": "node scripts/prerender-landing.mjs",
+    "build-only": "vite build && pnpm run build:ssr",
     "type-check": "vue-tsc --build",
     "lint": "eslint . --fix",
     "format": "prettier --write src/",
-    "vue-i18n-extract": "vue-i18n-extract report --vueFiles './src/**/*.?(ts|vue)' --languageFiles '../../packages/shared/i18n/*.?(json|yml|yaml|js)'"
+    "vue-i18n-extract": "vue-i18n-extract report --vueFiles './src/**/*.?(ts|vue)' --languageFiles '../../packages/shared/i18n/*.?(json|yml|yaml|js)'",
+    "build:ssr": "vite build --ssr src/entry-landing-ssr.ts --outDir dist-ssr --config vite.ssr.config.ts"
   },
   "dependencies": {
     "@cospired/i18n-iso-languages": "4.2.0",
