@@ -23,6 +23,8 @@ defineProps<EmailTemplateProps>()
     <table
       role="presentation"
       class="outer"
+      cellpadding="0"
+      cellspacing="0"
     >
       <tbody>
         <tr>
@@ -30,6 +32,9 @@ defineProps<EmailTemplateProps>()
             <table
               role="presentation"
               class="card"
+              width="600"
+              cellpadding="0"
+              cellspacing="0"
             >
               <tbody>
                 <tr>
@@ -48,6 +53,8 @@ defineProps<EmailTemplateProps>()
                     <table
                       role="presentation"
                       class="ctaTable"
+                      cellpadding="0"
+                      cellspacing="0"
                     >
                       <tbody>
                         <tr>
