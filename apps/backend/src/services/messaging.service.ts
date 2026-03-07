@@ -340,7 +340,7 @@ export class MessageService {
 
   async sendWelcomeMessage(recipientProfileId: string, locale: string) {
     const senderId = appConfig.WELCOME_MESSAGE_SENDER_PROFILE_ID
-    const siteName = appConfig.SITE_NAME || 'OpenCupid'
+    const siteName = appConfig.SITE_NAME
     console.error('Welcome message sender ID:', senderId)
     if (senderId) {
       const t = i18next.getFixedT(locale)
