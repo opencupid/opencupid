@@ -1,4 +1,4 @@
-import { createApp, nextTick } from 'vue'
+import { createApp, createSSRApp, nextTick } from 'vue'
 import { createPinia } from 'pinia'
 import { appUseI18n } from './lib/i18n'
 
@@ -10,7 +10,7 @@ import { shouldShowLandingPage } from './lib/bootstrapRoute'
 
 if (shouldShowLandingPage(window.location.pathname, !!localStorage.getItem('token'))) {
   import('@/features/landingpage/views/LandingPage.vue').then(({ default: Landing }) => {
-    const app = createApp(Landing)
+    const app = createSSRApp(Landing)
     app.use(createPinia())
 
     const localStore = useLocalStore()

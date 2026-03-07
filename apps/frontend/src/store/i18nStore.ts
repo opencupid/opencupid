@@ -82,10 +82,13 @@ export const useI18nStore = defineStore('i18n', () => {
   }
 })
 
-function getBrowserLanguage(availableLocales: string[]): string {
+export function getBrowserLanguage(
+  availableLocales: string[],
+  navigatorLike: Pick<Navigator, 'language'> | undefined = globalThis.navigator
+): string {
   // TODO - handle multiple languages in navigator.languages
   // is navigator.language always == navigator.languages[0]?
   // const browserLanguage = navigator.language || navigator.languages[0] || 'en'
-  const browserLang = (navigator.language || 'en').split('-')[0] ?? 'en'
+  const browserLang = (navigatorLike?.language || 'en').split('-')[0] ?? 'en'
   return availableLocales.includes(browserLang) ? browserLang : 'en'
 }
