@@ -8,7 +8,6 @@
   ],
   "devDependencies": {
     "@changesets/cli": "^2.29.8",
-    "@intlify/unplugin-vue-i18n": "6.0.8",
     "@lingual/i18n-check": "^0.8.19",
     "@modelcontextprotocol/server-filesystem": "2026.1.14",
     "@sentry/cli": "1.77.3",
