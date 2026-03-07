@@ -22,6 +22,7 @@ export default defineConfig(({ mode }: ConfigEnv): ViteUserConfig => {
         '@': path.resolve(__dirname, './src'),
         '@shared': path.resolve(__dirname, '../../packages/shared'),
         '@zod': path.resolve(__dirname, '../../packages/shared/zod'),
+        'vue-i18n': path.resolve(__dirname, './src/lib/i18n.ts'),
       },
     },
     test: {

@@ -19,7 +19,7 @@
   ],
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
-"baseUrl": ".",
+    "baseUrl": ".",
     "paths": {
       "@/*": [
         "src/*"
@@ -30,6 +30,9 @@
       "@shared/*": [
         "../../packages/shared/*"
       ],
+      "vue-i18n": [
+        "src/lib/i18n.ts"
+      ]
     }
   }
 }

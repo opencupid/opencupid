@@ -20,6 +20,15 @@ declare global {
   }
 }
 
+
+// vue-i18n plural: "one form | many form", selected by count
+function resolvePlural(translated: string, count: number): string {
+  if (!translated.includes('|')) return translated
+  const forms = translated.split('|').map((s) => s.trim())
+  const index = count === 1 ? 0 : 1
+  return forms[Math.min(index, forms.length - 1)] ?? translated
+}
+
 /**
  * Compatibility shim for vue-i18n's useI18n().
  * Returns { t, locale } backed by Tolgee's useTranslate() and useTolgee().
@@ -35,8 +44,31 @@ export function useI18n() {
     },
   })
 
-  const t = (key: string, params?: Record<string, unknown>): string => {
-    return tolgeeT.value(key, params as Record<string, string> | undefined)
+  const t = (
+    key: string,
+    paramsOrDefault?: Record<string, unknown> | string | number,
+    pluralIndex?: number
+  ): string => {
+    let params: Record<string, unknown> | undefined
+    let count: number | undefined
+
+    if (typeof paramsOrDefault === 'number') {
+      count = paramsOrDefault
+    } else if (typeof paramsOrDefault === 'object' && paramsOrDefault !== null) {
+      params = paramsOrDefault
+    }
+
+    if (typeof pluralIndex === 'number') {
+      count = pluralIndex
+    }
+
+    const translated = tolgeeT.value(key, params as Record<string, string> | undefined)
+
+    if (count !== undefined) {
+      return resolvePlural(translated, count)
+    }
+
+    return translated
   }
 
   return { t, locale }
@@ -57,13 +89,42 @@ export function getLocale(): string | null {
 
 let languageListenerAttached = false
 
+function createGlobalT() {
+  return (
+    key: string,
+    paramsOrDefault?: Record<string, unknown> | string | number,
+    pluralIndex?: number
+  ): string => {
+    let params: Record<string, unknown> | undefined
+    let count: number | undefined
+
+    if (typeof paramsOrDefault === 'number') {
+      count = paramsOrDefault
+    } else if (typeof paramsOrDefault === 'object' && paramsOrDefault !== null) {
+      params = paramsOrDefault
+    }
+
+    if (typeof pluralIndex === 'number') {
+      count = pluralIndex
+    }
+
+    const translated = tolgee.t(key, undefined, params as Record<string, string> | undefined)
+
+    if (count !== undefined) {
+      return resolvePlural(translated, count)
+    }
+
+    return translated
+  }
+}
+
 export function appUseI18n(app: App) {
   app.use(VueTolgee, { tolgee })
 
-  const globalT = (key: string, params?: Record<string, unknown>): string => {
-    return tolgee.t(key, undefined, params as Record<string, string> | undefined)
-  }
+  const globalT = createGlobalT()
 
+  // Override VueTolgee's $t with our plural-aware version
+  app.config.globalProperties.$t = globalT as typeof app.config.globalProperties.$t
   window.__APP_I18N__ = { global: { t: globalT } }
 
   const initialLocale = getLocale() ?? 'en'

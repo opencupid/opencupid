@@ -61,7 +61,7 @@ describe('i18n', () => {
     getLanguageMock.mockReturnValue('de')
 
     const { appUseI18n } = await import('../i18n')
-    const app = { use: vi.fn() } as unknown as App
+    const app = { use: vi.fn(), config: { globalProperties: {} } } as unknown as App
 
     appUseI18n(app)
 
@@ -75,7 +75,7 @@ describe('i18n', () => {
     getLanguageMock.mockReturnValue(null)
 
     const { appUseI18n } = await import('../i18n')
-    const app = { use: vi.fn() } as unknown as App
+    const app = { use: vi.fn(), config: { globalProperties: {} } } as unknown as App
 
     appUseI18n(app)
 
@@ -84,7 +84,7 @@ describe('i18n', () => {
 
   it('updates locale on language:changed bus event', async () => {
     const { appUseI18n } = await import('../i18n')
-    const app = { use: vi.fn() } as unknown as App
+    const app = { use: vi.fn(), config: { globalProperties: {} } } as unknown as App
 
     appUseI18n(app)
     changeLanguageMock.mockClear()
@@ -96,7 +96,7 @@ describe('i18n', () => {
 
   it('global t function delegates to tolgee.t', async () => {
     const { appUseI18n } = await import('../i18n')
-    const app = { use: vi.fn() } as unknown as App
+    const app = { use: vi.fn(), config: { globalProperties: {} } } as unknown as App
 
     appUseI18n(app)
 
@@ -106,7 +106,7 @@ describe('i18n', () => {
 
   it('global t function passes params to tolgee.t', async () => {
     const { appUseI18n } = await import('../i18n')
-    const app = { use: vi.fn() } as unknown as App
+    const app = { use: vi.fn(), config: { globalProperties: {} } } as unknown as App
 
     appUseI18n(app)
 

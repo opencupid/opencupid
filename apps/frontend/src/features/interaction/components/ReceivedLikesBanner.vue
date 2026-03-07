@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import IconHeart from '@/assets/icons/interface/heart.svg'
 import { useInteractionsViewModel } from '../composables/useInteractionsViewModel'
 
+const { t } = useI18n()
 const { receivedLikesCount, haveReceivedLikes, haveMatches, matches } = useInteractionsViewModel()
 </script>
 
@@ -16,7 +18,7 @@ const { receivedLikesCount, haveReceivedLikes, haveMatches, matches } = useInter
 
       {{ $t('matches.notifications.you_have') }}
 
-      {{ $t('matches.notifications.likes', { count: receivedLikesCount }, receivedLikesCount) }}
+      {{ t('matches.notifications.likes', { count: receivedLikesCount }, receivedLikesCount) }}
     </div>
   </div>
 </template>

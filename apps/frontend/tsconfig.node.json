@@ -38,6 +38,9 @@
       "@shared/*": [
         "../../packages/shared/*"
       ],
+      "vue-i18n": [
+        "src/lib/i18n.ts"
+      ]
     }
   },
 }

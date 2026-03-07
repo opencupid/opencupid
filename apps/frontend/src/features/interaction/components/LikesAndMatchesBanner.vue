@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { useInteractionsViewModel } from '../composables/useInteractionsViewModel'
 
+const { t } = useI18n()
 const { receivedLikesCount, haveReceivedLikes, haveNewMatches, newMatchesCount } =
   useInteractionsViewModel()
 
@@ -18,7 +20,7 @@ const emit = defineEmits<{
     <div class="">
       {{ $t('matches.notifications.you_have') }}
       <span v-if="haveReceivedLikes">{{
-        $t('matches.notifications.likes', { count: receivedLikesCount }, receivedLikesCount)
+        t('matches.notifications.likes', { count: receivedLikesCount }, receivedLikesCount)
       }}</span>
       <span>&nbsp;</span>
       <span v-if="haveNewMatches && haveReceivedLikes">
@@ -26,7 +28,7 @@ const emit = defineEmits<{
       </span>
       <span>&nbsp;</span>
       <span v-if="haveNewMatches">
-        {{ $t('matches.notifications.matches', { count: newMatchesCount }, newMatchesCount) }}
+        {{ t('matches.notifications.matches', { count: newMatchesCount }, newMatchesCount) }}
       </span>
       <span>!</span>
     </div>
