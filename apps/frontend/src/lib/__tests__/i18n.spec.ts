@@ -12,12 +12,10 @@ vi.mock('../bus', () => ({
 }))
 
 const changeLanguageMock = vi.fn()
-const tMock = vi.fn(
-  (key: string, _def: unknown, params?: Record<string, string>) => {
-    if (params) return `${key}:${JSON.stringify(params)}`
-    return key
-  }
-)
+const tMock = vi.fn((key: string, _def: unknown, params?: Record<string, string>) => {
+  if (params) return `${key}:${JSON.stringify(params)}`
+  return key
+})
 
 vi.mock('../tolgee', () => ({
   tolgee: {

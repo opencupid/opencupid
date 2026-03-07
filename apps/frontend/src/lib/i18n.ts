@@ -20,7 +20,6 @@ declare global {
   }
 }
 
-
 // vue-i18n plural: "one form | many form", selected by count
 function resolvePlural(translated: string, count: number): string {
   if (!translated.includes('|')) return translated
