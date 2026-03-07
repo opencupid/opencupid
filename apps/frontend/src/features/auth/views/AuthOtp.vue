@@ -85,7 +85,8 @@ async function doOtpLogin(otp: string) {
       return
     }
   } catch (err: any) {
-    // TODO i18n this
+    // TODO validate under what conditions this branch is hit.
+    // if it's dead, remove, if not i18n the error messages and handle different error cases properly
     error.value = err.response?.data?.message || 'Failed to confirm email.'
   } finally {
     isLoading.value = false

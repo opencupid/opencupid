@@ -13,7 +13,8 @@ import IconLogin from '@/assets/icons/interface/login.svg'
 const { t } = useI18n()
 
 const props = defineProps<{
-  isLoading: boolean
+  isLoading: boolean,
+  defaultAuthId?: string,
 }>()
 
 const emit = defineEmits<{
@@ -93,6 +94,7 @@ function handleCaptchaUpdatePayload(payload: string) {
             autofocus
             autocomplete="off"
             :state="inputState"
+            :value="defaultAuthId"
             lazy
           >
           </BInput>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { type UserIdentifyPayload } from '@zod/user/user.dto'
 import { type LoginUser } from '@zod/user/user.dto'
@@ -60,6 +60,12 @@ const handleSetLanguage = (lang: string) => {
   user.language = lang
   i18nStore.setLanguage(lang)
 }
+
+const defaultAuthId = ref('')
+
+onMounted(() => {
+  defaultAuthId.value = localStorage.getItem('authId') || ''
+})
 </script>
 
 <template>
@@ -70,6 +76,7 @@ const handleSetLanguage = (lang: string) => {
 
     <AuthIdComponent
       :isLoading="isLoading"
+      :defaultAuthId="defaultAuthId"
       @updated="handleSendOtp"
     />
 

@@ -22,6 +22,10 @@ type AuthStoreResponse<T> =
   | (ApiError & { code: AuthErrorCodes; restart: 'otp' | 'userid' })
 type UserStoreResponse<T> = SuccessResponse<T> | ApiError
 
+const getAuthId = (authId: UserIdentifier): string => {
+  return authId.email ? authId.email : (authId.phonenumber ?? '')
+}
+
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     jwt: '',
@@ -128,6 +132,7 @@ export const useAuthStore = defineStore('auth', {
         if (res.data.success === true) {
           this.setAuthState(res.data.token, res.data.refreshToken)
           localStorage.removeItem('uid') // Clear userId after successful login
+          localStorage.removeItem('authId') // Clear userId after successful login
         } else {
           return {
             success: false,
@@ -174,6 +179,7 @@ export const useAuthStore = defineStore('auth', {
         const user = params.data
         // set userId in localStorage for the otplogin to pick up
         localStorage.setItem('uid', user.id)
+        localStorage.setItem('authId', getAuthId(authId))
         // Return the status flag for the frontend to handle
         return {
           success: true,
