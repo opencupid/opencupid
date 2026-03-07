@@ -130,6 +130,10 @@ const popularTags = computed(() => tagStore.popularTags ?? ([] as PublicTag[]))
             :geoIp="true"
             @selected="handleLocationSelected"
           />
+          <p class="form-text text-muted mt-2">
+            <!-- Start typing.... -->
+            {{ t('onboarding.location_hint') }}
+          </p>
         </fieldset>
 
         <fieldset v-else-if="isCurrent('looking_for')">

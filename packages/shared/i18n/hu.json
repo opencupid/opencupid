@@ -206,6 +206,7 @@
     "welcome_title": "Légy üdvözölve nálunk.",
     "welcome_subtitle": "Hogy hívnak?",
     "location_title": "Hol laksz?",
+    "location_hint": "Kezdd el beírni a városod vagy falvad nevét, majd válaszd ki a listából.",
     "connections_title": "Kivel kapcsolódnál?",
     "connections_subtitle": "Teljes vagyok, de jól jönne egy kis társaság.",
     "interests_title": "Mi érdekel?",

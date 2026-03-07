@@ -218,6 +218,7 @@
     "welcome_title": "Welcome to {siteName}!",
     "welcome_subtitle": "Please fill in some info about yourself. You can always change this later.",
     "location_title": "I'm from...",
+    "location_hint": "Start typing your city or village, and select from the list.",
     "connections_title": "I am looking for...",
     "connections_subtitle": "I feel complete but could use some company.",
     "interests_title": "I'm into...",
