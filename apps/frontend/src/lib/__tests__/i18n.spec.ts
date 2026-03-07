@@ -21,6 +21,7 @@ vi.mock('../tolgee', () => ({
   tolgee: {
     t: (...args: unknown[]) => tMock(...(args as [string, unknown, Record<string, string>?])),
     changeLanguage: (...args: unknown[]) => changeLanguageMock(...args),
+    run: vi.fn(),
   },
   staticData: { en: { test: 'hello' } },
 }))

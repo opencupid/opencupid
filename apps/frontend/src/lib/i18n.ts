@@ -130,6 +130,9 @@ export function appUseI18n(app: App) {
   tolgee.changeLanguage(initialLocale)
   Settings.defaultLocale = initialLocale
 
+  // Start the Tolgee observer (enables in-context editing via Chrome Plugin)
+  tolgee.run()
+
   if (!languageListenerAttached) {
     bus.on('language:changed', ({ language }: { language: string }) => {
       tolgee.changeLanguage(language)
