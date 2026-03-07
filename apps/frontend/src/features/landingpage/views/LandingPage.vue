@@ -36,7 +36,7 @@ const handleSetLanguage = (lang: string) => {
   i18nStore.setLanguage(lang)
 }
 
-const siteName = __APP_CONFIG__.SITE_NAME || 'OpenCupid'
+const siteName = __APP_CONFIG__.SITE_NAME
 </script>
 
 <template>
