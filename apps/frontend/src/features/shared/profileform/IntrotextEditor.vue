@@ -158,7 +158,7 @@ watch(
         </li>
       </ul>
       <div class="align-self-end">
-        <BButton
+        <!-- <BButton
           :variant="isListening ? 'danger' : 'secondary'"
           class="btn-icon"
           size="sm"
@@ -166,7 +166,7 @@ watch(
           :title="isListening ? t('profiles.forms.dictate_listening') : t('profiles.forms.dictate')"
         >
           <IconMic2 class="svg-icon" />
-        </BButton>
+        </BButton> -->
       </div>
     </div>
     <div

@@ -135,6 +135,7 @@
       }
     },
     "pronouns_edit_label": "pronouns",
+    "gender_edit_label": "gender",
     "forms": {
       "my_preferences": "My preferences",
       "age_range": "Age range",
@@ -166,7 +167,7 @@
         "introSocialLocalized": "About me",
         "introDatingLocalized": "Who I'd like to meet",
         "profileImages": "Photos",
-        "genderIdentity": "Gender",
+        "gender_identity": "Gender",
         "pronouns": "Pronouns",
         "relationshipStatus": "Relationship status",
         "hasKids": "Kids"

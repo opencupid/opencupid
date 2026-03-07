@@ -179,7 +179,7 @@ const popularTags = computed(() => tagStore.popularTags ?? ([] as PublicTag[]))
         <fieldset v-else-if="isCurrent('introSocial')">
           <legend>
             <!-- About me... -->
-            {{ t('onboarding.social_intro_title') }}
+            <!-- {{ t('onboarding.social_intro_title') }} -->
           </legend>
           <p class="wizard-step-subtitle">
             <!-- Write a short introduction to help others get to know you. -->

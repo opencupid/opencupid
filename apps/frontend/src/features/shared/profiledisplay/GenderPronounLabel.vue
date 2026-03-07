@@ -40,8 +40,8 @@ const { age, gender, pronouns } = useDatingFields(profileRef, t)
               v-else
               class=""
             >
-              gender</span
-            >
+              {{ $t('profiles.gender_edit_label') }}
+            </span>
           </span>
         </template>
       </EditField>

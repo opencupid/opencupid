@@ -135,7 +135,7 @@
       "city_search_placeholder": "Helyek keresése",
       "city_add_placeholder": "Új város hozzáadása",
       "city_start_typing": "Kezdd el beírni a városod nevét",
-      "tag_search_placeholder": "Érdeklődési kör keresése...",
+      "tag_search_placeholder": "Érdeklődési kör...",
       "tag_add_placeholder": "Új címke",
       "dictate_listening": "Hallgatom...",
       "dictate": "Diktálj",
@@ -153,7 +153,7 @@
         "introSocialLocalized": "Rólam",
         "introDatingLocalized": "Kivel találkoznék",
         "profileImages": "Fotók",
-        "genderIdentity": "Nem",
+        "gender_identity": "Nemem",
         "pronouns": "Névmások",
         "relationshipStatus": "Kapcsolati állapot",
         "hasKids": "Gyerekek"
@@ -197,9 +197,10 @@
         "search_button_title_dating": "Keresés",
         "age_range": "Korosztály:",
         "filter_display_label": "Hely:",
-        "explore_tags": "Érdeklődések felfedezése"
+        "explore_tags": "Érdeklődési korok"
       }
     },
+    "gender_edit_label": "nemem",
     "pronouns_edit_label": "névmások"
   },
   "onboarding": {
@@ -215,8 +216,8 @@
     "languages_subtitle": "Ezeken a nyelveken beszélek:",
     "social_intro_title": "Pár szóban magamról",
     "social_intro_subtitle": "Mesélj egy kicsit magadról. ",
-    "social_intro_placeholder": "Mit érdemes rólam tudni...fontos számomra... mivel töltöm az időmet szívesen...",
-    "social_intro_hint": "Ha inkább későbbre hagynád ezt, hagyd üresen.",
+    "social_intro_placeholder": "Rovid bemutatkozo",
+    "social_intro_hint": "Mit érdemes rólam tudni? Kit, mit keresek? (Később is kitoltheted.)",
     "photos_title": "Képeim",
     "photos_subtitle": "Tölts fel egy képet magadról, hogy mások is láthassanak.",
     "age_title": "Ekkor születtem:",
