@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import type { UserIdentifyPayload } from '@zod/user/user.dto'
 import { emailRegex, phoneRegex } from '@/lib/utils'
 import CaptchaWidget from './CaptchaWidget.vue'
@@ -13,8 +13,8 @@ import IconLogin from '@/assets/icons/interface/login.svg'
 const { t } = useI18n()
 
 const props = defineProps<{
-  isLoading: boolean,
-  defaultAuthId?: string,
+  isLoading: boolean
+  defaultAuthId?: string
 }>()
 
 const emit = defineEmits<{
@@ -22,7 +22,7 @@ const emit = defineEmits<{
 }>()
 
 // State variables
-const authIdInput = ref('')
+const authIdInput = ref(props.defaultAuthId || '')
 const captchaPayload = ref('')
 const error = ref('')
 
@@ -94,7 +94,6 @@ function handleCaptchaUpdatePayload(payload: string) {
             autofocus
             autocomplete="off"
             :state="inputState"
-            :value="defaultAuthId"
             lazy
           >
           </BInput>
