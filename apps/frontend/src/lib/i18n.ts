@@ -2,6 +2,7 @@ import type { App } from 'vue'
 import { computed } from 'vue'
 import { VueTolgee, useTranslate, useTolgee } from '@tolgee/vue'
 import { Settings } from 'luxon'
+import { useLocalStore } from '@/store/localStore'
 import { bus } from './bus'
 import { tolgee, staticData } from './tolgee'
 
@@ -50,7 +51,6 @@ export function sortLanguagesWithEnFirst(codes: string[]): string[] {
 }
 
 export function getLocale(): string | null {
-  const { useLocalStore } = require('@/store/localStore')
   const localStore = useLocalStore()
   return localStore.getLanguage
 }
