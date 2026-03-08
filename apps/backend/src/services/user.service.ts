@@ -1,9 +1,10 @@
 import { prisma } from '@/lib/prisma'
 import { Prisma, UserRole } from '@prisma/client'
 import type { User } from '@zod/generated'
-import { ValidateUserOtpLoginResponse } from '@zod/user/auth.dto'
+import { ValidateLoginTokenResponse } from '@zod/user/auth.dto'
 import type { UserIdentifier, SessionProfile } from '@zod/user/user.dto'
-import otpGenerator from 'otp-generator'
+import { customAlphabet } from 'nanoid'
+import { nolookalikesSafe } from 'nanoid-dictionary'
 
 // Define types for service return values
 export type UserWithProfile = User & { profile: SessionProfile }
@@ -30,19 +31,18 @@ export class UserService {
     return UserService.instance
   }
 
-  async validateUserOtpLogin(userId: string, otp: string): Promise<ValidateUserOtpLoginResponse> {
+  async validateLoginToken(token: string): Promise<ValidateLoginTokenResponse> {
     const user = await prisma.user.findUnique({
       where: {
-        id: userId,
-        loginToken: otp,
+        loginToken: token,
       },
     })
     if (!user) {
-      return { code: 'AUTH_INVALID_OTP', message: 'Invalid OTP', success: false }
+      return { code: 'AUTH_INVALID_TOKEN', message: 'Invalid token', success: false }
     }
 
     if (user.loginTokenExp && user.loginTokenExp < new Date()) {
-      return { code: 'AUTH_EXPIRED_OTP', message: 'OTP has expired', success: false }
+      return { code: 'AUTH_EXPIRED_TOKEN', message: 'Token has expired', success: false }
     }
 
     const isNewUser = user.isRegistrationConfirmed === false
@@ -62,7 +62,7 @@ export class UserService {
     return { user: userUpdated, isNewUser, success: true }
   }
 
-  async setUserOTP(
+  async setLoginToken(
     authId: UserIdentifier,
     otp: string,
     language: string
@@ -87,7 +87,6 @@ export class UserService {
 
     const authIdField = normalizedAuthId
     const userExists = await prisma.user.findUnique({ where: { ...authIdField } })
-    // const emailConfirmationToken = generateOTP() // enerate email confirmation token
     const tokenExpiration = getTokenExpiration()
 
     // user record exists
@@ -167,13 +166,7 @@ export class UserService {
     })
   }
 
-  generateOTP() {
-    // Generate a 6-digit OTP
-    return otpGenerator.generate(6, {
-      digits: true,
-      specialChars: false,
-      upperCaseAlphabets: false,
-      lowerCaseAlphabets: false,
-    })
+  generateLoginToken() {
+    return customAlphabet(nolookalikesSafe, 6)()
   }
 }

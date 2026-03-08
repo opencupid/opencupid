@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { type UserIdentifyPayload } from '@zod/user/user.dto'
-import { type LoginUser } from '@zod/user/user.dto'
 
 import { useI18nStore } from '@/store/i18nStore'
 import { useAuthStore } from '../stores/authStore'
-import AuthIdComponent from '../components/AuthIdComponent.vue'
+import LoginForm from '../components/LoginForm.vue'
 import LocaleSelector from '../../shared/ui/LocaleSelector.vue'
 
 import ErrorComponent from '@/features/shared/ui/ErrorComponent.vue'
@@ -19,45 +19,29 @@ const isLoading = ref(false)
 const router = useRouter()
 const authStore = useAuthStore()
 const i18nStore = useI18nStore()
-
-// TODO duplicate in apps/frontend/src/features/auth/views/AuthOtp.vue
-const user = reactive<LoginUser>({
-  id: '',
-  email: '',
-  phonenumber: '',
-  language: i18nStore.getLanguage(),
-  newsletterOptIn: true,
-  isPushNotificationEnabled: false,
-})
+const { t } = useI18n()
 
 // Method to handle sending login link
 async function handleSendOtp(authIdCaptcha: UserIdentifyPayload) {
   const payload = {
     ...authIdCaptcha,
-    language: user.language || 'en',
+    language: i18nStore.getLanguage() || 'en',
   }
   try {
     error.value = ''
     isLoading.value = true
-    const res = await authStore.sendLoginLink(payload)
+    const res = await authStore.sendMagicLink(payload)
     if (res.success) {
-      Object.assign(user, res.user)
-      router.push({ name: 'LoginOTP' })
+      router.push({ name: 'MagicLink' })
     } else {
-      // TODO i18n these error messages
-      error.value = 'An unknown error occurred, please try again a bit later.'
+      error.value = res.message || t('auth.unknown_error')
     }
-  } catch (err: any) {
-    // TODO i18n these error messages
-    error.value = err || 'An unexpected error occurred.'
-    console.error('Login error:', err)
   } finally {
     isLoading.value = false
   }
 }
 
 const handleSetLanguage = (lang: string) => {
-  user.language = lang
   i18nStore.setLanguage(lang)
 }
 
@@ -70,7 +54,7 @@ const defaultAuthId = localStorage.getItem('authId') || ''
 
     <ErrorComponent :error="error" />
 
-    <AuthIdComponent
+    <LoginForm
       :isLoading="isLoading"
       :defaultAuthId="defaultAuthId"
       @updated="handleSendOtp"

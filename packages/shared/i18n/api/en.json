@@ -9,7 +9,7 @@
     "fallback_hint": "If the button doesn’t work, copy and paste this URL:",
     "loginLink": {
       "subject": "[{{siteName}}] Your login link",
-      "contentBody": "Hey there, this is your login code: <h2>{{otp}}</h2>",
+      "contentBody": "Click the button below to log in.",
       "callToActionLabel": "Use login link",
       "footer": "If you didn’t request this, you can ignore this email."
     },
