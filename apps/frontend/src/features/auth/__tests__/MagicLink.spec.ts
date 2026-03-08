@@ -19,10 +19,6 @@ vi.mock('vue-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
-vi.mock('@/store/i18nStore', () => ({
-  useI18nStore: () => ({ getLanguage: () => 'en' }),
-}))
-
 vi.mock('@/assets/icons/arrows/arrow-single-left.svg', () => ({
   default: { template: '<div />' },
 }))
@@ -45,6 +41,24 @@ const mountMagicLink = () =>
     },
   })
 
+const phoneLoginUser = {
+  id: 'ck1234567890abcd12345679',
+  email: '',
+  phonenumber: '+12345678901',
+  language: 'en',
+  newsletterOptIn: true,
+  isPushNotificationEnabled: false,
+}
+
+const emailLoginUser = {
+  id: 'ck1234567890abcd12345678',
+  email: 'test@example.com',
+  phonenumber: '',
+  language: 'en',
+  newsletterOptIn: true,
+  isPushNotificationEnabled: false,
+}
+
 describe('MagicLink', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -54,7 +68,9 @@ describe('MagicLink', () => {
 
   it('redirects valid magic-link token without rendering form', async () => {
     route.query = { token: '123456' }
-    vi.spyOn(useAuthStore(), 'verifyToken').mockResolvedValue({ success: true, status: '' })
+    const authStore = useAuthStore()
+    authStore.loginUser = emailLoginUser
+    vi.spyOn(authStore, 'verifyToken').mockResolvedValue({ success: true, status: '' })
 
     const wrapper = mountMagicLink()
 
@@ -66,38 +82,78 @@ describe('MagicLink', () => {
     expect(wrapper.find('[data-testid="token-form"]').exists()).toBe(false)
   })
 
-  it('renders the form with expired error when token is expired', async () => {
-    route.query = { token: '123456' }
-    vi.spyOn(useAuthStore(), 'verifyToken').mockResolvedValue({
-      success: false,
-      code: 'AUTH_EXPIRED_TOKEN',
-      message: 'expired',
-      restart: 'otp',
+  describe('phone auth', () => {
+    it('renders TokenInput with expired error when token is expired', async () => {
+      route.query = { token: '123456' }
+      const authStore = useAuthStore()
+      authStore.loginUser = phoneLoginUser
+      vi.spyOn(authStore, 'verifyToken').mockResolvedValue({
+        success: false,
+        code: 'AUTH_EXPIRED_TOKEN',
+        message: 'expired',
+        restart: 'otp',
+      })
+
+      const wrapper = mountMagicLink()
+
+      expect(wrapper.find('[data-testid="token-form"]').exists()).toBe(false)
+
+      await flushPromises()
+
+      expect(push).not.toHaveBeenCalled()
+      expect(wrapper.find('[data-testid="token-form"]').exists()).toBe(true)
+      expect(wrapper.text()).toContain('auth.token_expired')
+      expect(wrapper.text()).toContain('123456')
     })
 
-    const wrapper = mountMagicLink()
+    it('renders TokenInput when magic-link token query is invalid', async () => {
+      route.query = { token: '123' }
+      const authStore = useAuthStore()
+      authStore.loginUser = phoneLoginUser
+      const verifyTokenSpy = vi.spyOn(authStore, 'verifyToken')
 
-    expect(wrapper.find('[data-testid="token-form"]').exists()).toBe(false)
+      const wrapper = mountMagicLink()
 
-    await flushPromises()
+      await flushPromises()
 
-    expect(push).not.toHaveBeenCalled()
-    expect(wrapper.find('[data-testid="token-form"]').exists()).toBe(true)
-    expect(wrapper.text()).toContain('auth.token_expired')
-    expect(wrapper.text()).toContain('123456')
+      expect(verifyTokenSpy).not.toHaveBeenCalled()
+      expect(wrapper.find('[data-testid="token-form"]').exists()).toBe(true)
+      expect(wrapper.text()).toContain('auth.token_invalid_link')
+      expect(wrapper.text()).toContain('123')
+    })
   })
 
-  it('renders the form when magic-link token query is invalid', async () => {
-    route.query = { token: '123' }
-    const verifyTokenSpy = vi.spyOn(useAuthStore(), 'verifyToken')
+  describe('email auth', () => {
+    it('shows check-email message instead of TokenInput', async () => {
+      const authStore = useAuthStore()
+      authStore.loginUser = emailLoginUser
 
-    const wrapper = mountMagicLink()
+      const wrapper = mountMagicLink()
 
-    await flushPromises()
+      await flushPromises()
 
-    expect(verifyTokenSpy).not.toHaveBeenCalled()
-    expect(wrapper.find('[data-testid="token-form"]').exists()).toBe(true)
-    expect(wrapper.text()).toContain('auth.token_invalid_link')
-    expect(wrapper.text()).toContain('123')
+      expect(wrapper.find('[data-testid="token-form"]').exists()).toBe(false)
+      expect(wrapper.text()).toContain('auth.token_check_email')
+    })
+
+    it('shows error alongside check-email message on failed magic link', async () => {
+      route.query = { token: '123456' }
+      const authStore = useAuthStore()
+      authStore.loginUser = emailLoginUser
+      vi.spyOn(authStore, 'verifyToken').mockResolvedValue({
+        success: false,
+        code: 'AUTH_EXPIRED_TOKEN',
+        message: 'expired',
+        restart: 'otp',
+      })
+
+      const wrapper = mountMagicLink()
+
+      await flushPromises()
+
+      expect(wrapper.find('[data-testid="token-form"]').exists()).toBe(false)
+      expect(wrapper.text()).toContain('auth.token_check_email')
+      expect(wrapper.text()).toContain('auth.token_expired')
+    })
   })
 })

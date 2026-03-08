@@ -76,6 +76,7 @@
     "token_invalid": "A kóddal valami nem stimmel, jól írtad be?",
     "token_input_label": "Írd ide a kódot",
     "token_invalid_feedback": "A kód 6 számjegyű",
+    "token_check_email": "Küldtünk egy bejelentkezési linket. Nézd meg az emailjeidet, és kattints a linkre a belépéshez.",
     "token_unknown_error": "Valami hiba történt. Kérlek, próbáld újra később.",
     "email": "E-mail",
     "phone_number": "Telefonszám",

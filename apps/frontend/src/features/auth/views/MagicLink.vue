@@ -106,7 +106,7 @@ function handleBackButton() {
         variant="primary"
       />
       <TokenInput
-        v-else
+        v-else-if="authStore.isPhoneAuth"
         :isLoading="isLoading"
         :user="authStore.loginUser!"
         :validationResult="isValidated"
@@ -114,6 +114,18 @@ function handleBackButton() {
         :initialToken="lastTokenAttempt"
         @token:submit="handleTokenSubmitted"
       />
+      <div
+        v-else
+        class="text-center"
+      >
+        <p>{{ $t('auth.token_check_email') }}</p>
+        <div
+          v-if="error"
+          class="text-danger mt-2"
+        >
+          {{ error }}
+        </div>
+      </div>
     </div>
   </main>
 </template>
