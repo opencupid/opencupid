@@ -143,7 +143,7 @@ watch(
             <ImageTag
               :image="img"
               className="fitted-image"
-              variant="original"
+              variant="full"
             />
           </div>
         </Slide>
