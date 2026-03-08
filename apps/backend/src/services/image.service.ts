@@ -188,14 +188,9 @@ export class ImageService {
       const height = v.height ?? v.width
       const fit = v.fit ?? sharp.fit.inside
 
-      if (['card', 'thumb'].includes(v.name)) {
-        // Face-aware crop with +25% padding, target aspect maintained
+      if (['card', 'thumb', 'profile'].includes(v.name)) {
         const rect = await processor.getFaceAwareCrop(width, height, { paddingRatio: 0.75 })
-        const crop = { x: rect.left, y: rect.top, width: rect.width, height: rect.height }
-        await processor.extractAndResize(crop, width, height, outputPath)
-      } else if (['profile'].includes(v.name)) {
-        const crop = await processor.getCropRegion(width, height)
-        await processor.extractAndResize(crop, width, height, outputPath)
+        await processor.extractAndResize(rect, width, height, outputPath)
       } else {
         await processor.resizeOriginal(width, height, fit, outputPath)
       }

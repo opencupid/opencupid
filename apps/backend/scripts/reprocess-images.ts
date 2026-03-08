@@ -40,8 +40,8 @@ async function main() {
         where: { id: img.id },
         data: {
           blurhash: result.blurhash,
-          width: result.width,
-          height: result.height,
+          width: result.width ?? null,
+          height: result.height ?? null,
         },
       })
 
