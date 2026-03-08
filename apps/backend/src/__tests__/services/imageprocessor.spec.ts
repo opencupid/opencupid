@@ -38,24 +38,13 @@ describe('ImageProcessor', () => {
     expect(processor['faces'].length).toBeGreaterThanOrEqual(0)
   })
 
-  it('produces valid crop region', async () => {
-    const processor = new ImageProcessor(buffer)
-    await processor.analyze()
-
-    const crop = await processor.getCropRegion(600, 600)
-    expect(crop).toHaveProperty('x')
-    expect(crop).toHaveProperty('y')
-    expect(crop).toHaveProperty('width')
-    expect(crop).toHaveProperty('height')
-  })
-
   it('can extract and resize cropped image', async () => {
     const processor = new ImageProcessor(buffer)
     await processor.analyze()
-    const crop = await processor.getCropRegion(300, 300)
+    const rect = await processor.getFaceAwareCrop(300, 300)
 
     const outPath = path.join(TMP_DIR, 'crop-output.webp')
-    await processor.extractAndResize(crop, 300, 300, outPath)
+    await processor.extractAndResize(rect, 300, 300, outPath)
 
     const meta = await sharp(outPath).metadata()
     expect(meta.format).toBe('webp')
