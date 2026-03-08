@@ -111,7 +111,7 @@ describe('authStore localStorage auth flow', () => {
     mockSafeApiCall.mockImplementation((fn: () => Promise<unknown>) => fn())
   })
 
-  it('saves uid and authId in localStorage after sendLoginLink success (email)', async () => {
+  it('saves uid and authId in localStorage after sendMagicLink success (email)', async () => {
     mockApi.post.mockResolvedValue({
       data: {
         user: {
@@ -126,14 +126,14 @@ describe('authStore localStorage auth flow', () => {
     })
 
     const store = useAuthStore()
-    const res = await store.sendLoginLink({ email: 'test@example.com', phonenumber: '' })
+    const res = await store.sendMagicLink({ email: 'test@example.com', phonenumber: '' })
 
     expect(res.success).toBe(true)
     expect(localStorage.getItem('uid')).toBe('ck1234567890abcd12345678')
     expect(localStorage.getItem('authId')).toBe('test@example.com')
   })
 
-  it('saves phone number as authId after sendLoginLink success (phone)', async () => {
+  it('saves phone number as authId after sendMagicLink success (phone)', async () => {
     mockApi.post.mockResolvedValue({
       data: {
         user: {
@@ -148,18 +148,22 @@ describe('authStore localStorage auth flow', () => {
     })
 
     const store = useAuthStore()
-    const res = await store.sendLoginLink({ email: '', phonenumber: '+12345678901' })
+    const res = await store.sendMagicLink({ email: '', phonenumber: '+12345678901' })
 
     expect(res.success).toBe(true)
     expect(localStorage.getItem('uid')).toBe('ck1234567890abcd12345679')
     expect(localStorage.getItem('authId')).toBe('+12345678901')
   })
 
-  it('clears both uid and authId after successful otpLogin', async () => {
+  it('clears both uid and authId after successful verifyToken', async () => {
     localStorage.setItem('uid', 'u1')
     localStorage.setItem('authId', 'test@example.com')
 
-    const token = makeJwt({ userId: 'u1', profileId: 'p1', exp: Math.floor(Date.now() / 1000) + 3600 })
+    const token = makeJwt({
+      userId: 'u1',
+      profileId: 'p1',
+      exp: Math.floor(Date.now() / 1000) + 3600,
+    })
     mockApi.get.mockResolvedValue({
       data: {
         success: true,
@@ -169,7 +173,7 @@ describe('authStore localStorage auth flow', () => {
     })
 
     const store = useAuthStore()
-    const res = await store.otpLogin('123456')
+    const res = await store.verifyToken('123456')
 
     expect(res.success).toBe(true)
     expect(localStorage.getItem('uid')).toBeNull()

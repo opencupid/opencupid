@@ -12,11 +12,11 @@ vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 const stubFormKit = { template: '<form><slot :state="{ valid: true }" /></form>' }
 const CaptchaWidget = { template: '<div />' }
 
-import AuthIdComponent from '../components/AuthIdComponent.vue'
+import LoginForm from '../components/LoginForm.vue'
 
-describe('AuthIdComponent', () => {
+describe('LoginForm', () => {
   it('validates identifier input', () => {
-    const wrapper = mount(AuthIdComponent, {
+    const wrapper = mount(LoginForm, {
       props: { isLoading: false },
       global: { stubs: { CaptchaWidget } },
     })
@@ -29,7 +29,7 @@ describe('AuthIdComponent', () => {
   })
 
   it('emits updated with computed identifier', async () => {
-    const wrapper = mount(AuthIdComponent, {
+    const wrapper = mount(LoginForm, {
       props: { isLoading: false },
       global: { stubs: { CaptchaWidget } },
     })
@@ -44,7 +44,7 @@ describe('AuthIdComponent', () => {
   })
 
   it('sets error when identifier empty', async () => {
-    const wrapper = mount(AuthIdComponent, {
+    const wrapper = mount(LoginForm, {
       props: { isLoading: false },
       global: { stubs: { CaptchaWidget } },
     })

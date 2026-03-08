@@ -47,9 +47,9 @@ beforeEach(async () => {
   }
   reply = new MockReply()
   mockUserService = {
-    validateUserOtpLogin: vi.fn(),
-    setUserOTP: vi.fn(),
-    generateOTP: vi.fn().mockReturnValue('123456'),
+    validateLoginToken: vi.fn(),
+    setLoginToken: vi.fn(),
+    generateLoginToken: vi.fn().mockReturnValue('abc123'),
     getUserById: vi.fn(),
     bumpTokenVersion: vi.fn(),
   }
@@ -63,48 +63,29 @@ beforeEach(async () => {
   await authRoutes(fastify as any, {})
 })
 
-describe('GET /otp-login', () => {
+describe('GET /verify-token', () => {
   it('AUTH_INVALID_INPUT on bad zod parse', async () => {
-    const handler = fastify.routes['GET /otp-login']
-    mockUserService.validateUserOtpLogin.mockResolvedValue({
-      code: 'AUTH_INVALID_OTP',
-      message: 'Invalid OTP',
-      success: false,
-    })
-    await handler({ query: { userId: 'invalid', otp: '111111' } } as any, reply as any)
+    const handler = fastify.routes['GET /verify-token']
+    await handler({ query: { token: 'ab' } } as any, reply as any)
     expect(reply.payload.code).toBe('AUTH_INVALID_INPUT')
   })
 
-  it('AUTH_INVALID_INPUT on short otp', async () => {
-    const handler = fastify.routes['GET /otp-login']
-    mockUserService.validateUserOtpLogin.mockResolvedValue({
-      code: 'AUTH_INVALID_OTP',
-      message: 'Invalid OTP',
+  it('returns 422 if token is invalid', async () => {
+    const handler = fastify.routes['GET /verify-token']
+    mockUserService.validateLoginToken.mockResolvedValue({
+      code: 'AUTH_INVALID_TOKEN',
+      message: 'Invalid token',
       success: false,
     })
-    await handler(
-      { query: { userId: 'cmc7t45x400086w39gj30pzn3', otp: '00' } } as any,
-      reply as any
-    )
-    expect(reply.payload.code).toBe('AUTH_INVALID_INPUT')
-  })
-
-  it('returns 422 if OTP is invalid', async () => {
-    const handler = fastify.routes['GET /otp-login']
-    mockUserService.validateUserOtpLogin.mockResolvedValue({
-      code: 'AUTH_INVALID_OTP',
-      message: 'Invalid OTP',
-      success: false,
-    })
-    const req = { query: { userId: 'cmc7t45x400086w39gj30pzn3', otp: '123456' } }
+    const req = { query: { token: 'abc123' } }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(422)
-    expect(reply.payload.code).toBe('AUTH_INVALID_OTP')
-    expect(reply.payload.message).toBe('Invalid OTP')
+    expect(reply.payload.code).toBe('AUTH_INVALID_TOKEN')
+    expect(reply.payload.message).toBe('Invalid token')
   })
 
   it('returns 200 and token + refreshToken for existing user', async () => {
-    const handler = fastify.routes['GET /otp-login']
+    const handler = fastify.routes['GET /verify-token']
     const user = {
       id: 'user1',
       email: 'test@example.com',
@@ -113,13 +94,13 @@ describe('GET /otp-login', () => {
       language: 'en',
       profile: { id: 'profile1', isDatingActive: false, isSocialActive: false, isActive: false },
     }
-    mockUserService.validateUserOtpLogin.mockResolvedValue({
+    mockUserService.validateLoginToken.mockResolvedValue({
       success: true,
       user,
       isNewUser: false,
     })
     fastify.jwt = { sign: vi.fn().mockReturnValue('jwt-token') }
-    const req = { query: { userId: 'cmc7t45x400086w39gj30pzn3', otp: '123456' } }
+    const req = { query: { token: 'abc123' } }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
@@ -129,7 +110,7 @@ describe('GET /otp-login', () => {
   })
 
   it('returns 200 and token for new user, sends welcome email and initializes profile', async () => {
-    const handler = fastify.routes['GET /otp-login']
+    const handler = fastify.routes['GET /verify-token']
     const user = {
       id: 'user2',
       email: 'new@example.com',
@@ -138,7 +119,7 @@ describe('GET /otp-login', () => {
       language: 'en',
       profile: undefined,
     }
-    mockUserService.validateUserOtpLogin.mockResolvedValue({
+    mockUserService.validateLoginToken.mockResolvedValue({
       success: true,
       user,
       isNewUser: true,
@@ -154,7 +135,7 @@ describe('GET /otp-login', () => {
     const notifier = (await import('../../services/notifier.service')).notifierService
     // @ts-expect-error whatever
     notifier.notifyUser.mockClear()
-    const req = { query: { userId: 'cmc7t45x400086w39gj30pzn3', otp: '654321' } }
+    const req = { query: { token: 'abc123' } }
     await handler(req as any, reply as any)
     expect(notifier.notifyUser).toHaveBeenCalledWith('user2', 'welcome', {
       link: 'http://test/me',
@@ -167,23 +148,23 @@ describe('GET /otp-login', () => {
   })
 
   it('returns 500 on unexpected error', async () => {
-    const handler = fastify.routes['GET /otp-login']
-    mockUserService.validateUserOtpLogin.mockImplementation(() => {
+    const handler = fastify.routes['GET /verify-token']
+    mockUserService.validateLoginToken.mockImplementation(() => {
       throw new Error('fail')
     })
-    const req = { query: { userId: 'cmc7t45x400086w39gj30pzn3', otp: '123456' } }
+    const req = { query: { token: 'abc123' } }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(500)
     expect(reply.payload.code).toBe('AUTH_INTERNAL_ERROR')
   })
 })
 
-describe('POST /send-login-link', () => {
+describe('POST /send-magic-link', () => {
   let handler: any
   let notifier: any
 
   beforeEach(async () => {
-    handler = fastify.routes['POST /send-login-link']
+    handler = fastify.routes['POST /send-magic-link']
     notifier = (await import('../../services/notifier.service')).notifierService
     notifier.notifyUser.mockClear()
   })
@@ -232,8 +213,8 @@ describe('POST /send-login-link', () => {
     expect(reply.payload.code).toBe('AUTH_INTERNAL_ERROR')
   })
 
-  it('sends OTP via email for new user and returns register status', async () => {
-    mockUserService.setUserOTP.mockResolvedValue({
+  it('sends token via email for new user and returns register status', async () => {
+    mockUserService.setLoginToken.mockResolvedValue({
       user: {
         id: 'user3',
         email: 'newuser@example.com',
@@ -251,10 +232,9 @@ describe('POST /send-login-link', () => {
       },
     }
     await handler(req as any, reply as any)
-    expect(mockUserService.generateOTP).toHaveBeenCalled()
+    expect(mockUserService.generateLoginToken).toHaveBeenCalled()
     expect(notifier.notifyUser).toHaveBeenCalledWith('user3', 'login_link', {
-      otp: '123456',
-      link: 'http://test/auth/otp?otp=123456',
+      link: 'http://test/magic-link?token=abc123',
     })
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
@@ -262,8 +242,8 @@ describe('POST /send-login-link', () => {
     expect(reply.payload.user.email).toBe('newuser@example.com')
   })
 
-  it('sends OTP via email for existing user and returns login status', async () => {
-    mockUserService.setUserOTP.mockResolvedValue({
+  it('sends token via email for existing user and returns login status', async () => {
+    mockUserService.setLoginToken.mockResolvedValue({
       user: {
         id: 'user4',
         email: 'existing@example.com',
@@ -281,10 +261,9 @@ describe('POST /send-login-link', () => {
       },
     }
     await handler(req as any, reply as any)
-    expect(mockUserService.generateOTP).toHaveBeenCalled()
+    expect(mockUserService.generateLoginToken).toHaveBeenCalled()
     expect(notifier.notifyUser).toHaveBeenCalledWith('user4', 'login_link', {
-      otp: '123456',
-      link: 'http://test/auth/otp?otp=123456',
+      link: 'http://test/magic-link?token=abc123',
     })
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)

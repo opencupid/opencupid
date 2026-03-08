@@ -63,14 +63,10 @@ export const LoginUserSchema = UserSchema.pick({
 })
 export type LoginUser = z.infer<typeof LoginUserSchema>
 
-export const OtpLoginPayloadSchema = z.object({
-  userId: z.string().cuid(),
-  otp: z
-    .string()
-    .min(6, 'OTP must be at least 6 characters long')
-    .max(6, 'OTP must be exactly 6 characters long'),
+export const VerifyTokenPayloadSchema = z.object({
+  token: z.string().length(6),
 })
-export type OtpLoginPayload = z.infer<typeof OtpLoginPayloadSchema>
+export type VerifyTokenPayload = z.infer<typeof VerifyTokenPayloadSchema>
 
 export const RefreshTokenPayloadSchema = z.object({
   refreshToken: z.string().uuid(),

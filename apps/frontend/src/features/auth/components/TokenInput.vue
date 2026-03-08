@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { type LoginUser } from '@zod/user/user.dto'
-import { otpRegex } from '@/lib/utils'
+import { tokenRegex } from '@/lib/utils'
 
 import { useI18n } from 'vue-i18n'
 import IconMessage from '@/assets/icons/interface/message.svg'
@@ -13,27 +13,25 @@ const props = defineProps<{
   isLoading: boolean
   validationError: string | null
   validationResult: boolean | null
-  initialOtp?: string
+  initialToken?: string
 }>()
 
 const emit = defineEmits<{
-  (e: 'otp:submit', otp: string): void
+  (e: 'token:submit', token: string): void
 }>()
 
 const { t } = useI18n()
 
 // input field
-const otpInput = ref(props.initialOtp ?? '')
+const tokenInput = ref(props.initialToken ?? '')
 
-// Method to handle OTP entered
-async function handleOTPEntered() {
-  emit('otp:submit', otpInput.value)
+async function handleTokenEntered() {
+  emit('token:submit', tokenInput.value)
 }
 
 const inputState = computed(() => {
-  if (!otpInput.value) return null
-  // Simple validation for OTP: must be a number and 6 digits long
-  return otpRegex.test(otpInput.value)
+  if (!tokenInput.value) return null
+  return tokenRegex.test(tokenInput.value)
 })
 
 const validated = computed(() => {
@@ -42,7 +40,7 @@ const validated = computed(() => {
 
 watch(inputState, (state) => {
   if (state === true) {
-    emit('otp:submit', otpInput.value)
+    emit('token:submit', tokenInput.value)
   }
 })
 </script>
@@ -63,36 +61,36 @@ watch(inputState, (state) => {
         class="text-primary"
       />
 
-      <div class="text-center">{{ t('auth.otp_check_messages') }}</div>
+      <div class="text-center">{{ t('auth.token_check_messages') }}</div>
     </div>
     <div class="mb-3 form-text mb-3">
       <div v-if="user.phonenumber">
-        {{ t('auth.otp_sent_phone') }}
+        {{ t('auth.token_sent_phone') }}
       </div>
       <div v-else>
-        {{ t('auth.otp_sent_email') }}
+        {{ t('auth.token_sent_email') }}
       </div>
     </div>
     <div class="px-3">
       <BForm
-        @submit.prevent="handleOTPEntered"
+        @submit.prevent="handleTokenEntered"
         :novalidate="true"
         :disabled="isLoading || !inputState"
       >
         <div class="d-flex flex-column align-items-center position-relative">
           <BFormFloatingLabel
-            :label="t('auth.otp_input_label')"
-            label-for="otpInput"
+            :label="t('auth.token_input_label')"
+            label-for="tokenInput"
           >
             <BInput
               size="lg"
-              v-model.trim="otpInput"
-              id="otp"
+              v-model.trim="tokenInput"
+              id="token"
               type="text"
               inputmode="numeric"
               pattern="[0-9]*"
               placeholder=""
-              label="otpInput"
+              label="tokenInput"
               maxlength="6"
               aria-autocomplete="none"
               autofocus
@@ -106,7 +104,7 @@ watch(inputState, (state) => {
               v-if="!isLoading"
               force-show
             >
-              <span v-if="!inputState"> {{ t('auth.otp_invalid_feedback') }}</span>
+              <span v-if="!inputState"> {{ t('auth.token_invalid_feedback') }}</span>
               <span v-if="validationResult === false && inputState">{{ validationError }}</span>
               &nbsp;
             </BFormInvalidFeedback>

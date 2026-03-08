@@ -12,16 +12,16 @@ import { appConfig } from '@/lib/appconfig'
 
 import {
   UserIdentifyPayloadSchema,
-  OtpLoginPayloadSchema,
+  VerifyTokenPayloadSchema,
   RefreshTokenPayloadSchema,
   type LoginUser,
   type SessionData,
   type SessionProfile,
 } from '@zod/user/user.dto'
 import type {
-  OtpLoginResponse,
+  VerifyTokenResponse,
   RefreshTokenResponse,
-  SendLoginLinkResponse,
+  SendMagicLinkResponse,
   WsTicketResponse,
 } from '@zod/apiResponse.dto'
 import { UserIdentifier, JwtPayload } from '@zod/user/user.dto'
@@ -53,7 +53,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
   const refreshTokenService = new RefreshTokenService(fastify.redis)
 
   fastify.get(
-    '/otp-login',
+    '/verify-token',
     {
       config: {
         ...rateLimitConfig(fastify, '15 minute', 5),
@@ -61,12 +61,12 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
     },
     async (req, reply) => {
       try {
-        const params = OtpLoginPayloadSchema.safeParse(req.query)
+        const params = VerifyTokenPayloadSchema.safeParse(req.query)
         if (!params.success) {
           return reply.code(400).send({ code: 'AUTH_INVALID_INPUT' })
         }
-        const { userId, otp } = params.data
-        const result = await userService.validateUserOtpLogin(userId, otp)
+        const { token } = params.data
+        const result = await userService.validateLoginToken(token)
         if (!result.success) {
           return reply.code(422).send({ code: result.code, message: result.message })
         }
@@ -86,7 +86,6 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
           profileId = newProfile.id
           sessionProfile = newProfile
         } else {
-          // TODO FIXME otpLogin return a User which has no profile on it.
           const existingProfile = (user as any).profile
           profileId = existingProfile.id
           sessionProfile = existingProfile
@@ -101,7 +100,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         await fastify.createSession(jwt, buildSessionData(user, profileId, sessionProfile))
 
         const refreshToken = await refreshTokenService.create(user.id, profileId, user.tokenVersion)
-        const response: OtpLoginResponse = { success: true, token: jwt, refreshToken }
+        const response: VerifyTokenResponse = { success: true, token: jwt, refreshToken }
         reply.code(200).send(response)
       } catch (error) {
         return reply.code(500).send({ code: 'AUTH_INTERNAL_ERROR' })
@@ -207,7 +206,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   fastify.post(
-    '/send-login-link',
+    '/send-magic-link',
     {
       config: {
         ...rateLimitConfig(fastify, '15 minute', 5),
@@ -231,16 +230,16 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.code(500).send({ code: 'AUTH_INTERNAL_ERROR' })
       }
 
-      let otp = ''
+      let token = ''
 
       if (email) {
-        otp = userService.generateOTP()
+        token = userService.generateLoginToken()
       } else if (phonenumber) {
         const smsService = new SmsService(appConfig.SMS_API_KEY)
         const userId = cuid()
         const smsRes = await smsService.sendOtp(phonenumber, userId)
         if (smsRes.success && smsRes.otp && smsRes.otp !== '') {
-          otp = smsRes.otp
+          token = smsRes.otp
         } else {
           fastify.log.error('Textbelt error sending', smsRes.error)
           return reply.code(500).send({
@@ -256,7 +255,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         phonenumber: phonenumber || undefined,
       }
 
-      const { user, isNewUser } = await userService.setUserOTP(authId, otp, language)
+      const { user, isNewUser } = await userService.setLoginToken(authId, token, language)
 
       const userReturned: LoginUser = {
         id: user.id,
@@ -267,32 +266,15 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         isPushNotificationEnabled: user.isPushNotificationEnabled,
       }
 
-      // new user
-      if (isNewUser) {
-        if (user.email)
-          await notifierService.notifyUser(user.id, 'login_link', {
-            otp,
-            link: `${appConfig.FRONTEND_URL}/auth/otp?otp=${otp}`,
-          })
-
-        const response: SendLoginLinkResponse = {
-          success: true,
-          user: userReturned,
-          status: 'register',
-        }
-        return reply.code(200).send(response)
-      }
-
-      //  existing user
       if (user.email)
         await notifierService.notifyUser(user.id, 'login_link', {
-          otp,
-          link: `${appConfig.FRONTEND_URL}/auth/otp?otp=${otp}`,
+          link: `${appConfig.FRONTEND_URL}/magic-link?token=${token}`,
         })
-      const response: SendLoginLinkResponse = {
+
+      const response: SendMagicLinkResponse = {
         success: true,
         user: userReturned,
-        status: 'login',
+        status: isNewUser ? 'register' : 'login',
       }
       return reply.code(200).send(response)
     }

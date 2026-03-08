@@ -14,7 +14,7 @@ type NotifiableUser = {
 }
 
 interface NotificationParams {
-  login_link: { otp: string; link: string }
+  login_link: { link: string }
   welcome: { link: string }
   new_message: { sender: string; message: string; link: string }
   new_like: { link: string }

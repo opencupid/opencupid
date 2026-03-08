@@ -8,23 +8,22 @@ import { useI18nStore } from '@/store/i18nStore'
 import { useI18n } from 'vue-i18n'
 
 import { useAuthStore } from '../stores/authStore'
-import OtpLoginComponent from '../components/OtpLoginComponent.vue'
+import TokenInput from '../components/TokenInput.vue'
 import ChevronLeftIcon from '@/assets/icons/arrows/arrow-single-left.svg'
 
 // Reactive variables
 const error = ref('' as string)
 const isValidated = ref<boolean | null>(null)
 const isLoading = ref(false)
-const lastOtpAttempt = ref('')
+const lastTokenAttempt = ref('')
 
 const router = useRouter()
 const route = useRoute()
-const isCheckingMagicLinkOtp = ref(Boolean(route.query.otp))
+const isCheckingMagicLinkToken = ref(Boolean(route.query.token))
 const authStore = useAuthStore()
 const i18nStore = useI18nStore()
 const { t } = useI18n()
 
-// TODO duplicate in apps/frontend/src/features/auth/views/AuthUserId.vue
 const user = reactive<LoginUser>({
   id: '',
   email: '',
@@ -34,41 +33,38 @@ const user = reactive<LoginUser>({
   isPushNotificationEnabled: false,
 })
 
-const OtpParamSchema = z.object({
-  otp: z.string().min(6).max(6),
+const TokenParamSchema = z.object({
+  token: z.string().min(6).max(6),
 })
 
 onMounted(async () => {
-  // No query params -> display the OTP form directly
-  if (!route.query.otp) {
+  if (!route.query.token) {
     return
   }
-  // if query params, parse and validate
-  const rawOtp = typeof route.query.otp === 'string' ? route.query.otp : ''
-  const params = OtpParamSchema.safeParse(route.query)
+  const rawToken = typeof route.query.token === 'string' ? route.query.token : ''
+  const params = TokenParamSchema.safeParse(route.query)
   if (!params.success) {
-    error.value = t('auth.otp_invalid_link')
-    lastOtpAttempt.value = rawOtp
+    error.value = t('auth.token_invalid_link')
+    lastTokenAttempt.value = rawToken
     isValidated.value = false
-    isCheckingMagicLinkOtp.value = false
+    isCheckingMagicLinkToken.value = false
     return
   }
-  await doOtpLogin(params.data.otp)
+  await doVerifyToken(params.data.token)
   if (!isValidated.value) {
-    isCheckingMagicLinkOtp.value = false
+    isCheckingMagicLinkToken.value = false
   }
 })
 
-// Method to handle OTP entered
-async function handleOTPSubmitted(otp: string): Promise<void> {
-  await doOtpLogin(otp)
+async function handleTokenSubmitted(token: string): Promise<void> {
+  await doVerifyToken(token)
 }
 
-async function doOtpLogin(otp: string) {
-  lastOtpAttempt.value = otp
+async function doVerifyToken(token: string) {
+  lastTokenAttempt.value = token
   isLoading.value = true
   try {
-    const res = await authStore.otpLogin(otp)
+    const res = await authStore.verifyToken(token)
     if (res.success) {
       isValidated.value = true
       error.value = ''
@@ -76,17 +72,17 @@ async function doOtpLogin(otp: string) {
       return
     } else {
       switch (res.code) {
-        case 'AUTH_EXPIRED_OTP':
-          error.value = t('auth.otp_expired')
+        case 'AUTH_EXPIRED_TOKEN':
+          error.value = t('auth.token_expired')
           break
-        case 'AUTH_INVALID_OTP':
-          error.value = t('auth.otp_invalid')
+        case 'AUTH_INVALID_TOKEN':
+          error.value = t('auth.token_invalid')
           break
         case 'AUTH_INVALID_INPUT':
-          error.value = t('auth.otp_different_device')
+          error.value = t('auth.token_different_device')
           break
         default:
-          error.value = t('auth.otp_unknown_error')
+          error.value = t('auth.token_unknown_error')
       }
       isValidated.value = false
       return
@@ -117,18 +113,18 @@ function handleBackButton() {
         </a>
       </div>
       <BSpinner
-        v-if="isCheckingMagicLinkOtp"
+        v-if="isCheckingMagicLinkToken"
         type="grow"
         variant="primary"
       />
-      <OtpLoginComponent
+      <TokenInput
         v-else
         :isLoading="isLoading"
         :user="user"
         :validationResult="isValidated"
         :validationError="error"
-        :initialOtp="lastOtpAttempt"
-        @otp:submit="handleOTPSubmitted"
+        :initialToken="lastTokenAttempt"
+        @token:submit="handleTokenSubmitted"
       />
     </div>
   </main>

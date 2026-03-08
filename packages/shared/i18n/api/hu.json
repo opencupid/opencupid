@@ -6,7 +6,7 @@
     "fallback_hint": "Ha a gomb nem működik, másold ki és illeszd be ezt a címsorba:",
     "loginLink": {
       "subject": "{{siteName}} belépő link",
-      "contentBody": "Szia, ezzel a kóddal tudsz belépni: <h2>{{otp}}</h2>",
+      "contentBody": "Kattints az alábbi gombra a belépéshez.",
       "callToActionLabel": "Belépő link megnyitása",
       "footer": "Ha nem Te kérted ezt az emailt, hagyd figyelmen kívül."
     },

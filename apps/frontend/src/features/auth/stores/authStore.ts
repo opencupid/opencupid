@@ -9,8 +9,8 @@ import type { UserIdentifier, JwtPayload, SessionData, LoginUser } from '@zod/us
 
 import type {
   ApiError,
-  OtpLoginResponse,
-  SendLoginLinkResponse,
+  VerifyTokenResponse,
+  SendMagicLinkResponse,
   UserMeResponse,
 } from '@zod/apiResponse.dto'
 import { AuthErrorCodes } from '@zod/user/auth.dto'
@@ -89,32 +89,8 @@ export const useAuthStore = defineStore('auth', {
       this.isInitialized = true
     },
 
-    async otpLogin(otp: string): Promise<AuthStoreResponse<{ status: string }>> {
-      let userId: string | null
-      try {
-        userId = localStorage.getItem('uid')
-      } catch (error) {
-        console.warn('Failed to access localStorage:', error)
-        return {
-          success: false,
-          restart: 'userid',
-          code: 'AUTH_INVALID_INPUT',
-          message:
-            'Something is off with this browser. Please try again in a different one (or try clearing your browser storage.)',
-        }
-      }
-
-      if (!userId) {
-        // registration/login initiated in a different browser -> no userId
-        return {
-          success: false,
-          code: 'AUTH_INVALID_INPUT',
-          message: 'Something went wrong here, you started on a different phone or computer?',
-          restart: 'userid',
-        }
-      }
-      if (!otp) {
-        // OTP is missing - maybe it got garbled in the email link
+    async verifyToken(token: string): Promise<AuthStoreResponse<{ status: string }>> {
+      if (!token) {
         return {
           success: false,
           code: 'AUTH_INVALID_INPUT',
@@ -124,15 +100,15 @@ export const useAuthStore = defineStore('auth', {
       }
       try {
         const res = await safeApiCall(() =>
-          api.get<OtpLoginResponse>('/auth/otp-login', {
-            params: { userId, otp },
+          api.get<VerifyTokenResponse>('/auth/verify-token', {
+            params: { token },
           })
         )
 
         if (res.data.success === true) {
           this.setAuthState(res.data.token, res.data.refreshToken)
-          localStorage.removeItem('uid') // Clear userId after successful login
-          localStorage.removeItem('authId') // Clear userId after successful login
+          localStorage.removeItem('uid')
+          localStorage.removeItem('authId')
         } else {
           return {
             success: false,
@@ -157,14 +133,14 @@ export const useAuthStore = defineStore('auth', {
       return { success: true, status: '' }
     },
 
-    async sendLoginLink(authId: UserIdentifier): Promise<
+    async sendMagicLink(authId: UserIdentifier): Promise<
       AuthStoreResponse<{
         user: LoginUser
       }>
     > {
       try {
         const res = await safeApiCall(() =>
-          api.post<SendLoginLinkResponse>('/auth/send-login-link', authId)
+          api.post<SendMagicLinkResponse>('/auth/send-magic-link', authId)
         )
         const params = LoginUserSchema.safeParse(res.data.user)
         if (!params.success) {
@@ -177,16 +153,14 @@ export const useAuthStore = defineStore('auth', {
           }
         }
         const user = params.data
-        // set userId in localStorage for the otplogin to pick up
         localStorage.setItem('uid', user.id)
         localStorage.setItem('authId', getAuthId(authId))
-        // Return the status flag for the frontend to handle
         return {
           success: true,
           user,
         }
       } catch (error: any) {
-        console.error('Sending login link failed:', error)
+        console.error('Sending magic link failed:', error)
         return {
           success: false,
           code: error.response?.data?.code || 'AUTH_INTERNAL_ERROR',

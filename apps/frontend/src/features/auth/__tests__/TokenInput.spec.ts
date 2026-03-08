@@ -9,11 +9,11 @@ vi.mock('@/features/shared/icons/DoodleIcons.vue', () => ({ default: { template:
 
 const stubFormKit = { template: '<form><slot :state="{ valid: true }" /></form>' }
 
-import OtpLoginComponent from '../components/OtpLoginComponent.vue'
+import TokenInput from '../components/TokenInput.vue'
 
-describe('OtpLoginComponent', () => {
-  it('validates otp correctly', () => {
-    const wrapper = mount(OtpLoginComponent, {
+describe('TokenInput', () => {
+  it('validates token correctly', () => {
+    const wrapper = mount(TokenInput, {
       props: {
         user: {} as any,
         isLoading: false,
@@ -22,14 +22,14 @@ describe('OtpLoginComponent', () => {
       },
       global: { stubs: { FormKit: stubFormKit } },
     })
-    ;(wrapper.vm as any).otpInput = '123456'
+    ;(wrapper.vm as any).tokenInput = '123456'
     expect((wrapper.vm as any).inputState).toBe(true)
-    ;(wrapper.vm as any).otpInput = '12345'
+    ;(wrapper.vm as any).tokenInput = '12345'
     expect((wrapper.vm as any).inputState).toBe(false)
   })
 
-  it('emits otp:submit with entered value', async () => {
-    const wrapper = mount(OtpLoginComponent, {
+  it('emits token:submit with entered value', async () => {
+    const wrapper = mount(TokenInput, {
       props: {
         user: {} as any,
         isLoading: false,
@@ -38,8 +38,8 @@ describe('OtpLoginComponent', () => {
       },
       global: { stubs: { FormKit: stubFormKit } },
     })
-    ;(wrapper.vm as any).otpInput = '654321'
-    await (wrapper.vm as any).handleOTPEntered()
-    expect(wrapper.emitted('otp:submit')![0]).toEqual(['654321'])
+    ;(wrapper.vm as any).tokenInput = '654321'
+    await (wrapper.vm as any).handleTokenEntered()
+    expect(wrapper.emitted('token:submit')![0]).toEqual(['654321'])
   })
 })

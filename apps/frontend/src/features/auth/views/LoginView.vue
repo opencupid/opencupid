@@ -6,7 +6,7 @@ import { type LoginUser } from '@zod/user/user.dto'
 
 import { useI18nStore } from '@/store/i18nStore'
 import { useAuthStore } from '../stores/authStore'
-import AuthIdComponent from '../components/AuthIdComponent.vue'
+import LoginForm from '../components/LoginForm.vue'
 import LocaleSelector from '../../shared/ui/LocaleSelector.vue'
 
 import ErrorComponent from '@/features/shared/ui/ErrorComponent.vue'
@@ -20,7 +20,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 const i18nStore = useI18nStore()
 
-// TODO duplicate in apps/frontend/src/features/auth/views/AuthOtp.vue
+// TODO duplicate in apps/frontend/src/features/auth/views/MagicLink.vue
 const user = reactive<LoginUser>({
   id: '',
   email: '',
@@ -39,10 +39,10 @@ async function handleSendOtp(authIdCaptcha: UserIdentifyPayload) {
   try {
     error.value = ''
     isLoading.value = true
-    const res = await authStore.sendLoginLink(payload)
+    const res = await authStore.sendMagicLink(payload)
     if (res.success) {
       Object.assign(user, res.user)
-      router.push({ name: 'LoginOTP' })
+      router.push({ name: 'MagicLink' })
     } else {
       // TODO i18n these error messages
       error.value = 'An unknown error occurred, please try again a bit later.'
@@ -70,7 +70,7 @@ const defaultAuthId = localStorage.getItem('authId') || ''
 
     <ErrorComponent :error="error" />
 
-    <AuthIdComponent
+    <LoginForm
       :isLoading="isLoading"
       :defaultAuthId="defaultAuthId"
       @updated="handleSendOtp"

@@ -10,28 +10,28 @@ import MyProfile from '@/features/myprofile/views/MyProfile.vue'
 import SocialMatch from '@/features/browse/views/SocialMatch.vue'
 import PublicProfileView from '@/features/publicprofile/views/PublicProfileView.vue'
 import OnboardingView from '@/features/onboarding/views/Onboarding.vue'
-import AuthUserId from '@/features/auth/views/AuthUserId.vue'
-import AuthOtp from '@/features/auth/views/AuthOtp.vue'
-import Logout from '@/features/auth/views/Logout.vue'
+import LoginView from '@/features/auth/views/LoginView.vue'
+import MagicLink from '@/features/auth/views/MagicLink.vue'
+import LogoutView from '@/features/auth/views/LogoutView.vue'
 import PostsView from '@/features/posts/views/Posts.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/auth',
     name: 'Login',
-    component: AuthUserId,
+    component: LoginView,
     meta: { requiresAuth: false },
   },
   {
-    path: '/auth/otp',
-    name: 'LoginOTP',
-    component: AuthOtp,
+    path: '/magic-link',
+    name: 'MagicLink',
+    component: MagicLink,
     meta: { requiresAuth: false },
   },
   {
     path: '/auth/logout',
     name: 'Logout',
-    component: Logout,
+    component: LogoutView,
     meta: { requiresAuth: true },
   },
   {
