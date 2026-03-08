@@ -1,7 +1,13 @@
-import { describe, it, expect, beforeAll } from 'vitest'
+import { describe, it, expect, beforeAll, vi } from 'vitest'
 import fs from 'fs/promises'
 import path from 'path'
 import sharp from 'sharp'
+
+vi.mock('@tensorflow-models/blazeface', () => ({
+  load: vi.fn(async () => ({
+    estimateFaces: vi.fn(async () => []),
+  })),
+}))
 
 import { ImageProcessor } from '../../services/imageprocessor'
 

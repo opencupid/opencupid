@@ -1,9 +1,16 @@
-import { describe, it, expect } from 'vitest'
-import { transcodeToMp3 } from '../../services/audioTranscoder'
+import { describe, it, expect, vi } from 'vitest'
 import { promises as fsPromises } from 'fs'
 import { execFileSync } from 'child_process'
 import path from 'path'
 import os from 'os'
+
+const uploadTmpDirMock = vi.fn(() => os.tmpdir())
+
+vi.mock('@/lib/media', () => ({
+  uploadTmpDir: () => uploadTmpDirMock(),
+}))
+
+import { transcodeToMp3 } from '../../services/audioTranscoder'
 
 function hasFfmpeg(): boolean {
   try {
@@ -36,6 +43,7 @@ function makeWavHeader(): Buffer {
 describe.skipIf(!hasFfmpeg())('transcodeToMp3', () => {
   it('transcodes WAV to MP3, returns path with .mp3 extension and size > 0', async () => {
     const tmpDir = await fsPromises.mkdtemp(path.join(os.tmpdir(), 'transcode-mp3-'))
+    uploadTmpDirMock.mockReturnValue(tmpDir)
     const wavPath = path.join(tmpDir, 'test.wav')
     await fsPromises.writeFile(wavPath, makeWavHeader())
 
@@ -55,6 +63,7 @@ describe.skipIf(!hasFfmpeg())('transcodeToMp3', () => {
 
   it('cleans up temp file and preserves WAV on ffmpeg failure', async () => {
     const tmpDir = await fsPromises.mkdtemp(path.join(os.tmpdir(), 'transcode-fail-'))
+    uploadTmpDirMock.mockReturnValue(tmpDir)
     const badPath = path.join(tmpDir, 'bad.wav')
     // Write garbage data that ffmpeg cannot decode
     await fsPromises.writeFile(badPath, 'not a wav file')
