@@ -424,6 +424,42 @@ describe('OsmPoiMap', () => {
     expect(aliceIcon.iconAnchor).toEqual([16, 16])
   })
 
+  it('emits bounds-changed on moveend with viewport bounds', async () => {
+    const wrapper = await mountMap()
+    await flushPromises()
+
+    const mapInstance = (L.map as any).mock.results[0].value
+
+    // Find the moveend handler
+    const moveendCall = mapInstance.on.mock.calls.find((c: any) => c[0] === 'moveend')
+    expect(moveendCall).toBeDefined()
+    const moveendHandler = moveendCall[1]
+
+    // Mock getBounds to return a viewport
+    mapInstance.getBounds = vi.fn(() => ({
+      getSouth: () => 45.0,
+      getNorth: () => 48.0,
+      getWest: () => 16.0,
+      getEast: () => 23.0,
+    }))
+
+    moveendHandler()
+
+    expect(wrapper.emitted('bounds-changed')).toBeTruthy()
+    expect(wrapper.emitted('bounds-changed')![0]).toEqual([
+      { south: 45.0, north: 48.0, west: 16.0, east: 23.0 },
+    ])
+  })
+
+  it('registers moveend listener during map init', async () => {
+    await mountMap()
+    await flushPromises()
+
+    const mapInstance = (L.map as any).mock.results[0].value
+    const moveendCall = mapInstance.on.mock.calls.find((c: any) => c[0] === 'moveend')
+    expect(moveendCall).toBeDefined()
+  })
+
   it('flyTo uses lastStableZoom from zoomend, not mid-animation getZoom', async () => {
     const wrapper = await mountMap({ center: [47.0, 19.0] as [number, number], zoom: 7 })
     await flushPromises()

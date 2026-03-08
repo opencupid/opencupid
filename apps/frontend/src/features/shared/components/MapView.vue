@@ -30,6 +30,7 @@ const props = withDefaults(
 const emit = defineEmits<{
   (e: 'item:select', id: string | number): void
   (e: 'map:ready', map: LMap): void
+  (e: 'bounds-changed', bounds: { south: number; north: number; west: number; east: number }): void
 }>()
 
 const isMapReady = ref(false)
@@ -69,6 +70,7 @@ function onMapReady(map: LMap) {
         class="h-100"
         @map:ready="onMapReady"
         @item:select="(id) => emit('item:select', id)"
+        @bounds-changed="(bounds) => emit('bounds-changed', bounds)"
       />
     </div>
   </div>

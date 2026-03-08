@@ -56,6 +56,7 @@ const props = withDefaults(
 const emit = defineEmits<{
   (e: 'item:select', id: string | number): void
   (e: 'map:ready', map: LMap): void
+  (e: 'bounds-changed', bounds: { south: number; north: number; west: number; east: number }): void
 }>()
 
 const mapEl: Ref<HTMLDivElement | null> = ref(null)
@@ -173,6 +174,17 @@ function iconForItem(item: T, isSelected: boolean): L.DivIcon {
   return dotIcon(isSelected, highlighted)
 }
 
+function emitBounds() {
+  if (!map) return
+  const b = map.getBounds()
+  emit('bounds-changed', {
+    south: b.getSouth(),
+    north: b.getNorth(),
+    west: b.getWest(),
+    east: b.getEast(),
+  })
+}
+
 function webGLSupported(): boolean {
   try {
     const canvas = document.createElement('canvas')
@@ -220,6 +232,8 @@ function initBaseLayer(map: LMap): void {
   map.on('zoomend', () => {
     if (map) lastStableZoom = map.getZoom()
   })
+
+  map.on('moveend', emitBounds)
 
   if (!webGLSupported()) {
     initRasterFallback(map)
@@ -386,6 +400,7 @@ onMounted(() => {
 
 function destroyMap() {
   if (!map) return
+  map.off('moveend', emitBounds)
   map.off('mousemove', onMapMouseMove)
   map.off('zoomstart movestart', closeSpider)
 
