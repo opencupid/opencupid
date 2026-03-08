@@ -1,7 +1,7 @@
 import path from 'path'
+import fs from 'fs'
 import os from 'os'
 import { loadEnv, type Plugin } from 'vite'
-import { findUpSync } from 'find-up'
 import mkcert from 'vite-plugin-mkcert'
 import { getPackageVersion } from './version'
 import { appConfigSchema } from './zod/config/appConfig.schema'
@@ -57,6 +57,17 @@ export const server = (mode: string, env: Record<string, string | undefined>, ap
         ],
       },
     },
+  }
+}
+
+function findUpSync(name: string): string | undefined {
+  let dir = process.cwd()
+  while (true) {
+    const candidate = path.join(dir, name)
+    if (fs.existsSync(candidate)) return candidate
+    const parent = path.dirname(dir)
+    if (parent === dir) return undefined
+    dir = parent
   }
 }
 

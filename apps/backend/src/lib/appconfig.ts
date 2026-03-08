@@ -1,5 +1,6 @@
 import { z } from 'zod'
-import { findUpSync } from 'find-up'
+import path from 'path'
+import fs from 'fs'
 import dotenv from 'dotenv'
 import dotenvExpand from 'dotenv-expand'
 
@@ -58,6 +59,17 @@ export const configSchema = z.object({
 
   DEEPL_API_KEY: z.string().optional(),
 })
+
+function findUpSync(name: string): string | undefined {
+  let dir = process.cwd()
+  while (true) {
+    const candidate = path.join(dir, name)
+    if (fs.existsSync(candidate)) return candidate
+    const parent = path.dirname(dir)
+    if (parent === dir) return undefined
+    dir = parent
+  }
+}
 
 if (!['production', 'staging'].includes(process.env.NODE_ENV!)) {
   // This will walk up from the current directory to find the first `.env` file
