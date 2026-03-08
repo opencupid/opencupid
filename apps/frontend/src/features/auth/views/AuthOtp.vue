@@ -15,9 +15,11 @@ import ChevronLeftIcon from '@/assets/icons/arrows/arrow-single-left.svg'
 const error = ref('' as string)
 const isValidated = ref<boolean | null>(null)
 const isLoading = ref(false)
+const lastOtpAttempt = ref('')
 
 const router = useRouter()
 const route = useRoute()
+const isCheckingMagicLinkOtp = ref(Boolean(route.query.otp))
 const authStore = useAuthStore()
 const i18nStore = useI18nStore()
 const { t } = useI18n()
@@ -36,23 +38,25 @@ const OtpParamSchema = z.object({
   otp: z.string().min(6).max(6),
 })
 
-// // On mounted lifecycle hook
 onMounted(async () => {
-  // TODO this logic needs fixing.
-  // no query params -> do nothing here and display form
+  // No query params -> display the OTP form directly
   if (!route.query.otp) {
-    // call method on authStore to look up user
-    // obtain login user ID (phone or email)
     return
   }
-  isLoading.value = true
   // if query params, parse and validate
+  const rawOtp = typeof route.query.otp === 'string' ? route.query.otp : ''
   const params = OtpParamSchema.safeParse(route.query)
   if (!params.success) {
     error.value = t('auth.otp_invalid_link')
+    lastOtpAttempt.value = rawOtp
+    isValidated.value = false
+    isCheckingMagicLinkOtp.value = false
     return
   }
   await doOtpLogin(params.data.otp)
+  if (!isValidated.value) {
+    isCheckingMagicLinkOtp.value = false
+  }
 })
 
 // Method to handle OTP entered
@@ -61,6 +65,7 @@ async function handleOTPSubmitted(otp: string): Promise<void> {
 }
 
 async function doOtpLogin(otp: string) {
+  lastOtpAttempt.value = otp
   isLoading.value = true
   try {
     const res = await authStore.otpLogin(otp)
@@ -70,7 +75,6 @@ async function doOtpLogin(otp: string) {
       await router.push({ name: 'UserHome' })
       return
     } else {
-      console.log('OTP login failed:', res)
       switch (res.code) {
         case 'AUTH_EXPIRED_OTP':
           error.value = t('auth.otp_expired')
@@ -78,16 +82,15 @@ async function doOtpLogin(otp: string) {
         case 'AUTH_INVALID_OTP':
           error.value = t('auth.otp_invalid')
           break
+        case 'AUTH_INVALID_INPUT':
+          error.value = t('auth.otp_different_device')
+          break
         default:
-          error.value = res.message || 'An unknown error occurred. Please try again later.'
+          error.value = t('auth.otp_unknown_error')
       }
       isValidated.value = false
       return
     }
-  } catch (err: any) {
-    // TODO validate under what conditions this branch is hit.
-    // if it's dead, remove, if not i18n the error messages and handle different error cases properly
-    error.value = err.response?.data?.message || 'Failed to confirm email.'
   } finally {
     isLoading.value = false
   }
@@ -113,11 +116,18 @@ function handleBackButton() {
           <ChevronLeftIcon class="svg-icon" />
         </a>
       </div>
+      <BSpinner
+        v-if="isCheckingMagicLinkOtp"
+        type="grow"
+        variant="primary"
+      />
       <OtpLoginComponent
+        v-else
         :isLoading="isLoading"
         :user="user"
         :validationResult="isValidated"
         :validationError="error"
+        :initialOtp="lastOtpAttempt"
         @otp:submit="handleOTPSubmitted"
       />
     </div>

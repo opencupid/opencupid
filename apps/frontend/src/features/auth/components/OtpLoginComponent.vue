@@ -13,6 +13,7 @@ const props = defineProps<{
   isLoading: boolean
   validationError: string | null
   validationResult: boolean | null
+  initialOtp?: string
 }>()
 
 const emit = defineEmits<{
@@ -22,7 +23,7 @@ const emit = defineEmits<{
 const { t } = useI18n()
 
 // input field
-const otpInput = ref('')
+const otpInput = ref(props.initialOtp ?? '')
 
 // Method to handle OTP entered
 async function handleOTPEntered() {

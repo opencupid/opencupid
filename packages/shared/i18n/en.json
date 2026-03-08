@@ -80,6 +80,7 @@
     "captcha_error": "Something is up, try again?",
     "login_confirm_welcome": "Welcome!",
     "otp_check_messages": "Check your messages",
+    "otp_different_device": "It seems the login was started on a different device. Please go back and enter your email again.",
     "otp_sent_phone": "We have sent you a little code to your phone number, please enter it below.",
     "otp_sent_email": "We have sent you a login link, check your inbox. If you don't see it, please check your spam folder.",
     "otp_invalid_link": "Hmm that link in the email didn't look right. Please enter the code in the message.",
@@ -87,6 +88,7 @@
     "otp_invalid": "The code is invalid. Please try again.",
     "otp_input_label": "Enter code",
     "otp_invalid_feedback": "Code should be 6 digits",
+    "otp_unknown_error": "Something went wrong. Please try again later.",
     "email": "Email",
     "phone_number": "Phone number",
     "password": "Password"
