@@ -27,8 +27,6 @@ declare const __APP_CONFIG__: {
   readonly JITSI_DOMAIN: string
   readonly VOICE_MESSAGE_MAX_DURATION: string
   readonly MAPTILER_API_KEY: string
-  readonly TOLGEE_API_URL: string
-  readonly TOLGEE_API_KEY: string
 }
 
 declare const __APP_VERSION__: string

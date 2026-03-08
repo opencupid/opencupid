@@ -1,16 +1,20 @@
 import type { App } from 'vue'
 import { computed } from 'vue'
 import { VueTolgee, useTranslate, useTolgee } from '@tolgee/vue'
+import type { CombinedOptions, DefaultParamType } from '@tolgee/vue'
 import { Settings } from 'luxon'
 import { useLocalStore } from '@/store/localStore'
 import { bus } from './bus'
 import { tolgee } from './tolgee'
 
+type TolgeeParams = CombinedOptions<DefaultParamType>
+
+// TODO move this to config
 Settings.defaultZone = 'Europe/Berlin'
 
 // Compatibility type for MessageReceivedToast.vue
 export type Composer = {
-  t: (key: string, paramsOrDefault?: Record<string, unknown> | string) => string
+  t: (key: string, paramsOrDefault?: TolgeeParams | string) => string
 }
 
 declare global {
@@ -34,12 +38,12 @@ export function useI18n() {
     },
   })
 
-  const t = (key: string, paramsOrDefault?: Record<string, unknown> | string): string => {
+  const t = (key: string, paramsOrDefault?: TolgeeParams | string): string => {
     if (typeof paramsOrDefault === 'string') {
       return tolgeeT.value(key, paramsOrDefault)
     }
 
-    return tolgeeT.value(key, paramsOrDefault as Record<string, string> | undefined)
+    return tolgeeT.value(key, paramsOrDefault)
   }
 
   return { t, locale }
@@ -61,12 +65,12 @@ export function getLocale(): string | null {
 let languageListenerAttached = false
 
 function createGlobalT() {
-  return (key: string, paramsOrDefault?: Record<string, unknown> | string): string => {
+  return (key: string, paramsOrDefault?: TolgeeParams | string): string => {
     if (typeof paramsOrDefault === 'string') {
       return tolgee.t(key, paramsOrDefault)
     }
 
-    return tolgee.t(key, undefined, paramsOrDefault as Record<string, string> | undefined)
+    return tolgee.t(key, undefined, paramsOrDefault)
   }
 }
 
