@@ -38,13 +38,9 @@ const OtpParamSchema = z.object({
   otp: z.string().min(6).max(6),
 })
 
-// // On mounted lifecycle hook
 onMounted(async () => {
-  // TODO this logic needs fixing.
-  // no query params -> do nothing here and display form
+  // No query params -> display the OTP form directly
   if (!route.query.otp) {
-    // call method on authStore to look up user
-    // obtain login user ID (phone or email)
     return
   }
   // if query params, parse and validate
@@ -86,19 +82,15 @@ async function doOtpLogin(otp: string) {
         case 'AUTH_INVALID_OTP':
           error.value = t('auth.otp_invalid')
           break
+        case 'AUTH_INVALID_INPUT':
+          error.value = t('auth.otp_different_device')
+          break
         default:
-          // TODO validate under what conditions this branch is hit.
-          // if an error code is not handled above, handle it here according to the above pattern. don't show the API error,
-          // add user facing error string here and i18n it
-          error.value = res.message || 'An unknown error occurred. Please try again later.'
+          error.value = t('auth.otp_unknown_error')
       }
       isValidated.value = false
       return
     }
-  } catch (err: any) {
-    // TODO validate under what conditions this branch is hit.
-    // if it's dead, remove, if not i18n the error messages and handle different error cases properly
-    error.value = err.response?.data?.message || 'Failed to confirm email.'
   } finally {
     isLoading.value = false
   }
