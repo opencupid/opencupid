@@ -36,6 +36,16 @@ const handleCloseClick = () => {
   showFullscreen.value = false
 }
 
+const carouselProps = {
+  itemsToShow: 1,
+  snapAlign: 'start',
+  mouseDrag: false,
+  touchDrag: true,
+  wrapAround: true,
+  preventExcessiveDragging: true,
+  mouseWheel: false,
+} as const
+
 const currentImage = computed(() => props.profile.profileImages?.[inlineSlide.value])
 const showBlurhash = computed(
   () => currentImage.value?.blurhash //&& !loadedImages[currentImage.value.position]
@@ -61,14 +71,8 @@ watch(
     <Carousel
       v-model="inlineSlide"
       v-show="!showFullscreen"
+      v-bind="carouselProps"
       class="h-100"
-      :items-to-show="1"
-      snap-align="start"
-      :mouse-drag="false"
-      :touch-drag="true"
-      :wrap-around="true"
-      :prevent-excessive-dragging="true"
-      :mouse-wheel="false"
     >
       <Slide
         v-for="img in props.profile.profileImages"
@@ -116,14 +120,8 @@ watch(
       </template>
       <Carousel
         v-model="fullSlide"
+        v-bind="carouselProps"
         class="w-100 h-100"
-        :items-to-show="1"
-        snap-align="start"
-        :mouse-drag="false"
-        :touch-drag="true"
-        :wrap-around="true"
-        :prevent-excessive-dragging="true"
-        :mouse-wheel="false"
       >
         <Slide
           v-for="img in props.profile.profileImages"
@@ -248,6 +246,10 @@ watch(
     object-position: center;
   }
 
+}
+
+.image-carousel,
+.modal.carousel-modal {
   .carousel__prev,
   .carousel__next {
     background-color: rgba(0, 0, 0, 0.5);
