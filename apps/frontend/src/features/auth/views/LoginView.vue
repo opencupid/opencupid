@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { type UserIdentifyPayload } from '@zod/user/user.dto'
 
 import { useI18nStore } from '@/store/i18nStore'
@@ -18,6 +19,7 @@ const isLoading = ref(false)
 const router = useRouter()
 const authStore = useAuthStore()
 const i18nStore = useI18nStore()
+const { t } = useI18n()
 
 // Method to handle sending login link
 async function handleSendOtp(authIdCaptcha: UserIdentifyPayload) {
@@ -32,14 +34,8 @@ async function handleSendOtp(authIdCaptcha: UserIdentifyPayload) {
     if (res.success) {
       router.push({ name: 'MagicLink' })
     } else {
-      // TODO trace under what conditions we get here - is this a dead branch?
-      // i18n these error messages
-      error.value = 'An unknown error occurred, please try again a bit later.'
+      error.value = res.message || t('auth.unknown_error')
     }
-  } catch (err: any) {
-    // TODO trace under what conditions we get here 0 is this a dead branch? i18n these error messages is this is not dead
-    error.value = err || 'An unexpected error occurred.'
-    console.error('Login error:', err)
   } finally {
     isLoading.value = false
   }

@@ -7,6 +7,7 @@ const sendMagicLink = vi.fn()
 const setLanguage = vi.fn()
 
 vi.mock('vue-router', () => ({ useRouter: () => ({ push }) }))
+vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (key: string) => key }) }))
 vi.mock('../stores/authStore', () => ({ useAuthStore: () => ({ sendMagicLink }) }))
 vi.mock('@/store/i18nStore', () => ({
   useI18nStore: () => ({

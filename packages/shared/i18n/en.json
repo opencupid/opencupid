@@ -90,6 +90,7 @@
     "token_invalid_feedback": "Code should be 6 digits",
     "token_check_email": "We sent you a login link. Check your email and click the link to log in.",
     "token_unknown_error": "Something went wrong. Please try again later.",
+    "unknown_error": "An unexpected error occurred. Please try again later.",
     "email": "Email",
     "phone_number": "Phone number",
     "password": "Password"
