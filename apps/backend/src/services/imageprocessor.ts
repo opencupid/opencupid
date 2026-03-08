@@ -107,10 +107,6 @@ function maximizeInsideImageKeepingCenter(r: Rect, iw: number, ih: number): Rect
   return rectFromCenterSize(cx, cy, newW, newH)
 }
 
-function area(r: Rect) {
-  return r.width * r.height
-}
-
 // ImageProcessor.ts
 export class ImageProcessor {
   private buffer: Buffer
@@ -156,13 +152,16 @@ export class ImageProcessor {
       .toBuffer({ resolveWithObject: true })
 
     const tensor = tf.tensor3d(new Uint8Array(data), [info.height, info.width, 3])
-    const preds = await this.detector.estimateFaces(tensor, false)
-
-    return preds.map((p) => {
-      const [x1, y1] = p.topLeft as [number, number]
-      const [x2, y2] = p.bottomRight as [number, number]
-      return { x: x1, y: y1, width: x2 - x1, height: y2 - y1 }
-    })
+    try {
+      const preds = await this.detector.estimateFaces(tensor, false)
+      return preds.map((p) => {
+        const [x1, y1] = p.topLeft as [number, number]
+        const [x2, y2] = p.bottomRight as [number, number]
+        return { x: x1, y: y1, width: x2 - x1, height: y2 - y1 }
+      })
+    } finally {
+      tensor.dispose()
+    }
   }
 
   async getCropRegion(width: number, height: number): Promise<Crop> {
@@ -241,8 +240,7 @@ export class ImageProcessor {
     const iw = this.metadata?.width ?? 0
     const ih = this.metadata?.height ?? 0
     if (iw <= 0 || ih <= 0) {
-      // safest fallback: full image
-      return { left: 0, top: 0, width: 0, height: 0 }
+      return { left: 0, top: 0, width: Math.max(1, iw), height: Math.max(1, ih) }
     }
 
     // If we have a face, build a crop around it

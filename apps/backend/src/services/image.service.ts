@@ -165,8 +165,14 @@ export class ImageService {
     const processor = new ImageProcessor(buffer)
     await processor.analyze()
 
+    const blurhash = await processor.encodeBlurhash()
     const outputPaths = await this.generateAllVariants(processor, outputDir, baseName)
-    return outputPaths
+
+    return {
+      ...processor.getOriginalSize(),
+      variants: outputPaths,
+      blurhash,
+    }
   }
 
   private async generateAllVariants(
