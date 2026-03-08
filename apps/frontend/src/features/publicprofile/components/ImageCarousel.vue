@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from 'vue'
+import { shallowRef, reactive, computed, watch } from 'vue'
 
-import { BCarousel, BCarouselSlide } from 'bootstrap-vue-next'
+import { Carousel, Slide, Navigation, Pagination } from 'vue3-carousel'
+import 'vue3-carousel/dist/carousel.css'
+
 import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 import IconCross from '@/assets/icons/interface/cross.svg'
 import ImageTag from '@/features/images/components/ImageTag.vue'
@@ -12,9 +14,9 @@ const props = defineProps<{
   profile: PublicProfileWithContext
 }>()
 
-const showFullscreen = ref(false)
-const inlineSlide = ref(0)
-const fullSlide = ref(0)
+const showFullscreen = shallowRef(false)
+const inlineSlide = shallowRef(0)
+const fullSlide = shallowRef(0)
 
 const loadedImages = reactive<Record<number, boolean>>({})
 
@@ -54,30 +56,32 @@ watch(
       :blurhash="currentImage!.blurhash!"
       class="blurhash-overlay"
     />
-    <BCarousel
-      controls
+    <Carousel
       v-model="inlineSlide"
       v-show="!showFullscreen"
       class="h-100"
+      :items-to-show="1"
+      snap-align="start"
     >
-      <BCarouselSlide
+      <Slide
         v-for="img in props.profile.profileImages"
         :key="img.position"
         @click="handleImageClick"
-        class="w-100 h-100"
       >
-        <template #img>
-          <div class="ratio ratio-4x3">
-            <ImageTag
-              :image="img"
-              className="fitted-image"
-              variant="profile"
-              @load="handleImageLoad(img.position)"
-            />
-          </div>
-        </template>
-      </BCarouselSlide>
-    </BCarousel>
+        <div class="ratio ratio-4x3">
+          <ImageTag
+            :image="img"
+            className="fitted-image"
+            variant="profile"
+            @load="handleImageLoad(img.position)"
+          />
+        </div>
+      </Slide>
+
+      <template #addons>
+        <Navigation />
+      </template>
+    </Carousel>
 
     <BModal
       v-model="showFullscreen"
@@ -95,39 +99,42 @@ watch(
       <template #header-close>
         <IconCross class="svg-icon" />
       </template>
-      <BCarousel
-        controls
-        indicators
+      <Carousel
         v-model="fullSlide"
         class="w-100 h-100"
+        :items-to-show="1"
+        snap-align="start"
       >
-        <BCarouselSlide
+        <Slide
           v-for="img in props.profile.profileImages"
           :key="img.position"
-          class="bg-black h-100"
+          class="bg-black"
         >
-          <template #img>
-            <div
-              class="w-100 h-100 d-flex justify-content-center align-items-center overflow-hidden"
-              :style="
-                img.blurhash
-                  ? {
-                      backgroundImage: `url(${blurhashToDataUrl(img.blurhash)})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                    }
-                  : undefined
-              "
-            >
-              <ImageTag
-                :image="img"
-                className="fitted-image"
-                variant="full"
-              />
-            </div>
-          </template>
-        </BCarouselSlide>
-      </BCarousel>
+          <div
+            class="w-100 h-100 d-flex justify-content-center align-items-center overflow-hidden"
+            :style="
+              img.blurhash
+                ? {
+                    backgroundImage: `url(${blurhashToDataUrl(img.blurhash)})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                  }
+                : undefined
+            "
+          >
+            <ImageTag
+              :image="img"
+              className="fitted-image"
+              variant="full"
+            />
+          </div>
+        </Slide>
+
+        <template #addons>
+          <Navigation />
+          <Pagination />
+        </template>
+      </Carousel>
     </BModal>
   </div>
 </template>
@@ -148,9 +155,14 @@ watch(
     object-position: center;
   }
 
-  .carousel-inner {
+  .carousel__slide {
     height: 100%;
   }
+
+  .carousel__track {
+    height: 100%;
+  }
+
   .modal-content {
     background-color: transparent;
     border: none;
@@ -198,9 +210,20 @@ watch(
 .image-carousel {
   position: relative;
   height: 100% !important;
-  .carousel-inner {
+
+  .carousel__track {
+    height: 100%;
+  }
+
+  .carousel__slide {
+    height: 100%;
+  }
+
+  .fitted-image {
     width: 100%;
-    height: 100% !important;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
   }
 }
 
