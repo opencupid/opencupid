@@ -58,10 +58,7 @@ const handleCardClick = (profileId: string) => {
         </div>
       </FluidColumn>
 
-      <div
-        class="overflow-auto hide-scrollbar flex-grow-1 position-relative"
-        :class="{ loading: isLoading }"
-      >
+      <div class="overflow-auto hide-scrollbar flex-grow-1 position-relative">
         <slot
           name="results"
           :onProfileSelect="handleCardClick"
