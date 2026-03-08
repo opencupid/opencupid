@@ -4,6 +4,7 @@ import { loadEnv, type Plugin } from 'vite'
 import { findUpSync } from 'find-up'
 import mkcert from 'vite-plugin-mkcert'
 import { getPackageVersion } from './version'
+import { appConfigSchema } from './appConfig.schema'
 
 export const hostname = os.hostname()
 export const mdnsName = hostname + '.local'
@@ -90,19 +91,28 @@ export const define = (appDir: string) => {
 export const runtimeConfigPlugin = (mode: string): Plugin => {
   const env = mode === 'development' ? loadProjectEnv(mode) : process.env
 
-  const configJs = `window.__APP_CONFIG__ = ${JSON.stringify({
-    API_BASE_URL: env.API_BASE_URL ?? '/api',
-    FRONTEND_URL: env.FRONTEND_URL ?? '',
-    WS_BASE_URL: env.WS_BASE_URL ?? '/ws',
-    MEDIA_URL_BASE: env.MEDIA_URL_BASE ?? '/user-content',
-    NODE_ENV: env.NODE_ENV ?? 'development',
-    VAPID_PUBLIC_KEY: env.VAPID_PUBLIC_KEY ?? '',
-    SENTRY_DSN: env.SENTRY_DSN ?? '',
-    SITE_NAME: env.SITE_NAME ?? 'OpenCupid',
-    JITSI_DOMAIN: env.JITSI_DOMAIN ?? '',
-    VOICE_MESSAGE_MAX_DURATION: Number(env.VOICE_MESSAGE_MAX_DURATION) || 120,
-    MAPTILER_API_KEY: env.MAPTILER_API_KEY ?? '',
-  })};
+  const parseResult = appConfigSchema.safeParse({
+    API_BASE_URL: env.API_BASE_URL,
+    FRONTEND_URL: env.FRONTEND_URL,
+    WS_BASE_URL: env.WS_BASE_URL,
+    MEDIA_URL_BASE: env.MEDIA_URL_BASE,
+    NODE_ENV: env.NODE_ENV,
+    VAPID_PUBLIC_KEY: env.VAPID_PUBLIC_KEY,
+    SENTRY_DSN: env.SENTRY_DSN,
+    SITE_NAME: env.SITE_NAME,
+    JITSI_DOMAIN: env.JITSI_DOMAIN,
+    VOICE_MESSAGE_MAX_DURATION: env.VOICE_MESSAGE_MAX_DURATION,
+    MAPTILER_API_KEY: env.MAPTILER_API_KEY,
+  })
+
+  if (!parseResult.success) {
+    const formatted = parseResult.error.format()
+    throw new Error(
+      `Invalid __APP_CONFIG__: check your .env file.\n${JSON.stringify(formatted, null, 2)}`
+    )
+  }
+
+  const configJs = `window.__APP_CONFIG__ = ${JSON.stringify(parseResult.data)};
 `
 
   return {

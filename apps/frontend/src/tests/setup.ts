@@ -11,7 +11,8 @@ import {
   BCard,
   BFormInvalidFeedback,
 } from 'bootstrap-vue-next'
-;(globalThis as any).__APP_CONFIG__ = {
+import { appConfigSchema } from '@shared/appConfig.schema'
+;(globalThis as any).__APP_CONFIG__ = appConfigSchema.parse({
   API_BASE_URL: 'http://localhost',
   FRONTEND_URL: 'http://localhost',
   WS_BASE_URL: 'ws://localhost',
@@ -23,7 +24,7 @@ import {
   JITSI_DOMAIN: '',
   VOICE_MESSAGE_MAX_DURATION: '120',
   MAPTILER_API_KEY: '',
-}
+})
 import packageJson from '../../package.json'
 ;(globalThis as any).__APP_VERSION__ = packageJson.version
 
