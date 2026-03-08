@@ -327,6 +327,8 @@ When storage formats, path conventions, or data schemas change, always migrate t
 
 When debugging any problem, after you found an issue that looks suspect, do not immediately go in and impose a fix on the symptom. Instead, take one step back, look at the bigger picture, look at commit history and try to find the root cause and fix THAT. Use `git blame`. Never add workaround, silence errors to make an error message go away.
 
+**The right fix removes code. If your fix only adds code, you are almost certainly patching a symptom.** Before writing any fix, ask: "What existing code is wrong or redundant?" The answer to a bug is nearly always deleting or changing a line, not adding new logic on top.
+
 ## Coding Guidelines
 
 Development guidelines and best practices for this project.

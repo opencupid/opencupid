@@ -382,7 +382,6 @@ function highlightSelected() {
 
 onMounted(() => {
   ensureMap()
-  updateMarkers()
 })
 
 function destroyMap() {
