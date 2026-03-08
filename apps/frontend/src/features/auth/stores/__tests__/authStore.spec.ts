@@ -111,7 +111,7 @@ describe('authStore localStorage auth flow', () => {
     mockSafeApiCall.mockImplementation((fn: () => Promise<unknown>) => fn())
   })
 
-  it('saves uid and authId in localStorage after sendMagicLink success (email)', async () => {
+  it('saves authId in localStorage after sendMagicLink success (email)', async () => {
     mockApi.post.mockResolvedValue({
       data: {
         user: {
@@ -129,7 +129,6 @@ describe('authStore localStorage auth flow', () => {
     const res = await store.sendMagicLink({ email: 'test@example.com', phonenumber: '' })
 
     expect(res.success).toBe(true)
-    expect(localStorage.getItem('uid')).toBe('ck1234567890abcd12345678')
     expect(localStorage.getItem('authId')).toBe('test@example.com')
   })
 
@@ -151,12 +150,10 @@ describe('authStore localStorage auth flow', () => {
     const res = await store.sendMagicLink({ email: '', phonenumber: '+12345678901' })
 
     expect(res.success).toBe(true)
-    expect(localStorage.getItem('uid')).toBe('ck1234567890abcd12345679')
     expect(localStorage.getItem('authId')).toBe('+12345678901')
   })
 
-  it('clears both uid and authId after successful verifyToken', async () => {
-    localStorage.setItem('uid', 'u1')
+  it('clears authId after successful verifyToken', async () => {
     localStorage.setItem('authId', 'test@example.com')
 
     const token = makeJwt({
@@ -176,7 +173,6 @@ describe('authStore localStorage auth flow', () => {
     const res = await store.verifyToken('123456')
 
     expect(res.success).toBe(true)
-    expect(localStorage.getItem('uid')).toBeNull()
     expect(localStorage.getItem('authId')).toBeNull()
   })
 })

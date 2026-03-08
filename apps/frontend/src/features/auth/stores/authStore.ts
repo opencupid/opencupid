@@ -107,7 +107,6 @@ export const useAuthStore = defineStore('auth', {
 
         if (res.data.success === true) {
           this.setAuthState(res.data.token, res.data.refreshToken)
-          localStorage.removeItem('uid')
           localStorage.removeItem('authId')
         } else {
           return {
@@ -153,7 +152,6 @@ export const useAuthStore = defineStore('auth', {
           }
         }
         const user = params.data
-        localStorage.setItem('uid', user.id)
         localStorage.setItem('authId', getAuthId(authId))
         return {
           success: true,
@@ -224,6 +222,7 @@ export const useAuthStore = defineStore('auth', {
       this.jwt = ''
       localStorage.removeItem('token')
       localStorage.removeItem('refreshToken')
+      localStorage.removeItem('authId')
       delete api.defaults.headers.common['Authorization']
       bus.emit('auth:logout')
     },
