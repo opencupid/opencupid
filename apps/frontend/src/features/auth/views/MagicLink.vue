@@ -109,7 +109,7 @@ function handleBackButton() {
         variant="primary"
       />
       <template v-else>
-        <div class="fs-4 mb-3">
+        <div class="fs-4 mb-3 w-100">
           <ViewTitle
             :icon="authStore.isPhoneAuth ? IconMessage : IconMail"
             title=""
