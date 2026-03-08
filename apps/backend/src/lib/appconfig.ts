@@ -1,7 +1,7 @@
 import { z } from 'zod'
-import { findUpSync } from 'find-up'
 import dotenv from 'dotenv'
 import dotenvExpand from 'dotenv-expand'
+import { findUpSync } from '@shared/findUp'
 
 // Zod schema
 export const configSchema = z.object({

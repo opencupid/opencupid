@@ -1,8 +1,8 @@
 import path from 'path'
 import os from 'os'
 import { loadEnv, type Plugin } from 'vite'
-import { findUpSync } from 'find-up'
 import { getPackageVersion } from '../../packages/shared/version'
+import { findUpSync } from '../../packages/shared/findUp'
 
 export const hostname = os.hostname()
 export const mdnsName = hostname + '.local'

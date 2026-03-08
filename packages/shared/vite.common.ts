@@ -1,9 +1,9 @@
 import path from 'path'
 import os from 'os'
 import { loadEnv, type Plugin } from 'vite'
-import { findUpSync } from 'find-up'
 import mkcert from 'vite-plugin-mkcert'
 import { getPackageVersion } from './version'
+import { findUpSync } from './findUp'
 import { appConfigSchema } from './zod/config/appConfig.schema'
 
 export const hostname = os.hostname()
