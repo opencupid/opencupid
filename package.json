@@ -37,8 +37,8 @@
     "changeset": "changeset",
     "changeset:version": "changeset version",
     "changeset:status": "changeset status",
-    "tolgee:push": "tolgee push",
-    "tolgee:pull": "tolgee pull"
+    "tolgee:push": "set -a && . ./.env && tolgee push",
+    "tolgee:pull": "set -a && . ./.env && tolgee pull"
   },
   "dependencies": {
     "@types/node": "22.16.1",
