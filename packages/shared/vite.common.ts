@@ -102,6 +102,8 @@ export const runtimeConfigPlugin = (mode: string): Plugin => {
     JITSI_DOMAIN: env.JITSI_DOMAIN ?? '',
     VOICE_MESSAGE_MAX_DURATION: Number(env.VOICE_MESSAGE_MAX_DURATION) || 120,
     MAPTILER_API_KEY: env.MAPTILER_API_KEY ?? '',
+    TOLGEE_API_URL: env.TOLGEE_API_URL ?? '',
+    TOLGEE_API_KEY: env.TOLGEE_API_KEY ?? '',
   })};
 `
 
