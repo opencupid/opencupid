@@ -117,6 +117,11 @@ vi.mock('leaflet.markercluster', () => ({}))
 vi.mock('leaflet.markercluster/dist/MarkerCluster.css', () => ({}))
 vi.mock('leaflet.markercluster/dist/MarkerCluster.Default.css', () => ({}))
 
+// Mock blurhash data URL to avoid canvas/decode in tests
+vi.mock('@/features/images/composables/useBlurhashDataUrl', () => ({
+  blurhashToDataUrl: (hash: string) => `data:image/png;blurhash=${hash}`,
+}))
+
 // Mock MapTiler layer and CSS
 vi.mock('@maptiler/leaflet-maptilersdk', () => {
   const MaptilerLayer = vi.fn(function MaptilerLayerMock() {
@@ -140,17 +145,45 @@ const DummyPopup = defineComponent({
   },
 })
 
+interface TestImage {
+  mimeType: string
+  altText: string | null
+  position: number
+  blurhash: string | null
+  variants: { size: string; url: string }[]
+}
+
 interface TestItem {
   id: string
   location: { lat: number; lon: number }
   name: string
-  imageUrl?: string
+  image?: TestImage
+}
+
+function makeImage(url: string, blurhash?: string): TestImage {
+  return {
+    mimeType: 'image/webp',
+    altText: null,
+    position: 0,
+    blurhash: blurhash ?? null,
+    variants: [{ size: 'thumb', url }],
+  }
 }
 
 const items: TestItem[] = [
-  { id: '1', location: { lat: 47.5, lon: 19.0 }, name: 'Alice', imageUrl: 'https://img/alice.jpg' },
+  {
+    id: '1',
+    location: { lat: 47.5, lon: 19.0 },
+    name: 'Alice',
+    image: makeImage('https://img/alice.jpg'),
+  },
   { id: '2', location: { lat: 48.2, lon: 16.3 }, name: 'Bob' },
-  { id: '3', location: { lat: 46.0, lon: 18.0 }, name: 'Carol', imageUrl: 'https://img/carol.jpg' },
+  {
+    id: '3',
+    location: { lat: 46.0, lon: 18.0 },
+    name: 'Carol',
+    image: makeImage('https://img/carol.jpg'),
+  },
 ]
 
 function mountMap(props: Partial<Record<string, any>> = {}) {
@@ -172,7 +205,7 @@ beforeEach(() => {
 })
 
 describe('OsmPoiMap', () => {
-  it('creates default dot icons when getImageUrl is not provided', async () => {
+  it('creates default dot icons when getImage is not provided', async () => {
     mountMap()
     await flushPromises()
 
@@ -187,36 +220,36 @@ describe('OsmPoiMap', () => {
     }
   })
 
-  it('creates avatar icons when getImageUrl returns a URL', async () => {
-    const getImageUrl = (item: TestItem) => item.imageUrl
+  it('creates avatar icons when getImage returns an image', async () => {
+    const getImage = (item: TestItem) => item.image
 
-    mountMap({ getImageUrl })
+    mountMap({ getImage })
     await flushPromises()
 
     expect(L.marker).toHaveBeenCalledTimes(3)
 
     const calls = (L.marker as any).mock.calls
 
-    // Alice (index 0) has imageUrl → avatar icon
+    // Alice (index 0) has image → avatar icon
     const aliceAvatarHtml = calls[0][1].icon.html.innerHTML
     expect(aliceAvatarHtml).toContain('poi-avatar')
     expect(aliceAvatarHtml).toContain('alice.jpg')
     expect(calls[0][1].icon.className).toBe('poi-avatar-icon')
 
-    // Bob (index 1) has no imageUrl → dot icon
+    // Bob (index 1) has no image → dot icon
     expect(calls[1][1].icon.html).not.toContain('poi-avatar')
     expect(calls[1][1].icon.html).toContain('poi-dot')
 
-    // Carol (index 2) has imageUrl → avatar icon
+    // Carol (index 2) has image → avatar icon
     const carolAvatarHtml = calls[2][1].icon.html.innerHTML
     expect(carolAvatarHtml).toContain('poi-avatar')
     expect(carolAvatarHtml).toContain('carol.jpg')
   })
 
-  it('falls back to dot icon for items where getImageUrl returns undefined', async () => {
-    const getImageUrl = (_item: TestItem) => undefined
+  it('falls back to dot icon for items where getImage returns undefined', async () => {
+    const getImage = (_item: TestItem) => undefined
 
-    mountMap({ getImageUrl })
+    mountMap({ getImage })
     await flushPromises()
 
     for (const call of (L.marker as any).mock.calls) {
@@ -274,7 +307,9 @@ describe('OsmPoiMap', () => {
     await flushPromises()
 
     const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
-    const spiderfiedHandler = clusterInstance.on.mock.calls.find((c: any) => c[0] === 'spiderfied')[1]
+    const spiderfiedHandler = clusterInstance.on.mock.calls.find(
+      (c: any) => c[0] === 'spiderfied'
+    )[1]
     const mapInstance = (L.map as any).mock.results[0].value
     const mousemoveHandler = mapInstance.on.mock.calls.find((c: any) => c[0] === 'mousemove')[1]
 
@@ -296,7 +331,9 @@ describe('OsmPoiMap', () => {
     await flushPromises()
 
     const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
-    const spiderfiedHandler = clusterInstance.on.mock.calls.find((c: any) => c[0] === 'spiderfied')[1]
+    const spiderfiedHandler = clusterInstance.on.mock.calls.find(
+      (c: any) => c[0] === 'spiderfied'
+    )[1]
     const mapInstance = (L.map as any).mock.results[0].value
     const mousemoveHandler = mapInstance.on.mock.calls.find((c: any) => c[0] === 'mousemove')[1]
 
@@ -379,6 +416,46 @@ describe('OsmPoiMap', () => {
     // After nextTick, popup.update() should be called
     await nextTick()
     expect(popupUpdate).toHaveBeenCalledOnce()
+  })
+
+  it('uses 32×32 iconSize for avatar icons to match CSS dimensions', async () => {
+    const getImage = (item: TestItem) => item.image
+
+    mountMap({ getImage })
+    await flushPromises()
+
+    const calls = (L.marker as any).mock.calls
+    // Alice has image → avatar icon with size 32
+    const aliceIcon = calls[0][1].icon
+    expect(aliceIcon.iconSize).toEqual([32, 32])
+    expect(aliceIcon.iconAnchor).toEqual([16, 16])
+  })
+
+  it('renders blurhash placeholder when image has blurhash', async () => {
+    const itemsWithBlurhash: TestItem[] = [
+      {
+        id: '1',
+        location: { lat: 47.5, lon: 19.0 },
+        name: 'Alice',
+        image: makeImage('https://img/alice.jpg', 'LGF5]+Yk^6#M@-5c,1J5@[or[Q6.'),
+      },
+      { id: '2', location: { lat: 48.2, lon: 16.3 }, name: 'Bob' },
+    ]
+
+    const getImage = (item: TestItem) => item.image
+
+    mountMap({ items: itemsWithBlurhash, getImage })
+    await flushPromises()
+
+    const calls = (L.marker as any).mock.calls
+    // Alice (index 0) has image with blurhash → avatar icon with blurhash placeholder
+    const aliceAvatarHtml = calls[0][1].icon.html.innerHTML
+    expect(aliceAvatarHtml).toContain('poi-avatar')
+    // The blurhash mock returns a data URL containing the hash
+    expect(aliceAvatarHtml).toContain('data:image/png;blurhash=')
+
+    // Bob (index 1) has no image → dot icon
+    expect(calls[1][1].icon.html).toContain('poi-dot')
   })
 
   it('flyTo uses lastStableZoom from zoomend, not mid-animation getZoom', async () => {

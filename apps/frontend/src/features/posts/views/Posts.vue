@@ -39,7 +39,6 @@ const postStore = usePostStore()
 // Type filter state — owned here, passed to PostList as prop
 const selectedType = ref<PostTypeType | ''>('')
 
-
 // Get the posts for the active tab for map display
 const currentTabPosts = computed(() => {
   if (activeTab.value === 'my') {
@@ -61,10 +60,9 @@ const getPostLocation = (post: PublicPostWithProfile | OwnerPost) => {
   return undefined
 }
 
-const getPostImageUrl = (post: PublicPostWithProfile | OwnerPost) => {
+const getPostImage = (post: PublicPostWithProfile | OwnerPost) => {
   if ('postedBy' in post && post.postedBy) {
-    const variants = post.postedBy.profileImages?.[0]?.variants
-    return variants?.find((v) => v.size === 'thumb')?.url
+    return post.postedBy.profileImages?.[0]
   }
   return undefined
 }
@@ -91,45 +89,43 @@ onMounted(async () => {
       :class="{ active: isDetailView }"
     ></div>
 
-    <div
-      class="list-view d-flex flex-column"
-    >
+    <div class="list-view d-flex flex-column">
       <!-- Unified toolbar: scope pills + type filter + view toggle -->
       <div class="posts-toolbar d-flex align-items-center gap-2 px-3 py-2 flex-shrink-0">
         <div class="scope-pills d-flex gap-1 overflow-auto hide-scrollbar flex-grow-1">
-<!-- TODO -->
-         <ul class="nav nav-pills small">
-          <li class="nav-item">
-            <button
-              type="button"
-              class="nav-link py-1"
-              :class="{ active: activeTab === 'all' }"
-              @click="activeTab = 'all'"
-            >
-              {{ t('posts.filters.all') }}
-            </button>
-          </li>
-          <li class="nav-item">
-            <button
-              type="button"
-              class="nav-link py-1"
-              :class="{ active: activeTab === 'recent' }"
-              @click="activeTab = 'recent'"
-            >
-              {{ t('posts.filters.recent') }}
-            </button>
-          </li>
-          <li class="nav-item">
-            <button
-              type="button"
-              class="nav-link py-1"
-              :class="{ active: activeTab === 'my' }"
-              @click="activeTab = 'my'"
-            >
-              {{ t('posts.my_posts') }}
-            </button>
-          </li>
-        </ul>
+          <!-- TODO -->
+          <ul class="nav nav-pills small">
+            <li class="nav-item">
+              <button
+                type="button"
+                class="nav-link py-1"
+                :class="{ active: activeTab === 'all' }"
+                @click="activeTab = 'all'"
+              >
+                {{ t('posts.filters.all') }}
+              </button>
+            </li>
+            <li class="nav-item">
+              <button
+                type="button"
+                class="nav-link py-1"
+                :class="{ active: activeTab === 'recent' }"
+                @click="activeTab = 'recent'"
+              >
+                {{ t('posts.filters.recent') }}
+              </button>
+            </li>
+            <li class="nav-item">
+              <button
+                type="button"
+                class="nav-link py-1"
+                :class="{ active: activeTab === 'my' }"
+                @click="activeTab = 'my'"
+              >
+                {{ t('posts.my_posts') }}
+              </button>
+            </li>
+          </ul>
         </div>
 
         <BFormSelect
@@ -146,8 +142,9 @@ onMounted(async () => {
       </div>
 
       <!-- Tab content -->
-      <div class="tab-content flex-grow-1 overflow-hidden position-relative"
-      :class="{ 'opacity-50': isViewLoading }"
+      <div
+        class="tab-content flex-grow-1 overflow-hidden position-relative"
+        :class="{ 'opacity-50': isViewLoading }"
       >
         <!-- All posts -->
         <div
@@ -173,7 +170,7 @@ onMounted(async () => {
             :items="currentTabPosts"
             :get-location="getPostLocation"
             :get-title="getPostTitle"
-            :get-image-url="getPostImageUrl"
+            :get-image="getPostImage"
             :popup-component="PostMapCard"
             :is-loading="isViewLoading"
             class="h-100"
@@ -211,7 +208,7 @@ onMounted(async () => {
             :items="currentTabPosts"
             :get-location="getPostLocation"
             :get-title="getPostTitle"
-            :get-image-url="getPostImageUrl"
+            :get-image="getPostImage"
             :popup-component="PostMapCard"
             :is-loading="isViewLoading"
             class="h-100"
@@ -249,7 +246,7 @@ onMounted(async () => {
             :items="currentTabPosts"
             :get-location="getPostLocation"
             :get-title="getPostTitle"
-            :get-image-url="getPostImageUrl"
+            :get-image="getPostImage"
             :popup-component="PostMapCard"
             :is-loading="isViewLoading"
             class="h-100"
@@ -397,8 +394,6 @@ onMounted(async () => {
       box-shadow: none;
     }
   }
-
-
 }
 
 .tab-content {

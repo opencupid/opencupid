@@ -21,7 +21,7 @@ type Variant = {
 }
 
 const variants: Variant[] = [
-  { name: 'thumb', width: 150, height: 150, fit: sharp.fit.cover }, // square crop
+  { name: 'thumb', width: 128, height: 128, fit: sharp.fit.cover }, // square crop
   { name: 'card', width: 600, height: 600, fit: sharp.fit.cover }, // optional black bars or pad
   { name: 'profile', width: 1200, height: 900, fit: sharp.fit.contain }, // 4:3 aspect ratio
   { name: 'full', width: 1280, fit: sharp.fit.inside },

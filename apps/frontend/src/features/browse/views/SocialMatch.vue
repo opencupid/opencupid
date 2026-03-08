@@ -38,9 +38,8 @@ onMounted(async () => {
   await initialize()
 })
 
-const getProfileImageUrl = (profile: PublicProfile) => {
-  const variants = profile.profileImages?.[0]?.variants
-  return variants?.find((v) => v.size === 'thumb')?.url
+const getProfileImage = (profile: PublicProfile) => {
+  return profile.profileImages?.[0]
 }
 
 const mapCenter = computed<[number, number]>(() => {
@@ -168,7 +167,7 @@ watch(
         :is-placeholder-animated="true"
         :get-location="(profile: PublicProfile) => profile.location"
         :get-title="(profile: PublicProfile) => profile.publicName"
-        :get-image-url="getProfileImageUrl"
+        :get-image="getProfileImage"
         :is-highlighted="(profile: PublicProfile) => matchedProfileIds.has(profile.id)"
         :popup-component="ProfileMapCard"
         class="h-100"
