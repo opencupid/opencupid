@@ -21,7 +21,7 @@ const props = defineProps({
   /** optional: add loading/decoding hints */
   loading: {
     type: String as PropType<'eager' | 'lazy'>,
-    default: 'lazy',
+    default: 'eager',
   },
   decoding: {
     type: String as PropType<'sync' | 'async' | 'auto'>,

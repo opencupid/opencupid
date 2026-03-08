@@ -469,6 +469,9 @@ importers:
       vue-toastification:
         specifier: 2.0.0-rc.5
         version: 2.0.0-rc.5(vue@3.5.28(typescript@5.9.3))
+      vue3-carousel:
+        specifier: ^0.17.0
+        version: 0.17.0(vue@3.5.28(typescript@5.9.3))
     devDependencies:
       '@eslint/js':
         specifier: 9.34.0
@@ -7857,6 +7860,11 @@ packages:
     hasBin: true
     peerDependencies:
       typescript: '>=5.0.0'
+
+  vue3-carousel@0.17.0:
+    resolution: {integrity: sha512-kvb2CRpsEtLGSbiOq/fXfayMJeiwMMjnNSbqWI/Ee7tgfY/ofNanRuhpd7WRVtDdzJY1HvygdLawlBhIyJTM2w==}
+    peerDependencies:
+      vue: 3.5.28
 
   vue@3.5.28:
     resolution: {integrity: sha512-BRdrNfeoccSoIZeIhyPBfvWSLFP4q8J3u8Ju8Ug5vu3LdD+yTM13Sg4sKtljxozbnuMu1NB1X5HBHRYUzFocKg==}
@@ -15962,6 +15970,10 @@ snapshots:
       '@volar/typescript': 2.4.28
       '@vue/language-core': 3.2.5
       typescript: 5.9.3
+
+  vue3-carousel@0.17.0(vue@3.5.28(typescript@5.9.3)):
+    dependencies:
+      vue: 3.5.28(typescript@5.9.3)
 
   vue@3.5.28(typescript@5.9.3):
     dependencies:

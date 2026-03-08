@@ -1,9 +1,13 @@
 <script setup lang="ts">
-import { ref, reactive, watch } from 'vue'
+import { shallowRef, reactive, computed, watch } from 'vue'
 
-import { BCarousel } from 'bootstrap-vue-next'
+import { Carousel, Slide, Navigation, Pagination } from 'vue3-carousel'
+import 'vue3-carousel/dist/carousel.css'
+
 import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 import IconCross from '@/assets/icons/interface/cross.svg'
+import ChevronLeftIcon from '@/assets/icons/arrows/arrow-single-left.svg'
+import ChevronRightIcon from '@/assets/icons/arrows/arrow-single-right.svg'
 import ImageTag from '@/features/images/components/ImageTag.vue'
 import BlurhashCanvas from '@/features/images/components/BlurhashCanvas.vue'
 import { blurhashToDataUrl } from '@/features/images/composables/useBlurhashDataUrl'
@@ -12,9 +16,9 @@ const props = defineProps<{
   profile: PublicProfileWithContext
 }>()
 
-const showFullscreen = ref(false)
-const inlineSlide = ref(0)
-const fullSlide = ref(0)
+const showFullscreen = shallowRef(false)
+const inlineSlide = shallowRef(0)
+const fullSlide = shallowRef(0)
 
 const loadedImages = reactive<Record<number, boolean>>({})
 
@@ -32,6 +36,21 @@ const handleCloseClick = () => {
   showFullscreen.value = false
 }
 
+const carouselProps = {
+  itemsToShow: 1,
+  snapAlign: 'start',
+  mouseDrag: false,
+  touchDrag: true,
+  wrapAround: true,
+  preventExcessiveDragging: true,
+  mouseWheel: false,
+} as const
+
+const currentImage = computed(() => props.profile.profileImages?.[inlineSlide.value])
+const showBlurhash = computed(
+  () => currentImage.value?.blurhash && !loadedImages[currentImage.value.position]
+)
+
 // Reset carousel to first slide when images change (e.g. after reorder in editor)
 watch(
   () => props.profile.profileImages,
@@ -43,36 +62,44 @@ watch(
 </script>
 
 <template>
-  <div class="image-carousel">
-    <BCarousel
-      controls
+  <div class="image-carousel h-100">
+    <BlurhashCanvas
+      v-if="showBlurhash"
+      :blurhash="currentImage!.blurhash!"
+      class="blurhash-overlay"
+    />
+    <Carousel
       v-model="inlineSlide"
       v-show="!showFullscreen"
+      v-bind="carouselProps"
       class="h-100"
     >
-      <BCarouselSlide
+      <Slide
         v-for="img in props.profile.profileImages"
         :key="img.position"
         @click="handleImageClick"
-        class="w-100 h-100 bg-black"
       >
-        <template #img>
-          <div class="ratio ratio-4x3">
-            <BlurhashCanvas
-              v-if="img.blurhash && !loadedImages[img.position]"
-              :blurhash="img.blurhash"
-              class="blurhash-placeholder"
-            />
-            <ImageTag
-              :image="img"
-              className="fitted-image"
-              variant="profile"
-              @load="handleImageLoad(img.position)"
-            />
-          </div>
-        </template>
-      </BCarouselSlide>
-    </BCarousel>
+        <div class="ratio ratio-4x3">
+          <ImageTag
+            :image="img"
+            className="fitted-image"
+            variant="profile"
+            @load="handleImageLoad(img.position)"
+          />
+        </div>
+      </Slide>
+
+      <template #addons>
+        <Navigation>
+          <template #prev>
+            <ChevronLeftIcon class="carousel-nav-icon" />
+          </template>
+          <template #next>
+            <ChevronRightIcon class="carousel-nav-icon" />
+          </template>
+        </Navigation>
+      </template>
+    </Carousel>
 
     <BModal
       v-model="showFullscreen"
@@ -85,67 +112,75 @@ watch(
       :title-visually-hidden="true"
       :body-scrolling="false"
       :fullscreen="true"
-      :lazy="true"
+      :lazy="false"
+      no-animation
     >
       <template #header-close>
         <IconCross class="svg-icon" />
       </template>
-      <BCarousel
-        controls
-        indicators
+      <Carousel
         v-model="fullSlide"
+        v-bind="carouselProps"
         class="w-100 h-100"
       >
-        <BCarouselSlide
+        <Slide
           v-for="img in props.profile.profileImages"
           :key="img.position"
-          class="bg-black h-100"
+          class="bg-black"
         >
-          <template #img>
-            <div
-              class="w-100 h-100 d-flex justify-content-center align-items-center overflow-hidden"
-              :style="
-                img.blurhash
-                  ? {
-                      backgroundImage: `url(${blurhashToDataUrl(img.blurhash)})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                    }
-                  : undefined
-              "
-            >
-              <ImageTag
-                :image="img"
-                className="fitted-image"
-                variant="full"
-              />
-            </div>
-          </template>
-        </BCarouselSlide>
-      </BCarousel>
+          <div
+            class="w-100 h-100 d-flex justify-content-center align-items-center overflow-hidden"
+            :style="
+              img.blurhash
+                ? {
+                    backgroundImage: `url(${blurhashToDataUrl(img.blurhash)})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                  }
+                : undefined
+            "
+          >
+            <ImageTag
+              :image="img"
+              className="fitted-image"
+              variant="full"
+            />
+          </div>
+        </Slide>
+
+        <template #addons>
+          <Navigation>
+            <template #prev>
+              <ChevronLeftIcon class="carousel-nav-icon" />
+            </template>
+            <template #next>
+              <ChevronRightIcon class="carousel-nav-icon" />
+            </template>
+          </Navigation>
+          <Pagination />
+        </template>
+      </Carousel>
     </BModal>
   </div>
 </template>
 
 <style lang="scss">
-.profile-image {
-  flex: 1;
-  height: 100%;
-}
-
 .modal.carousel-modal {
   .fitted-image {
-    width: auto;
-    height: auto;
-    max-width: 100%;
-    max-height: 100%;
+    width: 100%;
+    height: 100%;
     object-fit: contain;
     object-position: center;
   }
 
-  .carousel-inner {
+  .carousel__slide {
     height: 100%;
   }
+
+  .carousel__track {
+    height: 100%;
+  }
+
   .modal-content {
     background-color: transparent;
     border: none;
@@ -191,17 +226,61 @@ watch(
 }
 
 .image-carousel {
-  height: 100% !important;
-  .carousel-inner {
+  position: relative;
+  animation: carousel-fade-in 0.3s ease-out;
+
+  .carousel__track {
+    height: 100%;
+  }
+
+  .carousel__slide {
+    height: 100%;
+  }
+
+  .fitted-image {
     width: 100%;
-    height: 100% !important;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
   }
 }
 
-.blurhash-placeholder {
+.image-carousel,
+.modal.carousel-modal {
+  .carousel__prev,
+  .carousel__next {
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    padding: 0;
+  }
+
+  .carousel-nav-icon {
+    width: 1rem;
+    height: 1rem;
+    fill: white;
+    color: white;
+  }
+}
+
+@keyframes carousel-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.blurhash-overlay {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: 0;
   pointer-events: none;
 }
 </style>

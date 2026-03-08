@@ -24,7 +24,7 @@ const variants: Variant[] = [
   { name: 'thumb', width: 150, height: 150, fit: sharp.fit.cover }, // square crop
   { name: 'card', width: 600, height: 600, fit: sharp.fit.cover }, // optional black bars or pad
   { name: 'profile', width: 1200, height: 900, fit: sharp.fit.contain }, // 4:3 aspect ratio
-  { name: 'full', width: 1280, fit: sharp.fit.contain },
+  { name: 'full', width: 1280, fit: sharp.fit.inside },
 ]
 export class ImageService {
   private static instance: ImageService
@@ -185,12 +185,12 @@ export class ImageService {
     for (const v of variants) {
       const outputPath = path.join(outputDir, `${baseName}-${v.name}.webp`)
       const width = v.width
-      const height = v.height ?? v.width
+      const height = v.height
       const fit = v.fit ?? sharp.fit.inside
 
       if (['card', 'thumb', 'profile'].includes(v.name)) {
-        const rect = await processor.getFaceAwareCrop(width, height, { paddingRatio: 0.75 })
-        await processor.extractAndResize(rect, width, height, outputPath)
+        const rect = await processor.getFaceAwareCrop(width, height!, { paddingRatio: 0.75 })
+        await processor.extractAndResize(rect, width, height!, outputPath)
       } else {
         await processor.resizeOriginal(width, height, fit, outputPath)
       }
