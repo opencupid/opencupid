@@ -143,7 +143,7 @@ watch(
             <ImageTag
               :image="img"
               className="fitted-image"
-              variant="full"
+              variant="original"
             />
           </div>
         </Slide>
@@ -167,10 +167,8 @@ watch(
 <style lang="scss">
 .modal.carousel-modal {
   .fitted-image {
-    width: auto;
-    height: auto;
-    max-width: 100%;
-    max-height: 100%;
+    width: 100%;
+    height: 100%;
     object-fit: contain;
     object-position: center;
   }
