@@ -15,9 +15,11 @@ import ChevronLeftIcon from '@/assets/icons/arrows/arrow-single-left.svg'
 const error = ref('' as string)
 const isValidated = ref<boolean | null>(null)
 const isLoading = ref(false)
+const lastOtpAttempt = ref('')
 
 const router = useRouter()
 const route = useRoute()
+const isCheckingMagicLinkOtp = ref(Boolean(route.query.otp))
 const authStore = useAuthStore()
 const i18nStore = useI18nStore()
 const { t } = useI18n()
@@ -45,14 +47,20 @@ onMounted(async () => {
     // obtain login user ID (phone or email)
     return
   }
-  isLoading.value = true
   // if query params, parse and validate
+  const rawOtp = typeof route.query.otp === 'string' ? route.query.otp : ''
   const params = OtpParamSchema.safeParse(route.query)
   if (!params.success) {
     error.value = t('auth.otp_invalid_link')
+    lastOtpAttempt.value = rawOtp
+    isValidated.value = false
+    isCheckingMagicLinkOtp.value = false
     return
   }
   await doOtpLogin(params.data.otp)
+  if (!isValidated.value) {
+    isCheckingMagicLinkOtp.value = false
+  }
 })
 
 // Method to handle OTP entered
@@ -61,6 +69,7 @@ async function handleOTPSubmitted(otp: string): Promise<void> {
 }
 
 async function doOtpLogin(otp: string) {
+  lastOtpAttempt.value = otp
   isLoading.value = true
   try {
     const res = await authStore.otpLogin(otp)
@@ -70,7 +79,6 @@ async function doOtpLogin(otp: string) {
       await router.push({ name: 'UserHome' })
       return
     } else {
-      console.log('OTP login failed:', res)
       switch (res.code) {
         case 'AUTH_EXPIRED_OTP':
           error.value = t('auth.otp_expired')
@@ -79,6 +87,9 @@ async function doOtpLogin(otp: string) {
           error.value = t('auth.otp_invalid')
           break
         default:
+          // TODO validate under what conditions this branch is hit.
+          // if an error code is not handled above, handle it here according to the above pattern. don't show the API error,
+          // add user facing error string here and i18n it
           error.value = res.message || 'An unknown error occurred. Please try again later.'
       }
       isValidated.value = false
@@ -113,11 +124,18 @@ function handleBackButton() {
           <ChevronLeftIcon class="svg-icon" />
         </a>
       </div>
+      <BSpinner
+        v-if="isCheckingMagicLinkOtp"
+        type="grow"
+        variant="primary"
+      />
       <OtpLoginComponent
+        v-else
         :isLoading="isLoading"
         :user="user"
         :validationResult="isValidated"
         :validationError="error"
+        :initialOtp="lastOtpAttempt"
         @otp:submit="handleOTPSubmitted"
       />
     </div>
