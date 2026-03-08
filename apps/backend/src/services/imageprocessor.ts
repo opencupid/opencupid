@@ -27,7 +27,7 @@ function clampRect(r: Rect, iw: number, ih: number): Rect {
   }
 }
 
-function toIntRect(r: Rect, iw: number, ih: number): Rect {
+function toIntRect(r: Rect, iw: number, ih: number): sharp.Region {
   const left = Math.floor(r.left)
   const top = Math.floor(r.top)
   const right = Math.ceil(r.left + r.width)
@@ -82,6 +82,15 @@ function maximizeWithinBounds(r: Rect, iw: number, ih: number): Rect {
   const newW = r.width * scale
   const newH = r.height * scale
   return { left: cx - newW / 2, top: cy - newH / 2, width: newW, height: newH }
+}
+
+function shiftInsideBounds(r: Rect, iw: number, ih: number): Rect {
+  let { left, top } = r
+  const w = Math.min(r.width, iw)
+  const h = Math.min(r.height, ih)
+  left = clamp(left, 0, iw - w)
+  top = clamp(top, 0, ih - h)
+  return { left, top, width: w, height: h }
 }
 
 export class ImageProcessor {
@@ -165,7 +174,7 @@ export class ImageProcessor {
       r = clampRect(r, iw, ih)
       r = ensureAspect(r, targetW, targetH)
       r = maximizeWithinBounds(r, iw, ih)
-      r = clampRect(r, iw, ih)
+      r = shiftInsideBounds(r, iw, ih)
 
       const minAcceptable = Math.min(iw, ih) * 0.1
       if (r.width >= minAcceptable && r.height >= minAcceptable) {
