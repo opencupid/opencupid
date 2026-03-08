@@ -55,6 +55,8 @@ export const useKomootStore = defineStore('komoot', {
       for (const tag of searchOSMTagFilters) {
         params.append('osm_tag', tag)
       }
+      params.append('layer', 'city')
+      params.append('layer', 'locality')
 
       try {
         const res = await axios.get<KomootFeatureCollection>('https://photon.komoot.io/api/', {
