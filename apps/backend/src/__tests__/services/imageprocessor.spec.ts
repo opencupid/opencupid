@@ -75,4 +75,44 @@ describe('ImageProcessor', () => {
     expect(meta.width).toBe(640)
     expect(meta.height).toBe(480)
   })
+
+  it('getFaceAwareCrop returns valid rect with no faces', async () => {
+    const processor = new ImageProcessor(buffer)
+    await processor.analyze()
+
+    const rect = await processor.getFaceAwareCrop(150, 150)
+    expect(rect.width).toBeGreaterThan(0)
+    expect(rect.height).toBeGreaterThan(0)
+    expect(rect.left).toBeGreaterThanOrEqual(0)
+    expect(rect.top).toBeGreaterThanOrEqual(0)
+  })
+
+  it('getFaceAwareCrop produces a usable crop for extractAndResize', async () => {
+    const processor = new ImageProcessor(buffer)
+    await processor.analyze()
+
+    const rect = await processor.getFaceAwareCrop(600, 600, { paddingRatio: 0.75 })
+    const outPath = path.join(TMP_DIR, 'face-crop-output.webp')
+    await processor.extractAndResize(
+      { x: rect.left, y: rect.top, width: rect.width, height: rect.height },
+      600,
+      600,
+      outPath
+    )
+
+    const meta = await sharp(outPath).metadata()
+    expect(meta.format).toBe('webp')
+    expect(meta.width).toBe(600)
+    expect(meta.height).toBe(600)
+  })
+
+  it('encodeBlurhash returns a valid blurhash string', async () => {
+    const processor = new ImageProcessor(buffer)
+    await processor.analyze()
+
+    const hash = await processor.encodeBlurhash()
+    expect(hash).toBeDefined()
+    expect(typeof hash).toBe('string')
+    expect(hash.length).toBeGreaterThan(0)
+  })
 })
