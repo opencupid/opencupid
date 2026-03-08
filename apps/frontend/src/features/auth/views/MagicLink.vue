@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import z from 'zod'
-import { ref, reactive, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { type LoginUser } from '@zod/user/user.dto'
-import { useI18nStore } from '@/store/i18nStore'
 import { useI18n } from 'vue-i18n'
 
 import { useAuthStore } from '../stores/authStore'
@@ -21,17 +19,7 @@ const router = useRouter()
 const route = useRoute()
 const isCheckingMagicLinkToken = ref(Boolean(route.query.token))
 const authStore = useAuthStore()
-const i18nStore = useI18nStore()
 const { t } = useI18n()
-
-const user = reactive<LoginUser>({
-  id: '',
-  email: '',
-  phonenumber: '',
-  language: i18nStore.getLanguage(),
-  newsletterOptIn: true,
-  isPushNotificationEnabled: false,
-})
 
 const TokenParamSchema = z.object({
   token: z.string().min(6).max(6),
@@ -120,7 +108,7 @@ function handleBackButton() {
       <TokenInput
         v-else
         :isLoading="isLoading"
-        :user="user"
+        :user="authStore.loginUser!"
         :validationResult="isValidated"
         :validationError="error"
         :initialToken="lastTokenAttempt"

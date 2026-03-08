@@ -132,6 +132,70 @@ describe('authStore localStorage auth flow', () => {
     expect(localStorage.getItem('authId')).toBe('test@example.com')
   })
 
+  it('stores loginUser after sendMagicLink and clears it after verifyToken', async () => {
+    mockApi.post.mockResolvedValue({
+      data: {
+        user: {
+          id: 'ck1234567890abcd12345678',
+          email: 'test@example.com',
+          phonenumber: '',
+          language: 'en',
+          newsletterOptIn: true,
+          isPushNotificationEnabled: false,
+        },
+      },
+    })
+
+    const store = useAuthStore()
+    expect(store.loginUser).toBeNull()
+    expect(store.isPhoneAuth).toBe(false)
+
+    await store.sendMagicLink({ email: 'test@example.com', phonenumber: '' })
+
+    expect(store.loginUser).toEqual({
+      id: 'ck1234567890abcd12345678',
+      email: 'test@example.com',
+      phonenumber: '',
+      language: 'en',
+      newsletterOptIn: true,
+      isPushNotificationEnabled: false,
+    })
+    expect(store.isPhoneAuth).toBe(false)
+
+    const token = makeJwt({
+      userId: 'u1',
+      profileId: 'p1',
+      exp: Math.floor(Date.now() / 1000) + 3600,
+    })
+    mockApi.get.mockResolvedValue({
+      data: { success: true, token, refreshToken: 'r1' },
+    })
+
+    await store.verifyToken('123456')
+
+    expect(store.loginUser).toBeNull()
+  })
+
+  it('sets isPhoneAuth to true for phone-based login', async () => {
+    mockApi.post.mockResolvedValue({
+      data: {
+        user: {
+          id: 'ck1234567890abcd12345679',
+          email: '',
+          phonenumber: '+12345678901',
+          language: 'en',
+          newsletterOptIn: true,
+          isPushNotificationEnabled: false,
+        },
+      },
+    })
+
+    const store = useAuthStore()
+    await store.sendMagicLink({ email: '', phonenumber: '+12345678901' })
+
+    expect(store.isPhoneAuth).toBe(true)
+  })
+
   it('saves phone number as authId after sendMagicLink success (phone)', async () => {
     mockApi.post.mockResolvedValue({
       data: {

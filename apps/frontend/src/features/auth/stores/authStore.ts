@@ -34,12 +34,14 @@ export const useAuthStore = defineStore('auth', {
     email: null as string | null,
     profileId: null as string | null,
     isInitialized: false,
+    loginUser: null as LoginUser | null,
   }),
 
   getters: {
     isLoggedIn: (state) => state.jwt !== '',
     getUserId: (state) => state.userId,
     getEmail: (state) => state.email,
+    isPhoneAuth: (state) => Boolean(state.loginUser?.phonenumber),
   },
 
   actions: {
@@ -107,6 +109,7 @@ export const useAuthStore = defineStore('auth', {
 
         if (res.data.success === true) {
           this.setAuthState(res.data.token, res.data.refreshToken)
+          this.loginUser = null
           localStorage.removeItem('authId')
         } else {
           return {
@@ -152,6 +155,7 @@ export const useAuthStore = defineStore('auth', {
           }
         }
         const user = params.data
+        this.loginUser = user
         localStorage.setItem('authId', getAuthId(authId))
         return {
           success: true,
@@ -219,6 +223,7 @@ export const useAuthStore = defineStore('auth', {
 
       this.userId = null
       this.email = null
+      this.loginUser = null
       this.jwt = ''
       localStorage.removeItem('token')
       localStorage.removeItem('refreshToken')

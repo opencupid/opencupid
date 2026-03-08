@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { type UserIdentifyPayload } from '@zod/user/user.dto'
-import { type LoginUser } from '@zod/user/user.dto'
 
 import { useI18nStore } from '@/store/i18nStore'
 import { useAuthStore } from '../stores/authStore'
@@ -20,35 +19,25 @@ const router = useRouter()
 const authStore = useAuthStore()
 const i18nStore = useI18nStore()
 
-// TODO duplicate in apps/frontend/src/features/auth/views/MagicLink.vue
-const user = reactive<LoginUser>({
-  id: '',
-  email: '',
-  phonenumber: '',
-  language: i18nStore.getLanguage(),
-  newsletterOptIn: true,
-  isPushNotificationEnabled: false,
-})
-
 // Method to handle sending login link
 async function handleSendOtp(authIdCaptcha: UserIdentifyPayload) {
   const payload = {
     ...authIdCaptcha,
-    language: user.language || 'en',
+    language: i18nStore.getLanguage() || 'en',
   }
   try {
     error.value = ''
     isLoading.value = true
     const res = await authStore.sendMagicLink(payload)
     if (res.success) {
-      Object.assign(user, res.user)
       router.push({ name: 'MagicLink' })
     } else {
-      // TODO i18n these error messages
+      // TODO trace under what conditions we get here - is this a dead branch?
+      // i18n these error messages
       error.value = 'An unknown error occurred, please try again a bit later.'
     }
   } catch (err: any) {
-    // TODO i18n these error messages
+    // TODO trace under what conditions we get here 0 is this a dead branch? i18n these error messages is this is not dead
     error.value = err || 'An unexpected error occurred.'
     console.error('Login error:', err)
   } finally {
@@ -57,7 +46,6 @@ async function handleSendOtp(authIdCaptcha: UserIdentifyPayload) {
 }
 
 const handleSetLanguage = (lang: string) => {
-  user.language = lang
   i18nStore.setLanguage(lang)
 }
 
