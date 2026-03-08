@@ -22,7 +22,7 @@ describe('komootStore', () => {
     await store.search('Berlin', 'en')
 
     expect(mockGet).toHaveBeenCalledOnce()
-    const [url, config] = mockGet.mock.calls[0]
+    const [url, config] = mockGet.mock.calls[0]!
     expect(url).toBe('https://photon.komoot.io/api/')
 
     const params: URLSearchParams = config.params
@@ -35,7 +35,7 @@ describe('komootStore', () => {
     const store = useKomootStore()
     await store.search('Berlin', 'en')
 
-    const params: URLSearchParams = mockGet.mock.calls[0][1].params
+    const params: URLSearchParams = mockGet.mock.calls[0]![1].params
     const osmTags = params.getAll('osm_tag')
     expect(osmTags).toContain('place:city')
     expect(osmTags).toContain('place:town')
