@@ -1,5 +1,11 @@
 # @opencupid/shared
 
+## 0.5.6
+
+### Patch Changes
+
+- 09d7b58: Implemented several UX fixes in the authentication, registration and onboarding flows.
+
 ## 0.5.5
 
 ### Patch Changes

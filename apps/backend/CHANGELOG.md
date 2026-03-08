@@ -1,5 +1,13 @@
 # backend
 
+## 0.17.13
+
+### Patch Changes
+
+- 4a3ca99: Remove unnecessary fallback values from SITE_NAME constants where defaults are already guaranteed by strong typing.
+- 9f26c2f: FIx email compatibility issues
+- 09d7b58: Implemented several UX fixes in the authentication, registration and onboarding flows.
+
 ## 0.17.12
 
 ### Patch Changes
