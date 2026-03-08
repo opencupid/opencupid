@@ -30,7 +30,6 @@ const thumbUrl = (image: AvatarImage) => image.variants?.find((v) => v.size === 
   object-fit: cover;
   border: 2px solid white;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-  background: #e0e0e0;
 }
 
 .poi-avatar.highlighted {
