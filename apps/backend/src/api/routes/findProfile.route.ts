@@ -80,6 +80,44 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
     }
   })
 
+  const BoundsQuerySchema = z.object({
+    south: z.preprocess((v) => (typeof v === 'string' ? parseFloat(v) : v), z.number()),
+    north: z.preprocess((v) => (typeof v === 'string' ? parseFloat(v) : v), z.number()),
+    west: z.preprocess((v) => (typeof v === 'string' ? parseFloat(v) : v), z.number()),
+    east: z.preprocess((v) => (typeof v === 'string' ? parseFloat(v) : v), z.number()),
+  })
+
+  fastify.get('/social/map/bounds', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    if (!req.session.profile.isSocialActive) {
+      return sendForbiddenError(reply)
+    }
+
+    const parsed = BoundsQuerySchema.safeParse(req.query)
+    if (!parsed.success) {
+      return sendError(
+        reply,
+        400,
+        'Missing or invalid bounds parameters (south, north, west, east)'
+      )
+    }
+
+    const myProfileId = req.session.profileId
+    const locale = req.session.lang
+    const bounds = parsed.data
+
+    try {
+      const profiles = await profileMatchService.findSocialProfilesInBounds(myProfileId, bounds, [
+        { updatedAt: 'desc' },
+      ])
+      const mappedProfiles = profiles.map((p) => mapProfileToPublic(p, false, locale))
+      const response: GetProfilesResponse = { success: true, profiles: mappedProfiles }
+      return reply.code(200).send(response)
+    } catch (err) {
+      req.log.error(err)
+      return sendError(reply, 500, 'Failed to fetch bounded map profiles')
+    }
+  })
+
   fastify.get('/dating', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const { skip, take } = PaginationQuerySchema.parse(req.query)
     return getDatingProfiles(req, reply, [{ updatedAt: 'desc' }], take, skip)
