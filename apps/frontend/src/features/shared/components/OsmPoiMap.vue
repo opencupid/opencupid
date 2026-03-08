@@ -11,7 +11,7 @@ import '@maptiler/sdk/dist/maptiler-sdk.css'
 import { MaptilerLayer } from '@maptiler/leaflet-maptilersdk'
 import { config as maptilerConfig, MapStyle } from '@maptiler/sdk'
 
-import AvatarIcon from './AvatarIcon.vue'
+import AvatarIcon, { type AvatarImage } from './AvatarIcon.vue'
 
 /** Basic POI shape for location data extraction */
 export interface PoiItem {
@@ -37,8 +37,8 @@ const props = withDefaults(
     /** Optional starting center/zoom (used if we can't fit to bounds) */
     center?: [number, number]
     zoom?: number
-    /** Optional function to get a thumbnail image URL for an item */
-    getImageUrl?: (item: T) => string | undefined
+    /** Optional function to get a profile image (with variants + blurhash) for an item */
+    getImage?: (item: T) => AvatarImage | undefined
     /** ID of selected item to highlight */
     selectedId?: string | number
     /** Whether to auto-fit the map to show all items */
@@ -140,11 +140,11 @@ function closeSpider() {
 
 let clusterGroup: any = null
 
-function avatarIcon(url: string, isSelected: boolean, isHighlighted: boolean): L.DivIcon {
-  const size = 50
+function avatarIcon(image: AvatarImage, isSelected: boolean, isHighlighted: boolean): L.DivIcon {
+  const size = 32
 
   const container = document.createElement('span')
-  render(h(AvatarIcon, { url: encodeURI(url), isHighlighted, isSelected }), container)
+  render(h(AvatarIcon, { image, isHighlighted, isSelected }), container)
   return L.divIcon({
     className: 'poi-avatar-icon',
     html: container,
@@ -168,8 +168,8 @@ function dotIcon(isSelected: boolean, isHighlighted: boolean): L.DivIcon {
 
 function iconForItem(item: T, isSelected: boolean): L.DivIcon {
   const highlighted = props.isHighlighted?.(item) ?? false
-  const imageUrl = props.getImageUrl?.(item)
-  if (imageUrl) return avatarIcon(imageUrl, isSelected, highlighted)
+  const image = props.getImage?.(item)
+  if (image) return avatarIcon(image, isSelected, highlighted)
   return dotIcon(isSelected, highlighted)
 }
 
@@ -382,8 +382,6 @@ function highlightSelected() {
 
 onMounted(() => {
   ensureMap()
-  updateMarkers()
-  highlightSelected()
 })
 
 function destroyMap() {
@@ -408,7 +406,6 @@ watch(
   () => props.items,
   () => {
     updateMarkers()
-    highlightSelected()
   },
   { deep: true }
 )

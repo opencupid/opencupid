@@ -4,6 +4,7 @@ import type { Map as LMap } from 'leaflet'
 
 import OsmPoiMap from './OsmPoiMap.vue'
 import MapPlaceholder from './MapPlaceholder.vue'
+import type { AvatarImage } from './AvatarIcon.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -15,7 +16,7 @@ const props = withDefaults(
     popupComponent: Component
     getLocation: (item: T) => { lat?: number | null; lon?: number | null } | null | undefined
     getTitle: (item: T) => string
-    getImageUrl?: (item: T) => string | undefined
+    getImage?: (item: T) => AvatarImage | undefined
     isHighlighted?: (item: T) => boolean
     isLoading?: boolean
     isPlaceholderAnimated?: boolean
@@ -63,7 +64,7 @@ function onMapReady(map: LMap) {
         :popup-component="props.popupComponent"
         :get-location="props.getLocation"
         :get-title="props.getTitle"
-        :get-image-url="props.getImageUrl"
+        :get-image="props.getImage"
         :is-highlighted="props.isHighlighted"
         class="h-100"
         @map:ready="onMapReady"
