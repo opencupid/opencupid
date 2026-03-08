@@ -32,7 +32,7 @@ const handleCloseClick = () => {
   showFullscreen.value = false
 }
 
-const currentImage = computed(() => props.profile.profileImages[inlineSlide.value])
+const currentImage = computed(() => props.profile.profileImages?.[inlineSlide.value])
 const showBlurhash = computed(
   () => currentImage.value?.blurhash && !loadedImages[currentImage.value.position]
 )
