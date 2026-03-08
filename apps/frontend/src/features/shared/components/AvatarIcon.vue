@@ -1,5 +1,9 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+import { blurhashToDataUrl } from '@/features/images/composables/useBlurhashDataUrl'
+
 export interface AvatarImage {
+  blurhash?: string | null
   variants?: { size: string; url: string }[]
 }
 
@@ -8,17 +12,23 @@ interface Props {
   isHighlighted?: boolean
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   isHighlighted: false,
 })
 
-const thumbUrl = (image: AvatarImage) => image.variants?.find((v) => v.size === 'thumb')?.url
+const thumbUrl = computed(() => props.image.variants?.find((v) => v.size === 'thumb')?.url)
+
+const backgroundStyle = computed(() => {
+  if (!props.image.blurhash) return undefined
+  return { backgroundImage: `url(${blurhashToDataUrl(props.image.blurhash)})` }
+})
 </script>
 
 <template>
   <img
-    v-if="thumbUrl(image)"
-    :src="thumbUrl(image)"
+    v-if="thumbUrl"
+    :src="thumbUrl"
+    :style="backgroundStyle"
     class="w-100 h-100"
     :class="{ 'poi-avatar': true, highlighted: isHighlighted }"
   />
@@ -30,6 +40,7 @@ const thumbUrl = (image: AvatarImage) => image.variants?.find((v) => v.size === 
   object-fit: cover;
   border: 2px solid white;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  background-size: cover;
 }
 
 .poi-avatar.highlighted {

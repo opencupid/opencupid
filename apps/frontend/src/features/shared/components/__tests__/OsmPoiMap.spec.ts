@@ -117,6 +117,11 @@ vi.mock('leaflet.markercluster', () => ({}))
 vi.mock('leaflet.markercluster/dist/MarkerCluster.css', () => ({}))
 vi.mock('leaflet.markercluster/dist/MarkerCluster.Default.css', () => ({}))
 
+// Mock blurhash (canvas unavailable in jsdom)
+vi.mock('@/features/images/composables/useBlurhashDataUrl', () => ({
+  blurhashToDataUrl: (hash: string) => `data:image/png;blurhash=${hash}`,
+}))
+
 // Mock MapTiler layer and CSS
 vi.mock('@maptiler/leaflet-maptilersdk', () => {
   const MaptilerLayer = vi.fn(function MaptilerLayerMock() {
@@ -144,11 +149,11 @@ interface TestItem {
   id: string
   location: { lat: number; lon: number }
   name: string
-  image?: { variants: { size: string; url: string }[] }
+  image?: { blurhash?: string | null; variants: { size: string; url: string }[] }
 }
 
-function makeImage(url: string) {
-  return { variants: [{ size: 'thumb', url }] }
+function makeImage(url: string, blurhash?: string) {
+  return { blurhash: blurhash ?? null, variants: [{ size: 'thumb', url }] }
 }
 
 const items: TestItem[] = [
@@ -167,10 +172,13 @@ const items: TestItem[] = [
   },
 ]
 
-function mountMap(props: Partial<Record<string, any>> = {}) {
-  return mount(OsmPoiMap as any, {
+async function mountMap(props: Partial<Record<string, any>> = {}) {
+  const testItems = props.items ?? items
+  delete props.items
+
+  const wrapper = mount(OsmPoiMap as any, {
     props: {
-      items,
+      items: [],
       getLocation: (item: TestItem) => item.location,
       getTitle: (item: TestItem) => item.name,
       popupComponent: DummyPopup,
@@ -178,6 +186,10 @@ function mountMap(props: Partial<Record<string, any>> = {}) {
     },
     attachTo: document.body,
   })
+
+  // Simulate real app flow: items arrive after mount via reactive update
+  await wrapper.setProps({ items: testItems })
+  return wrapper
 }
 
 beforeEach(() => {
@@ -187,7 +199,7 @@ beforeEach(() => {
 
 describe('OsmPoiMap', () => {
   it('creates default dot icons when getImage is not provided', async () => {
-    mountMap()
+    await mountMap()
     await flushPromises()
 
     // Should have created markers via L.marker
@@ -204,7 +216,7 @@ describe('OsmPoiMap', () => {
   it('creates avatar icons when getImage returns an image', async () => {
     const getImage = (item: TestItem) => item.image
 
-    mountMap({ getImage })
+    await mountMap({ getImage })
     await flushPromises()
 
     expect(L.marker).toHaveBeenCalledTimes(3)
@@ -230,7 +242,7 @@ describe('OsmPoiMap', () => {
   it('falls back to dot icon for items where getImage returns undefined', async () => {
     const getImage = (_item: TestItem) => undefined
 
-    mountMap({ getImage })
+    await mountMap({ getImage })
     await flushPromises()
 
     for (const call of (L.marker as any).mock.calls) {
@@ -239,7 +251,7 @@ describe('OsmPoiMap', () => {
   })
 
   it('initializes a markerClusterGroup and adds markers to it', async () => {
-    mountMap()
+    await mountMap()
     await flushPromises()
 
     // Should have created a cluster group
@@ -253,7 +265,7 @@ describe('OsmPoiMap', () => {
   })
 
   it('registers spider and map movement event handlers', async () => {
-    mountMap()
+    await mountMap()
     await flushPromises()
 
     const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
@@ -270,7 +282,7 @@ describe('OsmPoiMap', () => {
   })
 
   it('spiderfies cluster on clustermouseover', async () => {
-    mountMap()
+    await mountMap()
     await flushPromises()
 
     const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
@@ -284,7 +296,7 @@ describe('OsmPoiMap', () => {
   })
 
   it('closes active spider when mouse leaves hover bounds', async () => {
-    mountMap()
+    await mountMap()
     await flushPromises()
 
     const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
@@ -308,7 +320,7 @@ describe('OsmPoiMap', () => {
   })
 
   it('keeps active spider when mouse stays inside hover bounds', async () => {
-    mountMap()
+    await mountMap()
     await flushPromises()
 
     const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
@@ -334,7 +346,7 @@ describe('OsmPoiMap', () => {
   it('uses raster tile layer when WebGL is not supported', async () => {
     // jsdom does not implement WebGL, so canvas.getContext('webgl') returns null
     // by default — this test confirms the fallback path is taken.
-    mountMap()
+    await mountMap()
     await flushPromises()
 
     expect(L.tileLayer).toHaveBeenCalledOnce()
@@ -352,7 +364,7 @@ describe('OsmPoiMap', () => {
       throw new Error('WebGL context lost')
     })
 
-    mountMap()
+    await mountMap()
     await flushPromises()
 
     expect(L.tileLayer).toHaveBeenCalledOnce()
@@ -363,7 +375,7 @@ describe('OsmPoiMap', () => {
   })
 
   it('calls popup.update() on nextTick after popupopen to re-measure teleported content', async () => {
-    mountMap()
+    await mountMap()
     await flushPromises()
 
     // Get the first created marker instance
@@ -402,7 +414,7 @@ describe('OsmPoiMap', () => {
   it('uses 32×32 iconSize for avatar icons to match CSS dimensions', async () => {
     const getImage = (item: TestItem) => item.image
 
-    mountMap({ getImage })
+    await mountMap({ getImage })
     await flushPromises()
 
     const calls = (L.marker as any).mock.calls
@@ -413,7 +425,7 @@ describe('OsmPoiMap', () => {
   })
 
   it('flyTo uses lastStableZoom from zoomend, not mid-animation getZoom', async () => {
-    const wrapper = mountMap({ center: [47.0, 19.0] as [number, number], zoom: 7 })
+    const wrapper = await mountMap({ center: [47.0, 19.0] as [number, number], zoom: 7 })
     await flushPromises()
 
     // The map instance returned by L.map shares mapProto references
