@@ -55,7 +55,7 @@ describe('findProfileStore.findSocialForMapBounds', () => {
     await store.findSocialForMapBounds(bounds)
 
     expect(store.profileList).toHaveLength(1)
-    expect(store.profileList[0].id).toBe(mockProfile.id)
+    expect(store.profileList[0]!.id).toBe(mockProfile.id)
   })
 
   it('sets isLoading during fetch', async () => {

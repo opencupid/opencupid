@@ -162,10 +162,7 @@ export class ProfileMatchService {
       */
   }
 
-  private async buildSocialWhereClause(
-    profileId: string,
-    options?: { includeCountry?: boolean }
-  ) {
+  private async buildSocialWhereClause(profileId: string, options?: { includeCountry?: boolean }) {
     const userPrefs = await this.getSocialMatchFilter(profileId)
     if (!userPrefs) return null
 
