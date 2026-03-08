@@ -51,7 +51,7 @@ watch(
   <div class="image-carousel">
     <BlurhashCanvas
       v-if="showBlurhash"
-      :blurhash="currentImage.blurhash!"
+      :blurhash="currentImage!.blurhash!"
       class="blurhash-overlay"
     />
     <BCarousel
@@ -59,6 +59,7 @@ watch(
       v-model="inlineSlide"
       v-show="!showFullscreen"
       class="h-100"
+      :class="{ 'carousel-hidden': showBlurhash }"
     >
       <BCarouselSlide
         v-for="img in props.profile.profileImages"
@@ -202,6 +203,10 @@ watch(
     width: 100%;
     height: 100% !important;
   }
+}
+
+.carousel-hidden {
+  opacity: 0;
 }
 
 .blurhash-overlay {
