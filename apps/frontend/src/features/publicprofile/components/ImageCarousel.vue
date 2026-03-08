@@ -36,7 +36,7 @@ const handleCloseClick = () => {
 
 const currentImage = computed(() => props.profile.profileImages?.[inlineSlide.value])
 const showBlurhash = computed(
-  () => currentImage.value?.blurhash && !loadedImages[currentImage.value.position]
+  () => currentImage.value?.blurhash //&& !loadedImages[currentImage.value.position]
 )
 
 // Reset carousel to first slide when images change (e.g. after reorder in editor)
@@ -50,7 +50,7 @@ watch(
 </script>
 
 <template>
-  <div class="image-carousel">
+  <div class="image-carousel h-100">
     <BlurhashCanvas
       v-if="showBlurhash"
       :blurhash="currentImage!.blurhash!"
@@ -62,6 +62,11 @@ watch(
       class="h-100"
       :items-to-show="1"
       snap-align="start"
+      :mouse-drag="false"
+      :touch-drag="true"
+      :wrap-around="true"
+      :prevent-excessive-dragging="true"
+      :mouse-wheel="false"
     >
       <Slide
         v-for="img in props.profile.profileImages"
@@ -94,7 +99,8 @@ watch(
       :title-visually-hidden="true"
       :body-scrolling="false"
       :fullscreen="true"
-      :lazy="true"
+      :lazy="false"
+      no-animation
     >
       <template #header-close>
         <IconCross class="svg-icon" />
@@ -104,6 +110,11 @@ watch(
         class="w-100 h-100"
         :items-to-show="1"
         snap-align="start"
+        :mouse-drag="false"
+        :touch-drag="true"
+        :wrap-around="true"
+        :prevent-excessive-dragging="true"
+        :mouse-wheel="false"
       >
         <Slide
           v-for="img in props.profile.profileImages"
@@ -140,11 +151,6 @@ watch(
 </template>
 
 <style lang="scss">
-.profile-image {
-  flex: 1;
-  height: 100%;
-}
-
 .modal.carousel-modal {
   .fitted-image {
     width: auto;
@@ -209,7 +215,7 @@ watch(
 
 .image-carousel {
   position: relative;
-  height: 100% !important;
+  animation: carousel-fade-in 0.3s ease-out;
 
   .carousel__track {
     height: 100%;
@@ -227,10 +233,19 @@ watch(
   }
 }
 
+@keyframes carousel-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .blurhash-overlay {
   position: absolute;
   inset: 0;
-  z-index: 2;
+  z-index: 0;
   pointer-events: none;
 }
 </style>
