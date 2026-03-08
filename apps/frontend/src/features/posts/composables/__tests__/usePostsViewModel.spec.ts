@@ -42,13 +42,11 @@ describe('usePostsViewModel', () => {
   })
 
   it('sets isLoading during initialize and resets after completion', async () => {
-    let vm: ReturnType<typeof usePostsViewModel>
+    const vm = usePostsViewModel()
 
     bootstrapMock.mockImplementation(async () => {
       expect(vm.isLoading.value).toBe(true)
     })
-
-    vm = usePostsViewModel()
 
     expect(vm.isLoading.value).toBe(false)
     await vm.initialize()
