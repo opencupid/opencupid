@@ -1,52 +1,52 @@
 import type { App } from 'vue'
-import { createI18n, type Composer } from 'vue-i18n'
+import { computed } from 'vue'
+import { VueTolgee, useTranslate, useTolgee } from '@tolgee/vue'
+import type { CombinedOptions, DefaultParamType } from '@tolgee/vue'
 import { Settings } from 'luxon'
 import { useLocalStore } from '@/store/localStore'
 import { bus } from './bus'
+import { tolgee } from './tolgee'
 
-type LocaleMessages = Record<string, Record<string, any>>
+type TolgeeParams = CombinedOptions<DefaultParamType>
 
-type AppI18n = ReturnType<typeof appCreateI18n>
+// TODO move this to config
+Settings.defaultZone = 'Europe/Berlin'
+
+// Compatibility type for MessageReceivedToast.vue
+export type Composer = {
+  t: (key: string, paramsOrDefault?: TolgeeParams | string) => string
+}
 
 declare global {
   interface Window {
-    __APP_I18N__?: AppI18n
+    __APP_I18N__?: { global: Composer }
   }
 }
 
-const LOCALE_FILE_REGEX = /([\w-]+)\.json$/
+/**
+ * Compatibility shim for vue-i18n's useI18n().
+ * Returns { t, locale } backed by Tolgee's useTranslate() and useTolgee().
+ */
+export function useI18n() {
+  const { t: tolgeeT } = useTranslate()
+  const tolgeeInstance = useTolgee(['language'])
 
-Settings.defaultZone = 'Europe/Berlin'
+  const locale = computed({
+    get: () => tolgeeInstance.value.getLanguage() ?? 'en',
+    set: (lang: string) => {
+      tolgeeInstance.value.changeLanguage(lang)
+    },
+  })
 
-function extractLocaleFromPath(path: string): string | null {
-  return path.match(LOCALE_FILE_REGEX)?.[1] ?? null
-}
-
-function loadDevMessages(): LocaleMessages {
-  const modules = import.meta.glob('@shared/i18n/*.json', {
-    eager: true,
-    import: 'default',
-  }) as Record<string, Record<string, any>>
-
-  return Object.entries(modules).reduce<LocaleMessages>((acc, [path, localeMessages]) => {
-    const locale = extractLocaleFromPath(path)
-    if (!locale) {
-      return acc
+  const t = (key: string, paramsOrDefault?: TolgeeParams | string): string => {
+    if (typeof paramsOrDefault === 'string') {
+      return tolgeeT.value(key, paramsOrDefault)
     }
 
-    acc[locale] = localeMessages
-    return acc
-  }, {})
-}
+    return tolgeeT.value(key, paramsOrDefault)
+  }
 
-export const messages: LocaleMessages = loadDevMessages()
-
-let cachedI18n: AppI18n | undefined
-let languageListenerAttached = false
-
-export function getLocale(): string | null {
-  const localStore = useLocalStore()
-  return localStore.getLanguage
+  return { t, locale }
 }
 
 export function sortLanguagesWithEnFirst(codes: string[]): string[] {
@@ -57,56 +57,42 @@ export function sortLanguagesWithEnFirst(codes: string[]): string[] {
   })
 }
 
-export function appCreateI18n() {
-  return createI18n({
-    legacy: false,
-    locale: 'en',
-    fallbackLocale: 'en',
-    messages,
-    missingWarn: true,
-    fallbackWarn: false,
-  })
+export function getLocale(): string | null {
+  const localStore = useLocalStore()
+  return localStore.getLanguage
 }
 
-function getI18nInstance() {
-  if (!cachedI18n) {
-    cachedI18n = window.__APP_I18N__ ?? appCreateI18n()
-    window.__APP_I18N__ = cachedI18n
+let languageListenerAttached = false
+
+function createGlobalT() {
+  return (key: string, paramsOrDefault?: TolgeeParams | string): string => {
+    if (typeof paramsOrDefault === 'string') {
+      return tolgee.t(key, paramsOrDefault)
+    }
+
+    return tolgee.t(key, undefined, paramsOrDefault)
   }
-
-  return cachedI18n
-}
-
-function setLocale(i18n: AppI18n, locale: string) {
-  ;(i18n.global as Composer).locale.value = locale
-  Settings.defaultLocale = locale
 }
 
 export function appUseI18n(app: App) {
-  const i18n = getI18nInstance()
-  app.use(i18n)
+  app.use(VueTolgee, { tolgee })
 
-  setLocale(i18n, getLocale() ?? 'en')
+  // Expose global t for non-component contexts (e.g. MessageReceivedToast)
+  const globalT = createGlobalT()
+  window.__APP_I18N__ = { global: { t: globalT } }
+
+  const initialLocale = getLocale() ?? 'en'
+  tolgee.changeLanguage(initialLocale)
+  Settings.defaultLocale = initialLocale
+
+  // Start the Tolgee observer (enables in-context editing via Chrome Plugin)
+  tolgee.run()
 
   if (!languageListenerAttached) {
-    bus.on('language:changed', ({ language }) => {
-      setLocale(i18n, language)
+    bus.on('language:changed', ({ language }: { language: string }) => {
+      tolgee.changeLanguage(language)
+      Settings.defaultLocale = language
     })
     languageListenerAttached = true
   }
-}
-
-if (import.meta.hot) {
-  import.meta.hot.accept((nextModule) => {
-    const nextMessages = nextModule?.messages as LocaleMessages | undefined
-    const i18n = window.__APP_I18N__ ?? cachedI18n
-
-    if (!i18n || !nextMessages) {
-      return
-    }
-
-    Object.entries(nextMessages).forEach(([locale, localeMessages]) => {
-      i18n.global.setLocaleMessage(locale, localeMessages)
-    })
-  })
 }

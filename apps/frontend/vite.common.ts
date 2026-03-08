@@ -7,7 +7,6 @@ import { getPackageVersion } from '../../packages/shared/version'
 export const hostname = os.hostname()
 export const mdnsName = hostname + '.local'
 
-
 export const server = (mode: string, env: Record<string, string | undefined>, appDir: string) => {
   if (mode !== 'development') return {}
 

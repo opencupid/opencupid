@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue'
-import { I18nT } from 'vue-i18n'
 import { type InteractionContext } from '@zod/interaction/interactionContext.dto'
 
 import IconHeart from '@/assets/icons/interface/heart.svg'

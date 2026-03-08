@@ -268,7 +268,7 @@
     "matches_list_title": "My matches",
     "you_received_like": "You received a like!",
     "you_matched_with": "You matched with {name}!",
-    "received_likes": "You have no likes.|You have 1 like.|You have {count} likes!",
+    "received_likes": "{count, plural, =0 {You have no likes.} one {You have # like.} other {You have # likes!}}",
     "received_likes_cta": "Find out who sent it",
     "no_match_no_sent_like": "There's gotta be someone you like out there?  ",
     "no_match_no_sent_like_cta": "Start lookin'",
@@ -277,8 +277,8 @@
     "find_button_cta": "Go connect",
     "notifications": {
       "you_have": "You have",
-      "likes": "{count} ❤️  | {count} ❤️ ",
-      "matches": "{count} new match |{count} new matches",
+      "likes": "{count, plural, one {# ❤️} other {# ❤️}}",
+      "matches": "{count, plural, one {# new match} other {# new matches}}",
       "and": "and"
     },
     "pass_confirm_dialog": {

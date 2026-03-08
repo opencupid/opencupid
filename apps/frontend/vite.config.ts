@@ -3,7 +3,6 @@ import { type ConfigEnv, defineConfig, type UserConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import vueDevTools from 'vite-plugin-vue-devtools'
-import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 
 import Components from 'unplugin-vue-components/vite'
 import { BootstrapVueNextResolver } from 'bootstrap-vue-next'
@@ -52,6 +51,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
     },
     optimizeDeps: {
       include: ['qrcode'],
+      exclude: ['vue-i18n'],
     },
     plugins: [
       {
@@ -72,9 +72,6 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
 
       vueJsx(),
       vueDevTools(),
-      VueI18nPlugin({
-        include: [path.resolve(__dirname, '../../packages/shared/i18n/*')],
-      }),
       svgLoader(),
       Components({
         resolvers: [BootstrapVueNextResolver()],
@@ -108,6 +105,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
         '@shared': path.resolve(__dirname, '../../packages/shared'),
         '@zod': path.resolve(__dirname, '../../packages/shared/zod'),
         '@bootstrap': path.resolve(__dirname, 'node_modules/bootstrap'),
+        'vue-i18n': path.resolve(__dirname, './src/lib/i18n.ts'),
       },
     },
   }

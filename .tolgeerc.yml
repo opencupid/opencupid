@@ -2,9 +2,12 @@
 # Docs: https://tolgee.io/tolgee-cli/project-configuration
 apiUrl: http://localhost:8085
 projectId: 1
-files:
-  - path: packages/shared/i18n/{language}.json
-    language: '{language}'
-  - path: packages/shared/i18n/api/{language}.json
-    language: '{language}'
-    namespace: api
+
+push:
+  filesTemplate:
+    - packages/shared/i18n/{languageTag}.json
+    - packages/shared/i18n/{namespace}/{languageTag}.json
+
+pull:
+  path: packages/shared/i18n
+  fileStructureTemplate: '{namespace}/{languageTag}.json'
