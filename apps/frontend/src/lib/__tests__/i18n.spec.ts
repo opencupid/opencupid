@@ -12,18 +12,23 @@ vi.mock('../bus', () => ({
 }))
 
 const changeLanguageMock = vi.fn()
-const tMock = vi.fn((key: string, _def: unknown, params?: Record<string, string>) => {
-  if (params) return `${key}:${JSON.stringify(params)}`
-  return key
-})
+const tMock = vi.fn(
+  (key: string, defaultOrOpts?: string | Record<string, string>, opts?: Record<string, string>) => {
+    if (typeof defaultOrOpts === 'string') return defaultOrOpts
+    const params = opts ?? (typeof defaultOrOpts === 'object' ? defaultOrOpts : undefined)
+    if (params) return `${key}:${JSON.stringify(params)}`
+    return key
+  }
+)
 
 vi.mock('../tolgee', () => ({
   tolgee: {
-    t: (...args: unknown[]) => tMock(...(args as [string, unknown, Record<string, string>?])),
+    t: (...args: unknown[]) =>
+      tMock(...(args as [string, (string | Record<string, string>)?, Record<string, string>?])),
     changeLanguage: (...args: unknown[]) => changeLanguageMock(...args),
     run: vi.fn(),
   },
-  staticData: { en: { test: 'hello' } },
+  availableLanguages: ['en'],
 }))
 
 vi.mock('@tolgee/vue', () => ({
@@ -111,5 +116,26 @@ describe('i18n', () => {
 
     const result = window.__APP_I18N__!.global.t('test.key', { name: 'John' })
     expect(result).toBe('test.key:{"name":"John"}')
+  })
+
+  it('global t function returns default value when string is passed', async () => {
+    const { appUseI18n } = await import('../i18n')
+    const app = { use: vi.fn(), config: { globalProperties: {} } } as unknown as App
+
+    appUseI18n(app)
+
+    const result = window.__APP_I18N__!.global.t('missing.key', 'fallback text')
+    expect(result).toBe('fallback text')
+  })
+
+  it('global t function passes count param for ICU plural resolution', async () => {
+    const { appUseI18n } = await import('../i18n')
+    const app = { use: vi.fn(), config: { globalProperties: {} } } as unknown as App
+
+    appUseI18n(app)
+
+    const result = window.__APP_I18N__!.global.t('matches.received_likes', { count: 5 })
+    expect(tMock).toHaveBeenCalledWith('matches.received_likes', undefined, { count: 5 })
+    expect(result).toBe('matches.received_likes:{"count":5}')
   })
 })

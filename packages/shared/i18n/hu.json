@@ -256,7 +256,7 @@
     "matches_list_title": "Kölcsönös ❤️",
     "you_received_like": "Kaptál egy ❤️-ot!",
     "you_matched_with": "{name} visszajelölt!",
-    "received_likes": "Még nincs ❤️-od|1 ❤️-ot kaptál|{count} ❤️-od van",
+    "received_likes": "{count, plural, =0 {Még nincs ❤️-od} one {# ❤️-ot kaptál} other {# ❤️-od van}}",
     "received_likes_cta": "Vajon ki küldte?",
     "no_match_no_sent_like": "Még nem lájkoltál senkit",
     "no_match_no_sent_like_cta": "Kapcsolódj",
@@ -265,8 +265,8 @@
     "find_button_cta": "Kapcsolódj",
     "notifications": {
       "you_have": " ",
-      "likes": "{count} ❤️ | {count} ❤️ ",
-      "matches": "{count} új kölcsönös ❤️ |{count} új kölcsönös ❤️",
+      "likes": "{count, plural, one {# ❤️} other {# ❤️}}",
+      "matches": "{count, plural, one {# új kölcsönös ❤️} other {# új kölcsönös ❤️}}",
       "and": "és"
     },
     "pass_confirm_dialog": {

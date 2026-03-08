@@ -1,43 +1,30 @@
-import { Tolgee, DevTools, FormatSimple } from '@tolgee/vue'
+import { Tolgee, DevTools } from '@tolgee/vue'
+import type { TolgeeStaticData } from '@tolgee/vue'
+import { FormatIcu } from '@tolgee/format-icu'
 
-type NestedMessages = Record<string, unknown>
-type FlatMessages = Record<string, string>
+import en from '@shared/i18n/en.json'
 
-function flattenMessages(obj: NestedMessages, prefix = ''): FlatMessages {
-  const result: FlatMessages = {}
-  for (const [key, value] of Object.entries(obj)) {
-    const fullKey = prefix ? `${prefix}.${key}` : key
-    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-      Object.assign(result, flattenMessages(value as NestedMessages, fullKey))
-    } else {
-      result[fullKey] = String(value)
-    }
-  }
-  return result
-}
-
-const localeModules = import.meta.glob('@shared/i18n/*.json', {
-  eager: true,
+const lazyLocales = import.meta.glob(['@shared/i18n/*.json', '!@shared/i18n/en.json'], {
   import: 'default',
-}) as Record<string, NestedMessages>
+})
 
 const LOCALE_FILE_REGEX = /([\w-]+)\.json$/
 
-const staticData: Record<string, FlatMessages> = {}
-for (const [path, messages] of Object.entries(localeModules)) {
+const staticData: TolgeeStaticData = { en: en as TolgeeStaticData[string] }
+const availableLanguages = ['en']
+
+for (const path of Object.keys(lazyLocales)) {
   const locale = path.match(LOCALE_FILE_REGEX)?.[1]
   if (locale) {
-    staticData[locale] = flattenMessages(messages)
+    availableLanguages.push(locale)
+    staticData[locale] = (() => lazyLocales[path]()) as TolgeeStaticData[string]
   }
 }
 
-export { staticData }
+export { staticData, availableLanguages }
 
-export const tolgee = Tolgee()
-  .use(DevTools())
-  .use(FormatSimple())
-  .init({
-    language: 'en',
-    staticData,
-    availableLanguages: Object.keys(staticData),
-  })
+export const tolgee = Tolgee().use(DevTools()).use(FormatIcu()).init({
+  language: 'en',
+  staticData,
+  availableLanguages,
+})
