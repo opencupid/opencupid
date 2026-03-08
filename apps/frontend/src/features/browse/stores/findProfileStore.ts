@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
-import { api, isApiOnline, safeApiCall } from '@/lib/api'
+import { CanceledError } from 'axios'
+import { api, safeApiCall } from '@/lib/api'
 import type { PublicProfile } from '@zod/profile/profile.dto'
 import { PublicProfileArraySchema } from '@zod/profile/profile.dto'
 import type {
@@ -25,6 +26,10 @@ import {
   type UpdateSocialMatchFilterPayload,
 } from '@zod/match/filters.dto'
 import type { LocationDTO, LocationPayload } from '@zod/dto/location.dto'
+
+export type MapBounds = { south: number; north: number; west: number; east: number }
+
+let mapBoundsAbortController: AbortController | null = null
 
 type FindProfileStoreState = {
   datingPrefs: DatingPreferencesDTO | null
@@ -134,6 +139,39 @@ export const useFindProfileStore = defineStore('findProfile', {
       } catch (error: any) {
         this.profileList = []
         return storeError(error, 'Failed to fetch map profiles')
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    async findSocialForMapBounds(
+      bounds: MapBounds
+    ): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
+      if (mapBoundsAbortController) {
+        mapBoundsAbortController.abort()
+      }
+      mapBoundsAbortController = new AbortController()
+
+      try {
+        this.isLoading = true
+        this.hasMoreProfiles = false
+
+        const res = await safeApiCall(() =>
+          api.get<GetProfilesResponse>('/find/social/map/bounds', {
+            params: bounds,
+            signal: mapBoundsAbortController!.signal,
+          })
+        )
+        const fetched = PublicProfileArraySchema.parse(res.data.profiles)
+        this.profileList = fetched
+
+        return storeSuccess()
+      } catch (error: any) {
+        if (error instanceof CanceledError) {
+          return storeSuccess()
+        }
+        this.profileList = []
+        return storeError(error, 'Failed to fetch bounded map profiles')
       } finally {
         this.isLoading = false
       }
