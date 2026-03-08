@@ -22,6 +22,12 @@ vi.mock('vue-i18n', () => ({
 vi.mock('@/assets/icons/arrows/arrow-single-left.svg', () => ({
   default: { template: '<div />' },
 }))
+vi.mock('@/assets/icons/interface/message.svg', () => ({
+  default: { template: '<div />' },
+}))
+vi.mock('@/assets/icons/interface/mail.svg', () => ({
+  default: { template: '<div />' },
+}))
 
 const tokenComponentStub = {
   name: 'TokenInput',

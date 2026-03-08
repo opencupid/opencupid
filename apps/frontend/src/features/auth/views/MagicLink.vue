@@ -7,7 +7,10 @@ import { useI18n } from 'vue-i18n'
 
 import { useAuthStore } from '../stores/authStore'
 import TokenInput from '../components/TokenInput.vue'
+import ViewTitle from '@/features/shared/ui/ViewTitle.vue'
 import ChevronLeftIcon from '@/assets/icons/arrows/arrow-single-left.svg'
+import IconMessage from '@/assets/icons/interface/message.svg'
+import IconMail from '@/assets/icons/interface/mail.svg'
 
 // Reactive variables
 const error = ref('' as string)
@@ -105,27 +108,43 @@ function handleBackButton() {
         type="grow"
         variant="primary"
       />
-      <TokenInput
-        v-else-if="authStore.isPhoneAuth"
-        :isLoading="isLoading"
-        :user="authStore.loginUser!"
-        :validationResult="isValidated"
-        :validationError="error"
-        :initialToken="lastTokenAttempt"
-        @token:submit="handleTokenSubmitted"
-      />
-      <div
-        v-else
-        class="text-center"
-      >
-        <p>{{ $t('auth.token_check_email') }}</p>
-        <div
-          v-if="error"
-          class="text-danger mt-2"
-        >
-          {{ error }}
+      <template v-else>
+        <div class="fs-4 mb-3">
+          <ViewTitle
+            :icon="authStore.isPhoneAuth ? IconMessage : IconMail"
+            title=""
+            class="text-primary"
+          />
+          <div class="text-center">
+            {{ $t('auth.token_check_messages') }}
+          </div>
         </div>
-      </div>
+
+        <template v-if="authStore.isPhoneAuth">
+          <div class="mb-3 form-text">
+            {{ $t('auth.token_sent_phone') }}
+          </div>
+          <TokenInput
+            :isLoading="isLoading"
+            :validationResult="isValidated"
+            :validationError="error"
+            :initialToken="lastTokenAttempt"
+            @token:submit="handleTokenSubmitted"
+          />
+        </template>
+        <div
+          v-else
+          class="text-center"
+        >
+          <p>{{ $t('auth.token_check_email') }}</p>
+          <div
+            v-if="error"
+            class="text-danger mt-2"
+          >
+            {{ error }}
+          </div>
+        </div>
+      </template>
     </div>
   </main>
 </template>

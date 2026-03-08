@@ -2,8 +2,6 @@ import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi } from 'vitest'
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
-vi.mock('@/assets/icons/interface/message.svg', () => ({ default: { template: '<div />' } }))
-vi.mock('@/assets/icons/interface/mail.svg', () => ({ default: { template: '<div />' } }))
 
 vi.mock('@/features/shared/icons/DoodleIcons.vue', () => ({ default: { template: '<div />' } }))
 
@@ -15,7 +13,6 @@ describe('TokenInput', () => {
   it('validates token correctly', () => {
     const wrapper = mount(TokenInput, {
       props: {
-        user: {} as any,
         isLoading: false,
         validationError: null,
         validationResult: null,
@@ -31,7 +28,6 @@ describe('TokenInput', () => {
   it('emits token:submit with entered value', async () => {
     const wrapper = mount(TokenInput, {
       props: {
-        user: {} as any,
         isLoading: false,
         validationError: null,
         validationResult: null,

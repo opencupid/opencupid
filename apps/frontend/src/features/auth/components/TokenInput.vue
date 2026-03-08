@@ -1,15 +1,10 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { type LoginUser } from '@zod/user/user.dto'
 import { tokenRegex } from '@/lib/utils'
 
 import { useI18n } from 'vue-i18n'
-import IconMessage from '@/assets/icons/interface/message.svg'
-import IconMail from '@/assets/icons/interface/mail.svg'
-import ViewTitle from '@/features/shared/ui/ViewTitle.vue'
 
 const props = defineProps<{
-  user: LoginUser
   isLoading: boolean
   validationError: string | null
   validationResult: boolean | null
@@ -47,30 +42,6 @@ watch(inputState, (state) => {
 
 <template>
   <div>
-    <div class="fs-4 mb-3">
-      <ViewTitle
-        v-if="user.phonenumber"
-        :icon="IconMessage"
-        title=""
-        class="text-primary"
-      />
-      <ViewTitle
-        v-else
-        :icon="IconMail"
-        title=""
-        class="text-primary"
-      />
-
-      <div class="text-center">{{ t('auth.token_check_messages') }}</div>
-    </div>
-    <div class="mb-3 form-text mb-3">
-      <div v-if="user.phonenumber">
-        {{ t('auth.token_sent_phone') }}
-      </div>
-      <div v-else>
-        {{ t('auth.token_sent_email') }}
-      </div>
-    </div>
     <div class="px-3">
       <BForm
         @submit.prevent="handleTokenEntered"
