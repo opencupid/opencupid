@@ -136,12 +136,20 @@ function handleBackButton() {
           v-else
           class="text-center"
         >
-          <p>{{ $t('auth.token_check_email') }}</p>
+          <p class="text-muted fs-6">{{ $t('auth.token_check_email') }}</p>
           <div
             v-if="error"
-            class="text-danger mt-2"
+            class="mt-2"
           >
-            {{ error }}
+            <div class="text-danger mb-2">{{ error }}</div>
+
+            <BButton
+              variant="secondary"
+              :title="$t('uicomponents.back_button_title')"
+              @click="handleBackButton"
+            >
+              {{ $t('uicomponents.back_button_title') }}
+            </BButton>
           </div>
         </div>
       </template>
