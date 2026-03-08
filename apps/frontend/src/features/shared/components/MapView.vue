@@ -53,7 +53,6 @@ function onMapReady(map: LMap) {
       class="map-view h-100"
       :class="{
         'opacity-0': !isMapReady,
-        'opacity-75': isMapReady && isLoading,
       }"
     >
       <OsmPoiMap
