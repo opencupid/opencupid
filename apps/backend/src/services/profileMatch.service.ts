@@ -162,17 +162,20 @@ export class ProfileMatchService {
       */
   }
 
-  private async buildSocialWhereClause(profileId: string) {
+  private async buildSocialWhereClause(
+    profileId: string,
+    options?: { includeCountry?: boolean }
+  ) {
     const userPrefs = await this.getSocialMatchFilter(profileId)
     if (!userPrefs) return null
 
     const tagIds = userPrefs.tags?.map((tag) => tag.id)
+    const includeCountry = options?.includeCountry ?? true
 
     return {
       ...statusFlags,
       isSocialActive: true,
-      // id: { not: profileId }, // exclude user's own profile
-      ...(userPrefs.country ? { country: userPrefs.country } : {}),
+      ...(includeCountry && userPrefs.country ? { country: userPrefs.country } : {}),
       ...(userPrefs.tags?.length ? { tags: { some: { id: { in: tagIds } } } } : {}),
       ...blocklistWhereClause(profileId),
     }
@@ -195,6 +198,30 @@ export class ProfileMatchService {
       },
       take,
       skip,
+      orderBy,
+    })
+  }
+
+  async findSocialProfilesInBounds(
+    profileId: string,
+    bounds: { south: number; north: number; west: number; east: number },
+    orderBy: OrderBy = defaultOrderBy
+  ): Promise<DbProfileWithImages[]> {
+    const where = await this.buildSocialWhereClause(profileId, { includeCountry: false })
+    if (!where) return []
+
+    const locationFilter = {
+      lat: { not: null, gte: bounds.south, lte: bounds.north },
+      lon: { not: null, gte: bounds.west, lte: bounds.east },
+    }
+
+    return await prisma.profile.findMany({
+      where: { ...where, ...locationFilter },
+      include: {
+        ...tagsInclude(),
+        ...profileImageInclude(),
+      },
+      take: 500,
       orderBy,
     })
   }
