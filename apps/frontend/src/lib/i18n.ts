@@ -73,9 +73,8 @@ function createGlobalT() {
 export function appUseI18n(app: App) {
   app.use(VueTolgee, { tolgee })
 
+  // Expose global t for non-component contexts (e.g. MessageReceivedToast)
   const globalT = createGlobalT()
-
-  app.config.globalProperties.$t = globalT as typeof app.config.globalProperties.$t
   window.__APP_I18N__ = { global: { t: globalT } }
 
   const initialLocale = getLocale() ?? 'en'
