@@ -12,13 +12,9 @@ const imageService = ImageService.getInstance()
 async function main() {
   await ImageProcessor.initialize()
 
-  const images = await prisma.profileImage.findMany({
-    where: {
-      OR: [{ blurhash: null }, { blurhash: '' }],
-    },
-  })
+  const images = await prisma.profileImage.findMany()
 
-  console.log(`Found ${images.length} images with missing blurhash`)
+  console.log(`Found ${images.length} images to reprocess`)
 
   let success = 0
   let skipped = 0
