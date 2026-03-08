@@ -17,7 +17,7 @@ for (const path of Object.keys(lazyLocales)) {
   const locale = path.match(LOCALE_FILE_REGEX)?.[1]
   if (locale) {
     availableLanguages.push(locale)
-    staticData[locale] = (() => lazyLocales[path]()) as TolgeeStaticData[string]
+    staticData[locale] = (() => lazyLocales[path]!()) as TolgeeStaticData[string]
   }
 }
 
