@@ -1,5 +1,17 @@
 # frontend
 
+## 0.20.0
+
+### Minor Changes
+
+- cc8252c: Integrate Tolgee in-context editing via vue-i18n compatibility shim (#971)
+
+### Patch Changes
+
+- c60b4f2: Fix auth ID input field not accepting user input due to conflicting v-model and :value bindings (#969)
+- 4a3ca99: Remove unnecessary fallback values from SITE_NAME constants where defaults are already guaranteed by strong typing.
+- 09d7b58: Implemented several UX fixes in the authentication, registration and onboarding flows.
+
 ## 0.19.10
 
 ### Patch Changes
