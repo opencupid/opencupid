@@ -1,5 +1,19 @@
 # frontend
 
+## 0.21.0
+
+### Minor Changes
+
+- 31516c3: Token-only auth verification: magic links now work across browser contexts (#1017)
+- edf5250: Posts UI improvements
+
+### Patch Changes
+
+- b08f77a: Fix duplicated spinners in Settings
+- cd096b3: Move appConfig schema to shared/zod, simplify runtime config plugin (#1010)
+- 1b94fcf: Fix OTP form flash on magic link redirect (#1013)
+- 29c053b: Add layer filter to Photon geocoding API to prevent country-only results in LocationSelector (#1019)
+
 ## 0.20.0
 
 ### Minor Changes

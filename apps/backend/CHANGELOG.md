@@ -1,5 +1,12 @@
 # backend
 
+## 0.18.0
+
+### Minor Changes
+
+- 31516c3: Token-only auth verification: magic links now work across browser contexts (#1017)
+- edf5250: Posts UI improvements
+
 ## 0.17.13
 
 ### Patch Changes
