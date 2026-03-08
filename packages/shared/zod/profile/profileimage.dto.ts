@@ -70,23 +70,3 @@ export type ImageApiResponse = z.infer<typeof ImageApiResponseSchema>
 
 export type ProfileImagesResponse = z.infer<typeof ProfileImagesResponseSchema>
 
-// XXX this dooesn't work with the present multipart setup
-// without the `attachFieldsToBody: true` option,
-// the file is not attached to the body. Leaving this here for now but it's unused
-// export const UploadImageSchema = z.object({
-//   file: z.instanceof(File).refine(
-//     (file) => {
-//       // Check file size (max 5MB)
-//       const maxSize = 5 * 1024 * 1024; // 5MB
-//       return file.size <= maxSize;
-//     },
-//     { message: 'File size must be less than 5MB' }
-//   ).refine(
-//     (file) => {
-//       // Check file type
-//       const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
-//       return validTypes.includes(file.type);
-//     },
-//     { message: 'File must be JPEG, PNG, or WebP' }
-//   ),
-// });
