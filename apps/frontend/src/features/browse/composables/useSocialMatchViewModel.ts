@@ -6,7 +6,7 @@ import { useBootstrap } from '@/lib/bootstrap'
 import type { StoreError } from '@/store/helpers'
 import type { OwnerProfile } from '@zod/profile/profile.dto'
 
-import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
+import { useFindProfileStore, type MapBounds } from '@/features/browse/stores/findProfileStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 
 function socialFilterDefaults(ownerProfile: OwnerProfile) {
@@ -46,7 +46,19 @@ export function useSocialMatchViewModel() {
   }
 
   const fetchResults = async () => {
-    await Promise.all([findProfileStore.findSocialForMap(), findProfileStore.fetchDatingMatchIds()])
+    await findProfileStore.fetchDatingMatchIds()
+  }
+
+  const onBoundsChanged = async (bounds: MapBounds) => {
+    isLoading.value = true
+    try {
+      const res = await findProfileStore.findSocialForMapBounds(bounds)
+      if (!res.success) {
+        storeError.value = res
+      }
+    } finally {
+      isLoading.value = false
+    }
   }
 
   function openProfile(profileId: string): void {
@@ -87,6 +99,7 @@ export function useSocialMatchViewModel() {
     hideProfile,
     socialFilter: toRef(findProfileStore, 'socialFilter'),
     updatePrefs,
+    onBoundsChanged,
     openProfile,
     profileList: computed(() => findProfileStore.profileList),
     matchedProfileIds: computed(() => findProfileStore.matchedProfileIds),
