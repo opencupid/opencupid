@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
 
-import { BCarousel } from 'bootstrap-vue-next'
+import { BCarousel, BCarouselSlide } from 'bootstrap-vue-next'
 import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 import IconCross from '@/assets/icons/interface/cross.svg'
 import ImageTag from '@/features/images/components/ImageTag.vue'
@@ -59,13 +59,12 @@ watch(
       v-model="inlineSlide"
       v-show="!showFullscreen"
       class="h-100"
-      :class="{ 'carousel-hidden': showBlurhash }"
     >
       <BCarouselSlide
         v-for="img in props.profile.profileImages"
         :key="img.position"
         @click="handleImageClick"
-        class="w-100 h-100 bg-black"
+        class="w-100 h-100"
       >
         <template #img>
           <div class="ratio ratio-4x3">
@@ -203,10 +202,6 @@ watch(
     width: 100%;
     height: 100% !important;
   }
-}
-
-.carousel-hidden {
-  opacity: 0;
 }
 
 .blurhash-overlay {
