@@ -6,6 +6,8 @@ import 'vue3-carousel/dist/carousel.css'
 
 import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 import IconCross from '@/assets/icons/interface/cross.svg'
+import ChevronLeftIcon from '@/assets/icons/arrows/arrow-single-left.svg'
+import ChevronRightIcon from '@/assets/icons/arrows/arrow-single-right.svg'
 import ImageTag from '@/features/images/components/ImageTag.vue'
 import BlurhashCanvas from '@/features/images/components/BlurhashCanvas.vue'
 import { blurhashToDataUrl } from '@/features/images/composables/useBlurhashDataUrl'
@@ -84,7 +86,14 @@ watch(
       </Slide>
 
       <template #addons>
-        <Navigation />
+        <Navigation>
+          <template #prev>
+            <ChevronLeftIcon class="carousel-nav-icon" />
+          </template>
+          <template #next>
+            <ChevronRightIcon class="carousel-nav-icon" />
+          </template>
+        </Navigation>
       </template>
     </Carousel>
 
@@ -142,7 +151,14 @@ watch(
         </Slide>
 
         <template #addons>
-          <Navigation />
+          <Navigation>
+            <template #prev>
+              <ChevronLeftIcon class="carousel-nav-icon" />
+            </template>
+            <template #next>
+              <ChevronRightIcon class="carousel-nav-icon" />
+            </template>
+          </Navigation>
           <Pagination />
         </template>
       </Carousel>
@@ -230,6 +246,26 @@ watch(
     height: 100%;
     object-fit: cover;
     object-position: center;
+  }
+
+  .carousel__prev,
+  .carousel__next {
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    padding: 0;
+  }
+
+  .carousel-nav-icon {
+    width: 1rem;
+    height: 1rem;
+    fill: white;
+    color: white;
   }
 }
 
