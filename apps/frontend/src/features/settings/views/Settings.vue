@@ -75,7 +75,6 @@ function handleClick() {
   <main class="w-100 position-relative overflow-hidden container-fluid">
     <MiddleColumn class="h-100 d-flex flex-column">
       <div class="d-flex flex-column justify-content-center align-items-center h-100 w-100">
-        <LoadingComponent v-if="isLoading" />
         <SecondaryNav>
           <template #items-left>
             <RouterBackButton />
