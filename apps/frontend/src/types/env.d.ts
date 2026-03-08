@@ -15,6 +15,6 @@ declare module '*.json' {
   export default value
 }
 
-declare const __APP_CONFIG__: Readonly<import('@shared/appConfig.schema').AppConfig>
+declare const __APP_CONFIG__: Readonly<import('@zod/config/appConfig.schema').AppConfig>
 
 declare const __APP_VERSION__: string

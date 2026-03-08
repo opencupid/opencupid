@@ -11,7 +11,7 @@ import {
   BCard,
   BFormInvalidFeedback,
 } from 'bootstrap-vue-next'
-import { appConfigSchema } from '@shared/appConfig.schema'
+import { appConfigSchema } from '@zod/config/appConfig.schema'
 ;(globalThis as any).__APP_CONFIG__ = appConfigSchema.parse({
   API_BASE_URL: 'http://localhost',
   FRONTEND_URL: 'http://localhost',

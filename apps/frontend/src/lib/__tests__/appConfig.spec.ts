@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'fs'
 import { resolve } from 'path'
-import { appConfigSchema } from '@shared/appConfig.schema'
+import { appConfigSchema } from '@zod/config/appConfig.schema'
 
 describe('appConfig schema', () => {
   it('parses a valid config object using schema defaults', () => {
@@ -33,9 +33,7 @@ describe('appConfig schema', () => {
   })
 
   it('rejects non-string values without coercion', () => {
-    expect(() =>
-      appConfigSchema.parse({ API_BASE_URL: 42 })
-    ).toThrow()
+    expect(() => appConfigSchema.parse({ API_BASE_URL: 42 })).toThrow()
   })
 
   it('config.template.js contains all schema keys', () => {

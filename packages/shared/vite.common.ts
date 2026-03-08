@@ -4,7 +4,7 @@ import { loadEnv, type Plugin } from 'vite'
 import { findUpSync } from 'find-up'
 import mkcert from 'vite-plugin-mkcert'
 import { getPackageVersion } from './version'
-import { appConfigSchema } from './appConfig.schema'
+import { appConfigSchema } from './zod/config/appConfig.schema'
 
 export const hostname = os.hostname()
 export const mdnsName = hostname + '.local'
@@ -91,19 +91,11 @@ export const define = (appDir: string) => {
 export const runtimeConfigPlugin = (mode: string): Plugin => {
   const env = mode === 'development' ? loadProjectEnv(mode) : process.env
 
-  const parseResult = appConfigSchema.safeParse({
-    API_BASE_URL: env.API_BASE_URL,
-    FRONTEND_URL: env.FRONTEND_URL,
-    WS_BASE_URL: env.WS_BASE_URL,
-    MEDIA_URL_BASE: env.MEDIA_URL_BASE,
-    NODE_ENV: env.NODE_ENV,
-    VAPID_PUBLIC_KEY: env.VAPID_PUBLIC_KEY,
-    SENTRY_DSN: env.SENTRY_DSN,
-    SITE_NAME: env.SITE_NAME,
-    JITSI_DOMAIN: env.JITSI_DOMAIN,
-    VOICE_MESSAGE_MAX_DURATION: env.VOICE_MESSAGE_MAX_DURATION,
-    MAPTILER_API_KEY: env.MAPTILER_API_KEY,
-  })
+  const schemaKeys = Object.keys(appConfigSchema.shape)
+  const envSubset = Object.fromEntries(
+    schemaKeys.map((k) => [k, env[k]]).filter(([, v]) => v !== undefined)
+  )
+  const parseResult = appConfigSchema.safeParse(envSubset)
 
   if (!parseResult.success) {
     const formatted = parseResult.error.format()
