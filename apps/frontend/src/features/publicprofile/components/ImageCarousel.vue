@@ -48,7 +48,7 @@ const carouselProps = {
 
 const currentImage = computed(() => props.profile.profileImages?.[inlineSlide.value])
 const showBlurhash = computed(
-  () => currentImage.value?.blurhash //&& !loadedImages[currentImage.value.position]
+  () => currentImage.value?.blurhash && !loadedImages[currentImage.value.position]
 )
 
 // Reset carousel to first slide when images change (e.g. after reorder in editor)
@@ -243,7 +243,6 @@ watch(
     object-fit: cover;
     object-position: center;
   }
-
 }
 
 .image-carousel,
