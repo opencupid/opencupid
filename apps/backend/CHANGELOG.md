@@ -1,5 +1,11 @@
 # backend
 
+## 0.18.0
+
+### Minor Changes
+
+- 4f58ff4: Posts UI improvements
+
 ## 0.17.13
 
 ### Patch Changes

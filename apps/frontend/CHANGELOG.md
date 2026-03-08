@@ -1,5 +1,16 @@
 # frontend
 
+## 0.21.0
+
+### Minor Changes
+
+- 4f58ff4: Posts UI improvements
+
+### Patch Changes
+
+- cd096b3: Move appConfig schema to shared/zod, simplify runtime config plugin (#1010)
+- 1b94fcf: Fix OTP form flash on magic link redirect (#1013)
+
 ## 0.20.0
 
 ### Minor Changes
