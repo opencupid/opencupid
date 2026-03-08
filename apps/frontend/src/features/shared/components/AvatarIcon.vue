@@ -1,6 +1,5 @@
 <script setup lang="ts">
 export interface AvatarImage {
-  blurhash?: string | null
   variants?: { size: string; url: string }[]
 }
 
@@ -20,14 +19,13 @@ const thumbUrl = (image: AvatarImage) => image.variants?.find((v) => v.size === 
   <img
     v-if="thumbUrl(image)"
     :src="thumbUrl(image)"
+    class="w-100 h-100"
     :class="{ 'poi-avatar': true, highlighted: isHighlighted }"
   />
 </template>
 
 <style lang="scss" scoped>
 .poi-avatar {
-  width: 32px;
-  height: 32px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid white;

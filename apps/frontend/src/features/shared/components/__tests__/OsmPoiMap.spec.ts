@@ -117,11 +117,6 @@ vi.mock('leaflet.markercluster', () => ({}))
 vi.mock('leaflet.markercluster/dist/MarkerCluster.css', () => ({}))
 vi.mock('leaflet.markercluster/dist/MarkerCluster.Default.css', () => ({}))
 
-// Mock blurhash data URL to avoid canvas/decode in tests
-vi.mock('@/features/images/composables/useBlurhashDataUrl', () => ({
-  blurhashToDataUrl: (hash: string) => `data:image/png;blurhash=${hash}`,
-}))
-
 // Mock MapTiler layer and CSS
 vi.mock('@maptiler/leaflet-maptilersdk', () => {
   const MaptilerLayer = vi.fn(function MaptilerLayerMock() {
@@ -145,29 +140,15 @@ const DummyPopup = defineComponent({
   },
 })
 
-interface TestImage {
-  mimeType: string
-  altText: string | null
-  position: number
-  blurhash: string | null
-  variants: { size: string; url: string }[]
-}
-
 interface TestItem {
   id: string
   location: { lat: number; lon: number }
   name: string
-  image?: TestImage
+  image?: { variants: { size: string; url: string }[] }
 }
 
-function makeImage(url: string, blurhash?: string): TestImage {
-  return {
-    mimeType: 'image/webp',
-    altText: null,
-    position: 0,
-    blurhash: blurhash ?? null,
-    variants: [{ size: 'thumb', url }],
-  }
+function makeImage(url: string) {
+  return { variants: [{ size: 'thumb', url }] }
 }
 
 const items: TestItem[] = [
@@ -429,33 +410,6 @@ describe('OsmPoiMap', () => {
     const aliceIcon = calls[0][1].icon
     expect(aliceIcon.iconSize).toEqual([32, 32])
     expect(aliceIcon.iconAnchor).toEqual([16, 16])
-  })
-
-  it('renders blurhash placeholder when image has blurhash', async () => {
-    const itemsWithBlurhash: TestItem[] = [
-      {
-        id: '1',
-        location: { lat: 47.5, lon: 19.0 },
-        name: 'Alice',
-        image: makeImage('https://img/alice.jpg', 'LGF5]+Yk^6#M@-5c,1J5@[or[Q6.'),
-      },
-      { id: '2', location: { lat: 48.2, lon: 16.3 }, name: 'Bob' },
-    ]
-
-    const getImage = (item: TestItem) => item.image
-
-    mountMap({ items: itemsWithBlurhash, getImage })
-    await flushPromises()
-
-    const calls = (L.marker as any).mock.calls
-    // Alice (index 0) has image with blurhash → avatar icon with blurhash placeholder
-    const aliceAvatarHtml = calls[0][1].icon.html.innerHTML
-    expect(aliceAvatarHtml).toContain('poi-avatar')
-    // The blurhash mock returns a data URL containing the hash
-    expect(aliceAvatarHtml).toContain('data:image/png;blurhash=')
-
-    // Bob (index 1) has no image → dot icon
-    expect(calls[1][1].icon.html).toContain('poi-dot')
   })
 
   it('flyTo uses lastStableZoom from zoomend, not mid-animation getZoom', async () => {

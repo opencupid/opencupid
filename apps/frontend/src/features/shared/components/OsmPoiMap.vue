@@ -383,7 +383,6 @@ function highlightSelected() {
 onMounted(() => {
   ensureMap()
   updateMarkers()
-  highlightSelected()
 })
 
 function destroyMap() {
@@ -408,7 +407,6 @@ watch(
   () => props.items,
   () => {
     updateMarkers()
-    highlightSelected()
   },
   { deep: true }
 )
