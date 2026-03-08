@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, watch } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 
 import { BCarousel } from 'bootstrap-vue-next'
 import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
@@ -32,6 +32,11 @@ const handleCloseClick = () => {
   showFullscreen.value = false
 }
 
+const currentImage = computed(() => props.profile.profileImages[inlineSlide.value])
+const showBlurhash = computed(
+  () => currentImage.value?.blurhash && !loadedImages[currentImage.value.position]
+)
+
 // Reset carousel to first slide when images change (e.g. after reorder in editor)
 watch(
   () => props.profile.profileImages,
@@ -44,6 +49,11 @@ watch(
 
 <template>
   <div class="image-carousel">
+    <BlurhashCanvas
+      v-if="showBlurhash"
+      :blurhash="currentImage.blurhash!"
+      class="blurhash-overlay"
+    />
     <BCarousel
       controls
       v-model="inlineSlide"
@@ -58,11 +68,6 @@ watch(
       >
         <template #img>
           <div class="ratio ratio-4x3">
-            <BlurhashCanvas
-              v-if="img.blurhash && !loadedImages[img.position]"
-              :blurhash="img.blurhash"
-              class="blurhash-placeholder"
-            />
             <ImageTag
               :image="img"
               className="fitted-image"
@@ -191,6 +196,7 @@ watch(
 }
 
 .image-carousel {
+  position: relative;
   height: 100% !important;
   .carousel-inner {
     width: 100%;
@@ -198,10 +204,10 @@ watch(
   }
 }
 
-.blurhash-placeholder {
+.blurhash-overlay {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: 2;
   pointer-events: none;
 }
 </style>

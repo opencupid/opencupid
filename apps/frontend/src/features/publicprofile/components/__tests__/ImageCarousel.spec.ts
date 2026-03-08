@@ -91,21 +91,22 @@ describe('ImageCarousel', () => {
     expect(hasBackgroundImage).toBe(false)
   })
 
-  it('shows inline blurhash placeholder before image loads', () => {
+  it('shows blurhash overlay before image loads', () => {
     const wrapper = mountCarousel(makeProfile(2, true))
-    expect(wrapper.findAll('.blurhash-stub').length).toBeGreaterThan(0)
+    expect(wrapper.find('.blurhash-stub').exists()).toBe(true)
   })
 
-  it('hides inline blurhash placeholder after image loads', () => {
+  it('hides blurhash overlay after current image loads', async () => {
     const wrapper = mountCarousel(makeProfile(2, true))
     const vm = wrapper.vm as any
-    expect(vm.loadedImages[0]).toBeUndefined()
+    expect(wrapper.find('.blurhash-stub').exists()).toBe(true)
     vm.handleImageLoad(0)
-    expect(vm.loadedImages[0]).toBe(true)
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('.blurhash-stub').exists()).toBe(false)
   })
 
-  it('does not show inline blurhash when hash is null', () => {
+  it('does not show blurhash overlay when hash is null', () => {
     const wrapper = mountCarousel(makeProfile(2, false))
-    expect(wrapper.findAll('.blurhash-stub').length).toBe(0)
+    expect(wrapper.find('.blurhash-stub').exists()).toBe(false)
   })
 })
