@@ -15,11 +15,11 @@ import AvatarIcon, { type AvatarImage } from './AvatarIcon.vue'
 
 // Guard against _update firing after map removal (#1035, #1026).
 // TODO: Remove this monkey-patch when fixed upstream in @maptiler/leaflet-maptilersdk.
-// glitchtip issue: https://github.com/opencupid/opencupid/issues/1026
+// GitHub issue: https://github.com/opencupid/opencupid/issues/1026
 const origUpdate = MaptilerLayer.prototype._update
-MaptilerLayer.prototype._update = function () {
+MaptilerLayer.prototype._update = function (...args: unknown[]) {
   if (!this._map) return
-  origUpdate.call(this)
+  return origUpdate.apply(this, args)
 }
 
 /** Basic POI shape for location data extraction */
