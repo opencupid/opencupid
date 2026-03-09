@@ -97,6 +97,7 @@ watch(
           <BButton
             variant="link-secondary"
             size="sm"
+            class="p-0"
             @click="$emit('tagcloud:open')"
             :title="t('profiles.browse.filters.explore_tags')"
           >
