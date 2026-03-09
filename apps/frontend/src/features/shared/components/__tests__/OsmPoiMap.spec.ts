@@ -360,9 +360,9 @@ describe('OsmPoiMap', () => {
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({} as any)
 
     const { MaptilerLayer } = await import('@maptiler/leaflet-maptilersdk')
-    vi.mocked(MaptilerLayer).mockImplementationOnce(() => {
+    vi.mocked(MaptilerLayer).mockImplementationOnce(function () {
       throw new Error('WebGL context lost')
-    })
+    } as any)
 
     await mountMap()
     await flushPromises()
@@ -422,6 +422,42 @@ describe('OsmPoiMap', () => {
     const aliceIcon = calls[0][1].icon
     expect(aliceIcon.iconSize).toEqual([32, 32])
     expect(aliceIcon.iconAnchor).toEqual([16, 16])
+  })
+
+  it('emits bounds-changed on moveend with viewport bounds', async () => {
+    const wrapper = await mountMap()
+    await flushPromises()
+
+    const mapInstance = (L.map as any).mock.results[0].value
+
+    // Find the moveend handler
+    const moveendCall = mapInstance.on.mock.calls.find((c: any) => c[0] === 'moveend')
+    expect(moveendCall).toBeDefined()
+    const moveendHandler = moveendCall[1]
+
+    // Mock getBounds to return a viewport
+    mapInstance.getBounds = vi.fn(() => ({
+      getSouth: () => 45.0,
+      getNorth: () => 48.0,
+      getWest: () => 16.0,
+      getEast: () => 23.0,
+    }))
+
+    moveendHandler()
+
+    expect(wrapper.emitted('bounds-changed')).toBeTruthy()
+    expect(wrapper.emitted('bounds-changed')![0]).toEqual([
+      { south: 45.0, north: 48.0, west: 16.0, east: 23.0 },
+    ])
+  })
+
+  it('registers moveend listener during map init', async () => {
+    await mountMap()
+    await flushPromises()
+
+    const mapInstance = (L.map as any).mock.results[0].value
+    const moveendCall = mapInstance.on.mock.calls.find((c: any) => c[0] === 'moveend')
+    expect(moveendCall).toBeDefined()
   })
 
   it('flyTo uses lastStableZoom from zoomend, not mid-animation getZoom', async () => {

@@ -26,7 +26,7 @@ onMounted(async () => {
   }
 
   const findProfileStore = useFindProfileStore()
-  const result = await findProfileStore.fetchNewSocial()
+  const result = await findProfileStore.fetchNewProfiles()
   if (result.success && result.data) {
     newProfiles.value = result.data.result as PublicProfile[]
   }

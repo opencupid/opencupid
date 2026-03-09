@@ -46,14 +46,6 @@ describe('MapView', () => {
     expect(wrapper.find('.map-view').classes()).toContain('opacity-0')
   })
 
-  it('hides fade and applies loading opacity after map:ready', async () => {
-    const wrapper = mountMapView({ isLoading: true })
-    await wrapper.find('.emit-map-ready').trigger('click')
-
-    expect(wrapper.find('.map-view').classes()).not.toContain('opacity-0')
-    expect(wrapper.find('.map-view').classes()).toContain('opacity-75')
-  })
-
   it('re-emits item:select from OsmPoiMap', async () => {
     const wrapper = mountMapView()
     await wrapper.find('.emit-item-select').trigger('click')

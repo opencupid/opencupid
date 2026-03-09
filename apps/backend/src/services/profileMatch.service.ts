@@ -171,7 +171,6 @@ export class ProfileMatchService {
     return {
       ...statusFlags,
       isSocialActive: true,
-      // id: { not: profileId }, // exclude user's own profile
       ...(userPrefs.country ? { country: userPrefs.country } : {}),
       ...(userPrefs.tags?.length ? { tags: { some: { id: { in: tagIds } } } } : {}),
       ...blocklistWhereClause(profileId),
@@ -195,6 +194,38 @@ export class ProfileMatchService {
       },
       take,
       skip,
+      orderBy,
+    })
+  }
+
+  async findSocialProfilesInBounds(
+    profileId: string,
+    bounds: { south: number; north: number; west: number; east: number },
+    orderBy: OrderBy = defaultOrderBy
+  ): Promise<DbProfileWithImages[]> {
+    const userPrefs = await this.getSocialMatchFilter(profileId)
+    if (!userPrefs) return []
+
+    const tagIds = userPrefs.tags?.map((tag) => tag.id)
+    const tagFilter = tagIds?.length ? { tags: { some: { id: { in: tagIds } } } } : {}
+    const boundsFilter = {
+      lat: { not: null, gte: bounds.south, lte: bounds.north },
+      lon: { not: null, gte: bounds.west, lte: bounds.east },
+    }
+
+    return await prisma.profile.findMany({
+      where: {
+        ...statusFlags,
+        isSocialActive: true,
+        ...tagFilter,
+        ...boundsFilter,
+        ...blocklistWhereClause(profileId),
+      },
+      include: {
+        ...tagsInclude(),
+        ...profileImageInclude(),
+      },
+      take: 500,
       orderBy,
     })
   }

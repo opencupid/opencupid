@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
-import { api, isApiOnline, safeApiCall } from '@/lib/api'
+import { CanceledError } from 'axios'
+import { api, safeApiCall } from '@/lib/api'
 import type { PublicProfile } from '@zod/profile/profile.dto'
 import { PublicProfileArraySchema } from '@zod/profile/profile.dto'
 import type {
@@ -25,6 +26,10 @@ import {
   type UpdateSocialMatchFilterPayload,
 } from '@zod/match/filters.dto'
 import type { LocationDTO, LocationPayload } from '@zod/dto/location.dto'
+
+export type MapBounds = { south: number; north: number; west: number; east: number }
+
+let mapBoundsAbortController: AbortController | null = null
 
 type FindProfileStoreState = {
   datingPrefs: DatingPreferencesDTO | null
@@ -81,7 +86,7 @@ export const useFindProfileStore = defineStore('findProfile', {
   }),
 
   actions: {
-    async findSocial(): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
+    async findProfiles(): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
       try {
         this.isLoading = true
         this.currentPage = 0
@@ -101,41 +106,37 @@ export const useFindProfileStore = defineStore('findProfile', {
       }
     },
 
-    async findDating(): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
-      try {
-        this.isLoading = true
-        this.currentPage = 0
-        this.hasMoreProfiles = true
-
-        const res = await safeApiCall(() => api.get<GetProfilesResponse>('/find/dating'))
-        const fetched = PublicProfileArraySchema.parse(res.data.profiles)
-        this.profileList = fetched
-        this.hasMoreProfiles = fetched.length === this.pageSize
-
-        return storeSuccess()
-      } catch (error: any) {
-        this.profileList = []
-        return storeError(error, 'Failed to fetch profiles')
-      } finally {
-        this.isLoading = false
+    async findProfilesForMapBounds(
+      bounds: MapBounds
+    ): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
+      if (mapBoundsAbortController) {
+        mapBoundsAbortController.abort()
       }
-    },
+      const controller = new AbortController()
+      mapBoundsAbortController = controller
 
-    async findSocialForMap(): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
       try {
         this.isLoading = true
         this.hasMoreProfiles = false
 
-        const res = await safeApiCall(() => api.get<GetProfilesResponse>('/find/social/map'))
+        const res = await api.get<GetProfilesResponse>('/find/social/map/bounds', {
+          params: bounds,
+          signal: controller.signal,
+        })
         const fetched = PublicProfileArraySchema.parse(res.data.profiles)
         this.profileList = fetched
 
         return storeSuccess()
       } catch (error: any) {
+        if (error instanceof CanceledError) {
+          return storeSuccess()
+        }
         this.profileList = []
-        return storeError(error, 'Failed to fetch map profiles')
+        return storeError(error, 'Failed to fetch bounded map profiles')
       } finally {
-        this.isLoading = false
+        if (mapBoundsAbortController === controller) {
+          this.isLoading = false
+        }
       }
     },
 
@@ -148,7 +149,7 @@ export const useFindProfileStore = defineStore('findProfile', {
       }
     },
 
-    async fetchNewSocial(): Promise<StoreProfileListResponse> {
+    async fetchNewProfiles(): Promise<StoreProfileListResponse> {
       try {
         const res = await safeApiCall(() => api.get<GetProfilesResponse>('/find/social/new'))
         const fetched = PublicProfileArraySchema.parse(res.data.profiles)
@@ -158,7 +159,7 @@ export const useFindProfileStore = defineStore('findProfile', {
       }
     },
 
-    async loadMoreSocial(): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
+    async loadMoreProfiles(): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
       if (this.isLoadingMore || !this.hasMoreProfiles) {
         return storeSuccess()
       }
@@ -170,39 +171,6 @@ export const useFindProfileStore = defineStore('findProfile', {
 
         const res = await safeApiCall(() =>
           api.get<GetProfilesResponse>('/find/social', {
-            params: { skip, take: this.pageSize },
-          })
-        )
-        const fetched = PublicProfileArraySchema.parse(res.data.profiles)
-
-        if (fetched.length > 0) {
-          this.profileList.push(...fetched)
-          this.currentPage = nextPage
-          this.hasMoreProfiles = fetched.length === this.pageSize
-        } else {
-          this.hasMoreProfiles = false
-        }
-
-        return storeSuccess()
-      } catch (error: any) {
-        return storeError(error, 'Failed to load more profiles')
-      } finally {
-        this.isLoadingMore = false
-      }
-    },
-
-    async loadMoreDating(): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
-      if (this.isLoadingMore || !this.hasMoreProfiles) {
-        return storeSuccess()
-      }
-
-      try {
-        this.isLoadingMore = true
-        const nextPage = this.currentPage + 1
-        const skip = nextPage * this.pageSize
-
-        const res = await safeApiCall(() =>
-          api.get<GetProfilesResponse>('/find/dating', {
             params: { skip, take: this.pageSize },
           })
         )
@@ -304,6 +272,10 @@ export const useFindProfileStore = defineStore('findProfile', {
     },
 
     teardown() {
+      if (mapBoundsAbortController) {
+        mapBoundsAbortController.abort()
+        mapBoundsAbortController = null
+      }
       this.profileList = []
       this.matchedProfileIds = new Set()
       this.socialSearch = null

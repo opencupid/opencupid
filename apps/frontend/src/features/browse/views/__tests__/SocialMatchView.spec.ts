@@ -54,6 +54,7 @@ const vmState = {
   } | null>(null),
   isInitialized: ref(true),
   hideProfile: vi.fn(),
+  onBoundsChanged: vi.fn(),
   updatePrefs: vi.fn(),
   openProfile: vi.fn(),
   initialize: vi.fn(),

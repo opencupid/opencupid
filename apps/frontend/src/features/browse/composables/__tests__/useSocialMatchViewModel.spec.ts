@@ -18,9 +18,9 @@ const mockFindProfileStore = {
   profileList: [],
   matchedProfileIds: new Set<string>(),
   socialFilter: null,
-  findSocialForMap: vi.fn(),
   fetchSocialFilter: vi.fn(),
   fetchDatingMatchIds: vi.fn(),
+  findProfilesForMapBounds: vi.fn(),
   persistSocialFilter: vi.fn(),
   hide: vi.fn(),
   teardown: vi.fn(),
@@ -59,12 +59,11 @@ describe('useSocialMatchViewModel', () => {
     })
   })
 
-  it('initialize fetches social filter, map profiles, and match IDs', async () => {
+  it('initialize fetches social filter and match IDs (map profiles loaded via bounds)', async () => {
     const vm = useSocialMatchViewModel()
     await vm.initialize()
 
     expect(mockFindProfileStore.fetchSocialFilter).toHaveBeenCalled()
-    expect(mockFindProfileStore.findSocialForMap).toHaveBeenCalled()
     expect(mockFindProfileStore.fetchDatingMatchIds).toHaveBeenCalled()
   })
 
@@ -79,6 +78,16 @@ describe('useSocialMatchViewModel', () => {
     const vm = useSocialMatchViewModel()
     vm.hideProfile('abc')
     expect(mockFindProfileStore.hide).toHaveBeenCalledWith('abc')
+  })
+
+  it('onBoundsChanged calls findProfilesForMapBounds on the store', async () => {
+    mockFindProfileStore.findProfilesForMapBounds = vi.fn().mockResolvedValue({ success: true })
+    const vm = useSocialMatchViewModel()
+    const bounds = { south: 45, north: 48, west: 16, east: 23 }
+
+    await vm.onBoundsChanged(bounds)
+
+    expect(mockFindProfileStore.findProfilesForMapBounds).toHaveBeenCalledWith(bounds)
   })
 
   it('exposes matchedProfileIds from store', () => {

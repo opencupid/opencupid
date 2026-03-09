@@ -31,8 +31,16 @@ const {
   hideProfile,
   updatePrefs,
   openProfile,
+  onBoundsChanged,
   initialize,
 } = useSocialMatchViewModel()
+
+const MAP_BOUNDS_DEBOUNCE_MS = 500
+
+const debouncedOnBoundsChanged = useDebounceFn(
+  (bounds: { south: number; north: number; west: number; east: number }) => onBoundsChanged(bounds),
+  MAP_BOUNDS_DEBOUNCE_MS
+)
 
 onMounted(async () => {
   await initialize()
@@ -172,6 +180,7 @@ watch(
         :popup-component="ProfileMapCard"
         class="h-100"
         @item:select="(id: string | number) => onProfileSelect(String(id))"
+        @bounds-changed="debouncedOnBoundsChanged"
       />
     </template>
   </ProfileBrowseLayout>
