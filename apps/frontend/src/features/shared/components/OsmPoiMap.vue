@@ -228,7 +228,7 @@ function createLeafletMap(el: HTMLDivElement): LMap {
   return L.map(el, {
     center: props.center ?? [0, 0],
     zoom: props.center ? props.zoom : 2,
-    maxZoom: 19,
+    maxZoom: 14,
     preferCanvas: true,
   })
 }
@@ -266,7 +266,7 @@ function initBaseLayer(map: LMap): void {
 
 function initClusters(map: LMap) {
   clusterGroup = (L as any).markerClusterGroup({
-    spiderfyOnMaxZoom: false,
+    spiderfyOnMaxZoom: true,
     showCoverageOnHover: false,
     zoomToBoundsOnClick: true,
     maxClusterRadius: 40,
