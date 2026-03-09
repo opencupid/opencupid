@@ -3,10 +3,11 @@ import { useI18n } from 'vue-i18n'
 import { computed } from 'vue'
 
 import { type EditProfileForm } from '@zod/profile/profile.form'
-import { type PublicTag } from '@zod/tag/tag.dto'
+import { type PublicTag, type PopularTag } from '@zod/tag/tag.dto'
 
 import LanguageSelector from '@/features/shared/profileform/LanguageSelector.vue'
 import TagSelector from '@/features/shared/profileform/TagSelector.vue'
+import TagCloud from '@/features/shared/components/TagCloud.vue'
 import IntrotextEditor from '@/features/shared/profileform/IntrotextEditor.vue'
 import ImageEditor from '@/features/images/components/ImageEditor.vue'
 import DatingSteps from '../components/DatingSteps.vue'
@@ -66,6 +67,13 @@ const handleLocationSelected = async (location: { country: string }) => {
     country: location.country,
     limit: 50,
   })
+}
+
+const handleTagCloudSelect = (tag: PopularTag) => {
+  const exists = formData.value.tags.some((existing) => existing.id === tag.id)
+  if (!exists) {
+    formData.value.tags.push({ id: tag.id, name: tag.name, slug: tag.slug })
+  }
 }
 
 const siteName = __APP_CONFIG__.SITE_NAME
@@ -150,6 +158,13 @@ const popularTags = computed(() => tagStore.popularTags ?? ([] as PublicTag[]))
             <!-- I'm into... -->
             {{ t('onboarding.interests_title') }}
           </legend>
+          <TagCloud
+            v-if="formData.location?.country"
+            :key="formData.location.country"
+            :location="formData.location"
+            class="mb-3"
+            @tag:select="handleTagCloudSelect"
+          />
           <TagSelector
             v-model="formData.tags"
             :required="true"
