@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import IconDate from '@/assets/icons/app/cupid.svg'
-import IconSocialize from '@/assets/icons/app/socialize.svg'
+import IconDate from '@/assets/images/app/cupid.svg'
+import IconSocialize from '@/assets/images/app/socialize.svg'
 import { type ProfileScope } from '@zod/profile/profile.dto'
 
 const props = defineProps<{

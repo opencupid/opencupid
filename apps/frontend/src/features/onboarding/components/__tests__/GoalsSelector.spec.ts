@@ -1,8 +1,8 @@
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi } from 'vitest'
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
-vi.mock('@/assets/icons/app/cupid.svg', () => ({ default: { template: '<div />' } }))
-vi.mock('@/assets/icons/app/socialize.svg', () => ({ default: { template: '<div />' } }))
+vi.mock('@/assets/images/app/cupid.svg', () => ({ default: { template: '<div />' } }))
+vi.mock('@/assets/images/app/socialize.svg', () => ({ default: { template: '<div />' } }))
 
 import GoalsSelector from '../GoalsSelector.vue'
 

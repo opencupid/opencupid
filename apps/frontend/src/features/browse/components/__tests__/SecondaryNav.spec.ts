@@ -2,8 +2,8 @@ import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi } from 'vitest'
 
 vi.mock('@/assets/icons/interface/setting.svg', () => ({ default: { template: '<div />' } }))
-vi.mock('@/assets/icons/app/socialize.svg', () => ({ default: { template: '<div />' } }))
-vi.mock('@/assets/icons/app/cupid.svg', () => ({ default: { template: '<div />' } }))
+vi.mock('@/assets/images/app/socialize.svg', () => ({ default: { template: '<div />' } }))
+vi.mock('@/assets/images/app/cupid.svg', () => ({ default: { template: '<div />' } }))
 
 import SecondaryNav from '../../../shared/ui/SecondaryNav.vue'
 
