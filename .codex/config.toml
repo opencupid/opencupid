@@ -1,2 +1,0 @@
-[mcp_servers.github]
-bearer_token_env_var = "GITHUB_PAT_TOKEN"

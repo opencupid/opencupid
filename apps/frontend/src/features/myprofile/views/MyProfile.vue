@@ -3,8 +3,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { onMounted, ref, provide, computed, toRef } from 'vue'
 import { useBootstrap } from '@/lib/bootstrap'
 
-import IconDate from '@/assets/icons/app/cupid.svg'
-import IconSocialize from '@/assets/icons/app/socialize.svg'
+import IconDate from '@/assets/images/app/cupid.svg'
+import IconSocialize from '@/assets/images/app/socialize.svg'
 
 import StoreErrorOverlay from '@/features/shared/ui/StoreErrorOverlay.vue'
 import EditButton from '@/features/myprofile/components/EditButton.vue'

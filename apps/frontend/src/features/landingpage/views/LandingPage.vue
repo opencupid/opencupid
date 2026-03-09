@@ -2,10 +2,10 @@
 import { getCurrentInstance, ref } from 'vue'
 import { useI18nStore } from '@/store/i18nStore'
 
-import IconDate from '@/assets/icons/app/cupid.svg'
-import IconSocialize from '@/assets/icons/app/socialize.svg'
+import IconDate from '@/assets/images/app/cupid.svg'
+import IconSocialize from '@/assets/images/app/socialize.svg'
 import IconGlobe from '@/assets/icons/interface/globe.svg'
-import Logo from '@/assets/icons/app/logo.svg'
+import Logo from '@/assets/images/app/logo.svg'
 
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
 

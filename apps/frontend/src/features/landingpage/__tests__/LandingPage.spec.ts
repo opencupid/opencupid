@@ -16,16 +16,16 @@ vi.mock('@/store/i18nStore', () => ({
   useI18nStore: () => ({ setLanguage: vi.fn() }),
 }))
 
-vi.mock('@/assets/icons/app/cupid.svg', () => ({
+vi.mock('@/assets/images/app/cupid.svg', () => ({
   default: defineComponent({ template: '<svg />' }),
 }))
-vi.mock('@/assets/icons/app/socialize.svg', () => ({
+vi.mock('@/assets/images/app/socialize.svg', () => ({
   default: defineComponent({ template: '<svg />' }),
 }))
 vi.mock('@/assets/icons/interface/globe.svg', () => ({
   default: defineComponent({ template: '<svg />' }),
 }))
-vi.mock('@/assets/icons/app/logo.svg', () => ({
+vi.mock('@/assets/images/app/logo.svg', () => ({
   default: defineComponent({ template: '<svg />' }),
 }))
 
