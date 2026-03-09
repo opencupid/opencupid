@@ -112,7 +112,8 @@ export const useFindProfileStore = defineStore('findProfile', {
       if (mapBoundsAbortController) {
         mapBoundsAbortController.abort()
       }
-      mapBoundsAbortController = new AbortController()
+      const controller = new AbortController()
+      mapBoundsAbortController = controller
 
       try {
         this.isLoading = true
@@ -121,7 +122,7 @@ export const useFindProfileStore = defineStore('findProfile', {
         const res = await safeApiCall(() =>
           api.get<GetProfilesResponse>('/find/social/map/bounds', {
             params: bounds,
-            signal: mapBoundsAbortController!.signal,
+            signal: controller.signal,
           })
         )
         const fetched = PublicProfileArraySchema.parse(res.data.profiles)
@@ -135,7 +136,9 @@ export const useFindProfileStore = defineStore('findProfile', {
         this.profileList = []
         return storeError(error, 'Failed to fetch bounded map profiles')
       } finally {
-        this.isLoading = false
+        if (mapBoundsAbortController === controller) {
+          this.isLoading = false
+        }
       }
     },
 
@@ -271,6 +274,10 @@ export const useFindProfileStore = defineStore('findProfile', {
     },
 
     teardown() {
+      if (mapBoundsAbortController) {
+        mapBoundsAbortController.abort()
+        mapBoundsAbortController = null
+      }
       this.profileList = []
       this.matchedProfileIds = new Set()
       this.socialSearch = null
