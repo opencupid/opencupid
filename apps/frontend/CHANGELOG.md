@@ -1,5 +1,12 @@
 # frontend
 
+## 0.23.1
+
+### Patch Changes
+
+- 410d77f: Consolidate opt-in settings defaults and schema derivation (#990)
+- 739c442: Remove unused files: dead icon scripts, orphan stores/services, and relocate stray logo asset (#1056)
+
 ## 0.23.0
 
 ### Minor Changes

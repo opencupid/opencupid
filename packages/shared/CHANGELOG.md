@@ -1,5 +1,11 @@
 # @opencupid/shared
 
+## 0.5.7
+
+### Patch Changes
+
+- 410d77f: Consolidate opt-in settings defaults and schema derivation (#990)
+
 ## 0.5.6
 
 ### Patch Changes
