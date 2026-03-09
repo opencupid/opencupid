@@ -31,16 +31,7 @@ const router = useRouter()
 const isLoading = ref(true)
 const optInModel = computed<ProfileOptInSettings>({
   get() {
-    // TODO defaults should not be set here. This is a band-aid to silence typing errors.
-    // see also apps/frontend/src/features/onboarding/views/Onboarding.vue
-    // and implement the same fix in both places when refactoring.
-    return (
-      ownerProfileStore.optInSettings ?? {
-        isCallable: true,
-        newsletterOptIn: false,
-        isPushNotificationEnabled: false,
-      }
-    )
+    return ownerProfileStore.optInSettings
   },
   set(value) {
     ownerProfileStore.optInSettings = value

@@ -17,6 +17,7 @@ import {
   PublicProfileSchema,
   UpdateProfileScopeSchemaPayload,
 } from '@zod/profile/profile.dto'
+
 import type {
   GetProfileOptInResponse,
   GetMyProfileResponse,
@@ -24,6 +25,12 @@ import type {
   UpdateProfileOptInResponse,
   UpdateProfileResponse,
 } from '@zod/apiResponse.dto'
+
+const defaultOptInSettings: ProfileOptInSettings = {
+  isCallable: true,
+  newsletterOptIn: true,
+  isPushNotificationEnabled: false,
+}
 import {
   storeSuccess,
   storeError,
@@ -37,7 +44,7 @@ export type PublicProfileResponse = StoreResponse<PublicProfileWithContext> | St
 
 interface ProfileStoreState {
   profile: OwnerProfile | null
-  optInSettings: ProfileOptInSettings | null
+  optInSettings: ProfileOptInSettings
   profileScopes: ProfileScope[]
   isLoading: boolean
   error: StoreError | null
@@ -46,7 +53,7 @@ interface ProfileStoreState {
 export const useOwnerProfileStore = defineStore('ownerProfile', {
   state: (): ProfileStoreState => ({
     profile: null as OwnerProfile | null,
-    optInSettings: null,
+    optInSettings: { ...defaultOptInSettings },
     profileScopes: [],
     isLoading: false,
     error: null,
@@ -228,7 +235,7 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
 
     reset() {
       this.profile = null // Reset profile
-      this.optInSettings = null
+      this.optInSettings = { ...defaultOptInSettings }
       this.isLoading = false // Reset loading state
     },
   },

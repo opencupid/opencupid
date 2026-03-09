@@ -1,13 +1,11 @@
-
-
 export const baseFields = {
   id: true,
-} as const;
+} as const
 
 export const socialFields = {
   languages: true,
   publicName: true,
-} as const;
+} as const
 
 export const datingFields = {
   hasKids: true,
@@ -15,13 +13,20 @@ export const datingFields = {
   gender: true,
   birthday: true,
   pronouns: true,
-} as const;
+} as const
 
+export const profileOptInFields = {
+  isCallable: true,
+} as const
 
+export const userOptInFields = {
+  newsletterOptIn: true,
+  isPushNotificationEnabled: true,
+} as const
 
 export const ownerFields = {
   isDatingActive: true,
   isSocialActive: true,
   isOnboarded: true,
-  isCallable: true,
-} as const;
+  ...profileOptInFields,
+} as const
