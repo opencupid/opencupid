@@ -56,9 +56,9 @@ bus.on('language:changed', async ({ language }) => {
   const authStore = useAuthStore()
   if (!authStore.isLoggedIn) return
   if (language === lastSyncedLanguage) return
-  lastSyncedLanguage = language
   const store = useUserStore()
-  await store.updateLanguage(language)
+  const result = await store.updateLanguage(language)
+  if (result.success) lastSyncedLanguage = language
 })
 
 bus.on('auth:logout', () => {
