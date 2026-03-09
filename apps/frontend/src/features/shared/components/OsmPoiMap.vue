@@ -93,7 +93,7 @@ function customClusterIcon(cluster: any): L.DivIcon {
 // Spiderfy hover region
 type MCCluster = any
 
-const SPIDER_HOVER_PADDING_PX = 18
+const SPIDER_HOVER_PADDING_PX = 40
 
 let activeSpiderCluster: MCCluster | null = null
 let activeSpiderHoverBounds: L.LatLngBounds | null = null
