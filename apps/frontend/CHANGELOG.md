@@ -1,5 +1,21 @@
 # frontend
 
+## 0.23.0
+
+### Minor Changes
+
+- 2599d97: Extract userStore from authStore and clean up PATCH /users/me to language-only with Zod validation (#997, #982)
+
+### Patch Changes
+
+- d62a7a2: Derive map center from profile location and remove "Anywhere" fallback for lonely-country profiles (#1045)
+- 0fafc9b: Show an interest tag cloud during onboarding
+- fd0b0b5: Fix `this._map is null` crash in MaptilerLayer after map destroy (#1035, #1026)
+- f5159a2: Fix LocationSelector dropdown rendering behind Leaflet zoom controls (#1049)
+- 74d134f: Fix multiselect dropdown clipping inside modals (#1039)
+- 4f56456: Defer map:ready until tiles render to keep placeholder visible during load (#1046)
+- e779c66: Fix missing viewerProfile injection on public profile hard refresh (#1048)
+
 ## 0.22.0
 
 ### Minor Changes

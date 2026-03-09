@@ -1,5 +1,16 @@
 # backend
 
+## 0.23.0
+
+### Minor Changes
+
+- 431affb: Automate end-to-end release workflow, adopt fixed versioning across all app packages (#1041)
+
+### Patch Changes
+
+- d62a7a2: Derive map center from profile location and remove "Anywhere" fallback for lonely-country profiles (#1045)
+- 2599d97: Extract userStore from authStore and clean up PATCH /users/me to language-only with Zod validation (#997, #982)
+
 ## 0.19.0
 
 ### Minor Changes
