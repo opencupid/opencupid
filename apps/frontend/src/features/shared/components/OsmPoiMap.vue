@@ -189,6 +189,9 @@ function iconForItem(item: T, isSelected: boolean): L.DivIcon {
 
 function emitBounds() {
   if (!map) return
+  // Suppress bounds-changed while a popup is open — autopan from popup open
+  // would trigger a data fetch → rerender → close the popup the user just opened.
+  if (popupTarget.value) return
   const b = map.getBounds()
   emit('bounds-changed', {
     south: b.getSouth(),
