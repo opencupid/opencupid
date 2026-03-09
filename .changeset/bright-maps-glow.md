@@ -1,5 +1,6 @@
 ---
 '@opencupid/frontend': patch
+'@opencupid/backend': patch
 ---
 
-Remove hardcoded map center coordinates and derive from profile location (#1045)
+Derive map center from profile location and remove "Anywhere" fallback for lonely-country profiles (#1045)
