@@ -18,11 +18,6 @@ import {
   UpdateProfileScopeSchemaPayload,
 } from '@zod/profile/profile.dto'
 
-const defaultOptInSettings: ProfileOptInSettings = {
-  isCallable: true,
-  newsletterOptIn: true,
-  isPushNotificationEnabled: false,
-}
 import type {
   GetProfileOptInResponse,
   GetMyProfileResponse,
@@ -30,6 +25,12 @@ import type {
   UpdateProfileOptInResponse,
   UpdateProfileResponse,
 } from '@zod/apiResponse.dto'
+
+const defaultOptInSettings: ProfileOptInSettings = {
+  isCallable: true,
+  newsletterOptIn: true,
+  isPushNotificationEnabled: false,
+}
 import {
   storeSuccess,
   storeError,
