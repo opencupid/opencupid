@@ -251,6 +251,7 @@ fieldset[disabled] .multiselect {
 .multiselect__placeholder {
   color: var(--bs-secondary-color);
   display: inline-block;
+  line-height: 20px;
 }
 
 .multiselect--active .multiselect__placeholder {
