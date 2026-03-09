@@ -1,9 +1,17 @@
 <script setup lang="ts">
+import { computed, provide } from 'vue'
 import { useRouter } from 'vue-router'
+import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import PublicProfileComponent from '../components/PublicProfile.vue'
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 
 const props = defineProps<{ profileId: string }>()
+
+const profileStore = useOwnerProfileStore()
+provide(
+  'viewerProfile',
+  computed(() => profileStore.profile)
+)
 const router = useRouter()
 
 const handleBack = () => {
