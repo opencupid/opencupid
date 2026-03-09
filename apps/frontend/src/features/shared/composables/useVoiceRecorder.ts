@@ -76,12 +76,6 @@ export function useVoiceRecorder(maxDuration: number) {
       // Microphone access granted - now enter recording state
       state.value = 'recording'
 
-      console.debug('[VoiceRecorder] Created WAV MediaRecorder:', {
-        mimeType: recorder.mimeType,
-        state: recorder.state,
-        userAgent: navigator.userAgent,
-      })
-
       // Handle data available event
       recorder.ondataavailable = (e: BlobEvent) => {
         if (e.data.size > 0) {

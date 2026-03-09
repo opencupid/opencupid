@@ -72,7 +72,6 @@ const handleGoToBrowse = () => {
 }
 
 const handleWizardFinish = async () => {
-  console.log('Wizard finished with data:', formData)
   const res = await profileStore.createOwnerProfile(formData)
   if (!res.success) {
     console.error('Failed to save profile:', res.message)

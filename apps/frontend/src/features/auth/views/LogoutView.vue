@@ -7,7 +7,6 @@ const logout = () => {
   const authStore = useAuthStore()
   authStore.initialize()
   authStore.logout()
-  // console.log('User logged out successfully')
   router.push({ name: 'Login' })
 }
 </script>

@@ -75,7 +75,6 @@ function handleLikeReceived() {
 }
 
 function handleMatchReceived(edge: InteractionEdge) {
-  console.log('Match received:', edge)
   toast(
     {
       component: MatchReceivedToast,

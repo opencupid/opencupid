@@ -97,8 +97,6 @@ export class ImageService {
       throw new Error('Failed to create dest dir')
     }
 
-    console.log(`Storing image for user ${userId}`, imageLocation)
-
     try {
       // Process the image and save resized variants
       const processed = await this.processImage(
@@ -106,8 +104,6 @@ export class ImageService {
         imageLocation.absPath,
         imageLocation.base
       )
-      console.log('Image processed successfully', processed)
-
       // compute the content hash of the original
       const contentHash = await generateContentHash(processed.variants.original)
       // set position to be the last position
@@ -226,7 +222,7 @@ export class ImageService {
       where: { id: imageId, userId },
     })
     if (!image) {
-      console.error('Image not found or does not belong to user')
+      console.warn('Image not found or does not belong to user')
       return false
     }
     try {
@@ -251,7 +247,7 @@ export class ImageService {
         await fs.promises.unlink(f)
       } catch (err) {
         // Log but continue deleting other variants
-        console.error('Error deleting file:', err)
+        console.warn('Error deleting file:', err)
       }
     }
     return true

@@ -116,7 +116,6 @@ describe('POST /tags', () => {
       { user: { userId: 'u1' }, session: { lang: 'en' }, body: { name: 'Foo' } } as any,
       reply as any
     )
-    console.log(reply.payload)
     expect(reply.payload.success).toBe(true)
     expect(mockTagService.create).toHaveBeenCalledWith('en', {
       name: 'Foo',

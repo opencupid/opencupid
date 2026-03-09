@@ -109,9 +109,12 @@ export class ImageProcessor {
   }
 
   static async initialize() {
-    await tf.ready()
-    this.detector = await blazeface.load()
-    console.log('✅ BlazeFace model loaded')
+    try {
+      await tf.ready()
+      this.detector = await blazeface.load()
+    } catch (err) {
+      console.error('Failed to load BlazeFace model:', err)
+    }
   }
 
   private get detector() {
@@ -122,7 +125,6 @@ export class ImageProcessor {
   async analyze(): Promise<void> {
     this.metadata = await this.sharpInstance.metadata()
     this.faces = await this.detectFaces()
-    console.log(`Detected ${this.faces.length} faces`, this.faces)
   }
 
   private pickPrimaryFace(): FaceBox | null {

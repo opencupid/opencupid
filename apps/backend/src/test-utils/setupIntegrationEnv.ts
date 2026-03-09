@@ -8,5 +8,3 @@ const root = path.resolve(__dirname, '../..') // your project root
 const env = loadEnv('test', root, '') // third arg: '' = load all keys (not just VITE_)
 
 Object.assign(process.env, env)
-
-console.log('✅ Loaded DATABASE_URL from .env.test:', process.env.DATABASE_URL)

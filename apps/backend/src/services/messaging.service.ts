@@ -341,12 +341,10 @@ export class MessageService {
   async sendWelcomeMessage(recipientProfileId: string, locale: string) {
     const senderId = appConfig.WELCOME_MESSAGE_SENDER_PROFILE_ID
     const siteName = appConfig.SITE_NAME
-    console.error('Welcome message sender ID:', senderId)
     if (senderId) {
       const t = i18next.getFixedT(locale)
       const mdContent = t('messages.welcome_message', { siteName })
       const content = simpleMarkdownToHtml(mdContent)
-      console.error('Sending welcome message:', content)
       return await prisma.$transaction(async (tx) => {
         await this.sendOrStartConversation(tx, senderId, recipientProfileId, content, 'text/plain')
       })

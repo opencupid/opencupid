@@ -44,9 +44,7 @@ export async function connectWebSocket(): Promise<void> {
       retries: 3,
       delay: 3000,
     },
-    onConnected: () => {
-      console.log('[WS] Connected')
-    },
+    onConnected: () => {},
     onDisconnected: () => {
       console.warn('[WS] Connection closed.')
       if (!isIntentionalClose) {
@@ -56,7 +54,6 @@ export async function connectWebSocket(): Promise<void> {
     onMessage: (_ws, event) => {
       try {
         const data: WSMessage = JSON.parse(event.data)
-        console.log('[WS] Received message:', data)
         switch (data.type) {
           case 'ws:new_like':
             bus.emit('ws:new_like')
@@ -87,6 +84,5 @@ export function disconnectWebSocket() {
   if (socket) {
     socket.close()
     socket = null
-    console.log('[WS] Disconnected')
   }
 }
