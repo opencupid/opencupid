@@ -507,6 +507,13 @@ describe('OsmPoiMap', () => {
     expect(mapInstance.fitBounds).toHaveBeenCalled()
   })
 
+  it('monkey-patches MaptilerLayer._update with a null-guard on this._map', async () => {
+    const { MaptilerLayer } = await import('@maptiler/leaflet-maptilersdk')
+    // The patch wraps _update so calling it with _map = null does not throw
+    const ctx = { _map: null } as any
+    expect(() => MaptilerLayer.prototype._update.call(ctx)).not.toThrow()
+  })
+
   it('does not auto-fit to markers when center is provided', async () => {
     await mountMap({ center: [48.0, 16.0] as [number, number] })
     await flushPromises()
