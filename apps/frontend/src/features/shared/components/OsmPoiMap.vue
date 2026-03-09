@@ -279,14 +279,15 @@ function initClusters(map: LMap) {
   clusterGroup.on('unspiderfied', onClusterUnspiderfied)
 
   map.on('mousemove', onMapMouseMove)
-  map.on('zoomstart movestart', closeSpider)
+  map.on('zoomstart', closeSpider)
 
   map.addLayer(clusterGroup)
 }
 
 function onClusterMouseOver(e: any) {
-  // If another cluster is open, close it first (prevents multiple open states)
-  if (activeSpiderCluster && activeSpiderCluster !== e.layer) closeSpider()
+  // Ignore hover on other clusters while a spider is already open —
+  // the user must move away from the active spider to close it first.
+  if (activeSpiderCluster) return
 
   // scale spiderfy distance with viewport
   clusterGroup.options.spiderfyDistanceMultiplier = computeViewportMultiplier(map!)
@@ -301,6 +302,14 @@ function onClusterSpiderfied(e: any) {
     activeSpiderCluster,
     SPIDER_HOVER_PADDING_PX
   )
+
+  // Prevent clicks on spiderfied child markers from bubbling to the map,
+  // which would trigger the markercluster library's _unspiderfyWrapper
+  // and collapse the spider before the marker's popup can open.
+  for (const marker of e.markers) {
+    const el = marker.getElement?.()
+    if (el) L.DomEvent.on(el, 'click', L.DomEvent.stopPropagation)
+  }
 }
 
 function onClusterUnspiderfied() {
@@ -310,6 +319,8 @@ function onClusterUnspiderfied() {
 
 function onMapMouseMove(ev: L.LeafletMouseEvent) {
   if (!activeSpiderCluster || !activeSpiderHoverBounds) return
+  // Keep spider open while a popup is visible (user is interacting with a profile card)
+  if (popupTarget.value) return
   if (!activeSpiderHoverBounds.contains(ev.latlng)) closeSpider()
 }
 
@@ -534,7 +545,11 @@ watch(
 /* Avatar marker hover feedback — scale the inner img, not the icon wrapper
    (Leaflet uses transform on the wrapper for positioning) */
 :deep(.poi-avatar-icon img) {
-  transition: transform 0.15s ease, border-color 0.15s ease;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.15s ease;
+}
+
+:deep(.poi-avatar-icon:hover) {
+  z-index: 10000 !important;
 }
 
 :deep(.poi-avatar-icon:hover img) {
