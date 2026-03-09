@@ -39,6 +39,10 @@ export class MockReply {
     this.statusCode = status
     return this
   }
+  status(status: number) {
+    this.statusCode = status
+    return this
+  }
   send(payload: any) {
     this.payload = payload
     return this

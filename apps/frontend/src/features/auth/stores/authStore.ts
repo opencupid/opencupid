@@ -3,16 +3,11 @@ import { api, axios, safeApiCall } from '@/lib/api'
 import { bus } from '@/lib/bus'
 import { type UserRoleType } from '@zod/generated'
 
-import { LoginUserSchema, type SettingsUser, SettingsUserSchema } from '@zod/user/user.dto'
+import { LoginUserSchema } from '@zod/user/user.dto'
 
 import type { UserIdentifier, JwtPayload, SessionData, LoginUser } from '@zod/user/user.dto'
 
-import type {
-  ApiError,
-  VerifyTokenResponse,
-  SendMagicLinkResponse,
-  UserMeResponse,
-} from '@zod/apiResponse.dto'
+import type { ApiError, VerifyTokenResponse, SendMagicLinkResponse } from '@zod/apiResponse.dto'
 import { AuthErrorCodes } from '@zod/user/auth.dto'
 
 type SuccessResponse<T> = { success: true } & T
@@ -20,7 +15,6 @@ type SuccessResponse<T> = { success: true } & T
 type AuthStoreResponse<T> =
   | SuccessResponse<T>
   | (ApiError & { code: AuthErrorCodes; restart: 'otp' | 'userid' })
-type UserStoreResponse<T> = SuccessResponse<T> | ApiError
 
 const getAuthId = (authId: UserIdentifier): string => {
   return authId.email ? authId.email : (authId.phonenumber ?? '')
@@ -172,47 +166,9 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    async fetchUser(): Promise<UserStoreResponse<{ user: SettingsUser }>> {
-      try {
-        const res = await safeApiCall(() => api.get<UserMeResponse>('/users/me'))
-        const params = SettingsUserSchema.safeParse(res.data.user)
-        if (!params.success) {
-          console.error('Invalid user data received:', params.error)
-          return {
-            success: false,
-            message: 'Invalid user data received',
-          }
-        }
-        const user = params.data
-        return { success: true, user }
-      } catch (error: any) {
-        console.error('Could not fetch user:', error)
-        return {
-          success: false,
-          message: error.message,
-        }
-      }
-    },
-
     hasRole(role: UserRoleType) {
       // TODO implement me
       return true
-    },
-
-    // Update the current user
-    async updateUser(userData: Record<string, any>): Promise<
-      UserStoreResponse<{
-        user: SettingsUser
-      }>
-    > {
-      try {
-        const res = await safeApiCall(() => api.patch('/users/me', userData))
-        return { success: true, user: res.data.user }
-      } catch (error: any) {
-        console.error('Failed to update profile:', error)
-        const msg = error.response?.data?.message || 'Failed to update profile'
-        return { success: false, message: msg }
-      }
     },
 
     logout() {
@@ -237,14 +193,4 @@ export const useAuthStore = defineStore('auth', {
 bus.on('auth:token-refreshed', ({ token, refreshToken }) => {
   const store = useAuthStore()
   store.setAuthState(token, refreshToken)
-})
-
-let lastSyncedLanguage: string | null = null
-bus.on('language:changed', async ({ language }) => {
-  const store = useAuthStore()
-  if (!store.isLoggedIn) return
-  if (language === lastSyncedLanguage) return
-  lastSyncedLanguage = language
-  // TODO move this into the settings view
-  await store.updateUser({ language })
 })

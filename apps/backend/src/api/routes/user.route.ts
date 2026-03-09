@@ -1,9 +1,10 @@
 import { FastifyPluginAsync } from 'fastify'
 import { UserService } from 'src/services/user.service'
 import { sendError, sendUnauthorizedError } from '../helpers'
+import { validateBody } from '@/utils/zodValidate'
 
-import type { UserMeResponse } from '@zod/apiResponse.dto'
-import { User } from '@zod/generated'
+import type { GetUserSettingsResponse } from '@zod/apiResponse.dto'
+import { UpdateUserLanguagePayloadSchema, type UpdateUserLanguagePayload } from '@zod/user/user.dto'
 
 const userRoutes: FastifyPluginAsync = async (fastify) => {
   const userService = UserService.getInstance()
@@ -26,7 +27,7 @@ const userRoutes: FastifyPluginAsync = async (fastify) => {
         })
 
         if (!user) return sendUnauthorizedError(reply)
-        const response: UserMeResponse = { success: true, user }
+        const response: GetUserSettingsResponse = { success: true, user }
         return reply.code(200).send(response)
       } catch (error) {
         fastify.log.error({ err: error }, 'Error fetching user')
@@ -35,53 +36,29 @@ const userRoutes: FastifyPluginAsync = async (fastify) => {
     }
   )
 
-  // !!! TODO this is a temporary endpoint/hack to update the language
-  // need to be replaced with a proper user settings endpoint
   fastify.patch(
     '/me',
     {
       onRequest: [fastify.authenticate],
     },
     async (req, reply) => {
-      const { language, newsletterOptIn, isPushNotificationEnabled } = req.body as {
-        language?: string
-        newsletterOptIn?: boolean
-        isPushNotificationEnabled?: boolean
-      }
-      if (!language && newsletterOptIn === undefined && isPushNotificationEnabled === undefined) {
-        return sendError(
-          reply,
-          400,
-          'At least one field (language, newsletterOptIn, or isPushNotificationEnabled) is required'
-        )
-      }
-      try {
-        const updateData: Partial<User> = {
-          id: req.user.userId,
-        }
-        if (language) {
-          updateData.language = language
-        }
-        if (newsletterOptIn !== undefined) {
-          updateData.newsletterOptIn = newsletterOptIn
-        }
-        if (isPushNotificationEnabled !== undefined) {
-          updateData.isPushNotificationEnabled = isPushNotificationEnabled
-          if (isPushNotificationEnabled === false) {
-            await fastify.prisma.pushSubscription.deleteMany({ where: { userId: req.user.userId } })
-          }
-        }
-        await userService.update(updateData as User)
+      const body = validateBody<UpdateUserLanguagePayload>(
+        UpdateUserLanguagePayloadSchema,
+        req,
+        reply
+      )
+      if (!body) return
 
-        // Update session data instead of deleting it — deleteSession would
-        // nuke the Redis entry, causing 401s for any concurrent requests.
-        if (language) {
-          await req.updateSession({ lang: language })
-        }
+      try {
+        await fastify.prisma.user.update({
+          where: { id: req.user.userId },
+          data: { language: body.language },
+        })
+        await req.updateSession({ lang: body.language })
 
         return reply.code(200).send({ success: true })
       } catch (error) {
-        return sendError(reply, 500, 'Failed to update user settings')
+        return sendError(reply, 500, 'Failed to update user language')
       }
     }
   )

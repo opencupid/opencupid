@@ -70,7 +70,8 @@ export type InteractionEdgeCountResponse = ApiSuccess<{ count: number }>
 export type InteractionStatsResponse = ApiSuccess<{ stats: InteractionStats }>
 
 export type AuthResponse<T> = ApiSuccess<T> | (ApiError & { code: AuthErrorCodes })
-export type UserMeResponse = ApiSuccess<{ user: SettingsUser }>
+export type GetUserSettingsResponse = ApiSuccess<{ user: SettingsUser }>
+export type UpdateUserLanguageResponse = ApiSuccess<{}>
 export type SendMagicLinkResponse = ApiSuccess<{ user: LoginUser; status: string }>
 export type VerifyTokenSuccess = AuthResponse<{ token: string; refreshToken: string }>
 export interface VerifyTokenFailure {
