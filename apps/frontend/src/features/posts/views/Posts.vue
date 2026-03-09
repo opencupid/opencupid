@@ -51,11 +51,8 @@ const isViewLoading = computed(() => isLoading.value || postStore.isLoading)
 
 // Functions to extract location and title from posts for the map
 const getPostLocation = (post: PublicPostWithProfile | OwnerPost) => {
-  if ('location' in post && post.location) {
-    return {
-      lat: post.location.lat ?? undefined,
-      lon: post.location.lon ?? undefined,
-    }
+  if ('location' in post && post.location?.lat != null && post.location?.lon != null) {
+    return { lat: post.location.lat, lon: post.location.lon }
   }
   return undefined
 }
