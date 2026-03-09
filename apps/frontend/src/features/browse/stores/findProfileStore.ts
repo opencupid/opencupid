@@ -119,12 +119,10 @@ export const useFindProfileStore = defineStore('findProfile', {
         this.isLoading = true
         this.hasMoreProfiles = false
 
-        const res = await safeApiCall(() =>
-          api.get<GetProfilesResponse>('/find/social/map/bounds', {
-            params: bounds,
-            signal: controller.signal,
-          })
-        )
+        const res = await api.get<GetProfilesResponse>('/find/social/map/bounds', {
+          params: bounds,
+          signal: controller.signal,
+        })
         const fetched = PublicProfileArraySchema.parse(res.data.profiles)
         this.profileList = fetched
 
