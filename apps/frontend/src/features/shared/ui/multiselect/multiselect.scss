@@ -127,7 +127,6 @@ fieldset[disabled] .multiselect {
   width: calc(100%);
   transition: border 0.1s ease;
   box-sizing: border-box;
-  margin-bottom: 8px;
   vertical-align: top;
 }
 
@@ -150,7 +149,6 @@ fieldset[disabled] .multiselect {
 
 .multiselect__single {
   padding-left: 5px;
-  margin-bottom: 8px;
 }
 
 .multiselect__tags-wrap {
@@ -159,8 +157,10 @@ fieldset[disabled] .multiselect {
 
 .multiselect__tags {
   min-height: 40px;
-  display: block;
-  padding: 10px 40px 0 15px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 6px 40px 6px 15px;
   border-radius: 5px;
   border: 1px solid var(--bs-border-color);
   background: var(--bs-input-bg);
@@ -249,7 +249,6 @@ fieldset[disabled] .multiselect {
 .multiselect__placeholder {
   color: var(--bs-secondary-color);
   display: inline-block;
-  padding-top: 2px;
 }
 
 .multiselect--active .multiselect__placeholder {
