@@ -571,6 +571,14 @@ watch(
   width: 15rem !important;
 }
 
+:deep(.leaflet-popup-content-wrapper) {
+  padding: 0;
+  border-radius: 0.375rem;
+  overflow: hidden;
+  background: transparent;
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.5);
+}
+
 :deep(.leaflet-popup-content) {
   margin: 0;
   line-height: 1.3;
