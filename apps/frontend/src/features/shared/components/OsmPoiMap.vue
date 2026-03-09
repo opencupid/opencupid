@@ -13,15 +13,6 @@ import { config as maptilerConfig, MapStyle } from '@maptiler/sdk'
 
 import AvatarIcon, { type AvatarImage } from './AvatarIcon.vue'
 
-// Guard against _update firing after map removal (#1035, #1026).
-// TODO: Remove this monkey-patch when fixed upstream in @maptiler/leaflet-maptilersdk.
-// GitHub issue: https://github.com/opencupid/opencupid/issues/1026
-const origUpdate = MaptilerLayer.prototype._update
-MaptilerLayer.prototype._update = function (...args: unknown[]) {
-  if (!this._map) return
-  return origUpdate.apply(this, args)
-}
-
 /** Basic POI shape for location data extraction */
 export interface PoiItem {
   id: string | number
@@ -32,6 +23,15 @@ export interface PoiItem {
 }
 
 maptilerConfig.telemetry = false
+
+// Guard against _update firing after map removal (#1035, #1026).
+// TODO: Remove this monkey-patch when fixed upstream in @maptiler/leaflet-maptilersdk.
+// GitHub issue: https://github.com/opencupid/opencupid/issues/1026
+const origUpdate = MaptilerLayer.prototype._update
+MaptilerLayer.prototype._update = function (...args: unknown[]) {
+  if (!this._map) return
+  return origUpdate.apply(this, args)
+}
 
 const props = withDefaults(
   defineProps<{
