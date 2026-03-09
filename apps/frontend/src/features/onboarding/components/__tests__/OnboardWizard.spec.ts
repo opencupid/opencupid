@@ -81,13 +81,18 @@ const stubComponents = {
 function mountWizard(overrides: Record<string, any> = {}) {
   const formData = {
     publicName: 'TestUser',
-    location: {},
+    location: { country: '' },
     tags: [] as any[],
     languages: ['en'],
     isDatingActive: false,
     isSocialActive: true,
     introSocialLocalized: {},
     introDatingLocalized: {},
+    birthday: null,
+    gender: null,
+    pronouns: null,
+    relationship: null,
+    hasKids: null,
     ...overrides,
   }
 
