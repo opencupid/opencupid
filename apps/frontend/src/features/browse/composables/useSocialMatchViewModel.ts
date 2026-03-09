@@ -52,7 +52,7 @@ export function useSocialMatchViewModel() {
   const onBoundsChanged = async (bounds: MapBounds) => {
     isLoading.value = true
     try {
-      const res = await findProfileStore.findSocialForMapBounds(bounds)
+      const res = await findProfileStore.findProfilesForMapBounds(bounds)
       if (!res.success) {
         storeError.value = res
       }

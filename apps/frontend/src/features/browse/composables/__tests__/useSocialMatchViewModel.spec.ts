@@ -18,7 +18,6 @@ const mockFindProfileStore = {
   profileList: [],
   matchedProfileIds: new Set<string>(),
   socialFilter: null,
-  findSocialForMap: vi.fn(),
   fetchSocialFilter: vi.fn(),
   fetchDatingMatchIds: vi.fn(),
   findSocialForMapBounds: vi.fn(),
@@ -66,7 +65,6 @@ describe('useSocialMatchViewModel', () => {
 
     expect(mockFindProfileStore.fetchSocialFilter).toHaveBeenCalled()
     expect(mockFindProfileStore.fetchDatingMatchIds).toHaveBeenCalled()
-    expect(mockFindProfileStore.findSocialForMap).not.toHaveBeenCalled()
   })
 
   it('initialize sets isInitialized to true', async () => {

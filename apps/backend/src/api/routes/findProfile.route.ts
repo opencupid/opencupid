@@ -81,10 +81,10 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   const BoundsQuerySchema = z.object({
-    south: z.preprocess((v) => (typeof v === 'string' ? parseFloat(v) : v), z.number()),
-    north: z.preprocess((v) => (typeof v === 'string' ? parseFloat(v) : v), z.number()),
-    west: z.preprocess((v) => (typeof v === 'string' ? parseFloat(v) : v), z.number()),
-    east: z.preprocess((v) => (typeof v === 'string' ? parseFloat(v) : v), z.number()),
+    south: z.coerce.number(),
+    north: z.coerce.number(),
+    west: z.coerce.number(),
+    east: z.coerce.number(),
   })
 
   fastify.get('/social/map/bounds', { onRequest: [fastify.authenticate] }, async (req, reply) => {

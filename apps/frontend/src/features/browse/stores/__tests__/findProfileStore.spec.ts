@@ -38,7 +38,7 @@ describe('findProfileStore.findSocialForMapBounds', () => {
   it('calls the bounded map endpoint with bounds params', async () => {
     mockGet.mockResolvedValue({ data: { profiles: [mockProfile] } })
 
-    await store.findSocialForMapBounds(bounds)
+    await store.findProfilesForMapBounds(bounds)
 
     expect(mockGet).toHaveBeenCalledWith(
       '/find/social/map/bounds',
@@ -52,7 +52,7 @@ describe('findProfileStore.findSocialForMapBounds', () => {
   it('updates profileList with fetched results', async () => {
     mockGet.mockResolvedValue({ data: { profiles: [mockProfile] } })
 
-    await store.findSocialForMapBounds(bounds)
+    await store.findProfilesForMapBounds(bounds)
 
     expect(store.profileList).toHaveLength(1)
     expect(store.profileList[0]!.id).toBe(mockProfile.id)
@@ -62,7 +62,7 @@ describe('findProfileStore.findSocialForMapBounds', () => {
     let resolveGet: any
     mockGet.mockReturnValue(new Promise((r) => (resolveGet = r)))
 
-    const promise = store.findSocialForMapBounds(bounds)
+    const promise = store.findProfilesForMapBounds(bounds)
     expect(store.isLoading).toBe(true)
 
     resolveGet({ data: { profiles: [] } })
@@ -76,12 +76,12 @@ describe('findProfileStore.findSocialForMapBounds', () => {
     let resolveFirst: any
     mockGet.mockReturnValueOnce(new Promise((r) => (resolveFirst = r)))
 
-    const first = store.findSocialForMapBounds(bounds)
+    const first = store.findProfilesForMapBounds(bounds)
     // Clear any abort calls from the first invocation (cleaning up stale controller from prior tests)
     abortSpy.mockClear()
 
     mockGet.mockResolvedValueOnce({ data: { profiles: [] } })
-    const second = store.findSocialForMapBounds(bounds)
+    const second = store.findProfilesForMapBounds(bounds)
 
     expect(abortSpy).toHaveBeenCalledTimes(1)
 
@@ -94,7 +94,7 @@ describe('findProfileStore.findSocialForMapBounds', () => {
   it('silently ignores CanceledError from aborted requests', async () => {
     mockGet.mockRejectedValueOnce(new CanceledError('canceled'))
 
-    const result = await store.findSocialForMapBounds(bounds)
+    const result = await store.findProfilesForMapBounds(bounds)
 
     expect(result.success).toBe(true)
     expect(store.profileList).toEqual([])
@@ -103,7 +103,7 @@ describe('findProfileStore.findSocialForMapBounds', () => {
   it('returns error for non-cancel failures', async () => {
     mockGet.mockRejectedValueOnce(new Error('Network error'))
 
-    const result = await store.findSocialForMapBounds(bounds)
+    const result = await store.findProfilesForMapBounds(bounds)
 
     expect(result.success).toBe(false)
   })

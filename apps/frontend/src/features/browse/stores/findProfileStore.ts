@@ -86,7 +86,7 @@ export const useFindProfileStore = defineStore('findProfile', {
   }),
 
   actions: {
-    async findSocial(): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
+    async findProfiles(): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
       try {
         this.isLoading = true
         this.currentPage = 0
@@ -106,45 +106,7 @@ export const useFindProfileStore = defineStore('findProfile', {
       }
     },
 
-    async findDating(): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
-      try {
-        this.isLoading = true
-        this.currentPage = 0
-        this.hasMoreProfiles = true
-
-        const res = await safeApiCall(() => api.get<GetProfilesResponse>('/find/dating'))
-        const fetched = PublicProfileArraySchema.parse(res.data.profiles)
-        this.profileList = fetched
-        this.hasMoreProfiles = fetched.length === this.pageSize
-
-        return storeSuccess()
-      } catch (error: any) {
-        this.profileList = []
-        return storeError(error, 'Failed to fetch profiles')
-      } finally {
-        this.isLoading = false
-      }
-    },
-
-    async findSocialForMap(): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
-      try {
-        this.isLoading = true
-        this.hasMoreProfiles = false
-
-        const res = await safeApiCall(() => api.get<GetProfilesResponse>('/find/social/map'))
-        const fetched = PublicProfileArraySchema.parse(res.data.profiles)
-        this.profileList = fetched
-
-        return storeSuccess()
-      } catch (error: any) {
-        this.profileList = []
-        return storeError(error, 'Failed to fetch map profiles')
-      } finally {
-        this.isLoading = false
-      }
-    },
-
-    async findSocialForMapBounds(
+    async findProfilesForMapBounds(
       bounds: MapBounds
     ): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
       if (mapBoundsAbortController) {
@@ -186,7 +148,7 @@ export const useFindProfileStore = defineStore('findProfile', {
       }
     },
 
-    async fetchNewSocial(): Promise<StoreProfileListResponse> {
+    async fetchNewProfiles(): Promise<StoreProfileListResponse> {
       try {
         const res = await safeApiCall(() => api.get<GetProfilesResponse>('/find/social/new'))
         const fetched = PublicProfileArraySchema.parse(res.data.profiles)
@@ -196,7 +158,7 @@ export const useFindProfileStore = defineStore('findProfile', {
       }
     },
 
-    async loadMoreSocial(): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
+    async loadMoreProfiles(): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
       if (this.isLoadingMore || !this.hasMoreProfiles) {
         return storeSuccess()
       }
@@ -208,39 +170,6 @@ export const useFindProfileStore = defineStore('findProfile', {
 
         const res = await safeApiCall(() =>
           api.get<GetProfilesResponse>('/find/social', {
-            params: { skip, take: this.pageSize },
-          })
-        )
-        const fetched = PublicProfileArraySchema.parse(res.data.profiles)
-
-        if (fetched.length > 0) {
-          this.profileList.push(...fetched)
-          this.currentPage = nextPage
-          this.hasMoreProfiles = fetched.length === this.pageSize
-        } else {
-          this.hasMoreProfiles = false
-        }
-
-        return storeSuccess()
-      } catch (error: any) {
-        return storeError(error, 'Failed to load more profiles')
-      } finally {
-        this.isLoadingMore = false
-      }
-    },
-
-    async loadMoreDating(): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
-      if (this.isLoadingMore || !this.hasMoreProfiles) {
-        return storeSuccess()
-      }
-
-      try {
-        this.isLoadingMore = true
-        const nextPage = this.currentPage + 1
-        const skip = nextPage * this.pageSize
-
-        const res = await safeApiCall(() =>
-          api.get<GetProfilesResponse>('/find/dating', {
             params: { skip, take: this.pageSize },
           })
         )
