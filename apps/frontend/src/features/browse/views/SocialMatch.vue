@@ -176,7 +176,12 @@ watch(
         :center="mapCenter"
         :is-loading="isLoading"
         :is-placeholder-animated="true"
-        :get-location="(profile: PublicProfile) => profile.location"
+        :get-location="
+          (profile: PublicProfile) =>
+            profile.location.lat != null && profile.location.lon != null
+              ? { lat: profile.location.lat, lon: profile.location.lon }
+              : undefined
+        "
         :get-title="(profile: PublicProfile) => profile.publicName"
         :get-image="getProfileImage"
         :is-highlighted="(profile: PublicProfile) => matchedProfileIds.has(profile.id)"

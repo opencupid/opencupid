@@ -13,23 +13,37 @@ import { config as maptilerConfig, MapStyle } from '@maptiler/sdk'
 
 import AvatarIcon, { type AvatarImage } from './AvatarIcon.vue'
 
-/** Basic POI shape for location data extraction */
-export interface PoiItem {
-  id: string | number
-  location?: {
-    lat?: number | null
-    lon?: number | null
-  }
+/** Location coordinates returned by getLocation */
+export interface PoiLocation {
+  lat: number
+  lon: number
+}
+
+/** Viewport bounds emitted by bounds-changed */
+export interface MapBounds {
+  south: number
+  north: number
+  west: number
+  east: number
 }
 
 maptilerConfig.telemetry = false
+
+// Guard against _update firing after map removal (#1035, #1026).
+// TODO: Remove this monkey-patch when fixed upstream in @maptiler/leaflet-maptilersdk.
+// GitHub issue: https://github.com/opencupid/opencupid/issues/1026
+const origUpdate = MaptilerLayer.prototype._update
+MaptilerLayer.prototype._update = function (...args: unknown[]) {
+  if (!this._map) return
+  return origUpdate.apply(this, args)
+}
 
 const props = withDefaults(
   defineProps<{
     /** Items to display on the map (must have id and location with lat/lon) */
     items: T[]
     /** Function to extract location from an item */
-    getLocation: (item: T) => { lat?: number | null; lon?: number | null } | null | undefined
+    getLocation: (item: T) => PoiLocation | undefined
     /** Function to get title for marker */
     getTitle: (item: T) => string
     /** Vue component to render in popup */
@@ -55,7 +69,7 @@ const props = withDefaults(
 const emit = defineEmits<{
   (e: 'item:select', id: string | number): void
   (e: 'map:ready', map: LMap): void
-  (e: 'bounds-changed', bounds: { south: number; north: number; west: number; east: number }): void
+  (e: 'bounds-changed', bounds: MapBounds): void
 }>()
 
 const mapEl: Ref<HTMLDivElement | null> = ref(null)
@@ -310,7 +324,7 @@ function updateMarkers() {
 
   for (const item of props.items) {
     const location = props.getLocation(item)
-    if (!location || !(location.lat && location.lon)) continue
+    if (!location) continue
 
     const isSelected = item.id === props.selectedId
     const m = L.marker([location.lat, location.lon], {
@@ -354,7 +368,7 @@ function updateMarkers() {
     const latlngs: [number, number][] = []
     for (const item of props.items) {
       const location = props.getLocation(item)
-      if (location?.lat && location?.lon) {
+      if (location) {
         latlngs.push([location.lat, location.lon])
       }
     }

@@ -2,7 +2,7 @@
 import { ref, type Component } from 'vue'
 import type { Map as LMap } from 'leaflet'
 
-import OsmPoiMap from './OsmPoiMap.vue'
+import OsmPoiMap, { type PoiLocation, type MapBounds } from './OsmPoiMap.vue'
 import MapPlaceholder from './MapPlaceholder.vue'
 import type { AvatarImage } from './AvatarIcon.vue'
 
@@ -14,7 +14,7 @@ const props = withDefaults(
     selectedId?: string | number
     fitToPois?: boolean
     popupComponent: Component
-    getLocation: (item: T) => { lat?: number | null; lon?: number | null } | null | undefined
+    getLocation: (item: T) => PoiLocation | undefined
     getTitle: (item: T) => string
     getImage?: (item: T) => AvatarImage | undefined
     isHighlighted?: (item: T) => boolean
@@ -30,7 +30,7 @@ const props = withDefaults(
 const emit = defineEmits<{
   (e: 'item:select', id: string | number): void
   (e: 'map:ready', map: LMap): void
-  (e: 'bounds-changed', bounds: { south: number; north: number; west: number; east: number }): void
+  (e: 'bounds-changed', bounds: MapBounds): void
 }>()
 
 const isMapReady = ref(false)

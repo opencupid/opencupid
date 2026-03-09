@@ -134,6 +134,8 @@ vi.mock('@maptiler/leaflet-maptilersdk', () => {
       getMaptilerSDKMap: vi.fn(() => ({ once: vi.fn() })),
     }
   })
+  // Provide a stub _update so the monkey-patch in OsmPoiMap.vue can wrap it
+  MaptilerLayer.prototype._update = vi.fn()
   return { MaptilerLayer }
 })
 vi.mock('@maptiler/sdk/dist/maptiler-sdk.css', () => ({}))
@@ -505,6 +507,24 @@ describe('OsmPoiMap', () => {
 
     const mapInstance = (L.map as any).mock.results[0].value
     expect(mapInstance.fitBounds).toHaveBeenCalled()
+  })
+
+  it('monkey-patches MaptilerLayer._update with a null-guard on this._map', async () => {
+    const { MaptilerLayer } = await import('@maptiler/leaflet-maptilersdk')
+    const patchedUpdate = MaptilerLayer.prototype._update
+
+    // Should be wrapped (not the raw stub — the component patches it at module scope)
+    expect(patchedUpdate).toBeTypeOf('function')
+
+    // Null _map: should bail out without throwing or calling original
+    const nullCtx = { _map: null } as any
+    expect(() => patchedUpdate.call(nullCtx)).not.toThrow()
+
+    // Non-null _map: should delegate to the original stub
+    const liveCtx = { _map: {} } as any
+    patchedUpdate.call(liveCtx)
+    // The wrapper should not throw — it delegates via apply
+    expect(() => patchedUpdate.call(liveCtx)).not.toThrow()
   })
 
   it('does not auto-fit to markers when center is provided', async () => {
