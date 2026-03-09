@@ -5,7 +5,14 @@ import { ProfileSchema, ConversationSchema, UserSchema } from '../generated'
 import { PublicTagSchema } from '../tag/tag.dto'
 import { PublicProfileImageSchema } from './profileimage.dto'
 import { LocationSchema } from '@zod/dto/location.dto'
-import { baseFields, socialFields, datingFields, ownerFields } from './profile.fields'
+import {
+  baseFields,
+  socialFields,
+  datingFields,
+  ownerFields,
+  profileOptInFields,
+  userOptInFields,
+} from './profile.fields'
 import { InteractionContextSchema } from '@zod/interaction/interactionContext.dto'
 
 const PublicScalarsSchema = ProfileSchema.pick({
@@ -102,12 +109,9 @@ export const UpdateProfilePayloadSchema = ProfileSchema.pick({
 
 export type UpdateProfilePayload = z.infer<typeof UpdateProfilePayloadSchema>
 
-// TODO #tech-debt - code duplication with OwnerProfileSchema
-export const ProfileOptInSettingsSchema = z.object({
-  isCallable: z.boolean(),
-  newsletterOptIn: z.boolean(),
-  isPushNotificationEnabled: z.boolean(),
-})
+export const ProfileOptInSettingsSchema = ProfileSchema.pick(profileOptInFields).merge(
+  UserSchema.pick(userOptInFields)
+)
 export type ProfileOptInSettings = z.infer<typeof ProfileOptInSettingsSchema>
 
 export const UpdateProfileOptInPayloadSchema = ProfileOptInSettingsSchema.partial()
