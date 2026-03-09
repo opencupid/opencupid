@@ -43,7 +43,18 @@ describe('MapView', () => {
   it('shows placeholder and keeps map faded before map:ready', () => {
     const wrapper = mountMapView()
     expect(wrapper.find('.map-placeholder').exists()).toBe(true)
-    expect(wrapper.find('.map-view').classes()).toContain('opacity-0')
+    expect(wrapper.find('.map-view').classes()).toContain('opacity-50')
+  })
+
+  it('hides placeholder and reveals map after map:ready', async () => {
+    const wrapper = mountMapView()
+    const placeholder = wrapper.find('.map-placeholder')
+    expect(placeholder.attributes('style')).toBeUndefined()
+
+    await wrapper.find('.emit-map-ready').trigger('click')
+
+    expect(placeholder.attributes('style')).toContain('display: none')
+    expect(wrapper.find('.map-view').classes()).not.toContain('opacity-50')
   })
 
   it('re-emits item:select from OsmPoiMap', async () => {
