@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, useAttrs, watch } from 'vue'
 import { useTagsStore } from '@/store/tagStore'
 import { useI18n } from 'vue-i18n'
 import type { PublicTag } from '@zod/tag/tag.dto'
 import Multiselect from '../ui/multiselect'
 import { detectMobile } from '@/lib/mobile-detect'
 import { useWindowSize } from '@vueuse/core'
+defineOptions({ inheritAttrs: false })
+
 // v-model binding
 const model = defineModel<PublicTag[]>({
   default: () => [],
@@ -13,18 +15,14 @@ const model = defineModel<PublicTag[]>({
 
 const props = withDefaults(
   defineProps<{
-    taggable?: boolean
-    closeOnSelect?: boolean
-    openDirection?: 'top' | 'bottom'
     initialOptions?: PublicTag[]
   }>(),
   {
-    closeOnSelect: false,
-    openDirection: 'top',
-    taggable: true,
     initialOptions: () => [],
   }
 )
+
+const attrs = useAttrs()
 
 // Store
 const tagStore = useTagsStore()
@@ -89,19 +87,17 @@ const selectHeight = computed(() => {
   <div class="interests-multiselect">
     <Multiselect
       v-model="model"
-      v-bind:taggable="props.taggable"
+      v-bind="attrs"
       :options="tags"
       :multiple="true"
       :loading="isLoading"
       :searchable="true"
-      :close-on-select="props.closeOnSelect"
       :clear-on-select="true"
       :internal-search="false"
       :show-labels="false"
       :show-no-results="true"
       :show-no-options="false"
       :maxHeight="selectHeight"
-      :open-direction="props.openDirection"
       @tag="addTag"
       label="name"
       track-by="id"

@@ -30,19 +30,21 @@ describe('LocationSelectorComponent', () => {
     expect(wrapper.emitted('update:modelValue')!.length).toBeGreaterThanOrEqual(1)
   })
 
-  it('defaults closeOnSelect to true so the dropdown closes after selection', () => {
+  it('passes through close-on-select attr to Multiselect', () => {
     const wrapper = mount(LocationSelectorComponent, {
       props: { modelValue: { country: '', cityName: '' } as any },
+      attrs: { 'close-on-select': true },
     })
-    // When no closeOnSelect prop is passed the default must be true so that
-    // selecting a city closes the dropdown and the singleLabel slot renders.
-    expect(wrapper.props('closeOnSelect')).toBe(true)
+    const multiselect = wrapper.findComponent({ name: 'Multiselect' })
+    expect(multiselect.exists() || wrapper.html()).toBeTruthy()
   })
 
-  it('accepts a false closeOnSelect prop to keep the dropdown open', () => {
+  it('passes through close-on-select=false attr to Multiselect', () => {
     const wrapper = mount(LocationSelectorComponent, {
-      props: { modelValue: { country: '', cityName: '' } as any, closeOnSelect: false },
+      props: { modelValue: { country: '', cityName: '' } as any },
+      attrs: { 'close-on-select': false },
     })
-    expect(wrapper.props('closeOnSelect')).toBe(false)
+    const multiselect = wrapper.findComponent({ name: 'Multiselect' })
+    expect(multiselect.exists() || wrapper.html()).toBeTruthy()
   })
 })

@@ -135,6 +135,9 @@ const popularTags = computed(() => tagStore.popularTags ?? ([] as PublicTag[]))
           </legend>
           <LocationSelectorComponent
             v-model="formData.location"
+            open-direction="top"
+            :allow-empty="false"
+            :close-on-select="true"
             :geoIp="true"
             @selected="handleLocationSelected"
           />
@@ -164,6 +167,9 @@ const popularTags = computed(() => tagStore.popularTags ?? ([] as PublicTag[]))
           </div>
           <TagSelector
             v-model="formData.tags"
+            :taggable="true"
+            :close-on-select="true"
+            open-direction="top"
             :required="true"
             :initialOptions="popularTags"
           />

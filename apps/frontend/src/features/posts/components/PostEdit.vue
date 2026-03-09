@@ -178,7 +178,9 @@ const handleSubmit = async () => {
         <BFormGroup class="mb-2">
           <LocationSelector
             v-model="form.location"
+            open-direction="bottom"
             :allow-empty="true"
+            :close-on-select="true"
           />
         </BFormGroup>
 

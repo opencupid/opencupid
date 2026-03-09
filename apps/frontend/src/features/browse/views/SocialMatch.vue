@@ -125,7 +125,8 @@ watch(
                 <LocationSelector
                   v-model="socialFilter.location"
                   open-direction="bottom"
-                  :allowEmpty="true"
+                  :allow-empty="true"
+                  :close-on-select="true"
                   v-if="socialFilter"
                 />
               </div>
@@ -148,7 +149,7 @@ watch(
                   v-model="socialFilter.tags"
                   :taggable="false"
                   open-direction="bottom"
-                  :closeOnSelect="true"
+                  :close-on-select="true"
                   :initialOptions="viewerProfile?.tags ?? []"
                   v-if="socialFilter"
                 />
