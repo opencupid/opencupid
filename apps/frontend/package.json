@@ -12,7 +12,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:i18n": "npx i18n-check --locales ../../packages/shared/i18n/ -s en --only missingKeys --exclude **/api/**",
-    "test:coverage": "pnpm run test --coverage --run",
+    "test:coverage": "pnpm run test --coverage --coverage.reporter=text-summary",
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
     "lint": "eslint . --fix",
