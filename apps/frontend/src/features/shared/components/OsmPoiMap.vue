@@ -545,7 +545,9 @@ watch(
 /* Avatar marker hover feedback — scale the inner img, not the icon wrapper
    (Leaflet uses transform on the wrapper for positioning) */
 :deep(.poi-avatar-icon img) {
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.15s ease;
+  transition:
+    transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1),
+    border-color 0.15s ease;
 }
 
 :deep(.poi-avatar-icon:hover) {
@@ -577,11 +579,27 @@ watch(
   overflow: hidden;
   background: transparent;
   box-shadow: 0 3px 14px rgba(0, 0, 0, 0.5);
+  border: 1px solid transparent;
+  transition:
+    box-shadow 1.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    border-color 0.15s ease;
+}
+
+:deep(.leaflet-popup-content-wrapper:hover) {
+  box-shadow: 0 3px 18px rgba(0, 0, 0, 0.7);
+  border: 1px solid white;
 }
 
 :deep(.leaflet-popup-content) {
   margin: 0;
   line-height: 1.3;
   min-height: 1px;
+}
+
+/* Override Bootstrap's card hover lift inside map popups */
+:deep(.leaflet-popup .card.cursor-pointer:hover),
+:deep(.leaflet-popup .card[role='button']:hover) {
+  box-shadow: none;
+  transform: none;
 }
 </style>
