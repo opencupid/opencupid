@@ -67,7 +67,6 @@ const makeReq = (overrides: any = {}) => ({
 beforeEach(async () => {
   fastify = new MockFastify()
   const mockTx = {
-    profile: { count: vi.fn().mockResolvedValue(0) },
     pushSubscription: { deleteMany: vi.fn().mockResolvedValue({ count: 0 }) },
   }
   fastify.prisma = { $transaction: vi.fn((fn: any) => fn(mockTx)) }
@@ -359,44 +358,17 @@ describe('POST /me (onboarding)', () => {
     localized: [],
   }
 
-  it('creates filter with full location when nearby members exist', async () => {
+  it('creates social match filter with profile location', async () => {
     const handler = fastify.routes['POST /me']
-    const mockTx = { profile: { count: vi.fn().mockResolvedValue(5) } }
-    fastify.prisma.$transaction.mockImplementation((fn: any) => fn(mockTx))
     mockProfileService.updateCompleteProfile.mockResolvedValue(dbProfile)
 
     const req = makeReq({ body: { publicName: 'Test', country: 'HU' } })
     await handler(req, reply as any)
 
-    expect(mockTx.profile.count).toHaveBeenCalledWith({
-      where: {
-        country: 'HU',
-        isSocialActive: true,
-        isOnboarded: true,
-        isActive: true,
-        id: { not: 'p1' },
-      },
-    })
     expect(mockProfileMatchService.createSocialMatchFilter).toHaveBeenCalledWith(
-      mockTx,
+      expect.anything(),
       'p1',
       expect.objectContaining({ country: 'HU', cityName: 'Budapest', lat: 47.497, lon: 19.04 })
-    )
-  })
-
-  it('creates filter with Anywhere when no nearby members', async () => {
-    const handler = fastify.routes['POST /me']
-    const mockTx = { profile: { count: vi.fn().mockResolvedValue(0) } }
-    fastify.prisma.$transaction.mockImplementation((fn: any) => fn(mockTx))
-    mockProfileService.updateCompleteProfile.mockResolvedValue(dbProfile)
-
-    const req = makeReq({ body: { publicName: 'Test', country: 'HU' } })
-    await handler(req, reply as any)
-
-    expect(mockProfileMatchService.createSocialMatchFilter).toHaveBeenCalledWith(
-      mockTx,
-      'p1',
-      expect.objectContaining({ country: '', cityName: '', lat: null, lon: null })
     )
   })
 })

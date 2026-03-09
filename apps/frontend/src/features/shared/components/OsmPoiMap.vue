@@ -47,7 +47,6 @@ const props = withDefaults(
     isHighlighted?: (item: T) => boolean
   }>(),
   {
-    center: () => [47.0, 19.0], // Central Europe-ish default
     zoom: 7,
     fitToPois: false,
   }
@@ -214,8 +213,8 @@ function ensureMap() {
 
 function createLeafletMap(el: HTMLDivElement): LMap {
   return L.map(el, {
-    center: props.center,
-    zoom: props.zoom,
+    center: props.center ?? [0, 0],
+    zoom: props.center ? props.zoom : 2,
     maxZoom: 19,
     preferCanvas: true,
   })
@@ -361,8 +360,8 @@ function updateMarkers() {
     itemsById.set(item.id, item)
   }
 
-  // Fit bounds if requested and we have at least one item with location
-  if (props.fitToPois && props.items.length > 0) {
+  // Fit bounds to markers when explicitly requested or when no center was provided
+  if ((props.fitToPois || !props.center) && props.items.length > 0) {
     const latlngs: [number, number][] = []
     for (const item of props.items) {
       const location = props.getLocation(item)

@@ -50,10 +50,12 @@ const getProfileImage = (profile: PublicProfile) => {
   return profile.profileImages?.[0]
 }
 
-const mapCenter = computed<[number, number]>(() => {
+const mapCenter = computed<[number, number] | undefined>(() => {
   const loc = socialFilter.value?.location
   if (loc?.lat && loc?.lon) return [loc.lat, loc.lon]
-  return [47.0, 19.0] // default: Central Europe
+  const profile = viewerProfile.value?.location
+  if (profile?.lat && profile?.lon) return [profile.lat, profile.lon]
+  return undefined
 })
 
 // --- Inline filter logic ---
