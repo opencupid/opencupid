@@ -158,6 +158,16 @@ const popularTags = computed(() => tagStore.popularTags ?? ([] as PublicTag[]))
             <!-- I'm into... -->
             {{ t('onboarding.interests_title') }}
           </legend>
+          <div class="form-text text-muted lh-sm mb-2">
+            <!-- Start typing to search for tags. You can add new tags if you don't find what you're looking for. -->
+            <small>{{ t('onboarding.interests_hint') }}</small>
+          </div>
+          <TagSelector
+            v-model="formData.tags"
+            :required="true"
+            :initialOptions="popularTags"
+          />
+          <h6 class="mt-3 mt-lg-3 mb-0 text-center text-muted">{{ t('onboarding.interests_popular_heading') }}</h6>
           <TagCloud
             v-if="formData.location?.country"
             :key="formData.location.country"
@@ -165,15 +175,6 @@ const popularTags = computed(() => tagStore.popularTags ?? ([] as PublicTag[]))
             class="mb-3"
             @tag:select="handleTagCloudSelect"
           />
-          <TagSelector
-            v-model="formData.tags"
-            :required="true"
-            :initialOptions="popularTags"
-          />
-          <div class="form-text text-muted">
-            <!-- Start typing to search for tags. You can add new tags if you don't find what you're looking for. -->
-            {{ t('onboarding.interests_hint') }}
-          </div>
         </fieldset>
 
         <fieldset v-else-if="isCurrent('languages')">
