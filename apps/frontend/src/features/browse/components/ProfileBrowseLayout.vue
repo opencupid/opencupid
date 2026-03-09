@@ -104,7 +104,7 @@ main {
 
 .subnav-bar {
   position: relative;
-  z-index: 800; // above Leaflet map panes (max ~700)
+  z-index: 1030; // above Leaflet controls (z-index: 1000), below Bootstrap modals (1040+)
   // box-shadow: var(--shadow-xs);
 }
 </style>
