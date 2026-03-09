@@ -485,4 +485,29 @@ describe('OsmPoiMap', () => {
 
     expect(mapInstance.flyTo).toHaveBeenCalledWith([48.0, 20.0], 15, { duration: 1 })
   })
+
+  it('initializes at world view when no center is provided', async () => {
+    await mountMap()
+    await flushPromises()
+
+    const mapCall = (L.map as any).mock.calls[0][1]
+    expect(mapCall.center).toEqual([0, 0])
+    expect(mapCall.zoom).toBe(2)
+  })
+
+  it('auto-fits to markers when no center is provided', async () => {
+    await mountMap()
+    await flushPromises()
+
+    const mapInstance = (L.map as any).mock.results[0].value
+    expect(mapInstance.fitBounds).toHaveBeenCalled()
+  })
+
+  it('does not auto-fit to markers when center is provided', async () => {
+    await mountMap({ center: [48.0, 16.0] as [number, number] })
+    await flushPromises()
+
+    const mapInstance = (L.map as any).mock.results[0].value
+    expect(mapInstance.fitBounds).not.toHaveBeenCalled()
+  })
 })

@@ -43,13 +43,13 @@ vi.mock('vue-router', () => ({
 }))
 
 const vmState = {
-  viewerProfile: ref({ isSocialActive: true }),
+  viewerProfile: ref<Record<string, any>>({ isSocialActive: true }),
   haveResults: ref(true),
   isLoading: ref(false),
   profileList: ref([{ id: '1' }]),
   storeError: ref(null),
   socialFilter: ref<{
-    location: { country: string; cityName: string; lat: null; lon: null }
+    location: { country: string; cityName: string; lat: number | null; lon: number | null }
     tags: { id: string; name: string; slug: string }[]
   } | null>(null),
   isInitialized: ref(true),
@@ -129,5 +129,40 @@ describe('SocialMatch view', () => {
     const wrapper = mountComponent()
     expect(wrapper.find('.detail-view').exists()).toBe(false)
     expect(wrapper.find('.public-profile').exists()).toBe(false)
+  })
+
+  it('renders map when socialFilter has location coords', () => {
+    vmState.socialFilter.value = {
+      location: { country: 'HU', cityName: 'Budapest', lat: 47.5, lon: 19.0 },
+      tags: [],
+    }
+    const wrapper = mountComponent()
+    expect(wrapper.find('.map-view').exists()).toBe(true)
+  })
+
+  it('renders map when socialFilter has null coords but profile has location', () => {
+    vmState.viewerProfile.value = {
+      isSocialActive: true,
+      location: { country: 'HU', cityName: 'Budapest', lat: 47.5, lon: 19.0 },
+    }
+    vmState.socialFilter.value = {
+      location: { country: '', cityName: '', lat: null, lon: null },
+      tags: [],
+    }
+    const wrapper = mountComponent()
+    expect(wrapper.find('.map-view').exists()).toBe(true)
+  })
+
+  it('renders map when neither filter nor profile has coords', () => {
+    vmState.viewerProfile.value = {
+      isSocialActive: true,
+      location: { country: '', cityName: '', lat: null, lon: null },
+    }
+    vmState.socialFilter.value = {
+      location: { country: '', cityName: '', lat: null, lon: null },
+      tags: [],
+    }
+    const wrapper = mountComponent()
+    expect(wrapper.find('.map-view').exists()).toBe(true)
   })
 })
