@@ -531,6 +531,17 @@ watch(
   border: none;
 }
 
+/* Avatar marker hover feedback — scale the inner img, not the icon wrapper
+   (Leaflet uses transform on the wrapper for positioning) */
+:deep(.poi-avatar-icon img) {
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+:deep(.poi-avatar-icon:hover img) {
+  transform: scale(1.3);
+  border-color: #3a86ff;
+}
+
 :deep(.item-popup-highlighted .leaflet-popup-content-wrapper) {
   /* TODO remove hardcoded color - replace with semantic value */
   box-shadow: 0 3px 13px rgba(217, 83, 79, 0.9);
