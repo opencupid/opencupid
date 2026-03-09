@@ -85,7 +85,7 @@ watch(
       <!-- Tags column -->
       <div class="col-12 col-md-6">
         <div class="d-flex align-items-center gap-2">
-          <div class="flex-grow-1 fs-6">
+          <div class="flex-grow-1">
             <TagSelector
               v-model="filter.tags"
               :taggable="false"
