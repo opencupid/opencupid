@@ -70,7 +70,9 @@ const toggleDisabled = () => {
           <LocationSelector
             v-model="model.location as LocationDTO"
             v-if="model.location"
-            :allowEmpty="true"
+            open-direction="top"
+            :allow-empty="true"
+            :close-on-select="true"
           />
         </fieldset>
         <div class="ms-2">
@@ -97,6 +99,8 @@ const toggleDisabled = () => {
       <TagSelector
         v-model="model.tags"
         :taggable="false"
+        :close-on-select="false"
+        open-direction="top"
         :initialOptions="viewerProfile?.tags ?? []"
       />
     </div>

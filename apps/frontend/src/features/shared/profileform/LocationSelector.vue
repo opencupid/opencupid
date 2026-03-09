@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onUnmounted, ref } from 'vue'
+import { computed, onUnmounted, ref, useAttrs } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useKomootStore, type KomootLocation } from '@/features/komoot/stores/komootStore'
 import type { LocationDTO } from '@zod/dto/location.dto'
@@ -7,6 +7,8 @@ import Multiselect from '@/features/shared/ui/multiselect'
 
 import { useDebounceFn } from '@vueuse/core'
 import CountryFlag from '../ui/CountryFlag.vue'
+
+defineOptions({ inheritAttrs: false })
 
 const emit = defineEmits<{
   (e: 'selected', value: LocationDTO): void
@@ -29,18 +31,7 @@ const model = defineModel<LocationDTO>({
   }),
 })
 
-const props = withDefaults(
-  defineProps<{
-    allowEmpty?: boolean
-    closeOnSelect?: boolean
-    openDirection?: 'top' | 'bottom'
-  }>(),
-  {
-    openDirection: 'top',
-    allowEmpty: false,
-    closeOnSelect: true,
-  }
-)
+const attrs = useAttrs()
 
 const { locale, t } = useI18n()
 const komoot = useKomootStore()
@@ -88,11 +79,9 @@ onUnmounted(() => {
   <div class="location-selector">
     <Multiselect
       v-model="selected"
-      v-bind:allow-empty="props.allowEmpty"
-      :open-direction="props.openDirection"
+      v-bind="attrs"
       :options="options"
       :searchable="true"
-      :close-on-select="props.closeOnSelect"
       :clear-on-select="true"
       :internal-search="false"
       :show-no-results="false"
