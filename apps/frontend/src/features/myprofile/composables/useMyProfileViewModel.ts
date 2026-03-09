@@ -29,7 +29,6 @@ export function useMyProfileViewModel(isEditMode: boolean) {
   })
 
   const isDatingOnboarded = computed(() => {
-    // console.log('Checking if dating is onboarded:', profileStore.profile?.birthday)
     return profileStore.profile?.birthday !== null
   })
 

@@ -104,7 +104,6 @@ async function handleSendMessage() {
   if (trimmedContent === '') return
   const result = await messageStore.sendMessage(props.recipientProfile.id, trimmedContent)
   if (result.success) {
-    // console.log('Message sent successfully:', result.data)
     emit('message:sent', result.data!)
     content.value = '' // Clear the input after sending
     localStore.setMessageDraft(props.recipientProfile.id, '') // Clear the draft in local store

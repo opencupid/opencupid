@@ -24,8 +24,6 @@ const vm = getCurrentInstance()
 async function enterApp() {
   loading.value = true
 
-  // Unmount the current LandingPage app
-  console.log('Unmounting LandingPage app...', vm)
   vm?.appContext.app.unmount()
   const { bootstrapApp } = await import('../../../app')
 

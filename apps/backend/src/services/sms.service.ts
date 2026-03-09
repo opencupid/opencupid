@@ -1,4 +1,3 @@
-import { F } from '@faker-js/faker/dist/airline-BUL6NtOJ'
 import axios from 'axios'
 
 interface OtpResponse {
@@ -29,10 +28,7 @@ export class SmsService {
         userid: userId,
         key: this.apiKey,
       }
-      console.log('Sending OTP via Textbelt with request:', request)
       const response = await axios.post<OtpResponse>(this.apiUrl, request)
-
-      console.log('Textbelt response:', response.data)
       const { success, otp } = response.data
 
       if (success) {

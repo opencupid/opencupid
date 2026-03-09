@@ -34,7 +34,6 @@ async function ensureCountryLocale(locale: string) {
     return
   }
   const mod = await loader()
-  // console.log(`Registering country locale: ${locale}`, mod.default);
   countries.registerLocale(mod.default)
   loadedLocales.add(locale)
   language = locale

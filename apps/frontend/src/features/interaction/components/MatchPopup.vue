@@ -21,7 +21,6 @@ const messageSent = ref(false)
 const handleMessageSent = () => {
   messageSent.value = true
   setTimeout(() => {
-    console.log('Hiding modal after message sent')
     emit('messaged')
     emit('close')
   }, 3000)

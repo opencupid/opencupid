@@ -77,7 +77,6 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
         return storeSuccess()
       } catch (error: any) {
         this.profile = null // Reset profile on error
-        console.log('Error fetching profile:', error)
         return storeError(error, 'Failed to fetch profile')
       } finally {
         this.isLoading = false // Reset loading state
@@ -133,7 +132,6 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
         return storeSuccess()
       } catch (error: any) {
         this.profile = null // Reset profile on error
-        console.log('Error fetching profile:', error)
         return storeError(error, 'Failed to fetch profile')
       } finally {
         this.isLoading = false // Reset loading state

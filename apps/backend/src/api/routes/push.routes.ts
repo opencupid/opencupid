@@ -1,37 +1,6 @@
-// routes/sendMessage.ts
 import { FastifyPluginAsync } from 'fastify'
 
-interface PushRequestBody {
-  subscription: PushSubscription
-  message: string
-}
-
-function bufferToBase64(buffer: ArrayBuffer | null): string {
-  if (!buffer) return ''
-  return btoa(String.fromCharCode(...new Uint8Array(buffer)))
-}
-
-const pushRoutes: FastifyPluginAsync = async fastify => {
-  // fastify.post<{ Body: PushRequestBody }>('/send', async (req, reply) => {
-
-  //   const { subscription, message } = req.body
-
-  //   const payload = {
-  //     title: 'New Message!',
-  //     body: message || 'Someone sent you something',
-  //     icon: '/icons/notify.png',
-  //     url: '/inbox',
-  //   }
-
-  //   try {
-  //     await sendPushNotification(subscription, payload)
-  //     reply.code(200).send({ success: true, message: 'Push notification sent successfully' })
-  //   } catch (err) {
-  //     console.error('Push error:', err)
-  //     reply.code(500)
-  //   }
-  // })
-
+const pushRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post('/subscription', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const { endpoint, keys } = req.body as {
       endpoint: string
