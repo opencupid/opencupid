@@ -1,5 +1,19 @@
 # backend
 
+## 0.19.0
+
+### Minor Changes
+
+- c99e129: Add geo-boundary filtering for map-based profile browsing (#1032)
+- d03c461: Remove smartcrop-sharp dependency, simplify image processing pipeline to use sharp.strategy.attention as fallback
+
+### Patch Changes
+
+- 43e1199: Fix reprocess-images script to compute and persist blurhash for existing images, fix tensor memory leak and zero-rect fallback in ImageProcessor
+- 9687f24: Minor cleanup
+- c239914: Remove find-up dependency, replace with plain Node.js directory walk (#1033)
+- 8fb9ef1: Fix rendering of POI items on the map
+
 ## 0.18.0
 
 ### Minor Changes
