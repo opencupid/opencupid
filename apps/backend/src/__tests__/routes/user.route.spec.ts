@@ -20,10 +20,10 @@ vi.mock('@/lib/appconfig', () => ({
 
 beforeEach(async () => {
   fastify = new MockFastify()
+  fastify.prisma = { user: { update: vi.fn() } }
   reply = new MockReply()
   mockUserService = {
     getUserById: vi.fn(),
-    update: vi.fn(),
   }
   await userRoutes(fastify as any, {})
 })
@@ -56,28 +56,35 @@ describe('GET /me', () => {
 })
 
 describe('PATCH /me', () => {
-  it('returns 400 if no fields provided', async () => {
+  it('returns 400 if body is invalid', async () => {
     const handler = fastify.routes['PATCH /me']
     const req = { user: { userId: 'u1' }, body: {} }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(400)
   })
 
-  it('updates language and patches session instead of deleting it', async () => {
+  it('returns 400 if language is too short', async () => {
+    const handler = fastify.routes['PATCH /me']
+    const req = { user: { userId: 'u1' }, body: { language: 'x' } }
+    await handler(req as any, reply as any)
+    expect(reply.statusCode).toBe(400)
+  })
+
+  it('updates language and patches session', async () => {
     const handler = fastify.routes['PATCH /me']
     const updateSession = vi.fn()
-    const deleteSession = vi.fn()
     const req = {
       user: { userId: 'u1' },
       body: { language: 'de' },
       updateSession,
-      deleteSession,
     }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
-    expect(mockUserService.update).toHaveBeenCalled()
+    expect(fastify.prisma.user.update).toHaveBeenCalledWith({
+      where: { id: 'u1' },
+      data: { language: 'de' },
+    })
     expect(updateSession).toHaveBeenCalledWith({ lang: 'de' })
-    expect(deleteSession).not.toHaveBeenCalled()
   })
 })

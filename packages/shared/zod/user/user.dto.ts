@@ -63,6 +63,11 @@ export const LoginUserSchema = UserSchema.pick({
 })
 export type LoginUser = z.infer<typeof LoginUserSchema>
 
+export const UpdateUserLanguagePayloadSchema = z.object({
+  language: z.string().min(2).max(5),
+})
+export type UpdateUserLanguagePayload = z.infer<typeof UpdateUserLanguagePayloadSchema>
+
 export const VerifyTokenPayloadSchema = z.object({
   token: z.string().length(6),
 })

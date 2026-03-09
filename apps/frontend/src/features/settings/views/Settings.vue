@@ -1,14 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
-import { useColorMode } from 'bootstrap-vue-next'
-import { type LoginUser } from '@zod/user/user.dto'
 import type { ProfileOptInSettings } from '@zod/profile/profile.dto'
 
-import { useMessageStore } from '@/features/messaging/stores/messageStore'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
-import { useLocalStore } from '@/store/localStore'
+import { useUserStore } from '@/store/userStore'
 
 import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
 import IconLogout from '@/assets/icons/interface/logout.svg'
@@ -28,9 +25,9 @@ const { t } = useI18n()
 
 const authStore = useAuthStore()
 const ownerProfileStore = useOwnerProfileStore()
+const userStore = useUserStore()
 const router = useRouter()
 
-const user = reactive({} as LoginUser)
 const isLoading = ref(true)
 const optInModel = computed<ProfileOptInSettings>({
   get() {
@@ -52,16 +49,11 @@ const optInModel = computed<ProfileOptInSettings>({
 
 onMounted(async () => {
   isLoading.value = true
-  await ownerProfileStore.fetchOptInSettings()
-  const [res] = await Promise.all([authStore.fetchUser(), ownerProfileStore.fetchOwnerProfile()])
-
-  if (res.success) {
-    const { user: fetched } = res
-    Object.assign(user, fetched)
-  } else {
-    const { message } = res
-    console.error('Failed to fetch user:', message)
-  }
+  await Promise.all([
+    ownerProfileStore.fetchOptInSettings(),
+    userStore.fetchUser(),
+    ownerProfileStore.fetchOwnerProfile(),
+  ])
   isLoading.value = false
 })
 
@@ -85,18 +77,18 @@ function handleClick() {
           </template>
         </SecondaryNav>
 
-        <section
-          class="w-100 flex-grow-1"
-        >
+        <section class="w-100 flex-grow-1">
           <BOverlay
             :show="isLoading"
             class="h-100 d-flex flex-column justify-content-center"
           >
             <div class="row mb-3 mb-md-4 d-flex align-items-center justify-content-between">
               <div class="col-md-8">
-                <span v-if="user.email"> {{ $t('auth.email') }}: {{ user.email }}</span>
-                <span v-if="user.phonenumber">
-                  {{ $t('auth.phone_number') }}: {{ user.phonenumber }}</span
+                <span v-if="userStore.user?.email">
+                  {{ $t('auth.email') }}: {{ userStore.user.email }}</span
+                >
+                <span v-if="userStore.user?.phonenumber">
+                  {{ $t('auth.phone_number') }}: {{ userStore.user.phonenumber }}</span
                 >
               </div>
               <div class="col-md-4">
