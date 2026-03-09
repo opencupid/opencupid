@@ -360,9 +360,9 @@ describe('OsmPoiMap', () => {
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({} as any)
 
     const { MaptilerLayer } = await import('@maptiler/leaflet-maptilersdk')
-    vi.mocked(MaptilerLayer).mockImplementationOnce(() => {
+    vi.mocked(MaptilerLayer).mockImplementationOnce(function () {
       throw new Error('WebGL context lost')
-    })
+    } as any)
 
     await mountMap()
     await flushPromises()

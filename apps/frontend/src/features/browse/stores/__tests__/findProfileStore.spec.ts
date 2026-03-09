@@ -15,7 +15,7 @@ vi.mock('@/lib/bus', () => ({
 
 import { useFindProfileStore } from '../findProfileStore'
 
-describe('findProfileStore.findSocialForMapBounds', () => {
+describe('findProfileStore.findProfilesForMapBounds', () => {
   let store: ReturnType<typeof useFindProfileStore>
 
   beforeEach(() => {
