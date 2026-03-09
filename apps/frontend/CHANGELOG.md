@@ -1,5 +1,16 @@
 # frontend
 
+## 0.22.0
+
+### Minor Changes
+
+- c99e129: Add geo-boundary filtering for map-based profile browsing (#1032)
+
+### Patch Changes
+
+- 37a9cd0: Fix blurhash placeholder not rendering in ImageCarousel (#1029)
+- 8fb9ef1: Fix rendering of POI items on the map
+
 ## 0.21.0
 
 ### Minor Changes

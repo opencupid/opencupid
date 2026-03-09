@@ -1,6 +1,6 @@
 {
   "name": "@opencupid/frontend",
-  "version": "0.21.0",
+  "version": "0.22.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -50,7 +50,6 @@
     "d3-cloud": "^1.2.8",
     "d3-dispatch": "^3.0.1",
     "dompurify": "^3.3.1",
-
     "flag-icons": "7.5.0",
     "i18n-iso-countries": "7.14.0",
     "leaflet": "1.9.4",
