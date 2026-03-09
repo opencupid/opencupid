@@ -3,25 +3,28 @@ name: Release
 on:
   workflow_dispatch:
 
-concurrency: ${{ github.workflow }}-${{ github.ref }}
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
 
 jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GHCR_PAT }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
@@ -29,11 +32,90 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Create release pull request
-        uses: changesets/action@v1
-        with:
-          version: pnpm changeset version
-          commit: Version Packages
-          title: Version Packages
+      - name: Check for pending changesets
+        run: |
+          COUNT=$(find .changeset -name '*.md' ! -name 'README.md' | wc -l)
+          if [[ "$COUNT" -eq 0 ]]; then
+            echo "::error::No pending changesets found — nothing to release."
+            exit 1
+          fi
+          echo "Found $COUNT pending changeset(s)"
+
+      - name: Apply version bumps
+        run: pnpm changeset version
+
+      - name: Verify fixed versioning
+        run: |
+          CANONICAL=$(node -p "require('./apps/frontend/package.json').version")
+          for svc in backend admin ingress; do
+            SVC_VER=$(node -p "require('./apps/${svc}/package.json').version")
+            if [[ "$SVC_VER" != "$CANONICAL" ]]; then
+              echo "::error::Version mismatch: frontend=${CANONICAL}, ${svc}=${SVC_VER}"
+              exit 1
+            fi
+          done
+          echo "All app versions match: ${CANONICAL}"
+
+      - name: Determine release version
+        id: version
+        run: |
+          VERSION=$(node -p "require('./apps/frontend/package.json').version")
+          echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "### Release: v${VERSION}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Verify tag is new
+        run: |
+          if git rev-parse "refs/tags/${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
+            echo "::error::Tag ${{ steps.version.outputs.tag }} already exists."
+            exit 1
+          fi
+
+      - name: Commit version bumps
+        id: commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "chore: release ${{ steps.version.outputs.tag }} [skip ci]"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Push to main
+        run: git push origin main
+
+      - name: Build release notes
+        id: notes
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
+
+          NOTES=""
+          for svc in backend frontend admin ingress; do
+            CHANGELOG="apps/${svc}/CHANGELOG.md"
+            if ! git diff HEAD~1 --quiet -- "$CHANGELOG" 2>/dev/null; then
+              VERSION=$(node -p "require('./apps/${svc}/package.json').version")
+              SECTION=$(awk "/^## ${VERSION}/{flag=1; next} /^## [0-9]/{flag=0} flag" "$CHANGELOG")
+              if [[ -n "$SECTION" ]]; then
+                NOTES+="## @opencupid/${svc}@${VERSION}"$'\n\n'"${SECTION}"$'\n\n'
+              fi
+            fi
+          done
+
+          if [[ -z "$NOTES" ]]; then
+            NOTES="Version bump — see commit history for details."$'\n'
+          fi
+
+          if [[ -n "$PREV_TAG" ]]; then
+            NOTES+=$'\n'"**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREV_TAG}...${{ steps.version.outputs.tag }}"
+          fi
+
+          echo "$NOTES" > /tmp/release-notes.md
+          cat /tmp/release-notes.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Create GitHub release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GHCR_PAT }}
+        run: |
+          gh release create "${{ steps.version.outputs.tag }}" \
+            --target "${{ steps.commit.outputs.sha }}" \
+            --title "${{ steps.version.outputs.tag }}" \
+            --notes-file /tmp/release-notes.md
