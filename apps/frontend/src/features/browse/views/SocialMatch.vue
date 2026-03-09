@@ -1,16 +1,13 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDebounceFn } from '@vueuse/core'
 
 import ProfileBrowseLayout from '../components/ProfileBrowseLayout.vue'
+import BrowseFilterBar from '../components/BrowseFilterBar.vue'
 import MapView from '@/features/shared/components/MapView.vue'
 import ProfileMapCard from '../components/ProfileMapCard.vue'
-import LocationSelector from '@/features/shared/profileform/LocationSelector.vue'
-import TagSelector from '@/features/shared/profileform/TagSelector.vue'
 import TagCloud from '@/features/shared/components/TagCloud.vue'
-import IconTarget2 from '@/assets/icons/interface/target-2.svg'
-import IconTag from '@/assets/icons/e-commerce/tag.svg'
 
 import { useSocialMatchViewModel } from '../composables/useSocialMatchViewModel'
 import type { PublicProfile } from '@zod/profile/profile.dto'
@@ -58,16 +55,7 @@ const mapCenter = computed<[number, number] | undefined>(() => {
   return undefined
 })
 
-// --- Inline filter logic ---
-
 const showTagCloud = ref(false)
-
-function setLocationFromProfile() {
-  if (viewerProfile.value?.location && socialFilter.value?.location) {
-    Object.assign(socialFilter.value.location, viewerProfile.value.location)
-    updatePrefs()
-  }
-}
 
 function handleTagCloudSelect(tag: PopularTag) {
   if (!socialFilter.value) return
@@ -81,24 +69,6 @@ function handleTagCloudSelect(tag: PopularTag) {
   showTagCloud.value = false
   updatePrefs()
 }
-
-const debouncedUpdatePrefs = useDebounceFn(() => updatePrefs(), 500)
-
-// Watch for inline filter changes (location/tags edits via the selectors)
-watch(
-  () =>
-    socialFilter.value && {
-      country: socialFilter.value.location.country,
-      cityName: socialFilter.value.location.cityName,
-      tags: socialFilter.value.tags.map((t) => t.id).join(','),
-    },
-  (newVal, oldVal) => {
-    if (!oldVal || !newVal) return
-    if (JSON.stringify(newVal) !== JSON.stringify(oldVal)) {
-      debouncedUpdatePrefs()
-    }
-  }
-)
 </script>
 
 <template>
@@ -112,62 +82,12 @@ watch(
     @profile:hidden="hideProfile"
   >
     <template #filter-bar>
-      <div
-        class="filter-area flex-grow-1"
-        @click.stop
-      >
-        <div
-          class="row g-2"
-          v-if="socialFilter"
-        >
-          <!-- Location column -->
-          <div class="col-12 col-md-6">
-            <div class="d-flex align-items-center gap-2">
-              <div class="flex-grow-1">
-                <LocationSelector
-                  v-model="socialFilter.location"
-                  open-direction="bottom"
-                  :allow-empty="true"
-                  :close-on-select="true"
-                  v-if="socialFilter"
-                />
-              </div>
-              <BButton
-                variant="link-success"
-                size="sm"
-                class="p-0"
-                :title="t('profiles.browse.filters.locate_button_title')"
-                @click="setLocationFromProfile"
-              >
-                <IconTarget2 class="svg-icon-lg" />
-              </BButton>
-            </div>
-          </div>
-          <!-- Tags column -->
-          <div class="col-12 col-md-6">
-            <div class="d-flex align-items-center gap-2">
-              <div class="flex-grow-1 fs-6">
-                <TagSelector
-                  v-model="socialFilter.tags"
-                  :taggable="false"
-                  open-direction="bottom"
-                  :close-on-select="true"
-                  :initialOptions="viewerProfile?.tags ?? []"
-                  v-if="socialFilter"
-                />
-              </div>
-              <BButton
-                variant="link-secondary"
-                size="sm"
-                @click="showTagCloud = true"
-                :title="t('profiles.browse.filters.explore_tags')"
-              >
-                <IconTag class="svg-icon-lg" />
-              </BButton>
-            </div>
-          </div>
-        </div>
-      </div>
+      <BrowseFilterBar
+        v-model="socialFilter"
+        :viewer-profile="viewerProfile"
+        @filter:changed="updatePrefs"
+        @tagcloud:open="showTagCloud = true"
+      />
     </template>
 
     <template #results="{ onProfileSelect }">
