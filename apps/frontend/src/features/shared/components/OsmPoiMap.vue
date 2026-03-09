@@ -194,10 +194,11 @@ function webGLSupported(): boolean {
 }
 
 function initRasterFallback(map: LMap): void {
-  L.tileLayer(
+  const tileLayer = L.tileLayer(
     `https://api.maptiler.com/maps/dataviz/{z}/{x}/{y}.png?key=${__APP_CONFIG__.MAPTILER_API_KEY}`,
     { maxZoom: 19, attribution: '© MapTiler © OpenStreetMap contributors' }
   ).addTo(map)
+  tileLayer.once('load', () => emit('map:ready', map))
 }
 // --- map init orchestration -------------------------------------------------
 
@@ -207,8 +208,6 @@ function ensureMap() {
   map = createLeafletMap(mapEl.value)
   initBaseLayer(map)
   initClusters(map)
-
-  emit('map:ready', map)
 }
 
 function createLeafletMap(el: HTMLDivElement): LMap {
@@ -220,11 +219,6 @@ function createLeafletMap(el: HTMLDivElement): LMap {
   })
 }
 
-/**
- * Adds either WebGL (MapTiler SDK) or raster tiles.
- * Note: if you truly need "ready only after idle", you should NOT emit map:ready here.
- * Instead, emit it from the idle callback and do NOT emit at end of ensureMap().
- */
 function initBaseLayer(map: LMap): void {
   // Keep lastStableZoom in sync with the map so the center watcher always
   // uses the zoom from the last *completed* animation, never a mid-flyTo value.
@@ -245,13 +239,8 @@ function initBaseLayer(map: LMap): void {
       style: MapStyle.BASIC,
     }).addTo(map)
 
-    // If you still want the "idle = ready" semantics, move emit('map:ready') out of ensureMap()
-    // and do it here instead.
-    // maptilerLayer.getMaptilerSDKMap().once('idle', () => emit('map:ready', map))
-
-    // Otherwise keep this for debugging/telemetry and treat the map as ready immediately.
     maptilerLayer.getMaptilerSDKMap().once('idle', () => {
-      // optional: console.debug('[OsmPoiMap] MapLibre idle')
+      emit('map:ready', map)
     })
   } catch (err) {
     console.error('[OsmPoiMap] WebGL init failed, falling back to raster:', err)

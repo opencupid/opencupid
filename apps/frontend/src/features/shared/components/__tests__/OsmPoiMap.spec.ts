@@ -85,6 +85,10 @@ vi.mock('leaflet', () => {
 
   const tileLayerProto = {
     addTo: vi.fn().mockReturnThis(),
+    once: vi.fn(function (this: any, _event: string, cb: () => void) {
+      cb()
+      return this
+    }),
   }
   const tileLayer = vi.fn(() => ({ ...tileLayerProto }))
 
