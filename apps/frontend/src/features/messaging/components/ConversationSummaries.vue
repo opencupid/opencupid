@@ -32,6 +32,7 @@ const { t } = useI18n()
         <div class="thumbnail me-2 flex-shrink-0">
           <ProfileThumbnail :profile="convo.partnerProfile" />
         </div>
+        <!--  extract into slot   -->
         <div class="overflow-hidden flex-grow-1 user-select-none">
           <div class="text-truncate fw-bold">{{ convo.partnerProfile.publicName }}</div>
           <small

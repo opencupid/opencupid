@@ -15,5 +15,13 @@ const profiles = computed(() => props.edges.map((edge) => edge.profile))
   <ProfileChipList
     :profiles="profiles"
     @select:profile="$emit('select:profile', $event)"
-  />
+  >
+  <template aux-content>
+    <!--  wire SendMessageDialog here
+      clicking the chip opens SendMessageDialog see
+      apps/frontend/src/features/interaction/components/ProfileInteractions.vue
+      -->
+  </template>
+  </ProfileChipList>
+
 </template>

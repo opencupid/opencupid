@@ -21,6 +21,8 @@ defineEmits<{
         <ProfileThumbnail :profile="profile" />
       </div>
       <div class="text-truncate fw-bold">{{ profile.publicName }}</div>
+        <!-- add slot here   -->
+<slot aux-content></slot>
     </BListGroupItem>
   </BListGroup>
 </template>
