@@ -50,7 +50,5 @@ certs/
 # AI tooling
 .claude/
 .codex/
-apps/frontend/vite.config.ts
-.cursor/mcp.json
+.cursor/
 .vscode/mcp.json
-.mcp.json
