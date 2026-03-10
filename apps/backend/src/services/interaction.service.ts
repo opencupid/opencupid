@@ -136,6 +136,7 @@ export class InteractionService {
     const matches = await prisma.likedProfile.findMany({
       where: {
         fromId: profileId,
+        isNew: true,
         to: {
           likesSent: {
             some: { toId: profileId },
