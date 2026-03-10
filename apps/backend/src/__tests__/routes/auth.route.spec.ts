@@ -33,10 +33,12 @@ vi.mock('../../services/notifier.service', () => ({
 }))
 vi.mock('@/lib/appconfig', () => ({
   appConfig: {
+    NODE_ENV: 'development',
     ALTCHA_HMAC_KEY: 'x',
     SMS_API_KEY: 'k',
     IMAGE_MAX_SIZE: 1000,
     FRONTEND_URL: 'http://test',
+    DEV_AUTH_BYPASS_ENABLED: true,
   },
 }))
 
@@ -52,6 +54,7 @@ beforeEach(async () => {
     generateLoginToken: vi.fn().mockReturnValue('abc123'),
     getUserById: vi.fn(),
     bumpTokenVersion: vi.fn(),
+    findByAuthId: vi.fn(),
   }
   mockProfileService = { initializeProfiles: vi.fn() }
   mockRefreshTokenService = {
@@ -424,5 +427,42 @@ describe('GET /ws-ticket', () => {
       'EX',
       30
     )
+  })
+})
+
+describe('GET /dev/latest-token', () => {
+  it('registers the route when DEV_AUTH_BYPASS_ENABLED is true', () => {
+    expect(fastify.routes['GET /dev/latest-token']).toBeDefined()
+  })
+
+  it('returns 400 when authId is missing', async () => {
+    const handler = fastify.routes['GET /dev/latest-token']
+    await handler({ query: {} } as any, reply as any)
+    expect(reply.statusCode).toBe(400)
+    expect(reply.payload.code).toBe('MISSING_AUTH_ID')
+  })
+
+  it('returns 404 when no user or no pending token', async () => {
+    const handler = fastify.routes['GET /dev/latest-token']
+    mockUserService.findByAuthId.mockResolvedValue(null)
+    await handler({ query: { authId: 'auth-123' } } as any, reply as any)
+    expect(reply.statusCode).toBe(404)
+    expect(reply.payload.code).toBe('NO_PENDING_TOKEN')
+  })
+
+  it('returns 404 when user exists but loginToken is null', async () => {
+    const handler = fastify.routes['GET /dev/latest-token']
+    mockUserService.findByAuthId.mockResolvedValue({ id: 'user1', loginToken: null })
+    await handler({ query: { authId: 'auth-123' } } as any, reply as any)
+    expect(reply.statusCode).toBe(404)
+    expect(reply.payload.code).toBe('NO_PENDING_TOKEN')
+  })
+
+  it('returns 200 with token when available', async () => {
+    const handler = fastify.routes['GET /dev/latest-token']
+    mockUserService.findByAuthId.mockResolvedValue({ id: 'user1', loginToken: '987654' })
+    await handler({ query: { authId: 'auth-123' } } as any, reply as any)
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.token).toBe('987654')
   })
 })

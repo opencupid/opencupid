@@ -317,6 +317,23 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.code(200).send(response)
     }
   )
+
+  // Dev-only: retrieve the latest OTP for a given authId (skips Mailpit)
+  if (appConfig.DEV_AUTH_BYPASS_ENABLED && appConfig.NODE_ENV !== 'production') {
+    fastify.get('/dev/latest-token', async (req, reply) => {
+      const { authId } = req.query as { authId?: string }
+      if (!authId) {
+        return reply.code(400).send({ code: 'MISSING_AUTH_ID' })
+      }
+
+      const user = await userService.findByAuthId(authId)
+      if (!user?.loginToken) {
+        return reply.code(404).send({ code: 'NO_PENDING_TOKEN' })
+      }
+
+      return reply.code(200).send({ token: user.loginToken })
+    })
+  }
 }
 
 export default authRoutes

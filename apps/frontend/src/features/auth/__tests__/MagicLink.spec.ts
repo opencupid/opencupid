@@ -1,9 +1,20 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest'
+
+// Disable DEV before MagicLink loads so the dev-only DevAutoLogin stub is null
+const previousDev = vi.hoisted(() => {
+  const prev = (import.meta.env as any).DEV
+  ;(import.meta.env as any).DEV = false
+  return prev
+})
 
 import { useAuthStore } from '../stores/authStore'
 import MagicLink from '../views/MagicLink.vue'
+
+afterAll(() => {
+  ;(import.meta.env as any).DEV = previousDev
+})
 
 const push = vi.fn()
 const route = {
