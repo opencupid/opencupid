@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import z from 'zod'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, defineAsyncComponent } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useI18n } from 'vue-i18n'
@@ -11,6 +11,10 @@ import ViewTitle from '@/features/shared/ui/ViewTitle.vue'
 import ChevronLeftIcon from '@/assets/icons/arrows/arrow-single-left.svg'
 import IconMessage from '@/assets/icons/interface/message.svg'
 import IconMail from '@/assets/icons/interface/mail.svg'
+
+const DevAutoLogin = import.meta.env.DEV
+  ? defineAsyncComponent(() => import('../components/DevAutoLogin.vue'))
+  : null
 
 // Reactive variables
 const error = ref('' as string)
@@ -108,6 +112,7 @@ function handleBackButton() {
         type="grow"
         variant="primary"
       />
+      <DevAutoLogin v-else-if="DevAutoLogin" />
       <template v-else>
         <div class="fs-4 mb-3 w-100">
           <ViewTitle

@@ -166,6 +166,14 @@ export class UserService {
     })
   }
 
+  async findByAuthId(authId: string): Promise<User | null> {
+    return prisma.user.findFirst({
+      where: {
+        OR: [{ email: authId.toLowerCase() }, { phonenumber: authId.replace(/\s+/g, '') }],
+      },
+    })
+  }
+
   generateLoginToken() {
     return customAlphabet(nolookalikesSafe, 6)()
   }
