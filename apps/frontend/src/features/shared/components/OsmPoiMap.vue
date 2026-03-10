@@ -99,6 +99,7 @@ const SPIDER_HOVER_PADDING_PX = 40
 
 let activeSpiderCluster: MCCluster | null = null
 let activeSpiderHoverBounds: L.LatLngBounds | null = null
+const spiderClickHandlers = new WeakMap<L.Marker, (ev: Event) => void>()
 
 function computeViewportMultiplier(map: L.Map) {
   const { x: w, y: h } = map.getSize()
@@ -308,22 +309,33 @@ function onClusterSpiderfied(e: any) {
     SPIDER_HOVER_PADDING_PX
   )
 
-  // Prevent clicks on spiderfied child markers from bubbling to the map,
-  // which would trigger the markercluster library's _unspiderfyWrapper
-  // and collapse the spider before the marker's popup can open.
+  // Prevent clicks on spiderfied child markers from bubbling to the map
+  // (which would trigger markercluster's _unspiderfyWrapper and collapse
+  // the spider). stopPropagation also blocks Leaflet's own 'click' event,
+  // so we open the popup directly from the same DOM handler.
   for (const marker of e.markers) {
     const el = marker.getElement?.()
-    if (el) L.DomEvent.on(el, 'click', L.DomEvent.stopPropagation)
+    if (!el) continue
+    const handler = (ev: Event) => {
+      L.DomEvent.stopPropagation(ev as any)
+      marker.openPopup()
+    }
+    spiderClickHandlers.set(marker, handler)
+    L.DomEvent.on(el, 'click', handler)
   }
 }
 
 function onClusterUnspiderfied(e: any) {
-  // Remove click-stopPropagation handlers added in onClusterSpiderfied
+  // Remove click handlers added in onClusterSpiderfied
   // to prevent accumulation across spiderfy cycles (especially with KeepAlive)
   if (e?.markers) {
     for (const marker of e.markers) {
       const el = marker.getElement?.()
-      if (el) L.DomEvent.off(el, 'click', L.DomEvent.stopPropagation)
+      const handler = spiderClickHandlers.get(marker)
+      if (el && handler) {
+        L.DomEvent.off(el, 'click', handler)
+        spiderClickHandlers.delete(marker)
+      }
     }
   }
   activeSpiderCluster = null
