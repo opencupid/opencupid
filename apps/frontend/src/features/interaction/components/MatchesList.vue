@@ -1,23 +1,19 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { type InteractionEdge } from '@zod/interaction/interaction.dto'
-import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
+import ProfileChipList from '@/features/shared/components/ProfileChipList.vue'
 
-defineProps<{ edges: InteractionEdge[] }>()
+const props = defineProps<{ edges: InteractionEdge[] }>()
 defineEmits<{
   (e: 'select:profile', profileId: string): void
 }>()
+
+const profiles = computed(() => props.edges.map((edge) => edge.profile))
 </script>
 
 <template>
-  <BListGroup>
-    <BListGroupItem
-      v-for="edge in edges"
-      :key="edge.profile.id"
-      class="d-flex align-items-center mb-2 clickable"
-      @click="$emit('select:profile', edge.profile.id)"
-    >
-      <ProfileThumbnail :profile="edge.profile" />
-      <span class="ms-2">{{ edge.profile.publicName }}</span>
-    </BListGroupItem>
-  </BListGroup>
+  <ProfileChipList
+    :profiles="profiles"
+    @select:profile="$emit('select:profile', $event)"
+  />
 </template>

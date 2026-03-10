@@ -103,7 +103,7 @@ onMounted(async () => {
 
             <template v-if="haveMatches">
               <p class="px-2">{{ $t('matches.matches_list_title') }}</p>
-              <div class="px-2 mb-3">
+              <div class="px-3 mb-3">
                 <MatchesList
                   :edges="matches"
                   @select:profile="handleProfileSelect"
