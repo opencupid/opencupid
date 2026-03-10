@@ -61,6 +61,7 @@ const makeReq = (overrides: any = {}) => ({
     profile: { isDatingActive: true },
   },
   deleteSession: vi.fn(),
+  updateSession: vi.fn(),
   ...overrides,
 })
 
@@ -324,15 +325,30 @@ describe('PATCH /me/optin', () => {
 })
 
 describe('PATCH /scopes', () => {
-  it('updates scopes and clears session', async () => {
+  it('updates scopes and updates session with new profile data', async () => {
     const handler = fastify.routes['PATCH /scopes']
-    const updatedDb = { id: 'p1', isDatingActive: true, tags: [], profileImages: [], localized: [] }
+    const updatedDb = {
+      id: 'p1',
+      isDatingActive: true,
+      isSocialActive: true,
+      isActive: true,
+      tags: [],
+      profileImages: [],
+      localized: [],
+    }
     mockProfileService.updateScopes.mockResolvedValue(updatedDb)
 
     const req = makeReq({ body: { isDatingActive: true } })
     await handler(req, reply as any)
     expect(reply.statusCode).toBe(200)
-    expect(req.deleteSession).toHaveBeenCalled()
+    expect(req.updateSession).toHaveBeenCalledWith({
+      profile: {
+        id: 'p1',
+        isDatingActive: true,
+        isSocialActive: true,
+        isActive: true,
+      },
+    })
   })
 
   it('returns 404 when profile not found', async () => {

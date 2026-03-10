@@ -332,8 +332,15 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
       try {
         const updated = await profileService.updateScopes(req.user.userId, data)
         if (!updated) return sendError(reply, 404, 'Profile not found')
-        // Clear session to force re-fetch on next request, we need the roles updated
-        await req.deleteSession()
+        // Update session with new profile scope data
+        await req.updateSession({
+          profile: {
+            id: updated.id,
+            isDatingActive: updated.isDatingActive,
+            isSocialActive: updated.isSocialActive,
+            isActive: updated.isActive,
+          },
+        })
 
         const profile = mapDbProfileToOwnerProfile(locale, updated)
         const response: UpdateProfileResponse = { success: true, profile }

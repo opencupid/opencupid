@@ -50,6 +50,7 @@ const toggleDating = async () => {
     return
   }
   const newValue = !formData.isDatingActive
+  formData.isDatingActive = newValue
   await updateScopes({
     isDatingActive: newValue,
     isSocialActive: formData.isSocialActive,

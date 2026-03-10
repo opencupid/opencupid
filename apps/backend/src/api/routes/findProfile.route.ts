@@ -168,10 +168,6 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   fastify.get('/dating/filter', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-    if (req.session.profile.isDatingActive === false) {
-      return sendForbiddenError(reply, 'Dating preferences are not active for this profile')
-    }
-
     try {
       const fetched = await profileService.getProfileByUserId(req.user.userId)
       if (!fetched) return sendError(reply, 404, 'Profile not found')
