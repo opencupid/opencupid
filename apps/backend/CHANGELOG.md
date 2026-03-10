@@ -1,5 +1,11 @@
 # backend
 
+## 0.24.0
+
+### Patch Changes
+
+- da2cf1a: Remove debug console.log/console.debug statements and dead commented-out code
+
 ## 0.23.1
 
 ## 0.23.0

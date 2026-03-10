@@ -1,5 +1,11 @@
 # @opencupid/admin
 
+## 0.24.0
+
+### Patch Changes
+
+- 5aac8b5: Add dev-inspector-mcp Vite plugin for AI-powered visual debugging in dev mode
+
 ## 0.23.1
 
 ## 0.23.0

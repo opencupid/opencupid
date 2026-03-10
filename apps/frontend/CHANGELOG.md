@@ -1,5 +1,17 @@
 # frontend
 
+## 0.24.0
+
+### Minor Changes
+
+- fec9d54: Improve map clustering UX: fix spider interaction, popup stability, hover effects, staggered marker rendering, and KeepAlive for browse view
+
+### Patch Changes
+
+- e1bd8b7: Fix visual inconsistencies in browse filter bar multiselect components (#1059)
+- da2cf1a: Remove debug console.log/console.debug statements and dead commented-out code
+- 5aac8b5: Add dev-inspector-mcp Vite plugin for AI-powered visual debugging in dev mode
+
 ## 0.23.1
 
 ### Patch Changes
