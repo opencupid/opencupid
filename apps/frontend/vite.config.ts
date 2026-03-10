@@ -6,7 +6,6 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 
 import Components from 'unplugin-vue-components/vite'
 import { BootstrapVueNextResolver } from 'bootstrap-vue-next'
-import DevInspector from '@mcpc-tech/unplugin-dev-inspector-mcp'
 import svgLoader from 'vite-svg-loader'
 import serveStatic from 'serve-static'
 import {
@@ -15,6 +14,8 @@ import {
   runtimeConfigPlugin,
   loadProjectEnv,
   devCertPlugin,
+  devInspectorPlugin,
+  commonResolveAliases,
 } from '../../packages/shared/vite.common'
 
 process.env.DEBUG = 'vite:*' // Add this to force verbose output
@@ -63,9 +64,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
         },
       },
 
-      ...(mode === 'development'
-        ? [DevInspector.vite({ enabled: true, showInspectorBar: true })]
-        : []),
+      ...devInspectorPlugin(mode, __dirname),
 
       vue({
         template: {
@@ -106,9 +105,8 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
     },
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, './src'),
+        ...commonResolveAliases(__dirname),
         '@shared': path.resolve(__dirname, '../../packages/shared'),
-        '@zod': path.resolve(__dirname, '../../packages/shared/zod'),
         '@bootstrap': path.resolve(__dirname, 'node_modules/bootstrap'),
         'vue-i18n': path.resolve(__dirname, './src/lib/i18n.ts'),
       },

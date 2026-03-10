@@ -2,6 +2,8 @@ import path from 'path'
 import os from 'os'
 import { loadEnv, type Plugin } from 'vite'
 import mkcert from 'vite-plugin-mkcert'
+import DevInspector from '@mcpc-tech/unplugin-dev-inspector-mcp'
+import type { DevInspectorOptions } from '@mcpc-tech/unplugin-dev-inspector-mcp'
 import { getPackageVersion } from './version'
 import { findUpSync } from './findUp'
 import { appConfigSchema } from './zod/config/appConfig.schema'
@@ -87,6 +89,54 @@ export const define = (appDir: string) => {
     },
   }
 }
+
+export const devInspectorPlugin = (
+  mode: string,
+  appDir: string,
+  options: Omit<DevInspectorOptions, 'enabled'> = {}
+) => {
+  if (mode !== 'development') return []
+
+  // Use customEditors for claude-code so .mcp.json lands in the monorepo root
+  // (the built-in "claude-code" editor writes relative to the Vite app dir)
+  const monorepoRoot = path.resolve(appDir, '../..')
+
+  const plugin = DevInspector.vite({
+    enabled: true,
+    disableChrome: false,
+    showInspectorBar: true,
+    updateConfigServerName: 'oc-inspector',
+    updateConfig: ['vscode'],
+    customEditors: [
+      {
+        id: 'claude-code',
+        name: 'Claude Code',
+        configPath: monorepoRoot,
+        configFileName: '.mcp.json',
+        configFormat: 'mcpServers',
+      },
+    ],
+    visibleAgents: ['Claude Code'],
+    defaultAgent: 'Claude Code',
+    agents: [
+      {
+        name: 'Claude Code',
+        command: 'claude-agent-acp',
+        args: [],
+        env: [],
+        npmPackage: '@zed-industries/claude-agent-acp',
+      },
+    ],
+    ...options,
+  })
+
+  return [plugin].flat()
+}
+
+export const commonResolveAliases = (appDir: string) => ({
+  '@': path.resolve(appDir, './src'),
+  '@zod': path.resolve(appDir, '../../packages/shared/zod'),
+})
 
 export const runtimeConfigPlugin = (mode: string): Plugin => {
   const env = mode === 'development' ? loadProjectEnv(mode) : process.env

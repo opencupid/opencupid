@@ -1,15 +1,19 @@
-import path from 'path'
 import { defineConfig, type ConfigEnv, type Plugin, type UserConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import { getPackageVersion } from '../../packages/shared/version'
-import DevInspector from '@mcpc-tech/unplugin-dev-inspector-mcp'
-import { loadProjectEnv, server, devCertPlugin } from '../../packages/shared/vite.common'
+import {
+  loadProjectEnv,
+  server,
+  define,
+  devCertPlugin,
+  devInspectorPlugin,
+  commonResolveAliases,
+} from '../../packages/shared/vite.common'
 
 /**
  * In development, serve /config.js with the runtime config so the <script>
  * tag in index.html works the same as in the Docker container.
  */
-function runtimeConfigPlugin(env: Record<string, string | undefined>): Plugin {
+function adminRuntimeConfigPlugin(env: Record<string, string | undefined>): Plugin {
   const configJs = `window.__APP_CONFIG__ = ${JSON.stringify({
     API_BASE_URL: env.API_BASE_URL ?? '/api',
   })};`
@@ -28,35 +32,21 @@ function runtimeConfigPlugin(env: Record<string, string | undefined>): Plugin {
 export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
   const env = mode === 'development' ? loadProjectEnv(mode) : process.env
 
-  const appVersion = getPackageVersion(path.join(__dirname, 'package.json'))
-
-  const config: UserConfig = {
-    define: {
-      __APP_VERSION__: JSON.stringify(appVersion),
-    },
+  return {
+    ...define(__dirname),
+    ...(mode === 'development' ? server(mode, env, __dirname) : {}),
     plugins: [
-      ...(mode === 'development'
-        ? [DevInspector.vite({ enabled: true, showInspectorBar: true })]
-        : []),
+      ...devInspectorPlugin(mode, __dirname),
       vue(),
-      runtimeConfigPlugin(env),
+      adminRuntimeConfigPlugin(env),
       ...(mode === 'development' ? [devCertPlugin()] : []),
     ],
     resolve: {
-      alias: {
-        '@': path.resolve(__dirname, './src'),
-        '@zod': path.resolve(__dirname, '../../packages/shared/zod'),
-      },
+      alias: commonResolveAliases(__dirname),
     },
     build: {
       outDir: 'dist',
       sourcemap: true,
     },
   }
-
-  if (mode === 'development') {
-    config.server = server(mode, env, __dirname).server
-  }
-
-  return config
 })
