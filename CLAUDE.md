@@ -329,6 +329,23 @@ When debugging any problem, after you found an issue that looks suspect, do not 
 
 **The right fix removes code. If your fix only adds code, you are almost certainly patching a symptom.** Before writing any fix, ask: "What existing code is wrong or redundant?" The answer to a bug is nearly always deleting or changing a line, not adding new logic on top.
 
+### Vue MCP (live frontend debugging)
+
+The `vue-mcp` MCP server (configured in `.mcp.json`) connects to the running frontend via `vite-plugin-vue-mcp`. **You MUST use vue-mcp tools when debugging Vue component state, Pinia store data, or router issues** — do not guess at runtime state from source code alone.
+
+Available tools:
+
+| Tool | Use for |
+|------|---------|
+| `get-component-state` | Inspect a component's props, reactive state, computed values, and injected stores |
+| `get-pinia-tree` | List all registered Pinia stores |
+| `get-pinia-state` | Inspect a specific Pinia store's full state |
+| `get-router-info` | Get current route, params, query, matched routes |
+| `edit-component-state` | Live-edit reactive state at runtime for testing |
+| `highlight-component` | Visually highlight a component in the browser |
+
+**Known limitation:** `get-component-tree` exceeds Claude Code's 25k token response limit on non-trivial apps — use `get-component-state` on specific components instead.
+
 ## Coding Guidelines
 
 Development guidelines and best practices for this project.
