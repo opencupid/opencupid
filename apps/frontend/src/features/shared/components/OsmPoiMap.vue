@@ -79,6 +79,8 @@ let itemsById = new Map<string | number, T>()
 // Tracks the zoom level from the last completed zoom animation. Used by the
 // center watcher to avoid capturing a mid-flyTo intermediate zoom value.
 let lastStableZoom: number = props.zoom
+let isMapReady = false
+let staggerTimer: ReturnType<typeof setTimeout> | null = null
 
 function customClusterIcon(cluster: any): L.DivIcon {
   const count = cluster.getChildCount()
@@ -215,7 +217,7 @@ function initRasterFallback(map: LMap): void {
     `https://api.maptiler.com/maps/dataviz/{z}/{x}/{y}.png?key=${__APP_CONFIG__.MAPTILER_API_KEY}`,
     { maxZoom: 19, attribution: '© MapTiler © OpenStreetMap contributors' }
   ).addTo(map)
-  tileLayer.once('load', () => emit('map:ready', map))
+  tileLayer.once('load', () => onMapReady())
 }
 // --- map init orchestration -------------------------------------------------
 
@@ -257,7 +259,7 @@ function initBaseLayer(map: LMap): void {
     }).addTo(map)
 
     maptilerLayer.getMaptilerSDKMap().once('idle', () => {
-      emit('map:ready', map)
+      onMapReady()
     })
   } catch (err) {
     console.error('[OsmPoiMap] WebGL init failed, falling back to raster:', err)
@@ -330,8 +332,14 @@ function onMapMouseMove(ev: L.LeafletMouseEvent) {
 const popupTarget = ref<HTMLElement | null>(null)
 const popupItem = ref<T | null>(null)
 
+function onMapReady() {
+  isMapReady = true
+  emit('map:ready', map!)
+  updateMarkers()
+}
+
 function updateMarkers() {
-  if (!map || !clusterGroup) return
+  if (!map || !clusterGroup || !isMapReady) return
   clusterGroup.clearLayers()
   markers.clear()
   itemsById.clear()
