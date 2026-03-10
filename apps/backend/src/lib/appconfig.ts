@@ -57,6 +57,11 @@ export const configSchema = z.object({
   JITSI_DOMAIN: z.string().default('meet.jit.si'),
 
   DEEPL_API_KEY: z.string().optional(),
+
+  DEV_AUTH_BYPASS_ENABLED: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
 })
 
 if (!['production', 'staging'].includes(process.env.NODE_ENV!)) {
