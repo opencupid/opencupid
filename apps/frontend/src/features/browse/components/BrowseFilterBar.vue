@@ -63,6 +63,15 @@ watch(
       <!-- Location column -->
       <div class="col-12 col-md-6">
         <div class="d-flex align-items-center gap-2">
+          <BButton
+            variant="link-secondary"
+            size="sm"
+            class="p-0"
+            :title="t('profiles.browse.filters.locate_button_title')"
+            @click="setLocationFromProfile"
+          >
+            <IconTarget2 class="svg-icon-lg" />
+          </BButton>
           <div class="flex-grow-1">
             <LocationSelector
               v-model="filter.location"
@@ -71,15 +80,6 @@ watch(
               :close-on-select="true"
             />
           </div>
-          <BButton
-            variant="link-success"
-            size="sm"
-            class="p-0"
-            :title="t('profiles.browse.filters.locate_button_title')"
-            @click="setLocationFromProfile"
-          >
-            <IconTarget2 class="svg-icon-lg" />
-          </BButton>
         </div>
       </div>
       <!-- Tags column -->
