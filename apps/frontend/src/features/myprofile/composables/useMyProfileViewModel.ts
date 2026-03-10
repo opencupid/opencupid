@@ -1,5 +1,5 @@
 import { useI18nStore } from '@/store/i18nStore'
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, reactive, toRef, watch } from 'vue'
 
 import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 import { type EditFieldProfileFormWithImages } from '@zod/profile/profile.form'
@@ -104,6 +104,7 @@ export function useMyProfileViewModel(isEditMode: boolean) {
     profilePreview,
     isDatingOnboarded,
     isOnboarded,
+    datingPrefs: toRef(profileStore, 'datingPrefs'),
     updateScopes,
     updateProfile,
   }

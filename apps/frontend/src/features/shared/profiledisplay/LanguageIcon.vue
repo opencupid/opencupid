@@ -4,7 +4,7 @@ import CountryFlag from '@/features/shared/ui/CountryFlag.vue'
 
 const props = defineProps<{
   countryCode: string
-  size?: string
+  size?: number
 }>()
 
 const lang = computed(() => {
@@ -13,7 +13,7 @@ const lang = computed(() => {
 </script>
 <template>
   <CountryFlag
-    :size="size ?? '36'"
+    :size="size?.toString() ?? '36'"
     :code="lang"
     title=""
   />

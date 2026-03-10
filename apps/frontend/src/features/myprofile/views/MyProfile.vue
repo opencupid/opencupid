@@ -31,20 +31,26 @@ const {
   profilePreview,
   isDatingOnboarded,
   isOnboarded,
+  datingPrefs,
   updateScopes,
   updateProfile,
 } = useMyProfileViewModel(props.editMode)
 
 const isDatingWizardActive = ref(false)
+const openDatingPrefs = async () => {
+
+}
+
 const toggleDating = async () => {
   // If dating is not onboarded, show the wizard
   if (!isDatingOnboarded.value && !formData.isDatingActive) {
-    isDatingWizardActive.value = true
+  isDatingWizardActive.value = true
     return
   }
   formData.isDatingActive = !formData.isDatingActive
   await updateScopes()
 }
+
 
 const toggleSocial = async () => {
   formData.isSocialActive = !formData.isSocialActive
@@ -86,9 +92,7 @@ provide('viewerProfile', toRef(formData))
 
 const route = useRoute()
 const hint = computed(() => history?.state?.hint || null)
-// TODO implement floating hints
-// adapt HelpScribble.vue and use @floating-ui/vue to display floating scribbles
-// alongside controls
+
 </script>
 
 <template>
@@ -116,7 +120,7 @@ const hint = computed(() => history?.state?.hint || null)
                 v-if="viewState.isEditable"
                 class="d-flex"
               >
-                <span
+                <!-- <span
                   class="btn-social-toggle px-4 py-1 rounded-4 me-2"
                   role="button"
                   :title="$t('general.connectiontypes.socializing')"
@@ -151,10 +155,15 @@ const hint = computed(() => history?.state?.hint || null)
                     $t('general.connectiontypes.dating')
                   }}</span>
                   <IconDate class="svg-icon-lg" />
-                </span>
+                </span> -->
               </div>
               <div v-else>
-                <MyProfileSecondaryNav v-model="viewState" />
+                <MyProfileSecondaryNav
+                  v-model="viewState"
+                  v-model:datingPrefs="datingPrefs"
+                  @datingmode:toggle="toggleDating"
+                  @datingmode:prefs="openDatingPrefs"
+                />
               </div>
             </div>
           </div>

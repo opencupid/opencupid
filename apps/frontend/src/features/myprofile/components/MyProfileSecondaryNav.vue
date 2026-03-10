@@ -6,8 +6,18 @@ import { type ViewState } from '../composables/types'
 import ScopeViewToggler from '@/features/shared/ui/ScopeViewToggler.vue'
 import LanguageIcon from '@/features/shared/profiledisplay/LanguageIcon.vue'
 import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
-import { type OwnerProfile } from '@zod/profile/profile.dto'
+import IconViewAs from '@/assets/icons/interface/unhide.svg'
+import IconHeart from '@/assets/icons/interface/heart.svg'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { faSliders } from '@fortawesome/free-solid-svg-icons'
 
+import { type OwnerProfile } from '@zod/profile/profile.dto'
+import { type DatingPreferencesDTO } from '@zod/match/filters.dto'
+import DatingPrefsDisplay from '@/features/browse/components/DatingPrefsDisplay.vue'
+
+// TODO refactor - we no longer need viewState
+// replace this formData.isDatingActive from parent -> datingMode bool - other TODOs below
+// refer to it to implement gates.
 const model = defineModel<ViewState>({
   default: {
     scopes: [],
@@ -16,7 +26,18 @@ const model = defineModel<ViewState>({
   required: true,
 })
 
+const datingPrefs = defineModel<DatingPreferencesDTO | null>('datingPrefs', {
+  default: null,
+})
+
+defineEmits<{
+  (e: 'datingmode:toggle'): void
+  (e: 'datingmode:prefs'): void
+}>()
+
 const viewerProfile = inject<Ref<OwnerProfile>>('viewerProfile')
+
+const haveAccess = computed(() => !!viewerProfile?.value?.isDatingActive)
 
 const i18nStore = useI18nStore()
 
@@ -31,29 +52,38 @@ const currentLanguage = computed(() => {
 
 <template>
   <div class="d-flex justify-content-end align-items-center w-100">
-    <ul
-      pills
-      class="nav nav-pills w-100 d-flex align-items-center"
-    >
-      <li class="col-2 d-flex align-items-center">
-        <BNavItem
-          to="/settings"
-          class="p-0"
-        >
-          <BButton
-            variant="link-secondary"
-            class="p-0"
-          >
-            <IconSetting2 class="svg-icon-lg" />
-          </BButton>
-        </BNavItem>
-      </li>
-      <li class="col-8 d-flex nav-item justify-content-center align-items-center">
-        <ScopeViewToggler v-model="model.currentScope" />
-      </li>
+    <BNav pills>
+      <!-- Settings -->
+      <BNavItem
+        to="/settings"
+        class="p-0"
+      >
+        <BButton variant="outline-secondary">
+          <IconSetting2 class="svg-icon-lg" />
+        </BButton>
+      </BNavItem>
 
-      <li class="col-2 d-flex justify-content-end">
-        <BNavItemDropdown
+      <!-- View as -->
+      <BNavItemDropdown
+        size="sm"
+        text="Dropdown"
+        toggle-class="nav-link-custom"
+        :auto-close="false"
+      >
+        <!-- TODO set props to render the same as BNavItem -> BButton -> IconSetting2 above
+            as per canonical bootstrep vue 
+            this gets different variant or such
+            -->
+        <template #button-content>
+          <IconViewAs class="svg-icon-lg" />
+        </template>
+        <BDropdownItem>
+          <ScopeViewToggler v-model="model.currentScope" />
+        </BDropdownItem>
+        <BDropdownDivider />
+        <!-- TODO extract into component -->
+        <BDropdownGroup
+          header="Lang"
           v-if="languagePreviewOptions.length > 1"
           size="sm"
           id="my-nav-dropdown"
@@ -61,13 +91,7 @@ const currentLanguage = computed(() => {
           toggle-class="nav-link-custom"
           right
         >
-          <template #button-content>
-            <LanguageIcon
-              v-if="currentLanguage"
-              :countryCode="currentLanguage.value"
-            />
-          </template>
-          <BDropdownItem
+          <BDropdownItemButton
             v-for="lang in languagePreviewOptions"
             :key="lang.value"
             :active="lang.value === model.previewLanguage"
@@ -75,12 +99,57 @@ const currentLanguage = computed(() => {
           >
             <span class="d-flex align-items-center">
               <span class="flex-grow-1">{{ lang.label }}</span>
-              <LanguageIcon :countryCode="lang.value" />
+              <LanguageIcon
+                :countryCode="lang.value"
+                :size="24"
+              />
             </span>
-          </BDropdownItem>
-        </BNavItemDropdown>
-      </li>
-    </ul>
+          </BDropdownItemButton>
+        </BDropdownGroup>
+      </BNavItemDropdown>
+
+      <!-- Preferences -->
+      <!-- TODO extract into separate component -->
+      <BNavItemDropdown
+        v-if="languagePreviewOptions.length > 1"
+        size="sm"
+        id="my-nav-dropdown"
+        text="Dropdown"
+        toggle-class="nav-link-custom"
+        :auto-close="false"
+        right
+      >
+        <template #button-content>
+          <!-- TODO add status  -->
+          <IconHeart
+            class="svg-icon-lg"
+            :class="{ active: true }"
+          />
+        </template>
+
+        <BDropdownItem>
+          <BFormCheckbox @click="$emit('datingmode:toggle')">Dating mode </BFormCheckbox>
+        </BDropdownItem>
+
+        <!-- TODO only show is datingmode true -->
+        <BDropdownDivider v-if="true" />
+        <!-- TODO only show is datingmode true -->
+        <BDropdownItemButton
+          v-if="true"
+          @click="$emit('datingmode:prefs')"
+        >
+          <FontAwesomeIcon :icon="faSliders" />
+          My preferences
+        </BDropdownItemButton>
+        <BDropdownItem>
+          
+          <DatingPrefsDisplay
+            v-if="datingPrefs && haveAccess"
+            v-model="datingPrefs"
+          />
+        </BDropdownItem>
+      </BNavItemDropdown>
+    </BNav>
   </div>
 </template>
 
