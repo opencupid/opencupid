@@ -3,6 +3,7 @@ import { type ConfigEnv, defineConfig, type UserConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import vueDevTools from 'vite-plugin-vue-devtools'
+import { VueMcp } from 'vite-plugin-vue-mcp'
 
 import Components from 'unplugin-vue-components/vite'
 import { BootstrapVueNextResolver } from 'bootstrap-vue-next'
@@ -86,7 +87,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
         },
       },
 
-      ...(mode === 'development' ? [devCertPlugin()] : []),
+      ...(mode === 'development' ? [devCertPlugin(), VueMcp()] : []),
       runtimeConfigPlugin(mode),
     ],
     css: {
