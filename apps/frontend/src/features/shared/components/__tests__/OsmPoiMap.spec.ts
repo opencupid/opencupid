@@ -76,6 +76,7 @@ vi.mock('leaflet', () => {
   const markerClusterGroup = vi.fn(() => ({
     ...clusterGroupProto,
     addLayer: vi.fn(),
+    addLayers: vi.fn(),
     clearLayers: vi.fn(),
     on: vi.fn().mockReturnThis(),
     off: vi.fn().mockReturnThis(),
@@ -284,7 +285,7 @@ describe('OsmPoiMap', () => {
     const mapInstance = (L.map as any).mock.results[0].value
     const mapEventNames = mapInstance.on.mock.calls.map((c: any) => c[0])
     expect(mapEventNames).toContain('mousemove')
-    expect(mapEventNames).toContain('zoomstart movestart')
+    expect(mapEventNames).toContain('zoomstart')
   })
 
   it('spiderfies cluster on clustermouseover', async () => {
@@ -319,6 +320,7 @@ describe('OsmPoiMap', () => {
         getLatLng: () => ({ lat: 47, lng: 19 }),
         unspiderfy: unspiderfyMock,
       },
+      markers: [],
     })
 
     mousemoveHandler({ latlng: { lat: 0, lng: 0 } })
@@ -343,6 +345,7 @@ describe('OsmPoiMap', () => {
         getLatLng: () => ({ lat: 47, lng: 19 }),
         unspiderfy: unspiderfyMock,
       },
+      markers: [],
     })
 
     mousemoveHandler({ latlng: { lat: 47, lng: 19 } })

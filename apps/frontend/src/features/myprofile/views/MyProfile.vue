@@ -65,7 +65,7 @@ const handleFinishDatingOnboarding = async () => {
   await updateScopes()
   if (res.success) {
     isDatingWizardActive.value = false
-    router.push({ name: 'SocialMatch' })
+    router.push({ name: 'BrowseProfiles' })
   }
 }
 

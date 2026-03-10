@@ -79,6 +79,8 @@ let itemsById = new Map<string | number, T>()
 // Tracks the zoom level from the last completed zoom animation. Used by the
 // center watcher to avoid capturing a mid-flyTo intermediate zoom value.
 let lastStableZoom: number = props.zoom
+let isMapReady = false
+let staggerTimer: ReturnType<typeof setTimeout> | null = null
 
 function customClusterIcon(cluster: any): L.DivIcon {
   const count = cluster.getChildCount()
@@ -93,7 +95,7 @@ function customClusterIcon(cluster: any): L.DivIcon {
 // Spiderfy hover region
 type MCCluster = any
 
-const SPIDER_HOVER_PADDING_PX = 18
+const SPIDER_HOVER_PADDING_PX = 40
 
 let activeSpiderCluster: MCCluster | null = null
 let activeSpiderHoverBounds: L.LatLngBounds | null = null
@@ -189,6 +191,9 @@ function iconForItem(item: T, isSelected: boolean): L.DivIcon {
 
 function emitBounds() {
   if (!map) return
+  // Suppress bounds-changed while a popup is open — autopan from popup open
+  // would trigger a data fetch → rerender → close the popup the user just opened.
+  if (popupTarget.value) return
   const b = map.getBounds()
   emit('bounds-changed', {
     south: b.getSouth(),
@@ -210,9 +215,9 @@ function webGLSupported(): boolean {
 function initRasterFallback(map: LMap): void {
   const tileLayer = L.tileLayer(
     `https://api.maptiler.com/maps/dataviz/{z}/{x}/{y}.png?key=${__APP_CONFIG__.MAPTILER_API_KEY}`,
-    { maxZoom: 19, attribution: '© MapTiler © OpenStreetMap contributors' }
+    { maxZoom: 14, attribution: '© MapTiler © OpenStreetMap contributors' }
   ).addTo(map)
-  tileLayer.once('load', () => emit('map:ready', map))
+  tileLayer.once('load', () => onMapReady())
 }
 // --- map init orchestration -------------------------------------------------
 
@@ -228,7 +233,7 @@ function createLeafletMap(el: HTMLDivElement): LMap {
   return L.map(el, {
     center: props.center ?? [0, 0],
     zoom: props.center ? props.zoom : 2,
-    maxZoom: 19,
+    maxZoom: 14,
     preferCanvas: true,
   })
 }
@@ -254,7 +259,7 @@ function initBaseLayer(map: LMap): void {
     }).addTo(map)
 
     maptilerLayer.getMaptilerSDKMap().once('idle', () => {
-      emit('map:ready', map)
+      onMapReady()
     })
   } catch (err) {
     console.error('[OsmPoiMap] WebGL init failed, falling back to raster:', err)
@@ -266,7 +271,7 @@ function initBaseLayer(map: LMap): void {
 
 function initClusters(map: LMap) {
   clusterGroup = (L as any).markerClusterGroup({
-    spiderfyOnMaxZoom: false,
+    spiderfyOnMaxZoom: true,
     showCoverageOnHover: false,
     zoomToBoundsOnClick: true,
     maxClusterRadius: 40,
@@ -279,14 +284,15 @@ function initClusters(map: LMap) {
   clusterGroup.on('unspiderfied', onClusterUnspiderfied)
 
   map.on('mousemove', onMapMouseMove)
-  map.on('zoomstart movestart', closeSpider)
+  map.on('zoomstart', closeSpider)
 
   map.addLayer(clusterGroup)
 }
 
 function onClusterMouseOver(e: any) {
-  // If another cluster is open, close it first (prevents multiple open states)
-  if (activeSpiderCluster && activeSpiderCluster !== e.layer) closeSpider()
+  // Ignore hover on other clusters while a spider is already open —
+  // the user must move away from the active spider to close it first.
+  if (activeSpiderCluster) return
 
   // scale spiderfy distance with viewport
   clusterGroup.options.spiderfyDistanceMultiplier = computeViewportMultiplier(map!)
@@ -301,67 +307,120 @@ function onClusterSpiderfied(e: any) {
     activeSpiderCluster,
     SPIDER_HOVER_PADDING_PX
   )
+
+  // Prevent clicks on spiderfied child markers from bubbling to the map,
+  // which would trigger the markercluster library's _unspiderfyWrapper
+  // and collapse the spider before the marker's popup can open.
+  for (const marker of e.markers) {
+    const el = marker.getElement?.()
+    if (el) L.DomEvent.on(el, 'click', L.DomEvent.stopPropagation)
+  }
 }
 
-function onClusterUnspiderfied() {
+function onClusterUnspiderfied(e: any) {
+  // Remove click-stopPropagation handlers added in onClusterSpiderfied
+  // to prevent accumulation across spiderfy cycles (especially with KeepAlive)
+  if (e?.markers) {
+    for (const marker of e.markers) {
+      const el = marker.getElement?.()
+      if (el) L.DomEvent.off(el, 'click', L.DomEvent.stopPropagation)
+    }
+  }
   activeSpiderCluster = null
   activeSpiderHoverBounds = null
 }
 
 function onMapMouseMove(ev: L.LeafletMouseEvent) {
   if (!activeSpiderCluster || !activeSpiderHoverBounds) return
+  // Keep spider open while a popup is visible (user is interacting with a profile card)
+  if (popupTarget.value) return
   if (!activeSpiderHoverBounds.contains(ev.latlng)) closeSpider()
 }
 
 const popupTarget = ref<HTMLElement | null>(null)
 const popupItem = ref<T | null>(null)
 
+function onMapReady() {
+  isMapReady = true
+  emit('map:ready', map!)
+  updateMarkers()
+}
+
+const STAGGER_BATCH_SIZE = 5
+const STAGGER_DELAY_MS = 100
+
+function createMarker(item: T): LMarker | null {
+  const location = props.getLocation(item)
+  if (!location) return null
+
+  const isSelected = item.id === props.selectedId
+  const m = L.marker([location.lat, location.lon], {
+    title: props.getTitle(item),
+    icon: iconForItem(item, isSelected),
+    keyboard: true,
+  })
+
+  const highlighted = props.isHighlighted?.(item) ?? false
+  m.bindPopup('', {
+    maxWidth: 420,
+    autoPan: true,
+    autoPanPadding: L.point(20, 20),
+    className: highlighted ? 'item-popup item-popup-highlighted' : 'item-popup',
+  })
+
+  m.on('popupopen', (e: L.PopupEvent) => {
+    const target = e.popup
+      .getElement()
+      ?.querySelector('.leaflet-popup-content') as HTMLElement | null
+    popupTarget.value = target
+    popupItem.value = item
+    nextTick(() => e.popup.update())
+  })
+  m.on('popupclose', () => {
+    popupTarget.value = null
+    popupItem.value = null
+  })
+
+  m.on('click', () => m.openPopup())
+  return m
+}
+
 function updateMarkers() {
-  if (!map || !clusterGroup) return
+  if (!map || !clusterGroup || !isMapReady) return
+  if (staggerTimer) {
+    clearTimeout(staggerTimer)
+    staggerTimer = null
+  }
   clusterGroup.clearLayers()
   markers.clear()
   itemsById.clear()
 
-  for (const item of props.items) {
-    const location = props.getLocation(item)
-    if (!location) continue
+  const items = props.items.filter((item) => props.getLocation(item))
 
-    const isSelected = item.id === props.selectedId
-    const m = L.marker([location.lat, location.lon], {
-      title: props.getTitle(item),
-      icon: iconForItem(item, isSelected),
-      keyboard: true,
-    })
+  function addBatch(startIdx: number) {
+    if (!map || !clusterGroup) return
+    const end = Math.min(startIdx + STAGGER_BATCH_SIZE, items.length)
+    const batch: LMarker[] = []
 
-    const highlighted = props.isHighlighted?.(item) ?? false
-    m.bindPopup('', {
-      maxWidth: 420,
-      autoPan: true,
-      autoPanPadding: L.point(20, 20),
-      className: highlighted ? 'item-popup item-popup-highlighted' : 'item-popup',
-    })
+    for (let i = startIdx; i < end; i++) {
+      const item = items[i]
+      if (!item) continue
+      const m = createMarker(item)
+      if (m) {
+        batch.push(m)
+        markers.set(item.id, m)
+        itemsById.set(item.id, item)
+      }
+    }
 
-    m.on('popupopen', (e: L.PopupEvent) => {
-      const target = e.popup
-        .getElement()
-        ?.querySelector('.leaflet-popup-content') as HTMLElement | null
-      popupTarget.value = target
-      popupItem.value = item
-      // After Vue renders the teleported popup content, re-measure so
-      // Leaflet's autoPan accounts for the actual popup dimensions.
-      nextTick(() => e.popup.update())
-    })
-    m.on('popupclose', () => {
-      popupTarget.value = null
-      popupItem.value = null
-    })
+    clusterGroup.addLayers(batch)
 
-    m.on('click', () => m.openPopup())
-
-    clusterGroup.addLayer(m)
-    markers.set(item.id, m)
-    itemsById.set(item.id, item)
+    if (end < items.length) {
+      staggerTimer = setTimeout(() => addBatch(end), STAGGER_DELAY_MS)
+    }
   }
+
+  addBatch(0)
 
   // Fit bounds to markers when explicitly requested or when no center was provided
   if ((props.fitToPois || !props.center) && props.items.length > 0) {
@@ -402,6 +461,11 @@ onMounted(() => {
 
 function destroyMap() {
   if (!map) return
+  // Cancel any in-flight staggered marker batch (KeepAlive can delay teardown)
+  if (staggerTimer) {
+    clearTimeout(staggerTimer)
+    staggerTimer = null
+  }
   map.off('moveend', emitBounds)
   map.off('mousemove', onMapMouseMove)
   map.off('zoomstart movestart', closeSpider)
@@ -531,6 +595,28 @@ watch(
   border: none;
 }
 
+/* Fade-in for markers appearing on the map */
+:deep(.poi-cluster-icon) {
+  z-index: 5000; /* above regular markers but below hovered avatar icons */
+}
+
+/* Avatar marker hover feedback — scale the inner img, not the icon wrapper
+   (Leaflet uses transform on the wrapper for positioning) */
+:deep(.poi-avatar-icon img) {
+  transition:
+    transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1),
+    border-color 0.15s ease;
+}
+
+:deep(.poi-avatar-icon:hover) {
+  z-index: 10000 !important;
+}
+
+:deep(.poi-avatar-icon:hover img) {
+  transform: scale(1.3);
+  border-color: #3a86ff;
+}
+
 :deep(.item-popup-highlighted .leaflet-popup-content-wrapper) {
   /* TODO remove hardcoded color - replace with semantic value */
   box-shadow: 0 3px 13px rgba(217, 83, 79, 0.9);
@@ -545,9 +631,33 @@ watch(
   width: 15rem !important;
 }
 
+:deep(.leaflet-popup-content-wrapper) {
+  padding: 0;
+  border-radius: 0.375rem;
+  overflow: hidden;
+  background: transparent;
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.5);
+  border: 1px solid transparent;
+  transition:
+    box-shadow 1.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    border-color 0.15s ease;
+}
+
+:deep(.leaflet-popup-content-wrapper:hover) {
+  box-shadow: 0 3px 18px rgba(0, 0, 0, 0.7);
+  border: 1px solid white;
+}
+
 :deep(.leaflet-popup-content) {
   margin: 0;
   line-height: 1.3;
   min-height: 1px;
+}
+
+/* Override Bootstrap's card hover lift inside map popups */
+:deep(.leaflet-popup .card.cursor-pointer:hover),
+:deep(.leaflet-popup .card[role='button']:hover) {
+  box-shadow: none;
+  transform: none;
 }
 </style>

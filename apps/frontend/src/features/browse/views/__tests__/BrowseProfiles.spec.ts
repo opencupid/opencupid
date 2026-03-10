@@ -68,9 +68,9 @@ const BModal = { template: '<div class="b-modal"><slot /></div>', props: ['model
 const BButton = { template: '<button><slot /></button>' }
 const BContainer = { template: '<div class="container"><slot /></div>' }
 
-import SocialMatch from '../SocialMatch.vue'
+import BrowseProfiles from '../BrowseProfiles.vue'
 
-describe('SocialMatch view', () => {
+describe('BrowseProfiles view', () => {
   beforeEach(() => {
     vmState.haveResults.value = true
     vmState.isInitialized.value = true
@@ -79,7 +79,7 @@ describe('SocialMatch view', () => {
   })
 
   const mountComponent = () => {
-    return mount(SocialMatch, {
+    return mount(BrowseProfiles, {
       global: {
         stubs: {
           BModal,
