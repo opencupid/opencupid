@@ -1,5 +1,17 @@
 # frontend
 
+## 0.25.0
+
+### Minor Changes
+
+- 363a514: Extract ProfileChipList component, add ReceivedLikesTeaser, and improve messaging view layout (#1061)
+- b40ff65: Add vue-mcp integration for live Vue component/store debugging via MCP
+- 1b4494b: Dev-only OTP bypass: render a "Continue" button on the magic-link page that auto-fetches and verifies the latest token, skipping Mailpit
+
+### Patch Changes
+
+- 321b82c: Fix avatar click inside spiderfied map clusters not opening popup (#1061)
+
 ## 0.24.0
 
 ### Minor Changes
