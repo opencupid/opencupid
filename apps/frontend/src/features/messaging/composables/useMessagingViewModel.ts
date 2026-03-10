@@ -60,6 +60,10 @@ export function useMessagingViewModel(conversationId: Ref<string | undefined>) {
   const messageProfile = ref<PublicProfileWithContext>()
 
   const handleProfileSelect = async (profileId: string) => {
+    router.push({ name: 'PublicProfile', params: { profileId } })
+  }
+
+  const handleMatchSelect = async (profileId: string) => {
     const res = await fetchProfile(profileId)
     if (!res?.success) return
     messageProfile.value = res.data
@@ -88,6 +92,7 @@ export function useMessagingViewModel(conversationId: Ref<string | undefined>) {
     handleSelectConvo,
     handleDeselectConvo,
     handleProfileSelect,
+    handleMatchSelect,
     handleMessageSent,
     fetchConversations: () => messageStore.fetchConversations(),
 

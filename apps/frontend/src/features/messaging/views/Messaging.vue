@@ -31,6 +31,7 @@ const {
   handleSelectConvo,
   handleDeselectConvo,
   handleProfileSelect,
+  handleMatchSelect,
   handleMessageSent,
   fetchConversations,
   initialize,
@@ -109,7 +110,7 @@ onMounted(async () => {
               <div class="px-3 mb-3">
                 <MatchesList
                   :edges="matches"
-                  @select:profile="handleProfileSelect"
+                  @select:profile="handleMatchSelect"
                 />
               </div>
             </template>
