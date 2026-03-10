@@ -50,3 +50,5 @@ certs/
 # AI tooling
 .claude/
 .codex/
+.mcp.json
+.vscode/mcp.json
