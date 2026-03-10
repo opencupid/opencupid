@@ -93,6 +93,12 @@ vi.mock('leaflet', () => {
   }
   const tileLayer = vi.fn(() => ({ ...tileLayerProto }))
 
+  const DomEvent = {
+    on: vi.fn(),
+    off: vi.fn(),
+    stopPropagation: vi.fn((e: any) => e?.stopPropagation?.()),
+  }
+
   return {
     default: {
       map: mapFn,
@@ -103,6 +109,7 @@ vi.mock('leaflet', () => {
       markerClusterGroup,
       point,
       tileLayer,
+      DomEvent,
     },
     Map: mapFn,
     Marker: marker,
@@ -114,6 +121,7 @@ vi.mock('leaflet', () => {
     markerClusterGroup,
     point,
     tileLayer,
+    DomEvent,
   }
 })
 
@@ -528,6 +536,73 @@ describe('OsmPoiMap', () => {
     patchedUpdate.call(liveCtx)
     // The wrapper should not throw — it delegates via apply
     expect(() => patchedUpdate.call(liveCtx)).not.toThrow()
+  })
+
+  it('opens popup when clicking a spiderfied marker', async () => {
+    await mountMap()
+    await flushPromises()
+
+    const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
+    const spiderfiedHandler = clusterInstance.on.mock.calls.find(
+      (c: any) => c[0] === 'spiderfied'
+    )[1]
+
+    // Create a fake marker with a DOM element to simulate spiderfied state
+    const fakeEl = document.createElement('div')
+    const openPopup = vi.fn()
+    const fakeMarker = { getElement: () => fakeEl, openPopup }
+
+    spiderfiedHandler({
+      cluster: {
+        getAllChildMarkers: () => [],
+        getLatLng: () => ({ lat: 47, lng: 19 }),
+        unspiderfy: vi.fn(),
+      },
+      markers: [fakeMarker],
+    })
+
+    // The handler should have been registered via L.DomEvent.on
+    const domOnCalls = (L as any).DomEvent.on.mock.calls
+    const clickHandler = domOnCalls.find((c: any) => c[0] === fakeEl && c[1] === 'click')
+    expect(clickHandler).toBeDefined()
+
+    // Simulate click — the registered handler should call openPopup
+    const handler = clickHandler[2]
+    handler({ stopPropagation: vi.fn() })
+    expect(openPopup).toHaveBeenCalledOnce()
+  })
+
+  it('cleans up spider click handlers on unspiderfied', async () => {
+    await mountMap()
+    await flushPromises()
+
+    const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
+    const spiderfiedHandler = clusterInstance.on.mock.calls.find(
+      (c: any) => c[0] === 'spiderfied'
+    )[1]
+    const unspiderfiedHandler = clusterInstance.on.mock.calls.find(
+      (c: any) => c[0] === 'unspiderfied'
+    )[1]
+
+    const fakeEl = document.createElement('div')
+    const fakeMarker = { getElement: () => fakeEl, openPopup: vi.fn() }
+
+    spiderfiedHandler({
+      cluster: {
+        getAllChildMarkers: () => [],
+        getLatLng: () => ({ lat: 47, lng: 19 }),
+        unspiderfy: vi.fn(),
+      },
+      markers: [fakeMarker],
+    })
+
+    // Unspiderfy should clean up the handler
+    unspiderfiedHandler({ markers: [fakeMarker] })
+
+    const domOffCalls = (L as any).DomEvent.off.mock.calls
+    const cleanupCall = domOffCalls.find((c: any) => c[0] === fakeEl && c[1] === 'click')
+    expect(cleanupCall).toBeDefined()
+    expect((fakeMarker as any)._spiderClickHandler).toBeUndefined()
   })
 
   it('does not auto-fit to markers when center is provided', async () => {
