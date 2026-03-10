@@ -34,7 +34,7 @@ main {
 }
 
 nav.navbar + main {
-  background-color: var(--bs-body-bg);
+  // background-color: var(--bs-body-bg);
   // navbar is fixed at the top, so we need to offset the main content
   padding-top: $navbar-height;
   // height: 100%;

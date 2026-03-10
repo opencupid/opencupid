@@ -70,9 +70,9 @@ describe('SendMessageForm', () => {
     },
   }
 
-  it('defaults to "enter" send mode', () => {
+  it('defaults to "click" send mode', () => {
     const localStore = useLocalStore()
-    expect(localStore.getSendMode).toBe('enter')
+    expect(localStore.getSendMode).toBe('click')
   })
 
   it('changes send mode when user selects option', async () => {
@@ -282,15 +282,15 @@ describe('SendMessageForm', () => {
     const radioButtons = wrapper.findAll('input[type="radio"]')
     expect(radioButtons.length).toBe(2)
 
-    // First radio should be checked (enter mode is default)
-    expect(radioButtons[0]!.attributes('checked')).toBeDefined()
-    expect(radioButtons[1]!.attributes('checked')).toBeUndefined()
-
-    // Change mode and verify radio states
-    localStore.setSendMode('click')
-    await wrapper.vm.$nextTick()
-
+    // Second radio should be checked (click mode is default)
     expect(radioButtons[0]!.attributes('checked')).toBeUndefined()
     expect(radioButtons[1]!.attributes('checked')).toBeDefined()
+
+    // Change mode and verify radio states
+    localStore.setSendMode('enter')
+    await wrapper.vm.$nextTick()
+
+    expect(radioButtons[0]!.attributes('checked')).toBeDefined()
+    expect(radioButtons[1]!.attributes('checked')).toBeUndefined()
   })
 })

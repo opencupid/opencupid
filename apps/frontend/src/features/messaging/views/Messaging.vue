@@ -7,9 +7,11 @@ import IconSearch from '@/assets/icons/interface/search.svg'
 
 import ConversationDetail from '../components/ConversationDetail.vue'
 import ConversationSummaries from '../components/ConversationSummaries.vue'
+import SendMessageDialog from '@/features/publicprofile/components/SendMessageDialog.vue'
 import ViewTitle from '../../shared/ui/ViewTitle.vue'
 import LikesAndMatchesBanner from '@/features/interaction/components/LikesAndMatchesBanner.vue'
 import MatchesList from '@/features/interaction/components/MatchesList.vue'
+import ReceivedLikesTeaser from '@/features/interaction/components/ReceivedLikesTeaser.vue'
 
 import { useMessagingViewModel } from '../composables/useMessagingViewModel'
 
@@ -29,10 +31,13 @@ const {
   handleSelectConvo,
   handleDeselectConvo,
   handleProfileSelect,
+  handleMessageSent,
   fetchConversations,
   initialize,
   matches,
   haveMatches,
+  showMessageModal,
+  messageProfile,
 } = useMessagingViewModel(toRef(props, 'conversationId'))
 
 onMounted(async () => {
@@ -53,7 +58,7 @@ onMounted(async () => {
           :loading="isLoading"
           :conversation="activeConversation"
           @deselect:convo="handleDeselectConvo"
-          @profile:select="handleProfileSelect"
+          @profile:select="(profile) => handleProfileSelect(profile.id)"
           @updated="fetchConversations"
         />
       </MiddleColumn>
@@ -79,7 +84,7 @@ onMounted(async () => {
           >
             {{ $t('messaging.page_title') }}
           </ViewTitle>
-          
+
           <div class="d-flex flex-column align-items-center justify-content-center h-100">
             <p class="text-muted mb-4 mt-4 text-center">
               {{ $t('messaging.no_messages_placeholder') }}
@@ -99,17 +104,20 @@ onMounted(async () => {
         <!-- Conversation summaries -->
         <div class="flex-grow-1 overflow-auto hide-scrollbar pt-5">
           <MiddleColumn>
-            <LikesAndMatchesBanner class="mb-3" />
-
             <template v-if="haveMatches">
-              <p class="px-2">{{ $t('matches.matches_list_title') }}</p>
-              <div class="px-2 mb-3">
+              <p class="px-2 text-center">{{ $t('messaging.matches_list_title') }}</p>
+              <div class="px-3 mb-3">
                 <MatchesList
                   :edges="matches"
                   @select:profile="handleProfileSelect"
                 />
               </div>
             </template>
+
+            <div class="px-3 mb-3">
+              <ReceivedLikesTeaser />
+            </div>
+            <p class="px-2 text-center">{{ $t('messaging.conversations_list_title') }}</p>
 
             <ConversationSummaries
               :loading="isLoading"
@@ -121,6 +129,13 @@ onMounted(async () => {
         </div>
       </BOverlay>
     </div>
+
+    <SendMessageDialog
+      v-if="messageProfile"
+      v-model="showMessageModal"
+      :profile="messageProfile"
+      @sent="handleMessageSent"
+    />
   </main>
 </template>
 <style scoped lang="scss">
@@ -148,11 +163,6 @@ onMounted(async () => {
   }
 }
 
-.inactive {
-  pointer-events: none;
-  visibility: hidden;
-  display: none;
-}
 main {
   width: 100%;
 }

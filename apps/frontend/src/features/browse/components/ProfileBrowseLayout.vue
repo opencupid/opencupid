@@ -50,7 +50,7 @@ const handleCardClick = (profileId: string) => {
   <main class="w-100 position-relative overflow-hidden">
     <div class="list-view d-flex flex-column justify-content-start">
       <FluidColumn class="my-2">
-        <div class="subnav-bar d-flex align-items-center gap-2 px-2 py-1 bg-light rounded">
+        <div class="subnav-bar d-flex align-items-center gap-2 px-2 py-1  rounded">
           <slot
             name="filter-bar"
             :showPrefsModal="showPrefsModal"

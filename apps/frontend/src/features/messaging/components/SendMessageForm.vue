@@ -22,13 +22,16 @@ const toast = useToast()
 
 const messageStore = useMessageStore()
 
-const props = defineProps<{
-  recipientProfile: PublicProfileWithContext
-  conversationId: string | null
-  showTags?: boolean
-  canCall?: boolean
-}>()
-
+const props = withDefaults(
+  defineProps<{
+    recipientProfile: PublicProfileWithContext
+    conversationId: string | null
+    showTags?: boolean
+    canCall?: boolean
+    noResize?: boolean
+  }>(),
+  { noResize: true }
+)
 const emit = defineEmits<{
   (e: 'message:sent', message: MessageDTO | null): void
   (e: 'call:start'): void
@@ -196,7 +199,7 @@ function handleVoiceRecordingError(error: string) {
           v-model="content"
           rows="1"
           max-rows="5"
-          no-resize
+          :no-resize="noResize"
           class="mb-2"
           @keydown="handleKeyPress"
           :placeholder="$t('messaging.message_input_placeholder')"
