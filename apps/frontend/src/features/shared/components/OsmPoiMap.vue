@@ -99,6 +99,7 @@ const SPIDER_HOVER_PADDING_PX = 40
 
 let activeSpiderCluster: MCCluster | null = null
 let activeSpiderHoverBounds: L.LatLngBounds | null = null
+const spiderClickHandlers = new WeakMap<L.Marker, (ev: Event) => void>()
 
 function computeViewportMultiplier(map: L.Map) {
   const { x: w, y: h } = map.getSize()
@@ -319,7 +320,7 @@ function onClusterSpiderfied(e: any) {
       L.DomEvent.stopPropagation(ev as any)
       marker.openPopup()
     }
-    ;(marker as any)._spiderClickHandler = handler
+    spiderClickHandlers.set(marker, handler)
     L.DomEvent.on(el, 'click', handler)
   }
 }
@@ -330,10 +331,10 @@ function onClusterUnspiderfied(e: any) {
   if (e?.markers) {
     for (const marker of e.markers) {
       const el = marker.getElement?.()
-      const handler = (marker as any)._spiderClickHandler
+      const handler = spiderClickHandlers.get(marker)
       if (el && handler) {
         L.DomEvent.off(el, 'click', handler)
-        delete (marker as any)._spiderClickHandler
+        spiderClickHandlers.delete(marker)
       }
     }
   }

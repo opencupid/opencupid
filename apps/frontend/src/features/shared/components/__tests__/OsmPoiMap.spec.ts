@@ -315,9 +315,9 @@ describe('OsmPoiMap', () => {
     await flushPromises()
 
     const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
-    const spiderfiedHandler = clusterInstance.on.mock.calls.find(
-      (c: any) => c[0] === 'spiderfied'
-    )[1]
+    const spiderfiedCall = clusterInstance.on.mock.calls.find((c: any) => c[0] === 'spiderfied')
+    expect(spiderfiedCall).toBeDefined()
+    const spiderfiedHandler = spiderfiedCall![1]
     const mapInstance = (L.map as any).mock.results[0].value
     const mousemoveHandler = mapInstance.on.mock.calls.find((c: any) => c[0] === 'mousemove')[1]
 
@@ -340,9 +340,9 @@ describe('OsmPoiMap', () => {
     await flushPromises()
 
     const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
-    const spiderfiedHandler = clusterInstance.on.mock.calls.find(
-      (c: any) => c[0] === 'spiderfied'
-    )[1]
+    const spiderfiedCall = clusterInstance.on.mock.calls.find((c: any) => c[0] === 'spiderfied')
+    expect(spiderfiedCall).toBeDefined()
+    const spiderfiedHandler = spiderfiedCall![1]
     const mapInstance = (L.map as any).mock.results[0].value
     const mousemoveHandler = mapInstance.on.mock.calls.find((c: any) => c[0] === 'mousemove')[1]
 
@@ -543,9 +543,9 @@ describe('OsmPoiMap', () => {
     await flushPromises()
 
     const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
-    const spiderfiedHandler = clusterInstance.on.mock.calls.find(
-      (c: any) => c[0] === 'spiderfied'
-    )[1]
+    const spiderfiedCall = clusterInstance.on.mock.calls.find((c: any) => c[0] === 'spiderfied')
+    expect(spiderfiedCall).toBeDefined()
+    const spiderfiedHandler = spiderfiedCall![1]
 
     // Create a fake marker with a DOM element to simulate spiderfied state
     const fakeEl = document.createElement('div')
@@ -577,12 +577,12 @@ describe('OsmPoiMap', () => {
     await flushPromises()
 
     const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
-    const spiderfiedHandler = clusterInstance.on.mock.calls.find(
-      (c: any) => c[0] === 'spiderfied'
-    )[1]
-    const unspiderfiedHandler = clusterInstance.on.mock.calls.find(
-      (c: any) => c[0] === 'unspiderfied'
-    )[1]
+    const spiderfiedCall = clusterInstance.on.mock.calls.find((c: any) => c[0] === 'spiderfied')
+    expect(spiderfiedCall).toBeDefined()
+    const spiderfiedHandler = spiderfiedCall![1]
+    const unspiderfiedCall = clusterInstance.on.mock.calls.find((c: any) => c[0] === 'unspiderfied')
+    expect(unspiderfiedCall).toBeDefined()
+    const unspiderfiedHandler = unspiderfiedCall![1]
 
     const fakeEl = document.createElement('div')
     const fakeMarker = { getElement: () => fakeEl, openPopup: vi.fn() }
@@ -602,7 +602,6 @@ describe('OsmPoiMap', () => {
     const domOffCalls = (L as any).DomEvent.off.mock.calls
     const cleanupCall = domOffCalls.find((c: any) => c[0] === fakeEl && c[1] === 'click')
     expect(cleanupCall).toBeDefined()
-    expect((fakeMarker as any)._spiderClickHandler).toBeUndefined()
   })
 
   it('does not auto-fit to markers when center is provided', async () => {
