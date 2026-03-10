@@ -2,7 +2,6 @@ import path from 'path'
 import { defineConfig, type ConfigEnv, type Plugin, type UserConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { getPackageVersion } from '../../packages/shared/version'
-import DevInspector from '@mcpc-tech/unplugin-dev-inspector-mcp'
 import { loadProjectEnv, server, devCertPlugin } from '../../packages/shared/vite.common'
 
 /**
@@ -35,9 +34,6 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       __APP_VERSION__: JSON.stringify(appVersion),
     },
     plugins: [
-      ...(mode === 'development'
-        ? [DevInspector.vite({ enabled: true, showInspectorBar: true })]
-        : []),
       vue(),
       runtimeConfigPlugin(env),
       ...(mode === 'development' ? [devCertPlugin()] : []),
