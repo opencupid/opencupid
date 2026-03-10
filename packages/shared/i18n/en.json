@@ -270,11 +270,11 @@
     "finish_button": "Finish"
   },
   "matches": {
-    "matches_list_title": "My matches",
     "you_received_like": "You received a like!",
     "you_matched_with": "You matched with {name}!",
     "received_likes": "{count, plural, =0 {You have no likes.} one {You have # like.} other {You have # likes!}}",
     "received_likes_cta": "Find out who sent it",
+    "received_likes_teaser": "They didn't want you to know who they are, at least not yet. But you will find out when you like them back.",
     "no_match_no_sent_like": "There's gotta be someone you like out there?  ",
     "no_match_no_sent_like_cta": "Start lookin'",
     "no_match_have_sent_like": "They will surely like you back.",
@@ -313,6 +313,8 @@
   },
   "messaging": {
     "page_title": "Messages",
+    "matches_list_title": "My matches",
+    "conversations_list_title": "My conversations",
     "send_message_button": "Send",
     "message_input_placeholder": "Type your message here...",
     "new_message_notification": "{sender} sent a message",

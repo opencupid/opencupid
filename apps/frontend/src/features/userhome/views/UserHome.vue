@@ -56,10 +56,12 @@ provide('viewerProfile', toRef(viewerProfile))
 <template>
   <main class="overflow-auto hide-scrollbar">
     <BContainer fluid>
+      <div class="banner-halo">
       <LikesAndMatchesBanner
         class="clickable my-3"
         @click="router.push({ name: 'Messaging' })"
       />
+      </div>
       <!-- lg+: two-column layout -->
       <BRow class="d-flex mt-3">
         <BCol lg="6">

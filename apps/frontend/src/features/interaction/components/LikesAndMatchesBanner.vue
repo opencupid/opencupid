@@ -13,7 +13,7 @@ const emit = defineEmits<{
 
 <template>
   <div
-    class="rounded shadow d-flex align-items-center gap-1 dating p-4"
+    class="d-flex align-items-center gap-1 p-4"
     @click="emit('click')"
     v-if="haveNewMatches || haveReceivedLikes"
   >
@@ -21,6 +21,7 @@ const emit = defineEmits<{
       {{ $t('matches.notifications.you_have') }}
       <span v-if="haveReceivedLikes">{{
         t('matches.notifications.likes', { count: receivedLikesCount })
+        
       }}</span>
       <span>&nbsp;</span>
       <span v-if="haveNewMatches && haveReceivedLikes">
@@ -32,5 +33,8 @@ const emit = defineEmits<{
       </span>
       <span>!</span>
     </div>
+    <p class="text-muted">
+      
+    </p>
   </div>
 </template>

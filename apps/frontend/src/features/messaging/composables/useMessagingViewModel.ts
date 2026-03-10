@@ -2,16 +2,18 @@ import { computed, ref, watch, type Ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import type { ConversationSummary } from '@zod/messaging/messaging.dto'
-import type { ProfileSummary } from '@zod/profile/profile.dto'
+import type { PublicProfileWithContext } from '@zod/profile/profile.dto'
 
 import { useBootstrap } from '@/lib/bootstrap'
 import { useMessageStore } from '../stores/messageStore'
 import { useInteractionsViewModel } from '@/features/interaction/composables/useInteractionsViewModel'
+import { usePublicProfile } from '@/features/publicprofile/composables/usePublicProfile'
 
 export function useMessagingViewModel(conversationId: Ref<string | undefined>) {
   const router = useRouter()
   const messageStore = useMessageStore()
   const interactions = useInteractionsViewModel()
+  const { fetchProfile } = usePublicProfile()
 
   const isInitialized = ref(false)
 
@@ -53,9 +55,19 @@ export function useMessagingViewModel(conversationId: Ref<string | undefined>) {
     messageStore.resetActiveConversation()
   }
 
-  const handleProfileSelect = (profile: ProfileSummary | string) => {
-    const profileId = typeof profile === 'string' ? profile : profile.id
-    router.push({ name: 'PublicProfile', params: { profileId } })
+  // Send message dialog state
+  const showMessageModal = ref(false)
+  const messageProfile = ref<PublicProfileWithContext>()
+
+  const handleProfileSelect = async (profileId: string) => {
+    const res = await fetchProfile(profileId)
+    if (!res?.success) return
+    messageProfile.value = res.data
+    showMessageModal.value = true
+  }
+
+  const handleMessageSent = () => {
+    messageStore.fetchConversations()
   }
 
   const haveConversations = computed(() => messageStore.conversations.length > 0)
@@ -76,7 +88,12 @@ export function useMessagingViewModel(conversationId: Ref<string | undefined>) {
     handleSelectConvo,
     handleDeselectConvo,
     handleProfileSelect,
+    handleMessageSent,
     fetchConversations: () => messageStore.fetchConversations(),
+
+    // Send message dialog
+    showMessageModal,
+    messageProfile,
 
     // Lifecycle
     initialize,

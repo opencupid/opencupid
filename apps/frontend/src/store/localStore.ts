@@ -19,7 +19,7 @@ export const useLocalStore = defineStore('local', {
     language: null,
     theme: 'light',
     currentScope: null,
-    sendMode: 'enter',
+    sendMode: 'click',
   }),
   getters: {
     getLanguage: (state) => state.language,
@@ -59,7 +59,7 @@ export const useLocalStore = defineStore('local', {
       this.language = null
       this.theme = 'light'
       this.currentScope = null
-      this.sendMode = 'enter'
+      this.sendMode = 'click'
       localStorage.clear()
     },
     setLanguage(lang: string) {

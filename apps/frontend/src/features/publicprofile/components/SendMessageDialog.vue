@@ -39,7 +39,8 @@ const handleModalShown = () => {
   <BModal
     v-model="showModal"
     title=""
-    size="md"
+    size="lg"
+    fullscreen="sm"
     centered
     :no-header="messageSent"
     :no-footer="true"
@@ -75,6 +76,7 @@ const handleModalShown = () => {
           ref="messageInput"
           :recipientProfile="profile"
           :conversationId="null"
+          :no-resize="false"
           @message:sent="handleMessageSent"
           showTags
         />

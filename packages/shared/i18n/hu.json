@@ -258,11 +258,11 @@
     "finish_button": "Befejezés"
   },
   "matches": {
-    "matches_list_title": "Kölcsönös ❤️",
     "you_received_like": "Kaptál egy ❤️-ot!",
     "you_matched_with": "{name} visszajelölt!",
     "received_likes": "{count, plural, =0 {Még nincs ❤️-od} one {# ❤️-ot kaptál} other {# ❤️-od van}}",
     "received_likes_cta": "Vajon ki küldte?",
+    "received_likes_teaser": "Nem akarták, hogy tudd kik ők, legalábbis egyelőre. De kiderül, ha visszalájkolod őket.",
     "no_match_no_sent_like": "Még nem lájkoltál senkit",
     "no_match_no_sent_like_cta": "Kapcsolódj",
     "no_match_have_sent_like": "Még nem lájkolt vissza senki",
@@ -301,6 +301,8 @@
   },
   "messaging": {
     "page_title": "Üzenetek",
+    "matches_list_title": "Kölcsönös ❤️",
+    "conversations_list_title": "Beszélgetéseim",
     "send_message_button": "Mehet",
     "message_input_placeholder": "...",
     "new_message_notification": "{sender} küldött egy üzenetet",
