@@ -9,13 +9,13 @@
   "devDependencies": {
     "@changesets/cli": "^2.29.8",
     "@lingual/i18n-check": "^0.8.19",
+    "@mcpc-tech/unplugin-dev-inspector-mcp": "^0.1.45",
     "@modelcontextprotocol/server-filesystem": "2026.1.14",
     "@sentry/cli": "1.77.3",
     "@tolgee/cli": "^2.16.1",
     "@types/geojson": "7946.0.16",
     "acorn": "8.16.0",
     "dotenv-expand": "12.0.3",
-
     "prettier": "3.8.1",
     "turbo": "2.8.10"
   },
@@ -51,7 +51,8 @@
     "overrides": {
       "tsx": "4.21.0",
       "vue": "3.5.28",
-      "@vue/server-renderer": "3.5.28"
+      "@vue/server-renderer": "3.5.28",
+      "@mcpc-tech/unplugin-dev-inspector-mcp>zod": "3.25.76"
     },
     "onlyBuiltDependencies": [
       "@parcel/watcher",

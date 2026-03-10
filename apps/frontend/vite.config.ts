@@ -6,6 +6,7 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 
 import Components from 'unplugin-vue-components/vite'
 import { BootstrapVueNextResolver } from 'bootstrap-vue-next'
+import DevInspector from '@mcpc-tech/unplugin-dev-inspector-mcp'
 import svgLoader from 'vite-svg-loader'
 import serveStatic from 'serve-static'
 import {
@@ -61,6 +62,10 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
           return null
         },
       },
+
+      ...(mode === 'development'
+        ? [DevInspector.vite({ enabled: true, showInspectorBar: true })]
+        : []),
 
       vue({
         template: {
