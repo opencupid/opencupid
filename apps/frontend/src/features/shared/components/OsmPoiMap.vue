@@ -393,6 +393,7 @@ function updateMarkers() {
 
     for (let i = startIdx; i < end; i++) {
       const item = items[i]
+      if (!item) continue
       const m = createMarker(item)
       if (m) {
         batch.push(m)
