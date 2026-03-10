@@ -319,7 +319,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   // Dev-only: retrieve the latest OTP for a given authId (skips Mailpit)
-  if (appConfig.DEV_AUTH_BYPASS_ENABLED) {
+  if (appConfig.DEV_AUTH_BYPASS_ENABLED && appConfig.NODE_ENV !== 'production') {
     fastify.get('/dev/latest-token', async (req, reply) => {
       const { authId } = req.query as { authId?: string }
       if (!authId) {

@@ -33,6 +33,7 @@ vi.mock('../../services/notifier.service', () => ({
 }))
 vi.mock('@/lib/appconfig', () => ({
   appConfig: {
+    NODE_ENV: 'development',
     ALTCHA_HMAC_KEY: 'x',
     SMS_API_KEY: 'k',
     IMAGE_MAX_SIZE: 1000,
