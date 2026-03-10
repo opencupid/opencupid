@@ -47,7 +47,7 @@ const handleTagSelect = async (tag: PopularTag) => {
     findProfileStore.socialFilter.tags = [{ id: tag.id, name: tag.name, slug: tag.slug }]
     await findProfileStore.persistSocialFilter()
   }
-  router.push({ name: 'SocialMatch' })
+  router.push({ name: 'BrowseProfiles' })
 }
 
 provide('viewerProfile', toRef(viewerProfile))
@@ -74,7 +74,7 @@ provide('viewerProfile', toRef(viewerProfile))
               :showTags="false"
             />
             <RouterLink
-              :to="{ name: 'SocialMatch' }"
+              :to="{ name: 'BrowseProfiles' }"
               class="btn icon-link mt-2"
               role="button"
             >

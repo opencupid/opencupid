@@ -7,7 +7,7 @@ import MessagingView from '@/features/messaging/views/Messaging.vue'
 import UserHome from '@/features/userhome/views/UserHome.vue'
 import Settings from '@/features/settings/views/Settings.vue'
 import MyProfile from '@/features/myprofile/views/MyProfile.vue'
-import SocialMatch from '@/features/browse/views/SocialMatch.vue'
+import BrowseProfiles from '@/features/browse/views/BrowseProfiles.vue'
 import PublicProfileView from '@/features/publicprofile/views/PublicProfileView.vue'
 import OnboardingView from '@/features/onboarding/views/Onboarding.vue'
 import LoginView from '@/features/auth/views/LoginView.vue'
@@ -36,8 +36,8 @@ const routes: Array<RouteRecordRaw> = [
   },
   {
     path: '/browse',
-    name: 'SocialMatch',
-    component: SocialMatch,
+    name: 'BrowseProfiles',
+    component: BrowseProfiles,
     meta: { requiresAuth: true },
   },
   {

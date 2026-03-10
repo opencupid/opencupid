@@ -88,7 +88,7 @@ onMounted(async () => {
               variant="primary"
               size="lg"
               pill
-              @click="$router.push({ name: 'SocialMatch' })"
+              @click="$router.push({ name: 'BrowseProfiles' })"
             >
               <IconSearch class="svg-icon" />
               {{ $t('messaging.no_messages_cta') }}

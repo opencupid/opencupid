@@ -13,7 +13,7 @@ import { useSocialMatchViewModel } from '../composables/useSocialMatchViewModel'
 import type { PublicProfile } from '@zod/profile/profile.dto'
 import type { PopularTag } from '@zod/tag/tag.dto'
 
-defineOptions({ name: 'SocialMatch' })
+defineOptions({ name: 'BrowseProfiles' })
 
 const { t } = useI18n()
 

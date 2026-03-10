@@ -68,7 +68,7 @@ const handleGoToProfile = async () => {
 }
 
 const handleGoToBrowse = () => {
-  router.push({ name: 'SocialMatch' })
+  router.push({ name: 'BrowseProfiles' })
 }
 
 const handleWizardFinish = async () => {
