@@ -9,7 +9,6 @@ import ConversationDetail from '../components/ConversationDetail.vue'
 import ConversationSummaries from '../components/ConversationSummaries.vue'
 import SendMessageDialog from '@/features/publicprofile/components/SendMessageDialog.vue'
 import ViewTitle from '../../shared/ui/ViewTitle.vue'
-import LikesAndMatchesBanner from '@/features/interaction/components/LikesAndMatchesBanner.vue'
 import MatchesList from '@/features/interaction/components/MatchesList.vue'
 import ReceivedLikesTeaser from '@/features/interaction/components/ReceivedLikesTeaser.vue'
 
@@ -103,7 +102,7 @@ onMounted(async () => {
         </template>
 
         <!-- Conversation summaries -->
-        <div class="flex-grow-1 overflow-auto hide-scrollbar pt-5">
+        <div class="flex-grow-1 overflow-auto hide-scrollbar pt-2">
           <MiddleColumn>
             <template v-if="haveMatches">
               <p class="px-2 text-center">{{ $t('messaging.matches_list_title') }}</p>
