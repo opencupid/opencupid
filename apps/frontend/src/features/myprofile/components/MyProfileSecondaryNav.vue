@@ -14,7 +14,6 @@ import { faSliders } from '@fortawesome/free-solid-svg-icons'
 import { type OwnerProfile } from '@zod/profile/profile.dto'
 import { type DatingPreferencesDTO } from '@zod/match/filters.dto'
 import DatingPrefsDisplay from '@/features/browse/components/DatingPrefsDisplay.vue'
-
 // TODO refactor - we no longer need viewState
 // replace this formData.isDatingActive from parent -> datingMode bool - other TODOs below
 // refer to it to implement gates.
@@ -30,14 +29,16 @@ const datingPrefs = defineModel<DatingPreferencesDTO | null>('datingPrefs', {
   default: null,
 })
 
-defineEmits<{
+const isDatingActive = defineModel<boolean>('isDatingActive', {
+  default: false,
+})
+
+const emit = defineEmits<{
   (e: 'datingmode:toggle'): void
   (e: 'datingmode:prefs'): void
 }>()
 
 const viewerProfile = inject<Ref<OwnerProfile>>('viewerProfile')
-
-const haveAccess = computed(() => !!viewerProfile?.value?.isDatingActive)
 
 const i18nStore = useI18nStore()
 
@@ -127,27 +128,29 @@ const currentLanguage = computed(() => {
           />
         </template>
 
-        <BDropdownItem>
-          <BFormCheckbox @click="$emit('datingmode:toggle')">Dating mode </BFormCheckbox>
-        </BDropdownItem>
+        <BDropdownItemButton 
+        style="min-width: 15rem;"
+        @click.stop="$emit('datingmode:toggle')">
+          <BFormCheckbox
+            :model-value="isDatingActive"
+            tabindex="-1"
+            style="pointer-events: none"
+          >
+            Dating mode
+          </BFormCheckbox>
+        </BDropdownItemButton>
 
         <!-- TODO only show is datingmode true -->
-        <BDropdownDivider v-if="true" />
+        <BDropdownDivider v-if="isDatingActive" />
         <!-- TODO only show is datingmode true -->
         <BDropdownItemButton
-          v-if="true"
+          v-if="isDatingActive"
           @click="$emit('datingmode:prefs')"
         >
           <FontAwesomeIcon :icon="faSliders" />
           My preferences
         </BDropdownItemButton>
-        <BDropdownItem>
-          
-          <DatingPrefsDisplay
-            v-if="datingPrefs && haveAccess"
-            v-model="datingPrefs"
-          />
-        </BDropdownItem>
+
       </BNavItemDropdown>
     </BNav>
   </div>

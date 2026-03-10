@@ -12,6 +12,7 @@ import ProfileContent from '@/features/publicprofile/components/ProfileContent.v
 
 import { useMyProfileViewModel } from '../composables/useMyProfileViewModel'
 import DatingWizard from '../../onboarding/components/DatingWizard.vue'
+import DatingPreferencesForm from '@/features/browse/components/DatingPreferencesForm.vue'
 import MyProfileSecondaryNav from '../components/MyProfileSecondaryNav.vue'
 import EditableFields from '../components/EditableFields.vue'
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
@@ -37,38 +38,31 @@ const {
 } = useMyProfileViewModel(props.editMode)
 
 const isDatingWizardActive = ref(false)
-const openDatingPrefs = async () => {
-
+const showDatingPrefsModal = ref(false)
+const openDatingPrefs = () => {
+  showDatingPrefsModal.value = true
 }
 
 const toggleDating = async () => {
   // If dating is not onboarded, show the wizard
   if (!isDatingOnboarded.value && !formData.isDatingActive) {
-  isDatingWizardActive.value = true
+    isDatingWizardActive.value = true
     return
   }
-  formData.isDatingActive = !formData.isDatingActive
-  await updateScopes()
+  const newValue = !formData.isDatingActive
+  await updateScopes({
+    isDatingActive: newValue,
+    isSocialActive: formData.isSocialActive,
+  })
 }
 
 
-const toggleSocial = async () => {
-  formData.isSocialActive = !formData.isSocialActive
-  await updateScopes()
-}
-
-const handleFinishEdit = async () => {
-  const res = await updateProfile()
-  formData.isDatingActive = true
-  await updateScopes()
-  if (res.success) {
-    isDatingWizardActive.value = false
-  }
-}
 const handleFinishDatingOnboarding = async () => {
   const res = await updateProfile()
-  formData.isDatingActive = true
-  await updateScopes()
+  await updateScopes({
+    isDatingActive: true,
+    isSocialActive: formData.isSocialActive,
+  })
   if (res.success) {
     isDatingWizardActive.value = false
     router.push({ name: 'BrowseProfiles' })
@@ -161,6 +155,7 @@ const hint = computed(() => history?.state?.hint || null)
                 <MyProfileSecondaryNav
                   v-model="viewState"
                   v-model:datingPrefs="datingPrefs"
+                  v-model:isDatingActive="formData.isDatingActive"
                   @datingmode:toggle="toggleDating"
                   @datingmode:prefs="openDatingPrefs"
                 />
@@ -207,6 +202,26 @@ const hint = computed(() => history?.state?.hint || null)
         v-model="formData"
         @finished="handleFinishDatingOnboarding"
         @cancel="handleCancelEdit"
+      />
+    </BModal>
+    <BModal
+      v-model="showDatingPrefsModal"
+      centered
+      button-size="sm"
+      :focus="false"
+      :no-close-on-backdrop="true"
+      fullscreen="sm"
+      :no-footer="false"
+      :no-header="true"
+      :cancel-title="$t('profiles.browse.filters.dialog_cancel_button')"
+      cancel-variant="link"
+      ok-title="Search"
+      initial-animation
+      :body-scrolling="false"
+    >
+      <DatingPreferencesForm
+        v-model="datingPrefs"
+        v-if="datingPrefs"
       />
     </BModal>
   </main>

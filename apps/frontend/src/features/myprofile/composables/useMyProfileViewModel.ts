@@ -56,11 +56,8 @@ export function useMyProfileViewModel(isEditMode: boolean) {
     Object.assign(publicProfile, res.data)
   }
 
-  const updateScopes = async () => {
-    const res = await profileStore.updateProfileScopes({
-      isDatingActive: formData.isDatingActive,
-      isSocialActive: formData.isSocialActive,
-    })
+  const updateScopes = async (payload: { isDatingActive: boolean; isSocialActive: boolean }) => {
+    await profileStore.updateProfileScopes(payload)
   }
 
   const updateProfile = async () => {
@@ -77,10 +74,15 @@ export function useMyProfileViewModel(isEditMode: boolean) {
     { immediate: true }
   )
 
+  let datingPrefsFetched = false
   watch(
     () => profileStore.profile,
     () => {
       Object.assign(formData, profileStore.profile)
+      if (profileStore.profile && !datingPrefsFetched) {
+        datingPrefsFetched = true
+        profileStore.fetchDatingPrefs()
+      }
     },
     { immediate: true }
   )
