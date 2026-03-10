@@ -338,52 +338,77 @@ function onMapReady() {
   updateMarkers()
 }
 
+const STAGGER_BATCH_SIZE = 5
+const STAGGER_DELAY_MS = 100
+
+function createMarker(item: T): LMarker | null {
+  const location = props.getLocation(item)
+  if (!location) return null
+
+  const isSelected = item.id === props.selectedId
+  const m = L.marker([location.lat, location.lon], {
+    title: props.getTitle(item),
+    icon: iconForItem(item, isSelected),
+    keyboard: true,
+  })
+
+  const highlighted = props.isHighlighted?.(item) ?? false
+  m.bindPopup('', {
+    maxWidth: 420,
+    autoPan: true,
+    autoPanPadding: L.point(20, 20),
+    className: highlighted ? 'item-popup item-popup-highlighted' : 'item-popup',
+  })
+
+  m.on('popupopen', (e: L.PopupEvent) => {
+    const target = e.popup
+      .getElement()
+      ?.querySelector('.leaflet-popup-content') as HTMLElement | null
+    popupTarget.value = target
+    popupItem.value = item
+    nextTick(() => e.popup.update())
+  })
+  m.on('popupclose', () => {
+    popupTarget.value = null
+    popupItem.value = null
+  })
+
+  m.on('click', () => m.openPopup())
+  return m
+}
+
 function updateMarkers() {
   if (!map || !clusterGroup || !isMapReady) return
+  if (staggerTimer) { clearTimeout(staggerTimer); staggerTimer = null }
   clusterGroup.clearLayers()
   markers.clear()
   itemsById.clear()
 
-  for (const item of props.items) {
-    const location = props.getLocation(item)
-    if (!location) continue
+  const items = props.items.filter((item) => props.getLocation(item))
 
-    const isSelected = item.id === props.selectedId
-    const m = L.marker([location.lat, location.lon], {
-      title: props.getTitle(item),
-      icon: iconForItem(item, isSelected),
-      keyboard: true,
-    })
+  function addBatch(startIdx: number) {
+    if (!map || !clusterGroup) return
+    const end = Math.min(startIdx + STAGGER_BATCH_SIZE, items.length)
+    const batch: LMarker[] = []
 
-    const highlighted = props.isHighlighted?.(item) ?? false
-    m.bindPopup('', {
-      maxWidth: 420,
-      autoPan: true,
-      autoPanPadding: L.point(20, 20),
-      className: highlighted ? 'item-popup item-popup-highlighted' : 'item-popup',
-    })
+    for (let i = startIdx; i < end; i++) {
+      const item = items[i]
+      const m = createMarker(item)
+      if (m) {
+        batch.push(m)
+        markers.set(item.id, m)
+        itemsById.set(item.id, item)
+      }
+    }
 
-    m.on('popupopen', (e: L.PopupEvent) => {
-      const target = e.popup
-        .getElement()
-        ?.querySelector('.leaflet-popup-content') as HTMLElement | null
-      popupTarget.value = target
-      popupItem.value = item
-      // After Vue renders the teleported popup content, re-measure so
-      // Leaflet's autoPan accounts for the actual popup dimensions.
-      nextTick(() => e.popup.update())
-    })
-    m.on('popupclose', () => {
-      popupTarget.value = null
-      popupItem.value = null
-    })
+    clusterGroup.addLayers(batch)
 
-    m.on('click', () => m.openPopup())
-
-    clusterGroup.addLayer(m)
-    markers.set(item.id, m)
-    itemsById.set(item.id, item)
+    if (end < items.length) {
+      staggerTimer = setTimeout(() => addBatch(end), STAGGER_DELAY_MS)
+    }
   }
+
+  addBatch(0)
 
   // Fit bounds to markers when explicitly requested or when no center was provided
   if ((props.fitToPois || !props.center) && props.items.length > 0) {
@@ -551,6 +576,11 @@ watch(
 :deep(.leaflet-div-icon) {
   background: transparent;
   border: none;
+}
+
+/* Fade-in for markers appearing on the map */
+:deep(.poi-cluster-icon) {
+  z-index: 5000; /* above regular markers but below hovered avatar icons */
 }
 
 /* Avatar marker hover feedback — scale the inner img, not the icon wrapper
