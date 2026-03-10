@@ -215,7 +215,7 @@ function webGLSupported(): boolean {
 function initRasterFallback(map: LMap): void {
   const tileLayer = L.tileLayer(
     `https://api.maptiler.com/maps/dataviz/{z}/{x}/{y}.png?key=${__APP_CONFIG__.MAPTILER_API_KEY}`,
-    { maxZoom: 19, attribution: '© MapTiler © OpenStreetMap contributors' }
+    { maxZoom: 14, attribution: '© MapTiler © OpenStreetMap contributors' }
   ).addTo(map)
   tileLayer.once('load', () => onMapReady())
 }
@@ -317,7 +317,15 @@ function onClusterSpiderfied(e: any) {
   }
 }
 
-function onClusterUnspiderfied() {
+function onClusterUnspiderfied(e: any) {
+  // Remove click-stopPropagation handlers added in onClusterSpiderfied
+  // to prevent accumulation across spiderfy cycles (especially with KeepAlive)
+  if (e?.markers) {
+    for (const marker of e.markers) {
+      const el = marker.getElement?.()
+      if (el) L.DomEvent.off(el, 'click', L.DomEvent.stopPropagation)
+    }
+  }
   activeSpiderCluster = null
   activeSpiderHoverBounds = null
 }
@@ -379,7 +387,10 @@ function createMarker(item: T): LMarker | null {
 
 function updateMarkers() {
   if (!map || !clusterGroup || !isMapReady) return
-  if (staggerTimer) { clearTimeout(staggerTimer); staggerTimer = null }
+  if (staggerTimer) {
+    clearTimeout(staggerTimer)
+    staggerTimer = null
+  }
   clusterGroup.clearLayers()
   markers.clear()
   itemsById.clear()
@@ -450,6 +461,11 @@ onMounted(() => {
 
 function destroyMap() {
   if (!map) return
+  // Cancel any in-flight staggered marker batch (KeepAlive can delay teardown)
+  if (staggerTimer) {
+    clearTimeout(staggerTimer)
+    staggerTimer = null
+  }
   map.off('moveend', emitBounds)
   map.off('mousemove', onMapMouseMove)
   map.off('zoomstart movestart', closeSpider)
