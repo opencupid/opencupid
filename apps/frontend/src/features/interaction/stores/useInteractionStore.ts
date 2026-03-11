@@ -155,11 +155,11 @@ export const useInteractionStore = defineStore('interaction', {
     },
 
     async initialize() {
+      bus.on('ws:new_like', this.onNewLike)
+      bus.on('ws:new_match', this.onNewMatch)
       if (!this.initialized) {
         await this.fetchInteractions()
       }
-      bus.on('ws:new_like', this.onNewLike)
-      bus.on('ws:new_match', this.onNewMatch)
     },
 
     teardown() {
