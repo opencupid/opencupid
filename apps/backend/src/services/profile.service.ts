@@ -317,7 +317,9 @@ export class ProfileService {
     const data: Prisma.ProfileUpdateInput = {
       isDatingActive: scopes.isDatingActive,
       // isActive is exported into the session for authorization checks
-      isActive: scopes.isDatingActive,
+      // this is not currently modifiable by the user.
+      // TODO expose this into a "take a break" mode in the GUI that deactivates the profile without deleting it.
+      isActive: true,
     }
 
     try {
