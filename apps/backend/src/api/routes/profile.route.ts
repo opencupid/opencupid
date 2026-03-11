@@ -27,6 +27,7 @@ import type {
   GetPublicProfileResponse,
   UpdateProfileOptInResponse,
   UpdateProfileResponse,
+  UpdateProfileScopeResponse,
 } from '@zod/apiResponse.dto'
 import { GetProfileSummariesResponse } from '@zod/apiResponse.dto'
 
@@ -327,7 +328,6 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
         reply
       )) as UpdateProfileScopePayload
       if (!data) return
-      const locale = req.session.lang
 
       try {
         const updated = await profileService.updateScopes(req.user.userId, data)
@@ -342,8 +342,11 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
           },
         })
 
-        const profile = mapDbProfileToOwnerProfile(locale, updated)
-        const response: UpdateProfileResponse = { success: true, profile }
+        const response: UpdateProfileScopeResponse = {
+          success: true,
+          isDatingActive: updated.isDatingActive,
+          isActive: updated.isActive,
+        }
         return reply.code(200).send(response)
       } catch (error) {
         fastify.log.error(error)

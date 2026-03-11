@@ -25,6 +25,7 @@ import type {
   GetPublicProfileResponse,
   UpdateProfileOptInResponse,
   UpdateProfileResponse,
+  UpdateProfileScopeResponse,
 } from '@zod/apiResponse.dto'
 import {
   DatingPreferencesDTOSchema,
@@ -121,7 +122,6 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
       return this.persistOwnerProfile() // Persist dating preferences if they exist
     },
 
-    // Update the current user's social profile
     async updateProfileScopes(
       profileFragment: UpdateProfileScopePayload
     ): Promise<StoreVoidSuccess | StoreError> {
@@ -130,18 +130,19 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
       if (!parsed.success)
         return storeError(new Error('Invalid profile data'), 'Failed to update profile')
       try {
-        this.isLoading = true // Set loading state
+        this.isLoading = true
         const res = await safeApiCall(() =>
-          api.patch<UpdateProfileResponse>('/profiles/scopes', parsed.data)
+          api.patch<UpdateProfileScopeResponse>('/profiles/scopes', parsed.data)
         )
-        const fetched = OwnerProfileSchema.parse(res.data.profile)
-        if (this.profile) Object.assign(this.profile, fetched) // Update local state with new data
+        if (this.profile) {
+          this.profile.isDatingActive = res.data.isDatingActive
+          this.profile.isActive = res.data.isActive
+        }
         return storeSuccess()
       } catch (error: any) {
-        this.profile = null // Reset profile on error
-        return storeError(error, 'Failed to fetch profile')
+        return storeError(error, 'Failed to update profile scopes')
       } finally {
-        this.isLoading = false // Reset loading state
+        this.isLoading = false
       }
     },
 

@@ -56,7 +56,7 @@ export function useMyProfileViewModel(isEditMode: boolean) {
     Object.assign(publicProfile, res.data)
   }
 
-  const updateScopes = async (payload: { isDatingActive: boolean; isSocialActive: boolean }) => {
+  const updateScopes = async (payload: { isDatingActive: boolean }) => {
     await profileStore.updateProfileScopes(payload)
   }
 

@@ -51,19 +51,13 @@ const toggleDating = async () => {
   }
   const newValue = !formData.isDatingActive
   formData.isDatingActive = newValue
-  await updateScopes({
-    isDatingActive: newValue,
-    isSocialActive: formData.isSocialActive,
-  })
+  await updateScopes({ isDatingActive: newValue })
 }
 
 
 const handleFinishDatingOnboarding = async () => {
   const res = await updateProfile()
-  await updateScopes({
-    isDatingActive: true,
-    isSocialActive: formData.isSocialActive,
-  })
+  await updateScopes({ isDatingActive: true })
   if (res.success) {
     isDatingWizardActive.value = false
     router.push({ name: 'BrowseProfiles' })

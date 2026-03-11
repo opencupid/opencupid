@@ -313,25 +313,18 @@ export class ProfileService {
   async updateScopes(
     userId: string,
     scopes: UpdateProfileScopePayload
-  ): Promise<DbProfileWithImages | null> {
-    const data: Prisma.ProfileUpdateInput = {}
-    if (typeof scopes.isDatingActive === 'boolean') {
-      data.isDatingActive = scopes.isDatingActive
+  ): Promise<{ id: string; isDatingActive: boolean; isSocialActive: boolean; isActive: boolean } | null> {
+    const data: Prisma.ProfileUpdateInput = {
+      isDatingActive: scopes.isDatingActive,
+      // isActive is exported into the session for authorization checks
+      isActive: scopes.isDatingActive,
     }
-    if (typeof scopes.isSocialActive === 'boolean') {
-      data.isSocialActive = scopes.isSocialActive
-    }
-    // isActive is exported into the session for authorization checks
-    data.isActive = [data.isDatingActive, data.isSocialActive].some(Boolean)
 
     try {
       return await prisma.profile.update({
         where: { userId },
         data,
-        include: {
-          ...tagsInclude(),
-          ...profileImageInclude(),
-        },
+        select: { id: true, isDatingActive: true, isSocialActive: true, isActive: true },
       })
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {

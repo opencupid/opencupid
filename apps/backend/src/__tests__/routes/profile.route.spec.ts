@@ -332,15 +332,17 @@ describe('PATCH /scopes', () => {
       isDatingActive: true,
       isSocialActive: true,
       isActive: true,
-      tags: [],
-      profileImages: [],
-      localized: [],
     }
     mockProfileService.updateScopes.mockResolvedValue(updatedDb)
 
     const req = makeReq({ body: { isDatingActive: true } })
     await handler(req, reply as any)
     expect(reply.statusCode).toBe(200)
+    expect(reply.payload).toEqual({
+      success: true,
+      isDatingActive: true,
+      isActive: true,
+    })
     expect(req.updateSession).toHaveBeenCalledWith({
       profile: {
         id: 'p1',
