@@ -10,7 +10,7 @@ import IconGlobe from '@/assets/icons/interface/globe.svg'
 
 import { type OwnerProfile } from '@zod/profile/profile.dto'
 
-const model = defineModel<ViewState>({ required: true })
+const viewState = defineModel<ViewState>({ required: true })
 
 const isDatingActive = defineModel<boolean>('isDatingActive', {
   default: false,
@@ -40,7 +40,7 @@ const hasPreviewLanguages = computed(() => languagePreviewOptions.value.length >
 
     <span v-if="isDatingActive">
       <BDropdownItem>
-        <ScopeViewToggler v-model="model.currentScope" />
+        <ScopeViewToggler v-model="viewState.currentScope" />
       </BDropdownItem>
 
       <BDropdownDivider />
@@ -56,8 +56,8 @@ const hasPreviewLanguages = computed(() => languagePreviewOptions.value.length >
         v-for="lang in languagePreviewOptions"
         :key="lang.value"
         class="language-option"
-        :active="lang.value === model.previewLanguage"
-        @click="model.previewLanguage = lang.value"
+        :active="lang.value === viewState.previewLanguage"
+        @click="viewState.previewLanguage = lang.value"
       >
         <span class="d-flex align-items-center">
           <span class="flex-grow-1">{{ lang.label }}</span>

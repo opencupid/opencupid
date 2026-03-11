@@ -4,7 +4,7 @@ import ViewAsDropdown from './ViewAsDropdown.vue'
 import DatingModeDropdown from './DatingModeDropdown.vue'
 import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
 
-const model = defineModel<ViewState>({
+const viewState = defineModel<ViewState>({
   default: {
     scopes: [],
     currentScope: 'dating',
@@ -28,7 +28,7 @@ const emit = defineEmits<{
     <BNav>
       <!-- View as -->
       <ViewAsDropdown
-        v-model="model"
+        v-model="viewState"
         v-model:is-dating-active="isDatingActive"
       />
 
