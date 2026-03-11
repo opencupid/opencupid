@@ -136,6 +136,7 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
           this.profile.isDatingActive = res.data.isDatingActive
           this.profile.isActive = res.data.isActive
         }
+        bus.emit('profile:dating-prefs-updated')
         return storeSuccess()
       } catch (error: any) {
         return storeError(error, 'Failed to update profile scopes')
@@ -238,6 +239,7 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
         )
         const updated = DatingPreferencesDTOSchema.parse(res.data.prefs)
         this.datingPrefs = updated
+        bus.emit('profile:dating-prefs-updated')
         return storeSuccess()
       } catch (error: any) {
         return storeError(error, 'Failed to update dating preferences')
