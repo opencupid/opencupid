@@ -40,9 +40,9 @@ const emit = defineEmits<{
         <span>{{ $t('profiles.forms.dating_mode') }}</span>
       </span>
     </BDropdownItemButton>
-    
-    <div v-if="isDatingActive">
-      <BDropdownDivider v-if="isDatingActive" />
+
+    <BCollapse v-model="isDatingActive">
+      <BDropdownDivider />
       <BDropdownItemButton @click="$emit('datingmode:profile')">
         <IconProfile class="svg-icon me-2" />
         {{ $t('profiles.forms.my_dating_profile') }}
@@ -52,6 +52,6 @@ const emit = defineEmits<{
         <IconSlider class="svg-icon me-2" />
         {{ $t('profiles.forms.my_preferences') }}
       </BDropdownItemButton>
-    </div>
+    </BCollapse>
   </BNavItemDropdown>
 </template>
