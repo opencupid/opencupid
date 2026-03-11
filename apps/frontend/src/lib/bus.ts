@@ -10,6 +10,7 @@ type AppEvents = {
   'language:changed': { language: string }
   'api:offline': void
   'api:online': void
+  'profile:dating-prefs-updated': void
 }
 
 type Events = AppEvents & WSEvents

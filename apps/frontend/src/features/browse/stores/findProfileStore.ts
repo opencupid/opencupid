@@ -250,3 +250,8 @@ export const useFindProfileStore = defineStore('findProfile', {
 bus.on('auth:logout', () => {
   useFindProfileStore().teardown()
 })
+
+bus.on('profile:dating-prefs-updated', () => {
+  useFindProfileStore().findProfiles()
+  useFindProfileStore().fetchDatingMatchIds()
+})
