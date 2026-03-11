@@ -109,5 +109,6 @@ export function useMyProfileViewModel(isEditMode: boolean) {
     datingPrefs: toRef(profileStore, 'datingPrefs'),
     updateScopes,
     updateProfile,
+    persistDatingPrefs: () => profileStore.persistDatingPrefs(),
   }
 }

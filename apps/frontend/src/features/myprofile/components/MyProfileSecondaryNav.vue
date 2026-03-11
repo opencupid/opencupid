@@ -5,12 +5,12 @@ import { useI18nStore } from '@/store/i18nStore'
 import { type ViewState } from '../composables/types'
 import ScopeViewToggler from '@/features/shared/ui/ScopeViewToggler.vue'
 import LanguageIcon from '@/features/shared/profiledisplay/LanguageIcon.vue'
-import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
 import IconViewAs from '@/assets/icons/interface/unhide.svg'
 import IconHeart from '@/assets/icons/interface/heart.svg'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import IconGlobe from '@/assets/icons/interface/globe.svg'
-import { faSliders } from '@fortawesome/free-solid-svg-icons'
+import IconSlider from '@/assets/icons/interface/setting.svg'
+import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
+import IconProfile from '@/assets/icons/interface/user.svg'
 
 import { type OwnerProfile } from '@zod/profile/profile.dto'
 
@@ -46,7 +46,10 @@ const hasPreviewLanguages = computed(() => languagePreviewOptions.value.length >
   <div class="d-flex justify-content-end align-items-center w-100">
     <BNav>
       <!-- View as -->
-      <BNavItemDropdown :auto-close="'outside'" v-if="isDatingActive || hasPreviewLanguages">
+      <BNavItemDropdown
+        :auto-close="'outside'"
+        v-if="isDatingActive || hasPreviewLanguages"
+      >
         <template #button-content>
           <span class="text-secondary">
             <IconViewAs class="svg-icon-lg" />
@@ -115,11 +118,13 @@ const hasPreviewLanguages = computed(() => languagePreviewOptions.value.length >
         </BDropdownItemButton>
 
         <BDropdownDivider v-if="isDatingActive" />
-        <BDropdownItemButton
-          v-if="isDatingActive"
-          @click="$emit('datingmode:prefs')"
-        >
-          <FontAwesomeIcon :icon="faSliders" />
+        <BDropdownItemButton @click="$emit('datingmode:profile')">
+          <IconProfile class="svg-icon me-2" />
+          {{ $t('profiles.forms.my_dating_profile') }}
+        </BDropdownItemButton>
+
+        <BDropdownItemButton @click="$emit('datingmode:prefs')">
+          <IconSlider class="svg-icon me-2" />
           {{ $t('profiles.forms.my_preferences') }}
         </BDropdownItemButton>
       </BNavItemDropdown>

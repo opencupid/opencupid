@@ -35,10 +35,12 @@ const {
   datingPrefs,
   updateScopes,
   updateProfile,
+  persistDatingPrefs,
 } = useMyProfileViewModel(props.editMode)
 
 const isDatingWizardActive = ref(false)
 const showDatingPrefsModal = ref(false)
+const showDatingProfileModal = ref(false)
 const openDatingPrefs = () => {
   showDatingPrefsModal.value = true
 }
@@ -107,6 +109,7 @@ const hint = computed(() => history?.state?.hint || null)
               v-model:isDatingActive="formData.isDatingActive"
               @datingmode:toggle="toggleDating"
               @datingmode:prefs="openDatingPrefs"
+              @datingmode:profile="showDatingProfileModal = true"
             />
           </div>
         </MiddleColumn>
@@ -165,10 +168,32 @@ const hint = computed(() => history?.state?.hint || null)
       ok-title="Search"
       initial-animation
       :body-scrolling="false"
+      @ok="persistDatingPrefs"
     >
       <DatingPreferencesForm
         v-model="datingPrefs"
         v-if="datingPrefs"
+      />
+    </BModal>
+    <BModal
+      v-if="showDatingProfileModal"
+      :backdrop="'static'"
+      centered
+      size="lg"
+      button-size="sm"
+      fullscreen="sm"
+      :focus="false"
+      :no-close-on-backdrop="true"
+      :no-header="true"
+      :no-footer="true"
+      :show="true"
+      body-class="d-flex flex-column align-items-center justify-content-center overflow-auto hide-scrollbar p-2 p-md-5"
+      :keyboard="false"
+    >
+      <DatingWizard
+        v-model="formData"
+        @finished="updateProfile().then(() => (showDatingProfileModal = false))"
+        @cancel="showDatingProfileModal = false"
       />
     </BModal>
   </main>
