@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import { onMounted, toRef } from 'vue'
+import { computed, onMounted, provide, toRef } from 'vue'
+import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 import IconMessage from '@/assets/icons/interface/message.svg'
@@ -41,6 +42,11 @@ const {
   showMessageModal,
   messageProfile,
 } = useMessagingViewModel(toRef(props, 'conversationId'))
+
+provide(
+  'viewerProfile',
+  computed(() => useOwnerProfileStore().profile)
+)
 
 onMounted(async () => {
   await initialize()
@@ -109,7 +115,6 @@ onMounted(async () => {
             <template v-if="haveMatches">
               <p class="px-2 text-center">{{ $t('messaging.matches_list_title') }}</p>
               <div class="px-3 mb-3">
-                
                 <MatchesList
                   :edges="matches"
                   @select:profile="handleMatchSelect"

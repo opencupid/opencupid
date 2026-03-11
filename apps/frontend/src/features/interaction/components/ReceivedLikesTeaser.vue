@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, inject, type Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useInteractionsViewModel } from '../composables/useInteractionsViewModel'
 import AvatarIcon from '@/features/shared/components/AvatarIcon.vue'
 import type { ReceivedLike } from '@zod/interaction/interaction.dto'
+import type { OwnerProfile } from '@zod/profile/profile.dto'
 
 const { t } = useI18n()
 const { receivedLikes, receivedLikesCount, haveReceivedLikes } = useInteractionsViewModel()
+const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
+const ownerThumb = computed(() => viewerProfile?.value?.profileImages?.[0])
 
 const emit = defineEmits<{
   (e: 'interaction:selected', like: ReceivedLike): void
@@ -27,66 +30,77 @@ const displayedLikes = computed(() => receivedLikes.value.slice(0, 4))
         :key="index"
         cols="3"
       >
-        <div class="ratio ratio-1x1">
+        <!-- Revealed: clickable card that emits interaction:selected -->
+        <div
+          v-if="like.profile"
+          class="ratio ratio-1x1 clickable like-card"
+          role="button"
+          @click="emit('interaction:selected', like)"
+        >
           <div
             class="dating rounded-3 d-flex flex-column align-items-center justify-content-center p-2"
           >
-            <!-- Revealed: show real avatar and name -->
-            <template v-if="like.profile">
-              <div
-                class="avatar-chip ratio ratio-1x1 clickable"
-                role="button"
-                @click="emit('interaction:selected', like)"
-              >
-                <AvatarIcon
-                  v-if="like.profile.profileImages[0]"
-                  :image="like.profile.profileImages[0]"
-                />
-                <div
-                  v-else
-                  class="placeholder-avatar mt-2"
-                />
-              </div>
-              <small class="mt-1 text-truncate w-100 text-center">
-                {{ like.profile.publicName }}
-              </small>
-            </template>
-            <!-- Anonymous: show popover with hint -->
-            <template v-else>
-              <BPopover
-                placement="top"
-                click
-                title-class="d-none"
-              >
-                <template #target>
-                  <div
-                    class="placeholder-chip ratio ratio-1x1 clickable"
-                    role="button"
-                  >
-                    <div class="placeholder-avatar mt-2" />
-                  </div>
-                </template>
-                <p class="mb-2">
-                  {{ t('matches.anonymous_like_hint') }}
-                </p>
-                <div class="d-flex align-items-center gap-1 mb-2">
-                  <span class="highlighted-indicator" />
-                </div>
-                <RouterLink
-                  to="/browse"
-                  class="btn btn-sm btn-primary"
-                >
-                  {{ t('matches.anonymous_like_hint_cta') }}
-                </RouterLink>
-              </BPopover>
-              <BPlaceholder
-                class="mt-1"
-                :width="60 + 30 * Math.random()"
-                size="xs"
+            <div class="avatar-chip ratio ratio-1x1" >
+              <AvatarIcon
+                v-if="like.profile.profileImages[0]"
+                :image="like.profile.profileImages[0]"
               />
-            </template>
+              <div
+                v-else
+                class="placeholder-avatar mt-2"
+              />
+            </div>
+            <small class="mt-1 text-truncate w-100 text-center">
+              {{ like.profile.publicName }}
+            </small>
           </div>
         </div>
+        <!-- Anonymous: entire card is the popover target -->
+        <BPopover
+          v-else
+          placement="top"
+          click
+          title-class="d-none"
+          body-class="popover-hint"
+        >
+          <template #target>
+            <div class="ratio ratio-1x1 clickable like-card">
+              <div
+                class="dating rounded-3 d-flex flex-column align-items-center justify-content-center p-2"
+              >
+                <div class="placeholder-chip ratio ratio-1x1">
+                  <div class="placeholder-avatar mt-2" />
+                </div>
+                <BPlaceholder
+                  class="mt-1"
+                  :width="60 + 30 * Math.random()"
+                  size="xs"
+                />
+              </div>
+            </div>
+          </template>
+          <p class="mb-2">
+            {{ t('matches.anonymous_like_hint') }}
+          </p>
+          <div class="placeholder-chip d-flex align-items-center gap-1 mb-2">
+            <AvatarIcon
+              v-if="ownerThumb"
+              :image="ownerThumb"
+              :is-highlighted="true"
+              class="owner-thumb"
+            />
+            <span
+              v-else
+              class="highlighted-indicator"
+            />
+          </div>
+          <RouterLink
+            to="/browse"
+            class="btn btn-sm btn-primary"
+          >
+            {{ t('matches.anonymous_like_hint_cta') }}
+          </RouterLink>
+        </BPopover>
       </BCol>
     </BRow>
     <p class="small text-muted lh-sm mt-2 mb-0">
@@ -114,6 +128,20 @@ const displayedLikes = computed(() => receivedLikes.value.slice(0, 4))
 
 .clickable {
   cursor: pointer;
+}
+
+.like-card:hover {
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
+  border-radius: var(--bs-border-radius-lg);
+}
+
+:deep(.popover-hint) {
+  min-width: 12rem;
+}
+
+.owner-thumb {
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 .highlighted-indicator {
