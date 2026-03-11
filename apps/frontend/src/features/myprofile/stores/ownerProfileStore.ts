@@ -27,10 +27,7 @@ import type {
   UpdateProfileResponse,
   UpdateProfileScopeResponse,
 } from '@zod/apiResponse.dto'
-import {
-  DatingPreferencesDTOSchema,
-  type DatingPreferencesDTO,
-} from '@zod/match/filters.dto'
+import { DatingPreferencesDTOSchema, type DatingPreferencesDTO } from '@zod/match/filters.dto'
 
 const defaultOptInSettings: ProfileOptInSettings = {
   isCallable: true,
@@ -213,10 +210,6 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
       }
     },
 
-
-
-
-    
     async fetchDatingPrefs(
       defaults?: DatingPreferencesDTO
     ): Promise<StoreVoidSuccess | StoreError> {
