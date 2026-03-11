@@ -80,12 +80,16 @@ $aspect-ratios: map-merge(
 $enable-negative-margins: true;
 
 // ─── Sandstone-inspired component overrides ─────────────────────────
+$sand-lightest: #faf4ea; // lightest stop of the main gradient
+
 $card-border-color: rgba($gray-300, 0.75);
 $card-cap-bg: rgba($gray-200, 0.25);
+$dropdown-bg: $sand-lightest;
 $dropdown-link-color: $gray-600;
 $dropdown-link-hover-bg: $gray-200;
 $dropdown-link-active-bg: $gray-200;
 $dropdown-link-active-color: $gray-800;
+$modal-content-bg: $sand-lightest;
 $modal-content-border-color: $gray-300;
 $list-group-border-color: $gray-300;
 $list-group-hover-bg: $gray-200;
