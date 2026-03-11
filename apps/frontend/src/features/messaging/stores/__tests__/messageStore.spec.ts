@@ -161,6 +161,96 @@ describe('messageStore', () => {
       expect(store.conversations[0]!.conversationId).toBe('convo-2')
       expect(store.conversations[1]!.conversationId).toBe('convo-1')
     })
+
+    it('emits notification for non-active conversation when suppressMessageNotifications is false', async () => {
+      const store = useMessageStore()
+      store.suppressMessageNotifications = false
+
+      const convo: ConversationSummary = {
+        id: 'participant-1',
+        profileId: 'profile-1',
+        conversationId: 'convo-1',
+        lastReadAt: new Date('2024-01-01'),
+        isMuted: false,
+        isArchived: false,
+        canReply: true,
+        isCallable: true,
+        myIsCallable: true,
+        conversation: {
+          id: 'convo-1',
+          updatedAt: new Date('2024-01-01'),
+          createdAt: new Date('2024-01-01'),
+        },
+        partnerProfile: {
+          id: 'partner-1',
+          publicName: 'Partner',
+          profileImages: [],
+        },
+        lastMessage: null,
+      }
+      store.conversations = [convo]
+      store.activeConversation = null
+
+      const incomingMessage: MessageDTO = {
+        id: 'msg-1',
+        conversationId: 'convo-1',
+        senderId: 'partner-1',
+        content: 'Hello',
+        messageType: 'text/html',
+        createdAt: new Date('2024-01-02'),
+        isMine: false,
+        sender: { id: 'partner-1', publicName: 'Partner', profileImages: [] },
+      }
+
+      await store.handleIncomingMessage(incomingMessage)
+
+      expect(mockBus.emit).toHaveBeenCalledWith('notification:new_message', incomingMessage)
+    })
+
+    it('does not emit notification when suppressMessageNotifications is true', async () => {
+      const store = useMessageStore()
+      store.suppressMessageNotifications = true
+
+      const convo: ConversationSummary = {
+        id: 'participant-1',
+        profileId: 'profile-1',
+        conversationId: 'convo-1',
+        lastReadAt: new Date('2024-01-01'),
+        isMuted: false,
+        isArchived: false,
+        canReply: true,
+        isCallable: true,
+        myIsCallable: true,
+        conversation: {
+          id: 'convo-1',
+          updatedAt: new Date('2024-01-01'),
+          createdAt: new Date('2024-01-01'),
+        },
+        partnerProfile: {
+          id: 'partner-1',
+          publicName: 'Partner',
+          profileImages: [],
+        },
+        lastMessage: null,
+      }
+      store.conversations = [convo]
+      store.activeConversation = null
+
+      const incomingMessage: MessageDTO = {
+        id: 'msg-1',
+        conversationId: 'convo-1',
+        senderId: 'partner-1',
+        content: 'Hello',
+        messageType: 'text/html',
+        createdAt: new Date('2024-01-02'),
+        isMine: false,
+        sender: { id: 'partner-1', publicName: 'Partner', profileImages: [] },
+      }
+
+      await store.handleIncomingMessage(incomingMessage)
+
+      expect(mockBus.emit).not.toHaveBeenCalledWith('notification:new_message', incomingMessage)
+    })
   })
 })
 
