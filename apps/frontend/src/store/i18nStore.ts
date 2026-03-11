@@ -3,20 +3,7 @@ import { useI18n } from 'vue-i18n'
 import { ref, watch } from 'vue'
 import { bus } from '@/lib/bus'
 import { useLocalStore } from '@/store/localStore'
-
-const labels: Record<string, string> = {
-  en: 'English',
-  hu: 'Magyar',
-  // de: 'Deutsch',
-  // fr: 'Français',
-  // es: 'Español',
-  // it: 'Italiano',
-  // pt: 'Português',
-  // sk: 'Slovenčina',
-  // pl: 'Polski',
-  // ro: 'Română',
-  // nl: 'Nederlands',
-}
+import { appLocales } from '@shared/i18n/locales'
 
 export const useI18nStore = defineStore('i18n', () => {
   const localStore = useLocalStore()
@@ -24,7 +11,7 @@ export const useI18nStore = defineStore('i18n', () => {
   const { locale } = useI18n()
 
   const preferredLanguage =
-    localStore.getLanguage ?? getBrowserLanguage(Object.keys(labels)) ?? 'en'
+    localStore.getLanguage ?? getBrowserLanguage(Object.keys(appLocales)) ?? 'en'
   const currentLanguage = ref(preferredLanguage)
 
   // Sync changes vue-i18n
@@ -46,7 +33,7 @@ export const useI18nStore = defineStore('i18n', () => {
   }
 
   function setLanguage(lang: string) {
-    if (!labels[lang]) {
+    if (!Object.hasOwn(appLocales, lang)) {
       console.error(`Unsupported language: ${lang}`)
       return
     }
@@ -55,21 +42,23 @@ export const useI18nStore = defineStore('i18n', () => {
   }
 
   function getAvailableLocales() {
-    return Object.keys(labels)
+    return Object.keys(appLocales)
   }
 
   function getAvailableLocalesWithLabels() {
-    return Object.keys(labels).map((lang) => ({
+    return Object.keys(appLocales).map((lang) => ({
       value: lang,
-      label: labels[lang] || lang, // Fallback to code if no label found
+      label: appLocales[lang] || lang,
     }))
   }
 
   function getLanguageLabels(languages: string[]) {
-    return languages.map((lang) => ({
-      value: lang,
-      label: labels[lang] || lang, // Fallback to code if no label found
-    }))
+    return languages
+      .filter((lang) => Object.hasOwn(appLocales, lang))
+      .map((lang) => ({
+        value: lang,
+        label: appLocales[lang] || lang,
+      }))
   }
 
   return {
@@ -83,9 +72,6 @@ export const useI18nStore = defineStore('i18n', () => {
 })
 
 function getBrowserLanguage(availableLocales: string[]): string {
-  // TODO - handle multiple languages in navigator.languages
-  // is navigator.language always == navigator.languages[0]?
-  // const browserLanguage = navigator.language || navigator.languages[0] || 'en'
   const browserLang = (navigator.language || 'en').split('-')[0] ?? 'en'
   return availableLocales.includes(browserLang) ? browserLang : 'en'
 }
