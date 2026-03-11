@@ -54,7 +54,6 @@ const toggleDating = async () => {
   await updateScopes({ isDatingActive: newValue })
 }
 
-
 const handleFinishDatingOnboarding = async () => {
   const res = await updateProfile()
   await updateScopes({ isDatingActive: true })
@@ -81,7 +80,6 @@ provide('viewerProfile', toRef(formData))
 
 const route = useRoute()
 const hint = computed(() => history?.state?.hint || null)
-
 </script>
 
 <template>
@@ -103,59 +101,13 @@ const hint = computed(() => history?.state?.hint || null)
         class="d-flex flex-column justify-content-center h-100"
       >
         <MiddleColumn class="pt-sm-3 position-relative">
-          <div class="d-flex flex-row justify-content-between align-items-center my-2">
-            <div class="toggle-bar w-100 d-flex align-items-center justify-content-center">
-              <div
-                v-if="viewState.isEditable"
-                class="d-flex"
-              >
-                <!-- <span
-                  class="btn-social-toggle px-4 py-1 rounded-4 me-2"
-                  role="button"
-                  :title="$t('general.connectiontypes.socializing')"
-                  @click="toggleSocial"
-                  :class="{ active: formData.isSocialActive }"
-                >
-                  <input
-                    type="checkbox"
-                    class="form-check-input me-2"
-                    :checked="formData.isSocialActive"
-                    value="true"
-                  />
-                  <span class="d-none d-sm-inline me-2">{{
-                    $t('general.connectiontypes.socializing')
-                  }}</span>
-                  <IconSocialize class="svg-icon-lg" />
-                </span>
-                <span
-                  class="btn-dating-toggle px-4 py-1 rounded-4"
-                  role="button"
-                  :title="$t('general.connectiontypes.dating')"
-                  @click="toggleDating"
-                  :class="{ active: formData.isDatingActive }"
-                >
-                  <input
-                    type="checkbox"
-                    class="form-check-input me-2"
-                    :checked="formData.isDatingActive"
-                    value="true"
-                  />
-                  <span class="d-none d-sm-inline me-2">{{
-                    $t('general.connectiontypes.dating')
-                  }}</span>
-                  <IconDate class="svg-icon-lg" />
-                </span> -->
-              </div>
-              <div v-else>
-                <MyProfileSecondaryNav
-                  v-model="viewState"
-                  v-model:datingPrefs="datingPrefs"
-                  v-model:isDatingActive="formData.isDatingActive"
-                  @datingmode:toggle="toggleDating"
-                  @datingmode:prefs="openDatingPrefs"
-                />
-              </div>
-            </div>
+          <div class="d-flex flex-row justify-content-between align-items-center">
+            <MyProfileSecondaryNav
+              v-model="viewState"
+              v-model:isDatingActive="formData.isDatingActive"
+              @datingmode:toggle="toggleDating"
+              @datingmode:prefs="openDatingPrefs"
+            />
           </div>
         </MiddleColumn>
         <div class="overflow-auto hide-scrollbar h-100">

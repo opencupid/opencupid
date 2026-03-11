@@ -142,6 +142,8 @@
     "gender_edit_label": "gender",
     "forms": {
       "my_preferences": "My preferences",
+      "dating_mode": "Dating mode",
+      "preview_language": "Preview language",
       "age_range": "Age range",
       "kids_label": "Kids?",
       "relationship_label": "I am...",

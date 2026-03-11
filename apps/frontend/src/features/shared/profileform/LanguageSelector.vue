@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useLanguages } from '@/features/shared/composables/useLanguages'
 
-import { computed, onMounted, reactive } from 'vue'
+import { computed, onMounted, reactive, useAttrs } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Multiselect from 'vue-multiselect'
 import { type MultiselectOption } from '@/types/multiselect'
@@ -16,6 +16,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string[]): void
 }>()
+
+const attrs = useAttrs()
 
 const languageOptions = reactive([] as MultiselectOption[])
 const languagesComputed = computed({
@@ -43,12 +45,12 @@ const selectHeight = computed(() => {
   <div class="languages-multiselect">
     <Multiselect
       v-model="languagesComputed"
+      v-bind="attrs"
       :options="languageOptions"
       :close-on-select="false"
       :clear-on-select="true"
       :multiple="true"
       :searchable="true"
-      open-direction="top"
       :maxHeight="selectHeight"
       id="languages"
       label="label"
