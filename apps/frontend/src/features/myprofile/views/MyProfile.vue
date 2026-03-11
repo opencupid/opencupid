@@ -165,7 +165,7 @@ const hint = computed(() => history?.state?.hint || null)
       :no-header="true"
       :cancel-title="$t('profiles.browse.filters.dialog_cancel_button')"
       cancel-variant="link"
-      ok-title="Search"
+      :ok-title="$t('profiles.browse.filters.button_update_prefs')"
       initial-animation
       :body-scrolling="false"
       @ok="persistDatingPrefs"
