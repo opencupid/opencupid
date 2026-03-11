@@ -38,7 +38,11 @@ export class InteractionService {
 
   private constructor() {}
 
-  async like(fromId: string, toId: string): Promise<InteractionEdgePair & { isNewLike: boolean }> {
+  async like(
+    fromId: string,
+    toId: string,
+    isAnonymous = true
+  ): Promise<InteractionEdgePair & { isNewLike: boolean }> {
     if (fromId === toId) throw new Error('Cannot like yourself')
 
     const { like, isNewLike } = await prisma.$transaction(async (tx) => {
@@ -50,8 +54,8 @@ export class InteractionService {
 
       const like = await tx.likedProfile.upsert({
         where: { fromId_toId: { fromId, toId } },
-        update: {},
-        create: { fromId, toId },
+        update: { isAnonymous },
+        create: { fromId, toId, isAnonymous },
       })
 
       return { like, isNewLike: !existing }

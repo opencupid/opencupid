@@ -59,9 +59,10 @@ const interactionRoutes: FastifyPluginAsync = async (fastify) => {
     async (req, reply) => {
       const { targetId } = TargetLookupParamsSchema.parse(req.params)
       const myId = req.session.profileId
+      const body = z.object({ isAnonymous: z.boolean().default(true) }).parse(req.body ?? {})
 
       try {
-        const { isNewLike, ...likeResult } = await service.like(myId, targetId)
+        const { isNewLike, ...likeResult } = await service.like(myId, targetId, body.isAnonymous)
         const response: InteractionEdgeResponse = { success: true, pair: likeResult }
         reply.code(200).send(response)
 

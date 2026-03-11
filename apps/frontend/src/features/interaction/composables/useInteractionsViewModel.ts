@@ -14,7 +14,7 @@ export function useInteractionsViewModel() {
     receivedLikes: computed(() => store.receivedLikes),
     receivedLikesCount: computed(() => store.receivedLikes.length),
     newMatchesCount: computed(() => store.newMatchesCount),
-    like: store.sendLike,
+    like: (targetId: string, isAnonymous?: boolean) => store.sendLike(targetId, isAnonymous),
     updateLike: store.updateLike,
     pass: store.passProfile,
     refreshInteractions: store.fetchInteractions,

@@ -68,10 +68,15 @@ export const useInteractionStore = defineStore('interaction', {
       }
     },
 
-    async sendLike(targetId: string): Promise<StoreResponse<InteractionEdgePair>> {
+    async sendLike(
+      targetId: string,
+      isAnonymous = true
+    ): Promise<StoreResponse<InteractionEdgePair>> {
       try {
         const res = await safeApiCall(() =>
-          api.post<{ success: true; pair: unknown }>(`/interactions/like/${targetId}`)
+          api.post<{ success: true; pair: unknown }>(`/interactions/like/${targetId}`, {
+            isAnonymous,
+          })
         )
 
         // Parse and validate the response shape
