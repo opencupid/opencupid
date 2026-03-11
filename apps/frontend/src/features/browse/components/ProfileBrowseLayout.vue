@@ -27,14 +27,14 @@ const toast = useToast()
 const showPrefsModal = ref(false)
 
 // TODO(#847): Replace toast with proper no-results UX — see issue for design discussion
-watch(
-  () => props.haveResults,
-  (hasResults) => {
-    if (!hasResults && props.isInitialized) {
-      toast.info(t('profiles.browse.no_results_cta_title'))
-    }
-  }
-)
+// watch(
+//   () => props.haveResults,
+//   (hasResults) => {
+//     if (!hasResults && props.isInitialized) {
+//       toast.info(t('profiles.browse.no_results_cta_title'))
+//     }
+//   }
+// )
 
 provide(
   'viewerProfile',
