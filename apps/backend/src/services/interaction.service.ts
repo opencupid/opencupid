@@ -155,6 +155,7 @@ export class InteractionService {
           },
         },
       },
+      orderBy: [{ isAnonymous: 'asc' }, { createdAt: 'desc' }],
       include: {
         from: {
           include: profileImageInclude(),
