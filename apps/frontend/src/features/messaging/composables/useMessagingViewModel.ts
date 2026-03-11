@@ -77,7 +77,10 @@ export function useMessagingViewModel(conversationId: Ref<string | undefined>) {
   const haveConversations = computed(() => messageStore.conversations.length > 0)
   const isDetailView = computed(() => !!messageStore.activeConversation)
   const showEmptyState = computed(
-    () => !haveConversations.value && !interactions.haveMatches.value
+    () =>
+      !haveConversations.value &&
+      !interactions.haveMatches.value &&
+      !interactions.haveReceivedLikes.value
   )
 
   return {
