@@ -304,7 +304,9 @@
     "send_them_a_message": "Küldj egy üzenetet neki",
     "cancel_button": "Talán később",
     "message_confirmation": "Elküldve!",
-    "like_error": "Hoppá, ez nem működött. Kérjük, próbáld meg újra."
+    "like_error": "Hoppá, ez nem működött. Kérjük, próbáld meg újra.",
+    "anonymous_toggle_anonymous": "Maradj anonim",
+    "anonymous_toggle_reveal": "Mutasd a profilom"
   },
   "messaging": {
     "page_title": "Üzenetek",
