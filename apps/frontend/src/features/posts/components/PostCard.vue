@@ -94,6 +94,7 @@ const recipientProfile = computed<PublicProfileWithContext | null>(() => {
     interactionContext: profile.interactionContext ?? {
       likedByMe: false,
       isMatch: false,
+      isAnonymous: true,
       passedByMe: false,
       canLike: false,
       canPass: false,
