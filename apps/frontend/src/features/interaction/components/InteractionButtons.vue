@@ -66,7 +66,7 @@ const handleAnonymousChange = (value: boolean) => {
 
 <template>
   <div class="d-flex justify-content-center align-items-center gap-2">
-    <div v-if="context.canDate">
+    <div v-if="context.canDate && !context.isMatch">
       <BPopover
         v-model="passPopover"
         placement="top"
@@ -123,7 +123,7 @@ const handleAnonymousChange = (value: boolean) => {
 
     <!-- interaction action buttons popovers, 'like' action -->
     <BPopover
-      v-if="context.canDate"
+      v-if="context.canDate && !context.isMatch"
       placement="top"
       title=""
       title-class="d-none"
