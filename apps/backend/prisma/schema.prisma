@@ -156,16 +156,15 @@ model User {
   requestsSent     ConnectionRequest[] @relation("RequestsSent")
   requestsReceived ConnectionRequest[] @relation("RequestsReceived")
 
-  pushSubscription PushSubscription[]
-  isPushNotificationEnabled Boolean  @default(false)
-
+  pushSubscription          PushSubscription[]
+  isPushNotificationEnabled Boolean            @default(false)
 }
 
 model Profile {
-  id         String  @id @default(cuid())
-  publicName String
-  country    String  @default("")
-  cityName   String  @default("")
+  id             String  @id @default(cuid())
+  publicName     String
+  country        String  @default("")
+  cityName       String  @default("")
   isSocialActive Boolean @default(false)
   isDatingActive Boolean @default(false)
   isActive       Boolean @default(false)
@@ -314,14 +313,14 @@ enum ConversationStatus {
 }
 
 model LikedProfile {
-  id        String   @id @default(cuid())
-  from      Profile  @relation("LikesSent", fields: [fromId], references: [id])
-  fromId    String
-  to        Profile  @relation("LikesReceived", fields: [toId], references: [id])
-  toId      String
-  createdAt DateTime @default(now())
-  isNew       Boolean @default(true)
-  isAnonymous Boolean @default(true)
+  id          String   @id @default(cuid())
+  from        Profile  @relation("LikesSent", fields: [fromId], references: [id])
+  fromId      String
+  to          Profile  @relation("LikesReceived", fields: [toId], references: [id])
+  toId        String
+  createdAt   DateTime @default(now())
+  isNew       Boolean  @default(true)
+  isAnonymous Boolean  @default(true)
 
   @@unique([fromId, toId]) // Prevent double-like
 }
@@ -350,13 +349,13 @@ model Message {
 }
 
 model MessageAttachment {
-  id        String  @id @default(cuid())
-  message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  messageId String  @unique
+  id        String   @id @default(cuid())
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  messageId String   @unique
   filePath  String
   mimeType  String
   fileSize  Int?
-  duration  Int?    // duration in seconds for audio files
+  duration  Int? // duration in seconds for audio files
   createdAt DateTime @default(now())
 }
 
@@ -397,13 +396,13 @@ model Post {
   updatedAt DateTime @updatedAt
 
   // Location (optional, pre-filled from profile)
-  country   String?
-  cityName  String?
-  lat       Float?
-  lon       Float?
+  country  String?
+  cityName String?
+  lat      Float?
+  lon      Float?
 
   // Relations
-  postedBy  Profile @relation(fields: [postedById], references: [id], onDelete: Cascade)
+  postedBy   Profile @relation(fields: [postedById], references: [id], onDelete: Cascade)
   postedById String
 
   @@index([postedById])
