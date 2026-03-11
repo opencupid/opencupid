@@ -26,7 +26,7 @@ const displayedLikes = computed(() => receivedLikes.value.slice(0, 4))
     </p>
     <BRow class="g-2 px-1">
       <BCol
-        v-for="(like, index) in displayedLikes"
+        v-for="like in displayedLikes"
         :key="like.createdAt"
         cols="3"
       >
