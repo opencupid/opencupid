@@ -33,7 +33,7 @@ export function useMessagingViewModel(conversationId: Ref<string | undefined>) {
 
   const initialize = async () => {
     await useBootstrap().bootstrap()
-    await messageStore.fetchConversations()
+    await Promise.all([messageStore.fetchConversations(), interactions.refreshInteractions()])
     isInitialized.value = true
     if (conversationId.value) {
       await messageStore.setActiveConversationById(conversationId.value)
