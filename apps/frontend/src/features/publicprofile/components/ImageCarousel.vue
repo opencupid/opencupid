@@ -42,7 +42,6 @@ const carouselProps = {
   mouseDrag: false,
   touchDrag: true,
   wrapAround: true,
-  preventExcessiveDragging: true,
   mouseWheel: false,
 } as const
 

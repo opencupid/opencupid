@@ -27,6 +27,7 @@ export const userOptInFields = {
 export const ownerFields = {
   isDatingActive: true,
   isSocialActive: true,
+  isActive: true,
   isOnboarded: true,
   ...profileOptInFields,
 } as const

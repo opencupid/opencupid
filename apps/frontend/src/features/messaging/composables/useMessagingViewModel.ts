@@ -60,6 +60,10 @@ export function useMessagingViewModel(conversationId: Ref<string | undefined>) {
   const messageProfile = ref<PublicProfileWithContext>()
 
   const handleProfileSelect = async (profileId: string) => {
+    router.push({ name: 'PublicProfile', params: { profileId } })
+  }
+
+  const handleMatchSelect = async (profileId: string) => {
     const res = await fetchProfile(profileId)
     if (!res?.success) return
     messageProfile.value = res.data
@@ -72,6 +76,9 @@ export function useMessagingViewModel(conversationId: Ref<string | undefined>) {
 
   const haveConversations = computed(() => messageStore.conversations.length > 0)
   const isDetailView = computed(() => !!messageStore.activeConversation)
+  const showEmptyState = computed(
+    () => !haveConversations.value && !interactions.haveMatches.value
+  )
 
   return {
     // Store state
@@ -83,11 +90,13 @@ export function useMessagingViewModel(conversationId: Ref<string | undefined>) {
     haveConversations,
     isDetailView,
     isInitialized,
+    showEmptyState,
 
     // Handlers
     handleSelectConvo,
     handleDeselectConvo,
     handleProfileSelect,
+    handleMatchSelect,
     handleMessageSent,
     fetchConversations: () => messageStore.fetchConversations(),
 

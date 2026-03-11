@@ -27,6 +27,7 @@ import type {
   GetPublicProfileResponse,
   UpdateProfileOptInResponse,
   UpdateProfileResponse,
+  UpdateProfileScopeResponse,
 } from '@zod/apiResponse.dto'
 import { GetProfileSummariesResponse } from '@zod/apiResponse.dto'
 
@@ -327,16 +328,26 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
         reply
       )) as UpdateProfileScopePayload
       if (!data) return
-      const locale = req.session.lang
 
       try {
         const updated = await profileService.updateScopes(req.user.userId, data)
         if (!updated) return sendError(reply, 404, 'Profile not found')
-        // Clear session to force re-fetch on next request, we need the roles updated
-        await req.deleteSession()
+        // Update session with new profile scope data
+        await req.updateSession({
+          hasActiveProfile: updated.isActive,
+          profile: {
+            id: updated.id,
+            isDatingActive: updated.isDatingActive,
+            isSocialActive: updated.isSocialActive,
+            isActive: updated.isActive,
+          },
+        })
 
-        const profile = mapDbProfileToOwnerProfile(locale, updated)
-        const response: UpdateProfileResponse = { success: true, profile }
+        const response: UpdateProfileScopeResponse = {
+          success: true,
+          isDatingActive: updated.isDatingActive,
+          isActive: updated.isActive,
+        }
         return reply.code(200).send(response)
       } catch (error) {
         fastify.log.error(error)

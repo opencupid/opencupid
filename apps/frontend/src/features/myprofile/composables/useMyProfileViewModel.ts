@@ -1,5 +1,5 @@
 import { useI18nStore } from '@/store/i18nStore'
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, reactive, toRef, watch } from 'vue'
 
 import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 import { type EditFieldProfileFormWithImages } from '@zod/profile/profile.form'
@@ -56,11 +56,8 @@ export function useMyProfileViewModel(isEditMode: boolean) {
     Object.assign(publicProfile, res.data)
   }
 
-  const updateScopes = async () => {
-    const res = await profileStore.updateProfileScopes({
-      isDatingActive: formData.isDatingActive,
-      isSocialActive: formData.isSocialActive,
-    })
+  const updateScopes = async (payload: { isDatingActive: boolean }) => {
+    await profileStore.updateProfileScopes(payload)
   }
 
   const updateProfile = async () => {
@@ -77,10 +74,15 @@ export function useMyProfileViewModel(isEditMode: boolean) {
     { immediate: true }
   )
 
+  let datingPrefsFetched = false
   watch(
     () => profileStore.profile,
     () => {
       Object.assign(formData, profileStore.profile)
+      if (profileStore.profile && !datingPrefsFetched) {
+        datingPrefsFetched = true
+        profileStore.fetchDatingPrefs()
+      }
     },
     { immediate: true }
   )
@@ -104,7 +106,9 @@ export function useMyProfileViewModel(isEditMode: boolean) {
     profilePreview,
     isDatingOnboarded,
     isOnboarded,
+    datingPrefs: toRef(profileStore, 'datingPrefs'),
     updateScopes,
     updateProfile,
+    persistDatingPrefs: () => profileStore.persistDatingPrefs(),
   }
 }

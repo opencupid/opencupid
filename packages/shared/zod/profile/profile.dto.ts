@@ -135,12 +135,9 @@ export const ProfileScopeSchema = z.enum(['social', 'dating'])
 
 export type ProfileScope = z.infer<typeof ProfileScopeSchema>
 
-export const UpdateProfileScopeSchemaPayload = z
-  .object({
-    isDatingActive: z.boolean(),
-    isSocialActive: z.boolean(),
-  })
-  .partial()
+export const UpdateProfileScopeSchemaPayload = z.object({
+  isDatingActive: z.boolean(),
+})
 
 export type UpdateProfileScopePayload = z.infer<typeof UpdateProfileScopeSchemaPayload>
 

@@ -19,12 +19,16 @@ import {
 } from '@zod/profile/profile.dto'
 
 import type {
+  GetDatingPreferencesResponse,
   GetProfileOptInResponse,
   GetMyProfileResponse,
   GetPublicProfileResponse,
   UpdateProfileOptInResponse,
   UpdateProfileResponse,
+  UpdateDatingPreferencesResponse,
+  UpdateProfileScopeResponse,
 } from '@zod/apiResponse.dto'
+import { DatingPreferencesDTOSchema, type DatingPreferencesDTO } from '@zod/match/filters.dto'
 
 const defaultOptInSettings: ProfileOptInSettings = {
   isCallable: true,
@@ -44,6 +48,7 @@ export type PublicProfileResponse = StoreResponse<PublicProfileWithContext> | St
 
 interface ProfileStoreState {
   profile: OwnerProfile | null
+  datingPrefs: DatingPreferencesDTO | null
   optInSettings: ProfileOptInSettings
   profileScopes: ProfileScope[]
   isLoading: boolean
@@ -53,6 +58,7 @@ interface ProfileStoreState {
 export const useOwnerProfileStore = defineStore('ownerProfile', {
   state: (): ProfileStoreState => ({
     profile: null as OwnerProfile | null,
+    datingPrefs: null as DatingPreferencesDTO | null,
     optInSettings: { ...defaultOptInSettings },
     profileScopes: [],
     isLoading: false,
@@ -114,7 +120,6 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
       return this.persistOwnerProfile() // Persist dating preferences if they exist
     },
 
-    // Update the current user's social profile
     async updateProfileScopes(
       profileFragment: UpdateProfileScopePayload
     ): Promise<StoreVoidSuccess | StoreError> {
@@ -123,18 +128,19 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
       if (!parsed.success)
         return storeError(new Error('Invalid profile data'), 'Failed to update profile')
       try {
-        this.isLoading = true // Set loading state
+        this.isLoading = true
         const res = await safeApiCall(() =>
-          api.patch<UpdateProfileResponse>('/profiles/scopes', parsed.data)
+          api.patch<UpdateProfileScopeResponse>('/profiles/scopes', parsed.data)
         )
-        const fetched = OwnerProfileSchema.parse(res.data.profile)
-        if (this.profile) Object.assign(this.profile, fetched) // Update local state with new data
+        if (this.profile) {
+          this.profile.isDatingActive = res.data.isDatingActive
+          this.profile.isActive = res.data.isActive
+        }
         return storeSuccess()
       } catch (error: any) {
-        this.profile = null // Reset profile on error
-        return storeError(error, 'Failed to fetch profile')
+        return storeError(error, 'Failed to update profile scopes')
       } finally {
-        this.isLoading = false // Reset loading state
+        this.isLoading = false
       }
     },
 
@@ -205,6 +211,41 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
       }
     },
 
+    async fetchDatingPrefs(
+      defaults?: DatingPreferencesDTO
+    ): Promise<StoreVoidSuccess | StoreError> {
+      try {
+        this.isLoading = true
+        const res = await safeApiCall(() =>
+          api.get<GetDatingPreferencesResponse>('/find/dating/filter')
+        )
+        const fetched = DatingPreferencesDTOSchema.parse(res.data.prefs)
+        this.datingPrefs = fetched
+        return storeSuccess()
+      } catch (error: any) {
+        this.datingPrefs = defaults ?? null
+        return storeError(error, 'Failed to fetch datingPrefs')
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    async persistDatingPrefs(): Promise<StoreVoidSuccess | StoreError> {
+      try {
+        this.isLoading = true
+        const res = await safeApiCall(() =>
+          api.patch<UpdateDatingPreferencesResponse>('/find/dating/filter', this.datingPrefs)
+        )
+        const updated = DatingPreferencesDTOSchema.parse(res.data.prefs)
+        this.datingPrefs = updated
+        return storeSuccess()
+      } catch (error: any) {
+        return storeError(error, 'Failed to update dating preferences')
+      } finally {
+        this.isLoading = false
+      }
+    },
+
     /**
      * Fetch a profile preview by ID and locale.  Returns the shape of a PublicProfile, with all dating
      * fields.
@@ -233,6 +274,7 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
 
     reset() {
       this.profile = null // Reset profile
+      this.datingPrefs = null
       this.optInSettings = { ...defaultOptInSettings }
       this.isLoading = false // Reset loading state
     },

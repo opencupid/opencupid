@@ -128,6 +128,10 @@
     },
     "forms": {
       "my_preferences": "Preferenciáim",
+      "dating_mode": "Társkereső mód",
+      "my_dating_profile": "Társkereső profilom",
+      "my_profile": "Adataim",
+      "preview_language": "Előnézeti nyelv",
       "age_range": "Korosztály",
       "kids_label": "Gyerekek?",
       "relationship_label": "Én...",
@@ -199,6 +203,7 @@
         "locate_button_title": "Keress körülöttem",
         "search_button_title_social": "Keresés",
         "search_button_title_dating": "Keresés",
+        "button_update_prefs":"Rendben",
         "age_range": "Korosztály:",
         "filter_display_label": "Hely:",
         "explore_tags": "Érdeklődési korok"

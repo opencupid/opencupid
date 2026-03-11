@@ -5,7 +5,13 @@ import { useI18nStore } from '@/store/i18nStore'
 import { type ViewState } from '../composables/types'
 import ScopeViewToggler from '@/features/shared/ui/ScopeViewToggler.vue'
 import LanguageIcon from '@/features/shared/profiledisplay/LanguageIcon.vue'
+import IconViewAs from '@/assets/icons/interface/unhide.svg'
+import IconHeart from '@/assets/icons/interface/heart.svg'
+import IconGlobe from '@/assets/icons/interface/globe.svg'
+import IconSlider from '@/assets/icons/interface/setting.svg'
 import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
+import IconProfile from '@/assets/icons/interface/user.svg'
+
 import { type OwnerProfile } from '@zod/profile/profile.dto'
 
 const model = defineModel<ViewState>({
@@ -16,6 +22,16 @@ const model = defineModel<ViewState>({
   required: true,
 })
 
+const isDatingActive = defineModel<boolean>('isDatingActive', {
+  default: false,
+})
+
+const emit = defineEmits<{
+  (e: 'datingmode:toggle'): void
+  (e: 'datingmode:prefs'): void
+  (e: 'datingmode:profile'): void
+}>()
+
 const viewerProfile = inject<Ref<OwnerProfile>>('viewerProfile')
 
 const i18nStore = useI18nStore()
@@ -24,77 +40,120 @@ const languagePreviewOptions = computed(() => {
   return i18nStore.getLanguageLabels(viewerProfile?.value.languages || [])
 })
 
-const currentLanguage = computed(() => {
-  return languagePreviewOptions.value.find((lang) => lang.value === model.value.previewLanguage)
-})
+const hasPreviewLanguages = computed(() => languagePreviewOptions.value.length > 1)
 </script>
 
 <template>
   <div class="d-flex justify-content-end align-items-center w-100">
-    <ul
-      pills
-      class="nav nav-pills w-100 d-flex align-items-center"
-    >
-      <li class="col-2 d-flex align-items-center">
-        <BNavItem
-          to="/settings"
-          class="p-0"
-        >
-          <BButton
-            variant="link-secondary"
-            class="p-0"
-          >
-            <IconSetting2 class="svg-icon-lg" />
-          </BButton>
-        </BNavItem>
-      </li>
-      <li class="col-8 d-flex nav-item justify-content-center align-items-center">
-        <ScopeViewToggler v-model="model.currentScope" />
-      </li>
+    <BNav>
+      <!-- View as -->
+      <BNavItemDropdown
+        :auto-close="'outside'"
+        v-if="isDatingActive || hasPreviewLanguages"
+      >
+        <template #button-content>
+          <span class="text-secondary">
+            <IconViewAs class="svg-icon-lg" />
+          </span>
+        </template>
 
-      <li class="col-2 d-flex justify-content-end">
-        <BNavItemDropdown
-          v-if="languagePreviewOptions.length > 1"
-          size="sm"
-          id="my-nav-dropdown"
-          text="Dropdown"
-          toggle-class="nav-link-custom"
-          right
-        >
-          <template #button-content>
-            <LanguageIcon
-              v-if="currentLanguage"
-              :countryCode="currentLanguage.value"
-            />
-          </template>
-          <BDropdownItem
+        <span v-if="isDatingActive">
+          <BDropdownItem>
+            <ScopeViewToggler v-model="model.currentScope" />
+          </BDropdownItem>
+
+          <BDropdownDivider />
+        </span>
+
+        <span v-if="hasPreviewLanguages">
+          <BDropdownText style="width: 12rem">
+            <IconGlobe class="svg-icon" />
+            {{ $t('profiles.forms.preview_language') }}
+          </BDropdownText>
+
+          <!-- preview language -->
+          <BDropdownItemButton
             v-for="lang in languagePreviewOptions"
             :key="lang.value"
+            class="language-option"
             :active="lang.value === model.previewLanguage"
             @click="model.previewLanguage = lang.value"
           >
             <span class="d-flex align-items-center">
               <span class="flex-grow-1">{{ lang.label }}</span>
-              <LanguageIcon :countryCode="lang.value" />
+              <LanguageIcon
+                :countryCode="lang.value"
+                :size="24"
+              />
             </span>
-          </BDropdownItem>
-        </BNavItemDropdown>
-      </li>
-    </ul>
+          </BDropdownItemButton>
+        </span>
+      </BNavItemDropdown>
+
+      <!-- Preferences -->
+      <!-- TODO extract into separate component -->
+      <BNavItemDropdown
+        class="btn-link-secondary"
+        toggle-class="btn-link-warning"
+        :auto-close="'outside'"
+      >
+        <template #button-content>
+          <span :class="{ 'text-dating': isDatingActive, 'text-secondary': !isDatingActive }">
+            <IconHeart class="svg-icon-lg" />
+          </span>
+        </template>
+
+        <BDropdownItemButton
+          style="min-width: 15rem"
+          @click.stop="$emit('datingmode:toggle')"
+        >
+          <span class="d-flex align-items-center justify-content-start">
+            <BFormCheckbox
+              switch
+              :model-value="isDatingActive"
+              tabindex="-1"
+              style="pointer-events: none"
+            />
+            <span>{{ $t('profiles.forms.dating_mode') }}</span>
+          </span>
+        </BDropdownItemButton>
+
+        <BDropdownDivider v-if="isDatingActive" />
+        <BDropdownItemButton @click="$emit('datingmode:profile')">
+          <IconProfile class="svg-icon me-2" />
+          {{ $t('profiles.forms.my_dating_profile') }}
+        </BDropdownItemButton>
+
+        <BDropdownItemButton @click="$emit('datingmode:prefs')">
+          <IconSlider class="svg-icon me-2" />
+          {{ $t('profiles.forms.my_preferences') }}
+        </BDropdownItemButton>
+      </BNavItemDropdown>
+
+      <!-- Settings -->
+      <BNavItem
+        to="/settings"
+        link-class="text-secondary"
+      >
+        <IconSetting2 class="svg-icon-lg" />
+      </BNavItem>
+    </BNav>
   </div>
 </template>
 
 <style scoped>
+/* hide dropdown caret */
 :deep(button:after) {
   content: none !important;
   display: none !important;
   margin: 0 !important;
   padding: 0 !important;
 }
-.circle-flags {
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: 50%;
-  flex-shrink: 1;
+
+.language-option .flag-icon {
+  opacity: 0.5;
+}
+.language-option :deep(button.active) .flag-icon {
+  opacity: 1 !important;
 }
 </style>

@@ -34,13 +34,7 @@ export const useInteractionStore = defineStore('interaction', {
 
   actions: {
     onNewLike() {
-      // // Push to sent only if not already there
-      // if (!this.sent.some(e => e.profile.id === edge.profile.id)) {
-      //   this.sent.unshift(edge)
-      // }
-      // if (edge.isMatch && !this.matches.some(e => e.profile.id === edge.profile.id)) {
-      //   this.matches.unshift(edge)
-      // }
+      this.receivedLikesCount++
     },
     onNewMatch(edge: InteractionEdge) {
       if (edge.isMatch && !this.matches.some((e) => e.profile.id === edge.profile.id)) {

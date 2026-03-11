@@ -119,5 +119,6 @@ const handleBlock = async () => {
 .interactions {
   bottom: 1rem;
   left: 0;
+  z-index: 2;
 }
 </style>

@@ -142,6 +142,10 @@
     "gender_edit_label": "gender",
     "forms": {
       "my_preferences": "My preferences",
+      "dating_mode": "Dating mode",
+      "my_dating_profile": "My dating profile",
+      "my_profile": "My profile",
+      "preview_language": "Preview language",
       "age_range": "Age range",
       "kids_label": "Kids?",
       "relationship_label": "I am...",
@@ -214,6 +218,7 @@
         "locate_button_title": "Set to my country",
         "search_button_title_social": "Find people",
         "search_button_title_dating": "Find people",
+        "button_update_prefs":"Update",
         "age_range": "Age range:",
         "explore_tags": "Explore interests"
       }

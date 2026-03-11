@@ -9,11 +9,13 @@ import { InteractionEdgePair, type InteractionEdge } from '@zod/interaction/inte
 function toLikeEdge(
   profile: Prisma.ProfileGetPayload<{ include: { profileImages: true } }>,
   createdAt: Date,
-  isMatch: boolean
+  isMatch: boolean,
+  isNew = true
 ): InteractionEdge {
   return {
     profile: mapProfileSummary(profile),
     isMatch,
+    isNew,
     createdAt: createdAt.toISOString(),
   }
 }
@@ -136,6 +138,7 @@ export class InteractionService {
     const matches = await prisma.likedProfile.findMany({
       where: {
         fromId: profileId,
+        isNew: true,
         to: {
           likesSent: {
             some: { toId: profileId },

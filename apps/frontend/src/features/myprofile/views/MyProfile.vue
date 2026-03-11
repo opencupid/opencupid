@@ -12,6 +12,7 @@ import ProfileContent from '@/features/publicprofile/components/ProfileContent.v
 
 import { useMyProfileViewModel } from '../composables/useMyProfileViewModel'
 import DatingWizard from '../../onboarding/components/DatingWizard.vue'
+import DatingPreferencesForm from '@/features/browse/components/DatingPreferencesForm.vue'
 import MyProfileSecondaryNav from '../components/MyProfileSecondaryNav.vue'
 import EditableFields from '../components/EditableFields.vue'
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
@@ -31,38 +32,33 @@ const {
   profilePreview,
   isDatingOnboarded,
   isOnboarded,
+  datingPrefs,
   updateScopes,
   updateProfile,
+  persistDatingPrefs,
 } = useMyProfileViewModel(props.editMode)
 
 const isDatingWizardActive = ref(false)
+const showDatingPrefsModal = ref(false)
+const showDatingProfileModal = ref(false)
+const openDatingPrefs = () => {
+  showDatingPrefsModal.value = true
+}
+
 const toggleDating = async () => {
   // If dating is not onboarded, show the wizard
   if (!isDatingOnboarded.value && !formData.isDatingActive) {
     isDatingWizardActive.value = true
     return
   }
-  formData.isDatingActive = !formData.isDatingActive
-  await updateScopes()
+  const newValue = !formData.isDatingActive
+  formData.isDatingActive = newValue
+  await updateScopes({ isDatingActive: newValue })
 }
 
-const toggleSocial = async () => {
-  formData.isSocialActive = !formData.isSocialActive
-  await updateScopes()
-}
-
-const handleFinishEdit = async () => {
-  const res = await updateProfile()
-  formData.isDatingActive = true
-  await updateScopes()
-  if (res.success) {
-    isDatingWizardActive.value = false
-  }
-}
 const handleFinishDatingOnboarding = async () => {
   const res = await updateProfile()
-  formData.isDatingActive = true
-  await updateScopes()
+  await updateScopes({ isDatingActive: true })
   if (res.success) {
     isDatingWizardActive.value = false
     router.push({ name: 'BrowseProfiles' })
@@ -86,9 +82,6 @@ provide('viewerProfile', toRef(formData))
 
 const route = useRoute()
 const hint = computed(() => history?.state?.hint || null)
-// TODO implement floating hints
-// adapt HelpScribble.vue and use @floating-ui/vue to display floating scribbles
-// alongside controls
 </script>
 
 <template>
@@ -110,53 +103,14 @@ const hint = computed(() => history?.state?.hint || null)
         class="d-flex flex-column justify-content-center h-100"
       >
         <MiddleColumn class="pt-sm-3 position-relative">
-          <div class="d-flex flex-row justify-content-between align-items-center my-2">
-            <div class="toggle-bar w-100 d-flex align-items-center justify-content-center">
-              <div
-                v-if="viewState.isEditable"
-                class="d-flex"
-              >
-                <span
-                  class="btn-social-toggle px-4 py-1 rounded-4 me-2"
-                  role="button"
-                  :title="$t('general.connectiontypes.socializing')"
-                  @click="toggleSocial"
-                  :class="{ active: formData.isSocialActive }"
-                >
-                  <input
-                    type="checkbox"
-                    class="form-check-input me-2"
-                    :checked="formData.isSocialActive"
-                    value="true"
-                  />
-                  <span class="d-none d-sm-inline me-2">{{
-                    $t('general.connectiontypes.socializing')
-                  }}</span>
-                  <IconSocialize class="svg-icon-lg" />
-                </span>
-                <span
-                  class="btn-dating-toggle px-4 py-1 rounded-4"
-                  role="button"
-                  :title="$t('general.connectiontypes.dating')"
-                  @click="toggleDating"
-                  :class="{ active: formData.isDatingActive }"
-                >
-                  <input
-                    type="checkbox"
-                    class="form-check-input me-2"
-                    :checked="formData.isDatingActive"
-                    value="true"
-                  />
-                  <span class="d-none d-sm-inline me-2">{{
-                    $t('general.connectiontypes.dating')
-                  }}</span>
-                  <IconDate class="svg-icon-lg" />
-                </span>
-              </div>
-              <div v-else>
-                <MyProfileSecondaryNav v-model="viewState" />
-              </div>
-            </div>
+          <div class="d-flex flex-row justify-content-between align-items-center">
+            <MyProfileSecondaryNav
+              v-model="viewState"
+              v-model:isDatingActive="formData.isDatingActive"
+              @datingmode:toggle="toggleDating"
+              @datingmode:prefs="openDatingPrefs"
+              @datingmode:profile="showDatingProfileModal = true"
+            />
           </div>
         </MiddleColumn>
         <div class="overflow-auto hide-scrollbar h-100">
@@ -198,6 +152,48 @@ const hint = computed(() => history?.state?.hint || null)
         v-model="formData"
         @finished="handleFinishDatingOnboarding"
         @cancel="handleCancelEdit"
+      />
+    </BModal>
+    <BModal
+      v-model="showDatingPrefsModal"
+      centered
+      button-size="sm"
+      :focus="false"
+      :no-close-on-backdrop="true"
+      fullscreen="sm"
+      :no-footer="false"
+      :no-header="true"
+      :cancel-title="$t('profiles.browse.filters.dialog_cancel_button')"
+      cancel-variant="link"
+      :ok-title="$t('profiles.browse.filters.button_update_prefs')"
+      initial-animation
+      :body-scrolling="false"
+      @ok="persistDatingPrefs"
+    >
+      <DatingPreferencesForm
+        v-model="datingPrefs"
+        v-if="datingPrefs"
+      />
+    </BModal>
+    <BModal
+      v-if="showDatingProfileModal"
+      :backdrop="'static'"
+      centered
+      size="lg"
+      button-size="sm"
+      fullscreen="sm"
+      :focus="false"
+      :no-close-on-backdrop="true"
+      :no-header="true"
+      :no-footer="true"
+      :show="true"
+      body-class="d-flex flex-column align-items-center justify-content-center overflow-auto hide-scrollbar p-2 p-md-5"
+      :keyboard="false"
+    >
+      <DatingWizard
+        v-model="formData"
+        @finished="updateProfile().then(() => (showDatingProfileModal = false))"
+        @cancel="showDatingProfileModal = false"
       />
     </BModal>
   </main>

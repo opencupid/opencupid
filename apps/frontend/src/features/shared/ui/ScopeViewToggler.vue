@@ -12,8 +12,8 @@ const currentScope = defineModel<ProfileScope | null>()
 
 <template>
   <div
-    class="btn-group btn-group-toggle"
-    :class="{ compact }"
+    class="btn-group"
+    :class="{ compact }" 
     data-bs-toggle="buttons"
   >
     <input

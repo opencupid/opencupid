@@ -29,9 +29,9 @@ const { t } = useI18n()
       <IconConfusedEmoji class="svg-icon-lg h-100 w-100" />
     </div>
     <div class="text-center">
-      <h1 class="text-muted">{{ error.status }}</h1>
+      <!-- <h1 class="text-muted">{{ error.status }}</h1> -->
       <h4>{{ t('uicomponents.error.title') }}</h4>
-      <p class="text-muted">{{ error.message }}</p>
+      <!-- <p class="text-muted">{{ error.message }}</p> -->
       <!-- <pre>{{error}}</pre> -->
     </div>
     <div>

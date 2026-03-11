@@ -41,6 +41,10 @@ export type GetPublicProfileResponse = ApiSuccess<{ profile: PublicProfileWithCo
 export type GetProfilesResponse = ApiSuccess<{ profiles: PublicProfileWithContext[] }>
 export type GetMatchIdsResponse = ApiSuccess<{ ids: string[] }>
 export type UpdateProfileResponse = ApiSuccess<{ profile: OwnerProfile }>
+export type UpdateProfileScopeResponse = ApiSuccess<{
+  isDatingActive: boolean
+  isActive: boolean
+}>
 export type UpdateProfileOptInResponse = ApiSuccess<{ optIn: ProfileOptInSettings }>
 
 export type TagsResponse = ApiSuccess<{ tags: PublicTag[] }>

@@ -179,7 +179,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
         })
 
         const conversation = await messageService.getConversationSummary(convoId, senderProfileId)
-        if (!isDuplicate && conversation?.conversation.status !== 'INITIATED') {
+        if (!isDuplicate) {
           await interactionService.markMatchAsSeen(senderProfileId, profileId)
         }
 
@@ -348,7 +348,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
 
           const conversation = await messageService.getConversationSummary(convoId, senderProfileId)
 
-          if (!isDuplicate && conversation?.conversation.status !== 'INITIATED') {
+          if (!isDuplicate) {
             await interactionService.markMatchAsSeen(senderProfileId, payload.data.profileId)
           }
 

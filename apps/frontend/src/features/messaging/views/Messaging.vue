@@ -9,7 +9,6 @@ import ConversationDetail from '../components/ConversationDetail.vue'
 import ConversationSummaries from '../components/ConversationSummaries.vue'
 import SendMessageDialog from '@/features/publicprofile/components/SendMessageDialog.vue'
 import ViewTitle from '../../shared/ui/ViewTitle.vue'
-import LikesAndMatchesBanner from '@/features/interaction/components/LikesAndMatchesBanner.vue'
 import MatchesList from '@/features/interaction/components/MatchesList.vue'
 import ReceivedLikesTeaser from '@/features/interaction/components/ReceivedLikesTeaser.vue'
 
@@ -31,11 +30,13 @@ const {
   handleSelectConvo,
   handleDeselectConvo,
   handleProfileSelect,
+  handleMatchSelect,
   handleMessageSent,
   fetchConversations,
   initialize,
   matches,
   haveMatches,
+  showEmptyState,
   showMessageModal,
   messageProfile,
 } = useMessagingViewModel(toRef(props, 'conversationId'))
@@ -70,7 +71,7 @@ onMounted(async () => {
       :class="{ 'd-none': isDetailView }"
     >
       <BOverlay
-        :show="!haveConversations && isInitialized"
+        :show="showEmptyState && isInitialized"
         no-spinner
         bg-color="inherit"
         :blur="null"
@@ -102,14 +103,14 @@ onMounted(async () => {
         </template>
 
         <!-- Conversation summaries -->
-        <div class="flex-grow-1 overflow-auto hide-scrollbar pt-5">
+        <div class="flex-grow-1 overflow-auto hide-scrollbar pt-2">
           <MiddleColumn>
             <template v-if="haveMatches">
               <p class="px-2 text-center">{{ $t('messaging.matches_list_title') }}</p>
               <div class="px-3 mb-3">
                 <MatchesList
                   :edges="matches"
-                  @select:profile="handleProfileSelect"
+                  @select:profile="handleMatchSelect"
                 />
               </div>
             </template>
@@ -117,14 +118,17 @@ onMounted(async () => {
             <div class="px-3 mb-3">
               <ReceivedLikesTeaser />
             </div>
-            <p class="px-2 text-center">{{ $t('messaging.conversations_list_title') }}</p>
 
-            <ConversationSummaries
-              :loading="isLoading"
-              :conversations="conversations"
-              :activeConversation="activeConversation"
-              @convo:select="handleSelectConvo"
-            />
+            <div v-if="haveConversations">
+              <p class="px-2 text-center">{{ $t('messaging.conversations_list_title') }}</p>
+
+              <ConversationSummaries
+                :loading="isLoading"
+                :conversations="conversations"
+                :activeConversation="activeConversation"
+                @convo:select="handleSelectConvo"
+              />
+            </div>
           </MiddleColumn>
         </div>
       </BOverlay>

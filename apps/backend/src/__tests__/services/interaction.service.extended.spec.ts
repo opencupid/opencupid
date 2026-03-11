@@ -98,7 +98,7 @@ describe('InteractionService.getLikesSent', () => {
 })
 
 describe('InteractionService.getMatches', () => {
-  it('returns matched edges', async () => {
+  it('returns matched edges with isNew filter', async () => {
     mockPrisma.likedProfile.findMany.mockResolvedValue([
       {
         to: { id: 'p2', publicName: 'Bob', profileImages: [] },
@@ -108,6 +108,11 @@ describe('InteractionService.getMatches', () => {
     const result = await service.getMatches('p1')
     expect(result).toHaveLength(1)
     expect(result[0].isMatch).toBe(true)
+    expect(mockPrisma.likedProfile.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ isNew: true }),
+      })
+    )
   })
 })
 
