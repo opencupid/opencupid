@@ -34,7 +34,7 @@ const interactionRoutes: FastifyPluginAsync = async (fastify) => {
         const [sent, matches, receivedLikes, newMatchesCount] = await Promise.all([
           service.getLikesSent(myId),
           service.getMatches(myId),
-          service.getLikesReceived(myId),
+          service.getLikesReceived(myId, 4),
           service.getNewMatchesCount(myId),
         ])
         const response: InteractionStatsResponse = {

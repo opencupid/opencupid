@@ -54,8 +54,12 @@ const handlePass = async () => {
 }
 
 const handleAnonymousUpdate = async (isAnonymous: boolean) => {
-  await updateLike(props.profile.id, isAnonymous)
-  emit('updated')
+  const result = await updateLike(props.profile.id, isAnonymous)
+  if (result.success) {
+    emit('updated')
+  } else {
+    toast.error(t('interactions.like_error'))
+  }
 }
 
 const handleMessageIntent = () => {

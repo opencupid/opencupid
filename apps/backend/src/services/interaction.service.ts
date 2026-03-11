@@ -143,7 +143,7 @@ export class InteractionService {
     })
   }
 
-  async getLikesReceived(profileId: string): Promise<ReceivedLike[]> {
+  async getLikesReceived(profileId: string, limit?: number): Promise<ReceivedLike[]> {
     const likes = await prisma.likedProfile.findMany({
       where: {
         toId: profileId,
@@ -156,6 +156,7 @@ export class InteractionService {
         },
       },
       orderBy: [{ isAnonymous: 'asc' }, { createdAt: 'desc' }],
+      ...(limit ? { take: limit } : {}),
       include: {
         from: {
           include: profileImageInclude(),

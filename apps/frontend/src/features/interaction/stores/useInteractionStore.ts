@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { useDebounceFn } from '@vueuse/core'
 import { api, safeApiCall } from '@/lib/api'
 import { bus } from '@/lib/bus'
 import {
@@ -34,8 +35,8 @@ export const useInteractionStore = defineStore('interaction', {
   }),
 
   actions: {
-    async onNewLike() {
-      await this.fetchInteractions()
+    onNewLike() {
+      debouncedFetchInteractions()
     },
     onNewMatch(edge: InteractionEdge) {
       if (edge.isMatch && !this.matches.some((e) => e.profile.id === edge.profile.id)) {
@@ -77,9 +78,9 @@ export const useInteractionStore = defineStore('interaction', {
         const pair = InteractionEdgePairSchema.parse(res.data.pair)
 
         if (pair.isMatch) {
-          this.matches.push(pair.from)
+          this.matches.push(pair.to)
         } else {
-          this.sent.push(pair.from)
+          this.sent.push(pair.to)
         }
 
         return storeSuccess(pair)
@@ -105,7 +106,7 @@ export const useInteractionStore = defineStore('interaction', {
         // Update the sent edge with new isAnonymous value
         const sentIdx = this.sent.findIndex((e) => e.profile.id === targetId)
         if (sentIdx !== -1) {
-          this.sent[sentIdx] = pair.from
+          this.sent[sentIdx] = pair.to
         }
 
         return storeSuccess(pair)
@@ -176,6 +177,10 @@ export const useInteractionStore = defineStore('interaction', {
     },
   },
 })
+
+const debouncedFetchInteractions = useDebounceFn(() => {
+  useInteractionStore().fetchInteractions()
+}, 2000)
 
 bus.on('auth:logout', () => {
   useInteractionStore().teardown()
