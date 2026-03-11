@@ -3,9 +3,14 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useInteractionsViewModel } from '../composables/useInteractionsViewModel'
 import AvatarIcon from '@/features/shared/components/AvatarIcon.vue'
+import type { ReceivedLike } from '@zod/interaction/interaction.dto'
 
 const { t } = useI18n()
 const { receivedLikes, receivedLikesCount, haveReceivedLikes } = useInteractionsViewModel()
+
+const emit = defineEmits<{
+  (e: 'interaction:selected', like: ReceivedLike): void
+}>()
 
 const displayedLikes = computed(() => receivedLikes.value.slice(0, 4))
 </script>
@@ -28,7 +33,11 @@ const displayedLikes = computed(() => receivedLikes.value.slice(0, 4))
           >
             <!-- Revealed: show real avatar and name -->
             <template v-if="like.profile">
-              <div class="avatar-chip ratio ratio-1x1">
+              <div
+                class="avatar-chip ratio ratio-1x1 clickable"
+                role="button"
+                @click="emit('interaction:selected', like)"
+              >
                 <AvatarIcon
                   v-if="like.profile.profileImages[0]"
                   :image="like.profile.profileImages[0]"
@@ -42,11 +51,34 @@ const displayedLikes = computed(() => receivedLikes.value.slice(0, 4))
                 {{ like.profile.publicName }}
               </small>
             </template>
-            <!-- Anonymous: show blurred placeholder -->
+            <!-- Anonymous: show popover with hint -->
             <template v-else>
-              <div class="placeholder-chip ratio ratio-1x1">
-                <div class="placeholder-avatar mt-2" />
-              </div>
+              <BPopover
+                placement="top"
+                click
+                title-class="d-none"
+              >
+                <template #target>
+                  <div
+                    class="placeholder-chip ratio ratio-1x1 clickable"
+                    role="button"
+                  >
+                    <div class="placeholder-avatar mt-2" />
+                  </div>
+                </template>
+                <p class="mb-2">
+                  {{ t('matches.anonymous_like_hint') }}
+                </p>
+                <div class="d-flex align-items-center gap-1 mb-2">
+                  <span class="highlighted-indicator" />
+                </div>
+                <RouterLink
+                  to="/browse"
+                  class="btn btn-sm btn-primary"
+                >
+                  {{ t('matches.anonymous_like_hint_cta') }}
+                </RouterLink>
+              </BPopover>
               <BPlaceholder
                 class="mt-1"
                 :width="60 + 30 * Math.random()"
@@ -78,5 +110,19 @@ const displayedLikes = computed(() => receivedLikes.value.slice(0, 4))
 
 .avatar-chip {
   width: 2.5rem;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.highlighted-indicator {
+  display: inline-block;
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 50%;
+  background-color: var(--bs-secondary);
+  box-shadow: 0 0 6px 3px rgba(217, 83, 79, 0.7);
+  filter: drop-shadow(0 0 6px rgba(217, 83, 79, 0.6));
 }
 </style>

@@ -31,6 +31,7 @@ const {
   handleDeselectConvo,
   handleProfileSelect,
   handleMatchSelect,
+  handleReceivedLikeSelect,
   handleMessageSent,
   fetchConversations,
   initialize,
@@ -108,6 +109,7 @@ onMounted(async () => {
             <template v-if="haveMatches">
               <p class="px-2 text-center">{{ $t('messaging.matches_list_title') }}</p>
               <div class="px-3 mb-3">
+                
                 <MatchesList
                   :edges="matches"
                   @select:profile="handleMatchSelect"
@@ -116,7 +118,7 @@ onMounted(async () => {
             </template>
 
             <div class="px-3 mb-3">
-              <ReceivedLikesTeaser />
+              <ReceivedLikesTeaser @interaction:selected="handleReceivedLikeSelect" />
             </div>
 
             <div v-if="haveConversations">
