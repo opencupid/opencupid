@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, inject, type Ref, ref } from 'vue'
-import { useI18nStore } from '@/store/i18nStore'
+import { useLanguages } from '@/features/shared/composables/useLanguages'
 
 import { type ViewState } from '../composables/types'
 import ScopeViewToggler from '@/features/shared/ui/ScopeViewToggler.vue'
@@ -34,10 +34,10 @@ const emit = defineEmits<{
 
 const viewerProfile = inject<Ref<OwnerProfile>>('viewerProfile')
 
-const i18nStore = useI18nStore()
+const { getLanguageLabels } = useLanguages()
 
 const languagePreviewOptions = computed(() => {
-  return i18nStore.getLanguageLabels(viewerProfile?.value.languages || [])
+  return getLanguageLabels(viewerProfile?.value.languages || [])
 })
 
 const hasPreviewLanguages = computed(() => languagePreviewOptions.value.length > 1)
