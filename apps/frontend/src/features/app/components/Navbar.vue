@@ -25,7 +25,7 @@ const interactionStore = useInteractionStore()
 
 const hasUnreadMessages = computed(() => useMessageStore().hasUnreadMessages)
 const hasMatchNotifications = computed(
-  () => interactionStore.newMatchesCount > 0 || interactionStore.receivedLikesCount > 0
+  () => interactionStore.newMatchesCount > 0 || interactionStore.receivedLikes.length > 0
 )
 </script>
 
@@ -63,7 +63,7 @@ const hasMatchNotifications = computed(
           <IconNote class="svg-icon-lg" />
           <span class="d-none d-md-inline label">{{ $t('nav.bulletin') }}</span>
         </BNavItem>
-        
+
         <BNavItem
           to="/inbox"
           active-class="active"

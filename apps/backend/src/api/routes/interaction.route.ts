@@ -2,14 +2,13 @@ import { FastifyPluginAsync } from 'fastify'
 import z from 'zod'
 import { rateLimitConfig, sendError } from '../helpers'
 import type {
-  InteractionEdgeCountResponse,
   InteractionEdgeResponse,
   InteractionEdgesResponse,
   InteractionStatsResponse,
+  ReceivedLikesResponse,
 } from '@zod/apiResponse.dto'
 import { InteractionService } from '@/services/interaction.service'
 import { broadcastToProfile } from '@/utils/wsUtils'
-import { WebPushService } from '@/services/webpush.service'
 import { notifierService } from '@/services/notifier.service'
 import { appConfig } from '@/lib/appconfig'
 
@@ -32,15 +31,15 @@ const interactionRoutes: FastifyPluginAsync = async (fastify) => {
       const myId = req.session.profileId
 
       try {
-        const [sent, matches, receivedLikesCount, newMatchesCount] = await Promise.all([
+        const [sent, matches, receivedLikes, newMatchesCount] = await Promise.all([
           service.getLikesSent(myId),
           service.getMatches(myId),
-          service.getLikesReceivedCount(myId),
+          service.getLikesReceived(myId, 4),
           service.getNewMatchesCount(myId),
         ])
         const response: InteractionStatsResponse = {
           success: true,
-          stats: { sent, matches, receivedLikesCount, newMatchesCount },
+          stats: { sent, matches, receivedLikes, newMatchesCount },
         }
         return reply.code(200).send(response)
       } catch (err) {
@@ -60,17 +59,18 @@ const interactionRoutes: FastifyPluginAsync = async (fastify) => {
     async (req, reply) => {
       const { targetId } = TargetLookupParamsSchema.parse(req.params)
       const myId = req.session.profileId
+      const body = z.object({ isAnonymous: z.boolean().default(true) }).parse(req.body ?? {})
 
       try {
-        const { isNewLike, ...likeResult } = await service.like(myId, targetId)
+        const { isNewLike, ...likeResult } = await service.like(myId, targetId, body.isAnonymous)
         const response: InteractionEdgeResponse = { success: true, pair: likeResult }
         reply.code(200).send(response)
 
         if (isNewLike) {
-          // Broadcast the new message to the recipient
+          // Broadcast to the recipient — send the initiator's edge so they see who liked/matched them
           broadcastToProfile(fastify, targetId, {
             type: likeResult.isMatch ? 'ws:new_match' : 'ws:new_like',
-            payload: likeResult.to,
+            payload: likeResult.from,
           })
 
           if (likeResult.isMatch) {
@@ -91,22 +91,28 @@ const interactionRoutes: FastifyPluginAsync = async (fastify) => {
     }
   )
 
-  // DELETE /interactions/like/:targetId
-  // fastify.delete<{ Params: { targetId: string } }>('/like/:targetId', {
-  //   onRequest: [fastify.authenticate],
-  //   config: rateLimitConfig(fastify, '1 minute', 10),
-  // }, async (req, reply) => {
-  //   const { targetId } = TargetLookupParamsSchema.parse(req.params)
-  //   const myId = req.session.profileId
+  // PATCH /interactions/like/:targetId
+  fastify.patch<{ Params: { targetId: string } }>(
+    '/like/:targetId',
+    {
+      onRequest: [fastify.authenticate],
+      config: rateLimitConfig(fastify, '1 minute', 10),
+    },
+    async (req, reply) => {
+      const { targetId } = TargetLookupParamsSchema.parse(req.params)
+      const myId = req.session.profileId
+      const body = z.object({ isAnonymous: z.boolean() }).parse(req.body)
 
-  //   try {
-  //     await service.unlike(myId, targetId)
-  //     return reply.code(200).send({ success: true })
-  //   } catch (err) {
-  //     fastify.log.error(err)
-  //     return sendError(reply, 500, 'Failed to unlike profile')
-  //   }
-  // })
+      try {
+        const pair = await service.updateLike(myId, targetId, body)
+        const response: InteractionEdgeResponse = { success: true, pair }
+        return reply.code(200).send(response)
+      } catch (err) {
+        fastify.log.error(err)
+        return sendError(reply, 500, 'Failed to update like')
+      }
+    }
+  )
 
   // POST /interactions/pass/:targetId
   fastify.post<{ Params: { targetId: string } }>(
@@ -129,23 +135,6 @@ const interactionRoutes: FastifyPluginAsync = async (fastify) => {
     }
   )
 
-  // DELETE /interactions/pass/:targetId
-  // fastify.delete<{ Params: { targetId: string } }>('/pass/:targetId', {
-  //   onRequest: [fastify.authenticate],
-  //   config: rateLimitConfig(fastify, '1 minute', 10),
-  // }, async (req, reply) => {
-  //   const { targetId } = TargetLookupParamsSchema.parse(req.params)
-  //   const myId = req.session.profileId
-
-  //   try {
-  //     await service.unpass(myId, targetId)
-  //     return reply.code(200).send({ success: true })
-  //   } catch (err) {
-  //     fastify.log.error(err)
-  //     return sendError(reply, 500, 'Failed to unpass profile')
-  //   }
-  // })
-
   // GET /interactions/received
   fastify.get(
     '/received',
@@ -157,8 +146,8 @@ const interactionRoutes: FastifyPluginAsync = async (fastify) => {
       const myId = req.session.profileId
 
       try {
-        const count = await service.getLikesReceivedCount(myId)
-        const response: InteractionEdgeCountResponse = { success: true, count }
+        const edges = await service.getLikesReceived(myId)
+        const response: ReceivedLikesResponse = { success: true, edges }
         return reply.code(200).send(response)
       } catch (err) {
         fastify.log.error(err)

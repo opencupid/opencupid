@@ -4,18 +4,24 @@ import { prisma } from '@/lib/prisma'
 import { MessageService } from './messaging.service'
 
 import { Prisma } from '@prisma/client'
-import { InteractionEdgePair, type InteractionEdge } from '@zod/interaction/interaction.dto'
+import {
+  InteractionEdgePair,
+  type InteractionEdge,
+  type ReceivedLike,
+} from '@zod/interaction/interaction.dto'
 
 function toLikeEdge(
   profile: Prisma.ProfileGetPayload<{ include: { profileImages: true } }>,
   createdAt: Date,
   isMatch: boolean,
-  isNew = true
+  isNew = true,
+  isAnonymous = true
 ): InteractionEdge {
   return {
     profile: mapProfileSummary(profile),
     isMatch,
     isNew,
+    isAnonymous,
     createdAt: createdAt.toISOString(),
   }
 }
@@ -32,7 +38,11 @@ export class InteractionService {
 
   private constructor() {}
 
-  async like(fromId: string, toId: string): Promise<InteractionEdgePair & { isNewLike: boolean }> {
+  async like(
+    fromId: string,
+    toId: string,
+    isAnonymous = true
+  ): Promise<InteractionEdgePair & { isNewLike: boolean }> {
     if (fromId === toId) throw new Error('Cannot like yourself')
 
     const { like, isNewLike } = await prisma.$transaction(async (tx) => {
@@ -44,8 +54,8 @@ export class InteractionService {
 
       const like = await tx.likedProfile.upsert({
         where: { fromId_toId: { fromId, toId } },
-        update: {},
-        create: { fromId, toId },
+        update: { isAnonymous },
+        create: { fromId, toId, isAnonymous },
       })
 
       return { like, isNewLike: !existing }
@@ -73,12 +83,43 @@ export class InteractionService {
 
     const response: InteractionEdgePair & { isNewLike: boolean } = {
       isMatch: !!isMatch,
-      to: toLikeEdge(likedProfile, like.createdAt, !!isMatch),
-      from: toLikeEdge(initiatorProfile, like.createdAt, !!isMatch),
+      to: toLikeEdge(likedProfile, like.createdAt, !!isMatch, like.isNew, like.isAnonymous),
+      from: toLikeEdge(initiatorProfile, like.createdAt, !!isMatch, like.isNew, like.isAnonymous),
       isNewLike,
     }
 
     return response
+  }
+
+  async updateLike(
+    fromId: string,
+    toId: string,
+    data: { isAnonymous: boolean }
+  ): Promise<InteractionEdgePair> {
+    const like = await prisma.likedProfile.update({
+      where: { fromId_toId: { fromId, toId } },
+      data: { isAnonymous: data.isAnonymous },
+    })
+
+    const likedProfile = await prisma.profile.findUniqueOrThrow({
+      where: { id: toId },
+      include: profileImageInclude(),
+    })
+
+    const initiatorProfile = await prisma.profile.findUniqueOrThrow({
+      where: { id: fromId },
+      include: profileImageInclude(),
+    })
+
+    const isMatch = await prisma.likedProfile.findUnique({
+      where: { fromId_toId: { fromId: toId, toId: fromId } },
+    })
+
+    return {
+      isMatch: !!isMatch,
+      to: toLikeEdge(likedProfile, like.createdAt, !!isMatch, like.isNew, like.isAnonymous),
+      from: toLikeEdge(initiatorProfile, like.createdAt, !!isMatch, like.isNew, like.isAnonymous),
+    }
   }
 
   async unlike(fromId: string, toId: string): Promise<void> {
@@ -102,9 +143,20 @@ export class InteractionService {
     })
   }
 
-  async getLikesReceived(profileId: string): Promise<InteractionEdge[]> {
+  async getLikesReceived(profileId: string, limit?: number): Promise<ReceivedLike[]> {
     const likes = await prisma.likedProfile.findMany({
-      where: { toId: profileId },
+      where: {
+        toId: profileId,
+        from: {
+          likesReceived: {
+            none: {
+              fromId: profileId, // exclude mutual likes (same filter as count)
+            },
+          },
+        },
+      },
+      orderBy: [{ isAnonymous: 'asc' }, { createdAt: 'desc' }],
+      ...(limit ? { take: limit } : {}),
       include: {
         from: {
           include: profileImageInclude(),
@@ -112,10 +164,13 @@ export class InteractionService {
       },
     })
 
-    return likes.map((like) => {
-      const isMatch = false // Optional: calculate mutual like if needed
-      return toLikeEdge(like.from, like.createdAt, isMatch)
-    })
+    return likes.map((like) => ({
+      profile: like.isAnonymous ? null : mapProfileSummary(like.from),
+      isMatch: false,
+      isNew: like.isNew,
+      isAnonymous: like.isAnonymous,
+      createdAt: like.createdAt.toISOString(),
+    }))
   }
 
   async getLikesSent(profileId: string): Promise<InteractionEdge[]> {
@@ -128,10 +183,9 @@ export class InteractionService {
       },
     })
 
-    return likes.map((like) => {
-      const isMatch = false // Optional: calculate mutual like if needed
-      return toLikeEdge(like.to, like.createdAt, isMatch)
-    })
+    return likes.map((like) =>
+      toLikeEdge(like.to, like.createdAt, false, like.isNew, like.isAnonymous)
+    )
   }
 
   async getMatches(profileId: string): Promise<InteractionEdge[]> {
@@ -152,7 +206,9 @@ export class InteractionService {
       },
     })
 
-    return matches.map((like) => toLikeEdge(like.to, like.createdAt, true))
+    return matches.map((like) =>
+      toLikeEdge(like.to, like.createdAt, true, like.isNew, like.isAnonymous)
+    )
   }
 
   async getNewMatchesCount(profileId: string): Promise<number> {

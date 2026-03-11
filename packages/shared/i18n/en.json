@@ -218,7 +218,7 @@
         "locate_button_title": "Set to my country",
         "search_button_title_social": "Find people",
         "search_button_title_dating": "Find people",
-        "button_update_prefs":"Update",
+        "button_update_prefs": "Update",
         "age_range": "Age range:",
         "explore_tags": "Explore interests"
       }
@@ -280,6 +280,8 @@
     "received_likes": "{count, plural, =0 {You have no likes.} one {You have # like.} other {You have # likes!}}",
     "received_likes_cta": "Find out who sent it",
     "received_likes_teaser": "They didn't want you to know who they are, at least not yet. But you will find out when you like them back.",
+    "anonymous_like_hint": "You can bump into them on the map. If you see someone marked like this, your preferences match.",
+    "anonymous_like_hint_cta": "Discover the community",
     "no_match_no_sent_like": "There's gotta be someone you like out there?  ",
     "no_match_no_sent_like_cta": "Start lookin'",
     "no_match_have_sent_like": "They will surely like you back.",
@@ -314,7 +316,9 @@
     "send_them_a_message": "Send {name} a message",
     "cancel_button": "Maybe later",
     "message_confirmation": "Nice!",
-    "like_error": "Oops, this didn't work. Please try again."
+    "like_error": "Oops, this didn't work. Please try again.",
+    "anonymous_toggle_anonymous": "Stay anonymous",
+    "anonymous_toggle_reveal": "Reveal my profile"
   },
   "messaging": {
     "page_title": "Messages",

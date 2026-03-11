@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { type InteractionContext } from '@zod/interaction/interactionContext.dto'
 
 import IconHeart from '@/assets/icons/interface/heart.svg'
@@ -12,19 +12,29 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'like'): void
+  (e: 'like', isAnonymous: boolean): void
   (e: 'pass'): void
   (e: 'message'): void
+  (e: 'update:anonymous', isAnonymous: boolean): void
 }>()
 
 const passPopover = ref(false)
+
+// Local ref tracks the radio selection — synced from context when it changes
+const selectedAnonymous = ref(props.context.isAnonymous)
+watch(
+  () => props.context.isAnonymous,
+  (val) => {
+    selectedAnonymous.value = val
+  }
+)
 
 const handleLikeClick = () => {
   // If the user has already liked the profile, do nothing
   if (props.context.likedByMe || !props.context.canLike) {
     return
   }
-  emit('like')
+  emit('like', selectedAnonymous.value)
 }
 
 const handlePassClick = () => {
@@ -48,11 +58,15 @@ const handleMessageClick = () => {
     return
   }
 }
+
+const handleAnonymousChange = (value: boolean) => {
+  emit('update:anonymous', value)
+}
 </script>
 
 <template>
   <div class="d-flex justify-content-center align-items-center gap-2">
-    <div v-if="context.canDate">
+    <div v-if="context.canDate && !context.isMatch">
       <BPopover
         v-model="passPopover"
         placement="top"
@@ -109,7 +123,7 @@ const handleMessageClick = () => {
 
     <!-- interaction action buttons popovers, 'like' action -->
     <BPopover
-      v-if="context.canDate"
+      v-if="context.canDate && !context.isMatch"
       placement="top"
       title=""
       title-class="d-none"
@@ -124,19 +138,43 @@ const handleMessageClick = () => {
         </BButton>
       </template>
       <span v-if="context.isMatch">
-        <!-- You matched with them -->
         <IconHeart class="svg-icon text-dating" />
         {{ $t('interactions.you_matched_with_them') }}
       </span>
-      <span v-else-if="context.likedByMe">
-        <!-- You liked them -->
-        <IconHeart class="svg-icon text-dating" />
-        {{ $t('interactions.you_liked_them') }}
-      </span>
-      <span v-else>
-        <!-- Send a like. They will will not know who sent it until they like you back. -->
-        {{ $t('interactions.send_a_like') }}
-      </span>
+      <template v-else>
+        <span
+          v-if="context.likedByMe"
+          class="mb-2 d-block"
+        >
+          <IconHeart class="svg-icon text-dating" />
+          {{ $t('interactions.you_liked_them') }}
+        </span>
+        <span
+          v-else
+          class="mb-2 d-block"
+        >
+          {{ $t('interactions.send_a_like') }}
+        </span>
+        <BFormRadioGroup
+          v-model="selectedAnonymous"
+          stacked
+        >
+          <BFormRadio
+            name="anonymous-toggle"
+            :value="true"
+            @change="context.likedByMe && handleAnonymousChange(true)"
+          >
+            {{ $t('interactions.anonymous_toggle_anonymous') }}
+          </BFormRadio>
+          <BFormRadio
+            name="anonymous-toggle"
+            :value="false"
+            @change="context.likedByMe && handleAnonymousChange(false)"
+          >
+            {{ $t('interactions.anonymous_toggle_reveal') }}
+          </BFormRadio>
+        </BFormRadioGroup>
+      </template>
     </BPopover>
   </div>
 </template>

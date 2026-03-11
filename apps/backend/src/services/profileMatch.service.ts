@@ -308,8 +308,8 @@ export class ProfileMatchService {
     }
 
     const myAge = calculateAge(profile.birthday)
-    const prefAgeMax = profile.prefAgeMax ? profile.prefAgeMax + 1 : 99
-    const prefAgeMin = profile.prefAgeMin ? profile.prefAgeMin - 1 : 18
+    const prefAgeMax = (profile.prefAgeMax ?? 99) + AGE_TOLERANCE
+    const prefAgeMin = (profile.prefAgeMin ?? 18) - AGE_TOLERANCE
 
     const hasKids = profile.prefKids.length > 0 ? { hasKids: { in: profile.prefKids } } : {}
 
@@ -326,8 +326,8 @@ export class ProfileMatchService {
       },
       gender: { in: profile.prefGender },
       ...hasKids,
-      prefAgeMin: { lte: myAge },
-      prefAgeMax: { gte: myAge },
+      prefAgeMin: { lte: myAge + AGE_TOLERANCE },
+      prefAgeMax: { gte: myAge - AGE_TOLERANCE },
       prefGender: { hasSome: [profile.gender] },
       prefKids: profile.hasKids ? { hasSome: [profile.hasKids] } : undefined,
     }
@@ -363,14 +363,12 @@ export class ProfileMatchService {
     const ageB = calculateAge(b.birthday)
 
     const aMatchesB =
-      ageB >= (a.prefAgeMin ?? 18) &&
-      ageB <= (a.prefAgeMax ?? 99) &&
+      isAgeCompatible(ageB, a.prefAgeMin, a.prefAgeMax) &&
       a.prefGender.includes(b.gender) &&
       (b.hasKids == null || a.prefKids.includes(b.hasKids) || a.prefKids.length === 0)
 
     const bMatchesA =
-      ageA >= (b.prefAgeMin ?? 18) &&
-      ageA <= (b.prefAgeMax ?? 99) &&
+      isAgeCompatible(ageA, b.prefAgeMin, b.prefAgeMax) &&
       b.prefGender.includes(a.gender) &&
       (a.hasKids == null || b.prefKids.includes(a.hasKids) || b.prefKids.length === 0)
 
@@ -392,4 +390,24 @@ export function subtractYears(date: Date, years: number): Date {
   const d = new Date(date)
   d.setFullYear(d.getFullYear() - years)
   return d
+}
+
+/**
+ * ±1 year tolerance on age preference boundaries. Accounts for rounding in
+ * discrete age calculation (e.g. someone turning 35 later this year should
+ * still match a prefAgeMin of 35). Must be applied symmetrically in both
+ * directions to avoid one-way matches.
+ */
+const AGE_TOLERANCE = 1
+
+/** Check whether `candidateAge` falls within the viewer's age preference range (with tolerance). */
+export function isAgeCompatible(
+  candidateAge: number,
+  prefAgeMin: number | null,
+  prefAgeMax: number | null
+): boolean {
+  return (
+    candidateAge >= (prefAgeMin ?? 18) - AGE_TOLERANCE &&
+    candidateAge <= (prefAgeMax ?? 99) + AGE_TOLERANCE
+  )
 }

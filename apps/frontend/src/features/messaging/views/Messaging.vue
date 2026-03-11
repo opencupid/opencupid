@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import { onMounted, toRef } from 'vue'
+import { computed, onMounted, provide, toRef } from 'vue'
+import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 import IconMessage from '@/assets/icons/interface/message.svg'
@@ -31,6 +32,7 @@ const {
   handleDeselectConvo,
   handleProfileSelect,
   handleMatchSelect,
+  handleReceivedLikeSelect,
   handleMessageSent,
   fetchConversations,
   initialize,
@@ -40,6 +42,11 @@ const {
   showMessageModal,
   messageProfile,
 } = useMessagingViewModel(toRef(props, 'conversationId'))
+
+provide(
+  'viewerProfile',
+  computed(() => useOwnerProfileStore().profile)
+)
 
 onMounted(async () => {
   await initialize()
@@ -116,7 +123,7 @@ onMounted(async () => {
             </template>
 
             <div class="px-3 mb-3">
-              <ReceivedLikesTeaser />
+              <ReceivedLikesTeaser @interaction:selected="handleReceivedLikeSelect" />
             </div>
 
             <div v-if="haveConversations">

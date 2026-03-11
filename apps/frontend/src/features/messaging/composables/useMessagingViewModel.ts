@@ -3,6 +3,7 @@ import { useRouter } from 'vue-router'
 
 import type { ConversationSummary } from '@zod/messaging/messaging.dto'
 import type { PublicProfileWithContext } from '@zod/profile/profile.dto'
+import type { ReceivedLike } from '@zod/interaction/interaction.dto'
 
 import { useBootstrap } from '@/lib/bootstrap'
 import { useMessageStore } from '../stores/messageStore'
@@ -33,7 +34,7 @@ export function useMessagingViewModel(conversationId: Ref<string | undefined>) {
 
   const initialize = async () => {
     await useBootstrap().bootstrap()
-    await messageStore.fetchConversations()
+    await Promise.all([messageStore.fetchConversations(), interactions.refreshInteractions()])
     isInitialized.value = true
     if (conversationId.value) {
       await messageStore.setActiveConversationById(conversationId.value)
@@ -70,6 +71,11 @@ export function useMessagingViewModel(conversationId: Ref<string | undefined>) {
     showMessageModal.value = true
   }
 
+  const handleReceivedLikeSelect = async (like: ReceivedLike) => {
+    if (!like.profile) return
+    handleProfileSelect(like.profile.id)
+  }
+
   const handleMessageSent = () => {
     messageStore.fetchConversations()
   }
@@ -100,6 +106,7 @@ export function useMessagingViewModel(conversationId: Ref<string | undefined>) {
     handleDeselectConvo,
     handleProfileSelect,
     handleMatchSelect,
+    handleReceivedLikeSelect,
     handleMessageSent,
     fetchConversations: () => messageStore.fetchConversations(),
 

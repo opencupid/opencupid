@@ -57,7 +57,7 @@ provide('viewerProfile', toRef(viewerProfile))
   <main class="overflow-auto hide-scrollbar">
     <BContainer fluid>
       <div class="banner-halo">
-      <LikesAndMatchesBanner
+        <LikesAndMatchesBanner
         class="clickable my-3"
         @click="router.push({ name: 'Messaging' })"
       />

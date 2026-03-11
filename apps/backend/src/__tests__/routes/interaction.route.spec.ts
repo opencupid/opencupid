@@ -36,10 +36,11 @@ beforeEach(async () => {
   mockService = {
     getLikesSent: vi.fn().mockResolvedValue([]),
     getMatches: vi.fn().mockResolvedValue([]),
-    getLikesReceivedCount: vi.fn().mockResolvedValue(0),
+    getLikesReceived: vi.fn().mockResolvedValue([]),
     getNewMatchesCount: vi.fn().mockResolvedValue(0),
     like: vi.fn(),
     pass: vi.fn(),
+    updateLike: vi.fn(),
   }
   await interactionRoutes(fastify as any, {})
 })
@@ -49,13 +50,15 @@ describe('GET / (interaction stats)', () => {
     const handler = fastify.routes['GET /']
     mockService.getLikesSent.mockResolvedValue([{ id: '1' }])
     mockService.getMatches.mockResolvedValue([{ id: '2' }])
-    mockService.getLikesReceivedCount.mockResolvedValue(5)
+    mockService.getLikesReceived.mockResolvedValue([
+      { profile: null, isAnonymous: true, isMatch: false, createdAt: new Date().toISOString() },
+    ])
     mockService.getNewMatchesCount.mockResolvedValue(2)
 
     await handler(makeReq(), reply as any)
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
-    expect(reply.payload.stats.receivedLikesCount).toBe(5)
+    expect(reply.payload.stats.receivedLikes).toHaveLength(1)
     expect(reply.payload.stats.newMatchesCount).toBe(2)
   })
 
@@ -140,6 +143,52 @@ describe('POST /like/:targetId', () => {
   })
 })
 
+describe('PATCH /like/:targetId', () => {
+  it('updates the isAnonymous flag', async () => {
+    const handler = fastify.routes['PATCH /like/:targetId']
+    const pair = {
+      isMatch: false,
+      to: {
+        profile: { id: 'p2' },
+        isMatch: false,
+        isAnonymous: false,
+        createdAt: new Date().toISOString(),
+      },
+      from: {
+        profile: { id: 'p1' },
+        isMatch: false,
+        isAnonymous: false,
+        createdAt: new Date().toISOString(),
+      },
+    }
+    mockService.updateLike.mockResolvedValue(pair)
+
+    const req = makeReq({
+      params: { targetId: 'cm000000000000000000000p2' },
+      body: { isAnonymous: false },
+    })
+    await handler(req, reply as any)
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    expect(reply.payload.pair).toStrictEqual(pair)
+    expect(mockService.updateLike).toHaveBeenCalledWith('p1', 'cm000000000000000000000p2', {
+      isAnonymous: false,
+    })
+  })
+
+  it('returns 500 on error', async () => {
+    const handler = fastify.routes['PATCH /like/:targetId']
+    mockService.updateLike.mockRejectedValue(new Error('fail'))
+
+    const req = makeReq({
+      params: { targetId: 'cm000000000000000000000p2' },
+      body: { isAnonymous: true },
+    })
+    await handler(req, reply as any)
+    expect(reply.statusCode).toBe(500)
+  })
+})
+
 describe('POST /pass/:targetId', () => {
   it('passes a profile', async () => {
     const handler = fastify.routes['POST /pass/:targetId']
@@ -162,13 +211,16 @@ describe('POST /pass/:targetId', () => {
 })
 
 describe('GET /received', () => {
-  it('returns received likes count', async () => {
+  it('returns received likes', async () => {
     const handler = fastify.routes['GET /received']
-    mockService.getLikesReceivedCount.mockResolvedValue(3)
+    const edges = [
+      { profile: null, isAnonymous: true, isMatch: false, createdAt: new Date().toISOString() },
+    ]
+    mockService.getLikesReceived.mockResolvedValue(edges)
 
     await handler(makeReq(), reply as any)
     expect(reply.statusCode).toBe(200)
-    expect(reply.payload.count).toBe(3)
+    expect(reply.payload.edges).toBe(edges)
   })
 })
 
