@@ -39,10 +39,6 @@ const languagePreviewOptions = computed(() => {
   return i18nStore.getLanguageLabels(viewerProfile?.value.languages || [])
 })
 
-const currentLanguage = computed(() => {
-  return languagePreviewOptions.value.find((lang) => lang.value === model.value.previewLanguage)
-})
-
 const hasPreviewLanguages = computed(() => languagePreviewOptions.value.length > 1)
 </script>
 
@@ -50,44 +46,44 @@ const hasPreviewLanguages = computed(() => languagePreviewOptions.value.length >
   <div class="d-flex justify-content-end align-items-center w-100">
     <BNav>
       <!-- View as -->
-      <BNavItemDropdown :auto-close="'outside'">
+      <BNavItemDropdown :auto-close="'outside'" v-if="isDatingActive || hasPreviewLanguages">
         <template #button-content>
           <span class="text-secondary">
             <IconViewAs class="svg-icon-lg" />
           </span>
         </template>
 
-        <BDropdownItem v-if="isDatingActive">
-          <ScopeViewToggler v-model="model.currentScope" />
-        </BDropdownItem>
+        <span v-if="isDatingActive">
+          <BDropdownItem>
+            <ScopeViewToggler v-model="model.currentScope" />
+          </BDropdownItem>
 
-        <BDropdownDivider v-if="isDatingActive" />
+          <BDropdownDivider />
+        </span>
 
-        <BDropdownText
-          style="width: 12rem"
-          v-if="hasPreviewLanguages"
-        >
-          <IconGlobe class="svg-icon" />
-          {{ $t('profiles.forms.preview_language') }}
-        </BDropdownText>
+        <span v-if="hasPreviewLanguages">
+          <BDropdownText style="width: 12rem">
+            <IconGlobe class="svg-icon" />
+            {{ $t('profiles.forms.preview_language') }}
+          </BDropdownText>
 
-        <!-- preview language -->
-        <BDropdownItemButton
-          v-for="lang in languagePreviewOptions"
-          :key="lang.value"
-          class="language-option"
-          :active="lang.value === model.previewLanguage"
-          @click="model.previewLanguage = lang.value"
-        >
-        
-          <span class="d-flex align-items-center">
-            <span class="flex-grow-1">{{ lang.label }}</span>
-            <LanguageIcon
-              :countryCode="lang.value"
-              :size="24"
-            />
-          </span>
-        </BDropdownItemButton>
+          <!-- preview language -->
+          <BDropdownItemButton
+            v-for="lang in languagePreviewOptions"
+            :key="lang.value"
+            class="language-option"
+            :active="lang.value === model.previewLanguage"
+            @click="model.previewLanguage = lang.value"
+          >
+            <span class="d-flex align-items-center">
+              <span class="flex-grow-1">{{ lang.label }}</span>
+              <LanguageIcon
+                :countryCode="lang.value"
+                :size="24"
+              />
+            </span>
+          </BDropdownItemButton>
+        </span>
       </BNavItemDropdown>
 
       <!-- Preferences -->
@@ -148,7 +144,7 @@ const hasPreviewLanguages = computed(() => languagePreviewOptions.value.length >
   padding: 0 !important;
 }
 
-.language-option .flag-icon{
+.language-option .flag-icon {
   opacity: 0.5;
 }
 .language-option :deep(button.active) .flag-icon {
