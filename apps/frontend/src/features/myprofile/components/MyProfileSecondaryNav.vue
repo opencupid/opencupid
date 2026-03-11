@@ -29,6 +29,7 @@ const isDatingActive = defineModel<boolean>('isDatingActive', {
 const emit = defineEmits<{
   (e: 'datingmode:toggle'): void
   (e: 'datingmode:prefs'): void
+  (e: 'datingmode:profile'): void
 }>()
 
 const viewerProfile = inject<Ref<OwnerProfile>>('viewerProfile')

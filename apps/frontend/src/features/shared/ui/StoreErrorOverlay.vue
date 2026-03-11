@@ -20,7 +20,7 @@ const { t } = useI18n()
 <template>
   <div
     v-if="error"
-    class="d-flex align-items-center justify-content-center h-100 flex-column error-overlay"
+    class="d-flex align-items-center justify-content-center h-100 flex-column"
   >
     <div
       class="d-flex align-items-center justify-content-center mb-5 mt-5 text-danger"
@@ -39,5 +39,3 @@ const { t } = useI18n()
     </div>
   </div>
 </template>
-<style lang="scss" scoped>
-</style>
