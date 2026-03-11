@@ -1,7 +1,8 @@
-import z from "zod"
+import z from 'zod'
 
 export const DatingContextSchema = z.object({
   likedByMe: z.boolean().default(false),
+  isAnonymous: z.boolean().default(true),
   isMatch: z.boolean().default(false),
   passedByMe: z.boolean().default(false),
   canLike: z.boolean().default(false),
@@ -22,4 +23,3 @@ export type ConversationContext = z.infer<typeof ConversationContextSchema>
 export const InteractionContextSchema = ConversationContextSchema.merge(DatingContextSchema)
 
 export type InteractionContext = z.infer<typeof InteractionContextSchema>
-

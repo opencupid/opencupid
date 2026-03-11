@@ -5,6 +5,7 @@ export const InteractionEdgeSchema = z.object({
   profile: ProfileSummarySchema,
   isMatch: z.boolean(),
   isNew: z.boolean().default(true),
+  isAnonymous: z.boolean().default(true),
   createdAt: z.string().datetime(), // ISO format
 })
 
@@ -18,11 +19,17 @@ export const InteractionEdgePairSchema = z.object({
 
 export type InteractionEdgePair = z.infer<typeof InteractionEdgePairSchema>
 
+export const ReceivedLikeSchema = InteractionEdgeSchema.extend({
+  profile: ProfileSummarySchema.nullable(),
+})
+
+export type ReceivedLike = z.infer<typeof ReceivedLikeSchema>
+
 export const InteractionStatsSchema = z.object({
   sent: z.array(InteractionEdgeSchema),
   matches: z.array(InteractionEdgeSchema),
-  newMatchesCount: z.number().default(0), 
-  receivedLikesCount: z.number(),
+  newMatchesCount: z.number().default(0),
+  receivedLikes: z.array(ReceivedLikeSchema),
 })
 
 export type InteractionStats = z.infer<typeof InteractionStatsSchema>

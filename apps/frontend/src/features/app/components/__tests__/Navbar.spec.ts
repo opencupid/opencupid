@@ -71,7 +71,8 @@ vi.mock('@/features/myprofile/stores/ownerProfileStore', () => ({
 vi.mock('@/features/interaction/stores/useInteractionStore', () => ({
   useInteractionStore: () => ({
     matches: [],
-    receivedLikesCount: 0,
+    receivedLikes: [],
+    newMatchesCount: 0,
   }),
 }))
 

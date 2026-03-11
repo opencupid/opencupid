@@ -25,7 +25,9 @@ import {
   type InteractionEdgePair,
   type InteractionEdge,
   type InteractionStats,
+  type ReceivedLike,
 } from './interaction/interaction.dto'
+
 import type { OwnerPost, PublicPostWithProfile } from '@zod/post/post.dto'
 
 export type GetProfileSummariesResponse = ApiSuccess<{ profiles: ProfileSummary[] }>
@@ -69,6 +71,7 @@ export type SendMessageResponse = ApiSuccess<{
 export type InitiateConversationResponse = ApiSuccess<{}>
 
 export type InteractionEdgesResponse = ApiSuccess<{ edges: InteractionEdge[] }>
+export type ReceivedLikesResponse = ApiSuccess<{ edges: ReceivedLike[] }>
 export type InteractionEdgeResponse = ApiSuccess<{ pair: InteractionEdgePair }>
 export type InteractionEdgeCountResponse = ApiSuccess<{ count: number }>
 export type InteractionStatsResponse = ApiSuccess<{ stats: InteractionStats }>

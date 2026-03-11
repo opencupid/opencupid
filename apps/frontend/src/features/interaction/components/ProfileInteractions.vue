@@ -30,7 +30,7 @@ const showMessageModal = ref(false)
 const showMatchModal = ref(false)
 const match = ref<InteractionEdgePair>()
 
-const { like, pass, refreshInteractions, isLoading } = useInteractionsViewModel()
+const { like, pass, updateLike, refreshInteractions, isLoading } = useInteractionsViewModel()
 
 const handleLike = async () => {
   const result = await like(props.profile.id)
@@ -50,6 +50,11 @@ const handleLike = async () => {
 const handlePass = async () => {
   await pass(props.profile.id)
   emit('passed')
+  emit('updated')
+}
+
+const handleAnonymousUpdate = async (isAnonymous: boolean) => {
+  await updateLike(props.profile.id, isAnonymous)
   emit('updated')
 }
 
@@ -78,6 +83,7 @@ onMounted(async () => {
       @message="handleMessageIntent"
       @pass="handlePass"
       @like="handleLike"
+      @update:anonymous="handleAnonymousUpdate"
       :context="profile.interactionContext"
     />
     <SendMessageDialog

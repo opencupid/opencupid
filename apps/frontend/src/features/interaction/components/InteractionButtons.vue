@@ -15,9 +15,12 @@ const emit = defineEmits<{
   (e: 'like'): void
   (e: 'pass'): void
   (e: 'message'): void
+  (e: 'update:anonymous', isAnonymous: boolean): void
 }>()
 
 const passPopover = ref(false)
+
+const isAnonymous = computed(() => props.context.isAnonymous)
 
 const handleLikeClick = () => {
   // If the user has already liked the profile, do nothing
@@ -47,6 +50,10 @@ const handleMessageClick = () => {
     emit('message')
     return
   }
+}
+
+const handleAnonymousChange = (value: boolean) => {
+  emit('update:anonymous', value)
 }
 </script>
 
@@ -128,11 +135,30 @@ const handleMessageClick = () => {
         <IconHeart class="svg-icon text-dating" />
         {{ $t('interactions.you_matched_with_them') }}
       </span>
-      <span v-else-if="context.likedByMe">
-        <!-- You liked them -->
-        <IconHeart class="svg-icon text-dating" />
-        {{ $t('interactions.you_liked_them') }}
-      </span>
+      <template v-else-if="context.likedByMe">
+        <span class="mb-2 d-block">
+          <IconHeart class="svg-icon text-dating" />
+          {{ $t('interactions.you_liked_them') }}
+        </span>
+        <BFormRadioGroup stacked>
+          <BFormRadio
+            :model-value="isAnonymous"
+            name="anonymous-toggle"
+            :value="true"
+            @change="handleAnonymousChange(true)"
+          >
+            {{ $t('interactions.anonymous_toggle_anonymous') }}
+          </BFormRadio>
+          <BFormRadio
+            :model-value="isAnonymous"
+            name="anonymous-toggle"
+            :value="false"
+            @change="handleAnonymousChange(false)"
+          >
+            {{ $t('interactions.anonymous_toggle_reveal') }}
+          </BFormRadio>
+        </BFormRadioGroup>
+      </template>
       <span v-else>
         <!-- Send a like. They will will not know who sent it until they like you back. -->
         {{ $t('interactions.send_a_like') }}

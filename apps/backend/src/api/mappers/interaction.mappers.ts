@@ -13,7 +13,7 @@ function mapDatingContext(profile: DbProfileWithContext): DatingContext {
   const passedByMe = hiddenBy.length > 0
   return {
     likedByMe,
-    // likedMe,
+    isAnonymous: likedByMe ? likesReceived[0].isAnonymous : true,
     passedByMe,
     isMatch: likedByMe && likedMe,
     canLike: !likedByMe,

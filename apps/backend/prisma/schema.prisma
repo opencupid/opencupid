@@ -320,7 +320,8 @@ model LikedProfile {
   to        Profile  @relation("LikesReceived", fields: [toId], references: [id])
   toId      String
   createdAt DateTime @default(now())
-  isNew     Boolean  @default(true)
+  isNew       Boolean @default(true)
+  isAnonymous Boolean @default(true)
 
   @@unique([fromId, toId]) // Prevent double-like
 }

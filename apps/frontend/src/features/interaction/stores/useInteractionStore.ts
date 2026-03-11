@@ -6,12 +6,13 @@ import {
   InteractionStatsSchema,
   type InteractionEdge,
   type InteractionEdgePair,
+  type ReceivedLike,
 } from '@zod/interaction/interaction.dto'
 import { storeError, storeSuccess, type StoreError, type StoreResponse } from '@/store/helpers'
 
 interface InteractionState {
   sent: InteractionEdge[]
-  receivedLikesCount: number
+  receivedLikes: ReceivedLike[]
   newMatchesCount: number
   matches: InteractionEdge[]
   passed: string[] // just IDs for now
@@ -23,7 +24,7 @@ interface InteractionState {
 export const useInteractionStore = defineStore('interaction', {
   state: (): InteractionState => ({
     sent: [],
-    receivedLikesCount: 0,
+    receivedLikes: [],
     newMatchesCount: 0,
     matches: [],
     passed: [],
@@ -34,7 +35,13 @@ export const useInteractionStore = defineStore('interaction', {
 
   actions: {
     onNewLike() {
-      this.receivedLikesCount++
+      this.receivedLikes.push({
+        profile: null,
+        isMatch: false,
+        isNew: true,
+        isAnonymous: true,
+        createdAt: new Date().toISOString(),
+      })
     },
     onNewMatch(edge: InteractionEdge) {
       if (edge.isMatch && !this.matches.some((e) => e.profile.id === edge.profile.id)) {
@@ -50,7 +57,7 @@ export const useInteractionStore = defineStore('interaction', {
         const stats = InteractionStatsSchema.parse(res.data.stats)
         this.sent = stats.sent
         this.matches = stats.matches
-        this.receivedLikesCount = stats.receivedLikesCount
+        this.receivedLikes = stats.receivedLikes
         this.newMatchesCount = stats.newMatchesCount
         this.initialized = true
         return storeSuccess()
@@ -79,6 +86,32 @@ export const useInteractionStore = defineStore('interaction', {
         return storeSuccess(pair)
       } catch (error) {
         console.error('Failed to like profile:', error)
+        return storeError(error)
+      }
+    },
+
+    async updateLike(
+      targetId: string,
+      isAnonymous: boolean
+    ): Promise<StoreResponse<InteractionEdgePair>> {
+      try {
+        const res = await safeApiCall(() =>
+          api.patch<{ success: true; pair: unknown }>(`/interactions/like/${targetId}`, {
+            isAnonymous,
+          })
+        )
+
+        const pair = InteractionEdgePairSchema.parse(res.data.pair)
+
+        // Update the sent edge with new isAnonymous value
+        const sentIdx = this.sent.findIndex((e) => e.profile.id === targetId)
+        if (sentIdx !== -1) {
+          this.sent[sentIdx] = pair.from
+        }
+
+        return storeSuccess(pair)
+      } catch (error) {
+        console.error('Failed to update like:', error)
         return storeError(error)
       }
     },
@@ -135,7 +168,7 @@ export const useInteractionStore = defineStore('interaction', {
       bus.off('ws:new_match', this.onNewMatch)
       // Remove any other event listeners you may have added
       this.sent = []
-      this.receivedLikesCount = 0
+      this.receivedLikes = []
       this.matches = []
       this.passed = []
       this.loading = false

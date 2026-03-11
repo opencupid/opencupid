@@ -218,7 +218,7 @@
         "locate_button_title": "Set to my country",
         "search_button_title_social": "Find people",
         "search_button_title_dating": "Find people",
-        "button_update_prefs":"Update",
+        "button_update_prefs": "Update",
         "age_range": "Age range:",
         "explore_tags": "Explore interests"
       }
@@ -314,7 +314,9 @@
     "send_them_a_message": "Send {name} a message",
     "cancel_button": "Maybe later",
     "message_confirmation": "Nice!",
-    "like_error": "Oops, this didn't work. Please try again."
+    "like_error": "Oops, this didn't work. Please try again.",
+    "anonymous_toggle_anonymous": "Stay anonymous",
+    "anonymous_toggle_reveal": "Reveal my profile"
   },
   "messaging": {
     "page_title": "Messages",
