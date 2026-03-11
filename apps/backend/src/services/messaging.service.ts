@@ -324,10 +324,12 @@ export class MessageService {
       return existing
     }
 
-    // No existing conversation → create a new one
+    // No existing conversation → auto-accept if profiles have a mutual like
+    const isMatch = await this.hasMutualLike(tx, profileAId, profileBId)
+
     return tx.conversation.create({
       data: {
-        status: 'INITIATED',
+        status: isMatch ? 'ACCEPTED' : 'INITIATED',
         initiatorProfileId: senderId,
         profileAId,
         profileBId,
@@ -349,6 +351,22 @@ export class MessageService {
         await this.sendOrStartConversation(tx, senderId, recipientProfileId, content, 'text/plain')
       })
     }
+  }
+
+  private async hasMutualLike(
+    tx: Prisma.TransactionClient,
+    profileAId: string,
+    profileBId: string
+  ): Promise<boolean> {
+    const count = await tx.likedProfile.count({
+      where: {
+        OR: [
+          { fromId: profileAId, toId: profileBId },
+          { fromId: profileBId, toId: profileAId },
+        ],
+      },
+    })
+    return count === 2
   }
 
   /**

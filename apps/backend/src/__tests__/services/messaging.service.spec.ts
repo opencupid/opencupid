@@ -190,6 +190,91 @@ describe('MessageService.sendOrStartConversation dedup', () => {
   })
 })
 
+describe('MessageService.findOrCreateConversation auto-accept on match', () => {
+  const newMsg = {
+    id: 'm-new',
+    conversationId: 'c1',
+    senderId: 'alice',
+    content: 'hi',
+    messageType: 'text/plain',
+    createdAt: new Date(),
+    sender: { id: 'alice', publicName: 'Alice', profileImages: [] },
+    attachment: null,
+  }
+
+  it('creates conversation as INITIATED when no mutual like exists', async () => {
+    const createdConvo = {
+      id: 'c1',
+      status: 'INITIATED',
+      initiatorProfileId: 'alice',
+      profileAId: 'alice',
+      profileBId: 'bob',
+    }
+
+    const tx: any = {
+      conversation: {
+        findUnique: vi.fn().mockResolvedValue(null),
+        create: vi.fn().mockResolvedValue(createdConvo),
+      },
+      likedProfile: {
+        count: vi.fn().mockResolvedValue(0),
+      },
+      message: {
+        findFirst: vi.fn().mockResolvedValue(null),
+        create: vi.fn().mockResolvedValue(newMsg),
+      },
+    }
+
+    await service.sendOrStartConversation(tx, 'alice', 'bob', 'hi', 'text/plain')
+
+    expect(tx.conversation.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: 'INITIATED' }),
+      })
+    )
+  })
+
+  it('creates conversation as ACCEPTED when mutual like exists', async () => {
+    const createdConvo = {
+      id: 'c1',
+      status: 'ACCEPTED',
+      initiatorProfileId: 'alice',
+      profileAId: 'alice',
+      profileBId: 'bob',
+    }
+
+    const tx: any = {
+      conversation: {
+        findUnique: vi.fn().mockResolvedValue(null),
+        create: vi.fn().mockResolvedValue(createdConvo),
+      },
+      likedProfile: {
+        count: vi.fn().mockResolvedValue(2),
+      },
+      message: {
+        findFirst: vi.fn().mockResolvedValue(null),
+        create: vi.fn().mockResolvedValue(newMsg),
+      },
+    }
+
+    await service.sendOrStartConversation(tx, 'alice', 'bob', 'hi', 'text/plain')
+
+    expect(tx.likedProfile.count).toHaveBeenCalledWith({
+      where: {
+        OR: [
+          { fromId: 'alice', toId: 'bob' },
+          { fromId: 'bob', toId: 'alice' },
+        ],
+      },
+    })
+    expect(tx.conversation.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: 'ACCEPTED' }),
+      })
+    )
+  })
+})
+
 describe('MessageService.listMessagesForConversation', () => {
   it('fetches latest page in descending order and returns ascending payload', async () => {
     mockPrisma.message.findMany.mockResolvedValue([
