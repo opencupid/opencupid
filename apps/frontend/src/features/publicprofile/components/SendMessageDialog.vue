@@ -59,15 +59,21 @@ const handleModalShown = () => {
         class="d-flex align-items-center m-0"
         v-if="!messageSent"
       >
-        <ProfileThumbnail
-          :profile="profile"
-          class="me-2"
-        />
-        {{
-          $t('messaging.send_message_to_user', {
-            name: profile.publicName || 'them',
-          })
-        }}
+        <RouterLink
+          :to="{ name: 'PublicProfile', params: { profileId: profile.id } }"
+          class="d-flex align-items-center text-decoration-none text-reset"
+          @click="showModal = false"
+        >
+          <ProfileThumbnail
+            :profile="profile"
+            class="me-2"
+          />
+          {{
+            $t('messaging.send_message_to_user', {
+              name: profile.publicName || 'them',
+            })
+          }}
+        </RouterLink>
       </h6>
     </template>
     <div class="w-100">
