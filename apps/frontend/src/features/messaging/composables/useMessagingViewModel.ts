@@ -1,4 +1,4 @@
-import { computed, ref, watch, type Ref } from 'vue'
+import { computed, onUnmounted, ref, watch, type Ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import type { ConversationSummary } from '@zod/messaging/messaging.dto'
@@ -35,11 +35,16 @@ export function useMessagingViewModel(conversationId: Ref<string | undefined>) {
   const initialize = async () => {
     await useBootstrap().bootstrap()
     await Promise.all([messageStore.fetchConversations(), interactions.refreshInteractions()])
+    messageStore.suppressMessageNotifications = true
     isInitialized.value = true
     if (conversationId.value) {
       await messageStore.setActiveConversationById(conversationId.value)
     }
   }
+
+  onUnmounted(() => {
+    messageStore.suppressMessageNotifications = false
+  })
 
   const handleSelectConvo = async (convo: ConversationSummary) => {
     if (messageStore.activeConversation?.conversationId === convo.conversationId) {

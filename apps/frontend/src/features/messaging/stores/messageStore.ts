@@ -22,6 +22,7 @@ type MessageStoreState = {
   messages: MessageDTO[]
   activeConversation: ConversationSummary | null
   hasUnreadMessages: boolean
+  suppressMessageNotifications: boolean
   isSending: boolean
   isLoading: boolean
   error: StoreError | null
@@ -36,6 +37,7 @@ export const useMessageStore = defineStore('message', {
     messages: [] as MessageDTO[],
     activeConversation: null as ConversationSummary | null,
     hasUnreadMessages: false,
+    suppressMessageNotifications: false,
     isSending: false,
     isLoading: false,
     error: null,
@@ -72,12 +74,7 @@ export const useMessageStore = defineStore('message', {
         if (!this.messages.find((m) => m.id === message.id)) {
           this.messages.push(message)
         }
-      } else {
-        // Emit notification for new message
-        // this occurs here instead of the AppNotifier.vue handling it directly
-        // because we only want to send popup notifications
-        // *if* the conversation it's in is not already open
-        // (this is to avoid popup spam when the user is in the messaging view)
+      } else if (!this.suppressMessageNotifications) {
         bus.emit('notification:new_message', message)
       }
     },
@@ -318,6 +315,7 @@ export const useMessageStore = defineStore('message', {
       this.messages = []
       this.activeConversation = null
       this.hasUnreadMessages = false
+      this.suppressMessageNotifications = false
       this.isSending = false
       this.isLoading = false
       this.error = null
