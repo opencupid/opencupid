@@ -239,13 +239,13 @@ describe('ProfileService.updateScopes', () => {
     expect(result).toEqual(updated)
   })
 
-  it('sets isActive to false when dating is disabled', async () => {
-    const updated = { id: 'p1', isDatingActive: false, isSocialActive: true, isActive: false }
+  it('keeps isActive true when dating is disabled (social may still be active)', async () => {
+    const updated = { id: 'p1', isDatingActive: false, isSocialActive: true, isActive: true }
     mockPrisma.profile.update.mockResolvedValue(updated)
     const result = await service.updateScopes('u1', { isDatingActive: false })
     expect(mockPrisma.profile.update).toHaveBeenCalledWith({
       where: { userId: 'u1' },
-      data: { isDatingActive: false, isActive: false },
+      data: { isDatingActive: false, isActive: true },
       select: { id: true, isDatingActive: true, isSocialActive: true, isActive: true },
     })
     expect(result).toEqual(updated)

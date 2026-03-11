@@ -334,6 +334,7 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
         if (!updated) return sendError(reply, 404, 'Profile not found')
         // Update session with new profile scope data
         await req.updateSession({
+          hasActiveProfile: updated.isActive,
           profile: {
             id: updated.id,
             isDatingActive: updated.isDatingActive,

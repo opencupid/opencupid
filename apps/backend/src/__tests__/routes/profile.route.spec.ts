@@ -344,6 +344,7 @@ describe('PATCH /scopes', () => {
       isActive: true,
     })
     expect(req.updateSession).toHaveBeenCalledWith({
+      hasActiveProfile: true,
       profile: {
         id: 'p1',
         isDatingActive: true,

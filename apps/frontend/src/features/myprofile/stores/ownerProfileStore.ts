@@ -25,6 +25,7 @@ import type {
   GetPublicProfileResponse,
   UpdateProfileOptInResponse,
   UpdateProfileResponse,
+  UpdateDatingPreferencesResponse,
   UpdateProfileScopeResponse,
 } from '@zod/apiResponse.dto'
 import { DatingPreferencesDTOSchema, type DatingPreferencesDTO } from '@zod/match/filters.dto'
@@ -233,13 +234,13 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
       try {
         this.isLoading = true
         const res = await safeApiCall(() =>
-          api.patch<GetDatingPreferencesResponse>('/find/dating/filter', this.datingPrefs)
+          api.patch<UpdateDatingPreferencesResponse>('/find/dating/filter', this.datingPrefs)
         )
         const updated = DatingPreferencesDTOSchema.parse(res.data.prefs)
         this.datingPrefs = updated
         return storeSuccess()
       } catch (error: any) {
-        return storeError(error, 'Failed to update profile')
+        return storeError(error, 'Failed to update dating preferences')
       } finally {
         this.isLoading = false
       }
