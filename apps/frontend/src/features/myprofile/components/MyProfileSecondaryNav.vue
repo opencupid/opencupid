@@ -66,8 +66,6 @@ const currentLanguage = computed(() => {
 
       <!-- View as -->
       <BNavItemDropdown
-        size="sm"
-        text="Dropdown"
         toggle-class="nav-link-custom"
         :auto-close="false"
       >
@@ -84,13 +82,8 @@ const currentLanguage = computed(() => {
         <BDropdownDivider />
         <!-- TODO extract into component -->
         <BDropdownGroup
-          header="Lang"
           v-if="languagePreviewOptions.length > 1"
-          size="sm"
-          id="my-nav-dropdown"
-          text="Dropdown"
-          toggle-class="nav-link-custom"
-          right
+          header="Lang"
         >
           <BDropdownItemButton
             v-for="lang in languagePreviewOptions"
@@ -112,32 +105,29 @@ const currentLanguage = computed(() => {
       <!-- Preferences -->
       <!-- TODO extract into separate component -->
       <BNavItemDropdown
-        v-if="languagePreviewOptions.length > 1"
-        size="sm"
-        id="my-nav-dropdown"
-        text="Dropdown"
-        toggle-class="nav-link-custom"
-        :auto-close="false"
-        right
+        :auto-close="'outside'"
       >
         <template #button-content>
           <!-- TODO add status  -->
           <IconHeart
             class="svg-icon-lg"
-            :class="{ active: true }"
+            
           />
         </template>
 
-        <BDropdownItemButton 
-        style="min-width: 15rem;"
-        @click.stop="$emit('datingmode:toggle')">
-          <BFormCheckbox
-            :model-value="isDatingActive"
-            tabindex="-1"
-            style="pointer-events: none"
-          >
-            Dating mode
-          </BFormCheckbox>
+        <BDropdownItemButton
+          style="min-width: 15rem"
+          @click.stop="$emit('datingmode:toggle')"
+        >
+          <span class="d-flex align-items-center justify-content-between">
+            <BFormCheckbox
+              switch
+              :model-value="isDatingActive"
+              tabindex="-1"
+              style="pointer-events: none"
+            />
+            <span>Dating mode</span>
+          </span>
         </BDropdownItemButton>
 
         <!-- TODO only show is datingmode true -->
@@ -150,7 +140,6 @@ const currentLanguage = computed(() => {
           <FontAwesomeIcon :icon="faSliders" />
           My preferences
         </BDropdownItemButton>
-
       </BNavItemDropdown>
     </BNav>
   </div>
