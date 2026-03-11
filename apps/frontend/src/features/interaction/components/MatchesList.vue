@@ -8,7 +8,9 @@ defineEmits<{
   (e: 'select:profile', profileId: string): void
 }>()
 
-const profiles = computed(() => props.edges.map((edge) => edge.profile))
+const profiles = computed(() =>
+  props.edges.filter((edge) => edge.isNew).map((edge) => edge.profile)
+)
 </script>
 
 <template>

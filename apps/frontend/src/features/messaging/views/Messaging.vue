@@ -36,6 +36,7 @@ const {
   initialize,
   matches,
   haveMatches,
+  showEmptyState,
   showMessageModal,
   messageProfile,
 } = useMessagingViewModel(toRef(props, 'conversationId'))
@@ -70,7 +71,7 @@ onMounted(async () => {
       :class="{ 'd-none': isDetailView }"
     >
       <BOverlay
-        :show="!haveConversations && isInitialized"
+        :show="showEmptyState && isInitialized"
         no-spinner
         bg-color="inherit"
         :blur="null"
@@ -117,14 +118,17 @@ onMounted(async () => {
             <div class="px-3 mb-3">
               <ReceivedLikesTeaser />
             </div>
-            <p class="px-2 text-center">{{ $t('messaging.conversations_list_title') }}</p>
 
-            <ConversationSummaries
-              :loading="isLoading"
-              :conversations="conversations"
-              :activeConversation="activeConversation"
-              @convo:select="handleSelectConvo"
-            />
+            <div v-if="haveConversations">
+              <p class="px-2 text-center">{{ $t('messaging.conversations_list_title') }}</p>
+
+              <ConversationSummaries
+                :loading="isLoading"
+                :conversations="conversations"
+                :activeConversation="activeConversation"
+                @convo:select="handleSelectConvo"
+              />
+            </div>
           </MiddleColumn>
         </div>
       </BOverlay>

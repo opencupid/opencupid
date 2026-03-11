@@ -4,6 +4,7 @@ import { ProfileSummarySchema } from '@zod/profile/profile.dto'
 export const InteractionEdgeSchema = z.object({
   profile: ProfileSummarySchema,
   isMatch: z.boolean(),
+  isNew: z.boolean().default(true),
   createdAt: z.string().datetime(), // ISO format
 })
 
