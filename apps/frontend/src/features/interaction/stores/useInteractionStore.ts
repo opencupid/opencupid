@@ -34,14 +34,8 @@ export const useInteractionStore = defineStore('interaction', {
   }),
 
   actions: {
-    onNewLike() {
-      this.receivedLikes.push({
-        profile: null,
-        isMatch: false,
-        isNew: true,
-        isAnonymous: true,
-        createdAt: new Date().toISOString(),
-      })
+    async onNewLike() {
+      await this.fetchInteractions()
     },
     onNewMatch(edge: InteractionEdge) {
       if (edge.isMatch && !this.matches.some((e) => e.profile.id === edge.profile.id)) {
