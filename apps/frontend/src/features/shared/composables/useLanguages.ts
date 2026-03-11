@@ -63,9 +63,10 @@ export async function initialize(locale: string) {
 export function useLanguages() {
   const getLanguageSelectorOptions = (): MultiselectOption[] => {
     const langs = languages.getNames(language)
+    const englishLangs = languages.getNames('en')
     return Object.keys(langs).map((code) => ({
       value: code,
-      label: langs[code] ?? code,
+      label: langs[code] || englishLangs[code] || code,
     }))
   }
 
@@ -74,9 +75,10 @@ export function useLanguages() {
       return []
     }
     const langs = languages.getNames(language)
+    const englishLangs = languages.getNames('en')
     return codes.map((code) => ({
       value: code,
-      label: langs[code] || code,
+      label: langs[code] || englishLangs[code] || code,
     }))
   }
 
