@@ -27,7 +27,7 @@ const displayedLikes = computed(() => receivedLikes.value.slice(0, 4))
     <BRow class="g-2 px-1">
       <BCol
         v-for="(like, index) in displayedLikes"
-        :key="index"
+        :key="like.createdAt"
         cols="3"
       >
         <!-- Revealed: clickable card that emits interaction:selected -->
@@ -35,12 +35,13 @@ const displayedLikes = computed(() => receivedLikes.value.slice(0, 4))
           v-if="like.profile"
           class="ratio ratio-1x1 clickable like-card"
           role="button"
+          tabindex="0"
           @click="emit('interaction:selected', like)"
         >
           <div
             class="dating rounded-3 d-flex flex-column align-items-center justify-content-center p-2"
           >
-            <div class="avatar-chip ratio ratio-1x1" >
+            <div class="avatar-chip ratio ratio-1x1">
               <AvatarIcon
                 v-if="like.profile.profileImages[0]"
                 :image="like.profile.profileImages[0]"
@@ -73,7 +74,7 @@ const displayedLikes = computed(() => receivedLikes.value.slice(0, 4))
                 </div>
                 <BPlaceholder
                   class="mt-1"
-                  :width="60 + 30 * Math.random()"
+                  :width="70"
                   size="xs"
                 />
               </div>

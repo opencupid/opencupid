@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { type InteractionContext } from '@zod/interaction/interactionContext.dto'
 
 import IconHeart from '@/assets/icons/interface/heart.svg'
@@ -20,8 +20,14 @@ const emit = defineEmits<{
 
 const passPopover = ref(false)
 
-// Local ref tracks the radio selection — initialized from context when revisiting a liked profile
+// Local ref tracks the radio selection — synced from context when it changes
 const selectedAnonymous = ref(props.context.isAnonymous)
+watch(
+  () => props.context.isAnonymous,
+  (val) => {
+    selectedAnonymous.value = val
+  }
+)
 
 const handleLikeClick = () => {
   // If the user has already liked the profile, do nothing
