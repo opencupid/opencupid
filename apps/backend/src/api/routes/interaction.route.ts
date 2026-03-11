@@ -67,10 +67,10 @@ const interactionRoutes: FastifyPluginAsync = async (fastify) => {
         reply.code(200).send(response)
 
         if (isNewLike) {
-          // Broadcast the new message to the recipient
+          // Broadcast to the recipient — send the initiator's edge so they see who liked/matched them
           broadcastToProfile(fastify, targetId, {
             type: likeResult.isMatch ? 'ws:new_match' : 'ws:new_like',
-            payload: likeResult.to,
+            payload: likeResult.from,
           })
 
           if (likeResult.isMatch) {

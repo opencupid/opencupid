@@ -78,9 +78,9 @@ export const useInteractionStore = defineStore('interaction', {
         const pair = InteractionEdgePairSchema.parse(res.data.pair)
 
         if (pair.isMatch) {
-          this.matches.push(pair.to)
+          this.matches.push(pair.from)
         } else {
-          this.sent.push(pair.to)
+          this.sent.push(pair.from)
         }
 
         return storeSuccess(pair)
@@ -106,7 +106,7 @@ export const useInteractionStore = defineStore('interaction', {
         // Update the sent edge with new isAnonymous value
         const sentIdx = this.sent.findIndex((e) => e.profile.id === targetId)
         if (sentIdx !== -1) {
-          this.sent[sentIdx] = pair.to
+          this.sent[sentIdx] = pair.from
         }
 
         return storeSuccess(pair)
