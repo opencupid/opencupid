@@ -71,9 +71,6 @@ export function useLanguages() {
   }
 
   const getLanguageLabels = (codes: string[]) => {
-    if (!codes) {
-      return []
-    }
     const langs = languages.getNames(language)
     const englishLangs = languages.getNames('en')
     return codes.map((code) => ({

@@ -33,7 +33,7 @@ export const useI18nStore = defineStore('i18n', () => {
   }
 
   function setLanguage(lang: string) {
-    if (!appLocales[lang]) {
+    if (!Object.hasOwn(appLocales, lang)) {
       console.error(`Unsupported language: ${lang}`)
       return
     }
@@ -54,7 +54,7 @@ export const useI18nStore = defineStore('i18n', () => {
 
   function getLanguageLabels(languages: string[]) {
     return languages
-      .filter((lang) => lang in appLocales)
+      .filter((lang) => Object.hasOwn(appLocales, lang))
       .map((lang) => ({
         value: lang,
         label: appLocales[lang] || lang,
