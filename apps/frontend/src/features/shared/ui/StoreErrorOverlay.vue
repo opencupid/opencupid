@@ -20,7 +20,7 @@ const { t } = useI18n()
 <template>
   <div
     v-if="error"
-    class="d-flex align-items-center justify-content-center h-100 flex-column"
+    class="d-flex align-items-center justify-content-center h-100 flex-column error-overlay"
   >
     <div
       class="d-flex align-items-center justify-content-center mb-5 mt-5 text-danger"
@@ -29,9 +29,9 @@ const { t } = useI18n()
       <IconConfusedEmoji class="svg-icon-lg h-100 w-100" />
     </div>
     <div class="text-center">
-      <h1 class="text-muted">{{ error.status }}</h1>
+      <!-- <h1 class="text-muted">{{ error.status }}</h1> -->
       <h4>{{ t('uicomponents.error.title') }}</h4>
-      <p class="text-muted">{{ error.message }}</p>
+      <!-- <p class="text-muted">{{ error.message }}</p> -->
       <!-- <pre>{{error}}</pre> -->
     </div>
     <div>
@@ -39,3 +39,5 @@ const { t } = useI18n()
     </div>
   </div>
 </template>
+<style lang="scss" scoped>
+</style>
