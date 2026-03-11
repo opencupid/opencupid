@@ -76,6 +76,9 @@ export function useMessagingViewModel(conversationId: Ref<string | undefined>) {
 
   const haveConversations = computed(() => messageStore.conversations.length > 0)
   const isDetailView = computed(() => !!messageStore.activeConversation)
+  const showEmptyState = computed(
+    () => !haveConversations.value && !interactions.haveMatches.value
+  )
 
   return {
     // Store state
@@ -87,6 +90,7 @@ export function useMessagingViewModel(conversationId: Ref<string | undefined>) {
     haveConversations,
     isDetailView,
     isInitialized,
+    showEmptyState,
 
     // Handlers
     handleSelectConvo,
