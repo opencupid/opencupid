@@ -96,12 +96,12 @@ describe('BrowseProfiles view', () => {
     expect(wrapper.find('.map-placeholder').exists()).toBe(true)
   })
 
-  it('shows info toast when there are no results', async () => {
+  it('does not show toast when there are no results (replaced by inline CTA)', async () => {
     vmState.haveResults.value = true
     mountComponent()
     vmState.haveResults.value = false
     await nextTick()
-    expect(toastInfo).toHaveBeenCalledWith('profiles.browse.no_results_cta_title')
+    expect(toastInfo).not.toHaveBeenCalled()
   })
 
   it('renders map view with OsmPoiMap', () => {
