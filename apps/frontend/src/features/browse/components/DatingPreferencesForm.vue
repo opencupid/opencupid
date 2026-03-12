@@ -14,8 +14,6 @@ const model = defineModel<DatingPreferencesDTO>({
   default: () => DatingPreferencesFormSchema.parse({}),
 })
 
-// const { age } = useAgeFields(props.profile?.birthday ?? null)
-
 const { t } = useI18n()
 
 const prefAge = computed({
@@ -25,26 +23,10 @@ const prefAge = computed({
     model.value.prefAgeMax = max
   },
 })
-
-// const ageMaxMin = computed(() => {
-//   if (age.value) {
-//     return {
-//       min: Math.max(18, age.value - 25),
-//       max: age.value + 25,
-//     }
-//   } else {
-//     return {
-//       min: 18,
-//       max: 100,
-//     }
-//   }
-// })
 </script>
 
 <template>
   <fieldset class="d-flex flex-column h-100">
-    <h5>{{ t('profiles.forms.my_preferences') }}</h5>
-
     <div class="mb-3">
       <div>
         <label

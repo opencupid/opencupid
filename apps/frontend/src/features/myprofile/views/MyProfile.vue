@@ -166,6 +166,7 @@ const hint = computed(() => history?.state?.hint || null)
       fullscreen="sm"
       :no-footer="false"
       :no-header="false"
+      :title="$t('profiles.forms.my_preferences')"
       :cancel-title="$t('profiles.browse.filters.dialog_cancel_button')"
       cancel-variant="link"
       :ok-title="$t('profiles.browse.filters.button_update_prefs')"
