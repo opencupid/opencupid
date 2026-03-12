@@ -107,4 +107,46 @@ describe('findProfileStore.findProfilesForMapBounds', () => {
 
     expect(result.success).toBe(false)
   })
+
+  it('stores lastMapBounds for later re-fetch', async () => {
+    mockGet.mockResolvedValue({ data: { profiles: [] } })
+
+    expect(store.lastMapBounds).toBeNull()
+    await store.findProfilesForMapBounds(bounds)
+    expect(store.lastMapBounds).toEqual(bounds)
+  })
+})
+
+describe('findProfileStore.refreshAfterDatingPrefsUpdate', () => {
+  let store: ReturnType<typeof useFindProfileStore>
+
+  const bounds = { south: 45, north: 48, west: 16, east: 23 }
+
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    store = useFindProfileStore()
+    vi.clearAllMocks()
+  })
+
+  it('fetches match IDs and re-fetches map when lastMapBounds is set', async () => {
+    mockGet.mockResolvedValue({ data: { profiles: [], ids: ['p1'] } })
+    store.lastMapBounds = bounds
+
+    await store.refreshAfterDatingPrefsUpdate()
+
+    expect(mockGet).toHaveBeenCalledWith('/find/dating/match-ids')
+    expect(mockGet).toHaveBeenCalledWith(
+      '/find/social/map/bounds',
+      expect.objectContaining({ params: bounds })
+    )
+  })
+
+  it('fetches match IDs only when lastMapBounds is null', async () => {
+    mockGet.mockResolvedValue({ data: { ids: [] } })
+
+    await store.refreshAfterDatingPrefsUpdate()
+
+    expect(mockGet).toHaveBeenCalledWith('/find/dating/match-ids')
+    expect(mockGet).not.toHaveBeenCalledWith('/find/social/map/bounds', expect.anything())
+  })
 })

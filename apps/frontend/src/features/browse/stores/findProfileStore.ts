@@ -33,6 +33,7 @@ type FindProfileStoreState = {
   profileList: PublicProfile[] // List of public profiles
   matchedProfileIds: Set<string> // IDs of mutual dating preference matches
   socialSearch: SocialMatchFilterDTO | null // Current social search query
+  lastMapBounds: MapBounds | null // Last map viewport bounds (for re-fetch on pref change)
   isLoading: boolean // Loading state
   // Infinite scroll state
   isLoadingMore: boolean // Loading more profiles
@@ -72,6 +73,7 @@ export const useFindProfileStore = defineStore('findProfile', {
     profileList: [] as PublicProfile[],
     matchedProfileIds: new Set<string>(),
     socialSearch: null as SocialMatchFilterDTO | null, // Current social search query
+    lastMapBounds: null,
     isLoading: false,
     // Infinite scroll state
     isLoadingMore: false,
@@ -109,6 +111,7 @@ export const useFindProfileStore = defineStore('findProfile', {
       }
       const controller = new AbortController()
       mapBoundsAbortController = controller
+      this.lastMapBounds = bounds
 
       try {
         this.isLoading = true
@@ -141,6 +144,13 @@ export const useFindProfileStore = defineStore('findProfile', {
         this.matchedProfileIds = new Set(res.data.ids)
       } catch {
         this.matchedProfileIds = new Set()
+      }
+    },
+
+    async refreshAfterDatingPrefsUpdate(): Promise<void> {
+      await this.fetchDatingMatchIds()
+      if (this.lastMapBounds) {
+        await this.findProfilesForMapBounds(this.lastMapBounds)
       }
     },
 
@@ -238,6 +248,7 @@ export const useFindProfileStore = defineStore('findProfile', {
       }
       this.profileList = []
       this.matchedProfileIds = new Set()
+      this.lastMapBounds = null
       this.socialSearch = null
       this.isLoading = false
       this.isLoadingMore = false
@@ -252,6 +263,5 @@ bus.on('auth:logout', () => {
 })
 
 bus.on('profile:dating-prefs-updated', () => {
-  useFindProfileStore().findProfiles()
-  useFindProfileStore().fetchDatingMatchIds()
+  useFindProfileStore().refreshAfterDatingPrefsUpdate()
 })
