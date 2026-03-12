@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import { type LocationDTO } from '@zod/dto/location.dto'
 import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { type GenderType, type PronounsType } from '@zod/generated'
-import { type EditProfileForm } from '@zod/profile/profile.form'
+import { type EditProfileForm, emptyEditProfileForm } from '@zod/profile/profile.form'
 import { type DatingPreferencesDTO } from '@zod/match/filters.dto'
 import { DatingPreferencesFormSchema } from '@zod/match/filters.form'
 
@@ -22,30 +20,10 @@ import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 const profileStore = useOwnerProfileStore()
 const i18nStore = useI18nStore()
 
-// TODO - refactor this as per canonical Vue pattern. This initialization
-// logic doesn't feel right in the view component. This should happen
-// elsewhere, e.g. in ownerProfileStore
-const formData = reactive({
-  publicName: '',
-  birthday: null,
-  tags: [],
+const profileForm = reactive<EditProfileForm>({
+  ...emptyEditProfileForm(),
   languages: [i18nStore.getLanguage()],
-  location: {
-    country: '',
-    cityId: '',
-    cityName: '',
-  } as LocationDTO,
-  gender: 'unspecified' as GenderType,
-  pronouns: 'unspecified' as PronounsType,
-  relationship: null,
-  hasKids: null,
-  introSocial: '',
-  introDating: '',
-  introSocialLocalized: {} as Record<string, string>,
-  introDatingLocalized: {} as Record<string, string>,
-  isDatingActive: false,
-  isSocialActive: true,
-} as EditProfileForm)
+})
 
 const datingPrefs = reactive<DatingPreferencesDTO>(DatingPreferencesFormSchema.parse({}))
 
@@ -62,7 +40,7 @@ const handleGoToBrowse = () => {
 }
 
 const handleWizardFinish = async () => {
-  const res = await profileStore.createOwnerProfile(formData)
+  const res = await profileStore.createOwnerProfile(profileForm)
   if (!res.success) {
     console.error('Failed to save profile:', res.message)
     error.value = res.message || 'Failed to save profile'
@@ -100,7 +78,7 @@ onMounted(async () => {
   <main class="container">
     <MiddleColumn class="d-flex flex-column align-items-center justify-content-center h-100">
       <OnboardWizard
-        v-model="formData"
+        v-model="profileForm"
         v-model:datingPrefs="datingPrefs"
         @finished="handleWizardFinish"
       >
