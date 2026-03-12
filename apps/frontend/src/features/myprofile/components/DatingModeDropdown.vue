@@ -3,6 +3,10 @@ import IconHeart from '@/assets/icons/interface/heart.svg'
 import IconSlider from '@/assets/icons/interface/setting.svg'
 import IconProfile from '@/assets/icons/interface/user.svg'
 
+const props = defineProps<{
+  isDatingOnboarded?: boolean
+}>()
+
 const isDatingActive = defineModel<boolean>('isDatingActive', {
   default: false,
 })
@@ -48,7 +52,10 @@ const emit = defineEmits<{
         {{ $t('profiles.forms.my_dating_profile') }}
       </BDropdownItemButton>
 
-      <BDropdownItemButton @click="$emit('datingmode:prefs')">
+      <BDropdownItemButton
+        @click="$emit('datingmode:prefs')"
+        :disabled="!isDatingOnboarded"
+      >
         <IconSlider class="svg-icon me-2" />
         {{ $t('profiles.forms.my_preferences') }}
       </BDropdownItemButton>

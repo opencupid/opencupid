@@ -260,6 +260,17 @@
   }
 }
 
+// Gender selector
+.gender-list {
+  max-height: 25vh;
+}
+
+@media (min-height: 800px) {
+  .gender-list {
+    max-height: 40vh;
+  }
+}
+
 // ─── Elevation system ────────────────────────────────────────────────
 
 // Cards: subtle shadow + radius

@@ -108,6 +108,7 @@ const hint = computed(() => history?.state?.hint || null)
             <MyProfileSecondaryNav
               v-model="viewState"
               v-model:isDatingActive="formData.isDatingActive"
+              :is-dating-onboarded="isDatingOnboarded"
               @datingmode:toggle="toggleDating"
               @datingmode:prefs="openDatingPrefs"
               @datingmode:profile="showDatingProfileModal = true"

@@ -61,14 +61,3 @@ const sortedOptions = computed(() => {
   </div>
 </template>
 
-<style scoped>
-.gender-list {
-  max-height: 25vh;
-}
-
-@media (min-height: 800px) {
-  .gender-list {
-    max-height: 40vh;
-  }
-}
-</style>

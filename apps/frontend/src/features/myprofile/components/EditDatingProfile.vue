@@ -35,8 +35,7 @@ const birthYear = computed(() =>
       v-if="birthYear"
       class="text-center"
     >
-      <p class="fs-1 text-muted mb-0">{{ birthYear }}</p>
-      <small class="text-muted">{{ t('onboarding.age_title') }}</small>
+      <p>{{ t('profiles.forms.age_title_display', { birthYear }) }}</p>
     </div>
 
     <fieldset>
