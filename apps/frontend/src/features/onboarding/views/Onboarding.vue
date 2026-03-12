@@ -6,6 +6,7 @@ import { useRouter } from 'vue-router'
 import { type GenderType, type PronounsType } from '@zod/generated'
 import { type EditProfileForm } from '@zod/profile/profile.form'
 import { type DatingPreferencesDTO } from '@zod/match/filters.dto'
+import { DatingPreferencesFormSchema } from '@zod/match/filters.form'
 
 import SpinnerComponent from '@/features/shared/ui/SpinnerComponent.vue'
 import ErrorComponent from '@/features/shared/ui/ErrorComponent.vue'
@@ -46,12 +47,7 @@ const formData = reactive({
   isSocialActive: true,
 } as EditProfileForm)
 
-const datingPrefs = reactive<DatingPreferencesDTO>({
-  prefAgeMin: 18,
-  prefAgeMax: 80,
-  prefGender: [],
-  prefKids: [],
-})
+const datingPrefs = reactive<DatingPreferencesDTO>(DatingPreferencesFormSchema.parse({}))
 
 const error = ref('')
 

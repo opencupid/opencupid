@@ -46,13 +46,15 @@ function isLastChecked(value: HasKidsType): boolean {
           >{{ s.label }}</BFormCheckbox
         >
       </BListGroupItem>
-      <BListGroupItem class="d-flex justify-content-between align-items-center">
+      <!--
+      this is overkill. keep it here for now until a better implementation idea comes along.
+       <BListGroupItem class="d-flex justify-content-between align-items-center">
         <BFormCheckbox
           :id="`list-haskids-pref-${uid}-doesnt-matter`"
           v-model="doesntMatter"
           >{{ doesntMatterLabel }}</BFormCheckbox
         >
-      </BListGroupItem>
+      </BListGroupItem> -->
     </BListGroup>
   </div>
 </template>

@@ -4,10 +4,10 @@ import { PublicTagSchema } from '../tag/tag.dto'
 import { LocationSchema } from '../dto/location.dto'
 
 export const DatingPreferencesFormSchema = z.object({
-  prefAgeMin: z.number().int().gte(18).lte(120),
-  prefAgeMax: z.number().int().gte(18).lte(120),
+  prefAgeMin: z.number().int().gte(18).lte(120).default(18),
+  prefAgeMax: z.number().int().gte(18).lte(120).default(80),
   prefGender: z.array(GenderSchema).default([]),
-  prefKids: z.array(HasKidsSchema).default([]),
+  prefKids: z.array(HasKidsSchema).default(['yes', 'no']),
 })
 
 export type DatingPreferencesFormType = z.infer<typeof DatingPreferencesFormSchema>
