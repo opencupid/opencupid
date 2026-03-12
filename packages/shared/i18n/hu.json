@@ -139,6 +139,7 @@
       "preview_language": "Előnézeti nyelv",
       "age_range": "Korosztály",
       "kids_label": "Gyerekek?",
+      "age_title_display": "{birthYear}-ben születtem",
       "relationship_label": "Én...",
       "pronouns_label": "Úgy hivatkoznak rám, mint...",
       "name_label": "A keresztnevem...",

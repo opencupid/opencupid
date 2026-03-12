@@ -4,6 +4,10 @@ import ViewAsDropdown from './ViewAsDropdown.vue'
 import DatingModeDropdown from './DatingModeDropdown.vue'
 import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
 
+defineProps<{
+  isDatingOnboarded?: boolean
+}>()
+
 const viewState = defineModel<ViewState>({
   default: {
     scopes: [],
@@ -35,6 +39,7 @@ const emit = defineEmits<{
       <!-- Preferences -->
       <DatingModeDropdown
         v-model:is-dating-active="isDatingActive"
+        :is-dating-onboarded="isDatingOnboarded"
         @datingmode:toggle="$emit('datingmode:toggle')"
         @datingmode:prefs="$emit('datingmode:prefs')"
         @datingmode:profile="$emit('datingmode:profile')"

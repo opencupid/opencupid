@@ -29,8 +29,7 @@ const options = computed(() => {
     <GenderSelectorTitle class="mb-3" />
 
     <BListGroup
-      class="overflow-scroll"
-      style="max-height: 40vh"
+      class="overflow-auto gender-list"
     >
       <BListGroupItem
         v-for="g in options"

@@ -12,6 +12,7 @@ import ProfileContent from '@/features/publicprofile/components/ProfileContent.v
 
 import { useMyProfileViewModel } from '../composables/useMyProfileViewModel'
 import DatingWizard from '../../onboarding/components/DatingWizard.vue'
+import EditDatingProfile from '../components/EditDatingProfile.vue'
 import DatingPreferencesForm from '@/features/browse/components/DatingPreferencesForm.vue'
 import MyProfileSecondaryNav from '../components/MyProfileSecondaryNav.vue'
 import EditableFields from '../components/EditableFields.vue'
@@ -107,6 +108,7 @@ const hint = computed(() => history?.state?.hint || null)
             <MyProfileSecondaryNav
               v-model="viewState"
               v-model:isDatingActive="formData.isDatingActive"
+              :is-dating-onboarded="isDatingOnboarded"
               @datingmode:toggle="toggleDating"
               @datingmode:prefs="openDatingPrefs"
               @datingmode:profile="showDatingProfileModal = true"
@@ -191,9 +193,9 @@ const hint = computed(() => history?.state?.hint || null)
       body-class="d-flex flex-column align-items-center justify-content-center overflow-auto hide-scrollbar p-2 p-md-5"
       :keyboard="false"
     >
-      <DatingWizard
+      <EditDatingProfile
         v-model="formData"
-        @finished="updateProfile().then(() => (showDatingProfileModal = false))"
+        @save="updateProfile().then(() => (showDatingProfileModal = false))"
         @cancel="showDatingProfileModal = false"
       />
     </BModal>
