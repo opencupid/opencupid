@@ -180,7 +180,7 @@ const hint = computed(() => history?.state?.hint || null)
       />
     </BModal>
     <BModal
-      v-if="showDatingProfileModal"
+      v-model="showDatingProfileModal"
       :backdrop="'static'"
       centered
       size="lg"
@@ -191,7 +191,6 @@ const hint = computed(() => history?.state?.hint || null)
       :no-header="false"
       :title="$t('profiles.forms.my_dating_profile')"
       :no-footer="true"
-      :show="true"
       body-class="d-flex flex-column align-items-center justify-content-center overflow-auto hide-scrollbar p-2 p-md-5"
       :keyboard="false"
     >
