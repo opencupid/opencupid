@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { type EditFieldProfileFormWithImages } from '@zod/profile/profile.form'
+import { type DatingPreferencesDTO } from '@zod/match/filters.dto'
 
 import { useWizardSteps } from '../composables/useWizardSteps'
 import { useStepper } from '@vueuse/core'
 
+import IconCupid from '@/assets/images/app/cupid.svg'
 import BackButton from './BackButton.vue'
 import DatingSteps from './DatingSteps.vue'
 
@@ -28,6 +30,10 @@ const formData = defineModel<EditFieldProfileFormWithImages>({
   }),
 })
 
+const datingPrefs = defineModel<DatingPreferencesDTO | null>('datingPrefs', {
+  default: null,
+})
+
 const { datingWizardSteps } = useWizardSteps(formData.value)
 const { current, isFirst, isLast, goToNext, goToPrevious, isCurrent } =
   useStepper(datingWizardSteps)
@@ -44,8 +50,24 @@ const { current, isFirst, isLast, goToNext, goToPrevious, isCurrent } =
   </div>
 
   <div class="flex-grow-1 d-flex flex-column justify-content-center w-100">
+    <fieldset
+      v-if="isCurrent('hint')"
+      class="w-100"
+    >
+      <div
+        class="col-6 mx-auto d-flex align-items-center justify-content-center text-dating mb-2 mb-md-4 animate__animated animate__fadeIn"
+      >
+        <IconCupid class="svg-icon-100 opacity-50" />
+      </div>
+      <legend>{{ t('onboarding.dating_hint_title') }}</legend>
+      <p class="text-center text-muted">
+        {{ t('onboarding.dating_hint_subtitle') }}
+      </p>
+    </fieldset>
+
     <DatingSteps
       v-model="formData"
+      v-model:datingPrefs="datingPrefs"
       :isCurrent
     />
 

@@ -6,6 +6,7 @@ import { useRouter } from 'vue-router'
 
 import { type GenderType, type PronounsType } from '@zod/generated'
 import { type EditProfileForm } from '@zod/profile/profile.form'
+import { type DatingPreferencesDTO } from '@zod/match/filters.dto'
 import type { ProfileOptInSettings } from '@zod/profile/profile.dto'
 
 import SpinnerComponent from '@/features/shared/ui/SpinnerComponent.vue'
@@ -50,6 +51,13 @@ const formData = reactive({
   isDatingActive: false,
   isSocialActive: true,
 } as EditProfileForm)
+
+const datingPrefs = reactive<DatingPreferencesDTO>({
+  prefAgeMin: 18,
+  prefAgeMax: 80,
+  prefGender: [],
+  prefKids: [],
+})
 
 const error = ref('')
 const optInModel = computed<ProfileOptInSettings>({
@@ -110,6 +118,7 @@ onMounted(async () => {
     <MiddleColumn class="d-flex flex-column align-items-center justify-content-center h-100">
       <OnboardWizard
         v-model="formData"
+        v-model:datingPrefs="datingPrefs"
         @finished="handleWizardFinish"
       >
         <div

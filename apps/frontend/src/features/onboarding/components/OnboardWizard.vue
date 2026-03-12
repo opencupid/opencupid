@@ -3,6 +3,7 @@ import { useI18n } from 'vue-i18n'
 import { computed } from 'vue'
 
 import { type EditProfileForm } from '@zod/profile/profile.form'
+import { type DatingPreferencesDTO } from '@zod/match/filters.dto'
 import { type PublicTag, type PopularTag } from '@zod/tag/tag.dto'
 
 import LanguageSelector from '@/features/shared/profileform/LanguageSelector.vue'
@@ -15,9 +16,11 @@ import LocationSelectorComponent from '@/features/shared/profileform/LocationSel
 import GoalsSelector from './GoalsSelector.vue'
 import BackButton from '../components/BackButton.vue'
 import PublicNameInput from '@/features/shared/profileform/PublicNameInput.vue'
+import LogoutButton from '@/features/auth/components/LogoutButton.vue'
+
 import IconSun from '@/assets/icons/interface/sun.svg'
 import IconLogout from '@/assets/icons/interface/logout.svg'
-import LogoutButton from '@/features/auth/components/LogoutButton.vue'
+import IconCupid from '@/assets/images/app/cupid.svg'
 
 import { useStepper } from '@vueuse/core'
 
@@ -30,11 +33,13 @@ const formData = defineModel<EditProfileForm>({
   default: () => ({}),
 })
 
+const datingPrefs = defineModel<DatingPreferencesDTO>('datingPrefs')
+
 const emit = defineEmits<{
   (e: 'finished'): void
 }>()
 
-const { onboardingWizardSteps } = useWizardSteps(formData.value)
+const { onboardingWizardSteps } = useWizardSteps(formData.value, datingPrefs.value)
 
 const { current, isLast, isFirst, goToNext, goToPrevious, goTo, isCurrent } =
   useStepper(onboardingWizardSteps)
@@ -173,7 +178,9 @@ const popularTags = computed(() => tagStore.popularTags ?? ([] as PublicTag[]))
             :required="true"
             :initialOptions="popularTags"
           />
-          <h6 class="mt-3 mt-lg-3 mb-0 text-center text-muted">{{ t('onboarding.interests_popular_heading') }}</h6>
+          <h6 class="mt-3 mt-lg-3 mb-0 text-center text-muted">
+            {{ t('onboarding.interests_popular_heading') }}
+          </h6>
           <TagCloud
             v-if="formData.location?.country"
             :key="formData.location.country"
@@ -226,8 +233,24 @@ const popularTags = computed(() => tagStore.popularTags ?? ([] as PublicTag[]))
           <ImageEditor />
         </fieldset>
 
+        <fieldset
+          v-if="isCurrent('hint')"
+          class="w-100"
+        >
+          <div
+            class="col-6 mx-auto d-flex align-items-center justify-content-center text-dating mb-2 mb-md-4 animate__animated animate__fadeIn"
+          >
+            <IconCupid class="svg-icon-100 opacity-50" />
+          </div>
+          <legend>{{ t('onboarding.dating_hint_title') }}</legend>
+          <p class="text-center text-muted">
+            {{ t('onboarding.dating_hint_subtitle') }}
+          </p>
+        </fieldset>
+
         <DatingSteps
           v-model="formData"
+          v-model:datingPrefs="datingPrefs"
           :isCurrent
         ></DatingSteps>
 

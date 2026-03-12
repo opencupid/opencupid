@@ -20,7 +20,6 @@ const emit = defineEmits<{
 
 <template>
   <BNavItemDropdown
-    class="btn-link-secondary"
     toggle-class="btn-link-warning"
     :auto-close="'outside'"
   >

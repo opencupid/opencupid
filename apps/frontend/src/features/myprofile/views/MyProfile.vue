@@ -132,7 +132,6 @@ const hint = computed(() => history?.state?.hint || null)
       </div>
     </EditableFields>
     <BModal
-      title=""
       v-if="isDatingWizardActive"
       :backdrop="'static'"
       centered
@@ -141,7 +140,8 @@ const hint = computed(() => history?.state?.hint || null)
       fullscreen="sm"
       :focus="false"
       :no-close-on-backdrop="true"
-      :no-header="true"
+      :no-header="false"
+      title="Create dating profile"
       :no-footer="true"
       :show="true"
       body-class="d-flex flex-column align-items-center justify-content-center overflow-auto hide-scrollbar p-2 p-md-5"
@@ -149,6 +149,7 @@ const hint = computed(() => history?.state?.hint || null)
     >
       <DatingWizard
         v-model="formData"
+        v-model:datingPrefs="datingPrefs"
         @finished="handleFinishDatingOnboarding"
         @cancel="handleCancelEdit"
       />
