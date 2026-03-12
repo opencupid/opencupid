@@ -71,13 +71,13 @@ const prefAge = computed({
     </div>
 
     <div
-      class="mb-3"
+      class="mb-sm-2 mb-md-3"
       style="min-height: 0; flex: 0 1 auto"
     >
       <GenderPreferenceSelector v-model="model.prefGender" />
     </div>
 
-    <div class="mb-3">
+    <div class="mb-sm-2 mb-md-3">
       <HasKidsPreferenceSelector v-model="model.prefKids" />
     </div>
   </fieldset>

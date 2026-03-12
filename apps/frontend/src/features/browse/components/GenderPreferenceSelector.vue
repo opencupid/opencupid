@@ -30,8 +30,7 @@ const sortedOptions = computed(() => {
 
 <template>
   <BListGroup
-    class="overflow-auto"
-    style="max-height: 40vh"
+    class="overflow-auto gender-list"
   >
     <BListGroupItem
       v-for="g in sortedOptions"
@@ -48,7 +47,7 @@ const sortedOptions = computed(() => {
       >
     </BListGroupItem>
   </BListGroup>
-  <div class="mb-3">
+  <div class="mb-md-3">
     <BButton
       @click="() => (showAll = !showAll)"
       variant="link-secondary"
@@ -61,3 +60,15 @@ const sortedOptions = computed(() => {
     
   </div>
 </template>
+
+<style scoped>
+.gender-list {
+  max-height: 25vh;
+}
+
+@media (min-height: 800px) {
+  .gender-list {
+    max-height: 40vh;
+  }
+}
+</style>
