@@ -95,7 +95,13 @@ describe('GET /verify-token', () => {
       tokenVersion: 0,
       roles: [],
       language: 'en',
-      profile: { id: 'profile1', isDatingActive: false, isSocialActive: false, isActive: false },
+      profile: {
+        id: 'profile1',
+        isDatingActive: false,
+        isSocialActive: false,
+        isActive: false,
+        isOnboarded: true,
+      },
     }
     mockUserService.validateLoginToken.mockResolvedValue({
       success: true,
@@ -109,6 +115,7 @@ describe('GET /verify-token', () => {
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.token).toBe('jwt-token')
     expect(reply.payload.refreshToken).toBe('mock-refresh-token')
+    expect(reply.payload.isOnboarded).toBe(true)
     expect(mockRefreshTokenService.create).toHaveBeenCalledWith('user1', 'profile1', 0)
   })
 
@@ -132,6 +139,7 @@ describe('GET /verify-token', () => {
       isDatingActive: false,
       isSocialActive: false,
       isActive: false,
+      isOnboarded: false,
     }
     mockProfileService.initializeProfiles.mockResolvedValue(newProfile)
     fastify.jwt = { sign: vi.fn().mockReturnValue('jwt-token2') }
@@ -148,6 +156,7 @@ describe('GET /verify-token', () => {
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.token).toBe('jwt-token2')
     expect(reply.payload.refreshToken).toBe('mock-refresh-token')
+    expect(reply.payload.isOnboarded).toBe(false)
   })
 
   it('returns 500 on unexpected error', async () => {
@@ -362,7 +371,13 @@ describe('POST /refresh', () => {
       tokenVersion: 0,
       roles: [],
       language: 'en',
-      profile: { id: 'p1', isDatingActive: false, isSocialActive: false, isActive: false },
+      profile: {
+        id: 'p1',
+        isDatingActive: false,
+        isSocialActive: false,
+        isActive: false,
+        isOnboarded: true,
+      },
     })
     fastify.jwt = {
       sign: vi.fn().mockReturnValue('new-jwt'),

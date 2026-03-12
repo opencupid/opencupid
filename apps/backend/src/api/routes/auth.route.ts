@@ -42,6 +42,7 @@ function buildSessionData(user: User, profileId: string, profile: SessionProfile
       isDatingActive: profile.isDatingActive,
       isSocialActive: profile.isSocialActive,
       isActive: profile.isActive,
+      isOnboarded: profile.isOnboarded,
     },
   }
 }
@@ -100,7 +101,12 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         await fastify.createSession(jwt, buildSessionData(user, profileId, sessionProfile))
 
         const refreshToken = await refreshTokenService.create(user.id, profileId, user.tokenVersion)
-        const response: VerifyTokenResponse = { success: true, token: jwt, refreshToken }
+        const response: VerifyTokenResponse = {
+          success: true,
+          token: jwt,
+          refreshToken,
+          isOnboarded: sessionProfile.isOnboarded,
+        }
         reply.code(200).send(response)
       } catch (error) {
         return reply.code(500).send({ code: 'AUTH_INTERNAL_ERROR' })
@@ -181,6 +187,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         isDatingActive: false,
         isSocialActive: false,
         isActive: false,
+        isOnboarded: false,
       }
       await fastify.createSession(
         newJwt,

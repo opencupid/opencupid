@@ -38,33 +38,33 @@ const routes: Array<RouteRecordRaw> = [
     path: '/browse',
     name: 'BrowseProfiles',
     component: BrowseProfiles,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, requiresOnboarding: true },
   },
   {
     path: '/profile/:profileId',
     name: 'PublicProfile',
     component: PublicProfileView,
     props: true,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, requiresOnboarding: true },
   },
   {
     path: '/me',
     name: 'MyProfile',
     component: MyProfile,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, requiresOnboarding: true },
   },
   {
     path: '/me/edit',
     name: 'EditProfile',
     component: MyProfile,
     props: { editMode: true },
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, requiresOnboarding: true },
   },
   {
     path: '/home',
     name: 'UserHome',
     component: UserHome,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, requiresOnboarding: true },
   },
   {
     path: '/onboarding',
@@ -76,22 +76,21 @@ const routes: Array<RouteRecordRaw> = [
     path: '/settings',
     name: 'Settings',
     component: Settings,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, requiresOnboarding: true },
   },
   {
     path: '/inbox/:conversationId?',
     name: 'Messaging',
     component: MessagingView,
     props: true,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, requiresOnboarding: true },
   },
-
   {
     path: '/posts',
     name: 'Posts',
     component: PostsView,
     props: true,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, requiresOnboarding: true },
   },
   {
     path: '/',
@@ -105,17 +104,24 @@ const router = createRouter({
 })
 
 // Register the navigation guard
-router.beforeEach(async (to) => {
+router.beforeEach((to) => {
   const authStore = useAuthStore()
 
-  // if route requires authentication and the user is not logged in, redirect to login
   if (to.meta.requiresAuth && !authStore.isLoggedIn) {
     return { name: 'Login' }
   }
 
-  // user is logged in and tries to access the login page, redirect to UserHome
   if (!to.meta.requiresAuth && authStore.isLoggedIn) {
     return { name: 'UserHome' }
+  }
+
+  if (authStore.isLoggedIn) {
+    if (to.meta.requiresOnboarding && !authStore.isOnboarded) {
+      return { name: 'Onboarding' }
+    }
+    if (to.name === 'Onboarding' && authStore.isOnboarded) {
+      return { name: 'UserHome' }
+    }
   }
 })
 

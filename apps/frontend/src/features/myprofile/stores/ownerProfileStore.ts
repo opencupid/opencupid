@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { bus } from '@/lib/bus'
 import { api, isApiOnline, safeApiCall } from '@/lib/api'
+import { useAuthStore } from '@/features/auth/stores/authStore'
 import type {
   OwnerProfile,
   ProfileOptInSettings,
@@ -80,6 +81,7 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
         const res = await safeApiCall(() => api.get<GetMyProfileResponse>('/profiles/me'))
         const fetched = OwnerProfileSchema.parse(res.data.profile)
         this.profile = fetched // Update local state
+        useAuthStore().isOnboarded = fetched.isOnboarded
         return storeSuccess()
       } catch (error: any) {
         this.profile = null // Reset profile on error
@@ -100,6 +102,7 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
         const res = await api.post<UpdateProfileResponse>('/profiles/me', update)
         const updated = OwnerProfileSchema.parse(res.data.profile)
         this.profile = updated
+        useAuthStore().isOnboarded = true
         return storeSuccess()
       } catch (error: any) {
         return storeError(error, 'Failed to create profile')

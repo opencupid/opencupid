@@ -27,6 +27,7 @@ export const useAuthStore = defineStore('auth', {
     userId: null as string | null,
     email: null as string | null,
     profileId: null as string | null,
+    isOnboarded: true,
     isInitialized: false,
     loginUser: null as LoginUser | null,
   }),
@@ -103,6 +104,7 @@ export const useAuthStore = defineStore('auth', {
 
         if (res.data.success === true) {
           this.setAuthState(res.data.token, res.data.refreshToken)
+          this.isOnboarded = res.data.isOnboarded
           this.loginUser = null
           localStorage.removeItem('authId')
         } else {

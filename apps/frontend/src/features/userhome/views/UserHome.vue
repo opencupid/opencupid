@@ -20,11 +20,6 @@ const newProfiles = ref([] as PublicProfile[])
 onMounted(async () => {
   await useBootstrap().bootstrap()
 
-  if (viewerProfile.value && !viewerProfile.value?.isOnboarded) {
-    router.push({ name: 'Onboarding' })
-    return
-  }
-
   const findProfileStore = useFindProfileStore()
   const result = await findProfileStore.fetchNewProfiles()
   if (result.success && result.data) {
@@ -58,9 +53,9 @@ provide('viewerProfile', toRef(viewerProfile))
     <BContainer fluid>
       <div class="banner-halo">
         <LikesAndMatchesBanner
-        class="clickable my-3"
-        @click="router.push({ name: 'Messaging' })"
-      />
+          class="clickable my-3"
+          @click="router.push({ name: 'Messaging' })"
+        />
       </div>
       <!-- lg+: two-column layout -->
       <BRow class="d-flex mt-3">

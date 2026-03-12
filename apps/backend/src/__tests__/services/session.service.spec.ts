@@ -35,6 +35,7 @@ const sessionData = {
     isDatingActive: false,
     isSocialActive: true,
     isActive: true,
+    isOnboarded: true,
   },
 }
 

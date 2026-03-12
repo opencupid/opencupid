@@ -86,11 +86,6 @@ const appStore = useAppStore()
 onMounted(async () => {
   await useBootstrap().bootstrap()
 
-  if (profileStore.profile?.isOnboarded) {
-    router.push({ name: 'MyProfile' })
-    return
-  }
-
   // obtain GeoIP info
   appStore
     .fetchLocation()
