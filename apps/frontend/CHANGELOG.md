@@ -1,5 +1,11 @@
 # frontend
 
+## 0.27.0
+
+### Minor Changes
+
+- ecc179d: Dating prefs dialog: disable preferences link until onboarded, add birth year i18n display (#1082)
+
 ## 0.26.0
 
 ### Minor Changes
