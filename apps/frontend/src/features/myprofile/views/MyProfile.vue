@@ -191,10 +191,11 @@ const hint = computed(() => history?.state?.hint || null)
       :no-header="false"
       :title="$t('profiles.forms.my_dating_profile')"
       :no-footer="true"
-      body-class="d-flex flex-column align-items-center justify-content-center overflow-auto hide-scrollbar p-2 p-md-5"
+      body-class="d-flex flex-column align-items-center overflow-auto hide-scrollbar p-2 p-md-5"
       :keyboard="false"
     >
       <EditDatingProfile
+        v-if="showDatingProfileModal"
         v-model="formData"
         @save="updateProfile().then(() => (showDatingProfileModal = false))"
         @cancel="showDatingProfileModal = false"
