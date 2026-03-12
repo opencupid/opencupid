@@ -9,8 +9,8 @@ const { t } = useI18n()
 const model = defineModel<HasKidsType[] | null>({
   default: () => 'unspecified',
 })
-const { hasKidsOptions } = useEnumOptions(t)
-const checkboxOptions = hasKidsOptions().filter((o) => o.value !== 'unspecified')
+const { hasKidsPreferenceOptions } = useEnumOptions(t)
+const checkboxOptions = hasKidsPreferenceOptions().filter((o) => o.value !== 'unspecified')
 </script>
 
 <template>

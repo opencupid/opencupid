@@ -61,6 +61,11 @@
     "no": "No",
     "unspecified": "I'd rather not say"
   },
+  "haskids_preference": {
+    "yes": "Has kids",
+    "no": "No kids",
+    "unspecified": "Doesn't matter"
+  },
   "haskids_label": {
     "yes": "Has kids",
     "no": "No kids",

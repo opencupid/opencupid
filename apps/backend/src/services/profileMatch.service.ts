@@ -365,12 +365,12 @@ export class ProfileMatchService {
     const aMatchesB =
       isAgeCompatible(ageB, a.prefAgeMin, a.prefAgeMax) &&
       a.prefGender.includes(b.gender) &&
-      (b.hasKids == null || a.prefKids.includes(b.hasKids) || a.prefKids.length === 0)
+      (a.prefKids.length === 0 || (b.hasKids != null && a.prefKids.includes(b.hasKids)))
 
     const bMatchesA =
       isAgeCompatible(ageA, b.prefAgeMin, b.prefAgeMax) &&
       b.prefGender.includes(a.gender) &&
-      (a.hasKids == null || b.prefKids.includes(a.hasKids) || b.prefKids.length === 0)
+      (b.prefKids.length === 0 || (a.hasKids != null && b.prefKids.includes(a.hasKids)))
 
     return aMatchesB && bMatchesA
   }

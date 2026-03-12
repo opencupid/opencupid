@@ -104,3 +104,48 @@ describe('MatchQueryService.findMutualMatchesFor', () => {
     lte.setFullYear(lte.getFullYear() - 20)
   })
 })
+
+describe('ProfileMatchService.areProfilesMutuallyCompatible', () => {
+  const baseProfile = {
+    birthday: new Date('1990-01-01'),
+    gender: 'male',
+    isDatingActive: true,
+    prefAgeMin: 20,
+    prefAgeMax: 40,
+    prefGender: ['female'],
+    prefKids: [] as string[],
+    hasKids: null as string | null,
+  }
+
+  function makeProfiles(aOverrides: Record<string, any>, bOverrides: Record<string, any>) {
+    const a = { ...baseProfile, id: 'a', ...aOverrides }
+    const b = { ...baseProfile, id: 'b', gender: 'female', prefGender: ['male'], ...bOverrides }
+    mockPrisma.profile.findMany.mockResolvedValue([a, b])
+  }
+
+  it('matches when neither has kids preferences', async () => {
+    makeProfiles({}, {})
+    expect(await service.areProfilesMutuallyCompatible('a', 'b')).toBe(true)
+  })
+
+  it('matches when prefKids includes candidate hasKids', async () => {
+    makeProfiles({ prefKids: ['yes'] }, { hasKids: 'yes' })
+    expect(await service.areProfilesMutuallyCompatible('a', 'b')).toBe(true)
+  })
+
+  it('excludes when prefKids does not include candidate hasKids', async () => {
+    makeProfiles({ prefKids: ['no'] }, { hasKids: 'yes' })
+    expect(await service.areProfilesMutuallyCompatible('a', 'b')).toBe(false)
+  })
+
+  it('excludes when prefKids is set but candidate hasKids is null', async () => {
+    makeProfiles({ prefKids: ['yes'] }, { hasKids: null })
+    expect(await service.areProfilesMutuallyCompatible('a', 'b')).toBe(false)
+  })
+
+  it('checks kids compatibility in both directions', async () => {
+    makeProfiles({ prefKids: ['yes'], hasKids: 'yes' }, { prefKids: ['no'], hasKids: 'yes' })
+    // b wants 'no' kids but a hasKids 'yes' → bMatchesA fails
+    expect(await service.areProfilesMutuallyCompatible('a', 'b')).toBe(false)
+  })
+})
