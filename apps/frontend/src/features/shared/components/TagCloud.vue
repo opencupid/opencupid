@@ -12,7 +12,10 @@ const props = withDefaults(
   { limit: 50 }
 )
 
-const emit = defineEmits<{ 'tag:select': [tag: PopularTag] }>()
+const emit = defineEmits<{
+  'tag:select': [tag: PopularTag]
+  'tag:hover': [tag: PopularTag | null]
+}>()
 
 const tagStore = useTagsStore()
 
@@ -143,6 +146,8 @@ onMounted(async () => {
       :style="{ fontSize: `${w.size}px`, fontFamily: 'sans-serif', cursor: 'pointer' }"
       class="tag-cloud-word"
       @click="handleTagClick(w.tag)"
+      @mouseenter="emit('tag:hover', w.tag)"
+      @mouseleave="emit('tag:hover', null)"
     >
       {{ w.text }}
     </text>

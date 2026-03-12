@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import { type EditProfileForm } from '@zod/profile/profile.form'
 import { type DatingPreferencesDTO } from '@zod/match/filters.dto'
@@ -20,6 +20,7 @@ import LogoutButton from '@/features/auth/components/LogoutButton.vue'
 import IconSun from '@/assets/icons/interface/sun.svg'
 import IconLogout from '@/assets/icons/interface/logout.svg'
 import IconCupid from '@/assets/images/app/cupid.svg'
+import IconCurvedArrow from '@/assets/images/app/curved-arrow.svg'
 
 import { useStepper } from '@vueuse/core'
 
@@ -71,6 +72,12 @@ const handleLocationSelected = async (location: { country: string }) => {
     country: location.country,
     limit: 50,
   })
+}
+
+const tagCloudHint = ref<PopularTag | null>(null)
+
+const handleTagCloudHover = (tag: PopularTag | null) => {
+  tagCloudHint.value = tag
 }
 
 const handleTagCloudSelect = (tag: PopularTag) => {
@@ -167,18 +174,21 @@ const popularTags = computed(() => tagStore.popularTags ?? ([] as PublicTag[]))
             open-direction="top"
             :required="true"
             :initialOptions="popularTags"
+            :hint="tagCloudHint"
           />
           <h6 class="mt-3 mt-lg-3 mb-0 text-center text-muted">
             {{ t('onboarding.interests_popular_heading') }}
           </h6>
-          <div style="min-height: 12rem">
+          <div class="position-relative" style="min-height: 12rem">
+            <IconCurvedArrow class="curved-arrow" />
             <TagCloud
               v-if="formData.location?.country"
               :key="formData.location.country"
               :location="formData.location"
               class="mb-3"
               @tag:select="handleTagCloudSelect"
-            />
+              @tag:hover="handleTagCloudHover"
+                          />
           </div>
         </fieldset>
 
@@ -308,11 +318,19 @@ p.wizard-step-subtitle {
   margin-bottom: 0.5rem;
   text-align: center;
 }
-// .indicators {
-//   bottom: 0;
-//   margin-bottom: 1rem;
-//   font-size: 0.5rem;
-//   position: absolute;
-//   opacity: 0.2;
-// }
+.curved-arrow {
+  position: absolute;
+  bottom: 50%;
+  left: 50%;
+  width: 70%;
+  height: 70%;
+  color: yellow;
+  opacity: 0.6;
+  pointer-events: none;
+  filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.4));
+}
+
+:deep(.interests-multiselect) .multiselect__tags{
+  min-height: 5rem;
+}
 </style>
