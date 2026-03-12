@@ -29,7 +29,6 @@ const hasPreviewLanguages = computed(() => languagePreviewOptions.value.length >
 
 <template>
   <BNavItemDropdown
-    :auto-close="'outside'"
     v-if="isDatingActive || hasPreviewLanguages"
   >
     <template #button-content>
@@ -39,7 +38,7 @@ const hasPreviewLanguages = computed(() => languagePreviewOptions.value.length >
     </template>
 
     <span v-if="isDatingActive">
-      <BDropdownItem>
+      <BDropdownItem @click.stop>
         <ScopeViewToggler v-model="viewState.currentScope" />
       </BDropdownItem>
 
