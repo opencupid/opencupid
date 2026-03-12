@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import type { RelationshipStatusType } from '@zod/generated'
+import { useId } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useEnumOptions } from '../composables/useEnumOptions'
 
 // i18n
 const { t } = useI18n()
+const uid = useId()
 
 const model = defineModel<RelationshipStatusType | null>({
   default: () => 'unspecified',
@@ -25,9 +27,9 @@ const checkboxOptions = relationshipStatusOptions().filter(
         class="d-flex justify-content-between align-items-center clickable"
       >
         <BFormRadio
-          name="relationship"
+          :name="`relationship-${uid}`"
           v-model="model"
-          :id="`list-relationship-${s.value}`"
+          :id="`list-relationship-${uid}-${s.value}`"
           :value="s.value"
           >{{ s.label }}</BFormRadio
         >

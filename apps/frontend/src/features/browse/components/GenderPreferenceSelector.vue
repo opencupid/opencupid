@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { useEnumOptions } from '@/features/shared/composables/useEnumOptions'
-import { computed, ref } from 'vue'
+import { computed, ref, useId } from 'vue'
 import { type MultiselectOption } from '@/types/multiselect'
 import type { GenderType } from '@zod/generated'
 import ExpandCollapseButton from '@/features/shared/ui/ExpandCollapseButton.vue'
 
 const { t } = useI18n()
+const uid = useId()
 
 const model = defineModel<GenderType[] | null>({
   default: () => null,
@@ -28,18 +29,16 @@ const sortedOptions = computed(() => {
 </script>
 
 <template>
-  <BListGroup
-    class="overflow-auto gender-list"
-  >
+  <BListGroup class="overflow-auto gender-list">
     <BListGroupItem
       v-for="g in sortedOptions"
       :key="g.value"
       class="d-flex justify-content-between align-items-center"
     >
       <BFormCheckbox
-        name="gender"
+        :name="`gender-pref-${uid}`"
         v-model="model"
-        :id="`list-gender-${g.value}`"
+        :id="`list-gender-pref-${uid}-${g.value}`"
         :value="g.value"
       >
         {{ g.label }}</BFormCheckbox
@@ -50,4 +49,3 @@ const sortedOptions = computed(() => {
     <ExpandCollapseButton v-model="showAll" />
   </div>
 </template>
-

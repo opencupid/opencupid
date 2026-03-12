@@ -4,12 +4,13 @@ import { type MultiselectOption } from '@/types/multiselect'
 
 import { useI18n } from 'vue-i18n'
 import { useEnumOptions } from '../composables/useEnumOptions'
-import { computed } from 'vue'
+import { computed, useId } from 'vue'
 
 import GenderSelectorTitle from '@/features/shared/ui/GenderSelectorTitle.vue'
 
 // i18n
 const { t } = useI18n()
+const uid = useId()
 
 const model = defineModel<GenderType | null>({
   default: () => null,
@@ -28,18 +29,16 @@ const options = computed(() => {
   <div class="w-100">
     <GenderSelectorTitle class="mb-3" />
 
-    <BListGroup
-      class="overflow-auto gender-list"
-    >
+    <BListGroup class="overflow-auto gender-list">
       <BListGroupItem
         v-for="g in options"
         :key="g.value"
         class="d-flex justify-content-between align-items-center clickable"
       >
         <BFormRadio
-          name="gender"
+          :name="`gender-${uid}`"
           v-model="model"
-          :id="`list-gender-${g.value}`"
+          :id="`list-gender-${uid}-${g.value}`"
           :value="g.value"
           >{{ g.label }}</BFormRadio
         >

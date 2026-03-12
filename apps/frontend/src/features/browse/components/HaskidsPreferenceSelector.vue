@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, useId } from 'vue'
 import type { HasKidsType } from '@zod/generated'
 import { useI18n } from 'vue-i18n'
 import { useEnumOptions } from '@/features/shared/composables/useEnumOptions'
 
 const { t } = useI18n()
+const uid = useId()
 
 const model = defineModel<HasKidsType[]>({
   default: () => [],
@@ -37,9 +38,9 @@ function isLastChecked(value: HasKidsType): boolean {
         class="d-flex justify-content-between align-items-center"
       >
         <BFormCheckbox
-          name="haskids"
+          :name="`haskids-pref-${uid}`"
           v-model="model"
-          :id="`list-haskids-${s.value}`"
+          :id="`list-haskids-pref-${uid}-${s.value}`"
           :value="s.value"
           :disabled="isLastChecked(s.value as HasKidsType)"
           >{{ s.label }}</BFormCheckbox
@@ -47,7 +48,7 @@ function isLastChecked(value: HasKidsType): boolean {
       </BListGroupItem>
       <BListGroupItem class="d-flex justify-content-between align-items-center">
         <BFormCheckbox
-          id="list-haskids-doesnt-matter"
+          :id="`list-haskids-pref-${uid}-doesnt-matter`"
           v-model="doesntMatter"
           >{{ doesntMatterLabel }}</BFormCheckbox
         >

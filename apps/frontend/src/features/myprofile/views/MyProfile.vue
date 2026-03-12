@@ -175,8 +175,8 @@ const hint = computed(() => history?.state?.hint || null)
       @ok="persistDatingPrefs"
     >
       <DatingPreferencesForm
+        v-if="showDatingPrefsModal && datingPrefs"
         v-model="datingPrefs"
-        v-if="datingPrefs"
       />
     </BModal>
     <BModal
