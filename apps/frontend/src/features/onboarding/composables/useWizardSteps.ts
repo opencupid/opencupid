@@ -2,6 +2,7 @@ import { useImageStore } from '@/features/images/stores/imageStore'
 import { type EditProfileForm, EditProfileFormSchema } from '@zod/profile/profile.form'
 import { type DatingPreferencesDTO } from '@zod/match/filters.dto'
 import { isDatingPreferencesValid } from '@zod/match/filters.form'
+import { isLocationValid } from '@zod/dto/location.dto'
 import { computed } from 'vue'
 import { isPublicNameValid } from '@/features/shared/profileform/publicNameValidation'
 
@@ -20,15 +21,10 @@ export const useWizardSteps = (
       flags: '',
     },
     location: {
-      state: computed(() => (formData.location.country ? true : false)),
+      state: computed(() => isLocationValid(formData.location)),
       flags: '',
     },
-    looking_for: {
-      state: computed(() =>
-        [formData.isDatingActive, formData.isSocialActive].some((t) => t) ? true : false
-      ),
-      flags: '',
-    },
+
     interests: {
       state: computed(() => formData.tags.length > 0),
       flags: '',
@@ -44,17 +40,15 @@ export const useWizardSteps = (
     },
     photos: {
       state: computed(() => imageStore.images.length >= 1),
+      flags: '',
+    },
+    dating_mode: {
+      state: computed(() => true),
       flags: 'stage_one_end',
     },
   }
 
   const datingSteps = {
-    // Dating steps
-    hint: {
-      state: () => true,
-      flags: '',
-    },
-
     age: {
       state: computed(() =>
         EditProfileFormSchema.pick({ birthday: true }).safeParse(formData.birthday) ? true : false

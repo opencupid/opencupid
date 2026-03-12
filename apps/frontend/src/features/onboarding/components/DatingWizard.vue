@@ -50,21 +50,6 @@ const { current, isFirst, isLast, goToNext, goToPrevious, isCurrent } =
   </div>
 
   <div class="flex-grow-1 d-flex flex-column justify-content-center w-100">
-    <fieldset
-      v-if="isCurrent('hint')"
-      class="w-100"
-    >
-      <div
-        class="col-6 mx-auto d-flex align-items-center justify-content-center text-dating mb-2 mb-md-4 animate__animated animate__fadeIn"
-      >
-        <IconCupid class="svg-icon-100 opacity-50" />
-      </div>
-      <legend>{{ t('onboarding.dating_hint_title') }}</legend>
-      <p class="text-center text-muted">
-        {{ t('onboarding.dating_hint_subtitle') }}
-      </p>
-    </fieldset>
-
     <DatingSteps
       v-model="formData"
       v-model:datingPrefs="datingPrefs"

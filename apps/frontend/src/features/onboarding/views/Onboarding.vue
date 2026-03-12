@@ -100,16 +100,19 @@ onMounted(async () => {
   }
 
   // obtain GeoIP info
-  appStore
-    .fetchLocation()
-    .then((res) => {
-      if (res.success && res.data && !formData.location.country) {
-        formData.location = res.data
-      }
-    })
-    .catch((error) => {
-      console.error('Failed to fetch GeoIP info:', error)
-    })
+  // disabled for now - LocationSelector uses the komoot
+  // API with a locality search - the search is good enough,
+  // geoIP does not simplify the step.
+  // appStore
+  //   .fetchLocation()
+  //   .then((res) => {
+  //     if (res.success && res.data && !formData.location.country) {
+  //       formData.location = res.data
+  //     }
+  //   })
+  //   .catch((error) => {
+  //     console.error('Failed to fetch GeoIP info:', error)
+  //   })
 })
 </script>
 

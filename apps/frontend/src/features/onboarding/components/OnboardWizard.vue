@@ -13,7 +13,6 @@ import IntrotextEditor from '@/features/shared/profileform/IntrotextEditor.vue'
 import ImageEditor from '@/features/images/components/ImageEditor.vue'
 import DatingSteps from '../components/DatingSteps.vue'
 import LocationSelectorComponent from '@/features/shared/profileform/LocationSelector.vue'
-import GoalsSelector from './GoalsSelector.vue'
 import BackButton from '../components/BackButton.vue'
 import PublicNameInput from '@/features/shared/profileform/PublicNameInput.vue'
 import LogoutButton from '@/features/auth/components/LogoutButton.vue'
@@ -152,15 +151,6 @@ const popularTags = computed(() => tagStore.popularTags ?? ([] as PublicTag[]))
           </p>
         </fieldset>
 
-        <fieldset v-else-if="isCurrent('looking_for')">
-          <!-- goals selector title -->
-          <legend>
-            <!-- The connections I'm looking for... -->
-            {{ t('onboarding.connections_title') }}
-          </legend>
-          <GoalsSelector v-model="formData" />
-        </fieldset>
-
         <fieldset v-else-if="isCurrent('interests')">
           <legend>
             <!-- I'm into... -->
@@ -233,19 +223,33 @@ const popularTags = computed(() => tagStore.popularTags ?? ([] as PublicTag[]))
           <ImageEditor />
         </fieldset>
 
-        <fieldset
-          v-if="isCurrent('hint')"
-          class="w-100"
-        >
+        <fieldset v-else-if="isCurrent('dating_mode')">
           <div
             class="col-6 mx-auto d-flex align-items-center justify-content-center text-dating mb-2 mb-md-4 animate__animated animate__fadeIn"
           >
             <IconCupid class="svg-icon-100 opacity-50" />
           </div>
-          <legend>{{ t('onboarding.dating_hint_title') }}</legend>
-          <p class="text-center text-muted">
-            {{ t('onboarding.dating_hint_subtitle') }}
-          </p>
+          <!-- <legend>
+            {{ t('onboarding.dating_mode_step_title') }}
+          </legend> -->
+          <div class="mb-3">
+            <BFormCheckbox
+              v-model="formData.isDatingActive"
+              switch
+              size="lg"
+            >
+              {{ t('onboarding.dating_mode_switch') }}
+            </BFormCheckbox>
+
+            <p class="text-muted">
+              <span v-if="formData.isDatingActive">
+                {{ t('onboarding.dating_mode_step_hint_active') }}
+              </span>
+              <span v-else>
+                {{ t('onboarding.dating_mode_step_hint_inactive') }}
+              </span>
+            </p>
+          </div>
         </fieldset>
 
         <DatingSteps
