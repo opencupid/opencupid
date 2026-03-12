@@ -24,10 +24,8 @@ This uses Turbo to run both the frontend (Vite, port 5173, 5174) and backend (Fa
 The app uses magic link (OTP) authentication — no passwords.
 
 1. Go to <https://localhost:5173/auth>
-2. Enter email: `me@example.org`
-3. Open Mailpit at <http://localhost:1080/>
-4. Find the login email, copy the OTP token
-5. Paste the token back on the login page at `/auth/otp`
+2. Enter email: `me@example.org`, check captcha, click Continue
+3. Click Continue on next page. You are now on home page.
 
 Mailpit captures all transactional emails sent by the app (login tokens, notifications, etc.) regardless of recipient address.
 
@@ -87,9 +85,7 @@ packages/
 | `/auth`                        | Login (email entry)                                |
 | `/auth/otp`                    | OTP token entry                                    |
 | `/browse`                      | Browse profiles (social)                           |
-| `/matches`                     | Browse profiles (dating)                           |
-| `/browse/profile/:profileId`   | Public profile                                     |
-| `/matches/profile/:profileId?` | Public profile                                     |
+| `/profile/:profileId`   | Public profile                                     |
 | `/me`                          | My profile                                         |
 | `/me/edit`                     | Edit profile                                       |
 | `/inbox`                       | Conversation list                                  |
