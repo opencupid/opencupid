@@ -160,6 +160,7 @@ const hint = computed(() => history?.state?.hint || null)
       button-size="sm"
       :focus="false"
       :no-close-on-backdrop="true"
+      size="lg"
       fullscreen="sm"
       :no-footer="false"
       :no-header="true"

@@ -3,8 +3,9 @@ import { useI18n } from 'vue-i18n'
 import { useEnumOptions } from '@/features/shared/composables/useEnumOptions'
 import { computed, ref } from 'vue'
 import { type MultiselectOption } from '@/types/multiselect'
-
 import type { GenderType } from '@zod/generated'
+import ChevronsDown from '@/assets/icons/arrows/arrow-single-down.svg'
+import ChevronsUp from '@/assets/icons/arrows/arrow-single-up.svg'
 
 const { t } = useI18n()
 
@@ -29,8 +30,7 @@ const sortedOptions = computed(() => {
 
 <template>
   <BListGroup
-    class="overflow-scroll"
-    style="max-height: 40vh"
+    class="overflow-auto gender-list"
   >
     <BListGroupItem
       v-for="g in sortedOptions"
@@ -47,14 +47,28 @@ const sortedOptions = computed(() => {
       >
     </BListGroupItem>
   </BListGroup>
-  <div class="my-3">
+  <div class="mb-md-3">
     <BButton
-      v-if="!showAll"
       @click="() => (showAll = !showAll)"
       variant="link-secondary"
       class="m-0 p-0 w-100 text-center"
     >
-      {{ t('profiles.forms.more_options') }}
+    
+      {{ showAll ? t('profiles.forms.fewer_options') : t('profiles.forms.more_options') }}
+      <span><component :is="showAll ? ChevronsUp : ChevronsDown" class="svg-icon-sm me-1" /></span>
     </BButton>
+    
   </div>
 </template>
+
+<style scoped>
+.gender-list {
+  max-height: 25vh;
+}
+
+@media (min-height: 800px) {
+  .gender-list {
+    max-height: 40vh;
+  }
+}
+</style>

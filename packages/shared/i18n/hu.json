@@ -49,6 +49,11 @@
     "no": "Nem",
     "unspecified": "Inkább nem mondom meg"
   },
+  "haskids_preference": {
+    "yes": "Van gyereke",
+    "no": "Nincs gyereke",
+    "unspecified": "Mindegy"
+  },
   "haskids_label": {
     "yes": "Van gyereke",
     "no": "Nincs gyereke",
@@ -140,6 +145,7 @@
       "name_invalid": "Adj meg legalább 3 betűt",
       "name_first_name_only": "Csak a keresztnevedet",
       "more_options": "További lehetőségek...",
+      "fewer_options": "Kevesebb lehetőség",
       "city_search_placeholder": "Helyek keresése",
       "city_add_placeholder": "Új város hozzáadása",
       "city_start_typing": "Kezdd el beírni a városod nevét",
@@ -203,7 +209,7 @@
         "locate_button_title": "Keress körülöttem",
         "search_button_title_social": "Keresés",
         "search_button_title_dating": "Keresés",
-        "button_update_prefs":"Rendben",
+        "button_update_prefs": "Rendben",
         "age_range": "Korosztály:",
         "filter_display_label": "Hely:",
         "explore_tags": "Érdeklődési korok"
