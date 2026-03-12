@@ -26,7 +26,7 @@ async function handleContinue() {
 
     const res = await authStore.verifyToken(data.token)
     if (res.success) {
-      await router.push({ name: 'UserHome' })
+      await router.push({ name: authStore.isOnboarded ? 'UserHome' : 'Onboarding' })
     } else {
       error.value = res.message ?? 'Token verification failed'
     }
