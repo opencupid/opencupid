@@ -6,7 +6,6 @@ import { type DatingPreferencesDTO } from '@zod/match/filters.dto'
 import { useWizardSteps } from '../composables/useWizardSteps'
 import { useStepper } from '@vueuse/core'
 
-import IconCupid from '@/assets/images/app/cupid.svg'
 import BackButton from './BackButton.vue'
 import DatingSteps from './DatingSteps.vue'
 

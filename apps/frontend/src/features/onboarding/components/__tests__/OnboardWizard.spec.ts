@@ -65,7 +65,6 @@ const stubComponents = {
   ImageEditor: { template: '<div />' },
   DatingSteps: { template: '<div />' },
   LocationSelectorComponent: { template: '<div />' },
-  GoalsSelector: { template: '<div />' },
   BackButton: { template: '<div />' },
   PublicNameInput: { template: '<div />' },
   LogoutButton: { template: '<div />' },
@@ -120,9 +119,8 @@ describe('OnboardWizard TagCloud integration', () => {
 
     const { wrapper } = mountWizard({ location: {} })
 
-    // Navigate to the interests step: publicname → location → looking_for → interests
-    // Click next 3 times
-    for (let i = 0; i < 3; i++) {
+    // Navigate to the interests step: publicname → location → interests
+    for (let i = 0; i < 2; i++) {
       await wrapper.find('button').trigger('click')
       await flushPromises()
     }
@@ -139,7 +137,7 @@ describe('OnboardWizard TagCloud integration', () => {
 
     const { wrapper } = mountWizard({ location: { country: 'DE' } })
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 2; i++) {
       await wrapper.find('button').trigger('click')
       await flushPromises()
     }
@@ -158,7 +156,7 @@ describe('OnboardWizard TagCloud integration', () => {
 
     const { wrapper, formData } = mountWizard({ location: { country: 'DE' } })
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 2; i++) {
       await wrapper.find('button').trigger('click')
       await flushPromises()
     }
@@ -180,7 +178,7 @@ describe('OnboardWizard TagCloud integration', () => {
 
     const { wrapper, formData } = mountWizard({ location: { country: 'DE' } })
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 2; i++) {
       await wrapper.find('button').trigger('click')
       await flushPromises()
     }
