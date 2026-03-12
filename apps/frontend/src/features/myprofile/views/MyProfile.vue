@@ -3,9 +3,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { onMounted, ref, provide, computed, toRef } from 'vue'
 import { useBootstrap } from '@/lib/bootstrap'
 
-import IconDate from '@/assets/images/app/cupid.svg'
-import IconSocialize from '@/assets/images/app/socialize.svg'
-
 import StoreErrorOverlay from '@/features/shared/ui/StoreErrorOverlay.vue'
 import EditButton from '@/features/myprofile/components/EditButton.vue'
 import ProfileContent from '@/features/publicprofile/components/ProfileContent.vue'
@@ -173,9 +170,10 @@ const hint = computed(() => history?.state?.hint || null)
       initial-animation
       :body-scrolling="false"
       @ok="persistDatingPrefs"
+      lazy
     >
       <DatingPreferencesForm
-        v-if="showDatingPrefsModal && datingPrefs"
+        v-if="datingPrefs"
         v-model="datingPrefs"
       />
     </BModal>
@@ -193,9 +191,9 @@ const hint = computed(() => history?.state?.hint || null)
       :no-footer="true"
       body-class="d-flex flex-column align-items-center overflow-auto hide-scrollbar p-2 p-md-5"
       :keyboard="false"
+      lazy
     >
       <EditDatingProfile
-        v-if="showDatingProfileModal"
         v-model="formData"
         @save="updateProfile().then(() => (showDatingProfileModal = false))"
         @cancel="showDatingProfileModal = false"
@@ -221,24 +219,17 @@ const hint = computed(() => history?.state?.hint || null)
   flex-direction: column;
   align-items: stretch !important;
   width: 100%;
-  :deep(.editable-placeholder) {
-    height: 4rem;
-  }
 }
 
 :deep(.editable-textarea .edit-button) {
   position: absolute;
-  right: 0;
-  bottom: 0.5rem;
+  right: -0.25rem;
+  bottom: 0.25rem;
 }
+
 :deep(.editable-textarea .editable-placeholder) {
   display: flex;
   padding: 0.25rem;
-}
-:deep(.editable-textarea .editable-placeholder + .edit-button) {
-  position: absolute;
-  right: 0;
-  bottom: 0.25rem;
 }
 
 :deep(.editable-placeholder) {
@@ -251,9 +242,11 @@ const hint = computed(() => history?.state?.hint || null)
   width: 100%;
 }
 
-:deep(.editable .dating-field .editable-placeholder) {
-  background-color: var(--bs-dating-light);
+.editable :deep(.dating-field) {
+  background-color: transparentize($dating, 0.9);
+  box-shadow: 0 0 10px 10px transparentize($dating, 0.9);
 }
+
 :deep(.editable-field) {
   display: inline-flex;
   align-items: center;
