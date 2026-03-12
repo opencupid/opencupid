@@ -4,7 +4,7 @@ import ViewAsDropdown from './ViewAsDropdown.vue'
 import DatingModeDropdown from './DatingModeDropdown.vue'
 import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
 
-const props = defineProps<{
+defineProps<{
   isDatingOnboarded?: boolean
 }>()
 
