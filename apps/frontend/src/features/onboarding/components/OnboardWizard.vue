@@ -1,14 +1,11 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { computed, ref } from 'vue'
 
 import { type EditProfileForm } from '@zod/profile/profile.form'
 import { type DatingPreferencesDTO } from '@zod/match/filters.dto'
-import { type PublicTag, type PopularTag } from '@zod/tag/tag.dto'
 
 import LanguageSelector from '@/features/shared/profileform/LanguageSelector.vue'
-import TagSelector from '@/features/shared/profileform/TagSelector.vue'
-import TagCloud from '@/features/shared/components/TagCloud.vue'
+import TagExplorer from '@/features/shared/components/TagExplorer.vue'
 import IntrotextEditor from '@/features/shared/profileform/IntrotextEditor.vue'
 import ImageEditor from '@/features/images/components/ImageEditor.vue'
 import DatingSteps from '../components/DatingSteps.vue'
@@ -20,7 +17,6 @@ import LogoutButton from '@/features/auth/components/LogoutButton.vue'
 import IconSun from '@/assets/icons/interface/sun.svg'
 import IconLogout from '@/assets/icons/interface/logout.svg'
 import IconCupid from '@/assets/images/app/cupid.svg'
-import IconCurvedArrow from '@/assets/images/app/curved-arrow.svg'
 
 import { useStepper } from '@vueuse/core'
 
@@ -74,22 +70,7 @@ const handleLocationSelected = async (location: { country: string }) => {
   })
 }
 
-const tagCloudHint = ref<PopularTag | null>(null)
-
-const handleTagCloudHover = (tag: PopularTag | null) => {
-  tagCloudHint.value = tag
-}
-
-const handleTagCloudSelect = (tag: PopularTag) => {
-  const exists = formData.value.tags.some((existing) => existing.id === tag.id)
-  if (!exists) {
-    formData.value.tags.push({ id: tag.id, name: tag.name, slug: tag.slug })
-  }
-}
-
 const siteName = __APP_CONFIG__.SITE_NAME
-
-const popularTags = computed(() => tagStore.popularTags ?? ([] as PublicTag[]))
 </script>
 
 <template>
@@ -167,29 +148,10 @@ const popularTags = computed(() => tagStore.popularTags ?? ([] as PublicTag[]))
             <!-- Start typing to search for tags. You can add new tags if you don't find what you're looking for. -->
             <small>{{ t('onboarding.interests_hint') }}</small>
           </div>
-          <TagSelector
+          <TagExplorer
             v-model="formData.tags"
-            :taggable="true"
-            :close-on-select="true"
-            open-direction="top"
-            :required="true"
-            :initialOptions="popularTags"
-            :hint="tagCloudHint"
+            :location="formData.location"
           />
-          <h6 class="mt-3 mt-lg-3 mb-0 text-center text-muted">
-            {{ t('onboarding.interests_popular_heading') }}
-          </h6>
-          <div class="position-relative" style="min-height: 12rem">
-            <IconCurvedArrow class="curved-arrow" />
-            <TagCloud
-              v-if="formData.location?.country"
-              :key="formData.location.country"
-              :location="formData.location"
-              class="mb-3"
-              @tag:select="handleTagCloudSelect"
-              @tag:hover="handleTagCloudHover"
-                          />
-          </div>
         </fieldset>
 
         <fieldset v-else-if="isCurrent('languages')">
@@ -317,20 +279,5 @@ const popularTags = computed(() => tagStore.popularTags ?? ([] as PublicTag[]))
 p.wizard-step-subtitle {
   margin-bottom: 0.5rem;
   text-align: center;
-}
-.curved-arrow {
-  position: absolute;
-  bottom: 50%;
-  left: 50%;
-  width: 70%;
-  height: 70%;
-  color: yellow;
-  opacity: 0.6;
-  pointer-events: none;
-  filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.4));
-}
-
-:deep(.interests-multiselect) .multiselect__tags{
-  min-height: 5rem;
 }
 </style>
