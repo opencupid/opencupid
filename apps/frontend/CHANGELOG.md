@@ -1,5 +1,22 @@
 # frontend
 
+## 0.26.0
+
+### Minor Changes
+
+- dfb52c4: Add anonymous like flag and received likes interaction UX (#1077)
+- 68b5c54: New matches logic: isNew filter, dating profile modal, session hasActiveProfile sync (#1064)
+- d04192b: Refactor MyProfile secondary nav: extract ViewAsDropdown and DatingModeDropdown components, add dating prefs refresh on update
+
+### Patch Changes
+
+- 8b9a770: Fix hasKids/prefKids preference labels, match logic, and layout overflow on small screens
+- 86a1145: Pin VueUse to 13.x to fix WebSocket not connecting after async bootstrap
+- d9122e9: Fix language preview dropdown not showing when user speaks languages the app UI isn't translated into
+- 1352d33: Suppress message toast notifications while Messaging view is open (#1079)
+- 8ed85f1: Fix inbox empty state overlay showing on top of received likes teaser
+- 24365e5: Consolidate duplicated app locale maps into shared registry, fix language name fallback to English
+
 ## 0.25.0
 
 ### Minor Changes

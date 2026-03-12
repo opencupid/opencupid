@@ -1,5 +1,18 @@
 # backend
 
+## 0.26.0
+
+### Minor Changes
+
+- dfb52c4: Add anonymous like flag and received likes interaction UX (#1077)
+
+### Patch Changes
+
+- 68b5c54: New matches logic: isNew filter, dating profile modal, session hasActiveProfile sync (#1064)
+- 8b9a770: Fix hasKids/prefKids preference labels, match logic, and layout overflow on small screens
+- 24365e5: Consolidate duplicated app locale maps into shared registry, fix language name fallback to English
+- 01d60b1: Auto-accept conversation when matched profiles send first message
+
 ## 0.25.0
 
 ### Minor Changes
