@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 
 import { useAuthStore } from '@/features/auth/stores/authStore'
+import { useBootstrap } from '@/lib/bootstrap'
 
 import MessagingView from '@/features/messaging/views/Messaging.vue'
 import UserHome from '@/features/userhome/views/UserHome.vue'
@@ -104,7 +105,7 @@ const router = createRouter({
 })
 
 // Register the navigation guard
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   const authStore = useAuthStore()
 
   if (to.meta.requiresAuth && !authStore.isLoggedIn) {
@@ -116,6 +117,11 @@ router.beforeEach((to) => {
   }
 
   if (authStore.isLoggedIn) {
+    // Await bootstrap so isOnboarded is resolved from the API before deciding.
+    // bootstrap() is idempotent — returns the existing promise if already running,
+    // resolves immediately if already complete, so no overhead on SPA navigations.
+    await useBootstrap().bootstrap()
+
     if (to.meta.requiresOnboarding && !authStore.isOnboarded) {
       return { name: 'Onboarding' }
     }
