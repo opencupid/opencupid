@@ -162,6 +162,11 @@
   background-color: transparentize($social, 0.9);
 }
 
+.dating-field {
+  background-color: transparentize($dating, 0.9);
+  outline: 10px solid transparentize($dating, 0.9);
+  outline-offset: 0px;
+}
 // List group checkbox/radio lists
 // expand clickable area to the whole list item
 // to improve UX on mobile devices

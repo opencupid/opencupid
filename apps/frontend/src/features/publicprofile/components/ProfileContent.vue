@@ -134,9 +134,9 @@ const viewerLocation = computed(() => viewerProfile?.value?.location)
         </EditField>
       </div>
 
-      <div class="mb-3">
+      <div class="mb-3 dating-field">
         <div
-          class="mb-3 dating-field"
+          class="mb-3"
           v-if="props.profile.isDatingActive"
         >
           <span class="opacity-25">
@@ -166,9 +166,9 @@ const viewerLocation = computed(() => viewerProfile?.value?.location)
             </template>
           </EditField>
         </div>
-      </div>
-      <div class="mb-3">
-        <RelationshipTags :profile="props.profile" />
+        <div class="mb-3">
+          <RelationshipTags :profile="props.profile" />
+        </div>
       </div>
     </div>
   </div>

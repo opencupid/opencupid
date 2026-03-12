@@ -20,7 +20,7 @@ const { relationshipStatus, hasKids } = useDatingFields(profileRef, t)
 <template>
   <ul
     v-if="props.profile.isDatingActive"
-    class="list-unstyled d-inline-flex flex-wrap align-items-center dating-field"
+    class="list-unstyled d-inline-flex flex-wrap align-items-center"
   >
     <li
       v-if="props.profile.relationship"
