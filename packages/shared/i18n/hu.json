@@ -134,6 +134,7 @@
     "forms": {
       "my_preferences": "Preferenciáim",
       "dating_mode": "Társkereső mód",
+      "dating_mode_toggle_hint": "Mások (és a saját) magánéletének védelme érdekében ezt a beállítást naponta csak egyszer változtathatod meg.",
       "my_dating_profile": "Társkereső profilom",
       "my_profile": "Adataim",
       "preview_language": "Előnézeti nyelv",

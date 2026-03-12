@@ -3,6 +3,11 @@
 @import '@bootstrap/scss/mixins';
 @import '@/css/theme';
 
+// Hint text — smaller than .small
+.form-hint {
+  font-size: 75%;
+}
+
 // Form validation styles
 // fix dancing fields
 .invalid-feedback {

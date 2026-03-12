@@ -148,6 +148,7 @@
     "forms": {
       "my_preferences": "My preferences",
       "dating_mode": "Dating mode",
+      "dating_mode_toggle_hint": "To protect the privacy of other people (and yours) you can only change this setting once a day.",
       "my_dating_profile": "My dating profile",
       "my_profile": "My profile",
       "age_title_display": "I was born in {birthYear}",
