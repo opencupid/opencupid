@@ -130,7 +130,7 @@ const hint = computed(() => history?.state?.hint || null)
           </MiddleColumn>
         </div>
       </div>
-      <div class="main-edit-button btn-shadow">
+      <div class="main-edit-button">
         <EditButton v-model="viewState.isEditable" />
       </div>
     </EditableFields>
