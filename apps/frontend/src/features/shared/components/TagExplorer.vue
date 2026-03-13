@@ -70,13 +70,11 @@ const handleTagCloudSelect = (tag: PopularTag) => {
   left: 50%;
   width: 70%;
   height: 70%;
-  color: yellow;
-  opacity: 0.6;
+  color: rgb(227, 227, 35);
+  // opacity: 0.4;
   pointer-events: none;
   filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.4));
 }
 
-:deep(.interests-multiselect) .multiselect__tags {
-  min-height: 5rem;
-}
+
 </style>
