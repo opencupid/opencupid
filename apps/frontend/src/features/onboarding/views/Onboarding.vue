@@ -2,7 +2,7 @@
 import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { type EditProfileForm, emptyEditProfileForm } from '@zod/profile/profile.form'
+import { type CreateProfileForm, CreateProfileFormSchema } from '@zod/profile/profile.form'
 import { type DatingPreferencesDTO } from '@zod/match/filters.dto'
 import { DatingPreferencesFormSchema } from '@zod/match/filters.form'
 
@@ -20,8 +20,8 @@ import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 const profileStore = useOwnerProfileStore()
 const i18nStore = useI18nStore()
 
-const profileForm = reactive<EditProfileForm>({
-  ...emptyEditProfileForm(),
+const profileForm = reactive<CreateProfileForm>({
+  ...CreateProfileFormSchema.parse({}),
   languages: [i18nStore.getLanguage()],
 })
 
@@ -40,6 +40,7 @@ const handleGoToBrowse = () => {
 }
 
 const handleWizardFinish = async () => {
+  Object.assign(profileForm, datingPrefs)
   const res = await profileStore.createOwnerProfile(profileForm)
   if (!res.success) {
     console.error('Failed to save profile:', res.message)

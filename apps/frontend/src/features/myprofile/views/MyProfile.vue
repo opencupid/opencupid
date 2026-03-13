@@ -59,6 +59,7 @@ const toggleDating = async () => {
 
 const handleFinishDatingOnboarding = async () => {
   const res = await updateProfile()
+  await persistDatingPrefs()
   await updateScopes({ isDatingActive: true })
   if (res.success) {
     isDatingWizardActive.value = false

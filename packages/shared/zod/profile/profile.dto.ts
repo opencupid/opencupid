@@ -13,6 +13,7 @@ import {
   profileOptInFields,
   userOptInFields,
 } from './profile.fields'
+import { datingPreferencesFields } from '@zod/match/filters.dto'
 import { InteractionContextSchema } from '@zod/interaction/interactionContext.dto'
 
 const PublicScalarsSchema = ProfileSchema.pick({
@@ -108,6 +109,25 @@ export const UpdateProfilePayloadSchema = ProfileSchema.pick({
   .partial()
 
 export type UpdateProfilePayload = z.infer<typeof UpdateProfilePayloadSchema>
+
+// Client -> API DTO profile creation payload (includes dating preference fields)
+export const CreateProfilePayloadSchema = ProfileSchema.pick({
+  ...editableFields,
+  ...datingPreferencesFields,
+  country: true,
+  cityName: true,
+  lat: true,
+  lon: true,
+  isCallable: true,
+})
+  .extend({
+    tags: z.array(z.string().cuid()),
+    introSocialLocalized: z.record(z.string(), z.string()).optional(),
+    introDatingLocalized: z.record(z.string(), z.string()).optional(),
+  })
+  .partial()
+
+export type CreateProfilePayload = z.infer<typeof CreateProfilePayloadSchema>
 
 export const ProfileOptInSettingsSchema = ProfileSchema.pick(profileOptInFields).merge(
   UserSchema.pick(userOptInFields)

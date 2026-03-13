@@ -6,6 +6,7 @@ import {
   type ProfileOptInSettings,
   type UpdateProfileOptInPayload,
   type UpdateProfilePayload,
+  type CreateProfilePayload,
   type UpdateProfileScopePayload,
 } from '@zod/profile/profile.dto'
 import {
@@ -21,7 +22,6 @@ import {
   profileImageInclude,
   tagsInclude,
 } from '@/db/includes/profileIncludes'
-import { ProfileMatchService } from './profileMatch.service'
 
 export class ProfileService {
   private static instance: ProfileService
@@ -205,7 +205,7 @@ export class ProfileService {
     tx: Prisma.TransactionClient,
     locale: string,
     userId: string,
-    data: UpdateProfilePayload
+    data: UpdateProfilePayload | CreateProfilePayload
   ): Promise<DbProfileWithImages> {
     // 1) Pull out complex parts
     const { tags, introSocialLocalized, introDatingLocalized, ...rest } = data
@@ -248,23 +248,11 @@ export class ProfileService {
       await this.upsertLocalizedProfileText(tx, profileId, locale, updates)
     }
 
-    // XXX miserable hack
-    const profileMatchService = ProfileMatchService.getInstance()
-
-    // TODO factor this out of here
-    // determine if the user has dating prefs already or we need to create defaults
-    // awful hack. datingPrefs really needs to move out of the Profile table.
-    const datingPrefsFragment =
-      data.birthday && !current.prefAgeMax && !current.prefAgeMin
-        ? profileMatchService.createDatingPrefsDefaults(data)
-        : {}
-
     // 5) Update all scalar fields
     const updated = await tx.profile.update({
       where: { userId },
       data: {
         ...rest,
-        ...datingPrefsFragment,
         isActive: true, // TODO change this to isVisible when we have that field
       },
       include: {

@@ -169,8 +169,14 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.get('/dating/filter', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     try {
-      const fetched = await profileService.getProfileByUserId(req.user.userId)
+      let fetched = await profileService.getProfileByUserId(req.user.userId)
       if (!fetched) return sendError(reply, 404, 'Profile not found')
+
+      // Compute and persist age defaults when null and birthday exists
+      if (fetched.prefAgeMin === null && fetched.prefAgeMax === null && fetched.birthday) {
+        const defaults = profileMatchService.createDatingPrefsDefaults(fetched)
+        fetched = await profileService.updateProfileScalars(req.user.userId, defaults)
+      }
 
       const datingPrefs = mapProfileToDatingPreferencesDTO(fetched)
       const response: GetDatingPreferencesResponse = { success: true, prefs: datingPrefs }

@@ -9,8 +9,10 @@ import {
   type UpdateProfileOptInPayload,
   type UpdateProfilePayload,
   type UpdateProfileScopePayload,
+  type CreateProfilePayload,
   UpdateProfileOptInPayloadSchema,
   UpdateProfilePayloadSchema,
+  CreateProfilePayloadSchema,
   UpdateProfileScopeSchemaPayload,
 } from '@zod/profile/profile.dto'
 
@@ -205,10 +207,10 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
    */
   fastify.post('/me', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const data = (await validateBody(
-      UpdateProfilePayloadSchema,
+      CreateProfilePayloadSchema,
       req,
       reply
-    )) as UpdateProfilePayload
+    )) as CreateProfilePayload
     if (!data) return
 
     // check if the user already has an onboarded profile. Since we're allowing the setting of

@@ -42,7 +42,12 @@ import {
   type StoreResponse,
   type StoreError,
 } from '../../../store/helpers'
-import { type EditProfileForm, ProfileFormToPayloadTransform } from '@zod/profile/profile.form'
+import {
+  type EditProfileForm,
+  type CreateProfileForm,
+  ProfileFormToPayloadTransform,
+  CreateProfileFormToPayloadTransform,
+} from '@zod/profile/profile.form'
 
 export type PublicProfileResponse = StoreResponse<PublicProfileWithContext> | StoreError
 
@@ -89,9 +94,9 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
       }
     },
 
-    // Update the current user's social profile
-    async createOwnerProfile(profileData: EditProfileForm): Promise<StoreVoidSuccess | StoreError> {
-      const update = ProfileFormToPayloadTransform.parse(profileData)
+    // Create the current user's profile (onboarding)
+    async createOwnerProfile(profileData: CreateProfileForm): Promise<StoreVoidSuccess | StoreError> {
+      const update = CreateProfileFormToPayloadTransform.parse(profileData)
 
       if (!update) return storeError(new Error('Invalid profile data'), 'Failed to update profile')
 
