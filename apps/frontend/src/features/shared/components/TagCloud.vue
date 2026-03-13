@@ -68,7 +68,7 @@ function scaleFontSize(count: number, minCount: number, maxCount: number, fontMa
 function runLayout(tags: PopularTag[], w: number, h: number) {
   if (tags.length === 0 || w <= 0 || h <= 0) return
 
-  const fontMax = Math.min(FONT_MAX, w * 0.08)
+  const fontMax = Math.max(FONT_MIN, Math.min(FONT_MAX, w * 0.08))
   const minCount = Math.min(...tags.map((t) => t.count))
   const maxCount = Math.max(...tags.map((t) => t.count))
 
@@ -126,7 +126,7 @@ onMounted(async () => {
     class="tag-cloud-container"
   >
     <svg
-      v-if="!hasTags && props.showLoading"
+      v-if="!hasTags && props.showLoading && width > 0 && height > 0"
       data-testid="tag-cloud-placeholder"
       width="100%"
       :viewBox="`${-width / 2} ${-height / 2} ${width} ${height}`"
