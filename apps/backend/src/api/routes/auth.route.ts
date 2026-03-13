@@ -3,8 +3,8 @@ import { randomUUID } from 'crypto'
 import { FastifyPluginAsync } from 'fastify'
 import { notifierService } from '@/services/notifier.service'
 import { UserService } from 'src/services/user.service'
-import { ProfileService } from 'src/services/profile.service'
 import { RefreshTokenService } from 'src/services/refresh-token.service'
+import { createNewUserSession, getExistingUserSession } from '@/services/auth-session'
 import { rateLimitConfig, sendError, sendUnauthorizedError } from '../helpers'
 import { SmsService } from '@/services/sms.service'
 import { CaptchaService } from '@/services/captcha.service'
@@ -17,9 +17,6 @@ import {
   VerifyTokenPayloadSchema,
   RefreshTokenPayloadSchema,
   type LoginUser,
-  type SessionData,
-  type SessionProfile,
-  SessionProfileSchema,
 } from '@zod/user/user.dto'
 import type {
   VerifyTokenResponse,
@@ -28,30 +25,11 @@ import type {
   WsTicketResponse,
 } from '@zod/apiResponse.dto'
 import { UserIdentifier, JwtPayload } from '@zod/user/user.dto'
-import type { User } from '@zod/generated'
 
 const WS_TICKET_TTL = 30 // seconds
 
-function buildSessionData(user: User, profileId: string, profile: SessionProfile): SessionData {
-  return {
-    userId: user.id,
-    profileId,
-    tokenVersion: user.tokenVersion,
-    lang: user.language,
-    roles: user.roles,
-    hasActiveProfile: profile.isActive,
-    profile: {
-      id: profile.id,
-      isDatingActive: profile.isDatingActive,
-      isSocialActive: profile.isSocialActive,
-      isActive: profile.isActive,
-    },
-  }
-}
-
 const authRoutes: FastifyPluginAsync = async (fastify) => {
   const userService = UserService.getInstance()
-  const profileService = ProfileService.getInstance()
   const captchaService = new CaptchaService(appConfig.ALTCHA_HMAC_KEY)
   const refreshTokenService = new RefreshTokenService(fastify.redis)
 
@@ -75,39 +53,32 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         }
 
         const { user, isNewUser } = result
-        let profileId: string
-        let sessionProfile: SessionProfile
 
-        // new user
-        if (isNewUser) {
-          if (user.email)
-            await notifierService.notifyUser('' + user.id, 'welcome', {
-              link: `${appConfig.FRONTEND_URL}/me`,
-            })
-          // If the user is new, initialize their profiles
-          const newProfile = await profileService.initializeProfiles(user.id)
-          profileId = newProfile.id
-          sessionProfile = newProfile
-        } else {
-          // TODO: verify-token should not be concerned with obtaining profile data.
-          // The client should call the API separately after auth to obtain the profile.
-          // This is premature optimization — session building should not happen here.
-          const userWithProfile = await userService.getUserWithProfile(user.id)
-          const existingProfile = userWithProfile?.profile
-          if (!existingProfile) return sendError(reply, 404, 'Profile not found')
-          profileId = existingProfile.id
-          sessionProfile = existingProfile
+        if (isNewUser && user.email) {
+          await notifierService.notifyUser('' + user.id, 'welcome', {
+            link: `${appConfig.FRONTEND_URL}/me`,
+          })
         }
 
+        const session = isNewUser
+          ? await createNewUserSession(user)
+          : await getExistingUserSession(user)
+        if (!session) return sendError(reply, 404, 'Profile not found')
+
+        // TODO: profileId in JWT and refresh token is redundant with session data — remove in follow-up
         const payload: JwtPayload = {
           userId: user.id,
-          profileId: profileId,
+          profileId: session.profileId,
           tokenVersion: user.tokenVersion,
         }
         const jwt = fastify.jwt.sign(payload)
-        await fastify.createSession(jwt, buildSessionData(user, profileId, sessionProfile))
+        await fastify.createSession(jwt, session.sessionData)
 
-        const refreshToken = await refreshTokenService.create(user.id, profileId, user.tokenVersion)
+        const refreshToken = await refreshTokenService.create(
+          user.id,
+          session.profileId,
+          user.tokenVersion
+        )
 
         // Set media auth cookie so nginx can verify media requests
         const mediaToken = generateMediaToken()
@@ -174,8 +145,8 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         return sendUnauthorizedError(reply, 'Token revoked')
       }
 
-      // Fetch current user with profile to verify tokenVersion and rebuild session
-      const user = await userService.getUserWithProfile(tokenData.userId)
+      // Fetch current user to verify tokenVersion hasn't been bumped
+      const user = await userService.getUserById(tokenData.userId)
       if (!user) {
         return sendUnauthorizedError(reply, 'User not found')
       }
@@ -186,23 +157,22 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         return sendUnauthorizedError(reply, 'Token revoked')
       }
 
+      const session = await getExistingUserSession(user)
+      if (!session) return sendUnauthorizedError(reply, 'Profile not found')
+
       // Issue new JWT and refresh token
       const newPayload: JwtPayload = {
         userId: user.id,
-        profileId: tokenData.profileId,
+        profileId: session.profileId,
         tokenVersion: user.tokenVersion,
       }
       const newJwt = fastify.jwt.sign(newPayload)
 
-      const sessionProfile = SessionProfileSchema.parse(user.profile ?? { id: tokenData.profileId })
-      await fastify.createSession(
-        newJwt,
-        buildSessionData(user, tokenData.profileId, sessionProfile)
-      )
+      await fastify.createSession(newJwt, session.sessionData)
 
       const newRefreshToken = await refreshTokenService.create(
         user.id,
-        tokenData.profileId,
+        session.profileId,
         user.tokenVersion
       )
 

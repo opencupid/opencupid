@@ -5,14 +5,16 @@ import { MockFastify, MockReply } from '../../test-utils/fastify'
 let fastify: MockFastify
 let reply: MockReply
 let mockUserService: any
-let mockProfileService: any
 let mockRefreshTokenService: any
+let mockCreateNewUserSession: any
+let mockGetExistingUserSession: any
 
 vi.mock('../../services/user.service', () => ({
   UserService: { getInstance: () => mockUserService },
 }))
-vi.mock('../../services/profile.service', () => ({
-  ProfileService: { getInstance: () => mockProfileService },
+vi.mock('../../services/auth-session', () => ({
+  createNewUserSession: (...args: any[]) => mockCreateNewUserSession(...args),
+  getExistingUserSession: (...args: any[]) => mockGetExistingUserSession(...args),
 }))
 vi.mock('../../services/refresh-token.service', () => ({
   RefreshTokenService: class {
@@ -55,11 +57,11 @@ beforeEach(async () => {
     setLoginToken: vi.fn(),
     generateLoginToken: vi.fn().mockReturnValue('abc123'),
     getUserById: vi.fn(),
-    getUserWithProfile: vi.fn(),
     bumpTokenVersion: vi.fn(),
     findByAuthId: vi.fn(),
   }
-  mockProfileService = { initializeProfiles: vi.fn() }
+  mockCreateNewUserSession = vi.fn()
+  mockGetExistingUserSession = vi.fn()
   mockRefreshTokenService = {
     create: vi.fn().mockResolvedValue('mock-refresh-token'),
     validate: vi.fn(),
@@ -104,9 +106,17 @@ describe('GET /verify-token', () => {
       user,
       isNewUser: false,
     })
-    mockUserService.getUserWithProfile.mockResolvedValue({
-      ...user,
-      profile: { id: 'profile1', isDatingActive: false, isSocialActive: false, isActive: false },
+    mockGetExistingUserSession.mockResolvedValue({
+      profileId: 'profile1',
+      sessionData: {
+        userId: 'user1',
+        profileId: 'profile1',
+        tokenVersion: 0,
+        lang: 'en',
+        roles: [],
+        hasActiveProfile: false,
+        profile: { id: 'profile1', isDatingActive: false, isSocialActive: false, isActive: false },
+      },
     })
     fastify.jwt = { sign: vi.fn().mockReturnValue('jwt-token') }
     const req = { query: { token: 'abc123' } }
@@ -140,13 +150,18 @@ describe('GET /verify-token', () => {
       user,
       isNewUser: true,
     })
-    const newProfile = {
-      id: 'profile2',
-      isDatingActive: false,
-      isSocialActive: false,
-      isActive: false,
-    }
-    mockProfileService.initializeProfiles.mockResolvedValue(newProfile)
+    mockCreateNewUserSession.mockResolvedValue({
+      profileId: 'profile2',
+      sessionData: {
+        userId: 'user2',
+        profileId: 'profile2',
+        tokenVersion: 0,
+        lang: 'en',
+        roles: [],
+        hasActiveProfile: false,
+        profile: { id: 'profile2', isDatingActive: false, isSocialActive: false, isActive: false },
+      },
+    })
     fastify.jwt = { sign: vi.fn().mockReturnValue('jwt-token2') }
     const notifier = (await import('../../services/notifier.service')).notifierService
     // @ts-expect-error whatever
@@ -156,7 +171,7 @@ describe('GET /verify-token', () => {
     expect(notifier.notifyUser).toHaveBeenCalledWith('user2', 'welcome', {
       link: 'http://test/me',
     })
-    expect(mockProfileService.initializeProfiles).toHaveBeenCalledWith('user2')
+    expect(mockCreateNewUserSession).toHaveBeenCalledWith(user)
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.token).toBe('jwt-token2')
@@ -371,12 +386,23 @@ describe('POST /refresh', () => {
       tokenVersion: 0,
     })
     mockRefreshTokenService.create.mockResolvedValue('new-refresh-token')
-    mockUserService.getUserWithProfile.mockResolvedValue({
+    mockUserService.getUserById.mockResolvedValue({
       id: 'user1',
       tokenVersion: 0,
       roles: [],
       language: 'en',
-      profile: { id: profileId, isDatingActive: false, isSocialActive: false, isActive: false },
+    })
+    mockGetExistingUserSession.mockResolvedValue({
+      profileId,
+      sessionData: {
+        userId: 'user1',
+        profileId,
+        tokenVersion: 0,
+        lang: 'en',
+        roles: [],
+        hasActiveProfile: false,
+        profile: { id: profileId, isDatingActive: false, isSocialActive: false, isActive: false },
+      },
     })
     fastify.jwt = {
       sign: vi.fn().mockReturnValue('new-jwt'),
