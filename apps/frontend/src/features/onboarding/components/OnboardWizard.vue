@@ -206,7 +206,7 @@ const siteName = __APP_CONFIG__.SITE_NAME
           <!-- <legend>
             {{ t('onboarding.dating_mode_step_title') }}
           </legend> -->
-          <div class="mb-3">
+          <div class="mb-3 d-flex flex-column align-items-center">
             <BFormCheckbox
               v-model="formData.isDatingActive"
               switch
@@ -215,7 +215,7 @@ const siteName = __APP_CONFIG__.SITE_NAME
               {{ t('onboarding.dating_mode_switch') }}
             </BFormCheckbox>
 
-            <p class="text-muted">
+            <p class="text-muted text-center">
               <span v-if="formData.isDatingActive">
                 {{ t('onboarding.dating_mode_step_hint_active') }}
               </span>
@@ -279,5 +279,9 @@ const siteName = __APP_CONFIG__.SITE_NAME
 p.wizard-step-subtitle {
   margin-bottom: 0.5rem;
   text-align: center;
+}
+:deep(.interests-multiselect .multiselect__tags) {
+  min-height: 5rem;
+  align-items: start;
 }
 </style>
