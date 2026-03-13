@@ -47,7 +47,7 @@ onMounted(async () => {
 
 const mapPois = computed<MapPoi[]>(() =>
   profileList.value
-    .filter((p) => p.location.lat != null && p.location.lon != null)
+    .filter((p) => p.location?.lat != null && p.location?.lon != null)
     .map((p) => ({
       id: p.id,
       title: p.publicName,
