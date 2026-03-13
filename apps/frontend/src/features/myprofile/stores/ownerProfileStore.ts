@@ -259,6 +259,9 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
     },
 
     async persistDatingPrefs(): Promise<StoreVoidSuccess | StoreError> {
+      if (!this.datingPrefs) {
+        return storeError(new Error('No dating prefs to persist'), 'No dating prefs set')
+      }
       try {
         this.isLoading = true
         const res = await safeApiCall(() =>
@@ -314,7 +317,7 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
       if (!this.matchFilter) {
         return storeError(new Error('No match filter'), 'No match filter set')
       }
-      this.matchFilter.tags = tags
+      Object.assign(this.matchFilter, { tags })
       return this.persistMatchFilter()
     },
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { watch } from 'vue'
+import { ref, watch, onActivated, onDeactivated } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDebounceFn } from '@vueuse/core'
 
@@ -26,6 +26,10 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
+const isActive = ref(true)
+onActivated(() => (isActive.value = true))
+onDeactivated(() => (isActive.value = false))
+
 function setLocationFromProfile() {
   if (props.viewerProfile?.location && filter.value?.location) {
     Object.assign(filter.value.location, props.viewerProfile.location)
@@ -43,6 +47,7 @@ watch(
       tags: filter.value.tags.map((t) => t.id).join(','),
     },
   (newVal, oldVal) => {
+    if (!isActive.value) return
     if (!oldVal || !newVal) return
     if (JSON.stringify(newVal) !== JSON.stringify(oldVal)) {
       debouncedEmitChanged()

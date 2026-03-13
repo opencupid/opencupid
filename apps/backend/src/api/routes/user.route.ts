@@ -4,7 +4,11 @@ import { sendError, sendUnauthorizedError } from '../helpers'
 import { validateBody } from '@/utils/zodValidate'
 
 import type { GetUserSettingsResponse } from '@zod/apiResponse.dto'
-import { UpdateUserLanguagePayloadSchema, type UpdateUserLanguagePayload } from '@zod/user/user.dto'
+import {
+  SettingsUserSchema,
+  UpdateUserLanguagePayloadSchema,
+  type UpdateUserLanguagePayload,
+} from '@zod/user/user.dto'
 
 const userRoutes: FastifyPluginAsync = async (fastify) => {
   const userService = UserService.getInstance()
@@ -19,7 +23,10 @@ const userRoutes: FastifyPluginAsync = async (fastify) => {
         const user = await userService.getUserById(req.user.userId)
 
         if (!user) return sendUnauthorizedError(reply)
-        const response: GetUserSettingsResponse = { success: true, user }
+        const response: GetUserSettingsResponse = {
+          success: true,
+          user: SettingsUserSchema.parse(user),
+        }
         return reply.code(200).send(response)
       } catch (error) {
         fastify.log.error({ err: error }, 'Error fetching user')
