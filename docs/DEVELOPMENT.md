@@ -3,7 +3,7 @@
 ## Dependencies
 
 ```bash
-sudo apt-get install mkcert
+sudo apt-get install mkcert qrencode
 ```
 
 ## Getting started
