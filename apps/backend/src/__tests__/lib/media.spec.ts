@@ -43,9 +43,7 @@ describe('voiceBasePath', () => {
 
 describe('mediaUrl', () => {
   it('returns a clean URL with no query params', () => {
-    expect(mediaUrl('images/cmXXX/abc-card.webp')).toBe(
-      '/user-content/images/cmXXX/abc-card.webp'
-    )
+    expect(mediaUrl('images/cmXXX/abc-card.webp')).toBe('/user-content/images/cmXXX/abc-card.webp')
   })
 
   it('works for voice paths', () => {
