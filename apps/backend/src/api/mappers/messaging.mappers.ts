@@ -9,8 +9,7 @@ import {
   canSendMessageInConversation,
   type MessageWithSendInclude,
 } from '../../services/messaging.service'
-import { appConfig } from '@/lib/appconfig'
-import { signUrl } from '../../lib/media'
+import { mediaUrl } from '../../lib/media'
 
 function mapConversationMeta(c: { id: string; updatedAt: Date; createdAt: Date }) {
   return {
@@ -90,7 +89,7 @@ export function mapAttachmentDTO(dbAttachment: {
   duration: number | null
   createdAt: Date
 }): MessageAttachmentDTO {
-  const url = signUrl(`${appConfig.MEDIA_URL_BASE}/${dbAttachment.filePath}`)
+  const url = mediaUrl(dbAttachment.filePath)
   return {
     id: dbAttachment.id,
     url,

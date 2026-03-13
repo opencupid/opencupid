@@ -39,6 +39,8 @@ vi.mock('@/lib/appconfig', () => ({
     IMAGE_MAX_SIZE: 1000,
     FRONTEND_URL: 'http://test',
     DEV_AUTH_BYPASS_ENABLED: true,
+    IMAGE_URL_HMAC_WINDOW_SECONDS: 3600,
+    AUTH_IMG_HMAC_SECRET: 'test-secret-key',
   },
 }))
 

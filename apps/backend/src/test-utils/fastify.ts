@@ -51,4 +51,10 @@ export class MockReply {
     this.headers[name] = value
     return this
   }
+  setCookie(_name: string, _value: string, _opts?: any) {
+    return this
+  }
+  clearCookie(_name: string, _opts?: any) {
+    return this
+  }
 }

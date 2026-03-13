@@ -3,4 +3,4 @@
 '@opencupid/ingress': patch
 ---
 
-Window-based HMAC expiration for media URL cacheability (#1089)
+Signed cookie media auth — replaces per-URL HMAC query params with a single `__media_token` cookie (#1089)

@@ -2,8 +2,7 @@ import path from 'path'
 import fs from 'fs'
 
 import { prisma } from '../lib/prisma'
-import { getMediaRoot, imageBasePath, makeImageLocation, signUrl } from '@/lib/media'
-import { appConfig } from '@/lib/appconfig'
+import { getMediaRoot, imageBasePath, makeImageLocation, mediaUrl } from '@/lib/media'
 
 import { generateContentHash } from '@/utils/hash'
 import { ProfileImagePosition } from '@zod/profile/profileimage.dto'
@@ -65,13 +64,12 @@ export class ImageService {
    * Generate signed URLs for all variants of an image
    */
   getSignedUrls(image: { storagePath: string }): { size: string; url: string }[] {
-    const urlBase = appConfig.MEDIA_URL_BASE
     const base = imageBasePath(image.storagePath)
     const imgSet = variants.map((s) => ({
       size: s.name,
-      url: signUrl(`${urlBase}/${base}-${s.name}.webp`),
+      url: mediaUrl(`${base}-${s.name}.webp`),
     }))
-    imgSet.push({ size: 'original', url: signUrl(`${urlBase}/${base}-original.jpg`) })
+    imgSet.push({ size: 'original', url: mediaUrl(`${base}-original.jpg`) })
     return imgSet
   }
 
