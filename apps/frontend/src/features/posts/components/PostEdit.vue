@@ -104,8 +104,8 @@ const handleSubmit = async () => {
       const createPayload: CreatePostPayload = {
         content: form.value.content,
         type: form.value.type,
-        country: form.value.location.country || null,
-        cityName: form.value.location.cityName || null,
+        country: form.value.location.country || undefined,
+        cityName: form.value.location.cityName || undefined,
         lat: form.value.location.lat ?? null,
         lon: form.value.location.lon ?? null,
       }

@@ -131,7 +131,6 @@ function closeSpider() {
 
 let clusterGroup: any = null
 
-
 function hydratePoiIcon(component: Component, iconProps: PoiIconProps): L.DivIcon {
   const size = 32
 
@@ -144,7 +143,6 @@ function hydratePoiIcon(component: Component, iconProps: PoiIconProps): L.DivIco
     iconAnchor: [size / 2, size / 2],
   })
 }
-
 
 function emitBounds() {
   if (!map) return
@@ -321,7 +319,11 @@ function createMarker(item: MapPoi): LMarker {
   const isSelected = item.id === props.selectedId
   const m = L.marker([item.location.lat, item.location.lon], {
     title: item.title,
-    icon: hydratePoiIcon(props.iconComponent, { image: item.image, isSelected, isHighlighted: item.highlighted ?? false }),
+    icon: hydratePoiIcon(props.iconComponent, {
+      image: item.image,
+      isSelected,
+      isHighlighted: item.highlighted ?? false,
+    }),
     keyboard: true,
   })
 
@@ -371,8 +373,9 @@ function updateMarkers() {
     for (let i = startIdx; i < end; i++) {
       const item = props.items[i]
       if (!item?.image) continue
-      batch.push(createMarker(item))
-      markers.set(item.id, batch[batch.length - 1])
+      const marker = createMarker(item)
+      batch.push(marker)
+      markers.set(item.id, marker)
       itemsById.set(item.id, item)
     }
 
@@ -386,7 +389,9 @@ function updateMarkers() {
   addBatch(0)
 
   if ((props.fitToPois || !props.center) && props.items.length > 0) {
-    const latlngs = props.items.map((item) => [item.location.lat, item.location.lon] as [number, number])
+    const latlngs = props.items.map(
+      (item) => [item.location.lat, item.location.lon] as [number, number]
+    )
     const bounds = L.latLngBounds(latlngs)
     map.fitBounds(bounds, { padding: [24, 24] })
   }
@@ -398,7 +403,13 @@ function highlightSelected() {
     const item = itemsById.get(id)
     if (!item) continue
     if (!item.image) continue
-    marker.setIcon(hydratePoiIcon(props.iconComponent, { image: item.image, isSelected: id === props.selectedId, isHighlighted: item.highlighted ?? false }))
+    marker.setIcon(
+      hydratePoiIcon(props.iconComponent, {
+        image: item.image,
+        isSelected: id === props.selectedId,
+        isHighlighted: item.highlighted ?? false,
+      })
+    )
   }
   if (props.selectedId != null) {
     const m = markers.get(props.selectedId)

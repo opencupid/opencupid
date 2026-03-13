@@ -6,26 +6,22 @@ import {
   type OwnerPost,
 } from '@zod/post/post.dto'
 import type { ProfileSummary } from '@zod/profile/profile.dto'
+import type { LocationDTO } from '@zod/dto/location.dto'
 import { mapProfileSummary } from './profile.mappers'
 
 export type OwnerPostWithProfile = OwnerPost & {
   postedBy: ProfileSummary
-  location?: {
-    country: string | null
-    cityName: string | null
-    lat: number | null
-    lon: number | null
-  } | null
+  location?: LocationDTO | null
   isOwn?: boolean
 }
 
-function extractPostLocation(post: Record<string, unknown>) {
+function extractPostLocation(post: Record<string, unknown>): LocationDTO | null {
   if (!post.country && !post.cityName && post.lat == null && post.lon == null) {
     return null
   }
   return {
-    country: (post.country as string) ?? null,
-    cityName: (post.cityName as string) ?? null,
+    country: (post.country as string) ?? '',
+    cityName: (post.cityName as string) ?? undefined,
     lat: (post.lat as number) ?? null,
     lon: (post.lon as number) ?? null,
   }

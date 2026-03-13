@@ -5,7 +5,6 @@ import { ProfileSummarySchema } from '../profile/profile.dto'
 import { DbMinimalProfileSchema } from '../profile/profile.db'
 import { LocationSchema } from '@zod/dto/location.dto'
 
-
 // Base fields that are public
 const publicPostFields = {
   id: true,
@@ -46,7 +45,7 @@ export type OwnerPost = z.infer<typeof OwnerPostSchema>
 // Extended public post with profile info
 export const PublicPostWithProfileSchema = PublicPostSchema.extend({
   postedBy: ProfileSummarySchema,
-  location: LocationSchema,
+  location: LocationSchema.nullable().optional(),
 })
 export type PublicPostWithProfile = z.infer<typeof PublicPostWithProfileSchema>
 
@@ -54,7 +53,7 @@ export type PublicPostWithProfile = z.infer<typeof PublicPostWithProfileSchema>
 export const CreatePostPayloadSchema = z.object({
   content: z.string().min(1).max(2000),
   type: PostTypeSchema,
-  country: z.string(),
+  country: z.string().optional(),
   cityName: z.string().optional(),
   lat: z.number().nullable().optional(),
   lon: z.number().nullable().optional(),
@@ -83,11 +82,11 @@ export type PostParams = z.infer<typeof PostParamsSchema>
 export const PostQuerySchema = z.object({
   type: PostTypeSchema.optional(),
   limit: z.preprocess(
-    val => typeof val === 'string' ? parseInt(val, 10) : val,
+    (val) => (typeof val === 'string' ? parseInt(val, 10) : val),
     z.number().int().min(1).max(100).default(20)
   ),
   offset: z.preprocess(
-    val => typeof val === 'string' ? parseInt(val, 10) : val,
+    (val) => (typeof val === 'string' ? parseInt(val, 10) : val),
     z.number().int().min(0).default(0)
   ),
 })
@@ -102,16 +101,10 @@ export interface PostQueryInput {
 
 // Query parameters for nearby posts
 export const NearbyPostQuerySchema = PostQuerySchema.extend({
-  lat: z.preprocess(
-    val => typeof val === 'string' ? parseFloat(val) : val,
-    z.number()
-  ),
-  lon: z.preprocess(
-    val => typeof val === 'string' ? parseFloat(val) : val,
-    z.number()
-  ),
+  lat: z.preprocess((val) => (typeof val === 'string' ? parseFloat(val) : val), z.number()),
+  lon: z.preprocess((val) => (typeof val === 'string' ? parseFloat(val) : val), z.number()),
   radius: z.preprocess(
-    val => typeof val === 'string' ? parseInt(val, 10) : val,
+    (val) => (typeof val === 'string' ? parseInt(val, 10) : val),
     z.number().int().min(1).max(500).default(50)
   ),
 })

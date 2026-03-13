@@ -257,8 +257,7 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
       })
       const posts = raw.map((post) => mapDbPostToOwner(post))
 
-      const response: PostsResponse = { success: true, posts }
-      return reply.code(200).send(response)
+      return reply.code(200).send({ success: true, posts })
     } catch (err) {
       fastify.log.error(err)
       return sendError(reply, 500, 'Failed to fetch profile posts')
