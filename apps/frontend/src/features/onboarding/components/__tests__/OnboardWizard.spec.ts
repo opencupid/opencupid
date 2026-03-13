@@ -1,6 +1,15 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
+import { ref } from 'vue'
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
+
+vi.mock('@vueuse/core', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@vueuse/core')>()
+  return {
+    ...actual,
+    useElementSize: () => ({ width: ref(600), height: ref(400), stop: () => {} }),
+  }
+})
 vi.stubGlobal('__APP_CONFIG__', { SITE_NAME: 'TestSite' })
 vi.mock('@/assets/icons/interface/sun.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/logout.svg', () => ({ default: { template: '<div />' } }))
