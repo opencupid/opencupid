@@ -11,7 +11,7 @@ vi.mock('@/lib/appconfig', () => ({
 }))
 vi.mock('@/services/image.service', () => ({
   ImageService: {
-    getInstance: () => ({ getSignedUrls: () => [{ size: 'thumb', url: 'http://img/signed' }] }),
+    getInstance: () => ({ getImageUrls: () => [{ size: 'thumb', url: 'http://img/signed' }] }),
   },
 }))
 

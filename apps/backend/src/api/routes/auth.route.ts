@@ -108,7 +108,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         reply.setCookie('__media_token', mediaToken.value, {
           path: '/user-content/',
           httpOnly: true,
-          secure: appConfig.NODE_ENV === 'production',
+          secure: appConfig.NODE_ENV !== 'development',
           sameSite: 'strict',
           maxAge: mediaToken.maxAge,
         })

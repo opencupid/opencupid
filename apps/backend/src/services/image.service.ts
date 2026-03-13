@@ -61,9 +61,9 @@ export class ImageService {
   }
 
   /**
-   * Generate signed URLs for all variants of an image
+   * Build URLs for all variants of an image.
    */
-  getSignedUrls(image: { storagePath: string }): { size: string; url: string }[] {
+  getImageUrls(image: { storagePath: string }): { size: string; url: string }[] {
     const base = imageBasePath(image.storagePath)
     const imgSet = variants.map((s) => ({
       size: s.name,
