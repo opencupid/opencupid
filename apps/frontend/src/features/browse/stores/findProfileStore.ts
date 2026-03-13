@@ -199,9 +199,7 @@ export const useFindProfileStore = defineStore('findProfile', {
       }
     },
 
-    async fetchSocialFilter(
-      defaults?: SocialMatchFilterDTO
-    ): Promise<StoreVoidSuccess | StoreError> {
+    async fetchSocialFilter(): Promise<StoreVoidSuccess | StoreError> {
       try {
         this.isLoading = true
         const res = await safeApiCall(() =>
@@ -210,7 +208,7 @@ export const useFindProfileStore = defineStore('findProfile', {
         this.socialFilter = SocialMatchFilterDTOSchema.parse(res.data.filter)
         return storeSuccess()
       } catch (error: any) {
-        this.socialFilter = defaults ?? null
+        this.socialFilter = null
         return storeError(error, 'Failed to fetch socialFilter')
       } finally {
         this.isLoading = false
