@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { createHmac } from 'crypto'
 
 vi.mock('@/lib/appconfig', () => ({
@@ -9,7 +9,13 @@ vi.mock('@/lib/appconfig', () => ({
   },
 }))
 
-import { imageBasePath, voiceBasePath, MEDIA_SUBDIR, signUrl } from '../../lib/media'
+import {
+  imageBasePath,
+  voiceBasePath,
+  MEDIA_SUBDIR,
+  mediaUrl,
+  generateMediaToken,
+} from '../../lib/media'
 
 describe('MEDIA_SUBDIR', () => {
   it('defines expected subdirectory names', () => {
@@ -35,51 +41,56 @@ describe('voiceBasePath', () => {
   })
 })
 
-describe('signUrl', () => {
+describe('mediaUrl', () => {
+  it('returns a clean URL with no query params', () => {
+    expect(mediaUrl('images/cmXXX/abc-card.webp')).toBe('/user-content/images/cmXXX/abc-card.webp')
+  })
+
+  it('works for voice paths', () => {
+    expect(mediaUrl('voice/p1/msg-abc.webm')).toBe('/user-content/voice/p1/msg-abc.webm')
+  })
+})
+
+describe('generateMediaToken', () => {
   beforeEach(() => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2025-01-01T00:00:00Z'))
   })
 
-  it('signs relative path without MEDIA_URL_BASE prefix', () => {
-    const url = '/user-content/images/cmXXX/abc-card.webp'
-    const result = signUrl(url)
-
-    // The HMAC should be computed on 'images/cmXXX/abc-card.webp:exp' (without /user-content/ prefix)
-    const exp = Math.floor(Date.now() / 1000) + 3600
-    const expectedData = `images/cmXXX/abc-card.webp:${exp}`
-    const expectedSig = createHmac('sha256', 'test-secret').update(expectedData).digest('hex')
-
-    expect(result).toBe(`/user-content/images/cmXXX/abc-card.webp?exp=${exp}&sig=${expectedSig}`)
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
-  it('returns full URL with query params', () => {
-    const result = signUrl('/user-content/images/path/to/file.webp')
-    expect(result).toMatch(/^\/user-content\/images\/path\/to\/file\.webp\?exp=\d+&sig=[a-f0-9]+$/)
+  it('returns value in exp:sig format', () => {
+    const { value } = generateMediaToken()
+    expect(value).toMatch(/^\d+\.[a-f0-9]+$/)
   })
 
-  it('handles URLs that do not start with MEDIA_URL_BASE', () => {
-    const url = 'some/other/path.webp'
-    const result = signUrl(url)
-
-    // Should sign the full path as-is since no prefix to strip
-    const exp = Math.floor(Date.now() / 1000) + 3600
-    const expectedData = `some/other/path.webp:${exp}`
-    const expectedSig = createHmac('sha256', 'test-secret').update(expectedData).digest('hex')
-
-    expect(result).toBe(`some/other/path.webp?exp=${exp}&sig=${expectedSig}`)
+  it('produces correct HMAC signature', () => {
+    const { value } = generateMediaToken()
+    const [expStr, sig] = value.split('.')
+    const expected = createHmac('sha256', 'test-secret').update(expStr).digest('hex')
+    expect(sig).toBe(expected)
   })
 
-  it('signs voice message URLs correctly', () => {
-    const url = '/user-content/voice/cmXXX/1234567890-abc123.webm'
-    const result = signUrl(url)
+  it('sets exp to now + TTL', () => {
+    const { value } = generateMediaToken()
+    const exp = Number(value.split('.')[0])
+    const nowSeconds = Math.floor(new Date('2025-01-01T00:00:00Z').getTime() / 1000)
+    expect(exp).toBe(nowSeconds + 3600)
+  })
 
-    const exp = Math.floor(Date.now() / 1000) + 3600
-    const expectedData = `voice/cmXXX/1234567890-abc123.webm:${exp}`
-    const expectedSig = createHmac('sha256', 'test-secret').update(expectedData).digest('hex')
+  it('returns maxAge equal to the configured TTL', () => {
+    const { maxAge } = generateMediaToken()
+    expect(maxAge).toBe(3600)
+  })
 
-    expect(result).toBe(
-      `/user-content/voice/cmXXX/1234567890-abc123.webm?exp=${exp}&sig=${expectedSig}`
-    )
+  it('produces different tokens at different times', () => {
+    const t1 = generateMediaToken().value
+
+    vi.setSystemTime(new Date('2025-01-01T00:01:00Z'))
+    const t2 = generateMediaToken().value
+
+    expect(t1).not.toBe(t2)
   })
 })

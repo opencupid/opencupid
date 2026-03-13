@@ -11,12 +11,9 @@ export interface MinimalProfileImage {
   storagePath: string
 }
 
-/**
- * Constructs the public URL for the image
- */
-function getSignedVariants(image: MinimalProfileImage) {
+function getImageVariants(image: MinimalProfileImage) {
   const svc = ImageService.getInstance()
-  return svc.getSignedUrls(image)
+  return svc.getImageUrls(image)
 }
 
 /**
@@ -24,7 +21,7 @@ function getSignedVariants(image: MinimalProfileImage) {
  * by removing any non-public fields
  */
 export function toPublicProfileImage(image: MinimalProfileImage): PublicProfileImage {
-  const variants = getSignedVariants(image)
+  const variants = getImageVariants(image)
   return PublicProfileImageSchema.parse({ ...image, variants })
 }
 
@@ -33,6 +30,6 @@ export function toPublicProfileImage(image: MinimalProfileImage): PublicProfileI
  * by removing fields that are not accessible to the owner
  */
 export function toOwnerProfileImage(image: ProfileImage): OwnerProfileImage {
-  const variants = getSignedVariants(image)
+  const variants = getImageVariants(image)
   return OwnerProfileImageSchema.parse({ ...image, variants })
 }

@@ -9,6 +9,8 @@ import { rateLimitConfig, sendError, sendUnauthorizedError } from '../helpers'
 import { SmsService } from '@/services/sms.service'
 import { CaptchaService } from '@/services/captcha.service'
 import { appConfig } from '@/lib/appconfig'
+import '@fastify/cookie'
+import { generateMediaToken } from '@/lib/media'
 
 import {
   UserIdentifyPayloadSchema,
@@ -100,6 +102,17 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         await fastify.createSession(jwt, buildSessionData(user, profileId, sessionProfile))
 
         const refreshToken = await refreshTokenService.create(user.id, profileId, user.tokenVersion)
+
+        // Set media auth cookie so nginx can verify media requests
+        const mediaToken = generateMediaToken()
+        reply.setCookie('__media_token', mediaToken.value, {
+          path: '/user-content/',
+          httpOnly: true,
+          secure: appConfig.NODE_ENV !== 'development',
+          sameSite: 'strict',
+          maxAge: mediaToken.maxAge,
+        })
+
         const response: VerifyTokenResponse = { success: true, token: jwt, refreshToken }
         reply.code(200).send(response)
       } catch (error) {
@@ -293,6 +306,8 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         await req.deleteSession()
         // Delete all refresh tokens for this user
         await refreshTokenService.deleteAllForUser(req.user.userId)
+        // Clear media auth cookie
+        reply.clearCookie('__media_token', { path: '/user-content/' })
         return reply.code(200).send({ success: true })
       } catch (error) {
         fastify.log.error({ err: error }, 'Error during logout')

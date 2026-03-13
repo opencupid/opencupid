@@ -35,6 +35,8 @@ export class MockReply {
   statusCode = 200
   payload: any
   headers: Record<string, string> = {}
+  cookies: { name: string; value: string; opts?: any }[] = []
+  clearedCookies: { name: string; opts?: any }[] = []
   code(status: number) {
     this.statusCode = status
     return this
@@ -49,6 +51,14 @@ export class MockReply {
   }
   header(name: string, value: string) {
     this.headers[name] = value
+    return this
+  }
+  setCookie(name: string, value: string, opts?: any) {
+    this.cookies.push({ name, value, opts })
+    return this
+  }
+  clearCookie(name: string, opts?: any) {
+    this.clearedCookies.push({ name, opts })
     return this
   }
 }

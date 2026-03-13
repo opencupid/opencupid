@@ -7,13 +7,11 @@ import {
 vi.mock('@/lib/appconfig', () => ({
   appConfig: {
     MEDIA_URL_BASE: '/user-content',
-    IMAGE_URL_HMAC_TTL_SECONDS: 3600,
-    AUTH_IMG_HMAC_SECRET: 'x',
   },
 }))
 vi.mock('@/services/image.service', () => ({
   ImageService: {
-    getInstance: () => ({ getSignedUrls: () => [{ size: 'thumb', url: 'http://img/signed' }] }),
+    getInstance: () => ({ getImageUrls: () => [{ size: 'thumb', url: 'http://img/signed' }] }),
   },
 }))
 

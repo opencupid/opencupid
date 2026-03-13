@@ -18,27 +18,31 @@ if not secret or secret == '' then
   return ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
 end
 
-local exp = tonumber(ngx.var.arg_exp)
-local sig = ngx.var.arg_sig
-if not exp or not sig then
-  -- ngx.log(ngx.ERR, 'Missing exp or sig query parameters')
+local cookie = ngx.var.cookie___media_token
+if not cookie then
   return ngx.exit(ngx.HTTP_UNAUTHORIZED)
 end
 
-if exp < ngx.time() then
-  -- ngx.log(ngx.ERR, 'Signature expired: exp=', exp, ', current time=', ngx.time())
+local dot = cookie:find('.', 1, true)
+if not dot then
   return ngx.exit(ngx.HTTP_UNAUTHORIZED)
 end
 
-local image_path = ngx.var.uri:gsub('^/user%-content/', '')
-local data = image_path .. ':' .. exp
+local exp = tonumber(cookie:sub(1, dot - 1))
+local sig = cookie:sub(dot + 1)
+if not exp or not sig or sig == '' then
+  return ngx.exit(ngx.HTTP_UNAUTHORIZED)
+end
+
+local CLOCK_SKEW_GRACE = 30
+if exp + CLOCK_SKEW_GRACE < ngx.time() then
+  return ngx.exit(ngx.HTTP_UNAUTHORIZED)
+end
 
 local hmac_sha = hmac:new(secret, hmac.ALGOS.SHA256)
-local digest = hmac_sha:final(data, true) -- true = hex output
-local expected = digest
+local expected = hmac_sha:final(tostring(exp), true) -- true = hex output
 
 if not constant_time_compare(sig, expected) then
-  -- ngx.log(ngx.ERR, 'Invalid signature: expected=', expected, ', got=', sig)
   return ngx.exit(ngx.HTTP_UNAUTHORIZED)
 end
 -- success
