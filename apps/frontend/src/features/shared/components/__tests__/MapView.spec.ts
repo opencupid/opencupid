@@ -24,16 +24,15 @@ const DummyPopup = defineComponent({
   },
 })
 
-type TestItem = { id: string; location: { lat: number; lon: number }; name: string }
-const items: TestItem[] = [{ id: 'p-1', location: { lat: 47.5, lon: 19 }, name: 'Alice' }]
+const items = [
+  { id: 'p-1', title: 'Alice', location: { lat: 47.5, lon: 19 }, source: { name: 'Alice' } },
+]
 
 function mountMapView(props: Record<string, unknown> = {}) {
   return mount(MapView as any, {
     props: {
       items,
       popupComponent: DummyPopup,
-      getLocation: (item: TestItem) => item.location,
-      getTitle: (item: TestItem) => item.name,
       ...props,
     },
   })

@@ -15,9 +15,10 @@ import ViewModeToggler from '@/features/shared/ui/ViewModeToggler.vue'
 
 import { usePostsViewModel } from '../composables/usePostsViewModel'
 import { usePostStore } from '../stores/postStore'
-import type { PublicPostWithProfile, OwnerPost } from '@zod/post/post.dto'
+import type { PublicPostWithProfile } from '@zod/post/post.dto'
 import type { PostTypeType } from '@zod/generated'
 import type { LocationDTO } from '@zod/dto/location.dto'
+import type { MapPoi } from '@/features/shared/components/OsmPoiMap.vue'
 
 defineOptions({ name: 'BrowsePosts' })
 
@@ -52,28 +53,19 @@ const currentTabPosts = computed(() => {
 const isViewLoading = computed(() => isLoading.value || postStore.isLoading)
 const haveResults = computed(() => currentTabPosts.value.length > 0)
 
-const getPostLocation = (post: PublicPostWithProfile | OwnerPost) => {
-  if ('location' in post && post.location?.lat != null && post.location?.lon != null) {
-    return { lat: post.location.lat, lon: post.location.lon }
-  }
-  return undefined
-}
-
-const getPostImage = (post: PublicPostWithProfile | OwnerPost) => {
-  if ('postedBy' in post && post.postedBy) {
-    return post.postedBy.profileImages?.[0]
-  }
-  return undefined
-}
-
-const getPostTitle = (post: PublicPostWithProfile | OwnerPost) => {
-  const hasProfileData = (p: PublicPostWithProfile | OwnerPost): p is PublicPostWithProfile =>
-    'postedBy' in p && p.postedBy != null
-  if (hasProfileData(post)) {
-    return `${post.postedBy.publicName}: ${post.content.substring(0, 50)}...`
-  }
-  return post.content.substring(0, 50)
-}
+const mapPois = computed<MapPoi[]>(() =>
+  (postStore.posts as PublicPostWithProfile[])
+    .filter((p) => p.location?.lat != null && p.location?.lon != null)
+    .map((p) => ({
+      id: p.id,
+      title: p.postedBy
+        ? `${p.postedBy.publicName}: ${p.content.substring(0, 50)}...`
+        : p.content.substring(0, 50),
+      location: { lat: p.location.lat!, lon: p.location.lon! },
+      image: p.postedBy?.profileImages?.[0],
+      source: p,
+    }))
+)
 
 onMounted(async () => {
   await initialize()
@@ -120,10 +112,7 @@ onMounted(async () => {
       />
       <MapView
         v-else-if="viewMode === 'map'"
-        :items="currentTabPosts"
-        :get-location="getPostLocation"
-        :get-title="getPostTitle"
-        :get-image="getPostImage"
+        :items="mapPois"
         :popup-component="PostMapCard"
         :is-loading="isViewLoading"
         class="h-100"

@@ -1,18 +1,10 @@
 import { z } from 'zod'
-import { PostSchema, PostTypeSchema, ProfileImageSchema } from '../generated'
+import { PostSchema, PostTypeSchema } from '../generated'
 import { PostType } from '@prisma/client'
-import { ProfileSummarySchema, PublicProfileSchema } from '../profile/profile.dto'
+import { ProfileSummarySchema } from '../profile/profile.dto'
 import { DbMinimalProfileSchema } from '../profile/profile.db'
 import { LocationSchema } from '@zod/dto/location.dto'
 
-// Post location schema (nullable, for display)
-export const PostLocationSchema = z.object({
-  country: z.string().nullable(),
-  cityName: z.string().nullable(),
-  lat: z.number().nullable(),
-  lon: z.number().nullable(),
-})
-export type PostLocation = z.infer<typeof PostLocationSchema>
 
 // Base fields that are public
 const publicPostFields = {
@@ -54,7 +46,7 @@ export type OwnerPost = z.infer<typeof OwnerPostSchema>
 // Extended public post with profile info
 export const PublicPostWithProfileSchema = PublicPostSchema.extend({
   postedBy: ProfileSummarySchema,
-  location: PostLocationSchema.nullable().optional(),
+  location: LocationSchema,
 })
 export type PublicPostWithProfile = z.infer<typeof PublicPostWithProfileSchema>
 
@@ -62,8 +54,8 @@ export type PublicPostWithProfile = z.infer<typeof PublicPostWithProfileSchema>
 export const CreatePostPayloadSchema = z.object({
   content: z.string().min(1).max(2000),
   type: PostTypeSchema,
-  country: z.string().nullable().optional(),
-  cityName: z.string().nullable().optional(),
+  country: z.string(),
+  cityName: z.string().optional(),
   lat: z.number().nullable().optional(),
   lon: z.number().nullable().optional(),
 })

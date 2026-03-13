@@ -1,23 +1,18 @@
-<script setup lang="ts" generic="T extends { id: string | number }">
+<script setup lang="ts">
 import { ref, type Component } from 'vue'
 import type { Map as LMap } from 'leaflet'
 
-import OsmPoiMap, { type PoiLocation, type MapBounds } from './OsmPoiMap.vue'
+import OsmPoiMap, { type MapPoi, type MapBounds } from './OsmPoiMap.vue'
 import MapPlaceholder from './MapPlaceholder.vue'
-import type { AvatarImage } from './AvatarIcon.vue'
 
 const props = withDefaults(
   defineProps<{
-    items: T[]
+    items: MapPoi[]
+    popupComponent: Component
     center?: [number, number]
     zoom?: number
     selectedId?: string | number
     fitToPois?: boolean
-    popupComponent: Component
-    getLocation: (item: T) => PoiLocation | undefined
-    getTitle: (item: T) => string
-    getImage?: (item: T) => AvatarImage | undefined
-    isHighlighted?: (item: T) => boolean
     isLoading?: boolean
     isPlaceholderAnimated?: boolean
   }>(),
@@ -62,10 +57,6 @@ function onMapReady(map: LMap) {
         :selected-id="props.selectedId"
         :fit-to-pois="props.fitToPois"
         :popup-component="props.popupComponent"
-        :get-location="props.getLocation"
-        :get-title="props.getTitle"
-        :get-image="props.getImage"
-        :is-highlighted="props.isHighlighted"
         class="h-100"
         @map:ready="onMapReady"
         @item:select="(id) => emit('item:select', id)"

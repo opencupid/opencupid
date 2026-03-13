@@ -1,4 +1,4 @@
-<script setup lang="ts" generic="T extends { id: string | number }">
+<script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref, watch, nextTick, type Component, render, h } from 'vue'
 import type { Ref } from 'vue'
 import L, { Map as LMap, Marker as LMarker } from 'leaflet'
@@ -13,7 +13,7 @@ import { config as maptilerConfig, MapStyle } from '@maptiler/sdk'
 
 import AvatarIcon, { type AvatarImage } from './AvatarIcon.vue'
 
-/** Location coordinates returned by getLocation */
+/** Location coordinates for a map point */
 export interface PoiLocation {
   lat: number
   lon: number
@@ -25,6 +25,17 @@ export interface MapBounds {
   north: number
   west: number
   east: number
+}
+
+/** A point-of-interest item for the map. Call sites map domain objects into this shape. */
+export interface MapPoi {
+  id: string | number
+  title: string
+  location: PoiLocation
+  image?: AvatarImage
+  highlighted?: boolean
+  /** The original domain object, passed through to the popup component as `:item` */
+  source: unknown
 }
 
 maptilerConfig.telemetry = false
@@ -40,25 +51,12 @@ MaptilerLayer.prototype._update = function (...args: unknown[]) {
 
 const props = withDefaults(
   defineProps<{
-    /** Items to display on the map (must have id and location with lat/lon) */
-    items: T[]
-    /** Function to extract location from an item */
-    getLocation: (item: T) => PoiLocation | undefined
-    /** Function to get title for marker */
-    getTitle: (item: T) => string
-    /** Vue component to render in popup */
+    items: MapPoi[]
     popupComponent: Component
-    /** Optional starting center/zoom (used if we can't fit to bounds) */
     center?: [number, number]
     zoom?: number
-    /** Optional function to get a profile image (with variants + blurhash) for an item */
-    getImage?: (item: T) => AvatarImage | undefined
-    /** ID of selected item to highlight */
     selectedId?: string | number
-    /** Whether to auto-fit the map to show all items */
     fitToPois?: boolean
-    /** Optional callback to determine if an item should have a highlight halo */
-    isHighlighted?: (item: T) => boolean
   }>(),
   {
     zoom: 7,
@@ -75,7 +73,7 @@ const emit = defineEmits<{
 const mapEl: Ref<HTMLDivElement | null> = ref(null)
 let map: LMap | null = null
 let markers = new Map<string | number, LMarker>()
-let itemsById = new Map<string | number, T>()
+let itemsById = new Map<string | number, MapPoi>()
 // Tracks the zoom level from the last completed zoom animation. Used by the
 // center watcher to avoid capturing a mid-flyTo intermediate zoom value.
 let lastStableZoom: number = props.zoom
@@ -183,11 +181,9 @@ function dotIcon(isSelected: boolean, isHighlighted: boolean): L.DivIcon {
   })
 }
 
-function iconForItem(item: T, isSelected: boolean): L.DivIcon {
-  const highlighted = props.isHighlighted?.(item) ?? false
-  const image = props.getImage?.(item)
-  if (image) return avatarIcon(image, isSelected, highlighted)
-  return dotIcon(isSelected, highlighted)
+function iconForItem(item: MapPoi, isSelected: boolean): L.DivIcon {
+  if (item.image) return avatarIcon(item.image, isSelected, item.highlighted ?? false)
+  return dotIcon(isSelected, item.highlighted ?? false)
 }
 
 function emitBounds() {
@@ -350,7 +346,7 @@ function onMapMouseMove(ev: L.LeafletMouseEvent) {
 }
 
 const popupTarget = ref<HTMLElement | null>(null)
-const popupItem = ref<T | null>(null)
+const popupItem = ref<MapPoi | null>(null)
 
 function onMapReady() {
   isMapReady = true
@@ -361,23 +357,19 @@ function onMapReady() {
 const STAGGER_BATCH_SIZE = 5
 const STAGGER_DELAY_MS = 100
 
-function createMarker(item: T): LMarker | null {
-  const location = props.getLocation(item)
-  if (!location) return null
-
+function createMarker(item: MapPoi): LMarker {
   const isSelected = item.id === props.selectedId
-  const m = L.marker([location.lat, location.lon], {
-    title: props.getTitle(item),
+  const m = L.marker([item.location.lat, item.location.lon], {
+    title: item.title,
     icon: iconForItem(item, isSelected),
     keyboard: true,
   })
 
-  const highlighted = props.isHighlighted?.(item) ?? false
   m.bindPopup('', {
     maxWidth: 420,
     autoPan: true,
     autoPanPadding: L.point(20, 20),
-    className: highlighted ? 'item-popup item-popup-highlighted' : 'item-popup',
+    className: item.highlighted ? 'item-popup item-popup-highlighted' : 'item-popup',
   })
 
   m.on('popupopen', (e: L.PopupEvent) => {
@@ -407,46 +399,32 @@ function updateMarkers() {
   markers.clear()
   itemsById.clear()
 
-  const items = props.items.filter((item) => props.getLocation(item))
-
   function addBatch(startIdx: number) {
     if (!map || !clusterGroup) return
-    const end = Math.min(startIdx + STAGGER_BATCH_SIZE, items.length)
+    const end = Math.min(startIdx + STAGGER_BATCH_SIZE, props.items.length)
     const batch: LMarker[] = []
 
     for (let i = startIdx; i < end; i++) {
-      const item = items[i]
+      const item = props.items[i]
       if (!item) continue
-      const m = createMarker(item)
-      if (m) {
-        batch.push(m)
-        markers.set(item.id, m)
-        itemsById.set(item.id, item)
-      }
+      batch.push(createMarker(item))
+      markers.set(item.id, batch[batch.length - 1])
+      itemsById.set(item.id, item)
     }
 
     clusterGroup.addLayers(batch)
 
-    if (end < items.length) {
+    if (end < props.items.length) {
       staggerTimer = setTimeout(() => addBatch(end), STAGGER_DELAY_MS)
     }
   }
 
   addBatch(0)
 
-  // Fit bounds to markers when explicitly requested or when no center was provided
   if ((props.fitToPois || !props.center) && props.items.length > 0) {
-    const latlngs: [number, number][] = []
-    for (const item of props.items) {
-      const location = props.getLocation(item)
-      if (location) {
-        latlngs.push([location.lat, location.lon])
-      }
-    }
-    if (latlngs.length > 0) {
-      const bounds = L.latLngBounds(latlngs)
-      map.fitBounds(bounds, { padding: [24, 24] })
-    }
+    const latlngs = props.items.map((item) => [item.location.lat, item.location.lon] as [number, number])
+    const bounds = L.latLngBounds(latlngs)
+    map.fitBounds(bounds, { padding: [24, 24] })
   }
 }
 
@@ -533,7 +511,7 @@ watch(
     >
       <component
         :is="popupComponent"
-        :item="popupItem"
+        :item="popupItem.source"
         @click="$emit('item:select', popupItem.id)"
       />
     </Teleport>

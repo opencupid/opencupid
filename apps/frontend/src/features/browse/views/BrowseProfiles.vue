@@ -10,8 +10,8 @@ import ProfileMapCard from '../components/ProfileMapCard.vue'
 import TagCloud from '@/features/shared/components/TagCloud.vue'
 
 import { useSocialMatchViewModel } from '../composables/useSocialMatchViewModel'
-import type { PublicProfile } from '@zod/profile/profile.dto'
 import type { PopularTag } from '@zod/tag/tag.dto'
+import type { MapPoi } from '@/features/shared/components/OsmPoiMap.vue'
 
 defineOptions({ name: 'BrowseProfiles' })
 
@@ -44,9 +44,18 @@ onMounted(async () => {
   await initialize()
 })
 
-const getProfileImage = (profile: PublicProfile) => {
-  return profile.profileImages?.[0]
-}
+const mapPois = computed<MapPoi[]>(() =>
+  profileList.value
+    .filter((p) => p.location.lat != null && p.location.lon != null)
+    .map((p) => ({
+      id: p.id,
+      title: p.publicName,
+      location: { lat: p.location.lat!, lon: p.location.lon! },
+      image: p.profileImages?.[0],
+      highlighted: matchedProfileIds.value.has(p.id),
+      source: p,
+    }))
+)
 
 const mapCenter = computed<[number, number] | undefined>(() => {
   const loc = matchFilter.value?.location
@@ -89,19 +98,10 @@ function handleTagCloudSelect(tag: PopularTag) {
 
     <template #results>
       <MapView
-        :items="profileList"
+        :items="mapPois"
         :center="mapCenter"
         :is-loading="isLoading"
         :is-placeholder-animated="true"
-        :get-location="
-          (profile: PublicProfile) =>
-            profile.location.lat != null && profile.location.lon != null
-              ? { lat: profile.location.lat, lon: profile.location.lon }
-              : undefined
-        "
-        :get-title="(profile: PublicProfile) => profile.publicName"
-        :get-image="getProfileImage"
-        :is-highlighted="(profile: PublicProfile) => matchedProfileIds.has(profile.id)"
         :popup-component="ProfileMapCard"
         class="h-100"
         @item:select="(id: string | number) => openProfile(String(id))"
