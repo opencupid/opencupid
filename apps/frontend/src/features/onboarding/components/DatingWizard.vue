@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { type EditFieldProfileFormWithImages } from '@zod/profile/profile.form'
-import { type DatingPreferencesDTO } from '@zod/match/filters.dto'
+import { type DatingPreferencesFormType } from '@zod/match/filters.form'
 
 import { useWizardSteps } from '../composables/useWizardSteps'
 import { useStepper } from '@vueuse/core'
@@ -16,20 +16,9 @@ defineEmits<{
   (e: 'cancel'): void
 }>()
 
-const formData = defineModel<EditFieldProfileFormWithImages>({
-  default: () => ({
-    isDatingActive: false,
-    isSocialActive: false,
-    birthday: null,
-    genderPronouns: null,
-    relationshipStatus: null,
-    hasKids: null,
-    introSocialLocalized: {},
-    introDatingLocalized: {},
-  }),
-})
+const formData = defineModel<EditFieldProfileFormWithImages>({ required: true })
 
-const datingPrefs = defineModel<DatingPreferencesDTO | null>('datingPrefs', {
+const datingPrefs = defineModel<DatingPreferencesFormType | null>('datingPrefs', {
   default: null,
 })
 

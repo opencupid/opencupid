@@ -3,8 +3,10 @@ import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { type CreateProfileForm, CreateProfileFormSchema } from '@zod/profile/profile.form'
-import { type DatingPreferencesDTO } from '@zod/match/filters.dto'
-import { DatingPreferencesFormSchema } from '@zod/match/filters.form'
+import {
+  DatingPreferencesFormSchema,
+  type DatingPreferencesFormType,
+} from '@zod/match/filters.form'
 
 import SpinnerComponent from '@/features/shared/ui/SpinnerComponent.vue'
 import ErrorComponent from '@/features/shared/ui/ErrorComponent.vue'
@@ -25,7 +27,7 @@ const profileForm = reactive<CreateProfileForm>({
   languages: [i18nStore.getLanguage()],
 })
 
-const datingPrefs = reactive<DatingPreferencesDTO>(DatingPreferencesFormSchema.parse({}))
+const datingPrefs = reactive<DatingPreferencesFormType>(DatingPreferencesFormSchema.parse({}))
 
 const error = ref('')
 
@@ -57,21 +59,6 @@ onMounted(async () => {
     router.push({ name: 'MyProfile' })
     return
   }
-
-  // obtain GeoIP info
-  // disabled for now - LocationSelector uses the komoot
-  // API with a locality search - the search is good enough,
-  // geoIP does not simplify the step.
-  // appStore
-  //   .fetchLocation()
-  //   .then((res) => {
-  //     if (res.success && res.data && !formData.location.country) {
-  //       formData.location = res.data
-  //     }
-  //   })
-  //   .catch((error) => {
-  //     console.error('Failed to fetch GeoIP info:', error)
-  //   })
 })
 </script>
 

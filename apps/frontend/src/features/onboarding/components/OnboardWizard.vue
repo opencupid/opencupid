@@ -2,7 +2,7 @@
 import { useI18n } from 'vue-i18n'
 
 import { type EditProfileForm } from '@zod/profile/profile.form'
-import { type DatingPreferencesDTO } from '@zod/match/filters.dto'
+import { type DatingPreferencesFormType } from '@zod/match/filters.form'
 
 import LanguageSelector from '@/features/shared/profileform/LanguageSelector.vue'
 import TagExplorer from '@/features/shared/components/TagExplorer.vue'
@@ -29,7 +29,7 @@ const formData = defineModel<EditProfileForm>({
   default: () => ({}),
 })
 
-const datingPrefs = defineModel<DatingPreferencesDTO>('datingPrefs')
+const datingPrefs = defineModel<DatingPreferencesFormType>('datingPrefs')
 
 const emit = defineEmits<{
   (e: 'finished'): void

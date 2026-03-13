@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import useEditFields from '@/features/shared/composables/useEditFields'
 import { type EditProfileForm } from '@zod/profile/profile.form'
-import { type DatingPreferencesDTO } from '@zod/match/filters.dto'
+import { type DatingPreferencesFormType } from '@zod/match/filters.form'
 import AgeSelector from '@/features/shared/profileform/AgeSelector.vue'
 import GenderPronounSelector from '@/features/shared/profileform/GenderPronounSelector.vue'
 import RelationstatusSelector from '@/features/shared/profileform/RelationstatusSelector.vue'
@@ -11,18 +11,9 @@ import DatingPreferencesForm from '@/features/browse/components/DatingPreference
 
 import { useI18n } from 'vue-i18n'
 
-const formData = defineModel<EditProfileForm>({
-  default: () => ({
-    birthday: null,
-    genderPronouns: null,
-    relationshipStatus: null,
-    hasKids: null,
-    introSocial: '',
-    introDating: '',
-  }),
-})
+const formData = defineModel<EditProfileForm>({ required: true })
 
-const datingPrefs = defineModel<DatingPreferencesDTO | null>('datingPrefs', {
+const datingPrefs = defineModel<DatingPreferencesFormType | null>('datingPrefs', {
   default: null,
 })
 

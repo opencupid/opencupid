@@ -1,15 +1,22 @@
 import type { Profile } from '@zod/generated'
+import { type SocialMatchFilterDTO, type SocialMatchFilterWithTags } from '@zod/match/filters.dto'
 import {
-  DatingPreferencesDTOSchema,
-  type DatingPreferencesDTO,
-  type SocialMatchFilterDTO,
-  type SocialMatchFilterWithTags,
-} from '@zod/match/filters.dto'
+  DatingPreferencesFormSchema,
+  type DatingPreferencesFormType,
+} from '@zod/match/filters.form'
+import { DatingEligibleProfileSchema } from '@zod/profile/profile.db'
 import { DbTagToPublicTagTransform } from './tag.mappers'
 import { DbLocationToLocationDTO } from './location.mappers'
 
-export function mapProfileToDatingPreferencesDTO(profile: Profile): DatingPreferencesDTO {
-  return DatingPreferencesDTOSchema.parse(profile)
+export function mapProfileToDatingPreferencesDTO(profile: Profile): DatingPreferencesFormType {
+  const parsed = DatingEligibleProfileSchema.pick({
+    prefAgeMin: true,
+    prefAgeMax: true,
+    prefGender: true,
+    prefKids: true,
+  }).safeParse(profile)
+  if (parsed.success) return parsed.data
+  return DatingPreferencesFormSchema.parse({})
 }
 
 export function mapSocialMatchFilterToDTO(

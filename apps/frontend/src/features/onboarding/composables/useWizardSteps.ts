@@ -1,6 +1,6 @@
 import { useImageStore } from '@/features/images/stores/imageStore'
 import { type EditProfileForm, EditProfileFormSchema } from '@zod/profile/profile.form'
-import { type DatingPreferencesDTO } from '@zod/match/filters.dto'
+import { type DatingPreferencesFormType } from '@zod/match/filters.form'
 import { isDatingPreferencesValid } from '@zod/match/filters.form'
 import { isLocationValid } from '@zod/dto/location.dto'
 import { computed } from 'vue'
@@ -11,7 +11,7 @@ import { isPublicNameValid } from '@/features/shared/profileform/publicNameValid
 
 export const useWizardSteps = (
   formData: EditProfileForm,
-  datingPrefs?: DatingPreferencesDTO | null
+  datingPrefs?: DatingPreferencesFormType | null
 ) => {
   const imageStore = useImageStore()
 

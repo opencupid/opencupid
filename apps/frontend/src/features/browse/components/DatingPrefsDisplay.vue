@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { type DatingPreferencesDTO } from '@zod/match/filters.dto'
+import { type DatingPreferencesFormType } from '@zod/match/filters.form'
 
 import GenderSymbol from '@/features/shared/profiledisplay/GenderSymbol.vue'
 
-const datingPrefs = defineModel<DatingPreferencesDTO | null>({
+const datingPrefs = defineModel<DatingPreferencesFormType | null>({
   default: null,
 })
 </script>

@@ -29,7 +29,10 @@ import type {
   UpdateProfileScopeResponse,
   GetSocialMatchFilterResponse,
 } from '@zod/apiResponse.dto'
-import { DatingPreferencesDTOSchema, type DatingPreferencesDTO } from '@zod/match/filters.dto'
+import {
+  DatingPreferencesFormSchema,
+  type DatingPreferencesFormType,
+} from '@zod/match/filters.form'
 import type { PublicTag } from '@zod/tag/tag.dto'
 import {
   SocialMatchFilterDTOSchema,
@@ -68,7 +71,7 @@ function mapMatchFilterToPayload(dto: SocialMatchFilterDTO): UpdateSocialMatchFi
 
 interface ProfileStoreState {
   profile: OwnerProfile | null
-  datingPrefs: DatingPreferencesDTO | null
+  datingPrefs: DatingPreferencesFormType | null
   matchFilter: SocialMatchFilterDTO | null
   optInSettings: ProfileOptInSettings
   profileScopes: ProfileScope[]
@@ -79,7 +82,7 @@ interface ProfileStoreState {
 export const useOwnerProfileStore = defineStore('ownerProfile', {
   state: (): ProfileStoreState => ({
     profile: null as OwnerProfile | null,
-    datingPrefs: null as DatingPreferencesDTO | null,
+    datingPrefs: null as DatingPreferencesFormType | null,
     matchFilter: null as SocialMatchFilterDTO | null,
     optInSettings: { ...defaultOptInSettings },
     profileScopes: [],
@@ -237,14 +240,14 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
     },
 
     async fetchDatingPrefs(
-      defaults?: DatingPreferencesDTO
+      defaults?: DatingPreferencesFormType
     ): Promise<StoreVoidSuccess | StoreError> {
       try {
         this.isLoading = true
         const res = await safeApiCall(() =>
           api.get<GetDatingPreferencesResponse>('/profiles/me/dating-prefs')
         )
-        const fetched = DatingPreferencesDTOSchema.parse(res.data.prefs)
+        const fetched = DatingPreferencesFormSchema.parse(res.data.prefs)
         this.datingPrefs = fetched
         return storeSuccess()
       } catch (error: any) {
@@ -261,7 +264,7 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
         const res = await safeApiCall(() =>
           api.patch<UpdateDatingPreferencesResponse>('/profiles/me/dating-prefs', this.datingPrefs)
         )
-        const updated = DatingPreferencesDTOSchema.parse(res.data.prefs)
+        const updated = DatingPreferencesFormSchema.parse(res.data.prefs)
         this.datingPrefs = updated
         bus.emit('profile:dating-prefs-updated')
         return storeSuccess()

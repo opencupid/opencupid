@@ -19,7 +19,8 @@ import type { ConversationSummary, MessageDTO } from '@zod/messaging/messaging.d
 import type { LoginUser, SettingsUser } from '@zod/user/user.dto'
 import type { LocationDTO } from '@zod/dto/location.dto'
 import type { VersionDTO } from '@zod/dto/version.dto'
-import type { DatingPreferencesDTO, SocialMatchFilterDTO } from '@zod/match/filters.dto'
+import type { SocialMatchFilterDTO } from '@zod/match/filters.dto'
+import type { DatingPreferencesFormType } from '@zod/match/filters.form'
 import { AuthErrorCodes } from '@zod/user/auth.dto'
 import {
   type InteractionEdgePair,
@@ -34,8 +35,8 @@ export type GetProfileSummariesResponse = ApiSuccess<{ profiles: ProfileSummary[
 
 export type GetSocialMatchFilterResponse = ApiSuccess<{ filter: SocialMatchFilterDTO }>
 
-export type GetDatingPreferencesResponse = ApiSuccess<{ prefs: DatingPreferencesDTO }>
-export type UpdateDatingPreferencesResponse = ApiSuccess<{ prefs: DatingPreferencesDTO }>
+export type GetDatingPreferencesResponse = ApiSuccess<{ prefs: DatingPreferencesFormType }>
+export type UpdateDatingPreferencesResponse = ApiSuccess<{ prefs: DatingPreferencesFormType }>
 
 export type GetMyProfileResponse = ApiSuccess<{ profile: OwnerProfile }>
 export type GetProfileOptInResponse = ApiSuccess<{ optIn: ProfileOptInSettings }>
