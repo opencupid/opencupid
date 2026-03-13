@@ -8,7 +8,7 @@ import MapPlaceholder from './MapPlaceholder.vue'
 const props = withDefaults(
   defineProps<{
     items: MapPoi[]
-    popupComponent: Component
+    popupComponent?: Component
     center?: [number, number]
     zoom?: number
     selectedId?: string | number

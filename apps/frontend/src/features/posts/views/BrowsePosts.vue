@@ -9,7 +9,6 @@ import PostFilterBar from '../components/PostFilterBar.vue'
 import PostList from '../components/PostList.vue'
 import PostEdit from '../components/PostEdit.vue'
 import PostFullView from '../components/PostFullView.vue'
-import PostMapCard from '../components/PostMapCard.vue'
 import MapView from '@/features/shared/components/MapView.vue'
 import ViewModeToggler from '@/features/shared/ui/ViewModeToggler.vue'
 
@@ -113,7 +112,6 @@ onMounted(async () => {
       <MapView
         v-else-if="viewMode === 'map'"
         :items="mapPois"
-        :popup-component="PostMapCard"
         :is-loading="isViewLoading"
         class="h-100"
         @item:select="

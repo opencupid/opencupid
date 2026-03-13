@@ -52,7 +52,7 @@ MaptilerLayer.prototype._update = function (...args: unknown[]) {
 const props = withDefaults(
   defineProps<{
     items: MapPoi[]
-    popupComponent: Component
+    popupComponent?: Component
     center?: [number, number]
     zoom?: number
     selectedId?: string | number
@@ -365,27 +365,31 @@ function createMarker(item: MapPoi): LMarker {
     keyboard: true,
   })
 
-  m.bindPopup('', {
-    maxWidth: 420,
-    autoPan: true,
-    autoPanPadding: L.point(20, 20),
-    className: item.highlighted ? 'item-popup item-popup-highlighted' : 'item-popup',
-  })
+  if (props.popupComponent) {
+    m.bindPopup('', {
+      maxWidth: 420,
+      autoPan: true,
+      autoPanPadding: L.point(20, 20),
+      className: item.highlighted ? 'item-popup item-popup-highlighted' : 'item-popup',
+    })
 
-  m.on('popupopen', (e: L.PopupEvent) => {
-    const target = e.popup
-      .getElement()
-      ?.querySelector('.leaflet-popup-content') as HTMLElement | null
-    popupTarget.value = target
-    popupItem.value = item
-    nextTick(() => e.popup.update())
-  })
-  m.on('popupclose', () => {
-    popupTarget.value = null
-    popupItem.value = null
-  })
+    m.on('popupopen', (e: L.PopupEvent) => {
+      const target = e.popup
+        .getElement()
+        ?.querySelector('.leaflet-popup-content') as HTMLElement | null
+      popupTarget.value = target
+      popupItem.value = item
+      nextTick(() => e.popup.update())
+    })
+    m.on('popupclose', () => {
+      popupTarget.value = null
+      popupItem.value = null
+    })
 
-  m.on('click', () => m.openPopup())
+    m.on('click', () => m.openPopup())
+  } else {
+    m.on('click', () => emit('item:select', item.id))
+  }
   return m
 }
 
@@ -506,7 +510,7 @@ watch(
     />
 
     <Teleport
-      v-if="popupTarget && popupItem"
+      v-if="popupComponent && popupTarget && popupItem"
       :to="popupTarget"
     >
       <component
