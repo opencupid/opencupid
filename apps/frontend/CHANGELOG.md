@@ -1,5 +1,12 @@
 # frontend
 
+## 0.28.0
+
+### Minor Changes
+
+- c551cf4: Responsive UserHome layout with dynamic TagCloud sizing (#1088)
+- 8feb0cd: Dating wizard intro overlay, nav consistency fix, and i18n extraction (#1087)
+
 ## 0.27.0
 
 ### Minor Changes
