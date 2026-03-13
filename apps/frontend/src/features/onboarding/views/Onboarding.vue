@@ -42,7 +42,12 @@ const handleGoToBrowse = () => {
 }
 
 const handleWizardFinish = async () => {
-  Object.assign(profileForm, datingPrefs)
+  // handle the case where the user changes this flag
+  // after filling data info datingPrefs and then changing the
+  // toggle afterwards. We'll leave the prefs empty.
+  if (profileForm.isDatingActive) {
+    Object.assign(profileForm, datingPrefs)
+  }
   const res = await profileStore.createOwnerProfile(profileForm)
   if (!res.success) {
     console.error('Failed to save profile:', res.message)
