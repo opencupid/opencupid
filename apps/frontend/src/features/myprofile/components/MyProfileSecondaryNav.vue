@@ -3,6 +3,7 @@ import { type ViewState } from '../composables/types'
 import ViewAsDropdown from './ViewAsDropdown.vue'
 import DatingModeDropdown from './DatingModeDropdown.vue'
 import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
+import IconMenuDotsVert from '@/assets/icons/interface/menu-dots-vert.svg'
 
 defineProps<{
   isDatingOnboarded?: boolean
@@ -49,10 +50,11 @@ const emit = defineEmits<{
       <BNavItemDropdown>
         <template #button-content>
           <span class="text-secondary">
-            <IconSetting2 class="svg-icon-lg" />
+          <IconMenuDotsVert class="svg-icon-lg fs-4" />
           </span>
         </template>
         <BDropdownItem to="/settings">
+            <IconSetting2 class="svg-icon me-1" />
           {{ $t('settings.title') }}
         </BDropdownItem>
       </BNavItemDropdown>

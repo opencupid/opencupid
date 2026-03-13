@@ -33,7 +33,7 @@ const datingPrefs = defineModel<DatingPreferencesDTO | null>('datingPrefs', {
   default: null,
 })
 
-const { datingWizardSteps } = useWizardSteps(formData.value)
+const { datingWizardSteps } = useWizardSteps(formData.value, datingPrefs.value)
 const { current, isFirst, isLast, goToNext, goToPrevious, isCurrent } =
   useStepper(datingWizardSteps)
 </script>

@@ -72,10 +72,7 @@ const handleTagCloudSelect = (tag: PopularTag) => {
   width: 70%;
   height: 70%;
   color: rgb(227, 227, 35);
-  // opacity: 0.4;
   pointer-events: none;
   filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.4));
 }
-
-
 </style>

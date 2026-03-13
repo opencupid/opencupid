@@ -35,7 +35,7 @@ const hasPreviewLanguages = computed(() => languagePreviewOptions.value.length >
     </template>
     <div style="width: 16rem">
       <BDropdownText>
-        <div class="">Preview your profile </div>
+        <div>{{ $t('profiles.forms.preview_profile') }}</div>
       </BDropdownText>
 
       <span v-if="isDatingActive">
@@ -52,36 +52,35 @@ const hasPreviewLanguages = computed(() => languagePreviewOptions.value.length >
               tabindex="-1"
               style="pointer-events: none"
             />
-            <span> Dating mode view </span>
+            <span>{{ $t('profiles.forms.dating_mode_view') }}</span>
           </span>
           <div class="form-hint lh-sm">
             <div v-if="viewState.currentScope === 'dating'">
-              This is what people also in dating mode will see when they view your profile.
+              {{ $t('profiles.forms.dating_mode_view_hint_active') }}
             </div>
-            <div v-else>This is what everyone else sees about you.</div>
+            <div v-else>{{ $t('profiles.forms.dating_mode_view_hint_inactive') }}</div>
           </div>
         </BDropdownItemButton>
-
       </span>
 
       <span v-if="hasPreviewLanguages">
         <BDropdownDivider />
         <BDropdownGroup :header="$t('profiles.forms.preview_language')">
-        <BDropdownItemButton
-          v-for="lang in languagePreviewOptions"
-          :key="lang.value"
-          class="language-option"
-          :active="lang.value === viewState.previewLanguage"
-          @click="viewState.previewLanguage = lang.value"
-        >
-          <span class="d-flex align-items-center">
-            <span class="flex-grow-1">{{ lang.label }}</span>
-            <LanguageIcon
-              :countryCode="lang.value"
-              :size="24"
-            />
-          </span>
-        </BDropdownItemButton>
+          <BDropdownItemButton
+            v-for="lang in languagePreviewOptions"
+            :key="lang.value"
+            class="language-option"
+            :active="lang.value === viewState.previewLanguage"
+            @click="viewState.previewLanguage = lang.value"
+          >
+            <span class="d-flex align-items-center">
+              <span class="flex-grow-1">{{ lang.label }}</span>
+              <LanguageIcon
+                :countryCode="lang.value"
+                :size="24"
+              />
+            </span>
+          </BDropdownItemButton>
         </BDropdownGroup>
       </span>
     </div>

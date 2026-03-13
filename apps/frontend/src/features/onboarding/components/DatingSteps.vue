@@ -37,7 +37,6 @@ const { birthdayModel, relationshipModel, hasKidsModel, introDatingModel, gender
 </script>
 
 <template>
-  
   <fieldset v-if="isCurrent('age')">
     <!-- I was born... -->
     <legend>{{ t('onboarding.age_title') }}</legend>
@@ -78,13 +77,11 @@ const { birthdayModel, relationshipModel, hasKidsModel, introDatingModel, gender
     </div>
   </fieldset>
 
-    <fieldset v-else-if="isCurrent('preferences')">
+  <fieldset v-else-if="isCurrent('preferences')">
     <legend>{{ t('onboarding.dating_preferences_title') }}</legend>
     <DatingPreferencesForm
       v-if="datingPrefs"
       v-model="datingPrefs"
     />
   </fieldset>
-
-  
 </template>
