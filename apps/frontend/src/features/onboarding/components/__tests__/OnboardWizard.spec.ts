@@ -4,6 +4,7 @@ vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 vi.stubGlobal('__APP_CONFIG__', { SITE_NAME: 'TestSite' })
 vi.mock('@/assets/icons/interface/sun.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/logout.svg', () => ({ default: { template: '<div />' } }))
+vi.mock('@/assets/images/app/curved-arrow.svg', () => ({ default: { template: '<div />' } }))
 
 // Mock d3-cloud — jsdom has no canvas, so we simulate the layout synchronously
 let endCallback: ((words: any[]) => void) | null = null
