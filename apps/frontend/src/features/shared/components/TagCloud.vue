@@ -8,8 +8,9 @@ const props = withDefaults(
   defineProps<{
     location?: { country?: string }
     limit?: number
+    showLoading?: boolean
   }>(),
-  { limit: 50 }
+  { limit: 50, showLoading: false }
 )
 
 const emit = defineEmits<{
@@ -108,7 +109,7 @@ onMounted(async () => {
 
 <template>
   <svg
-    v-if="!hasTags"
+    v-if="!hasTags && props.showLoading"
     data-testid="tag-cloud-placeholder"
     width="100%"
     :viewBox="`${-WIDTH / 2} ${-HEIGHT / 2} ${WIDTH} ${HEIGHT}`"

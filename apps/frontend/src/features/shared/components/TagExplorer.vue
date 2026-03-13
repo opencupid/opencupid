@@ -59,6 +59,7 @@ const handleTagCloudSelect = (tag: PopularTag) => {
       class="mb-3"
       @tag:select="handleTagCloudSelect"
       @tag:hover="handleTagCloudHover"
+      show-loading
     />
   </div>
 </template>
