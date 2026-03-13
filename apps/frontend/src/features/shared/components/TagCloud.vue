@@ -9,11 +9,15 @@ const props = withDefaults(
   defineProps<{
     location?: { country?: string }
     limit?: number
+    showLoading?: boolean
   }>(),
-  { limit: 50 }
+  { limit: 50, showLoading: false }
 )
 
-const emit = defineEmits<{ 'tag:select': [tag: PopularTag] }>()
+const emit = defineEmits<{
+  'tag:select': [tag: PopularTag]
+  'tag:hover': [tag: PopularTag | null]
+}>()
 
 const tagStore = useTagsStore()
 
@@ -36,6 +40,24 @@ const words = ref<PositionedWord[]>([])
 const tagsLoaded = ref(false)
 
 const hasTags = computed(() => words.value.length > 0)
+
+// Deterministic pseudo-random placeholder badges
+const placeholderBadges = Array.from({ length: 20 }, (_, i) => {
+  const seed = (i * 7 + 3) % 20
+  const w = 40 + (seed % 5) * 20
+  const h = 18 + (seed % 3) * 4
+  const col = (i % 4) - 1.5
+  const row = Math.floor(i / 4) - 2
+  return {
+    x: col * (w + 20) + (row % 2) * 15,
+    y: row * (h + 14),
+    width: w,
+    height: h,
+    rx: h / 2,
+    opacity: 0.08 + (seed % 4) * 0.04,
+    delay: `${(i * 0.12).toFixed(2)}s`,
+  }
+})
 
 function scaleFontSize(
   count: number,
@@ -109,7 +131,27 @@ onMounted(async () => {
     class="tag-cloud-container"
   >
     <svg
-      v-if="hasTags"
+      v-if="!hasTags && props.showLoading"
+      data-testid="tag-cloud-placeholder"
+      width="100%"
+      :viewBox="`${-width / 2} ${-height / 2} ${width} ${height}`"
+    >
+      <rect
+        v-for="(b, i) in placeholderBadges"
+        :key="i"
+        :x="b.x - b.width / 2"
+        :y="b.y - b.height / 2"
+        :width="b.width"
+        :height="b.height"
+        :rx="b.rx"
+        fill="currentColor"
+        :opacity="b.opacity"
+        class="placeholder-badge"
+        :style="{ animationDelay: b.delay }"
+      />
+    </svg>
+    <svg
+      v-else-if="hasTags"
       data-testid="tag-cloud"
       :width="width"
       :height="height"
@@ -126,6 +168,8 @@ onMounted(async () => {
         :style="{ fontSize: `${w.size}px`, fontFamily: 'sans-serif', cursor: 'pointer' }"
         class="tag-cloud-word"
         @click="handleTagClick(w.tag)"
+        @mouseenter="emit('tag:hover', w.tag)"
+        @mouseleave="emit('tag:hover', null)"
       >
         {{ w.text }}
       </text>
@@ -144,5 +188,16 @@ onMounted(async () => {
 }
 .tag-cloud-word:hover {
   opacity: 0.7;
+}
+.placeholder-badge {
+  animation: pulse 1.8s ease-in-out infinite alternate;
+}
+@keyframes pulse {
+  from {
+    opacity: 0.06;
+  }
+  to {
+    opacity: 0.18;
+  }
 }
 </style>
