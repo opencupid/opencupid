@@ -14,8 +14,6 @@ export function usePostsViewModel() {
   const activeTab = ref<'all' | 'recent' | 'my'>('all')
   const viewMode = ref('grid')
   const showCreateModal = ref(false)
-  const locationPermission = ref<boolean | null>(null)
-  const userLocation = ref<{ lat: number; lon: number } | null>(null)
   const isDetailView = ref(false)
   const showFullView = ref(false)
   const editingPost = ref<OwnerPost | null>(null)
@@ -24,36 +22,7 @@ export function usePostsViewModel() {
   const isLoading = ref(false)
 
   // Computed properties
-  const nearbyParams = computed(() => {
-    if (!userLocation.value) {
-      return { lat: 0, lon: 0, radius: 50 }
-    }
-    return {
-      lat: userLocation.value.lat,
-      lon: userLocation.value.lon,
-      radius: 50,
-    }
-  })
-
   const ownerProfile = computed(() => ownerStore.profile)
-
-  // Check if geolocation permission was already granted
-  const checkLocationPermission = async () => {
-    if (!navigator.permissions) {
-      locationPermission.value = false
-      return
-    }
-    try {
-      const status = await navigator.permissions.query({ name: 'geolocation' })
-      if (status.state === 'granted') {
-        await requestLocation()
-      } else {
-        locationPermission.value = false
-      }
-    } catch {
-      locationPermission.value = false
-    }
-  }
 
   // Bootstrap mechanism
   const initialize = async () => {
@@ -67,39 +36,9 @@ export function usePostsViewModel() {
         return
       }
 
-      await checkLocationPermission()
       isInitialized.value = true
     } finally {
       isLoading.value = false
-    }
-  }
-
-  // Location handling
-  const getCurrentPosition = (): Promise<GeolocationPosition> => {
-    return new Promise((resolve, reject) => {
-      if (!navigator.geolocation) {
-        reject(new Error('Geolocation is not supported'))
-        return
-      }
-
-      navigator.geolocation.getCurrentPosition(resolve, reject, {
-        enableHighAccuracy: false,
-        timeout: 5000,
-        maximumAge: 300000, // 5 minutes
-      })
-    })
-  }
-
-  const requestLocation = async () => {
-    try {
-      const position = await getCurrentPosition()
-      userLocation.value = {
-        lat: position.coords.latitude,
-        lon: position.coords.longitude,
-      }
-      locationPermission.value = true
-    } catch (error) {
-      console.warn('Cannot get location:', error)
     }
   }
 
@@ -208,9 +147,6 @@ export function usePostsViewModel() {
     activeTab,
     viewMode,
     showCreateModal,
-    locationPermission,
-    userLocation,
-    nearbyParams,
     isDetailView,
     showFullView,
     editingPost,
@@ -221,7 +157,6 @@ export function usePostsViewModel() {
 
     // Methods
     initialize,
-    requestLocation,
     handlePostListIntent,
     handleDelete,
     handleHide,
