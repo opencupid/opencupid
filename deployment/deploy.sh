@@ -112,3 +112,11 @@ echo ""
 echo "✓ Deployment completed successfully"
 echo "  URL: $STAGING_URL"
 echo "  SSH: ssh $SSH_USER@$SERVER_IP"
+echo ""
+
+# Display QR code for easy mobile access
+if command -v qrencode >/dev/null 2>&1; then
+  qrencode -t ANSIUTF8 "$STAGING_URL"
+else
+  echo "Tip: install qrencode to display a scannable QR code here (e.g. apt install qrencode)"
+fi
