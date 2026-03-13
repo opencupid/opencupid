@@ -23,13 +23,13 @@ if not cookie then
   return ngx.exit(ngx.HTTP_UNAUTHORIZED)
 end
 
-local colon = cookie:find(':', 1, true)
-if not colon then
+local dot = cookie:find('.', 1, true)
+if not dot then
   return ngx.exit(ngx.HTTP_UNAUTHORIZED)
 end
 
-local exp = tonumber(cookie:sub(1, colon - 1))
-local sig = cookie:sub(colon + 1)
+local exp = tonumber(cookie:sub(1, dot - 1))
+local sig = cookie:sub(dot + 1)
 if not exp or not sig or sig == '' then
   return ngx.exit(ngx.HTTP_UNAUTHORIZED)
 end

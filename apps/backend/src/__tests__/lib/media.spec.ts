@@ -63,19 +63,19 @@ describe('generateMediaToken', () => {
 
   it('returns value in exp:sig format', () => {
     const { value } = generateMediaToken()
-    expect(value).toMatch(/^\d+:[a-f0-9]+$/)
+    expect(value).toMatch(/^\d+\.[a-f0-9]+$/)
   })
 
   it('produces correct HMAC signature', () => {
     const { value } = generateMediaToken()
-    const [expStr, sig] = value.split(':')
+    const [expStr, sig] = value.split('.')
     const expected = createHmac('sha256', 'test-secret').update(expStr).digest('hex')
     expect(sig).toBe(expected)
   })
 
   it('sets exp to now + TTL', () => {
     const { value } = generateMediaToken()
-    const exp = Number(value.split(':')[0])
+    const exp = Number(value.split('.')[0])
     const nowSeconds = Math.floor(new Date('2025-01-01T00:00:00Z').getTime() / 1000)
     expect(exp).toBe(nowSeconds + 3600)
   })

@@ -57,14 +57,14 @@ export function mediaUrl(relativePath: string): string {
 
 /**
  * Generate a signed media token for cookie-based auth.
- * Returns `{ value, maxAge }` where value is `{exp}:{sig}` and maxAge is
- * the TTL in seconds.
+ * Returns `{ value, maxAge }` where value is `{exp}.{sig}` and maxAge is
+ * the TTL in seconds. Uses `.` as separator (`:` gets URL-encoded in cookies).
  */
 export function generateMediaToken(): { value: string; maxAge: number } {
   const maxAge = appConfig.IMAGE_URL_HMAC_TTL_SECONDS
   const exp = Math.floor(Date.now() / 1000) + maxAge
   const sig = createHmac('sha256', appConfig.AUTH_IMG_HMAC_SECRET).update(String(exp)).digest('hex')
-  return { value: `${exp}:${sig}`, maxAge }
+  return { value: `${exp}.${sig}`, maxAge }
 }
 
 type ImageLocation = {
