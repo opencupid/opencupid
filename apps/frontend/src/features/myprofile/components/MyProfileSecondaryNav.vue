@@ -46,12 +46,16 @@ const emit = defineEmits<{
       />
 
       <!-- Settings -->
-      <BNavItem
-        to="/settings"
-        link-class="text-secondary"
-      >
-        <IconSetting2 class="svg-icon-lg" />
-      </BNavItem>
+      <BNavItemDropdown>
+        <template #button-content>
+          <span class="text-secondary">
+            <IconSetting2 class="svg-icon-lg" />
+          </span>
+        </template>
+        <BDropdownItem to="/settings">
+          {{ $t('settings.title') }}
+        </BDropdownItem>
+      </BNavItemDropdown>
     </BNav>
   </div>
 </template>
