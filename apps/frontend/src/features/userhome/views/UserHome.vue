@@ -75,12 +75,14 @@ provide('viewerProfile', toRef(viewerProfile))
       </div>
       <!-- lg+: two-column layout -->
       <BRow class="d-flex mt-3 align-items-lg-center">
-        <BCol lg="6" >
+        <BCol lg="6">
           <div
             v-if="visibleProfiles.length > 0"
             class="mb-4"
           >
-            <h6 class="display-6 text-center text-muted mb-2 mb-lg-4">{{ $t('home.meet_new_people') }}</h6>
+            <h6 class="display-6 text-center text-muted mb-2 mb-lg-4">
+              {{ $t('home.meet_new_people') }}
+            </h6>
             <ProfileCardGrid
               :profiles="visibleProfiles"
               @profile:select="handleCardClick"

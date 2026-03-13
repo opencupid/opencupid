@@ -59,12 +59,7 @@ const placeholderBadges = Array.from({ length: 20 }, (_, i) => {
   }
 })
 
-function scaleFontSize(
-  count: number,
-  minCount: number,
-  maxCount: number,
-  fontMax: number
-): number {
+function scaleFontSize(count: number, minCount: number, maxCount: number, fontMax: number): number {
   if (maxCount === minCount) return (FONT_MIN + fontMax) / 2
   const ratio = (count - minCount) / (maxCount - minCount)
   return FONT_MIN + ratio * (fontMax - FONT_MIN)

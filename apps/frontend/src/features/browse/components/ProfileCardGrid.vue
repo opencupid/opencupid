@@ -16,17 +16,17 @@ defineEmits<{
 </script>
 
 <template>
-    <BRow v-bind="$attrs">
-      <BCol
-        v-for="profile in profiles"
-        :key="profile.id"
-        class="col"
-      >
-        <ProfileCardComponent
-          :profile
-          v-bind="{ showTags: $props.showTags, showLocation: $props.showLocation }"
-          @click="$emit('profile:select', profile.id)"
-        />
-      </BCol>
-    </BRow>
+  <BRow v-bind="$attrs">
+    <BCol
+      v-for="profile in profiles"
+      :key="profile.id"
+      class="col"
+    >
+      <ProfileCardComponent
+        :profile
+        v-bind="{ showTags: $props.showTags, showLocation: $props.showLocation }"
+        @click="$emit('profile:select', profile.id)"
+      />
+    </BCol>
+  </BRow>
 </template>
