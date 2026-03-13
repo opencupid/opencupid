@@ -25,7 +25,8 @@ if not exp or not sig then
   return ngx.exit(ngx.HTTP_UNAUTHORIZED)
 end
 
-if exp < ngx.time() then
+local CLOCK_SKEW_GRACE = 30
+if exp + CLOCK_SKEW_GRACE < ngx.time() then
   -- ngx.log(ngx.ERR, 'Signature expired: exp=', exp, ', current time=', ngx.time())
   return ngx.exit(ngx.HTTP_UNAUTHORIZED)
 end

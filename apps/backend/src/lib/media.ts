@@ -51,7 +51,9 @@ export function checkUserContentRoot(): boolean {
 }
 
 export function signUrl(url: string): string {
-  const exp = Math.floor(Date.now() / 1000) + appConfig.IMAGE_URL_HMAC_TTL_SECONDS
+  const nowSeconds = Math.floor(Date.now() / 1000)
+  const window = appConfig.IMAGE_URL_HMAC_WINDOW_SECONDS
+  const exp = (Math.floor(nowSeconds / window) + 1) * window
   // Sign only the relative path (strip MEDIA_URL_BASE prefix) to match nginx lua verification
   const prefix = appConfig.MEDIA_URL_BASE + '/'
   const pathToSign = url.startsWith(prefix) ? url.slice(prefix.length) : url
