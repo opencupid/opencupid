@@ -5,14 +5,13 @@ import { Profile, ProfileImage } from '@zod/generated'
 import {
   type ProfileOptInSettings,
   type UpdateProfileOptInPayload,
-  type UpdateProfilePayload,
-  type CreateProfilePayload,
   type UpdateProfileScopePayload,
 } from '@zod/profile/profile.dto'
 import {
   DbProfileWithContext,
   DbOwnerUpdateScalars,
   DbProfileWithImages,
+  type ProfileUpdateInput,
 } from '@zod/profile/profile.db'
 import { mapToLocalizedUpserts } from '@/api/mappers/profile.mappers'
 import {
@@ -205,7 +204,7 @@ export class ProfileService {
     tx: Prisma.TransactionClient,
     locale: string,
     userId: string,
-    data: UpdateProfilePayload | CreateProfilePayload
+    data: ProfileUpdateInput
   ): Promise<DbProfileWithImages> {
     // 1) Pull out complex parts
     const { tags, introSocialLocalized, introDatingLocalized, ...rest } = data
@@ -235,7 +234,10 @@ export class ProfileService {
     }
 
     // 4) Handle localized fields
-    const localizedPayload: Partial<UpdateProfilePayload> = {
+    const localizedPayload: Pick<
+      ProfileUpdateInput,
+      'introSocialLocalized' | 'introDatingLocalized'
+    > = {
       introSocialLocalized,
       introDatingLocalized,
     }

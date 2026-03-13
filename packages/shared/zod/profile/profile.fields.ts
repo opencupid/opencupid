@@ -31,6 +31,13 @@ export const datingPreferencesFields = {
   prefKids: true,
 } as const
 
+export const locationFields = {
+  country: true,
+  cityName: true,
+  lat: true,
+  lon: true,
+} as const
+
 export const ownerFields = {
   isDatingActive: true,
   isSocialActive: true,

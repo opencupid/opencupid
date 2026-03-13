@@ -231,24 +231,6 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
     }
   })
 
-  // fastify.get('/', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-
-  //   if (!req.session.hasActiveProfile) return sendForbiddenError(reply)
-  //   const myProfileId = req.session.profileId
-  //   const locale = req.session.lang
-
-  //   try {
-  //     const profiles = await profileService.findProfilesFor(locale, myProfileId)
-  //     const hasDatingPermission = req.session.profile.isDatingActive
-  //     const mappedProfiles = profiles.map(p => mapProfileWithContext(p, hasDatingPermission, locale))
-  //     const response: GetProfilesResponse = { success: true, profiles: mappedProfiles }
-  //     return reply.code(200).send(response)
-  //   } catch (err) {
-  //     fastify.log.error(err)
-  //     return sendError(reply, 500, 'Failed to fetch profiles')
-  //   }
-  // })
-
   /**
    * Create a new profile for the current user
    * @description This route is used to create a new profile for the current user.
@@ -270,25 +252,15 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
       return sendError(reply, 403, 'Profile already exists and is onboarded')
     }
 
-    // @ts-expect-error - We are setting isOnboarded here, which is not part of CreateProfilePayload
-    //  i'm not gonna bloody write a transform for this
-    data.isOnboarded = true // Set the onboarding flag to true
-
     const locale = req.session.lang
 
     try {
       const updated = await fastify.prisma.$transaction(async (tx) => {
-        // const datingPrefsFragment = data.isDatingActive ? profileMatchService.createDatingPrefsDefaults(data) : {}
-        // const update = {
-        //   ...data,
-        //   ...datingPrefsFragment
-        // }
-
         const updatedProfile = await profileService.updateCompleteProfile(
           tx,
           locale,
           req.user.userId,
-          data
+          { ...data, isOnboarded: true }
         )
         const profile = mapDbProfileToOwnerProfile(locale, updatedProfile)
         await profileMatchService.createSocialMatchFilter(tx, updatedProfile.id, profile.location)

@@ -9,11 +9,12 @@ import {
   baseFields,
   socialFields,
   datingFields,
+  datingPreferencesFields,
+  locationFields,
   ownerFields,
   profileOptInFields,
   userOptInFields,
 } from './profile.fields'
-import { datingPreferencesFields } from './profile.fields'
 import { InteractionContextSchema } from '@zod/interaction/interactionContext.dto'
 
 const PublicScalarsSchema = ProfileSchema.pick({
@@ -95,10 +96,7 @@ export const editableFields = {
 // Client -> API DTO profile editing payload
 export const UpdateProfilePayloadSchema = ProfileSchema.pick({
   ...editableFields,
-  country: true,
-  cityName: true,
-  lat: true,
-  lon: true,
+  ...locationFields,
   isCallable: true,
 })
   .extend({
@@ -114,10 +112,7 @@ export type UpdateProfilePayload = z.infer<typeof UpdateProfilePayloadSchema>
 export const CreateProfilePayloadSchema = ProfileSchema.pick({
   ...editableFields,
   ...datingPreferencesFields,
-  country: true,
-  cityName: true,
-  lat: true,
-  lon: true,
+  ...locationFields,
   isCallable: true,
 })
   .extend({

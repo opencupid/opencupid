@@ -30,6 +30,10 @@ export const SessionProfileSchema = ProfileSchema.pick({
   isDatingActive: true,
   isSocialActive: true,
   isActive: true,
+}).extend({
+  isDatingActive: z.boolean().default(false),
+  isSocialActive: z.boolean().default(false),
+  isActive: z.boolean().default(false),
 })
 export type SessionProfile = z.infer<typeof SessionProfileSchema>
 

@@ -3,7 +3,6 @@ import {
   ProfileUnionSchema,
   type ProfileSummary,
   type OwnerProfile,
-  type UpdateProfilePayload,
   OwnerScalarsSchema,
 } from '@zod/profile/profile.dto'
 import {
@@ -123,7 +122,10 @@ export function mapProfileSummary(profile: DbProfileSummary): ProfileSummary {
 
 export function mapToLocalizedUpserts(
   profileId: string,
-  payload: Partial<Pick<UpdateProfilePayload, 'introSocialLocalized' | 'introDatingLocalized'>>
+  payload: {
+    introSocialLocalized?: Record<string, string>
+    introDatingLocalized?: Record<string, string>
+  }
 ): Array<{ locale: string; updates: Record<string, string> }> {
   const byLocale: Record<string, Record<string, string>> = {}
 

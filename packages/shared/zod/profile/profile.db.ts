@@ -10,7 +10,13 @@ import {
 } from '@zod/generated'
 import { TagWithTranslationsSchema } from '@zod/tag/tag.db'
 import { GenderSchema, HasKidsSchema } from '@zod/generated'
-import { datingFields, datingPreferencesFields, ownerFields, socialFields } from './profile.fields'
+import {
+  datingFields,
+  datingPreferencesFields,
+  locationFields,
+  ownerFields,
+  socialFields,
+} from './profile.fields'
 
 export const DbProfileSchema = ProfileSchema.extend({
   localized: z.array(LocalizedProfileFieldSchema).default([]),
@@ -66,7 +72,15 @@ export const DbOwnerUpdateScalarsSchema = ProfileSchema.pick({
   ...socialFields,
   ...datingFields,
   ...datingPreferencesFields,
+  ...locationFields,
   ...ownerFields,
 }).partial()
 
 export type DbOwnerUpdateScalars = z.infer<typeof DbOwnerUpdateScalarsSchema>
+
+/** Full profile update input for the service layer (scalars + complex fields). */
+export type ProfileUpdateInput = DbOwnerUpdateScalars & {
+  tags?: string[]
+  introSocialLocalized?: Record<string, string>
+  introDatingLocalized?: Record<string, string>
+}

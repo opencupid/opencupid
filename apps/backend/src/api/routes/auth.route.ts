@@ -19,6 +19,7 @@ import {
   type LoginUser,
   type SessionData,
   type SessionProfile,
+  SessionProfileSchema,
 } from '@zod/user/user.dto'
 import type {
   VerifyTokenResponse,
@@ -189,12 +190,9 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       const newJwt = fastify.jwt.sign(newPayload)
 
       const userWithProfile = user as UserWithProfile
-      const sessionProfile = userWithProfile.profile ?? {
-        id: tokenData.profileId,
-        isDatingActive: false,
-        isSocialActive: false,
-        isActive: false,
-      }
+      const sessionProfile = SessionProfileSchema.parse(
+        userWithProfile.profile ?? { id: tokenData.profileId }
+      )
       await fastify.createSession(
         newJwt,
         buildSessionData(user, tokenData.profileId, sessionProfile)

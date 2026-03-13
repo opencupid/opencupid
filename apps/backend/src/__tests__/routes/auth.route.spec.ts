@@ -360,9 +360,10 @@ describe('POST /refresh', () => {
 
   it('returns new tokens on valid refresh', async () => {
     const handler = fastify.routes['POST /refresh']
+    const profileId = 'cmc7t45x400086w39gj30pzn3'
     mockRefreshTokenService.validate.mockResolvedValue({
       userId: 'user1',
-      profileId: 'p1',
+      profileId,
       tokenVersion: 0,
     })
     mockRefreshTokenService.create.mockResolvedValue('new-refresh-token')
@@ -371,11 +372,11 @@ describe('POST /refresh', () => {
       tokenVersion: 0,
       roles: [],
       language: 'en',
-      profile: { id: 'p1', isDatingActive: false, isSocialActive: false, isActive: false },
+      profile: { id: profileId, isDatingActive: false, isSocialActive: false, isActive: false },
     })
     fastify.jwt = {
       sign: vi.fn().mockReturnValue('new-jwt'),
-      verify: vi.fn().mockReturnValue({ userId: 'user1', profileId: 'p1', tokenVersion: 0 }),
+      verify: vi.fn().mockReturnValue({ userId: 'user1', profileId, tokenVersion: 0 }),
     }
     const req = {
       body: { refreshToken: '550e8400-e29b-41d4-a716-446655440000' },
