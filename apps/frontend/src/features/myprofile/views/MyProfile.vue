@@ -151,6 +151,7 @@ const hint = computed(() => history?.state?.hint || null)
       content-class="overflow-clipped"
       :keyboard="false"
       @hidden="showDatingIntro = true"
+      lazy
     >
       <BOverlay
         :show="showDatingIntro"
