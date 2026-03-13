@@ -271,7 +271,10 @@
       "appear_message": "Ezt az infókat bármikor megváltoztathatod a profile oldaladon.",
       "next": "Következő",
       "finish": "Befejezés",
-      "cancel": "Inkább mégse"
+      "cancel": "Inkább mégse",
+      "dating_modal_title": "Társkereső profil létrehozása",
+      "dating_intro_text": "Most először használod a Társkereső módot. Kérjük, tölts ki néhány dolgot magadról, hogy mások megismerhessenek. Ezeket az információkat bármikor szerkesztheted a profilbeállításaidban.",
+      "continue": "Tovább"
     },
     "next_button": "Következő",
     "back_button": "Vissza",

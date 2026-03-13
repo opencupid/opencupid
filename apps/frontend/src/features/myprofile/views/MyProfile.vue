@@ -144,7 +144,7 @@ const hint = computed(() => history?.state?.hint || null)
       :focus="false"
       :no-close-on-backdrop="true"
       :no-header="false"
-      title="Create dating profile"
+      :title="$t('onboarding.wizard.dating_modal_title')"
       variant="light-subtle"
       :no-footer="true"
       body-class="d-flex flex-column align-items-center justify-content-center overflow-auto hide-scrollbar p-2 p-md-5"
@@ -162,15 +162,13 @@ const hint = computed(() => history?.state?.hint || null)
       >
         <template #overlay>
           <div
-            class="col-3 mx-auto d-flex align-items-center justify-content-center text-dating  my-md-2 animate__animated animate__fadeIn"
+            class="col-3 mx-auto d-flex align-items-center justify-content-center text-dating my-md-2 animate__animated animate__fadeIn"
           >
             <IconCupid class="svg-icon-100 opacity-50" />
           </div>
           <div class="text-center p-4">
             <p class="mb-3 lh-sm form-hint">
-              This is the first time you are using the Dating Mode, please fill out a couple of
-              things about yourself so that other users can get to know you. You can always edit
-              this information later in your profile settings.
+              {{ $t('onboarding.wizard.dating_intro_text') }}
             </p>
             <BButton
               variant="primary"
@@ -178,44 +176,44 @@ const hint = computed(() => history?.state?.hint || null)
               class="px-5"
               @click="showDatingIntro = false"
             >
-              Continue
+              {{ $t('onboarding.wizard.continue') }}
             </BButton>
           </div>
         </template>
       </BOverlay>
       <DatingWizard
-          v-model="formData"
-          v-model:datingPrefs="datingPrefs"
-          @finished="handleFinishDatingOnboarding"
-          @cancel="handleCancelEdit"
+        v-model="formData"
+        v-model:datingPrefs="datingPrefs"
+        @finished="handleFinishDatingOnboarding"
+        @cancel="handleCancelEdit"
+      >
+        <div
+          class="col-6 mx-auto d-flex align-items-center justify-content-center text-dating mb-2 mb-md-4 animate__animated animate__fadeIn"
         >
-          <div
-            class="col-6 mx-auto d-flex align-items-center justify-content-center text-dating mb-2 mb-md-4 animate__animated animate__fadeIn"
-          >
-            <IconCupid class="svg-icon-100 opacity-50" />
-          </div>
-          <!-- <legend>
+          <IconCupid class="svg-icon-100 opacity-50" />
+        </div>
+        <!-- <legend>
             {{ t('onboarding.dating_mode_step_title') }}
           </legend> -->
-          <div class="mb-3 d-flex flex-column align-items-center">
-            <BFormCheckbox
-              v-model="formData.isDatingActive"
-              switch
-              size="lg"
-            >
-              {{ $t('onboarding.dating_mode_switch') }}
-            </BFormCheckbox>
+        <div class="mb-3 d-flex flex-column align-items-center">
+          <BFormCheckbox
+            v-model="formData.isDatingActive"
+            switch
+            size="lg"
+          >
+            {{ $t('onboarding.dating_mode_switch') }}
+          </BFormCheckbox>
 
-            <p class="text-muted text-center">
-              <span v-if="formData.isDatingActive">
-                {{ $t('onboarding.dating_mode_step_hint_active') }}
-              </span>
-              <span v-else>
-                {{ $t('onboarding.dating_mode_step_hint_inactive') }}
-              </span>
-            </p>
-          </div>
-        </DatingWizard>
+          <p class="text-muted text-center">
+            <span v-if="formData.isDatingActive">
+              {{ $t('onboarding.dating_mode_step_hint_active') }}
+            </span>
+            <span v-else>
+              {{ $t('onboarding.dating_mode_step_hint_inactive') }}
+            </span>
+          </p>
+        </div>
+      </DatingWizard>
     </BModal>
     <BModal
       v-model="showDatingPrefsModal"

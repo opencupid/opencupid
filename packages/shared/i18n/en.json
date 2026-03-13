@@ -283,7 +283,10 @@
       "appear_message": "You will now appear to people who are looking for the same things as you. You can always change this info later.",
       "next": "Next",
       "finish": "Finish",
-      "cancel": "Nevermind"
+      "cancel": "Nevermind",
+      "dating_modal_title": "Create dating profile",
+      "dating_intro_text": "This is the first time you are using the Dating Mode, please fill out a couple of things about yourself so that other users can get to know you. You can always edit this information later in your profile settings.",
+      "continue": "Continue"
     },
     "next_button": "Next",
     "back_button": "Back",
