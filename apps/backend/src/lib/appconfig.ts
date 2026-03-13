@@ -27,7 +27,7 @@ export const configSchema = z.object({
   MEDIA_UPLOAD_DIR: z.string(),
   MEDIA_URL_BASE: z.string(),
   IMAGE_MAX_SIZE: z.coerce.number(),
-  IMAGE_URL_HMAC_WINDOW_SECONDS: z.coerce.number().default(30 * 60),
+  IMAGE_URL_HMAC_TTL_SECONDS: z.coerce.number().default(30 * 60),
   AUTH_IMG_HMAC_SECRET: z.string().min(10),
 
   SMS_API_KEY: z.string(),
