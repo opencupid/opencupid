@@ -301,7 +301,12 @@ export class ProfileService {
   async updateScopes(
     userId: string,
     scopes: UpdateProfileScopePayload
-  ): Promise<{ id: string; isDatingActive: boolean; isSocialActive: boolean; isActive: boolean } | null> {
+  ): Promise<{
+    id: string
+    isDatingActive: boolean
+    isSocialActive: boolean
+    isActive: boolean
+  } | null> {
     const data: Prisma.ProfileUpdateInput = {
       isDatingActive: scopes.isDatingActive,
       // isActive is exported into the session for authorization checks

@@ -49,11 +49,7 @@ const handleCardClick = async (profileId: string) => {
 }
 
 const handleTagSelect = async (tag: PopularTag) => {
-  const findProfileStore = useFindProfileStore()
-  if (findProfileStore.socialFilter) {
-    findProfileStore.socialFilter.tags = [{ id: tag.id, name: tag.name, slug: tag.slug }]
-    await findProfileStore.persistSocialFilter()
-  }
+  await profileStore.setMatchFilterTags([tag])
   router.push({ name: 'BrowseProfiles' })
 }
 

@@ -38,9 +38,8 @@ const ProfileFormExtrasSchema = z.object({
 })
 
 // Edit form: social + dating profile + extras
-export const EditProfileFormSchema = SocialFormSchema.merge(DatingProfileFormSchema).merge(
-  ProfileFormExtrasSchema
-)
+export const EditProfileFormSchema =
+  SocialFormSchema.merge(DatingProfileFormSchema).merge(ProfileFormExtrasSchema)
 export type EditProfileForm = z.infer<typeof EditProfileFormSchema>
 
 // Create form: edit form + dating match preferences

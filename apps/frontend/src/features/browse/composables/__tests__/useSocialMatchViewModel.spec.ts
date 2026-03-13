@@ -17,11 +17,8 @@ const mockFindProfileStore = {
   isLoading: false,
   profileList: [],
   matchedProfileIds: new Set<string>(),
-  socialFilter: null,
-  fetchSocialFilter: vi.fn(),
   fetchDatingMatchIds: vi.fn(),
   findProfilesForMapBounds: vi.fn(),
-  persistSocialFilter: vi.fn(),
   hide: vi.fn(),
   teardown: vi.fn(),
 }
@@ -38,6 +35,9 @@ const mockOwnerStore = {
     tags: [],
   },
   isLoading: false,
+  matchFilter: null,
+  fetchMatchFilter: vi.fn(),
+  persistMatchFilter: vi.fn(),
 }
 vi.mock('@/features/myprofile/stores/ownerProfileStore', () => ({
   useOwnerProfileStore: () => mockOwnerStore,
@@ -63,7 +63,7 @@ describe('useSocialMatchViewModel', () => {
     const vm = useSocialMatchViewModel()
     await vm.initialize()
 
-    expect(mockFindProfileStore.fetchSocialFilter).toHaveBeenCalled()
+    expect(mockOwnerStore.fetchMatchFilter).toHaveBeenCalled()
     expect(mockFindProfileStore.fetchDatingMatchIds).toHaveBeenCalled()
   })
 

@@ -31,7 +31,7 @@ export function useSocialMatchViewModel() {
       return
     }
 
-    await findProfileStore.fetchSocialFilter()
+    await ownerStore.fetchMatchFilter()
     await fetchResults()
     isInitialized.value = true
   }
@@ -69,7 +69,7 @@ export function useSocialMatchViewModel() {
   const updatePrefs = async () => {
     isLoading.value = true
     try {
-      const res = await findProfileStore.persistSocialFilter()
+      const res = await ownerStore.persistMatchFilter()
       if (!res.success) {
         storeError.value = res
         return
@@ -88,7 +88,7 @@ export function useSocialMatchViewModel() {
     storeError,
     initialize,
     hideProfile,
-    socialFilter: toRef(findProfileStore, 'socialFilter'),
+    matchFilter: toRef(ownerStore, 'matchFilter'),
     updatePrefs,
     onBoundsChanged,
     openProfile,

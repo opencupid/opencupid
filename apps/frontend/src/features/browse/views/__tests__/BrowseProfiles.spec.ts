@@ -48,7 +48,7 @@ const vmState = {
   isLoading: ref(false),
   profileList: ref([{ id: '1' }]),
   storeError: ref(null),
-  socialFilter: ref<{
+  matchFilter: ref<{
     location: { country: string; cityName: string; lat: number | null; lon: number | null }
     tags: { id: string; name: string; slug: string }[]
   } | null>(null),
@@ -74,7 +74,7 @@ describe('BrowseProfiles view', () => {
   beforeEach(() => {
     vmState.haveResults.value = true
     vmState.isInitialized.value = true
-    vmState.socialFilter.value = null
+    vmState.matchFilter.value = null
     toastInfo.mockClear()
   })
 
@@ -110,7 +110,7 @@ describe('BrowseProfiles view', () => {
   })
 
   it('renders inline LocationSelector and TagSelector when filter is set', () => {
-    vmState.socialFilter.value = {
+    vmState.matchFilter.value = {
       location: { country: 'US', cityName: 'New York', lat: null, lon: null },
       tags: [],
     }
@@ -131,8 +131,8 @@ describe('BrowseProfiles view', () => {
     expect(wrapper.find('.public-profile').exists()).toBe(false)
   })
 
-  it('renders map when socialFilter has location coords', () => {
-    vmState.socialFilter.value = {
+  it('renders map when matchFilter has location coords', () => {
+    vmState.matchFilter.value = {
       location: { country: 'HU', cityName: 'Budapest', lat: 47.5, lon: 19.0 },
       tags: [],
     }
@@ -140,12 +140,12 @@ describe('BrowseProfiles view', () => {
     expect(wrapper.find('.map-view').exists()).toBe(true)
   })
 
-  it('renders map when socialFilter has null coords but profile has location', () => {
+  it('renders map when matchFilter has null coords but profile has location', () => {
     vmState.viewerProfile.value = {
       isSocialActive: true,
       location: { country: 'HU', cityName: 'Budapest', lat: 47.5, lon: 19.0 },
     }
-    vmState.socialFilter.value = {
+    vmState.matchFilter.value = {
       location: { country: '', cityName: '', lat: null, lon: null },
       tags: [],
     }
@@ -158,7 +158,7 @@ describe('BrowseProfiles view', () => {
       isSocialActive: true,
       location: { country: '', cityName: '', lat: null, lon: null },
     }
-    vmState.socialFilter.value = {
+    vmState.matchFilter.value = {
       location: { country: '', cityName: '', lat: null, lon: null },
       tags: [],
     }

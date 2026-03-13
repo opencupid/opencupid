@@ -24,14 +24,21 @@ import {
   mapProfileWithContext,
 } from '@/api/mappers/profile.mappers'
 import type {
+  GetDatingPreferencesResponse,
   GetProfileOptInResponse,
   GetMyProfileResponse,
   GetPublicProfileResponse,
+  UpdateDatingPreferencesResponse,
   UpdateProfileOptInResponse,
   UpdateProfileResponse,
   UpdateProfileScopeResponse,
 } from '@zod/apiResponse.dto'
 import { GetProfileSummariesResponse } from '@zod/apiResponse.dto'
+import {
+  DatingPreferencesDTOSchema,
+  UpdateDatingPreferencesPayloadSchema,
+} from '@zod/match/filters.dto'
+import { mapProfileToDatingPreferencesDTO } from '@/api/mappers/profileMatch.mappers'
 
 import { ProfileService } from 'src/services/profile.service'
 import { ProfileMatchService } from '@/services/profileMatch.service'
@@ -114,6 +121,48 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
         return sendError(reply, 404, 'Profile not found')
       }
       return sendError(reply, 500, 'Failed to update opt-in settings')
+    }
+  })
+
+  /**
+   * Get dating preferences for the current user.
+   */
+  fastify.get('/me/dating-prefs', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    try {
+      let fetched = await profileService.getProfileByUserId(req.user.userId)
+      if (!fetched) return sendError(reply, 404, 'Profile not found')
+
+      // Compute and persist age defaults when null and birthday exists
+      if (fetched.prefAgeMin === null && fetched.prefAgeMax === null && fetched.birthday) {
+        const defaults = profileMatchService.createDatingPrefsDefaults(fetched)
+        fetched = await profileService.updateProfileScalars(req.user.userId, defaults)
+      }
+
+      const prefs = mapProfileToDatingPreferencesDTO(fetched)
+      const response: GetDatingPreferencesResponse = { success: true, prefs }
+      return reply.code(200).send(response)
+    } catch (err) {
+      fastify.log.error(err)
+      return sendError(reply, 500, 'Failed to load dating preferences')
+    }
+  })
+
+  /**
+   * Update dating preferences for the current user.
+   */
+  fastify.patch('/me/dating-prefs', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const data = await validateBody(UpdateDatingPreferencesPayloadSchema, req, reply)
+    if (!data) return
+
+    try {
+      const updated = await profileService.updateProfileScalars(req.user.userId, data)
+      if (!updated) return sendError(reply, 404, 'Profile not found')
+      const prefs = DatingPreferencesDTOSchema.parse(updated)
+      const response: UpdateDatingPreferencesResponse = { success: true, prefs }
+      return reply.code(200).send(response)
+    } catch (err) {
+      fastify.log.error(err)
+      return sendError(reply, 500, 'Failed to update dating preferences')
     }
   })
 

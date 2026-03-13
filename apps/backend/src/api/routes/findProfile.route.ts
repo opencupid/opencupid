@@ -6,23 +6,13 @@ import { sendError, sendForbiddenError } from '../helpers'
 import { ProfileMatchService, type OrderBy } from '@/services/profileMatch.service'
 import {
   GetProfilesResponse,
-  type GetDatingPreferencesResponse,
   type GetMatchIdsResponse,
   type GetSocialMatchFilterResponse,
-  type UpdateDatingPreferencesResponse,
 } from '@zod/apiResponse.dto'
-import {
-  DatingPreferencesDTOSchema,
-  UpdateDatingPreferencesPayloadSchema,
-  UpdateSocialMatchFilterPayloadSchema,
-} from '../../../../../packages/shared/zod/match/filters.dto'
-import { ProfileService } from '../../services/profile.service'
+import { UpdateSocialMatchFilterPayloadSchema } from '@shared/zod/match/filters.dto'
 import { validateBody } from '../../utils/zodValidate'
 import { mapProfileToPublic } from '../mappers/profile.mappers'
-import {
-  mapProfileToDatingPreferencesDTO,
-  mapSocialMatchFilterToDTO,
-} from '../mappers/profileMatch.mappers'
+import { mapSocialMatchFilterToDTO } from '../mappers/profileMatch.mappers'
 
 // Pagination query schema for infinite scrolling
 const PaginationQuerySchema = z.object({
@@ -39,7 +29,6 @@ const PaginationQuerySchema = z.object({
 const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
   // instantiate services
   const profileMatchService = ProfileMatchService.getInstance()
-  const profileService = ProfileService.getInstance()
 
   fastify.get('/social', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const { skip, take } = PaginationQuerySchema.parse(req.query)
@@ -164,42 +153,6 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
     } catch (err) {
       req.log.error(err)
       return sendError(reply, 500, 'Failed to fetch profiles')
-    }
-  })
-
-  fastify.get('/dating/filter', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-    try {
-      let fetched = await profileService.getProfileByUserId(req.user.userId)
-      if (!fetched) return sendError(reply, 404, 'Profile not found')
-
-      // Compute and persist age defaults when null and birthday exists
-      if (fetched.prefAgeMin === null && fetched.prefAgeMax === null && fetched.birthday) {
-        const defaults = profileMatchService.createDatingPrefsDefaults(fetched)
-        fetched = await profileService.updateProfileScalars(req.user.userId, defaults)
-      }
-
-      const datingPrefs = mapProfileToDatingPreferencesDTO(fetched)
-      const response: GetDatingPreferencesResponse = { success: true, prefs: datingPrefs }
-      return reply.code(200).send(response)
-    } catch (err) {
-      fastify.log.error(err)
-      return sendError(reply, 500, 'Failed to load profile')
-    }
-  })
-
-  fastify.patch('/dating/filter', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-    const data = await validateBody(UpdateDatingPreferencesPayloadSchema, req, reply)
-    if (!data) return
-
-    try {
-      const updated = await profileService.updateProfileScalars(req.user.userId, data)
-      if (!updated) return sendError(reply, 404, 'Profile not found')
-      const prefs = DatingPreferencesDTOSchema.parse(updated)
-      const response: UpdateDatingPreferencesResponse = { success: true, prefs }
-      return reply.code(200).send(response)
-    } catch (err) {
-      fastify.log.error(err)
-      return sendError(reply, 500, 'Failed to update dating preferences')
     }
   })
 
