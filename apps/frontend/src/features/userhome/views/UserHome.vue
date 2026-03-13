@@ -93,7 +93,6 @@ provide('viewerProfile', toRef(viewerProfile))
               cols-lg="3"
               cols-xl="3"
               gutter-y="4"
-              gutter-xl-y="8"
             />
             <div class="d-flex justify-content-center mt-3">
               <BButton
