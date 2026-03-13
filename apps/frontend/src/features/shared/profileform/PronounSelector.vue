@@ -2,11 +2,13 @@
 import type { PronounsType } from '@zod/generated'
 import { type MultiselectOption } from '@/types/multiselect'
 
+import { useId } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useEnumOptions } from '../composables/useEnumOptions'
 
 // i18n
 const { t } = useI18n()
+const uid = useId()
 
 const model = defineModel<PronounsType | null>({
   default: () => null,
@@ -27,9 +29,9 @@ const pronounsChoices = pronounsOptions() as MultiselectOption[]
         class="d-flex justify-content-between align-items-center clickable"
       >
         <BFormRadio
-          name="pronouns"
+          :name="`pronouns-${uid}`"
           v-model="model"
-          :id="`list-pronouns-${p.value}`"
+          :id="`list-pronouns-${uid}-${p.value}`"
           :value="p.value"
           >{{ p.label }}</BFormRadio
         >

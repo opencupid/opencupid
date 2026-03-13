@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { type EditFieldProfileFormWithImages } from '@zod/profile/profile.form'
+import { type DatingPreferencesDTO } from '@zod/match/filters.dto'
 
 import { useWizardSteps } from '../composables/useWizardSteps'
 import { useStepper } from '@vueuse/core'
@@ -28,7 +29,11 @@ const formData = defineModel<EditFieldProfileFormWithImages>({
   }),
 })
 
-const { datingWizardSteps } = useWizardSteps(formData.value)
+const datingPrefs = defineModel<DatingPreferencesDTO | null>('datingPrefs', {
+  default: null,
+})
+
+const { datingWizardSteps } = useWizardSteps(formData.value, datingPrefs.value)
 const { current, isFirst, isLast, goToNext, goToPrevious, isCurrent } =
   useStepper(datingWizardSteps)
 </script>
@@ -46,6 +51,7 @@ const { current, isFirst, isLast, goToNext, goToPrevious, isCurrent } =
   <div class="flex-grow-1 d-flex flex-column justify-content-center w-100">
     <DatingSteps
       v-model="formData"
+      v-model:datingPrefs="datingPrefs"
       :isCurrent
     />
 

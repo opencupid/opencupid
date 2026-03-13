@@ -1,23 +1,22 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { computed } from 'vue'
 
 import { type EditProfileForm } from '@zod/profile/profile.form'
-import { type PublicTag, type PopularTag } from '@zod/tag/tag.dto'
+import { type DatingPreferencesDTO } from '@zod/match/filters.dto'
 
 import LanguageSelector from '@/features/shared/profileform/LanguageSelector.vue'
-import TagSelector from '@/features/shared/profileform/TagSelector.vue'
-import TagCloud from '@/features/shared/components/TagCloud.vue'
+import TagExplorer from '@/features/shared/components/TagExplorer.vue'
 import IntrotextEditor from '@/features/shared/profileform/IntrotextEditor.vue'
 import ImageEditor from '@/features/images/components/ImageEditor.vue'
 import DatingSteps from '../components/DatingSteps.vue'
 import LocationSelectorComponent from '@/features/shared/profileform/LocationSelector.vue'
-import GoalsSelector from './GoalsSelector.vue'
 import BackButton from '../components/BackButton.vue'
 import PublicNameInput from '@/features/shared/profileform/PublicNameInput.vue'
+import LogoutButton from '@/features/auth/components/LogoutButton.vue'
+
 import IconSun from '@/assets/icons/interface/sun.svg'
 import IconLogout from '@/assets/icons/interface/logout.svg'
-import LogoutButton from '@/features/auth/components/LogoutButton.vue'
+import IconCupid from '@/assets/images/app/cupid.svg'
 
 import { useStepper } from '@vueuse/core'
 
@@ -30,11 +29,13 @@ const formData = defineModel<EditProfileForm>({
   default: () => ({}),
 })
 
+const datingPrefs = defineModel<DatingPreferencesDTO>('datingPrefs')
+
 const emit = defineEmits<{
   (e: 'finished'): void
 }>()
 
-const { onboardingWizardSteps } = useWizardSteps(formData.value)
+const { onboardingWizardSteps } = useWizardSteps(formData.value, datingPrefs.value)
 
 const { current, isLast, isFirst, goToNext, goToPrevious, goTo, isCurrent } =
   useStepper(onboardingWizardSteps)
@@ -69,16 +70,7 @@ const handleLocationSelected = async (location: { country: string }) => {
   })
 }
 
-const handleTagCloudSelect = (tag: PopularTag) => {
-  const exists = formData.value.tags.some((existing) => existing.id === tag.id)
-  if (!exists) {
-    formData.value.tags.push({ id: tag.id, name: tag.name, slug: tag.slug })
-  }
-}
-
 const siteName = __APP_CONFIG__.SITE_NAME
-
-const popularTags = computed(() => tagStore.popularTags ?? ([] as PublicTag[]))
 </script>
 
 <template>
@@ -147,15 +139,6 @@ const popularTags = computed(() => tagStore.popularTags ?? ([] as PublicTag[]))
           </p>
         </fieldset>
 
-        <fieldset v-else-if="isCurrent('looking_for')">
-          <!-- goals selector title -->
-          <legend>
-            <!-- The connections I'm looking for... -->
-            {{ t('onboarding.connections_title') }}
-          </legend>
-          <GoalsSelector v-model="formData" />
-        </fieldset>
-
         <fieldset v-else-if="isCurrent('interests')">
           <legend>
             <!-- I'm into... -->
@@ -165,21 +148,9 @@ const popularTags = computed(() => tagStore.popularTags ?? ([] as PublicTag[]))
             <!-- Start typing to search for tags. You can add new tags if you don't find what you're looking for. -->
             <small>{{ t('onboarding.interests_hint') }}</small>
           </div>
-          <TagSelector
+          <TagExplorer
             v-model="formData.tags"
-            :taggable="true"
-            :close-on-select="true"
-            open-direction="top"
-            :required="true"
-            :initialOptions="popularTags"
-          />
-          <h6 class="mt-3 mt-lg-3 mb-0 text-center text-muted">{{ t('onboarding.interests_popular_heading') }}</h6>
-          <TagCloud
-            v-if="formData.location?.country"
-            :key="formData.location.country"
             :location="formData.location"
-            class="mb-3"
-            @tag:select="handleTagCloudSelect"
           />
         </fieldset>
 
@@ -226,8 +197,38 @@ const popularTags = computed(() => tagStore.popularTags ?? ([] as PublicTag[]))
           <ImageEditor />
         </fieldset>
 
+        <fieldset v-else-if="isCurrent('dating_mode')">
+          <div
+            class="col-6 mx-auto d-flex align-items-center justify-content-center text-dating mb-2 mb-md-4 animate__animated animate__fadeIn"
+          >
+            <IconCupid class="svg-icon-100 opacity-50" />
+          </div>
+          <!-- <legend>
+            {{ t('onboarding.dating_mode_step_title') }}
+          </legend> -->
+          <div class="mb-3 d-flex flex-column align-items-center">
+            <BFormCheckbox
+              v-model="formData.isDatingActive"
+              switch
+              size="lg"
+            >
+              {{ t('onboarding.dating_mode_switch') }}
+            </BFormCheckbox>
+
+            <p class="text-muted text-center">
+              <span v-if="formData.isDatingActive">
+                {{ t('onboarding.dating_mode_step_hint_active') }}
+              </span>
+              <span v-else>
+                {{ t('onboarding.dating_mode_step_hint_inactive') }}
+              </span>
+            </p>
+          </div>
+        </fieldset>
+
         <DatingSteps
           v-model="formData"
+          v-model:datingPrefs="datingPrefs"
           :isCurrent
         ></DatingSteps>
 
@@ -279,11 +280,8 @@ p.wizard-step-subtitle {
   margin-bottom: 0.5rem;
   text-align: center;
 }
-// .indicators {
-//   bottom: 0;
-//   margin-bottom: 1rem;
-//   font-size: 0.5rem;
-//   position: absolute;
-//   opacity: 0.2;
-// }
+:deep(.interests-multiselect .multiselect__tags) {
+  min-height: 5rem;
+  align-items: start;
+}
 </style>

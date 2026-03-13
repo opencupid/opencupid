@@ -28,18 +28,8 @@ const birthYear = computed(() =>
 </script>
 
 <template>
-  <div class="d-flex flex-column w-100 gap-4 py-3">
-    <h5 class="text-center mb-0">{{ t('profiles.forms.my_dating_profile') }}</h5>
-
-    <div
-      v-if="birthYear"
-      class="text-center"
-    >
-      <p>{{ t('profiles.forms.age_title_display', { birthYear }) }}</p>
-    </div>
-
+  <div class="d-flex flex-column w-100 gap-4 py-md-3">
     <fieldset>
-      <legend class="fs-6">{{ t('onboarding.gender_subtitle') }}</legend>
       <GenderPronounSelector v-model="genderPronounsModel" />
     </fieldset>
 

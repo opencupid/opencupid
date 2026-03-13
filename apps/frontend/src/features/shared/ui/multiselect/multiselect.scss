@@ -265,7 +265,8 @@ fieldset[disabled] .multiselect {
   background: var(--bs-body-bg);
   width: 100%;
   max-height: var(--multiselect-dropdown-height);
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   border: 1px solid var(--bs-border-color);
   border-top: none;
   border-bottom-left-radius: 5px;
@@ -311,6 +312,8 @@ fieldset[disabled] .multiselect {
   position: relative;
   cursor: pointer;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .multiselect__option::after {

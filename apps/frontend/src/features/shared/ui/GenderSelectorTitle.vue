@@ -3,7 +3,9 @@ import GenderSymbol from '@/features/shared/profiledisplay/GenderSymbol.vue'
 </script>
 
 <template>
-  <div class="gender-icons-title d-flex w-100 justify-content-center align-items-center">
+  <div
+  :title="$t('onboarding.gender_subtitle')"
+  class="gender-icons-title d-flex w-100 justify-content-center align-items-center">
     <GenderSymbol gender="female" />
     <GenderSymbol gender="male" />
     <GenderSymbol gender="transfeminine" />

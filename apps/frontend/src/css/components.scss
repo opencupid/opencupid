@@ -1,7 +1,17 @@
 @import '@bootstrap/scss/functions';
 @import '@bootstrap/scss/variables';
 @import '@bootstrap/scss/mixins';
+@import '@bootstrap/scss/buttons';
 @import '@/css/theme';
+
+main {
+  transition: background-color 500ms ease;
+}
+// Hint text — smaller than .small
+.form-hint {
+  font-size: 75%;
+  white-space: normal;
+}
 
 // Form validation styles
 // fix dancing fields
@@ -9,12 +19,12 @@
   display: block !important;
 }
 
-.form-control ~ .invalid-feedback,
-.is-valid ~ .invalid-feedback {
+.form-control~.invalid-feedback,
+.is-valid~.invalid-feedback {
   visibility: hidden;
 }
 
-.is-invalid ~ .invalid-feedback {
+.is-invalid~.invalid-feedback {
   visibility: visible;
 }
 
@@ -91,6 +101,18 @@
   width: 2rem;
   height: 2rem;
   padding: 0.25rem;
+}
+
+.btn-inline-edit {
+  @extend .btn-rounded;
+  @extend .btn;
+  @extend .btn-primary;
+  color: var(--bs-primary);
+  background-color: transparentize($color: $primary, $amount: 0.9);
+  border-color: transparent;
+  width: 2rem;
+  height: 2rem;
+  padding: 0.5rem;
 }
 
 .btn-icon-lg {

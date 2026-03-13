@@ -17,7 +17,7 @@ const editState = defineModel<boolean>({
     <BButton
       v-if="editState"
       size="lg"
-      class="btn-icon-lg"
+      class="btn-icon-lg btn-shadow"
       key="edit"
       @click="editState = false"
       variant="success"
@@ -28,7 +28,7 @@ const editState = defineModel<boolean>({
     <BButton
       v-else
       size="lg"
-      class="btn-icon-lg"
+      class="btn-icon-lg btn-shadow"
       key="save"
       @click="editState = true"
       variant="primary"

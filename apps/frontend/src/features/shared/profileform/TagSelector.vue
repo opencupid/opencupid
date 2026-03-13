@@ -16,11 +16,24 @@ const model = defineModel<PublicTag[]>({
 const props = withDefaults(
   defineProps<{
     initialOptions?: PublicTag[]
+    hint?: PublicTag | null
   }>(),
   {
     initialOptions: () => [],
+    hint: undefined,
   }
 )
+
+const isHintAlreadySelected = computed(
+  () => !!props.hint && model.value.some((t) => t.id === props.hint!.id)
+)
+
+const hintTagId = computed(() => (isHintAlreadySelected.value ? undefined : props.hint?.id))
+
+const displayTags = computed(() => {
+  if (!props.hint || isHintAlreadySelected.value) return model.value
+  return [...model.value, props.hint]
+})
 
 const attrs = useAttrs()
 
@@ -86,7 +99,8 @@ const selectHeight = computed(() => {
 <template>
   <div class="interests-multiselect">
     <Multiselect
-      v-model="model"
+      :model-value="displayTags"
+      @update:model-value="model = $event.filter((t: PublicTag) => t.id !== hintTagId)"
       v-bind="attrs"
       :options="tags"
       :multiple="true"
@@ -105,6 +119,22 @@ const selectHeight = computed(() => {
       :placeholder="t('profiles.forms.tag_search_placeholder')"
       @search-change="asyncFind"
     >
+      <template #tag="{ option, remove }">
+        <span
+          class="multiselect__tag"
+          :class="{ 'multiselect__tag--hint': option.id === hintTagId }"
+          @mousedown.prevent
+        >
+          <span>{{ option.name }}</span>
+          <i
+            v-if="option.id !== hintTagId"
+            tabindex="1"
+            @keypress.enter.prevent="remove(option)"
+            @mousedown.prevent="remove(option)"
+            class="multiselect__tag-icon"
+          ></i>
+        </span>
+      </template>
       <template #noResult>{{ t('profiles.forms.tag_no_results') }}</template>
     </Multiselect>
   </div>
@@ -115,6 +145,12 @@ const selectHeight = computed(() => {
   .multiselect__tag {
     background-color: var(--bs-warning);
     color: var(--bs-body-bg);
+
+    &--hint {
+      background-color: #efefef;
+      color: var(--bs-secondary);
+      opacity: 0.7;
+    }
 
     i:after {
       color: var(--bs-text-secondary);

@@ -4,6 +4,7 @@ vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 vi.stubGlobal('__APP_CONFIG__', { SITE_NAME: 'TestSite' })
 vi.mock('@/assets/icons/interface/sun.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/logout.svg', () => ({ default: { template: '<div />' } }))
+vi.mock('@/assets/images/app/curved-arrow.svg', () => ({ default: { template: '<div />' } }))
 
 // Mock d3-cloud — jsdom has no canvas, so we simulate the layout synchronously
 let endCallback: ((words: any[]) => void) | null = null
@@ -65,7 +66,6 @@ const stubComponents = {
   ImageEditor: { template: '<div />' },
   DatingSteps: { template: '<div />' },
   LocationSelectorComponent: { template: '<div />' },
-  GoalsSelector: { template: '<div />' },
   BackButton: { template: '<div />' },
   PublicNameInput: { template: '<div />' },
   LogoutButton: { template: '<div />' },
@@ -120,9 +120,8 @@ describe('OnboardWizard TagCloud integration', () => {
 
     const { wrapper } = mountWizard({ location: {} })
 
-    // Navigate to the interests step: publicname → location → looking_for → interests
-    // Click next 3 times
-    for (let i = 0; i < 3; i++) {
+    // Navigate to the interests step: publicname → location → interests
+    for (let i = 0; i < 2; i++) {
       await wrapper.find('button').trigger('click')
       await flushPromises()
     }
@@ -139,7 +138,7 @@ describe('OnboardWizard TagCloud integration', () => {
 
     const { wrapper } = mountWizard({ location: { country: 'DE' } })
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 2; i++) {
       await wrapper.find('button').trigger('click')
       await flushPromises()
     }
@@ -158,7 +157,7 @@ describe('OnboardWizard TagCloud integration', () => {
 
     const { wrapper, formData } = mountWizard({ location: { country: 'DE' } })
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 2; i++) {
       await wrapper.find('button').trigger('click')
       await flushPromises()
     }
@@ -180,7 +179,7 @@ describe('OnboardWizard TagCloud integration', () => {
 
     const { wrapper, formData } = mountWizard({ location: { country: 'DE' } })
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 2; i++) {
       await wrapper.find('button').trigger('click')
       await flushPromises()
     }

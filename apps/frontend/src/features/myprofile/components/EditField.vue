@@ -58,7 +58,9 @@ const fieldProxy = getModelProxy(props.fieldName)
       class="edit-button me-2"
     >
       <slot>
-        <IconPencil2 class="svg-icon" />
+        <button class="btn btn-inline-edit">
+          <IconPencil2 class="svg-icon" />
+        </button>
       </slot>
     </a>
     <Teleport
@@ -78,35 +80,3 @@ const fieldProxy = getModelProxy(props.fieldName)
   </span>
 </template>
 
-<style scoped lang="scss">
-// .editable-field {
-//   position: relative;
-//   // display: flex;
-//   // justify-content: end;
-//   // display: inline-flex;
-// }
-
-// :deep(.editable-placeholder) {
-//   border: 2px dashed var(--bs-secondary);
-//   border-radius: 5px;
-//   height: 4rem;
-//   opacity: 50%;
-//   display: flex;
-//   align-items: center;
-//   justify-content: center;
-//   width: 100%;
-// }
-
-// :deep(.editable-placeholder + .edit-button) {
-//   transform: translate(-12rem, 0%);
-//   background-color: red;
-//   position: relative;
-//   left:100%;
-
-//   bottom: 2rem;
-//   right:1rem;
-//   // z-index: 5;
-//   // right: 1rem;
-//   // bottom:1.5rem;
-// }
-</style>

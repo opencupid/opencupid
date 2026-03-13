@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import useEditFields from '@/features/shared/composables/useEditFields'
 import { type EditProfileForm } from '@zod/profile/profile.form'
+import { type DatingPreferencesDTO } from '@zod/match/filters.dto'
 import AgeSelector from '@/features/shared/profileform/AgeSelector.vue'
 import GenderPronounSelector from '@/features/shared/profileform/GenderPronounSelector.vue'
 import RelationstatusSelector from '@/features/shared/profileform/RelationstatusSelector.vue'
 import IntrotextEditor from '@/features/shared/profileform/IntrotextEditor.vue'
 import HaskidsSelector from '@/features/shared/profileform/HaskidsSelector.vue'
-import GenderSelectorTitle from '@/features/shared/ui/GenderSelectorTitle.vue'
+import DatingPreferencesForm from '@/features/browse/components/DatingPreferencesForm.vue'
 
 import { useI18n } from 'vue-i18n'
 
@@ -21,21 +22,18 @@ const formData = defineModel<EditProfileForm>({
   }),
 })
 
+const datingPrefs = defineModel<DatingPreferencesDTO | null>('datingPrefs', {
+  default: null,
+})
+
 const { t } = useI18n()
 
 const props = defineProps<{
   isCurrent: (step: any) => boolean
 }>()
 
-const {
-  publicNameModel,
-  birthdayModel,
-  relationshipModel,
-  hasKidsModel,
-  introSocialModel,
-  introDatingModel,
-  genderPronounsModel,
-} = useEditFields(formData.value)
+const { birthdayModel, relationshipModel, hasKidsModel, introDatingModel, genderPronounsModel } =
+  useEditFields(formData.value)
 </script>
 
 <template>
@@ -77,5 +75,13 @@ const {
       <!-- This is optional, you can fill it out later. -->
       {{ t('onboarding.dating_intro_hint') }}
     </div>
+  </fieldset>
+
+  <fieldset v-else-if="isCurrent('preferences')">
+    <legend>{{ t('onboarding.dating_preferences_title') }}</legend>
+    <DatingPreferencesForm
+      v-if="datingPrefs"
+      v-model="datingPrefs"
+    />
   </fieldset>
 </template>

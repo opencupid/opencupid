@@ -7,7 +7,7 @@ import { useI18n } from 'vue-i18n'
 import { useEnumOptions } from '../composables/useEnumOptions'
 import PronounSelector from './PronounSelector.vue'
 import GenderSelector from './GenderSelector.vue'
-import GenderSelectorTitle from '@/features/shared/ui/GenderSelectorTitle.vue'
+import ExpandCollapseButton from '@/features/shared/ui/ExpandCollapseButton.vue'
 
 // i18n
 const { t } = useI18n()
@@ -76,14 +76,7 @@ const showPronouns = computed(() => {
       :sortedOptions="sortedOptions"
       v-model="gender"
     />
-    <BButton
-      v-if="!showAll"
-      @click="() => (showAll = !showAll)"
-      variant="link-secondary"
-      class="m-0 p-0 w-100 text-center"
-    >
-      {{ t('profiles.forms.more_options') }}
-    </BButton>
+    <ExpandCollapseButton v-model="showAll" />
 
     <div
       v-if="showPronouns && !showAll"

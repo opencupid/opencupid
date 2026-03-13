@@ -20,7 +20,6 @@ const emit = defineEmits<{
 
 <template>
   <BNavItemDropdown
-    class="btn-link-secondary"
     toggle-class="btn-link-warning"
     :auto-close="'outside'"
   >
@@ -44,7 +43,11 @@ const emit = defineEmits<{
         <span>{{ $t('profiles.forms.dating_mode') }}</span>
       </span>
     </BDropdownItemButton>
-
+    <BDropdownText>
+      <div class="form-hint lh-sm">
+        {{ $t('profiles.forms.dating_mode_toggle_hint') }}
+      </div>
+    </BDropdownText>
     <BCollapse v-model="isDatingActive">
       <BDropdownDivider />
       <BDropdownItemButton @click="$emit('datingmode:profile')">
