@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
-import { computed, onMounted, provide, ref, toRef, useTemplateRef } from 'vue'
+import { computed, onMounted, provide, ref, toRef } from 'vue'
 import { useRouter } from 'vue-router'
 import { useBreakpoints } from '@vueuse/core'
 import { useBootstrap } from '@/lib/bootstrap'
