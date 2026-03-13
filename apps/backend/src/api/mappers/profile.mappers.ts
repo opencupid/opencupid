@@ -12,6 +12,7 @@ import {
   type DbProfileWithImages,
 } from '@zod/profile/profile.db'
 import { LocationSchema } from '@zod/dto/location.dto'
+import { DbLocationToLocationDTO } from './location.mappers'
 
 import { type OwnerProfileImage, type PublicProfileImage } from '@zod/profile/profileimage.dto'
 import { mapProfileTagsTranslated } from './tag.mappers'
@@ -83,12 +84,7 @@ export function mapProfileToPublic(
     ...scalars,
     profileImages: publicImages,
     tags: publicTags,
-    location: {
-      country: dbProfile.country || '',
-      cityName: dbProfile.cityName || '',
-      lat: dbProfile.lat ?? null,
-      lon: dbProfile.lon ?? null,
-    },
+    location: DbLocationToLocationDTO(dbProfile),
     introSocial: get('introSocial') || '',
     introDating: get('introDating') || '',
   } as PublicProfileWithContext

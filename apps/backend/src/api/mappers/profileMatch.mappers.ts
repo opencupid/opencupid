@@ -16,11 +16,11 @@ export function mapSocialMatchFilterToDTO(
   filter: SocialMatchFilterWithTags,
   locale: string
 ): SocialMatchFilterDTO {
-  const tags = (filter.tags ?? []).map(tag => DbTagToPublicTagTransform(tag, locale))
+  const tags = (filter.tags ?? []).map((tag) => DbTagToPublicTagTransform(tag, locale))
   const location = DbLocationToLocationDTO(filter)
   return {
     location,
     tags,
-    radius: filter.radius ?? 0,
+    radius: filter.radius ?? undefined,
   }
 }

@@ -1,6 +1,6 @@
 import { prisma } from '../lib/prisma'
 
-import { type DbProfileWithImages } from '@zod/profile/profile.db'
+import { type DbProfileWithImages, DatingEligibleProfileSchema } from '@zod/profile/profile.db'
 import type {
   SocialMatchFilterWithTags,
   UpdateSocialMatchFilterPayload,
@@ -9,7 +9,9 @@ import type {
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
 import { profileImageInclude, tagsInclude } from '@/db/includes/profileIncludes'
 import type { LocationDTO } from '@zod/dto/location.dto'
-import { Gender, HasKids, type Prisma } from '@prisma/client'
+import { Gender, HasKids, type Prisma, type Profile } from '@prisma/client'
+import { PREF_AGE_MIN, PREF_AGE_MAX } from '@zod/match/filters.form'
+import type { DatingPreferencesDTO } from '@zod/match/filters.dto'
 
 const tagInclude = {
   // city: true,
@@ -94,7 +96,7 @@ export class ProfileMatchService {
       cityName: data.location?.cityName || null,
       lat: data.location?.lat ?? null,
       lon: data.location?.lon ?? null,
-      radius: data.radius ?? 0,
+      radius: data.radius,
       tags: {
         set: tagIds, // ✅ safe for update
       },
@@ -102,11 +104,11 @@ export class ProfileMatchService {
 
     const create = {
       profileId,
-      country: data.location?.country ?? '',
+      country: data.location?.country || null,
       cityName: data.location?.cityName || null,
       lat: data.location?.lat ?? null,
       lon: data.location?.lon ?? null,
-      radius: data.radius ?? 0,
+      radius: data.radius,
       tags: {
         connect: tagIds, // ✅ required for create
       },
@@ -130,7 +132,7 @@ export class ProfileMatchService {
     return await tx.socialMatchFilter.create({
       data: {
         profileId,
-        country: location.country ?? '',
+        country: location.country || null,
         cityName: location.cityName || null,
         lat: location.lat ?? null,
         lon: location.lon ?? null,
@@ -140,26 +142,18 @@ export class ProfileMatchService {
       },
     })
   }
-  createDatingPrefsDefaults(profile: { birthday?: Date | null; gender?: Gender | null }) {
+  createDatingPrefsDefaults(
+    profile: Pick<Profile, 'birthday' | 'gender'>
+  ): Partial<DatingPreferencesDTO> {
     if (!profile.birthday) return {}
-    const currentYear = new Date().getFullYear()
-    const age = currentYear - new Date(profile.birthday).getFullYear()
+    const age = calculateAge(profile.birthday)
     const prefGender = profile.gender === Gender.male ? Gender.female : Gender.male
-    const prefs = {
-      prefAgeMin: age ? age - 5 : 18,
-      prefAgeMax: age ? age + 5 : 100,
+    return {
+      prefAgeMin: age ? age - 5 : PREF_AGE_MIN,
+      prefAgeMax: age ? age + 5 : PREF_AGE_MAX,
       prefGender: [prefGender],
       prefKids: [HasKids.no, HasKids.yes],
     }
-    // for now we'll just return the created preferences object.
-    return prefs
-    /*
-    // TODO this will eventually moved to its own table, then we'll upsert it from here
-    return await tx.profile.update({
-      where: { id: profile.id },
-      data: prefs,
-    })
-      */
   }
 
   private async buildSocialWhereClause(profileId: string) {
@@ -300,50 +294,41 @@ export class ProfileMatchService {
     take: number = 10,
     skip: number = 0
   ): Promise<DbProfileWithImages[]> {
-    const profile = await prisma.profile.findUnique({
+    const raw = await prisma.profile.findUnique({
       where: { id: profileId },
     })
-    if (!profile || !profile.birthday || !profile.gender || profile.isDatingActive !== true) {
-      return []
-    }
+    const parsed = DatingEligibleProfileSchema.safeParse(raw)
+    if (!parsed.success) return []
 
+    const profile = parsed.data
     const myAge = calculateAge(profile.birthday)
-    const prefAgeMax = (profile.prefAgeMax ?? 99) + AGE_TOLERANCE
-    const prefAgeMin = (profile.prefAgeMin ?? 18) - AGE_TOLERANCE
-
     const hasKids = profile.prefKids.length > 0 ? { hasKids: { in: profile.prefKids } } : {}
 
-    const where = {
-      ...statusFlags,
-      isDatingActive: true,
-      id: {
-        not: profile.id,
+    return prisma.profile.findMany({
+      where: {
+        ...statusFlags,
+        isDatingActive: true,
+        id: { not: profile.id },
+        ...blocklistWhereClause(profileId),
+        birthday: {
+          gte: subtractYears(new Date(), profile.prefAgeMax + AGE_TOLERANCE),
+          lte: subtractYears(new Date(), profile.prefAgeMin - AGE_TOLERANCE),
+        },
+        gender: { in: profile.prefGender },
+        ...hasKids,
+        prefAgeMin: { lte: myAge + AGE_TOLERANCE },
+        prefAgeMax: { gte: myAge - AGE_TOLERANCE },
+        prefGender: { hasSome: [profile.gender] },
+        prefKids: profile.hasKids ? { hasSome: [profile.hasKids] } : undefined,
       },
-      ...blocklistWhereClause(profileId),
-      birthday: {
-        gte: subtractYears(new Date(), prefAgeMax), // oldest acceptable
-        lte: subtractYears(new Date(), prefAgeMin), // youngest acceptable
-      },
-      gender: { in: profile.prefGender },
-      ...hasKids,
-      prefAgeMin: { lte: myAge + AGE_TOLERANCE },
-      prefAgeMax: { gte: myAge - AGE_TOLERANCE },
-      prefGender: { hasSome: [profile.gender] },
-      prefKids: profile.hasKids ? { hasSome: [profile.hasKids] } : undefined,
-    }
-
-    const profiles = await prisma.profile.findMany({
-      where: where,
       include: {
         ...tagsInclude(),
         ...profileImageInclude(),
       },
-      take: take,
-      skip: skip,
-      orderBy: orderBy,
+      take,
+      skip,
+      orderBy,
     })
-
-    return profiles
   }
 
   async findMutualMatchIds(profileId: string): Promise<string[]> {
@@ -352,25 +337,27 @@ export class ProfileMatchService {
   }
 
   async areProfilesMutuallyCompatible(aId: string, bId: string): Promise<boolean> {
-    const [a, b] = await prisma.profile.findMany({
+    const rows = await prisma.profile.findMany({
       where: { id: { in: [aId, bId] } },
     })
+    const a = DatingEligibleProfileSchema.safeParse(rows[0])
+    const b = DatingEligibleProfileSchema.safeParse(rows[1])
+    if (!a.success || !b.success) return false
 
-    if (!a || !b || !a.birthday || !b.birthday || !a.gender || !b.gender) return false
-    if (!a.isDatingActive || !b.isDatingActive) return false
-
-    const ageA = calculateAge(a.birthday)
-    const ageB = calculateAge(b.birthday)
+    const ageA = calculateAge(a.data.birthday)
+    const ageB = calculateAge(b.data.birthday)
 
     const aMatchesB =
-      isAgeCompatible(ageB, a.prefAgeMin, a.prefAgeMax) &&
-      a.prefGender.includes(b.gender) &&
-      (a.prefKids.length === 0 || (b.hasKids != null && a.prefKids.includes(b.hasKids)))
+      isAgeCompatible(ageB, a.data.prefAgeMin, a.data.prefAgeMax) &&
+      a.data.prefGender.includes(b.data.gender) &&
+      (a.data.prefKids.length === 0 ||
+        (b.data.hasKids != null && a.data.prefKids.includes(b.data.hasKids)))
 
     const bMatchesA =
-      isAgeCompatible(ageA, b.prefAgeMin, b.prefAgeMax) &&
-      b.prefGender.includes(a.gender) &&
-      (b.prefKids.length === 0 || (a.hasKids != null && b.prefKids.includes(a.hasKids)))
+      isAgeCompatible(ageA, b.data.prefAgeMin, b.data.prefAgeMax) &&
+      b.data.prefGender.includes(a.data.gender) &&
+      (b.data.prefKids.length === 0 ||
+        (a.data.hasKids != null && b.data.prefKids.includes(a.data.hasKids)))
 
     return aMatchesB && bMatchesA
   }
@@ -403,11 +390,8 @@ const AGE_TOLERANCE = 1
 /** Check whether `candidateAge` falls within the viewer's age preference range (with tolerance). */
 export function isAgeCompatible(
   candidateAge: number,
-  prefAgeMin: number | null,
-  prefAgeMax: number | null
+  prefAgeMin: number,
+  prefAgeMax: number
 ): boolean {
-  return (
-    candidateAge >= (prefAgeMin ?? 18) - AGE_TOLERANCE &&
-    candidateAge <= (prefAgeMax ?? 99) + AGE_TOLERANCE
-  )
+  return candidateAge >= prefAgeMin - AGE_TOLERANCE && candidateAge <= prefAgeMax + AGE_TOLERANCE
 }

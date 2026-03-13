@@ -13,7 +13,7 @@ import {
   profileOptInFields,
   userOptInFields,
 } from './profile.fields'
-import { datingPreferencesFields } from '@zod/match/filters.dto'
+import { datingPreferencesFields } from './profile.fields'
 import { InteractionContextSchema } from '@zod/interaction/interactionContext.dto'
 
 const PublicScalarsSchema = ProfileSchema.pick({

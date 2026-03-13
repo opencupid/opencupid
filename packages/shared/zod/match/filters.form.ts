@@ -3,9 +3,12 @@ import { GenderSchema, HasKidsSchema } from '@zod/generated'
 import { PublicTagSchema } from '../tag/tag.dto'
 import { LocationSchema } from '../dto/location.dto'
 
+export const PREF_AGE_MIN = 18
+export const PREF_AGE_MAX = 80
+
 export const DatingPreferencesFormSchema = z.object({
-  prefAgeMin: z.number().int().gte(18).lte(120).default(18),
-  prefAgeMax: z.number().int().gte(18).lte(120).default(80),
+  prefAgeMin: z.number().int().gte(PREF_AGE_MIN).lte(120).default(PREF_AGE_MIN),
+  prefAgeMax: z.number().int().gte(PREF_AGE_MIN).lte(120).default(PREF_AGE_MAX),
   prefGender: z.array(GenderSchema).default([]),
   prefKids: z.array(HasKidsSchema).default(['yes', 'no']),
 })

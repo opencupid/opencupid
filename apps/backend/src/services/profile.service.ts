@@ -226,8 +226,6 @@ export class ProfileService {
       await tx.profile.update({
         where: { id: profileId },
         data: {
-          // XXX duplicated in updateScopes(), should be refactored to be updated in only place only
-          isActive: [data.isDatingActive, data.isSocialActive].some(Boolean),
           tags: {
             set: [],
             connect: tags.map((tagId) => ({ id: tagId })),
@@ -362,26 +360,6 @@ export class ProfileService {
     })
   }
 
-  /**
-   * Attach a tag to a profile.
-   */
-  public async addTagToProfile(profileId: string, tagId: string): Promise<void> {
-    await prisma.profile.update({
-      where: { id: profileId },
-      data: { tags: { connect: { id: tagId } } },
-    })
-  }
-
-  /**
-   * Remove a tag from a profile.
-   */
-  public async removeTagFromProfile(profileId: string, tagId: string): Promise<void> {
-    await prisma.profile.update({
-      where: { id: profileId },
-      data: { tags: { disconnect: { id: tagId } } },
-    })
-  }
-
   async initializeProfiles(userId: string): Promise<Profile> {
     const profile = await prisma.profile.findUnique({
       where: { userId },
@@ -478,19 +456,4 @@ export class ProfileService {
     })
     return result?.blockedProfiles ?? []
   }
-
-  // async findProfilesFor(locale: string, profileId: string): Promise<DbProfileComplete[]> {
-  //   return await prisma.profile.findMany({
-  //     where: {
-  //       isActive: true,
-  //       id: {
-  //         not: profileId,
-  //       },
-  //     },
-  //     include: {
-  //       ...profileCompleteInclude(),
-  //       ...conversationWithMyProfileInclude(profileId),
-  //     },
-  //   })
-  // }
 }

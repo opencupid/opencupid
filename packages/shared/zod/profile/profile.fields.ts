@@ -24,6 +24,13 @@ export const userOptInFields = {
   isPushNotificationEnabled: true,
 } as const
 
+export const datingPreferencesFields = {
+  prefAgeMin: true,
+  prefAgeMax: true,
+  prefGender: true,
+  prefKids: true,
+} as const
+
 export const ownerFields = {
   isDatingActive: true,
   isSocialActive: true,
