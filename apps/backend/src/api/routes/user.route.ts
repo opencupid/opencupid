@@ -16,15 +16,7 @@ const userRoutes: FastifyPluginAsync = async (fastify) => {
     },
     async (req, reply) => {
       try {
-        const user = await userService.getUserById(req.user.userId, {
-          select: {
-            email: true,
-            phonenumber: true,
-            language: true,
-            newsletterOptIn: true,
-            isPushNotificationEnabled: true,
-          },
-        })
+        const user = await userService.getUserById(req.user.userId)
 
         if (!user) return sendUnauthorizedError(reply)
         const response: GetUserSettingsResponse = { success: true, user }

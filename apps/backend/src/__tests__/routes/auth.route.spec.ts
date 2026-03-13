@@ -55,6 +55,7 @@ beforeEach(async () => {
     setLoginToken: vi.fn(),
     generateLoginToken: vi.fn().mockReturnValue('abc123'),
     getUserById: vi.fn(),
+    getUserWithProfile: vi.fn(),
     bumpTokenVersion: vi.fn(),
     findByAuthId: vi.fn(),
   }
@@ -97,12 +98,15 @@ describe('GET /verify-token', () => {
       tokenVersion: 0,
       roles: [],
       language: 'en',
-      profile: { id: 'profile1', isDatingActive: false, isSocialActive: false, isActive: false },
     }
     mockUserService.validateLoginToken.mockResolvedValue({
       success: true,
       user,
       isNewUser: false,
+    })
+    mockUserService.getUserWithProfile.mockResolvedValue({
+      ...user,
+      profile: { id: 'profile1', isDatingActive: false, isSocialActive: false, isActive: false },
     })
     fastify.jwt = { sign: vi.fn().mockReturnValue('jwt-token') }
     const req = { query: { token: 'abc123' } }
@@ -367,7 +371,7 @@ describe('POST /refresh', () => {
       tokenVersion: 0,
     })
     mockRefreshTokenService.create.mockResolvedValue('new-refresh-token')
-    mockUserService.getUserById.mockResolvedValue({
+    mockUserService.getUserWithProfile.mockResolvedValue({
       id: 'user1',
       tokenVersion: 0,
       roles: [],

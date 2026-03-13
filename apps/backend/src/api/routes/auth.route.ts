@@ -2,7 +2,7 @@ import cuid from 'cuid'
 import { randomUUID } from 'crypto'
 import { FastifyPluginAsync } from 'fastify'
 import { notifierService } from '@/services/notifier.service'
-import { UserService, type UserWithProfile } from 'src/services/user.service'
+import { UserService } from 'src/services/user.service'
 import { ProfileService } from 'src/services/profile.service'
 import { RefreshTokenService } from 'src/services/refresh-token.service'
 import { rateLimitConfig, sendError, sendUnauthorizedError } from '../helpers'
@@ -89,7 +89,12 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
           profileId = newProfile.id
           sessionProfile = newProfile
         } else {
-          const existingProfile = (user as any).profile
+          // TODO: verify-token should not be concerned with obtaining profile data.
+          // The client should call the API separately after auth to obtain the profile.
+          // This is premature optimization — session building should not happen here.
+          const userWithProfile = await userService.getUserWithProfile(user.id)
+          const existingProfile = userWithProfile?.profile
+          if (!existingProfile) return sendError(reply, 404, 'Profile not found')
           profileId = existingProfile.id
           sessionProfile = existingProfile
         }
@@ -169,8 +174,8 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         return sendUnauthorizedError(reply, 'Token revoked')
       }
 
-      // Fetch current user to verify tokenVersion hasn't been bumped
-      const user = await userService.getUserById(tokenData.userId, { include: { profile: true } })
+      // Fetch current user with profile to verify tokenVersion and rebuild session
+      const user = await userService.getUserWithProfile(tokenData.userId)
       if (!user) {
         return sendUnauthorizedError(reply, 'User not found')
       }
@@ -189,10 +194,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       }
       const newJwt = fastify.jwt.sign(newPayload)
 
-      const userWithProfile = user as UserWithProfile
-      const sessionProfile = SessionProfileSchema.parse(
-        userWithProfile.profile ?? { id: tokenData.profileId }
-      )
+      const sessionProfile = SessionProfileSchema.parse(user.profile ?? { id: tokenData.profileId })
       await fastify.createSession(
         newJwt,
         buildSessionData(user, tokenData.profileId, sessionProfile)

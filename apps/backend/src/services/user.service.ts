@@ -2,19 +2,12 @@ import { prisma } from '@/lib/prisma'
 import { Prisma, UserRole } from '@prisma/client'
 import type { User } from '@zod/generated'
 import { ValidateLoginTokenResponse } from '@zod/user/auth.dto'
-import type { UserIdentifier, SessionProfile } from '@zod/user/user.dto'
+import { type UserIdentifier, SessionProfileSchema, type SessionProfile } from '@zod/user/user.dto'
 import { customAlphabet } from 'nanoid'
 import { nolookalikesSafe } from 'nanoid-dictionary'
 
-// Define types for service return values
-export type UserWithProfile = User & { profile: SessionProfile }
-
 function getTokenExpiration() {
   return new Date(Date.now() + 1000 * 60 * 15) // 15 minutes
-}
-
-const profileInclude = {
-  profile: true,
 }
 
 export class UserService {
@@ -56,7 +49,6 @@ export class UserService {
         loginTokenExp: null, // Clear the expiration
         lastLoginAt: new Date(), // Update the last login date
       },
-      include: profileInclude,
     })
 
     return { user: userUpdated, isNewUser, success: true }
@@ -117,11 +109,22 @@ export class UserService {
     return { user, isNewUser }
   }
 
-  async getUserById(userId: string, args?: object): Promise<User | UserWithProfile | null> {
-    return prisma.user.findUnique({
+  async getUserById(userId: string): Promise<User | null> {
+    return prisma.user.findUnique({ where: { id: userId } })
+  }
+
+  async getUserWithProfile(
+    userId: string
+  ): Promise<(User & { profile: SessionProfile | null }) | null> {
+    const user = await prisma.user.findUnique({
       where: { id: userId },
-      ...args,
+      include: { profile: true },
     })
+    if (!user) return null
+    return {
+      ...user,
+      profile: user.profile ? SessionProfileSchema.parse(user.profile) : null,
+    }
   }
 
   addRole(user: User, role: UserRole): User {
