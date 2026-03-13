@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, ref, computed, watch, useTemplateRef } from 'vue'
+import { useElementSize, useDebounceFn } from '@vueuse/core'
 import { useTagsStore } from '@/store/tagStore'
 import type { PopularTag } from '@zod/tag/tag.dto'
 import cloud from 'd3-cloud'
@@ -20,11 +21,12 @@ const emit = defineEmits<{
 
 const tagStore = useTagsStore()
 
-const WIDTH = 600
-const HEIGHT = 400
 const FONT_MIN = 12
 const FONT_MAX = 48
 const COLORS = ['#5e4b2c', '#8b6914', '#6b8e23', '#a0522d', '#2e8b57', '#b8860b', '#556b2f']
+
+const container = useTemplateRef<HTMLDivElement>('container')
+const { width, height } = useElementSize(container)
 
 interface PositionedWord {
   text: string
@@ -35,6 +37,7 @@ interface PositionedWord {
 }
 
 const words = ref<PositionedWord[]>([])
+const tagsLoaded = ref(false)
 
 const hasTags = computed(() => words.value.length > 0)
 
@@ -56,26 +59,27 @@ const placeholderBadges = Array.from({ length: 20 }, (_, i) => {
   }
 })
 
-function scaleFontSize(count: number, minCount: number, maxCount: number): number {
-  if (maxCount === minCount) return (FONT_MIN + FONT_MAX) / 2
+function scaleFontSize(count: number, minCount: number, maxCount: number, fontMax: number): number {
+  if (maxCount === minCount) return (FONT_MIN + fontMax) / 2
   const ratio = (count - minCount) / (maxCount - minCount)
-  return FONT_MIN + ratio * (FONT_MAX - FONT_MIN)
+  return FONT_MIN + ratio * (fontMax - FONT_MIN)
 }
 
-function runLayout(tags: PopularTag[]) {
-  if (tags.length === 0) return
+function runLayout(tags: PopularTag[], w: number, h: number) {
+  if (tags.length === 0 || w <= 0 || h <= 0) return
 
+  const fontMax = Math.max(FONT_MIN, Math.min(FONT_MAX, w * 0.08))
   const minCount = Math.min(...tags.map((t) => t.count))
   const maxCount = Math.max(...tags.map((t) => t.count))
 
   const tagMap = new Map<string, PopularTag>()
   const input = tags.map((tag) => {
     tagMap.set(tag.name, tag)
-    return { text: tag.name, size: scaleFontSize(tag.count, minCount, maxCount) }
+    return { text: tag.name, size: scaleFontSize(tag.count, minCount, maxCount, fontMax) }
   })
 
   cloud()
-    .size([WIDTH, HEIGHT])
+    .size([w, h])
     .words(input)
     .font('sans-serif')
     .fontSize((d: any) => d.size)
@@ -83,16 +87,24 @@ function runLayout(tags: PopularTag[]) {
     .padding(3)
     .random(() => 0.5)
     .on('end', (output: any[]) => {
-      words.value = output.map((w) => ({
-        text: w.text!,
-        size: w.size!,
-        x: w.x!,
-        y: w.y!,
-        tag: tagMap.get(w.text!)!,
+      words.value = output.map((wo) => ({
+        text: wo.text!,
+        size: wo.size!,
+        x: wo.x!,
+        y: wo.y!,
+        tag: tagMap.get(wo.text!)!,
       }))
     })
     .start()
 }
+
+const debouncedLayout = useDebounceFn(() => {
+  if (tagsLoaded.value) {
+    runLayout(tagStore.popularTags, width.value, height.value)
+  }
+}, 200)
+
+watch([width, height], debouncedLayout)
 
 function handleTagClick(tag: PopularTag) {
   emit('tag:select', tag)
@@ -103,59 +115,69 @@ onMounted(async () => {
     country: props.location?.country,
     limit: props.limit,
   })
-  runLayout(tagStore.popularTags)
+  tagsLoaded.value = true
+  runLayout(tagStore.popularTags, width.value, height.value)
 })
 </script>
 
 <template>
-  <svg
-    v-if="!hasTags && props.showLoading"
-    data-testid="tag-cloud-placeholder"
-    width="100%"
-    :viewBox="`${-WIDTH / 2} ${-HEIGHT / 2} ${WIDTH} ${HEIGHT}`"
-    preserveAspectRatio="xMidYMid meet"
+  <div
+    ref="container"
+    class="tag-cloud-container"
   >
-    <rect
-      v-for="(b, i) in placeholderBadges"
-      :key="i"
-      :x="b.x - b.width / 2"
-      :y="b.y - b.height / 2"
-      :width="b.width"
-      :height="b.height"
-      :rx="b.rx"
-      fill="currentColor"
-      :opacity="b.opacity"
-      class="placeholder-badge"
-      :style="{ animationDelay: b.delay }"
-    />
-  </svg>
-  <svg
-    v-else-if="hasTags"
-    data-testid="tag-cloud"
-    width="100%"
-    :viewBox="`${-WIDTH / 2} ${-HEIGHT / 2} ${WIDTH} ${HEIGHT}`"
-    preserveAspectRatio="xMidYMid meet"
-  >
-    <text
-      v-for="(w, i) in words"
-      :key="w.tag.id"
-      text-anchor="middle"
-      dominant-baseline="central"
-      :x="w.x"
-      :y="w.y"
-      :fill="COLORS[i % COLORS.length]"
-      :style="{ fontSize: `${w.size}px`, fontFamily: 'sans-serif', cursor: 'pointer' }"
-      class="tag-cloud-word"
-      @click="handleTagClick(w.tag)"
-      @mouseenter="emit('tag:hover', w.tag)"
-      @mouseleave="emit('tag:hover', null)"
+    <svg
+      v-if="!hasTags && props.showLoading && width > 0 && height > 0"
+      data-testid="tag-cloud-placeholder"
+      width="100%"
+      :viewBox="`${-width / 2} ${-height / 2} ${width} ${height}`"
     >
-      {{ w.text }}
-    </text>
-  </svg>
+      <rect
+        v-for="(b, i) in placeholderBadges"
+        :key="i"
+        :x="b.x - b.width / 2"
+        :y="b.y - b.height / 2"
+        :width="b.width"
+        :height="b.height"
+        :rx="b.rx"
+        fill="currentColor"
+        :opacity="b.opacity"
+        class="placeholder-badge"
+        :style="{ animationDelay: b.delay }"
+      />
+    </svg>
+    <svg
+      v-else-if="hasTags"
+      data-testid="tag-cloud"
+      :width="width"
+      :height="height"
+      :viewBox="`${-width / 2} ${-height / 2} ${width} ${height}`"
+    >
+      <text
+        v-for="(w, i) in words"
+        :key="w.tag.id"
+        text-anchor="middle"
+        dominant-baseline="central"
+        :x="w.x"
+        :y="w.y"
+        :fill="COLORS[i % COLORS.length]"
+        :style="{ fontSize: `${w.size}px`, fontFamily: 'sans-serif', cursor: 'pointer' }"
+        class="tag-cloud-word"
+        @click="handleTagClick(w.tag)"
+        @mouseenter="emit('tag:hover', w.tag)"
+        @mouseleave="emit('tag:hover', null)"
+      >
+        {{ w.text }}
+      </text>
+    </svg>
+  </div>
 </template>
 
 <style scoped>
+.tag-cloud-container {
+  width: 100%;
+  min-height: 300px;
+  height: 100%;
+}
 .tag-cloud-word {
   transition: opacity 0.15s;
 }

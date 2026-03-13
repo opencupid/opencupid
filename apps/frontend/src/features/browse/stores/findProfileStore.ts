@@ -154,9 +154,11 @@ export const useFindProfileStore = defineStore('findProfile', {
       }
     },
 
-    async fetchNewProfiles(): Promise<StoreProfileListResponse> {
+    async fetchNewProfiles(take: number): Promise<StoreProfileListResponse> {
       try {
-        const res = await safeApiCall(() => api.get<GetProfilesResponse>('/find/social/new'))
+        const res = await safeApiCall(() =>
+          api.get<GetProfilesResponse>('/find/social/new', { params: { take } })
+        )
         const fetched = PublicProfileArraySchema.parse(res.data.profiles)
         return storeSuccess({ result: fetched })
       } catch (error: any) {

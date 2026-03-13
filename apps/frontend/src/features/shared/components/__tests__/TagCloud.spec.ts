@@ -1,6 +1,16 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
+import { ref } from 'vue'
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
+
+// jsdom has no layout engine — stub useElementSize to return fixed dimensions
+vi.mock('@vueuse/core', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@vueuse/core')>()
+  return {
+    ...actual,
+    useElementSize: () => ({ width: ref(600), height: ref(400), stop: () => {} }),
+  }
+})
 
 // Mock d3-cloud — jsdom has no canvas, so we simulate the layout synchronously
 let endCallback: ((words: any[]) => void) | null = null
