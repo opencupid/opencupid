@@ -112,6 +112,13 @@ describe('GET /verify-token', () => {
     expect(reply.payload.token).toBe('jwt-token')
     expect(reply.payload.refreshToken).toBe('mock-refresh-token')
     expect(mockRefreshTokenService.create).toHaveBeenCalledWith('user1', 'profile1', 0)
+    expect(reply.cookies[0].name).toBe('__media_token')
+    expect(reply.cookies[0].value).toMatch(/^\d+\.[a-f0-9]+$/)
+    expect(reply.cookies[0].opts).toMatchObject({
+      path: '/user-content/',
+      httpOnly: true,
+      sameSite: 'strict',
+    })
   })
 
   it('returns 200 and token for new user, sends welcome email and initializes profile', async () => {
@@ -400,6 +407,10 @@ describe('POST /logout', () => {
     expect(mockUserService.bumpTokenVersion).toHaveBeenCalledWith('user1')
     expect(deleteSession).toHaveBeenCalled()
     expect(mockRefreshTokenService.deleteAllForUser).toHaveBeenCalledWith('user1')
+    expect(reply.clearedCookies[0]).toMatchObject({
+      name: '__media_token',
+      opts: { path: '/user-content/' },
+    })
   })
 })
 
