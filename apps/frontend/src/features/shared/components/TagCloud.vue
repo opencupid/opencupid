@@ -130,7 +130,7 @@ onMounted(async () => {
     />
   </svg>
   <svg
-    v-else
+    v-else-if="hasTags"
     data-testid="tag-cloud"
     width="100%"
     :viewBox="`${-WIDTH / 2} ${-HEIGHT / 2} ${WIDTH} ${HEIGHT}`"
