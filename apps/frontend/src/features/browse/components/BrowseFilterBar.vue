@@ -3,9 +3,8 @@ import { ref, watch, onActivated, onDeactivated } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDebounceFn } from '@vueuse/core'
 
-import LocationSelector from '@/features/shared/profileform/LocationSelector.vue'
+import LocationFilterInput from '@/features/shared/profileform/LocationFilterInput.vue'
 import TagSelector from '@/features/shared/profileform/TagSelector.vue'
-import IconTarget2 from '@/assets/icons/interface/target-2.svg'
 import IconTag from '@/assets/icons/e-commerce/tag.svg'
 
 import type { SocialMatchFilterDTO } from '@zod/match/filters.dto'
@@ -67,25 +66,11 @@ watch(
     >
       <!-- Location column -->
       <div class="col-12 col-md-6">
-        <div class="d-flex align-items-center gap-2">
-          <BButton
-            variant="link-secondary"
-            size="sm"
-            class="p-0"
-            :title="t('profiles.browse.filters.locate_button_title')"
-            @click="setLocationFromProfile"
-          >
-            <IconTarget2 class="svg-icon-lg" />
-          </BButton>
-          <div class="flex-grow-1">
-            <LocationSelector
-              v-model="filter.location"
-              open-direction="bottom"
-              :allow-empty="true"
-              :close-on-select="true"
-            />
-          </div>
-        </div>
+        <LocationFilterInput
+          v-model="filter.location"
+          :viewer-profile="viewerProfile"
+          @location:set-from-profile="$emit('filter:changed')"
+        />
       </div>
       <!-- Tags column -->
       <div class="col-12 col-md-6">

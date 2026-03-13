@@ -1,4 +1,4 @@
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useBootstrap } from '@/lib/bootstrap'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
@@ -11,7 +11,7 @@ export function usePostsViewModel() {
   const ownerStore = useOwnerProfileStore()
 
   // State management
-  const activeTab = ref('all')
+  const activeTab = ref<'all' | 'recent' | 'my'>('all')
   const viewMode = ref('grid')
   const showCreateModal = ref(false)
   const locationPermission = ref<boolean | null>(null)
@@ -102,13 +102,6 @@ export function usePostsViewModel() {
       console.warn('Cannot get location:', error)
     }
   }
-
-  // Watch for Nearby tab activation
-  watch(activeTab, (newTab) => {
-    if (newTab === 'nearby' && !locationPermission.value) {
-      requestLocation()
-    }
-  })
 
   // Post manipulation helpers
   function toListPost(post: PublicPostWithProfile | OwnerPost) {

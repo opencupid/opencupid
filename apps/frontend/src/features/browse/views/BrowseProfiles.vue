@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, provide, ref, toRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDebounceFn } from '@vueuse/core'
 
-import ProfileBrowseLayout from '../components/ProfileBrowseLayout.vue'
+import BrowseLayout from '@/features/shared/components/BrowseLayout.vue'
 import BrowseFilterBar from '../components/BrowseFilterBar.vue'
 import MapView from '@/features/shared/components/MapView.vue'
 import ProfileMapCard from '../components/ProfileMapCard.vue'
@@ -25,12 +25,13 @@ const {
   matchedProfileIds,
   matchFilter,
   isInitialized,
-  hideProfile,
   updatePrefs,
   openProfile,
   onBoundsChanged,
   initialize,
 } = useSocialMatchViewModel()
+
+provide('viewerProfile', toRef(viewerProfile))
 
 const MAP_BOUNDS_DEBOUNCE_MS = 500
 
@@ -72,14 +73,10 @@ function handleTagCloudSelect(tag: PopularTag) {
 </script>
 
 <template>
-  <ProfileBrowseLayout
-    :viewerProfile="viewerProfile"
-    :profileList="profileList"
+  <BrowseLayout
     :isLoading="isLoading"
     :isInitialized="isInitialized"
     :haveResults="haveResults"
-    @profile:open="openProfile"
-    @profile:hidden="hideProfile"
   >
     <template #filter-bar>
       <BrowseFilterBar
@@ -90,7 +87,7 @@ function handleTagCloudSelect(tag: PopularTag) {
       />
     </template>
 
-    <template #results="{ onProfileSelect }">
+    <template #results>
       <MapView
         :items="profileList"
         :center="mapCenter"
@@ -107,11 +104,11 @@ function handleTagCloudSelect(tag: PopularTag) {
         :is-highlighted="(profile: PublicProfile) => matchedProfileIds.has(profile.id)"
         :popup-component="ProfileMapCard"
         class="h-100"
-        @item:select="(id: string | number) => onProfileSelect(String(id))"
+        @item:select="(id: string | number) => openProfile(String(id))"
         @bounds-changed="debouncedOnBoundsChanged"
       />
     </template>
-  </ProfileBrowseLayout>
+  </BrowseLayout>
 
   <BModal
     v-model="showTagCloud"
