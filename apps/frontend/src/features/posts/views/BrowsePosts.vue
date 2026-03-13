@@ -10,6 +10,7 @@ import PostList from '../components/PostList.vue'
 import PostEdit from '../components/PostEdit.vue'
 import PostFullView from '../components/PostFullView.vue'
 import MapView from '@/features/shared/components/MapView.vue'
+import MapIcon from '../components/MapIcon.vue'
 import ViewModeToggler from '@/features/shared/ui/ViewModeToggler.vue'
 
 import { usePostsViewModel } from '../composables/usePostsViewModel'
@@ -17,7 +18,7 @@ import { usePostStore } from '../stores/postStore'
 import type { PublicPostWithProfile } from '@zod/post/post.dto'
 import type { PostTypeType } from '@zod/generated'
 import type { LocationDTO } from '@zod/dto/location.dto'
-import type { MapPoi } from '@/features/shared/components/OsmPoiMap.vue'
+import type { MapPoi } from '@/features/shared/components/OsmPoiMap.types'
 
 defineOptions({ name: 'BrowsePosts' })
 
@@ -112,6 +113,7 @@ onMounted(async () => {
       <MapView
         v-else-if="viewMode === 'map'"
         :items="mapPois"
+        :icon-component="MapIcon"
         :is-loading="isViewLoading"
         class="h-100"
         @item:select="

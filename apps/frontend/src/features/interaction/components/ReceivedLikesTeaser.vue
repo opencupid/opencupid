@@ -2,14 +2,13 @@
 import { computed, inject, type Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useInteractionsViewModel } from '../composables/useInteractionsViewModel'
-import AvatarIcon from '@/features/shared/components/AvatarIcon.vue'
+import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
 import type { ReceivedLike } from '@zod/interaction/interaction.dto'
 import type { OwnerProfile } from '@zod/profile/profile.dto'
 
 const { t } = useI18n()
 const { receivedLikes, receivedLikesCount, haveReceivedLikes } = useInteractionsViewModel()
 const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
-const ownerThumb = computed(() => viewerProfile?.value?.profileImages?.[0])
 
 const emit = defineEmits<{
   (e: 'interaction:selected', like: ReceivedLike): void
@@ -42,9 +41,9 @@ const displayedLikes = computed(() => receivedLikes.value.slice(0, 4))
             class="dating rounded-3 d-flex flex-column align-items-center justify-content-center p-2"
           >
             <div class="avatar-chip ratio ratio-1x1">
-              <AvatarIcon
+              <ProfileThumbnail
                 v-if="like.profile.profileImages[0]"
-                :image="like.profile.profileImages[0]"
+                :profile="like.profile"
               />
               <div
                 v-else
@@ -84,10 +83,9 @@ const displayedLikes = computed(() => receivedLikes.value.slice(0, 4))
             {{ t('matches.anonymous_like_hint') }}
           </p>
           <div class="placeholder-chip d-flex align-items-center gap-1 mb-2">
-            <AvatarIcon
-              v-if="ownerThumb"
-              :image="ownerThumb"
-              :is-highlighted="true"
+            <ProfileThumbnail
+              v-if="viewerProfile"
+              :profile="viewerProfile"
               class="owner-thumb"
             />
             <span

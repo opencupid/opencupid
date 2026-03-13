@@ -11,32 +11,7 @@ import '@maptiler/sdk/dist/maptiler-sdk.css'
 import { MaptilerLayer } from '@maptiler/leaflet-maptilersdk'
 import { config as maptilerConfig, MapStyle } from '@maptiler/sdk'
 
-import AvatarIcon, { type AvatarImage } from './AvatarIcon.vue'
-
-/** Location coordinates for a map point */
-export interface PoiLocation {
-  lat: number
-  lon: number
-}
-
-/** Viewport bounds emitted by bounds-changed */
-export interface MapBounds {
-  south: number
-  north: number
-  west: number
-  east: number
-}
-
-/** A point-of-interest item for the map. Call sites map domain objects into this shape. */
-export interface MapPoi {
-  id: string | number
-  title: string
-  location: PoiLocation
-  image?: AvatarImage
-  highlighted?: boolean
-  /** The original domain object, passed through to the popup component as `:item` */
-  source: unknown
-}
+import type { MapPoi, MapBounds, PoiIconProps } from './OsmPoiMap.types'
 
 maptilerConfig.telemetry = false
 
@@ -52,6 +27,7 @@ MaptilerLayer.prototype._update = function (...args: unknown[]) {
 const props = withDefaults(
   defineProps<{
     items: MapPoi[]
+    iconComponent: Component
     popupComponent?: Component
     center?: [number, number]
     zoom?: number
@@ -155,11 +131,12 @@ function closeSpider() {
 
 let clusterGroup: any = null
 
-function avatarIcon(image: AvatarImage, isSelected: boolean, isHighlighted: boolean): L.DivIcon {
+
+function hydratePoiIcon(component: Component, iconProps: PoiIconProps): L.DivIcon {
   const size = 32
 
   const container = document.createElement('span')
-  render(h(AvatarIcon, { image, isHighlighted, isSelected }), container)
+  render(h(component, iconProps), container)
   return L.divIcon({
     className: 'poi-avatar-icon',
     html: container,
@@ -168,23 +145,6 @@ function avatarIcon(image: AvatarImage, isSelected: boolean, isHighlighted: bool
   })
 }
 
-// TODO - refactor this the same way as avatarIcon
-function dotIcon(isSelected: boolean, isHighlighted: boolean): L.DivIcon {
-  const classes = ['poi-dot']
-  if (isSelected) classes.push('selected')
-  if (isHighlighted) classes.push('highlighted')
-  return L.divIcon({
-    className: isSelected ? 'poi-selected-icon' : 'poi-default-icon',
-    html: `<div class="${classes.join(' ')}"></div>`,
-    iconSize: isSelected ? [20, 20] : [16, 16],
-    iconAnchor: isSelected ? [10, 10] : [8, 8],
-  })
-}
-
-function iconForItem(item: MapPoi, isSelected: boolean): L.DivIcon {
-  if (item.image) return avatarIcon(item.image, isSelected, item.highlighted ?? false)
-  return dotIcon(isSelected, item.highlighted ?? false)
-}
 
 function emitBounds() {
   if (!map) return
@@ -361,7 +321,7 @@ function createMarker(item: MapPoi): LMarker {
   const isSelected = item.id === props.selectedId
   const m = L.marker([item.location.lat, item.location.lon], {
     title: item.title,
-    icon: iconForItem(item, isSelected),
+    icon: hydratePoiIcon(props.iconComponent, { image: item.image, isSelected, isHighlighted: item.highlighted ?? false }),
     keyboard: true,
   })
 
@@ -410,7 +370,7 @@ function updateMarkers() {
 
     for (let i = startIdx; i < end; i++) {
       const item = props.items[i]
-      if (!item) continue
+      if (!item?.image) continue
       batch.push(createMarker(item))
       markers.set(item.id, batch[batch.length - 1])
       itemsById.set(item.id, item)
@@ -437,7 +397,8 @@ function highlightSelected() {
   for (const [id, marker] of markers) {
     const item = itemsById.get(id)
     if (!item) continue
-    marker.setIcon(iconForItem(item, id === props.selectedId))
+    if (!item.image) continue
+    marker.setIcon(hydratePoiIcon(props.iconComponent, { image: item.image, isSelected: id === props.selectedId, isHighlighted: item.highlighted ?? false }))
   }
   if (props.selectedId != null) {
     const m = markers.get(props.selectedId)
@@ -527,29 +488,6 @@ watch(
   /* Set an explicit height, or it won't be visible */
   height: 100%;
   width: 100%;
-}
-
-/* Simple circular dot markers */
-:deep(.poi-dot) {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  outline: 2px solid rgba(0, 0, 0, 0.25);
-  background: #3a86ff; /* default */
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
-}
-
-:deep(.poi-dot.selected) {
-  width: 16px;
-  height: 16px;
-  background: #ff006e;
-}
-
-:deep(.poi-dot.highlighted) {
-  box-shadow:
-    0 0 0 2px rgba(255, 255, 255, 0.9),
-    0 0 10px 3px rgba(217, 83, 79, 0.4);
-  filter: drop-shadow(0 0 6px rgba(217, 83, 79, 0.5));
 }
 
 /* Cluster badge */

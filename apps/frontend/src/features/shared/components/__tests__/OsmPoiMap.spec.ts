@@ -160,6 +160,16 @@ const DummyPopup = defineComponent({
   },
 })
 
+const DummyIcon = defineComponent({
+  props: ['image', 'isSelected', 'isHighlighted'],
+  render() {
+    return h('img', {
+      src: this.image?.variants?.[0]?.url,
+      class: { 'poi-avatar': true, highlighted: this.isHighlighted },
+    })
+  },
+})
+
 function makeImage(url: string, blurhash?: string) {
   return { blurhash: blurhash ?? null, variants: [{ size: 'thumb', url }] }
 }
@@ -176,6 +186,7 @@ const items = [
     id: '2',
     location: { lat: 48.2, lon: 16.3 },
     title: 'Bob',
+    image: makeImage('https://img/bob.jpg'),
     source: { name: 'Bob' },
   },
   {
@@ -194,6 +205,7 @@ async function mountMap(props: Partial<Record<string, any>> = {}) {
   const wrapper = mount(OsmPoiMap as any, {
     props: {
       items: [],
+      iconComponent: DummyIcon,
       popupComponent: DummyPopup,
       ...props,
     },
@@ -211,7 +223,7 @@ beforeEach(() => {
 })
 
 describe('OsmPoiMap', () => {
-  it('creates avatar icons for items with image, dot icons for items without', async () => {
+  it('creates markers for items with images using iconComponent', async () => {
     await mountMap()
     await flushPromises()
 
@@ -219,30 +231,18 @@ describe('OsmPoiMap', () => {
 
     const calls = (L.marker as any).mock.calls
 
-    // Alice (index 0) has image → avatar icon
-    const aliceAvatarHtml = calls[0][1].icon.html.innerHTML
-    expect(aliceAvatarHtml).toContain('poi-avatar')
-    expect(aliceAvatarHtml).toContain('alice.jpg')
+    // All items have images → rendered via iconComponent
     expect(calls[0][1].icon.className).toBe('poi-avatar-icon')
-
-    // Bob (index 1) has no image → dot icon
-    expect(calls[1][1].icon.html).not.toContain('poi-avatar')
-    expect(calls[1][1].icon.html).toContain('poi-dot')
-
-    // Carol (index 2) has image → avatar icon
-    const carolAvatarHtml = calls[2][1].icon.html.innerHTML
-    expect(carolAvatarHtml).toContain('poi-avatar')
-    expect(carolAvatarHtml).toContain('carol.jpg')
+    expect(calls[1][1].icon.className).toBe('poi-avatar-icon')
+    expect(calls[2][1].icon.className).toBe('poi-avatar-icon')
   })
 
-  it('uses dot icons for items without image property', async () => {
+  it('skips items without image property', async () => {
     const noImageItems = items.map(({ image, ...rest }) => rest)
     await mountMap({ items: noImageItems })
     await flushPromises()
 
-    for (const call of (L.marker as any).mock.calls) {
-      expect(call[1].icon.html).toContain('poi-dot')
-    }
+    expect(L.marker).not.toHaveBeenCalled()
   })
 
   it('initializes a markerClusterGroup and adds markers to it', async () => {

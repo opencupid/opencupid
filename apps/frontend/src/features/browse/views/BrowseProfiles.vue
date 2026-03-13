@@ -7,11 +7,12 @@ import BrowseLayout from '@/features/shared/components/BrowseLayout.vue'
 import BrowseFilterBar from '../components/BrowseFilterBar.vue'
 import MapView from '@/features/shared/components/MapView.vue'
 import ProfileMapCard from '../components/ProfileMapCard.vue'
+import MapIcon from '@/features/publicprofile/components/MapIcon.vue'
 import TagCloud from '@/features/shared/components/TagCloud.vue'
 
 import { useSocialMatchViewModel } from '../composables/useSocialMatchViewModel'
 import type { PopularTag } from '@zod/tag/tag.dto'
-import type { MapPoi } from '@/features/shared/components/OsmPoiMap.vue'
+import type { MapPoi } from '@/features/shared/components/OsmPoiMap.types'
 
 defineOptions({ name: 'BrowseProfiles' })
 
@@ -99,6 +100,7 @@ function handleTagCloudSelect(tag: PopularTag) {
     <template #results>
       <MapView
         :items="mapPois"
+        :icon-component="MapIcon"
         :center="mapCenter"
         :is-loading="isLoading"
         :is-placeholder-animated="true"

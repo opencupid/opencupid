@@ -2,12 +2,14 @@
 import { ref, type Component } from 'vue'
 import type { Map as LMap } from 'leaflet'
 
-import OsmPoiMap, { type MapPoi, type MapBounds } from './OsmPoiMap.vue'
+import OsmPoiMap from './OsmPoiMap.vue'
+import type { MapPoi, MapBounds } from './OsmPoiMap.types'
 import MapPlaceholder from './MapPlaceholder.vue'
 
 const props = withDefaults(
   defineProps<{
     items: MapPoi[]
+    iconComponent: Component
     popupComponent?: Component
     center?: [number, number]
     zoom?: number
@@ -56,6 +58,7 @@ function onMapReady(map: LMap) {
         :zoom="props.zoom"
         :selected-id="props.selectedId"
         :fit-to-pois="props.fitToPois"
+        :icon-component="props.iconComponent"
         :popup-component="props.popupComponent"
         class="h-100"
         @map:ready="onMapReady"
