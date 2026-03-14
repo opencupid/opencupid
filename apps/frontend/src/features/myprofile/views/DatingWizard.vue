@@ -81,9 +81,7 @@ const handleFinish = async () => {
           v-model:datingPrefs="datingPrefs"
           @finished="handleFinish"
           @cancel="router.back()"
-        >
-        /reve 
-        </DatingWizardStepper>
+        />
       </section>
     </MiddleColumn>
   </main>
