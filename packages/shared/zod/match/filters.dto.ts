@@ -1,21 +1,9 @@
-import { ProfileSchema, SocialMatchFilterSchema, TagSchema } from '@zod/generated'
+import { ProfileSchema, SocialMatchFilterSchema } from '@zod/generated'
 import { z } from 'zod'
 import { LocationSchema, LocationPayloadSchema } from '../dto/location.dto'
 import { PublicTagSchema } from '../tag/tag.dto'
 import { TagWithTranslationsSchema } from '../tag/tag.db'
-
-export const datingPreferencesFields = {
-  prefAgeMin: true,
-  prefAgeMax: true,
-  prefGender: true,
-  prefKids: true,
-} as const
-
-// API -> client dating preferences DTO
-export const DatingPreferencesDTOSchema = ProfileSchema.pick({
-  ...datingPreferencesFields,
-})
-export type DatingPreferencesDTO = z.infer<typeof DatingPreferencesDTOSchema>
+import { datingPreferencesFields } from '@zod/profile/profile.fields'
 
 // client -> API DTO dating preferences update payload
 export const UpdateDatingPreferencesPayloadSchema = ProfileSchema.pick({

@@ -5,13 +5,13 @@ import { Profile, ProfileImage } from '@zod/generated'
 import {
   type ProfileOptInSettings,
   type UpdateProfileOptInPayload,
-  type UpdateProfilePayload,
   type UpdateProfileScopePayload,
 } from '@zod/profile/profile.dto'
 import {
   DbProfileWithContext,
   DbOwnerUpdateScalars,
   DbProfileWithImages,
+  type ProfileUpdateInput,
 } from '@zod/profile/profile.db'
 import { mapToLocalizedUpserts } from '@/api/mappers/profile.mappers'
 import {
@@ -21,7 +21,6 @@ import {
   profileImageInclude,
   tagsInclude,
 } from '@/db/includes/profileIncludes'
-import { ProfileMatchService } from './profileMatch.service'
 
 export class ProfileService {
   private static instance: ProfileService
@@ -205,7 +204,7 @@ export class ProfileService {
     tx: Prisma.TransactionClient,
     locale: string,
     userId: string,
-    data: UpdateProfilePayload
+    data: ProfileUpdateInput
   ): Promise<DbProfileWithImages> {
     // 1) Pull out complex parts
     const { tags, introSocialLocalized, introDatingLocalized, ...rest } = data
@@ -226,8 +225,6 @@ export class ProfileService {
       await tx.profile.update({
         where: { id: profileId },
         data: {
-          // XXX duplicated in updateScopes(), should be refactored to be updated in only place only
-          isActive: [data.isDatingActive, data.isSocialActive].some(Boolean),
           tags: {
             set: [],
             connect: tags.map((tagId) => ({ id: tagId })),
@@ -237,7 +234,10 @@ export class ProfileService {
     }
 
     // 4) Handle localized fields
-    const localizedPayload: Partial<UpdateProfilePayload> = {
+    const localizedPayload: Pick<
+      ProfileUpdateInput,
+      'introSocialLocalized' | 'introDatingLocalized'
+    > = {
       introSocialLocalized,
       introDatingLocalized,
     }
@@ -248,23 +248,11 @@ export class ProfileService {
       await this.upsertLocalizedProfileText(tx, profileId, locale, updates)
     }
 
-    // XXX miserable hack
-    const profileMatchService = ProfileMatchService.getInstance()
-
-    // TODO factor this out of here
-    // determine if the user has dating prefs already or we need to create defaults
-    // awful hack. datingPrefs really needs to move out of the Profile table.
-    const datingPrefsFragment =
-      data.birthday && !current.prefAgeMax && !current.prefAgeMin
-        ? profileMatchService.createDatingPrefsDefaults(data)
-        : {}
-
     // 5) Update all scalar fields
     const updated = await tx.profile.update({
       where: { userId },
       data: {
         ...rest,
-        ...datingPrefsFragment,
         isActive: true, // TODO change this to isVisible when we have that field
       },
       include: {
@@ -313,7 +301,12 @@ export class ProfileService {
   async updateScopes(
     userId: string,
     scopes: UpdateProfileScopePayload
-  ): Promise<{ id: string; isDatingActive: boolean; isSocialActive: boolean; isActive: boolean } | null> {
+  ): Promise<{
+    id: string
+    isDatingActive: boolean
+    isSocialActive: boolean
+    isActive: boolean
+  } | null> {
     const data: Prisma.ProfileUpdateInput = {
       isDatingActive: scopes.isDatingActive,
       // isActive is exported into the session for authorization checks
@@ -363,26 +356,6 @@ export class ProfileService {
   }
 
   async removeProfileTag(profileId: string, tagId: string): Promise<void> {
-    await prisma.profile.update({
-      where: { id: profileId },
-      data: { tags: { disconnect: { id: tagId } } },
-    })
-  }
-
-  /**
-   * Attach a tag to a profile.
-   */
-  public async addTagToProfile(profileId: string, tagId: string): Promise<void> {
-    await prisma.profile.update({
-      where: { id: profileId },
-      data: { tags: { connect: { id: tagId } } },
-    })
-  }
-
-  /**
-   * Remove a tag from a profile.
-   */
-  public async removeTagFromProfile(profileId: string, tagId: string): Promise<void> {
     await prisma.profile.update({
       where: { id: profileId },
       data: { tags: { disconnect: { id: tagId } } },
@@ -485,19 +458,4 @@ export class ProfileService {
     })
     return result?.blockedProfiles ?? []
   }
-
-  // async findProfilesFor(locale: string, profileId: string): Promise<DbProfileComplete[]> {
-  //   return await prisma.profile.findMany({
-  //     where: {
-  //       isActive: true,
-  //       id: {
-  //         not: profileId,
-  //       },
-  //     },
-  //     include: {
-  //       ...profileCompleteInclude(),
-  //       ...conversationWithMyProfileInclude(profileId),
-  //     },
-  //   })
-  // }
 }

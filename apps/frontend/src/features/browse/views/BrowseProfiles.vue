@@ -23,7 +23,7 @@ const {
   isLoading,
   profileList,
   matchedProfileIds,
-  socialFilter,
+  matchFilter,
   isInitialized,
   hideProfile,
   updatePrefs,
@@ -48,7 +48,7 @@ const getProfileImage = (profile: PublicProfile) => {
 }
 
 const mapCenter = computed<[number, number] | undefined>(() => {
-  const loc = socialFilter.value?.location
+  const loc = matchFilter.value?.location
   if (loc?.lat && loc?.lon) return [loc.lat, loc.lon]
   const profile = viewerProfile.value?.location
   if (profile?.lat && profile?.lon) return [profile.lat, profile.lon]
@@ -58,11 +58,11 @@ const mapCenter = computed<[number, number] | undefined>(() => {
 const showTagCloud = ref(false)
 
 function handleTagCloudSelect(tag: PopularTag) {
-  if (!socialFilter.value) return
-  const exists = socialFilter.value.tags.some((t) => t.id === tag.id)
+  if (!matchFilter.value) return
+  const exists = matchFilter.value.tags.some((t) => t.id === tag.id)
   if (!exists) {
-    socialFilter.value.tags = [
-      ...socialFilter.value.tags,
+    matchFilter.value.tags = [
+      ...matchFilter.value.tags,
       { id: tag.id, name: tag.name, slug: tag.slug },
     ]
   }
@@ -83,7 +83,7 @@ function handleTagCloudSelect(tag: PopularTag) {
   >
     <template #filter-bar>
       <BrowseFilterBar
-        v-model="socialFilter"
+        v-model="matchFilter"
         :viewer-profile="viewerProfile"
         @filter:changed="updatePrefs"
         @tagcloud:open="showTagCloud = true"

@@ -2,7 +2,7 @@
 import { useI18n } from 'vue-i18n'
 
 import { type EditProfileForm } from '@zod/profile/profile.form'
-import { type DatingPreferencesDTO } from '@zod/match/filters.dto'
+import { type DatingPreferencesFormType } from '@zod/match/filters.form'
 
 import LanguageSelector from '@/features/shared/profileform/LanguageSelector.vue'
 import TagExplorer from '@/features/shared/components/TagExplorer.vue'
@@ -25,11 +25,13 @@ import { useTagsStore } from '@/store/tagStore'
 
 const { t } = useI18n()
 
+// TODO move this to the API.
 const formData = defineModel<EditProfileForm>({
   default: () => ({}),
 })
 
-const datingPrefs = defineModel<DatingPreferencesDTO>('datingPrefs')
+// TODO move this to the API. defaults scattered all over the place.
+const datingPrefs = defineModel<DatingPreferencesFormType>('datingPrefs')
 
 const emit = defineEmits<{
   (e: 'finished'): void
@@ -227,6 +229,7 @@ const siteName = __APP_CONFIG__.SITE_NAME
         </fieldset>
 
         <DatingSteps
+          v-if="datingPrefs"
           v-model="formData"
           v-model:datingPrefs="datingPrefs"
           :isCurrent

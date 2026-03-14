@@ -6,11 +6,11 @@ import VueSlider from 'vue-3-slider-component'
 import { DatingPreferencesFormSchema } from '@zod/match/filters.form'
 import GenderPreferenceSelector from './GenderPreferenceSelector.vue'
 import HasKidsPreferenceSelector from './HaskidsPreferenceSelector.vue'
-import { type DatingPreferencesDTO } from '@zod/match/filters.dto'
+import { type DatingPreferencesFormType } from '@zod/match/filters.form'
 
 // https://github.com/s-sasaki-0529/vue-slider-component
 
-const model = defineModel<DatingPreferencesDTO>({
+const model = defineModel<DatingPreferencesFormType>({
   default: () => DatingPreferencesFormSchema.parse({}),
 })
 

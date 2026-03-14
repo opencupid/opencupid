@@ -1,6 +1,5 @@
 import { validateBody } from '@/utils/zodValidate'
 import {
-  PublicTagSchema,
   SearchQuerySchema,
   CreateTagPayloadSchema,
   CreateTagPayload,
@@ -23,7 +22,7 @@ const tagsRoutes: FastifyPluginAsync = async (fastify) => {
 
     try {
       let tags = await tagService.getPopularTags({ limit, country, locale })
-      // if no tags found with country filter, broaden the query without country 
+      // if no tags found with country filter, broaden the query without country
       if (tags.length === 0) {
         tags = await tagService.getPopularTags({ limit, country: undefined, locale })
       }
@@ -100,87 +99,6 @@ const tagsRoutes: FastifyPluginAsync = async (fastify) => {
       }
     }
   )
-
-  /**
-   * Admin endpoints
-   * TODO add admin role checks
-   */
-
-  /**
-   * List all tags
-   */
-  // fastify.get('/', { onRequest: [fastify.authenticate] }, async (_req, reply) => {
-  //   try {
-  //     const tags = await tagService.findAll();
-  //     return reply.code(200).send({ success: true, tags });
-  //   } catch (err) {
-  //     fastify.log.error(err);
-  //     return sendError(reply, 500, 'Failed to list tags');
-  //   }
-  // });
-
-  /**
-   * Get a tag by ID
-   */
-  // fastify.get('/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-  //   const { id } = TagParamsSchema.parse(req.params);
-  //   try {
-  //     const tag = await tagService.findById(id);
-  //     if (!tag) return sendError(reply, 404, 'Tag not found');
-  //     return reply.code(200).send({ success: true, tag });
-  //   } catch (err) {
-  //     fastify.log.error(err);
-  //     return sendError(reply, 500, 'Failed to fetch tag');
-  //   }
-  // });
-
-  /**
-   * Create a new tag
-   */
-  // fastify.post('/', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-  //   const data = await validateBody(UpdateTagPayloadSchema, req, reply)
-  //   if (!data) return;
-  //   try {
-  //     const created = await tagService.create(data);
-  //     return reply.code(201).send({ success: true, tag: created });
-  //   } catch (err) {
-  //     fastify.log.error(err);
-  //     return sendError(reply, 500, 'Failed to create tag');
-  //   }
-  // });
-
-  /**
-   * Update a tag
-   */
-  // fastify.patch('/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-  //   const { id } = TagParamsSchema.parse(req.params);
-  //   const data = await validateBody(UpdateTagPayloadSchema, req, reply)
-  //   if (!data) return;
-  //   try {
-  //     const updated = await tagService.update(id, data);
-  //     return reply.code(200).send({ success: true, tag: updated });
-  //   } catch (err: any) {
-  //     fastify.log.error(err);
-  //     if (err.code === 'P2025') {
-  //       return sendError(reply, 404, 'Tag not found');
-  //     }
-  //     return sendError(reply, 500, 'Failed to update tag');
-  //   }
-  // });
-
-  /**
-   * Soft delete a tag
-   */
-  // fastify.delete('/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-  //   const { id } = TagParamsSchema.parse(req.params);
-  //   try {
-  //     await tagService.remove(id);
-  //     return reply.code(204).send();
-  //   } catch (err) {
-  //     fastify.log.error(err);
-  //     return sendError(reply, 500, 'Failed to delete tag');
-  //   }
-  // });
 }
 
 export default tagsRoutes

@@ -4,7 +4,7 @@ import { type SocialMatchFilterDTO } from '@zod/match/filters.dto'
 import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
 import type { PublicTag } from '@zod/tag/tag.dto'
 
-const socialFilter = defineModel<SocialMatchFilterDTO | null>({
+const matchFilter = defineModel<SocialMatchFilterDTO | null>({
   default: null,
 })
 const props = defineProps<{
@@ -16,22 +16,21 @@ const emit = defineEmits<{
 }>()
 
 function removeTag(tag: PublicTag) {
-  if (socialFilter.value) {
-    socialFilter.value.tags = socialFilter.value.tags.filter((t) => t.slug !== tag.slug)
+  if (matchFilter.value) {
+    matchFilter.value.tags = matchFilter.value.tags.filter((t) => t.slug !== tag.slug)
     emit('filter:changed')
   }
 }
-
 </script>
 
 <template>
   <div class="filter-chips flex-grow-1">
     <span
       class="filter-chip badge text-bg-info me-1"
-      v-if="socialFilter?.location?.country && viewerLocation"
+      v-if="matchFilter?.location?.country && viewerLocation"
     >
       <LocationLabel
-        :location="socialFilter.location"
+        :location="matchFilter.location"
         :viewerLocation="viewerLocation"
         :showCity="false"
         :showCountryLabel="true"
@@ -40,7 +39,7 @@ function removeTag(tag: PublicTag) {
     </span>
 
     <span
-      v-for="tag in socialFilter?.tags"
+      v-for="tag in matchFilter?.tags"
       :key="tag.slug"
       class="filter-chip badge text-bg-warning me-1"
     >

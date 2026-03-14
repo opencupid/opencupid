@@ -1,7 +1,7 @@
 import z from 'zod'
 
 export const LocationSchema = z.object({
-  country: z.string(),
+  country: z.string().default(''),
   cityName: z.string().optional(),
   lat: z.number().nullable().optional(),
   lon: z.number().nullable().optional(),

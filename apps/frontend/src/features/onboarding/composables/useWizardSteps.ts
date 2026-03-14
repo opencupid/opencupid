@@ -1,9 +1,11 @@
 import { useImageStore } from '@/features/images/stores/imageStore'
 import { type EditProfileForm, EditProfileFormSchema } from '@zod/profile/profile.form'
-import { type DatingPreferencesDTO } from '@zod/match/filters.dto'
+import { type DatingPreferencesFormType } from '@zod/match/filters.form'
 import { isDatingPreferencesValid } from '@zod/match/filters.form'
 import { isLocationValid } from '@zod/dto/location.dto'
 import { computed } from 'vue'
+
+// TODO move this to packages/shared/zod/profile/profile.form.ts
 import { isPublicNameValid } from '@/features/shared/profileform/publicNameValidation'
 
 // https://github.com/vueuse/vueuse/blob/main/packages/core/useStepper/index.md
@@ -11,7 +13,7 @@ import { isPublicNameValid } from '@/features/shared/profileform/publicNameValid
 
 export const useWizardSteps = (
   formData: EditProfileForm,
-  datingPrefs?: DatingPreferencesDTO | null
+  datingPrefs?: DatingPreferencesFormType
 ) => {
   const imageStore = useImageStore()
 

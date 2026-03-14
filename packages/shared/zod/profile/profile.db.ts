@@ -9,7 +9,14 @@ import {
   ProfileSchema,
 } from '@zod/generated'
 import { TagWithTranslationsSchema } from '@zod/tag/tag.db'
-import { datingFields, ownerFields, socialFields } from './profile.fields'
+import { GenderSchema, HasKidsSchema } from '@zod/generated'
+import {
+  datingFields,
+  datingPreferencesFields,
+  locationFields,
+  ownerFields,
+  socialFields,
+} from './profile.fields'
 
 export const DbProfileSchema = ProfileSchema.extend({
   localized: z.array(LocalizedProfileFieldSchema).default([]),
@@ -47,11 +54,33 @@ export const DbProfileWithContextSchema = DbProfileWithImagesSchema.extend({
 
 export type DbProfileWithContext = z.infer<typeof DbProfileWithContextSchema>
 
+/** Validates that a profile has all dating-critical fields set. Use `.safeParse()` to narrow. */
+export const DatingEligibleProfileSchema = z.object({
+  id: z.string(),
+  isDatingActive: z.literal(true),
+  birthday: z.coerce.date(),
+  gender: GenderSchema,
+  hasKids: HasKidsSchema.nullable(),
+  prefAgeMin: z.number().int(),
+  prefAgeMax: z.number().int(),
+  prefGender: z.array(GenderSchema),
+  prefKids: z.array(HasKidsSchema),
+})
+export type DatingEligibleProfile = z.infer<typeof DatingEligibleProfileSchema>
+
 export const DbOwnerUpdateScalarsSchema = ProfileSchema.pick({
   ...socialFields,
   ...datingFields,
+  ...datingPreferencesFields,
+  ...locationFields,
   ...ownerFields,
-  ...datingFields,
 }).partial()
 
 export type DbOwnerUpdateScalars = z.infer<typeof DbOwnerUpdateScalarsSchema>
+
+/** Full profile update input for the service layer (scalars + complex fields). */
+export type ProfileUpdateInput = DbOwnerUpdateScalars & {
+  tags?: string[]
+  introSocialLocalized?: Record<string, string>
+  introDatingLocalized?: Record<string, string>
+}

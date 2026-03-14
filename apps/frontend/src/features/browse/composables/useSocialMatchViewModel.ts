@@ -4,18 +4,9 @@ import { useRouter } from 'vue-router'
 import { useBootstrap } from '@/lib/bootstrap'
 
 import type { StoreError } from '@/store/helpers'
-import type { OwnerProfile } from '@zod/profile/profile.dto'
 
 import { useFindProfileStore, type MapBounds } from '@/features/browse/stores/findProfileStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
-
-function socialFilterDefaults(ownerProfile: OwnerProfile) {
-  return {
-    location: ownerProfile.location,
-    radius: 100,
-    tags: ownerProfile.tags || [],
-  }
-}
 
 export function useSocialMatchViewModel() {
   const router = useRouter()
@@ -40,7 +31,7 @@ export function useSocialMatchViewModel() {
       return
     }
 
-    await findProfileStore.fetchSocialFilter(socialFilterDefaults(ownerProfile))
+    await ownerStore.fetchMatchFilter()
     await fetchResults()
     isInitialized.value = true
   }
@@ -78,7 +69,7 @@ export function useSocialMatchViewModel() {
   const updatePrefs = async () => {
     isLoading.value = true
     try {
-      const res = await findProfileStore.persistSocialFilter()
+      const res = await ownerStore.persistMatchFilter()
       if (!res.success) {
         storeError.value = res
         return
@@ -97,7 +88,7 @@ export function useSocialMatchViewModel() {
     storeError,
     initialize,
     hideProfile,
-    socialFilter: toRef(findProfileStore, 'socialFilter'),
+    matchFilter: toRef(ownerStore, 'matchFilter'),
     updatePrefs,
     onBoundsChanged,
     openProfile,

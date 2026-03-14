@@ -3,11 +3,7 @@ import { CanceledError } from 'axios'
 import { api, safeApiCall } from '@/lib/api'
 import type { PublicProfile } from '@zod/profile/profile.dto'
 import { PublicProfileArraySchema } from '@zod/profile/profile.dto'
-import type {
-  GetMatchIdsResponse,
-  GetProfilesResponse,
-  GetSocialMatchFilterResponse,
-} from '@zod/apiResponse.dto'
+import type { GetMatchIdsResponse, GetProfilesResponse } from '@zod/apiResponse.dto'
 import {
   storeSuccess,
   storeError,
@@ -17,22 +13,14 @@ import {
   type StoreSuccess,
 } from '@/store/helpers'
 import { bus } from '@/lib/bus'
-import {
-  SocialMatchFilterDTOSchema,
-  type SocialMatchFilterDTO,
-  type UpdateSocialMatchFilterPayload,
-} from '@zod/match/filters.dto'
-import type { LocationDTO, LocationPayload } from '@zod/dto/location.dto'
 
 export type MapBounds = { south: number; north: number; west: number; east: number }
 
 let mapBoundsAbortController: AbortController | null = null
 
 type FindProfileStoreState = {
-  socialFilter: SocialMatchFilterDTO | null // Social match filter preferences
   profileList: PublicProfile[] // List of public profiles
   matchedProfileIds: Set<string> // IDs of mutual dating preference matches
-  socialSearch: SocialMatchFilterDTO | null // Current social search query
   lastMapBounds: MapBounds | null // Last map viewport bounds (for re-fetch on pref change)
   isLoading: boolean // Loading state
   // Infinite scroll state
@@ -44,35 +32,10 @@ type FindProfileStoreState = {
 
 type StoreProfileListResponse = StoreSuccess<{ result: PublicProfile[] }> | StoreError
 
-function mapLocationToPayload(dto: LocationDTO): LocationPayload {
-  const country = dto.country && dto.country !== '' ? dto.country : null
-  const cityName = dto.cityName ?? ''
-
-  return {
-    country,
-    cityName,
-    lat: dto.lat ?? null,
-    lon: dto.lon ?? null,
-  }
-}
-
-function mapSocialMatchFilterDTOToPayload(
-  dto: SocialMatchFilterDTO
-): UpdateSocialMatchFilterPayload {
-  const payload = {
-    ...dto,
-    location: mapLocationToPayload(dto.location),
-    tags: dto.tags.map((tag) => tag.id),
-  }
-  return payload as any as UpdateSocialMatchFilterPayload
-}
-
 export const useFindProfileStore = defineStore('findProfile', {
   state: (): FindProfileStoreState => ({
-    socialFilter: null,
     profileList: [] as PublicProfile[],
     matchedProfileIds: new Set<string>(),
-    socialSearch: null as SocialMatchFilterDTO | null, // Current social search query
     lastMapBounds: null,
     isLoading: false,
     // Infinite scroll state
@@ -199,43 +162,6 @@ export const useFindProfileStore = defineStore('findProfile', {
       }
     },
 
-    async fetchSocialFilter(
-      defaults?: SocialMatchFilterDTO
-    ): Promise<StoreVoidSuccess | StoreError> {
-      try {
-        this.isLoading = true
-        const res = await safeApiCall(() =>
-          api.get<GetSocialMatchFilterResponse>('/find/social/filter')
-        )
-        this.socialFilter = SocialMatchFilterDTOSchema.parse(res.data.filter)
-        return storeSuccess()
-      } catch (error: any) {
-        this.socialFilter = defaults ?? null
-        return storeError(error, 'Failed to fetch socialFilter')
-      } finally {
-        this.isLoading = false
-      }
-    },
-
-    async persistSocialFilter(): Promise<StoreVoidSuccess | StoreError> {
-      if (!this.socialFilter) {
-        return storeError(new Error('No social filter to persist'), 'No social filter set')
-      }
-      try {
-        this.isLoading = true
-        const payload = mapSocialMatchFilterDTOToPayload(this.socialFilter)
-        const res = await safeApiCall(() =>
-          api.patch<GetSocialMatchFilterResponse>('/find/social/filter', payload)
-        )
-        this.socialFilter = SocialMatchFilterDTOSchema.parse(res.data.filter)
-        return storeSuccess()
-      } catch (error: any) {
-        return storeError(error, 'Failed to update socialFilter')
-      } finally {
-        this.isLoading = false
-      }
-    },
-
     hide(profileId: string): void {
       const profileIndex = this.profileList.findIndex((p) => p.id === profileId)
       if (profileIndex !== -1) {
@@ -251,7 +177,6 @@ export const useFindProfileStore = defineStore('findProfile', {
       this.profileList = []
       this.matchedProfileIds = new Set()
       this.lastMapBounds = null
-      this.socialSearch = null
       this.isLoading = false
       this.isLoadingMore = false
       this.hasMoreProfiles = true

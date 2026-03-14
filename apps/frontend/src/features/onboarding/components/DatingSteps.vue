@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import useEditFields from '@/features/shared/composables/useEditFields'
 import { type EditProfileForm } from '@zod/profile/profile.form'
-import { type DatingPreferencesDTO } from '@zod/match/filters.dto'
+import {
+  createDatingPrefsDefaults,
+  DatingPreferencesFormSchema,
+  type DatingPreferencesFormType,
+} from '@zod/match/filters.form'
 import AgeSelector from '@/features/shared/profileform/AgeSelector.vue'
 import GenderPronounSelector from '@/features/shared/profileform/GenderPronounSelector.vue'
 import RelationstatusSelector from '@/features/shared/profileform/RelationstatusSelector.vue'
@@ -10,21 +14,11 @@ import HaskidsSelector from '@/features/shared/profileform/HaskidsSelector.vue'
 import DatingPreferencesForm from '@/features/browse/components/DatingPreferencesForm.vue'
 
 import { useI18n } from 'vue-i18n'
+import { watch } from 'vue'
 
-const formData = defineModel<EditProfileForm>({
-  default: () => ({
-    birthday: null,
-    genderPronouns: null,
-    relationshipStatus: null,
-    hasKids: null,
-    introSocial: '',
-    introDating: '',
-  }),
-})
+const formData = defineModel<EditProfileForm>({ required: true })
 
-const datingPrefs = defineModel<DatingPreferencesDTO | null>('datingPrefs', {
-  default: null,
-})
+const datingPrefs = defineModel<DatingPreferencesFormType>('datingPrefs', { required: true })
 
 const { t } = useI18n()
 
@@ -34,6 +28,24 @@ const props = defineProps<{
 
 const { birthdayModel, relationshipModel, hasKidsModel, introDatingModel, genderPronounsModel } =
   useEditFields(formData.value)
+
+watch(
+  () => [formData.value.isDatingActive, formData.value.birthday, formData.value.gender] as const,
+  ([active, birthday, gender]) => {
+    if (
+      active &&
+      birthday &&
+      gender &&
+      gender !== 'unspecified' &&
+      datingPrefs.value.prefGender.length === 0
+    ) {
+      Object.assign(datingPrefs.value, createDatingPrefsDefaults(formData.value))
+    } else if (!active) {
+      Object.assign(datingPrefs.value, DatingPreferencesFormSchema.parse({}))
+    }
+  },
+  { immediate: true }
+)
 </script>
 
 <template>

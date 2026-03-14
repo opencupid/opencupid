@@ -1,7 +1,6 @@
 // TODO: review usage; copied for both db and dto layers
 import { z } from 'zod'
 import { ProfileSchema, UserRoleSchema, UserSchema } from '../generated'
-import { OwnerProfileSchema } from '@zod/profile/profile.dto'
 
 export const JwtPayloadSchema = z.object({
   userId: z.string().cuid(),
@@ -30,6 +29,10 @@ export const SessionProfileSchema = ProfileSchema.pick({
   isDatingActive: true,
   isSocialActive: true,
   isActive: true,
+}).extend({
+  isDatingActive: z.boolean().default(false),
+  isSocialActive: z.boolean().default(false),
+  isActive: z.boolean().default(false),
 })
 export type SessionProfile = z.infer<typeof SessionProfileSchema>
 
@@ -77,9 +80,3 @@ export const RefreshTokenPayloadSchema = z.object({
   refreshToken: z.string().uuid(),
 })
 export type RefreshTokenPayload = z.infer<typeof RefreshTokenPayloadSchema>
-
-export const UserWithProfileSchema = UserSchema.extend({
-  profile: OwnerProfileSchema,
-})
-
-export type UserWithProfile = z.infer<typeof UserWithProfileSchema>

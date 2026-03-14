@@ -9,6 +9,8 @@ import {
   baseFields,
   socialFields,
   datingFields,
+  datingPreferencesFields,
+  locationFields,
   ownerFields,
   profileOptInFields,
   userOptInFields,
@@ -94,10 +96,7 @@ export const editableFields = {
 // Client -> API DTO profile editing payload
 export const UpdateProfilePayloadSchema = ProfileSchema.pick({
   ...editableFields,
-  country: true,
-  cityName: true,
-  lat: true,
-  lon: true,
+  ...locationFields,
   isCallable: true,
 })
   .extend({
@@ -108,6 +107,22 @@ export const UpdateProfilePayloadSchema = ProfileSchema.pick({
   .partial()
 
 export type UpdateProfilePayload = z.infer<typeof UpdateProfilePayloadSchema>
+
+// Client -> API DTO profile creation payload (includes dating preference fields)
+export const CreateProfilePayloadSchema = ProfileSchema.pick({
+  ...editableFields,
+  ...datingPreferencesFields,
+  ...locationFields,
+  isCallable: true,
+})
+  .extend({
+    tags: z.array(z.string().cuid()),
+    introSocialLocalized: z.record(z.string(), z.string()).optional(),
+    introDatingLocalized: z.record(z.string(), z.string()).optional(),
+  })
+  .partial()
+
+export type CreateProfilePayload = z.infer<typeof CreateProfilePayloadSchema>
 
 export const ProfileOptInSettingsSchema = ProfileSchema.pick(profileOptInFields).merge(
   UserSchema.pick(userOptInFields)

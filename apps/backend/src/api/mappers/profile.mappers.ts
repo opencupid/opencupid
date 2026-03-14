@@ -3,7 +3,6 @@ import {
   ProfileUnionSchema,
   type ProfileSummary,
   type OwnerProfile,
-  type UpdateProfilePayload,
   OwnerScalarsSchema,
 } from '@zod/profile/profile.dto'
 import {
@@ -12,6 +11,7 @@ import {
   type DbProfileWithImages,
 } from '@zod/profile/profile.db'
 import { LocationSchema } from '@zod/dto/location.dto'
+import { DbLocationToLocationDTO } from './location.mappers'
 
 import { type OwnerProfileImage, type PublicProfileImage } from '@zod/profile/profileimage.dto'
 import { mapProfileTagsTranslated } from './tag.mappers'
@@ -83,12 +83,7 @@ export function mapProfileToPublic(
     ...scalars,
     profileImages: publicImages,
     tags: publicTags,
-    location: {
-      country: dbProfile.country || '',
-      cityName: dbProfile.cityName || '',
-      lat: dbProfile.lat ?? null,
-      lon: dbProfile.lon ?? null,
-    },
+    location: DbLocationToLocationDTO(dbProfile),
     introSocial: get('introSocial') || '',
     introDating: get('introDating') || '',
   } as PublicProfileWithContext
@@ -127,7 +122,10 @@ export function mapProfileSummary(profile: DbProfileSummary): ProfileSummary {
 
 export function mapToLocalizedUpserts(
   profileId: string,
-  payload: Partial<Pick<UpdateProfilePayload, 'introSocialLocalized' | 'introDatingLocalized'>>
+  payload: {
+    introSocialLocalized?: Record<string, string>
+    introDatingLocalized?: Record<string, string>
+  }
 ): Array<{ locale: string; updates: Record<string, string> }> {
   const byLocale: Record<string, Record<string, string>> = {}
 
