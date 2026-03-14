@@ -52,10 +52,12 @@ onMounted(async () => {
       v-if="isCurrent('confirm')"
       class="position-relative py-5 px-3"
     >
-      <legend>{{ t('onboarding.wizard.all_set') }}</legend>
-      <p class="text-muted">
-        {{ t('onboarding.wizard.appear_message') }}
-      </p>
+      <slot>
+        <legend>{{ t('onboarding.wizard.all_set') }}</legend>
+        <p class="text-muted">
+          {{ t('onboarding.wizard.appear_message') }}
+        </p>
+      </slot>
     </fieldset>
   </div>
 
