@@ -312,7 +312,7 @@ export class ProfileService {
     if (scopes.isDatingActive) {
       const profile = await prisma.profile.findUnique({ where: { userId } })
       if (!profile) return null
-      const result = DatingEligibleProfileSchema.safeParse(profile)
+      const result = DatingEligibleProfileSchema.safeParse({ ...profile, isDatingActive: true })
       if (!result.success) {
         const err = new Error('Profile must complete dating onboarding before activating dating mode')
         err.name = 'DatingEligibilityError'
