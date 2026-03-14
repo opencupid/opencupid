@@ -64,8 +64,6 @@ onMounted(async () => {
 provide('isOwner', true)
 provide('viewerProfile', toRef(formData))
 
-const route = useRoute()
-const hint = computed(() => history?.state?.hint || null)
 </script>
 
 <template>
