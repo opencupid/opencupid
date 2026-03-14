@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, watch } from 'vue'
 import { useAgeFields } from '../composables/useAgeFields'
 
 import VueSlider from 'vue-3-slider-component'
 
-const model = defineModel<Date | null>({
-  default: () => new Date(new Date().getFullYear() - 18, 1, 1),
-})
+const model = defineModel<Date | null>({ default: null })
 
 const birthYear = computed({
   get: () => (model.value ? new Date(model.value).getFullYear() : null),
@@ -17,12 +15,11 @@ const birthYear = computed({
   },
 })
 
-onMounted(() => {
-  // set default value
-  if (!model.value) {
+watch(model, (val) => {
+  if (!val) {
     model.value = new Date(new Date().getFullYear() - 18, 1, 1)
   }
-})
+}, { immediate: true })
 
 const { birthYearMin, birthYearMax } = useAgeFields(model.value)
 </script>
