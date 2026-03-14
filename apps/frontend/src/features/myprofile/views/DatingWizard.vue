@@ -24,11 +24,10 @@ onMounted(async () => {
 
 const handleFinish = async () => {
   const res = await updateProfile()
+  if (!res.success) return
   await persistDatingPrefs()
   await updateScopes({ isDatingActive: true })
-  if (res.success) {
-    router.push({ name: 'BrowseProfiles' })
-  }
+  router.push({ name: 'BrowseProfiles' })
 }
 </script>
 
@@ -83,29 +82,7 @@ const handleFinish = async () => {
           @finished="handleFinish"
           @cancel="router.back()"
         >
-          <div
-            class="col-6 mx-auto d-flex align-items-center justify-content-center text-dating mb-2 mb-md-4 animate__animated animate__fadeIn"
-          >
-            <IconCupid class="svg-icon-100 opacity-50" />
-          </div>
-          <div class="mb-3 d-flex flex-column align-items-center">
-            <BFormCheckbox
-              v-model="formData.isDatingActive"
-              switch
-              size="lg"
-            >
-              {{ $t('onboarding.dating_mode_switch') }}
-            </BFormCheckbox>
-
-            <p class="text-muted text-center">
-              <span v-if="formData.isDatingActive">
-                {{ $t('onboarding.dating_mode_step_hint_active') }}
-              </span>
-              <span v-else>
-                {{ $t('onboarding.dating_mode_step_hint_inactive') }}
-              </span>
-            </p>
-          </div>
+        /reve 
         </DatingWizardStepper>
       </section>
     </MiddleColumn>

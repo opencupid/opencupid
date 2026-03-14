@@ -10,7 +10,7 @@ const { t } = useI18n()
 const uid = useId()
 
 const model = defineModel<GenderType[]>({
-  default: () => null,
+  default: () => [],
 })
 const { genderOptions } = useEnumOptions(t)
 const showAll = ref(false)

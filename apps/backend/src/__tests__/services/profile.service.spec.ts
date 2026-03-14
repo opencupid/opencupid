@@ -273,9 +273,9 @@ describe('ProfileService.updateScopes', () => {
   it('throws when profile is not dating-eligible', async () => {
     const { birthday: _, ...incompleteProfile } = eligibleProfile
     mockPrisma.profile.findUnique.mockResolvedValue(incompleteProfile)
-    await expect(service.updateScopes('u1', { isDatingActive: true })).rejects.toThrow(
-      'dating onboarding'
-    )
+    await expect(service.updateScopes('u1', { isDatingActive: true })).rejects.toMatchObject({
+      name: 'DatingEligibilityError',
+    })
   })
 
   it('returns null on P2025 error (profile not found)', async () => {

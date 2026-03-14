@@ -370,7 +370,7 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
         }
         return reply.code(200).send(response)
       } catch (error: any) {
-        if (error.message?.includes('dating onboarding')) {
+        if (error.name === 'DatingEligibilityError') {
           return sendError(reply, 403, error.message)
         }
         fastify.log.error(error)
