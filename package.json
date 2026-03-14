@@ -68,6 +68,7 @@
       "prisma",
       "protobufjs",
       "sharp",
+      "vite-plugin-vue-mcp",
       "vue-demi"
     ]
   },
