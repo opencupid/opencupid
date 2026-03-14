@@ -64,14 +64,13 @@ onMounted(async () => {
   <div class="mt-1 mt-md-3 d-flex flex-column justify-content-end align-items-center">
     <div class="mb-2">
         <BButton
-        v-if="!isFirst"
+        v-if="!isFirst && !isLast"
         @click="goToPrevious"
         variant="secondary"
         class="px-5 me-2"
         pill
       >
-      Previous
-        <!-- {{ t('onboarding.wizard.previous') }} -->
+        {{ t('onboarding.wizard.previous') }} 
       </BButton>
       <BButton
         v-if="!isLast"
