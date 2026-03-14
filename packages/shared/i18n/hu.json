@@ -449,6 +449,10 @@
     "update_banner": {
       "message": "Frissítés érhető el.",
       "reload": "Újratöltés"
+    },
+    "install_banner": {
+      "message": "Telepítse az alkalmazást a készülékére.",
+      "install": "Telepítés"
     }
   },
   "landingpage": {
