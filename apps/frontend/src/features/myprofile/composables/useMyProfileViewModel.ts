@@ -3,6 +3,7 @@ import { computed, reactive, toRef, watch } from 'vue'
 
 import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 import { type EditFieldProfileFormWithImages } from '@zod/profile/profile.form'
+import { createDatingPrefsDefaults, isDatingPreferencesValid } from '@zod/match/filters.form'
 
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 
@@ -74,15 +75,11 @@ export function useMyProfileViewModel(isEditMode: boolean) {
     { immediate: true }
   )
 
-  let datingPrefsFetched = false
   watch(
     () => profileStore.profile,
-    () => {
+    async () => {
       Object.assign(formData, profileStore.profile)
-      if (profileStore.profile && !datingPrefsFetched) {
-        datingPrefsFetched = true
-        profileStore.fetchDatingPrefs()
-      }
+      await profileStore.fetchDatingPrefs()
     },
     { immediate: true }
   )

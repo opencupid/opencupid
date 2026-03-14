@@ -11,11 +11,11 @@ import { type OwnerProfile } from '@zod/profile/profile.dto'
 
 const viewState = defineModel<ViewState>({ required: true })
 
-const isDatingActive = defineModel<boolean>('isDatingActive', {
-  default: false,
-})
-
 const viewerProfile = inject<Ref<OwnerProfile>>('viewerProfile')
+
+const isDatingActive = defineModel<boolean>('isDatingActive', {
+  default: false, // default this to isOnboarded
+})
 
 const { getLanguageLabels } = useLanguages()
 

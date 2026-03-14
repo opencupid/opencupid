@@ -8,6 +8,8 @@ import { useStepper } from '@vueuse/core'
 
 import BackButton from './BackButton.vue'
 import DatingSteps from './DatingSteps.vue'
+import { useBootstrap } from '@/lib/bootstrap'
+import { onMounted } from 'vue'
 
 const { t } = useI18n()
 
@@ -23,6 +25,10 @@ const datingPrefs = defineModel<DatingPreferencesFormType>('datingPrefs', { requ
 const { datingWizardSteps } = useWizardSteps(formData.value, datingPrefs.value)
 const { current, isFirst, isLast, goToNext, goToPrevious, isCurrent } =
   useStepper(datingWizardSteps)
+
+onMounted(async () => {
+  await useBootstrap().bootstrap()
+})
 </script>
 
 <template>
@@ -46,15 +52,26 @@ const { current, isFirst, isLast, goToNext, goToPrevious, isCurrent } =
       v-if="isCurrent('confirm')"
       class="position-relative py-5 px-3"
     >
-      <legend>{{ t('onboarding.wizard.all_set') }}</legend>
-      <p class="text-muted">
-        {{ t('onboarding.wizard.appear_message') }}
-      </p>
+      <slot>
+        <legend>{{ t('onboarding.wizard.all_set') }}</legend>
+        <p class="text-muted">
+          {{ t('onboarding.wizard.appear_message') }}
+        </p>
+      </slot>
     </fieldset>
   </div>
 
   <div class="mt-1 mt-md-3 d-flex flex-column justify-content-end align-items-center">
     <div class="mb-2">
+        <BButton
+        v-if="!isFirst && !isLast"
+        @click="goToPrevious"
+        variant="secondary"
+        class="px-5 me-2"
+        pill
+      >
+        {{ t('onboarding.wizard.previous') }} 
+      </BButton>
       <BButton
         v-if="!isLast"
         @click="goToNext"
@@ -76,7 +93,7 @@ const { current, isFirst, isLast, goToNext, goToPrevious, isCurrent } =
         {{ t('onboarding.wizard.finish') }}
       </BButton>
     </div>
-    <div>
+    <!-- <div>
       <BButton
         v-if="!isLast"
         @click="$emit('cancel')"
@@ -85,6 +102,6 @@ const { current, isFirst, isLast, goToNext, goToPrevious, isCurrent } =
       >
         {{ t('onboarding.wizard.cancel') }}
       </BButton>
-    </div>
+    </div> -->
   </div>
 </template>

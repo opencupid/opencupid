@@ -247,10 +247,11 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
         const res = await safeApiCall(() =>
           api.get<GetDatingPreferencesResponse>('/profiles/me/dating-prefs')
         )
-        this.datingPrefs = DatingPreferencesFormSchema.parse(res.data.prefs)
+        const fetched = DatingPreferencesFormSchema.parse(res.data.prefs)
+        Object.assign(this.datingPrefs, fetched)
         return storeSuccess()
       } catch (error: any) {
-        this.datingPrefs = defaultDatingPrefs()
+        Object.assign(this.datingPrefs, defaultDatingPrefs())
         return storeError(error, 'Failed to fetch datingPrefs')
       } finally {
         this.isLoading = false
@@ -261,10 +262,12 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
       try {
         this.isLoading = true
         const res = await safeApiCall(() =>
-          api.patch<UpdateDatingPreferencesResponse>('/profiles/me/dating-prefs', this.datingPrefs)
+          api.patch<UpdateDatingPreferencesResponse>('/profiles/me/dating-prefs', {
+            datingPrefs: this.datingPrefs,
+          })
         )
         const updated = DatingPreferencesFormSchema.parse(res.data.prefs)
-        this.datingPrefs = updated
+        Object.assign(this.datingPrefs, updated)
         bus.emit('profile:dating-prefs-updated')
         return storeSuccess()
       } catch (error: any) {
@@ -345,7 +348,7 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
 
     reset() {
       this.profile = null
-      this.datingPrefs = defaultDatingPrefs()
+      Object.assign(this.datingPrefs, defaultDatingPrefs())
       this.matchFilter = null
       this.optInSettings = { ...defaultOptInSettings }
       this.isLoading = false

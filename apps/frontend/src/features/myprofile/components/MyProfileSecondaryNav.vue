@@ -6,7 +6,7 @@ import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
 import IconMenuDotsVert from '@/assets/icons/interface/menu-dots-vert.svg'
 
 defineProps<{
-  isDatingOnboarded?: boolean
+  isDatingOnboarded: boolean
 }>()
 
 const viewState = defineModel<ViewState>({
@@ -24,7 +24,6 @@ const isDatingActive = defineModel<boolean>('isDatingActive', {
 const emit = defineEmits<{
   (e: 'datingmode:toggle'): void
   (e: 'datingmode:prefs'): void
-  (e: 'datingmode:profile'): void
 }>()
 </script>
 
@@ -40,21 +39,19 @@ const emit = defineEmits<{
       <!-- Preferences -->
       <DatingModeDropdown
         v-model:is-dating-active="isDatingActive"
-        :is-dating-onboarded="isDatingOnboarded"
         @datingmode:toggle="$emit('datingmode:toggle')"
         @datingmode:prefs="$emit('datingmode:prefs')"
-        @datingmode:profile="$emit('datingmode:profile')"
       />
 
       <!-- Settings -->
       <BNavItemDropdown>
         <template #button-content>
           <span class="text-secondary">
-          <IconMenuDotsVert class="svg-icon-lg fs-4" />
+            <IconMenuDotsVert class="svg-icon-lg fs-4" />
           </span>
         </template>
         <BDropdownItem to="/settings">
-            <IconSetting2 class="svg-icon me-1" />
+          <IconSetting2 class="svg-icon me-1" />
           {{ $t('settings.title') }}
         </BDropdownItem>
       </BNavItemDropdown>

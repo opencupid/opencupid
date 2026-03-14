@@ -9,8 +9,8 @@ import ExpandCollapseButton from '@/features/shared/ui/ExpandCollapseButton.vue'
 const { t } = useI18n()
 const uid = useId()
 
-const model = defineModel<GenderType[] | null>({
-  default: () => null,
+const model = defineModel<GenderType[]>({
+  default: () => [],
 })
 const { genderOptions } = useEnumOptions(t)
 const showAll = ref(false)

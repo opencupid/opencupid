@@ -1,11 +1,7 @@
 <script setup lang="ts">
 import useEditFields from '@/features/shared/composables/useEditFields'
 import { type EditProfileForm } from '@zod/profile/profile.form'
-import {
-  createDatingPrefsDefaults,
-  DatingPreferencesFormSchema,
-  type DatingPreferencesFormType,
-} from '@zod/match/filters.form'
+import { createDatingPrefsDefaults, type DatingPreferencesFormType } from '@zod/match/filters.form'
 import AgeSelector from '@/features/shared/profileform/AgeSelector.vue'
 import GenderPronounSelector from '@/features/shared/profileform/GenderPronounSelector.vue'
 import RelationstatusSelector from '@/features/shared/profileform/RelationstatusSelector.vue'
@@ -30,18 +26,15 @@ const { birthdayModel, relationshipModel, hasKidsModel, introDatingModel, gender
   useEditFields(formData.value)
 
 watch(
-  () => [formData.value.isDatingActive, formData.value.birthday, formData.value.gender] as const,
-  ([active, birthday, gender]) => {
+  () => [formData.value.birthday, formData.value.gender] as const,
+  ([birthday, gender]) => {
     if (
-      active &&
       birthday &&
       gender &&
       gender !== 'unspecified' &&
       datingPrefs.value.prefGender.length === 0
     ) {
       Object.assign(datingPrefs.value, createDatingPrefsDefaults(formData.value))
-    } else if (!active) {
-      Object.assign(datingPrefs.value, DatingPreferencesFormSchema.parse({}))
     }
   },
   { immediate: true }
