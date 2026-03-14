@@ -77,11 +77,11 @@ export function useMyProfileViewModel(isEditMode: boolean) {
   let datingPrefsFetched = false
   watch(
     () => profileStore.profile,
-    () => {
+    async () => {
       Object.assign(formData, profileStore.profile)
       if (profileStore.profile && !datingPrefsFetched) {
         datingPrefsFetched = true
-        profileStore.fetchDatingPrefs()
+        await profileStore.fetchDatingPrefs()
       }
     },
     { immediate: true }
