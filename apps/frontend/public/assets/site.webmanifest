@@ -2,6 +2,10 @@
   "name": "Gaians.net",
   "short_name": "Gaians",
   "start_url": "/home",
+  "scope": "/",
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
   "icons": [
     {
       "src": "/assets/icon-192x192.png",
