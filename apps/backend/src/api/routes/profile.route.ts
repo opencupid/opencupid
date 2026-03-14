@@ -369,7 +369,10 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
           isActive: updated.isActive,
         }
         return reply.code(200).send(response)
-      } catch (error) {
+      } catch (error: any) {
+        if (error.message?.includes('dating onboarding')) {
+          return sendError(reply, 403, error.message)
+        }
         fastify.log.error(error)
         return sendError(reply, 500, 'Failed to update profile scopes')
       }

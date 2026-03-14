@@ -11,6 +11,7 @@ import {
   DbProfileWithContext,
   DbOwnerUpdateScalars,
   DbProfileWithImages,
+  DatingEligibleProfileSchema,
   type ProfileUpdateInput,
 } from '@zod/profile/profile.db'
 import { mapToLocalizedUpserts } from '@/api/mappers/profile.mappers'
@@ -307,6 +308,16 @@ export class ProfileService {
     isSocialActive: boolean
     isActive: boolean
   } | null> {
+    // When activating dating, verify the profile has all required dating fields
+    if (scopes.isDatingActive) {
+      const profile = await prisma.profile.findUnique({ where: { userId } })
+      if (!profile) return null
+      const result = DatingEligibleProfileSchema.safeParse(profile)
+      if (!result.success) {
+        throw new Error('Profile must complete dating onboarding before activating dating mode')
+      }
+    }
+
     const data: Prisma.ProfileUpdateInput = {
       isDatingActive: scopes.isDatingActive,
       // isActive is exported into the session for authorization checks

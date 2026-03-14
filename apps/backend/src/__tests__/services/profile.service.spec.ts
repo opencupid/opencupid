@@ -227,8 +227,21 @@ describe('ProfileService.getVisibleProfiles', () => {
 })
 
 describe('ProfileService.updateScopes', () => {
+  const eligibleProfile = {
+    id: 'p1',
+    isDatingActive: false,
+    birthday: new Date('1990-01-01'),
+    gender: 'male',
+    hasKids: 'no',
+    prefAgeMin: 25,
+    prefAgeMax: 35,
+    prefGender: ['female'],
+    prefKids: ['no'],
+  }
+
   it('updates isDatingActive and sets isActive accordingly', async () => {
     const updated = { id: 'p1', isDatingActive: true, isSocialActive: true, isActive: true }
+    mockPrisma.profile.findUnique.mockResolvedValue(eligibleProfile)
     mockPrisma.profile.update.mockResolvedValue(updated)
     const result = await service.updateScopes('u1', { isDatingActive: true })
     expect(mockPrisma.profile.update).toHaveBeenCalledWith({
@@ -251,15 +264,26 @@ describe('ProfileService.updateScopes', () => {
     expect(result).toEqual(updated)
   })
 
+  it('returns null when profile not found during dating activation', async () => {
+    mockPrisma.profile.findUnique.mockResolvedValue(null)
+    const result = await service.updateScopes('u1', { isDatingActive: true })
+    expect(result).toBeNull()
+  })
+
+  it('throws when profile is not dating-eligible', async () => {
+    const { birthday: _, ...incompleteProfile } = eligibleProfile
+    mockPrisma.profile.findUnique.mockResolvedValue(incompleteProfile)
+    await expect(service.updateScopes('u1', { isDatingActive: true })).rejects.toThrow(
+      'dating onboarding'
+    )
+  })
+
   it('returns null on P2025 error (profile not found)', async () => {
     const err = new Error('Not found') as any
     err.code = 'P2025'
-    // Simulate PrismaClientKnownRequestError
     Object.setPrototypeOf(err, { constructor: { name: 'PrismaClientKnownRequestError' } })
+    mockPrisma.profile.findUnique.mockResolvedValue(eligibleProfile)
     mockPrisma.profile.update.mockRejectedValue(err)
-
-    // Need to mock Prisma import for instanceof check
-    // Since we can't easily mock the class, test the rethrow path
     await expect(service.updateScopes('u1', { isDatingActive: true })).rejects.toThrow()
   })
 })
