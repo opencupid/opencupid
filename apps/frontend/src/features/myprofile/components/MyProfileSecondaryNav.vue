@@ -24,7 +24,6 @@ const isDatingActive = defineModel<boolean>('isDatingActive', {
 const emit = defineEmits<{
   (e: 'datingmode:toggle'): void
   (e: 'datingmode:prefs'): void
-  (e: 'datingmode:profile'): void
 }>()
 </script>
 
@@ -42,7 +41,6 @@ const emit = defineEmits<{
         v-model:is-dating-active="isDatingActive"
         @datingmode:toggle="$emit('datingmode:toggle')"
         @datingmode:prefs="$emit('datingmode:prefs')"
-        @datingmode:profile="$emit('datingmode:profile')"
       />
 
       <!-- Settings -->
