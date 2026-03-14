@@ -69,9 +69,11 @@ function mapMatchFilterToPayload(dto: SocialMatchFilterDTO): UpdateSocialMatchFi
   } as UpdateSocialMatchFilterPayload
 }
 
+const defaultDatingPrefs = (): DatingPreferencesFormType => DatingPreferencesFormSchema.parse({})
+
 interface ProfileStoreState {
   profile: OwnerProfile | null
-  datingPrefs: DatingPreferencesFormType | null
+  datingPrefs: DatingPreferencesFormType
   matchFilter: SocialMatchFilterDTO | null
   optInSettings: ProfileOptInSettings
   profileScopes: ProfileScope[]
@@ -82,7 +84,7 @@ interface ProfileStoreState {
 export const useOwnerProfileStore = defineStore('ownerProfile', {
   state: (): ProfileStoreState => ({
     profile: null as OwnerProfile | null,
-    datingPrefs: null as DatingPreferencesFormType | null,
+    datingPrefs: defaultDatingPrefs(),
     matchFilter: null as SocialMatchFilterDTO | null,
     optInSettings: { ...defaultOptInSettings },
     profileScopes: [],
@@ -239,19 +241,16 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
       }
     },
 
-    async fetchDatingPrefs(
-      defaults?: DatingPreferencesFormType
-    ): Promise<StoreVoidSuccess | StoreError> {
+    async fetchDatingPrefs(): Promise<StoreVoidSuccess | StoreError> {
       try {
         this.isLoading = true
         const res = await safeApiCall(() =>
           api.get<GetDatingPreferencesResponse>('/profiles/me/dating-prefs')
         )
-        const fetched = DatingPreferencesFormSchema.parse(res.data.prefs)
-        this.datingPrefs = fetched
+        this.datingPrefs = DatingPreferencesFormSchema.parse(res.data.prefs)
         return storeSuccess()
       } catch (error: any) {
-        this.datingPrefs = defaults ?? null
+        this.datingPrefs = defaultDatingPrefs()
         return storeError(error, 'Failed to fetch datingPrefs')
       } finally {
         this.isLoading = false
@@ -259,9 +258,6 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
     },
 
     async persistDatingPrefs(): Promise<StoreVoidSuccess | StoreError> {
-      if (!this.datingPrefs) {
-        return storeError(new Error('No dating prefs to persist'), 'No dating prefs set')
-      }
       try {
         this.isLoading = true
         const res = await safeApiCall(() =>
@@ -349,7 +345,7 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
 
     reset() {
       this.profile = null
-      this.datingPrefs = null
+      this.datingPrefs = defaultDatingPrefs()
       this.matchFilter = null
       this.optInSettings = { ...defaultOptInSettings }
       this.isLoading = false

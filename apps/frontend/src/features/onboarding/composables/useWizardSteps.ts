@@ -13,7 +13,7 @@ import { isPublicNameValid } from '@/features/shared/profileform/publicNameValid
 
 export const useWizardSteps = (
   formData: EditProfileForm,
-  datingPrefs?: DatingPreferencesFormType | null
+  datingPrefs?: DatingPreferencesFormType
 ) => {
   const imageStore = useImageStore()
 
