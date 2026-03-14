@@ -229,7 +229,7 @@ describe('ProfileService.getVisibleProfiles', () => {
 describe('ProfileService.updateScopes', () => {
   const eligibleProfile = {
     id: 'p1',
-    isDatingActive: false,
+    isDatingActive: true,
     birthday: new Date('1990-01-01'),
     gender: 'male',
     hasKids: 'no',
