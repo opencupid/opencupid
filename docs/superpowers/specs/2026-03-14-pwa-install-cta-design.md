@@ -24,25 +24,26 @@ The browser fully controls when `beforeinstallprompt` fires. The app cannot forc
 
 **File:** `apps/frontend/src/features/app/composables/usePwaInstall.ts`
 
+The captured `BeforeInstallPromptEvent` is stored in a **module-scoped variable** (not in Pinia state), following the same pattern as `useUpdateChecker` which keeps `timeoutId` and `activeCheck` as plain variables. Only a boolean flag goes in the store.
+
+- Module-scoped `let deferredPrompt: BeforeInstallPromptEvent | null`
 - `onMounted`: adds `beforeinstallprompt` listener on `window`
   - Calls `event.preventDefault()` to suppress Chrome's default mini-infobar
-  - Stores the event in `appStore.pwaInstallEvent`
+  - Stores the event in `deferredPrompt`
+  - Sets `appStore.canInstallPwa = true`
 - `onMounted`: adds `appinstalled` listener on `window`
-  - Clears `appStore.pwaInstallEvent` (hides the banner)
+  - Clears `deferredPrompt` and sets `appStore.canInstallPwa = false`
 - `onUnmounted`: removes both listeners
-- Exposes `promptInstall()`: calls `.prompt()` on the stored event, awaits `userChoice`, clears the event from store regardless of outcome
+- Exposes `promptInstall()`: calls `.prompt()` on `deferredPrompt`, awaits `userChoice`, then clears the event and sets `canInstallPwa = false` regardless of outcome (accepted or dismissed). If the user dismissed the dialog, the banner stays hidden for the rest of the session; `beforeinstallprompt` may fire again on a subsequent visit.
 
 ### 2. Store additions: `appStore.ts`
 
 **File:** `apps/frontend/src/features/app/stores/appStore.ts`
 
 New state:
-- `pwaInstallEvent: BeforeInstallPromptEvent | null` — the captured event (session-scoped, no persistence)
+- `canInstallPwa: false` — boolean flag, toggled by the composable
 
-New getter:
-- `canInstallPwa` — returns `pwaInstallEvent !== null`
-
-No `localStorage`, no persistence. Dismissal resets on page reload; a fresh `beforeinstallprompt` may fire again on the next visit.
+No event objects in the store. No `localStorage`, no persistence. Dismissal resets on page reload; a fresh `beforeinstallprompt` may fire again on the next visit.
 
 ### 3. Banner component: `PwaInstallBanner.vue`
 
@@ -75,7 +76,7 @@ Add under `uicomponents`:
 
 ### 6. TypeScript
 
-`BeforeInstallPromptEvent` is not in the standard lib types. Add a minimal type declaration (inline in the composable or in a `.d.ts`) covering `prompt()` and `userChoice`.
+`BeforeInstallPromptEvent` is not in the standard lib types. Add a minimal type declaration in `apps/frontend/src/types/pwa.d.ts` covering `prompt()` and `userChoice`.
 
 ## What changes
 
@@ -83,7 +84,7 @@ Add under `uicomponents`:
 |------|--------|
 | `apps/frontend/src/features/app/composables/usePwaInstall.ts` | New — event capture composable |
 | `apps/frontend/src/features/app/components/PwaInstallBanner.vue` | New — banner component |
-| `apps/frontend/src/features/app/stores/appStore.ts` | Add `pwaInstallEvent` state and `canInstallPwa` getter |
+| `apps/frontend/src/features/app/stores/appStore.ts` | Add `canInstallPwa` boolean state |
 | `apps/frontend/src/App.vue` | Wire composable + banner |
 | `packages/shared/i18n/en.json` | Add install banner i18n keys |
 | Tests for composable and component | New |
@@ -100,12 +101,13 @@ Add under `uicomponents`:
 - `beforeinstallprompt` is supported in Chromium-based browsers (Chrome, Edge, Samsung Internet)
 - Safari and Firefox do not fire this event — the banner simply never appears (graceful degradation)
 - The `appinstalled` event is supported in Chrome 64+
+- When the app is already running as an installed PWA (`display-mode: standalone`), `beforeinstallprompt` does not fire, so the banner naturally never appears
 
 ## Acceptance criteria
 
 1. On Android Chrome, when the app is installable, an install banner appears at the top of the page
 2. Tapping "Install" triggers Chrome's native install dialog
-3. After installation (or dialog dismissal), the banner disappears
+3. After installation or dialog dismissal, the banner disappears for the rest of the session
 4. The close button hides the banner for the remainder of the session
 5. The banner does not appear when the app is already installed or when `beforeinstallprompt` does not fire
 6. On browsers that don't support `beforeinstallprompt`, no banner is shown (no errors)
@@ -113,9 +115,9 @@ Add under `uicomponents`:
 ## Testing
 
 ### Unit tests — composable (`usePwaInstall`)
-- Dispatching `beforeinstallprompt` on `window` stores the event and sets `canInstallPwa` to true
-- Dispatching `appinstalled` clears the event and sets `canInstallPwa` to false
-- `promptInstall()` calls `.prompt()` on the stored event
+- Dispatching `beforeinstallprompt` on `window` sets `appStore.canInstallPwa` to true
+- Dispatching `appinstalled` sets `appStore.canInstallPwa` to false
+- `promptInstall()` calls `.prompt()` on the captured event and clears `canInstallPwa`
 - Listeners are cleaned up on unmount
 
 ### Unit tests — component (`PwaInstallBanner`)
