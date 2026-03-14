@@ -9,8 +9,6 @@ import ProfileContent from '@/features/publicprofile/components/ProfileContent.v
 
 import { useMyProfileViewModel } from '../composables/useMyProfileViewModel'
 import DatingWizard from '../../onboarding/components/DatingWizard.vue'
-import EditDatingProfile from '../components/EditDatingProfile.vue'
-import DatingPreferencesForm from '@/features/browse/components/DatingPreferencesForm.vue'
 import MyProfileSecondaryNav from '../components/MyProfileSecondaryNav.vue'
 import EditableFields from '../components/EditableFields.vue'
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
@@ -39,17 +37,26 @@ const {
 } = useMyProfileViewModel(props.editMode)
 
 const isDatingWizardActive = ref(false)
-const showDatingIntro = ref(true)
-const showDatingPrefsModal = ref(false)
-const showDatingProfileModal = ref(false)
 const openDatingPrefs = () => {
-  showDatingPrefsModal.value = true
+  if (!isDatingOnboarded.value) {
+    router.push({ name: 'DatingWizard' })
+    return
+  }
+  router.push({ name: 'DatingPrefs' })
+}
+
+const openDatingProfile = () => {
+  if (!isDatingOnboarded.value) {
+    router.push({ name: 'DatingWizard' })
+    return
+  }
+  router.push({ name: 'DatingPrefs' })
 }
 
 const toggleDating = async () => {
-  // If dating is not onboarded, show the wizard
+  // If dating is not onboarded, navigate to the intro view
   if (!isDatingOnboarded.value && !formData.isDatingActive) {
-    isDatingWizardActive.value = true
+    router.push({ name: 'DatingWizard' })
     return
   }
   const newValue = !formData.isDatingActive
@@ -112,7 +119,7 @@ const hint = computed(() => history?.state?.hint || null)
               :is-dating-onboarded="isDatingOnboarded"
               @datingmode:toggle="toggleDating"
               @datingmode:prefs="openDatingPrefs"
-              @datingmode:profile="showDatingProfileModal = true"
+              @datingmode:profile="openDatingProfile"
             />
           </div>
         </MiddleColumn>
@@ -151,38 +158,8 @@ const hint = computed(() => history?.state?.hint || null)
       body-class="d-flex flex-column align-items-center justify-content-center overflow-auto hide-scrollbar p-2 p-md-5"
       content-class="overflow-clipped"
       :keyboard="false"
-      @hidden="showDatingIntro = true"
       lazy
     >
-      <BOverlay
-        :show="showDatingIntro"
-        no-wrap
-        no-center
-        variant="light-subtle"
-        opacity="0.95"
-        blur="5px"
-      >
-        <template #overlay>
-          <div
-            class="col-3 mx-auto d-flex align-items-center justify-content-center text-dating my-md-2 animate__animated animate__fadeIn"
-          >
-            <IconCupid class="svg-icon-100 opacity-50" />
-          </div>
-          <div class="text-center p-4">
-            <p class="mb-3 lh-sm form-hint">
-              {{ $t('onboarding.wizard.dating_intro_text') }}
-            </p>
-            <BButton
-              variant="primary"
-              pill
-              class="px-5"
-              @click="showDatingIntro = false"
-            >
-              {{ $t('onboarding.wizard.continue') }}
-            </BButton>
-          </div>
-        </template>
-      </BOverlay>
       <DatingWizard
         v-model="formData"
         v-model:datingPrefs="datingPrefs"
@@ -216,52 +193,6 @@ const hint = computed(() => history?.state?.hint || null)
           </p>
         </div>
       </DatingWizard>
-    </BModal>
-    <BModal
-      v-model="showDatingPrefsModal"
-      centered
-      button-size="sm"
-      :focus="false"
-      :no-close-on-backdrop="true"
-      size="lg"
-      fullscreen="sm"
-      :no-footer="false"
-      :no-header="false"
-      :title="$t('profiles.forms.my_preferences')"
-      :cancel-title="$t('profiles.browse.filters.dialog_cancel_button')"
-      cancel-variant="link"
-      :ok-title="$t('profiles.browse.filters.button_update_prefs')"
-      initial-animation
-      :body-scrolling="false"
-      @ok="persistDatingPrefs"
-      lazy
-    >
-      <DatingPreferencesForm
-        v-if="datingPrefs"
-        v-model="datingPrefs"
-      />
-    </BModal>
-    <BModal
-      v-model="showDatingProfileModal"
-      :backdrop="'static'"
-      centered
-      size="lg"
-      button-size="sm"
-      fullscreen="sm"
-      :focus="false"
-      :no-close-on-backdrop="true"
-      :no-header="false"
-      :title="$t('profiles.forms.my_dating_profile')"
-      :no-footer="true"
-      body-class="d-flex flex-column align-items-center overflow-auto hide-scrollbar p-2 p-md-5"
-      :keyboard="false"
-      lazy
-    >
-      <EditDatingProfile
-        v-model="formData"
-        @save="updateProfile().then(() => (showDatingProfileModal = false))"
-        @cancel="showDatingProfileModal = false"
-      />
     </BModal>
   </main>
 </template>

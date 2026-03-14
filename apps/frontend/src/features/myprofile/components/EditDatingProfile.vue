@@ -50,7 +50,7 @@ const birthYear = computed(() =>
       />
     </fieldset>
 
-    <div class="d-flex justify-content-center gap-2 mt-2">
+    <!-- <div class="d-flex justify-content-center gap-2 mt-2">
       <BButton
         variant="link"
         class="link-secondary"
@@ -66,6 +66,6 @@ const birthYear = computed(() =>
       >
         {{ t('onboarding.wizard.finish') }}
       </BButton>
-    </div>
+    </div> -->
   </div>
 </template>

@@ -7,6 +7,8 @@ import MessagingView from '@/features/messaging/views/Messaging.vue'
 import UserHome from '@/features/userhome/views/UserHome.vue'
 import Settings from '@/features/settings/views/Settings.vue'
 import MyProfile from '@/features/myprofile/views/MyProfile.vue'
+import DatingWizardView from '@/features/myprofile/views/DatingWizard.vue'
+import DatingPrefsView from '@/features/myprofile/views/DatingPrefs.vue'
 import BrowseProfiles from '@/features/browse/views/BrowseProfiles.vue'
 import PublicProfileView from '@/features/publicprofile/views/PublicProfileView.vue'
 import OnboardingView from '@/features/onboarding/views/Onboarding.vue'
@@ -51,6 +53,18 @@ const routes: Array<RouteRecordRaw> = [
     path: '/me',
     name: 'MyProfile',
     component: MyProfile,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/me/dating-wizard',
+    name: 'DatingWizard',
+    component: DatingWizardView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/me/dating-prefs',
+    name: 'DatingPrefs',
+    component: DatingPrefsView,
     meta: { requiresAuth: true },
   },
   {

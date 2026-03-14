@@ -35,6 +35,7 @@ const emit = defineEmits<{
       <ViewAsDropdown
         v-model="viewState"
         v-model:is-dating-active="isDatingActive"
+        :is-dating-onboarded="isDatingOnboarded"
       />
 
       <!-- Preferences -->

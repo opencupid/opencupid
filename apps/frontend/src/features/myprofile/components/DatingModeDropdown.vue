@@ -50,17 +50,17 @@ const emit = defineEmits<{
     </BDropdownText>
     <BCollapse v-model="isDatingActive">
       <BDropdownDivider />
-      <BDropdownItemButton @click="$emit('datingmode:profile')">
+      <!-- <BDropdownItemButton @click="$emit('datingmode:profile')">
         <IconProfile class="svg-icon me-2" />
-        {{ $t('profiles.forms.my_dating_profile') }}
-      </BDropdownItemButton>
+        {{ $t('profiles.forms.my_preferences') }} // TODO clean up this key
+      </BDropdownItemButton> -->
 
       <BDropdownItemButton
         @click="$emit('datingmode:prefs')"
         :disabled="!isDatingOnboarded"
       >
         <IconSlider class="svg-icon me-2" />
-        {{ $t('profiles.forms.my_preferences') }}
+        {{ $t('profiles.forms.my_dating_profile') }}
       </BDropdownItemButton>
     </BCollapse>
   </BNavItemDropdown>
