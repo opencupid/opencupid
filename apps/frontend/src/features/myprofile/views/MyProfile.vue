@@ -54,11 +54,6 @@ const openDatingProfile = () => {
 }
 
 const toggleDating = async () => {
-  // If dating is not onboarded, navigate to the intro view
-  if (!isDatingOnboarded.value && !formData.isDatingActive) {
-    router.push({ name: 'DatingWizard' })
-    return
-  }
   const newValue = !formData.isDatingActive
   formData.isDatingActive = newValue
   await updateScopes({ isDatingActive: newValue })

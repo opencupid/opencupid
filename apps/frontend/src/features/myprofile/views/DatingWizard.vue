@@ -32,10 +32,10 @@ function proceed() {
         <div
           class="col-3 mx-auto d-flex align-items-center justify-content-center text-dating my-md-2 animate__animated animate__fadeIn"
         >
-          <IconCupid class="svg-icon-100 opacity-50" />
+          <IconCupid class="svg-icon-100 opacity-25" />
         </div>
         <div class="text-center p-4">
-          <p class="mb-3 lh-sm form-hint">
+          <p class="mb-3">
             {{ $t('onboarding.wizard.dating_intro_text') }}
           </p>
           <BButton

@@ -41,7 +41,6 @@ const emit = defineEmits<{
       <!-- Preferences -->
       <DatingModeDropdown
         v-model:is-dating-active="isDatingActive"
-        :is-dating-onboarded="isDatingOnboarded"
         @datingmode:toggle="$emit('datingmode:toggle')"
         @datingmode:prefs="$emit('datingmode:prefs')"
         @datingmode:profile="$emit('datingmode:profile')"
