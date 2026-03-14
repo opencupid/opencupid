@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach, vi } from 'vitest'
 vi.mock('../../lib/prisma', () => ({ prisma: {} }))
 import { subtractYears } from '../../services/profileMatch.service'
-import { calculateAge } from '../../services/profileMatch.service'
+import { calculateAge } from '@zod/match/filters.form'
 import { date } from 'zod'
 
 describe('subtractYears', () => {

@@ -36,6 +36,7 @@ import type {
 import { GetProfileSummariesResponse } from '@zod/apiResponse.dto'
 import { UpdateDatingPreferencesPayloadSchema } from '@zod/match/filters.dto'
 import { mapProfileToDatingPreferencesDTO } from '@/api/mappers/profileMatch.mappers'
+import { createDatingPrefsDefaults, DatingPreferencesFormSchema } from '@zod/match/filters.form'
 
 import { ProfileService } from 'src/services/profile.service'
 import { ProfileMatchService } from '@/services/profileMatch.service'
@@ -129,9 +130,8 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
       let fetched = await profileService.getProfileByUserId(req.user.userId)
       if (!fetched) return sendError(reply, 404, 'Profile not found')
 
-      // Compute and persist age-aware defaults when birthday exists
-      if (fetched.prefAgeMin === null && fetched.prefAgeMax === null && fetched.birthday) {
-        const defaults = profileMatchService.createDatingPrefsDefaults(fetched)
+      if (fetched.prefAgeMin === null) {
+        const defaults = DatingPreferencesFormSchema.parse(createDatingPrefsDefaults(fetched))
         fetched = await profileService.updateProfileScalars(req.user.userId, defaults)
       }
 

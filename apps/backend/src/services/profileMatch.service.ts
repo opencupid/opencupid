@@ -9,8 +9,8 @@ import type {
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
 import { profileImageInclude, tagsInclude } from '@/db/includes/profileIncludes'
 import type { LocationDTO } from '@zod/dto/location.dto'
-import { Gender, HasKids, type Prisma, type Profile } from '@prisma/client'
-import { PREF_AGE_MIN, PREF_AGE_MAX, type DatingPreferencesFormType } from '@zod/match/filters.form'
+import { type Prisma } from '@prisma/client'
+import { calculateAge } from '@zod/match/filters.form'
 
 const tagInclude = {
   // city: true,
@@ -141,20 +141,6 @@ export class ProfileMatchService {
       },
     })
   }
-  createDatingPrefsDefaults(
-    profile: Pick<Profile, 'birthday' | 'gender'>
-  ): Partial<DatingPreferencesFormType> {
-    if (!profile.birthday) return {}
-    const age = calculateAge(profile.birthday)
-    const prefGender = profile.gender === Gender.male ? Gender.female : Gender.male
-    return {
-      prefAgeMin: age ? age - 5 : PREF_AGE_MIN,
-      prefAgeMax: age ? age + 5 : PREF_AGE_MAX,
-      prefGender: [prefGender],
-      prefKids: [HasKids.no, HasKids.yes],
-    }
-  }
-
   private async buildSocialWhereClause(profileId: string) {
     const userPrefs = await this.getSocialMatchFilter(profileId)
     if (!userPrefs) return null
@@ -360,16 +346,6 @@ export class ProfileMatchService {
 
     return aMatchesB && bMatchesA
   }
-}
-
-export function calculateAge(birthday: Date): number {
-  const today = new Date()
-  let age = today.getFullYear() - birthday.getFullYear()
-  const m = today.getMonth() - birthday.getMonth()
-  if (m < 0 || (m === 0 && today.getDate() < birthday.getDate())) {
-    age--
-  }
-  return age
 }
 
 export function subtractYears(date: Date, years: number): Date {

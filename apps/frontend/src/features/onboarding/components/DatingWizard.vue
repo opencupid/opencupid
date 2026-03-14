@@ -18,9 +18,7 @@ defineEmits<{
 
 const formData = defineModel<EditFieldProfileFormWithImages>({ required: true })
 
-const datingPrefs = defineModel<DatingPreferencesFormType | null>('datingPrefs', {
-  default: null,
-})
+const datingPrefs = defineModel<DatingPreferencesFormType>('datingPrefs', { required: true })
 
 const { datingWizardSteps } = useWizardSteps(formData.value, datingPrefs.value)
 const { current, isFirst, isLast, goToNext, goToPrevious, isCurrent } =
