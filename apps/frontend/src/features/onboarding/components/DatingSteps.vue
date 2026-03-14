@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import useEditFields from '@/features/shared/composables/useEditFields'
 import { type EditProfileForm } from '@zod/profile/profile.form'
-import {
-  createDatingPrefsDefaults,
-  type DatingPreferencesFormType,
-} from '@zod/match/filters.form'
+import { createDatingPrefsDefaults, type DatingPreferencesFormType } from '@zod/match/filters.form'
 import AgeSelector from '@/features/shared/profileform/AgeSelector.vue'
 import GenderPronounSelector from '@/features/shared/profileform/GenderPronounSelector.vue'
 import RelationstatusSelector from '@/features/shared/profileform/RelationstatusSelector.vue'

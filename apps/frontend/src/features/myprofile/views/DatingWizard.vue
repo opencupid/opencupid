@@ -5,7 +5,7 @@ import { useRouter } from 'vue-router'
 import { useBootstrap } from '@/lib/bootstrap'
 import { useMyProfileViewModel } from '../composables/useMyProfileViewModel'
 
-import DatingWizardSteps from '@/features/onboarding/components/DatingWizard.vue'
+import DatingWizardStepper from '@/features/onboarding/components/DatingWizardStepper.vue'
 import IconCupid from '@/assets/images/app/cupid.svg'
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 import RouterBackButton from '@/features/shared/ui/RouterBackButton.vue'
@@ -37,7 +37,7 @@ const handleFinish = async () => {
     <MiddleColumn class="h-100 d-flex flex-column">
       <SecondaryNav>
         <template #items-right>
-          <RouterBackButton > <IconClose class="svg-icon" /> </RouterBackButton>
+          <RouterBackButton> <IconClose class="svg-icon" /> </RouterBackButton>
         </template>
         <template #items-center>
           {{ $t('onboarding.wizard.dating_modal_title') }}
@@ -77,7 +77,7 @@ const handleFinish = async () => {
           </template>
         </BOverlay>
 
-        <DatingWizardSteps
+        <DatingWizardStepper
           v-model="formData"
           v-model:datingPrefs="datingPrefs"
           @finished="handleFinish"
@@ -106,7 +106,7 @@ const handleFinish = async () => {
               </span>
             </p>
           </div>
-        </DatingWizardSteps>
+        </DatingWizardStepper>
       </section>
     </MiddleColumn>
   </main>
