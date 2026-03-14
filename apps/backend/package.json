@@ -11,6 +11,7 @@
     "prisma:migrate": "prisma migrate  dev",
     "prisma:seed": "prisma db seed",
     "prisma:deploy": "prisma migrate deploy",
+    "prisma:studio": "prisma studio",
     "watch": "tsc-watch",
     "lint": "eslint . --ext .ts",
     "format": "prettier --write src/",
