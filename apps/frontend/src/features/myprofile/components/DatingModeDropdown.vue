@@ -3,7 +3,6 @@ import IconHeart from '@/assets/icons/interface/heart.svg'
 import IconSlider from '@/assets/icons/interface/setting.svg'
 import IconProfile from '@/assets/icons/interface/user.svg'
 
-
 const isDatingActive = defineModel<boolean>('isDatingActive', {
   default: false,
 })

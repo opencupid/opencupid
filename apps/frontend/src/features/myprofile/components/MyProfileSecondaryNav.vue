@@ -6,7 +6,7 @@ import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
 import IconMenuDotsVert from '@/assets/icons/interface/menu-dots-vert.svg'
 
 defineProps<{
-  isDatingOnboarded?: boolean
+  isDatingOnboarded: boolean
 }>()
 
 const viewState = defineModel<ViewState>({
@@ -50,11 +50,11 @@ const emit = defineEmits<{
       <BNavItemDropdown>
         <template #button-content>
           <span class="text-secondary">
-          <IconMenuDotsVert class="svg-icon-lg fs-4" />
+            <IconMenuDotsVert class="svg-icon-lg fs-4" />
           </span>
         </template>
         <BDropdownItem to="/settings">
-            <IconSetting2 class="svg-icon me-1" />
+          <IconSetting2 class="svg-icon me-1" />
           {{ $t('settings.title') }}
         </BDropdownItem>
       </BNavItemDropdown>

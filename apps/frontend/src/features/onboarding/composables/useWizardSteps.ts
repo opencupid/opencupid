@@ -71,7 +71,11 @@ export const useWizardSteps = (
       flags: '',
     },
     preferences: {
-      state: computed(() => isDatingPreferencesValid(datingPrefs)),
+      state: computed(() => {
+        if (!datingPrefs) return false
+        const { prefGender, prefKids, prefAgeMin, prefAgeMax } = datingPrefs
+        return isDatingPreferencesValid({ prefGender, prefKids, prefAgeMin, prefAgeMax })
+      }),
       flags: '',
     },
   }

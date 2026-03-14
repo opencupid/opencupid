@@ -8,6 +8,8 @@ import { useStepper } from '@vueuse/core'
 
 import BackButton from './BackButton.vue'
 import DatingSteps from './DatingSteps.vue'
+import { useBootstrap } from '@/lib/bootstrap'
+import { onMounted } from 'vue'
 
 const { t } = useI18n()
 
@@ -23,6 +25,10 @@ const datingPrefs = defineModel<DatingPreferencesFormType>('datingPrefs', { requ
 const { datingWizardSteps } = useWizardSteps(formData.value, datingPrefs.value)
 const { current, isFirst, isLast, goToNext, goToPrevious, isCurrent } =
   useStepper(datingWizardSteps)
+
+onMounted(async () => {
+  await useBootstrap().bootstrap()
+})
 </script>
 
 <template>
