@@ -1,5 +1,15 @@
 # frontend
 
+## 0.29.0
+
+### Minor Changes
+
+- 956853f: Extract dating wizard and prefs into standalone routed views (#1096)
+
+### Patch Changes
+
+- 9e21523: Fix dating preferences not persisted during onboarding and dating wizard flows (#1094)
+
 ## 0.28.0
 
 ### Minor Changes

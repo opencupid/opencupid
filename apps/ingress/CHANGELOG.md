@@ -1,5 +1,11 @@
 # @opencupid/ingress
 
+## 0.29.0
+
+### Patch Changes
+
+- 1d2286e: Signed cookie media auth — replaces per-URL HMAC query params with a single `__media_token` cookie (#1089)
+
 ## 0.28.0
 
 ## 0.27.0

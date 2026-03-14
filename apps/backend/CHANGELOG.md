@@ -1,5 +1,16 @@
 # backend
 
+## 0.29.0
+
+### Minor Changes
+
+- 1d2286e: Signed cookie media auth — replaces per-URL HMAC query params with a single `__media_token` cookie (#1089)
+
+### Patch Changes
+
+- 956853f: Extract dating wizard and prefs into standalone routed views (#1096)
+- 9e21523: Fix dating preferences not persisted during onboarding and dating wizard flows (#1094)
+
 ## 0.28.0
 
 ## 0.27.0
