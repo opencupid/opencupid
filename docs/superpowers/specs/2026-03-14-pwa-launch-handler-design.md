@@ -15,7 +15,7 @@ The web app manifest (`apps/frontend/public/assets/site.webmanifest`) lacks two 
 - `scope` — defines which URLs belong to the PWA
 - `launch_handler` — defines what Chrome should do when an in-scope URL is opened externally
 
-Without these, Chrome has no instruction to prefer the PWA over a regular tab.
+The current manifest has `start_url: "/home"`, which gives Chrome an implicit scope of `/home`. The magic link at `/magic-link` falls outside that implicit scope, so Chrome does not associate it with the installed PWA. Adding an explicit `scope: "/"` widens this to cover all app routes. Without `launch_handler`, Chrome still has no instruction to prefer the PWA window over a regular tab.
 
 ## Solution
 
@@ -74,5 +74,5 @@ This is the right mode because:
 2. Log out or use an unauthenticated state
 3. Trigger a magic-link email (enter email at `/auth`)
 4. Open the email and tap the magic link
-5. Verify the PWA window activates and navigates to `/magic-link?token=...`
+5. Verify the PWA window activates and navigates to `/magic-link?token=...` (no new browser tab should open)
 6. Verify auth completes and the user lands on `/home`
