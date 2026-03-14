@@ -16,10 +16,13 @@ const model = defineModel<LocalizedText | null>({
   default: () => ({}),
 })
 
-const props = defineProps<{
-  languages: string[]
-  placeholder: string
-}>()
+const props = withDefaults(
+  defineProps<{
+    languages?: string[]
+    placeholder: string
+  }>(),
+  { languages: () => [] }
+)
 
 const debug = ref('')
 
@@ -29,7 +32,7 @@ const lastConfidence = ref(0)
 const error = ref('')
 const status = ref('idle')
 
-const langList = computed(() => sortLanguagesWithEnFirst(props.languages))
+const langList = computed(() => props.languages ? sortLanguagesWithEnFirst(props.languages) : [])
 
 const currentLanguage = ref(langList.value[0] ?? '')
 
@@ -108,7 +111,7 @@ const toggleListening = () => {
 watch(
   () => model.value,
   (value) => {
-    if (!value) return
+    if (!value || !props.languages) return
 
     props.languages.forEach((lang) => {
       if (!(lang in value)) {
