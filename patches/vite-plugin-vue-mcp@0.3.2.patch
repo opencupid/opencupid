@@ -1,0 +1,978 @@
+diff --git a/dist/chunks/server.cjs b/dist/chunks/server.cjs
+index d56b8ff9d50d5723bf015cfed1bff3e5090af122..1f7715316a9d6cfa577ab7e2b56f26b7951e62fa 100644
+--- a/dist/chunks/server.cjs
++++ b/dist/chunks/server.cjs
+@@ -4,9 +4,37 @@ const mcp_js = require('@modelcontextprotocol/sdk/server/mcp.js');
+ const nanoid = require('nanoid');
+ const zod = require('zod');
+ 
+-const version = "0.3.2";
++const version = "0.3.3";
+ 
+-function createMcpServerDefault(options, vite, ctx) {
++const TOOL_TIMEOUT = 1e4;
++const log = (...args) => console.log(...args);
++function createToolHandler(ctx, toolName, rpcCall) {
++  return () => {
++    log(`[vue-mcp] tool:${toolName} called`);
++    return new Promise((resolve, reject) => {
++      const eventName = nanoid.nanoid();
++      const timeout = setTimeout(() => {
++        console.error(`[vue-mcp] tool:${toolName} timed out after ${TOOL_TIMEOUT}ms \u2014 is a browser tab open?`);
++        reject(new Error(`[vue-mcp] tool:${toolName} timed out \u2014 no response from browser client`));
++      }, TOOL_TIMEOUT);
++      ctx.hooks.hookOnce(eventName, (res) => {
++        clearTimeout(timeout);
++        log(`[vue-mcp] tool:${toolName} received response`);
++        resolve({
++          content: [{ type: "text", text: JSON.stringify(res) }]
++        });
++      });
++      try {
++        rpcCall(eventName);
++      } catch (e) {
++        clearTimeout(timeout);
++        console.error(`[vue-mcp] tool:${toolName} RPC call failed:`, e);
++        reject(e);
++      }
++    });
++  };
++}
++function createMcpServerDefault(options, _vite, ctx) {
+   const server = new mcp_js.McpServer(
+     {
+       name: "vite",
+@@ -18,20 +46,9 @@ function createMcpServerDefault(options, vite, ctx) {
+     "get-component-tree",
+     "Get the Vue component tree in markdown tree syntax format.",
+     {},
+-    async () => {
+-      return new Promise((resolve) => {
+-        const eventName = nanoid.nanoid();
+-        ctx.hooks.hookOnce(eventName, (res) => {
+-          resolve({
+-            content: [{
+-              type: "text",
+-              text: JSON.stringify(res)
+-            }]
+-          });
+-        });
+-        ctx.rpcServer.getInspectorTree({ event: eventName });
+-      });
+-    }
++    createToolHandler(ctx, "get-component-tree", (event) => {
++      ctx.rpcServer.getInspectorTree({ event });
++    })
+   );
+   server.tool(
+     "get-component-state",
+@@ -40,17 +57,27 @@ function createMcpServerDefault(options, vite, ctx) {
+       componentName: zod.z.string()
+     },
+     async ({ componentName }) => {
+-      return new Promise((resolve) => {
++      log(`[vue-mcp] tool:get-component-state called for "${componentName}"`);
++      return new Promise((resolve, reject) => {
+         const eventName = nanoid.nanoid();
++        const timeout = setTimeout(() => {
++          console.error(`[vue-mcp] tool:get-component-state timed out after ${TOOL_TIMEOUT}ms`);
++          reject(new Error(`[vue-mcp] tool:get-component-state timed out \u2014 no response from browser client`));
++        }, TOOL_TIMEOUT);
+         ctx.hooks.hookOnce(eventName, (res) => {
++          clearTimeout(timeout);
++          log(`[vue-mcp] tool:get-component-state received response`);
+           resolve({
+-            content: [{
+-              type: "text",
+-              text: JSON.stringify(res)
+-            }]
++            content: [{ type: "text", text: JSON.stringify(res) }]
+           });
+         });
+-        ctx.rpcServer.getInspectorState({ event: eventName, componentName });
++        try {
++          ctx.rpcServer.getInspectorState({ event: eventName, componentName });
++        } catch (e) {
++          clearTimeout(timeout);
++          console.error(`[vue-mcp] tool:get-component-state RPC call failed:`, e);
++          reject(e);
++        }
+       });
+     }
+   );
+@@ -64,15 +91,17 @@ function createMcpServerDefault(options, vite, ctx) {
+       valueType: zod.z.enum(["string", "number", "boolean", "object", "array"])
+     },
+     async ({ componentName, path, value, valueType }) => {
+-      return new Promise((resolve) => {
++      log(`[vue-mcp] tool:edit-component-state called for "${componentName}" path=${path.join(".")}`);
++      try {
+         ctx.rpcServer.editComponentState({ componentName, path, value, valueType });
+-        resolve({
+-          content: [{
+-            type: "text",
+-            text: "ok"
+-          }]
+-        });
+-      });
++        log(`[vue-mcp] tool:edit-component-state completed`);
++        return {
++          content: [{ type: "text", text: "ok" }]
++        };
++      } catch (e) {
++        console.error(`[vue-mcp] tool:edit-component-state failed:`, e);
++        throw e;
++      }
+     }
+   );
+   server.tool(
+@@ -82,35 +111,26 @@ function createMcpServerDefault(options, vite, ctx) {
+       componentName: zod.z.string()
+     },
+     async ({ componentName }) => {
+-      return new Promise((resolve) => {
++      log(`[vue-mcp] tool:highlight-component called for "${componentName}"`);
++      try {
+         ctx.rpcServer.highlightComponent({ componentName });
+-        resolve({
+-          content: [{
+-            type: "text",
+-            text: "ok"
+-          }]
+-        });
+-      });
++        log(`[vue-mcp] tool:highlight-component completed`);
++        return {
++          content: [{ type: "text", text: "ok" }]
++        };
++      } catch (e) {
++        console.error(`[vue-mcp] tool:highlight-component failed:`, e);
++        throw e;
++      }
+     }
+   );
+   server.tool(
+     "get-router-info",
+     "Get the Vue router info in JSON structure format.",
+     {},
+-    async () => {
+-      return new Promise((resolve) => {
+-        const eventName = nanoid.nanoid();
+-        ctx.hooks.hookOnce(eventName, (res) => {
+-          resolve({
+-            content: [{
+-              type: "text",
+-              text: JSON.stringify(res)
+-            }]
+-          });
+-        });
+-        ctx.rpcServer.getRouterInfo({ event: eventName });
+-      });
+-    }
++    createToolHandler(ctx, "get-router-info", (event) => {
++      ctx.rpcServer.getRouterInfo({ event });
++    })
+   );
+   server.tool(
+     "get-pinia-state",
+@@ -119,17 +139,27 @@ function createMcpServerDefault(options, vite, ctx) {
+       storeName: zod.z.string()
+     },
+     async ({ storeName }) => {
+-      return new Promise((resolve) => {
++      log(`[vue-mcp] tool:get-pinia-state called for store "${storeName}"`);
++      return new Promise((resolve, reject) => {
+         const eventName = nanoid.nanoid();
++        const timeout = setTimeout(() => {
++          console.error(`[vue-mcp] tool:get-pinia-state timed out after ${TOOL_TIMEOUT}ms`);
++          reject(new Error(`[vue-mcp] tool:get-pinia-state timed out \u2014 no response from browser client`));
++        }, TOOL_TIMEOUT);
+         ctx.hooks.hookOnce(eventName, (res) => {
++          clearTimeout(timeout);
++          log(`[vue-mcp] tool:get-pinia-state received response`);
+           resolve({
+-            content: [{
+-              type: "text",
+-              text: JSON.stringify(res)
+-            }]
++            content: [{ type: "text", text: JSON.stringify(res) }]
+           });
+         });
+-        ctx.rpcServer.getPiniaState({ event: eventName, storeName });
++        try {
++          ctx.rpcServer.getPiniaState({ event: eventName, storeName });
++        } catch (e) {
++          clearTimeout(timeout);
++          console.error(`[vue-mcp] tool:get-pinia-state RPC call failed:`, e);
++          reject(e);
++        }
+       });
+     }
+   );
+@@ -137,20 +167,9 @@ function createMcpServerDefault(options, vite, ctx) {
+     "get-pinia-tree",
+     "Get the Pinia tree in JSON structure format.",
+     {},
+-    async () => {
+-      return new Promise((resolve) => {
+-        const eventName = nanoid.nanoid();
+-        ctx.hooks.hookOnce(eventName, (res) => {
+-          resolve({
+-            content: [{
+-              type: "text",
+-              text: JSON.stringify(res)
+-            }]
+-          });
+-        });
+-        ctx.rpcServer.getPiniaTree({ event: eventName });
+-      });
+-    }
++    createToolHandler(ctx, "get-pinia-tree", (event) => {
++      ctx.rpcServer.getPiniaTree({ event });
++    })
+   );
+   return server;
+ }
+diff --git a/dist/chunks/server.mjs b/dist/chunks/server.mjs
+index 625be8c1ac6f04f65867140e43cd0f4a6761d032..c224fd5f5d059afa8fd0a876c1a5916dc6efecc7 100644
+--- a/dist/chunks/server.mjs
++++ b/dist/chunks/server.mjs
+@@ -2,9 +2,37 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+ import { nanoid } from 'nanoid';
+ import { z } from 'zod';
+ 
+-const version = "0.3.2";
++const version = "0.3.3";
+ 
+-function createMcpServerDefault(options, vite, ctx) {
++const TOOL_TIMEOUT = 1e4;
++const log = (...args) => console.log(...args);
++function createToolHandler(ctx, toolName, rpcCall) {
++  return () => {
++    log(`[vue-mcp] tool:${toolName} called`);
++    return new Promise((resolve, reject) => {
++      const eventName = nanoid();
++      const timeout = setTimeout(() => {
++        console.error(`[vue-mcp] tool:${toolName} timed out after ${TOOL_TIMEOUT}ms \u2014 is a browser tab open?`);
++        reject(new Error(`[vue-mcp] tool:${toolName} timed out \u2014 no response from browser client`));
++      }, TOOL_TIMEOUT);
++      ctx.hooks.hookOnce(eventName, (res) => {
++        clearTimeout(timeout);
++        log(`[vue-mcp] tool:${toolName} received response`);
++        resolve({
++          content: [{ type: "text", text: JSON.stringify(res) }]
++        });
++      });
++      try {
++        rpcCall(eventName);
++      } catch (e) {
++        clearTimeout(timeout);
++        console.error(`[vue-mcp] tool:${toolName} RPC call failed:`, e);
++        reject(e);
++      }
++    });
++  };
++}
++function createMcpServerDefault(options, _vite, ctx) {
+   const server = new McpServer(
+     {
+       name: "vite",
+@@ -16,20 +44,9 @@ function createMcpServerDefault(options, vite, ctx) {
+     "get-component-tree",
+     "Get the Vue component tree in markdown tree syntax format.",
+     {},
+-    async () => {
+-      return new Promise((resolve) => {
+-        const eventName = nanoid();
+-        ctx.hooks.hookOnce(eventName, (res) => {
+-          resolve({
+-            content: [{
+-              type: "text",
+-              text: JSON.stringify(res)
+-            }]
+-          });
+-        });
+-        ctx.rpcServer.getInspectorTree({ event: eventName });
+-      });
+-    }
++    createToolHandler(ctx, "get-component-tree", (event) => {
++      ctx.rpcServer.getInspectorTree({ event });
++    })
+   );
+   server.tool(
+     "get-component-state",
+@@ -38,17 +55,27 @@ function createMcpServerDefault(options, vite, ctx) {
+       componentName: z.string()
+     },
+     async ({ componentName }) => {
+-      return new Promise((resolve) => {
++      log(`[vue-mcp] tool:get-component-state called for "${componentName}"`);
++      return new Promise((resolve, reject) => {
+         const eventName = nanoid();
++        const timeout = setTimeout(() => {
++          console.error(`[vue-mcp] tool:get-component-state timed out after ${TOOL_TIMEOUT}ms`);
++          reject(new Error(`[vue-mcp] tool:get-component-state timed out \u2014 no response from browser client`));
++        }, TOOL_TIMEOUT);
+         ctx.hooks.hookOnce(eventName, (res) => {
++          clearTimeout(timeout);
++          log(`[vue-mcp] tool:get-component-state received response`);
+           resolve({
+-            content: [{
+-              type: "text",
+-              text: JSON.stringify(res)
+-            }]
++            content: [{ type: "text", text: JSON.stringify(res) }]
+           });
+         });
+-        ctx.rpcServer.getInspectorState({ event: eventName, componentName });
++        try {
++          ctx.rpcServer.getInspectorState({ event: eventName, componentName });
++        } catch (e) {
++          clearTimeout(timeout);
++          console.error(`[vue-mcp] tool:get-component-state RPC call failed:`, e);
++          reject(e);
++        }
+       });
+     }
+   );
+@@ -62,15 +89,17 @@ function createMcpServerDefault(options, vite, ctx) {
+       valueType: z.enum(["string", "number", "boolean", "object", "array"])
+     },
+     async ({ componentName, path, value, valueType }) => {
+-      return new Promise((resolve) => {
++      log(`[vue-mcp] tool:edit-component-state called for "${componentName}" path=${path.join(".")}`);
++      try {
+         ctx.rpcServer.editComponentState({ componentName, path, value, valueType });
+-        resolve({
+-          content: [{
+-            type: "text",
+-            text: "ok"
+-          }]
+-        });
+-      });
++        log(`[vue-mcp] tool:edit-component-state completed`);
++        return {
++          content: [{ type: "text", text: "ok" }]
++        };
++      } catch (e) {
++        console.error(`[vue-mcp] tool:edit-component-state failed:`, e);
++        throw e;
++      }
+     }
+   );
+   server.tool(
+@@ -80,35 +109,26 @@ function createMcpServerDefault(options, vite, ctx) {
+       componentName: z.string()
+     },
+     async ({ componentName }) => {
+-      return new Promise((resolve) => {
++      log(`[vue-mcp] tool:highlight-component called for "${componentName}"`);
++      try {
+         ctx.rpcServer.highlightComponent({ componentName });
+-        resolve({
+-          content: [{
+-            type: "text",
+-            text: "ok"
+-          }]
+-        });
+-      });
++        log(`[vue-mcp] tool:highlight-component completed`);
++        return {
++          content: [{ type: "text", text: "ok" }]
++        };
++      } catch (e) {
++        console.error(`[vue-mcp] tool:highlight-component failed:`, e);
++        throw e;
++      }
+     }
+   );
+   server.tool(
+     "get-router-info",
+     "Get the Vue router info in JSON structure format.",
+     {},
+-    async () => {
+-      return new Promise((resolve) => {
+-        const eventName = nanoid();
+-        ctx.hooks.hookOnce(eventName, (res) => {
+-          resolve({
+-            content: [{
+-              type: "text",
+-              text: JSON.stringify(res)
+-            }]
+-          });
+-        });
+-        ctx.rpcServer.getRouterInfo({ event: eventName });
+-      });
+-    }
++    createToolHandler(ctx, "get-router-info", (event) => {
++      ctx.rpcServer.getRouterInfo({ event });
++    })
+   );
+   server.tool(
+     "get-pinia-state",
+@@ -117,17 +137,27 @@ function createMcpServerDefault(options, vite, ctx) {
+       storeName: z.string()
+     },
+     async ({ storeName }) => {
+-      return new Promise((resolve) => {
++      log(`[vue-mcp] tool:get-pinia-state called for store "${storeName}"`);
++      return new Promise((resolve, reject) => {
+         const eventName = nanoid();
++        const timeout = setTimeout(() => {
++          console.error(`[vue-mcp] tool:get-pinia-state timed out after ${TOOL_TIMEOUT}ms`);
++          reject(new Error(`[vue-mcp] tool:get-pinia-state timed out \u2014 no response from browser client`));
++        }, TOOL_TIMEOUT);
+         ctx.hooks.hookOnce(eventName, (res) => {
++          clearTimeout(timeout);
++          log(`[vue-mcp] tool:get-pinia-state received response`);
+           resolve({
+-            content: [{
+-              type: "text",
+-              text: JSON.stringify(res)
+-            }]
++            content: [{ type: "text", text: JSON.stringify(res) }]
+           });
+         });
+-        ctx.rpcServer.getPiniaState({ event: eventName, storeName });
++        try {
++          ctx.rpcServer.getPiniaState({ event: eventName, storeName });
++        } catch (e) {
++          clearTimeout(timeout);
++          console.error(`[vue-mcp] tool:get-pinia-state RPC call failed:`, e);
++          reject(e);
++        }
+       });
+     }
+   );
+@@ -135,20 +165,9 @@ function createMcpServerDefault(options, vite, ctx) {
+     "get-pinia-tree",
+     "Get the Pinia tree in JSON structure format.",
+     {},
+-    async () => {
+-      return new Promise((resolve) => {
+-        const eventName = nanoid();
+-        ctx.hooks.hookOnce(eventName, (res) => {
+-          resolve({
+-            content: [{
+-              type: "text",
+-              text: JSON.stringify(res)
+-            }]
+-          });
+-        });
+-        ctx.rpcServer.getPiniaTree({ event: eventName });
+-      });
+-    }
++    createToolHandler(ctx, "get-pinia-tree", (event) => {
++      ctx.rpcServer.getPiniaTree({ event });
++    })
+   );
+   return server;
+ }
+diff --git a/dist/index.cjs b/dist/index.cjs
+index 4c089cc6700862484b5229a76d95bd2797c0f725..bd9fac1821e6e4224372e6e61c0222f126b9170c 100644
+--- a/dist/index.cjs
++++ b/dist/index.cjs
+@@ -9,7 +9,6 @@ const pathe = require('pathe');
+ const vite = require('vite');
+ const viteDevRpc = require('vite-dev-rpc');
+ const sse_js = require('@modelcontextprotocol/sdk/server/sse.js');
+-const DEBUG = require('debug');
+ const hookable = require('hookable');
+ 
+ var _documentCurrentScript = typeof document !== 'undefined' ? document.currentScript : null;
+@@ -18,19 +17,31 @@ function _interopDefaultCompat (e) { return e && typeof e === 'object' && 'defau
+ const fs__default = /*#__PURE__*/_interopDefaultCompat(fs);
+ const path__default = /*#__PURE__*/_interopDefaultCompat(path);
+ const c__default = /*#__PURE__*/_interopDefaultCompat(c);
+-const DEBUG__default = /*#__PURE__*/_interopDefaultCompat(DEBUG);
+ 
+-const debug = DEBUG__default("vite:mcp:server");
+-async function setupRoutes(base, server, vite) {
++const log = (...args) => console.log(...args);
++async function setupRoutes(base, createServer, vite) {
+   const transports = /* @__PURE__ */ new Map();
+   vite.middlewares.use(`${base}/sse`, async (req, res) => {
+-    const transport = new sse_js.SSEServerTransport(`${base}/messages`, res);
+-    transports.set(transport.sessionId, transport);
+-    debug("SSE Connected %s", transport.sessionId);
+-    res.on("close", () => {
+-      transports.delete(transport.sessionId);
+-    });
+-    await server.connect(transport);
++    try {
++      const transport = new sse_js.SSEServerTransport(`${base}/messages`, res);
++      const server = await createServer();
++      transports.set(transport.sessionId, transport);
++      log(`[vue-mcp] SSE client connected: ${transport.sessionId}`);
++      res.on("close", () => {
++        log(`[vue-mcp] SSE client disconnected: ${transport.sessionId}`);
++        transports.delete(transport.sessionId);
++        server.close().catch((e) => {
++          console.error("[vue-mcp] Error closing MCP server:", e);
++        });
++      });
++      await server.connect(transport);
++    } catch (e) {
++      console.error("[vue-mcp] SSE connection error:", e);
++      if (!res.headersSent) {
++        res.statusCode = 500;
++        res.end("Internal Server Error");
++      }
++    }
+   });
+   vite.middlewares.use(`${base}/messages`, async (req, res) => {
+     if (req.method !== "POST") {
+@@ -47,12 +58,21 @@ async function setupRoutes(base, server, vite) {
+     }
+     const transport = transports.get(clientId);
+     if (!transport) {
++      console.warn(`[vue-mcp] Message for unknown session: ${clientId}`);
+       res.statusCode = 404;
+       res.end("Not Found");
+       return;
+     }
+-    debug("Message from %s", clientId);
+-    await transport.handlePostMessage(req, res);
++    try {
++      log(`[vue-mcp] Message received from session: ${clientId}`);
++      await transport.handlePostMessage(req, res);
++    } catch (e) {
++      console.error(`[vue-mcp] Message handling error for session ${clientId}:`, e);
++      if (!res.headersSent) {
++        res.statusCode = 500;
++        res.end("Internal Server Error");
++      }
++    }
+   });
+ }
+ 
+@@ -128,19 +148,32 @@ function VueMcp(options = {}) {
+       );
+       ctx.rpcServer = rpcServer;
+       ctx.rpc = rpc;
+-      let mcp = await mcpServer(vite$1, ctx);
+-      mcp = await options.mcpServerSetup?.(mcp, vite$1) || mcp;
+-      await setupRoutes(mcpPath, mcp, vite$1);
++      const createMcpServer = async () => {
++        let mcp = await mcpServer(vite$1, ctx);
++        mcp = await options.mcpServerSetup?.(mcp, vite$1) || mcp;
++        return mcp;
++      };
++      await setupRoutes(mcpPath, createMcpServer, vite$1);
+       const port = vite$1.config.server.port || 5173;
+       const root = vite.searchForWorkspaceRoot(vite$1.config.root);
+       const sseUrl = `http://${options.host || "localhost"}:${port}${mcpPath}/sse`;
+       if (cursorMcpOptions.enabled) {
+-        if (node_fs.existsSync(pathe.join(root, ".cursor"))) {
+-          const mcp2 = node_fs.existsSync(pathe.join(root, ".cursor/mcp.json")) ? JSON.parse(await fs__default.readFile(pathe.join(root, ".cursor/mcp.json"), "utf-8") || "{}") : {};
+-          mcp2.mcpServers ||= {};
+-          mcp2.mcpServers[cursorMcpOptions.serverName || "vue-mcp"] = { url: sseUrl };
+-          await fs__default.writeFile(pathe.join(root, ".cursor/mcp.json"), `${JSON.stringify(mcp2, null, 2)}
++        try {
++          if (node_fs.existsSync(pathe.join(root, ".cursor"))) {
++            const mcpConfigPath = pathe.join(root, ".cursor/mcp.json");
++            let mcp = {};
++            if (node_fs.existsSync(mcpConfigPath)) {
++              const raw = await fs__default.readFile(mcpConfigPath, "utf-8");
++              mcp = JSON.parse(raw || "{}");
++            }
++            mcp.mcpServers ||= {};
++            mcp.mcpServers[cursorMcpOptions.serverName || "vue-mcp"] = { url: sseUrl };
++            await fs__default.writeFile(mcpConfigPath, `${JSON.stringify(mcp, null, 2)}
+ `);
++            console.log(`[vue-mcp] Updated ${mcpConfigPath}`);
++          }
++        } catch (e) {
++          console.error("[vue-mcp] Failed to update .cursor/mcp.json:", e);
+         }
+       }
+       if (printUrl) {
+diff --git a/dist/index.mjs b/dist/index.mjs
+index dfbe3505e38c2c0079d1b758e15be144d43a4bd0..e178e17589c0adc59d96039939b9e907fb01dd36 100644
+--- a/dist/index.mjs
++++ b/dist/index.mjs
+@@ -7,20 +7,32 @@ import { join } from 'pathe';
+ import { searchForWorkspaceRoot, normalizePath } from 'vite';
+ import { createRPCServer } from 'vite-dev-rpc';
+ import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
+-import DEBUG from 'debug';
+ import { createHooks } from 'hookable';
+ 
+-const debug = DEBUG("vite:mcp:server");
+-async function setupRoutes(base, server, vite) {
++const log = (...args) => console.log(...args);
++async function setupRoutes(base, createServer, vite) {
+   const transports = /* @__PURE__ */ new Map();
+   vite.middlewares.use(`${base}/sse`, async (req, res) => {
+-    const transport = new SSEServerTransport(`${base}/messages`, res);
+-    transports.set(transport.sessionId, transport);
+-    debug("SSE Connected %s", transport.sessionId);
+-    res.on("close", () => {
+-      transports.delete(transport.sessionId);
+-    });
+-    await server.connect(transport);
++    try {
++      const transport = new SSEServerTransport(`${base}/messages`, res);
++      const server = await createServer();
++      transports.set(transport.sessionId, transport);
++      log(`[vue-mcp] SSE client connected: ${transport.sessionId}`);
++      res.on("close", () => {
++        log(`[vue-mcp] SSE client disconnected: ${transport.sessionId}`);
++        transports.delete(transport.sessionId);
++        server.close().catch((e) => {
++          console.error("[vue-mcp] Error closing MCP server:", e);
++        });
++      });
++      await server.connect(transport);
++    } catch (e) {
++      console.error("[vue-mcp] SSE connection error:", e);
++      if (!res.headersSent) {
++        res.statusCode = 500;
++        res.end("Internal Server Error");
++      }
++    }
+   });
+   vite.middlewares.use(`${base}/messages`, async (req, res) => {
+     if (req.method !== "POST") {
+@@ -37,12 +49,21 @@ async function setupRoutes(base, server, vite) {
+     }
+     const transport = transports.get(clientId);
+     if (!transport) {
++      console.warn(`[vue-mcp] Message for unknown session: ${clientId}`);
+       res.statusCode = 404;
+       res.end("Not Found");
+       return;
+     }
+-    debug("Message from %s", clientId);
+-    await transport.handlePostMessage(req, res);
++    try {
++      log(`[vue-mcp] Message received from session: ${clientId}`);
++      await transport.handlePostMessage(req, res);
++    } catch (e) {
++      console.error(`[vue-mcp] Message handling error for session ${clientId}:`, e);
++      if (!res.headersSent) {
++        res.statusCode = 500;
++        res.end("Internal Server Error");
++      }
++    }
+   });
+ }
+ 
+@@ -118,19 +139,32 @@ function VueMcp(options = {}) {
+       );
+       ctx.rpcServer = rpcServer;
+       ctx.rpc = rpc;
+-      let mcp = await mcpServer(vite, ctx);
+-      mcp = await options.mcpServerSetup?.(mcp, vite) || mcp;
+-      await setupRoutes(mcpPath, mcp, vite);
++      const createMcpServer = async () => {
++        let mcp = await mcpServer(vite, ctx);
++        mcp = await options.mcpServerSetup?.(mcp, vite) || mcp;
++        return mcp;
++      };
++      await setupRoutes(mcpPath, createMcpServer, vite);
+       const port = vite.config.server.port || 5173;
+       const root = searchForWorkspaceRoot(vite.config.root);
+       const sseUrl = `http://${options.host || "localhost"}:${port}${mcpPath}/sse`;
+       if (cursorMcpOptions.enabled) {
+-        if (existsSync(join(root, ".cursor"))) {
+-          const mcp2 = existsSync(join(root, ".cursor/mcp.json")) ? JSON.parse(await fs.readFile(join(root, ".cursor/mcp.json"), "utf-8") || "{}") : {};
+-          mcp2.mcpServers ||= {};
+-          mcp2.mcpServers[cursorMcpOptions.serverName || "vue-mcp"] = { url: sseUrl };
+-          await fs.writeFile(join(root, ".cursor/mcp.json"), `${JSON.stringify(mcp2, null, 2)}
++        try {
++          if (existsSync(join(root, ".cursor"))) {
++            const mcpConfigPath = join(root, ".cursor/mcp.json");
++            let mcp = {};
++            if (existsSync(mcpConfigPath)) {
++              const raw = await fs.readFile(mcpConfigPath, "utf-8");
++              mcp = JSON.parse(raw || "{}");
++            }
++            mcp.mcpServers ||= {};
++            mcp.mcpServers[cursorMcpOptions.serverName || "vue-mcp"] = { url: sseUrl };
++            await fs.writeFile(mcpConfigPath, `${JSON.stringify(mcp, null, 2)}
+ `);
++            console.log(`[vue-mcp] Updated ${mcpConfigPath}`);
++          }
++        } catch (e) {
++          console.error("[vue-mcp] Failed to update .cursor/mcp.json:", e);
+         }
+       }
+       if (printUrl) {
+diff --git a/src/overlay.js b/src/overlay.js
+index f1af38b4bd672fbb126f6af6f948034914ffb8df..edea7bc605c52f2f8dfbd63cf65c65b66faa944e 100644
+--- a/src/overlay.js
++++ b/src/overlay.js
+@@ -3,9 +3,11 @@ import { devtools, devtoolsRouterInfo, devtoolsState, getInspector, stringify, t
+ import { createRPCClient } from 'vite-dev-rpc'
+ import { createHotContext } from 'vite-hot-client'
+ 
++// eslint-disable-next-line no-console
++const log = (...args) => console.log(...args)
+ 
+ const base = import.meta.env.BASE_URL || '/'
+-const hot = createHotContext('',base)
++const hot = createHotContext('', base)
+ const PINIA_INSPECTOR_ID = 'pinia'
+ const COMPONENTS_INSPECTOR_ID = 'components'
+ 
+@@ -30,109 +32,190 @@ function flattenChildren(node) {
+   return result
+ }
+ 
++function findComponent(flattenedChildren, componentName, toolName) {
++  const targetNode = flattenedChildren.find(child => child.name === componentName)
++  if (!targetNode) {
++    console.warn(`[vue-mcp:browser] ${toolName}: component "${componentName}" not found in tree`)
++    return null
++  }
++  return targetNode
++}
++
++function restoreHighPerfMode(wasEnabled) {
++  if (wasEnabled) {
++    try {
++      toggleHighPerfMode(true)
++    }
++    catch (e) {
++      console.error('[vue-mcp:browser] Failed to restore high perf mode:', e)
++    }
++  }
++}
++
+ const rpc = createRPCClient(
+   'vite-plugin-vue-mcp',
+   hot,
+   {
+     // get component tree
+     async getInspectorTree(query) {
+-      const inspectorTree = await devtools.api.getInspectorTree({
+-        inspectorId: COMPONENTS_INSPECTOR_ID,
+-        filter: '',
+-      })
+-      rpc.onInspectorTreeUpdated(query.event, inspectorTree[0])
++      log('[vue-mcp:browser] getInspectorTree called')
++      try {
++        const inspectorTree = await devtools.api.getInspectorTree({
++          inspectorId: COMPONENTS_INSPECTOR_ID,
++          filter: '',
++        })
++        log('[vue-mcp:browser] getInspectorTree resolved')
++        rpc.onInspectorTreeUpdated(query.event, inspectorTree[0])
++      }
++      catch (e) {
++        console.error('[vue-mcp:browser] getInspectorTree failed:', e)
++        rpc.onInspectorTreeUpdated(query.event, null)
++      }
+     },
+     // get component state
+     async getInspectorState(query) {
+-      const inspectorTree = await devtools.api.getInspectorTree({
+-        inspectorId: COMPONENTS_INSPECTOR_ID,
+-        filter: '',
+-      })
+-      const flattenedChildren = flattenChildren(inspectorTree[0])
+-      const targetNode = flattenedChildren.find(child => child.name === query.componentName)
+-      const inspectorState = await devtools.api.getInspectorState({
+-        inspectorId: COMPONENTS_INSPECTOR_ID,
+-        nodeId: targetNode.id,
+-      })
+-      rpc.onInspectorStateUpdated(query.event, stringify(inspectorState))
++      log(`[vue-mcp:browser] getInspectorState called for "${query.componentName}"`)
++      try {
++        const inspectorTree = await devtools.api.getInspectorTree({
++          inspectorId: COMPONENTS_INSPECTOR_ID,
++          filter: '',
++        })
++        const flattenedChildren = flattenChildren(inspectorTree[0])
++        const targetNode = findComponent(flattenedChildren, query.componentName, 'getInspectorState')
++        if (!targetNode) {
++          rpc.onInspectorStateUpdated(query.event, stringify({ error: `Component "${query.componentName}" not found` }))
++          return
++        }
++        const inspectorState = await devtools.api.getInspectorState({
++          inspectorId: COMPONENTS_INSPECTOR_ID,
++          nodeId: targetNode.id,
++        })
++        log('[vue-mcp:browser] getInspectorState resolved')
++        rpc.onInspectorStateUpdated(query.event, stringify(inspectorState))
++      }
++      catch (e) {
++        console.error('[vue-mcp:browser] getInspectorState failed:', e)
++        rpc.onInspectorStateUpdated(query.event, stringify({ error: String(e) }))
++      }
+     },
+ 
+     // edit component state
+     async editComponentState(query) {
+-      const inspectorTree = await devtools.api.getInspectorTree({
+-        inspectorId: COMPONENTS_INSPECTOR_ID,
+-        filter: '',
+-      })
+-      const flattenedChildren = flattenChildren(inspectorTree[0])
+-      const targetNode = flattenedChildren.find(child => child.name === query.componentName)
+-      const payload = {
+-        inspectorId: COMPONENTS_INSPECTOR_ID,
+-        nodeId: targetNode.id,
+-        path: query.path,
+-        state: {
+-          new: null,
+-          remove: false,
+-          type: query.valueType,
+-          value: query.value,
+-        },
+-        type: undefined,
++      log(`[vue-mcp:browser] editComponentState called for "${query.componentName}"`)
++      try {
++        const inspectorTree = await devtools.api.getInspectorTree({
++          inspectorId: COMPONENTS_INSPECTOR_ID,
++          filter: '',
++        })
++        const flattenedChildren = flattenChildren(inspectorTree[0])
++        const targetNode = findComponent(flattenedChildren, query.componentName, 'editComponentState')
++        if (!targetNode) {
++          return
++        }
++        const payload = {
++          inspectorId: COMPONENTS_INSPECTOR_ID,
++          nodeId: targetNode.id,
++          path: query.path,
++          state: {
++            new: null,
++            remove: false,
++            type: query.valueType,
++            value: query.value,
++          },
++          type: undefined,
++        }
++        await devtools.ctx.api.editInspectorState(payload)
++        log('[vue-mcp:browser] editComponentState completed')
++      }
++      catch (e) {
++        console.error('[vue-mcp:browser] editComponentState failed:', e)
+       }
+-      await devtools.ctx.api.editInspectorState(payload)
+     },
+ 
+     // highlight component
+     async highlightComponent(query) {
+-      clearTimeout(highlightComponentTimeout)
+-      const inspectorTree = await devtools.api.getInspectorTree({
+-        inspectorId: COMPONENTS_INSPECTOR_ID,
+-        filter: '',
+-      })
+-      const flattenedChildren = flattenChildren(inspectorTree[0])
+-      const targetNode = flattenedChildren.find(child => child.name === query.componentName)
+-      devtools.ctx.hooks.callHook('componentHighlight', { uid: targetNode.id })
+-      highlightComponentTimeout = setTimeout(() => {
+-        devtools.ctx.hooks.callHook('componentUnhighlight')
+-      }, 5000)
++      log(`[vue-mcp:browser] highlightComponent called for "${query.componentName}"`)
++      try {
++        clearTimeout(highlightComponentTimeout)
++        const inspectorTree = await devtools.api.getInspectorTree({
++          inspectorId: COMPONENTS_INSPECTOR_ID,
++          filter: '',
++        })
++        const flattenedChildren = flattenChildren(inspectorTree[0])
++        const targetNode = findComponent(flattenedChildren, query.componentName, 'highlightComponent')
++        if (!targetNode) {
++          return
++        }
++        devtools.ctx.hooks.callHook('componentHighlight', { uid: targetNode.id })
++        highlightComponentTimeout = setTimeout(() => {
++          devtools.ctx.hooks.callHook('componentUnhighlight')
++        }, 5000)
++        log('[vue-mcp:browser] highlightComponent completed')
++      }
++      catch (e) {
++        console.error('[vue-mcp:browser] highlightComponent failed:', e)
++      }
+     },
+     // get router info
+     async getRouterInfo(query) {
+-      rpc.onRouterInfoUpdated(query.event, JSON.stringify(devtoolsRouterInfo, null, 2))
++      log('[vue-mcp:browser] getRouterInfo called')
++      try {
++        rpc.onRouterInfoUpdated(query.event, JSON.stringify(devtoolsRouterInfo, null, 2))
++      }
++      catch (e) {
++        console.error('[vue-mcp:browser] getRouterInfo failed:', e)
++        rpc.onRouterInfoUpdated(query.event, JSON.stringify({ error: String(e) }))
++      }
+     },
+     // get pinia tree
+     async getPiniaTree(query) {
++      log('[vue-mcp:browser] getPiniaTree called')
+       const highPerfModeEnabled = devtoolsState.highPerfModeEnabled
+-      if (highPerfModeEnabled) {
+-        toggleHighPerfMode(false)
++      try {
++        if (highPerfModeEnabled) {
++          toggleHighPerfMode(false)
++        }
++        const inspectorTree = await devtools.api.getInspectorTree({
++          inspectorId: PINIA_INSPECTOR_ID,
++          filter: '',
++        })
++        restoreHighPerfMode(highPerfModeEnabled)
++        log('[vue-mcp:browser] getPiniaTree resolved')
++        rpc.onPiniaTreeUpdated(query.event, inspectorTree)
+       }
+-      const inspectorTree = await devtools.api.getInspectorTree({
+-        inspectorId: PINIA_INSPECTOR_ID,
+-        filter: '',
+-      })
+-      if (highPerfModeEnabled) {
+-        toggleHighPerfMode(true)
++      catch (e) {
++        restoreHighPerfMode(highPerfModeEnabled)
++        console.error('[vue-mcp:browser] getPiniaTree failed:', e)
++        rpc.onPiniaTreeUpdated(query.event, null)
+       }
+-      rpc.onPiniaTreeUpdated(query.event, inspectorTree)
+     },
+     // get pinia state
+     async getPiniaState(query) {
++      log(`[vue-mcp:browser] getPiniaState called for store "${query.storeName}"`)
+       const highPerfModeEnabled = devtoolsState.highPerfModeEnabled
+-      if (highPerfModeEnabled) {
+-        toggleHighPerfMode(false)
+-      }
+-      const payload = {
+-        inspectorId: PINIA_INSPECTOR_ID,
+-        nodeId: query.storeName,
+-      }
+-      const inspector = getInspector(payload.inspectorId)
++      try {
++        if (highPerfModeEnabled) {
++          toggleHighPerfMode(false)
++        }
++        const payload = {
++          inspectorId: PINIA_INSPECTOR_ID,
++          nodeId: query.storeName,
++        }
++        const inspector = getInspector(payload.inspectorId)
+ 
+-      if (inspector)
+-        inspector.selectedNodeId = payload.nodeId
++        if (inspector)
++          inspector.selectedNodeId = payload.nodeId
+ 
+-      const res = await devtools.ctx.api.getInspectorState(payload)
+-      if (highPerfModeEnabled) {
+-        toggleHighPerfMode(true)
++        const res = await devtools.ctx.api.getInspectorState(payload)
++        restoreHighPerfMode(highPerfModeEnabled)
++        log('[vue-mcp:browser] getPiniaState resolved')
++        rpc.onPiniaInfoUpdated(query.event, stringify(res))
++      }
++      catch (e) {
++        restoreHighPerfMode(highPerfModeEnabled)
++        console.error('[vue-mcp:browser] getPiniaState failed:', e)
++        rpc.onPiniaInfoUpdated(query.event, stringify({ error: String(e) }))
+       }
+-      rpc.onPiniaInfoUpdated(query.event, stringify(res))
+     },
+   },
+   {
