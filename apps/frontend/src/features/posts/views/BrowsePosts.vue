@@ -148,23 +148,32 @@ onMounted(async () => {
     centered
     size="lg"
     button-size="sm"
-    fullscreen="md"
+    fullscreen="sm"
     :focus="false"
-    :no-header="true"
+    :no-header="false"
     :no-footer="true"
     :show="true"
     :no-close-on-esc="false"
+    header-class="bg-transparent border-0"
     content-class="bg-transparent border-0 shadow-none"
     body-class="d-flex flex-column align-items-center justify-content-center overflow-auto hide-scrollbar p-2 p-md-2"
     @close="handlePostListIntent('close')"
     @hidden="handlePostListIntent('close')"
   >
-    <PostFullView
-      :post="selectedPost"
-      @close="handlePostListIntent('close')"
-      @edit="handlePostListIntent('edit', $event)"
-      @hide="handlePostListIntent('hide', $event)"
-      @delete="handlePostListIntent('delete', $event)"
-    />
+    <template #default>
+      <PostFullView
+        :post="selectedPost"
+        @close="handlePostListIntent('close')"
+        @edit="handlePostListIntent('edit', $event)"
+        @hide="handlePostListIntent('hide', $event)"
+        @delete="handlePostListIntent('delete', $event)"
+      />
+    </template>
+    <template #header="{ hide }">
+      <BCloseButton
+        @click="hide('close')"
+        style="color: white"
+      />
+    </template>
   </BModal>
 </template>
