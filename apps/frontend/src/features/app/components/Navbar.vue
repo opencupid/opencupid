@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-
 import IconMessage from '@/assets/icons/interface/message.svg'
 import IconSearch from '@/assets/icons/interface/search.svg'
 import IconHeart from '@/assets/icons/interface/heart.svg'
@@ -10,10 +8,9 @@ import IconLogout from '@/assets/icons/interface/logout.svg'
 import IconNote from '@/assets/icons/interface/message-2.svg'
 
 import NotificationDot from '@/features/shared/ui/NotificationDot.vue'
-import { useInteractionStore } from '@/features/interaction/stores/useInteractionStore'
+import { useNotificationState } from '../composables/useNotificationState'
 
 import { useAuthStore } from '@/features/auth/stores/authStore'
-import { useMessageStore } from '@/features/messaging/stores/messageStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 
 import ProfileImage from '@/features/images/components/ProfileImage.vue'
@@ -21,12 +18,7 @@ import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 
 const authStore = useAuthStore()
 const profileStore = useOwnerProfileStore()
-const interactionStore = useInteractionStore()
-
-const hasUnreadMessages = computed(() => useMessageStore().hasUnreadMessages)
-const hasMatchNotifications = computed(
-  () => interactionStore.newMatchesCount > 0 || interactionStore.receivedLikes.length > 0
-)
+const { hasUnreadMessages, hasMatchNotifications } = useNotificationState()
 </script>
 
 <template>

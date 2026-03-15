@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import Navbar from '@/features/app/components/Navbar.vue'
+import FaviconNotification from '@/features/app/components/FaviconNotification.vue'
 import AppNotifier from '@/features/app/components/AppNotifier.vue'
 import UpdateBanner from '@/features/app/components/UpdateBanner.vue'
 import CallingOverlay from '@/features/videocall/components/CallingOverlay.vue'
@@ -32,4 +33,5 @@ useCallStore().initialize()
   <AppNotifier />
   <CallingOverlay />
   <JitsiModal />
+  <FaviconNotification />
 </template>
