@@ -61,13 +61,13 @@ const routes: Array<RouteRecordRaw> = [
     path: '/me/dating-wizard',
     name: 'DatingWizard',
     component: DatingWizardView,
-    meta: { requiresAuth: true,hideNavbar: true },
+    meta: { requiresAuth: true, hideNavbar: true },
   },
   {
     path: '/me/dating-prefs',
     name: 'DatingPrefs',
     component: DatingPrefsView,
-    meta: { requiresAuth: true,hideNavbar: true },
+    meta: { requiresAuth: true, hideNavbar: true },
   },
   {
     path: '/me/edit',
@@ -105,7 +105,7 @@ const routes: Array<RouteRecordRaw> = [
     name: 'Conversation',
     component: ConversationView,
     props: true,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, hideNavbar: true },
   },
 
   {
