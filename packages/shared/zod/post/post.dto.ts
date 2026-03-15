@@ -39,13 +39,18 @@ export const PublicPostSchema = PostSchema.pick(publicPostFields).extend({
 export type PublicPost = z.infer<typeof PublicPostSchema>
 
 // Owner post schema (what the post creator sees)
-export const OwnerPostSchema = PostSchema.pick(ownerPostFields)
+export const OwnerPostSchema = PostSchema.pick(ownerPostFields).extend({
+  postedBy: ProfileSummarySchema,
+  location: LocationSchema.nullable().optional(),
+  isOwn: z.boolean().default(true),
+})
 export type OwnerPost = z.infer<typeof OwnerPostSchema>
 
 // Extended public post with profile info
 export const PublicPostWithProfileSchema = PublicPostSchema.extend({
   postedBy: ProfileSummarySchema,
   location: LocationSchema.nullable().optional(),
+  isOwn: z.boolean().default(false),
 })
 export type PublicPostWithProfile = z.infer<typeof PublicPostWithProfileSchema>
 

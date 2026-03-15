@@ -5,15 +5,8 @@ import {
   type PublicPostWithProfile,
   type OwnerPost,
 } from '@zod/post/post.dto'
-import type { ProfileSummary } from '@zod/profile/profile.dto'
 import type { LocationDTO } from '@zod/dto/location.dto'
 import { mapProfileSummary } from './profile.mappers'
-
-export type OwnerPostWithProfile = OwnerPost & {
-  postedBy: ProfileSummary
-  location?: LocationDTO | null
-  isOwn?: boolean
-}
 
 function extractPostLocation(post: Record<string, unknown>): LocationDTO | null {
   if (!post.country && !post.cityName && post.lat == null && post.lon == null) {
@@ -33,18 +26,19 @@ export function mapDbPostToPublic(
 ): PublicPostWithProfile {
   const { postedBy, ...rest } = post
   return {
+    ...PublicPostSchema.parse(rest),
     isOwn: post.postedById === viewerProfileId,
     postedBy: mapProfileSummary(postedBy),
-    ...PublicPostSchema.parse(rest),
     location: extractPostLocation(rest),
   }
 }
 
-export function mapDbPostToOwner(post: PostWithProfile): OwnerPostWithProfile {
+export function mapDbPostToOwner(post: PostWithProfile): OwnerPost {
   const { postedBy, ...rest } = post
-  return {
+  const mapped = {
+    ...rest,
     postedBy: mapProfileSummary(postedBy),
-    ...OwnerPostSchema.parse(rest),
     location: extractPostLocation(rest),
   }
+  return OwnerPostSchema.parse(mapped)
 }

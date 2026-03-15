@@ -1,19 +1,14 @@
 <script setup lang="ts">
 import { computed, inject, nextTick, ref, type Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useAuthStore } from '@/features/auth/stores/authStore'
 import PostIt from '@/features/shared/ui/PostIt.vue'
 import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
 import type { PublicPostWithProfile, OwnerPost } from '@zod/post/post.dto'
-import type { OwnerProfile } from '@zod/profile/profile.dto'
-import type { MessageRecipient } from '@zod/profile/profile.dto'
+import type { OwnerProfile, MessageRecipient } from '@zod/profile/profile.dto'
 
-import IconHide from '@/assets/icons/interface/hide.svg'
-import IconShow from '@/assets/icons/interface/unhide.svg'
-import IconDelete from '@/assets/icons/interface/delete.svg'
-import IconEdit from '@/assets/icons/interface/pencil-2.svg'
 import IconMessage from '@/assets/icons/interface/message.svg'
 import PostTypeBadge from './PostTypeBadge.vue'
+import OwnerToolbar from './OwnerToolbar.vue'
 import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
 import SendMessageForm from '@/features/messaging/components/SendMessageForm.vue'
 import { useMessageSentState } from '@/features/publicprofile/composables/useMessageSentState'
@@ -32,36 +27,15 @@ const viewerLocation = computed(() => ownerProfile?.value?.location ?? undefined
 
 const emit = defineEmits<{
   (e: 'click', post: PublicPostWithProfile | OwnerPost): void
+  (e: 'contact', post: PublicPostWithProfile): void
   (e: 'edit', post: PublicPostWithProfile | OwnerPost): void
-  (e: 'contact', post: PublicPostWithProfile | OwnerPost): void
   (e: 'hide', post: PublicPostWithProfile | OwnerPost): void
   (e: 'delete', post: PublicPostWithProfile | OwnerPost): void
 }>()
 
-const authStore = useAuthStore()
+const isVisible = computed(() => !('isVisible' in props.post) || props.post.isVisible !== false)
 
-const isOwn = computed(() => {
-  return authStore.profileId === props.post.postedById
-})
-
-const isVisible = computed(() => (props.post as any).isVisible !== false)
-
-const hasProfileData = (post: any): post is PublicPostWithProfile => {
-  return 'postedBy' in post && post.postedBy != null
-}
-
-const postLocation = computed(() => {
-  if ('location' in props.post && props.post.location) {
-    const loc = props.post.location
-    return {
-      country: loc.country ?? '',
-      cityName: loc.cityName ?? undefined,
-      lat: loc.lat ?? undefined,
-      lon: loc.lon ?? undefined,
-    }
-  }
-  return null
-})
+const postLocation = computed(() => props.post.location ?? null)
 
 const GRID_TRUNCATE_LENGTH = 100
 
@@ -78,70 +52,27 @@ const showMessageForm = ref(false)
 const messageInput = ref()
 const { messageSent, handleMessageSent, resetMessageSent } = useMessageSentState()
 
-const recipientProfile = computed<MessageRecipient | null>(() => {
-  if (!hasProfileData(props.post)) return null
-  return props.post.postedBy
-})
+const recipientProfile = computed<MessageRecipient>(() => props.post.postedBy)
 
 const handleContact = async () => {
-  if (!recipientProfile.value) return
   resetMessageSent()
   showMessageForm.value = true
   await nextTick()
-  messageInput.value?.focusTextarea?.()
+  messageInput.value.focusTextarea?.()
 }
 </script>
 
 <template>
   <div
     class="post-wrapper position-relative w-100"
-    :class="{ 'post-wrapper--invisible': isOwn && props.dimHidden && !(post as any).isVisible }"
+    :class="{
+      'post-wrapper--invisible': post.isOwn && props.dimHidden && !(post as any).isVisible,
+    }"
   >
-    <!-- owner toolbar -->
-    <div
-      v-if="isOwn && showOwnerToolbar"
-      class="toolbar position-absolute z-3 d-flex align-items-center justify-content-end gap-1"
-    >
-      <BButton
-        @click.stop="$emit('edit', post)"
-        variant="link-light"
-        size="sm"
-        :title="$t('posts.actions.edit')"
-        :aria-label="$t('posts.actions.edit')"
-      >
-        <IconEdit class="svg-icon" />
-      </BButton>
-      <BButton
-        @click.stop="$emit('delete', post)"
-        variant="link-light"
-        size="sm"
-        :title="$t('posts.actions.delete')"
-        :aria-label="$t('posts.actions.delete')"
-      >
-        <IconDelete class="svg-icon" />
-      </BButton>
-      <BButton
-        @click.stop="$emit('hide', post)"
-        variant="link-light"
-        size="sm"
-        :title="isVisible ? $t('posts.actions.hide') : $t('posts.actions.show')"
-        :aria-label="isVisible ? $t('posts.actions.hide') : $t('posts.actions.show')"
-      >
-        <IconHide
-          v-if="isVisible"
-          class="svg-icon"
-        />
-        <IconShow
-          v-else
-          class="svg-icon"
-        />
-      </BButton>
-    </div>
-
     <PostIt
       class="position-relative p-2"
       :id="post.id"
-      :variant="isOwn ? 'accent' : ''"
+      :variant="post.isOwn ? 'accent' : ''"
     >
       <template #header>
         <div class="d-flex justify-content-end align-items-center">
@@ -154,7 +85,7 @@ const handleContact = async () => {
         :class="[
           `post-card--${post.type.toLowerCase()}`,
           {
-            'post-card--own': isOwn,
+            'post-card--own': post.isOwn,
           },
         ]"
         @click="$emit('click', post)"
@@ -168,23 +99,27 @@ const handleContact = async () => {
           >
             <!-- left col 50% can grow/shrink-->
             <div class="d-flex justify-content-start flex-row align-items-center">
-              <div
-                v-if="hasProfileData(post)"
-                class="d-flex align-items-center"
-              >
-                <ProfileThumbnail
-                  :profile="post.postedBy"
-                  class="me-2"
+              <div class="d-flex align-items-center">
+                <OwnerToolbar
+                  v-if="post.isOwn"
+                  :is-visible="isVisible"
+                  @edit="$emit('edit', post)"
+                  @delete="$emit('delete', post)"
+                  @hide="$emit('hide', post)"
                 />
-                <div>{{ post.postedBy.publicName }}</div>
-              </div>
-              <div>
-                <UseTimeAgo
-                  v-slot="{ timeAgo }"
-                  :time="post.createdAt"
-                >
-                  | {{ timeAgo }}
-                </UseTimeAgo>
+                <div v-else>
+                  <ProfileThumbnail
+                    :profile="post.postedBy"
+                    class="me-2"
+                  />
+                  <div>{{ post.postedBy.publicName }}</div>
+                  <UseTimeAgo
+                    v-slot="{ timeAgo }"
+                    :time="post.createdAt"
+                  >
+                    | {{ timeAgo }}
+                  </UseTimeAgo>
+                </div>
               </div>
             </div>
           </div>
@@ -218,7 +153,7 @@ const handleContact = async () => {
               />
             </span>
             <button
-              v-if="showDetails && !isOwn && hasProfileData(post)"
+              v-if="showDetails && !post.isOwn"
               class="contact-btn"
               :title="t('posts.actions.contact')"
               :aria-label="t('posts.actions.contact')"
@@ -235,7 +170,7 @@ const handleContact = async () => {
       v-if="showMessageForm"
       class="mt-2 px-1"
     >
-      <div v-if="!messageSent && recipientProfile">
+      <div v-if="!messageSent">
         <SendMessageForm
           ref="messageInput"
           :recipient-profile="recipientProfile"
