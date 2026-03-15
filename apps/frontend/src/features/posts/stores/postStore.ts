@@ -404,6 +404,26 @@ export const usePostStore = defineStore('posts', {
       }
     },
 
+    upsertPost(post: PublicPostWithProfile | OwnerPost) {
+      const isOwn = 'isVisible' in post
+
+      if (isOwn) {
+        const idx = this.myPosts.findIndex((p) => p.id === post.id)
+        if (idx === -1) {
+          this.myPosts.unshift(post as OwnerPost)
+        } else {
+          this.myPosts[idx] = post as OwnerPost
+        }
+      }
+
+      const idx = this.posts.findIndex((p) => p.id === post.id)
+      if (idx === -1) {
+        this.posts.unshift({ ...post, isOwn: true } as PublicPostWithProfile)
+      } else {
+        this.posts[idx] = { ...post, isOwn: true } as PublicPostWithProfile
+      }
+    },
+
     clearPosts() {
       this.posts = []
     },

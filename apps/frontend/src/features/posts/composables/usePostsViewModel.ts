@@ -58,35 +58,6 @@ export function usePostsViewModel() {
     }
   }
 
-  // Post manipulation helpers
-  function toListPost(post: PublicPostWithProfile | OwnerPost) {
-    return {
-      ...post,
-      isOwn: true,
-    }
-  }
-
-  function upsertIntoActiveList(post: PublicPostWithProfile | OwnerPost) {
-    const normalized = toListPost(post)
-
-    if (activeTab.value === 'my') {
-      const idx = postStore.myPosts.findIndex((item) => item.id === post.id)
-      if (idx === -1) {
-        postStore.myPosts.unshift(post as OwnerPost)
-      } else {
-        postStore.myPosts[idx] = post as OwnerPost
-      }
-      return
-    }
-
-    const idx = postStore.posts.findIndex((item) => item.id === post.id)
-    if (idx === -1) {
-      postStore.posts.unshift(normalized as PublicPostWithProfile)
-    } else {
-      postStore.posts[idx] = normalized as PublicPostWithProfile
-    }
-  }
-
   // Post handlers
   function closePostOverlays() {
     selectedPost.value = null
@@ -119,35 +90,25 @@ export function usePostsViewModel() {
     }
   }
 
-  async function handlePostListIntent(event: string, post?: PublicPostWithProfile | OwnerPost) {
-    switch (event) {
-      case 'fullview':
-        selectedPost.value = post ?? null
-        break
-      case 'create':
-        router.push({ name: 'CreatePost' })
-        break
-      case 'edit':
-        if (post) {
-          router.push({ name: 'EditPost', params: { postId: post.id } })
-        }
-        break
-      case 'close':
-        closePostOverlays()
-        break
-      case 'hide':
-        await handleHide(post)
-        break
-      case 'delete':
-        await handleDelete(post)
-        break
-      case 'saved':
-        if (post) {
-          upsertIntoActiveList(post)
-        }
-        closePostOverlays()
-        break
+  function handleFullview(post?: PublicPostWithProfile | OwnerPost) {
+    selectedPost.value = post ?? null
+  }
+
+  function handleCreate() {
+    router.push({ name: 'CreatePost' })
+  }
+
+  function handleEdit(post?: PublicPostWithProfile | OwnerPost) {
+    if (post) {
+      router.push({ name: 'EditPost', params: { postId: post.id } })
     }
+  }
+
+  function handleSaved(post?: PublicPostWithProfile | OwnerPost) {
+    if (post) {
+      postStore.upsertPost(post)
+    }
+    closePostOverlays()
   }
 
   return {
@@ -164,9 +125,12 @@ export function usePostsViewModel() {
     // Methods
     initialize,
     onBoundsChanged,
-    handlePostListIntent,
+    handleFullview,
+    handleCreate,
+    handleEdit,
     handleDelete,
     handleHide,
+    handleSaved,
     closePostOverlays,
   }
 }

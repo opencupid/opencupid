@@ -34,7 +34,13 @@ const {
   isInitialized,
   initialize,
   onBoundsChanged,
-  handlePostListIntent,
+  handleFullview,
+  handleCreate,
+  handleEdit,
+  handleDelete,
+  handleHide,
+  handleSaved,
+  closePostOverlays,
 } = usePostsViewModel()
 
 provide('ownerProfile', ownerProfile)
@@ -114,12 +120,12 @@ onActivated(() => {
         :should-fetch="true"
         :type="selectedType || undefined"
         :show-filters="false"
-        @intent:fullview="(post) => handlePostListIntent('fullview', post)"
-        @intent:edit="(post) => handlePostListIntent('edit', post)"
-        @intent:close="() => handlePostListIntent('close')"
-        @intent:hide="(post) => handlePostListIntent('hide', post)"
-        @intent:delete="(post) => handlePostListIntent('delete', post)"
-        @intent:saved="(post) => handlePostListIntent('saved', post)"
+        @intent:fullview="handleFullview"
+        @intent:edit="handleEdit"
+        @intent:close="closePostOverlays"
+        @intent:hide="handleHide"
+        @intent:delete="handleDelete"
+        @intent:saved="handleSaved"
       >
         <template #empty>
           <p class="text-muted mb-0">{{ t('posts.messages.no_posts') }}</p>
@@ -132,13 +138,7 @@ onActivated(() => {
         :center="mapCenter"
         :is-loading="isViewLoading"
         class="h-100"
-        @item:select="
-          (id) =>
-            handlePostListIntent(
-              'fullview',
-              currentTabPosts.find((p) => p.id === id)
-            )
-        "
+        @item:select="(id) => handleFullview(currentTabPosts.find((p) => p.id === id))"
         @bounds-changed="onBoundsChanged"
       />
     </template>
@@ -151,7 +151,7 @@ onActivated(() => {
           class="btn-icon-lg btn-shadow"
           variant="primary"
           :title="t('posts.actions.create')"
-          @click="handlePostListIntent('create')"
+          @click="handleCreate()"
         >
           <FontAwesomeIcon :icon="faPenToSquare" />
         </BButton>
@@ -176,16 +176,16 @@ onActivated(() => {
     header-class="bg-transparent border-0"
     content-class="bg-transparent border-0 shadow-none"
     body-class="d-flex flex-column align-items-center justify-content-center overflow-auto hide-scrollbar p-2 p-md-2"
-    @close="handlePostListIntent('close')"
-    @hidden="handlePostListIntent('close')"
+    @close="closePostOverlays"
+    @hidden="closePostOverlays"
   >
     <template #default>
       <PostFullView
         :post="selectedPost"
-        @close="handlePostListIntent('close')"
-        @edit="handlePostListIntent('close'); handlePostListIntent('edit', $event)"
-        @hide="handlePostListIntent('hide', $event)"
-        @delete="handlePostListIntent('delete', $event)"
+        @close="closePostOverlays"
+        @edit="closePostOverlays(); handleEdit($event)"
+        @hide="handleHide"
+        @delete="handleDelete"
       />
     </template>
     <template #header="{ hide }">
@@ -210,21 +210,11 @@ onActivated(() => {
       cols="1"
       cols-sm="1"
       cols-lg="1"
-      @intent:fullview="
-        (post) => {
-          showMyPosts = false
-          handlePostListIntent('fullview', post)
-        }
-      "
-      @intent:edit="
-        (post) => {
-          showMyPosts = false
-          handlePostListIntent('edit', post)
-        }
-      "
-      @intent:close="() => handlePostListIntent('close')"
-      @intent:hide="(post) => handlePostListIntent('hide', post)"
-      @intent:delete="(post) => handlePostListIntent('delete', post)"
+      @intent:fullview="(post) => { showMyPosts = false; handleFullview(post) }"
+      @intent:edit="(post) => { showMyPosts = false; handleEdit(post) }"
+      @intent:close="closePostOverlays"
+      @intent:hide="handleHide"
+      @intent:delete="handleDelete"
     >
       <template #empty>
         <p class="text-muted mb-0">{{ t('posts.messages.no_my_posts') }}</p>
@@ -233,7 +223,7 @@ onActivated(() => {
     <div class="position-fixed bottom-0 end-0 p-3 text-cente w-100r" style="width: inherit">
       <BButton
         variant="primary"
-        @click="showMyPosts = false; handlePostListIntent('create')"
+        @click="showMyPosts = false; handleCreate()"
       >
         {{ t('posts.actions.create') }}
       </BButton>
