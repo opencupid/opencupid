@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import FluidColumn from '@/features/shared/ui/FluidColumn.vue'
+import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 
 defineProps<{
   isLoading: boolean
@@ -34,25 +35,6 @@ const showPrefsModal = ref(false)
       <div class="overflow-auto hide-scrollbar flex-grow-1 position-relative">
         <slot name="results" />
       </div>
-
-      <BModal
-        v-model="showPrefsModal"
-        centered
-        button-size="sm"
-        :focus="false"
-        :no-close-on-backdrop="true"
-        fullscreen="sm"
-        :no-footer="false"
-        :no-header="true"
-        :cancel-title="t('profiles.browse.filters.dialog_cancel_button')"
-        cancel-variant="link"
-        ok-title="Search"
-        initial-animation
-        :body-scrolling="false"
-        @ok="$emit('prefs:update')"
-      >
-        <slot name="prefs-modal" />
-      </BModal>
     </div>
 
     <slot name="floating" />
