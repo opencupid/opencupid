@@ -9,7 +9,9 @@ import SecondaryNav from '../../../shared/ui/SecondaryNav.vue'
 
 describe('SecondaryNav', () => {
   it('renders nav with correct classes', () => {
-    const wrapper = mount(SecondaryNav)
+    const wrapper = mount(SecondaryNav, {
+      global: { mocks: { $t: (k: string) => k } },
+    })
     const div = wrapper.find('div')
     expect(div.exists()).toBe(true)
     // expect(ul.classes()).toContain('align-items-center')
