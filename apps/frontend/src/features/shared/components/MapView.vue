@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { ref, type Component } from 'vue'
+import { useDebounceFn } from '@vueuse/core'
 import type { Map as LMap } from 'leaflet'
 
 import OsmPoiMap from './OsmPoiMap.vue'
 import type { MapPoi, MapBounds } from './OsmPoiMap.types'
 import MapPlaceholder from './MapPlaceholder.vue'
+
+const BOUNDS_DEBOUNCE_MS = 500
 
 const props = withDefaults(
   defineProps<{
@@ -29,6 +32,10 @@ const emit = defineEmits<{
   (e: 'map:ready', map: LMap): void
   (e: 'bounds-changed', bounds: MapBounds): void
 }>()
+
+const debouncedEmitBounds = useDebounceFn((bounds: MapBounds) => {
+  emit('bounds-changed', bounds)
+}, BOUNDS_DEBOUNCE_MS)
 
 const isMapReady = ref(false)
 
@@ -63,7 +70,7 @@ function onMapReady(map: LMap) {
         class="h-100"
         @map:ready="onMapReady"
         @item:select="(id) => emit('item:select', id)"
-        @bounds-changed="(bounds) => emit('bounds-changed', bounds)"
+        @bounds-changed="debouncedEmitBounds"
       />
     </div>
   </div>

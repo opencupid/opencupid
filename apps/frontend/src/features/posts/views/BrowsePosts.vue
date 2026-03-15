@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, provide, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useDebounceFn } from '@vueuse/core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faPenToSquare } from '@fortawesome/free-solid-svg-icons'
 
@@ -37,13 +36,6 @@ const {
   handlePostListIntent,
 } = usePostsViewModel()
 
-const MAP_BOUNDS_DEBOUNCE_MS = 500
-
-const debouncedOnBoundsChanged = useDebounceFn(
-  (bounds: { south: number; north: number; west: number; east: number }) => onBoundsChanged(bounds),
-  MAP_BOUNDS_DEBOUNCE_MS
-)
-
 provide('ownerProfile', ownerProfile)
 
 const postStore = usePostStore()
@@ -59,7 +51,7 @@ const isViewLoading = computed(() => isLoading.value || postStore.isLoading)
 const haveResults = computed(() => currentTabPosts.value.length > 0)
 
 const mapCenter = computed<[number, number] | undefined>(() => {
-  const loc = ownerProfile.value?.location
+  const loc = filterLocation.value
   if (loc?.lat && loc?.lon) return [loc.lat, loc.lon]
   return undefined
 })
@@ -128,7 +120,7 @@ onMounted(async () => {
               currentTabPosts.find((p) => p.id === id)
             )
         "
-        @bounds-changed="debouncedOnBoundsChanged"
+        @bounds-changed="onBoundsChanged"
       />
     </template>
 

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, provide, ref, toRef } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useDebounceFn } from '@vueuse/core'
 
 import BrowseLayout from '@/features/shared/components/BrowseLayout.vue'
 import BrowseFilterBar from '../components/BrowseFilterBar.vue'
@@ -33,13 +32,6 @@ const {
 } = useSocialMatchViewModel()
 
 provide('viewerProfile', toRef(viewerProfile))
-
-const MAP_BOUNDS_DEBOUNCE_MS = 500
-
-const debouncedOnBoundsChanged = useDebounceFn(
-  (bounds: { south: number; north: number; west: number; east: number }) => onBoundsChanged(bounds),
-  MAP_BOUNDS_DEBOUNCE_MS
-)
 
 onMounted(async () => {
   await initialize()
@@ -107,7 +99,7 @@ function handleTagCloudSelect(tag: PopularTag) {
         :popup-component="ProfileMapCard"
         class="h-100"
         @item:select="(id: string | number) => openProfile(String(id))"
-        @bounds-changed="debouncedOnBoundsChanged"
+        @bounds-changed="onBoundsChanged"
       />
     </template>
   </BrowseLayout>
