@@ -47,7 +47,7 @@ function onTypeChange(value: unknown) {
         />
       </div>
       <!-- Scope + Type column -->
-      <div class="col-12 col-md-6">
+      <!-- <div class="col-12 col-md-6">
         <div class="d-flex align-items-center gap-2">
           <BFormSelect
             :modelValue="scope"
@@ -71,7 +71,7 @@ function onTypeChange(value: unknown) {
             <BFormSelectOption value="REQUEST">{{ t('posts.filters.requests') }}</BFormSelectOption>
           </BFormSelect>
         </div>
-      </div>
+      </div> -->
     </div>
   </div>
 </template>
