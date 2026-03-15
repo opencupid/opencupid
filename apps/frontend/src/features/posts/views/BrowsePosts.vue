@@ -75,16 +75,7 @@ onMounted(async () => {
     :isInitialized="isInitialized"
     :haveResults="haveResults"
   >
-    <template #subnav>
-      <SecondaryNav>
-        <template #items-right>
-          <RouterBackButton> <IconClose class="svg-icon" /> </RouterBackButton>
-        </template>
-        <template #items-center>
-          {{ $t('') }}
-        </template>
-      </SecondaryNav>
-    </template>
+  
 
     <template #filter-bar>
       <PostFilterBar
@@ -104,13 +95,6 @@ onMounted(async () => {
         :is-active="true"
         :type="selectedType || undefined"
         :show-filters="false"
-        :empty-message="
-          activeTab === 'my'
-            ? $t('posts.messages.no_my_posts')
-            : activeTab === 'recent'
-              ? $t('posts.messages.no_recent')
-              : $t('posts.messages.no_posts')
-        "
         @intent:fullview="(post) => handlePostListIntent('fullview', post)"
         @intent:edit="(post) => handlePostListIntent('edit', post)"
         @intent:close="() => handlePostListIntent('close')"
