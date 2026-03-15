@@ -35,6 +35,9 @@ export function usePostsViewModel() {
         return
       }
 
+      // Fetch posts eagerly so both grid and map views have data
+      await postStore.loadPosts('all')
+
       isInitialized.value = true
     } finally {
       isLoading.value = false
