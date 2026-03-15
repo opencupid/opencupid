@@ -306,7 +306,7 @@ const handleContact = async () => {
 .post-content {
   max-height: 5rem;
   overflow: hidden;
-  font-family: 'Reenie Beanie', cursive;
+  font-family: 'Patrick Hand', cursive;
   font-size: 2rem;
   line-height: 1.25;
 }
