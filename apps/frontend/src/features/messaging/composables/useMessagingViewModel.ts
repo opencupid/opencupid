@@ -1,4 +1,4 @@
-import { computed, onUnmounted, ref, watch, type Ref } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import type { ConversationSummary } from '@zod/messaging/messaging.dto'
@@ -10,7 +10,7 @@ import { useMessageStore } from '../stores/messageStore'
 import { useInteractionsViewModel } from '@/features/interaction/composables/useInteractionsViewModel'
 import { usePublicProfile } from '@/features/publicprofile/composables/usePublicProfile'
 
-export function useMessagingViewModel(conversationId: Ref<string | undefined>) {
+export function useMessagingViewModel() {
   const router = useRouter()
   const messageStore = useMessageStore()
   const interactions = useInteractionsViewModel()
@@ -18,28 +18,11 @@ export function useMessagingViewModel(conversationId: Ref<string | undefined>) {
 
   const isInitialized = ref(false)
 
-  watch(
-    conversationId,
-    async (newId, oldId) => {
-      if (newId !== oldId) {
-        if (!newId) {
-          await messageStore.setActiveConversation(null)
-        } else {
-          await messageStore.setActiveConversationById(newId)
-        }
-      }
-    },
-    { immediate: true }
-  )
-
   const initialize = async () => {
     await useBootstrap().bootstrap()
     await Promise.all([messageStore.fetchConversations(), interactions.refreshInteractions()])
     messageStore.suppressMessageNotifications = true
     isInitialized.value = true
-    if (conversationId.value) {
-      await messageStore.setActiveConversationById(conversationId.value)
-    }
   }
 
   onUnmounted(() => {
@@ -50,15 +33,10 @@ export function useMessagingViewModel(conversationId: Ref<string | undefined>) {
     if (messageStore.activeConversation?.conversationId === convo.conversationId) {
       return
     }
-    router.push({ name: 'Messaging', params: { conversationId: convo.conversationId } })
+    router.push({ name: 'Conversation', params: { conversationId: convo.conversationId } })
     setTimeout(async () => {
       await messageStore.markAsRead(convo.conversationId)
     }, 2000)
-  }
-
-  const handleDeselectConvo = async () => {
-    router.back()
-    messageStore.resetActiveConversation()
   }
 
   // Send message dialog state
@@ -86,7 +64,6 @@ export function useMessagingViewModel(conversationId: Ref<string | undefined>) {
   }
 
   const haveConversations = computed(() => messageStore.conversations.length > 0)
-  const isDetailView = computed(() => !!messageStore.activeConversation)
   const showEmptyState = computed(
     () =>
       !haveConversations.value &&
@@ -102,14 +79,11 @@ export function useMessagingViewModel(conversationId: Ref<string | undefined>) {
 
     // Computed
     haveConversations,
-    isDetailView,
     isInitialized,
     showEmptyState,
 
     // Handlers
     handleSelectConvo,
-    handleDeselectConvo,
-    handleProfileSelect,
     handleMatchSelect,
     handleReceivedLikeSelect,
     handleMessageSent,

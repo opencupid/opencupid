@@ -20,7 +20,11 @@ const hasDoneInitialScroll = ref(false)
 
 const scrollToBottom = () => {
   if (messageListRef.value) {
-    messageListRef.value.scrollTop = messageListRef.value.scrollHeight
+    requestAnimationFrame(() => {
+      if (messageListRef.value) {
+        messageListRef.value.scrollTop = messageListRef.value.scrollHeight
+      }
+    })
   }
 }
 
@@ -68,7 +72,6 @@ const handleScroll = () => {
     emit('load-older')
   }
 }
-
 </script>
 
 <template>
@@ -81,7 +84,7 @@ const handleScroll = () => {
       v-if="isLoadingMore"
       class="text-center text-muted small py-2"
     >
-      Loading older messages…
+      {{ $t('messaging.loading_older_messages') }}
     </div>
     <div
       v-for="msg in messages"

@@ -4,6 +4,7 @@ import type { RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 
 import MessagingView from '@/features/messaging/views/Messaging.vue'
+import ConversationView from '@/features/messaging/views/ConversationView.vue'
 import UserHome from '@/features/userhome/views/UserHome.vue'
 import Settings from '@/features/settings/views/Settings.vue'
 import MyProfile from '@/features/myprofile/views/MyProfile.vue'
@@ -94,9 +95,15 @@ const routes: Array<RouteRecordRaw> = [
     meta: { requiresAuth: true },
   },
   {
-    path: '/inbox/:conversationId?',
+    path: '/inbox',
     name: 'Messaging',
     component: MessagingView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/inbox/:conversationId',
+    name: 'Conversation',
+    component: ConversationView,
     props: true,
     meta: { requiresAuth: true },
   },
