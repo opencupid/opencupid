@@ -70,7 +70,9 @@ if (props.isEdit && props.post) {
 }
 
 const isFormValid = computed(() => {
-  return form.value.content.trim().length > 0 && form.value.content.length <= 150
+  return (
+    form.value.content.trim().length > 10 && form.value.content.length <= POST_CONTENT_MAX_LENGTH
+  )
 })
 
 const saveButtonText = computed(() => {
@@ -167,7 +169,7 @@ const handleSubmit = async () => {
             :placeholder="$t('posts.placeholders.content')"
             :maxlength="POST_CONTENT_MAX_LENGTH"
             required
-            rows="4"
+            rows="6"
             :label="$t('posts.labels.content')"
           ></BFormTextarea>
           <div class="fs-6 text-end form-text text-muted character-count">
@@ -178,7 +180,7 @@ const handleSubmit = async () => {
         <BFormGroup class="mb-2">
           <LocationSelector
             v-model="form.location"
-            open-direction="bottom"
+            open-direction="top"
             :allow-empty="true"
             :close-on-select="true"
           />
@@ -210,7 +212,7 @@ const handleSubmit = async () => {
       </BButton>
       <BButton
         type="submit"
-        variant="primary"
+        variant="success"
         :disabled="isLoading || !isFormValid"
       >
         {{ isLoading ? $t('uicomponents.submitbutton.working') : saveButtonText }}
