@@ -24,6 +24,7 @@ const { hasUnreadMessages, hasMatchNotifications } = useNotificationState()
 <template>
   <BNavbar
     v-if="authStore.isLoggedIn && profileStore.profile?.isOnboarded"
+    fixed="top"
     class="navbar-soft"
     data-testid="navbar"
   >

@@ -15,28 +15,21 @@ body {
 }
 
 #app {
+  display: flex;
+  flex-direction: column;
   height: 100dvh;
 }
 
 nav.navbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
-  height: $navbar-height;
+  height: $navbar-height; // positioning handled by Bootstrap fixed="top" on <BNavbar>
 }
 
 main {
-  height: 100dvh;
+  flex-grow: 1;
   min-height: 0; // prevents flex item overflow clipping (iOS)
   position: relative;
 }
 
 nav.navbar + main {
-  // background-color: var(--bs-body-bg);
-  // navbar is fixed at the top, so we need to offset the main content
   padding-top: $navbar-height;
-  // height: 100%;
-  // height: calc(100% - $navbar-height);
 }
