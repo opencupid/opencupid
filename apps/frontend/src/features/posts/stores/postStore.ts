@@ -376,6 +376,38 @@ export const usePostStore = defineStore('posts', {
       }
     },
 
+    async fetchPostsInBounds(bounds: { south: number; north: number; west: number; east: number }) {
+      this.isLoading = true
+      this.error = null
+
+      try {
+        const params = new URLSearchParams({
+          south: bounds.south.toString(),
+          north: bounds.north.toString(),
+          west: bounds.west.toString(),
+          east: bounds.east.toString(),
+        })
+
+        const r = await safeApiCall<{ data: PostsResponse }>(() =>
+          api.get(`/posts/bounds?${params.toString()}`)
+        )
+        const response = r.data
+
+        if (response.success) {
+          this.posts = response.posts
+          return response.posts
+        } else {
+          this.error = 'Failed to fetch posts in bounds'
+          return []
+        }
+      } catch (error: any) {
+        this.error = error.message || 'Failed to fetch posts in bounds'
+        return []
+      } finally {
+        this.isLoading = false
+      }
+    },
+
     clearPosts() {
       this.posts = []
     },

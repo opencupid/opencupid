@@ -158,6 +158,42 @@ export class PostService {
     })
   }
 
+  async findInBounds(
+    bounds: { south: number; north: number; west: number; east: number },
+    options: {
+      type?: PostType
+      limit?: number
+      offset?: number
+    } = {}
+  ) {
+    const { type, limit = 100, offset = 0 } = options
+
+    return this.prisma.post.findMany({
+      where: {
+        isDeleted: false,
+        isVisible: true,
+        ...(type ? { type } : {}),
+        OR: [
+          {
+            lat: { gte: bounds.south, lte: bounds.north },
+            lon: { gte: bounds.west, lte: bounds.east },
+          },
+          {
+            lat: null,
+            postedBy: {
+              lat: { gte: bounds.south, lte: bounds.north },
+              lon: { gte: bounds.west, lte: bounds.east },
+            },
+          },
+        ],
+      },
+      ...postedByInclude,
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      skip: offset,
+    })
+  }
+
   async findRecent(
     options: {
       type?: PostType

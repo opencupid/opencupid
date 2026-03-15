@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, provide, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useDebounceFn } from '@vueuse/core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faPenToSquare } from '@fortawesome/free-solid-svg-icons'
 
@@ -11,7 +12,6 @@ import PostFullView from '../components/PostFullView.vue'
 import MapView from '@/features/shared/components/MapView.vue'
 import MapIcon from '../components/MapIcon.vue'
 import ViewModeToggler from '@/features/shared/ui/ViewModeToggler.vue'
-import SecondaryNav from '@/features/shared/ui/SecondaryNav.vue'
 
 import { usePostsViewModel } from '../composables/usePostsViewModel'
 import { usePostStore } from '../stores/postStore'
@@ -33,8 +33,16 @@ const {
   isLoading,
   isInitialized,
   initialize,
+  onBoundsChanged,
   handlePostListIntent,
 } = usePostsViewModel()
+
+const MAP_BOUNDS_DEBOUNCE_MS = 500
+
+const debouncedOnBoundsChanged = useDebounceFn(
+  (bounds: { south: number; north: number; west: number; east: number }) => onBoundsChanged(bounds),
+  MAP_BOUNDS_DEBOUNCE_MS
+)
 
 provide('ownerProfile', ownerProfile)
 
@@ -49,6 +57,12 @@ const currentTabPosts = computed(() => {
 
 const isViewLoading = computed(() => isLoading.value || postStore.isLoading)
 const haveResults = computed(() => currentTabPosts.value.length > 0)
+
+const mapCenter = computed<[number, number] | undefined>(() => {
+  const loc = ownerProfile.value?.location
+  if (loc?.lat && loc?.lon) return [loc.lat, loc.lon]
+  return undefined
+})
 
 const mapPois = computed<MapPoi[]>(() =>
   (postStore.posts as PublicPostWithProfile[])
@@ -75,8 +89,6 @@ onMounted(async () => {
     :isInitialized="isInitialized"
     :haveResults="haveResults"
   >
-  
-
     <template #filter-bar>
       <PostFilterBar
         :viewer-profile="ownerProfile"
@@ -106,6 +118,7 @@ onMounted(async () => {
         v-else-if="viewMode === 'map'"
         :items="mapPois"
         :icon-component="MapIcon"
+        :center="mapCenter"
         :is-loading="isViewLoading"
         class="h-100"
         @item:select="
@@ -115,6 +128,7 @@ onMounted(async () => {
               currentTabPosts.find((p) => p.id === id)
             )
         "
+        @bounds-changed="debouncedOnBoundsChanged"
       />
     </template>
 

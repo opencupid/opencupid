@@ -1,4 +1,5 @@
 import { FastifyPluginAsync } from 'fastify'
+import { z } from 'zod'
 import { validateBody } from '@/utils/zodValidate'
 import {
   CreatePostPayloadSchema,
@@ -184,6 +185,38 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
     } catch (err) {
       fastify.log.error(err)
       return sendError(reply, 500, 'Failed to fetch nearby posts')
+    }
+  })
+
+  /**
+   * Get posts within map bounds
+   */
+  const BoundsQuerySchema = z.object({
+    south: z.coerce.number(),
+    north: z.coerce.number(),
+    west: z.coerce.number(),
+    east: z.coerce.number(),
+  })
+
+  fastify.get('/bounds', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const parsed = BoundsQuerySchema.safeParse(req.query)
+    if (!parsed.success) {
+      return sendError(
+        reply,
+        400,
+        'Missing or invalid bounds parameters (south, north, west, east)'
+      )
+    }
+
+    try {
+      const raw = await postService.findInBounds(parsed.data)
+      const posts = raw.map((post) => mapDbPostToPublic(post, req.session.profileId))
+
+      const response: PostsResponse = { success: true, posts }
+      return reply.code(200).send(response)
+    } catch (err) {
+      fastify.log.error(err)
+      return sendError(reply, 500, 'Failed to fetch posts in bounds')
     }
   })
 

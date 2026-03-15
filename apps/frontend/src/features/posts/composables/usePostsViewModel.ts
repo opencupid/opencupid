@@ -1,4 +1,5 @@
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
+import type { MapBounds } from '@/features/shared/components/OsmPoiMap.types'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useBootstrap } from '@/lib/bootstrap'
@@ -47,12 +48,15 @@ export function usePostsViewModel() {
     }
   }
 
-  // Reload posts when view mode changes (also handles initial load after bootstrap)
-  watch([viewMode, isInitialized], () => {
-    if (isInitialized.value) {
-      postStore.loadPosts('all')
+  // Map bounds handler
+  const onBoundsChanged = async (bounds: MapBounds) => {
+    isLoading.value = true
+    try {
+      await postStore.fetchPostsInBounds(bounds)
+    } finally {
+      isLoading.value = false
     }
-  })
+  }
 
   // Post manipulation helpers
   function toListPost(post: PublicPostWithProfile | OwnerPost) {
@@ -159,6 +163,7 @@ export function usePostsViewModel() {
 
     // Methods
     initialize,
+    onBoundsChanged,
     handlePostListIntent,
     handleDelete,
     handleHide,
