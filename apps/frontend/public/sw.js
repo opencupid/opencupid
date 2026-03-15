@@ -8,7 +8,7 @@ self.addEventListener('push', (event) => {
   const title = data.title || 'Notification'
   const options = {
     body: data.body || '',
-    icon: data.icon || '/favicon.ico',
+    icon: data.icon || '/assets/favicon-96x96.png',
     data: {
       url: data.data?.url || '/',
     },
