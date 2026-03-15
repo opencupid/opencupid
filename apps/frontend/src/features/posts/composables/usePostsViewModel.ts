@@ -20,6 +20,7 @@ export function usePostsViewModel() {
   const isDetailView = ref(false)
   const filterLocation = ref<LocationDTO>({ country: '' })
   const selectedPost = ref<PublicPostWithProfile | OwnerPost | null>(null)
+  const showMyPosts = ref(false)
   const isInitialized = ref(false)
   const isLoading = ref(false)
 
@@ -61,6 +62,7 @@ export function usePostsViewModel() {
   // Post handlers
   function closePostOverlays() {
     selectedPost.value = null
+    showMyPosts.value = false
   }
 
   async function handleDelete(post?: PublicPostWithProfile | OwnerPost) {
@@ -91,15 +93,18 @@ export function usePostsViewModel() {
   }
 
   function handleFullview(post?: PublicPostWithProfile | OwnerPost) {
+    showMyPosts.value = false
     selectedPost.value = post ?? null
   }
 
   function handleCreate() {
+    showMyPosts.value = false
     router.push({ name: 'CreatePost' })
   }
 
   function handleEdit(post?: PublicPostWithProfile | OwnerPost) {
     if (post) {
+      showMyPosts.value = false
       router.push({ name: 'EditPost', params: { postId: post.id } })
     }
   }
@@ -118,6 +123,7 @@ export function usePostsViewModel() {
     isDetailView,
     filterLocation,
     selectedPost,
+    showMyPosts,
     isInitialized,
     isLoading,
     ownerProfile,

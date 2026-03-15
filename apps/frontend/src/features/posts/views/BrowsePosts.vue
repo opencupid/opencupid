@@ -29,6 +29,7 @@ const {
   viewMode,
   filterLocation,
   selectedPost,
+  showMyPosts,
   ownerProfile,
   isLoading,
   isInitialized,
@@ -48,7 +49,6 @@ provide('ownerProfile', ownerProfile)
 const postStore = usePostStore()
 
 const selectedType = ref<PostTypeType | ''>('')
-const showMyPosts = ref(false)
 
 const currentTabPosts = computed(() => {
   if (activeTab.value === 'my') return postStore.myPosts
@@ -210,8 +210,8 @@ onActivated(() => {
       cols="1"
       cols-sm="1"
       cols-lg="1"
-      @intent:fullview="(post) => { showMyPosts = false; handleFullview(post) }"
-      @intent:edit="(post) => { showMyPosts = false; handleEdit(post) }"
+      @intent:fullview="handleFullview"
+      @intent:edit="handleEdit"
       @intent:close="closePostOverlays"
       @intent:hide="handleHide"
       @intent:delete="handleDelete"
@@ -223,7 +223,7 @@ onActivated(() => {
     <div class="position-fixed bottom-0 end-0 p-3 text-cente w-100r" style="width: inherit">
       <BButton
         variant="primary"
-        @click="showMyPosts = false; handleCreate()"
+        @click="handleCreate()"
       >
         {{ t('posts.actions.create') }}
       </BButton>
