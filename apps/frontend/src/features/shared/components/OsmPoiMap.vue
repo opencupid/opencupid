@@ -1,4 +1,4 @@
-<script setup lang="ts" generic="T extends { id: string | number }">
+<script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref, watch, nextTick, type Component, render, h } from 'vue'
 import type { Ref } from 'vue'
 import L, { Map as LMap, Marker as LMarker } from 'leaflet'
@@ -11,21 +11,7 @@ import '@maptiler/sdk/dist/maptiler-sdk.css'
 import { MaptilerLayer } from '@maptiler/leaflet-maptilersdk'
 import { config as maptilerConfig, MapStyle } from '@maptiler/sdk'
 
-import AvatarIcon, { type AvatarImage } from './AvatarIcon.vue'
-
-/** Location coordinates returned by getLocation */
-export interface PoiLocation {
-  lat: number
-  lon: number
-}
-
-/** Viewport bounds emitted by bounds-changed */
-export interface MapBounds {
-  south: number
-  north: number
-  west: number
-  east: number
-}
+import type { MapPoi, MapBounds, PoiIconProps } from './OsmPoiMap.types'
 
 maptilerConfig.telemetry = false
 
@@ -40,25 +26,13 @@ MaptilerLayer.prototype._update = function (...args: unknown[]) {
 
 const props = withDefaults(
   defineProps<{
-    /** Items to display on the map (must have id and location with lat/lon) */
-    items: T[]
-    /** Function to extract location from an item */
-    getLocation: (item: T) => PoiLocation | undefined
-    /** Function to get title for marker */
-    getTitle: (item: T) => string
-    /** Vue component to render in popup */
-    popupComponent: Component
-    /** Optional starting center/zoom (used if we can't fit to bounds) */
+    items: MapPoi[]
+    iconComponent: Component
+    popupComponent?: Component
     center?: [number, number]
     zoom?: number
-    /** Optional function to get a profile image (with variants + blurhash) for an item */
-    getImage?: (item: T) => AvatarImage | undefined
-    /** ID of selected item to highlight */
     selectedId?: string | number
-    /** Whether to auto-fit the map to show all items */
     fitToPois?: boolean
-    /** Optional callback to determine if an item should have a highlight halo */
-    isHighlighted?: (item: T) => boolean
   }>(),
   {
     zoom: 7,
@@ -75,7 +49,7 @@ const emit = defineEmits<{
 const mapEl: Ref<HTMLDivElement | null> = ref(null)
 let map: LMap | null = null
 let markers = new Map<string | number, LMarker>()
-let itemsById = new Map<string | number, T>()
+let itemsById = new Map<string | number, MapPoi>()
 // Tracks the zoom level from the last completed zoom animation. Used by the
 // center watcher to avoid capturing a mid-flyTo intermediate zoom value.
 let lastStableZoom: number = props.zoom
@@ -157,37 +131,17 @@ function closeSpider() {
 
 let clusterGroup: any = null
 
-function avatarIcon(image: AvatarImage, isSelected: boolean, isHighlighted: boolean): L.DivIcon {
+function hydratePoiIcon(component: Component, iconProps: PoiIconProps): L.DivIcon {
   const size = 32
 
   const container = document.createElement('span')
-  render(h(AvatarIcon, { image, isHighlighted, isSelected }), container)
+  render(h(component, iconProps), container)
   return L.divIcon({
     className: 'poi-avatar-icon',
     html: container,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
   })
-}
-
-// TODO - refactor this the same way as avatarIcon
-function dotIcon(isSelected: boolean, isHighlighted: boolean): L.DivIcon {
-  const classes = ['poi-dot']
-  if (isSelected) classes.push('selected')
-  if (isHighlighted) classes.push('highlighted')
-  return L.divIcon({
-    className: isSelected ? 'poi-selected-icon' : 'poi-default-icon',
-    html: `<div class="${classes.join(' ')}"></div>`,
-    iconSize: isSelected ? [20, 20] : [16, 16],
-    iconAnchor: isSelected ? [10, 10] : [8, 8],
-  })
-}
-
-function iconForItem(item: T, isSelected: boolean): L.DivIcon {
-  const highlighted = props.isHighlighted?.(item) ?? false
-  const image = props.getImage?.(item)
-  if (image) return avatarIcon(image, isSelected, highlighted)
-  return dotIcon(isSelected, highlighted)
 }
 
 function emitBounds() {
@@ -350,7 +304,7 @@ function onMapMouseMove(ev: L.LeafletMouseEvent) {
 }
 
 const popupTarget = ref<HTMLElement | null>(null)
-const popupItem = ref<T | null>(null)
+const popupItem = ref<MapPoi | null>(null)
 
 function onMapReady() {
   isMapReady = true
@@ -361,39 +315,43 @@ function onMapReady() {
 const STAGGER_BATCH_SIZE = 5
 const STAGGER_DELAY_MS = 100
 
-function createMarker(item: T): LMarker | null {
-  const location = props.getLocation(item)
-  if (!location) return null
-
+function createMarker(item: MapPoi): LMarker {
   const isSelected = item.id === props.selectedId
-  const m = L.marker([location.lat, location.lon], {
-    title: props.getTitle(item),
-    icon: iconForItem(item, isSelected),
+  const m = L.marker([item.location.lat, item.location.lon], {
+    title: item.title,
+    icon: hydratePoiIcon(props.iconComponent, {
+      image: item.image,
+      isSelected,
+      isHighlighted: item.highlighted ?? false,
+    }),
     keyboard: true,
   })
 
-  const highlighted = props.isHighlighted?.(item) ?? false
-  m.bindPopup('', {
-    maxWidth: 420,
-    autoPan: true,
-    autoPanPadding: L.point(20, 20),
-    className: highlighted ? 'item-popup item-popup-highlighted' : 'item-popup',
-  })
+  if (props.popupComponent) {
+    m.bindPopup('', {
+      maxWidth: 420,
+      autoPan: true,
+      autoPanPadding: L.point(20, 20),
+      className: item.highlighted ? 'item-popup item-popup-highlighted' : 'item-popup',
+    })
 
-  m.on('popupopen', (e: L.PopupEvent) => {
-    const target = e.popup
-      .getElement()
-      ?.querySelector('.leaflet-popup-content') as HTMLElement | null
-    popupTarget.value = target
-    popupItem.value = item
-    nextTick(() => e.popup.update())
-  })
-  m.on('popupclose', () => {
-    popupTarget.value = null
-    popupItem.value = null
-  })
+    m.on('popupopen', (e: L.PopupEvent) => {
+      const target = e.popup
+        .getElement()
+        ?.querySelector('.leaflet-popup-content') as HTMLElement | null
+      popupTarget.value = target
+      popupItem.value = item
+      nextTick(() => e.popup.update())
+    })
+    m.on('popupclose', () => {
+      popupTarget.value = null
+      popupItem.value = null
+    })
 
-  m.on('click', () => m.openPopup())
+    m.on('click', () => m.openPopup())
+  } else {
+    m.on('click', () => emit('item:select', item.id))
+  }
   return m
 }
 
@@ -407,46 +365,35 @@ function updateMarkers() {
   markers.clear()
   itemsById.clear()
 
-  const items = props.items.filter((item) => props.getLocation(item))
-
   function addBatch(startIdx: number) {
     if (!map || !clusterGroup) return
-    const end = Math.min(startIdx + STAGGER_BATCH_SIZE, items.length)
+    const end = Math.min(startIdx + STAGGER_BATCH_SIZE, props.items.length)
     const batch: LMarker[] = []
 
     for (let i = startIdx; i < end; i++) {
-      const item = items[i]
+      const item = props.items[i]
       if (!item) continue
-      const m = createMarker(item)
-      if (m) {
-        batch.push(m)
-        markers.set(item.id, m)
-        itemsById.set(item.id, item)
-      }
+      const marker = createMarker(item)
+      batch.push(marker)
+      markers.set(item.id, marker)
+      itemsById.set(item.id, item)
     }
 
     clusterGroup.addLayers(batch)
 
-    if (end < items.length) {
+    if (end < props.items.length) {
       staggerTimer = setTimeout(() => addBatch(end), STAGGER_DELAY_MS)
     }
   }
 
   addBatch(0)
 
-  // Fit bounds to markers when explicitly requested or when no center was provided
   if ((props.fitToPois || !props.center) && props.items.length > 0) {
-    const latlngs: [number, number][] = []
-    for (const item of props.items) {
-      const location = props.getLocation(item)
-      if (location) {
-        latlngs.push([location.lat, location.lon])
-      }
-    }
-    if (latlngs.length > 0) {
-      const bounds = L.latLngBounds(latlngs)
-      map.fitBounds(bounds, { padding: [24, 24] })
-    }
+    const latlngs = props.items.map(
+      (item) => [item.location.lat, item.location.lon] as [number, number]
+    )
+    const bounds = L.latLngBounds(latlngs)
+    map.fitBounds(bounds, { padding: [24, 24] })
   }
 }
 
@@ -455,7 +402,13 @@ function highlightSelected() {
   for (const [id, marker] of markers) {
     const item = itemsById.get(id)
     if (!item) continue
-    marker.setIcon(iconForItem(item, id === props.selectedId))
+    marker.setIcon(
+      hydratePoiIcon(props.iconComponent, {
+        image: item.image,
+        isSelected: id === props.selectedId,
+        isHighlighted: item.highlighted ?? false,
+      })
+    )
   }
   if (props.selectedId != null) {
     const m = markers.get(props.selectedId)
@@ -528,12 +481,12 @@ watch(
     />
 
     <Teleport
-      v-if="popupTarget && popupItem"
+      v-if="popupComponent && popupTarget && popupItem"
       :to="popupTarget"
     >
       <component
         :is="popupComponent"
-        :item="popupItem"
+        :item="popupItem.source"
         @click="$emit('item:select', popupItem.id)"
       />
     </Teleport>
@@ -545,29 +498,6 @@ watch(
   /* Set an explicit height, or it won't be visible */
   height: 100%;
   width: 100%;
-}
-
-/* Simple circular dot markers */
-:deep(.poi-dot) {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  outline: 2px solid rgba(0, 0, 0, 0.25);
-  background: #3a86ff; /* default */
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
-}
-
-:deep(.poi-dot.selected) {
-  width: 16px;
-  height: 16px;
-  background: #ff006e;
-}
-
-:deep(.poi-dot.highlighted) {
-  box-shadow:
-    0 0 0 2px rgba(255, 255, 255, 0.9),
-    0 0 10px 3px rgba(217, 83, 79, 0.4);
-  filter: drop-shadow(0 0 6px rgba(217, 83, 79, 0.5));
 }
 
 /* Cluster badge */

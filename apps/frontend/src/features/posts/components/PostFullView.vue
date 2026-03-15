@@ -2,7 +2,6 @@
 import { computed, nextTick, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { PublicPostWithProfile, OwnerPost } from '@zod/post/post.dto'
-import type { PublicProfileWithContext } from '@zod/profile/profile.dto'
 
 import PostCard from './PostCard.vue'
 import SendMessageForm from '@/features/messaging/components/SendMessageForm.vue'
@@ -24,47 +23,11 @@ const showMessageForm = ref(false)
 const messageInput = ref()
 const { messageSent, handleMessageSent, resetMessageSent } = useMessageSentState()
 
-const hasProfileData = (post: PublicPostWithProfile | OwnerPost): post is PublicPostWithProfile => {
-  return 'postedBy' in post && post.postedBy != null
-}
-
-const recipientProfile = computed<PublicProfileWithContext | null>(() => {
-  if (!hasProfileData(props.post)) {
-    return null
-  }
-
-  const profile = props.post.postedBy as any
-  return {
-    ...profile,
-    tags: profile.tags ?? [],
-    languages: profile.languages ?? [],
-    location: profile.location ?? { country: '', cityName: '', lat: null, lon: null },
-    introSocial: profile.introSocial ?? '',
-    introDating: profile.introDating ?? '',
-    conversation: profile.conversation ?? null,
-    interactionContext: profile.interactionContext ?? {
-      likedByMe: false,
-      isMatch: false,
-      isAnonymous: true,
-      passedByMe: false,
-      canLike: false,
-      canPass: false,
-      canDate: false,
-      haveConversation: false,
-      canMessage: true,
-      conversationId: null,
-      initiated: false,
-    },
-  } as PublicProfileWithContext
-})
+const recipientProfile = computed(() => props.post.postedBy)
 
 const handleContact = async () => {
-  if (!recipientProfile.value) {
-    return
-  }
   resetMessageSent()
   showMessageForm.value = true
-
   await nextTick()
   messageInput.value?.focusTextarea?.()
 }
@@ -94,7 +57,7 @@ watch(
       v-if="showMessageForm"
       class="mt-3"
     >
-      <div v-if="!messageSent && recipientProfile">
+      <div v-if="!messageSent">
         <SendMessageForm
           ref="messageInput"
           :recipient-profile="recipientProfile"
@@ -120,4 +83,3 @@ watch(
   </div>
 </template>
 
-<style scoped></style>

@@ -1,26 +1,34 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { usePostStore } from '../stores/postStore'
-import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
-import { useI18n } from 'vue-i18n'
-import type { CreatePostPayload, UpdatePostPayload, OwnerPost } from '@zod/post/post.dto'
-import type { LocationDTO } from '@zod/dto/location.dto'
-import { type PostTypeType } from '@zod/generated'
+import { z } from 'zod'
+import type { OwnerPost } from '@zod/post/post.dto'
+import { LocationSchema, type LocationDTO } from '@zod/dto/location.dto'
+import { PostTypeSchema } from '@zod/generated'
 
 const POST_CONTENT_MAX_LENGTH = 300
+
+const PostFormSchema = z.object({
+  type: PostTypeSchema.default('OFFER'),
+  content: z.string().default(''),
+  isVisible: z.boolean().default(true),
+  location: LocationSchema,
+})
+type PostForm = z.infer<typeof PostFormSchema>
 
 import PostIt from '@/features/shared/ui/PostIt.vue'
 import PostTypeBadge from './PostTypeBadge.vue'
 import LocationSelector from '@/features/shared/profileform/LocationSelector.vue'
 
-interface Props {
-  post?: OwnerPost
-  isEdit?: boolean
-}
-
 interface Emits {
   (e: 'cancel'): void
   (e: 'saved', post: OwnerPost): void
+}
+
+interface Props {
+  post?: OwnerPost
+  isEdit: boolean
+  defaultLocation: LocationDTO
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -29,52 +37,23 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emits>()
 
-const { t } = useI18n()
 const postStore = usePostStore()
-const profileStore = useOwnerProfileStore()
 
-const defaultLocation = (): LocationDTO => ({
-  country: profileStore.profile?.location?.country ?? '',
-  cityName: profileStore.profile?.location?.cityName ?? '',
-  lat: profileStore.profile?.location?.lat ?? null,
-  lon: profileStore.profile?.location?.lon ?? null,
-})
+const post = props.post
 
-const form = ref<{
-  type: PostTypeType
-  content: string
-  isVisible: boolean
-  location: LocationDTO
-}>({
-  type: 'OFFER',
-  content: '',
-  isVisible: true,
-  location: defaultLocation(),
-})
+const form = ref<PostForm>(
+  PostFormSchema.parse({
+    ...post,
+    location: post?.location ?? props.defaultLocation,
+  })
+)
 
 const isLoading = ref(false)
 
-// Initialize form with existing post data if editing
-if (props.isEdit && props.post) {
-  form.value = {
-    type: props.post.type,
-    content: props.post.content,
-    isVisible: props.post.isVisible,
-    location: {
-      country: props.post.country ?? defaultLocation().country,
-      cityName: props.post.cityName ?? defaultLocation().cityName,
-      lat: props.post.lat ?? defaultLocation().lat,
-      lon: props.post.lon ?? defaultLocation().lon,
-    },
-  }
-}
-
 const isFormValid = computed(() => {
-  return form.value.content.trim().length > 0 && form.value.content.length <= 150
-})
-
-const saveButtonText = computed(() => {
-  return props.isEdit ? t('posts.actions.save') : t('posts.actions.create')
+  return (
+    form.value.content.trim().length > 10 && form.value.content.length <= POST_CONTENT_MAX_LENGTH
+  )
 })
 
 const handleSubmit = async () => {
@@ -83,45 +62,20 @@ const handleSubmit = async () => {
   isLoading.value = true
 
   try {
-    if (props.isEdit && props.post) {
-      // Update existing post
-      const updatePayload: UpdatePostPayload = {
-        content: form.value.content,
-        type: form.value.type,
-        isVisible: form.value.isVisible,
-        country: form.value.location.country || null,
-        cityName: form.value.location.cityName || null,
-        lat: form.value.location.lat ?? null,
-        lon: form.value.location.lon ?? null,
-      }
+    const { content, type, isVisible, location } = form.value
+    let savedPost: OwnerPost | null = null
 
-      const updatedPost = await postStore.updatePost(props.post.id, updatePayload)
-      if (updatedPost) {
-        emit('saved', updatedPost)
-      }
+    if (props.isEdit && post) {
+      savedPost = await postStore.updatePost(post.id, { content, type, isVisible, ...location })
     } else {
-      // Create new post
-      const createPayload: CreatePostPayload = {
-        content: form.value.content,
-        type: form.value.type,
-        country: form.value.location.country || null,
-        cityName: form.value.location.cityName || null,
-        lat: form.value.location.lat ?? null,
-        lon: form.value.location.lon ?? null,
-      }
-
-      const newPost = await postStore.createPost(createPayload)
-      if (newPost) {
-        emit('saved', newPost)
-        // Reset form for new post
-        form.value = {
-          type: 'OFFER',
-          content: '',
-          isVisible: true,
-          location: defaultLocation(),
-        }
+      savedPost = await postStore.createPost({ content, type, ...location })
+      if (savedPost) {
+        // reset form
+        form.value = PostFormSchema.parse({ location: props.defaultLocation })
       }
     }
+
+    if (savedPost) emit('saved', savedPost)
   } finally {
     isLoading.value = false
   }
@@ -167,7 +121,7 @@ const handleSubmit = async () => {
             :placeholder="$t('posts.placeholders.content')"
             :maxlength="POST_CONTENT_MAX_LENGTH"
             required
-            rows="4"
+            rows="6"
             :label="$t('posts.labels.content')"
           ></BFormTextarea>
           <div class="fs-6 text-end form-text text-muted character-count">
@@ -178,7 +132,7 @@ const handleSubmit = async () => {
         <BFormGroup class="mb-2">
           <LocationSelector
             v-model="form.location"
-            open-direction="bottom"
+            open-direction="top"
             :allow-empty="true"
             :close-on-select="true"
           />
@@ -210,10 +164,12 @@ const handleSubmit = async () => {
       </BButton>
       <BButton
         type="submit"
-        variant="primary"
+        variant="success"
         :disabled="isLoading || !isFormValid"
       >
-        {{ isLoading ? $t('uicomponents.submitbutton.working') : saveButtonText }}
+        <span v-if="isLoading">{{ $t('uicomponents.submitbutton.working') }}</span>
+        <span v-else-if="isEdit">{{ $t('posts.actions.save') }}</span>
+        <span v-else>{{ $t('posts.actions.create') }}</span>
       </BButton>
     </div>
   </BForm>

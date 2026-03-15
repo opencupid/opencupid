@@ -26,15 +26,15 @@ const baseDbPost: any = {
   createdAt: new Date('2025-01-01'),
   updatedAt: new Date('2025-01-01'),
   postedById: 'clprofile000000000001',
-  country: null,
-  cityName: null,
-  lat: null,
-  lon: null,
+  country: 'AT',
+  cityName: 'Vienna',
+  lat: 48.2,
+  lon: 16.3,
   postedBy: basePostedBy,
 }
 
 describe('mapDbPostToPublic', () => {
-  it('maps a post without location — location is null', () => {
+  it('maps a post with location', () => {
     const result = mapDbPostToPublic(baseDbPost, 'viewer-profile-id')
 
     expect(result.id).toBe(baseDbPost.id)
@@ -45,7 +45,12 @@ describe('mapDbPostToPublic', () => {
       publicName: basePostedBy.publicName,
       profileImages: [],
     })
-    expect(result.location).toBeNull()
+    expect(result.location).toEqual({
+      country: 'AT',
+      cityName: 'Vienna',
+      lat: 48.2,
+      lon: 16.3,
+    })
   })
 
   it('maps a post with location fields', () => {
@@ -64,25 +69,6 @@ describe('mapDbPostToPublic', () => {
       cityName: 'Berlin',
       lat: 52.52,
       lon: 13.405,
-    })
-  })
-
-  it('maps a post with partial location (only country)', () => {
-    const postPartialLocation = {
-      ...baseDbPost,
-      country: 'US',
-      cityName: null,
-      lat: null,
-      lon: null,
-    }
-
-    const result = mapDbPostToPublic(postPartialLocation, 'viewer-profile-id')
-
-    expect(result.location).toEqual({
-      country: 'US',
-      cityName: null,
-      lat: null,
-      lon: null,
     })
   })
 
@@ -134,38 +120,14 @@ describe('mapDbPostToOwner', () => {
     })
   })
 
-  it('returns null location when all location fields are empty', () => {
+  it('maps location from base post', () => {
     const result = mapDbPostToOwner(baseDbPost)
 
-    expect(result.location).toBeNull()
-  })
-})
-
-describe('extractPostLocation (via mappers)', () => {
-  it('returns null when all location fields are null/empty', () => {
-    const post = { ...baseDbPost, country: null, cityName: null, lat: null, lon: null }
-    const result = mapDbPostToPublic(post, 'viewer-profile-id')
-    expect(result.location).toBeNull()
-  })
-
-  it('returns null when all location fields are falsy', () => {
-    const post = { ...baseDbPost, country: '', cityName: '', lat: null, lon: null }
-    const result = mapDbPostToPublic(post, 'viewer-profile-id')
-    expect(result.location).toBeNull()
-  })
-
-  it('returns location when at least one field has a value', () => {
-    const post = { ...baseDbPost, country: 'AT', cityName: null, lat: null, lon: null }
-    const result = mapDbPostToPublic(post, 'viewer-profile-id')
-    expect(result.location).not.toBeNull()
-    expect(result.location!.country).toBe('AT')
-  })
-
-  it('returns location when only lat/lon are set', () => {
-    const post = { ...baseDbPost, country: null, cityName: null, lat: 48.2, lon: 16.3 }
-    const result = mapDbPostToPublic(post, 'viewer-profile-id')
-    expect(result.location).not.toBeNull()
-    expect(result.location!.lat).toBe(48.2)
-    expect(result.location!.lon).toBe(16.3)
+    expect(result.location).toEqual({
+      country: 'AT',
+      cityName: 'Vienna',
+      lat: 48.2,
+      lon: 16.3,
+    })
   })
 })

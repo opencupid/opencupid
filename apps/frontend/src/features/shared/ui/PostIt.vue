@@ -1,23 +1,3 @@
-<template>
-  <div
-    class="post-it-wrapper"
-    :style="warpStyle(id)"
-  >
-    <div
-      class="post-it"
-      :class="variant"
-    >
-      <div class="header mb-2">
-        <slot name="header"></slot>
-        <div class="pin-marker"></div>
-      </div>
-      <div class="content fs-4">
-        <slot></slot>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
 defineProps({
   variant: {
@@ -67,18 +47,33 @@ function warpStyle(id: string) {
   } as Record<string, string>
 }
 </script>
+<template>
+  <div
+    class="post-it-wrapper"
+    :style="warpStyle(id)"
+  >
+    <div
+      class="post-it"
+      :class="variant"
+    >
+      <div class="header mb-2">
+        <slot name="header"></slot>
+        <div class="pin-marker"></div>
+      </div>
+      <div class="content">
+        <slot></slot>
+      </div>
+    </div>
+  </div>
+</template>
 
 <style scoped lang="scss">
 .o-post-it {
   background-color: var(--postit-bg); /* Default yellow */
-  /* padding: 0.5rem; */
   border: 1px solid var(--bs-border-color);
   box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
-  /* display: inline-block; */
-  /* margin: 0.25rem; */
-  width: 100%; /* Example width */
-  min-height: 150px; /* Example minimum height */
-  /* transform: rotate(3deg);  */
+  width: 100%;
+  min-height: 150px;
 }
 
 /* Wrapper holds transform + shadow so clip-path on inner doesn't clip the shadow */
@@ -116,17 +111,7 @@ function warpStyle(id: string) {
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background:
-      radial-gradient(
-        120% 80% at 0% 0%,
-        rgba(0, 0, 0, calc(0.06 * var(--skv))) 0%,
-        transparent 50%
-      ),
-      radial-gradient(
-        120% 80% at 100% 100%,
-        rgba(0, 0, 0, calc(0.06 * var(--skv))) 0%,
-        transparent 55%
-      );
+
     mix-blend-mode: multiply;
     opacity: 0.6;
     border-radius: inherit;
@@ -138,27 +123,7 @@ function warpStyle(id: string) {
     position: absolute;
     inset: -2px -2px -8px -2px; /* a hair larger for feather */
     pointer-events: none;
-    background:
-      radial-gradient(
-        100% 20px at 50% 0%,
-        rgba(0, 0, 0, calc(0.12 * var(--skv))) 0,
-        rgba(0, 0, 0, 0) 70%
-      ),
-      radial-gradient(
-        100% 16px at 0% 50%,
-        rgba(0, 0, 0, calc(0.08 * var(--skv))) 0,
-        rgba(0, 0, 0, 0) 65%
-      ),
-      radial-gradient(
-        100% 16px at 100% 50%,
-        rgba(0, 0, 0, calc(0.08 * var(--skv))) 0,
-        rgba(0, 0, 0, 0) 65%
-      ),
-      radial-gradient(
-        100% 22px at 50% 100%,
-        rgba(0, 0, 0, calc(0.1 * var(--skv))) 0,
-        rgba(0, 0, 0, 0) 75%
-      );
+
     filter: blur(0.5px);
     border-radius: inherit;
   }
@@ -174,7 +139,6 @@ function warpStyle(id: string) {
 
 .header {
   position: relative;
-  font-family: var(--bs-body-font-family, sans-serif);
 }
 
 /* simple round pin/dent */

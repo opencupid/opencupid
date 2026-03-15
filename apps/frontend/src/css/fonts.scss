@@ -15,6 +15,11 @@
 @import '@fontsource/rubik/latin-400.css';
 @import '@fontsource/rubik/latin-700.css';
 
-@import '@fontsource/reenie-beanie/latin-400.css';
-// scribble
-// @import '@fontsource/caveat'; // Defaults to weight 400
+// handwritten font for post cards
+@font-face {
+  font-family: 'Patrick Hand';
+  font-style: normal;
+  font-weight: 400;
+  src: url('@/assets/fonts/PatrickHand-Regular.ttf') format('truetype');
+  font-display: swap;
+}

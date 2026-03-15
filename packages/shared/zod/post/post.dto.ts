@@ -1,18 +1,9 @@
 import { z } from 'zod'
-import { PostSchema, PostTypeSchema, ProfileImageSchema } from '../generated'
+import { PostSchema, PostTypeSchema } from '../generated'
 import { PostType } from '@prisma/client'
-import { ProfileSummarySchema, PublicProfileSchema } from '../profile/profile.dto'
+import { ProfileSummarySchema } from '../profile/profile.dto'
 import { DbMinimalProfileSchema } from '../profile/profile.db'
 import { LocationSchema } from '@zod/dto/location.dto'
-
-// Post location schema (nullable, for display)
-export const PostLocationSchema = z.object({
-  country: z.string().nullable(),
-  cityName: z.string().nullable(),
-  lat: z.number().nullable(),
-  lon: z.number().nullable(),
-})
-export type PostLocation = z.infer<typeof PostLocationSchema>
 
 // Base fields that are public
 const publicPostFields = {
@@ -48,13 +39,18 @@ export const PublicPostSchema = PostSchema.pick(publicPostFields).extend({
 export type PublicPost = z.infer<typeof PublicPostSchema>
 
 // Owner post schema (what the post creator sees)
-export const OwnerPostSchema = PostSchema.pick(ownerPostFields)
+export const OwnerPostSchema = PostSchema.pick(ownerPostFields).extend({
+  postedBy: ProfileSummarySchema,
+  location: LocationSchema.nullable().optional(),
+  isOwn: z.boolean().default(true),
+})
 export type OwnerPost = z.infer<typeof OwnerPostSchema>
 
 // Extended public post with profile info
 export const PublicPostWithProfileSchema = PublicPostSchema.extend({
   postedBy: ProfileSummarySchema,
-  location: PostLocationSchema.nullable().optional(),
+  location: LocationSchema.nullable().optional(),
+  isOwn: z.boolean().default(false),
 })
 export type PublicPostWithProfile = z.infer<typeof PublicPostWithProfileSchema>
 
@@ -62,8 +58,8 @@ export type PublicPostWithProfile = z.infer<typeof PublicPostWithProfileSchema>
 export const CreatePostPayloadSchema = z.object({
   content: z.string().min(1).max(2000),
   type: PostTypeSchema,
-  country: z.string().nullable().optional(),
-  cityName: z.string().nullable().optional(),
+  country: z.string().optional(),
+  cityName: z.string().optional(),
   lat: z.number().nullable().optional(),
   lon: z.number().nullable().optional(),
 })
@@ -91,11 +87,11 @@ export type PostParams = z.infer<typeof PostParamsSchema>
 export const PostQuerySchema = z.object({
   type: PostTypeSchema.optional(),
   limit: z.preprocess(
-    val => typeof val === 'string' ? parseInt(val, 10) : val,
+    (val) => (typeof val === 'string' ? parseInt(val, 10) : val),
     z.number().int().min(1).max(100).default(20)
   ),
   offset: z.preprocess(
-    val => typeof val === 'string' ? parseInt(val, 10) : val,
+    (val) => (typeof val === 'string' ? parseInt(val, 10) : val),
     z.number().int().min(0).default(0)
   ),
 })
@@ -110,16 +106,10 @@ export interface PostQueryInput {
 
 // Query parameters for nearby posts
 export const NearbyPostQuerySchema = PostQuerySchema.extend({
-  lat: z.preprocess(
-    val => typeof val === 'string' ? parseFloat(val) : val,
-    z.number()
-  ),
-  lon: z.preprocess(
-    val => typeof val === 'string' ? parseFloat(val) : val,
-    z.number()
-  ),
+  lat: z.preprocess((val) => (typeof val === 'string' ? parseFloat(val) : val), z.number()),
+  lon: z.preprocess((val) => (typeof val === 'string' ? parseFloat(val) : val), z.number()),
   radius: z.preprocess(
-    val => typeof val === 'string' ? parseInt(val, 10) : val,
+    (val) => (typeof val === 'string' ? parseInt(val, 10) : val),
     z.number().int().min(1).max(500).default(50)
   ),
 })

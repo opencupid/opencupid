@@ -5,11 +5,6 @@ import IconMap from '@/assets/icons/interface/map.svg'
 
 const modelValue = defineModel<string>({ required: true })
 const { t } = useI18n()
-
-const modes = [
-  { value: 'grid', icon: GridButton, title: 'profiles.browse.views.grid_view_button_title' },
-  { value: 'map', icon: IconMap, title: 'profiles.browse.views.map_view_button_title' },
-]
 </script>
 
 <template>
@@ -18,17 +13,20 @@ const modes = [
     size="sm"
   >
     <BButton
-      v-for="mode in modes"
-      :key="mode.value"
       variant="outline-dark"
-      :title="t(mode.title)"
-      :pressed="modelValue === mode.value"
-      @click="modelValue = mode.value"
+      :title="t('profiles.browse.views.grid_view_button_title')"
+      :pressed="modelValue === 'grid'"
+      @click="modelValue = 'grid'"
     >
-      <component
-        :is="mode.icon"
-        class="svg-icon"
-      />
+      <GridButton class="svg-icon" />
+    </BButton>
+    <BButton
+      variant="outline-dark"
+      :title="t('profiles.browse.views.map_view_button_title')"
+      :pressed="modelValue === 'map'"
+      @click="modelValue = 'map'"
+    >
+      <IconMap class="svg-icon" />
     </BButton>
   </BButtonGroup>
 </template>

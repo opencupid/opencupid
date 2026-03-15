@@ -1,59 +1,31 @@
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
+import type { MapBounds } from '@/features/shared/components/OsmPoiMap.types'
+import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useBootstrap } from '@/lib/bootstrap'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { usePostStore } from '../stores/postStore'
 import type { PublicPostWithProfile, OwnerPost } from '@zod/post/post.dto'
+import type { LocationDTO } from '@zod/dto/location.dto'
 
 export function usePostsViewModel() {
   const { t } = useI18n()
+  const router = useRouter()
   const postStore = usePostStore()
   const ownerStore = useOwnerProfileStore()
 
   // State management
-  const activeTab = ref('all')
-  const viewMode = ref('grid')
-  const showCreateModal = ref(false)
-  const locationPermission = ref<boolean | null>(null)
-  const userLocation = ref<{ lat: number; lon: number } | null>(null)
+  const activeTab = ref<'all' | 'recent' | 'my'>('all')
+  const viewMode = ref('map')
   const isDetailView = ref(false)
-  const showFullView = ref(false)
-  const editingPost = ref<OwnerPost | null>(null)
+  const filterLocation = ref<LocationDTO>({ country: '' })
   const selectedPost = ref<PublicPostWithProfile | OwnerPost | null>(null)
+  const showMyPosts = ref(false)
   const isInitialized = ref(false)
   const isLoading = ref(false)
 
   // Computed properties
-  const nearbyParams = computed(() => {
-    if (!userLocation.value) {
-      return { lat: 0, lon: 0, radius: 50 }
-    }
-    return {
-      lat: userLocation.value.lat,
-      lon: userLocation.value.lon,
-      radius: 50,
-    }
-  })
-
   const ownerProfile = computed(() => ownerStore.profile)
-
-  // Check if geolocation permission was already granted
-  const checkLocationPermission = async () => {
-    if (!navigator.permissions) {
-      locationPermission.value = false
-      return
-    }
-    try {
-      const status = await navigator.permissions.query({ name: 'geolocation' })
-      if (status.state === 'granted') {
-        await requestLocation()
-      } else {
-        locationPermission.value = false
-      }
-    } catch {
-      locationPermission.value = false
-    }
-  }
 
   // Bootstrap mechanism
   const initialize = async () => {
@@ -67,84 +39,30 @@ export function usePostsViewModel() {
         return
       }
 
-      await checkLocationPermission()
+      if (ownerProfile.value?.location) {
+        filterLocation.value = { ...ownerProfile.value.location }
+      }
+
       isInitialized.value = true
     } finally {
       isLoading.value = false
     }
   }
 
-  // Location handling
-  const getCurrentPosition = (): Promise<GeolocationPosition> => {
-    return new Promise((resolve, reject) => {
-      if (!navigator.geolocation) {
-        reject(new Error('Geolocation is not supported'))
-        return
-      }
-
-      navigator.geolocation.getCurrentPosition(resolve, reject, {
-        enableHighAccuracy: false,
-        timeout: 5000,
-        maximumAge: 300000, // 5 minutes
-      })
-    })
-  }
-
-  const requestLocation = async () => {
+  // Map bounds handler
+  const onBoundsChanged = async (bounds: MapBounds) => {
+    isLoading.value = true
     try {
-      const position = await getCurrentPosition()
-      userLocation.value = {
-        lat: position.coords.latitude,
-        lon: position.coords.longitude,
-      }
-      locationPermission.value = true
-    } catch (error) {
-      console.warn('Cannot get location:', error)
-    }
-  }
-
-  // Watch for Nearby tab activation
-  watch(activeTab, (newTab) => {
-    if (newTab === 'nearby' && !locationPermission.value) {
-      requestLocation()
-    }
-  })
-
-  // Post manipulation helpers
-  function toListPost(post: PublicPostWithProfile | OwnerPost) {
-    return {
-      ...post,
-      isOwn: true,
-    }
-  }
-
-  function upsertIntoActiveList(post: PublicPostWithProfile | OwnerPost) {
-    const normalized = toListPost(post)
-
-    if (activeTab.value === 'my') {
-      const idx = postStore.myPosts.findIndex((item) => item.id === post.id)
-      if (idx === -1) {
-        postStore.myPosts.unshift(post as OwnerPost)
-      } else {
-        postStore.myPosts[idx] = post as OwnerPost
-      }
-      return
-    }
-
-    const idx = postStore.posts.findIndex((item) => item.id === post.id)
-    if (idx === -1) {
-      postStore.posts.unshift(normalized as PublicPostWithProfile)
-    } else {
-      postStore.posts[idx] = normalized as PublicPostWithProfile
+      await postStore.fetchPostsInBounds(bounds)
+    } finally {
+      isLoading.value = false
     }
   }
 
   // Post handlers
   function closePostOverlays() {
-    showFullView.value = false
-    showCreateModal.value = false
-    editingPost.value = null
     selectedPost.value = null
+    showMyPosts.value = false
   }
 
   async function handleDelete(post?: PublicPostWithProfile | OwnerPost) {
@@ -174,64 +92,51 @@ export function usePostsViewModel() {
     }
   }
 
-  async function handlePostListIntent(event: string, post?: PublicPostWithProfile | OwnerPost) {
-    switch (event) {
-      case 'fullview':
-        selectedPost.value = post ?? null
-        editingPost.value = null
-        showCreateModal.value = false
-        showFullView.value = true
-        break
-      case 'create':
-        editingPost.value = null
-        showCreateModal.value = true
-        showFullView.value = true
-        break
-      case 'edit':
-        editingPost.value = post as OwnerPost
-        showCreateModal.value = false
-        showFullView.value = true
-        break
-      case 'close':
-        closePostOverlays()
-        break
-      case 'hide':
-        await handleHide(post)
-        break
-      case 'delete':
-        await handleDelete(post)
-        break
-      case 'saved':
-        if (post && (showCreateModal.value || editingPost.value)) {
-          upsertIntoActiveList(post)
-        }
-        showFullView.value = false
-        break
+  function handleFullview(post?: PublicPostWithProfile | OwnerPost) {
+    showMyPosts.value = false
+    selectedPost.value = post ?? null
+  }
+
+  function handleCreate() {
+    showMyPosts.value = false
+    router.push({ name: 'CreatePost' })
+  }
+
+  function handleEdit(post?: PublicPostWithProfile | OwnerPost) {
+    if (post) {
+      showMyPosts.value = false
+      router.push({ name: 'EditPost', params: { postId: post.id } })
     }
+  }
+
+  function handleSaved(post?: PublicPostWithProfile | OwnerPost) {
+    if (post) {
+      postStore.upsertPost(post)
+    }
+    closePostOverlays()
   }
 
   return {
     // State
     activeTab,
     viewMode,
-    showCreateModal,
-    locationPermission,
-    userLocation,
-    nearbyParams,
     isDetailView,
-    showFullView,
-    editingPost,
+    filterLocation,
     selectedPost,
+    showMyPosts,
     isInitialized,
     isLoading,
     ownerProfile,
 
     // Methods
     initialize,
-    requestLocation,
-    handlePostListIntent,
+    onBoundsChanged,
+    handleFullview,
+    handleCreate,
+    handleEdit,
     handleDelete,
     handleHide,
+    handleSaved,
     closePostOverlays,
   }
 }

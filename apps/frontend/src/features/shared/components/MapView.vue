@@ -1,23 +1,23 @@
-<script setup lang="ts" generic="T extends { id: string | number }">
+<script setup lang="ts">
 import { ref, type Component } from 'vue'
+import { useDebounceFn } from '@vueuse/core'
 import type { Map as LMap } from 'leaflet'
 
-import OsmPoiMap, { type PoiLocation, type MapBounds } from './OsmPoiMap.vue'
+import OsmPoiMap from './OsmPoiMap.vue'
+import type { MapPoi, MapBounds } from './OsmPoiMap.types'
 import MapPlaceholder from './MapPlaceholder.vue'
-import type { AvatarImage } from './AvatarIcon.vue'
+
+const BOUNDS_DEBOUNCE_MS = 500
 
 const props = withDefaults(
   defineProps<{
-    items: T[]
+    items: MapPoi[]
+    iconComponent: Component
+    popupComponent?: Component
     center?: [number, number]
     zoom?: number
     selectedId?: string | number
     fitToPois?: boolean
-    popupComponent: Component
-    getLocation: (item: T) => PoiLocation | undefined
-    getTitle: (item: T) => string
-    getImage?: (item: T) => AvatarImage | undefined
-    isHighlighted?: (item: T) => boolean
     isLoading?: boolean
     isPlaceholderAnimated?: boolean
   }>(),
@@ -32,6 +32,10 @@ const emit = defineEmits<{
   (e: 'map:ready', map: LMap): void
   (e: 'bounds-changed', bounds: MapBounds): void
 }>()
+
+const debouncedEmitBounds = useDebounceFn((bounds: MapBounds) => {
+  emit('bounds-changed', bounds)
+}, BOUNDS_DEBOUNCE_MS)
 
 const isMapReady = ref(false)
 
@@ -61,15 +65,12 @@ function onMapReady(map: LMap) {
         :zoom="props.zoom"
         :selected-id="props.selectedId"
         :fit-to-pois="props.fitToPois"
+        :icon-component="props.iconComponent"
         :popup-component="props.popupComponent"
-        :get-location="props.getLocation"
-        :get-title="props.getTitle"
-        :get-image="props.getImage"
-        :is-highlighted="props.isHighlighted"
         class="h-100"
         @map:ready="onMapReady"
         @item:select="(id) => emit('item:select', id)"
-        @bounds-changed="(bounds) => emit('bounds-changed', bounds)"
+        @bounds-changed="debouncedEmitBounds"
       />
     </div>
   </div>

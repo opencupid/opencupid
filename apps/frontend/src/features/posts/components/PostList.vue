@@ -2,25 +2,23 @@
 import { ref } from 'vue'
 import { useInfiniteScroll } from '@vueuse/core'
 import PostCard from './PostCard.vue'
+import PostPlaceholdersGrid from './PostPlaceholdersGrid.vue'
 import { type PostTypeType } from '@zod/generated'
 import { usePostListViewModel } from '../composables/usePostListViewModel'
+
+defineOptions({ inheritAttrs: false })
 
 interface Props {
   title?: string
   type?: PostTypeType
-  showFilters?: boolean
-  scope?: 'all' | 'nearby' | 'recent' | 'my'
-  nearbyParams?: { lat: number; lon: number; radius: number }
-  emptyMessage?: string
-  isActive?: boolean
+  scope: 'all' | 'nearby' | 'recent' | 'my'
+  shouldFetch: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   title: 'Posts',
-  showFilters: false,
   scope: 'all',
-  emptyMessage: 'No posts found',
-  isActive: true,
+  shouldFetch: true,
 })
 
 const emit = defineEmits<{
@@ -70,24 +68,13 @@ function handlePostDelete(post: any) {
 function handlePostHide(post: any) {
   emit('intent:hide', post)
 }
-function handlePostSaved(post: any) {
-  emit('intent:saved', post)
-}
-function handleClose() {
-  emit('intent:close')
-}
 </script>
 
 <template>
   <div class="post-list h-100 d-flex flex-column">
-    <div
-      v-if="postStore.isLoading && posts.length === 0"
-      class="mb-2 flex-shrink-0"
-    >
-      <div class="loading-spinner"></div>
-      <p>{{ $t('uicomponents.loading.loading') }}</p>
-    </div>
-
+    <BContainer v-if="postStore.isLoading && posts.length === 0">
+      <PostPlaceholdersGrid />
+    </BContainer>
     <div
       v-else-if="postStore.error"
       class="text-danger mb-2 flex-shrink-0"
@@ -106,18 +93,22 @@ function handleClose() {
       v-else-if="posts.length === 0"
       class="d-flex align-items-center justify-content-center flex-grow-1"
     >
-      <p class="text-muted mb-0">{{ emptyMessage }}</p>
+      <slot name="empty">
+        <p class="text-muted mb-0">{{ $t('posts.messages.no_posts') }}</p>
+      </slot>
     </div>
 
     <div
       ref="scrollContainer"
       class="container-fluid overflow-auto hide-scrollbar flex-grow-1 flex-shrink-1"
     >
-      <TransitionGroup
-        name="fade"
-        tag="div"
+      <BRow
         v-if="posts.length > 0"
-        class="row row-cols-1 g-2 row-cols-sm-2 row-cols-lg-3 gx-4 gy-4"
+        cols="1"
+        cols-sm="2"
+        cols-lg="3"
+        class="g-2 g-md-3"
+        v-bind="$attrs"
       >
         <BCol
           v-for="post in posts"
@@ -135,7 +126,7 @@ function handleClose() {
             class="clickable"
           />
         </BCol>
-      </TransitionGroup>
+      </BRow>
     </div>
 
     <div

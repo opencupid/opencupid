@@ -160,30 +160,41 @@ const DummyPopup = defineComponent({
   },
 })
 
-interface TestItem {
-  id: string
-  location: { lat: number; lon: number }
-  name: string
-  image?: { blurhash?: string | null; variants: { size: string; url: string }[] }
-}
+const DummyIcon = defineComponent({
+  props: ['image', 'isSelected', 'isHighlighted'],
+  render() {
+    return h('img', {
+      src: this.image?.variants?.[0]?.url,
+      class: { 'poi-avatar': true, highlighted: this.isHighlighted },
+    })
+  },
+})
 
 function makeImage(url: string, blurhash?: string) {
   return { blurhash: blurhash ?? null, variants: [{ size: 'thumb', url }] }
 }
 
-const items: TestItem[] = [
+const items = [
   {
     id: '1',
     location: { lat: 47.5, lon: 19.0 },
-    name: 'Alice',
+    title: 'Alice',
     image: makeImage('https://img/alice.jpg'),
+    source: { name: 'Alice' },
   },
-  { id: '2', location: { lat: 48.2, lon: 16.3 }, name: 'Bob' },
+  {
+    id: '2',
+    location: { lat: 48.2, lon: 16.3 },
+    title: 'Bob',
+    image: makeImage('https://img/bob.jpg'),
+    source: { name: 'Bob' },
+  },
   {
     id: '3',
     location: { lat: 46.0, lon: 18.0 },
-    name: 'Carol',
+    title: 'Carol',
     image: makeImage('https://img/carol.jpg'),
+    source: { name: 'Carol' },
   },
 ]
 
@@ -194,8 +205,7 @@ async function mountMap(props: Partial<Record<string, any>> = {}) {
   const wrapper = mount(OsmPoiMap as any, {
     props: {
       items: [],
-      getLocation: (item: TestItem) => item.location,
-      getTitle: (item: TestItem) => item.name,
+      iconComponent: DummyIcon,
       popupComponent: DummyPopup,
       ...props,
     },
@@ -213,56 +223,26 @@ beforeEach(() => {
 })
 
 describe('OsmPoiMap', () => {
-  it('creates default dot icons when getImage is not provided', async () => {
+  it('creates markers for items with images using iconComponent', async () => {
     await mountMap()
-    await flushPromises()
-
-    // Should have created markers via L.marker
-    expect(L.marker).toHaveBeenCalledTimes(3)
-
-    // All icons should be divIcons (dot style), none should have poi-avatar class
-    for (const call of (L.marker as any).mock.calls) {
-      const icon = call[1]?.icon
-      expect(icon).toBeDefined()
-      expect(icon.html).not.toContain('poi-avatar')
-    }
-  })
-
-  it('creates avatar icons when getImage returns an image', async () => {
-    const getImage = (item: TestItem) => item.image
-
-    await mountMap({ getImage })
     await flushPromises()
 
     expect(L.marker).toHaveBeenCalledTimes(3)
 
     const calls = (L.marker as any).mock.calls
 
-    // Alice (index 0) has image → avatar icon
-    const aliceAvatarHtml = calls[0][1].icon.html.innerHTML
-    expect(aliceAvatarHtml).toContain('poi-avatar')
-    expect(aliceAvatarHtml).toContain('alice.jpg')
+    // All items have images → rendered via iconComponent
     expect(calls[0][1].icon.className).toBe('poi-avatar-icon')
-
-    // Bob (index 1) has no image → dot icon
-    expect(calls[1][1].icon.html).not.toContain('poi-avatar')
-    expect(calls[1][1].icon.html).toContain('poi-dot')
-
-    // Carol (index 2) has image → avatar icon
-    const carolAvatarHtml = calls[2][1].icon.html.innerHTML
-    expect(carolAvatarHtml).toContain('poi-avatar')
-    expect(carolAvatarHtml).toContain('carol.jpg')
+    expect(calls[1][1].icon.className).toBe('poi-avatar-icon')
+    expect(calls[2][1].icon.className).toBe('poi-avatar-icon')
   })
 
-  it('falls back to dot icon for items where getImage returns undefined', async () => {
-    const getImage = (_item: TestItem) => undefined
-
-    await mountMap({ getImage })
+  it('renders markers for items without image property', async () => {
+    const noImageItems = items.map(({ image, ...rest }) => rest)
+    await mountMap({ items: noImageItems })
     await flushPromises()
 
-    for (const call of (L.marker as any).mock.calls) {
-      expect(call[1].icon.html).toContain('poi-dot')
-    }
+    expect(L.marker).toHaveBeenCalledTimes(noImageItems.length)
   })
 
   it('initializes a markerClusterGroup and adds markers to it', async () => {
@@ -429,9 +409,7 @@ describe('OsmPoiMap', () => {
   })
 
   it('uses 32×32 iconSize for avatar icons to match CSS dimensions', async () => {
-    const getImage = (item: TestItem) => item.image
-
-    await mountMap({ getImage })
+    await mountMap()
     await flushPromises()
 
     const calls = (L.marker as any).mock.calls

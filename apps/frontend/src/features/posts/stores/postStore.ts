@@ -10,6 +10,7 @@ import type {
 } from '@zod/post/post.dto'
 import type {
   PostsResponse,
+  MyPostsResponse,
   PostResponse,
   CreatePostResponse,
   UpdatePostResponse,
@@ -27,11 +28,6 @@ export const usePostStore = defineStore('posts', {
   }),
 
   getters: {
-    getPostById: (state) => (id: string) => {
-      return (
-        state.posts.find((post) => post.id === id) || state.myPosts.find((post) => post.id === id)
-      )
-    },
     getPostsByType: (state) => (type: PostTypeType) => {
       return state.posts.filter((post) => post.type === type)
     },
@@ -352,16 +348,16 @@ export const usePostStore = defineStore('posts', {
 
         // We'll need to get the current profile ID from auth store
         // For now, we'll use a placeholder endpoint
-        const r = await safeApiCall<{ data: PostsResponse }>(() =>
+        const r = await safeApiCall<{ data: MyPostsResponse }>(() =>
           api.get(`/posts/profile/me?${params.toString()}`)
         )
         const response = r.data
 
         if (response.success) {
           if (query.offset === 0) {
-            this.myPosts = response.posts as any[]
+            this.myPosts = response.posts
           } else {
-            this.myPosts.push(...(response.posts as any[]))
+            this.myPosts.push(...response.posts)
           }
           return response.posts
         } else {
@@ -373,6 +369,58 @@ export const usePostStore = defineStore('posts', {
         return []
       } finally {
         this.isLoading = false
+      }
+    },
+
+    async fetchPostsInBounds(bounds: { south: number; north: number; west: number; east: number }) {
+      this.isLoading = true
+      this.error = null
+
+      try {
+        const params = new URLSearchParams({
+          south: bounds.south.toString(),
+          north: bounds.north.toString(),
+          west: bounds.west.toString(),
+          east: bounds.east.toString(),
+        })
+
+        const r = await safeApiCall<{ data: PostsResponse }>(() =>
+          api.get(`/posts/bounds?${params.toString()}`)
+        )
+        const response = r.data
+
+        if (response.success) {
+          this.posts = response.posts
+          return response.posts
+        } else {
+          this.error = 'Failed to fetch posts in bounds'
+          return []
+        }
+      } catch (error: any) {
+        this.error = error.message || 'Failed to fetch posts in bounds'
+        return []
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    upsertPost(post: PublicPostWithProfile | OwnerPost) {
+      const isOwn = 'isVisible' in post
+
+      if (isOwn) {
+        const idx = this.myPosts.findIndex((p) => p.id === post.id)
+        if (idx === -1) {
+          this.myPosts.unshift(post as OwnerPost)
+        } else {
+          this.myPosts[idx] = post as OwnerPost
+        }
+      }
+
+      const idx = this.posts.findIndex((p) => p.id === post.id)
+      if (idx === -1) {
+        this.posts.unshift({ ...post, isOwn: true } as PublicPostWithProfile)
+      } else {
+        this.posts[idx] = { ...post, isOwn: true } as PublicPostWithProfile
       }
     },
 

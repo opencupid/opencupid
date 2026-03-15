@@ -10,7 +10,7 @@ interface UsePostListOptions {
   scope?: 'all' | 'nearby' | 'recent' | 'my'
   type?: PostTypeType
   nearbyParams?: { lat: number; lon: number; radius: number }
-  isActive?: boolean
+  shouldFetch?: boolean
 }
 
 export function usePostListViewModel(options: UsePostListOptions) {
@@ -108,9 +108,9 @@ export function usePostListViewModel(options: UsePostListOptions) {
   }
 
   watch(
-    () => options.isActive,
-    (isActive) => {
-      if (isActive) {
+    () => options.shouldFetch,
+    (shouldFetch) => {
+      if (shouldFetch) {
         loadPosts()
       }
     },
@@ -128,7 +128,7 @@ export function usePostListViewModel(options: UsePostListOptions) {
   watch(
     () => options.nearbyParams,
     () => {
-      if (options.scope === 'nearby' && options.isActive) {
+      if (options.scope === 'nearby' && options.shouldFetch) {
         loadPosts()
       }
     },

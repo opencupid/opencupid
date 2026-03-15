@@ -102,8 +102,6 @@ describe('PostService.create', () => {
     await service.create('clprofile000000000001', {
       content: 'No location',
       type: 'REQUEST',
-      country: undefined,
-      lat: undefined,
     })
 
     expect(mockPost.post.create).toHaveBeenCalledWith(
