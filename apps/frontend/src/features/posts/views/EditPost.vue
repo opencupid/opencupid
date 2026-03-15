@@ -69,11 +69,8 @@ function handleSaved() {
         </template>
       </SecondaryNav>
       <div
-        class="container py-3"
-        style="max-width: 640px"
+        class="container py-md-3"
       >
-        <h5 class="mb-3"></h5>
-
         <div
           v-if="isLoading"
           class="text-center py-5"

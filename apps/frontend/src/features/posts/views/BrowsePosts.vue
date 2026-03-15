@@ -10,6 +10,7 @@ import PostList from '../components/PostList.vue'
 import PostFullView from '../components/PostFullView.vue'
 import MapView from '@/features/shared/components/MapView.vue'
 import MapIcon from '../components/MapIcon.vue'
+import IconMenu from '@/assets/icons/interface/menu.svg'
 import ViewModeToggler from '@/features/shared/ui/ViewModeToggler.vue'
 
 import { usePostsViewModel } from '../composables/usePostsViewModel'
@@ -41,6 +42,7 @@ provide('ownerProfile', ownerProfile)
 const postStore = usePostStore()
 
 const selectedType = ref<PostTypeType | ''>('')
+const showMyPosts = ref(false)
 
 const currentTabPosts = computed(() => {
   if (activeTab.value === 'my') return postStore.myPosts
@@ -95,6 +97,13 @@ onActivated(() => {
         v-model:type="selectedType"
       />
       <ViewModeToggler v-model="viewMode" />
+      <BButton
+        variant="link-secondary"
+        class="p-1"
+        @click="showMyPosts = true"
+      >
+        <IconMenu class="svg-icon" />
+      </BButton>
     </template>
 
     <template #results>
@@ -102,7 +111,7 @@ onActivated(() => {
         v-if="viewMode === 'grid'"
         :key="activeTab"
         :scope="activeTab"
-        :is-active="true"
+        :should-fetch="true"
         :type="selectedType || undefined"
         :show-filters="false"
         @intent:fullview="(post) => handlePostListIntent('fullview', post)"
@@ -111,7 +120,11 @@ onActivated(() => {
         @intent:hide="(post) => handlePostListIntent('hide', post)"
         @intent:delete="(post) => handlePostListIntent('delete', post)"
         @intent:saved="(post) => handlePostListIntent('saved', post)"
-      />
+      >
+        <template #empty>
+          <p class="text-muted mb-0">{{ t('posts.messages.no_posts') }}</p>
+        </template>
+      </PostList>
       <MapView
         v-else-if="viewMode === 'map'"
         :items="mapPois"
@@ -170,7 +183,7 @@ onActivated(() => {
       <PostFullView
         :post="selectedPost"
         @close="handlePostListIntent('close')"
-        @edit="handlePostListIntent('edit', $event)"
+        @edit="handlePostListIntent('close'); handlePostListIntent('edit', $event)"
         @hide="handlePostListIntent('hide', $event)"
         @delete="handlePostListIntent('delete', $event)"
       />
@@ -182,4 +195,48 @@ onActivated(() => {
       />
     </template>
   </BModal>
+
+  <!-- My Posts Offcanvas -->
+  <BOffcanvas
+    v-model="showMyPosts"
+    placement="end"
+    :title="t('posts.my_posts')"
+    shadow
+  >
+    <PostList
+      scope="my"
+      :should-fetch="showMyPosts"
+      :show-filters="false"
+      cols="1"
+      cols-sm="1"
+      cols-lg="1"
+      @intent:fullview="
+        (post) => {
+          showMyPosts = false
+          handlePostListIntent('fullview', post)
+        }
+      "
+      @intent:edit="
+        (post) => {
+          showMyPosts = false
+          handlePostListIntent('edit', post)
+        }
+      "
+      @intent:close="() => handlePostListIntent('close')"
+      @intent:hide="(post) => handlePostListIntent('hide', post)"
+      @intent:delete="(post) => handlePostListIntent('delete', post)"
+    >
+      <template #empty>
+        <p class="text-muted mb-0">{{ t('posts.messages.no_my_posts') }}</p>
+      </template>
+    </PostList>
+    <div class="position-fixed bottom-0 end-0 p-3 text-cente w-100r" style="width: inherit">
+      <BButton
+        variant="primary"
+        @click="showMyPosts = false; handlePostListIntent('create')"
+      >
+        {{ t('posts.actions.create') }}
+      </BButton>
+    </div>
+  </BOffcanvas>
 </template>
