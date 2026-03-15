@@ -19,13 +19,16 @@ const previousMessageCount = ref(0)
 const hasDoneInitialScroll = ref(false)
 
 const scrollToBottom = () => {
-  if (messageListRef.value) {
+  if (!messageListRef.value) return
+  // Double rAF: first frame lets the browser complete layout after Vue's DOM update,
+  // second frame ensures flex containers have settled their final dimensions.
+  requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       if (messageListRef.value) {
         messageListRef.value.scrollTop = messageListRef.value.scrollHeight
       }
     })
-  }
+  })
 }
 
 watch(
