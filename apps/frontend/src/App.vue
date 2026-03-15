@@ -20,7 +20,7 @@ useLanguages().initialize(i18nStore.getLanguage())
 useUpdateChecker()
 
 // Initialize PWA install prompt handler
-usePwaInstall()
+// usePwaInstall()
 
 // Initialize call store (WebRTC / call state)
 import { useCallStore } from '@/features/videocall/stores/callStore'
@@ -29,7 +29,7 @@ useCallStore().initialize()
 
 <template>
   <UpdateBanner />
-  <PwaInstallBanner />
+  <!-- <PwaInstallBanner /> -->
   <Navbar />
   <RouterView v-slot="{ Component }">
     <KeepAlive :include="['UserHome', 'BrowseProfiles', 'BrowsePosts']">
