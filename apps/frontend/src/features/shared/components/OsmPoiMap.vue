@@ -372,6 +372,7 @@ function updateMarkers() {
 
     for (let i = startIdx; i < end; i++) {
       const item = props.items[i]
+      if (!item) continue
       const marker = createMarker(item)
       batch.push(marker)
       markers.set(item.id, marker)
