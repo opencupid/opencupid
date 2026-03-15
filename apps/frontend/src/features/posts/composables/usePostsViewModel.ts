@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useBootstrap } from '@/lib/bootstrap'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
@@ -12,7 +12,7 @@ export function usePostsViewModel() {
 
   // State management
   const activeTab = ref<'all' | 'recent' | 'my'>('all')
-  const viewMode = ref('grid')
+  const viewMode = ref('map')
   const showCreateModal = ref(false)
   const isDetailView = ref(false)
   const editingPost = ref<OwnerPost | null>(null)
@@ -35,14 +35,18 @@ export function usePostsViewModel() {
         return
       }
 
-      // Fetch posts eagerly so both grid and map views have data
-      await postStore.loadPosts('all')
-
       isInitialized.value = true
     } finally {
       isLoading.value = false
     }
   }
+
+  // Reload posts when view mode changes (also handles initial load after bootstrap)
+  watch([viewMode, isInitialized], () => {
+    if (isInitialized.value) {
+      postStore.loadPosts('all')
+    }
+  })
 
   // Post manipulation helpers
   function toListPost(post: PublicPostWithProfile | OwnerPost) {
