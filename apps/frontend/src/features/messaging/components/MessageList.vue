@@ -19,9 +19,16 @@ const previousMessageCount = ref(0)
 const hasDoneInitialScroll = ref(false)
 
 const scrollToBottom = () => {
-  if (messageListRef.value) {
-    messageListRef.value.scrollTop = messageListRef.value.scrollHeight
-  }
+  if (!messageListRef.value) return
+  // Double rAF: first frame lets the browser complete layout after Vue's DOM update,
+  // second frame ensures flex containers have settled their final dimensions.
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      if (messageListRef.value) {
+        messageListRef.value.scrollTop = messageListRef.value.scrollHeight
+      }
+    })
+  })
 }
 
 watch(
@@ -68,7 +75,6 @@ const handleScroll = () => {
     emit('load-older')
   }
 }
-
 </script>
 
 <template>
@@ -81,7 +87,7 @@ const handleScroll = () => {
       v-if="isLoadingMore"
       class="text-center text-muted small py-2"
     >
-      Loading older messages…
+      {{ $t('messaging.loading_older_messages') }}
     </div>
     <div
       v-for="msg in messages"

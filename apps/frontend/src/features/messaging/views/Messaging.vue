@@ -1,12 +1,11 @@
 <script lang="ts" setup>
-import { computed, onMounted, provide, toRef } from 'vue'
+import { computed, onMounted, provide } from 'vue'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 import IconMessage from '@/assets/icons/interface/message.svg'
 import IconSearch from '@/assets/icons/interface/search.svg'
 
-import ConversationDetail from '../components/ConversationDetail.vue'
 import ConversationSummaries from '../components/ConversationSummaries.vue'
 import SendMessageDialog from '@/features/publicprofile/components/SendMessageDialog.vue'
 import ViewTitle from '../../shared/ui/ViewTitle.vue'
@@ -17,31 +16,23 @@ import { useMessagingViewModel } from '../composables/useMessagingViewModel'
 
 defineOptions({ name: 'Messaging' })
 
-const props = defineProps<{
-  conversationId?: string
-}>()
-
 const {
   conversations,
   activeConversation,
   isLoading,
   haveConversations,
-  isDetailView,
   isInitialized,
   handleSelectConvo,
-  handleDeselectConvo,
-  handleProfileSelect,
   handleMatchSelect,
   handleReceivedLikeSelect,
   handleMessageSent,
-  fetchConversations,
   initialize,
   matches,
   haveMatches,
   showEmptyState,
   showMessageModal,
   messageProfile,
-} = useMessagingViewModel(toRef(props, 'conversationId'))
+} = useMessagingViewModel()
 
 provide(
   'viewerProfile',
@@ -54,38 +45,16 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main class="w-100 position-relative">
-    <!-- Detail view overlay -->
-    <div
-      v-if="isInitialized && isDetailView"
-      class="detail-view position-absolute w-100"
-      style="z-index: 1050"
-    >
-      <MiddleColumn class="h-100">
-        <ConversationDetail
-          :loading="isLoading"
-          :conversation="activeConversation"
-          @deselect:convo="handleDeselectConvo"
-          @profile:select="(profile) => handleProfileSelect(profile.id)"
-          @updated="fetchConversations"
-        />
-      </MiddleColumn>
-    </div>
+  <main class="w-100 h-100 d-flex flex-column position-relative">
+    <MiddleColumn class="h-100 d-flex flex-column overflow-hidden">
+      <!-- List view -->
 
-    <!-- List view -->
-    <div
-      class="d-flex flex-column overflow-auto hide-scrollbar h-100"
-      :class="{ 'd-none': isDetailView }"
-    >
-      <BOverlay
-        :show="showEmptyState && isInitialized"
-        no-spinner
-        bg-color="inherit"
-        :blur="null"
-        opacity="0.85"
-        class="h-100 overlay"
+      <!-- TODO align vert middle -->
+      <div
+        v-if="showEmptyState && isInitialized"
+        class="d-flex flex-column overflow-auto hide-scrollbar"
       >
-        <template #overlay>
+        <div>
           <ViewTitle
             :icon="IconMessage"
             class="text-primary"
@@ -93,7 +62,7 @@ onMounted(async () => {
             {{ $t('messaging.page_title') }}
           </ViewTitle>
 
-          <div class="d-flex flex-column align-items-center justify-content-center h-100">
+          <div class="d-flex flex-column justify-content-center h-100">
             <p class="text-muted mb-4 mt-4 text-center">
               {{ $t('messaging.no_messages_placeholder') }}
             </p>
@@ -107,39 +76,39 @@ onMounted(async () => {
               {{ $t('messaging.no_messages_cta') }}
             </BButton>
           </div>
+        </div>
+      </div>
+      <!-- Conversation summaries -->
+      <div
+        v-else
+        class="flex-grow-1 overflow-auto hide-scrollbar pt-2"
+      >
+        <template v-if="haveMatches">
+          <p class="px-2 text-center">{{ $t('messaging.matches_list_title') }}</p>
+          <div class="px-3 mb-3">
+            <MatchesList
+              :edges="matches"
+              @select:profile="handleMatchSelect"
+            />
+          </div>
         </template>
 
-        <!-- Conversation summaries -->
-        <div class="flex-grow-1 overflow-auto hide-scrollbar pt-2">
-          <MiddleColumn>
-            <template v-if="haveMatches">
-              <p class="px-2 text-center">{{ $t('messaging.matches_list_title') }}</p>
-              <div class="px-3 mb-3">
-                <MatchesList
-                  :edges="matches"
-                  @select:profile="handleMatchSelect"
-                />
-              </div>
-            </template>
-
-            <div class="px-3 mb-3">
-              <ReceivedLikesTeaser @interaction:selected="handleReceivedLikeSelect" />
-            </div>
-
-            <div v-if="haveConversations">
-              <p class="px-2 text-center">{{ $t('messaging.conversations_list_title') }}</p>
-
-              <ConversationSummaries
-                :loading="isLoading"
-                :conversations="conversations"
-                :activeConversation="activeConversation"
-                @convo:select="handleSelectConvo"
-              />
-            </div>
-          </MiddleColumn>
+        <div class="px-3 mb-3">
+          <ReceivedLikesTeaser @interaction:selected="handleReceivedLikeSelect" />
         </div>
-      </BOverlay>
-    </div>
+
+        <div v-if="haveConversations">
+          <p class="px-2 text-center">{{ $t('messaging.conversations_list_title') }}</p>
+
+          <ConversationSummaries
+            :loading="isLoading"
+            :conversations="conversations"
+            :activeConversation="activeConversation"
+            @convo:select="handleSelectConvo"
+          />
+        </div>
+      </div>
+    </MiddleColumn>
 
     <SendMessageDialog
       v-if="messageProfile"
@@ -149,32 +118,3 @@ onMounted(async () => {
     />
   </main>
 </template>
-<style scoped lang="scss">
-@import 'bootstrap/scss/functions';
-@import 'bootstrap/scss/variables';
-@import 'bootstrap/scss/mixins';
-@import '@/css/app-vars.scss';
-
-.detail-view {
-  left: 0;
-  // nav.fixed is on 1030 - on screens < md we put this above the navbar
-
-  // on screens > sm navbar stays visible
-  // top: $navbar-height;
-  // height: calc(100vh - $navbar-height);
-  inset: 0;
-  height: 100dvh;
-  z-index: 1050;
-
-  @include media-breakpoint-up(sm) {
-    // on screens > sm navbar stays visible
-    top: $navbar-height;
-    height: calc(100vh - $navbar-height);
-    z-index: 900;
-  }
-}
-
-main {
-  width: 100%;
-}
-</style>

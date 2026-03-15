@@ -19,7 +19,7 @@ const handleBack = () => {
 }
 
 const handleMessage = (conversationId: string) => {
-  router.push({ name: 'Messaging', params: { conversationId } })
+  router.push({ name: 'Conversation', params: { conversationId } })
 }
 
 const handleHidden = () => {

@@ -81,8 +81,11 @@ describe('MessageList', () => {
         hasMore: true,
         isLoadingMore: true,
       },
+      global: {
+        mocks: { $t: (k: string) => k },
+      },
     })
 
-    expect(wrapper.text()).toContain('Loading older messages')
+    expect(wrapper.text()).toContain('messaging.loading_older_messages')
   })
 })
