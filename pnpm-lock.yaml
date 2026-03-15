@@ -459,6 +459,9 @@ importers:
       timeago.js:
         specifier: 4.0.2
         version: 4.0.2
+      tinycon:
+        specifier: ^0.6.8
+        version: 0.6.8
       vue:
         specifier: 3.5.28
         version: 3.5.28(typescript@5.9.3)
@@ -526,6 +529,9 @@ importers:
       '@types/serve-static':
         specifier: 1.15.8
         version: 1.15.8
+      '@types/tinycon':
+        specifier: ^0.6.7
+        version: 0.6.7
       '@vitejs/plugin-vue':
         specifier: 6.0.4
         version: 6.0.4(vite@6.3.5(@types/node@22.16.1)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.43.1)(tsx@4.21.0)(yaml@2.8.2))(vue@3.5.28(typescript@5.9.3))
@@ -2933,6 +2939,9 @@ packages:
 
   '@types/tedious@4.0.14':
     resolution: {integrity: sha512-KHPsfX/FoVbUGbyYvk1q9MMQHLPeRZhRJZdO45Q4YjvFkv4hMNghCWTvy7rdKessBsmtz4euWCWAB6/tVpI1Iw==}
+
+  '@types/tinycon@0.6.7':
+    resolution: {integrity: sha512-rRklPHkd/mWYEqNpgVi5ItpamqPSl6VVkvvCFavvVyrNdSN+qCM8vzza6FkLYKTRSMzOQhUwhPTktRetjJ4ctw==}
 
   '@types/tough-cookie@4.0.5':
     resolution: {integrity: sha512-/Ad8+nIOV7Rl++6f1BdKxFSMgmoqEoYbHRpPcx3JEfv8VRsQe9Z4mCXeJBzxs7mbHY/XOZZuXlRNfhpVPbs6ZA==}
@@ -7300,6 +7309,9 @@ packages:
   tinybench@2.9.0:
     resolution: {integrity: sha512-0+DUvqWMValLmha6lr4kD8iAMK1HzV0/aKnCtWb9v9641TnP/MFb7Pc2bxoxQjTXAErryXVgUOfv2YqNllqGeg==}
 
+  tinycon@0.6.8:
+    resolution: {integrity: sha512-bF8Lxm4JUXF6Cw0XlZdugJ44GV575OinZ0Pt8vQPr8ooNqd2yyNkoFdCHzmdpHlgoqfSLfcyk4HDP1EyllT+ug==}
+
   tinyexec@0.3.2:
     resolution: {integrity: sha512-KQQR9yN7R5+OSwaK0XQoj22pwHoTlgYqmUscPYoknOoWCWfj/5/ABTMRi69FrKU5ffPVh5QcFikpWJI/P1ocHA==}
 
@@ -10516,6 +10528,8 @@ snapshots:
   '@types/tedious@4.0.14':
     dependencies:
       '@types/node': 22.16.1
+
+  '@types/tinycon@0.6.7': {}
 
   '@types/tough-cookie@4.0.5': {}
 
@@ -15388,6 +15402,8 @@ snapshots:
   tiny-lru@11.4.7: {}
 
   tinybench@2.9.0: {}
+
+  tinycon@0.6.8: {}
 
   tinyexec@0.3.2: {}
 
