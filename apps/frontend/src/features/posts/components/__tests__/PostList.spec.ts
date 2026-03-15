@@ -67,7 +67,7 @@ describe('PostList', () => {
 
   it('emits hide intent when post card emits hide', async () => {
     const wrapper = mount(PostList, {
-      props: { showFilters: false },
+      props: { scope: 'all', shouldFetch: false },
       global: globalOpts(),
     })
 
@@ -79,7 +79,7 @@ describe('PostList', () => {
 
   it('emits delete intent when post card emits delete', async () => {
     const wrapper = mount(PostList, {
-      props: { showFilters: false },
+      props: { scope: 'all', shouldFetch: false },
       global: globalOpts(),
     })
 
@@ -91,7 +91,7 @@ describe('PostList', () => {
 
   it('scroll container has overflow-auto and hide-scrollbar classes', () => {
     const wrapper = mount(PostList, {
-      props: { showFilters: false },
+      props: { scope: 'all', shouldFetch: false },
       global: globalOpts(),
     })
 
@@ -104,7 +104,7 @@ describe('PostList', () => {
     mockVm.isLoadingMore = ref(true)
 
     const wrapper = mount(PostList, {
-      props: { showFilters: false },
+      props: { scope: 'all', shouldFetch: false },
       global: globalOpts({ BSpinner: { template: '<div class="spinner" />' } }),
     })
 
@@ -115,7 +115,7 @@ describe('PostList', () => {
     mockVm.isLoadingMore = ref(false)
 
     const wrapper = mount(PostList, {
-      props: { showFilters: false },
+      props: { scope: 'all', shouldFetch: false },
       global: globalOpts({ BSpinner: { template: '<div class="spinner" />' } }),
     })
 
@@ -124,7 +124,7 @@ describe('PostList', () => {
 
   it('registers infinite scroll on mount', () => {
     mount(PostList, {
-      props: { showFilters: false },
+      props: { scope: 'all', shouldFetch: false },
       global: globalOpts(),
     })
 
@@ -133,7 +133,7 @@ describe('PostList', () => {
 
   it('outer container has flex-column layout for scrolling', () => {
     const wrapper = mount(PostList, {
-      props: { showFilters: false },
+      props: { scope: 'all', shouldFetch: false },
       global: globalOpts(),
     })
 
@@ -144,7 +144,7 @@ describe('PostList', () => {
 
   it('accepts type prop and passes it to the view model', () => {
     const wrapper = mount(PostList, {
-      props: { showFilters: false, type: 'OFFER' },
+      props: { scope: 'all', shouldFetch: false, type: 'OFFER' },
       global: globalOpts(),
     })
 
