@@ -5,6 +5,12 @@ import { useNotificationState } from '../composables/useNotificationState'
 
 const { hasNotifications } = useNotificationState()
 
+Tinycon.setOptions({
+  width: 6,
+  height: 6,
+  font: '0px arial',
+})
+
 watch(
   hasNotifications,
   (show) => {
