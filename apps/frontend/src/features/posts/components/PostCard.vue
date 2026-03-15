@@ -6,7 +6,7 @@ import PostIt from '@/features/shared/ui/PostIt.vue'
 import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
 import type { PublicPostWithProfile, OwnerPost } from '@zod/post/post.dto'
 import type { OwnerProfile } from '@zod/profile/profile.dto'
-import type { PublicProfileWithContext } from '@zod/profile/profile.dto'
+import type { MessageRecipient } from '@zod/profile/profile.dto'
 
 import IconHide from '@/assets/icons/interface/hide.svg'
 import IconShow from '@/assets/icons/interface/unhide.svg'
@@ -78,33 +78,9 @@ const showMessageForm = ref(false)
 const messageInput = ref()
 const { messageSent, handleMessageSent, resetMessageSent } = useMessageSentState()
 
-const recipientProfile = computed<PublicProfileWithContext | null>(() => {
-  if (!hasProfileData(props.post)) {
-    return null
-  }
-  const profile = props.post.postedBy as any
-  return {
-    ...profile,
-    tags: profile.tags ?? [],
-    languages: profile.languages ?? [],
-    location: profile.location ?? { country: '', cityName: '', lat: null, lon: null },
-    introSocial: profile.introSocial ?? '',
-    introDating: profile.introDating ?? '',
-    conversation: profile.conversation ?? null,
-    interactionContext: profile.interactionContext ?? {
-      likedByMe: false,
-      isMatch: false,
-      isAnonymous: true,
-      passedByMe: false,
-      canLike: false,
-      canPass: false,
-      canDate: false,
-      haveConversation: false,
-      canMessage: true,
-      conversationId: null,
-      initiated: false,
-    },
-  } as PublicProfileWithContext
+const recipientProfile = computed<MessageRecipient | null>(() => {
+  if (!hasProfileData(props.post)) return null
+  return props.post.postedBy
 })
 
 const handleContact = async () => {

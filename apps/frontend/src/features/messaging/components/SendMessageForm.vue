@@ -6,7 +6,7 @@ import { useLocalStore } from '@/store/localStore'
 import type { SendMode } from '@/store/localStore'
 
 import { type MessageDTO, type MessageAttachmentDTO } from '@zod/messaging/messaging.dto'
-import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
+import { type MessageRecipient } from '@zod/profile/profile.dto'
 
 import TagList from '@/features/shared/profiledisplay/TagList.vue'
 import LanguageList from '@/features/shared/profiledisplay/LanguageList.vue'
@@ -24,7 +24,7 @@ const messageStore = useMessageStore()
 
 const props = withDefaults(
   defineProps<{
-    recipientProfile: PublicProfileWithContext
+    recipientProfile: MessageRecipient
     conversationId: string | null
     showTags?: boolean
     canCall?: boolean
