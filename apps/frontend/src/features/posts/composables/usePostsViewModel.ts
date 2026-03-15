@@ -15,7 +15,6 @@ export function usePostsViewModel() {
   const viewMode = ref('grid')
   const showCreateModal = ref(false)
   const isDetailView = ref(false)
-  const showFullView = ref(false)
   const editingPost = ref<OwnerPost | null>(null)
   const selectedPost = ref<PublicPostWithProfile | OwnerPost | null>(null)
   const isInitialized = ref(false)
@@ -73,7 +72,6 @@ export function usePostsViewModel() {
 
   // Post handlers
   function closePostOverlays() {
-    showFullView.value = false
     showCreateModal.value = false
     editingPost.value = null
     selectedPost.value = null
@@ -112,17 +110,16 @@ export function usePostsViewModel() {
         selectedPost.value = post ?? null
         editingPost.value = null
         showCreateModal.value = false
-        showFullView.value = true
         break
       case 'create':
+        selectedPost.value = null
         editingPost.value = null
         showCreateModal.value = true
-        showFullView.value = true
         break
       case 'edit':
+        selectedPost.value = null
         editingPost.value = post as OwnerPost
         showCreateModal.value = false
-        showFullView.value = true
         break
       case 'close':
         closePostOverlays()
@@ -137,7 +134,7 @@ export function usePostsViewModel() {
         if (post && (showCreateModal.value || editingPost.value)) {
           upsertIntoActiveList(post)
         }
-        showFullView.value = false
+        closePostOverlays()
         break
     }
   }
@@ -148,7 +145,6 @@ export function usePostsViewModel() {
     viewMode,
     showCreateModal,
     isDetailView,
-    showFullView,
     editingPost,
     selectedPost,
     isInitialized,

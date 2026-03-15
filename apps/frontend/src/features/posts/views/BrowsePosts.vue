@@ -28,7 +28,6 @@ const {
   activeTab,
   viewMode,
   showCreateModal,
-  showFullView,
   editingPost,
   selectedPost,
   ownerProfile,
@@ -142,15 +141,43 @@ onMounted(async () => {
     </template>
   </BrowseLayout>
 
-  <!-- Post Full View / Edit Modal -->
+  <!-- Post Full View Modal -->
   <BModal
-    v-if="showFullView"
-    :title="t('posts.create_title')"
+    v-if="selectedPost"
+    :title="selectedPost.content.substring(0, 50)"
     :backdrop="true"
     centered
     size="lg"
     button-size="sm"
-    fullscreen="sm"
+    fullscreen="md"
+    :focus="false"
+    :no-header="true"
+    :no-footer="true"
+    :show="true"
+    :no-close-on-esc="false"
+    content-class="bg-transparent border-0 shadow-none"
+    body-class="d-flex flex-column align-items-center justify-content-center overflow-auto hide-scrollbar p-2 p-md-2"
+    @close="handlePostListIntent('close')"
+    @hidden="handlePostListIntent('close')"
+  >
+    <PostFullView
+      :post="selectedPost"
+      @close="handlePostListIntent('close')"
+      @edit="handlePostListIntent('edit', $event)"
+      @hide="handlePostListIntent('hide', $event)"
+      @delete="handlePostListIntent('delete', $event)"
+    />
+  </BModal>
+
+  <!-- Create / Edit Post Modal -->
+  <BModal
+    v-if="showCreateModal || editingPost"
+    :title="editingPost ? t('posts.edit_title') : t('posts.create_title')"
+    :backdrop="true"
+    centered
+    size="lg"
+    button-size="sm"
+    fullscreen="md"
     :focus="false"
     :no-header="false"
     :no-footer="true"
@@ -160,31 +187,11 @@ onMounted(async () => {
     @close="handlePostListIntent('close')"
     @hidden="handlePostListIntent('close')"
   >
-    <template v-if="showCreateModal">
-      <PostEdit
-        :is-edit="false"
-        @cancel="handlePostListIntent('close')"
-        @saved="handlePostListIntent('saved', $event)"
-      />
-    </template>
-
-    <template v-if="editingPost">
-      <PostEdit
-        :post="editingPost"
-        :is-edit="true"
-        @cancel="handlePostListIntent('close')"
-        @saved="handlePostListIntent('saved', $event)"
-      />
-    </template>
-
-    <template v-else-if="selectedPost">
-      <PostFullView
-        :post="selectedPost"
-        @close="handlePostListIntent('close')"
-        @edit="handlePostListIntent('edit', $event)"
-        @hide="handlePostListIntent('hide', $event)"
-        @delete="handlePostListIntent('delete', $event)"
-      />
-    </template>
+    <PostEdit
+      :post="editingPost ?? undefined"
+      :is-edit="!!editingPost"
+      @cancel="handlePostListIntent('close')"
+      @saved="handlePostListIntent('saved', $event)"
+    />
   </BModal>
 </template>

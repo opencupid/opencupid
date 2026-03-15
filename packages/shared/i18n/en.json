@@ -466,6 +466,7 @@
   "posts": {
     "title": "Bulletin board",
     "create_title": "Post something",
+    "edit_title": "Edit post",
     "types": {
       "OFFER": "Offer",
       "REQUEST": "Request"

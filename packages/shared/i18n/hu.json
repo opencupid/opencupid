@@ -466,6 +466,7 @@
   "posts": {
     "title": "Hirdetőtábla",
     "create_title": "Új hirdetés",
+    "edit_title": "Hirdetés szerkesztése",
     "types": {
       "OFFER": "Felajánlás",
       "REQUEST": "Keresés"
