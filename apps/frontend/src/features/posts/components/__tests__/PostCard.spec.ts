@@ -28,46 +28,20 @@ vi.mock('@/assets/icons/interface/delete.svg', () => ({ default: { template: '<s
 vi.mock('@/assets/icons/interface/pencil-2.svg', () => ({ default: { template: '<span />' } }))
 vi.mock('@/assets/icons/interface/message.svg', () => ({ default: { template: '<span />' } }))
 
-import PostCard from '../PostCard.vue'
+import OwnerToolbar from '../OwnerToolbar.vue'
 
 const stubs = {
-  PostIt: { template: '<div><slot name="header" /><slot /></div>' },
-  PostTypeBadge: { template: '<div />' },
-  LocationLabel: { template: '<div />' },
-  ProfileThumbnail: { template: '<div />' },
-  UseTimeAgo: { template: '<span><slot :timeAgo="\'now\'" /></span>' },
   BButton: {
     props: ['title'],
     template: '<button :title="title" @click="$emit(\'click\')"><slot /></button>',
   },
-  SendMessageForm: { template: '<div />' },
 }
 
-describe('PostCard', () => {
+describe('OwnerToolbar', () => {
   it('uses Hide title when post is visible', () => {
-    const wrapper = mount(PostCard, {
-      props: {
-        showDetails: false,
-        showOwnerToolbar: true,
-        post: {
-          id: 'post-1',
-          postedById: 'profile-1',
-          type: 'OFFER',
-          content: 'visible',
-          isVisible: true,
-          isDeleted: false,
-          country: null,
-          cityName: null,
-          lat: null,
-          lon: null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      },
-      global: {
-        stubs,
-        mocks: { $t: (k: string) => k },
-      },
+    const wrapper = mount(OwnerToolbar, {
+      props: { isVisible: true },
+      global: { stubs, mocks: { $t: (k: string) => k } },
     })
 
     const buttons = wrapper.findAll('button')
@@ -75,29 +49,9 @@ describe('PostCard', () => {
   })
 
   it('uses Show title when post is hidden', () => {
-    const wrapper = mount(PostCard, {
-      props: {
-        showDetails: false,
-        showOwnerToolbar: true,
-        post: {
-          id: 'post-1',
-          postedById: 'profile-1',
-          type: 'OFFER',
-          content: 'hidden',
-          isVisible: false,
-          isDeleted: false,
-          country: null,
-          cityName: null,
-          lat: null,
-          lon: null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      },
-      global: {
-        stubs,
-        mocks: { $t: (k: string) => k },
-      },
+    const wrapper = mount(OwnerToolbar, {
+      props: { isVisible: false },
+      global: { stubs, mocks: { $t: (k: string) => k } },
     })
 
     const buttons = wrapper.findAll('button')

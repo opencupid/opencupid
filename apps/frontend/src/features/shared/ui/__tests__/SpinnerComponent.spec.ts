@@ -1,15 +1,16 @@
 import { mount } from '@vue/test-utils'
-import { describe, it, expect, vi } from 'vitest'
-
-vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
+import { describe, it, expect } from 'vitest'
 
 import SpinnerComponent from '../SpinnerComponent.vue'
 
 describe('SpinnerComponent', () => {
-  it('passes label to BSpinner', () => {
+  it('renders spinner and loading text', () => {
     const wrapper = mount(SpinnerComponent, {
-      global: { stubs: { BSpinner: { template: '<div :label="label" />', props: ['label'] } } },
+      global: {
+        stubs: { BSpinner: { template: '<div />' } },
+        mocks: { $t: (k: string) => k },
+      },
     })
-    expect(wrapper.html()).toContain('label="uicomponents.spinner.spinning"')
+    expect(wrapper.text()).toContain('uicomponents.loading.loading')
   })
 })
