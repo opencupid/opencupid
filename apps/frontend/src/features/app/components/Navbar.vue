@@ -16,15 +16,25 @@ import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileSt
 import ProfileImage from '@/features/images/components/ProfileImage.vue'
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+import { useBreakpoints } from '@vueuse/core'
+
 const authStore = useAuthStore()
 const profileStore = useOwnerProfileStore()
 const { hasUnreadMessages, hasMatchNotifications } = useNotificationState()
+
+const route = useRoute()
+const breakpoints = useBreakpoints({ sm: 576 })
+const isMobile = breakpoints.smaller('sm')
+const shouldShowNavbar = computed(
+  () => authStore.isLoggedIn && profileStore.profile?.isOnboarded && !(route.meta.hideNavbar && isMobile.value)
+)
 </script>
 
 <template>
   <BNavbar
-    v-if="authStore.isLoggedIn && profileStore.profile?.isOnboarded"
-    fixed="top"
+    v-if="shouldShowNavbar"
     class="navbar-soft"
     data-testid="navbar"
   >
@@ -96,10 +106,19 @@ const { hasUnreadMessages, hasMatchNotifications } = useNotificationState()
 <style scoped lang="scss">
 @import '@/css/app-vars.scss';
 
+@import 'bootstrap/scss/functions';
+@import 'bootstrap/scss/variables';
+@import 'bootstrap/scss/mixins';
+
 .navbar-soft {
   background-color: #dfd7ca; // Sandstone gray-300 — warm sand
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   box-shadow: var(--shadow-xs);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+
+  @include media-breakpoint-up(sm) {
+    border-top: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  }
 }
 
 :deep(.nav-link) {

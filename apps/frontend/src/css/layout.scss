@@ -1,4 +1,7 @@
 @import '@/css/app-vars.scss';
+@import 'bootstrap/scss/functions';
+@import 'bootstrap/scss/variables';
+@import 'bootstrap/scss/mixins';
 
 html,
 body {
@@ -21,7 +24,20 @@ body {
 }
 
 nav.navbar {
-  height: $navbar-height; // positioning handled by Bootstrap fixed="top" on <BNavbar>
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: $zindex-fixed;
+  height: $navbar-height;
+
+  // mobile: bottom tab bar
+  bottom: 0;
+
+  // desktop: top navbar
+  @include media-breakpoint-up(sm) {
+    bottom: auto;
+    top: 0;
+  }
 }
 
 main {
@@ -31,5 +47,12 @@ main {
 }
 
 nav.navbar + main {
-  padding-top: $navbar-height;
+  // mobile: offset for bottom navbar
+  padding-bottom: $navbar-height;
+
+  // desktop: offset for top navbar
+  @include media-breakpoint-up(sm) {
+    padding-bottom: 0;
+    padding-top: $navbar-height;
+  }
 }
