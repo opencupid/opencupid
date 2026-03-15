@@ -372,7 +372,6 @@ function updateMarkers() {
 
     for (let i = startIdx; i < end; i++) {
       const item = props.items[i]
-      if (!item?.image) continue
       const marker = createMarker(item)
       batch.push(marker)
       markers.set(item.id, marker)
@@ -402,7 +401,6 @@ function highlightSelected() {
   for (const [id, marker] of markers) {
     const item = itemsById.get(id)
     if (!item) continue
-    if (!item.image) continue
     marker.setIcon(
       hydratePoiIcon(props.iconComponent, {
         image: item.image,

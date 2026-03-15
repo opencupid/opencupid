@@ -1,23 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useI18n } from 'vue-i18n'
 import FluidColumn from '@/features/shared/ui/FluidColumn.vue'
-import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 
 defineProps<{
   isLoading: boolean
   isInitialized: boolean
   haveResults: boolean
-  prefsModalTitle?: string
 }>()
-
-defineEmits<{
-  'prefs:update': []
-}>()
-
-const { t } = useI18n()
-
-const showPrefsModal = ref(false)
 </script>
 
 <template>
@@ -25,10 +13,7 @@ const showPrefsModal = ref(false)
     <div class="list-view d-flex flex-column justify-content-start">
       <FluidColumn class="my-2">
         <div class="subnav-bar d-flex align-items-center gap-2 px-2 py-1 rounded">
-          <slot
-            name="filter-bar"
-            :showPrefsModal="showPrefsModal"
-          />
+          <slot name="filter-bar" />
         </div>
       </FluidColumn>
 

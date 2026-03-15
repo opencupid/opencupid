@@ -65,7 +65,7 @@ const mapCenter = computed<[number, number] | undefined>(() => {
 })
 
 const mapPois = computed<MapPoi[]>(() =>
-  (postStore.posts as PublicPostWithProfile[])
+  (currentTabPosts.value as PublicPostWithProfile[])
     .filter((p) => p.location?.lat != null && p.location?.lon != null)
     .map((p) => ({
       id: p.id,
@@ -183,7 +183,10 @@ onActivated(() => {
       <PostFullView
         :post="selectedPost"
         @close="closePostOverlays"
-        @edit="closePostOverlays(); handleEdit($event)"
+        @edit="
+          closePostOverlays()
+          handleEdit($event)
+        "
         @hide="handleHide"
         @delete="handleDelete"
       />
@@ -220,7 +223,10 @@ onActivated(() => {
         <p class="text-muted mb-0">{{ t('posts.messages.no_my_posts') }}</p>
       </template>
     </PostList>
-    <div class="position-fixed bottom-0 end-0 p-3 text-cente w-100r" style="width: inherit">
+    <div
+      class="position-fixed bottom-0 end-0 p-3 text-cente w-100r"
+      style="width: inherit"
+    >
       <BButton
         variant="primary"
         @click="handleCreate()"

@@ -237,12 +237,12 @@ describe('OsmPoiMap', () => {
     expect(calls[2][1].icon.className).toBe('poi-avatar-icon')
   })
 
-  it('skips items without image property', async () => {
+  it('renders markers for items without image property', async () => {
     const noImageItems = items.map(({ image, ...rest }) => rest)
     await mountMap({ items: noImageItems })
     await flushPromises()
 
-    expect(L.marker).not.toHaveBeenCalled()
+    expect(L.marker).toHaveBeenCalledTimes(noImageItems.length)
   })
 
   it('initializes a markerClusterGroup and adds markers to it', async () => {

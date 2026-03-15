@@ -24,7 +24,10 @@ withDefaults(
       v-for="n in howMany"
       :key="n"
     >
-      <PostCardPlaceholder :isAnimated="isAnimated" />
+      <PostCardPlaceholder
+        :index="n"
+        :isAnimated="isAnimated"
+      />
     </BCol>
   </BRow>
 </template>

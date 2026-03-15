@@ -58,7 +58,7 @@ const handleContact = async () => {
   resetMessageSent()
   showMessageForm.value = true
   await nextTick()
-  messageInput.value.focusTextarea?.()
+  messageInput.value?.focusTextarea?.()
 }
 </script>
 
