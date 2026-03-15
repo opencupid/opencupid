@@ -183,10 +183,7 @@ onActivated(() => {
       <PostFullView
         :post="selectedPost"
         @close="closePostOverlays"
-        @edit="
-          closePostOverlays()
-          handleEdit($event)
-        "
+        @edit="closePostOverlays(); handleEdit($event)"
         @hide="handleHide"
         @delete="handleDelete"
       />
