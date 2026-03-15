@@ -461,6 +461,10 @@
     "update_banner": {
       "message": "An update is available.",
       "reload": "Reload"
+    },
+    "install_banner": {
+      "message": "Install this app on your device.",
+      "install": "Install"
     }
   },
   "posts": {
