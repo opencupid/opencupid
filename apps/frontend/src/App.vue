@@ -25,7 +25,6 @@ useCallStore().initialize()
 <template>
   <UpdateBanner />
   <Navbar />
-  <FaviconNotification />
   <RouterView v-slot="{ Component }">
     <KeepAlive :include="['BrowseProfiles', 'BrowsePosts']">
       <component :is="Component" />
@@ -34,4 +33,5 @@ useCallStore().initialize()
   <AppNotifier />
   <CallingOverlay />
   <JitsiModal />
+  <FaviconNotification />
 </template>
