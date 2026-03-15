@@ -9,6 +9,7 @@ RUN apt-get update && apt-get -y install build-essential python3 && \
 
 # Install dependencies
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY patches ./patches
 COPY tsconfig.json ./tsconfig.json
 COPY apps/backend/package.json ./apps/backend/package.json
 COPY apps/frontend/package.json ./apps/frontend/package.json
