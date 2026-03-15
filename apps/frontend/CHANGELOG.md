@@ -1,5 +1,17 @@
 # frontend
 
+## 0.30.0
+
+### Minor Changes
+
+- 1af0822: Generalize map marker icons via iconComponent prop, add post map pin icons, remove geolocation code from posts
+
+### Patch Changes
+
+- dda231a: Pull vite-plugin-vue-mcp from fork with MCP transport fixes
+- f3203a7: Fix Docker build by copying patches directory before pnpm install
+- f7e7bc1: Add favicon notification dot using Tinycon (#1103)
+
 ## 0.29.0
 
 ### Minor Changes

@@ -1,5 +1,11 @@
 # @opencupid/admin
 
+## 0.30.0
+
+### Patch Changes
+
+- f3203a7: Fix Docker build by copying patches directory before pnpm install
+
 ## 0.29.0
 
 ## 0.28.0
