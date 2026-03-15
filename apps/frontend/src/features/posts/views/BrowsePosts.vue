@@ -7,11 +7,11 @@ import { faPenToSquare } from '@fortawesome/free-solid-svg-icons'
 import BrowseLayout from '@/features/shared/components/BrowseLayout.vue'
 import PostFilterBar from '../components/PostFilterBar.vue'
 import PostList from '../components/PostList.vue'
-import PostEdit from '../components/PostEdit.vue'
 import PostFullView from '../components/PostFullView.vue'
 import MapView from '@/features/shared/components/MapView.vue'
 import MapIcon from '../components/MapIcon.vue'
 import ViewModeToggler from '@/features/shared/ui/ViewModeToggler.vue'
+import SecondaryNav from '@/features/shared/ui/SecondaryNav.vue'
 
 import { usePostsViewModel } from '../composables/usePostsViewModel'
 import { usePostStore } from '../stores/postStore'
@@ -27,8 +27,6 @@ const { t } = useI18n()
 const {
   activeTab,
   viewMode,
-  showCreateModal,
-  editingPost,
   selectedPost,
   ownerProfile,
   isLoading,
@@ -77,6 +75,17 @@ onMounted(async () => {
     :isInitialized="isInitialized"
     :haveResults="haveResults"
   >
+    <template #subnav>
+      <SecondaryNav>
+        <template #items-right>
+          <RouterBackButton> <IconClose class="svg-icon" /> </RouterBackButton>
+        </template>
+        <template #items-center>
+          {{ $t('') }}
+        </template>
+      </SecondaryNav>
+    </template>
+
     <template #filter-bar>
       <PostFilterBar
         :viewer-profile="ownerProfile"
@@ -166,32 +175,6 @@ onMounted(async () => {
       @edit="handlePostListIntent('edit', $event)"
       @hide="handlePostListIntent('hide', $event)"
       @delete="handlePostListIntent('delete', $event)"
-    />
-  </BModal>
-
-  <!-- Create / Edit Post Modal -->
-  <BModal
-    v-if="showCreateModal || editingPost"
-    :title="editingPost ? t('posts.edit_title') : t('posts.create_title')"
-    :backdrop="true"
-    centered
-    size="lg"
-    button-size="sm"
-    fullscreen="md"
-    :focus="false"
-    :no-header="false"
-    :no-footer="true"
-    :show="true"
-    :no-close-on-esc="false"
-    body-class="d-flex flex-column align-items-center justify-content-center overflow-auto hide-scrollbar p-2 p-md-2"
-    @close="handlePostListIntent('close')"
-    @hidden="handlePostListIntent('close')"
-  >
-    <PostEdit
-      :post="editingPost ?? undefined"
-      :is-edit="!!editingPost"
-      @cancel="handlePostListIntent('close')"
-      @saved="handlePostListIntent('saved', $event)"
     />
   </BModal>
 </template>

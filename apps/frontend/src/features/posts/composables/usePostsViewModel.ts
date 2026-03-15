@@ -1,4 +1,5 @@
 import { ref, computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useBootstrap } from '@/lib/bootstrap'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
@@ -7,15 +8,14 @@ import type { PublicPostWithProfile, OwnerPost } from '@zod/post/post.dto'
 
 export function usePostsViewModel() {
   const { t } = useI18n()
+  const router = useRouter()
   const postStore = usePostStore()
   const ownerStore = useOwnerProfileStore()
 
   // State management
   const activeTab = ref<'all' | 'recent' | 'my'>('all')
   const viewMode = ref('map')
-  const showCreateModal = ref(false)
   const isDetailView = ref(false)
-  const editingPost = ref<OwnerPost | null>(null)
   const selectedPost = ref<PublicPostWithProfile | OwnerPost | null>(null)
   const isInitialized = ref(false)
   const isLoading = ref(false)
@@ -79,8 +79,6 @@ export function usePostsViewModel() {
 
   // Post handlers
   function closePostOverlays() {
-    showCreateModal.value = false
-    editingPost.value = null
     selectedPost.value = null
   }
 
@@ -115,18 +113,14 @@ export function usePostsViewModel() {
     switch (event) {
       case 'fullview':
         selectedPost.value = post ?? null
-        editingPost.value = null
-        showCreateModal.value = false
         break
       case 'create':
-        selectedPost.value = null
-        editingPost.value = null
-        showCreateModal.value = true
+        router.push({ name: 'CreatePost' })
         break
       case 'edit':
-        selectedPost.value = null
-        editingPost.value = post as OwnerPost
-        showCreateModal.value = false
+        if (post) {
+          router.push({ name: 'EditPost', params: { postId: post.id } })
+        }
         break
       case 'close':
         closePostOverlays()
@@ -138,7 +132,7 @@ export function usePostsViewModel() {
         await handleDelete(post)
         break
       case 'saved':
-        if (post && (showCreateModal.value || editingPost.value)) {
+        if (post) {
           upsertIntoActiveList(post)
         }
         closePostOverlays()
@@ -150,9 +144,7 @@ export function usePostsViewModel() {
     // State
     activeTab,
     viewMode,
-    showCreateModal,
     isDetailView,
-    editingPost,
     selectedPost,
     isInitialized,
     isLoading,
