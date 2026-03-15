@@ -95,6 +95,7 @@ export type CaptchaChallengeResponse = ApiSuccess<any> // altcha challenge shape
 
 // Post responses
 export type PostsResponse = ApiSuccess<{ posts: PublicPostWithProfile[] }>
+export type MyPostsResponse = ApiSuccess<{ posts: OwnerPost[] }>
 export type PostResponse = ApiSuccess<{ post: OwnerPost }>
 export type CreatePostResponse = ApiSuccess<{ post: OwnerPost }>
 export type UpdatePostResponse = ApiSuccess<{ post: OwnerPost }>

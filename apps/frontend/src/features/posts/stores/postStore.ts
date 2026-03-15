@@ -10,6 +10,7 @@ import type {
 } from '@zod/post/post.dto'
 import type {
   PostsResponse,
+  MyPostsResponse,
   PostResponse,
   CreatePostResponse,
   UpdatePostResponse,
@@ -27,11 +28,6 @@ export const usePostStore = defineStore('posts', {
   }),
 
   getters: {
-    getPostById: (state) => (id: string) => {
-      return (
-        state.posts.find((post) => post.id === id) || state.myPosts.find((post) => post.id === id)
-      )
-    },
     getPostsByType: (state) => (type: PostTypeType) => {
       return state.posts.filter((post) => post.type === type)
     },
@@ -352,16 +348,16 @@ export const usePostStore = defineStore('posts', {
 
         // We'll need to get the current profile ID from auth store
         // For now, we'll use a placeholder endpoint
-        const r = await safeApiCall<{ data: PostsResponse }>(() =>
+        const r = await safeApiCall<{ data: MyPostsResponse }>(() =>
           api.get(`/posts/profile/me?${params.toString()}`)
         )
         const response = r.data
 
         if (response.success) {
           if (query.offset === 0) {
-            this.myPosts = response.posts as any[]
+            this.myPosts = response.posts
           } else {
-            this.myPosts.push(...(response.posts as any[]))
+            this.myPosts.push(...response.posts)
           }
           return response.posts
         } else {

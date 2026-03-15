@@ -107,7 +107,10 @@ const handleContact = async () => {
                   @delete="$emit('delete', post)"
                   @hide="$emit('hide', post)"
                 />
-                <div v-else>
+                <div
+                  v-else
+                  class="d-flex align-items-center"
+                >
                   <ProfileThumbnail
                     :profile="post.postedBy"
                     class="me-2"
@@ -125,14 +128,23 @@ const handleContact = async () => {
           </div>
 
           <div
-            class="post-date text-muted flex-grow-1 d-flex align-items-center"
+            class=""
             v-if="!showDetails"
           >
-            <UseTimeAgo
-              v-slot="{ timeAgo }"
-              :time="post.createdAt"
-              >{{ timeAgo }}</UseTimeAgo
-            >
+            <div class="post-date text-muted small">
+              <UseTimeAgo
+                v-slot="{ timeAgo }"
+                :time="post.createdAt"
+                >{{ timeAgo }}</UseTimeAgo
+              >
+            </div>
+            <OwnerToolbar
+              v-if="post.isOwn"
+              :is-visible="isVisible"
+              @edit="$emit('edit', post)"
+              @delete="$emit('delete', post)"
+              @hide="$emit('hide', post)"
+            />
           </div>
 
           <!-- location  in right column 50% can shrink -->

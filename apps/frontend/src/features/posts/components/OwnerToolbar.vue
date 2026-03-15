@@ -37,7 +37,6 @@ defineEmits<{
     </BButton>
     <BButton
       @click.stop="$emit('hide')"
-      
       variant="link-secondary"
       size="sm"
       :title="isVisible ? $t('posts.actions.hide') : $t('posts.actions.show')"

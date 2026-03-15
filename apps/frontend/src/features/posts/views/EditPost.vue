@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, provide, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import PostEdit from '../components/EditPostDialog.vue'
 import { useBootstrap } from '@/lib/bootstrap'
 import { usePostStore } from '../stores/postStore'
+import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import type { OwnerPost } from '@zod/post/post.dto'
+import { LocationSchema } from '@zod/dto/location.dto'
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 import SecondaryNav from '@/features/shared/ui/SecondaryNav.vue'
 import SpinnerComponent from '@/features/shared/ui/SpinnerComponent.vue'
@@ -15,6 +17,13 @@ defineOptions({ name: 'EditPost' })
 const route = useRoute()
 const router = useRouter()
 const postStore = usePostStore()
+const profileStore = useOwnerProfileStore()
+const ownerProfile = computed(() => profileStore.profile)
+provide('ownerProfile', ownerProfile)
+
+const defaultLocation = computed(() =>
+  LocationSchema.parse(ownerProfile.value?.location ?? {})
+)
 
 const postId = computed(() => route.params.postId as string | undefined)
 const isEdit = computed(() => !!postId.value)
@@ -44,15 +53,10 @@ function handleCancel() {
   router.back()
 }
 
-function handleSaved(savedPost: OwnerPost) {
-  const idx = postStore.myPosts.findIndex((p) => p.id === savedPost.id)
-  if (idx === -1) {
-    postStore.myPosts.unshift(savedPost)
-  } else {
-    postStore.myPosts[idx] = savedPost
-  }
+function handleSaved() {
   router.push({ name: 'Posts' })
 }
+
 </script>
 
 <template>
@@ -84,6 +88,7 @@ function handleSaved(savedPost: OwnerPost) {
           v-else
           :post="post"
           :is-edit="isEdit"
+          :default-location="defaultLocation"
           @cancel="handleCancel"
           @saved="handleSaved"
         />

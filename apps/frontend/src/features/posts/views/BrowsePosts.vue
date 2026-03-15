@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, provide, ref } from 'vue'
+import { computed, onActivated, onMounted, provide, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faPenToSquare } from '@fortawesome/free-solid-svg-icons'
@@ -72,6 +72,12 @@ const mapPois = computed<MapPoi[]>(() =>
 
 onMounted(async () => {
   await initialize()
+})
+
+onActivated(() => {
+  if (isInitialized.value) {
+    postStore.loadPosts(activeTab.value)
+  }
 })
 </script>
 
