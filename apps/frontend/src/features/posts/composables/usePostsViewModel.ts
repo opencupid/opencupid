@@ -5,6 +5,7 @@ import { useBootstrap } from '@/lib/bootstrap'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { usePostStore } from '../stores/postStore'
 import type { PublicPostWithProfile, OwnerPost } from '@zod/post/post.dto'
+import type { LocationDTO } from '@zod/dto/location.dto'
 
 export function usePostsViewModel() {
   const { t } = useI18n()
@@ -16,6 +17,7 @@ export function usePostsViewModel() {
   const activeTab = ref<'all' | 'recent' | 'my'>('all')
   const viewMode = ref('map')
   const isDetailView = ref(false)
+  const filterLocation = ref<LocationDTO>({ country: '' })
   const selectedPost = ref<PublicPostWithProfile | OwnerPost | null>(null)
   const isInitialized = ref(false)
   const isLoading = ref(false)
@@ -33,6 +35,10 @@ export function usePostsViewModel() {
       if (!ownerProfile.value) {
         console.error('Owner profile not found')
         return
+      }
+
+      if (ownerProfile.value?.location) {
+        filterLocation.value = { ...ownerProfile.value.location }
       }
 
       isInitialized.value = true
@@ -145,6 +151,7 @@ export function usePostsViewModel() {
     activeTab,
     viewMode,
     isDetailView,
+    filterLocation,
     selectedPost,
     isInitialized,
     isLoading,

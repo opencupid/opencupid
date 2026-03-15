@@ -17,7 +17,7 @@ import { usePostsViewModel } from '../composables/usePostsViewModel'
 import { usePostStore } from '../stores/postStore'
 import type { PublicPostWithProfile } from '@zod/post/post.dto'
 import type { PostTypeType } from '@zod/generated'
-import type { LocationDTO } from '@zod/dto/location.dto'
+
 import type { MapPoi } from '@/features/shared/components/OsmPoiMap.types'
 
 defineOptions({ name: 'BrowsePosts' })
@@ -27,6 +27,7 @@ const { t } = useI18n()
 const {
   activeTab,
   viewMode,
+  filterLocation,
   selectedPost,
   ownerProfile,
   isLoading,
@@ -40,7 +41,6 @@ provide('ownerProfile', ownerProfile)
 const postStore = usePostStore()
 
 const selectedType = ref<PostTypeType | ''>('')
-const filterLocation = ref<LocationDTO>({ country: '' })
 
 const currentTabPosts = computed(() => {
   if (activeTab.value === 'my') return postStore.myPosts
