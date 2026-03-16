@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useBootstrap } from '@/lib/bootstrap'
@@ -20,55 +20,89 @@ onMounted(async () => {
   await useBootstrap().bootstrap()
 })
 
-async function save() {
-  await updateProfile()
-  await persistDatingPrefs()
+const isSaving = ref(false)
+
+async function handleSave() {
+  isSaving.value = true
+  await Promise.all([updateProfile(), persistDatingPrefs()])
+  router.back()
+}
+
+async function handleCancel() {
   router.back()
 }
 </script>
 
 <template>
-  <main class="w-100 position-relative overflow-hidden container-fluid">
-    <MiddleColumn class="h-100 d-flex flex-column">
-      <SecondaryNav>
-        <template #items-left>
-          <RouterBackButton />
-        </template>
-        <template #items-center>
-          {{ $t('profiles.forms.my_dating_profile') }}
-        </template>
-      </SecondaryNav>
+  <main class="w-100 position-relative overflow-hidden d-flex flex-column">
+    <BContainer
+      fluid
+      class="flex-grow-1 overflow-hidden"
+    >
+      <MiddleColumn class="h-100 d-flex flex-column">
+        <SecondaryNav>
+          <template #items-left>
+            <!-- <RouterBackButton /> -->
+          </template>
+          <template #items-center>
+            {{ $t('profiles.forms.my_dating_profile') }}
+          </template>
+        </SecondaryNav>
 
-      <section class="w-100 flex-grow-1 overflow-auto hide-scrollbar py-3">
-        <BOverlay :show="isLoading">
-        <BTabs
-          pills
-          variant="warning"
-          nav-class="justify-content-center"
-        >
-          <BTab
-            :title="$t('profiles.forms.my_dating_profile')"
-            active
+        <section class="w-100 flex-grow-1 overflow-auto hide-scrollbar py-3">
+          <BTabs
+            pills
+            variant="warning"
+            nav-class="justify-content-center"
           >
-            <div class="pt-3">
-              <EditDatingProfile
-                v-model="formData"
-                @save="save"
-                @cancel="router.back()"
-              />
-            </div>
-          </BTab>
-          <BTab :title="$t('profiles.forms.my_preferences')">
-            <div class="pt-3">
-              <DatingPreferencesForm
-                v-if="datingPrefs"
-                v-model="datingPrefs"
-              />
-            </div>
-          </BTab>
-        </BTabs>
-        </BOverlay>
-      </section>
-    </MiddleColumn>
+            <BTab
+              :title="$t('profiles.forms.my_dating_profile')"
+              active
+            >
+              <fieldset
+                class="pt-3"
+                :disabled="isSaving || isLoading"
+              >
+                <EditDatingProfile
+                  v-model="formData"
+                  @save="handleSave"
+                />
+              </fieldset>
+            </BTab>
+            <BTab :title="$t('profiles.forms.my_preferences')">
+              <fieldset
+                class="pt-3"
+                :disabled="isSaving || isLoading"
+              >
+                <DatingPreferencesForm
+                  v-if="datingPrefs"
+                  v-model="datingPrefs"
+                />
+              </fieldset>
+            </BTab>
+          </BTabs>
+        </section>
+      </MiddleColumn>
+    </BContainer>
+    <div
+      class="sticky-bottom shadow shadow-lg bg-light-subtle py-3 d-flex justify-content-center gap-2"
+    >
+      <BButton
+        variant="link"
+        class="link-secondary"
+        @click="handleCancel"
+      >
+        {{ $t('onboarding.wizard.cancel') }}
+      </BButton>
+      <BButton
+        variant="primary"
+        pill
+        class="px-5"
+        @click.stop="handleSave"
+        :disabled="isLoading"
+      >
+        {{ $t('onboarding.wizard.finish') }}
+      </BButton>
+    </div>
   </main>
 </template>

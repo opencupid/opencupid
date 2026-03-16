@@ -19,12 +19,12 @@ main {
   display: block !important;
 }
 
-.form-control~.invalid-feedback,
-.is-valid~.invalid-feedback {
+.form-control ~ .invalid-feedback,
+.is-valid ~ .invalid-feedback {
   visibility: hidden;
 }
 
-.is-invalid~.invalid-feedback {
+.is-invalid ~ .invalid-feedback {
   visibility: visible;
 }
 
@@ -332,14 +332,6 @@ main {
 .toast {
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
-}
-
-// Floating action button
-.main-edit-button {
-  position: fixed;
-  z-index: 1000;
-  bottom: 1.5rem;
-  right: 1.5rem;
 }
 
 .btn-shadow {

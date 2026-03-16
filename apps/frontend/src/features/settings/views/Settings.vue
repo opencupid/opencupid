@@ -11,17 +11,13 @@ import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
 import IconLogout from '@/assets/icons/interface/logout.svg'
 
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
-import LoadingComponent from '@/features/shared/ui/LoadingComponent.vue'
-import LogoutButton from '@/features/auth/components/LogoutButton.vue'
 import LanguageSelectorDropdown from '../../shared/ui/LanguageSelectorDropdown.vue'
 import OptInCheckboxes from '../components/OptInCheckboxes.vue'
 import VersionInfo from '../components/VersionInfo.vue'
 import RouterBackButton from '@/features/shared/ui/RouterBackButton.vue'
 import SecondaryNav from '@/features/shared/ui/SecondaryNav.vue'
 import { useRouter } from 'vue-router'
-import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
 
 const authStore = useAuthStore()
 const ownerProfileStore = useOwnerProfileStore()
@@ -66,13 +62,11 @@ function handleClick() {
             <IconSetting2 class="svg-icon me-2" />
             {{ $t('settings.title') }}
           </template>
+          <template #items-right> &nbsp; </template>
         </SecondaryNav>
 
         <section class="w-100 flex-grow-1">
-          <BOverlay
-            :show="isLoading"
-            class="h-100 d-flex flex-column justify-content-center"
-          >
+          <div class="h-100 d-flex flex-column justify-content-center">
             <div class="row mb-3 mb-md-4 d-flex align-items-center justify-content-between">
               <div class="col-md-8">
                 <span v-if="userStore.user?.email">
@@ -96,18 +90,18 @@ function handleClick() {
 
             <fieldset class="mb-3 mb-md-4">
               <legend class="h5">
-                {{ t('settings.language_label') }}
+                {{ $t('settings.language_label') }}
               </legend>
               <LanguageSelectorDropdown size="md" />
             </fieldset>
 
             <fieldset>
               <legend class="h5">
-                {{ t('settings.notifications_label') }}
+                {{ $t('settings.notifications_label') }}
               </legend>
               <OptInCheckboxes v-model="optInModel" />
             </fieldset>
-          </BOverlay>
+          </div>
         </section>
         <div class="position-fixed bottom-0 w-100 p-2">
           <VersionInfo />

@@ -24,6 +24,11 @@ const languagePreviewOptions = computed(() => {
 })
 
 const hasPreviewLanguages = computed(() => languagePreviewOptions.value.length > 1)
+
+const toggleScope = (hide: () => void) => {
+  viewState.value.currentScope = viewState.value.currentScope === 'dating' ? 'social' : 'dating'
+  setTimeout(hide, 1000)
+}
 </script>
 
 <template>
@@ -33,57 +38,55 @@ const hasPreviewLanguages = computed(() => languagePreviewOptions.value.length >
         <IconViewAs class="svg-icon-lg" />
       </span>
     </template>
-    <div style="width: 16rem">
-      <BDropdownText>
-        <div>{{ $t('profiles.forms.preview_profile') }}</div>
-      </BDropdownText>
+    <template #default="{ hide }">
+      <div style="width: 16rem">
+        <BDropdownText>
+          <div>{{ $t('profiles.forms.preview_profile') }}</div>
+        </BDropdownText>
 
-      <span v-if="isDatingActive">
-        <BDropdownDivider />
-        <BDropdownItemButton
-          @click.stop="
-            viewState.currentScope = viewState.currentScope === 'dating' ? 'social' : 'dating'
-          "
-        >
-          <span class="d-flex align-items-center justify-content-start">
-            <BFormCheckbox
-              switch
-              :model-value="viewState.currentScope === 'dating'"
-              tabindex="-1"
-              style="pointer-events: none"
-            />
-            <span>{{ $t('profiles.forms.dating_mode_view') }}</span>
-          </span>
-          <div class="form-hint lh-sm">
-            <div v-if="viewState.currentScope === 'dating'">
-              {{ $t('profiles.forms.dating_mode_view_hint_active') }}
-            </div>
-            <div v-else>{{ $t('profiles.forms.dating_mode_view_hint_inactive') }}</div>
-          </div>
-        </BDropdownItemButton>
-      </span>
-
-      <span v-if="hasPreviewLanguages">
-        <BDropdownDivider />
-        <BDropdownGroup :header="$t('profiles.forms.preview_language')">
-          <BDropdownItemButton
-            v-for="lang in languagePreviewOptions"
-            :key="lang.value"
-            class="language-option"
-            :active="lang.value === viewState.previewLanguage"
-            @click="viewState.previewLanguage = lang.value"
-          >
-            <span class="d-flex align-items-center">
-              <span class="flex-grow-1">{{ lang.label }}</span>
-              <LanguageIcon
-                :countryCode="lang.value"
-                :size="24"
+        <span v-if="isDatingActive">
+          <BDropdownDivider />
+          <BDropdownItemButton @click.stop="toggleScope(hide)">
+            <span class="d-flex align-items-center justify-content-start">
+              <BFormCheckbox
+                switch
+                :model-value="viewState.currentScope === 'dating'"
+                tabindex="-1"
+                style="pointer-events: none"
               />
+              <span>{{ $t('profiles.forms.dating_mode_view') }}</span>
             </span>
+            <div class="form-hint lh-sm">
+              <div v-if="viewState.currentScope === 'dating'">
+                {{ $t('profiles.forms.dating_mode_view_hint_active') }}
+              </div>
+              <div v-else>{{ $t('profiles.forms.dating_mode_view_hint_inactive') }}</div>
+            </div>
           </BDropdownItemButton>
-        </BDropdownGroup>
-      </span>
-    </div>
+        </span>
+
+        <span v-if="hasPreviewLanguages">
+          <BDropdownDivider />
+          <BDropdownGroup :header="$t('profiles.forms.preview_language')">
+            <BDropdownItemButton
+              v-for="lang in languagePreviewOptions"
+              :key="lang.value"
+              class="language-option"
+              :active="lang.value === viewState.previewLanguage"
+              @click="viewState.previewLanguage = lang.value"
+            >
+              <span class="d-flex align-items-center">
+                <span class="flex-grow-1">{{ lang.label }}</span>
+                <LanguageIcon
+                  :countryCode="lang.value"
+                  :size="24"
+                />
+              </span>
+            </BDropdownItemButton>
+          </BDropdownGroup>
+        </span>
+      </div>
+    </template>
   </BNavItemDropdown>
 </template>
 

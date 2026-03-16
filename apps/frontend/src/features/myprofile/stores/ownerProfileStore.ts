@@ -262,9 +262,7 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
       try {
         this.isLoading = true
         const res = await safeApiCall(() =>
-          api.patch<UpdateDatingPreferencesResponse>('/profiles/me/dating-prefs', {
-            datingPrefs: this.datingPrefs,
-          })
+          api.patch<UpdateDatingPreferencesResponse>('/profiles/me/dating-prefs', this.datingPrefs)
         )
         const updated = DatingPreferencesFormSchema.parse(res.data.prefs)
         Object.assign(this.datingPrefs, updated)
