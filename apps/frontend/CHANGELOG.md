@@ -1,5 +1,15 @@
 # frontend
 
+## 0.32.0
+
+### Minor Changes
+
+- ebcb3ee: Refactor geocoding: extract provider abstraction, add Nominatim support
+
+### Patch Changes
+
+- c7c0cdd: Extract OsmPoiMap pure utility functions into testable mapUtils module, move component into osmPoiMap/ subdirectory, and fix Invalid LatLng (NaN, NaN) crash
+
 ## 0.31.0
 
 ### Minor Changes
