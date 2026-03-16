@@ -27,6 +27,15 @@ import router from './router'
 export async function bootstrapApp() {
   const app = createApp(App)
 
+  // Set errorHandler BEFORE Sentry.init so Sentry wraps it rather than
+  // re-throwing. Without this, @sentry/vue defers captureException to
+  // setTimeout then re-throws — the re-throw escapes Vue's scheduler as an
+  // unhandled promise rejection, racing with globalHandlersIntegration.
+  // The dedupe integration then drops the richer Vue-specific event.
+  app.config.errorHandler = (err, _vm, info) => {
+    console.error(`[Vue error] ${info}:`, err)
+  }
+
   if (__APP_CONFIG__.NODE_ENV !== 'development') {
     Sentry.init({
       app,
@@ -46,11 +55,8 @@ export async function bootstrapApp() {
     })
   }
 
-  app.config.warnHandler = (msg, vm, trace) => {
+  app.config.warnHandler = (msg, _vm, trace) => {
     console.error('Vue warning:', msg, trace)
-    if (msg.includes('computed value is readonly')) {
-      // debugger
-    }
   }
   app.use(createPinia())
   app.use(router)
