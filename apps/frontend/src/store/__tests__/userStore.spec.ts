@@ -23,8 +23,9 @@ vi.mock('@/lib/bus', () => ({
   bus: mockBus,
 }))
 
+const mockAuthState = { isLoggedIn: false }
 vi.mock('@/features/auth/stores/authStore', () => ({
-  useAuthStore: vi.fn(() => ({ isLoggedIn: false })),
+  useAuthStore: vi.fn(() => mockAuthState),
 }))
 
 vi.stubGlobal('__APP_CONFIG__', {
@@ -42,9 +43,22 @@ const validUser = {
 }
 
 describe('userStore', () => {
+  // Bus handlers are registered at module load time, capture before clearAllMocks
+  const busHandlers = new Map<string, (payload: Record<string, unknown>) => Promise<void>>()
+  function captureBusHandlers() {
+    for (const [event, handler] of mockBus.on.mock.calls) {
+      busHandlers.set(
+        event as string,
+        handler as (payload: Record<string, unknown>) => Promise<void>
+      )
+    }
+  }
+  captureBusHandlers()
+
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
+    mockAuthState.isLoggedIn = false
     mockSafeApiCall.mockImplementation((fn: () => Promise<unknown>) => fn())
   })
 
@@ -121,6 +135,54 @@ describe('userStore', () => {
       const result = await store.updateLanguage('de')
 
       expect(result.success).toBe(false)
+    })
+  })
+
+  describe('language:changed bus listener', () => {
+    it('skips PATCH when user data has not been loaded yet', async () => {
+      mockAuthState.isLoggedIn = true
+      const handler = busHandlers.get('language:changed')!
+
+      const store = useUserStore()
+      expect(store.user).toBeNull()
+
+      await handler({ language: 'en' })
+
+      expect(mockApi.patch).not.toHaveBeenCalled()
+    })
+
+    it('skips PATCH when language already matches user language', async () => {
+      mockAuthState.isLoggedIn = true
+      const handler = busHandlers.get('language:changed')!
+
+      const store = useUserStore()
+      store.user = { ...validUser, language: 'en' }
+
+      await handler({ language: 'en' })
+
+      expect(mockApi.patch).not.toHaveBeenCalled()
+    })
+
+    it('sends PATCH when language differs from user language', async () => {
+      mockAuthState.isLoggedIn = true
+      mockApi.patch.mockResolvedValue({ data: { success: true } })
+      const handler = busHandlers.get('language:changed')!
+
+      const store = useUserStore()
+      store.user = { ...validUser, language: 'en' }
+
+      await handler({ language: 'de' })
+
+      expect(mockApi.patch).toHaveBeenCalledWith('/users/me', { language: 'de' })
+    })
+
+    it('skips PATCH when user is not logged in', async () => {
+      mockAuthState.isLoggedIn = false
+      const handler = busHandlers.get('language:changed')!
+
+      await handler({ language: 'de' })
+
+      expect(mockApi.patch).not.toHaveBeenCalled()
     })
   })
 })
