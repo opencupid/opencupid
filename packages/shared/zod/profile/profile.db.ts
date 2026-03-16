@@ -58,7 +58,9 @@ export type DbProfileWithContext = z.infer<typeof DbProfileWithContextSchema>
 export const DatingEligibleProfileSchema = z.object({
   id: z.string(),
   isDatingActive: z.literal(true),
-  birthday: z.coerce.date(),
+  birthday: z.date(),
+  // TODO(#1115): gender/prefGender are too permissive — 'unspecified' and [] pass validation.
+  // Needs a dedicated onboarding status flag instead of relying on field parsing.
   gender: GenderSchema,
   hasKids: HasKidsSchema.nullable(),
   prefAgeMin: z.number().int(),
