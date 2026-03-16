@@ -62,7 +62,31 @@
     />
   </head>
 
-  <body>
+  <body
+    style="
+      margin: 0;
+      min-height: 100dvh;
+      background: linear-gradient(170deg, #dbc49c 0%, #e8d5b5 40%, #faf4ea 100%);
+      background-attachment: fixed;
+    "
+  >
+    <div
+      id="splash"
+      style="
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+      "
+    >
+      <img
+        src="/assets/logo.png"
+        alt=""
+        style="width: 25%; max-width: 200px; opacity: 0.8"
+      />
+    </div>
     <div
       id="app"
       class="d-flex flex-column h-100"

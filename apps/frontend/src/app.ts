@@ -70,4 +70,5 @@ export async function bootstrapApp() {
   await router.isReady()
 
   app.mount('#app')
+  document.getElementById('splash')?.remove()
 }
