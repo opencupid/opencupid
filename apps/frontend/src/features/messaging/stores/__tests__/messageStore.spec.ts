@@ -24,6 +24,31 @@ vi.mock('@/lib/bus', () => ({
 
 import { useMessageStore } from '../messageStore'
 
+function makeConvo(conversationId: string, partnerName: string): ConversationSummary {
+  return {
+    id: `participant-${conversationId}`,
+    profileId: 'profile-1',
+    conversationId,
+    lastReadAt: new Date('2024-01-01'),
+    isMuted: false,
+    isArchived: false,
+    canReply: false,
+    isCallable: true,
+    myIsCallable: true,
+    conversation: {
+      id: conversationId,
+      updatedAt: new Date('2024-01-01'),
+      createdAt: new Date('2024-01-01'),
+    },
+    partnerProfile: {
+      id: `partner-${conversationId}`,
+      publicName: partnerName,
+      profileImages: [],
+    },
+    lastMessage: null,
+  }
+}
+
 describe('messageStore', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -251,6 +276,186 @@ describe('messageStore', () => {
 
       expect(mockBus.emit).not.toHaveBeenCalledWith('notification:new_message', incomingMessage)
     })
+  })
+})
+
+describe('bumpConversation', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  it('moves an existing conversation to the top of the list', () => {
+    const store = useMessageStore()
+    const convo1 = makeConvo('convo-1', 'Partner 1')
+    const convo2 = makeConvo('convo-2', 'Partner 2')
+    store.conversations = [convo1, convo2]
+
+    const updatedConvo2: ConversationSummary = { ...convo2, canReply: true }
+    store.bumpConversation(updatedConvo2)
+
+    expect(store.conversations).toHaveLength(2)
+    expect(store.conversations[0]!.conversationId).toBe('convo-2')
+    expect(store.conversations[1]!.conversationId).toBe('convo-1')
+  })
+
+  it('adds a new conversation to the top if not already present', () => {
+    const store = useMessageStore()
+    const convo1 = makeConvo('convo-1', 'Partner 1')
+    store.conversations = [convo1]
+
+    const newConvo = makeConvo('convo-new', 'New Partner')
+    store.bumpConversation(newConvo)
+
+    expect(store.conversations).toHaveLength(2)
+    expect(store.conversations[0]!.conversationId).toBe('convo-new')
+  })
+})
+
+describe('appendMessageIfNew', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  it('appends a message that does not exist yet', () => {
+    const store = useMessageStore()
+    store.messages = [{ id: 'msg-1' } as MessageDTO]
+
+    store.appendMessageIfNew({ id: 'msg-2' } as MessageDTO)
+
+    expect(store.messages.map((m) => m.id)).toEqual(['msg-1', 'msg-2'])
+  })
+
+  it('does not append a duplicate message', () => {
+    const store = useMessageStore()
+    store.messages = [{ id: 'msg-1' } as MessageDTO]
+
+    store.appendMessageIfNew({ id: 'msg-1' } as MessageDTO)
+
+    expect(store.messages).toHaveLength(1)
+  })
+})
+
+describe('sendMessage', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  it('sends a text message and bumps conversation to top', async () => {
+    const store = useMessageStore()
+    const otherConvo = makeConvo('convo-other', 'Other')
+    const convo = makeConvo('convo-1', 'Partner')
+    store.conversations = [otherConvo, convo]
+    store.activeConversation = convo
+
+    mockApi.post.mockResolvedValue({
+      data: {
+        success: true,
+        conversation: { ...convo, lastMessage: { id: 'msg-1', content: 'Hello' } },
+        message: { id: 'msg-1', conversationId: 'convo-1', content: 'Hello' },
+      },
+    })
+
+    const result = await store.sendMessage('partner-convo-1', 'Hello')
+
+    expect(result).toEqual({ success: true, data: expect.objectContaining({ id: 'msg-1' }) })
+    // convo-1 was at index 1, should now be bumped to index 0
+    expect(store.conversations[0]!.conversationId).toBe('convo-1')
+    expect(store.conversations[1]!.conversationId).toBe('convo-other')
+    expect(store.messages.map((m) => m.id)).toContain('msg-1')
+    expect(store.isSending).toBe(false)
+  })
+
+  it('returns StoreError when message is null in response', async () => {
+    const store = useMessageStore()
+    const convo = makeConvo('convo-1', 'Partner')
+
+    mockApi.post.mockResolvedValue({
+      data: {
+        success: true,
+        conversation: convo,
+        message: null,
+      },
+    })
+
+    const result = await store.sendMessage('partner-convo-1', 'Hello')
+
+    expect(result).toMatchObject({ success: false })
+  })
+})
+
+describe('sendVoiceMessage', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  it('sends a voice message via FormData and bumps conversation', async () => {
+    const store = useMessageStore()
+    const convo = makeConvo('convo-1', 'Partner')
+    store.conversations = [convo]
+    store.activeConversation = convo
+
+    mockApi.post.mockResolvedValue({
+      data: {
+        success: true,
+        conversation: { ...convo, lastMessage: { id: 'voice-1' } },
+        message: { id: 'voice-1', conversationId: 'convo-1', content: '' },
+      },
+    })
+
+    const blob = new Blob(['audio'], { type: 'audio/webm' })
+    const result = await store.sendVoiceMessage('partner-convo-1', blob, 5)
+
+    expect(result).toEqual({ success: true, data: expect.objectContaining({ id: 'voice-1' }) })
+    expect(mockApi.post).toHaveBeenCalledWith('/messages/voice', expect.any(FormData))
+    expect(store.isSending).toBe(false)
+  })
+})
+
+describe('teardown', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  it('resets all state to initial values and unsubscribes from bus', () => {
+    const store = useMessageStore()
+
+    // Dirty the store
+    store.conversations = [makeConvo('convo-1', 'Partner')]
+    store.messages = [{ id: 'msg-1' } as MessageDTO]
+    store.activeConversation = makeConvo('convo-1', 'Partner')
+    store.hasUnreadMessages = true
+    store.initialized = true
+    store.suppressMessageNotifications = true
+    store.isSending = true
+    store.isLoading = true
+    store.error = { success: false, message: 'err' }
+    store.messageCursor = 'cursor'
+    store.hasMoreMessages = true
+    store.isLoadingMoreMessages = true
+
+    store.teardown()
+
+    // All state should be back to initial values
+    expect(store.conversations).toEqual([])
+    expect(store.messages).toEqual([])
+    expect(store.activeConversation).toBeNull()
+    expect(store.hasUnreadMessages).toBe(false)
+    expect(store.initialized).toBe(false)
+    expect(store.suppressMessageNotifications).toBe(false)
+    expect(store.isSending).toBe(false)
+    expect(store.isLoading).toBe(false)
+    expect(store.error).toBeNull()
+    expect(store.messageCursor).toBeNull()
+    expect(store.hasMoreMessages).toBe(false)
+    expect(store.isLoadingMoreMessages).toBe(false)
+
+    // Bus listener should be removed
+    expect(mockBus.off).toHaveBeenCalledWith('ws:new_message', store.handleIncomingMessage)
   })
 })
 

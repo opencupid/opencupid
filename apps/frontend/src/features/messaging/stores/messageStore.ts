@@ -1,4 +1,4 @@
-import { defineStore, type Store } from 'pinia'
+import { defineStore } from 'pinia'
 
 import { api, safeApiCall } from '@/lib/api'
 import { bus } from '@/lib/bus'
@@ -58,7 +58,7 @@ export const useMessageStore = defineStore('message', {
       if (convoIndex === -1) {
         await this.fetchConversations() // Fetch conversations if not found
       } else {
-        const convo = this.conversations.splice(convoIndex, 1)[0]!
+        const convo = this.conversations[convoIndex]!
         // Update last message and unread count
         // When we receive a message, it means the conversation is now in ACCEPTED state
         // and we can reply (fixes bug where both "My turn" and "Their turn" badges show)
@@ -67,18 +67,40 @@ export const useMessageStore = defineStore('message', {
           lastMessage: message,
           canReply: true,
         }
-        this.conversations.unshift(updatedConvo)
+        this.bumpConversation(updatedConvo)
         this.updateUnreadFlag()
       }
       // If this is the active conversation, append to visible messages
       if (this.activeConversation?.conversationId === message.conversationId) {
-        // Check if message already exists to prevent duplicates
-        if (!this.messages.find((m) => m.id === message.id)) {
-          this.messages.push(message)
-        }
+        this.appendMessageIfNew(message)
       } else if (!this.suppressMessageNotifications) {
         bus.emit('notification:new_message', message)
       }
+    },
+
+    appendMessageIfNew(message: MessageDTO) {
+      if (!this.messages.find((m) => m.id === message.id)) {
+        this.messages.push(message)
+      }
+    },
+
+    bumpConversation(conversation: ConversationSummary) {
+      this.conversations = [
+        conversation,
+        ...this.conversations.filter((c) => c.conversationId !== conversation.conversationId),
+      ]
+    },
+
+    handleSendResponse(res: {
+      data: { conversation: ConversationSummary; message: MessageDTO | null }
+    }): StoreResponse<MessageDTO> | StoreError {
+      const { conversation, message } = res.data
+      if (!message) return storeError(new Error('Message not sent'))
+      this.bumpConversation(conversation)
+      if (this.activeConversation?.conversationId === conversation.conversationId) {
+        this.appendMessageIfNew(message)
+      }
+      return storeSuccess(message)
     },
 
     // Update a conversation in the list
@@ -213,34 +235,20 @@ export const useMessageStore = defineStore('message', {
       content: string
     ): Promise<StoreResponse<MessageDTO> | StoreError> {
       try {
-        const payload: SendMessagePayload = {
-          profileId: recipientProfileId,
-          content,
-        }
         this.isSending = true
         this.error = null
         const res = await safeApiCall(() =>
-          api.post<SendMessageResponse>(`/messages/message`, payload)
+          api.post<SendMessageResponse>('/messages/message', {
+            profileId: recipientProfileId,
+            content,
+          } satisfies SendMessagePayload)
         )
-        const { conversation, message } = res.data
-        if (!message) return storeError(new Error('Message not sent'))
-        // Move conversation to top, remove any old instance
-        this.conversations = [
-          conversation,
-          ...this.conversations.filter((c) => c.conversationId !== conversation.conversationId),
-        ]
-        if (this.activeConversation?.conversationId === conversation.conversationId) {
-          // Check if message already exists to prevent duplicates
-          if (!this.messages.find((m) => m.id === message.id)) {
-            this.messages.push(message)
-          }
-        }
-        return storeSuccess(message)
+        return this.handleSendResponse(res)
       } catch (error: any) {
         this.error = storeError(error)
         return this.error
       } finally {
-        this.isSending = false // Reset sending state
+        this.isSending = false
       }
     },
 
@@ -265,19 +273,7 @@ export const useMessageStore = defineStore('message', {
         const res = await safeApiCall(() =>
           api.post<SendMessageResponse>('/messages/voice', formData)
         )
-
-        const { conversation, message } = res.data
-        if (!message) return storeError(new Error('Voice message not sent'))
-
-        // Move conversation to top, remove any old instance
-        this.conversations = [
-          conversation,
-          ...this.conversations.filter((c) => c.conversationId !== conversation.conversationId),
-        ]
-        if (this.activeConversation?.conversationId === conversation.conversationId) {
-          this.messages.push(message)
-        }
-        return storeSuccess(message)
+        return this.handleSendResponse(res)
       } catch (error: any) {
         this.error = storeError(error)
         return this.error
@@ -316,18 +312,7 @@ export const useMessageStore = defineStore('message', {
 
     teardown() {
       bus.off('ws:new_message', this.handleIncomingMessage)
-      this.conversations = []
-      this.messages = []
-      this.activeConversation = null
-      this.hasUnreadMessages = false
-      this.initialized = false
-      this.suppressMessageNotifications = false
-      this.isSending = false
-      this.isLoading = false
-      this.error = null
-      this.messageCursor = null
-      this.hasMoreMessages = false
-      this.isLoadingMoreMessages = false
+      this.$reset()
     },
   },
 })
