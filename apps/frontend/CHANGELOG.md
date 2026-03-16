@@ -1,5 +1,11 @@
 # frontend
 
+## 0.32.1
+
+### Patch Changes
+
+- 6803aac: Fix Vue errors not being captured by Sentry due to errorHandler race condition
+
 ## 0.32.0
 
 ### Minor Changes
