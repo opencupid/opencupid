@@ -213,18 +213,19 @@ function initClusters(map: LMap) {
 function onClusterMouseOver(e: any) {
   // Ignore hover on other clusters while a spider is already open —
   // the user must move away from the active spider to close it first.
-  if (activeSpiderCluster) return
+  if (activeSpiderCluster || !map) return
 
   // scale spiderfy distance with viewport
-  clusterGroup.options.spiderfyDistanceMultiplier = computeViewportMultiplier(map!.getSize())
+  clusterGroup.options.spiderfyDistanceMultiplier = computeViewportMultiplier(map.getSize())
 
   e.layer.spiderfy()
 }
 
 function onClusterSpiderfied(e: any) {
+  if (!map) return
   activeSpiderCluster = e.cluster
   activeSpiderHoverBounds = computeSpiderHoverBounds(
-    map!,
+    map,
     activeSpiderCluster,
     SPIDER_HOVER_PADDING_PX
   )
@@ -273,8 +274,9 @@ const popupTarget = ref<HTMLElement | null>(null)
 const popupItem = ref<MapPoi | null>(null)
 
 function onMapReady() {
+  if (!map) return
   isMapReady = true
-  emit('map:ready', map!)
+  emit('map:ready', map)
   updateMarkers()
 }
 
