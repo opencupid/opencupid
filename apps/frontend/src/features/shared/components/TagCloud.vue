@@ -123,7 +123,7 @@ onMounted(async () => {
 <template>
   <div
     ref="container"
-    class="tag-cloud-container"
+    class="tag-cloud-container user-select-none"
   >
     <svg
       v-if="!hasTags && props.showLoading && width > 0 && height > 0"
