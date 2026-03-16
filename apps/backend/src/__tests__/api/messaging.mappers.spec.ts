@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import {
-  mapMessageDTO,
-  mapMessageForMessageList,
+  mapMessageToDTO,
   mapConversationParticipantToSummary,
   mapAttachmentDTO,
 } from '../../api/mappers/messaging.mappers'
@@ -52,20 +51,47 @@ const participant: any = {
 }
 
 describe('messaging mappers', () => {
-  it('marks message as mine', () => {
-    const m = mapMessageForMessageList(msg, 'p1')
-    expect(m.isMine).toBe(true)
+  describe('mapMessageToDTO', () => {
+    it('maps a message with sender to DTO', () => {
+      const dto = mapMessageToDTO(msg)
+      expect(dto.id).toBe('m1')
+      expect(dto.sender.publicName).toBe('Me')
+      expect(dto.attachment).toBeNull()
+      expect(dto.isMine).toBeUndefined()
+    })
+
+    it('sets isMine true when senderId matches profileId', () => {
+      const dto = mapMessageToDTO(msg, 'p1')
+      expect(dto.isMine).toBe(true)
+    })
+
+    it('sets isMine false when senderId does not match profileId', () => {
+      const dto = mapMessageToDTO(msg, 'p2')
+      expect(dto.isMine).toBe(false)
+    })
+
+    it('maps attachment when present', () => {
+      const msgWithAttachment = {
+        ...msg,
+        attachment: {
+          id: 'a1',
+          filePath: 'voice/p1/msg.webm',
+          mimeType: 'audio/webm',
+          fileSize: 1024,
+          duration: 5,
+          createdAt: new Date(),
+        },
+      }
+      const dto = mapMessageToDTO(msgWithAttachment)
+      expect(dto.attachment).not.toBeNull()
+      expect(dto.attachment!.mimeType).toBe('audio/webm')
+    })
   })
 
   it('maps participant to conversation summary', () => {
     const summary = mapConversationParticipantToSummary(participant, 'p1')
     expect(summary.partnerProfile.publicName).toBe('Them')
     expect(summary.lastMessage?.isMine).toBe(true)
-  })
-
-  it('maps message dto with sender profile', () => {
-    const dto = mapMessageDTO(msg, participant)
-    expect(dto.sender.publicName).toBe('Me')
   })
 
   describe('isCallable mapping', () => {

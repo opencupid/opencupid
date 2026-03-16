@@ -5,11 +5,7 @@ import { MessageService, cleanMessageForNotification } from '@/services/messagin
 import { WebPushService } from '@/services/webpush.service'
 
 import { z } from 'zod'
-import {
-  mapConversationParticipantToSummary,
-  mapMessageDTO,
-  mapMessageForMessageList,
-} from '../mappers/messaging.mappers'
+import { mapConversationParticipantToSummary, mapMessageToDTO } from '../mappers/messaging.mappers'
 import type {
   MessagesResponse,
   ConversationsResponse,
@@ -99,7 +95,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
         take: query.data.take,
       })
 
-      const messages = raw.map((m) => mapMessageForMessageList(m, profileId))
+      const messages = raw.map((m) => mapMessageToDTO(m, profileId))
       const response: MessagesResponse = { success: true, messages, nextCursor, hasMore }
       return reply.code(200).send(response)
     } catch (error) {
@@ -187,9 +183,8 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
           throw new Error('Conversation summary not found')
         }
 
-        const messageDTO = mapMessageDTO(message, conversation)
-
-        const messageWithMine = { ...messageDTO, isMine: true }
+        const messageDTO = mapMessageToDTO(message)
+        const messageWithMine = mapMessageToDTO(message, senderProfileId)
 
         const response: SendMessageResponse = {
           success: true,
@@ -356,8 +351,8 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
             throw new Error('Conversation summary not found')
           }
 
-          const messageDTO = mapMessageDTO(message, conversation)
-          const messageWithMine = { ...messageDTO, isMine: true }
+          const messageDTO = mapMessageToDTO(message)
+          const messageWithMine = mapMessageToDTO(message, senderProfileId)
 
           const response: SendMessageResponse = {
             success: true,

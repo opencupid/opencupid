@@ -16,11 +16,16 @@ vi.mock('../../utils/wsUtils', () => ({
   broadcastToProfile: vi.fn(() => true),
 }))
 
-vi.mock('../../api/mappers/profile.mappers', () => ({
-  mapProfileSummary: vi.fn((p: any) => ({
-    id: p.id,
-    publicName: p.publicName,
-    profileImages: [],
+vi.mock('../../api/mappers/messaging.mappers', () => ({
+  mapMessageToDTO: vi.fn((m: any) => ({
+    id: m.id,
+    conversationId: m.conversationId,
+    senderId: m.senderId,
+    content: m.content,
+    messageType: m.messageType,
+    createdAt: m.createdAt,
+    sender: { id: m.sender?.id, publicName: m.sender?.publicName, profileImages: [] },
+    attachment: null,
   })),
 }))
 
@@ -108,10 +113,7 @@ describe('POST /:conversationId/decline', () => {
     const handler = fastify.routes['POST /:conversationId/decline']
     fastify.prisma.conversation.findUnique = vi.fn().mockResolvedValue({
       id: 'ck1234567890abcd12345678',
-      participants: [
-        { profileId: 'p1', profile: { id: 'p1', publicName: 'Alice', profileImages: [] } },
-        { profileId: 'p2', profile: { id: 'p2', publicName: 'Bob', profileImages: [] } },
-      ],
+      participants: [{ profileId: 'p1' }, { profileId: 'p2' }],
     })
     mockCallService.insertMissedCallMessage.mockResolvedValue({
       message: {
@@ -121,6 +123,8 @@ describe('POST /:conversationId/decline', () => {
         content: 'Missed call',
         messageType: 'call/missed',
         createdAt: new Date(),
+        sender: { id: 'p2', publicName: 'Bob', profileImages: [] },
+        attachment: null,
       },
       isDuplicate: false,
     })
@@ -142,10 +146,7 @@ describe('POST /:conversationId/decline', () => {
     const handler = fastify.routes['POST /:conversationId/decline']
     fastify.prisma.conversation.findUnique = vi.fn().mockResolvedValue({
       id: 'ck1234567890abcd12345678',
-      participants: [
-        { profileId: 'p1', profile: { id: 'p1', publicName: 'Alice', profileImages: [] } },
-        { profileId: 'p2', profile: { id: 'p2', publicName: 'Bob', profileImages: [] } },
-      ],
+      participants: [{ profileId: 'p1' }, { profileId: 'p2' }],
     })
     mockCallService.insertMissedCallMessage.mockResolvedValue({
       message: {
@@ -155,6 +156,8 @@ describe('POST /:conversationId/decline', () => {
         content: 'Missed call',
         messageType: 'call/missed',
         createdAt: new Date(),
+        sender: { id: 'p2', publicName: 'Bob', profileImages: [] },
+        attachment: null,
       },
       isDuplicate: true,
     })
@@ -182,10 +185,7 @@ describe('POST /:conversationId/cancel', () => {
     const handler = fastify.routes['POST /:conversationId/cancel']
     fastify.prisma.conversation.findUnique = vi.fn().mockResolvedValue({
       id: 'ck1234567890abcd12345678',
-      participants: [
-        { profileId: 'p1', profile: { id: 'p1', publicName: 'Alice', profileImages: [] } },
-        { profileId: 'p2', profile: { id: 'p2', publicName: 'Bob', profileImages: [] } },
-      ],
+      participants: [{ profileId: 'p1' }, { profileId: 'p2' }],
     })
     mockCallService.insertMissedCallMessage.mockResolvedValue({
       message: {
@@ -195,6 +195,8 @@ describe('POST /:conversationId/cancel', () => {
         content: 'Missed call',
         messageType: 'call/missed',
         createdAt: new Date(),
+        sender: { id: 'p1', publicName: 'Alice', profileImages: [] },
+        attachment: null,
       },
       isDuplicate: false,
     })

@@ -1,6 +1,7 @@
-import { Prisma, Message } from '@prisma/client'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import crypto from 'crypto'
+import { messageWithSenderInclude, type MessageWithSender } from './messaging.service'
 
 export class CallService {
   private static instance: CallService
@@ -56,7 +57,7 @@ export class CallService {
     tx: Prisma.TransactionClient,
     conversationId: string,
     callerProfileId: string
-  ): Promise<{ message: Message; isDuplicate: boolean }> {
+  ): Promise<{ message: MessageWithSender; isDuplicate: boolean }> {
     // Dedup: check for recent missed call message within 30 seconds
     const thirtySecondsAgo = new Date(Date.now() - 30000)
     const existing = await tx.message.findFirst({
@@ -66,6 +67,7 @@ export class CallService {
         messageType: 'call/missed',
         createdAt: { gte: thirtySecondsAgo },
       },
+      include: messageWithSenderInclude,
     })
     if (existing) return { message: existing, isDuplicate: true }
 
@@ -76,6 +78,7 @@ export class CallService {
         content: 'Missed call',
         messageType: 'call/missed',
       },
+      include: messageWithSenderInclude,
     })
     return { message, isDuplicate: false }
   }

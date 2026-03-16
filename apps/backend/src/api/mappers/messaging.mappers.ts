@@ -7,7 +7,7 @@ import type {
 import { mapProfileSummary } from './profile.mappers'
 import {
   canSendMessageInConversation,
-  type MessageWithSendInclude,
+  type MessageWithSender,
 } from '../../services/messaging.service'
 import { mediaUrl } from '../../lib/media'
 
@@ -17,13 +17,6 @@ function mapConversationMeta(c: { id: string; updatedAt: Date; createdAt: Date }
     updatedAt: c.updatedAt,
     createdAt: c.createdAt,
   }
-}
-
-export function extractSenderProfile(
-  p: ConversationParticipantWithConversationSummary,
-  senderProfileId: string
-) {
-  return p.conversation.participants.find((p) => p.profileId === senderProfileId)?.profile
 }
 
 export function mapConversationParticipantToSummary(
@@ -38,9 +31,8 @@ export function mapConversationParticipantToSummary(
 
   const canReply = canSendMessageInConversation(p.conversation, currentProfileId)
   const myParticipant = p.conversation.participants.find((cp) => cp.profileId === currentProfileId)
-  const isCallable =
-    (partner as any).isCallable !== false && (partner.profile as any).isCallable !== false
-  const myIsCallable = (myParticipant as any)?.isCallable !== false
+  const isCallable = partner.isCallable !== false && partner.profile.isCallable !== false
+  const myIsCallable = myParticipant?.isCallable !== false
   return {
     id: p.id,
     profileId: p.profileId,
@@ -64,11 +56,7 @@ export function mapConversationParticipantToSummary(
   }
 }
 
-export function mapMessageDTO(
-  m: MessageWithSendInclude,
-  p: ConversationParticipantWithConversationSummary
-): MessageDTO {
-  const sender = extractSenderProfile(p, m.senderId)
+export function mapMessageToDTO(m: MessageWithSender, currentProfileId?: string): MessageDTO {
   return {
     id: m.id,
     conversationId: m.conversationId,
@@ -76,8 +64,9 @@ export function mapMessageDTO(
     content: m.content,
     messageType: m.messageType,
     createdAt: m.createdAt,
+    sender: mapProfileSummary(m.sender),
     attachment: m.attachment ? mapAttachmentDTO(m.attachment) : null,
-    sender: mapProfileSummary(sender!),
+    ...(currentProfileId !== undefined && { isMine: m.senderId === currentProfileId }),
   }
 }
 
@@ -97,38 +86,5 @@ export function mapAttachmentDTO(dbAttachment: {
     fileSize: dbAttachment.fileSize,
     duration: dbAttachment.duration,
     createdAt: dbAttachment.createdAt,
-  }
-}
-
-export function mapMessageForMessageList(
-  m: {
-    id: string
-    conversationId: string
-    senderId: string
-    content: string
-    messageType: string
-    createdAt: Date
-    sender: { id: string; publicName: string; profileImages: any[] }
-    attachment: {
-      id: string
-      filePath: string
-      mimeType: string
-      fileSize: number | null
-      duration: number | null
-      createdAt: Date
-    } | null
-  },
-  profileId: string
-): MessageDTO {
-  return {
-    id: m.id,
-    conversationId: m.conversationId,
-    senderId: m.senderId,
-    content: m.content,
-    messageType: m.messageType,
-    createdAt: m.createdAt,
-    sender: mapProfileSummary(m.sender),
-    attachment: m.attachment ? mapAttachmentDTO(m.attachment) : null,
-    isMine: m.senderId === profileId,
   }
 }

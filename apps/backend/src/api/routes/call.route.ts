@@ -3,9 +3,8 @@ import { z } from 'zod'
 import { rateLimitConfig, sendError } from '../helpers'
 import { CallService } from '@/services/call.service'
 import { broadcastToProfile } from '@/utils/wsUtils'
-import { mapProfileSummary } from '@/api/mappers/profile.mappers'
+import { mapMessageToDTO } from '@/api/mappers/messaging.mappers'
 import { WebPushService } from '@/services/webpush.service'
-import type { MessageDTO } from '@zod/messaging/messaging.dto'
 
 const ConversationIdParamsSchema = z.object({
   conversationId: z.string().cuid(),
@@ -123,11 +122,7 @@ const callRoutes: FastifyPluginAsync = async (fastify) => {
       try {
         const conversation = await fastify.prisma.conversation.findUnique({
           where: { id: params.data.conversationId },
-          include: {
-            participants: {
-              include: { profile: { include: { profileImages: true } } },
-            },
-          },
+          include: { participants: true },
         })
 
         if (!conversation) return sendError(reply, 404, 'Conversation not found')
@@ -153,16 +148,7 @@ const callRoutes: FastifyPluginAsync = async (fastify) => {
         )
 
         if (!isDuplicate) {
-          const messageDTO: MessageDTO = {
-            id: missedMsg.id,
-            conversationId: missedMsg.conversationId,
-            senderId: missedMsg.senderId,
-            content: missedMsg.content,
-            messageType: missedMsg.messageType,
-            createdAt: missedMsg.createdAt,
-            sender: mapProfileSummary(callerParticipant.profile),
-            attachment: null,
-          }
+          const messageDTO = mapMessageToDTO(missedMsg)
 
           for (const p of conversation.participants) {
             broadcastToProfile(fastify, p.profileId, {
@@ -194,20 +180,13 @@ const callRoutes: FastifyPluginAsync = async (fastify) => {
       try {
         const conversation = await fastify.prisma.conversation.findUnique({
           where: { id: params.data.conversationId },
-          include: {
-            participants: {
-              include: { profile: { include: { profileImages: true } } },
-            },
-          },
+          include: { participants: true },
         })
 
         if (!conversation) return sendError(reply, 404, 'Conversation not found')
 
         const calleeParticipant = conversation.participants.find((p) => p.profileId !== profileId)
         if (!calleeParticipant) return sendError(reply, 404, 'Callee not found')
-
-        const callerParticipant = conversation.participants.find((p) => p.profileId === profileId)
-        if (!callerParticipant) return sendError(reply, 404, 'Caller not found')
 
         broadcastToProfile(fastify, calleeParticipant.profileId, {
           type: 'ws:call_cancelled',
@@ -225,16 +204,7 @@ const callRoutes: FastifyPluginAsync = async (fastify) => {
           })
 
         if (!cancelIsDuplicate) {
-          const messageDTO: MessageDTO = {
-            id: cancelMissedMsg.id,
-            conversationId: cancelMissedMsg.conversationId,
-            senderId: cancelMissedMsg.senderId,
-            content: cancelMissedMsg.content,
-            messageType: cancelMissedMsg.messageType,
-            createdAt: cancelMissedMsg.createdAt,
-            sender: mapProfileSummary(callerParticipant.profile),
-            attachment: null,
-          }
+          const messageDTO = mapMessageToDTO(cancelMissedMsg)
 
           for (const p of conversation.participants) {
             broadcastToProfile(fastify, p.profileId, {
