@@ -12,6 +12,7 @@ import MapView from '@/features/shared/components/MapView.vue'
 import MapIcon from '../components/MapIcon.vue'
 import IconMenu from '@/assets/icons/interface/menu.svg'
 import ViewModeToggler from '@/features/shared/ui/ViewModeToggler.vue'
+import FloatingButton from '@/features/shared/components/FloatingButton.vue'
 
 import { usePostsViewModel } from '../composables/usePostsViewModel'
 import { usePostStore } from '../stores/postStore'
@@ -145,7 +146,7 @@ onActivated(() => {
 
     <template #floating>
       <!-- Create Post Button -->
-      <div class="main-edit-button">
+      <FloatingButton>
         <BButton
           size="lg"
           class="btn-icon-lg btn-shadow"
@@ -155,7 +156,7 @@ onActivated(() => {
         >
           <FontAwesomeIcon :icon="faPenToSquare" />
         </BButton>
-      </div>
+      </FloatingButton>
     </template>
   </BrowseLayout>
 
