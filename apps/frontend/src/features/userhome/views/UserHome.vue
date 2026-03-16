@@ -67,7 +67,7 @@ provide('viewerProfile', toRef(viewerProfile))
         />
       </div>
       <!-- lg+: two-column layout -->
-      <BRow class="d-flex mt-3 align-items-lg-center">
+      <BRow class="d-flex mt-3 align-items-lg-stretch">
         <BCol lg="6">
           <div
             v-if="visibleProfiles.length > 0"
