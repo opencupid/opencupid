@@ -17,7 +17,7 @@ import FloatingButton from '@/features/shared/components/FloatingButton.vue'
 
 import { usePostsViewModel } from '../composables/usePostsViewModel'
 import { usePostStore } from '../stores/postStore'
-import type { PublicPostWithProfile } from '@zod/post/post.dto'
+import type { PublicPostWithProfile, OwnerPost } from '@zod/post/post.dto'
 import type { PostTypeType } from '@zod/generated'
 
 import type { MapPoi } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
@@ -45,6 +45,11 @@ const {
   handleSaved,
   closePostOverlays,
 } = usePostsViewModel()
+
+function handleEditAndClose(post: PublicPostWithProfile | OwnerPost) {
+  closePostOverlays()
+  handleEdit(post)
+}
 
 provide('ownerProfile', ownerProfile)
 
@@ -186,10 +191,7 @@ onActivated(() => {
       <PostFullView
         :post="selectedPost"
         @close="closePostOverlays"
-        @edit="
-          closePostOverlays()
-          handleEdit($event)
-        "
+        @edit="handleEditAndClose"
         @hide="handleHide"
         @delete="handleDelete"
       />
