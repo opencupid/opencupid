@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { type ViewState } from '../composables/types'
 import IconTick from '@/assets/icons/interface/tick.svg'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import IconPencil2 from '@/assets/icons/interface/pencil-2.svg'
+// import IconPencil2 from '@/assets/icons/interface/pencil-2.svg'
 import { faPenToSquare } from '@fortawesome/free-solid-svg-icons'
 const editState = defineModel<boolean>({
   default: false,
