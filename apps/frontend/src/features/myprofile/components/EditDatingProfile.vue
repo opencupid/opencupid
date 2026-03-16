@@ -21,25 +21,25 @@ const birthYear = computed(() =>
 
 <template>
   <div class="d-flex flex-column w-100 gap-4 py-md-3">
-    <fieldset>
+    <div>
       <GenderPronounSelector v-model="genderPronounsModel" />
-    </fieldset>
+    </div>
 
-    <fieldset>
+    <div>
       <legend class="fs-6">{{ $t('onboarding.relationship_title') }}</legend>
       <div class="mb-3">
         <RelationstatusSelector v-model="relationshipModel" />
       </div>
       <HaskidsSelector v-model="hasKidsModel" />
-    </fieldset>
+    </div>
 
-    <fieldset>
+    <div>
       <legend class="fs-6">{{ $t('onboarding.dating_intro_title') }}</legend>
       <IntrotextEditor
         v-model="introDatingModel"
         :languages="formData.languages"
         :placeholder="$t('onboarding.dating_intro_placeholder')"
       />
-    </fieldset>
+    </div>
   </div>
 </template>

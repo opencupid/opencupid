@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useBootstrap } from '@/lib/bootstrap'
@@ -20,9 +20,15 @@ onMounted(async () => {
   await useBootstrap().bootstrap()
 })
 
-async function save() {
-  await updateProfile()
-  await persistDatingPrefs()
+const isSaving = ref(false)
+
+async function handleSave() {
+  isSaving.value = true
+  await Promise.all([updateProfile(), persistDatingPrefs()])
+  router.back()
+}
+
+async function handleCancel() {
   router.back()
 }
 </script>
@@ -44,33 +50,37 @@ async function save() {
         </SecondaryNav>
 
         <section class="w-100 flex-grow-1 overflow-auto hide-scrollbar py-3">
-          <BOverlay :show="isLoading">
-            <BTabs
-              pills
-              variant="warning"
-              nav-class="justify-content-center"
+          <BTabs
+            pills
+            variant="warning"
+            nav-class="justify-content-center"
+          >
+            <BTab
+              :title="$t('profiles.forms.my_dating_profile')"
+              active
             >
-              <BTab
-                :title="$t('profiles.forms.my_dating_profile')"
-                active
+              <fieldset
+                class="pt-3"
+                :disabled="isSaving || isLoading"
               >
-                <div class="pt-3">
-                  <EditDatingProfile
-                    v-model="formData"
-                    @save="save"
-                  />
-                </div>
-              </BTab>
-              <BTab :title="$t('profiles.forms.my_preferences')">
-                <div class="pt-3">
-                  <DatingPreferencesForm
-                    v-if="datingPrefs"
-                    v-model="datingPrefs"
-                  />
-                </div>
-              </BTab>
-            </BTabs>
-          </BOverlay>
+                <EditDatingProfile
+                  v-model="formData"
+                  @save="handleSave"
+                />
+              </fieldset>
+            </BTab>
+            <BTab :title="$t('profiles.forms.my_preferences')">
+              <fieldset
+                class="pt-3"
+                :disabled="isSaving || isLoading"
+              >
+                <DatingPreferencesForm
+                  v-if="datingPrefs"
+                  v-model="datingPrefs"
+                />
+              </fieldset>
+            </BTab>
+          </BTabs>
         </section>
       </MiddleColumn>
     </BContainer>
@@ -80,7 +90,7 @@ async function save() {
       <BButton
         variant="link"
         class="link-secondary"
-        @click="router.back()"
+        @click="handleCancel"
       >
         {{ $t('onboarding.wizard.cancel') }}
       </BButton>
@@ -88,7 +98,8 @@ async function save() {
         variant="primary"
         pill
         class="px-5"
-        @click="save"
+        @click.stop="handleSave"
+        :disabled="isLoading"
       >
         {{ $t('onboarding.wizard.finish') }}
       </BButton>
