@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faPenToSquare } from '@fortawesome/free-solid-svg-icons'
 
 import BrowseLayout from '@/features/shared/components/BrowseLayout.vue'
+import { isValidLatLng } from '@/features/shared/components/osmPoiMap/mapUtils'
 import PostFilterBar from '../components/PostFilterBar.vue'
 import PostList from '../components/PostList.vue'
 import PostFullView from '../components/PostFullView.vue'
@@ -61,8 +62,9 @@ const haveResults = computed(() => currentTabPosts.value.length > 0)
 
 const mapCenter = computed<[number, number] | undefined>(() => {
   const loc = filterLocation.value
-  if (loc?.lat && loc?.lon) return [loc.lat, loc.lon]
-  return undefined
+  const pair: [number, number] | undefined =
+    loc?.lat != null && loc?.lon != null ? [loc.lat, loc.lon] : undefined
+  return isValidLatLng(pair) ? pair : undefined
 })
 
 const mapPois = computed<MapPoi[]>(() =>
