@@ -98,8 +98,6 @@ onMounted(async () => {
         </div>
 
         <div v-if="haveConversations">
-          <p class="px-2 text-center">{{ $t('messaging.conversations_list_title') }}</p>
-
           <ConversationSummaries
             :loading="isLoading"
             :conversations="conversations"
