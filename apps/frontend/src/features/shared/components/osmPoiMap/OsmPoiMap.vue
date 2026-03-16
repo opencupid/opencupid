@@ -18,7 +18,7 @@ import {
   webGLSupported,
   createClusterIcon,
   hydratePoiIcon,
-} from './osmPoiMap/mapUtils'
+} from './mapUtils'
 
 maptilerConfig.telemetry = false
 
@@ -432,9 +432,8 @@ watch(
 watch(
   () => props.center,
   (newCenter) => {
-    if (map && isValidLatLng(newCenter)) {
-      map.flyTo(newCenter, lastStableZoom, { duration: 1 })
-    }
+    if (!map || !isValidLatLng(newCenter)) return
+    map.flyTo(newCenter, lastStableZoom, { duration: 1 })
   }
 )
 </script>

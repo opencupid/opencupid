@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 import { mount } from '@vue/test-utils'
 
-vi.mock('../OsmPoiMap.vue', () => ({
+vi.mock('../osmPoiMap/OsmPoiMap.vue', () => ({
   default: defineComponent({
     name: 'OsmPoiMap',
     emits: ['map:ready', 'item:select'],

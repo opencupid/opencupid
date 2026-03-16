@@ -3,8 +3,8 @@ import { ref, type Component } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import type { Map as LMap } from 'leaflet'
 
-import OsmPoiMap from './OsmPoiMap.vue'
-import type { MapPoi, MapBounds } from './OsmPoiMap.types'
+import OsmPoiMap from './osmPoiMap/OsmPoiMap.vue'
+import type { MapPoi, MapBounds } from './osmPoiMap/OsmPoiMap.types'
 import MapPlaceholder from './MapPlaceholder.vue'
 
 const BOUNDS_DEBOUNCE_MS = 500

@@ -1,6 +1,6 @@
 import L from 'leaflet'
 import { type Component, render, h } from 'vue'
-import type { PoiIconProps } from '../OsmPoiMap.types'
+import type { PoiIconProps } from './OsmPoiMap.types'
 
 /** Validates that a coordinate pair contains finite numbers (rejects NaN, Infinity, null, undefined). */
 export function isValidLatLng(center: [number, number] | undefined): center is [number, number] {

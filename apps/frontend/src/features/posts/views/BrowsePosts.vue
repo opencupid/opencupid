@@ -20,7 +20,7 @@ import { usePostStore } from '../stores/postStore'
 import type { PublicPostWithProfile } from '@zod/post/post.dto'
 import type { PostTypeType } from '@zod/generated'
 
-import type { MapPoi } from '@/features/shared/components/OsmPoiMap.types'
+import type { MapPoi } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
 
 defineOptions({ name: 'BrowsePosts' })
 
@@ -186,7 +186,10 @@ onActivated(() => {
       <PostFullView
         :post="selectedPost"
         @close="closePostOverlays"
-        @edit="closePostOverlays(); handleEdit($event)"
+        @edit="
+          closePostOverlays()
+          handleEdit($event)
+        "
         @hide="handleHide"
         @delete="handleDelete"
       />

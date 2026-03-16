@@ -12,7 +12,7 @@ import TagCloud from '@/features/shared/components/TagCloud.vue'
 
 import { useSocialMatchViewModel } from '../composables/useSocialMatchViewModel'
 import type { PopularTag } from '@zod/tag/tag.dto'
-import type { MapPoi } from '@/features/shared/components/OsmPoiMap.types'
+import type { MapPoi } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
 
 defineOptions({ name: 'BrowseProfiles' })
 
