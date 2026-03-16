@@ -578,4 +578,15 @@ watch(
   box-shadow: none;
   transform: none;
 }
+
+:deep(.leaflet-control-attribution) {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+@media (max-width: 767.98px) {
+  :deep(.leaflet-control-attribution) {
+    display: none;
+  }
+}
 </style>
