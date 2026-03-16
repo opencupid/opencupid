@@ -1,6 +1,15 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { defineComponent, h, nextTick } from 'vue'
 
+// jsdom does not provide ResizeObserver — stub it so createLeafletMap() can
+// call `new ResizeObserver(cb)` / `.observe()` / `.disconnect()` without error.
+class ResizeObserverStub {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+vi.stubGlobal('ResizeObserver', ResizeObserverStub)
+
 // Track created markers and their icons
 const createdMarkers: { latLng: [number, number]; opts: any; icon?: any }[] = []
 
