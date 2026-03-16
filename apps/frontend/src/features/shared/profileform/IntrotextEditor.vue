@@ -34,7 +34,16 @@ const status = ref('idle')
 
 const langList = computed(() => props.languages ? sortLanguagesWithEnFirst(props.languages) : [])
 
+// TODO: replace with a computed or composable — the ref + watcher is a workaround
+// for langList being empty at setup time (formData arrives async from the store).
 const currentLanguage = ref(langList.value[0] ?? '')
+
+// Sync currentLanguage when langList populates after initial mount
+watch(langList, (langs) => {
+  if (!currentLanguage.value || !langs.includes(currentLanguage.value)) {
+    currentLanguage.value = langs[0] ?? ''
+  }
+})
 
 let recognition: SpeechRecognition | null = null
 
