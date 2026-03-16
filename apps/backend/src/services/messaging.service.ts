@@ -30,7 +30,7 @@ const conversationSummaryInclude = {
   },
 }
 
-const sendInclude = {
+export const messageWithSenderInclude = {
   sender: {
     select: {
       id: true,
@@ -43,7 +43,9 @@ const sendInclude = {
   attachment: true,
 } satisfies Prisma.MessageInclude
 
-export type MessageWithSendInclude = Prisma.MessageGetPayload<{ include: typeof sendInclude }>
+export type MessageWithSender = Prisma.MessageGetPayload<{
+  include: typeof messageWithSenderInclude
+}>
 
 export class MessageService {
   private static instance: MessageService
@@ -137,16 +139,7 @@ export class MessageService {
       where: {
         conversationId,
       },
-      include: {
-        sender: {
-          include: {
-            profileImages: {
-              where: { position: 0 }, // Get the first image (profile picture)
-            },
-          },
-        },
-        attachment: true,
-      },
+      include: messageWithSenderInclude,
       orderBy: {
         createdAt: 'desc',
       },
@@ -239,7 +232,7 @@ export class MessageService {
       fileSize?: number
       duration?: number
     }
-  ): Promise<{ convoId: string; message: MessageWithSendInclude; isDuplicate: boolean }> {
+  ): Promise<{ convoId: string; message: MessageWithSender; isDuplicate: boolean }> {
     // Trim user input for text messages; markdown rendering + sanitization happens on the frontend
     const cleanContent = messageType === 'text/plain' ? content.trim() : content
 
@@ -267,7 +260,7 @@ export class MessageService {
           messageType,
           createdAt: { gte: fiveSecondsAgo },
         },
-        include: sendInclude,
+        include: messageWithSenderInclude,
       })
       if (duplicate) return { convoId: convo.id, message: duplicate, isDuplicate: true }
     }
@@ -284,7 +277,7 @@ export class MessageService {
           },
         }),
       },
-      include: sendInclude,
+      include: messageWithSenderInclude,
     })
 
     return { convoId: convo.id, message, isDuplicate: false }
@@ -382,7 +375,7 @@ export class MessageService {
 
 export type SendMessageSuccessResponse = {
   conversation: ConversationParticipantWithConversationSummary
-  message: MessageWithSendInclude
+  message: MessageWithSender
 }
 
 export type SendMessageErrorResponse = {
