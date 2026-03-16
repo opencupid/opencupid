@@ -171,7 +171,16 @@ function initBaseLayer(map: LMap): void {
     `https://api.maptiler.com/maps/dataviz/{z}/{x}/{y}.png?key=${__APP_CONFIG__.MAPTILER_API_KEY}`,
     { maxZoom: 14, attribution: '© MapTiler © OpenStreetMap contributors' }
   ).addTo(map)
-  tileLayer.once('load', () => onMapReady())
+  // Mark map ready on first successful load OR first tile error — whichever
+  // comes first. Without the tileerror fallback, a bad API key or network
+  // failure would prevent markers from ever appearing.
+  const readyOnce = () => {
+    tileLayer.off('load', readyOnce)
+    tileLayer.off('tileerror', readyOnce)
+    onMapReady()
+  }
+  tileLayer.once('load', readyOnce)
+  tileLayer.once('tileerror', readyOnce)
 }
 
 // --- clusters + spider hover region ----------------------------------------

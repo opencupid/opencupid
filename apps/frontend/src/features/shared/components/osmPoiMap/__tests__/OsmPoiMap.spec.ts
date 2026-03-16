@@ -99,9 +99,11 @@ vi.mock('leaflet', () => {
   const tileLayerProto = {
     addTo: vi.fn().mockReturnThis(),
     once: vi.fn(function (this: any, _event: string, cb: () => void) {
-      cb()
+      // Simulate immediate tile load for the first listener only
+      if (_event === 'load') cb()
       return this
     }),
+    off: vi.fn().mockReturnThis(),
   }
   const tileLayer = vi.fn(() => ({ ...tileLayerProto }))
 
@@ -146,7 +148,6 @@ vi.mock('leaflet.markercluster/dist/MarkerCluster.Default.css', () => ({}))
 vi.mock('@/features/images/composables/useBlurhashDataUrl', () => ({
   blurhashToDataUrl: (hash: string) => `data:image/png;blurhash=${hash}`,
 }))
-
 
 import { mount, flushPromises } from '@vue/test-utils'
 import OsmPoiMap from '../OsmPoiMap.vue'
@@ -348,6 +349,27 @@ describe('OsmPoiMap', () => {
     const [url] = (L.tileLayer as any).mock.calls[0]
     expect(url).toContain('maptiler.com/maps/dataviz')
     expect(url).toContain('{z}/{x}/{y}.png')
+  })
+
+  it('marks map ready on tileerror when tiles fail to load', async () => {
+    // Override tileLayer mock: only fire tileerror, never load
+    const tileLayerOnce = vi.fn(function (this: any, event: string, cb: () => void) {
+      if (event === 'tileerror') cb()
+      return this
+    })
+    vi.mocked(L.tileLayer).mockReturnValueOnce({
+      addTo: vi.fn().mockReturnValue({
+        once: tileLayerOnce,
+        off: vi.fn().mockReturnThis(),
+      }),
+    } as any)
+
+    const wrapper = await mountMap()
+    await flushPromises()
+
+    // Map should still be ready (markers rendered) despite tile load failure
+    expect(L.marker).toHaveBeenCalledTimes(3)
+    expect(wrapper.emitted('map:ready')).toBeTruthy()
   })
 
   it('calls popup.update() on nextTick after popupopen to re-measure teleported content', async () => {
