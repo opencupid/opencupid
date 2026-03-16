@@ -1,7 +1,7 @@
 import { setActivePinia, createPinia } from 'pinia'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const mockSearch = vi.fn()
+const mockSearch = vi.hoisted(() => vi.fn())
 
 vi.mock('../../composables/useGeocoder', () => ({
   useGeocoder: () => ({ search: mockSearch }),

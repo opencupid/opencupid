@@ -4,6 +4,8 @@ import type { GeocodingResult } from '../types'
 
 export type { GeocodingResult }
 
+const { search: geocode } = useGeocoder()
+
 export const useGeocodingStore = defineStore('geocoding', {
   state: () => ({
     results: [] as GeocodingResult[],
@@ -18,8 +20,7 @@ export const useGeocodingStore = defineStore('geocoding', {
       }
       this.isLoading = true
       try {
-        const { search } = useGeocoder()
-        this.results = await search(query, lang)
+        this.results = await geocode(query, lang)
         return this.results
       } catch (err) {
         console.error('Geocoding search failed:', err)
