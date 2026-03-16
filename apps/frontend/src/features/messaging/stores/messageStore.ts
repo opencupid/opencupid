@@ -182,6 +182,7 @@ export const useMessageStore = defineStore('message', {
         if (res.data.success) {
           this.conversations = res.data.conversations
           this.updateUnreadFlag()
+          this.initialized = true
         }
       } catch (error: any) {
         this.error = storeError(error)
@@ -189,7 +190,6 @@ export const useMessageStore = defineStore('message', {
       } finally {
         this.isLoading = false // Reset loading state
       }
-      this.initialized = true
       return this.conversations
     },
 

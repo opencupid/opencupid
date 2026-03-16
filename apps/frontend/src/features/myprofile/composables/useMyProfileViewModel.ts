@@ -63,6 +63,7 @@ export function useMyProfileViewModel(isEditMode: boolean) {
 
   const updateProfile = async () => {
     const res = await profileStore.updateOwnerProfile(formData)
+    if (res.success) fetchPreview()
     return res
   }
 
