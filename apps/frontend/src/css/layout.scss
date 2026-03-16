@@ -27,7 +27,7 @@ nav.navbar {
   position: fixed;
   left: 0;
   right: 0;
-  z-index: $zindex-fixed;
+  z-index: 1000;
   height: $navbar-height;
 
   // mobile: bottom tab bar

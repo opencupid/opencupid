@@ -39,9 +39,11 @@ function reloadApp() {
 
 <style scoped>
 .alert {
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 1030;
+  left: 0;
+  right: 0;
+  z-index: 1050;
   border-left: 0;
   border-right: 0;
   border-top: 0;
