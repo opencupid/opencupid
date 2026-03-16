@@ -30,13 +30,15 @@ vi.mock('../../utils/wsUtils', () => ({
 }))
 
 vi.mock('../../api/mappers/messaging.mappers', () => ({
-  mapMessageForMessageList: vi.fn((m: any) => ({ ...m, mapped: true })),
-  mapConversationParticipantToSummary: vi.fn(() => ({ id: 'summary', partnerProfile: {} })),
-  mapMessageDTO: vi.fn(() => ({
-    id: 'dto',
-    sender: { publicName: 'TestSender' },
-    content: '',
+  mapMessageToDTO: vi.fn((m: any, currentProfileId?: string) => ({
+    ...m,
+    id: m?.id ?? 'dto',
+    sender: m?.sender ?? { publicName: 'TestSender' },
+    content: m?.content ?? '',
+    mapped: true,
+    ...(currentProfileId !== undefined && { isMine: m?.senderId === currentProfileId }),
   })),
+  mapConversationParticipantToSummary: vi.fn(() => ({ id: 'summary', partnerProfile: {} })),
 }))
 
 vi.mock('@/lib/appconfig', () => ({
