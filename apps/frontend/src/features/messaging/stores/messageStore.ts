@@ -312,18 +312,7 @@ export const useMessageStore = defineStore('message', {
 
     teardown() {
       bus.off('ws:new_message', this.handleIncomingMessage)
-      this.conversations = []
-      this.messages = []
-      this.activeConversation = null
-      this.hasUnreadMessages = false
-      this.initialized = false
-      this.suppressMessageNotifications = false
-      this.isSending = false
-      this.isLoading = false
-      this.error = null
-      this.messageCursor = null
-      this.hasMoreMessages = false
-      this.isLoadingMoreMessages = false
+      this.$reset()
     },
   },
 })

@@ -415,6 +415,50 @@ describe('sendVoiceMessage', () => {
   })
 })
 
+describe('teardown', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  it('resets all state to initial values and unsubscribes from bus', () => {
+    const store = useMessageStore()
+
+    // Dirty the store
+    store.conversations = [makeConvo('convo-1', 'Partner')]
+    store.messages = [{ id: 'msg-1' } as MessageDTO]
+    store.activeConversation = makeConvo('convo-1', 'Partner')
+    store.hasUnreadMessages = true
+    store.initialized = true
+    store.suppressMessageNotifications = true
+    store.isSending = true
+    store.isLoading = true
+    store.error = { success: false, message: 'err' }
+    store.messageCursor = 'cursor'
+    store.hasMoreMessages = true
+    store.isLoadingMoreMessages = true
+
+    store.teardown()
+
+    // All state should be back to initial values
+    expect(store.conversations).toEqual([])
+    expect(store.messages).toEqual([])
+    expect(store.activeConversation).toBeNull()
+    expect(store.hasUnreadMessages).toBe(false)
+    expect(store.initialized).toBe(false)
+    expect(store.suppressMessageNotifications).toBe(false)
+    expect(store.isSending).toBe(false)
+    expect(store.isLoading).toBe(false)
+    expect(store.error).toBeNull()
+    expect(store.messageCursor).toBeNull()
+    expect(store.hasMoreMessages).toBe(false)
+    expect(store.isLoadingMoreMessages).toBe(false)
+
+    // Bus listener should be removed
+    expect(mockBus.off).toHaveBeenCalledWith('ws:new_message', store.handleIncomingMessage)
+  })
+})
+
 describe('fetchMessagesForConversation pagination', () => {
   it('loads latest 10 messages and stores cursor metadata', async () => {
     const store = useMessageStore()
