@@ -111,9 +111,9 @@ provide('viewerProfile', toRef(formData))
           </MiddleColumn>
         </div>
       </div>
-      <div class="main-edit-button">
-        <EditButton v-model="viewState.isEditable" />
-      </div>
+      <FloatingButton>
+        <EditSaveButton v-model="viewState.isEditable" />
+      </FloatingButton>
     </EditableFields>
   </main>
 </template>
