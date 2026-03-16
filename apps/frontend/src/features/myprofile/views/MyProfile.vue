@@ -4,13 +4,14 @@ import { onMounted, ref, provide, computed, toRef } from 'vue'
 import { useBootstrap } from '@/lib/bootstrap'
 
 import StoreErrorOverlay from '@/features/shared/ui/StoreErrorOverlay.vue'
-import EditButton from '@/features/myprofile/components/EditButton.vue'
 import ProfileContent from '@/features/publicprofile/components/ProfileContent.vue'
 
 import { useMyProfileViewModel } from '../composables/useMyProfileViewModel'
 import MyProfileSecondaryNav from '../components/MyProfileSecondaryNav.vue'
 import EditableFields from '../components/EditableFields.vue'
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
+import FloatingButton from '@/features/shared/components/FloatingButton.vue'
+import EditSaveButton from '@/features/shared/ui/EditSaveButton.vue'
 
 const router = useRouter()
 
