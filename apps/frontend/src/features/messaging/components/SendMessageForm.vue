@@ -186,7 +186,10 @@ function handleVoiceRecordingError(error: string) {
         </div>
       </div>
 
-      <!-- Message input form -->
+      <!-- TODO(#1109): Elevate VoiceRecorder over the dimmed textarea as
+           a focused overlay when recording. Current sibling-in-flow layout
+           causes jumps with translateY/margin approaches. -->
+       
       <div>
         <BFormTextarea
           id="content-input"
@@ -196,6 +199,7 @@ function handleVoiceRecordingError(error: string) {
           max-rows="5"
           :no-resize="noResize"
           class="mb-2"
+          :class="{'opacity-25': isVoiceActive}"
           @keydown="handleKeyPress"
           :placeholder="$t('messaging.message_input_placeholder')"
           :disabled="messageStore.isSending || isVoiceActive"
