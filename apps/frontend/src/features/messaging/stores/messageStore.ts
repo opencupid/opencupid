@@ -72,12 +72,15 @@ export const useMessageStore = defineStore('message', {
       }
       // If this is the active conversation, append to visible messages
       if (this.activeConversation?.conversationId === message.conversationId) {
-        // Check if message already exists to prevent duplicates
-        if (!this.messages.find((m) => m.id === message.id)) {
-          this.messages.push(message)
-        }
+        this.appendMessageIfNew(message)
       } else if (!this.suppressMessageNotifications) {
         bus.emit('notification:new_message', message)
+      }
+    },
+
+    appendMessageIfNew(message: MessageDTO) {
+      if (!this.messages.find((m) => m.id === message.id)) {
+        this.messages.push(message)
       }
     },
 
@@ -234,10 +237,7 @@ export const useMessageStore = defineStore('message', {
         // Move conversation to top, remove any old instance
         this.bumpConversation(conversation)
         if (this.activeConversation?.conversationId === conversation.conversationId) {
-          // Check if message already exists to prevent duplicates
-          if (!this.messages.find((m) => m.id === message.id)) {
-            this.messages.push(message)
-          }
+          this.appendMessageIfNew(message)
         }
         return storeSuccess(message)
       } catch (error: any) {
@@ -276,7 +276,7 @@ export const useMessageStore = defineStore('message', {
         // Move conversation to top, remove any old instance
         this.bumpConversation(conversation)
         if (this.activeConversation?.conversationId === conversation.conversationId) {
-          this.messages.push(message)
+          this.appendMessageIfNew(message)
         }
         return storeSuccess(message)
       } catch (error: any) {

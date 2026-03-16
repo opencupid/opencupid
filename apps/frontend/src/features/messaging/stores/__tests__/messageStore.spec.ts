@@ -312,6 +312,31 @@ describe('bumpConversation', () => {
   })
 })
 
+describe('appendMessageIfNew', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  it('appends a message that does not exist yet', () => {
+    const store = useMessageStore()
+    store.messages = [{ id: 'msg-1' } as MessageDTO]
+
+    store.appendMessageIfNew({ id: 'msg-2' } as MessageDTO)
+
+    expect(store.messages.map((m) => m.id)).toEqual(['msg-1', 'msg-2'])
+  })
+
+  it('does not append a duplicate message', () => {
+    const store = useMessageStore()
+    store.messages = [{ id: 'msg-1' } as MessageDTO]
+
+    store.appendMessageIfNew({ id: 'msg-1' } as MessageDTO)
+
+    expect(store.messages).toHaveLength(1)
+  })
+})
+
 describe('fetchMessagesForConversation pagination', () => {
   it('loads latest 10 messages and stores cursor metadata', async () => {
     const store = useMessageStore()
