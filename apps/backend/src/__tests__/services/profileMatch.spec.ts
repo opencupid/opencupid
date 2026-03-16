@@ -6,6 +6,7 @@ let mockPrisma: any
 
 beforeEach(async () => {
   vi.resetModules()
+  vi.useRealTimers()
   mockPrisma = createMockPrisma()
   vi.doMock('../../lib/prisma', () => ({ prisma: mockPrisma }))
   const module = await import('../../services/profileMatch.service')
