@@ -6,30 +6,14 @@ import 'leaflet/dist/leaflet.css'
 import 'leaflet.markercluster'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
-import '@maptiler/sdk/dist/maptiler-sdk.css'
-
-import { MaptilerLayer } from '@maptiler/leaflet-maptilersdk'
-import { config as maptilerConfig, MapStyle } from '@maptiler/sdk'
 
 import type { MapPoi, MapBounds } from './OsmPoiMap.types'
 import {
   isValidLatLng,
   computeViewportMultiplier,
-  webGLSupported,
   createClusterIcon,
   hydratePoiIcon,
 } from './mapUtils'
-
-maptilerConfig.telemetry = false
-
-// Guard against _update firing after map removal (#1035, #1026).
-// TODO: Remove this monkey-patch when fixed upstream in @maptiler/leaflet-maptilersdk.
-// GitHub issue: https://github.com/opencupid/opencupid/issues/1026
-const origUpdate = MaptilerLayer.prototype._update
-MaptilerLayer.prototype._update = function (...args: unknown[]) {
-  if (!this._map) return
-  return origUpdate.apply(this, args)
-}
 
 const props = withDefaults(
   defineProps<{
@@ -137,13 +121,6 @@ function emitBounds() {
   })
 }
 
-function initRasterFallback(map: LMap): void {
-  const tileLayer = L.tileLayer(
-    `https://api.maptiler.com/maps/dataviz/{z}/{x}/{y}.png?key=${__APP_CONFIG__.MAPTILER_API_KEY}`,
-    { maxZoom: 14, attribution: '© MapTiler © OpenStreetMap contributors' }
-  ).addTo(map)
-  tileLayer.once('load', () => onMapReady())
-}
 // --- map init orchestration -------------------------------------------------
 
 function ensureMap() {
@@ -190,24 +167,11 @@ function initBaseLayer(map: LMap): void {
 
   map.on('moveend', emitBounds)
 
-  if (!webGLSupported()) {
-    initRasterFallback(map)
-    return
-  }
-
-  try {
-    const maptilerLayer = new MaptilerLayer({
-      apiKey: __APP_CONFIG__.MAPTILER_API_KEY,
-      style: MapStyle.BASIC,
-    }).addTo(map)
-
-    maptilerLayer.getMaptilerSDKMap().once('idle', () => {
-      onMapReady()
-    })
-  } catch (err) {
-    console.error('[OsmPoiMap] WebGL init failed, falling back to raster:', err)
-    initRasterFallback(map)
-  }
+  const tileLayer = L.tileLayer(
+    `https://api.maptiler.com/maps/dataviz/{z}/{x}/{y}.png?key=${__APP_CONFIG__.MAPTILER_API_KEY}`,
+    { maxZoom: 14, attribution: '© MapTiler © OpenStreetMap contributors' }
+  ).addTo(map)
+  tileLayer.once('load', () => onMapReady())
 }
 
 // --- clusters + spider hover region ----------------------------------------
@@ -613,5 +577,16 @@ watch(
 :deep(.leaflet-popup .card[role='button']:hover) {
   box-shadow: none;
   transform: none;
+}
+
+:deep(.leaflet-control-attribution) {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+@media (max-width: 767.98px) {
+  :deep(.leaflet-control-attribution) {
+    display: none;
+  }
 }
 </style>
