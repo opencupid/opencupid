@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, ref, watch, nextTick, type Component } from 'vue'
+import { onMounted, onBeforeUnmount, onActivated, ref, watch, nextTick, type Component } from 'vue'
 import type { Ref } from 'vue'
 import L, { Map as LMap, Marker as LMarker } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -61,7 +61,9 @@ let itemsById = new Map<string | number, MapPoi>()
 // center watcher to avoid capturing a mid-flyTo intermediate zoom value.
 let lastStableZoom: number = props.zoom
 let isMapReady = false
+let pendingCenter: [number, number] | null = null
 let staggerTimer: ReturnType<typeof setTimeout> | null = null
+let resizeObserver: ResizeObserver | null = null
 
 // Spiderfy hover region
 type MCCluster = any
@@ -124,6 +126,8 @@ function emitBounds() {
   // Suppress bounds-changed while a popup is open — autopan from popup open
   // would trigger a data fetch → rerender → close the popup the user just opened.
   if (popupTarget.value) return
+  const size = map.getSize()
+  if (size.x === 0 || size.y === 0) return
   const b = map.getBounds()
   emit('bounds-changed', {
     south: b.getSouth(),
@@ -151,12 +155,30 @@ function ensureMap() {
 }
 
 function createLeafletMap(el: HTMLDivElement): LMap {
-  return L.map(el, {
+  const m = L.map(el, {
     center: props.center ?? [0, 0],
     zoom: props.center ? props.zoom : 2,
     maxZoom: 14,
     preferCanvas: true,
+    trackResize: false,
   })
+
+  // ResizeObserver pattern from Leaflet v2 (#9010): skip resize when the
+  // container is hidden (zero dimensions) to prevent NaN in projection math.
+  // When dimensions return (e.g. KeepAlive reactivation), invalidateSize and
+  // replay any deferred flyTo.
+  resizeObserver = new ResizeObserver(() => {
+    const size = m.getSize()
+    if (size.x === 0 || size.y === 0) return
+    m.invalidateSize({ debounceMoveend: true })
+    if (pendingCenter) {
+      m.flyTo(pendingCenter, lastStableZoom, { duration: 1 })
+      pendingCenter = null
+    }
+  })
+  resizeObserver.observe(el)
+
+  return m
 }
 
 function initBaseLayer(map: LMap): void {
@@ -325,6 +347,8 @@ function createMarker(item: MapPoi): LMarker {
 
 function updateMarkers() {
   if (!map || !clusterGroup || !isMapReady) return
+  const size = map.getSize()
+  if (size.x === 0 || size.y === 0) return
   if (staggerTimer) {
     clearTimeout(staggerTimer)
     staggerTimer = null
@@ -394,6 +418,10 @@ onMounted(() => {
 
 function destroyMap() {
   if (!map) return
+  if (resizeObserver) {
+    resizeObserver.disconnect()
+    resizeObserver = null
+  }
   // Cancel any in-flight staggered marker batch (KeepAlive can delay teardown)
   if (staggerTimer) {
     clearTimeout(staggerTimer)
@@ -416,6 +444,18 @@ onBeforeUnmount(() => {
   destroyMap()
 })
 
+onActivated(() => {
+  if (!map) return
+  map.invalidateSize()
+  const size = map.getSize()
+  if (size.x === 0 || size.y === 0) return
+  if (pendingCenter) {
+    map.flyTo(pendingCenter, lastStableZoom, { duration: 1 })
+    pendingCenter = null
+  }
+  updateMarkers()
+})
+
 watch(
   () => props.items,
   () => {
@@ -435,6 +475,11 @@ watch(
   () => props.center,
   (newCenter) => {
     if (!map || !isValidLatLng(newCenter)) return
+    const size = map.getSize()
+    if (size.x === 0 || size.y === 0) {
+      pendingCenter = newCenter
+      return
+    }
     map.flyTo(newCenter, lastStableZoom, { duration: 1 })
   }
 )
