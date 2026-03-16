@@ -3,7 +3,6 @@ import { computed, reactive, toRef, watch } from 'vue'
 
 import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 import { type EditFieldProfileFormWithImages } from '@zod/profile/profile.form'
-import { createDatingPrefsDefaults, isDatingPreferencesValid } from '@zod/match/filters.form'
 
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 
@@ -93,6 +92,15 @@ export function useMyProfileViewModel(isEditMode: boolean) {
     },
     {}
   )
+
+  watch(
+    () => formData.isDatingActive,
+    (active) => {
+      viewState.currentScope = active ? 'dating' : 'social'
+    }
+  )
+
+
 
   return {
     error: computed(() => profileStore.error),
