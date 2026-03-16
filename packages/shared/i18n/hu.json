@@ -334,7 +334,6 @@
   "messaging": {
     "page_title": "Üzenetek",
     "matches_list_title": "Kölcsönös ❤️",
-    "conversations_list_title": "Beszélgetéseim",
     "loading_older_messages": "Régebbi üzenetek betöltése\u2026",
     "send_message_button": "Mehet",
     "message_input_placeholder": "...",

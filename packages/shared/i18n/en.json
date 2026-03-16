@@ -346,7 +346,6 @@
   "messaging": {
     "page_title": "Messages",
     "matches_list_title": "My matches",
-    "conversations_list_title": "My conversations",
     "loading_older_messages": "Loading older messages\u2026",
     "send_message_button": "Send",
     "message_input_placeholder": "Type your message here...",

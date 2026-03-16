@@ -3,12 +3,10 @@ import { computed, onMounted, provide } from 'vue'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
-import IconMessage from '@/assets/icons/interface/message.svg'
-import IconSearch from '@/assets/icons/interface/search.svg'
 
 import ConversationSummaries from '../components/ConversationSummaries.vue'
+import EmptyView from '../components/EmptyView.vue'
 import SendMessageDialog from '@/features/publicprofile/components/SendMessageDialog.vue'
-import ViewTitle from '../../shared/ui/ViewTitle.vue'
 import MatchesList from '@/features/interaction/components/MatchesList.vue'
 import ReceivedLikesTeaser from '@/features/interaction/components/ReceivedLikesTeaser.vue'
 
@@ -47,36 +45,11 @@ onMounted(async () => {
 <template>
   <main class="w-100 h-100 d-flex flex-column position-relative">
     <MiddleColumn class="h-100 d-flex flex-column overflow-hidden">
-      <!-- List view -->
-
-      <!-- TODO align vert middle -->
       <div
         v-if="showEmptyState && isInitialized"
-        class="d-flex flex-column overflow-auto hide-scrollbar"
+        class="flex-grow-1 d-flex flex-column justify-content-center overflow-auto hide-scrollbar"
       >
-        <div>
-          <ViewTitle
-            :icon="IconMessage"
-            class="text-primary"
-          >
-            {{ $t('messaging.page_title') }}
-          </ViewTitle>
-
-          <div class="d-flex flex-column justify-content-center h-100">
-            <p class="text-muted mb-4 mt-4 text-center">
-              {{ $t('messaging.no_messages_placeholder') }}
-            </p>
-            <BButton
-              variant="primary"
-              size="lg"
-              pill
-              @click="$router.push({ name: 'BrowseProfiles' })"
-            >
-              <IconSearch class="svg-icon" />
-              {{ $t('messaging.no_messages_cta') }}
-            </BButton>
-          </div>
-        </div>
+        <EmptyView />
       </div>
       <!-- Conversation summaries -->
       <div
@@ -98,8 +71,6 @@ onMounted(async () => {
         </div>
 
         <div v-if="haveConversations">
-          <p class="px-2 text-center">{{ $t('messaging.conversations_list_title') }}</p>
-
           <ConversationSummaries
             :loading="isLoading"
             :conversations="conversations"

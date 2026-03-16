@@ -3,7 +3,6 @@ import { ref, watch, watchEffect, computed } from 'vue'
 import { funnel } from 'remeda'
 
 import { useLocalStore } from '@/store/localStore'
-import type { SendMode } from '@/store/localStore'
 
 import { type MessageDTO, type MessageAttachmentDTO } from '@zod/messaging/messaging.dto'
 import { type MessageRecipient } from '@zod/profile/profile.dto'
@@ -11,8 +10,8 @@ import { type MessageRecipient } from '@zod/profile/profile.dto'
 import TagList from '@/features/shared/profiledisplay/TagList.vue'
 import LanguageList from '@/features/shared/profiledisplay/LanguageList.vue'
 import StoreErrorOverlay from '@/features/shared/ui/StoreErrorOverlay.vue'
-import IconMenuDotsVert from '@/assets/icons/interface/menu-dots-vert.svg'
 import IconCall from '@/assets/icons/interface/call.svg'
+import SendModeSelector from './SendModeSelector.vue'
 import { useToast } from 'vue-toastification'
 import VoiceRecorder from './VoiceRecorder.vue'
 import VoiceMessage from './VoiceMessage.vue'
@@ -96,10 +95,6 @@ const handleKeyPress = (event: KeyboardEvent) => {
     event.preventDefault()
     handleSendMessage()
   }
-}
-
-const setSendMode = (mode: SendMode) => {
-  localStore.setSendMode(mode)
 }
 
 async function handleSendMessage() {
@@ -191,7 +186,10 @@ function handleVoiceRecordingError(error: string) {
         </div>
       </div>
 
-      <!-- Message input form -->
+      <!-- TODO(#1109): Elevate VoiceRecorder over the dimmed textarea as
+           a focused overlay when recording. Current sibling-in-flow layout
+           causes jumps with translateY/margin approaches. -->
+       
       <div>
         <BFormTextarea
           id="content-input"
@@ -201,11 +199,12 @@ function handleVoiceRecordingError(error: string) {
           max-rows="5"
           :no-resize="noResize"
           class="mb-2"
+          :class="{'opacity-25': isVoiceActive}"
           @keydown="handleKeyPress"
           :placeholder="$t('messaging.message_input_placeholder')"
           :disabled="messageStore.isSending || isVoiceActive"
         />
-        <div class="form-text text-muted d-flex justify-content-between align-items-start">
+        <div class="text-muted d-flex justify-content-between align-items-start">
           <div class="d-flex align-items-center gap-1">
             <!-- Unified voice recorder (left) -->
             <VoiceRecorder
@@ -250,42 +249,7 @@ function handleVoiceRecordingError(error: string) {
             >
               {{ $t('messaging.send_mode_press_enter') }}
             </small>
-            <BDropdown
-              variant="link"
-              no-caret
-              toggle-class="text-decoration-none p-0 text-muted"
-              size="sm"
-              menu-class="send-mode-menu"
-              end
-            >
-              <template #button-content>
-                <IconMenuDotsVert class="svg-icon-lg fs-4" />
-              </template>
-              <BDropdownItem
-                @click="setSendMode('enter')"
-                :active="sendMode === 'enter'"
-              >
-                <input
-                  type="radio"
-                  class="form-check-input me-2"
-                  :checked="sendMode === 'enter'"
-                  disabled
-                />
-                {{ $t('messaging.send_mode_press_enter') }}
-              </BDropdownItem>
-              <BDropdownItem
-                @click="setSendMode('click')"
-                :active="sendMode === 'click'"
-              >
-                <input
-                  type="radio"
-                  class="form-check-input me-2"
-                  :checked="sendMode === 'click'"
-                  disabled
-                />
-                {{ $t('messaging.send_mode_click') }}
-              </BDropdownItem>
-            </BDropdown>
+            <SendModeSelector />
           </div>
         </div>
       </div>
@@ -322,10 +286,6 @@ function handleVoiceRecordingError(error: string) {
 </template>
 
 <style scoped>
-.send-mode-menu {
-  min-width: 200px;
-}
-
 .icon-btn-round {
   width: 2rem;
   height: 2rem;
