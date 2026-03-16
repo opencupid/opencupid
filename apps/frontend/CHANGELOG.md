@@ -1,5 +1,19 @@
 # frontend
 
+## 0.31.0
+
+### Minor Changes
+
+- aa839bc: Extract ConversationView into standalone route (#messaging-extract)
+- 5434faf: Responsive navbar layout: bottom tab bar on mobile, top navbar on desktop (#1107)
+- 1f8f079: Add splash screen with logo and gradient background for improved first paint experience
+
+### Patch Changes
+
+- bb77996: Misc UI tweaks: fix dating prefs scrollable layout, scope watcher, dropdown auto-close, IntrotextEditor hard-reload bug, and DatingEligibleProfileSchema null birthday validation (#1115)
+- 89c3cda: Skip redundant PATCH /users/me language sync on hard reload
+- 1427660: Messaging UI cleanup: extract SendModeSelector and EmptyView components, remove unused i18n key
+
 ## 0.30.0
 
 ### Minor Changes
