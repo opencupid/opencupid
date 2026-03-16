@@ -55,23 +55,25 @@ const handleFinish = async () => {
           blur="5px"
         >
           <template #overlay>
-            <div
-              class="col-3 mx-auto d-flex align-items-center justify-content-center text-dating my-md-2 animate__animated animate__fadeIn"
-            >
-              <IconCupid class="svg-icon-100 opacity-25" />
-            </div>
-            <div class="text-center p-4">
-              <p class="mb-3">
-                {{ $t('onboarding.wizard.dating_intro_text') }}
-              </p>
-              <BButton
-                variant="primary"
-                pill
-                class="px-5"
-                @click="showIntro = false"
+            <div class="mt-3 mt-md-4 mt-lg-5 d-flex align-items-center flex-column justify-content-center">
+              <div
+                class="col-3 mx-auto d-flex align-items-center justify-content-center text-dating my-md-2"
               >
-                {{ $t('onboarding.wizard.continue') }}
-              </BButton>
+                <IconCupid class="svg-icon-100 opacity-25" />
+              </div>
+              <div class="text-center p-4">
+                <p class="mb-3">
+                  {{ $t('onboarding.wizard.dating_intro_text') }}
+                </p>
+                <BButton
+                  variant="primary"
+                  pill
+                  class="px-5"
+                  @click="showIntro = false"
+                >
+                  {{ $t('onboarding.wizard.continue') }}
+                </BButton>
+              </div>
             </div>
           </template>
         </BOverlay>
