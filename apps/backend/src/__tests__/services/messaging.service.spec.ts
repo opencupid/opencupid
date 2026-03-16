@@ -287,7 +287,13 @@ describe('MessageService.listMessagesForConversation', () => {
     expect(mockPrisma.message.findMany).toHaveBeenCalledWith({
       where: { conversationId: 'c1' },
       include: {
-        sender: { include: { profileImages: { where: { position: 0 } } } },
+        sender: {
+          select: {
+            id: true,
+            publicName: true,
+            profileImages: { orderBy: { position: 'asc' } },
+          },
+        },
         attachment: true,
       },
       orderBy: { createdAt: 'desc' },

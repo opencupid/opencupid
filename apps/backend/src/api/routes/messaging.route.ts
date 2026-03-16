@@ -5,10 +5,7 @@ import { MessageService, cleanMessageForNotification } from '@/services/messagin
 import { WebPushService } from '@/services/webpush.service'
 
 import { z } from 'zod'
-import {
-  mapConversationParticipantToSummary,
-  mapMessageToDTO,
-} from '../mappers/messaging.mappers'
+import { mapConversationParticipantToSummary, mapMessageToDTO } from '../mappers/messaging.mappers'
 import type {
   MessagesResponse,
   ConversationsResponse,

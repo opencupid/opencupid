@@ -89,4 +89,3 @@ export function mapAttachmentDTO(dbAttachment: {
     createdAt: dbAttachment.createdAt,
   }
 }
-

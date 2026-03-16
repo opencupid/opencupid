@@ -107,14 +107,17 @@ describe('CallService', () => {
         },
       }
       const result = await service.insertMissedCallMessage(tx, 'c1', 'caller')
-      expect(tx.message.create).toHaveBeenCalledWith({
-        data: {
-          conversationId: 'c1',
-          senderId: 'caller',
-          content: 'Missed call',
-          messageType: 'call/missed',
-        },
-      })
+      expect(tx.message.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: {
+            conversationId: 'c1',
+            senderId: 'caller',
+            content: 'Missed call',
+            messageType: 'call/missed',
+          },
+          include: expect.objectContaining({ attachment: true, sender: expect.any(Object) }),
+        })
+      )
       expect(result.message.id).toBe('m1')
       expect(result.isDuplicate).toBe(false)
     })
