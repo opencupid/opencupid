@@ -1,14 +1,16 @@
-import { vi, describe, it, expect, beforeEach } from 'vitest'
+import { vi, describe, it, expect, beforeEach, afterAll } from 'vitest'
 import { defineComponent, h, nextTick } from 'vue'
 
 // jsdom does not provide ResizeObserver — stub it so createLeafletMap() can
 // call `new ResizeObserver(cb)` / `.observe()` / `.disconnect()` without error.
-class ResizeObserverStub {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-}
+// Store callbacks so tests can trigger resize events.
+const resizeObserverCallbacks: Array<() => void> = []
+const ResizeObserverStub = vi.fn(function (cb: () => void) {
+  resizeObserverCallbacks.push(cb)
+  return { observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn() }
+})
 vi.stubGlobal('ResizeObserver', ResizeObserverStub)
+afterAll(() => vi.unstubAllGlobals())
 
 // Track created markers and their icons
 const createdMarkers: { latLng: [number, number]; opts: any; icon?: any }[] = []
@@ -66,6 +68,7 @@ vi.mock('leaflet', () => {
 
     getZoom: vi.fn(() => 10),
     getSize: vi.fn(() => ({ x: 1000, y: 800 })),
+    invalidateSize: vi.fn().mockReturnThis(),
     getCenter: vi.fn(() => ({ lat: 47, lng: 19 })),
     latLngToLayerPoint: vi.fn((latlng: { lat: number; lng: number }) => ({
       x: latlng.lng * 10,
@@ -228,6 +231,7 @@ async function mountMap(props: Partial<Record<string, any>> = {}) {
 
 beforeEach(() => {
   createdMarkers.length = 0
+  resizeObserverCallbacks.length = 0
   vi.clearAllMocks()
 })
 
@@ -597,5 +601,59 @@ describe('OsmPoiMap', () => {
 
     const mapInstance = (L.map as any).mock.results[0].value
     expect(mapInstance.fitBounds).not.toHaveBeenCalled()
+  })
+
+  it('defers flyTo when container has zero dimensions and replays on resize', async () => {
+    const wrapper = await mountMap({ center: [47.0, 19.0] as [number, number], zoom: 7 })
+    await flushPromises()
+
+    const mapInstance = (L.map as any).mock.results[0].value
+
+    // Simulate zoomend so lastStableZoom is set
+    const zoomendHandler = mapInstance.on.mock.calls.find((c: any) => c[0] === 'zoomend')[1]
+    mapInstance.getZoom.mockReturnValue(10)
+    zoomendHandler()
+
+    // Simulate zero-size container (KeepAlive deactivation)
+    mapInstance.getSize.mockReturnValue({ x: 0, y: 0 })
+    mapInstance.flyTo.mockClear()
+
+    // Change center while hidden — flyTo should be deferred, not called
+    await wrapper.setProps({ center: [50.0, 14.0] as [number, number] })
+    await nextTick()
+    expect(mapInstance.flyTo).not.toHaveBeenCalled()
+
+    // Restore non-zero size and trigger the ResizeObserver callback
+    mapInstance.getSize.mockReturnValue({ x: 1000, y: 800 })
+
+    const roCallback = resizeObserverCallbacks[resizeObserverCallbacks.length - 1]!
+    roCallback()
+    expect(mapInstance.flyTo).toHaveBeenCalledWith([50.0, 14.0], 10, { duration: 1 })
+  })
+
+  it('suppresses bounds-changed when container has zero dimensions', async () => {
+    const wrapper = await mountMap()
+    await flushPromises()
+
+    const mapInstance = (L.map as any).mock.results[0].value
+
+    const moveendHandler = mapInstance.on.mock.calls.find((c: any) => c[0] === 'moveend')[1]
+
+    mapInstance.getBounds = vi.fn(() => ({
+      getSouth: () => 45.0,
+      getNorth: () => 48.0,
+      getWest: () => 16.0,
+      getEast: () => 23.0,
+    }))
+
+    // Zero-size container — bounds-changed should be suppressed
+    mapInstance.getSize.mockReturnValue({ x: 0, y: 0 })
+    moveendHandler()
+    expect(wrapper.emitted('bounds-changed')).toBeFalsy()
+
+    // Non-zero container — bounds-changed should fire
+    mapInstance.getSize.mockReturnValue({ x: 1000, y: 800 })
+    moveendHandler()
+    expect(wrapper.emitted('bounds-changed')).toBeTruthy()
   })
 })

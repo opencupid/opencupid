@@ -447,6 +447,8 @@ onBeforeUnmount(() => {
 onActivated(() => {
   if (!map) return
   map.invalidateSize()
+  const size = map.getSize()
+  if (size.x === 0 || size.y === 0) return
   if (pendingCenter) {
     map.flyTo(pendingCenter, lastStableZoom, { duration: 1 })
     pendingCenter = null
