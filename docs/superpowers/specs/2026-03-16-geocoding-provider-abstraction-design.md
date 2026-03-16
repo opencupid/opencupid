@@ -29,7 +29,7 @@ The `features/komoot/` directory contains a Pinia store that directly calls the 
 ```typescript
 export interface GeocodingResult {
   name: string
-  country: string // ISO 3166-1 alpha-2
+  country: string // ISO 3166-1 alpha-2, uppercase (e.g. "DE")
   lat: number
   lon: number
 }
@@ -44,7 +44,7 @@ export type GeocodingProvider = (
 
 ### Layer 2 — Provider Implementations
 
-Each provider is a module exporting a single `GeocodingProvider` function. Providers handle HTTP + response mapping only. They use `axios` from `@/lib/api`.
+Each provider is a module exporting a single `GeocodingProvider` function. Providers handle HTTP + response mapping only — they do not catch errors (the store handles that). They use the raw `axios` import re-exported from `@/lib/api` (not the `api` instance, which has `baseURL` and auth interceptors for the app backend).
 
 Both providers type their response as `FeatureCollection<Point, *Properties>` from the `geojson` package. Only provider-specific property interfaces are defined locally.
 
@@ -59,10 +59,11 @@ Both providers type their response as `FeatureCollection<Point, *Properties>` fr
 #### Nominatim (`providers/nominatim.ts`)
 
 - Endpoint: `https://nominatim.openstreetmap.org/search`
-- Local type: `NominatimProperties { name: string; address: { country_code: string } }`
+- Local type: `NominatimProperties { name: string; address: { country_code: string } }` — verified against actual Nominatim GeoJSON response: `name` is a top-level property, `country_code` is nested under `address` (lowercase, e.g. `"de"`)
 - Response typed as `FeatureCollection<Point, NominatimProperties>`
 - Query params: `q`, `format=geojson`, `addressdetails=1`, `limit=10`, `featureType=city`, `accept-language` (full locale support)
-- Mapping: `properties.name` → `name`, `properties.address.country_code` → `country`, `geometry.coordinates[1]` → `lat`, `geometry.coordinates[0]` → `lon`
+- Must set `User-Agent` header (e.g. `OpenCupid/1.0`) per Nominatim usage policy
+- Mapping: `properties.name` → `name`, `properties.address.country_code.toUpperCase()` → `country`, `geometry.coordinates[1]` → `lat`, `geometry.coordinates[0]` → `lon`
 
 ### Layer 3 — Composable (`composables/useGeocoder.ts`)
 
@@ -86,7 +87,8 @@ Switching providers = changing one line in this file.
 - Pinia ID: `'geocoding'`
 - Export: `useGeocodingStore`
 - State: `results: GeocodingResult[]`, `isLoading: boolean`
-- Action `search(query, lang)`: calls `useGeocoder().search(query, lang)`, maps result to `results`, manages `isLoading`
+- Action `search(query, lang)`: calls `useGeocoder().search(query, lang)`, sets `results`, manages `isLoading`, catches errors (logs + returns `[]`)
+- Returns `Promise<GeocodingResult[]>` (preserves current contract)
 - No provider-specific code
 
 ### Consumer Changes
@@ -106,6 +108,8 @@ Add Nominatim domain to `CSP_ALLOWED_DOMAINS` in `.env.example` and `.env.develo
 ```
 CSP_ALLOWED_DOMAINS="https://photon.komoot.io https://nominatim.openstreetmap.org https://api.maptiler.com"
 ```
+
+When switching to Nominatim in production, the production `.env` on the deployment host must also be updated with the Nominatim domain in `CSP_ALLOWED_DOMAINS`.
 
 ## File Structure
 
@@ -128,7 +132,7 @@ features/geocoding/
 
 ## Testing Strategy
 
-- **Provider tests** (`photon.spec.ts`, `nominatim.spec.ts`): mock `axios.get`, verify correct URL/params, verify response mapping to `GeocodingResult[]`, verify error handling returns `[]`
+- **Provider tests** (`photon.spec.ts`, `nominatim.spec.ts`): mock `axios.get`, verify correct URL/params, verify response mapping to `GeocodingResult[]`, verify errors propagate (providers do not catch)
 - **Store tests** (`geocodingStore.spec.ts`): mock `useGeocoder`, verify store manages `results`/`isLoading` correctly, verify empty query short-circuit
 - **LocationSelector tests**: update mock paths, no behavioral changes
 
@@ -138,6 +142,8 @@ features/geocoding/
 |----------|--------|--------|
 | Provider switching | Build-time, one-line change in composable | YAGNI — no need for env vars or runtime config |
 | Store kept | Yes, Pinia store remains consumer-facing | Consumers depend on reactive `results`/`isLoading` |
-| HTTP client | `axios` from `@/lib/api` | Consistent with codebase, gets shared config |
+| HTTP client | Raw `axios` re-export from `@/lib/api` (not `api` instance) | Consistent with current Photon usage, avoids backend baseURL/interceptors |
+| Error handling | Providers throw, store catches | Clean separation — providers are pure fetch+map |
+| Country code casing | Uppercase in `GeocodingResult` | Matches Photon output and app expectations; Nominatim provider must `.toUpperCase()` |
 | GeoJSON types | `@types/geojson` (`FeatureCollection<Point, P>`) | Already a dependency, no custom duplicates |
 | Response format | Both providers use GeoJSON | Uniform mapping logic, coordinates as numbers |
