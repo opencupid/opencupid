@@ -31,9 +31,8 @@ export function mapConversationParticipantToSummary(
 
   const canReply = canSendMessageInConversation(p.conversation, currentProfileId)
   const myParticipant = p.conversation.participants.find((cp) => cp.profileId === currentProfileId)
-  const isCallable =
-    (partner as any).isCallable !== false && (partner.profile as any).isCallable !== false
-  const myIsCallable = (myParticipant as any)?.isCallable !== false
+  const isCallable = partner.isCallable !== false && partner.profile.isCallable !== false
+  const myIsCallable = myParticipant?.isCallable !== false
   return {
     id: p.id,
     profileId: p.profileId,

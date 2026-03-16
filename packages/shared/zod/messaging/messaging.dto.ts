@@ -1,6 +1,11 @@
 import { z } from 'zod'
 import { ProfileSummarySchema } from '../profile/profile.dto'
-import { ConversationParticipantSchema, ConversationSchema, MessageSchema, MessageAttachmentSchema } from '../generated'
+import {
+  ConversationParticipantSchema,
+  ConversationSchema,
+  MessageSchema,
+  MessageAttachmentSchema,
+} from '../generated'
 import { Prisma } from '@prisma/client'
 
 const conversationParticipantFields = {
@@ -24,7 +29,6 @@ const DbMessageAttachmentDTOSchema = MessageAttachmentSchema.pick({
 
 export type DbMessageAttachmentDTO = z.infer<typeof DbMessageAttachmentDTOSchema>
 
-
 // Message attachment DTO
 const MessageAttachmentDTOSchema = MessageAttachmentSchema.pick({
   id: true,
@@ -33,12 +37,10 @@ const MessageAttachmentDTOSchema = MessageAttachmentSchema.pick({
   duration: true,
   createdAt: true,
 }).extend({
-  url: z.string()
+  url: z.string(),
 })
 
 export type MessageAttachmentDTO = z.infer<typeof MessageAttachmentDTOSchema>
-
-
 
 // this is used in the db layer
 const DbMessageInConversationSchema = MessageSchema.pick({
@@ -53,7 +55,6 @@ const DbMessageInConversationSchema = MessageSchema.pick({
   attachment: DbMessageAttachmentDTOSchema.nullable().optional(),
 })
 export type DbMessageInConversation = z.infer<typeof DbMessageInConversationSchema>
-
 
 // this is used in the db layer
 const MessageInConversationSchema = MessageSchema.pick({
@@ -77,7 +78,6 @@ const MessageDTOSchema = MessageInConversationSchema.extend({
 })
 export type MessageDTO = z.infer<typeof MessageDTOSchema>
 
-
 const MessageInConversationSummarySchema = MessageSchema.pick({
   content: true,
   messageType: true,
@@ -85,7 +85,6 @@ const MessageInConversationSummarySchema = MessageSchema.pick({
 }).extend({
   isMine: z.boolean().optional(),
 })
-
 
 const ConversationSummarySchema = ConversationParticipantSchema.pick({
   id: true,
@@ -109,7 +108,6 @@ const ConversationSummarySchema = ConversationParticipantSchema.pick({
 
 export type ConversationSummary = z.infer<typeof ConversationSummarySchema>
 
-
 export type ConversationParticipantWithConversationSummary =
   Prisma.ConversationParticipantGetPayload<{
     include: {
@@ -119,15 +117,13 @@ export type ConversationParticipantWithConversationSummary =
             include: {
               profile: {
                 include: {
-                  profileImages: {
-                    where: { position: number }
-                  }
+                  profileImages: true
                 }
               }
             }
-          },
+          }
           messages: {
-            take: 1,
+            take: 1
             orderBy: {
               createdAt: 'desc'
             }
@@ -136,7 +132,6 @@ export type ConversationParticipantWithConversationSummary =
       }
     }
   }>
-
 
 export const SendMessagePayloadSchema = z.object({
   profileId: z.string().cuid(),
@@ -154,7 +149,6 @@ export const SendVoiceMessagePayloadSchema = z.object({
 })
 
 export type SendVoiceMessagePayload = z.infer<typeof SendVoiceMessagePayloadSchema>
-
 
 // export type ConversationParticipantWithExtras = ConversationParticipantWithConversationSummary & {
 //   unreadCount: number,
