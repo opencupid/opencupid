@@ -1,4 +1,4 @@
-import { defineStore, type Store } from 'pinia'
+import { defineStore } from 'pinia'
 
 import { api, safeApiCall } from '@/lib/api'
 import { bus } from '@/lib/bus'
@@ -58,7 +58,7 @@ export const useMessageStore = defineStore('message', {
       if (convoIndex === -1) {
         await this.fetchConversations() // Fetch conversations if not found
       } else {
-        const convo = this.conversations.splice(convoIndex, 1)[0]!
+        const convo = this.conversations[convoIndex]!
         // Update last message and unread count
         // When we receive a message, it means the conversation is now in ACCEPTED state
         // and we can reply (fixes bug where both "My turn" and "Their turn" badges show)
@@ -67,7 +67,7 @@ export const useMessageStore = defineStore('message', {
           lastMessage: message,
           canReply: true,
         }
-        this.conversations.unshift(updatedConvo)
+        this.bumpConversation(updatedConvo)
         this.updateUnreadFlag()
       }
       // If this is the active conversation, append to visible messages
@@ -79,6 +79,13 @@ export const useMessageStore = defineStore('message', {
       } else if (!this.suppressMessageNotifications) {
         bus.emit('notification:new_message', message)
       }
+    },
+
+    bumpConversation(conversation: ConversationSummary) {
+      this.conversations = [
+        conversation,
+        ...this.conversations.filter((c) => c.conversationId !== conversation.conversationId),
+      ]
     },
 
     // Update a conversation in the list
@@ -225,10 +232,7 @@ export const useMessageStore = defineStore('message', {
         const { conversation, message } = res.data
         if (!message) return storeError(new Error('Message not sent'))
         // Move conversation to top, remove any old instance
-        this.conversations = [
-          conversation,
-          ...this.conversations.filter((c) => c.conversationId !== conversation.conversationId),
-        ]
+        this.bumpConversation(conversation)
         if (this.activeConversation?.conversationId === conversation.conversationId) {
           // Check if message already exists to prevent duplicates
           if (!this.messages.find((m) => m.id === message.id)) {
@@ -270,10 +274,7 @@ export const useMessageStore = defineStore('message', {
         if (!message) return storeError(new Error('Voice message not sent'))
 
         // Move conversation to top, remove any old instance
-        this.conversations = [
-          conversation,
-          ...this.conversations.filter((c) => c.conversationId !== conversation.conversationId),
-        ]
+        this.bumpConversation(conversation)
         if (this.activeConversation?.conversationId === conversation.conversationId) {
           this.messages.push(message)
         }

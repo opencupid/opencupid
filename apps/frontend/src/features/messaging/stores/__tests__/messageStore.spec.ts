@@ -24,6 +24,31 @@ vi.mock('@/lib/bus', () => ({
 
 import { useMessageStore } from '../messageStore'
 
+function makeConvo(conversationId: string, partnerName: string): ConversationSummary {
+  return {
+    id: `participant-${conversationId}`,
+    profileId: 'profile-1',
+    conversationId,
+    lastReadAt: new Date('2024-01-01'),
+    isMuted: false,
+    isArchived: false,
+    canReply: false,
+    isCallable: true,
+    myIsCallable: true,
+    conversation: {
+      id: conversationId,
+      updatedAt: new Date('2024-01-01'),
+      createdAt: new Date('2024-01-01'),
+    },
+    partnerProfile: {
+      id: `partner-${conversationId}`,
+      publicName: partnerName,
+      profileImages: [],
+    },
+    lastMessage: null,
+  }
+}
+
 describe('messageStore', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -251,6 +276,39 @@ describe('messageStore', () => {
 
       expect(mockBus.emit).not.toHaveBeenCalledWith('notification:new_message', incomingMessage)
     })
+  })
+})
+
+describe('bumpConversation', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  it('moves an existing conversation to the top of the list', () => {
+    const store = useMessageStore()
+    const convo1 = makeConvo('convo-1', 'Partner 1')
+    const convo2 = makeConvo('convo-2', 'Partner 2')
+    store.conversations = [convo1, convo2]
+
+    const updatedConvo2: ConversationSummary = { ...convo2, canReply: true }
+    store.bumpConversation(updatedConvo2)
+
+    expect(store.conversations).toHaveLength(2)
+    expect(store.conversations[0]!.conversationId).toBe('convo-2')
+    expect(store.conversations[1]!.conversationId).toBe('convo-1')
+  })
+
+  it('adds a new conversation to the top if not already present', () => {
+    const store = useMessageStore()
+    const convo1 = makeConvo('convo-1', 'Partner 1')
+    store.conversations = [convo1]
+
+    const newConvo = makeConvo('convo-new', 'New Partner')
+    store.bumpConversation(newConvo)
+
+    expect(store.conversations).toHaveLength(2)
+    expect(store.conversations[0]!.conversationId).toBe('convo-new')
   })
 })
 
