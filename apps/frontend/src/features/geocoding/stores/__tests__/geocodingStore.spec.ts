@@ -32,7 +32,7 @@ describe('geocodingStore', () => {
     mockSearch.mockReturnValue(
       new Promise((r) => {
         resolveSearch = r
-      }),
+      })
     )
 
     const store = useGeocodingStore()

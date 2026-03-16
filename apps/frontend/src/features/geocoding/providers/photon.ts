@@ -23,7 +23,7 @@ export const searchPhoton: GeocodingProvider = async (query, lang) => {
 
   const res = await axios.get<FeatureCollection<Point, PhotonProperties>>(
     'https://photon.komoot.io/api/',
-    { params },
+    { params }
   )
 
   return (res.data.features ?? []).map(
@@ -32,6 +32,6 @@ export const searchPhoton: GeocodingProvider = async (query, lang) => {
       country: f.properties.countrycode,
       lat: f.geometry.coordinates[1],
       lon: f.geometry.coordinates[0],
-    }),
+    })
   )
 }

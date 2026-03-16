@@ -5,7 +5,4 @@ export interface GeocodingResult {
   lon: number
 }
 
-export type GeocodingProvider = (
-  query: string,
-  lang: string,
-) => Promise<GeocodingResult[]>
+export type GeocodingProvider = (query: string, lang: string) => Promise<GeocodingResult[]>
