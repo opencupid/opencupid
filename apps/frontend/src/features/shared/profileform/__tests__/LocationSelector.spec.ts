@@ -3,8 +3,8 @@ import { describe, it, expect, vi } from 'vitest'
 
 vi.mock('vue-multiselect', () => ({ default: { template: '<div />' } }))
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k, locale: ref('en') }) }))
-vi.mock('@/features/komoot/stores/komootStore', () => ({
-  useKomootStore: () => ({ search: vi.fn(), results: [], isLoading: false }),
+vi.mock('@/features/geocoding/stores/geocodingStore', () => ({
+  useGeocodingStore: () => ({ search: vi.fn(), results: [], isLoading: false }),
 }))
 
 import LocationSelectorComponent from '../LocationSelector.vue'

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, useAttrs } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useKomootStore, type KomootLocation } from '@/features/komoot/stores/komootStore'
+import { useGeocodingStore, type GeocodingResult } from '@/features/geocoding/stores/geocodingStore'
 import type { LocationDTO } from '@zod/dto/location.dto'
 import Multiselect from '@/features/shared/ui/multiselect'
 
@@ -16,10 +16,10 @@ const emit = defineEmits<{
 
 const debouncedAsyncFind = useDebounceFn(async (query: string) => {
   if (!query) {
-    komoot.results = selected.value ? [selected.value] : []
+    geocoding.results = selected.value ? [selected.value] : []
     return
   }
-  await komoot.search(query, locale.value)
+  await geocoding.search(query, locale.value)
 }, 500) // debounce delay in ms
 
 const model = defineModel<LocationDTO>({
@@ -34,13 +34,13 @@ const model = defineModel<LocationDTO>({
 const attrs = useAttrs()
 
 const { locale, t } = useI18n()
-const komoot = useKomootStore()
+const geocoding = useGeocodingStore()
 
 const showHint = ref(false)
-const options = computed(() => komoot.results)
-const isLoading = computed(() => komoot.isLoading)
+const options = computed(() => geocoding.results)
+const isLoading = computed(() => geocoding.isLoading)
 
-const selected = computed<KomootLocation | null>({
+const selected = computed<GeocodingResult | null>({
   get() {
     if (!model.value.cityName) return null
     return {
@@ -50,7 +50,7 @@ const selected = computed<KomootLocation | null>({
       lon: model.value.lon ?? 0,
     }
   },
-  set(val: KomootLocation | null) {
+  set(val: GeocodingResult | null) {
     if (!val) {
       model.value.country = ''
       model.value.cityName = ''
@@ -66,12 +66,12 @@ const selected = computed<KomootLocation | null>({
 })
 
 function handleSelected() {
-  komoot.results = []
+  geocoding.results = []
   emit('selected', model.value)
 }
 
 onUnmounted(() => {
-  komoot.results = []
+  geocoding.results = []
 })
 </script>
 
