@@ -337,6 +337,84 @@ describe('appendMessageIfNew', () => {
   })
 })
 
+describe('sendMessage', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  it('sends a text message and bumps conversation to top', async () => {
+    const store = useMessageStore()
+    const otherConvo = makeConvo('convo-other', 'Other')
+    const convo = makeConvo('convo-1', 'Partner')
+    store.conversations = [otherConvo, convo]
+    store.activeConversation = convo
+
+    mockApi.post.mockResolvedValue({
+      data: {
+        success: true,
+        conversation: { ...convo, lastMessage: { id: 'msg-1', content: 'Hello' } },
+        message: { id: 'msg-1', conversationId: 'convo-1', content: 'Hello' },
+      },
+    })
+
+    const result = await store.sendMessage('partner-convo-1', 'Hello')
+
+    expect(result).toEqual({ success: true, data: expect.objectContaining({ id: 'msg-1' }) })
+    // convo-1 was at index 1, should now be bumped to index 0
+    expect(store.conversations[0]!.conversationId).toBe('convo-1')
+    expect(store.conversations[1]!.conversationId).toBe('convo-other')
+    expect(store.messages.map((m) => m.id)).toContain('msg-1')
+    expect(store.isSending).toBe(false)
+  })
+
+  it('returns StoreError when message is null in response', async () => {
+    const store = useMessageStore()
+    const convo = makeConvo('convo-1', 'Partner')
+
+    mockApi.post.mockResolvedValue({
+      data: {
+        success: true,
+        conversation: convo,
+        message: null,
+      },
+    })
+
+    const result = await store.sendMessage('partner-convo-1', 'Hello')
+
+    expect(result).toMatchObject({ success: false })
+  })
+})
+
+describe('sendVoiceMessage', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  it('sends a voice message via FormData and bumps conversation', async () => {
+    const store = useMessageStore()
+    const convo = makeConvo('convo-1', 'Partner')
+    store.conversations = [convo]
+    store.activeConversation = convo
+
+    mockApi.post.mockResolvedValue({
+      data: {
+        success: true,
+        conversation: { ...convo, lastMessage: { id: 'voice-1' } },
+        message: { id: 'voice-1', conversationId: 'convo-1', content: '' },
+      },
+    })
+
+    const blob = new Blob(['audio'], { type: 'audio/webm' })
+    const result = await store.sendVoiceMessage('partner-convo-1', blob, 5)
+
+    expect(result).toEqual({ success: true, data: expect.objectContaining({ id: 'voice-1' }) })
+    expect(mockApi.post).toHaveBeenCalledWith('/messages/voice', expect.any(FormData))
+    expect(store.isSending).toBe(false)
+  })
+})
+
 describe('fetchMessagesForConversation pagination', () => {
   it('loads latest 10 messages and stores cursor metadata', async () => {
     const store = useMessageStore()

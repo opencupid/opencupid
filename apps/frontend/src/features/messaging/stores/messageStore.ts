@@ -91,6 +91,18 @@ export const useMessageStore = defineStore('message', {
       ]
     },
 
+    handleSendResponse(res: {
+      data: { conversation: ConversationSummary; message: MessageDTO | null }
+    }): StoreResponse<MessageDTO> | StoreError {
+      const { conversation, message } = res.data
+      if (!message) return storeError(new Error('Message not sent'))
+      this.bumpConversation(conversation)
+      if (this.activeConversation?.conversationId === conversation.conversationId) {
+        this.appendMessageIfNew(message)
+      }
+      return storeSuccess(message)
+    },
+
     // Update a conversation in the list
     updateConvo(convo: ConversationSummary) {
       const index = this.conversations.findIndex((c) => c.conversationId === convo.conversationId)
@@ -223,28 +235,20 @@ export const useMessageStore = defineStore('message', {
       content: string
     ): Promise<StoreResponse<MessageDTO> | StoreError> {
       try {
-        const payload: SendMessagePayload = {
-          profileId: recipientProfileId,
-          content,
-        }
         this.isSending = true
         this.error = null
         const res = await safeApiCall(() =>
-          api.post<SendMessageResponse>(`/messages/message`, payload)
+          api.post<SendMessageResponse>('/messages/message', {
+            profileId: recipientProfileId,
+            content,
+          } satisfies SendMessagePayload)
         )
-        const { conversation, message } = res.data
-        if (!message) return storeError(new Error('Message not sent'))
-        // Move conversation to top, remove any old instance
-        this.bumpConversation(conversation)
-        if (this.activeConversation?.conversationId === conversation.conversationId) {
-          this.appendMessageIfNew(message)
-        }
-        return storeSuccess(message)
+        return this.handleSendResponse(res)
       } catch (error: any) {
         this.error = storeError(error)
         return this.error
       } finally {
-        this.isSending = false // Reset sending state
+        this.isSending = false
       }
     },
 
@@ -269,16 +273,7 @@ export const useMessageStore = defineStore('message', {
         const res = await safeApiCall(() =>
           api.post<SendMessageResponse>('/messages/voice', formData)
         )
-
-        const { conversation, message } = res.data
-        if (!message) return storeError(new Error('Voice message not sent'))
-
-        // Move conversation to top, remove any old instance
-        this.bumpConversation(conversation)
-        if (this.activeConversation?.conversationId === conversation.conversationId) {
-          this.appendMessageIfNew(message)
-        }
-        return storeSuccess(message)
+        return this.handleSendResponse(res)
       } catch (error: any) {
         this.error = storeError(error)
         return this.error
