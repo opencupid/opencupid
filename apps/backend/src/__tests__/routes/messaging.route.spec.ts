@@ -186,6 +186,150 @@ describe('POST /conversations/:id/mark-read', () => {
   })
 })
 
+describe('GET /conversations', () => {
+  it('returns 404 when session missing', async () => {
+    const handler = fastify.routes['GET /conversations']
+    await handler({ session: {} } as any, reply as any)
+    expect(reply.statusCode).toBe(404)
+    expect(reply.payload.message).toMatch('Profile not found')
+  })
+
+  it('returns conversation summaries', async () => {
+    const handler = fastify.routes['GET /conversations']
+    mockMessageService.listConversationsForProfile.mockResolvedValue([{ id: 'cp1' }, { id: 'cp2' }])
+    await handler({ session: { profileId: 'p1' } } as any, reply as any)
+    expect(mockMessageService.listConversationsForProfile).toHaveBeenCalledWith('p1')
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    expect(reply.payload.conversations).toHaveLength(2)
+  })
+
+  it('returns 500 when service throws', async () => {
+    const handler = fastify.routes['GET /conversations']
+    mockMessageService.listConversationsForProfile.mockRejectedValue(new Error('db down'))
+    await handler({ session: { profileId: 'p1' } } as any, reply as any)
+    expect(reply.statusCode).toBe(500)
+  })
+})
+
+describe('POST /message', () => {
+  const validBody = { profileId: 'ck1234567890abcd12345678', content: 'hello' }
+
+  it('returns 401 when session missing', async () => {
+    const handler = fastify.routes['POST /message']
+    await handler({ session: {}, body: validBody } as any, reply as any)
+    expect(reply.statusCode).toBe(401)
+    expect(reply.payload.message).toMatch('Sender ID not found')
+  })
+
+  it('returns 401 for invalid body', async () => {
+    const handler = fastify.routes['POST /message']
+    await handler({ session: { profileId: 'p1' }, body: {} } as any, reply as any)
+    expect(reply.statusCode).toBe(401)
+    expect(reply.payload.message).toMatch('Invalid parameters')
+  })
+
+  it('sends message and returns conversation with messageDTO', async () => {
+    const handler = fastify.routes['POST /message']
+    mockMessageService.sendOrStartConversation.mockResolvedValue({
+      convoId: 'conv1',
+      message: { id: 'm1', senderId: 'p1' },
+      isDuplicate: false,
+    })
+    mockMessageService.getConversationSummary.mockResolvedValue({
+      conversation: { status: 'ACTIVE' },
+    })
+
+    await handler({ session: { profileId: 'p1' }, body: validBody } as any, reply as any)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    expect(reply.payload.message).toHaveProperty('isMine', true)
+    expect(reply.payload.conversation.id).toBe('summary')
+    expect(mockMessageService.sendOrStartConversation).toHaveBeenCalledWith(
+      fastify.prisma,
+      'p1',
+      'ck1234567890abcd12345678',
+      'hello',
+      'text/plain'
+    )
+  })
+
+  it('broadcasts via WS and falls back to notification when offline', async () => {
+    const { broadcastToProfile } = await import('../../utils/wsUtils')
+    ;(broadcastToProfile as any).mockReturnValue(false)
+
+    const handler = fastify.routes['POST /message']
+    mockMessageService.sendOrStartConversation.mockResolvedValue({
+      convoId: 'conv1',
+      message: { id: 'm1', senderId: 'p1' },
+      isDuplicate: false,
+    })
+    mockMessageService.getConversationSummary.mockResolvedValue({
+      conversation: { status: 'ACTIVE' },
+    })
+
+    await handler({ session: { profileId: 'p1' }, body: validBody } as any, reply as any)
+
+    expect(broadcastToProfile).toHaveBeenCalledWith(
+      fastify,
+      'ck1234567890abcd12345678',
+      expect.objectContaining({ type: 'ws:new_message' })
+    )
+    expect(mockNotifierService.notifyProfile).toHaveBeenCalledWith(
+      'ck1234567890abcd12345678',
+      'new_message',
+      expect.objectContaining({ link: 'http://test/inbox' })
+    )
+  })
+
+  it('skips broadcast and notification when isDuplicate', async () => {
+    const { broadcastToProfile } = await import('../../utils/wsUtils')
+    ;(broadcastToProfile as any).mockClear()
+
+    const handler = fastify.routes['POST /message']
+    mockMessageService.sendOrStartConversation.mockResolvedValue({
+      convoId: 'conv1',
+      message: { id: 'm1', senderId: 'p1' },
+      isDuplicate: true,
+    })
+    mockMessageService.getConversationSummary.mockResolvedValue({
+      conversation: { status: 'ACTIVE' },
+    })
+
+    await handler({ session: { profileId: 'p1' }, body: validBody } as any, reply as any)
+
+    expect(reply.statusCode).toBe(200)
+    // broadcastToProfile should not have been called with ws:new_message
+    const newMessageCalls = (broadcastToProfile as any).mock.calls.filter(
+      (c: any) => c[2]?.type === 'ws:new_message'
+    )
+    expect(newMessageCalls).toHaveLength(0)
+    expect(mockNotifierService.notifyProfile).not.toHaveBeenCalled()
+  })
+
+  it('returns 403 when sendOrStartConversation throws', async () => {
+    const handler = fastify.routes['POST /message']
+    mockMessageService.sendOrStartConversation.mockRejectedValue(new Error('blocked'))
+    await handler({ session: { profileId: 'p1' }, body: validBody } as any, reply as any)
+    expect(reply.statusCode).toBe(403)
+  })
+
+  it('throws when conversation summary not found', async () => {
+    const handler = fastify.routes['POST /message']
+    mockMessageService.sendOrStartConversation.mockResolvedValue({
+      convoId: 'conv1',
+      message: { id: 'm1', senderId: 'p1' },
+      isDuplicate: false,
+    })
+    mockMessageService.getConversationSummary.mockResolvedValue(null)
+
+    await handler({ session: { profileId: 'p1' }, body: validBody } as any, reply as any)
+    // The thrown error is caught by the catch block which calls sendError with 403
+    expect(reply.statusCode).toBe(403)
+  })
+})
+
 describe('POST /voice', () => {
   it('uses i18n-translated string for voice message notification', async () => {
     const handler = fastify.routes['POST /voice']
@@ -249,5 +393,177 @@ describe('POST /voice', () => {
     const handler = fastify.routes['POST /voice']
     await handler({ session: {} } as any, reply as any)
     expect(reply.statusCode).toBe(401)
+  })
+
+  it('returns 400 when no voice file provided', async () => {
+    const handler = fastify.routes['POST /voice']
+    // Only field parts, no file part
+    const parts = (async function* () {
+      yield { type: 'field', fieldname: 'profileId', value: 'ck1234567890abcd12345678' }
+      yield { type: 'field', fieldname: 'duration', value: '5' }
+    })()
+
+    await handler({ session: { profileId: 'p1' }, parts: () => parts } as any, reply as any)
+    expect(reply.statusCode).toBe(400)
+    expect(reply.payload.message).toMatch('No voice file provided')
+  })
+
+  it('returns 400 for invalid audio mime type', async () => {
+    const handler = fastify.routes['POST /voice']
+    const parts = (async function* () {
+      yield {
+        type: 'file',
+        fieldname: 'voice',
+        filename: 'hack.exe',
+        mimetype: 'application/octet-stream',
+        toBuffer: async () => Buffer.from('data'),
+      }
+      yield { type: 'field', fieldname: 'profileId', value: 'ck1234567890abcd12345678' }
+      yield { type: 'field', fieldname: 'duration', value: '5' }
+    })()
+
+    await handler({ session: { profileId: 'p1' }, parts: () => parts } as any, reply as any)
+    expect(reply.statusCode).toBe(400)
+    expect(reply.payload.message).toMatch('Invalid audio file type')
+  })
+
+  it('returns 400 when duration exceeds max', async () => {
+    const handler = fastify.routes['POST /voice']
+    const parts = (async function* () {
+      yield {
+        type: 'file',
+        fieldname: 'voice',
+        filename: 'voice.webm',
+        mimetype: 'audio/webm',
+        toBuffer: async () => Buffer.from('fake-audio'),
+      }
+      yield { type: 'field', fieldname: 'profileId', value: 'ck1234567890abcd12345678' }
+      yield { type: 'field', fieldname: 'content', value: '' }
+      yield { type: 'field', fieldname: 'duration', value: '999' }
+    })()
+
+    await handler({ session: { profileId: 'p1' }, parts: () => parts } as any, reply as any)
+    expect(reply.statusCode).toBe(400)
+    expect(reply.payload.message).toMatch('Voice message too long')
+  })
+
+  it('returns 400 for invalid voice message params (missing profileId)', async () => {
+    const handler = fastify.routes['POST /voice']
+    const parts = (async function* () {
+      yield {
+        type: 'file',
+        fieldname: 'voice',
+        filename: 'voice.webm',
+        mimetype: 'audio/webm',
+        toBuffer: async () => Buffer.from('fake-audio'),
+      }
+      // missing profileId field
+      yield { type: 'field', fieldname: 'content', value: '' }
+      yield { type: 'field', fieldname: 'duration', value: '5' }
+    })()
+
+    await handler({ session: { profileId: 'p1' }, parts: () => parts } as any, reply as any)
+    expect(reply.statusCode).toBe(400)
+    expect(reply.payload.message).toMatch('Invalid voice message parameters')
+  })
+
+  it('cleans up file when message creation fails', async () => {
+    const fs = await import('fs')
+    const handler = fastify.routes['POST /voice']
+
+    mockMessageService.sendOrStartConversation.mockRejectedValue(new Error('db error'))
+
+    const parts = (async function* () {
+      yield {
+        type: 'file',
+        fieldname: 'voice',
+        filename: 'voice.webm',
+        mimetype: 'audio/webm',
+        toBuffer: async () => Buffer.from('fake-audio'),
+      }
+      yield { type: 'field', fieldname: 'profileId', value: 'ck1234567890abcd12345678' }
+      yield { type: 'field', fieldname: 'content', value: '' }
+      yield { type: 'field', fieldname: 'duration', value: '5' }
+    })()
+
+    await handler({ session: { profileId: 'p1' }, parts: () => parts } as any, reply as any)
+
+    expect(reply.statusCode).toBe(403)
+    expect(fs.promises.unlink).toHaveBeenCalled()
+  })
+
+  it('skips broadcast when isDuplicate', async () => {
+    const { broadcastToProfile } = await import('../../utils/wsUtils')
+    ;(broadcastToProfile as any).mockClear()
+
+    const handler = fastify.routes['POST /voice']
+    mockMessageService.sendOrStartConversation.mockResolvedValue({
+      convoId: 'conv1',
+      message: { id: 'm1', senderId: 'p1' },
+      isDuplicate: true,
+    })
+    mockMessageService.getConversationSummary.mockResolvedValue({
+      conversation: { status: 'ACTIVE' },
+    })
+
+    const parts = (async function* () {
+      yield {
+        type: 'file',
+        fieldname: 'voice',
+        filename: 'voice.webm',
+        mimetype: 'audio/webm',
+        toBuffer: async () => Buffer.from('fake-audio'),
+      }
+      yield { type: 'field', fieldname: 'profileId', value: 'ck1234567890abcd12345678' }
+      yield { type: 'field', fieldname: 'content', value: '' }
+      yield { type: 'field', fieldname: 'duration', value: '5' }
+    })()
+
+    await handler({ session: { profileId: 'p1' }, parts: () => parts } as any, reply as any)
+
+    expect(reply.statusCode).toBe(200)
+    const newMessageCalls = (broadcastToProfile as any).mock.calls.filter(
+      (c: any) => c[2]?.type === 'ws:new_message'
+    )
+    expect(newMessageCalls).toHaveLength(0)
+  })
+})
+
+describe('GET /:id (error paths)', () => {
+  it('returns 404 for invalid conversation ID format', async () => {
+    const handler = fastify.routes['GET /:id']
+    await handler(
+      { session: { profileId: 'p1' }, params: { id: 'not-a-cuid' } } as any,
+      reply as any
+    )
+    expect(reply.statusCode).toBe(404)
+  })
+
+  it('returns 500 when service throws', async () => {
+    const handler = fastify.routes['GET /:id']
+    mockMessageService.listMessagesForConversation.mockRejectedValue(new Error('db down'))
+    await handler(
+      { session: { profileId: 'p1' }, params: { id: 'ck1234567890abcd12345678' } } as any,
+      reply as any
+    )
+    expect(reply.statusCode).toBe(500)
+  })
+})
+
+describe('POST /conversations/:id/mark-read (error paths)', () => {
+  it('returns 404 for invalid ID format', async () => {
+    const handler = fastify.routes['POST /conversations/:id/mark-read']
+    await handler({ session: { profileId: 'p1' }, params: { id: 'bad' } } as any, reply as any)
+    expect(reply.statusCode).toBe(404)
+  })
+
+  it('returns 500 when markConversationRead throws', async () => {
+    const handler = fastify.routes['POST /conversations/:id/mark-read']
+    mockMessageService.markConversationRead.mockRejectedValue(new Error('db error'))
+    await handler(
+      { session: { profileId: 'p1' }, params: { id: 'ck1234567890abcd12345678' } } as any,
+      reply as any
+    )
+    expect(reply.statusCode).toBe(500)
   })
 })
