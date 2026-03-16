@@ -32,7 +32,7 @@ const lastConfidence = ref(0)
 const error = ref('')
 const status = ref('idle')
 
-const langList = computed(() => props.languages ? sortLanguagesWithEnFirst(props.languages) : [])
+const langList = computed(() => (props.languages ? sortLanguagesWithEnFirst(props.languages) : []))
 
 // TODO: replace with a computed or composable — the ref + watcher is a workaround
 // for langList being empty at setup time (formData arrives async from the store).

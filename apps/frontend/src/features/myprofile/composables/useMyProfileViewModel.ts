@@ -100,8 +100,6 @@ export function useMyProfileViewModel(isEditMode: boolean) {
     }
   )
 
-
-
   return {
     error: computed(() => profileStore.error),
     isLoading,
