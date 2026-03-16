@@ -13,16 +13,6 @@ export function computeViewportMultiplier(mapSize: { x: number; y: number }): nu
   return Math.max(0.8, Math.min(4, minDim / 400))
 }
 
-/** Checks for WebGL support in the current browser. */
-export function webGLSupported(): boolean {
-  try {
-    const canvas = document.createElement('canvas')
-    return !!(canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))
-  } catch {
-    return false
-  }
-}
-
 /** Creates a Leaflet DivIcon for a marker cluster badge. */
 export function createClusterIcon(cluster: { getChildCount(): number }): L.DivIcon {
   const count = cluster.getChildCount()

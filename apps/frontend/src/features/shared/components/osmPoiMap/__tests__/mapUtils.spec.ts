@@ -8,12 +8,7 @@ vi.mock('leaflet', () => ({
   divIcon: vi.fn((opts: any) => ({ _type: 'divIcon', ...opts })),
 }))
 
-import {
-  isValidLatLng,
-  computeViewportMultiplier,
-  webGLSupported,
-  createClusterIcon,
-} from '../mapUtils'
+import { isValidLatLng, computeViewportMultiplier, createClusterIcon } from '../mapUtils'
 
 describe('isValidLatLng', () => {
   it.each([
@@ -52,26 +47,6 @@ describe('computeViewportMultiplier', () => {
   it('uses the smaller dimension when viewport is not square', () => {
     // min(2000, 400) = 400 → 400/400 = 1.0
     expect(computeViewportMultiplier({ x: 2000, y: 400 })).toBe(1)
-  })
-})
-
-describe('webGLSupported', () => {
-  it('returns false when getContext returns null (jsdom default)', () => {
-    expect(webGLSupported()).toBe(false)
-  })
-
-  it('returns true when webgl context is available', () => {
-    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({} as any)
-    expect(webGLSupported()).toBe(true)
-    vi.restoreAllMocks()
-  })
-
-  it('returns false when getContext throws', () => {
-    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(() => {
-      throw new Error('canvas error')
-    })
-    expect(webGLSupported()).toBe(false)
-    vi.restoreAllMocks()
   })
 })
 
