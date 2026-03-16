@@ -30,8 +30,8 @@ export const searchNominatim: GeocodingProvider = async (query, lang) => {
     (f): GeocodingResult => ({
       name: f.properties.name,
       country: f.properties.address.country_code.toUpperCase(),
-      lat: f.geometry.coordinates[1],
-      lon: f.geometry.coordinates[0],
+      lat: f.geometry.coordinates[1] ?? 0,
+      lon: f.geometry.coordinates[0] ?? 0,
     })
   )
 }
