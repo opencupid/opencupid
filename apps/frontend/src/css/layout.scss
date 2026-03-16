@@ -1,4 +1,7 @@
 @import '@/css/app-vars.scss';
+@import 'bootstrap/scss/functions';
+@import 'bootstrap/scss/variables';
+@import 'bootstrap/scss/mixins';
 
 html,
 body {
@@ -15,28 +18,41 @@ body {
 }
 
 #app {
+  display: flex;
+  flex-direction: column;
   height: 100dvh;
 }
 
 nav.navbar {
   position: fixed;
-  top: 0;
   left: 0;
   right: 0;
   z-index: 1000;
   height: $navbar-height;
+
+  // mobile: bottom tab bar
+  bottom: 0;
+
+  // desktop: top navbar
+  @include media-breakpoint-up(sm) {
+    bottom: auto;
+    top: 0;
+  }
 }
 
 main {
-  height: 100dvh;
+  flex-grow: 1;
   min-height: 0; // prevents flex item overflow clipping (iOS)
   position: relative;
 }
 
 nav.navbar + main {
-  // background-color: var(--bs-body-bg);
-  // navbar is fixed at the top, so we need to offset the main content
-  padding-top: $navbar-height;
-  // height: 100%;
-  // height: calc(100% - $navbar-height);
+  // mobile: offset for bottom navbar
+  padding-bottom: $navbar-height;
+
+  // desktop: offset for top navbar
+  @include media-breakpoint-up(sm) {
+    padding-bottom: 0;
+    padding-top: $navbar-height;
+  }
 }

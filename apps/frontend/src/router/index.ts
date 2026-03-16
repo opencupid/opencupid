@@ -49,7 +49,7 @@ const routes: Array<RouteRecordRaw> = [
     name: 'PublicProfile',
     component: PublicProfileView,
     props: true,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, hideNavbar: true },
   },
   {
     path: '/me',
@@ -61,20 +61,20 @@ const routes: Array<RouteRecordRaw> = [
     path: '/me/dating-wizard',
     name: 'DatingWizard',
     component: DatingWizardView,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, hideNavbar: true },
   },
   {
     path: '/me/dating-prefs',
     name: 'DatingPrefs',
     component: DatingPrefsView,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, hideNavbar: true },
   },
   {
     path: '/me/edit',
     name: 'EditProfile',
     component: MyProfile,
     props: { editMode: true },
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, hideNavbar: true },
   },
   {
     path: '/home',
@@ -105,7 +105,7 @@ const routes: Array<RouteRecordRaw> = [
     name: 'Conversation',
     component: ConversationView,
     props: true,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, hideNavbar: true },
   },
 
   {
@@ -118,14 +118,14 @@ const routes: Array<RouteRecordRaw> = [
     path: '/posts/new',
     name: 'CreatePost',
     component: EditPostView,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, hideNavbar: true },
   },
   {
     path: '/posts/:postId/edit',
     name: 'EditPost',
     component: EditPostView,
     props: true,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, hideNavbar: true },
   },
   {
     path: '/',

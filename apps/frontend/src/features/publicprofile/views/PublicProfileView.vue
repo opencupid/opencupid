@@ -44,17 +44,3 @@ const handleHidden = () => {
   </main>
 </template>
 
-<style scoped lang="scss">
-@import 'bootstrap/scss/functions';
-@import 'bootstrap/scss/variables';
-@import 'bootstrap/scss/mixins';
-@import '@/css/app-vars.scss';
-
-.public-profile-view {
-  height: 100dvh;
-
-  @include media-breakpoint-up(sm) {
-    height: calc(100vh - $navbar-height);
-  }
-}
-</style>
