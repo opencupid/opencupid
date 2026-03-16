@@ -19,6 +19,7 @@ if (shouldShowLandingPage(window.location.pathname, !!localStorage.getItem('toke
     appUseI18n(app)
 
     app.mount('#app')
+    document.getElementById('splash')?.remove()
     // Preload full app silently in background
     nextTick(() => {
       import('./app')
