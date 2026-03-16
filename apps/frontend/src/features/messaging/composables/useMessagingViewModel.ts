@@ -1,4 +1,5 @@
 import { computed, onUnmounted, ref } from 'vue'
+import { whenever } from '@vueuse/core'
 import { useRouter } from 'vue-router'
 
 import type { ConversationSummary } from '@zod/messaging/messaging.dto'
@@ -18,11 +19,19 @@ export function useMessagingViewModel() {
 
   const isInitialized = ref(false)
 
+  // bootstrap fires messageStore.initialize() and interactionStore.initialize()
+  // as fire-and-forget; reactively wait for both to complete
+  whenever(
+    () => messageStore.initialized && interactions.isInitialized.value,
+    () => {
+      isInitialized.value = true
+    },
+    { immediate: true, once: true }
+  )
+
   const initialize = async () => {
     await useBootstrap().bootstrap()
-    await Promise.all([messageStore.fetchConversations(), interactions.refreshInteractions()])
     messageStore.suppressMessageNotifications = true
-    isInitialized.value = true
   }
 
   onUnmounted(() => {

@@ -1,5 +1,6 @@
 import { useI18nStore } from '@/store/i18nStore'
 import { computed, reactive, toRef, watch } from 'vue'
+import { whenever } from '@vueuse/core'
 
 import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 import { type EditFieldProfileFormWithImages } from '@zod/profile/profile.form'
@@ -62,25 +63,27 @@ export function useMyProfileViewModel(isEditMode: boolean) {
 
   const updateProfile = async () => {
     const res = await profileStore.updateOwnerProfile(formData)
+    if (res.success) fetchPreview()
     return res
   }
 
-  watch(
-    [() => viewState.previewLanguage, () => profileStore.profile],
-    () => {
-      // Object.assign(formData, profileStore.profile)
+  // Initialize form data and fetch preview/dating-prefs once when profile is available.
+  // whenever() only fires when the source is truthy, so it safely waits for bootstrap
+  // to load the profile on deep-links, then runs exactly once.
+  whenever(
+    () => profileStore.profile,
+    (profile) => {
+      Object.assign(formData, profile)
       fetchPreview()
+      profileStore.fetchDatingPrefs()
     },
-    { immediate: true }
+    { immediate: true, once: true }
   )
 
+  // Re-fetch preview only when user switches the preview language
   watch(
-    () => profileStore.profile,
-    async () => {
-      Object.assign(formData, profileStore.profile)
-      await profileStore.fetchDatingPrefs()
-    },
-    { immediate: true }
+    () => viewState.previewLanguage,
+    () => fetchPreview()
   )
 
   // switch to dating scope when editable is turned on,

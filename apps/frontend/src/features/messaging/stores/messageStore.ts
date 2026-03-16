@@ -24,6 +24,7 @@ type MessageStoreState = {
   hasUnreadMessages: boolean
   suppressMessageNotifications: boolean
   isSending: boolean
+  initialized: boolean
   isLoading: boolean
   error: StoreError | null
   messageCursor: string | null
@@ -37,6 +38,7 @@ export const useMessageStore = defineStore('message', {
     messages: [] as MessageDTO[],
     activeConversation: null as ConversationSummary | null,
     hasUnreadMessages: false,
+    initialized: false,
     suppressMessageNotifications: false,
     isSending: false,
     isLoading: false,
@@ -180,6 +182,7 @@ export const useMessageStore = defineStore('message', {
         if (res.data.success) {
           this.conversations = res.data.conversations
           this.updateUnreadFlag()
+          this.initialized = true
         }
       } catch (error: any) {
         this.error = storeError(error)
@@ -305,7 +308,9 @@ export const useMessageStore = defineStore('message', {
     },
 
     async initialize() {
-      await this.fetchConversations()
+      if (!this.initialized) {
+        await this.fetchConversations()
+      }
       bus.on('ws:new_message', this.handleIncomingMessage)
     },
 
@@ -315,6 +320,7 @@ export const useMessageStore = defineStore('message', {
       this.messages = []
       this.activeConversation = null
       this.hasUnreadMessages = false
+      this.initialized = false
       this.suppressMessageNotifications = false
       this.isSending = false
       this.isLoading = false
