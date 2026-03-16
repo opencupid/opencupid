@@ -3,6 +3,7 @@ import { computed, onMounted, provide, ref, toRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import BrowseLayout from '@/features/shared/components/BrowseLayout.vue'
+import { isValidLatLng } from '@/features/shared/components/osmPoiMap/mapUtils'
 import BrowseFilterBar from '../components/BrowseFilterBar.vue'
 import MapView from '@/features/shared/components/MapView.vue'
 import ProfileMapCard from '../components/ProfileMapCard.vue'
@@ -11,7 +12,7 @@ import TagCloud from '@/features/shared/components/TagCloud.vue'
 
 import { useSocialMatchViewModel } from '../composables/useSocialMatchViewModel'
 import type { PopularTag } from '@zod/tag/tag.dto'
-import type { MapPoi } from '@/features/shared/components/OsmPoiMap.types'
+import type { MapPoi } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
 
 defineOptions({ name: 'BrowseProfiles' })
 
@@ -52,9 +53,15 @@ const mapPois = computed<MapPoi[]>(() =>
 
 const mapCenter = computed<[number, number] | undefined>(() => {
   const loc = matchFilter.value?.location
-  if (loc?.lat && loc?.lon) return [loc.lat, loc.lon]
+  const locPair: [number, number] | undefined =
+    loc?.lat != null && loc?.lon != null ? [loc.lat, loc.lon] : undefined
+  if (isValidLatLng(locPair)) return locPair
+
   const profile = viewerProfile.value?.location
-  if (profile?.lat && profile?.lon) return [profile.lat, profile.lon]
+  const profilePair: [number, number] | undefined =
+    profile?.lat != null && profile?.lon != null ? [profile.lat, profile.lon] : undefined
+  if (isValidLatLng(profilePair)) return profilePair
+
   return undefined
 })
 

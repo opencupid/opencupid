@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, ref, watch, nextTick, type Component, render, h } from 'vue'
+import { onMounted, onBeforeUnmount, ref, watch, nextTick, type Component } from 'vue'
 import type { Ref } from 'vue'
 import L, { Map as LMap, Marker as LMarker } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -11,7 +11,14 @@ import '@maptiler/sdk/dist/maptiler-sdk.css'
 import { MaptilerLayer } from '@maptiler/leaflet-maptilersdk'
 import { config as maptilerConfig, MapStyle } from '@maptiler/sdk'
 
-import type { MapPoi, MapBounds, PoiIconProps } from './OsmPoiMap.types'
+import type { MapPoi, MapBounds } from './OsmPoiMap.types'
+import {
+  isValidLatLng,
+  computeViewportMultiplier,
+  webGLSupported,
+  createClusterIcon,
+  hydratePoiIcon,
+} from './mapUtils'
 
 maptilerConfig.telemetry = false
 
@@ -56,16 +63,6 @@ let lastStableZoom: number = props.zoom
 let isMapReady = false
 let staggerTimer: ReturnType<typeof setTimeout> | null = null
 
-function customClusterIcon(cluster: any): L.DivIcon {
-  const count = cluster.getChildCount()
-  return L.divIcon({
-    html: `<div class="poi-cluster-badge">${count}</div>`,
-    className: 'poi-cluster-icon',
-    iconSize: [28, 28],
-    iconAnchor: [14, 14],
-  })
-}
-
 // Spiderfy hover region
 type MCCluster = any
 
@@ -74,15 +71,6 @@ const SPIDER_HOVER_PADDING_PX = 40
 let activeSpiderCluster: MCCluster | null = null
 let activeSpiderHoverBounds: L.LatLngBounds | null = null
 const spiderClickHandlers = new WeakMap<L.Marker, (ev: Event) => void>()
-
-function computeViewportMultiplier(map: L.Map) {
-  const { x: w, y: h } = map.getSize()
-  const minDim = Math.min(w, h)
-
-  // Heuristic: on a ~800px tall map => multiplier ~1.6
-  // Tune the divisor to your liking.
-  return Math.max(0.8, Math.min(4, minDim / 400))
-}
 
 function computeSpiderHoverBounds(
   map: LMap,
@@ -131,19 +119,6 @@ function closeSpider() {
 
 let clusterGroup: any = null
 
-function hydratePoiIcon(component: Component, iconProps: PoiIconProps): L.DivIcon {
-  const size = 32
-
-  const container = document.createElement('span')
-  render(h(component, iconProps), container)
-  return L.divIcon({
-    className: 'poi-avatar-icon',
-    html: container,
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
-  })
-}
-
 function emitBounds() {
   if (!map) return
   // Suppress bounds-changed while a popup is open — autopan from popup open
@@ -156,15 +131,6 @@ function emitBounds() {
     west: b.getWest(),
     east: b.getEast(),
   })
-}
-
-function webGLSupported(): boolean {
-  try {
-    const canvas = document.createElement('canvas')
-    return !!(canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))
-  } catch {
-    return false
-  }
 }
 
 function initRasterFallback(map: LMap): void {
@@ -231,7 +197,7 @@ function initClusters(map: LMap) {
     zoomToBoundsOnClick: true,
     maxClusterRadius: 40,
     spiderfyDistanceMultiplier: 1.5,
-    iconCreateFunction: customClusterIcon,
+    iconCreateFunction: createClusterIcon,
   })
 
   clusterGroup.on('clustermouseover', onClusterMouseOver)
@@ -247,18 +213,19 @@ function initClusters(map: LMap) {
 function onClusterMouseOver(e: any) {
   // Ignore hover on other clusters while a spider is already open —
   // the user must move away from the active spider to close it first.
-  if (activeSpiderCluster) return
+  if (activeSpiderCluster || !map) return
 
   // scale spiderfy distance with viewport
-  clusterGroup.options.spiderfyDistanceMultiplier = computeViewportMultiplier(map!)
+  clusterGroup.options.spiderfyDistanceMultiplier = computeViewportMultiplier(map.getSize())
 
   e.layer.spiderfy()
 }
 
 function onClusterSpiderfied(e: any) {
+  if (!map) return
   activeSpiderCluster = e.cluster
   activeSpiderHoverBounds = computeSpiderHoverBounds(
-    map!,
+    map,
     activeSpiderCluster,
     SPIDER_HOVER_PADDING_PX
   )
@@ -307,8 +274,9 @@ const popupTarget = ref<HTMLElement | null>(null)
 const popupItem = ref<MapPoi | null>(null)
 
 function onMapReady() {
+  if (!map) return
   isMapReady = true
-  emit('map:ready', map!)
+  emit('map:ready', map)
   updateMarkers()
 }
 
@@ -466,9 +434,8 @@ watch(
 watch(
   () => props.center,
   (newCenter) => {
-    if (map && newCenter) {
-      map.flyTo(newCenter, lastStableZoom, { duration: 1 })
-    }
+    if (!map || !isValidLatLng(newCenter)) return
+    map.flyTo(newCenter, lastStableZoom, { duration: 1 })
   }
 )
 </script>
