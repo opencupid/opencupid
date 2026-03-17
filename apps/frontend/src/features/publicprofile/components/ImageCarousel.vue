@@ -31,11 +31,6 @@ const handleImageClick = () => {
   showFullscreen.value = true
 }
 
-const handleCloseClick = () => {
-  inlineSlide.value = fullSlide.value
-  showFullscreen.value = false
-}
-
 const carouselProps = {
   itemsToShow: 1,
   snapAlign: 'start',
@@ -49,6 +44,8 @@ const currentImage = computed(() => props.profile.profileImages?.[inlineSlide.va
 const showBlurhash = computed(
   () => currentImage.value?.blurhash && !loadedImages[currentImage.value.position]
 )
+
+const shouldShowNavButtons = computed(() => Object.keys(loadedImages).length > 1)
 
 // Reset carousel to first slide when images change (e.g. after reorder in editor)
 watch(
@@ -89,7 +86,7 @@ watch(
       </Slide>
 
       <template #addons>
-        <Navigation>
+        <Navigation v-if="shouldShowNavButtons">
           <template #prev>
             <ChevronLeftIcon class="carousel-nav-icon" />
           </template>
@@ -148,7 +145,7 @@ watch(
         </Slide>
 
         <template #addons>
-          <Navigation>
+          <Navigation v-if="shouldShowNavButtons">
             <template #prev>
               <ChevronLeftIcon class="carousel-nav-icon" />
             </template>
