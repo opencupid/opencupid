@@ -3,24 +3,27 @@ import type { RouteRecordRaw } from 'vue-router'
 
 import { useAuthStore } from '@/features/auth/stores/authStore'
 
-// Eager: most common entry points — no extra round-trip on first load
+// Eager: common entry points and lightweight auth views
 import UserHome from '@/features/userhome/views/UserHome.vue'
 import LoginView from '@/features/auth/views/LoginView.vue'
+import PublicProfileView from '@/features/publicprofile/views/PublicProfileView.vue'
+import OnboardingView from '@/features/onboarding/views/Onboarding.vue'
+import MagicLink from '@/features/auth/views/MagicLink.vue'
+import LogoutView from '@/features/auth/views/LogoutView.vue'
+import Settings from '@/features/settings/views/Settings.vue'
 
-// Lazy: each route becomes a separate chunk, loaded on navigation
-const MessagingView = () => import('@/features/messaging/views/Messaging.vue')
-const ConversationView = () => import('@/features/messaging/views/ConversationView.vue')
-const Settings = () => import('@/features/settings/views/Settings.vue')
-const MyProfile = () => import('@/features/myprofile/views/MyProfile.vue')
-const DatingWizardView = () => import('@/features/myprofile/views/DatingWizard.vue')
-const DatingPrefsView = () => import('@/features/myprofile/views/DatingPrefs.vue')
+import MyProfile from '@/features/myprofile/views/MyProfile.vue'
+import DatingWizardView from '@/features/myprofile/views/DatingWizard.vue'
+import DatingPrefsView from '@/features/myprofile/views/DatingPrefs.vue'
+
+import MessagingView from '@/features/messaging/views/Messaging.vue'
+import ConversationView from '@/features/messaging/views/ConversationView.vue'
+
+import EditPostView from '@/features/posts/views/EditPost.vue'
+
+// Lazy: heaviest route (pulls in Leaflet maps ~200KB)
 const BrowseProfiles = () => import('@/features/browse/views/BrowseProfiles.vue')
-const PublicProfileView = () => import('@/features/publicprofile/views/PublicProfileView.vue')
-const OnboardingView = () => import('@/features/onboarding/views/Onboarding.vue')
-const MagicLink = () => import('@/features/auth/views/MagicLink.vue')
-const LogoutView = () => import('@/features/auth/views/LogoutView.vue')
 const BrowsePostsView = () => import('@/features/posts/views/BrowsePosts.vue')
-const EditPostView = () => import('@/features/posts/views/EditPost.vue')
 
 const routes: Array<RouteRecordRaw> = [
   {
