@@ -6,3 +6,18 @@ export const tokenRegex = /^\d{6}$/
 export function toInitialCaps(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1)
 }
+
+/**
+ * Fisher-Yates shuffle with a simple seeded PRNG so the order is
+ * deterministic for a given seed but different across seeds.
+ */
+export function seededShuffle<T>(arr: T[], seed: number): T[] {
+  const copy = [...arr]
+  let s = seed
+  for (let i = copy.length - 1; i > 0; i--) {
+    s = (s * 16807 + 0.5) % 1
+    const j = Math.floor(s * (i + 1))
+    ;[copy[i], copy[j]] = [copy[j], copy[i]]
+  }
+  return copy
+}
