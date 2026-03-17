@@ -1,19 +1,14 @@
 // Self-hosted variable fonts from Google Fonts GitHub repos.
-// Single TTF per family — full charset, all weights, no subset splitting.
+// WOFF2 served from public/ (preloadable, static paths).
+// TTF fallback from src/assets (Vite-processed, for older browsers).
 
 @font-face {
   font-family: 'Nunito';
   font-style: normal;
   font-weight: 200 1000;
-  src: url('@/assets/fonts/Nunito-Variable.ttf') format('truetype');
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Nunito';
-  font-style: italic;
-  font-weight: 200 1000;
-  src: url('@/assets/fonts/Nunito-Italic-Variable.ttf') format('truetype');
+  src:
+    url('/fonts/Nunito-Variable.woff2') format('woff2'),
+    url('@/assets/fonts/Nunito-Variable.ttf') format('truetype');
   font-display: swap;
 }
 
@@ -21,7 +16,9 @@
   font-family: 'Rubik';
   font-style: normal;
   font-weight: 300 900;
-  src: url('@/assets/fonts/Rubik-Variable.ttf') format('truetype');
+  src:
+    url('/fonts/Rubik-Variable.woff2') format('woff2'),
+    url('@/assets/fonts/Rubik-Variable.ttf') format('truetype');
   font-display: swap;
 }
 
