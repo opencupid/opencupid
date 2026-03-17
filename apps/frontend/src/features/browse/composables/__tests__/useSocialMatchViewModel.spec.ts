@@ -109,23 +109,16 @@ describe('useSocialMatchViewModel', () => {
     mockFindProfileStore.findProfilesForMapBounds = vi.fn().mockResolvedValue({ success: true })
 
     const vm = useSocialMatchViewModel()
-
-    let matchIdsCallTime = 0
-    let boundsCallTime = 0
-    mockFindProfileStore.fetchDatingMatchIds = vi.fn(() => {
-      matchIdsCallTime = Date.now()
-      return Promise.resolve()
-    })
-    mockFindProfileStore.findProfilesForMapBounds = vi.fn(() => {
-      boundsCallTime = Date.now()
-      return Promise.resolve({ success: true })
-    })
-
     await vm.initialize()
 
     expect(mockFindProfileStore.fetchDatingMatchIds).toHaveBeenCalled()
     expect(mockFindProfileStore.findProfilesForMapBounds).toHaveBeenCalledWith(bounds)
-    expect(Math.abs(matchIdsCallTime - boundsCallTime)).toBeLessThan(5)
+
+    // Both calls should be dispatched before either resolves — verify via
+    // invocationCallOrder which is deterministic (no timer-based flakiness)
+    const matchOrder = mockFindProfileStore.fetchDatingMatchIds.mock.invocationCallOrder[0]!
+    const boundsOrder = mockFindProfileStore.findProfilesForMapBounds.mock.invocationCallOrder[0]!
+    expect(Math.abs(matchOrder - boundsOrder)).toBe(1)
 
     mockFindProfileStore.lastMapBounds = null
   })

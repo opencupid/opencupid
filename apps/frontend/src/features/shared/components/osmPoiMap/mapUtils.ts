@@ -41,9 +41,13 @@ export function hydratePoiIcon(component: Component, iconProps: PoiIconProps): L
 
   const container = document.createElement('span')
   render(h(component, iconProps), container)
+  // Cache the rendered HTML string, not the live element — Leaflet's DivIcon
+  // uses appendChild for element nodes, which *moves* them between markers
+  // instead of cloning. Passing a string lets Leaflet parse fresh DOM per marker.
+  const html = container.innerHTML
   const icon = L.divIcon({
     className: 'poi-avatar-icon',
-    html: container,
+    html,
     iconSize: [POI_ICON_SIZE, POI_ICON_SIZE],
     iconAnchor: [POI_ICON_SIZE / 2, POI_ICON_SIZE / 2],
   })

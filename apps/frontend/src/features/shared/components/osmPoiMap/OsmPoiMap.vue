@@ -382,16 +382,21 @@ function updateMarkers(forceRebuild = false) {
       markers.set(id, marker)
       itemsById.set(id, item)
       toAdd.push(marker)
-    } else if (existing.highlighted !== item.highlighted || existing.image !== item.image) {
-      const marker = markers.get(id)!
-      marker.setIcon(
-        hydratePoiIcon(props.iconComponent, {
-          image: item.image,
-          isSelected: id === props.selectedId,
-          isHighlighted: item.highlighted ?? false,
-        })
-      )
+    } else {
+      // Always keep itemsById in sync so popup/click handlers see current data
       itemsById.set(id, item)
+      const imageUrl = item.image?.variants?.[0]?.url
+      const existingUrl = existing.image?.variants?.[0]?.url
+      if (existing.highlighted !== item.highlighted || imageUrl !== existingUrl) {
+        const marker = markers.get(id)!
+        marker.setIcon(
+          hydratePoiIcon(props.iconComponent, {
+            image: item.image,
+            isSelected: id === props.selectedId,
+            isHighlighted: item.highlighted ?? false,
+          })
+        )
+      }
     }
   }
 

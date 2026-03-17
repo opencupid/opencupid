@@ -121,6 +121,7 @@ export const useFindProfileStore = defineStore('findProfile', {
 
       if (cachedBounds && boundsContain(cachedBounds, bounds)) {
         this.profileList = [...cachedProfiles.values()].filter((p) => profileInBounds(p, bounds))
+        this.hasMoreProfiles = false
         this.isLoading = false
         return storeSuccess()
       }
