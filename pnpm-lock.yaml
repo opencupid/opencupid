@@ -336,15 +336,6 @@ importers:
       '@fontsource/caveat':
         specifier: 5.2.8
         version: 5.2.8
-      '@fontsource/fredoka-one':
-        specifier: 5.2.5
-        version: 5.2.5
-      '@fontsource/nunito':
-        specifier: 5.2.7
-        version: 5.2.7
-      '@fontsource/rubik':
-        specifier: 5.2.8
-        version: 5.2.8
       '@fortawesome/fontawesome-svg-core':
         specifier: 7.2.0
         version: 7.2.0
@@ -1384,15 +1375,6 @@ packages:
 
   '@fontsource/caveat@5.2.8':
     resolution: {integrity: sha512-9fUUfFE2IQFKbx+xOcaeQxxmh8iJguEb8z+j1PeueO4UUx+XfT4pRm/B04ZDvFA794/iRxY/IibmP8ZKtIf4rw==}
-
-  '@fontsource/fredoka-one@5.2.5':
-    resolution: {integrity: sha512-Fan2k5pTOmmN8eydeUOk20/NALW+qtRu6WdqPBNhFq2WaquxKpBMUzdxFXgy9asICtbEhxTM51XHeU+OKfPQnQ==}
-
-  '@fontsource/nunito@5.2.7':
-    resolution: {integrity: sha512-pmtBq0H9ex9nk+RtJYEJOD9pag393iHETnl/PVKleF4i06cd0ttngK5ZCTgYb5eOqR3Xdlrjtev8m7bmgYprew==}
-
-  '@fontsource/rubik@5.2.8':
-    resolution: {integrity: sha512-PIc8QR7FqWPcYhbdRiGff56vQlKqg/ytES1YqecSq1GkgxiH4TBshrFvDEOZ9JonUF9m1qQ+qXxJj7wD5zgXEw==}
 
   '@formatjs/cli-lib@6.6.6':
     resolution: {integrity: sha512-yWcW2fJB7wLblOPED+1NfaUU0dHBt/UZSsw774lh/oxKrr+rOfFTHciqTMif1H533mRcxkPtIZf/WdPsgzqgXA==}
@@ -8754,12 +8736,6 @@ snapshots:
       - utf-8-validate
 
   '@fontsource/caveat@5.2.8': {}
-
-  '@fontsource/fredoka-one@5.2.5': {}
-
-  '@fontsource/nunito@5.2.7': {}
-
-  '@fontsource/rubik@5.2.8': {}
 
   '@formatjs/cli-lib@6.6.6(@vue/compiler-core@3.5.29)(vue@3.5.28(typescript@5.9.3))':
     dependencies:

@@ -1,25 +1,26 @@
-// src/assets/styles/_fonts.scss
-// —————————————————————————————————————————
-// Import the font packs you’ll use. You can narrow these to
-// only specific weights/styles if you like.
-// @import "~@fontsource/nunito/index.css";
-// @import "~@fontsource/poppins/index.css";
-// @import "~@fontsource/rubik/index.css";
-// @import "~@fontsource/quicksand/index.css";
-// @import "~@fontsource/mukta/index.css";
-// import "@fontsource/poppins/index.css";
+// Self-hosted variable fonts from Google Fonts GitHub repos.
+// All served as WOFF2 from public/fonts/ (stable paths, preloadable).
 
-// Import only latin subset and required weights
-@import '@fontsource/nunito/latin-400.css';
-@import '@fontsource/nunito/latin-700.css';
-@import '@fontsource/rubik/latin-400.css';
-@import '@fontsource/rubik/latin-700.css';
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 200 1000;
+  src: url('/fonts/Nunito-Variable.woff2') format('woff2');
+  font-display: swap;
+}
 
-// handwritten font for post cards
+@font-face {
+  font-family: 'Rubik';
+  font-style: normal;
+  font-weight: 300 900;
+  src: url('/fonts/Rubik-Variable.woff2') format('woff2');
+  font-display: swap;
+}
+
 @font-face {
   font-family: 'Patrick Hand';
   font-style: normal;
   font-weight: 400;
-  src: url('@/assets/fonts/PatrickHand-Regular.ttf') format('truetype');
+  src: url('/fonts/PatrickHand-Regular.woff2') format('woff2');
   font-display: swap;
 }
