@@ -1,5 +1,4 @@
 // import '@/css'
-import { useIcons } from './lib/icons'
 import registerToast from './lib/toast'
 import { useBootstrap } from './lib/bootstrap'
 import { appUseI18n } from './lib/i18n'
@@ -16,18 +15,39 @@ Settings.defaultZone = 'Europe/Berlin'
 
 import { createApp } from 'vue'
 
-import * as Sentry from '@sentry/vue'
-
 import { createPinia } from 'pinia'
 import { createBootstrap } from 'bootstrap-vue-next'
 
 import App from './App.vue'
 import router from './router'
 
+function initSentry(app: ReturnType<typeof createApp>) {
+  if (__APP_CONFIG__.NODE_ENV === 'development') return
+  if (!__APP_CONFIG__.SENTRY_DSN) return
+
+  import('@sentry/vue')
+    .then((Sentry) => {
+      Sentry.init({
+        app,
+        dsn: __APP_CONFIG__.SENTRY_DSN,
+        release: `frontend@${__APP_VERSION__}`,
+        sendDefaultPii: true,
+        integrations: [Sentry.browserTracingIntegration({ router }), Sentry.replayIntegration()],
+        tracesSampleRate: 1.0,
+        tracePropagationTargets: ['localhost', __APP_CONFIG__.FRONTEND_URL],
+        replaysSessionSampleRate: 0.1,
+        replaysOnErrorSampleRate: 1.0,
+      })
+    })
+    .catch((err) => {
+      console.warn('Failed to load Sentry:', err)
+    })
+}
+
 export async function bootstrapApp() {
   const app = createApp(App)
 
-  // Set errorHandler BEFORE Sentry.init so Sentry wraps it rather than
+  // Set errorHandler BEFORE Sentry loads so Sentry wraps it rather than
   // re-throwing. Without this, @sentry/vue defers captureException to
   // setTimeout then re-throws — the re-throw escapes Vue's scheduler as an
   // unhandled promise rejection, racing with globalHandlersIntegration.
@@ -36,34 +56,12 @@ export async function bootstrapApp() {
     console.error(`[Vue error] ${info}:`, err)
   }
 
-  if (__APP_CONFIG__.NODE_ENV !== 'development') {
-    Sentry.init({
-      app,
-      dsn: __APP_CONFIG__.SENTRY_DSN,
-      release: `frontend@${__APP_VERSION__}`,
-      // Setting this option to true will send default PII data to Sentry.
-      // For example, automatic IP address collection on events
-      sendDefaultPii: true,
-      integrations: [Sentry.browserTracingIntegration({ router }), Sentry.replayIntegration()],
-      // Tracing
-      tracesSampleRate: 1.0, // Capture 100% of the transactions
-      // Set 'tracePropagationTargets' to control for which URLs distributed tracing should be enabled
-      tracePropagationTargets: ['localhost', __APP_CONFIG__.FRONTEND_URL],
-      // Session Replay
-      replaysSessionSampleRate: 0.1, // This sets the sample rate at 10%. You may want to change it to 100% while in development and then sample at a lower rate in production.
-      replaysOnErrorSampleRate: 1.0, // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.
-    })
-  }
-
   app.config.warnHandler = (msg, _vm, trace) => {
     console.error('Vue warning:', msg, trace)
   }
   app.use(createPinia())
   app.use(router)
   app.use(createBootstrap()) // bootstrap-vue-next
-
-  // Load/initialize icon set
-  useIcons(app)
 
   // toasts
 
@@ -77,4 +75,7 @@ export async function bootstrapApp() {
 
   app.mount('#app')
   document.getElementById('splash')?.remove()
+
+  // Load Sentry after mount so it doesn't block initial render
+  initSentry(app)
 }

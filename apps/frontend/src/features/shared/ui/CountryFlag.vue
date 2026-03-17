@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import 'flag-icons/css/flag-icons.min.css'
+import { onMounted } from 'vue'
+
+onMounted(() => {
+  import('flag-icons/css/flag-icons.min.css')
+})
 
 defineProps<{
   code: string | undefined

@@ -15,7 +15,6 @@ declare module 'vue' {
     BBadge: typeof import('bootstrap-vue-next/components/BBadge')['BBadge']
     BButton: typeof import('bootstrap-vue-next/components/BButton')['BButton']
     BButtonGroup: typeof import('bootstrap-vue-next/components/BButton')['BButtonGroup']
-    BCarouselSlide: typeof import('bootstrap-vue-next/components/BCarousel')['BCarouselSlide']
     BCloseButton: typeof import('bootstrap-vue-next/components/BButton')['BCloseButton']
     BCol: typeof import('bootstrap-vue-next/components/BContainer')['BCol']
     BCollapse: typeof import('bootstrap-vue-next/components/BCollapse')['BCollapse']
@@ -60,7 +59,6 @@ declare module 'vue' {
     BTab: typeof import('bootstrap-vue-next/components/BTabs')['BTab']
     BTabs: typeof import('bootstrap-vue-next/components/BTabs')['BTabs']
     BTooltip: typeof import('bootstrap-vue-next/components/BTooltip')['BTooltip']
-    ImageCarousel: typeof import('./src/components/profiles/public/ImageCarousel.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
   }
@@ -71,7 +69,6 @@ declare global {
   const BBadge: typeof import('bootstrap-vue-next/components/BBadge')['BBadge']
   const BButton: typeof import('bootstrap-vue-next/components/BButton')['BButton']
   const BButtonGroup: typeof import('bootstrap-vue-next/components/BButton')['BButtonGroup']
-  const BCarouselSlide: typeof import('bootstrap-vue-next/components/BCarousel')['BCarouselSlide']
   const BCloseButton: typeof import('bootstrap-vue-next/components/BButton')['BCloseButton']
   const BCol: typeof import('bootstrap-vue-next/components/BContainer')['BCol']
   const BCollapse: typeof import('bootstrap-vue-next/components/BCollapse')['BCollapse']
@@ -116,7 +113,6 @@ declare global {
   const BTab: typeof import('bootstrap-vue-next/components/BTabs')['BTab']
   const BTabs: typeof import('bootstrap-vue-next/components/BTabs')['BTabs']
   const BTooltip: typeof import('bootstrap-vue-next/components/BTooltip')['BTooltip']
-  const ImageCarousel: typeof import('./src/components/profiles/public/ImageCarousel.vue')['default']
   const RouterLink: typeof import('vue-router')['RouterLink']
   const RouterView: typeof import('vue-router')['RouterView']
 }
