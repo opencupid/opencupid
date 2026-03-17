@@ -459,8 +459,7 @@ watch(
   () => props.items,
   () => {
     updateMarkers()
-  },
-  { deep: true }
+  }
 )
 
 watch(
