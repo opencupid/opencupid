@@ -1,5 +1,11 @@
 # frontend
 
+## 0.33.1
+
+### Patch Changes
+
+- bbad7c6: Fix TypeError crash when profileImages is undefined in ImageCarousel (#1131)
+
 ## 0.33.0
 
 ### Minor Changes
