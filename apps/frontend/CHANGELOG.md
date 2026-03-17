@@ -1,5 +1,11 @@
 # frontend
 
+## 0.35.0
+
+### Minor Changes
+
+- f6b1419: Optimize production bundle: fix NODE_ENV for Vite builds, async Sentry, lazy flag-icons, devtools leak fix (#1134)
+
 ## 0.34.0
 
 ### Minor Changes
