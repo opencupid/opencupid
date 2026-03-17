@@ -304,7 +304,7 @@ function onMapReady() {
   if (!map) return
   isMapReady = true
   emit('map:ready', map)
-  updateMarkers()
+  updateMarkers(true)
 }
 
 function createMarker(item: MapPoi): LMarker {
@@ -347,26 +347,65 @@ function createMarker(item: MapPoi): LMarker {
   return m
 }
 
-function updateMarkers() {
+function updateMarkers(forceRebuild = false) {
   if (!map || !clusterGroup || !isMapReady) return
   const size = map.getSize()
   if (size.x === 0 || size.y === 0) return
 
-  clusterGroup.clearLayers()
-  markers.clear()
-  itemsById.clear()
-
-  const batch: LMarker[] = []
-  for (const item of props.items) {
-    const marker = createMarker(item)
-    batch.push(marker)
-    markers.set(item.id, marker)
-    itemsById.set(item.id, item)
+  if (forceRebuild) {
+    clusterGroup.clearLayers()
+    markers.clear()
+    itemsById.clear()
   }
 
-  clusterGroup.addLayers(batch)
+  const incoming = new Map<string | number, MapPoi>()
+  for (const item of props.items) {
+    incoming.set(item.id, item)
+  }
 
-  if ((props.fitToPois || !props.center) && props.items.length > 0) {
+  // Remove markers no longer in the incoming list
+  const toRemove: LMarker[] = []
+  for (const [id, marker] of markers) {
+    if (!incoming.has(id)) {
+      toRemove.push(marker)
+      markers.delete(id)
+      itemsById.delete(id)
+    }
+  }
+
+  // Add new markers or update changed ones in-place
+  const toAdd: LMarker[] = []
+  for (const [id, item] of incoming) {
+    const existing = itemsById.get(id)
+    if (!existing) {
+      const marker = createMarker(item)
+      markers.set(id, marker)
+      itemsById.set(id, item)
+      toAdd.push(marker)
+    } else if (existing.highlighted !== item.highlighted || existing.image !== item.image) {
+      const marker = markers.get(id)!
+      marker.setIcon(
+        hydratePoiIcon(props.iconComponent, {
+          image: item.image,
+          isSelected: id === props.selectedId,
+          isHighlighted: item.highlighted ?? false,
+        })
+      )
+      itemsById.set(id, item)
+    }
+  }
+
+  if (toRemove.length) clusterGroup.removeLayers(toRemove)
+  if (toAdd.length) clusterGroup.addLayers(toAdd)
+
+  // Only fitBounds on initial load (all markers are new, none removed)
+  if (
+    toAdd.length > 0 &&
+    toRemove.length === 0 &&
+    markers.size === toAdd.length &&
+    (props.fitToPois || !props.center) &&
+    props.items.length > 0
+  ) {
     const latlngs = props.items.map(
       (item) => [item.location.lat, item.location.lon] as [number, number]
     )
@@ -444,7 +483,7 @@ onActivated(() => {
     map.flyTo(pendingCenter, lastStableZoom, { duration: 1 })
     pendingCenter = null
   }
-  updateMarkers()
+  updateMarkers(true)
 })
 
 watch(

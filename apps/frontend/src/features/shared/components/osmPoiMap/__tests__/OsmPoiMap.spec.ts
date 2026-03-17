@@ -93,6 +93,7 @@ vi.mock('leaflet', () => {
     ...clusterGroupProto,
     addLayer: vi.fn(),
     addLayers: vi.fn(),
+    removeLayers: vi.fn(),
     clearLayers: vi.fn(),
     on: vi.fn().mockReturnThis(),
     off: vi.fn().mockReturnThis(),
@@ -781,5 +782,68 @@ describe('OsmPoiMap', () => {
     ])
 
     vi.useRealTimers()
+  })
+
+  describe('diff-based updateMarkers', () => {
+    it('adds only new markers without clearing existing ones on items update', async () => {
+      const wrapper = await mountMap({ items: [items[0]] })
+      await flushPromises()
+
+      const initialMarkerCount = (L.marker as any).mock.calls.length
+      expect(initialMarkerCount).toBe(1)
+
+      const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
+
+      // Update: add one more item
+      await wrapper.setProps({ items: [items[0], items[1]] })
+      await flushPromises()
+
+      // Should have created only 1 additional marker (not cleared + rebuilt 2)
+      expect((L.marker as any).mock.calls.length).toBe(initialMarkerCount + 1)
+      // addLayers should have been called with batch containing only the new marker
+      expect(clusterInstance.addLayers).toHaveBeenCalled()
+
+      // Trigger another update with same items — no new markers should be created
+      const markerCountBefore = (L.marker as any).mock.calls.length
+      await wrapper.setProps({ items: [items[0], items[1]] })
+      await flushPromises()
+      // Same array reference won't trigger the watcher, so force with a new array
+      await wrapper.setProps({ items: [...[items[0], items[1]]] })
+      await flushPromises()
+      expect((L.marker as any).mock.calls.length).toBe(markerCountBefore)
+    })
+
+    it('removes stale markers when items are removed', async () => {
+      const wrapper = await mountMap({ items: [items[0], items[1]] })
+      await flushPromises()
+
+      const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
+
+      // Remove the second item
+      await wrapper.setProps({ items: [items[0]] })
+      await flushPromises()
+
+      expect(clusterInstance.removeLayers).toHaveBeenCalled()
+      const removedBatch = clusterInstance.removeLayers.mock.calls[0][0]
+      expect(removedBatch).toHaveLength(1)
+    })
+
+    it('updates marker icon in place when highlighted changes', async () => {
+      const item0 = { ...items[0], highlighted: false }
+      const wrapper = await mountMap({ items: [item0] })
+      await flushPromises()
+
+      const markerInstance = (L.marker as any).mock.results[0].value
+
+      // Change highlighted flag
+      const item0Highlighted = { ...items[0], highlighted: true }
+      await wrapper.setProps({ items: [item0Highlighted] })
+      await flushPromises()
+
+      // Marker should have been updated in-place via setIcon
+      expect(markerInstance.setIcon).toHaveBeenCalled()
+      // No new markers should have been created
+      expect((L.marker as any).mock.calls.length).toBe(1)
+    })
   })
 })

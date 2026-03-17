@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 
 // Mock Leaflet before importing mapUtils (hydratePoiIcon and createClusterIcon depend on L.divIcon)
 vi.mock('leaflet', () => ({
