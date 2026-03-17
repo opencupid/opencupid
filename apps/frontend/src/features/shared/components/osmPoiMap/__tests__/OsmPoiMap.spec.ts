@@ -79,6 +79,10 @@ vi.mock('leaflet', () => {
       lng: p.x / 10,
     })),
     on: vi.fn().mockReturnThis(),
+    once: vi.fn(function (this: any, _event: string, cb: () => void) {
+      cb()
+      return this
+    }),
     off: vi.fn().mockReturnThis(),
     remove: vi.fn(),
     addLayer: vi.fn(),
@@ -89,6 +93,7 @@ vi.mock('leaflet', () => {
     ...clusterGroupProto,
     addLayer: vi.fn(),
     addLayers: vi.fn(),
+    removeLayers: vi.fn(),
     clearLayers: vi.fn(),
     on: vi.fn().mockReturnThis(),
     off: vi.fn().mockReturnThis(),
@@ -402,17 +407,13 @@ describe('OsmPoiMap', () => {
   })
 
   it('emits bounds-changed on moveend with viewport bounds', async () => {
+    vi.useFakeTimers()
     const wrapper = await mountMap()
     await flushPromises()
 
     const mapInstance = (L.map as any).mock.results[0].value
+    const moveendHandler = mapInstance.on.mock.calls.find((c: any) => c[0] === 'moveend')[1]
 
-    // Find the moveend handler
-    const moveendCall = mapInstance.on.mock.calls.find((c: any) => c[0] === 'moveend')
-    expect(moveendCall).toBeDefined()
-    const moveendHandler = moveendCall[1]
-
-    // Mock getBounds to return a viewport
     mapInstance.getBounds = vi.fn(() => ({
       getSouth: () => 45.0,
       getNorth: () => 48.0,
@@ -421,11 +422,14 @@ describe('OsmPoiMap', () => {
     }))
 
     moveendHandler()
+    vi.advanceTimersByTime(300)
 
     expect(wrapper.emitted('bounds-changed')).toBeTruthy()
     expect(wrapper.emitted('bounds-changed')![0]).toEqual([
       { south: 45.0, north: 48.0, west: 16.0, east: 23.0 },
     ])
+
+    vi.useRealTimers()
   })
 
   it('registers moveend listener during map init', async () => {
@@ -675,11 +679,11 @@ describe('OsmPoiMap', () => {
   })
 
   it('suppresses bounds-changed when container has zero dimensions', async () => {
+    vi.useFakeTimers()
     const wrapper = await mountMap()
     await flushPromises()
 
     const mapInstance = (L.map as any).mock.results[0].value
-
     const moveendHandler = mapInstance.on.mock.calls.find((c: any) => c[0] === 'moveend')[1]
 
     mapInstance.getBounds = vi.fn(() => ({
@@ -689,14 +693,157 @@ describe('OsmPoiMap', () => {
       getEast: () => 23.0,
     }))
 
-    // Zero-size container — bounds-changed should be suppressed
     mapInstance.getSize.mockReturnValue({ x: 0, y: 0 })
     moveendHandler()
+    vi.advanceTimersByTime(300)
     expect(wrapper.emitted('bounds-changed')).toBeFalsy()
 
-    // Non-zero container — bounds-changed should fire
     mapInstance.getSize.mockReturnValue({ x: 1000, y: 800 })
     moveendHandler()
+    vi.advanceTimersByTime(300)
     expect(wrapper.emitted('bounds-changed')).toBeTruthy()
+
+    vi.useRealTimers()
+  })
+
+  it('suppresses bounds-changed during programmatic fitBounds from updateMarkers', async () => {
+    vi.useFakeTimers()
+
+    // Mount with no items initially — map.once callback fires immediately in mock
+    // so suppressBoundsEmit is already cleared. Now we make once NOT call back
+    // immediately to simulate the real async moveend.
+    const wrapper = await mountMap({ items: [] })
+    await flushPromises()
+
+    const mapInstance = (L.map as any).mock.results[0].value
+    const moveendHandler = mapInstance.on.mock.calls.find((c: any) => c[0] === 'moveend')[1]
+
+    mapInstance.getBounds = vi.fn(() => ({
+      getSouth: () => 45.0,
+      getNorth: () => 48.0,
+      getWest: () => 16.0,
+      getEast: () => 23.0,
+    }))
+
+    // Override once to NOT auto-fire (simulates real Leaflet where moveend
+    // hasn't fired yet after fitBounds)
+    let pendingOnceCallback: (() => void) | null = null
+    mapInstance.once = vi.fn((_event: string, cb: () => void) => {
+      pendingOnceCallback = cb
+      return mapInstance
+    })
+
+    // Now set items — triggers updateMarkers → fitBounds → suppressBoundsEmit = true
+    await wrapper.setProps({ items })
+    await flushPromises()
+
+    // moveend fires while suppress is active
+    moveendHandler()
+    vi.advanceTimersByTime(300)
+    expect(wrapper.emitted('bounds-changed')).toBeFalsy()
+
+    // Simulate the real moveend from fitBounds completing — clears suppress
+    pendingOnceCallback!()
+
+    // Now a user-initiated moveend should emit
+    moveendHandler()
+    vi.advanceTimersByTime(300)
+    expect(wrapper.emitted('bounds-changed')).toBeTruthy()
+
+    vi.useRealTimers()
+  })
+
+  it('debounces bounds-changed emission on rapid moveend events', async () => {
+    vi.useFakeTimers()
+    const wrapper = await mountMap()
+    await flushPromises()
+
+    const mapInstance = (L.map as any).mock.results[0].value
+    const moveendHandler = mapInstance.on.mock.calls.find((c: any) => c[0] === 'moveend')[1]
+
+    mapInstance.getBounds = vi.fn(() => ({
+      getSouth: () => 45.0,
+      getNorth: () => 48.0,
+      getWest: () => 16.0,
+      getEast: () => 23.0,
+    }))
+
+    moveendHandler()
+    moveendHandler()
+    moveendHandler()
+
+    expect(wrapper.emitted('bounds-changed')).toBeFalsy()
+
+    vi.advanceTimersByTime(300)
+
+    expect(wrapper.emitted('bounds-changed')).toHaveLength(1)
+    expect(wrapper.emitted('bounds-changed')![0]).toEqual([
+      { south: 45.0, north: 48.0, west: 16.0, east: 23.0 },
+    ])
+
+    vi.useRealTimers()
+  })
+
+  describe('diff-based updateMarkers', () => {
+    it('adds only new markers without clearing existing ones on items update', async () => {
+      const wrapper = await mountMap({ items: [items[0]] })
+      await flushPromises()
+
+      const initialMarkerCount = (L.marker as any).mock.calls.length
+      expect(initialMarkerCount).toBe(1)
+
+      const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
+
+      // Update: add one more item
+      await wrapper.setProps({ items: [items[0], items[1]] })
+      await flushPromises()
+
+      // Should have created only 1 additional marker (not cleared + rebuilt 2)
+      expect((L.marker as any).mock.calls.length).toBe(initialMarkerCount + 1)
+      // addLayers should have been called with batch containing only the new marker
+      expect(clusterInstance.addLayers).toHaveBeenCalled()
+
+      // Trigger another update with same items — no new markers should be created
+      const markerCountBefore = (L.marker as any).mock.calls.length
+      await wrapper.setProps({ items: [items[0], items[1]] })
+      await flushPromises()
+      // Same array reference won't trigger the watcher, so force with a new array
+      await wrapper.setProps({ items: [...[items[0], items[1]]] })
+      await flushPromises()
+      expect((L.marker as any).mock.calls.length).toBe(markerCountBefore)
+    })
+
+    it('removes stale markers when items are removed', async () => {
+      const wrapper = await mountMap({ items: [items[0], items[1]] })
+      await flushPromises()
+
+      const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
+
+      // Remove the second item
+      await wrapper.setProps({ items: [items[0]] })
+      await flushPromises()
+
+      expect(clusterInstance.removeLayers).toHaveBeenCalled()
+      const removedBatch = clusterInstance.removeLayers.mock.calls[0][0]
+      expect(removedBatch).toHaveLength(1)
+    })
+
+    it('updates marker icon in place when highlighted changes', async () => {
+      const item0 = { ...items[0], highlighted: false }
+      const wrapper = await mountMap({ items: [item0] })
+      await flushPromises()
+
+      const markerInstance = (L.marker as any).mock.results[0].value
+
+      // Change highlighted flag
+      const item0Highlighted = { ...items[0], highlighted: true }
+      await wrapper.setProps({ items: [item0Highlighted] })
+      await flushPromises()
+
+      // Marker should have been updated in-place via setIcon
+      expect(markerInstance.setIcon).toHaveBeenCalled()
+      // No new markers should have been created
+      expect((L.marker as any).mock.calls.length).toBe(1)
+    })
   })
 })

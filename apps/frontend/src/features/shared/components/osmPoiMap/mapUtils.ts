@@ -26,14 +26,35 @@ export function createClusterIcon(cluster: { getChildCount(): number }): L.DivIc
 
 const POI_ICON_SIZE = 32
 
+const iconCache = new Map<string, L.DivIcon>()
+
+function getIconCacheKey(props: PoiIconProps): string {
+  const url = props.image?.variants?.[0]?.url ?? 'none'
+  return `${url}_${props.isSelected}_${props.isHighlighted}`
+}
+
 /** Renders a Vue component into a Leaflet DivIcon for use as a POI marker. */
 export function hydratePoiIcon(component: Component, iconProps: PoiIconProps): L.DivIcon {
+  const key = getIconCacheKey(iconProps)
+  const cached = iconCache.get(key)
+  if (cached) return cached
+
   const container = document.createElement('span')
   render(h(component, iconProps), container)
-  return L.divIcon({
+  // Cache the rendered HTML string, not the live element — Leaflet's DivIcon
+  // uses appendChild for element nodes, which *moves* them between markers
+  // instead of cloning. Passing a string lets Leaflet parse fresh DOM per marker.
+  const html = container.innerHTML
+  const icon = L.divIcon({
     className: 'poi-avatar-icon',
-    html: container,
+    html,
     iconSize: [POI_ICON_SIZE, POI_ICON_SIZE],
     iconAnchor: [POI_ICON_SIZE / 2, POI_ICON_SIZE / 2],
   })
+  iconCache.set(key, icon)
+  return icon
+}
+
+export function clearIconCache(): void {
+  iconCache.clear()
 }

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 
 // Mock Leaflet before importing mapUtils (hydratePoiIcon and createClusterIcon depend on L.divIcon)
 vi.mock('leaflet', () => ({
@@ -8,7 +8,21 @@ vi.mock('leaflet', () => ({
   divIcon: vi.fn((opts: any) => ({ _type: 'divIcon', ...opts })),
 }))
 
-import { isValidLatLng, computeViewportMultiplier, createClusterIcon } from '../mapUtils'
+import { defineComponent, h } from 'vue'
+import {
+  isValidLatLng,
+  computeViewportMultiplier,
+  createClusterIcon,
+  hydratePoiIcon,
+  clearIconCache,
+} from '../mapUtils'
+
+const DummyIcon = defineComponent({
+  props: ['image', 'isSelected', 'isHighlighted'],
+  render() {
+    return h('img', { src: 'test.jpg' })
+  },
+})
 
 describe('isValidLatLng', () => {
   it.each([
@@ -59,5 +73,42 @@ describe('createClusterIcon', () => {
       iconSize: [28, 28],
       iconAnchor: [14, 14],
     })
+  })
+})
+
+describe('hydratePoiIcon caching', () => {
+  afterEach(() => clearIconCache())
+
+  it('returns cached icon for identical props', () => {
+    const props = {
+      image: { variants: [{ size: 'thumb' as const, url: 'a.jpg' }], blurhash: null },
+      isSelected: false,
+      isHighlighted: false,
+    }
+    const icon1 = hydratePoiIcon(DummyIcon, props)
+    const icon2 = hydratePoiIcon(DummyIcon, props)
+    expect(icon1).toBe(icon2)
+  })
+
+  it('returns different icon when highlighted changes', () => {
+    const base = {
+      image: { variants: [{ size: 'thumb' as const, url: 'a.jpg' }], blurhash: null },
+      isSelected: false,
+    }
+    const icon1 = hydratePoiIcon(DummyIcon, { ...base, isHighlighted: false })
+    const icon2 = hydratePoiIcon(DummyIcon, { ...base, isHighlighted: true })
+    expect(icon1).not.toBe(icon2)
+  })
+
+  it('clearIconCache empties the cache', () => {
+    const props = {
+      image: { variants: [{ size: 'thumb' as const, url: 'a.jpg' }], blurhash: null },
+      isSelected: false,
+      isHighlighted: false,
+    }
+    const icon1 = hydratePoiIcon(DummyIcon, props)
+    clearIconCache()
+    const icon2 = hydratePoiIcon(DummyIcon, props)
+    expect(icon1).not.toBe(icon2)
   })
 })

@@ -21,6 +21,7 @@ describe('findProfileStore.findProfilesForMapBounds', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     store = useFindProfileStore()
+    store.teardown()
     vi.clearAllMocks()
   })
 
@@ -30,20 +31,26 @@ describe('findProfileStore.findProfilesForMapBounds', () => {
     publicName: 'Alice',
     languages: [],
     isDatingActive: false,
-    location: { country: 'HU' },
+    location: { country: 'HU', lat: 47, lon: 19 },
     profileImages: [],
     tags: [],
   }
 
-  it('calls the bounded map endpoint with bounds params', async () => {
+  it('calls the bounded map endpoint with padded bounds params', async () => {
     mockGet.mockResolvedValue({ data: { profiles: [mockProfile] } })
 
     await store.findProfilesForMapBounds(bounds)
 
+    const expectedPadded = {
+      south: bounds.south - (bounds.north - bounds.south) * 0.3,
+      north: bounds.north + (bounds.north - bounds.south) * 0.3,
+      west: bounds.west - (bounds.east - bounds.west) * 0.3,
+      east: bounds.east + (bounds.east - bounds.west) * 0.3,
+    }
     expect(mockGet).toHaveBeenCalledWith(
       '/find/social/map/bounds',
       expect.objectContaining({
-        params: { south: 45, north: 48, west: 16, east: 23 },
+        params: expectedPadded,
         signal: expect.any(AbortSignal),
       })
     )
@@ -125,6 +132,7 @@ describe('findProfileStore.refreshAfterDatingPrefsUpdate', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     store = useFindProfileStore()
+    store.teardown()
     vi.clearAllMocks()
   })
 
@@ -137,7 +145,14 @@ describe('findProfileStore.refreshAfterDatingPrefsUpdate', () => {
     expect(mockGet).toHaveBeenCalledWith('/find/dating/match-ids')
     expect(mockGet).toHaveBeenCalledWith(
       '/find/social/map/bounds',
-      expect.objectContaining({ params: bounds })
+      expect.objectContaining({
+        params: {
+          south: bounds.south - (bounds.north - bounds.south) * 0.3,
+          north: bounds.north + (bounds.north - bounds.south) * 0.3,
+          west: bounds.west - (bounds.east - bounds.west) * 0.3,
+          east: bounds.east + (bounds.east - bounds.west) * 0.3,
+        },
+      })
     )
   })
 
@@ -148,5 +163,80 @@ describe('findProfileStore.refreshAfterDatingPrefsUpdate', () => {
 
     expect(mockGet).toHaveBeenCalledWith('/find/dating/match-ids')
     expect(mockGet).not.toHaveBeenCalledWith('/find/social/map/bounds', expect.anything())
+  })
+})
+
+describe('findProfileStore bounds caching', () => {
+  let store: ReturnType<typeof useFindProfileStore>
+
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    store = useFindProfileStore()
+    store.teardown()
+    vi.clearAllMocks()
+  })
+
+  const mockProfile = {
+    id: 'clxxxxxxxxxxxxxxxxxxxxxxxxx',
+    publicName: 'Alice',
+    languages: [],
+    isDatingActive: false,
+    location: { country: 'HU', lat: 47, lon: 19 },
+    profileImages: [],
+    tags: [],
+  }
+
+  it('skips API call when requested bounds are within cached bounds', async () => {
+    mockGet.mockResolvedValueOnce({ data: { profiles: [mockProfile] } })
+
+    const largeBounds = { south: 40, north: 50, west: 10, east: 30 }
+    await store.findProfilesForMapBounds(largeBounds)
+    expect(mockGet).toHaveBeenCalledTimes(1)
+    mockGet.mockClear()
+
+    const smallBounds = { south: 44, north: 48, west: 14, east: 24 }
+    await store.findProfilesForMapBounds(smallBounds)
+    expect(mockGet).not.toHaveBeenCalled()
+    expect(store.profileList).toHaveLength(1)
+  })
+
+  it('fetches from API when bounds extend beyond cached area', async () => {
+    mockGet.mockResolvedValue({ data: { profiles: [mockProfile] } })
+
+    const bounds1 = { south: 45, north: 48, west: 16, east: 23 }
+    await store.findProfilesForMapBounds(bounds1)
+    mockGet.mockClear()
+
+    const bounds2 = { south: 35, north: 40, west: 16, east: 23 }
+    await store.findProfilesForMapBounds(bounds2)
+    expect(mockGet).toHaveBeenCalledTimes(1)
+  })
+
+  it('invalidates cache on teardown', async () => {
+    mockGet.mockResolvedValue({ data: { profiles: [mockProfile] } })
+
+    const bounds = { south: 45, north: 48, west: 16, east: 23 }
+    await store.findProfilesForMapBounds(bounds)
+    mockGet.mockClear()
+
+    store.teardown()
+
+    mockGet.mockResolvedValue({ data: { profiles: [] } })
+    await store.findProfilesForMapBounds(bounds)
+    expect(mockGet).toHaveBeenCalledTimes(1)
+  })
+
+  it('invalidates cache on refreshAfterDatingPrefsUpdate', async () => {
+    mockGet.mockResolvedValue({ data: { profiles: [mockProfile], ids: [] } })
+
+    const bounds = { south: 45, north: 48, west: 16, east: 23 }
+    await store.findProfilesForMapBounds(bounds)
+    mockGet.mockClear()
+
+    mockGet.mockResolvedValue({ data: { profiles: [], ids: [] } })
+    store.lastMapBounds = bounds
+    await store.refreshAfterDatingPrefsUpdate()
+
+    expect(mockGet).toHaveBeenCalledWith('/find/social/map/bounds', expect.anything())
   })
 })

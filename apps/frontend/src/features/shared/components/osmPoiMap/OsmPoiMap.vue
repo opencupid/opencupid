@@ -13,6 +13,7 @@ import {
   computeViewportMultiplier,
   createClusterIcon,
   hydratePoiIcon,
+  clearIconCache,
 } from './mapUtils'
 
 const props = withDefaults(
@@ -46,7 +47,8 @@ let itemsById = new Map<string | number, MapPoi>()
 let lastStableZoom: number = props.zoom
 let isMapReady = false
 let pendingCenter: [number, number] | null = null
-let staggerTimer: ReturnType<typeof setTimeout> | null = null
+let boundsDebounceTimer: ReturnType<typeof setTimeout> | null = null
+let suppressBoundsEmit = false
 let resizeObserver: ResizeObserver | null = null
 
 // Spiderfy hover region
@@ -112,19 +114,24 @@ function closeSpider() {
 let clusterGroup: any = null
 
 function emitBounds() {
-  if (!map) return
-  // Suppress bounds-changed while a popup is open — autopan from popup open
-  // would trigger a data fetch → rerender → close the popup the user just opened.
-  if (popupTarget.value) return
-  const size = map.getSize()
-  if (size.x === 0 || size.y === 0) return
-  const b = map.getBounds()
-  emit('bounds-changed', {
-    south: b.getSouth(),
-    north: b.getNorth(),
-    west: b.getWest(),
-    east: b.getEast(),
-  })
+  if (boundsDebounceTimer) clearTimeout(boundsDebounceTimer)
+  boundsDebounceTimer = setTimeout(() => {
+    boundsDebounceTimer = null
+    if (suppressBoundsEmit) return
+    if (!map) return
+    // Suppress bounds-changed while a popup is open — autopan from popup open
+    // would trigger a data fetch → rerender → close the popup the user just opened.
+    if (popupTarget.value) return
+    const size = map.getSize()
+    if (size.x === 0 || size.y === 0) return
+    const b = map.getBounds()
+    emit('bounds-changed', {
+      south: b.getSouth(),
+      north: b.getNorth(),
+      west: b.getWest(),
+      east: b.getEast(),
+    })
+  }, 300)
 }
 
 // --- map init orchestration -------------------------------------------------
@@ -297,11 +304,8 @@ function onMapReady() {
   if (!map) return
   isMapReady = true
   emit('map:ready', map)
-  updateMarkers()
+  updateMarkers(true)
 }
-
-const STAGGER_BATCH_SIZE = 5
-const STAGGER_DELAY_MS = 100
 
 function createMarker(item: MapPoi): LMarker {
   const isSelected = item.id === props.selectedId
@@ -343,47 +347,79 @@ function createMarker(item: MapPoi): LMarker {
   return m
 }
 
-function updateMarkers() {
+function updateMarkers(forceRebuild = false) {
   if (!map || !clusterGroup || !isMapReady) return
   const size = map.getSize()
   if (size.x === 0 || size.y === 0) return
-  if (staggerTimer) {
-    clearTimeout(staggerTimer)
-    staggerTimer = null
+
+  if (forceRebuild) {
+    clusterGroup.clearLayers()
+    markers.clear()
+    itemsById.clear()
   }
-  clusterGroup.clearLayers()
-  markers.clear()
-  itemsById.clear()
 
-  function addBatch(startIdx: number) {
-    if (!map || !clusterGroup) return
-    const end = Math.min(startIdx + STAGGER_BATCH_SIZE, props.items.length)
-    const batch: LMarker[] = []
+  const incoming = new Map<string | number, MapPoi>()
+  for (const item of props.items) {
+    incoming.set(item.id, item)
+  }
 
-    for (let i = startIdx; i < end; i++) {
-      const item = props.items[i]
-      if (!item) continue
+  // Remove markers no longer in the incoming list
+  const toRemove: LMarker[] = []
+  for (const [id, marker] of markers) {
+    if (!incoming.has(id)) {
+      toRemove.push(marker)
+      markers.delete(id)
+      itemsById.delete(id)
+    }
+  }
+
+  // Add new markers or update changed ones in-place
+  const toAdd: LMarker[] = []
+  for (const [id, item] of incoming) {
+    const existing = itemsById.get(id)
+    if (!existing) {
       const marker = createMarker(item)
-      batch.push(marker)
-      markers.set(item.id, marker)
-      itemsById.set(item.id, item)
-    }
-
-    clusterGroup.addLayers(batch)
-
-    if (end < props.items.length) {
-      staggerTimer = setTimeout(() => addBatch(end), STAGGER_DELAY_MS)
+      markers.set(id, marker)
+      itemsById.set(id, item)
+      toAdd.push(marker)
+    } else {
+      // Always keep itemsById in sync so popup/click handlers see current data
+      itemsById.set(id, item)
+      const imageUrl = item.image?.variants?.[0]?.url
+      const existingUrl = existing.image?.variants?.[0]?.url
+      if (existing.highlighted !== item.highlighted || imageUrl !== existingUrl) {
+        const marker = markers.get(id)!
+        marker.setIcon(
+          hydratePoiIcon(props.iconComponent, {
+            image: item.image,
+            isSelected: id === props.selectedId,
+            isHighlighted: item.highlighted ?? false,
+          })
+        )
+      }
     }
   }
 
-  addBatch(0)
+  if (toRemove.length) clusterGroup.removeLayers(toRemove)
+  if (toAdd.length) clusterGroup.addLayers(toAdd)
 
-  if ((props.fitToPois || !props.center) && props.items.length > 0) {
+  // Only fitBounds on initial load (all markers are new, none removed)
+  if (
+    toAdd.length > 0 &&
+    toRemove.length === 0 &&
+    markers.size === toAdd.length &&
+    (props.fitToPois || !props.center) &&
+    props.items.length > 0
+  ) {
     const latlngs = props.items.map(
       (item) => [item.location.lat, item.location.lon] as [number, number]
     )
     const bounds = L.latLngBounds(latlngs)
+    suppressBoundsEmit = true
     map.fitBounds(bounds, { padding: [24, 24] })
+    map.once('moveend', () => {
+      suppressBoundsEmit = false
+    })
   }
 }
 
@@ -420,11 +456,11 @@ function destroyMap() {
     resizeObserver.disconnect()
     resizeObserver = null
   }
-  // Cancel any in-flight staggered marker batch (KeepAlive can delay teardown)
-  if (staggerTimer) {
-    clearTimeout(staggerTimer)
-    staggerTimer = null
+  if (boundsDebounceTimer) {
+    clearTimeout(boundsDebounceTimer)
+    boundsDebounceTimer = null
   }
+  clearIconCache()
   map.off('moveend', emitBounds)
   map.off('mousemove', onMapMouseMove)
   map.off('touchstart', onMapTouchStart)
@@ -452,15 +488,14 @@ onActivated(() => {
     map.flyTo(pendingCenter, lastStableZoom, { duration: 1 })
     pendingCenter = null
   }
-  updateMarkers()
+  updateMarkers(true)
 })
 
 watch(
   () => props.items,
   () => {
     updateMarkers()
-  },
-  { deep: true }
+  }
 )
 
 watch(

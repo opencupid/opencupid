@@ -102,6 +102,27 @@ describe('useSocialMatchViewModel', () => {
     mockFindProfileStore.lastMapBounds = null
   })
 
+  it('fetches match IDs and map profiles in parallel when lastMapBounds exists', async () => {
+    const bounds = { south: 45, north: 48, west: 16, east: 23 }
+    mockFindProfileStore.lastMapBounds = bounds
+    mockFindProfileStore.fetchDatingMatchIds = vi.fn().mockResolvedValue(undefined)
+    mockFindProfileStore.findProfilesForMapBounds = vi.fn().mockResolvedValue({ success: true })
+
+    const vm = useSocialMatchViewModel()
+    await vm.initialize()
+
+    expect(mockFindProfileStore.fetchDatingMatchIds).toHaveBeenCalled()
+    expect(mockFindProfileStore.findProfilesForMapBounds).toHaveBeenCalledWith(bounds)
+
+    // Both calls should be dispatched before either resolves — verify via
+    // invocationCallOrder which is deterministic (no timer-based flakiness)
+    const matchOrder = mockFindProfileStore.fetchDatingMatchIds.mock.invocationCallOrder[0]!
+    const boundsOrder = mockFindProfileStore.findProfilesForMapBounds.mock.invocationCallOrder[0]!
+    expect(Math.abs(matchOrder - boundsOrder)).toBe(1)
+
+    mockFindProfileStore.lastMapBounds = null
+  })
+
   it('exposes matchedProfileIds from store', () => {
     mockFindProfileStore.matchedProfileIds = new Set(['p1', 'p2'])
     const vm = useSocialMatchViewModel()
