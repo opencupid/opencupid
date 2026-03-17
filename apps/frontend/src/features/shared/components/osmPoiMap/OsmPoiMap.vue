@@ -58,6 +58,12 @@ let activeSpiderCluster: MCCluster | null = null
 let activeSpiderHoverBounds: L.LatLngBounds | null = null
 const spiderClickHandlers = new WeakMap<L.Marker, (ev: Event) => void>()
 
+// Suppress child-marker popup during spiderfy animation triggered by tap/click
+// so the same gesture doesn't ghost-click a child marker.
+let spiderfyCooldown = false
+// Tracks whether the current spiderfy was triggered by hover (no cooldown needed)
+let spiderfyViaHover = false
+
 function computeSpiderHoverBounds(
   map: LMap,
   cluster: MCCluster,
@@ -186,11 +192,14 @@ function initClusters(map: LMap) {
     iconCreateFunction: createClusterIcon,
   })
 
+  // Desktop: hover to spiderfy
   clusterGroup.on('clustermouseover', onClusterMouseOver)
   clusterGroup.on('spiderfied', onClusterSpiderfied)
   clusterGroup.on('unspiderfied', onClusterUnspiderfied)
 
+  // Both: mousemove (desktop) and touchstart (touch) to close spider
   map.on('mousemove', onMapMouseMove)
+  map.on('touchstart', onMapTouchStart)
   map.on('zoomstart', closeSpider)
 
   map.addLayer(clusterGroup)
@@ -204,7 +213,23 @@ function onClusterMouseOver(e: any) {
   // scale spiderfy distance with viewport
   clusterGroup.options.spiderfyDistanceMultiplier = computeViewportMultiplier(map.getSize())
 
+  spiderfyViaHover = true
   e.layer.spiderfy()
+}
+
+function onMapTouchStart(ev: L.LeafletEvent) {
+  if (!activeSpiderCluster || !activeSpiderHoverBounds || !map) return
+  if (popupTarget.value) return
+  // touchstart doesn't carry latlng — extract from the raw TouchEvent
+  const touch = ((ev as any).originalEvent as TouchEvent)?.touches?.[0]
+  if (!touch) return
+  const pt = map.containerPointToLatLng(
+    L.point(
+      touch.clientX - map.getContainer().getBoundingClientRect().left,
+      touch.clientY - map.getContainer().getBoundingClientRect().top
+    )
+  )
+  if (!activeSpiderHoverBounds.contains(pt)) closeSpider()
 }
 
 function onClusterSpiderfied(e: any) {
@@ -216,6 +241,14 @@ function onClusterSpiderfied(e: any) {
     SPIDER_HOVER_PADDING_PX
   )
 
+  // When spiderfy was triggered by a tap/click (not hover), suppress popup
+  // opens briefly so the same gesture doesn't ghost-click a child marker.
+  if (!spiderfyViaHover) {
+    spiderfyCooldown = true
+    setTimeout(() => (spiderfyCooldown = false), 400)
+  }
+  spiderfyViaHover = false
+
   // Prevent clicks on spiderfied child markers from bubbling to the map
   // (which would trigger markercluster's _unspiderfyWrapper and collapse
   // the spider). stopPropagation also blocks Leaflet's own 'click' event,
@@ -224,6 +257,7 @@ function onClusterSpiderfied(e: any) {
     const el = marker.getElement?.()
     if (!el) continue
     const handler = (ev: Event) => {
+      if (spiderfyCooldown) return
       L.DomEvent.stopPropagation(ev as any)
       marker.openPopup()
     }
@@ -393,6 +427,7 @@ function destroyMap() {
   }
   map.off('moveend', emitBounds)
   map.off('mousemove', onMapMouseMove)
+  map.off('touchstart', onMapTouchStart)
   map.off('zoomstart movestart', closeSpider)
 
   clusterGroup?.off('clustermouseover', onClusterMouseOver)

@@ -111,6 +111,8 @@ vi.mock('leaflet', () => {
     stopPropagation: vi.fn((e: any) => e?.stopPropagation?.()),
   }
 
+  const Browser = { touch: false }
+
   return {
     default: {
       map: mapFn,
@@ -122,6 +124,7 @@ vi.mock('leaflet', () => {
       point,
       tileLayer,
       DomEvent,
+      Browser,
     },
     Map: mapFn,
     Marker: marker,
@@ -134,6 +137,7 @@ vi.mock('leaflet', () => {
     point,
     tileLayer,
     DomEvent,
+    Browser,
   }
 })
 
@@ -146,7 +150,6 @@ vi.mock('leaflet.markercluster/dist/MarkerCluster.Default.css', () => ({}))
 vi.mock('@/features/images/composables/useBlurhashDataUrl', () => ({
   blurhashToDataUrl: (hash: string) => `data:image/png;blurhash=${hash}`,
 }))
-
 
 import { mount, flushPromises } from '@vue/test-utils'
 import OsmPoiMap from '../OsmPoiMap.vue'
@@ -477,14 +480,20 @@ describe('OsmPoiMap', () => {
     expect(mapInstance.fitBounds).toHaveBeenCalled()
   })
 
-  it('opens popup when clicking a spiderfied marker', async () => {
+  it('opens popup when clicking a hover-spiderfied marker', async () => {
     await mountMap()
     await flushPromises()
 
     const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
-    const spiderfiedCall = clusterInstance.on.mock.calls.find((c: any) => c[0] === 'spiderfied')
-    expect(spiderfiedCall).toBeDefined()
-    const spiderfiedHandler = spiderfiedCall![1]
+    const mouseoverHandler = clusterInstance.on.mock.calls.find(
+      (c: any) => c[0] === 'clustermouseover'
+    )![1]
+    const spiderfiedHandler = clusterInstance.on.mock.calls.find(
+      (c: any) => c[0] === 'spiderfied'
+    )![1]
+
+    // Trigger spiderfy via hover (no cooldown)
+    mouseoverHandler({ layer: { spiderfy: vi.fn() } })
 
     // Create a fake marker with a DOM element to simulate spiderfied state
     const fakeEl = document.createElement('div')
@@ -505,7 +514,7 @@ describe('OsmPoiMap', () => {
     const clickHandler = domOnCalls.find((c: any) => c[0] === fakeEl && c[1] === 'click')
     expect(clickHandler).toBeDefined()
 
-    // Simulate click — the registered handler should call openPopup
+    // Simulate click — should open popup immediately (no cooldown for hover)
     const handler = clickHandler[2]
     handler({ stopPropagation: vi.fn() })
     expect(openPopup).toHaveBeenCalledOnce()
@@ -577,6 +586,92 @@ describe('OsmPoiMap', () => {
     const roCallback = resizeObserverCallbacks[resizeObserverCallbacks.length - 1]!
     roCallback()
     expect(mapInstance.flyTo).toHaveBeenCalledWith([50.0, 14.0], 10, { duration: 1 })
+  })
+
+  it('registers both mousemove and touchstart for spider close', async () => {
+    await mountMap()
+    await flushPromises()
+
+    const mapInstance = (L.map as any).mock.results[0].value
+    const mapEventNames = mapInstance.on.mock.calls.map((c: any) => c[0])
+    expect(mapEventNames).toContain('mousemove')
+    expect(mapEventNames).toContain('touchstart')
+  })
+
+  it('suppresses popup during cooldown when spiderfy is not from hover', async () => {
+    vi.useFakeTimers()
+    await mountMap()
+    await flushPromises()
+
+    const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
+    const spiderfiedHandler = clusterInstance.on.mock.calls.find(
+      (c: any) => c[0] === 'spiderfied'
+    )![1]
+
+    const fakeEl = document.createElement('div')
+    const openPopup = vi.fn()
+    const fakeMarker = { getElement: () => fakeEl, openPopup }
+
+    // Simulate click-triggered spiderfy (not via hover) — cooldown should apply
+    spiderfiedHandler({
+      cluster: {
+        getAllChildMarkers: () => [],
+        getLatLng: () => ({ lat: 47, lng: 19 }),
+        unspiderfy: vi.fn(),
+      },
+      markers: [fakeMarker],
+    })
+
+    const domOnCalls = (L as any).DomEvent.on.mock.calls
+    const clickHandler = domOnCalls.find((c: any) => c[0] === fakeEl && c[1] === 'click')![2]
+
+    // Click during cooldown — should NOT open popup
+    clickHandler({ stopPropagation: vi.fn() })
+    expect(openPopup).not.toHaveBeenCalled()
+
+    // After cooldown expires — should open popup
+    vi.advanceTimersByTime(400)
+    clickHandler({ stopPropagation: vi.fn() })
+    expect(openPopup).toHaveBeenCalledOnce()
+
+    vi.useRealTimers()
+  })
+
+  it('does not apply cooldown when spiderfy is triggered by hover', async () => {
+    await mountMap()
+    await flushPromises()
+
+    const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
+    const mouseoverHandler = clusterInstance.on.mock.calls.find(
+      (c: any) => c[0] === 'clustermouseover'
+    )![1]
+    const spiderfiedHandler = clusterInstance.on.mock.calls.find(
+      (c: any) => c[0] === 'spiderfied'
+    )![1]
+
+    // Trigger spiderfy via hover
+    const spiderfyMock = vi.fn()
+    mouseoverHandler({ layer: { spiderfy: spiderfyMock } })
+
+    const fakeEl = document.createElement('div')
+    const openPopup = vi.fn()
+    const fakeMarker = { getElement: () => fakeEl, openPopup }
+
+    spiderfiedHandler({
+      cluster: {
+        getAllChildMarkers: () => [],
+        getLatLng: () => ({ lat: 47, lng: 19 }),
+        unspiderfy: vi.fn(),
+      },
+      markers: [fakeMarker],
+    })
+
+    const domOnCalls = (L as any).DomEvent.on.mock.calls
+    const clickHandler = domOnCalls.find((c: any) => c[0] === fakeEl && c[1] === 'click')![2]
+
+    // Click immediately — should open popup (no cooldown for hover-triggered spiderfy)
+    clickHandler({ stopPropagation: vi.fn() })
+    expect(openPopup).toHaveBeenCalledOnce()
   })
 
   it('suppresses bounds-changed when container has zero dimensions', async () => {
