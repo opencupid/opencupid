@@ -47,6 +47,7 @@ let lastStableZoom: number = props.zoom
 let isMapReady = false
 let pendingCenter: [number, number] | null = null
 let staggerTimer: ReturnType<typeof setTimeout> | null = null
+let boundsDebounceTimer: ReturnType<typeof setTimeout> | null = null
 let resizeObserver: ResizeObserver | null = null
 
 // Spiderfy hover region
@@ -112,19 +113,23 @@ function closeSpider() {
 let clusterGroup: any = null
 
 function emitBounds() {
-  if (!map) return
-  // Suppress bounds-changed while a popup is open — autopan from popup open
-  // would trigger a data fetch → rerender → close the popup the user just opened.
-  if (popupTarget.value) return
-  const size = map.getSize()
-  if (size.x === 0 || size.y === 0) return
-  const b = map.getBounds()
-  emit('bounds-changed', {
-    south: b.getSouth(),
-    north: b.getNorth(),
-    west: b.getWest(),
-    east: b.getEast(),
-  })
+  if (boundsDebounceTimer) clearTimeout(boundsDebounceTimer)
+  boundsDebounceTimer = setTimeout(() => {
+    boundsDebounceTimer = null
+    if (!map) return
+    // Suppress bounds-changed while a popup is open — autopan from popup open
+    // would trigger a data fetch → rerender → close the popup the user just opened.
+    if (popupTarget.value) return
+    const size = map.getSize()
+    if (size.x === 0 || size.y === 0) return
+    const b = map.getBounds()
+    emit('bounds-changed', {
+      south: b.getSouth(),
+      north: b.getNorth(),
+      west: b.getWest(),
+      east: b.getEast(),
+    })
+  }, 300)
 }
 
 // --- map init orchestration -------------------------------------------------
@@ -424,6 +429,10 @@ function destroyMap() {
   if (staggerTimer) {
     clearTimeout(staggerTimer)
     staggerTimer = null
+  }
+  if (boundsDebounceTimer) {
+    clearTimeout(boundsDebounceTimer)
+    boundsDebounceTimer = null
   }
   map.off('moveend', emitBounds)
   map.off('mousemove', onMapMouseMove)
