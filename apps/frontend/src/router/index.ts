@@ -3,7 +3,7 @@ import type { RouteRecordRaw } from 'vue-router'
 
 import { useAuthStore } from '@/features/auth/stores/authStore'
 
-// Eager: common entry points and lightweight auth views
+// Eager: views loaded on initial navigation
 import UserHome from '@/features/userhome/views/UserHome.vue'
 import LoginView from '@/features/auth/views/LoginView.vue'
 import PublicProfileView from '@/features/publicprofile/views/PublicProfileView.vue'
@@ -21,10 +21,9 @@ import ConversationView from '@/features/messaging/views/ConversationView.vue'
 
 import EditPostView from '@/features/posts/views/EditPost.vue'
 
-import BrowsePostsView from '@/features/posts/views/BrowsePosts.vue'
-
-// Lazy: heaviest route (pulls in Leaflet maps ~200KB)
+// Lazy: pull in Leaflet maps (~200 kB) only when visited
 const BrowseProfiles = () => import('@/features/browse/views/BrowseProfiles.vue')
+const BrowsePostsView = () => import('@/features/posts/views/BrowsePosts.vue')
 
 const routes: Array<RouteRecordRaw> = [
   {
