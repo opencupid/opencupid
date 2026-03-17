@@ -1,14 +1,11 @@
 // Self-hosted variable fonts from Google Fonts GitHub repos.
-// WOFF2 served from public/ (preloadable, static paths).
-// TTF fallback from src/assets (Vite-processed, for older browsers).
+// All served as WOFF2 from public/fonts/ (stable paths, preloadable).
 
 @font-face {
   font-family: 'Nunito';
   font-style: normal;
   font-weight: 200 1000;
-  src:
-    url('/fonts/Nunito-Variable.woff2') format('woff2'),
-    url('@/assets/fonts/Nunito-Variable.ttf') format('truetype');
+  src: url('/fonts/Nunito-Variable.woff2') format('woff2');
   font-display: swap;
 }
 
@@ -16,17 +13,14 @@
   font-family: 'Rubik';
   font-style: normal;
   font-weight: 300 900;
-  src:
-    url('/fonts/Rubik-Variable.woff2') format('woff2'),
-    url('@/assets/fonts/Rubik-Variable.ttf') format('truetype');
+  src: url('/fonts/Rubik-Variable.woff2') format('woff2');
   font-display: swap;
 }
 
-// handwritten font for post cards
 @font-face {
   font-family: 'Patrick Hand';
   font-style: normal;
   font-weight: 400;
-  src: url('@/assets/fonts/PatrickHand-Regular.ttf') format('truetype');
+  src: url('/fonts/PatrickHand-Regular.woff2') format('woff2');
   font-display: swap;
 }
