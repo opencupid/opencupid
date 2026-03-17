@@ -21,9 +21,8 @@ import ConversationView from '@/features/messaging/views/ConversationView.vue'
 
 import EditPostView from '@/features/posts/views/EditPost.vue'
 
-// Lazy: pull in Leaflet maps (~200 kB) only when visited
-const BrowseProfiles = () => import('@/features/browse/views/BrowseProfiles.vue')
-const BrowsePostsView = () => import('@/features/posts/views/BrowsePosts.vue')
+import BrowseProfiles from '@/features/browse/views/BrowseProfiles.vue'
+import BrowsePostsView from '@/features/posts/views/BrowsePosts.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
