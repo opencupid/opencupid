@@ -38,9 +38,26 @@ export function useSocialMatchViewModel() {
 
   const fetchResults = async () => {
     await findProfileStore.fetchDatingMatchIds()
+    if (findProfileStore.lastMapBounds) {
+      await findProfileStore.findProfilesForMapBounds(findProfileStore.lastMapBounds)
+    }
+  }
+
+  // moveend fires after updateMarkers() rebuilds the cluster
+  // layer, which triggers emitBounds → debounced bounds-changed
+  // → onBoundsChanged → redundant identical fetch
+  function sameBounds(a: MapBounds | null, b: MapBounds): boolean {
+    return (
+      a !== null &&
+      a.south === b.south &&
+      a.north === b.north &&
+      a.west === b.west &&
+      a.east === b.east
+    )
   }
 
   const onBoundsChanged = async (bounds: MapBounds) => {
+    if (sameBounds(findProfileStore.lastMapBounds, bounds)) return
     isLoading.value = true
     try {
       const res = await findProfileStore.findProfilesForMapBounds(bounds)

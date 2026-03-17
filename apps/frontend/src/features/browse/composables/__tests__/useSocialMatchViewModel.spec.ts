@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { ref } from 'vue'
 
 // --- Mocks ---
 
@@ -17,6 +16,7 @@ const mockFindProfileStore = {
   isLoading: false,
   profileList: [],
   matchedProfileIds: new Set<string>(),
+  lastMapBounds: null as { south: number; north: number; west: number; east: number } | null,
   fetchDatingMatchIds: vi.fn(),
   findProfilesForMapBounds: vi.fn(),
   hide: vi.fn(),
@@ -88,6 +88,18 @@ describe('useSocialMatchViewModel', () => {
     await vm.onBoundsChanged(bounds)
 
     expect(mockFindProfileStore.findProfilesForMapBounds).toHaveBeenCalledWith(bounds)
+  })
+
+  it('onBoundsChanged skips fetch when bounds are identical to lastMapBounds', async () => {
+    const bounds = { south: 45, north: 48, west: 16, east: 23 }
+    mockFindProfileStore.lastMapBounds = { ...bounds }
+    mockFindProfileStore.findProfilesForMapBounds = vi.fn().mockResolvedValue({ success: true })
+    const vm = useSocialMatchViewModel()
+
+    await vm.onBoundsChanged(bounds)
+
+    expect(mockFindProfileStore.findProfilesForMapBounds).not.toHaveBeenCalled()
+    mockFindProfileStore.lastMapBounds = null
   })
 
   it('exposes matchedProfileIds from store', () => {
