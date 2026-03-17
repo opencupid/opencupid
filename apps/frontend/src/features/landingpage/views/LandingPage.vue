@@ -38,7 +38,7 @@ const siteName = __APP_CONFIG__.SITE_NAME
 </script>
 
 <template>
-  <div class="lp-wrapper">
+  <div class="lp-wrapper d-flex flex-column h-100">
     <header
       class="position-absolute top-0 start-0 w-100 pt-2"
       style="z-index: 1000; background-color: inherit"
@@ -189,8 +189,7 @@ const siteName = __APP_CONFIG__.SITE_NAME
 @import 'bootstrap/scss/mixins';
 
 .lp-wrapper {
-  min-height: 100%;
-  overflow: clip;
+  overflow-x: clip;
   background: radial-gradient(ellipse at 50% 40%, #faf4ea 0%, #e0c99a 55%, #c9a97a 100%);
   position: relative;
 
