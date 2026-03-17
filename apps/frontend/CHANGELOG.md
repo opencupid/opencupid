@@ -1,5 +1,11 @@
 # frontend
 
+## 0.34.0
+
+### Minor Changes
+
+- 0f08f23: Optimize OsmPoiMap performance: diff-based marker updates, debounced bounds emission, parallel API fetches, icon caching, and expanding-bounds cache
+
 ## 0.33.1
 
 ### Patch Changes
