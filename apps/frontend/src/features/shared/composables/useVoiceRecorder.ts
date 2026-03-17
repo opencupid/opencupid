@@ -6,14 +6,12 @@ export type RecordingState = 'idle' | 'recording' | 'paused' | 'completed' | 'er
 
 // Lazy-loaded recorder constructor — keeps standardized-audio-context (218 kB)
 // out of the main bundle. Loaded on first recording attempt only.
+// Single dynamic import so Rollup emits one chunk instead of three.
 let LazyMediaRecorder: typeof import('extendable-media-recorder').MediaRecorder
 let encoderRegistered = false
 async function ensureEncoder() {
   if (encoderRegistered) return
-  const [{ MediaRecorder: MR, register }, { connect }] = await Promise.all([
-    import('extendable-media-recorder'),
-    import('extendable-media-recorder-wav-encoder'),
-  ])
+  const { MediaRecorder: MR, register, connect } = await import('./voiceRecorderEncoder')
   await register(await connect())
   LazyMediaRecorder = MR
   encoderRegistered = true

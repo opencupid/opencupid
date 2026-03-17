@@ -21,9 +21,10 @@ import ConversationView from '@/features/messaging/views/ConversationView.vue'
 
 import EditPostView from '@/features/posts/views/EditPost.vue'
 
+import BrowsePostsView from '@/features/posts/views/BrowsePosts.vue'
+
 // Lazy: heaviest route (pulls in Leaflet maps ~200KB)
 const BrowseProfiles = () => import('@/features/browse/views/BrowseProfiles.vue')
-const BrowsePostsView = () => import('@/features/posts/views/BrowsePosts.vue')
 
 const routes: Array<RouteRecordRaw> = [
   {
