@@ -79,6 +79,10 @@ vi.mock('leaflet', () => {
       lng: p.x / 10,
     })),
     on: vi.fn().mockReturnThis(),
+    once: vi.fn(function (this: any, _event: string, cb: () => void) {
+      cb()
+      return this
+    }),
     off: vi.fn().mockReturnThis(),
     remove: vi.fn(),
     addLayer: vi.fn(),
@@ -694,6 +698,53 @@ describe('OsmPoiMap', () => {
     expect(wrapper.emitted('bounds-changed')).toBeFalsy()
 
     mapInstance.getSize.mockReturnValue({ x: 1000, y: 800 })
+    moveendHandler()
+    vi.advanceTimersByTime(300)
+    expect(wrapper.emitted('bounds-changed')).toBeTruthy()
+
+    vi.useRealTimers()
+  })
+
+  it('suppresses bounds-changed during programmatic fitBounds from updateMarkers', async () => {
+    vi.useFakeTimers()
+
+    // Mount with no items initially — map.once callback fires immediately in mock
+    // so suppressBoundsEmit is already cleared. Now we make once NOT call back
+    // immediately to simulate the real async moveend.
+    const wrapper = await mountMap({ items: [] })
+    await flushPromises()
+
+    const mapInstance = (L.map as any).mock.results[0].value
+    const moveendHandler = mapInstance.on.mock.calls.find((c: any) => c[0] === 'moveend')[1]
+
+    mapInstance.getBounds = vi.fn(() => ({
+      getSouth: () => 45.0,
+      getNorth: () => 48.0,
+      getWest: () => 16.0,
+      getEast: () => 23.0,
+    }))
+
+    // Override once to NOT auto-fire (simulates real Leaflet where moveend
+    // hasn't fired yet after fitBounds)
+    let pendingOnceCallback: (() => void) | null = null
+    mapInstance.once = vi.fn((_event: string, cb: () => void) => {
+      pendingOnceCallback = cb
+      return mapInstance
+    })
+
+    // Now set items — triggers updateMarkers → fitBounds → suppressBoundsEmit = true
+    await wrapper.setProps({ items })
+    await flushPromises()
+
+    // moveend fires while suppress is active
+    moveendHandler()
+    vi.advanceTimersByTime(300)
+    expect(wrapper.emitted('bounds-changed')).toBeFalsy()
+
+    // Simulate the real moveend from fitBounds completing — clears suppress
+    pendingOnceCallback?.()
+
+    // Now a user-initiated moveend should emit
     moveendHandler()
     vi.advanceTimersByTime(300)
     expect(wrapper.emitted('bounds-changed')).toBeTruthy()

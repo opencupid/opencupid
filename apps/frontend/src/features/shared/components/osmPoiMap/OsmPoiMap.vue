@@ -46,8 +46,8 @@ let itemsById = new Map<string | number, MapPoi>()
 let lastStableZoom: number = props.zoom
 let isMapReady = false
 let pendingCenter: [number, number] | null = null
-let staggerTimer: ReturnType<typeof setTimeout> | null = null
 let boundsDebounceTimer: ReturnType<typeof setTimeout> | null = null
+let suppressBoundsEmit = false
 let resizeObserver: ResizeObserver | null = null
 
 // Spiderfy hover region
@@ -116,6 +116,7 @@ function emitBounds() {
   if (boundsDebounceTimer) clearTimeout(boundsDebounceTimer)
   boundsDebounceTimer = setTimeout(() => {
     boundsDebounceTimer = null
+    if (suppressBoundsEmit) return
     if (!map) return
     // Suppress bounds-changed while a popup is open — autopan from popup open
     // would trigger a data fetch → rerender → close the popup the user just opened.
@@ -305,9 +306,6 @@ function onMapReady() {
   updateMarkers()
 }
 
-const STAGGER_BATCH_SIZE = 5
-const STAGGER_DELAY_MS = 100
-
 function createMarker(item: MapPoi): LMarker {
   const isSelected = item.id === props.selectedId
   const m = L.marker([item.location.lat, item.location.lon], {
@@ -352,43 +350,31 @@ function updateMarkers() {
   if (!map || !clusterGroup || !isMapReady) return
   const size = map.getSize()
   if (size.x === 0 || size.y === 0) return
-  if (staggerTimer) {
-    clearTimeout(staggerTimer)
-    staggerTimer = null
-  }
+
   clusterGroup.clearLayers()
   markers.clear()
   itemsById.clear()
 
-  function addBatch(startIdx: number) {
-    if (!map || !clusterGroup) return
-    const end = Math.min(startIdx + STAGGER_BATCH_SIZE, props.items.length)
-    const batch: LMarker[] = []
-
-    for (let i = startIdx; i < end; i++) {
-      const item = props.items[i]
-      if (!item) continue
-      const marker = createMarker(item)
-      batch.push(marker)
-      markers.set(item.id, marker)
-      itemsById.set(item.id, item)
-    }
-
-    clusterGroup.addLayers(batch)
-
-    if (end < props.items.length) {
-      staggerTimer = setTimeout(() => addBatch(end), STAGGER_DELAY_MS)
-    }
+  const batch: LMarker[] = []
+  for (const item of props.items) {
+    const marker = createMarker(item)
+    batch.push(marker)
+    markers.set(item.id, marker)
+    itemsById.set(item.id, item)
   }
 
-  addBatch(0)
+  clusterGroup.addLayers(batch)
 
   if ((props.fitToPois || !props.center) && props.items.length > 0) {
     const latlngs = props.items.map(
       (item) => [item.location.lat, item.location.lon] as [number, number]
     )
     const bounds = L.latLngBounds(latlngs)
+    suppressBoundsEmit = true
     map.fitBounds(bounds, { padding: [24, 24] })
+    map.once('moveend', () => {
+      suppressBoundsEmit = false
+    })
   }
 }
 
@@ -424,11 +410,6 @@ function destroyMap() {
   if (resizeObserver) {
     resizeObserver.disconnect()
     resizeObserver = null
-  }
-  // Cancel any in-flight staggered marker batch (KeepAlive can delay teardown)
-  if (staggerTimer) {
-    clearTimeout(staggerTimer)
-    staggerTimer = null
   }
   if (boundsDebounceTimer) {
     clearTimeout(boundsDebounceTimer)
