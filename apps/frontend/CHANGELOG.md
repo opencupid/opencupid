@@ -1,5 +1,20 @@
 # frontend
 
+## 0.33.0
+
+### Minor Changes
+
+- 7bfe60a: Replace vector tiles with raster-only map layer and style attribution overlay
+- 14d6529: Extract TagFilterSelector component and fix map double-render on tag filter change (#1129)
+
+### Patch Changes
+
+- c2c9939: Simplify messageStore by extracting helpers, unifying send methods, and using $reset() (#1124)
+- f305f0e: fix: eliminate duplicate API calls in dating preferences and messaging views
+- 8942422: Fix ghost-click popup on touch spiderfy of map clusters
+- 3b74a21: Prevent Leaflet flyTo NaN crash when map container has zero dimensions (#1125)
+- 0e8ea9b: UX fixes: hide carousel nav for single images, close fullscreen on click, fix settings layout wrapping, fix default scope in edit mode
+
 ## 0.32.1
 
 ### Patch Changes

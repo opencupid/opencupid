@@ -1,5 +1,11 @@
 # backend
 
+## 0.33.0
+
+### Patch Changes
+
+- e10b8f5: Unify MessageDTO mapper input types into single `mapMessageToDTO` function (#1096)
+
 ## 0.32.1
 
 ## 0.32.0
