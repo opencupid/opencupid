@@ -40,16 +40,17 @@ const carouselProps = {
   mouseWheel: false,
 } as const
 
-const currentImage = computed(() => props.profile.profileImages?.[inlineSlide.value])
+const images = computed(() => props.profile.profileImages ?? [])
+const currentImage = computed(() => images.value[inlineSlide.value])
 const showBlurhash = computed(
   () => currentImage.value?.blurhash && !loadedImages[currentImage.value.position]
 )
 
-const shouldShowNavButtons = computed(() => props.profile.profileImages.length > 1)
+const shouldShowNavButtons = computed(() => images.value.length > 1)
 
 // Reset carousel to first slide when images change (e.g. after reorder in editor)
 watch(
-  () => props.profile.profileImages,
+  () => images.value,
   () => {
     inlineSlide.value = 0
     Object.keys(loadedImages).forEach((key) => delete loadedImages[Number(key)])
@@ -71,7 +72,7 @@ watch(
       class="h-100"
     >
       <Slide
-        v-for="img in props.profile.profileImages"
+        v-for="img in images"
         :key="img.position"
         @click="handleImageClick"
       >
@@ -121,7 +122,7 @@ watch(
         @click="showFullscreen = false"
       >
         <Slide
-          v-for="img in props.profile.profileImages"
+          v-for="img in images"
           :key="img.position"
           class="bg-black"
         >
