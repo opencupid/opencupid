@@ -72,7 +72,6 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       }),
 
       vueJsx(),
-      vueDevTools(),
       svgLoader(),
       Components({
         resolvers: [BootstrapVueNextResolver()],
@@ -87,7 +86,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
         },
       },
 
-      ...(mode === 'development' ? [devCertPlugin(), VueMcp()] : []),
+      ...(mode === 'development' ? [vueDevTools(), devCertPlugin(), VueMcp()] : []),
       runtimeConfigPlugin(mode),
     ],
     css: {
