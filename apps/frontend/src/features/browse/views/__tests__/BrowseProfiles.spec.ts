@@ -29,14 +29,14 @@ vi.mock('@/features/shared/profileform/TagSelector.vue', () => ({
     props: ['modelValue', 'taggable'],
   },
 }))
-vi.mock('@/features/shared/components/TagCloud.vue', () => ({
-  default: { template: '<div class="tag-cloud" />' },
+vi.mock('@/features/shared/profileform/TagFilterSelector.vue', () => ({
+  default: {
+    template: '<div class="tag-filter-selector" />',
+    props: ['modelValue'],
+  },
 }))
 vi.mock('@/assets/icons/interface/target-2.svg', () => ({
   default: { template: '<svg class="icon-target" />' },
-}))
-vi.mock('@/assets/icons/e-commerce/tag.svg', () => ({
-  default: { template: '<svg class="icon-tag" />' },
 }))
 vi.mock('vue-router', () => ({
   useRouter: () => ({ push: vi.fn(), back: vi.fn(), replace: vi.fn() }),
@@ -64,7 +64,6 @@ vi.mock('../../composables/useSocialMatchViewModel', () => ({
   useSocialMatchViewModel: () => vmState,
 }))
 
-const BModal = { template: '<div class="b-modal"><slot /></div>', props: ['modelValue'] }
 const BButton = { template: '<button><slot /></button>' }
 const BContainer = { template: '<div class="container"><slot /></div>' }
 
@@ -82,7 +81,6 @@ describe('BrowseProfiles view', () => {
     return mount(BrowseProfiles, {
       global: {
         stubs: {
-          BModal,
           BButton,
           BContainer,
         },
@@ -116,13 +114,16 @@ describe('BrowseProfiles view', () => {
     }
     const wrapper = mountComponent()
     expect(wrapper.find('.location-selector').exists()).toBe(true)
-    expect(wrapper.find('.tag-select-component').exists()).toBe(true)
+    expect(wrapper.find('.tag-filter-selector').exists()).toBe(true)
   })
 
-  it('renders TagCloud modal markup', () => {
+  it('renders TagFilterSelector in filter bar', () => {
+    vmState.matchFilter.value = {
+      location: { country: 'US', cityName: 'New York', lat: null, lon: null },
+      tags: [],
+    }
     const wrapper = mountComponent()
-    expect(wrapper.find('.b-modal').exists()).toBe(true)
-    expect(wrapper.find('.tag-cloud').exists()).toBe(true)
+    expect(wrapper.find('.tag-filter-selector').exists()).toBe(true)
   })
 
   it('no detail overlay exists (profiles are now route-based)', () => {

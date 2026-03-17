@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, provide, ref, toRef } from 'vue'
-import { useI18n } from 'vue-i18n'
+import { computed, onMounted, provide, toRef } from 'vue'
 
 import BrowseLayout from '@/features/shared/components/BrowseLayout.vue'
 import { isValidLatLng } from '@/features/shared/components/osmPoiMap/mapUtils'
@@ -8,15 +7,10 @@ import BrowseFilterBar from '../components/BrowseFilterBar.vue'
 import MapView from '@/features/shared/components/MapView.vue'
 import ProfileMapCard from '../components/ProfileMapCard.vue'
 import MapIcon from '@/features/publicprofile/components/MapIcon.vue'
-import TagCloud from '@/features/shared/components/TagCloud.vue'
-
 import { useSocialMatchViewModel } from '../composables/useSocialMatchViewModel'
-import type { PopularTag } from '@zod/tag/tag.dto'
 import type { MapPoi } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
 
 defineOptions({ name: 'BrowseProfiles' })
-
-const { t } = useI18n()
 
 const {
   viewerProfile,
@@ -64,21 +58,6 @@ const mapCenter = computed<[number, number] | undefined>(() => {
 
   return undefined
 })
-
-const showTagCloud = ref(false)
-
-function handleTagCloudSelect(tag: PopularTag) {
-  if (!matchFilter.value) return
-  const exists = matchFilter.value.tags.some((t) => t.id === tag.id)
-  if (!exists) {
-    matchFilter.value.tags = [
-      ...matchFilter.value.tags,
-      { id: tag.id, name: tag.name, slug: tag.slug },
-    ]
-  }
-  showTagCloud.value = false
-  updatePrefs()
-}
 </script>
 
 <template>
@@ -92,7 +71,6 @@ function handleTagCloudSelect(tag: PopularTag) {
         v-model="matchFilter"
         :viewer-profile="viewerProfile"
         @filter:changed="updatePrefs"
-        @tagcloud:open="showTagCloud = true"
       />
     </template>
 
@@ -110,15 +88,4 @@ function handleTagCloudSelect(tag: PopularTag) {
       />
     </template>
   </BrowseLayout>
-
-  <BModal
-    v-model="showTagCloud"
-    centered
-    :no-header="false"
-    :no-footer="true"
-    :title="t('profiles.browse.filters.explore_tags')"
-    size="lg"
-  >
-    <TagCloud @tag:select="handleTagCloudSelect" />
-  </BModal>
 </template>

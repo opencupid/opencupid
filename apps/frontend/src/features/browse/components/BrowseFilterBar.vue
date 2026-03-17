@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { ref, watch, onActivated, onDeactivated } from 'vue'
-import { useI18n } from 'vue-i18n'
 import { useDebounceFn } from '@vueuse/core'
 
 import LocationFilterInput from '@/features/shared/profileform/LocationFilterInput.vue'
-import TagSelector from '@/features/shared/profileform/TagSelector.vue'
-import IconTag from '@/assets/icons/e-commerce/tag.svg'
+import TagFilterSelector from '@/features/shared/profileform/TagFilterSelector.vue'
 
 import type { SocialMatchFilterDTO } from '@zod/match/filters.dto'
 import type { OwnerProfile } from '@zod/profile/profile.dto'
@@ -20,10 +18,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'filter:changed': []
-  'tagcloud:open': []
 }>()
-
-const { t } = useI18n()
 
 const isActive = ref(true)
 onActivated(() => (isActive.value = true))
@@ -74,26 +69,10 @@ watch(
       </div>
       <!-- Tags column -->
       <div class="col-12 col-md-6">
-        <div class="d-flex align-items-center gap-2">
-          <div class="flex-grow-1">
-            <TagSelector
-              v-model="filter.tags"
-              :taggable="false"
-              open-direction="bottom"
-              :close-on-select="true"
-              :initialOptions="viewerProfile?.tags ?? []"
-            />
-          </div>
-          <BButton
-            variant="link-secondary"
-            size="sm"
-            class="p-0"
-            @click="$emit('tagcloud:open')"
-            :title="t('profiles.browse.filters.explore_tags')"
-          >
-            <IconTag class="svg-icon-lg" />
-          </BButton>
-        </div>
+        <TagFilterSelector
+          v-model="filter.tags"
+          :initialOptions="viewerProfile?.tags ?? []"
+        />
       </div>
     </div>
   </div>

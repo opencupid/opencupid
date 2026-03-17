@@ -94,6 +94,7 @@ const { width, height } = useWindowSize()
 const selectHeight = computed(() => {
   return height.value * 0.25
 })
+
 </script>
 
 <template>
