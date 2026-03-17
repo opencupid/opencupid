@@ -1,19 +1,29 @@
-// src/assets/styles/_fonts.scss
-// —————————————————————————————————————————
-// Import the font packs you’ll use. You can narrow these to
-// only specific weights/styles if you like.
-// @import "~@fontsource/nunito/index.css";
-// @import "~@fontsource/poppins/index.css";
-// @import "~@fontsource/rubik/index.css";
-// @import "~@fontsource/quicksand/index.css";
-// @import "~@fontsource/mukta/index.css";
-// import "@fontsource/poppins/index.css";
+// Self-hosted variable fonts from Google Fonts GitHub repos.
+// Single TTF per family — full charset, all weights, no subset splitting.
 
-// Import all subsets with unicode-range (browser downloads only what's needed)
-@import '@fontsource/nunito/400.css';
-@import '@fontsource/nunito/700.css';
-@import '@fontsource/rubik/400.css';
-@import '@fontsource/rubik/700.css';
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 200 1000;
+  src: url('@/assets/fonts/Nunito-Variable.ttf') format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Nunito';
+  font-style: italic;
+  font-weight: 200 1000;
+  src: url('@/assets/fonts/Nunito-Italic-Variable.ttf') format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Rubik';
+  font-style: normal;
+  font-weight: 300 900;
+  src: url('@/assets/fonts/Rubik-Variable.ttf') format('truetype');
+  font-display: swap;
+}
 
 // handwritten font for post cards
 @font-face {
