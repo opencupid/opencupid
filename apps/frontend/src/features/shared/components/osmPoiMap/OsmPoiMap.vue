@@ -13,6 +13,7 @@ import {
   computeViewportMultiplier,
   createClusterIcon,
   hydratePoiIcon,
+  clearIconCache,
 } from './mapUtils'
 
 const props = withDefaults(
@@ -415,6 +416,7 @@ function destroyMap() {
     clearTimeout(boundsDebounceTimer)
     boundsDebounceTimer = null
   }
+  clearIconCache()
   map.off('moveend', emitBounds)
   map.off('mousemove', onMapMouseMove)
   map.off('touchstart', onMapTouchStart)
