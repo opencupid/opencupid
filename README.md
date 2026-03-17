@@ -22,7 +22,7 @@ Unlike commercial matchmaking apps, OpenCupid is free from dark patterns and man
 
 ## Running a production instance
 
-See [DEPLOYMENT.md](docs/DEPLOYMENT.md).
+See [DEPLOYMENT.md](deployment/DEPLOYMENT.md).
 
 ## Getting started with development
 
