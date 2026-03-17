@@ -18,7 +18,6 @@ import RouterBackButton from '@/features/shared/ui/RouterBackButton.vue'
 import SecondaryNav from '@/features/shared/ui/SecondaryNav.vue'
 import { useRouter } from 'vue-router'
 
-
 const authStore = useAuthStore()
 const ownerProfileStore = useOwnerProfileStore()
 const userStore = useUserStore()
@@ -67,27 +66,6 @@ function handleClick() {
 
         <section class="w-100 flex-grow-1">
           <div class="h-100 d-flex flex-column justify-content-center">
-            <div class="row mb-3 mb-md-4 d-flex align-items-center justify-content-between">
-              <div class="col-md-8">
-                <span v-if="userStore.user?.email">
-                  {{ $t('auth.email') }}: {{ userStore.user.email }}</span
-                >
-                <span v-if="userStore.user?.phonenumber">
-                  {{ $t('auth.phone_number') }}: {{ userStore.user.phonenumber }}</span
-                >
-              </div>
-              <div class="col-md-4">
-                <BButton
-                  variant="secondary"
-                  size="sm"
-                  @click="handleClick"
-                >
-                  <IconLogout class="svg-icon" />
-                  {{ $t('authentication.logout') }}</BButton
-                >
-              </div>
-            </div>
-
             <fieldset class="mb-3 mb-md-4">
               <legend class="h5">
                 {{ $t('settings.language_label') }}
@@ -100,6 +78,27 @@ function handleClick() {
                 {{ $t('settings.notifications_label') }}
               </legend>
               <OptInCheckboxes v-model="optInModel" />
+            </fieldset>
+<hr>
+            <fieldset class="d-flex flex-wrap align-items-center gap-2">
+              <div class="flex-grow-1" style="min-width: 0; word-break: break-all">
+                <span v-if="userStore.user?.email">
+                  {{ $t('auth.email') }}: {{ userStore.user.email }}</span
+                >
+                <span v-if="userStore.user?.phonenumber">
+                  {{ $t('auth.phone_number') }}: {{ userStore.user.phonenumber }}</span
+                >
+              </div>
+              <div class="flex-shrink-0">
+                <BButton
+                  variant="secondary"
+                  size="sm"
+                  @click="handleClick"
+                >
+                  <IconLogout class="svg-icon" />
+                  {{ $t('authentication.logout') }}</BButton
+                >
+              </div>
             </fieldset>
           </div>
         </section>

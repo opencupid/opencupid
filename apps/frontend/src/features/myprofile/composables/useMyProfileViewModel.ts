@@ -91,7 +91,7 @@ export function useMyProfileViewModel(isEditMode: boolean) {
   watch(
     () => viewState.isEditable,
     () => {
-      if (viewState.scopes.includes('dating')) viewState.currentScope = 'dating'
+      if (profileStore.profile?.isDatingActive) viewState.currentScope = 'dating'
     },
     {}
   )

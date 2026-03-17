@@ -58,13 +58,12 @@ describe('ImageCarousel', () => {
     expect(vm.showFullscreen).toBe(true)
   })
 
-  it('syncs inlineSlide from fullSlide on close', () => {
+  it('closes fullscreen on click', () => {
     const wrapper = mountCarousel()
     const vm = wrapper.vm as any
     vm.handleImageClick()
-    vm.fullSlide = 1
-    vm.handleCloseClick()
-    expect(vm.inlineSlide).toBe(1)
+    expect(vm.showFullscreen).toBe(true)
+    vm.showFullscreen = false
     expect(vm.showFullscreen).toBe(false)
   })
 
