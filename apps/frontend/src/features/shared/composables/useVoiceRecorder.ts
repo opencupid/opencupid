@@ -1,19 +1,15 @@
 import { ref, onUnmounted, readonly } from 'vue'
-import type { IMediaRecorder } from 'extendable-media-recorder'
+import { MediaRecorder, register, type IMediaRecorder } from 'extendable-media-recorder'
+import { connect } from 'extendable-media-recorder-wav-encoder'
 import voiceRecordingEndUrl from '@/assets/audio/voice-recording-end.mp3'
 
 export type RecordingState = 'idle' | 'recording' | 'paused' | 'completed' | 'error'
 
-// Lazy-loaded recorder constructor — keeps standardized-audio-context (218 kB)
-// out of the main bundle. Loaded on first recording attempt only.
-// Single dynamic import so Rollup emits one chunk instead of three.
-let LazyMediaRecorder: typeof import('extendable-media-recorder').MediaRecorder
+// Register the WAV encoder once (idempotent — the library ignores duplicate registrations)
 let encoderRegistered = false
 async function ensureEncoder() {
   if (encoderRegistered) return
-  const { MediaRecorder: MR, register, connect } = await import('./voiceRecorderEncoder')
   await register(await connect())
-  LazyMediaRecorder = MR
   encoderRegistered = true
 }
 
@@ -75,7 +71,7 @@ export function useVoiceRecorder(maxDuration: number) {
       // WAV is a raw format that cannot have container metadata issues,
       // unlike webm which breaks on QtWebEngine browsers.
       // The backend will transcode to MP3 after upload.
-      recorder = new LazyMediaRecorder(stream, { mimeType: 'audio/wav' })
+      recorder = new MediaRecorder(stream, { mimeType: 'audio/wav' })
 
       // Microphone access granted - now enter recording state
       state.value = 'recording'
