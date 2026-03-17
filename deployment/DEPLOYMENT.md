@@ -34,13 +34,15 @@ All domains share a single SAN certificate obtained by certbot (see [Getting sta
 # clone the repo
 git clone https://github.com/opencupid/opencupid.git && cd opencupid
 
-# Pull production images
-docker compose pull
-
 # Create configuration from template
 cp .env.example .env
 
-# Edit .env
+# Edit .env — set domains, passwords, DOCKER_IMAGE_PREFIX, *_VERSION vars, etc.
+# IMPORTANT: uncomment COMPOSE_FILE=docker-compose.production.yml in .env
+# (all docker compose commands below rely on this being set)
+
+# Pull production images
+docker compose pull
 
 # Start services
 docker compose up -d
@@ -57,7 +59,7 @@ docker compose run --rm --service-ports certbot certonly \
   -d "$ADMIN_DOMAIN" \
   -d "$JITSI_DOMAIN"
 
-# start services
+# Restart ingress to apply cert
 docker compose restart ingress
 ```
 
@@ -145,52 +147,15 @@ The admin domain is protected by **mutual TLS (mTLS)** — only clients presenti
 
 5. **Import `client.p12`** into your browser's certificate store.
 
-## Sentry / GlitchTip Sourcemap Uploads
-
-The Sentry Sourcemaps workflow (`.github/workflows/sentry-sourcemaps.yml`) uploads frontend and backend sourcemaps to GlitchTip so that error stack traces show original source code instead of minified bundles. It runs automatically after the Docker Build workflow completes and is **secrets-gated** — it skips gracefully when `SENTRY_AUTH_TOKEN` is not configured (e.g. in forks).
-
-### How it works
-
-The workflow:
-
-1. Builds frontend and backend locally to produce `dist/` with sourcemaps
-2. Runs `sentry-cli sourcemaps inject` to stamp debug IDs into the files
-3. Runs `sentry-cli sourcemaps upload` to push the artifact bundle to GlitchTip
-
-The job is marked `continue-on-error: true` — if the upload fails, Docker images are still pushed and the release succeeds.
-
-### GitHub configuration
-
-The workflow reads Sentry config from GitHub secrets and variables:
-
-| Type     | Name                | Value                         |
-| -------- | ------------------- | ----------------------------- |
-| Secret   | `SENTRY_AUTH_TOKEN` | GlitchTip API auth token      |
-| Variable | `SENTRY_URL`        | `https://lsentry.example.org` |
-| Variable | `SENTRY_ORG`        | `example_org`                 |
-| Variable | `SENTRY_PROJECT`    | `example_proj`                |
-
-### Release naming
-
-Sourcemaps are tagged with release names that match the Sentry SDK configuration:
-
-| App      | Release format       | Example           |
-| -------- | -------------------- | ----------------- |
-| Frontend | `frontend@{version}` | `frontend@0.12.2` |
-| Backend  | `api@{version}`      | `api@0.12.2`      |
-
-The version is read from the root `package.json`.
-
 ## Release Pipeline
 
-The release pipeline consists of two independent GitHub Actions workflows:
+The release pipeline consists of these GitHub Actions workflows:
 
-| Workflow          | File                    | Trigger                | Purpose                        |
-| ----------------- | ----------------------- | ---------------------- | ------------------------------ |
-| Docker Build      | `docker-build.yml`      | `release: published`   | Build and push images to GHCR  |
-| Sentry Sourcemaps | `sentry-sourcemaps.yml` | Docker Build completes | Upload sourcemaps to GlitchTip |
-
-Sentry Sourcemaps triggers automatically after Docker Build completes. It is **secrets-gated** — it skips gracefully when `SENTRY_AUTH_TOKEN` is not configured (e.g. in forks).
+| Workflow          | File                    | Trigger                | Purpose                                          |
+| ----------------- | ----------------------- | ---------------------- | ------------------------------------------------ |
+| Release           | `release.yml`           | `workflow_dispatch`    | Apply changeset bumps, commit, create GH release |
+| Docker Build      | `docker-build.yml`      | `release: published`   | Build and push images to GHCR                    |
+| Sentry Sourcemaps | `sentry-sourcemaps.yml` | Docker Build completes | Upload sourcemaps to GlitchTip (secrets-gated)   |
 
 ## Firewall
 
