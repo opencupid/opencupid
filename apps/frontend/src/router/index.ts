@@ -3,26 +3,21 @@ import type { RouteRecordRaw } from 'vue-router'
 
 import { useAuthStore } from '@/features/auth/stores/authStore'
 
-// Eager: views loaded on initial navigation
+import MessagingView from '@/features/messaging/views/Messaging.vue'
+import ConversationView from '@/features/messaging/views/ConversationView.vue'
 import UserHome from '@/features/userhome/views/UserHome.vue'
-import LoginView from '@/features/auth/views/LoginView.vue'
-import PublicProfileView from '@/features/publicprofile/views/PublicProfileView.vue'
-import OnboardingView from '@/features/onboarding/views/Onboarding.vue'
-import MagicLink from '@/features/auth/views/MagicLink.vue'
-import LogoutView from '@/features/auth/views/LogoutView.vue'
 import Settings from '@/features/settings/views/Settings.vue'
-
 import MyProfile from '@/features/myprofile/views/MyProfile.vue'
 import DatingWizardView from '@/features/myprofile/views/DatingWizard.vue'
 import DatingPrefsView from '@/features/myprofile/views/DatingPrefs.vue'
-
-import MessagingView from '@/features/messaging/views/Messaging.vue'
-import ConversationView from '@/features/messaging/views/ConversationView.vue'
-
-import EditPostView from '@/features/posts/views/EditPost.vue'
-
 import BrowseProfiles from '@/features/browse/views/BrowseProfiles.vue'
+import PublicProfileView from '@/features/publicprofile/views/PublicProfileView.vue'
+import OnboardingView from '@/features/onboarding/views/Onboarding.vue'
+import LoginView from '@/features/auth/views/LoginView.vue'
+import MagicLink from '@/features/auth/views/MagicLink.vue'
+import LogoutView from '@/features/auth/views/LogoutView.vue'
 import BrowsePostsView from '@/features/posts/views/BrowsePosts.vue'
+import EditPostView from '@/features/posts/views/EditPost.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
