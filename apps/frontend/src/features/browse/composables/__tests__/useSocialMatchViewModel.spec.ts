@@ -102,6 +102,34 @@ describe('useSocialMatchViewModel', () => {
     mockFindProfileStore.lastMapBounds = null
   })
 
+  it('fetches match IDs and map profiles in parallel when lastMapBounds exists', async () => {
+    const bounds = { south: 45, north: 48, west: 16, east: 23 }
+    mockFindProfileStore.lastMapBounds = bounds
+    mockFindProfileStore.fetchDatingMatchIds = vi.fn().mockResolvedValue(undefined)
+    mockFindProfileStore.findProfilesForMapBounds = vi.fn().mockResolvedValue({ success: true })
+
+    const vm = useSocialMatchViewModel()
+
+    let matchIdsCallTime = 0
+    let boundsCallTime = 0
+    mockFindProfileStore.fetchDatingMatchIds = vi.fn(() => {
+      matchIdsCallTime = Date.now()
+      return Promise.resolve()
+    })
+    mockFindProfileStore.findProfilesForMapBounds = vi.fn(() => {
+      boundsCallTime = Date.now()
+      return Promise.resolve({ success: true })
+    })
+
+    await vm.initialize()
+
+    expect(mockFindProfileStore.fetchDatingMatchIds).toHaveBeenCalled()
+    expect(mockFindProfileStore.findProfilesForMapBounds).toHaveBeenCalledWith(bounds)
+    expect(Math.abs(matchIdsCallTime - boundsCallTime)).toBeLessThan(5)
+
+    mockFindProfileStore.lastMapBounds = null
+  })
+
   it('exposes matchedProfileIds from store', () => {
     mockFindProfileStore.matchedProfileIds = new Set(['p1', 'p2'])
     const vm = useSocialMatchViewModel()

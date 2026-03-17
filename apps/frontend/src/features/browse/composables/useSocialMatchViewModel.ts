@@ -37,10 +37,12 @@ export function useSocialMatchViewModel() {
   }
 
   const fetchResults = async () => {
-    await findProfileStore.fetchDatingMatchIds()
-    if (findProfileStore.lastMapBounds) {
-      await findProfileStore.findProfilesForMapBounds(findProfileStore.lastMapBounds)
-    }
+    await Promise.all([
+      findProfileStore.fetchDatingMatchIds(),
+      findProfileStore.lastMapBounds
+        ? findProfileStore.findProfilesForMapBounds(findProfileStore.lastMapBounds)
+        : Promise.resolve(),
+    ])
   }
 
   // moveend fires after updateMarkers() rebuilds the cluster
