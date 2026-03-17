@@ -9,11 +9,11 @@
 // @import "~@fontsource/mukta/index.css";
 // import "@fontsource/poppins/index.css";
 
-// Import only latin subset and required weights
-@import '@fontsource/nunito/latin-400.css';
-@import '@fontsource/nunito/latin-700.css';
-@import '@fontsource/rubik/latin-400.css';
-@import '@fontsource/rubik/latin-700.css';
+// Import all subsets with unicode-range (browser downloads only what's needed)
+@import '@fontsource/nunito/400.css';
+@import '@fontsource/nunito/700.css';
+@import '@fontsource/rubik/400.css';
+@import '@fontsource/rubik/700.css';
 
 // handwritten font for post cards
 @font-face {
