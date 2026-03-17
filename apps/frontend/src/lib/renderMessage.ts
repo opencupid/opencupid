@@ -1,3 +1,6 @@
+// TODO: markdown-it (158 kB) + dompurify (62 kB) add ~220 kB to the main bundle.
+// Consider replacing with a lightweight inline renderer (linkify + escapeHtml)
+// or lazy-loading these deps, since only renderMessage() needs them.
 import MarkdownIt from 'markdown-it'
 import DOMPurify from 'dompurify'
 
