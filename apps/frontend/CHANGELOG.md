@@ -1,5 +1,12 @@
 # frontend
 
+## 0.35.1
+
+### Patch Changes
+
+- 8554ef5: Fix landing page not being scrollable on any viewport
+- 8215025: Fix font substitution for Hungarian ő/ű characters by importing full unicode-range font subsets
+
 ## 0.35.0
 
 ### Minor Changes
