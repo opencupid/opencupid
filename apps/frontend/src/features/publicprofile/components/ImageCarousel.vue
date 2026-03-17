@@ -45,7 +45,7 @@ const showBlurhash = computed(
   () => currentImage.value?.blurhash && !loadedImages[currentImage.value.position]
 )
 
-const shouldShowNavButtons = computed(() => Object.keys(loadedImages).length > 1)
+const shouldShowNavButtons = computed(() => props.profile.profileImages.length > 1)
 
 // Reset carousel to first slide when images change (e.g. after reorder in editor)
 watch(
@@ -118,6 +118,7 @@ watch(
         v-model="fullSlide"
         v-bind="carouselProps"
         class="w-100 h-100"
+        @click="showFullscreen = false"
       >
         <Slide
           v-for="img in props.profile.profileImages"
