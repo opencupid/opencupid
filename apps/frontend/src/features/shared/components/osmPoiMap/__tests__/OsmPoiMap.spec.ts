@@ -743,7 +743,7 @@ describe('OsmPoiMap', () => {
     expect(wrapper.emitted('bounds-changed')).toBeFalsy()
 
     // Simulate the real moveend from fitBounds completing — clears suppress
-    pendingOnceCallback?.()
+    pendingOnceCallback!()
 
     // Now a user-initiated moveend should emit
     moveendHandler()
