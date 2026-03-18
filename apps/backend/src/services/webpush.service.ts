@@ -62,7 +62,7 @@ export class WebPushService {
         )
       } catch (err: any) {
         if (err.statusCode === 410) {
-          await prisma.pushSubscription.delete({ where: { endpoint: sub.endpoint } })
+          await prisma.pushSubscription.deleteMany({ where: { endpoint: sub.endpoint } })
         } else {
           console.error('Push failed:', err)
         }
@@ -103,7 +103,7 @@ export class WebPushService {
         )
       } catch (err: any) {
         if (err.statusCode === 410) {
-          await prisma.pushSubscription.delete({ where: { endpoint: sub.endpoint } })
+          await prisma.pushSubscription.deleteMany({ where: { endpoint: sub.endpoint } })
         } else {
           console.error('Call push notification failed:', err)
         }

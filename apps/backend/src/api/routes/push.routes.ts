@@ -1,5 +1,11 @@
 import { FastifyPluginAsync } from 'fastify'
+import { z } from 'zod'
 import { rateLimitConfig } from '../helpers'
+import { validateBody } from '@/utils/zodValidate'
+
+const DeleteSubscriptionBodySchema = z.object({
+  endpoint: z.string().min(1).url(),
+})
 
 const pushRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post(
@@ -45,9 +51,15 @@ const pushRoutes: FastifyPluginAsync = async (fastify) => {
       config: rateLimitConfig(fastify, '1 hour', 5),
     },
     async (req, reply) => {
-      const { endpoint } = req.body as { endpoint: string }
+      const body = validateBody<z.infer<typeof DeleteSubscriptionBodySchema>>(
+        DeleteSubscriptionBodySchema,
+        req,
+        reply
+      )
+      if (!body) return
+
       await fastify.prisma.pushSubscription.deleteMany({
-        where: { endpoint, userId: req.user.userId },
+        where: { endpoint: body.endpoint, userId: req.user.userId },
       })
       reply.code(204).send()
     }

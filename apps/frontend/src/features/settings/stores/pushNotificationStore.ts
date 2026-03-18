@@ -23,6 +23,7 @@ export const usePushNotificationStore = defineStore('pushNotification', {
   getters: {
     isSupported(): boolean {
       return (
+        typeof window !== 'undefined' &&
         typeof navigator !== 'undefined' &&
         'serviceWorker' in navigator &&
         'Notification' in window &&

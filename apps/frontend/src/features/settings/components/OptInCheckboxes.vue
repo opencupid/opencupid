@@ -16,6 +16,7 @@ const model = defineModel<ProfileOptInSettings>({
   default: () => ({
     isCallable: true,
     newsletterOptIn: false,
+    isPushNotificationEnabled: false,
   }),
 })
 
