@@ -1,5 +1,11 @@
 # backend
 
+## 0.36.0
+
+### Minor Changes
+
+- dc597ed: Refactor push notifications: extract utility to lib/utils, move subscription logic to dedicated Pinia store, derive checkbox state from browser permissions, add DELETE /push/subscription endpoint with rate limiting, auto-cleanup stale 410 subscriptions (#push-refactor)
+
 ## 0.35.2
 
 ## 0.35.1

@@ -1,5 +1,17 @@
 # frontend
 
+## 0.36.0
+
+### Minor Changes
+
+- dc597ed: Refactor push notifications: extract utility to lib/utils, move subscription logic to dedicated Pinia store, derive checkbox state from browser permissions, add DELETE /push/subscription endpoint with rate limiting, auto-cleanup stale 410 subscriptions (#push-refactor)
+- bd123b7: Show received non-anonymous likes with profile thumbnails, extract like card components (#1145)
+- 32c61eb: Fix mobile cluster tap opening popup instead of zooming, increase map icon sizes 25%, cap maxZoom at 12, style popup close button (#1141)
+
+### Patch Changes
+
+- 275054d: Debounce offline detection to prevent false-positive error overlay on app-switch
+
 ## 0.35.2
 
 ### Patch Changes
