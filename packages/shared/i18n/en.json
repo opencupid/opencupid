@@ -334,7 +334,7 @@
     "you_messaged_them": "You messaged them",
     "you_liked_them": "You liked them",
     "you_matched_with_them": "You matched with them",
-    "send_a_like": "Send them a like. They will will not know who sent it until they like you back.",
+    "send_a_like": "Send them a like.",
     "they_liked_you": "They liked you! Like them back to match.",
     "its_a_match": "It's a match!",
     "send_them_a_message": "Send {name} a message",
@@ -342,7 +342,9 @@
     "message_confirmation": "Nice!",
     "like_error": "Oops, this didn't work. Please try again.",
     "anonymous_toggle_anonymous": "Stay anonymous",
-    "anonymous_toggle_reveal": "Reveal my profile"
+    "anonymous_toggle_reveal": "Reveal my profile",
+    "anonymous_like_explanation": "They will not know who sent it until they like you back.",
+    "revealed_like_explanation": "Your name will be revealed."
   },
   "messaging": {
     "page_title": "Messages",

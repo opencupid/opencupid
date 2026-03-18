@@ -322,7 +322,7 @@
     "you_messaged_them": "Üzenetet küldtél nekik",
     "you_liked_them": "Tetszett neked",
     "you_matched_with_them": "{name} visszajelölt!",
-    "send_a_like": "Küldj neki egy ❤️-ot. Nem fogja tudni, ki küldte, amíg vissza nem lájkol.",
+    "send_a_like": "Küldj neki egy ❤️-ot.",
     "they_liked_you": "Kedvel téged! Lájkold vissza a párosításhoz.",
     "its_a_match": "Kölcsönös!",
     "send_them_a_message": "Küldj egy üzenetet neki",
@@ -330,7 +330,9 @@
     "message_confirmation": "Elküldve!",
     "like_error": "Hoppá, ez nem működött. Kérjük, próbáld meg újra.",
     "anonymous_toggle_anonymous": "Maradj anonim",
-    "anonymous_toggle_reveal": "Mutasd a profilom"
+    "anonymous_toggle_reveal": "Mutasd a profilom",
+    "anonymous_like_explanation": "Nem fogja tudni, ki küldte, amíg vissza nem lájkol.",
+    "revealed_like_explanation": "A neved látható lesz."
   },
   "messaging": {
     "page_title": "Üzenetek",

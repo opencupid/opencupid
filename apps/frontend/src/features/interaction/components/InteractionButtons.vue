@@ -161,27 +161,35 @@ const handleAnonymousChange = (value: boolean) => {
           class="mb-2 d-block"
         >
           {{ $t('interactions.send_a_like') }}
-           <BFormRadioGroup
-          v-model="selectedAnonymous"
-          stacked
-        >
-          <BFormRadio
-            name="anonymous-toggle"
-            :value="true"
-            @change="context.likedByMe && handleAnonymousChange(true)"
+          <BFormRadioGroup
+            v-model="selectedAnonymous"
+            stacked
           >
-            {{ $t('interactions.anonymous_toggle_anonymous') }}
-          </BFormRadio>
-          <BFormRadio
-            name="anonymous-toggle"
-            :value="false"
-            @change="context.likedByMe && handleAnonymousChange(false)"
-          >
-            {{ $t('interactions.anonymous_toggle_reveal') }}
-          </BFormRadio>
-        </BFormRadioGroup>
+            <BFormRadio
+              name="anonymous-toggle"
+              :value="true"
+              @change="context.likedByMe && handleAnonymousChange(true)"
+            >
+              {{ $t('interactions.anonymous_toggle_anonymous') }}
+            </BFormRadio>
+            <BFormRadio
+              name="anonymous-toggle"
+              :value="false"
+              @change="context.likedByMe && handleAnonymousChange(false)"
+            >
+              {{ $t('interactions.anonymous_toggle_reveal') }}
+            </BFormRadio>
+          </BFormRadioGroup>
+          <div v-if="selectedAnonymous">
+            <!--  They will will not know who sent it until they like you back. -->
+              <!-- Nem fogja tudni, ki küldte, amíg vissza nem lájkol. -->
+            {{ $t('interactions.anonymous_like_explanation') }}
+          </div>
+          <div v-else>
+            <!-- Your name will be revealed -->
+            {{ $t('interactions.revealed_like_explanation') }}
+          </div>
         </span>
-       
       </template>
     </BPopover>
   </div>
