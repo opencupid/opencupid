@@ -18,47 +18,41 @@ const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
         <div
           class="dating rounded-3 d-flex flex-column align-items-center justify-content-center p-2"
         >
-          <div class="placeholder-chip ratio ratio-1x1">
-            <div class="placeholder-avatar mt-2" />
-          </div>
-          <BPlaceholder
-            class="mt-1"
-            :width="70"
-            size="xs"
-          />
+          <div class="placeholder-chip ratio ratio-1x1 dating-eligible-highlight"></div>
+          <small class="mt-1 w-100 text-center">
+            <span class="placeholder w-75 opacity-25" />
+          </small>
         </div>
       </div>
     </template>
     <p class="mb-2">
       {{ $t('matches.anonymous_like_hint') }}
     </p>
-    <div class="placeholder-chip d-flex align-items-center gap-1 mb-2">
+    <div class="d-flex flex-column align-items-center justify-content-center gap-1 mb-2">
       <ProfileThumbnail
         v-if="viewerProfile"
         :profile="viewerProfile"
-        class="owner-thumb dating-eligible-highlight"
+        class="owner-thumb dating-eligible-highlight mb-2"
       />
+      <RouterLink
+        to="/browse"
+        class="btn btn-sm btn-primary"
+      >
+        {{ $t('matches.anonymous_like_hint_cta') }}
+      </RouterLink>
     </div>
-    <RouterLink
-      to="/browse"
-      class="btn btn-sm btn-primary"
-    >
-      {{ $t('matches.anonymous_like_hint_cta') }}
-    </RouterLink>
   </BPopover>
 </template>
 
 <style scoped>
 .placeholder-chip {
   width: 2.5rem;
-}
-
-.placeholder-avatar {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
   background-color: var(--bs-secondary);
   opacity: 0.4;
+}
+.placeholder {
+  opacity: 0.25;
+  background-color: var(--bs-secondary);
 }
 
 .clickable {
@@ -78,5 +72,4 @@ const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
   width: 2.5rem;
   height: 2.5rem;
 }
-
 </style>

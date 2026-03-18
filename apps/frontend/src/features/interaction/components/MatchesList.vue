@@ -22,7 +22,7 @@ const profiles = computed(() =>
       class="dating d-flex align-items-center mb-3 p-2 border-0 rounded-3 shadow cursor-pointer user-select-none"
       @click="$emit('select:profile', profile.id)"
     >
-      <div class="me-2 flex-shrink-0">
+      <div class="mx-2 mt-2 flex-shrink-0">
         <ProfileThumbnail :profile="profile" />
       </div>
       <div class="text-truncate fw-bold">{{ profile.publicName }}</div>
