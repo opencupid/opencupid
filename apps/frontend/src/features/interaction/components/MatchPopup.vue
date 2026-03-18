@@ -44,10 +44,10 @@ const handleMessageSent = () => {
     @hidden="messageSent = false"
   >
     <div class="w-100 p-5">
-      <h1 class="text-center mb-4">
+      <h6 class="display-6 text-center mb-4">
         <!-- It's a match! -->
         {{ $t('interactions.its_a_match') }}
-      </h1>
+      </h6>
       <div class="d-flex flex-row align-items-center justify-content-center mb-4">
         <div class="image-wrapper">
           <ProfileImage
@@ -65,13 +65,13 @@ const handleMessageSent = () => {
       </div>
       <div
         v-if="profile.interactionContext.canMessage"
-        class="text-center mb-4"
+        class="text-center"
       >
         <div v-if="!messageSent">
-          <h5 class="text-center mb-3">
+          <h6 class="text-center mb-3">
             <!-- send {them} a messages -->
             {{ $t('interactions.send_them_a_message', { name: profile.publicName }) }}
-          </h5>
+          </h6>
           <SendMessageForm
             ref="messageInput"
             :recipientProfile="profile"
