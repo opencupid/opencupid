@@ -58,6 +58,7 @@ describe('SendMessageForm', () => {
     conversation: null,
     interactionContext: {
       likedByMe: false,
+      likedMe: false,
       isMatch: false,
       isAnonymous: true,
       passedByMe: false,

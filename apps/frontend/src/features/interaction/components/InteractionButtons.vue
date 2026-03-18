@@ -158,8 +158,7 @@ const handleAnonymousChange = (value: boolean) => {
         </BButton>
       </template>
       <span class="mb-2 d-block">
-        <IconHeart class="svg-icon text-dating" />
-        {{ $t('interactions.they_liked_you') }}
+        {{ $t('interactions.like_them_back') }}
       </span>
     </BPopover>
 
