@@ -1,5 +1,11 @@
 # frontend
 
+## 0.35.2
+
+### Patch Changes
+
+- 1c24aeb: Shuffle UserHome profile grid ordering per session for variety
+
 ## 0.35.1
 
 ### Patch Changes
