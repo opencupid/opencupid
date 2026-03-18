@@ -335,6 +335,7 @@
     "you_liked_them": "You liked them",
     "you_matched_with_them": "You matched with them",
     "send_a_like": "Send them a like. They will will not know who sent it until they like you back.",
+    "they_liked_you": "They liked you! Like them back to match.",
     "its_a_match": "It's a match!",
     "send_them_a_message": "Send {name} a message",
     "cancel_button": "Maybe later",

@@ -3,6 +3,7 @@ import z from 'zod'
 export const DatingContextSchema = z.object({
   likedByMe: z.boolean().default(false),
   isAnonymous: z.boolean().default(true),
+  likedMe: z.boolean().default(false),
   isMatch: z.boolean().default(false),
   passedByMe: z.boolean().default(false),
   canLike: z.boolean().default(false),

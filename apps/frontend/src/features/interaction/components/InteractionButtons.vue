@@ -150,12 +150,18 @@ const handleAnonymousChange = (value: boolean) => {
           {{ $t('interactions.you_liked_them') }}
         </span>
         <span
+          v-else-if="context.likedMe"
+          class="mb-2 d-block"
+        >
+          <IconHeart class="svg-icon text-dating" />
+          {{ $t('interactions.they_liked_you') }}
+        </span>
+        <span
           v-else
           class="mb-2 d-block"
         >
           {{ $t('interactions.send_a_like') }}
-        </span>
-        <BFormRadioGroup
+           <BFormRadioGroup
           v-model="selectedAnonymous"
           stacked
         >
@@ -174,6 +180,8 @@ const handleAnonymousChange = (value: boolean) => {
             {{ $t('interactions.anonymous_toggle_reveal') }}
           </BFormRadio>
         </BFormRadioGroup>
+        </span>
+       
       </template>
     </BPopover>
   </div>
