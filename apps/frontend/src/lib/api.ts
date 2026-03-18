@@ -27,6 +27,7 @@ const ERROR_CODES = [
 
 let isOffline = false
 let retryTimeoutId: NodeJS.Timeout | null = null
+let offlineDebounceId: NodeJS.Timeout | null = null
 let waitForRecovery: (() => void)[] = []
 
 export const isApiOnline = () =>
@@ -75,6 +76,11 @@ export async function getVersionInfo(options?: { timeout?: number }): Promise<Ve
 
 api.interceptors.response.use(
   (response) => {
+    if (offlineDebounceId) {
+      clearTimeout(offlineDebounceId)
+      offlineDebounceId = null
+    }
+
     if (isOffline) {
       isOffline = false
       bus.emit('api:online')
@@ -159,13 +165,16 @@ api.interceptors.response.use(
       }
     }
 
-    // Network error handling
+    // Network error handling — debounce to avoid false positives from app-switching
     const isNetworkError = !error.response || ERROR_CODES.includes(error.code)
 
-    if (isNetworkError && !isOffline) {
-      isOffline = true
-      bus.emit('api:offline')
-      startRetryMechanism()
+    if (isNetworkError && !isOffline && !offlineDebounceId) {
+      offlineDebounceId = setTimeout(() => {
+        offlineDebounceId = null
+        isOffline = true
+        bus.emit('api:offline')
+        startRetryMechanism()
+      }, 3000)
     }
 
     return Promise.reject(error)
