@@ -157,6 +157,7 @@ model User {
   requestsReceived ConnectionRequest[] @relation("RequestsReceived")
 
   pushSubscription          PushSubscription[]
+  // TODO: remove isPushNotificationEnabled — push state should be derived from PushSubscription existence
   isPushNotificationEnabled Boolean            @default(false)
 }
 

@@ -1,99 +1,39 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { api } from '@/lib/api'
+import { onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
+import { usePushNotificationStore } from '../stores/pushNotificationStore'
 
-const props = defineProps<{
-  modelValue: boolean
+defineProps<{
   disabled?: boolean
 }>()
 
-const emit = defineEmits<{
-  (e: 'update:modelValue', value: boolean): void
-}>()
-
 const { t } = useI18n()
-const ownerProfileStore = useOwnerProfileStore()
+const pushStore = usePushNotificationStore()
 
-const isSupported =
-  'serviceWorker' in navigator && 'Notification' in window && 'PushManager' in window
-
-const isLoading = ref(false)
-
-function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
-  const padding = '='.repeat((4 - (base64.length % 4)) % 4)
-  const base64url = (base64 + padding).replace(/-/g, '+').replace(/_/g, '/')
-  try {
-    const raw = atob(base64url)
-    return Uint8Array.from([...raw].map((char) => char.charCodeAt(0)))
-  } catch (error) {
-    console.error('Failed to decode base64 string:', error)
-  }
-  return new Uint8Array()
-}
+onMounted(() => pushStore.checkSubscription())
 
 async function handleChange(event: Event) {
   const checkbox = event.target as HTMLInputElement
   const checked = checkbox.checked
 
-  isLoading.value = true
-  try {
-    if (checked) {
-      const permission = await Notification.requestPermission()
-      if (permission !== 'granted') {
-        checkbox.checked = false
-        return
-      }
-
-      const registration = await navigator.serviceWorker.ready
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(__APP_CONFIG__.VAPID_PUBLIC_KEY),
-      })
-
-      await api.post('/push/subscription', subscription)
-      const updateRes = await ownerProfileStore.updateOptInSettings({
-        isPushNotificationEnabled: true,
-      })
-      if (!updateRes.success) {
-        throw new Error(updateRes.message)
-      }
-      emit('update:modelValue', true)
-    } else {
-      const registration = await navigator.serviceWorker.ready
-      const subscription = await registration.pushManager.getSubscription()
-      if (subscription) {
-        await subscription.unsubscribe()
-      }
-      const updateRes = await ownerProfileStore.updateOptInSettings({
-        isPushNotificationEnabled: false,
-      })
-      if (!updateRes.success) {
-        throw new Error(updateRes.message)
-      }
-      emit('update:modelValue', false)
-    }
-  } catch (error) {
-    console.error('Push notification toggle failed:', error)
+  const res = checked ? await pushStore.subscribe() : await pushStore.unsubscribe()
+  if (!res.success) {
     checkbox.checked = !checked
-  } finally {
-    isLoading.value = false
   }
 }
 </script>
 
 <template>
   <div
-    v-if="isSupported"
+    v-if="pushStore.isSupported"
     class="form-check"
   >
     <input
       id="push-notify-messages"
       type="checkbox"
       class="form-check-input"
-      :checked="modelValue"
-      :disabled="disabled || isLoading"
+      :checked="pushStore.isSubscribed"
+      :disabled="disabled || pushStore.isLoading"
       @change="handleChange"
     />
     <label

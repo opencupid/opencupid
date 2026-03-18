@@ -314,7 +314,9 @@ export class ProfileService {
       if (!profile) return null
       const result = DatingEligibleProfileSchema.safeParse({ ...profile, isDatingActive: true })
       if (!result.success) {
-        const err = new Error('Profile must complete dating onboarding before activating dating mode')
+        const err = new Error(
+          'Profile must complete dating onboarding before activating dating mode'
+        )
         err.name = 'DatingEligibilityError'
         throw err
       }
