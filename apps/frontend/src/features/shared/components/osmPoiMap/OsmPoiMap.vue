@@ -628,7 +628,7 @@ watch(
 :deep(.leaflet-popup-content-wrapper) {
   padding: 0;
   border-radius: 0.375rem;
-  overflow: hidden;
+  overflow: visible;
   background: transparent;
   box-shadow: 0 3px 14px rgba(0, 0, 0, 0.5);
   border: 1px solid transparent;
@@ -642,10 +642,34 @@ watch(
   border: 1px solid white;
 }
 
+:deep(.leaflet-popup-close-button) {
+  width: 24px !important;
+  height: 24px !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7) !important;
+  color: white !important;
+  border-radius: 50%;
+  font-size: 16px;
+  line-height: 1;
+  top: -10px !important;
+  right: -10px !important;
+  padding: 0 !important;
+  z-index: 1;
+}
+
+:deep(.leaflet-popup-close-button:hover) {
+  background: rgba(0, 0, 0, 0.9) !important;
+  color: white !important;
+}
+
 :deep(.leaflet-popup-content) {
   margin: 0;
   line-height: 1.3;
   min-height: 1px;
+  border-radius: 0.375rem;
+  overflow: hidden;
 }
 
 /* Override Bootstrap's card hover lift inside map popups */
