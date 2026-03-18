@@ -148,7 +148,7 @@ function createLeafletMap(el: HTMLDivElement): LMap {
   const m = L.map(el, {
     center: props.center ?? [0, 0],
     zoom: props.center ? props.zoom : 2,
-    maxZoom: 14,
+    maxZoom: 12,
     preferCanvas: true,
     trackResize: false,
   })
@@ -560,12 +560,10 @@ watch(
 }
 
 :deep(.poi-cluster-badge) {
-  width: 28px;
-  height: 28px;
   border-radius: 50%;
   background: #3a86ff;
   color: white;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   display: flex;
   align-items: center;

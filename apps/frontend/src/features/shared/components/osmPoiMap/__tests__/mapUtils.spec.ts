@@ -15,6 +15,7 @@ import {
   createClusterIcon,
   hydratePoiIcon,
   clearIconCache,
+  CLUSTER_ICON_SIZE,
 } from '../mapUtils'
 
 const DummyIcon = defineComponent({
@@ -68,10 +69,10 @@ describe('createClusterIcon', () => {
   it('creates a DivIcon with the cluster child count', () => {
     const icon = createClusterIcon({ getChildCount: () => 7 })
     expect(icon).toMatchObject({
-      html: '<div class="poi-cluster-badge">7</div>',
+      html: `<div class="poi-cluster-badge" style="width:${CLUSTER_ICON_SIZE}px;height:${CLUSTER_ICON_SIZE}px">7</div>`,
       className: 'poi-cluster-icon',
-      iconSize: [28, 28],
-      iconAnchor: [14, 14],
+      iconSize: [CLUSTER_ICON_SIZE, CLUSTER_ICON_SIZE],
+      iconAnchor: [CLUSTER_ICON_SIZE / 2, CLUSTER_ICON_SIZE / 2],
     })
   })
 })
