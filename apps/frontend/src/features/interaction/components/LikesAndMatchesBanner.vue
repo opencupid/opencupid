@@ -18,20 +18,15 @@ const emit = defineEmits<{
     v-if="haveNewMatches || haveReceivedLikes"
   >
     <div class="">
-      {{ $t('matches.notifications.you_have') }}
       <span v-if="haveReceivedLikes">{{
-        t('matches.notifications.likes', { count: receivedLikesCount })
-        
+        t('matches.notifications.you_have_likes', { count: receivedLikesCount })
       }}</span>
-      <span>&nbsp;</span>
-      <span v-if="haveNewMatches && haveReceivedLikes">
-        {{ $t('matches.notifications.and') }}
-      </span>
-      <span>&nbsp;</span>
+      <template v-if="haveNewMatches && haveReceivedLikes">
+        &nbsp;{{ $t('matches.notifications.and') }}&nbsp;
+      </template>
       <span v-if="haveNewMatches">
         {{ t('matches.notifications.matches', { count: newMatchesCount }) }}
-      </span>
-      <span>!</span>
+      </span>!
     </div>
     <p class="text-muted">
       

@@ -310,8 +310,7 @@
     "no_match_have_sent_like_cta": "Keep lookin'",
     "find_button_cta": "Go connect",
     "notifications": {
-      "you_have": "You have",
-      "likes": "{count, plural, one {# ❤️} other {# ❤️}}",
+      "you_have_likes": "{count, plural, one {You have # ❤️} other {You have # ❤️}}",
       "matches": "{count, plural, one {# new match} other {# new matches}}",
       "and": "and"
     },
@@ -348,6 +347,7 @@
   "messaging": {
     "page_title": "Messages",
     "matches_list_title": "My matches",
+    "my_conversations": "My conversations",
     "loading_older_messages": "Loading older messages\u2026",
     "send_message_button": "Send",
     "message_input_placeholder": "Type your message here...",

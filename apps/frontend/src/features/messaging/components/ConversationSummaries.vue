@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { type ConversationSummary } from '@zod/messaging/messaging.dto'
 import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
-import { useI18n } from 'vue-i18n'
 import { stripForPreview } from '@/lib/renderMessage'
+import { computed } from 'vue'
 
-defineProps<{
+const props = defineProps<{
   conversations: ConversationSummary[]
   activeConversation: ConversationSummary | null
   loading: boolean
@@ -14,11 +14,17 @@ defineEmits<{
   (e: 'convo:select', val: ConversationSummary): void
 }>()
 
-const { t } = useI18n()
+const haveConversations = computed(() => props.conversations.length > 0)
 </script>
 
 <template>
   <div class="mb-3 px-3">
+    <p
+      v-if="haveConversations"
+      class="text-center"
+    >
+      {{ $t('messaging.my_conversations') }}
+    </p>
     <BListGroup>
       <BListGroupItem
         v-for="convo in conversations"
@@ -40,7 +46,7 @@ const { t } = useI18n()
             v-if="convo.lastMessage"
             >{{
               convo.lastMessage.messageType === 'audio/voice'
-                ? t('messaging.voice.voice_message_preview')
+                ? $t('messaging.voice.voice_message_preview')
                 : stripForPreview(convo.lastMessage.content)
             }}</small
           >
@@ -49,14 +55,14 @@ const { t } = useI18n()
           <small
             v-if="!convo.lastMessage?.isMine"
             class="badge bg-danger"
-            >{{ t('messaging.my_turn') }}</small
+            >{{ $t('messaging.my_turn') }}</small
           >
           <small
             v-if="!convo.canReply"
             class="badge bg-secondary"
           >
             <!-- Their turn -->
-            {{ t('messaging.their_turn') }}
+            {{ $t('messaging.their_turn') }}
           </small>
         </div>
       </BListGroupItem>

@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
-import { useI18n } from 'vue-i18n'
 import { useInteractionsViewModel } from '../composables/useInteractionsViewModel'
 import RevealedLikeCard from './RevealedLikeCard.vue'
 import AnonymousLikeCard from './AnonymousLikeCard.vue'
 import type { ReceivedLike } from '@zod/interaction/interaction.dto'
 
-const { t } = useI18n()
 const { receivedLikes, receivedLikesCount, haveReceivedLikes, refreshInteractions } =
   useInteractionsViewModel()
 
@@ -22,8 +20,7 @@ const displayedLikes = computed(() => receivedLikes.value.slice(0, 4))
 <template>
   <div v-if="haveReceivedLikes">
     <p class="text-center mb-2">
-      {{ t('matches.notifications.you_have') }}
-      {{ t('matches.notifications.likes', { count: receivedLikesCount }) }}
+      {{ $t('matches.notifications.you_have_likes', { count: receivedLikesCount }) }}
     </p>
     <BRow
       class="g-2 px-1"

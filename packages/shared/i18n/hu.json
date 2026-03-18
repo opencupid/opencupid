@@ -298,8 +298,7 @@
     "no_match_have_sent_like_cta": "Keresés",
     "find_button_cta": "Kapcsolódj",
     "notifications": {
-      "you_have": " ",
-      "likes": "{count, plural, one {# ❤️} other {# ❤️}}",
+      "you_have_likes": "{count, plural, one {# ❤️} other {# ❤️}}",
       "matches": "{count, plural, one {# új kölcsönös ❤️} other {# új kölcsönös ❤️}}",
       "and": "és"
     },
@@ -336,6 +335,7 @@
   "messaging": {
     "page_title": "Üzenetek",
     "matches_list_title": "Kölcsönös ❤️",
+    "my_conversations": "Beszélgetéseim",
     "loading_older_messages": "Régebbi üzenetek betöltése\u2026",
     "send_message_button": "Mehet",
     "message_input_placeholder": "...",
