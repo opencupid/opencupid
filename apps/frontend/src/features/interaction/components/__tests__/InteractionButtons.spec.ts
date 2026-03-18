@@ -18,7 +18,7 @@ import type { InteractionContext } from '@zod/interaction/interactionContext.dto
 const baseContext: InteractionContext = {
   likedByMe: false,
   isAnonymous: true,
-  likedMe: false,
+  likedMeRevealed: false,
   isMatch: false,
   passedByMe: false,
   canLike: true,

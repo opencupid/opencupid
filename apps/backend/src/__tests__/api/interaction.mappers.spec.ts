@@ -55,20 +55,20 @@ describe('mapInteractionContext', () => {
     expect(result.isAnonymous).toBe(false)
   })
 
-  it('sets likedMe true when they liked me non-anonymously', () => {
+  it('sets likedMeRevealed true when they liked me non-anonymously', () => {
     const profile = makeProfile({
       likesSent: [{ toId: 'me', isAnonymous: false }] as any,
     })
     const result = mapInteractionContext(profile, true)
-    expect(result.likedMe).toBe(true)
+    expect(result.likedMeRevealed).toBe(true)
   })
 
-  it('sets likedMe false when they liked me anonymously', () => {
+  it('sets likedMeRevealed false when they liked me anonymously', () => {
     const profile = makeProfile({
       likesSent: [{ toId: 'me', isAnonymous: true }] as any,
     })
     const result = mapInteractionContext(profile, true)
-    expect(result.likedMe).toBe(false)
+    expect(result.likedMeRevealed).toBe(false)
   })
 
   it('detects a match when both like each other', () => {

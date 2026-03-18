@@ -23,19 +23,8 @@ for (const path of Object.keys(lazyLocales)) {
 
 export { staticData, availableLanguages }
 
-// Preserve the Tolgee singleton across HMR updates
-export const tolgee: ReturnType<ReturnType<typeof Tolgee>['init']> =
-  import.meta.hot?.data?.tolgee ??
-  Tolgee().use(DevTools()).use(FormatIcu()).init({
-    language: 'en',
-    staticData,
-    availableLanguages,
-  })
-
-if (import.meta.hot?.data) {
-  import.meta.hot.data.tolgee = tolgee
-  import.meta.hot.accept(() => {
-    // Module re-executed with fresh `en` import — push updated translations into the persisted instance
-    tolgee.addStaticData({ en: en as TolgeeStaticData[string] })
-  })
-}
+export const tolgee = Tolgee().use(DevTools()).use(FormatIcu()).init({
+  language: 'en',
+  staticData,
+  availableLanguages,
+})

@@ -14,7 +14,7 @@ function mapDatingContext(profile: DbProfileWithContext): DatingContext {
   return {
     likedByMe,
     isAnonymous: likedByMe ? likesReceived[0].isAnonymous : true,
-    likedMe: likedMe && !likesSent[0].isAnonymous,
+    likedMeRevealed: likedMe && !likesSent[0].isAnonymous,
     passedByMe,
     isMatch: likedByMe && likedMe,
     canLike: !likedByMe,

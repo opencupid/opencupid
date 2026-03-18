@@ -144,7 +144,7 @@ const handleAnonymousChange = (value: boolean) => {
 
     <!-- like popover: they liked me (non-anonymous) -->
     <BPopover
-      v-else-if="context.canDate && !context.isMatch && context.likedMe"
+      v-else-if="context.canDate && !context.isMatch && context.likedMeRevealed"
       placement="top"
       :title="$t('interactions.they_liked_you')"
     >
