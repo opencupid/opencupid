@@ -4,6 +4,7 @@ import { computed, onMounted, provide, ref, toRef } from 'vue'
 import { useRouter } from 'vue-router'
 import { useBreakpoints } from '@vueuse/core'
 import { useBootstrap } from '@/lib/bootstrap'
+import { seededShuffle } from '@/lib/utils'
 import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 import { type PublicProfile } from '@zod/profile/profile.dto'
 import type { PopularTag } from '@zod/tag/tag.dto'
@@ -20,9 +21,14 @@ const newProfiles = ref([] as PublicProfile[])
 
 const breakpoints = useBreakpoints({ md: 768, lg: 992 })
 const isMdOrSmaller = breakpoints.smallerOrEqual('md')
-const visibleProfiles = computed(() =>
-  isMdOrSmaller.value ? newProfiles.value.slice(0, 6) : newProfiles.value
-)
+
+// Seed once per page load so the order is stable within a session but
+// different across sessions.
+const orderingSeed = Math.random()
+const visibleProfiles = computed(() => {
+  const shuffled = seededShuffle(newProfiles.value, orderingSeed)
+  return isMdOrSmaller.value ? shuffled.slice(0, 6) : shuffled
+})
 
 onMounted(async () => {
   await useBootstrap().bootstrap()

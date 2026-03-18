@@ -26,7 +26,7 @@ useCallStore().initialize()
   <UpdateBanner />
   <Navbar />
   <RouterView v-slot="{ Component }">
-    <KeepAlive :include="['BrowseProfiles', 'BrowsePosts']">
+    <KeepAlive :include="['UserHome', 'BrowseProfiles', 'BrowsePosts']">
       <component :is="Component" />
     </KeepAlive>
   </RouterView>
