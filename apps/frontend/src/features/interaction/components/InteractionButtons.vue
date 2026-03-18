@@ -5,6 +5,7 @@ import { type InteractionContext } from '@zod/interaction/interactionContext.dto
 import IconHeart from '@/assets/icons/interface/heart.svg'
 import IconCross from '@/assets/icons/interface/cross.svg'
 import IconMessage from '@/assets/icons/interface/message.svg'
+import AnonymousToggle from './AnonymousToggle.vue'
 import ConfirmPassDialog from './ConfirmPassDialog.vue'
 
 const props = defineProps<{
@@ -121,12 +122,31 @@ const handleAnonymousChange = (value: boolean) => {
       </span>
     </BPopover>
 
-    <!-- interaction action buttons popovers, 'like' action -->
+    <!-- like popover: already liked by me -->
     <BPopover
-      v-if="context.canDate && !context.isMatch"
+      v-if="context.canDate && !context.isMatch && context.likedByMe"
       placement="top"
-      title=""
-      title-class="d-none"
+      :title="$t('interactions.you_liked_them')"
+    >
+      <template #target>
+        <BButton
+          class="btn-icon-lg btn-dating btn-shadow"
+          :title="$t('interactions.like_button_title')"
+        >
+          <IconHeart class="svg-icon-lg" />
+        </BButton>
+      </template>
+      <AnonymousToggle
+        v-model="selectedAnonymous"
+        @change="handleAnonymousChange"
+      />
+    </BPopover>
+
+    <!-- like popover: they liked me (non-anonymous) -->
+    <BPopover
+      v-else-if="context.canDate && !context.isMatch && context.likedMe"
+      placement="top"
+      :title="$t('interactions.they_liked_you')"
     >
       <template #target>
         <BButton
@@ -137,60 +157,28 @@ const handleAnonymousChange = (value: boolean) => {
           <IconHeart class="svg-icon-lg" />
         </BButton>
       </template>
-      <span v-if="context.isMatch">
+      <span class="mb-2 d-block">
         <IconHeart class="svg-icon text-dating" />
-        {{ $t('interactions.you_matched_with_them') }}
+        {{ $t('interactions.they_liked_you') }}
       </span>
-      <template v-else>
-        <span
-          v-if="context.likedByMe"
-          class="mb-2 d-block"
+    </BPopover>
+
+    <!-- like popover: send a like -->
+    <BPopover
+      v-else-if="context.canDate && !context.isMatch"
+      placement="top"
+      :title="$t('interactions.send_a_like')"
+    >
+      <template #target>
+        <BButton
+          class="btn-icon-lg btn-dating btn-shadow"
+          @click="handleLikeClick"
+          :title="$t('interactions.like_button_title')"
         >
-          <IconHeart class="svg-icon text-dating" />
-          {{ $t('interactions.you_liked_them') }}
-        </span>
-        <span
-          v-else-if="context.likedMe"
-          class="mb-2 d-block"
-        >
-          <IconHeart class="svg-icon text-dating" />
-          {{ $t('interactions.they_liked_you') }}
-        </span>
-        <span
-          v-else
-          class="mb-2 d-block"
-        >
-          {{ $t('interactions.send_a_like') }}
-          <BFormRadioGroup
-            v-model="selectedAnonymous"
-            stacked
-          >
-            <BFormRadio
-              name="anonymous-toggle"
-              :value="true"
-              @change="context.likedByMe && handleAnonymousChange(true)"
-            >
-              {{ $t('interactions.anonymous_toggle_anonymous') }}
-            </BFormRadio>
-            <BFormRadio
-              name="anonymous-toggle"
-              :value="false"
-              @change="context.likedByMe && handleAnonymousChange(false)"
-            >
-              {{ $t('interactions.anonymous_toggle_reveal') }}
-            </BFormRadio>
-          </BFormRadioGroup>
-          <div v-if="selectedAnonymous">
-            <!--  They will will not know who sent it until they like you back. -->
-              <!-- Nem fogja tudni, ki küldte, amíg vissza nem lájkol. -->
-            {{ $t('interactions.anonymous_like_explanation') }}
-          </div>
-          <div v-else>
-            <!-- Your name will be revealed -->
-            {{ $t('interactions.revealed_like_explanation') }}
-          </div>
-        </span>
+          <IconHeart class="svg-icon-lg" />
+        </BButton>
       </template>
+      <AnonymousToggle v-model="selectedAnonymous" />
     </BPopover>
   </div>
 </template>
