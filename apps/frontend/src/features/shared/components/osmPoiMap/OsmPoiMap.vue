@@ -14,6 +14,7 @@ import {
   createClusterIcon,
   hydratePoiIcon,
   clearIconCache,
+  MAP_MAX_ZOOM,
 } from './mapUtils'
 
 const props = withDefaults(
@@ -148,7 +149,7 @@ function createLeafletMap(el: HTMLDivElement): LMap {
   const m = L.map(el, {
     center: props.center ?? [0, 0],
     zoom: props.center ? props.zoom : 2,
-    maxZoom: 12,
+    maxZoom: MAP_MAX_ZOOM,
     preferCanvas: true,
     trackResize: false,
   })
@@ -447,7 +448,7 @@ function highlightSelected() {
     const m = markers.get(props.selectedId)
     if (m) {
       // Center and open its popup
-      map.setView(m.getLatLng(), Math.max(map.getZoom(), 12))
+      map.setView(m.getLatLng(), Math.max(map.getZoom(), MAP_MAX_ZOOM))
       m.openPopup()
     }
   }

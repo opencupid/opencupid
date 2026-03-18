@@ -13,6 +13,7 @@ export function computeViewportMultiplier(mapSize: { x: number; y: number }): nu
   return Math.max(0.8, Math.min(4, minDim / 400))
 }
 
+export const MAP_MAX_ZOOM = 12
 export const CLUSTER_ICON_SIZE = 35
 export const POI_ICON_SIZE = 40
 
