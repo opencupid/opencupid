@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import { inject, type Ref } from 'vue'
-import { useI18n } from 'vue-i18n'
 import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
 import type { OwnerProfile } from '@zod/profile/profile.dto'
 
-const { t } = useI18n()
 const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
 </script>
 
@@ -32,20 +30,20 @@ const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
       </div>
     </template>
     <p class="mb-2">
-      {{ t('matches.anonymous_like_hint') }}
+      {{ $t('matches.anonymous_like_hint') }}
     </p>
     <div class="placeholder-chip d-flex align-items-center gap-1 mb-2">
       <ProfileThumbnail
         v-if="viewerProfile"
         :profile="viewerProfile"
-        class="owner-thumb highlighted-indicator"
+        class="owner-thumb dating-eligible-highlight"
       />
     </div>
     <RouterLink
       to="/browse"
       class="btn btn-sm btn-primary"
     >
-      {{ t('matches.anonymous_like_hint_cta') }}
+      {{ $t('matches.anonymous_like_hint_cta') }}
     </RouterLink>
   </BPopover>
 </template>
@@ -81,11 +79,4 @@ const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
   height: 2.5rem;
 }
 
-.highlighted-indicator {
-  display: inline-block;
-  border-radius: 50%;
-  background-color: var(--bs-secondary);
-  box-shadow: 0 0 6px 3px rgba(217, 83, 79, 0.7);
-  filter: drop-shadow(0 0 6px rgba(217, 83, 79, 0.6));
-}
 </style>
