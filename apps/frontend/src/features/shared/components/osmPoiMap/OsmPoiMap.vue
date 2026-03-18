@@ -448,7 +448,7 @@ function highlightSelected() {
     const m = markers.get(props.selectedId)
     if (m) {
       // Center and open its popup
-      map.setView(m.getLatLng(), Math.max(map.getZoom(), MAP_MAX_ZOOM))
+      map.setView(m.getLatLng(), MAP_MAX_ZOOM)
       m.openPopup()
     }
   }
