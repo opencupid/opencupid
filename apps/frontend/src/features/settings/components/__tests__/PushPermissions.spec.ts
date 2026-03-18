@@ -1,82 +1,65 @@
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 
-vi.mock('@/lib/api', () => {
-  const post = vi.fn().mockResolvedValue({})
-  return { api: { post } }
-})
+const mockSubscribe = vi.fn().mockResolvedValue({ success: true })
+const mockUnsubscribe = vi.fn().mockResolvedValue({ success: true })
+const mockCheckSubscription = vi.fn()
 
-import { api } from '@/lib/api'
-import PushPermissions from '../PushPermissions.vue'
-
-const post = api.post as ReturnType<typeof vi.fn>
-const updateOptInSettings = vi.fn().mockResolvedValue({
-  success: true,
-  data: {
-    isCallable: true,
-    newsletterOptIn: false,
-    isPushNotificationEnabled: true,
-  },
-})
-
-vi.mock('@/features/myprofile/stores/ownerProfileStore', () => ({
-  useOwnerProfileStore: () => ({
-    updateOptInSettings,
+vi.mock('../../stores/pushNotificationStore', () => ({
+  usePushNotificationStore: () => ({
+    isSupported: true,
+    isSubscribed: false,
+    isLoading: false,
+    subscribe: mockSubscribe,
+    unsubscribe: mockUnsubscribe,
+    checkSubscription: mockCheckSubscription,
   }),
 }))
 
+import PushPermissions from '../PushPermissions.vue'
+
 beforeEach(() => {
-  post.mockClear()
-  updateOptInSettings.mockClear()
-  ;(global as any).PushManager = {}
-  ;(global as any).__APP_CONFIG__ = {
-    VAPID_PUBLIC_KEY:
-      'BIgjb-IGNNSdDDw2DJ45-jBTUVjjmnxYZgmoo7LZsRMdg7Mj3M22bh9wjQdH9oqmP3GP5z1DmOZlw6vnGR36BJs',
-  }
+  setActivePinia(createPinia())
+  mockSubscribe.mockClear()
+  mockUnsubscribe.mockClear()
+  mockCheckSubscription.mockClear()
 })
 
 describe('PushPermissions', () => {
-  it('requests permission when checkbox is checked', async () => {
-    ;(global as any).Notification = { requestPermission: vi.fn().mockResolvedValue('denied') }
-    ;(global as any).navigator = {
-      serviceWorker: {
-        ready: Promise.resolve({
-          pushManager: { subscribe: vi.fn(), getSubscription: vi.fn().mockResolvedValue(null) },
-        }),
-      },
-    }
-    const wrapper = mount(PushPermissions, { props: { modelValue: false } })
-    const checkbox = wrapper.find('input[type="checkbox"]')
-    ;(checkbox.element as HTMLInputElement).checked = true
-    await checkbox.trigger('change')
-    expect((Notification as any).requestPermission).toHaveBeenCalled()
-    delete (global as any).Notification
+  it('calls checkSubscription on mount', () => {
+    mount(PushPermissions)
+    expect(mockCheckSubscription).toHaveBeenCalled()
   })
 
-  it('subscribes and posts when permission granted', async () => {
-    const subscribe = vi.fn().mockResolvedValue('sub')
-    ;(global as any).Notification = { requestPermission: vi.fn().mockResolvedValue('granted') }
-    ;(global as any).navigator = {
-      serviceWorker: {
-        ready: Promise.resolve({
-          pushManager: { subscribe, getSubscription: vi.fn().mockResolvedValue(null) },
-        }),
-      },
-    }
-    const wrapper = mount(PushPermissions, { props: { modelValue: false } })
+  it('calls subscribe when checkbox is checked', async () => {
+    const wrapper = mount(PushPermissions)
     const checkbox = wrapper.find('input[type="checkbox"]')
     ;(checkbox.element as HTMLInputElement).checked = true
     await checkbox.trigger('change')
-    // flush async chain
     await Promise.resolve()
+    expect(mockSubscribe).toHaveBeenCalled()
+  })
+
+  it('calls unsubscribe when checkbox is unchecked', async () => {
+    const wrapper = mount(PushPermissions)
+    const checkbox = wrapper.find('input[type="checkbox"]')
+    ;(checkbox.element as HTMLInputElement).checked = false
+    await checkbox.trigger('change')
     await Promise.resolve()
+    expect(mockUnsubscribe).toHaveBeenCalled()
+  })
+
+  it('reverts checkbox on subscribe failure', async () => {
+    mockSubscribe.mockResolvedValue({ success: false, message: 'denied' })
+    const wrapper = mount(PushPermissions)
+    const checkbox = wrapper.find('input[type="checkbox"]')
+    const input = checkbox.element as HTMLInputElement
+    input.checked = true
+    await checkbox.trigger('change')
     await Promise.resolve()
-    expect((Notification as any).requestPermission).toHaveBeenCalled()
-    expect(subscribe).toHaveBeenCalled()
-    expect(post).toHaveBeenCalledWith('/push/subscription', 'sub')
-    expect(updateOptInSettings).toHaveBeenCalledWith({ isPushNotificationEnabled: true })
-    delete (global as any).Notification
+    expect(input.checked).toBe(false)
   })
 })

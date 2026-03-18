@@ -11,7 +11,6 @@ defineProps<{
 
 const { t } = useI18n()
 
-
 const ownerProfileStore = useOwnerProfileStore()
 const model = defineModel<ProfileOptInSettings>({
   default: () => ({
@@ -64,22 +63,11 @@ async function handleNewsletterOptInChange(event: Event) {
     isSaving.value = false
   }
 }
-
-function handlePushChange(value: boolean) {
-  model.value = {
-    ...model.value,
-    isPushNotificationEnabled: value,
-  }
-}
 </script>
 
 <template>
   <fieldset class="mb-3">
-    <PushPermissions
-      :model-value="model.isPushNotificationEnabled"
-      :disabled="disabled || isSaving"
-      @update:modelValue="handlePushChange"
-    />
+    <PushPermissions :disabled="disabled || isSaving" />
   </fieldset>
 
   <fieldset class="mb-3">

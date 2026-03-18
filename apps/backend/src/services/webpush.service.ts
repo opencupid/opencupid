@@ -35,10 +35,9 @@ export class WebPushService {
 
     const profile = await prisma.profile.findUnique({
       where: { id: recipientProfileId },
-      include: { user: true },
+      select: { userId: true },
     })
-    if (!profile?.user) return
-    if (!profile.user.isPushNotificationEnabled) return
+    if (!profile) return
 
     const payload = {
       title: `New message from ${message.sender.publicName}`,
@@ -47,7 +46,7 @@ export class WebPushService {
         url: `/inbox/${message.conversationId}`,
       },
     }
-    const subscriptions = await this.getSubscriptions(profile.user.id)
+    const subscriptions = await this.getSubscriptions(profile.userId)
 
     for (const sub of subscriptions) {
       try {
@@ -61,21 +60,28 @@ export class WebPushService {
           },
           JSON.stringify(payload)
         )
-      } catch (err) {
-        console.error('Push failed:', err)
+      } catch (err: any) {
+        if (err.statusCode === 410) {
+          await prisma.pushSubscription.deleteMany({ where: { endpoint: sub.endpoint } })
+        } else {
+          console.error('Push failed:', err)
+        }
       }
     }
   }
 
-  async sendCallNotification(recipientProfileId: string, callerName: string, conversationId: string) {
+  async sendCallNotification(
+    recipientProfileId: string,
+    callerName: string,
+    conversationId: string
+  ) {
     if (!WebPushService.isWebPushConfigured()) return
 
     const profile = await prisma.profile.findUnique({
       where: { id: recipientProfileId },
-      include: { user: true },
+      select: { userId: true },
     })
-    if (!profile?.user) return
-    if (!profile.user.isPushNotificationEnabled) return
+    if (!profile) return
 
     const payload = {
       title: `Incoming call from ${callerName}`,
@@ -84,7 +90,7 @@ export class WebPushService {
         url: `/inbox/${conversationId}`,
       },
     }
-    const subscriptions = await this.getSubscriptions(profile.user.id)
+    const subscriptions = await this.getSubscriptions(profile.userId)
 
     for (const sub of subscriptions) {
       try {
@@ -95,8 +101,12 @@ export class WebPushService {
           },
           JSON.stringify(payload)
         )
-      } catch (err) {
-        console.error('Call push notification failed:', err)
+      } catch (err: any) {
+        if (err.statusCode === 410) {
+          await prisma.pushSubscription.deleteMany({ where: { endpoint: sub.endpoint } })
+        } else {
+          console.error('Call push notification failed:', err)
+        }
       }
     }
   }
