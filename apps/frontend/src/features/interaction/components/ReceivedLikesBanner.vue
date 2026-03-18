@@ -16,9 +16,7 @@ const { receivedLikesCount, haveReceivedLikes, haveMatches, matches } = useInter
     <div class="">
       <span class="text-dating"><IconHeart class="svg-icon" /></span>
 
-      {{ $t('matches.notifications.you_have') }}
-
-      {{ t('matches.notifications.likes', { count: receivedLikesCount }) }}
+      {{ t('matches.notifications.you_have_likes', { count: receivedLikesCount }) }}
     </div>
   </div>
 </template>

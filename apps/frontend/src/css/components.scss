@@ -343,6 +343,15 @@ main {
   }
 }
 
+// Glow ring for profiles eligible for dating interaction
+.dating-eligible-highlight {
+  display: inline-block;
+  border-radius: 50%;
+  background-color: var(--bs-secondary);
+  box-shadow: 0 0 6px 3px rgba(217, 83, 79, 0.7);
+  filter: drop-shadow(0 0 6px rgba(217, 83, 79, 0.6));
+}
+
 // Focus-visible outline (a11y)
 :focus-visible {
   outline: 2px solid var(--bs-secondary);

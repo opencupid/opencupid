@@ -29,6 +29,8 @@ function makeConvo(overrides: Partial<ConversationSummary> = {}): ConversationSu
 }
 
 describe('ConversationSummaries', () => {
+  const globalMocks = { global: { mocks: { $t: (k: string) => k } } }
+
   it('shows text message content as preview', () => {
     const wrapper = mount(ConversationSummaries, {
       props: {
@@ -36,6 +38,7 @@ describe('ConversationSummaries', () => {
         activeConversation: null,
         loading: false,
       },
+      ...globalMocks,
     })
 
     expect(wrapper.find('.last-message').text()).toBe('Hello there')
@@ -57,6 +60,7 @@ describe('ConversationSummaries', () => {
         activeConversation: null,
         loading: false,
       },
+      ...globalMocks,
     })
 
     expect(wrapper.find('.last-message').text()).toBe('messaging.voice.voice_message_preview')
@@ -78,6 +82,7 @@ describe('ConversationSummaries', () => {
         activeConversation: null,
         loading: false,
       },
+      ...globalMocks,
     })
 
     expect(wrapper.find('.last-message').text()).toBe('Bold and italic')

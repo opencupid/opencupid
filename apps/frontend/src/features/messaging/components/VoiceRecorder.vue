@@ -46,7 +46,7 @@ const buttonVariant = computed(() => {
   if (isRecording.value) return 'danger'
   if (isCompleted.value) return 'success'
   if (isError.value) return 'warning'
-  return 'outline-secondary'
+  return 'secondary'
 })
 
 const progressPercentage = computed(() => {

@@ -55,6 +55,22 @@ describe('mapInteractionContext', () => {
     expect(result.isAnonymous).toBe(false)
   })
 
+  it('sets likedMeRevealed true when they liked me non-anonymously', () => {
+    const profile = makeProfile({
+      likesSent: [{ toId: 'me', isAnonymous: false }] as any,
+    })
+    const result = mapInteractionContext(profile, true)
+    expect(result.likedMeRevealed).toBe(true)
+  })
+
+  it('sets likedMeRevealed false when they liked me anonymously', () => {
+    const profile = makeProfile({
+      likesSent: [{ toId: 'me', isAnonymous: true }] as any,
+    })
+    const result = mapInteractionContext(profile, true)
+    expect(result.likedMeRevealed).toBe(false)
+  })
+
   it('detects a match when both like each other', () => {
     const profile = makeProfile({
       likesReceived: [{ fromId: 'me' }] as any,
