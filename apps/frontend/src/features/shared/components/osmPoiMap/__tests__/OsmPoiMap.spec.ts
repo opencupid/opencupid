@@ -717,19 +717,19 @@ describe('OsmPoiMap', () => {
 
     // Get a marker's Leaflet-level click handler from createMarker
     const markerInstance = (L.marker as any).mock.results[0]?.value
-    if (markerInstance) {
-      const clickCall = markerInstance.on.mock.calls.find((c: any) => c[0] === 'click')
-      if (clickCall) {
-        const clickHandler = clickCall[1]
-        clickHandler()
-        expect(markerInstance.openPopup).not.toHaveBeenCalled()
+    expect(markerInstance).toBeDefined()
 
-        // After cooldown expires
-        vi.advanceTimersByTime(400)
-        clickHandler()
-        expect(markerInstance.openPopup).toHaveBeenCalledOnce()
-      }
-    }
+    const clickCall = markerInstance.on.mock.calls.find((c: any) => c[0] === 'click')
+    expect(clickCall).toBeDefined()
+
+    const clickHandler = clickCall[1]
+    clickHandler()
+    expect(markerInstance.openPopup).not.toHaveBeenCalled()
+
+    // After cooldown expires
+    vi.advanceTimersByTime(400)
+    clickHandler()
+    expect(markerInstance.openPopup).toHaveBeenCalledOnce()
 
     vi.useRealTimers()
   })
