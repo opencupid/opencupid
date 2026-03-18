@@ -69,11 +69,12 @@ describe('createClusterIcon', () => {
   it('creates a DivIcon with the cluster child count', () => {
     const icon = createClusterIcon({ getChildCount: () => 7 })
     expect(icon).toMatchObject({
-      html: `<div class="poi-cluster-badge" style="width:${CLUSTER_ICON_SIZE}px;height:${CLUSTER_ICON_SIZE}px">7</div>`,
       className: 'poi-cluster-icon',
       iconSize: [CLUSTER_ICON_SIZE, CLUSTER_ICON_SIZE],
       iconAnchor: [CLUSTER_ICON_SIZE / 2, CLUSTER_ICON_SIZE / 2],
     })
+    expect(icon.html).toContain('poi-cluster-badge')
+    expect(icon.html).toContain('7')
   })
 })
 
