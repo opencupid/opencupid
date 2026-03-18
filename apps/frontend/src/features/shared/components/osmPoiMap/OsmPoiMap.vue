@@ -14,6 +14,7 @@ import {
   createClusterIcon,
   hydratePoiIcon,
   clearIconCache,
+  MAP_MAX_ZOOM,
 } from './mapUtils'
 
 const props = withDefaults(
@@ -148,7 +149,7 @@ function createLeafletMap(el: HTMLDivElement): LMap {
   const m = L.map(el, {
     center: props.center ?? [0, 0],
     zoom: props.center ? props.zoom : 2,
-    maxZoom: 14,
+    maxZoom: MAP_MAX_ZOOM,
     preferCanvas: true,
     trackResize: false,
   })
@@ -213,6 +214,10 @@ function initClusters(map: LMap) {
 }
 
 function onClusterMouseOver(e: any) {
+  // On mobile/touch, the browser synthesizes mouseover before click — skip
+  // hover-to-spiderfy and let markercluster's _zoomOrSpiderfy handle the tap
+  // with canonical zoom-to-bounds (or spiderfy at max zoom).
+  if (L.Browser.mobile) return
   // Ignore hover on other clusters while a spider is already open —
   // the user must move away from the active spider to close it first.
   if (activeSpiderCluster || !map) return
@@ -340,7 +345,10 @@ function createMarker(item: MapPoi): LMarker {
       popupItem.value = null
     })
 
-    m.on('click', () => m.openPopup())
+    m.on('click', () => {
+      if (spiderfyCooldown) return
+      m.openPopup()
+    })
   } else {
     m.on('click', () => emit('item:select', item.id))
   }
@@ -440,7 +448,7 @@ function highlightSelected() {
     const m = markers.get(props.selectedId)
     if (m) {
       // Center and open its popup
-      map.setView(m.getLatLng(), Math.max(map.getZoom(), 12))
+      map.setView(m.getLatLng(), MAP_MAX_ZOOM)
       m.openPopup()
     }
   }
@@ -553,12 +561,10 @@ watch(
 }
 
 :deep(.poi-cluster-badge) {
-  width: 28px;
-  height: 28px;
   border-radius: 50%;
   background: #3a86ff;
   color: white;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -622,7 +628,7 @@ watch(
 :deep(.leaflet-popup-content-wrapper) {
   padding: 0;
   border-radius: 0.375rem;
-  overflow: hidden;
+  overflow: visible;
   background: transparent;
   box-shadow: 0 3px 14px rgba(0, 0, 0, 0.5);
   border: 1px solid transparent;
@@ -636,10 +642,34 @@ watch(
   border: 1px solid white;
 }
 
+:deep(.leaflet-popup-close-button) {
+  width: 24px !important;
+  height: 24px !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7) !important;
+  color: white !important;
+  border-radius: 50%;
+  font-size: 16px;
+  line-height: 1;
+  top: -10px !important;
+  right: -10px !important;
+  padding: 0 !important;
+  z-index: 1;
+}
+
+:deep(.leaflet-popup-close-button:hover) {
+  background: rgba(0, 0, 0, 0.9) !important;
+  color: white !important;
+}
+
 :deep(.leaflet-popup-content) {
   margin: 0;
   line-height: 1.3;
   min-height: 1px;
+  border-radius: 0.375rem;
+  overflow: hidden;
 }
 
 /* Override Bootstrap's card hover lift inside map popups */

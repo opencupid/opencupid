@@ -13,18 +13,20 @@ export function computeViewportMultiplier(mapSize: { x: number; y: number }): nu
   return Math.max(0.8, Math.min(4, minDim / 400))
 }
 
+export const MAP_MAX_ZOOM = 12
+export const CLUSTER_ICON_SIZE = 35
+export const POI_ICON_SIZE = 40
+
 /** Creates a Leaflet DivIcon for a marker cluster badge. */
 export function createClusterIcon(cluster: { getChildCount(): number }): L.DivIcon {
   const count = cluster.getChildCount()
   return L.divIcon({
-    html: `<div class="poi-cluster-badge">${count}</div>`,
+    html: `<div class="poi-cluster-badge" style="width:${CLUSTER_ICON_SIZE}px;height:${CLUSTER_ICON_SIZE}px">${count}</div>`,
     className: 'poi-cluster-icon',
-    iconSize: [28, 28],
-    iconAnchor: [14, 14],
+    iconSize: [CLUSTER_ICON_SIZE, CLUSTER_ICON_SIZE],
+    iconAnchor: [CLUSTER_ICON_SIZE / 2, CLUSTER_ICON_SIZE / 2],
   })
 }
-
-const POI_ICON_SIZE = 32
 
 const iconCache = new Map<string, L.DivIcon>()
 

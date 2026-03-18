@@ -116,7 +116,7 @@ vi.mock('leaflet', () => {
     stopPropagation: vi.fn((e: any) => e?.stopPropagation?.()),
   }
 
-  const Browser = { touch: false }
+  const Browser = { touch: false, mobile: false }
 
   return {
     default: {
@@ -158,6 +158,7 @@ vi.mock('@/features/images/composables/useBlurhashDataUrl', () => ({
 
 import { mount, flushPromises } from '@vue/test-utils'
 import OsmPoiMap from '../OsmPoiMap.vue'
+import { POI_ICON_SIZE } from '../mapUtils'
 import L from 'leaflet'
 
 const DummyPopup = defineComponent({
@@ -298,6 +299,22 @@ describe('OsmPoiMap', () => {
     expect(spiderfyMock).toHaveBeenCalledOnce()
   })
 
+  it('skips hover-to-spiderfy on mobile to let canonical zoomToBoundsOnClick handle tap', async () => {
+    ;(L.Browser as any).mobile = true
+    await mountMap()
+    await flushPromises()
+
+    const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
+    const onCalls = clusterInstance.on.mock.calls
+    const mouseoverHandler = onCalls.find((c: any) => c[0] === 'clustermouseover')[1]
+
+    const spiderfyMock = vi.fn()
+    mouseoverHandler({ layer: { spiderfy: spiderfyMock } })
+
+    expect(spiderfyMock).not.toHaveBeenCalled()
+    ;(L.Browser as any).mobile = false
+  })
+
   it('closes active spider when mouse leaves hover bounds', async () => {
     await mountMap()
     await flushPromises()
@@ -395,15 +412,14 @@ describe('OsmPoiMap', () => {
     expect(popupUpdate).toHaveBeenCalledOnce()
   })
 
-  it('uses 32×32 iconSize for avatar icons to match CSS dimensions', async () => {
+  it(`uses ${POI_ICON_SIZE}×${POI_ICON_SIZE} iconSize for avatar icons`, async () => {
     await mountMap()
     await flushPromises()
 
     const calls = (L.marker as any).mock.calls
-    // Alice has image → avatar icon with size 32
     const aliceIcon = calls[0][1].icon
-    expect(aliceIcon.iconSize).toEqual([32, 32])
-    expect(aliceIcon.iconAnchor).toEqual([16, 16])
+    expect(aliceIcon.iconSize).toEqual([POI_ICON_SIZE, POI_ICON_SIZE])
+    expect(aliceIcon.iconAnchor).toEqual([POI_ICON_SIZE / 2, POI_ICON_SIZE / 2])
   })
 
   it('emits bounds-changed on moveend with viewport bounds', async () => {
@@ -676,6 +692,46 @@ describe('OsmPoiMap', () => {
     // Click immediately — should open popup (no cooldown for hover-triggered spiderfy)
     clickHandler({ stopPropagation: vi.fn() })
     expect(openPopup).toHaveBeenCalledOnce()
+  })
+
+  it('marker Leaflet click handler respects spiderfyCooldown', async () => {
+    vi.useFakeTimers()
+    await mountMap()
+    await flushPromises()
+
+    const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
+    const spiderfiedHandler = clusterInstance.on.mock.calls.find(
+      (c: any) => c[0] === 'spiderfied'
+    )![1]
+
+    // Trigger spiderfied without hover (cooldown active) — simulates
+    // _zoomOrSpiderfy at max zoom on mobile
+    spiderfiedHandler({
+      cluster: {
+        getAllChildMarkers: () => [],
+        getLatLng: () => ({ lat: 47, lng: 19 }),
+        unspiderfy: vi.fn(),
+      },
+      markers: [],
+    })
+
+    // Get a marker's Leaflet-level click handler from createMarker
+    const markerInstance = (L.marker as any).mock.results[0]?.value
+    expect(markerInstance).toBeDefined()
+
+    const clickCall = markerInstance.on.mock.calls.find((c: any) => c[0] === 'click')
+    expect(clickCall).toBeDefined()
+
+    const clickHandler = clickCall[1]
+    clickHandler()
+    expect(markerInstance.openPopup).not.toHaveBeenCalled()
+
+    // After cooldown expires
+    vi.advanceTimersByTime(400)
+    clickHandler()
+    expect(markerInstance.openPopup).toHaveBeenCalledOnce()
+
+    vi.useRealTimers()
   })
 
   it('suppresses bounds-changed when container has zero dimensions', async () => {
