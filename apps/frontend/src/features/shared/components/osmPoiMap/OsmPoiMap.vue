@@ -213,6 +213,10 @@ function initClusters(map: LMap) {
 }
 
 function onClusterMouseOver(e: any) {
+  // On mobile/touch, the browser synthesizes mouseover before click — skip
+  // hover-to-spiderfy and let markercluster's _zoomOrSpiderfy handle the tap
+  // with canonical zoom-to-bounds (or spiderfy at max zoom).
+  if (L.Browser.mobile) return
   // Ignore hover on other clusters while a spider is already open —
   // the user must move away from the active spider to close it first.
   if (activeSpiderCluster || !map) return
@@ -340,7 +344,10 @@ function createMarker(item: MapPoi): LMarker {
       popupItem.value = null
     })
 
-    m.on('click', () => m.openPopup())
+    m.on('click', () => {
+      if (spiderfyCooldown) return
+      m.openPopup()
+    })
   } else {
     m.on('click', () => emit('item:select', item.id))
   }

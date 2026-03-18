@@ -116,7 +116,7 @@ vi.mock('leaflet', () => {
     stopPropagation: vi.fn((e: any) => e?.stopPropagation?.()),
   }
 
-  const Browser = { touch: false }
+  const Browser = { touch: false, mobile: false }
 
   return {
     default: {
@@ -296,6 +296,22 @@ describe('OsmPoiMap', () => {
     mouseoverHandler({ layer: { spiderfy: spiderfyMock } })
 
     expect(spiderfyMock).toHaveBeenCalledOnce()
+  })
+
+  it('skips hover-to-spiderfy on mobile to let canonical zoomToBoundsOnClick handle tap', async () => {
+    ;(L.Browser as any).mobile = true
+    await mountMap()
+    await flushPromises()
+
+    const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
+    const onCalls = clusterInstance.on.mock.calls
+    const mouseoverHandler = onCalls.find((c: any) => c[0] === 'clustermouseover')[1]
+
+    const spiderfyMock = vi.fn()
+    mouseoverHandler({ layer: { spiderfy: spiderfyMock } })
+
+    expect(spiderfyMock).not.toHaveBeenCalled()
+    ;(L.Browser as any).mobile = false
   })
 
   it('closes active spider when mouse leaves hover bounds', async () => {
@@ -676,6 +692,46 @@ describe('OsmPoiMap', () => {
     // Click immediately — should open popup (no cooldown for hover-triggered spiderfy)
     clickHandler({ stopPropagation: vi.fn() })
     expect(openPopup).toHaveBeenCalledOnce()
+  })
+
+  it('marker Leaflet click handler respects spiderfyCooldown', async () => {
+    vi.useFakeTimers()
+    await mountMap()
+    await flushPromises()
+
+    const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
+    const spiderfiedHandler = clusterInstance.on.mock.calls.find(
+      (c: any) => c[0] === 'spiderfied'
+    )![1]
+
+    // Trigger spiderfied without hover (cooldown active) — simulates
+    // _zoomOrSpiderfy at max zoom on mobile
+    spiderfiedHandler({
+      cluster: {
+        getAllChildMarkers: () => [],
+        getLatLng: () => ({ lat: 47, lng: 19 }),
+        unspiderfy: vi.fn(),
+      },
+      markers: [],
+    })
+
+    // Get a marker's Leaflet-level click handler from createMarker
+    const markerInstance = (L.marker as any).mock.results[0]?.value
+    if (markerInstance) {
+      const clickCall = markerInstance.on.mock.calls.find((c: any) => c[0] === 'click')
+      if (clickCall) {
+        const clickHandler = clickCall[1]
+        clickHandler()
+        expect(markerInstance.openPopup).not.toHaveBeenCalled()
+
+        // After cooldown expires
+        vi.advanceTimersByTime(400)
+        clickHandler()
+        expect(markerInstance.openPopup).toHaveBeenCalledOnce()
+      }
+    }
+
+    vi.useRealTimers()
   })
 
   it('suppresses bounds-changed when container has zero dimensions', async () => {
