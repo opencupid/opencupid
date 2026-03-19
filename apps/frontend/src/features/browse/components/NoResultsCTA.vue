@@ -11,15 +11,22 @@ const { share, isSupported } = useShare()
 const { t } = useI18n()
 const showModal = ref(false)
 const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
-const handleWebShare = () => {
-  share({
-    title: t('uicomponents.share_dialog.share_title', { siteName: __APP_CONFIG__.SITE_NAME }),
-    text: t('uicomponents.share_dialog.share_text', {
-      siteName: __APP_CONFIG__.SITE_NAME,
-      publicName: viewerProfile?.value?.publicName || ''
-    }),
-    url: window.location.origin,
-  })
+const handleWebShare = async () => {
+  try {
+    await share({
+      title: t('uicomponents.share_dialog.share_title', { siteName: __APP_CONFIG__.SITE_NAME }),
+      text: t('uicomponents.share_dialog.share_text', {
+        siteName: __APP_CONFIG__.SITE_NAME,
+        publicName: viewerProfile?.value?.publicName || '',
+      }),
+      url: window.location.origin,
+    })
+  } catch (error: unknown) {
+    if (error instanceof DOMException && (error.name === 'AbortError' || error.name === 'NotAllowedError')) {
+      return
+    }
+    throw error
+  }
 }
 </script>
 

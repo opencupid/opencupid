@@ -105,13 +105,13 @@ describe('BrowseProfiles view', () => {
     expect(toastInfo).not.toHaveBeenCalled()
   })
 
-  it('shows NoResultsCTA when isNoOneAround is true', () => {
+  it('hides CTA alert when isNoOneAround is true (other profiles present)', () => {
     vmState.isNoOneAround.value = true
     const wrapper = mountComponent()
     expect(wrapper.findComponent({ name: 'BAlert' }).exists()).toBe(false)
   })
 
-  it('shows NoResultsCTA when isNoOneAround is false', () => {
+  it('shows CTA alert when isNoOneAround is false (no other profiles)', () => {
     vmState.isNoOneAround.value = false
     const wrapper = mountComponent()
     expect(wrapper.findComponent({ name: 'BAlert' }).exists()).toBe(true)
