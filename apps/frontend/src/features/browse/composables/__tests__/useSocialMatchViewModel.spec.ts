@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import type { SocialMatchFilterDTO } from '@zod/match/filters.dto'
 
 // --- Mocks ---
 
@@ -36,9 +37,10 @@ const mockOwnerStore = {
     tags: [],
   },
   isLoading: false,
-  matchFilter: null,
+  matchFilter: null as SocialMatchFilterDTO | null,
   fetchMatchFilter: vi.fn(),
   persistMatchFilter: vi.fn(),
+  setMatchFilterTags: vi.fn(),
 }
 vi.mock('@/features/myprofile/stores/ownerProfileStore', () => ({
   useOwnerProfileStore: () => mockOwnerStore,
@@ -49,6 +51,8 @@ import { useSocialMatchViewModel } from '../useSocialMatchViewModel'
 describe('useSocialMatchViewModel', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockOwnerStore.matchFilter = null
+    mockFindProfileStore.lastMapBounds = null
   })
 
   it('openProfile navigates to PublicProfile route', () => {
@@ -100,7 +104,6 @@ describe('useSocialMatchViewModel', () => {
     await vm.onBoundsChanged(bounds)
 
     expect(mockFindProfileStore.findProfilesForMapBounds).not.toHaveBeenCalled()
-    mockFindProfileStore.lastMapBounds = null
   })
 
   it('fetches match IDs and map profiles in parallel when lastMapBounds exists', async () => {
@@ -120,8 +123,6 @@ describe('useSocialMatchViewModel', () => {
     const matchOrder = mockFindProfileStore.fetchDatingMatchIds.mock.invocationCallOrder[0]!
     const boundsOrder = mockFindProfileStore.findProfilesForMapBounds.mock.invocationCallOrder[0]!
     expect(Math.abs(matchOrder - boundsOrder)).toBe(1)
-
-    mockFindProfileStore.lastMapBounds = null
   })
 
   it('exposes matchedProfileIds from store', () => {
@@ -150,7 +151,80 @@ describe('useSocialMatchViewModel', () => {
       mockFindProfileStore.invalidateMapCache.mock.invocationCallOrder[0]! <
         mockFindProfileStore.findProfilesForMapBounds.mock.invocationCallOrder[0]!
     ).toBe(true)
+  })
 
-    mockFindProfileStore.lastMapBounds = null
+  describe('refreshIfFilterChanged', () => {
+    it('does nothing when filter has not changed since last render', async () => {
+      const filter = { location: { country: 'DE', lat: 1, lon: 2 }, radius: 10, tags: [] }
+      mockOwnerStore.matchFilter = { ...filter }
+      mockOwnerStore.fetchMatchFilter = vi.fn()
+      mockFindProfileStore.invalidateMapCache = vi.fn()
+      mockFindProfileStore.fetchDatingMatchIds = vi.fn()
+      mockFindProfileStore.findProfilesForMapBounds = vi.fn()
+      mockFindProfileStore.lastMapBounds = { south: 45, north: 48, west: 16, east: 23 }
+
+      const vm = useSocialMatchViewModel()
+      // initialize sets the snapshot to the current filter
+      await vm.initialize()
+      vi.clearAllMocks()
+
+      await vm.refreshIfFilterChanged()
+
+      expect(mockFindProfileStore.invalidateMapCache).not.toHaveBeenCalled()
+      expect(mockFindProfileStore.fetchDatingMatchIds).not.toHaveBeenCalled()
+      expect(mockFindProfileStore.findProfilesForMapBounds).not.toHaveBeenCalled()
+    })
+
+    it('invalidates cache and refetches when filter was mutated externally before activation', async () => {
+      const initialFilter = { location: { country: 'DE', lat: 1, lon: 2 }, radius: 10, tags: [] }
+      const updatedFilter = {
+        location: { country: 'DE', lat: 1, lon: 2 },
+        radius: 10,
+        tags: [{ id: 't1', slug: 'hiking', name: 'Hiking' }],
+      }
+      mockOwnerStore.matchFilter = { ...initialFilter }
+      mockOwnerStore.fetchMatchFilter = vi.fn()
+      mockFindProfileStore.invalidateMapCache = vi.fn()
+      mockFindProfileStore.fetchDatingMatchIds = vi.fn().mockResolvedValue(undefined)
+      mockFindProfileStore.findProfilesForMapBounds = vi.fn().mockResolvedValue({ success: true })
+      const bounds = { south: 45, north: 48, west: 16, east: 23 }
+      mockFindProfileStore.lastMapBounds = bounds
+
+      const vm = useSocialMatchViewModel()
+      await vm.initialize()
+
+      // Simulate external mutation (e.g. UserHome tag-cloud sets a tag without persisting)
+      mockOwnerStore.matchFilter = { ...updatedFilter }
+      vi.clearAllMocks()
+
+      await vm.refreshIfFilterChanged()
+
+      // Must not re-fetch the filter from API — the local mutation is the source of truth
+      expect(mockOwnerStore.fetchMatchFilter).not.toHaveBeenCalled()
+      expect(mockFindProfileStore.invalidateMapCache).toHaveBeenCalledTimes(1)
+      expect(mockFindProfileStore.fetchDatingMatchIds).toHaveBeenCalled()
+      expect(mockFindProfileStore.findProfilesForMapBounds).toHaveBeenCalledWith(bounds)
+    })
+
+    it('does not re-trigger a second refetch if called again with unchanged filter', async () => {
+      const filter = { location: { country: 'DE', lat: 1, lon: 2 }, radius: 10, tags: [] }
+      const updatedFilter = { location: { country: 'FR', lat: 3, lon: 4 }, radius: 20, tags: [] }
+      mockOwnerStore.matchFilter = { ...filter }
+      mockOwnerStore.fetchMatchFilter = vi.fn()
+      mockFindProfileStore.invalidateMapCache = vi.fn()
+      mockFindProfileStore.fetchDatingMatchIds = vi.fn().mockResolvedValue(undefined)
+      mockFindProfileStore.findProfilesForMapBounds = vi.fn().mockResolvedValue({ success: true })
+      mockFindProfileStore.lastMapBounds = { south: 45, north: 48, west: 16, east: 23 }
+
+      const vm = useSocialMatchViewModel()
+      await vm.initialize()
+
+      mockOwnerStore.matchFilter = { ...updatedFilter }
+      await vm.refreshIfFilterChanged() // first call — should refetch
+      vi.clearAllMocks()
+
+      await vm.refreshIfFilterChanged() // second call — filter unchanged, should skip
+      expect(mockFindProfileStore.invalidateMapCache).not.toHaveBeenCalled()
+    })
   })
 })
