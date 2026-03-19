@@ -52,6 +52,7 @@ import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import TagCloud from '../TagCloud.vue'
 import { useTagsStore } from '@/store/tagStore'
+import { bus } from '@/lib/bus'
 
 vi.mock('@/lib/api', () => ({
   api: { get: vi.fn(), patch: vi.fn() },
@@ -138,5 +139,51 @@ describe('TagCloud', () => {
       country: 'DE',
       limit: 50,
     })
+  })
+
+  it('handles duplicate tag names without duplicate key warnings', async () => {
+    const tagStore = useTagsStore()
+    const duplicateNameTags = [
+      { id: 't1', name: 'Music', slug: 'music-a', count: 10 },
+      { id: 't2', name: 'Music', slug: 'music-b', count: 7 },
+    ]
+    tagStore.popularTags = duplicateNameTags
+    tagStore.fetchPopularTags = vi.fn().mockImplementation(async () => {
+      tagStore.popularTags = duplicateNameTags
+    })
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    const wrapper = mount(TagCloud)
+    await flushPromises()
+
+    expect(wrapper.findAll('.tag-cloud-word')).toHaveLength(2)
+    const duplicateKeyWarnings = warnSpy.mock.calls.filter((call) =>
+      String(call[0]).includes('Duplicate keys found during update')
+    )
+    expect(duplicateKeyWarnings).toHaveLength(0)
+
+    warnSpy.mockRestore()
+  })
+
+  it('re-fetches popular tags on language:changed bus event', async () => {
+    const tagStore = useTagsStore()
+    tagStore.fetchPopularTags = vi.fn().mockResolvedValue([])
+
+    const wrapper = mount(TagCloud, {
+      props: { location: { country: 'DE' }, limit: 10 },
+    })
+    await flushPromises()
+
+    expect(tagStore.fetchPopularTags).toHaveBeenCalledTimes(1)
+    bus.emit('language:changed', { language: 'fr' })
+    await flushPromises()
+
+    expect(tagStore.fetchPopularTags).toHaveBeenCalledTimes(2)
+    expect(tagStore.fetchPopularTags).toHaveBeenLastCalledWith({
+      country: 'DE',
+      limit: 10,
+    })
+
+    wrapper.unmount()
   })
 })

@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { onMounted, ref, computed, watch, useTemplateRef } from 'vue'
+import { onMounted, onUnmounted, ref, computed, watch, useTemplateRef } from 'vue'
 import { useElementSize, useDebounceFn } from '@vueuse/core'
 import { useTagsStore } from '@/store/tagStore'
 import type { PopularTag } from '@zod/tag/tag.dto'
+import { bus } from '@/lib/bus'
 import cloud from 'd3-cloud'
 
 const props = withDefaults(
@@ -29,6 +30,7 @@ const container = useTemplateRef<HTMLDivElement>('container')
 const { width, height } = useElementSize(container)
 
 interface PositionedWord {
+  key: string
   text: string
   size: number
   x: number
@@ -72,9 +74,11 @@ function runLayout(tags: PopularTag[], w: number, h: number) {
   const minCount = Math.min(...tags.map((t) => t.count))
   const maxCount = Math.max(...tags.map((t) => t.count))
 
-  const tagMap = new Map<string, PopularTag>()
+  const tagsByText = new Map<string, PopularTag[]>()
   const input = tags.map((tag) => {
-    tagMap.set(tag.name, tag)
+    const queue = tagsByText.get(tag.name) ?? []
+    queue.push(tag)
+    tagsByText.set(tag.name, queue)
     return { text: tag.name, size: scaleFontSize(tag.count, minCount, maxCount, fontMax) }
   })
 
@@ -87,13 +91,22 @@ function runLayout(tags: PopularTag[], w: number, h: number) {
     .padding(3)
     .random(() => 0.5)
     .on('end', (output: any[]) => {
-      words.value = output.map((wo) => ({
-        text: wo.text!,
-        size: wo.size!,
-        x: wo.x!,
-        y: wo.y!,
-        tag: tagMap.get(wo.text!)!,
-      }))
+      words.value = output
+        .map((wo, index) => {
+          const text = wo.text as string
+          const queue = tagsByText.get(text)
+          const tag = queue?.shift()
+          if (!tag) return null
+          return {
+            key: `${tag.id}-${index}`,
+            text,
+            size: wo.size!,
+            x: wo.x!,
+            y: wo.y!,
+            tag,
+          }
+        })
+        .filter((w): w is PositionedWord => w !== null)
     })
     .start()
 }
@@ -110,13 +123,26 @@ function handleTagClick(tag: PopularTag) {
   emit('tag:select', tag)
 }
 
-onMounted(async () => {
+async function fetchAndLayout() {
   await tagStore.fetchPopularTags({
     country: props.location?.country,
     limit: props.limit,
   })
   tagsLoaded.value = true
   runLayout(tagStore.popularTags, width.value, height.value)
+}
+
+async function handleLanguageChanged() {
+  await fetchAndLayout()
+}
+
+onMounted(async () => {
+  bus.on('language:changed', handleLanguageChanged)
+  await fetchAndLayout()
+})
+
+onUnmounted(() => {
+  bus.off('language:changed', handleLanguageChanged)
 })
 </script>
 
@@ -154,7 +180,7 @@ onMounted(async () => {
     >
       <text
         v-for="(w, i) in words"
-        :key="w.tag.id"
+        :key="w.key"
         text-anchor="middle"
         dominant-baseline="central"
         :x="w.x"
