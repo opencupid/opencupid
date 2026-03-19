@@ -52,6 +52,7 @@ import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import TagCloud from '../TagCloud.vue'
 import { useTagsStore } from '@/store/tagStore'
+import { bus } from '@/lib/bus'
 
 vi.mock('@/lib/api', () => ({
   api: { get: vi.fn(), patch: vi.fn() },
@@ -162,5 +163,27 @@ describe('TagCloud', () => {
     expect(duplicateKeyWarnings).toHaveLength(0)
 
     warnSpy.mockRestore()
+  })
+
+  it('re-fetches popular tags on language:changed bus event', async () => {
+    const tagStore = useTagsStore()
+    tagStore.fetchPopularTags = vi.fn().mockResolvedValue([])
+
+    const wrapper = mount(TagCloud, {
+      props: { location: { country: 'DE' }, limit: 10 },
+    })
+    await flushPromises()
+
+    expect(tagStore.fetchPopularTags).toHaveBeenCalledTimes(1)
+    bus.emit('language:changed', { language: 'fr' })
+    await flushPromises()
+
+    expect(tagStore.fetchPopularTags).toHaveBeenCalledTimes(2)
+    expect(tagStore.fetchPopularTags).toHaveBeenLastCalledWith({
+      country: 'DE',
+      limit: 10,
+    })
+
+    wrapper.unmount()
   })
 })

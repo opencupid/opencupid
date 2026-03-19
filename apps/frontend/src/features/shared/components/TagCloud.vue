@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { onMounted, ref, computed, watch, useTemplateRef } from 'vue'
+import { onMounted, onUnmounted, ref, computed, watch, useTemplateRef } from 'vue'
 import { useElementSize, useDebounceFn } from '@vueuse/core'
 import { useTagsStore } from '@/store/tagStore'
 import type { PopularTag } from '@zod/tag/tag.dto'
+import { bus } from '@/lib/bus'
 import cloud from 'd3-cloud'
 
 const props = withDefaults(
@@ -122,13 +123,26 @@ function handleTagClick(tag: PopularTag) {
   emit('tag:select', tag)
 }
 
-onMounted(async () => {
+async function fetchAndLayout() {
   await tagStore.fetchPopularTags({
     country: props.location?.country,
     limit: props.limit,
   })
   tagsLoaded.value = true
   runLayout(tagStore.popularTags, width.value, height.value)
+}
+
+async function handleLanguageChanged() {
+  await fetchAndLayout()
+}
+
+onMounted(async () => {
+  bus.on('language:changed', handleLanguageChanged)
+  await fetchAndLayout()
+})
+
+onUnmounted(() => {
+  bus.off('language:changed', handleLanguageChanged)
 })
 </script>
 
