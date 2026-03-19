@@ -105,7 +105,7 @@ export function useSocialMatchViewModel() {
   const isNoOneAround = computed(() => {
     const list = findProfileStore.profileList
     if (list.length === 0) return false
-    if (list.length === 1 && list[0].id === viewerProfile.value?.id) return false
+    if (list.length === 1 && list[0]?.id === viewerProfile.value?.id) return false
     return true
   })
 
