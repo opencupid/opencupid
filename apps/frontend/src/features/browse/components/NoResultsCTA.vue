@@ -9,24 +9,16 @@ const showModal = ref(false)
 </script>
 
 <template>
-  <div
-    class="d-flex flex-column align-items-center shadow-lg bg-theme user-select-none justify-content-center px-4 py-4 text-center position-relative"
-  >
-    <BCloseButton
-      class="position-absolute top-0 end-0 m-2"
-      @click="emit('close')"
-    />
-
+  <div class="d-flex flex-wrap align-items-center justify-content-center gap-2 user-select-none">
     <!-- This community is still growing -->
-    <h5>{{ t('profiles.browse.no_results_cta_title') }}</h5>
-
-    <!-- You can help by inviting your friends to join -->
-    <p class="text-muted">{{ t('profiles.browse.no_results_cta_description') }}</p>
+    <div class="lh-sm small">
+      {{ t('profiles.browse.no_results_cta_title') }}
+    </div>
 
     <!-- Invite friends -->
     <BButton
-      class="mb-3"
-      variant="primary"
+      variant="outline-primary"
+      size="sm"
       @click="showModal = true"
     >
       {{ t('profiles.browse.invite_button') }}
@@ -34,3 +26,9 @@ const showModal = ref(false)
   </div>
   <ShareDialog v-model="showModal" />
 </template>
+
+<style scoped lang="scss">
+.small,button {
+  font-size: 0.725rem;
+}
+</style>

@@ -98,11 +98,7 @@ onActivated(() => {
 </script>
 
 <template>
-  <BrowseLayout
-    :isLoading="isViewLoading"
-    :isInitialized="isInitialized"
-    :haveResults="haveResults"
-  >
+  <BrowseLayout>
     <template #filter-bar>
       <PostFilterBar
         :viewer-profile="ownerProfile"
