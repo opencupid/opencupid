@@ -293,8 +293,8 @@ export const useMessageStore = defineStore('message', {
       this.activeConversation = null
     },
 
-    handleProfileBlocked() {
-      this.fetchConversations()
+    async handleProfileBlocked() {
+      await this.fetchConversations()
     },
 
     async setActiveConversationById(conversationId: string) {

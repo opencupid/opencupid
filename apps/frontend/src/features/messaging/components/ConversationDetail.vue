@@ -25,7 +25,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'deselect:convo'): void
-  (e: 'updated'): void
   (e: 'profile:select', profile: PublicProfileWithContext): void
 }>()
 
@@ -57,7 +56,6 @@ const handleBlockProfile = async () => {
   showModal.value = false
   if (ok) {
     emit('deselect:convo')
-    emit('updated')
   }
 }
 

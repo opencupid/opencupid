@@ -130,7 +130,7 @@ describe('ConversationView', () => {
     })
   })
 
-  it('re-fetches conversations on updated event', async () => {
+  it('does not re-fetch conversations on updated event (handled by profile:blocked bus listener)', async () => {
     const wrapper = mount(ConversationView, {
       props: { conversationId: 'conv-123' },
     })
@@ -140,6 +140,6 @@ describe('ConversationView', () => {
     const stub = wrapper.findComponent({ name: 'ConversationDetailStub' })
     stub.vm.$emit('updated')
 
-    expect(mockMessageStore.fetchConversations).toHaveBeenCalled()
+    expect(mockMessageStore.fetchConversations).not.toHaveBeenCalled()
   })
 })

@@ -124,7 +124,7 @@ describe('findProfileStore.findProfilesForMapBounds', () => {
   })
 })
 
-describe('findProfileStore.refreshAfterDatingPrefsUpdate', () => {
+describe('findProfileStore.refetchBounds', () => {
   let store: ReturnType<typeof useFindProfileStore>
 
   const bounds = { south: 45, north: 48, west: 16, east: 23 }
@@ -226,7 +226,7 @@ describe('findProfileStore bounds caching', () => {
     expect(mockGet).toHaveBeenCalledTimes(1)
   })
 
-  it('invalidates cache on refreshAfterDatingPrefsUpdate', async () => {
+  it('invalidates cache on refetchBounds', async () => {
     mockGet.mockResolvedValue({ data: { profiles: [mockProfile], ids: [] } })
 
     const bounds = { south: 45, north: 48, west: 16, east: 23 }

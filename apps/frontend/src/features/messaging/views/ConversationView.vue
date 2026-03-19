@@ -46,10 +46,6 @@ function handleDeselectConvo() {
 function handleProfileSelect(profileId: string) {
   router.push({ name: 'PublicProfile', params: { profileId } })
 }
-
-function handleUpdated() {
-  messageStore.fetchConversations()
-}
 </script>
 
 <template>
@@ -60,7 +56,6 @@ function handleUpdated() {
         :conversation="activeConversation"
         @deselect:convo="handleDeselectConvo"
         @profile:select="(profile) => handleProfileSelect(profile.id)"
-        @updated="handleUpdated"
       />
     </MiddleColumn>
   </main>
