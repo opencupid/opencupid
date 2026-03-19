@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, provide, toRef } from 'vue'
+import { computed, onActivated, onMounted, provide, toRef } from 'vue'
 
 import BrowseLayout from '@/features/shared/components/BrowseLayout.vue'
 import { isValidLatLng } from '@/features/shared/components/osmPoiMap/mapUtils'
@@ -24,12 +24,19 @@ const {
   openProfile,
   onBoundsChanged,
   initialize,
+  refreshIfFilterChanged,
 } = useSocialMatchViewModel()
 
 provide('viewerProfile', toRef(viewerProfile))
 
 onMounted(async () => {
   await initialize()
+})
+
+onActivated(() => {
+  if (isInitialized.value) {
+    refreshIfFilterChanged()
+  }
 })
 
 const mapPois = computed<MapPoi[]>(() =>

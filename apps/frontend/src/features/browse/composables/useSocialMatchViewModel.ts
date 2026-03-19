@@ -17,6 +17,9 @@ export function useSocialMatchViewModel() {
   const storeError = ref<StoreError | null>(null)
   const isInitialized = ref(false)
   const isLoading = ref(false)
+  // Tracks the filter snapshot that was used for the last map fetch.
+  // Plain variable — not reactive — it's internal bookkeeping, not UI state.
+  let renderedFilterSnapshot = ''
 
   const initialize = async () => {
     await useBootstrap().bootstrap()
@@ -31,18 +34,34 @@ export function useSocialMatchViewModel() {
       return
     }
 
-    await ownerStore.fetchMatchFilter()
     await fetchResults()
+    renderedFilterSnapshot = JSON.stringify(ownerStore.matchFilter)
     isInitialized.value = true
   }
 
   const fetchResults = async () => {
+    await Promise.all([
+      ownerStore.fetchMatchFilter(),
+      findProfileStore.fetchDatingMatchIds(),
+      findProfileStore.lastMapBounds
+        ? findProfileStore.findProfilesForMapBounds(findProfileStore.lastMapBounds)
+        : Promise.resolve(),
+    ])
+  }
+
+  // Called on onActivated to handle the case where the filter was mutated
+  // externally (e.g. UserHome tag-cloud selection) before navigating here.
+  const refreshIfFilterChanged = async () => {
+    const currentSnapshot = JSON.stringify(ownerStore.matchFilter)
+    if (currentSnapshot === renderedFilterSnapshot) return
+    findProfileStore.invalidateMapCache()
     await Promise.all([
       findProfileStore.fetchDatingMatchIds(),
       findProfileStore.lastMapBounds
         ? findProfileStore.findProfilesForMapBounds(findProfileStore.lastMapBounds)
         : Promise.resolve(),
     ])
+    renderedFilterSnapshot = currentSnapshot
   }
 
   // moveend fires after updateMarkers() rebuilds the cluster
@@ -96,6 +115,7 @@ export function useSocialMatchViewModel() {
       storeError.value = null
       findProfileStore.invalidateMapCache()
       await fetchResults()
+      renderedFilterSnapshot = JSON.stringify(ownerStore.matchFilter)
     } finally {
       isLoading.value = false
     }
@@ -111,6 +131,7 @@ export function useSocialMatchViewModel() {
     matchFilter: toRef(ownerStore, 'matchFilter'),
     updatePrefs,
     onBoundsChanged,
+    refreshIfFilterChanged,
     openProfile,
     profileList: computed(() => findProfileStore.profileList),
     matchedProfileIds: computed(() => findProfileStore.matchedProfileIds),
