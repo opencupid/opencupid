@@ -167,7 +167,7 @@ export const useFindProfileStore = defineStore('findProfile', {
       }
     },
 
-    async refreshAfterDatingPrefsUpdate(): Promise<void> {
+    async refetchBounds(): Promise<void> {
       invalidateBoundsCache()
       await this.fetchDatingMatchIds()
       if (this.lastMapBounds) {
@@ -253,5 +253,9 @@ bus.on('auth:logout', () => {
 })
 
 bus.on('profile:dating-prefs-updated', () => {
-  useFindProfileStore().refreshAfterDatingPrefsUpdate()
+  useFindProfileStore().refetchBounds()
+})
+
+bus.on('profile:blocked', () => {
+  useFindProfileStore().refetchBounds()
 })

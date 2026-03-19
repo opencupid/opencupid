@@ -11,6 +11,7 @@ import {
   type StoreError,
 } from '@/store/helpers'
 import type { GetProfileSummariesResponse, GetPublicProfileResponse } from '@zod/apiResponse.dto'
+import { bus } from '@/lib/bus'
 
 type PublicProfileStoreState = {
   profile: PublicProfileWithContext | null // Current public profile
@@ -47,6 +48,7 @@ export const usePublicProfileStore = defineStore('publicProfile', {
         const res = await safeApiCall(() => api.post(`/profiles/${targetId}/block`))
         if (res.status === 204) {
           // Successfully blocked the profile
+          bus.emit('profile:blocked', { profileId: targetId }) // Emit event to notify other parts of the app
           return storeSuccess()
         } else {
           return storeError(new Error('Failed to block profile'), 'Failed to block profile')

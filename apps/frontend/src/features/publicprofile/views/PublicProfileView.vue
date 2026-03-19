@@ -47,7 +47,7 @@ const handleBlock = async () => {
   const res = await publicProfileStore.blockProfile(props.profileId)
   showBlockModal.value = false
   if (res.success) {
-    toast.warning(t('profiles.blocklist.block_confirm_message'))
+    toast.info(t('profiles.blocklist.block_confirm_message'))
   }
   router.back()
 }
