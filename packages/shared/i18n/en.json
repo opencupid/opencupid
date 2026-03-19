@@ -360,10 +360,10 @@
         "social_title": "I 'm looking for connections...",
         "tags_label": "Interested in..."
       },
-      "invite_button": "Invite friends",
+      "invite_button": "Invite",
       "loading_more_profiles": "Loading more profiles...",
       "no_results_cta_description": "You can help by inviting your friends to join. The more, the merrier.",
-      "no_results_cta_title": "This community is still growing.",
+      "no_results_cta_title": "It's a bit lonely here. Invite a friend?",
       "social_no_results": "We haven't found anyone in {country} yet.",
       "social_no_results_city": "Haven't found anyone in {cityName} yet.",
       "social_no_results_tags": "Haven't found anyone with those interests.",
@@ -481,6 +481,10 @@
       "message": "An error occurred. Please try again later.",
       "retry": "Retry",
       "title": "We've hit a snag here."
+    },
+    "install_banner": {
+      "install": "Install",
+      "message": "Install this app on your device."
     },
     "loading": {
       "loading": "Loading..."

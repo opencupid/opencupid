@@ -360,10 +360,10 @@
         "social_title": "Itt keresek...",
         "tags_label": "Érdeklődési körök..."
       },
-      "invite_button": "Barátok meghívása",
+      "invite_button": "Megosztás",
       "loading_more_profiles": "Egy pillanat...",
       "no_results_cta_description": "Segíthetsz, ha meghívod barátaidat, hogy csatlakozzanak. Minél többen vagyunk, annál jobb.",
-      "no_results_cta_title": "Ez a közösség még növekszik.",
+      "no_results_cta_title": "Ez a közösség még növekszik. Hívd meg pár barátodat a környékről?",
       "social_no_results": "Errefelé még nem találtunk senkit.",
       "social_no_results_city": "Errefelé még nem találtunk senkit.",
       "social_no_results_tags": "Nem találtunk senkit, akinek ezek a dolgok érdekelnének.",
@@ -481,6 +481,10 @@
       "message": "Hiba történt. Kérjük, próbálja meg később újra.",
       "retry": "Retry",
       "title": "Itt elakadtunk."
+    },
+    "install_banner": {
+      "install": "Telepítés",
+      "message": "Telepítse az alkalmazást a készülékére."
     },
     "loading": {
       "loading": "Betöltés..."
