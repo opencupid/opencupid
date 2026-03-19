@@ -48,6 +48,13 @@ export const server = (mode: string, env: Record<string, string | undefined>, ap
           ws: true,
           secure: false,
         },
+        // Proxy Tolgee API through HTTPS so the browser extension can connect
+        // from other LAN devices without hitting mixed-content blocks.
+        // Configure the Tolgee extension API URL to https://<hostname>.local:5173
+        '/v2/': {
+          target: 'http://localhost:8085',
+          changeOrigin: true,
+        },
       },
       fs: {
         allow: [
