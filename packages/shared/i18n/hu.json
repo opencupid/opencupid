@@ -497,6 +497,8 @@
       "button_copy": "Másolás",
       "description": "Hívj meg barátokat",
       "qr_hint": "Villantsd ezt a telefonjukra",
+      "share_text": "{publicName} meghívott, hogy csatlakozz a {siteName}-hez",
+      "share_title": "Nézd meg a {siteName}-t",
       "title": "Terjeszd az igét"
     },
     "spinner": {

@@ -497,6 +497,8 @@
       "button_copy": "Copy",
       "description": "Invite your friends to join Gaians and connect with like-minded people.",
       "qr_hint": "Flash this at their phone",
+      "share_text": "{publicName} invited you to join {siteName}",
+      "share_title": "Check out {siteName}",
       "title": "Spread the word"
     },
     "spinner": {
