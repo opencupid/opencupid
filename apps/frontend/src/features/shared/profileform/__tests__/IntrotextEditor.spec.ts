@@ -11,6 +11,22 @@ vi.mock('@/assets/icons/interface/globe.svg', () => ({ default: { template: '<di
 import IntrotextEditor from '../IntrotextEditor.vue'
 
 describe('IntrotextEditor', () => {
+  it('hides language chooser when only one language is provided', () => {
+    const wrapper = mount(IntrotextEditor, {
+      props: { languages: ['en'], placeholder: 'blah' },
+      global: { stubs: { BFormTextarea: true, BFormFloatingLabel: true, BButton: true } },
+    })
+    expect(wrapper.find('.nav-pills').exists()).toBe(false)
+  })
+
+  it('shows language chooser when multiple languages are provided', () => {
+    const wrapper = mount(IntrotextEditor, {
+      props: { languages: ['en', 'hu'], placeholder: 'blah' },
+      global: { stubs: { BFormTextarea: true, BFormFloatingLabel: true, BButton: true } },
+    })
+    expect(wrapper.find('.nav-pills').exists()).toBe(true)
+  })
+
   it('updates status when speech not supported', () => {
     const wrapper = mount(IntrotextEditor, {
       props: { languages: ['en'], placeholder: 'blah' },

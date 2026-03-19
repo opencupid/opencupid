@@ -144,7 +144,10 @@ watch(
 
 <template>
   <div class="d-flex flex-column">
-    <div class="d-flex justify-content-start align-items-center mb-3">
+    <div
+      v-if="langList.length > 1"
+      class="d-flex justify-content-start align-items-center mb-3"
+    >
       <ul class="nav nav-pills flex-grow-1">
         <li
           class="nav-item me-2"
