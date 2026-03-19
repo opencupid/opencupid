@@ -175,6 +175,10 @@ export const useFindProfileStore = defineStore('findProfile', {
       }
     },
 
+    invalidateMapCache(): void {
+      invalidateBoundsCache()
+    },
+
     async fetchNewProfiles(take: number): Promise<StoreProfileListResponse> {
       try {
         const res = await safeApiCall(() =>

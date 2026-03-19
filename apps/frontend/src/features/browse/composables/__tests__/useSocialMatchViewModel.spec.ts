@@ -19,6 +19,7 @@ const mockFindProfileStore = {
   lastMapBounds: null as { south: number; north: number; west: number; east: number } | null,
   fetchDatingMatchIds: vi.fn(),
   findProfilesForMapBounds: vi.fn(),
+  invalidateMapCache: vi.fn(),
   hide: vi.fn(),
   teardown: vi.fn(),
 }
@@ -130,5 +131,26 @@ describe('useSocialMatchViewModel', () => {
     expect(vm.matchedProfileIds.value.has('p2')).toBe(true)
     expect(vm.matchedProfileIds.value.has('p3')).toBe(false)
     mockFindProfileStore.matchedProfileIds = new Set()
+  })
+
+  it('updatePrefs invalidates map cache before fetching bounded results', async () => {
+    const bounds = { south: 45, north: 48, west: 16, east: 23 }
+    mockFindProfileStore.lastMapBounds = bounds
+    mockOwnerStore.persistMatchFilter = vi.fn().mockResolvedValue({ success: true })
+    mockFindProfileStore.invalidateMapCache = vi.fn()
+    mockFindProfileStore.fetchDatingMatchIds = vi.fn().mockResolvedValue(undefined)
+    mockFindProfileStore.findProfilesForMapBounds = vi.fn().mockResolvedValue({ success: true })
+
+    const vm = useSocialMatchViewModel()
+    await vm.updatePrefs()
+
+    expect(mockFindProfileStore.invalidateMapCache).toHaveBeenCalledTimes(1)
+    expect(mockFindProfileStore.findProfilesForMapBounds).toHaveBeenCalledWith(bounds)
+    expect(
+      mockFindProfileStore.invalidateMapCache.mock.invocationCallOrder[0]! <
+        mockFindProfileStore.findProfilesForMapBounds.mock.invocationCallOrder[0]!
+    ).toBe(true)
+
+    mockFindProfileStore.lastMapBounds = null
   })
 })

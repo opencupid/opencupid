@@ -94,6 +94,7 @@ export function useSocialMatchViewModel() {
         return
       }
       storeError.value = null
+      findProfileStore.invalidateMapCache()
       await fetchResults()
     } finally {
       isLoading.value = false
