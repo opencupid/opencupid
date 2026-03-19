@@ -454,8 +454,41 @@ describe('teardown', () => {
     expect(store.hasMoreMessages).toBe(false)
     expect(store.isLoadingMoreMessages).toBe(false)
 
-    // Bus listener should be removed
+    // Bus listeners should be removed
     expect(mockBus.off).toHaveBeenCalledWith('ws:new_message', store.handleIncomingMessage)
+    expect(mockBus.off).toHaveBeenCalledWith('profile:blocked', store.handleProfileBlocked)
+  })
+})
+
+describe('profile:blocked listener', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  it('registers profile:blocked on initialize and unregisters on teardown', async () => {
+    const store = useMessageStore()
+
+    mockApi.get.mockResolvedValue({ data: { success: true, conversations: [] } })
+    await store.initialize()
+
+    expect(mockBus.on).toHaveBeenCalledWith('profile:blocked', store.handleProfileBlocked)
+
+    store.teardown()
+
+    expect(mockBus.off).toHaveBeenCalledWith('profile:blocked', store.handleProfileBlocked)
+  })
+
+  it('fetches conversations when profile:blocked fires', async () => {
+    const store = useMessageStore()
+
+    mockApi.get.mockResolvedValue({
+      data: { success: true, conversations: [makeConvo('c1', 'Alice')] },
+    })
+    await store.handleProfileBlocked()
+
+    expect(mockApi.get).toHaveBeenCalledWith('/messages/conversations')
+    expect(store.conversations[0]!.conversationId).toBe('c1')
   })
 })
 

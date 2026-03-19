@@ -124,7 +124,7 @@ describe('findProfileStore.findProfilesForMapBounds', () => {
   })
 })
 
-describe('findProfileStore.refreshAfterDatingPrefsUpdate', () => {
+describe('findProfileStore.refetchBounds', () => {
   let store: ReturnType<typeof useFindProfileStore>
 
   const bounds = { south: 45, north: 48, west: 16, east: 23 }
@@ -140,7 +140,7 @@ describe('findProfileStore.refreshAfterDatingPrefsUpdate', () => {
     mockGet.mockResolvedValue({ data: { profiles: [], ids: ['p1'] } })
     store.lastMapBounds = bounds
 
-    await store.refreshAfterDatingPrefsUpdate()
+    await store.refetchBounds()
 
     expect(mockGet).toHaveBeenCalledWith('/find/dating/match-ids')
     expect(mockGet).toHaveBeenCalledWith(
@@ -159,7 +159,7 @@ describe('findProfileStore.refreshAfterDatingPrefsUpdate', () => {
   it('fetches match IDs only when lastMapBounds is null', async () => {
     mockGet.mockResolvedValue({ data: { ids: [] } })
 
-    await store.refreshAfterDatingPrefsUpdate()
+    await store.refetchBounds()
 
     expect(mockGet).toHaveBeenCalledWith('/find/dating/match-ids')
     expect(mockGet).not.toHaveBeenCalledWith('/find/social/map/bounds', expect.anything())
@@ -226,7 +226,7 @@ describe('findProfileStore bounds caching', () => {
     expect(mockGet).toHaveBeenCalledTimes(1)
   })
 
-  it('invalidates cache on refreshAfterDatingPrefsUpdate', async () => {
+  it('invalidates cache on refetchBounds', async () => {
     mockGet.mockResolvedValue({ data: { profiles: [mockProfile], ids: [] } })
 
     const bounds = { south: 45, north: 48, west: 16, east: 23 }
@@ -235,7 +235,7 @@ describe('findProfileStore bounds caching', () => {
 
     mockGet.mockResolvedValue({ data: { profiles: [], ids: [] } })
     store.lastMapBounds = bounds
-    await store.refreshAfterDatingPrefsUpdate()
+    await store.refetchBounds()
 
     expect(mockGet).toHaveBeenCalledWith('/find/social/map/bounds', expect.anything())
   })

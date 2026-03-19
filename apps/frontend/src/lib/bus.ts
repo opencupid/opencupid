@@ -11,6 +11,7 @@ type AppEvents = {
   'api:offline': void
   'api:online': void
   'profile:dating-prefs-updated': void
+  'profile:blocked': { profileId: string }
 }
 
 type Events = AppEvents & WSEvents

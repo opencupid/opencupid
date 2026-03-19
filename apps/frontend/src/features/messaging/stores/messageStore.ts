@@ -293,6 +293,10 @@ export const useMessageStore = defineStore('message', {
       this.activeConversation = null
     },
 
+    async handleProfileBlocked() {
+      await this.fetchConversations()
+    },
+
     async setActiveConversationById(conversationId: string) {
       const convo = this.conversations.find((c) => c.conversationId === conversationId)
       if (convo) {
@@ -308,10 +312,12 @@ export const useMessageStore = defineStore('message', {
         await this.fetchConversations()
       }
       bus.on('ws:new_message', this.handleIncomingMessage)
+      bus.on('profile:blocked', this.handleProfileBlocked)
     },
 
     teardown() {
       bus.off('ws:new_message', this.handleIncomingMessage)
+      bus.off('profile:blocked', this.handleProfileBlocked)
       this.$reset()
     },
   },
