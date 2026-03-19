@@ -57,7 +57,7 @@ server {
   location ~* \.(php|asp|aspx|cgi|pl|py|rb|jsp|jspx|env|git|sql|bak|old|zip|tar|gz)$ {
     return 444;
   }
-  location ~* ^/(wp-admin|wp-login\.php|xmlrpc\.php|wp-content|wp-includes|phpmyadmin|pma|\.git|\.env) {
+  location ~* ^/(wp-admin|wp-login\.php|xmlrpc\.php|wp-content|wp-includes|phpmyadmin|pma|meta.json|\.env|\.git|\.env) {
     return 444;
   }
 
