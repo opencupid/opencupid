@@ -31,8 +31,10 @@ export const usePublicProfileStore = defineStore('publicProfile', {
           api.get<GetPublicProfileResponse>(`/profiles/${profileId}`)
         )
         const fetched = PublicProfileWithContextSchema.parse(res.data.profile)
+        this.profile = fetched
         return storeSuccess(fetched)
       } catch (error: any) {
+        this.profile = null
         return storeError(error, 'Failed to fetch profile')
       } finally {
         this.isLoading = false // Reset loading state
