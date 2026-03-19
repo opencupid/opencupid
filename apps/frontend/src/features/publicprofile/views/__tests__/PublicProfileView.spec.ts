@@ -26,14 +26,18 @@ vi.mock('@/features/myprofile/stores/ownerProfileStore', () => ({
   }),
 }))
 
-vi.mock('../../composables/usePublicProfile', () => ({
-  usePublicProfile: () => ({
-    fetchProfile: vi.fn().mockResolvedValue({}),
-    refreshProfile: vi.fn(),
-    blockProfile: vi.fn(),
+vi.mock('../../stores/publicProfileStore', () => ({
+  usePublicProfileStore: () => ({
     profile: ref({ ...mockProfile, isDatingActive: false }),
     isLoading: ref(false),
-    error: ref(null),
+    getPublicProfile: vi.fn().mockResolvedValue({ success: true }),
+    blockProfile: vi.fn().mockResolvedValue({ success: true }),
+  }),
+}))
+
+vi.mock('@/lib/bootstrap', () => ({
+  useBootstrap: () => ({
+    bootstrap: vi.fn().mockResolvedValue(undefined),
   }),
 }))
 
@@ -50,6 +54,10 @@ vi.mock('../../components/PublicProfile.vue', () => ({
   }),
 }))
 
+vi.mock('../../components/BlockProfileDialog.vue', () => ({
+  default: { template: '<div />' },
+}))
+
 vi.mock('@/features/shared/ui/MiddleColumn.vue', () => ({
   default: { template: '<div><slot /></div>' },
 }))
@@ -60,6 +68,12 @@ describe('PublicProfileView', () => {
   it('provides viewerProfile injection from owner profile store', async () => {
     const wrapper = mount(PublicProfileView, {
       props: { profileId: '123' },
+      global: {
+        stubs: {
+          BPlaceholderWrapper: { template: '<div><slot /></div>' },
+          BPlaceholderCard: { template: '<div />' },
+        },
+      },
     })
     await flushPromises()
 

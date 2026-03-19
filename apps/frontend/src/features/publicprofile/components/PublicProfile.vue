@@ -1,114 +1,48 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { useToast } from 'vue-toastification'
-
+import type { PublicProfileWithContext } from '@zod/profile/profile.dto'
 import ProfileInteractions from '@/features/interaction/components/ProfileInteractions.vue'
-
-import { usePublicProfile } from '../composables/usePublicProfile'
 import ProfileContent from '../components/ProfileContent.vue'
-import BlockProfileDialog from '../components/BlockProfileDialog.vue'
 import PublicProfileSecondaryNav from '../components/PublicProfileSecondaryNav.vue'
-import StoreErrorOverlay from '@/features/shared/ui/StoreErrorOverlay.vue'
-import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
-
-// Props
 const props = defineProps<{
-  id: string
+  profile: PublicProfileWithContext
 }>()
 
 const emit = defineEmits<{
   (e: 'intent:back'): void
   (e: 'intent:message', conversationId: string): void
-  (e: 'hidden', profileId: string): void
+  (e: 'intent:block'): void
   (e: 'updated'): void
 }>()
-
-// Local state
-const showModal = ref(false)
-
-const { fetchProfile, refreshProfile, blockProfile, profile, isLoading, error } = usePublicProfile()
-
-onMounted(async () => {
-  const res = await fetchProfile(props.id)
-})
-
-const toast = useToast()
-
-const handleBlock = async () => {
-  const ok = await blockProfile()
-  showModal.value = false
-  if (ok) {
-    toast.warning(t('profiles.blocklist.block_confirm_message'))
-  }
-  emit('hidden', profile.value.id)
-}
 </script>
 
 <template>
   <div
     :class="{ dating: profile.isDatingActive }"
     class="public-profile"
-    style="min-height: 100%"
   >
-    <StoreErrorOverlay
-      v-if="error"
-      :error="error"
-    >
-      <template #default="{ error }">
-        <BButton
-          v-if="error.status"
-          variant="primary"
-          @click="$emit('intent:back')"
-        >
-          Keep browsing though!
-        </BButton>
-      </template>
-    </StoreErrorOverlay>
-
-    <div
-      v-else
-      class="h-100 position-relative"
-    >
+    <div class="min-h-100 position-relative">
       <div class="secondary-nav position-absolute w-100 py-2 text-color-white">
         <PublicProfileSecondaryNav
-          @intent:back="$emit('intent:back')"
-          @intent:block="showModal = true"
+          @intent:back="emit('intent:back')"
+          @intent:block="emit('intent:block')"
         />
       </div>
-      <BPlaceholderWrapper :loading="isLoading">
-        <template #loading>
-          <BPlaceholderCard
-            class="w-100 opacity-50"
-            img-height="250"
-            animation="glow"
-            no-button
-          />
-        </template>
 
-        <ProfileContent
-          :profile
-          :isLoading="isLoading"
-          class="mb-5"
+      <ProfileContent
+        :profile="profile"
+        class="mb-5"
+      />
+
+      <div class="interactions position-fixed w-100">
+        <ProfileInteractions
+          :profile="profile"
+          @intent:message="(convoId: string) => emit('intent:message', convoId)"
+          @updated="emit('updated')"
+          @passed="emit('intent:back')"
         />
-
-        <div class="interactions position-fixed w-100">
-          <ProfileInteractions
-            :profile="profile"
-            @intent:message="(convoId: string) => emit('intent:message', convoId)"
-            @updated="refreshProfile"
-            @passed="$emit('hidden', profile.id)"
-          />
-        </div>
-      </BPlaceholderWrapper>
+      </div>
     </div>
-    <BlockProfileDialog
-      :profile="profile"
-      v-model="showModal"
-      :loading="isLoading"
-      @block="handleBlock"
-    />
   </div>
 </template>
 
