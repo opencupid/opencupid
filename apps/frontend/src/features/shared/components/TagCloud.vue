@@ -29,6 +29,7 @@ const container = useTemplateRef<HTMLDivElement>('container')
 const { width, height } = useElementSize(container)
 
 interface PositionedWord {
+  key: string
   text: string
   size: number
   x: number
@@ -72,9 +73,11 @@ function runLayout(tags: PopularTag[], w: number, h: number) {
   const minCount = Math.min(...tags.map((t) => t.count))
   const maxCount = Math.max(...tags.map((t) => t.count))
 
-  const tagMap = new Map<string, PopularTag>()
+  const tagsByText = new Map<string, PopularTag[]>()
   const input = tags.map((tag) => {
-    tagMap.set(tag.name, tag)
+    const queue = tagsByText.get(tag.name) ?? []
+    queue.push(tag)
+    tagsByText.set(tag.name, queue)
     return { text: tag.name, size: scaleFontSize(tag.count, minCount, maxCount, fontMax) }
   })
 
@@ -87,13 +90,22 @@ function runLayout(tags: PopularTag[], w: number, h: number) {
     .padding(3)
     .random(() => 0.5)
     .on('end', (output: any[]) => {
-      words.value = output.map((wo) => ({
-        text: wo.text!,
-        size: wo.size!,
-        x: wo.x!,
-        y: wo.y!,
-        tag: tagMap.get(wo.text!)!,
-      }))
+      words.value = output
+        .map((wo, index) => {
+          const text = wo.text as string
+          const queue = tagsByText.get(text)
+          const tag = queue?.shift()
+          if (!tag) return null
+          return {
+            key: `${tag.id}-${index}`,
+            text,
+            size: wo.size!,
+            x: wo.x!,
+            y: wo.y!,
+            tag,
+          }
+        })
+        .filter((w): w is PositionedWord => w !== null)
     })
     .start()
 }
@@ -154,7 +166,7 @@ onMounted(async () => {
     >
       <text
         v-for="(w, i) in words"
-        :key="w.tag.id"
+        :key="w.key"
         text-anchor="middle"
         dominant-baseline="central"
         :x="w.x"

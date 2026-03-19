@@ -139,4 +139,28 @@ describe('TagCloud', () => {
       limit: 50,
     })
   })
+
+  it('handles duplicate tag names without duplicate key warnings', async () => {
+    const tagStore = useTagsStore()
+    const duplicateNameTags = [
+      { id: 't1', name: 'Music', slug: 'music-a', count: 10 },
+      { id: 't2', name: 'Music', slug: 'music-b', count: 7 },
+    ]
+    tagStore.popularTags = duplicateNameTags
+    tagStore.fetchPopularTags = vi.fn().mockImplementation(async () => {
+      tagStore.popularTags = duplicateNameTags
+    })
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    const wrapper = mount(TagCloud)
+    await flushPromises()
+
+    expect(wrapper.findAll('.tag-cloud-word')).toHaveLength(2)
+    const duplicateKeyWarnings = warnSpy.mock.calls.filter((call) =>
+      String(call[0]).includes('Duplicate keys found during update')
+    )
+    expect(duplicateKeyWarnings).toHaveLength(0)
+
+    warnSpy.mockRestore()
+  })
 })
