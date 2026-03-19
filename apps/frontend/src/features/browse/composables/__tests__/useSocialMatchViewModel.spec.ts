@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import type { SocialMatchFilterDTO } from '@zod/match/filters.dto'
 
 // --- Mocks ---
 
@@ -36,7 +37,7 @@ const mockOwnerStore = {
     tags: [],
   },
   isLoading: false,
-  matchFilter: null as unknown,
+  matchFilter: null as SocialMatchFilterDTO | null,
   fetchMatchFilter: vi.fn(),
   persistMatchFilter: vi.fn(),
   setMatchFilterTags: vi.fn(),
@@ -176,7 +177,11 @@ describe('useSocialMatchViewModel', () => {
 
     it('invalidates cache and refetches when filter was mutated externally before activation', async () => {
       const initialFilter = { location: { country: 'DE', lat: 1, lon: 2 }, radius: 10, tags: [] }
-      const updatedFilter = { location: { country: 'DE', lat: 1, lon: 2 }, radius: 10, tags: [{ id: 't1', slug: 'hiking', name: 'Hiking' }] }
+      const updatedFilter = {
+        location: { country: 'DE', lat: 1, lon: 2 },
+        radius: 10,
+        tags: [{ id: 't1', slug: 'hiking', name: 'Hiking' }],
+      }
       mockOwnerStore.matchFilter = { ...initialFilter }
       mockOwnerStore.fetchMatchFilter = vi.fn()
       mockFindProfileStore.invalidateMapCache = vi.fn()

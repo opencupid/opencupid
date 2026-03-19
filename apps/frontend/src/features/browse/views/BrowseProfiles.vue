@@ -33,9 +33,9 @@ onMounted(async () => {
   await initialize()
 })
 
-onActivated(() => {
+onActivated(async () => {
   if (isInitialized.value) {
-    refreshIfFilterChanged()
+    await refreshIfFilterChanged()
   }
 })
 

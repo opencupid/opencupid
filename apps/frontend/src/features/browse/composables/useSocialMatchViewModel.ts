@@ -34,6 +34,7 @@ export function useSocialMatchViewModel() {
       return
     }
 
+    await ownerStore.fetchMatchFilter()
     await fetchResults()
     renderedFilterSnapshot = JSON.stringify(ownerStore.matchFilter)
     isInitialized.value = true
@@ -41,7 +42,6 @@ export function useSocialMatchViewModel() {
 
   const fetchResults = async () => {
     await Promise.all([
-      ownerStore.fetchMatchFilter(),
       findProfileStore.fetchDatingMatchIds(),
       findProfileStore.lastMapBounds
         ? findProfileStore.findProfilesForMapBounds(findProfileStore.lastMapBounds)
