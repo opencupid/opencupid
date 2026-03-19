@@ -1,11 +1,5 @@
 <script setup lang="ts">
 import FluidColumn from '@/features/shared/ui/FluidColumn.vue'
-
-defineProps<{
-  isLoading: boolean
-  isInitialized: boolean
-  haveResults: boolean
-}>()
 </script>
 
 <template>

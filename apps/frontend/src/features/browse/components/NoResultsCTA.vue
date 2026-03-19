@@ -1,32 +1,56 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { inject, ref, type Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ShareDialog from './ShareDialog.vue'
+import type { OwnerProfile } from '@zod/profile/profile.dto'
 
-const emit = defineEmits<{ close: [] }>()
+import { useShare } from '@vueuse/core'
+
+const { share, isSupported } = useShare()
+
 const { t } = useI18n()
 const showModal = ref(false)
+const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
+const handleWebShare = async () => {
+  try {
+    await share({
+      title: t('uicomponents.share_dialog.share_title', { siteName: __APP_CONFIG__.SITE_NAME }),
+      text: t('uicomponents.share_dialog.share_text', {
+        siteName: __APP_CONFIG__.SITE_NAME,
+        publicName: viewerProfile?.value?.publicName || '',
+      }),
+      url: window.location.origin,
+    })
+  } catch (error: unknown) {
+    if (error instanceof DOMException && (error.name === 'AbortError' || error.name === 'NotAllowedError')) {
+      return
+    }
+    throw error
+  }
+}
 </script>
 
 <template>
-  <div
-    class="d-flex flex-column align-items-center shadow-lg bg-theme user-select-none justify-content-center px-4 py-4 text-center position-relative"
-  >
-    <BCloseButton
-      class="position-absolute top-0 end-0 m-2"
-      @click="emit('close')"
-    />
-
+  <div class="d-flex flex-wrap align-items-center justify-content-center gap-2 user-select-none">
     <!-- This community is still growing -->
-    <h5>{{ t('profiles.browse.no_results_cta_title') }}</h5>
+    <div class="lh-sm small">
+      {{ t('profiles.browse.no_results_cta_title') }}
+    </div>
 
-    <!-- You can help by inviting your friends to join -->
-    <p class="text-muted">{{ t('profiles.browse.no_results_cta_description') }}</p>
+    <BButton
+      v-if="isSupported"
+      variant="outline-primary"
+      size="sm"
+      @click="handleWebShare"
+    >
+      {{ t('profiles.browse.invite_button') }}
+    </BButton>
 
     <!-- Invite friends -->
     <BButton
-      class="mb-3"
-      variant="primary"
+      v-else
+      variant="outline-primary"
+      size="sm"
       @click="showModal = true"
     >
       {{ t('profiles.browse.invite_button') }}
@@ -34,3 +58,10 @@ const showModal = ref(false)
   </div>
   <ShareDialog v-model="showModal" />
 </template>
+
+<style scoped lang="scss">
+.small,
+button {
+  font-size: 0.725rem;
+}
+</style>

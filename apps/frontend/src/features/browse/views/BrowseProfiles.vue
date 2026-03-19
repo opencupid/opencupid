@@ -1,20 +1,22 @@
 <script setup lang="ts">
 import { computed, onActivated, onMounted, provide, toRef } from 'vue'
 
-import BrowseLayout from '@/features/shared/components/BrowseLayout.vue'
+import { useSocialMatchViewModel } from '../composables/useSocialMatchViewModel'
 import { isValidLatLng } from '@/features/shared/components/osmPoiMap/mapUtils'
+
+import BrowseLayout from '@/features/shared/components/BrowseLayout.vue'
 import BrowseFilterBar from '../components/BrowseFilterBar.vue'
 import MapView from '@/features/shared/components/MapView.vue'
 import ProfileMapCard from '../components/ProfileMapCard.vue'
+import NoResultsCTA from '../components/NoResultsCTA.vue'
 import MapIcon from '@/features/publicprofile/components/MapIcon.vue'
-import { useSocialMatchViewModel } from '../composables/useSocialMatchViewModel'
 import type { MapPoi } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
 
 defineOptions({ name: 'BrowseProfiles' })
 
 const {
   viewerProfile,
-  haveResults,
+  isNoOneAround,
   isLoading,
   profileList,
   matchedProfileIds,
@@ -68,11 +70,7 @@ const mapCenter = computed<[number, number] | undefined>(() => {
 </script>
 
 <template>
-  <BrowseLayout
-    :isLoading="isLoading"
-    :isInitialized="isInitialized"
-    :haveResults="haveResults"
-  >
+  <BrowseLayout>
     <template #filter-bar>
       <BrowseFilterBar
         v-model="matchFilter"
@@ -82,6 +80,14 @@ const mapCenter = computed<[number, number] | undefined>(() => {
     </template>
 
     <template #results>
+      <BAlert
+        v-if="isNoOneAround"
+        variant="info"
+        class="lonely-alert shadow p-2 p-md-2"
+        show
+      >
+        <NoResultsCTA />
+      </BAlert>
       <MapView
         :items="mapPois"
         :icon-component="MapIcon"
@@ -96,3 +102,22 @@ const mapCenter = computed<[number, number] | undefined>(() => {
     </template>
   </BrowseLayout>
 </template>
+
+<style scoped lang="scss">
+@import 'bootstrap/scss/functions';
+@import 'bootstrap/scss/variables';
+@import 'bootstrap/scss/mixins';
+@import '@/css/app-vars.scss';
+@import '@/css/theme.scss';
+
+.lonely-alert {
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1025;
+  background-color: rgba($color: $info, $alpha: 0.6);
+  position: absolute;
+  width: fit-content;
+  min-width: 80%;
+}
+</style>

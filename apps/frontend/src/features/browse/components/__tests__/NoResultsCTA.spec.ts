@@ -1,20 +1,30 @@
 import { vi } from 'vitest'
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
+
+const shareFn = vi.fn().mockResolvedValue(undefined)
+let mockIsSupported = false
+vi.mock('@vueuse/core', () => ({
+  useShare: () => ({ share: shareFn, isSupported: mockIsSupported }),
+}))
+
 import { mount } from '@vue/test-utils'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 
 const ShareDialog = {
   props: ['modelValue'],
   template: '<div class="share-dialog" :data-show="modelValue" />',
 }
 const BButton = { template: '<button @click="$emit(\'click\')"><slot /></button>' }
-const BCloseButton = { template: '<button class="btn-close" @click="$emit(\'click\')" />' }
 
 import NoResultsCTA from '../NoResultsCTA.vue'
 
-describe('NoResultsCTA', () => {
-  const mountCTA = () =>
-    mount(NoResultsCTA, { global: { stubs: { ShareDialog, BButton, BCloseButton } } })
+const mountCTA = () => mount(NoResultsCTA, { global: { stubs: { ShareDialog, BButton } } })
+
+describe('NoResultsCTA — Web Share not supported', () => {
+  beforeEach(() => {
+    mockIsSupported = false
+    shareFn.mockClear()
+  })
 
   it('opens share dialog when invite button is clicked', async () => {
     const wrapper = mountCTA()
@@ -25,10 +35,21 @@ describe('NoResultsCTA', () => {
       .trigger('click')
     expect(wrapper.find('.share-dialog').attributes('data-show')).toBe('true')
   })
+})
 
-  it('emits close when close button is clicked', async () => {
+describe('NoResultsCTA — Web Share supported', () => {
+  beforeEach(() => {
+    mockIsSupported = true
+    shareFn.mockClear()
+  })
+
+  it('calls share() and does not open modal when invite button is clicked', async () => {
     const wrapper = mountCTA()
-    await wrapper.find('.btn-close').trigger('click')
-    expect(wrapper.emitted('close')!.length).toBeGreaterThanOrEqual(1)
+    await wrapper
+      .findAll('button')
+      .find((b) => b.text().includes('invite'))!
+      .trigger('click')
+    expect(shareFn).toHaveBeenCalled()
+    expect(wrapper.find('.share-dialog').attributes('data-show')).toBe('false')
   })
 })

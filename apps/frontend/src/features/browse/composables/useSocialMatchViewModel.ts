@@ -100,6 +100,15 @@ export function useSocialMatchViewModel() {
     return findProfileStore.profileList.length > 0
   })
 
+    // isNoOneAround is true if the only profile is the 
+  // viewer themselves
+  const isNoOneAround = computed(() => {
+    const list = findProfileStore.profileList
+    if (list.length === 0) return false
+    if (list.length === 1 && list[0]?.id === viewerProfile.value?.id) return true
+    return false
+  })
+
   const hideProfile = (profileId: string) => {
     findProfileStore.hide(profileId)
   }
@@ -124,6 +133,7 @@ export function useSocialMatchViewModel() {
   return {
     viewerProfile,
     haveResults,
+    isNoOneAround,
     isLoading: isLoading,
     storeError,
     initialize,

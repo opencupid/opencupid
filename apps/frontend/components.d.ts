@@ -12,6 +12,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    BAlert: typeof import('bootstrap-vue-next/components/BAlert')['BAlert']
     BBadge: typeof import('bootstrap-vue-next/components/BBadge')['BBadge']
     BButton: typeof import('bootstrap-vue-next/components/BButton')['BButton']
     BButtonGroup: typeof import('bootstrap-vue-next/components/BButton')['BButtonGroup']
@@ -66,6 +67,7 @@ declare module 'vue' {
 
 // For TSX support
 declare global {
+  const BAlert: typeof import('bootstrap-vue-next/components/BAlert')['BAlert']
   const BBadge: typeof import('bootstrap-vue-next/components/BBadge')['BBadge']
   const BButton: typeof import('bootstrap-vue-next/components/BButton')['BButton']
   const BButtonGroup: typeof import('bootstrap-vue-next/components/BButton')['BButtonGroup']
