@@ -73,7 +73,7 @@ import BrowseProfiles from '../BrowseProfiles.vue'
 
 describe('BrowseProfiles view', () => {
   beforeEach(() => {
-    vmState.isNoOneAround.value = true
+    vmState.isNoOneAround.value = false
     vmState.isInitialized.value = true
     vmState.matchFilter.value = null
     toastInfo.mockClear()
@@ -98,21 +98,21 @@ describe('BrowseProfiles view', () => {
   })
 
   it('does not show toast when there are no results (replaced by inline CTA)', async () => {
-    vmState.isNoOneAround.value = true
-    mountComponent()
     vmState.isNoOneAround.value = false
+    mountComponent()
+    vmState.isNoOneAround.value = true
     await nextTick()
     expect(toastInfo).not.toHaveBeenCalled()
   })
 
-  it('hides CTA alert when isNoOneAround is true (other profiles present)', () => {
-    vmState.isNoOneAround.value = true
+  it('hides CTA alert when isNoOneAround is false (other profiles present)', () => {
+    vmState.isNoOneAround.value = false
     const wrapper = mountComponent()
     expect(wrapper.findComponent({ name: 'BAlert' }).exists()).toBe(false)
   })
 
-  it('shows CTA alert when isNoOneAround is false (no other profiles)', () => {
-    vmState.isNoOneAround.value = false
+  it('shows CTA alert when isNoOneAround is true (no other profiles)', () => {
+    vmState.isNoOneAround.value = true
     const wrapper = mountComponent()
     expect(wrapper.findComponent({ name: 'BAlert' }).exists()).toBe(true)
   })
