@@ -8,10 +8,17 @@ export async function promptInstall() {
   if (!deferredPrompt) return
 
   const appStore = useAppStore()
-  await deferredPrompt.prompt()
-  await deferredPrompt.userChoice
-  deferredPrompt = null
-  appStore.canInstallPwa = false
+
+  try {
+    await deferredPrompt.prompt()
+    await deferredPrompt.userChoice
+  } catch (error) {
+    // Avoid unhandled rejections and aid debugging if the prompt fails.
+    console.error('PWA install prompt failed:', error)
+  } finally {
+    deferredPrompt = null
+    appStore.canInstallPwa = false
+  }
 }
 
 /**
