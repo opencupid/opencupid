@@ -66,11 +66,11 @@ async function handleNewsletterOptInChange(event: Event) {
 </script>
 
 <template>
-  <fieldset class="mb-3">
+  <fieldset class="mb-2 mb-md-3">
     <PushPermissions :disabled="disabled || isSaving" />
   </fieldset>
 
-  <fieldset class="mb-3">
+  <fieldset class="mb-2 mb-md-3">
     <div class="form-check">
       <input
         id="callable-opt-in"
@@ -89,7 +89,7 @@ async function handleNewsletterOptInChange(event: Event) {
     </div>
   </fieldset>
 
-  <fieldset class="mb-3">
+  <fieldset class="mb-2 mb-md-3">
     <div class="form-check">
       <input
         id="newsletter-opt-in"

@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 import type { ProfileOptInSettings } from '@zod/profile/profile.dto'
 
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { useUserStore } from '@/store/userStore'
+import { usePwaInstall } from '@/features/app/composables/usePwaInstall'
 
 import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
 import IconLogout from '@/assets/icons/interface/logout.svg'
+import IconGlobe from '@/assets/icons/interface/globe.svg'
 
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 import LanguageSelectorDropdown from '../../shared/ui/LanguageSelectorDropdown.vue'
@@ -16,12 +19,15 @@ import OptInCheckboxes from '../components/OptInCheckboxes.vue'
 import VersionInfo from '../components/VersionInfo.vue'
 import RouterBackButton from '@/features/shared/ui/RouterBackButton.vue'
 import SecondaryNav from '@/features/shared/ui/SecondaryNav.vue'
-import { useRouter } from 'vue-router'
+import PwaInstallButton from '@/features/app/components/PwaInstallButton.vue'
 
 const authStore = useAuthStore()
 const ownerProfileStore = useOwnerProfileStore()
 const userStore = useUserStore()
 const router = useRouter()
+
+// Initialize PWA install prompt handler
+usePwaInstall()
 
 const isLoading = ref(true)
 const optInModel = computed<ProfileOptInSettings>({
@@ -66,27 +72,37 @@ function handleClick() {
 
         <section class="w-100 flex-grow-1">
           <div class="h-100 d-flex flex-column justify-content-center">
-            <fieldset class="mb-3 mb-md-4">
-              <legend class="h5">
-                {{ $t('settings.language_label') }}
-              </legend>
+            <fieldset class="d-flex align-items-center mb-1 mb-md-4">
+              <IconGlobe class="svg-icon svg-icon-lg me-2" />
               <LanguageSelectorDropdown size="md" />
             </fieldset>
+            <hr class="mb-md-4" />
 
             <fieldset>
-              <legend class="h5">
+              <legend class="h5 d-none d-md-block">
                 {{ $t('settings.notifications_label') }}
               </legend>
               <OptInCheckboxes v-model="optInModel" />
             </fieldset>
-<hr>
+
+            <fieldset>
+              <PwaInstallButton />
+            </fieldset>
+
+            <hr class="mb-md-4"/>
+
             <fieldset class="d-flex flex-wrap align-items-center gap-2">
-              <div class="flex-grow-1" style="min-width: 0; word-break: break-all">
+              <div
+                class="flex-grow-1 form-hint"
+                style="min-width: 0; word-break: break-all"
+              >
                 <span v-if="userStore.user?.email">
-                  {{ $t('auth.email') }}: {{ userStore.user.email }}</span
+                  <span class="d-none d-md-inline">{{ $t('auth.email') }}:</span>
+                  {{ userStore.user.email }}</span
                 >
                 <span v-if="userStore.user?.phonenumber">
-                  {{ $t('auth.phone_number') }}: {{ userStore.user.phonenumber }}</span
+                  <span class="d-none d-md-inline">{{ $t('auth.phone_number') }}:</span>
+                  {{ userStore.user.phonenumber }}</span
                 >
               </div>
               <div class="flex-shrink-0">
