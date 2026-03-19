@@ -8,7 +8,6 @@ import { useShare } from '@vueuse/core'
 
 const { share, isSupported } = useShare()
 
-const emit = defineEmits<{ close: [] }>()
 const { t } = useI18n()
 const showModal = ref(false)
 const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')

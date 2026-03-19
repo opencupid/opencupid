@@ -44,7 +44,7 @@ vi.mock('vue-router', () => ({
 
 const vmState = {
   viewerProfile: ref<Record<string, any>>({ isSocialActive: true }),
-  haveResults: ref(true),
+  isNoOneAround: ref(true),
   isLoading: ref(false),
   profileList: ref([{ id: '1' }]),
   storeError: ref(null),
@@ -58,6 +58,7 @@ const vmState = {
   updatePrefs: vi.fn(),
   openProfile: vi.fn(),
   initialize: vi.fn(),
+  refreshIfFilterChanged: vi.fn(),
 }
 
 vi.mock('../../composables/useSocialMatchViewModel', () => ({
@@ -66,12 +67,13 @@ vi.mock('../../composables/useSocialMatchViewModel', () => ({
 
 const BButton = { template: '<button><slot /></button>' }
 const BContainer = { template: '<div class="container"><slot /></div>' }
+const NoResultsCTA = { template: '<div class="no-results-cta" />' }
 
 import BrowseProfiles from '../BrowseProfiles.vue'
 
 describe('BrowseProfiles view', () => {
   beforeEach(() => {
-    vmState.haveResults.value = true
+    vmState.isNoOneAround.value = true
     vmState.isInitialized.value = true
     vmState.matchFilter.value = null
     toastInfo.mockClear()
@@ -83,6 +85,7 @@ describe('BrowseProfiles view', () => {
         stubs: {
           BButton,
           BContainer,
+          NoResultsCTA,
         },
       },
     })
@@ -95,11 +98,23 @@ describe('BrowseProfiles view', () => {
   })
 
   it('does not show toast when there are no results (replaced by inline CTA)', async () => {
-    vmState.haveResults.value = true
+    vmState.isNoOneAround.value = true
     mountComponent()
-    vmState.haveResults.value = false
+    vmState.isNoOneAround.value = false
     await nextTick()
     expect(toastInfo).not.toHaveBeenCalled()
+  })
+
+  it('shows NoResultsCTA when isNoOneAround is true', () => {
+    vmState.isNoOneAround.value = true
+    const wrapper = mountComponent()
+    expect(wrapper.findComponent({ name: 'BAlert' }).exists()).toBe(false)
+  })
+
+  it('shows NoResultsCTA when isNoOneAround is false', () => {
+    vmState.isNoOneAround.value = false
+    const wrapper = mountComponent()
+    expect(wrapper.findComponent({ name: 'BAlert' }).exists()).toBe(true)
   })
 
   it('renders map view with OsmPoiMap', () => {

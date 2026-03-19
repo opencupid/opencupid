@@ -16,7 +16,6 @@ defineOptions({ name: 'BrowseProfiles' })
 
 const {
   viewerProfile,
-  haveResults,
   isNoOneAround,
   isLoading,
   profileList,
