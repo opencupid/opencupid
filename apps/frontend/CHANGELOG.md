@@ -1,5 +1,11 @@
 # frontend
 
+## 0.36.1
+
+### Patch Changes
+
+- 4b8ca61: Invalidate bounds cache when filter is updated
+
 ## 0.36.0
 
 ### Minor Changes
