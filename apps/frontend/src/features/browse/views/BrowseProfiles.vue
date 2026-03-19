@@ -81,7 +81,7 @@ const mapCenter = computed<[number, number] | undefined>(() => {
 
     <template #results>
       <BAlert
-        v-if="!isNoOneAround"
+        v-if="isNoOneAround"
         variant="info"
         class="lonely-alert shadow p-2 p-md-2"
         show
