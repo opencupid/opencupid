@@ -39,7 +39,7 @@ const handleTagCloudSelect = (tag: PopularTag) => {
     v-model="model"
     :taggable="true"
     :close-on-select="true"
-    open-direction="top"
+    open-direction="bottom"
     :required="true"
     :initialOptions="popularTags"
     :hint="tagCloudHint"
