@@ -1,11 +1,11 @@
-// Self-hosted variable fonts from Google Fonts GitHub repos.
-// All served as WOFF2 from public/fonts/ (stable paths, preloadable).
+// Self-hosted variable fonts — inlined as base64 data URIs so they are
+// embedded directly in the CSS bundle with no separate font fetch.
 
 @font-face {
   font-family: 'Nunito';
   font-style: normal;
   font-weight: 200 1000;
-  src: url('/fonts/Nunito-Variable.woff2') format('woff2');
+  src: url('../assets/fonts/Nunito-Variable.woff2?inline') format('woff2');
   font-display: swap;
 }
 
@@ -13,7 +13,7 @@
   font-family: 'Rubik';
   font-style: normal;
   font-weight: 300 900;
-  src: url('/fonts/Rubik-Variable.woff2') format('woff2');
+  src: url('../assets/fonts/Rubik-Variable.woff2?inline') format('woff2');
   font-display: swap;
 }
 
@@ -21,6 +21,6 @@
   font-family: 'Patrick Hand';
   font-style: normal;
   font-weight: 400;
-  src: url('/fonts/PatrickHand-Regular.woff2') format('woff2');
+  src: url('../assets/fonts/PatrickHand-Regular.woff2?inline') format('woff2');
   font-display: swap;
 }
