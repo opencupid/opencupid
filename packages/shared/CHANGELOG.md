@@ -1,5 +1,11 @@
 # @opencupid/shared
 
+## 0.5.8
+
+### Patch Changes
+
+- 82f9e6c: Update Hungarian and English translations (#1147)
+
 ## 0.5.7
 
 ### Patch Changes

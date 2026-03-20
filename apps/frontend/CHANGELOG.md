@@ -1,5 +1,20 @@
 # frontend
 
+## 0.37.0
+
+### Minor Changes
+
+- d44e9c3: Add PWA launch_handler to route Android magic-link taps into installed app, and add in-app install banner using beforeinstallprompt (#1100)
+- 2c344ba: Browse empty state: inline CTA with native share (#1153)
+
+### Patch Changes
+
+- 248eb94: Re-render map results when matchFilter changes on BrowseProfiles activation (#1152)
+- a5ba79e: Sync i18n JSON files to Tolgee export baseline (key reordering, remove empty footer placeholders)
+- c3b93b4: Hide language chooser in IntrotextEditor when user has only one language
+- c9fc246: Refresh conversation list when a profile is blocked from any view (#1150)
+- 2c32ef3: Refactor PublicProfile: lift store ownership to view, simplify component to pure presenter (#refactor)
+
 ## 0.36.1
 
 ### Patch Changes
