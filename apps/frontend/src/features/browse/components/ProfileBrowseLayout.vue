@@ -50,7 +50,7 @@ const handleCardClick = (profileId: string) => {
   <main class="w-100 position-relative overflow-hidden">
     <div class="list-view d-flex flex-column justify-content-start">
       <FluidColumn class="my-2">
-        <div class="subnav-bar d-flex align-items-center gap-2 px-2 py-1  rounded">
+        <div class="subnav-bar d-flex align-items-center gap-2 px-2 py-1 rounded">
           <slot
             name="filter-bar"
             :showPrefsModal="showPrefsModal"
@@ -77,6 +77,7 @@ const handleCardClick = (profileId: string) => {
         :cancel-title="t('profiles.browse.filters.dialog_cancel_button')"
         cancel-variant="link"
         ok-title="Search"
+        ok-variant="secondary"
         initial-animation
         :body-scrolling="false"
         @ok="$emit('prefs:update')"

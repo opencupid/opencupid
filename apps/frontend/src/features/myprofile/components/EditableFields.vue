@@ -68,7 +68,7 @@ provide('isEditable', toRef(props, 'editState'))
     :no-close-on-backdrop="true"
     :no-header="false"
     :ok-title="'OK'"
-    :ok-class="'btn btn-primary px-5'"
+    ok-variant="success"
     :initial-animation="false"
     body-class="d-flex flex-row align-items-center justify-content-center overflow-hidden flex-grow-1 min-h-0"
     modal-class="field-edit-modal"
@@ -79,10 +79,10 @@ provide('isEditable', toRef(props, 'editState'))
   >
     <template #cancel="{ close }">
       <BButton
-        class="btn btn-link text-decoration-none"
-        @click="close"
         variant="link"
+        class="link-secondary"
         size="sm"
+        @click="close"
         >{{ $t('uicomponents.dialog_cancel_button') }}</BButton
       >
     </template>

@@ -11,7 +11,7 @@ vi.mock('@/assets/icons/interface/menu-dots-vert.svg', () => ({ default: { templ
 import MessagingNav from '../components/MessagingNav.vue'
 
 const stubs = {
-  BButton: true,
+  BButton: { template: '<button><slot /></button>' },
   BDropdown: { template: '<div><slot /><slot name="button-content" /></div>' },
   BDropdownItem: { template: '<div class="dropdown-item"><slot /></div>' },
   BDropdownDivider: { template: '<hr />' },
@@ -25,7 +25,7 @@ describe('MessagingNav', () => {
       props: { recipient: { id: '1', publicName: 'B', profileImages: [] } },
       global: { stubs, mocks: { $t: (key: string) => key } },
     })
-    await wrapper.find('.back-button a').trigger('click')
+    await wrapper.find('.back-button button').trigger('click')
     expect(wrapper.emitted('deselect:convo')).toBeTruthy()
   })
 

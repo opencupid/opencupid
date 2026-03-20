@@ -293,6 +293,17 @@ main {
   }
 }
 
+// ─── Canonical button conventions ────────────────────────────────────
+//
+// Cancel / Dismiss / Nevermind:  variant="link"   class="link-secondary"
+// OK / Confirm:                  variant="success"
+// Submit / Save:                 variant="secondary"
+// Destructive confirm:           variant="danger"   (preserve as-is)
+//
+// Exception: VoiceRecorder cancel uses variant="outline-secondary"
+// because it sits inline next to the recording indicator and needs
+// stronger visual weight than a plain text link.
+
 // ─── Elevation system ────────────────────────────────────────────────
 
 // Cards: subtle shadow + radius

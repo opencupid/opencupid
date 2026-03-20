@@ -21,14 +21,14 @@ defineEmits<{
 <template>
   <div class="d-flex align-items-center justify-content-between p-2">
     <div class="back-button">
-      <a
-        class="btn btn-secondary-outline fs-1"
-        role="button"
+      <BButton
+        variant="link"
+        class="link-secondary fs-1 p-0"
         :title="$t('uicomponents.back_button_title')"
         @click="$emit('deselect:convo')"
       >
         <IconArrowSingleLeft class="svg-icon" />
-      </a>
+      </BButton>
     </div>
 
     <div
