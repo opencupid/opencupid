@@ -1,5 +1,19 @@
 # frontend
 
+## 0.38.0
+
+### Minor Changes
+
+- dbca451: Tag selector dropdown: elevation shadow when active, tag cloud dims while dropdown is open
+- 1428077: Add configurable country allowlist for geocoding search results (#1155)
+- 09eb088: IntrotextEditor: show full language name and flag icon in language tabs, with a help popover (#1160)
+
+### Patch Changes
+
+- 8b87f9a: Remove orphaned dating_mode_view_hint_inactive i18n key reference from ViewAsDropdown
+- 139b18e: fix: open ShareDialog fallback when Web Share API is blocked in Edge (#1161)
+- 884ef10: fix: sort exact geocoding matches first and cancel stale requests (#1157)
+
 ## 0.37.0
 
 ### Minor Changes
