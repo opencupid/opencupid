@@ -15,7 +15,10 @@ export const useGeocodingStore = defineStore('geocoding', () => {
 
   async function search(query: string, lang: string): Promise<GeocodingResult[]> {
     if (!query) {
+      _abortController?.abort()
+      _abortController = null
       results.value = []
+      isLoading.value = false
       return results.value
     }
 
