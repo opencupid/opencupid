@@ -24,6 +24,7 @@ const tagStore = useTagsStore()
 
 const FONT_MIN = 12
 const FONT_MAX = 48
+const FONT_FAMILY = 'Nunito, Poppins, sans-serif'
 const COLORS = ['#5e4b2c', '#8b6914', '#6b8e23', '#a0522d', '#2e8b57', '#b8860b', '#556b2f']
 
 const container = useTemplateRef<HTMLDivElement>('container')
@@ -85,7 +86,7 @@ function runLayout(tags: PopularTag[], w: number, h: number) {
   cloud()
     .size([w, h])
     .words(input)
-    .font('sans-serif')
+    .font(FONT_FAMILY)
     .fontSize((d: any) => d.size)
     .rotate(0)
     .padding(3)
@@ -186,7 +187,7 @@ onUnmounted(() => {
         :x="w.x"
         :y="w.y"
         :fill="COLORS[i % COLORS.length]"
-        :style="{ fontSize: `${w.size}px`, fontFamily: 'sans-serif', cursor: 'pointer' }"
+        :style="{ fontSize: `${w.size}px`, fontFamily: FONT_FAMILY, cursor: 'pointer' }"
         class="tag-cloud-word"
         @click="handleTagClick(w.tag)"
         @mouseenter="emit('tag:hover', w.tag)"
