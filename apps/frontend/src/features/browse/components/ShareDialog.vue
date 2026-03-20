@@ -34,17 +34,11 @@ const handleSelect = (event: Event) => {
     :title="t('uicomponents.share_dialog.title')"
     :backdrop-first="false"
     no-animation
+    body-class="d-flex flex-column justify-content-center"
   >
-    <BFormGroup class="d-flex align-items-center justify-content-between flex-column mb-3">
-      <div class="my-2">
-        <BFormInput
-          v-model="shareUrl"
-          type="text"
-          :placeholder="shareUrl"
-          readonly
-          class="form-control-lg"
-          @click="handleSelect"
-        />
+    <div class="text-center">
+      <div class="mb-2">
+        <code class="text-truncate">{{ shareUrl }}</code>
       </div>
       <UseClipboard
         v-slot="{ copy, copied }"
@@ -52,10 +46,10 @@ const handleSelect = (event: Event) => {
       >
         <BButton
           @click="copy()"
-          size="lg"
           variant="primary"
+          size="lg"
           pill
-          class="flex-grow-1 flex-shrink-0 ms-3"
+          class="flex-shrink-0 ms-3 mb-3"
         >
           <IconCopy class="svg-icon" />
           {{
@@ -65,16 +59,13 @@ const handleSelect = (event: Event) => {
           }}
         </BButton>
       </UseClipboard>
-    </BFormGroup>
-    <div class="col-12 text-center">
+    </div>
+    <div class="text-center">
       <img
         :src="qrcode"
         alt="QR Code"
-        class="img-fluid w-75"
+        class="img-fluid w-100"
       />
-      <div class="text-muted">
-        {{ t('uicomponents.share_dialog.qr_hint') }}
-      </div>
     </div>
   </BModal>
 </template>
