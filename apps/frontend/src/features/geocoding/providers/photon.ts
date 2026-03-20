@@ -26,8 +26,10 @@ export const searchPhoton: GeocodingProvider = async (query, lang) => {
     { params }
   )
 
-  const raw = __APP_CONFIG__.GEOCODING_ALLOWED_COUNTRIES
-  const allowedCountries = raw ? raw.split(',').map((c) => c.trim().toUpperCase()) : []
+  const allowedCountries = (__APP_CONFIG__.GEOCODING_ALLOWED_COUNTRIES ?? '')
+    .split(',')
+    .map((c) => c.trim().toUpperCase())
+    .filter(Boolean)
 
   return (res.data.features ?? [])
     .filter(

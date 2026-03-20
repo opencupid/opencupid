@@ -109,6 +109,15 @@ describe('searchPhoton', () => {
     await expect(searchPhoton('Berlin', 'en')).rejects.toThrow('Network error')
   })
 
+  it('treats whitespace-only GEOCODING_ALLOWED_COUNTRIES as unset (returns all results)', async () => {
+    ;(globalThis as any).__APP_CONFIG__.GEOCODING_ALLOWED_COUNTRIES = '   '
+    mockGet.mockResolvedValue({ data: { type: 'FeatureCollection', features: multiCityFeatures } })
+
+    const results = await searchPhoton('city', 'en')
+
+    expect(results.map((r) => r.name)).toEqual(['Berlin', 'Manila', 'New York'])
+  })
+
   it('returns all results when GEOCODING_ALLOWED_COUNTRIES is empty', async () => {
     mockGet.mockResolvedValue({ data: { type: 'FeatureCollection', features: multiCityFeatures } })
 
