@@ -4,10 +4,13 @@ import { computed, ref, watch } from 'vue'
 import type { SpeechRecognition, SpeechRecognitionEvent } from '@/types/speechrecognition'
 
 import IconMic2 from '@/assets/icons/interface/mic-2.svg'
-import IconGlobe from '@/assets/icons/interface/globe.svg'
+import IconQuestion from '@/assets/icons/interface/question.svg'
 import { sortLanguagesWithEnFirst } from '@/lib/i18n'
+import { useLanguages } from '@/features/shared/composables/useLanguages'
+import LanguageIcon from '@/features/shared/profiledisplay/LanguageIcon.vue'
 // i18n
 const { t } = useI18n()
+const { getLanguageLabels } = useLanguages()
 
 type Language = string
 type LocalizedText = Record<Language, string>
@@ -33,6 +36,7 @@ const error = ref('')
 const status = ref('idle')
 
 const langList = computed(() => (props.languages ? sortLanguagesWithEnFirst(props.languages) : []))
+const labelledLangList = computed(() => getLanguageLabels(langList.value))
 
 // TODO: replace with a computed or composable — the ref + watcher is a workaround
 // for langList being empty at setup time (formData arrives async from the store).
@@ -151,38 +155,40 @@ watch(
       <ul class="nav nav-pills flex-grow-1">
         <li
           class="nav-item me-2"
-          style="width: 1rem; height: 1rem"
-        >
-          <IconGlobe class="svg-icon svg-icon-100" />
-        </li>
-        <li
-          class="nav-item me-2"
-          v-for="lang in langList"
-          :key="lang"
+          v-for="lang in labelledLangList"
+          :key="lang.value"
         >
           <a
-            class="nav-link"
-            :class="{ active: currentLanguage === lang }"
-            :aria-label="lang"
-            :aria-selected="currentLanguage === lang"
+            class="nav-link nav-link-sm"
+            :class="{ active: currentLanguage === lang.value }"
+            :aria-label="lang.label"
+            :aria-selected="currentLanguage === lang.value"
             aria-current="page"
             href="#"
-            @click="currentLanguage = lang"
-            ><small>{{ lang }}</small></a
+            @click="currentLanguage = lang.value"
           >
+            <span class="d-flex align-items-center gap-2">
+              <LanguageIcon
+                :countryCode="lang.value"
+                :size="16"
+              />
+              <small class="fs-xs">{{ lang.label }}</small>
+            </span>
+          </a>
         </li>
       </ul>
-      <div class="align-self-end">
-        <!-- <BButton
-          :variant="isListening ? 'danger' : 'secondary'"
-          class="btn-icon"
-          size="sm"
-          @click="toggleListening"
-          :title="isListening ? t('profiles.forms.dictate_listening') : t('profiles.forms.dictate')"
-        >
-          <IconMic2 class="svg-icon" />
-        </BButton> -->
-      </div>
+      <BPopover
+        placement="top"
+        hover
+        title-class="d-none"
+      >
+        <template #target>
+          <button class="btn btn-info btn-sm btn-icon">
+            <IconQuestion class="svg-icon-sm" />
+          </button>
+        </template>
+        {{ t('profiles.forms.introtext_multilang_hint') }}
+      </BPopover>
     </div>
     <div
       v-for="lang in props.languages"
@@ -234,13 +240,10 @@ watch(
 
 <style scoped lang="scss">
 .nav-link {
-  padding: 0.15rem 1rem;
+  padding: 0.15rem 0.6rem;
+  font-size: 0.75rem;
 }
 textarea {
   height: 30vh !important;
-}
-.svg-icon-100 {
-  width: 100%;
-  height: 100%;
 }
 </style>
