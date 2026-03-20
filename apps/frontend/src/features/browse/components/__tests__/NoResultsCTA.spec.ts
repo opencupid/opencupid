@@ -52,4 +52,28 @@ describe('NoResultsCTA — Web Share supported', () => {
     expect(shareFn).toHaveBeenCalled()
     expect(wrapper.find('.share-dialog').attributes('data-show')).toBe('false')
   })
+
+  it('opens share dialog when share() throws NotAllowedError', async () => {
+    const err = new DOMException('Not allowed', 'NotAllowedError')
+    shareFn.mockRejectedValueOnce(err)
+    const wrapper = mountCTA()
+    await wrapper
+      .findAll('button')
+      .find((b) => b.text().includes('invite'))!
+      .trigger('click')
+    await vi.runAllTimersAsync().catch(() => {})
+    expect(wrapper.find('.share-dialog').attributes('data-show')).toBe('true')
+  })
+
+  it('does not open share dialog when share() throws AbortError', async () => {
+    const err = new DOMException('Aborted', 'AbortError')
+    shareFn.mockRejectedValueOnce(err)
+    const wrapper = mountCTA()
+    await wrapper
+      .findAll('button')
+      .find((b) => b.text().includes('invite'))!
+      .trigger('click')
+    await vi.runAllTimersAsync().catch(() => {})
+    expect(wrapper.find('.share-dialog').attributes('data-show')).toBe('false')
+  })
 })

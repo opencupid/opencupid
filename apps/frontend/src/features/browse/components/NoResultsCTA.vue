@@ -22,10 +22,11 @@ const handleWebShare = async () => {
       url: window.location.origin,
     })
   } catch (error: unknown) {
-    if (error instanceof DOMException && (error.name === 'AbortError' || error.name === 'NotAllowedError')) {
+    if (error instanceof DOMException && error.name === 'AbortError') {
       return
     }
-    throw error
+    // Share was blocked or failed (e.g. NotAllowedError in Edge desktop) — fall back to modal
+    showModal.value = true
   }
 }
 </script>
