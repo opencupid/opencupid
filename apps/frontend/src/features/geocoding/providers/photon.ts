@@ -10,7 +10,7 @@ interface PhotonProperties {
 const SUPPORTED_LANGS = ['en', 'de']
 const OSM_TAG_FILTERS = ['place:city', 'place:town', 'place:village', 'place:hamlet']
 
-export const searchPhoton: GeocodingProvider = async (query, lang) => {
+export const searchPhoton: GeocodingProvider = async (query, lang, signal?) => {
   const params = new URLSearchParams()
   params.set('q', query)
   params.set('lang', SUPPORTED_LANGS.includes(lang) ? lang : 'en')
@@ -23,7 +23,7 @@ export const searchPhoton: GeocodingProvider = async (query, lang) => {
 
   const res = await axios.get<FeatureCollection<Point, PhotonProperties>>(
     'https://photon.komoot.io/api/',
-    { params }
+    { params, signal }
   )
 
   const allowedCountries = (__APP_CONFIG__.GEOCODING_ALLOWED_COUNTRIES ?? '')

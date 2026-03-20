@@ -103,6 +103,16 @@ describe('searchPhoton', () => {
     expect(results).toEqual([])
   })
 
+  it('forwards AbortSignal to axios', async () => {
+    mockGet.mockResolvedValue({ data: { type: 'FeatureCollection', features: [] } })
+    const controller = new AbortController()
+
+    await searchPhoton('Berlin', 'en', controller.signal)
+
+    const [, config] = mockGet.mock.calls[0]!
+    expect(config.signal).toBe(controller.signal)
+  })
+
   it('propagates errors (does not catch)', async () => {
     mockGet.mockRejectedValue(new Error('Network error'))
 

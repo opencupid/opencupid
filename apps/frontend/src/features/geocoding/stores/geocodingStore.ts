@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { ref } from 'vue'
 import { useGeocoder } from '../composables/useGeocoder'
 import type { GeocodingResult } from '../types'
 
@@ -6,29 +7,51 @@ export type { GeocodingResult }
 
 const { search: geocode } = useGeocoder()
 
-export const useGeocodingStore = defineStore('geocoding', {
-  state: () => ({
-    results: [] as GeocodingResult[],
-    isLoading: false,
-  }),
+export const useGeocodingStore = defineStore('geocoding', () => {
+  let _abortController: AbortController | null = null
 
-  actions: {
-    async search(query: string, lang: string): Promise<GeocodingResult[]> {
-      if (!query) {
-        this.results = []
-        return this.results
+  const results = ref<GeocodingResult[]>([])
+  const isLoading = ref(false)
+
+  async function search(query: string, lang: string): Promise<GeocodingResult[]> {
+    if (!query) {
+      _abortController?.abort()
+      _abortController = null
+      results.value = []
+      isLoading.value = false
+      return results.value
+    }
+
+    _abortController?.abort()
+    _abortController = new AbortController()
+    const { signal } = _abortController
+
+    const normalizedQuery = query.trim().toLowerCase()
+
+    isLoading.value = true
+    try {
+      const data = await geocode(query, lang, signal)
+      if (!signal.aborted) {
+        results.value = data.sort(
+          (a, b) =>
+            Number(a.name.toLowerCase() !== normalizedQuery) -
+            Number(b.name.toLowerCase() !== normalizedQuery)
+        )
       }
-      this.isLoading = true
-      try {
-        this.results = await geocode(query, lang)
-        return this.results
-      } catch (err) {
-        console.error('Geocoding search failed:', err)
-        this.results = []
-        return this.results
-      } finally {
-        this.isLoading = false
+      return results.value
+    } catch (err) {
+      if (err instanceof Error && err.name === 'CanceledError') {
+        return results.value
       }
-    },
-  },
+      console.error('Geocoding search failed:', err)
+      results.value = []
+      return results.value
+    } finally {
+      if (!signal.aborted) {
+        isLoading.value = false
+      }
+    }
+  }
+
+  return { results, isLoading, search }
 })
