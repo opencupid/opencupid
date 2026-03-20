@@ -8,6 +8,11 @@ import { detectMobile } from '@/lib/mobile-detect'
 import { useWindowSize } from '@vueuse/core'
 defineOptions({ inheritAttrs: false })
 
+const emit = defineEmits<{
+  'dropdown:open': []
+  'dropdown:close': []
+}>()
+
 // v-model binding
 const model = defineModel<PublicTag[]>({
   default: () => [],
@@ -119,6 +124,8 @@ const selectHeight = computed(() => {
       :tag-placeholder="t('profiles.forms.tag_add_placeholder')"
       :placeholder="t('profiles.forms.tag_search_placeholder')"
       @search-change="asyncFind"
+      @open="emit('dropdown:open')"
+      @close="emit('dropdown:close')"
     >
       <template #tag="{ option, remove }">
         <span
@@ -143,6 +150,8 @@ const selectHeight = computed(() => {
 
 <style lang="scss">
 .interests-multiselect {
+ 
+
   .multiselect__tag {
     background-color: var(--bs-warning);
     color: var(--bs-body-bg);

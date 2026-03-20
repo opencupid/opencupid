@@ -47,7 +47,7 @@ const selectHeight = computed(() => {
       v-model="languagesComputed"
       v-bind="attrs"
       :options="languageOptions"
-      :close-on-select="false"
+      :close-on-select="true"
       :clear-on-select="true"
       :multiple="true"
       :searchable="true"
