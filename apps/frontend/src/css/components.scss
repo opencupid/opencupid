@@ -357,3 +357,8 @@ main {
   outline: 2px solid var(--bs-secondary);
   outline-offset: 2px;
 }
+
+// Popovers
+.popover {
+  box-shadow: var(--shadow-md);
+}

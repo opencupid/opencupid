@@ -410,6 +410,7 @@
       "name_first_name_only": "Csak a keresztnevedet",
       "name_invalid": "Adj meg legalább 3 betűt",
       "name_label": "A keresztnevem...",
+      "introtext_multilang_hint": "A bemutatkozó szövegedet több nyelven is megírhatod. Mások az általuk preferált nyelven fogják látni, vagy az alapértelmezett változatot, ha az ő nyelvük nem elérhető.",
       "preview_language": "Előnézeti nyelv",
       "preview_profile": "Profilod előnézete",
       "pronouns_label": "Úgy hivatkoznak rám, mint...",

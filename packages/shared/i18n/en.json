@@ -411,6 +411,7 @@
       "name_invalid": "Enter at least 3 letters",
       "name_label": "My first name is...",
       "preview_language": "Preview language",
+      "introtext_multilang_hint": "You can write your intro text in multiple languages. Other people will see the version in their preferred language, or the default if their language isn't available.",
       "preview_profile": "Preview your profile",
       "pronouns_label": "They refer to me as...",
       "relationship_label": "I am...",
