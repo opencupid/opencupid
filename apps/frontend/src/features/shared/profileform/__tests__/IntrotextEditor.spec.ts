@@ -6,6 +6,7 @@ vi.mock('vue-i18n', () => ({
 }))
 vi.mock('@/store/i18nStore', () => ({ useI18nStore: () => ({ getLanguage: () => 'en' }) }))
 vi.mock('@/assets/icons/interface/mic-2.svg', () => ({ default: { template: '<div />' } }))
+vi.mock('@/assets/icons/interface/question.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/features/shared/composables/useLanguages', () => ({
   useLanguages: () => ({
     getLanguageLabels: (codes: string[]) =>
@@ -21,7 +22,12 @@ vi.mock('@/features/shared/profiledisplay/LanguageIcon.vue', () => ({
 
 import IntrotextEditor from '../IntrotextEditor.vue'
 
-const stubs = { BFormTextarea: true, BFormFloatingLabel: true, BButton: true }
+const stubs = {
+  BFormTextarea: true,
+  BFormFloatingLabel: true,
+  BButton: true,
+  BPopover: true,
+}
 
 describe('IntrotextEditor', () => {
   it('hides language chooser when only one language is provided', () => {
