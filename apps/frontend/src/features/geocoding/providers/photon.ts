@@ -26,12 +26,21 @@ export const searchPhoton: GeocodingProvider = async (query, lang) => {
     { params }
   )
 
-  return (res.data.features ?? []).map(
-    (f): GeocodingResult => ({
-      name: f.properties.name,
-      country: f.properties.countrycode,
-      lat: f.geometry.coordinates[1] ?? 0,
-      lon: f.geometry.coordinates[0] ?? 0,
-    })
-  )
+  const raw = __APP_CONFIG__.GEOCODING_ALLOWED_COUNTRIES
+  const allowedCountries = raw ? raw.split(',').map((c) => c.trim().toUpperCase()) : []
+
+  return (res.data.features ?? [])
+    .filter(
+      (f) =>
+        allowedCountries.length === 0 ||
+        allowedCountries.includes(f.properties.countrycode?.toUpperCase())
+    )
+    .map(
+      (f): GeocodingResult => ({
+        name: f.properties.name,
+        country: f.properties.countrycode,
+        lat: f.geometry.coordinates[1] ?? 0,
+        lon: f.geometry.coordinates[0] ?? 0,
+      })
+    )
 }
