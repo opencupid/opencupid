@@ -88,16 +88,14 @@ async function handleCancel() {
       class="sticky-bottom shadow shadow-lg bg-light-subtle py-3 d-flex justify-content-center gap-2"
     >
       <BButton
-        variant="link"
-        class="link-secondary"
+        class="btn-cancel"
         @click="handleCancel"
       >
         {{ $t('onboarding.wizard.cancel') }}
       </BButton>
       <BButton
-        variant="primary"
+        class="btn-ok px-5"
         pill
-        class="px-5"
         @click.stop="handleSave"
         :disabled="isLoading"
       >

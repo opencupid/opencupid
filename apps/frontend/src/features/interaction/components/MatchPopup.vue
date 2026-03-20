@@ -79,7 +79,7 @@ const handleMessageSent = () => {
             @message:sent="handleMessageSent"
           />
           <BButton
-            class="btn btn-link text-decoration-none"
+            class="btn-cancel"
             @click="emit('close')"
           >
             <!-- Maybe later -->

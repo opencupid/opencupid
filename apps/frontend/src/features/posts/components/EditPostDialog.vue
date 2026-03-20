@@ -156,8 +156,7 @@ const handleSubmit = async () => {
       <BButton
         type="button"
         @click="$emit('cancel')"
-        variant="link-secondary"
-        class="me-2"
+        class="btn-cancel me-2"
         :disabled="isLoading"
       >
         {{ $t('posts.actions.cancel') }}
