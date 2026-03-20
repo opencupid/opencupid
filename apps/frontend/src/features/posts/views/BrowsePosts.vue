@@ -106,7 +106,6 @@ onActivated(() => {
         v-model:scope="activeTab"
         v-model:type="selectedType"
       />
-      <ViewModeToggler v-model="viewMode" />
       <BButton
         variant="link-secondary"
         class="p-1"
@@ -148,6 +147,9 @@ onActivated(() => {
     </template>
 
     <template #floating>
+      <div class="view-mode-pill">
+        <ViewModeToggler v-model="viewMode" />
+      </div>
       <!-- Create Post Button -->
       <FloatingButton>
         <BButton
@@ -237,3 +239,26 @@ onActivated(() => {
     </div>
   </BOffcanvas>
 </template>
+
+<style scoped lang="scss">
+@import 'bootstrap/scss/functions';
+@import 'bootstrap/scss/variables';
+@import '@/css/app-vars.scss';
+
+.view-mode-pill {
+  position: fixed;
+  bottom: calc($navbar-height + 1rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1030;
+  background: white;
+  border-radius: 9999px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  padding: 0.25rem;
+
+  :deep(.btn-group) {
+    border-radius: 9999px;
+    overflow: hidden;
+  }
+}
+</style>
