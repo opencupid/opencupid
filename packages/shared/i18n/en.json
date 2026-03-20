@@ -231,10 +231,10 @@
     "dating_intro_placeholder": "Tell a bit about the kind of relationship you are looking for",
     "dating_intro_subtitle": "This will be visible only to people who are looking for a relationship as well, not to those who are just looking for friends or social connections.",
     "dating_intro_title": "I would like to find:",
-    "dating_mode_step_hint_active": "Other people in dating mode will be able to see your dating profile.",
-    "dating_mode_step_hint_inactive": "You can always enable dating mode later from your profile.",
+    "dating_mode_step_hint_active": "In the next few steps, please reveal a few additional details about yourself, and your preferences on who you would like to meet.  Those details will be visible only to other people in dating mode who match your preferences.  ",
+    "dating_mode_step_hint_inactive": "You can always enable or disable dating mode later from your profile.",
     "dating_mode_step_title": "Would you also like to use dating mode?",
-    "dating_mode_switch": "Enable dating mode",
+    "dating_mode_switch": "Dating mode ON?",
     "dating_preferences_title": "My preferences",
     "finish_button": "Finish",
     "gender_subtitle": "I identify as...",
@@ -360,10 +360,10 @@
         "social_title": "I 'm looking for connections...",
         "tags_label": "Interested in..."
       },
-      "invite_button": "Invite friends",
+      "invite_button": "Invite",
       "loading_more_profiles": "Loading more profiles...",
       "no_results_cta_description": "You can help by inviting your friends to join. The more, the merrier.",
-      "no_results_cta_title": "This community is still growing.",
+      "no_results_cta_title": "It's a bit lonely here. Invite a friend?",
       "social_no_results": "We haven't found anyone in {country} yet.",
       "social_no_results_city": "Haven't found anyone in {cityName} yet.",
       "social_no_results_tags": "Haven't found anyone with those interests.",
@@ -383,7 +383,6 @@
       "dating_mode_toggle_hint": "To protect the privacy of other people (and yours) you can only change this setting once a day.",
       "dating_mode_view": "Dating mode view",
       "dating_mode_view_hint_active": "This is what people also in dating mode will see when they view your profile.",
-      "dating_mode_view_hint_inactive": "This is what everyone else sees about you.",
       "dictate": "Dictate",
       "dictate_listening": "Listening…",
       "edit_button_hint": "Edit your info",
@@ -482,6 +481,10 @@
       "message": "An error occurred. Please try again later.",
       "retry": "Retry",
       "title": "We've hit a snag here."
+    },
+    "install_banner": {
+      "install": "Install",
+      "message": "Install this app on your device."
     },
     "loading": {
       "loading": "Loading..."
