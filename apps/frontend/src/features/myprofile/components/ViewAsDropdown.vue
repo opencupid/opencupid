@@ -60,7 +60,6 @@ const toggleScope = (hide: () => void) => {
               <div v-if="viewState.currentScope === 'dating'">
                 {{ $t('profiles.forms.dating_mode_view_hint_active') }}
               </div>
-              <div v-else>{{ $t('profiles.forms.dating_mode_view_hint_inactive') }}</div>
             </div>
           </BDropdownItemButton>
         </span>
