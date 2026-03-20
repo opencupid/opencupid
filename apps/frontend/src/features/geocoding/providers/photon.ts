@@ -31,8 +31,6 @@ export const searchPhoton: GeocodingProvider = async (query, lang, signal?) => {
     .map((c) => c.trim().toUpperCase())
     .filter(Boolean)
 
-  const normalizedQuery = query.trim().toLowerCase()
-
   return (res.data.features ?? [])
     .filter(
       (f) =>
@@ -47,9 +45,4 @@ export const searchPhoton: GeocodingProvider = async (query, lang, signal?) => {
         lon: f.geometry.coordinates[0] ?? 0,
       })
     )
-    .sort((a, b) => {
-      const aExact = a.name.toLowerCase() === normalizedQuery ? 0 : 1
-      const bExact = b.name.toLowerCase() === normalizedQuery ? 0 : 1
-      return aExact - bExact
-    })
 }

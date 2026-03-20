@@ -103,37 +103,6 @@ describe('searchPhoton', () => {
     expect(results).toEqual([])
   })
 
-  it('sorts exact matches (case-insensitive) to the top', async () => {
-    mockGet.mockResolvedValue({
-      data: {
-        type: 'FeatureCollection',
-        features: [
-          {
-            type: 'Feature',
-            geometry: { type: 'Point', coordinates: [-66.1, 18.5] },
-            properties: { name: 'San Juan de la Nava', countrycode: 'ES' },
-          },
-          {
-            type: 'Feature',
-            geometry: { type: 'Point', coordinates: [-66.1, 18.5] },
-            properties: { name: 'San Juan', countrycode: 'PH' },
-          },
-          {
-            type: 'Feature',
-            geometry: { type: 'Point', coordinates: [-66.1, 18.5] },
-            properties: { name: 'San Juan Bautista', countrycode: 'ES' },
-          },
-        ],
-      },
-    })
-
-    const results = await searchPhoton('san juan', 'en')
-
-    expect(results[0]!.name).toBe('San Juan')
-    expect(results.slice(1).map((r) => r.name)).toContain('San Juan de la Nava')
-    expect(results.slice(1).map((r) => r.name)).toContain('San Juan Bautista')
-  })
-
   it('forwards AbortSignal to axios', async () => {
     mockGet.mockResolvedValue({ data: { type: 'FeatureCollection', features: [] } })
     const controller = new AbortController()

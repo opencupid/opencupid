@@ -23,11 +23,17 @@ export const useGeocodingStore = defineStore('geocoding', () => {
     _abortController = new AbortController()
     const { signal } = _abortController
 
+    const normalizedQuery = query.trim().toLowerCase()
+
     isLoading.value = true
     try {
       const data = await geocode(query, lang, signal)
       if (!signal.aborted) {
-        results.value = data
+        results.value = data.sort(
+          (a, b) =>
+            Number(a.name.toLowerCase() !== normalizedQuery) -
+            Number(b.name.toLowerCase() !== normalizedQuery)
+        )
       }
       return results.value
     } catch (err) {
