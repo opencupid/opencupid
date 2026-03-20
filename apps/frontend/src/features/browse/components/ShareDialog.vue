@@ -16,7 +16,7 @@ const shareUrl = window.location.origin
 const qrcode = useQRCode(shareUrl, {
   errorCorrectionLevel: 'H',
   margin: 3,
-  width: 400,
+  width: 300,
 })
 const handleSelect = (event: Event) => {
   const target = event.target as HTMLInputElement
@@ -70,7 +70,7 @@ const handleSelect = (event: Event) => {
       <img
         :src="qrcode"
         alt="QR Code"
-        class="img-fluid w-100"
+        class="img-fluid w-75"
       />
       <div class="text-muted">
         {{ t('uicomponents.share_dialog.qr_hint') }}
