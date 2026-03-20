@@ -12,6 +12,7 @@ export const appConfigSchema = z.object({
   JITSI_DOMAIN: z.string().default(''),
   VOICE_MESSAGE_MAX_DURATION: z.string().default('120'),
   MAPTILER_API_KEY: z.string().default(''),
+  GEOCODING_ALLOWED_COUNTRIES: z.string().default(''),
 })
 
 export type AppConfig = z.infer<typeof appConfigSchema>

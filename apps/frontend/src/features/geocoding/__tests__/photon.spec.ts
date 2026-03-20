@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 const mockGet = vi.fn()
 
@@ -8,9 +8,32 @@ vi.mock('@/lib/api', () => ({
 
 import { searchPhoton } from '../providers/photon'
 
+const multiCityFeatures = [
+  {
+    type: 'Feature',
+    geometry: { type: 'Point', coordinates: [13.4, 52.5] },
+    properties: { name: 'Berlin', countrycode: 'DE' },
+  },
+  {
+    type: 'Feature',
+    geometry: { type: 'Point', coordinates: [121.0, 14.6] },
+    properties: { name: 'Manila', countrycode: 'PH' },
+  },
+  {
+    type: 'Feature',
+    geometry: { type: 'Point', coordinates: [-73.9, 40.7] },
+    properties: { name: 'New York', countrycode: 'US' },
+  },
+]
+
 describe('searchPhoton', () => {
   beforeEach(() => {
     mockGet.mockReset()
+    ;(globalThis as any).__APP_CONFIG__.GEOCODING_ALLOWED_COUNTRIES = ''
+  })
+
+  afterEach(() => {
+    ;(globalThis as any).__APP_CONFIG__.GEOCODING_ALLOWED_COUNTRIES = ''
   })
 
   it('calls the Photon API with correct URL and params', async () => {
@@ -84,5 +107,49 @@ describe('searchPhoton', () => {
     mockGet.mockRejectedValue(new Error('Network error'))
 
     await expect(searchPhoton('Berlin', 'en')).rejects.toThrow('Network error')
+  })
+
+  it('treats whitespace-only GEOCODING_ALLOWED_COUNTRIES as unset (returns all results)', async () => {
+    ;(globalThis as any).__APP_CONFIG__.GEOCODING_ALLOWED_COUNTRIES = '   '
+    mockGet.mockResolvedValue({ data: { type: 'FeatureCollection', features: multiCityFeatures } })
+
+    const results = await searchPhoton('city', 'en')
+
+    expect(results.map((r) => r.name)).toEqual(['Berlin', 'Manila', 'New York'])
+  })
+
+  it('returns all results when GEOCODING_ALLOWED_COUNTRIES is empty', async () => {
+    mockGet.mockResolvedValue({ data: { type: 'FeatureCollection', features: multiCityFeatures } })
+
+    const results = await searchPhoton('city', 'en')
+
+    expect(results.map((r) => r.name)).toEqual(['Berlin', 'Manila', 'New York'])
+  })
+
+  it('filters results to allowed countries', async () => {
+    ;(globalThis as any).__APP_CONFIG__.GEOCODING_ALLOWED_COUNTRIES = 'DE,PH'
+    mockGet.mockResolvedValue({ data: { type: 'FeatureCollection', features: multiCityFeatures } })
+
+    const results = await searchPhoton('city', 'en')
+
+    expect(results.map((r) => r.name)).toEqual(['Berlin', 'Manila'])
+  })
+
+  it('filters case-insensitively (lowercase env input)', async () => {
+    ;(globalThis as any).__APP_CONFIG__.GEOCODING_ALLOWED_COUNTRIES = 'de,ph'
+    mockGet.mockResolvedValue({ data: { type: 'FeatureCollection', features: multiCityFeatures } })
+
+    const results = await searchPhoton('city', 'en')
+
+    expect(results.map((r) => r.name)).toEqual(['Berlin', 'Manila'])
+  })
+
+  it('returns empty when no results match the allowed countries', async () => {
+    ;(globalThis as any).__APP_CONFIG__.GEOCODING_ALLOWED_COUNTRIES = 'JP'
+    mockGet.mockResolvedValue({ data: { type: 'FeatureCollection', features: multiCityFeatures } })
+
+    const results = await searchPhoton('city', 'en')
+
+    expect(results).toEqual([])
   })
 })
