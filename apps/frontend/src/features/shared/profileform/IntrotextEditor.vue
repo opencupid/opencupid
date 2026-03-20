@@ -165,7 +165,7 @@ watch(
             :aria-selected="currentLanguage === lang.value"
             aria-current="page"
             href="#"
-            @click="currentLanguage = lang.value"
+            @click.prevent="currentLanguage = lang.value"
           >
             <span class="d-flex align-items-center gap-2">
               <LanguageIcon
@@ -183,7 +183,11 @@ watch(
         title-class="d-none"
       >
         <template #target>
-          <button class="btn btn-info btn-sm btn-icon">
+          <button
+            type="button"
+            class="btn btn-info btn-sm btn-icon"
+            :aria-label="t('profiles.forms.introtext_multilang_hint')"
+          >
             <IconQuestion class="svg-icon-sm" />
           </button>
         </template>
