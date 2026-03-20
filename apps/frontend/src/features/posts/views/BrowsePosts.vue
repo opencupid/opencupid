@@ -243,12 +243,17 @@ onActivated(() => {
 <style scoped lang="scss">
 @import 'bootstrap/scss/functions';
 @import 'bootstrap/scss/variables';
+@import 'bootstrap/scss/mixins';
 @import '@/css/app-vars.scss';
 
 .view-mode-pill {
   position: fixed;
   bottom: calc($navbar-height + 1rem);
   left: 50%;
+
+  @include media-breakpoint-up(sm) {
+    bottom: 2rem;
+  }
   transform: translateX(-50%);
   z-index: 1030;
   background: white;
