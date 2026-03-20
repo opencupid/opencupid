@@ -129,7 +129,7 @@ const siteName = __APP_CONFIG__.SITE_NAME
           </legend>
           <LocationSelectorComponent
             v-model="formData.location"
-            open-direction="top"
+            open-direction="bottom"
             :allow-empty="false"
             :close-on-select="true"
             :geoIp="true"

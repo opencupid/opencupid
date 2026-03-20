@@ -74,6 +74,18 @@ fieldset[disabled] .multiselect {
   border-radius: 5px;
 }
 
+.multiselect {
+  transition: box-shadow 0.15s ease;
+
+  &--active {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+
+    .multiselect__content-wrapper {
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+    }
+  }
+}
+
 .modal-content .multiselect {
   position: relative;
   margin-bottom: var(--multiselect-dropdown-height);
@@ -130,8 +142,8 @@ fieldset[disabled] .multiselect {
   vertical-align: top;
 }
 
-.multiselect__tag ~ .multiselect__input,
-.multiselect__tag ~ .multiselect__single {
+.multiselect__tag~.multiselect__input,
+.multiselect__tag~.multiselect__single {
   width: auto;
 }
 

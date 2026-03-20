@@ -22,6 +22,8 @@ const tagStore = useTagsStore()
 const tagCloudHint = ref<PopularTag | null>(null)
 const popularTags = computed(() => tagStore.popularTags ?? ([] as PublicTag[]))
 
+const isDropdownOpen = ref(false)
+
 const handleTagCloudHover = (tag: PopularTag | null) => {
   tagCloudHint.value = tag
 }
@@ -39,13 +41,15 @@ const handleTagCloudSelect = (tag: PopularTag) => {
     v-model="model"
     :taggable="true"
     :close-on-select="true"
-    open-direction="top"
+    open-direction="bottom"
     :required="true"
     :initialOptions="popularTags"
     :hint="tagCloudHint"
+    @dropdown:open="isDropdownOpen = true"
+    @dropdown:close="isDropdownOpen = false"
   />
-  <h6 class="mt-3 mt-lg-3 mb-0 text-center text-muted">
-    {{ t('onboarding.interests_popular_heading') }}
+  <h6 class="mt-3 mt-lg-3 mb-0 text-center form-hint">
+    <!-- {{ t('onboarding.interests_popular_heading') }} -->
   </h6>
   <div
     class="position-relative"
@@ -57,6 +61,7 @@ const handleTagCloudSelect = (tag: PopularTag) => {
       :key="props.location.country"
       :location="props.location"
       class="mb-3"
+      :class="{ 'tag-cloud--inactive': isDropdownOpen }"
       @tag:select="handleTagCloudSelect"
       @tag:hover="handleTagCloudHover"
       show-loading
@@ -65,6 +70,15 @@ const handleTagCloudSelect = (tag: PopularTag) => {
 </template>
 
 <style lang="scss" scoped>
+.tag-cloud-container {
+  transition: opacity 0.15s ease;
+
+  &.tag-cloud--inactive {
+    pointer-events: none;
+    opacity: 0.25;
+  }
+}
+
 .curved-arrow {
   position: absolute;
   bottom: 50%;
