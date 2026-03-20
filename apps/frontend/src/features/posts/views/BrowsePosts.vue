@@ -78,7 +78,7 @@ const mapPois = computed<MapPoi[]>(() =>
     .map((p) => ({
       id: p.id,
       title: p.postedBy
-        ? `${p.postedBy.publicName}: ${p.content.substring(0, 50)}...`
+        ? `${p.content.substring(0, 50)}...`
         : p.content.substring(0, 50),
       location: { lat: p.location!.lat!, lon: p.location!.lon! },
       image: p.postedBy?.profileImages?.[0],

@@ -28,17 +28,20 @@ export function createClusterIcon(cluster: { getChildCount(): number }): L.DivIc
   })
 }
 
-const iconCache = new Map<string, L.DivIcon>()
-
 function getIconCacheKey(props: PoiIconProps): string {
   const url = props.image?.variants?.[0]?.url ?? 'none'
   return `${url}_${props.isSelected}_${props.isHighlighted}`
 }
 
-/** Renders a Vue component into a Leaflet DivIcon for use as a POI marker. */
-export function hydratePoiIcon(component: Component, iconProps: PoiIconProps): L.DivIcon {
+/** Renders a Vue component into a Leaflet DivIcon for use as a POI marker.
+ *  @param cache - per-instance Map so icons are never shared across map instances. */
+export function hydratePoiIcon(
+  component: Component,
+  iconProps: PoiIconProps,
+  cache: Map<string, L.DivIcon>
+): L.DivIcon {
   const key = getIconCacheKey(iconProps)
-  const cached = iconCache.get(key)
+  const cached = cache.get(key)
   if (cached) return cached
 
   const container = document.createElement('span')
@@ -53,10 +56,6 @@ export function hydratePoiIcon(component: Component, iconProps: PoiIconProps): L
     iconSize: [POI_ICON_SIZE, POI_ICON_SIZE],
     iconAnchor: [POI_ICON_SIZE / 2, POI_ICON_SIZE / 2],
   })
-  iconCache.set(key, icon)
+  cache.set(key, icon)
   return icon
-}
-
-export function clearIconCache(): void {
-  iconCache.clear()
 }

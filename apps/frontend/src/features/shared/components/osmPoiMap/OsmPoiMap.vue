@@ -13,7 +13,6 @@ import {
   computeViewportMultiplier,
   createClusterIcon,
   hydratePoiIcon,
-  clearIconCache,
   MAP_MAX_ZOOM,
 } from './mapUtils'
 
@@ -43,6 +42,7 @@ const mapEl: Ref<HTMLDivElement | null> = ref(null)
 let map: LMap | null = null
 let markers = new Map<string | number, LMarker>()
 let itemsById = new Map<string | number, MapPoi>()
+const iconCache = new Map<string, L.DivIcon>()
 // Tracks the zoom level from the last completed zoom animation. Used by the
 // center watcher to avoid capturing a mid-flyTo intermediate zoom value.
 let lastStableZoom: number = props.zoom
@@ -320,7 +320,7 @@ function createMarker(item: MapPoi): LMarker {
       image: item.image,
       isSelected,
       isHighlighted: item.highlighted ?? false,
-    }),
+    }, iconCache),
     keyboard: true,
   })
 
@@ -402,7 +402,7 @@ function updateMarkers(forceRebuild = false) {
             image: item.image,
             isSelected: id === props.selectedId,
             isHighlighted: item.highlighted ?? false,
-          })
+          }, iconCache)
         )
       }
     }
@@ -441,7 +441,7 @@ function highlightSelected() {
         image: item.image,
         isSelected: id === props.selectedId,
         isHighlighted: item.highlighted ?? false,
-      })
+      }, iconCache)
     )
   }
   if (props.selectedId != null) {
@@ -468,7 +468,7 @@ function destroyMap() {
     clearTimeout(boundsDebounceTimer)
     boundsDebounceTimer = null
   }
-  clearIconCache()
+  iconCache.clear()
   map.off('moveend', emitBounds)
   map.off('mousemove', onMapMouseMove)
   map.off('touchstart', onMapTouchStart)
