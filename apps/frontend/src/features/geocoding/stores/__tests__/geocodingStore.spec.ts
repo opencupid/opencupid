@@ -22,7 +22,7 @@ describe('geocodingStore', () => {
     const store = useGeocodingStore()
     const results = await store.search('Berlin', 'en')
 
-    expect(mockSearch).toHaveBeenCalledWith('Berlin', 'en')
+    expect(mockSearch).toHaveBeenCalledWith('Berlin', 'en', expect.any(AbortSignal))
     expect(results).toEqual(mockResults)
     expect(store.results).toEqual(mockResults)
   })
@@ -64,6 +64,53 @@ describe('geocodingStore', () => {
     expect(results).toEqual([])
     expect(store.results).toEqual([])
     expect(store.isLoading).toBe(false)
+    consoleSpy.mockRestore()
+  })
+
+  it('passes an AbortSignal to the geocoder', async () => {
+    mockSearch.mockResolvedValue([])
+
+    const store = useGeocodingStore()
+    await store.search('Berlin', 'en')
+
+    expect(mockSearch).toHaveBeenCalledWith('Berlin', 'en', expect.any(AbortSignal))
+  })
+
+  it('aborts previous in-flight request when a new search is issued', async () => {
+    let firstAborted = false
+    let resolveFirst!: (v: never[]) => void
+
+    mockSearch.mockImplementationOnce((_query, _lang, signal?: AbortSignal) => {
+      signal?.addEventListener('abort', () => {
+        firstAborted = true
+      })
+      return new Promise((resolve) => {
+        resolveFirst = resolve
+      })
+    })
+    mockSearch.mockResolvedValueOnce([{ name: 'San Juan', country: 'PH', lat: 18.5, lon: -66.1 }])
+
+    const store = useGeocodingStore()
+    const first = store.search('san', 'en')
+    const second = store.search('san juan', 'en')
+
+    resolveFirst([])
+    await Promise.allSettled([first, second])
+
+    expect(firstAborted).toBe(true)
+    expect(store.results).toEqual([{ name: 'San Juan', country: 'PH', lat: 18.5, lon: -66.1 }])
+  })
+
+  it('does not treat a CanceledError as a real failure', async () => {
+    const canceledError = Object.assign(new Error('canceled'), { name: 'CanceledError' })
+    mockSearch.mockRejectedValue(canceledError)
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const store = useGeocodingStore()
+    const results = await store.search('Berlin', 'en')
+
+    expect(consoleSpy).not.toHaveBeenCalled()
+    expect(results).toEqual([])
     consoleSpy.mockRestore()
   })
 })
