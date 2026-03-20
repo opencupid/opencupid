@@ -305,7 +305,7 @@ main {
 .btn-cancel {
   @extend .btn;
   @extend .btn-link;
-  @extend .link-secondary;
+  color: var(--bs-secondary-color);
 }
 
 // ─── Elevation system ────────────────────────────────────────────────
