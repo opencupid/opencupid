@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { inject, ref, type Ref } from 'vue'
+import { computed, inject, ref, type Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ShareDialog from './ShareDialog.vue'
 import type { OwnerProfile } from '@zod/profile/profile.dto'
+import { detectMobile } from '@/lib/mobile-detect'
 
 import { useShare } from '@vueuse/core'
 
@@ -11,6 +12,12 @@ const { share, isSupported } = useShare()
 const { t } = useI18n()
 const showModal = ref(false)
 const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
+
+// Web Share API is unreliable on desktop browsers (Edge silently drops the sheet).
+// Only use it on mobile where it reliably opens a native share sheet.
+const isMobile = computed(() => detectMobile())
+const useWebShare = isSupported && isMobile.value
+
 const handleWebShare = async () => {
   try {
     await share({
@@ -25,7 +32,7 @@ const handleWebShare = async () => {
     if (error instanceof DOMException && error.name === 'AbortError') {
       return
     }
-    // Share was blocked or failed (e.g. NotAllowedError in Edge desktop) — fall back to modal
+    // Share was blocked or failed — fall back to modal
     showModal.value = true
   }
 }
@@ -39,7 +46,7 @@ const handleWebShare = async () => {
     </div>
 
     <BButton
-      v-if="isSupported"
+      v-if="useWebShare"
       variant="outline-primary"
       size="sm"
       @click="handleWebShare"
