@@ -461,6 +461,11 @@
     "widowed": "Özvegy"
   },
   "settings": {
+    "close_account_button": "Fiók törlése",
+    "close_account_confirm_label": "Add meg az e-mail címedet a megerősítéshez",
+    "close_account_dialog_message": "Ez véglegesen törli a fiókodat és az összes kapcsolódó adatot. Ez a művelet nem visszavonható.",
+    "close_account_dialog_title": "Fiók törlése",
+    "close_account_ok_button": "Fiók végleges törlése",
     "enable_push": "Push értesítések engedélyezése",
     "language_label": "Nyelv",
     "newsletter_opt_in": "Szívesen kapok alkalmi hírlevelet",
