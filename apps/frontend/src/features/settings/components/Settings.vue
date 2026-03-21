@@ -2,13 +2,11 @@
 import { computed, onMounted, ref } from 'vue'
 
 import type { ProfileOptInSettings } from '@zod/profile/profile.dto'
-import type { DeleteAccountResponse } from '@zod/apiResponse.dto'
 
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { useUserStore } from '@/store/userStore'
 import { usePwaInstall } from '@/features/app/composables/usePwaInstall'
-import { api, safeApiCall } from '@/lib/api'
 
 import IconLogout from '@/assets/icons/interface/logout.svg'
 import IconGlobe from '@/assets/icons/interface/globe.svg'
@@ -58,12 +56,11 @@ function handleLogout() {
 
 async function handleCloseAccount() {
   isClosingAccount.value = true
-  try {
-    await safeApiCall(() => api.delete<DeleteAccountResponse>('/users/me'))
+  const result = await userStore.deleteAccount()
+  isClosingAccount.value = false
+  showCloseAccountDialog.value = false
+  if (result.success) {
     authStore.logout()
-  } finally {
-    isClosingAccount.value = false
-    showCloseAccountDialog.value = false
   }
 }
 </script>
