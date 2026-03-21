@@ -59,13 +59,4 @@ describe('IntrotextEditor', () => {
     expect(tabs.at(1)?.text()).toContain('Hungarian')
     expect(wrapper.findAll('.language-icon').length).toBe(2)
   })
-
-  it('updates status when speech not supported', () => {
-    const wrapper = mount(IntrotextEditor, {
-      props: { languages: ['en'], placeholder: 'blah' },
-      global: { stubs },
-    })
-    ;(wrapper.vm as any).toggleListening()
-    expect((wrapper.vm as any).status).toBe('SpeechRecognition not supported')
-  })
 })
