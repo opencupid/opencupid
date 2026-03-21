@@ -1,5 +1,13 @@
 # frontend
 
+## 0.39.1
+
+### Patch Changes
+
+- 63e0917: Gate DevAutoLogin component on DEV_AUTH_BYPASS_ENABLED runtime flag to prevent 404s when the backend bypass endpoint is not enabled
+- f3bbb0b: Fix modal backdrop to render as light/frosted-white instead of dark (#1162)
+- a2795a2: Fix redirect to /onboarding being skipped after fresh registration due to two races: fire-and-forget auth:login event and KeepAlive skipping onMounted
+
 ## 0.39.0
 
 ### Minor Changes
