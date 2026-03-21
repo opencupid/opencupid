@@ -240,6 +240,24 @@ describe('messaging mappers', () => {
     })
   })
 
+  describe('deleted partner (account closed)', () => {
+    it('returns tombstone partner profile when partner profile row is null (SetNull)', () => {
+      const p: any = {
+        ...participant,
+        conversation: {
+          ...participant.conversation,
+          profileBId: null,
+          profileB: null,
+        },
+      }
+      const summary = mapConversationParticipantToSummary(p, 'p1')
+      expect(summary.partnerProfile.id).toBe('')
+      expect(summary.partnerProfile.publicName).toBe('')
+      expect(summary.partnerProfile.profileImages).toEqual([])
+      expect(summary.isCallable).toBe(false)
+    })
+  })
+
   describe('mapAttachmentDTO', () => {
     it('returns clean URL for voice attachments (no query params)', () => {
       const attachment: any = {
