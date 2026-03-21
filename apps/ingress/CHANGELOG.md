@@ -1,5 +1,11 @@
 # @opencupid/ingress
 
+## 0.39.3
+
+### Patch Changes
+
+- 0f35d93: Fix CSP font-src violation by allowing data: URIs for inlined base64 fonts (#1184)
+
 ## 0.39.2
 
 ### Patch Changes

@@ -1,5 +1,12 @@
 # frontend
 
+## 0.39.3
+
+### Patch Changes
+
+- 54ff24d: Replace MAPTILER_API_KEY with MAP_TILE_URL — configure the full tile URL (including API key) in .env instead of assembling it in code
+- 57f36f0: Fix spiderfied post-it map markers not opening post modal (#1183)
+
 ## 0.39.2
 
 ### Patch Changes
