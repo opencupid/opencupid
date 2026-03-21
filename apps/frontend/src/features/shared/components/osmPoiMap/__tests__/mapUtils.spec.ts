@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 
 // Mock Leaflet before importing mapUtils (hydratePoiIcon and createClusterIcon depend on L.divIcon)
 vi.mock('leaflet', () => ({
@@ -12,10 +12,7 @@ import { defineComponent, h } from 'vue'
 import {
   isValidLatLng,
   computeViewportMultiplier,
-  createClusterIcon,
   hydratePoiIcon,
-  clearIconCache,
-  CLUSTER_ICON_SIZE,
 } from '../mapUtils'
 
 const DummyIcon = defineComponent({
@@ -65,61 +62,38 @@ describe('computeViewportMultiplier', () => {
   })
 })
 
-// TODO FIXME
-// describe('createClusterIcon', () => {
-//   it('creates a DivIcon with the cluster child count', () => {
-//     const icon = createClusterIcon({ getChildCount: () => 7 })
-//     expect(icon).toMatchObject({
-//       className: 'poi-cluster-icon',
-//       iconSize: [CLUSTER_ICON_SIZE, CLUSTER_ICON_SIZE],
-//       iconAnchor: [CLUSTER_ICON_SIZE / 2, CLUSTER_ICON_SIZE / 2],
-//     })
-//         /*
-// TODO fix test errors below by properly typing
-//  Error: src/features/shared/components/osmPoiMap/__tests__/mapUtils.spec.ts(76,17): error TS2339: Property 'html' does not exist on type 'DivIcon'.
-// Error: src/features/shared/components/osmPoiMap/__tests__/mapUtils.spec.ts(77,17): error TS2339: Property 'html' does not exist on type 'DivIcon'.
-// ELIFECYCLE Command failed with exit code 2.
-// Error:  command finished with error: command (/home/runner/work/opencupid/opencupid/apps/frontend) /home/runner/setup-pnpm/node_modules/.bin/pnpm run type-check exited (2)
-// Error: @opencupid/frontend#type-check: command (/home/runner/work/opencupid/opencupid/apps/frontend) /home/runner/setup-pnpm/node_modules/.bin/pnpm run type-check exited (2)
-// */
-//     expect(icon.options.html).toEqual(expect.stringContaining('poi-cluster-badge'))
-//     expect(icon.options.html).toEqual(expect.stringContaining('7'))
-//   })
-// })
-
 describe('hydratePoiIcon caching', () => {
-  afterEach(() => clearIconCache())
-
   it('returns cached icon for identical props', () => {
+    const cache = new Map()
     const props = {
       image: { variants: [{ size: 'thumb' as const, url: 'a.jpg' }], blurhash: null },
       isSelected: false,
       isHighlighted: false,
     }
-    const icon1 = hydratePoiIcon(DummyIcon, props)
-    const icon2 = hydratePoiIcon(DummyIcon, props)
+    const icon1 = hydratePoiIcon(DummyIcon, props, cache)
+    const icon2 = hydratePoiIcon(DummyIcon, props, cache)
     expect(icon1).toBe(icon2)
   })
 
   it('returns different icon when highlighted changes', () => {
+    const cache = new Map()
     const base = {
       image: { variants: [{ size: 'thumb' as const, url: 'a.jpg' }], blurhash: null },
       isSelected: false,
     }
-    const icon1 = hydratePoiIcon(DummyIcon, { ...base, isHighlighted: false })
-    const icon2 = hydratePoiIcon(DummyIcon, { ...base, isHighlighted: true })
+    const icon1 = hydratePoiIcon(DummyIcon, { ...base, isHighlighted: false }, cache)
+    const icon2 = hydratePoiIcon(DummyIcon, { ...base, isHighlighted: true }, cache)
     expect(icon1).not.toBe(icon2)
   })
 
-  it('clearIconCache empties the cache', () => {
+  it('fresh cache produces a new icon for the same props', () => {
     const props = {
       image: { variants: [{ size: 'thumb' as const, url: 'a.jpg' }], blurhash: null },
       isSelected: false,
       isHighlighted: false,
     }
-    const icon1 = hydratePoiIcon(DummyIcon, props)
-    clearIconCache()
-    const icon2 = hydratePoiIcon(DummyIcon, props)
+    const icon1 = hydratePoiIcon(DummyIcon, props, new Map())
+    const icon2 = hydratePoiIcon(DummyIcon, props, new Map())
     expect(icon1).not.toBe(icon2)
   })
 })
