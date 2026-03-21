@@ -39,6 +39,14 @@ function mapConversationMeta(c: { id: string; updatedAt: Date; createdAt: Date }
   }
 }
 
+/**
+ * Maps a conversation participant row to a ConversationSummary DTO.
+ *
+ * When a partner's account is closed, their Profile (and ConversationParticipant)
+ * is cascade-deleted while the Conversation is ARCHIVED with nullable FKs (SetNull).
+ * In that case `partner` is undefined and we return a tombstone placeholder so the
+ * API never throws — the frontend renders the closed-account state via issue #1192.
+ */
 export function mapConversationParticipantToSummary(
   p: ConversationParticipantWithConversationSummary,
   currentProfileId: string
@@ -49,7 +57,9 @@ export function mapConversationParticipantToSummary(
   // participant, but profileA/profileB are always populated.
   const partner =
     conversation.profileAId === currentProfileId ? conversation.profileB : conversation.profileA
-  const partnerState = conversation.participants.find((s) => s.profileId === partner.id)
+  const partnerState = partner
+    ? conversation.participants.find((s) => s.profileId === partner.id)
+    : undefined
   const myState = conversation.participants.find((s) => s.profileId === currentProfileId)
 
   const lastMessage = conversation.messages[0] ?? null
@@ -61,6 +71,12 @@ export function mapConversationParticipantToSummary(
   const adminId = appConfig.ADMIN_PROFILE_ID
   const isAdminInitiator = !!adminId && conversation.initiatorProfileId === adminId
 
+  // Tombstone: partner's account was closed — empty placeholder for frontend to handle
+  const partnerProfile: MessageProfileRef = partner
+    ? mapMessageProfileRef(partner)
+    : { id: '', publicName: '', profileImages: [] }
+  const isCallable = !!partner && partnerState?.isCallable !== false && partner.isCallable !== false
+
   return {
     id: p.id,
     profileId: p.profileId,
@@ -71,7 +87,7 @@ export function mapConversationParticipantToSummary(
     isDraft: false,
     canReply,
     isAdminInitiator,
-    isCallable: partnerState?.isCallable !== false && partner.isCallable !== false,
+    isCallable,
     myIsCallable: myState?.isCallable !== false,
     lastMessage: lastMessage
       ? {
@@ -82,7 +98,7 @@ export function mapConversationParticipantToSummary(
         }
       : null,
     conversation: mapConversationMeta(conversation),
-    partnerProfile: mapMessageProfileRef(partner),
+    partnerProfile,
   }
 }
 

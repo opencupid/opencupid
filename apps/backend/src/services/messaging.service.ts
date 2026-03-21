@@ -593,12 +593,13 @@ export type SendMessageErrorResponse = {
 
 /*
 Checks if the sender is allowed to reply to a conversation.
-| Condition                                | Allow?                   |
-| ---------------------------------------- | ------------------------ |
-| status = `ACCEPTED`                      | ✅ Yes                    |
-| status = `INITIATED`, sender ≠ initiator | ✅ Yes                    |
-| status = `INITIATED`, sender = initiator | ❌ No (already initiated) |
-| status = `BLOCKED` or anything else      | ❌ No                     |
+| Condition                                          | Allow?                   |
+| -------------------------------------------------- | ------------------------ |
+| status = `ACCEPTED`                                | ✅ Yes                    |
+| status = `INITIATED`, sender ≠ initiator           | ✅ Yes                    |
+| status = `INITIATED`, sender = initiator           | ❌ No (already initiated) |
+| status = `INITIATED`, initiatorProfileId = null     | ❌ No (deleted account)   |
+| status = `BLOCKED` / `ARCHIVED` / anything else    | ❌ No                     |
 */
 export function canSendMessageInConversation(
   conversation: Pick<Conversation, 'status' | 'initiatorProfileId'> | null,

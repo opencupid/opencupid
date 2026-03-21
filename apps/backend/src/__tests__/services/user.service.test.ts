@@ -13,6 +13,7 @@ const { mockTx, mockPrisma, mockUnlink, mockRm } = vi.hoisted(() => {
       findMany: vi.fn().mockResolvedValue([{ conversationId: 'c1' }]),
     },
     conversation: { updateMany: vi.fn(), deleteMany: vi.fn() },
+    profileImage: { deleteMany: vi.fn() },
     user: { delete: vi.fn() },
   }
 
