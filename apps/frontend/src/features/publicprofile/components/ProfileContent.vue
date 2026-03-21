@@ -47,10 +47,12 @@ const viewerLocation = computed(() => viewerProfile?.value?.location)
     <div class="action-buttons">
       <EditField
         fieldName="profileImages"
-        :editComponent="ImageEditor"
         buttonClass="btn-icon-lg btn-overlay photo-edit-button"
       >
         <IconPhoto class="svg-icon" />
+        <template #editor="{ modelValue, onUpdate }">
+          <ImageEditor :modelValue="modelValue" @update:modelValue="onUpdate" />
+        </template>
       </EditField>
     </div>
 
@@ -58,10 +60,11 @@ const viewerLocation = computed(() => viewerProfile?.value?.location)
       <div class="d-flex flex-row align-items-center mt-2">
         <div class="flex-grow-1 d-inline-flex align-items-center">
           <span class="fw-bolder fs-2 me-1"> {{ props.profile.publicName }}</span>
-          <EditField
-            fieldName="publicName"
-            :editComponent="PublicNameInput"
-          />
+          <EditField fieldName="publicName">
+            <template #editor="{ modelValue, onUpdate }">
+              <PublicNameInput :modelValue="modelValue" @update:modelValue="onUpdate" />
+            </template>
+          </EditField>
         </div>
         <GenderPronounLabel :profile="props.profile" />
       </div>
@@ -75,19 +78,17 @@ const viewerLocation = computed(() => viewerProfile?.value?.location)
             :showCountryIcon="false"
           />
         </span>
-        <EditField
-          fieldName="location"
-          :editComponent="LocationSelector"
-        />
+        <EditField fieldName="location">
+          <template #editor="{ modelValue, onUpdate }">
+            <LocationSelector :modelValue="modelValue" @update:modelValue="onUpdate" />
+          </template>
+        </EditField>
       </div>
 
       <div class="mb-3">
         <div class="d-inline-flex align-items-center flex-wrap">
           <TagList :tags="profile.tags" />
-          <EditField
-            fieldName="tags"
-            :editComponent="TagSelector"
-          >
+          <EditField fieldName="tags">
             <template #placeholder>
               <div
                 class="editable-placeholder"
@@ -96,26 +97,25 @@ const viewerLocation = computed(() => viewerProfile?.value?.location)
                 {{ t('profiles.forms.tags_placeholder') }}
               </div>
             </template>
+            <template #editor="{ modelValue, onUpdate }">
+              <TagSelector :modelValue="modelValue" @update:modelValue="onUpdate" />
+            </template>
           </EditField>
         </div>
 
         <div class="d-inline-flex align-items-center">
           <LanguageList :languages="profile.languages" />
-          <EditField
-            fieldName="languages"
-            :editComponent="LanguageSelector"
-          />
+          <EditField fieldName="languages">
+            <template #editor="{ modelValue, onUpdate }">
+              <LanguageSelector :modelValue="modelValue" @update:modelValue="onUpdate" />
+            </template>
+          </EditField>
         </div>
       </div>
       <div class="mb-3">
         <EditField
           fieldName="introSocialLocalized"
-          :editComponent="IntrotextEditor"
           wrapper-class="editable-textarea"
-          :editProps="{
-            languages: profile.languages,
-            placeholder: t('profiles.forms.intro_placeholder'),
-          }"
         >
           <template #display>
             {{ props.profile.introSocial }}
@@ -130,6 +130,14 @@ const viewerLocation = computed(() => viewerProfile?.value?.location)
               </span>
             </div>
           </template>
+          <template #editor="{ modelValue, onUpdate }">
+            <IntrotextEditor
+              :modelValue="modelValue"
+              @update:modelValue="onUpdate"
+              :languages="profile.languages"
+              :placeholder="t('profiles.forms.intro_placeholder')"
+            />
+          </template>
         </EditField>
       </div>
 
@@ -143,12 +151,7 @@ const viewerLocation = computed(() => viewerProfile?.value?.location)
           </span>
           <EditField
             fieldName="introDatingLocalized"
-            :editComponent="IntrotextEditor"
             wrapper-class="editable-textarea"
-            :editProps="{
-              languages: profile.languages,
-              placeholder: t('profiles.forms.intro_who_placeholder'),
-            }"
           >
             <template #display>
               {{ props.profile.introDating }}
@@ -162,6 +165,14 @@ const viewerLocation = computed(() => viewerProfile?.value?.location)
                   {{ props.profile.introDating }}
                 </span>
               </div>
+            </template>
+            <template #editor="{ modelValue, onUpdate }">
+              <IntrotextEditor
+                :modelValue="modelValue"
+                @update:modelValue="onUpdate"
+                :languages="profile.languages"
+                :placeholder="t('profiles.forms.intro_who_placeholder')"
+              />
             </template>
           </EditField>
         </div>
