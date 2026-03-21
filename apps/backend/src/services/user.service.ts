@@ -1,4 +1,8 @@
+import fs from 'fs'
+import path from 'path'
+
 import { prisma } from '@/lib/prisma'
+import { getMediaRoot, imageBasePath, MEDIA_SUBDIR } from '@/lib/media'
 import { Prisma, UserRole } from '@prisma/client'
 import type { User } from '@zod/generated'
 import { ValidateLoginTokenResponse } from '@zod/user/auth.dto'
@@ -158,5 +162,73 @@ export class UserService {
 
   generateLoginToken() {
     return customAlphabet(nolookalikesSafe, 6)()
+  }
+
+  async deleteAccount(userId: string): Promise<void> {
+    // Collect image storagePaths before deletion for filesystem cleanup
+    const images = await prisma.profileImage.findMany({
+      where: { userId },
+      select: { storagePath: true },
+    })
+
+    await prisma.$transaction(async (tx) => {
+      const profile = await tx.profile.findUnique({
+        where: { userId },
+        select: { id: true },
+      })
+
+      if (profile) {
+        const profileId = profile.id
+
+        // Delete RESTRICT FK records that won't cascade automatically
+        await tx.likedProfile.deleteMany({
+          where: { OR: [{ fromId: profileId }, { toId: profileId }] },
+        })
+        await tx.hiddenProfile.deleteMany({
+          where: { OR: [{ fromId: profileId }, { toId: profileId }] },
+        })
+        await tx.socialMatchFilter.deleteMany({ where: { profileId } })
+
+        // Delete conversations where this profile is the initiator (RESTRICT FK, no cascade)
+        await tx.conversation.deleteMany({ where: { initiatorProfileId: profileId } })
+
+        // Delete Profile — cascades: LocalizedProfileField, ProfileImage (profileId FK),
+        // Conversation (profileA/profileB FKs), ConversationParticipant, Message,
+        // MessageAttachment, ProfileSessionLog, ProfileActivitySummary, Post, _BlockedProfiles
+        await tx.profile.delete({ where: { id: profileId } })
+      }
+
+      // Delete User — cascades: ConnectionRequest, PushSubscription
+      // Also clears remaining ProfileImage rows with userId FK
+      await tx.user.delete({ where: { id: userId } })
+    })
+
+    // Delete image files from disk (outside transaction — best-effort cleanup)
+    for (const { storagePath } of images) {
+      const baseFile = path.join(getMediaRoot(), imageBasePath(storagePath))
+      const filesToDelete = [
+        `${baseFile}-original.jpg`,
+        `${baseFile}-face.jpg`,
+        `${baseFile}-thumb.webp`,
+        `${baseFile}-card.webp`,
+        `${baseFile}-profile.webp`,
+        `${baseFile}-full.webp`,
+      ]
+      for (const f of filesToDelete) {
+        try {
+          await fs.promises.unlink(f)
+        } catch {
+          // Ignore missing files — continue cleanup
+        }
+      }
+    }
+
+    // Delete user image directory if it exists
+    const userImageDir = path.join(getMediaRoot(), MEDIA_SUBDIR.IMAGES, userId)
+    try {
+      await fs.promises.rm(userImageDir, { recursive: true, force: true })
+    } catch {
+      // Ignore — directory may not exist
+    }
   }
 }

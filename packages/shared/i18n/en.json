@@ -506,6 +506,11 @@
     "widowed": "Widowed"
   },
   "settings": {
+    "close_account_button": "Close Account",
+    "close_account_confirm_label": "Type your email address to confirm",
+    "close_account_dialog_message": "This will permanently delete your account and all associated data. This action cannot be undone.",
+    "close_account_dialog_title": "Close Account",
+    "close_account_ok_button": "Delete My Account",
     "enable_push": "Enable Push Notifications",
     "language_label": "Language",
     "newsletter_opt_in": "I'm happy to receive the occasional email newsletter",
