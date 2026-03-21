@@ -14,7 +14,6 @@ const { mockTx, mockPrisma, mockUnlink, mockRm } = vi.hoisted(() => {
   }
 
   const mockPrisma = {
-    profileImage: { findMany: vi.fn() },
     $transaction: vi.fn((fn: (tx: typeof mockTx) => Promise<void>) => fn(mockTx)),
   }
 
@@ -28,7 +27,6 @@ vi.mock('../../lib/prisma', () => ({ prisma: mockPrisma }))
 
 vi.mock('../../lib/media', () => ({
   getMediaRoot: vi.fn(() => '/media'),
-  imageBasePath: vi.fn((p: string) => `images/${p}`),
   MEDIA_SUBDIR: { IMAGES: 'images' },
 }))
 
@@ -56,7 +54,6 @@ describe('UserService.deleteAccount', () => {
     const profileId = 'profile-123'
     const userId = 'user-123'
 
-    mockPrisma.profileImage.findMany.mockResolvedValue([])
     mockTx.profile.findUnique.mockResolvedValue({ id: profileId })
 
     await service.deleteAccount(userId)
@@ -80,7 +77,6 @@ describe('UserService.deleteAccount', () => {
   it('skips profile deletion steps if user has no profile', async () => {
     const userId = 'user-no-profile'
 
-    mockPrisma.profileImage.findMany.mockResolvedValue([])
     mockTx.profile.findUnique.mockResolvedValue(null)
 
     await service.deleteAccount(userId)
@@ -90,20 +86,8 @@ describe('UserService.deleteAccount', () => {
     expect(mockTx.user.delete).toHaveBeenCalledWith({ where: { id: userId } })
   })
 
-  it('deletes image files from disk for each stored image', async () => {
-    const userId = 'user-with-images'
-    mockPrisma.profileImage.findMany.mockResolvedValue([{ storagePath: 'user-with-images/img1' }])
-    mockTx.profile.findUnique.mockResolvedValue(null)
-
-    await service.deleteAccount(userId)
-
-    expect(mockUnlink).toHaveBeenCalledWith('/media/images/user-with-images/img1-original.jpg')
-    expect(mockUnlink).toHaveBeenCalledWith('/media/images/user-with-images/img1-thumb.webp')
-  })
-
   it('removes the user image directory after deletion', async () => {
     const userId = 'user-123'
-    mockPrisma.profileImage.findMany.mockResolvedValue([])
     mockTx.profile.findUnique.mockResolvedValue(null)
 
     await service.deleteAccount(userId)
