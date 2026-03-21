@@ -32,6 +32,7 @@ export function mapInteractionContext(
   const initiated =
     !!conversation &&
     conversation.status === 'INITIATED' &&
+    conversation.initiatorProfileId != null &&
     conversation.initiatorProfileId !== profile.id
 
   const canMessage =

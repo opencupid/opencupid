@@ -88,11 +88,7 @@ export class MessageService {
       where: {
         profileId,
         NOT: [
-          {
-            conversation: {
-              status: 'BLOCKED', // Exclude blocked conversations
-            },
-          },
+          { conversation: { status: 'BLOCKED' } },
         ],
         conversation: {
           participants: {
@@ -400,7 +396,9 @@ export function canSendMessageInConversation(
 
   return (
     conversation.status === 'ACCEPTED' ||
-    (conversation.status === 'INITIATED' && conversation.initiatorProfileId !== senderProfileId)
+    (conversation.status === 'INITIATED' &&
+      conversation.initiatorProfileId != null &&
+      conversation.initiatorProfileId !== senderProfileId)
   )
 }
 
