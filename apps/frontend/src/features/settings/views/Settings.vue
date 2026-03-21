@@ -8,6 +8,8 @@ import { useAuthStore } from '@/features/auth/stores/authStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { useUserStore } from '@/store/userStore'
 import { usePwaInstall } from '@/features/app/composables/usePwaInstall'
+import { api, safeApiCall } from '@/lib/api'
+import type { DeleteAccountResponse } from '@zod/apiResponse.dto'
 
 import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
 import IconLogout from '@/assets/icons/interface/logout.svg'
@@ -20,6 +22,7 @@ import VersionInfo from '../components/VersionInfo.vue'
 import RouterBackButton from '@/features/shared/ui/RouterBackButton.vue'
 import SecondaryNav from '@/features/shared/ui/SecondaryNav.vue'
 import PwaInstallButton from '@/features/app/components/PwaInstallButton.vue'
+import CloseAccountDialog from '../components/CloseAccountDialog.vue'
 
 const authStore = useAuthStore()
 const ownerProfileStore = useOwnerProfileStore()
@@ -30,6 +33,9 @@ const router = useRouter()
 usePwaInstall()
 
 const isLoading = ref(true)
+const showCloseAccountDialog = ref(false)
+const isClosingAccount = ref(false)
+
 const optInModel = computed<ProfileOptInSettings>({
   get() {
     return ownerProfileStore.optInSettings
@@ -52,6 +58,18 @@ onMounted(async () => {
 function handleClick() {
   authStore.logout()
   router.push({ name: 'Login' })
+}
+
+async function handleCloseAccount() {
+  isClosingAccount.value = true
+  try {
+    await safeApiCall(() => api.delete<DeleteAccountResponse>('/users/me'))
+    authStore.logout()
+    router.push({ name: 'Login' })
+  } finally {
+    isClosingAccount.value = false
+    showCloseAccountDialog.value = false
+  }
 }
 </script>
 
@@ -89,7 +107,7 @@ function handleClick() {
               <PwaInstallButton />
             </fieldset>
 
-            <hr class="mb-md-4"/>
+            <hr class="mb-md-4" />
 
             <fieldset class="d-flex flex-wrap align-items-center gap-2">
               <div
@@ -116,6 +134,18 @@ function handleClick() {
                 >
               </div>
             </fieldset>
+
+            <hr class="mb-md-4" />
+
+            <fieldset>
+              <BButton
+                variant="outline-danger"
+                size="sm"
+                @click="showCloseAccountDialog = true"
+              >
+                {{ $t('settings.close_account_button') }}
+              </BButton>
+            </fieldset>
           </div>
         </section>
         <div class="position-fixed bottom-0 w-100 p-2">
@@ -124,4 +154,11 @@ function handleClick() {
       </div>
     </MiddleColumn>
   </main>
+
+  <CloseAccountDialog
+    v-model="showCloseAccountDialog"
+    :user-email="userStore.user?.email ?? null"
+    :loading="isClosingAccount"
+    @confirm="handleCloseAccount"
+  />
 </template>
