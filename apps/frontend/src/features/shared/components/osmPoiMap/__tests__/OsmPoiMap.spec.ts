@@ -365,14 +365,26 @@ describe('OsmPoiMap', () => {
     expect(unspiderfyMock).not.toHaveBeenCalled()
   })
 
-  it('uses raster tile layer', async () => {
+  it('uses raster tile layer from MAP_TILE_URL config', async () => {
+    const tileUrl = 'https://tiles.example.com/{z}/{x}/{y}.png'
+    ;(globalThis as any).__APP_CONFIG__ = { ...__APP_CONFIG__, MAP_TILE_URL: tileUrl }
     await mountMap()
     await flushPromises()
 
     expect(L.tileLayer).toHaveBeenCalledOnce()
     const [url] = (L.tileLayer as any).mock.calls[0]
-    expect(url).toContain('maps.hereapi.com/v3/base/mc')
-    expect(url).toContain('{z}/{x}/{y}/png')
+    expect(url).toBe(tileUrl)
+    ;(globalThis as any).__APP_CONFIG__ = { ...__APP_CONFIG__, MAP_TILE_URL: '' }
+  })
+
+  it('skips tile layer and logs error when MAP_TILE_URL is empty', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    await mountMap()
+    await flushPromises()
+
+    expect(L.tileLayer).not.toHaveBeenCalled()
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('MAP_TILE_URL'))
+    errorSpy.mockRestore()
   })
 
   it('calls popup.update() on nextTick after popupopen to re-measure teleported content', async () => {

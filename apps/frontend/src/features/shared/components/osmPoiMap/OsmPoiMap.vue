@@ -179,10 +179,16 @@ function initBaseLayer(map: LMap): void {
     if (map) lastStableZoom = map.getZoom()
   })
   map.on('moveend', emitBounds)
-  const tileLayer = L.tileLayer(
-    `https://maps.hereapi.com/v3/base/mc/{z}/{x}/{y}/png?apiKey=${__APP_CONFIG__.MAPTILER_API_KEY}&style=lite.day&size=512`,
-    { maxZoom: 20, attribution: '© HERE' }
-  ).addTo(map)
+  const tileUrl = __APP_CONFIG__.MAP_TILE_URL
+  if (!tileUrl) {
+    console.error('[OsmPoiMap] MAP_TILE_URL is not configured. Map tiles will not load.')
+    onMapReady()
+    return
+  }
+  const tileLayer = L.tileLayer(tileUrl, {
+    maxZoom: MAP_MAX_ZOOM,
+    attribution: __APP_CONFIG__.MAP_ATTRIBUTION,
+  }).addTo(map)
   tileLayer.once('load', () => onMapReady())
 }
 

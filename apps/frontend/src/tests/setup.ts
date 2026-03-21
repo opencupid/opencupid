@@ -23,7 +23,8 @@ import { appConfigSchema } from '@zod/config/appConfig.schema'
   SITE_NAME: 'OpenCupid',
   JITSI_DOMAIN: '',
   VOICE_MESSAGE_MAX_DURATION: '120',
-  MAPTILER_API_KEY: '',
+  MAP_TILE_URL: '',
+  MAP_ATTRIBUTION: '',
 })
 import packageJson from '../../package.json'
 ;(globalThis as any).__APP_VERSION__ = packageJson.version
