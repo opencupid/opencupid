@@ -107,7 +107,7 @@ const selectHeight = computed(() => {
     <Multiselect
       :model-value="displayTags"
       @update:model-value="model = $event.filter((t: PublicTag) => t.id !== hintTagId)"
-      v-bind="attrs"
+      :taggable="true"
       :options="tags"
       :multiple="true"
       :loading="isLoading"
@@ -118,6 +118,7 @@ const selectHeight = computed(() => {
       :show-no-results="true"
       :show-no-options="false"
       :maxHeight="selectHeight"
+      v-bind="attrs"
       @tag="addTag"
       label="name"
       track-by="id"
