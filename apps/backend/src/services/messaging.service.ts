@@ -564,7 +564,9 @@ export function canSendMessageInConversation(
 
   return (
     conversation.status === 'ACCEPTED' ||
-    (conversation.status === 'INITIATED' && conversation.initiatorProfileId !== senderProfileId)
+    (conversation.status === 'INITIATED' &&
+      conversation.initiatorProfileId != null &&
+      conversation.initiatorProfileId !== senderProfileId)
   )
 }
 

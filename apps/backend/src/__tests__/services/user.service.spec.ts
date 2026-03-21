@@ -2,6 +2,14 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { UserService } from '../../services/user.service'
 import { createMockPrisma } from '../../test-utils/prisma'
 
+vi.mock('fs', () => ({
+  default: { promises: { rm: vi.fn().mockResolvedValue(undefined) } },
+}))
+vi.mock('../../lib/media', () => ({
+  getMediaRoot: () => '/tmp/media',
+  MEDIA_SUBDIR: { IMAGES: 'images' },
+}))
+
 let mockPrisma: any = {}
 vi.mock('../../lib/prisma', () => ({
   get prisma() {
@@ -127,5 +135,55 @@ describe('UserService.setLoginToken', () => {
         originDomain: 'test.local',
       },
     })
+  })
+})
+
+describe('UserService.deleteAccount', () => {
+  it('archives conversations before deleting profile', async () => {
+    const profileId = 'prof1'
+    mockPrisma.profile.findUnique.mockResolvedValue({ id: profileId })
+    mockPrisma.conversationParticipant.findMany.mockResolvedValue([
+      { conversationId: 'conv1' },
+      { conversationId: 'conv2' },
+    ])
+    mockPrisma.likedProfile.deleteMany.mockResolvedValue({})
+    mockPrisma.hiddenProfile.deleteMany.mockResolvedValue({})
+    mockPrisma.socialMatchFilter.deleteMany.mockResolvedValue({})
+    mockPrisma.conversation.updateMany.mockResolvedValue({})
+    mockPrisma.profile.delete.mockResolvedValue({})
+    mockPrisma.user.delete.mockResolvedValue({})
+
+    await service.deleteAccount('user1')
+
+    expect(mockPrisma.conversation.updateMany).toHaveBeenCalledWith({
+      where: { id: { in: ['conv1', 'conv2'] } },
+      data: { status: 'ARCHIVED' },
+    })
+    expect(mockPrisma.profile.delete).toHaveBeenCalledWith({ where: { id: profileId } })
+    expect(mockPrisma.user.delete).toHaveBeenCalledWith({ where: { id: 'user1' } })
+  })
+
+  it('skips conversation archiving when profile has no conversations', async () => {
+    mockPrisma.profile.findUnique.mockResolvedValue({ id: 'prof1' })
+    mockPrisma.conversationParticipant.findMany.mockResolvedValue([])
+    mockPrisma.likedProfile.deleteMany.mockResolvedValue({})
+    mockPrisma.hiddenProfile.deleteMany.mockResolvedValue({})
+    mockPrisma.socialMatchFilter.deleteMany.mockResolvedValue({})
+    mockPrisma.profile.delete.mockResolvedValue({})
+    mockPrisma.user.delete.mockResolvedValue({})
+
+    await service.deleteAccount('user1')
+
+    expect(mockPrisma.conversation.updateMany).not.toHaveBeenCalled()
+  })
+
+  it('still deletes user when profile does not exist', async () => {
+    mockPrisma.profile.findUnique.mockResolvedValue(null)
+    mockPrisma.user.delete.mockResolvedValue({})
+
+    await service.deleteAccount('user1')
+
+    expect(mockPrisma.profile.delete).not.toHaveBeenCalled()
+    expect(mockPrisma.user.delete).toHaveBeenCalledWith({ where: { id: 'user1' } })
   })
 })
