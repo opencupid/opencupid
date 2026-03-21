@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import useEditFields from '@/features/shared/composables/useEditFields'
 import { type EditProfileForm } from '@zod/profile/profile.form'
 import { createDatingPrefsDefaults, type DatingPreferencesFormType } from '@zod/match/filters.form'
 import AgeSelector from '@/features/shared/profileform/AgeSelector.vue'
+import type { GenderPickerModel } from '@/features/shared/profileform/GenderPronounSelector.vue'
 import GenderPronounSelector from '@/features/shared/profileform/GenderPronounSelector.vue'
 import RelationstatusSelector from '@/features/shared/profileform/RelationstatusSelector.vue'
 import IntrotextEditor from '@/features/shared/profileform/IntrotextEditor.vue'
@@ -10,10 +10,9 @@ import HaskidsSelector from '@/features/shared/profileform/HaskidsSelector.vue'
 import DatingPreferencesForm from '@/features/browse/components/DatingPreferencesForm.vue'
 
 import { useI18n } from 'vue-i18n'
-import { watch } from 'vue'
+import { computed, watch } from 'vue'
 
 const formData = defineModel<EditProfileForm>({ required: true })
-
 const datingPrefs = defineModel<DatingPreferencesFormType>('datingPrefs', { required: true })
 
 const { t } = useI18n()
@@ -22,8 +21,13 @@ const props = defineProps<{
   isCurrent: (step: any) => boolean
 }>()
 
-const { birthdayModel, relationshipModel, hasKidsModel, introDatingModel, genderPronounsModel } =
-  useEditFields(formData.value)
+const genderPronounsModel = computed<GenderPickerModel>({
+  get: () => ({ gender: formData.value.gender, pronouns: formData.value.pronouns }),
+  set: (val) => {
+    formData.value.gender = val.gender
+    formData.value.pronouns = val.pronouns
+  },
+})
 
 watch(
   () => [formData.value.birthday, formData.value.gender] as const,
@@ -49,7 +53,7 @@ watch(
     <!-- I've been on this planet since -->
     <!-- {{ t('onboarding.age_subtitle') }} -->
     <!-- </p> -->
-    <AgeSelector v-model="birthdayModel" />
+    <AgeSelector v-model="formData.birthday" />
   </fieldset>
 
   <fieldset v-else-if="isCurrent('gender')">
@@ -63,16 +67,16 @@ watch(
     <!-- relationship status step title -->
     <legend>{{ t('onboarding.relationship_title') }}</legend>
     <div class="mb-3">
-      <RelationstatusSelector v-model="relationshipModel" />
+      <RelationstatusSelector v-model="formData.relationship" />
     </div>
-    <HaskidsSelector v-model="hasKidsModel" />
+    <HaskidsSelector v-model="formData.hasKids" />
   </fieldset>
 
   <fieldset v-else-if="isCurrent('introDating')">
     <!-- dating intro title -->
     <legend>{{ t('onboarding.dating_intro_title') }}</legend>
     <IntrotextEditor
-      v-model="introDatingModel"
+      v-model="formData.introDatingLocalized"
       :languages="formData.languages"
       :placeholder="t('onboarding.dating_intro_placeholder')"
     />
