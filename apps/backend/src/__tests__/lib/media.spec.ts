@@ -12,6 +12,7 @@ vi.mock('@/lib/appconfig', () => ({
 import {
   imageBasePath,
   voiceBasePath,
+  messageImageBasePath,
   MEDIA_SUBDIR,
   mediaUrl,
   generateMediaToken,
@@ -22,6 +23,7 @@ describe('MEDIA_SUBDIR', () => {
     expect(MEDIA_SUBDIR.IMAGES).toBe('images')
     expect(MEDIA_SUBDIR.VOICE).toBe('voice')
     expect(MEDIA_SUBDIR.TMP).toBe('tmp')
+    expect(MEDIA_SUBDIR.MESSAGE_IMAGES).toBe('message-images')
   })
 })
 
@@ -38,6 +40,12 @@ describe('imageBasePath', () => {
 describe('voiceBasePath', () => {
   it('prepends voice/ to a storagePath', () => {
     expect(voiceBasePath('p1/msg-abc.webm')).toBe('voice/p1/msg-abc.webm')
+  })
+})
+
+describe('messageImageBasePath', () => {
+  it('prepends message-images/ to a storagePath', () => {
+    expect(messageImageBasePath('p1/slug123')).toBe('message-images/p1/slug123')
   })
 })
 

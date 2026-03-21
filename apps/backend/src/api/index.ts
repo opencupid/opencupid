@@ -5,6 +5,7 @@ import profileRoutes from './routes/profile.route'
 import tagsRoutes from './routes/tags.route'
 import captchaRoutes from './routes/captcha.route'
 import messageRoutes from './routes/messaging.route'
+import messageMediaRoutes from './routes/messageMedia.route'
 import pushRoutes from './routes/push.routes'
 import imageRoutes from './routes/image.route'
 import findProfileRoutes from './routes/findProfile.route'
@@ -21,6 +22,7 @@ const api: FastifyPluginAsync = async (fastify) => {
   fastify.register(profileRoutes, { prefix: '/profiles' })
   fastify.register(interactionRoutes, { prefix: '/interactions' })
   fastify.register(messageRoutes, { prefix: '/messages' })
+  fastify.register(messageMediaRoutes, { prefix: '/messages' })
   fastify.register(captchaRoutes, { prefix: '/captcha' })
   fastify.register(pushRoutes, { prefix: '/push' })
   fastify.register(imageRoutes, { prefix: '/image' })

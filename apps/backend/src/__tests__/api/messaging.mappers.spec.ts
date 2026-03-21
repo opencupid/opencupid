@@ -183,6 +183,7 @@ describe('messaging mappers', () => {
       }
       const dto = mapAttachmentDTO(attachment)
       expect(dto.url).toBe('/user-content/voice/p1/msg-abc.webm')
+      expect(dto.fullUrl).toBeUndefined()
     })
 
     it('returns clean URL for image attachments (no query params)', () => {
@@ -195,7 +196,22 @@ describe('messaging mappers', () => {
         createdAt: new Date(),
       }
       const dto = mapAttachmentDTO(attachment)
-      expect(dto.url).toBe('/user-content/images/cmXXX/abc-card.webp')
+      expect(dto.url).toBe('/user-content/images/cmXXX/abc-card.webp-inline.webp')
+      expect(dto.fullUrl).toBe('/user-content/images/cmXXX/abc-card.webp-full.webp')
+    })
+
+    it('returns inline and full URLs for message image attachments', () => {
+      const attachment: any = {
+        id: 'a3',
+        filePath: 'message-images/p1/slug123',
+        mimeType: 'image/webp',
+        fileSize: 3000,
+        duration: null,
+        createdAt: new Date(),
+      }
+      const dto = mapAttachmentDTO(attachment)
+      expect(dto.url).toBe('/user-content/message-images/p1/slug123-inline.webp')
+      expect(dto.fullUrl).toBe('/user-content/message-images/p1/slug123-full.webp')
     })
   })
 })

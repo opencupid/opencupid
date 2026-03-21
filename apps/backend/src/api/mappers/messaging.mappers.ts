@@ -78,6 +78,19 @@ export function mapAttachmentDTO(dbAttachment: {
   duration: number | null
   createdAt: Date
 }): MessageAttachmentDTO {
+  if (dbAttachment.mimeType === 'image/webp') {
+    // filePath is stored as base path (without variant suffix)
+    // e.g. "message-images/{profileId}/{slug}"
+    return {
+      id: dbAttachment.id,
+      url: mediaUrl(`${dbAttachment.filePath}-inline.webp`),
+      fullUrl: mediaUrl(`${dbAttachment.filePath}-full.webp`),
+      mimeType: dbAttachment.mimeType,
+      fileSize: dbAttachment.fileSize,
+      duration: dbAttachment.duration,
+      createdAt: dbAttachment.createdAt,
+    }
+  }
   const url = mediaUrl(dbAttachment.filePath)
   return {
     id: dbAttachment.id,

@@ -103,9 +103,6 @@ export class ImageProcessor {
   constructor(buffer: Buffer) {
     this.buffer = buffer
     this.sharpInstance = sharp(buffer)
-    if (!ImageProcessor.detector) {
-      throw new Error('BlazeFace detector not initialized. Call ImageProcessor.initialize() first.')
-    }
   }
 
   static async initialize() {
@@ -123,6 +120,9 @@ export class ImageProcessor {
   }
 
   async analyze(): Promise<void> {
+    if (!ImageProcessor.detector) {
+      throw new Error('BlazeFace detector not initialized. Call ImageProcessor.initialize() first.')
+    }
     this.metadata = await this.sharpInstance.metadata()
     this.faces = await this.detectFaces()
   }

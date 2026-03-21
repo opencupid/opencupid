@@ -18,6 +18,7 @@ export const MEDIA_SUBDIR = {
   TMP: 'tmp',
   IMAGES: 'images',
   VOICE: 'voice',
+  MESSAGE_IMAGES: 'message-images',
 } as const
 
 /** Resolve a DB storagePath to its on-disk path relative to mediaRoot. */
@@ -28,6 +29,11 @@ export function imageBasePath(storagePath: string): string {
 /** Resolve a DB voice filePath to its on-disk path relative to mediaRoot. */
 export function voiceBasePath(storagePath: string): string {
   return path.posix.join(MEDIA_SUBDIR.VOICE, storagePath)
+}
+
+/** Resolve a DB message image basePath to its on-disk path relative to mediaRoot. */
+export function messageImageBasePath(storagePath: string): string {
+  return path.posix.join(MEDIA_SUBDIR.MESSAGE_IMAGES, storagePath)
 }
 
 export function checkUserContentRoot(): boolean {

@@ -38,6 +38,7 @@ const MessageAttachmentDTOSchema = MessageAttachmentSchema.pick({
   createdAt: true,
 }).extend({
   url: z.string(),
+  fullUrl: z.string().nullable().optional(),
 })
 
 export type MessageAttachmentDTO = z.infer<typeof MessageAttachmentDTOSchema>
@@ -149,6 +150,15 @@ export const SendVoiceMessagePayloadSchema = z.object({
 })
 
 export type SendVoiceMessagePayload = z.infer<typeof SendVoiceMessagePayloadSchema>
+
+// Schema for image message payload
+export const SendImageMessagePayloadSchema = z.object({
+  profileId: z.string().cuid(),
+  content: z.string().default(''), // Always empty for image messages
+  messageType: z.literal('image/webp'),
+})
+
+export type SendImageMessagePayload = z.infer<typeof SendImageMessagePayloadSchema>
 
 // export type ConversationParticipantWithExtras = ConversationParticipantWithConversationSummary & {
 //   unreadCount: number,

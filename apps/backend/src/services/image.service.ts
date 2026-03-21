@@ -12,7 +12,7 @@ import sharp from 'sharp'
 
 import { ImageProcessor } from './imageprocessor'
 
-type Variant = {
+export type Variant = {
   name: string
   width: number
   height?: number
@@ -169,14 +169,15 @@ export class ImageService {
     }
   }
 
-  private async generateAllVariants(
+  async generateAllVariants(
     processor: ImageProcessor,
     outputDir: string,
-    baseName: string
+    baseName: string,
+    variantList?: Variant[]
   ): Promise<Record<string, string>> {
     const outputPaths: Record<string, string> = {}
 
-    for (const v of variants) {
+    for (const v of variantList ?? variants) {
       const outputPath = path.join(outputDir, `${baseName}-${v.name}.webp`)
       const width = v.width
       const height = v.height
