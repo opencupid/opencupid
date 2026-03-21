@@ -293,6 +293,21 @@ main {
   }
 }
 
+// ─── Canonical button styles ─────────────────────────────────────────
+
+// OK / Confirm / Save actions
+.btn-ok {
+  @extend .btn;
+  @extend .btn-success;
+}
+
+// Cancel / Dismiss / Nevermind actions
+.btn-cancel {
+  @extend .btn;
+  @extend .btn-link;
+  color: var(--bs-secondary-color);
+}
+
 // ─── Elevation system ────────────────────────────────────────────────
 
 // Cards: subtle shadow + radius

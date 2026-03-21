@@ -194,10 +194,9 @@ function onModalHidden() {
           {{ t('profiles.image_upload.looks_good') }}
         </BButton>
         <BButton
-          variant="link-secondary"
-          @click.prevent="backFromPreview"
-          class="link-secondary"
+          class="btn-cancel"
           size="sm"
+          @click.prevent="backFromPreview"
         >
           {{ t('profiles.image_upload.nevermind') }}
         </BButton>
@@ -231,10 +230,9 @@ function onModalHidden() {
           </div>
           <div>
             <BButton
-              variant="link-secondary"
-              @click.prevent="closeModal"
-              class="link-secondary"
+              class="btn-cancel"
               size="sm"
+              @click.prevent="closeModal"
             >
               {{ t('profiles.image_upload.nevermind') }}
             </BButton>
