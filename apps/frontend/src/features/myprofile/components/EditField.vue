@@ -1,19 +1,16 @@
 <script setup lang="ts">
-import { type Component, inject, ref } from 'vue'
+import { inject } from 'vue'
 import IconPencil2 from '@/assets/icons/interface/pencil-2.svg'
 import useEditFields from '@/features/shared/composables/useEditFields'
 import { type EditFieldProfileFormWithImages } from '@zod/profile/profile.form'
 import { type FieldEditState } from '../composables/types'
 
-// Only allow field names that are accepted by getModelProxy
 type AllowedFieldKey = keyof EditFieldProfileFormWithImages
 
 const props = defineProps<{
   fieldName: AllowedFieldKey
-  editComponent: Component
-  buttonClass?: string // optional class for the button
-  wrapperClass?: string // optional class for the wrapper
-  editProps?: Record<string, any> // allow additional props to be passed to the edit component
+  buttonClass?: string
+  wrapperClass?: string
 }>()
 
 const isEditable = inject<boolean>('isEditable', false)
@@ -67,16 +64,16 @@ const fieldProxy = getModelProxy(props.fieldName)
       to="#field-edit-modal"
       v-if="fieldEditState.fieldEditModal"
     >
-      <component
-        :is="editComponent"
-        v-bind="editProps"
-        v-model="fieldProxy"
-        v-if="fieldEditState.currentField === fieldName"
-      />
+      <template v-if="fieldEditState.currentField === fieldName">
+        <slot
+          name="editor"
+          :modelValue="fieldProxy.value"
+          :onUpdate="(val: typeof fieldProxy.value) => { fieldProxy.value = val }"
+        />
+      </template>
     </Teleport>
   </span>
   <span v-else>
     <slot name="display"></slot>
   </span>
 </template>
-
