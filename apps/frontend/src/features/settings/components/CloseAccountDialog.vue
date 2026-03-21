@@ -4,7 +4,7 @@ import { ref, computed } from 'vue'
 const show = defineModel<boolean>()
 
 const props = defineProps<{
-  userEmail: string | null
+  userIdentifier: string | null
   loading: boolean
 }>()
 
@@ -14,8 +14,15 @@ defineEmits<{
 
 const confirmInput = ref('')
 
+function onHidden() {
+  show.value = false
+  confirmInput.value = ''
+}
+
 const isConfirmed = computed(
-  () => confirmInput.value.trim().toLowerCase() === (props.userEmail ?? '').toLowerCase()
+  () =>
+    !!props.userIdentifier &&
+    confirmInput.value.trim().toLowerCase() === props.userIdentifier.toLowerCase()
 )
 </script>
 
@@ -39,10 +46,7 @@ const isConfirmed = computed(
     initial-animation
     @ok.prevent="$emit('confirm')"
     @cancel="show = false"
-    @hidden="
-      show = false
-      confirmInput = ''
-    "
+    @hidden="onHidden"
   >
     <BOverlay
       :show="loading"
@@ -62,7 +66,7 @@ const isConfirmed = computed(
           type="text"
           class="form-control"
           autocomplete="off"
-          :placeholder="userEmail ?? ''"
+          :placeholder="userIdentifier ?? ''"
           @keydown.enter.prevent="isConfirmed && $emit('confirm')"
         />
       </div>
