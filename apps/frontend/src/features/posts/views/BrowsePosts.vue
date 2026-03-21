@@ -11,6 +11,7 @@ import PostList from '../components/PostList.vue'
 import PostFullView from '../components/PostFullView.vue'
 import MapView from '@/features/shared/components/MapView.vue'
 import MapIcon from '../components/MapIcon.vue'
+import PostMapPopup from '../components/PostMapPopup.vue'
 import IconMenu from '@/assets/icons/interface/menu.svg'
 import ViewModeToggler from '@/features/shared/ui/ViewModeToggler.vue'
 import FloatingButton from '@/features/shared/components/FloatingButton.vue'
@@ -138,6 +139,7 @@ onActivated(() => {
         v-else-if="viewMode === 'map'"
         :items="mapPois"
         :icon-component="MapIcon"
+        :popup-component="PostMapPopup"
         :center="mapCenter"
         :is-loading="isViewLoading"
         class="h-100"
