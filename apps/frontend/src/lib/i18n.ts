@@ -49,10 +49,10 @@ export function useI18n() {
   return { t, locale }
 }
 
-export function sortLanguagesWithEnFirst(codes: string[]): string[] {
+export function sortLanguagesWithDefaultFirst(codes: string[], defaultLang: string): string[] {
   return codes.slice().sort((a, b) => {
-    if (a === 'en') return -1
-    if (b === 'en') return 1
+    if (a === defaultLang) return -1
+    if (b === defaultLang) return 1
     return a.localeCompare(b)
   })
 }
