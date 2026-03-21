@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { api, axios, safeApiCall } from '@/lib/api'
 import { bus } from '@/lib/bus'
+import { useBootstrap } from '@/lib/bootstrap'
 import { type UserRoleType } from '@zod/generated'
 
 import { LoginUserSchema } from '@zod/user/user.dto'
@@ -125,7 +126,11 @@ export const useAuthStore = defineStore('auth', {
           restart: 'otp',
         }
       }
-      bus.emit('auth:login', { token: this.jwt })
+      // Await bootstrap so the owner profile is loaded before verifyToken
+      // returns. This prevents a race in UserHome where isOnboarded is checked
+      // before the profile fetch completes, causing the /onboarding redirect
+      // to be silently skipped for freshly registered users.
+      await useBootstrap().onLogin()
       return { success: true, status: '' }
     },
 
