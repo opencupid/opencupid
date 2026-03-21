@@ -8,8 +8,6 @@ import { useAuthStore } from '@/features/auth/stores/authStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { useUserStore } from '@/store/userStore'
 import { usePwaInstall } from '@/features/app/composables/usePwaInstall'
-import { api, safeApiCall } from '@/lib/api'
-import type { DeleteAccountResponse } from '@zod/apiResponse.dto'
 
 import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
 import IconLogout from '@/assets/icons/interface/logout.svg'
@@ -22,7 +20,6 @@ import VersionInfo from '../components/VersionInfo.vue'
 import RouterBackButton from '@/features/shared/ui/RouterBackButton.vue'
 import SecondaryNav from '@/features/shared/ui/SecondaryNav.vue'
 import PwaInstallButton from '@/features/app/components/PwaInstallButton.vue'
-import CloseAccountDialog from '../components/CloseAccountDialog.vue'
 
 const authStore = useAuthStore()
 const ownerProfileStore = useOwnerProfileStore()
@@ -33,8 +30,6 @@ const router = useRouter()
 usePwaInstall()
 
 const isLoading = ref(true)
-const showCloseAccountDialog = ref(false)
-const isClosingAccount = ref(false)
 
 const optInModel = computed<ProfileOptInSettings>({
   get() {
@@ -58,18 +53,6 @@ onMounted(async () => {
 function handleClick() {
   authStore.logout()
   router.push({ name: 'Login' })
-}
-
-async function handleCloseAccount() {
-  isClosingAccount.value = true
-  try {
-    await safeApiCall(() => api.delete<DeleteAccountResponse>('/users/me'))
-    authStore.logout()
-    router.push({ name: 'Login' })
-  } finally {
-    isClosingAccount.value = false
-    showCloseAccountDialog.value = false
-  }
 }
 </script>
 
@@ -141,7 +124,7 @@ async function handleCloseAccount() {
               <BButton
                 variant="outline-danger"
                 size="sm"
-                @click="showCloseAccountDialog = true"
+                :to="{ name: 'CloseAccount' }"
               >
                 {{ $t('settings.close_account_button') }}
               </BButton>
@@ -154,11 +137,4 @@ async function handleCloseAccount() {
       </div>
     </MiddleColumn>
   </main>
-
-  <CloseAccountDialog
-    v-model="showCloseAccountDialog"
-    :user-identifier="userStore.user?.email ?? userStore.user?.phonenumber ?? null"
-    :loading="isClosingAccount"
-    @confirm="handleCloseAccount"
-  />
 </template>

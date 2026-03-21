@@ -7,6 +7,7 @@ import MessagingView from '@/features/messaging/views/Messaging.vue'
 import ConversationView from '@/features/messaging/views/ConversationView.vue'
 import UserHome from '@/features/userhome/views/UserHome.vue'
 import Settings from '@/features/settings/views/Settings.vue'
+import CloseAccountView from '@/features/settings/views/CloseAccountView.vue'
 import MyProfile from '@/features/myprofile/views/MyProfile.vue'
 import DatingWizardView from '@/features/myprofile/views/DatingWizard.vue'
 import DatingPrefsView from '@/features/myprofile/views/DatingPrefs.vue'
@@ -93,6 +94,12 @@ const routes: Array<RouteRecordRaw> = [
     name: 'Settings',
     component: Settings,
     meta: { requiresAuth: true },
+  },
+  {
+    path: '/settings/close-account',
+    name: 'CloseAccount',
+    component: CloseAccountView,
+    meta: { requiresAuth: true, hideNavbar: true },
   },
   {
     path: '/inbox',
