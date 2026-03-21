@@ -1,9 +1,7 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
 import { computed, ref, watch } from 'vue'
-import type { SpeechRecognition, SpeechRecognitionEvent } from '@/types/speechrecognition'
 
-import IconMic2 from '@/assets/icons/interface/mic-2.svg'
 import { sortLanguagesWithDefaultFirst } from '@/lib/i18n'
 import { useLanguages } from '@/features/shared/composables/useLanguages'
 import IntrotextLanguageChooser from './IntrotextLanguageChooser.vue'
