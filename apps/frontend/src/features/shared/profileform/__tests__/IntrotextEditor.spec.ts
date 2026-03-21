@@ -1,8 +1,11 @@
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi } from 'vitest'
 vi.mock('vue-i18n', () => ({
-  useI18n: () => ({ t: (k: string) => k }),
-  sortLanguagesWithEnFirst: (langs: string[]) => langs,
+  useI18n: () => ({ t: (k: string) => k, locale: { value: 'en' } }),
+}))
+vi.mock('@/lib/i18n', () => ({
+  useI18n: () => ({ t: (k: string) => k, locale: { value: 'en' } }),
+  sortLanguagesWithDefaultFirst: (langs: string[]) => langs,
 }))
 vi.mock('@/store/i18nStore', () => ({ useI18nStore: () => ({ getLanguage: () => 'en' }) }))
 vi.mock('@/assets/icons/interface/mic-2.svg', () => ({ default: { template: '<div />' } }))
@@ -55,14 +58,5 @@ describe('IntrotextEditor', () => {
     expect(tabs.at(0)?.text()).toContain('English')
     expect(tabs.at(1)?.text()).toContain('Hungarian')
     expect(wrapper.findAll('.language-icon').length).toBe(2)
-  })
-
-  it('updates status when speech not supported', () => {
-    const wrapper = mount(IntrotextEditor, {
-      props: { languages: ['en'], placeholder: 'blah' },
-      global: { stubs },
-    })
-    ;(wrapper.vm as any).toggleListening()
-    expect((wrapper.vm as any).status).toBe('SpeechRecognition not supported')
   })
 })

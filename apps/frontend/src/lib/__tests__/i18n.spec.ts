@@ -56,9 +56,9 @@ describe('i18n', () => {
     delete window.__APP_I18N__
   })
 
-  it('sorts languages with english first', async () => {
-    const { sortLanguagesWithEnFirst } = await import('../i18n')
-    expect(sortLanguagesWithEnFirst(['de', 'fr', 'en'])).toEqual(['en', 'de', 'fr'])
+  it('sorts languages with default language first', async () => {
+    const { sortLanguagesWithDefaultFirst } = await import('../i18n')
+    expect(sortLanguagesWithDefaultFirst(['de', 'fr', 'en'], 'en')).toEqual(['en', 'de', 'fr'])
   })
 
   it('appUseI18n installs plugin and sets up window.__APP_I18N__', async () => {
