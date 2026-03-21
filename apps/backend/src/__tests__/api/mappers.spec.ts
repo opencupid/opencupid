@@ -4,6 +4,7 @@ import {
   mapToLocalizedUpserts,
   mapProfileToPublic,
 } from '../../api/mappers/profile.mappers'
+import { DbTagToPublicTagTransform } from '../../api/mappers/tag.mappers'
 vi.mock('@/lib/appconfig', () => ({
   appConfig: {
     MEDIA_URL_BASE: '/user-content',
@@ -262,6 +263,39 @@ describe('mappers', () => {
 
       expect(result.introSocial).toBe('')
       expect(result.introDating).toBe('')
+    })
+  })
+
+  describe('DbTagToPublicTagTransform', () => {
+    const tagBase: any = {
+      id: 'tag1',
+      slug: 'composting',
+      translations: [
+        { locale: 'en', name: 'Composting' },
+        { locale: 'nl', name: 'Composteren' },
+      ],
+    }
+
+    it('returns translation for the requested locale', () => {
+      expect(DbTagToPublicTagTransform(tagBase, 'nl').name).toBe('Composteren')
+    })
+
+    it('falls back to English when requested locale has no translation', () => {
+      expect(DbTagToPublicTagTransform(tagBase, 'bg').name).toBe('Composting')
+    })
+
+    it('falls back to any non-empty translation when neither requested locale nor English exist', () => {
+      const tagNoEn: any = {
+        id: 'tag2',
+        slug: 'kert',
+        translations: [{ locale: 'hu', name: 'Kert' }],
+      }
+      expect(DbTagToPublicTagTransform(tagNoEn, 'bg').name).toBe('Kert')
+    })
+
+    it('returns empty string when tag has no translations', () => {
+      const tagEmpty: any = { id: 'tag3', slug: 'unknown', translations: [] }
+      expect(DbTagToPublicTagTransform(tagEmpty, 'en').name).toBe('')
     })
   })
 })
