@@ -36,12 +36,17 @@ describe('appConfig schema', () => {
     expect(() => appConfigSchema.parse({ API_BASE_URL: 42 })).toThrow()
   })
 
-  it('config.template.js contains all schema keys', () => {
+  it('config.template.js contains all required schema keys', () => {
     const templatePath = resolve(__dirname, '../../../config.template.js')
     const templateContent = readFileSync(templatePath, 'utf-8')
-    const schemaKeys = Object.keys(appConfigSchema.shape)
 
-    for (const key of schemaKeys) {
+    // Keys intentionally omitted from the prod config template — dev-only flags
+    // that default to false in the schema and are only consumed in dev builds.
+    const devOnlyKeys = new Set<string>(['DEV_AUTH_BYPASS_ENABLED'])
+
+    const requiredKeys = Object.keys(appConfigSchema.shape).filter((k) => !devOnlyKeys.has(k))
+
+    for (const key of requiredKeys) {
       expect(templateContent, `config.template.js is missing key: ${key}`).toContain(key)
     }
   })
