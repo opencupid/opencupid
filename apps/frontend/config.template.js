@@ -1,6 +1,7 @@
 // config.template.js — runtime configuration injected by docker-entrypoint.sh.
 // IMPORTANT: only expose values safe to be public in the browser.
-// envsubst substitutes ${VAR} placeholders at container startup.
+// envsubst substitutes all ${VAR} placeholders at container startup.
+// Adding a new var here is all that's needed — no other file to update.
 window.__APP_CONFIG__ = {
   API_BASE_URL: '${API_BASE_URL}',
   FRONTEND_URL: '${FRONTEND_URL}',
