@@ -28,15 +28,16 @@ const props = withDefaults(
 const langList = computed(() => (props.languages ? sortLanguagesWithDefaultFirst(props.languages, locale.value) : []))
 const labelledLangList = computed(() => getLanguageLabels(langList.value))
 
-// TODO: replace with a computed or composable — the ref + watcher is a workaround
-// for langList being empty at setup time (formData arrives async from the store).
-const currentLanguage = ref(langList.value[0] ?? '')
+const selectedLanguage = ref('')
 
-// Sync currentLanguage when langList populates after initial mount
-watch(langList, (langs) => {
-  if (!currentLanguage.value || !langs.includes(currentLanguage.value)) {
-    currentLanguage.value = langs[0] ?? ''
-  }
+const currentLanguage = computed({
+  get: () => {
+    if (langList.value.includes(selectedLanguage.value)) return selectedLanguage.value
+    return langList.value[0] ?? ''
+  },
+  set: (lang: string) => {
+    selectedLanguage.value = lang
+  },
 })
 
 watch(
