@@ -120,7 +120,7 @@ async function handleCloseAccount() {
 
     <CloseAccountDialog
       v-model="showCloseAccountDialog"
-      :user-email="userStore.user?.email ?? null"
+      :user-identifier="userStore.user?.email ?? userStore.user?.phonenumber ?? null"
       :loading="isClosingAccount"
       @confirm="handleCloseAccount"
     />
