@@ -205,8 +205,11 @@ export class UserService {
         await tx.profile.delete({ where: { id: profileId } })
       }
 
+      // TODO: ProfileImage has redundant userId (RESTRICT) + profileId (CASCADE) FKs — consolidate to Profile-only. (#1193)
+      // Profile deletion cascades profileId-linked images, but unattached images (profileId=NULL) survive.
+      await tx.profileImage.deleteMany({ where: { userId, profileId: null } })
+
       // Delete User — cascades: ConnectionRequest, PushSubscription
-      // Also clears remaining ProfileImage rows with userId FK
       await tx.user.delete({ where: { id: userId } })
     })
 
