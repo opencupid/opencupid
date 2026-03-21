@@ -29,10 +29,7 @@ const { age, gender, pronouns } = useDatingFields(profileRef, t)
         v-if="gender && gender != 'unspecified'"
         :gender
       />
-      <EditField
-        fieldName="gender"
-        :editComponent="GenderSelector"
-      >
+      <EditField fieldName="gender">
         <template #placeholder>
           <span class="d-inline-flex align-items-center editable-placeholder pe-4">
             <span v-if="gender !== 'unspecified'">({{ props.profile.gender }})</span>
@@ -44,6 +41,9 @@ const { age, gender, pronouns } = useDatingFields(profileRef, t)
             </span>
           </span>
         </template>
+        <template #editor="{ modelValue, onUpdate }">
+          <GenderSelector :modelValue="modelValue" @update:modelValue="onUpdate" />
+        </template>
       </EditField>
     </span>
 
@@ -53,16 +53,16 @@ const { age, gender, pronouns } = useDatingFields(profileRef, t)
     >
       <span>{{ pronouns }}</span>
     </span>
-    <EditField
-      fieldName="pronouns"
-      :editComponent="PronounSelector"
-    >
+    <EditField fieldName="pronouns">
       <template #placeholder>
         <span
           v-if="!pronouns || props.profile.pronouns === 'unspecified'"
           class="editable-placeholder"
           >{{ $t('profiles.pronouns_edit_label') }}
         </span>
+      </template>
+      <template #editor="{ modelValue, onUpdate }">
+        <PronounSelector :modelValue="modelValue" @update:modelValue="onUpdate" />
       </template>
     </EditField>
   </div>
