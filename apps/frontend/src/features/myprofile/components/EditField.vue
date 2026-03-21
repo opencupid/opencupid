@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { inject } from 'vue'
+import { computed, inject } from 'vue'
 import IconPencil2 from '@/assets/icons/interface/pencil-2.svg'
-import useEditFields from '@/features/shared/composables/useEditFields'
 import { type EditFieldProfileFormWithImages } from '@zod/profile/profile.form'
 import { type FieldEditState } from '../composables/types'
 
@@ -28,9 +27,12 @@ const handleButtonClick = () => {
   fieldEditState.fieldEditModal = true
 }
 
-const { getModelProxy } = useEditFields(editableModel)
-// @ts-expect-error // TypeScript doesn't know about the dynamic nature of field names
-const fieldProxy = getModelProxy(props.fieldName)
+const fieldProxy = computed({
+  get: () => editableModel[props.fieldName] as any,
+  set: (val: any) => {
+    ;(editableModel as any)[props.fieldName] = val
+  },
+})
 </script>
 
 <template>
