@@ -29,7 +29,6 @@ const { relationshipStatus, hasKids } = useDatingFields(profileRef, t)
       <span class="badge text-bg-dating">{{ relationshipStatus }}</span>
       <EditField
         fieldName="relationship"
-        :editComponent="RelationstatusSelector"
         class="ms-1"
       >
         <template #placeholder>
@@ -40,6 +39,9 @@ const { relationshipStatus, hasKids } = useDatingFields(profileRef, t)
             >{{ $t('profiles.relationship_unspecified_label') }}</span
           >
         </template>
+        <template #editor="{ modelValue, onUpdate }">
+          <RelationstatusSelector :modelValue="modelValue" @update:modelValue="onUpdate" />
+        </template>
       </EditField>
     </li>
     <li
@@ -49,7 +51,6 @@ const { relationshipStatus, hasKids } = useDatingFields(profileRef, t)
       <span class="badge text-bg-dating">{{ hasKids }}</span>
       <EditField
         fieldName="hasKids"
-        :editComponent="HaskidsSelector"
         class="ms-1"
       >
         <template #placeholder>
@@ -60,6 +61,9 @@ const { relationshipStatus, hasKids } = useDatingFields(profileRef, t)
           >
             {{ $t('profiles.haskids_unspecified_label') }}</span
           >
+        </template>
+        <template #editor="{ modelValue, onUpdate }">
+          <HaskidsSelector :modelValue="modelValue" @update:modelValue="onUpdate" />
         </template>
       </EditField>
     </li>
