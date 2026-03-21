@@ -183,12 +183,25 @@ export class UserService {
         })
         await tx.socialMatchFilter.deleteMany({ where: { profileId } })
 
-        // Delete conversations where this profile is the initiator (RESTRICT FK, no cascade)
-        await tx.conversation.deleteMany({ where: { initiatorProfileId: profileId } })
+        // Archive all conversations this profile participated in so they are
+        // hidden from the surviving participant's inbox. The conversation rows
+        // survive (profileAId/profileBId become NULL via SetNull cascade) so
+        // the surviving participant's ConversationParticipant is preserved and
+        // markConversationRead no longer produces a P2025 error.
+        const participantRows = await tx.conversationParticipant.findMany({
+          where: { profileId },
+          select: { conversationId: true },
+        })
+        if (participantRows.length > 0) {
+          await tx.conversation.updateMany({
+            where: { id: { in: participantRows.map((r) => r.conversationId) } },
+            data: { status: 'ARCHIVED' },
+          })
+        }
 
         // Delete Profile — cascades: LocalizedProfileField, ProfileImage (profileId FK),
-        // Conversation (profileA/profileB FKs), ConversationParticipant, Message,
-        // MessageAttachment, ProfileSessionLog, ProfileActivitySummary, Post, _BlockedProfiles
+        // ConversationParticipant (profileId FK), Message (senderId FK).
+        // profileAId/profileBId/initiatorProfileId on Conversation are set to NULL (SetNull).
         await tx.profile.delete({ where: { id: profileId } })
       }
 
