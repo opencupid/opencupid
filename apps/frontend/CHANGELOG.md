@@ -1,5 +1,17 @@
 # frontend
 
+## 0.39.0
+
+### Minor Changes
+
+- 5b651d2: Replace map pin with mini post-it marker on /posts map, fix per-instance icon cache collision between posts and profiles map (#1174)
+
+### Patch Changes
+
+- c82187c: feat: clean up ShareDialog — inline URL as code element, single-row layout, QR code full width, vertical centering
+- b2d67f9: feat: move posts view mode toggle to floating pill, freeing filter bar space
+- d3d9185: perf: inline fonts as base64 data URIs in CSS bundle to eliminate font swap substitution
+
 ## 0.38.0
 
 ### Minor Changes
