@@ -9,7 +9,10 @@ const { mockTx, mockPrisma, mockUnlink, mockRm } = vi.hoisted(() => {
     likedProfile: { deleteMany: vi.fn() },
     hiddenProfile: { deleteMany: vi.fn() },
     socialMatchFilter: { deleteMany: vi.fn() },
-    conversation: { deleteMany: vi.fn() },
+    conversationParticipant: {
+      findMany: vi.fn().mockResolvedValue([{ conversationId: 'c1' }]),
+    },
+    conversation: { updateMany: vi.fn(), deleteMany: vi.fn() },
     user: { delete: vi.fn() },
   }
 
@@ -67,8 +70,9 @@ describe('UserService.deleteAccount', () => {
     expect(mockTx.socialMatchFilter.deleteMany).toHaveBeenCalledWith({
       where: { profileId },
     })
-    expect(mockTx.conversation.deleteMany).toHaveBeenCalledWith({
-      where: { initiatorProfileId: profileId },
+    expect(mockTx.conversation.updateMany).toHaveBeenCalledWith({
+      where: { id: { in: ['c1'] } },
+      data: { status: 'ARCHIVED' },
     })
     expect(mockTx.profile.delete).toHaveBeenCalledWith({ where: { id: profileId } })
     expect(mockTx.user.delete).toHaveBeenCalledWith({ where: { id: userId } })

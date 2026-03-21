@@ -54,6 +54,16 @@ describe('MessageService.canSendMessageInConversation', () => {
     const convo: any = { status: 'BLOCKED', initiatorProfileId: 'x' }
     expect(canSendMessageInConversation(convo, 'p1')).toBe(false)
   })
+
+  it('rejects when archived (account deleted)', () => {
+    const convo: any = { status: 'ARCHIVED', initiatorProfileId: null }
+    expect(canSendMessageInConversation(convo, 'p1')).toBe(false)
+  })
+
+  it('rejects when initiated but initiatorProfileId is null (deleted account)', () => {
+    const convo: any = { status: 'INITIATED', initiatorProfileId: null }
+    expect(canSendMessageInConversation(convo, 'p1')).toBe(false)
+  })
 })
 
 describe('MessageService.getConversationSummary', () => {
