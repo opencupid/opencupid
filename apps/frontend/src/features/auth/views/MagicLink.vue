@@ -12,9 +12,14 @@ import ChevronLeftIcon from '@/assets/icons/arrows/arrow-single-left.svg'
 import IconMessage from '@/assets/icons/interface/message.svg'
 import IconMail from '@/assets/icons/interface/mail.svg'
 
-const DevAutoLogin = import.meta.env.DEV
-  ? defineAsyncComponent(() => import('../components/DevAutoLogin.vue'))
-  : null
+// Only show the dev auto-login shortcut when both conditions are true:
+// - Vite is running in dev mode (build-time guard — eliminates the component from prod bundles)
+// - DEV_AUTH_BYPASS_ENABLED=true in .env (runtime guard — backend /auth/dev/latest-token
+//   only exists when this flag is set, so showing the button without it would 404)
+const DevAutoLogin =
+  import.meta.env.DEV && __APP_CONFIG__.DEV_AUTH_BYPASS_ENABLED
+    ? defineAsyncComponent(() => import('../components/DevAutoLogin.vue'))
+    : null
 
 // Reactive variables
 const error = ref('' as string)

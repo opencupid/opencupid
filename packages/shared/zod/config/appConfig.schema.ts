@@ -13,6 +13,10 @@ export const appConfigSchema = z.object({
   VOICE_MESSAGE_MAX_DURATION: z.string().default('120'),
   MAPTILER_API_KEY: z.string().default(''),
   GEOCODING_ALLOWED_COUNTRIES: z.string().default(''),
+  DEV_AUTH_BYPASS_ENABLED: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
 })
 
 export type AppConfig = z.infer<typeof appConfigSchema>
