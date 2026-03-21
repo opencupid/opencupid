@@ -16,7 +16,7 @@ export function usePostsViewModel() {
 
   // State management
   const activeTab = ref<'all' | 'recent' | 'my'>('all')
-  const viewMode = ref('map')
+  const viewMode = ref('grid')
   const isDetailView = ref(false)
   const filterLocation = ref<LocationDTO>({ country: '' })
   const selectedPost = ref<PublicPostWithProfile | OwnerPost | null>(null)
