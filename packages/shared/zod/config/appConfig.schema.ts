@@ -11,7 +11,7 @@ export const appConfigSchema = z.object({
   SITE_NAME: z.string().default('OpenCupid'),
   JITSI_DOMAIN: z.string().default(''),
   VOICE_MESSAGE_MAX_DURATION: z.string().default('120'),
-  MAPTILER_API_KEY: z.string().default(''),
+  MAP_TILE_URL: z.string().default(''),
   GEOCODING_ALLOWED_COUNTRIES: z.string().default(''),
   DEV_AUTH_BYPASS_ENABLED: z
     .enum(['true', 'false'])

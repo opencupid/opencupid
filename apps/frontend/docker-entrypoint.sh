@@ -7,7 +7,7 @@ envsubst '${OG_TITLE} ${OG_DESCRIPTION} ${OG_IMAGE} ${OG_URL} ${OG_TYPE} ${SITE_
 mv /var/www/index.html.tmp /var/www/index.html
 
 # 2. Generate config.js from committed template
-envsubst '${API_BASE_URL} ${FRONTEND_URL} ${WS_BASE_URL} ${MEDIA_URL_BASE} ${NODE_ENV} ${VAPID_PUBLIC_KEY} ${SENTRY_DSN} ${SITE_NAME} ${JITSI_DOMAIN} ${VOICE_MESSAGE_MAX_DURATION} ${MAPTILER_API_KEY} ${GEOCODING_ALLOWED_COUNTRIES}' \
+envsubst '${API_BASE_URL} ${FRONTEND_URL} ${WS_BASE_URL} ${MEDIA_URL_BASE} ${NODE_ENV} ${VAPID_PUBLIC_KEY} ${SENTRY_DSN} ${SITE_NAME} ${JITSI_DOMAIN} ${VOICE_MESSAGE_MAX_DURATION} ${MAP_TILE_URL} ${GEOCODING_ALLOWED_COUNTRIES}' \
   < /var/www/config.template.js > /var/www/config.js
 
 exec nginx -g "daemon off;"
