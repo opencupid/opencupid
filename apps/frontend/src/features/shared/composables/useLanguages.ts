@@ -41,7 +41,10 @@ languages.registerLocale(lang)
 
 // Lazy-register other languages only when first needed
 async function ensureCountryLocale(locale: string) {
-  if (loadedLocales.has(locale)) return
+  if (loadedLocales.has(locale)) {
+    language.value = locale
+    return
+  }
 
   const loader = localeLoaders[locale]
   if (!loader) {
