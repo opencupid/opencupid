@@ -41,6 +41,7 @@ server {
       "worker-src 'self' blob:"
       .. "; media-src 'self'"
       .. "; frame-src https://*.${DOMAIN}"
+      .. "; img-src 'self' data: blob: ${CSP_ALLOWED_DOMAINS}"
       .. "; connect-src 'self' blob: wss://${DOMAIN} https://*.${DOMAIN} ${CSP_ALLOWED_DOMAINS}"
     )
   }
