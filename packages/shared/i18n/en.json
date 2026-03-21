@@ -431,6 +431,11 @@
   },
   "settings": {
     "calls_opt_in_hint": "You can disable this on a per-member basis as well. Uncheck this if you're not interested in using this at all.",
+    "close_account_button": "Close Account",
+    "close_account_confirm_label": "Type your email address to confirm",
+    "close_account_dialog_message": "This will permanently delete your account and all associated data. This action cannot be undone.",
+    "close_account_dialog_title": "Close Account",
+    "close_account_ok_button": "Delete My Account",
     "email_notifications_opt_in": "Email",
     "newsletter_opt_in": "Email newsletter",
     "newsletter_opt_in_hint": "Community updates, new features, that kind of stuff. You can unsubscribe any time.",
