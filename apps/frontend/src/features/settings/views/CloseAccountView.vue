@@ -6,8 +6,6 @@ import { useAuthStore } from '@/features/auth/stores/authStore'
 import { useUserStore } from '@/store/userStore'
 import { useBootstrap } from '@/lib/bootstrap'
 
-import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
-
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 import RouterBackButton from '@/features/shared/ui/RouterBackButton.vue'
 import SecondaryNav from '@/features/shared/ui/SecondaryNav.vue'
@@ -38,8 +36,8 @@ async function handleCloseAccount() {
   if (!isConfirmed.value) return
   isDeleting.value = true
   const result = await userStore.deleteAccount()
+  isDeleting.value = false
   if (result.success) {
-    isDeleting.value = false
     authStore.logout()
     router.push({ name: 'Login' })
   }
