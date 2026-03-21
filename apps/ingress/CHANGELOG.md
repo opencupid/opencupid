@@ -1,5 +1,11 @@
 # @opencupid/ingress
 
+## 0.39.2
+
+### Patch Changes
+
+- c47e3f3: fix: migrate map tiles from deprecated HERE legacy API to HERE Maps v3 (#1182)
+
 ## 0.39.1
 
 ## 0.39.0

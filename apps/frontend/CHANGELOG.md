@@ -1,5 +1,12 @@
 # frontend
 
+## 0.39.2
+
+### Patch Changes
+
+- 4b5059b: Fix location search dropdown not showing results due to GEOCODING_ALLOWED_COUNTRIES and FRONTEND_URL not being substituted in docker-entrypoint.sh
+- c47e3f3: fix: migrate map tiles from deprecated HERE legacy API to HERE Maps v3 (#1182)
+
 ## 0.39.1
 
 ### Patch Changes
