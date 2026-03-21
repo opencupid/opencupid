@@ -2,11 +2,13 @@
 import { computed, onMounted, ref } from 'vue'
 
 import type { ProfileOptInSettings } from '@zod/profile/profile.dto'
+import type { DeleteAccountResponse } from '@zod/apiResponse.dto'
 
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { useUserStore } from '@/store/userStore'
 import { usePwaInstall } from '@/features/app/composables/usePwaInstall'
+import { api, safeApiCall } from '@/lib/api'
 
 import IconLogout from '@/assets/icons/interface/logout.svg'
 import IconGlobe from '@/assets/icons/interface/globe.svg'
@@ -19,6 +21,7 @@ import LanguageSelectorDropdown from '@/features/shared/ui/LanguageSelectorDropd
 import OptInCheckboxes from './OptInCheckboxes.vue'
 import VersionInfo from './VersionInfo.vue'
 import PwaInstallButton from '@/features/app/components/PwaInstallButton.vue'
+import CloseAccountDialog from './CloseAccountDialog.vue'
 
 const authStore = useAuthStore()
 const ownerProfileStore = useOwnerProfileStore()
@@ -27,6 +30,9 @@ const userStore = useUserStore()
 usePwaInstall()
 
 const isLoading = ref(true)
+const showCloseAccountDialog = ref(false)
+const isClosingAccount = ref(false)
+
 const optInModel = computed<ProfileOptInSettings>({
   get() {
     return ownerProfileStore.optInSettings
@@ -48,6 +54,17 @@ onMounted(async () => {
 
 function handleLogout() {
   authStore.logout()
+}
+
+async function handleCloseAccount() {
+  isClosingAccount.value = true
+  try {
+    await safeApiCall(() => api.delete<DeleteAccountResponse>('/users/me'))
+    authStore.logout()
+  } finally {
+    isClosingAccount.value = false
+    showCloseAccountDialog.value = false
+  }
 }
 </script>
 
@@ -84,8 +101,28 @@ function handleLogout() {
         {{ $t('authentication.logout') }}
       </BButton>
     </fieldset>
+
+    <hr class="mb-md-4" />
+
+    <fieldset>
+      <BButton
+        variant="outline-danger"
+        size="sm"
+        @click="showCloseAccountDialog = true"
+      >
+        {{ $t('settings.close_account_button') }}
+      </BButton>
+    </fieldset>
+
     <div class="mt-auto pt-3 position-absolute bottom-0 start-0 w-100 pb-2">
       <VersionInfo />
     </div>
+
+    <CloseAccountDialog
+      v-model="showCloseAccountDialog"
+      :user-email="userStore.user?.email ?? null"
+      :loading="isClosingAccount"
+      @confirm="handleCloseAccount"
+    />
   </div>
 </template>
