@@ -1,3 +1,4 @@
+import { ref } from 'vue'
 import { bus } from '@/lib/bus'
 import { type MultiselectOption } from '@/types/multiselect'
 import languages from '@cospired/i18n-iso-languages'
@@ -19,7 +20,7 @@ import languages from '@cospired/i18n-iso-languages'
 //   }
 // }
 
-let language = 'en'
+const language = ref('en')
 
 const localeLoaders: Record<string, () => Promise<any>> = {
   de: () => import('@cospired/i18n-iso-languages/langs/de.json'),
@@ -40,7 +41,10 @@ languages.registerLocale(lang)
 
 // Lazy-register other languages only when first needed
 async function ensureCountryLocale(locale: string) {
-  if (loadedLocales.has(locale)) return
+  if (loadedLocales.has(locale)) {
+    language.value = locale
+    return
+  }
 
   const loader = localeLoaders[locale]
   if (!loader) {
@@ -50,19 +54,19 @@ async function ensureCountryLocale(locale: string) {
   const mod = await loader()
   languages.registerLocale(mod.default)
   loadedLocales.add(locale)
-  language = locale
+  language.value = locale
 }
 
 export async function initialize(locale: string) {
   await ensureCountryLocale(locale)
-  bus.on('language:changed', async ({ language }) => {
-    await useLanguages().ensureCountryLocale(language)
+  bus.on('language:changed', async ({ language: lang }) => {
+    await useLanguages().ensureCountryLocale(lang)
   })
 }
 
 export function useLanguages() {
   const getLanguageSelectorOptions = (): MultiselectOption[] => {
-    const langs = languages.getNames(language)
+    const langs = languages.getNames(language.value)
     const englishLangs = languages.getNames('en')
     return Object.keys(langs).map((code) => ({
       value: code,
@@ -71,7 +75,7 @@ export function useLanguages() {
   }
 
   const getLanguageLabels = (codes: string[]) => {
-    const langs = languages.getNames(language)
+    const langs = languages.getNames(language.value)
     const englishLangs = languages.getNames('en')
     return codes.map((code) => ({
       value: code,
