@@ -21,9 +21,7 @@ const profileStore = useOwnerProfileStore()
 const ownerProfile = computed(() => profileStore.profile)
 provide('ownerProfile', ownerProfile)
 
-const defaultLocation = computed(() =>
-  LocationSchema.parse(ownerProfile.value?.location ?? {})
-)
+const defaultLocation = computed(() => LocationSchema.parse(ownerProfile.value?.location ?? {}))
 
 const postId = computed(() => route.params.postId as string | undefined)
 const isEdit = computed(() => !!postId.value)
@@ -56,7 +54,6 @@ function handleCancel() {
 function handleSaved() {
   router.push({ name: 'Posts' })
 }
-
 </script>
 
 <template>
@@ -68,9 +65,7 @@ function handleSaved() {
           <span v-else>{{ $t('posts.create_title') }}</span>
         </template>
       </SecondaryNav>
-      <div
-        class="container py-md-3"
-      >
+      <div class="py-md-3 flex-grow-1 d-flex flex-column justify-content-center">
         <div
           v-if="isLoading"
           class="text-center py-5"

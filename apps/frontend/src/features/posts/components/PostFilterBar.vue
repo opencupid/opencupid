@@ -40,7 +40,7 @@ function onTypeChange(value: unknown) {
   >
     <div class="row g-2">
       <!-- Location column -->
-      <div class="col-12 col-md-6">
+      <div class="col-12">
         <LocationFilterInput
           v-model="location"
           :viewer-profile="viewerProfile"

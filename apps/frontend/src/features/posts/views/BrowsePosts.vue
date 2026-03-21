@@ -78,7 +78,7 @@ const mapPois = computed<MapPoi[]>(() =>
     .map((p) => ({
       id: p.id,
       title: p.postedBy
-        ? `${p.postedBy.publicName}: ${p.content.substring(0, 50)}...`
+        ? `${p.content.substring(0, 50)}...`
         : p.content.substring(0, 50),
       location: { lat: p.location!.lat!, lon: p.location!.lon! },
       image: p.postedBy?.profileImages?.[0],
@@ -243,12 +243,17 @@ onActivated(() => {
 <style scoped lang="scss">
 @import 'bootstrap/scss/functions';
 @import 'bootstrap/scss/variables';
+@import 'bootstrap/scss/mixins';
 @import '@/css/app-vars.scss';
 
 .view-mode-pill {
   position: fixed;
   bottom: calc($navbar-height + 1rem);
   left: 50%;
+
+  @include media-breakpoint-up(sm) {
+    bottom: 2rem;
+  }
   transform: translateX(-50%);
   z-index: 1030;
   background: white;
