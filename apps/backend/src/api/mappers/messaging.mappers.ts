@@ -4,6 +4,7 @@ import type {
   MessageAttachmentDTO,
   MessageDTO,
 } from '@zod/messaging/messaging.dto'
+import type { Conversation } from '@prisma/client'
 import { mapProfileSummary } from './profile.mappers'
 import {
   canSendMessageInConversation,
@@ -11,11 +12,17 @@ import {
 } from '../../services/messaging.service'
 import { mediaUrl } from '../../lib/media'
 
-function mapConversationMeta(c: { id: string; updatedAt: Date; createdAt: Date }) {
+function mapConversationMeta(c: {
+  id: string
+  updatedAt: Date
+  createdAt: Date
+  status: Conversation['status']
+}) {
   return {
     id: c.id,
     updatedAt: c.updatedAt,
     createdAt: c.createdAt,
+    status: c.status,
   }
 }
 

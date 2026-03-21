@@ -98,6 +98,7 @@ const ConversationSummarySchema = ConversationParticipantSchema.pick({
     id: true,
     updatedAt: true,
     createdAt: true,
+    status: true,
   }),
   canReply: z.boolean().default(false),
   isCallable: z.boolean().default(true),

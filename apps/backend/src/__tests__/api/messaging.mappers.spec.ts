@@ -34,6 +34,7 @@ const participant: any = {
     id: 'c1',
     updatedAt: new Date(),
     createdAt: new Date(),
+    status: 'ACCEPTED',
     participants: [
       {
         profileId: 'p1',
@@ -92,6 +93,11 @@ describe('messaging mappers', () => {
     const summary = mapConversationParticipantToSummary(participant, 'p1')
     expect(summary.partnerProfile.publicName).toBe('Them')
     expect(summary.lastMessage?.isMine).toBe(true)
+  })
+
+  it('passes conversation status through to the summary', () => {
+    const summary = mapConversationParticipantToSummary(participant, 'p1')
+    expect(summary.conversation.status).toBe('ACCEPTED')
   })
 
   describe('isCallable mapping', () => {
@@ -177,6 +183,7 @@ describe('messaging mappers', () => {
         ...participant,
         conversation: {
           ...participant.conversation,
+          status: 'ARCHIVED',
           participants: [
             {
               profileId: 'p1',
@@ -192,6 +199,7 @@ describe('messaging mappers', () => {
       expect(summary.partnerProfile.profileImages).toEqual([])
       expect(summary.isCallable).toBe(false)
       expect(summary.canReply).toBe(false)
+      expect(summary.conversation.status).toBe('ARCHIVED')
     })
   })
 
