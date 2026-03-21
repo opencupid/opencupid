@@ -1,5 +1,17 @@
 # frontend
 
+## 0.40.0
+
+### Minor Changes
+
+- 5671563: Extract IntrotextLanguageChooser component and sort languages by current GUI locale
+
+### Patch Changes
+
+- 6aacc26: Fix language labels rendering in English instead of GUI locale on first mount
+- 186042e: Remove explicit envsubst variable list so new config vars no longer need manual sync (#1181)
+- 64ccee5: Fix TagSelector so parent can override the taggable prop via attrs
+
 ## 0.39.3
 
 ### Patch Changes

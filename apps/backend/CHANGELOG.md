@@ -1,5 +1,11 @@
 # backend
 
+## 0.40.0
+
+### Patch Changes
+
+- e7b520e: Fix empty tag names when previewing profile in an unsupported locale (#1191)
+
 ## 0.39.3
 
 ## 0.39.2

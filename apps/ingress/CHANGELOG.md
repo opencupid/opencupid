@@ -1,5 +1,7 @@
 # @opencupid/ingress
 
+## 0.40.0
+
 ## 0.39.3
 
 ### Patch Changes
