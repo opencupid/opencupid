@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { type EditFieldProfileFormWithImages } from '@zod/profile/profile.form'
 
-import useEditFields from '@/features/shared/composables/useEditFields'
+import type { GenderPickerModel } from '@/features/shared/profileform/GenderPronounSelector.vue'
 import GenderPronounSelector from '@/features/shared/profileform/GenderPronounSelector.vue'
 import RelationstatusSelector from '@/features/shared/profileform/RelationstatusSelector.vue'
 import HaskidsSelector from '@/features/shared/profileform/HaskidsSelector.vue'
@@ -10,9 +10,13 @@ import IntrotextEditor from '@/features/shared/profileform/IntrotextEditor.vue'
 
 const formData = defineModel<EditFieldProfileFormWithImages>({ required: true })
 
-const { genderPronounsModel, relationshipModel, hasKidsModel, introDatingModel } = useEditFields(
-  formData.value
-)
+const genderPronounsModel = computed<GenderPickerModel>({
+  get: () => ({ gender: formData.value.gender, pronouns: formData.value.pronouns }),
+  set: (val) => {
+    formData.value.gender = val.gender
+    formData.value.pronouns = val.pronouns
+  },
+})
 
 const birthYear = computed(() =>
   formData.value.birthday ? new Date(formData.value.birthday).getFullYear() : null
@@ -28,15 +32,15 @@ const birthYear = computed(() =>
     <div>
       <legend class="fs-6">{{ $t('onboarding.relationship_title') }}</legend>
       <div class="mb-3">
-        <RelationstatusSelector v-model="relationshipModel" />
+        <RelationstatusSelector v-model="formData.relationship" />
       </div>
-      <HaskidsSelector v-model="hasKidsModel" />
+      <HaskidsSelector v-model="formData.hasKids" />
     </div>
 
     <div>
       <legend class="fs-6">{{ $t('onboarding.dating_intro_title') }}</legend>
       <IntrotextEditor
-        v-model="introDatingModel"
+        v-model="formData.introDatingLocalized"
         :languages="formData.languages"
         :placeholder="$t('onboarding.dating_intro_placeholder')"
       />
