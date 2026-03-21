@@ -18,6 +18,7 @@ describe('appConfig schema', () => {
       JITSI_DOMAIN: '',
       VOICE_MESSAGE_MAX_DURATION: '120',
       MAP_TILE_URL: '',
+      MAP_ATTRIBUTION: '',
     })
   })
 

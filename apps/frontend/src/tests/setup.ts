@@ -24,6 +24,7 @@ import { appConfigSchema } from '@zod/config/appConfig.schema'
   JITSI_DOMAIN: '',
   VOICE_MESSAGE_MAX_DURATION: '120',
   MAP_TILE_URL: '',
+  MAP_ATTRIBUTION: '',
 })
 import packageJson from '../../package.json'
 ;(globalThis as any).__APP_VERSION__ = packageJson.version

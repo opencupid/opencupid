@@ -179,9 +179,15 @@ function initBaseLayer(map: LMap): void {
     if (map) lastStableZoom = map.getZoom()
   })
   map.on('moveend', emitBounds)
-  const tileLayer = L.tileLayer(__APP_CONFIG__.MAP_TILE_URL, {
+  const tileUrl = __APP_CONFIG__.MAP_TILE_URL
+  if (!tileUrl) {
+    console.error('[OsmPoiMap] MAP_TILE_URL is not configured. Map tiles will not load.')
+    onMapReady()
+    return
+  }
+  const tileLayer = L.tileLayer(tileUrl, {
     maxZoom: MAP_MAX_ZOOM,
-    attribution: '',
+    attribution: __APP_CONFIG__.MAP_ATTRIBUTION,
   }).addTo(map)
   tileLayer.once('load', () => onMapReady())
 }

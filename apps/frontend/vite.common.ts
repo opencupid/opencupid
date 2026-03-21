@@ -91,6 +91,7 @@ export const runtimeConfigPlugin = (mode: string): Plugin => {
     JITSI_DOMAIN: env.JITSI_DOMAIN ?? '',
     VOICE_MESSAGE_MAX_DURATION: Number(env.VOICE_MESSAGE_MAX_DURATION) || 120,
     MAP_TILE_URL: env.MAP_TILE_URL ?? '',
+    MAP_ATTRIBUTION: env.MAP_ATTRIBUTION ?? '',
   })};
 `
 

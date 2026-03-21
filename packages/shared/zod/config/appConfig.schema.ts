@@ -12,6 +12,7 @@ export const appConfigSchema = z.object({
   JITSI_DOMAIN: z.string().default(''),
   VOICE_MESSAGE_MAX_DURATION: z.string().default('120'),
   MAP_TILE_URL: z.string().default(''),
+  MAP_ATTRIBUTION: z.string().default(''),
   GEOCODING_ALLOWED_COUNTRIES: z.string().default(''),
   DEV_AUTH_BYPASS_ENABLED: z
     .enum(['true', 'false'])
