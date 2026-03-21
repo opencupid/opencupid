@@ -155,6 +155,8 @@
     "you_received_like": "You received a like!"
   },
   "messaging": {
+    "archived_conversation_name": "Deleted Account",
+    "archived_conversation_subtitle": "This conversation is no longer available",
     "block_member": "Block member",
     "block_report_unmatch": "Block/report/unmatch",
     "block_user_ok": "Block {name}",
