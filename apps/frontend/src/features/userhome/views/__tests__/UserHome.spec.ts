@@ -129,22 +129,42 @@ describe('UserHome onboarding redirect', () => {
        *    KeepAlive reactivates the cached instance — onActivated fires, NOT onMounted.
        *
        * Without the onActivated check, the redirect was silently skipped.
+       *
+       * We use a real <KeepAlive> + dynamic component wrapper so onActivated fires
+       * through the public Vue lifecycle rather than via internal instance fields.
        */
+      const { defineComponent, shallowRef, KeepAlive, h } = await import('vue')
+
+      const show = shallowRef(true)
+      const Wrapper = defineComponent({
+        setup() {
+          return () =>
+            h(KeepAlive, null, {
+              default: () => (show.value ? h(UserHome) : null),
+            })
+        },
+      })
 
       // Step 1: mount with an onboarded user — no redirect expected
       mockProfileRef.value = { isOnboarded: true }
-      const wrapper = mountUserHome()
+      const wrapper = mount(Wrapper, {
+        global: {
+          plugins: [createPinia()],
+          components: { BContainer, BRow, BCol, BButton },
+          stubs: { teleport: true },
+        },
+      })
       await flush()
       expect(mockPush).not.toHaveBeenCalledWith({ name: 'Onboarding' })
       mockPush.mockClear()
 
-      // Step 2: switch to a non-onboarded profile (simulates new-user login)
-      // then fire the onActivated hooks the way KeepAlive does
+      // Step 2: deactivate (hide the component — KeepAlive caches it)
+      show.value = false
+      await wrapper.vm.$nextTick()
+
+      // Step 3: reactivate with a non-onboarded profile (simulates new-user login)
       mockProfileRef.value = { isOnboarded: false }
-      const activatedHooks = (wrapper.vm.$ as any).a // Vue 3 internal: activated hooks array
-      if (activatedHooks) {
-        for (const hook of activatedHooks) hook()
-      }
+      show.value = true
       await wrapper.vm.$nextTick()
 
       expect(mockPush).toHaveBeenCalledWith({ name: 'Onboarding' })

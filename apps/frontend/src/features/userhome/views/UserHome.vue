@@ -44,6 +44,10 @@ function checkOnboarding(): boolean {
 // registered user lands on /home after magic-link login while a previous
 // (onboarded) component instance is still cached. Without this hook, onMounted
 // would NOT re-run and the redirect check would be silently skipped.
+//
+// On initial mount, onActivated fires before onMounted's await bootstrap()
+// resolves, so viewerProfile is still null — checkOnboarding() returns early
+// safely. The real redirect on cold-start is handled by onMounted below.
 onActivated(() => {
   checkOnboarding()
 })
