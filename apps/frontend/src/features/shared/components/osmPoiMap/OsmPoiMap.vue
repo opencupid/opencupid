@@ -178,12 +178,10 @@ function initBaseLayer(map: LMap): void {
   map.on('zoomend', () => {
     if (map) lastStableZoom = map.getZoom()
   })
-
   map.on('moveend', emitBounds)
-
   const tileLayer = L.tileLayer(
-    `https://api.maptiler.com/maps/dataviz/{z}/{x}/{y}.png?key=${__APP_CONFIG__.MAPTILER_API_KEY}`,
-    { maxZoom: 14, attribution: '© MapTiler © OpenStreetMap contributors' }
+    `https://maps.hereapi.com/v3/base/mc/{z}/{x}/{y}/png?apiKey=${__APP_CONFIG__.MAPTILER_API_KEY}&style=lite.day&size=512`,
+    { maxZoom: 20, attribution: '© HERE' }
   ).addTo(map)
   tileLayer.once('load', () => onMapReady())
 }
@@ -437,11 +435,15 @@ function highlightSelected() {
     const item = itemsById.get(id)
     if (!item) continue
     marker.setIcon(
-      hydratePoiIcon(props.iconComponent, {
-        image: item.image,
-        isSelected: id === props.selectedId,
-        isHighlighted: item.highlighted ?? false,
-      }, iconCache)
+      hydratePoiIcon(
+        props.iconComponent,
+        {
+          image: item.image,
+          isSelected: id === props.selectedId,
+          isHighlighted: item.highlighted ?? false,
+        },
+        iconCache
+      )
     )
   }
   if (props.selectedId != null) {

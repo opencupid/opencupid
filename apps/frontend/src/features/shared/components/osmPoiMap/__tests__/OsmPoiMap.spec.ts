@@ -371,8 +371,8 @@ describe('OsmPoiMap', () => {
 
     expect(L.tileLayer).toHaveBeenCalledOnce()
     const [url] = (L.tileLayer as any).mock.calls[0]
-    expect(url).toContain('maptiler.com/maps/dataviz')
-    expect(url).toContain('{z}/{x}/{y}.png')
+    expect(url).toContain('maps.hereapi.com/v3/base/mc')
+    expect(url).toContain('{z}/{x}/{y}/png')
   })
 
   it('calls popup.update() on nextTick after popupopen to re-measure teleported content', async () => {
