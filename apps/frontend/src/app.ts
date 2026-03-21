@@ -2,6 +2,7 @@
 import registerToast from './lib/toast'
 import { useBootstrap } from './lib/bootstrap'
 import { appUseI18n } from './lib/i18n'
+import { useAuthStore } from './features/auth/stores/authStore'
 
 // Register push-only service worker
 if ('serviceWorker' in navigator) {
@@ -67,6 +68,7 @@ export async function bootstrapApp() {
 
   registerToast(app)
 
+  useAuthStore().initialize()
   useBootstrap().bootstrap()
 
   appUseI18n(app)

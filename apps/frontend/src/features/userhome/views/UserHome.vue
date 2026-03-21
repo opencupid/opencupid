@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
-import { computed, onMounted, provide, ref, toRef } from 'vue'
+import { computed, onActivated, onMounted, provide, ref, toRef } from 'vue'
 import { useRouter } from 'vue-router'
 import { useBreakpoints } from '@vueuse/core'
 import { useBootstrap } from '@/lib/bootstrap'
@@ -30,11 +30,32 @@ const visibleProfiles = computed(() => {
   return isMdOrSmaller.value ? shuffled.slice(0, 6) : shuffled
 })
 
+// Redirect non-onboarded users to the onboarding flow.
+// Returns true if a redirect was triggered (caller should bail out early).
+function checkOnboarding(): boolean {
+  if (viewerProfile.value && !viewerProfile.value.isOnboarded) {
+    router.push({ name: 'Onboarding' })
+    return true
+  }
+  return false
+}
+
+// onActivated fires on every <KeepAlive> re-entry — including when a freshly
+// registered user lands on /home after magic-link login while a previous
+// (onboarded) component instance is still cached. Without this hook, onMounted
+// would NOT re-run and the redirect check would be silently skipped.
+onActivated(() => {
+  checkOnboarding()
+})
+
 onMounted(async () => {
+  // bootstrap() is idempotent — if already resolved (cold-start) it returns
+  // instantly; if still in-flight (hot-start via verifyToken) it joins the
+  // existing promise. Either way, viewerProfile is populated by the time we
+  // reach checkOnboarding() below.
   await useBootstrap().bootstrap()
 
-  if (viewerProfile.value && !viewerProfile.value?.isOnboarded) {
-    router.push({ name: 'Onboarding' })
+  if (checkOnboarding()) {
     return
   }
 
