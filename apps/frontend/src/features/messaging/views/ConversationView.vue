@@ -50,7 +50,7 @@ function handleProfileSelect(profileId: string) {
 
 <template>
   <main class="conversation-view h-100">
-    <MiddleColumn class="h-100">
+    <MiddleColumn class="h-100 p-0 py-md-4">
       <ConversationDetail
         :loading="isLoading"
         :conversation="activeConversation"

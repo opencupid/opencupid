@@ -18,7 +18,7 @@ const haveConversations = computed(() => props.conversations.length > 0)
 </script>
 
 <template>
-  <div class="mb-3 px-3">
+  <div class="mb-3">
     <p
       v-if="haveConversations"
       class="text-center"
