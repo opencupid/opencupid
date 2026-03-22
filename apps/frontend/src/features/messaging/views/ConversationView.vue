@@ -49,7 +49,7 @@ function handleProfileSelect(profileId: string) {
 </script>
 
 <template>
-  <main class="conversation-view w-100 h-100">
+  <main class="conversation-view h-100">
     <MiddleColumn class="h-100">
       <ConversationDetail
         :loading="isLoading"

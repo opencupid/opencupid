@@ -34,12 +34,8 @@ async function handleCancel() {
 </script>
 
 <template>
-  <main class="w-100 position-relative overflow-hidden d-flex flex-column">
-    <BContainer
-      fluid
-      class="flex-grow-1 overflow-hidden"
-    >
-      <MiddleColumn class="h-100 d-flex flex-column">
+  <main class="d-flex flex-column">
+    <MiddleColumn class="h-100 d-flex flex-column flex-grow-1 overflow-hidden">
         <SecondaryNav>
           <template #items-left>
             <!-- <RouterBackButton /> -->
@@ -83,7 +79,6 @@ async function handleCancel() {
           </BTabs>
         </section>
       </MiddleColumn>
-    </BContainer>
     <div
       class="sticky-bottom shadow shadow-lg bg-light-subtle py-3 d-flex justify-content-center gap-2"
     >

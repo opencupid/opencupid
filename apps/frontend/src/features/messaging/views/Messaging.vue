@@ -43,7 +43,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main class="w-100 h-100 d-flex flex-column position-relative">
+  <main class="h-100 d-flex flex-column">
     <MiddleColumn class="h-100 d-flex flex-column overflow-hidden">
       <div
         v-if="showEmptyState && isInitialized"

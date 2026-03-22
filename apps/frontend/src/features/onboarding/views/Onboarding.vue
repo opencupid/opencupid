@@ -68,7 +68,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main class="container">
+  <main>
     <MiddleColumn class="d-flex flex-column align-items-center justify-content-center h-100">
       <OnboardWizard
         v-model="profileForm"

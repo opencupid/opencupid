@@ -2,7 +2,7 @@
 </script>
 
 <template>
-  <main class="w-100 position-relative overflow-hidden">
+  <main>
     <div class="list-view d-flex flex-column justify-content-start">
       <BContainer class="my-2">
         <div class="subnav-bar d-flex align-items-center gap-2 px-2 py-1 rounded">
@@ -28,10 +28,6 @@
 
 .list-view {
   height: calc(100vh - $navbar-height);
-}
-
-main {
-  width: 100%;
 }
 
 .subnav-bar {

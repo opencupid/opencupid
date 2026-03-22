@@ -69,7 +69,6 @@ provide('viewerProfile', toRef(formData))
 
 <template>
   <main
-    class="w-100 position-relative overflow-hidden"
     :class="[viewState.currentScope, { editable: viewState.isEditable }]"
   >
     <EditableFields

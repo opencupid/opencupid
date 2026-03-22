@@ -56,7 +56,7 @@ function handleClick() {
 </script>
 
 <template>
-  <main class="w-100 position-relative overflow-hidden container-fluid">
+  <main>
     <MiddleColumn class="h-100 d-flex flex-column">
       <div class="d-flex flex-column justify-content-center align-items-center h-100 w-100">
         <SecondaryNav>
