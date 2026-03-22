@@ -32,6 +32,7 @@
     "welcome_message": "Welcome to {{siteName}}!\nI am Mookie, your host.\nThis is a place for us to connect, meet new people, and find like-minded souls. I hope you enjoy your stay here.\nHappy connecting!\n- Mookie"
   },
   "notifications": {
-    "voice_message_sent": "Sent a voice message"
+    "voice_message_sent": "Sent a voice message",
+    "image_message_sent": "Sent an image"
   }
 }

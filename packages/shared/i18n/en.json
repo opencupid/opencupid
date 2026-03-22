@@ -200,7 +200,10 @@
       "unsupported_browser": "Voice recording is not supported in this browser.",
       "voice_message_notification": "sent you a voice message",
       "voice_message_preview": "Voice message"
-    }
+    },
+    "attach_image_button": "Attach image",
+    "image_message_alt": "Image message",
+    "image_upload_error": "Failed to upload image. Please try again."
   },
   "nav": {
     "browse": "Buddies",
@@ -484,8 +487,8 @@
       "title": "We've hit a snag here."
     },
     "install_banner": {
-      "install": "Install",
-      "message": "Install this app on your device."
+      "message": "Install this app on your device.",
+      "install": "Install"
     },
     "loading": {
       "loading": "Loading..."
@@ -525,10 +528,6 @@
     "update_banner": {
       "message": "An update is available.",
       "reload": "Reload"
-    },
-    "install_banner": {
-      "message": "Install this app on your device.",
-      "install": "Install"
     }
   }
 }

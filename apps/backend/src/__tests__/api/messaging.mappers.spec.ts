@@ -172,7 +172,7 @@ describe('messaging mappers', () => {
   })
 
   describe('mapAttachmentDTO', () => {
-    it('returns clean URL for voice attachments (no query params)', () => {
+    it('returns plain URL for non-image attachments (voice)', () => {
       const attachment: any = {
         id: 'a1',
         filePath: 'voice/p1/msg-abc.webm',
@@ -186,18 +186,18 @@ describe('messaging mappers', () => {
       expect(dto.fullUrl).toBeUndefined()
     })
 
-    it('returns clean URL for image attachments (no query params)', () => {
+    it('returns inline and full URLs for image/webp attachments', () => {
       const attachment: any = {
         id: 'a2',
-        filePath: 'images/cmXXX/abc-card.webp',
+        filePath: 'message-images/p1/slug123',
         mimeType: 'image/webp',
         fileSize: 2048,
         duration: null,
         createdAt: new Date(),
       }
       const dto = mapAttachmentDTO(attachment)
-      expect(dto.url).toBe('/user-content/images/cmXXX/abc-card.webp-inline.webp')
-      expect(dto.fullUrl).toBe('/user-content/images/cmXXX/abc-card.webp-full.webp')
+      expect(dto.url).toBe('/user-content/message-images/p1/slug123-inline.webp')
+      expect(dto.fullUrl).toBe('/user-content/message-images/p1/slug123-full.webp')
     })
 
     it('returns inline and full URLs for message image attachments', () => {

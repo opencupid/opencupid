@@ -282,6 +282,30 @@ export const useMessageStore = defineStore('message', {
       }
     },
 
+    async sendImageMessage(
+      recipientProfileId: string,
+      imageFile: File
+    ): Promise<StoreResponse<MessageDTO> | StoreError> {
+      try {
+        this.isSending = true
+        this.error = null
+
+        const formData = new FormData()
+        formData.append('file', imageFile, imageFile.name)
+        formData.append('profileId', recipientProfileId)
+
+        const res = await safeApiCall(() =>
+          api.post<SendMessageResponse>('/messages/image', formData)
+        )
+        return this.handleSendResponse(res)
+      } catch (error: any) {
+        this.error = storeError(error)
+        return this.error
+      } finally {
+        this.isSending = false
+      }
+    },
+
     async setActiveConversation(convo: ConversationSummary | null) {
       this.activeConversation = convo
       if (this.activeConversation) {

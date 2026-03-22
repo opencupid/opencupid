@@ -2,6 +2,7 @@
 import { type MessageDTO } from '@zod/messaging/messaging.dto'
 import { nextTick, ref, watch } from 'vue'
 import VoiceMessage from './VoiceMessage.vue'
+import ImageMessage from './ImageMessage.vue'
 import { renderMessage } from '@/lib/renderMessage'
 
 const props = defineProps<{
@@ -101,6 +102,13 @@ const handleScroll = () => {
       <!-- Voice message -->
       <VoiceMessage
         v-if="msg.messageType === 'audio/voice' && msg.attachment"
+        :attachment="msg.attachment"
+        :is-mine="msg.isMine"
+      />
+
+      <!-- Image message -->
+      <ImageMessage
+        v-else-if="msg.messageType === 'image/webp' && msg.attachment"
         :attachment="msg.attachment"
         :is-mine="msg.isMine"
       />

@@ -13,6 +13,9 @@ vi.mock('@/features/shared/ui/StoreErrorOverlay.vue', () => ({ default: { templa
 vi.mock('@/assets/icons/interface/call.svg', () => ({
   default: { template: '<span data-testid="icon-call" />' },
 }))
+vi.mock('@/assets/icons/interface/photo.svg', () => ({
+  default: { template: '<span data-testid="icon-photo" />' },
+}))
 vi.mock('extendable-media-recorder', () => ({
   MediaRecorder: vi.fn(),
   register: vi.fn(),
@@ -156,6 +159,7 @@ describe('SendMessageForm', () => {
           VoiceMessage: true,
           IconMenuDotsVert: true,
           IconCall: true,
+          IconPhoto: true,
           Mic2Icon: true,
         },
         mocks: {

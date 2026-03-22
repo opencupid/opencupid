@@ -11,6 +11,7 @@ import TagList from '@/features/shared/profiledisplay/TagList.vue'
 import LanguageList from '@/features/shared/profiledisplay/LanguageList.vue'
 import StoreErrorOverlay from '@/features/shared/ui/StoreErrorOverlay.vue'
 import IconCall from '@/assets/icons/interface/call.svg'
+import IconPhoto from '@/assets/icons/interface/photo.svg'
 import SendModeSelector from './SendModeSelector.vue'
 import { useToast } from 'vue-toastification'
 import VoiceRecorder from './VoiceRecorder.vue'
@@ -27,6 +28,7 @@ const props = withDefaults(
     conversationId: string | null
     showTags?: boolean
     canCall?: boolean
+    canReply?: boolean
     noResize?: boolean
   }>(),
   { noResize: true }
@@ -40,6 +42,62 @@ const content = ref('')
 const isVoiceActive = ref(false)
 const voiceRecorderRef = ref<InstanceType<typeof VoiceRecorder> | null>(null)
 const voiceMaxDuration = parseInt(__APP_CONFIG__.VOICE_MESSAGE_MAX_DURATION, 10)
+
+// Image attachment state
+const pendingImageFile = ref<File | null>(null)
+const pendingImageUrl = ref<string | null>(null)
+const imageInputRef = ref<HTMLInputElement | null>(null)
+
+function handleImageSelected(file: File) {
+  // Revoke previous object URL to avoid leaks
+  if (pendingImageUrl.value) URL.revokeObjectURL(pendingImageUrl.value)
+  pendingImageFile.value = file
+  pendingImageUrl.value = URL.createObjectURL(file)
+}
+
+function dismissImage() {
+  if (pendingImageUrl.value) URL.revokeObjectURL(pendingImageUrl.value)
+  pendingImageFile.value = null
+  pendingImageUrl.value = null
+  if (imageInputRef.value) imageInputRef.value.value = ''
+}
+
+function handleImageInputChange(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (file) handleImageSelected(file)
+}
+
+async function handleSendImageMessage() {
+  if (!pendingImageFile.value) return
+  const result = await messageStore.sendImageMessage(
+    props.recipientProfile.id,
+    pendingImageFile.value
+  )
+  if (result.success) {
+    emit('message:sent', result.data!)
+    dismissImage()
+  } else {
+    toast.error(result.message)
+  }
+}
+
+// Clipboard paste handler: attach pasted images
+function handlePaste(event: ClipboardEvent) {
+  if (!props.canReply) return
+  const items = event.clipboardData?.items
+  if (!items) return
+  for (const item of items) {
+    if (item.type.startsWith('image/')) {
+      const file = item.getAsFile()
+      if (file) {
+        event.preventDefault()
+        handleImageSelected(file)
+        return
+      }
+    }
+  }
+}
 
 // Voice confirmation modal state (shown when recording auto-stops at max duration)
 const showVoiceConfirmModal = ref(false)
@@ -98,6 +156,10 @@ const handleKeyPress = (event: KeyboardEvent) => {
 }
 
 async function handleSendMessage() {
+  if (pendingImageFile.value) {
+    await handleSendImageMessage()
+    return
+  }
   const trimmedContent = content.value.trim()
   if (trimmedContent === '') return
   const result = await messageStore.sendMessage(props.recipientProfile.id, trimmedContent)
@@ -161,7 +223,10 @@ function handleVoiceRecordingError(error: string) {
 </script>
 
 <template>
-  <div class="w-100">
+  <div
+    class="w-100"
+    @paste="handlePaste"
+  >
     <StoreErrorOverlay
       v-if="messageStore.error"
       :error="messageStore.error"
@@ -186,6 +251,35 @@ function handleVoiceRecordingError(error: string) {
         </div>
       </div>
 
+      <!-- Image attachment preview chip -->
+      <div
+        v-if="pendingImageFile && pendingImageUrl"
+        class="d-flex align-items-center gap-2 mb-2 p-1 bg-secondary rounded"
+        style="max-width: fit-content"
+      >
+        <img
+          :src="pendingImageUrl"
+          :alt="$t('messaging.image_message_alt')"
+          style="width: 48px; height: 48px; object-fit: cover; border-radius: 4px"
+        />
+        <span class="text-white small text-truncate" style="max-width: 120px">{{ pendingImageFile.name }}</span>
+        <button
+          type="button"
+          class="btn-close btn-close-white btn-sm"
+          :aria-label="$t('messaging.nevermind')"
+          @click="dismissImage"
+        />
+      </div>
+
+      <!-- Hidden file input for image picker -->
+      <input
+        ref="imageInputRef"
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        class="d-none"
+        @change="handleImageInputChange"
+      />
+
       <!-- TODO(#1109): Elevate VoiceRecorder over the dimmed textarea as
            a focused overlay when recording. Current sibling-in-flow layout
            causes jumps with translateY/margin approaches. -->
@@ -199,17 +293,17 @@ function handleVoiceRecordingError(error: string) {
           max-rows="5"
           :no-resize="noResize"
           class="mb-2"
-          :class="{'opacity-25': isVoiceActive}"
+          :class="{'opacity-25': isVoiceActive || !!pendingImageFile}"
           @keydown="handleKeyPress"
           :placeholder="$t('messaging.message_input_placeholder')"
-          :disabled="messageStore.isSending || isVoiceActive"
+          :disabled="messageStore.isSending || isVoiceActive || !!pendingImageFile"
         />
         <div class="text-muted d-flex justify-content-between align-items-start">
           <div class="d-flex align-items-center gap-1">
             <!-- Unified voice recorder (left) -->
             <VoiceRecorder
               ref="voiceRecorderRef"
-              :disabled="messageStore.isSending"
+              :disabled="messageStore.isSending || !!pendingImageFile"
               :max-duration="voiceMaxDuration"
               @recording:started="() => (isVoiceActive = true)"
               @recording:completed="handleVoiceRecordingCompleted"
@@ -217,6 +311,17 @@ function handleVoiceRecordingError(error: string) {
               @recording:cancelled="handleVoiceRecordingCancelled"
               @recording:error="handleVoiceRecordingError"
             />
+            <!-- Image attach button (shown when canReply and voice not active) -->
+            <button
+              v-if="canReply && !isVoiceActive"
+              type="button"
+              class="btn btn-secondary btn-sm icon-btn-round"
+              :title="$t('messaging.attach_image_button')"
+              :disabled="messageStore.isSending"
+              @click="imageInputRef?.click()"
+            >
+              <IconPhoto class="svg-icon" />
+            </button>
             <a
               v-if="canCall && !isVoiceActive"
               class="btn btn-secondary btn-sm icon-btn-round ms-2"
@@ -238,7 +343,7 @@ function handleVoiceRecordingError(error: string) {
               variant="primary"
               size="sm"
               @click="handleSendMessage"
-              :disabled="content.trim() === '' || isVoiceActive"
+              :disabled="(content.trim() === '' && !pendingImageFile) || isVoiceActive"
               :title="$t('messaging.send_message_button')"
             >
               {{ $t('messaging.send_message_button').toUpperCase() }}
