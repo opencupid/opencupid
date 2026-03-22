@@ -1,5 +1,11 @@
 # @opencupid/ingress
 
+## 0.41.0
+
+### Patch Changes
+
+- f3f8c15: Allow `data:` images in the admin CSP to prevent avatar and placeholder image violations.
+
 ## 0.40.2
 
 ## 0.40.1

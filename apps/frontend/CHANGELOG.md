@@ -1,5 +1,16 @@
 # frontend
 
+## 0.41.0
+
+### Minor Changes
+
+- ba4e4b3: Fine tune translated strings
+
+### Patch Changes
+
+- d7f0582: Show common languages between sender and recipient in SendMessageForm
+- fbe8641: Update @vueuse/core, @vueuse/components, and @vueuse/integrations from 13.5.0 to 14.2.1
+
 ## 0.40.2
 
 ## 0.40.1
