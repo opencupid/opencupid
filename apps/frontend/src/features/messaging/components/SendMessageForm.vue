@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ref, watch, watchEffect, computed } from 'vue'
+import { ref, watch, watchEffect, computed, inject, type Ref } from 'vue'
 import { funnel } from 'remeda'
 
 import { useLocalStore } from '@/store/localStore'
 
 import { type MessageDTO, type MessageAttachmentDTO } from '@zod/messaging/messaging.dto'
-import { type MessageRecipient } from '@zod/profile/profile.dto'
+import { type MessageRecipient, type OwnerProfile } from '@zod/profile/profile.dto'
 
 import TagList from '@/features/shared/profiledisplay/TagList.vue'
 import LanguageList from '@/features/shared/profiledisplay/LanguageList.vue'
@@ -35,6 +35,14 @@ const emit = defineEmits<{
   (e: 'message:sent', message: MessageDTO | null): void
   (e: 'call:start'): void
 }>()
+
+const viewerProfile = inject<Ref<OwnerProfile>>('viewerProfile')
+
+const senderLanguages = computed<string[]>(() => viewerProfile?.value?.languages ?? [])
+
+const commonLanguages = computed<string[]>(() =>
+  senderLanguages.value.filter((lang) => props.recipientProfile.languages.includes(lang))
+)
 
 const content = ref('')
 const isVoiceActive = ref(false)
@@ -180,7 +188,7 @@ function handleVoiceRecordingError(error: string) {
         </div>
         <div class="d-inline-block">
           <LanguageList
-            :languages="props.recipientProfile.languages"
+            :languages="commonLanguages"
             class="d-inline-block"
           />
         </div>
