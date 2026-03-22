@@ -401,6 +401,7 @@
       },
       "fewer_options": "Fewer options",
       "intro_placeholder": "Tell a bit about yourself",
+      "introtext_multilang_hint": "You can write your intro text in multiple languages. Other people will see the version in their preferred language, or the default if their language isn't available.",
       "intro_who_placeholder": "Who would you like to meet?",
       "kids_label": "Kids?",
       "more_options": "More options",
@@ -411,7 +412,6 @@
       "name_invalid": "Enter at least 3 letters",
       "name_label": "My first name is...",
       "preview_language": "Preview language",
-      "introtext_multilang_hint": "You can write your intro text in multiple languages. Other people will see the version in their preferred language, or the default if their language isn't available.",
       "preview_profile": "Preview your profile",
       "pronouns_label": "They refer to me as...",
       "relationship_label": "I am...",
@@ -483,6 +483,10 @@
       "retry": "Retry",
       "title": "We've hit a snag here."
     },
+    "install_banner": {
+      "install": "Install",
+      "message": "Install this app on your device."
+    },
     "loading": {
       "loading": "Loading..."
     },
@@ -496,6 +500,7 @@
       "button_copied": "Copied",
       "button_copy": "Copy",
       "description": "Invite your friends to join Gaians and connect with like-minded people.",
+      "qr_hint": "Flash this at their phone",
       "share_text": "{publicName} invited you to join {siteName}",
       "share_title": "Check out {siteName}",
       "title": "Spread the word"
@@ -521,10 +526,6 @@
     "update_banner": {
       "message": "An update is available.",
       "reload": "Reload"
-    },
-    "install_banner": {
-      "message": "Install this app on your device.",
-      "install": "Install"
     }
   }
 }

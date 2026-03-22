@@ -258,7 +258,7 @@
     "social_intro_placeholder": "Rovid bemutatkozo",
     "social_intro_subtitle": "Mesélj egy kicsit magadról. ",
     "social_intro_title": "Pár szóban magamról",
-    "welcome_subtitle": "Hogy hívnak?",
+    "welcome_subtitle": "Adj meg néhány infót magadról.",
     "welcome_title": "Légy üdvözölve nálunk.",
     "wizard": {
       "all_set": "Minden kész!",
@@ -268,7 +268,7 @@
       "dating_intro_text": "Most először használod a Társkereső módot. Kérjük, tölts ki néhány dolgot magadról, hogy mások megismerhessenek. Ezeket az információkat bármikor szerkesztheted a profilbeállításaidban.",
       "dating_modal_title": "Társkereső profil létrehozása",
       "finish": "Befejezés",
-      "next": "Következő",
+      "next": "Tovább",
       "previous": "Előző"
     }
   },
@@ -401,6 +401,7 @@
       },
       "fewer_options": "Kevesebb lehetőség",
       "intro_placeholder": "Mesélj egy kicsit magadról",
+      "introtext_multilang_hint": "A bemutatkozó szövegedet több nyelven is megírhatod. Mások az általuk preferált nyelven fogják látni, vagy az alapértelmezett változatot, ha az ő nyelvük nem elérhető.",
       "intro_who_placeholder": "Kivel szeretnél találkozni?",
       "kids_label": "Gyerekek?",
       "more_options": "További lehetőségek...",
@@ -410,7 +411,6 @@
       "name_first_name_only": "Csak a keresztnevedet",
       "name_invalid": "Adj meg legalább 3 betűt",
       "name_label": "A keresztnevem...",
-      "introtext_multilang_hint": "A bemutatkozó szövegedet több nyelven is megírhatod. Mások az általuk preferált nyelven fogják látni, vagy az alapértelmezett változatot, ha az ő nyelvük nem elérhető.",
       "preview_language": "Előnézeti nyelv",
       "preview_profile": "Profilod előnézete",
       "pronouns_label": "Úgy hivatkoznak rám, mint...",
@@ -483,6 +483,10 @@
       "retry": "Retry",
       "title": "Itt elakadtunk."
     },
+    "install_banner": {
+      "install": "Telepítem",
+      "message": "Telepítsd az alkalmazást erre a telefonra"
+    },
     "loading": {
       "loading": "Betöltés..."
     },
@@ -520,12 +524,8 @@
       }
     },
     "update_banner": {
-      "message": "Frissítés érhető el.",
-      "reload": "Újratöltés"
-    },
-    "install_banner": {
-      "message": "Telepítsd az alkalmazást erre a telefonra",
-      "install": "Telepítem"
+      "message": "Új verzió jelent meg, frissítsünk?",
+      "reload": "Frissítsd"
     }
   }
 }
