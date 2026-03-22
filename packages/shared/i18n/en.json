@@ -90,8 +90,8 @@
   },
   "home": {
     "explore_interests": "Explore interests",
-    "meet_new_people": "Meet new people",
-    "more_people": "More people...",
+    "meet_new_people": "New people",
+    "more_people": "Find buddies",
     "welcome_title": "Welcome to {siteName}!"
   },
   "interactions": {
@@ -103,10 +103,9 @@
     "like_button_title": "Like",
     "like_error": "Oops, this didn't work. Please try again.",
     "like_them_back": "Like them back to match.",
-    "message_button_title": "Message",
     "message_confirmation": "Nice!",
     "pass_button_title": "Pass",
-    "revealed_like_explanation": "Your name will be revealed.",
+    "revealed_like_explanation": "They will see who sent it.",
     "send_a_like": "Send them a like",
     "send_a_message": "Send a message",
     "send_them_a_message": "Send {name} a message",
@@ -160,7 +159,7 @@
     "block_user_ok": "Block {name}",
     "conversation_options_title": "Conversation options",
     "loading_older_messages": "Loading older messages…",
-    "matches_list_title": "My matches",
+    "matches_list_title": "My matches ❤️",
     "message_input_hint": "Press Enter to send",
     "message_input_hint_click": "Click SEND to send",
     "message_input_placeholder": "Type your message here...",
@@ -274,14 +273,16 @@
   },
   "posts": {
     "actions": {
-      "cancel": "Cancel",
+      "cancel": "Nevermind",
       "contact": "Contact poster",
-      "create": "Create Post",
-      "delete": "Delete Post",
+      "create": "Submit",
+      "create_cta": "Create post...",
+      "create_cta_title": "Post something",
+      "delete": "Delete",
       "edit": "Edit Post",
-      "hide": "Hide Post",
+      "hide": "Hide (but don't delete)",
       "save": "Save Post",
-      "show": "Show Post"
+      "show": "Show post"
     },
     "create_title": "Post something",
     "edit_title": "Edit post",
@@ -318,9 +319,9 @@
       "not_visible": "This post is not visible to others",
       "updated": "Post updated successfully"
     },
-    "my_posts": "My Posts",
+    "my_posts": "My posts",
     "placeholders": {
-      "content": "Share what you're offering or looking for..."
+      "content": "Share what you're offering or looking for"
     },
     "title": "Bulletin board",
     "types": {
@@ -351,9 +352,9 @@
         "button_update_prefs": "Update",
         "dialog_cancel_button": "Nevermind",
         "dialog_ok_button": "Find people",
-        "explore_tags": "Explore interests",
+        "explore_tags": "Explore popular interests",
         "filter_display_label": "Looking in:",
-        "locate_button_title": "Set to my country",
+        "locate_button_title": "Set to my location",
         "near_label": "Near...",
         "search_button_title_dating": "Find people",
         "search_button_title_social": "Find people",
@@ -382,7 +383,7 @@
       "dating_mode": "Dating mode",
       "dating_mode_toggle_hint": "To protect the privacy of other people (and yours) you can only change this setting once a day.",
       "dating_mode_view": "Dating mode view",
-      "dating_mode_view_hint_active": "This is what people also in dating mode will see when they view your profile.",
+      "dating_mode_view_hint_active": "This is what other people with whom your preferences mutually match will see.",
       "dictate": "Dictate",
       "dictate_listening": "Listening…",
       "edit_button_hint": "Edit your info",
@@ -405,14 +406,15 @@
       "intro_who_placeholder": "Who would you like to meet?",
       "kids_label": "Kids?",
       "more_options": "More options",
-      "my_dating_profile": "My profile",
+      "my_dating_profile": "My dating profile",
       "my_preferences": "My preferences",
       "my_profile": "My profile",
       "name_first_name_only": "Just your first name please",
       "name_invalid": "Enter at least 3 letters",
       "name_label": "My first name is...",
       "preview_language": "Preview language",
-      "preview_profile": "Preview your profile",
+      "preview_profile": "Preview my profile",
+      "preview_profile_hint": "How other people see me",
       "pronouns_label": "They refer to me as...",
       "relationship_label": "I am...",
       "save_changes_hint": "Done editing",
@@ -441,6 +443,7 @@
     "more_options_button_title": "More options",
     "no_profile_create": "Create Profile",
     "no_profile_title": "Please fill in your profile",
+    "profile_not_found": "Profile not found",
     "profile_photos": "{name}'s photos",
     "pronouns_edit_label": "pronouns",
     "send_message_button": "Message"
@@ -466,7 +469,7 @@
     "newsletter_opt_in": "I'm happy to receive the occasional email newsletter",
     "notifications_label": "Notifications",
     "push_notifications": "Push Notifications",
-    "push_notify_messages": "I want notifications when someone messages me",
+    "push_notify_messages": "Notifications when someone messages me",
     "title": "Settings"
   },
   "uicomponents": {
