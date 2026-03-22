@@ -252,7 +252,7 @@ function handleVoiceRecordingError(error: string) {
               :disabled="content.trim() === '' || isVoiceActive"
               :title="$t('messaging.send_message_button')"
             >
-              {{ $t('messaging.send_message_button').toUpperCase() }}
+              {{ $t('messaging.send_message_button') }}
             </BButton>
             <small
               v-else

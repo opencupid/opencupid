@@ -34,14 +34,17 @@ const toggleScope = (hide: () => void) => {
 <template>
   <BNavItemDropdown v-if="isDatingActive || hasPreviewLanguages">
     <template #button-content>
-      <span class="text-secondary">
+      <span
+        class="text-secondary"
+        :title="$t('profiles.forms.preview_profile')"
+      >
         <IconViewAs class="svg-icon-lg" />
       </span>
     </template>
     <template #default="{ hide }">
       <div style="width: 16rem">
         <BDropdownText>
-          <div>{{ $t('profiles.forms.preview_profile') }}</div>
+          <div>{{ $t('profiles.forms.preview_profile_hint') }}</div>
         </BDropdownText>
 
         <span v-if="isDatingActive">

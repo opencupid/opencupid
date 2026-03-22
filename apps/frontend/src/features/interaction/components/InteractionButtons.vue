@@ -67,7 +67,7 @@ const handleAnonymousChange = (value: boolean) => {
 
 <template>
   <div class="d-flex justify-content-center align-items-center gap-2">
-    <div v-if="context.canDate && !context.isMatch">
+    <div v-if="context.canDate && !context.isMatch && context.likedByMe">
       <BPopover
         v-model="passPopover"
         placement="top"
@@ -107,7 +107,6 @@ const handleAnonymousChange = (value: boolean) => {
         <BButton
           class="btn-icon-lg btn-info me-2 btn-shadow"
           @click="handleMessageClick"
-          :title="$t('interactions.message_button_title')"
         >
           <IconMessage class="svg-icon-lg p-0" />
         </BButton>
@@ -129,10 +128,7 @@ const handleAnonymousChange = (value: boolean) => {
       :title="$t('interactions.you_liked_them')"
     >
       <template #target>
-        <BButton
-          class="btn-icon-lg btn-dating btn-shadow"
-          :title="$t('interactions.like_button_title')"
-        >
+        <BButton class="btn-icon-lg btn-dating btn-shadow">
           <IconHeart class="svg-icon-lg" />
         </BButton>
       </template>
@@ -146,13 +142,22 @@ const handleAnonymousChange = (value: boolean) => {
     <BPopover
       v-else-if="context.canDate && !context.isMatch && context.likedMeRevealed"
       placement="top"
-      :title="$t('interactions.they_liked_you')"
     >
+      <template #title>
+        <span class="d-inline-flex w-100">
+          <span class="flex-grow-1">
+            {{ $t('interactions.they_liked_you') }}
+          </span>
+          <span class="flex-grow-0 text-dating flex-shrink-1">
+            <IconHeart class="svg-icon" />
+          </span>
+        </span>
+      </template>
+
       <template #target>
         <BButton
           class="btn-icon-lg btn-dating btn-shadow"
           @click="handleLikeClick"
-          :title="$t('interactions.like_button_title')"
         >
           <IconHeart class="svg-icon-lg" />
         </BButton>
@@ -166,13 +171,22 @@ const handleAnonymousChange = (value: boolean) => {
     <BPopover
       v-else-if="context.canDate && !context.isMatch"
       placement="top"
-      :title="$t('interactions.send_a_like')"
+      style="width: 16rem; height: 12rem"
     >
+      <template #title>
+        <span class="d-inline-flex w-100">
+          <span class="flex-grow-1">
+            {{ $t('interactions.send_a_like') }}
+          </span>
+          <span class="flex-grow-0 text-dating flex-shrink-1">
+            <IconHeart class="svg-icon" />
+          </span>
+        </span>
+      </template>
       <template #target>
         <BButton
           class="btn-icon-lg btn-dating btn-shadow"
           @click="handleLikeClick"
-          :title="$t('interactions.like_button_title')"
         >
           <IconHeart class="svg-icon-lg" />
         </BButton>

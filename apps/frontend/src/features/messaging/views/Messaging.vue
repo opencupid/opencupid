@@ -58,7 +58,7 @@ onMounted(async () => {
       >
         <template v-if="haveMatches">
           <p class="px-2 text-center">{{ $t('messaging.matches_list_title') }}</p>
-          <div class="px-3 mb-3">
+          <div class="mb-3">
             <MatchesList
               :edges="matches"
               @select:profile="handleMatchSelect"
@@ -66,7 +66,7 @@ onMounted(async () => {
           </div>
         </template>
 
-        <div class="px-3 mb-3">
+        <div class="mb-3">
           <ReceivedLikesTeaser @interaction:selected="handleReceivedLikeSelect" />
         </div>
 

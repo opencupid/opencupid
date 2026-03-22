@@ -26,10 +26,12 @@ const emit = defineEmits<{
       {{ $t('interactions.anonymous_toggle_reveal') }}
     </BFormRadio>
   </BFormRadioGroup>
-  <div v-if="selectedAnonymous">
-    {{ $t('interactions.anonymous_like_explanation') }}
-  </div>
-  <div v-else>
-    {{ $t('interactions.revealed_like_explanation') }}
+  <div class="form-hint mt-2">
+    <div v-if="selectedAnonymous">
+      {{ $t('interactions.anonymous_like_explanation') }}
+    </div>
+    <div v-else>
+      {{ $t('interactions.revealed_like_explanation') }}
+    </div>
   </div>
 </template>

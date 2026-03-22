@@ -85,7 +85,8 @@ defineEmits<{
         {{ t('matches.pass_confirm_dialog.liked_button_yes') }}
       </BButton>
       <BButton
-        class="btn btn-link link-secondary text-decoration-none"
+        size="sm"
+        variant="secondary"
         @click="$emit('no')"
       >
         <!-- No, don't pass -->

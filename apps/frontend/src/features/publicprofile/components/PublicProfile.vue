@@ -39,7 +39,7 @@ const emit = defineEmits<{
           :profile="profile"
           @intent:message="(convoId: string) => emit('intent:message', convoId)"
           @updated="emit('updated')"
-          @passed="emit('intent:back')"
+          @passed="emit('updated')"
         />
       </div>
     </div>
