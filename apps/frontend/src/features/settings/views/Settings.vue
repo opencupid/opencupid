@@ -56,7 +56,7 @@ function handleClick() {
 </script>
 
 <template>
-  <main class="w-100 position-relative overflow-hidden container-fluid">
+  <main>
     <MiddleColumn class="h-100 d-flex flex-column">
       <div class="d-flex flex-column justify-content-center align-items-center h-100 w-100">
         <SecondaryNav>
@@ -89,7 +89,7 @@ function handleClick() {
               <PwaInstallButton />
             </fieldset>
 
-            <hr class="mb-md-4"/>
+            <hr class="mb-md-4" />
 
             <fieldset class="d-flex flex-wrap align-items-center gap-2">
               <div

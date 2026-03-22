@@ -32,7 +32,7 @@ const handleFinish = async () => {
 </script>
 
 <template>
-  <main class="w-100 position-relative overflow-hidden container-fluid">
+  <main>
     <MiddleColumn class="h-100 d-flex flex-column">
       <SecondaryNav>
         <template #items-right>
@@ -55,7 +55,9 @@ const handleFinish = async () => {
           blur="5px"
         >
           <template #overlay>
-            <div class="mt-3 mt-md-4 mt-lg-5 d-flex align-items-center flex-column justify-content-center">
+            <div
+              class="mt-3 mt-md-4 mt-lg-5 d-flex align-items-center flex-column justify-content-center"
+            >
               <div
                 class="col-3 mx-auto d-flex align-items-center justify-content-center text-dating my-md-2"
               >

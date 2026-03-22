@@ -49,8 +49,8 @@ function handleProfileSelect(profileId: string) {
 </script>
 
 <template>
-  <main class="conversation-view w-100 h-100">
-    <MiddleColumn class="h-100">
+  <main class="conversation-view h-100">
+    <MiddleColumn class="h-100 p-0 py-md-4">
       <ConversationDetail
         :loading="isLoading"
         :conversation="activeConversation"

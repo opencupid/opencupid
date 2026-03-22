@@ -29,12 +29,12 @@ const currentLanguage = defineModel<string>({ required: true })
           href="#"
           @click="currentLanguage = lang.value"
         >
-          <span class="d-flex align-items-center gap-2">
+          <span class="d-flex align-items-center gap-2 py-1">
             <LanguageIcon
               :countryCode="lang.value"
               :size="16"
             />
-            <small class="fs-xs">{{ lang.label }}</small>
+            <small class="fs-xs d-none d-md-inline">{{ lang.label }}</small>
           </span>
         </a>
       </li>
@@ -45,7 +45,7 @@ const currentLanguage = defineModel<string>({ required: true })
       title-class="d-none"
     >
       <template #target>
-        <button class="btn btn-info btn-sm btn-icon">
+        <button type="button" class="btn btn-info btn-sm btn-icon">
           <IconQuestion class="svg-icon-sm" />
         </button>
       </template>

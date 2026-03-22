@@ -124,6 +124,7 @@ function onModalHidden() {
     v-model="showModal"
     centered
     button-size="sm"
+    size="lg"
     :focus="false"
     :no-close-on-backdrop="true"
     :no-footer="true"

@@ -32,14 +32,6 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div
-    class="d-flex justify-content-start align-items-center w-100 flex-grow-0 position-absolute top-0 start-0"
-  >
-    <BackButton
-      :show="!isFirst && !isLast"
-      @click="goToPrevious"
-    />
-  </div>
 
   <div class="flex-grow-1 d-flex flex-column justify-content-center w-100">
     <DatingSteps
@@ -67,7 +59,7 @@ onMounted(async () => {
         v-if="!isFirst && !isLast"
         @click="goToPrevious"
         variant="secondary"
-        class="px-5 me-2"
+        class="px-3 px-md-5 me-2"
         pill
       >
         {{ t('onboarding.wizard.previous') }} 
@@ -77,7 +69,7 @@ onMounted(async () => {
         @click="goToNext"
         :disabled="!current.state"
         variant="primary"
-        class="px-5"
+        class="px-3 px-md-5"
         pill
       >
         {{ t('onboarding.wizard.next') }}
@@ -87,7 +79,7 @@ onMounted(async () => {
         @click="$emit('finished')"
         :disabled="!current.state"
         variant="primary"
-        class="px-5"
+        class="px-3 px-md-5"
         pill
       >
         {{ t('onboarding.wizard.finish') }}

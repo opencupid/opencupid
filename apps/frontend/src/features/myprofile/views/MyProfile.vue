@@ -64,14 +64,10 @@ onMounted(async () => {
 
 provide('isOwner', true)
 provide('viewerProfile', toRef(formData))
-
 </script>
 
 <template>
-  <main
-    class="w-100 position-relative overflow-hidden"
-    :class="[viewState.currentScope, { editable: viewState.isEditable }]"
-  >
+  <main :class="[viewState.currentScope, { editable: viewState.isEditable }]">
     <EditableFields
       v-model="formData"
       :editState="viewState.isEditable"
@@ -85,7 +81,7 @@ provide('viewerProfile', toRef(formData))
         v-else
         class="d-flex flex-column justify-content-center h-100"
       >
-        <MiddleColumn class="pt-sm-3 position-relative">
+        <MiddleColumn class="pt-sm-3 position-relative px-0 px-sm-3">
           <div class="d-flex flex-row justify-content-between align-items-center">
             <MyProfileSecondaryNav
               v-model="viewState"
@@ -99,7 +95,7 @@ provide('viewerProfile', toRef(formData))
         </MiddleColumn>
         <div class="overflow-auto hide-scrollbar h-100">
           <MiddleColumn
-            class="pt-sm-3 position-relative flex-grow-1"
+            class="pt-sm-3 position-relative flex-grow-1 px-0 px-sm-3"
             style="min-height: 100%"
           >
             <ProfileContent

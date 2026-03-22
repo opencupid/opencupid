@@ -57,7 +57,7 @@ function handleSaved() {
 </script>
 
 <template>
-  <main class="w-100 position-relative overflow-hidden container-fluid">
+  <main>
     <MiddleColumn class="h-100 d-flex flex-column">
       <SecondaryNav>
         <template #items-center>

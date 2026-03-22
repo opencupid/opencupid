@@ -14,7 +14,6 @@ import { useAuthStore } from '@/features/auth/stores/authStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 
 import ProfileImage from '@/features/images/components/ProfileImage.vue'
-import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
@@ -28,7 +27,10 @@ const route = useRoute()
 const breakpoints = useBreakpoints({ sm: 576 })
 const isMobile = breakpoints.smaller('sm')
 const shouldShowNavbar = computed(
-  () => authStore.isLoggedIn && profileStore.profile?.isOnboarded && !(route.meta?.hideNavbar && isMobile.value)
+  () =>
+    authStore.isLoggedIn &&
+    profileStore.profile?.isOnboarded &&
+    !(route.meta?.hideNavbar && isMobile.value)
 )
 </script>
 
@@ -38,7 +40,7 @@ const shouldShowNavbar = computed(
     class="navbar-soft"
     data-testid="navbar"
   >
-    <MiddleColumn>
+    <BContainer>
       <BNavbarNav class="d-flex justify-content-between w-100">
         <BNavItem
           to="/home"
@@ -99,7 +101,7 @@ const shouldShowNavbar = computed(
           />
         </BNavItem>
       </BNavbarNav>
-    </MiddleColumn>
+    </BContainer>
   </BNavbar>
 </template>
 
