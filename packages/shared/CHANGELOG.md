@@ -1,5 +1,11 @@
 # @opencupid/shared
 
+## 0.5.9
+
+### Patch Changes
+
+- 6cb091b: Fix tolgee baseline
+
 ## 0.5.8
 
 ### Patch Changes

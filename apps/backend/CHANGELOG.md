@@ -1,5 +1,7 @@
 # backend
 
+## 0.40.1
+
 ## 0.40.0
 
 ### Patch Changes

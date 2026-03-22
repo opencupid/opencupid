@@ -1,5 +1,11 @@
 # frontend
 
+## 0.40.1
+
+### Patch Changes
+
+- 706abf0: Simplify layout system: add container-content class, remove FluidColumn, widen Navbar, eliminate repeated main boilerplate (#1199)
+
 ## 0.40.0
 
 ### Minor Changes
