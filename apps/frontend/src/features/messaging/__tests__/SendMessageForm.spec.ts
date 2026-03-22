@@ -297,27 +297,21 @@ describe('SendMessageForm', () => {
     expect(radioButtons[1]!.attributes('checked')).toBeUndefined()
   })
 
-  it('passes only common languages to LanguageList when showTags is true', async () => {
-    const recipientWithLanguages: PublicProfileWithContext = {
-      ...mockRecipient,
-      languages: ['en', 'fr', 'de'],
-    }
-
+  function mountFormWithLanguages(recipientLanguages: string[], viewerLanguages: string[]) {
     const LanguageListStub = {
       name: 'LanguageList',
       template: '<div />',
       props: ['languages'],
     }
-
-    const wrapper = mount(SendMessageForm, {
+    return mount(SendMessageForm, {
       props: {
-        recipientProfile: recipientWithLanguages,
+        recipientProfile: { ...mockRecipient, languages: recipientLanguages },
         conversationId: 'conv-1',
         showTags: true,
       },
       global: {
         provide: {
-          viewerProfile: ref({ languages: ['en', 'fr', 'es'] }),
+          viewerProfile: ref({ languages: viewerLanguages }),
         },
         stubs: {
           BFormGroup: true,
@@ -340,55 +334,16 @@ describe('SendMessageForm', () => {
         },
       },
     })
+  }
 
+  it('passes only common languages to LanguageList when showTags is true', () => {
+    const wrapper = mountFormWithLanguages(['en', 'fr', 'de'], ['en', 'fr', 'es'])
     const languageList = wrapper.findComponent({ name: 'LanguageList' })
     expect(languageList.props('languages')).toEqual(['en', 'fr'])
   })
 
-  it('passes empty array to LanguageList when there are no common languages', async () => {
-    const recipientWithLanguages: PublicProfileWithContext = {
-      ...mockRecipient,
-      languages: ['de', 'es'],
-    }
-
-    const LanguageListStub = {
-      name: 'LanguageList',
-      template: '<div />',
-      props: ['languages'],
-    }
-
-    const wrapper = mount(SendMessageForm, {
-      props: {
-        recipientProfile: recipientWithLanguages,
-        conversationId: 'conv-1',
-        showTags: true,
-      },
-      global: {
-        provide: {
-          viewerProfile: ref({ languages: ['en', 'fr'] }),
-        },
-        stubs: {
-          BFormGroup: true,
-          BFormTextarea: true,
-          BButton: true,
-          BDropdown: true,
-          BDropdownItem: true,
-          TagList: true,
-          LanguageList: LanguageListStub,
-          BModal: true,
-          StoreErrorOverlay: true,
-          VoiceRecorder: VoiceRecorderStub,
-          VoiceMessage: true,
-          IconMenuDotsVert: true,
-          IconCall: true,
-          Mic2Icon: true,
-        },
-        mocks: {
-          $t: (key: string) => key,
-        },
-      },
-    })
-
+  it('passes empty array to LanguageList when there are no common languages', () => {
+    const wrapper = mountFormWithLanguages(['de', 'es'], ['en', 'fr'])
     const languageList = wrapper.findComponent({ name: 'LanguageList' })
     expect(languageList.props('languages')).toEqual([])
   })
