@@ -1,5 +1,5 @@
 <template>
-  <div class="middlecolumn col-12 col-sm-10 col-md-8 col-lg-6 mx-auto">
+  <div class="middlecolumn col-12 col-sm-10 col-md-8 col-lg-6 col-xl-4 mx-auto">
     <slot></slot>
   </div>
 </template>
