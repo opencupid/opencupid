@@ -25,10 +25,12 @@ provide(
 )
 
 const showBlockModal = ref(false)
+const isLoaded = ref(false)
 
 onMounted(async () => {
   await useBootstrap().bootstrap()
   await publicProfileStore.getPublicProfile(props.profileId)
+  isLoaded.value = true
 })
 
 const handleBack = () => {
@@ -67,26 +69,28 @@ const handleBlock = async () => {
           />
         </template>
 
-        <PublicProfileComponent
-          v-if="publicProfileStore.profile"
-          :profile="publicProfileStore.profile"
-          class="shadow-lg mb-3 pb-5"
-          @intent:back="handleBack"
-          @intent:message="handleMessage"
-          @intent:block="showBlockModal = true"
-          @updated="handleRefresh"
-        />
-        <div
-          v-else
-          class="text-center py-5"
-        >
-          <p class="text-muted">{{ $t('common.profile_not_found') }}</p>
-          <BButton
-            variant="primary"
-            @click="handleBack"
+        <div v-if="isLoaded">
+          <PublicProfileComponent
+            v-if="publicProfileStore.profile"
+            :profile="publicProfileStore.profile"
+            class="shadow-lg mb-3 pb-5"
+            @intent:back="handleBack"
+            @intent:message="handleMessage"
+            @intent:block="showBlockModal = true"
+            @updated="handleRefresh"
+          />
+          <div
+            v-else
+            class="text-center py-5"
           >
-            {{ $t('common.go_back') }}
-          </BButton>
+            <p class="text-muted">{{ $t('profiles.profile_not_found') }}</p>
+            <BButton
+              variant="primary"
+              @click="handleBack"
+            >
+              {{ $t('profiles.back_button_title') }}
+            </BButton>
+          </div>
         </div>
       </BPlaceholderWrapper>
     </MiddleColumn>
