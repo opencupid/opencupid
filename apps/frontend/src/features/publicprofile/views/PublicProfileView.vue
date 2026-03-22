@@ -55,9 +55,7 @@ const handleBlock = async () => {
 
 <template>
   <main class="w-100 overflow-auto hide-scrollbar public-profile-view">
-    <MiddleColumn
-      class="pt-sm-3 position-relative "
-    >
+    <MiddleColumn class="pt-sm-3 position-relative px-0 px-sm-3">
       <BPlaceholderWrapper :loading="publicProfileStore.isLoading">
         <template #loading>
           <BPlaceholderCard
