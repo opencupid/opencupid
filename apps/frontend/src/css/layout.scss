@@ -44,6 +44,8 @@ main {
   flex-grow: 1;
   min-height: 0; // prevents flex item overflow clipping (iOS)
   position: relative;
+  overflow: hidden;
+  width: 100%;
 }
 
 nav.navbar + main {
@@ -55,4 +57,15 @@ nav.navbar + main {
     padding-bottom: 0;
     padding-top: $navbar-height;
   }
+}
+
+// Content-width container — used by MiddleColumn and page views
+// Fluid on mobile, capped at comfortable reading width on desktop
+.container-content {
+  @include make-container();
+
+  @include media-breakpoint-up(sm) { max-width: 540px; }
+  @include media-breakpoint-up(md) { max-width: 640px; }
+  @include media-breakpoint-up(lg) { max-width: 680px; }
+  @include media-breakpoint-up(xl) { max-width: 720px; }
 }
