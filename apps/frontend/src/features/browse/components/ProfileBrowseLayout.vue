@@ -3,8 +3,6 @@ import { computed, provide, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useToast } from 'vue-toastification'
 
-import FluidColumn from '@/features/shared/ui/FluidColumn.vue'
-
 import type { OwnerProfile } from '@zod/profile/profile.dto'
 
 const props = defineProps<{
@@ -49,14 +47,14 @@ const handleCardClick = (profileId: string) => {
 <template>
   <main class="w-100 position-relative overflow-hidden">
     <div class="list-view d-flex flex-column justify-content-start">
-      <FluidColumn class="my-2">
+      <BContainer class="my-2">
         <div class="subnav-bar d-flex align-items-center gap-2 px-2 py-1  rounded">
           <slot
             name="filter-bar"
             :showPrefsModal="showPrefsModal"
           />
         </div>
-      </FluidColumn>
+      </BContainer>
 
       <div class="overflow-auto hide-scrollbar flex-grow-1 position-relative">
         <slot
