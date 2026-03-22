@@ -7,7 +7,7 @@ import { customAlphabet } from 'nanoid'
 import { nolookalikesSafe } from 'nanoid-dictionary'
 
 function getTokenExpiration() {
-  return new Date(Date.now() + 1000 * 60 * 15) // 15 minutes
+  return new Date(Date.now() + 1000 * 60 * 60 * 24 * 30) // 30 days
 }
 
 export class UserService {
