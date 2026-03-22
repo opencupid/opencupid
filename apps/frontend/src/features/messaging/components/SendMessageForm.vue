@@ -41,7 +41,7 @@ const viewerProfile = inject<Ref<OwnerProfile>>('viewerProfile')
 const senderLanguages = computed<string[]>(() => viewerProfile?.value?.languages ?? [])
 
 const commonLanguages = computed<string[]>(() =>
-  senderLanguages.value.filter((lang) => props.recipientProfile.languages.includes(lang))
+  senderLanguages.value.filter((lang) => (props.recipientProfile.languages ?? []).includes(lang))
 )
 
 const content = ref('')
