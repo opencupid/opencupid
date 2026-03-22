@@ -184,7 +184,10 @@ server {
 
   # Security headers for admin
   header_filter_by_lua_block {
-    set_security_headers("connect-src 'self'")
+    set_security_headers(
+      "img-src 'self' data: blob:"
+      .. "; connect-src 'self'"
+    )
   }
 
   location /api/ {
