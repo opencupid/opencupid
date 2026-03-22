@@ -483,10 +483,6 @@
       "retry": "Retry",
       "title": "We've hit a snag here."
     },
-    "install_banner": {
-      "install": "Install",
-      "message": "Install this app on your device."
-    },
     "loading": {
       "loading": "Loading..."
     },

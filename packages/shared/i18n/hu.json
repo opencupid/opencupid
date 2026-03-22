@@ -483,10 +483,6 @@
       "retry": "Retry",
       "title": "Itt elakadtunk."
     },
-    "install_banner": {
-      "install": "Telepítés",
-      "message": "Telepítse az alkalmazást a készülékére."
-    },
     "loading": {
       "loading": "Betöltés..."
     },
@@ -528,8 +524,8 @@
       "reload": "Újratöltés"
     },
     "install_banner": {
-      "message": "Telepítse az alkalmazást a készülékére.",
-      "install": "Telepítés"
+      "message": "Telepítsd az alkalmazást erre a telefonra",
+      "install": "Telepítem"
     }
   }
 }
