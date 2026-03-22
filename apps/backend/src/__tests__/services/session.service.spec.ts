@@ -44,7 +44,7 @@ describe('SessionService.getOrCreate', () => {
     expect(result).toEqual(sessionData)
     expect(redis.multi).toHaveBeenCalled()
     expect(redis._chain.set).toHaveBeenCalledWith('session:sess1', JSON.stringify(sessionData))
-    expect(redis._chain.expire).toHaveBeenCalledWith('session:sess1', 604800)
+    expect(redis._chain.expire).toHaveBeenCalledWith('session:sess1', 2592000)
   })
 })
 
@@ -74,8 +74,8 @@ describe('SessionService.refreshTtl', () => {
   it('refreshes TTL on session and roles keys', async () => {
     await service.refreshTtl('sess1')
     expect(redis.multi).toHaveBeenCalled()
-    expect(redis._chain.expire).toHaveBeenCalledWith('session:sess1', 604800)
-    expect(redis._chain.expire).toHaveBeenCalledWith('session:sess1:roles', 604800)
+    expect(redis._chain.expire).toHaveBeenCalledWith('session:sess1', 2592000)
+    expect(redis._chain.expire).toHaveBeenCalledWith('session:sess1:roles', 2592000)
   })
 })
 
@@ -87,7 +87,7 @@ describe('SessionService.patch', () => {
     // Zod reorders keys when parsing, so compare as parsed objects
     const storedJson = redis._chain.set.mock.calls[0][1]
     expect(JSON.parse(storedJson)).toEqual({ ...sessionData, lang: 'hu' })
-    expect(redis._chain.expire).toHaveBeenCalledWith('session:sess1', 604800)
+    expect(redis._chain.expire).toHaveBeenCalledWith('session:sess1', 2592000)
   })
 
   it('does nothing when session does not exist', async () => {
