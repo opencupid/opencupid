@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
+import { ref } from 'vue'
 import type { PublicProfileWithContext } from '@zod/profile/profile.dto'
 
 vi.mock('@/features/shared/profiledisplay/TagList.vue', () => ({
@@ -294,5 +295,56 @@ describe('SendMessageForm', () => {
 
     expect(radioButtons[0]!.attributes('checked')).toBeDefined()
     expect(radioButtons[1]!.attributes('checked')).toBeUndefined()
+  })
+
+  function mountFormWithLanguages(recipientLanguages: string[], viewerLanguages: string[]) {
+    const LanguageListStub = {
+      name: 'LanguageList',
+      template: '<div />',
+      props: ['languages'],
+    }
+    return mount(SendMessageForm, {
+      props: {
+        recipientProfile: { ...mockRecipient, languages: recipientLanguages },
+        conversationId: 'conv-1',
+        showTags: true,
+      },
+      global: {
+        provide: {
+          viewerProfile: ref({ languages: viewerLanguages }),
+        },
+        stubs: {
+          BFormGroup: true,
+          BFormTextarea: true,
+          BButton: true,
+          BDropdown: true,
+          BDropdownItem: true,
+          TagList: true,
+          LanguageList: LanguageListStub,
+          BModal: true,
+          StoreErrorOverlay: true,
+          VoiceRecorder: VoiceRecorderStub,
+          VoiceMessage: true,
+          IconMenuDotsVert: true,
+          IconCall: true,
+          Mic2Icon: true,
+        },
+        mocks: {
+          $t: (key: string) => key,
+        },
+      },
+    })
+  }
+
+  it('passes only common languages to LanguageList when showTags is true', () => {
+    const wrapper = mountFormWithLanguages(['en', 'fr', 'de'], ['en', 'fr', 'es'])
+    const languageList = wrapper.findComponent({ name: 'LanguageList' })
+    expect(languageList.props('languages')).toEqual(['en', 'fr'])
+  })
+
+  it('passes empty array to LanguageList when there are no common languages', () => {
+    const wrapper = mountFormWithLanguages(['de', 'es'], ['en', 'fr'])
+    const languageList = wrapper.findComponent({ name: 'LanguageList' })
+    expect(languageList.props('languages')).toEqual([])
   })
 })
