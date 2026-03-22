@@ -6,7 +6,7 @@ import { SessionData, SessionDataSchema } from '@zod/user/user.dto'
 export class SessionService {
   constructor(
     private redis: Redis,
-    private ttlSec = 60 * 60 * 24 * 7 // 7 days
+    private ttlSec = 60 * 60 * 24 * 30 // 30 days
   ) {}
 
   private sessionKey(id: string) {

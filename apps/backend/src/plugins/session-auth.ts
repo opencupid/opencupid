@@ -29,7 +29,7 @@ if (!redisUrl) {
 export default fp(async (fastify: FastifyInstance) => {
   fastify.register(fastifyJwt, {
     secret: appConfig.JWT_SECRET,
-    sign: { expiresIn: '1h' },
+    sign: { expiresIn: '30d' },
   })
 
   // Initialize Redis client
