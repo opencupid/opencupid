@@ -236,7 +236,7 @@ onActivated(() => {
         variant="primary"
         @click="handleCreate()"
       >
-        {{ t('posts.actions.create') }}
+        {{ t('posts.actions.create_cta') }}
       </BButton>
     </div>
   </BOffcanvas>
