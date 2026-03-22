@@ -44,6 +44,8 @@ const commonLanguages = computed<string[]>(() =>
   senderLanguages.value.filter((lang) => (props.recipientProfile.languages ?? []).includes(lang))
 )
 
+const shouldShowLanguageList = computed(() => senderLanguages.value.length > 1)
+
 const content = ref('')
 const isVoiceActive = ref(false)
 const voiceRecorderRef = ref<InstanceType<typeof VoiceRecorder> | null>(null)
@@ -188,6 +190,7 @@ function handleVoiceRecordingError(error: string) {
         </div>
         <div class="d-inline-block">
           <LanguageList
+            v-if="shouldShowLanguageList"
             :languages="commonLanguages"
             class="d-inline-block"
           />
@@ -197,7 +200,7 @@ function handleVoiceRecordingError(error: string) {
       <!-- TODO(#1109): Elevate VoiceRecorder over the dimmed textarea as
            a focused overlay when recording. Current sibling-in-flow layout
            causes jumps with translateY/margin approaches. -->
-       
+
       <div>
         <BFormTextarea
           id="content-input"
@@ -207,7 +210,7 @@ function handleVoiceRecordingError(error: string) {
           max-rows="5"
           :no-resize="noResize"
           class="mb-2"
-          :class="{'opacity-25': isVoiceActive}"
+          :class="{ 'opacity-25': isVoiceActive }"
           @keydown="handleKeyPress"
           :placeholder="$t('messaging.message_input_placeholder')"
           :disabled="messageStore.isSending || isVoiceActive"
