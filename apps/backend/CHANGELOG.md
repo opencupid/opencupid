@@ -1,5 +1,11 @@
 # backend
 
+## 0.40.2
+
+### Patch Changes
+
+- c5c5113: Extend JWT and session TTL to 30 days so users stay logged in for a month (#1203)
+
 ## 0.40.1
 
 ## 0.40.0
