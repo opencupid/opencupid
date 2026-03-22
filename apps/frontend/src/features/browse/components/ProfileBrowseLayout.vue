@@ -48,7 +48,7 @@ const handleCardClick = (profileId: string) => {
   <main>
     <div class="list-view d-flex flex-column justify-content-start">
       <BContainer class="my-2">
-        <div class="subnav-bar d-flex align-items-center gap-2 px-2 py-1  rounded">
+        <div class="subnav-bar d-flex align-items-center gap-2 px-2 py-1 rounded">
           <slot
             name="filter-bar"
             :showPrefsModal="showPrefsModal"

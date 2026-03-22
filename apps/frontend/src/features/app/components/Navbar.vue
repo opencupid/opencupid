@@ -27,7 +27,10 @@ const route = useRoute()
 const breakpoints = useBreakpoints({ sm: 576 })
 const isMobile = breakpoints.smaller('sm')
 const shouldShowNavbar = computed(
-  () => authStore.isLoggedIn && profileStore.profile?.isOnboarded && !(route.meta?.hideNavbar && isMobile.value)
+  () =>
+    authStore.isLoggedIn &&
+    profileStore.profile?.isOnboarded &&
+    !(route.meta?.hideNavbar && isMobile.value)
 )
 </script>
 

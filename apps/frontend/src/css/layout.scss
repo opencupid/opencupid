@@ -64,8 +64,16 @@ nav.navbar + main {
 .container-content {
   @include make-container();
 
-  @include media-breakpoint-up(sm) { max-width: 540px; }
-  @include media-breakpoint-up(md) { max-width: 640px; }
-  @include media-breakpoint-up(lg) { max-width: 680px; }
-  @include media-breakpoint-up(xl) { max-width: 720px; }
+  @include media-breakpoint-up(sm) {
+    max-width: 540px;
+  }
+  @include media-breakpoint-up(md) {
+    max-width: 640px;
+  }
+  @include media-breakpoint-up(lg) {
+    max-width: 680px;
+  }
+  @include media-breakpoint-up(xl) {
+    max-width: 720px;
+  }
 }

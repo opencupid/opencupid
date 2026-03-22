@@ -89,7 +89,7 @@ function handleClick() {
               <PwaInstallButton />
             </fieldset>
 
-            <hr class="mb-md-4"/>
+            <hr class="mb-md-4" />
 
             <fieldset class="d-flex flex-wrap align-items-center gap-2">
               <div

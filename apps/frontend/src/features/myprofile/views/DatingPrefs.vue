@@ -36,49 +36,49 @@ async function handleCancel() {
 <template>
   <main class="d-flex flex-column">
     <MiddleColumn class="h-100 d-flex flex-column flex-grow-1 overflow-hidden">
-        <SecondaryNav>
-          <template #items-left>
-            <!-- <RouterBackButton /> -->
-          </template>
-          <template #items-center>
-            {{ $t('profiles.forms.my_dating_profile') }}
-          </template>
-        </SecondaryNav>
+      <SecondaryNav>
+        <template #items-left>
+          <!-- <RouterBackButton /> -->
+        </template>
+        <template #items-center>
+          {{ $t('profiles.forms.my_dating_profile') }}
+        </template>
+      </SecondaryNav>
 
-        <section class="w-100 flex-grow-1 overflow-auto hide-scrollbar py-3">
-          <BTabs
-            pills
-            variant="warning"
-            nav-class="justify-content-center"
+      <section class="w-100 flex-grow-1 overflow-auto hide-scrollbar py-3">
+        <BTabs
+          pills
+          variant="warning"
+          nav-class="justify-content-center"
+        >
+          <BTab
+            :title="$t('profiles.forms.my_dating_profile')"
+            active
           >
-            <BTab
-              :title="$t('profiles.forms.my_dating_profile')"
-              active
+            <fieldset
+              class="pt-3"
+              :disabled="isSaving || isLoading"
             >
-              <fieldset
-                class="pt-3"
-                :disabled="isSaving || isLoading"
-              >
-                <EditDatingProfile
-                  v-model="formData"
-                  @save="handleSave"
-                />
-              </fieldset>
-            </BTab>
-            <BTab :title="$t('profiles.forms.my_preferences')">
-              <fieldset
-                class="pt-3"
-                :disabled="isSaving || isLoading"
-              >
-                <DatingPreferencesForm
-                  v-if="datingPrefs"
-                  v-model="datingPrefs"
-                />
-              </fieldset>
-            </BTab>
-          </BTabs>
-        </section>
-      </MiddleColumn>
+              <EditDatingProfile
+                v-model="formData"
+                @save="handleSave"
+              />
+            </fieldset>
+          </BTab>
+          <BTab :title="$t('profiles.forms.my_preferences')">
+            <fieldset
+              class="pt-3"
+              :disabled="isSaving || isLoading"
+            >
+              <DatingPreferencesForm
+                v-if="datingPrefs"
+                v-model="datingPrefs"
+              />
+            </fieldset>
+          </BTab>
+        </BTabs>
+      </section>
+    </MiddleColumn>
     <div
       class="sticky-bottom shadow shadow-lg bg-light-subtle py-3 d-flex justify-content-center gap-2"
     >

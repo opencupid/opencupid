@@ -64,13 +64,10 @@ onMounted(async () => {
 
 provide('isOwner', true)
 provide('viewerProfile', toRef(formData))
-
 </script>
 
 <template>
-  <main
-    :class="[viewState.currentScope, { editable: viewState.isEditable }]"
-  >
+  <main :class="[viewState.currentScope, { editable: viewState.isEditable }]">
     <EditableFields
       v-model="formData"
       :editState="viewState.isEditable"

@@ -55,7 +55,9 @@ const handleFinish = async () => {
           blur="5px"
         >
           <template #overlay>
-            <div class="mt-3 mt-md-4 mt-lg-5 d-flex align-items-center flex-column justify-content-center">
+            <div
+              class="mt-3 mt-md-4 mt-lg-5 d-flex align-items-center flex-column justify-content-center"
+            >
               <div
                 class="col-3 mx-auto d-flex align-items-center justify-content-center text-dating my-md-2"
               >
