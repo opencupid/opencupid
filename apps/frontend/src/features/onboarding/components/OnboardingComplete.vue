@@ -17,8 +17,8 @@ const emit = defineEmits<{
       class="d-flex flex-column align-items-center justify-content-center text-success flex-shrink-0"
     >
       <IconOkHand
-        style="width: 5rem; height: 5rem"
-        class="svg-icon opacity-25 mb-2"
+        style="width: 8rem; height: 8rem"
+        class="svg-icon opacity-75 mb-2"
       />
       <h2 class="mb-0">{{ t('onboarding.confirmation.title') }}</h2>
     </div>
