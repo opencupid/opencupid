@@ -158,7 +158,7 @@ onActivated(() => {
           size="lg"
           class="btn-icon-lg btn-shadow"
           variant="primary"
-          :title="t('posts.actions.create')"
+          :title="t('posts.actions.create_cta_title')"
           @click="handleCreate()"
         >
           <FontAwesomeIcon :icon="faPenToSquare" />

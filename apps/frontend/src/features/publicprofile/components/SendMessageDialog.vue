@@ -70,7 +70,7 @@ const handleModalShown = () => {
           />
           {{
             $t('messaging.send_message_to_user', {
-              name: profile.publicName || 'them',
+              name: profile.publicName || '',
             })
           }}
         </RouterLink>

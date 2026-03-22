@@ -2,16 +2,18 @@
 import { inject, type Ref } from 'vue'
 import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
 import type { OwnerProfile } from '@zod/profile/profile.dto'
+import IconSearch from '@/assets/icons/interface/search.svg'
 
 const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
 </script>
 
 <template>
   <BPopover
-    placement="top"
+    placement="bottom"
     click
     title-class="d-none"
     body-class="popover-hint"
+    style="min-width: 16rem"
   >
     <template #target>
       <div class="ratio ratio-1x1 clickable like-card">
@@ -38,6 +40,7 @@ const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
         to="/browse"
         class="btn btn-sm btn-primary"
       >
+        <IconSearch class="svg-icon me-1" />
         {{ $t('matches.anonymous_like_hint_cta') }}
       </RouterLink>
     </div>

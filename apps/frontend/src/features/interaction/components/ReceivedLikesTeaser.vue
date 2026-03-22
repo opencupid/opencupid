@@ -23,7 +23,7 @@ const displayedLikes = computed(() => receivedLikes.value.slice(0, 4))
       {{ $t('matches.notifications.you_have_likes', { count: receivedLikesCount }) }}
     </p>
     <BRow
-      class="g-2 px-1"
+      class="g-2"
       cols="3"
       cols-sm="4"
       cols-md="4"
