@@ -2,7 +2,6 @@ import { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify'
 import { Prisma } from '@prisma/client'
 import { z } from 'zod'
 
-import { appConfig } from '@/lib/appconfig'
 import { validateBody } from '@/utils/zodValidate'
 
 import {
@@ -41,6 +40,8 @@ import { createDatingPrefsDefaults, DatingPreferencesFormSchema } from '@zod/mat
 import { ProfileService } from 'src/services/profile.service'
 import { ProfileMatchService } from '@/services/profileMatch.service'
 import { MessageService } from '../../services/messaging.service'
+
+const RATE_LIMIT_PROFILE_SCOPES = 1 // max scope toggles per day
 
 // Route params for ID lookups
 const IdLookupParamsSchema = z.object({
@@ -375,7 +376,7 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
     {
       onRequest: [fastify.authenticate],
       config: {
-        ...rateLimitConfig(fastify, '1 day', appConfig.RATE_LIMIT_PROFILE_SCOPES),
+        ...rateLimitConfig(fastify, '1 day', RATE_LIMIT_PROFILE_SCOPES),
       },
     },
     async (req, reply) => {

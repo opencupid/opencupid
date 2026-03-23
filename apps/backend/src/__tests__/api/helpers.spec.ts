@@ -1,5 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
-vi.mock('@shared/config/appconfig', () => ({ appConfig: { TYPEAHEAD_DEBOUNCE_MS: 300 } }))
+import { describe, it, expect } from 'vitest'
 import {
   sendError,
   sendForbiddenError,

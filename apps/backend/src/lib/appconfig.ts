@@ -46,11 +46,7 @@ export const configSchema = z.object({
   MAXMIND_ACCOUNT_ID: z.string(),
   MAXMIND_LICENSE_KEY: z.string(),
 
-  TYPEAHEAD_DEBOUNCE_MS: z.coerce.number().default(300),
-
   VOICE_MESSAGE_MAX_DURATION: z.coerce.number().default(120), // Max duration in seconds
-
-  RATE_LIMIT_PROFILE_SCOPES: z.coerce.number().default(1),
 
   WELCOME_MESSAGE_SENDER_PROFILE_ID: z.string().optional(),
 
