@@ -1,5 +1,11 @@
 # frontend
 
+## 0.41.1
+
+### Patch Changes
+
+- e490dac: fix: Fetch conversation data on mount
+
 ## 0.41.0
 
 ### Minor Changes
