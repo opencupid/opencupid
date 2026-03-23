@@ -22,7 +22,13 @@ const callRoutes: FastifyPluginAsync = async (fastify) => {
   const callService = CallService.getInstance()
   const webPushService = WebPushService.getInstance()
 
-  // POST / — initiate a call
+  /**
+   * POST /
+   * Initiates a video/audio call in a conversation. Creates a Jitsi room and notifies the callee
+   * via WebSocket or web push.
+   * @body {string} conversationId - Conversation to call in (CUID)
+   * @returns {{ success, conversationId, roomName }}
+   */
   fastify.post(
     '/',
     { onRequest: [fastify.authenticate], config: rateLimitConfig(fastify, '1 minute', 5) },
@@ -70,7 +76,12 @@ const callRoutes: FastifyPluginAsync = async (fastify) => {
     }
   )
 
-  // POST /:conversationId/accept — accept an incoming call
+  /**
+   * POST /:conversationId/accept
+   * Accepts an incoming call. Notifies the caller via WebSocket.
+   * @param {string} conversationId - CUID
+   * @returns {{ success: boolean }}
+   */
   fastify.post(
     '/:conversationId/accept',
     { onRequest: [fastify.authenticate], config: rateLimitConfig(fastify, '1 minute', 5) },
@@ -108,7 +119,13 @@ const callRoutes: FastifyPluginAsync = async (fastify) => {
     }
   )
 
-  // POST /:conversationId/decline — decline an incoming call
+  /**
+   * POST /:conversationId/decline
+   * Declines an incoming call. Sends a generic "declined" event to the caller (indistinguishable
+   * from a timeout for privacy) and inserts a missed-call message into the conversation.
+   * @param {string} conversationId - CUID
+   * @returns {{ success: boolean }}
+   */
   fastify.post(
     '/:conversationId/decline',
     { onRequest: [fastify.authenticate], config: rateLimitConfig(fastify, '1 minute', 5) },
@@ -166,7 +183,13 @@ const callRoutes: FastifyPluginAsync = async (fastify) => {
     }
   )
 
-  // POST /:conversationId/cancel — caller cancels outgoing call
+  /**
+   * POST /:conversationId/cancel
+   * Caller cancels an outgoing call before it's answered. Notifies the callee and inserts
+   * a missed-call message.
+   * @param {string} conversationId - CUID
+   * @returns {{ success: boolean }}
+   */
   fastify.post(
     '/:conversationId/cancel',
     { onRequest: [fastify.authenticate], config: rateLimitConfig(fastify, '1 minute', 5) },
@@ -222,7 +245,13 @@ const callRoutes: FastifyPluginAsync = async (fastify) => {
     }
   )
 
-  // PATCH /:conversationId/callable — update callable status
+  /**
+   * PATCH /:conversationId/callable
+   * Updates whether the current user is available for calls in this conversation.
+   * @param {string} conversationId - CUID
+   * @body {boolean} isCallable - New callable status
+   * @returns {{ success: boolean }}
+   */
   fastify.patch(
     '/:conversationId/callable',
     { onRequest: [fastify.authenticate] },

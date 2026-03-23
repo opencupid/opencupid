@@ -20,7 +20,11 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
     }
   })
 
-  // GET /admin/stats/daily — Daily signups & logins (last 7 days)
+  /**
+   * GET /stats/daily
+   * Returns daily signup and login counts for the last 7 days.
+   * @returns {{ success, dailySignups, dailyLogins }}
+   */
   fastify.get('/stats/daily', async (_req, reply) => {
     try {
       const days = getLast7Days()
@@ -54,7 +58,12 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
     }
   })
 
-  // GET /admin/stats — Dashboard KPIs
+  /**
+   * GET /stats
+   * Returns dashboard KPIs: total users, active profiles, recent signups, blocked/reported counts,
+   * and activity segment distribution.
+   * @returns {{ success, stats }}
+   */
   fastify.get('/stats', async (_req, reply) => {
     try {
       const now = new Date()
@@ -104,7 +113,14 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
     }
   })
 
-  // GET /admin/users — Paginated user list
+  /**
+   * GET /users
+   * Returns a paginated, searchable list of users.
+   * @query {number} [page=1] - Page number
+   * @query {number} [pageSize=25] - Page size (max 100)
+   * @query {string} [search] - Search by email or phone
+   * @returns {{ success, users, total, page, pageSize }}
+   */
   fastify.get('/users', async (req, reply) => {
     try {
       const { page = '1', pageSize = '25', search = '' } = req.query as Record<string, string>
@@ -157,7 +173,12 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
     }
   })
 
-  // GET /admin/users/:id — User detail
+  /**
+   * GET /users/:id
+   * Returns detailed user information including profile data.
+   * @param {string} id - User ID
+   * @returns {{ success, user }}
+   */
   fastify.get('/users/:id', async (req, reply) => {
     try {
       const { id } = req.params as { id: string }
@@ -198,7 +219,14 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
     }
   })
 
-  // PATCH /admin/users/:id — Update user fields
+  /**
+   * PATCH /users/:id
+   * Updates user admin fields (active/blocked status).
+   * @param {string} id - User ID
+   * @body {boolean} [isActive] - Active status
+   * @body {boolean} [isBlocked] - Blocked status
+   * @returns {{ success, user }}
+   */
   fastify.patch('/users/:id', async (req, reply) => {
     try {
       const { id } = req.params as { id: string }
@@ -229,7 +257,11 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
     }
   })
 
-  // GET /admin/profiles/countries — Distinct country list
+  /**
+   * GET /profiles/countries
+   * Returns a sorted list of distinct country codes across all profiles.
+   * @returns {{ success, countries: string[] }}
+   */
   fastify.get('/profiles/countries', async (_req, reply) => {
     try {
       const groups = await prisma.profile.groupBy({
@@ -245,7 +277,15 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
     }
   })
 
-  // GET /admin/profiles — Paginated profile list
+  /**
+   * GET /profiles
+   * Returns a paginated, searchable list of profiles with optional country filter.
+   * @query {number} [page=1] - Page number
+   * @query {number} [pageSize=25] - Page size (max 100)
+   * @query {string} [search] - Search by name, city, or country
+   * @query {string} [country] - Country code filter
+   * @returns {{ success, profiles, total, page, pageSize }}
+   */
   fastify.get('/profiles', async (req, reply) => {
     try {
       const {
@@ -313,7 +353,14 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
     }
   })
 
-  // POST /admin/tags — Create a new tag
+  /**
+   * POST /tags
+   * Creates a new admin-approved tag with optional translations.
+   * @body {string} name - Tag display name (used as 'en' translation)
+   * @body {string} [slug] - URL slug (auto-generated from name if omitted)
+   * @body {{ locale: string, name: string }[]} [translations] - Additional translations
+   * @returns {{ success, tag }} 201
+   */
   fastify.post('/tags', async (req, reply) => {
     try {
       const body = req.body as {
@@ -362,7 +409,14 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
     }
   })
 
-  // GET /admin/tags — Paginated tag list
+  /**
+   * GET /tags
+   * Returns a paginated tag list, ordered by usage count. Excludes soft-deleted tags.
+   * @query {number} [page=1] - Page number
+   * @query {number} [pageSize=25] - Page size (max 100)
+   * @query {string} [search] - Search by name, slug, or translation
+   * @returns {{ success, tags, total, page, pageSize }}
+   */
   fastify.get('/tags', async (req, reply) => {
     try {
       const { page = '1', pageSize = '25', search = '' } = req.query as Record<string, string>
@@ -406,7 +460,18 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
     }
   })
 
-  // PATCH /admin/tags/:id — Update tag fields
+  /**
+   * PATCH /tags/:id
+   * Updates tag fields and/or upserts translations.
+   * @param {string} id - Tag ID
+   * @body {string} [slug] - URL slug
+   * @body {string} [name] - Display name
+   * @body {boolean} [isApproved] - Approval status
+   * @body {boolean} [isHidden] - Hidden from search
+   * @body {boolean} [isDeleted] - Soft-delete
+   * @body {{ locale: string, name: string }[]} [translations] - Upsert translations
+   * @returns {{ success, tag }}
+   */
   fastify.patch('/tags/:id', async (req, reply) => {
     try {
       const { id } = req.params as { id: string }
@@ -453,7 +518,14 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
     }
   })
 
-  // POST /admin/tags/merge — Merge loser tags into a winner tag
+  /**
+   * POST /tags/merge
+   * Merges multiple "loser" tags into a single "winner" tag. Moves translations, profile
+   * associations, and filter associations to the winner, then soft-deletes the losers.
+   * @body {string} winnerTagId - Tag to keep
+   * @body {string[]} loserTagIds - Tags to merge into the winner
+   * @returns {{ success, mergedCount, tag }}
+   */
   fastify.post('/tags/merge', async (req, reply) => {
     try {
       const { winnerTagId, loserTagIds } = req.body as {
@@ -548,7 +620,13 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
     }
   })
 
-  // POST /admin/tags/translate — Translate tag name via DeepL
+  /**
+   * POST /tags/translate
+   * Translates a tag name into multiple languages using the DeepL API.
+   * @body {string} text - Source text to translate
+   * @body {string[]} targetLocales - Target language codes
+   * @returns {{ success, translations: Record<string, string> }}
+   */
   fastify.post('/tags/translate', async (req, reply) => {
     try {
       const { text, targetLocales } = req.body as {
@@ -580,7 +658,11 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
     }
   })
 
-  // GET /admin/subscribers — Subscriber data for external newsletter sync
+  /**
+   * GET /subscribers
+   * Returns subscriber data for external newsletter sync (active profiles with email).
+   * @returns {{ success, subscribers: { id, email, name, language, newsletterOptIn }[] }}
+   */
   fastify.get('/subscribers', async (_req, reply) => {
     try {
       const users = await prisma.user.findMany({
@@ -612,7 +694,12 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
     }
   })
 
-  // GET /admin/profiles/:id — Profile detail
+  /**
+   * GET /profiles/:id
+   * Returns detailed profile information including user data and images.
+   * @param {string} id - Profile ID
+   * @returns {{ success, profile }}
+   */
   fastify.get('/profiles/:id', async (req, reply) => {
     try {
       const { id } = req.params as { id: string }

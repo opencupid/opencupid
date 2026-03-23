@@ -36,21 +36,6 @@ const MessageListQuerySchema = z.object({
   take: z.coerce.number().int().min(1).max(50).optional(),
 })
 
-/**
- * Registers messaging-related routes for the Fastify server.
- *
- * This plugin provides endpoints for:
- * - Fetching messages in a conversation (`GET /:id`)
- * - Listing all conversations for the authenticated profile (`GET /conversations`)
- * - Marking a conversation as read (`POST /conversations/:id/mark-read`)
- * - Initiating a new conversation with a message (`POST /conversations/initiate`)
- * - Sending a message to an existing conversation (`POST /conversations/:id`)
- *
- * All routes require authentication via `fastify.authenticate`.
- * Handles request validation, error responses, and broadcasts new messages via WebSocket and web push notifications.
- *
- * @param fastify - The Fastify instance to decorate with messaging routes.
- */
 const messageRoutes: FastifyPluginAsync = async (fastify) => {
   // Calculate max file size from configured max duration.
   // WAV at 48kHz, 16-bit, stereo = duration × 48000 × 2 bytes/sample × 2 channels + 10% buffer
@@ -74,6 +59,14 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
   const webPushService = WebPushService.getInstance()
   const interactionService = InteractionService.getInstance()
 
+  /**
+   * GET /:id
+   * Returns paginated messages for a conversation, with cursor-based pagination.
+   * @param {string} id - Conversation ID (CUID)
+   * @query {string} [cursor] - Message ID to paginate from
+   * @query {number} [take] - Number of messages to return (1–50)
+   * @returns {MessagesResponse} { messages, nextCursor, hasMore }
+   */
   fastify.get('/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const profileId = req.session.profileId
     if (!profileId) return sendError(reply, 404, 'Profile not found.')
@@ -104,6 +97,11 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
     }
   })
 
+  /**
+   * GET /conversations
+   * Returns all conversations for the authenticated profile with latest message summaries.
+   * @returns {ConversationsResponse}
+   */
   fastify.get('/conversations', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const profileId = req.session.profileId
     if (!profileId) return sendError(reply, 404, 'Profile not found.')
@@ -120,8 +118,10 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   /**
-   * Marks a conversation as read.
-   * @param :id - conversation ID
+   * POST /conversations/:id/mark-read
+   * Marks all messages in a conversation as read for the current profile.
+   * @param {string} id - Conversation ID (CUID)
+   * @returns {ConversationResponse} Updated conversation summary
    */
   fastify.post(
     '/conversations/:id/mark-read',
@@ -151,6 +151,14 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
     }
   )
 
+  /**
+   * POST /message
+   * Sends a text message. Creates a new conversation if one doesn't exist with the recipient.
+   * Notifies the recipient via WebSocket, or falls back to web push + email if offline.
+   * @body {string} profileId - Recipient profile ID
+   * @body {string} content - Message text
+   * @returns {SendMessageResponse} { conversation, message }
+   */
   fastify.post(
     '/message',
     { onRequest: [fastify.authenticate], config: rateLimitConfig(fastify, '1 minute', 30) },
@@ -220,7 +228,17 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
     }
   )
 
-  // Voice message upload endpoint
+  /**
+   * POST /voice
+   * Uploads and sends a voice message (multipart form data).
+   * Accepts audio files (mpeg, mp4, wav, webm, ogg). WAV is transcoded to MP3.
+   * Creates a conversation if one doesn't exist with the recipient.
+   * @body {string} profileId - Recipient profile ID (form field)
+   * @body {string} [content] - Optional text caption (form field)
+   * @body {number} duration - Audio duration in seconds (form field)
+   * @body {File} file - Audio file (multipart file field)
+   * @returns {SendMessageResponse} { conversation, message }
+   */
   fastify.post(
     '/voice',
     { onRequest: [fastify.authenticate], config: rateLimitConfig(fastify, '1 minute', 10) },

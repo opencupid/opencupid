@@ -8,6 +8,13 @@ const DeleteSubscriptionBodySchema = z.object({
 })
 
 const pushRoutes: FastifyPluginAsync = async (fastify) => {
+  /**
+   * POST /subscription
+   * Registers or updates a web push subscription for the authenticated user.
+   * @body {string} endpoint - Push subscription endpoint URL
+   * @body {{ p256dh: string, auth: string }} keys - Push encryption keys
+   * @returns {{ success, updated }}
+   */
   fastify.post(
     '/subscription',
     {
@@ -44,6 +51,12 @@ const pushRoutes: FastifyPluginAsync = async (fastify) => {
     }
   )
 
+  /**
+   * DELETE /subscription
+   * Removes a web push subscription by endpoint URL.
+   * @body {string} endpoint - Push subscription endpoint URL to remove
+   * @returns 204
+   */
   fastify.delete(
     '/subscription',
     {

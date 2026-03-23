@@ -9,6 +9,13 @@ interface WsMessage {
 }
 
 const messageWsRoutes: FastifyPluginAsync = async (fastify) => {
+  /**
+   * WS /message
+   * WebSocket endpoint for real-time messaging. Authenticates via a short-lived ticket
+   * (from GET /auth/ws-ticket). Maintains per-profile socket sets for broadcasting.
+   * Supports client heartbeat (type: 'ping' → responds 'pong').
+   * @query {string} ticket - Short-lived WS auth ticket
+   */
   fastify.get('/message', { websocket: true }, async (socket: WebSocket, req) => {
     let profileId: string
     try {

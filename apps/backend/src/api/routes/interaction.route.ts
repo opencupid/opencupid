@@ -20,7 +20,11 @@ const TargetLookupParamsSchema = z.object({
 const interactionRoutes: FastifyPluginAsync = async (fastify) => {
   const service = InteractionService.getInstance()
 
-  // GET /interactions
+  /**
+   * GET /
+   * Returns a dashboard summary: sent likes, matches, received likes (up to 4), and new match count.
+   * @returns {InteractionStatsResponse}
+   */
   fastify.get(
     '/',
     {
@@ -49,7 +53,14 @@ const interactionRoutes: FastifyPluginAsync = async (fastify) => {
     }
   )
 
-  // POST /interactions/like/:targetId
+  /**
+   * POST /like/:targetId
+   * Likes a profile. Creates a new like or returns existing. If mutual, triggers a match.
+   * Notifies the target via WebSocket and email.
+   * @param {string} targetId - Profile ID to like (CUID)
+   * @body {boolean} [isAnonymous=true] - Whether the like is anonymous (hidden from recipient)
+   * @returns {InteractionEdgeResponse}
+   */
   fastify.post<{ Params: { targetId: string } }>(
     '/like/:targetId',
     {
@@ -91,7 +102,13 @@ const interactionRoutes: FastifyPluginAsync = async (fastify) => {
     }
   )
 
-  // PATCH /interactions/like/:targetId
+  /**
+   * PATCH /like/:targetId
+   * Updates the anonymity of an existing like (reveal or re-hide).
+   * @param {string} targetId - Profile ID of the liked profile (CUID)
+   * @body {boolean} isAnonymous - New anonymity state
+   * @returns {InteractionEdgeResponse}
+   */
   fastify.patch<{ Params: { targetId: string } }>(
     '/like/:targetId',
     {
@@ -114,7 +131,12 @@ const interactionRoutes: FastifyPluginAsync = async (fastify) => {
     }
   )
 
-  // POST /interactions/pass/:targetId
+  /**
+   * POST /pass/:targetId
+   * Passes on (hides) a profile so it no longer appears in browse results.
+   * @param {string} targetId - Profile ID to pass on (CUID)
+   * @returns {{ success: boolean }}
+   */
   fastify.post<{ Params: { targetId: string } }>(
     '/pass/:targetId',
     {
@@ -135,7 +157,11 @@ const interactionRoutes: FastifyPluginAsync = async (fastify) => {
     }
   )
 
-  // GET /interactions/received
+  /**
+   * GET /received
+   * Returns all likes received by the current profile (anonymous likes show null sender).
+   * @returns {ReceivedLikesResponse}
+   */
   fastify.get(
     '/received',
     {
@@ -156,7 +182,11 @@ const interactionRoutes: FastifyPluginAsync = async (fastify) => {
     }
   )
 
-  // GET /interactions/sent
+  /**
+   * GET /sent
+   * Returns all likes sent by the current profile.
+   * @returns {InteractionEdgesResponse}
+   */
   fastify.get(
     '/sent',
     {
@@ -177,7 +207,11 @@ const interactionRoutes: FastifyPluginAsync = async (fastify) => {
     }
   )
 
-  // GET /interactions/matches
+  /**
+   * GET /matches
+   * Returns all mutual matches (profiles that liked each other) for the current profile.
+   * @returns {InteractionEdgesResponse}
+   */
   fastify.get(
     '/matches',
     {

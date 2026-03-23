@@ -13,6 +13,11 @@ import {
 const userRoutes: FastifyPluginAsync = async (fastify) => {
   const userService = UserService.getInstance()
 
+  /**
+   * GET /me
+   * Returns account-level settings (email, phone, language, newsletter/push preferences).
+   * @returns {GetUserSettingsResponse}
+   */
   fastify.get(
     '/me',
     {
@@ -35,6 +40,12 @@ const userRoutes: FastifyPluginAsync = async (fastify) => {
     }
   )
 
+  /**
+   * PATCH /me
+   * Updates the user's preferred language. Also updates the session locale.
+   * @body {string} language - Language code (e.g. 'en', 'hu')
+   * @returns {{ success: boolean }}
+   */
   fastify.patch(
     '/me',
     {

@@ -33,6 +33,12 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
   const captchaService = new CaptchaService(appConfig.ALTCHA_HMAC_KEY)
   const refreshTokenService = new RefreshTokenService(fastify.redis)
 
+  /**
+   * GET /verify-token
+   * Validates a magic-link token, creates or resumes a user session.
+   * @query {string} token - The magic-link or OTP token
+   * @returns {VerifyTokenResponse} JWT access token + refresh token
+   */
   fastify.get(
     '/verify-token',
     {
@@ -98,6 +104,13 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
     }
   )
 
+  /**
+   * POST /refresh
+   * Issues a new JWT + refresh token pair using an expired JWT and a valid refresh token.
+   * @body {string} refreshToken - The current refresh token
+   * @header Authorization: Bearer <expired-jwt>
+   * @returns {RefreshTokenResponse} New JWT + refresh token
+   */
   fastify.post(
     '/refresh',
     {
@@ -188,6 +201,16 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
     }
   )
 
+  /**
+   * POST /send-magic-link
+   * Sends a magic-link login email or SMS OTP code to the given identifier.
+   * Creates the user if they don't exist yet.
+   * @body {string} [email] - Email address (send email link)
+   * @body {string} [phonenumber] - Phone number (send SMS OTP)
+   * @body {string} captchaSolution - ALTCHA captcha solution
+   * @body {string} [language] - Preferred language code
+   * @returns {SendMagicLinkResponse} User info + status ('login' | 'register')
+   */
   fastify.post(
     '/send-magic-link',
     {
@@ -263,6 +286,11 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
     }
   )
 
+  /**
+   * POST /logout
+   * Invalidates all tokens for the current user, deletes the session and refresh tokens.
+   * @returns {{ success: boolean }}
+   */
   fastify.post(
     '/logout',
     {
@@ -286,6 +314,11 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
     }
   )
 
+  /**
+   * GET /ws-ticket
+   * Generates a short-lived ticket (30s) for authenticating a WebSocket connection.
+   * @returns {WsTicketResponse} { ticket: string }
+   */
   fastify.get(
     '/ws-ticket',
     {
@@ -305,6 +338,12 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
   // Dev-only: retrieve the latest OTP for a given authId (skips Mailpit)
   if (appConfig.DEV_AUTH_BYPASS_ENABLED && appConfig.NODE_ENV !== 'production') {
+    /**
+     * GET /dev/latest-token (dev only)
+     * Returns the most recent login token for a given authId, bypassing email/SMS delivery.
+     * @query {string} authId - The user's email or phone number
+     * @returns {{ token: string }}
+     */
     fastify.get('/dev/latest-token', async (req, reply) => {
       const { authId } = req.query as { authId?: string }
       if (!authId) {

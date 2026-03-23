@@ -72,16 +72,27 @@ export const conversationContextInclude = (myProfileId: string) => ({
   },
 })
 
+/**
+ * Prisma includes for computing the viewer ↔ target interaction state.
+ *
+ * ⚠️  The relation names are from the **target profile's** perspective, but the
+ * WHERE clauses filter them relative to the **viewer** (myProfileId). This
+ * flips the apparent direction:
+ *
+ *   likesReceived  →  likes the target *received* FROM myProfileId  →  "did I like them?"
+ *   likesSent      →  likes the target *sent* TO myProfileId        →  "did they like me?"
+ *   hiddenBy       →  hides placed on the target BY myProfileId     →  "did I pass them?"
+ */
 export const interactionContextInclude = (myProfileId: string) => {
   return {
     likesReceived: {
-      where: { fromId: myProfileId }, // Did I like them?
+      where: { fromId: myProfileId }, // likes FROM me → target  ("did I like them?")
     },
     likesSent: {
-      where: { toId: myProfileId }, // Did they like me?
+      where: { toId: myProfileId }, // likes FROM target → me  ("did they like me?")
     },
     hiddenBy: {
-      where: { fromId: myProfileId }, // Did I pass them?
+      where: { fromId: myProfileId }, // hides BY me on target  ("did I pass them?")
     },
   }
 }

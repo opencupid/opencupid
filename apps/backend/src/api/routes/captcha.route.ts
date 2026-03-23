@@ -5,6 +5,11 @@ import { appConfig } from '@/lib/appconfig'
 import type { CaptchaChallengeResponse } from '@zod/apiResponse.dto'
 
 const captchaRoutes: FastifyPluginAsync = async (fastify) => {
+  /**
+   * GET /challenge
+   * Generates an ALTCHA proof-of-work captcha challenge for client-side solving.
+   * @returns {CaptchaChallengeResponse} Challenge parameters (algorithm, challenge, salt, etc.)
+   */
   fastify.get('/challenge', async (_request, reply) => {
     try {
       const challenge = await createChallenge({
