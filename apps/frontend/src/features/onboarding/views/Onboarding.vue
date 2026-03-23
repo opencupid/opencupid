@@ -54,6 +54,7 @@ const handleWizardFinish = async () => {
     error.value = res.message || 'Failed to save profile'
     return
   }
+  // fetch welcome message
   await useMessageStore().fetchConversations()
 }
 

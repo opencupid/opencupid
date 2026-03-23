@@ -30,6 +30,7 @@ const {
   showEmptyState,
   showMessageModal,
   messageProfile,
+  fetchConversations,
 } = useMessagingViewModel()
 
 provide(
@@ -39,6 +40,7 @@ provide(
 
 onMounted(async () => {
   await initialize()
+  await fetchConversations()
 })
 </script>
 
