@@ -22,6 +22,10 @@ vi.mock('@/features/publicprofile/composables/useMessageSentState', () => ({
   }),
 }))
 
+vi.mock('@/features/shared/components/LocalizedTimeAgo.vue', () => ({
+  default: { template: '<span><slot timeAgo="time ago" /></span>' },
+}))
+
 vi.mock('@/assets/icons/interface/hide.svg', () => ({ default: { template: '<span />' } }))
 vi.mock('@/assets/icons/interface/unhide.svg', () => ({ default: { template: '<span />' } }))
 vi.mock('@/assets/icons/interface/delete.svg', () => ({ default: { template: '<span />' } }))
