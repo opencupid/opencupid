@@ -14,7 +14,12 @@ const tagsRoutes: FastifyPluginAsync = async (fastify) => {
   const tagService = TagService.getInstance()
 
   /**
-   * Get popular tags ordered by usage count
+   * GET /popular
+   * Returns popular tags ordered by usage count. Falls back to global results if no tags
+   * match the country filter.
+   * @query {number} [limit] - Max tags to return
+   * @query {string} [country] - Country code to filter by
+   * @returns {PopularTagsResponse}
    */
   fastify.get('/popular', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const { limit, country } = PopularTagsQuerySchema.parse(req.query)
@@ -35,7 +40,10 @@ const tagsRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   /**
-   * Search tags by partial name -- for type-ahead multi-select with debounce headers
+   * GET /search
+   * Searches tags by partial name for type-ahead. Returns debounce headers for frontend throttling.
+   * @query {string} q - Search query
+   * @returns {TagsResponse}
    */
   fastify.get('/search', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const { q } = SearchQuerySchema.parse(req.query)
@@ -59,7 +67,10 @@ const tagsRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   /**
-   * Create a new tag
+   * POST /
+   * Creates a user-generated tag in the session locale.
+   * @body {string} name - Tag display name
+   * @returns {TagResponse}
    */
   fastify.post(
     '/',

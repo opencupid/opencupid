@@ -30,11 +30,27 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
   // instantiate services
   const profileMatchService = ProfileMatchService.getInstance()
 
+  /**
+   * GET /social
+   * Returns paginated social profiles matching the viewer's social filter.
+   * @query {number} [skip=0] - Offset for pagination
+   * @query {number} [take=10] - Page size (max 50)
+   * @returns {GetProfilesResponse} Profiles without dating context
+   */
   fastify.get('/social', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const { skip, take } = PaginationQuerySchema.parse(req.query)
     return getSocialProfiles(req, reply, [{ updatedAt: 'desc' }], take, skip)
   })
 
+  /**
+   * GET /social/map
+   * Returns social profiles with location data for map display. Optionally filtered by bounds.
+   * @query {number} [south] - Bounding box south latitude
+   * @query {number} [north] - Bounding box north latitude
+   * @query {number} [west] - Bounding box west longitude
+   * @query {number} [east] - Bounding box east longitude
+   * @returns {GetProfilesResponse}
+   */
   fastify.get('/social/map', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     if (!req.session.profile.isSocialActive) {
       return sendForbiddenError(reply)
@@ -76,6 +92,15 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
     east: z.coerce.number(),
   })
 
+  /**
+   * GET /social/map/bounds
+   * Returns social profiles strictly within the given geographic bounding box.
+   * @query {number} south - Required south latitude
+   * @query {number} north - Required north latitude
+   * @query {number} west - Required west longitude
+   * @query {number} east - Required east longitude
+   * @returns {GetProfilesResponse}
+   */
   fastify.get('/social/map/bounds', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     if (!req.session.profile.isSocialActive) {
       return sendForbiddenError(reply)
@@ -107,11 +132,25 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
     }
   })
 
+  /**
+   * GET /dating
+   * Returns paginated dating profiles that mutually match the viewer's dating preferences.
+   * Requires isDatingActive on the viewer's profile.
+   * @query {number} [skip=0] - Offset for pagination
+   * @query {number} [take=10] - Page size (max 50)
+   * @returns {GetProfilesResponse} Profiles with dating context (like/match state)
+   */
   fastify.get('/dating', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const { skip, take } = PaginationQuerySchema.parse(req.query)
     return getDatingProfiles(req, reply, [{ updatedAt: 'desc' }], take, skip)
   })
 
+  /**
+   * GET /dating/match-ids
+   * Returns IDs of all profiles that mutually match the viewer's dating preferences.
+   * Returns empty array if dating is not active.
+   * @returns {GetMatchIdsResponse} { ids: string[] }
+   */
   fastify.get('/dating/match-ids', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     if (!req.session.profile.isDatingActive) {
       const response: GetMatchIdsResponse = { success: true, ids: [] }
@@ -128,6 +167,13 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
     }
   })
 
+  /**
+   * GET /social/new
+   * Returns recently created social profiles (newest first), regardless of location filter.
+   * @query {number} [skip=0] - Offset for pagination
+   * @query {number} [take=10] - Page size (max 50)
+   * @returns {GetProfilesResponse}
+   */
   fastify.get('/social/new', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const { skip, take } = PaginationQuerySchema.parse(req.query)
 
@@ -156,6 +202,11 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
     }
   })
 
+  /**
+   * GET /social/filter
+   * Returns the current user's social match filter (tag preferences, etc.).
+   * @returns {GetSocialMatchFilterResponse}
+   */
   fastify.get('/social/filter', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const locale = req.session.lang
     try {
@@ -172,6 +223,12 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
     }
   })
 
+  /**
+   * PATCH /social/filter
+   * Updates the current user's social match filter.
+   * @body {UpdateSocialMatchFilterPayload}
+   * @returns {GetSocialMatchFilterResponse}
+   */
   fastify.patch('/social/filter', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const data = await validateBody(UpdateSocialMatchFilterPayloadSchema, req, reply)
     if (!data) return

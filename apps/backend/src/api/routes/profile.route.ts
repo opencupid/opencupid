@@ -59,8 +59,9 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
   const messageService = MessageService.getInstance()
 
   /**
-   * Get the current user's profile
-   * @description This route retrieves the current user's social and dating profiles.
+   * GET /me
+   * Returns the current user's complete profile (owner view — includes private fields).
+   * @returns {GetMyProfileResponse}
    */
   fastify.get('/me', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const locale = req.session.lang
@@ -79,7 +80,9 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   /**
-   * Get opt-in flags for the current user/profile.
+   * GET /me/optin
+   * Returns opt-in flags (push notifications, newsletter, etc.) for the current user.
+   * @returns {GetProfileOptInResponse}
    */
   fastify.get('/me/optin', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     try {
@@ -94,7 +97,10 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   /**
-   * Update opt-in flags for the current user/profile.
+   * PATCH /me/optin
+   * Updates opt-in flags. Disabling push notifications also deletes all push subscriptions.
+   * @body {UpdateProfileOptInPayload}
+   * @returns {UpdateProfileOptInResponse}
    */
   fastify.patch('/me/optin', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const data = (await validateBody(
@@ -123,7 +129,9 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   /**
-   * Get dating preferences for the current user.
+   * GET /me/dating-prefs
+   * Returns dating preferences. Initializes defaults from profile data if not yet set.
+   * @returns {GetDatingPreferencesResponse}
    */
   fastify.get('/me/dating-prefs', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     try {
@@ -145,7 +153,10 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   /**
-   * Update dating preferences for the current user.
+   * PATCH /me/dating-prefs
+   * Updates dating preference filters (age range, distance, gender, etc.).
+   * @body {UpdateDatingPreferencesPayload}
+   * @returns {UpdateDatingPreferencesResponse}
    */
   fastify.patch('/me/dating-prefs', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const data = await validateBody(UpdateDatingPreferencesPayloadSchema, req, reply)
@@ -164,8 +175,12 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   /**
-   * Get a profile by ID
-   * @param {string} id - The id of the profile to retrieve
+   * GET /:id
+   * Returns a public profile with interaction context (like/match/conversation state).
+   * Dating context is only included when both profiles have dating active and are mutually compatible.
+   * Returns 404 if the target profile has blocked the viewer (intentionally vague for privacy).
+   * @param {string} id - Target profile ID (CUID)
+   * @returns {GetPublicProfileResponse}
    */
   fastify.get('/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const myProfileId = req.session.profileId
@@ -203,6 +218,14 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
     }
   })
 
+  /**
+   * GET /preview/:locale/:id
+   * Returns a preview of the viewer's own profile as others would see it, in the given locale.
+   * Only accessible for the viewer's own profile.
+   * @param {string} locale - Locale code for tag/field translations
+   * @param {string} id - Profile ID (must match the authenticated user's profile)
+   * @returns {GetPublicProfileResponse}
+   */
   fastify.get('/preview/:locale/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const myProfileId = req.session.profileId
 
@@ -229,9 +252,12 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   /**
-   * Create a new profile for the current user
-   * @description This route is used to create a new profile for the current user.
-   * It sets the onboarding flag to true, indicating that the user has completed the onboarding process.
+   * POST /me
+   * Creates/activates the current user's profile (onboarding completion).
+   * Sets isOnboarded=true, creates a social match filter, clears the session to refresh roles,
+   * and sends a welcome message. Can only be called once per user.
+   * @body {CreateProfilePayload} Profile data including isDatingActive, isSocialActive
+   * @returns {UpdateProfileResponse}
    */
   fastify.post('/me', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const data = (await validateBody(
@@ -288,7 +314,11 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   /**
-   * Update the current user's profile
+   * PATCH /me
+   * Updates the current user's profile fields. Strips isDatingActive/isSocialActive
+   * from the payload — those can only be changed via PATCH /scopes.
+   * @body {UpdateProfilePayload}
+   * @returns {UpdateProfileResponse}
    */
   fastify.patch('/me', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const data = (await validateBody(
@@ -333,6 +363,13 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
     }
   }
 
+  /**
+   * PATCH /scopes
+   * Toggles dating/social active flags. Rate-limited per day to prevent abuse.
+   * Updates the session with new scope data so subsequent requests see the change immediately.
+   * @body {UpdateProfileScopePayload} { isDatingActive?, isSocialActive? }
+   * @returns {UpdateProfileScopeResponse}
+   */
   fastify.patch(
     '/scopes',
     {
@@ -379,6 +416,12 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
     }
   )
 
+  /**
+   * POST /:id/block
+   * Blocks a profile. The blocked profile will see 404 when viewing the blocker.
+   * @param {string} id - Profile ID to block (CUID)
+   * @returns 204
+   */
   fastify.post('/:id/block', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const profileId = req.session.profileId
     try {
@@ -394,6 +437,12 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
     }
   })
 
+  /**
+   * POST /:id/unblock
+   * Removes a block on a profile.
+   * @param {string} id - Profile ID to unblock (CUID)
+   * @returns 204
+   */
   fastify.post('/:id/unblock', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const profileId = req.session.profileId
     try {
@@ -406,6 +455,11 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
     }
   })
 
+  /**
+   * GET /blocked
+   * Returns a list of profiles the current user has blocked.
+   * @returns {GetProfileSummariesResponse}
+   */
   fastify.get('/blocked', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const profileId = req.session.profileId
     try {

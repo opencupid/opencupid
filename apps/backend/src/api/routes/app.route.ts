@@ -14,6 +14,13 @@ function extractClientIp(headerValue: string | undefined, fallbackIp: string): s
 }
 
 const appRoutes: FastifyPluginAsync = async (fastify) => {
+  /**
+   * GET /version
+   * Returns backend and frontend version info. If the client sends its current version,
+   * includes an updateAvailable flag.
+   * @query {string} [v] - Client's current frontend version
+   * @returns {{ success, version: VersionDTO }}
+   */
   fastify.get(
     '/version',
     {
@@ -45,11 +52,16 @@ const appRoutes: FastifyPluginAsync = async (fastify) => {
     }
   )
 
+  /**
+   * GET /location
+   * Returns the client's country based on IP geolocation (MaxMind GeoLite2).
+   * In development, returns a hardcoded country ('MX').
+   * @returns {{ success, location: LocationDTO }} { country, cityName }
+   */
   fastify.get(
     '/location',
     {
       onRequest: [fastify.authenticate],
-      // rate limiter
       config: {
         ...rateLimitConfig(fastify, '5 minute', 5),
       },

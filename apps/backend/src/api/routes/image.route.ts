@@ -34,6 +34,11 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
   const profileService = ProfileService.getInstance()
   const imageService = ImageService.getInstance()
 
+  /**
+   * GET /me
+   * Returns all profile images for the authenticated user (owner view with private metadata).
+   * @returns {ImageApiResponse}
+   */
   fastify.get('/me', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     try {
       const rawImages = await imageService.listImages(req.user.userId)
@@ -46,7 +51,11 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
     }
   })
   /**
-   * Upload an image to the user's profile
+   * POST /
+   * Uploads a profile image (multipart). Validates file type and size.
+   * @body {File} file - Image file (multipart)
+   * @body {string} [captionText] - Optional image caption (form field)
+   * @returns {ImageApiResponse} Updated list of all profile images
    */
   fastify.post(
     '/',
@@ -115,7 +124,10 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   /**
-   * Delete a profile image
+   * DELETE /:id
+   * Deletes a profile image by its profile-image ID.
+   * @param {string} id - ProfileImage ID (CUID)
+   * @returns {ImageApiResponse} Updated list of remaining profile images
    */
   fastify.delete('/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const { id: profileImageId } = IdLookupParamsSchema.parse(req.params)
@@ -139,7 +151,10 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   /**
-   * Reorder profile images
+   * PATCH /order
+   * Reorders profile images by setting new position values.
+   * @body {ReorderProfileImagesPayload} { images: [{ id, position }] }
+   * @returns {ImageApiResponse} Updated list of profile images in new order
    */
   fastify.patch('/order', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const { images } = ReorderProfileImagesPayloadSchema.parse(req.body)

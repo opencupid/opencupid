@@ -24,7 +24,10 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
   const postService = PostService.getInstance(fastify.prisma)
 
   /**
-   * Create a new post
+   * POST /
+   * Creates a new post for the authenticated profile.
+   * @body {CreatePostPayload}
+   * @returns {CreatePostResponse} 201
    */
   fastify.post(
     '/',
@@ -55,7 +58,10 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   /**
-   * Get a specific post by ID
+   * GET /:id
+   * Returns a single post by ID (public view).
+   * @param {string} id - Post ID (CUID)
+   * @returns {{ success, post }}
    */
   fastify.get('/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const { id } = PostParamsSchema.parse(req.params)
@@ -77,7 +83,11 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   /**
-   * Update a post
+   * PATCH /:id
+   * Updates a post. Only the post owner can update.
+   * @param {string} id - Post ID (CUID)
+   * @body {UpdatePostPayload}
+   * @returns {UpdatePostResponse}
    */
   fastify.patch(
     '/:id',
@@ -113,7 +123,10 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   /**
-   * Delete a post
+   * DELETE /:id
+   * Deletes a post. Only the post owner can delete.
+   * @param {string} id - Post ID (CUID)
+   * @returns {DeletePostResponse}
    */
   fastify.delete(
     '/:id',
@@ -145,7 +158,12 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   /**
-   * List all posts
+   * GET /
+   * Returns all posts, optionally filtered by type, with pagination.
+   * @query {string} [type] - Post type filter
+   * @query {number} [limit] - Page size
+   * @query {number} [offset] - Offset
+   * @returns {PostsResponse}
    */
   fastify.get('/', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const query = PostQuerySchema.parse(req.query)
@@ -167,7 +185,15 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   /**
-   * Get nearby posts by lat/lon/radius
+   * GET /nearby
+   * Returns posts within a radius of a given coordinate.
+   * @query {number} lat - Center latitude
+   * @query {number} lon - Center longitude
+   * @query {number} radius - Radius in km
+   * @query {string} [type] - Post type filter
+   * @query {number} [limit] - Page size
+   * @query {number} [offset] - Offset
+   * @returns {PostsResponse}
    */
   fastify.get('/nearby', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const query = NearbyPostQuerySchema.parse(req.query)
@@ -189,7 +215,13 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   /**
-   * Get posts within map bounds
+   * GET /bounds
+   * Returns posts within a geographic bounding box.
+   * @query {number} south - South latitude
+   * @query {number} north - North latitude
+   * @query {number} west - West longitude
+   * @query {number} east - East longitude
+   * @returns {PostsResponse}
    */
   const BoundsQuerySchema = z.object({
     south: z.coerce.number(),
@@ -221,7 +253,12 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   /**
-   * Get recent posts (last week)
+   * GET /recent
+   * Returns posts created in the last 7 days.
+   * @query {string} [type] - Post type filter
+   * @query {number} [limit] - Page size
+   * @query {number} [offset] - Offset
+   * @returns {PostsResponse}
    */
   fastify.get('/recent', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const query = PostQuerySchema.parse(req.query)
@@ -243,7 +280,13 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   /**
-   * Get posts by profile ID (for viewing user's own posts)
+   * GET /profile/:profileId
+   * Returns posts by a specific profile. Includes invisible posts only when viewing own profile.
+   * @param {string} profileId - Profile ID (CUID)
+   * @query {string} [type] - Post type filter
+   * @query {number} [limit] - Page size
+   * @query {number} [offset] - Offset
+   * @returns {PostsResponse}
    */
   fastify.get('/profile/:profileId', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const { id: profileId } = PostParamsSchema.parse({ id: (req.params as any).profileId })
@@ -271,7 +314,12 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   /**
-   * Get current user's posts
+   * GET /profile/me
+   * Returns the current user's posts (owner view — always includes invisible posts).
+   * @query {string} [type] - Post type filter
+   * @query {number} [limit] - Page size
+   * @query {number} [offset] - Offset
+   * @returns {{ success, posts }}
    */
   fastify.get('/profile/me', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const profileId = req.session.profileId
