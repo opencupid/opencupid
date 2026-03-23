@@ -13,7 +13,7 @@ console.log(`JWT_SECRET=${randomUUID()}`)
 console.log(`AUTH_IMG_HMAC_SECRET=${randomUUID()}`)
 console.log(`ALTCHA_HMAC_KEY=${randomUUID()}`)
 
-// --- VAPID key pair (ECDH P-256, URL-safe base64) ---
+// --- VAPID key pair (EC P-256 / prime256v1, URL-safe base64) ---
 const { publicKey, privateKey } = generateKeyPairSync('ec', {
   namedCurve: 'prime256v1',
   publicKeyEncoding: { type: 'spki', format: 'der' },
