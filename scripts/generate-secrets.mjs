@@ -14,17 +14,19 @@ console.log(`AUTH_IMG_HMAC_SECRET=${randomUUID()}`)
 console.log(`ALTCHA_HMAC_KEY=${randomUUID()}`)
 
 // --- VAPID key pair (EC P-256 / prime256v1, URL-safe base64) ---
-const { publicKey, privateKey } = generateKeyPairSync('ec', {
+const { publicKey: publicJwk, privateKey: privateJwk } = generateKeyPairSync('ec', {
   namedCurve: 'prime256v1',
-  publicKeyEncoding: { type: 'spki', format: 'der' },
-  privateKeyEncoding: { type: 'pkcs8', format: 'der' },
+  publicKeyEncoding: { format: 'jwk' },
+  privateKeyEncoding: { format: 'jwk' },
 })
 
-// web-push expects the raw 65-byte uncompressed public key and 32-byte private scalar,
-// both encoded as URL-safe base64 (no padding).
-// SPKI DER = 26-byte header + 65-byte EC point; PKCS8 DER = 36-byte header + 32-byte scalar + …
-const vapidPublic = publicKey.subarray(-65).toString('base64url')
-const vapidPrivate = privateKey.subarray(36, 36 + 32).toString('base64url')
+// web-push expects the raw 65-byte uncompressed public key (0x04 || x || y)
+// and the 32-byte private scalar (d), both encoded as URL-safe base64 (no padding).
+const xBuf = Buffer.from(publicJwk.x, 'base64url')
+const yBuf = Buffer.from(publicJwk.y, 'base64url')
+const uncompressedPoint = Buffer.concat([Buffer.from([0x04]), xBuf, yBuf])
+const vapidPublic = uncompressedPoint.toString('base64url')
+const vapidPrivate = Buffer.from(privateJwk.d, 'base64url').toString('base64url')
 
 console.log(`\n# VAPID keys for web push\n`)
 console.log(`VAPID_PUBLIC_KEY=${vapidPublic}`)
