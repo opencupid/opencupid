@@ -13,7 +13,7 @@ import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
 import SendMessageForm from '@/features/messaging/components/SendMessageForm.vue'
 import { useMessageSentState } from '@/features/publicprofile/composables/useMessageSentState'
 
-import { UseTimeAgo } from '@vueuse/components'
+import LocalizedTimeAgo from '@/features/shared/components/LocalizedTimeAgo.vue'
 
 const props = defineProps<{
   post: PublicPostWithProfile | OwnerPost
@@ -116,12 +116,12 @@ const handleContact = async () => {
                     class="me-2"
                   />
                   <div>{{ post.postedBy.publicName }}</div>
-                  <UseTimeAgo
+                  <LocalizedTimeAgo
                     v-slot="{ timeAgo }"
                     :time="post.createdAt"
                   >
                     | {{ timeAgo }}
-                  </UseTimeAgo>
+                  </LocalizedTimeAgo>
                 </div>
               </div>
             </div>
@@ -132,10 +132,10 @@ const handleContact = async () => {
             v-if="!showDetails"
           >
             <div class="post-date text-muted small">
-              <UseTimeAgo
+              <LocalizedTimeAgo
                 v-slot="{ timeAgo }"
                 :time="post.createdAt"
-                >{{ timeAgo }}</UseTimeAgo
+                >{{ timeAgo }}</LocalizedTimeAgo
               >
             </div>
             <OwnerToolbar
