@@ -25,6 +25,10 @@ import type { MapBounds } from '@/features/shared/components/osmPoiMap/OsmPoiMap
 const PublicPostWithProfileArraySchema = PublicPostWithProfileSchema.array()
 const OwnerPostArraySchema = OwnerPostSchema.array()
 
+type StorePostResponse = StoreResponse<{ post: OwnerPost }>
+type StorePostsResponse = StoreResponse<{ posts: PublicPostWithProfile[] }>
+type StoreOwnerPostsResponse = StoreResponse<{ posts: OwnerPost[] }>
+
 export const usePostStore = defineStore('posts', {
   state: () => ({
     posts: [] as PublicPostWithProfile[],
@@ -41,7 +45,7 @@ export const usePostStore = defineStore('posts', {
   },
 
   actions: {
-    async createPost(payload: CreatePostPayload): Promise<StoreResponse<{ post: OwnerPost }>> {
+    async createPost(payload: CreatePostPayload): Promise<StorePostResponse> {
       try {
         const res = await safeApiCall(() => api.post<CreatePostResponse>('/posts', payload))
         const post = OwnerPostSchema.parse(res.data.post)
@@ -52,10 +56,7 @@ export const usePostStore = defineStore('posts', {
       }
     },
 
-    async updatePost(
-      id: string,
-      payload: UpdatePostPayload
-    ): Promise<StoreResponse<{ post: OwnerPost }>> {
+    async updatePost(id: string, payload: UpdatePostPayload): Promise<StorePostResponse> {
       try {
         const res = await safeApiCall(() => api.patch<UpdatePostResponse>(`/posts/${id}`, payload))
         const post = OwnerPostSchema.parse(res.data.post)
@@ -90,10 +91,7 @@ export const usePostStore = defineStore('posts', {
       }
     },
 
-    async setPostVisibility(
-      id: string,
-      isVisible: boolean
-    ): Promise<StoreResponse<{ post: OwnerPost }>> {
+    async setPostVisibility(id: string, isVisible: boolean): Promise<StorePostResponse> {
       try {
         const res = await safeApiCall(() =>
           api.patch<UpdatePostResponse>(`/posts/${id}`, { isVisible })
@@ -162,7 +160,7 @@ export const usePostStore = defineStore('posts', {
       }
     },
 
-    async fetchPost(id: string): Promise<StoreResponse<{ post: OwnerPost }>> {
+    async fetchPost(id: string): Promise<StorePostResponse> {
       try {
         const res = await safeApiCall(() => api.get<PostResponse>(`/posts/${id}`))
         const post = OwnerPostSchema.parse(res.data.post)
@@ -173,9 +171,7 @@ export const usePostStore = defineStore('posts', {
       }
     },
 
-    async fetchPosts(
-      query: PostQueryInput = {}
-    ): Promise<StoreResponse<{ posts: PublicPostWithProfile[] }>> {
+    async fetchPosts(query: PostQueryInput = {}): Promise<StorePostsResponse> {
       try {
         const res = await safeApiCall(() => api.get<PostsResponse>('/posts', { params: query }))
         const posts = PublicPostWithProfileArraySchema.parse(res.data.posts)
@@ -191,9 +187,7 @@ export const usePostStore = defineStore('posts', {
       }
     },
 
-    async fetchNearbyPosts(
-      query: NearbyPostQueryInput
-    ): Promise<StoreResponse<{ posts: PublicPostWithProfile[] }>> {
+    async fetchNearbyPosts(query: NearbyPostQueryInput): Promise<StorePostsResponse> {
       try {
         const res = await safeApiCall(() =>
           api.get<PostsResponse>('/posts/nearby', { params: query })
@@ -211,9 +205,7 @@ export const usePostStore = defineStore('posts', {
       }
     },
 
-    async fetchRecentPosts(
-      query: PostQueryInput = {}
-    ): Promise<StoreResponse<{ posts: PublicPostWithProfile[] }>> {
+    async fetchRecentPosts(query: PostQueryInput = {}): Promise<StorePostsResponse> {
       try {
         const res = await safeApiCall(() =>
           api.get<PostsResponse>('/posts/recent', { params: query })
@@ -231,7 +223,7 @@ export const usePostStore = defineStore('posts', {
       }
     },
 
-    async fetchMyPosts(query: PostQueryInput = {}): Promise<StoreResponse<{ posts: OwnerPost[] }>> {
+    async fetchMyPosts(query: PostQueryInput = {}): Promise<StoreOwnerPostsResponse> {
       try {
         const res = await safeApiCall(() =>
           api.get<MyPostsResponse>('/posts/profile/me', { params: query })
@@ -249,9 +241,7 @@ export const usePostStore = defineStore('posts', {
       }
     },
 
-    async fetchPostsInBounds(
-      bounds: MapBounds
-    ): Promise<StoreResponse<{ posts: PublicPostWithProfile[] }>> {
+    async fetchPostsInBounds(bounds: MapBounds): Promise<StorePostsResponse> {
       try {
         const res = await safeApiCall(() =>
           api.get<PostsResponse>('/posts/bounds', { params: bounds })
