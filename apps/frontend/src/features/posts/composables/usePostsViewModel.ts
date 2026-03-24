@@ -83,9 +83,7 @@ export function usePostsViewModel() {
 
     // Only OwnerPost has isVisible property
     const isVisible = 'isVisible' in post ? post.isVisible !== false : true
-    const result = isVisible
-      ? await postStore.hidePost(post.id)
-      : await postStore.showPost(post.id)
+    const result = isVisible ? await postStore.hidePost(post.id) : await postStore.showPost(post.id)
 
     if (result.success) {
       closePostOverlays()

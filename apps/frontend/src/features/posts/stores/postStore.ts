@@ -20,6 +20,7 @@ import type {
 } from '@zod/apiResponse.dto'
 import { type PostTypeType } from '@zod/generated'
 import { storeSuccess, storeError, type StoreResponse } from '@/store/helpers'
+import type { MapBounds } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
 
 const PublicPostWithProfileArraySchema = PublicPostWithProfileSchema.array()
 const OwnerPostArraySchema = OwnerPostSchema.array()
@@ -56,9 +57,7 @@ export const usePostStore = defineStore('posts', {
       payload: UpdatePostPayload
     ): Promise<StoreResponse<{ post: OwnerPost }>> {
       try {
-        const res = await safeApiCall(() =>
-          api.patch<UpdatePostResponse>(`/posts/${id}`, payload)
-        )
+        const res = await safeApiCall(() => api.patch<UpdatePostResponse>(`/posts/${id}`, payload))
         const post = OwnerPostSchema.parse(res.data.post)
 
         const index = this.myPosts.findIndex((p) => p.id === id)
@@ -178,9 +177,7 @@ export const usePostStore = defineStore('posts', {
       query: PostQueryInput = {}
     ): Promise<StoreResponse<{ posts: PublicPostWithProfile[] }>> {
       try {
-        const res = await safeApiCall(() =>
-          api.get<PostsResponse>('/posts', { params: query })
-        )
+        const res = await safeApiCall(() => api.get<PostsResponse>('/posts', { params: query }))
         const posts = PublicPostWithProfileArraySchema.parse(res.data.posts)
 
         if (query.offset === 0 || query.offset === undefined) {
@@ -234,9 +231,7 @@ export const usePostStore = defineStore('posts', {
       }
     },
 
-    async fetchMyPosts(
-      query: PostQueryInput = {}
-    ): Promise<StoreResponse<{ posts: OwnerPost[] }>> {
+    async fetchMyPosts(query: PostQueryInput = {}): Promise<StoreResponse<{ posts: OwnerPost[] }>> {
       try {
         const res = await safeApiCall(() =>
           api.get<MyPostsResponse>('/posts/profile/me', { params: query })
@@ -254,12 +249,9 @@ export const usePostStore = defineStore('posts', {
       }
     },
 
-    async fetchPostsInBounds(bounds: {
-      south: number
-      north: number
-      west: number
-      east: number
-    }): Promise<StoreResponse<{ posts: PublicPostWithProfile[] }>> {
+    async fetchPostsInBounds(
+      bounds: MapBounds
+    ): Promise<StoreResponse<{ posts: PublicPostWithProfile[] }>> {
       try {
         const res = await safeApiCall(() =>
           api.get<PostsResponse>('/posts/bounds', { params: bounds })
