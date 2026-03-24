@@ -11,20 +11,21 @@ vi.mock('../../stores/postStore', () => ({
   usePostStore: () => ({
     posts: [],
     myPosts: [],
-    isLoading: false,
-    error: null,
     loadPosts: mockLoadPosts,
-    clearError: vi.fn(),
   }),
 }))
 
 import { usePostListViewModel } from '../usePostListViewModel'
 
+function storeResult(posts: unknown[]) {
+  return { success: true, data: { posts } }
+}
+
 describe('usePostListViewModel', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
-    mockLoadPosts.mockResolvedValue([])
+    mockLoadPosts.mockResolvedValue(storeResult([]))
   })
 
   it('initializes with page 0 and hasMorePosts true', () => {
@@ -37,7 +38,7 @@ describe('usePostListViewModel', () => {
   it('handleLoadMore increments page and calls loadPosts with append', async () => {
     const vm = usePostListViewModel({ scope: 'all' })
 
-    mockLoadPosts.mockResolvedValueOnce(new Array(20).fill({}))
+    mockLoadPosts.mockResolvedValueOnce(storeResult(new Array(20).fill({})))
     await vm.handleLoadMore()
 
     expect(mockLoadPosts).toHaveBeenCalledWith(
@@ -49,14 +50,14 @@ describe('usePostListViewModel', () => {
   it('sets hasMorePosts to false when fewer than pageSize items returned', async () => {
     const vm = usePostListViewModel({ scope: 'all' })
 
-    mockLoadPosts.mockResolvedValueOnce(new Array(5).fill({}))
+    mockLoadPosts.mockResolvedValueOnce(storeResult(new Array(5).fill({})))
     await vm.handleLoadMore()
 
     expect(vm.hasMorePosts.value).toBe(false)
   })
 
   it('keeps hasMorePosts true when a full page is returned', async () => {
-    mockLoadPosts.mockResolvedValue(new Array(20).fill({}))
+    mockLoadPosts.mockResolvedValue(storeResult(new Array(20).fill({})))
     const vm = usePostListViewModel({ scope: 'all' })
     await vi.waitFor(() => expect(vm.isInitialized.value).toBe(true))
 
@@ -71,7 +72,7 @@ describe('usePostListViewModel', () => {
     let loadingDuringFetch = false
     mockLoadPosts.mockImplementationOnce(async () => {
       loadingDuringFetch = vm.isLoadingMore.value
-      return []
+      return storeResult([])
     })
 
     await vm.handleLoadMore()
@@ -84,12 +85,12 @@ describe('usePostListViewModel', () => {
     const vm = usePostListViewModel({ scope: 'all' })
 
     // Load a page first
-    mockLoadPosts.mockResolvedValueOnce(new Array(20).fill({}))
+    mockLoadPosts.mockResolvedValueOnce(storeResult(new Array(20).fill({})))
     await vm.handleLoadMore()
     expect(mockLoadPosts).toHaveBeenLastCalledWith('all', expect.objectContaining({ page: 1 }))
 
     // Type filter should reset to page 0
-    mockLoadPosts.mockResolvedValueOnce([])
+    mockLoadPosts.mockResolvedValueOnce(storeResult([]))
     vm.handleTypeFilter()
     await new Promise((resolve) => setTimeout(resolve, 0))
 
