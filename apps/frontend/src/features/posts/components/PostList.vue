@@ -12,13 +12,11 @@ interface Props {
   title?: string
   type?: PostTypeType
   scope: 'all' | 'nearby' | 'recent' | 'my'
-  shouldFetch: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   title: 'Posts',
   scope: 'all',
-  shouldFetch: true,
 })
 
 const emit = defineEmits<{

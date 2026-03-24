@@ -18,6 +18,7 @@ import FloatingButton from '@/features/shared/components/FloatingButton.vue'
 
 import { usePostsViewModel } from '../composables/usePostsViewModel'
 import { usePostStore } from '../stores/postStore'
+import { useNativeOffcanvas } from '@/features/shared/composables/useNativeOffcanvas'
 import type { PublicPostWithProfile, OwnerPost } from '@zod/post/post.dto'
 import type { PostTypeType } from '@zod/generated'
 
@@ -54,6 +55,9 @@ function handleEditAndClose(post: PublicPostWithProfile | OwnerPost) {
 
 provide('ownerProfile', ownerProfile)
 
+const myPostsEl = ref<HTMLElement>()
+useNativeOffcanvas(myPostsEl, showMyPosts)
+
 const postStore = usePostStore()
 
 const selectedType = ref<PostTypeType | ''>('')
@@ -78,9 +82,7 @@ const mapPois = computed<MapPoi[]>(() =>
     .filter((p) => p.location?.lat != null && p.location?.lon != null)
     .map((p) => ({
       id: p.id,
-      title: p.postedBy
-        ? `${p.content.substring(0, 50)}...`
-        : p.content.substring(0, 50),
+      title: p.postedBy ? `${p.content.substring(0, 50)}...` : p.content.substring(0, 50),
       location: { lat: p.location!.lat!, lon: p.location!.lon! },
       image: p.postedBy?.profileImages?.[0],
       source: p,
@@ -121,9 +123,7 @@ onActivated(() => {
         v-if="viewMode === 'grid'"
         :key="activeTab"
         :scope="activeTab"
-        :should-fetch="true"
         :type="selectedType || undefined"
-        :show-filters="false"
         @intent:fullview="handleFullview"
         @intent:edit="handleEdit"
         @intent:close="closePostOverlays"
@@ -204,42 +204,51 @@ onActivated(() => {
     </template>
   </BModal>
 
-  <!-- My Posts Offcanvas -->
-  <BOffcanvas
-    v-model="showMyPosts"
-    placement="end"
-    :title="t('posts.my_posts')"
-    shadow
+  <!-- My Posts Offcanvas (native Bootstrap — bypasses bootstrap-vue-next close-animation flash bug) -->
+  <div
+    ref="myPostsEl"
+    class="offcanvas offcanvas-end shadow"
+    tabindex="-1"
   >
-    <PostList
-      scope="my"
-      :should-fetch="showMyPosts"
-      :show-filters="false"
-      cols="1"
-      cols-sm="1"
-      cols-lg="1"
-      @intent:fullview="handleFullview"
-      @intent:edit="handleEdit"
-      @intent:close="closePostOverlays"
-      @intent:hide="handleHide"
-      @intent:delete="handleDelete"
-    >
-      <template #empty>
-        <p class="text-muted mb-0">{{ t('posts.messages.no_my_posts') }}</p>
-      </template>
-    </PostList>
-    <div
-      class="position-fixed bottom-0 end-0 p-3 text-cente w-100r"
-      style="width: inherit"
-    >
-      <BButton
-        variant="primary"
-        @click="handleCreate()"
-      >
-        {{ t('posts.actions.create_cta') }}
-      </BButton>
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title">{{ t('posts.my_posts') }}</h5>
+      <button
+        type="button"
+        class="btn-close"
+        data-bs-dismiss="offcanvas"
+        :aria-label="t('uicomponents.actions.close')"
+      />
     </div>
-  </BOffcanvas>
+    <div class="offcanvas-body">
+      <PostList
+        v-if="showMyPosts"
+        scope="my"
+        cols="1"
+        cols-sm="1"
+        cols-lg="1"
+        @intent:fullview="handleFullview"
+        @intent:edit="handleEdit"
+        @intent:close="closePostOverlays"
+        @intent:hide="handleHide"
+        @intent:delete="handleDelete"
+      >
+        <template #empty>
+          <p class="text-muted mb-0">{{ t('posts.messages.no_my_posts') }}</p>
+        </template>
+      </PostList>
+      <div
+        class="position-fixed bottom-0 end-0 p-3 text-center"
+        style="width: inherit"
+      >
+        <BButton
+          variant="primary"
+          @click="handleCreate()"
+        >
+          {{ t('posts.actions.create_cta') }}
+        </BButton>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped lang="scss">
