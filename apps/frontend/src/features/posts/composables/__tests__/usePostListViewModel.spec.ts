@@ -28,14 +28,14 @@ describe('usePostListViewModel', () => {
   })
 
   it('initializes with page 0 and hasMorePosts true', () => {
-    const vm = usePostListViewModel({ scope: 'all', shouldFetch: false })
+    const vm = usePostListViewModel({ scope: 'all' })
     expect(vm.hasMorePosts.value).toBe(true)
     expect(vm.isLoadingMore.value).toBe(false)
     expect(vm.isInitialized.value).toBe(false)
   })
 
   it('handleLoadMore increments page and calls loadPosts with append', async () => {
-    const vm = usePostListViewModel({ scope: 'all', shouldFetch: false })
+    const vm = usePostListViewModel({ scope: 'all' })
 
     mockLoadPosts.mockResolvedValueOnce(new Array(20).fill({}))
     await vm.handleLoadMore()
@@ -47,7 +47,7 @@ describe('usePostListViewModel', () => {
   })
 
   it('sets hasMorePosts to false when fewer than pageSize items returned', async () => {
-    const vm = usePostListViewModel({ scope: 'all', shouldFetch: false })
+    const vm = usePostListViewModel({ scope: 'all' })
 
     mockLoadPosts.mockResolvedValueOnce(new Array(5).fill({}))
     await vm.handleLoadMore()
@@ -56,16 +56,17 @@ describe('usePostListViewModel', () => {
   })
 
   it('keeps hasMorePosts true when a full page is returned', async () => {
-    const vm = usePostListViewModel({ scope: 'all', shouldFetch: false })
+    mockLoadPosts.mockResolvedValue(new Array(20).fill({}))
+    const vm = usePostListViewModel({ scope: 'all' })
+    await vi.waitFor(() => expect(vm.isInitialized.value).toBe(true))
 
-    mockLoadPosts.mockResolvedValueOnce(new Array(20).fill({}))
     await vm.handleLoadMore()
 
     expect(vm.hasMorePosts.value).toBe(true)
   })
 
   it('sets isLoadingMore true during handleLoadMore and resets after', async () => {
-    const vm = usePostListViewModel({ scope: 'all', shouldFetch: false })
+    const vm = usePostListViewModel({ scope: 'all' })
 
     let loadingDuringFetch = false
     mockLoadPosts.mockImplementationOnce(async () => {
@@ -80,7 +81,7 @@ describe('usePostListViewModel', () => {
   })
 
   it('handleTypeFilter resets pagination and reloads from page 0', async () => {
-    const vm = usePostListViewModel({ scope: 'all', shouldFetch: false })
+    const vm = usePostListViewModel({ scope: 'all' })
 
     // Load a page first
     mockLoadPosts.mockResolvedValueOnce(new Array(20).fill({}))
