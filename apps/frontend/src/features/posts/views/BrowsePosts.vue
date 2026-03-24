@@ -67,7 +67,7 @@ const currentTabPosts = computed(() => {
   return postStore.posts
 })
 
-const isViewLoading = computed(() => isLoading.value || postStore.isLoading)
+const isViewLoading = computed(() => isLoading.value)
 const haveResults = computed(() => currentTabPosts.value.length > 0)
 
 const mapCenter = computed<[number, number] | undefined>(() => {

@@ -1,12 +1,15 @@
 import { defineStore } from 'pinia'
 import { api, safeApiCall } from '@/lib/api'
-import type {
-  CreatePostPayload,
-  UpdatePostPayload,
-  PublicPostWithProfile,
-  OwnerPost,
-  PostQueryInput,
-  NearbyPostQueryInput,
+import {
+  PublicPostWithProfileSchema,
+  OwnerPostSchema,
+  type PublicPostWithProfile,
+  type OwnerPost,
+  type CreatePostPayload,
+  type UpdatePostPayload,
+  type PostQueryInput,
+  type NearbyPostQueryInput,
+  type PostScope,
 } from '@zod/post/post.dto'
 import type {
   PostsResponse,
@@ -17,14 +20,20 @@ import type {
   DeletePostResponse,
 } from '@zod/apiResponse.dto'
 import { type PostTypeType } from '@zod/generated'
+import { storeSuccess, storeError, type StoreResponse } from '@/store/helpers'
+import type { MapBounds } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
+
+const PublicPostWithProfileArraySchema = PublicPostWithProfileSchema.array()
+const OwnerPostArraySchema = OwnerPostSchema.array()
+type StorePostResponse = StoreResponse<{ post: OwnerPost }>
+type StorePostsResponse = StoreResponse<{ posts: PublicPostWithProfile[] }>
+type StoreOwnerPostsResponse = StoreResponse<{ posts: OwnerPost[] }>
 
 export const usePostStore = defineStore('posts', {
   state: () => ({
     posts: [] as PublicPostWithProfile[],
     myPosts: [] as OwnerPost[],
     currentPost: null as PublicPostWithProfile | OwnerPost | null,
-    isLoading: false,
-    error: null as string | null,
   }),
 
   getters: {
@@ -36,132 +45,77 @@ export const usePostStore = defineStore('posts', {
   },
 
   actions: {
-    async createPost(payload: CreatePostPayload) {
-      this.isLoading = true
-      this.error = null
-
+    async createPost(payload: CreatePostPayload): Promise<StorePostResponse> {
       try {
-        const r = await safeApiCall<{ data: CreatePostResponse }>(() => api.post('/posts', payload))
-
-        const response = r.data
-
-        if (response.success) {
-          this.myPosts.unshift(response.post)
-          return response.post
-        } else {
-          this.error = 'Failed to create post'
-          return null
-        }
+        const res = await safeApiCall(() => api.post<CreatePostResponse>('/posts', payload))
+        const post = OwnerPostSchema.parse(res.data.post)
+        this.myPosts.unshift(post)
+        return storeSuccess({ post })
       } catch (error: any) {
-        this.error = error.message || 'Failed to create post'
-        return null
-      } finally {
-        this.isLoading = false
+        return storeError(error, 'Failed to create post')
       }
     },
 
-    async updatePost(id: string, payload: UpdatePostPayload) {
-      this.isLoading = true
-      this.error = null
-
+    async updatePost(id: string, payload: UpdatePostPayload): Promise<StorePostResponse> {
       try {
-        const r = await safeApiCall<{ data: UpdatePostResponse }>(() =>
-          api.patch(`/posts/${id}`, payload)
+        const res = await safeApiCall(() => api.patch<UpdatePostResponse>(`/posts/${id}`, payload))
+        const post = OwnerPostSchema.parse(res.data.post)
+
+        const index = this.myPosts.findIndex((p) => p.id === id)
+        if (index !== -1) {
+          this.myPosts[index] = post
+        }
+        if (this.currentPost?.id === id) {
+          this.currentPost = post
+        }
+
+        return storeSuccess({ post })
+      } catch (error: any) {
+        return storeError(error, 'Failed to update post')
+      }
+    },
+
+    async deletePost(id: string): Promise<StoreResponse<void>> {
+      try {
+        await safeApiCall(() => api.delete<DeletePostResponse>(`/posts/${id}`))
+
+        this.myPosts = this.myPosts.filter((post) => post.id !== id)
+        this.posts = this.posts.filter((post) => post.id !== id)
+        if (this.currentPost?.id === id) {
+          this.currentPost = null
+        }
+
+        return storeSuccess()
+      } catch (error: any) {
+        return storeError(error, 'Failed to delete post')
+      }
+    },
+
+    async setPostVisibility(id: string, isVisible: boolean): Promise<StorePostResponse> {
+      try {
+        const res = await safeApiCall(() =>
+          api.patch<UpdatePostResponse>(`/posts/${id}`, { isVisible })
         )
-        const response = r.data
+        const post = OwnerPostSchema.parse(res.data.post)
 
-        if (response.success) {
-          // Update in myPosts array
-          const index = this.myPosts.findIndex((post) => post.id === id)
-          if (index !== -1) {
-            this.myPosts[index] = response.post
-          }
-
-          // Update current post if it's the same
-          if (this.currentPost?.id === id) {
-            this.currentPost = response.post
-          }
-
-          return response.post
-        } else {
-          this.error = 'Failed to update post'
-          return null
+        const index = this.myPosts.findIndex((p) => p.id === id)
+        if (index !== -1) {
+          this.myPosts[index] = post
         }
-      } catch (error: any) {
-        this.error = error.message || 'Failed to update post'
-        return null
-      } finally {
-        this.isLoading = false
-      }
-    },
 
-    async deletePost(id: string) {
-      this.isLoading = true
-      this.error = null
-
-      try {
-        const r = await safeApiCall<{ data: DeletePostResponse }>(() => api.delete(`/posts/${id}`))
-        const response = r.data
-
-        if (response.success) {
-          // Remove from myPosts
-          this.myPosts = this.myPosts.filter((post) => post.id !== id)
-
-          // Remove from posts if it exists there
-          this.posts = this.posts.filter((post) => post.id !== id)
-
-          // Clear current post if it's the same
-          if (this.currentPost?.id === id) {
-            this.currentPost = null
-          }
-
-          return true
+        if (post.isVisible) {
+          this.upsertPost(post)
         } else {
-          this.error = 'Failed to delete post'
-          return false
+          this.posts = this.posts.filter((p) => p.id !== id)
         }
-      } catch (error: any) {
-        this.error = error.message || 'Failed to delete post'
-        return false
-      } finally {
-        this.isLoading = false
-      }
-    },
 
-    async setPostVisibility(id: string, isVisible: boolean) {
-      this.isLoading = true
-      this.error = null
-
-      try {
-        const r = await safeApiCall<{ data: UpdatePostResponse }>(() =>
-          api.patch(`/posts/${id}`, { isVisible })
-        )
-        const response = r.data
-
-        if (response.success) {
-          const index = this.myPosts.findIndex((post) => post.id === id)
-          if (index !== -1) {
-            this.myPosts[index] = response.post
-          }
-
-          if (!response.post.isVisible) {
-            this.posts = this.posts.filter((post) => post.id !== id)
-          }
-
-          if (this.currentPost?.id === id) {
-            this.currentPost = response.post
-          }
-
-          return response.post
-        } else {
-          this.error = 'Failed to update post visibility'
-          return null
+        if (this.currentPost?.id === id) {
+          this.currentPost = post
         }
+
+        return storeSuccess({ post })
       } catch (error: any) {
-        this.error = error.message || 'Failed to update post visibility'
-        return null
-      } finally {
-        this.isLoading = false
+        return storeError(error, 'Failed to update post visibility')
       }
     },
 
@@ -174,12 +128,12 @@ export const usePostStore = defineStore('posts', {
     },
 
     async loadPosts(
-      scope: 'all' | 'nearby' | 'recent' | 'my',
+      scope: PostScope,
       options: {
         type?: PostTypeType
         page?: number
         pageSize?: number
-        nearbyParams?: { lat: number; lon: number; radius?: number }
+        nearbyParams?: NearbyPostQueryInput
       } = {}
     ) {
       const { type, page = 0, pageSize = 20, nearbyParams } = options
@@ -193,12 +147,10 @@ export const usePostStore = defineStore('posts', {
           if (nearbyParams) {
             return await this.fetchNearbyPosts({
               ...baseQuery,
-              lat: nearbyParams.lat,
-              lon: nearbyParams.lon,
-              radius: nearbyParams.radius ?? 50,
+              ...nearbyParams,
             })
           }
-          return []
+          return storeSuccess({ posts: [] as PublicPostWithProfile[] })
         case 'recent':
           return await this.fetchRecentPosts(baseQuery)
         case 'my':
@@ -208,199 +160,97 @@ export const usePostStore = defineStore('posts', {
       }
     },
 
-    async fetchPost(id: string) {
-      this.isLoading = true
-      this.error = null
-
+    async fetchPost(id: string): Promise<StorePostResponse> {
       try {
-        const r = await safeApiCall<{ data: PostResponse }>(() => api.get(`/posts/${id}`))
-        const response = r.data
-
-        if (response.success) {
-          this.currentPost = response.post
-          return response.post
-        } else {
-          this.error = 'Failed to fetch post'
-          return null
-        }
+        const res = await safeApiCall(() => api.get<PostResponse>(`/posts/${id}`))
+        const post = OwnerPostSchema.parse(res.data.post)
+        this.currentPost = post
+        return storeSuccess({ post })
       } catch (error: any) {
-        this.error = error.message || 'Failed to fetch post'
-        return null
-      } finally {
-        this.isLoading = false
+        return storeError(error, 'Failed to fetch post')
       }
     },
 
-    async fetchPosts(query: PostQueryInput = {}) {
-      this.isLoading = true
-      this.error = null
-
+    async fetchPosts(query: PostQueryInput = {}): Promise<StorePostsResponse> {
       try {
-        const params = new URLSearchParams()
-        if (query.type) params.set('type', query.type)
-        if (query.limit) params.set('limit', query.limit.toString())
-        if (query.offset) params.set('offset', query.offset.toString())
+        const res = await safeApiCall(() => api.get<PostsResponse>('/posts', { params: query }))
+        const posts = PublicPostWithProfileArraySchema.parse(res.data.posts)
 
-        const r = await safeApiCall<{ data: PostsResponse }>(() =>
-          api.get(`/posts?${params.toString()}`)
-        )
-        const response = r.data
-
-        if (response.success) {
-          if (query.offset === 0) {
-            this.posts = response.posts
-          } else {
-            this.posts.push(...response.posts)
-          }
-          return response.posts
+        if (query.offset === 0 || query.offset === undefined) {
+          this.posts = posts
         } else {
-          this.error = 'Failed to fetch posts'
-          return []
+          this.posts.push(...posts)
         }
+        return storeSuccess({ posts })
       } catch (error: any) {
-        this.error = error.message || 'Failed to fetch posts exception'
-        return []
-      } finally {
-        this.isLoading = false
+        return storeError(error, 'Failed to fetch posts')
       }
     },
 
-    async fetchNearbyPosts(query: NearbyPostQueryInput) {
-      this.isLoading = true
-      this.error = null
-
+    async fetchNearbyPosts(query: NearbyPostQueryInput): Promise<StorePostsResponse> {
       try {
-        const params = new URLSearchParams()
-        params.set('lat', query.lat.toString())
-        params.set('lon', query.lon.toString())
-        params.set('radius', (query.radius || 50).toString())
-        if (query.type) params.set('type', query.type)
-        if (query.limit) params.set('limit', query.limit.toString())
-        if (query.offset) params.set('offset', query.offset.toString())
-
-        const r = await safeApiCall<{ data: PostsResponse }>(() =>
-          api.get(`/posts/nearby?${params.toString()}`)
+        const res = await safeApiCall(() =>
+          api.get<PostsResponse>('/posts/nearby', { params: query })
         )
-        const response = r.data
+        const posts = PublicPostWithProfileArraySchema.parse(res.data.posts)
 
-        if (response.success) {
-          if (query.offset === 0) {
-            this.posts = response.posts
-          } else {
-            this.posts.push(...response.posts)
-          }
-          return response.posts
+        if (query.offset === 0 || query.offset === undefined) {
+          this.posts = posts
         } else {
-          this.error = 'Failed to fetch nearby posts'
-          return []
+          this.posts.push(...posts)
         }
+        return storeSuccess({ posts })
       } catch (error: any) {
-        this.error = error.message || 'Failed to fetch nearby posts'
-        return []
-      } finally {
-        this.isLoading = false
+        return storeError(error, 'Failed to fetch nearby posts')
       }
     },
 
-    async fetchRecentPosts(query: PostQueryInput = {}) {
-      this.isLoading = true
-      this.error = null
-
+    async fetchRecentPosts(query: PostQueryInput = {}): Promise<StorePostsResponse> {
       try {
-        const params = new URLSearchParams()
-        if (query.type) params.set('type', query.type)
-        if (query.limit) params.set('limit', query.limit.toString())
-        if (query.offset) params.set('offset', query.offset.toString())
-
-        const r = await safeApiCall<{ data: PostsResponse }>(() =>
-          api.get(`/posts/recent?${params.toString()}`)
+        const res = await safeApiCall(() =>
+          api.get<PostsResponse>('/posts/recent', { params: query })
         )
-        const response = r.data
+        const posts = PublicPostWithProfileArraySchema.parse(res.data.posts)
 
-        if (response.success) {
-          if (query.offset === 0) {
-            this.posts = response.posts
-          } else {
-            this.posts.push(...response.posts)
-          }
-          return response.posts
+        if (query.offset === 0 || query.offset === undefined) {
+          this.posts = posts
         } else {
-          this.error = 'Failed to fetch recent posts'
-          return []
+          this.posts.push(...posts)
         }
+        return storeSuccess({ posts })
       } catch (error: any) {
-        this.error = error.message || 'Failed to fetch recent posts'
-        return []
-      } finally {
-        this.isLoading = false
+        return storeError(error, 'Failed to fetch recent posts')
       }
     },
 
-    async fetchMyPosts(query: PostQueryInput = {}) {
-      this.isLoading = true
-      this.error = null
-
+    async fetchMyPosts(query: PostQueryInput = {}): Promise<StoreOwnerPostsResponse> {
       try {
-        const params = new URLSearchParams()
-        if (query.type) params.set('type', query.type)
-        if (query.limit) params.set('limit', query.limit.toString())
-        if (query.offset) params.set('offset', query.offset.toString())
-
-        // We'll need to get the current profile ID from auth store
-        // For now, we'll use a placeholder endpoint
-        const r = await safeApiCall<{ data: MyPostsResponse }>(() =>
-          api.get(`/posts/profile/me?${params.toString()}`)
+        const res = await safeApiCall(() =>
+          api.get<MyPostsResponse>('/posts/profile/me', { params: query })
         )
-        const response = r.data
+        const posts = OwnerPostArraySchema.parse(res.data.posts)
 
-        if (response.success) {
-          if (query.offset === 0) {
-            this.myPosts = response.posts
-          } else {
-            this.myPosts.push(...response.posts)
-          }
-          return response.posts
+        if (query.offset === 0 || query.offset === undefined) {
+          this.myPosts = posts
         } else {
-          this.error = 'Failed to fetch my posts'
-          return []
+          this.myPosts.push(...posts)
         }
+        return storeSuccess({ posts })
       } catch (error: any) {
-        this.error = error.message || 'Failed to fetch my posts'
-        return []
-      } finally {
-        this.isLoading = false
+        return storeError(error, 'Failed to fetch my posts')
       }
     },
 
-    async fetchPostsInBounds(bounds: { south: number; north: number; west: number; east: number }) {
-      this.isLoading = true
-      this.error = null
-
+    async fetchPostsInBounds(bounds: MapBounds): Promise<StorePostsResponse> {
       try {
-        const params = new URLSearchParams({
-          south: bounds.south.toString(),
-          north: bounds.north.toString(),
-          west: bounds.west.toString(),
-          east: bounds.east.toString(),
-        })
-
-        const r = await safeApiCall<{ data: PostsResponse }>(() =>
-          api.get(`/posts/bounds?${params.toString()}`)
+        const res = await safeApiCall(() =>
+          api.get<PostsResponse>('/posts/bounds', { params: bounds })
         )
-        const response = r.data
-
-        if (response.success) {
-          this.posts = response.posts
-          return response.posts
-        } else {
-          this.error = 'Failed to fetch posts in bounds'
-          return []
-        }
+        const posts = PublicPostWithProfileArraySchema.parse(res.data.posts)
+        this.posts = posts
+        return storeSuccess({ posts })
       } catch (error: any) {
-        this.error = error.message || 'Failed to fetch posts in bounds'
-        return []
-      } finally {
-        this.isLoading = false
+        return storeError(error, 'Failed to fetch posts in bounds')
       }
     },
 
@@ -430,10 +280,6 @@ export const usePostStore = defineStore('posts', {
 
     clearMyPosts() {
       this.myPosts = []
-    },
-
-    clearError() {
-      this.error = null
     },
 
     setCurrentPost(post: PublicPostWithProfile | OwnerPost | null) {

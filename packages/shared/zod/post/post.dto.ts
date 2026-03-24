@@ -1,6 +1,5 @@
 import { z } from 'zod'
 import { PostSchema, PostTypeSchema } from '../generated'
-import { PostType } from '@prisma/client'
 import { ProfileSummarySchema } from '../profile/profile.dto'
 import { DbMinimalProfileSchema } from '../profile/profile.db'
 import { LocationSchema } from '@zod/dto/location.dto'
@@ -86,38 +85,19 @@ export type PostParams = z.infer<typeof PostParamsSchema>
 // Query parameters for listing posts
 export const PostQuerySchema = z.object({
   type: PostTypeSchema.optional(),
-  limit: z.preprocess(
-    (val) => (typeof val === 'string' ? parseInt(val, 10) : val),
-    z.number().int().min(1).max(100).default(20)
-  ),
-  offset: z.preprocess(
-    (val) => (typeof val === 'string' ? parseInt(val, 10) : val),
-    z.number().int().min(0).default(0)
-  ),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  offset: z.coerce.number().int().min(0).default(0),
 })
 export type PostQuery = z.infer<typeof PostQuerySchema>
-
-// Frontend query type (all optional)
-export interface PostQueryInput {
-  type?: PostType
-  limit?: number
-  offset?: number
-}
+export type PostQueryInput = z.input<typeof PostQuerySchema>
 
 // Query parameters for nearby posts
 export const NearbyPostQuerySchema = PostQuerySchema.extend({
-  lat: z.preprocess((val) => (typeof val === 'string' ? parseFloat(val) : val), z.number()),
-  lon: z.preprocess((val) => (typeof val === 'string' ? parseFloat(val) : val), z.number()),
-  radius: z.preprocess(
-    (val) => (typeof val === 'string' ? parseInt(val, 10) : val),
-    z.number().int().min(1).max(500).default(50)
-  ),
+  lat: z.coerce.number(),
+  lon: z.coerce.number(),
+  radius: z.coerce.number().int().min(1).max(500).default(50),
 })
 export type NearbyPostQuery = z.infer<typeof NearbyPostQuerySchema>
+export type NearbyPostQueryInput = z.input<typeof NearbyPostQuerySchema>
 
-// Frontend nearby query type
-export interface NearbyPostQueryInput extends PostQueryInput {
-  lat: number
-  lon: number
-  radius?: number
-}
+export type PostScope = 'all' | 'nearby' | 'recent' | 'my'

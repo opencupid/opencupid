@@ -1,15 +1,20 @@
 import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import type { PublicPostWithProfile, OwnerPost } from '@zod/post/post.dto'
+import type {
+  PublicPostWithProfile,
+  OwnerPost,
+  NearbyPostQueryInput,
+  PostScope,
+} from '@zod/post/post.dto'
 import { type PostTypeType } from '@zod/generated'
 
 import { usePostStore } from '../stores/postStore'
 
 interface UsePostListOptions {
-  scope?: 'all' | 'nearby' | 'recent' | 'my'
+  scope?: PostScope
   type?: PostTypeType
-  nearbyParams?: { lat: number; lon: number; radius: number }
+  nearbyParams?: NearbyPostQueryInput
 }
 
 export function usePostListViewModel(options: UsePostListOptions) {
@@ -40,15 +45,18 @@ export function usePostListViewModel(options: UsePostListOptions) {
       isLoadingMore.value = true
     }
 
-    const fetched = await postStore.loadPosts(options.scope || 'all', {
+    const result = await postStore.loadPosts(options.scope || 'all', {
       type: (selectedType.value as PostTypeType) || undefined,
       page: currentPage.value,
       pageSize,
       nearbyParams: options.nearbyParams,
     })
 
-    if (fetched.length < pageSize) {
-      hasMorePosts.value = false
+    if (result.success) {
+      const fetched = result.data?.posts ?? []
+      if (fetched.length < pageSize) {
+        hasMorePosts.value = false
+      }
     }
 
     if (append) {
@@ -68,7 +76,6 @@ export function usePostListViewModel(options: UsePostListOptions) {
   }
 
   const handleRetry = () => {
-    postStore.clearError()
     loadPosts()
   }
 
@@ -84,8 +91,8 @@ export function usePostListViewModel(options: UsePostListOptions) {
 
   const handlePostDelete = async (post: PublicPostWithProfile | OwnerPost) => {
     if (confirm(t('posts.messages.confirm_delete'))) {
-      const success = await postStore.deletePost(post.id)
-      if (success) {
+      const result = await postStore.deletePost(post.id)
+      if (result.success) {
         closeFullView()
       }
     }

@@ -70,8 +70,8 @@ export function usePostsViewModel() {
       return
     }
 
-    const success = await postStore.deletePost(post.id)
-    if (success) {
+    const result = await postStore.deletePost(post.id)
+    if (result.success) {
       closePostOverlays()
     }
   }
@@ -83,11 +83,9 @@ export function usePostsViewModel() {
 
     // Only OwnerPost has isVisible property
     const isVisible = 'isVisible' in post ? post.isVisible !== false : true
-    const updatedPost = isVisible
-      ? await postStore.hidePost(post.id)
-      : await postStore.showPost(post.id)
+    const result = isVisible ? await postStore.hidePost(post.id) : await postStore.showPost(post.id)
 
-    if (updatedPost) {
+    if (result.success) {
       closePostOverlays()
     }
   }

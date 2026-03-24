@@ -35,9 +35,9 @@ onMounted(async () => {
     await useBootstrap().bootstrap()
 
     if (postId.value) {
-      const fetched = await postStore.fetchPost(postId.value)
-      if (fetched) {
-        post.value = fetched as OwnerPost
+      const result = await postStore.fetchPost(postId.value)
+      if (result.success && result.data) {
+        post.value = result.data.post
       }
     }
 
