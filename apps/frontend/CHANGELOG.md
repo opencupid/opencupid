@@ -1,5 +1,16 @@
 # frontend
 
+## 0.42.0
+
+### Minor Changes
+
+- aa771a3: Clean up postStore: add Zod response validation, StoreResponse pattern, deduplicate query params, fix post visibility toggle (#1216)
+
+### Patch Changes
+
+- b6ff61c: Fix i18n for time-ago rendering in PostCard (#1204)
+- af127a2: Fix offcanvas close-animation flash by replacing BOffcanvas with native Bootstrap Offcanvas JS
+
 ## 0.41.1
 
 ### Patch Changes

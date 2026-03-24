@@ -1,5 +1,13 @@
 # backend
 
+## 0.42.0
+
+### Patch Changes
+
+- cd91e13: Add JSDoc documentation to all API route endpoints and clarify interaction mapper naming
+- ed5f223: Clean up .env.example: hardcode constants, reorder, add secret generation script (#912)
+- aa771a3: Clean up postStore: add Zod response validation, StoreResponse pattern, deduplicate query params, fix post visibility toggle (#1216)
+
 ## 0.41.1
 
 ## 0.41.0
