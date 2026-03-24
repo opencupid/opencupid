@@ -70,10 +70,7 @@ function handleSaved() {
           v-if="isLoading"
           class="text-center py-5"
         >
-          <SpinnerComponent
-            variant="primary"
-            type="border"
-          />
+          <SpinnerComponent />
         </div>
 
         <PostEdit
