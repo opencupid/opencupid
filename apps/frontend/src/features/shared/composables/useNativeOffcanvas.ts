@@ -11,22 +11,21 @@ import Offcanvas from 'bootstrap/js/dist/offcanvas'
  */
 export function useNativeOffcanvas(elRef: Ref<HTMLElement | undefined>, isOpen: Ref<boolean>) {
   let instance: Offcanvas | null = null
+  const abort = new AbortController()
 
   onMounted(() => {
     const el = elRef.value
     if (!el) return
 
     instance = new Offcanvas(el)
+    const opts = { signal: abort.signal }
 
-    el.addEventListener('shown.bs.offcanvas', () => {
-      isOpen.value = true
-    })
-    el.addEventListener('hidden.bs.offcanvas', () => {
-      isOpen.value = false
-    })
+    el.addEventListener('shown.bs.offcanvas', () => (isOpen.value = true), opts)
+    el.addEventListener('hidden.bs.offcanvas', () => (isOpen.value = false), opts)
   })
 
   onBeforeUnmount(() => {
+    abort.abort()
     instance?.dispose()
     instance = null
   })

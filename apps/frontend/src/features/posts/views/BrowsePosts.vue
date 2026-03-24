@@ -209,9 +209,15 @@ onActivated(() => {
     ref="myPostsEl"
     class="offcanvas offcanvas-end shadow"
     tabindex="-1"
+    aria-labelledby="my-posts-offcanvas-title"
   >
     <div class="offcanvas-header">
-      <h5 class="offcanvas-title">{{ t('posts.my_posts') }}</h5>
+      <h5
+        id="my-posts-offcanvas-title"
+        class="offcanvas-title"
+      >
+        {{ t('posts.my_posts') }}
+      </h5>
       <button
         type="button"
         class="btn-close"
