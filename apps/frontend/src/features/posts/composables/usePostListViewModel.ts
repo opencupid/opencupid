@@ -40,15 +40,18 @@ export function usePostListViewModel(options: UsePostListOptions) {
       isLoadingMore.value = true
     }
 
-    const fetched = await postStore.loadPosts(options.scope || 'all', {
+    const result = await postStore.loadPosts(options.scope || 'all', {
       type: (selectedType.value as PostTypeType) || undefined,
       page: currentPage.value,
       pageSize,
       nearbyParams: options.nearbyParams,
     })
 
-    if (fetched.length < pageSize) {
-      hasMorePosts.value = false
+    if (result.success) {
+      const fetched = result.data?.posts ?? []
+      if (fetched.length < pageSize) {
+        hasMorePosts.value = false
+      }
     }
 
     if (append) {
@@ -68,7 +71,6 @@ export function usePostListViewModel(options: UsePostListOptions) {
   }
 
   const handleRetry = () => {
-    postStore.clearError()
     loadPosts()
   }
 
@@ -84,8 +86,8 @@ export function usePostListViewModel(options: UsePostListOptions) {
 
   const handlePostDelete = async (post: PublicPostWithProfile | OwnerPost) => {
     if (confirm(t('posts.messages.confirm_delete'))) {
-      const success = await postStore.deletePost(post.id)
-      if (success) {
+      const result = await postStore.deletePost(post.id)
+      if (result.success) {
         closeFullView()
       }
     }

@@ -63,19 +63,18 @@ const handleSubmit = async () => {
 
   try {
     const { content, type, isVisible, location } = form.value
-    let savedPost: OwnerPost | null = null
 
-    if (props.isEdit && post) {
-      savedPost = await postStore.updatePost(post.id, { content, type, isVisible, ...location })
-    } else {
-      savedPost = await postStore.createPost({ content, type, ...location })
-      if (savedPost) {
-        // reset form
+    const result =
+      props.isEdit && post
+        ? await postStore.updatePost(post.id, { content, type, isVisible, ...location })
+        : await postStore.createPost({ content, type, ...location })
+
+    if (result.success && result.data) {
+      if (!props.isEdit) {
         form.value = PostFormSchema.parse({ location: props.defaultLocation })
       }
+      emit('saved', result.data.post)
     }
-
-    if (savedPost) emit('saved', savedPost)
   } finally {
     isLoading.value = false
   }
