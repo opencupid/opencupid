@@ -45,7 +45,6 @@ vi.mock('../../api/mappers/profile.mappers', () => ({
 vi.mock('@/lib/appconfig', () => ({
   appConfig: {
     FRONTEND_URL: 'http://test',
-    RATE_LIMIT_PROFILE_SCOPES: 10,
   },
 }))
 vi.mock('@/utils/zodValidate', () => ({
