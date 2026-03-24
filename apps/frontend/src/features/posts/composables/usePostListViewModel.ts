@@ -1,15 +1,20 @@
 import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import type { PublicPostWithProfile, OwnerPost } from '@zod/post/post.dto'
+import type {
+  PublicPostWithProfile,
+  OwnerPost,
+  NearbyPostQueryInput,
+  PostScope,
+} from '@zod/post/post.dto'
 import { type PostTypeType } from '@zod/generated'
 
 import { usePostStore } from '../stores/postStore'
 
 interface UsePostListOptions {
-  scope?: 'all' | 'nearby' | 'recent' | 'my'
+  scope?: PostScope
   type?: PostTypeType
-  nearbyParams?: { lat: number; lon: number; radius: number }
+  nearbyParams?: NearbyPostQueryInput
 }
 
 export function usePostListViewModel(options: UsePostListOptions) {

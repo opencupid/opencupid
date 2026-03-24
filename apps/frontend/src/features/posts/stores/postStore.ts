@@ -9,6 +9,7 @@ import {
   type UpdatePostPayload,
   type PostQueryInput,
   type NearbyPostQueryInput,
+  type PostScope,
 } from '@zod/post/post.dto'
 import type {
   PostsResponse,
@@ -24,7 +25,6 @@ import type { MapBounds } from '@/features/shared/components/osmPoiMap/OsmPoiMap
 
 const PublicPostWithProfileArraySchema = PublicPostWithProfileSchema.array()
 const OwnerPostArraySchema = OwnerPostSchema.array()
-
 type StorePostResponse = StoreResponse<{ post: OwnerPost }>
 type StorePostsResponse = StoreResponse<{ posts: PublicPostWithProfile[] }>
 type StoreOwnerPostsResponse = StoreResponse<{ posts: OwnerPost[] }>
@@ -103,7 +103,9 @@ export const usePostStore = defineStore('posts', {
           this.myPosts[index] = post
         }
 
-        if (!post.isVisible) {
+        if (post.isVisible) {
+          this.upsertPost(post)
+        } else {
           this.posts = this.posts.filter((p) => p.id !== id)
         }
 
@@ -126,12 +128,12 @@ export const usePostStore = defineStore('posts', {
     },
 
     async loadPosts(
-      scope: 'all' | 'nearby' | 'recent' | 'my',
+      scope: PostScope,
       options: {
         type?: PostTypeType
         page?: number
         pageSize?: number
-        nearbyParams?: { lat: number; lon: number; radius?: number }
+        nearbyParams?: NearbyPostQueryInput
       } = {}
     ) {
       const { type, page = 0, pageSize = 20, nearbyParams } = options
@@ -145,9 +147,7 @@ export const usePostStore = defineStore('posts', {
           if (nearbyParams) {
             return await this.fetchNearbyPosts({
               ...baseQuery,
-              lat: nearbyParams.lat,
-              lon: nearbyParams.lon,
-              radius: nearbyParams.radius ?? 50,
+              ...nearbyParams,
             })
           }
           return storeSuccess({ posts: [] as PublicPostWithProfile[] })

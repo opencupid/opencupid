@@ -59,9 +59,9 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * GET /:id
-   * Returns a single post by ID (public view).
+   * Returns a single post by ID (owner view with visibility metadata).
    * @param {string} id - Post ID (CUID)
-   * @returns {{ success, post }}
+   * @returns {{ success, post: OwnerPost }}
    */
   fastify.get('/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const { id } = PostParamsSchema.parse(req.params)
@@ -73,7 +73,7 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
         return sendError(reply, 404, 'Post not found')
       }
 
-      const post = mapDbPostToPublic(raw, viewerProfileId)
+      const post = mapDbPostToOwner(raw)
 
       return reply.code(200).send({ success: true, post })
     } catch (err) {

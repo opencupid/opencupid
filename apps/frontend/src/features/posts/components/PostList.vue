@@ -5,13 +5,14 @@ import PostCard from './PostCard.vue'
 import PostPlaceholdersGrid from './PostPlaceholdersGrid.vue'
 import { type PostTypeType } from '@zod/generated'
 import { usePostListViewModel } from '../composables/usePostListViewModel'
+import type { PostScope } from '@zod/post/post.dto'
 
 defineOptions({ inheritAttrs: false })
 
 interface Props {
   title?: string
   type?: PostTypeType
-  scope: 'all' | 'nearby' | 'recent' | 'my'
+  scope: PostScope
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -28,15 +29,8 @@ const emit = defineEmits<{
   (e: 'intent:saved', post: any): void
 }>()
 
-const {
-  postStore,
-  posts,
-  isLoadingMore,
-  hasMorePosts,
-  isInitialized,
-  handleLoadMore,
-  handleRetry,
-} = usePostListViewModel(props)
+const { posts, isLoadingMore, hasMorePosts, isInitialized, handleLoadMore } =
+  usePostListViewModel(props)
 
 const scrollContainer = ref<HTMLElement>()
 
@@ -70,22 +64,9 @@ function handlePostHide(post: any) {
 
 <template>
   <div class="post-list h-100 d-flex flex-column">
-    <BContainer v-if="postStore.isLoading && posts.length === 0">
+    <BContainer v-if="!isInitialized && posts.length === 0">
       <PostPlaceholdersGrid />
     </BContainer>
-    <div
-      v-else-if="postStore.error"
-      class="text-danger mb-2 flex-shrink-0"
-    >
-      <p>{{ postStore.error }}</p>
-      <BButton
-        variant="warning"
-        @click="handleRetry"
-        class="btn btn-primary"
-      >
-        {{ $t('uicomponents.error.retry') }}
-      </BButton>
-    </div>
 
     <div
       v-else-if="posts.length === 0"
