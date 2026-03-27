@@ -1,5 +1,11 @@
 # @opencupid/ingress
 
+## 0.42.1
+
+### Patch Changes
+
+- 9a044a6: Enable Colibri WebSocket on JVB for TCP fallback when UDP media transport fails
+
 ## 0.42.0
 
 ## 0.41.1
