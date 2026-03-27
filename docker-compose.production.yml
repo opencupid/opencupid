@@ -93,6 +93,8 @@ services:
       - ENABLE_AUTH=0
       - ENABLE_GUESTS=1
       - ENABLE_XMPP_WEBSOCKET=1
+      - ENABLE_COLIBRI_WEBSOCKET=1
+      - COLIBRI_WEBSOCKET_JVB_LOOKUP_NAME=jitsi-jvb
       - PUBLIC_URL=https://meet.${DOMAIN}
       - XMPP_DOMAIN=meet.jitsi
       - XMPP_AUTH_DOMAIN=auth.meet.jitsi
@@ -157,6 +159,9 @@ services:
       - JVB_BREWERY_MUC=jvbbrewery
       - JVB_PORT=10000
       - JVB_ADVERTISE_IPS=${JVB_ADVERTISE_IPS}
+      - COLIBRI_WEBSOCKET_ENABLED=true
+      - COLIBRI_WEBSOCKET_DOMAIN=meet.${DOMAIN}
+      - COLIBRI_WEBSOCKET_SERVER_ID=default-id
       - TZ=UTC
     depends_on:
       - jitsi-prosody
