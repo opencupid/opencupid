@@ -1,6 +1,10 @@
 import { vi, describe, it, expect, beforeEach, afterAll } from 'vitest'
 import { defineComponent, h, nextTick } from 'vue'
 
+vi.mock('@/features/auth/stores/authStore', () => ({
+  useAuthStore: () => ({ refreshMediaToken: vi.fn().mockResolvedValue(undefined) }),
+}))
+
 // jsdom does not provide ResizeObserver — stub it so createLeafletMap() can
 // call `new ResizeObserver(cb)` / `.observe()` / `.disconnect()` without error.
 // Store callbacks so tests can trigger resize events.

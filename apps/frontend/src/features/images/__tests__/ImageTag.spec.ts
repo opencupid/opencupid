@@ -1,16 +1,19 @@
 import { mount, flushPromises } from '@vue/test-utils'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
 
-vi.mock('../composables/useMediaTokenRefresh', () => ({
-  refreshMediaToken: vi.fn().mockResolvedValue(undefined),
+const mockRefreshMediaToken = vi.fn().mockResolvedValue(undefined)
+
+vi.mock('@/features/auth/stores/authStore', () => ({
+  useAuthStore: () => ({ refreshMediaToken: mockRefreshMediaToken }),
 }))
 
 import ImageTag from '../components/ImageTag.vue'
-import { refreshMediaToken } from '../composables/useMediaTokenRefresh'
 
 describe('ImageTag', () => {
   beforeEach(() => {
-    vi.mocked(refreshMediaToken).mockClear()
+    setActivePinia(createPinia())
+    mockRefreshMediaToken.mockClear()
   })
 
   it('renders img with variant url', () => {
@@ -37,7 +40,7 @@ describe('ImageTag', () => {
     await wrapper.find('img').trigger('error')
     await flushPromises()
 
-    expect(refreshMediaToken).toHaveBeenCalledTimes(1)
+    expect(mockRefreshMediaToken).toHaveBeenCalledTimes(1)
     const src = wrapper.find('img').attributes('src')!
     expect(src).toMatch(/\/path\/img-card\.jpg\?_t=\d+/)
   })
@@ -52,7 +55,7 @@ describe('ImageTag', () => {
     await wrapper.find('img').trigger('error')
     await flushPromises()
 
-    expect(refreshMediaToken).toHaveBeenCalledTimes(1)
+    expect(mockRefreshMediaToken).toHaveBeenCalledTimes(1)
   })
 
   it('resets retry guard after successful load, allowing future retries', async () => {
@@ -63,7 +66,7 @@ describe('ImageTag', () => {
     // First expiry cycle: error → refresh → retry
     await wrapper.find('img').trigger('error')
     await flushPromises()
-    expect(refreshMediaToken).toHaveBeenCalledTimes(1)
+    expect(mockRefreshMediaToken).toHaveBeenCalledTimes(1)
 
     // Successful load resets the guard
     await wrapper.find('img').trigger('load')
@@ -71,6 +74,6 @@ describe('ImageTag', () => {
     // Second expiry cycle: error → refresh → retry again
     await wrapper.find('img').trigger('error')
     await flushPromises()
-    expect(refreshMediaToken).toHaveBeenCalledTimes(2)
+    expect(mockRefreshMediaToken).toHaveBeenCalledTimes(2)
   })
 })

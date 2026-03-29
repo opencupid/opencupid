@@ -4,6 +4,7 @@ import { ref } from 'vue'
 
 vi.mock('@vueuse/core', () => ({
   useInfiniteScroll: vi.fn(),
+  useDebounceFn: (fn: (...args: unknown[]) => unknown) => fn,
 }))
 
 vi.mock('vue-i18n', () => ({

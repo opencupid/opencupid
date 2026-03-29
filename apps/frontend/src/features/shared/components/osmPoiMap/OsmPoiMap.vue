@@ -15,7 +15,9 @@ import {
   hydratePoiIcon,
   MAP_MAX_ZOOM,
 } from './mapUtils'
-import { refreshMediaToken } from '@/features/images/composables/useMediaTokenRefresh'
+import { useAuthStore } from '@/features/auth/stores/authStore'
+
+const authStore = useAuthStore()
 
 const props = withDefaults(
   defineProps<{
@@ -481,7 +483,7 @@ async function onMarkerImgError(e: Event) {
   if (img.dataset.retried) return
   img.dataset.retried = '1'
   try {
-    await refreshMediaToken()
+    await authStore.refreshMediaToken()
     img.src = img.src.split('?')[0] + '?_t=' + Date.now()
   } catch {
     delete img.dataset.retried

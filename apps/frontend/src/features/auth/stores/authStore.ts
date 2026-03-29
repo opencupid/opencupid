@@ -21,6 +21,10 @@ const getAuthId = (authId: UserIdentifier): string => {
   return authId.email ? authId.email : (authId.phonenumber ?? '')
 }
 
+// Module-level dedup guard — must live outside the store so concurrent callers
+// across component trees share a single in-flight promise.
+let _mediaRefreshPromise: Promise<void> | null = null
+
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     jwt: '',
@@ -30,6 +34,8 @@ export const useAuthStore = defineStore('auth', {
     profileId: null as string | null,
     isInitialized: false,
     loginUser: null as LoginUser | null,
+    // Unix seconds; 0 = unknown (treat as expired). Set at login and after each refresh.
+    mediaTokenExpiresAt: 0,
   }),
 
   getters: {
@@ -104,6 +110,7 @@ export const useAuthStore = defineStore('auth', {
 
         if (res.data.success === true) {
           this.setAuthState(res.data.token, res.data.refreshToken)
+          this.setMediaTokenExpiry(res.data.expiresAt)
           this.loginUser = null
           localStorage.removeItem('authId')
         } else {
@@ -171,6 +178,23 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
+    setMediaTokenExpiry(expiresAt: number) {
+      this.mediaTokenExpiresAt = expiresAt
+    },
+
+    refreshMediaToken(): Promise<void> {
+      if (_mediaRefreshPromise) return _mediaRefreshPromise
+      _mediaRefreshPromise = api
+        .post<{ success: boolean; expiresAt: number }>('/auth/media-token')
+        .then((res) => {
+          this.mediaTokenExpiresAt = res.data.expiresAt
+        })
+        .finally(() => {
+          _mediaRefreshPromise = null
+        })
+      return _mediaRefreshPromise
+    },
+
     hasRole(role: UserRoleType) {
       // TODO implement me
       return true
@@ -198,4 +222,14 @@ export const useAuthStore = defineStore('auth', {
 bus.on('auth:token-refreshed', ({ token, refreshToken }) => {
   const store = useAuthStore()
   store.setAuthState(token, refreshToken)
+})
+
+const MEDIA_TOKEN_REFRESH_BUFFER_S = 60
+
+bus.on('app:tab-visible', () => {
+  const store = useAuthStore()
+  const nowS = Math.floor(Date.now() / 1000)
+  if (nowS >= store.mediaTokenExpiresAt - MEDIA_TOKEN_REFRESH_BUFFER_S) {
+    store.refreshMediaToken().catch(() => {})
+  }
 })

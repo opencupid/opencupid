@@ -1,6 +1,10 @@
 import { mount } from '@vue/test-utils'
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
 
+vi.mock('@/features/auth/stores/authStore', () => ({
+  useAuthStore: () => ({ refreshMediaToken: vi.fn().mockResolvedValue(undefined) }),
+}))
 vi.mock('../image/ImageTag.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('@/features/shared/icons/DoodleIcons.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('@/features/images/components/BlurhashCanvas.vue', () => ({
@@ -43,6 +47,10 @@ const mountCarousel = (profile = makeProfile()) =>
   })
 
 describe('ImageCarousel', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
   it('opens fullscreen on image click', () => {
     const wrapper = mountCarousel()
     ;(wrapper.vm as any).handleImageClick()

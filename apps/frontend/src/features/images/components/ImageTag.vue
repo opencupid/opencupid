@@ -3,7 +3,9 @@ import { type ImageVariant } from '@zod/profile/profileimage.dto'
 import { computed, ref } from 'vue'
 import type { PropType } from 'vue'
 import { type VariantName } from './types'
-import { refreshMediaToken } from '../composables/useMediaTokenRefresh'
+import { useAuthStore } from '@/features/auth/stores/authStore'
+
+const authStore = useAuthStore()
 
 const props = defineProps({
   image: {
@@ -59,7 +61,7 @@ async function onImgError() {
   if (hasRetried.value) return
   hasRetried.value = true
   try {
-    await refreshMediaToken()
+    await authStore.refreshMediaToken()
     cacheBuster.value = String(Date.now())
   } catch {
     hasRetried.value = false

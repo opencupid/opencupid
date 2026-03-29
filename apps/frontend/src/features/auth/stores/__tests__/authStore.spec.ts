@@ -19,9 +19,20 @@ vi.mock('@/lib/api', () => ({
   axios: { isAxiosError: vi.fn(() => false) },
 }))
 
-vi.mock('@/lib/bus', () => ({
-  bus: { emit: vi.fn(), on: vi.fn() },
-}))
+vi.mock('@/lib/bus', () => {
+  const handlers = new Map<string, ((...args: unknown[]) => void)[]>()
+  return {
+    bus: {
+      on: vi.fn((event: string, handler: (...args: unknown[]) => void) => {
+        if (!handlers.has(event)) handlers.set(event, [])
+        handlers.get(event)!.push(handler)
+      }),
+      emit: vi.fn((event: string, ...args: unknown[]) => {
+        handlers.get(event)?.forEach((h) => h(...args))
+      }),
+    },
+  }
+})
 
 vi.mock('@/lib/bootstrap', () => ({
   useBootstrap: () => ({ onLogin: vi.fn().mockResolvedValue(undefined) }),
@@ -172,7 +183,12 @@ describe('authStore localStorage auth flow', () => {
       exp: Math.floor(Date.now() / 1000) + 3600,
     })
     mockApi.get.mockResolvedValue({
-      data: { success: true, token, refreshToken: 'r1' },
+      data: {
+        success: true,
+        token,
+        refreshToken: 'r1',
+        expiresAt: Math.floor(Date.now() / 1000) + 1800,
+      },
     })
 
     await store.verifyToken('123456')
@@ -234,6 +250,7 @@ describe('authStore localStorage auth flow', () => {
         success: true,
         token,
         refreshToken: 'r1',
+        expiresAt: Math.floor(Date.now() / 1000) + 1800,
       },
     })
 
@@ -242,5 +259,78 @@ describe('authStore localStorage auth flow', () => {
 
     expect(res.success).toBe(true)
     expect(localStorage.getItem('authId')).toBeNull()
+  })
+})
+
+describe('authStore refreshMediaToken', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+    mockSafeApiCall.mockImplementation((fn: () => Promise<unknown>) => fn())
+  })
+
+  it('calls POST /auth/media-token', async () => {
+    mockApi.post.mockResolvedValue({ data: { success: true, expiresAt: 9999999999 } })
+    const store = useAuthStore()
+    await store.refreshMediaToken()
+    expect(mockApi.post).toHaveBeenCalledWith('/auth/media-token')
+  })
+
+  it('deduplicates concurrent refresh calls into a single request', async () => {
+    mockApi.post.mockResolvedValue({ data: { success: true, expiresAt: 9999999999 } })
+    const store = useAuthStore()
+    await Promise.all([store.refreshMediaToken(), store.refreshMediaToken()])
+    expect(mockApi.post).toHaveBeenCalledTimes(1)
+  })
+
+  it('allows a new refresh after the previous one completes', async () => {
+    mockApi.post.mockResolvedValue({ data: { success: true, expiresAt: 9999999999 } })
+    const store = useAuthStore()
+    await store.refreshMediaToken()
+    await store.refreshMediaToken()
+    expect(mockApi.post).toHaveBeenCalledTimes(2)
+  })
+
+  it('resets dedup lock even when the request fails', async () => {
+    mockApi.post.mockRejectedValueOnce(new Error('network'))
+    const store = useAuthStore()
+    await store.refreshMediaToken().catch(() => {})
+    mockApi.post.mockResolvedValue({ data: { success: true, expiresAt: 9999999999 } })
+    await store.refreshMediaToken()
+    expect(mockApi.post).toHaveBeenCalledTimes(2)
+  })
+
+  it('skips refresh on app:tab-visible when token is not yet expired', async () => {
+    const { bus } = await import('@/lib/bus')
+    mockApi.post.mockResolvedValue({ data: { success: true, expiresAt: 9999999999 } })
+    const store = useAuthStore()
+    const futureExp = Math.floor(Date.now() / 1000) + 3600
+    store.setMediaTokenExpiry(futureExp)
+    mockApi.post.mockClear()
+    bus.emit('app:tab-visible')
+    await new Promise((r) => setTimeout(r, 0))
+    expect(mockApi.post).not.toHaveBeenCalled()
+  })
+
+  it('refreshes on app:tab-visible when token is expired', async () => {
+    const { bus } = await import('@/lib/bus')
+    mockApi.post.mockResolvedValue({ data: { success: true, expiresAt: 9999999999 } })
+    const store = useAuthStore()
+    const pastExp = Math.floor(Date.now() / 1000) - 10
+    store.setMediaTokenExpiry(pastExp)
+    mockApi.post.mockClear()
+    bus.emit('app:tab-visible')
+    await new Promise((r) => setTimeout(r, 0))
+    expect(mockApi.post).toHaveBeenCalledWith('/auth/media-token')
+  })
+
+  it('refreshes immediately on app:tab-visible when expiresAt is unknown (0)', async () => {
+    const { bus } = await import('@/lib/bus')
+    mockApi.post.mockResolvedValue({ data: { success: true, expiresAt: 9999999999 } })
+    const store = useAuthStore()
+    // No setMediaTokenExpiry called — defaults to 0
+    bus.emit('app:tab-visible')
+    await new Promise((r) => setTimeout(r, 0))
+    expect(mockApi.post).toHaveBeenCalledWith('/auth/media-token')
   })
 })
