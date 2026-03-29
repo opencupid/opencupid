@@ -5,10 +5,10 @@ vi.mock('@/lib/api', () => ({
 }))
 
 vi.mock('@/lib/bus', () => {
-  const handlers = new Map<string, Function>()
+  const handlers = new Map<string, () => void>()
   return {
     bus: {
-      on: vi.fn((event: string, handler: Function) => handlers.set(event, handler)),
+      on: vi.fn((event: string, handler: () => void) => handlers.set(event, handler)),
       emit: vi.fn((event: string) => handlers.get(event)?.()),
     },
   }
