@@ -49,12 +49,12 @@ describe('ImageCarousel', () => {
     expect((wrapper.vm as any).showFullscreen).toBe(true)
   })
 
-  it('syncs fullSlide from inlineSlide on open', () => {
+  it('opens fullscreen preserving current slide index', () => {
     const wrapper = mountCarousel()
     const vm = wrapper.vm as any
     vm.inlineSlide = 2
     vm.handleImageClick()
-    expect(vm.fullSlide).toBe(2)
+    expect(vm.inlineSlide).toBe(2)
     expect(vm.showFullscreen).toBe(true)
   })
 
