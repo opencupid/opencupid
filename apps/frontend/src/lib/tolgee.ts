@@ -3,15 +3,20 @@ import type { TolgeeStaticData } from '@tolgee/vue'
 import { FormatIcu } from '@tolgee/format-icu'
 
 import en from '@shared/i18n/en.json'
+import hu from '@shared/i18n/hu.json'
 
-const lazyLocales = import.meta.glob(['@shared/i18n/*.json', '!@shared/i18n/en.json'], {
-  import: 'default',
-})
+const lazyLocales = import.meta.glob(
+  ['@shared/i18n/*.json', '!@shared/i18n/en.json', '!@shared/i18n/hu.json'],
+  { import: 'default' },
+)
 
 const LOCALE_FILE_REGEX = /([\w-]+)\.json$/
 
-const staticData: TolgeeStaticData = { en: en as TolgeeStaticData[string] }
-const availableLanguages = ['en']
+const staticData: TolgeeStaticData = {
+  en: en as TolgeeStaticData[string],
+  hu: hu as TolgeeStaticData[string],
+}
+const availableLanguages = ['en', 'hu']
 
 for (const path of Object.keys(lazyLocales)) {
   const locale = path.match(LOCALE_FILE_REGEX)?.[1]
