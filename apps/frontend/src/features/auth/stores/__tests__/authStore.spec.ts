@@ -5,11 +5,24 @@ import { SESSION_COOKIE } from '@shared/session'
 import { useAuthStore } from '../authStore'
 
 const { mockApi, mockSafeApiCall } = vi.hoisted(() => {
+  const responseInterceptors: ((res: any) => any)[] = []
   return {
     mockApi: {
       get: vi.fn(),
       post: vi.fn(),
       defaults: { headers: { common: {} as Record<string, string> } },
+      interceptors: {
+        response: {
+          use: vi.fn((fn: (res: any) => any) => {
+            responseInterceptors.push(fn)
+            return responseInterceptors.length - 1
+          }),
+          eject: vi.fn((id: number) => {
+            responseInterceptors.splice(id, 1)
+          }),
+          _run: (res: any) => responseInterceptors.forEach((fn) => fn(res)),
+        },
+      },
     },
     mockSafeApiCall: vi.fn((fn: () => Promise<unknown>) => fn()),
   }
@@ -97,6 +110,30 @@ describe('authStore initialize', () => {
     expect(store.isLoggedIn).toBe(true)
     expect(store.isInitialized).toBe(true)
     expect(store.userId).toBe('u1')
+  })
+
+  it('migrates legacy localStorage token to Bearer header on initialize', () => {
+    const token = makeJwt({
+      userId: 'u1',
+      profileId: 'p1',
+      exp: Math.floor(Date.now() / 1000) + 3600,
+    })
+    localStorage.setItem('token', token)
+    localStorage.setItem('refreshToken', 'old-refresh')
+
+    const store = useAuthStore()
+    store.initialize()
+
+    // Should set Bearer header for backend migration
+    expect(mockApi.defaults.headers.common['Authorization']).toBe(`Bearer ${token}`)
+    expect(store.isLoggedIn).toBe(true)
+    expect(store.userId).toBe('u1')
+
+    // Simulate first successful API response — header + localStorage cleaned up
+    mockApi.interceptors.response._run({})
+    expect(mockApi.defaults.headers.common['Authorization']).toBeUndefined()
+    expect(localStorage.getItem('token')).toBeNull()
+    expect(localStorage.getItem('refreshToken')).toBeNull()
   })
 
   it('clears malformed JWT on initialize', () => {

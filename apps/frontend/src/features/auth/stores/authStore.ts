@@ -22,6 +22,33 @@ import { SESSION_COOKIE, SESSION_COOKIE_OPTS } from '@shared/session'
 
 const cookies = new Cookies()
 
+/**
+ * One-time migration for users upgrading from the old frontend that stored
+ * the JWT in localStorage. Sets the Bearer header on the axios instance so
+ * the backend's authenticate hook picks it up and sets the __session cookie.
+ * Cleans up localStorage after the first successful API response.
+ *
+ * TODO: Remove this function once all clients have migrated to cookie auth.
+ */
+function migrateLegacyToken(): string | null {
+  const legacyToken = localStorage.getItem('token')
+  if (!legacyToken) return null
+
+  api.defaults.headers.common['Authorization'] = `Bearer ${legacyToken}`
+
+  // After the first successful response the cookie is set by the backend —
+  // remove the temporary header and clean up localStorage.
+  const ejectId = api.interceptors.response.use((res) => {
+    delete api.defaults.headers.common['Authorization']
+    localStorage.removeItem('token')
+    localStorage.removeItem('refreshToken')
+    api.interceptors.response.eject(ejectId)
+    return res
+  })
+
+  return legacyToken
+}
+
 const getAuthId = (authId: UserIdentifier): string => {
   return authId.email ? authId.email : (authId.phonenumber ?? '')
 }
@@ -57,12 +84,12 @@ export const useAuthStore = defineStore('auth', {
     },
 
     initialize() {
-      // Restore state from cookie (non-httpOnly — readable by JS)
-      const cookieToken = cookies.get<string>(SESSION_COOKIE)
+      // Restore state from cookie, or migrate from legacy localStorage
+      const token = cookies.get<string>(SESSION_COOKIE) ?? migrateLegacyToken()
 
-      if (cookieToken) {
+      if (token) {
         try {
-          JSON.parse(atob(cookieToken.split('.')[1]!))
+          JSON.parse(atob(token.split('.')[1]!))
         } catch {
           // Malformed JWT — clear it
           cookies.remove(SESSION_COOKIE, SESSION_COOKIE_OPTS)
@@ -71,7 +98,7 @@ export const useAuthStore = defineStore('auth', {
         }
         // Even if the JWT is expired, keep it — the refresh interceptor in
         // api.ts will attempt a silent refresh using the httpOnly __refresh cookie.
-        this.setAuthState(cookieToken)
+        this.setAuthState(token)
       }
       this.isInitialized = true
     },
