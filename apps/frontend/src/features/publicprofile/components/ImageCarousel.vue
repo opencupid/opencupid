@@ -109,7 +109,7 @@ watch(
       :title-visually-hidden="true"
       :body-scrolling="false"
       :fullscreen="true"
-      :lazy="false"
+      :lazy="true"
       no-animation
     >
       <template #header-close>
@@ -119,12 +119,12 @@ watch(
         v-model="fullSlide"
         v-bind="carouselProps"
         class="w-100 h-100"
-        @click="showFullscreen = false"
       >
         <Slide
           v-for="img in images"
           :key="img.position"
           class="bg-black"
+          @click="showFullscreen = false"
         >
           <div
             class="w-100 h-100 d-flex justify-content-center align-items-center overflow-hidden"
