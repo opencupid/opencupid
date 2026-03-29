@@ -18,7 +18,6 @@ const props = defineProps<{
 
 const showFullscreen = shallowRef(false)
 const inlineSlide = shallowRef(0)
-const fullSlide = shallowRef(0)
 
 const loadedImages = reactive<Record<number, boolean>>({})
 
@@ -27,7 +26,6 @@ const handleImageLoad = (position: number) => {
 }
 
 const handleImageClick = () => {
-  fullSlide.value = inlineSlide.value
   showFullscreen.value = true
 }
 
@@ -109,22 +107,22 @@ watch(
       :title-visually-hidden="true"
       :body-scrolling="false"
       :fullscreen="true"
-      :lazy="false"
+      :lazy="true"
       no-animation
     >
       <template #header-close>
         <IconCross class="svg-icon" />
       </template>
       <Carousel
-        v-model="fullSlide"
+        v-model="inlineSlide"
         v-bind="carouselProps"
         class="w-100 h-100"
-        @click="showFullscreen = false"
       >
         <Slide
           v-for="img in images"
           :key="img.position"
           class="bg-black"
+          @click="showFullscreen = false"
         >
           <div
             class="w-100 h-100 d-flex justify-content-center align-items-center overflow-hidden"
