@@ -67,23 +67,6 @@ describe('authStore initialize', () => {
     clearSessionCookie()
   })
 
-  it('migrates token from localStorage to cookie on initialize', () => {
-    const token = makeJwt({
-      userId: 'u1',
-      profileId: 'p1',
-      exp: Math.floor(Date.now() / 1000) + 3600,
-    })
-    localStorage.setItem('token', token)
-
-    const store = useAuthStore()
-    store.initialize()
-
-    expect(localStorage.getItem('token')).toBeNull()
-    expect(getSessionCookie()).toBe(token)
-    expect(store.isLoggedIn).toBe(true)
-    expect(store.userId).toBe('u1')
-  })
-
   it('keeps expired JWT on initialize (refresh handled by interceptor)', () => {
     const expiredToken = makeJwt({
       userId: 'u1',

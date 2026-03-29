@@ -18,7 +18,7 @@ type AuthStoreResponse<T> =
   | SuccessResponse<T>
   | (ApiError & { code: AuthErrorCodes; restart: 'otp' | 'userid' })
 
-import { SESSION_COOKIE, SESSION_COOKIE_OPTS, SESSION_MAX_AGE } from '@shared/session'
+import { SESSION_COOKIE, SESSION_COOKIE_OPTS } from '@shared/session'
 
 const cookies = new Cookies()
 
@@ -57,17 +57,6 @@ export const useAuthStore = defineStore('auth', {
     },
 
     initialize() {
-      // One-time migration: move JWT from localStorage to cookie
-      const storedToken = localStorage.getItem('token')
-      if (storedToken) {
-        cookies.set(SESSION_COOKIE, storedToken, {
-          ...SESSION_COOKIE_OPTS,
-          maxAge: SESSION_MAX_AGE,
-          secure: location.protocol === 'https:',
-        })
-        localStorage.removeItem('token')
-      }
-
       // Restore state from cookie (non-httpOnly — readable by JS)
       const cookieToken = cookies.get<string>(SESSION_COOKIE)
 
