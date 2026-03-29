@@ -74,14 +74,14 @@ function createGlobalT() {
   }
 }
 
-export function appUseI18n(app: App, defaultLocale: string) {
+export function appUseI18n(app: App) {
   app.use(VueTolgee, { tolgee })
 
   // Expose global t for non-component contexts (e.g. MessageReceivedToast)
   const globalT = createGlobalT()
   window.__APP_I18N__ = { global: { t: globalT } }
 
-  const initialLocale = getLocale() ?? defaultLocale
+  const initialLocale = getLocale() ?? __APP_CONFIG__.DEFAULT_LANGUAGE
   tolgee.changeLanguage(initialLocale)
   Settings.defaultLocale = initialLocale
 

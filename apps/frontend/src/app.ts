@@ -71,7 +71,7 @@ export async function bootstrapApp() {
   useAuthStore().initialize()
   useBootstrap().bootstrap()
 
-  appUseI18n(app, 'hu')
+  appUseI18n(app)
 
   await router.isReady()
 

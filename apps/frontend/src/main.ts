@@ -16,7 +16,7 @@ if (shouldShowLandingPage(window.location.pathname, !!localStorage.getItem('toke
     const localStore = useLocalStore()
     localStore.initialize()
 
-    appUseI18n(app, 'hu')
+    appUseI18n(app)
 
     app.mount('#app')
     document.getElementById('splash')?.remove()

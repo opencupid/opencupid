@@ -9,6 +9,7 @@ export const appConfigSchema = z.object({
   VAPID_PUBLIC_KEY: z.string().default(''),
   SENTRY_DSN: z.string().default(''),
   SITE_NAME: z.string().default('OpenCupid'),
+  DEFAULT_LANGUAGE: z.string().default('en'),
   JITSI_DOMAIN: z.string().default(''),
   VOICE_MESSAGE_MAX_DURATION: z.string().default('120'),
   MAP_TILE_URL: z.string().default(''),
