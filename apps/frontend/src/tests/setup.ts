@@ -21,6 +21,7 @@ import { appConfigSchema } from '@zod/config/appConfig.schema'
   VAPID_PUBLIC_KEY: '',
   SENTRY_DSN: '',
   SITE_NAME: 'OpenCupid',
+  DEFAULT_LANGUAGE: 'en',
   JITSI_DOMAIN: '',
   VOICE_MESSAGE_MAX_DURATION: '120',
   MAP_TILE_URL: '',
