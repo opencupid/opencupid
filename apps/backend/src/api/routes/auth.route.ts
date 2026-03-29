@@ -10,7 +10,7 @@ import { SmsService } from '@/services/sms.service'
 import { CaptchaService } from '@/services/captcha.service'
 import { appConfig } from '@/lib/appconfig'
 import '@fastify/cookie'
-import { generateMediaToken } from '@/lib/media'
+import { setMediaCookie, clearMediaCookie } from '@/plugins/media-cookie'
 
 import {
   UserIdentifyPayloadSchema,
@@ -87,14 +87,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         )
 
         // Set media auth cookie so nginx can verify media requests
-        const mediaToken = generateMediaToken()
-        reply.setCookie('__media_token', mediaToken.value, {
-          path: '/user-content/',
-          httpOnly: true,
-          secure: appConfig.NODE_ENV !== 'development',
-          sameSite: 'strict',
-          maxAge: mediaToken.maxAge,
-        })
+        setMediaCookie(reply)
 
         const response: VerifyTokenResponse = { success: true, token: jwt, refreshToken }
         reply.code(200).send(response)
@@ -304,8 +297,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         await req.deleteSession()
         // Delete all refresh tokens for this user
         await refreshTokenService.deleteAllForUser(req.user.userId)
-        // Clear media auth cookie
-        reply.clearCookie('__media_token', { path: '/user-content/' })
+        clearMediaCookie(reply)
         return reply.code(200).send({ success: true })
       } catch (error) {
         fastify.log.error({ err: error }, 'Error during logout')
@@ -340,6 +332,8 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
    * POST /media-token
    * Refreshes the __media_token cookie used by nginx to authorize image requests.
    * Called by the frontend when the cookie expires while a tab is idle.
+   * The media-cookie preHandler plugin sets the cookie automatically on all
+   * authenticated requests — this endpoint just provides a lightweight target.
    * @returns {{ success: boolean }}
    */
   fastify.post(
@@ -349,14 +343,6 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       config: { ...rateLimitConfig(fastify, '1 minute', 10) },
     },
     async (_req, reply) => {
-      const mediaToken = generateMediaToken()
-      reply.setCookie('__media_token', mediaToken.value, {
-        path: '/user-content/',
-        httpOnly: true,
-        secure: appConfig.NODE_ENV !== 'development',
-        sameSite: 'strict',
-        maxAge: mediaToken.maxAge,
-      })
       return reply.code(200).send({ success: true })
     }
   )
