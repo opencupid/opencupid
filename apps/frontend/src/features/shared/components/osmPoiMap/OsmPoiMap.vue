@@ -15,6 +15,7 @@ import {
   hydratePoiIcon,
   MAP_MAX_ZOOM,
 } from './mapUtils'
+import { refreshMediaToken } from '@/features/images/composables/useMediaTokenRefresh'
 
 const props = withDefaults(
   defineProps<{
@@ -320,11 +321,15 @@ function createMarker(item: MapPoi): LMarker {
   const isSelected = item.id === props.selectedId
   const m = L.marker([item.location.lat, item.location.lon], {
     title: item.title,
-    icon: hydratePoiIcon(props.iconComponent, {
-      image: item.image,
-      isSelected,
-      isHighlighted: item.highlighted ?? false,
-    }, iconCache),
+    icon: hydratePoiIcon(
+      props.iconComponent,
+      {
+        image: item.image,
+        isSelected,
+        isHighlighted: item.highlighted ?? false,
+      },
+      iconCache
+    ),
     keyboard: true,
   })
 
@@ -402,11 +407,15 @@ function updateMarkers(forceRebuild = false) {
       if (existing.highlighted !== item.highlighted || imageUrl !== existingUrl) {
         const marker = markers.get(id)!
         marker.setIcon(
-          hydratePoiIcon(props.iconComponent, {
-            image: item.image,
-            isSelected: id === props.selectedId,
-            isHighlighted: item.highlighted ?? false,
-          }, iconCache)
+          hydratePoiIcon(
+            props.iconComponent,
+            {
+              image: item.image,
+              isSelected: id === props.selectedId,
+              isHighlighted: item.highlighted ?? false,
+            },
+            iconCache
+          )
         )
       }
     }
@@ -462,12 +471,27 @@ function highlightSelected() {
   }
 }
 
+/** Delegated error handler for static <img> tags inside Leaflet marker icons.
+ *  These are rendered outside Vue (via hydratePoiIcon), so we use capture-phase
+ *  event delegation to catch load failures and retry after refreshing the media cookie. */
+async function onMarkerImgError(e: Event) {
+  const img = e.target
+  if (!(img instanceof HTMLImageElement)) return
+  if (!img.closest('.poi-avatar-icon')) return
+  if (img.dataset.retried) return
+  img.dataset.retried = '1'
+  await refreshMediaToken()
+  img.src = img.src.split('?')[0] + '?_t=' + Date.now()
+}
+
 onMounted(() => {
   ensureMap()
+  mapEl.value?.addEventListener('error', onMarkerImgError, true)
 })
 
 function destroyMap() {
   if (!map) return
+  mapEl.value?.removeEventListener('error', onMarkerImgError, true)
   if (resizeObserver) {
     resizeObserver.disconnect()
     resizeObserver = null

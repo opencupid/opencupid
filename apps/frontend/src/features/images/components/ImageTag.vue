@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { type ImageVariant } from '@zod/profile/profileimage.dto'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import type { PropType } from 'vue'
 import { type VariantName } from './types'
+import { refreshMediaToken } from '../composables/useMediaTokenRefresh'
 
 const props = defineProps({
   image: {
@@ -41,7 +42,25 @@ const pickUrl = (variant: string, variants: ImageVariant[]) => {
 
 const emit = defineEmits<{ load: [] }>()
 
-const url = computed(() => pickUrl(props.variant, props.image.variants))
+const cacheBuster = ref('')
+const hasRetried = ref(false)
+
+const url = computed(() => {
+  const base = pickUrl(props.variant, props.image.variants)
+  return cacheBuster.value ? `${base}?_t=${cacheBuster.value}` : base
+})
+
+function onImgLoad() {
+  hasRetried.value = false
+  emit('load')
+}
+
+async function onImgError() {
+  if (hasRetried.value) return
+  hasRetried.value = true
+  await refreshMediaToken()
+  cacheBuster.value = String(Date.now())
+}
 </script>
 
 <template>
@@ -51,7 +70,8 @@ const url = computed(() => pickUrl(props.variant, props.image.variants))
     :class="['fitted-image', className]"
     :loading="loading"
     :decoding="decoding"
-    @load="emit('load')"
+    @load="onImgLoad"
+    @error="onImgError"
   />
 </template>
 
