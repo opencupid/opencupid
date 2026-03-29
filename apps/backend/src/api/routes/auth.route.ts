@@ -87,9 +87,14 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         )
 
         // Set media auth cookie so nginx can verify media requests
-        setMediaCookie(reply)
+        const mediaTokenExpiresAt = setMediaCookie(reply)
 
-        const response: VerifyTokenResponse = { success: true, token: jwt, refreshToken }
+        const response: VerifyTokenResponse = {
+          success: true,
+          token: jwt,
+          refreshToken,
+          expiresAt: mediaTokenExpiresAt,
+        }
         reply.code(200).send(response)
       } catch (error) {
         return reply.code(500).send({ code: 'AUTH_INTERNAL_ERROR' })
@@ -341,8 +346,8 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       config: { ...rateLimitConfig(fastify, '1 minute', 10) },
     },
     async (_req, reply) => {
-      setMediaCookie(reply)
-      return reply.code(200).send({ success: true })
+      const expiresAt = setMediaCookie(reply)
+      return reply.code(200).send({ success: true, expiresAt })
     }
   )
 

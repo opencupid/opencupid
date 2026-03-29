@@ -6,8 +6,8 @@ import { appConfig } from '@/lib/appconfig'
 const COOKIE_NAME = '__media_token'
 const COOKIE_PATH = '/user-content/'
 
-export function setMediaCookie(reply: FastifyReply): void {
-  const { value, maxAge } = generateMediaToken()
+export function setMediaCookie(reply: FastifyReply): number {
+  const { value, maxAge, expiresAt } = generateMediaToken()
   reply.setCookie(COOKIE_NAME, value, {
     path: COOKIE_PATH,
     httpOnly: true,
@@ -15,6 +15,7 @@ export function setMediaCookie(reply: FastifyReply): void {
     sameSite: 'strict',
     maxAge,
   })
+  return expiresAt
 }
 
 export function clearMediaCookie(reply: FastifyReply): void {

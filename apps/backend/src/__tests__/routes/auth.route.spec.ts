@@ -133,6 +133,8 @@ describe('GET /verify-token', () => {
       httpOnly: true,
       sameSite: 'strict',
     })
+    const cookieExp = parseInt(reply.cookies[0].value.split('.')[0], 10)
+    expect(reply.payload.expiresAt).toBe(cookieExp)
   })
 
   it('returns 200 and token for new user, sends welcome email and initializes profile', async () => {
@@ -488,6 +490,18 @@ describe('POST /media-token', () => {
       httpOnly: true,
       sameSite: 'strict',
     })
+  })
+
+  it('returns expiresAt matching the cookie expiry timestamp', async () => {
+    const before = Math.floor(Date.now() / 1000)
+    const handler = fastify.routes['POST /media-token']
+    const req = { user: { userId: 'user1', profileId: 'p1', tokenVersion: 0 } }
+    await handler(req as any, reply as any)
+    const after = Math.floor(Date.now() / 1000)
+    const cookieExp = parseInt(reply.cookies[0].value.split('.')[0], 10)
+    expect(reply.payload.expiresAt).toBe(cookieExp)
+    expect(reply.payload.expiresAt).toBeGreaterThanOrEqual(before + reply.cookies[0].opts.maxAge)
+    expect(reply.payload.expiresAt).toBeLessThanOrEqual(after + reply.cookies[0].opts.maxAge)
   })
 })
 
