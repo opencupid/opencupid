@@ -1,5 +1,4 @@
-import fp from 'fastify-plugin'
-import type { FastifyInstance, FastifyReply } from 'fastify'
+import type { FastifyReply } from 'fastify'
 import '@fastify/cookie'
 import { generateMediaToken } from '@/lib/media'
 import { appConfig } from '@/lib/appconfig'
@@ -21,10 +20,3 @@ export function setMediaCookie(reply: FastifyReply): void {
 export function clearMediaCookie(reply: FastifyReply): void {
   reply.clearCookie(COOKIE_NAME, { path: COOKIE_PATH })
 }
-
-export default fp(async (fastify: FastifyInstance) => {
-  fastify.addHook('preHandler', async (req, reply) => {
-    if (!req.session) return
-    setMediaCookie(reply)
-  })
-})

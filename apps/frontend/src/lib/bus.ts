@@ -10,6 +10,7 @@ type AppEvents = {
   'language:changed': { language: string }
   'api:offline': void
   'api:online': void
+  'app:tab-visible': void
   'profile:dating-prefs-updated': void
   'profile:blocked': { profileId: string }
 }

@@ -4,7 +4,18 @@ vi.mock('@/lib/api', () => ({
   api: { post: vi.fn() },
 }))
 
+vi.mock('@/lib/bus', () => {
+  const handlers = new Map<string, Function>()
+  return {
+    bus: {
+      on: vi.fn((event: string, handler: Function) => handlers.set(event, handler)),
+      emit: vi.fn((event: string) => handlers.get(event)?.()),
+    },
+  }
+})
+
 import { api } from '@/lib/api'
+import { bus } from '@/lib/bus'
 
 // Re-import fresh module per test to reset the dedup promise
 let refreshMediaToken: typeof import('../composables/useMediaTokenRefresh').refreshMediaToken
@@ -12,7 +23,6 @@ let refreshMediaToken: typeof import('../composables/useMediaTokenRefresh').refr
 describe('refreshMediaToken', () => {
   beforeEach(async () => {
     vi.mocked(api.post).mockReset()
-    // Fresh import to reset module-level state
     vi.resetModules()
     const mod = await import('../composables/useMediaTokenRefresh')
     refreshMediaToken = mod.refreshMediaToken
@@ -22,7 +32,7 @@ describe('refreshMediaToken', () => {
     vi.restoreAllMocks()
   })
 
-  it('calls /app/version to refresh the media cookie', async () => {
+  it('calls /auth/media-token to refresh the media cookie', async () => {
     vi.mocked(api.post).mockResolvedValue({ data: {} })
     await refreshMediaToken()
     expect(api.post).toHaveBeenCalledWith('/auth/media-token')
@@ -49,5 +59,14 @@ describe('refreshMediaToken', () => {
     vi.mocked(api.post).mockResolvedValue({ data: {} })
     await refreshMediaToken()
     expect(api.post).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('visibilitychange via bus', () => {
+  it('registers a listener for app:tab-visible', async () => {
+    vi.mocked(api.post).mockReset()
+    vi.resetModules()
+    await import('../composables/useMediaTokenRefresh')
+    expect(bus.on).toHaveBeenCalledWith('app:tab-visible', expect.any(Function))
   })
 })

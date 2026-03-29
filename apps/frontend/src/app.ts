@@ -3,6 +3,7 @@ import registerToast from './lib/toast'
 import { useBootstrap } from './lib/bootstrap'
 import { appUseI18n } from './lib/i18n'
 import { useAuthStore } from './features/auth/stores/authStore'
+import { bus } from './lib/bus'
 
 // Register push-only service worker
 if ('serviceWorker' in navigator) {
@@ -70,6 +71,10 @@ export async function bootstrapApp() {
 
   useAuthStore().initialize()
   useBootstrap().bootstrap()
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) bus.emit('app:tab-visible')
+  })
 
   appUseI18n(app)
 
