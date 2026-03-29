@@ -1,7 +1,9 @@
 import axios from 'axios'
+import Cookies from 'universal-cookie'
 import { bus } from './bus'
 import { VersionSchema, type VersionDTO } from '@zod/dto/version.dto'
 import type { VersionResponse } from '@zod/apiResponse.dto'
+import { SESSION_COOKIE, SESSION_COOKIE_OPTS } from '@shared/session'
 
 const baseURL = __APP_CONFIG__?.API_BASE_URL
 
@@ -130,6 +132,8 @@ api.interceptors.response.use(
         isRefreshing = false
         refreshSubscribers = []
 
+        // Clear session cookie so next page load doesn't re-enter the refresh loop
+        new Cookies().remove(SESSION_COOKIE, SESSION_COOKIE_OPTS)
         bus.emit('auth:logout')
         window.location.href = '/auth'
 

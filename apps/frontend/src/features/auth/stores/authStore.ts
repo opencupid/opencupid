@@ -175,7 +175,11 @@ export const useAuthStore = defineStore('auth', {
       this.userId = null
       this.email = null
       this.loginUser = null
-      // Session + refresh cookies are cleared by the backend Set-Cookie response
+      // Clear session cookie client-side so a failed server logout
+      // doesn't leave the user appearing logged in on next page load.
+      // (The __refresh cookie is httpOnly — only the backend can clear it,
+      // but it will fail validation without a matching session anyway.)
+      cookies.remove(SESSION_COOKIE, SESSION_COOKIE_OPTS)
       localStorage.removeItem('authId')
       bus.emit('auth:logout')
     },

@@ -67,8 +67,9 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
   /**
    * GET /verify-token
    * Validates a magic-link token, creates or resumes a user session.
+   * Sets __session and __refresh cookies on success.
    * @query {string} token - The magic-link or OTP token
-   * @returns {VerifyTokenResponse} JWT access token + refresh token
+   * @returns {VerifyTokenResponse} JWT access token (refresh token set via httpOnly cookie)
    */
   fastify.get(
     '/verify-token',
@@ -130,9 +131,9 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * POST /refresh
-   * Issues a new JWT + refresh token pair using an expired JWT and a valid refresh token.
-   * Both tokens are read from cookies — no request body needed.
-   * @returns {RefreshTokenResponse} New JWT (refresh token set via httpOnly cookie)
+   * Issues a new JWT using the expired __session cookie and __refresh cookie.
+   * No request body needed — both tokens are read from cookies.
+   * @returns {RefreshTokenResponse} New JWT (new refresh token set via httpOnly cookie)
    */
   fastify.post(
     '/refresh',
