@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 vi.mock('@/lib/api', () => ({
-  api: { get: vi.fn() },
+  api: { post: vi.fn() },
 }))
 
 import { api } from '@/lib/api'
@@ -11,7 +11,7 @@ let refreshMediaToken: typeof import('../composables/useMediaTokenRefresh').refr
 
 describe('refreshMediaToken', () => {
   beforeEach(async () => {
-    vi.mocked(api.get).mockReset()
+    vi.mocked(api.post).mockReset()
     // Fresh import to reset module-level state
     vi.resetModules()
     const mod = await import('../composables/useMediaTokenRefresh')
@@ -23,31 +23,31 @@ describe('refreshMediaToken', () => {
   })
 
   it('calls /app/version to refresh the media cookie', async () => {
-    vi.mocked(api.get).mockResolvedValue({ data: {} })
+    vi.mocked(api.post).mockResolvedValue({ data: {} })
     await refreshMediaToken()
-    expect(api.get).toHaveBeenCalledWith('/app/version')
+    expect(api.post).toHaveBeenCalledWith('/auth/media-token')
   })
 
   it('deduplicates concurrent calls into a single request', async () => {
-    vi.mocked(api.get).mockResolvedValue({ data: {} })
+    vi.mocked(api.post).mockResolvedValue({ data: {} })
     const p1 = refreshMediaToken()
     const p2 = refreshMediaToken()
     await Promise.all([p1, p2])
-    expect(api.get).toHaveBeenCalledTimes(1)
+    expect(api.post).toHaveBeenCalledTimes(1)
   })
 
   it('allows a new request after the previous one completes', async () => {
-    vi.mocked(api.get).mockResolvedValue({ data: {} })
+    vi.mocked(api.post).mockResolvedValue({ data: {} })
     await refreshMediaToken()
     await refreshMediaToken()
-    expect(api.get).toHaveBeenCalledTimes(2)
+    expect(api.post).toHaveBeenCalledTimes(2)
   })
 
   it('resets dedup lock even when the request fails', async () => {
-    vi.mocked(api.get).mockRejectedValueOnce(new Error('network'))
+    vi.mocked(api.post).mockRejectedValueOnce(new Error('network'))
     await refreshMediaToken().catch(() => {})
-    vi.mocked(api.get).mockResolvedValue({ data: {} })
+    vi.mocked(api.post).mockResolvedValue({ data: {} })
     await refreshMediaToken()
-    expect(api.get).toHaveBeenCalledTimes(2)
+    expect(api.post).toHaveBeenCalledTimes(2)
   })
 })

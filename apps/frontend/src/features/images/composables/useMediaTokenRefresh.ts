@@ -16,7 +16,7 @@ let refreshPromise: Promise<void> | null = null
 export function refreshMediaToken(): Promise<void> {
   if (refreshPromise) return refreshPromise
   refreshPromise = api
-    .get('/app/version')
+    .post('/auth/media-token')
     .then(() => {})
     .finally(() => {
       refreshPromise = null

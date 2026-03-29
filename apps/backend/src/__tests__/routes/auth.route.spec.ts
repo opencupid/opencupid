@@ -474,6 +474,23 @@ describe('GET /ws-ticket', () => {
   })
 })
 
+describe('POST /media-token', () => {
+  it('sets __media_token cookie and returns success', async () => {
+    const handler = fastify.routes['POST /media-token']
+    const req = { user: { userId: 'user1', profileId: 'p1', tokenVersion: 0 } }
+    await handler(req as any, reply as any)
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    expect(reply.cookies[0].name).toBe('__media_token')
+    expect(reply.cookies[0].value).toMatch(/^\d+\.[a-f0-9]+$/)
+    expect(reply.cookies[0].opts).toMatchObject({
+      path: '/user-content/',
+      httpOnly: true,
+      sameSite: 'strict',
+    })
+  })
+})
+
 describe('GET /dev/latest-token', () => {
   it('registers the route when DEV_AUTH_BYPASS_ENABLED is true', () => {
     expect(fastify.routes['GET /dev/latest-token']).toBeDefined()

@@ -336,6 +336,31 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
     }
   )
 
+  /**
+   * POST /media-token
+   * Refreshes the __media_token cookie used by nginx to authorize image requests.
+   * Called by the frontend when the cookie expires while a tab is idle.
+   * @returns {{ success: boolean }}
+   */
+  fastify.post(
+    '/media-token',
+    {
+      onRequest: [fastify.authenticate],
+      config: { ...rateLimitConfig(fastify, '1 minute', 10) },
+    },
+    async (_req, reply) => {
+      const mediaToken = generateMediaToken()
+      reply.setCookie('__media_token', mediaToken.value, {
+        path: '/user-content/',
+        httpOnly: true,
+        secure: appConfig.NODE_ENV !== 'development',
+        sameSite: 'strict',
+        maxAge: mediaToken.maxAge,
+      })
+      return reply.code(200).send({ success: true })
+    }
+  )
+
   // Dev-only: retrieve the latest OTP for a given authId (skips Mailpit)
   if (appConfig.DEV_AUTH_BYPASS_ENABLED && appConfig.NODE_ENV !== 'production') {
     /**
