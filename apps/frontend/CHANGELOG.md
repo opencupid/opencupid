@@ -1,5 +1,11 @@
 # frontend
 
+## 0.42.2
+
+### Patch Changes
+
+- d630b58: Fix image carousel nav buttons closing fullscreen modal and eliminate open-flicker on non-zero slide
+
 ## 0.42.1
 
 ## 0.42.0
