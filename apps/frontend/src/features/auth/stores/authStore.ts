@@ -88,6 +88,9 @@ export const useAuthStore = defineStore('auth', {
           return
         }
         this.setAuthState(token)
+        // mediaTokenExpiresAt is unknown after a hard reload — refresh immediately
+        // so images don't 401 before the first app:tab-visible fires.
+        this.refreshMediaToken().catch(() => {})
       }
       this.isInitialized = true
     },

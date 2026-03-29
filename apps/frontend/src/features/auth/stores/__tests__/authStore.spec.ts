@@ -55,6 +55,7 @@ describe('authStore initialize', () => {
     setActivePinia(createPinia())
     localStorage.clear()
     vi.clearAllMocks()
+    mockApi.post.mockResolvedValue({ data: { success: true, expiresAt: 9999999999 } })
   })
 
   it('clears expired JWT without refresh token on initialize', async () => {
@@ -104,6 +105,28 @@ describe('authStore initialize', () => {
     expect(store.isLoggedIn).toBe(true)
     expect(store.isInitialized).toBe(true)
     expect(store.userId).toBe('u1')
+  })
+
+  it('refreshes media token on initialize when a session exists', () => {
+    const validToken = makeJwt({
+      userId: 'u1',
+      profileId: 'p1',
+      exp: Math.floor(Date.now() / 1000) + 3600,
+    })
+    localStorage.setItem('token', validToken)
+    mockApi.post.mockResolvedValue({ data: { success: true, expiresAt: 9999999999 } })
+
+    const store = useAuthStore()
+    store.initialize()
+
+    expect(mockApi.post).toHaveBeenCalledWith('/auth/media-token')
+  })
+
+  it('does not refresh media token on initialize when no session exists', () => {
+    const store = useAuthStore()
+    store.initialize()
+
+    expect(mockApi.post).not.toHaveBeenCalled()
   })
 
   it('clears malformed JWT on initialize', async () => {
