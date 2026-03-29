@@ -480,18 +480,30 @@ async function onMarkerImgError(e: Event) {
   if (!img.closest('.poi-avatar-icon')) return
   if (img.dataset.retried) return
   img.dataset.retried = '1'
-  await refreshMediaToken()
-  img.src = img.src.split('?')[0] + '?_t=' + Date.now()
+  try {
+    await refreshMediaToken()
+    img.src = img.src.split('?')[0] + '?_t=' + Date.now()
+  } catch {
+    delete img.dataset.retried
+  }
+}
+
+function onMarkerImgLoad(e: Event) {
+  const img = e.target
+  if (!(img instanceof HTMLImageElement)) return
+  if (img.dataset.retried) delete img.dataset.retried
 }
 
 onMounted(() => {
   ensureMap()
   mapEl.value?.addEventListener('error', onMarkerImgError, true)
+  mapEl.value?.addEventListener('load', onMarkerImgLoad, true)
 })
 
 function destroyMap() {
   if (!map) return
   mapEl.value?.removeEventListener('error', onMarkerImgError, true)
+  mapEl.value?.removeEventListener('load', onMarkerImgLoad, true)
   if (resizeObserver) {
     resizeObserver.disconnect()
     resizeObserver = null

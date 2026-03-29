@@ -25,6 +25,7 @@ let lastRefreshedAt = Date.now()
 
 bus.on('app:tab-visible', () => {
   if (Date.now() - lastRefreshedAt > REFRESH_THRESHOLD_MS) {
-    refreshMediaToken()
+    // Fire-and-forget; failures are non-critical (onerror fallback handles expired images)
+    refreshMediaToken().catch(() => {})
   }
 })

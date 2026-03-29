@@ -58,8 +58,12 @@ function onImgLoad() {
 async function onImgError() {
   if (hasRetried.value) return
   hasRetried.value = true
-  await refreshMediaToken()
-  cacheBuster.value = String(Date.now())
+  try {
+    await refreshMediaToken()
+    cacheBuster.value = String(Date.now())
+  } catch {
+    hasRetried.value = false
+  }
 }
 </script>
 
