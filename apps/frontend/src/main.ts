@@ -1,6 +1,7 @@
 import { createApp, nextTick } from 'vue'
 import { createPinia } from 'pinia'
 import { appUseI18n } from './lib/i18n'
+import { availableLanguages } from './lib/tolgee'
 
 import '@/css/fonts.scss'
 import '@/css/bootstrap.scss'
@@ -15,6 +16,13 @@ if (shouldShowLandingPage(window.location.pathname, !!localStorage.getItem('toke
 
     const localStore = useLocalStore()
     localStore.initialize()
+
+    if (!localStore.getLanguage) {
+      const urlLang = new URLSearchParams(window.location.search).get('lang')
+      if (urlLang && availableLanguages.includes(urlLang)) {
+        localStore.setLanguage(urlLang)
+      }
+    }
 
     appUseI18n(app)
 
