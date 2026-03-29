@@ -1,6 +1,6 @@
 import cuid from 'cuid'
 import { randomUUID } from 'crypto'
-import { FastifyPluginAsync } from 'fastify'
+import { FastifyPluginAsync, FastifyReply } from 'fastify'
 import { notifierService } from '@/services/notifier.service'
 import { UserService } from 'src/services/user.service'
 import { RefreshTokenService } from 'src/services/refresh-token.service'
@@ -10,7 +10,6 @@ import { SmsService } from '@/services/sms.service'
 import { CaptchaService } from '@/services/captcha.service'
 import { appConfig } from '@/lib/appconfig'
 import '@fastify/cookie'
-import { generateMediaToken } from '@/lib/media'
 
 import {
   UserIdentifyPayloadSchema,
@@ -25,6 +24,20 @@ import type {
   WsTicketResponse,
 } from '@zod/apiResponse.dto'
 import { UserIdentifier, JwtPayload } from '@zod/user/user.dto'
+import { SESSION_COOKIE, SESSION_COOKIE_OPTS, SESSION_MAX_AGE } from '@shared/session'
+
+function setSessionCookie(reply: FastifyReply, jwt: string) {
+  reply.setCookie(SESSION_COOKIE, jwt, {
+    ...SESSION_COOKIE_OPTS,
+    httpOnly: false,
+    secure: appConfig.NODE_ENV !== 'development',
+    maxAge: SESSION_MAX_AGE,
+  })
+}
+
+function clearSessionCookie(reply: FastifyReply) {
+  reply.clearCookie(SESSION_COOKIE, SESSION_COOKIE_OPTS)
+}
 
 const WS_TICKET_TTL = 30 // seconds
 
@@ -86,15 +99,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
           user.tokenVersion
         )
 
-        // Set media auth cookie so nginx can verify media requests
-        const mediaToken = generateMediaToken()
-        reply.setCookie('__media_token', mediaToken.value, {
-          path: '/user-content/',
-          httpOnly: true,
-          secure: appConfig.NODE_ENV !== 'development',
-          sameSite: 'strict',
-          maxAge: mediaToken.maxAge,
-        })
+        setSessionCookie(reply, jwt)
 
         const response: VerifyTokenResponse = { success: true, token: jwt, refreshToken }
         reply.code(200).send(response)
@@ -126,13 +131,9 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
       const { refreshToken } = params.data
 
-      const auth = req.headers.authorization
-      if (!auth) {
-        return sendUnauthorizedError(reply, 'Missing Authorization header')
-      }
-      const [scheme, expiredJwt] = auth.split(' ')
-      if (scheme !== 'Bearer' || !expiredJwt) {
-        return sendUnauthorizedError(reply, 'Invalid Authorization format')
+      const expiredJwt = req.cookies[SESSION_COOKIE]
+      if (!expiredJwt) {
+        return sendUnauthorizedError(reply, 'Missing session cookie')
       }
 
       // Verify JWT signature but ignore expiration to get userId
@@ -191,6 +192,8 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
       // Delete old refresh token
       await refreshTokenService.delete(refreshToken, jwtPayload.userId)
+
+      setSessionCookie(reply, newJwt)
 
       const response: RefreshTokenResponse = {
         success: true,
@@ -304,8 +307,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         await req.deleteSession()
         // Delete all refresh tokens for this user
         await refreshTokenService.deleteAllForUser(req.user.userId)
-        // Clear media auth cookie
-        reply.clearCookie('__media_token', { path: '/user-content/' })
+        clearSessionCookie(reply)
         return reply.code(200).send({ success: true })
       } catch (error) {
         fastify.log.error({ err: error }, 'Error during logout')

@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
+import Cookies from 'universal-cookie'
+import { SESSION_COOKIE } from '@shared/session'
 
 // --- hoisted mocks ---
 const { mockFetchOwnerProfile, mockConnectWebSocket, mockMessagingInit, mockInteractionInit } =
@@ -40,10 +42,11 @@ describe('useBootstrap', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     localStorage.clear()
+    new Cookies().remove(SESSION_COOKIE, { path: '/' })
     vi.clearAllMocks()
   })
 
-  describe('cold start — no token in localStorage', () => {
+  describe('cold start — no session cookie', () => {
     it('does not fetch profile when no token is present', async () => {
       await useBootstrap().bootstrap()
 
@@ -52,9 +55,9 @@ describe('useBootstrap', () => {
     })
   })
 
-  describe('cold start — token in localStorage', () => {
-    it('fetches owner profile when token exists', async () => {
-      localStorage.setItem('token', 'some.jwt.token')
+  describe('cold start — session cookie present', () => {
+    it('fetches owner profile when session cookie exists', async () => {
+      new Cookies().set(SESSION_COOKIE, 'some.jwt.token', { path: '/', sameSite: 'strict' })
 
       await useBootstrap().bootstrap()
 
@@ -62,7 +65,7 @@ describe('useBootstrap', () => {
     })
 
     it('connects websocket and initializes services after profile fetch', async () => {
-      localStorage.setItem('token', 'some.jwt.token')
+      new Cookies().set(SESSION_COOKIE, 'some.jwt.token', { path: '/', sameSite: 'strict' })
 
       await useBootstrap().bootstrap()
 
@@ -72,7 +75,7 @@ describe('useBootstrap', () => {
     })
 
     it('is idempotent — second call reuses the same promise', async () => {
-      localStorage.setItem('token', 'some.jwt.token')
+      new Cookies().set(SESSION_COOKIE, 'some.jwt.token', { path: '/', sameSite: 'strict' })
       const bs = useBootstrap()
 
       await Promise.all([bs.bootstrap(), bs.bootstrap()])
@@ -87,8 +90,8 @@ describe('useBootstrap', () => {
       await useBootstrap().bootstrap()
       expect(mockFetchOwnerProfile).not.toHaveBeenCalled()
 
-      // Now user logs in — token is now in localStorage
-      localStorage.setItem('token', 'some.jwt.token')
+      // Now user logs in — session cookie is set by the backend
+      new Cookies().set(SESSION_COOKIE, 'some.jwt.token', { path: '/', sameSite: 'strict' })
       await useBootstrap().onLogin()
 
       expect(mockFetchOwnerProfile).toHaveBeenCalledOnce()
@@ -100,7 +103,7 @@ describe('useBootstrap', () => {
         profileFetched = true
         return { success: true }
       })
-      localStorage.setItem('token', 'some.jwt.token')
+      new Cookies().set(SESSION_COOKIE, 'some.jwt.token', { path: '/', sameSite: 'strict' })
 
       await useBootstrap().onLogin()
 
@@ -109,7 +112,7 @@ describe('useBootstrap', () => {
     })
 
     it('allows re-bootstrap after onLogin resets the promise', async () => {
-      localStorage.setItem('token', 'some.jwt.token')
+      new Cookies().set(SESSION_COOKIE, 'some.jwt.token', { path: '/', sameSite: 'strict' })
       const bs = useBootstrap()
 
       await bs.bootstrap()

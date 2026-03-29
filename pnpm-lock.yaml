@@ -371,7 +371,7 @@ importers:
         version: 14.2.1(vue@3.5.28(typescript@5.9.3))
       '@vueuse/integrations':
         specifier: 14.2.1
-        version: 14.2.1(axios@1.13.5)(qrcode@1.5.4)(sortablejs@1.15.6)(vue@3.5.28(typescript@5.9.3))
+        version: 14.2.1(axios@1.13.5)(qrcode@1.5.4)(sortablejs@1.15.6)(universal-cookie@8.0.1)(vue@3.5.28(typescript@5.9.3))
       altcha:
         specifier: 2.3.0
         version: 2.3.0
@@ -447,6 +447,9 @@ importers:
       tinycon:
         specifier: ^0.6.8
         version: 0.6.8
+      universal-cookie:
+        specifier: ^8.0.1
+        version: 8.0.1
       vue:
         specifier: 3.5.28
         version: 3.5.28(typescript@5.9.3)
@@ -7419,6 +7422,9 @@ packages:
     resolution: {integrity: sha512-uNaeirEPvpZWSgzwsPGtU2zVSTrn/8L5q/IexZmH0eH6SA73CmAA5U4GwORTxQAZs95TAXLNqeLoPPNO5gZfWg==}
     engines: {node: '>=8'}
 
+  universal-cookie@8.0.1:
+    resolution: {integrity: sha512-B6ks9FLLnP1UbPPcveOidfvB9pHjP+wekP2uRYB9YDfKVpvcjKgy1W5Zj+cEXJ9KTPnqOKGfVDQBmn8/YCQfRg==}
+
   universalify@0.1.2:
     resolution: {integrity: sha512-rBJeI5CXAlmy1pV+617WB9J63U6XcazHHF2f2dbJix4XzpUF0RS3Zbj0FGIOCAva5P/d/GBOYaACQ1w+0azUkg==}
     engines: {node: '>= 4.0.0'}
@@ -10812,7 +10818,7 @@ snapshots:
       '@vueuse/shared': 14.2.1(vue@3.5.28(typescript@5.9.3))
       vue: 3.5.28(typescript@5.9.3)
 
-  '@vueuse/integrations@14.2.1(axios@1.13.5)(qrcode@1.5.4)(sortablejs@1.15.6)(vue@3.5.28(typescript@5.9.3))':
+  '@vueuse/integrations@14.2.1(axios@1.13.5)(qrcode@1.5.4)(sortablejs@1.15.6)(universal-cookie@8.0.1)(vue@3.5.28(typescript@5.9.3))':
     dependencies:
       '@vueuse/core': 14.2.1(vue@3.5.28(typescript@5.9.3))
       '@vueuse/shared': 14.2.1(vue@3.5.28(typescript@5.9.3))
@@ -10821,6 +10827,7 @@ snapshots:
       axios: 1.13.5(debug@4.4.3)
       qrcode: 1.5.4
       sortablejs: 1.15.6
+      universal-cookie: 8.0.1
 
   '@vueuse/metadata@14.2.1': {}
 
@@ -15330,6 +15337,10 @@ snapshots:
   unique-string@2.0.0:
     dependencies:
       crypto-random-string: 2.0.0
+
+  universal-cookie@8.0.1:
+    dependencies:
+      cookie: 1.1.1
 
   universalify@0.1.2: {}
 

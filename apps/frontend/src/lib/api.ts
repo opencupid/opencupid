@@ -11,6 +11,7 @@ if (!baseURL) {
 
 export const api = axios.create({
   baseURL,
+  withCredentials: true,
 })
 const CURRENT_VERSION = __APP_VERSION__
 
@@ -55,14 +56,14 @@ function startRetryMechanism() {
 
 // --- Silent token refresh interceptor ---
 let isRefreshing = false
-let refreshSubscribers: ((token: string) => void)[] = []
+let refreshSubscribers: (() => void)[] = []
 
-function onTokenRefreshed(token: string) {
-  refreshSubscribers.forEach((cb) => cb(token))
+function onTokenRefreshed() {
+  refreshSubscribers.forEach((cb) => cb())
   refreshSubscribers = []
 }
 
-function addRefreshSubscriber(callback: (token: string) => void) {
+function addRefreshSubscriber(callback: () => void) {
   refreshSubscribers.push(callback)
 }
 
@@ -101,14 +102,12 @@ api.interceptors.response.use(
     // Handle 401 with silent refresh
     if (error.response?.status === 401 && !originalRequest._retry) {
       const refreshToken = localStorage.getItem('refreshToken')
-      const token = localStorage.getItem('token')
 
-      if (refreshToken && token) {
+      if (refreshToken) {
         if (isRefreshing) {
           // Another refresh is in progress — queue this request
           return new Promise((resolve) => {
-            addRefreshSubscriber((newToken: string) => {
-              originalRequest.headers['Authorization'] = `Bearer ${newToken}`
+            addRefreshSubscriber(() => {
               resolve(api(originalRequest))
             })
           })
@@ -118,37 +117,33 @@ api.interceptors.response.use(
         isRefreshing = true
 
         try {
+          // Cookie carries the expired JWT automatically — no Authorization header needed
           const res = await axios.post(
             `${baseURL}/auth/refresh`,
             { refreshToken },
             {
-              headers: { Authorization: `Bearer ${token}` },
+              withCredentials: true,
             }
           )
 
           const newToken = res.data.token
           const newRefreshToken = res.data.refreshToken
 
-          localStorage.setItem('token', newToken)
           localStorage.setItem('refreshToken', newRefreshToken)
-          api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`
 
           isRefreshing = false
-          onTokenRefreshed(newToken)
+          onTokenRefreshed()
 
           // Notify auth store of new tokens
           bus.emit('auth:token-refreshed', { token: newToken, refreshToken: newRefreshToken })
 
-          originalRequest.headers['Authorization'] = `Bearer ${newToken}`
           return api(originalRequest)
         } catch (refreshError) {
           isRefreshing = false
           refreshSubscribers = []
 
           // Refresh failed — clear auth state and redirect to login
-          localStorage.removeItem('token')
           localStorage.removeItem('refreshToken')
-          delete api.defaults.headers.common['Authorization']
           bus.emit('auth:logout')
           window.location.href = '/auth'
 
@@ -156,9 +151,7 @@ api.interceptors.response.use(
         }
       } else {
         // No refresh token — unrecoverable 401
-        localStorage.removeItem('token')
         localStorage.removeItem('refreshToken')
-        delete api.defaults.headers.common['Authorization']
         bus.emit('auth:logout')
         window.location.href = '/auth'
         return Promise.reject(error)

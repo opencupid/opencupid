@@ -41,8 +41,6 @@ vi.mock('@/lib/appconfig', () => ({
     IMAGE_MAX_SIZE: 1000,
     FRONTEND_URL: 'http://test',
     DEV_AUTH_BYPASS_ENABLED: true,
-    IMAGE_URL_HMAC_TTL_SECONDS: 3600,
-    AUTH_IMG_HMAC_SECRET: 'test-secret-key',
   },
 }))
 
@@ -126,11 +124,11 @@ describe('GET /verify-token', () => {
     expect(reply.payload.token).toBe('jwt-token')
     expect(reply.payload.refreshToken).toBe('mock-refresh-token')
     expect(mockRefreshTokenService.create).toHaveBeenCalledWith('user1', 'profile1', 0)
-    expect(reply.cookies[0].name).toBe('__media_token')
-    expect(reply.cookies[0].value).toMatch(/^\d+\.[a-f0-9]+$/)
+    expect(reply.cookies[0].name).toBe('__session')
+    expect(reply.cookies[0].value).toBe('jwt-token')
     expect(reply.cookies[0].opts).toMatchObject({
-      path: '/user-content/',
-      httpOnly: true,
+      path: '/',
+      httpOnly: false,
       sameSite: 'strict',
     })
   })
@@ -326,16 +324,16 @@ describe('POST /send-magic-link', () => {
 describe('POST /refresh', () => {
   it('returns 400 for missing refresh token', async () => {
     const handler = fastify.routes['POST /refresh']
-    const req = { body: {}, headers: { authorization: 'Bearer some-jwt' } }
+    const req = { body: {}, cookies: { __session: 'some-jwt' } }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(400)
   })
 
-  it('returns 401 for missing authorization header', async () => {
+  it('returns 401 for missing session cookie', async () => {
     const handler = fastify.routes['POST /refresh']
     const req = {
       body: { refreshToken: '550e8400-e29b-41d4-a716-446655440000' },
-      headers: {},
+      cookies: {},
     }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(401)
@@ -350,7 +348,7 @@ describe('POST /refresh', () => {
     }
     const req = {
       body: { refreshToken: '550e8400-e29b-41d4-a716-446655440000' },
-      headers: { authorization: 'Bearer expired-jwt' },
+      cookies: { __session: 'expired-jwt' },
     }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(401)
@@ -370,7 +368,7 @@ describe('POST /refresh', () => {
     }
     const req = {
       body: { refreshToken: '550e8400-e29b-41d4-a716-446655440000' },
-      headers: { authorization: 'Bearer expired-jwt' },
+      cookies: { __session: 'expired-jwt' },
     }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(401)
@@ -410,7 +408,7 @@ describe('POST /refresh', () => {
     }
     const req = {
       body: { refreshToken: '550e8400-e29b-41d4-a716-446655440000' },
-      headers: { authorization: 'Bearer expired-jwt' },
+      cookies: { __session: 'expired-jwt' },
     }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(200)
@@ -421,6 +419,8 @@ describe('POST /refresh', () => {
       '550e8400-e29b-41d4-a716-446655440000',
       'user1'
     )
+    expect(reply.cookies[0].name).toBe('__session')
+    expect(reply.cookies[0].value).toBe('new-jwt')
   })
 })
 
@@ -439,8 +439,8 @@ describe('POST /logout', () => {
     expect(deleteSession).toHaveBeenCalled()
     expect(mockRefreshTokenService.deleteAllForUser).toHaveBeenCalledWith('user1')
     expect(reply.clearedCookies[0]).toMatchObject({
-      name: '__media_token',
-      opts: { path: '/user-content/' },
+      name: '__session',
+      opts: { path: '/' },
     })
   })
 })

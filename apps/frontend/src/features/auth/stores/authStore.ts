@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import Cookies from 'universal-cookie'
 import { api, axios, safeApiCall } from '@/lib/api'
 import { bus } from '@/lib/bus'
 import { useBootstrap } from '@/lib/bootstrap'
@@ -17,13 +18,16 @@ type AuthStoreResponse<T> =
   | SuccessResponse<T>
   | (ApiError & { code: AuthErrorCodes; restart: 'otp' | 'userid' })
 
+import { SESSION_COOKIE, SESSION_COOKIE_OPTS, SESSION_MAX_AGE } from '@shared/session'
+
+const cookies = new Cookies()
+
 const getAuthId = (authId: UserIdentifier): string => {
   return authId.email ? authId.email : (authId.phonenumber ?? '')
 }
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    jwt: '',
     session: null as SessionData | null,
     userId: null as string | null,
     email: null as string | null,
@@ -33,7 +37,7 @@ export const useAuthStore = defineStore('auth', {
   }),
 
   getters: {
-    isLoggedIn: (state) => state.jwt !== '',
+    isLoggedIn: (state) => state.userId !== null,
     getUserId: (state) => state.userId,
     getEmail: (state) => state.email,
     isPhoneAuth: (state) => Boolean(state.loginUser?.phonenumber),
@@ -41,16 +45,11 @@ export const useAuthStore = defineStore('auth', {
 
   actions: {
     setAuthState(token: string, refreshToken?: string) {
-      // Set JWT in localStorage and axios headers
-      this.jwt = token
-      localStorage.setItem('token', token)
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`
-
       if (refreshToken) {
         localStorage.setItem('refreshToken', refreshToken)
       }
 
-      // Parse user data from token
+      // Parse user data from JWT payload (cookie is non-httpOnly so JWT is readable)
       try {
         const payload = JSON.parse(atob(token.split('.')[1]!)) as JwtPayload
         this.userId = payload.userId
@@ -62,26 +61,39 @@ export const useAuthStore = defineStore('auth', {
     },
 
     initialize() {
-      const token = localStorage.getItem('token')
-      if (token) {
+      // One-time migration: move JWT from localStorage to cookie
+      const storedToken = localStorage.getItem('token')
+      if (storedToken) {
+        cookies.set(SESSION_COOKIE, storedToken, {
+          ...SESSION_COOKIE_OPTS,
+          maxAge: SESSION_MAX_AGE,
+          secure: location.protocol === 'https:',
+        })
+        localStorage.removeItem('token')
+      }
+
+      // Restore state from cookie (non-httpOnly — readable by JS)
+      const cookieToken = cookies.get<string>(SESSION_COOKIE)
+
+      if (cookieToken) {
         try {
-          const payload = JSON.parse(atob(token.split('.')[1]!))
+          const payload = JSON.parse(atob(cookieToken.split('.')[1]!))
           const isExpired = payload.exp && payload.exp * 1000 < Date.now()
           const refreshToken = localStorage.getItem('refreshToken')
 
           if (isExpired && !refreshToken) {
-            // Expired JWT with no refresh token — unrecoverable, clear state
-            localStorage.removeItem('token')
+            // Expired JWT with no refresh token — unrecoverable, clear cookie
+            cookies.remove(SESSION_COOKIE, SESSION_COOKIE_OPTS)
             this.isInitialized = true
             return
           }
         } catch {
           // Malformed JWT — clear it
-          localStorage.removeItem('token')
+          cookies.remove(SESSION_COOKIE, SESSION_COOKIE_OPTS)
           this.isInitialized = true
           return
         }
-        this.setAuthState(token)
+        this.setAuthState(cookieToken)
       }
       this.isInitialized = true
     },
@@ -178,18 +190,16 @@ export const useAuthStore = defineStore('auth', {
 
     logout() {
       // Try to call server-side logout (fire-and-forget)
-      if (this.jwt) {
+      if (this.userId) {
         api.post('/auth/logout').catch(() => {})
       }
 
       this.userId = null
       this.email = null
       this.loginUser = null
-      this.jwt = ''
-      localStorage.removeItem('token')
+      // Cookie is cleared by the backend Set-Cookie response
       localStorage.removeItem('refreshToken')
       localStorage.removeItem('authId')
-      delete api.defaults.headers.common['Authorization']
       bus.emit('auth:logout')
     },
   },

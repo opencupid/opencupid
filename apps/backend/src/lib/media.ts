@@ -3,7 +3,6 @@ import fs from 'fs'
 
 import cuid from 'cuid'
 import { appConfig } from '@/lib/appconfig'
-import { createHmac } from 'crypto'
 
 export function uploadTmpDir() {
   return path.join(appConfig.MEDIA_UPLOAD_DIR, 'tmp')
@@ -53,18 +52,6 @@ export function checkUserContentRoot(): boolean {
 /** Build a clean media URL (no query params) for a relative path. */
 export function mediaUrl(relativePath: string): string {
   return `${appConfig.MEDIA_URL_BASE}/${relativePath}`
-}
-
-/**
- * Generate a signed media token for cookie-based auth.
- * Returns `{ value, maxAge }` where value is `{exp}.{sig}` and maxAge is
- * the TTL in seconds. Uses `.` as separator (`:` gets URL-encoded in cookies).
- */
-export function generateMediaToken(): { value: string; maxAge: number } {
-  const maxAge = appConfig.IMAGE_URL_HMAC_TTL_SECONDS
-  const exp = Math.floor(Date.now() / 1000) + maxAge
-  const sig = createHmac('sha256', appConfig.AUTH_IMG_HMAC_SECRET).update(String(exp)).digest('hex')
-  return { value: `${exp}.${sig}`, maxAge }
 }
 
 type ImageLocation = {
