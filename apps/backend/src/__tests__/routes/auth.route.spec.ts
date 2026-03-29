@@ -122,13 +122,20 @@ describe('GET /verify-token', () => {
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.token).toBe('jwt-token')
-    expect(reply.payload.refreshToken).toBe('mock-refresh-token')
+    expect(reply.payload.refreshToken).toBeUndefined()
     expect(mockRefreshTokenService.create).toHaveBeenCalledWith('user1', 'profile1', 0)
     expect(reply.cookies[0].name).toBe('__session')
     expect(reply.cookies[0].value).toBe('jwt-token')
     expect(reply.cookies[0].opts).toMatchObject({
       path: '/',
       httpOnly: false,
+      sameSite: 'strict',
+    })
+    expect(reply.cookies[1].name).toBe('__refresh')
+    expect(reply.cookies[1].value).toBe('mock-refresh-token')
+    expect(reply.cookies[1].opts).toMatchObject({
+      path: '/',
+      httpOnly: true,
       sameSite: 'strict',
     })
   })
@@ -173,7 +180,7 @@ describe('GET /verify-token', () => {
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.token).toBe('jwt-token2')
-    expect(reply.payload.refreshToken).toBe('mock-refresh-token')
+    expect(reply.payload.refreshToken).toBeUndefined()
   })
 
   it('returns 500 on unexpected error', async () => {
@@ -322,18 +329,18 @@ describe('POST /send-magic-link', () => {
 })
 
 describe('POST /refresh', () => {
-  it('returns 400 for missing refresh token', async () => {
+  it('returns 401 for missing refresh cookie', async () => {
     const handler = fastify.routes['POST /refresh']
     const req = { body: {}, cookies: { __session: 'some-jwt' } }
     await handler(req as any, reply as any)
-    expect(reply.statusCode).toBe(400)
+    expect(reply.statusCode).toBe(401)
   })
 
   it('returns 401 for missing session cookie', async () => {
     const handler = fastify.routes['POST /refresh']
     const req = {
-      body: { refreshToken: '550e8400-e29b-41d4-a716-446655440000' },
-      cookies: {},
+      body: {},
+      cookies: { __refresh: '550e8400-e29b-41d4-a716-446655440000' },
     }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(401)
@@ -347,8 +354,11 @@ describe('POST /refresh', () => {
       verify: vi.fn().mockReturnValue({ userId: 'user1', profileId: 'p1', tokenVersion: 0 }),
     }
     const req = {
-      body: { refreshToken: '550e8400-e29b-41d4-a716-446655440000' },
-      cookies: { __session: 'expired-jwt' },
+      body: {},
+      cookies: {
+        __session: 'expired-jwt',
+        __refresh: '550e8400-e29b-41d4-a716-446655440000',
+      },
     }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(401)
@@ -367,8 +377,11 @@ describe('POST /refresh', () => {
       verify: vi.fn().mockReturnValue({ userId: 'user1', profileId: 'p1', tokenVersion: 1 }),
     }
     const req = {
-      body: { refreshToken: '550e8400-e29b-41d4-a716-446655440000' },
-      cookies: { __session: 'expired-jwt' },
+      body: {},
+      cookies: {
+        __session: 'expired-jwt',
+        __refresh: '550e8400-e29b-41d4-a716-446655440000',
+      },
     }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(401)
@@ -407,20 +420,26 @@ describe('POST /refresh', () => {
       verify: vi.fn().mockReturnValue({ userId: 'user1', profileId, tokenVersion: 0 }),
     }
     const req = {
-      body: { refreshToken: '550e8400-e29b-41d4-a716-446655440000' },
-      cookies: { __session: 'expired-jwt' },
+      body: {},
+      cookies: {
+        __session: 'expired-jwt',
+        __refresh: '550e8400-e29b-41d4-a716-446655440000',
+      },
     }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.token).toBe('new-jwt')
-    expect(reply.payload.refreshToken).toBe('new-refresh-token')
+    expect(reply.payload.refreshToken).toBeUndefined()
     expect(mockRefreshTokenService.delete).toHaveBeenCalledWith(
       '550e8400-e29b-41d4-a716-446655440000',
       'user1'
     )
     expect(reply.cookies[0].name).toBe('__session')
     expect(reply.cookies[0].value).toBe('new-jwt')
+    expect(reply.cookies[1].name).toBe('__refresh')
+    expect(reply.cookies[1].value).toBe('new-refresh-token')
+    expect(reply.cookies[1].opts.httpOnly).toBe(true)
   })
 })
 
@@ -440,6 +459,10 @@ describe('POST /logout', () => {
     expect(mockRefreshTokenService.deleteAllForUser).toHaveBeenCalledWith('user1')
     expect(reply.clearedCookies[0]).toMatchObject({
       name: '__session',
+      opts: { path: '/' },
+    })
+    expect(reply.clearedCookies[1]).toMatchObject({
+      name: '__refresh',
       opts: { path: '/' },
     })
   })

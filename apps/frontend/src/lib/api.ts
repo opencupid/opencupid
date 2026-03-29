@@ -99,62 +99,41 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config
 
-    // Handle 401 with silent refresh
+    // Handle 401 with silent refresh (refresh token is in an httpOnly cookie,
+    // sent automatically via withCredentials)
     if (error.response?.status === 401 && !originalRequest._retry) {
-      const refreshToken = localStorage.getItem('refreshToken')
-
-      if (refreshToken) {
-        if (isRefreshing) {
-          // Another refresh is in progress — queue this request
-          return new Promise((resolve) => {
-            addRefreshSubscriber(() => {
-              resolve(api(originalRequest))
-            })
+      if (isRefreshing) {
+        // Another refresh is in progress — queue this request
+        return new Promise((resolve) => {
+          addRefreshSubscriber(() => {
+            resolve(api(originalRequest))
           })
-        }
+        })
+      }
 
-        originalRequest._retry = true
-        isRefreshing = true
+      originalRequest._retry = true
+      isRefreshing = true
 
-        try {
-          // Cookie carries the expired JWT automatically — no Authorization header needed
-          const res = await axios.post(
-            `${baseURL}/auth/refresh`,
-            { refreshToken },
-            {
-              withCredentials: true,
-            }
-          )
+      try {
+        // Both cookies (__session + __refresh) are sent automatically
+        const res = await axios.post(`${baseURL}/auth/refresh`, null, {
+          withCredentials: true,
+        })
 
-          const newToken = res.data.token
-          const newRefreshToken = res.data.refreshToken
+        isRefreshing = false
+        onTokenRefreshed()
 
-          localStorage.setItem('refreshToken', newRefreshToken)
+        bus.emit('auth:token-refreshed', { token: res.data.token })
 
-          isRefreshing = false
-          onTokenRefreshed()
+        return api(originalRequest)
+      } catch (refreshError) {
+        isRefreshing = false
+        refreshSubscribers = []
 
-          // Notify auth store of new tokens
-          bus.emit('auth:token-refreshed', { token: newToken, refreshToken: newRefreshToken })
-
-          return api(originalRequest)
-        } catch (refreshError) {
-          isRefreshing = false
-          refreshSubscribers = []
-
-          // Refresh failed — clear auth state and redirect to login
-          localStorage.removeItem('refreshToken')
-          bus.emit('auth:logout')
-          window.location.href = '/auth'
-
-          return Promise.reject(refreshError)
-        }
-      } else {
-        // No refresh token — unrecoverable 401
-        localStorage.removeItem('refreshToken')
         bus.emit('auth:logout')
         window.location.href = '/auth'
-        return Promise.reject(error)
+
+        return Promise.reject(refreshError)
       }
     }
 

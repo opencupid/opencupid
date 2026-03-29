@@ -61,20 +61,6 @@ describe('api refresh interceptor', () => {
     }
   })
 
-  it('stores and retrieves refresh token from localStorage', () => {
-    localStorage.setItem('refreshToken', 'test-refresh-token')
-    expect(localStorage.getItem('refreshToken')).toBe('test-refresh-token')
-  })
-
-  it('clears refresh token on logout event', () => {
-    localStorage.setItem('refreshToken', 'refresh')
-
-    // Simulate what happens on logout
-    localStorage.removeItem('refreshToken')
-
-    expect(localStorage.getItem('refreshToken')).toBeNull()
-  })
-
   it('retry flag prevents infinite loops', () => {
     // Test that _retry flag logic works
     const config = { _retry: false }
@@ -83,32 +69,8 @@ describe('api refresh interceptor', () => {
     expect(config._retry).toBe(true)
   })
 
-  it('redirects to /auth when 401 received with no refresh token', async () => {
-    const { api } = await import('../api')
-
-    // No refreshToken set — simulates legacy user
-
-    const mockAdapter = vi.fn().mockRejectedValue({
-      response: { status: 401, data: {} },
-      config: { headers: new AxiosHeaders(), _retry: false },
-      isAxiosError: true,
-    })
-    api.defaults.adapter = mockAdapter
-
-    try {
-      await api.get('/test')
-    } catch {
-      // expected
-    }
-
-    expect(mockEmit).toHaveBeenCalledWith('auth:logout')
-    expect(locationHref).toBe('/auth')
-  })
-
   it('redirects to /auth when refresh attempt fails', async () => {
     const { api } = await import('../api')
-
-    localStorage.setItem('refreshToken', 'some-refresh')
 
     // Mock the api adapter for the original 401 request
     const mockAdapter = vi.fn().mockRejectedValue({
@@ -129,24 +91,21 @@ describe('api refresh interceptor', () => {
 
     expect(postSpy).toHaveBeenCalledWith(
       'http://localhost:3000/auth/refresh',
-      { refreshToken: 'some-refresh' },
+      null,
       expect.objectContaining({ withCredentials: true })
     )
-    expect(localStorage.getItem('refreshToken')).toBeNull()
     expect(mockEmit).toHaveBeenCalledWith('auth:logout')
     expect(locationHref).toBe('/auth')
 
     postSpy.mockRestore()
   })
 
-  it('refreshes token on 401 when refresh token exists', async () => {
+  it('refreshes token on 401 via httpOnly refresh cookie', async () => {
     const { api } = await import('../api')
-
-    localStorage.setItem('refreshToken', 'valid-refresh')
 
     // Mock axios.post for the refresh call — it succeeds
     const postSpy = vi.spyOn(axios, 'post').mockResolvedValueOnce({
-      data: { token: 'new-jwt', refreshToken: 'new-refresh' },
+      data: { token: 'new-jwt' },
     })
 
     let callCount = 0
@@ -174,10 +133,8 @@ describe('api refresh interceptor', () => {
     const res = await api.get('/test')
 
     expect(res.data).toEqual({ ok: true })
-    expect(localStorage.getItem('refreshToken')).toBe('new-refresh')
     expect(mockEmit).toHaveBeenCalledWith('auth:token-refreshed', {
       token: 'new-jwt',
-      refreshToken: 'new-refresh',
     })
     expect(locationHref).not.toBe('/auth')
 

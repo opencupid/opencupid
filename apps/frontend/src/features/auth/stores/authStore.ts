@@ -44,11 +44,7 @@ export const useAuthStore = defineStore('auth', {
   },
 
   actions: {
-    setAuthState(token: string, refreshToken?: string) {
-      if (refreshToken) {
-        localStorage.setItem('refreshToken', refreshToken)
-      }
-
+    setAuthState(token: string) {
       // Parse user data from JWT payload (cookie is non-httpOnly so JWT is readable)
       try {
         const payload = JSON.parse(atob(token.split('.')[1]!)) as JwtPayload
@@ -77,22 +73,15 @@ export const useAuthStore = defineStore('auth', {
 
       if (cookieToken) {
         try {
-          const payload = JSON.parse(atob(cookieToken.split('.')[1]!))
-          const isExpired = payload.exp && payload.exp * 1000 < Date.now()
-          const refreshToken = localStorage.getItem('refreshToken')
-
-          if (isExpired && !refreshToken) {
-            // Expired JWT with no refresh token — unrecoverable, clear cookie
-            cookies.remove(SESSION_COOKIE, SESSION_COOKIE_OPTS)
-            this.isInitialized = true
-            return
-          }
+          JSON.parse(atob(cookieToken.split('.')[1]!))
         } catch {
           // Malformed JWT — clear it
           cookies.remove(SESSION_COOKIE, SESSION_COOKIE_OPTS)
           this.isInitialized = true
           return
         }
+        // Even if the JWT is expired, keep it — the refresh interceptor in
+        // api.ts will attempt a silent refresh using the httpOnly __refresh cookie.
         this.setAuthState(cookieToken)
       }
       this.isInitialized = true
@@ -115,7 +104,7 @@ export const useAuthStore = defineStore('auth', {
         )
 
         if (res.data.success === true) {
-          this.setAuthState(res.data.token, res.data.refreshToken)
+          this.setAuthState(res.data.token)
           this.loginUser = null
           localStorage.removeItem('authId')
         } else {
@@ -197,15 +186,14 @@ export const useAuthStore = defineStore('auth', {
       this.userId = null
       this.email = null
       this.loginUser = null
-      // Cookie is cleared by the backend Set-Cookie response
-      localStorage.removeItem('refreshToken')
+      // Session + refresh cookies are cleared by the backend Set-Cookie response
       localStorage.removeItem('authId')
       bus.emit('auth:logout')
     },
   },
 })
 
-bus.on('auth:token-refreshed', ({ token, refreshToken }) => {
+bus.on('auth:token-refreshed', ({ token }) => {
   const store = useAuthStore()
-  store.setAuthState(token, refreshToken)
+  store.setAuthState(token)
 })

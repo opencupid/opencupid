@@ -84,30 +84,13 @@ describe('authStore initialize', () => {
     expect(store.userId).toBe('u1')
   })
 
-  it('clears expired JWT without refresh token on initialize', () => {
+  it('keeps expired JWT on initialize (refresh handled by interceptor)', () => {
     const expiredToken = makeJwt({
       userId: 'u1',
       profileId: 'p1',
       exp: Math.floor(Date.now() / 1000) - 3600,
     })
     setSessionCookie(expiredToken)
-
-    const store = useAuthStore()
-    store.initialize()
-
-    expect(store.isLoggedIn).toBe(false)
-    expect(store.isInitialized).toBe(true)
-    expect(getSessionCookie()).toBeUndefined()
-  })
-
-  it('keeps expired JWT with refresh token on initialize', () => {
-    const expiredToken = makeJwt({
-      userId: 'u1',
-      profileId: 'p1',
-      exp: Math.floor(Date.now() / 1000) - 3600,
-    })
-    setSessionCookie(expiredToken)
-    localStorage.setItem('refreshToken', 'some-refresh-token')
 
     const store = useAuthStore()
     store.initialize()
@@ -215,7 +198,7 @@ describe('authStore localStorage auth flow', () => {
       exp: Math.floor(Date.now() / 1000) + 3600,
     })
     mockApi.get.mockResolvedValue({
-      data: { success: true, token, refreshToken: 'r1' },
+      data: { success: true, token },
     })
 
     await store.verifyToken('123456')
@@ -276,7 +259,6 @@ describe('authStore localStorage auth flow', () => {
       data: {
         success: true,
         token,
-        refreshToken: 'r1',
       },
     })
 
@@ -302,16 +284,14 @@ describe('authStore localStorage auth flow', () => {
     expect(store.profileId).toBe('p1')
   })
 
-  it('logout does not touch localStorage token', () => {
+  it('logout clears state without touching localStorage', () => {
     const store = useAuthStore()
-    localStorage.setItem('refreshToken', 'rt1')
 
     store.userId = 'u1'
     store.logout()
 
     expect(store.userId).toBeNull()
-    expect(localStorage.getItem('refreshToken')).toBeNull()
-    // Verify token key was never written
     expect(localStorage.getItem('token')).toBeNull()
+    expect(localStorage.getItem('refreshToken')).toBeNull()
   })
 })

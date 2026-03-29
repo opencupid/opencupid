@@ -14,7 +14,6 @@ import '@fastify/cookie'
 import {
   UserIdentifyPayloadSchema,
   VerifyTokenPayloadSchema,
-  RefreshTokenPayloadSchema,
   type LoginUser,
 } from '@zod/user/user.dto'
 import type {
@@ -24,7 +23,13 @@ import type {
   WsTicketResponse,
 } from '@zod/apiResponse.dto'
 import { UserIdentifier, JwtPayload } from '@zod/user/user.dto'
-import { SESSION_COOKIE, SESSION_COOKIE_OPTS, SESSION_MAX_AGE } from '@shared/session'
+import {
+  SESSION_COOKIE,
+  SESSION_COOKIE_OPTS,
+  SESSION_MAX_AGE,
+  REFRESH_COOKIE,
+  REFRESH_MAX_AGE,
+} from '@shared/session'
 
 function setSessionCookie(reply: FastifyReply, jwt: string) {
   reply.setCookie(SESSION_COOKIE, jwt, {
@@ -35,8 +40,21 @@ function setSessionCookie(reply: FastifyReply, jwt: string) {
   })
 }
 
+function setRefreshCookie(reply: FastifyReply, token: string) {
+  reply.setCookie(REFRESH_COOKIE, token, {
+    ...SESSION_COOKIE_OPTS,
+    httpOnly: true,
+    secure: appConfig.NODE_ENV !== 'development',
+    maxAge: REFRESH_MAX_AGE,
+  })
+}
+
 function clearSessionCookie(reply: FastifyReply) {
   reply.clearCookie(SESSION_COOKIE, SESSION_COOKIE_OPTS)
+}
+
+function clearRefreshCookie(reply: FastifyReply) {
+  reply.clearCookie(REFRESH_COOKIE, SESSION_COOKIE_OPTS)
 }
 
 const WS_TICKET_TTL = 30 // seconds
@@ -100,8 +118,9 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         )
 
         setSessionCookie(reply, jwt)
+        setRefreshCookie(reply, refreshToken)
 
-        const response: VerifyTokenResponse = { success: true, token: jwt, refreshToken }
+        const response: VerifyTokenResponse = { success: true, token: jwt }
         reply.code(200).send(response)
       } catch (error) {
         return reply.code(500).send({ code: 'AUTH_INTERNAL_ERROR' })
@@ -112,9 +131,8 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
   /**
    * POST /refresh
    * Issues a new JWT + refresh token pair using an expired JWT and a valid refresh token.
-   * @body {string} refreshToken - The current refresh token
-   * @header Authorization: Bearer <expired-jwt>
-   * @returns {RefreshTokenResponse} New JWT + refresh token
+   * Both tokens are read from cookies — no request body needed.
+   * @returns {RefreshTokenResponse} New JWT (refresh token set via httpOnly cookie)
    */
   fastify.post(
     '/refresh',
@@ -124,12 +142,10 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (req, reply) => {
-      const params = RefreshTokenPayloadSchema.safeParse(req.body)
-      if (!params.success) {
-        return reply.code(400).send({ success: false, message: 'Invalid refresh token format' })
+      const refreshToken = req.cookies[REFRESH_COOKIE]
+      if (!refreshToken) {
+        return sendUnauthorizedError(reply, 'Missing refresh token')
       }
-
-      const { refreshToken } = params.data
 
       const expiredJwt = req.cookies[SESSION_COOKIE]
       if (!expiredJwt) {
@@ -194,12 +210,9 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       await refreshTokenService.delete(refreshToken, jwtPayload.userId)
 
       setSessionCookie(reply, newJwt)
+      setRefreshCookie(reply, newRefreshToken)
 
-      const response: RefreshTokenResponse = {
-        success: true,
-        token: newJwt,
-        refreshToken: newRefreshToken,
-      }
+      const response: RefreshTokenResponse = { success: true, token: newJwt }
       reply.code(200).send(response)
     }
   )
@@ -308,6 +321,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         // Delete all refresh tokens for this user
         await refreshTokenService.deleteAllForUser(req.user.userId)
         clearSessionCookie(reply)
+        clearRefreshCookie(reply)
         return reply.code(200).send({ success: true })
       } catch (error) {
         fastify.log.error({ err: error }, 'Error during logout')
