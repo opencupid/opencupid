@@ -43,8 +43,6 @@ async function main() {
   app.register(import('./plugins/websockets'))
   app.register(import('./plugins/prisma'))
   app.register(import('./plugins/session-auth'))
-  // media-cookie.ts is now a helper module (setMediaCookie/clearMediaCookie),
-  // not a plugin — cookie is set at login and on POST /auth/media-token only.
   app.register(import('./plugins/activity-tracking'))
   // API routes
   app.register(import('./api'), { prefix: '/api' })

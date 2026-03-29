@@ -10,7 +10,7 @@ import { SmsService } from '@/services/sms.service'
 import { CaptchaService } from '@/services/captcha.service'
 import { appConfig } from '@/lib/appconfig'
 import '@fastify/cookie'
-import { setMediaCookie, clearMediaCookie } from '@/plugins/media-cookie'
+import { setMediaCookie, clearMediaCookie } from '@/utils/media-cookie'
 
 import {
   UserIdentifyPayloadSchema,
