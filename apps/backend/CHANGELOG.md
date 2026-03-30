@@ -1,5 +1,11 @@
 # backend
 
+## 0.43.0
+
+### Minor Changes
+
+- 405fb4f: Replace HMAC media auth with Redis session checking; migrate JWT from localStorage to cookie
+
 ## 0.42.2
 
 ## 0.42.1
