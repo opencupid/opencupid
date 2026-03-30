@@ -10,7 +10,10 @@ const { mockApi, mockSafeApiCall } = vi.hoisted(() => {
     mockApi: {
       get: vi.fn(),
       post: vi.fn(),
-      defaults: { headers: { common: {} as Record<string, string> } },
+      defaults: {
+        headers: { common: {} as Record<string, string> },
+        baseURL: 'http://localhost:3000',
+      },
       interceptors: {
         response: {
           use: vi.fn((fn: (res: any) => any) => {
@@ -31,7 +34,7 @@ const { mockApi, mockSafeApiCall } = vi.hoisted(() => {
 vi.mock('@/lib/api', () => ({
   api: mockApi,
   safeApiCall: mockSafeApiCall,
-  axios: { isAxiosError: vi.fn(() => false) },
+  axios: { isAxiosError: vi.fn(() => false), post: vi.fn().mockResolvedValue({}) },
 }))
 
 vi.mock('@/lib/bus', () => ({
