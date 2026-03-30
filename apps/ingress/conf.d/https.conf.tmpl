@@ -35,16 +35,9 @@ server {
   limit_req_status 429;
   limit_conn_status 429;
 
-  # Security headers (set via Lua to apply to all locations including those with add_header)
-  header_filter_by_lua_block {
-    set_security_headers(
-      "worker-src 'self' blob:"
-      .. "; media-src 'self'"
-      .. "; frame-src https://*.${DOMAIN}"
-      .. "; img-src 'self' data: blob: ${CSP_ALLOWED_DOMAINS}"
-      .. "; connect-src 'self' blob: wss://${DOMAIN} https://*.${DOMAIN} ${CSP_ALLOWED_DOMAINS}"
-    )
-  }
+  # --- Security headers ---
+  include conf.d/security-headers.conf;
+  add_header Content-Security-Policy "default-src 'self'; script-src 'self' https://*.${DOMAIN}; style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; worker-src 'self' blob:; media-src 'self'; frame-src https://*.${DOMAIN}; img-src 'self' data: blob: ${CSP_ALLOWED_DOMAINS}; connect-src 'self' blob: wss://${DOMAIN} https://*.${DOMAIN} ${CSP_ALLOWED_DOMAINS}; upgrade-insecure-requests${CSP_REPORT_DIRECTIVE}" always;
 
   # Default limit for everything else (1MB by default, or set explicitly)
   client_max_body_size 1M;
@@ -110,11 +103,18 @@ server {
   }
 
   location /user-content/ {
-    access_by_lua_file media_auth.lua;
+    auth_jwt $cookie___session;
+    auth_jwt_key "${JWT_SECRET}" utf8;
+    auth_jwt_alg HS256;
+
+    # Repeat security headers — add_header in a location overrides server-level
+    include conf.d/security-headers.conf;
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' https://*.${DOMAIN}; style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; worker-src 'self' blob:; media-src 'self'; frame-src https://*.${DOMAIN}; img-src 'self' data: blob: ${CSP_ALLOWED_DOMAINS}; connect-src 'self' blob: wss://${DOMAIN} https://*.${DOMAIN} ${CSP_ALLOWED_DOMAINS}; upgrade-insecure-requests${CSP_REPORT_DIRECTIVE}" always;
+    add_header Cache-Control "public, max-age=31536000, immutable";
+
     alias /var/www/;
     autoindex off;
     try_files $uri =404;
-    add_header Cache-Control "public, max-age=31536000, immutable";
   }
 
   location /.well-known/acme-challenge/ {
@@ -183,12 +183,8 @@ server {
   ssl_verify_client on;
 
   # Security headers for admin
-  header_filter_by_lua_block {
-    set_security_headers(
-      "img-src 'self' data: blob:"
-      .. "; connect-src 'self'"
-    )
-  }
+  include conf.d/security-headers.conf;
+  add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; img-src 'self' data: blob:; connect-src 'self'; upgrade-insecure-requests${CSP_REPORT_DIRECTIVE}" always;
 
   location /api/ {
     proxy_pass http://backend:3000;

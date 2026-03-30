@@ -1,12 +1,11 @@
-FROM openresty/openresty:alpine-fat
+FROM ghcr.io/max-lt/nginx-jwt-module:latest
 LABEL org.opencontainers.image.source=https://github.com/opencupid/opencupid
 
 RUN apk add --no-cache gettext
 
 COPY entrypoint.sh /entrypoint.sh
-COPY nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
-COPY conf.d/ /usr/local/openresty/nginx/conf/conf.d/
-COPY media_auth.lua /usr/local/openresty/nginx/media_auth.lua
+COPY nginx.conf /etc/nginx/nginx.conf
+COPY conf.d/ /etc/nginx/conf.d/
 
 EXPOSE 443 80
 ENTRYPOINT ["/bin/sh", "/entrypoint.sh"]
