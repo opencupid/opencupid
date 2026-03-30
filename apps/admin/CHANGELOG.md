@@ -1,5 +1,11 @@
 # @opencupid/admin
 
+## 0.44.0
+
+### Minor Changes
+
+- b5e2075: Add interaction, match & message line charts to admin dashboard and lastLoginAt column to users table
+
 ## 0.43.0
 
 ## 0.42.2

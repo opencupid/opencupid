@@ -1,5 +1,15 @@
 # backend
 
+## 0.44.0
+
+### Minor Changes
+
+- b5e2075: Add interaction, match & message line charts to admin dashboard and lastLoginAt column to users table
+
+### Patch Changes
+
+- d1d0c5c: Replace Redis/Lua media auth with nginx-jwt-module for JWT signature verification on /user-content/ requests; fix post-onboarding 401 caused by session deletion on profile activation; fix refresh request 415 error caused by missing Content-Type header
+
 ## 0.43.0
 
 ### Minor Changes
