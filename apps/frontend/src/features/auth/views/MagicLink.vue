@@ -6,6 +6,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 
 import { useAuthStore } from '../stores/authStore'
+import { logCheckpoint } from '@/lib/diagnostics'
 import TokenInput from '../components/TokenInput.vue'
 import ViewTitle from '@/features/shared/ui/ViewTitle.vue'
 import ChevronLeftIcon from '@/assets/icons/arrows/arrow-single-left.svg'
@@ -66,6 +67,7 @@ async function doVerifyToken(token: string) {
   try {
     const res = await authStore.verifyToken(token)
     if (res.success) {
+      logCheckpoint('auth:verify_success')
       isValidated.value = true
       error.value = ''
       await router.push({ name: 'UserHome' })

@@ -22,27 +22,26 @@ import { createBootstrap } from 'bootstrap-vue-next'
 import App from './App.vue'
 import router from './router'
 
-function initSentry(app: ReturnType<typeof createApp>) {
+async function initSentry(app: ReturnType<typeof createApp>) {
   if (__APP_CONFIG__.NODE_ENV === 'development') return
   if (!__APP_CONFIG__.SENTRY_DSN) return
 
-  import('@sentry/vue')
-    .then((Sentry) => {
-      Sentry.init({
-        app,
-        dsn: __APP_CONFIG__.SENTRY_DSN,
-        release: `frontend@${__APP_VERSION__}`,
-        sendDefaultPii: true,
-        integrations: [Sentry.browserTracingIntegration({ router }), Sentry.replayIntegration()],
-        tracesSampleRate: 1.0,
-        tracePropagationTargets: ['localhost', __APP_CONFIG__.FRONTEND_URL],
-        replaysSessionSampleRate: 0.1,
-        replaysOnErrorSampleRate: 1.0,
-      })
+  try {
+    const Sentry = await import('@sentry/vue')
+    Sentry.init({
+      app,
+      dsn: __APP_CONFIG__.SENTRY_DSN,
+      release: `frontend@${__APP_VERSION__}`,
+      sendDefaultPii: true,
+      integrations: [Sentry.browserTracingIntegration({ router }), Sentry.replayIntegration()],
+      tracesSampleRate: 1.0,
+      tracePropagationTargets: ['localhost', __APP_CONFIG__.FRONTEND_URL],
+      replaysSessionSampleRate: 0.1,
+      replaysOnErrorSampleRate: 1.0,
     })
-    .catch((err) => {
-      console.warn('Failed to load Sentry:', err)
-    })
+  } catch (err) {
+    console.warn('Failed to load Sentry:', err)
+  }
 }
 
 export async function bootstrapApp() {
@@ -78,6 +77,6 @@ export async function bootstrapApp() {
   app.mount('#app')
   document.getElementById('splash')?.remove()
 
-  // Load Sentry after mount so it doesn't block initial render
-  initSentry(app)
+  // Load Sentry eagerly after mount so it's available for diagnostic checkpoints
+  await initSentry(app)
 }
