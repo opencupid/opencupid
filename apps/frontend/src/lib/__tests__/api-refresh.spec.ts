@@ -91,7 +91,7 @@ describe('api refresh interceptor', () => {
 
     expect(postSpy).toHaveBeenCalledWith(
       'http://localhost:3000/auth/refresh',
-      null,
+      {},
       expect.objectContaining({ withCredentials: true })
     )
     expect(mockEmit).toHaveBeenCalledWith('auth:logout')

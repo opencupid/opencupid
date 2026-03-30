@@ -194,9 +194,15 @@ export const useAuthStore = defineStore('auth', {
     },
 
     logout() {
-      // Try to call server-side logout (fire-and-forget)
+      // Try to call server-side logout (fire-and-forget).
+      // Use bare axios (not the interceptor-equipped api instance) so a stale
+      // session cookie doesn't trigger the refresh interceptor, which would
+      // execute window.location.href='/auth' and cause a hard reload that races
+      // with the router.push() done by the caller.
       if (this.userId) {
-        api.post('/auth/logout').catch(() => {})
+        axios
+          .post(`${api.defaults.baseURL}/auth/logout`, {}, { withCredentials: true })
+          .catch(() => {})
       }
 
       this.userId = null

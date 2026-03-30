@@ -21,6 +21,9 @@ vi.mock('../../api/mappers/profile.mappers', () => ({
   mapDbProfileToOwnerProfile: vi.fn((_locale, db) => ({
     id: db.id,
     publicName: db.publicName || 'mapped',
+    isActive: db.isActive ?? false,
+    isDatingActive: db.isDatingActive ?? false,
+    isSocialActive: db.isSocialActive ?? false,
     location: {
       country: db.country || '',
       cityName: db.cityName || '',
@@ -388,5 +391,30 @@ describe('POST /me (onboarding)', () => {
       'p1',
       expect.objectContaining({ country: 'HU', cityName: 'Budapest', lat: 47.497, lon: 19.04 })
     )
+  })
+
+  it('updates session with active profile state instead of deleting it', async () => {
+    const handler = fastify.routes['POST /me']
+    const profile = {
+      ...dbProfile,
+      isActive: true,
+      isDatingActive: true,
+      isSocialActive: false,
+    }
+    mockProfileService.updateCompleteProfile.mockResolvedValue(profile)
+
+    const req = makeReq({ body: { publicName: 'Test', country: 'HU' } })
+    await handler(req, reply as any)
+
+    expect(req.deleteSession).not.toHaveBeenCalled()
+    expect(req.updateSession).toHaveBeenCalledWith({
+      hasActiveProfile: true,
+      profile: {
+        id: 'p1',
+        isDatingActive: true,
+        isSocialActive: false,
+        isActive: true,
+      },
+    })
   })
 })
