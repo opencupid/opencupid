@@ -155,6 +155,9 @@ describe('GET /stats/daily', () => {
         { date: '2026-02-19', count: BigInt(7) },
         { date: '2026-02-21', count: BigInt(2) },
       ]) // logins
+      .mockResolvedValueOnce([{ date: '2026-03-29', count: BigInt(5) }]) // interactions
+      .mockResolvedValueOnce([{ date: '2026-03-30', count: BigInt(2) }]) // matches
+      .mockResolvedValueOnce([{ date: '2026-03-28', count: BigInt(10) }]) // messages
 
     const handler = fastify.routes['GET /stats/daily']
     await handler({}, reply)
@@ -163,6 +166,9 @@ describe('GET /stats/daily', () => {
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.dailySignups).toHaveLength(7)
     expect(reply.payload.dailyLogins).toHaveLength(7)
+    expect(reply.payload.dailyInteractions).toHaveLength(7)
+    expect(reply.payload.dailyMatches).toHaveLength(7)
+    expect(reply.payload.dailyMessages).toHaveLength(7)
 
     // Verify zero-fill: each entry has date and count
     for (const entry of reply.payload.dailySignups) {
@@ -170,10 +176,20 @@ describe('GET /stats/daily', () => {
       expect(entry).toHaveProperty('count')
       expect(typeof entry.count).toBe('number')
     }
+    for (const entry of reply.payload.dailyInteractions) {
+      expect(entry).toHaveProperty('date')
+      expect(entry).toHaveProperty('count')
+      expect(typeof entry.count).toBe('number')
+    }
   })
 
   it('returns all zeros when no data exists', async () => {
-    mockPrisma.$queryRaw.mockResolvedValueOnce([]).mockResolvedValueOnce([])
+    mockPrisma.$queryRaw
+      .mockResolvedValueOnce([]) // signups
+      .mockResolvedValueOnce([]) // logins
+      .mockResolvedValueOnce([]) // interactions
+      .mockResolvedValueOnce([]) // matches
+      .mockResolvedValueOnce([]) // messages
 
     const handler = fastify.routes['GET /stats/daily']
     await handler({}, reply)
@@ -181,6 +197,9 @@ describe('GET /stats/daily', () => {
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.dailySignups.every((d: any) => d.count === 0)).toBe(true)
     expect(reply.payload.dailyLogins.every((d: any) => d.count === 0)).toBe(true)
+    expect(reply.payload.dailyInteractions.every((d: any) => d.count === 0)).toBe(true)
+    expect(reply.payload.dailyMatches.every((d: any) => d.count === 0)).toBe(true)
+    expect(reply.payload.dailyMessages.every((d: any) => d.count === 0)).toBe(true)
   })
 
   it('handles errors gracefully', async () => {

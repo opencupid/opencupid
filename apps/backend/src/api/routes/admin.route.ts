@@ -30,27 +30,59 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
       const days = getLast7Days()
       const since = days[0]
 
-      const [signupRows, loginRows] = await Promise.all([
+      const [signupRows, loginRows, interactionRows, matchRows, messageRows] = await Promise.all([
         prisma.$queryRaw<{ date: string; count: bigint }[]>`
-          SELECT DATE("createdAt")::text AS date, COUNT(*)::bigint AS count
-          FROM "User"
-          WHERE "createdAt" >= ${since}::date
-          GROUP BY DATE("createdAt")
-          ORDER BY date
-        `,
+            SELECT DATE("createdAt")::text AS date, COUNT(*)::bigint AS count
+            FROM "User"
+            WHERE "createdAt" >= ${since}::date
+            GROUP BY DATE("createdAt")
+            ORDER BY date
+          `,
         prisma.$queryRaw<{ date: string; count: bigint }[]>`
-          SELECT DATE("lastLoginAt")::text AS date, COUNT(*)::bigint AS count
-          FROM "User"
-          WHERE "lastLoginAt" >= ${since}::date
-          GROUP BY DATE("lastLoginAt")
-          ORDER BY date
-        `,
+            SELECT DATE("lastLoginAt")::text AS date, COUNT(*)::bigint AS count
+            FROM "User"
+            WHERE "lastLoginAt" >= ${since}::date
+            GROUP BY DATE("lastLoginAt")
+            ORDER BY date
+          `,
+        prisma.$queryRaw<{ date: string; count: bigint }[]>`
+            SELECT DATE(first_at)::text AS date, COUNT(*)::bigint AS count
+            FROM (
+              SELECT LEAST("fromId","toId") AS a, GREATEST("fromId","toId") AS b,
+                     MIN("createdAt") AS first_at
+              FROM "LikedProfile"
+              GROUP BY a, b
+            ) pairs
+            WHERE first_at >= ${since}::date
+            GROUP BY DATE(first_at)
+            ORDER BY date
+          `,
+        prisma.$queryRaw<{ date: string; count: bigint }[]>`
+            SELECT DATE(GREATEST(a."createdAt", b."createdAt"))::text AS date,
+                   COUNT(*)::bigint AS count
+            FROM "LikedProfile" a
+            JOIN "LikedProfile" b ON a."fromId" = b."toId" AND a."toId" = b."fromId"
+            WHERE a."fromId" < a."toId"
+              AND GREATEST(a."createdAt", b."createdAt") >= ${since}::date
+            GROUP BY DATE(GREATEST(a."createdAt", b."createdAt"))
+            ORDER BY date
+          `,
+        prisma.$queryRaw<{ date: string; count: bigint }[]>`
+            SELECT DATE("createdAt")::text AS date, COUNT(*)::bigint AS count
+            FROM "Message"
+            WHERE "createdAt" >= ${since}::date
+            GROUP BY DATE("createdAt")
+            ORDER BY date
+          `,
       ])
 
       return reply.code(200).send({
         success: true,
         dailySignups: fillZeroDays(signupRows, days),
         dailyLogins: fillZeroDays(loginRows, days),
+        dailyInteractions: fillZeroDays(interactionRows, days),
+        dailyMatches: fillZeroDays(matchRows, days),
+        dailyMessages: fillZeroDays(messageRows, days),
       })
     } catch (err) {
       fastify.log.error({ err }, 'Error fetching daily stats')
