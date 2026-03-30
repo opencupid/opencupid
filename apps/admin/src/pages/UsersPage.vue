@@ -42,6 +42,7 @@ type SortColumn =
   | 'isActive'
   | 'isBlocked'
   | 'createdAt'
+  | 'lastLoginAt'
   | 'isRegistrationConfirmed'
   | 'newsletterOptIn'
 const sortColumn = ref<SortColumn | null>(null)
@@ -57,9 +58,9 @@ const sortedUsers = computed(() => {
     if (col === 'publicName') {
       aVal = a.profile?.publicName?.toLowerCase() ?? ''
       bVal = b.profile?.publicName?.toLowerCase() ?? ''
-    } else if (col === 'createdAt') {
-      aVal = new Date(a.createdAt).getTime()
-      bVal = new Date(b.createdAt).getTime()
+    } else if (col === 'createdAt' || col === 'lastLoginAt') {
+      aVal = a[col] ? new Date(a[col]).getTime() : 0
+      bVal = b[col] ? new Date(b[col]).getTime() : 0
     } else {
       aVal = a[col] ? 1 : 0
       bVal = b[col] ? 1 : 0
@@ -254,6 +255,12 @@ onMounted(fetchUsers)
             >
               Created{{ sortIndicator('createdAt') }}
             </th>
+            <th
+              style="cursor: pointer"
+              @click="toggleSort('lastLoginAt')"
+            >
+              Last Login{{ sortIndicator('lastLoginAt') }}
+            </th>
             <th></th>
           </tr>
         </thead>
@@ -287,6 +294,7 @@ onMounted(fetchUsers)
               </span>
             </td>
             <td>{{ new Date(user.createdAt).toLocaleDateString() }}</td>
+            <td>{{ user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : '-' }}</td>
             <td class="text-nowrap">
               <button
                 v-if="user.profile"
@@ -306,7 +314,7 @@ onMounted(fetchUsers)
           </tr>
           <tr v-if="users.length === 0">
             <td
-              colspan="8"
+              colspan="9"
               class="text-center text-muted"
             >
               No users found
