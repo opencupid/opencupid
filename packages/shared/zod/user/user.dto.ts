@@ -75,8 +75,3 @@ export const VerifyTokenPayloadSchema = z.object({
   token: z.string().length(6),
 })
 export type VerifyTokenPayload = z.infer<typeof VerifyTokenPayloadSchema>
-
-export const RefreshTokenPayloadSchema = z.object({
-  refreshToken: z.string().uuid(),
-})
-export type RefreshTokenPayload = z.infer<typeof RefreshTokenPayloadSchema>

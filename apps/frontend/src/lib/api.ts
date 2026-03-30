@@ -1,7 +1,9 @@
 import axios from 'axios'
+import Cookies from 'universal-cookie'
 import { bus } from './bus'
 import { VersionSchema, type VersionDTO } from '@zod/dto/version.dto'
 import type { VersionResponse } from '@zod/apiResponse.dto'
+import { SESSION_COOKIE, SESSION_COOKIE_OPTS } from '@shared/session'
 
 const baseURL = __APP_CONFIG__?.API_BASE_URL
 
@@ -11,6 +13,7 @@ if (!baseURL) {
 
 export const api = axios.create({
   baseURL,
+  withCredentials: true,
 })
 const CURRENT_VERSION = __APP_VERSION__
 
@@ -55,14 +58,14 @@ function startRetryMechanism() {
 
 // --- Silent token refresh interceptor ---
 let isRefreshing = false
-let refreshSubscribers: ((token: string) => void)[] = []
+let refreshSubscribers: (() => void)[] = []
 
-function onTokenRefreshed(token: string) {
-  refreshSubscribers.forEach((cb) => cb(token))
+function onTokenRefreshed() {
+  refreshSubscribers.forEach((cb) => cb())
   refreshSubscribers = []
 }
 
-function addRefreshSubscriber(callback: (token: string) => void) {
+function addRefreshSubscriber(callback: () => void) {
   refreshSubscribers.push(callback)
 }
 
@@ -98,70 +101,43 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config
 
-    // Handle 401 with silent refresh
+    // Handle 401 with silent refresh (refresh token is in an httpOnly cookie,
+    // sent automatically via withCredentials)
     if (error.response?.status === 401 && !originalRequest._retry) {
-      const refreshToken = localStorage.getItem('refreshToken')
-      const token = localStorage.getItem('token')
-
-      if (refreshToken && token) {
-        if (isRefreshing) {
-          // Another refresh is in progress — queue this request
-          return new Promise((resolve) => {
-            addRefreshSubscriber((newToken: string) => {
-              originalRequest.headers['Authorization'] = `Bearer ${newToken}`
-              resolve(api(originalRequest))
-            })
+      if (isRefreshing) {
+        // Another refresh is in progress — queue this request
+        return new Promise((resolve) => {
+          addRefreshSubscriber(() => {
+            resolve(api(originalRequest))
           })
-        }
+        })
+      }
 
-        originalRequest._retry = true
-        isRefreshing = true
+      originalRequest._retry = true
+      isRefreshing = true
 
-        try {
-          const res = await axios.post(
-            `${baseURL}/auth/refresh`,
-            { refreshToken },
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          )
+      try {
+        // Both cookies (__session + __refresh) are sent automatically
+        const res = await axios.post(`${baseURL}/auth/refresh`, null, {
+          withCredentials: true,
+        })
 
-          const newToken = res.data.token
-          const newRefreshToken = res.data.refreshToken
+        isRefreshing = false
+        onTokenRefreshed()
 
-          localStorage.setItem('token', newToken)
-          localStorage.setItem('refreshToken', newRefreshToken)
-          api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`
+        bus.emit('auth:token-refreshed', { token: res.data.token })
 
-          isRefreshing = false
-          onTokenRefreshed(newToken)
+        return api(originalRequest)
+      } catch (refreshError) {
+        isRefreshing = false
+        refreshSubscribers = []
 
-          // Notify auth store of new tokens
-          bus.emit('auth:token-refreshed', { token: newToken, refreshToken: newRefreshToken })
-
-          originalRequest.headers['Authorization'] = `Bearer ${newToken}`
-          return api(originalRequest)
-        } catch (refreshError) {
-          isRefreshing = false
-          refreshSubscribers = []
-
-          // Refresh failed — clear auth state and redirect to login
-          localStorage.removeItem('token')
-          localStorage.removeItem('refreshToken')
-          delete api.defaults.headers.common['Authorization']
-          bus.emit('auth:logout')
-          window.location.href = '/auth'
-
-          return Promise.reject(refreshError)
-        }
-      } else {
-        // No refresh token — unrecoverable 401
-        localStorage.removeItem('token')
-        localStorage.removeItem('refreshToken')
-        delete api.defaults.headers.common['Authorization']
+        // Clear session cookie so next page load doesn't re-enter the refresh loop
+        new Cookies().remove(SESSION_COOKIE, SESSION_COOKIE_OPTS)
         bus.emit('auth:logout')
         window.location.href = '/auth'
-        return Promise.reject(error)
+
+        return Promise.reject(refreshError)
       }
     }
 

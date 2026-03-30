@@ -81,14 +81,14 @@ export type AuthResponse<T> = ApiSuccess<T> | (ApiError & { code: AuthErrorCodes
 export type GetUserSettingsResponse = ApiSuccess<{ user: SettingsUser }>
 export type UpdateUserLanguageResponse = ApiSuccess<{}>
 export type SendMagicLinkResponse = ApiSuccess<{ user: LoginUser; status: string }>
-export type VerifyTokenSuccess = AuthResponse<{ token: string; refreshToken: string }>
+export type VerifyTokenSuccess = AuthResponse<{ token: string }>
 export interface VerifyTokenFailure {
   success: false
   status: string
 }
 export type VerifyTokenResponse = VerifyTokenSuccess | VerifyTokenFailure
 
-export type RefreshTokenResponse = ApiSuccess<{ token: string; refreshToken: string }>
+export type RefreshTokenResponse = ApiSuccess<{ token: string }>
 export type WsTicketResponse = ApiSuccess<{ ticket: string }>
 
 export type CaptchaChallengeResponse = ApiSuccess<any> // altcha challenge shape

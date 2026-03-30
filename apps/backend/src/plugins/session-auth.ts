@@ -6,6 +6,8 @@ import Redis from 'ioredis'
 import { SessionService } from '../services/session.service'
 import { sendUnauthorizedError } from 'src/api/helpers'
 import { appConfig } from '@/lib/appconfig'
+import '@fastify/cookie'
+import { SESSION_COOKIE, SESSION_COOKIE_OPTS, SESSION_MAX_AGE } from '@shared/session'
 import { SessionData } from '@zod/user/user.dto'
 
 // Extend Fastify types
@@ -30,6 +32,7 @@ export default fp(async (fastify: FastifyInstance) => {
   fastify.register(fastifyJwt, {
     secret: appConfig.JWT_SECRET,
     sign: { expiresIn: '30d' },
+    cookie: { cookieName: SESSION_COOKIE, signed: false },
   })
 
   // Initialize Redis client
@@ -41,21 +44,36 @@ export default fp(async (fastify: FastifyInstance) => {
     await sessionService.getOrCreate(token, data)
   })
 
-  // Auth hook reads Bearer token as session ID
+  // Auth hook reads JWT from Authorization header (if present) or __session
+  // cookie. @fastify/jwt checks Bearer header first, then falls back to cookie.
+  // Old clients still sending Authorization: Bearer get migrated to the cookie.
   fastify.decorate('authenticate', async (req: FastifyRequest, reply: FastifyReply) => {
+    const cookieToken = req.cookies[SESSION_COOKIE]
+    const bearerToken = req.headers.authorization?.startsWith('Bearer ')
+      ? req.headers.authorization.slice(7)
+      : null
+
+    if (!cookieToken && !bearerToken) {
+      return sendUnauthorizedError(reply, 'Missing session cookie')
+    }
+
     try {
       await req.jwtVerify()
     } catch (err) {
       return sendUnauthorizedError(reply)
     }
 
-    const auth = req.headers.authorization
-    if (!auth) {
-      return sendUnauthorizedError(reply, 'Missing Authorization header')
-    }
-    const [scheme, sessionId] = auth.split(' ')
-    if (scheme !== 'Bearer' || !sessionId) {
-      return sendUnauthorizedError(reply, 'Invalid Authorization format')
+    // Resolve the session ID — prefer cookie, fall back to Bearer token
+    const sessionId = cookieToken ?? bearerToken!
+
+    // Migrate old clients: set __session cookie so subsequent requests use it
+    if (!cookieToken && bearerToken) {
+      reply.setCookie(SESSION_COOKIE, sessionId, {
+        ...SESSION_COOKIE_OPTS,
+        httpOnly: false,
+        secure: appConfig.NODE_ENV !== 'development',
+        maxAge: SESSION_MAX_AGE,
+      })
     }
 
     // Try to fetch an existing session from Redis

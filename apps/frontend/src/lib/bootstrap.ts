@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import Cookies from 'universal-cookie'
+import { SESSION_COOKIE } from '@shared/session'
 import { connectWebSocket } from './websocket'
 
 import { useInteractionStore } from '../features/interaction/stores/useInteractionStore'
@@ -33,7 +35,7 @@ export const useBootstrap = defineStore('bootstrap', () => {
       // app.ts (cold-start path) and in authStore.verifyToken (hot-start path).
       // This keeps bootstrap.ts free of an authStore import, which would create
       // a circular dependency: authStore → bootstrap → authStore.
-      if (!localStorage.getItem('token')) return
+      if (!new Cookies().get(SESSION_COOKIE)) return
 
       const ownerProfileStore = useOwnerProfileStore()
       const messagingStore = useMessageStore()

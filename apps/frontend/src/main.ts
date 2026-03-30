@@ -7,8 +7,11 @@ import '@/css/bootstrap.scss'
 import '@/css/main.scss'
 import { useLocalStore } from './store/localStore'
 import { shouldShowLandingPage } from './lib/bootstrapRoute'
+import Cookies from 'universal-cookie'
+import { SESSION_COOKIE } from '@shared/session'
 
-if (shouldShowLandingPage(window.location.pathname, !!localStorage.getItem('token'))) {
+const hasSession = !!new Cookies().get(SESSION_COOKIE) || !!localStorage.getItem('token')
+if (shouldShowLandingPage(window.location.pathname, hasSession)) {
   import('@/features/landingpage/views/LandingPage.vue').then(({ default: Landing }) => {
     const app = createApp(Landing)
     app.use(createPinia())

@@ -1,13 +1,28 @@
-import { describe, it, expect, vi, beforeEach, afterAll } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterAll, afterEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
+import Cookies from 'universal-cookie'
+import { SESSION_COOKIE } from '@shared/session'
 import { useAuthStore } from '../authStore'
 
 const { mockApi, mockSafeApiCall } = vi.hoisted(() => {
+  const responseInterceptors: ((res: any) => any)[] = []
   return {
     mockApi: {
       get: vi.fn(),
       post: vi.fn(),
       defaults: { headers: { common: {} as Record<string, string> } },
+      interceptors: {
+        response: {
+          use: vi.fn((fn: (res: any) => any) => {
+            responseInterceptors.push(fn)
+            return responseInterceptors.length - 1
+          }),
+          eject: vi.fn((id: number) => {
+            responseInterceptors.splice(id, 1)
+          }),
+          _run: (res: any) => responseInterceptors.forEach((fn) => fn(res)),
+        },
+      },
     },
     mockSafeApiCall: vi.fn((fn: () => Promise<unknown>) => fn()),
   }
@@ -39,53 +54,55 @@ function makeJwt(payload: Record<string, unknown>): string {
   return `${header}.${body}.fakesig`
 }
 
+const cookies = new Cookies()
+
+function setSessionCookie(token: string) {
+  cookies.set(SESSION_COOKIE, token, { path: '/', sameSite: 'strict' })
+}
+
+function clearSessionCookie() {
+  cookies.remove(SESSION_COOKIE, { path: '/' })
+}
+
+function getSessionCookie(): string | undefined {
+  return cookies.get(SESSION_COOKIE) || undefined
+}
+
 describe('authStore initialize', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     localStorage.clear()
+    clearSessionCookie()
     vi.clearAllMocks()
   })
 
-  it('clears expired JWT without refresh token on initialize', async () => {
-    const expiredToken = makeJwt({
-      userId: 'u1',
-      profileId: 'p1',
-      exp: Math.floor(Date.now() / 1000) - 3600,
-    })
-    localStorage.setItem('token', expiredToken)
-
-    const store = useAuthStore()
-    store.initialize()
-
-    expect(store.isLoggedIn).toBe(false)
-    expect(store.isInitialized).toBe(true)
-    expect(localStorage.getItem('token')).toBeNull()
+  afterEach(() => {
+    clearSessionCookie()
   })
 
-  it('keeps expired JWT with refresh token on initialize', async () => {
+  it('keeps expired JWT on initialize (refresh handled by interceptor)', () => {
     const expiredToken = makeJwt({
       userId: 'u1',
       profileId: 'p1',
       exp: Math.floor(Date.now() / 1000) - 3600,
     })
-    localStorage.setItem('token', expiredToken)
-    localStorage.setItem('refreshToken', 'some-refresh-token')
+    setSessionCookie(expiredToken)
 
     const store = useAuthStore()
     store.initialize()
 
     expect(store.isLoggedIn).toBe(true)
     expect(store.isInitialized).toBe(true)
-    expect(localStorage.getItem('token')).toBe(expiredToken)
+    expect(getSessionCookie()).toBe(expiredToken)
   })
 
-  it('keeps valid JWT on initialize', async () => {
+  it('keeps valid JWT on initialize', () => {
     const validToken = makeJwt({
       userId: 'u1',
       profileId: 'p1',
       exp: Math.floor(Date.now() / 1000) + 3600,
     })
-    localStorage.setItem('token', validToken)
+    setSessionCookie(validToken)
 
     const store = useAuthStore()
     store.initialize()
@@ -95,15 +112,39 @@ describe('authStore initialize', () => {
     expect(store.userId).toBe('u1')
   })
 
-  it('clears malformed JWT on initialize', async () => {
-    localStorage.setItem('token', 'not-a-valid-jwt')
+  it('migrates legacy localStorage token to Bearer header on initialize', () => {
+    const token = makeJwt({
+      userId: 'u1',
+      profileId: 'p1',
+      exp: Math.floor(Date.now() / 1000) + 3600,
+    })
+    localStorage.setItem('token', token)
+    localStorage.setItem('refreshToken', 'old-refresh')
+
+    const store = useAuthStore()
+    store.initialize()
+
+    // Should set Bearer header for backend migration
+    expect(mockApi.defaults.headers.common['Authorization']).toBe(`Bearer ${token}`)
+    expect(store.isLoggedIn).toBe(true)
+    expect(store.userId).toBe('u1')
+
+    // Simulate first successful API response — header + localStorage cleaned up
+    mockApi.interceptors.response._run({})
+    expect(mockApi.defaults.headers.common['Authorization']).toBeUndefined()
+    expect(localStorage.getItem('token')).toBeNull()
+    expect(localStorage.getItem('refreshToken')).toBeNull()
+  })
+
+  it('clears malformed JWT on initialize', () => {
+    setSessionCookie('not-a-valid-jwt')
 
     const store = useAuthStore()
     store.initialize()
 
     expect(store.isLoggedIn).toBe(false)
     expect(store.isInitialized).toBe(true)
-    expect(localStorage.getItem('token')).toBeNull()
+    expect(getSessionCookie()).toBeUndefined()
   })
 })
 
@@ -111,8 +152,13 @@ describe('authStore localStorage auth flow', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     localStorage.clear()
+    clearSessionCookie()
     vi.clearAllMocks()
     mockSafeApiCall.mockImplementation((fn: () => Promise<unknown>) => fn())
+  })
+
+  afterEach(() => {
+    clearSessionCookie()
   })
 
   it('saves authId in localStorage after sendMagicLink success (email)', async () => {
@@ -172,7 +218,7 @@ describe('authStore localStorage auth flow', () => {
       exp: Math.floor(Date.now() / 1000) + 3600,
     })
     mockApi.get.mockResolvedValue({
-      data: { success: true, token, refreshToken: 'r1' },
+      data: { success: true, token },
     })
 
     await store.verifyToken('123456')
@@ -233,7 +279,6 @@ describe('authStore localStorage auth flow', () => {
       data: {
         success: true,
         token,
-        refreshToken: 'r1',
       },
     })
 
@@ -242,5 +287,31 @@ describe('authStore localStorage auth flow', () => {
 
     expect(res.success).toBe(true)
     expect(localStorage.getItem('authId')).toBeNull()
+  })
+
+  it('setAuthState does not write token to localStorage', () => {
+    const store = useAuthStore()
+    const token = makeJwt({
+      userId: 'u1',
+      profileId: 'p1',
+      exp: Math.floor(Date.now() / 1000) + 3600,
+    })
+
+    store.setAuthState(token)
+
+    expect(localStorage.getItem('token')).toBeNull()
+    expect(store.userId).toBe('u1')
+    expect(store.profileId).toBe('p1')
+  })
+
+  it('logout clears state without touching localStorage', () => {
+    const store = useAuthStore()
+
+    store.userId = 'u1'
+    store.logout()
+
+    expect(store.userId).toBeNull()
+    expect(localStorage.getItem('token')).toBeNull()
+    expect(localStorage.getItem('refreshToken')).toBeNull()
   })
 })

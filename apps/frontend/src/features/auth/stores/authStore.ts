@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import Cookies from 'universal-cookie'
 import { api, axios, safeApiCall } from '@/lib/api'
 import { bus } from '@/lib/bus'
 import { useBootstrap } from '@/lib/bootstrap'
@@ -17,13 +18,43 @@ type AuthStoreResponse<T> =
   | SuccessResponse<T>
   | (ApiError & { code: AuthErrorCodes; restart: 'otp' | 'userid' })
 
+import { SESSION_COOKIE, SESSION_COOKIE_OPTS } from '@shared/session'
+
+const cookies = new Cookies()
+
+/**
+ * One-time migration for users upgrading from the old frontend that stored
+ * the JWT in localStorage. Sets the Bearer header on the axios instance so
+ * the backend's authenticate hook picks it up and sets the __session cookie.
+ * Cleans up localStorage after the first successful API response.
+ *
+ * TODO: Remove this function once all clients have migrated to cookie auth.
+ */
+function migrateLegacyToken(): string | null {
+  const legacyToken = localStorage.getItem('token')
+  if (!legacyToken) return null
+
+  api.defaults.headers.common['Authorization'] = `Bearer ${legacyToken}`
+
+  // After the first successful response the cookie is set by the backend —
+  // remove the temporary header and clean up localStorage.
+  const ejectId = api.interceptors.response.use((res) => {
+    delete api.defaults.headers.common['Authorization']
+    localStorage.removeItem('token')
+    localStorage.removeItem('refreshToken')
+    api.interceptors.response.eject(ejectId)
+    return res
+  })
+
+  return legacyToken
+}
+
 const getAuthId = (authId: UserIdentifier): string => {
   return authId.email ? authId.email : (authId.phonenumber ?? '')
 }
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    jwt: '',
     session: null as SessionData | null,
     userId: null as string | null,
     email: null as string | null,
@@ -33,24 +64,15 @@ export const useAuthStore = defineStore('auth', {
   }),
 
   getters: {
-    isLoggedIn: (state) => state.jwt !== '',
+    isLoggedIn: (state) => state.userId !== null,
     getUserId: (state) => state.userId,
     getEmail: (state) => state.email,
     isPhoneAuth: (state) => Boolean(state.loginUser?.phonenumber),
   },
 
   actions: {
-    setAuthState(token: string, refreshToken?: string) {
-      // Set JWT in localStorage and axios headers
-      this.jwt = token
-      localStorage.setItem('token', token)
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`
-
-      if (refreshToken) {
-        localStorage.setItem('refreshToken', refreshToken)
-      }
-
-      // Parse user data from token
+    setAuthState(token: string) {
+      // Parse user data from JWT payload (cookie is non-httpOnly so JWT is readable)
       try {
         const payload = JSON.parse(atob(token.split('.')[1]!)) as JwtPayload
         this.userId = payload.userId
@@ -62,25 +84,20 @@ export const useAuthStore = defineStore('auth', {
     },
 
     initialize() {
-      const token = localStorage.getItem('token')
+      // Restore state from cookie, or migrate from legacy localStorage
+      const token = cookies.get<string>(SESSION_COOKIE) ?? migrateLegacyToken()
+
       if (token) {
         try {
-          const payload = JSON.parse(atob(token.split('.')[1]!))
-          const isExpired = payload.exp && payload.exp * 1000 < Date.now()
-          const refreshToken = localStorage.getItem('refreshToken')
-
-          if (isExpired && !refreshToken) {
-            // Expired JWT with no refresh token — unrecoverable, clear state
-            localStorage.removeItem('token')
-            this.isInitialized = true
-            return
-          }
+          JSON.parse(atob(token.split('.')[1]!))
         } catch {
           // Malformed JWT — clear it
-          localStorage.removeItem('token')
+          cookies.remove(SESSION_COOKIE, SESSION_COOKIE_OPTS)
           this.isInitialized = true
           return
         }
+        // Even if the JWT is expired, keep it — the refresh interceptor in
+        // api.ts will attempt a silent refresh using the httpOnly __refresh cookie.
         this.setAuthState(token)
       }
       this.isInitialized = true
@@ -103,7 +120,7 @@ export const useAuthStore = defineStore('auth', {
         )
 
         if (res.data.success === true) {
-          this.setAuthState(res.data.token, res.data.refreshToken)
+          this.setAuthState(res.data.token)
           this.loginUser = null
           localStorage.removeItem('authId')
         } else {
@@ -178,24 +195,25 @@ export const useAuthStore = defineStore('auth', {
 
     logout() {
       // Try to call server-side logout (fire-and-forget)
-      if (this.jwt) {
+      if (this.userId) {
         api.post('/auth/logout').catch(() => {})
       }
 
       this.userId = null
       this.email = null
       this.loginUser = null
-      this.jwt = ''
-      localStorage.removeItem('token')
-      localStorage.removeItem('refreshToken')
+      // Clear session cookie client-side so a failed server logout
+      // doesn't leave the user appearing logged in on next page load.
+      // (The __refresh cookie is httpOnly — only the backend can clear it,
+      // but it will fail validation without a matching session anyway.)
+      cookies.remove(SESSION_COOKIE, SESSION_COOKIE_OPTS)
       localStorage.removeItem('authId')
-      delete api.defaults.headers.common['Authorization']
       bus.emit('auth:logout')
     },
   },
 })
 
-bus.on('auth:token-refreshed', ({ token, refreshToken }) => {
+bus.on('auth:token-refreshed', ({ token }) => {
   const store = useAuthStore()
-  store.setAuthState(token, refreshToken)
+  store.setAuthState(token)
 })

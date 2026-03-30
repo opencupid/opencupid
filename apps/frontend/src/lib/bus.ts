@@ -5,7 +5,7 @@ import type { MessageDTO } from '@zod/messaging/messaging.dto'
 type AppEvents = {
   'auth:login': { token: string }
   'auth:logout': void
-  'auth:token-refreshed': { token: string; refreshToken: string }
+  'auth:token-refreshed': { token: string }
   'notification:new_message': MessageDTO
   'language:changed': { language: string }
   'api:offline': void

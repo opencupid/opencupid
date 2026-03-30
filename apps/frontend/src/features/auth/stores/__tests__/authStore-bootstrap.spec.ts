@@ -55,7 +55,7 @@ describe('authStore.verifyToken bootstrap sequencing', () => {
 
   it('calls onLogin after successful token verification', async () => {
     const token = makeJwt({ userId: 'u1', profileId: 'p1', exp: Date.now() / 1000 + 3600 })
-    mockApi.get.mockResolvedValue({ data: { success: true, token, refreshToken: 'r1' } })
+    mockApi.get.mockResolvedValue({ data: { success: true, token } })
 
     const store = useAuthStore()
     await store.verifyToken('123456')
@@ -72,7 +72,7 @@ describe('authStore.verifyToken bootstrap sequencing', () => {
     })
 
     const token = makeJwt({ userId: 'u1', profileId: 'p1', exp: Date.now() / 1000 + 3600 })
-    mockApi.get.mockResolvedValue({ data: { success: true, token, refreshToken: 'r1' } })
+    mockApi.get.mockResolvedValue({ data: { success: true, token } })
 
     const store = useAuthStore()
     const result = await store.verifyToken('123456')
