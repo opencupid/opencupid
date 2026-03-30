@@ -291,8 +291,16 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
 
         return profile
       })
-      // Clear session to force re-fetch on next request, we need the roles updated
-      await req.deleteSession()
+      // Update session so the next request sees hasActiveProfile=true without a round-trip
+      await req.updateSession({
+        hasActiveProfile: updated.isActive,
+        profile: {
+          id: updated.id,
+          isDatingActive: updated.isDatingActive,
+          isSocialActive: updated.isSocialActive,
+          isActive: updated.isActive,
+        },
+      })
       const response: UpdateProfileResponse = { success: true, profile: updated }
       reply.code(200).send(response)
 

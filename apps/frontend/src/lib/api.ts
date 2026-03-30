@@ -118,7 +118,7 @@ api.interceptors.response.use(
 
       try {
         // Both cookies (__session + __refresh) are sent automatically
-        const res = await axios.post(`${baseURL}/auth/refresh`, null, {
+        const res = await axios.post(`${baseURL}/auth/refresh`, {}, {
           withCredentials: true,
         })
 
