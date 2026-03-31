@@ -43,7 +43,7 @@ const version = computed(() => __APP_VERSION__)
         <li class="nav-item">
           <a
             class="nav-link"
-            href="/bull-board"
+            href="/bull-board/"
             target="_blank"
             rel="noopener"
             >Queues</a
