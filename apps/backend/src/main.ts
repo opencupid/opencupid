@@ -44,6 +44,7 @@ async function main() {
   app.register(import('./plugins/prisma'))
   app.register(import('./plugins/session-auth'))
   app.register(import('./plugins/activity-tracking'))
+  app.register(import('./plugins/bull-board'), { prefix: '/bull-board' })
   // API routes
   app.register(import('./api'), { prefix: '/api' })
 
