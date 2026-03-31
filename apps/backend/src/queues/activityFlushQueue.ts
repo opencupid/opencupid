@@ -11,5 +11,9 @@ export const activityFlushQueue = new Queue('activity-flush', { connection })
  * one pending job exists per profile at any time (deduplication is free).
  */
 export async function enqueueActivity(profileId: string): Promise<void> {
-  await activityFlushQueue.add('flush', { profileId }, { jobId: profileId })
+  await activityFlushQueue.add(
+    'flush',
+    { profileId },
+    { jobId: profileId, removeOnComplete: true, removeOnFail: true }
+  )
 }

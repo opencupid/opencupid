@@ -19,8 +19,8 @@ describe('recordActivity', () => {
     expect(mockedEnqueue).toHaveBeenCalledWith('profile-abc')
   })
 
-  it('does not throw if enqueue fails', async () => {
+  it('propagates enqueue errors (caller is responsible for handling)', async () => {
     mockedEnqueue.mockRejectedValueOnce(new Error('redis down'))
-    await expect(recordActivity('profile-abc')).resolves.not.toThrow()
+    await expect(recordActivity('profile-abc')).rejects.toThrow('redis down')
   })
 })
