@@ -13,7 +13,7 @@ export const activityFlushQueue = new Queue('activity-flush', { connection })
 export async function enqueueActivity(profileId: string): Promise<void> {
   await activityFlushQueue.add(
     'flush',
-    { profileId, seenAt: new Date().toISOString() },
+    { profileId },
     { jobId: profileId }
   )
 }

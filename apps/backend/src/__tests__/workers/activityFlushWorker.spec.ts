@@ -63,10 +63,11 @@ describe('processActivityFlushJob', () => {
   })
 
   it('silently skips FK violation (deleted profile)', async () => {
+    const { Prisma } = await import('@prisma/client')
     mockedPrisma.profileSessionLog.findFirst.mockResolvedValue(null)
-    const fkError = Object.assign(new Error('FK violation'), {
+    const fkError = new Prisma.PrismaClientKnownRequestError('Foreign key constraint failed', {
       code: 'P2003',
-      name: 'PrismaClientKnownRequestError',
+      clientVersion: '5.0.0',
     })
     mockedPrisma.profileSessionLog.create.mockRejectedValueOnce(fkError)
 

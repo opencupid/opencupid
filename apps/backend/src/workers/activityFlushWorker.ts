@@ -28,11 +28,7 @@ export async function processActivityFlushJob(profileId: string): Promise<void> 
       data: { profileId, startedAt: now },
     })
   } catch (err) {
-    if (
-      (err instanceof Prisma.PrismaClientKnownRequestError ||
-        (err instanceof Error && err.name === 'PrismaClientKnownRequestError')) &&
-      (err as { code?: string }).code === 'P2003'
-    ) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2003') {
       return
     }
     throw err
