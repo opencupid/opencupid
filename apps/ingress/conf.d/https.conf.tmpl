@@ -47,7 +47,10 @@ server {
     return 404;
   }
 
-  # Block bull-board on public domain — only accessible via mTLS admin domain
+  # Block bull-board on public domain — only accessible via mTLS admin domain.
+  # Unlike /api/ routes, this path is not proxied here so there is no
+  # proxy_set_header to clear the X-Admin-Authenticated header; the 404
+  # ensures the backend is never reached at all.
   location /bull-board {
     return 404;
   }
