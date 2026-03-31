@@ -204,19 +204,25 @@ export const useAuthStore = defineStore('auth', {
           .post(`${api.defaults.baseURL}/auth/logout`, {}, { withCredentials: true })
           .catch(() => {})
       }
-
-      this.userId = null
-      this.email = null
-      this.loginUser = null
-      // Clear session cookie client-side so a failed server logout
-      // doesn't leave the user appearing logged in on next page load.
-      // (The __refresh cookie is httpOnly — only the backend can clear it,
-      // but it will fail validation without a matching session anyway.)
-      cookies.remove(SESSION_COOKIE, SESSION_COOKIE_OPTS)
-      localStorage.removeItem('authId')
+      // Emit auth:logout — the bus listener below clears state synchronously.
       bus.emit('auth:logout')
     },
   },
+})
+
+// Clear auth state on logout — runs for both explicit logout() and the
+// api.ts refresh-failure path which emits auth:logout directly.
+// Must complete before auth:logged-out is emitted so the router guard
+// sees isLoggedIn=false when it navigates to Login.
+bus.on('auth:logout', () => {
+  const store = useAuthStore()
+  store.userId = null
+  store.email = null
+  store.loginUser = null
+  // Clear session cookie client-side so a failed server logout
+  // doesn't leave the user appearing logged in on next page load.
+  cookies.remove(SESSION_COOKIE, SESSION_COOKIE_OPTS)
+  localStorage.removeItem('authId')
 })
 
 bus.on('auth:token-refreshed', ({ token }) => {

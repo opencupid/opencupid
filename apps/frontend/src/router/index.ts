@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 
 import { useAuthStore } from '@/features/auth/stores/authStore'
+import { bus } from '@/lib/bus'
 
 import MessagingView from '@/features/messaging/views/Messaging.vue'
 import ConversationView from '@/features/messaging/views/ConversationView.vue'
@@ -160,5 +161,9 @@ router.afterEach((to, from) => {
 })
 
 export { getPreviousUrl } from './history'
+
+bus.on('auth:logged-out', () => {
+  router.push({ name: 'Login' })
+})
 
 export default router

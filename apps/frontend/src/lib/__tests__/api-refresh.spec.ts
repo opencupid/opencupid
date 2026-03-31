@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach, beforeAll, afterAll } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from 'vitest'
 import { AxiosHeaders } from 'axios'
 import axios from 'axios'
 
@@ -6,7 +6,13 @@ const mockEmit = vi.fn()
 vi.mock('../bus', () => ({
   bus: {
     emit: mockEmit,
+    on: vi.fn(),
   },
+}))
+
+const mockRouterPush = vi.fn()
+vi.mock('@/router', () => ({
+  default: { push: mockRouterPush },
 }))
 
 vi.stubGlobal('__APP_CONFIG__', {
@@ -16,14 +22,7 @@ vi.stubGlobal('__APP_CONFIG__', {
 afterAll(() => vi.unstubAllGlobals())
 
 describe('api refresh interceptor', () => {
-  let locationHref: string
-
   let originalAdapter: any
-  let originalLocationDescriptor: PropertyDescriptor | undefined
-
-  beforeAll(() => {
-    originalLocationDescriptor = Object.getOwnPropertyDescriptor(window, 'location')
-  })
 
   beforeEach(async () => {
     vi.clearAllMocks()
@@ -32,33 +31,12 @@ describe('api refresh interceptor', () => {
     // Save original adapter before any test can override it
     const { api } = await import('../api')
     originalAdapter = api.defaults.adapter
-
-    // Mock window.location.href to capture redirects
-    locationHref = ''
-    Object.defineProperty(window, 'location', {
-      configurable: true,
-      writable: true,
-      value: {
-        ...window.location,
-        get href() {
-          return locationHref
-        },
-        set href(val: string) {
-          locationHref = val
-        },
-      },
-    })
   })
 
   afterEach(async () => {
     // Restore original adapter to prevent cross-test contamination
     const { api } = await import('../api')
     api.defaults.adapter = originalAdapter
-
-    // Restore window.location to prevent cross-file contamination
-    if (originalLocationDescriptor) {
-      Object.defineProperty(window, 'location', originalLocationDescriptor)
-    }
   })
 
   it('retry flag prevents infinite loops', () => {
@@ -95,7 +73,6 @@ describe('api refresh interceptor', () => {
       expect.objectContaining({ withCredentials: true })
     )
     expect(mockEmit).toHaveBeenCalledWith('auth:logout')
-    expect(locationHref).toBe('/auth')
 
     postSpy.mockRestore()
   })
@@ -136,7 +113,7 @@ describe('api refresh interceptor', () => {
     expect(mockEmit).toHaveBeenCalledWith('auth:token-refreshed', {
       token: 'new-jwt',
     })
-    expect(locationHref).not.toBe('/auth')
+    expect(mockRouterPush).not.toHaveBeenCalled()
 
     postSpy.mockRestore()
   })

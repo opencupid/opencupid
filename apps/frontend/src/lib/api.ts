@@ -118,9 +118,13 @@ api.interceptors.response.use(
 
       try {
         // Both cookies (__session + __refresh) are sent automatically
-        const res = await axios.post(`${baseURL}/auth/refresh`, {}, {
-          withCredentials: true,
-        })
+        const res = await axios.post(
+          `${baseURL}/auth/refresh`,
+          {},
+          {
+            withCredentials: true,
+          }
+        )
 
         isRefreshing = false
         onTokenRefreshed()
@@ -134,8 +138,8 @@ api.interceptors.response.use(
 
         // Clear session cookie so next page load doesn't re-enter the refresh loop
         new Cookies().remove(SESSION_COOKIE, SESSION_COOKIE_OPTS)
-        bus.emit('auth:logout')
-        window.location.href = '/auth'
+        bus.emit('auth:logout') // store teardowns run synchronously
+        bus.emit('auth:logged-out') // all teardowns done — router can navigate now
 
         return Promise.reject(refreshError)
       }
