@@ -40,6 +40,15 @@ const version = computed(() => __APP_VERSION__)
             >Tags</router-link
           >
         </li>
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            href="/bull-board/"
+            target="_blank"
+            rel="noopener"
+            >Queues</a
+          >
+        </li>
       </ul>
       <div class="mt-auto text-white-50 small">v{{ version }}</div>
     </nav>

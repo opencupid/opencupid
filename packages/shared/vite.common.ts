@@ -42,6 +42,12 @@ export const server = (mode: string, env: Record<string, string | undefined>, ap
             })
           },
         },
+        '/bull-board': {
+          target: `http://localhost:${backendPort}`,
+          changeOrigin: true,
+          secure: false,
+          headers: { 'X-Admin-Authenticated': 'true' },
+        },
         '/ws': {
           target: `ws://localhost:${backendPort}`,
           rewriteWsOrigin: true,
