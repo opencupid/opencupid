@@ -14,6 +14,6 @@ export async function enqueueActivity(profileId: string): Promise<void> {
   await activityFlushQueue.add(
     'flush',
     { profileId },
-    { jobId: profileId, removeOnComplete: true, removeOnFail: true }
+    { jobId: profileId, removeOnComplete: { count: 100 }, removeOnFail: { count: 50 } }
   )
 }
