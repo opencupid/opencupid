@@ -5,6 +5,7 @@ import { BullMQAdapter } from '@bull-board/api/bullMQAdapter'
 import { FastifyAdapter } from '@bull-board/fastify'
 import { emailQueue } from '../queues/emailQueue'
 import { activityQueue } from '../queues/activityQueue'
+import { activityFlushQueue } from '../queues/activityFlushQueue'
 
 const bullBoardPlugin: FastifyPluginAsync = async (fastify: FastifyInstance) => {
   // Guard: only allow requests that passed nginx mTLS admin proxy
@@ -17,13 +18,11 @@ const bullBoardPlugin: FastifyPluginAsync = async (fastify: FastifyInstance) => 
   const serverAdapter = new FastifyAdapter()
 
   createBullBoard({
-    queues: [new BullMQAdapter(emailQueue), new BullMQAdapter(activityQueue)],
+    queues: [new BullMQAdapter(emailQueue), new BullMQAdapter(activityQueue), new BullMQAdapter(activityFlushQueue)],
     serverAdapter,
   })
 
   serverAdapter.setBasePath('/bull-board')
-
-  fastify.get('/', async (_req, reply) => reply.redirect('/bull-board/'))
 
   fastify.register(serverAdapter.registerPlugin(), { prefix: '/' })
 }
