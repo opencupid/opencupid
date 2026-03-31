@@ -305,7 +305,8 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * POST /logout
-   * Invalidates all tokens for the current user, deletes the session and refresh tokens.
+   * Revokes the current session and its associated refresh token only.
+   * Other active sessions (other devices/browsers) are not affected.
    * @returns {{ success: boolean }}
    */
   fastify.post(

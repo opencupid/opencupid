@@ -138,8 +138,8 @@ api.interceptors.response.use(
 
         // Clear session cookie so next page load doesn't re-enter the refresh loop
         new Cookies().remove(SESSION_COOKIE, SESSION_COOKIE_OPTS)
-        bus.emit('auth:logout') // store teardowns run synchronously
-        bus.emit('auth:logged-out') // all teardowns done — router can navigate now
+        bus.emit('auth:logout') // clear auth state (store, bootstrap, cookie)
+        bus.emit('auth:logged-out') // navigate to login — emitted after synchronous teardowns
 
         return Promise.reject(refreshError)
       }

@@ -47,7 +47,7 @@ describe('api refresh interceptor', () => {
     expect(config._retry).toBe(true)
   })
 
-  it('redirects to /auth when refresh attempt fails', async () => {
+  it('emits auth:logout and auth:logged-out when refresh attempt fails', async () => {
     const { api } = await import('../api')
 
     // Mock the api adapter for the original 401 request
@@ -73,6 +73,7 @@ describe('api refresh interceptor', () => {
       expect.objectContaining({ withCredentials: true })
     )
     expect(mockEmit).toHaveBeenCalledWith('auth:logout')
+    expect(mockEmit).toHaveBeenCalledWith('auth:logged-out')
 
     postSpy.mockRestore()
   })
