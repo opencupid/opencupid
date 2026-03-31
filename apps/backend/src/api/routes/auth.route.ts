@@ -305,7 +305,8 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * POST /logout
-   * Invalidates all tokens for the current user, deletes the session and refresh tokens.
+   * Revokes the current session and its associated refresh token only.
+   * Other active sessions (other devices/browsers) are not affected.
    * @returns {{ success: boolean }}
    */
   fastify.post(
@@ -315,12 +316,14 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
     },
     async (req, reply) => {
       try {
-        // Bump tokenVersion to invalidate all tokens for this user
-        await userService.bumpTokenVersion(req.user.userId)
-        // Delete current session
+        // Delete current session and its refresh token only — do not bump
+        // tokenVersion, which would invalidate all other active sessions
+        // (other devices/browsers) since we have no "logout all" feature.
         await req.deleteSession()
-        // Delete all refresh tokens for this user
-        await refreshTokenService.deleteAllForUser(req.user.userId)
+        const refreshToken = req.cookies[REFRESH_COOKIE]
+        if (refreshToken) {
+          await refreshTokenService.delete(refreshToken, req.user.userId)
+        }
         clearSessionCookie(reply)
         clearRefreshCookie(reply)
         return reply.code(200).send({ success: true })

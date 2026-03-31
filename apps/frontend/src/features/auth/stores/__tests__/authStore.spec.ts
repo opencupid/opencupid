@@ -37,9 +37,10 @@ vi.mock('@/lib/api', () => ({
   axios: { isAxiosError: vi.fn(() => false), post: vi.fn().mockResolvedValue({}) },
 }))
 
-vi.mock('@/lib/bus', () => ({
-  bus: { emit: vi.fn(), on: vi.fn() },
-}))
+vi.mock('@/lib/bus', async () => {
+  const { default: mitt } = await import('mitt')
+  return { bus: mitt() }
+})
 
 vi.mock('@/lib/bootstrap', () => ({
   useBootstrap: () => ({ onLogin: vi.fn().mockResolvedValue(undefined) }),

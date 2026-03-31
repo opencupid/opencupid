@@ -148,13 +148,6 @@ export class UserService {
     return updated
   }
 
-  async bumpTokenVersion(userId: string): Promise<void> {
-    await prisma.user.update({
-      where: { id: userId },
-      data: { tokenVersion: { increment: 1 } },
-    })
-  }
-
   async findByAuthId(authId: string): Promise<User | null> {
     return prisma.user.findFirst({
       where: {

@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import Cookies from 'universal-cookie'
 import { SESSION_COOKIE } from '@shared/session'
 import { connectWebSocket } from './websocket'
+import { bus } from './bus'
 
 import { useInteractionStore } from '../features/interaction/stores/useInteractionStore'
 import { useMessageStore } from '../features/messaging/stores/messageStore'
@@ -65,5 +66,20 @@ export const useBootstrap = defineStore('bootstrap', () => {
     await bootstrap()
   }
 
-  return { bootstrap, onLogin }
+  function reset() {
+    isBootstrapped.value = false
+    bootstrapPromise.value = null
+  }
+
+  return { bootstrap, onLogin, reset }
+})
+
+// Reset the singleton so a subsequent login in the same app lifetime
+// (without a full page reload) calls bootstrap() fresh rather than
+// reusing a promise that resolved against a now-invalid session.
+// Do NOT call onLogin() here — that re-runs bootstrap() immediately,
+// which would attempt fetchOwnerProfile/connectWebSocket with an
+// invalidated session before the cookie is cleared.
+bus.on('auth:logout', () => {
+  useBootstrap().reset()
 })
