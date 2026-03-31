@@ -444,19 +444,21 @@ describe('POST /refresh', () => {
 })
 
 describe('POST /logout', () => {
-  it('bumps tokenVersion, deletes session and refresh tokens', async () => {
+  it('deletes only the current session and its refresh token, does not bump tokenVersion', async () => {
     const handler = fastify.routes['POST /logout']
     const deleteSession = vi.fn()
     const req = {
       user: { userId: 'user1', profileId: 'p1', tokenVersion: 0 },
+      cookies: { __refresh: 'tok-abc' },
       deleteSession,
     }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
-    expect(mockUserService.bumpTokenVersion).toHaveBeenCalledWith('user1')
+    expect(mockUserService.bumpTokenVersion).not.toHaveBeenCalled()
     expect(deleteSession).toHaveBeenCalled()
-    expect(mockRefreshTokenService.deleteAllForUser).toHaveBeenCalledWith('user1')
+    expect(mockRefreshTokenService.delete).toHaveBeenCalledWith('tok-abc', 'user1')
+    expect(mockRefreshTokenService.deleteAllForUser).not.toHaveBeenCalled()
     expect(reply.clearedCookies[0]).toMatchObject({
       name: '__session',
       opts: { path: '/' },
