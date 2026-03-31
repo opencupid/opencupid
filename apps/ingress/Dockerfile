@@ -1,4 +1,4 @@
-FROM ghcr.io/max-lt/nginx-jwt-module:latest
+FROM ghcr.io/max-lt/nginx-jwt-module:v3.4.4
 LABEL org.opencontainers.image.source=https://github.com/opencupid/opencupid
 
 RUN apk add --no-cache gettext

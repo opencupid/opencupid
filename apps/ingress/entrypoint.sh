@@ -3,6 +3,11 @@ set -eu
 
 CONF=/etc/nginx
 
+if [ -z "${JWT_SECRET:-}" ]; then
+  echo "Error: JWT_SECRET must be set and non-empty" >&2
+  exit 1
+fi
+
 # Build the CSP report-uri directive (empty string if not configured)
 if [ -n "${CSP_REPORT_URI:-}" ]; then
   export CSP_REPORT_DIRECTIVE="; report-uri ${CSP_REPORT_URI}"
