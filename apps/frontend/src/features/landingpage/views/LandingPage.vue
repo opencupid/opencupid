@@ -118,7 +118,7 @@ const siteName = __APP_CONFIG__.SITE_NAME
                   <div class="lp-feature-text">
                     <!-- Exchange ideas, connect on our travels, find like-minded souls nearby to hang out
                 with -->
-                    {{ t('landingpage.socialize_1') }}
+                    {{ t('landingpage.socialize_1', '') }}
                   </div>
                 </div>
               </BCol>
@@ -131,7 +131,7 @@ const siteName = __APP_CONFIG__.SITE_NAME
                   </div>
                   <div class="lp-feature-text">
                     <!-- Find a soulmate or playmate -->
-                    {{ t('landingpage.date_1') }}
+                    {{ t('landingpage.date_1', '') }}
                   </div>
                 </div>
               </BCol>

@@ -102,7 +102,7 @@
     "its_a_match": "Kölcsönös!",
     "like_button_title": "Komálom!",
     "like_error": "Hoppá, ez nem működött. Kérjük, próbáld meg újra.",
-    "like_them_back": "Jelöld vissza, ha Te is.",
+    "like_them_back": "Jelöld vissza, ha Te is.  ",
     "message_confirmation": "Elküldve!",
     "pass_button_title": "Passzolok",
     "revealed_like_explanation": "Látni fogja, hogy Te küldted.",
@@ -115,13 +115,13 @@
     "you_messaged_them": "Üzenetet küldtél nekik"
   },
   "landingpage": {
-    "date_1": "Ismerj meg egy lelki társat, partnert, vagy valakit, akivel együtt járhatod az utat",
+    "date_1":" ",
     "enter_button": "Belépés",
     "enter_button_loading": "Egy pillanat...",
     "footer_contribute": "Nyílt forráskód. Csatlakozz ",
     "footer_madeby": "Sok ❤️-tel készíti néhány önkéntes",
     "select_language": "Másik nyelv",
-    "socialize_1": "Találj útitársakat, helyi barátokat és hasonló gondolkodásúakat a közeledben",
+    "socialize_1": " ",
     "subtitle_1": "Mindannyian keressük a különféle kapcsolódásokat - társat, párt, hasonszőrűeket a környékről, tanítót, mentort, barátokat. Nem könnyű ez - szét vagyunk szóródva az ország különböző pontjain, falvakban, városokban, tanyákon. Gyakori, hogy hosszú idő után találkozunk először valakivel, aki csak pár faluval arrébb lakik ugyan, de nem keresztezik egymást útjaink. Vagy a szomszéd lépcsőházban, de sosem derül ki, hogy Ő is éppen tanyát keres és permakultúra videókat bingel a Youtubeon.\n\nEz itt egy biztonságos tér, ami segít a kapcsolódásban, ahol rátalálhatunk egymásra.",
     "title": "Ez itt a {siteName}",
     "title_lg": "Ez itt a {siteName}"
