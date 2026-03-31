@@ -12,6 +12,7 @@ export interface MapBounds {
   north: number
   west: number
   east: number
+  zoom: number
 }
 
 /** Props contract for custom marker icon components passed via `iconComponent`. */
@@ -30,4 +31,12 @@ export interface MapPoi {
   highlighted?: boolean
   /** The original domain object, passed through to the popup component as `:item` */
   source: unknown
+}
+
+/** A server-side cluster to render as a count badge (no profile data). */
+export interface MapCluster {
+  clusterId: number
+  count: number
+  location: PoiLocation
+  expansionZoom: number
 }

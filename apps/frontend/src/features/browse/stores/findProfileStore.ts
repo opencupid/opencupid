@@ -3,7 +3,12 @@ import { CanceledError } from 'axios'
 import { api, safeApiCall } from '@/lib/api'
 import type { PublicProfile } from '@zod/profile/profile.dto'
 import { PublicProfileArraySchema } from '@zod/profile/profile.dto'
-import type { GetMatchIdsResponse, GetProfilesResponse } from '@zod/apiResponse.dto'
+import type {
+  GetMatchIdsResponse,
+  GetProfilesResponse,
+  GetMapClustersResponse,
+  MapClusterResultDTO,
+} from '@zod/apiResponse.dto'
 import {
   storeSuccess,
   storeError,
@@ -14,18 +19,26 @@ import {
 } from '@/store/helpers'
 import { bus } from '@/lib/bus'
 
-export type MapBounds = { south: number; north: number; west: number; east: number }
+export type MapBounds = {
+  south: number
+  north: number
+  west: number
+  east: number
+  zoom: number
+}
 
 let mapBoundsAbortController: AbortController | null = null
-const cachedProfiles = new Map<string, PublicProfile>()
 let cachedBounds: MapBounds | null = null
+let cachedClusters: MapClusterResultDTO[] = []
+let cachedProfiles = new Map<string, PublicProfile>()
 
 function boundsContain(outer: MapBounds, inner: MapBounds): boolean {
   return (
     outer.south <= inner.south &&
     outer.north >= inner.north &&
     outer.west <= inner.west &&
-    outer.east >= inner.east
+    outer.east >= inner.east &&
+    outer.zoom === inner.zoom
   )
 }
 
@@ -37,32 +50,20 @@ function padBounds(bounds: MapBounds, factor: number): MapBounds {
     north: bounds.north + latPad,
     west: bounds.west - lonPad,
     east: bounds.east + lonPad,
+    zoom: bounds.zoom,
   }
-}
-
-function unionBounds(a: MapBounds, b: MapBounds): MapBounds {
-  return {
-    south: Math.min(a.south, b.south),
-    north: Math.max(a.north, b.north),
-    west: Math.min(a.west, b.west),
-    east: Math.max(a.east, b.east),
-  }
-}
-
-function profileInBounds(profile: PublicProfile, bounds: MapBounds): boolean {
-  const lat = profile.location?.lat
-  const lon = profile.location?.lon
-  if (lat == null || lon == null) return false
-  return lat >= bounds.south && lat <= bounds.north && lon >= bounds.west && lon <= bounds.east
 }
 
 function invalidateBoundsCache(): void {
+  cachedClusters = []
   cachedProfiles.clear()
   cachedBounds = null
 }
 
 type FindProfileStoreState = {
-  profileList: PublicProfile[] // List of public profiles
+  profileList: PublicProfile[] // List of public profiles (for list view)
+  mapClusters: MapClusterResultDTO[] // Server-side cluster data for map
+  mapProfiles: PublicProfile[] // Full profiles for unclustered map points
   matchedProfileIds: Set<string> // IDs of mutual dating preference matches
   lastMapBounds: MapBounds | null // Last map viewport bounds (for re-fetch on pref change)
   isLoading: boolean // Loading state
@@ -78,6 +79,8 @@ type StoreProfileListResponse = StoreSuccess<{ result: PublicProfile[] }> | Stor
 export const useFindProfileStore = defineStore('findProfile', {
   state: (): FindProfileStoreState => ({
     profileList: [] as PublicProfile[],
+    mapClusters: [] as MapClusterResultDTO[],
+    mapProfiles: [] as PublicProfile[],
     matchedProfileIds: new Set<string>(),
     lastMapBounds: null,
     isLoading: false,
@@ -109,7 +112,7 @@ export const useFindProfileStore = defineStore('findProfile', {
       }
     },
 
-    async findProfilesForMapBounds(
+    async findClustersForMapBounds(
       bounds: MapBounds
     ): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
       if (mapBoundsAbortController) {
@@ -120,37 +123,46 @@ export const useFindProfileStore = defineStore('findProfile', {
       this.lastMapBounds = bounds
 
       if (cachedBounds && boundsContain(cachedBounds, bounds)) {
-        this.profileList = [...cachedProfiles.values()].filter((p) => profileInBounds(p, bounds))
-        this.hasMoreProfiles = false
+        this.mapClusters = cachedClusters
+        this.mapProfiles = [...cachedProfiles.values()]
         this.isLoading = false
         return storeSuccess()
       }
 
       try {
         this.isLoading = true
-        this.hasMoreProfiles = false
 
         const paddedBounds = padBounds(bounds, 0.3)
-        const res = await api.get<GetProfilesResponse>('/find/social/map/bounds', {
-          params: paddedBounds,
+        const res = await api.get<GetMapClustersResponse>('/find/social/map/clusters', {
+          params: {
+            south: paddedBounds.south,
+            north: paddedBounds.north,
+            west: paddedBounds.west,
+            east: paddedBounds.east,
+            zoom: paddedBounds.zoom,
+          },
           signal: controller.signal,
         })
-        const fetched = PublicProfileArraySchema.parse(res.data.profiles)
 
-        for (const profile of fetched) {
+        cachedClusters = res.data.clusters
+        cachedProfiles = new Map<string, PublicProfile>()
+        const profiles = PublicProfileArraySchema.parse(res.data.profiles)
+        for (const profile of profiles) {
           cachedProfiles.set(profile.id, profile)
         }
-        cachedBounds = cachedBounds ? unionBounds(cachedBounds, paddedBounds) : paddedBounds
+        cachedBounds = paddedBounds
 
-        this.profileList = [...cachedProfiles.values()].filter((p) => profileInBounds(p, bounds))
+        this.mapClusters = cachedClusters
+        this.mapProfiles = [...cachedProfiles.values()]
 
         return storeSuccess()
       } catch (error: any) {
         if (error instanceof CanceledError) {
           return storeSuccess()
         }
-        this.profileList = []
-        return storeError(error, 'Failed to fetch bounded map profiles')
+        this.mapClusters = []
+        this.mapProfiles = []
+        return storeError(error, 'Failed to fetch map clusters')
       } finally {
         if (mapBoundsAbortController === controller) {
           this.isLoading = false
@@ -171,7 +183,7 @@ export const useFindProfileStore = defineStore('findProfile', {
       invalidateBoundsCache()
       await this.fetchDatingMatchIds()
       if (this.lastMapBounds) {
-        await this.findProfilesForMapBounds(this.lastMapBounds)
+        await this.findClustersForMapBounds(this.lastMapBounds)
       }
     },
 
@@ -238,6 +250,8 @@ export const useFindProfileStore = defineStore('findProfile', {
       }
       invalidateBoundsCache()
       this.profileList = []
+      this.mapClusters = []
+      this.mapProfiles = []
       this.matchedProfileIds = new Set()
       this.lastMapBounds = null
       this.isLoading = false

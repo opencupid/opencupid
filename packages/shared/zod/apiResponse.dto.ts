@@ -43,6 +43,30 @@ export type GetProfileOptInResponse = ApiSuccess<{ optIn: ProfileOptInSettings }
 export type GetPublicProfileResponse = ApiSuccess<{ profile: PublicProfileWithContext }>
 export type GetProfilesResponse = ApiSuccess<{ profiles: PublicProfileWithContext[] }>
 export type GetMatchIdsResponse = ApiSuccess<{ ids: string[] }>
+
+/** Server-side clustered map response */
+export interface MapClusterItemDTO {
+  cluster: true
+  clusterId: number
+  count: number
+  lat: number
+  lon: number
+  expansionZoom: number
+}
+
+export interface MapPointItemDTO {
+  cluster: false
+  profileId: string
+  lat: number
+  lon: number
+}
+
+export type MapClusterResultDTO = MapClusterItemDTO | MapPointItemDTO
+
+export type GetMapClustersResponse = ApiSuccess<{
+  clusters: MapClusterResultDTO[]
+  profiles: PublicProfileWithContext[]
+}>
 export type UpdateProfileResponse = ApiSuccess<{ profile: OwnerProfile }>
 export type UpdateProfileScopeResponse = ApiSuccess<{
   isDatingActive: boolean

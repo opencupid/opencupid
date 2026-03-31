@@ -7,11 +7,12 @@ import 'leaflet.markercluster'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 
-import type { MapPoi, MapBounds } from './OsmPoiMap.types'
+import type { MapPoi, MapBounds, MapCluster } from './OsmPoiMap.types'
 import {
   isValidLatLng,
   computeViewportMultiplier,
   createClusterIcon,
+  createServerClusterIcon,
   hydratePoiIcon,
   MAP_MAX_ZOOM,
 } from './mapUtils'
@@ -19,6 +20,7 @@ import {
 const props = withDefaults(
   defineProps<{
     items: MapPoi[]
+    clusters?: MapCluster[]
     iconComponent: Component
     popupComponent?: Component
     center?: [number, number]
@@ -36,6 +38,7 @@ const emit = defineEmits<{
   (e: 'item:select', id: string | number): void
   (e: 'map:ready', map: LMap): void
   (e: 'bounds-changed', bounds: MapBounds): void
+  (e: 'cluster:click', cluster: MapCluster): void
 }>()
 
 const mapEl: Ref<HTMLDivElement | null> = ref(null)
@@ -113,6 +116,8 @@ function closeSpider() {
 }
 
 let clusterGroup: any = null
+let serverClusterLayer: L.LayerGroup | null = null
+let serverClusterMarkers = new Map<number, LMarker>()
 
 function emitBounds() {
   if (boundsDebounceTimer) clearTimeout(boundsDebounceTimer)
@@ -131,6 +136,7 @@ function emitBounds() {
       north: b.getNorth(),
       west: b.getWest(),
       east: b.getEast(),
+      zoom: map.getZoom(),
     })
   }, 300)
 }
@@ -215,6 +221,8 @@ function initClusters(map: LMap) {
   map.on('zoomstart', closeSpider)
 
   map.addLayer(clusterGroup)
+
+  serverClusterLayer = L.layerGroup().addTo(map)
 }
 
 function onClusterMouseOver(e: any) {
@@ -309,10 +317,47 @@ function onMapMouseMove(ev: L.LeafletMouseEvent) {
 const popupTarget = ref<HTMLElement | null>(null)
 const popupItem = ref<MapPoi | null>(null)
 
+function updateServerClusters() {
+  if (!map || !serverClusterLayer || !isMapReady) return
+
+  const incoming = props.clusters ?? []
+  const incomingIds = new Set(incoming.map((c) => c.clusterId))
+
+  // Remove stale cluster markers
+  for (const [id, marker] of serverClusterMarkers) {
+    if (!incomingIds.has(id)) {
+      serverClusterLayer.removeLayer(marker)
+      serverClusterMarkers.delete(id)
+    }
+  }
+
+  // Add or update cluster markers
+  for (const cluster of incoming) {
+    const existing = serverClusterMarkers.get(cluster.clusterId)
+    if (existing) {
+      existing.setLatLng([cluster.location.lat, cluster.location.lon])
+      existing.setIcon(createServerClusterIcon(cluster.count))
+    } else {
+      const m = L.marker([cluster.location.lat, cluster.location.lon], {
+        icon: createServerClusterIcon(cluster.count),
+        keyboard: false,
+      })
+      m.on('click', () => {
+        if (!map) return
+        emit('cluster:click', cluster)
+        map.setView([cluster.location.lat, cluster.location.lon], cluster.expansionZoom)
+      })
+      serverClusterLayer.addLayer(m)
+      serverClusterMarkers.set(cluster.clusterId, m)
+    }
+  }
+}
+
 function onMapReady() {
   if (!map) return
   isMapReady = true
   emit('map:ready', map)
+  updateServerClusters()
   updateMarkers(true)
 }
 
@@ -320,11 +365,15 @@ function createMarker(item: MapPoi): LMarker {
   const isSelected = item.id === props.selectedId
   const m = L.marker([item.location.lat, item.location.lon], {
     title: item.title,
-    icon: hydratePoiIcon(props.iconComponent, {
-      image: item.image,
-      isSelected,
-      isHighlighted: item.highlighted ?? false,
-    }, iconCache),
+    icon: hydratePoiIcon(
+      props.iconComponent,
+      {
+        image: item.image,
+        isSelected,
+        isHighlighted: item.highlighted ?? false,
+      },
+      iconCache
+    ),
     keyboard: true,
   })
 
@@ -402,11 +451,15 @@ function updateMarkers(forceRebuild = false) {
       if (existing.highlighted !== item.highlighted || imageUrl !== existingUrl) {
         const marker = markers.get(id)!
         marker.setIcon(
-          hydratePoiIcon(props.iconComponent, {
-            image: item.image,
-            isSelected: id === props.selectedId,
-            isHighlighted: item.highlighted ?? false,
-          }, iconCache)
+          hydratePoiIcon(
+            props.iconComponent,
+            {
+              image: item.image,
+              isSelected: id === props.selectedId,
+              isHighlighted: item.highlighted ?? false,
+            },
+            iconCache
+          )
         )
       }
     }
@@ -486,6 +539,9 @@ function destroyMap() {
   clusterGroup?.off('spiderfied', onClusterSpiderfied)
   clusterGroup?.off('unspiderfied', onClusterUnspiderfied)
 
+  serverClusterMarkers.clear()
+  serverClusterLayer = null
+
   map.remove()
   map = null
   clusterGroup = null
@@ -504,8 +560,16 @@ onActivated(() => {
     map.flyTo(pendingCenter, lastStableZoom, { duration: 1 })
     pendingCenter = null
   }
+  updateServerClusters()
   updateMarkers(true)
 })
+
+watch(
+  () => props.clusters,
+  () => {
+    updateServerClusters()
+  }
+)
 
 watch(
   () => props.items,

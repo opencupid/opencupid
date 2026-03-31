@@ -16,10 +16,18 @@ vi.mock('@/lib/bootstrap', () => ({
 const mockFindProfileStore = {
   isLoading: false,
   profileList: [],
+  mapClusters: [] as any[],
+  mapProfiles: [] as any[],
   matchedProfileIds: new Set<string>(),
-  lastMapBounds: null as { south: number; north: number; west: number; east: number } | null,
+  lastMapBounds: null as {
+    south: number
+    north: number
+    west: number
+    east: number
+    zoom: number
+  } | null,
   fetchDatingMatchIds: vi.fn(),
-  findProfilesForMapBounds: vi.fn(),
+  findClustersForMapBounds: vi.fn(),
   invalidateMapCache: vi.fn(),
   hide: vi.fn(),
   teardown: vi.fn(),
@@ -85,43 +93,43 @@ describe('useSocialMatchViewModel', () => {
     expect(mockFindProfileStore.hide).toHaveBeenCalledWith('abc')
   })
 
-  it('onBoundsChanged calls findProfilesForMapBounds on the store', async () => {
-    mockFindProfileStore.findProfilesForMapBounds = vi.fn().mockResolvedValue({ success: true })
+  it('onBoundsChanged calls findClustersForMapBounds on the store', async () => {
+    mockFindProfileStore.findClustersForMapBounds = vi.fn().mockResolvedValue({ success: true })
     const vm = useSocialMatchViewModel()
-    const bounds = { south: 45, north: 48, west: 16, east: 23 }
+    const bounds = { south: 45, north: 48, west: 16, east: 23, zoom: 7 }
 
     await vm.onBoundsChanged(bounds)
 
-    expect(mockFindProfileStore.findProfilesForMapBounds).toHaveBeenCalledWith(bounds)
+    expect(mockFindProfileStore.findClustersForMapBounds).toHaveBeenCalledWith(bounds)
   })
 
   it('onBoundsChanged skips fetch when bounds are identical to lastMapBounds', async () => {
-    const bounds = { south: 45, north: 48, west: 16, east: 23 }
+    const bounds = { south: 45, north: 48, west: 16, east: 23, zoom: 7 }
     mockFindProfileStore.lastMapBounds = { ...bounds }
-    mockFindProfileStore.findProfilesForMapBounds = vi.fn().mockResolvedValue({ success: true })
+    mockFindProfileStore.findClustersForMapBounds = vi.fn().mockResolvedValue({ success: true })
     const vm = useSocialMatchViewModel()
 
     await vm.onBoundsChanged(bounds)
 
-    expect(mockFindProfileStore.findProfilesForMapBounds).not.toHaveBeenCalled()
+    expect(mockFindProfileStore.findClustersForMapBounds).not.toHaveBeenCalled()
   })
 
   it('fetches match IDs and map profiles in parallel when lastMapBounds exists', async () => {
-    const bounds = { south: 45, north: 48, west: 16, east: 23 }
+    const bounds = { south: 45, north: 48, west: 16, east: 23, zoom: 7 }
     mockFindProfileStore.lastMapBounds = bounds
     mockFindProfileStore.fetchDatingMatchIds = vi.fn().mockResolvedValue(undefined)
-    mockFindProfileStore.findProfilesForMapBounds = vi.fn().mockResolvedValue({ success: true })
+    mockFindProfileStore.findClustersForMapBounds = vi.fn().mockResolvedValue({ success: true })
 
     const vm = useSocialMatchViewModel()
     await vm.initialize()
 
     expect(mockFindProfileStore.fetchDatingMatchIds).toHaveBeenCalled()
-    expect(mockFindProfileStore.findProfilesForMapBounds).toHaveBeenCalledWith(bounds)
+    expect(mockFindProfileStore.findClustersForMapBounds).toHaveBeenCalledWith(bounds)
 
     // Both calls should be dispatched before either resolves — verify via
     // invocationCallOrder which is deterministic (no timer-based flakiness)
     const matchOrder = mockFindProfileStore.fetchDatingMatchIds.mock.invocationCallOrder[0]!
-    const boundsOrder = mockFindProfileStore.findProfilesForMapBounds.mock.invocationCallOrder[0]!
+    const boundsOrder = mockFindProfileStore.findClustersForMapBounds.mock.invocationCallOrder[0]!
     expect(Math.abs(matchOrder - boundsOrder)).toBe(1)
   })
 
@@ -135,21 +143,21 @@ describe('useSocialMatchViewModel', () => {
   })
 
   it('updatePrefs invalidates map cache before fetching bounded results', async () => {
-    const bounds = { south: 45, north: 48, west: 16, east: 23 }
+    const bounds = { south: 45, north: 48, west: 16, east: 23, zoom: 7 }
     mockFindProfileStore.lastMapBounds = bounds
     mockOwnerStore.persistMatchFilter = vi.fn().mockResolvedValue({ success: true })
     mockFindProfileStore.invalidateMapCache = vi.fn()
     mockFindProfileStore.fetchDatingMatchIds = vi.fn().mockResolvedValue(undefined)
-    mockFindProfileStore.findProfilesForMapBounds = vi.fn().mockResolvedValue({ success: true })
+    mockFindProfileStore.findClustersForMapBounds = vi.fn().mockResolvedValue({ success: true })
 
     const vm = useSocialMatchViewModel()
     await vm.updatePrefs()
 
     expect(mockFindProfileStore.invalidateMapCache).toHaveBeenCalledTimes(1)
-    expect(mockFindProfileStore.findProfilesForMapBounds).toHaveBeenCalledWith(bounds)
+    expect(mockFindProfileStore.findClustersForMapBounds).toHaveBeenCalledWith(bounds)
     expect(
       mockFindProfileStore.invalidateMapCache.mock.invocationCallOrder[0]! <
-        mockFindProfileStore.findProfilesForMapBounds.mock.invocationCallOrder[0]!
+        mockFindProfileStore.findClustersForMapBounds.mock.invocationCallOrder[0]!
     ).toBe(true)
   })
 
@@ -160,8 +168,8 @@ describe('useSocialMatchViewModel', () => {
       mockOwnerStore.fetchMatchFilter = vi.fn()
       mockFindProfileStore.invalidateMapCache = vi.fn()
       mockFindProfileStore.fetchDatingMatchIds = vi.fn()
-      mockFindProfileStore.findProfilesForMapBounds = vi.fn()
-      mockFindProfileStore.lastMapBounds = { south: 45, north: 48, west: 16, east: 23 }
+      mockFindProfileStore.findClustersForMapBounds = vi.fn()
+      mockFindProfileStore.lastMapBounds = { south: 45, north: 48, west: 16, east: 23, zoom: 7 }
 
       const vm = useSocialMatchViewModel()
       // initialize sets the snapshot to the current filter
@@ -172,7 +180,7 @@ describe('useSocialMatchViewModel', () => {
 
       expect(mockFindProfileStore.invalidateMapCache).not.toHaveBeenCalled()
       expect(mockFindProfileStore.fetchDatingMatchIds).not.toHaveBeenCalled()
-      expect(mockFindProfileStore.findProfilesForMapBounds).not.toHaveBeenCalled()
+      expect(mockFindProfileStore.findClustersForMapBounds).not.toHaveBeenCalled()
     })
 
     it('invalidates cache and refetches when filter was mutated externally before activation', async () => {
@@ -186,8 +194,8 @@ describe('useSocialMatchViewModel', () => {
       mockOwnerStore.fetchMatchFilter = vi.fn()
       mockFindProfileStore.invalidateMapCache = vi.fn()
       mockFindProfileStore.fetchDatingMatchIds = vi.fn().mockResolvedValue(undefined)
-      mockFindProfileStore.findProfilesForMapBounds = vi.fn().mockResolvedValue({ success: true })
-      const bounds = { south: 45, north: 48, west: 16, east: 23 }
+      mockFindProfileStore.findClustersForMapBounds = vi.fn().mockResolvedValue({ success: true })
+      const bounds = { south: 45, north: 48, west: 16, east: 23, zoom: 7 }
       mockFindProfileStore.lastMapBounds = bounds
 
       const vm = useSocialMatchViewModel()
@@ -203,7 +211,7 @@ describe('useSocialMatchViewModel', () => {
       expect(mockOwnerStore.fetchMatchFilter).not.toHaveBeenCalled()
       expect(mockFindProfileStore.invalidateMapCache).toHaveBeenCalledTimes(1)
       expect(mockFindProfileStore.fetchDatingMatchIds).toHaveBeenCalled()
-      expect(mockFindProfileStore.findProfilesForMapBounds).toHaveBeenCalledWith(bounds)
+      expect(mockFindProfileStore.findClustersForMapBounds).toHaveBeenCalledWith(bounds)
     })
 
     it('does not re-trigger a second refetch if called again with unchanged filter', async () => {
@@ -213,8 +221,8 @@ describe('useSocialMatchViewModel', () => {
       mockOwnerStore.fetchMatchFilter = vi.fn()
       mockFindProfileStore.invalidateMapCache = vi.fn()
       mockFindProfileStore.fetchDatingMatchIds = vi.fn().mockResolvedValue(undefined)
-      mockFindProfileStore.findProfilesForMapBounds = vi.fn().mockResolvedValue({ success: true })
-      mockFindProfileStore.lastMapBounds = { south: 45, north: 48, west: 16, east: 23 }
+      mockFindProfileStore.findClustersForMapBounds = vi.fn().mockResolvedValue({ success: true })
+      mockFindProfileStore.lastMapBounds = { south: 45, north: 48, west: 16, east: 23, zoom: 7 }
 
       const vm = useSocialMatchViewModel()
       await vm.initialize()

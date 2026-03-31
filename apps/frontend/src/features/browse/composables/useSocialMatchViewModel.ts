@@ -44,7 +44,7 @@ export function useSocialMatchViewModel() {
     await Promise.all([
       findProfileStore.fetchDatingMatchIds(),
       findProfileStore.lastMapBounds
-        ? findProfileStore.findProfilesForMapBounds(findProfileStore.lastMapBounds)
+        ? findProfileStore.findClustersForMapBounds(findProfileStore.lastMapBounds)
         : Promise.resolve(),
     ])
   }
@@ -58,7 +58,7 @@ export function useSocialMatchViewModel() {
     await Promise.all([
       findProfileStore.fetchDatingMatchIds(),
       findProfileStore.lastMapBounds
-        ? findProfileStore.findProfilesForMapBounds(findProfileStore.lastMapBounds)
+        ? findProfileStore.findClustersForMapBounds(findProfileStore.lastMapBounds)
         : Promise.resolve(),
     ])
     renderedFilterSnapshot = currentSnapshot
@@ -81,7 +81,7 @@ export function useSocialMatchViewModel() {
     if (sameBounds(findProfileStore.lastMapBounds, bounds)) return
     isLoading.value = true
     try {
-      const res = await findProfileStore.findProfilesForMapBounds(bounds)
+      const res = await findProfileStore.findClustersForMapBounds(bounds)
       if (!res.success) {
         storeError.value = res
       }
@@ -100,7 +100,7 @@ export function useSocialMatchViewModel() {
     return findProfileStore.profileList.length > 0
   })
 
-    // isNoOneAround is true if the only profile is the 
+  // isNoOneAround is true if the only profile is the
   // viewer themselves
   const isNoOneAround = computed(() => {
     const list = findProfileStore.profileList
@@ -144,6 +144,8 @@ export function useSocialMatchViewModel() {
     refreshIfFilterChanged,
     openProfile,
     profileList: computed(() => findProfileStore.profileList),
+    mapClusters: computed(() => findProfileStore.mapClusters),
+    mapProfiles: computed(() => findProfileStore.mapProfiles),
     matchedProfileIds: computed(() => findProfileStore.matchedProfileIds),
     isInitialized: isInitialized,
   }

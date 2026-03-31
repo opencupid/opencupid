@@ -4,6 +4,7 @@ const mockFindSocialProfilesWithLocation = vi.fn()
 const mockFindSocialProfilesInBounds = vi.fn()
 const mockFindSocialProfilesFor = vi.fn()
 const mockFindMutualMatchIds = vi.fn()
+const mockGetSocialMatchFilter = vi.fn()
 
 vi.mock('@/services/profileMatch.service', () => ({
   ProfileMatchService: {
@@ -12,8 +13,24 @@ vi.mock('@/services/profileMatch.service', () => ({
       findSocialProfilesWithLocation: mockFindSocialProfilesWithLocation,
       findSocialProfilesInBounds: mockFindSocialProfilesInBounds,
       findMutualMatchIds: mockFindMutualMatchIds,
-      getSocialMatchFilter: vi.fn(),
+      getSocialMatchFilter: mockGetSocialMatchFilter,
       updateSocialMatchFilter: vi.fn(),
+    }),
+  },
+}))
+
+const mockEnsureIndex = vi.fn()
+const mockGetClusters = vi.fn()
+const mockGetExcludedIds = vi.fn()
+const mockGetProfilesByIds = vi.fn()
+
+vi.mock('@/services/mapCluster.service', () => ({
+  MapClusterService: {
+    getInstance: () => ({
+      ensureIndex: mockEnsureIndex,
+      getClusters: mockGetClusters,
+      getExcludedIds: mockGetExcludedIds,
+      getProfilesByIds: mockGetProfilesByIds,
     }),
   },
 }))
@@ -198,6 +215,92 @@ describe('GET /social/map/bounds', () => {
       {
         session: mockSession,
         query: { south: '45.0', north: '48.0', west: '16.0', east: '23.0' },
+        log: { error: vi.fn() },
+      },
+      reply
+    )
+
+    expect(reply.statusCode).toBe(500)
+  })
+})
+
+describe('GET /social/map/clusters', () => {
+  const handler = () => fastify.routes['GET /social/map/clusters']
+
+  it('returns clusters and profiles for valid params', async () => {
+    const clusterResult = [
+      { cluster: true, clusterId: 1, count: 5, lat: 47, lon: 19, expansionZoom: 9 },
+      { cluster: false, profileId: 'p1', lat: 47.5, lon: 19.5 },
+    ]
+    const mockDbProfile = {
+      id: 'p1',
+      publicName: 'Alice',
+      lat: 47.5,
+      lon: 19.5,
+      country: 'HU',
+      cityName: 'Budapest',
+      localized: [],
+      profileImages: [],
+      tags: [],
+    }
+
+    mockEnsureIndex.mockResolvedValue(undefined)
+    mockGetExcludedIds.mockResolvedValue(new Set(['profile-123']))
+    mockGetClusters.mockReturnValue(clusterResult)
+    mockGetSocialMatchFilter.mockResolvedValue(null)
+    mockGetProfilesByIds.mockResolvedValue([mockDbProfile])
+
+    await handler()(
+      {
+        session: mockSession,
+        query: { south: '45.0', north: '48.0', west: '16.0', east: '23.0', zoom: '7' },
+        log: { error: vi.fn() },
+      },
+      reply
+    )
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    expect(reply.payload.clusters).toHaveLength(2)
+    expect(reply.payload.profiles).toHaveLength(1)
+    expect(mockEnsureIndex).toHaveBeenCalled()
+    expect(mockGetClusters).toHaveBeenCalledWith([16, 45, 23, 48], 7, expect.any(Set))
+  })
+
+  it('returns 400 when zoom is missing', async () => {
+    await handler()(
+      {
+        session: mockSession,
+        query: { south: '45.0', north: '48.0', west: '16.0', east: '23.0' },
+        log: { error: vi.fn() },
+      },
+      reply
+    )
+
+    expect(reply.statusCode).toBe(400)
+    expect(mockEnsureIndex).not.toHaveBeenCalled()
+  })
+
+  it('returns 403 when social is not active', async () => {
+    await handler()(
+      {
+        session: { ...mockSession, profile: { ...mockSession.profile, isSocialActive: false } },
+        query: { south: '45.0', north: '48.0', west: '16.0', east: '23.0', zoom: '7' },
+      },
+      reply
+    )
+
+    expect(reply.statusCode).toBe(403)
+    expect(mockEnsureIndex).not.toHaveBeenCalled()
+  })
+
+  it('returns 500 on service error', async () => {
+    mockEnsureIndex.mockRejectedValue(new Error('Index error'))
+
+    await handler()(
+      {
+        session: mockSession,
+        query: { south: '45.0', north: '48.0', west: '16.0', east: '23.0', zoom: '7' },
         log: { error: vi.fn() },
       },
       reply

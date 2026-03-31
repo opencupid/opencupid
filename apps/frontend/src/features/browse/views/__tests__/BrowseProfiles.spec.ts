@@ -46,7 +46,8 @@ const vmState = {
   viewerProfile: ref<Record<string, any>>({ isSocialActive: true }),
   isNoOneAround: ref(true),
   isLoading: ref(false),
-  profileList: ref([{ id: '1' }]),
+  mapClusters: ref([] as any[]),
+  mapProfiles: ref([] as any[]),
   storeError: ref(null),
   matchFilter: ref<{
     location: { country: string; cityName: string; lat: number | null; lon: number | null }

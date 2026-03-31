@@ -10,7 +10,7 @@ import MapView from '@/features/shared/components/MapView.vue'
 import ProfileMapCard from '../components/ProfileMapCard.vue'
 import NoResultsCTA from '../components/NoResultsCTA.vue'
 import MapIcon from '@/features/publicprofile/components/MapIcon.vue'
-import type { MapPoi } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
+import type { MapPoi, MapCluster } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
 
 defineOptions({ name: 'BrowseProfiles' })
 
@@ -18,7 +18,8 @@ const {
   viewerProfile,
   isNoOneAround,
   isLoading,
-  profileList,
+  mapClusters,
+  mapProfiles,
   matchedProfileIds,
   matchFilter,
   isInitialized,
@@ -42,7 +43,7 @@ onActivated(async () => {
 })
 
 const mapPois = computed<MapPoi[]>(() =>
-  profileList.value
+  mapProfiles.value
     .filter((p) => p.location?.lat != null && p.location?.lon != null)
     .map((p) => ({
       id: p.id,
@@ -51,6 +52,17 @@ const mapPois = computed<MapPoi[]>(() =>
       image: p.profileImages?.[0],
       highlighted: matchedProfileIds.value.has(p.id),
       source: p,
+    }))
+)
+
+const mapClusterItems = computed<MapCluster[]>(() =>
+  mapClusters.value
+    .filter((c): c is Extract<typeof c, { cluster: true }> => c.cluster)
+    .map((c) => ({
+      clusterId: c.clusterId,
+      count: c.count,
+      location: { lat: c.lat, lon: c.lon },
+      expansionZoom: c.expansionZoom,
     }))
 )
 
@@ -90,6 +102,7 @@ const mapCenter = computed<[number, number] | undefined>(() => {
       </BAlert>
       <MapView
         :items="mapPois"
+        :clusters="mapClusterItems"
         :icon-component="MapIcon"
         :center="mapCenter"
         :is-loading="isLoading"

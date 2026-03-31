@@ -4,10 +4,12 @@ import { z } from 'zod'
 import { sendError, sendForbiddenError } from '../helpers'
 
 import { ProfileMatchService, type OrderBy } from '@/services/profileMatch.service'
+import { MapClusterService } from '@/services/mapCluster.service'
 import {
   GetProfilesResponse,
   type GetMatchIdsResponse,
   type GetSocialMatchFilterResponse,
+  type GetMapClustersResponse,
 } from '@zod/apiResponse.dto'
 import { UpdateSocialMatchFilterPayloadSchema } from '@shared/zod/match/filters.dto'
 import { validateBody } from '../../utils/zodValidate'
@@ -29,6 +31,7 @@ const PaginationQuerySchema = z.object({
 const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
   // instantiate services
   const profileMatchService = ProfileMatchService.getInstance()
+  const mapClusterService = MapClusterService.getInstance()
 
   /**
    * GET /social
@@ -92,6 +95,10 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
     east: z.coerce.number(),
   })
 
+  const ClusterQuerySchema = BoundsQuerySchema.extend({
+    zoom: z.coerce.number().int().min(0).max(20),
+  })
+
   /**
    * GET /social/map/bounds
    * Returns social profiles strictly within the given geographic bounding box.
@@ -129,6 +136,66 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
     } catch (err) {
       req.log.error(err)
       return sendError(reply, 500, 'Failed to fetch bounded map profiles')
+    }
+  })
+
+  /**
+   * GET /social/map/clusters
+   * Returns server-side clustered map data. At low zoom levels, nearby profiles
+   * are grouped into lightweight cluster objects (count + centroid). At high zoom,
+   * individual profile points are returned with full profile data.
+   * @query {number} south - Required south latitude
+   * @query {number} north - Required north latitude
+   * @query {number} west - Required west longitude
+   * @query {number} east - Required east longitude
+   * @query {number} zoom - Current map zoom level (integer 0–20)
+   * @returns {GetMapClustersResponse}
+   */
+  fastify.get('/social/map/clusters', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    if (!req.session.profile.isSocialActive) {
+      return sendForbiddenError(reply)
+    }
+
+    const parsed = ClusterQuerySchema.safeParse(req.query)
+    if (!parsed.success) {
+      return sendError(reply, 400, 'Missing or invalid parameters (south, north, west, east, zoom)')
+    }
+
+    const myProfileId = req.session.profileId
+    const locale = req.session.lang
+    const { south, north, west, east, zoom } = parsed.data
+
+    try {
+      await mapClusterService.ensureIndex()
+
+      const excludeIds = await mapClusterService.getExcludedIds(myProfileId)
+
+      const bbox: [number, number, number, number] = [west, south, east, north]
+      const clusterResults = mapClusterService.getClusters(bbox, zoom, excludeIds)
+
+      // Collect individual point IDs to fetch full profile data
+      const pointIds = clusterResults.filter((r) => !r.cluster).map((r) => (r as any).profileId)
+
+      const userPrefs = await profileMatchService.getSocialMatchFilter(myProfileId)
+      const dbProfiles = await mapClusterService.getProfilesByIds(pointIds, myProfileId, userPrefs)
+      const profiles = dbProfiles.map((p) => mapProfileToPublic(p, false, locale))
+
+      // Only include cluster results for profiles that passed tag filtering
+      const fetchedProfileIds = new Set(profiles.map((p) => p.id))
+      const filteredResults = clusterResults.filter((r) => {
+        if (r.cluster) return true
+        return fetchedProfileIds.has(r.profileId)
+      })
+
+      const response: GetMapClustersResponse = {
+        success: true,
+        clusters: filteredResults,
+        profiles,
+      }
+      return reply.code(200).send(response)
+    } catch (err) {
+      req.log.error(err)
+      return sendError(reply, 500, 'Failed to fetch map clusters')
     }
   })
 

@@ -4,7 +4,7 @@ import { useDebounceFn } from '@vueuse/core'
 import type { Map as LMap } from 'leaflet'
 
 import OsmPoiMap from './osmPoiMap/OsmPoiMap.vue'
-import type { MapPoi, MapBounds } from './osmPoiMap/OsmPoiMap.types'
+import type { MapPoi, MapBounds, MapCluster } from './osmPoiMap/OsmPoiMap.types'
 import MapPlaceholder from './MapPlaceholder.vue'
 
 const BOUNDS_DEBOUNCE_MS = 500
@@ -12,6 +12,7 @@ const BOUNDS_DEBOUNCE_MS = 500
 const props = withDefaults(
   defineProps<{
     items: MapPoi[]
+    clusters?: MapCluster[]
     iconComponent: Component
     popupComponent?: Component
     center?: [number, number]
@@ -61,6 +62,7 @@ function onMapReady(map: LMap) {
     >
       <OsmPoiMap
         :items="props.items"
+        :clusters="props.clusters"
         :center="props.center"
         :zoom="props.zoom"
         :selected-id="props.selectedId"
