@@ -47,6 +47,11 @@ server {
     return 404;
   }
 
+  # Block bull-board on public domain — only accessible via mTLS admin domain
+  location /bull-board {
+    return 404;
+  }
+
   # --- Scanner / exploit-probe honeypots (return 444 = drop connection) ---
   location ~* \.(php|asp|aspx|cgi|pl|py|rb|jsp|jspx|env|git|sql|bak|old|zip|tar|gz)$ {
     return 444;
