@@ -2,4 +2,4 @@
 '@opencupid/ingress': patch
 ---
 
-Restore Server header suppression via headers-more module; deduplicate public CSP into nginx variable; add JWT_SECRET pre-flight check in entrypoint
+Deduplicate public CSP into nginx variable; add JWT_SECRET pre-flight check in entrypoint
