@@ -34,6 +34,8 @@
     "seed": "node prisma/seed/tags.js"
   },
   "dependencies": {
+    "@bull-board/api": "^6.20.6",
+    "@bull-board/fastify": "^6.20.6",
     "@fastify/cookie": "^11.0.2",
     "@fastify/cors": "11.2.0",
     "@fastify/jwt": "10.0.0",
