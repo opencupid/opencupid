@@ -3,7 +3,6 @@ import IORedis from 'ioredis'
 import { Prisma } from '@prisma/client'
 import { appConfig } from '@/lib/appconfig'
 import { prisma } from '@/lib/prisma'
-import { registerActivityFlushJob } from '@/queues/activityFlushQueue'
 
 const SESSION_GAP_MS = 30 * 60 * 1000
 
@@ -41,11 +40,8 @@ new Worker(
   'activity-flush',
   async (job) => {
     const { profileId } = job.data as { profileId: string }
+    if (!profileId) return
     await processActivityFlushJob(profileId)
   },
   { connection }
 )
-
-registerActivityFlushJob().catch((err) => {
-  console.error('Failed to register activity flush job:', err)
-})

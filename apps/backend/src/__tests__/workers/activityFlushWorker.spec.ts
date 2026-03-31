@@ -12,7 +12,6 @@ vi.mock('../../lib/prisma', () => ({
 vi.mock('../../queues/activityFlushQueue', () => ({
   activityFlushQueue: {},
   enqueueActivity: vi.fn(),
-  registerActivityFlushJob: vi.fn().mockResolvedValue(undefined),
 }))
 
 import { processActivityFlushJob } from '../../workers/activityFlushWorker'

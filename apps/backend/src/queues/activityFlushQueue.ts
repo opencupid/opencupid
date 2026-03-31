@@ -13,15 +13,3 @@ export const activityFlushQueue = new Queue('activity-flush', { connection })
 export async function enqueueActivity(profileId: string): Promise<void> {
   await activityFlushQueue.add('flush', { profileId }, { jobId: profileId })
 }
-
-/**
- * Register the repeatable flush job.
- * Safe to call on every startup — BullMQ deduplicates by cron pattern.
- */
-export async function registerActivityFlushJob(): Promise<void> {
-  await activityFlushQueue.upsertJobScheduler(
-    'flush-schedule',
-    { every: 10 * 60 * 1000 },
-    { name: 'flush' }
-  )
-}
