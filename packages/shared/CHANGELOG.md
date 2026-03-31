@@ -1,5 +1,11 @@
 # @opencupid/shared
 
+## 0.5.10
+
+### Patch Changes
+
+- bc41c10: Landing page update
+
 ## 0.5.9
 
 ### Patch Changes

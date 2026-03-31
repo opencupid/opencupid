@@ -1,6 +1,6 @@
 {
   "name": "@opencupid/shared",
-  "version": "0.5.9",
+  "version": "0.5.10",
   "main": "index.ts",
   "devDependencies": {
     "@prisma/client": "6.15.0",

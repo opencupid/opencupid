@@ -1,5 +1,11 @@
 # frontend
 
+## 0.44.1
+
+### Patch Changes
+
+- bc41c10: Landing page update
+
 ## 0.44.0
 
 ### Patch Changes
