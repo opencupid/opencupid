@@ -23,6 +23,8 @@ const bullBoardPlugin: FastifyPluginAsync = async (fastify: FastifyInstance) => 
 
   serverAdapter.setBasePath('/bull-board')
 
+  fastify.get('', async (_req, reply) => reply.redirect('/bull-board/'))
+
   fastify.register(serverAdapter.registerPlugin(), { prefix: '/' })
 }
 
