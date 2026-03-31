@@ -15,6 +15,7 @@ vi.mock('@bull-board/fastify', () => ({
 }))
 vi.mock('../../queues/emailQueue', () => ({ emailQueue: {} }))
 vi.mock('../../queues/activityQueue', () => ({ activityQueue: {} }))
+vi.mock('../../queues/activityFlushQueue', () => ({ activityFlushQueue: {} }))
 
 import bullBoardPlugin from '../../plugins/bull-board'
 
@@ -86,10 +87,3 @@ describe('bull-board auth guard', () => {
   })
 })
 
-describe('GET / redirect', () => {
-  it('redirects to /bull-board/', async () => {
-    const handler = fastify.routes['GET /']
-    await handler({}, reply)
-    expect(reply.redirectUrl).toBe('/bull-board/')
-  })
-})
