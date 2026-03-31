@@ -1,5 +1,15 @@
 # @opencupid/ingress
 
+## 0.45.0
+
+### Minor Changes
+
+- e004f68: Add Bull Board queue monitoring dashboard, accessible from the admin sidebar at /bull-board
+
+### Patch Changes
+
+- e61503b: Deduplicate public CSP into nginx variable; add JWT_SECRET pre-flight check in entrypoint
+
 ## 0.44.1
 
 ## 0.44.0

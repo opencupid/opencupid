@@ -1,5 +1,11 @@
 # @opencupid/shared
 
+## 0.5.11
+
+### Patch Changes
+
+- e004f68: Add Bull Board queue monitoring dashboard, accessible from the admin sidebar at /bull-board
+
 ## 0.5.10
 
 ### Patch Changes

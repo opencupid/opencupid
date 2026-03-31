@@ -1,5 +1,14 @@
 # frontend
 
+## 0.45.0
+
+### Patch Changes
+
+- 5cb0c05: Fix auth session logout bugs (#1231 follow-up)
+  - scope logout to current session only — remove tokenVersion bump that was invalidating all other active sessions across devices
+  - reset bootstrap singleton on auth:logout so a re-login in the same app lifetime re-fetches the profile
+  - replace hard redirect (window.location.href) on refresh failure with bus-driven router navigation to eliminate race with Vue lifecycle
+
 ## 0.44.1
 
 ### Patch Changes

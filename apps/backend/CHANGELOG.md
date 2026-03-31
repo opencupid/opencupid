@@ -1,5 +1,19 @@
 # backend
 
+## 0.45.0
+
+### Minor Changes
+
+- e004f68: Add Bull Board queue monitoring dashboard, accessible from the admin sidebar at /bull-board
+- 3d95b93: Replace Redis-debounced per-request activity writes with a BullMQ flush worker that gap-checks against Postgres directly, fixing FK violations caused by stale sessions for deleted users
+
+### Patch Changes
+
+- 5cb0c05: Fix auth session logout bugs (#1231 follow-up)
+  - scope logout to current session only — remove tokenVersion bump that was invalidating all other active sessions across devices
+  - reset bootstrap singleton on auth:logout so a re-login in the same app lifetime re-fetches the profile
+  - replace hard redirect (window.location.href) on refresh failure with bus-driven router navigation to eliminate race with Vue lifecycle
+
 ## 0.44.1
 
 ## 0.44.0

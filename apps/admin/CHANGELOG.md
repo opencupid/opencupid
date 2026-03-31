@@ -1,5 +1,11 @@
 # @opencupid/admin
 
+## 0.45.0
+
+### Minor Changes
+
+- e004f68: Add Bull Board queue monitoring dashboard, accessible from the admin sidebar at /bull-board
+
 ## 0.44.1
 
 ## 0.44.0
