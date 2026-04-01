@@ -30,9 +30,11 @@ export const jobDataSchema = z.object({
   windowOffsetMs: z.coerce.number().finite().nonnegative().default(ONE_DAY_MS),
 })
 
+type JobData = z.input<typeof jobDataSchema>
+
 const connection = new IORedis(appConfig.REDIS_URL, { maxRetriesPerRequest: null })
 
-new Worker(
+new Worker<JobData>(
   'onboarding-reminder',
   async (job) => {
     const { windowOffsetMs } = jobDataSchema.parse(job.data ?? {})
