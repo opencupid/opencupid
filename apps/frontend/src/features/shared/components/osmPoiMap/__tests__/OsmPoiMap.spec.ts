@@ -454,7 +454,7 @@ describe('OsmPoiMap', () => {
 
     expect(wrapper.emitted('bounds-changed')).toBeTruthy()
     expect(wrapper.emitted('bounds-changed')![0]).toEqual([
-      { south: 45.0, north: 48.0, west: 16.0, east: 23.0 },
+      { bounds: { south: 45.0, north: 48.0, west: 16.0, east: 23.0 }, zoom: expect.any(Number) },
     ])
 
     vi.useRealTimers()
@@ -846,7 +846,7 @@ describe('OsmPoiMap', () => {
 
     expect(wrapper.emitted('bounds-changed')).toHaveLength(1)
     expect(wrapper.emitted('bounds-changed')![0]).toEqual([
-      { south: 45.0, north: 48.0, west: 16.0, east: 23.0 },
+      { bounds: { south: 45.0, north: 48.0, west: 16.0, east: 23.0 }, zoom: expect.any(Number) },
     ])
 
     vi.useRealTimers()
