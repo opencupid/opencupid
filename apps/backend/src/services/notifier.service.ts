@@ -4,7 +4,13 @@ import i18next from 'i18next'
 import { dispatcher } from '@/queues/emailDispatcher'
 import type { EmailPayload } from './email/types'
 
-type NotificationType = 'login_link' | 'welcome' | 'new_message' | 'new_like' | 'new_match'
+type NotificationType =
+  | 'login_link'
+  | 'welcome'
+  | 'new_message'
+  | 'new_like'
+  | 'new_match'
+  | 'onboarding_reminder'
 
 type NotifiableUser = {
   id: string
@@ -19,6 +25,7 @@ interface NotificationParams {
   new_message: { sender: string; message: string; link: string }
   new_like: { link: string }
   new_match: { name: string; link: string }
+  onboarding_reminder: { link: string }
 }
 
 export class NotifierService {
@@ -45,6 +52,8 @@ export class NotifierService {
         return 'new_like'
       case 'new_match':
         return 'new_match'
+      case 'onboarding_reminder':
+        return 'onboarding_reminder'
     }
   }
 
@@ -125,7 +134,15 @@ export class NotifierService {
 
     const emailPayload = this.createEmailPayload(emailType, args, user)
 
-    await this.disp.dispatchEmail(emailPayload)
+    // Idempotent notifications (welcome, onboarding_reminder) use a deterministic jobId
+    // so BullMQ deduplicates retries. Event-driven notifications (login_link, new_message,
+    // new_like, new_match) append a timestamp to allow multiple sends per user.
+    const jobId =
+      emailType === 'welcome' || emailType === 'onboarding_reminder'
+        ? `${emailType}-${user.id}`
+        : `${emailType}-${user.id}-${Date.now()}`
+
+    await this.disp.dispatchEmail(emailPayload, jobId)
   }
 }
 

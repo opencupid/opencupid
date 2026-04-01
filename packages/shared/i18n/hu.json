@@ -69,6 +69,11 @@
       "footer": " ",
       "subject": "[{siteName}] Új üzeneted érkezett"
     },
+    "onboarding_reminder": {
+      "callToActionLabel": "Befejezem a profilomat",
+      "contentBody": "Szia, elkezdted a profilod beállítását, de még nem fejezted be. Ha problémába ütköztél, vagy valami nem volt teljesen egyértelmű, válaszolj nyugodtan erre az emailre, szívesen segítünk. Szép napot!",
+      "subject": "[{siteName}] Elkezdett regisztráció"
+    },
     "welcome": {
       "callToActionLabel": "Kapcsolódj",
       "contentBody": "Üdv a közösségben!",

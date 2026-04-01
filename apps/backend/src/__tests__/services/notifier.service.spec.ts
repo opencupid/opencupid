@@ -122,19 +122,22 @@ describe('NotifierService', () => {
 
     expect(mockGetFixedT).toHaveBeenCalledWith('de')
     expect(mockDispatchEmail).toHaveBeenCalledTimes(1)
-    expect(mockDispatchEmail).toHaveBeenCalledWith({
-      to: 'user@example.com',
-      subject: 'emails.new_like.subject-translated',
-      templateProps: {
-        siteName: 'OpenCupid',
-        publicName: 'Alice',
-        contentBody: 'emails.new_like.contentBody-translated',
-        callToActionLabel: 'emails.new_like.callToActionLabel-translated',
-        callToActionUrl: 'https://frontend.test/browse',
-        fallbackHint: 'emails.fallback_hint-translated',
-        footer: 'emails.new_like.footer-translated',
+    expect(mockDispatchEmail).toHaveBeenCalledWith(
+      {
+        to: 'user@example.com',
+        subject: 'emails.new_like.subject-translated',
+        templateProps: {
+          siteName: 'OpenCupid',
+          publicName: 'Alice',
+          contentBody: 'emails.new_like.contentBody-translated',
+          callToActionLabel: 'emails.new_like.callToActionLabel-translated',
+          callToActionUrl: 'https://frontend.test/browse',
+          fallbackHint: 'emails.fallback_hint-translated',
+          footer: 'emails.new_like.footer-translated',
+        },
       },
-    })
+      expect.stringMatching(/^new_like-user-1-\d+$/)
+    )
   })
 
   it('notifyUser: dispatches welcome email payload for resolved user', async () => {
@@ -148,19 +151,22 @@ describe('NotifierService', () => {
     const service = new NotifierService({ dispatchEmail: mockDispatchEmail } as any)
     await service.notifyUser('user-1', 'welcome', { link: 'https://frontend.test/me' })
 
-    expect(mockDispatchEmail).toHaveBeenCalledWith({
-      to: 'user@example.com',
-      subject: 'emails.welcome.subject-translated',
-      templateProps: {
-        siteName: 'OpenCupid',
-        publicName: 'Alice',
-        contentBody: 'emails.welcome.contentBody-translated',
-        callToActionLabel: 'emails.welcome.callToActionLabel-translated',
-        callToActionUrl: 'https://frontend.test/me',
-        fallbackHint: 'emails.fallback_hint-translated',
-        footer: 'emails.welcome.footer-translated',
+    expect(mockDispatchEmail).toHaveBeenCalledWith(
+      {
+        to: 'user@example.com',
+        subject: 'emails.welcome.subject-translated',
+        templateProps: {
+          siteName: 'OpenCupid',
+          publicName: 'Alice',
+          contentBody: 'emails.welcome.contentBody-translated',
+          callToActionLabel: 'emails.welcome.callToActionLabel-translated',
+          callToActionUrl: 'https://frontend.test/me',
+          fallbackHint: 'emails.fallback_hint-translated',
+          footer: 'emails.welcome.footer-translated',
+        },
       },
-    })
+      'welcome-user-1'
+    )
   })
 
   it('notifyUser: supports users without profile', async () => {
@@ -174,14 +180,17 @@ describe('NotifierService', () => {
     const service = new NotifierService({ dispatchEmail: mockDispatchEmail } as any)
     await service.notifyUser('user-2', 'welcome', { link: 'https://frontend.test/me' })
 
-    expect(mockDispatchEmail).toHaveBeenCalledWith({
-      to: 'user2@example.com',
-      subject: 'emails.welcome.subject-translated',
-      templateProps: expect.objectContaining({
-        publicName: '',
-        callToActionLabel: 'emails.welcome.callToActionLabel-translated',
-        callToActionUrl: 'https://frontend.test/me',
-      }),
-    })
+    expect(mockDispatchEmail).toHaveBeenCalledWith(
+      {
+        to: 'user2@example.com',
+        subject: 'emails.welcome.subject-translated',
+        templateProps: expect.objectContaining({
+          publicName: '',
+          callToActionLabel: 'emails.welcome.callToActionLabel-translated',
+          callToActionUrl: 'https://frontend.test/me',
+        }),
+      },
+      'welcome-user-2'
+    )
   })
 })
