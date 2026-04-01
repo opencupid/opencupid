@@ -38,6 +38,10 @@ export async function sendOnboardingReminders(): Promise<number> {
     await notifierService.notifyUser(user.id, 'onboarding_reminder', {
       link: onboardingUrl,
     })
+    // Stagger sends with a random 10-15s delay to avoid hitting SMTP rate limits
+    if (users.indexOf(user) < users.length - 1) {
+      await new Promise((resolve) => setTimeout(resolve, 10_000 + Math.random() * 5_000))
+    }
   }
 
   return users.length

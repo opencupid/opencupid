@@ -76,6 +76,10 @@ async function main() {
       }
     )
     console.log(`Queued: ${u.email}`)
+    // Stagger sends with a random 10-15s delay to avoid hitting SMTP rate limits
+    if (users.indexOf(u) < users.length - 1) {
+      await new Promise((resolve) => setTimeout(resolve, 10_000 + Math.random() * 5_000))
+    }
   }
 
   console.log(`Done — ${users.length} emails queued`)

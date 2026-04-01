@@ -72,7 +72,9 @@ describe('sendOnboardingReminders', () => {
     mockPrisma.user.findMany.mockResolvedValue([{ id: 'user-1' }, { id: 'user-2' }])
 
     const sendOnboardingReminders = await importService()
-    const count = await sendOnboardingReminders()
+    const promise = sendOnboardingReminders()
+    await vi.runAllTimersAsync()
+    const count = await promise
 
     expect(count).toBe(2)
     expect(mockNotifyUser).toHaveBeenCalledTimes(2)
