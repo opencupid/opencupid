@@ -4,6 +4,8 @@ import { z } from 'zod'
 import { sendError, sendForbiddenError } from '../helpers'
 
 import { ProfileMatchService, type OrderBy } from '@/services/profileMatch.service'
+import { ClusterService } from '@/services/cluster.service'
+import { enqueueClusterRebuild } from '@/queues/clusterQueue'
 import {
   GetProfilesResponse,
   type GetMatchIdsResponse,
@@ -29,6 +31,7 @@ const PaginationQuerySchema = z.object({
 const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
   // instantiate services
   const profileMatchService = ProfileMatchService.getInstance()
+  const clusterService = ClusterService.getInstance()
 
   /**
    * GET /social
@@ -92,6 +95,18 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
     east: z.coerce.number(),
   })
 
+  const ClusterQuerySchema = z.object({
+    south: z.coerce.number(),
+    north: z.coerce.number(),
+    west: z.coerce.number(),
+    east: z.coerce.number(),
+    zoom: z.coerce.number().int().min(0).max(20),
+  })
+
+  const LeavesQuerySchema = z.object({
+    clusterId: z.coerce.number().int(),
+  })
+
   /**
    * GET /social/map/bounds
    * Returns social profiles strictly within the given geographic bounding box.
@@ -131,6 +146,63 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
       return sendError(reply, 500, 'Failed to fetch bounded map profiles')
     }
   })
+
+  /**
+   * GET /social/map/clusters
+   * Returns map clusters for the visible viewport at a given zoom level.
+   * @query {number} south - Bounding box south latitude
+   * @query {number} north - Bounding box north latitude
+   * @query {number} west - Bounding box west longitude
+   * @query {number} east - Bounding box east longitude
+   * @query {number} zoom - Map zoom level (0–20)
+   * @returns {{ success: true, features: MapFeature[] }}
+   */
+  fastify.get('/social/map/clusters', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    if (!req.session.profile.isSocialActive) {
+      return sendForbiddenError(reply)
+    }
+
+    const parsed = ClusterQuerySchema.safeParse(req.query)
+    if (!parsed.success) {
+      return sendError(reply, 400, 'Missing or invalid parameters (south, north, west, east, zoom)')
+    }
+
+    const { south, north, west, east, zoom } = parsed.data
+    const bbox: [number, number, number, number] = [west, south, east, north]
+
+    try {
+      const features = await clusterService.getOrBuildClusters(req.session.profileId, bbox, zoom)
+      return reply.code(200).send({ success: true, features })
+    } catch (err) {
+      req.log.error(err)
+      return sendError(reply, 500, 'Failed to fetch clusters')
+    }
+  })
+
+  /**
+   * GET /social/map/clusters/leaves
+   * Returns the individual profile points that make up a cluster.
+   * @query {number} clusterId - The cluster ID to expand
+   * @returns {{ success: true, features: PointFeature[] }}
+   */
+  fastify.get(
+    '/social/map/clusters/leaves',
+    { onRequest: [fastify.authenticate] },
+    async (req, reply) => {
+      if (!req.session.profile.isSocialActive) {
+        return sendForbiddenError(reply)
+      }
+
+      const parsed = LeavesQuerySchema.safeParse(req.query)
+      if (!parsed.success) {
+        return sendError(reply, 400, 'Missing or invalid parameter (clusterId)')
+      }
+
+      const { clusterId } = parsed.data
+      const features = clusterService.getLeaves(req.session.profileId, clusterId)
+      return reply.code(200).send({ success: true, features })
+    }
+  )
 
   /**
    * GET /dating
@@ -240,6 +312,9 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
 
       const filter = mapSocialMatchFilterToDTO(updated, locale)
       const response: GetSocialMatchFilterResponse = { success: true, filter }
+      enqueueClusterRebuild(req.session.profileId).catch((err) => {
+        fastify.log.error(err, 'Failed to enqueue cluster rebuild')
+      })
       return reply.code(200).send(response)
     } catch (err) {
       fastify.log.error(err)
