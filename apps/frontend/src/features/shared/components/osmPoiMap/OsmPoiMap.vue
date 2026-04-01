@@ -27,6 +27,7 @@ const props = withDefaults(
     zoom?: number
     selectedId?: string | number
     fitToPois?: boolean
+    fetchPopupData?: (id: string | number) => Promise<unknown>
   }>(),
   {
     zoom: 7,
@@ -349,12 +350,20 @@ function createMarker(item: MapPoi): LMarker {
       className: item.highlighted ? 'item-popup item-popup-highlighted' : 'item-popup',
     })
 
-    m.on('popupopen', (e: L.PopupEvent) => {
+    m.on('popupopen', async (e: L.PopupEvent) => {
       const target = e.popup
         .getElement()
         ?.querySelector('.leaflet-popup-content') as HTMLElement | null
       popupTarget.value = target
       popupItem.value = item
+
+      if (props.fetchPopupData) {
+        const fullData = await props.fetchPopupData(item.id)
+        if (fullData) {
+          popupItem.value = { ...item, source: fullData }
+        }
+      }
+
       nextTick(() => e.popup.update())
     })
     m.on('popupclose', () => {
