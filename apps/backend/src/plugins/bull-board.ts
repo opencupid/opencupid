@@ -7,6 +7,7 @@ import { emailQueue } from '../queues/emailQueue'
 import { activityQueue } from '../queues/activityQueue'
 import { activityFlushQueue } from '../queues/activityFlushQueue'
 import { onboardingReminderQueue } from '../queues/onboardingReminderQueue'
+import { clusterQueue } from '@/queues/clusterQueue'
 
 const bullBoardPlugin: FastifyPluginAsync = async (fastify: FastifyInstance) => {
   // Guard: only allow requests that passed nginx mTLS admin proxy
@@ -24,6 +25,7 @@ const bullBoardPlugin: FastifyPluginAsync = async (fastify: FastifyInstance) => 
       new BullMQAdapter(activityQueue),
       new BullMQAdapter(activityFlushQueue),
       new BullMQAdapter(onboardingReminderQueue),
+      new BullMQAdapter(clusterQueue),
     ],
     serverAdapter,
   })
