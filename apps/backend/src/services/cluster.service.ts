@@ -1,6 +1,7 @@
 import Supercluster from 'supercluster'
 import type { Feature, Point } from 'geojson'
 import { ProfileMatchService } from './profileMatch.service'
+import { ImageService } from './image.service'
 import type { ClusterFeature, PointFeature, MapFeature } from '@shared/zod/map/cluster.dto'
 
 const MAP_MAX_ZOOM = 12
@@ -53,7 +54,9 @@ export class ClusterService {
           image: p.profileImages?.[0]
             ? {
                 blurhash: p.profileImages[0].blurhash ?? null,
-                url: p.profileImages[0].variants?.[0]?.url,
+                url: ImageService.getInstance()
+                  .getImageUrls(p.profileImages[0])
+                  .find((v) => v.size === 'thumb')?.url,
               }
             : null,
           highlighted: matchSet.has(p.id),
@@ -129,14 +132,15 @@ export class ClusterService {
       | Supercluster.PointFeature<PointProperties>,
     _profileId: string
   ): MapFeature {
-    if (f.properties.cluster) {
-      const clusterId = f.properties.cluster_id as number
+    const p = f.properties as Record<string, unknown>
+    if ('cluster' in p && p.cluster) {
+      const clusterId = p.cluster_id as number
       return {
         type: 'cluster',
         id: clusterId,
         lat: f.geometry.coordinates[1],
         lon: f.geometry.coordinates[0],
-        count: f.properties.point_count as number,
+        count: p.point_count as number,
         expansionZoom: this.indexes.get(_profileId)!.index.getClusterExpansionZoom(clusterId),
       } satisfies ClusterFeature
     }

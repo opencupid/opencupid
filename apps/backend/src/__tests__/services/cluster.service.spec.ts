@@ -16,6 +16,16 @@ vi.mock('@/lib/appconfig', () => ({
   appConfig: {},
 }))
 
+vi.mock('@/services/image.service', () => ({
+  ImageService: {
+    getInstance: () => ({
+      getImageUrls: (img: { storagePath: string }) => [
+        { size: 'thumb', url: `https://cdn.test/${img.storagePath}/thumb.webp` },
+      ],
+    }),
+  },
+}))
+
 import { ClusterService } from '@/services/cluster.service'
 
 const makeProfile = (id: string, lat: number, lon: number, name = 'User') => ({
@@ -30,7 +40,7 @@ const makeProfile = (id: string, lat: number, lon: number, name = 'User') => ({
     {
       id: 'img-1',
       blurhash: 'LEHV6nWB2yk8',
-      variants: [{ size: 'thumb', url: `https://cdn.test/${id}/thumb.jpg` }],
+      storagePath: `images/${id}/photo`,
     },
   ],
   tags: [],
