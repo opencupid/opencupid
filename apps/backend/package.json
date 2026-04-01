@@ -27,7 +27,7 @@
     "type-check": "tsc --noEmit",
     "test": "vitest --run",
     "test:watch": "vitest",
-    "test:i18n": "npx i18n-check --locales ../../packages/shared/i18n/api/ -s en --only missingKeys",
+    "test:i18n": "npx i18n-check --locales ../../packages/shared/i18n/ -s en --only missingKeys --exclude **/api/**",
     "test:coverage": "pnpm run test --coverage --coverage.reporter=text-summary"
   },
   "prisma": {
