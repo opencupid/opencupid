@@ -1,5 +1,12 @@
 # frontend
 
+## 0.45.1
+
+### Patch Changes
+
+- bb845d3: Restore Rubik Variable font with Latin Extended-A charset; fixes Hungarian Ő/ő/Ű/ű rendering (#1242)
+- 9a64ef3: Widen message bubbles and fix paragraph spacing in MessageList (#1241)
+
 ## 0.45.0
 
 ### Patch Changes
