@@ -52,7 +52,7 @@ async function handleCancel() {
           nav-class="justify-content-center"
         >
           <BTab
-            :title="$t('profiles.forms.my_dating_profile')"
+            :title="$t('profiles.forms.dating_profile_tab')"
             active
           >
             <fieldset
