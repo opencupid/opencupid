@@ -134,7 +134,15 @@ export class NotifierService {
 
     const emailPayload = this.createEmailPayload(emailType, args, user)
 
-    await this.disp.dispatchEmail(emailPayload, `${emailType}-${user.id}`)
+    // Idempotent notifications (welcome, onboarding_reminder) use a deterministic jobId
+    // so BullMQ deduplicates retries. Event-driven notifications (login_link, new_message,
+    // new_like, new_match) append a timestamp to allow multiple sends per user.
+    const jobId =
+      emailType === 'welcome' || emailType === 'onboarding_reminder'
+        ? `${emailType}-${user.id}`
+        : `${emailType}-${user.id}-${Date.now()}`
+
+    await this.disp.dispatchEmail(emailPayload, jobId)
   }
 }
 

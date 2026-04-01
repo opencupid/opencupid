@@ -32,6 +32,8 @@ export async function sendOnboardingReminders(): Promise<number> {
 
   const onboardingUrl = `${appConfig.FRONTEND_URL}/onboarding`
 
+  // TODO: select email/language/profile fields in findMany and call notifyResolvedUser
+  // directly to avoid N+1 queries (notifyUser re-fetches each user individually)
   for (const user of users) {
     await notifierService.notifyUser(user.id, 'onboarding_reminder', {
       link: onboardingUrl,

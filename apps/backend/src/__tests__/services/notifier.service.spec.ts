@@ -136,7 +136,7 @@ describe('NotifierService', () => {
           footer: 'emails.new_like.footer-translated',
         },
       },
-      'new_like-user-1'
+      expect.stringMatching(/^new_like-user-1-\d+$/)
     )
   })
 

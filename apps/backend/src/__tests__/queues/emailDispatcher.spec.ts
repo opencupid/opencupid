@@ -35,6 +35,8 @@ describe('EmailDispatcher.dispatchEmail', () => {
       jobId: 'welcome-user-1',
       attempts: 5,
       backoff: { type: 'exponential', delay: 5000 },
+      removeOnComplete: { age: 86400, count: 1000 },
+      removeOnFail: { age: 604800, count: 1000 },
     })
   })
 
