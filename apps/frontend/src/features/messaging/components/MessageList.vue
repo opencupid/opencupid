@@ -116,9 +116,9 @@ const handleScroll = () => {
   </div>
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
 .message {
-  max-width: 50%;
+  max-width: 60%;
   border-radius: 15px;
   word-break: break-word;
   padding: 0.25rem 0.5rem;
@@ -126,8 +126,8 @@ const handleScroll = () => {
   color: white;
 }
 
-.message-text :deep(p) {
-  margin: 0;
+.message-text p {
+  margin: 0 0 0 1rem;
 }
 
 .message-text :deep(a) {
