@@ -62,7 +62,9 @@ const mapPois = computed<MapPoi[]>(() =>
       id: p.id,
       title: p.publicName,
       location: { lat: p.lat, lon: p.lon },
-      image: p.image ?? undefined,
+      image: p.image?.url
+        ? { blurhash: p.image.blurhash, variants: [{ size: 'thumb', url: p.image.url }] }
+        : undefined,
       highlighted: p.highlighted,
       source: p,
     }))
