@@ -1,5 +1,11 @@
 # backend
 
+## 0.46.1
+
+### Patch Changes
+
+- 26f4289: Make onboarding reminder time window configurable via job data (`windowOffsetMs`); remove backfill script
+
 ## 0.46.0
 
 ### Minor Changes

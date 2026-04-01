@@ -1,5 +1,11 @@
 # frontend
 
+## 0.46.1
+
+### Patch Changes
+
+- 2190b30: Fix RecordFetchError when loading Hungarian locale on stale cached bundles (#1247)
+
 ## 0.46.0
 
 ### Patch Changes
