@@ -27,8 +27,6 @@ describe('sendOnboardingReminders', () => {
   beforeEach(() => {
     vi.resetAllMocks()
     vi.useFakeTimers()
-    // Fix "now" to 2026-04-01T12:00:00Z
-    vi.setSystemTime(new Date('2026-04-01T12:00:00Z'))
 
     mockPrisma = {
       user: {
@@ -46,22 +44,20 @@ describe('sendOnboardingReminders', () => {
     return mod.sendOnboardingReminders
   }
 
-  it('queries the correct 24h window (1-2 days ago)', async () => {
+  it('queries using the provided window dates', async () => {
+    const windowStart = new Date('2026-03-30T12:00:00.000Z')
+    const windowEnd = new Date('2026-03-31T12:00:00.000Z')
     const sendOnboardingReminders = await importService()
-    await sendOnboardingReminders()
+    await sendOnboardingReminders(windowStart, windowEnd)
 
     const call = mockPrisma.user.findMany.mock.calls[0][0]
-    const { gte, lt } = call.where.createdAt
-
-    // 2 days ago = 2026-03-30T12:00:00Z
-    expect(gte.toISOString()).toBe('2026-03-30T12:00:00.000Z')
-    // 1 day ago = 2026-03-31T12:00:00Z
-    expect(lt.toISOString()).toBe('2026-03-31T12:00:00.000Z')
+    expect(call.where.createdAt.gte).toBe(windowStart)
+    expect(call.where.createdAt.lt).toBe(windowEnd)
   })
 
   it('filters for users with no profile or unfinished onboarding', async () => {
     const sendOnboardingReminders = await importService()
-    await sendOnboardingReminders()
+    await sendOnboardingReminders(new Date('2026-03-30T12:00:00Z'), new Date('2026-03-31T12:00:00Z'))
 
     const call = mockPrisma.user.findMany.mock.calls[0][0]
     expect(call.where.OR).toEqual([{ profile: null }, { profile: { isOnboarded: false } }])
@@ -72,7 +68,10 @@ describe('sendOnboardingReminders', () => {
     mockPrisma.user.findMany.mockResolvedValue([{ id: 'user-1' }, { id: 'user-2' }])
 
     const sendOnboardingReminders = await importService()
-    const promise = sendOnboardingReminders()
+    const promise = sendOnboardingReminders(
+      new Date('2026-03-30T12:00:00Z'),
+      new Date('2026-03-31T12:00:00Z')
+    )
     await vi.runAllTimersAsync()
     const count = await promise
 
@@ -88,7 +87,10 @@ describe('sendOnboardingReminders', () => {
 
   it('returns 0 and sends nothing when no users match', async () => {
     const sendOnboardingReminders = await importService()
-    const count = await sendOnboardingReminders()
+    const count = await sendOnboardingReminders(
+      new Date('2026-03-30T12:00:00Z'),
+      new Date('2026-03-31T12:00:00Z')
+    )
 
     expect(count).toBe(0)
     expect(mockNotifyUser).not.toHaveBeenCalled()
