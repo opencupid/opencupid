@@ -3,7 +3,8 @@ import { CanceledError } from 'axios'
 import { api, safeApiCall } from '@/lib/api'
 import type { PublicProfile } from '@zod/profile/profile.dto'
 import { PublicProfileArraySchema } from '@zod/profile/profile.dto'
-import type { GetMatchIdsResponse, GetProfilesResponse } from '@zod/apiResponse.dto'
+import type { GetMatchIdsResponse, GetProfilesResponse, GetPublicProfileResponse } from '@zod/apiResponse.dto'
+import type { MapFeature } from '@shared/zod/map/cluster.dto'
 import {
   storeSuccess,
   storeError,
@@ -19,6 +20,12 @@ export type MapBounds = { south: number; north: number; west: number; east: numb
 let mapBoundsAbortController: AbortController | null = null
 const cachedProfiles = new Map<string, PublicProfile>()
 let cachedBounds: MapBounds | null = null
+
+let clusterAbortController: AbortController | null = null
+let cachedClusterZoom: number | null = null
+let cachedClusterBounds: MapBounds | null = null
+const popupCache = new Map<string, PublicProfile>()
+const POPUP_CACHE_MAX = 20
 
 function boundsContain(outer: MapBounds, inner: MapBounds): boolean {
   return (
@@ -59,10 +66,14 @@ function profileInBounds(profile: PublicProfile, bounds: MapBounds): boolean {
 function invalidateBoundsCache(): void {
   cachedProfiles.clear()
   cachedBounds = null
+  cachedClusterBounds = null
+  cachedClusterZoom = null
+  popupCache.clear()
 }
 
 type FindProfileStoreState = {
   profileList: PublicProfile[] // List of public profiles
+  clusterFeatures: MapFeature[] // Map cluster features
   matchedProfileIds: Set<string> // IDs of mutual dating preference matches
   lastMapBounds: MapBounds | null // Last map viewport bounds (for re-fetch on pref change)
   isLoading: boolean // Loading state
@@ -78,6 +89,7 @@ type StoreProfileListResponse = StoreSuccess<{ result: PublicProfile[] }> | Stor
 export const useFindProfileStore = defineStore('findProfile', {
   state: (): FindProfileStoreState => ({
     profileList: [] as PublicProfile[],
+    clusterFeatures: [] as MapFeature[],
     matchedProfileIds: new Set<string>(),
     lastMapBounds: null,
     isLoading: false,
@@ -158,6 +170,75 @@ export const useFindProfileStore = defineStore('findProfile', {
       }
     },
 
+    async findClustersForMapBounds(
+      bounds: MapBounds,
+      zoom: number
+    ): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
+      if (clusterAbortController) {
+        clusterAbortController.abort()
+      }
+      const controller = new AbortController()
+      clusterAbortController = controller
+      this.lastMapBounds = bounds
+
+      const zoomChanged = cachedClusterZoom !== zoom
+      if (
+        !zoomChanged &&
+        cachedClusterBounds &&
+        boundsContain(cachedClusterBounds, bounds)
+      ) {
+        this.isLoading = false
+        return storeSuccess()
+      }
+
+      try {
+        this.isLoading = true
+
+        const paddedBounds = padBounds(bounds, 0.3)
+        const res = await api.get<{ success: true; features: MapFeature[] }>(
+          '/find/social/map/clusters',
+          {
+            params: { ...paddedBounds, zoom },
+            signal: controller.signal,
+          }
+        )
+
+        this.clusterFeatures = res.data.features
+        cachedClusterBounds = paddedBounds
+        cachedClusterZoom = zoom
+
+        return storeSuccess()
+      } catch (error: any) {
+        if (error instanceof CanceledError) {
+          return storeSuccess()
+        }
+        this.clusterFeatures = []
+        return storeError(error, 'Failed to fetch map clusters')
+      } finally {
+        if (clusterAbortController === controller) {
+          this.isLoading = false
+        }
+      }
+    },
+
+    async fetchProfileForPopup(profileId: string): Promise<PublicProfile | null> {
+      const cached = popupCache.get(profileId)
+      if (cached) return cached
+
+      try {
+        const res = await api.get<GetPublicProfileResponse>(`/profiles/${profileId}`)
+        const profile = res.data.profile
+        if (popupCache.size >= POPUP_CACHE_MAX) {
+          const firstKey = popupCache.keys().next().value!
+          popupCache.delete(firstKey)
+        }
+        popupCache.set(profileId, profile)
+        return profile
+      } catch {
+        return null
+      }
+    },
+
     async fetchDatingMatchIds(): Promise<void> {
       try {
         const res = await safeApiCall(() => api.get<GetMatchIdsResponse>('/find/dating/match-ids'))
@@ -169,9 +250,8 @@ export const useFindProfileStore = defineStore('findProfile', {
 
     async refetchBounds(): Promise<void> {
       invalidateBoundsCache()
-      await this.fetchDatingMatchIds()
       if (this.lastMapBounds) {
-        await this.findProfilesForMapBounds(this.lastMapBounds)
+        await this.findClustersForMapBounds(this.lastMapBounds, cachedClusterZoom ?? 7)
       }
     },
 
@@ -236,8 +316,13 @@ export const useFindProfileStore = defineStore('findProfile', {
         mapBoundsAbortController.abort()
         mapBoundsAbortController = null
       }
+      if (clusterAbortController) {
+        clusterAbortController.abort()
+        clusterAbortController = null
+      }
       invalidateBoundsCache()
       this.profileList = []
+      this.clusterFeatures = []
       this.matchedProfileIds = new Set()
       this.lastMapBounds = null
       this.isLoading = false
