@@ -30,7 +30,7 @@ function isLastChecked(value: HasKidsType): boolean {
 
 <template>
   <div>
-    <label>{{ t('profiles.forms.kids_label') }}</label>
+    <label>{{ t('profiles.forms.kids_preference_label') }}</label>
     <BListGroup>
       <BListGroupItem
         v-for="s in checkboxOptions"
