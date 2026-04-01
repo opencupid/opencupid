@@ -5,7 +5,8 @@ import { useBootstrap } from '@/lib/bootstrap'
 
 import type { StoreError } from '@/store/helpers'
 
-import { useFindProfileStore, type MapBounds } from '@/features/browse/stores/findProfileStore'
+import type { BoundsWithZoom } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
+import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 
 export function useSocialMatchViewModel() {
@@ -20,6 +21,7 @@ export function useSocialMatchViewModel() {
   // Tracks the filter snapshot that was used for the last map fetch.
   // Plain variable — not reactive — it's internal bookkeeping, not UI state.
   let renderedFilterSnapshot = ''
+  let lastZoom = 7
 
   const initialize = async () => {
     await useBootstrap().bootstrap()
@@ -41,12 +43,9 @@ export function useSocialMatchViewModel() {
   }
 
   const fetchResults = async () => {
-    await Promise.all([
-      findProfileStore.fetchDatingMatchIds(),
-      findProfileStore.lastMapBounds
-        ? findProfileStore.findProfilesForMapBounds(findProfileStore.lastMapBounds)
-        : Promise.resolve(),
-    ])
+    if (findProfileStore.lastMapBounds) {
+      await findProfileStore.findClustersForMapBounds(findProfileStore.lastMapBounds, lastZoom)
+    }
   }
 
   // Called on onActivated to handle the case where the filter was mutated
@@ -55,20 +54,21 @@ export function useSocialMatchViewModel() {
     const currentSnapshot = JSON.stringify(ownerStore.matchFilter)
     if (currentSnapshot === renderedFilterSnapshot) return
     findProfileStore.invalidateMapCache()
-    await Promise.all([
-      findProfileStore.fetchDatingMatchIds(),
-      findProfileStore.lastMapBounds
-        ? findProfileStore.findProfilesForMapBounds(findProfileStore.lastMapBounds)
-        : Promise.resolve(),
-    ])
+    await fetchResults()
     renderedFilterSnapshot = currentSnapshot
   }
 
   // moveend fires after updateMarkers() rebuilds the cluster
   // layer, which triggers emitBounds → debounced bounds-changed
   // → onBoundsChanged → redundant identical fetch
-  function sameBounds(a: MapBounds | null, b: MapBounds): boolean {
+  function sameViewport(
+    a: { south: number; north: number; west: number; east: number } | null,
+    aZoom: number,
+    b: { south: number; north: number; west: number; east: number },
+    bZoom: number,
+  ): boolean {
     return (
+      aZoom === bZoom &&
       a !== null &&
       a.south === b.south &&
       a.north === b.north &&
@@ -77,11 +77,12 @@ export function useSocialMatchViewModel() {
     )
   }
 
-  const onBoundsChanged = async (bounds: MapBounds) => {
-    if (sameBounds(findProfileStore.lastMapBounds, bounds)) return
+  const onBoundsChanged = async ({ bounds, zoom }: BoundsWithZoom) => {
+    if (sameViewport(findProfileStore.lastMapBounds, lastZoom, bounds, zoom)) return
+    lastZoom = zoom
     isLoading.value = true
     try {
-      const res = await findProfileStore.findProfilesForMapBounds(bounds)
+      const res = await findProfileStore.findClustersForMapBounds(bounds, zoom)
       if (!res.success) {
         storeError.value = res
       }
@@ -97,15 +98,21 @@ export function useSocialMatchViewModel() {
   const viewerProfile = computed(() => ownerStore.profile)
 
   const haveResults = computed(() => {
-    return findProfileStore.profileList.length > 0
+    return findProfileStore.clusterFeatures.length > 0
   })
 
-    // isNoOneAround is true if the only profile is the 
+  // isNoOneAround is true if the only profile is the
   // viewer themselves
   const isNoOneAround = computed(() => {
-    const list = findProfileStore.profileList
-    if (list.length === 0) return false
-    if (list.length === 1 && list[0]?.id === viewerProfile.value?.id) return true
+    const features = findProfileStore.clusterFeatures
+    if (features.length === 0) return false
+    if (
+      features.length === 1 &&
+      features[0].type === 'point' &&
+      features[0].id === viewerProfile.value?.id
+    ) {
+      return true
+    }
     return false
   })
 
@@ -134,7 +141,7 @@ export function useSocialMatchViewModel() {
     viewerProfile,
     haveResults,
     isNoOneAround,
-    isLoading: isLoading,
+    isLoading,
     storeError,
     initialize,
     hideProfile,
@@ -143,8 +150,7 @@ export function useSocialMatchViewModel() {
     onBoundsChanged,
     refreshIfFilterChanged,
     openProfile,
-    profileList: computed(() => findProfileStore.profileList),
-    matchedProfileIds: computed(() => findProfileStore.matchedProfileIds),
-    isInitialized: isInitialized,
+    clusterFeatures: computed(() => findProfileStore.clusterFeatures),
+    isInitialized,
   }
 }
