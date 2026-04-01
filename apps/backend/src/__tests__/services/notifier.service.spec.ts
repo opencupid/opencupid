@@ -136,7 +136,7 @@ describe('NotifierService', () => {
           footer: 'emails.new_like.footer-translated',
         },
       },
-      'new_like:user-1'
+      'new_like-user-1'
     )
   })
 
@@ -165,7 +165,7 @@ describe('NotifierService', () => {
           footer: 'emails.welcome.footer-translated',
         },
       },
-      'welcome:user-1'
+      'welcome-user-1'
     )
   })
 
@@ -190,7 +190,7 @@ describe('NotifierService', () => {
           callToActionUrl: 'https://frontend.test/me',
         }),
       },
-      'welcome:user-2'
+      'welcome-user-2'
     )
   })
 })

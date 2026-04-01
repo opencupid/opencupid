@@ -134,7 +134,7 @@ export class NotifierService {
 
     const emailPayload = this.createEmailPayload(emailType, args, user)
 
-    await this.disp.dispatchEmail(emailPayload, `${emailType}:${user.id}`)
+    await this.disp.dispatchEmail(emailPayload, `${emailType}-${user.id}`)
   }
 }
 
