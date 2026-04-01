@@ -1,5 +1,15 @@
 # backend
 
+## 0.46.0
+
+### Minor Changes
+
+- 1362392: Add daily onboarding reminder email for users who registered 3 days ago but haven't completed their profile
+
+### Patch Changes
+
+- 48db9e1: Consolidate i18n: merge api/ email strings into root locale files, add ICU support to backend (#994)
+
 ## 0.45.1
 
 ## 0.45.0

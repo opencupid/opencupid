@@ -1,5 +1,11 @@
 # frontend
 
+## 0.46.0
+
+### Patch Changes
+
+- a2acd2d: Disambiguate kids form labels and dating profile tab title (#1246)
+
 ## 0.45.1
 
 ### Patch Changes
