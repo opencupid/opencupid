@@ -8,6 +8,7 @@ import './lib/i18n' // Initialize i18next with translations
 import './workers/emailWorker' // ← side‐effect: starts the worker
 import './workers/activityWorker' // ← side-effect: starts the activity distill worker
 import './workers/activityFlushWorker' // ← side-effect: starts the activity flush worker
+import './workers/onboardingReminderWorker' // ← side-effect: starts the onboarding reminder worker
 import { checkUserContentRoot } from '@/lib/media'
 
 import { ImageProcessor } from './services/imageprocessor'

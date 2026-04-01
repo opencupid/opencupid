@@ -29,13 +29,13 @@ describe('EmailDispatcher.dispatchEmail', () => {
       },
     }
 
-    await dispatcher.dispatchEmail(payload)
+    await dispatcher.dispatchEmail(payload, 'welcome:user-1')
 
-    expect(mockAdd).toHaveBeenCalledWith(
-      'sendEmail',
-      payload,
-      { attempts: 5, backoff: { type: 'exponential', delay: 5000 } }
-    )
+    expect(mockAdd).toHaveBeenCalledWith('sendEmail', payload, {
+      jobId: 'welcome:user-1',
+      attempts: 5,
+      backoff: { type: 'exponential', delay: 5000 },
+    })
   })
 
   it('passes through different email content', async () => {
@@ -53,12 +53,12 @@ describe('EmailDispatcher.dispatchEmail', () => {
       },
     }
 
-    await dispatcher.dispatchEmail(payload)
+    await dispatcher.dispatchEmail(payload, 'login_link:user-2')
 
     expect(mockAdd).toHaveBeenCalledWith(
       'sendEmail',
       payload,
-      expect.objectContaining({ attempts: 5 })
+      expect.objectContaining({ jobId: 'login_link:user-2', attempts: 5 })
     )
   })
 })
