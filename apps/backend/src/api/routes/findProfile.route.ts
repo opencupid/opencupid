@@ -12,6 +12,7 @@ import {
   type GetSocialMatchFilterResponse,
 } from '@zod/apiResponse.dto'
 import { UpdateSocialMatchFilterPayloadSchema } from '@shared/zod/match/filters.dto'
+import { MAP_MAX_ZOOM } from '@shared/maps'
 import { validateBody } from '../../utils/zodValidate'
 import { mapProfileToPublic } from '../mappers/profile.mappers'
 import { mapSocialMatchFilterToDTO } from '../mappers/profileMatch.mappers'
@@ -100,7 +101,7 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
     north: z.coerce.number(),
     west: z.coerce.number(),
     east: z.coerce.number(),
-    zoom: z.coerce.number().int().min(0).max(20),
+    zoom: z.coerce.number().int().min(0).max(MAP_MAX_ZOOM),
   })
 
   const LeavesQuerySchema = z.object({
