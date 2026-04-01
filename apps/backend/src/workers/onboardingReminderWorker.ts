@@ -4,12 +4,39 @@ import { appConfig } from '@/lib/appconfig'
 import { sendOnboardingReminders } from '@/services/onboardingReminder.service'
 import { registerOnboardingReminderJob } from '@/queues/onboardingReminderQueue'
 
+const ONE_DAY_MS = 24 * 60 * 60 * 1000
+
+/**
+ * Job data schema (all fields optional):
+ *
+ *   { windowOffsetMs?: number }
+ *
+ * - windowOffsetMs: how far back (in ms) the END of the 24h registration window sits
+ *                   relative to "now". Defaults to ONE_DAY_MS (1 day ago).
+ *
+ * The worker always scans a 24h window:
+ *   windowStart = now - windowOffsetMs - ONE_DAY_MS
+ *   windowEnd   = now - windowOffsetMs
+ *
+ * Examples:
+ *   {}                            → users who registered 1–2 days ago  (default daily cron)
+ *   { windowOffsetMs: 172800000 } → users who registered 2–3 days ago
+ *   { windowOffsetMs: 259200000 } → users who registered 3–4 days ago
+ *
+ * To backfill several days, enqueue one job per day with increasing windowOffsetMs values.
+ * BullMQ deduplicates via the deterministic jobId in the notifier, so re-runs are safe.
+ */
+
 const connection = new IORedis(appConfig.REDIS_URL, { maxRetriesPerRequest: null })
 
 new Worker(
   'onboarding-reminder',
-  async () => {
-    const count = await sendOnboardingReminders()
+  async (job) => {
+    const windowOffsetMs: number = job.data?.windowOffsetMs ?? ONE_DAY_MS
+    const now = Date.now()
+    const windowStart = new Date(now - windowOffsetMs - ONE_DAY_MS)
+    const windowEnd = new Date(now - windowOffsetMs)
+    const count = await sendOnboardingReminders(windowStart, windowEnd)
     if (count > 0) {
       console.log(`Sent ${count} onboarding reminder(s)`)
     }

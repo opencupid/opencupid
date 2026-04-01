@@ -2,19 +2,20 @@ import { prisma } from '@/lib/prisma'
 import { notifierService } from './notifier.service'
 import { appConfig } from '@/lib/appconfig'
 
-const ONE_DAY_MS = 24 * 60 * 60 * 1000
-
 /**
- * Find users who registered exactly 1 calendar day ago (within a 24h window)
+ * Find users who registered within the given time window
  * and have not completed onboarding, then send them a single reminder email.
+ *
+ * @param windowStart - start of the registration window (inclusive)
+ * @param windowEnd   - end of the registration window (exclusive)
  *
  * Idempotency: each email job uses a deterministic jobId based on the user ID,
  * so BullMQ deduplicates if this function runs more than once for the same window.
  */
-export async function sendOnboardingReminders(): Promise<number> {
-  const now = Date.now()
-  const windowStart = new Date(now - 2 * ONE_DAY_MS) // 2 days ago
-  const windowEnd = new Date(now - ONE_DAY_MS) // 1 day ago
+export async function sendOnboardingReminders(
+  windowStart: Date,
+  windowEnd: Date
+): Promise<number> {
 
   const users = await prisma.user.findMany({
     where: {
