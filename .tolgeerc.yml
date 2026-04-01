@@ -6,8 +6,7 @@ projectId: 1
 push:
   filesTemplate:
     - packages/shared/i18n/{languageTag}.json
-    - packages/shared/i18n/{namespace}/{languageTag}.json
 
 pull:
   path: packages/shared/i18n
-  fileStructureTemplate: '{namespace}/{languageTag}.json'
+  fileStructureTemplate: '{languageTag}.json'

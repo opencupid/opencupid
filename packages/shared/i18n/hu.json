@@ -43,6 +43,39 @@
     "missed_call_message": "Nem fogadott hívás",
     "open_to_calls_setting": "Elérhető vagyok videóhívásra"
   },
+  "emails": {
+    "fallback_hint": "Ha a gomb nem működik, másold ki és illeszd be ezt a címsorba:",
+    "loginLink": {
+      "callToActionLabel": "Belépek",
+      "contentBody": "Kattints a gombra a belépéshez:",
+      "footer": "Ha nem Te kérted ezt az emailt, nyugodtan hagyd figyelmen kívül.",
+      "subject": "[{siteName}] Belépő link"
+    },
+    "new_like": {
+      "callToActionLabel": "Megnyitom",
+      "contentBody": "Szia, valaki komál téged.",
+      "footer": " ",
+      "subject": "[{siteName}] Valaki komál téged"
+    },
+    "new_match": {
+      "callToActionLabel": "Megnyitom",
+      "contentBody": "Szia, {name} és Te kölcsönösen komáljátok egymást.",
+      "footer": " ",
+      "subject": "[{siteName}] Komáljátok egymást"
+    },
+    "new_message": {
+      "callToActionLabel": "Üzenet megnyitása",
+      "contentBody": "Szia, {sender} üzenetet küldött neked: {message}",
+      "footer": " ",
+      "subject": "[{siteName}] Új üzeneted érkezett"
+    },
+    "welcome": {
+      "callToActionLabel": "Kapcsolódj",
+      "contentBody": "Üdv a közösségben!",
+      "footer": " ",
+      "subject": "{siteName} Üdv az oldalon!"
+    }
+  },
   "gender": {
     "agender": "Agender",
     "androgynous": "Androgün",
@@ -115,7 +148,7 @@
     "you_messaged_them": "Üzenetet küldtél nekik"
   },
   "landingpage": {
-    "date_1":" ",
+    "date_1": " ",
     "enter_button": "Belépés",
     "enter_button_loading": "Egy pillanat...",
     "footer_contribute": "Nyílt forráskód. Csatlakozz ",
@@ -145,13 +178,16 @@
       "matched_button_no": "Inkább nem",
       "matched_button_yes": "Igen, passzolok",
       "question_liked": "Már komáltad őt.  Meggondoltad magad?",
-      "question_matched": "Kölcsönösen bejöttök egymásnak. TÉNYLEG passzolni szeretnél?",
+      "question_matched": "Kölcsönösen komáljátok egymást. TÉNYLEG passzolni szeretnél?",
       "title": "De várj..."
     },
     "received_likes": "{count, plural, =0 {Még nincs ❤️-od} one {# ❤️-ot kaptál} other {# ❤️-od van}}",
     "received_likes_cta": "Vajon ki küldte?",
-    "you_matched_with": "{name} visszajelölt!",
+    "you_matched_with": "{name} is komál téged",
     "you_received_like": "Valaki komál! ❤️"
+  },
+  "messages": {
+    "welcome_message": "Üdv a {siteName} oldalon !\nMookie vagyok, a házigazda.\nEz egy olyan hely, ahol kapcsolatba léphetünk, új emberekkel találkozhatunk, és megtalálhatjuk a hasonlóan gondolkodó lelkeket. Remélem, jól fogod érezni magad itt.\nSzép kapcsolódásokat!\n\n- Mookie"
   },
   "messaging": {
     "block_member": "Tag letiltása",
@@ -209,6 +245,9 @@
     "matches": "Pártaláló",
     "profile": "Profilom",
     "settings": "Beállítások"
+  },
+  "notifications": {
+    "voice_message_sent": "Hangüzenetet küldött"
   },
   "onboarding": {
     "age_subtitle": "Ennyi ideje élek ezen a bolygón",

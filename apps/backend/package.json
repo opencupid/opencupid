@@ -27,7 +27,7 @@
     "type-check": "tsc --noEmit",
     "test": "vitest --run",
     "test:watch": "vitest",
-    "test:i18n": "npx i18n-check --locales ../../packages/shared/i18n/api/ -s en --only missingKeys",
+    "test:i18n": "npx i18n-check --locales ../../packages/shared/i18n/ -s en --only missingKeys --exclude **/api/**",
     "test:coverage": "pnpm run test --coverage --coverage.reporter=text-summary"
   },
   "prisma": {
@@ -63,6 +63,7 @@
     "fastify-plugin": "5.1.0",
     "i18next": "25.8.13",
     "i18next-fs-backend": "2.6.1",
+    "i18next-icu": "^2.4.3",
     "ioredis": "5.9.3",
     "jsdom": "28.1.0",
     "juice": "^11.1.1",
