@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue'
-import type { MapBounds } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
+import type { BoundsWithZoom } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useBootstrap } from '@/lib/bootstrap'
@@ -50,7 +50,7 @@ export function usePostsViewModel() {
   }
 
   // Map bounds handler
-  const onBoundsChanged = async (bounds: MapBounds) => {
+  const onBoundsChanged = async ({ bounds }: BoundsWithZoom) => {
     isLoading.value = true
     try {
       await postStore.fetchPostsInBounds(bounds)

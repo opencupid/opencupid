@@ -52,7 +52,7 @@ const clusters = computed<MapCluster[]>(() =>
       location: { lat: f.lat, lon: f.lon },
       count: f.count,
       expansionZoom: f.expansionZoom,
-    })),
+    }))
 )
 
 const mapPois = computed<MapPoi[]>(() =>
@@ -65,7 +65,7 @@ const mapPois = computed<MapPoi[]>(() =>
       image: p.image ?? undefined,
       highlighted: p.highlighted,
       source: p,
-    })),
+    }))
 )
 
 const fetchPopupData = async (id: string | number) => {

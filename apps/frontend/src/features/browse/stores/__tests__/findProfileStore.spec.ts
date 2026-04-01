@@ -234,10 +234,7 @@ describe('findProfileStore bounds caching', () => {
     store.lastMapBounds = bounds
     await store.refetchBounds()
 
-    expect(mockGet).toHaveBeenCalledWith(
-      '/find/social/map/clusters',
-      expect.anything()
-    )
+    expect(mockGet).toHaveBeenCalledWith('/find/social/map/clusters', expect.anything())
   })
 })
 
@@ -269,9 +266,18 @@ describe('findClustersForMapBounds', () => {
     const bounds = { south: 47, north: 49, west: 16, east: 20 }
     await store.findClustersForMapBounds(bounds, 6)
 
-    expect(mockGet).toHaveBeenCalledWith('/find/social/map/clusters', expect.objectContaining({
-      params: expect.objectContaining({ south: expect.any(Number), north: expect.any(Number), west: expect.any(Number), east: expect.any(Number), zoom: 6 }),
-    }))
+    expect(mockGet).toHaveBeenCalledWith(
+      '/find/social/map/clusters',
+      expect.objectContaining({
+        params: expect.objectContaining({
+          south: expect.any(Number),
+          north: expect.any(Number),
+          west: expect.any(Number),
+          east: expect.any(Number),
+          zoom: 6,
+        }),
+      })
+    )
     expect(store.clusterFeatures).toHaveLength(2)
   })
 
@@ -290,7 +296,9 @@ describe('findClustersForMapBounds', () => {
 
   it('cancels in-flight request on new call', async () => {
     let resolveFirst: (v: any) => void
-    const firstCall = new Promise((r) => { resolveFirst = r })
+    const firstCall = new Promise((r) => {
+      resolveFirst = r
+    })
     mockGet.mockImplementationOnce(() => firstCall)
     mockGet.mockResolvedValueOnce({ data: { success: true, features: [] } })
 

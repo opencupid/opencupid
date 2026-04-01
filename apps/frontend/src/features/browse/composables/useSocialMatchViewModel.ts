@@ -65,7 +65,7 @@ export function useSocialMatchViewModel() {
     a: { south: number; north: number; west: number; east: number } | null,
     aZoom: number,
     b: { south: number; north: number; west: number; east: number },
-    bZoom: number,
+    bZoom: number
   ): boolean {
     return (
       aZoom === bZoom &&
@@ -106,10 +106,12 @@ export function useSocialMatchViewModel() {
   const isNoOneAround = computed(() => {
     const features = findProfileStore.clusterFeatures
     if (features.length === 0) return false
+    const first = features[0]
     if (
       features.length === 1 &&
-      features[0].type === 'point' &&
-      features[0].id === viewerProfile.value?.id
+      first &&
+      first.type === 'point' &&
+      first.id === viewerProfile.value?.id
     ) {
       return true
     }

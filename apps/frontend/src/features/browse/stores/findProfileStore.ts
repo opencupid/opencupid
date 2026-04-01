@@ -3,7 +3,11 @@ import { CanceledError } from 'axios'
 import { api, safeApiCall } from '@/lib/api'
 import type { PublicProfile } from '@zod/profile/profile.dto'
 import { PublicProfileArraySchema } from '@zod/profile/profile.dto'
-import type { GetMatchIdsResponse, GetProfilesResponse, GetPublicProfileResponse } from '@zod/apiResponse.dto'
+import type {
+  GetMatchIdsResponse,
+  GetProfilesResponse,
+  GetPublicProfileResponse,
+} from '@zod/apiResponse.dto'
 import type { MapFeature } from '@shared/zod/map/cluster.dto'
 import {
   storeSuccess,
@@ -182,11 +186,7 @@ export const useFindProfileStore = defineStore('findProfile', {
       this.lastMapBounds = bounds
 
       const zoomChanged = cachedClusterZoom !== zoom
-      if (
-        !zoomChanged &&
-        cachedClusterBounds &&
-        boundsContain(cachedClusterBounds, bounds)
-      ) {
+      if (!zoomChanged && cachedClusterBounds && boundsContain(cachedClusterBounds, bounds)) {
         this.isLoading = false
         return storeSuccess()
       }
