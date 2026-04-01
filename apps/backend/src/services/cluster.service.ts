@@ -3,8 +3,7 @@ import type { Feature, Point } from 'geojson'
 import { ProfileMatchService } from './profileMatch.service'
 import { ImageService } from './image.service'
 import type { ClusterFeature, PointFeature, MapFeature } from '@shared/zod/map/cluster.dto'
-
-const MAP_MAX_ZOOM = 12
+import { MAP_MAX_ZOOM } from '@shared/maps'
 const CLUSTER_RADIUS = 40
 
 interface PointProperties {
