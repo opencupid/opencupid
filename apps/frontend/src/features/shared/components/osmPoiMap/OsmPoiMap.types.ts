@@ -31,3 +31,17 @@ export interface MapPoi {
   /** The original domain object, passed through to the popup component as `:item` */
   source: unknown
 }
+
+/** A server-computed cluster marker. */
+export interface MapCluster {
+  id: number
+  location: PoiLocation
+  count: number
+  expansionZoom: number
+}
+
+/** Bounds + zoom emitted on viewport change for cluster queries. */
+export interface BoundsWithZoom {
+  bounds: MapBounds
+  zoom: number
+}

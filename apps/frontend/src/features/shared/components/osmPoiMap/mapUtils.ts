@@ -28,6 +28,16 @@ export function createClusterIcon(cluster: { getChildCount(): number }): L.DivIc
   })
 }
 
+/** Creates a Leaflet DivIcon for a server-computed cluster (takes count directly). */
+export function createServerClusterIcon(count: number): L.DivIcon {
+  return L.divIcon({
+    html: `<div class="poi-cluster-badge" style="width:${CLUSTER_ICON_SIZE}px;height:${CLUSTER_ICON_SIZE}px">${count}</div>`,
+    className: 'poi-cluster-icon',
+    iconSize: [CLUSTER_ICON_SIZE, CLUSTER_ICON_SIZE],
+    iconAnchor: [CLUSTER_ICON_SIZE / 2, CLUSTER_ICON_SIZE / 2],
+  })
+}
+
 function getIconCacheKey(props: PoiIconProps): string {
   const url = props.image?.variants?.[0]?.url ?? 'none'
   return `${url}_${props.isSelected}_${props.isHighlighted}`
