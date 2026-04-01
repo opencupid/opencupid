@@ -46,32 +46,32 @@
   "emails": {
     "fallback_hint": "Ha a gomb nem működik, másold ki és illeszd be ezt a címsorba:",
     "loginLink": {
-      "callToActionLabel": "Belépő link megnyitása",
-      "contentBody": "Kattints az alábbi gombra a belépéshez.",
-      "footer": "Ha nem Te kérted ezt az emailt, hagyd figyelmen kívül.",
-      "subject": "{siteName} belépő link"
+      "callToActionLabel": "Belépek",
+      "contentBody": "Kattints a gombra a belépéshez:",
+      "footer": "Ha nem Te kérted ezt az emailt, nyugodtan hagyd figyelmen kívül.",
+      "subject": "[{siteName}] Belépő link"
     },
     "new_like": {
-      "callToActionLabel": "Nézd meg, ki volt az",
-      "contentBody": "Szia, valaki küldött neked egy ❤️-t.",
+      "callToActionLabel": "Megnyitom",
+      "contentBody": "Szia, valaki komál téged.",
       "footer": " ",
-      "subject": "[{siteName}] Valaki kedvelt téged"
+      "subject": "[{siteName}] Valaki komál téged"
     },
     "new_match": {
-      "callToActionLabel": "Egyezések megnyitása",
-      "contentBody": "Szia, tetszetek egymásnak {name} felhasználóval.",
+      "callToActionLabel": "Megnyitom",
+      "contentBody": "Szia, {name} és Te kölcsönösen komáljátok egymást.",
       "footer": " ",
-      "subject": "[{siteName}] Új egyezésed van!"
+      "subject": "[{siteName}] Komáljátok egymást"
     },
     "new_message": {
       "callToActionLabel": "Üzenet megnyitása",
-      "contentBody": "Szia, új üzeneted érkezett tőle: {sender}: {message}",
+      "contentBody": "Szia, {sender} üzenetet küldött neked: {message}",
       "footer": " ",
       "subject": "[{siteName}] Új üzeneted érkezett"
     },
     "welcome": {
       "callToActionLabel": "Kapcsolódj",
-      "contentBody": "Üdv a fedélzeten!",
+      "contentBody": "Üdv a közösségben!",
       "footer": " ",
       "subject": "{siteName} Üdv az oldalon!"
     }
@@ -178,12 +178,12 @@
       "matched_button_no": "Inkább nem",
       "matched_button_yes": "Igen, passzolok",
       "question_liked": "Már komáltad őt.  Meggondoltad magad?",
-      "question_matched": "Kölcsönösen bejöttök egymásnak. TÉNYLEG passzolni szeretnél?",
+      "question_matched": "Kölcsönösen komáljátok egymást. TÉNYLEG passzolni szeretnél?",
       "title": "De várj..."
     },
     "received_likes": "{count, plural, =0 {Még nincs ❤️-od} one {# ❤️-ot kaptál} other {# ❤️-od van}}",
     "received_likes_cta": "Vajon ki küldte?",
-    "you_matched_with": "{name} visszajelölt!",
+    "you_matched_with": "{name} is komál téged",
     "you_received_like": "Valaki komál! ❤️"
   },
   "messages": {
