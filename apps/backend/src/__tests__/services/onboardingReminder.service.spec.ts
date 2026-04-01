@@ -46,17 +46,17 @@ describe('sendOnboardingReminders', () => {
     return mod.sendOnboardingReminders
   }
 
-  it('queries the correct 24h window (3-4 days ago)', async () => {
+  it('queries the correct 24h window (1-2 days ago)', async () => {
     const sendOnboardingReminders = await importService()
     await sendOnboardingReminders()
 
     const call = mockPrisma.user.findMany.mock.calls[0][0]
     const { gte, lt } = call.where.createdAt
 
-    // 4 days ago = 2026-03-28T12:00:00Z
-    expect(gte.toISOString()).toBe('2026-03-28T12:00:00.000Z')
-    // 3 days ago = 2026-03-29T12:00:00Z
-    expect(lt.toISOString()).toBe('2026-03-29T12:00:00.000Z')
+    // 2 days ago = 2026-03-30T12:00:00Z
+    expect(gte.toISOString()).toBe('2026-03-30T12:00:00.000Z')
+    // 1 day ago = 2026-03-31T12:00:00Z
+    expect(lt.toISOString()).toBe('2026-03-31T12:00:00.000Z')
   })
 
   it('filters for users with no profile or unfinished onboarding', async () => {

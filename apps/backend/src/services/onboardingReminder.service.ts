@@ -2,10 +2,10 @@ import { prisma } from '@/lib/prisma'
 import { notifierService } from './notifier.service'
 import { appConfig } from '@/lib/appconfig'
 
-const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000
+const ONE_DAY_MS = 24 * 60 * 60 * 1000
 
 /**
- * Find users who registered exactly 3 calendar days ago (within a 24h window)
+ * Find users who registered exactly 1 calendar day ago (within a 24h window)
  * and have not completed onboarding, then send them a single reminder email.
  *
  * Idempotency: each email job uses a deterministic jobId based on the user ID,
@@ -13,8 +13,8 @@ const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000
  */
 export async function sendOnboardingReminders(): Promise<number> {
   const now = Date.now()
-  const windowStart = new Date(now - THREE_DAYS_MS - 24 * 60 * 60 * 1000) // 4 days ago
-  const windowEnd = new Date(now - THREE_DAYS_MS) // 3 days ago
+  const windowStart = new Date(now - 2 * ONE_DAY_MS) // 2 days ago
+  const windowEnd = new Date(now - ONE_DAY_MS) // 1 day ago
 
   const users = await prisma.user.findMany({
     where: {
