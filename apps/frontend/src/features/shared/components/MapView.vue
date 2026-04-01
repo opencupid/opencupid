@@ -4,7 +4,7 @@ import { useDebounceFn } from '@vueuse/core'
 import type { Map as LMap } from 'leaflet'
 
 import OsmPoiMap from './osmPoiMap/OsmPoiMap.vue'
-import type { MapPoi, MapBounds } from './osmPoiMap/OsmPoiMap.types'
+import type { MapPoi, MapCluster, BoundsWithZoom } from './osmPoiMap/OsmPoiMap.types'
 import MapPlaceholder from './MapPlaceholder.vue'
 
 const BOUNDS_DEBOUNCE_MS = 500
@@ -12,6 +12,7 @@ const BOUNDS_DEBOUNCE_MS = 500
 const props = withDefaults(
   defineProps<{
     items: MapPoi[]
+    clusters?: MapCluster[]
     iconComponent: Component
     popupComponent?: Component
     center?: [number, number]
@@ -20,21 +21,23 @@ const props = withDefaults(
     fitToPois?: boolean
     isLoading?: boolean
     isPlaceholderAnimated?: boolean
+    fetchPopupData?: (id: string | number) => Promise<unknown>
   }>(),
   {
     isLoading: false,
     isPlaceholderAnimated: true,
+    clusters: () => [],
   }
 )
 
 const emit = defineEmits<{
   (e: 'item:select', id: string | number): void
   (e: 'map:ready', map: LMap): void
-  (e: 'bounds-changed', bounds: MapBounds): void
+  (e: 'bounds-changed', payload: BoundsWithZoom): void
 }>()
 
-const debouncedEmitBounds = useDebounceFn((bounds: MapBounds) => {
-  emit('bounds-changed', bounds)
+const debouncedEmitBounds = useDebounceFn((payload: BoundsWithZoom) => {
+  emit('bounds-changed', payload)
 }, BOUNDS_DEBOUNCE_MS)
 
 const isMapReady = ref(false)
@@ -61,12 +64,14 @@ function onMapReady(map: LMap) {
     >
       <OsmPoiMap
         :items="props.items"
+        :clusters="props.clusters"
         :center="props.center"
         :zoom="props.zoom"
         :selected-id="props.selectedId"
         :fit-to-pois="props.fitToPois"
         :icon-component="props.iconComponent"
         :popup-component="props.popupComponent"
+        :fetch-popup-data="props.fetchPopupData"
         class="h-100"
         @map:ready="onMapReady"
         @item:select="(id) => emit('item:select', id)"
