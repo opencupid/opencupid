@@ -36,10 +36,20 @@ new Worker(
     const now = Date.now()
     const windowStart = new Date(now - windowOffsetMs - ONE_DAY_MS)
     const windowEnd = new Date(now - windowOffsetMs)
-    const count = await sendOnboardingReminders(windowStart, windowEnd)
-    if (count > 0) {
-      console.log(`Sent ${count} onboarding reminder(s)`)
-    }
+    await job.log(`Window: ${windowStart.toISOString()} → ${windowEnd.toISOString()}`)
+
+    const count = await sendOnboardingReminders(
+      windowStart,
+      windowEnd,
+      async (sent, total, userId) => {
+        await job.updateProgress(Math.round((sent / total) * 100))
+        await job.log(`[${sent}/${total}] queued reminder for user ${userId}`)
+      }
+    )
+
+    await job.log(
+      count > 0 ? `Done — ${count} reminder(s) queued` : 'No users matched — nothing sent'
+    )
   },
   { connection }
 )

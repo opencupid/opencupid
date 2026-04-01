@@ -14,9 +14,9 @@ import { appConfig } from '@/lib/appconfig'
  */
 export async function sendOnboardingReminders(
   windowStart: Date,
-  windowEnd: Date
+  windowEnd: Date,
+  onProgress?: (sent: number, total: number, userId: string) => Promise<void> | void
 ): Promise<number> {
-
   const users = await prisma.user.findMany({
     where: {
       createdAt: {
@@ -35,12 +35,14 @@ export async function sendOnboardingReminders(
 
   // TODO: select email/language/profile fields in findMany and call notifyResolvedUser
   // directly to avoid N+1 queries (notifyUser re-fetches each user individually)
-  for (const user of users) {
+  for (let i = 0; i < users.length; i++) {
+    const user = users[i]
     await notifierService.notifyUser(user.id, 'onboarding_reminder', {
       link: onboardingUrl,
     })
+    await onProgress?.(i + 1, users.length, user.id)
     // Stagger sends with a random 10-15s delay to avoid hitting SMTP rate limits
-    if (users.indexOf(user) < users.length - 1) {
+    if (i < users.length - 1) {
       await new Promise((resolve) => setTimeout(resolve, 10_000 + Math.random() * 5_000))
     }
   }
