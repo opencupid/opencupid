@@ -1,5 +1,6 @@
 import { Worker } from 'bullmq'
 import IORedis from 'ioredis'
+import { z } from 'zod'
 import { appConfig } from '@/lib/appconfig'
 import { sendOnboardingReminders } from '@/services/onboardingReminder.service'
 import { registerOnboardingReminderJob } from '@/queues/onboardingReminderQueue'
@@ -7,12 +8,11 @@ import { registerOnboardingReminderJob } from '@/queues/onboardingReminderQueue'
 const ONE_DAY_MS = 24 * 60 * 60 * 1000
 
 /**
- * Job data schema (all fields optional):
+ * Job data schema. All fields are optional.
  *
- *   { windowOffsetMs?: number }
- *
- * - windowOffsetMs: how far back (in ms) the END of the 24h registration window sits
- *                   relative to "now". Defaults to ONE_DAY_MS (1 day ago).
+ * windowOffsetMs: how far back (in ms) the END of the 24h registration window sits
+ *                relative to "now". Defaults to ONE_DAY_MS (1 day ago).
+ *                Coerced from string to support Bull Board's manual trigger UI.
  *
  * The worker always scans a 24h window:
  *   windowStart = now - windowOffsetMs - ONE_DAY_MS
@@ -26,13 +26,16 @@ const ONE_DAY_MS = 24 * 60 * 60 * 1000
  * To backfill several days, enqueue one job per day with increasing windowOffsetMs values.
  * BullMQ deduplicates via the deterministic jobId in the notifier, so re-runs are safe.
  */
+export const jobDataSchema = z.object({
+  windowOffsetMs: z.coerce.number().finite().nonnegative().default(ONE_DAY_MS),
+})
 
 const connection = new IORedis(appConfig.REDIS_URL, { maxRetriesPerRequest: null })
 
 new Worker(
   'onboarding-reminder',
   async (job) => {
-    const windowOffsetMs: number = job.data?.windowOffsetMs ?? ONE_DAY_MS
+    const { windowOffsetMs } = jobDataSchema.parse(job.data ?? {})
     const now = Date.now()
     const windowStart = new Date(now - windowOffsetMs - ONE_DAY_MS)
     const windowEnd = new Date(now - windowOffsetMs)
