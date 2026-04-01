@@ -530,5 +530,40 @@
       "message": "An update is available.",
       "reload": "Reload"
     }
+  },
+  "emails": {
+    "fallback_hint": "If the button doesn't work, copy and paste this URL:",
+    "loginLink": {
+      "callToActionLabel": "Use login link",
+      "contentBody": "Click the button below to log in.",
+      "footer": "If you didn't request this, you can ignore this email.",
+      "subject": "[{siteName}] Your login link"
+    },
+    "new_like": {
+      "callToActionLabel": "Find out who",
+      "contentBody": "Hey there, someone sent you a  ❤️.",
+      "subject": "[{siteName}] You have a new like"
+    },
+    "new_match": {
+      "callToActionLabel": "Open matches",
+      "contentBody": "Hey there, you matched with {name}.",
+      "subject": "[{siteName}] You have a new match!"
+    },
+    "new_message": {
+      "callToActionLabel": "Read message",
+      "contentBody": "Hey there, you have a new message from {sender}: {message}",
+      "subject": "[{siteName}] You have a new message"
+    },
+    "welcome": {
+      "callToActionLabel": "Go connect with people",
+      "contentBody": "Hey there, welcome aboard!",
+      "subject": "[{siteName}] Welcome!"
+    }
+  },
+  "messages": {
+    "welcome_message": "Welcome to {siteName}!\nI am Mookie, your host.\nThis is a place for us to connect, meet new people, and find like-minded souls. I hope you enjoy your stay here.\nHappy connecting!\n- Mookie"
+  },
+  "notifications": {
+    "voice_message_sent": "Sent a voice message"
   }
 }
