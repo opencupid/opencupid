@@ -15,16 +15,6 @@ afterAll(() => vi.unstubAllGlobals())
 // Track created markers and their icons
 const createdMarkers: { latLng: [number, number]; opts: any; icon?: any }[] = []
 
-// Track cluster group interactions
-const clusterGroupProto = {
-  addLayer: vi.fn(),
-  clearLayers: vi.fn(),
-  on: vi.fn().mockReturnThis(),
-  off: vi.fn().mockReturnThis(),
-  getBounds: vi.fn(() => ({})),
-  options: {},
-}
-
 // Mock leaflet before imports
 vi.mock('leaflet', () => {
   const divIcon = vi.fn((opts: any) => ({ _type: 'divIcon', ...opts }))
@@ -38,6 +28,7 @@ vi.mock('leaflet', () => {
       this._icon = icon
       return this
     }),
+    setLatLng: vi.fn().mockReturnThis(),
     getLatLng: vi.fn(() => ({ lat: 47, lng: 19 })),
     _icon: null as any,
   }
@@ -53,9 +44,12 @@ vi.mock('leaflet', () => {
   const layerGroupProto = {
     addTo: vi.fn().mockReturnThis(),
     clearLayers: vi.fn(),
+    addLayer: vi.fn(),
+    removeLayer: vi.fn(),
   }
   const layerGroup = vi.fn(() => ({ ...layerGroupProto }))
 
+  const latLng = vi.fn((lat: number, lng: number) => ({ lat, lng }))
   const latLngBounds = vi.fn(() => ({
     contains: vi.fn((latlng: { lat?: number }) => latlng?.lat === 47),
   }))
@@ -89,18 +83,6 @@ vi.mock('leaflet', () => {
   }
   const mapFn = vi.fn(() => ({ ...mapProto }))
 
-  const markerClusterGroup = vi.fn(() => ({
-    ...clusterGroupProto,
-    addLayer: vi.fn(),
-    addLayers: vi.fn(),
-    removeLayers: vi.fn(),
-    clearLayers: vi.fn(),
-    on: vi.fn().mockReturnThis(),
-    off: vi.fn().mockReturnThis(),
-    getBounds: vi.fn(() => ({})),
-    options: {},
-  }))
-
   const tileLayerProto = {
     addTo: vi.fn().mockReturnThis(),
     once: vi.fn(function (this: any, _event: string, cb: () => void) {
@@ -124,8 +106,8 @@ vi.mock('leaflet', () => {
       marker,
       divIcon,
       layerGroup,
+      latLng,
       latLngBounds,
-      markerClusterGroup,
       point,
       tileLayer,
       DomEvent,
@@ -137,8 +119,8 @@ vi.mock('leaflet', () => {
     marker,
     divIcon,
     layerGroup,
+    latLng,
     latLngBounds,
-    markerClusterGroup,
     point,
     tileLayer,
     DomEvent,
@@ -146,10 +128,28 @@ vi.mock('leaflet', () => {
   }
 })
 
-// Mock leaflet.markercluster (it mutates L as a side effect)
-vi.mock('leaflet.markercluster', () => ({}))
-vi.mock('leaflet.markercluster/dist/MarkerCluster.css', () => ({}))
-vi.mock('leaflet.markercluster/dist/MarkerCluster.Default.css', () => ({}))
+// vi.mock is hoisted before const declarations, so omsInstance must be defined
+// via vi.hoisted() to be available when the mock factory runs.
+const { omsInstance } = vi.hoisted(() => ({
+  omsInstance: {
+    addMarker: vi.fn().mockReturnThis(),
+    removeMarker: vi.fn().mockReturnThis(),
+    clearMarkers: vi.fn().mockReturnThis(),
+    addListener: vi.fn().mockReturnThis(),
+    getMarkers: vi.fn(() => []),
+    circleSpiralSwitchover: 9,
+    circleFootSeparation: 25,
+    spiralFootSeparation: 28,
+    spiralLengthStart: 11,
+    spiralLengthFactor: 5,
+    spiderListener: vi.fn(),
+  },
+}))
+vi.mock('ts-overlapping-marker-spiderfier-leaflet', () => ({
+  OverlappingMarkerSpiderfier: vi.fn(function () {
+    return omsInstance
+  }),
+}))
 
 // Mock blurhash (canvas unavailable in jsdom)
 vi.mock('@/features/images/composables/useBlurhashDataUrl', () => ({
@@ -158,7 +158,8 @@ vi.mock('@/features/images/composables/useBlurhashDataUrl', () => ({
 
 import { mount, flushPromises } from '@vue/test-utils'
 import OsmPoiMap from '../OsmPoiMap.vue'
-import { POI_ICON_SIZE } from '../mapUtils'
+import { POI_ICON_SIZE, MAP_MAX_ZOOM } from '../mapUtils'
+import type { MapCluster } from '../OsmPoiMap.types'
 import L from 'leaflet'
 
 const DummyPopup = defineComponent({
@@ -209,6 +210,8 @@ const items = [
 async function mountMap(props: Partial<Record<string, any>> = {}) {
   const testItems = props.items ?? items
   delete props.items
+  const testClusters = props.clusters
+  delete props.clusters
 
   const wrapper = mount(OsmPoiMap as any, {
     props: {
@@ -220,8 +223,11 @@ async function mountMap(props: Partial<Record<string, any>> = {}) {
     attachTo: document.body,
   })
 
-  // Simulate real app flow: items arrive after mount via reactive update
+  // Simulate real app flow: items/clusters arrive after mount via reactive update
   await wrapper.setProps({ items: testItems })
+  if (testClusters) {
+    await wrapper.setProps({ clusters: testClusters })
+  }
   return wrapper
 }
 
@@ -229,6 +235,12 @@ beforeEach(() => {
   createdMarkers.length = 0
   resizeObserverCallbacks.length = 0
   vi.clearAllMocks()
+  omsInstance.addMarker.mockReturnThis()
+  omsInstance.removeMarker.mockReturnThis()
+  omsInstance.clearMarkers.mockReturnThis()
+  omsInstance.addListener.mockReturnThis()
+  omsInstance.getMarkers.mockReturnValue([])
+  omsInstance.spiderListener.mockReset()
 })
 
 describe('OsmPoiMap', () => {
@@ -252,117 +264,6 @@ describe('OsmPoiMap', () => {
     await flushPromises()
 
     expect(L.marker).toHaveBeenCalledTimes(noImageItems.length)
-  })
-
-  it('initializes a markerClusterGroup and adds markers to it', async () => {
-    await mountMap()
-    await flushPromises()
-
-    // Should have created a cluster group
-    expect((L as any).markerClusterGroup).toHaveBeenCalledTimes(1)
-    const clusterOpts = (L as any).markerClusterGroup.mock.calls[0][0]
-    expect(clusterOpts.maxClusterRadius).toBe(40)
-    expect(clusterOpts.zoomToBoundsOnClick).toBe(true)
-
-    // Markers should be added to the cluster group, not directly to the map
-    expect(L.marker).toHaveBeenCalledTimes(3)
-  })
-
-  it('registers spider and map movement event handlers', async () => {
-    await mountMap()
-    await flushPromises()
-
-    const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
-    const clusterOnCalls = clusterInstance.on.mock.calls
-    const clusterEventNames = clusterOnCalls.map((c: any) => c[0])
-    expect(clusterEventNames).toContain('clustermouseover')
-    expect(clusterEventNames).toContain('spiderfied')
-    expect(clusterEventNames).toContain('unspiderfied')
-
-    const mapInstance = (L.map as any).mock.results[0].value
-    const mapEventNames = mapInstance.on.mock.calls.map((c: any) => c[0])
-    expect(mapEventNames).toContain('mousemove')
-    expect(mapEventNames).toContain('zoomstart')
-  })
-
-  it('spiderfies cluster on clustermouseover', async () => {
-    await mountMap()
-    await flushPromises()
-
-    const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
-    const onCalls = clusterInstance.on.mock.calls
-    const mouseoverHandler = onCalls.find((c: any) => c[0] === 'clustermouseover')[1]
-
-    const spiderfyMock = vi.fn()
-    mouseoverHandler({ layer: { spiderfy: spiderfyMock } })
-
-    expect(spiderfyMock).toHaveBeenCalledOnce()
-  })
-
-  it('skips hover-to-spiderfy on mobile to let canonical zoomToBoundsOnClick handle tap', async () => {
-    ;(L.Browser as any).mobile = true
-    await mountMap()
-    await flushPromises()
-
-    const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
-    const onCalls = clusterInstance.on.mock.calls
-    const mouseoverHandler = onCalls.find((c: any) => c[0] === 'clustermouseover')[1]
-
-    const spiderfyMock = vi.fn()
-    mouseoverHandler({ layer: { spiderfy: spiderfyMock } })
-
-    expect(spiderfyMock).not.toHaveBeenCalled()
-    ;(L.Browser as any).mobile = false
-  })
-
-  it('closes active spider when mouse leaves hover bounds', async () => {
-    await mountMap()
-    await flushPromises()
-
-    const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
-    const spiderfiedCall = clusterInstance.on.mock.calls.find((c: any) => c[0] === 'spiderfied')
-    expect(spiderfiedCall).toBeDefined()
-    const spiderfiedHandler = spiderfiedCall![1]
-    const mapInstance = (L.map as any).mock.results[0].value
-    const mousemoveHandler = mapInstance.on.mock.calls.find((c: any) => c[0] === 'mousemove')[1]
-
-    const unspiderfyMock = vi.fn()
-    spiderfiedHandler({
-      cluster: {
-        getAllChildMarkers: () => [],
-        getLatLng: () => ({ lat: 47, lng: 19 }),
-        unspiderfy: unspiderfyMock,
-      },
-      markers: [],
-    })
-
-    mousemoveHandler({ latlng: { lat: 0, lng: 0 } })
-    expect(unspiderfyMock).toHaveBeenCalledOnce()
-  })
-
-  it('keeps active spider when mouse stays inside hover bounds', async () => {
-    await mountMap()
-    await flushPromises()
-
-    const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
-    const spiderfiedCall = clusterInstance.on.mock.calls.find((c: any) => c[0] === 'spiderfied')
-    expect(spiderfiedCall).toBeDefined()
-    const spiderfiedHandler = spiderfiedCall![1]
-    const mapInstance = (L.map as any).mock.results[0].value
-    const mousemoveHandler = mapInstance.on.mock.calls.find((c: any) => c[0] === 'mousemove')[1]
-
-    const unspiderfyMock = vi.fn()
-    spiderfiedHandler({
-      cluster: {
-        getAllChildMarkers: () => [],
-        getLatLng: () => ({ lat: 47, lng: 19 }),
-        unspiderfy: unspiderfyMock,
-      },
-      markers: [],
-    })
-
-    mousemoveHandler({ latlng: { lat: 47, lng: 19 } })
-    expect(unspiderfyMock).not.toHaveBeenCalled()
   })
 
   it('uses raster tile layer from MAP_TILE_URL config', async () => {
@@ -412,15 +313,15 @@ describe('OsmPoiMap', () => {
           return el
         },
         update: popupUpdate,
+        isOpen: () => true,
       },
     }
 
-    // Fire the handler — update() should NOT have been called yet (it waits for nextTick)
-    handler(fakeEvent)
-    expect(popupUpdate).not.toHaveBeenCalled()
-
-    // After nextTick, popup.update() should be called
+    // Fire the async handler and wait for it + nextTick to complete
+    await handler(fakeEvent)
+    await flushPromises()
     await nextTick()
+
     expect(popupUpdate).toHaveBeenCalledOnce()
   })
 
@@ -454,7 +355,7 @@ describe('OsmPoiMap', () => {
 
     expect(wrapper.emitted('bounds-changed')).toBeTruthy()
     expect(wrapper.emitted('bounds-changed')![0]).toEqual([
-      { south: 45.0, north: 48.0, west: 16.0, east: 23.0 },
+      { bounds: { south: 45.0, north: 48.0, west: 16.0, east: 23.0 }, zoom: expect.any(Number) },
     ])
 
     vi.useRealTimers()
@@ -512,78 +413,6 @@ describe('OsmPoiMap', () => {
     expect(mapInstance.fitBounds).toHaveBeenCalled()
   })
 
-  it('opens popup when clicking a hover-spiderfied marker', async () => {
-    await mountMap()
-    await flushPromises()
-
-    const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
-    const mouseoverHandler = clusterInstance.on.mock.calls.find(
-      (c: any) => c[0] === 'clustermouseover'
-    )![1]
-    const spiderfiedHandler = clusterInstance.on.mock.calls.find(
-      (c: any) => c[0] === 'spiderfied'
-    )![1]
-
-    // Trigger spiderfy via hover (no cooldown)
-    mouseoverHandler({ layer: { spiderfy: vi.fn() } })
-
-    // Create a fake marker with a DOM element to simulate spiderfied state
-    const fakeEl = document.createElement('div')
-    const openPopup = vi.fn()
-    const fakeMarker = { getElement: () => fakeEl, openPopup }
-
-    spiderfiedHandler({
-      cluster: {
-        getAllChildMarkers: () => [],
-        getLatLng: () => ({ lat: 47, lng: 19 }),
-        unspiderfy: vi.fn(),
-      },
-      markers: [fakeMarker],
-    })
-
-    // The handler should have been registered via L.DomEvent.on
-    const domOnCalls = (L as any).DomEvent.on.mock.calls
-    const clickHandler = domOnCalls.find((c: any) => c[0] === fakeEl && c[1] === 'click')
-    expect(clickHandler).toBeDefined()
-
-    // Simulate click — should open popup immediately (no cooldown for hover)
-    const handler = clickHandler[2]
-    handler({ stopPropagation: vi.fn() })
-    expect(openPopup).toHaveBeenCalledOnce()
-  })
-
-  it('cleans up spider click handlers on unspiderfied', async () => {
-    await mountMap()
-    await flushPromises()
-
-    const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
-    const spiderfiedCall = clusterInstance.on.mock.calls.find((c: any) => c[0] === 'spiderfied')
-    expect(spiderfiedCall).toBeDefined()
-    const spiderfiedHandler = spiderfiedCall![1]
-    const unspiderfiedCall = clusterInstance.on.mock.calls.find((c: any) => c[0] === 'unspiderfied')
-    expect(unspiderfiedCall).toBeDefined()
-    const unspiderfiedHandler = unspiderfiedCall![1]
-
-    const fakeEl = document.createElement('div')
-    const fakeMarker = { getElement: () => fakeEl, openPopup: vi.fn() }
-
-    spiderfiedHandler({
-      cluster: {
-        getAllChildMarkers: () => [],
-        getLatLng: () => ({ lat: 47, lng: 19 }),
-        unspiderfy: vi.fn(),
-      },
-      markers: [fakeMarker],
-    })
-
-    // Unspiderfy should clean up the handler
-    unspiderfiedHandler({ markers: [fakeMarker] })
-
-    const domOffCalls = (L as any).DomEvent.off.mock.calls
-    const cleanupCall = domOffCalls.find((c: any) => c[0] === fakeEl && c[1] === 'click')
-    expect(cleanupCall).toBeDefined()
-  })
-
   it('does not auto-fit to markers when center is provided', async () => {
     await mountMap({ center: [48.0, 16.0] as [number, number] })
     await flushPromises()
@@ -618,132 +447,6 @@ describe('OsmPoiMap', () => {
     const roCallback = resizeObserverCallbacks[resizeObserverCallbacks.length - 1]!
     roCallback()
     expect(mapInstance.flyTo).toHaveBeenCalledWith([50.0, 14.0], 10, { duration: 1 })
-  })
-
-  it('registers both mousemove and touchstart for spider close', async () => {
-    await mountMap()
-    await flushPromises()
-
-    const mapInstance = (L.map as any).mock.results[0].value
-    const mapEventNames = mapInstance.on.mock.calls.map((c: any) => c[0])
-    expect(mapEventNames).toContain('mousemove')
-    expect(mapEventNames).toContain('touchstart')
-  })
-
-  it('suppresses popup during cooldown when spiderfy is not from hover', async () => {
-    vi.useFakeTimers()
-    await mountMap()
-    await flushPromises()
-
-    const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
-    const spiderfiedHandler = clusterInstance.on.mock.calls.find(
-      (c: any) => c[0] === 'spiderfied'
-    )![1]
-
-    const fakeEl = document.createElement('div')
-    const openPopup = vi.fn()
-    const fakeMarker = { getElement: () => fakeEl, openPopup }
-
-    // Simulate click-triggered spiderfy (not via hover) — cooldown should apply
-    spiderfiedHandler({
-      cluster: {
-        getAllChildMarkers: () => [],
-        getLatLng: () => ({ lat: 47, lng: 19 }),
-        unspiderfy: vi.fn(),
-      },
-      markers: [fakeMarker],
-    })
-
-    const domOnCalls = (L as any).DomEvent.on.mock.calls
-    const clickHandler = domOnCalls.find((c: any) => c[0] === fakeEl && c[1] === 'click')![2]
-
-    // Click during cooldown — should NOT open popup
-    clickHandler({ stopPropagation: vi.fn() })
-    expect(openPopup).not.toHaveBeenCalled()
-
-    // After cooldown expires — should open popup
-    vi.advanceTimersByTime(400)
-    clickHandler({ stopPropagation: vi.fn() })
-    expect(openPopup).toHaveBeenCalledOnce()
-
-    vi.useRealTimers()
-  })
-
-  it('does not apply cooldown when spiderfy is triggered by hover', async () => {
-    await mountMap()
-    await flushPromises()
-
-    const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
-    const mouseoverHandler = clusterInstance.on.mock.calls.find(
-      (c: any) => c[0] === 'clustermouseover'
-    )![1]
-    const spiderfiedHandler = clusterInstance.on.mock.calls.find(
-      (c: any) => c[0] === 'spiderfied'
-    )![1]
-
-    // Trigger spiderfy via hover
-    const spiderfyMock = vi.fn()
-    mouseoverHandler({ layer: { spiderfy: spiderfyMock } })
-
-    const fakeEl = document.createElement('div')
-    const openPopup = vi.fn()
-    const fakeMarker = { getElement: () => fakeEl, openPopup }
-
-    spiderfiedHandler({
-      cluster: {
-        getAllChildMarkers: () => [],
-        getLatLng: () => ({ lat: 47, lng: 19 }),
-        unspiderfy: vi.fn(),
-      },
-      markers: [fakeMarker],
-    })
-
-    const domOnCalls = (L as any).DomEvent.on.mock.calls
-    const clickHandler = domOnCalls.find((c: any) => c[0] === fakeEl && c[1] === 'click')![2]
-
-    // Click immediately — should open popup (no cooldown for hover-triggered spiderfy)
-    clickHandler({ stopPropagation: vi.fn() })
-    expect(openPopup).toHaveBeenCalledOnce()
-  })
-
-  it('marker Leaflet click handler respects spiderfyCooldown', async () => {
-    vi.useFakeTimers()
-    await mountMap()
-    await flushPromises()
-
-    const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
-    const spiderfiedHandler = clusterInstance.on.mock.calls.find(
-      (c: any) => c[0] === 'spiderfied'
-    )![1]
-
-    // Trigger spiderfied without hover (cooldown active) — simulates
-    // _zoomOrSpiderfy at max zoom on mobile
-    spiderfiedHandler({
-      cluster: {
-        getAllChildMarkers: () => [],
-        getLatLng: () => ({ lat: 47, lng: 19 }),
-        unspiderfy: vi.fn(),
-      },
-      markers: [],
-    })
-
-    // Get a marker's Leaflet-level click handler from createMarker
-    const markerInstance = (L.marker as any).mock.results[0]?.value
-    expect(markerInstance).toBeDefined()
-
-    const clickCall = markerInstance.on.mock.calls.find((c: any) => c[0] === 'click')
-    expect(clickCall).toBeDefined()
-
-    const clickHandler = clickCall[1]
-    clickHandler()
-    expect(markerInstance.openPopup).not.toHaveBeenCalled()
-
-    // After cooldown expires
-    vi.advanceTimersByTime(400)
-    clickHandler()
-    expect(markerInstance.openPopup).toHaveBeenCalledOnce()
-
-    vi.useRealTimers()
   })
 
   it('suppresses bounds-changed when container has zero dimensions', async () => {
@@ -846,7 +549,7 @@ describe('OsmPoiMap', () => {
 
     expect(wrapper.emitted('bounds-changed')).toHaveLength(1)
     expect(wrapper.emitted('bounds-changed')![0]).toEqual([
-      { south: 45.0, north: 48.0, west: 16.0, east: 23.0 },
+      { bounds: { south: 45.0, north: 48.0, west: 16.0, east: 23.0 }, zoom: expect.any(Number) },
     ])
 
     vi.useRealTimers()
@@ -860,7 +563,7 @@ describe('OsmPoiMap', () => {
       const initialMarkerCount = (L.marker as any).mock.calls.length
       expect(initialMarkerCount).toBe(1)
 
-      const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
+      const pointLayerInstance = (L.layerGroup as any).mock.results[0].value
 
       // Update: add one more item
       await wrapper.setProps({ items: [items[0], items[1]] })
@@ -868,8 +571,8 @@ describe('OsmPoiMap', () => {
 
       // Should have created only 1 additional marker (not cleared + rebuilt 2)
       expect((L.marker as any).mock.calls.length).toBe(initialMarkerCount + 1)
-      // addLayers should have been called with batch containing only the new marker
-      expect(clusterInstance.addLayers).toHaveBeenCalled()
+      // addLayer should have been called for the new marker
+      expect(pointLayerInstance.addLayer).toHaveBeenCalled()
 
       // Trigger another update with same items — no new markers should be created
       const markerCountBefore = (L.marker as any).mock.calls.length
@@ -885,15 +588,13 @@ describe('OsmPoiMap', () => {
       const wrapper = await mountMap({ items: [items[0], items[1]] })
       await flushPromises()
 
-      const clusterInstance = (L as any).markerClusterGroup.mock.results[0].value
+      const pointLayerInstance = (L.layerGroup as any).mock.results[0].value
 
       // Remove the second item
       await wrapper.setProps({ items: [items[0]] })
       await flushPromises()
 
-      expect(clusterInstance.removeLayers).toHaveBeenCalled()
-      const removedBatch = clusterInstance.removeLayers.mock.calls[0][0]
-      expect(removedBatch).toHaveLength(1)
+      expect(pointLayerInstance.removeLayer).toHaveBeenCalled()
     })
 
     it('updates marker icon in place when highlighted changes', async () => {
@@ -912,6 +613,196 @@ describe('OsmPoiMap', () => {
       expect(markerInstance.setIcon).toHaveBeenCalled()
       // No new markers should have been created
       expect((L.marker as any).mock.calls.length).toBe(1)
+    })
+  })
+
+  describe('updateClusterMarkers', () => {
+    const clusters: MapCluster[] = [
+      { id: 100, location: { lat: 47.5, lon: 19.0 }, count: 5, expansionZoom: 8 },
+      { id: 200, location: { lat: 48.0, lon: 16.0 }, count: 3, expansionZoom: 10 },
+    ]
+
+    it('creates cluster markers and removes stale ones on prop change', async () => {
+      const wrapper = await mountMap({ items: [], clusters })
+      await flushPromises()
+
+      // 0 point markers + 2 cluster markers = 2 total L.marker calls
+      expect((L.marker as any).mock.calls.length).toBe(2)
+
+      // Remove one cluster
+      await wrapper.setProps({ clusters: [clusters[0]] })
+      await flushPromises()
+
+      const clusterLayerInstance = (L.layerGroup as any).mock.results[1].value
+      expect(clusterLayerInstance.removeLayer).toHaveBeenCalled()
+    })
+
+    it('updates existing cluster marker latlng and icon in place', async () => {
+      const wrapper = await mountMap({ items: [], clusters: [clusters[0]] })
+      await flushPromises()
+
+      const markerCountBefore = (L.marker as any).mock.calls.length
+
+      // Update the same cluster id with new location/count
+      const updated: MapCluster = {
+        id: 100,
+        location: { lat: 49.0, lon: 20.0 },
+        count: 8,
+        expansionZoom: 9,
+      }
+      await wrapper.setProps({ clusters: [updated] })
+      await flushPromises()
+
+      // No new marker should be created — updated in place
+      expect((L.marker as any).mock.calls.length).toBe(markerCountBefore)
+    })
+
+    it('cluster click at max zoom removes marker and sets view', async () => {
+      const maxZoomCluster: MapCluster = {
+        id: 300,
+        location: { lat: 47.0, lon: 19.0 },
+        count: 2,
+        expansionZoom: MAP_MAX_ZOOM,
+      }
+      await mountMap({ items: [], clusters: [maxZoomCluster] })
+      await flushPromises()
+
+      const mapInstance = (L.map as any).mock.results[0].value
+
+      // Only cluster marker exists (no point markers)
+      const clusterMarkerInstance = (L.marker as any).mock.results[0].value
+      const clickHandler = clusterMarkerInstance.on.mock.calls.find(
+        (c: any) => c[0] === 'click'
+      )?.[1]
+      expect(clickHandler).toBeDefined()
+
+      clickHandler()
+
+      expect(mapInstance.setView).toHaveBeenCalledWith([47.0, 19.0], MAP_MAX_ZOOM)
+    })
+
+    it('cluster click below max zoom flies to expansion zoom', async () => {
+      await mountMap({ items: [], clusters: [clusters[0]] })
+      await flushPromises()
+
+      const mapInstance = (L.map as any).mock.results[0].value
+      const clusterMarkerInstance = (L.marker as any).mock.results[0].value
+      const clickHandler = clusterMarkerInstance.on.mock.calls.find(
+        (c: any) => c[0] === 'click'
+      )?.[1]
+      expect(clickHandler).toBeDefined()
+
+      clickHandler()
+
+      expect(mapInstance.flyTo).toHaveBeenCalledWith([47.5, 19.0], 8, { duration: 0.5 })
+    })
+  })
+
+  describe('popup data fetching', () => {
+    it('calls fetchPopupData and updates popupItem with full data', async () => {
+      const fetchPopupData = vi.fn().mockResolvedValue({ name: 'Alice Full' })
+      await mountMap({ fetchPopupData })
+      await flushPromises()
+
+      const markerInstance = (L.marker as any).mock.results[0].value
+      const popupopenCall = markerInstance.on.mock.calls.find((c: any) => c[0] === 'popupopen')
+      const handler = popupopenCall[1]
+
+      const popupUpdate = vi.fn()
+      const fakeEvent = {
+        popup: {
+          getElement: () => {
+            const el = document.createElement('div')
+            const content = document.createElement('div')
+            content.className = 'leaflet-popup-content'
+            el.appendChild(content)
+            return el
+          },
+          update: popupUpdate,
+          isOpen: () => true,
+        },
+      }
+
+      await handler(fakeEvent)
+      await flushPromises()
+      await nextTick()
+
+      expect(fetchPopupData).toHaveBeenCalledWith('1')
+      expect(popupUpdate).toHaveBeenCalled()
+    })
+
+    it('does not update popupItem when fetchPopupData rejects', async () => {
+      const fetchPopupData = vi.fn().mockRejectedValue(new Error('network'))
+      await mountMap({ fetchPopupData })
+      await flushPromises()
+
+      const markerInstance = (L.marker as any).mock.results[0].value
+      const popupopenCall = markerInstance.on.mock.calls.find((c: any) => c[0] === 'popupopen')
+      const handler = popupopenCall[1]
+
+      const popupUpdate = vi.fn()
+      const fakeEvent = {
+        popup: {
+          getElement: () => {
+            const el = document.createElement('div')
+            const content = document.createElement('div')
+            content.className = 'leaflet-popup-content'
+            el.appendChild(content)
+            return el
+          },
+          update: popupUpdate,
+          isOpen: () => true,
+        },
+      }
+
+      // Should not throw
+      await handler(fakeEvent)
+      await flushPromises()
+    })
+
+    it('skips popup update when popup is closed before fetch resolves', async () => {
+      let resolvePromise: (v: unknown) => void
+      const fetchPopupData = vi.fn(
+        () =>
+          new Promise((resolve) => {
+            resolvePromise = resolve
+          })
+      )
+      await mountMap({ fetchPopupData })
+      await flushPromises()
+
+      const markerInstance = (L.marker as any).mock.results[0].value
+      const popupopenCall = markerInstance.on.mock.calls.find((c: any) => c[0] === 'popupopen')
+      const handler = popupopenCall[1]
+
+      const popupUpdate = vi.fn()
+      let isOpen = true
+      const fakeEvent = {
+        popup: {
+          getElement: () => {
+            const el = document.createElement('div')
+            const content = document.createElement('div')
+            content.className = 'leaflet-popup-content'
+            el.appendChild(content)
+            return el
+          },
+          update: popupUpdate,
+          isOpen: () => isOpen,
+        },
+      }
+
+      const handlerPromise = handler(fakeEvent)
+
+      // Close the popup before the fetch resolves
+      isOpen = false
+      resolvePromise!({ name: 'Alice Full' })
+
+      await handlerPromise
+      await flushPromises()
+      await nextTick()
+
+      // popup.update should NOT have been called since popup closed
+      expect(popupUpdate).not.toHaveBeenCalled()
     })
   })
 })

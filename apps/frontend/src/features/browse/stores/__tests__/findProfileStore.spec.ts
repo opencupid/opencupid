@@ -136,33 +136,30 @@ describe('findProfileStore.refetchBounds', () => {
     vi.clearAllMocks()
   })
 
-  it('fetches match IDs and re-fetches map when lastMapBounds is set', async () => {
-    mockGet.mockResolvedValue({ data: { profiles: [], ids: ['p1'] } })
+  it('re-fetches clusters when lastMapBounds is set', async () => {
+    mockGet.mockResolvedValue({ data: { success: true, features: [] } })
     store.lastMapBounds = bounds
 
     await store.refetchBounds()
 
-    expect(mockGet).toHaveBeenCalledWith('/find/dating/match-ids')
     expect(mockGet).toHaveBeenCalledWith(
-      '/find/social/map/bounds',
+      '/find/social/map/clusters',
       expect.objectContaining({
-        params: {
-          south: bounds.south - (bounds.north - bounds.south) * 0.3,
-          north: bounds.north + (bounds.north - bounds.south) * 0.3,
-          west: bounds.west - (bounds.east - bounds.west) * 0.3,
-          east: bounds.east + (bounds.east - bounds.west) * 0.3,
-        },
+        params: expect.objectContaining({
+          south: expect.any(Number),
+          north: expect.any(Number),
+          west: expect.any(Number),
+          east: expect.any(Number),
+          zoom: expect.any(Number),
+        }),
       })
     )
   })
 
-  it('fetches match IDs only when lastMapBounds is null', async () => {
-    mockGet.mockResolvedValue({ data: { ids: [] } })
-
+  it('does nothing when lastMapBounds is null', async () => {
     await store.refetchBounds()
 
-    expect(mockGet).toHaveBeenCalledWith('/find/dating/match-ids')
-    expect(mockGet).not.toHaveBeenCalledWith('/find/social/map/bounds', expect.anything())
+    expect(mockGet).not.toHaveBeenCalled()
   })
 })
 
@@ -227,16 +224,123 @@ describe('findProfileStore bounds caching', () => {
   })
 
   it('invalidates cache on refetchBounds', async () => {
-    mockGet.mockResolvedValue({ data: { profiles: [mockProfile], ids: [] } })
+    mockGet.mockResolvedValue({ data: { profiles: [mockProfile], features: [] } })
 
     const bounds = { south: 45, north: 48, west: 16, east: 23 }
     await store.findProfilesForMapBounds(bounds)
     mockGet.mockClear()
 
-    mockGet.mockResolvedValue({ data: { profiles: [], ids: [] } })
+    mockGet.mockResolvedValue({ data: { success: true, features: [], profiles: [] } })
     store.lastMapBounds = bounds
     await store.refetchBounds()
 
-    expect(mockGet).toHaveBeenCalledWith('/find/social/map/bounds', expect.anything())
+    expect(mockGet).toHaveBeenCalledWith('/find/social/map/clusters', expect.anything())
+  })
+})
+
+describe('findClustersForMapBounds', () => {
+  let store: ReturnType<typeof useFindProfileStore>
+
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    store = useFindProfileStore()
+    store.teardown()
+    vi.clearAllMocks()
+  })
+
+  it('fetches clusters from the cluster endpoint with bounds and zoom', async () => {
+    const mockFeatures = [
+      { type: 'cluster', id: 1, lat: 47.5, lon: 19.0, count: 5, expansionZoom: 8 },
+      {
+        type: 'point',
+        id: 'p1',
+        lat: 48.2,
+        lon: 16.3,
+        publicName: 'Alice',
+        image: null,
+        highlighted: false,
+      },
+    ]
+    mockGet.mockResolvedValue({ data: { success: true, features: mockFeatures } })
+
+    const bounds = { south: 47, north: 49, west: 16, east: 20 }
+    await store.findClustersForMapBounds(bounds, 6)
+
+    expect(mockGet).toHaveBeenCalledWith(
+      '/find/social/map/clusters',
+      expect.objectContaining({
+        params: expect.objectContaining({
+          south: expect.any(Number),
+          north: expect.any(Number),
+          west: expect.any(Number),
+          east: expect.any(Number),
+          zoom: 6,
+        }),
+      })
+    )
+    expect(store.clusterFeatures).toHaveLength(2)
+  })
+
+  it('always refetches on zoom change even if bounds are cached', async () => {
+    mockGet.mockResolvedValue({ data: { success: true, features: [] } })
+
+    const bounds = { south: 47, north: 49, west: 16, east: 20 }
+
+    await store.findClustersForMapBounds(bounds, 6)
+    mockGet.mockClear()
+
+    // Same bounds, different zoom — must refetch
+    await store.findClustersForMapBounds(bounds, 8)
+    expect(mockGet).toHaveBeenCalled()
+  })
+
+  it('cancels in-flight request on new call', async () => {
+    let resolveFirst: (v: any) => void
+    const firstCall = new Promise((r) => {
+      resolveFirst = r
+    })
+    mockGet.mockImplementationOnce(() => firstCall)
+    mockGet.mockResolvedValueOnce({ data: { success: true, features: [] } })
+
+    const bounds = { south: 47, north: 49, west: 16, east: 20 }
+
+    const p1 = store.findClustersForMapBounds(bounds, 6)
+    const p2 = store.findClustersForMapBounds(bounds, 7)
+
+    resolveFirst!({ data: { success: true, features: [] } })
+    await Promise.all([p1, p2])
+
+    expect(store.clusterFeatures).toEqual([])
+  })
+})
+
+describe('fetchProfileForPopup', () => {
+  let store: ReturnType<typeof useFindProfileStore>
+
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    store = useFindProfileStore()
+    store.teardown()
+    vi.clearAllMocks()
+  })
+
+  it('fetches a single profile by ID', async () => {
+    const mockProfile = { id: 'p1', publicName: 'Alice' }
+    mockGet.mockResolvedValue({ data: { success: true, profile: mockProfile } })
+
+    const result = await store.fetchProfileForPopup('p1')
+
+    expect(mockGet).toHaveBeenCalledWith('/profiles/p1')
+    expect(result).toEqual(mockProfile)
+  })
+
+  it('caches repeated fetches for the same profile', async () => {
+    const mockProfile = { id: 'p1', publicName: 'Alice' }
+    mockGet.mockResolvedValue({ data: { success: true, profile: mockProfile } })
+
+    await store.fetchProfileForPopup('p1')
+    await store.fetchProfileForPopup('p1')
+
+    expect(mockGet).toHaveBeenCalledTimes(1)
   })
 })

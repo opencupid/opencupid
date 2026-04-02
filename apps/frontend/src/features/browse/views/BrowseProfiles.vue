@@ -10,7 +10,9 @@ import MapView from '@/features/shared/components/MapView.vue'
 import ProfileMapCard from '../components/ProfileMapCard.vue'
 import NoResultsCTA from '../components/NoResultsCTA.vue'
 import MapIcon from '@/features/publicprofile/components/MapIcon.vue'
-import type { MapPoi } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
+import type { MapPoi, MapCluster } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
+import type { ClusterFeature, PointFeature } from '@shared/zod/map/cluster.dto'
+import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 
 defineOptions({ name: 'BrowseProfiles' })
 
@@ -18,8 +20,7 @@ const {
   viewerProfile,
   isNoOneAround,
   isLoading,
-  profileList,
-  matchedProfileIds,
+  clusterFeatures,
   matchFilter,
   isInitialized,
   updatePrefs,
@@ -31,6 +32,8 @@ const {
 
 provide('viewerProfile', toRef(viewerProfile))
 
+const findProfileStore = useFindProfileStore()
+
 onMounted(async () => {
   await initialize()
 })
@@ -41,18 +44,35 @@ onActivated(async () => {
   }
 })
 
+const clusters = computed<MapCluster[]>(() =>
+  clusterFeatures.value
+    .filter((f): f is ClusterFeature => f.type === 'cluster')
+    .map((f) => ({
+      id: f.id,
+      location: { lat: f.lat, lon: f.lon },
+      count: f.count,
+      expansionZoom: f.expansionZoom,
+    }))
+)
+
 const mapPois = computed<MapPoi[]>(() =>
-  profileList.value
-    .filter((p) => p.location?.lat != null && p.location?.lon != null)
+  clusterFeatures.value
+    .filter((f): f is PointFeature => f.type === 'point')
     .map((p) => ({
       id: p.id,
       title: p.publicName,
-      location: { lat: p.location.lat!, lon: p.location.lon! },
-      image: p.profileImages?.[0],
-      highlighted: matchedProfileIds.value.has(p.id),
+      location: { lat: p.lat, lon: p.lon },
+      image: p.image?.url
+        ? { blurhash: p.image.blurhash, variants: [{ size: 'thumb', url: p.image.url }] }
+        : undefined,
+      highlighted: p.highlighted,
       source: p,
     }))
 )
+
+const fetchPopupData = async (id: string | number) => {
+  return findProfileStore.fetchProfileForPopup(String(id))
+}
 
 const mapCenter = computed<[number, number] | undefined>(() => {
   const loc = matchFilter.value?.location
@@ -90,11 +110,13 @@ const mapCenter = computed<[number, number] | undefined>(() => {
       </BAlert>
       <MapView
         :items="mapPois"
+        :clusters="clusters"
         :icon-component="MapIcon"
         :center="mapCenter"
         :is-loading="isLoading"
         :is-placeholder-animated="true"
         :popup-component="ProfileMapCard"
+        :fetch-popup-data="fetchPopupData"
         class="h-100"
         @item:select="(id: string | number) => openProfile(String(id))"
         @bounds-changed="onBoundsChanged"

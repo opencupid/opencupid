@@ -3,39 +3,34 @@ import { onMounted, onBeforeUnmount, onActivated, ref, watch, nextTick, type Com
 import type { Ref } from 'vue'
 import L, { Map as LMap, Marker as LMarker } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import 'leaflet.markercluster'
-import 'leaflet.markercluster/dist/MarkerCluster.css'
-import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
+import { OverlappingMarkerSpiderfier } from 'ts-overlapping-marker-spiderfier-leaflet'
 
-import type { MapPoi, MapBounds } from './OsmPoiMap.types'
-import {
-  isValidLatLng,
-  computeViewportMultiplier,
-  createClusterIcon,
-  hydratePoiIcon,
-  MAP_MAX_ZOOM,
-} from './mapUtils'
+import type { MapPoi, MapCluster, BoundsWithZoom } from './OsmPoiMap.types'
+import { isValidLatLng, createServerClusterIcon, hydratePoiIcon, MAP_MAX_ZOOM } from './mapUtils'
 
 const props = withDefaults(
   defineProps<{
     items: MapPoi[]
+    clusters?: MapCluster[]
     iconComponent: Component
     popupComponent?: Component
     center?: [number, number]
     zoom?: number
     selectedId?: string | number
     fitToPois?: boolean
+    fetchPopupData?: (id: string | number) => Promise<unknown>
   }>(),
   {
     zoom: 7,
     fitToPois: false,
+    clusters: () => [],
   }
 )
 
 const emit = defineEmits<{
   (e: 'item:select', id: string | number): void
   (e: 'map:ready', map: LMap): void
-  (e: 'bounds-changed', bounds: MapBounds): void
+  (e: 'bounds-changed', payload: BoundsWithZoom): void
 }>()
 
 const mapEl: Ref<HTMLDivElement | null> = ref(null)
@@ -43,6 +38,8 @@ let map: LMap | null = null
 let markers = new Map<string | number, LMarker>()
 let itemsById = new Map<string | number, MapPoi>()
 const iconCache = new Map<string, L.DivIcon>()
+let clusterLayer: L.LayerGroup | null = null
+let clusterMarkers = new Map<number, LMarker>()
 // Tracks the zoom level from the last completed zoom animation. Used by the
 // center watcher to avoid capturing a mid-flyTo intermediate zoom value.
 let lastStableZoom: number = props.zoom
@@ -52,67 +49,11 @@ let boundsDebounceTimer: ReturnType<typeof setTimeout> | null = null
 let suppressBoundsEmit = false
 let resizeObserver: ResizeObserver | null = null
 
-// Spiderfy hover region
-type MCCluster = any
-
-const SPIDER_HOVER_PADDING_PX = 40
-
-let activeSpiderCluster: MCCluster | null = null
-let activeSpiderHoverBounds: L.LatLngBounds | null = null
-const spiderClickHandlers = new WeakMap<L.Marker, (ev: Event) => void>()
-
-// Suppress child-marker popup during spiderfy animation triggered by tap/click
-// so the same gesture doesn't ghost-click a child marker.
-let spiderfyCooldown = false
-// Tracks whether the current spiderfy was triggered by hover (no cooldown needed)
-let spiderfyViaHover = false
-
-function computeSpiderHoverBounds(
-  map: LMap,
-  cluster: MCCluster,
-  paddingPx = SPIDER_HOVER_PADDING_PX
-): L.LatLngBounds {
-  const children: LMarker[] = cluster.getAllChildMarkers?.() ?? []
-  if (!children.length) {
-    // Defensive guard: if plugin reports no children (transient state / API mismatch),
-    // return a valid bounds around the cluster center (avoids Infinity bounds).
-    const ll = cluster.getLatLng?.() ?? map.getCenter()
-    return L.latLngBounds(ll, ll)
-  }
-
-  let minX = Infinity,
-    minY = Infinity,
-    maxX = -Infinity,
-    maxY = -Infinity
-  for (const m of children) {
-    const p = map.latLngToLayerPoint(m.getLatLng())
-    if (p.x < minX) minX = p.x
-    if (p.y < minY) minY = p.y
-    if (p.x > maxX) maxX = p.x
-    if (p.y > maxY) maxY = p.y
-  }
-
-  minX -= paddingPx
-  minY -= paddingPx
-  maxX += paddingPx
-  maxY += paddingPx
-
-  // Convert back to LatLng bounds.
-  // y grows downward in layer points: (minX, maxY) is bottom-left, (maxX, minY) is top-right.
-  const sw = map.layerPointToLatLng(L.point(minX, maxY))
-  const ne = map.layerPointToLatLng(L.point(maxX, minY))
-  return L.latLngBounds(sw, ne)
-}
-
-function closeSpider() {
-  if (activeSpiderCluster) {
-    activeSpiderCluster.unspiderfy?.()
-  }
-  activeSpiderCluster = null
-  activeSpiderHoverBounds = null
-}
-
-let clusterGroup: any = null
+let pointLayer: L.LayerGroup | null = null
+let oms: OverlappingMarkerSpiderfier | null = null
+const markerItems = new WeakMap<LMarker, MapPoi>()
+let pendingSpiderfyLatLng: L.LatLng | null = null
+const clusterData = new WeakMap<LMarker, MapCluster>()
 
 function emitBounds() {
   if (boundsDebounceTimer) clearTimeout(boundsDebounceTimer)
@@ -127,10 +68,13 @@ function emitBounds() {
     if (size.x === 0 || size.y === 0) return
     const b = map.getBounds()
     emit('bounds-changed', {
-      south: b.getSouth(),
-      north: b.getNorth(),
-      west: b.getWest(),
-      east: b.getEast(),
+      bounds: {
+        south: b.getSouth(),
+        north: b.getNorth(),
+        west: b.getWest(),
+        east: b.getEast(),
+      },
+      zoom: map.getZoom(),
     })
   }, 300)
 }
@@ -142,7 +86,7 @@ function ensureMap() {
 
   map = createLeafletMap(mapEl.value)
   initBaseLayer(map)
-  initClusters(map)
+  initLayers(map)
 }
 
 function createLeafletMap(el: HTMLDivElement): LMap {
@@ -176,7 +120,9 @@ function initBaseLayer(map: LMap): void {
   // Keep lastStableZoom in sync with the map so the center watcher always
   // uses the zoom from the last *completed* animation, never a mid-flyTo value.
   map.on('zoomend', () => {
-    if (map) lastStableZoom = map.getZoom()
+    if (map) {
+      lastStableZoom = map.getZoom()
+    }
   })
   map.on('moveend', emitBounds)
   const tileUrl = __APP_CONFIG__.MAP_TILE_URL
@@ -192,122 +138,46 @@ function initBaseLayer(map: LMap): void {
   tileLayer.once('load', () => onMapReady())
 }
 
-// --- clusters + spider hover region ----------------------------------------
+// Max distance in metres between two markers considered co-located for spiderfy grouping.
+const SPIDERFY_COLOCATION_THRESHOLD_M = 10
 
-function initClusters(map: LMap) {
-  clusterGroup = (L as any).markerClusterGroup({
-    spiderfyOnMaxZoom: true,
-    showCoverageOnHover: false,
-    zoomToBoundsOnClick: true,
-    maxClusterRadius: 40,
-    spiderfyDistanceMultiplier: 1.5,
-    iconCreateFunction: createClusterIcon,
+// OMS tuning for large avatar markers (defaults are sized for tiny pin icons).
+// Tune in browser console: oms.circleFootSeparation = 120, etc.
+const OMS_CIRCLE_FOOT_SEPARATION = 65
+const OMS_SPIRAL_FOOT_SEPARATION = 50
+const OMS_SPIRAL_LENGTH_START = 16
+const OMS_SPIRAL_LENGTH_FACTOR = 12
+function triggerSpiderfy(target: L.LatLng) {
+  if (!oms || !map) return
+  const match = [...markers.values()].find(
+    (m) => m.getLatLng().distanceTo(target) < SPIDERFY_COLOCATION_THRESHOLD_M
+  )
+  if (!match) return
+  ;(oms as any).spiderListener(match)
+}
+
+function initLayers(map: LMap) {
+  pointLayer = L.layerGroup().addTo(map)
+  clusterLayer = L.layerGroup().addTo(map)
+  oms = new OverlappingMarkerSpiderfier(map, { keepSpiderfied: true })
+  oms.circleFootSeparation = OMS_CIRCLE_FOOT_SEPARATION
+  oms.spiralFootSeparation = OMS_SPIRAL_FOOT_SEPARATION
+  oms.spiralLengthStart = OMS_SPIRAL_LENGTH_START
+  oms.spiralLengthFactor = OMS_SPIRAL_LENGTH_FACTOR
+  oms.addListener('click', (marker) => {
+    const item = markerItems.get(marker as LMarker)
+    if (!item) return
+    if (props.popupComponent) (marker as LMarker).openPopup()
+    else emit('item:select', item.id)
   })
-
-  // Desktop: hover to spiderfy
-  clusterGroup.on('clustermouseover', onClusterMouseOver)
-  clusterGroup.on('spiderfied', onClusterSpiderfied)
-  clusterGroup.on('unspiderfied', onClusterUnspiderfied)
-
-  // Both: mousemove (desktop) and touchstart (touch) to close spider
-  map.on('mousemove', onMapMouseMove)
-  map.on('touchstart', onMapTouchStart)
-  map.on('zoomstart', closeSpider)
-
-  map.addLayer(clusterGroup)
-}
-
-function onClusterMouseOver(e: any) {
-  // On mobile/touch, the browser synthesizes mouseover before click — skip
-  // hover-to-spiderfy and let markercluster's _zoomOrSpiderfy handle the tap
-  // with canonical zoom-to-bounds (or spiderfy at max zoom).
-  if (L.Browser.mobile) return
-  // Ignore hover on other clusters while a spider is already open —
-  // the user must move away from the active spider to close it first.
-  if (activeSpiderCluster || !map) return
-
-  // scale spiderfy distance with viewport
-  clusterGroup.options.spiderfyDistanceMultiplier = computeViewportMultiplier(map.getSize())
-
-  spiderfyViaHover = true
-  e.layer.spiderfy()
-}
-
-function onMapTouchStart(ev: L.LeafletEvent) {
-  if (!activeSpiderCluster || !activeSpiderHoverBounds || !map) return
-  if (popupTarget.value) return
-  // touchstart doesn't carry latlng — extract from the raw TouchEvent
-  const touch = ((ev as any).originalEvent as TouchEvent)?.touches?.[0]
-  if (!touch) return
-  const pt = map.containerPointToLatLng(
-    L.point(
-      touch.clientX - map.getContainer().getBoundingClientRect().left,
-      touch.clientY - map.getContainer().getBoundingClientRect().top
-    )
-  )
-  if (!activeSpiderHoverBounds.contains(pt)) closeSpider()
-}
-
-function onClusterSpiderfied(e: any) {
-  if (!map) return
-  activeSpiderCluster = e.cluster
-  activeSpiderHoverBounds = computeSpiderHoverBounds(
-    map,
-    activeSpiderCluster,
-    SPIDER_HOVER_PADDING_PX
-  )
-
-  // When spiderfy was triggered by a tap/click (not hover), suppress popup
-  // opens briefly so the same gesture doesn't ghost-click a child marker.
-  if (!spiderfyViaHover) {
-    spiderfyCooldown = true
-    setTimeout(() => (spiderfyCooldown = false), 400)
-  }
-  spiderfyViaHover = false
-
-  // Prevent clicks on spiderfied child markers from bubbling to the map
-  // (which would trigger markercluster's _unspiderfyWrapper and collapse
-  // the spider). stopPropagation also blocks Leaflet's own 'click' event,
-  // so we open the popup directly from the same DOM handler.
-  for (const marker of e.markers) {
-    const el = marker.getElement?.()
-    if (!el) continue
-    const handler = (ev: Event) => {
-      if (spiderfyCooldown) return
-      L.DomEvent.stopPropagation(ev as any)
-      marker.openPopup()
-    }
-    spiderClickHandlers.set(marker, handler)
-    L.DomEvent.on(el, 'click', handler)
-  }
-}
-
-function onClusterUnspiderfied(e: any) {
-  // Remove click handlers added in onClusterSpiderfied
-  // to prevent accumulation across spiderfy cycles (especially with KeepAlive)
-  if (e?.markers) {
-    for (const marker of e.markers) {
-      const el = marker.getElement?.()
-      const handler = spiderClickHandlers.get(marker)
-      if (el && handler) {
-        L.DomEvent.off(el, 'click', handler)
-        spiderClickHandlers.delete(marker)
-      }
-    }
-  }
-  activeSpiderCluster = null
-  activeSpiderHoverBounds = null
-}
-
-function onMapMouseMove(ev: L.LeafletMouseEvent) {
-  if (!activeSpiderCluster || !activeSpiderHoverBounds) return
-  // Keep spider open while a popup is visible (user is interacting with a profile card)
-  if (popupTarget.value) return
-  if (!activeSpiderHoverBounds.contains(ev.latlng)) closeSpider()
 }
 
 const popupTarget = ref<HTMLElement | null>(null)
 const popupItem = ref<MapPoi | null>(null)
+
+function closeActivePopup() {
+  map?.closePopup()
+}
 
 function onMapReady() {
   if (!map) return
@@ -320,11 +190,15 @@ function createMarker(item: MapPoi): LMarker {
   const isSelected = item.id === props.selectedId
   const m = L.marker([item.location.lat, item.location.lon], {
     title: item.title,
-    icon: hydratePoiIcon(props.iconComponent, {
-      image: item.image,
-      isSelected,
-      isHighlighted: item.highlighted ?? false,
-    }, iconCache),
+    icon: hydratePoiIcon(
+      props.iconComponent,
+      {
+        image: item.image,
+        isSelected,
+        isHighlighted: item.highlighted ?? false,
+      },
+      iconCache
+    ),
     keyboard: true,
   })
 
@@ -336,36 +210,49 @@ function createMarker(item: MapPoi): LMarker {
       className: item.highlighted ? 'item-popup item-popup-highlighted' : 'item-popup',
     })
 
-    m.on('popupopen', (e: L.PopupEvent) => {
-      const target = e.popup
+    m.on('popupopen', async (e: L.PopupEvent) => {
+      const popup = e.popup
+      const target = popup
         .getElement()
         ?.querySelector('.leaflet-popup-content') as HTMLElement | null
       popupTarget.value = target
       popupItem.value = item
-      nextTick(() => e.popup.update())
+
+      if (props.fetchPopupData) {
+        const itemId = item.id
+        try {
+          const fullData = await props.fetchPopupData(itemId)
+          if (!popup.isOpen()) return
+          if (fullData && popupItem.value?.id === itemId) {
+            popupItem.value = { ...item, source: fullData }
+          }
+        } catch {
+          // Swallow – popup may already be closed; nothing useful to show.
+        }
+      }
+
+      if (popup.isOpen()) {
+        nextTick(() => popup.update())
+      }
     })
     m.on('popupclose', () => {
       popupTarget.value = null
       popupItem.value = null
     })
-
-    m.on('click', () => {
-      if (spiderfyCooldown) return
-      m.openPopup()
-    })
-  } else {
-    m.on('click', () => emit('item:select', item.id))
   }
+
+  markerItems.set(m, item)
   return m
 }
 
 function updateMarkers(forceRebuild = false) {
-  if (!map || !clusterGroup || !isMapReady) return
+  if (!map || !pointLayer || !isMapReady) return
   const size = map.getSize()
   if (size.x === 0 || size.y === 0) return
 
   if (forceRebuild) {
-    clusterGroup.clearLayers()
+    pointLayer.clearLayers()
+    oms?.clearMarkers()
     markers.clear()
     itemsById.clear()
   }
@@ -402,18 +289,36 @@ function updateMarkers(forceRebuild = false) {
       if (existing.highlighted !== item.highlighted || imageUrl !== existingUrl) {
         const marker = markers.get(id)!
         marker.setIcon(
-          hydratePoiIcon(props.iconComponent, {
-            image: item.image,
-            isSelected: id === props.selectedId,
-            isHighlighted: item.highlighted ?? false,
-          }, iconCache)
+          hydratePoiIcon(
+            props.iconComponent,
+            {
+              image: item.image,
+              isSelected: id === props.selectedId,
+              isHighlighted: item.highlighted ?? false,
+            },
+            iconCache
+          )
         )
       }
     }
   }
 
-  if (toRemove.length) clusterGroup.removeLayers(toRemove)
-  if (toAdd.length) clusterGroup.addLayers(toAdd)
+  for (const m of toRemove) {
+    pointLayer.removeLayer(m)
+    oms?.removeMarker(m)
+  }
+  for (const m of toAdd) {
+    pointLayer.addLayer(m)
+    oms?.addMarker(m)
+  }
+
+  // After dissolving a max-zoom cluster, auto-spiderfy the co-located leaf markers.
+  if (pendingSpiderfyLatLng) {
+    const target = pendingSpiderfyLatLng
+    pendingSpiderfyLatLng = null
+    const match = [...markers.values()].find((m) => m.getLatLng().distanceTo(target) < 1)
+    if (match) setTimeout(() => triggerSpiderfy(target), 0)
+  }
 
   // Only fitBounds on initial load (all markers are new, none removed)
   if (
@@ -432,6 +337,59 @@ function updateMarkers(forceRebuild = false) {
     map.once('moveend', () => {
       suppressBoundsEmit = false
     })
+  }
+}
+
+function updateClusterMarkers() {
+  if (!map || !clusterLayer) return
+
+  const incoming = new Map<number, MapCluster>()
+  for (const cluster of props.clusters ?? []) {
+    incoming.set(cluster.id, cluster)
+  }
+
+  // Remove stale cluster markers
+  for (const [id, marker] of clusterMarkers) {
+    if (!incoming.has(id)) {
+      clusterLayer.removeLayer(marker)
+      clusterMarkers.delete(id)
+    }
+  }
+
+  // Add new or update existing cluster markers
+  for (const [id, cluster] of incoming) {
+    const existing = clusterMarkers.get(id)
+    if (!existing) {
+      const m = L.marker([cluster.location.lat, cluster.location.lon], {
+        icon: createServerClusterIcon(cluster.count),
+        keyboard: true,
+      })
+      clusterData.set(m, cluster)
+      m.on('click', () => {
+        if (!map) return
+        const data = clusterData.get(m)
+        if (!data) return
+        if (data.expansionZoom >= MAP_MAX_ZOOM) {
+          // At max zoom the cluster dissolves into individual points — remove it
+          // immediately so it cannot intercept the next click on a leaf marker.
+          // Store the latlng so updateMarkers can auto-spiderfy after the leaves arrive.
+          clusterLayer?.removeLayer(m)
+          clusterMarkers.delete(id)
+          pendingSpiderfyLatLng = L.latLng(data.location.lat, data.location.lon)
+          map.setView([data.location.lat, data.location.lon], MAP_MAX_ZOOM)
+        } else {
+          map.flyTo([data.location.lat, data.location.lon], data.expansionZoom, {
+            duration: 0.5,
+          })
+        }
+      })
+      clusterLayer.addLayer(m)
+      clusterMarkers.set(id, m)
+    } else {
+      existing.setLatLng([cluster.location.lat, cluster.location.lon])
+      existing.setIcon(createServerClusterIcon(cluster.count))
+      clusterData.set(existing, cluster)
+    }
   }
 }
 
@@ -478,17 +436,17 @@ function destroyMap() {
   }
   iconCache.clear()
   map.off('moveend', emitBounds)
-  map.off('mousemove', onMapMouseMove)
-  map.off('touchstart', onMapTouchStart)
-  map.off('zoomstart movestart', closeSpider)
 
-  clusterGroup?.off('clustermouseover', onClusterMouseOver)
-  clusterGroup?.off('spiderfied', onClusterSpiderfied)
-  clusterGroup?.off('unspiderfied', onClusterUnspiderfied)
+  pointLayer?.clearLayers()
+  pointLayer = null
+  oms?.clearMarkers()
+  oms = null
+  clusterLayer?.clearLayers()
+  clusterLayer = null
+  clusterMarkers.clear()
 
   map.remove()
   map = null
-  clusterGroup = null
 }
 
 onBeforeUnmount(() => {
@@ -505,12 +463,18 @@ onActivated(() => {
     pendingCenter = null
   }
   updateMarkers(true)
+  updateClusterMarkers()
 })
 
 watch(
   () => props.items,
+  () => updateMarkers()
+)
+
+watch(
+  () => props.clusters,
   () => {
-    updateMarkers()
+    updateClusterMarkers()
   }
 )
 
@@ -536,10 +500,17 @@ watch(
 </script>
 
 <template>
-  <div>
+  <div class="osm-poi-map-wrapper">
     <div
       class="osm-poi-map"
       ref="mapEl"
+    />
+
+    <!-- Backdrop absorbs map clicks while a popup is open, preventing OMS unspiderfy -->
+    <div
+      v-if="popupTarget"
+      class="map-popup-backdrop"
+      @click="closeActivePopup"
     />
 
     <Teleport
@@ -556,10 +527,26 @@ watch(
 </template>
 
 <style scoped>
+.osm-poi-map-wrapper {
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+
 .osm-poi-map {
   /* Set an explicit height, or it won't be visible */
   height: 100%;
   width: 100%;
+}
+
+/* Invisible overlay that swallows map clicks while a popup is open,
+   preventing OMS from collapsing the spider. The popup itself lives
+   inside the Leaflet pane which sits above this backdrop. */
+.map-popup-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 999;
+  cursor: pointer;
 }
 
 /* Cluster badge */
@@ -581,16 +568,6 @@ watch(
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
-/* Hide default markercluster styles we don't use */
-:deep(.marker-cluster) {
-  background: transparent !important;
-  border: none !important;
-}
-
-:deep(.marker-cluster div) {
-  background: transparent !important;
-}
-
 /* Remove default Leaflet icon images spacing */
 :deep(.leaflet-div-icon) {
   background: transparent;
@@ -610,8 +587,13 @@ watch(
     border-color 0.15s ease;
 }
 
+:deep(.poi-avatar-icon) {
+  transition: z-index 0s 250ms;
+}
+
 :deep(.poi-avatar-icon:hover) {
   z-index: 10000 !important;
+  transition: z-index 0s 0s;
 }
 
 :deep(.poi-avatar-icon:hover img) {
