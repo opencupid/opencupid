@@ -141,17 +141,19 @@ function initBaseLayer(map: LMap): void {
 // Max distance in metres between two markers considered co-located for spiderfy grouping.
 const SPIDERFY_COLOCATION_THRESHOLD_M = 10
 
+// OMS spiral/circle params (defaults shown) — tune in browser console if needed:
+//   oms.circleSpiralSwitchover = 9   — switch from circle to spiral above this count
+//   oms.circleFootSeparation = 25    — arc spacing between markers in circle mode (px)
+//   oms.circleStartAngle = Math.PI / 6
+//   oms.spiralFootSeparation = 28    — spacing between spiral turns (px)
+//   oms.spiralLengthStart = 11       — initial spiral arm radius (px)
+//   oms.spiralLengthFactor = 5       — how fast the spiral arm grows per turn
 function triggerSpiderfy(target: L.LatLng) {
   if (!oms || !map) return
-  const match = [...markers.values()].find((m) => m.getLatLng().distanceTo(target) < SPIDERFY_COLOCATION_THRESHOLD_M)
+  const match = [...markers.values()].find(
+    (m) => m.getLatLng().distanceTo(target) < SPIDERFY_COLOCATION_THRESHOLD_M
+  )
   if (!match) return
-  // Tunable OMS spiral/circle params (defaults shown):
-  // oms.circleSpiralSwitchover = 9   — switch from circle to spiral above this count
-  // oms.circleFootSeparation = 25    — arc spacing between markers in circle mode (px)
-  // oms.circleStartAngle = Math.PI / 6
-  // oms.spiralFootSeparation = 28    — spacing between spiral turns (px)
-  // oms.spiralLengthStart = 11 //      — initial spiral arm radius (px)
-  // oms.spiralLengthFactor = 2    //   — how fast the spiral arm grows per turn
   ;(oms as any).spiderListener(match)
 }
 
@@ -285,10 +287,15 @@ function updateMarkers(forceRebuild = false) {
     }
   }
 
-  for (const m of toRemove) { pointLayer.removeLayer(m); oms?.removeMarker(m) }
-  for (const m of toAdd) { pointLayer.addLayer(m); oms?.addMarker(m) }
+  for (const m of toRemove) {
+    pointLayer.removeLayer(m)
+    oms?.removeMarker(m)
+  }
+  for (const m of toAdd) {
+    pointLayer.addLayer(m)
+    oms?.addMarker(m)
+  }
 
-  // After dissolving a max-zoom cluster, auto-spiderfy the co-located leaf markers.
   // After dissolving a max-zoom cluster, auto-spiderfy the co-located leaf markers.
   if (pendingSpiderfyLatLng) {
     const target = pendingSpiderfyLatLng
@@ -317,7 +324,6 @@ function updateMarkers(forceRebuild = false) {
   }
 }
 
-
 function updateClusterMarkers() {
   if (!map || !clusterLayer) return
 
@@ -344,7 +350,6 @@ function updateClusterMarkers() {
       })
       m.on('click', () => {
         if (!map) return
-        console.log('[OsmPoiMap] cluster click expansionZoom', cluster.expansionZoom, 'MAP_MAX_ZOOM', MAP_MAX_ZOOM)
         if (cluster.expansionZoom >= MAP_MAX_ZOOM) {
           // At max zoom the cluster dissolves into individual points — remove it
           // immediately so it cannot intercept the next click on a leaf marker.
@@ -519,7 +524,6 @@ watch(
   border: 2px solid rgba(255, 255, 255, 0.9);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
-
 
 /* Remove default Leaflet icon images spacing */
 :deep(.leaflet-div-icon) {

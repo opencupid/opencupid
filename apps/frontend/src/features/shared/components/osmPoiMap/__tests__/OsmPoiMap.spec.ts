@@ -124,15 +124,27 @@ vi.mock('leaflet', () => {
   }
 })
 
-// Mock OMS — provides a minimal stub for addMarker/removeMarker/clearMarkers/addListener
-const omsInstance = {
-  addMarker: vi.fn().mockReturnThis(),
-  removeMarker: vi.fn().mockReturnThis(),
-  clearMarkers: vi.fn().mockReturnThis(),
-  addListener: vi.fn().mockReturnThis(),
-}
+// vi.mock is hoisted before const declarations, so omsInstance must be defined
+// via vi.hoisted() to be available when the mock factory runs.
+const { omsInstance } = vi.hoisted(() => ({
+  omsInstance: {
+    addMarker: vi.fn().mockReturnThis(),
+    removeMarker: vi.fn().mockReturnThis(),
+    clearMarkers: vi.fn().mockReturnThis(),
+    addListener: vi.fn().mockReturnThis(),
+    getMarkers: vi.fn(() => []),
+    circleSpiralSwitchover: 9,
+    circleFootSeparation: 25,
+    spiralFootSeparation: 28,
+    spiralLengthStart: 11,
+    spiralLengthFactor: 5,
+    spiderListener: vi.fn(),
+  },
+}))
 vi.mock('ts-overlapping-marker-spiderfier-leaflet', () => ({
-  OverlappingMarkerSpiderfier: vi.fn(() => omsInstance),
+  OverlappingMarkerSpiderfier: vi.fn(function () {
+    return omsInstance
+  }),
 }))
 
 // Mock blurhash (canvas unavailable in jsdom)
@@ -217,6 +229,8 @@ beforeEach(() => {
   omsInstance.removeMarker.mockReturnThis()
   omsInstance.clearMarkers.mockReturnThis()
   omsInstance.addListener.mockReturnThis()
+  omsInstance.getMarkers.mockReturnValue([])
+  omsInstance.spiderListener.mockReset()
 })
 
 describe('OsmPoiMap', () => {
