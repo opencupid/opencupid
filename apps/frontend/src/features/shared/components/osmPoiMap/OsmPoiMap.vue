@@ -52,6 +52,7 @@ let resizeObserver: ResizeObserver | null = null
 let pointLayer: L.LayerGroup | null = null
 let oms: OverlappingMarkerSpiderfier | null = null
 const markerItems = new WeakMap<LMarker, MapPoi>()
+let pendingSpiderfyLatLng: L.LatLng | null = null
 
 function emitBounds() {
   if (boundsDebounceTimer) clearTimeout(boundsDebounceTimer)
@@ -135,6 +136,23 @@ function initBaseLayer(map: LMap): void {
     attribution: __APP_CONFIG__.MAP_ATTRIBUTION,
   }).addTo(map)
   tileLayer.once('load', () => onMapReady())
+}
+
+// Max distance in metres between two markers considered co-located for spiderfy grouping.
+const SPIDERFY_COLOCATION_THRESHOLD_M = 10
+
+function triggerSpiderfy(target: L.LatLng) {
+  if (!oms || !map) return
+  const match = [...markers.values()].find((m) => m.getLatLng().distanceTo(target) < SPIDERFY_COLOCATION_THRESHOLD_M)
+  if (!match) return
+  // Tunable OMS spiral/circle params (defaults shown):
+  // oms.circleSpiralSwitchover = 9   — switch from circle to spiral above this count
+  // oms.circleFootSeparation = 25    — arc spacing between markers in circle mode (px)
+  // oms.circleStartAngle = Math.PI / 6
+  // oms.spiralFootSeparation = 28    — spacing between spiral turns (px)
+  // oms.spiralLengthStart = 11 //      — initial spiral arm radius (px)
+  // oms.spiralLengthFactor = 2    //   — how fast the spiral arm grows per turn
+  ;(oms as any).spiderListener(match)
 }
 
 function initLayers(map: LMap) {
@@ -270,6 +288,15 @@ function updateMarkers(forceRebuild = false) {
   for (const m of toRemove) { pointLayer.removeLayer(m); oms?.removeMarker(m) }
   for (const m of toAdd) { pointLayer.addLayer(m); oms?.addMarker(m) }
 
+  // After dissolving a max-zoom cluster, auto-spiderfy the co-located leaf markers.
+  // After dissolving a max-zoom cluster, auto-spiderfy the co-located leaf markers.
+  if (pendingSpiderfyLatLng) {
+    const target = pendingSpiderfyLatLng
+    pendingSpiderfyLatLng = null
+    const match = [...markers.values()].find((m) => m.getLatLng().distanceTo(target) < 1)
+    if (match) setTimeout(() => triggerSpiderfy(target), 0)
+  }
+
   // Only fitBounds on initial load (all markers are new, none removed)
   if (
     toAdd.length > 0 &&
@@ -317,10 +344,20 @@ function updateClusterMarkers() {
       })
       m.on('click', () => {
         if (!map) return
-        console.log('[OsmPoiMap] cluster click expansionZoom', cluster.expansionZoom)
-        map.flyTo([cluster.location.lat, cluster.location.lon], cluster.expansionZoom, {
-          duration: 0.5,
-        })
+        console.log('[OsmPoiMap] cluster click expansionZoom', cluster.expansionZoom, 'MAP_MAX_ZOOM', MAP_MAX_ZOOM)
+        if (cluster.expansionZoom >= MAP_MAX_ZOOM) {
+          // At max zoom the cluster dissolves into individual points — remove it
+          // immediately so it cannot intercept the next click on a leaf marker.
+          // Store the latlng so updateMarkers can auto-spiderfy after the leaves arrive.
+          clusterLayer?.removeLayer(m)
+          clusterMarkers.delete(id)
+          pendingSpiderfyLatLng = L.latLng(cluster.location.lat, cluster.location.lon)
+          map.setView([cluster.location.lat, cluster.location.lon], MAP_MAX_ZOOM)
+        } else {
+          map.flyTo([cluster.location.lat, cluster.location.lon], cluster.expansionZoom, {
+            duration: 0.5,
+          })
+        }
       })
       clusterLayer.addLayer(m)
       clusterMarkers.set(id, m)
@@ -503,8 +540,13 @@ watch(
     border-color 0.15s ease;
 }
 
+:deep(.poi-avatar-icon) {
+  transition: z-index 0s 250ms;
+}
+
 :deep(.poi-avatar-icon:hover) {
   z-index: 10000 !important;
+  transition: z-index 0s 0s;
 }
 
 :deep(.poi-avatar-icon:hover img) {
