@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from 'vitest'
 import { AxiosHeaders } from 'axios'
-import { getVersionInfo, api } from '../api'
+import { getVersionInfo, api, ERROR_CODES } from '../api'
 import packageJson from '../../../package.json'
 
 // Mock the bus module
@@ -60,65 +60,26 @@ describe('api error handling', () => {
 
   it('detects network errors correctly', () => {
     // Test the network error detection logic
-    const testCases = [
-      { code: 'ECONNABORTED', expected: true },
-      { code: 'ENETUNREACH', expected: true },
-      { code: 'ENOTFOUND', expected: true },
-      { code: 'ECONNREFUSED', expected: true },
-      { code: 'ETIMEDOUT', expected: true },
-      { code: 'ECONNRESET', expected: true },
-      { code: 'ERR_NETWORK', expected: true },
-      { code: 'ERR_BAD_RESPONSE', expected: true },
+    const testCases: { code?: string; response?: unknown; expected: boolean }[] = [
+      ...ERROR_CODES.map((code) => ({ code, expected: true })),
       { response: null, expected: true }, // no response = network error
+      { code: 'ERR_BAD_RESPONSE', response: { status: 500 }, expected: false },
       { code: 'SOME_OTHER_ERROR', response: { status: 500 }, expected: false },
     ]
 
     testCases.forEach(({ code, response, expected }) => {
       const error = { code, response }
-      const isNetworkError =
-        !error.response ||
-        [
-          'ECONNABORTED',
-          'ENETUNREACH',
-          'ENOTFOUND',
-          'ECONNREFUSED',
-          'ETIMEDOUT',
-          'ECONNRESET',
-          'ERR_NETWORK',
-          'ERR_BAD_RESPONSE',
-        ].includes(error.code ?? '')
+      const isNetworkError = !error.response || ERROR_CODES.includes(error.code ?? '')
 
       expect(isNetworkError).toBe(expected)
     })
   })
 
   it('handles various network error codes', () => {
-    const errorCodes = [
-      'ECONNABORTED',
-      'ENETUNREACH',
-      'ENOTFOUND',
-      'ECONNREFUSED',
-      'ETIMEDOUT',
-      'ECONNRESET',
-      'ERR_NETWORK',
-      'ERR_BAD_RESPONSE',
-    ]
-
-    for (const code of errorCodes) {
+    for (const code of ERROR_CODES) {
       const mockError: { code: string; response?: unknown } = { code }
 
-      const isNetworkError =
-        !mockError.response ||
-        [
-          'ECONNABORTED',
-          'ENETUNREACH',
-          'ENOTFOUND',
-          'ECONNREFUSED',
-          'ETIMEDOUT',
-          'ECONNRESET',
-          'ERR_NETWORK',
-          'ERR_BAD_RESPONSE',
-        ].includes(mockError.code)
+      const isNetworkError = !mockError.response || ERROR_CODES.includes(mockError.code)
 
       expect(isNetworkError).toBe(true)
     }

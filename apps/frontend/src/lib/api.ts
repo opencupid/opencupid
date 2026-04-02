@@ -17,7 +17,7 @@ export const api = axios.create({
 })
 const CURRENT_VERSION = __APP_VERSION__
 
-const ERROR_CODES = [
+export const ERROR_CODES = [
   'ECONNABORTED',
   'ENETUNREACH',
   'ENOTFOUND',
