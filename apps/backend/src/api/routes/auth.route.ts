@@ -92,11 +92,12 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
         const { user, isNewUser } = result
 
-        if (isNewUser && user.email) {
-          await notifierService.notifyUser('' + user.id, 'welcome', {
-            link: `${appConfig.FRONTEND_URL}/me`,
-          })
-        }
+        // disabled for now.
+        // if (isNewUser && user.email) {
+        //   await notifierService.notifyUser('' + user.id, 'welcome', {
+        //     link: `${appConfig.FRONTEND_URL}/me`,
+        //   })
+        // }
 
         const session = isNewUser
           ? await createNewUserSession(user)
