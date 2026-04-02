@@ -121,7 +121,6 @@ function initBaseLayer(map: LMap): void {
   map.on('zoomend', () => {
     if (map) {
       lastStableZoom = map.getZoom()
-      console.log('[OsmPoiMap] zoomend', lastStableZoom)
     }
   })
   map.on('moveend', emitBounds)
