@@ -13,6 +13,7 @@ vi.mock('@vueuse/core', async (importOriginal) => {
 vi.stubGlobal('__APP_CONFIG__', { SITE_NAME: 'TestSite' })
 vi.mock('@/assets/icons/interface/sun.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/logout.svg', () => ({ default: { template: '<div />' } }))
+vi.mock('@/assets/icons/interface/question.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/images/app/curved-arrow.svg', () => ({ default: { template: '<div />' } }))
 
 // Mock d3-cloud — jsdom has no canvas, so we simulate the layout synchronously
@@ -78,6 +79,7 @@ const stubComponents = {
   BackButton: { template: '<div />' },
   PublicNameInput: { template: '<div />' },
   LogoutButton: { template: '<div />' },
+  OpenreplayButton: { template: '<div />' },
   IconSun: { template: '<div />' },
   IconLogout: { template: '<div />' },
   BForm: { template: '<form><slot /></form>' },

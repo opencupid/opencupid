@@ -311,6 +311,12 @@
       "previous": "Previous"
     }
   },
+  "openreplay": {
+    "button_title": "Help us improve",
+    "modal_body": "When enabled, your screen activity is recorded anonymously to help us find and fix issues. No personal data is stored beyond your user ID. You can turn this off at any time.",
+    "modal_title": "Session replay",
+    "switch_label": "Enable session replay"
+  },
   "posts": {
     "actions": {
       "cancel": "Nevermind",
