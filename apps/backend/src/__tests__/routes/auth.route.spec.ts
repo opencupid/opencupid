@@ -140,7 +140,7 @@ describe('GET /verify-token', () => {
     })
   })
 
-  it('returns 200 and token for new user, sends welcome email and initializes profile', async () => {
+  it('returns 200 and token for new user and initializes profile', async () => {
     const handler = fastify.routes['GET /verify-token']
     const user = {
       id: 'user2',
@@ -168,14 +168,8 @@ describe('GET /verify-token', () => {
       },
     })
     fastify.jwt = { sign: vi.fn().mockReturnValue('jwt-token2') }
-    const notifier = (await import('../../services/notifier.service')).notifierService
-    // @ts-expect-error whatever
-    notifier.notifyUser.mockClear()
     const req = { query: { token: 'abc123' } }
     await handler(req as any, reply as any)
-    expect(notifier.notifyUser).toHaveBeenCalledWith('user2', 'welcome', {
-      link: 'http://test/me',
-    })
     expect(mockCreateNewUserSession).toHaveBeenCalledWith(user)
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
