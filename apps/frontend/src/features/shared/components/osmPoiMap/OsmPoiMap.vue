@@ -141,13 +141,12 @@ function initBaseLayer(map: LMap): void {
 // Max distance in metres between two markers considered co-located for spiderfy grouping.
 const SPIDERFY_COLOCATION_THRESHOLD_M = 10
 
-// OMS spiral/circle params (defaults shown) — tune in browser console if needed:
-//   oms.circleSpiralSwitchover = 9   — switch from circle to spiral above this count
-//   oms.circleFootSeparation = 25    — arc spacing between markers in circle mode (px)
-//   oms.circleStartAngle = Math.PI / 6
-//   oms.spiralFootSeparation = 28    — spacing between spiral turns (px)
-//   oms.spiralLengthStart = 11       — initial spiral arm radius (px)
-//   oms.spiralLengthFactor = 5       — how fast the spiral arm grows per turn
+// OMS tuning for large avatar markers (defaults are sized for tiny pin icons).
+// Tune in browser console: oms.circleFootSeparation = 120, etc.
+const OMS_CIRCLE_FOOT_SEPARATION = 65
+const OMS_SPIRAL_FOOT_SEPARATION = 50
+const OMS_SPIRAL_LENGTH_START = 16
+const OMS_SPIRAL_LENGTH_FACTOR = 12
 function triggerSpiderfy(target: L.LatLng) {
   if (!oms || !map) return
   const match = [...markers.values()].find(
@@ -161,6 +160,10 @@ function initLayers(map: LMap) {
   pointLayer = L.layerGroup().addTo(map)
   clusterLayer = L.layerGroup().addTo(map)
   oms = new OverlappingMarkerSpiderfier(map, { keepSpiderfied: true })
+  oms.circleFootSeparation = OMS_CIRCLE_FOOT_SEPARATION
+  oms.spiralFootSeparation = OMS_SPIRAL_FOOT_SEPARATION
+  oms.spiralLengthStart = OMS_SPIRAL_LENGTH_START
+  oms.spiralLengthFactor = OMS_SPIRAL_LENGTH_FACTOR
   oms.addListener('click', (marker) => {
     const item = markerItems.get(marker as LMarker)
     if (!item) return
