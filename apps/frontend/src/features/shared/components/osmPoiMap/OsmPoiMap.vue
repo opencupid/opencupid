@@ -175,6 +175,10 @@ function initLayers(map: LMap) {
 const popupTarget = ref<HTMLElement | null>(null)
 const popupItem = ref<MapPoi | null>(null)
 
+function closeActivePopup() {
+  map?.closePopup()
+}
+
 function onMapReady() {
   if (!map) return
   isMapReady = true
@@ -496,10 +500,17 @@ watch(
 </script>
 
 <template>
-  <div>
+  <div class="osm-poi-map-wrapper">
     <div
       class="osm-poi-map"
       ref="mapEl"
+    />
+
+    <!-- Backdrop absorbs map clicks while a popup is open, preventing OMS unspiderfy -->
+    <div
+      v-if="popupTarget"
+      class="map-popup-backdrop"
+      @click="closeActivePopup"
     />
 
     <Teleport
@@ -516,10 +527,26 @@ watch(
 </template>
 
 <style scoped>
+.osm-poi-map-wrapper {
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+
 .osm-poi-map {
   /* Set an explicit height, or it won't be visible */
   height: 100%;
   width: 100%;
+}
+
+/* Invisible overlay that swallows map clicks while a popup is open,
+   preventing OMS from collapsing the spider. The popup itself lives
+   inside the Leaflet pane which sits above this backdrop. */
+.map-popup-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 999;
+  cursor: pointer;
 }
 
 /* Cluster badge */
