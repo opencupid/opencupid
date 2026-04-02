@@ -14,6 +14,8 @@ export const appConfigSchema = z.object({
   MAP_TILE_URL: z.string().default(''),
   MAP_ATTRIBUTION: z.string().default(''),
   GEOCODING_ALLOWED_COUNTRIES: z.string().default(''),
+  OPENREPLAY_PROJECT_KEY: z.string().default(''),
+  OPENREPLAY_INGEST_POINT: z.string().default(''),
   DEV_AUTH_BYPASS_ENABLED: z
     .enum(['true', 'false'])
     .default('false')
