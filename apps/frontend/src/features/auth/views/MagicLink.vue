@@ -67,7 +67,8 @@ async function doVerifyToken(token: string) {
   try {
     const res = await authStore.verifyToken(token)
     if (res.success) {
-      logCheckpoint('auth:verify_success')
+      // disabled for now to reduce noise - will re-enable if needed
+      // logCheckpoint('auth:verify_success')
       isValidated.value = true
       error.value = ''
       await router.push({ name: 'UserHome' })
