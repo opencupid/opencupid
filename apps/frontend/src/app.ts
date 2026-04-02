@@ -22,6 +22,23 @@ import { createBootstrap } from 'bootstrap-vue-next'
 import App from './App.vue'
 import router from './router'
 
+function initOpenReplay() {
+  const { OPENREPLAY_PROJECT_KEY, OPENREPLAY_INGEST_POINT } = __APP_CONFIG__
+  if (!OPENREPLAY_PROJECT_KEY || !OPENREPLAY_INGEST_POINT) return
+
+  import('@openreplay/tracker')
+    .then(({ default: Tracker }) => {
+      const tracker = new Tracker({
+        projectKey: OPENREPLAY_PROJECT_KEY,
+        ingestPoint: OPENREPLAY_INGEST_POINT,
+      })
+      tracker.start()
+    })
+    .catch((err) => {
+      console.warn('Failed to load OpenReplay:', err)
+    })
+}
+
 function initSentry(app: ReturnType<typeof createApp>) {
   if (__APP_CONFIG__.NODE_ENV === 'development') return
   if (!__APP_CONFIG__.SENTRY_DSN) return
@@ -78,6 +95,7 @@ export async function bootstrapApp() {
   app.mount('#app')
   document.getElementById('splash')?.remove()
 
-  // Load Sentry after mount so it doesn't block initial render
+  // Load observability tools after mount so they don't block initial render
   initSentry(app)
+  initOpenReplay()
 }
