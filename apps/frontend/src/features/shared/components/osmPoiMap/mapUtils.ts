@@ -7,26 +7,11 @@ export function isValidLatLng(center: [number, number] | undefined): center is [
   return !!center && Number.isFinite(center[0]) && Number.isFinite(center[1])
 }
 
-/** Scales spiderfy distance multiplier based on the smaller viewport dimension. */
-export function computeViewportMultiplier(mapSize: { x: number; y: number }): number {
-  const minDim = Math.min(mapSize.x, mapSize.y)
-  return Math.max(0.8, Math.min(4, minDim / 400))
-}
 
 export { MAP_MAX_ZOOM } from '@shared/maps'
 export const CLUSTER_ICON_SIZE = 35
 export const POI_ICON_SIZE = 40
 
-/** Creates a Leaflet DivIcon for a marker cluster badge. */
-export function createClusterIcon(cluster: { getChildCount(): number }): L.DivIcon {
-  const count = cluster.getChildCount()
-  return L.divIcon({
-    html: `<div class="poi-cluster-badge" style="width:${CLUSTER_ICON_SIZE}px;height:${CLUSTER_ICON_SIZE}px">${count}</div>`,
-    className: 'poi-cluster-icon',
-    iconSize: [CLUSTER_ICON_SIZE, CLUSTER_ICON_SIZE],
-    iconAnchor: [CLUSTER_ICON_SIZE / 2, CLUSTER_ICON_SIZE / 2],
-  })
-}
 
 /** Creates a Leaflet DivIcon for a server-computed cluster (takes count directly). */
 export function createServerClusterIcon(count: number): L.DivIcon {

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 
-// Mock Leaflet before importing mapUtils (hydratePoiIcon and createClusterIcon depend on L.divIcon)
+// Mock Leaflet before importing mapUtils (hydratePoiIcon depends on L.divIcon)
 vi.mock('leaflet', () => ({
   default: {
     divIcon: vi.fn((opts: any) => ({ _type: 'divIcon', ...opts })),
@@ -9,11 +9,7 @@ vi.mock('leaflet', () => ({
 }))
 
 import { defineComponent, h } from 'vue'
-import {
-  isValidLatLng,
-  computeViewportMultiplier,
-  hydratePoiIcon,
-} from '../mapUtils'
+import { isValidLatLng, hydratePoiIcon } from '../mapUtils'
 
 const DummyIcon = defineComponent({
   props: ['image', 'isSelected', 'isHighlighted'],
@@ -43,24 +39,6 @@ describe('isValidLatLng', () => {
   })
 })
 
-describe('computeViewportMultiplier', () => {
-  it('returns ~2 for a 800x800 viewport', () => {
-    expect(computeViewportMultiplier({ x: 800, y: 800 })).toBe(2)
-  })
-
-  it('clamps to floor of 0.8 for tiny viewports', () => {
-    expect(computeViewportMultiplier({ x: 100, y: 100 })).toBe(0.8)
-  })
-
-  it('clamps to ceiling of 4 for huge viewports', () => {
-    expect(computeViewportMultiplier({ x: 3000, y: 3000 })).toBe(4)
-  })
-
-  it('uses the smaller dimension when viewport is not square', () => {
-    // min(2000, 400) = 400 → 400/400 = 1.0
-    expect(computeViewportMultiplier({ x: 2000, y: 400 })).toBe(1)
-  })
-})
 
 describe('hydratePoiIcon caching', () => {
   it('returns cached icon for identical props', () => {

@@ -140,7 +140,10 @@ export class ClusterService {
         lat: f.geometry.coordinates[1],
         lon: f.geometry.coordinates[0],
         count: p.point_count as number,
-        expansionZoom: this.indexes.get(_profileId)!.index.getClusterExpansionZoom(clusterId),
+        expansionZoom: Math.min(
+          this.indexes.get(_profileId)!.index.getClusterExpansionZoom(clusterId),
+          MAP_MAX_ZOOM
+        ),
       } satisfies ClusterFeature
     }
 

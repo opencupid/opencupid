@@ -3,19 +3,9 @@ import { onMounted, onBeforeUnmount, onActivated, ref, watch, nextTick, type Com
 import type { Ref } from 'vue'
 import L, { Map as LMap, Marker as LMarker } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import 'leaflet.markercluster'
-import 'leaflet.markercluster/dist/MarkerCluster.css'
-import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 
 import type { MapPoi, MapCluster, BoundsWithZoom } from './OsmPoiMap.types'
-import {
-  isValidLatLng,
-  computeViewportMultiplier,
-  createClusterIcon,
-  createServerClusterIcon,
-  hydratePoiIcon,
-  MAP_MAX_ZOOM,
-} from './mapUtils'
+import { isValidLatLng, createServerClusterIcon, hydratePoiIcon, MAP_MAX_ZOOM } from './mapUtils'
 
 const props = withDefaults(
   defineProps<{
@@ -58,67 +48,7 @@ let boundsDebounceTimer: ReturnType<typeof setTimeout> | null = null
 let suppressBoundsEmit = false
 let resizeObserver: ResizeObserver | null = null
 
-// Spiderfy hover region
-type MCCluster = any
-
-const SPIDER_HOVER_PADDING_PX = 40
-
-let activeSpiderCluster: MCCluster | null = null
-let activeSpiderHoverBounds: L.LatLngBounds | null = null
-const spiderClickHandlers = new WeakMap<L.Marker, (ev: Event) => void>()
-
-// Suppress child-marker popup during spiderfy animation triggered by tap/click
-// so the same gesture doesn't ghost-click a child marker.
-let spiderfyCooldown = false
-// Tracks whether the current spiderfy was triggered by hover (no cooldown needed)
-let spiderfyViaHover = false
-
-function computeSpiderHoverBounds(
-  map: LMap,
-  cluster: MCCluster,
-  paddingPx = SPIDER_HOVER_PADDING_PX
-): L.LatLngBounds {
-  const children: LMarker[] = cluster.getAllChildMarkers?.() ?? []
-  if (!children.length) {
-    // Defensive guard: if plugin reports no children (transient state / API mismatch),
-    // return a valid bounds around the cluster center (avoids Infinity bounds).
-    const ll = cluster.getLatLng?.() ?? map.getCenter()
-    return L.latLngBounds(ll, ll)
-  }
-
-  let minX = Infinity,
-    minY = Infinity,
-    maxX = -Infinity,
-    maxY = -Infinity
-  for (const m of children) {
-    const p = map.latLngToLayerPoint(m.getLatLng())
-    if (p.x < minX) minX = p.x
-    if (p.y < minY) minY = p.y
-    if (p.x > maxX) maxX = p.x
-    if (p.y > maxY) maxY = p.y
-  }
-
-  minX -= paddingPx
-  minY -= paddingPx
-  maxX += paddingPx
-  maxY += paddingPx
-
-  // Convert back to LatLng bounds.
-  // y grows downward in layer points: (minX, maxY) is bottom-left, (maxX, minY) is top-right.
-  const sw = map.layerPointToLatLng(L.point(minX, maxY))
-  const ne = map.layerPointToLatLng(L.point(maxX, minY))
-  return L.latLngBounds(sw, ne)
-}
-
-function closeSpider() {
-  if (activeSpiderCluster) {
-    activeSpiderCluster.unspiderfy?.()
-  }
-  activeSpiderCluster = null
-  activeSpiderHoverBounds = null
-}
-
-let clusterGroup: any = null
+let pointLayer: L.LayerGroup | null = null
 
 function emitBounds() {
   if (boundsDebounceTimer) clearTimeout(boundsDebounceTimer)
@@ -151,7 +81,7 @@ function ensureMap() {
 
   map = createLeafletMap(mapEl.value)
   initBaseLayer(map)
-  initClusters(map)
+  initLayers(map)
 }
 
 function createLeafletMap(el: HTMLDivElement): LMap {
@@ -201,119 +131,9 @@ function initBaseLayer(map: LMap): void {
   tileLayer.once('load', () => onMapReady())
 }
 
-// --- clusters + spider hover region ----------------------------------------
-
-function initClusters(map: LMap) {
-  clusterGroup = (L as any).markerClusterGroup({
-    spiderfyOnMaxZoom: true,
-    showCoverageOnHover: false,
-    zoomToBoundsOnClick: true,
-    maxClusterRadius: 40,
-    spiderfyDistanceMultiplier: 1.5,
-    iconCreateFunction: createClusterIcon,
-  })
-
-  // Desktop: hover to spiderfy
-  clusterGroup.on('clustermouseover', onClusterMouseOver)
-  clusterGroup.on('spiderfied', onClusterSpiderfied)
-  clusterGroup.on('unspiderfied', onClusterUnspiderfied)
-
-  // Both: mousemove (desktop) and touchstart (touch) to close spider
-  map.on('mousemove', onMapMouseMove)
-  map.on('touchstart', onMapTouchStart)
-  map.on('zoomstart', closeSpider)
-
-  map.addLayer(clusterGroup)
+function initLayers(map: LMap) {
+  pointLayer = L.layerGroup().addTo(map)
   clusterLayer = L.layerGroup().addTo(map)
-}
-
-function onClusterMouseOver(e: any) {
-  // On mobile/touch, the browser synthesizes mouseover before click — skip
-  // hover-to-spiderfy and let markercluster's _zoomOrSpiderfy handle the tap
-  // with canonical zoom-to-bounds (or spiderfy at max zoom).
-  if (L.Browser.mobile) return
-  // Ignore hover on other clusters while a spider is already open —
-  // the user must move away from the active spider to close it first.
-  if (activeSpiderCluster || !map) return
-
-  // scale spiderfy distance with viewport
-  clusterGroup.options.spiderfyDistanceMultiplier = computeViewportMultiplier(map.getSize())
-
-  spiderfyViaHover = true
-  e.layer.spiderfy()
-}
-
-function onMapTouchStart(ev: L.LeafletEvent) {
-  if (!activeSpiderCluster || !activeSpiderHoverBounds || !map) return
-  if (popupTarget.value) return
-  // touchstart doesn't carry latlng — extract from the raw TouchEvent
-  const touch = ((ev as any).originalEvent as TouchEvent)?.touches?.[0]
-  if (!touch) return
-  const pt = map.containerPointToLatLng(
-    L.point(
-      touch.clientX - map.getContainer().getBoundingClientRect().left,
-      touch.clientY - map.getContainer().getBoundingClientRect().top
-    )
-  )
-  if (!activeSpiderHoverBounds.contains(pt)) closeSpider()
-}
-
-function onClusterSpiderfied(e: any) {
-  if (!map) return
-  activeSpiderCluster = e.cluster
-  activeSpiderHoverBounds = computeSpiderHoverBounds(
-    map,
-    activeSpiderCluster,
-    SPIDER_HOVER_PADDING_PX
-  )
-
-  // When spiderfy was triggered by a tap/click (not hover), suppress popup
-  // opens briefly so the same gesture doesn't ghost-click a child marker.
-  if (!spiderfyViaHover) {
-    spiderfyCooldown = true
-    setTimeout(() => (spiderfyCooldown = false), 400)
-  }
-  spiderfyViaHover = false
-
-  // Prevent clicks on spiderfied child markers from bubbling to the map
-  // (which would trigger markercluster's _unspiderfyWrapper and collapse
-  // the spider). stopPropagation also blocks Leaflet's own 'click' event,
-  // so we open the popup directly from the same DOM handler.
-  for (const marker of e.markers) {
-    const el = marker.getElement?.()
-    if (!el) continue
-    const handler = (ev: Event) => {
-      if (spiderfyCooldown) return
-      L.DomEvent.stopPropagation(ev as any)
-      marker.openPopup()
-    }
-    spiderClickHandlers.set(marker, handler)
-    L.DomEvent.on(el, 'click', handler)
-  }
-}
-
-function onClusterUnspiderfied(e: any) {
-  // Remove click handlers added in onClusterSpiderfied
-  // to prevent accumulation across spiderfy cycles (especially with KeepAlive)
-  if (e?.markers) {
-    for (const marker of e.markers) {
-      const el = marker.getElement?.()
-      const handler = spiderClickHandlers.get(marker)
-      if (el && handler) {
-        L.DomEvent.off(el, 'click', handler)
-        spiderClickHandlers.delete(marker)
-      }
-    }
-  }
-  activeSpiderCluster = null
-  activeSpiderHoverBounds = null
-}
-
-function onMapMouseMove(ev: L.LeafletMouseEvent) {
-  if (!activeSpiderCluster || !activeSpiderHoverBounds) return
-  // Keep spider open while a popup is visible (user is interacting with a profile card)
-  if (popupTarget.value) return
-  if (!activeSpiderHoverBounds.contains(ev.latlng)) closeSpider()
 }
 
 const popupTarget = ref<HTMLElement | null>(null)
@@ -371,10 +191,7 @@ function createMarker(item: MapPoi): LMarker {
       popupItem.value = null
     })
 
-    m.on('click', () => {
-      if (spiderfyCooldown) return
-      m.openPopup()
-    })
+    m.on('click', () => m.openPopup())
   } else {
     m.on('click', () => emit('item:select', item.id))
   }
@@ -382,12 +199,12 @@ function createMarker(item: MapPoi): LMarker {
 }
 
 function updateMarkers(forceRebuild = false) {
-  if (!map || !clusterGroup || !isMapReady) return
+  if (!map || !pointLayer || !isMapReady) return
   const size = map.getSize()
   if (size.x === 0 || size.y === 0) return
 
   if (forceRebuild) {
-    clusterGroup.clearLayers()
+    pointLayer.clearLayers()
     markers.clear()
     itemsById.clear()
   }
@@ -438,8 +255,8 @@ function updateMarkers(forceRebuild = false) {
     }
   }
 
-  if (toRemove.length) clusterGroup.removeLayers(toRemove)
-  if (toAdd.length) clusterGroup.addLayers(toAdd)
+  for (const m of toRemove) pointLayer.removeLayer(m)
+  for (const m of toAdd) pointLayer.addLayer(m)
 
   // Only fitBounds on initial load (all markers are new, none removed)
   if (
@@ -460,6 +277,7 @@ function updateMarkers(forceRebuild = false) {
     })
   }
 }
+
 
 function updateClusterMarkers() {
   if (!map || !clusterLayer) return
@@ -543,21 +361,15 @@ function destroyMap() {
   }
   iconCache.clear()
   map.off('moveend', emitBounds)
-  map.off('mousemove', onMapMouseMove)
-  map.off('touchstart', onMapTouchStart)
-  map.off('zoomstart movestart', closeSpider)
 
-  clusterGroup?.off('clustermouseover', onClusterMouseOver)
-  clusterGroup?.off('spiderfied', onClusterSpiderfied)
-  clusterGroup?.off('unspiderfied', onClusterUnspiderfied)
-
+  pointLayer?.clearLayers()
+  pointLayer = null
   clusterLayer?.clearLayers()
   clusterLayer = null
   clusterMarkers.clear()
 
   map.remove()
   map = null
-  clusterGroup = null
 }
 
 onBeforeUnmount(() => {
@@ -579,9 +391,7 @@ onActivated(() => {
 
 watch(
   () => props.items,
-  () => {
-    updateMarkers()
-  }
+  () => updateMarkers()
 )
 
 watch(
@@ -658,15 +468,6 @@ watch(
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
-/* Hide default markercluster styles we don't use */
-:deep(.marker-cluster) {
-  background: transparent !important;
-  border: none !important;
-}
-
-:deep(.marker-cluster div) {
-  background: transparent !important;
-}
 
 /* Remove default Leaflet icon images spacing */
 :deep(.leaflet-div-icon) {
