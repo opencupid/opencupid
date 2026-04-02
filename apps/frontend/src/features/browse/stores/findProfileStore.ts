@@ -8,7 +8,7 @@ import type {
   GetProfilesResponse,
   GetPublicProfileResponse,
 } from '@zod/apiResponse.dto'
-import type { MapFeature } from '@shared/zod/map/cluster.dto'
+import { ClusterMapResponseSchema, type MapFeature } from '@shared/zod/map/cluster.dto'
 import {
   storeSuccess,
   storeError,
@@ -195,15 +195,12 @@ export const useFindProfileStore = defineStore('findProfile', {
         this.isLoading = true
 
         const paddedBounds = padBounds(bounds, 0.3)
-        const res = await api.get<{ success: true; features: MapFeature[] }>(
-          '/find/social/map/clusters',
-          {
-            params: { ...paddedBounds, zoom },
-            signal: controller.signal,
-          }
-        )
+        const res = await api.get('/find/social/map/clusters', {
+          params: { ...paddedBounds, zoom },
+          signal: controller.signal,
+        })
 
-        this.clusterFeatures = res.data.features
+        this.clusterFeatures = ClusterMapResponseSchema.parse(res.data).features
         cachedClusterBounds = paddedBounds
         cachedClusterZoom = zoom
 
@@ -249,9 +246,10 @@ export const useFindProfileStore = defineStore('findProfile', {
     },
 
     async refetchBounds(): Promise<void> {
+      const lastZoom = cachedClusterZoom ?? 7
       invalidateBoundsCache()
       if (this.lastMapBounds) {
-        await this.findClustersForMapBounds(this.lastMapBounds, cachedClusterZoom ?? 7)
+        await this.findClustersForMapBounds(this.lastMapBounds, lastZoom)
       }
     },
 

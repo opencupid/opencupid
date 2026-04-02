@@ -155,7 +155,7 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
    * @query {number} north - Bounding box north latitude
    * @query {number} west - Bounding box west longitude
    * @query {number} east - Bounding box east longitude
-   * @query {number} zoom - Map zoom level (0–20)
+   * @query {number} zoom - Map zoom level (0–12)
    * @returns {{ success: true, features: MapFeature[] }}
    */
   fastify.get('/social/map/clusters', { onRequest: [fastify.authenticate] }, async (req, reply) => {
@@ -313,6 +313,7 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
 
       const filter = mapSocialMatchFilterToDTO(updated, locale)
       const response: GetSocialMatchFilterResponse = { success: true, filter }
+      clusterService.evict(req.session.profileId)
       enqueueClusterRebuild(req.session.profileId).catch((err) => {
         fastify.log.error(err, 'Failed to enqueue cluster rebuild')
       })

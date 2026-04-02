@@ -28,6 +28,7 @@ vi.mock('leaflet', () => {
       this._icon = icon
       return this
     }),
+    setLatLng: vi.fn().mockReturnThis(),
     getLatLng: vi.fn(() => ({ lat: 47, lng: 19 })),
     _icon: null as any,
   }
@@ -48,6 +49,7 @@ vi.mock('leaflet', () => {
   }
   const layerGroup = vi.fn(() => ({ ...layerGroupProto }))
 
+  const latLng = vi.fn((lat: number, lng: number) => ({ lat, lng }))
   const latLngBounds = vi.fn(() => ({
     contains: vi.fn((latlng: { lat?: number }) => latlng?.lat === 47),
   }))
@@ -104,6 +106,7 @@ vi.mock('leaflet', () => {
       marker,
       divIcon,
       layerGroup,
+      latLng,
       latLngBounds,
       point,
       tileLayer,
@@ -116,6 +119,7 @@ vi.mock('leaflet', () => {
     marker,
     divIcon,
     layerGroup,
+    latLng,
     latLngBounds,
     point,
     tileLayer,
@@ -154,7 +158,8 @@ vi.mock('@/features/images/composables/useBlurhashDataUrl', () => ({
 
 import { mount, flushPromises } from '@vue/test-utils'
 import OsmPoiMap from '../OsmPoiMap.vue'
-import { POI_ICON_SIZE } from '../mapUtils'
+import { POI_ICON_SIZE, MAP_MAX_ZOOM } from '../mapUtils'
+import type { MapCluster } from '../OsmPoiMap.types'
 import L from 'leaflet'
 
 const DummyPopup = defineComponent({
@@ -205,6 +210,8 @@ const items = [
 async function mountMap(props: Partial<Record<string, any>> = {}) {
   const testItems = props.items ?? items
   delete props.items
+  const testClusters = props.clusters
+  delete props.clusters
 
   const wrapper = mount(OsmPoiMap as any, {
     props: {
@@ -216,8 +223,11 @@ async function mountMap(props: Partial<Record<string, any>> = {}) {
     attachTo: document.body,
   })
 
-  // Simulate real app flow: items arrive after mount via reactive update
+  // Simulate real app flow: items/clusters arrive after mount via reactive update
   await wrapper.setProps({ items: testItems })
+  if (testClusters) {
+    await wrapper.setProps({ clusters: testClusters })
+  }
   return wrapper
 }
 
@@ -303,15 +313,15 @@ describe('OsmPoiMap', () => {
           return el
         },
         update: popupUpdate,
+        isOpen: () => true,
       },
     }
 
-    // Fire the handler — update() should NOT have been called yet (it waits for nextTick)
-    handler(fakeEvent)
-    expect(popupUpdate).not.toHaveBeenCalled()
-
-    // After nextTick, popup.update() should be called
+    // Fire the async handler and wait for it + nextTick to complete
+    await handler(fakeEvent)
+    await flushPromises()
     await nextTick()
+
     expect(popupUpdate).toHaveBeenCalledOnce()
   })
 
@@ -603,6 +613,196 @@ describe('OsmPoiMap', () => {
       expect(markerInstance.setIcon).toHaveBeenCalled()
       // No new markers should have been created
       expect((L.marker as any).mock.calls.length).toBe(1)
+    })
+  })
+
+  describe('updateClusterMarkers', () => {
+    const clusters: MapCluster[] = [
+      { id: 100, location: { lat: 47.5, lon: 19.0 }, count: 5, expansionZoom: 8 },
+      { id: 200, location: { lat: 48.0, lon: 16.0 }, count: 3, expansionZoom: 10 },
+    ]
+
+    it('creates cluster markers and removes stale ones on prop change', async () => {
+      const wrapper = await mountMap({ items: [], clusters })
+      await flushPromises()
+
+      // 0 point markers + 2 cluster markers = 2 total L.marker calls
+      expect((L.marker as any).mock.calls.length).toBe(2)
+
+      // Remove one cluster
+      await wrapper.setProps({ clusters: [clusters[0]] })
+      await flushPromises()
+
+      const clusterLayerInstance = (L.layerGroup as any).mock.results[1].value
+      expect(clusterLayerInstance.removeLayer).toHaveBeenCalled()
+    })
+
+    it('updates existing cluster marker latlng and icon in place', async () => {
+      const wrapper = await mountMap({ items: [], clusters: [clusters[0]] })
+      await flushPromises()
+
+      const markerCountBefore = (L.marker as any).mock.calls.length
+
+      // Update the same cluster id with new location/count
+      const updated: MapCluster = {
+        id: 100,
+        location: { lat: 49.0, lon: 20.0 },
+        count: 8,
+        expansionZoom: 9,
+      }
+      await wrapper.setProps({ clusters: [updated] })
+      await flushPromises()
+
+      // No new marker should be created — updated in place
+      expect((L.marker as any).mock.calls.length).toBe(markerCountBefore)
+    })
+
+    it('cluster click at max zoom removes marker and sets view', async () => {
+      const maxZoomCluster: MapCluster = {
+        id: 300,
+        location: { lat: 47.0, lon: 19.0 },
+        count: 2,
+        expansionZoom: MAP_MAX_ZOOM,
+      }
+      await mountMap({ items: [], clusters: [maxZoomCluster] })
+      await flushPromises()
+
+      const mapInstance = (L.map as any).mock.results[0].value
+
+      // Only cluster marker exists (no point markers)
+      const clusterMarkerInstance = (L.marker as any).mock.results[0].value
+      const clickHandler = clusterMarkerInstance.on.mock.calls.find(
+        (c: any) => c[0] === 'click'
+      )?.[1]
+      expect(clickHandler).toBeDefined()
+
+      clickHandler()
+
+      expect(mapInstance.setView).toHaveBeenCalledWith([47.0, 19.0], MAP_MAX_ZOOM)
+    })
+
+    it('cluster click below max zoom flies to expansion zoom', async () => {
+      await mountMap({ items: [], clusters: [clusters[0]] })
+      await flushPromises()
+
+      const mapInstance = (L.map as any).mock.results[0].value
+      const clusterMarkerInstance = (L.marker as any).mock.results[0].value
+      const clickHandler = clusterMarkerInstance.on.mock.calls.find(
+        (c: any) => c[0] === 'click'
+      )?.[1]
+      expect(clickHandler).toBeDefined()
+
+      clickHandler()
+
+      expect(mapInstance.flyTo).toHaveBeenCalledWith([47.5, 19.0], 8, { duration: 0.5 })
+    })
+  })
+
+  describe('popup data fetching', () => {
+    it('calls fetchPopupData and updates popupItem with full data', async () => {
+      const fetchPopupData = vi.fn().mockResolvedValue({ name: 'Alice Full' })
+      await mountMap({ fetchPopupData })
+      await flushPromises()
+
+      const markerInstance = (L.marker as any).mock.results[0].value
+      const popupopenCall = markerInstance.on.mock.calls.find((c: any) => c[0] === 'popupopen')
+      const handler = popupopenCall[1]
+
+      const popupUpdate = vi.fn()
+      const fakeEvent = {
+        popup: {
+          getElement: () => {
+            const el = document.createElement('div')
+            const content = document.createElement('div')
+            content.className = 'leaflet-popup-content'
+            el.appendChild(content)
+            return el
+          },
+          update: popupUpdate,
+          isOpen: () => true,
+        },
+      }
+
+      await handler(fakeEvent)
+      await flushPromises()
+      await nextTick()
+
+      expect(fetchPopupData).toHaveBeenCalledWith('1')
+      expect(popupUpdate).toHaveBeenCalled()
+    })
+
+    it('does not update popupItem when fetchPopupData rejects', async () => {
+      const fetchPopupData = vi.fn().mockRejectedValue(new Error('network'))
+      await mountMap({ fetchPopupData })
+      await flushPromises()
+
+      const markerInstance = (L.marker as any).mock.results[0].value
+      const popupopenCall = markerInstance.on.mock.calls.find((c: any) => c[0] === 'popupopen')
+      const handler = popupopenCall[1]
+
+      const popupUpdate = vi.fn()
+      const fakeEvent = {
+        popup: {
+          getElement: () => {
+            const el = document.createElement('div')
+            const content = document.createElement('div')
+            content.className = 'leaflet-popup-content'
+            el.appendChild(content)
+            return el
+          },
+          update: popupUpdate,
+          isOpen: () => true,
+        },
+      }
+
+      // Should not throw
+      await handler(fakeEvent)
+      await flushPromises()
+    })
+
+    it('skips popup update when popup is closed before fetch resolves', async () => {
+      let resolvePromise: (v: unknown) => void
+      const fetchPopupData = vi.fn(
+        () =>
+          new Promise((resolve) => {
+            resolvePromise = resolve
+          })
+      )
+      await mountMap({ fetchPopupData })
+      await flushPromises()
+
+      const markerInstance = (L.marker as any).mock.results[0].value
+      const popupopenCall = markerInstance.on.mock.calls.find((c: any) => c[0] === 'popupopen')
+      const handler = popupopenCall[1]
+
+      const popupUpdate = vi.fn()
+      let isOpen = true
+      const fakeEvent = {
+        popup: {
+          getElement: () => {
+            const el = document.createElement('div')
+            const content = document.createElement('div')
+            content.className = 'leaflet-popup-content'
+            el.appendChild(content)
+            return el
+          },
+          update: popupUpdate,
+          isOpen: () => isOpen,
+        },
+      }
+
+      const handlerPromise = handler(fakeEvent)
+
+      // Close the popup before the fetch resolves
+      isOpen = false
+      resolvePromise!({ name: 'Alice Full' })
+
+      await handlerPromise
+      await flushPromises()
+      await nextTick()
+
+      // popup.update should NOT have been called since popup closed
+      expect(popupUpdate).not.toHaveBeenCalled()
     })
   })
 })

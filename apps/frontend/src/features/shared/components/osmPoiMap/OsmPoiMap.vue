@@ -53,6 +53,7 @@ let pointLayer: L.LayerGroup | null = null
 let oms: OverlappingMarkerSpiderfier | null = null
 const markerItems = new WeakMap<LMarker, MapPoi>()
 let pendingSpiderfyLatLng: L.LatLng | null = null
+const clusterData = new WeakMap<LMarker, MapCluster>()
 
 function emitBounds() {
   if (boundsDebounceTimer) clearTimeout(boundsDebounceTimer)
@@ -203,20 +204,29 @@ function createMarker(item: MapPoi): LMarker {
     })
 
     m.on('popupopen', async (e: L.PopupEvent) => {
-      const target = e.popup
+      const popup = e.popup
+      const target = popup
         .getElement()
         ?.querySelector('.leaflet-popup-content') as HTMLElement | null
       popupTarget.value = target
       popupItem.value = item
 
       if (props.fetchPopupData) {
-        const fullData = await props.fetchPopupData(item.id)
-        if (fullData) {
-          popupItem.value = { ...item, source: fullData }
+        const itemId = item.id
+        try {
+          const fullData = await props.fetchPopupData(itemId)
+          if (!popup.isOpen()) return
+          if (fullData && popupItem.value?.id === itemId) {
+            popupItem.value = { ...item, source: fullData }
+          }
+        } catch {
+          // Swallow – popup may already be closed; nothing useful to show.
         }
       }
 
-      nextTick(() => e.popup.update())
+      if (popup.isOpen()) {
+        nextTick(() => popup.update())
+      }
     })
     m.on('popupclose', () => {
       popupTarget.value = null
@@ -347,18 +357,21 @@ function updateClusterMarkers() {
         icon: createServerClusterIcon(cluster.count),
         keyboard: true,
       })
+      clusterData.set(m, cluster)
       m.on('click', () => {
         if (!map) return
-        if (cluster.expansionZoom >= MAP_MAX_ZOOM) {
+        const data = clusterData.get(m)
+        if (!data) return
+        if (data.expansionZoom >= MAP_MAX_ZOOM) {
           // At max zoom the cluster dissolves into individual points — remove it
           // immediately so it cannot intercept the next click on a leaf marker.
           // Store the latlng so updateMarkers can auto-spiderfy after the leaves arrive.
           clusterLayer?.removeLayer(m)
           clusterMarkers.delete(id)
-          pendingSpiderfyLatLng = L.latLng(cluster.location.lat, cluster.location.lon)
-          map.setView([cluster.location.lat, cluster.location.lon], MAP_MAX_ZOOM)
+          pendingSpiderfyLatLng = L.latLng(data.location.lat, data.location.lon)
+          map.setView([data.location.lat, data.location.lon], MAP_MAX_ZOOM)
         } else {
-          map.flyTo([cluster.location.lat, cluster.location.lon], cluster.expansionZoom, {
+          map.flyTo([data.location.lat, data.location.lon], data.expansionZoom, {
             duration: 0.5,
           })
         }
@@ -368,6 +381,7 @@ function updateClusterMarkers() {
     } else {
       existing.setLatLng([cluster.location.lat, cluster.location.lon])
       existing.setIcon(createServerClusterIcon(cluster.count))
+      clusterData.set(existing, cluster)
     }
   }
 }

@@ -5,6 +5,8 @@ import { ImageService } from './image.service'
 import type { ClusterFeature, PointFeature, MapFeature } from '@shared/zod/map/cluster.dto'
 import { MAP_MAX_ZOOM } from '@shared/maps'
 const CLUSTER_RADIUS = 40
+const INDEX_TTL_MS = 30 * 60 * 1000 // 30 minutes
+const INDEX_MAX_SIZE = 200
 
 interface PointProperties {
   id: string
@@ -89,6 +91,7 @@ export class ClusterService {
     bbox: [number, number, number, number],
     zoom: number
   ): Promise<MapFeature[]> {
+    this.pruneIndexes()
     if (!this.indexes.has(profileId)) {
       await this.buildIndex(profileId)
     }
@@ -123,6 +126,28 @@ export class ClusterService {
 
   hasIndex(profileId: string): boolean {
     return this.indexes.has(profileId)
+  }
+
+  private pruneIndexes(): void {
+    const now = Date.now()
+
+    // Evict expired entries
+    for (const [id, cached] of this.indexes) {
+      if (now - cached.updatedAt.getTime() > INDEX_TTL_MS) {
+        this.indexes.delete(id)
+      }
+    }
+
+    // Enforce size cap by evicting oldest entries
+    if (this.indexes.size > INDEX_MAX_SIZE) {
+      const sorted = [...this.indexes.entries()].sort(
+        (a, b) => a[1].updatedAt.getTime() - b[1].updatedAt.getTime()
+      )
+      const excess = this.indexes.size - INDEX_MAX_SIZE
+      for (let i = 0; i < excess; i++) {
+        this.indexes.delete(sorted[i][0])
+      }
+    }
   }
 
   private mapFeature(
