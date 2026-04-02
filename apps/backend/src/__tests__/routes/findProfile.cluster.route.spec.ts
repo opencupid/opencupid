@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 vi.mock('@/services/cluster.service')
-vi.mock('@/queues/clusterQueue')
 
 vi.mock('@/services/profileMatch.service', () => ({
   ProfileMatchService: {
@@ -41,7 +40,6 @@ vi.mock('../../api/mappers/profile.mappers', () => ({
 import findProfileRoutes from '../../api/routes/findProfile.route'
 import { MockFastify, MockReply } from '../../test-utils/fastify'
 import { ClusterService } from '@/services/cluster.service'
-import { enqueueClusterRebuild } from '@/queues/clusterQueue'
 
 let fastify: MockFastify
 let reply: MockReply
@@ -137,12 +135,5 @@ describe('GET /social/map/clusters/leaves', () => {
 
     expect(reply.statusCode).toBe(400)
     expect(mockGetLeaves).not.toHaveBeenCalled()
-  })
-})
-
-// Verify enqueueClusterRebuild is exported from the mock (used in PATCH /social/filter)
-describe('enqueueClusterRebuild mock', () => {
-  it('is a mock function', () => {
-    expect(vi.isMockFunction(enqueueClusterRebuild)).toBe(true)
   })
 })

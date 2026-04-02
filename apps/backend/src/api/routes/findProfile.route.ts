@@ -5,7 +5,6 @@ import { sendError, sendForbiddenError } from '../helpers'
 
 import { ProfileMatchService, type OrderBy } from '@/services/profileMatch.service'
 import { ClusterService } from '@/services/cluster.service'
-import { enqueueClusterRebuild } from '@/queues/clusterQueue'
 import {
   GetProfilesResponse,
   type GetMatchIdsResponse,
@@ -314,9 +313,6 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
       const filter = mapSocialMatchFilterToDTO(updated, locale)
       const response: GetSocialMatchFilterResponse = { success: true, filter }
       clusterService.evict(req.session.profileId)
-      enqueueClusterRebuild(req.session.profileId).catch((err) => {
-        fastify.log.error(err, 'Failed to enqueue cluster rebuild')
-      })
       return reply.code(200).send(response)
     } catch (err) {
       fastify.log.error(err)
