@@ -17,7 +17,7 @@ export const api = axios.create({
 })
 const CURRENT_VERSION = __APP_VERSION__
 
-const ERROR_CODES = [
+export const ERROR_CODES = [
   'ECONNABORTED',
   'ENETUNREACH',
   'ENOTFOUND',
@@ -25,7 +25,6 @@ const ERROR_CODES = [
   'ETIMEDOUT',
   'ECONNRESET',
   'ERR_NETWORK',
-  'ERR_BAD_RESPONSE',
 ]
 
 let isOffline = false
