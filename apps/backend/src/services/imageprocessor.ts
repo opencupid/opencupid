@@ -102,7 +102,7 @@ export class ImageProcessor {
 
   constructor(buffer: Buffer) {
     this.buffer = buffer
-    this.sharpInstance = sharp(buffer)
+    this.sharpInstance = sharp(buffer, { failOn: 'error' })
     if (!ImageProcessor.detector) {
       throw new Error('BlazeFace detector not initialized. Call ImageProcessor.initialize() first.')
     }
@@ -133,7 +133,7 @@ export class ImageProcessor {
   }
 
   private async detectFaces(): Promise<FaceBox[]> {
-    const { data, info } = await sharp(this.buffer)
+    const { data, info } = await sharp(this.buffer, { failOn: 'error' })
       .removeAlpha()
       .raw()
       .toBuffer({ resolveWithObject: true })
@@ -239,7 +239,7 @@ export class ImageProcessor {
   }
 
   async encodeBlurhash(componentX = 4, componentY = 3): Promise<string> {
-    const { data, info } = await sharp(this.buffer)
+    const { data, info } = await sharp(this.buffer, { failOn: 'error' })
       .resize(32, 32, { fit: 'inside' })
       .ensureAlpha()
       .raw()
