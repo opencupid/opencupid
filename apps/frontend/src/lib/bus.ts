@@ -4,6 +4,7 @@ import type { MessageDTO } from '@zod/messaging/messaging.dto'
 
 type AppEvents = {
   'auth:login': { token: string }
+  'openreplay:start': { userId: string | null }
   'auth:logout': void
   'auth:logged-out': void
   'auth:token-refreshed': { token: string }

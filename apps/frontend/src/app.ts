@@ -3,6 +3,7 @@ import registerToast from './lib/toast'
 import { useBootstrap } from './lib/bootstrap'
 import { appUseI18n } from './lib/i18n'
 import { useAuthStore } from './features/auth/stores/authStore'
+import { useOpenreplayStore } from './store/openreplayStore'
 
 // Register push-only service worker
 if ('serviceWorker' in navigator) {
@@ -21,23 +22,6 @@ import { createBootstrap } from 'bootstrap-vue-next'
 
 import App from './App.vue'
 import router from './router'
-
-function initOpenReplay() {
-  const { OPENREPLAY_PROJECT_KEY, OPENREPLAY_INGEST_POINT } = __APP_CONFIG__
-  if (!OPENREPLAY_PROJECT_KEY || !OPENREPLAY_INGEST_POINT) return
-
-  import('@openreplay/tracker')
-    .then(({ default: Tracker }) => {
-      const tracker = new Tracker({
-        projectKey: OPENREPLAY_PROJECT_KEY,
-        ingestPoint: OPENREPLAY_INGEST_POINT,
-      })
-      tracker.start()
-    })
-    .catch((err) => {
-      console.warn('Failed to load OpenReplay:', err)
-    })
-}
 
 function initSentry(app: ReturnType<typeof createApp>) {
   if (__APP_CONFIG__.NODE_ENV === 'development') return
@@ -97,5 +81,5 @@ export async function bootstrapApp() {
 
   // Load observability tools after mount so they don't block initial render
   initSentry(app)
-  initOpenReplay()
+  useOpenreplayStore().initialize()
 }
