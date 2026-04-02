@@ -59,6 +59,7 @@
     "remeda": "2.33.6",
     "timeago.js": "4.0.2",
     "tinycon": "^0.6.8",
+    "ts-overlapping-marker-spiderfier-leaflet": "^1.0.5",
     "universal-cookie": "^8.0.1",
     "vue": "^3.5.0",
     "vue-3-slider-component": "1.0.2",

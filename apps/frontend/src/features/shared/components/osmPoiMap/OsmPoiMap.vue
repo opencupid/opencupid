@@ -3,6 +3,7 @@ import { onMounted, onBeforeUnmount, onActivated, ref, watch, nextTick, type Com
 import type { Ref } from 'vue'
 import L, { Map as LMap, Marker as LMarker } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import { OverlappingMarkerSpiderfier } from 'ts-overlapping-marker-spiderfier-leaflet'
 
 import type { MapPoi, MapCluster, BoundsWithZoom } from './OsmPoiMap.types'
 import { isValidLatLng, createServerClusterIcon, hydratePoiIcon, MAP_MAX_ZOOM } from './mapUtils'
@@ -49,6 +50,8 @@ let suppressBoundsEmit = false
 let resizeObserver: ResizeObserver | null = null
 
 let pointLayer: L.LayerGroup | null = null
+let oms: OverlappingMarkerSpiderfier | null = null
+const markerItems = new WeakMap<LMarker, MapPoi>()
 
 function emitBounds() {
   if (boundsDebounceTimer) clearTimeout(boundsDebounceTimer)
@@ -115,7 +118,10 @@ function initBaseLayer(map: LMap): void {
   // Keep lastStableZoom in sync with the map so the center watcher always
   // uses the zoom from the last *completed* animation, never a mid-flyTo value.
   map.on('zoomend', () => {
-    if (map) lastStableZoom = map.getZoom()
+    if (map) {
+      lastStableZoom = map.getZoom()
+      console.log('[OsmPoiMap] zoomend', lastStableZoom)
+    }
   })
   map.on('moveend', emitBounds)
   const tileUrl = __APP_CONFIG__.MAP_TILE_URL
@@ -134,6 +140,13 @@ function initBaseLayer(map: LMap): void {
 function initLayers(map: LMap) {
   pointLayer = L.layerGroup().addTo(map)
   clusterLayer = L.layerGroup().addTo(map)
+  oms = new OverlappingMarkerSpiderfier(map, { keepSpiderfied: true })
+  oms.addListener('click', (marker) => {
+    const item = markerItems.get(marker as LMarker)
+    if (!item) return
+    if (props.popupComponent) (marker as LMarker).openPopup()
+    else emit('item:select', item.id)
+  })
 }
 
 const popupTarget = ref<HTMLElement | null>(null)
@@ -190,11 +203,9 @@ function createMarker(item: MapPoi): LMarker {
       popupTarget.value = null
       popupItem.value = null
     })
-
-    m.on('click', () => m.openPopup())
-  } else {
-    m.on('click', () => emit('item:select', item.id))
   }
+
+  markerItems.set(m, item)
   return m
 }
 
@@ -205,6 +216,7 @@ function updateMarkers(forceRebuild = false) {
 
   if (forceRebuild) {
     pointLayer.clearLayers()
+    oms?.clearMarkers()
     markers.clear()
     itemsById.clear()
   }
@@ -255,8 +267,8 @@ function updateMarkers(forceRebuild = false) {
     }
   }
 
-  for (const m of toRemove) pointLayer.removeLayer(m)
-  for (const m of toAdd) pointLayer.addLayer(m)
+  for (const m of toRemove) { pointLayer.removeLayer(m); oms?.removeMarker(m) }
+  for (const m of toAdd) { pointLayer.addLayer(m); oms?.addMarker(m) }
 
   // Only fitBounds on initial load (all markers are new, none removed)
   if (
@@ -305,6 +317,7 @@ function updateClusterMarkers() {
       })
       m.on('click', () => {
         if (!map) return
+        console.log('[OsmPoiMap] cluster click expansionZoom', cluster.expansionZoom)
         map.flyTo([cluster.location.lat, cluster.location.lon], cluster.expansionZoom, {
           duration: 0.5,
         })
@@ -364,6 +377,8 @@ function destroyMap() {
 
   pointLayer?.clearLayers()
   pointLayer = null
+  oms?.clearMarkers()
+  oms = null
   clusterLayer?.clearLayers()
   clusterLayer = null
   clusterMarkers.clear()

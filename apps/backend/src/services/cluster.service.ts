@@ -64,7 +64,7 @@ export class ClusterService {
 
     const index = new Supercluster<PointProperties, Supercluster.AnyProps>({
       radius: CLUSTER_RADIUS,
-      maxZoom: MAP_MAX_ZOOM,
+      maxZoom: MAP_MAX_ZOOM - 1,
       minPoints: 2,
     })
 

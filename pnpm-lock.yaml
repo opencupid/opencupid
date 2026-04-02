@@ -462,6 +462,9 @@ importers:
       tinycon:
         specifier: ^0.6.8
         version: 0.6.8
+      ts-overlapping-marker-spiderfier-leaflet:
+        specifier: ^1.0.5
+        version: 1.0.5
       universal-cookie:
         specifier: ^8.0.1
         version: 8.0.1
@@ -7336,6 +7339,9 @@ packages:
         optional: true
       '@swc/wasm':
         optional: true
+
+  ts-overlapping-marker-spiderfier-leaflet@1.0.5:
+    resolution: {integrity: sha512-D2GiNFeHStohz7CLg7O7UDbuPHSDHQHtx/qNaO55/EDaACkln9dGDiV6+hJKGwXcTDvckDjLFR2QgNywJWCyxA==}
 
   ts-pattern@4.3.0:
     resolution: {integrity: sha512-pefrkcd4lmIVR0LA49Imjf9DYLK8vtWhqBPA3Ya1ir8xCW0O2yjL9dsCVvI7pCodLC5q7smNpEtDR2yVulQxOg==}
@@ -15337,6 +15343,10 @@ snapshots:
       typescript: 5.9.3
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
+
+  ts-overlapping-marker-spiderfier-leaflet@1.0.5:
+    dependencies:
+      '@types/leaflet': 1.9.21
 
   ts-pattern@4.3.0: {}
 

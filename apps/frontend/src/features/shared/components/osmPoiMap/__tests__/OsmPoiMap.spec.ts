@@ -124,6 +124,17 @@ vi.mock('leaflet', () => {
   }
 })
 
+// Mock OMS — provides a minimal stub for addMarker/removeMarker/clearMarkers/addListener
+const omsInstance = {
+  addMarker: vi.fn().mockReturnThis(),
+  removeMarker: vi.fn().mockReturnThis(),
+  clearMarkers: vi.fn().mockReturnThis(),
+  addListener: vi.fn().mockReturnThis(),
+}
+vi.mock('ts-overlapping-marker-spiderfier-leaflet', () => ({
+  OverlappingMarkerSpiderfier: vi.fn(() => omsInstance),
+}))
+
 // Mock blurhash (canvas unavailable in jsdom)
 vi.mock('@/features/images/composables/useBlurhashDataUrl', () => ({
   blurhashToDataUrl: (hash: string) => `data:image/png;blurhash=${hash}`,
@@ -202,6 +213,10 @@ beforeEach(() => {
   createdMarkers.length = 0
   resizeObserverCallbacks.length = 0
   vi.clearAllMocks()
+  omsInstance.addMarker.mockReturnThis()
+  omsInstance.removeMarker.mockReturnThis()
+  omsInstance.clearMarkers.mockReturnThis()
+  omsInstance.addListener.mockReturnThis()
 })
 
 describe('OsmPoiMap', () => {
