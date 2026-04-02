@@ -1,5 +1,16 @@
 # frontend
 
+## 0.47.0
+
+### Minor Changes
+
+- 2200a56: Integrate OpenReplay session replay tracker with optional OPENREPLAY_PROJECT_KEY and OPENREPLAY_INGEST_POINT config vars
+- 34c0da4: Add server-side map clustering with supercluster for browse profiles map
+
+### Patch Changes
+
+- d90d4d6: Fix infinite image upload retry loop caused by ERR_BAD_RESPONSE being treated as a network error, and tolerate minor JPEG spec violations in Sharp image processing
+
 ## 0.46.1
 
 ### Patch Changes

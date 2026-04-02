@@ -1,5 +1,16 @@
 # backend
 
+## 0.47.0
+
+### Minor Changes
+
+- 34c0da4: Add server-side map clustering with supercluster for browse profiles map
+
+### Patch Changes
+
+- d90d4d6: Fix infinite image upload retry loop caused by ERR_BAD_RESPONSE being treated as a network error, and tolerate minor JPEG spec violations in Sharp image processing
+- 911516e: Disable welcome email
+
 ## 0.46.1
 
 ### Patch Changes
