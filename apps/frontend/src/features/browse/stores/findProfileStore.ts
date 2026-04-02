@@ -178,6 +178,10 @@ export const useFindProfileStore = defineStore('findProfile', {
       bounds: MapBounds,
       zoom: number
     ): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
+      // Supercluster requires integer zoom; Leaflet can report fractional values
+      // during fitBounds or mid-animation.
+      zoom = Math.round(zoom)
+
       if (clusterAbortController) {
         clusterAbortController.abort()
       }
