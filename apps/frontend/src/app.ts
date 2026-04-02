@@ -3,7 +3,8 @@ import registerToast from './lib/toast'
 import { useBootstrap } from './lib/bootstrap'
 import { appUseI18n } from './lib/i18n'
 import { useAuthStore } from './features/auth/stores/authStore'
-import { useOpenreplayStore } from './store/openreplayStore'
+// Side-effect import: registers the auth:logout → teardown bus listener
+import './features/openreplay/stores/openreplayStore'
 
 // Register push-only service worker
 if ('serviceWorker' in navigator) {
@@ -81,5 +82,4 @@ export async function bootstrapApp() {
 
   // Load observability tools after mount so they don't block initial render
   initSentry(app)
-  useOpenreplayStore().initialize()
 }

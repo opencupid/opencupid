@@ -13,6 +13,8 @@ import LocationSelectorComponent from '@/features/shared/profileform/LocationSel
 import BackButton from '../components/BackButton.vue'
 import PublicNameInput from '@/features/shared/profileform/PublicNameInput.vue'
 import LogoutButton from '@/features/auth/components/LogoutButton.vue'
+import SecondaryNav from '@/features/shared/ui/SecondaryNav.vue'
+import OpenreplayButton from '@/features/openreplay/components/OpenreplayButton.vue'
 
 import IconSun from '@/assets/icons/interface/sun.svg'
 import IconLogout from '@/assets/icons/interface/logout.svg'
@@ -77,22 +79,25 @@ const siteName = __APP_CONFIG__.SITE_NAME
 
 <template>
   <div class="w-100 h-100 d-flex flex-column justify-content-center align-items-center">
-    <div
-      class="w-100 d-flex justify-content-between align-items-center position-absolute top-0 left-0"
-    >
-      <BackButton
-        :show="!isFirst && !isLast"
-        @click="goToPrevious"
-      />
+    <SecondaryNav>
+      <template #items-left>
+        <BackButton
+          :show="!isFirst && !isLast"
+          @click="goToPrevious"
+        />
 
-      <LogoutButton
-        v-if="isFirst"
-        variant="link"
-        class="btn btn-link link-secondary text-decoration-non"
-      >
-        <IconLogout class="svg-icon" />
-      </LogoutButton>
-    </div>
+        <LogoutButton
+          v-if="isFirst"
+          variant="link"
+          class="btn btn-link link-secondary text-decoration-non"
+        >
+          <IconLogout class="svg-icon" />
+        </LogoutButton>
+      </template>
+      <template #items-right>
+        <OpenreplayButton />
+      </template>
+    </SecondaryNav>
 
     <div class="wizard d-flex align-items-center flex-grow-1 col-12 justify-content-center">
       <BForm
