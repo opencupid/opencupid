@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useApi } from '../composables/useApi'
 import { apiRequest } from '../composables/useApi'
 
@@ -120,14 +120,36 @@ async function viewProfile(profileId: string) {
   }
 }
 
+const hasMore = computed(() => users.value.length < total.value)
+const loadingMore = ref(false)
+
+function buildParams() {
+  return { page: page.value, pageSize, search: search.value || undefined }
+}
+
 async function fetchUsers() {
-  const res = await call<UsersResponse>('/admin/users', {
-    params: { page: page.value, pageSize, search: search.value || undefined },
-  })
+  const res = await call<UsersResponse>('/admin/users', { params: buildParams() })
   if (res) {
     users.value = res.users
     total.value = res.total
   }
+}
+
+async function appendUsers() {
+  loadingMore.value = true
+  try {
+    const res = await apiRequest<UsersResponse>('/admin/users', { params: buildParams() })
+    users.value = [...users.value, ...res.users]
+    total.value = res.total
+  } finally {
+    loadingMore.value = false
+  }
+}
+
+function loadMore() {
+  if (loadingMore.value || loading.value || !hasMore.value) return
+  page.value++
+  appendUsers()
 }
 
 function viewUser(user: AdminUser) {
@@ -157,31 +179,35 @@ async function saveUser() {
   }
 }
 
-const totalPages = ref(0)
-watch(total, (t) => {
-  totalPages.value = Math.ceil(t / pageSize)
-})
-
-function prevPage() {
-  page.value--
-  fetchUsers()
-}
-
-function nextPage() {
-  page.value++
+function resetAndFetch() {
+  page.value = 1
+  users.value = []
   fetchUsers()
 }
 
 let searchTimeout: ReturnType<typeof setTimeout>
 function onSearchInput() {
   clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => {
-    page.value = 1
-    fetchUsers()
-  }, 300)
+  searchTimeout = setTimeout(resetAndFetch, 300)
 }
 
-onMounted(fetchUsers)
+const sentinel = ref<HTMLElement | null>(null)
+let observer: IntersectionObserver | null = null
+
+onMounted(() => {
+  fetchUsers()
+  observer = new IntersectionObserver(
+    ([entry]) => {
+      if (entry?.isIntersecting) loadMore()
+    },
+    { rootMargin: '200px' }
+  )
+  if (sentinel.value) observer.observe(sentinel.value)
+})
+
+onUnmounted(() => {
+  observer?.disconnect()
+})
 </script>
 
 <template>
@@ -323,38 +349,12 @@ onMounted(fetchUsers)
         </tbody>
       </table>
 
-      <nav
-        v-if="totalPages > 1"
-        class="mt-3"
+      <div
+        ref="sentinel"
+        class="text-center text-muted py-2"
       >
-        <ul class="pagination pagination-sm mb-0">
-          <li
-            class="page-item"
-            :class="{ disabled: page === 1 }"
-          >
-            <button
-              class="page-link"
-              @click="prevPage"
-            >
-              Previous
-            </button>
-          </li>
-          <li class="page-item disabled">
-            <span class="page-link">Page {{ page }} of {{ totalPages }}</span>
-          </li>
-          <li
-            class="page-item"
-            :class="{ disabled: page >= totalPages }"
-          >
-            <button
-              class="page-link"
-              @click="nextPage"
-            >
-              Next
-            </button>
-          </li>
-        </ul>
-      </nav>
+        <span v-if="loadingMore">Loading more...</span>
+      </div>
     </div>
 
     <!-- User Detail Modal -->

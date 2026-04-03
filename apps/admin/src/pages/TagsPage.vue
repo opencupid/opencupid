@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useApi } from '../composables/useApi'
 import { apiRequest } from '../composables/useApi'
 
@@ -132,14 +132,36 @@ function sortIndicator(col: SortColumn) {
   return sortDirection.value === 'asc' ? ' ▲' : ' ▼'
 }
 
+const hasMore = computed(() => tags.value.length < total.value)
+const loadingMore = ref(false)
+
+function buildParams() {
+  return { page: page.value, pageSize, search: search.value || undefined }
+}
+
 async function fetchTags() {
-  const res = await call<TagsResponse>('/admin/tags', {
-    params: { page: page.value, pageSize, search: search.value || undefined },
-  })
+  const res = await call<TagsResponse>('/admin/tags', { params: buildParams() })
   if (res) {
     tags.value = res.tags
     total.value = res.total
   }
+}
+
+async function appendTags() {
+  loadingMore.value = true
+  try {
+    const res = await apiRequest<TagsResponse>('/admin/tags', { params: buildParams() })
+    tags.value = [...tags.value, ...res.tags]
+    total.value = res.total
+  } finally {
+    loadingMore.value = false
+  }
+}
+
+function loadMore() {
+  if (loadingMore.value || loading.value || !hasMore.value) return
+  page.value++
+  appendTags()
 }
 
 function openAddModal() {
@@ -212,7 +234,7 @@ async function saveTag() {
       })
     }
     selectedTag.value = null
-    await fetchTags()
+    resetAndFetch()
   } catch (err: unknown) {
     saveError.value = err instanceof Error ? err.message : 'Failed to save'
   } finally {
@@ -255,7 +277,7 @@ async function deleteTag() {
       body: { isDeleted: true },
     })
     selectedTag.value = null
-    await fetchTags()
+    resetAndFetch()
   } catch (err: unknown) {
     saveError.value = err instanceof Error ? err.message : 'Failed to delete'
   } finally {
@@ -311,7 +333,7 @@ async function confirmMerge() {
       }
       mergeLoserTags.value = []
       showMerge.value = false
-      await fetchTags()
+      resetAndFetch()
     }
   } catch (err: unknown) {
     saveError.value = err instanceof Error ? err.message : 'Merge failed'
@@ -320,31 +342,35 @@ async function confirmMerge() {
   }
 }
 
-const totalPages = ref(0)
-watch(total, (t) => {
-  totalPages.value = Math.ceil(t / pageSize)
-})
-
-function prevPage() {
-  page.value--
-  fetchTags()
-}
-
-function nextPage() {
-  page.value++
+function resetAndFetch() {
+  page.value = 1
+  tags.value = []
   fetchTags()
 }
 
 let searchTimeout: ReturnType<typeof setTimeout>
 function onSearchInput() {
   clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => {
-    page.value = 1
-    fetchTags()
-  }, 300)
+  searchTimeout = setTimeout(resetAndFetch, 300)
 }
 
-onMounted(fetchTags)
+const sentinel = ref<HTMLElement | null>(null)
+let observer: IntersectionObserver | null = null
+
+onMounted(() => {
+  fetchTags()
+  observer = new IntersectionObserver(
+    ([entry]) => {
+      if (entry?.isIntersecting) loadMore()
+    },
+    { rootMargin: '200px' }
+  )
+  if (sentinel.value) observer.observe(sentinel.value)
+})
+
+onUnmounted(() => {
+  observer?.disconnect()
+})
 </script>
 
 <template>
@@ -470,38 +496,12 @@ onMounted(fetchTags)
         </tbody>
       </table>
 
-      <nav
-        v-if="totalPages > 1"
-        class="mt-3"
+      <div
+        ref="sentinel"
+        class="text-center text-muted py-2"
       >
-        <ul class="pagination pagination-sm mb-0">
-          <li
-            class="page-item"
-            :class="{ disabled: page === 1 }"
-          >
-            <button
-              class="page-link"
-              @click="prevPage"
-            >
-              Previous
-            </button>
-          </li>
-          <li class="page-item disabled">
-            <span class="page-link">Page {{ page }} of {{ totalPages }}</span>
-          </li>
-          <li
-            class="page-item"
-            :class="{ disabled: page >= totalPages }"
-          >
-            <button
-              class="page-link"
-              @click="nextPage"
-            >
-              Next
-            </button>
-          </li>
-        </ul>
-      </nav>
+        <span v-if="loadingMore">Loading more...</span>
+      </div>
     </div>
 
     <!-- Tag Edit Modal -->
