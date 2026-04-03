@@ -40,7 +40,7 @@ const emit = defineEmits<{
 
 const { onboardingWizardSteps } = useWizardSteps(formData.value, datingPrefs.value)
 
-const { current, isLast, isFirst, goToNext, goToPrevious, goTo, isCurrent } =
+const { current, index, stepNames, isLast, isFirst, goToNext, goToPrevious, goTo, isCurrent } =
   useStepper(onboardingWizardSteps)
 
 const handleNext = () => {
@@ -58,7 +58,7 @@ const handleNext = () => {
     logCheckpoint('onboarding:completed', { skippedDating: false })
     emit('finished')
   } else {
-    logCheckpoint('onboarding:step_changed', { step: current.value })
+    logCheckpoint('onboarding:step_changed', { step: stepNames.value[index.value] })
   }
 }
 

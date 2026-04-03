@@ -29,7 +29,7 @@ export function logCheckpoint(checkpoint: Checkpoint, extra?: Record<string, unk
         user_agent: navigator.userAgent,
         language: navigator.language,
         online: navigator.onLine,
-        url: window.location.href,
+        url: window.location.pathname,
       },
     },
     extra,
