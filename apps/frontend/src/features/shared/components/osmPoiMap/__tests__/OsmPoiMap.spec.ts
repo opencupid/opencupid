@@ -80,6 +80,8 @@ vi.mock('leaflet', () => {
     off: vi.fn().mockReturnThis(),
     remove: vi.fn(),
     addLayer: vi.fn(),
+    createPane: vi.fn(() => document.createElement('div')),
+    closePopup: vi.fn().mockReturnThis(),
   }
   const mapFn = vi.fn(() => ({ ...mapProto }))
 
