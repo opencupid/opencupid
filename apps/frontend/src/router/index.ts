@@ -17,7 +17,6 @@ import OnboardingView from '@/features/onboarding/views/Onboarding.vue'
 import LoginView from '@/features/auth/views/LoginView.vue'
 import MagicLink from '@/features/auth/views/MagicLink.vue'
 import LogoutView from '@/features/auth/views/LogoutView.vue'
-import BrowsePostsView from '@/features/posts/views/BrowsePosts.vue'
 import EditPostView from '@/features/posts/views/EditPost.vue'
 
 const routes: Array<RouteRecordRaw> = [
@@ -111,9 +110,7 @@ const routes: Array<RouteRecordRaw> = [
 
   {
     path: '/posts',
-    name: 'Posts',
-    component: BrowsePostsView,
-    meta: { requiresAuth: true },
+    redirect: '/browse',
   },
   {
     path: '/posts/new',

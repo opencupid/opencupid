@@ -13,10 +13,13 @@ const props = withDefaults(
     items: MapPoi[]
     clusters?: MapCluster[]
     iconComponent: Component
+    /** Per-item icon resolver. When provided, overrides iconComponent per item. */
+    iconResolver?: (poi: MapPoi) => Component
     popupComponent?: Component
     center?: [number, number]
     zoom?: number
     selectedId?: string | number
+    highlightedPoiId?: string | number | null
     fitToPois?: boolean
     fetchPopupData?: (id: string | number) => Promise<unknown>
   }>(),
@@ -192,12 +195,16 @@ function onMapReady() {
   updateMarkers(true)
 }
 
+function resolveIcon(item: MapPoi): Component {
+  return props.iconResolver ? props.iconResolver(item) : props.iconComponent
+}
+
 function createMarker(item: MapPoi): LMarker {
   const isSelected = item.id === props.selectedId
   const m = L.marker([item.location.lat, item.location.lon], {
     title: item.title,
     icon: hydratePoiIcon(
-      props.iconComponent,
+      resolveIcon(item),
       {
         image: item.image,
         isSelected,
@@ -296,7 +303,7 @@ function updateMarkers(forceRebuild = false) {
         const marker = markers.get(id)!
         marker.setIcon(
           hydratePoiIcon(
-            props.iconComponent,
+            resolveIcon(item),
             {
               image: item.image,
               isSelected: id === props.selectedId,
@@ -406,7 +413,7 @@ function highlightSelected() {
     if (!item) continue
     marker.setIcon(
       hydratePoiIcon(
-        props.iconComponent,
+        resolveIcon(item),
         {
           image: item.image,
           isSelected: id === props.selectedId,
@@ -425,6 +432,16 @@ function highlightSelected() {
     }
   }
 }
+
+function flyToMarker(poi: MapPoi) {
+  if (!map) return
+  map.flyTo([poi.location.lat, poi.location.lon], Math.max(map.getZoom(), 13), {
+    animate: true,
+    duration: 0.6,
+  })
+}
+
+defineExpose({ flyToMarker })
 
 onMounted(() => {
   ensureMap()

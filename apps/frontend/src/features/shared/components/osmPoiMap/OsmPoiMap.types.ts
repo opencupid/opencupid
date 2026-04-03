@@ -28,6 +28,8 @@ export interface MapPoi {
   location: PoiLocation
   image?: AvatarImage
   highlighted?: boolean
+  /** Discriminator for icon resolution when multiple POI types share one map. */
+  type?: string
   /** The original domain object, passed through to the popup component as `:item` */
   source: unknown
 }

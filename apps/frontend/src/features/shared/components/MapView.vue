@@ -14,10 +14,13 @@ const props = withDefaults(
     items: MapPoi[]
     clusters?: MapCluster[]
     iconComponent: Component
+    /** Per-item icon resolver. When provided, overrides iconComponent per item. */
+    iconResolver?: (poi: MapPoi) => Component
     popupComponent?: Component
     center?: [number, number]
     zoom?: number
     selectedId?: string | number
+    highlightedPoiId?: string | number | null
     fitToPois?: boolean
     isLoading?: boolean
     isPlaceholderAnimated?: boolean
@@ -29,6 +32,14 @@ const props = withDefaults(
     clusters: () => [],
   }
 )
+
+const osmPoiMapRef = ref<InstanceType<typeof OsmPoiMap> | null>(null)
+
+function flyToMarker(poi: MapPoi) {
+  osmPoiMapRef.value?.flyToMarker(poi)
+}
+
+defineExpose({ flyToMarker })
 
 const emit = defineEmits<{
   (e: 'item:select', id: string | number): void
@@ -63,13 +74,16 @@ function onMapReady(map: LMap) {
       }"
     >
       <OsmPoiMap
+        ref="osmPoiMapRef"
         :items="props.items"
         :clusters="props.clusters"
         :center="props.center"
         :zoom="props.zoom"
         :selected-id="props.selectedId"
+        :highlighted-poi-id="props.highlightedPoiId"
         :fit-to-pois="props.fitToPois"
         :icon-component="props.iconComponent"
+        :icon-resolver="props.iconResolver"
         :popup-component="props.popupComponent"
         :fetch-popup-data="props.fetchPopupData"
         class="h-100"
