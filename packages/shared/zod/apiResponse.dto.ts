@@ -100,3 +100,10 @@ export type PostResponse = ApiSuccess<{ post: OwnerPost }>
 export type CreatePostResponse = ApiSuccess<{ post: OwnerPost }>
 export type UpdatePostResponse = ApiSuccess<{ post: OwnerPost }>
 export type DeletePostResponse = ApiSuccess<{}>
+
+// Browse responses
+export type BrowseBoundsResponse = ApiSuccess<{
+  profiles: PublicProfileWithContext[]
+  posts: PublicPostWithProfile[]
+  tags: PublicTag[]
+}>
