@@ -212,7 +212,10 @@ onUnmounted(() => {
 
 <template>
   <div>
-    <h2 class="mb-4">Users</h2>
+    <div class="d-flex align-items-baseline mb-4">
+      <h2 class="mb-0">Users</h2>
+      <span class="text-muted ms-auto">{{ total }} result{{ total === 1 ? '' : 's' }}</span>
+    </div>
 
     <div
       v-if="error"
