@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useApi } from '../composables/useApi'
 
 interface AdminProfile {
@@ -37,6 +37,9 @@ const search = ref('')
 const selectedProfile = ref<AdminProfile | null>(null)
 const countries = ref<string[]>([])
 const selectedCountry = ref('')
+const allSegments = ['new', 'returning', 'frequent', 'dormant'] as const
+const selectedSegments = ref<string[]>([])
+const segmentDropdownOpen = ref(false)
 
 type SortColumn =
   | 'publicName'
@@ -102,6 +105,7 @@ async function fetchProfiles() {
       pageSize,
       search: search.value || undefined,
       country: selectedCountry.value || undefined,
+      segments: selectedSegments.value.length > 0 ? selectedSegments.value.join(',') : undefined,
     },
   })
   if (res) {
@@ -149,14 +153,37 @@ function onSearchInput() {
   }, 300)
 }
 
+function toggleSegment(segment: string) {
+  const idx = selectedSegments.value.indexOf(segment)
+  if (idx >= 0) {
+    selectedSegments.value.splice(idx, 1)
+  } else {
+    selectedSegments.value.push(segment)
+  }
+  page.value = 1
+  fetchProfiles()
+}
+
 function onCountryChange() {
   page.value = 1
   fetchProfiles()
 }
 
+function onClickOutside(e: MouseEvent) {
+  const target = e.target as HTMLElement
+  if (!target.closest('.dropdown')) {
+    segmentDropdownOpen.value = false
+  }
+}
+
 onMounted(() => {
+  document.addEventListener('click', onClickOutside)
   fetchCountries()
   fetchProfiles()
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', onClickOutside)
 })
 </script>
 
@@ -179,6 +206,43 @@ onMounted(() => {
         placeholder="Search by name or city..."
         @input="onSearchInput"
       />
+      <div
+        class="dropdown"
+        style="max-width: 200px"
+      >
+        <button
+          class="btn btn-outline-secondary dropdown-toggle w-100 text-start"
+          type="button"
+          @click="segmentDropdownOpen = !segmentDropdownOpen"
+        >
+          {{
+            selectedSegments.length === 0
+              ? 'All Segments'
+              : `${selectedSegments.length} Segment${selectedSegments.length > 1 ? 's' : ''}`
+          }}
+        </button>
+        <ul
+          v-if="segmentDropdownOpen"
+          class="dropdown-menu show"
+          style="min-width: 180px"
+        >
+          <li
+            v-for="seg in allSegments"
+            :key="seg"
+            class="dropdown-item"
+            style="cursor: pointer"
+            @click="toggleSegment(seg)"
+          >
+            <input
+              type="checkbox"
+              class="form-check-input me-2"
+              :checked="selectedSegments.includes(seg)"
+              @click.stop="toggleSegment(seg)"
+            />
+            {{ seg }}
+          </li>
+        </ul>
+      </div>
       <select
         v-model="selectedCountry"
         class="form-select"

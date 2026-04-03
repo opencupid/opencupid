@@ -374,6 +374,42 @@ describe('GET /profiles', () => {
       })
     )
   })
+
+  it('filters by segments when provided', async () => {
+    mockPrisma.profile.findMany.mockResolvedValue([])
+    mockPrisma.profile.count.mockResolvedValue(0)
+
+    const handler = fastify.routes['GET /profiles']
+    await handler(
+      { query: { page: '1', pageSize: '25', search: '', segments: 'new,frequent' } },
+      reply
+    )
+
+    expect(mockPrisma.profile.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { AND: [{ activitySummary: { segment: { in: ['new', 'frequent'] } } }] },
+      })
+    )
+  })
+
+  it('combines country and segments filters', async () => {
+    mockPrisma.profile.findMany.mockResolvedValue([])
+    mockPrisma.profile.count.mockResolvedValue(0)
+
+    const handler = fastify.routes['GET /profiles']
+    await handler(
+      { query: { page: '1', pageSize: '25', search: '', country: 'AT', segments: 'dormant' } },
+      reply
+    )
+
+    expect(mockPrisma.profile.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          AND: [{ country: 'AT' }, { activitySummary: { segment: { in: ['dormant'] } } }],
+        },
+      })
+    )
+  })
 })
 
 describe('GET /profiles/:id', () => {
