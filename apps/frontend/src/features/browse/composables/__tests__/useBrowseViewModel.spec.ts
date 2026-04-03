@@ -7,10 +7,13 @@ vi.mock('@/lib/api', () => ({
   safeApiCall: (fn: () => unknown) => fn(),
 }))
 
+import { ref } from 'vue'
 import { useBrowseViewModel } from '../useBrowseViewModel'
 import type { MapBounds } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
 
 const mockBounds: MapBounds = { south: 46.5, north: 47.5, west: 18.0, east: 19.0 }
+const noCluster = ref([])
+const notLoading = ref(false)
 
 describe('useBrowseViewModel', () => {
   beforeEach(() => {
@@ -34,7 +37,7 @@ describe('useBrowseViewModel', () => {
       },
     })
 
-    const vm = useBrowseViewModel()
+    const vm = useBrowseViewModel(noCluster, notLoading)
     await vm.fetchPostsAndTags(mockBounds)
 
     expect(mockGet).toHaveBeenCalledWith(
@@ -64,7 +67,7 @@ describe('useBrowseViewModel', () => {
       },
     })
 
-    const vm = useBrowseViewModel()
+    const vm = useBrowseViewModel(noCluster, notLoading)
     await vm.fetchPostsAndTags(mockBounds)
 
     expect(vm.postPois.value).toHaveLength(1)
@@ -72,7 +75,7 @@ describe('useBrowseViewModel', () => {
   })
 
   it('toggleTag adds and removes tag IDs', () => {
-    const vm = useBrowseViewModel()
+    const vm = useBrowseViewModel(noCluster, notLoading)
     expect(vm.selectedTagIds.value).toEqual([])
 
     vm.toggleTag('t1')
@@ -86,7 +89,7 @@ describe('useBrowseViewModel', () => {
   })
 
   it('clearTags resets selectedTagIds', () => {
-    const vm = useBrowseViewModel()
+    const vm = useBrowseViewModel(noCluster, notLoading)
     vm.toggleTag('t1')
     vm.toggleTag('t2')
     vm.clearTags()

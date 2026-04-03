@@ -49,9 +49,9 @@ vi.mock('@/features/myprofile/stores/ownerProfileStore', () => ({
   useOwnerProfileStore: () => mockOwnerStore,
 }))
 
-import { useSocialMatchViewModel } from '../useSocialMatchViewModel'
+import { useProfilesViewModel } from '../useProfilesViewModel'
 
-describe('useSocialMatchViewModel', () => {
+describe('useProfilesViewModel', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockOwnerStore.matchFilter = null
@@ -59,7 +59,7 @@ describe('useSocialMatchViewModel', () => {
   })
 
   it('openProfile navigates to PublicProfile route', () => {
-    const { openProfile } = useSocialMatchViewModel()
+    const { openProfile } = useProfilesViewModel()
     openProfile('profile-42')
     expect(routerPush).toHaveBeenCalledWith({
       name: 'PublicProfile',
@@ -69,28 +69,28 @@ describe('useSocialMatchViewModel', () => {
 
   it('initialize fetches social filter (clusters loaded via bounds)', async () => {
     mockFindProfileStore.findClustersForMapBounds = vi.fn().mockResolvedValue({ success: true })
-    const vm = useSocialMatchViewModel()
+    const vm = useProfilesViewModel()
     await vm.initialize()
 
     expect(mockOwnerStore.fetchMatchFilter).toHaveBeenCalled()
   })
 
   it('initialize sets isInitialized to true', async () => {
-    const vm = useSocialMatchViewModel()
+    const vm = useProfilesViewModel()
     expect(vm.isInitialized.value).toBe(false)
     await vm.initialize()
     expect(vm.isInitialized.value).toBe(true)
   })
 
   it('hideProfile delegates to store', () => {
-    const vm = useSocialMatchViewModel()
+    const vm = useProfilesViewModel()
     vm.hideProfile('abc')
     expect(mockFindProfileStore.hide).toHaveBeenCalledWith('abc')
   })
 
   it('onBoundsChanged calls findClustersForMapBounds on the store', async () => {
     mockFindProfileStore.findClustersForMapBounds = vi.fn().mockResolvedValue({ success: true })
-    const vm = useSocialMatchViewModel()
+    const vm = useProfilesViewModel()
     const bounds = { south: 45, north: 48, west: 16, east: 23 }
 
     await vm.onBoundsChanged({ bounds, zoom: 6 })
@@ -102,7 +102,7 @@ describe('useSocialMatchViewModel', () => {
     const bounds = { south: 45, north: 48, west: 16, east: 23 }
     mockFindProfileStore.lastMapBounds = { ...bounds }
     mockFindProfileStore.findClustersForMapBounds = vi.fn().mockResolvedValue({ success: true })
-    const vm = useSocialMatchViewModel()
+    const vm = useProfilesViewModel()
 
     // First call to set lastZoom
     await vm.onBoundsChanged({ bounds, zoom: 6 })
@@ -119,7 +119,7 @@ describe('useSocialMatchViewModel', () => {
     mockFindProfileStore.lastMapBounds = bounds
     mockFindProfileStore.findClustersForMapBounds = vi.fn().mockResolvedValue({ success: true })
 
-    const vm = useSocialMatchViewModel()
+    const vm = useProfilesViewModel()
     await vm.initialize()
 
     expect(mockFindProfileStore.findClustersForMapBounds).toHaveBeenCalledWith(bounds, 7)
@@ -137,7 +137,7 @@ describe('useSocialMatchViewModel', () => {
         highlighted: false,
       },
     ]
-    const vm = useSocialMatchViewModel()
+    const vm = useProfilesViewModel()
     expect(vm.clusterFeatures.value).toHaveLength(1)
     mockFindProfileStore.clusterFeatures = []
   })
@@ -149,7 +149,7 @@ describe('useSocialMatchViewModel', () => {
     mockFindProfileStore.invalidateMapCache = vi.fn()
     mockFindProfileStore.findClustersForMapBounds = vi.fn().mockResolvedValue({ success: true })
 
-    const vm = useSocialMatchViewModel()
+    const vm = useProfilesViewModel()
     await vm.updatePrefs()
 
     expect(mockFindProfileStore.invalidateMapCache).toHaveBeenCalledTimes(1)
@@ -169,7 +169,7 @@ describe('useSocialMatchViewModel', () => {
       mockFindProfileStore.findClustersForMapBounds = vi.fn().mockResolvedValue({ success: true })
       mockFindProfileStore.lastMapBounds = { south: 45, north: 48, west: 16, east: 23 }
 
-      const vm = useSocialMatchViewModel()
+      const vm = useProfilesViewModel()
       await vm.initialize()
       vi.clearAllMocks()
 
@@ -193,7 +193,7 @@ describe('useSocialMatchViewModel', () => {
       const bounds = { south: 45, north: 48, west: 16, east: 23 }
       mockFindProfileStore.lastMapBounds = bounds
 
-      const vm = useSocialMatchViewModel()
+      const vm = useProfilesViewModel()
       await vm.initialize()
 
       mockOwnerStore.matchFilter = { ...updatedFilter }
@@ -215,7 +215,7 @@ describe('useSocialMatchViewModel', () => {
       mockFindProfileStore.findClustersForMapBounds = vi.fn().mockResolvedValue({ success: true })
       mockFindProfileStore.lastMapBounds = { south: 45, north: 48, west: 16, east: 23 }
 
-      const vm = useSocialMatchViewModel()
+      const vm = useProfilesViewModel()
       await vm.initialize()
 
       mockOwnerStore.matchFilter = { ...updatedFilter }

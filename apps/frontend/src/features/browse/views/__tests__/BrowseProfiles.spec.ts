@@ -94,8 +94,8 @@ const vmState = {
   refreshIfFilterChanged: vi.fn(),
 }
 
-vi.mock('../../composables/useSocialMatchViewModel', () => ({
-  useSocialMatchViewModel: () => vmState,
+vi.mock('../../composables/useProfilesViewModel', () => ({
+  useProfilesViewModel: () => vmState,
 }))
 
 vi.mock('@/features/browse/stores/findProfileStore', () => ({

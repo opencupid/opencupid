@@ -9,7 +9,7 @@ import type { BoundsWithZoom } from '@/features/shared/components/osmPoiMap/OsmP
 import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 
-export function useSocialMatchViewModel() {
+export function useProfilesViewModel() {
   const router = useRouter()
 
   const ownerStore = useOwnerProfileStore()

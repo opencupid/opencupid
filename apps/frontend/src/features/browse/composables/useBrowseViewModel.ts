@@ -1,17 +1,21 @@
-import { computed, ref } from 'vue'
+import { computed, ref, type Ref } from 'vue'
 import { api, safeApiCall } from '@/lib/api'
 import type { BrowseBoundsResponse } from '@zod/apiResponse.dto'
 import type { PublicTag } from '@zod/tag/tag.dto'
-import type { MapBounds, MapPoi } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
+import type { MapBounds, MapCluster, MapPoi } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
 import type { PublicPostWithProfile } from '@zod/post/post.dto'
+import type { ClusterFeature, MapFeature, PointFeature } from '@shared/zod/map/cluster.dto'
 
 /**
  * Composable that manages the posts data layer and bounds-scoped tags
  * for the unified browse map. Profile clustering continues to be managed
- * by `useSocialMatchViewModel` / `findProfileStore` — this composable
+ * by `useProfilesViewModel` / `findProfileStore` — this composable
  * adds the post POIs and tag data on top.
  */
-export function useBrowseViewModel() {
+export function useBrowseViewModel(
+  clusterFeatures: Ref<MapFeature[]>,
+  isLoadingProfiles: Ref<boolean>
+) {
   const postPois = ref<MapPoi[]>([])
   const availableTags = ref<PublicTag[]>([])
   const selectedTagIds = ref<string[]>([])
@@ -63,6 +67,37 @@ export function useBrowseViewModel() {
     return postPois.value
   })
 
+  const clusters = computed<MapCluster[]>(() =>
+    clusterFeatures.value
+      .filter((f): f is ClusterFeature => f.type === 'cluster')
+      .map((f) => ({
+        id: f.id,
+        location: { lat: f.lat, lon: f.lon },
+        count: f.count,
+        expansionZoom: f.expansionZoom,
+      }))
+  )
+
+  const profilePois = computed<MapPoi[]>(() =>
+    clusterFeatures.value
+      .filter((f): f is PointFeature => f.type === 'point')
+      .map((p) => ({
+        id: p.id,
+        title: p.publicName,
+        location: { lat: p.lat, lon: p.lon },
+        image: p.image?.url
+          ? { blurhash: p.image.blurhash, variants: [{ size: 'thumb', url: p.image.url }] }
+          : undefined,
+        highlighted: p.highlighted,
+        type: 'profile',
+        source: p,
+      }))
+  )
+
+  const allPois = computed<MapPoi[]>(() => [...profilePois.value, ...filteredPostPois.value])
+
+  const isLoading = computed(() => isLoadingProfiles.value || isLoadingPosts.value)
+
   function toggleTag(id: string) {
     const idx = selectedTagIds.value.indexOf(id)
     if (idx === -1) selectedTagIds.value = [...selectedTagIds.value, id]
@@ -76,8 +111,12 @@ export function useBrowseViewModel() {
   return {
     postPois,
     filteredPostPois,
+    clusters,
+    profilePois,
+    allPois,
     availableTags,
     selectedTagIds,
+    isLoading,
     isLoadingPosts,
     fetchPostsAndTags,
     toggleTag,

@@ -2,11 +2,9 @@
 import { computed, onActivated, onMounted, provide, ref, toRef, type Component } from 'vue'
 import { useRoute } from 'vue-router'
 
-import { useSocialMatchViewModel } from '../composables/useSocialMatchViewModel'
+import { useProfilesViewModel } from '../composables/useProfilesViewModel'
 import { useBrowseViewModel } from '../composables/useBrowseViewModel'
 import { useOffcanvasState } from '@/features/shared/composables/useOffcanvasState'
-import { useNotificationState } from '@/features/app/composables/useNotificationState'
-import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { isValidLatLng } from '@/features/shared/components/osmPoiMap/mapUtils'
 
 import BrowseLayout from '@/features/shared/components/BrowseLayout.vue'
@@ -19,16 +17,11 @@ import PostMarkerIcon from '../components/PostMarkerIcon.vue'
 import PostsSidebar from '../components/PostsSidebar.vue'
 import BrowseOffcanvas from '../components/BrowseOffcanvas.vue'
 import UserOffcanvas from '@/features/app/components/UserOffcanvas.vue'
-import ProfileImage from '@/features/images/components/ProfileImage.vue'
-import NotificationDot from '@/features/shared/ui/NotificationDot.vue'
-import IconMessage from '@/assets/icons/interface/message.svg'
-import IconUser from '@/assets/icons/interface/user.svg'
+import OwnerDrawerControls from '../components/OwnerDrawerControls.vue'
 import type {
   MapPoi,
-  MapCluster,
   BoundsWithZoom,
 } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
-import type { ClusterFeature, PointFeature } from '@shared/zod/map/cluster.dto'
 import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 
 defineOptions({ name: 'BrowseProfiles' })
@@ -46,18 +39,16 @@ const {
   onBoundsChanged: onProfileBoundsChanged,
   initialize,
   refreshIfFilterChanged,
-} = useSocialMatchViewModel()
+} = useProfilesViewModel()
 
 provide('viewerProfile', toRef(viewerProfile))
 
 const route = useRoute()
 const findProfileStore = useFindProfileStore()
-const ownerProfileStore = useOwnerProfileStore()
-const { hasUnreadMessages, hasMatchNotifications } = useNotificationState()
 
-// ── Post layer + tags (new unified endpoint) ───────────────────────
-const { filteredPostPois, availableTags, selectedTagIds, isLoadingPosts, fetchPostsAndTags } =
-  useBrowseViewModel()
+// ── Post layer + tags + merged map data ────────────────────────────
+const { filteredPostPois, clusters, allPois, availableTags, selectedTagIds, isLoading, fetchPostsAndTags } =
+  useBrowseViewModel(clusterFeatures, isLoadingProfiles)
 
 // ── Offcanvas state ─────────────────────────────────────────────────
 const offcanvasState = useOffcanvasState()
@@ -102,38 +93,6 @@ async function onBoundsChanged(payload: BoundsWithZoom) {
   await Promise.all([onProfileBoundsChanged(payload), fetchPostsAndTags(payload.bounds)])
 }
 
-// ── Combined loading state ──────────────────────────────────────────
-const isLoading = computed(() => isLoadingProfiles.value || isLoadingPosts.value)
-
-// ── Map data: profile clusters + flat post POIs ─────────────────────
-const clusters = computed<MapCluster[]>(() =>
-  clusterFeatures.value
-    .filter((f): f is ClusterFeature => f.type === 'cluster')
-    .map((f) => ({
-      id: f.id,
-      location: { lat: f.lat, lon: f.lon },
-      count: f.count,
-      expansionZoom: f.expansionZoom,
-    }))
-)
-
-const profilePois = computed<MapPoi[]>(() =>
-  clusterFeatures.value
-    .filter((f): f is PointFeature => f.type === 'point')
-    .map((p) => ({
-      id: p.id,
-      title: p.publicName,
-      location: { lat: p.lat, lon: p.lon },
-      image: p.image?.url
-        ? { blurhash: p.image.blurhash, variants: [{ size: 'thumb', url: p.image.url }] }
-        : undefined,
-      highlighted: p.highlighted,
-      type: 'profile',
-      source: p,
-    }))
-)
-
-const allPois = computed<MapPoi[]>(() => [...profilePois.value, ...filteredPostPois.value])
 
 function iconResolver(poi: MapPoi): Component {
   return poi.type === 'post' ? PostMarkerIcon : MapIcon
@@ -193,41 +152,10 @@ onActivated(async () => {
 
     <!-- Map region -->
     <div class="map-region flex-grow-1 position-relative overflow-hidden">
-      <!-- Map overlay: user controls (top-right) -->
-      <div
-        class="map-overlay-controls position-absolute top-0 end-0 p-2 d-flex gap-2"
-        style="z-index: 1010"
-      >
-        <button
-          type="button"
-          class="btn btn-light btn-sm rounded-circle shadow-sm p-0 overflow-hidden"
-          style="width: 2.5rem; height: 2.5rem"
-          :aria-label="$t('nav.inbox')"
-          @click="openUserOffcanvas('inbox')"
-        >
-          <NotificationDot :show="hasUnreadMessages || hasMatchNotifications">
-            <IconMessage class="svg-icon" />
-          </NotificationDot>
-        </button>
-        <button
-          type="button"
-          class="btn btn-light btn-sm rounded-circle shadow-sm p-0 overflow-hidden"
-          style="width: 2.5rem; height: 2.5rem"
-          :aria-label="$t('nav.profile')"
-          @click="openUserOffcanvas('profile')"
-        >
-          <ProfileImage
-            v-if="ownerProfileStore.profile?.profileImages?.length"
-            :profile="ownerProfileStore.profile"
-            variant="thumb"
-            class="img-fluid w-100 h-100"
-          />
-          <IconUser
-            v-else
-            class="svg-icon"
-          />
-        </button>
-      </div>
+      <OwnerDrawerControls
+        @open:inbox="openUserOffcanvas('inbox')"
+        @open:profile="openUserOffcanvas('profile')"
+      />
 
       <BrowseLayout>
         <template #filter-bar>
