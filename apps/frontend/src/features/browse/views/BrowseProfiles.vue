@@ -77,10 +77,7 @@ function openUserOffcanvas(panel: 'profile' | 'inbox', conversationId?: string) 
 
 function onMarkerClick(id: string | number) {
   const poi = allPois.value.find((p) => p.id === id)
-  if (!poi) {
-    openProfile(String(id))
-    return
-  }
+  if (!poi) return
   activePoi.value = poi
   if (poi.type === 'post') activePostId.value = poi.id
 }
@@ -187,6 +184,13 @@ onActivated(async () => {
       @select="onSidebarSelect"
     />
 
+    <!-- Browse detail panel (between sidebar and map, per wireframe) -->
+    <BrowseOffcanvas
+      :active-poi="activePoi"
+      @close="onOffcanvasClose"
+      @view-profile="onViewProfile"
+    />
+
     <!-- Map region -->
     <div class="map-region flex-grow-1 position-relative overflow-hidden">
       <!-- Map overlay: user controls (top-right) -->
@@ -252,7 +256,7 @@ onActivated(async () => {
             :clusters="clusters"
             :icon-component="MapIcon"
             :icon-resolver="iconResolver"
-            :highlighted-poi-id="activePostId"
+            :highlighted-poi-id="activePoi?.id ?? null"
             :center="mapCenter"
             :is-loading="isLoading"
             :is-placeholder-animated="true"
@@ -265,13 +269,6 @@ onActivated(async () => {
         </template>
       </BrowseLayout>
     </div>
-
-    <!-- Browse offcanvas (profile or post detail) -->
-    <BrowseOffcanvas
-      :active-poi="activePoi"
-      @close="onOffcanvasClose"
-      @view-profile="onViewProfile"
-    />
 
     <!-- User offcanvas (Profile + Inbox panels) -->
     <UserOffcanvas
