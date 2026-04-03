@@ -43,9 +43,9 @@ vi.mock('vue-router', () => ({
   useRoute: () => ({ query: {} }),
 }))
 
-// Stub UserOffcanvas to avoid media-encoder-host Worker dependency
-vi.mock('@/features/app/components/UserOffcanvas.vue', () => ({
-  default: { template: '<div class="user-offcanvas-stub" />' },
+// Stub OwnerDrawer to avoid media-encoder-host Worker dependency
+vi.mock('@/features/app/components/OwnerDrawer.vue', () => ({
+  default: { template: '<div class="owner-drawer-stub" />' },
 }))
 vi.mock('@/features/app/composables/useNotificationState', () => ({
   useNotificationState: () => ({

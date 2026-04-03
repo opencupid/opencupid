@@ -6,6 +6,7 @@ import { useBootstrap } from '@/lib/bootstrap'
 import type { StoreError } from '@/store/helpers'
 
 import type { BoundsWithZoom } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
+import { isValidLatLng, toLatLng } from '@/features/shared/components/osmPoiMap/mapUtils'
 import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 
@@ -139,6 +140,19 @@ export function useProfilesViewModel() {
     }
   }
 
+  const mapCenter = computed<[number, number] | undefined>(() => {
+    const fromFilter = toLatLng(ownerStore.matchFilter?.location)
+    if (isValidLatLng(fromFilter)) return fromFilter
+
+    const fromProfile = toLatLng(viewerProfile.value?.location)
+    if (isValidLatLng(fromProfile)) return fromProfile
+
+    return undefined
+  })
+
+  const fetchPopupData = (id: string | number) =>
+    findProfileStore.fetchProfileForPopup(String(id))
+
   return {
     viewerProfile,
     haveResults,
@@ -154,5 +168,7 @@ export function useProfilesViewModel() {
     openProfile,
     clusterFeatures: computed(() => findProfileStore.clusterFeatures),
     isInitialized,
+    mapCenter,
+    fetchPopupData,
   }
 }

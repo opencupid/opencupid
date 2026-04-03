@@ -31,7 +31,7 @@ import IconBackward from '@/assets/icons/interface/backward.svg'
 
 import type { ProfileOptInSettings } from '@zod/profile/profile.dto'
 
-defineOptions({ name: 'UserOffcanvas' })
+defineOptions({ name: 'OwnerDrawer' })
 
 const props = defineProps<{
   panel: 'profile' | 'inbox'
@@ -168,9 +168,9 @@ const inboxUnreadCount = computed(() =>
 <template>
   <div
     ref="offcanvasEl"
-    class="offcanvas offcanvas-end user-offcanvas"
+    class="offcanvas offcanvas-end owner-drawer"
     tabindex="-1"
-    aria-labelledby="userOffcanvasLabel"
+    aria-labelledby="ownerDrawerLabel"
   >
     <!-- ── Profile panel ─────────────────────────────────────────────────── -->
     <template v-if="panel === 'profile'">
@@ -185,7 +185,7 @@ const inboxUnreadCount = computed(() =>
             <IconBackward class="svg-icon" />
           </button>
           <span
-            id="userOffcanvasLabel"
+            id="ownerDrawerLabel"
             class="offcanvas-title"
           >
             Settings
@@ -195,7 +195,7 @@ const inboxUnreadCount = computed(() =>
           <span class="d-flex align-items-center gap-2 flex-grow-1 overflow-hidden">
             <span
               v-if="ownerProfileStore.profile?.profileImages?.length"
-              class="user-offcanvas-avatar flex-shrink-0 overflow-hidden rounded-circle"
+              class="owner-drawer-avatar flex-shrink-0 overflow-hidden rounded-circle"
             >
               <ProfileImage
                 :profile="ownerProfileStore.profile"
@@ -204,7 +204,7 @@ const inboxUnreadCount = computed(() =>
               />
             </span>
             <span
-              id="userOffcanvasLabel"
+              id="ownerDrawerLabel"
               class="offcanvas-title text-truncate"
             >
               {{ ownerProfileStore.profile?.publicName }}
@@ -334,7 +334,7 @@ const inboxUnreadCount = computed(() =>
             <IconBackward class="svg-icon" />
           </button>
           <span
-            id="userOffcanvasLabel"
+            id="ownerDrawerLabel"
             class="offcanvas-title"
           >
             {{ activeConversation?.partnerProfile?.publicName }}
@@ -342,7 +342,7 @@ const inboxUnreadCount = computed(() =>
         </template>
         <template v-else>
           <span
-            id="userOffcanvasLabel"
+            id="ownerDrawerLabel"
             class="offcanvas-title"
           >
             {{ $t('messaging.inbox_title') }}
@@ -419,7 +419,7 @@ const inboxUnreadCount = computed(() =>
 </template>
 
 <style scoped lang="scss">
-.user-offcanvas {
+.owner-drawer {
   width: 320px;
 
   @media (max-width: 575.98px) {
@@ -427,7 +427,7 @@ const inboxUnreadCount = computed(() =>
   }
 }
 
-.user-offcanvas-avatar {
+.owner-drawer-avatar {
   width: 2rem;
   height: 2rem;
 }

@@ -1,10 +1,16 @@
 import L from 'leaflet'
 import { type Component, render, h } from 'vue'
 import type { PoiIconProps } from './OsmPoiMap.types'
+import type { LocationDTO } from '@zod/dto/location.dto'
 
 /** Validates that a coordinate pair contains finite numbers (rejects NaN, Infinity, null, undefined). */
 export function isValidLatLng(center: [number, number] | undefined): center is [number, number] {
   return !!center && Number.isFinite(center[0]) && Number.isFinite(center[1])
+}
+
+/** Extracts a Leaflet-compatible [lat, lon] tuple from a LocationDTO, or undefined if coords are absent. */
+export function toLatLng(loc?: LocationDTO): [number, number] | undefined {
+  if (loc?.lat != null && loc?.lon != null) return [loc.lat, loc.lon]
 }
 
 

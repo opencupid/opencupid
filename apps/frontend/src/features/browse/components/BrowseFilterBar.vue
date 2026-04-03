@@ -97,7 +97,7 @@ function clearBoundsTags() {
       </div>
     </div>
     <!-- Bounds-scoped tags (from map viewport) -->
-    <div
+    <!-- <div
       v-if="availableTags?.length"
       class="d-flex flex-wrap gap-1 mt-2"
     >
@@ -117,6 +117,6 @@ function clearBoundsTags() {
       >
         ✕
       </button>
-    </div>
+    </div> -->
   </div>
 </template>

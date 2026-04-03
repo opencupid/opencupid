@@ -12,10 +12,7 @@ import type { ClusterFeature, MapFeature, PointFeature } from '@shared/zod/map/c
  * by `useProfilesViewModel` / `findProfileStore` — this composable
  * adds the post POIs and tag data on top.
  */
-export function useBrowseViewModel(
-  clusterFeatures: Ref<MapFeature[]>,
-  isLoadingProfiles: Ref<boolean>
-) {
+export function useBrowseViewModel(clusterFeatures: Ref<MapFeature[]>) {
   const postPois = ref<MapPoi[]>([])
   const availableTags = ref<PublicTag[]>([])
   const selectedTagIds = ref<string[]>([])
@@ -96,8 +93,6 @@ export function useBrowseViewModel(
 
   const allPois = computed<MapPoi[]>(() => [...profilePois.value, ...filteredPostPois.value])
 
-  const isLoading = computed(() => isLoadingProfiles.value || isLoadingPosts.value)
-
   function toggleTag(id: string) {
     const idx = selectedTagIds.value.indexOf(id)
     if (idx === -1) selectedTagIds.value = [...selectedTagIds.value, id]
@@ -116,7 +111,6 @@ export function useBrowseViewModel(
     allPois,
     availableTags,
     selectedTagIds,
-    isLoading,
     isLoadingPosts,
     fetchPostsAndTags,
     toggleTag,

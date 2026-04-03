@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { computed, onActivated, onMounted, provide, ref, toRef, type Component } from 'vue'
+import { onActivated, onMounted, provide, ref, toRef, type Component } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { useProfilesViewModel } from '../composables/useProfilesViewModel'
 import { useBrowseViewModel } from '../composables/useBrowseViewModel'
 import { useOffcanvasState } from '@/features/shared/composables/useOffcanvasState'
-import { isValidLatLng } from '@/features/shared/components/osmPoiMap/mapUtils'
 
 import BrowseLayout from '@/features/shared/components/BrowseLayout.vue'
 import BrowseFilterBar from '../components/BrowseFilterBar.vue'
@@ -16,13 +15,12 @@ import MapIcon from '@/features/publicprofile/components/MapIcon.vue'
 import PostMarkerIcon from '../components/PostMarkerIcon.vue'
 import PostsSidebar from '../components/PostsSidebar.vue'
 import BrowseOffcanvas from '../components/BrowseOffcanvas.vue'
-import UserOffcanvas from '@/features/app/components/UserOffcanvas.vue'
+import OwnerDrawer from '@/features/app/components/OwnerDrawer.vue'
 import OwnerDrawerControls from '../components/OwnerDrawerControls.vue'
 import type {
   MapPoi,
   BoundsWithZoom,
 } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
-import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 
 defineOptions({ name: 'BrowseProfiles' })
 
@@ -30,7 +28,6 @@ defineOptions({ name: 'BrowseProfiles' })
 const {
   viewerProfile,
   isNoOneAround,
-  isLoading: isLoadingProfiles,
   clusterFeatures,
   matchFilter,
   isInitialized,
@@ -39,16 +36,16 @@ const {
   onBoundsChanged: onProfileBoundsChanged,
   initialize,
   refreshIfFilterChanged,
+  mapCenter,
+  fetchPopupData,
 } = useProfilesViewModel()
 
 provide('viewerProfile', toRef(viewerProfile))
 
 const route = useRoute()
-const findProfileStore = useFindProfileStore()
-
 // ── Post layer + tags + merged map data ────────────────────────────
-const { filteredPostPois, clusters, allPois, availableTags, selectedTagIds, isLoading, fetchPostsAndTags } =
-  useBrowseViewModel(clusterFeatures, isLoadingProfiles)
+const { filteredPostPois, clusters, allPois, availableTags, selectedTagIds, fetchPostsAndTags } =
+  useBrowseViewModel(clusterFeatures)
 
 // ── Offcanvas state ─────────────────────────────────────────────────
 const offcanvasState = useOffcanvasState()
@@ -57,11 +54,16 @@ const activePostId = ref<string | number | null>(null)
 const mapRef = ref<InstanceType<typeof MapView> | null>(null)
 
 // ── User offcanvas (profile + inbox) ────────────────────────────────
-const userOffcanvasPanel = ref<'profile' | 'inbox'>('profile')
+const ownerDrawerPanel = ref<'profile' | 'inbox'>('profile')
 const initialConversationId = ref<string | undefined>()
 
-function openUserOffcanvas(panel: 'profile' | 'inbox', conversationId?: string) {
-  userOffcanvasPanel.value = panel
+function openProfileDrawer() {
+  ownerDrawerPanel.value = 'profile'
+  offcanvasState.open('user')
+}
+
+function openInboxDrawer(conversationId?: string) {
+  ownerDrawerPanel.value = 'inbox'
   initialConversationId.value = conversationId
   offcanvasState.open('user')
 }
@@ -89,8 +91,8 @@ function onViewProfile(profileId: string) {
 }
 
 // ── Unified bounds handler ──────────────────────────────────────────
-async function onBoundsChanged(payload: BoundsWithZoom) {
-  await Promise.all([onProfileBoundsChanged(payload), fetchPostsAndTags(payload.bounds)])
+async function onBoundsChanged(boundsWithZoom: BoundsWithZoom) {
+  await Promise.all([onProfileBoundsChanged(boundsWithZoom), fetchPostsAndTags(boundsWithZoom.bounds)])
 }
 
 
@@ -98,23 +100,6 @@ function iconResolver(poi: MapPoi): Component {
   return poi.type === 'post' ? PostMarkerIcon : MapIcon
 }
 
-const fetchPopupData = async (id: string | number) => {
-  return findProfileStore.fetchProfileForPopup(String(id))
-}
-
-const mapCenter = computed<[number, number] | undefined>(() => {
-  const loc = matchFilter.value?.location
-  const locPair: [number, number] | undefined =
-    loc?.lat != null && loc?.lon != null ? [loc.lat, loc.lon] : undefined
-  if (isValidLatLng(locPair)) return locPair
-
-  const profile = viewerProfile.value?.location
-  const profilePair: [number, number] | undefined =
-    profile?.lat != null && profile?.lon != null ? [profile.lat, profile.lon] : undefined
-  if (isValidLatLng(profilePair)) return profilePair
-
-  return undefined
-})
 
 onMounted(async () => {
   await initialize()
@@ -122,9 +107,8 @@ onMounted(async () => {
   // Deep-link support: ?panel=profile|inbox&conversation=<id>
   const panel = route.query.panel as 'profile' | 'inbox' | undefined
   const convoId = route.query.conversation as string | undefined
-  if (panel === 'profile' || panel === 'inbox') {
-    openUserOffcanvas(panel, convoId)
-  }
+  if (panel === 'profile') openProfileDrawer()
+  else if (panel === 'inbox') openInboxDrawer(convoId)
 })
 
 onActivated(async () => {
@@ -153,8 +137,8 @@ onActivated(async () => {
     <!-- Map region -->
     <div class="map-region flex-grow-1 position-relative overflow-hidden">
       <OwnerDrawerControls
-        @open:inbox="openUserOffcanvas('inbox')"
-        @open:profile="openUserOffcanvas('profile')"
+        @open:inbox="openInboxDrawer()"
+        @open:profile="openProfileDrawer()"
       />
 
       <BrowseLayout>
@@ -186,7 +170,6 @@ onActivated(async () => {
             :icon-resolver="iconResolver"
             :highlighted-poi-id="activePoi?.id ?? null"
             :center="mapCenter"
-            :is-loading="isLoading"
             :is-placeholder-animated="true"
             :popup-component="ProfileMapCard"
             :fetch-popup-data="fetchPopupData"
@@ -199,8 +182,8 @@ onActivated(async () => {
     </div>
 
     <!-- User offcanvas (Profile + Inbox panels) -->
-    <UserOffcanvas
-      :panel="userOffcanvasPanel"
+    <OwnerDrawer
+      :panel="ownerDrawerPanel"
       :conversation-id="initialConversationId"
       @profile:open="onViewProfile"
     />

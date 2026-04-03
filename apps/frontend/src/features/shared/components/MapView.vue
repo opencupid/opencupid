@@ -22,12 +22,10 @@ const props = withDefaults(
     selectedId?: string | number
     highlightedPoiId?: string | number | null
     fitToPois?: boolean
-    isLoading?: boolean
     isPlaceholderAnimated?: boolean
     fetchPopupData?: (id: string | number) => Promise<unknown>
   }>(),
   {
-    isLoading: false,
     isPlaceholderAnimated: true,
     clusters: () => [],
   }

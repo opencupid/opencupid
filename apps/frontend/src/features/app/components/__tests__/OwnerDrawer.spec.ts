@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
-import UserOffcanvas from '../UserOffcanvas.vue'
+import OwnerDrawer from '../OwnerDrawer.vue'
 
 vi.mock('vue-router', () => ({
   useRouter: () => ({ push: vi.fn(), back: vi.fn(), replace: vi.fn() }),
@@ -132,11 +132,11 @@ const globalConfig = {
   mocks: { $t: (k: string) => k },
 }
 
-describe('UserOffcanvas', () => {
+describe('OwnerDrawer', () => {
   beforeEach(() => vi.clearAllMocks())
 
   it('shows profile panel when panel=profile', () => {
-    const wrapper = mount(UserOffcanvas, {
+    const wrapper = mount(OwnerDrawer, {
       props: { panel: 'profile' },
       global: globalConfig,
     })
@@ -145,7 +145,7 @@ describe('UserOffcanvas', () => {
   })
 
   it('gear icon switches to settings sub-view', async () => {
-    const wrapper = mount(UserOffcanvas, {
+    const wrapper = mount(OwnerDrawer, {
       props: { panel: 'profile' },
       global: globalConfig,
     })
@@ -155,7 +155,7 @@ describe('UserOffcanvas', () => {
   })
 
   it('back button from settings returns to profile tab', async () => {
-    const wrapper = mount(UserOffcanvas, {
+    const wrapper = mount(OwnerDrawer, {
       props: { panel: 'profile' },
       global: globalConfig,
     })
@@ -166,7 +166,7 @@ describe('UserOffcanvas', () => {
   })
 
   it('shows inbox panel when panel=inbox', () => {
-    const wrapper = mount(UserOffcanvas, {
+    const wrapper = mount(OwnerDrawer, {
       props: { panel: 'inbox' },
       global: globalConfig,
     })
@@ -174,7 +174,7 @@ describe('UserOffcanvas', () => {
   })
 
   it('clicking close calls offcanvasState.close', async () => {
-    const wrapper = mount(UserOffcanvas, {
+    const wrapper = mount(OwnerDrawer, {
       props: { panel: 'profile' },
       global: globalConfig,
     })
