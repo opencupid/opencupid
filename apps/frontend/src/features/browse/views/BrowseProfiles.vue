@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, onActivated, onMounted, provide, toRef, type Component } from 'vue'
+import { computed, onActivated, onMounted, provide, ref, toRef, type Component } from 'vue'
 
 import { useSocialMatchViewModel } from '../composables/useSocialMatchViewModel'
 import { useBrowseViewModel } from '../composables/useBrowseViewModel'
+import { useOffcanvasState } from '@/features/shared/composables/useOffcanvasState'
 import { isValidLatLng } from '@/features/shared/components/osmPoiMap/mapUtils'
 
 import BrowseLayout from '@/features/shared/components/BrowseLayout.vue'
@@ -12,6 +13,8 @@ import ProfileMapCard from '../components/ProfileMapCard.vue'
 import NoResultsCTA from '../components/NoResultsCTA.vue'
 import MapIcon from '@/features/publicprofile/components/MapIcon.vue'
 import PostMarkerIcon from '../components/PostMarkerIcon.vue'
+import PostsSidebar from '../components/PostsSidebar.vue'
+import BrowseOffcanvas from '../components/BrowseOffcanvas.vue'
 import type {
   MapPoi,
   MapCluster,
@@ -45,9 +48,39 @@ const findProfileStore = useFindProfileStore()
 const { filteredPostPois, availableTags, selectedTagIds, isLoadingPosts, fetchPostsAndTags } =
   useBrowseViewModel()
 
+// ── Offcanvas state ─────────────────────────────────────────────────
+const offcanvasState = useOffcanvasState()
+const activePoi = ref<MapPoi | null>(null)
+const activePostId = ref<string | number | null>(null)
+const mapRef = ref<InstanceType<typeof MapView> | null>(null)
+
+function onMarkerClick(id: string | number) {
+  const poi = allPois.value.find((p) => p.id === id)
+  if (!poi) {
+    openProfile(String(id))
+    return
+  }
+  activePoi.value = poi
+  if (poi.type === 'post') activePostId.value = poi.id
+}
+
+function onSidebarSelect(poi: MapPoi) {
+  activePostId.value = poi.id
+  activePoi.value = poi
+  mapRef.value?.flyToMarker(poi)
+}
+
+function onOffcanvasClose() {
+  activePoi.value = null
+  activePostId.value = null
+}
+
+function onViewProfile(profileId: string) {
+  openProfile(profileId)
+}
+
 // ── Unified bounds handler ──────────────────────────────────────────
 async function onBoundsChanged(payload: BoundsWithZoom) {
-  // Fire both in parallel: profile clusters + post/tag fetch
   await Promise.all([onProfileBoundsChanged(payload), fetchPostsAndTags(payload.bounds)])
 }
 
@@ -84,7 +117,6 @@ const profilePois = computed<MapPoi[]>(() =>
 
 const allPois = computed<MapPoi[]>(() => [...profilePois.value, ...filteredPostPois.value])
 
-// ── Icon resolver: profile → MapIcon, post → PostMarkerIcon ────────
 function iconResolver(poi: MapPoi): Component {
   return poi.type === 'post' ? PostMarkerIcon : MapIcon
 }
@@ -119,43 +151,64 @@ onActivated(async () => {
 </script>
 
 <template>
-  <BrowseLayout>
-    <template #filter-bar>
-      <BrowseFilterBar
-        v-model="matchFilter"
-        :viewer-profile="viewerProfile"
-        :available-tags="availableTags"
-        :selected-tag-ids="selectedTagIds"
-        @filter:changed="updatePrefs"
-        @update:selected-tag-ids="selectedTagIds = $event"
-      />
-    </template>
+  <div class="browse-shell d-flex vh-100 overflow-hidden">
+    <!-- Posts sidebar (desktop only) -->
+    <PostsSidebar
+      :posts="filteredPostPois"
+      :active-id="activePostId"
+      @select="onSidebarSelect"
+    />
 
-    <template #results>
-      <BAlert
-        v-if="isNoOneAround"
-        variant="info"
-        class="lonely-alert shadow p-2 p-md-2"
-        show
-      >
-        <NoResultsCTA />
-      </BAlert>
-      <MapView
-        :items="allPois"
-        :clusters="clusters"
-        :icon-component="MapIcon"
-        :icon-resolver="iconResolver"
-        :center="mapCenter"
-        :is-loading="isLoading"
-        :is-placeholder-animated="true"
-        :popup-component="ProfileMapCard"
-        :fetch-popup-data="fetchPopupData"
-        class="h-100"
-        @item:select="(id: string | number) => openProfile(String(id))"
-        @bounds-changed="onBoundsChanged"
-      />
-    </template>
-  </BrowseLayout>
+    <!-- Map region -->
+    <div class="map-region flex-grow-1 position-relative overflow-hidden">
+      <BrowseLayout>
+        <template #filter-bar>
+          <BrowseFilterBar
+            v-model="matchFilter"
+            :viewer-profile="viewerProfile"
+            :available-tags="availableTags"
+            :selected-tag-ids="selectedTagIds"
+            @filter:changed="updatePrefs"
+            @update:selected-tag-ids="selectedTagIds = $event"
+          />
+        </template>
+
+        <template #results>
+          <BAlert
+            v-if="isNoOneAround"
+            variant="info"
+            class="lonely-alert shadow p-2 p-md-2"
+            show
+          >
+            <NoResultsCTA />
+          </BAlert>
+          <MapView
+            ref="mapRef"
+            :items="allPois"
+            :clusters="clusters"
+            :icon-component="MapIcon"
+            :icon-resolver="iconResolver"
+            :highlighted-poi-id="activePostId"
+            :center="mapCenter"
+            :is-loading="isLoading"
+            :is-placeholder-animated="true"
+            :popup-component="ProfileMapCard"
+            :fetch-popup-data="fetchPopupData"
+            class="h-100"
+            @item:select="onMarkerClick"
+            @bounds-changed="onBoundsChanged"
+          />
+        </template>
+      </BrowseLayout>
+    </div>
+
+    <!-- Browse offcanvas (profile or post detail) -->
+    <BrowseOffcanvas
+      :active-poi="activePoi"
+      @close="onOffcanvasClose"
+      @view-profile="onViewProfile"
+    />
+  </div>
 </template>
 
 <style scoped lang="scss">
