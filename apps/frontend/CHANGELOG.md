@@ -1,5 +1,11 @@
 # frontend
 
+## 0.48.0
+
+### Minor Changes
+
+- 6ba95f9: Add diagnostic checkpoint events at key onboarding flow stages via Sentry/GlitchTip
+
 ## 0.47.0
 
 ### Minor Changes
