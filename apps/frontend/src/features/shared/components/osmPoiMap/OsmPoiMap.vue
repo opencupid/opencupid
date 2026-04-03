@@ -34,6 +34,7 @@ const emit = defineEmits<{
 }>()
 
 const mapEl: Ref<HTMLDivElement | null> = ref(null)
+const backdropPaneEl: Ref<HTMLElement | null> = ref(null)
 let map: LMap | null = null
 let markers = new Map<string | number, LMarker>()
 let itemsById = new Map<string | number, MapPoi>()
@@ -85,6 +86,11 @@ function ensureMap() {
   if (map || !mapEl.value) return
 
   map = createLeafletMap(mapEl.value)
+  // Custom pane between marker-pane (600) and popup-pane (700) so the
+  // backdrop blocks marker/spider clicks but popups remain clickable.
+  const backdropPane = map.createPane('backdropPane')
+  backdropPane.style.zIndex = '699'
+  backdropPaneEl.value = backdropPane
   initBaseLayer(map)
   initLayers(map)
 }
@@ -506,12 +512,18 @@ watch(
       ref="mapEl"
     />
 
-    <!-- Backdrop absorbs map clicks while a popup is open, preventing OMS unspiderfy -->
-    <div
-      v-if="popupTarget"
-      class="map-popup-backdrop"
-      @click="closeActivePopup"
-    />
+    <!-- Backdrop absorbs marker/spider clicks while a popup is open, preventing
+         OMS unspiderfy. Teleported into a custom Leaflet pane (z-index 699)
+         so it sits between the marker pane (600) and popup pane (700). -->
+    <Teleport
+      v-if="popupTarget && backdropPaneEl"
+      :to="backdropPaneEl"
+    >
+      <div
+        class="map-popup-backdrop"
+        @click.stop="closeActivePopup"
+      />
+    </Teleport>
 
     <Teleport
       v-if="popupComponent && popupTarget && popupItem"
@@ -539,13 +551,15 @@ watch(
   width: 100%;
 }
 
-/* Invisible overlay that swallows map clicks while a popup is open,
-   preventing OMS from collapsing the spider. The popup itself lives
-   inside the Leaflet pane which sits above this backdrop. */
+/* Invisible overlay inside the custom backdropPane (z-index 699).
+   Oversized to cover the viewport regardless of the map pane's
+   transform offset that shifts on every pan. */
 .map-popup-backdrop {
   position: absolute;
-  inset: 0;
-  z-index: 999;
+  top: -100vh;
+  left: -100vw;
+  width: 300vw;
+  height: 300vh;
   cursor: pointer;
 }
 
