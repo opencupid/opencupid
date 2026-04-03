@@ -94,7 +94,7 @@ provide('viewerProfile', toRef(viewerProfile))
       <div class="banner-halo">
         <LikesAndMatchesBanner
           class="clickable my-3"
-          @click="router.push({ name: 'Messaging' })"
+          @click="router.push({ path: '/browse', query: { panel: 'inbox' } })"
         />
       </div>
       <!-- lg+: two-column layout -->

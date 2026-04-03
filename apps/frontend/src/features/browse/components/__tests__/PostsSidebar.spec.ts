@@ -33,14 +33,15 @@ describe('PostsSidebar', () => {
 
   it('emits select when a thumb is clicked', async () => {
     const wrapper = mount(PostsSidebar, { props: { posts, activeId: null } })
-    await wrapper.findAll('.thumb-cell')[0].trigger('click')
-    expect(wrapper.emitted('select')?.[0][0]).toMatchObject({ id: '1' })
+    await wrapper.findAll('.thumb-cell')[0]!.trigger('click')
+    expect(wrapper.emitted('select')?.[0]?.[0]).toMatchObject({ id: '1' })
   })
 
   it('marks the active post with active class', () => {
     const wrapper = mount(PostsSidebar, { props: { posts, activeId: '1' } })
-    expect(wrapper.findAll('.thumb-cell')[0].classes()).toContain('active')
-    expect(wrapper.findAll('.thumb-cell')[1].classes()).not.toContain('active')
+    const cells = wrapper.findAll('.thumb-cell')
+    expect(cells[0]!.classes()).toContain('active')
+    expect(cells[1]!.classes()).not.toContain('active')
   })
 
   it('shows empty state when no posts', () => {

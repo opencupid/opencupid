@@ -42,7 +42,7 @@ export function useMessagingViewModel() {
     if (messageStore.activeConversation?.conversationId === convo.conversationId) {
       return
     }
-    router.push({ name: 'Conversation', params: { conversationId: convo.conversationId } })
+    router.push({ path: '/browse', query: { panel: 'inbox', conversation: convo.conversationId } })
     setTimeout(async () => {
       await messageStore.markAsRead(convo.conversationId)
     }, 2000)

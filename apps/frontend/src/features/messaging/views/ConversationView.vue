@@ -40,7 +40,7 @@ onUnmounted(() => {
 })
 
 function handleDeselectConvo() {
-  router.push({ name: 'Messaging' })
+  router.push({ path: '/browse', query: { panel: 'inbox' } })
 }
 
 function handleProfileSelect(profileId: string) {

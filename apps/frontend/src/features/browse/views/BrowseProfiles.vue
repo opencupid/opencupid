@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { computed, onActivated, onMounted, provide, ref, toRef, type Component } from 'vue'
+import { useRoute } from 'vue-router'
 
 import { useSocialMatchViewModel } from '../composables/useSocialMatchViewModel'
 import { useBrowseViewModel } from '../composables/useBrowseViewModel'
 import { useOffcanvasState } from '@/features/shared/composables/useOffcanvasState'
+import { useNotificationState } from '@/features/app/composables/useNotificationState'
+import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { isValidLatLng } from '@/features/shared/components/osmPoiMap/mapUtils'
 
 import BrowseLayout from '@/features/shared/components/BrowseLayout.vue'
@@ -15,6 +18,11 @@ import MapIcon from '@/features/publicprofile/components/MapIcon.vue'
 import PostMarkerIcon from '../components/PostMarkerIcon.vue'
 import PostsSidebar from '../components/PostsSidebar.vue'
 import BrowseOffcanvas from '../components/BrowseOffcanvas.vue'
+import UserOffcanvas from '@/features/app/components/UserOffcanvas.vue'
+import ProfileImage from '@/features/images/components/ProfileImage.vue'
+import NotificationDot from '@/features/shared/ui/NotificationDot.vue'
+import IconMessage from '@/assets/icons/interface/message.svg'
+import IconUser from '@/assets/icons/interface/user.svg'
 import type {
   MapPoi,
   MapCluster,
@@ -42,7 +50,10 @@ const {
 
 provide('viewerProfile', toRef(viewerProfile))
 
+const route = useRoute()
 const findProfileStore = useFindProfileStore()
+const ownerProfileStore = useOwnerProfileStore()
+const { hasUnreadMessages, hasMatchNotifications } = useNotificationState()
 
 // ── Post layer + tags (new unified endpoint) ───────────────────────
 const { filteredPostPois, availableTags, selectedTagIds, isLoadingPosts, fetchPostsAndTags } =
@@ -53,6 +64,16 @@ const offcanvasState = useOffcanvasState()
 const activePoi = ref<MapPoi | null>(null)
 const activePostId = ref<string | number | null>(null)
 const mapRef = ref<InstanceType<typeof MapView> | null>(null)
+
+// ── User offcanvas (profile + inbox) ────────────────────────────────
+const userOffcanvasPanel = ref<'profile' | 'inbox'>('profile')
+const initialConversationId = ref<string | undefined>()
+
+function openUserOffcanvas(panel: 'profile' | 'inbox', conversationId?: string) {
+  userOffcanvasPanel.value = panel
+  initialConversationId.value = conversationId
+  offcanvasState.open('user')
+}
 
 function onMarkerClick(id: string | number) {
   const poi = allPois.value.find((p) => p.id === id)
@@ -141,6 +162,13 @@ const mapCenter = computed<[number, number] | undefined>(() => {
 
 onMounted(async () => {
   await initialize()
+
+  // Deep-link support: ?panel=profile|inbox&conversation=<id>
+  const panel = route.query.panel as 'profile' | 'inbox' | undefined
+  const convoId = route.query.conversation as string | undefined
+  if (panel === 'profile' || panel === 'inbox') {
+    openUserOffcanvas(panel, convoId)
+  }
 })
 
 onActivated(async () => {
@@ -161,6 +189,42 @@ onActivated(async () => {
 
     <!-- Map region -->
     <div class="map-region flex-grow-1 position-relative overflow-hidden">
+      <!-- Map overlay: user controls (top-right) -->
+      <div
+        class="map-overlay-controls position-absolute top-0 end-0 p-2 d-flex gap-2"
+        style="z-index: 1010"
+      >
+        <button
+          type="button"
+          class="btn btn-light btn-sm rounded-circle shadow-sm p-0 overflow-hidden"
+          style="width: 2.5rem; height: 2.5rem"
+          :aria-label="$t('nav.inbox')"
+          @click="openUserOffcanvas('inbox')"
+        >
+          <NotificationDot :show="hasUnreadMessages || hasMatchNotifications">
+            <IconMessage class="svg-icon" />
+          </NotificationDot>
+        </button>
+        <button
+          type="button"
+          class="btn btn-light btn-sm rounded-circle shadow-sm p-0 overflow-hidden"
+          style="width: 2.5rem; height: 2.5rem"
+          :aria-label="$t('nav.profile')"
+          @click="openUserOffcanvas('profile')"
+        >
+          <ProfileImage
+            v-if="ownerProfileStore.profile?.profileImages?.length"
+            :profile="ownerProfileStore.profile"
+            variant="thumb"
+            class="img-fluid w-100 h-100"
+          />
+          <IconUser
+            v-else
+            class="svg-icon"
+          />
+        </button>
+      </div>
+
       <BrowseLayout>
         <template #filter-bar>
           <BrowseFilterBar
@@ -207,6 +271,13 @@ onActivated(async () => {
       :active-poi="activePoi"
       @close="onOffcanvasClose"
       @view-profile="onViewProfile"
+    />
+
+    <!-- User offcanvas (Profile + Inbox panels) -->
+    <UserOffcanvas
+      :panel="userOffcanvasPanel"
+      :conversation-id="initialConversationId"
+      @profile:open="onViewProfile"
     />
   </div>
 </template>

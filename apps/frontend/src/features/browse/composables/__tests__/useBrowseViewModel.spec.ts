@@ -4,7 +4,7 @@ const mockGet = vi.fn()
 
 vi.mock('@/lib/api', () => ({
   api: { get: (...args: any[]) => mockGet(...args) },
-  safeApiCall: (fn: Function) => fn(),
+  safeApiCall: (fn: () => unknown) => fn(),
 }))
 
 import { useBrowseViewModel } from '../useBrowseViewModel'
@@ -42,7 +42,7 @@ describe('useBrowseViewModel', () => {
       expect.objectContaining({ params: mockBounds })
     )
     expect(vm.postPois.value).toHaveLength(1)
-    expect(vm.postPois.value[0].type).toBe('post')
+    expect(vm.postPois.value[0]!.type).toBe('post')
     expect(vm.availableTags.value).toHaveLength(1)
   })
 
@@ -68,7 +68,7 @@ describe('useBrowseViewModel', () => {
     await vm.fetchPostsAndTags(mockBounds)
 
     expect(vm.postPois.value).toHaveLength(1)
-    expect(vm.postPois.value[0].id).toBe('post1')
+    expect(vm.postPois.value[0]!.id).toBe('post1')
   })
 
   it('toggleTag adds and removes tag IDs', () => {

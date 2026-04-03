@@ -27,7 +27,7 @@ const handleFinish = async () => {
   if (!res.success) return
   await persistDatingPrefs()
   await updateScopes({ isDatingActive: true })
-  router.push({ name: 'MyProfile' })
+  router.push({ path: '/browse', query: { panel: 'profile' } })
 }
 </script>
 

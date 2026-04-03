@@ -5,6 +5,8 @@ import { useOffcanvasState } from '@/features/shared/composables/useOffcanvasSta
 import ProfileMapCard from './ProfileMapCard.vue'
 import PostMapPopup from '@/features/posts/components/PostMapPopup.vue'
 import type { MapPoi } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
+import type { PublicPostWithProfile } from '@zod/post/post.dto'
+import type { PublicProfile } from '@zod/profile/profile.dto'
 
 defineOptions({ name: 'BrowseOffcanvas' })
 
@@ -79,12 +81,14 @@ const isPost = computed(() => props.activePoi?.type === 'post')
     <div class="offcanvas-body p-0">
       <PostMapPopup
         v-if="activePoi && isPost"
-        :item="activePoi.source"
-        @click="emit('view-profile', String(activePoi.source?.postedBy?.id))"
+        :item="activePoi.source as PublicPostWithProfile"
+        @click="
+          emit('view-profile', String((activePoi.source as PublicPostWithProfile)?.postedBy?.id))
+        "
       />
       <ProfileMapCard
         v-else-if="activePoi && !isPost"
-        :item="activePoi.source"
+        :item="activePoi.source as PublicProfile"
         @click="emit('view-profile', String(activePoi.id))"
       />
     </div>

@@ -40,6 +40,29 @@ vi.mock('@/assets/icons/interface/target-2.svg', () => ({
 }))
 vi.mock('vue-router', () => ({
   useRouter: () => ({ push: vi.fn(), back: vi.fn(), replace: vi.fn() }),
+  useRoute: () => ({ query: {} }),
+}))
+
+// Stub UserOffcanvas to avoid media-encoder-host Worker dependency
+vi.mock('@/features/app/components/UserOffcanvas.vue', () => ({
+  default: { template: '<div class="user-offcanvas-stub" />' },
+}))
+vi.mock('@/features/app/composables/useNotificationState', () => ({
+  useNotificationState: () => ({
+    hasUnreadMessages: ref(false),
+    hasMatchNotifications: ref(false),
+  }),
+}))
+vi.mock('@/features/myprofile/stores/ownerProfileStore', () => ({
+  useOwnerProfileStore: () => ({
+    profile: { publicName: 'Test', profileImages: [] },
+  }),
+}))
+vi.mock('@/assets/icons/interface/message.svg', () => ({
+  default: { template: '<svg class="icon-message" />' },
+}))
+vi.mock('@/assets/icons/interface/user.svg', () => ({
+  default: { template: '<svg class="icon-user" />' },
 }))
 
 const vmState = {
@@ -102,7 +125,10 @@ describe('BrowseProfiles view', () => {
           BButton,
           BContainer,
           NoResultsCTA,
+          NotificationDot: { template: '<span><slot /></span>' },
+          ProfileImage: true,
         },
+        mocks: { $t: (k: string) => k },
       },
     })
   }

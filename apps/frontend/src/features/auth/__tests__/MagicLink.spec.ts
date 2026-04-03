@@ -95,7 +95,7 @@ describe('MagicLink', () => {
 
     await flushPromises()
 
-    expect(push).toHaveBeenCalledWith({ name: 'UserHome' })
+    expect(push).toHaveBeenCalledWith('/browse')
     expect(wrapper.find('[data-testid="token-form"]').exists()).toBe(false)
   })
 

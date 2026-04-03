@@ -4,11 +4,6 @@ import type { RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { bus } from '@/lib/bus'
 
-import MessagingView from '@/features/messaging/views/Messaging.vue'
-import ConversationView from '@/features/messaging/views/ConversationView.vue'
-import UserHome from '@/features/userhome/views/UserHome.vue'
-import Settings from '@/features/settings/views/Settings.vue'
-import MyProfile from '@/features/myprofile/views/MyProfile.vue'
 import DatingWizardView from '@/features/myprofile/views/DatingWizard.vue'
 import DatingPrefsView from '@/features/myprofile/views/DatingPrefs.vue'
 import BrowseProfiles from '@/features/browse/views/BrowseProfiles.vue'
@@ -53,9 +48,7 @@ const routes: Array<RouteRecordRaw> = [
   },
   {
     path: '/me',
-    name: 'MyProfile',
-    component: MyProfile,
-    meta: { requiresAuth: true },
+    redirect: () => ({ path: '/browse', query: { panel: 'profile' } }),
   },
   {
     path: '/me/dating-wizard',
@@ -71,16 +64,11 @@ const routes: Array<RouteRecordRaw> = [
   },
   {
     path: '/me/edit',
-    name: 'EditProfile',
-    component: MyProfile,
-    props: { editMode: true },
-    meta: { requiresAuth: true, hideNavbar: true },
+    redirect: () => ({ path: '/browse', query: { panel: 'profile' } }),
   },
   {
     path: '/home',
-    name: 'UserHome',
-    component: UserHome,
-    meta: { requiresAuth: true },
+    redirect: '/browse',
   },
   {
     path: '/onboarding',
@@ -90,24 +78,19 @@ const routes: Array<RouteRecordRaw> = [
   },
   {
     path: '/settings',
-    name: 'Settings',
-    component: Settings,
-    meta: { requiresAuth: true },
+    redirect: () => ({ path: '/browse', query: { panel: 'profile' } }),
   },
   {
     path: '/inbox',
-    name: 'Messaging',
-    component: MessagingView,
-    meta: { requiresAuth: true },
+    redirect: () => ({ path: '/browse', query: { panel: 'inbox' } }),
   },
   {
     path: '/inbox/:conversationId',
-    name: 'Conversation',
-    component: ConversationView,
-    props: true,
-    meta: { requiresAuth: true, hideNavbar: true },
+    redirect: (to) => ({
+      path: '/browse',
+      query: { panel: 'inbox', conversation: to.params.conversationId as string },
+    }),
   },
-
   {
     path: '/posts',
     redirect: '/browse',
@@ -127,7 +110,7 @@ const routes: Array<RouteRecordRaw> = [
   },
   {
     path: '/',
-    redirect: { name: 'UserHome' },
+    redirect: '/browse',
   },
 ]
 
@@ -145,9 +128,9 @@ router.beforeEach(async (to) => {
     return { name: 'Login' }
   }
 
-  // user is logged in and tries to access the login page, redirect to UserHome
+  // user is logged in and tries to access the login page, redirect to browse
   if (!to.meta.requiresAuth && authStore.isLoggedIn) {
-    return { name: 'UserHome' }
+    return { path: '/browse' }
   }
 })
 
