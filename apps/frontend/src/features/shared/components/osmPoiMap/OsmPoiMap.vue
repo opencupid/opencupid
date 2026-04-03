@@ -105,7 +105,9 @@ function createLeafletMap(el: HTMLDivElement): LMap {
     maxZoom: MAP_MAX_ZOOM,
     preferCanvas: true,
     trackResize: false,
+    zoomControl: false,
   })
+  L.control.zoom({ position: 'bottomright' }).addTo(m)
 
   // ResizeObserver pattern from Leaflet v2 (#9010): skip resize when the
   // container is hidden (zero dimensions) to prevent NaN in projection math.

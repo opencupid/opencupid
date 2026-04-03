@@ -26,15 +26,7 @@ function handleTagCloudSelect(tag: PopularTag) {
 
 <template>
   <div class="d-flex align-items-center gap-2">
-    <BButton
-      variant="link-secondary"
-      size="sm"
-      class="p-0"
-      @click="showTagCloud = true"
-      :title="$t('profiles.browse.filters.explore_tags')"
-    >
-      <IconTag class="svg-icon-lg" />
-    </BButton>
+
     <div class="flex-grow-1">
       <TagSelector
         v-model="model"
@@ -46,14 +38,4 @@ function handleTagCloudSelect(tag: PopularTag) {
     </div>
   </div>
 
-  <BModal
-    v-model="showTagCloud"
-    centered
-    :no-header="false"
-    :no-footer="true"
-    :title="$t('profiles.browse.filters.explore_tags')"
-    size="lg"
-  >
-    <TagCloud @tag:select="handleTagCloudSelect" />
-  </BModal>
 </template>

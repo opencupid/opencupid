@@ -4,6 +4,8 @@ import { useDebounceFn } from '@vueuse/core'
 
 import LocationFilterInput from '@/features/shared/profileform/LocationFilterInput.vue'
 import TagFilterSelector from '@/features/shared/profileform/TagFilterSelector.vue'
+import TagList from '@/features/shared/profiledisplay/TagList.vue'
+import TagSelector from '@/features/shared/profileform/TagSelector.vue'
 
 import type { SocialMatchFilterDTO } from '@zod/match/filters.dto'
 import type { OwnerProfile } from '@zod/profile/profile.dto'
@@ -72,32 +74,33 @@ function clearBoundsTags() {
 </script>
 
 <template>
-  <div
-    class="filter-area flex-grow-1"
+  <BRow
+    v-if="filter"
     @click.stop
   >
-    <div
-      class="row g-2"
-      v-if="filter"
-    >
-      <!-- Location column -->
-      <div class="col-12 col-md-6">
-        <LocationFilterInput
-          v-model="filter.location"
-          :viewer-profile="viewerProfile"
-          @location:set-from-profile="$emit('filter:changed')"
-        />
-      </div>
-      <!-- Tags column -->
-      <div class="col-12 col-md-6">
-        <TagFilterSelector
-          v-model="filter.tags"
-          :initialOptions="viewerProfile?.tags ?? []"
-        />
-      </div>
+    <!-- Location column -->
+    <div class="col-12 col-md-6">
+      <LocationFilterInput
+        v-model="filter.location"
+        :viewer-profile="viewerProfile"
+        @location:set-from-profile="$emit('filter:changed')"
+      />
     </div>
-    <!-- Bounds-scoped tags (from map viewport) -->
-    <!-- <div
+    <!-- Tags column -->
+    <div class="col-12 col-md-6">
+      <!-- <TagList :tags="filter.tags" /> -->
+
+      <TagSelector
+        v-model="filter.tags"
+        :taggable="false"
+        open-direction="bottom"
+        :close-on-select="true"
+        :initialOptions="availableTags ?? []"
+      />
+    </div>
+  </BRow>
+  <!-- Bounds-scoped tags (from map viewport) -->
+  <!-- <div
       v-if="availableTags?.length"
       class="d-flex flex-wrap gap-1 mt-2"
     >
@@ -118,5 +121,4 @@ function clearBoundsTags() {
         ✕
       </button>
     </div> -->
-  </div>
 </template>

@@ -2,7 +2,7 @@
 import { useI18n } from 'vue-i18n'
 
 import LocationSelector from './LocationSelector.vue'
-import IconTarget2 from '@/assets/icons/interface/target-2.svg'
+import IconHome from '@/assets/icons/interface/home.svg'
 
 import type { LocationDTO } from '@zod/dto/location.dto'
 import type { OwnerProfile } from '@zod/profile/profile.dto'
@@ -36,7 +36,7 @@ function setLocationFromProfile() {
       :title="t('profiles.browse.filters.locate_button_title')"
       @click="setLocationFromProfile"
     >
-      <IconTarget2 class="svg-icon-lg" />
+      <IconHome class="svg-icon-lg" />
     </BButton>
     <div class="flex-grow-1">
       <LocationSelector

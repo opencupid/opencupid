@@ -18,13 +18,10 @@ const { hasUnreadMessages, hasMatchNotifications } = useNotificationState()
 </script>
 
 <template>
-  <div
-    class="owner-drawer-controls position-absolute top-0 end-0 p-2 d-flex gap-2"
-    style="z-index: 1010"
-  >
-    <button
-      type="button"
-      class="btn btn-light btn-sm rounded-circle shadow-sm p-0 overflow-hidden"
+  <div class="owner-drawer-controls d-flex gap-2">
+    <BButton
+      variant="light"
+      class="btn-sm rounded-circle shadow p-0 overflow-hidden"
       style="width: 2.5rem; height: 2.5rem"
       :aria-label="$t('nav.inbox')"
       @click="$emit('open:inbox')"
@@ -32,10 +29,10 @@ const { hasUnreadMessages, hasMatchNotifications } = useNotificationState()
       <NotificationDot :show="hasUnreadMessages || hasMatchNotifications">
         <IconMessage class="svg-icon" />
       </NotificationDot>
-    </button>
-    <button
-      type="button"
-      class="btn btn-light btn-sm rounded-circle shadow-sm p-0 overflow-hidden"
+    </BButton>
+    <BButton
+      variant="light"
+      class="btn-sm rounded-circle shadow p-0 overflow-hidden"
       style="width: 2.5rem; height: 2.5rem"
       :aria-label="$t('nav.profile')"
       @click="$emit('open:profile')"
@@ -50,6 +47,6 @@ const { hasUnreadMessages, hasMatchNotifications } = useNotificationState()
         v-else
         class="svg-icon"
       />
-    </button>
+    </BButton>
   </div>
 </template>

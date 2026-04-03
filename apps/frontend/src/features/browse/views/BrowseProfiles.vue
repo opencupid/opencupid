@@ -6,7 +6,6 @@ import { useProfilesViewModel } from '../composables/useProfilesViewModel'
 import { useBrowseViewModel } from '../composables/useBrowseViewModel'
 import { useOffcanvasState } from '@/features/shared/composables/useOffcanvasState'
 
-import BrowseLayout from '@/features/shared/components/BrowseLayout.vue'
 import BrowseFilterBar from '../components/BrowseFilterBar.vue'
 import MapView from '@/features/shared/components/MapView.vue'
 import ProfileMapCard from '../components/ProfileMapCard.vue'
@@ -17,10 +16,7 @@ import PostsSidebar from '../components/PostsSidebar.vue'
 import BrowseOffcanvas from '../components/BrowseOffcanvas.vue'
 import OwnerDrawer from '@/features/app/components/OwnerDrawer.vue'
 import OwnerDrawerControls from '../components/OwnerDrawerControls.vue'
-import type {
-  MapPoi,
-  BoundsWithZoom,
-} from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
+import type { MapPoi, BoundsWithZoom } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
 
 defineOptions({ name: 'BrowseProfiles' })
 
@@ -92,14 +88,15 @@ function onViewProfile(profileId: string) {
 
 // ── Unified bounds handler ──────────────────────────────────────────
 async function onBoundsChanged(boundsWithZoom: BoundsWithZoom) {
-  await Promise.all([onProfileBoundsChanged(boundsWithZoom), fetchPostsAndTags(boundsWithZoom.bounds)])
+  await Promise.all([
+    onProfileBoundsChanged(boundsWithZoom),
+    fetchPostsAndTags(boundsWithZoom.bounds),
+  ])
 }
-
 
 function iconResolver(poi: MapPoi): Component {
   return poi.type === 'post' ? PostMarkerIcon : MapIcon
 }
-
 
 onMounted(async () => {
   await initialize()
@@ -136,13 +133,11 @@ onActivated(async () => {
 
     <!-- Map region -->
     <div class="map-region flex-grow-1 position-relative overflow-hidden">
-      <OwnerDrawerControls
-        @open:inbox="openInboxDrawer()"
-        @open:profile="openProfileDrawer()"
-      />
-
-      <BrowseLayout>
-        <template #filter-bar>
+      <div
+        class="position-absolute w-100 top-0 end-0 d-flex align-items-center justify-content-end gap-2 p-2"
+        style="z-index: 1010"
+      >
+        <div class="flex-grow-1">
           <BrowseFilterBar
             v-model="matchFilter"
             :viewer-profile="viewerProfile"
@@ -151,9 +146,16 @@ onActivated(async () => {
             @filter:changed="updatePrefs"
             @update:selected-tag-ids="selectedTagIds = $event"
           />
-        </template>
-
-        <template #results>
+        </div>
+        <div class="flex-shrink-0 flex-grow-0">
+          <OwnerDrawerControls
+            @open:inbox="openInboxDrawer()"
+            @open:profile="openProfileDrawer()"
+          />
+        </div>
+      </div>
+      <main class="list-view d-flex flex-column justify-content-start">
+        <div class="overflow-auto hide-scrollbar flex-grow-1 position-relative">
           <BAlert
             v-if="isNoOneAround"
             variant="info"
@@ -177,8 +179,8 @@ onActivated(async () => {
             @item:select="onMarkerClick"
             @bounds-changed="onBoundsChanged"
           />
-        </template>
-      </BrowseLayout>
+        </div>
+      </main>
     </div>
 
     <!-- User offcanvas (Profile + Inbox panels) -->
@@ -196,6 +198,15 @@ onActivated(async () => {
 @import 'bootstrap/scss/mixins';
 @import '@/css/app-vars.scss';
 @import '@/css/theme.scss';
+
+.list-view {
+  height: 100vh;
+}
+
+.subnav-bar {
+  position: relative;
+  z-index: 1030;
+}
 
 .lonely-alert {
   top: 1rem;
