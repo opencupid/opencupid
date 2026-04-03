@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useApi } from '../composables/useApi'
 import { apiRequest } from '../composables/useApi'
 
@@ -48,6 +48,8 @@ const saveError = ref<string | null>(null)
 const translating = ref(false)
 const deleting = ref(false)
 const showMerge = ref(false)
+const selectedOrigins = ref<string[]>([])
+const originDropdownOpen = ref(false)
 
 const isNewTag = computed(() => selectedTag.value?.id === '')
 const mergeSearch = ref('')
@@ -132,14 +134,46 @@ function sortIndicator(col: SortColumn) {
   return sortDirection.value === 'asc' ? ' ▲' : ' ▼'
 }
 
+const hasMore = computed(() => tags.value.length < total.value)
+const loadingMore = ref(false)
+
+function buildParams() {
+  return {
+    page: page.value,
+    pageSize,
+    search: search.value || undefined,
+    userSubmitted:
+      selectedOrigins.value.length === 1
+        ? selectedOrigins.value[0] === 'user'
+          ? 'true'
+          : 'false'
+        : undefined,
+  }
+}
+
 async function fetchTags() {
-  const res = await call<TagsResponse>('/admin/tags', {
-    params: { page: page.value, pageSize, search: search.value || undefined },
-  })
+  const res = await call<TagsResponse>('/admin/tags', { params: buildParams() })
   if (res) {
     tags.value = res.tags
     total.value = res.total
   }
+}
+
+async function appendTags() {
+  loadingMore.value = true
+  try {
+    const res = await apiRequest<TagsResponse>('/admin/tags', { params: buildParams() })
+    tags.value = [...tags.value, ...res.tags]
+    total.value = res.total
+  } finally {
+    loadingMore.value = false
+  }
+}
+
+function loadMore() {
+  if (loadingMore.value || loading.value || !hasMore.value) return
+  page.value++
+  appendTags()
 }
 
 function openAddModal() {
@@ -212,7 +246,7 @@ async function saveTag() {
       })
     }
     selectedTag.value = null
-    await fetchTags()
+    resetAndFetch()
   } catch (err: unknown) {
     saveError.value = err instanceof Error ? err.message : 'Failed to save'
   } finally {
@@ -255,7 +289,7 @@ async function deleteTag() {
       body: { isDeleted: true },
     })
     selectedTag.value = null
-    await fetchTags()
+    resetAndFetch()
   } catch (err: unknown) {
     saveError.value = err instanceof Error ? err.message : 'Failed to delete'
   } finally {
@@ -311,7 +345,7 @@ async function confirmMerge() {
       }
       mergeLoserTags.value = []
       showMerge.value = false
-      await fetchTags()
+      resetAndFetch()
     }
   } catch (err: unknown) {
     saveError.value = err instanceof Error ? err.message : 'Merge failed'
@@ -320,36 +354,62 @@ async function confirmMerge() {
   }
 }
 
-const totalPages = ref(0)
-watch(total, (t) => {
-  totalPages.value = Math.ceil(t / pageSize)
-})
-
-function prevPage() {
-  page.value--
-  fetchTags()
-}
-
-function nextPage() {
-  page.value++
+function resetAndFetch() {
+  page.value = 1
+  tags.value = []
   fetchTags()
 }
 
 let searchTimeout: ReturnType<typeof setTimeout>
 function onSearchInput() {
   clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => {
-    page.value = 1
-    fetchTags()
-  }, 300)
+  searchTimeout = setTimeout(resetAndFetch, 300)
 }
 
-onMounted(fetchTags)
+function toggleOrigin(origin: string) {
+  const idx = selectedOrigins.value.indexOf(origin)
+  if (idx >= 0) {
+    selectedOrigins.value.splice(idx, 1)
+  } else {
+    selectedOrigins.value.push(origin)
+  }
+  resetAndFetch()
+}
+
+function onClickOutside(e: MouseEvent) {
+  const target = e.target as HTMLElement
+  if (!target.closest('.dropdown')) {
+    originDropdownOpen.value = false
+  }
+}
+
+const sentinel = ref<HTMLElement | null>(null)
+let observer: IntersectionObserver | null = null
+
+onMounted(() => {
+  document.addEventListener('click', onClickOutside)
+  fetchTags()
+  observer = new IntersectionObserver(
+    ([entry]) => {
+      if (entry?.isIntersecting) loadMore()
+    },
+    { rootMargin: '200px' }
+  )
+  if (sentinel.value) observer.observe(sentinel.value)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', onClickOutside)
+  observer?.disconnect()
+})
 </script>
 
 <template>
   <div>
-    <h2 class="mb-4">Tags</h2>
+    <div class="d-flex align-items-baseline mb-4">
+      <h2 class="mb-0">Tags</h2>
+      <span class="text-muted ms-auto">{{ total }} result{{ total === 1 ? '' : 's' }}</span>
+    </div>
 
     <div
       v-if="error"
@@ -363,9 +423,52 @@ onMounted(fetchTags)
         v-model="search"
         type="text"
         class="form-control"
+        style="min-width: 0"
         placeholder="Search by name, slug, or translation..."
         @input="onSearchInput"
       />
+      <div
+        class="dropdown"
+        style="width: 200px; flex-shrink: 0"
+      >
+        <button
+          class="btn btn-outline-secondary dropdown-toggle w-100 text-start"
+          type="button"
+          @click="originDropdownOpen = !originDropdownOpen"
+        >
+          {{
+            selectedOrigins.length === 0 || selectedOrigins.length === 2
+              ? 'All Origins'
+              : selectedOrigins[0] === 'user'
+                ? 'User Submitted'
+                : 'Admin Created'
+          }}
+        </button>
+        <ul
+          v-if="originDropdownOpen"
+          class="dropdown-menu show"
+          style="min-width: 180px"
+        >
+          <li
+            v-for="origin in [
+              { key: 'user', label: 'User Submitted' },
+              { key: 'admin', label: 'Admin Created' },
+            ]"
+            :key="origin.key"
+            class="dropdown-item"
+            style="cursor: pointer"
+            @click="toggleOrigin(origin.key)"
+          >
+            <input
+              type="checkbox"
+              class="form-check-input me-2"
+              :checked="selectedOrigins.includes(origin.key)"
+              @click.stop="toggleOrigin(origin.key)"
+            />
+            {{ origin.label }}
+          </li>
+        </ul>
+      </div>
       <button
         class="btn btn-primary text-nowrap"
         @click="openAddModal"
@@ -392,12 +495,6 @@ onMounted(fetchTags)
               @click="toggleSort('name')"
             >
               Original Title{{ sortIndicator('name') }}
-            </th>
-            <th
-              style="cursor: pointer"
-              @click="toggleSort('slug')"
-            >
-              Slug{{ sortIndicator('slug') }}
             </th>
             <th
               style="cursor: pointer"
@@ -436,7 +533,6 @@ onMounted(fetchTags)
             @click="editTag(tag)"
           >
             <td>{{ tag.name }}</td>
-            <td>{{ tag.slug }}</td>
             <td>{{ new Date(tag.createdAt).toLocaleDateString() }}</td>
             <td>
               <span :class="tag.isUserCreated ? 'badge bg-info' : 'badge bg-secondary'">
@@ -470,38 +566,12 @@ onMounted(fetchTags)
         </tbody>
       </table>
 
-      <nav
-        v-if="totalPages > 1"
-        class="mt-3"
+      <div
+        ref="sentinel"
+        class="text-center text-muted py-2"
       >
-        <ul class="pagination pagination-sm mb-0">
-          <li
-            class="page-item"
-            :class="{ disabled: page === 1 }"
-          >
-            <button
-              class="page-link"
-              @click="prevPage"
-            >
-              Previous
-            </button>
-          </li>
-          <li class="page-item disabled">
-            <span class="page-link">Page {{ page }} of {{ totalPages }}</span>
-          </li>
-          <li
-            class="page-item"
-            :class="{ disabled: page >= totalPages }"
-          >
-            <button
-              class="page-link"
-              @click="nextPage"
-            >
-              Next
-            </button>
-          </li>
-        </ul>
-      </nav>
+        <span v-if="loadingMore">Loading more...</span>
+      </div>
     </div>
 
     <!-- Tag Edit Modal -->

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
-import { useApi } from '../composables/useApi'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useApi, apiRequest } from '../composables/useApi'
 
 interface AdminProfile {
   id: string
@@ -37,6 +37,9 @@ const search = ref('')
 const selectedProfile = ref<AdminProfile | null>(null)
 const countries = ref<string[]>([])
 const selectedCountry = ref('')
+const allSegments = ['new', 'returning', 'frequent', 'dormant'] as const
+const selectedSegments = ref<string[]>([])
+const segmentDropdownOpen = ref(false)
 
 type SortColumn =
   | 'publicName'
@@ -95,19 +98,42 @@ async function fetchCountries() {
   if (res) countries.value = res.countries
 }
 
+const hasMore = computed(() => profiles.value.length < total.value)
+const loadingMore = ref(false)
+
+function buildParams() {
+  return {
+    page: page.value,
+    pageSize,
+    search: search.value || undefined,
+    country: selectedCountry.value || undefined,
+    segments: selectedSegments.value.length > 0 ? selectedSegments.value.join(',') : undefined,
+  }
+}
+
 async function fetchProfiles() {
-  const res = await call<ProfilesResponse>('/admin/profiles', {
-    params: {
-      page: page.value,
-      pageSize,
-      search: search.value || undefined,
-      country: selectedCountry.value || undefined,
-    },
-  })
+  const res = await call<ProfilesResponse>('/admin/profiles', { params: buildParams() })
   if (res) {
     profiles.value = res.profiles
     total.value = res.total
   }
+}
+
+async function appendProfiles() {
+  loadingMore.value = true
+  try {
+    const res = await apiRequest<ProfilesResponse>('/admin/profiles', { params: buildParams() })
+    profiles.value = [...profiles.value, ...res.profiles]
+    total.value = res.total
+  } finally {
+    loadingMore.value = false
+  }
+}
+
+function loadMore() {
+  if (loadingMore.value || loading.value || !hasMore.value) return
+  page.value++
+  appendProfiles()
 }
 
 const segmentColors: Record<string, string> = {
@@ -125,44 +151,68 @@ function viewProfile(profile: AdminProfile) {
   selectedProfile.value = profile
 }
 
-const totalPages = ref(0)
-watch(total, (t) => {
-  totalPages.value = Math.ceil(t / pageSize)
-})
-
-function prevPage() {
-  page.value--
-  fetchProfiles()
-}
-
-function nextPage() {
-  page.value++
+function resetAndFetch() {
+  page.value = 1
+  profiles.value = []
   fetchProfiles()
 }
 
 let searchTimeout: ReturnType<typeof setTimeout>
 function onSearchInput() {
   clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => {
-    page.value = 1
-    fetchProfiles()
-  }, 300)
+  searchTimeout = setTimeout(resetAndFetch, 300)
+}
+
+function toggleSegment(segment: string) {
+  const idx = selectedSegments.value.indexOf(segment)
+  if (idx >= 0) {
+    selectedSegments.value.splice(idx, 1)
+  } else {
+    selectedSegments.value.push(segment)
+  }
+  resetAndFetch()
 }
 
 function onCountryChange() {
-  page.value = 1
-  fetchProfiles()
+  resetAndFetch()
 }
 
+function onClickOutside(e: MouseEvent) {
+  const target = e.target as HTMLElement
+  if (!target.closest('.dropdown')) {
+    segmentDropdownOpen.value = false
+  }
+}
+
+const sentinel = ref<HTMLElement | null>(null)
+let observer: IntersectionObserver | null = null
+
 onMounted(() => {
+  document.addEventListener('click', onClickOutside)
   fetchCountries()
   fetchProfiles()
+
+  observer = new IntersectionObserver(
+    ([entry]) => {
+      if (entry?.isIntersecting) loadMore()
+    },
+    { rootMargin: '200px' }
+  )
+  if (sentinel.value) observer.observe(sentinel.value)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', onClickOutside)
+  observer?.disconnect()
 })
 </script>
 
 <template>
   <div>
-    <h2 class="mb-4">Profiles</h2>
+    <div class="d-flex align-items-baseline mb-4">
+      <h2 class="mb-0">Profiles</h2>
+      <span class="text-muted ms-auto">{{ total }} result{{ total === 1 ? '' : 's' }}</span>
+    </div>
 
     <div
       v-if="error"
@@ -179,6 +229,43 @@ onMounted(() => {
         placeholder="Search by name or city..."
         @input="onSearchInput"
       />
+      <div
+        class="dropdown"
+        style="max-width: 200px"
+      >
+        <button
+          class="btn btn-outline-secondary dropdown-toggle w-100 text-start"
+          type="button"
+          @click="segmentDropdownOpen = !segmentDropdownOpen"
+        >
+          {{
+            selectedSegments.length === 0
+              ? 'All Segments'
+              : `${selectedSegments.length} Segment${selectedSegments.length > 1 ? 's' : ''}`
+          }}
+        </button>
+        <ul
+          v-if="segmentDropdownOpen"
+          class="dropdown-menu show"
+          style="min-width: 180px"
+        >
+          <li
+            v-for="seg in allSegments"
+            :key="seg"
+            class="dropdown-item"
+            style="cursor: pointer"
+            @click="toggleSegment(seg)"
+          >
+            <input
+              type="checkbox"
+              class="form-check-input me-2"
+              :checked="selectedSegments.includes(seg)"
+              @click.stop="toggleSegment(seg)"
+            />
+            {{ seg }}
+          </li>
+        </ul>
+      </div>
       <select
         v-model="selectedCountry"
         class="form-select"
@@ -315,38 +402,12 @@ onMounted(() => {
         </tbody>
       </table>
 
-      <nav
-        v-if="totalPages > 1"
-        class="mt-3"
+      <div
+        ref="sentinel"
+        class="text-center text-muted py-2"
       >
-        <ul class="pagination pagination-sm mb-0">
-          <li
-            class="page-item"
-            :class="{ disabled: page === 1 }"
-          >
-            <button
-              class="page-link"
-              @click="prevPage"
-            >
-              Previous
-            </button>
-          </li>
-          <li class="page-item disabled">
-            <span class="page-link">Page {{ page }} of {{ totalPages }}</span>
-          </li>
-          <li
-            class="page-item"
-            :class="{ disabled: page >= totalPages }"
-          >
-            <button
-              class="page-link"
-              @click="nextPage"
-            >
-              Next
-            </button>
-          </li>
-        </ul>
-      </nav>
+        <span v-if="loadingMore">Loading more...</span>
+      </div>
     </div>
 
     <!-- Profile Detail Modal -->

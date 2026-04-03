@@ -8,7 +8,7 @@ const version = computed(() => __APP_VERSION__)
   <div class="d-flex">
     <nav
       class="sidebar d-flex flex-column p-3"
-      style="width: 220px"
+      style="width: 220px; flex-shrink: 0"
     >
       <h5 class="text-white mb-4">Admin</h5>
       <ul class="nav flex-column">
@@ -54,7 +54,7 @@ const version = computed(() => __APP_VERSION__)
     </nav>
     <main
       class="flex-grow-1 p-4 pb-5 bg-light"
-      style="min-height: 100vh"
+      style="min-height: 100vh; min-width: 0"
     >
       <router-view />
     </main>

@@ -374,6 +374,42 @@ describe('GET /profiles', () => {
       })
     )
   })
+
+  it('filters by segments when provided', async () => {
+    mockPrisma.profile.findMany.mockResolvedValue([])
+    mockPrisma.profile.count.mockResolvedValue(0)
+
+    const handler = fastify.routes['GET /profiles']
+    await handler(
+      { query: { page: '1', pageSize: '25', search: '', segments: 'new,frequent' } },
+      reply
+    )
+
+    expect(mockPrisma.profile.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { AND: [{ activitySummary: { segment: { in: ['new', 'frequent'] } } }] },
+      })
+    )
+  })
+
+  it('combines country and segments filters', async () => {
+    mockPrisma.profile.findMany.mockResolvedValue([])
+    mockPrisma.profile.count.mockResolvedValue(0)
+
+    const handler = fastify.routes['GET /profiles']
+    await handler(
+      { query: { page: '1', pageSize: '25', search: '', country: 'AT', segments: 'dormant' } },
+      reply
+    )
+
+    expect(mockPrisma.profile.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          AND: [{ country: 'AT' }, { activitySummary: { segment: { in: ['dormant'] } } }],
+        },
+      })
+    )
+  })
 })
 
 describe('GET /profiles/:id', () => {
@@ -491,6 +527,40 @@ describe('GET /tags', () => {
             { translations: { some: { name: { contains: 'hike', mode: 'insensitive' } } } },
           ],
         },
+      })
+    )
+  })
+
+  it('filters to user-submitted tags when userSubmitted=true', async () => {
+    mockPrisma.tag.findMany.mockResolvedValue([])
+    mockPrisma.tag.count.mockResolvedValue(0)
+
+    const handler = fastify.routes['GET /tags']
+    await handler(
+      { query: { page: '1', pageSize: '25', search: '', userSubmitted: 'true' } },
+      reply
+    )
+
+    expect(mockPrisma.tag.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { isDeleted: false, isUserCreated: true },
+      })
+    )
+  })
+
+  it('filters to admin-created tags when userSubmitted=false', async () => {
+    mockPrisma.tag.findMany.mockResolvedValue([])
+    mockPrisma.tag.count.mockResolvedValue(0)
+
+    const handler = fastify.routes['GET /tags']
+    await handler(
+      { query: { page: '1', pageSize: '25', search: '', userSubmitted: 'false' } },
+      reply
+    )
+
+    expect(mockPrisma.tag.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { isDeleted: false, isUserCreated: false },
       })
     )
   })

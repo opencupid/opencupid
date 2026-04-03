@@ -316,6 +316,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
    * @query {number} [pageSize=25] - Page size (max 100)
    * @query {string} [search] - Search by name, city, or country
    * @query {string} [country] - Country code filter
+   * @query {string} [segments] - Comma-separated activity segments filter (e.g. "new,frequent")
    * @returns {{ success, profiles, total, page, pageSize }}
    */
   fastify.get('/profiles', async (req, reply) => {
@@ -325,6 +326,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
         pageSize = '25',
         search = '',
         country = '',
+        segments = '',
       } = req.query as Record<string, string>
       const pageNum = Math.max(1, parseInt(page, 10) || 1)
       const size = Math.min(100, Math.max(1, parseInt(pageSize, 10) || 25))
@@ -342,6 +344,14 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
       }
       if (country) {
         conditions.push({ country })
+      }
+      if (segments) {
+        const segmentList = segments.split(',').filter(Boolean)
+        if (segmentList.length > 0) {
+          conditions.push({
+            activitySummary: { segment: { in: segmentList } },
+          })
+        }
       }
       const where = conditions.length > 0 ? { AND: conditions } : {}
 
@@ -447,11 +457,17 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
    * @query {number} [page=1] - Page number
    * @query {number} [pageSize=25] - Page size (max 100)
    * @query {string} [search] - Search by name, slug, or translation
+   * @query {string} [userSubmitted] - Filter by isUserCreated flag ("true" to show only user-submitted)
    * @returns {{ success, tags, total, page, pageSize }}
    */
   fastify.get('/tags', async (req, reply) => {
     try {
-      const { page = '1', pageSize = '25', search = '' } = req.query as Record<string, string>
+      const {
+        page = '1',
+        pageSize = '25',
+        search = '',
+        userSubmitted = '',
+      } = req.query as Record<string, string>
       const pageNum = Math.max(1, parseInt(page, 10) || 1)
       const size = Math.min(100, Math.max(1, parseInt(pageSize, 10) || 25))
       const skip = (pageNum - 1) * size
@@ -463,6 +479,11 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
           { slug: { contains: search, mode: 'insensitive' as const } },
           { translations: { some: { name: { contains: search, mode: 'insensitive' as const } } } },
         ]
+      }
+      if (userSubmitted === 'true') {
+        where.isUserCreated = true
+      } else if (userSubmitted === 'false') {
+        where.isUserCreated = false
       }
 
       const [tags, total] = await Promise.all([
