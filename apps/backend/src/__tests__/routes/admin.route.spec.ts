@@ -531,6 +531,40 @@ describe('GET /tags', () => {
     )
   })
 
+  it('filters to user-submitted tags when userSubmitted=true', async () => {
+    mockPrisma.tag.findMany.mockResolvedValue([])
+    mockPrisma.tag.count.mockResolvedValue(0)
+
+    const handler = fastify.routes['GET /tags']
+    await handler(
+      { query: { page: '1', pageSize: '25', search: '', userSubmitted: 'true' } },
+      reply
+    )
+
+    expect(mockPrisma.tag.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { isDeleted: false, isUserCreated: true },
+      })
+    )
+  })
+
+  it('filters to admin-created tags when userSubmitted=false', async () => {
+    mockPrisma.tag.findMany.mockResolvedValue([])
+    mockPrisma.tag.count.mockResolvedValue(0)
+
+    const handler = fastify.routes['GET /tags']
+    await handler(
+      { query: { page: '1', pageSize: '25', search: '', userSubmitted: 'false' } },
+      reply
+    )
+
+    expect(mockPrisma.tag.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { isDeleted: false, isUserCreated: false },
+      })
+    )
+  })
+
   it('handles errors gracefully', async () => {
     mockPrisma.tag.findMany.mockRejectedValueOnce(new Error('DB error'))
 

@@ -48,6 +48,8 @@ const saveError = ref<string | null>(null)
 const translating = ref(false)
 const deleting = ref(false)
 const showMerge = ref(false)
+const selectedOrigins = ref<string[]>([])
+const originDropdownOpen = ref(false)
 
 const isNewTag = computed(() => selectedTag.value?.id === '')
 const mergeSearch = ref('')
@@ -136,7 +138,17 @@ const hasMore = computed(() => tags.value.length < total.value)
 const loadingMore = ref(false)
 
 function buildParams() {
-  return { page: page.value, pageSize, search: search.value || undefined }
+  return {
+    page: page.value,
+    pageSize,
+    search: search.value || undefined,
+    userSubmitted:
+      selectedOrigins.value.length === 1
+        ? selectedOrigins.value[0] === 'user'
+          ? 'true'
+          : 'false'
+        : undefined,
+  }
 }
 
 async function fetchTags() {
@@ -354,10 +366,28 @@ function onSearchInput() {
   searchTimeout = setTimeout(resetAndFetch, 300)
 }
 
+function toggleOrigin(origin: string) {
+  const idx = selectedOrigins.value.indexOf(origin)
+  if (idx >= 0) {
+    selectedOrigins.value.splice(idx, 1)
+  } else {
+    selectedOrigins.value.push(origin)
+  }
+  resetAndFetch()
+}
+
+function onClickOutside(e: MouseEvent) {
+  const target = e.target as HTMLElement
+  if (!target.closest('.dropdown')) {
+    originDropdownOpen.value = false
+  }
+}
+
 const sentinel = ref<HTMLElement | null>(null)
 let observer: IntersectionObserver | null = null
 
 onMounted(() => {
+  document.addEventListener('click', onClickOutside)
   fetchTags()
   observer = new IntersectionObserver(
     ([entry]) => {
@@ -369,6 +399,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  document.removeEventListener('click', onClickOutside)
   observer?.disconnect()
 })
 </script>
@@ -392,9 +423,52 @@ onUnmounted(() => {
         v-model="search"
         type="text"
         class="form-control"
+        style="min-width: 0"
         placeholder="Search by name, slug, or translation..."
         @input="onSearchInput"
       />
+      <div
+        class="dropdown"
+        style="width: 200px; flex-shrink: 0"
+      >
+        <button
+          class="btn btn-outline-secondary dropdown-toggle w-100 text-start"
+          type="button"
+          @click="originDropdownOpen = !originDropdownOpen"
+        >
+          {{
+            selectedOrigins.length === 0 || selectedOrigins.length === 2
+              ? 'All Origins'
+              : selectedOrigins[0] === 'user'
+                ? 'User Submitted'
+                : 'Admin Created'
+          }}
+        </button>
+        <ul
+          v-if="originDropdownOpen"
+          class="dropdown-menu show"
+          style="min-width: 180px"
+        >
+          <li
+            v-for="origin in [
+              { key: 'user', label: 'User Submitted' },
+              { key: 'admin', label: 'Admin Created' },
+            ]"
+            :key="origin.key"
+            class="dropdown-item"
+            style="cursor: pointer"
+            @click="toggleOrigin(origin.key)"
+          >
+            <input
+              type="checkbox"
+              class="form-check-input me-2"
+              :checked="selectedOrigins.includes(origin.key)"
+              @click.stop="toggleOrigin(origin.key)"
+            />
+            {{ origin.label }}
+          </li>
+        </ul>
+      </div>
       <button
         class="btn btn-primary text-nowrap"
         @click="openAddModal"
@@ -421,12 +495,6 @@ onUnmounted(() => {
               @click="toggleSort('name')"
             >
               Original Title{{ sortIndicator('name') }}
-            </th>
-            <th
-              style="cursor: pointer"
-              @click="toggleSort('slug')"
-            >
-              Slug{{ sortIndicator('slug') }}
             </th>
             <th
               style="cursor: pointer"
@@ -465,7 +533,6 @@ onUnmounted(() => {
             @click="editTag(tag)"
           >
             <td>{{ tag.name }}</td>
-            <td>{{ tag.slug }}</td>
             <td>{{ new Date(tag.createdAt).toLocaleDateString() }}</td>
             <td>
               <span :class="tag.isUserCreated ? 'badge bg-info' : 'badge bg-secondary'">
