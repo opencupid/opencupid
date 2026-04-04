@@ -84,17 +84,12 @@ const globalConfig = {
       template: '<div data-testid="settings-view" />',
       emits: ['back', 'close'],
     },
-    MessagingView: {
-      name: 'MessagingView',
-      template: '<div data-testid="messaging-view" />',
-      emits: ['convo:select', 'close'],
+    InboxPanel: {
+      name: 'InboxPanel',
+      template: '<div data-testid="inbox-panel" />',
+      emits: ['close'],
     },
     PostList: true,
-    ConversationDetail: {
-      name: 'ConversationDetail',
-      template: '<div data-testid="conversation-detail" />',
-      emits: ['deselect:convo', 'close'],
-    },
     BButton: true,
   },
   mocks: { $t: (k: string) => k },
@@ -135,12 +130,12 @@ describe('OwnerDrawerOrchestrator', () => {
     expect(wrapper.find('[data-testid="my-profile-view"]').exists()).toBe(true)
   })
 
-  it('renders MessagingView for inbox panel', () => {
+  it('renders InboxPanel for inbox panel', () => {
     const wrapper = mount(OwnerDrawerOrchestrator, {
       props: { panel: 'inbox' },
       global: globalConfig,
     })
-    expect(wrapper.find('[data-testid="messaging-view"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="inbox-panel"]').exists()).toBe(true)
   })
 
   it('calls offcanvasState.close on close emit from child', async () => {

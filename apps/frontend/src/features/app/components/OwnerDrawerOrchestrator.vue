@@ -1,16 +1,14 @@
 <script setup lang="ts">
-import { ref, computed, watch, provide, toRef } from 'vue'
+import { ref, watch, provide, toRef } from 'vue'
 
 import { useOffcanvasState } from '@/features/shared/composables/useOffcanvasState'
 import { useMyProfileViewModel } from '@/features/myprofile/composables/useMyProfileViewModel'
-import { useMessageStore } from '@/features/messaging/stores/messageStore'
 
 import OwnerDrawer from './OwnerDrawer.vue'
 import MyProfileView from '@/features/myprofile/views/MyProfile.vue'
 import SettingsView from '@/features/settings/views/Settings.vue'
-import MessagingView from '@/features/messaging/views/Messaging.vue'
+import InboxPanel from '@/features/messaging/views/InboxPanel.vue'
 import PostList from '@/features/posts/components/PostList.vue'
-import ConversationDetail from '@/features/messaging/components/ConversationDetail.vue'
 
 defineOptions({ name: 'OwnerDrawerOrchestrator' })
 
@@ -20,7 +18,6 @@ const props = defineProps<{
 }>()
 
 const offcanvasState = useOffcanvasState()
-const isOpen = computed(() => offcanvasState.isOpen('user'))
 
 // ── Profile panel state ──────────────────────────────────────────────
 const profileSubView = ref<'profile' | 'posts' | 'settings'>('profile')
@@ -30,40 +27,13 @@ const { formData } = useMyProfileViewModel(false)
 provide('isOwner', true)
 provide('viewerProfile', toRef(formData))
 
-// ── Inbox panel state ────────────────────────────────────────────────
-const inboxSubView = ref<'list' | 'thread'>('list')
-const messageStore = useMessageStore()
-
-// Reset sub-views when top-level panel changes
+// Reset profile sub-view when switching panels
 watch(
   () => props.panel,
   () => {
     profileSubView.value = 'profile'
-    inboxSubView.value = 'list'
   }
 )
-
-// Deep-link: open thread directly when conversationId is provided
-watch(
-  () => props.panel === 'inbox' && isOpen.value && !!props.conversationId,
-  async (active) => {
-    if (active && props.conversationId) {
-      await messageStore.setActiveConversationById(props.conversationId)
-      inboxSubView.value = 'thread'
-    }
-  }
-)
-
-async function onConvoSelect(conversationId: string) {
-  await messageStore.setActiveConversationById(conversationId)
-  inboxSubView.value = 'thread'
-  setTimeout(() => messageStore.markAsRead(conversationId), 2000)
-}
-
-function onDeselectConvo() {
-  messageStore.resetActiveConversation()
-  inboxSubView.value = 'list'
-}
 </script>
 
 <template>
@@ -132,19 +102,10 @@ function onDeselectConvo() {
       </template>
     </template>
 
-    <template v-else-if="panel === 'inbox'">
-      <MessagingView
-        v-if="inboxSubView === 'list'"
-        @convo:select="onConvoSelect"
-        @close="offcanvasState.close()"
-      />
-      <ConversationDetail
-        v-else-if="inboxSubView === 'thread'"
-        :loading="messageStore.isLoading"
-        :conversation="messageStore.activeConversation"
-        @deselect:convo="onDeselectConvo"
-        @close="offcanvasState.close()"
-      />
-    </template>
+    <InboxPanel
+      v-else-if="panel === 'inbox'"
+      :conversation-id="conversationId"
+      @close="offcanvasState.close()"
+    />
   </OwnerDrawer>
 </template>
