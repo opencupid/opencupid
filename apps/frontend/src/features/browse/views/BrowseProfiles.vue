@@ -15,10 +15,13 @@ import ProfileMarker from '@/features/publicprofile/components/ProfileMarker.vue
 import PostMarker from '@/features/posts/components/PostMarker.vue'
 
 import PostsSidebar from '../components/PostsSidebar.vue'
-import BrowseOffcanvas from '../components/BrowseOffcanvas.vue'
+import DetailContainer from '../components/DetailContainer.vue'
+import PostMapPopup from '@/features/posts/components/PostMapPopup.vue'
 import OwnerDrawer from '@/features/app/components/OwnerDrawer.vue'
 import OwnerDrawerControls from '../components/OwnerDrawerControls.vue'
 import type { MapPoi } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
+import type { PublicPostWithProfile } from '@zod/post/post.dto'
+import type { PublicProfile } from '@zod/profile/profile.dto'
 
 defineOptions({ name: 'BrowseProfiles' })
 
@@ -111,12 +114,23 @@ onActivated(async () => {
       @select="onSidebarSelect"
     />
 
-    <!-- Browse detail panel (between sidebar and map, per wireframe) -->
-    <BrowseOffcanvas
-      :active-poi="activePoi"
+    <!-- Detail panel (between sidebar and map) -->
+    <DetailContainer
+      :open="!!activePoi"
       @close="onSelectionClear"
-      @view-profile="onViewProfile"
-    />
+    >
+      <template #header>{{ activePoi?.type === 'post' ? 'Post' : 'Profile' }}</template>
+      <PostMapPopup
+        v-if="activePoi?.type === 'post'"
+        :item="activePoi.source as PublicPostWithProfile"
+        @click="onViewProfile(String((activePoi.source as PublicPostWithProfile)?.postedBy?.id))"
+      />
+      <ProfileMapCard
+        v-else-if="activePoi"
+        :item="activePoi.source as PublicProfile"
+        @click="onViewProfile(String(activePoi.id))"
+      />
+    </DetailContainer>
 
     <!-- Map region -->
     <div class="map-region flex-grow-1 position-relative overflow-hidden">
