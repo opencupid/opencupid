@@ -2,7 +2,7 @@
 import { watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useOffcanvasState } from '@/features/shared/composables/useOffcanvasState'
-import OwnerDrawer from '@/features/app/components/OwnerDrawer.vue'
+import OwnerDrawerOrchestrator from '@/features/app/components/OwnerDrawerOrchestrator.vue'
 
 defineOptions({ name: 'AuthLayout' })
 
@@ -37,7 +37,7 @@ watch(
       </RouterView>
     </div>
 
-    <OwnerDrawer
+    <OwnerDrawerOrchestrator
       :panel="offcanvasState.userPanel.value"
       :conversation-id="offcanvasState.userConversationId.value"
     />

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useRoute, useRouter } from 'vue-router'
 import { onMounted, ref, provide, computed, toRef } from 'vue'
+import { useRouter } from 'vue-router'
 import { useBootstrap } from '@/lib/bootstrap'
 
 import StoreErrorOverlay from '@/features/shared/ui/StoreErrorOverlay.vue'
@@ -9,8 +9,6 @@ import ProfileContent from '@/features/publicprofile/components/ProfileContent.v
 import { useMyProfileViewModel } from '../composables/useMyProfileViewModel'
 import MyProfileSecondaryNav from '../components/MyProfileSecondaryNav.vue'
 import EditableFields from '../components/EditableFields.vue'
-import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
-import FloatingButton from '@/features/shared/components/FloatingButton.vue'
 import EditSaveButton from '@/features/shared/ui/EditSaveButton.vue'
 
 const router = useRouter()
@@ -67,7 +65,10 @@ provide('viewerProfile', toRef(formData))
 </script>
 
 <template>
-  <main :class="[viewState.currentScope, { editable: viewState.isEditable }]">
+  <div
+    class="h-100 overflow-auto"
+    :class="[viewState.currentScope, { editable: viewState.isEditable }]"
+  >
     <EditableFields
       v-model="formData"
       :editState="viewState.isEditable"
@@ -77,50 +78,34 @@ provide('viewerProfile', toRef(formData))
         v-if="error"
         :error
       />
-      <div
-        v-else
-        class="d-flex flex-column justify-content-center h-100"
-      >
-        <MiddleColumn class="pt-sm-3 position-relative px-0 px-sm-3">
-          <div class="d-flex flex-row justify-content-between align-items-center">
-            <MyProfileSecondaryNav
-              v-model="viewState"
-              v-model:isDatingActive="formData.isDatingActive"
-              :is-dating-onboarded="isDatingOnboarded"
-              @datingmode:toggle="toggleDating"
-              @datingmode:prefs="openDatingPrefs"
-              @datingmode:profile="openDatingProfile"
-            />
-          </div>
-        </MiddleColumn>
-        <div class="overflow-auto hide-scrollbar h-100">
-          <MiddleColumn
-            class="pt-sm-3 position-relative flex-grow-1 px-0 px-sm-3"
-            style="min-height: 100%"
-          >
-            <ProfileContent
-              v-if="profilePreview"
-              :isLoading="isLoading"
-              @intent:field:edit="showModal = true"
-              class="shadow-lg"
-              :profile="profilePreview"
-            />
-          </MiddleColumn>
+      <template v-else>
+        <div class="px-3 pt-2">
+          <MyProfileSecondaryNav
+            v-model="viewState"
+            v-model:isDatingActive="formData.isDatingActive"
+            :is-dating-onboarded="isDatingOnboarded"
+            @datingmode:toggle="toggleDating"
+            @datingmode:prefs="openDatingPrefs"
+            @datingmode:profile="openDatingProfile"
+          />
         </div>
-      </div>
-      <FloatingButton>
-        <EditSaveButton v-model="viewState.isEditable" />
-      </FloatingButton>
+        <ProfileContent
+          v-if="profilePreview"
+          :isLoading="isLoading"
+          @intent:field:edit="showModal = true"
+          class="shadow-lg"
+          :profile="profilePreview"
+        />
+        <div class="position-sticky bottom-0 pb-2 px-3 text-end">
+          <EditSaveButton v-model="viewState.isEditable" />
+        </div>
+      </template>
     </EditableFields>
-  </main>
+  </div>
 </template>
 
 <style scoped lang="scss">
 @import '@/css/theme.scss';
-
-.toggle-bar {
-  height: 3rem;
-}
 
 .editable {
   background-color: var(--bs-light);

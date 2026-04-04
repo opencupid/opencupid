@@ -222,7 +222,7 @@ async function mountMap(props: Partial<Record<string, any>> = {}) {
   const wrapper = mount(OsmPoiMap as any, {
     props: {
       items: [],
-      iconComponent: DummyIcon,
+      iconResolver: () => DummyIcon,
       popupComponent: DummyPopup,
       ...props,
     },
@@ -250,7 +250,7 @@ beforeEach(() => {
 })
 
 describe('OsmPoiMap', () => {
-  it('creates markers for items with images using iconComponent', async () => {
+  it('creates markers for items with images using iconResolver', async () => {
     await mountMap()
     await flushPromises()
 
@@ -258,7 +258,7 @@ describe('OsmPoiMap', () => {
 
     const calls = (L.marker as any).mock.calls
 
-    // All items have images → rendered via iconComponent
+    // All items have images → rendered via iconResolver
     expect(calls[0][1].icon.className).toBe('poi-avatar-icon')
     expect(calls[1][1].icon.className).toBe('poi-avatar-icon')
     expect(calls[2][1].icon.className).toBe('poi-avatar-icon')

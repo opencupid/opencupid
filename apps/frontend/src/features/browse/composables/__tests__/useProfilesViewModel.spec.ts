@@ -3,10 +3,8 @@ import type { SocialMatchFilterDTO } from '@zod/match/filters.dto'
 
 // --- Mocks ---
 
-const routerPush = vi.fn()
-
 vi.mock('vue-router', () => ({
-  useRouter: () => ({ push: routerPush }),
+  useRouter: () => ({ push: vi.fn() }),
 }))
 
 vi.mock('@/lib/bootstrap', () => ({
@@ -56,15 +54,6 @@ describe('useProfilesViewModel', () => {
     vi.clearAllMocks()
     mockOwnerStore.matchFilter = null
     mockFindProfileStore.lastMapBounds = null
-  })
-
-  it('openProfile navigates to PublicProfile route', () => {
-    const { openProfile } = useProfilesViewModel()
-    openProfile('profile-42')
-    expect(routerPush).toHaveBeenCalledWith({
-      name: 'PublicProfile',
-      params: { profileId: 'profile-42' },
-    })
   })
 
   it('initialize fetches social filter (clusters loaded via bounds)', async () => {

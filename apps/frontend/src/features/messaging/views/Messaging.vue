@@ -1,8 +1,5 @@
 <script lang="ts" setup>
-import { computed, onMounted, provide } from 'vue'
-import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
-
-import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
+import type { ConversationSummary } from '@zod/messaging/messaging.dto'
 
 import ConversationSummaries from '../components/ConversationSummaries.vue'
 import EmptyView from '../components/EmptyView.vue'
@@ -14,74 +11,66 @@ import { useMessagingViewModel } from '../composables/useMessagingViewModel'
 
 defineOptions({ name: 'Messaging' })
 
+const emit = defineEmits<{
+  (e: 'convo:select', conversationId: string): void
+}>()
+
 const {
   conversations,
   activeConversation,
   isLoading,
   haveConversations,
   isInitialized,
-  handleSelectConvo,
   handleMatchSelect,
   handleReceivedLikeSelect,
   handleMessageSent,
-  initialize,
   matches,
   haveMatches,
   showEmptyState,
   showMessageModal,
   messageProfile,
-  fetchConversations,
 } = useMessagingViewModel()
 
-provide(
-  'viewerProfile',
-  computed(() => useOwnerProfileStore().profile)
-)
-
-onMounted(async () => {
-  await initialize()
-  await fetchConversations()
-})
+function handleSelectConvo(convo: ConversationSummary) {
+  emit('convo:select', convo.conversationId)
+}
 </script>
 
 <template>
-  <main class="h-100 d-flex flex-column">
-    <MiddleColumn class="h-100 d-flex flex-column overflow-hidden">
-      <div
-        v-if="showEmptyState && isInitialized"
-        class="flex-grow-1 d-flex flex-column justify-content-center overflow-auto hide-scrollbar"
-      >
-        <EmptyView />
-      </div>
-      <!-- Conversation summaries -->
-      <div
-        v-else
-        class="flex-grow-1 overflow-auto hide-scrollbar pt-2"
-      >
-        <template v-if="haveMatches">
-          <p class="px-2 text-center">{{ $t('messaging.matches_list_title') }}</p>
-          <div class="mb-3">
-            <MatchesList
-              :edges="matches"
-              @select:profile="handleMatchSelect"
-            />
-          </div>
-        </template>
-
+  <div class="h-100 d-flex flex-column overflow-hidden">
+    <div
+      v-if="showEmptyState && isInitialized"
+      class="flex-grow-1 d-flex flex-column justify-content-center overflow-auto hide-scrollbar"
+    >
+      <EmptyView />
+    </div>
+    <div
+      v-else
+      class="flex-grow-1 overflow-auto hide-scrollbar pt-2"
+    >
+      <template v-if="haveMatches">
+        <p class="px-2 text-center">{{ $t('messaging.matches_list_title') }}</p>
         <div class="mb-3">
-          <ReceivedLikesTeaser @interaction:selected="handleReceivedLikeSelect" />
-        </div>
-
-        <div v-if="haveConversations">
-          <ConversationSummaries
-            :loading="isLoading"
-            :conversations="conversations"
-            :activeConversation="activeConversation"
-            @convo:select="handleSelectConvo"
+          <MatchesList
+            :edges="matches"
+            @select:profile="handleMatchSelect"
           />
         </div>
+      </template>
+
+      <div class="mb-3">
+        <ReceivedLikesTeaser @interaction:selected="handleReceivedLikeSelect" />
       </div>
-    </MiddleColumn>
+
+      <div v-if="haveConversations">
+        <ConversationSummaries
+          :loading="isLoading"
+          :conversations="conversations"
+          :activeConversation="activeConversation"
+          @convo:select="handleSelectConvo"
+        />
+      </div>
+    </div>
 
     <SendMessageDialog
       v-if="messageProfile"
@@ -89,5 +78,5 @@ onMounted(async () => {
       :profile="messageProfile"
       @sent="handleMessageSent"
     />
-  </main>
+  </div>
 </template>
