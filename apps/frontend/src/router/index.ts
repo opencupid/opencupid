@@ -5,6 +5,7 @@ import { useAuthStore } from '@/features/auth/stores/authStore'
 import { bus } from '@/lib/bus'
 
 import AuthLayout from '@/features/app/views/AuthLayout.vue'
+import PublicProfileView from '@/features/publicprofile/views/PublicProfileView.vue'
 import DatingWizardView from '@/features/myprofile/views/DatingWizard.vue'
 import DatingPrefsView from '@/features/myprofile/views/DatingPrefs.vue'
 import BrowseProfiles from '@/features/browse/views/BrowseProfiles.vue'
@@ -39,6 +40,12 @@ const routes: Array<RouteRecordRaw> = [
         path: 'browse',
         name: 'BrowseProfiles',
         component: BrowseProfiles,
+      },
+      {
+        path: 'profile/:profileId',
+        name: 'PublicProfile',
+        component: PublicProfileView,
+        props: true,
       },
       {
         path: 'auth/logout',

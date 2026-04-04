@@ -8,6 +8,7 @@ import { useOffcanvasState } from '@/features/shared/composables/useOffcanvasSta
 import BrowseFilterBar from '../components/BrowseFilterBar.vue'
 import OsmPoiMap from '@/features/shared/components/osmPoiMap/OsmPoiMap.vue'
 import NoResultsCTA from '../components/NoResultsCTA.vue'
+import ProfileMapCard from '../components/ProfileMapCard.vue'
 import PublicProfileView from '@/features/publicprofile/views/PublicProfileView.vue'
 
 import ProfileMarker from '@/features/publicprofile/components/ProfileMarker.vue'
@@ -34,6 +35,7 @@ const {
   initialize,
   refreshIfFilterChanged,
   mapCenter,
+  fetchPopupData,
 } = useProfilesViewModel()
 
 provide('viewerProfile', toRef(viewerProfile))
@@ -148,6 +150,8 @@ onActivated(async () => {
           :clusters="clusters"
           :icon-resolver="(poi) => poi.type === 'post' ? PostMarker : ProfileMarker"
           :center="mapCenter"
+          :popup-component="ProfileMapCard"
+          :fetch-popup-data="fetchPopupData"
           class="h-100"
           @item:select="onMarkerClick"
           @bounds:changed="onBoundsChanged"
