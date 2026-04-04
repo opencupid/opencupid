@@ -2,17 +2,24 @@ import { computed, ref, type Ref } from 'vue'
 import { api, safeApiCall } from '@/lib/api'
 import type { BrowseBoundsResponse } from '@zod/apiResponse.dto'
 import type { PublicTag } from '@zod/tag/tag.dto'
-import type { MapBounds, MapCluster, MapPoi } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
+import type {
+  MapBounds,
+  MapCluster,
+  MapPoi,
+  BoundsWithZoom,
+} from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
 import type { PublicPostWithProfile } from '@zod/post/post.dto'
 import type { ClusterFeature, MapFeature, PointFeature } from '@shared/zod/map/cluster.dto'
 
 /**
- * Composable that manages the posts data layer and bounds-scoped tags
- * for the unified browse map. Profile clustering continues to be managed
- * by `useProfilesViewModel` / `findProfileStore` — this composable
- * adds the post POIs and tag data on top.
+ * Composable that manages the posts data layer, bounds-scoped tags,
+ * and map selection state for the unified browse map. Profile clustering
+ * continues to be managed by `useProfilesViewModel` / `findProfileStore`.
  */
-export function useBrowseViewModel(clusterFeatures: Ref<MapFeature[]>) {
+export function useBrowseViewModel(
+  clusterFeatures: Ref<MapFeature[]>,
+  onProfileBoundsChanged: (b: BoundsWithZoom) => void
+) {
   const postPois = ref<MapPoi[]>([])
   const availableTags = ref<PublicTag[]>([])
   const selectedTagIds = ref<string[]>([])
@@ -103,6 +110,35 @@ export function useBrowseViewModel(clusterFeatures: Ref<MapFeature[]>) {
     selectedTagIds.value = []
   }
 
+  // ── Map selection state ────────────────────────────────────────────
+  const activePoi = ref<MapPoi | null>(null)
+  const activePostId = ref<string | number | null>(null)
+
+  function onMarkerClick(id: string | number) {
+    const poi = allPois.value.find((p) => p.id === id)
+    if (!poi) return
+    activePoi.value = poi
+    if (poi.type === 'post') activePostId.value = poi.id
+  }
+
+  function onSelectionClear() {
+    activePoi.value = null
+    activePostId.value = null
+  }
+
+  function onPoiSelect(poi: MapPoi) {
+    activePostId.value = poi.id
+    activePoi.value = poi
+  }
+
+  // ── Unified bounds handler ─────────────────────────────────────────
+  async function onBoundsChanged(boundsWithZoom: BoundsWithZoom) {
+    await Promise.all([
+      onProfileBoundsChanged(boundsWithZoom),
+      fetchPostsAndTags(boundsWithZoom.bounds),
+    ])
+  }
+
   return {
     postPois,
     filteredPostPois,
@@ -115,5 +151,11 @@ export function useBrowseViewModel(clusterFeatures: Ref<MapFeature[]>) {
     fetchPostsAndTags,
     toggleTag,
     clearTags,
+    activePoi,
+    activePostId,
+    onMarkerClick,
+    onSelectionClear,
+    onPoiSelect,
+    onBoundsChanged,
   }
 }

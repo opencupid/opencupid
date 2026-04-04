@@ -16,7 +16,7 @@ import PostsSidebar from '../components/PostsSidebar.vue'
 import BrowseOffcanvas from '../components/BrowseOffcanvas.vue'
 import OwnerDrawer from '@/features/app/components/OwnerDrawer.vue'
 import OwnerDrawerControls from '../components/OwnerDrawerControls.vue'
-import type { MapPoi, BoundsWithZoom } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
+import type { MapPoi } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
 
 defineOptions({ name: 'BrowseProfiles' })
 
@@ -39,14 +39,24 @@ const {
 provide('viewerProfile', toRef(viewerProfile))
 
 const route = useRoute()
-// ── Post layer + tags + merged map data ────────────────────────────
-const { filteredPostPois, clusters, allPois, availableTags, selectedTagIds, fetchPostsAndTags } =
-  useBrowseViewModel(clusterFeatures)
+
+// ── Post layer + tags + merged map data + selection state ──────────
+const {
+  filteredPostPois,
+  clusters,
+  allPois,
+  availableTags,
+  selectedTagIds,
+  activePoi,
+  activePostId,
+  onMarkerClick,
+  onSelectionClear,
+  onPoiSelect,
+  onBoundsChanged,
+} = useBrowseViewModel(clusterFeatures, onProfileBoundsChanged)
 
 // ── Offcanvas state ─────────────────────────────────────────────────
 const offcanvasState = useOffcanvasState()
-const activePoi = ref<MapPoi | null>(null)
-const activePostId = ref<string | number | null>(null)
 const mapRef = ref<InstanceType<typeof OsmPoiMap> | null>(null)
 
 // ── User offcanvas (profile + inbox) ────────────────────────────────
@@ -64,34 +74,13 @@ function openInboxDrawer(conversationId?: string) {
   offcanvasState.open('user')
 }
 
-function onMarkerClick(id: string | number) {
-  const poi = allPois.value.find((p) => p.id === id)
-  if (!poi) return
-  activePoi.value = poi
-  if (poi.type === 'post') activePostId.value = poi.id
-}
-
 function onSidebarSelect(poi: MapPoi) {
-  activePostId.value = poi.id
-  activePoi.value = poi
+  onPoiSelect(poi)
   mapRef.value?.flyToMarker(poi)
-}
-
-function onOffcanvasClose() {
-  activePoi.value = null
-  activePostId.value = null
 }
 
 function onViewProfile(profileId: string) {
   openProfile(profileId)
-}
-
-// ── Unified bounds handler ──────────────────────────────────────────
-async function onBoundsChanged(boundsWithZoom: BoundsWithZoom) {
-  await Promise.all([
-    onProfileBoundsChanged(boundsWithZoom),
-    fetchPostsAndTags(boundsWithZoom.bounds),
-  ])
 }
 
 function iconResolver(poi: MapPoi): Component {
@@ -127,7 +116,7 @@ onActivated(async () => {
     <!-- Browse detail panel (between sidebar and map, per wireframe) -->
     <BrowseOffcanvas
       :active-poi="activePoi"
-      @close="onOffcanvasClose"
+      @close="onSelectionClear"
       @view-profile="onViewProfile"
     />
 
