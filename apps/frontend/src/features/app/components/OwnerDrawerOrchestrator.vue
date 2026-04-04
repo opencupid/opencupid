@@ -2,10 +2,8 @@
 import { ref, computed, watch, provide, toRef } from 'vue'
 
 import { useOffcanvasState } from '@/features/shared/composables/useOffcanvasState'
-import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { useMyProfileViewModel } from '@/features/myprofile/composables/useMyProfileViewModel'
 import { useMessageStore } from '@/features/messaging/stores/messageStore'
-import { useNotificationState } from '@/features/app/composables/useNotificationState'
 import { useBootstrap } from '@/lib/bootstrap'
 
 import OwnerDrawer from './OwnerDrawer.vue'
@@ -14,10 +12,6 @@ import SettingsView from '@/features/settings/views/Settings.vue'
 import MessagingView from '@/features/messaging/views/Messaging.vue'
 import PostList from '@/features/posts/components/PostList.vue'
 import ConversationDetail from '@/features/messaging/components/ConversationDetail.vue'
-
-import IconBackward from '@/assets/icons/interface/backward.svg'
-import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
-import ProfileImage from '@/features/images/components/ProfileImage.vue'
 
 defineOptions({ name: 'OwnerDrawerOrchestrator' })
 
@@ -29,23 +23,17 @@ const props = defineProps<{
 const offcanvasState = useOffcanvasState()
 const isOpen = computed(() => offcanvasState.isOpen('user'))
 
-// ── Profile panel ────────────────────────────────────────────────────
+// ── Profile panel state ──────────────────────────────────────────────
 const profileSubView = ref<'profile' | 'posts' | 'settings'>('profile')
 
-const ownerProfileStore = useOwnerProfileStore()
 const { formData } = useMyProfileViewModel(false)
 
 provide('isOwner', true)
 provide('viewerProfile', toRef(formData))
 
-// ── Inbox panel ──────────────────────────────────────────────────────
+// ── Inbox panel state ────────────────────────────────────────────────
 const inboxSubView = ref<'list' | 'thread'>('list')
 const messageStore = useMessageStore()
-const { hasUnreadMessages, hasMatchNotifications } = useNotificationState()
-
-const inboxUnreadCount = computed(() =>
-  hasUnreadMessages.value || hasMatchNotifications.value ? '\u25CF' : ''
-)
 
 // Reset sub-views when top-level panel changes
 watch(
@@ -88,92 +76,47 @@ function onDeselectConvo() {
 
 <template>
   <OwnerDrawer>
-    <!-- ── Header slot ──────────────────────────────────────────────── -->
-    <template #header>
-      <template v-if="panel === 'profile'">
-        <template v-if="profileSubView === 'settings'">
-          <button
-            type="button"
-            class="btn btn-link p-0 me-2"
-            @click="profileSubView = 'profile'"
-          >
-            <IconBackward class="svg-icon" />
-          </button>
-          <span
-            id="ownerDrawerLabel"
-            class="offcanvas-title"
-          >
-            {{ $t('settings.title') }}
-          </span>
-        </template>
-        <template v-else>
-          <span class="d-flex align-items-center gap-2 flex-grow-1 overflow-hidden">
-            <span
-              v-if="ownerProfileStore.profile?.profileImages?.length"
-              class="owner-drawer-avatar flex-shrink-0 overflow-hidden rounded-circle"
-            >
-              <ProfileImage
-                :profile="ownerProfileStore.profile"
-                variant="thumb"
-                class="img-fluid w-100 h-100"
-              />
-            </span>
+    <template v-if="panel === 'profile'">
+      <SettingsView
+        v-if="profileSubView === 'settings'"
+        @back="profileSubView = 'profile'"
+        @close="offcanvasState.close()"
+      />
+      <template v-else>
+        <MyProfileView
+          v-if="profileSubView === 'profile'"
+          @navigate:settings="profileSubView = 'settings'"
+          @close="offcanvasState.close()"
+        />
+        <div
+          v-else-if="profileSubView === 'posts'"
+          class="d-flex flex-column h-100"
+        >
+          <div class="offcanvas-header">
             <span
               id="ownerDrawerLabel"
-              class="offcanvas-title text-truncate"
+              class="offcanvas-title"
+              >{{ $t('profile.tab_posts') }}</span
             >
-              {{ ownerProfileStore.profile?.publicName }}
-            </span>
-          </span>
-          <button
-            type="button"
-            class="btn btn-link p-0 ms-2 flex-shrink-0"
-            :aria-label="$t('settings.title')"
-            @click="profileSubView = 'settings'"
-          >
-            <IconSetting2 class="svg-icon" />
-          </button>
-        </template>
-      </template>
+            <button
+              type="button"
+              class="btn-close ms-auto"
+              :aria-label="$t('common.close')"
+              @click="offcanvasState.close()"
+            />
+          </div>
+          <div class="offcanvas-body overflow-auto">
+            <PostList scope="my" />
+          </div>
+        </div>
 
-      <template v-else-if="panel === 'inbox'">
-        <template v-if="inboxSubView === 'thread'">
-          <button
-            type="button"
-            class="btn btn-link p-0 me-2"
-            @click="onDeselectConvo"
-          >
-            <IconBackward class="svg-icon" />
-          </button>
-          <span
-            id="ownerDrawerLabel"
-            class="offcanvas-title"
-          >
-            {{ messageStore.activeConversation?.partnerProfile?.publicName }}
-          </span>
-        </template>
-        <template v-else>
-          <span
-            id="ownerDrawerLabel"
-            class="offcanvas-title"
-          >
-            {{ $t('messaging.inbox_title') }}
-            <span
-              v-if="inboxUnreadCount"
-              class="badge bg-primary ms-1"
-              >{{ inboxUnreadCount }}</span
-            >
-          </span>
-        </template>
-      </template>
-    </template>
-
-    <!-- ── Body (default slot) ──────────────────────────────────────── -->
-    <template v-if="panel === 'profile'">
-      <SettingsView v-if="profileSubView === 'settings'" />
-      <template v-else>
-        <div class="px-3 pt-2 border-bottom flex-shrink-0">
-          <ul class="nav nav-tabs w-100">
+        <!-- Tab bar between profile and posts sub-views -->
+        <div
+          v-if="profileSubView === 'profile' || profileSubView === 'posts'"
+          class="position-absolute bottom-0 start-0 end-0 border-top bg-body"
+          style="z-index: 1"
+        >
+          <ul class="nav nav-tabs w-100 px-3">
             <li class="nav-item">
               <button
                 class="nav-link"
@@ -194,13 +137,6 @@ function onDeselectConvo() {
             </li>
           </ul>
         </div>
-        <div class="flex-grow-1 overflow-auto">
-          <MyProfileView v-if="profileSubView === 'profile'" />
-          <PostList
-            v-else-if="profileSubView === 'posts'"
-            scope="my"
-          />
-        </div>
       </template>
     </template>
 
@@ -208,20 +144,15 @@ function onDeselectConvo() {
       <MessagingView
         v-if="inboxSubView === 'list'"
         @convo:select="onConvoSelect"
+        @close="offcanvasState.close()"
       />
       <ConversationDetail
         v-else-if="inboxSubView === 'thread'"
         :loading="messageStore.isLoading"
         :conversation="messageStore.activeConversation"
         @deselect:convo="onDeselectConvo"
+        @close="offcanvasState.close()"
       />
     </template>
   </OwnerDrawer>
 </template>
-
-<style scoped>
-.owner-drawer-avatar {
-  width: 2rem;
-  height: 2rem;
-}
-</style>

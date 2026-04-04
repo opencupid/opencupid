@@ -8,12 +8,20 @@ import MatchesList from '@/features/interaction/components/MatchesList.vue'
 import ReceivedLikesTeaser from '@/features/interaction/components/ReceivedLikesTeaser.vue'
 
 import { useMessagingViewModel } from '../composables/useMessagingViewModel'
+import { useNotificationState } from '@/features/app/composables/useNotificationState'
+import { computed } from 'vue'
 
 defineOptions({ name: 'Messaging' })
 
 const emit = defineEmits<{
   (e: 'convo:select', conversationId: string): void
+  (e: 'close'): void
 }>()
+
+const { hasUnreadMessages, hasMatchNotifications } = useNotificationState()
+const inboxUnreadCount = computed(() =>
+  hasUnreadMessages.value || hasMatchNotifications.value ? '\u25CF' : ''
+)
 
 const {
   conversations,
@@ -38,6 +46,25 @@ function handleSelectConvo(convo: ConversationSummary) {
 
 <template>
   <div class="h-100 d-flex flex-column overflow-hidden">
+    <div class="offcanvas-header flex-shrink-0">
+      <span
+        id="ownerDrawerLabel"
+        class="offcanvas-title"
+      >
+        {{ $t('messaging.inbox_title') }}
+        <span
+          v-if="inboxUnreadCount"
+          class="badge bg-primary ms-1"
+          >{{ inboxUnreadCount }}</span
+        >
+      </span>
+      <button
+        type="button"
+        class="btn-close ms-auto"
+        :aria-label="$t('common.close')"
+        @click="emit('close')"
+      />
+    </div>
     <div
       v-if="showEmptyState && isInitialized"
       class="flex-grow-1 d-flex flex-column justify-content-center overflow-auto hide-scrollbar"

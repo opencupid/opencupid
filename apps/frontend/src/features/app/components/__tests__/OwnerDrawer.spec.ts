@@ -15,16 +15,6 @@ vi.mock('extendable-media-recorder-wav-encoder', () => ({
   connect: vi.fn(),
 }))
 
-vi.mock('@/assets/icons/interface/setting-2.svg', () => ({
-  default: { template: '<span data-testid="icon-settings" />' },
-}))
-vi.mock('@/assets/icons/interface/logout.svg', () => ({
-  default: { template: '<span data-testid="icon-logout" />' },
-}))
-vi.mock('@/assets/icons/interface/backward.svg', () => ({
-  default: { template: '<span data-testid="icon-backward" />' },
-}))
-
 vi.mock('@/features/shared/composables/useNativeOffcanvas', () => ({
   useNativeOffcanvas: vi.fn(),
 }))
@@ -80,15 +70,31 @@ vi.mock('@/lib/bootstrap', () => ({
   useBootstrap: () => ({ bootstrap: vi.fn() }),
 }))
 
+// Child views are stubbed — they emit events the orchestrator reacts to
 const globalConfig = {
   stubs: {
-    OwnerDrawer: { template: '<div><slot name="header" /><slot /></div>' },
-    MyProfileView: true,
-    SettingsView: true,
-    MessagingView: true,
+    OwnerDrawer: { template: '<div><slot /></div>' },
+    MyProfileView: {
+      name: 'MyProfileView',
+      template: '<div data-testid="my-profile-view" />',
+      emits: ['navigate:settings', 'close'],
+    },
+    SettingsView: {
+      name: 'SettingsView',
+      template: '<div data-testid="settings-view" />',
+      emits: ['back', 'close'],
+    },
+    MessagingView: {
+      name: 'MessagingView',
+      template: '<div data-testid="messaging-view" />',
+      emits: ['convo:select', 'close'],
+    },
     PostList: true,
-    ProfileImage: true,
-    ConversationDetail: true,
+    ConversationDetail: {
+      name: 'ConversationDetail',
+      template: '<div data-testid="conversation-detail" />',
+      emits: ['deselect:convo', 'close'],
+    },
     BButton: true,
   },
   mocks: { $t: (k: string) => k },
@@ -97,40 +103,52 @@ const globalConfig = {
 describe('OwnerDrawerOrchestrator', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('shows profile panel when panel=profile', () => {
+  it('renders MyProfileView for profile panel', () => {
     const wrapper = mount(OwnerDrawerOrchestrator, {
       props: { panel: 'profile' },
       global: globalConfig,
     })
-    expect(wrapper.text()).toContain('Test User')
+    expect(wrapper.find('[data-testid="my-profile-view"]').exists()).toBe(true)
     expect(wrapper.find('ul.nav-tabs').exists()).toBe(true)
   })
 
-  it('gear icon switches to settings sub-view', async () => {
+  it('switches to SettingsView on navigate:settings emit from MyProfileView', async () => {
     const wrapper = mount(OwnerDrawerOrchestrator, {
       props: { panel: 'profile' },
       global: globalConfig,
     })
-    await wrapper.find('[aria-label="settings.title"]').trigger('click')
-    expect(wrapper.text()).toContain('settings.title')
+    await wrapper.findComponent({ name: 'MyProfileView' }).vm.$emit('navigate:settings')
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('[data-testid="settings-view"]').exists()).toBe(true)
     expect(wrapper.find('ul.nav-tabs').exists()).toBe(false)
   })
 
-  it('back button from settings returns to profile tab', async () => {
+  it('returns to MyProfileView on back emit from SettingsView', async () => {
     const wrapper = mount(OwnerDrawerOrchestrator, {
       props: { panel: 'profile' },
       global: globalConfig,
     })
-    await wrapper.find('[aria-label="settings.title"]').trigger('click')
-    await wrapper.findAll('button')[0]!.trigger('click')
-    expect(wrapper.find('ul.nav-tabs').exists()).toBe(true)
+    await wrapper.findComponent({ name: 'MyProfileView' }).vm.$emit('navigate:settings')
+    await wrapper.vm.$nextTick()
+    await wrapper.findComponent({ name: 'SettingsView' }).vm.$emit('back')
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('[data-testid="my-profile-view"]').exists()).toBe(true)
   })
 
-  it('shows inbox panel when panel=inbox', () => {
+  it('renders MessagingView for inbox panel', () => {
     const wrapper = mount(OwnerDrawerOrchestrator, {
       props: { panel: 'inbox' },
       global: globalConfig,
     })
-    expect(wrapper.text()).toContain('messaging.inbox_title')
+    expect(wrapper.find('[data-testid="messaging-view"]').exists()).toBe(true)
+  })
+
+  it('calls offcanvasState.close on close emit from child', async () => {
+    const wrapper = mount(OwnerDrawerOrchestrator, {
+      props: { panel: 'profile' },
+      global: globalConfig,
+    })
+    await wrapper.findComponent({ name: 'MyProfileView' }).vm.$emit('close')
+    expect(mockClose).toHaveBeenCalled()
   })
 })

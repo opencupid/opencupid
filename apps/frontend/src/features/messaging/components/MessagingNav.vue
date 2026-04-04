@@ -12,6 +12,7 @@ defineProps<{
 
 defineEmits<{
   (e: 'block:open'): void
+  (e: 'close'): void
   (e: 'deselect:convo'): void
   (e: 'profile:select', val: ProfileSummary): void
   (e: 'callable:toggle', event: Event): void
@@ -44,6 +45,12 @@ defineEmits<{
     </div>
 
     <div class="d-flex align-items-center gap-1">
+      <button
+        type="button"
+        class="btn-close"
+        :aria-label="$t('common.close')"
+        @click="$emit('close')"
+      />
       <BDropdown
         variant="link"
         no-caret

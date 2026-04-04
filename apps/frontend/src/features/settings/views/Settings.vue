@@ -6,10 +6,15 @@ import type { ProfileOptInSettings } from '@zod/profile/profile.dto'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { useUserStore } from '@/store/userStore'
-import { useOffcanvasState } from '@/features/shared/composables/useOffcanvasState'
 import { usePwaInstall } from '@/features/app/composables/usePwaInstall'
 
 import IconLogout from '@/assets/icons/interface/logout.svg'
+import IconBackward from '@/assets/icons/interface/backward.svg'
+
+const emit = defineEmits<{
+  (e: 'back'): void
+  (e: 'close'): void
+}>()
 
 import LanguageSelectorDropdown from '@/features/shared/ui/LanguageSelectorDropdown.vue'
 import OptInCheckboxes from '../components/OptInCheckboxes.vue'
@@ -19,7 +24,6 @@ import PwaInstallButton from '@/features/app/components/PwaInstallButton.vue'
 const authStore = useAuthStore()
 const ownerProfileStore = useOwnerProfileStore()
 const userStore = useUserStore()
-const offcanvasState = useOffcanvasState()
 
 usePwaInstall()
 
@@ -45,43 +49,65 @@ onMounted(async () => {
 
 function handleLogout() {
   authStore.logout()
-  offcanvasState.close()
+  emit('close')
 }
 </script>
 
 <template>
-  <div class="d-flex flex-column h-100 overflow-auto px-3 py-3">
-    <fieldset class="d-flex align-items-center mb-3">
-      <LanguageSelectorDropdown size="md" />
-    </fieldset>
-    <hr />
-    <fieldset class="mb-3">
-      <legend class="h6">{{ $t('settings.notifications_label') }}</legend>
-      <OptInCheckboxes v-model="optInModel" />
-    </fieldset>
-    <fieldset class="mb-3">
-      <PwaInstallButton />
-    </fieldset>
-    <hr />
-    <fieldset class="d-flex flex-wrap align-items-center gap-2">
-      <div
-        class="flex-grow-1 form-hint"
-        style="min-width: 0; word-break: break-all"
+  <div class="d-flex flex-column h-100">
+    <div class="offcanvas-header flex-shrink-0">
+      <button
+        type="button"
+        class="btn btn-link p-0 me-2"
+        @click="emit('back')"
       >
-        <span v-if="userStore.user?.email">{{ userStore.user.email }}</span>
-        <span v-if="userStore.user?.phonenumber">{{ userStore.user.phonenumber }}</span>
+        <IconBackward class="svg-icon" />
+      </button>
+      <span
+        id="ownerDrawerLabel"
+        class="offcanvas-title"
+        >{{ $t('settings.title') }}</span
+      >
+      <button
+        type="button"
+        class="btn-close ms-auto"
+        :aria-label="$t('common.close')"
+        @click="emit('close')"
+      />
+    </div>
+    <div class="flex-grow-1 overflow-auto px-3 py-3">
+      <fieldset class="d-flex align-items-center mb-3">
+        <LanguageSelectorDropdown size="md" />
+      </fieldset>
+      <hr />
+      <fieldset class="mb-3">
+        <legend class="h6">{{ $t('settings.notifications_label') }}</legend>
+        <OptInCheckboxes v-model="optInModel" />
+      </fieldset>
+      <fieldset class="mb-3">
+        <PwaInstallButton />
+      </fieldset>
+      <hr />
+      <fieldset class="d-flex flex-wrap align-items-center gap-2">
+        <div
+          class="flex-grow-1 form-hint"
+          style="min-width: 0; word-break: break-all"
+        >
+          <span v-if="userStore.user?.email">{{ userStore.user.email }}</span>
+          <span v-if="userStore.user?.phonenumber">{{ userStore.user.phonenumber }}</span>
+        </div>
+        <BButton
+          variant="secondary"
+          size="sm"
+          @click="handleLogout"
+        >
+          <IconLogout class="svg-icon" />
+          {{ $t('authentication.logout') }}
+        </BButton>
+      </fieldset>
+      <div class="mt-auto pt-3">
+        <VersionInfo />
       </div>
-      <BButton
-        variant="secondary"
-        size="sm"
-        @click="handleLogout"
-      >
-        <IconLogout class="svg-icon" />
-        {{ $t('authentication.logout') }}
-      </BButton>
-    </fieldset>
-    <div class="mt-auto pt-3">
-      <VersionInfo />
     </div>
   </div>
 </template>

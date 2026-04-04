@@ -28,18 +28,7 @@ useNativeOffcanvas(offcanvasEl, bsIsOpen)
     tabindex="-1"
     aria-labelledby="ownerDrawerLabel"
   >
-    <div class="offcanvas-header">
-      <slot name="header" />
-      <button
-        type="button"
-        class="btn-close ms-auto"
-        :aria-label="$t('common.close')"
-        @click="offcanvasState.close()"
-      />
-    </div>
-    <div class="offcanvas-body p-0 d-flex flex-column overflow-hidden">
-      <slot />
-    </div>
+    <slot />
   </div>
 </template>
 
