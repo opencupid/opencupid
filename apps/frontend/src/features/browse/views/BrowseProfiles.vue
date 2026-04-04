@@ -7,7 +7,7 @@ import { useBrowseViewModel } from '../composables/useBrowseViewModel'
 import { useOffcanvasState } from '@/features/shared/composables/useOffcanvasState'
 
 import BrowseFilterBar from '../components/BrowseFilterBar.vue'
-import MapView from '@/features/shared/components/MapView.vue'
+import OsmPoiMap from '@/features/shared/components/osmPoiMap/OsmPoiMap.vue'
 import ProfileMapCard from '../components/ProfileMapCard.vue'
 import NoResultsCTA from '../components/NoResultsCTA.vue'
 import MapIcon from '@/features/publicprofile/components/MapIcon.vue'
@@ -47,7 +47,7 @@ const { filteredPostPois, clusters, allPois, availableTags, selectedTagIds, fetc
 const offcanvasState = useOffcanvasState()
 const activePoi = ref<MapPoi | null>(null)
 const activePostId = ref<string | number | null>(null)
-const mapRef = ref<InstanceType<typeof MapView> | null>(null)
+const mapRef = ref<InstanceType<typeof OsmPoiMap> | null>(null)
 
 // ── User offcanvas (profile + inbox) ────────────────────────────────
 const ownerDrawerPanel = ref<'profile' | 'inbox'>('profile')
@@ -164,20 +164,18 @@ onActivated(async () => {
           >
             <NoResultsCTA />
           </BAlert>
-          <MapView
+          <OsmPoiMap
             ref="mapRef"
             :items="allPois"
             :clusters="clusters"
             :icon-component="MapIcon"
             :icon-resolver="iconResolver"
-            :highlighted-poi-id="activePoi?.id ?? null"
             :center="mapCenter"
-            :is-placeholder-animated="true"
             :popup-component="ProfileMapCard"
             :fetch-popup-data="fetchPopupData"
             class="h-100"
             @item:select="onMarkerClick"
-            @bounds-changed="onBoundsChanged"
+            @bounds:changed="onBoundsChanged"
           />
         </div>
       </main>

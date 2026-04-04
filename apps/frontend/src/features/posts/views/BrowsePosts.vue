@@ -9,7 +9,7 @@ import { isValidLatLng } from '@/features/shared/components/osmPoiMap/mapUtils'
 import PostFilterBar from '../components/PostFilterBar.vue'
 import PostList from '../components/PostList.vue'
 import PostFullView from '../components/PostFullView.vue'
-import MapView from '@/features/shared/components/MapView.vue'
+import OsmPoiMap from '@/features/shared/components/osmPoiMap/OsmPoiMap.vue'
 import MapIcon from '../components/MapIcon.vue'
 import PostMapPopup from '../components/PostMapPopup.vue'
 import IconMenu from '@/assets/icons/interface/menu.svg'
@@ -135,16 +135,15 @@ onActivated(() => {
           <p class="text-muted mb-0">{{ t('posts.messages.no_posts') }}</p>
         </template>
       </PostList>
-      <MapView
+      <OsmPoiMap
         v-else-if="viewMode === 'map'"
         :items="mapPois"
         :icon-component="MapIcon"
         :popup-component="PostMapPopup"
         :center="mapCenter"
-        :is-loading="isViewLoading"
         class="h-100"
         @item:select="(id) => handleFullview(currentTabPosts.find((p) => p.id === id))"
-        @bounds-changed="onBoundsChanged"
+        @bounds:changed="onBoundsChanged"
       />
     </template>
 
