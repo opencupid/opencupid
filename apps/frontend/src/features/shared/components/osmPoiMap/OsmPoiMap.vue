@@ -11,9 +11,7 @@ const props = withDefaults(
   defineProps<{
     items: MapPoi[]
     clusters?: MapCluster[]
-    iconComponent: Component
-    /** Per-item icon resolver. When provided, overrides iconComponent per item. */
-    iconResolver?: (poi: MapPoi) => Component
+    iconResolver: (poi: MapPoi) => Component
     popupComponent?: Component
     center?: [number, number]
     zoom?: number
@@ -48,9 +46,6 @@ const { flyToMarker } = useMapController(
     },
     get clusters() {
       return props.clusters ?? []
-    },
-    get iconComponent() {
-      return props.iconComponent
     },
     get iconResolver() {
       return props.iconResolver

@@ -1,4 +1,4 @@
-import type { AvatarImage } from '@/features/publicprofile/components/MapIcon.vue'
+import type { AvatarImage } from '@/features/publicprofile/components/ProfileMarker.vue'
 import type { Component } from 'vue'
 
 /** Location coordinates for a map point */

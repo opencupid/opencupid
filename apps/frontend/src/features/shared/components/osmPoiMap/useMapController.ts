@@ -8,8 +8,7 @@ import type { MapPoi, MapCluster, BoundsWithZoom } from './OsmPoiMap.types'
 export interface MapProps {
   items: MapPoi[]
   clusters: MapCluster[]
-  iconComponent: Component
-  iconResolver?: (poi: MapPoi) => Component
+  iconResolver: (poi: MapPoi) => Component
   popupComponent?: Component
   center?: [number, number]
   zoom: number
@@ -33,13 +32,9 @@ export function useMapController(
 ): { flyToMarker: (poi: MapPoi) => void } {
   let controller: MapController | null = null
 
-  function resolveIcon(poi: MapPoi): Component {
-    return props.iconResolver ? props.iconResolver(poi) : props.iconComponent
-  }
-
   function markerConfig() {
     return {
-      resolveIcon,
+      resolveIcon: (poi: MapPoi) => props.iconResolver(poi),
       popupComponent: props.popupComponent,
       fetchPopupData: props.fetchPopupData,
     }

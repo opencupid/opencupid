@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onActivated, onMounted, provide, ref, toRef, type Component } from 'vue'
+import { onActivated, onMounted, provide, ref, toRef } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { useProfilesViewModel } from '../composables/useProfilesViewModel'
@@ -10,8 +10,10 @@ import BrowseFilterBar from '../components/BrowseFilterBar.vue'
 import OsmPoiMap from '@/features/shared/components/osmPoiMap/OsmPoiMap.vue'
 import ProfileMapCard from '../components/ProfileMapCard.vue'
 import NoResultsCTA from '../components/NoResultsCTA.vue'
-import MapIcon from '@/features/publicprofile/components/MapIcon.vue'
-import PostMarkerIcon from '../components/PostMarkerIcon.vue'
+
+import ProfileMarker from '@/features/publicprofile/components/ProfileMarker.vue'
+import PostMarker from '@/features/posts/components/PostMarker.vue'
+
 import PostsSidebar from '../components/PostsSidebar.vue'
 import BrowseOffcanvas from '../components/BrowseOffcanvas.vue'
 import OwnerDrawer from '@/features/app/components/OwnerDrawer.vue'
@@ -81,10 +83,6 @@ function onSidebarSelect(poi: MapPoi) {
 
 function onViewProfile(profileId: string) {
   openProfile(profileId)
-}
-
-function iconResolver(poi: MapPoi): Component {
-  return poi.type === 'post' ? PostMarkerIcon : MapIcon
 }
 
 onMounted(async () => {
@@ -157,8 +155,7 @@ onActivated(async () => {
             ref="mapRef"
             :items="allPois"
             :clusters="clusters"
-            :icon-component="MapIcon"
-            :icon-resolver="iconResolver"
+            :icon-resolver="(poi) => poi.type === 'post' ? PostMarker : ProfileMarker"
             :center="mapCenter"
             :popup-component="ProfileMapCard"
             :fetch-popup-data="fetchPopupData"

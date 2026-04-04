@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import PostsSidebar from '../PostsSidebar.vue'
 
-vi.mock('../PostMarkerIcon.vue', () => ({
+vi.mock('@/features/posts/components/PostMarker.vue', () => ({
   default: { template: '<span class="mock-post-icon" />' },
 }))
 

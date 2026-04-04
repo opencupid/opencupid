@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { MapPoi } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
-import PostMarkerIcon from './PostMarkerIcon.vue'
+import PostMarker from '@/features/posts/components/PostMarker.vue'
 
 defineOptions({ name: 'PostsSidebar' })
 
@@ -41,7 +41,7 @@ const emit = defineEmits<{
           v-else
           class="no-image d-flex align-items-center justify-content-center h-100 bg-light"
         >
-          <PostMarkerIcon
+          <PostMarker
             :is-selected="false"
             :is-highlighted="false"
           />
