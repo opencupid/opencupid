@@ -4,7 +4,6 @@ import { ref, computed, watch, provide, toRef } from 'vue'
 import { useOffcanvasState } from '@/features/shared/composables/useOffcanvasState'
 import { useMyProfileViewModel } from '@/features/myprofile/composables/useMyProfileViewModel'
 import { useMessageStore } from '@/features/messaging/stores/messageStore'
-import { useBootstrap } from '@/lib/bootstrap'
 
 import OwnerDrawer from './OwnerDrawer.vue'
 import MyProfileView from '@/features/myprofile/views/MyProfile.vue'
@@ -44,17 +43,10 @@ watch(
   }
 )
 
-// Lazy-initialize messaging on first open of inbox
-let inboxInitialized = false
+// Deep-link: open thread directly when conversationId is provided
 watch(
-  () => props.panel === 'inbox' && isOpen.value,
+  () => props.panel === 'inbox' && isOpen.value && !!props.conversationId,
   async (active) => {
-    if (active && !inboxInitialized) {
-      inboxInitialized = true
-      await useBootstrap().bootstrap()
-      messageStore.suppressMessageNotifications = true
-      await messageStore.fetchConversations()
-    }
     if (active && props.conversationId) {
       await messageStore.setActiveConversationById(props.conversationId)
       inboxSubView.value = 'thread'

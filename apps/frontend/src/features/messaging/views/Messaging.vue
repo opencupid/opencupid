@@ -9,7 +9,7 @@ import ReceivedLikesTeaser from '@/features/interaction/components/ReceivedLikes
 
 import { useMessagingViewModel } from '../composables/useMessagingViewModel'
 import { useNotificationState } from '@/features/app/composables/useNotificationState'
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 
 defineOptions({ name: 'Messaging' })
 
@@ -29,6 +29,8 @@ const {
   isLoading,
   haveConversations,
   isInitialized,
+  initialize,
+  fetchConversations,
   handleMatchSelect,
   handleReceivedLikeSelect,
   handleMessageSent,
@@ -38,6 +40,11 @@ const {
   showMessageModal,
   messageProfile,
 } = useMessagingViewModel()
+
+onMounted(async () => {
+  await initialize()
+  await fetchConversations()
+})
 
 function handleSelectConvo(convo: ConversationSummary) {
   emit('convo:select', convo.conversationId)
