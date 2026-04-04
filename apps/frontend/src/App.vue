@@ -23,11 +23,7 @@ useCallStore().initialize()
 
 <template>
   <UpdateBanner />
-  <RouterView v-slot="{ Component }">
-    <KeepAlive :include="['BrowseProfiles']">
-      <component :is="Component" />
-    </KeepAlive>
-  </RouterView>
+  <RouterView />
   <AppNotifier />
   <CallingOverlay />
   <JitsiModal />

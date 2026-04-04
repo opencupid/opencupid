@@ -1,6 +1,4 @@
 import { computed, ref, toRef } from 'vue'
-import { useRouter } from 'vue-router'
-
 import { useBootstrap } from '@/lib/bootstrap'
 
 import type { StoreError } from '@/store/helpers'
@@ -11,8 +9,6 @@ import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 
 export function useProfilesViewModel() {
-  const router = useRouter()
-
   const ownerStore = useOwnerProfileStore()
   const findProfileStore = useFindProfileStore()
 
@@ -92,10 +88,6 @@ export function useProfilesViewModel() {
     }
   }
 
-  function openProfile(profileId: string): void {
-    router.push({ name: 'PublicProfile', params: { profileId } })
-  }
-
   const viewerProfile = computed(() => ownerStore.profile)
 
   const haveResults = computed(() => {
@@ -165,7 +157,6 @@ export function useProfilesViewModel() {
     updatePrefs,
     onBoundsChanged,
     refreshIfFilterChanged,
-    openProfile,
     clusterFeatures: computed(() => findProfileStore.clusterFeatures),
     isInitialized,
     mapCenter,

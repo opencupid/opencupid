@@ -4,6 +4,9 @@ import { ref, computed, watchEffect } from 'vue'
 import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 import { type ConversationSummary } from '@zod/messaging/messaging.dto'
 
+import DetailContainer from '@/features/browse/components/DetailContainer.vue'
+import ProfileContent from '@/features/publicprofile/components/ProfileContent.vue'
+
 import { useMessageStore } from '@/features/messaging/stores/messageStore'
 import { usePublicProfileStore } from '@/features/publicprofile/stores/publicProfileStore'
 import { useCallStore } from '@/features/videocall/stores/callStore'
@@ -25,8 +28,9 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'deselect:convo'): void
-  (e: 'profile:select', profile: PublicProfileWithContext): void
 }>()
+
+const viewingProfile = ref<PublicProfileWithContext | null>(null)
 
 const showModal = ref(false)
 const conversationPartner = ref<PublicProfileWithContext | null>(null)
@@ -84,7 +88,7 @@ async function handleToggleCallable(event: Event) {
       :recipient="conversationPartner"
       :allowCalls="myIsCallable"
       @deselect:convo="emit('deselect:convo')"
-      @profile:select="emit('profile:select', conversationPartner)"
+      @profile:select="viewingProfile = conversationPartner"
       @block:open="showModal = true"
       @callable:toggle="handleToggleCallable"
     />
@@ -116,6 +120,13 @@ async function handleToggleCallable(event: Event) {
       @block="handleBlockProfile"
     />
   </div>
+
+  <Teleport defer v-if="viewingProfile" to="#app-detail">
+    <DetailContainer :open="true" @close="viewingProfile = null">
+      <template #header>{{ viewingProfile.publicName }}</template>
+      <ProfileContent :profile="viewingProfile" />
+    </DetailContainer>
+  </Teleport>
 </template>
 
 <style scoped>

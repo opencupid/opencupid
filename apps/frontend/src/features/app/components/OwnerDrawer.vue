@@ -38,9 +38,6 @@ const props = defineProps<{
   conversationId?: string
 }>()
 
-const emit = defineEmits<{
-  'profile:open': [profileId: string]
-}>()
 
 // ── Offcanvas open/close wired to shared state ──────────────────────────────
 const offcanvasState = useOffcanvasState()
@@ -155,10 +152,6 @@ function onDeselectConvo() {
   inboxSubView.value = 'list'
 }
 
-function onProfileSelectFromThread(profile: { id: string }) {
-  offcanvasState.close()
-  emit('profile:open', profile.id)
-}
 
 const inboxUnreadCount = computed(() =>
   hasUnreadMessages.value || hasMatchNotifications.value ? '\u25CF' : ''
@@ -404,7 +397,6 @@ const inboxUnreadCount = computed(() =>
           :loading="messagingLoading"
           :conversation="activeConversation"
           @deselect:convo="onDeselectConvo"
-          @profile:select="onProfileSelectFromThread"
         />
       </div>
 

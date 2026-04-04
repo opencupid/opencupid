@@ -8,7 +8,6 @@ import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileSt
 import { usePublicProfileStore } from '../stores/publicProfileStore'
 import PublicProfileComponent from '../components/PublicProfile.vue'
 import BlockProfileDialog from '../components/BlockProfileDialog.vue'
-import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -56,51 +55,47 @@ const handleBlock = async () => {
 </script>
 
 <template>
-  <main class="w-100 overflow-auto hide-scrollbar public-profile-view">
-    <MiddleColumn class="pt-sm-3 position-relative px-0 px-sm-3">
-      <BPlaceholderWrapper :loading="publicProfileStore.isLoading">
-        <template #loading>
-          <BPlaceholderCard
-            class="w-100 opacity-50"
-            style="min-height: 100%"
-            img-height="400"
-            animation="glow"
-            no-button
-          />
-        </template>
+  <BPlaceholderWrapper :loading="publicProfileStore.isLoading">
+    <template #loading>
+      <BPlaceholderCard
+        class="w-100 opacity-50"
+        style="min-height: 100%"
+        img-height="400"
+        animation="glow"
+        no-button
+      />
+    </template>
 
-        <div v-if="isLoaded">
-          <PublicProfileComponent
-            v-if="publicProfileStore.profile"
-            :profile="publicProfileStore.profile"
-            class="shadow-lg mb-3 pb-5"
-            @intent:back="handleBack"
-            @intent:message="handleMessage"
-            @intent:block="showBlockModal = true"
-            @updated="handleRefresh"
-          />
-          <div
-            v-else
-            class="text-center py-5"
-          >
-            <p class="text-muted">{{ $t('profiles.profile_not_found') }}</p>
-            <BButton
-              variant="primary"
-              @click="handleBack"
-            >
-              {{ $t('profiles.back_button_title') }}
-            </BButton>
-          </div>
-        </div>
-      </BPlaceholderWrapper>
-    </MiddleColumn>
+    <div v-if="isLoaded">
+      <PublicProfileComponent
+        v-if="publicProfileStore.profile"
+        :profile="publicProfileStore.profile"
+        class="shadow-lg mb-3 pb-5"
+        @intent:back="handleBack"
+        @intent:message="handleMessage"
+        @intent:block="showBlockModal = true"
+        @updated="handleRefresh"
+      />
+      <div
+        v-else
+        class="text-center py-5"
+      >
+        <p class="text-muted">{{ $t('profiles.profile_not_found') }}</p>
+        <BButton
+          variant="primary"
+          @click="handleBack"
+        >
+          {{ $t('profiles.back_button_title') }}
+        </BButton>
+      </div>
+    </div>
+  </BPlaceholderWrapper>
 
-    <BlockProfileDialog
-      v-if="publicProfileStore.profile"
-      :profile="publicProfileStore.profile"
-      v-model="showBlockModal"
-      :loading="publicProfileStore.isLoading"
-      @block="handleBlock"
-    />
-  </main>
+  <BlockProfileDialog
+    v-if="publicProfileStore.profile"
+    :profile="publicProfileStore.profile"
+    v-model="showBlockModal"
+    :loading="publicProfileStore.isLoading"
+    @block="handleBlock"
+  />
 </template>

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { onActivated, onMounted, provide, ref, toRef } from 'vue'
-import { useRoute } from 'vue-router'
 
 import { useProfilesViewModel } from '../composables/useProfilesViewModel'
 import { useBrowseViewModel } from '../composables/useBrowseViewModel'
@@ -8,8 +7,8 @@ import { useOffcanvasState } from '@/features/shared/composables/useOffcanvasSta
 
 import BrowseFilterBar from '../components/BrowseFilterBar.vue'
 import OsmPoiMap from '@/features/shared/components/osmPoiMap/OsmPoiMap.vue'
-import ProfileMapCard from '../components/ProfileMapCard.vue'
 import NoResultsCTA from '../components/NoResultsCTA.vue'
+import PublicProfileView from '@/features/publicprofile/views/PublicProfileView.vue'
 
 import ProfileMarker from '@/features/publicprofile/components/ProfileMarker.vue'
 import PostMarker from '@/features/posts/components/PostMarker.vue'
@@ -17,11 +16,9 @@ import PostMarker from '@/features/posts/components/PostMarker.vue'
 import PostsSidebar from '../components/PostsSidebar.vue'
 import DetailContainer from '../components/DetailContainer.vue'
 import PostMapPopup from '@/features/posts/components/PostMapPopup.vue'
-import OwnerDrawer from '@/features/app/components/OwnerDrawer.vue'
 import OwnerDrawerControls from '../components/OwnerDrawerControls.vue'
 import type { MapPoi } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
 import type { PublicPostWithProfile } from '@zod/post/post.dto'
-import type { PublicProfile } from '@zod/profile/profile.dto'
 
 defineOptions({ name: 'BrowseProfiles' })
 
@@ -33,17 +30,13 @@ const {
   matchFilter,
   isInitialized,
   updatePrefs,
-  openProfile,
   onBoundsChanged: onProfileBoundsChanged,
   initialize,
   refreshIfFilterChanged,
   mapCenter,
-  fetchPopupData,
 } = useProfilesViewModel()
 
 provide('viewerProfile', toRef(viewerProfile))
-
-const route = useRoute()
 
 // ── Post layer + tags + merged map data + selection state ──────────
 const {
@@ -64,19 +57,12 @@ const {
 const offcanvasState = useOffcanvasState()
 const mapRef = ref<InstanceType<typeof OsmPoiMap> | null>(null)
 
-// ── User offcanvas (profile + inbox) ────────────────────────────────
-const ownerDrawerPanel = ref<'profile' | 'inbox'>('profile')
-const initialConversationId = ref<string | undefined>()
-
 function openProfileDrawer() {
-  ownerDrawerPanel.value = 'profile'
-  offcanvasState.open('user')
+  offcanvasState.openUser('profile')
 }
 
-function openInboxDrawer(conversationId?: string) {
-  ownerDrawerPanel.value = 'inbox'
-  initialConversationId.value = conversationId
-  offcanvasState.open('user')
+function openInboxDrawer() {
+  offcanvasState.openUser('inbox')
 }
 
 function onSidebarSelect(poi: MapPoi) {
@@ -84,18 +70,8 @@ function onSidebarSelect(poi: MapPoi) {
   mapRef.value?.flyToMarker(poi)
 }
 
-function onViewProfile(profileId: string) {
-  openProfile(profileId)
-}
-
 onMounted(async () => {
   await initialize()
-
-  // Deep-link support: ?panel=profile|inbox&conversation=<id>
-  const panel = route.query.panel as 'profile' | 'inbox' | undefined
-  const convoId = route.query.conversation as string | undefined
-  if (panel === 'profile') openProfileDrawer()
-  else if (panel === 'inbox') openInboxDrawer(convoId)
 })
 
 onActivated(async () => {
@@ -106,87 +82,78 @@ onActivated(async () => {
 </script>
 
 <template>
-  <div class="browse-shell d-flex vh-100 overflow-hidden">
-    <!-- Posts sidebar (desktop only) -->
+  <!-- Sidebar teleported into AuthLayout's #app-sidebar slot -->
+  <Teleport defer to="#app-sidebar">
     <PostsSidebar
       :posts="filteredPostPois"
       :active-id="activePostId"
       @select="onSidebarSelect"
     />
+  </Teleport>
 
-    <!-- Detail panel (between sidebar and map) -->
+  <!-- Detail panel teleported into AuthLayout's #app-detail slot -->
+  <Teleport defer to="#app-detail">
     <DetailContainer
       :open="!!activePoi"
       @close="onSelectionClear"
     >
-      <template #header>{{ activePoi?.type === 'post' ? 'Post' : 'Profile' }}</template>
+      <template #header>{{ activePoi?.type === 'post' ? 'Post' : activePoi?.title }}</template>
       <PostMapPopup
         v-if="activePoi?.type === 'post'"
         :item="activePoi.source as PublicPostWithProfile"
-        @click="onViewProfile(String((activePoi.source as PublicPostWithProfile)?.postedBy?.id))"
       />
-      <ProfileMapCard
+      <PublicProfileView
         v-else-if="activePoi"
-        :item="activePoi.source as PublicProfile"
-        @click="onViewProfile(String(activePoi.id))"
+        :profile-id="String(activePoi.id)"
       />
     </DetailContainer>
+  </Teleport>
 
-    <!-- Map region -->
-    <div class="map-region flex-grow-1 position-relative overflow-hidden">
-      <div
-        class="position-absolute w-100 top-0 end-0 d-flex align-items-center justify-content-end gap-2 p-2"
-        style="z-index: 1010"
-      >
-        <div class="flex-grow-1">
-          <BrowseFilterBar
-            v-model="matchFilter"
-            :viewer-profile="viewerProfile"
-            :available-tags="availableTags"
-            :selected-tag-ids="selectedTagIds"
-            @filter:changed="updatePrefs"
-            @update:selected-tag-ids="selectedTagIds = $event"
-          />
-        </div>
-        <div class="flex-shrink-0 flex-grow-0">
-          <OwnerDrawerControls
-            @open:inbox="openInboxDrawer()"
-            @open:profile="openProfileDrawer()"
-          />
-        </div>
+  <!-- Map region (only content that stays in-place) -->
+  <div class="map-region h-100 position-relative overflow-hidden">
+    <div
+      class="position-absolute w-100 top-0 end-0 d-flex align-items-center justify-content-end gap-2 p-2"
+      style="z-index: 1010"
+    >
+      <div class="flex-grow-1">
+        <BrowseFilterBar
+          v-model="matchFilter"
+          :viewer-profile="viewerProfile"
+          :available-tags="availableTags"
+          :selected-tag-ids="selectedTagIds"
+          @filter:changed="updatePrefs"
+          @update:selected-tag-ids="selectedTagIds = $event"
+        />
       </div>
-      <main class="list-view d-flex flex-column justify-content-start">
-        <div class="overflow-auto hide-scrollbar flex-grow-1 position-relative">
-          <BAlert
-            v-if="isNoOneAround"
-            variant="info"
-            class="lonely-alert shadow p-2 p-md-2"
-            show
-          >
-            <NoResultsCTA />
-          </BAlert>
-          <OsmPoiMap
-            ref="mapRef"
-            :items="allPois"
-            :clusters="clusters"
-            :icon-resolver="(poi) => poi.type === 'post' ? PostMarker : ProfileMarker"
-            :center="mapCenter"
-            :popup-component="ProfileMapCard"
-            :fetch-popup-data="fetchPopupData"
-            class="h-100"
-            @item:select="onMarkerClick"
-            @bounds:changed="onBoundsChanged"
-          />
-        </div>
-      </main>
+      <div class="flex-shrink-0 flex-grow-0">
+        <OwnerDrawerControls
+          @open:inbox="openInboxDrawer()"
+          @open:profile="openProfileDrawer()"
+        />
+      </div>
     </div>
-
-    <!-- User offcanvas (Profile + Inbox panels) -->
-    <OwnerDrawer
-      :panel="ownerDrawerPanel"
-      :conversation-id="initialConversationId"
-      @profile:open="onViewProfile"
-    />
+    <main class="list-view d-flex flex-column justify-content-start">
+      <div class="overflow-auto hide-scrollbar flex-grow-1 position-relative">
+        <BAlert
+          v-if="isNoOneAround"
+          variant="info"
+          class="lonely-alert shadow p-2 p-md-2"
+          show
+        >
+          <NoResultsCTA />
+        </BAlert>
+        <OsmPoiMap
+          ref="mapRef"
+          :items="allPois"
+          :clusters="clusters"
+          :icon-resolver="(poi) => poi.type === 'post' ? PostMarker : ProfileMarker"
+          :center="mapCenter"
+          class="h-100"
+          @item:select="onMarkerClick"
+          @bounds:changed="onBoundsChanged"
+        />
+      </div>
+    </main>
   </div>
 </template>
 
@@ -199,11 +166,6 @@ onActivated(async () => {
 
 .list-view {
   height: 100vh;
-}
-
-.subnav-bar {
-  position: relative;
-  z-index: 1030;
 }
 
 .lonely-alert {
