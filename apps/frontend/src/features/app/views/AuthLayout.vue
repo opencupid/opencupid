@@ -9,14 +9,17 @@ defineOptions({ name: 'AuthLayout' })
 const route = useRoute()
 const offcanvasState = useOffcanvasState()
 
-// Deep-link support: ?panel=profile|inbox&conversation=<id>
 watch(
-  () => route.query,
-  (query) => {
-    const panel = query.panel as 'profile' | 'inbox' | undefined
-    if (panel === 'profile' || panel === 'inbox') {
-      offcanvasState.openUser(panel, query.conversation as string | undefined)
-    }
+  () => route.name,
+  (name) => {
+    if (name === 'Me')
+      offcanvasState.openUser('profile')
+    else if (name === 'Inbox')
+      offcanvasState.openUser('inbox')
+    else if (name === 'Conversation')
+      offcanvasState.openUser('inbox', route.params.conversationId as string)
+    else
+      offcanvasState.close()
   },
   { immediate: true }
 )
