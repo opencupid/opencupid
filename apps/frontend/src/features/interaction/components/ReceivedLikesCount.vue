@@ -8,7 +8,7 @@ const { receivedLikesCount, haveReceivedLikes } = useInteractionsViewModel()
 <template>
   <div
     class="rounded shadow clickable d-flex align-items-center gap-1 dating p-4"
-    @click="$router.push({ path: '/browse', query: { panel: 'inbox' } })"
+    @click="$router.push({ name: 'Inbox' })"
     v-if="haveReceivedLikes"
   >
     <div class="">

@@ -35,11 +35,11 @@ const error = ref('')
 const router = useRouter()
 
 const handleGoToProfile = async () => {
-  router.push({ path: '/browse', query: { panel: 'profile' } })
+  router.push({ name: 'Me' })
 }
 
 const handleGoToBrowse = () => {
-  router.push({ name: 'BrowseProfiles' })
+  router.push({ name: 'Browse' })
 }
 
 const handleWizardFinish = async () => {
@@ -63,7 +63,7 @@ onMounted(async () => {
   await useBootstrap().bootstrap()
 
   if (profileStore.profile?.isOnboarded) {
-    router.push({ path: '/browse', query: { panel: 'profile' } })
+    router.push({ name: 'Me' })
     return
   }
 

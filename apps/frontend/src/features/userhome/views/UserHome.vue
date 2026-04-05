@@ -82,7 +82,7 @@ const handleCardClick = async (profileId: string) => {
 const handleTagSelect = async (tag: PopularTag) => {
   if (!profileStore.matchFilter) await profileStore.fetchMatchFilter()
   await profileStore.setMatchFilterTags([tag])
-  router.push({ name: 'BrowseProfiles' })
+  router.push({ name: 'Browse' })
 }
 
 provide('viewerProfile', toRef(viewerProfile))
@@ -94,7 +94,7 @@ provide('viewerProfile', toRef(viewerProfile))
       <div class="banner-halo">
         <LikesAndMatchesBanner
           class="clickable my-3"
-          @click="router.push({ path: '/browse', query: { panel: 'inbox' } })"
+          @click="router.push({ name: 'Inbox' })"
         />
       </div>
       <!-- lg+: two-column layout -->
@@ -120,7 +120,7 @@ provide('viewerProfile', toRef(viewerProfile))
             />
             <div class="d-flex justify-content-center mt-3">
               <BButton
-                :to="{ name: 'BrowseProfiles' }"
+                :to="{ name: 'Browse' }"
                 variant="primary"
                 class=""
               >
