@@ -1,13 +1,16 @@
 <script setup lang="ts">
-import { ref, provide, toRef } from 'vue'
+import { ref, provide, toRef, computed } from 'vue'
 
 import { useOwnerProfileStore } from '../stores/ownerProfileStore'
 import { useMyProfileViewModel } from '../composables/useMyProfileViewModel'
+import { LocationSchema } from '@zod/dto/location.dto'
+import type { OwnerPost } from '@zod/post/post.dto'
 
 import MyProfileView from './MyProfile.vue'
 import SettingsView from '@/features/settings/components/Settings.vue'
-import DatingPrefsView from '../views/DatingPrefs.vue'
-import DatingWizardView from '../views/DatingWizard.vue'
+import DatingPrefsView from './DatingPrefs.vue'
+import DatingWizardView from './DatingWizard.vue'
+import EditPostDialog from '@/features/posts/components/EditPostDialog.vue'
 import PostList from '@/features/posts/components/PostList.vue'
 import ProfileImage from '@/features/images/components/ProfileImage.vue'
 
@@ -20,10 +23,23 @@ const emit = defineEmits<{
   (e: 'close'): void
 }>()
 
-const profileSubView = ref<'myprofile' | 'myposts' | 'settings' | 'datingprefs' | 'datingwizard'>('myprofile')
+const profileSubView = ref<'myprofile' | 'myposts' | 'settings' | 'datingprefs' | 'datingwizard' | 'editpost'>('myprofile')
 
 const ownerProfileStore = useOwnerProfileStore()
 const { formData } = useMyProfileViewModel(false)
+
+const editingPost = ref<OwnerPost | undefined>()
+const defaultLocation = computed(() => LocationSchema.parse(formData.value?.location ?? {}))
+
+function openEditPost(post: OwnerPost) {
+  editingPost.value = post
+  profileSubView.value = 'editpost'
+}
+
+function openCreatePost() {
+  editingPost.value = undefined
+  profileSubView.value = 'editpost'
+}
 
 provide('isOwner', true)
 provide('viewerProfile', toRef(formData))
@@ -52,6 +68,11 @@ const handleClose = () => {
     <template v-else-if="profileSubView === 'datingwizard'">
       <PanelHeader @back="profileSubView = 'myprofile'">
         <template #title>{{ $t('onboarding.wizard.dating_modal_title') }}</template>
+      </PanelHeader>
+    </template>
+    <template v-else-if="profileSubView === 'editpost'">
+      <PanelHeader @back="profileSubView = 'myposts'">
+        <template #title>{{ editingPost ? $t('posts.edit_title') : $t('posts.create_title') }}</template>
       </PanelHeader>
     </template>
     <template v-else>
@@ -93,9 +114,9 @@ const handleClose = () => {
   <!-- Tab bar — hidden in non-main sub-views -->
   <div
     v-if="profileSubView === 'myprofile' || profileSubView === 'myposts'"
-    class="flex-shrink-0"
+    class="flex-shrink-0 d-flex align-items-center px-3"
   >
-    <ul class="nav nav-tabs w-100 px-3">
+    <ul class="nav nav-tabs flex-grow-1">
       <li class="nav-item">
         <button
           class="nav-link"
@@ -115,6 +136,15 @@ const handleClose = () => {
         </button>
       </li>
     </ul>
+    <BButton
+      v-if="profileSubView === 'myposts'"
+      variant="link"
+      size="sm"
+      class="ms-2 p-0 flex-shrink-0"
+      @click="openCreatePost"
+    >
+      {{ $t('posts.actions.create_cta_title') }}
+    </BButton>
   </div>
 
   <!-- Content area -->
@@ -127,6 +157,15 @@ const handleClose = () => {
     <PostList
       v-else-if="profileSubView === 'myposts'"
       scope="my"
+      @intent:edit="openEditPost"
+    />
+    <EditPostDialog
+      v-else-if="profileSubView === 'editpost'"
+      :post="editingPost"
+      :is-edit="!!editingPost"
+      :default-location="defaultLocation"
+      @cancel="profileSubView = 'myposts'"
+      @saved="profileSubView = 'myposts'"
     />
     <SettingsView
       v-else-if="profileSubView === 'settings'"

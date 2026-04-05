@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, provide, ref } from 'vue'
+import { computed, provide, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
 import { useI18n } from 'vue-i18n'
@@ -26,11 +26,16 @@ provide(
 const showBlockModal = ref(false)
 const isLoaded = ref(false)
 
-onMounted(async () => {
-  await useBootstrap().bootstrap()
-  await publicProfileStore.getPublicProfile(props.profileId)
-  isLoaded.value = true
-})
+watch(
+  () => props.profileId,
+  async (id) => {
+    isLoaded.value = false
+    await useBootstrap().bootstrap()
+    await publicProfileStore.getPublicProfile(id)
+    isLoaded.value = true
+  },
+  { immediate: true }
+)
 
 const handleBack = () => {
   router.back()

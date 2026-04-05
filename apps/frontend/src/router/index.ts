@@ -5,15 +5,10 @@ import { useAuthStore } from '@/features/auth/stores/authStore'
 import { bus } from '@/lib/bus'
 
 import AuthLayout from '@/features/app/views/AuthLayout.vue'
-import PublicProfileView from '@/features/publicprofile/views/PublicProfileView.vue'
-import DatingWizardView from '@/features/myprofile/views/DatingWizard.vue'
-import DatingPrefsView from '@/features/myprofile/views/DatingPrefs.vue'
 import BrowseProfiles from '@/features/browse/views/BrowseProfiles.vue'
 import OnboardingView from '@/features/onboarding/views/Onboarding.vue'
 import LoginView from '@/features/auth/views/LoginView.vue'
 import MagicLink from '@/features/auth/views/MagicLink.vue'
-import LogoutView from '@/features/auth/views/LogoutView.vue'
-import EditPostView from '@/features/posts/views/EditPost.vue'
 
 const routes: Array<RouteRecordRaw> = [
   // ── Unauthenticated routes ───────────────────────────────────────────
@@ -59,39 +54,13 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: 'profile/:profileId',
         name: 'PublicProfile',
-        component: PublicProfileView,
+        component: BrowseProfiles,
         props: true,
-      },
-      {
-        path: 'auth/logout',
-        name: 'Logout',
-        component: LogoutView,
       },
       {
         path: 'onboarding',
         name: 'Onboarding',
         component: OnboardingView,
-      },
-      {
-        path: 'me/dating-wizard',
-        name: 'DatingWizard',
-        component: DatingWizardView,
-      },
-      {
-        path: 'me/dating-prefs',
-        name: 'DatingPrefs',
-        component: DatingPrefsView,
-      },
-      {
-        path: 'posts/new',
-        name: 'CreatePost',
-        component: EditPostView,
-      },
-      {
-        path: 'posts/:postId/edit',
-        name: 'EditPost',
-        component: EditPostView,
-        props: true,
       },
     ],
   },

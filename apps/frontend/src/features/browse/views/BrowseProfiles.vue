@@ -11,7 +11,7 @@ import BrowseFilterBar from '../components/BrowseFilterBar.vue'
 import OsmPoiMap from '@/features/shared/components/osmPoiMap/OsmPoiMap.vue'
 import NoResultsCTA from '../components/NoResultsCTA.vue'
 import ProfileMapCard from '../components/ProfileMapCard.vue'
-import PublicProfileView from '@/features/publicprofile/views/PublicProfileView.vue'
+import PublicProfileView from '@/features/publicprofile/components/PublicProfileView.vue'
 
 import ProfileMarker from '@/features/publicprofile/components/ProfileMarker.vue'
 import PostMarker from '@/features/posts/components/PostMarker.vue'

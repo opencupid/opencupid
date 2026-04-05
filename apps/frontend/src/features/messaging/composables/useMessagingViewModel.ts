@@ -53,7 +53,7 @@ export function useMessagingViewModel() {
   const messageProfile = ref<PublicProfileWithContext>()
 
   const handleProfileSelect = async (profileId: string) => {
-    router.push({ name: 'PublicProfile', params: { profileId } })
+    // TODO: navigate to public profile panel (route removed)
   }
 
   const handleMatchSelect = async (profileId: string) => {
