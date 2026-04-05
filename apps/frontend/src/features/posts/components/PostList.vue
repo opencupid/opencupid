@@ -84,8 +84,6 @@ function handlePostHide(post: any) {
       <BRow
         v-if="posts.length > 0"
         cols="1"
-        cols-sm="2"
-        cols-lg="3"
         class="g-2 g-md-3"
         v-bind="$attrs"
       >

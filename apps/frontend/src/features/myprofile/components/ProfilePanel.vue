@@ -10,7 +10,7 @@ import PostList from '@/features/posts/components/PostList.vue'
 import ProfileImage from '@/features/images/components/ProfileImage.vue'
 
 import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
-import IconBackward from '@/assets/icons/interface/backward.svg'
+import PanelHeader from './PanelHeader.vue'
 
 defineOptions({ name: 'ProfilePanel' })
 
@@ -25,25 +25,28 @@ const { formData } = useMyProfileViewModel(false)
 
 provide('isOwner', true)
 provide('viewerProfile', toRef(formData))
+
+const handleClose = () => {
+  emit('close')
+  setTimeout(() => {
+    profileSubView.value = 'myprofile'
+  }, 2000)
+}
 </script>
 
 <template>
   <!-- Shared header — persists across all sub-views -->
   <div class="offcanvas-header flex-shrink-0">
     <template v-if="profileSubView === 'settings'">
-      <button
-        type="button"
-        class="btn btn-link p-0 me-2"
-        :aria-label="$t('common.back')"
-        @click="profileSubView = 'myprofile'"
-      >
-        <IconBackward class="svg-icon" />
-      </button>
-      <span
-        id="ownerDrawerLabel"
-        class="offcanvas-title"
-        >{{ $t('settings.title') }}</span
-      >
+      <PanelHeader @back="profileSubView = 'myprofile'">
+        <template #title>
+          <span
+            id="ownerDrawerLabel"
+            class="offcanvas-title"
+            >{{ $t('settings.title') }}</span
+          >
+        </template>
+      </PanelHeader>
     </template>
     <template v-else>
       <span class="d-flex align-items-center gap-2 flex-grow-1 overflow-hidden">
@@ -64,20 +67,20 @@ provide('viewerProfile', toRef(formData))
           {{ ownerProfileStore.profile?.publicName }}
         </span>
       </span>
-      <button
-        type="button"
-        class="btn btn-link p-0 ms-2 flex-shrink-0"
+      <BButton
+        variant="link-secondary"
+        class="p-0 ms-2 flex-shrink-0"
         :aria-label="$t('settings.title')"
         @click="profileSubView = 'settings'"
       >
         <IconSetting2 class="svg-icon" />
-      </button>
+      </BButton>
     </template>
     <button
       type="button"
       class="btn-close ms-2"
       :aria-label="$t('common.close')"
-      @click="emit('close')"
+      @click="handleClose"
     />
   </div>
 

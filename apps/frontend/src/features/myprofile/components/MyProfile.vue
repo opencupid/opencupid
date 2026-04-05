@@ -10,6 +10,7 @@ import { useMyProfileViewModel } from '../composables/useMyProfileViewModel'
 import MyProfileSecondaryNav from './MyProfileSecondaryNav.vue'
 import EditableFields from './EditableFields.vue'
 import EditSaveButton from '@/features/shared/ui/EditSaveButton.vue'
+import ChevronLeftIcon from '@/assets/icons/arrows/arrow-single-left.svg'
 
 const router = useRouter()
 
@@ -62,27 +63,28 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div :class="[viewState.currentScope, { editable: viewState.isEditable }]">
+  <div>
     <EditableFields
-        v-model="formData"
-        :editState="viewState.isEditable"
-        @updated="updateProfile"
-      >
-        <StoreErrorOverlay
-          v-if="error"
-          :error
-        />
-        <template v-else>
-          <div class="px-3 pt-2">
-            <MyProfileSecondaryNav
-              v-model="viewState"
-              v-model:isDatingActive="formData.isDatingActive"
-              :is-dating-onboarded="isDatingOnboarded"
-              @datingmode:toggle="toggleDating"
-              @datingmode:prefs="openDatingPrefs"
-              @datingmode:profile="openDatingProfile"
-            />
-          </div>
+      v-model="formData"
+      :editState="viewState.isEditable"
+      @updated="updateProfile"
+    >
+      <StoreErrorOverlay
+        v-if="error"
+        :error
+      />
+      <template v-else>
+        <div class="px-0">
+          <MyProfileSecondaryNav
+            v-model="viewState"
+            v-model:isDatingActive="formData.isDatingActive"
+            :is-dating-onboarded="isDatingOnboarded"
+            @datingmode:toggle="toggleDating"
+            @datingmode:prefs="openDatingPrefs"
+            @datingmode:profile="openDatingProfile"
+          />
+        </div>
+        <div :class="[viewState.currentScope, { editable: viewState.isEditable }]">
           <ProfileContent
             v-if="profilePreview"
             :isLoading="isLoading"
@@ -93,8 +95,9 @@ onMounted(async () => {
           <div class="position-sticky bottom-0 pb-2 px-3 text-end">
             <EditSaveButton v-model="viewState.isEditable" />
           </div>
-        </template>
-      </EditableFields>
+        </div>
+      </template>
+    </EditableFields>
   </div>
 </template>
 

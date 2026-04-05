@@ -15,9 +15,11 @@ watch(
     bsIsOpen.value = val
   }
 )
+
 watch(bsIsOpen, (open) => {
   if (!open) offcanvasState.close()
 })
+
 useNativeOffcanvas(offcanvasEl, bsIsOpen)
 </script>
 
@@ -33,10 +35,21 @@ useNativeOffcanvas(offcanvasEl, bsIsOpen)
 </template>
 
 <style scoped lang="scss">
-.owner-drawer {
-  width: 320px;
+@import 'bootstrap/scss/functions';
+@import 'bootstrap/scss/variables';
+@import 'bootstrap/scss/mixins';
 
-  @media (max-width: 575.98px) {
+.owner-drawer {
+
+  @include media-breakpoint-up(md) {
+    width: 75vw;
+  }
+
+  @include media-breakpoint-up(lg) {
+    width: 33vw;
+  }
+
+  @include media-breakpoint-down(sm) {
     width: 100vw;
   }
 }
