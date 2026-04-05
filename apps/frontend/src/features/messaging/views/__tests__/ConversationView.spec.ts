@@ -112,7 +112,7 @@ describe('ConversationView', () => {
     const stub = wrapper.findComponent({ name: 'ConversationDetailStub' })
     stub.vm.$emit('deselect:convo')
 
-    expect(mockPush).toHaveBeenCalledWith({ path: '/browse', query: { panel: 'inbox' } })
+    expect(mockPush).toHaveBeenCalledWith({ name: 'Inbox' })
   })
 
   it('navigates to PublicProfile on profile select', async () => {
