@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import ChevronLeftIcon from '@/assets/icons/arrows/arrow-single-left.svg'
 
+defineProps<{ title?: string }>()
 defineEmits<{ (e: 'back'): void }>()
 </script>
 
@@ -17,7 +18,12 @@ defineEmits<{ (e: 'back'): void }>()
           <ChevronLeftIcon class="svg-icon" />
         </BButton>
       </slot>
-      <slot name="title" />
+      <span
+        id="ownerDrawerLabel"
+        class="offcanvas-title"
+      >
+        <slot name="title" />
+      </span>
     </div>
     <slot />
   </div>

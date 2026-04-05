@@ -6,6 +6,8 @@ import { useMyProfileViewModel } from '../composables/useMyProfileViewModel'
 
 import MyProfileView from './MyProfile.vue'
 import SettingsView from '@/features/settings/components/Settings.vue'
+import DatingPrefsView from '../views/DatingPrefs.vue'
+import DatingWizardView from '../views/DatingWizard.vue'
 import PostList from '@/features/posts/components/PostList.vue'
 import ProfileImage from '@/features/images/components/ProfileImage.vue'
 
@@ -18,7 +20,7 @@ const emit = defineEmits<{
   (e: 'close'): void
 }>()
 
-const profileSubView = ref<'myprofile' | 'myposts' | 'settings'>('myprofile')
+const profileSubView = ref<'myprofile' | 'myposts' | 'settings' | 'datingprefs' | 'datingwizard'>('myprofile')
 
 const ownerProfileStore = useOwnerProfileStore()
 const { formData } = useMyProfileViewModel(false)
@@ -39,13 +41,17 @@ const handleClose = () => {
   <div class="offcanvas-header flex-shrink-0">
     <template v-if="profileSubView === 'settings'">
       <PanelHeader @back="profileSubView = 'myprofile'">
-        <template #title>
-          <span
-            id="ownerDrawerLabel"
-            class="offcanvas-title"
-            >{{ $t('settings.title') }}</span
-          >
-        </template>
+        <template #title>{{ $t('settings.title') }}</template>
+      </PanelHeader>
+    </template>
+    <template v-else-if="profileSubView === 'datingprefs'">
+      <PanelHeader @back="profileSubView = 'myprofile'">
+        <template #title>{{ $t('profiles.forms.my_dating_profile') }}</template>
+      </PanelHeader>
+    </template>
+    <template v-else-if="profileSubView === 'datingwizard'">
+      <PanelHeader @back="profileSubView = 'myprofile'">
+        <template #title>{{ $t('onboarding.wizard.dating_modal_title') }}</template>
       </PanelHeader>
     </template>
     <template v-else>
@@ -84,9 +90,9 @@ const handleClose = () => {
     />
   </div>
 
-  <!-- Tab bar — hidden in settings sub-view -->
+  <!-- Tab bar — hidden in non-main sub-views -->
   <div
-    v-if="profileSubView !== 'settings'"
+    v-if="profileSubView === 'myprofile' || profileSubView === 'myposts'"
     class="flex-shrink-0"
   >
     <ul class="nav nav-tabs w-100 px-3">
@@ -113,7 +119,11 @@ const handleClose = () => {
 
   <!-- Content area -->
   <div class="flex-grow-1 overflow-auto">
-    <MyProfileView v-if="profileSubView === 'myprofile'" />
+    <MyProfileView
+      v-if="profileSubView === 'myprofile'"
+      @datingmode:prefs="profileSubView = 'datingprefs'"
+      @datingmode:wizard="profileSubView = 'datingwizard'"
+    />
     <PostList
       v-else-if="profileSubView === 'myposts'"
       scope="my"
@@ -121,6 +131,14 @@ const handleClose = () => {
     <SettingsView
       v-else-if="profileSubView === 'settings'"
       @close="emit('close')"
+    />
+    <DatingPrefsView
+      v-else-if="profileSubView === 'datingprefs'"
+      @close="profileSubView = 'myprofile'"
+    />
+    <DatingWizardView
+      v-else-if="profileSubView === 'datingwizard'"
+      @close="profileSubView = 'myprofile'"
     />
   </div>
 </template>

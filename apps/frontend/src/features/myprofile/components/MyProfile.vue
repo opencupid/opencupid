@@ -12,10 +12,14 @@ import EditableFields from './EditableFields.vue'
 import EditSaveButton from '@/features/shared/ui/EditSaveButton.vue'
 import ChevronLeftIcon from '@/assets/icons/arrows/arrow-single-left.svg'
 
-const router = useRouter()
 
 const props = defineProps<{
   editMode?: boolean
+}>()
+
+const emit = defineEmits<{
+  (e: 'datingmode:prefs'): void
+  (e: 'datingmode:wizard'): void
 }>()
 
 const showModal = ref(false)
@@ -26,25 +30,16 @@ const {
   formData,
   profilePreview,
   isDatingOnboarded,
-  isOnboarded,
   updateScopes,
   updateProfile,
 } = useMyProfileViewModel(props.editMode)
 
 const openDatingPrefs = () => {
   if (!isDatingOnboarded.value) {
-    router.push({ name: 'DatingWizard' })
+    emit('datingmode:wizard')
     return
   }
-  router.push({ name: 'DatingPrefs' })
-}
-
-const openDatingProfile = () => {
-  if (!isDatingOnboarded.value) {
-    router.push({ name: 'DatingWizard' })
-    return
-  }
-  router.push({ name: 'DatingPrefs' })
+  emit('datingmode:prefs')
 }
 
 const toggleDating = async () => {
@@ -53,13 +48,6 @@ const toggleDating = async () => {
   await updateScopes({ isDatingActive: newValue })
 }
 
-onMounted(async () => {
-  await useBootstrap().bootstrap()
-  if (!isOnboarded.value) {
-    router.push({ name: 'Onboarding' })
-    return
-  }
-})
 </script>
 
 <template>
@@ -81,7 +69,6 @@ onMounted(async () => {
             :is-dating-onboarded="isDatingOnboarded"
             @datingmode:toggle="toggleDating"
             @datingmode:prefs="openDatingPrefs"
-            @datingmode:profile="openDatingProfile"
           />
         </div>
         <div :class="[viewState.currentScope, { editable: viewState.isEditable }]">

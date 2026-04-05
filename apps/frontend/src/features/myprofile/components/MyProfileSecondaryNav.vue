@@ -37,7 +37,6 @@ const emit = defineEmits<{
         class="flex-grow-1"
         v-model:is-dating-active="isDatingActive"
         @datingmode:toggle="$emit('datingmode:toggle')"
-        @datingmode:prefs="$emit('datingmode:prefs')"
       />
 
       <!-- View as -->
