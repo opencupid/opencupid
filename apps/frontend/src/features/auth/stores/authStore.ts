@@ -223,6 +223,7 @@ bus.on('auth:logout', () => {
   // doesn't leave the user appearing logged in on next page load.
   cookies.remove(SESSION_COOKIE, SESSION_COOKIE_OPTS)
   localStorage.removeItem('authId')
+  bus.emit('auth:logged-out')
 })
 
 bus.on('auth:token-refreshed', ({ token }) => {

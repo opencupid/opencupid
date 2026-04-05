@@ -1,6 +1,5 @@
 import { useI18nStore } from '@/store/i18nStore'
 import { computed, reactive, toRef, watch } from 'vue'
-import { whenever } from '@vueuse/core'
 
 import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 import { type EditFieldProfileFormWithImages } from '@zod/profile/profile.form'
@@ -67,17 +66,19 @@ export function useMyProfileViewModel(isEditMode: boolean) {
     return res
   }
 
-  // Initialize form data and fetch preview/dating-prefs once when profile is available.
-  // whenever() only fires when the source is truthy, so it safely waits for bootstrap
-  // to load the profile on deep-links, then runs exactly once.
-  whenever(
+  // Re-sync formData whenever the profile reference is replaced (fetchOwnerProfile,
+  // createOwnerProfile, persistOwnerProfile all assign a new object). updateOwnerProfile
+  // mutates in place so it does not trigger this watcher, which is correct — the form
+  // is the authoritative source while the user is editing.
+  watch(
     () => profileStore.profile,
     (profile) => {
+      if (!profile) return
       Object.assign(formData, profile)
       fetchPreview()
       profileStore.fetchDatingPrefs()
     },
-    { immediate: true, once: true }
+    { immediate: true }
   )
 
   // Re-fetch preview only when user switches the preview language

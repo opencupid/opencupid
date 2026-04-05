@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { onActivated, onMounted, provide, ref, toRef } from 'vue'
+import { useRouter } from 'vue-router'
 
+import { useBootstrap } from '@/lib/bootstrap'
+import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { useProfilesViewModel } from '../composables/useProfilesViewModel'
 import { useBrowseViewModel } from '../composables/useBrowseViewModel'
 import { useOffcanvasState } from '@/features/shared/composables/useOffcanvasState'
@@ -58,6 +61,8 @@ const {
 // ── Offcanvas state ─────────────────────────────────────────────────
 const offcanvasState = useOffcanvasState()
 const mapRef = ref<InstanceType<typeof OsmPoiMap> | null>(null)
+const router = useRouter()
+const ownerProfileStore = useOwnerProfileStore()
 
 function openProfileDrawer() {
   offcanvasState.openUser('profile')
@@ -73,11 +78,18 @@ function onSidebarSelect(poi: MapPoi) {
 }
 
 onMounted(async () => {
+  await useBootstrap().bootstrap()
+  if (!ownerProfileStore.profile?.isOnboarded) {
+    router.push({ name: 'Onboarding' })
+    return
+  }
   await initialize()
 })
 
 onActivated(async () => {
-  if (isInitialized.value) {
+  if (!isInitialized.value) {
+    await initialize()
+  } else {
     await refreshIfFilterChanged()
   }
 })

@@ -47,7 +47,6 @@ onMounted(async () => {
 
 function handleLogout() {
   authStore.logout()
-  emit('close')
 }
 </script>
 
