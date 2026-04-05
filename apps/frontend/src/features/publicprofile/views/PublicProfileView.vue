@@ -37,7 +37,7 @@ const handleBack = () => {
 }
 
 const handleMessage = (conversationId: string) => {
-  router.push({ path: '/browse', query: { panel: 'inbox', conversation: conversationId } })
+  router.push({ name: 'Conversation', params: { conversationId } })
 }
 
 const handleRefresh = async () => {
