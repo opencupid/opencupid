@@ -29,68 +29,19 @@ vi.mock('@/features/shared/composables/useOffcanvasState', () => ({
   }),
 }))
 
-vi.mock('@/features/myprofile/composables/useMyProfileViewModel', () => ({
-  useMyProfileViewModel: () => ({
-    viewState: { isEditable: false },
-    formData: { publicName: 'Test User' },
-    profilePreview: null,
-    updateProfile: vi.fn(),
-  }),
-}))
-
-vi.mock('@/features/myprofile/stores/ownerProfileStore', () => ({
-  useOwnerProfileStore: () => ({
-    profile: { publicName: 'Test User', profileImages: [] },
-    optInSettings: {},
-    fetchOptInSettings: vi.fn(),
-    fetchOwnerProfile: vi.fn(),
-  }),
-}))
-
-vi.mock('@/features/app/composables/useNotificationState', () => ({
-  useNotificationState: () => ({
-    hasUnreadMessages: false,
-    hasMatchNotifications: false,
-  }),
-}))
-
-vi.mock('@/features/messaging/stores/messageStore', () => ({
-  useMessageStore: () => ({
-    activeConversation: null,
-    isLoading: false,
-    resetActiveConversation: vi.fn(),
-    setActiveConversationById: vi.fn(),
-    markAsRead: vi.fn(),
-    fetchConversations: vi.fn(),
-    suppressMessageNotifications: false,
-  }),
-}))
-
-vi.mock('@/lib/bootstrap', () => ({
-  useBootstrap: () => ({ bootstrap: vi.fn() }),
-}))
-
-// Child views are stubbed — they emit events the orchestrator reacts to
 const globalConfig = {
   stubs: {
     OwnerDrawer: { template: '<div><slot /></div>' },
-    MyProfileView: {
-      name: 'MyProfileView',
-      template: '<div data-testid="my-profile-view" />',
-      emits: ['navigate:settings', 'close'],
-    },
-    SettingsView: {
-      name: 'SettingsView',
-      template: '<div data-testid="settings-view" />',
-      emits: ['back', 'close'],
+    ProfilePanel: {
+      name: 'ProfilePanel',
+      template: '<div data-testid="profile-panel" />',
+      emits: ['close'],
     },
     InboxPanel: {
       name: 'InboxPanel',
       template: '<div data-testid="inbox-panel" />',
       emits: ['close'],
     },
-    PostList: true,
-    BButton: true,
   },
   mocks: { $t: (k: string) => k },
 }
@@ -98,36 +49,13 @@ const globalConfig = {
 describe('OwnerDrawerOrchestrator', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('renders MyProfileView for profile panel', () => {
+  it('renders ProfilePanel for profile panel', () => {
     const wrapper = mount(OwnerDrawerOrchestrator, {
       props: { panel: 'profile' },
       global: globalConfig,
     })
-    expect(wrapper.find('[data-testid="my-profile-view"]').exists()).toBe(true)
-    expect(wrapper.find('ul.nav-tabs').exists()).toBe(true)
-  })
-
-  it('switches to SettingsView on navigate:settings emit from MyProfileView', async () => {
-    const wrapper = mount(OwnerDrawerOrchestrator, {
-      props: { panel: 'profile' },
-      global: globalConfig,
-    })
-    await wrapper.findComponent({ name: 'MyProfileView' }).vm.$emit('navigate:settings')
-    await wrapper.vm.$nextTick()
-    expect(wrapper.find('[data-testid="settings-view"]').exists()).toBe(true)
-    expect(wrapper.find('ul.nav-tabs').exists()).toBe(false)
-  })
-
-  it('returns to MyProfileView on back emit from SettingsView', async () => {
-    const wrapper = mount(OwnerDrawerOrchestrator, {
-      props: { panel: 'profile' },
-      global: globalConfig,
-    })
-    await wrapper.findComponent({ name: 'MyProfileView' }).vm.$emit('navigate:settings')
-    await wrapper.vm.$nextTick()
-    await wrapper.findComponent({ name: 'SettingsView' }).vm.$emit('back')
-    await wrapper.vm.$nextTick()
-    expect(wrapper.find('[data-testid="my-profile-view"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="profile-panel"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="inbox-panel"]').exists()).toBe(false)
   })
 
   it('renders InboxPanel for inbox panel', () => {
@@ -136,14 +64,24 @@ describe('OwnerDrawerOrchestrator', () => {
       global: globalConfig,
     })
     expect(wrapper.find('[data-testid="inbox-panel"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="profile-panel"]').exists()).toBe(false)
   })
 
-  it('calls offcanvasState.close on close emit from child', async () => {
+  it('calls offcanvasState.close on close emit from ProfilePanel', async () => {
     const wrapper = mount(OwnerDrawerOrchestrator, {
       props: { panel: 'profile' },
       global: globalConfig,
     })
-    await wrapper.findComponent({ name: 'MyProfileView' }).vm.$emit('close')
+    await wrapper.findComponent({ name: 'ProfilePanel' }).vm.$emit('close')
+    expect(mockClose).toHaveBeenCalled()
+  })
+
+  it('calls offcanvasState.close on close emit from InboxPanel', async () => {
+    const wrapper = mount(OwnerDrawerOrchestrator, {
+      props: { panel: 'inbox' },
+      global: globalConfig,
+    })
+    await wrapper.findComponent({ name: 'InboxPanel' }).vm.$emit('close')
     expect(mockClose).toHaveBeenCalled()
   })
 })

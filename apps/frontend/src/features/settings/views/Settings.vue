@@ -9,10 +9,8 @@ import { useUserStore } from '@/store/userStore'
 import { usePwaInstall } from '@/features/app/composables/usePwaInstall'
 
 import IconLogout from '@/assets/icons/interface/logout.svg'
-import IconBackward from '@/assets/icons/interface/backward.svg'
 
 const emit = defineEmits<{
-  (e: 'back'): void
   (e: 'close'): void
 }>()
 
@@ -54,28 +52,7 @@ function handleLogout() {
 </script>
 
 <template>
-  <div class="d-flex flex-column h-100">
-    <div class="offcanvas-header flex-shrink-0">
-      <button
-        type="button"
-        class="btn btn-link p-0 me-2"
-        @click="emit('back')"
-      >
-        <IconBackward class="svg-icon" />
-      </button>
-      <span
-        id="ownerDrawerLabel"
-        class="offcanvas-title"
-        >{{ $t('settings.title') }}</span
-      >
-      <button
-        type="button"
-        class="btn-close ms-auto"
-        :aria-label="$t('common.close')"
-        @click="emit('close')"
-      />
-    </div>
-    <div class="flex-grow-1 overflow-auto px-3 py-3">
+  <div class="px-3 py-3">
       <fieldset class="d-flex align-items-center mb-3">
         <LanguageSelectorDropdown size="md" />
       </fieldset>
@@ -108,6 +85,5 @@ function handleLogout() {
       <div class="mt-auto pt-3">
         <VersionInfo />
       </div>
-    </div>
   </div>
 </template>
