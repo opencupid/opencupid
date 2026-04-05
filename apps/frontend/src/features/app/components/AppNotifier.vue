@@ -47,9 +47,8 @@ function handleMessageReceived(message: MessageDTO) {
     {
       onClick: (closeToast) => {
         router.push({
-          path: '/browse',
-          query: { panel: 'inbox', conversation: message.conversationId },
-          force: true,
+          name: 'Conversation',
+          params: { conversationId: message.conversationId },
         })
         closeToast()
       },

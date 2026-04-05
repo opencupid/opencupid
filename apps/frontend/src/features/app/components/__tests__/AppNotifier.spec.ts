@@ -81,9 +81,8 @@ describe('AppNotifier', () => {
     const close = vi.fn()
     cfg.onClick(close)
     expect(push).toHaveBeenCalledWith({
-      path: '/browse',
-      query: { panel: 'inbox', conversation: '42' },
-      force: true,
+      name: 'Conversation',
+      params: { conversationId: '42' },
     })
     expect(close).toHaveBeenCalled()
   })
