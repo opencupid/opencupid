@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useOffcanvasState } from '@/features/shared/composables/useOffcanvasState'
 import { useNativeOffcanvas } from '@/features/shared/composables/useNativeOffcanvas'
 
 defineOptions({ name: 'OwnerDrawer' })
 
 const offcanvasState = useOffcanvasState()
+const router = useRouter()
+const route = useRoute()
 const offcanvasEl = ref<HTMLElement>()
 const bsIsOpen = ref(false)
 
@@ -17,7 +20,10 @@ watch(
 )
 
 watch(bsIsOpen, (open) => {
-  if (!open) offcanvasState.close()
+  if (!open) {
+    offcanvasState.close()
+    if (route.name !== 'Browse') router.replace({ name: 'Browse' })
+  }
 })
 
 useNativeOffcanvas(offcanvasEl, bsIsOpen)
