@@ -57,7 +57,7 @@ const {
   onBoundsChanged,
 } = useBrowseViewModel(clusterFeatures, onProfileBoundsChanged)
 
-// ── Offcanvas state ─────────────────────────────────────────────────
+// ── Map and router refs ──────────────────────────────────────────────
 const mapRef = ref<InstanceType<typeof OsmPoiMap> | null>(null)
 const router = useRouter()
 const ownerProfileStore = useOwnerProfileStore()

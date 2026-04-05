@@ -66,7 +66,6 @@ function handleLikeReceived() {
     },
     {
       onClick: (closeToast) => {
-        // router.push({ name: 'Messaging', params: { conversationId: message.conversationId },force: true })
         closeToast()
       },
     }
