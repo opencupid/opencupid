@@ -38,7 +38,22 @@ const routes: Array<RouteRecordRaw> = [
     children: [
       {
         path: 'browse',
-        name: 'BrowseProfiles',
+        name: 'Browse',
+        component: BrowseProfiles,
+      },
+      {
+        path: 'me',
+        name: 'Me',
+        component: BrowseProfiles,
+      },
+      {
+        path: 'inbox',
+        name: 'Inbox',
+        component: BrowseProfiles,
+      },
+      {
+        path: 'inbox/:conversationId',
+        name: 'Conversation',
         component: BrowseProfiles,
       },
       {
@@ -82,17 +97,8 @@ const routes: Array<RouteRecordRaw> = [
   },
 
   // ── Redirects ────────────────────────────────────────────────────────
-  { path: '/me', redirect: () => ({ path: '/browse', query: { panel: 'profile' } }) },
-  { path: '/me/edit', redirect: () => ({ path: '/browse', query: { panel: 'profile' } }) },
-  { path: '/settings', redirect: () => ({ path: '/browse', query: { panel: 'profile' } }) },
-  { path: '/inbox', redirect: () => ({ path: '/browse', query: { panel: 'inbox' } }) },
-  {
-    path: '/inbox/:conversationId',
-    redirect: (to) => ({
-      path: '/browse',
-      query: { panel: 'inbox', conversation: to.params.conversationId as string },
-    }),
-  },
+  { path: '/me/edit', redirect: () => ({ name: 'Me' }) },
+  { path: '/settings', redirect: () => ({ name: 'Me' }) },
   { path: '/posts', redirect: '/browse' },
   { path: '/home', redirect: '/browse' },
   { path: '/', redirect: '/browse' },
