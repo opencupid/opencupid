@@ -1,4 +1,4 @@
-import { ref, nextTick, type Ref } from 'vue'
+import { nextTick, type Ref } from 'vue'
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
