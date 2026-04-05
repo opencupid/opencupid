@@ -6,7 +6,6 @@ import { useBootstrap } from '@/lib/bootstrap'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { useProfilesViewModel } from '../composables/useProfilesViewModel'
 import { useBrowseViewModel } from '../composables/useBrowseViewModel'
-import { useOffcanvasState } from '@/features/shared/composables/useOffcanvasState'
 
 import BrowseFilterBar from '../components/BrowseFilterBar.vue'
 import OsmPoiMap from '@/features/shared/components/osmPoiMap/OsmPoiMap.vue'
@@ -59,17 +58,16 @@ const {
 } = useBrowseViewModel(clusterFeatures, onProfileBoundsChanged)
 
 // ── Offcanvas state ─────────────────────────────────────────────────
-const offcanvasState = useOffcanvasState()
 const mapRef = ref<InstanceType<typeof OsmPoiMap> | null>(null)
 const router = useRouter()
 const ownerProfileStore = useOwnerProfileStore()
 
 function openProfileDrawer() {
-  offcanvasState.openUser('profile')
+  router.push({ name: 'Me' })
 }
 
 function openInboxDrawer() {
-  offcanvasState.openUser('inbox')
+  router.push({ name: 'Inbox' })
 }
 
 function onSidebarSelect(poi: MapPoi) {
