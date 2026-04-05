@@ -93,7 +93,7 @@ provide('viewerProfile', toRef(formData))
           :class="{ active: profileSubView === 'myprofile' }"
           @click="profileSubView = 'myprofile'"
         >
-          {{ $t('profile.tab_profile') }}
+          {{ $t('profiles.forms.tab_profile') }}
         </button>
       </li>
       <li class="nav-item">
@@ -102,7 +102,7 @@ provide('viewerProfile', toRef(formData))
           :class="{ active: profileSubView === 'myposts' }"
           @click="profileSubView = 'myposts'"
         >
-          {{ $t('profile.tab_posts') }}
+          {{ $t('profiles.forms.tab_posts') }}
         </button>
       </li>
     </ul>
