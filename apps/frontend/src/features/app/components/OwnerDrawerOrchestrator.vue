@@ -2,8 +2,8 @@
 import { useOffcanvasState } from '@/features/shared/composables/useOffcanvasState'
 
 import OwnerDrawer from './OwnerDrawer.vue'
-import ProfilePanel from '@/features/myprofile/views/ProfilePanel.vue'
-import InboxPanel from '@/features/messaging/views/InboxPanel.vue'
+import ProfilePanel from '@/features/myprofile/components/ProfilePanel.vue'
+import InboxPanel from '@/features/messaging/components/InboxPanel.vue'
 
 defineOptions({ name: 'OwnerDrawerOrchestrator' })
 
