@@ -15,7 +15,7 @@ import ProfileMapCard from '../components/ProfileMapCard.vue'
 import PublicProfileView from '@/features/publicprofile/components/PublicProfileView.vue'
 
 import ProfileMarker from '@/features/publicprofile/components/ProfileMarker.vue'
-import PostMarker from '@/features/posts/components/PostMarker.vue'
+import MapIcon from '@/features/posts/components/MapIcon.vue'
 
 import PostsSidebar from '../components/PostsSidebar.vue'
 import DetailContainer from '../components/DetailContainer.vue'
@@ -131,7 +131,10 @@ onActivated(async () => {
 
 <template>
   <!-- Sidebar teleported into AuthLayout's #app-sidebar slot -->
-  <Teleport defer to="#app-sidebar">
+  <Teleport
+    defer
+    to="#app-sidebar"
+  >
     <PostsSidebar
       :posts="filteredPostPois"
       :active-id="activePostId"
@@ -140,7 +143,10 @@ onActivated(async () => {
   </Teleport>
 
   <!-- Detail panel teleported into AuthLayout's #app-detail slot -->
-  <Teleport defer to="#app-detail">
+  <Teleport
+    defer
+    to="#app-detail"
+  >
     <DetailContainer
       :open="!!detail"
       @close="onDetailClose"
@@ -194,9 +200,9 @@ onActivated(async () => {
           ref="mapRef"
           :items="allPois"
           :clusters="clusters"
-          :icon-resolver="(poi) => poi.type === 'post' ? PostMarker : ProfileMarker"
+          :icon-resolver="(poi) => (poi.type === 'post' ? MapIcon : ProfileMarker)"
           :center="mapCenter"
-          :popup-component="ProfileMapCard"
+          :popup-resolver="(poi) => (poi.type === 'post' ? PostMapPopup : ProfileMapCard)"
           :fetch-popup-data="fetchPopupData"
           class="h-100"
           @item:select="handleMarkerSelect"

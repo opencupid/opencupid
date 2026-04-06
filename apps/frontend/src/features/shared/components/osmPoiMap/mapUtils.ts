@@ -13,11 +13,9 @@ export function toLatLng(loc?: LocationDTO): [number, number] | undefined {
   if (loc?.lat != null && loc?.lon != null) return [loc.lat, loc.lon]
 }
 
-
 export { MAP_MAX_ZOOM } from '@shared/maps'
 export const CLUSTER_ICON_SIZE = 35
 export const POI_ICON_SIZE = 40
-
 
 /** Creates a Leaflet DivIcon for a server-computed cluster (takes count directly). */
 export function createServerClusterIcon(count: number): L.DivIcon {
@@ -29,9 +27,10 @@ export function createServerClusterIcon(count: number): L.DivIcon {
   })
 }
 
-function getIconCacheKey(props: PoiIconProps): string {
+function getIconCacheKey(component: Component, props: PoiIconProps): string {
+  const name = (component as any).name ?? (component as any).__name ?? 'anon'
   const url = props.image?.variants?.[0]?.url ?? 'none'
-  return `${url}_${props.isSelected}_${props.isHighlighted}`
+  return `${name}_${url}_${props.isSelected}_${props.isHighlighted}`
 }
 
 /** Renders a Vue component into a Leaflet DivIcon for use as a POI marker.
@@ -41,7 +40,7 @@ export function hydratePoiIcon(
   iconProps: PoiIconProps,
   cache: Map<string, L.DivIcon>
 ): L.DivIcon {
-  const key = getIconCacheKey(iconProps)
+  const key = getIconCacheKey(component, iconProps)
   const cached = cache.get(key)
   if (cached) return cached
 

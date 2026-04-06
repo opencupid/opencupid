@@ -376,10 +376,9 @@ export class MapController {
 
   private createPoiMarker(item: MapPoi): LMarker {
     if (!this.markerConfig) throw new Error('markerConfig must be set before createPoiMarker')
-    const { resolveIcon, popupComponent, fetchPopupData } = this.markerConfig
+    const { resolveIcon, resolvePopup, fetchPopupData } = this.markerConfig
 
     const m = L.marker([item.location.lat, item.location.lon], {
-      title: item.title,
       icon: hydratePoiIcon(
         resolveIcon(item),
         { image: item.image, isSelected: false, isHighlighted: item.highlighted ?? false },
@@ -391,7 +390,7 @@ export class MapController {
     // Popup on hover only — OMS click handles selection
     m.on('mouseover', () => m.openPopup())
 
-    if (popupComponent) {
+    if (resolvePopup) {
       m.bindPopup('', {
         maxWidth: 420,
         autoPan: true,

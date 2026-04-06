@@ -12,7 +12,7 @@ const props = withDefaults(
     items: MapPoi[]
     clusters?: MapCluster[]
     iconResolver: (poi: MapPoi) => Component
-    popupComponent?: Component
+    popupResolver?: (poi: MapPoi) => Component
     center?: [number, number]
     zoom?: number
     fitToPois?: boolean
@@ -50,8 +50,8 @@ const { flyToMarker } = useMapController(
     get iconResolver() {
       return props.iconResolver
     },
-    get popupComponent() {
-      return props.popupComponent
+    get popupResolver() {
+      return props.popupResolver
     },
     get center() {
       return props.center
@@ -103,11 +103,11 @@ defineExpose({ flyToMarker })
     />
 
     <Teleport
-      v-if="popupComponent && popupTarget && popupItem"
+      v-if="popupResolver && popupTarget && popupItem"
       :to="popupTarget"
     >
       <component
-        :is="popupComponent"
+        :is="popupResolver(popupItem)"
         :item="popupItem.source"
         @click="$emit('item:select', popupItem.id)"
       />

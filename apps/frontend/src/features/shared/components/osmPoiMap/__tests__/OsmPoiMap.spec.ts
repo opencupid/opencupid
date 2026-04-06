@@ -223,7 +223,7 @@ async function mountMap(props: Partial<Record<string, any>> = {}) {
     props: {
       items: [],
       iconResolver: () => DummyIcon,
-      popupComponent: DummyPopup,
+      popupResolver: () => DummyPopup,
       ...props,
     },
     attachTo: document.body,

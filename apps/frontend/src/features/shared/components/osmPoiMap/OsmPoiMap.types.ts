@@ -52,6 +52,6 @@ export interface BoundsWithZoom {
 /** Per-render configuration passed from the component to MapController.updateMarkers(). */
 export interface MarkerConfig {
   resolveIcon: (poi: MapPoi) => Component
-  popupComponent?: Component
+  resolvePopup?: (poi: MapPoi) => Component
   fetchPopupData?: (id: string | number) => Promise<unknown>
 }

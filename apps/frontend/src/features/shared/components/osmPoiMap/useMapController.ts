@@ -9,7 +9,7 @@ export interface MapProps {
   items: MapPoi[]
   clusters: MapCluster[]
   iconResolver: (poi: MapPoi) => Component
-  popupComponent?: Component
+  popupResolver?: (poi: MapPoi) => Component
   center?: [number, number]
   zoom: number
   fitToPois: boolean
@@ -35,7 +35,7 @@ export function useMapController(
   function markerConfig() {
     return {
       resolveIcon: (poi: MapPoi) => props.iconResolver(poi),
-      popupComponent: props.popupComponent,
+      resolvePopup: props.popupResolver,
       fetchPopupData: props.fetchPopupData,
     }
   }
