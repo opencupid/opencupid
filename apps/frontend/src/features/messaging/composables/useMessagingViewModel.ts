@@ -52,8 +52,12 @@ export function useMessagingViewModel() {
   const showMessageModal = ref(false)
   const messageProfile = ref<PublicProfileWithContext>()
 
+  const viewingProfile = ref<PublicProfileWithContext | null>(null)
+
   const handleProfileSelect = async (profileId: string) => {
-    // TODO: navigate to public profile panel (route removed)
+    const res = await fetchProfile(profileId)
+    if (!res?.success) return
+    viewingProfile.value = res.data ?? null
   }
 
   const handleMatchSelect = async (profileId: string) => {
@@ -108,5 +112,9 @@ export function useMessagingViewModel() {
     // Interactions (matches/likes)
     matches: interactions.matches,
     haveMatches: interactions.haveMatches,
+
+    // Profile viewer (opened from inbox list, e.g. received likes)
+    viewingProfile,
+    handleProfileSelect,
   }
 }

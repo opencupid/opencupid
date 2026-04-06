@@ -1,28 +1,30 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useOffcanvasState } from '@/features/shared/composables/useOffcanvasState'
+import { useAppShellState } from '@/features/app/composables/useAppShellState'
 import { useNativeOffcanvas } from '@/features/shared/composables/useNativeOffcanvas'
 
 defineOptions({ name: 'OwnerDrawer' })
 
-const offcanvasState = useOffcanvasState()
+const { drawerType } = useAppShellState()
 const router = useRouter()
 const route = useRoute()
 const offcanvasEl = ref<HTMLElement>()
 const bsIsOpen = ref(false)
 
+// Route state → open/close offcanvas
 watch(
-  () => offcanvasState.isOpen('user'),
-  (val) => {
-    bsIsOpen.value = val
-  }
+  () => drawerType.value !== null,
+  (shouldBeOpen) => {
+    bsIsOpen.value = shouldBeOpen
+  },
+  { immediate: true }
 )
 
+// Bootstrap close gesture → navigate to Browse
 watch(bsIsOpen, (open) => {
-  if (!open) {
-    offcanvasState.close()
-    if (route.name !== 'Browse') router.replace({ name: 'Browse' })
+  if (!open && route.name !== 'Browse') {
+    router.replace({ name: 'Browse' })
   }
 })
 

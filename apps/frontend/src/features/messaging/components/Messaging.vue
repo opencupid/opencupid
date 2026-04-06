@@ -6,17 +6,21 @@ import EmptyView from './EmptyView.vue'
 import SendMessageDialog from '@/features/publicprofile/components/SendMessageDialog.vue'
 import MatchesList from '@/features/interaction/components/MatchesList.vue'
 import ReceivedLikesTeaser from '@/features/interaction/components/ReceivedLikesTeaser.vue'
+import DetailContainer from '@/features/browse/components/DetailContainer.vue'
+import PublicProfileView from '@/features/publicprofile/components/PublicProfileView.vue'
 
 import { useMessagingViewModel } from '../composables/useMessagingViewModel'
 import { useNotificationState } from '@/features/app/composables/useNotificationState'
+import { useRouter } from 'vue-router'
 import { computed, onMounted } from 'vue'
 
 defineOptions({ name: 'Messaging' })
 
 const emit = defineEmits<{
   (e: 'convo:select', conversationId: string): void
-  (e: 'close'): void
 }>()
+
+const router = useRouter()
 
 const { hasUnreadMessages, hasMatchNotifications } = useNotificationState()
 const inboxUnreadCount = computed(() =>
@@ -39,6 +43,7 @@ const {
   showEmptyState,
   showMessageModal,
   messageProfile,
+  viewingProfile,
 } = useMessagingViewModel()
 
 onMounted(async () => {
@@ -69,7 +74,7 @@ function handleSelectConvo(convo: ConversationSummary) {
         type="button"
         class="btn-close ms-auto"
         :aria-label="$t('common.close')"
-        @click="emit('close')"
+        @click="router.replace({ name: 'Browse' })"
       />
     </div>
     <div
@@ -113,4 +118,19 @@ function handleSelectConvo(convo: ConversationSummary) {
       @sent="handleMessageSent"
     />
   </div>
+
+  <!-- Profile viewer: opens alongside the inbox without closing it -->
+  <Teleport
+    defer
+    v-if="viewingProfile"
+    to="#app-detail"
+  >
+    <DetailContainer
+      :open="true"
+      @close="viewingProfile = null"
+    >
+      <template #header>{{ viewingProfile.publicName }}</template>
+      <PublicProfileView :profile-id="viewingProfile.id" />
+    </DetailContainer>
+  </Teleport>
 </template>

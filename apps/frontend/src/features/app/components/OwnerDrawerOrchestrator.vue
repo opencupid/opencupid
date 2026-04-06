@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useOffcanvasState } from '@/features/shared/composables/useOffcanvasState'
+import { useAppShellState } from '@/features/app/composables/useAppShellState'
 
 import OwnerDrawer from './OwnerDrawer.vue'
 import ProfilePanel from '@/features/myprofile/components/ProfilePanel.vue'
@@ -7,24 +7,12 @@ import InboxPanel from '@/features/messaging/components/InboxPanel.vue'
 
 defineOptions({ name: 'OwnerDrawerOrchestrator' })
 
-const props = defineProps<{
-  panel: 'profile' | 'inbox'
-  conversationId?: string
-}>()
-
-const offcanvasState = useOffcanvasState()
+const { drawerType } = useAppShellState()
 </script>
 
 <template>
   <OwnerDrawer>
-    <ProfilePanel
-      v-if="panel === 'profile'"
-      @close="offcanvasState.close()"
-    />
-    <InboxPanel
-      v-else-if="panel === 'inbox'"
-      :conversation-id="conversationId"
-      @close="offcanvasState.close()"
-    />
+    <ProfilePanel v-if="drawerType === 'profile'" />
+    <InboxPanel v-else-if="drawerType === 'inbox'" />
   </OwnerDrawer>
 </template>

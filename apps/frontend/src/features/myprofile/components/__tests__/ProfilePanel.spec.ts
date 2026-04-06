@@ -1,9 +1,25 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
-import ProfilePanel from '../ProfilePanel.vue'
+import { ref, computed } from 'vue'
+import type { ProfileSubView } from '@/features/myprofile/composables/useMyProfileRouteState'
+
+const mockReplace = vi.fn()
+const mockPush = vi.fn()
 
 vi.mock('vue-router', () => ({
-  useRouter: () => ({ push: vi.fn(), back: vi.fn(), replace: vi.fn() }),
+  useRouter: () => ({ push: mockPush, replace: mockReplace }),
+  useRoute: () => ({ name: 'Me', params: {} }),
+}))
+
+// Control subView from tests
+const mockSubView = ref<ProfileSubView>('myprofile')
+const mockEditingPostId = ref<string | undefined>(undefined)
+
+vi.mock('@/features/myprofile/composables/useMyProfileRouteState', () => ({
+  useMyProfileRouteState: () => ({
+    subView: computed(() => mockSubView.value),
+    editingPostId: computed(() => mockEditingPostId.value),
+  }),
 }))
 
 vi.mock('extendable-media-recorder', () => ({
@@ -43,6 +59,8 @@ vi.mock('@/features/images/components/ProfileImage.vue', () => ({
   default: { template: '<span />' },
 }))
 
+import ProfilePanel from '../ProfilePanel.vue'
+
 const globalConfig = {
   stubs: {
     MyProfileView: {
@@ -61,55 +79,75 @@ const globalConfig = {
     ProfileImage: { template: '<span />' },
     IconSetting2: { template: '<span />' },
     IconBackward: { template: '<span />' },
+    PanelHeader: {
+      name: 'PanelHeader',
+      template: '<div data-testid="panel-header"><slot name="title" /></div>',
+      emits: ['back'],
+    },
   },
   mocks: { $t: (k: string) => k },
 }
 
 describe('ProfilePanel', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockSubView.value = 'myprofile'
+    mockEditingPostId.value = undefined
+  })
 
-  it('shows MyProfileView and tab bar by default', () => {
+  it('shows MyProfileView and tab bar on myprofile subView', () => {
     const wrapper = mount(ProfilePanel, { global: globalConfig })
     expect(wrapper.find('[data-testid="my-profile-view"]').exists()).toBe(true)
     expect(wrapper.find('ul.nav-tabs').exists()).toBe(true)
     expect(wrapper.find('[data-testid="settings-view"]').exists()).toBe(false)
   })
 
-  it('switches to SettingsView when gear button is clicked', async () => {
+  it('shows SettingsView on settings subView', () => {
+    mockSubView.value = 'settings'
     const wrapper = mount(ProfilePanel, { global: globalConfig })
-    await wrapper.find('[aria-label="settings.title"]').trigger('click')
     expect(wrapper.find('[data-testid="settings-view"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="my-profile-view"]').exists()).toBe(false)
     expect(wrapper.find('ul.nav-tabs').exists()).toBe(false)
   })
 
-  it('returns to MyProfileView when back button is clicked from settings', async () => {
+  it('shows PostList on myposts subView', () => {
+    mockSubView.value = 'myposts'
     const wrapper = mount(ProfilePanel, { global: globalConfig })
-    await wrapper.find('[aria-label="settings.title"]').trigger('click')
-    await wrapper.find('[aria-label="common.back"]').trigger('click')
-    expect(wrapper.find('[data-testid="my-profile-view"]').exists()).toBe(true)
-    expect(wrapper.find('ul.nav-tabs').exists()).toBe(true)
-  })
-
-  it('switches to PostList when posts tab is clicked', async () => {
-    const wrapper = mount(ProfilePanel, { global: globalConfig })
-    const tabs = wrapper.findAll('ul.nav-tabs button')
-    await tabs[1]!.trigger('click')
     expect(wrapper.find('[data-testid="post-list"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="my-profile-view"]').exists()).toBe(false)
     expect(wrapper.find('ul.nav-tabs').exists()).toBe(true)
   })
 
-  it('emits close when header close button is clicked', async () => {
-    const wrapper = mount(ProfilePanel, { global: globalConfig })
-    await wrapper.find('[aria-label="common.close"]').trigger('click')
-    expect(wrapper.emitted('close')).toBeTruthy()
-  })
-
-  it('emits close when SettingsView emits close (logout)', async () => {
+  it('settings button calls router.push({ name: MeSettings })', async () => {
     const wrapper = mount(ProfilePanel, { global: globalConfig })
     await wrapper.find('[aria-label="settings.title"]').trigger('click')
+    expect(mockPush).toHaveBeenCalledWith({ name: 'MeSettings' })
+  })
+
+  it('PanelHeader back emits router.replace({ name: Me }) on settings subView', async () => {
+    mockSubView.value = 'settings'
+    const wrapper = mount(ProfilePanel, { global: globalConfig })
+    await wrapper.findComponent({ name: 'PanelHeader' }).vm.$emit('back')
+    expect(mockReplace).toHaveBeenCalledWith({ name: 'Me' })
+  })
+
+  it('posts tab click calls router.replace({ name: MePosts })', async () => {
+    const wrapper = mount(ProfilePanel, { global: globalConfig })
+    const tabs = wrapper.findAll('ul.nav-tabs button')
+    await tabs[1]!.trigger('click')
+    expect(mockReplace).toHaveBeenCalledWith({ name: 'MePosts' })
+  })
+
+  it('close button calls router.replace({ name: Browse })', async () => {
+    const wrapper = mount(ProfilePanel, { global: globalConfig })
+    await wrapper.find('[aria-label="common.close"]').trigger('click')
+    expect(mockReplace).toHaveBeenCalledWith({ name: 'Browse' })
+  })
+
+  it('SettingsView close event calls router.replace({ name: Browse })', async () => {
+    mockSubView.value = 'settings'
+    const wrapper = mount(ProfilePanel, { global: globalConfig })
     await wrapper.findComponent({ name: 'SettingsView' }).vm.$emit('close')
-    expect(wrapper.emitted('close')).toBeTruthy()
+    expect(mockReplace).toHaveBeenCalledWith({ name: 'Browse' })
   })
 })

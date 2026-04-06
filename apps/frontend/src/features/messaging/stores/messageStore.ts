@@ -298,6 +298,9 @@ export const useMessageStore = defineStore('message', {
     },
 
     async setActiveConversationById(conversationId: string) {
+      if (!this.initialized) {
+        await this.fetchConversations()
+      }
       const convo = this.conversations.find((c) => c.conversationId === conversationId)
       if (convo) {
         await this.setActiveConversation(convo)

@@ -1,9 +1,8 @@
-import { nextTick, type Ref } from 'vue'
+import { nextTick, ref, type Ref } from 'vue'
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const mockReplace = vi.fn()
-const mockClose = vi.fn()
 let mockRouteName = 'Me'
 
 vi.mock('vue-router', () => ({
@@ -11,11 +10,10 @@ vi.mock('vue-router', () => ({
   useRoute: () => ({ name: mockRouteName }),
 }))
 
-vi.mock('@/features/shared/composables/useOffcanvasState', () => ({
-  useOffcanvasState: () => ({
-    close: mockClose,
-    isOpen: () => false,
-  }),
+const mockDrawerType = ref<'profile' | 'inbox' | null>('profile')
+
+vi.mock('@/features/app/composables/useAppShellState', () => ({
+  useAppShellState: () => ({ drawerType: mockDrawerType }),
 }))
 
 let capturedBsIsOpen: Ref<boolean>
@@ -32,6 +30,7 @@ describe('OwnerDrawer dismiss navigation', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockRouteName = 'Me'
+    mockDrawerType.value = 'profile'
   })
 
   it('calls router.replace({ name: "Browse" }) when closed on a panel route', async () => {
@@ -40,7 +39,6 @@ describe('OwnerDrawer dismiss navigation', () => {
     await nextTick()
     capturedBsIsOpen.value = false
     await nextTick()
-    expect(mockClose).toHaveBeenCalled()
     expect(mockReplace).toHaveBeenCalledWith({ name: 'Browse' })
   })
 
@@ -51,7 +49,6 @@ describe('OwnerDrawer dismiss navigation', () => {
     await nextTick()
     capturedBsIsOpen.value = false
     await nextTick()
-    expect(mockClose).toHaveBeenCalled()
     expect(mockReplace).not.toHaveBeenCalled()
   })
 })

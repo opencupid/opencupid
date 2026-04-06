@@ -1,79 +1,46 @@
 import { mount } from '@vue/test-utils'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-
-const mockOpenUser = vi.fn()
-const mockClose = vi.fn()
-
-vi.mock('@/features/shared/composables/useOffcanvasState', () => ({
-  useOffcanvasState: () => ({
-    openUser: mockOpenUser,
-    close: mockClose,
-    userPanel: { value: 'profile' },
-    userConversationId: { value: undefined },
-  }),
-}))
+import { ref } from 'vue'
+import { describe, it, expect, vi } from 'vitest'
 
 vi.mock('@/features/app/components/OwnerDrawerOrchestrator.vue', () => ({
-  default: { template: '<div />' },
+  default: { name: 'OwnerDrawerOrchestrator', template: '<div data-testid="orchestrator" />' },
 }))
 
-let mockRouteName: string | undefined = 'Browse'
-let mockRouteParams: Record<string, string> = {}
-
-vi.mock('vue-router', () => ({
-  useRoute: () => ({ name: mockRouteName, params: mockRouteParams }),
+vi.mock('@/features/myprofile/stores/ownerProfileStore', () => ({
+  useOwnerProfileStore: () => ({ profile: null }),
 }))
+
+vi.mock('pinia', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('pinia')>()
+  return { ...actual, storeToRefs: () => ({ profile: ref(null) }) }
+})
 
 import AuthLayout from '../AuthLayout.vue'
 
-describe('AuthLayout route.name watcher', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    mockRouteName = 'Browse'
-    mockRouteParams = {}
-  })
-
+describe('AuthLayout', () => {
   const mountLayout = () =>
     mount(AuthLayout, {
       global: {
         stubs: {
-          RouterView: { template: '<div />' },
+          RouterView: { template: '<div data-testid="router-view" />' },
           KeepAlive: { template: '<slot />' },
         },
       },
     })
 
-  it('calls close() immediately when on Browse', () => {
-    mountLayout()
-    expect(mockClose).toHaveBeenCalledOnce()
-    expect(mockOpenUser).not.toHaveBeenCalled()
+  it('renders a RouterView for route content', () => {
+    const wrapper = mountLayout()
+    expect(wrapper.find('[data-testid="router-view"]').exists()).toBe(true)
   })
 
-  it('calls openUser("profile") immediately when on Me', () => {
-    mockRouteName = 'Me'
-    mountLayout()
-    expect(mockOpenUser).toHaveBeenCalledWith('profile')
-    expect(mockClose).not.toHaveBeenCalled()
+  it('renders OwnerDrawerOrchestrator', () => {
+    const wrapper = mountLayout()
+    expect(wrapper.find('[data-testid="orchestrator"]').exists()).toBe(true)
   })
 
-  it('calls openUser("inbox") immediately when on Inbox', () => {
-    mockRouteName = 'Inbox'
-    mountLayout()
-    expect(mockOpenUser).toHaveBeenCalledWith('inbox')
-    expect(mockClose).not.toHaveBeenCalled()
-  })
-
-  it('calls openUser("inbox", conversationId) immediately when on Conversation', () => {
-    mockRouteName = 'Conversation'
-    mockRouteParams = { conversationId: 'conv-99' }
-    mountLayout()
-    expect(mockOpenUser).toHaveBeenCalledWith('inbox', 'conv-99')
-    expect(mockClose).not.toHaveBeenCalled()
-  })
-
-  it('calls close() when on an unrelated route', () => {
-    mockRouteName = 'PublicProfile'
-    mountLayout()
-    expect(mockClose).toHaveBeenCalledOnce()
+  it('provides teleport anchor elements', () => {
+    const wrapper = mountLayout()
+    expect(wrapper.find('#app-sidebar').exists()).toBe(true)
+    expect(wrapper.find('#app-detail').exists()).toBe(true)
   })
 })

@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { ref, provide, toRef, computed } from 'vue'
+import { provide, toRef, computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { ref } from 'vue'
 
 import { useOwnerProfileStore } from '../stores/ownerProfileStore'
 import { useMyProfileViewModel } from '../composables/useMyProfileViewModel'
+import { useMyProfileRouteState } from '../composables/useMyProfileRouteState'
 import { LocationSchema } from '@zod/dto/location.dto'
 import type { OwnerPost } from '@zod/post/post.dto'
 
@@ -19,60 +22,73 @@ import PanelHeader from './PanelHeader.vue'
 
 defineOptions({ name: 'ProfilePanel' })
 
-const emit = defineEmits<{
-  (e: 'close'): void
-}>()
 
-const profileSubView = ref<'myprofile' | 'myposts' | 'settings' | 'datingprefs' | 'datingwizard' | 'editpost'>('myprofile')
+const router = useRouter()
+const { subView, editingPostId } = useMyProfileRouteState()
 
 const ownerProfileStore = useOwnerProfileStore()
 const { formData } = useMyProfileViewModel(false)
 
+// The full post object — set when navigating forward from PostList.
+// If editingPostId is present but this ref is null (e.g. direct deep-link),
+// we redirect to MePosts to avoid a broken edit state.
 const editingPost = ref<OwnerPost | undefined>()
-const defaultLocation = computed(() => LocationSchema.parse(formData.value?.location ?? {}))
+const defaultLocation = computed(() => LocationSchema.parse(formData?.location ?? {}))
 
-function openEditPost(post: OwnerPost) {
-  editingPost.value = post
-  profileSubView.value = 'editpost'
-}
-
-function openCreatePost() {
-  editingPost.value = undefined
-  profileSubView.value = 'editpost'
-}
+watch(
+  editingPostId,
+  (postId) => {
+    if (postId && !editingPost.value) {
+      router.replace({ name: 'MePosts' })
+    }
+    if (!postId) {
+      editingPost.value = undefined
+    }
+  },
+  { immediate: true }
+)
 
 provide('isOwner', true)
 provide('viewerProfile', toRef(formData))
 
-const handleClose = () => {
-  emit('close')
-  setTimeout(() => {
-    profileSubView.value = 'myprofile'
-  }, 2000)
+function handleClose() {
+  router.replace({ name: 'Browse' })
+}
+
+function openEditPost(post: OwnerPost) {
+  editingPost.value = post
+  router.push({ name: 'MeEditPost', params: { postId: post.id } })
+}
+
+function openCreatePost() {
+  editingPost.value = undefined
+  router.push({ name: 'MeCreatePost' })
 }
 </script>
 
 <template>
   <!-- Shared header — persists across all sub-views -->
   <div class="offcanvas-header flex-shrink-0">
-    <template v-if="profileSubView === 'settings'">
-      <PanelHeader @back="profileSubView = 'myprofile'">
+    <template v-if="subView === 'settings'">
+      <PanelHeader @back="router.replace({ name: 'Me' })">
         <template #title>{{ $t('settings.title') }}</template>
       </PanelHeader>
     </template>
-    <template v-else-if="profileSubView === 'datingprefs'">
-      <PanelHeader @back="profileSubView = 'myprofile'">
+    <template v-else-if="subView === 'datingprefs'">
+      <PanelHeader @back="router.replace({ name: 'Me' })">
         <template #title>{{ $t('profiles.forms.my_dating_profile') }}</template>
       </PanelHeader>
     </template>
-    <template v-else-if="profileSubView === 'datingwizard'">
-      <PanelHeader @back="profileSubView = 'myprofile'">
+    <template v-else-if="subView === 'datingwizard'">
+      <PanelHeader @back="router.replace({ name: 'Me' })">
         <template #title>{{ $t('onboarding.wizard.dating_modal_title') }}</template>
       </PanelHeader>
     </template>
-    <template v-else-if="profileSubView === 'editpost'">
-      <PanelHeader @back="profileSubView = 'myposts'">
-        <template #title>{{ editingPost ? $t('posts.edit_title') : $t('posts.create_title') }}</template>
+    <template v-else-if="subView === 'editpost'">
+      <PanelHeader @back="router.replace({ name: 'MePosts' })">
+        <template #title>{{
+          editingPost ? $t('posts.edit_title') : $t('posts.create_title')
+        }}</template>
       </PanelHeader>
     </template>
     <template v-else>
@@ -98,7 +114,7 @@ const handleClose = () => {
         variant="link-secondary"
         class="p-0 ms-2 flex-shrink-0"
         :aria-label="$t('settings.title')"
-        @click="profileSubView = 'settings'"
+        @click="router.push({ name: 'MeSettings' })"
       >
         <IconSetting2 class="svg-icon" />
       </BButton>
@@ -113,15 +129,15 @@ const handleClose = () => {
 
   <!-- Tab bar — hidden in non-main sub-views -->
   <div
-    v-if="profileSubView === 'myprofile' || profileSubView === 'myposts'"
+    v-if="subView === 'myprofile' || subView === 'myposts'"
     class="flex-shrink-0 d-flex align-items-center px-3"
   >
     <ul class="nav nav-tabs flex-grow-1">
       <li class="nav-item">
         <button
           class="nav-link"
-          :class="{ active: profileSubView === 'myprofile' }"
-          @click="profileSubView = 'myprofile'"
+          :class="{ active: subView === 'myprofile' }"
+          @click="router.replace({ name: 'Me' })"
         >
           {{ $t('profiles.forms.tab_profile') }}
         </button>
@@ -129,15 +145,15 @@ const handleClose = () => {
       <li class="nav-item">
         <button
           class="nav-link"
-          :class="{ active: profileSubView === 'myposts' }"
-          @click="profileSubView = 'myposts'"
+          :class="{ active: subView === 'myposts' }"
+          @click="router.replace({ name: 'MePosts' })"
         >
           {{ $t('profiles.forms.tab_posts') }}
         </button>
       </li>
     </ul>
     <BButton
-      v-if="profileSubView === 'myposts'"
+      v-if="subView === 'myposts'"
       variant="link"
       size="sm"
       class="ms-2 p-0 flex-shrink-0"
@@ -150,34 +166,34 @@ const handleClose = () => {
   <!-- Content area -->
   <div class="flex-grow-1 overflow-auto">
     <MyProfileView
-      v-if="profileSubView === 'myprofile'"
-      @datingmode:prefs="profileSubView = 'datingprefs'"
-      @datingmode:wizard="profileSubView = 'datingwizard'"
+      v-if="subView === 'myprofile'"
+      @datingmode:prefs="router.push({ name: 'MeDating' })"
+      @datingmode:wizard="router.push({ name: 'MeDatingWizard' })"
     />
     <PostList
-      v-else-if="profileSubView === 'myposts'"
+      v-else-if="subView === 'myposts'"
       scope="my"
       @intent:edit="openEditPost"
     />
     <EditPostDialog
-      v-else-if="profileSubView === 'editpost'"
+      v-else-if="subView === 'editpost'"
       :post="editingPost"
       :is-edit="!!editingPost"
       :default-location="defaultLocation"
-      @cancel="profileSubView = 'myposts'"
-      @saved="profileSubView = 'myposts'"
+      @cancel="router.replace({ name: 'MePosts' })"
+      @saved="router.replace({ name: 'MePosts' })"
     />
     <SettingsView
-      v-else-if="profileSubView === 'settings'"
-      @close="emit('close')"
+      v-else-if="subView === 'settings'"
+      @close="handleClose"
     />
     <DatingPrefsView
-      v-else-if="profileSubView === 'datingprefs'"
-      @close="profileSubView = 'myprofile'"
+      v-else-if="subView === 'datingprefs'"
+      @close="router.replace({ name: 'Me' })"
     />
     <DatingWizardView
-      v-else-if="profileSubView === 'datingwizard'"
-      @close="profileSubView = 'myprofile'"
+      v-else-if="subView === 'datingwizard'"
+      @close="router.replace({ name: 'Me' })"
     />
   </div>
 </template>

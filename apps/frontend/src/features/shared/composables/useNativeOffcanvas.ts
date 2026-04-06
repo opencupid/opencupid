@@ -22,6 +22,10 @@ export function useNativeOffcanvas(elRef: Ref<HTMLElement | undefined>, isOpen: 
 
     el.addEventListener('shown.bs.offcanvas', () => (isOpen.value = true), opts)
     el.addEventListener('hidden.bs.offcanvas', () => (isOpen.value = false), opts)
+
+    // If isOpen was set to true before the instance existed (cold-start deep-link),
+    // show immediately now that the Bootstrap instance is ready.
+    if (isOpen.value) instance.show()
   })
 
   onBeforeUnmount(() => {

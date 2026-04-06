@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { onActivated, onMounted, provide, ref, toRef } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onActivated, onMounted, provide, ref, toRef, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 import { useBootstrap } from '@/lib/bootstrap'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { useProfilesViewModel } from '../composables/useProfilesViewModel'
 import { useBrowseViewModel } from '../composables/useBrowseViewModel'
+import { useDetailRouteState } from '@/features/shared/composables/useDetailRouteState'
 
 import BrowseFilterBar from '../components/BrowseFilterBar.vue'
 import OsmPoiMap from '@/features/shared/components/osmPoiMap/OsmPoiMap.vue'
@@ -23,7 +24,8 @@ import OwnerDrawerControls from '../components/OwnerDrawerControls.vue'
 import type { MapPoi } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
 import type { PublicPostWithProfile } from '@zod/post/post.dto'
 
-defineOptions({ name: 'BrowseProfiles' })
+// Component name must be 'AppShell' for KeepAlive to identify it correctly
+defineOptions({ name: 'AppShell' })
 
 // ── Profile layer (existing cluster pipeline) ──────────────────────
 const {
@@ -50,18 +52,36 @@ const {
   availableTags,
   selectedTagIds,
   activePoi,
-  activePostId,
-  onMarkerClick,
   onSelectionClear,
-  onPoiSelect,
   onBoundsChanged,
 } = useBrowseViewModel(clusterFeatures, onProfileBoundsChanged)
 
-// ── Map and router refs ──────────────────────────────────────────────
-const mapRef = ref<InstanceType<typeof OsmPoiMap> | null>(null)
+// ── Route-driven detail panel ──────────────────────────────────────
+const route = useRoute()
 const router = useRouter()
 const ownerProfileStore = useOwnerProfileStore()
+const mapRef = ref<InstanceType<typeof OsmPoiMap> | null>(null)
 
+const { detail } = useDetailRouteState()
+
+// Sync activePoi with route for map visual state + PostMapPopup source data
+watch(
+  detail,
+  (d) => {
+    if (!d) {
+      onSelectionClear()
+      return
+    }
+    const found = allPois.value.find((p) => String(p.id) === d.id)
+    activePoi.value = found ?? null
+  },
+  { immediate: true }
+)
+
+// activePostId: drives PostsSidebar highlight
+const activePostId = computed(() => (detail.value?.type === 'post' ? detail.value.id : null))
+
+// ── Navigation helpers ─────────────────────────────────────────────
 function openProfileDrawer() {
   router.push({ name: 'Me' })
 }
@@ -70,11 +90,27 @@ function openInboxDrawer() {
   router.push({ name: 'Inbox' })
 }
 
+// Route-aware marker selection: profiles and posts go to route
+function handleMarkerSelect(id: string | number) {
+  const poi = allPois.value.find((p) => p.id === id)
+  if (!poi) return
+  if (poi.type === 'post') {
+    router.push({ name: 'PublicPost', params: { postId: String(id) } })
+  } else {
+    router.push({ name: 'PublicProfile', params: { profileId: String(id) } })
+  }
+}
+
 function onSidebarSelect(poi: MapPoi) {
-  onPoiSelect(poi)
+  router.push({ name: 'PublicPost', params: { postId: String(poi.id) } })
   mapRef.value?.flyToMarker(poi)
 }
 
+function onDetailClose() {
+  router.replace({ name: 'Browse' })
+}
+
+// ── Lifecycle ──────────────────────────────────────────────────────
 onMounted(async () => {
   await useBootstrap().bootstrap()
   if (!ownerProfileStore.profile?.isOnboarded) {
@@ -106,17 +142,17 @@ onActivated(async () => {
   <!-- Detail panel teleported into AuthLayout's #app-detail slot -->
   <Teleport defer to="#app-detail">
     <DetailContainer
-      :open="!!activePoi"
-      @close="onSelectionClear"
+      :open="!!detail"
+      @close="onDetailClose"
     >
-      <template #header>{{ activePoi?.type === 'post' ? 'Post' : activePoi?.title }}</template>
+      <template #header>{{ detail?.type === 'post' ? 'Post' : activePoi?.title }}</template>
       <PostMapPopup
-        v-if="activePoi?.type === 'post'"
+        v-if="detail?.type === 'post' && activePoi"
         :item="activePoi.source as PublicPostWithProfile"
       />
       <PublicProfileView
-        v-else-if="activePoi"
-        :profile-id="String(activePoi.id)"
+        v-else-if="detail?.type === 'profile'"
+        :profile-id="detail.id"
       />
     </DetailContainer>
   </Teleport>
@@ -163,7 +199,7 @@ onActivated(async () => {
           :popup-component="ProfileMapCard"
           :fetch-popup-data="fetchPopupData"
           class="h-100"
-          @item:select="onMarkerClick"
+          @item:select="handleMarkerSelect"
           @bounds:changed="onBoundsChanged"
         />
       </div>

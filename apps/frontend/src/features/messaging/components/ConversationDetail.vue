@@ -10,6 +10,7 @@ import ProfileContent from '@/features/publicprofile/components/ProfileContent.v
 import { useMessageStore } from '@/features/messaging/stores/messageStore'
 import { usePublicProfileStore } from '@/features/publicprofile/stores/publicProfileStore'
 import { useCallStore } from '@/features/videocall/stores/callStore'
+import { useRouter } from 'vue-router'
 import BlockProfileDialog from '@/features/publicprofile/components/BlockProfileDialog.vue'
 
 import SendMessage from './SendMessageForm.vue'
@@ -28,8 +29,9 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'deselect:convo'): void
-  (e: 'close'): void
 }>()
+
+const router = useRouter()
 
 const viewingProfile = ref<PublicProfileWithContext | null>(null)
 
@@ -89,7 +91,7 @@ async function handleToggleCallable(event: Event) {
       :recipient="conversationPartner"
       :allowCalls="myIsCallable"
       @deselect:convo="emit('deselect:convo')"
-      @close="emit('close')"
+      @close="router.replace({ name: 'Browse' })"
       @profile:select="viewingProfile = conversationPartner"
       @block:open="showModal = true"
       @callable:toggle="handleToggleCallable"

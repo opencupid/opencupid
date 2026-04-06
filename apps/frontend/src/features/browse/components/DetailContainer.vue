@@ -1,38 +1,13 @@
 <script setup lang="ts">
-import { watch } from 'vue'
-import { useOffcanvasState } from '@/features/shared/composables/useOffcanvasState'
-
 defineOptions({ name: 'DetailContainer' })
 
-const props = defineProps<{
+defineProps<{
   open: boolean
 }>()
 
 const emit = defineEmits<{
   close: []
 }>()
-
-const offcanvasState = useOffcanvasState()
-
-watch(
-  () => props.open,
-  (isOpen) => {
-    if (isOpen) offcanvasState.open('browse')
-  }
-)
-
-// Close when another panel takes over (e.g. user offcanvas)
-watch(
-  () => offcanvasState.activePanel.value,
-  (panel) => {
-    if (panel !== 'browse' && props.open) emit('close')
-  }
-)
-
-function handleClose() {
-  offcanvasState.close()
-  emit('close')
-}
 </script>
 
 <template>
@@ -47,7 +22,7 @@ function handleClose() {
       <button
         type="button"
         class="btn-close"
-        @click="handleClose"
+        @click="emit('close')"
       />
     </div>
     <div class="panel-body flex-grow-1 overflow-auto p-0">

@@ -1,51 +1,87 @@
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { nextTick, ref } from 'vue'
+import { nextTick, ref, computed } from 'vue'
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 
 const toastInfo = vi.fn()
 vi.mock('vue-toastification', () => ({ useToast: () => ({ info: toastInfo }) }))
 
 // stub child components
-vi.mock('@/features/shared/components/MapView.vue', () => ({
+vi.mock('@/features/shared/components/osmPoiMap/OsmPoiMap.vue', () => ({
   default: {
+    name: 'OsmPoiMap',
     template:
       '<div class="map-view"><div class="map-placeholder" /><div class="osm-poi-map" /></div>',
-    props: ['items'],
+    props: ['items', 'clusters', 'iconResolver', 'center', 'popupComponent', 'fetchPopupData'],
   },
 }))
 vi.mock('../../components/ProfileMapCard.vue', () => ({
   default: { template: '<div class="profile-map-card" />' },
 }))
-vi.mock('@/features/shared/profileform/LocationSelector.vue', () => ({
+vi.mock('@/features/browse/components/DetailContainer.vue', () => ({
   default: {
-    template: '<div class="location-selector" />',
-    props: ['modelValue', 'allowEmpty'],
+    template: '<div class="detail-container"><slot /><slot name="header" /></div>',
+    props: ['open'],
+    emits: ['close'],
   },
 }))
-vi.mock('@/features/shared/profileform/TagSelector.vue', () => ({
+vi.mock('@/features/publicprofile/components/PublicProfileView.vue', () => ({
+  default: { template: '<div class="public-profile-view" />', props: ['profileId'] },
+}))
+vi.mock('@/features/posts/components/PostMapPopup.vue', () => ({
+  default: { template: '<div class="post-map-popup" />', props: ['item'] },
+}))
+vi.mock('@/features/browse/components/PostsSidebar.vue', () => ({
   default: {
-    template: '<div class="tag-select-component" />',
-    props: ['modelValue', 'taggable'],
+    template: '<div class="posts-sidebar" />',
+    props: ['posts', 'activeId'],
+    emits: ['select'],
   },
 }))
-vi.mock('@/features/shared/profileform/TagFilterSelector.vue', () => ({
+vi.mock('@/features/browse/components/OwnerDrawerControls.vue', () => ({
   default: {
-    template: '<div class="tag-filter-selector" />',
-    props: ['modelValue'],
+    template: '<div class="owner-drawer-controls" />',
+    emits: ['open:inbox', 'open:profile'],
+  },
+}))
+vi.mock('@/features/publicprofile/components/ProfileMarker.vue', () => ({
+  default: { template: '<div />' },
+}))
+vi.mock('@/features/posts/components/PostMarker.vue', () => ({
+  default: { template: '<div />' },
+}))
+vi.mock('../../components/BrowseFilterBar.vue', () => ({
+  default: {
+    name: 'BrowseFilterBar',
+    template: '<div class="browse-filter-bar" />',
+    props: ['modelValue', 'viewerProfile', 'availableTags', 'selectedTagIds'],
+    emits: ['filter:changed', 'update:selectedTagIds', 'update:modelValue'],
   },
 }))
 vi.mock('@/assets/icons/interface/target-2.svg', () => ({
   default: { template: '<svg class="icon-target" />' },
 }))
+
+const mockPush = vi.fn()
+const mockReplace = vi.fn()
+const mockRouteName = ref('Browse')
+
 vi.mock('vue-router', () => ({
-  useRouter: () => ({ push: vi.fn(), back: vi.fn(), replace: vi.fn() }),
-  useRoute: () => ({ query: {} }),
+  useRouter: () => ({ push: mockPush, back: vi.fn(), replace: mockReplace }),
+  useRoute: () => ({
+    get name() {
+      return mockRouteName.value
+    },
+    query: {},
+  }),
 }))
 
 // Stub OwnerDrawer to avoid media-encoder-host Worker dependency
 vi.mock('@/features/app/components/OwnerDrawer.vue', () => ({
   default: { template: '<div class="owner-drawer-stub" />' },
+}))
+vi.mock('@/lib/bootstrap', () => ({
+  useBootstrap: () => ({ bootstrap: vi.fn().mockResolvedValue(undefined) }),
 }))
 vi.mock('@/features/app/composables/useNotificationState', () => ({
   useNotificationState: () => ({
@@ -63,6 +99,13 @@ vi.mock('@/assets/icons/interface/message.svg', () => ({
 }))
 vi.mock('@/assets/icons/interface/user.svg', () => ({
   default: { template: '<svg class="icon-user" />' },
+}))
+
+// Control detail state via a ref so tests can set it
+const mockDetail = ref<{ type: 'profile' | 'post'; id: string } | null>(null)
+
+vi.mock('@/features/shared/composables/useDetailRouteState', () => ({
+  useDetailRouteState: () => ({ detail: computed(() => mockDetail.value) }),
 }))
 
 const vmState = {
@@ -92,6 +135,8 @@ const vmState = {
   openProfile: vi.fn(),
   initialize: vi.fn(),
   refreshIfFilterChanged: vi.fn(),
+  mapCenter: ref(null),
+  fetchPopupData: vi.fn(),
 }
 
 vi.mock('../../composables/useProfilesViewModel', () => ({
@@ -115,7 +160,11 @@ describe('BrowseProfiles view', () => {
     vmState.isNoOneAround.value = false
     vmState.isInitialized.value = true
     vmState.matchFilter.value = null
+    mockRouteName.value = 'Browse'
+    mockDetail.value = null
     toastInfo.mockClear()
+    mockPush.mockClear()
+    mockReplace.mockClear()
   })
 
   const mountComponent = () => {
@@ -127,6 +176,7 @@ describe('BrowseProfiles view', () => {
           NoResultsCTA,
           NotificationDot: { template: '<span><slot /></span>' },
           ProfileImage: true,
+          Teleport: true,
         },
         mocks: { $t: (k: string) => k },
       },
@@ -164,29 +214,9 @@ describe('BrowseProfiles view', () => {
     expect(wrapper.find('.osm-poi-map').exists()).toBe(true)
   })
 
-  it('renders inline LocationSelector and TagSelector when filter is set', () => {
-    vmState.matchFilter.value = {
-      location: { country: 'US', cityName: 'New York', lat: null, lon: null },
-      tags: [],
-    }
+  it('renders BrowseFilterBar', () => {
     const wrapper = mountComponent()
-    expect(wrapper.find('.location-selector').exists()).toBe(true)
-    expect(wrapper.find('.tag-filter-selector').exists()).toBe(true)
-  })
-
-  it('renders TagFilterSelector in filter bar', () => {
-    vmState.matchFilter.value = {
-      location: { country: 'US', cityName: 'New York', lat: null, lon: null },
-      tags: [],
-    }
-    const wrapper = mountComponent()
-    expect(wrapper.find('.tag-filter-selector').exists()).toBe(true)
-  })
-
-  it('no detail overlay exists (profiles are now route-based)', () => {
-    const wrapper = mountComponent()
-    expect(wrapper.find('.detail-view').exists()).toBe(false)
-    expect(wrapper.find('.public-profile').exists()).toBe(false)
+    expect(wrapper.find('.browse-filter-bar').exists()).toBe(true)
   })
 
   it('renders map when matchFilter has location coords', () => {

@@ -1,59 +1,51 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { watch } from 'vue'
+import { useRouter } from 'vue-router'
 
 import { useMessageStore } from '../stores/messageStore'
+import { useInboxRouteState } from '../composables/useInboxRouteState'
 
 import MessagingView from './Messaging.vue'
 import ConversationDetail from './ConversationDetail.vue'
 
 defineOptions({ name: 'InboxPanel' })
 
-const props = defineProps<{
-  conversationId?: string
-}>()
-
-const emit = defineEmits<{
-  (e: 'close'): void
-}>()
-
+const router = useRouter()
 const messageStore = useMessageStore()
-const subView = ref<'list' | 'thread'>('list')
+const { conversationId } = useInboxRouteState()
 
-// Deep-link: jump straight to thread when conversationId arrives
+// Deep-link / route change: load thread when conversationId is present
 watch(
-  () => props.conversationId,
+  conversationId,
   async (id) => {
     if (id) {
       await messageStore.setActiveConversationById(id)
-      subView.value = 'thread'
+      setTimeout(() => messageStore.markAsRead(id), 2000)
+    } else {
+      messageStore.resetActiveConversation()
     }
   },
   { immediate: true }
 )
 
-async function onConvoSelect(conversationId: string) {
-  await messageStore.setActiveConversationById(conversationId)
-  subView.value = 'thread'
-  setTimeout(() => messageStore.markAsRead(conversationId), 2000)
+async function onConvoSelect(id: string) {
+  router.push({ name: 'Conversation', params: { conversationId: id } })
 }
 
 function onDeselectConvo() {
-  messageStore.resetActiveConversation()
-  subView.value = 'list'
+  router.push({ name: 'Inbox' })
 }
 </script>
 
 <template>
   <MessagingView
-    v-if="subView === 'list'"
+    v-if="!conversationId"
     @convo:select="onConvoSelect"
-    @close="emit('close')"
   />
   <ConversationDetail
     v-else
     :loading="messageStore.isLoading"
     :conversation="messageStore.activeConversation"
     @deselect:convo="onDeselectConvo"
-    @close="emit('close')"
   />
 </template>

@@ -5,13 +5,22 @@ import { useAuthStore } from '@/features/auth/stores/authStore'
 import { bus } from '@/lib/bus'
 
 import AuthLayout from '@/features/app/views/AuthLayout.vue'
-import BrowseProfiles from '@/features/browse/views/BrowseProfiles.vue'
+import AppShell from '@/features/browse/views/BrowseProfiles.vue'
 import OnboardingView from '@/features/onboarding/views/Onboarding.vue'
 import LoginView from '@/features/auth/views/LoginView.vue'
 import MagicLink from '@/features/auth/views/MagicLink.vue'
 
+// All browse-area routes render AppShell. KeepAlive (include: ['AppShell'])
+// in AuthLayout keeps it mounted across navigations. AppShell reads the
+// route via area orchestrator composables — no <RouterView> in its template.
+const browseRoute = (path: string, name: string): RouteRecordRaw => ({
+  path,
+  name,
+  component: AppShell,
+})
+
 const routes: Array<RouteRecordRaw> = [
-  // ── Unauthenticated routes ───────────────────────────────────────────
+  // ── Unauthenticated routes ────────────────────────────────────────────
   {
     path: '/auth',
     name: 'Login',
@@ -25,52 +34,36 @@ const routes: Array<RouteRecordRaw> = [
     meta: { requiresAuth: false },
   },
 
-  // ── Authenticated routes (app shell) ────────────────────────────────
+  // ── Authenticated shell ───────────────────────────────────────────────
   {
     path: '/',
     component: AuthLayout,
     meta: { requiresAuth: true },
     children: [
-      {
-        path: 'browse',
-        name: 'Browse',
-        component: BrowseProfiles,
-      },
-      {
-        path: 'me',
-        name: 'Me',
-        component: BrowseProfiles,
-      },
-      {
-        path: 'inbox',
-        name: 'Inbox',
-        component: BrowseProfiles,
-      },
-      {
-        path: 'inbox/:conversationId',
-        name: 'Conversation',
-        component: BrowseProfiles,
-      },
-      {
-        path: 'profile/:profileId',
-        name: 'PublicProfile',
-        component: BrowseProfiles,
-        props: true,
-      },
-      {
-        path: 'onboarding',
-        name: 'Onboarding',
-        component: OnboardingView,
-      },
+      // Full-page replacement — map must not render behind this
+      { path: 'onboarding', name: 'Onboarding', component: OnboardingView },
+
+      // Browse area — all render AppShell, KeepAlive keeps it mounted
+      browseRoute('browse', 'Browse'),
+
+      // Detail panel area (drives DetailContainer in AppShell)
+      browseRoute('profile/:profileId', 'PublicProfile'),
+      browseRoute('posts/:postId', 'PublicPost'),
+
+      // My profile area (drives drawer → ProfilePanel sub-views)
+      browseRoute('me', 'Me'),
+      browseRoute('me/posts', 'MePosts'),
+      browseRoute('me/posts/new', 'MeCreatePost'),
+      browseRoute('me/posts/:postId/edit', 'MeEditPost'),
+      browseRoute('me/settings', 'MeSettings'),
+      browseRoute('me/dating', 'MeDating'),
+      browseRoute('me/dating/wizard', 'MeDatingWizard'),
+
+      // Inbox area (drives drawer → InboxPanel sub-views)
+      browseRoute('inbox', 'Inbox'),
+      browseRoute('inbox/:conversationId', 'Conversation'),
     ],
   },
-
-  // ── Redirects ────────────────────────────────────────────────────────
-  { path: '/me/edit', redirect: () => ({ name: 'Me' }) },
-  { path: '/settings', redirect: () => ({ name: 'Me' }) },
-  { path: '/posts', redirect: '/browse' },
-  { path: '/home', redirect: '/browse' },
-  { path: '/', redirect: '/browse' },
 ]
 
 const router = createRouter({
@@ -86,7 +79,7 @@ router.beforeEach(async (to) => {
   }
 
   if (!to.meta.requiresAuth && authStore.isLoggedIn) {
-    return { path: '/browse' }
+    return { name: 'Browse' }
   }
 })
 
