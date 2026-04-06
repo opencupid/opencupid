@@ -1,20 +1,16 @@
 <script setup lang="ts">
-import { provide, toRef, computed, watch } from 'vue'
+import { provide, toRef } from 'vue'
 import { useRouter } from 'vue-router'
-import { ref } from 'vue'
 
 import { useOwnerProfileStore } from '../stores/ownerProfileStore'
 import { useMyProfileViewModel } from '../composables/useMyProfileViewModel'
 import { useMyProfileRouteState } from '../composables/useMyProfileRouteState'
-import { LocationSchema } from '@zod/dto/location.dto'
-import type { OwnerPost } from '@zod/post/post.dto'
 
 import MyProfileView from './MyProfile.vue'
 import SettingsView from '@/features/settings/components/Settings.vue'
 import DatingPrefsView from './DatingPrefs.vue'
 import DatingWizardView from './DatingWizard.vue'
-import EditPostDialog from '@/features/posts/components/EditPostDialog.vue'
-import PostList from '@/features/posts/components/PostList.vue'
+import PostsOrchestrator from '@/features/posts/components/PostsOrchestrator.vue'
 import ProfileImage from '@/features/images/components/ProfileImage.vue'
 
 import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
@@ -22,47 +18,17 @@ import PanelHeader from './PanelHeader.vue'
 
 defineOptions({ name: 'ProfilePanel' })
 
-
 const router = useRouter()
-const { subView, editingPostId } = useMyProfileRouteState()
+const { subView } = useMyProfileRouteState()
 
 const ownerProfileStore = useOwnerProfileStore()
 const { formData } = useMyProfileViewModel(false)
-
-// The full post object — set when navigating forward from PostList.
-// If editingPostId is present but this ref is null (e.g. direct deep-link),
-// we redirect to MePosts to avoid a broken edit state.
-const editingPost = ref<OwnerPost | undefined>()
-const defaultLocation = computed(() => LocationSchema.parse(formData?.location ?? {}))
-
-watch(
-  editingPostId,
-  (postId) => {
-    if (postId && !editingPost.value) {
-      router.replace({ name: 'MePosts' })
-    }
-    if (!postId) {
-      editingPost.value = undefined
-    }
-  },
-  { immediate: true }
-)
 
 provide('isOwner', true)
 provide('viewerProfile', toRef(formData))
 
 function handleClose() {
   router.replace({ name: 'Browse' })
-}
-
-function openEditPost(post: OwnerPost) {
-  editingPost.value = post
-  router.push({ name: 'MeEditPost', params: { postId: post.id } })
-}
-
-function openCreatePost() {
-  editingPost.value = undefined
-  router.push({ name: 'MeCreatePost' })
 }
 </script>
 
@@ -87,7 +53,7 @@ function openCreatePost() {
     <template v-else-if="subView === 'editpost'">
       <PanelHeader @back="router.replace({ name: 'MePosts' })">
         <template #title>{{
-          editingPost ? $t('posts.edit_title') : $t('posts.create_title')
+          $route.name === 'MeEditPost' ? $t('posts.edit_title') : $t('posts.create_title')
         }}</template>
       </PanelHeader>
     </template>
@@ -152,15 +118,6 @@ function openCreatePost() {
         </button>
       </li>
     </ul>
-    <BButton
-      v-if="subView === 'myposts'"
-      variant="link"
-      size="sm"
-      class="ms-2 p-0 flex-shrink-0"
-      @click="openCreatePost"
-    >
-      {{ $t('posts.actions.create_cta_title') }}
-    </BButton>
   </div>
 
   <!-- Content area -->
@@ -170,19 +127,8 @@ function openCreatePost() {
       @datingmode:prefs="router.push({ name: 'MeDating' })"
       @datingmode:wizard="router.push({ name: 'MeDatingWizard' })"
     />
-    <PostList
-      v-else-if="subView === 'myposts'"
-      scope="my"
-      @intent:edit="openEditPost"
-    />
-    <EditPostDialog
-      v-else-if="subView === 'editpost'"
-      :post="editingPost"
-      :is-edit="!!editingPost"
-      :default-location="defaultLocation"
-      @cancel="router.replace({ name: 'MePosts' })"
-      @saved="router.replace({ name: 'MePosts' })"
-    />
+
+    <PostsOrchestrator v-else-if="subView === 'myposts' || subView === 'editpost'" />
     <SettingsView
       v-else-if="subView === 'settings'"
       @close="handleClose"
