@@ -36,7 +36,7 @@ server {
   limit_conn_status 429;
 
   # --- Security headers ---
-  set $public_csp "default-src 'self'; script-src 'self' https://*.${DOMAIN}; style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; worker-src 'self' blob:; media-src 'self'; frame-src https://*.${DOMAIN}; img-src 'self' data: blob: ${CSP_ALLOWED_DOMAINS}; connect-src 'self' blob: wss://${DOMAIN} https://*.${DOMAIN} ${CSP_ALLOWED_DOMAINS}; upgrade-insecure-requests${CSP_REPORT_DIRECTIVE}";
+  set $public_csp "default-src 'self'; script-src 'self' https://*.${DOMAIN}; style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; worker-src 'self' blob:; media-src 'self' blob:; frame-src https://*.${DOMAIN}; img-src 'self' data: blob: ${CSP_ALLOWED_DOMAINS}; connect-src 'self' blob: wss://${DOMAIN} https://*.${DOMAIN} ${CSP_ALLOWED_DOMAINS}; upgrade-insecure-requests${CSP_REPORT_DIRECTIVE}";
   include conf.d/security-headers.conf;
   add_header Content-Security-Policy $public_csp always;
 
