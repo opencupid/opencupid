@@ -19,12 +19,6 @@ const haveConversations = computed(() => props.conversations.length > 0)
 
 <template>
   <div class="mb-3">
-    <p
-      v-if="haveConversations"
-      class="text-center"
-    >
-      {{ $t('messaging.my_conversations') }}
-    </p>
     <BListGroup>
       <BListGroupItem
         v-for="convo in conversations"

@@ -63,18 +63,14 @@ function handleSelectConvo(convo: ConversationSummary) {
         id="ownerDrawerLabel"
         class="offcanvas-title"
       >
-        {{ $t('messaging.inbox_title') }}
-        <span
-          v-if="inboxUnreadCount"
-          class="badge bg-primary ms-1"
-          >{{ inboxUnreadCount }}</span
-        >
+        {{ $t('messaging.my_conversations') }}
       </span>
+
       <button
         type="button"
         class="btn-close ms-auto"
         :aria-label="$t('common.close')"
-        @click="router.replace({ name: 'Browse' })"
+        @click="router.back()"
       />
     </div>
     <div
@@ -85,21 +81,18 @@ function handleSelectConvo(convo: ConversationSummary) {
     </div>
     <div
       v-else
-      class="flex-grow-1 overflow-auto hide-scrollbar pt-2"
+      class="flex-grow-1 overflow-auto hide-scrollbar p-2"
     >
-      <template v-if="haveMatches">
-        <p class="px-2 text-center">{{ $t('messaging.matches_list_title') }}</p>
-        <div class="mb-3">
-          <MatchesList
-            :edges="matches"
-            @select:profile="handleMatchSelect"
-          />
-        </div>
-      </template>
-
       <div class="mb-3">
         <ReceivedLikesTeaser @interaction:selected="handleReceivedLikeSelect" />
       </div>
+
+      <template v-if="haveMatches">
+        <MatchesList
+          :edges="matches"
+          @select:profile="handleMatchSelect"
+        />
+      </template>
 
       <div v-if="haveConversations">
         <ConversationSummaries
