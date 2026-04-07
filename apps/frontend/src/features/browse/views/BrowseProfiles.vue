@@ -20,6 +20,7 @@ import MapIcon from '@/features/posts/components/MapIcon.vue'
 
 import PostsSidebar from '../components/PostsSidebar.vue'
 import PostMapPopup from '@/features/posts/components/PostMapPopup.vue'
+import PostFullView from '@/features/posts/components/PostFullView.vue'
 import OwnerDrawerControls from '../components/OwnerDrawerControls.vue'
 import type { MapPoi } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
 import type { PublicPostWithProfile } from '@zod/post/post.dto'
@@ -65,7 +66,7 @@ const mapRef = ref<InstanceType<typeof OsmPoiMap> | null>(null)
 const { detail } = useDetailRouteState()
 const panel = useDetailPanel()
 
-// Sync activePoi with route for map visual state + PostMapPopup source data
+// Sync activePoi with route for map visual state + post detail panel source data
 watch(
   detail,
   (d) => {
@@ -82,7 +83,7 @@ watch(
 // Drive the global detail panel from the route. The panel is owned by
 // DetailPanelOrchestrator in AuthLayout — we just push content into it.
 // Watching both `detail` and `activePoi` ensures we wait for post data to
-// load before opening (PostMapPopup needs activePoi.source).
+// load before opening (PostFullView needs activePoi.source).
 watch(
   [detail, activePoi],
   ([d, poi]) => {
@@ -93,7 +94,7 @@ watch(
     if (d.type === 'profile') {
       panel.show(PublicProfileView, { profileId: d.id })
     } else if (d.type === 'post' && poi) {
-      panel.show(PostMapPopup, { item: poi.source as PublicPostWithProfile })
+      panel.show(PostFullView, { post: poi.source as PublicPostWithProfile })
     }
   },
   { immediate: true }

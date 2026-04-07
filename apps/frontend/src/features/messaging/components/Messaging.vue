@@ -12,7 +12,8 @@ import { useMessagingViewModel } from '../composables/useMessagingViewModel'
 import { useNotificationState } from '@/features/app/composables/useNotificationState'
 import { useDetailPanel } from '@/features/app/composables/useDetailPanel'
 import { useRouter } from 'vue-router'
-import { computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { computed, onMounted } from 'vue'
+import type { ReceivedLike } from '@zod/interaction/interaction.dto'
 
 defineOptions({ name: 'Messaging' })
 
@@ -36,43 +37,23 @@ const {
   initialize,
   fetchConversations,
   handleMatchSelect,
-  handleReceivedLikeSelect,
+  handleProfileSelect,
   handleMessageSent,
   matches,
   haveMatches,
   showEmptyState,
   showMessageModal,
   messageProfile,
-  viewingProfile,
 } = useMessagingViewModel()
 
-// Push viewingProfile into the global detail panel whenever the view-model
-// sets it (e.g. from a received-like click). The panel owns lifecycle —
-// we just react to changes in intent state.
 const panel = useDetailPanel()
-watch(viewingProfile, (profile) => {
-  if (profile) {
-    panel.show(PublicProfileView, { profileId: profile.id })
-  } else {
-    panel.close()
-  }
-})
 
-// When the panel closes externally (X / ESC / backdrop), clear our intent
-// so reopening the same profile works.
-watch(
-  () => panel.isOpen.value,
-  (open) => {
-    if (!open && viewingProfile.value) {
-      viewingProfile.value = null
-    }
-  }
-)
-
-// Leaving the inbox while the panel is open → close it cleanly.
-onBeforeUnmount(() => {
-  if (viewingProfile.value) panel.close()
-})
+// Click on a "received like" → fetch profile + push into the global detail panel.
+async function onReceivedLikeSelect(like: ReceivedLike) {
+  if (!like.profile) return
+  const profile = await handleProfileSelect(like.profile.id)
+  if (profile) panel.show(PublicProfileView, { profileId: profile.id })
+}
 
 onMounted(async () => {
   await initialize()
@@ -112,7 +93,7 @@ function handleSelectConvo(convo: ConversationSummary) {
       class="flex-grow-1 overflow-auto hide-scrollbar p-2"
     >
       <div class="mb-3">
-        <ReceivedLikesTeaser @interaction:selected="handleReceivedLikeSelect" />
+        <ReceivedLikesTeaser @interaction:selected="onReceivedLikeSelect" />
       </div>
 
       <template v-if="haveMatches">

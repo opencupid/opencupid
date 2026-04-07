@@ -14,20 +14,6 @@ defineEmits<{
 <template>
   <div class="d-flex justify-content-end align-items-center w-100">
     <ul class="nav nav-pills w-100 d-flex align-items-center">
-      <li class="col-2">
-        <a
-          class="btn btn-shaded"
-          role="button"
-          :title="t('profiles.back_button_title')"
-          :aria-label="t('profiles.back_button_title')"
-          @click="$emit('intent:back')"
-        >
-          <IconArrowSingleLeft class="svg-icon" />
-        </a>
-      </li>
-
-      <li class="col-8 d-flex nav-item justify-content-center align-items-center"></li>
-
       <li class="col-2 d-flex justify-content-end">
         <a
           class="btn btn-shaded"
@@ -39,6 +25,20 @@ defineEmits<{
           <IconMenuDotsVert class="svg-icon-lg" />
         </a>
       </li>
+
+      <!-- <li class="col-2">
+        <a
+          class="btn btn-shaded"
+          role="button"
+          :title="t('profiles.back_button_title')"
+          :aria-label="t('profiles.back_button_title')"
+          @click="$emit('intent:back')"
+        >
+          <IconArrowSingleLeft class="svg-icon" />
+        </a>
+      </li>
+
+      <li class="col-8 d-flex nav-item justify-content-center align-items-center"></li> -->
     </ul>
   </div>
 </template>

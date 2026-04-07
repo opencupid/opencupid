@@ -45,12 +45,6 @@ defineEmits<{
     </div>
 
     <div class="d-flex align-items-center gap-1">
-      <button
-        type="button"
-        class="btn-close"
-        :aria-label="$t('common.close')"
-        @click="$emit('close')"
-      />
       <BDropdown
         variant="link"
         no-caret
@@ -80,6 +74,12 @@ defineEmits<{
           </label>
         </BDropdownForm>
       </BDropdown>
+      <button
+        type="button"
+        class="btn-close"
+        :aria-label="$t('common.close')"
+        @click="$emit('close')"
+      />
     </div>
   </div>
 </template>

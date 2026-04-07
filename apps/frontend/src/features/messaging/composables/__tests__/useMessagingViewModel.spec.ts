@@ -44,25 +44,24 @@ describe('useMessagingViewModel – handleProfileSelect', () => {
     mockFetchProfile.mockReset()
   })
 
-  it('sets viewingProfile when fetchProfile succeeds', async () => {
+  it('returns the fetched profile when fetchProfile succeeds', async () => {
     const profile = { id: 'prof-1', publicName: 'Alice' }
     mockFetchProfile.mockResolvedValue({ success: true, data: profile })
 
-    const { handleProfileSelect, viewingProfile } = useMessagingViewModel()
-    expect(viewingProfile.value).toBeNull()
+    const { handleProfileSelect } = useMessagingViewModel()
 
-    await handleProfileSelect('prof-1')
+    const result = await handleProfileSelect('prof-1')
 
     expect(mockFetchProfile).toHaveBeenCalledWith('prof-1')
-    expect(viewingProfile.value).toEqual(profile)
+    expect(result).toEqual(profile)
   })
 
-  it('leaves viewingProfile null when fetchProfile fails', async () => {
+  it('returns null when fetchProfile fails', async () => {
     mockFetchProfile.mockResolvedValue({ success: false })
 
-    const { handleProfileSelect, viewingProfile } = useMessagingViewModel()
-    await handleProfileSelect('prof-x')
+    const { handleProfileSelect } = useMessagingViewModel()
+    const result = await handleProfileSelect('prof-x')
 
-    expect(viewingProfile.value).toBeNull()
+    expect(result).toBeNull()
   })
 })

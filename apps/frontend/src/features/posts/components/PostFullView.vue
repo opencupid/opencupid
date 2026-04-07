@@ -42,7 +42,7 @@ watch(
 </script>
 
 <template>
-  <div class="w-100">
+  <div class="w-100 pt-5">
     <PostCard
       :post="post"
       :show-details="true"
@@ -53,10 +53,7 @@ watch(
       @delete="emit('delete', post)"
     />
 
-    <div
-      v-if="showMessageForm"
-      class="mt-3"
-    >
+    <div class="mt-3 p-2">
       <div v-if="!messageSent">
         <SendMessageForm
           ref="messageInput"
@@ -82,4 +79,3 @@ watch(
     </div>
   </div>
 </template>
-

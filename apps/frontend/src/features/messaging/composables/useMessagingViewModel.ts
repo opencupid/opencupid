@@ -4,7 +4,6 @@ import { useRouter } from 'vue-router'
 
 import type { ConversationSummary } from '@zod/messaging/messaging.dto'
 import type { PublicProfileWithContext } from '@zod/profile/profile.dto'
-import type { ReceivedLike } from '@zod/interaction/interaction.dto'
 
 import { useBootstrap } from '@/lib/bootstrap'
 import { useMessageStore } from '../stores/messageStore'
@@ -52,12 +51,14 @@ export function useMessagingViewModel() {
   const showMessageModal = ref(false)
   const messageProfile = ref<PublicProfileWithContext>()
 
-  const viewingProfile = ref<PublicProfileWithContext | null>(null)
-
-  const handleProfileSelect = async (profileId: string) => {
+  // Fetch a public profile by id. Returns the profile or null on failure.
+  // Consumers decide what to do with the result (e.g. push into the detail panel).
+  const handleProfileSelect = async (
+    profileId: string
+  ): Promise<PublicProfileWithContext | null> => {
     const res = await fetchProfile(profileId)
-    if (!res?.success) return
-    viewingProfile.value = res.data ?? null
+    if (!res?.success) return null
+    return res.data ?? null
   }
 
   const handleMatchSelect = async (profileId: string) => {
@@ -65,11 +66,6 @@ export function useMessagingViewModel() {
     if (!res?.success) return
     messageProfile.value = res.data
     showMessageModal.value = true
-  }
-
-  const handleReceivedLikeSelect = async (like: ReceivedLike) => {
-    if (!like.profile) return
-    handleProfileSelect(like.profile.id)
   }
 
   const handleMessageSent = () => {
@@ -98,7 +94,6 @@ export function useMessagingViewModel() {
     // Handlers
     handleSelectConvo,
     handleMatchSelect,
-    handleReceivedLikeSelect,
     handleMessageSent,
     fetchConversations: () => messageStore.fetchConversations(),
 
@@ -113,8 +108,8 @@ export function useMessagingViewModel() {
     matches: interactions.matches,
     haveMatches: interactions.haveMatches,
 
-    // Profile viewer (opened from inbox list, e.g. received likes)
-    viewingProfile,
+    // Profile fetch helper (consumer decides what to do with the result —
+    // typically push into the global detail panel via useDetailPanel)
     handleProfileSelect,
   }
 }

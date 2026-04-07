@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, computed, watchEffect, watch, onBeforeUnmount } from 'vue'
+import { ref, computed, watchEffect } from 'vue'
 
-import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
-import { type ConversationSummary } from '@zod/messaging/messaging.dto'
+import type { PublicProfileWithContext } from '@zod/profile/profile.dto'
+import type { ConversationSummary } from '@zod/messaging/messaging.dto'
 
 import ProfileContent from '@/features/publicprofile/components/ProfileContent.vue'
 
@@ -32,37 +32,19 @@ const emit = defineEmits<{
 }>()
 
 const router = useRouter()
-
-const viewingProfile = ref<PublicProfileWithContext | null>(null)
 const panel = useDetailPanel()
-
-// Push the viewed profile into the global detail panel. Panel owns lifecycle;
-// this component only tracks user intent.
-watch(viewingProfile, (profile) => {
-  if (profile) {
-    panel.show(ProfileContent, { profile })
-  } else {
-    panel.close()
-  }
-})
-
-// Sync external panel dismissal (X / ESC / backdrop) back to local intent.
-watch(
-  () => panel.isOpen.value,
-  (open) => {
-    if (!open && viewingProfile.value) {
-      viewingProfile.value = null
-    }
-  }
-)
-
-// Leaving the conversation while the panel is open → close it cleanly.
-onBeforeUnmount(() => {
-  if (viewingProfile.value) panel.close()
-})
 
 const showModal = ref(false)
 const conversationPartner = ref<PublicProfileWithContext | null>(null)
+
+// Click on the conversation partner header → push their profile into the
+// global detail panel. The panel owns its own lifecycle; this component
+// holds no state about whether the panel is currently open.
+function onProfileSelect() {
+  if (conversationPartner.value) {
+    panel.show(ProfileContent, { profile: conversationPartner.value })
+  }
+}
 
 const canCall = computed(() => {
   if (!props.conversation) return false
@@ -118,7 +100,7 @@ async function handleToggleCallable(event: Event) {
       :allowCalls="myIsCallable"
       @deselect:convo="emit('deselect:convo')"
       @close="router.replace({ name: 'Browse' })"
-      @profile:select="viewingProfile = conversationPartner"
+      @profile:select="onProfileSelect"
       @block:open="showModal = true"
       @callable:toggle="handleToggleCallable"
     />
@@ -150,17 +132,9 @@ async function handleToggleCallable(event: Event) {
       @block="handleBlockProfile"
     />
   </div>
-
-  <!-- Profile viewer content is pushed into DetailPanelOrchestrator
-       imperatively via useDetailPanel() — see watcher in script. -->
 </template>
 
 <style scoped>
-.convo-detail {
-}
-.messaging-nav {
-  background-color: var(--bs-body-bg);
-}
 .send-message-wrapper {
   background-color: transparent;
 }

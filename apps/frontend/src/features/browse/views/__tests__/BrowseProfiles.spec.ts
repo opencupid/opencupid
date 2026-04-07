@@ -31,6 +31,9 @@ vi.mock('@/features/publicprofile/components/PublicProfileView.vue', () => ({
 vi.mock('@/features/posts/components/PostMapPopup.vue', () => ({
   default: { template: '<div class="post-map-popup" />', props: ['item'] },
 }))
+vi.mock('@/features/posts/components/PostFullView.vue', () => ({
+  default: { template: '<div class="post-full-view" />', props: ['post'] },
+}))
 vi.mock('@/features/browse/components/PostsSidebar.vue', () => ({
   default: {
     template: '<div class="posts-sidebar" />',
