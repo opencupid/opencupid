@@ -6,13 +6,13 @@ import EmptyView from './EmptyView.vue'
 import SendMessageDialog from '@/features/publicprofile/components/SendMessageDialog.vue'
 import MatchesList from '@/features/interaction/components/MatchesList.vue'
 import ReceivedLikesTeaser from '@/features/interaction/components/ReceivedLikesTeaser.vue'
-import DetailContainer from '@/features/browse/components/DetailContainer.vue'
 import PublicProfileView from '@/features/publicprofile/components/PublicProfileView.vue'
 
 import { useMessagingViewModel } from '../composables/useMessagingViewModel'
 import { useNotificationState } from '@/features/app/composables/useNotificationState'
+import { useDetailPanel } from '@/features/app/composables/useDetailPanel'
 import { useRouter } from 'vue-router'
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, onBeforeUnmount, watch } from 'vue'
 
 defineOptions({ name: 'Messaging' })
 
@@ -45,6 +45,34 @@ const {
   messageProfile,
   viewingProfile,
 } = useMessagingViewModel()
+
+// Push viewingProfile into the global detail panel whenever the view-model
+// sets it (e.g. from a received-like click). The panel owns lifecycle —
+// we just react to changes in intent state.
+const panel = useDetailPanel()
+watch(viewingProfile, (profile) => {
+  if (profile) {
+    panel.show(PublicProfileView, { profileId: profile.id })
+  } else {
+    panel.close()
+  }
+})
+
+// When the panel closes externally (X / ESC / backdrop), clear our intent
+// so reopening the same profile works.
+watch(
+  () => panel.isOpen.value,
+  (open) => {
+    if (!open && viewingProfile.value) {
+      viewingProfile.value = null
+    }
+  }
+)
+
+// Leaving the inbox while the panel is open → close it cleanly.
+onBeforeUnmount(() => {
+  if (viewingProfile.value) panel.close()
+})
 
 onMounted(async () => {
   await initialize()
@@ -112,18 +140,6 @@ function handleSelectConvo(convo: ConversationSummary) {
     />
   </div>
 
-  <!-- Profile viewer: opens alongside the inbox without closing it -->
-  <Teleport
-    defer
-    v-if="viewingProfile"
-    to="#app-detail"
-  >
-    <DetailContainer
-      :open="true"
-      @close="viewingProfile = null"
-    >
-      <template #header>{{ viewingProfile.publicName }}</template>
-      <PublicProfileView :profile-id="viewingProfile.id" />
-    </DetailContainer>
-  </Teleport>
+  <!-- Detail panel content is pushed into DetailPanelOrchestrator
+       imperatively via useDetailPanel() — see watcher in script. -->
 </template>

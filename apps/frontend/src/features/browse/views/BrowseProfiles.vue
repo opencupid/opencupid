@@ -7,6 +7,7 @@ import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileSt
 import { useProfilesViewModel } from '../composables/useProfilesViewModel'
 import { useBrowseViewModel } from '../composables/useBrowseViewModel'
 import { useDetailRouteState } from '@/features/shared/composables/useDetailRouteState'
+import { useDetailPanel } from '@/features/app/composables/useDetailPanel'
 
 import BrowseFilterBar from '../components/BrowseFilterBar.vue'
 import OsmPoiMap from '@/features/shared/components/osmPoiMap/OsmPoiMap.vue'
@@ -18,7 +19,6 @@ import ProfileMarker from '@/features/publicprofile/components/ProfileMarker.vue
 import MapIcon from '@/features/posts/components/MapIcon.vue'
 
 import PostsSidebar from '../components/PostsSidebar.vue'
-import DetailContainer from '../components/DetailContainer.vue'
 import PostMapPopup from '@/features/posts/components/PostMapPopup.vue'
 import OwnerDrawerControls from '../components/OwnerDrawerControls.vue'
 import type { MapPoi } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
@@ -63,6 +63,7 @@ const ownerProfileStore = useOwnerProfileStore()
 const mapRef = ref<InstanceType<typeof OsmPoiMap> | null>(null)
 
 const { detail } = useDetailRouteState()
+const panel = useDetailPanel()
 
 // Sync activePoi with route for map visual state + PostMapPopup source data
 watch(
@@ -76,6 +77,38 @@ watch(
     activePoi.value = found ?? null
   },
   { immediate: true }
+)
+
+// Drive the global detail panel from the route. The panel is owned by
+// DetailPanelOrchestrator in AuthLayout — we just push content into it.
+// Watching both `detail` and `activePoi` ensures we wait for post data to
+// load before opening (PostMapPopup needs activePoi.source).
+watch(
+  [detail, activePoi],
+  ([d, poi]) => {
+    if (!d) {
+      panel.close()
+      return
+    }
+    if (d.type === 'profile') {
+      panel.show(PublicProfileView, { profileId: d.id })
+    } else if (d.type === 'post' && poi) {
+      panel.show(PostMapPopup, { item: poi.source as PublicPostWithProfile })
+    }
+  },
+  { immediate: true }
+)
+
+// User dismissed the panel via its close button / ESC / backdrop while a
+// detail route is still active → sync the route back to Browse so the URL
+// reflects the closed state. The watch above will then no-op (detail is null).
+watch(
+  () => panel.isOpen.value,
+  (open) => {
+    if (!open && detail.value) {
+      router.replace({ name: 'Browse' })
+    }
+  }
 )
 
 // activePostId: drives PostsSidebar highlight
@@ -104,10 +137,6 @@ function handleMarkerSelect(id: string | number) {
 function onSidebarSelect(poi: MapPoi) {
   router.push({ name: 'PublicPost', params: { postId: String(poi.id) } })
   mapRef.value?.flyToMarker(poi)
-}
-
-function onDetailClose() {
-  router.replace({ name: 'Browse' })
 }
 
 // ── Lifecycle ──────────────────────────────────────────────────────
@@ -142,26 +171,8 @@ onActivated(async () => {
     />
   </Teleport>
 
-  <!-- Detail panel teleported into AuthLayout's #app-detail slot -->
-  <Teleport
-    defer
-    to="#app-detail"
-  >
-    <DetailContainer
-      :open="!!detail"
-      @close="onDetailClose"
-    >
-      <template #header>{{ detail?.type === 'post' ? 'Post' : activePoi?.title }}</template>
-      <PostMapPopup
-        v-if="detail?.type === 'post' && activePoi"
-        :item="activePoi.source as PublicPostWithProfile"
-      />
-      <PublicProfileView
-        v-else-if="detail?.type === 'profile'"
-        :profile-id="detail.id"
-      />
-    </DetailContainer>
-  </Teleport>
+  <!-- Detail panel content is pushed into DetailPanelOrchestrator (AuthLayout)
+       imperatively via useDetailPanel() — see watcher above. -->
 
   <!-- Map region (only content that stays in-place) -->
   <div class="map-region h-100 position-relative overflow-hidden">

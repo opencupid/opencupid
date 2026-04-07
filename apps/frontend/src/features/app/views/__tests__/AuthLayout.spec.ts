@@ -6,6 +6,13 @@ vi.mock('@/features/app/components/OwnerDrawerOrchestrator.vue', () => ({
   default: { name: 'OwnerDrawerOrchestrator', template: '<div data-testid="orchestrator" />' },
 }))
 
+vi.mock('@/features/app/components/DetailPanelOrchestrator.vue', () => ({
+  default: {
+    name: 'DetailPanelOrchestrator',
+    template: '<div data-testid="detail-panel-orchestrator" />',
+  },
+}))
+
 vi.mock('@/features/myprofile/stores/ownerProfileStore', () => ({
   useOwnerProfileStore: () => ({ profile: null }),
 }))
@@ -38,9 +45,13 @@ describe('AuthLayout', () => {
     expect(wrapper.find('[data-testid="orchestrator"]').exists()).toBe(true)
   })
 
-  it('provides teleport anchor elements', () => {
+  it('renders DetailPanelOrchestrator', () => {
+    const wrapper = mountLayout()
+    expect(wrapper.find('[data-testid="detail-panel-orchestrator"]').exists()).toBe(true)
+  })
+
+  it('provides #app-sidebar teleport anchor', () => {
     const wrapper = mountLayout()
     expect(wrapper.find('#app-sidebar').exists()).toBe(true)
-    expect(wrapper.find('#app-detail').exists()).toBe(true)
   })
 })

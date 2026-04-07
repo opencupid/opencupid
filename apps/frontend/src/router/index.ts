@@ -46,7 +46,7 @@ const routes: Array<RouteRecordRaw> = [
       // Browse area — all render AppShell, KeepAlive keeps it mounted
       browseRoute('browse', 'Browse'),
 
-      // Detail panel area (drives DetailContainer in AppShell)
+      // Detail panel area (drives DetailPanelOrchestrator via useDetailPanel)
       browseRoute('profile/:profileId', 'PublicProfile'),
       browseRoute('posts/:postId', 'PublicPost'),
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, provide, ref, watch } from 'vue'
+import { computed, inject, provide, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
 import { useI18n } from 'vue-i18n'
@@ -37,8 +37,13 @@ watch(
   { immediate: true }
 )
 
+// When rendered inside DetailPanelOrchestrator, close the panel cleanly
+// instead of router.back() (which would pop to the wrong place on a deep-link).
+// When rendered standalone, fall back to router history navigation.
+const closeDetailPanel = inject<(() => void) | null>('detailPanelClose', null)
 const handleBack = () => {
-  router.back()
+  if (closeDetailPanel) closeDetailPanel()
+  else router.back()
 }
 
 const handleMessage = (conversationId: string) => {

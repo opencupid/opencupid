@@ -2,6 +2,7 @@
 import { provide } from 'vue'
 import { storeToRefs } from 'pinia'
 import OwnerDrawerOrchestrator from '@/features/app/components/OwnerDrawerOrchestrator.vue'
+import DetailPanelOrchestrator from '@/features/app/components/DetailPanelOrchestrator.vue'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 
 defineOptions({ name: 'AuthLayout' })
@@ -12,9 +13,8 @@ provide('viewerProfile', profile)
 
 <template>
   <div class="auth-layout d-flex vh-100 overflow-hidden">
-    <!-- Named Teleport targets — claimed by AppShell and messaging components -->
+    <!-- Named Teleport target — claimed by AppShell -->
     <div id="app-sidebar" />
-    <div id="app-detail" />
 
     <!-- Route content -->
     <div class="flex-grow-1 overflow-hidden">
@@ -26,5 +26,6 @@ provide('viewerProfile', profile)
     </div>
 
     <OwnerDrawerOrchestrator />
+    <DetailPanelOrchestrator />
   </div>
 </template>

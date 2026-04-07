@@ -18,12 +18,12 @@ vi.mock('@/features/shared/components/osmPoiMap/OsmPoiMap.vue', () => ({
 vi.mock('../../components/ProfileMapCard.vue', () => ({
   default: { template: '<div class="profile-map-card" />' },
 }))
-vi.mock('@/features/browse/components/DetailContainer.vue', () => ({
-  default: {
-    template: '<div class="detail-container"><slot /><slot name="header" /></div>',
-    props: ['open'],
-    emits: ['close'],
-  },
+vi.mock('@/features/app/composables/useDetailPanel', () => ({
+  useDetailPanel: () => ({
+    isOpen: ref(false),
+    show: vi.fn(),
+    close: vi.fn(),
+  }),
 }))
 vi.mock('@/features/publicprofile/components/PublicProfileView.vue', () => ({
   default: { template: '<div class="public-profile-view" />', props: ['profileId'] },
@@ -76,8 +76,8 @@ vi.mock('vue-router', () => ({
   }),
 }))
 
-// Stub OwnerDrawer to avoid media-encoder-host Worker dependency
-vi.mock('@/features/app/components/OwnerDrawer.vue', () => ({
+// Stub OwnerDrawerOrchestrator to avoid media-encoder-host Worker dependency
+vi.mock('@/features/app/components/OwnerDrawerOrchestrator.vue', () => ({
   default: { template: '<div class="owner-drawer-stub" />' },
 }))
 vi.mock('@/lib/bootstrap', () => ({

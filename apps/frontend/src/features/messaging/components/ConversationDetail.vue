@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { ref, computed, watchEffect } from 'vue'
+import { ref, computed, watchEffect, watch, onBeforeUnmount } from 'vue'
 
 import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 import { type ConversationSummary } from '@zod/messaging/messaging.dto'
 
-import DetailContainer from '@/features/browse/components/DetailContainer.vue'
 import ProfileContent from '@/features/publicprofile/components/ProfileContent.vue'
 
 import { useMessageStore } from '@/features/messaging/stores/messageStore'
 import { usePublicProfileStore } from '@/features/publicprofile/stores/publicProfileStore'
 import { useCallStore } from '@/features/videocall/stores/callStore'
+import { useDetailPanel } from '@/features/app/composables/useDetailPanel'
 import { useRouter } from 'vue-router'
 import BlockProfileDialog from '@/features/publicprofile/components/BlockProfileDialog.vue'
 
@@ -34,6 +34,32 @@ const emit = defineEmits<{
 const router = useRouter()
 
 const viewingProfile = ref<PublicProfileWithContext | null>(null)
+const panel = useDetailPanel()
+
+// Push the viewed profile into the global detail panel. Panel owns lifecycle;
+// this component only tracks user intent.
+watch(viewingProfile, (profile) => {
+  if (profile) {
+    panel.show(ProfileContent, { profile })
+  } else {
+    panel.close()
+  }
+})
+
+// Sync external panel dismissal (X / ESC / backdrop) back to local intent.
+watch(
+  () => panel.isOpen.value,
+  (open) => {
+    if (!open && viewingProfile.value) {
+      viewingProfile.value = null
+    }
+  }
+)
+
+// Leaving the conversation while the panel is open → close it cleanly.
+onBeforeUnmount(() => {
+  if (viewingProfile.value) panel.close()
+})
 
 const showModal = ref(false)
 const conversationPartner = ref<PublicProfileWithContext | null>(null)
@@ -125,19 +151,8 @@ async function handleToggleCallable(event: Event) {
     />
   </div>
 
-  <Teleport
-    defer
-    v-if="viewingProfile"
-    to="#app-detail"
-  >
-    <DetailContainer
-      :open="true"
-      @close="viewingProfile = null"
-    >
-      <template #header>{{ viewingProfile.publicName }}</template>
-      <ProfileContent :profile="viewingProfile" />
-    </DetailContainer>
-  </Teleport>
+  <!-- Profile viewer content is pushed into DetailPanelOrchestrator
+       imperatively via useDetailPanel() — see watcher in script. -->
 </template>
 
 <style scoped>
