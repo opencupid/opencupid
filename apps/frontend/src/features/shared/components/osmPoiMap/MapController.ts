@@ -10,6 +10,18 @@ import { isValidLatLng, createServerClusterIcon, hydratePoiIcon, MAP_MAX_ZOOM } 
 // Types
 // ---------------------------------------------------------------------------
 
+/**
+ * True when the device's primary input is a fine pointer that supports real
+ * hover (i.e. a mouse). Touch devices report `(hover: none)` and only ever
+ * fire `mouseover` as a synthesized side-effect of a tap, which is the case
+ * we want to keep autoPan on for. Evaluated once at module load — the
+ * primary input device does not change at runtime.
+ */
+const HAS_REAL_HOVER =
+  typeof window !== 'undefined' &&
+  typeof window.matchMedia === 'function' &&
+  window.matchMedia('(hover: hover) and (pointer: fine)').matches
+
 type MapPhase = 'uninitialized' | 'loading' | 'ready' | 'suspended'
 
 interface DeferredWork {
@@ -387,15 +399,25 @@ export class MapController {
       keyboard: true,
     })
 
-    // Popup on hover only — OMS click handles selection
-    m.on('mouseover', () => m.openPopup())
-
     if (resolvePopup) {
       m.bindPopup('', {
         maxWidth: 420,
         autoPan: true,
         autoPanPadding: L.point(20, 20),
         className: item.highlighted ? 'item-popup item-popup-highlighted' : 'item-popup',
+      })
+
+      // Popup on hover only — OMS click handles selection.
+      // On real mouse devices we suppress autoPan so the map doesn't lurch
+      // under the cursor; on touch devices the same `mouseover` is synthesized
+      // from a tap, and there autoPan is desired so the selected popup is
+      // panned fully into view. Discriminator is the device capability
+      // (`HAS_REAL_HOVER`), not the event — Leaflet's `mouseover` originalEvent
+      // is a plain MouseEvent with no pointerType.
+      m.on('mouseover', () => {
+        const popup = m.getPopup()
+        if (popup) popup.options.autoPan = !HAS_REAL_HOVER
+        m.openPopup()
       })
 
       m.on('popupopen', async (e: L.PopupEvent) => {
