@@ -13,9 +13,6 @@ provide('viewerProfile', profile)
 
 <template>
   <div class="auth-layout d-flex vh-100 overflow-hidden">
-    <!-- Named Teleport target — claimed by AppShell -->
-    <div id="app-sidebar" />
-
     <!-- Route content -->
     <div class="flex-grow-1 overflow-hidden">
       <RouterView v-slot="{ Component }">

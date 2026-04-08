@@ -114,23 +114,9 @@ export function useBrowseViewModel(
 
   // ── Map selection state ────────────────────────────────────────────
   const activePoi = ref<MapPoi | null>(null)
-  const activePostId = ref<string | number | null>(null)
-
-  function onMarkerClick(id: string | number) {
-    const poi = allPois.value.find((p) => p.id === id)
-    if (!poi) return
-    activePoi.value = poi
-    if (poi.type === 'post') activePostId.value = poi.id
-  }
 
   function onSelectionClear() {
     activePoi.value = null
-    activePostId.value = null
-  }
-
-  function onPoiSelect(poi: MapPoi) {
-    activePostId.value = poi.id
-    activePoi.value = poi
   }
 
   // ── Unified bounds handler ─────────────────────────────────────────
@@ -154,10 +140,7 @@ export function useBrowseViewModel(
     toggleTag,
     clearTags,
     activePoi,
-    activePostId,
-    onMarkerClick,
     onSelectionClear,
-    onPoiSelect,
     onBoundsChanged,
   }
 }
