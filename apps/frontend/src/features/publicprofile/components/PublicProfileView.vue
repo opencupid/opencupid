@@ -60,7 +60,7 @@ const handleBlock = async () => {
   if (res.success) {
     toast.info(t('profiles.blocklist.block_confirm_message'))
   }
-  router.back()
+  handleBack()
 }
 </script>
 

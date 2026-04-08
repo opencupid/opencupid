@@ -58,7 +58,9 @@ export function useBrowseViewModel(
       availableTags.value = res.data.tags
     } catch (err: any) {
       if (err?.code === 'ERR_CANCELED') return
-      postPois.value = []
+      // On transient errors, keep the last good postPois/availableTags on
+      // screen rather than flashing to empty — the user just panned and a
+      // blank map is worse UX than slightly-stale results.
     } finally {
       if (postAbortController === controller) {
         isLoadingPosts.value = false

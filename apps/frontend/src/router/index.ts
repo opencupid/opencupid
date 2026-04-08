@@ -40,6 +40,9 @@ const routes: Array<RouteRecordRaw> = [
     component: AuthLayout,
     meta: { requiresAuth: true },
     children: [
+      // Default landing route — redirect bare '/' to Browse
+      { path: '', redirect: { name: 'Browse' } },
+
       // Full-page replacement — map must not render behind this
       { path: 'onboarding', name: 'Onboarding', component: OnboardingView },
 

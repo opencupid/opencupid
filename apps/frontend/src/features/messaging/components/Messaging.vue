@@ -79,7 +79,7 @@ function handleSelectConvo(convo: ConversationSummary) {
         type="button"
         class="btn-close ms-auto"
         :aria-label="$t('common.close')"
-        @click="router.back()"
+        @click="router.replace({ name: 'Browse' })"
       />
     </div>
     <div

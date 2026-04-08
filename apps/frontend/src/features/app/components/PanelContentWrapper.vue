@@ -13,7 +13,10 @@ provide('detailPanelClose', props.close)
 
 <template>
   <div class="h-100 position-relative">
-    <div class="position-absolute w-100 d-flex justify-content-end p-2 h-100 top-0 " style="z-index: 10;">
+    <div
+      class="position-absolute w-100 d-flex justify-content-end p-2 top-0"
+      style="z-index: 10"
+    >
       <button
         type="button"
         class="btn-close"
