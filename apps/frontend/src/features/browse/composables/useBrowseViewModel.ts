@@ -1,4 +1,5 @@
 import { computed, ref, type Ref } from 'vue'
+import { storeToRefs } from 'pinia'
 import { api, safeApiCall } from '@/lib/api'
 import type { BrowseBoundsResponse } from '@zod/apiResponse.dto'
 import type { PublicTag } from '@zod/tag/tag.dto'
@@ -10,19 +11,23 @@ import type {
 } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
 import type { PublicPostWithProfile } from '@zod/post/post.dto'
 import type { ClusterFeature, MapFeature, PointFeature } from '@shared/zod/map/cluster.dto'
+import { useBrowseFiltersStore } from '@/features/browse/stores/browseFiltersStore'
 
 /**
  * Composable that manages the posts data layer, bounds-scoped tags,
  * and map selection state for the unified browse map. Profile clustering
  * continues to be managed by `useProfilesViewModel` / `findProfileStore`.
+ * The ephemeral tag selection lives in `useBrowseFiltersStore`.
  */
 export function useBrowseViewModel(
   clusterFeatures: Ref<MapFeature[]>,
   onProfileBoundsChanged: (b: BoundsWithZoom) => void
 ) {
+  const filtersStore = useBrowseFiltersStore()
+  const { selectedTagIds } = storeToRefs(filtersStore)
+
   const postPois = ref<MapPoi[]>([])
   const availableTags = ref<PublicTag[]>([])
-  const selectedTagIds = ref<string[]>([])
   const isLoadingPosts = ref(false)
   let postAbortController: AbortController | null = null
 
@@ -68,11 +73,6 @@ export function useBrowseViewModel(
     }
   }
 
-  const filteredPostPois = computed(() => {
-    // Posts have no tags — they're always included regardless of tag filter
-    return postPois.value
-  })
-
   const clusters = computed<MapCluster[]>(() =>
     clusterFeatures.value
       .filter((f): f is ClusterFeature => f.type === 'cluster')
@@ -100,17 +100,14 @@ export function useBrowseViewModel(
       }))
   )
 
-  const allPois = computed<MapPoi[]>(() => [...profilePois.value, ...filteredPostPois.value])
+  const allPois = computed<MapPoi[]>(() => [...profilePois.value, ...postPois.value])
 
-  function toggleTag(id: string) {
-    const idx = selectedTagIds.value.indexOf(id)
-    if (idx === -1) selectedTagIds.value = [...selectedTagIds.value, id]
-    else selectedTagIds.value = selectedTagIds.value.filter((t) => t !== id)
-  }
-
-  function clearTags() {
-    selectedTagIds.value = []
-  }
+  // Tag selection actions are delegated to useBrowseFiltersStore — see
+  // filtersStore.toggleTag / clearTags. Exposed here only for caller
+  // convenience so the filter bar doesn't need to import the store
+  // directly.
+  const toggleTag = (id: string) => filtersStore.toggleTag(id)
+  const clearTags = () => filtersStore.clearTags()
 
   // ── Map selection state ────────────────────────────────────────────
   const activePoi = ref<MapPoi | null>(null)
@@ -129,7 +126,6 @@ export function useBrowseViewModel(
 
   return {
     postPois,
-    filteredPostPois,
     clusters,
     profilePois,
     allPois,

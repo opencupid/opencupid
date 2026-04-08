@@ -33,6 +33,11 @@ import type { OwnerPost, PublicPostWithProfile } from '@zod/post/post.dto'
 
 export type GetProfileSummariesResponse = ApiSuccess<{ profiles: ProfileSummary[] }>
 
+/**
+ * @deprecated The persistent SocialMatchFilter model has been retired.
+ * Kept only for the no-op shim at `GET/PATCH /find/social/filter`.
+ * TODO(cleanup): remove together with the shim endpoints.
+ */
 export type GetSocialMatchFilterResponse = ApiSuccess<{ filter: SocialMatchFilterDTO }>
 
 export type GetDatingPreferencesResponse = ApiSuccess<{ prefs: DatingPreferencesFormType }>

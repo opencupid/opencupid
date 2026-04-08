@@ -255,8 +255,8 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
   /**
    * POST /me
    * Creates/activates the current user's profile (onboarding completion).
-   * Sets isOnboarded=true, creates a social match filter, clears the session to refresh roles,
-   * and sends a welcome message. Can only be called once per user.
+   * Sets isOnboarded=true, clears the session to refresh roles, and sends
+   * a welcome message. Can only be called once per user.
    * @body {CreateProfilePayload} Profile data including isDatingActive, isSocialActive
    * @returns {UpdateProfileResponse}
    */
@@ -286,10 +286,7 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
           req.user.userId,
           { ...data, isOnboarded: true }
         )
-        const profile = mapDbProfileToOwnerProfile(locale, updatedProfile)
-        await profileMatchService.createSocialMatchFilter(tx, updatedProfile.id, profile.location)
-
-        return profile
+        return mapDbProfileToOwnerProfile(locale, updatedProfile)
       })
       // Update session so the next request sees hasActiveProfile=true without a round-trip
       await req.updateSession({

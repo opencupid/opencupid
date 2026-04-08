@@ -1,19 +1,24 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-const mockFindSocialProfilesWithLocation = vi.fn()
 const mockFindSocialProfilesInBounds = vi.fn()
-const mockFindSocialProfilesFor = vi.fn()
 const mockFindMutualMatchIds = vi.fn()
+const mockFindNewProfilesAnywhere = vi.fn()
 
 vi.mock('@/services/profileMatch.service', () => ({
   ProfileMatchService: {
     getInstance: () => ({
-      findSocialProfilesFor: mockFindSocialProfilesFor,
-      findSocialProfilesWithLocation: mockFindSocialProfilesWithLocation,
       findSocialProfilesInBounds: mockFindSocialProfilesInBounds,
       findMutualMatchIds: mockFindMutualMatchIds,
-      getSocialMatchFilter: vi.fn(),
-      updateSocialMatchFilter: vi.fn(),
+      findNewProfilesAnywhere: mockFindNewProfilesAnywhere,
+    }),
+  },
+}))
+
+vi.mock('@/services/cluster.service', () => ({
+  ClusterService: {
+    getInstance: () => ({
+      getOrBuildClusters: vi.fn(),
+      getLeaves: vi.fn(),
     }),
   },
 }))
@@ -62,78 +67,6 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
-describe('GET /social/map', () => {
-  const handler = () => fastify.routes['GET /social/map']
-
-  it('returns profiles with location data', async () => {
-    const mockProfiles = [
-      {
-        id: 'p1',
-        publicName: 'Alice',
-        lat: 47.5,
-        lon: 19.0,
-        country: 'HU',
-        cityName: 'Budapest',
-        localized: [],
-        profileImages: [],
-        tags: [],
-      },
-    ]
-    mockFindSocialProfilesWithLocation.mockResolvedValue(mockProfiles)
-
-    await handler()({ session: mockSession, query: {}, log: { error: vi.fn() } }, reply)
-
-    expect(reply.statusCode).toBe(200)
-    expect(reply.payload.success).toBe(true)
-    expect(reply.payload.profiles).toHaveLength(1)
-    expect(mockFindSocialProfilesWithLocation).toHaveBeenCalledWith(
-      'profile-123',
-      [{ updatedAt: 'desc' }],
-      undefined
-    )
-  })
-
-  it('passes bounding box to service when provided', async () => {
-    mockFindSocialProfilesWithLocation.mockResolvedValue([])
-
-    await handler()(
-      {
-        session: mockSession,
-        query: { south: '45.0', north: '48.0', west: '16.0', east: '23.0' },
-      },
-      reply
-    )
-
-    expect(reply.statusCode).toBe(200)
-    expect(mockFindSocialProfilesWithLocation).toHaveBeenCalledWith(
-      'profile-123',
-      [{ updatedAt: 'desc' }],
-      { south: 45.0, north: 48.0, west: 16.0, east: 23.0 }
-    )
-  })
-
-  it('returns 403 when social is not active', async () => {
-    await handler()(
-      {
-        session: { ...mockSession, profile: { ...mockSession.profile, isSocialActive: false } },
-        query: {},
-      },
-      reply
-    )
-
-    expect(reply.statusCode).toBe(403)
-    expect(mockFindSocialProfilesWithLocation).not.toHaveBeenCalled()
-  })
-
-  it('returns 500 on service error', async () => {
-    mockFindSocialProfilesWithLocation.mockRejectedValue(new Error('DB error'))
-
-    await handler()({ session: mockSession, query: {}, log: { error: vi.fn() } }, reply)
-
-    expect(reply.statusCode).toBe(500)
-  })
-})
-
 describe('GET /social/map/bounds', () => {
   const handler = () => fastify.routes['GET /social/map/bounds']
 
@@ -167,7 +100,55 @@ describe('GET /social/map/bounds', () => {
     expect(mockFindSocialProfilesInBounds).toHaveBeenCalledWith(
       'profile-123',
       { south: 45.0, north: 48.0, west: 16.0, east: 23.0 },
+      [],
       [{ updatedAt: 'desc' }]
+    )
+  })
+
+  it('parses comma-separated tagIds and forwards them to the service', async () => {
+    mockFindSocialProfilesInBounds.mockResolvedValue([])
+
+    await handler()(
+      {
+        session: mockSession,
+        query: {
+          south: '45.0',
+          north: '48.0',
+          west: '16.0',
+          east: '23.0',
+          tagIds: 'tag-a,tag-b,tag-c',
+        },
+        log: { error: vi.fn() },
+      },
+      reply
+    )
+
+    expect(reply.statusCode).toBe(200)
+    expect(mockFindSocialProfilesInBounds).toHaveBeenCalledWith(
+      'profile-123',
+      { south: 45.0, north: 48.0, west: 16.0, east: 23.0 },
+      ['tag-a', 'tag-b', 'tag-c'],
+      [{ updatedAt: 'desc' }]
+    )
+  })
+
+  it('treats an empty tagIds string as no filter', async () => {
+    mockFindSocialProfilesInBounds.mockResolvedValue([])
+
+    await handler()(
+      {
+        session: mockSession,
+        query: { south: '45.0', north: '48.0', west: '16.0', east: '23.0', tagIds: '' },
+        log: { error: vi.fn() },
+      },
+      reply
+    )
+
+    expect(mockFindSocialProfilesInBounds).toHaveBeenCalledWith(
+      'profile-123',
+      expect.any(Object),
+      [],
+      expect.any(Array)
     )
   })
 
@@ -242,5 +223,49 @@ describe('GET /dating/match-ids', () => {
     await handler()({ session: datingSession, log: { error: vi.fn() } }, reply)
 
     expect(reply.statusCode).toBe(500)
+  })
+})
+
+// ────────────────────────────────────────────────────────────────────
+// Deprecated SocialMatchFilter shim endpoints — kept for backwards
+// compatibility with stale frontends that haven't been updated yet.
+// See findProfile.route.ts for the cleanup TODO.
+// ────────────────────────────────────────────────────────────────────
+describe('GET /social/filter (deprecated shim)', () => {
+  const handler = () => fastify.routes['GET /social/filter']
+
+  it('returns a static empty SocialMatchFilterDTO', async () => {
+    await handler()({ session: mockSession }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload).toEqual({
+      success: true,
+      filter: {
+        location: { country: '' },
+        radius: 50,
+        tags: [],
+      },
+    })
+  })
+})
+
+describe('PATCH /social/filter (deprecated shim)', () => {
+  const handler = () => fastify.routes['PATCH /social/filter']
+
+  it('ignores the request body and returns the same static DTO', async () => {
+    await handler()(
+      { session: mockSession, body: { location: { country: 'NL' }, tags: ['tag-x'] } },
+      reply
+    )
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload).toEqual({
+      success: true,
+      filter: {
+        location: { country: '' },
+        radius: 50,
+        tags: [],
+      },
+    })
   })
 })

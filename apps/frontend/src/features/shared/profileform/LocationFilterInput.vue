@@ -15,6 +15,12 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'location:set-from-profile': []
+  /**
+   * Emitted when the user picks a location with usable coordinates.
+   * Consumers should treat this as a one-shot "pan the map here" command;
+   * it is no longer tied to any persistent filter state.
+   */
+  'location:fly-to': [coords: { lat: number; lon: number }]
 }>()
 
 const { t } = useI18n()
@@ -23,6 +29,16 @@ function setLocationFromProfile() {
   if (props.viewerProfile?.location) {
     Object.assign(model.value, props.viewerProfile.location)
     emit('location:set-from-profile')
+    const { lat, lon } = props.viewerProfile.location
+    if (lat != null && lon != null) {
+      emit('location:fly-to', { lat, lon })
+    }
+  }
+}
+
+function onSelectorSelected(loc: LocationDTO) {
+  if (loc.lat != null && loc.lon != null) {
+    emit('location:fly-to', { lat: loc.lat, lon: loc.lon })
   }
 }
 </script>
@@ -44,6 +60,7 @@ function setLocationFromProfile() {
         open-direction="bottom"
         :allow-empty="true"
         :close-on-select="true"
+        @selected="onSelectorSelected"
       />
     </div>
   </div>

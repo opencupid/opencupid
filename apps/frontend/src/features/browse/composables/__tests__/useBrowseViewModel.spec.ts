@@ -1,10 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { setActivePinia, createPinia } from 'pinia'
 
 const mockGet = vi.fn()
 
 vi.mock('@/lib/api', () => ({
   api: { get: (...args: any[]) => mockGet(...args) },
   safeApiCall: (fn: () => unknown) => fn(),
+}))
+
+vi.mock('@/lib/bus', () => ({
+  bus: { on: vi.fn(), emit: vi.fn() },
 }))
 
 import { ref } from 'vue'
@@ -16,6 +21,7 @@ const noCluster = ref([])
 
 describe('useBrowseViewModel', () => {
   beforeEach(() => {
+    setActivePinia(createPinia())
     vi.clearAllMocks()
   })
 

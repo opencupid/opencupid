@@ -20,6 +20,16 @@ interface CachedIndex {
   updatedAt: Date
 }
 
+/**
+ * Builds a deterministic cache key from profileId and the current tag
+ * filter selection. Sorting guarantees the same set of IDs always produces
+ * the same key regardless of the order they were selected.
+ */
+function buildCacheKey(profileId: string, tagIds: string[]): string {
+  if (tagIds.length === 0) return profileId
+  return `${profileId}:${[...tagIds].sort().join(',')}`
+}
+
 export class ClusterService {
   private indexes = new Map<string, CachedIndex>()
   private static instance: ClusterService
@@ -31,11 +41,11 @@ export class ClusterService {
     return ClusterService.instance
   }
 
-  async buildIndex(profileId: string): Promise<void> {
+  async buildIndex(profileId: string, tagIds: string[] = []): Promise<void> {
     const profileMatchService = ProfileMatchService.getInstance()
 
     const [profiles, matchIds] = await Promise.all([
-      profileMatchService.findSocialProfilesWithLocation(profileId, undefined),
+      profileMatchService.findSocialProfilesWithLocation(profileId, tagIds),
       profileMatchService.findMutualMatchIds(profileId),
     ])
 
@@ -71,41 +81,45 @@ export class ClusterService {
     })
 
     index.load(features)
-    this.indexes.set(profileId, { index, updatedAt: new Date() })
+    this.indexes.set(buildCacheKey(profileId, tagIds), { index, updatedAt: new Date() })
   }
 
   getClusters(
     profileId: string,
     bbox: [number, number, number, number],
-    zoom: number
+    zoom: number,
+    tagIds: string[] = []
   ): MapFeature[] {
-    const cached = this.indexes.get(profileId)
+    const key = buildCacheKey(profileId, tagIds)
+    const cached = this.indexes.get(key)
     if (!cached) return []
 
     const raw = cached.index.getClusters(bbox, Math.round(zoom))
-    return raw.map((f) => this.mapFeature(f, profileId))
+    return raw.map((f) => this.mapFeature(f, key))
   }
 
   async getOrBuildClusters(
     profileId: string,
     bbox: [number, number, number, number],
-    zoom: number
+    zoom: number,
+    tagIds: string[] = []
   ): Promise<MapFeature[]> {
     this.pruneIndexes()
-    if (!this.indexes.has(profileId)) {
-      await this.buildIndex(profileId)
+    const key = buildCacheKey(profileId, tagIds)
+    if (!this.indexes.has(key)) {
+      await this.buildIndex(profileId, tagIds)
     }
-    return this.getClusters(profileId, bbox, zoom)
+    return this.getClusters(profileId, bbox, zoom, tagIds)
   }
 
-  getExpansionZoom(profileId: string, clusterId: number): number {
-    const cached = this.indexes.get(profileId)
+  getExpansionZoom(profileId: string, clusterId: number, tagIds: string[] = []): number {
+    const cached = this.indexes.get(buildCacheKey(profileId, tagIds))
     if (!cached) return MAP_MAX_ZOOM
     return cached.index.getClusterExpansionZoom(clusterId)
   }
 
-  getLeaves(profileId: string, clusterId: number): PointFeature[] {
-    const cached = this.indexes.get(profileId)
+  getLeaves(profileId: string, clusterId: number, tagIds: string[] = []): PointFeature[] {
+    const cached = this.indexes.get(buildCacheKey(profileId, tagIds))
     if (!cached) return []
 
     const leaves = cached.index.getLeaves(clusterId, Infinity, 0)
@@ -120,12 +134,21 @@ export class ClusterService {
     }))
   }
 
+  /**
+   * Evicts all cached indexes for a profile, regardless of their tag-filter
+   * variants. Called when the user's underlying data changes (block, dating
+   * prefs updated) so stale clusters are rebuilt on the next query.
+   */
   evict(profileId: string): void {
-    this.indexes.delete(profileId)
+    for (const key of this.indexes.keys()) {
+      if (key === profileId || key.startsWith(`${profileId}:`)) {
+        this.indexes.delete(key)
+      }
+    }
   }
 
-  hasIndex(profileId: string): boolean {
-    return this.indexes.has(profileId)
+  hasIndex(profileId: string, tagIds: string[] = []): boolean {
+    return this.indexes.has(buildCacheKey(profileId, tagIds))
   }
 
   private pruneIndexes(): void {
@@ -154,7 +177,7 @@ export class ClusterService {
     f:
       | Supercluster.ClusterFeature<Supercluster.AnyProps>
       | Supercluster.PointFeature<PointProperties>,
-    _profileId: string
+    cacheKey: string
   ): MapFeature {
     const p = f.properties as Record<string, unknown>
     if ('cluster' in p && p.cluster) {
@@ -166,7 +189,7 @@ export class ClusterService {
         lon: f.geometry.coordinates[0],
         count: p.point_count as number,
         expansionZoom: Math.min(
-          this.indexes.get(_profileId)!.index.getClusterExpansionZoom(clusterId),
+          this.indexes.get(cacheKey)!.index.getClusterExpansionZoom(clusterId),
           MAP_MAX_ZOOM
         ),
       } satisfies ClusterFeature

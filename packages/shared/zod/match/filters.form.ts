@@ -1,7 +1,5 @@
 import { z } from 'zod'
 import { GenderSchema, HasKidsSchema, type GenderType } from '@zod/generated'
-import { PublicTagSchema } from '../tag/tag.dto'
-import { LocationSchema } from '../dto/location.dto'
 
 export const PREF_AGE_MIN = 18
 export const PREF_AGE_MAX = 80
@@ -55,11 +53,3 @@ export const isDatingPreferencesValid = (
   if (!prefs) return false
   return DatingPreferencesValidationSchema.safeParse(prefs).success
 }
-
-export const SocialMatchFilterFormSchema = z.object({
-  location: LocationSchema,
-  radius: z.number().optional(),
-  tags: z.array(PublicTagSchema).default([]),
-})
-
-export type SocialMatchFilterForm = z.infer<typeof SocialMatchFilterFormSchema>

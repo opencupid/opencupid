@@ -1,8 +1,7 @@
-import { ProfileSchema, SocialMatchFilterSchema } from '@zod/generated'
+import { ProfileSchema } from '@zod/generated'
 import { z } from 'zod'
-import { LocationSchema, LocationPayloadSchema } from '../dto/location.dto'
+import { LocationSchema } from '../dto/location.dto'
 import { PublicTagSchema } from '../tag/tag.dto'
-import { TagWithTranslationsSchema } from '../tag/tag.db'
 import { datingPreferencesFields } from '@zod/profile/profile.fields'
 
 // client -> API DTO dating preferences update payload
@@ -11,24 +10,19 @@ export const UpdateDatingPreferencesPayloadSchema = ProfileSchema.pick({
 }).partial()
 export type UpdateDatingPreferencesPayload = z.infer<typeof UpdateDatingPreferencesPayloadSchema>
 
-export const SocialMatchFilterWithTagsSchema = SocialMatchFilterSchema.extend({
-  tags: z.array(TagWithTranslationsSchema),
-})
-
-export type SocialMatchFilterWithTags = z.infer<typeof SocialMatchFilterWithTagsSchema>
-
+/**
+ * @deprecated The persistent SocialMatchFilter model has been retired.
+ * Browse filtering is now entirely ephemeral and client-side. This schema
+ * is kept only so stale frontends can still parse the no-op response from
+ * the deprecated `GET/PATCH /find/social/filter` shim endpoints.
+ *
+ * TODO(cleanup): remove together with the shim endpoints once all clients
+ * have been updated and dashboards confirm no traffic is hitting the path.
+ */
 export const SocialMatchFilterDTOSchema = z.object({
   location: LocationSchema,
   radius: z.number().optional(),
   tags: z.array(PublicTagSchema).default([]),
 })
+/** @deprecated see `SocialMatchFilterDTOSchema` */
 export type SocialMatchFilterDTO = z.infer<typeof SocialMatchFilterDTOSchema>
-
-export const UpdateSocialMatchFilterPayloadSchema = z
-  .object({
-    location: LocationPayloadSchema.optional(),
-    radius: z.number().optional(),
-    tags: z.array(z.string()).default([]), // or z.array(PublicTagSchema).optional().default([]) if you want full tag objects
-  })
-  .partial()
-export type UpdateSocialMatchFilterPayload = z.infer<typeof UpdateSocialMatchFilterPayloadSchema>

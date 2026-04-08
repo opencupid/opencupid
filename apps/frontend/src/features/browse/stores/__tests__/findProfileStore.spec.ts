@@ -50,7 +50,7 @@ describe('findProfileStore.findProfilesForMapBounds', () => {
     expect(mockGet).toHaveBeenCalledWith(
       '/find/social/map/bounds',
       expect.objectContaining({
-        params: expectedPadded,
+        params: expect.objectContaining(expectedPadded),
         signal: expect.any(AbortSignal),
       })
     )

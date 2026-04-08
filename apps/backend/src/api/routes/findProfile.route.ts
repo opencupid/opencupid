@@ -10,11 +10,9 @@ import {
   type GetMatchIdsResponse,
   type GetSocialMatchFilterResponse,
 } from '@zod/apiResponse.dto'
-import { UpdateSocialMatchFilterPayloadSchema } from '@shared/zod/match/filters.dto'
+import type { SocialMatchFilterDTO } from '@shared/zod/match/filters.dto'
 import { MAP_MAX_ZOOM } from '@shared/maps'
-import { validateBody } from '../../utils/zodValidate'
 import { mapProfileToPublic } from '../mappers/profile.mappers'
-import { mapSocialMatchFilterToDTO } from '../mappers/profileMatch.mappers'
 
 // Pagination query schema for infinite scrolling
 const PaginationQuerySchema = z.object({
@@ -28,71 +26,30 @@ const PaginationQuerySchema = z.object({
   ),
 })
 
+/**
+ * Parse a comma-separated `tagIds` query param into a deduped string array.
+ * Returns `[]` for undefined / empty / whitespace-only values.
+ */
+function parseTagIds(raw: unknown): string[] {
+  if (typeof raw !== 'string' || raw.trim().length === 0) return []
+  const ids = raw
+    .split(',')
+    .map((t) => t.trim())
+    .filter(Boolean)
+  return Array.from(new Set(ids))
+}
+
 const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
   // instantiate services
   const profileMatchService = ProfileMatchService.getInstance()
   const clusterService = ClusterService.getInstance()
-
-  /**
-   * GET /social
-   * Returns paginated social profiles matching the viewer's social filter.
-   * @query {number} [skip=0] - Offset for pagination
-   * @query {number} [take=10] - Page size (max 50)
-   * @returns {GetProfilesResponse} Profiles without dating context
-   */
-  fastify.get('/social', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-    const { skip, take } = PaginationQuerySchema.parse(req.query)
-    return getSocialProfiles(req, reply, [{ updatedAt: 'desc' }], take, skip)
-  })
-
-  /**
-   * GET /social/map
-   * Returns social profiles with location data for map display. Optionally filtered by bounds.
-   * @query {number} [south] - Bounding box south latitude
-   * @query {number} [north] - Bounding box north latitude
-   * @query {number} [west] - Bounding box west longitude
-   * @query {number} [east] - Bounding box east longitude
-   * @returns {GetProfilesResponse}
-   */
-  fastify.get('/social/map', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-    if (!req.session.profile.isSocialActive) {
-      return sendForbiddenError(reply)
-    }
-
-    const myProfileId = req.session.profileId
-    const locale = req.session.lang
-    const query = req.query as Record<string, string>
-
-    const bounds =
-      query.south && query.north && query.west && query.east
-        ? {
-            south: parseFloat(query.south),
-            north: parseFloat(query.north),
-            west: parseFloat(query.west),
-            east: parseFloat(query.east),
-          }
-        : undefined
-
-    try {
-      const profiles = await profileMatchService.findSocialProfilesWithLocation(
-        myProfileId,
-        [{ updatedAt: 'desc' }],
-        bounds
-      )
-      const mappedProfiles = profiles.map((p) => mapProfileToPublic(p, false, locale))
-      const response: GetProfilesResponse = { success: true, profiles: mappedProfiles }
-      return reply.code(200).send(response)
-    } catch (err) {
-      req.log.error(err)
-      return sendError(reply, 500, 'Failed to fetch map profiles')
-    }
-  })
 
   const BoundsQuerySchema = z.object({
     south: z.coerce.number(),
     north: z.coerce.number(),
     west: z.coerce.number(),
     east: z.coerce.number(),
+    tagIds: z.string().optional(),
   })
 
   const ClusterQuerySchema = z.object({
@@ -101,19 +58,23 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
     west: z.coerce.number(),
     east: z.coerce.number(),
     zoom: z.coerce.number().int().min(0).max(MAP_MAX_ZOOM),
+    tagIds: z.string().optional(),
   })
 
   const LeavesQuerySchema = z.object({
     clusterId: z.coerce.number().int(),
+    tagIds: z.string().optional(),
   })
 
   /**
    * GET /social/map/bounds
-   * Returns social profiles strictly within the given geographic bounding box.
+   * Returns social profiles strictly within the given geographic bounding box,
+   * optionally filtered by a comma-separated list of tag IDs.
    * @query {number} south - Required south latitude
    * @query {number} north - Required north latitude
    * @query {number} west - Required west longitude
    * @query {number} east - Required east longitude
+   * @query {string} [tagIds] - Optional comma-separated tag IDs
    * @returns {GetProfilesResponse}
    */
   fastify.get('/social/map/bounds', { onRequest: [fastify.authenticate] }, async (req, reply) => {
@@ -132,12 +93,16 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
 
     const myProfileId = req.session.profileId
     const locale = req.session.lang
-    const bounds = parsed.data
+    const { tagIds: rawTagIds, ...bounds } = parsed.data
+    const tagIds = parseTagIds(rawTagIds)
 
     try {
-      const profiles = await profileMatchService.findSocialProfilesInBounds(myProfileId, bounds, [
-        { updatedAt: 'desc' },
-      ])
+      const profiles = await profileMatchService.findSocialProfilesInBounds(
+        myProfileId,
+        bounds,
+        tagIds,
+        [{ updatedAt: 'desc' }]
+      )
       const mappedProfiles = profiles.map((p) => mapProfileToPublic(p, false, locale))
       const response: GetProfilesResponse = { success: true, profiles: mappedProfiles }
       return reply.code(200).send(response)
@@ -149,12 +114,14 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * GET /social/map/clusters
-   * Returns map clusters for the visible viewport at a given zoom level.
+   * Returns map clusters for the visible viewport at a given zoom level,
+   * optionally filtered by tag IDs.
    * @query {number} south - Bounding box south latitude
    * @query {number} north - Bounding box north latitude
    * @query {number} west - Bounding box west longitude
    * @query {number} east - Bounding box east longitude
    * @query {number} zoom - Map zoom level (0–12)
+   * @query {string} [tagIds] - Optional comma-separated tag IDs
    * @returns {{ success: true, features: MapFeature[] }}
    */
   fastify.get('/social/map/clusters', { onRequest: [fastify.authenticate] }, async (req, reply) => {
@@ -167,11 +134,17 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
       return sendError(reply, 400, 'Missing or invalid parameters (south, north, west, east, zoom)')
     }
 
-    const { south, north, west, east, zoom } = parsed.data
+    const { south, north, west, east, zoom, tagIds: rawTagIds } = parsed.data
     const bbox: [number, number, number, number] = [west, south, east, north]
+    const tagIds = parseTagIds(rawTagIds)
 
     try {
-      const features = await clusterService.getOrBuildClusters(req.session.profileId, bbox, zoom)
+      const features = await clusterService.getOrBuildClusters(
+        req.session.profileId,
+        bbox,
+        zoom,
+        tagIds
+      )
       return reply.code(200).send({ success: true, features })
     } catch (err) {
       req.log.error(err)
@@ -182,7 +155,10 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
   /**
    * GET /social/map/clusters/leaves
    * Returns the individual profile points that make up a cluster.
+   * The `tagIds` param must match the selection used when fetching the
+   * cluster itself — each tag combination has its own cached index.
    * @query {number} clusterId - The cluster ID to expand
+   * @query {string} [tagIds] - Optional comma-separated tag IDs
    * @returns {{ success: true, features: PointFeature[] }}
    */
   fastify.get(
@@ -198,8 +174,9 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
         return sendError(reply, 400, 'Missing or invalid parameter (clusterId)')
       }
 
-      const { clusterId } = parsed.data
-      const features = clusterService.getLeaves(req.session.profileId, clusterId)
+      const { clusterId, tagIds: rawTagIds } = parsed.data
+      const tagIds = parseTagIds(rawTagIds)
+      const features = clusterService.getLeaves(req.session.profileId, clusterId, tagIds)
       return reply.code(200).send({ success: true, features })
     }
   )
@@ -241,7 +218,7 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * GET /social/new
-   * Returns recently created social profiles (newest first), regardless of location filter.
+   * Returns recently created social profiles (newest first).
    * @query {number} [skip=0] - Offset for pagination
    * @query {number} [take=10] - Page size (max 50)
    * @returns {GetProfilesResponse}
@@ -274,50 +251,53 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
     }
   })
 
+  // ────────────────────────────────────────────────────────────────────
+  // DEPRECATED SHIMS — SocialMatchFilter retired
+  // ────────────────────────────────────────────────────────────────────
+  // Browse filtering is now entirely ephemeral and client-side; there is
+  // no persistent match filter anymore. These endpoints are kept solely
+  // so that stale frontends (deployed before this refactor) do not crash
+  // on `zod.parse()` when they try to load or update the filter.
+  //
+  // Both return a static minimal DTO that satisfies
+  // `SocialMatchFilterDTOSchema` with empty location/tags. PATCH is a
+  // no-op that ignores its body and returns the same static DTO.
+  //
+  // TODO(cleanup): remove these two handlers, together with
+  // `SocialMatchFilterDTO` / `GetSocialMatchFilterResponse` from
+  // `packages/shared/zod`, once all clients have been updated and
+  // dashboards confirm no traffic is hitting these paths.
+  // ────────────────────────────────────────────────────────────────────
+
+  const DEPRECATED_SOCIAL_FILTER_DTO: SocialMatchFilterDTO = {
+    location: { country: '' },
+    radius: 50,
+    tags: [],
+  }
+
   /**
-   * GET /social/filter
-   * Returns the current user's social match filter (tag preferences, etc.).
-   * @returns {GetSocialMatchFilterResponse}
+   * @deprecated GET /social/filter — shim for retired SocialMatchFilter model.
+   * Returns a static empty filter. Kept for stale client compatibility only.
    */
-  fastify.get('/social/filter', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-    const locale = req.session.lang
-    try {
-      const fetched = await profileMatchService.getSocialMatchFilter(req.session.profileId)
-
-      if (!fetched) return sendError(reply, 404, 'Profile not found')
-
-      const filter = mapSocialMatchFilterToDTO(fetched, locale)
-      const response: GetSocialMatchFilterResponse = { success: true, filter }
-      return reply.code(200).send(response)
-    } catch (err) {
-      fastify.log.error(err)
-      return sendError(reply, 500, 'Failed to load profile')
+  fastify.get('/social/filter', { onRequest: [fastify.authenticate] }, async (_req, reply) => {
+    const response: GetSocialMatchFilterResponse = {
+      success: true,
+      filter: DEPRECATED_SOCIAL_FILTER_DTO,
     }
+    return reply.code(200).send(response)
   })
 
   /**
-   * PATCH /social/filter
-   * Updates the current user's social match filter.
-   * @body {UpdateSocialMatchFilterPayload}
-   * @returns {GetSocialMatchFilterResponse}
+   * @deprecated PATCH /social/filter — shim for retired SocialMatchFilter model.
+   * Accepts any body, performs no write, and returns the same static empty
+   * filter. Kept for stale client compatibility only.
    */
-  fastify.patch('/social/filter', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-    const data = await validateBody(UpdateSocialMatchFilterPayloadSchema, req, reply)
-    if (!data) return
-    const locale = req.session.lang
-
-    try {
-      const updated = await profileMatchService.updateSocialMatchFilter(req.session.profileId, data)
-      if (!updated) return sendError(reply, 404, 'Profile not found')
-
-      const filter = mapSocialMatchFilterToDTO(updated, locale)
-      const response: GetSocialMatchFilterResponse = { success: true, filter }
-      clusterService.evict(req.session.profileId)
-      return reply.code(200).send(response)
-    } catch (err) {
-      fastify.log.error(err)
-      return sendError(reply, 500, 'Failed to update social filter')
+  fastify.patch('/social/filter', { onRequest: [fastify.authenticate] }, async (_req, reply) => {
+    const response: GetSocialMatchFilterResponse = {
+      success: true,
+      filter: DEPRECATED_SOCIAL_FILTER_DTO,
     }
+    return reply.code(200).send(response)
   })
 
   const getDatingProfiles = async (
@@ -343,38 +323,6 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
       )
       const mappedProfiles = profiles.map((p) =>
         mapProfileToPublic(p, true /* includeDatingContext */, locale)
-      )
-      const response: GetProfilesResponse = { success: true, profiles: mappedProfiles }
-      return reply.code(200).send(response)
-    } catch (err) {
-      req.log.error(err)
-      return sendError(reply, 500, 'Failed to fetch profiles')
-    }
-  }
-
-  const getSocialProfiles = async (
-    req: FastifyRequest,
-    reply: FastifyReply,
-    orderBy: OrderBy,
-    take: number = 10,
-    skip: number = 0
-  ) => {
-    if (!req.session.profile.isSocialActive) {
-      return sendForbiddenError(reply)
-    }
-
-    const myProfileId = req.session.profileId
-    const locale = req.session.lang
-
-    try {
-      const profiles = await profileMatchService.findSocialProfilesFor(
-        myProfileId,
-        orderBy,
-        take,
-        skip
-      )
-      const mappedProfiles = profiles.map((p) =>
-        mapProfileToPublic(p, false /* includeDatingContext */, locale)
       )
       const response: GetProfilesResponse = { success: true, profiles: mappedProfiles }
       return reply.code(200).send(response)
