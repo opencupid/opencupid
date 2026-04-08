@@ -318,4 +318,20 @@ describe('authStore localStorage auth flow', () => {
     expect(localStorage.getItem('token')).toBeNull()
     expect(localStorage.getItem('refreshToken')).toBeNull()
   })
+
+  it('auth:logout handler re-emits auth:logged-out after teardown', async () => {
+    const { bus } = await import('@/lib/bus')
+    const store = useAuthStore()
+    store.userId = 'u1'
+
+    const loggedOutSpy = vi.fn()
+    bus.on('auth:logged-out', loggedOutSpy)
+
+    bus.emit('auth:logout')
+
+    expect(loggedOutSpy).toHaveBeenCalledTimes(1)
+    expect(store.userId).toBeNull()
+
+    bus.off('auth:logged-out', loggedOutSpy)
+  })
 })

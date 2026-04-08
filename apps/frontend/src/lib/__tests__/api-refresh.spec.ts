@@ -47,7 +47,7 @@ describe('api refresh interceptor', () => {
     expect(config._retry).toBe(true)
   })
 
-  it('emits auth:logout and auth:logged-out when refresh attempt fails', async () => {
+  it('emits auth:logout when refresh attempt fails', async () => {
     const { api } = await import('../api')
 
     // Mock the api adapter for the original 401 request
@@ -72,8 +72,10 @@ describe('api refresh interceptor', () => {
       {},
       expect.objectContaining({ withCredentials: true })
     )
+    // api.ts emits only auth:logout; the authStore handler is the single
+    // place that re-emits auth:logged-out after synchronous teardown.
     expect(mockEmit).toHaveBeenCalledWith('auth:logout')
-    expect(mockEmit).toHaveBeenCalledWith('auth:logged-out')
+    expect(mockEmit).not.toHaveBeenCalledWith('auth:logged-out')
 
     postSpy.mockRestore()
   })
