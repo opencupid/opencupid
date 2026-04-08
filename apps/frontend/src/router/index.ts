@@ -5,6 +5,7 @@ import { useAuthStore } from '@/features/auth/stores/authStore'
 import { bus } from '@/lib/bus'
 
 import AuthLayout from '@/features/app/views/AuthLayout.vue'
+import OnboardingLayout from '@/features/app/views/OnboardingLayout.vue'
 import AppShell from '@/features/browse/views/BrowseProfiles.vue'
 import OnboardingView from '@/features/onboarding/views/Onboarding.vue'
 import LoginView from '@/features/auth/views/LoginView.vue'
@@ -34,6 +35,21 @@ const routes: Array<RouteRecordRaw> = [
     meta: { requiresAuth: false },
   },
 
+  // ── Onboarding shell ──────────────────────────────────────────────────
+  // Top-level sibling of '/' (NOT a child) so that navigating between
+  // /onboarding and /browse causes the other layout to unmount. This is
+  // how we guarantee that AppShell's KeepAlive cache cannot survive across
+  // the onboarding boundary: when a fresh-registration user is redirected
+  // from BrowseProfiles.onMounted → /onboarding, AuthLayout unmounts and
+  // takes the cached (broken-state) AppShell with it. On completion →
+  // /browse, OnboardingLayout unmounts and a fresh AuthLayout mounts.
+  {
+    path: '/onboarding',
+    component: OnboardingLayout,
+    meta: { requiresAuth: true },
+    children: [{ path: '', name: 'Onboarding', component: OnboardingView }],
+  },
+
   // ── Authenticated shell ───────────────────────────────────────────────
   {
     path: '/',
@@ -42,9 +58,6 @@ const routes: Array<RouteRecordRaw> = [
     children: [
       // Default landing route — redirect bare '/' to Browse
       { path: '', redirect: { name: 'Browse' } },
-
-      // Full-page replacement — map must not render behind this
-      { path: 'onboarding', name: 'Onboarding', component: OnboardingView },
 
       // Browse area — all render AppShell, KeepAlive keeps it mounted
       browseRoute('browse', 'Browse'),
