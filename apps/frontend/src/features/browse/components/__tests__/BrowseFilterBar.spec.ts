@@ -61,11 +61,30 @@ describe('BrowseFilterBar', () => {
 
   it('reflects pre-existing store state in the tag selector', () => {
     const store = useBrowseFiltersStore()
-    store.setTags(['t1'])
+    store.setTags([{ id: 't1', name: 'Vue', slug: 'vue' }])
 
     const wrapper = mountComponent()
     const tagSelector = wrapper.findComponent({ name: 'TagSelector' })
     expect(tagSelector.props('modelValue')).toEqual([{ id: 't1', name: 'Vue', slug: 'vue' }])
+  })
+
+  // Regression: a tag picked via the TagSelector's autocomplete search may
+  // not be present in the bounds-scoped `availableTags` prop. The store
+  // must hold the full PublicTag objects so the filter bar can still
+  // render the pill (and the user can still remove it).
+  it('renders selected tags that are NOT in availableTags', async () => {
+    const store = useBrowseFiltersStore()
+    const wrapper = mountComponent()
+
+    // User searches the global tag store and picks "Biokertészet" — a tag
+    // that lives in the DB but isn't in the current viewport's tag list.
+    const offBoundsTag = { id: 'tag-out-of-bounds', name: 'Biokertészet', slug: 'biokerteszet' }
+    wrapper.findComponent({ name: 'TagSelector' }).vm.$emit('update:modelValue', [offBoundsTag])
+    await nextTick()
+
+    expect(store.selectedTagIds).toEqual(['tag-out-of-bounds'])
+    const tagSelector = wrapper.findComponent({ name: 'TagSelector' })
+    expect(tagSelector.props('modelValue')).toEqual([offBoundsTag])
   })
 
   it('emits location:fly-to when LocationFilterInput emits a location with coords', async () => {
@@ -81,7 +100,7 @@ describe('BrowseFilterBar', () => {
 
   it('does not modify the store when location fly-to fires', async () => {
     const store = useBrowseFiltersStore()
-    store.setTags(['t1'])
+    store.setTags([{ id: 't1', name: 'Vue', slug: 'vue' }])
 
     const wrapper = mountComponent()
     wrapper

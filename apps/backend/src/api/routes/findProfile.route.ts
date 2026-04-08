@@ -27,16 +27,39 @@ const PaginationQuerySchema = z.object({
 })
 
 /**
- * Parse a comma-separated `tagIds` query param into a deduped string array.
- * Returns `[]` for undefined / empty / whitespace-only values.
+ * Maximum number of tag IDs accepted on filter query params. Caps the
+ * Prisma `IN` filter size, the cluster cache key length, and the cache
+ * key explosion across user/tag-set combinations. Must stay in sync with
+ * `MAX_BROWSE_TAGS` in
+ * `apps/frontend/src/features/browse/stores/browseFiltersStore.ts`.
  */
-function parseTagIds(raw: unknown): string[] {
-  if (typeof raw !== 'string' || raw.trim().length === 0) return []
-  const ids = raw
-    .split(',')
-    .map((t) => t.trim())
-    .filter(Boolean)
-  return Array.from(new Set(ids))
+const MAX_TAG_IDS = 5
+
+/** Coarse opaque-ID shape check (alphanumeric, 8–32 chars). */
+const TAG_ID_RE = /^[a-z0-9]{8,32}$/i
+
+/**
+ * Parse a comma-separated `tagIds` query param into a deduped string array.
+ * Returns `[]` for undefined / empty / whitespace-only values. Returns
+ * `null` if the input is malformed (too many IDs or any ID fails the
+ * shape check) — callers should map this to a 400.
+ */
+function parseTagIds(raw: unknown): string[] | null {
+  if (typeof raw === 'undefined' || raw === null) return []
+  if (typeof raw !== 'string') return null
+  if (raw.trim().length === 0) return []
+  const deduped = Array.from(
+    new Set(
+      raw
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean)
+    )
+  )
+  if (deduped.length === 0) return []
+  if (deduped.length > MAX_TAG_IDS) return null
+  if (!deduped.every((id) => TAG_ID_RE.test(id))) return null
+  return deduped
 }
 
 const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
@@ -95,6 +118,9 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
     const locale = req.session.lang
     const { tagIds: rawTagIds, ...bounds } = parsed.data
     const tagIds = parseTagIds(rawTagIds)
+    if (tagIds === null) {
+      return sendError(reply, 400, `Invalid tagIds (max ${MAX_TAG_IDS}, alphanumeric only)`)
+    }
 
     try {
       const profiles = await profileMatchService.findSocialProfilesInBounds(
@@ -137,6 +163,9 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
     const { south, north, west, east, zoom, tagIds: rawTagIds } = parsed.data
     const bbox: [number, number, number, number] = [west, south, east, north]
     const tagIds = parseTagIds(rawTagIds)
+    if (tagIds === null) {
+      return sendError(reply, 400, `Invalid tagIds (max ${MAX_TAG_IDS}, alphanumeric only)`)
+    }
 
     try {
       const features = await clusterService.getOrBuildClusters(
@@ -176,6 +205,9 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
 
       const { clusterId, tagIds: rawTagIds } = parsed.data
       const tagIds = parseTagIds(rawTagIds)
+      if (tagIds === null) {
+        return sendError(reply, 400, `Invalid tagIds (max ${MAX_TAG_IDS}, alphanumeric only)`)
+      }
       const features = clusterService.getLeaves(req.session.profileId, clusterId, tagIds)
       return reply.code(200).send({ success: true, features })
     }

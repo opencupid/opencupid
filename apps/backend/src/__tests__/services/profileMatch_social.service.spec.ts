@@ -150,18 +150,13 @@ describe('ProfileMatchService.findSocialProfilesWithLocation', () => {
     )
   })
 
-  it('excludes the viewer profile from results', async () => {
+  it('does NOT exclude the viewer profile (frontend empty-state relies on it being present)', async () => {
     mockPrisma.profile.findMany.mockResolvedValue(mockProfiles)
 
     await service.findSocialProfilesWithLocation(mockProfileId)
 
-    expect(mockPrisma.profile.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          id: { not: mockProfileId },
-        }),
-      })
-    )
+    const call = mockPrisma.profile.findMany.mock.calls[0][0]
+    expect(call.where).not.toHaveProperty('id')
   })
 
   it('limits results to 500', async () => {

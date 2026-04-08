@@ -96,7 +96,7 @@ describe('GET /social/map/clusters', () => {
     await handler()(
       {
         session: mockSession,
-        query: { ...validQuery, tagIds: 'tag-1,tag-2' },
+        query: { ...validQuery, tagIds: 'cabcdef01,cabcdef02' },
         log: { error: vi.fn() },
       },
       reply
@@ -106,7 +106,7 @@ describe('GET /social/map/clusters', () => {
       'profile-123',
       [16.0, 45.0, 23.0, 48.0],
       10,
-      ['tag-1', 'tag-2']
+      ['cabcdef01', 'cabcdef02']
     )
   })
 
@@ -159,13 +159,13 @@ describe('GET /social/map/clusters/leaves', () => {
     await handler()(
       {
         session: mockSession,
-        query: { clusterId: '42', tagIds: 'tag-1' },
+        query: { clusterId: '42', tagIds: 'cabcdef01' },
         log: { error: vi.fn() },
       },
       reply
     )
 
-    expect(mockGetLeaves).toHaveBeenCalledWith('profile-123', 42, ['tag-1'])
+    expect(mockGetLeaves).toHaveBeenCalledWith('profile-123', 42, ['cabcdef01'])
   })
 
   it('returns 400 for missing clusterId', async () => {

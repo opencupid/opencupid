@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 
 import LocationFilterInput from '@/features/shared/profileform/LocationFilterInput.vue'
@@ -10,7 +10,7 @@ import type { OwnerProfile } from '@zod/profile/profile.dto'
 import type { PublicTag } from '@zod/tag/tag.dto'
 import { useBrowseFiltersStore } from '@/features/browse/stores/browseFiltersStore'
 
-const props = defineProps<{
+defineProps<{
   viewerProfile: OwnerProfile | null
   /** Tags available in the current map bounds (from /browse/bounds) */
   availableTags?: PublicTag[]
@@ -26,7 +26,12 @@ const emit = defineEmits<{
 }>()
 
 const filtersStore = useBrowseFiltersStore()
-const { selectedTagIds } = storeToRefs(filtersStore)
+// Bind the TagSelector v-model directly to the store's PublicTag[] state.
+// Storing full tag objects (not just IDs) means tags picked via the
+// autocomplete search — which queries the global tag store and may
+// return tags that aren't in the bounds-scoped `availableTags` list —
+// always render their pill correctly.
+const { selectedTags } = storeToRefs(filtersStore)
 
 // Local ephemeral location, used only to drive the LocationSelector
 // display. Not persisted, not sent to the backend.
@@ -35,19 +40,6 @@ const locationModel = ref<LocationDTO>({ country: '' })
 function onLocationFlyTo(coords: { lat: number; lon: number }) {
   emit('location:fly-to', coords)
 }
-
-// v-model binding for the TagSelector: it expects `PublicTag[]` but we
-// store only `string[]` (IDs) in the filters store. Derive the full
-// tag objects from the currently-available tag list.
-const selectedTagObjects = computed<PublicTag[]>({
-  get() {
-    const lookup = new Map((props.availableTags ?? []).map((t) => [t.id, t]))
-    return selectedTagIds.value.map((id) => lookup.get(id)).filter((t): t is PublicTag => t != null)
-  },
-  set(tags: PublicTag[]) {
-    filtersStore.setTags(tags.map((t) => t.id))
-  },
-})
 </script>
 
 <template>
@@ -63,7 +55,7 @@ const selectedTagObjects = computed<PublicTag[]>({
     <!-- Tags column -->
     <div class="col-12 col-md-6">
       <TagSelector
-        v-model="selectedTagObjects"
+        v-model="selectedTags"
         :taggable="false"
         open-direction="bottom"
         :close-on-select="true"

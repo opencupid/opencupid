@@ -1,45 +1,64 @@
 import { defineStore } from 'pinia'
 import { bus } from '@/lib/bus'
+import type { PublicTag } from '@zod/tag/tag.dto'
+
+/**
+ * Maximum number of tags the user may select for browse filtering.
+ * Capping the selection bounds the size of the `tagIds` query string,
+ * the Prisma `IN` filter, and the cluster service's per-(profile,tagSig)
+ * cache key explosion. The backend route enforces the same cap as a
+ * defense-in-depth measure — keep both numbers in sync.
+ */
+export const MAX_BROWSE_TAGS = 5
 
 /**
  * Ephemeral, client-side filter state for the browse map. State lives only
  * for the session: no persistence to localStorage, sessionStorage, or the
  * backend. Selections reset on page reload and on logout.
  *
- * Currently holds the `selectedTagIds` that are passed into bounds/cluster
- * queries as an optional comma-separated `tagIds` query param. The persistent
- * SocialMatchFilter model has been retired — see the matching refactor in
- * `profileMatch.service.ts` and `findProfile.route.ts`.
+ * The store holds full `PublicTag` objects (not just IDs) so that the
+ * filter bar can render the selected pill regardless of whether the tag
+ * is currently in the bounds-scoped `availableTags` list. Without this,
+ * tags picked via the autocomplete search (which queries the global tag
+ * store, not just the in-viewport list) would briefly show up and then
+ * disappear from the UI.
  */
 interface BrowseFiltersState {
-  selectedTagIds: string[]
+  selectedTags: PublicTag[]
 }
 
 export const useBrowseFiltersStore = defineStore('browseFilters', {
   state: (): BrowseFiltersState => ({
-    selectedTagIds: [],
+    selectedTags: [],
   }),
 
+  getters: {
+    selectedTagIds(state): string[] {
+      return state.selectedTags.map((t) => t.id)
+    },
+  },
+
   actions: {
-    toggleTag(id: string) {
-      const idx = this.selectedTagIds.indexOf(id)
+    toggleTag(tag: PublicTag) {
+      const idx = this.selectedTags.findIndex((t) => t.id === tag.id)
       if (idx === -1) {
-        this.selectedTagIds = [...this.selectedTagIds, id]
+        if (this.selectedTags.length >= MAX_BROWSE_TAGS) return
+        this.selectedTags = [...this.selectedTags, tag]
       } else {
-        this.selectedTagIds = this.selectedTagIds.filter((t) => t !== id)
+        this.selectedTags = this.selectedTags.filter((t) => t.id !== tag.id)
       }
     },
 
-    setTags(ids: string[]) {
-      this.selectedTagIds = [...ids]
+    setTags(tags: PublicTag[]) {
+      this.selectedTags = tags.slice(0, MAX_BROWSE_TAGS)
     },
 
     clearTags() {
-      this.selectedTagIds = []
+      this.selectedTags = []
     },
 
     reset() {
-      this.selectedTagIds = []
+      this.selectedTags = []
     },
   },
 })

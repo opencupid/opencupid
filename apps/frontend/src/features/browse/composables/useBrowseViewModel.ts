@@ -102,13 +102,6 @@ export function useBrowseViewModel(
 
   const allPois = computed<MapPoi[]>(() => [...profilePois.value, ...postPois.value])
 
-  // Tag selection actions are delegated to useBrowseFiltersStore — see
-  // filtersStore.toggleTag / clearTags. Exposed here only for caller
-  // convenience so the filter bar doesn't need to import the store
-  // directly.
-  const toggleTag = (id: string) => filtersStore.toggleTag(id)
-  const clearTags = () => filtersStore.clearTags()
-
   // ── Map selection state ────────────────────────────────────────────
   const activePoi = ref<MapPoi | null>(null)
 
@@ -133,8 +126,6 @@ export function useBrowseViewModel(
     selectedTagIds,
     isLoadingPosts,
     fetchPostsAndTags,
-    toggleTag,
-    clearTags,
     activePoi,
     onSelectionClear,
     onBoundsChanged,

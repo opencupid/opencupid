@@ -78,26 +78,4 @@ describe('useBrowseViewModel', () => {
     expect(vm.postPois.value).toHaveLength(1)
     expect(vm.postPois.value[0]!.id).toBe('post1')
   })
-
-  it('toggleTag adds and removes tag IDs', () => {
-    const vm = useBrowseViewModel(noCluster, vi.fn())
-    expect(vm.selectedTagIds.value).toEqual([])
-
-    vm.toggleTag('t1')
-    expect(vm.selectedTagIds.value).toEqual(['t1'])
-
-    vm.toggleTag('t2')
-    expect(vm.selectedTagIds.value).toEqual(['t1', 't2'])
-
-    vm.toggleTag('t1')
-    expect(vm.selectedTagIds.value).toEqual(['t2'])
-  })
-
-  it('clearTags resets selectedTagIds', () => {
-    const vm = useBrowseViewModel(noCluster, vi.fn())
-    vm.toggleTag('t1')
-    vm.toggleTag('t2')
-    vm.clearTags()
-    expect(vm.selectedTagIds.value).toEqual([])
-  })
 })

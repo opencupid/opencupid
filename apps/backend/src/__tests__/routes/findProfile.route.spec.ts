@@ -116,7 +116,7 @@ describe('GET /social/map/bounds', () => {
           north: '48.0',
           west: '16.0',
           east: '23.0',
-          tagIds: 'tag-a,tag-b,tag-c',
+          tagIds: 'cabcdef01,cabcdef02,cabcdef03',
         },
         log: { error: vi.fn() },
       },
@@ -127,7 +127,7 @@ describe('GET /social/map/bounds', () => {
     expect(mockFindSocialProfilesInBounds).toHaveBeenCalledWith(
       'profile-123',
       { south: 45.0, north: 48.0, west: 16.0, east: 23.0 },
-      ['tag-a', 'tag-b', 'tag-c'],
+      ['cabcdef01', 'cabcdef02', 'cabcdef03'],
       [{ updatedAt: 'desc' }]
     )
   })
@@ -150,6 +150,46 @@ describe('GET /social/map/bounds', () => {
       [],
       expect.any(Array)
     )
+  })
+
+  it('returns 400 when more than 5 tagIds are supplied', async () => {
+    await handler()(
+      {
+        session: mockSession,
+        query: {
+          south: '45.0',
+          north: '48.0',
+          west: '16.0',
+          east: '23.0',
+          tagIds: 'cabcdef01,cabcdef02,cabcdef03,cabcdef04,cabcdef05,cabcdef06',
+        },
+        log: { error: vi.fn() },
+      },
+      reply
+    )
+
+    expect(reply.statusCode).toBe(400)
+    expect(mockFindSocialProfilesInBounds).not.toHaveBeenCalled()
+  })
+
+  it('returns 400 when a tagId fails the shape check', async () => {
+    await handler()(
+      {
+        session: mockSession,
+        query: {
+          south: '45.0',
+          north: '48.0',
+          west: '16.0',
+          east: '23.0',
+          tagIds: "valid12345,'; DROP TABLE profile; --",
+        },
+        log: { error: vi.fn() },
+      },
+      reply
+    )
+
+    expect(reply.statusCode).toBe(400)
+    expect(mockFindSocialProfilesInBounds).not.toHaveBeenCalled()
   })
 
   it('returns 400 when bounds params are missing', async () => {
