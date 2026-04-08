@@ -7,7 +7,7 @@ defineEmits<{ (e: 'click', id: string): void }>()
 
 <template>
   <div
-    class="post-map-popup cursor-pointer p-3"
+    class="post-map-popup cursor-pointer p-3 user-select-none"
     @click="$emit('click', item.id)"
   >{{ item.content.substring(0, 120) }}</div>
 </template>
