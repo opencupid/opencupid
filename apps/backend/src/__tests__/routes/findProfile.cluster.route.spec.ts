@@ -5,12 +5,10 @@ vi.mock('@/services/cluster.service')
 vi.mock('@/services/profileMatch.service', () => ({
   ProfileMatchService: {
     getInstance: () => ({
-      findSocialProfilesFor: vi.fn(),
       findSocialProfilesWithLocation: vi.fn(),
       findSocialProfilesInBounds: vi.fn(),
       findMutualMatchIds: vi.fn(),
-      getSocialMatchFilter: vi.fn(),
-      updateSocialMatchFilter: vi.fn(),
+      findNewProfilesAnywhere: vi.fn(),
     }),
   },
 }))
@@ -84,7 +82,32 @@ describe('GET /social/map/clusters', () => {
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.features).toEqual(mockFeatures)
-    expect(mockGetOrBuildClusters).toHaveBeenCalledWith('profile-123', [16.0, 45.0, 23.0, 48.0], 10)
+    expect(mockGetOrBuildClusters).toHaveBeenCalledWith(
+      'profile-123',
+      [16.0, 45.0, 23.0, 48.0],
+      10,
+      []
+    )
+  })
+
+  it('forwards parsed tagIds to the cluster service', async () => {
+    mockGetOrBuildClusters.mockResolvedValue([])
+
+    await handler()(
+      {
+        session: mockSession,
+        query: { ...validQuery, tagIds: 'cabcdef01,cabcdef02' },
+        log: { error: vi.fn() },
+      },
+      reply
+    )
+
+    expect(mockGetOrBuildClusters).toHaveBeenCalledWith(
+      'profile-123',
+      [16.0, 45.0, 23.0, 48.0],
+      10,
+      ['cabcdef01', 'cabcdef02']
+    )
   })
 
   it('returns 400 for missing params', async () => {
@@ -127,7 +150,22 @@ describe('GET /social/map/clusters/leaves', () => {
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.features).toEqual(mockFeatures)
-    expect(mockGetLeaves).toHaveBeenCalledWith('profile-123', 42)
+    expect(mockGetLeaves).toHaveBeenCalledWith('profile-123', 42, [])
+  })
+
+  it('forwards tagIds so the correct cached index is queried', async () => {
+    mockGetLeaves.mockReturnValue([])
+
+    await handler()(
+      {
+        session: mockSession,
+        query: { clusterId: '42', tagIds: 'cabcdef01' },
+        log: { error: vi.fn() },
+      },
+      reply
+    )
+
+    expect(mockGetLeaves).toHaveBeenCalledWith('profile-123', 42, ['cabcdef01'])
   })
 
   it('returns 400 for missing clusterId', async () => {

@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { onActivated, onMounted, provide, toRef, watch } from 'vue'
+import { computed, onActivated, onMounted, provide, ref, toRef, watch } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 
 import { useBootstrap } from '@/lib/bootstrap'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { useProfilesViewModel } from '../composables/useProfilesViewModel'
 import { useBrowseViewModel } from '../composables/useBrowseViewModel'
+import { useBrowseFiltersStore } from '@/features/browse/stores/browseFiltersStore'
+import { isValidLatLng, toLatLng } from '@/features/shared/components/osmPoiMap/mapUtils'
 import { useDetailRouteState } from '@/features/shared/composables/useDetailRouteState'
 import { useDetailPanel } from '@/features/app/composables/useDetailPanel'
 
@@ -31,28 +34,40 @@ const {
   viewerProfile,
   isNoOneAround,
   clusterFeatures,
-  matchFilter,
   isInitialized,
-  updatePrefs,
   onBoundsChanged: onProfileBoundsChanged,
   initialize,
-  refreshIfFilterChanged,
-  mapCenter,
+  refetchForCurrentBounds,
   fetchPopupData,
 } = useProfilesViewModel()
+
+// Ephemeral tag filter state (client-only). Changing it triggers a refetch
+// of the current viewport so the map reflects the new filter immediately.
+const filtersStore = useBrowseFiltersStore()
+const { selectedTagIds } = storeToRefs(filtersStore)
+watch(selectedTagIds, () => {
+  refetchForCurrentBounds()
+})
+
+// Map center: starts at the viewer's own location, then moves when the
+// user picks a fly-to target from the location filter. OsmPoiMap watches
+// its `center` prop and pans imperatively when it changes (see
+// MapController.flyToCenter).
+const mapCenterOverride = ref<[number, number] | null>(null)
+const mapCenter = computed<[number, number] | undefined>(() => {
+  if (mapCenterOverride.value) return mapCenterOverride.value
+  const fromProfile = toLatLng(viewerProfile.value?.location)
+  return isValidLatLng(fromProfile) ? fromProfile : undefined
+})
+function onLocationFlyTo(coords: { lat: number; lon: number }) {
+  mapCenterOverride.value = [coords.lat, coords.lon]
+}
 
 provide('viewerProfile', toRef(viewerProfile))
 
 // ── Post layer + tags + merged map data + selection state ──────────
-const {
-  clusters,
-  allPois,
-  availableTags,
-  selectedTagIds,
-  activePoi,
-  onSelectionClear,
-  onBoundsChanged,
-} = useBrowseViewModel(clusterFeatures, onProfileBoundsChanged)
+const { clusters, allPois, availableTags, activePoi, onSelectionClear, onBoundsChanged } =
+  useBrowseViewModel(clusterFeatures, onProfileBoundsChanged)
 
 // ── Route-driven detail panel ──────────────────────────────────────
 const router = useRouter()
@@ -152,8 +167,6 @@ onActivated(async () => {
   if (checkOnboarding()) return
   if (!isInitialized.value) {
     await initialize()
-  } else {
-    await refreshIfFilterChanged()
   }
 })
 
@@ -180,12 +193,9 @@ onMounted(async () => {
     >
       <div class="flex-grow-1">
         <BrowseFilterBar
-          v-model="matchFilter"
           :viewer-profile="viewerProfile"
           :available-tags="availableTags"
-          :selected-tag-ids="selectedTagIds"
-          @filter:changed="updatePrefs"
-          @update:selected-tag-ids="selectedTagIds = $event"
+          @location:fly-to="onLocationFlyTo"
         />
       </div>
       <div class="flex-shrink-0 flex-grow-0">

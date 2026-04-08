@@ -1,97 +1,61 @@
 <script setup lang="ts">
-import { ref, watch, onActivated, onDeactivated } from 'vue'
-import { useDebounceFn } from '@vueuse/core'
+import { ref } from 'vue'
+import { storeToRefs } from 'pinia'
 
 import LocationFilterInput from '@/features/shared/profileform/LocationFilterInput.vue'
-import TagFilterSelector from '@/features/shared/profileform/TagFilterSelector.vue'
-import TagList from '@/features/shared/profiledisplay/TagList.vue'
 import TagSelector from '@/features/shared/profileform/TagSelector.vue'
 
-import type { SocialMatchFilterDTO } from '@zod/match/filters.dto'
+import type { LocationDTO } from '@zod/dto/location.dto'
 import type { OwnerProfile } from '@zod/profile/profile.dto'
 import type { PublicTag } from '@zod/tag/tag.dto'
+import { useBrowseFiltersStore } from '@/features/browse/stores/browseFiltersStore'
 
-const FILTER_DEBOUNCE_MS = 500
-
-const filter = defineModel<SocialMatchFilterDTO | null>({ default: null })
-
-const props = defineProps<{
+defineProps<{
   viewerProfile: OwnerProfile | null
   /** Tags available in the current map bounds (from /browse/bounds) */
   availableTags?: PublicTag[]
-  /** Currently selected tag IDs for bounds-scoped filtering */
-  selectedTagIds?: string[]
 }>()
 
 const emit = defineEmits<{
-  'filter:changed': []
-  'update:selectedTagIds': [ids: string[]]
+  /**
+   * Emitted when the user picks a location from the selector. Consumers
+   * should pan the map to these coordinates; the location input no
+   * longer filters any backend query.
+   */
+  'location:fly-to': [coords: { lat: number; lon: number }]
 }>()
 
-const isActive = ref(true)
-onActivated(() => (isActive.value = true))
-onDeactivated(() => (isActive.value = false))
+const filtersStore = useBrowseFiltersStore()
+// Bind the TagSelector v-model directly to the store's PublicTag[] state.
+// Storing full tag objects (not just IDs) means tags picked via the
+// autocomplete search — which queries the global tag store and may
+// return tags that aren't in the bounds-scoped `availableTags` list —
+// always render their pill correctly.
+const { selectedTags } = storeToRefs(filtersStore)
 
-function setLocationFromProfile() {
-  if (props.viewerProfile?.location && filter.value?.location) {
-    Object.assign(filter.value.location, props.viewerProfile.location)
-    emit('filter:changed')
-  }
-}
+// Local ephemeral location, used only to drive the LocationSelector
+// display. Not persisted, not sent to the backend.
+const locationModel = ref<LocationDTO>({ country: '' })
 
-const debouncedEmitChanged = useDebounceFn(() => emit('filter:changed'), FILTER_DEBOUNCE_MS)
-
-watch(
-  () =>
-    filter.value && {
-      country: filter.value.location.country,
-      cityName: filter.value.location.cityName,
-      tags: filter.value.tags.map((t) => t.id).join(','),
-    },
-  (newVal, oldVal) => {
-    if (!isActive.value) return
-    if (!oldVal || !newVal) return
-    if (JSON.stringify(newVal) !== JSON.stringify(oldVal)) {
-      debouncedEmitChanged()
-    }
-  }
-)
-
-function toggleBoundsTag(id: string) {
-  const current = props.selectedTagIds ?? []
-  const idx = current.indexOf(id)
-  if (idx === -1) emit('update:selectedTagIds', [...current, id])
-  else
-    emit(
-      'update:selectedTagIds',
-      current.filter((t) => t !== id)
-    )
-}
-
-function clearBoundsTags() {
-  emit('update:selectedTagIds', [])
+function onLocationFlyTo(coords: { lat: number; lon: number }) {
+  emit('location:fly-to', coords)
 }
 </script>
 
 <template>
-  <BRow
-    v-if="filter"
-    @click.stop
-  >
+  <BRow @click.stop>
     <!-- Location column -->
     <div class="col-12 col-md-6">
       <LocationFilterInput
-        v-model="filter.location"
+        v-model="locationModel"
         :viewer-profile="viewerProfile"
-        @location:set-from-profile="$emit('filter:changed')"
+        @location:fly-to="onLocationFlyTo"
       />
     </div>
     <!-- Tags column -->
     <div class="col-12 col-md-6">
-      <!-- <TagList :tags="filter.tags" /> -->
-
       <TagSelector
-        v-model="filter.tags"
+        v-model="selectedTags"
         :taggable="false"
         open-direction="bottom"
         :close-on-select="true"
@@ -99,26 +63,4 @@ function clearBoundsTags() {
       />
     </div>
   </BRow>
-  <!-- Bounds-scoped tags (from map viewport) -->
-  <!-- <div
-      v-if="availableTags?.length"
-      class="d-flex flex-wrap gap-1 mt-2"
-    >
-      <button
-        v-for="tag in availableTags"
-        :key="tag.id"
-        class="badge rounded-pill border border-secondary-subtle"
-        :class="selectedTagIds?.includes(tag.id) ? 'bg-secondary text-white' : 'bg-white text-dark'"
-        @click="toggleBoundsTag(tag.id)"
-      >
-        #{{ tag.name }}
-      </button>
-      <button
-        v-if="selectedTagIds?.length"
-        class="badge rounded-pill bg-white text-muted border"
-        @click="clearBoundsTags"
-      >
-        ✕
-      </button>
-    </div> -->
 </template>

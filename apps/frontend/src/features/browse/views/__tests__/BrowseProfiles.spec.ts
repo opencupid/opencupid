@@ -50,9 +50,34 @@ vi.mock('../../components/BrowseFilterBar.vue', () => ({
   default: {
     name: 'BrowseFilterBar',
     template: '<div class="browse-filter-bar" />',
-    props: ['modelValue', 'viewerProfile', 'availableTags', 'selectedTagIds'],
-    emits: ['filter:changed', 'update:selectedTagIds', 'update:modelValue'],
+    props: ['viewerProfile', 'availableTags'],
+    emits: ['location:fly-to'],
   },
+}))
+
+// Stub the new ephemeral filters store so the test doesn't have to bring
+// up real Pinia state for an unrelated dependency.
+vi.mock('@/features/browse/stores/browseFiltersStore', () => ({
+  useBrowseFiltersStore: () => ({
+    selectedTagIds: ref<string[]>([]),
+    toggleTag: vi.fn(),
+    setTags: vi.fn(),
+    clearTags: vi.fn(),
+    reset: vi.fn(),
+  }),
+}))
+
+// Stub useBrowseViewModel — these tests focus on BrowseProfiles wiring,
+// not the post/tag layer composable's internals.
+vi.mock('../../composables/useBrowseViewModel', () => ({
+  useBrowseViewModel: () => ({
+    clusters: ref([]),
+    allPois: ref([]),
+    availableTags: ref([]),
+    activePoi: ref(null),
+    onSelectionClear: vi.fn(),
+    onBoundsChanged: vi.fn(),
+  }),
 }))
 vi.mock('@/assets/icons/interface/target-2.svg', () => ({
   default: { template: '<svg class="icon-target" />' },
@@ -120,18 +145,12 @@ const vmState = {
     },
   ]),
   storeError: ref(null),
-  matchFilter: ref<{
-    location: { country: string; cityName: string; lat: number | null; lon: number | null }
-    tags: { id: string; name: string; slug: string }[]
-  } | null>(null),
   isInitialized: ref(true),
   hideProfile: vi.fn(),
   onBoundsChanged: vi.fn(),
-  updatePrefs: vi.fn(),
   openProfile: vi.fn(),
   initialize: vi.fn(),
-  refreshIfFilterChanged: vi.fn(),
-  mapCenter: ref(null),
+  refetchForCurrentBounds: vi.fn(),
   fetchPopupData: vi.fn(),
 }
 
@@ -155,7 +174,6 @@ describe('BrowseProfiles view', () => {
   beforeEach(() => {
     vmState.isNoOneAround.value = false
     vmState.isInitialized.value = true
-    vmState.matchFilter.value = null
     mockRouteName.value = 'Browse'
     mockDetail.value = null
     toastInfo.mockClear()
@@ -215,36 +233,19 @@ describe('BrowseProfiles view', () => {
     expect(wrapper.find('.browse-filter-bar').exists()).toBe(true)
   })
 
-  it('renders map when matchFilter has location coords', () => {
-    vmState.matchFilter.value = {
+  it('renders map when viewer profile has location coords', () => {
+    vmState.viewerProfile.value = {
+      isSocialActive: true,
       location: { country: 'HU', cityName: 'Budapest', lat: 47.5, lon: 19.0 },
-      tags: [],
     }
     const wrapper = mountComponent()
     expect(wrapper.find('.map-view').exists()).toBe(true)
   })
 
-  it('renders map when matchFilter has null coords but profile has location', () => {
-    vmState.viewerProfile.value = {
-      isSocialActive: true,
-      location: { country: 'HU', cityName: 'Budapest', lat: 47.5, lon: 19.0 },
-    }
-    vmState.matchFilter.value = {
-      location: { country: '', cityName: '', lat: null, lon: null },
-      tags: [],
-    }
-    const wrapper = mountComponent()
-    expect(wrapper.find('.map-view').exists()).toBe(true)
-  })
-
-  it('renders map when neither filter nor profile has coords', () => {
+  it('renders map when viewer profile has no coords', () => {
     vmState.viewerProfile.value = {
       isSocialActive: true,
       location: { country: '', cityName: '', lat: null, lon: null },
-    }
-    vmState.matchFilter.value = {
-      location: { country: '', cityName: '', lat: null, lon: null },
-      tags: [],
     }
     const wrapper = mountComponent()
     expect(wrapper.find('.map-view').exists()).toBe(true)

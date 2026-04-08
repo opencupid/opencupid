@@ -15,19 +15,21 @@ import {
   type StoreVoidSuccess,
   type StoreResponse,
   type StoreError,
-  type StoreSuccess,
 } from '@/store/helpers'
 import { bus } from '@/lib/bus'
+import { useBrowseFiltersStore } from './browseFiltersStore'
 
 export type MapBounds = { south: number; north: number; west: number; east: number }
 
 let mapBoundsAbortController: AbortController | null = null
 const cachedProfiles = new Map<string, PublicProfile>()
 let cachedBounds: MapBounds | null = null
+let cachedBoundsTagSig = ''
 
 let clusterAbortController: AbortController | null = null
 let cachedClusterZoom: number | null = null
 let cachedClusterBounds: MapBounds | null = null
+let cachedClusterTagSig = ''
 const popupCache = new Map<string, PublicProfile>()
 const POPUP_CACHE_MAX = 20
 
@@ -67,11 +69,33 @@ function profileInBounds(profile: PublicProfile, bounds: MapBounds): boolean {
   return lat >= bounds.south && lat <= bounds.north && lon >= bounds.west && lon <= bounds.east
 }
 
+/**
+ * Stable signature for a tag selection, used for cache keying. Sorting
+ * guarantees that the same set always produces the same string regardless
+ * of selection order.
+ */
+function tagSignature(tagIds: string[]): string {
+  if (tagIds.length === 0) return ''
+  return [...tagIds].sort().join(',')
+}
+
+/**
+ * Serializes the tag selection for HTTP transport. Returns `undefined` when
+ * empty so axios omits the `tagIds` query param entirely (keeps URLs clean
+ * in dev tools and matches the backend's "empty string means no filter"
+ * parser).
+ */
+function tagIdsParam(tagIds: string[]): string | undefined {
+  return tagIds.length > 0 ? tagIds.join(',') : undefined
+}
+
 function invalidateBoundsCache(): void {
   cachedProfiles.clear()
   cachedBounds = null
+  cachedBoundsTagSig = ''
   cachedClusterBounds = null
   cachedClusterZoom = null
+  cachedClusterTagSig = ''
   popupCache.clear()
 }
 
@@ -81,14 +105,7 @@ type FindProfileStoreState = {
   matchedProfileIds: Set<string> // IDs of mutual dating preference matches
   lastMapBounds: MapBounds | null // Last map viewport bounds (for re-fetch on pref change)
   isLoading: boolean // Loading state
-  // Infinite scroll state
-  isLoadingMore: boolean // Loading more profiles
-  hasMoreProfiles: boolean // Whether there are more profiles to load
-  currentPage: number // Current page for pagination
-  pageSize: number // Number of profiles per page
 }
-
-type StoreProfileListResponse = StoreSuccess<{ result: PublicProfile[] }> | StoreError
 
 export const useFindProfileStore = defineStore('findProfile', {
   state: (): FindProfileStoreState => ({
@@ -97,34 +114,9 @@ export const useFindProfileStore = defineStore('findProfile', {
     matchedProfileIds: new Set<string>(),
     lastMapBounds: null,
     isLoading: false,
-    // Infinite scroll state
-    isLoadingMore: false,
-    hasMoreProfiles: true,
-    currentPage: 0,
-    pageSize: 10,
   }),
 
   actions: {
-    async findProfiles(): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
-      try {
-        this.isLoading = true
-        this.currentPage = 0
-        this.hasMoreProfiles = true
-
-        const res = await safeApiCall(() => api.get<GetProfilesResponse>('/find/social'))
-        const fetched = PublicProfileArraySchema.parse(res.data.profiles)
-        this.profileList = fetched
-        this.hasMoreProfiles = fetched.length === this.pageSize
-
-        return storeSuccess()
-      } catch (error: any) {
-        this.profileList = []
-        return storeError(error, 'Failed to fetch profiles')
-      } finally {
-        this.isLoading = false
-      }
-    },
-
     async findProfilesForMapBounds(
       bounds: MapBounds
     ): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
@@ -135,20 +127,29 @@ export const useFindProfileStore = defineStore('findProfile', {
       mapBoundsAbortController = controller
       this.lastMapBounds = bounds
 
-      if (cachedBounds && boundsContain(cachedBounds, bounds)) {
+      const tagIds = useBrowseFiltersStore().selectedTagIds
+      const sig = tagSignature(tagIds)
+
+      if (sig === cachedBoundsTagSig && cachedBounds && boundsContain(cachedBounds, bounds)) {
         this.profileList = [...cachedProfiles.values()].filter((p) => profileInBounds(p, bounds))
-        this.hasMoreProfiles = false
         this.isLoading = false
         return storeSuccess()
       }
 
+      // Tag selection changed — throw out the old bounds cache, it was
+      // keyed to a different filter.
+      if (sig !== cachedBoundsTagSig) {
+        cachedProfiles.clear()
+        cachedBounds = null
+        cachedBoundsTagSig = sig
+      }
+
       try {
         this.isLoading = true
-        this.hasMoreProfiles = false
 
         const paddedBounds = padBounds(bounds, 0.3)
         const res = await api.get<GetProfilesResponse>('/find/social/map/bounds', {
-          params: paddedBounds,
+          params: { ...paddedBounds, tagIds: tagIdsParam(tagIds) },
           signal: controller.signal,
         })
         const fetched = PublicProfileArraySchema.parse(res.data.profiles)
@@ -189,8 +190,17 @@ export const useFindProfileStore = defineStore('findProfile', {
       clusterAbortController = controller
       this.lastMapBounds = bounds
 
+      const tagIds = useBrowseFiltersStore().selectedTagIds
+      const sig = tagSignature(tagIds)
+
+      const sameTags = sig === cachedClusterTagSig
       const zoomChanged = cachedClusterZoom !== zoom
-      if (!zoomChanged && cachedClusterBounds && boundsContain(cachedClusterBounds, bounds)) {
+      if (
+        sameTags &&
+        !zoomChanged &&
+        cachedClusterBounds &&
+        boundsContain(cachedClusterBounds, bounds)
+      ) {
         this.isLoading = false
         return storeSuccess()
       }
@@ -200,13 +210,14 @@ export const useFindProfileStore = defineStore('findProfile', {
 
         const paddedBounds = padBounds(bounds, 0.3)
         const res = await api.get('/find/social/map/clusters', {
-          params: { ...paddedBounds, zoom },
+          params: { ...paddedBounds, zoom, tagIds: tagIdsParam(tagIds) },
           signal: controller.signal,
         })
 
         this.clusterFeatures = ClusterMapResponseSchema.parse(res.data).features
         cachedClusterBounds = paddedBounds
         cachedClusterZoom = zoom
+        cachedClusterTagSig = sig
 
         return storeSuccess()
       } catch (error: any) {
@@ -261,51 +272,6 @@ export const useFindProfileStore = defineStore('findProfile', {
       invalidateBoundsCache()
     },
 
-    async fetchNewProfiles(take: number): Promise<StoreProfileListResponse> {
-      try {
-        const res = await safeApiCall(() =>
-          api.get<GetProfilesResponse>('/find/social/new', { params: { take } })
-        )
-        const fetched = PublicProfileArraySchema.parse(res.data.profiles)
-        return storeSuccess({ result: fetched })
-      } catch (error: any) {
-        return storeError(error, 'Failed to fetch profiles')
-      }
-    },
-
-    async loadMoreProfiles(): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
-      if (this.isLoadingMore || !this.hasMoreProfiles) {
-        return storeSuccess()
-      }
-
-      try {
-        this.isLoadingMore = true
-        const nextPage = this.currentPage + 1
-        const skip = nextPage * this.pageSize
-
-        const res = await safeApiCall(() =>
-          api.get<GetProfilesResponse>('/find/social', {
-            params: { skip, take: this.pageSize },
-          })
-        )
-        const fetched = PublicProfileArraySchema.parse(res.data.profiles)
-
-        if (fetched.length > 0) {
-          this.profileList.push(...fetched)
-          this.currentPage = nextPage
-          this.hasMoreProfiles = fetched.length === this.pageSize
-        } else {
-          this.hasMoreProfiles = false
-        }
-
-        return storeSuccess()
-      } catch (error: any) {
-        return storeError(error, 'Failed to load more profiles')
-      } finally {
-        this.isLoadingMore = false
-      }
-    },
-
     hide(profileId: string): void {
       const profileIndex = this.profileList.findIndex((p) => p.id === profileId)
       if (profileIndex !== -1) {
@@ -328,9 +294,6 @@ export const useFindProfileStore = defineStore('findProfile', {
       this.matchedProfileIds = new Set()
       this.lastMapBounds = null
       this.isLoading = false
-      this.isLoadingMore = false
-      this.hasMoreProfiles = true
-      this.currentPage = 0
     },
   },
 })

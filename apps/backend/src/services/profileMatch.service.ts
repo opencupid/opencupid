@@ -1,27 +1,11 @@
 import { prisma } from '../lib/prisma'
 
 import { type DbProfileWithImages, DatingEligibleProfileSchema } from '@zod/profile/profile.db'
-import type {
-  SocialMatchFilterWithTags,
-  UpdateSocialMatchFilterPayload,
-} from '@zod/match/filters.dto'
 
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
 import { profileImageInclude, tagsInclude } from '@/db/includes/profileIncludes'
-import type { LocationDTO } from '@zod/dto/location.dto'
 import { type Prisma } from '@prisma/client'
 import { calculateAge } from '@zod/match/filters.form'
-
-const tagInclude = {
-  // city: true,
-  tags: {
-    include: {
-      translations: {
-        select: { name: true, locale: true },
-      },
-    },
-  },
-}
 
 export type OrderBy =
   | Prisma.Enumerable<Prisma.ProfileOrderByWithRelationInput>
@@ -75,118 +59,13 @@ export class ProfileMatchService {
     return ProfileMatchService.instance
   }
 
-  async getSocialMatchFilter(profileId: string): Promise<SocialMatchFilterWithTags | null> {
-    return await prisma.socialMatchFilter.findUnique({
-      where: { profileId },
-      include: {
-        ...tagInclude,
-      },
-    })
-  }
-
-  async updateSocialMatchFilter(
-    profileId: string,
-    data: UpdateSocialMatchFilterPayload
-  ): Promise<SocialMatchFilterWithTags | null> {
-    const tagIds = (data.tags ?? []).map((id) => ({ id }))
-    const update = {
-      profileId,
-      country: data.location?.country || null,
-      cityName: data.location?.cityName || null,
-      lat: data.location?.lat ?? null,
-      lon: data.location?.lon ?? null,
-      radius: data.radius,
-      tags: {
-        set: tagIds, // ✅ safe for update
-      },
-    }
-
-    const create = {
-      profileId,
-      country: data.location?.country || null,
-      cityName: data.location?.cityName || null,
-      lat: data.location?.lat ?? null,
-      lon: data.location?.lon ?? null,
-      radius: data.radius,
-      tags: {
-        connect: tagIds, // ✅ required for create
-      },
-    }
-
-    return await prisma.socialMatchFilter.upsert({
-      where: { profileId },
-      update,
-      create,
-      include: {
-        ...tagInclude,
-      },
-    })
-  }
-
-  async createSocialMatchFilter(
-    tx: Prisma.TransactionClient,
-    profileId: string,
-    location: LocationDTO
-  ): Promise<SocialMatchFilterWithTags | null> {
-    return await tx.socialMatchFilter.create({
-      data: {
-        profileId,
-        country: location.country || null,
-        cityName: location.cityName || null,
-        lat: location.lat ?? null,
-        lon: location.lon ?? null,
-      },
-      include: {
-        ...tagInclude,
-      },
-    })
-  }
-  private async buildSocialWhereClause(profileId: string) {
-    const userPrefs = await this.getSocialMatchFilter(profileId)
-    if (!userPrefs) return null
-
-    const tagIds = userPrefs.tags?.map((tag) => tag.id)
-
-    return {
-      ...statusFlags,
-      isSocialActive: true,
-      ...(userPrefs.country ? { country: userPrefs.country } : {}),
-      ...(userPrefs.tags?.length ? { tags: { some: { id: { in: tagIds } } } } : {}),
-      ...blocklistWhereClause(profileId),
-    }
-  }
-
-  async findSocialProfilesFor(
-    profileId: string,
-    orderBy: OrderBy = defaultOrderBy,
-    take: number = 10,
-    skip: number = 0
-  ): Promise<DbProfileWithImages[]> {
-    const where = await this.buildSocialWhereClause(profileId)
-    if (!where) return []
-
-    return await prisma.profile.findMany({
-      where,
-      include: {
-        ...tagsInclude(),
-        ...profileImageInclude(),
-      },
-      take,
-      skip,
-      orderBy,
-    })
-  }
-
   async findSocialProfilesInBounds(
     profileId: string,
     bounds: { south: number; north: number; west: number; east: number },
+    tagIds: string[] = [],
     orderBy: OrderBy = defaultOrderBy
   ): Promise<DbProfileWithImages[]> {
-    const userPrefs = await this.getSocialMatchFilter(profileId)
-    if (!userPrefs) return []
-
-    const tagIds = userPrefs.tags?.map((tag) => tag.id)
-    const tagFilter = tagIds?.length ? { tags: { some: { id: { in: tagIds } } } } : {}
+    const tagFilter = tagIds.length ? { tags: { some: { id: { in: tagIds } } } } : {}
     const boundsFilter = {
       lat: { not: null, gte: bounds.south, lte: bounds.north },
       lon: { not: null, gte: bounds.west, lte: bounds.east },
@@ -196,6 +75,7 @@ export class ProfileMatchService {
       where: {
         ...statusFlags,
         isSocialActive: true,
+        id: { not: profileId },
         ...tagFilter,
         ...boundsFilter,
         ...blocklistWhereClause(profileId),
@@ -209,23 +89,31 @@ export class ProfileMatchService {
     })
   }
 
+  /**
+   * Fetches all social profiles with a location, optionally filtered by tagIds.
+   * Used by ClusterService.buildIndex to seed the supercluster index.
+   *
+   * The viewer's own profile is intentionally NOT excluded — the frontend
+   * empty-state logic in `useProfilesViewModel.isNoOneAround` relies on the
+   * viewer being present in the cluster results to detect "I'm alone on
+   * the map" and render the NoResultsCTA.
+   */
   async findSocialProfilesWithLocation(
     profileId: string,
-    orderBy: OrderBy = defaultOrderBy,
-    bounds?: { south: number; north: number; west: number; east: number }
+    tagIds: string[] = [],
+    orderBy: OrderBy = defaultOrderBy
   ): Promise<DbProfileWithImages[]> {
-    const where = await this.buildSocialWhereClause(profileId)
-    if (!where) return []
-
-    const locationFilter = bounds
-      ? {
-          lat: { not: null, gte: bounds.south, lte: bounds.north },
-          lon: { not: null, gte: bounds.west, lte: bounds.east },
-        }
-      : { lat: { not: null }, lon: { not: null } }
+    const tagFilter = tagIds.length ? { tags: { some: { id: { in: tagIds } } } } : {}
 
     return await prisma.profile.findMany({
-      where: { ...where, ...locationFilter },
+      where: {
+        ...statusFlags,
+        isSocialActive: true,
+        lat: { not: null },
+        lon: { not: null },
+        ...tagFilter,
+        ...blocklistWhereClause(profileId),
+      },
       include: {
         ...tagsInclude(),
         ...profileImageInclude(),
@@ -233,44 +121,6 @@ export class ProfileMatchService {
       take: 500,
       orderBy,
     })
-  }
-
-  async findLocalProfiles(
-    profileId: string,
-    orderBy: OrderBy = defaultOrderBy,
-    take: number = 10,
-    skip: number = 0
-  ): Promise<DbProfileWithImages[]> {
-    const userPrefs = await this.getSocialMatchFilter(profileId)
-
-    if (!userPrefs) {
-      return [] // no preferences set, return empty array
-    }
-
-    const filters = {
-      ...(userPrefs.country ? { country: userPrefs.country } : {}),
-    }
-
-    const profiles = await prisma.profile.findMany({
-      where: {
-        ...statusFlags,
-        isSocialActive: true,
-        id: {
-          not: profileId,
-        },
-        ...filters,
-        ...blocklistWhereClause(profileId),
-      },
-      include: {
-        ...tagsInclude(),
-        ...profileImageInclude(),
-      },
-      take: take,
-      skip: skip,
-      orderBy: orderBy,
-    })
-
-    return profiles
   }
 
   async findMutualMatchesFor(

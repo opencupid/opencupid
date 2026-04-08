@@ -106,7 +106,6 @@ model Tag {
   updatedAt      DateTime            @updatedAt
   translations   TagTranslation[]
   profiles       Profile[]           @relation("ProfileTags")
-  filters        SocialMatchFilter[]
 }
 
 model TagTranslation {
@@ -358,17 +357,6 @@ model MessageAttachment {
   fileSize  Int?
   duration  Int? // duration in seconds for audio files
   createdAt DateTime @default(now())
-}
-
-model SocialMatchFilter {
-  id        String  @id @default(cuid())
-  profileId String  @unique
-  country   String?
-  cityName  String?
-  lat       Float?
-  lon       Float?
-  radius    Int?    @default(50) // in km
-  tags      Tag[]
 }
 
 model PushSubscription {

@@ -89,7 +89,6 @@ beforeEach(async () => {
   }
   mockProfileMatchService = {
     areProfilesMutuallyCompatible: vi.fn().mockResolvedValue(false),
-    createSocialMatchFilter: vi.fn(),
     createDatingPrefsDefaults: vi.fn().mockReturnValue({}),
   }
   mockMessageService = {
@@ -378,20 +377,6 @@ describe('POST /me (onboarding)', () => {
     profileImages: [],
     localized: [],
   }
-
-  it('creates social match filter with profile location', async () => {
-    const handler = fastify.routes['POST /me']
-    mockProfileService.updateCompleteProfile.mockResolvedValue(dbProfile)
-
-    const req = makeReq({ body: { publicName: 'Test', country: 'HU' } })
-    await handler(req, reply as any)
-
-    expect(mockProfileMatchService.createSocialMatchFilter).toHaveBeenCalledWith(
-      expect.anything(),
-      'p1',
-      expect.objectContaining({ country: 'HU', cityName: 'Budapest', lat: 47.497, lon: 19.04 })
-    )
-  })
 
   it('updates session with active profile state instead of deleting it', async () => {
     const handler = fastify.routes['POST /me']

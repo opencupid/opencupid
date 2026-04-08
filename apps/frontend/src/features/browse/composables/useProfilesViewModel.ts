@@ -1,10 +1,9 @@
-import { computed, ref, toRef } from 'vue'
+import { computed, ref } from 'vue'
 import { useBootstrap } from '@/lib/bootstrap'
 
 import type { StoreError } from '@/store/helpers'
 
 import type { BoundsWithZoom } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
-import { isValidLatLng, toLatLng } from '@/features/shared/components/osmPoiMap/mapUtils'
 import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 
@@ -15,9 +14,6 @@ export function useProfilesViewModel() {
   const storeError = ref<StoreError | null>(null)
   const isInitialized = ref(false)
   const isLoading = ref(false)
-  // Tracks the filter snapshot that was used for the last map fetch.
-  // Plain variable — not reactive — it's internal bookkeeping, not UI state.
-  let renderedFilterSnapshot = ''
   let lastZoom = 7
 
   const initialize = async () => {
@@ -33,9 +29,7 @@ export function useProfilesViewModel() {
       return
     }
 
-    await ownerStore.fetchMatchFilter()
     await fetchResults()
-    renderedFilterSnapshot = JSON.stringify(ownerStore.matchFilter)
     isInitialized.value = true
   }
 
@@ -43,16 +37,6 @@ export function useProfilesViewModel() {
     if (findProfileStore.lastMapBounds) {
       await findProfileStore.findClustersForMapBounds(findProfileStore.lastMapBounds, lastZoom)
     }
-  }
-
-  // Called on onActivated to handle the case where the filter was mutated
-  // externally (e.g. UserHome tag-cloud selection) before navigating here.
-  const refreshIfFilterChanged = async () => {
-    const currentSnapshot = JSON.stringify(ownerStore.matchFilter)
-    if (currentSnapshot === renderedFilterSnapshot) return
-    findProfileStore.invalidateMapCache()
-    await fetchResults()
-    renderedFilterSnapshot = currentSnapshot
   }
 
   // moveend fires after updateMarkers() rebuilds the cluster
@@ -88,6 +72,16 @@ export function useProfilesViewModel() {
     }
   }
 
+  /**
+   * Forces a refetch of clusters + bounds for the last known viewport.
+   * Invoked when the ephemeral tag selection changes so the map reflects
+   * the new filter immediately. Cheaper than a full re-initialize.
+   */
+  const refetchForCurrentBounds = async () => {
+    findProfileStore.invalidateMapCache()
+    await fetchResults()
+  }
+
   const viewerProfile = computed(() => ownerStore.profile)
 
   const haveResults = computed(() => {
@@ -115,35 +109,7 @@ export function useProfilesViewModel() {
     findProfileStore.hide(profileId)
   }
 
-  const updatePrefs = async () => {
-    isLoading.value = true
-    try {
-      const res = await ownerStore.persistMatchFilter()
-      if (!res.success) {
-        storeError.value = res
-        return
-      }
-      storeError.value = null
-      findProfileStore.invalidateMapCache()
-      await fetchResults()
-      renderedFilterSnapshot = JSON.stringify(ownerStore.matchFilter)
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  const mapCenter = computed<[number, number] | undefined>(() => {
-    const fromFilter = toLatLng(ownerStore.matchFilter?.location)
-    if (isValidLatLng(fromFilter)) return fromFilter
-
-    const fromProfile = toLatLng(viewerProfile.value?.location)
-    if (isValidLatLng(fromProfile)) return fromProfile
-
-    return undefined
-  })
-
-  const fetchPopupData = (id: string | number) =>
-    findProfileStore.fetchProfileForPopup(String(id))
+  const fetchPopupData = (id: string | number) => findProfileStore.fetchProfileForPopup(String(id))
 
   return {
     viewerProfile,
@@ -153,13 +119,10 @@ export function useProfilesViewModel() {
     storeError,
     initialize,
     hideProfile,
-    matchFilter: toRef(ownerStore, 'matchFilter'),
-    updatePrefs,
     onBoundsChanged,
-    refreshIfFilterChanged,
+    refetchForCurrentBounds,
     clusterFeatures: computed(() => findProfileStore.clusterFeatures),
     isInitialized,
-    mapCenter,
     fetchPopupData,
   }
 }

@@ -105,7 +105,7 @@ describe('ClusterService', () => {
 
       const features = await service.getOrBuildClusters('viewer-1', [0, 0, 10, 10], 5)
       expect(features).toEqual([])
-      expect(mockFindSocialProfilesWithLocation).toHaveBeenCalledWith('viewer-1', undefined)
+      expect(mockFindSocialProfilesWithLocation).toHaveBeenCalledWith('viewer-1', [])
     })
   })
 

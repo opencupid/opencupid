@@ -1,10 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { setActivePinia, createPinia } from 'pinia'
 
 const mockGet = vi.fn()
 
 vi.mock('@/lib/api', () => ({
   api: { get: (...args: any[]) => mockGet(...args) },
   safeApiCall: (fn: () => unknown) => fn(),
+}))
+
+vi.mock('@/lib/bus', () => ({
+  bus: { on: vi.fn(), emit: vi.fn() },
 }))
 
 import { ref } from 'vue'
@@ -16,6 +21,7 @@ const noCluster = ref([])
 
 describe('useBrowseViewModel', () => {
   beforeEach(() => {
+    setActivePinia(createPinia())
     vi.clearAllMocks()
   })
 
@@ -71,27 +77,5 @@ describe('useBrowseViewModel', () => {
 
     expect(vm.postPois.value).toHaveLength(1)
     expect(vm.postPois.value[0]!.id).toBe('post1')
-  })
-
-  it('toggleTag adds and removes tag IDs', () => {
-    const vm = useBrowseViewModel(noCluster, vi.fn())
-    expect(vm.selectedTagIds.value).toEqual([])
-
-    vm.toggleTag('t1')
-    expect(vm.selectedTagIds.value).toEqual(['t1'])
-
-    vm.toggleTag('t2')
-    expect(vm.selectedTagIds.value).toEqual(['t1', 't2'])
-
-    vm.toggleTag('t1')
-    expect(vm.selectedTagIds.value).toEqual(['t2'])
-  })
-
-  it('clearTags resets selectedTagIds', () => {
-    const vm = useBrowseViewModel(noCluster, vi.fn())
-    vm.toggleTag('t1')
-    vm.toggleTag('t2')
-    vm.clearTags()
-    expect(vm.selectedTagIds.value).toEqual([])
   })
 })

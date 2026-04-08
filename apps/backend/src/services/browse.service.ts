@@ -37,9 +37,12 @@ export class BrowseService {
     const postService = PostService.getInstance(this.prisma)
 
     const [rawProfiles, rawPosts] = await Promise.all([
-      profileMatchService.findSocialProfilesInBounds(viewerProfileId, bounds, [
-        { updatedAt: 'desc' },
-      ]),
+      profileMatchService.findSocialProfilesInBounds(
+        viewerProfileId,
+        bounds,
+        [],
+        [{ updatedAt: 'desc' }]
+      ),
       postService.findInBounds(bounds),
     ])
 

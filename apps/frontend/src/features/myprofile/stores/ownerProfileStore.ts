@@ -27,18 +27,11 @@ import type {
   UpdateProfileResponse,
   UpdateDatingPreferencesResponse,
   UpdateProfileScopeResponse,
-  GetSocialMatchFilterResponse,
 } from '@zod/apiResponse.dto'
 import {
   DatingPreferencesFormSchema,
   type DatingPreferencesFormType,
 } from '@zod/match/filters.form'
-import type { PublicTag } from '@zod/tag/tag.dto'
-import {
-  SocialMatchFilterDTOSchema,
-  type SocialMatchFilterDTO,
-  type UpdateSocialMatchFilterPayload,
-} from '@zod/match/filters.dto'
 
 const defaultOptInSettings: ProfileOptInSettings = {
   isCallable: true,
@@ -61,20 +54,11 @@ import {
 
 export type PublicProfileResponse = StoreResponse<PublicProfileWithContext> | StoreError
 
-function mapMatchFilterToPayload(dto: SocialMatchFilterDTO): UpdateSocialMatchFilterPayload {
-  return {
-    location: dto.location,
-    tags: dto.tags.map((tag) => tag.id),
-    radius: dto.radius,
-  } as UpdateSocialMatchFilterPayload
-}
-
 const defaultDatingPrefs = (): DatingPreferencesFormType => DatingPreferencesFormSchema.parse({})
 
 interface ProfileStoreState {
   profile: OwnerProfile | null
   datingPrefs: DatingPreferencesFormType
-  matchFilter: SocialMatchFilterDTO | null
   optInSettings: ProfileOptInSettings
   profileScopes: ProfileScope[]
   isLoading: boolean
@@ -85,7 +69,6 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
   state: (): ProfileStoreState => ({
     profile: null as OwnerProfile | null,
     datingPrefs: defaultDatingPrefs(),
-    matchFilter: null as SocialMatchFilterDTO | null,
     optInSettings: { ...defaultOptInSettings },
     profileScopes: [],
     isLoading: false,
@@ -275,49 +258,6 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
       }
     },
 
-    async fetchMatchFilter(): Promise<StoreVoidSuccess | StoreError> {
-      try {
-        this.isLoading = true
-        const res = await safeApiCall(() =>
-          api.get<GetSocialMatchFilterResponse>('/find/social/filter')
-        )
-        this.matchFilter = SocialMatchFilterDTOSchema.parse(res.data.filter)
-        return storeSuccess()
-      } catch (error: any) {
-        this.matchFilter = null
-        return storeError(error, 'Failed to fetch match filter')
-      } finally {
-        this.isLoading = false
-      }
-    },
-
-    async persistMatchFilter(): Promise<StoreVoidSuccess | StoreError> {
-      if (!this.matchFilter) {
-        return storeError(new Error('No match filter to persist'), 'No match filter set')
-      }
-      try {
-        this.isLoading = true
-        const payload = mapMatchFilterToPayload(this.matchFilter)
-        const res = await safeApiCall(() =>
-          api.patch<GetSocialMatchFilterResponse>('/find/social/filter', payload)
-        )
-        this.matchFilter = SocialMatchFilterDTOSchema.parse(res.data.filter)
-        return storeSuccess()
-      } catch (error: any) {
-        return storeError(error, 'Failed to update match filter')
-      } finally {
-        this.isLoading = false
-      }
-    },
-
-    async setMatchFilterTags(tags: PublicTag[]): Promise<StoreVoidSuccess | StoreError> {
-      if (!this.matchFilter) {
-        return storeError(new Error('No match filter'), 'No match filter set')
-      }
-      Object.assign(this.matchFilter, { tags })
-      return this.persistMatchFilter()
-    },
-
     /**
      * Fetch a profile preview by ID and locale.  Returns the shape of a PublicProfile, with all dating
      * fields.
@@ -347,7 +287,6 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
     reset() {
       this.profile = null
       Object.assign(this.datingPrefs, defaultDatingPrefs())
-      this.matchFilter = null
       this.optInSettings = { ...defaultOptInSettings }
       this.isLoading = false
     },
