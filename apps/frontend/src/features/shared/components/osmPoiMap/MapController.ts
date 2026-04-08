@@ -248,7 +248,7 @@ export class MapController {
 
   flyToMarker(poi: MapPoi): void {
     if (this.phase !== 'ready') return
-    this.map.flyTo([poi.location.lat, poi.location.lon], Math.max(this.map.getZoom(), 13), {
+    this.map.flyTo([poi.location.lat, poi.location.lon], MAP_MAX_ZOOM, {
       animate: true,
       duration: 0.6,
     })
