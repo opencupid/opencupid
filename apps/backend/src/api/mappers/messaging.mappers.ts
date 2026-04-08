@@ -19,20 +19,36 @@ function mapConversationMeta(c: { id: string; updatedAt: Date; createdAt: Date }
   }
 }
 
+/**
+ * Maps a conversation participant row to a ConversationSummary DTO.
+ *
+ * When a partner's account is closed, their Profile (and ConversationParticipant)
+ * is cascade-deleted while the Conversation is ARCHIVED with nullable FKs (SetNull).
+ * In that case `partner` is undefined and we return a tombstone placeholder so the
+ * API never throws — the frontend renders the closed-account state via issue #1192.
+ */
 export function mapConversationParticipantToSummary(
   p: ConversationParticipantWithConversationSummary,
   currentProfileId: string
 ): ConversationSummary {
   const partner = p.conversation.participants.find((cp) => cp.profileId !== currentProfileId)
 
-  if (!partner) throw new Error('Partner profile not found in conversation')
-
   const lastMessage = p.conversation.messages[0] ?? null
 
   const canReply = canSendMessageInConversation(p.conversation, currentProfileId)
   const myParticipant = p.conversation.participants.find((cp) => cp.profileId === currentProfileId)
-  const isCallable = partner.isCallable !== false && partner.profile.isCallable !== false
   const myIsCallable = myParticipant?.isCallable !== false
+
+  let partnerProfile: ConversationSummary['partnerProfile']
+  let isCallable: boolean
+  if (partner) {
+    partnerProfile = mapProfileSummary(partner.profile)
+    isCallable = partner.isCallable !== false && partner.profile.isCallable !== false
+  } else {
+    // Tombstone: partner's account was closed — empty placeholder for frontend to handle
+    partnerProfile = { id: '', publicName: '', profileImages: [] }
+    isCallable = false
+  }
   return {
     id: p.id,
     profileId: p.profileId,
@@ -52,7 +68,7 @@ export function mapConversationParticipantToSummary(
         }
       : null,
     conversation: mapConversationMeta(p.conversation),
-    partnerProfile: mapProfileSummary(partner.profile),
+    partnerProfile,
   }
 }
 

@@ -100,3 +100,4 @@ export type PostResponse = ApiSuccess<{ post: OwnerPost }>
 export type CreatePostResponse = ApiSuccess<{ post: OwnerPost }>
 export type UpdatePostResponse = ApiSuccess<{ post: OwnerPost }>
 export type DeletePostResponse = ApiSuccess<{}>
+export type DeleteAccountResponse = ApiSuccess<{}>

@@ -1,9 +1,10 @@
 import { FastifyPluginAsync } from 'fastify'
 import { UserService } from 'src/services/user.service'
+import { RefreshTokenService } from 'src/services/refresh-token.service'
 import { sendError, sendUnauthorizedError } from '../helpers'
 import { validateBody } from '@/utils/zodValidate'
 
-import type { GetUserSettingsResponse } from '@zod/apiResponse.dto'
+import type { GetUserSettingsResponse, DeleteAccountResponse } from '@zod/apiResponse.dto'
 import {
   SettingsUserSchema,
   UpdateUserLanguagePayloadSchema,
@@ -12,6 +13,7 @@ import {
 
 const userRoutes: FastifyPluginAsync = async (fastify) => {
   const userService = UserService.getInstance()
+  const refreshTokenService = new RefreshTokenService(fastify.redis)
 
   /**
    * GET /me
@@ -69,6 +71,26 @@ const userRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.code(200).send({ success: true })
       } catch (error) {
         return sendError(reply, 500, 'Failed to update user language')
+      }
+    }
+  )
+  fastify.delete(
+    '/me',
+    {
+      onRequest: [fastify.authenticate],
+    },
+    async (req, reply) => {
+      try {
+        await userService.deleteAccount(req.user.userId)
+        // Clear all refresh tokens and session (same as logout)
+        await refreshTokenService.deleteAllForUser(req.user.userId)
+        await req.deleteSession()
+        reply.clearCookie('__media_token', { path: '/user-content/' })
+        const response: DeleteAccountResponse = { success: true }
+        return reply.code(200).send(response)
+      } catch (error) {
+        fastify.log.error({ err: error }, 'Error deleting account')
+        return sendError(reply, 500, 'Failed to delete account')
       }
     }
   )

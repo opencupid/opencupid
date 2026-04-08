@@ -171,6 +171,30 @@ describe('messaging mappers', () => {
     })
   })
 
+  describe('deleted partner (account closed)', () => {
+    it('returns tombstone partner profile when partner participant is missing', () => {
+      const p: any = {
+        ...participant,
+        conversation: {
+          ...participant.conversation,
+          participants: [
+            {
+              profileId: 'p1',
+              isCallable: true,
+              profile: { id: 'p1', publicName: 'Me', profileImages: [], isCallable: true },
+            },
+          ],
+        },
+      }
+      const summary = mapConversationParticipantToSummary(p, 'p1')
+      expect(summary.partnerProfile.id).toBe('')
+      expect(summary.partnerProfile.publicName).toBe('')
+      expect(summary.partnerProfile.profileImages).toEqual([])
+      expect(summary.isCallable).toBe(false)
+      expect(summary.canReply).toBe(false)
+    })
+  })
+
   describe('mapAttachmentDTO', () => {
     it('returns clean URL for voice attachments (no query params)', () => {
       const attachment: any = {

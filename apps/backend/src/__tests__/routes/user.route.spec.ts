@@ -5,9 +5,17 @@ import { MockFastify, MockReply } from '../../test-utils/fastify'
 let fastify: MockFastify
 let reply: MockReply
 let mockUserService: any
+let mockRefreshTokenService: any
 
 vi.mock('../../services/user.service', () => ({
   UserService: { getInstance: () => mockUserService },
+}))
+vi.mock('../../services/refresh-token.service', () => ({
+  RefreshTokenService: class {
+    deleteAllForUser(...args: any[]) {
+      return mockRefreshTokenService.deleteAllForUser(...args)
+    }
+  },
 }))
 vi.mock('@/lib/appconfig', () => ({
   appConfig: {
@@ -24,6 +32,10 @@ beforeEach(async () => {
   reply = new MockReply()
   mockUserService = {
     getUserById: vi.fn(),
+    deleteAccount: vi.fn(),
+  }
+  mockRefreshTokenService = {
+    deleteAllForUser: vi.fn(),
   }
   await userRoutes(fastify as any, {})
 })
@@ -86,5 +98,30 @@ describe('PATCH /me', () => {
       data: { language: 'de' },
     })
     expect(updateSession).toHaveBeenCalledWith({ lang: 'de' })
+  })
+})
+
+describe('DELETE /me', () => {
+  it('deletes account, clears tokens and session, returns 200', async () => {
+    const handler = fastify.routes['DELETE /me']
+    const deleteSession = vi.fn().mockResolvedValue(undefined)
+    mockUserService.deleteAccount.mockResolvedValue(undefined)
+    mockRefreshTokenService.deleteAllForUser.mockResolvedValue(undefined)
+    const req = { user: { userId: 'u1' }, deleteSession }
+    await handler(req as any, reply as any)
+    expect(mockUserService.deleteAccount).toHaveBeenCalledWith('u1')
+    expect(mockRefreshTokenService.deleteAllForUser).toHaveBeenCalledWith('u1')
+    expect(deleteSession).toHaveBeenCalled()
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    expect(reply.clearedCookies.some((c) => c.name === '__media_token')).toBe(true)
+  })
+
+  it('returns 500 if deleteAccount throws', async () => {
+    const handler = fastify.routes['DELETE /me']
+    mockUserService.deleteAccount.mockRejectedValue(new Error('db error'))
+    const req = { user: { userId: 'u1' }, deleteSession: vi.fn() }
+    await handler(req as any, reply as any)
+    expect(reply.statusCode).toBe(500)
   })
 })

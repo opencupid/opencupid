@@ -272,18 +272,18 @@ model Conversation {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  profileA   Profile @relation("ProfileA", fields: [profileAId], references: [id], onDelete: Cascade)
-  profileAId String
+  profileA   Profile? @relation("ProfileA", fields: [profileAId], references: [id], onDelete: SetNull)
+  profileAId String?
 
-  profileB   Profile @relation("ProfileB", fields: [profileBId], references: [id], onDelete: Cascade)
-  profileBId String
+  profileB   Profile? @relation("ProfileB", fields: [profileBId], references: [id], onDelete: SetNull)
+  profileBId String?
 
   participants ConversationParticipant[]
   messages     Message[]
   status       ConversationStatus        @default(INITIATED)
 
-  initiatorProfileId String
-  initiator          Profile @relation(fields: [initiatorProfileId], references: [id])
+  initiatorProfileId String?
+  initiator          Profile? @relation(fields: [initiatorProfileId], references: [id], onDelete: SetNull)
 
   jitsiRoomId String?
 

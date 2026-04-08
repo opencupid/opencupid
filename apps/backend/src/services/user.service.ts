@@ -1,4 +1,8 @@
+import fs from 'fs'
+import path from 'path'
+
 import { prisma } from '@/lib/prisma'
+import { getMediaRoot, MEDIA_SUBDIR } from '@/lib/media'
 import { Prisma, UserRole } from '@prisma/client'
 import type { User } from '@zod/generated'
 import { ValidateLoginTokenResponse } from '@zod/user/auth.dto'
@@ -158,5 +162,63 @@ export class UserService {
 
   generateLoginToken() {
     return customAlphabet(nolookalikesSafe, 6)()
+  }
+
+  async deleteAccount(userId: string): Promise<void> {
+    await prisma.$transaction(async (tx) => {
+      const profile = await tx.profile.findUnique({
+        where: { userId },
+        select: { id: true },
+      })
+
+      if (profile) {
+        const profileId = profile.id
+
+        // Delete RESTRICT FK records that won't cascade automatically
+        await tx.likedProfile.deleteMany({
+          where: { OR: [{ fromId: profileId }, { toId: profileId }] },
+        })
+        await tx.hiddenProfile.deleteMany({
+          where: { OR: [{ fromId: profileId }, { toId: profileId }] },
+        })
+        await tx.socialMatchFilter.deleteMany({ where: { profileId } })
+
+        // Archive all conversations this profile participated in so they are
+        // hidden from the surviving participant's inbox. The conversation rows
+        // survive (profileAId/profileBId become NULL via SetNull cascade) so
+        // the surviving participant's ConversationParticipant is preserved and
+        // markConversationRead no longer produces a P2025 error.
+        const participantRows = await tx.conversationParticipant.findMany({
+          where: { profileId },
+          select: { conversationId: true },
+        })
+        if (participantRows.length > 0) {
+          await tx.conversation.updateMany({
+            where: { id: { in: participantRows.map((r) => r.conversationId) } },
+            data: { status: 'ARCHIVED' },
+          })
+        }
+
+        // Delete Profile — cascades: LocalizedProfileField, ProfileImage (profileId FK),
+        // ConversationParticipant (profileId FK), Message (senderId FK).
+        // profileAId/profileBId/initiatorProfileId on Conversation are set to NULL (SetNull).
+        await tx.profile.delete({ where: { id: profileId } })
+      }
+
+      // TODO: ProfileImage has redundant userId (RESTRICT) + profileId (CASCADE) FKs — consolidate to Profile-only. (#1193)
+      // Profile deletion cascades profileId-linked images, but unattached images (profileId=NULL) survive.
+      await tx.profileImage.deleteMany({ where: { userId, profileId: null } })
+
+      // Delete User — cascades: ConnectionRequest, PushSubscription
+      await tx.user.delete({ where: { id: userId } })
+    })
+
+    // Delete user image directory from disk (outside transaction — best-effort cleanup)
+    const userImageDir = path.join(getMediaRoot(), MEDIA_SUBDIR.IMAGES, userId)
+    try {
+      await fs.promises.rm(userImageDir, { recursive: true, force: true })
+    } catch {
+      // Ignore — directory may not exist
+    }
   }
 }

@@ -105,6 +105,23 @@ describe('mapInteractionContext', () => {
     expect(result.haveConversation).toBe(false)
   })
 
+  it('treats conversation with null initiatorProfileId as not initiated', () => {
+    const profile = makeProfile({
+      id: 'p1',
+      conversationParticipants: [
+        {
+          conversation: {
+            id: 'conv1',
+            status: 'INITIATED',
+            initiatorProfileId: null, // deleted account
+          },
+        },
+      ] as any,
+    })
+    const result = mapInteractionContext(profile, false)
+    expect(result.initiated).toBe(false)
+  })
+
   it('detects existing conversation (not initiated)', () => {
     const profile = makeProfile({
       id: 'p1',

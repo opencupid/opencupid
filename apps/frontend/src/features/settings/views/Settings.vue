@@ -30,6 +30,7 @@ const router = useRouter()
 usePwaInstall()
 
 const isLoading = ref(true)
+
 const optInModel = computed<ProfileOptInSettings>({
   get() {
     return ownerProfileStore.optInSettings
@@ -115,6 +116,18 @@ function handleClick() {
                   {{ $t('authentication.logout') }}</BButton
                 >
               </div>
+            </fieldset>
+
+            <hr class="mb-md-4" />
+
+            <fieldset>
+              <BButton
+                variant="outline-danger"
+                size="sm"
+                :to="{ name: 'CloseAccount' }"
+              >
+                {{ $t('settings.close_account_button') }}
+              </BButton>
             </fieldset>
           </div>
         </section>

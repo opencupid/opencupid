@@ -258,9 +258,9 @@ export const ConversationSchema = z.object({
   id: z.string().cuid(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
-  profileAId: z.string(),
-  profileBId: z.string(),
-  initiatorProfileId: z.string(),
+  profileAId: z.string().nullable(),
+  profileBId: z.string().nullable(),
+  initiatorProfileId: z.string().nullable(),
   jitsiRoomId: z.string().nullable(),
 })
 
@@ -1903,26 +1903,26 @@ export const ConversationWhereInputSchema: z.ZodType<Prisma.ConversationWhereInp
   id: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
-  profileAId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
-  profileBId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  profileAId: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
+  profileBId: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   status: z.union([ z.lazy(() => EnumConversationStatusFilterSchema),z.lazy(() => ConversationStatusSchema) ]).optional(),
-  initiatorProfileId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  initiatorProfileId: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   jitsiRoomId: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
-  profileA: z.union([ z.lazy(() => ProfileScalarRelationFilterSchema),z.lazy(() => ProfileWhereInputSchema) ]).optional(),
-  profileB: z.union([ z.lazy(() => ProfileScalarRelationFilterSchema),z.lazy(() => ProfileWhereInputSchema) ]).optional(),
+  profileA: z.union([ z.lazy(() => ProfileNullableScalarRelationFilterSchema),z.lazy(() => ProfileWhereInputSchema) ]).optional().nullable(),
+  profileB: z.union([ z.lazy(() => ProfileNullableScalarRelationFilterSchema),z.lazy(() => ProfileWhereInputSchema) ]).optional().nullable(),
   participants: z.lazy(() => ConversationParticipantListRelationFilterSchema).optional(),
   messages: z.lazy(() => MessageListRelationFilterSchema).optional(),
-  initiator: z.union([ z.lazy(() => ProfileScalarRelationFilterSchema),z.lazy(() => ProfileWhereInputSchema) ]).optional(),
+  initiator: z.union([ z.lazy(() => ProfileNullableScalarRelationFilterSchema),z.lazy(() => ProfileWhereInputSchema) ]).optional().nullable(),
 }).strict();
 
 export const ConversationOrderByWithRelationInputSchema: z.ZodType<Prisma.ConversationOrderByWithRelationInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
-  profileAId: z.lazy(() => SortOrderSchema).optional(),
-  profileBId: z.lazy(() => SortOrderSchema).optional(),
+  profileAId: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
+  profileBId: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   status: z.lazy(() => SortOrderSchema).optional(),
-  initiatorProfileId: z.lazy(() => SortOrderSchema).optional(),
+  initiatorProfileId: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   jitsiRoomId: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   profileA: z.lazy(() => ProfileOrderByWithRelationInputSchema).optional(),
   profileB: z.lazy(() => ProfileOrderByWithRelationInputSchema).optional(),
@@ -1951,26 +1951,26 @@ export const ConversationWhereUniqueInputSchema: z.ZodType<Prisma.ConversationWh
   NOT: z.union([ z.lazy(() => ConversationWhereInputSchema),z.lazy(() => ConversationWhereInputSchema).array() ]).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
-  profileAId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
-  profileBId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  profileAId: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
+  profileBId: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   status: z.union([ z.lazy(() => EnumConversationStatusFilterSchema),z.lazy(() => ConversationStatusSchema) ]).optional(),
-  initiatorProfileId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  initiatorProfileId: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   jitsiRoomId: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
-  profileA: z.union([ z.lazy(() => ProfileScalarRelationFilterSchema),z.lazy(() => ProfileWhereInputSchema) ]).optional(),
-  profileB: z.union([ z.lazy(() => ProfileScalarRelationFilterSchema),z.lazy(() => ProfileWhereInputSchema) ]).optional(),
+  profileA: z.union([ z.lazy(() => ProfileNullableScalarRelationFilterSchema),z.lazy(() => ProfileWhereInputSchema) ]).optional().nullable(),
+  profileB: z.union([ z.lazy(() => ProfileNullableScalarRelationFilterSchema),z.lazy(() => ProfileWhereInputSchema) ]).optional().nullable(),
   participants: z.lazy(() => ConversationParticipantListRelationFilterSchema).optional(),
   messages: z.lazy(() => MessageListRelationFilterSchema).optional(),
-  initiator: z.union([ z.lazy(() => ProfileScalarRelationFilterSchema),z.lazy(() => ProfileWhereInputSchema) ]).optional(),
+  initiator: z.union([ z.lazy(() => ProfileNullableScalarRelationFilterSchema),z.lazy(() => ProfileWhereInputSchema) ]).optional().nullable(),
 }).strict());
 
 export const ConversationOrderByWithAggregationInputSchema: z.ZodType<Prisma.ConversationOrderByWithAggregationInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
-  profileAId: z.lazy(() => SortOrderSchema).optional(),
-  profileBId: z.lazy(() => SortOrderSchema).optional(),
+  profileAId: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
+  profileBId: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   status: z.lazy(() => SortOrderSchema).optional(),
-  initiatorProfileId: z.lazy(() => SortOrderSchema).optional(),
+  initiatorProfileId: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   jitsiRoomId: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   _count: z.lazy(() => ConversationCountOrderByAggregateInputSchema).optional(),
   _max: z.lazy(() => ConversationMaxOrderByAggregateInputSchema).optional(),
@@ -1984,10 +1984,10 @@ export const ConversationScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.
   id: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
-  profileAId: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
-  profileBId: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
+  profileAId: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema),z.string() ]).optional().nullable(),
+  profileBId: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema),z.string() ]).optional().nullable(),
   status: z.union([ z.lazy(() => EnumConversationStatusWithAggregatesFilterSchema),z.lazy(() => ConversationStatusSchema) ]).optional(),
-  initiatorProfileId: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
+  initiatorProfileId: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema),z.string() ]).optional().nullable(),
   jitsiRoomId: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema),z.string() ]).optional().nullable(),
 }).strict();
 
@@ -3584,21 +3584,21 @@ export const ConversationCreateInputSchema: z.ZodType<Prisma.ConversationCreateI
   updatedAt: z.coerce.date().optional(),
   status: z.lazy(() => ConversationStatusSchema).optional(),
   jitsiRoomId: z.string().optional().nullable(),
-  profileA: z.lazy(() => ProfileCreateNestedOneWithoutConversationAsAInputSchema),
-  profileB: z.lazy(() => ProfileCreateNestedOneWithoutConversationAsBInputSchema),
+  profileA: z.lazy(() => ProfileCreateNestedOneWithoutConversationAsAInputSchema).optional(),
+  profileB: z.lazy(() => ProfileCreateNestedOneWithoutConversationAsBInputSchema).optional(),
   participants: z.lazy(() => ConversationParticipantCreateNestedManyWithoutConversationInputSchema).optional(),
   messages: z.lazy(() => MessageCreateNestedManyWithoutConversationInputSchema).optional(),
-  initiator: z.lazy(() => ProfileCreateNestedOneWithoutConversationInputSchema)
+  initiator: z.lazy(() => ProfileCreateNestedOneWithoutConversationInputSchema).optional()
 }).strict();
 
 export const ConversationUncheckedCreateInputSchema: z.ZodType<Prisma.ConversationUncheckedCreateInput> = z.object({
   id: z.string().cuid().optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
-  profileAId: z.string(),
-  profileBId: z.string(),
+  profileAId: z.string().optional().nullable(),
+  profileBId: z.string().optional().nullable(),
   status: z.lazy(() => ConversationStatusSchema).optional(),
-  initiatorProfileId: z.string(),
+  initiatorProfileId: z.string().optional().nullable(),
   jitsiRoomId: z.string().optional().nullable(),
   participants: z.lazy(() => ConversationParticipantUncheckedCreateNestedManyWithoutConversationInputSchema).optional(),
   messages: z.lazy(() => MessageUncheckedCreateNestedManyWithoutConversationInputSchema).optional()
@@ -3610,21 +3610,21 @@ export const ConversationUpdateInputSchema: z.ZodType<Prisma.ConversationUpdateI
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   status: z.union([ z.lazy(() => ConversationStatusSchema),z.lazy(() => EnumConversationStatusFieldUpdateOperationsInputSchema) ]).optional(),
   jitsiRoomId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  profileA: z.lazy(() => ProfileUpdateOneRequiredWithoutConversationAsANestedInputSchema).optional(),
-  profileB: z.lazy(() => ProfileUpdateOneRequiredWithoutConversationAsBNestedInputSchema).optional(),
+  profileA: z.lazy(() => ProfileUpdateOneWithoutConversationAsANestedInputSchema).optional(),
+  profileB: z.lazy(() => ProfileUpdateOneWithoutConversationAsBNestedInputSchema).optional(),
   participants: z.lazy(() => ConversationParticipantUpdateManyWithoutConversationNestedInputSchema).optional(),
   messages: z.lazy(() => MessageUpdateManyWithoutConversationNestedInputSchema).optional(),
-  initiator: z.lazy(() => ProfileUpdateOneRequiredWithoutConversationNestedInputSchema).optional()
+  initiator: z.lazy(() => ProfileUpdateOneWithoutConversationNestedInputSchema).optional()
 }).strict();
 
 export const ConversationUncheckedUpdateInputSchema: z.ZodType<Prisma.ConversationUncheckedUpdateInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  profileAId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  profileBId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  profileAId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  profileBId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   status: z.union([ z.lazy(() => ConversationStatusSchema),z.lazy(() => EnumConversationStatusFieldUpdateOperationsInputSchema) ]).optional(),
-  initiatorProfileId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  initiatorProfileId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   jitsiRoomId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   participants: z.lazy(() => ConversationParticipantUncheckedUpdateManyWithoutConversationNestedInputSchema).optional(),
   messages: z.lazy(() => MessageUncheckedUpdateManyWithoutConversationNestedInputSchema).optional()
@@ -3634,10 +3634,10 @@ export const ConversationCreateManyInputSchema: z.ZodType<Prisma.ConversationCre
   id: z.string().cuid().optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
-  profileAId: z.string(),
-  profileBId: z.string(),
+  profileAId: z.string().optional().nullable(),
+  profileBId: z.string().optional().nullable(),
   status: z.lazy(() => ConversationStatusSchema).optional(),
-  initiatorProfileId: z.string(),
+  initiatorProfileId: z.string().optional().nullable(),
   jitsiRoomId: z.string().optional().nullable()
 }).strict();
 
@@ -3653,10 +3653,10 @@ export const ConversationUncheckedUpdateManyInputSchema: z.ZodType<Prisma.Conver
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  profileAId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  profileBId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  profileAId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  profileBId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   status: z.union([ z.lazy(() => ConversationStatusSchema),z.lazy(() => EnumConversationStatusFieldUpdateOperationsInputSchema) ]).optional(),
-  initiatorProfileId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  initiatorProfileId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   jitsiRoomId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
 
@@ -6965,18 +6965,22 @@ export const EnumConversationStatusFieldUpdateOperationsInputSchema: z.ZodType<P
   set: z.lazy(() => ConversationStatusSchema).optional()
 }).strict();
 
-export const ProfileUpdateOneRequiredWithoutConversationAsANestedInputSchema: z.ZodType<Prisma.ProfileUpdateOneRequiredWithoutConversationAsANestedInput> = z.object({
+export const ProfileUpdateOneWithoutConversationAsANestedInputSchema: z.ZodType<Prisma.ProfileUpdateOneWithoutConversationAsANestedInput> = z.object({
   create: z.union([ z.lazy(() => ProfileCreateWithoutConversationAsAInputSchema),z.lazy(() => ProfileUncheckedCreateWithoutConversationAsAInputSchema) ]).optional(),
   connectOrCreate: z.lazy(() => ProfileCreateOrConnectWithoutConversationAsAInputSchema).optional(),
   upsert: z.lazy(() => ProfileUpsertWithoutConversationAsAInputSchema).optional(),
+  disconnect: z.union([ z.boolean(),z.lazy(() => ProfileWhereInputSchema) ]).optional(),
+  delete: z.union([ z.boolean(),z.lazy(() => ProfileWhereInputSchema) ]).optional(),
   connect: z.lazy(() => ProfileWhereUniqueInputSchema).optional(),
   update: z.union([ z.lazy(() => ProfileUpdateToOneWithWhereWithoutConversationAsAInputSchema),z.lazy(() => ProfileUpdateWithoutConversationAsAInputSchema),z.lazy(() => ProfileUncheckedUpdateWithoutConversationAsAInputSchema) ]).optional(),
 }).strict();
 
-export const ProfileUpdateOneRequiredWithoutConversationAsBNestedInputSchema: z.ZodType<Prisma.ProfileUpdateOneRequiredWithoutConversationAsBNestedInput> = z.object({
+export const ProfileUpdateOneWithoutConversationAsBNestedInputSchema: z.ZodType<Prisma.ProfileUpdateOneWithoutConversationAsBNestedInput> = z.object({
   create: z.union([ z.lazy(() => ProfileCreateWithoutConversationAsBInputSchema),z.lazy(() => ProfileUncheckedCreateWithoutConversationAsBInputSchema) ]).optional(),
   connectOrCreate: z.lazy(() => ProfileCreateOrConnectWithoutConversationAsBInputSchema).optional(),
   upsert: z.lazy(() => ProfileUpsertWithoutConversationAsBInputSchema).optional(),
+  disconnect: z.union([ z.boolean(),z.lazy(() => ProfileWhereInputSchema) ]).optional(),
+  delete: z.union([ z.boolean(),z.lazy(() => ProfileWhereInputSchema) ]).optional(),
   connect: z.lazy(() => ProfileWhereUniqueInputSchema).optional(),
   update: z.union([ z.lazy(() => ProfileUpdateToOneWithWhereWithoutConversationAsBInputSchema),z.lazy(() => ProfileUpdateWithoutConversationAsBInputSchema),z.lazy(() => ProfileUncheckedUpdateWithoutConversationAsBInputSchema) ]).optional(),
 }).strict();
@@ -7009,10 +7013,12 @@ export const MessageUpdateManyWithoutConversationNestedInputSchema: z.ZodType<Pr
   deleteMany: z.union([ z.lazy(() => MessageScalarWhereInputSchema),z.lazy(() => MessageScalarWhereInputSchema).array() ]).optional(),
 }).strict();
 
-export const ProfileUpdateOneRequiredWithoutConversationNestedInputSchema: z.ZodType<Prisma.ProfileUpdateOneRequiredWithoutConversationNestedInput> = z.object({
+export const ProfileUpdateOneWithoutConversationNestedInputSchema: z.ZodType<Prisma.ProfileUpdateOneWithoutConversationNestedInput> = z.object({
   create: z.union([ z.lazy(() => ProfileCreateWithoutConversationInputSchema),z.lazy(() => ProfileUncheckedCreateWithoutConversationInputSchema) ]).optional(),
   connectOrCreate: z.lazy(() => ProfileCreateOrConnectWithoutConversationInputSchema).optional(),
   upsert: z.lazy(() => ProfileUpsertWithoutConversationInputSchema).optional(),
+  disconnect: z.union([ z.boolean(),z.lazy(() => ProfileWhereInputSchema) ]).optional(),
+  delete: z.union([ z.boolean(),z.lazy(() => ProfileWhereInputSchema) ]).optional(),
   connect: z.lazy(() => ProfileWhereUniqueInputSchema).optional(),
   update: z.union([ z.lazy(() => ProfileUpdateToOneWithWhereWithoutConversationInputSchema),z.lazy(() => ProfileUpdateWithoutConversationInputSchema),z.lazy(() => ProfileUncheckedUpdateWithoutConversationInputSchema) ]).optional(),
 }).strict();
@@ -8829,19 +8835,19 @@ export const ConversationCreateWithoutProfileAInputSchema: z.ZodType<Prisma.Conv
   updatedAt: z.coerce.date().optional(),
   status: z.lazy(() => ConversationStatusSchema).optional(),
   jitsiRoomId: z.string().optional().nullable(),
-  profileB: z.lazy(() => ProfileCreateNestedOneWithoutConversationAsBInputSchema),
+  profileB: z.lazy(() => ProfileCreateNestedOneWithoutConversationAsBInputSchema).optional(),
   participants: z.lazy(() => ConversationParticipantCreateNestedManyWithoutConversationInputSchema).optional(),
   messages: z.lazy(() => MessageCreateNestedManyWithoutConversationInputSchema).optional(),
-  initiator: z.lazy(() => ProfileCreateNestedOneWithoutConversationInputSchema)
+  initiator: z.lazy(() => ProfileCreateNestedOneWithoutConversationInputSchema).optional()
 }).strict();
 
 export const ConversationUncheckedCreateWithoutProfileAInputSchema: z.ZodType<Prisma.ConversationUncheckedCreateWithoutProfileAInput> = z.object({
   id: z.string().cuid().optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
-  profileBId: z.string(),
+  profileBId: z.string().optional().nullable(),
   status: z.lazy(() => ConversationStatusSchema).optional(),
-  initiatorProfileId: z.string(),
+  initiatorProfileId: z.string().optional().nullable(),
   jitsiRoomId: z.string().optional().nullable(),
   participants: z.lazy(() => ConversationParticipantUncheckedCreateNestedManyWithoutConversationInputSchema).optional(),
   messages: z.lazy(() => MessageUncheckedCreateNestedManyWithoutConversationInputSchema).optional()
@@ -8863,19 +8869,19 @@ export const ConversationCreateWithoutProfileBInputSchema: z.ZodType<Prisma.Conv
   updatedAt: z.coerce.date().optional(),
   status: z.lazy(() => ConversationStatusSchema).optional(),
   jitsiRoomId: z.string().optional().nullable(),
-  profileA: z.lazy(() => ProfileCreateNestedOneWithoutConversationAsAInputSchema),
+  profileA: z.lazy(() => ProfileCreateNestedOneWithoutConversationAsAInputSchema).optional(),
   participants: z.lazy(() => ConversationParticipantCreateNestedManyWithoutConversationInputSchema).optional(),
   messages: z.lazy(() => MessageCreateNestedManyWithoutConversationInputSchema).optional(),
-  initiator: z.lazy(() => ProfileCreateNestedOneWithoutConversationInputSchema)
+  initiator: z.lazy(() => ProfileCreateNestedOneWithoutConversationInputSchema).optional()
 }).strict();
 
 export const ConversationUncheckedCreateWithoutProfileBInputSchema: z.ZodType<Prisma.ConversationUncheckedCreateWithoutProfileBInput> = z.object({
   id: z.string().cuid().optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
-  profileAId: z.string(),
+  profileAId: z.string().optional().nullable(),
   status: z.lazy(() => ConversationStatusSchema).optional(),
-  initiatorProfileId: z.string(),
+  initiatorProfileId: z.string().optional().nullable(),
   jitsiRoomId: z.string().optional().nullable(),
   participants: z.lazy(() => ConversationParticipantUncheckedCreateNestedManyWithoutConversationInputSchema).optional(),
   messages: z.lazy(() => MessageUncheckedCreateNestedManyWithoutConversationInputSchema).optional()
@@ -8925,8 +8931,8 @@ export const ConversationCreateWithoutInitiatorInputSchema: z.ZodType<Prisma.Con
   updatedAt: z.coerce.date().optional(),
   status: z.lazy(() => ConversationStatusSchema).optional(),
   jitsiRoomId: z.string().optional().nullable(),
-  profileA: z.lazy(() => ProfileCreateNestedOneWithoutConversationAsAInputSchema),
-  profileB: z.lazy(() => ProfileCreateNestedOneWithoutConversationAsBInputSchema),
+  profileA: z.lazy(() => ProfileCreateNestedOneWithoutConversationAsAInputSchema).optional(),
+  profileB: z.lazy(() => ProfileCreateNestedOneWithoutConversationAsBInputSchema).optional(),
   participants: z.lazy(() => ConversationParticipantCreateNestedManyWithoutConversationInputSchema).optional(),
   messages: z.lazy(() => MessageCreateNestedManyWithoutConversationInputSchema).optional()
 }).strict();
@@ -8935,8 +8941,8 @@ export const ConversationUncheckedCreateWithoutInitiatorInputSchema: z.ZodType<P
   id: z.string().cuid().optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
-  profileAId: z.string(),
-  profileBId: z.string(),
+  profileAId: z.string().optional().nullable(),
+  profileBId: z.string().optional().nullable(),
   status: z.lazy(() => ConversationStatusSchema).optional(),
   jitsiRoomId: z.string().optional().nullable(),
   participants: z.lazy(() => ConversationParticipantUncheckedCreateNestedManyWithoutConversationInputSchema).optional(),
@@ -9508,10 +9514,10 @@ export const ConversationScalarWhereInputSchema: z.ZodType<Prisma.ConversationSc
   id: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
-  profileAId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
-  profileBId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  profileAId: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
+  profileBId: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   status: z.union([ z.lazy(() => EnumConversationStatusFilterSchema),z.lazy(() => ConversationStatusSchema) ]).optional(),
-  initiatorProfileId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  initiatorProfileId: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   jitsiRoomId: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
 }).strict();
 
@@ -11109,20 +11115,20 @@ export const ConversationCreateWithoutParticipantsInputSchema: z.ZodType<Prisma.
   updatedAt: z.coerce.date().optional(),
   status: z.lazy(() => ConversationStatusSchema).optional(),
   jitsiRoomId: z.string().optional().nullable(),
-  profileA: z.lazy(() => ProfileCreateNestedOneWithoutConversationAsAInputSchema),
-  profileB: z.lazy(() => ProfileCreateNestedOneWithoutConversationAsBInputSchema),
+  profileA: z.lazy(() => ProfileCreateNestedOneWithoutConversationAsAInputSchema).optional(),
+  profileB: z.lazy(() => ProfileCreateNestedOneWithoutConversationAsBInputSchema).optional(),
   messages: z.lazy(() => MessageCreateNestedManyWithoutConversationInputSchema).optional(),
-  initiator: z.lazy(() => ProfileCreateNestedOneWithoutConversationInputSchema)
+  initiator: z.lazy(() => ProfileCreateNestedOneWithoutConversationInputSchema).optional()
 }).strict();
 
 export const ConversationUncheckedCreateWithoutParticipantsInputSchema: z.ZodType<Prisma.ConversationUncheckedCreateWithoutParticipantsInput> = z.object({
   id: z.string().cuid().optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
-  profileAId: z.string(),
-  profileBId: z.string(),
+  profileAId: z.string().optional().nullable(),
+  profileBId: z.string().optional().nullable(),
   status: z.lazy(() => ConversationStatusSchema).optional(),
-  initiatorProfileId: z.string(),
+  initiatorProfileId: z.string().optional().nullable(),
   jitsiRoomId: z.string().optional().nullable(),
   messages: z.lazy(() => MessageUncheckedCreateNestedManyWithoutConversationInputSchema).optional()
 }).strict();
@@ -11252,20 +11258,20 @@ export const ConversationUpdateWithoutParticipantsInputSchema: z.ZodType<Prisma.
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   status: z.union([ z.lazy(() => ConversationStatusSchema),z.lazy(() => EnumConversationStatusFieldUpdateOperationsInputSchema) ]).optional(),
   jitsiRoomId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  profileA: z.lazy(() => ProfileUpdateOneRequiredWithoutConversationAsANestedInputSchema).optional(),
-  profileB: z.lazy(() => ProfileUpdateOneRequiredWithoutConversationAsBNestedInputSchema).optional(),
+  profileA: z.lazy(() => ProfileUpdateOneWithoutConversationAsANestedInputSchema).optional(),
+  profileB: z.lazy(() => ProfileUpdateOneWithoutConversationAsBNestedInputSchema).optional(),
   messages: z.lazy(() => MessageUpdateManyWithoutConversationNestedInputSchema).optional(),
-  initiator: z.lazy(() => ProfileUpdateOneRequiredWithoutConversationNestedInputSchema).optional()
+  initiator: z.lazy(() => ProfileUpdateOneWithoutConversationNestedInputSchema).optional()
 }).strict();
 
 export const ConversationUncheckedUpdateWithoutParticipantsInputSchema: z.ZodType<Prisma.ConversationUncheckedUpdateWithoutParticipantsInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  profileAId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  profileBId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  profileAId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  profileBId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   status: z.union([ z.lazy(() => ConversationStatusSchema),z.lazy(() => EnumConversationStatusFieldUpdateOperationsInputSchema) ]).optional(),
-  initiatorProfileId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  initiatorProfileId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   jitsiRoomId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   messages: z.lazy(() => MessageUncheckedUpdateManyWithoutConversationNestedInputSchema).optional()
 }).strict();
@@ -12076,20 +12082,20 @@ export const ConversationCreateWithoutMessagesInputSchema: z.ZodType<Prisma.Conv
   updatedAt: z.coerce.date().optional(),
   status: z.lazy(() => ConversationStatusSchema).optional(),
   jitsiRoomId: z.string().optional().nullable(),
-  profileA: z.lazy(() => ProfileCreateNestedOneWithoutConversationAsAInputSchema),
-  profileB: z.lazy(() => ProfileCreateNestedOneWithoutConversationAsBInputSchema),
+  profileA: z.lazy(() => ProfileCreateNestedOneWithoutConversationAsAInputSchema).optional(),
+  profileB: z.lazy(() => ProfileCreateNestedOneWithoutConversationAsBInputSchema).optional(),
   participants: z.lazy(() => ConversationParticipantCreateNestedManyWithoutConversationInputSchema).optional(),
-  initiator: z.lazy(() => ProfileCreateNestedOneWithoutConversationInputSchema)
+  initiator: z.lazy(() => ProfileCreateNestedOneWithoutConversationInputSchema).optional()
 }).strict();
 
 export const ConversationUncheckedCreateWithoutMessagesInputSchema: z.ZodType<Prisma.ConversationUncheckedCreateWithoutMessagesInput> = z.object({
   id: z.string().cuid().optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
-  profileAId: z.string(),
-  profileBId: z.string(),
+  profileAId: z.string().optional().nullable(),
+  profileBId: z.string().optional().nullable(),
   status: z.lazy(() => ConversationStatusSchema).optional(),
-  initiatorProfileId: z.string(),
+  initiatorProfileId: z.string().optional().nullable(),
   jitsiRoomId: z.string().optional().nullable(),
   participants: z.lazy(() => ConversationParticipantUncheckedCreateNestedManyWithoutConversationInputSchema).optional()
 }).strict();
@@ -12236,20 +12242,20 @@ export const ConversationUpdateWithoutMessagesInputSchema: z.ZodType<Prisma.Conv
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   status: z.union([ z.lazy(() => ConversationStatusSchema),z.lazy(() => EnumConversationStatusFieldUpdateOperationsInputSchema) ]).optional(),
   jitsiRoomId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  profileA: z.lazy(() => ProfileUpdateOneRequiredWithoutConversationAsANestedInputSchema).optional(),
-  profileB: z.lazy(() => ProfileUpdateOneRequiredWithoutConversationAsBNestedInputSchema).optional(),
+  profileA: z.lazy(() => ProfileUpdateOneWithoutConversationAsANestedInputSchema).optional(),
+  profileB: z.lazy(() => ProfileUpdateOneWithoutConversationAsBNestedInputSchema).optional(),
   participants: z.lazy(() => ConversationParticipantUpdateManyWithoutConversationNestedInputSchema).optional(),
-  initiator: z.lazy(() => ProfileUpdateOneRequiredWithoutConversationNestedInputSchema).optional()
+  initiator: z.lazy(() => ProfileUpdateOneWithoutConversationNestedInputSchema).optional()
 }).strict();
 
 export const ConversationUncheckedUpdateWithoutMessagesInputSchema: z.ZodType<Prisma.ConversationUncheckedUpdateWithoutMessagesInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  profileAId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  profileBId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  profileAId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  profileBId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   status: z.union([ z.lazy(() => ConversationStatusSchema),z.lazy(() => EnumConversationStatusFieldUpdateOperationsInputSchema) ]).optional(),
-  initiatorProfileId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  initiatorProfileId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   jitsiRoomId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   participants: z.lazy(() => ConversationParticipantUncheckedUpdateManyWithoutConversationNestedInputSchema).optional()
 }).strict();
@@ -13585,9 +13591,9 @@ export const ConversationCreateManyProfileAInputSchema: z.ZodType<Prisma.Convers
   id: z.string().cuid().optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
-  profileBId: z.string(),
+  profileBId: z.string().optional().nullable(),
   status: z.lazy(() => ConversationStatusSchema).optional(),
-  initiatorProfileId: z.string(),
+  initiatorProfileId: z.string().optional().nullable(),
   jitsiRoomId: z.string().optional().nullable()
 }).strict();
 
@@ -13595,9 +13601,9 @@ export const ConversationCreateManyProfileBInputSchema: z.ZodType<Prisma.Convers
   id: z.string().cuid().optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
-  profileAId: z.string(),
+  profileAId: z.string().optional().nullable(),
   status: z.lazy(() => ConversationStatusSchema).optional(),
-  initiatorProfileId: z.string(),
+  initiatorProfileId: z.string().optional().nullable(),
   jitsiRoomId: z.string().optional().nullable()
 }).strict();
 
@@ -13613,8 +13619,8 @@ export const ConversationCreateManyInitiatorInputSchema: z.ZodType<Prisma.Conver
   id: z.string().cuid().optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
-  profileAId: z.string(),
-  profileBId: z.string(),
+  profileAId: z.string().optional().nullable(),
+  profileBId: z.string().optional().nullable(),
   status: z.lazy(() => ConversationStatusSchema).optional(),
   jitsiRoomId: z.string().optional().nullable()
 }).strict();
@@ -13806,19 +13812,19 @@ export const ConversationUpdateWithoutProfileAInputSchema: z.ZodType<Prisma.Conv
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   status: z.union([ z.lazy(() => ConversationStatusSchema),z.lazy(() => EnumConversationStatusFieldUpdateOperationsInputSchema) ]).optional(),
   jitsiRoomId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  profileB: z.lazy(() => ProfileUpdateOneRequiredWithoutConversationAsBNestedInputSchema).optional(),
+  profileB: z.lazy(() => ProfileUpdateOneWithoutConversationAsBNestedInputSchema).optional(),
   participants: z.lazy(() => ConversationParticipantUpdateManyWithoutConversationNestedInputSchema).optional(),
   messages: z.lazy(() => MessageUpdateManyWithoutConversationNestedInputSchema).optional(),
-  initiator: z.lazy(() => ProfileUpdateOneRequiredWithoutConversationNestedInputSchema).optional()
+  initiator: z.lazy(() => ProfileUpdateOneWithoutConversationNestedInputSchema).optional()
 }).strict();
 
 export const ConversationUncheckedUpdateWithoutProfileAInputSchema: z.ZodType<Prisma.ConversationUncheckedUpdateWithoutProfileAInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  profileBId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  profileBId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   status: z.union([ z.lazy(() => ConversationStatusSchema),z.lazy(() => EnumConversationStatusFieldUpdateOperationsInputSchema) ]).optional(),
-  initiatorProfileId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  initiatorProfileId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   jitsiRoomId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   participants: z.lazy(() => ConversationParticipantUncheckedUpdateManyWithoutConversationNestedInputSchema).optional(),
   messages: z.lazy(() => MessageUncheckedUpdateManyWithoutConversationNestedInputSchema).optional()
@@ -13828,9 +13834,9 @@ export const ConversationUncheckedUpdateManyWithoutProfileAInputSchema: z.ZodTyp
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  profileBId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  profileBId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   status: z.union([ z.lazy(() => ConversationStatusSchema),z.lazy(() => EnumConversationStatusFieldUpdateOperationsInputSchema) ]).optional(),
-  initiatorProfileId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  initiatorProfileId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   jitsiRoomId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
 
@@ -13840,19 +13846,19 @@ export const ConversationUpdateWithoutProfileBInputSchema: z.ZodType<Prisma.Conv
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   status: z.union([ z.lazy(() => ConversationStatusSchema),z.lazy(() => EnumConversationStatusFieldUpdateOperationsInputSchema) ]).optional(),
   jitsiRoomId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  profileA: z.lazy(() => ProfileUpdateOneRequiredWithoutConversationAsANestedInputSchema).optional(),
+  profileA: z.lazy(() => ProfileUpdateOneWithoutConversationAsANestedInputSchema).optional(),
   participants: z.lazy(() => ConversationParticipantUpdateManyWithoutConversationNestedInputSchema).optional(),
   messages: z.lazy(() => MessageUpdateManyWithoutConversationNestedInputSchema).optional(),
-  initiator: z.lazy(() => ProfileUpdateOneRequiredWithoutConversationNestedInputSchema).optional()
+  initiator: z.lazy(() => ProfileUpdateOneWithoutConversationNestedInputSchema).optional()
 }).strict();
 
 export const ConversationUncheckedUpdateWithoutProfileBInputSchema: z.ZodType<Prisma.ConversationUncheckedUpdateWithoutProfileBInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  profileAId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  profileAId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   status: z.union([ z.lazy(() => ConversationStatusSchema),z.lazy(() => EnumConversationStatusFieldUpdateOperationsInputSchema) ]).optional(),
-  initiatorProfileId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  initiatorProfileId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   jitsiRoomId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   participants: z.lazy(() => ConversationParticipantUncheckedUpdateManyWithoutConversationNestedInputSchema).optional(),
   messages: z.lazy(() => MessageUncheckedUpdateManyWithoutConversationNestedInputSchema).optional()
@@ -13862,9 +13868,9 @@ export const ConversationUncheckedUpdateManyWithoutProfileBInputSchema: z.ZodTyp
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  profileAId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  profileAId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   status: z.union([ z.lazy(() => ConversationStatusSchema),z.lazy(() => EnumConversationStatusFieldUpdateOperationsInputSchema) ]).optional(),
-  initiatorProfileId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  initiatorProfileId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   jitsiRoomId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
 
@@ -13900,8 +13906,8 @@ export const ConversationUpdateWithoutInitiatorInputSchema: z.ZodType<Prisma.Con
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   status: z.union([ z.lazy(() => ConversationStatusSchema),z.lazy(() => EnumConversationStatusFieldUpdateOperationsInputSchema) ]).optional(),
   jitsiRoomId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  profileA: z.lazy(() => ProfileUpdateOneRequiredWithoutConversationAsANestedInputSchema).optional(),
-  profileB: z.lazy(() => ProfileUpdateOneRequiredWithoutConversationAsBNestedInputSchema).optional(),
+  profileA: z.lazy(() => ProfileUpdateOneWithoutConversationAsANestedInputSchema).optional(),
+  profileB: z.lazy(() => ProfileUpdateOneWithoutConversationAsBNestedInputSchema).optional(),
   participants: z.lazy(() => ConversationParticipantUpdateManyWithoutConversationNestedInputSchema).optional(),
   messages: z.lazy(() => MessageUpdateManyWithoutConversationNestedInputSchema).optional()
 }).strict();
@@ -13910,8 +13916,8 @@ export const ConversationUncheckedUpdateWithoutInitiatorInputSchema: z.ZodType<P
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  profileAId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  profileBId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  profileAId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  profileBId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   status: z.union([ z.lazy(() => ConversationStatusSchema),z.lazy(() => EnumConversationStatusFieldUpdateOperationsInputSchema) ]).optional(),
   jitsiRoomId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   participants: z.lazy(() => ConversationParticipantUncheckedUpdateManyWithoutConversationNestedInputSchema).optional(),
@@ -13922,8 +13928,8 @@ export const ConversationUncheckedUpdateManyWithoutInitiatorInputSchema: z.ZodTy
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  profileAId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  profileBId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  profileAId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  profileBId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   status: z.union([ z.lazy(() => ConversationStatusSchema),z.lazy(() => EnumConversationStatusFieldUpdateOperationsInputSchema) ]).optional(),
   jitsiRoomId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
