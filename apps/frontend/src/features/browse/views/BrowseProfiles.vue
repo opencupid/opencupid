@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onActivated, onMounted, provide, ref, toRef, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { onActivated, onMounted, provide, toRef, watch } from 'vue'
+import { useRouter } from 'vue-router'
 
 import { useBootstrap } from '@/lib/bootstrap'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
@@ -18,11 +18,9 @@ import PublicProfileView from '@/features/publicprofile/components/PublicProfile
 import ProfileMarker from '@/features/publicprofile/components/ProfileMarker.vue'
 import MapIcon from '@/features/posts/components/MapIcon.vue'
 
-import PostsSidebar from '../components/PostsSidebar.vue'
 import PostMapPopup from '@/features/posts/components/PostMapPopup.vue'
 import PostFullView from '@/features/posts/components/PostFullView.vue'
 import OwnerDrawerControls from '../components/OwnerDrawerControls.vue'
-import type { MapPoi } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
 import type { PublicPostWithProfile } from '@zod/post/post.dto'
 
 // Component name must be 'AppShell' for KeepAlive to identify it correctly
@@ -47,7 +45,6 @@ provide('viewerProfile', toRef(viewerProfile))
 
 // ── Post layer + tags + merged map data + selection state ──────────
 const {
-  filteredPostPois,
   clusters,
   allPois,
   availableTags,
@@ -58,10 +55,8 @@ const {
 } = useBrowseViewModel(clusterFeatures, onProfileBoundsChanged)
 
 // ── Route-driven detail panel ──────────────────────────────────────
-const route = useRoute()
 const router = useRouter()
 const ownerProfileStore = useOwnerProfileStore()
-const mapRef = ref<InstanceType<typeof OsmPoiMap> | null>(null)
 
 const { detail } = useDetailRouteState()
 const panel = useDetailPanel()
@@ -112,9 +107,6 @@ watch(
   }
 )
 
-// activePostId: drives PostsSidebar highlight
-const activePostId = computed(() => (detail.value?.type === 'post' ? detail.value.id : null))
-
 // ── Navigation helpers ─────────────────────────────────────────────
 function openProfileDrawer() {
   router.push({ name: 'Me' })
@@ -135,43 +127,48 @@ function handleMarkerSelect(id: string | number) {
   }
 }
 
-function onSidebarSelect(poi: MapPoi) {
-  router.push({ name: 'PublicPost', params: { postId: String(poi.id) } })
-  mapRef.value?.flyToMarker(poi)
+// ── Onboarding guard ───────────────────────────────────────────────
+// Redirect non-onboarded users to the onboarding flow.
+// Returns true if a redirect was triggered (caller should bail out early).
+function checkOnboarding(): boolean {
+  if (ownerProfileStore.profile && !ownerProfileStore.profile.isOnboarded) {
+    router.push({ name: 'Onboarding' })
+    return true
+  }
+  return false
 }
 
 // ── Lifecycle ──────────────────────────────────────────────────────
-onMounted(async () => {
-  await useBootstrap().bootstrap()
-  if (!ownerProfileStore.profile?.isOnboarded) {
-    router.push({ name: 'Onboarding' })
-    return
-  }
-  await initialize()
-})
-
+// onActivated fires on every <KeepAlive> re-entry — including when a freshly
+// registered user lands on /browse after magic-link login while a previous
+// (onboarded) component instance is still cached. Without this hook, onMounted
+// would NOT re-run and the redirect check would be silently skipped.
+//
+// On initial mount, onActivated fires before onMounted's await bootstrap()
+// resolves, so ownerProfileStore.profile is still null — checkOnboarding()
+// returns early safely. The real redirect on cold-start is handled by
+// onMounted below.
 onActivated(async () => {
+  if (checkOnboarding()) return
   if (!isInitialized.value) {
     await initialize()
   } else {
     await refreshIfFilterChanged()
   }
 })
+
+onMounted(async () => {
+  // bootstrap() is idempotent — if already resolved (cold-start) it returns
+  // instantly; if still in-flight (hot-start via verifyToken) it joins the
+  // existing promise. Either way, ownerProfileStore.profile is populated by
+  // the time we reach checkOnboarding() below.
+  await useBootstrap().bootstrap()
+  if (checkOnboarding()) return
+  await initialize()
+})
 </script>
 
 <template>
-  <!-- Sidebar teleported into AuthLayout's #app-sidebar slot -->
-  <Teleport
-    defer
-    to="#app-sidebar"
-  >
-    <PostsSidebar
-      :posts="filteredPostPois"
-      :active-id="activePostId"
-      @select="onSidebarSelect"
-    />
-  </Teleport>
-
   <!-- Detail panel content is pushed into DetailPanelOrchestrator (AuthLayout)
        imperatively via useDetailPanel() — see watcher above. -->
 
@@ -209,7 +206,6 @@ onActivated(async () => {
           <NoResultsCTA />
         </BAlert>
         <OsmPoiMap
-          ref="mapRef"
           :items="allPois"
           :clusters="clusters"
           :icon-resolver="(poi) => (poi.type === 'post' ? MapIcon : ProfileMarker)"

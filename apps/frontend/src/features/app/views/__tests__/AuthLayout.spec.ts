@@ -49,9 +49,4 @@ describe('AuthLayout', () => {
     const wrapper = mountLayout()
     expect(wrapper.find('[data-testid="detail-panel-orchestrator"]').exists()).toBe(true)
   })
-
-  it('provides #app-sidebar teleport anchor', () => {
-    const wrapper = mountLayout()
-    expect(wrapper.find('#app-sidebar').exists()).toBe(true)
-  })
 })
