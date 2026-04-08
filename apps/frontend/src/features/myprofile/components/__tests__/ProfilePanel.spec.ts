@@ -76,6 +76,10 @@ const globalConfig = {
       name: 'PostList',
       template: '<div data-testid="post-list" />',
     },
+    PostsOrchestrator: {
+      name: 'PostsOrchestrator',
+      template: '<div data-testid="post-list" />',
+    },
     ProfileImage: { template: '<span />' },
     IconSetting2: { template: '<span />' },
     IconBackward: { template: '<span />' },

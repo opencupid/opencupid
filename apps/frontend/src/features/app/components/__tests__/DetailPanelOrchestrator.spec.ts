@@ -31,7 +31,10 @@ describe('DetailPanelOrchestrator', () => {
 
   const mountIt = () =>
     mount(DetailPanelOrchestrator, {
-      global: { stubs: { BOffcanvas: BOffcanvasStub } },
+      global: {
+        stubs: { BOffcanvas: BOffcanvasStub },
+        mocks: { $t: (k: string) => k },
+      },
     })
 
   it('renders nothing inside the panel when no content is registered', () => {
