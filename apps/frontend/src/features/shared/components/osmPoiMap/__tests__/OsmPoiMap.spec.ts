@@ -102,6 +102,8 @@ vi.mock('leaflet', () => {
 
   const Browser = { touch: false, mobile: false }
 
+  const control = { zoom: vi.fn(() => ({ addTo: vi.fn() })) }
+
   return {
     default: {
       map: mapFn,
@@ -114,6 +116,7 @@ vi.mock('leaflet', () => {
       tileLayer,
       DomEvent,
       Browser,
+      control,
     },
     Map: mapFn,
     Marker: marker,
@@ -127,6 +130,7 @@ vi.mock('leaflet', () => {
     tileLayer,
     DomEvent,
     Browser,
+    control,
   }
 })
 
@@ -218,8 +222,8 @@ async function mountMap(props: Partial<Record<string, any>> = {}) {
   const wrapper = mount(OsmPoiMap as any, {
     props: {
       items: [],
-      iconComponent: DummyIcon,
-      popupComponent: DummyPopup,
+      iconResolver: () => DummyIcon,
+      popupResolver: () => DummyPopup,
       ...props,
     },
     attachTo: document.body,
@@ -246,7 +250,7 @@ beforeEach(() => {
 })
 
 describe('OsmPoiMap', () => {
-  it('creates markers for items with images using iconComponent', async () => {
+  it('creates markers for items with images using iconResolver', async () => {
     await mountMap()
     await flushPromises()
 
@@ -254,7 +258,7 @@ describe('OsmPoiMap', () => {
 
     const calls = (L.marker as any).mock.calls
 
-    // All items have images → rendered via iconComponent
+    // All items have images → rendered via iconResolver
     expect(calls[0][1].icon.className).toBe('poi-avatar-icon')
     expect(calls[1][1].icon.className).toBe('poi-avatar-icon')
     expect(calls[2][1].icon.className).toBe('poi-avatar-icon')
@@ -337,7 +341,7 @@ describe('OsmPoiMap', () => {
     expect(aliceIcon.iconAnchor).toEqual([POI_ICON_SIZE / 2, POI_ICON_SIZE / 2])
   })
 
-  it('emits bounds-changed on moveend with viewport bounds', async () => {
+  it('emits bounds:changed on moveend with viewport bounds', async () => {
     vi.useFakeTimers()
     const wrapper = await mountMap()
     await flushPromises()
@@ -353,10 +357,10 @@ describe('OsmPoiMap', () => {
     }))
 
     moveendHandler()
-    vi.advanceTimersByTime(300)
+    vi.advanceTimersByTime(500)
 
-    expect(wrapper.emitted('bounds-changed')).toBeTruthy()
-    expect(wrapper.emitted('bounds-changed')![0]).toEqual([
+    expect(wrapper.emitted('bounds:changed')).toBeTruthy()
+    expect(wrapper.emitted('bounds:changed')![0]).toEqual([
       { bounds: { south: 45.0, north: 48.0, west: 16.0, east: 23.0 }, zoom: expect.any(Number) },
     ])
 
@@ -451,7 +455,7 @@ describe('OsmPoiMap', () => {
     expect(mapInstance.flyTo).toHaveBeenCalledWith([50.0, 14.0], 10, { duration: 1 })
   })
 
-  it('suppresses bounds-changed when container has zero dimensions', async () => {
+  it('suppresses bounds:changed when container has zero dimensions', async () => {
     vi.useFakeTimers()
     const wrapper = await mountMap()
     await flushPromises()
@@ -468,65 +472,47 @@ describe('OsmPoiMap', () => {
 
     mapInstance.getSize.mockReturnValue({ x: 0, y: 0 })
     moveendHandler()
-    vi.advanceTimersByTime(300)
-    expect(wrapper.emitted('bounds-changed')).toBeFalsy()
+    vi.advanceTimersByTime(500)
+    expect(wrapper.emitted('bounds:changed')).toBeFalsy()
 
     mapInstance.getSize.mockReturnValue({ x: 1000, y: 800 })
     moveendHandler()
-    vi.advanceTimersByTime(300)
-    expect(wrapper.emitted('bounds-changed')).toBeTruthy()
+    vi.advanceTimersByTime(500)
+    expect(wrapper.emitted('bounds:changed')).toBeTruthy()
 
     vi.useRealTimers()
   })
 
-  it('suppresses bounds-changed during programmatic fitBounds from updateMarkers', async () => {
-    vi.useFakeTimers()
-
-    // Mount with no items initially — map.once callback fires immediately in mock
-    // so suppressBoundsEmit is already cleared. Now we make once NOT call back
-    // immediately to simulate the real async moveend.
+  it('unregisters moveend before fitBounds and re-registers via once to suppress bounds:changed', async () => {
+    // Mount with no items so initial fitBounds doesn't fire before we instrument once
     const wrapper = await mountMap({ items: [] })
     await flushPromises()
 
     const mapInstance = (L.map as any).mock.results[0].value
-    const moveendHandler = mapInstance.on.mock.calls.find((c: any) => c[0] === 'moveend')[1]
 
-    mapInstance.getBounds = vi.fn(() => ({
-      getSouth: () => 45.0,
-      getNorth: () => 48.0,
-      getWest: () => 16.0,
-      getEast: () => 23.0,
-    }))
-
-    // Override once to NOT auto-fire (simulates real Leaflet where moveend
-    // hasn't fired yet after fitBounds)
-    let pendingOnceCallback: (() => void) | null = null
-    mapInstance.once = vi.fn((_event: string, cb: () => void) => {
-      pendingOnceCallback = cb
+    // Capture the once callback so we can assert re-registration happens
+    let onceEvent: string | null = null
+    let onceCallback: (() => void) | null = null
+    mapInstance.once = vi.fn(function (event: string, cb: () => void) {
+      onceEvent = event
+      onceCallback = cb
       return mapInstance
     })
 
-    // Now set items — triggers updateMarkers → fitBounds → suppressBoundsEmit = true
+    // Set items — triggers updateMarkers → first load → fitBounds path
     await wrapper.setProps({ items })
     await flushPromises()
 
-    // moveend fires while suppress is active
-    moveendHandler()
-    vi.advanceTimersByTime(300)
-    expect(wrapper.emitted('bounds-changed')).toBeFalsy()
+    // map.off should have been called to unregister emitBounds before fitBounds
+    expect(mapInstance.off).toHaveBeenCalledWith('moveend', expect.any(Function))
+    expect(mapInstance.fitBounds).toHaveBeenCalled()
 
-    // Simulate the real moveend from fitBounds completing — clears suppress
-    pendingOnceCallback!()
-
-    // Now a user-initiated moveend should emit
-    moveendHandler()
-    vi.advanceTimersByTime(300)
-    expect(wrapper.emitted('bounds-changed')).toBeTruthy()
-
-    vi.useRealTimers()
+    // map.once should re-register moveend after the programmatic moveend fires
+    expect(onceEvent).toBe('moveend')
+    expect(onceCallback).toBeTypeOf('function')
   })
 
-  it('debounces bounds-changed emission on rapid moveend events', async () => {
+  it('debounces bounds:changed emission on rapid moveend events', async () => {
     vi.useFakeTimers()
     const wrapper = await mountMap()
     await flushPromises()
@@ -545,12 +531,12 @@ describe('OsmPoiMap', () => {
     moveendHandler()
     moveendHandler()
 
-    expect(wrapper.emitted('bounds-changed')).toBeFalsy()
+    expect(wrapper.emitted('bounds:changed')).toBeFalsy()
 
-    vi.advanceTimersByTime(300)
+    vi.advanceTimersByTime(500)
 
-    expect(wrapper.emitted('bounds-changed')).toHaveLength(1)
-    expect(wrapper.emitted('bounds-changed')![0]).toEqual([
+    expect(wrapper.emitted('bounds:changed')).toHaveLength(1)
+    expect(wrapper.emitted('bounds:changed')![0]).toEqual([
       { bounds: { south: 45.0, north: 48.0, west: 16.0, east: 23.0 }, zoom: expect.any(Number) },
     ])
 

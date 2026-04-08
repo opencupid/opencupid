@@ -35,11 +35,11 @@ const error = ref('')
 const router = useRouter()
 
 const handleGoToProfile = async () => {
-  router.push({ name: 'MyProfile' })
+  router.push({ name: 'Me' })
 }
 
 const handleGoToBrowse = () => {
-  router.push({ name: 'BrowseProfiles' })
+  router.push({ name: 'Browse' })
 }
 
 const handleWizardFinish = async () => {
@@ -63,7 +63,7 @@ onMounted(async () => {
   await useBootstrap().bootstrap()
 
   if (profileStore.profile?.isOnboarded) {
-    router.push({ name: 'MyProfile' })
+    router.push({ name: 'Me' })
     return
   }
 
@@ -72,7 +72,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main>
+  <main class="h-100">
     <MiddleColumn class="d-flex flex-column align-items-center justify-content-center h-100">
       <OnboardWizard
         v-model="profileForm"

@@ -10,7 +10,7 @@ const { receivedLikesCount, haveReceivedLikes, haveMatches, matches } = useInter
 <template>
   <div
     class="rounded shadow clickable d-flex align-items-center gap-1 dating p-4"
-    @click="$router.push({ name: 'Messaging' })"
+    @click="$router.push({ name: 'Inbox' })"
     v-if="haveReceivedLikes"
   >
     <div class="">

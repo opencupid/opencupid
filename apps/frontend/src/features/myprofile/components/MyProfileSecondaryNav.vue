@@ -4,6 +4,8 @@ import ViewAsDropdown from './ViewAsDropdown.vue'
 import DatingModeDropdown from './DatingModeDropdown.vue'
 import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
 import IconMenuDotsVert from '@/assets/icons/interface/menu-dots-vert.svg'
+import IconSlider from '@/assets/icons/interface/setting.svg'
+import ChevronRightIcon from '@/assets/icons/arrows/arrow-single-right.svg'
 
 defineProps<{
   isDatingOnboarded: boolean
@@ -28,36 +30,40 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="d-flex justify-content-end align-items-center w-100">
-    <BNav>
+  <div >
+    <div class="d-flex align-items-center w-100 p-2">
+      <!-- Preferences -->
+      <DatingModeDropdown
+        class="flex-grow-1"
+        v-model:is-dating-active="isDatingActive"
+        @datingmode:toggle="$emit('datingmode:toggle')"
+      />
+
       <!-- View as -->
       <ViewAsDropdown
         v-model="viewState"
         v-model:is-dating-active="isDatingActive"
       />
+    </div>
 
-      <!-- Preferences -->
-      <DatingModeDropdown
-        v-model:is-dating-active="isDatingActive"
-        @datingmode:toggle="$emit('datingmode:toggle')"
-        @datingmode:prefs="$emit('datingmode:prefs')"
-      />
-
-      <!-- Settings -->
-      <BNavItemDropdown>
-        <template #button-content>
-          <span class="text-secondary">
-            <IconMenuDotsVert class="svg-icon-lg fs-4" />
-          </span>
-        </template>
-        <BDropdownItem to="/settings">
-          <IconSetting2 class="svg-icon me-1" />
-          {{ $t('settings.title') }}
-        </BDropdownItem>
-      </BNavItemDropdown>
-    </BNav>
+    <BCollapse v-model="isDatingActive">
+      <BButton
+        variant="light"
+        class="btn-subnav w-100 text-start d-flex align-items-center justify-content-between"
+        @click="$emit('datingmode:prefs')"
+      >
+        <span class="flex-grow-1">
+          <IconSlider class="svg-icon me-2" />
+          {{ $t('profiles.forms.my_dating_profile') }}
+        </span>
+        <span class="flex-grow-0">
+          <ChevronRightIcon class="svg-icon-sm" />
+        </span>
+      </BButton>
+    </BCollapse>
   </div>
 </template>
+
 <style scoped>
 /* hide dropdown caret */
 :deep(button:after) {
@@ -65,5 +71,9 @@ const emit = defineEmits<{
   display: none !important;
   margin: 0 !important;
   padding: 0 !important;
+}
+.btn-subnav {
+  border: none;
+  border-radius: 0;
 }
 </style>

@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import Navbar from '@/features/app/components/Navbar.vue'
 import FaviconNotification from '@/features/app/components/FaviconNotification.vue'
 import AppNotifier from '@/features/app/components/AppNotifier.vue'
 import UpdateBanner from '@/features/app/components/UpdateBanner.vue'
@@ -24,12 +23,7 @@ useCallStore().initialize()
 
 <template>
   <UpdateBanner />
-  <Navbar />
-  <RouterView v-slot="{ Component }">
-    <KeepAlive :include="['UserHome', 'BrowseProfiles', 'BrowsePosts']">
-      <component :is="Component" />
-    </KeepAlive>
-  </RouterView>
+  <RouterView />
   <AppNotifier />
   <CallingOverlay />
   <JitsiModal />

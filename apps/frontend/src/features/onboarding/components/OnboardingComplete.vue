@@ -46,22 +46,6 @@ const emit = defineEmits<{
           {{ t('onboarding.confirmation.browse_button') }}
         </BButton>
       </div>
-
-      <!-- Profile CTA -->
-      <div class="d-flex flex-column align-items-center align-items-md-start gap-2">
-        <div class="text-center text-md-start">
-          {{ t('onboarding.confirmation.profile_hint') }}
-        </div>
-        <BButton
-          @click="emit('profile')"
-          variant="primary"
-          size="lg"
-          pill
-          class="w-100"
-        >
-          {{ t('onboarding.confirmation.profile_button') }}
-        </BButton>
-      </div>
     </div>
   </div>
 </template>

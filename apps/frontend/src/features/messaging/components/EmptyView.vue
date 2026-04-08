@@ -20,7 +20,7 @@ import ViewTitle from '@/features/shared/ui/ViewTitle.vue'
       variant="primary"
       size="lg"
       pill
-      @click="$router.push({ name: 'BrowseProfiles' })"
+      @click="$router.push({ name: 'Browse' })"
     >
       <IconSearch class="svg-icon" />
       {{ $t('messaging.no_messages_cta') }}

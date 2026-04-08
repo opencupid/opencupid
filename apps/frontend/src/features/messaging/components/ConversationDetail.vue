@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import { ref, computed, watchEffect } from 'vue'
 
-import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
-import { type ConversationSummary } from '@zod/messaging/messaging.dto'
+import type { PublicProfileWithContext } from '@zod/profile/profile.dto'
+import type { ConversationSummary } from '@zod/messaging/messaging.dto'
+
+import ProfileContent from '@/features/publicprofile/components/ProfileContent.vue'
 
 import { useMessageStore } from '@/features/messaging/stores/messageStore'
 import { usePublicProfileStore } from '@/features/publicprofile/stores/publicProfileStore'
 import { useCallStore } from '@/features/videocall/stores/callStore'
+import { useDetailPanel } from '@/features/app/composables/useDetailPanel'
+import { useRouter } from 'vue-router'
 import BlockProfileDialog from '@/features/publicprofile/components/BlockProfileDialog.vue'
 
 import SendMessage from './SendMessageForm.vue'
@@ -25,11 +29,22 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'deselect:convo'): void
-  (e: 'profile:select', profile: PublicProfileWithContext): void
 }>()
+
+const router = useRouter()
+const panel = useDetailPanel()
 
 const showModal = ref(false)
 const conversationPartner = ref<PublicProfileWithContext | null>(null)
+
+// Click on the conversation partner header → push their profile into the
+// global detail panel. The panel owns its own lifecycle; this component
+// holds no state about whether the panel is currently open.
+function onProfileSelect() {
+  if (conversationPartner.value) {
+    panel.show(ProfileContent, { profile: conversationPartner.value })
+  }
+}
 
 const canCall = computed(() => {
   if (!props.conversation) return false
@@ -84,7 +99,8 @@ async function handleToggleCallable(event: Event) {
       :recipient="conversationPartner"
       :allowCalls="myIsCallable"
       @deselect:convo="emit('deselect:convo')"
-      @profile:select="emit('profile:select', conversationPartner)"
+      @close="router.replace({ name: 'Browse' })"
+      @profile:select="onProfileSelect"
       @block:open="showModal = true"
       @callable:toggle="handleToggleCallable"
     />
@@ -119,11 +135,6 @@ async function handleToggleCallable(event: Event) {
 </template>
 
 <style scoped>
-.convo-detail {
-}
-.messaging-nav {
-  background-color: var(--bs-body-bg);
-}
 .send-message-wrapper {
   background-color: transparent;
 }

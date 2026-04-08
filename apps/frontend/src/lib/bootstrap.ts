@@ -57,9 +57,8 @@ export const useBootstrap = defineStore('bootstrap', () => {
   // Called by authStore.verifyToken after a successful magic-link login.
   // Resets the singleton promise so bootstrap() re-fetches the profile for the
   // newly authenticated user. verifyToken awaits this before returning, which
-  // guarantees the profile is in the store before router.push({ name: 'UserHome' })
-  // fires — preventing the race where UserHome.onMounted checks isOnboarded
-  // against a null profile and silently skips the /onboarding redirect.
+  // guarantees the profile is in the store before router.push('/browse')
+  // fires — preventing the race where BrowseProfiles.onMounted reads a null profile.
   async function onLogin() {
     isBootstrapped.value = false
     bootstrapPromise.value = null

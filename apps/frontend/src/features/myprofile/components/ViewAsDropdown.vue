@@ -6,6 +6,7 @@ import { type ViewState } from '../composables/types'
 import LanguageIcon from '@/features/shared/profiledisplay/LanguageIcon.vue'
 import IconViewAs from '@/assets/icons/interface/unhide.svg'
 import IconGlobe from '@/assets/icons/interface/globe.svg'
+import IconMenuDotsVert from '@/assets/icons/interface/menu-dots-vert.svg'
 
 import { type OwnerProfile } from '@zod/profile/profile.dto'
 
@@ -32,19 +33,26 @@ const toggleScope = (hide: () => void) => {
 </script>
 
 <template>
-  <BNavItemDropdown v-if="isDatingActive || hasPreviewLanguages">
+  <BDropdown
+    v-if="isDatingActive || hasPreviewLanguages"
+    variant="link"
+    no-caret
+  >
     <template #button-content>
       <span
         class="text-secondary"
         :title="$t('profiles.forms.preview_profile')"
       >
-        <IconViewAs class="svg-icon-lg" />
+        <IconMenuDotsVert class="svg-icon-lg" />
       </span>
     </template>
     <template #default="{ hide }">
       <div style="width: 16rem">
         <BDropdownText>
-          <div>{{ $t('profiles.forms.preview_profile_hint') }}</div>
+          <div>
+            <IconViewAs class="svg-icon me-1" />
+            {{ $t('profiles.forms.preview_profile_hint') }}
+          </div>
         </BDropdownText>
 
         <span v-if="isDatingActive">
@@ -89,7 +97,7 @@ const toggleScope = (hide: () => void) => {
         </span>
       </div>
     </template>
-  </BNavItemDropdown>
+  </BDropdown>
 </template>
 
 <style scoped>

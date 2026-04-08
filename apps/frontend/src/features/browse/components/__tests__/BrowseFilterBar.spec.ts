@@ -11,11 +11,11 @@ const LocationFilterInput = {
   emits: ['update:modelValue', 'location:set-from-profile'],
 }
 
-const TagFilterSelector = {
-  name: 'TagFilterSelector',
-  template: '<div class="tag-filter-selector" />',
-  props: ['modelValue', 'initialOptions'],
-  emits: ['update:modelValue', 'filter:changed'],
+const TagSelector = {
+  name: 'TagSelector',
+  template: '<div class="tag-selector" />',
+  props: ['modelValue', 'taggable', 'closeOnSelect', 'openDirection', 'initialOptions'],
+  emits: ['update:modelValue', 'dropdown:open', 'dropdown:close'],
 }
 
 describe('BrowseFilterBar', () => {
@@ -31,7 +31,7 @@ describe('BrowseFilterBar', () => {
       global: {
         stubs: {
           LocationFilterInput,
-          TagFilterSelector,
+          TagSelector,
         },
       },
     })
@@ -42,7 +42,7 @@ describe('BrowseFilterBar', () => {
     const wrapper = mountComponent()
 
     wrapper
-      .findComponent({ name: 'TagFilterSelector' })
+      .findComponent({ name: 'TagSelector' })
       .vm.$emit('update:modelValue', [{ id: '1', name: 'vue', slug: 'vue' }])
     await nextTick()
     vi.advanceTimersByTime(500)

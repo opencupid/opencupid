@@ -47,9 +47,8 @@ function handleMessageReceived(message: MessageDTO) {
     {
       onClick: (closeToast) => {
         router.push({
-          name: 'Messaging',
+          name: 'Conversation',
           params: { conversationId: message.conversationId },
-          force: true,
         })
         closeToast()
       },
@@ -67,7 +66,6 @@ function handleLikeReceived() {
     },
     {
       onClick: (closeToast) => {
-        // router.push({ name: 'Messaging', params: { conversationId: message.conversationId },force: true })
         closeToast()
       },
     }

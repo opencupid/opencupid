@@ -97,13 +97,13 @@ export function usePostsViewModel() {
 
   function handleCreate() {
     showMyPosts.value = false
-    router.push({ name: 'CreatePost' })
+    router.push({ name: 'MeCreatePost' })
   }
 
   function handleEdit(post?: PublicPostWithProfile | OwnerPost) {
     if (post) {
       showMyPosts.value = false
-      router.push({ name: 'EditPost', params: { postId: post.id } })
+      router.push({ name: 'MeEditPost', params: { postId: post.id } })
     }
   }
 

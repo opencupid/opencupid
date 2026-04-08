@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import IconArrowSingleLeft from '@/assets/icons/arrows/arrow-single-left.svg'
+import IconCross from '@/assets/icons/interface/cross.svg'
 import IconMenuDotsVert from '@/assets/icons/interface/menu-dots-vert.svg'
+
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
@@ -12,33 +13,25 @@ defineEmits<{
 </script>
 
 <template>
-  <div class="d-flex justify-content-end align-items-center w-100">
-    <ul class="nav nav-pills w-100 d-flex align-items-center">
-      <li class="col-2">
-        <a
-          class="btn btn-shaded"
-          role="button"
-          :title="t('profiles.back_button_title')"
-          :aria-label="t('profiles.back_button_title')"
-          @click="$emit('intent:back')"
-        >
-          <IconArrowSingleLeft class="svg-icon" />
-        </a>
-      </li>
+  <div class="d-flex justify-content-between align-items-center w-100">
+    <button
+      type="button"
+      class="btn btn-shaded"
+      :title="t('profiles.more_options_button_title')"
+      :aria-label="t('profiles.more_options_button_title')"
+      @click="$emit('intent:block')"
+    >
+      <IconMenuDotsVert class="svg-icon-lg" />
+    </button>
 
-      <li class="col-8 d-flex nav-item justify-content-center align-items-center"></li>
-
-      <li class="col-2 d-flex justify-content-end">
-        <a
-          class="btn btn-shaded"
-          role="button"
-          :title="t('profiles.more_options_button_title')"
-          :aria-label="t('profiles.more_options_button_title')"
-          @click="$emit('intent:block')"
-        >
-          <IconMenuDotsVert class="svg-icon-lg" />
-        </a>
-      </li>
-    </ul>
+    <button
+      type="button"
+      class="btn btn-shaded"
+      :title="t('profiles.back_button_title')"
+      :aria-label="t('profiles.back_button_title')"
+      @click="$emit('intent:back')"
+    >
+      <IconCross class="svg-icon" />
+    </button>
   </div>
 </template>

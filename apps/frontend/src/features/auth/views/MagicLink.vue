@@ -68,7 +68,7 @@ async function doVerifyToken(token: string) {
     if (res.success) {
       isValidated.value = true
       error.value = ''
-      await router.push({ name: 'UserHome' })
+      await router.push('/browse')
       return
     } else {
       switch (res.code) {

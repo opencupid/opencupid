@@ -415,6 +415,8 @@
     },
     "forms": {
       "age_range": "Age range",
+      "tab_posts": "Posts",
+      "tab_profile": "Profile",
       "age_title_display": "I was born in {birthYear}",
       "city_add_placeholder": "Add this as new city",
       "city_deselect_label": "Remove",

@@ -2,6 +2,7 @@
 import IconHeart from '@/assets/icons/interface/heart.svg'
 import IconSlider from '@/assets/icons/interface/setting.svg'
 import IconProfile from '@/assets/icons/interface/user.svg'
+import { ref } from 'vue'
 
 const isDatingActive = defineModel<boolean>('isDatingActive', {
   default: false,
@@ -9,51 +10,79 @@ const isDatingActive = defineModel<boolean>('isDatingActive', {
 
 const emit = defineEmits<{
   (e: 'datingmode:toggle'): void
-  (e: 'datingmode:prefs'): void
 }>()
+
+const expand = ref(false)
+const pillRef = ref<HTMLElement>()
 </script>
 
 <template>
-  <BNavItemDropdown
-    toggle-class="btn-link-warning"
-    :auto-close="'outside'"
-  >
-    <template #button-content>
-      <span :class="{ 'text-dating': isDatingActive, 'text-secondary': !isDatingActive }">
-        <IconHeart class="svg-icon-lg" />
-      </span>
-    </template>
-
-    <BDropdownItemButton
-      style="min-width: 15rem"
-      @click.stop="$emit('datingmode:toggle')"
+  <div>
+    <div
+      class="d-flex"
+      ref="pillRef"
     >
-      <span class="d-flex align-items-center justify-content-start">
-        <BFormCheckbox
-          switch
-          :model-value="isDatingActive"
-          tabindex="-1"
-          style="pointer-events: none"
-        />
-        <span>{{ $t('profiles.forms.dating_mode') }}</span>
-      </span>
-    </BDropdownItemButton>
-    <BDropdownText>
-      <div class="form-hint lh-sm">
-        {{ $t('profiles.forms.dating_mode_toggle_hint') }}
-      </div>
-    </BDropdownText>
-    <BCollapse v-model="isDatingActive">
-      <BDropdownDivider />
-      <!-- <BDropdownItemButton @click="$emit('datingmode:profile')">
-        <IconProfile class="svg-icon me-2" />
-        {{ $t('profiles.forms.my_preferences') }} // TODO clean up this key
-      </BDropdownItemButton> -->
+      <div
+        class="expand-pill d-flex align-items-center"
+        @mouseenter="expand = true"
+        @mouseleave="expand = false"
+      >
+        <BButton variant="link">
+          <span :class="{ 'text-dating': isDatingActive, 'text-secondary': !isDatingActive }">
+            <IconHeart class="svg-icon-lg" />
+          </span>
+        </BButton>
 
-      <BDropdownItemButton @click="$emit('datingmode:prefs')">
-        <IconSlider class="svg-icon me-2" />
-        {{ $t('profiles.forms.my_dating_profile') }}
-      </BDropdownItemButton>
-    </BCollapse>
-  </BNavItemDropdown>
+        <div
+          class="expand-grid"
+          :class="{ expanded: expand }"
+        >
+          <div class="expand-grid-inner px-1">
+            <BFormCheckbox
+              switch
+              :model-value="isDatingActive"
+              @update:model-value="$emit('datingmode:toggle')"
+              tabindex="-1"
+              v-show="expand"
+            >
+              <span>{{ $t('profiles.forms.dating_mode') }}</span>
+            </BFormCheckbox>
+          </div>
+        </div>
+      </div>
+    </div>
+    <BPopover
+      :target="pillRef"
+      :show="expand"
+      placement="top"
+      triggers=""
+      :delay="{ show: 1000, hide: 0 }"
+    >
+      <small class="lh-sm">{{ $t('profiles.forms.dating_mode_toggle_hint') }}</small>
+    </BPopover>
+  </div>
 </template>
+
+<style scoped>
+.expand-pill {
+  border-radius: 9999px;
+  background-color: white;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.expand-grid {
+  display: grid;
+  grid-template-columns: 0fr;
+  transition: grid-template-columns 0.3s ease;
+  overflow: hidden;
+}
+
+.expand-grid.expanded {
+  grid-template-columns: 1fr;
+}
+
+.expand-grid-inner {
+  min-width: 0;
+}
+</style>

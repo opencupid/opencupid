@@ -89,11 +89,10 @@ const handleCardClick = (profileId: string) => {
 @import 'bootstrap/scss/functions';
 @import 'bootstrap/scss/variables';
 @import 'bootstrap/scss/mixins';
-@import '@/css/app-vars.scss';
 @import '@/css/theme.scss';
 
 .list-view {
-  height: calc(100vh - $navbar-height);
+  height: 100vh;
 }
 
 .subnav-bar {

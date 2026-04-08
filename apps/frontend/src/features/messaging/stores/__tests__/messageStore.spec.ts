@@ -415,6 +415,57 @@ describe('sendVoiceMessage', () => {
   })
 })
 
+describe('setActiveConversationById', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  it('fetches conversations first when store is not initialized (cold-start deep-link)', async () => {
+    const store = useMessageStore()
+    const convo = makeConvo('convo-1', 'Alice')
+
+    mockApi.get.mockResolvedValue({
+      data: { success: true, conversations: [convo] },
+    })
+
+    expect(store.initialized).toBe(false)
+    await store.setActiveConversationById('convo-1')
+
+    expect(mockApi.get).toHaveBeenCalledWith('/messages/conversations')
+    expect(store.activeConversation?.conversationId).toBe('convo-1')
+  })
+
+  it('does not fetch conversations again when already initialized', async () => {
+    const store = useMessageStore()
+    const convo = makeConvo('convo-1', 'Alice')
+    store.conversations = [convo]
+    store.initialized = true
+
+    mockApi.get.mockResolvedValue({
+      data: { success: true, messages: [], nextCursor: null, hasMore: false },
+    })
+
+    await store.setActiveConversationById('convo-1')
+
+    expect(mockApi.get).not.toHaveBeenCalledWith('/messages/conversations')
+    expect(store.activeConversation?.conversationId).toBe('convo-1')
+  })
+
+  it('clears activeConversation when id not found after fetch', async () => {
+    const store = useMessageStore()
+
+    mockApi.get.mockResolvedValue({
+      data: { success: true, conversations: [] },
+    })
+
+    await store.setActiveConversationById('nonexistent')
+
+    expect(store.activeConversation).toBeNull()
+    expect(store.messages).toEqual([])
+  })
+})
+
 describe('teardown', () => {
   beforeEach(() => {
     setActivePinia(createPinia())

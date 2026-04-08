@@ -1,4 +1,5 @@
-import type { AvatarImage } from '@/features/publicprofile/components/MapIcon.vue'
+import type { AvatarImage } from '@/features/publicprofile/components/ProfileMarker.vue'
+import type { Component } from 'vue'
 
 /** Location coordinates for a map point */
 export interface PoiLocation {
@@ -6,7 +7,7 @@ export interface PoiLocation {
   lon: number
 }
 
-/** Viewport bounds emitted by bounds-changed */
+/** Viewport bounds emitted by bounds:changed */
 export interface MapBounds {
   south: number
   north: number
@@ -28,6 +29,8 @@ export interface MapPoi {
   location: PoiLocation
   image?: AvatarImage
   highlighted?: boolean
+  /** Discriminator for icon resolution when multiple POI types share one map. */
+  type?: string
   /** The original domain object, passed through to the popup component as `:item` */
   source: unknown
 }
@@ -44,4 +47,11 @@ export interface MapCluster {
 export interface BoundsWithZoom {
   bounds: MapBounds
   zoom: number
+}
+
+/** Per-render configuration passed from the component to MapController.updateMarkers(). */
+export interface MarkerConfig {
+  resolveIcon: (poi: MapPoi) => Component
+  resolvePopup?: (poi: MapPoi) => Component
+  fetchPopupData?: (id: string | number) => Promise<unknown>
 }
