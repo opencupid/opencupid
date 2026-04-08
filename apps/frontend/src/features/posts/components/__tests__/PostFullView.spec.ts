@@ -6,6 +6,10 @@ vi.mock('vue-i18n', () => ({
   useI18n: () => ({ t: (k: string) => k }),
 }))
 
+vi.mock('vue-router', () => ({
+  useRouter: () => ({ replace: vi.fn(), push: vi.fn(), back: vi.fn() }),
+}))
+
 vi.mock('@/features/auth/stores/authStore', () => ({
   useAuthStore: () => ({ profileId: 'profile-1' }),
 }))
@@ -35,6 +39,9 @@ vi.mock('@/features/messaging/components/SendMessageForm.vue', () => ({
 vi.mock('@/assets/icons/interface/message.svg', () => ({
   default: { template: '<span />' },
 }))
+vi.mock('@/assets/icons/interface/cross.svg', () => ({
+  default: { template: '<span />' },
+}))
 
 import PostFullView from '../PostFullView.vue'
 
@@ -51,6 +58,8 @@ const stubs = {
     `,
   },
 }
+
+const globalConfig = { stubs, mocks: { $t: (k: string) => k } }
 
 describe('PostFullView', () => {
   const post = {
@@ -70,7 +79,7 @@ describe('PostFullView', () => {
   it('forwards hide intent with current post payload', async () => {
     const wrapper = mount(PostFullView, {
       props: { post },
-      global: { stubs },
+      global: globalConfig,
     })
 
     await wrapper.find('button.hide').trigger('click')
@@ -82,7 +91,7 @@ describe('PostFullView', () => {
   it('forwards delete intent with current post payload', async () => {
     const wrapper = mount(PostFullView, {
       props: { post },
-      global: { stubs },
+      global: globalConfig,
     })
 
     await wrapper.find('button.delete').trigger('click')
@@ -91,15 +100,11 @@ describe('PostFullView', () => {
     expect(wrapper.emitted('delete')?.[0]?.[0]).toEqual(post)
   })
 
-  it('shows inline send message form when contact is clicked', async () => {
+  it('renders the inline send message form by default', () => {
     const wrapper = mount(PostFullView, {
       props: { post },
-      global: { stubs },
+      global: globalConfig,
     })
-
-    expect(wrapper.find('.message-form').exists()).toBe(false)
-    await wrapper.find('button.contact').trigger('click')
-    await nextTick()
 
     expect(wrapper.find('.message-form').exists()).toBe(true)
   })
@@ -107,11 +112,9 @@ describe('PostFullView', () => {
   it('replaces inline send form with success state after message is sent', async () => {
     const wrapper = mount(PostFullView, {
       props: { post },
-      global: { stubs },
+      global: globalConfig,
     })
 
-    await wrapper.find('button.contact').trigger('click')
-    await nextTick()
     expect(wrapper.find('.message-form').exists()).toBe(true)
 
     await wrapper.find('button.send-message').trigger('click')

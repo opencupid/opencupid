@@ -1,16 +1,21 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue'
-import { useI18n } from 'vue-i18n'
+import { computed, inject, nextTick, ref, watch } from 'vue'
 import type { PublicPostWithProfile, OwnerPost } from '@zod/post/post.dto'
 
 import PostCard from './PostCard.vue'
 import SendMessageForm from '@/features/messaging/components/SendMessageForm.vue'
 import IconMessage from '@/assets/icons/interface/message.svg'
+import IconCross from '@/assets/icons/interface/cross.svg'
+
 import { useMessageSentState } from '@/features/publicprofile/composables/useMessageSentState'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 const props = defineProps<{
   post: PublicPostWithProfile | OwnerPost
 }>()
+
 const emit = defineEmits<{
   (e: 'close'): void
   (e: 'edit', post: PublicPostWithProfile | OwnerPost): void
@@ -18,7 +23,6 @@ const emit = defineEmits<{
   (e: 'delete', post: PublicPostWithProfile | OwnerPost): void
 }>()
 
-const { t } = useI18n()
 const showMessageForm = ref(false)
 const messageInput = ref()
 const { messageSent, handleMessageSent, resetMessageSent } = useMessageSentState()
@@ -39,13 +43,31 @@ watch(
     resetMessageSent()
   }
 )
+
+const closeDetailPanel = inject<(() => void) | null>('detailPanelClose', null)
+const handleBack = () => {
+  if (closeDetailPanel) closeDetailPanel()
+  else router.replace({ name: 'Browse' })
+}
 </script>
 
 <template>
-  <div class="w-100 pt-5">
+  <div class="w-100">
+    <div class="d-flex justify-content-end align-items-center w-100">
+      <button
+        type="button"
+        class="btn btn-shaded"
+        :title="$t('profiles.back_button_title')"
+        :aria-label="$t('profiles.back_button_title')"
+        @click="handleBack"
+      >
+        <IconCross class="svg-icon" />
+      </button>
+    </div>
     <PostCard
       :post="post"
       :show-details="true"
+      class="pt-5"
       :class="{ details: true }"
       @contact="handleContact"
       @edit="emit('edit', post)"
@@ -73,7 +95,7 @@ watch(
           <IconMessage class="svg-icon-lg h-100 w-100" />
         </div>
         <h5 class="mb-4 text-center animate__animated animate__fadeInDown">
-          {{ t('messaging.message_sent_success') }}
+          {{ $t('messaging.message_sent_success') }}
         </h5>
       </div>
     </div>

@@ -37,13 +37,13 @@ watch(
   { immediate: true }
 )
 
-// When rendered inside DetailPanelOrchestrator, close the panel cleanly
-// instead of router.back() (which would pop to the wrong place on a deep-link).
-// When rendered standalone, fall back to router history navigation.
+// When rendered inside DetailPanelOrchestrator, close the panel cleanly.
+// Otherwise, navigate to a deterministic landing route — never router.back(),
+// which can pop out of the SPA entirely on cold-start deep-links.
 const closeDetailPanel = inject<(() => void) | null>('detailPanelClose', null)
 const handleBack = () => {
   if (closeDetailPanel) closeDetailPanel()
-  else router.back()
+  else router.replace({ name: 'Browse' })
 }
 
 const handleMessage = (conversationId: string) => {
