@@ -5,7 +5,7 @@ import { storeToRefs } from 'pinia'
 import LocationFilterInput from '@/features/shared/profileform/LocationFilterInput.vue'
 import TagSelector from '@/features/shared/profileform/TagSelector.vue'
 
-import type { LocationDTO } from '@zod/dto/location.dto'
+import type { LocationDTO, GeoPoint } from '@zod/dto/location.dto'
 import type { OwnerProfile } from '@zod/profile/profile.dto'
 import type { PublicTag } from '@zod/tag/tag.dto'
 import { useBrowseFiltersStore } from '@/features/browse/stores/browseFiltersStore'
@@ -18,11 +18,10 @@ defineProps<{
 
 const emit = defineEmits<{
   /**
-   * Emitted when the user picks a location from the selector. Consumers
-   * should pan the map to these coordinates; the location input no
-   * longer filters any backend query.
+   * Emitted when the user picks a location from the selector.
+   * Consumers should pan the map to these coordinates.
    */
-  'location:fly-to': [coords: { lat: number; lon: number }]
+  'location:set': [point: GeoPoint]
 }>()
 
 const filtersStore = useBrowseFiltersStore()
@@ -33,12 +32,11 @@ const filtersStore = useBrowseFiltersStore()
 // always render their pill correctly.
 const { selectedTags } = storeToRefs(filtersStore)
 
-// Local ephemeral location, used only to drive the LocationSelector
-// display. Not persisted, not sent to the backend.
+// Drives the LocationSelector's display text only; never read back.
 const locationModel = ref<LocationDTO>({ country: '' })
 
-function onLocationFlyTo(coords: { lat: number; lon: number }) {
-  emit('location:fly-to', coords)
+function onLocationSet(point: GeoPoint) {
+  emit('location:set', point)
 }
 </script>
 
@@ -49,7 +47,7 @@ function onLocationFlyTo(coords: { lat: number; lon: number }) {
       <LocationFilterInput
         v-model="locationModel"
         :viewer-profile="viewerProfile"
-        @location:fly-to="onLocationFlyTo"
+        @location:set="onLocationSet"
       />
     </div>
     <!-- Tags column -->

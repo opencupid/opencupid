@@ -10,7 +10,7 @@ const LocationFilterInput = {
   name: 'LocationFilterInput',
   template: '<div class="location-filter-input" />',
   props: ['modelValue', 'viewerProfile'],
-  emits: ['update:modelValue', 'location:set-from-profile', 'location:fly-to'],
+  emits: ['update:modelValue', 'location:set'],
 }
 
 const TagSelector = {
@@ -87,25 +87,25 @@ describe('BrowseFilterBar', () => {
     expect(tagSelector.props('modelValue')).toEqual([offBoundsTag])
   })
 
-  it('emits location:fly-to when LocationFilterInput emits a location with coords', async () => {
+  it('emits location:set when LocationFilterInput emits a location with coords', async () => {
     const wrapper = mountComponent()
 
     wrapper
       .findComponent({ name: 'LocationFilterInput' })
-      .vm.$emit('location:fly-to', { lat: 51.5, lon: 4.45 })
+      .vm.$emit('location:set', { lat: 51.5, lon: 4.45 })
     await nextTick()
 
-    expect(wrapper.emitted('location:fly-to')).toEqual([[{ lat: 51.5, lon: 4.45 }]])
+    expect(wrapper.emitted('location:set')).toEqual([[{ lat: 51.5, lon: 4.45 }]])
   })
 
-  it('does not modify the store when location fly-to fires', async () => {
+  it('does not modify the store when location:set fires', async () => {
     const store = useBrowseFiltersStore()
     store.setTags([{ id: 't1', name: 'Vue', slug: 'vue' }])
 
     const wrapper = mountComponent()
     wrapper
       .findComponent({ name: 'LocationFilterInput' })
-      .vm.$emit('location:fly-to', { lat: 51.5, lon: 4.45 })
+      .vm.$emit('location:set', { lat: 51.5, lon: 4.45 })
     await nextTick()
 
     expect(store.selectedTagIds).toEqual(['t1'])

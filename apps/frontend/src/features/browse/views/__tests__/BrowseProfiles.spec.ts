@@ -51,7 +51,7 @@ vi.mock('../../components/BrowseFilterBar.vue', () => ({
     name: 'BrowseFilterBar',
     template: '<div class="browse-filter-bar" />',
     props: ['viewerProfile', 'availableTags'],
-    emits: ['location:fly-to'],
+    emits: ['location:set'],
   },
 }))
 

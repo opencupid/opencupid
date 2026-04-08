@@ -25,6 +25,7 @@ import PostMapPopup from '@/features/posts/components/PostMapPopup.vue'
 import PostFullView from '@/features/posts/components/PostFullView.vue'
 import OwnerDrawerControls from '../components/OwnerDrawerControls.vue'
 import type { PublicPostWithProfile } from '@zod/post/post.dto'
+import type { GeoPoint } from '@zod/dto/location.dto'
 
 // Component name must be 'AppShell' for KeepAlive to identify it correctly
 defineOptions({ name: 'AppShell' })
@@ -60,8 +61,8 @@ const mapCenter = computed<[number, number] | undefined>(() => {
   const fromProfile = toLatLng(viewerProfile.value?.location)
   return isValidLatLng(fromProfile) ? fromProfile : undefined
 })
-function onLocationFlyTo(coords: { lat: number; lon: number }) {
-  mapCenterOverride.value = [coords.lat, coords.lon]
+function onLocationSet(point: GeoPoint) {
+  mapCenterOverride.value = [point.lat, point.lon]
 }
 
 provide('viewerProfile', toRef(viewerProfile))
@@ -176,7 +177,7 @@ onMounted(async () => {
         <BrowseFilterBar
           :viewer-profile="viewerProfile"
           :available-tags="availableTags"
-          @location:fly-to="onLocationFlyTo"
+          @location:set="onLocationSet"
         />
       </div>
       <div class="flex-shrink-0 flex-grow-0">
