@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 // Mock prisma before imports
-vi.mock('../../lib/prisma', () => ({
-  prisma: {
+vi.mock('../../lib/prisma', () => {
+  const mock: any = {
     $queryRaw: vi.fn(),
     profileActivitySummary: {
       findUnique: vi.fn(),
@@ -12,8 +12,10 @@ vi.mock('../../lib/prisma', () => ({
     profileSessionLog: {
       deleteMany: vi.fn(),
     },
-  },
-}))
+  }
+  mock.$transaction = vi.fn((fn: (client: any) => any) => fn(mock))
+  return { prisma: mock }
+})
 
 import {
   computeRawSegment,
@@ -32,44 +34,42 @@ describe('computeRawSegment', () => {
   const now = new Date('2026-03-01T12:00:00Z')
 
   it('returns dormant when lastSeenAt is 14+ days ago', () => {
-    const result = computeRawSegment(daysAgo(14, now), daysAgo(100, now), 5, now)
+    const result = computeRawSegment(daysAgo(14, now), 5, now)
     expect(result).toBe('dormant')
   })
 
   it('returns dormant when lastSeenAt is 20 days ago even with high activeDays', () => {
-    const result = computeRawSegment(daysAgo(20, now), daysAgo(100, now), 15, now)
+    const result = computeRawSegment(daysAgo(20, now), 15, now)
     expect(result).toBe('dormant')
   })
 
-  it('returns new when firstSeenAt within 3 days and activeDays ≤ 2', () => {
-    const result = computeRawSegment(daysAgo(0, now), daysAgo(2, now), 2, now)
-    expect(result).toBe('new')
-  })
-
-  it('does not return new when activeDays > 2', () => {
-    const result = computeRawSegment(daysAgo(0, now), daysAgo(2, now), 3, now)
-    // Should be returning since activeDays < 8
-    expect(result).toBe('returning')
-  })
-
-  it('does not return new when firstSeenAt is older than 3 days', () => {
-    const result = computeRawSegment(daysAgo(0, now), daysAgo(4, now), 1, now)
-    expect(result).toBe('returning')
-  })
-
   it('returns frequent when activeDays28 >= 8', () => {
-    const result = computeRawSegment(daysAgo(0, now), daysAgo(30, now), 8, now)
+    const result = computeRawSegment(daysAgo(0, now), 8, now)
     expect(result).toBe('frequent')
   })
 
-  it('returns returning as default', () => {
-    const result = computeRawSegment(daysAgo(1, now), daysAgo(10, now), 4, now)
+  it('returns returning when activeDays28 >= 2 and < 8', () => {
+    const result = computeRawSegment(daysAgo(1, now), 4, now)
     expect(result).toBe('returning')
   })
 
+  it('returns returning at the threshold of 2 active days', () => {
+    const result = computeRawSegment(daysAgo(0, now), 2, now)
+    expect(result).toBe('returning')
+  })
+
+  it('returns new for single-visit users', () => {
+    const result = computeRawSegment(daysAgo(0, now), 1, now)
+    expect(result).toBe('new')
+  })
+
+  it('returns new for single-visit users even if first seen long ago', () => {
+    const result = computeRawSegment(daysAgo(10, now), 1, now)
+    expect(result).toBe('new')
+  })
+
   it('dormant overrides frequent (priority)', () => {
-    // User has lots of active days but hasn't been seen recently
-    const result = computeRawSegment(daysAgo(15, now), daysAgo(30, now), 12, now)
+    const result = computeRawSegment(daysAgo(15, now), 12, now)
     expect(result).toBe('dormant')
   })
 })
@@ -161,8 +161,8 @@ describe('distillActivitySegments', () => {
       { profileId: 'profile3', activeDays28: 1, sessions28: 1, lastSessionAt: daysAgo(0, now) },
     ])
     // profile1: existing frequent profile
-    // profile2: no existing summary
-    // profile3: no existing summary, firstSeen 1 day ago → new
+    // profile2: no existing summary, 3 active days → returning
+    // profile3: no existing summary, 1 active day → new
     mockedPrisma.profileActivitySummary.findUnique
       .mockResolvedValueOnce({
         profileId: 'profile1',
@@ -192,14 +192,14 @@ describe('distillActivitySegments', () => {
         update: expect.objectContaining({ segment: 'frequent' }),
       })
     )
-    // profile2: returning (3 active days, no existing summary → default dormant, promoted)
+    // profile2: returning (3 active days >= 2 threshold, no existing summary → default dormant, promoted)
     expect(mockedPrisma.profileActivitySummary.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { profileId: 'profile2' },
         create: expect.objectContaining({ segment: 'returning' }),
       })
     )
-    // profile3: new (1 active day, firstSeenAt=today within 3-day window, activeDays ≤ 2, promoted from dormant)
+    // profile3: new (1 active day < 2 threshold, promoted from dormant)
     expect(mockedPrisma.profileActivitySummary.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { profileId: 'profile3' },
