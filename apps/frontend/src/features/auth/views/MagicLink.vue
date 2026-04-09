@@ -6,6 +6,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 
 import { useAuthStore } from '../stores/authStore'
+import AuthLayout from '../components/AuthLayout.vue'
 import TokenInput from '../components/TokenInput.vue'
 import ViewTitle from '@/features/shared/ui/ViewTitle.vue'
 import ChevronLeftIcon from '@/assets/icons/arrows/arrow-single-left.svg'
@@ -100,8 +101,8 @@ function handleBackButton() {
 </script>
 
 <template>
-  <main class="container d-flex justify-content-center align-items-center flex-column">
-    <div class="d-flex flex-column align-items-center justify-content-center overflow-hidden">
+  <AuthLayout>
+    <div class="d-flex flex-column align-items-center justify-content-center overflow-hidden my-5">
       <div class="back-button">
         <a
           class="btn btn-secondary-outline"
@@ -164,7 +165,7 @@ function handleBackButton() {
         </div>
       </template>
     </div>
-  </main>
+  </AuthLayout>
 </template>
 
 <style scoped>
