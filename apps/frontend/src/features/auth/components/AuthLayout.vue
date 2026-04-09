@@ -21,10 +21,6 @@ defineOptions({ name: 'AuthLayout' })
 @import '@bootstrap/scss/buttons';
 @import '@/css/theme';
 
-.auth-logo {
-  width: clamp(120px, 10vw, 220px);
-}
-
 .map-bg {
   position: relative;
 
