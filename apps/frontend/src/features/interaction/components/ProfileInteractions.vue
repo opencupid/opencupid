@@ -81,7 +81,7 @@ onMounted(async () => {
 <template>
   <div
     v-if="profile.interactionContext"
-    class="d-flex justify-content-center align-items-center gap-2"
+    class="profile-interactions d-flex justify-content-center align-items-center gap-2"
   >
     <InteractionButtons
       @message="handleMessageIntent"
