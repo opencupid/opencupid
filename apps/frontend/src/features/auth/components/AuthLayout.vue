@@ -15,10 +15,6 @@ defineOptions({ name: 'AuthLayout' })
 </template>
 
 <style scoped lang="scss">
-@import '@bootstrap/scss/functions';
-@import '@bootstrap/scss/variables';
-@import '@bootstrap/scss/mixins';
-@import '@bootstrap/scss/buttons';
 @import '@/css/theme';
 
 .map-bg {
