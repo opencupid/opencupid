@@ -1,10 +1,9 @@
-import { ActivitySegment } from '@prisma/client'
+import { ActivitySegment, Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 
 // Tunable constants (could be made configurable if needed)
 const DORMANT_THRESHOLD_DAYS = 14
-const NEW_WINDOW_DAYS = 3
-const NEW_MAX_ACTIVE_DAYS = 2
+const RETURNING_MIN_ACTIVE_DAYS = 2
 const FREQUENT_MIN_ACTIVE_DAYS = 8
 const HYSTERESIS_K = 2
 const RETENTION_DAYS = 28
@@ -23,7 +22,6 @@ const SEGMENT_RANK: Record<ActivitySegment, number> = {
  */
 export function computeRawSegment(
   lastSeenAt: Date,
-  firstSeenAt: Date,
   activeDays28: number,
   now: Date
 ): ActivitySegment {
@@ -32,15 +30,14 @@ export function computeRawSegment(
   // Highest priority: dormant if not seen in 14+ days
   if (daysSinceLastSeen >= DORMANT_THRESHOLD_DAYS) return 'dormant'
 
-  // New: first seen within last 3 days AND ≤ 2 active days
-  const daysSinceFirstSeen = (now.getTime() - firstSeenAt.getTime()) / (1000 * 60 * 60 * 24)
-  if (daysSinceFirstSeen <= NEW_WINDOW_DAYS && activeDays28 <= NEW_MAX_ACTIVE_DAYS) return 'new'
-
   // Frequent: 8+ active days in last 28d
   if (activeDays28 >= FREQUENT_MIN_ACTIVE_DAYS) return 'frequent'
 
-  // Default
-  return 'returning'
+  // Returning: visited on 2+ distinct days (evidence of actual return)
+  if (activeDays28 >= RETURNING_MIN_ACTIVE_DAYS) return 'returning'
+
+  // New: single-visit users who haven't yet demonstrated engagement
+  return 'new'
 }
 
 /**
@@ -72,10 +69,11 @@ export function applyHysteresis(
  * compute segment with hysteresis, and upsert the result.
  */
 async function processProfileStats(
+  tx: Prisma.TransactionClient,
   row: { profileId: string; activeDays28: number; sessions28: number; lastSessionAt: Date },
   now: Date
 ): Promise<void> {
-  const existing = await prisma.profileActivitySummary.findUnique({
+  const existing = await tx.profileActivitySummary.findUnique({
     where: { profileId: row.profileId },
   })
 
@@ -85,14 +83,14 @@ async function processProfileStats(
       ? row.lastSessionAt
       : existing!.lastSeenAt
 
-  const rawSegment = computeRawSegment(lastSeenAt, firstSeenAt, row.activeDays28, now)
+  const rawSegment = computeRawSegment(lastSeenAt, row.activeDays28, now)
   const currentSegment = existing?.segment ?? 'dormant'
   const currentStreak = existing?.demotionStreak ?? 0
 
   const { segment, demotionStreak } = applyHysteresis(currentSegment, rawSegment, currentStreak)
   const segmentChanged = segment !== currentSegment
 
-  await prisma.profileActivitySummary.upsert({
+  await tx.profileActivitySummary.upsert({
     where: { profileId: row.profileId },
     create: {
       profileId: row.profileId,
@@ -140,28 +138,34 @@ export async function distillActivitySegments(): Promise<void> {
     GROUP BY "profileId"
   `
 
-  // 2. Process profiles in batches (concurrent within batch, sequential between batches)
+  // 2. Process profiles in per-batch transactions (sequential within each to
+  //    avoid concurrent queries on a single Prisma interactive transaction client)
   for (let i = 0; i < stats.length; i += BATCH_SIZE) {
     const batch = stats.slice(i, i + BATCH_SIZE)
-    await Promise.all(batch.map((row) => processProfileStats(row, now)))
+    await prisma.$transaction(async (tx) => {
+      for (const row of batch) {
+        await processProfileStats(tx, row, now)
+      }
+    })
   }
 
-  // 3. Dormant sweep: mark profiles whose lastSeenAt is stale and who aren't already dormant
-  const dormantThreshold = new Date(now.getTime() - DORMANT_THRESHOLD_DAYS * 24 * 60 * 60 * 1000)
-  await prisma.profileActivitySummary.updateMany({
-    where: {
-      lastSeenAt: { lt: dormantThreshold },
-      segment: { not: 'dormant' },
-    },
-    data: {
-      segment: 'dormant',
-      demotionStreak: 0,
-      segmentUpdatedAt: now,
-    },
-  })
+  // 3. Dormant sweep + cleanup in a single short transaction
+  await prisma.$transaction(async (tx) => {
+    const dormantThreshold = new Date(now.getTime() - DORMANT_THRESHOLD_DAYS * 24 * 60 * 60 * 1000)
+    await tx.profileActivitySummary.updateMany({
+      where: {
+        lastSeenAt: { lt: dormantThreshold },
+        segment: { not: 'dormant' },
+      },
+      data: {
+        segment: 'dormant',
+        demotionStreak: 0,
+        segmentUpdatedAt: now,
+      },
+    })
 
-  // 4. Cleanup: delete session logs older than the retention window
-  await prisma.profileSessionLog.deleteMany({
-    where: { startedAt: { lt: windowStart } },
+    await tx.profileSessionLog.deleteMany({
+      where: { startedAt: { lt: windowStart } },
+    })
   })
 }
