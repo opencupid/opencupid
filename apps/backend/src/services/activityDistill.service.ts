@@ -138,14 +138,19 @@ export async function distillActivitySegments(): Promise<void> {
     GROUP BY "profileId"
   `
 
-  await prisma.$transaction(async (tx) => {
-    // 2. Process profiles in batches (concurrent within batch, sequential between batches)
-    for (let i = 0; i < stats.length; i += BATCH_SIZE) {
-      const batch = stats.slice(i, i + BATCH_SIZE)
-      await Promise.all(batch.map((row) => processProfileStats(tx, row, now)))
-    }
+  // 2. Process profiles in per-batch transactions (sequential within each to
+  //    avoid concurrent queries on a single Prisma interactive transaction client)
+  for (let i = 0; i < stats.length; i += BATCH_SIZE) {
+    const batch = stats.slice(i, i + BATCH_SIZE)
+    await prisma.$transaction(async (tx) => {
+      for (const row of batch) {
+        await processProfileStats(tx, row, now)
+      }
+    })
+  }
 
-    // 3. Dormant sweep: mark profiles whose lastSeenAt is stale and who aren't already dormant
+  // 3. Dormant sweep + cleanup in a single short transaction
+  await prisma.$transaction(async (tx) => {
     const dormantThreshold = new Date(now.getTime() - DORMANT_THRESHOLD_DAYS * 24 * 60 * 60 * 1000)
     await tx.profileActivitySummary.updateMany({
       where: {
@@ -159,7 +164,6 @@ export async function distillActivitySegments(): Promise<void> {
       },
     })
 
-    // 4. Cleanup: delete session logs older than the retention window
     await tx.profileSessionLog.deleteMany({
       where: { startedAt: { lt: windowStart } },
     })
