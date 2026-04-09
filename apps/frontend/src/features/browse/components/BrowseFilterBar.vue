@@ -3,9 +3,7 @@ import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 
 import LocationFilterInput from '@/features/shared/profileform/LocationFilterInput.vue'
-import TagSelector from '@/features/shared/profileform/TagSelector.vue'
-import TagFilterSelector from '@/features/shared/profileform/TagFilterSelector.vue'
-import TagList from '@/features/shared/profiledisplay/TagList.vue'
+import SelectableTagList from './SelectableTagList.vue'
 
 import type { LocationDTO, GeoPoint } from '@zod/dto/location.dto'
 import type { OwnerProfile } from '@zod/profile/profile.dto'
@@ -26,17 +24,23 @@ const emit = defineEmits<{
 }>()
 
 const filtersStore = useBrowseFiltersStore()
-// Bind the TagSelector v-model directly to the store's PublicTag[] state.
-// Storing full tag objects (not just IDs) means tags picked via the
-// autocomplete search — which queries the global tag store and may
-// return tags that aren't in the bounds-scoped `availableTags` list —
-// always render their pill correctly.
 const { selectedTags } = storeToRefs(filtersStore)
 
 // Drives the LocationSelector's display text only; never read back.
 const locationModel = ref<LocationDTO>({ country: '' })
 
+const panelOpen = ref(false)
+
+function openPanel() {
+  panelOpen.value = true
+}
+
+function closePanel() {
+  panelOpen.value = false
+}
+
 function onLocationSet(point: GeoPoint) {
+  selectedTags.value = []
   emit('location:set', point)
 }
 </script>
@@ -44,7 +48,10 @@ function onLocationSet(point: GeoPoint) {
 <template>
   <div
     class="search-bar"
+    :class="{ 'search-bar--open': panelOpen }"
     @click.stop
+    @mouseenter="openPanel"
+    @mouseleave="closePanel"
   >
     <div class="search-bar__pill">
       <div class="search-bar__field search-bar__field--location">
@@ -59,15 +66,20 @@ function onLocationSet(point: GeoPoint) {
         aria-hidden="true"
       />
       <div class="search-bar__field search-bar__field--tags">
-        <TagList :tags="selectedTags" />
+        <SelectableTagList
+          :tags="selectedTags"
+          removable
+          @remove="selectedTags = []"
+        />
       </div>
       <div
         class="search-bar__panel"
         aria-hidden="true"
       >
-        <TagFilterSelector
-          v-model="selectedTags"
-          :initialOptions="availableTags ?? []"
+        <SelectableTagList
+          :tags="availableTags ?? []"
+          selectable
+          @select="selectedTags = [$event]"
         />
       </div>
     </div>
@@ -110,9 +122,9 @@ $panel-height: 30vh;
     box-shadow 0.15s ease;
 }
 
-// When any input inside the search bar gains focus, the pill flattens
-// its bottom edge into the panel and the panel slides into view.
-.search-bar:focus-within {
+// When the panel is open, the pill flattens its bottom edge into the
+// panel and the panel slides into view.
+.search-bar--open {
   .search-bar__pill {
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
@@ -130,6 +142,8 @@ $panel-height: 30vh;
 
 .search-bar__panel {
   position: absolute;
+  overflow-y: auto;
+  overflow-x: hidden;
   top: 100%;
   left: 0;
   right: 0;
@@ -195,6 +209,7 @@ $panel-height: 30vh;
 :deep(.multiselect--active .multiselect__content-wrapper) {
   box-shadow: none;
   outline: none;
+  border: none;
 }
 
 // The "use my profile location" button sits inline with the location

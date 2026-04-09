@@ -45,7 +45,7 @@ function onSelectorSelected(loc: LocationDTO) {
     <BButton
       variant="link-secondary"
       size="sm"
-      class="p-0"
+      class="ms-1 p-0"
       :title="t('profiles.browse.filters.locate_button_title')"
       @click="setLocationFromProfile"
     >

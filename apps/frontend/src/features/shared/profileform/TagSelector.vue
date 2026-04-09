@@ -154,7 +154,7 @@ const selectHeight = computed(() => {
  
 
   .multiselect__tag {
-    background-color: var(--bs-warning);
+    background-color: var(--bs-tag);
     color: var(--bs-body-bg);
 
     &--hint {
