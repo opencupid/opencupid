@@ -91,7 +91,7 @@ watch(
 )
 
 // Drive the global detail panel from the route. The panel is owned by
-// DetailPanelOrchestrator in AuthLayout — we just push content into it.
+// DetailPanelOrchestrator in AppShellLayout — we just push content into it.
 // Watching both `detail` and `activePoi` ensures we wait for post data to
 // load before opening (PostFullView needs activePoi.source).
 watch(
@@ -182,7 +182,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <!-- Detail panel content is pushed into DetailPanelOrchestrator (AuthLayout)
+  <!-- Detail panel content is pushed into DetailPanelOrchestrator (AppShellLayout)
        imperatively via useDetailPanel() — see watcher above. -->
 
   <!-- Map region (only content that stays in-place) -->

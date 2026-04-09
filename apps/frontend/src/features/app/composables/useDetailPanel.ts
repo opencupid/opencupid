@@ -3,7 +3,7 @@ import { ref, shallowRef, markRaw, type Component } from 'vue'
 /**
  * Imperative API for the global left-side detail panel.
  *
- * Architecture: a single persistent <BOffcanvas> lives in AuthLayout via
+ * Architecture: a single persistent <BOffcanvas> lives in AppShellLayout via
  * DetailPanelOrchestrator. Consumers do not own panel state; they call
  * `show(component, props)` to push content in, and the orchestrator handles
  * open/close/animation lifecycle. Content stays mounted during the close

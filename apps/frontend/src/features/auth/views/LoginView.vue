@@ -10,6 +10,7 @@ import LoginForm from '../components/LoginForm.vue'
 import LocaleSelector from '../../shared/ui/LocaleSelector.vue'
 
 import ErrorComponent from '@/features/shared/ui/ErrorComponent.vue'
+import AuthLayout from '../components/AuthLayout.vue'
 import LogoComponent from '@/features/shared/ui/LogoComponent.vue'
 
 // State
@@ -49,8 +50,8 @@ const defaultAuthId = localStorage.getItem('authId') || ''
 </script>
 
 <template>
-  <main class="container d-flex justify-content-center align-items-center flex-column">
-    <LogoComponent class="w-25 mb-2 mb-md-4 auth-logo" />
+  <AuthLayout>
+    <LogoComponent class="mb-2 mb-md-4 auth-logo" />
 
     <ErrorComponent :error="error" />
 
@@ -63,13 +64,11 @@ const defaultAuthId = localStorage.getItem('authId') || ''
     <div class="d-flex justify-content-center align-items-center mt-3 text-center">
       <LocaleSelector @language:select="(lang: string) => handleSetLanguage(lang)" />
     </div>
-  </main>
+  </AuthLayout>
 </template>
 
-<style scoped>
-@media (min-width: 992px) {
-  .auth-logo {
-    width: 12.5% !important;
-  }
+<style scoped lang="scss">
+.auth-logo {
+  width: clamp(120px, 10vw, 220px);
 }
 </style>

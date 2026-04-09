@@ -22,11 +22,11 @@ vi.mock('pinia', async (importOriginal) => {
   return { ...actual, storeToRefs: () => ({ profile: ref(null) }) }
 })
 
-import AuthLayout from '../AuthLayout.vue'
+import AppShellLayout from '../AppShellLayout.vue'
 
-describe('AuthLayout', () => {
+describe('AppShellLayout', () => {
   const mountLayout = () =>
-    mount(AuthLayout, {
+    mount(AppShellLayout, {
       global: {
         stubs: {
           RouterView: { template: '<div data-testid="router-view" />' },

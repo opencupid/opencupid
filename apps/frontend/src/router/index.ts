@@ -4,7 +4,7 @@ import type { RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { bus } from '@/lib/bus'
 
-import AuthLayout from '@/features/app/views/AuthLayout.vue'
+import AppShellLayout from '@/features/app/views/AppShellLayout.vue'
 import OnboardingLayout from '@/features/app/views/OnboardingLayout.vue'
 import AppShell from '@/features/browse/views/BrowseProfiles.vue'
 import OnboardingView from '@/features/onboarding/views/Onboarding.vue'
@@ -12,7 +12,7 @@ import LoginView from '@/features/auth/views/LoginView.vue'
 import MagicLink from '@/features/auth/views/MagicLink.vue'
 
 // All browse-area routes render AppShell. KeepAlive (include: ['AppShell'])
-// in AuthLayout keeps it mounted across navigations. AppShell reads the
+// in AppShellLayout keeps it mounted across navigations. AppShell reads the
 // route via area orchestrator composables — no <RouterView> in its template.
 const browseRoute = (path: string, name: string): RouteRecordRaw => ({
   path,
@@ -40,9 +40,9 @@ const routes: Array<RouteRecordRaw> = [
   // /onboarding and /browse causes the other layout to unmount. This is
   // how we guarantee that AppShell's KeepAlive cache cannot survive across
   // the onboarding boundary: when a fresh-registration user is redirected
-  // from BrowseProfiles.onMounted → /onboarding, AuthLayout unmounts and
+  // from BrowseProfiles.onMounted → /onboarding, AppShellLayout unmounts and
   // takes the cached (broken-state) AppShell with it. On completion →
-  // /browse, OnboardingLayout unmounts and a fresh AuthLayout mounts.
+  // /browse, OnboardingLayout unmounts and a fresh AppShellLayout mounts.
   {
     path: '/onboarding',
     component: OnboardingLayout,
@@ -53,7 +53,7 @@ const routes: Array<RouteRecordRaw> = [
   // ── Authenticated shell ───────────────────────────────────────────────
   {
     path: '/',
-    component: AuthLayout,
+    component: AppShellLayout,
     meta: { requiresAuth: true },
     children: [
       // Default landing route — redirect bare '/' to Browse

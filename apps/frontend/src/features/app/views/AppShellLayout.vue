@@ -5,7 +5,7 @@ import OwnerDrawerOrchestrator from '@/features/app/components/OwnerDrawerOrches
 import DetailPanelOrchestrator from '@/features/app/components/DetailPanelOrchestrator.vue'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 
-defineOptions({ name: 'AuthLayout' })
+defineOptions({ name: 'AppShellLayout' })
 
 const { profile } = storeToRefs(useOwnerProfileStore())
 provide('viewerProfile', profile)
