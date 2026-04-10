@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue'
-import type { BoundsWithZoom } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
+import type { BoundsWithZoom } from '@/features/map/types/map.types'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useBootstrap } from '@/lib/bootstrap'

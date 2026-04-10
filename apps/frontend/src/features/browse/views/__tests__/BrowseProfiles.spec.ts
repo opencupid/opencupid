@@ -7,7 +7,7 @@ const toastInfo = vi.fn()
 vi.mock('vue-toastification', () => ({ useToast: () => ({ info: toastInfo }) }))
 
 // stub child components
-vi.mock('@/features/shared/components/osmPoiMap/OsmPoiMap.vue', () => ({
+vi.mock('@/features/map/components/OsmPoiMap.vue', () => ({
   default: {
     name: 'OsmPoiMap',
     template:

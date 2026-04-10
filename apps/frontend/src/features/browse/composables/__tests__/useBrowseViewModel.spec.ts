@@ -14,7 +14,7 @@ vi.mock('@/lib/bus', () => ({
 
 import { ref } from 'vue'
 import { useBrowseViewModel } from '../useBrowseViewModel'
-import type { MapBounds } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
+import type { MapBounds } from '@/features/map/types/map.types'
 
 const mockBounds: MapBounds = { south: 46.5, north: 47.5, west: 18.0, east: 19.0 }
 const noCluster = ref([])

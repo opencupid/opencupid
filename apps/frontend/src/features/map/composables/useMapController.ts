@@ -1,12 +1,11 @@
 import L, { Map as LMap, Marker as LMarker } from 'leaflet'
-import 'leaflet/dist/leaflet.css'
 import { OverlappingMarkerSpiderfier } from 'ts-overlapping-marker-spiderfier-leaflet'
 import { nextTick, onMounted, onBeforeUnmount, onActivated, onDeactivated, ref, watch } from 'vue'
 import type { Component, Ref } from 'vue'
 
 import { DiffableLayer } from './DiffableLayer'
-import type { MapPoi, MapCluster, BoundsWithZoom, MarkerConfig } from './OsmPoiMap.types'
-import { isValidLatLng, createServerClusterIcon, hydratePoiIcon, MAP_MAX_ZOOM } from './mapUtils'
+import type { MapPoi, MapCluster, BoundsWithZoom, MarkerConfig } from '../types/map.types'
+import { isValidLatLng, createServerClusterIcon, hydratePoiIcon, MAP_MAX_ZOOM } from '../utils/mapUtils'
 
 // ---------------------------------------------------------------------------
 // Types

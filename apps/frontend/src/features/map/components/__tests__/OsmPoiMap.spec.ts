@@ -164,8 +164,8 @@ vi.mock('@/features/images/composables/useBlurhashDataUrl', () => ({
 
 import { mount, flushPromises } from '@vue/test-utils'
 import OsmPoiMap from '../OsmPoiMap.vue'
-import { POI_ICON_SIZE, MAP_MAX_ZOOM } from '../mapUtils'
-import type { MapCluster } from '../OsmPoiMap.types'
+import { POI_ICON_SIZE, MAP_MAX_ZOOM } from '../../utils/mapUtils'
+import type { MapCluster } from '../../types/map.types'
 import L from 'leaflet'
 
 const DummyPopup = defineComponent({

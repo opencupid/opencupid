@@ -3,7 +3,7 @@ import { useBootstrap } from '@/lib/bootstrap'
 
 import type { StoreError } from '@/store/helpers'
 
-import type { BoundsWithZoom } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
+import type { BoundsWithZoom } from '@/features/map/types/map.types'
 import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 

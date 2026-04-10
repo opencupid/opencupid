@@ -2,9 +2,10 @@
 import { ref } from 'vue'
 import type { Component } from 'vue'
 import type { Map as LMap } from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 
-import type { MapPoi, MapCluster, BoundsWithZoom } from './OsmPoiMap.types'
-import { useMapController } from './useMapController'
+import type { MapPoi, MapCluster, BoundsWithZoom } from '../types/map.types'
+import { useMapController } from '../composables/useMapController'
 import MapPlaceholder from '@/features/shared/components/MapPlaceholder.vue'
 
 const props = withDefaults(

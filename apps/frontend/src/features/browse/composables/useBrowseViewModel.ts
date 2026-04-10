@@ -1,5 +1,4 @@
 import { computed, ref, type Ref } from 'vue'
-import { storeToRefs } from 'pinia'
 import { api, safeApiCall } from '@/lib/api'
 import type { BrowseBoundsResponse } from '@zod/apiResponse.dto'
 import type { PublicTag } from '@zod/tag/tag.dto'
@@ -8,24 +7,18 @@ import type {
   MapCluster,
   MapPoi,
   BoundsWithZoom,
-} from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
+} from '@/features/map/types/map.types'
 import type { PublicPostWithProfile } from '@zod/post/post.dto'
 import type { ClusterFeature, MapFeature, PointFeature } from '@shared/zod/map/cluster.dto'
-import { useBrowseFiltersStore } from '@/features/browse/stores/browseFiltersStore'
-
 /**
  * Composable that manages the posts data layer, bounds-scoped tags,
  * and map selection state for the unified browse map. Profile clustering
  * continues to be managed by `useProfilesViewModel` / `findProfileStore`.
- * The ephemeral tag selection lives in `useBrowseFiltersStore`.
  */
 export function useBrowseViewModel(
   clusterFeatures: Ref<MapFeature[]>,
   onProfileBoundsChanged: (b: BoundsWithZoom) => void
 ) {
-  const filtersStore = useBrowseFiltersStore()
-  const { selectedTagIds } = storeToRefs(filtersStore)
-
   const postPois = ref<MapPoi[]>([])
   const availableTags = ref<PublicTag[]>([])
   const isLoadingPosts = ref(false)
@@ -36,6 +29,7 @@ export function useBrowseViewModel(
     const controller = new AbortController()
     postAbortController = controller
 
+    // TODO move this into pinia store
     isLoadingPosts.value = true
     try {
       const res = await safeApiCall(() =>
@@ -84,6 +78,7 @@ export function useBrowseViewModel(
       }))
   )
 
+  // this belongs to the pinia store, or better yet, into the backend
   const profilePois = computed<MapPoi[]>(() =>
     clusterFeatures.value
       .filter((f): f is PointFeature => f.type === 'point')
@@ -123,7 +118,6 @@ export function useBrowseViewModel(
     profilePois,
     allPois,
     availableTags,
-    selectedTagIds,
     isLoadingPosts,
     fetchPostsAndTags,
     activePoi,
