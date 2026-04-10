@@ -423,6 +423,19 @@ export class MapController {
         m.closePopup()
       })
 
+      m.on('click', (e) => {
+        const originalEvent = e.originalEvent
+        const isTouch =
+          (typeof TouchEvent !== 'undefined' && originalEvent instanceof TouchEvent) ||
+          ('pointerType' in originalEvent &&
+            (originalEvent as PointerEvent).pointerType === 'touch')
+
+        // don't open popup on touch, only mouse click
+        if (isTouch) return
+
+        m.openPopup()
+      })
+
       m.on('popupopen', async (e: L.PopupEvent) => {
         const popup = e.popup
         const target = popup
