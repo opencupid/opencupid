@@ -145,7 +145,6 @@ function checkOnboarding(): boolean {
 const isInitialized = ref(false)
 
 async function initialize() {
-  await useBootstrap().bootstrap()
   if (!ownerProfileStore.profile) return
   if (findProfileStore.lastMapBounds) {
     await findProfileStore.fetchBounds(findProfileStore.lastMapBounds, 7)

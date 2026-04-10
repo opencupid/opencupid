@@ -1,4 +1,3 @@
-import type { PublicProfile } from '@zod/profile/profile.dto'
 import type { MapBounds } from '@/features/map/types/map.types'
 
 export function boundsContain(outer: MapBounds, inner: MapBounds): boolean {
@@ -19,20 +18,4 @@ export function padBounds(bounds: MapBounds, factor: number): MapBounds {
     west: bounds.west - lonPad,
     east: bounds.east + lonPad,
   }
-}
-
-export function unionBounds(a: MapBounds, b: MapBounds): MapBounds {
-  return {
-    south: Math.min(a.south, b.south),
-    north: Math.max(a.north, b.north),
-    west: Math.min(a.west, b.west),
-    east: Math.max(a.east, b.east),
-  }
-}
-
-export function profileInBounds(profile: PublicProfile, bounds: MapBounds): boolean {
-  const lat = profile.location?.lat
-  const lon = profile.location?.lon
-  if (lat == null || lon == null) return false
-  return lat >= bounds.south && lat <= bounds.north && lon >= bounds.west && lon <= bounds.east
 }
