@@ -14,6 +14,7 @@ vi.mock('@/lib/bus', () => ({
 
 import { ref } from 'vue'
 import { useBrowseViewModel } from '../useBrowseViewModel'
+import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 import type { MapBounds } from '@/features/map/types/map.types'
 
 const mockBounds: MapBounds = { south: 46.5, north: 47.5, west: 18.0, east: 19.0 }
@@ -43,7 +44,8 @@ describe('useBrowseViewModel', () => {
     })
 
     const vm = useBrowseViewModel(noCluster, vi.fn())
-    await vm.fetchPostsAndTags(mockBounds)
+    const store = useFindProfileStore()
+    await store.fetchPostsAndTags(mockBounds)
 
     expect(mockGet).toHaveBeenCalledWith(
       '/browse/bounds',
@@ -72,9 +74,10 @@ describe('useBrowseViewModel', () => {
       },
     })
 
-    const vm = useBrowseViewModel(noCluster, vi.fn())
-    await vm.fetchPostsAndTags(mockBounds)
+    const store = useFindProfileStore()
+    await store.fetchPostsAndTags(mockBounds)
 
+    const vm = useBrowseViewModel(noCluster, vi.fn())
     expect(vm.postPois.value).toHaveLength(1)
     expect(vm.postPois.value[0]!.id).toBe('post1')
   })

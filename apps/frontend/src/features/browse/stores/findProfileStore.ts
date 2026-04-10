@@ -4,10 +4,14 @@ import { api, safeApiCall } from '@/lib/api'
 import type { PublicProfile } from '@zod/profile/profile.dto'
 import { PublicProfileArraySchema } from '@zod/profile/profile.dto'
 import type {
+  BrowseBoundsResponse,
   GetMatchIdsResponse,
   GetProfilesResponse,
   GetPublicProfileResponse,
 } from '@zod/apiResponse.dto'
+import type { PublicPostWithProfile } from '@zod/post/post.dto'
+import type { PublicTag } from '@zod/tag/tag.dto'
+import type { MapPoi } from '@/features/map/types/map.types'
 import { ClusterMapResponseSchema, type MapFeature } from '@shared/zod/map/cluster.dto'
 import {
   storeSuccess,
@@ -18,8 +22,15 @@ import {
 } from '@/store/helpers'
 import { bus } from '@/lib/bus'
 import { useBrowseFiltersStore } from './browseFiltersStore'
+import {
+  type MapBounds,
+  boundsContain,
+  padBounds,
+  unionBounds,
+  profileInBounds,
+} from '../utils/boundsUtils'
 
-export type MapBounds = { south: number; north: number; west: number; east: number }
+export type { MapBounds }
 
 let mapBoundsAbortController: AbortController | null = null
 const cachedProfiles = new Map<string, PublicProfile>()
@@ -27,47 +38,12 @@ let cachedBounds: MapBounds | null = null
 let cachedBoundsTagSig = ''
 
 let clusterAbortController: AbortController | null = null
+let postAbortController: AbortController | null = null
 let cachedClusterZoom: number | null = null
 let cachedClusterBounds: MapBounds | null = null
 let cachedClusterTagSig = ''
 const popupCache = new Map<string, PublicProfile>()
 const POPUP_CACHE_MAX = 20
-
-function boundsContain(outer: MapBounds, inner: MapBounds): boolean {
-  return (
-    outer.south <= inner.south &&
-    outer.north >= inner.north &&
-    outer.west <= inner.west &&
-    outer.east >= inner.east
-  )
-}
-
-function padBounds(bounds: MapBounds, factor: number): MapBounds {
-  const latPad = (bounds.north - bounds.south) * factor
-  const lonPad = (bounds.east - bounds.west) * factor
-  return {
-    south: bounds.south - latPad,
-    north: bounds.north + latPad,
-    west: bounds.west - lonPad,
-    east: bounds.east + lonPad,
-  }
-}
-
-function unionBounds(a: MapBounds, b: MapBounds): MapBounds {
-  return {
-    south: Math.min(a.south, b.south),
-    north: Math.max(a.north, b.north),
-    west: Math.min(a.west, b.west),
-    east: Math.max(a.east, b.east),
-  }
-}
-
-function profileInBounds(profile: PublicProfile, bounds: MapBounds): boolean {
-  const lat = profile.location?.lat
-  const lon = profile.location?.lon
-  if (lat == null || lon == null) return false
-  return lat >= bounds.south && lat <= bounds.north && lon >= bounds.west && lon <= bounds.east
-}
 
 /**
  * Stable signature for a tag selection, used for cache keying. Sorting
@@ -100,11 +76,14 @@ function invalidateBoundsCache(): void {
 }
 
 type FindProfileStoreState = {
-  profileList: PublicProfile[] // List of public profiles
-  clusterFeatures: MapFeature[] // Map cluster features
-  matchedProfileIds: Set<string> // IDs of mutual dating preference matches
-  lastMapBounds: MapBounds | null // Last map viewport bounds (for re-fetch on pref change)
-  isLoading: boolean // Loading state
+  profileList: PublicProfile[]
+  clusterFeatures: MapFeature[]
+  matchedProfileIds: Set<string>
+  lastMapBounds: MapBounds | null
+  isLoading: boolean
+  postPois: MapPoi[]
+  availableTags: PublicTag[]
+  isLoadingPosts: boolean
 }
 
 export const useFindProfileStore = defineStore('findProfile', {
@@ -114,6 +93,9 @@ export const useFindProfileStore = defineStore('findProfile', {
     matchedProfileIds: new Set<string>(),
     lastMapBounds: null,
     isLoading: false,
+    postPois: [] as MapPoi[],
+    availableTags: [] as PublicTag[],
+    isLoadingPosts: false,
   }),
 
   actions: {
@@ -233,6 +215,43 @@ export const useFindProfileStore = defineStore('findProfile', {
       }
     },
 
+    async fetchPostsAndTags(bounds: MapBounds): Promise<void> {
+      if (postAbortController) postAbortController.abort()
+      const controller = new AbortController()
+      postAbortController = controller
+
+      this.isLoadingPosts = true
+      try {
+        const res = await safeApiCall(() =>
+          api.get<BrowseBoundsResponse>('/browse/bounds', {
+            params: bounds,
+            signal: controller.signal,
+          })
+        )
+
+        if (!res.data.success) return
+
+        this.postPois = (res.data.posts as PublicPostWithProfile[])
+          .filter((p) => p.location?.lat != null && p.location?.lon != null)
+          .map((p) => ({
+            id: p.id,
+            title: p.content?.substring(0, 50) ?? '',
+            location: { lat: p.location!.lat!, lon: p.location!.lon! },
+            image: p.postedBy?.profileImages?.[0],
+            type: 'post',
+            source: p,
+          }))
+
+        this.availableTags = res.data.tags
+      } catch (err: any) {
+        if (err?.code === 'ERR_CANCELED') return
+      } finally {
+        if (postAbortController === controller) {
+          this.isLoadingPosts = false
+        }
+      }
+    },
+
     async fetchProfileForPopup(profileId: string): Promise<PublicProfile | null> {
       const cached = popupCache.get(profileId)
       if (cached) return cached
@@ -288,12 +307,19 @@ export const useFindProfileStore = defineStore('findProfile', {
         clusterAbortController.abort()
         clusterAbortController = null
       }
+      if (postAbortController) {
+        postAbortController.abort()
+        postAbortController = null
+      }
       invalidateBoundsCache()
       this.profileList = []
       this.clusterFeatures = []
       this.matchedProfileIds = new Set()
       this.lastMapBounds = null
       this.isLoading = false
+      this.postPois = []
+      this.availableTags = []
+      this.isLoadingPosts = false
     },
   },
 })
