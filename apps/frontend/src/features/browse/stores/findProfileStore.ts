@@ -2,11 +2,9 @@ import { defineStore } from 'pinia'
 import { CanceledError } from 'axios'
 import { api, safeApiCall } from '@/lib/api'
 import type { PublicProfile } from '@zod/profile/profile.dto'
-import { PublicProfileArraySchema } from '@zod/profile/profile.dto'
 import type {
   BrowseBoundsResponse,
   GetMatchIdsResponse,
-  GetProfilesResponse,
   GetPublicProfileResponse,
 } from '@zod/apiResponse.dto'
 import type { PublicPostWithProfile } from '@zod/post/post.dto'
@@ -23,12 +21,7 @@ import {
 import { bus } from '@/lib/bus'
 import { useBrowseFiltersStore } from './browseFiltersStore'
 import type { MapBounds } from '@/features/map/types/map.types'
-import { boundsContain, padBounds, unionBounds, profileInBounds } from '../utils/boundsUtils'
-
-let mapBoundsAbortController: AbortController | null = null
-const cachedProfiles = new Map<string, PublicProfile>()
-let cachedBounds: MapBounds | null = null
-let cachedBoundsTagSig = ''
+import { boundsContain, padBounds } from '../utils/boundsUtils'
 
 let clusterAbortController: AbortController | null = null
 let postAbortController: AbortController | null = null
@@ -76,9 +69,6 @@ function sameViewport(
 }
 
 function invalidateBoundsCache(): void {
-  cachedProfiles.clear()
-  cachedBounds = null
-  cachedBoundsTagSig = ''
   cachedClusterBounds = null
   cachedClusterZoom = null
   cachedClusterTagSig = ''
@@ -86,7 +76,6 @@ function invalidateBoundsCache(): void {
 }
 
 type FindProfileStoreState = {
-  profileList: PublicProfile[]
   clusterFeatures: MapFeature[]
   matchedProfileIds: Set<string>
   lastMapBounds: MapBounds | null
@@ -98,7 +87,6 @@ type FindProfileStoreState = {
 
 export const useFindProfileStore = defineStore('findProfile', {
   state: (): FindProfileStoreState => ({
-    profileList: [] as PublicProfile[],
     clusterFeatures: [] as MapFeature[],
     matchedProfileIds: new Set<string>(),
     lastMapBounds: null,
@@ -109,66 +97,6 @@ export const useFindProfileStore = defineStore('findProfile', {
   }),
 
   actions: {
-    async findProfilesForMapBounds(
-      bounds: MapBounds
-    ): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
-      if (mapBoundsAbortController) {
-        mapBoundsAbortController.abort()
-      }
-      const controller = new AbortController()
-      mapBoundsAbortController = controller
-      this.lastMapBounds = bounds
-
-      const tagIds = useBrowseFiltersStore().selectedTagIds
-      const sig = tagSignature(tagIds)
-
-      if (sig === cachedBoundsTagSig && cachedBounds && boundsContain(cachedBounds, bounds)) {
-        this.profileList = [...cachedProfiles.values()].filter((p) => profileInBounds(p, bounds))
-        this.isLoading = false
-        return storeSuccess()
-      }
-
-      // Tag selection changed — throw out the old bounds cache, it was
-      // keyed to a different filter.
-      if (sig !== cachedBoundsTagSig) {
-        cachedProfiles.clear()
-        cachedBounds = null
-        cachedBoundsTagSig = sig
-      }
-
-      try {
-        this.isLoading = true
-
-        const paddedBounds = padBounds(bounds, 0.3)
-        const res = await safeApiCall(() =>
-          api.get<GetProfilesResponse>('/find/social/map/bounds', {
-            params: { ...paddedBounds, tagIds: tagIdsParam(tagIds) },
-            signal: controller.signal,
-          })
-        )
-        const fetched = PublicProfileArraySchema.parse(res.data.profiles)
-
-        for (const profile of fetched) {
-          cachedProfiles.set(profile.id, profile)
-        }
-        cachedBounds = cachedBounds ? unionBounds(cachedBounds, paddedBounds) : paddedBounds
-
-        this.profileList = [...cachedProfiles.values()].filter((p) => profileInBounds(p, bounds))
-
-        return storeSuccess()
-      } catch (error: any) {
-        if (error instanceof CanceledError) {
-          return storeSuccess()
-        }
-        this.profileList = []
-        return storeError(error, 'Failed to fetch bounded map profiles')
-      } finally {
-        if (mapBoundsAbortController === controller) {
-          this.isLoading = false
-        }
-      }
-    },
-
     async findClustersForMapBounds(
       bounds: MapBounds,
       zoom: number
@@ -316,18 +244,7 @@ export const useFindProfileStore = defineStore('findProfile', {
       }
     },
 
-    hide(profileId: string): void {
-      const profileIndex = this.profileList.findIndex((p) => p.id === profileId)
-      if (profileIndex !== -1) {
-        this.profileList.splice(profileIndex, 1) // Remove profile from list
-      }
-    },
-
     teardown() {
-      if (mapBoundsAbortController) {
-        mapBoundsAbortController.abort()
-        mapBoundsAbortController = null
-      }
       if (clusterAbortController) {
         clusterAbortController.abort()
         clusterAbortController = null
@@ -337,7 +254,6 @@ export const useFindProfileStore = defineStore('findProfile', {
         postAbortController = null
       }
       invalidateBoundsCache()
-      this.profileList = []
       this.clusterFeatures = []
       this.matchedProfileIds = new Set()
       this.lastMapBounds = null
