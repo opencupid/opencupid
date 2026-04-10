@@ -22,15 +22,8 @@ import {
 } from '@/store/helpers'
 import { bus } from '@/lib/bus'
 import { useBrowseFiltersStore } from './browseFiltersStore'
-import {
-  type MapBounds,
-  boundsContain,
-  padBounds,
-  unionBounds,
-  profileInBounds,
-} from '../utils/boundsUtils'
-
-export type { MapBounds }
+import type { MapBounds } from '@/features/map/types/map.types'
+import { boundsContain, padBounds, unionBounds, profileInBounds } from '../utils/boundsUtils'
 
 let mapBoundsAbortController: AbortController | null = null
 const cachedProfiles = new Map<string, PublicProfile>()

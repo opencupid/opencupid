@@ -1,6 +1,5 @@
 import type { PublicProfile } from '@zod/profile/profile.dto'
-
-export type MapBounds = { south: number; north: number; west: number; east: number }
+import type { MapBounds } from '@/features/map/types/map.types'
 
 export function boundsContain(outer: MapBounds, inner: MapBounds): boolean {
   return (
