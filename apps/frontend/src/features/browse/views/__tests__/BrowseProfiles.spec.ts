@@ -133,17 +133,6 @@ const vmState = {
   viewerProfile: ref<Record<string, any>>({ isSocialActive: true }),
   isNoOneAround: ref(true),
   isLoading: ref(false),
-  clusterFeatures: ref([
-    {
-      type: 'point',
-      id: 'p1',
-      lat: 47,
-      lon: 19,
-      publicName: 'Alice',
-      image: null,
-      highlighted: false,
-    },
-  ]),
   storeError: ref(null),
   isInitialized: ref(true),
   hideProfile: vi.fn(),

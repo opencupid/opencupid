@@ -121,7 +121,6 @@ export function useProfilesViewModel() {
     hideProfile,
     onBoundsChanged,
     refetchForCurrentBounds,
-    clusterFeatures: computed(() => findProfileStore.clusterFeatures),
     isInitialized,
     fetchPopupData,
   }

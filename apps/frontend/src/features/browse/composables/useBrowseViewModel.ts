@@ -1,24 +1,19 @@
-import { computed, ref, type Ref } from 'vue'
+import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
-import type {
-  MapCluster,
-  MapPoi,
-  BoundsWithZoom,
-} from '@/features/map/types/map.types'
-import type { ClusterFeature, MapFeature, PointFeature } from '@shared/zod/map/cluster.dto'
+import type { MapCluster, MapPoi, BoundsWithZoom } from '@/features/map/types/map.types'
+import type { ClusterFeature, PointFeature } from '@shared/zod/map/cluster.dto'
 import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 
 /**
  * Composable that manages the posts data layer, bounds-scoped tags,
- * and map selection state for the unified browse map. Profile clustering
- * continues to be managed by `useProfilesViewModel` / `findProfileStore`.
+ * and map selection state for the unified browse map.
  */
 export function useBrowseViewModel(
-  clusterFeatures: Ref<MapFeature[]>,
   onProfileBoundsChanged: (b: BoundsWithZoom) => void
 ) {
   const findProfileStore = useFindProfileStore()
-  const { postPois, availableTags, isLoadingPosts } = storeToRefs(findProfileStore)
+  const { clusterFeatures, postPois, availableTags, isLoadingPosts } =
+    storeToRefs(findProfileStore)
 
   const clusters = computed<MapCluster[]>(() =>
     clusterFeatures.value

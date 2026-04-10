@@ -33,7 +33,6 @@ defineOptions({ name: 'AppShell' })
 const {
   viewerProfile,
   isNoOneAround,
-  clusterFeatures,
   isInitialized,
   onBoundsChanged: onProfileBoundsChanged,
   initialize,
@@ -67,7 +66,7 @@ provide('viewerProfile', toRef(viewerProfile))
 
 // ── Post layer + tags + merged map data + selection state ──────────
 const { clusters, allPois, availableTags, activePoi, onSelectionClear, onBoundsChanged } =
-  useBrowseViewModel(clusterFeatures, onProfileBoundsChanged)
+  useBrowseViewModel(onProfileBoundsChanged)
 
 // ── Route-driven detail panel ──────────────────────────────────────
 const router = useRouter()

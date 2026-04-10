@@ -100,23 +100,6 @@ describe('useProfilesViewModel', () => {
     expect(mockFindProfileStore.findClustersForMapBounds).toHaveBeenCalledWith(bounds, 7)
   })
 
-  it('exposes clusterFeatures from store', () => {
-    mockFindProfileStore.clusterFeatures = [
-      {
-        type: 'point',
-        id: 'p1',
-        lat: 47,
-        lon: 19,
-        publicName: 'A',
-        image: null,
-        highlighted: false,
-      },
-    ]
-    const vm = useProfilesViewModel()
-    expect(vm.clusterFeatures.value).toHaveLength(1)
-    mockFindProfileStore.clusterFeatures = []
-  })
-
   it('refetchForCurrentBounds invalidates cache before refetching', async () => {
     const bounds = { south: 45, north: 48, west: 16, east: 23 }
     mockFindProfileStore.lastMapBounds = bounds
