@@ -3,7 +3,7 @@ import { nextTick } from 'vue'
 import { setActivePinia, createPinia } from 'pinia'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import BrowseFilterBar from '../BrowseFilterBar.vue'
+import SearchBar from '../SearchBar.vue'
 import { useBrowseFiltersStore } from '@/features/browse/stores/browseFiltersStore'
 
 const LocationFilterInput = {
@@ -25,13 +25,13 @@ const availableTags = [
   { id: 't2', name: 'Pinia', slug: 'pinia' },
 ]
 
-describe('BrowseFilterBar', () => {
+describe('SearchBar', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
   })
 
   function mountComponent() {
-    return mount(BrowseFilterBar, {
+    return mount(SearchBar, {
       props: {
         viewerProfile: null,
         availableTags,

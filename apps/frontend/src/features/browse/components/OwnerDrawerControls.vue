@@ -18,7 +18,7 @@ const { hasUnreadMessages, hasMatchNotifications } = useNotificationState()
 </script>
 
 <template>
-  <div class="owner-drawer-controls d-flex gap-2">
+  <div class="owner-drawer-controls d-flex flex-column flex-md-row gap-2">
     <BButton
       variant="light"
       class="btn-sm rounded-circle shadow p-0 overflow-hidden"

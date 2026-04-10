@@ -46,10 +46,10 @@ vi.mock('@/features/publicprofile/components/ProfileMarker.vue', () => ({
 vi.mock('@/features/posts/components/PostMarker.vue', () => ({
   default: { template: '<div />' },
 }))
-vi.mock('../../components/BrowseFilterBar.vue', () => ({
+vi.mock('../../components/SearchBar.vue', () => ({
   default: {
-    name: 'BrowseFilterBar',
-    template: '<div class="browse-filter-bar" />',
+    name: 'SearchBar',
+    template: '<div class="search-bar" />',
     props: ['viewerProfile', 'availableTags'],
     emits: ['location:set'],
   },
@@ -200,9 +200,9 @@ describe('BrowseProfiles view', () => {
     expect(wrapper.find('.osm-poi-map').exists()).toBe(true)
   })
 
-  it('renders BrowseFilterBar', () => {
+  it('renders SearchBar', () => {
     const wrapper = mountComponent()
-    expect(wrapper.find('.browse-filter-bar').exists()).toBe(true)
+    expect(wrapper.find('.search-bar').exists()).toBe(true)
   })
 
   it('renders map when viewer profile has location coords', () => {

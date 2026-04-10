@@ -47,13 +47,13 @@ function onLocationSet(point: GeoPoint) {
 
 <template>
   <div
-    class="search-bar"
+    class="search-bar position-relative w-100"
     :class="{ 'search-bar--open': panelOpen }"
     @click.stop
     @mouseenter="openPanel"
     @mouseleave="closePanel"
   >
-    <div class="search-bar__pill">
+    <div class="search-bar__pill w-100 position-relative d-flex flex-row align-items-center">
       <div class="search-bar__field search-bar__field--location">
         <LocationFilterInput
           v-model="locationModel"
@@ -73,7 +73,7 @@ function onLocationSet(point: GeoPoint) {
         />
       </div>
       <div
-        class="search-bar__panel"
+        class="search-bar__panel position-absolute overflow-y-auto overflow-x-hidden w-100 left-0 top-100 z-1 pointer-events-none shadow"
         aria-hidden="true"
       >
         <SelectableTagList
@@ -87,30 +87,11 @@ function onLocationSet(point: GeoPoint) {
 </template>
 
 <style lang="scss" scoped>
-// Google-Maps-style search control:
-//   .search-bar          — positioning shell (anchors the panel)
-//   .search-bar__pill    — visible rounded bar holding both inputs
-//   .search-bar__panel   — empty backdrop that drops down on focus,
-//                          providing the visual surface that the
-//                          multiselect dropdowns overlay onto.
-// The multiselect inputs inside the pill are stripped of their own
-// chrome via :deep() overrides so the pill reads as one continuous
-// control.
-
 $pill-radius: 28px;
 $panel-height: 30vh;
 
-.search-bar {
-  position: relative;
-  width: 100%;
-}
-
 .search-bar__pill {
-  position: relative;
   z-index: 2;
-  display: flex;
-  align-items: center;
-  width: 100%;
   background-color: var(--bs-body-bg, #fff);
   border-radius: $pill-radius;
   box-shadow:
@@ -141,22 +122,11 @@ $panel-height: 30vh;
 }
 
 .search-bar__panel {
-  position: absolute;
-  overflow-y: auto;
-  overflow-x: hidden;
-  top: 100%;
-  left: 0;
-  right: 0;
-  z-index: 1;
   height: $panel-height;
-  background-color: var(--bs-body-bg, #fff);
+  background-color: var(--bs-body-bg);
   border-bottom-left-radius: $pill-radius;
   border-bottom-right-radius: $pill-radius;
-  box-shadow:
-    0 8px 16px rgba(0, 0, 0, 0.08),
-    0 16px 32px rgba(0, 0, 0, 0.06);
   opacity: 0;
-  pointer-events: none;
   transform: translateY(-4px);
   transition:
     opacity 0.15s ease,

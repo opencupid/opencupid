@@ -12,8 +12,8 @@ import { isValidLatLng, toLatLng } from '@/features/map/utils/mapUtils'
 import { useDetailRouteState } from '@/features/shared/composables/useDetailRouteState'
 import { useDetailPanel } from '@/features/app/composables/useDetailPanel'
 
-import BrowseFilterBar from '../components/BrowseFilterBar.vue'
 import OsmPoiMap from '@/features/map/components/OsmPoiMap.vue'
+import SearchBar from '../components/SearchBar.vue'
 import NoResultsCTA from '../components/NoResultsCTA.vue'
 import ProfileMapCard from '../components/ProfileMapCard.vue'
 import PublicProfileView from '@/features/publicprofile/components/PublicProfileView.vue'
@@ -174,7 +174,7 @@ onMounted(async () => {
       style="z-index: 1010"
     >
       <div class="flex-grow-1">
-        <BrowseFilterBar
+        <SearchBar
           :viewer-profile="viewerProfile"
           :available-tags="availableTags"
           @location:set="onLocationSet"
