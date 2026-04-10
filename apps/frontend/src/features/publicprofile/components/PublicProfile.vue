@@ -28,7 +28,7 @@ const emit = defineEmits<{
           @intent:block="emit('intent:block')"
         />
       </div>
-      <div class="profile-content h-100 overflow-auto">
+      <div class="profile-content h-100 overflow-auto hide-scrollbar">
         <ProfileContent :profile="profile" />
       </div>
     </div>

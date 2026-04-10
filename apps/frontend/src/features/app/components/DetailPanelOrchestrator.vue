@@ -15,7 +15,7 @@ const { isOpen, currentComponent, currentProps, close, notifyHidden } = useDetai
     placement="start"
     no-header
     no-backdrop
-    class="detail-panel"
+    class="detail-panel shadow-lg"
     body-class="p-0 overflow-hidden"
     @hidden="notifyHidden"
   >
@@ -44,11 +44,8 @@ const { isOpen, currentComponent, currentProps, close, notifyHidden } = useDetai
 @import 'bootstrap/scss/variables';
 @import 'bootstrap/scss/mixins';
 
-.offcanvas-body {
-  // border-right: none !important;
-}
-
 .detail-panel {
+  border-right: none;
 
   @include media-breakpoint-up(md) {
     width: 33vw;
@@ -77,11 +74,15 @@ const { isOpen, currentComponent, currentProps, close, notifyHidden } = useDetai
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-left: none;
   box-shadow: 1px 0px 2px rgba(0, 0, 0, 0.1);
-    clip-path: inset(-1px -10px -1px 0);
+  clip-path: inset(-1px -10px -1px 0);
   border-radius: 0 0.375rem 0.375rem 0;
   color: $gray-600;
   cursor: pointer;
   font-size: 0.625rem;
+
+  &:hover {
+    background-color: whitesmoke;
+  }
 
   &::before {
     content: '';
@@ -91,11 +92,9 @@ const { isOpen, currentComponent, currentProps, close, notifyHidden } = useDetai
     transform: translateY(-50%);
     width: 1px;
     height: 100vh;
-    // border-right: 1px solid  rgba(0, 0, 0, 0.1);
+    border-right: 1px solid  rgba(0, 0, 0, 0.1);
     box-shadow: 0px 0 3px rgba(0, 0, 0, 0.5);
-    clip-path: inset(0 -10px 0 0);
     pointer-events: none;
   }
-
 }
 </style>
