@@ -39,6 +39,10 @@ function closePanel() {
   panelOpen.value = false
 }
 
+function togglePanel() {
+  panelOpen.value = !panelOpen.value
+}
+
 function onLocationSet(point: GeoPoint) {
   selectedTags.value = []
   emit('location:set', point)
@@ -50,10 +54,9 @@ function onLocationSet(point: GeoPoint) {
     class="search-bar position-relative w-100"
     :class="{ 'search-bar--open': panelOpen }"
     @click.stop
-    @mouseenter="openPanel"
-    @mouseleave="closePanel"
   >
-    <div class="search-bar__pill w-100 position-relative d-flex flex-row align-items-center">
+    <div class="search-bar__pill w-100 position-relative d-flex flex-row align-items-center"
+    @click="togglePanel">
       <div class="search-bar__field search-bar__field--location">
         <LocationFilterInput
           v-model="locationModel"

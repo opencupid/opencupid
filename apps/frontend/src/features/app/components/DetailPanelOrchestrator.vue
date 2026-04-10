@@ -1,18 +1,24 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useMediaQuery } from '@vueuse/core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faCaretLeft } from '@fortawesome/free-solid-svg-icons'
 import { useDetailPanel } from '@/features/app/composables/useDetailPanel'
 import PanelContentWrapper from './PanelContentWrapper.vue'
+import { SwipeModal } from '@takuma-ru/vue-swipe-modal'
 
 defineOptions({ name: 'DetailPanelOrchestrator' })
 
 const { isOpen, currentComponent, currentProps, close, notifyHidden } = useDetailPanel()
+const isMdUp = useMediaQuery('(min-width: 768px)')
+const placement = computed(() => (isMdUp.value ? 'start' : 'bottom'))
 </script>
 
 <template>
   <BOffcanvas
+    v-if="isMdUp"
     v-model="isOpen"
-    placement="start"
+    :placement="placement"
     no-header
     no-backdrop
     class="detail-panel shadow-lg"
@@ -21,7 +27,7 @@ const { isOpen, currentComponent, currentProps, close, notifyHidden } = useDetai
   >
     <div>
       <button
-        class="drawer-close-tab"
+        class="drawer-close-tab d-none d-md-flex position-absolute align-items-center justify-content-center"
         @click="close"
       >
         <FontAwesomeIcon :icon="faCaretLeft" />
@@ -37,9 +43,24 @@ const { isOpen, currentComponent, currentProps, close, notifyHidden } = useDetai
       />
     </PanelContentWrapper>
   </BOffcanvas>
+
+  <SwipeModal v-model="isOpen"
+  :snap-point="'75vh'"
+  v-else
+  >
+    <PanelContentWrapper
+      v-if="currentComponent"
+      :close="close"
+    >
+      <component
+        :is="currentComponent"
+        v-bind="currentProps"
+      />
+    </PanelContentWrapper>
+  </SwipeModal>
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 @import 'bootstrap/scss/functions';
 @import 'bootstrap/scss/variables';
 @import 'bootstrap/scss/mixins';
@@ -48,8 +69,8 @@ const { isOpen, currentComponent, currentProps, close, notifyHidden } = useDetai
   border-right: none;
 
   @include media-breakpoint-up(md) {
-    width: 33vw;
-    min-width: 320px;
+    // width: 33vw;
+    // min-width: 320px;
   }
 
   @include media-breakpoint-down(sm) {
@@ -57,15 +78,26 @@ const { isOpen, currentComponent, currentProps, close, notifyHidden } = useDetai
   }
 }
 
+.detail-panel.offcanvas-bottom {
+  height: 50vh;
+}
+
+// Override vue-swipe-modal scoped dark defaults
+.modal-style {
+  background-color: $white !important;
+  color: $body-color !important;
+}
+
+.swipe-modal::backdrop {
+  background-color: rgba(0, 0, 0, 0.3) !important;
+  backdrop-filter: none !important;
+}
+
 .drawer-close-tab {
-  position: absolute;
   top: 50%;
   right: 0;
   transform: translateX(100%) translateY(-50%);
   z-index: 1050;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   width: 1.5rem;
   height: 3rem;
   padding: 0;
@@ -78,7 +110,7 @@ const { isOpen, currentComponent, currentProps, close, notifyHidden } = useDetai
   border-radius: 0 0.375rem 0.375rem 0;
   color: $gray-600;
   cursor: pointer;
-  font-size: 0.625rem;
+  font-size: 0.825rem;
 
   &:hover {
     background-color: whitesmoke;
@@ -92,7 +124,7 @@ const { isOpen, currentComponent, currentProps, close, notifyHidden } = useDetai
     transform: translateY(-50%);
     width: 1px;
     height: 100vh;
-    border-right: 1px solid  rgba(0, 0, 0, 0.1);
+    border-right: 1px solid rgba(0, 0, 0, 0.1);
     box-shadow: 0px 0 3px rgba(0, 0, 0, 0.5);
     pointer-events: none;
   }

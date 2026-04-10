@@ -10,18 +10,6 @@ import { isValidLatLng, createServerClusterIcon, hydratePoiIcon, MAP_MAX_ZOOM } 
 // Types
 // ---------------------------------------------------------------------------
 
-/**
- * True when the device's primary input is a fine pointer that supports real
- * hover (i.e. a mouse). Touch devices report `(hover: none)` and only ever
- * fire `mouseover` as a synthesized side-effect of a tap, which is the case
- * we want to keep autoPan on for. Evaluated once at module load — the
- * primary input device does not change at runtime.
- */
-const HAS_REAL_HOVER =
-  typeof window !== 'undefined' &&
-  typeof window.matchMedia === 'function' &&
-  window.matchMedia('(hover: hover) and (pointer: fine)').matches
-
 type MapPhase = 'uninitialized' | 'loading' | 'ready' | 'suspended'
 
 interface DeferredWork {
@@ -43,6 +31,11 @@ export interface MapCallbacks {
   onMapReady: (map: LMap) => void
   onPopupOpen: (item: MapPoi, target: HTMLElement) => void
   onPopupClose: () => void
+}
+
+function isTouchEvent(e: L.LeafletMouseEvent): boolean {
+  const ev = e.originalEvent as PointerEvent
+  return ev.pointerType === 'touch'
 }
 
 // ---------------------------------------------------------------------------
@@ -407,32 +400,17 @@ export class MapController {
         className: item.highlighted ? 'item-popup item-popup-highlighted' : 'item-popup',
       })
 
-      // Popup on hover only — OMS click handles selection.
-      // On real mouse devices we suppress autoPan so the map doesn't lurch
-      // under the cursor; on touch devices the same `mouseover` is synthesized
-      // from a tap, and there autoPan is desired so the selected popup is
-      // panned fully into view. Discriminator is the device capability
-      // (`HAS_REAL_HOVER`), not the event — Leaflet's `mouseover` originalEvent
-      // is a plain MouseEvent with no pointerType.
-      m.on('mouseover', () => {
-        const popup = m.getPopup()
-        if (popup) popup.options.autoPan = !HAS_REAL_HOVER
+      m.on('mouseover', (e: L.LeafletMouseEvent) => {
+        if (isTouchEvent(e)) return
         m.openPopup()
       })
+
       m.on('mouseout', () => {
         m.closePopup()
       })
 
-      m.on('click', (e) => {
-        const originalEvent = e.originalEvent
-        const isTouch =
-          (typeof TouchEvent !== 'undefined' && originalEvent instanceof TouchEvent) ||
-          ('pointerType' in originalEvent &&
-            (originalEvent as PointerEvent).pointerType === 'touch')
-
-        // don't open popup on touch, only mouse click
-        if (isTouch) return
-
+      m.on('click', (e: L.LeafletMouseEvent) => {
+        if (isTouchEvent(e)) return
         m.openPopup()
       })
 
