@@ -1,5 +1,5 @@
 import { FastifyPluginAsync } from 'fastify'
-import { z } from 'zod'
+import { BoundsQuerySchema } from '@zod/dto/bounds.dto'
 import { validateBody } from '@/utils/zodValidate'
 import {
   CreatePostPayloadSchema,
@@ -223,13 +223,6 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
    * @query {number} east - East longitude
    * @returns {PostsResponse}
    */
-  const BoundsQuerySchema = z.object({
-    south: z.coerce.number(),
-    north: z.coerce.number(),
-    west: z.coerce.number(),
-    east: z.coerce.number(),
-  })
-
   fastify.get('/bounds', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const parsed = BoundsQuerySchema.safeParse(req.query)
     if (!parsed.success) {

@@ -1,6 +1,8 @@
 import { FastifyPluginAsync, type FastifyReply, type FastifyRequest } from 'fastify'
 import { z } from 'zod'
 
+import { BoundsQuerySchema } from '@zod/dto/bounds.dto'
+
 import { sendError, sendForbiddenError } from '../helpers'
 
 import { ProfileMatchService, type OrderBy } from '@/services/profileMatch.service'
@@ -10,7 +12,8 @@ import {
   type GetMatchIdsResponse,
   type GetSocialMatchFilterResponse,
 } from '@zod/apiResponse.dto'
-import type { SocialMatchFilterDTO } from '@shared/zod/match/filters.dto'
+import type { SocialMatchFilterDTO } from '@zod/match/filters.dto'
+
 import { MAP_MAX_ZOOM } from '@shared/maps'
 import { mapProfileToPublic } from '../mappers/profile.mappers'
 
@@ -67,19 +70,11 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
   const profileMatchService = ProfileMatchService.getInstance()
   const clusterService = ClusterService.getInstance()
 
-  const BoundsQuerySchema = z.object({
-    south: z.coerce.number(),
-    north: z.coerce.number(),
-    west: z.coerce.number(),
-    east: z.coerce.number(),
+  const BoundsWithTagsQuerySchema = BoundsQuerySchema.extend({
     tagIds: z.string().optional(),
   })
 
-  const ClusterQuerySchema = z.object({
-    south: z.coerce.number(),
-    north: z.coerce.number(),
-    west: z.coerce.number(),
-    east: z.coerce.number(),
+  const ClusterQuerySchema = BoundsQuerySchema.extend({
     zoom: z.coerce.number().int().min(0).max(MAP_MAX_ZOOM),
     tagIds: z.string().optional(),
   })
@@ -105,7 +100,7 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
       return sendForbiddenError(reply)
     }
 
-    const parsed = BoundsQuerySchema.safeParse(req.query)
+    const parsed = BoundsWithTagsQuerySchema.safeParse(req.query)
     if (!parsed.success) {
       return sendError(
         reply,

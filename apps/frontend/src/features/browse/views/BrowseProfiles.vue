@@ -5,15 +5,15 @@ import { useRouter } from 'vue-router'
 
 import { useBootstrap } from '@/lib/bootstrap'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
-import { useProfilesViewModel } from '../composables/useProfilesViewModel'
 import { useBrowseViewModel } from '../composables/useBrowseViewModel'
 import { useBrowseFiltersStore } from '@/features/browse/stores/browseFiltersStore'
-import { isValidLatLng, toLatLng } from '@/features/shared/components/osmPoiMap/mapUtils'
+import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
+import { isValidLatLng, toLatLng } from '@/features/map/utils/mapUtils'
 import { useDetailRouteState } from '@/features/shared/composables/useDetailRouteState'
 import { useDetailPanel } from '@/features/app/composables/useDetailPanel'
 
 import BrowseFilterBar from '../components/BrowseFilterBar.vue'
-import OsmPoiMap from '@/features/shared/components/osmPoiMap/OsmPoiMap.vue'
+import OsmPoiMap from '@/features/map/components/OsmPoiMap.vue'
 import NoResultsCTA from '../components/NoResultsCTA.vue'
 import ProfileMapCard from '../components/ProfileMapCard.vue'
 import PublicProfileView from '@/features/publicprofile/components/PublicProfileView.vue'
@@ -29,30 +29,31 @@ import type { PublicPostWithProfile } from '@zod/post/post.dto'
 // Component name must be 'AppShell' for KeepAlive to identify it correctly
 defineOptions({ name: 'AppShell' })
 
-// ── Profile layer (existing cluster pipeline) ──────────────────────
+// ── View model ────────────────────────────────────────────────────
 const {
   viewerProfile,
   isNoOneAround,
-  clusterFeatures,
-  isInitialized,
-  onBoundsChanged: onProfileBoundsChanged,
-  initialize,
-  refetchForCurrentBounds,
+  clusters,
+  allPois,
+  availableTags,
+  activePoi,
+  onSelectionClear,
+  onBoundsChanged,
   fetchPopupData,
-} = useProfilesViewModel()
+} = useBrowseViewModel()
+
+const findProfileStore = useFindProfileStore()
 
 // Ephemeral tag filter state (client-only). Changing it triggers a refetch
 // of the current viewport so the map reflects the new filter immediately.
 const filtersStore = useBrowseFiltersStore()
 const { selectedTagIds } = storeToRefs(filtersStore)
 watch(selectedTagIds, () => {
-  refetchForCurrentBounds()
+  findProfileStore.refetchBounds()
 })
 
 // Map center: starts at the viewer's own location, then moves when the
-// user picks a fly-to target from the location filter. OsmPoiMap watches
-// its `center` prop and pans imperatively when it changes (see
-// MapController.flyToCenter).
+// user picks a fly-to target from the location filter.
 const mapCenterOverride = ref<[number, number] | null>(null)
 const mapCenter = computed<[number, number] | undefined>(() => {
   if (mapCenterOverride.value) return mapCenterOverride.value
@@ -64,10 +65,6 @@ function onLocationFlyTo(coords: { lat: number; lon: number }) {
 }
 
 provide('viewerProfile', toRef(viewerProfile))
-
-// ── Post layer + tags + merged map data + selection state ──────────
-const { clusters, allPois, availableTags, activePoi, onSelectionClear, onBoundsChanged } =
-  useBrowseViewModel(clusterFeatures, onProfileBoundsChanged)
 
 // ── Route-driven detail panel ──────────────────────────────────────
 const router = useRouter()
@@ -90,10 +87,7 @@ watch(
   { immediate: true }
 )
 
-// Drive the global detail panel from the route. The panel is owned by
-// DetailPanelOrchestrator in AppShellLayout — we just push content into it.
-// Watching both `detail` and `activePoi` ensures we wait for post data to
-// load before opening (PostFullView needs activePoi.source).
+// Drive the global detail panel from the route.
 watch(
   [detail, activePoi],
   ([d, poi]) => {
@@ -110,9 +104,6 @@ watch(
   { immediate: true }
 )
 
-// User dismissed the panel via its close button / ESC / backdrop while a
-// detail route is still active → sync the route back to Browse so the URL
-// reflects the closed state. The watch above will then no-op (detail is null).
 watch(
   () => panel.isOpen.value,
   (open) => {
@@ -131,7 +122,6 @@ function openInboxDrawer() {
   router.push({ name: 'Inbox' })
 }
 
-// Route-aware marker selection: profiles and posts go to route
 function handleMarkerSelect(id: string | number) {
   const poi = allPois.value.find((p) => p.id === id)
   if (!poi) return
@@ -143,8 +133,6 @@ function handleMarkerSelect(id: string | number) {
 }
 
 // ── Onboarding guard ───────────────────────────────────────────────
-// Redirect non-onboarded users to the onboarding flow.
-// Returns true if a redirect was triggered (caller should bail out early).
 function checkOnboarding(): boolean {
   if (ownerProfileStore.profile && !ownerProfileStore.profile.isOnboarded) {
     router.push({ name: 'Onboarding' })
@@ -154,15 +142,17 @@ function checkOnboarding(): boolean {
 }
 
 // ── Lifecycle ──────────────────────────────────────────────────────
-// onActivated fires on every <KeepAlive> re-entry — including when a freshly
-// registered user lands on /browse after magic-link login while a previous
-// (onboarded) component instance is still cached. Without this hook, onMounted
-// would NOT re-run and the redirect check would be silently skipped.
-//
-// On initial mount, onActivated fires before onMounted's await bootstrap()
-// resolves, so ownerProfileStore.profile is still null — checkOnboarding()
-// returns early safely. The real redirect on cold-start is handled by
-// onMounted below.
+const isInitialized = ref(false)
+
+async function initialize() {
+  await useBootstrap().bootstrap()
+  if (!ownerProfileStore.profile) return
+  if (findProfileStore.lastMapBounds) {
+    await findProfileStore.fetchBounds(findProfileStore.lastMapBounds, 7)
+  }
+  isInitialized.value = true
+}
+
 onActivated(async () => {
   if (checkOnboarding()) return
   if (!isInitialized.value) {
@@ -171,10 +161,6 @@ onActivated(async () => {
 })
 
 onMounted(async () => {
-  // bootstrap() is idempotent — if already resolved (cold-start) it returns
-  // instantly; if still in-flight (hot-start via verifyToken) it joins the
-  // existing promise. Either way, ownerProfileStore.profile is populated by
-  // the time we reach checkOnboarding() below.
   await useBootstrap().bootstrap()
   if (checkOnboarding()) return
   await initialize()
@@ -182,10 +168,6 @@ onMounted(async () => {
 </script>
 
 <template>
-  <!-- Detail panel content is pushed into DetailPanelOrchestrator (AppShellLayout)
-       imperatively via useDetailPanel() — see watcher above. -->
-
-  <!-- Map region (only content that stays in-place) -->
   <div class="map-region h-100 position-relative overflow-hidden">
     <div
       class="position-absolute w-100 top-0 end-0 d-flex align-items-center justify-content-end gap-2 p-2"

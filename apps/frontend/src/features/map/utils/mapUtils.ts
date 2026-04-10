@@ -1,6 +1,6 @@
 import L from 'leaflet'
 import { type Component, render, h } from 'vue'
-import type { PoiIconProps } from './OsmPoiMap.types'
+import type { PoiIconProps } from '../types/map.types'
 import type { LocationDTO } from '@zod/dto/location.dto'
 
 /** Validates that a coordinate pair contains finite numbers (rejects NaN, Infinity, null, undefined). */

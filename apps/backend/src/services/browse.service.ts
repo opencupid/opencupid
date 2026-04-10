@@ -7,7 +7,7 @@ import { mapProfileTagsTranslated } from '../api/mappers/tag.mappers'
 import type { PublicProfileWithContext } from '@zod/profile/profile.dto'
 import type { PublicPostWithProfile } from '@zod/post/post.dto'
 import type { PublicTag } from '@zod/tag/tag.dto'
-import type { Bounds } from '@shared/zod/dto/bounds.dto'
+import type { Bounds } from '@zod/dto/bounds.dto'
 
 export class BrowseService {
   private static instance: BrowseService

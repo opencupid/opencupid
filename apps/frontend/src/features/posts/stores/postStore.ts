@@ -21,7 +21,7 @@ import type {
 } from '@zod/apiResponse.dto'
 import { type PostTypeType } from '@zod/generated'
 import { storeSuccess, storeError, type StoreResponse } from '@/store/helpers'
-import type { MapBounds } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
+import type { MapBounds } from '@/features/map/types/map.types'
 
 const PublicPostWithProfileArraySchema = PublicPostWithProfileSchema.array()
 const OwnerPostArraySchema = OwnerPostSchema.array()

@@ -1,16 +1,8 @@
 import { FastifyPluginAsync } from 'fastify'
-import { z } from 'zod'
 import { sendError } from '../helpers'
 import { BrowseService } from '@/services/browse.service'
-import { BoundsSchema } from '@shared/zod/dto/bounds.dto'
+import { BoundsQuerySchema } from '@zod/dto/bounds.dto'
 import type { BrowseBoundsResponse } from '@zod/apiResponse.dto'
-
-const BoundsQuerySchema = BoundsSchema.extend({
-  south: z.coerce.number(),
-  north: z.coerce.number(),
-  west: z.coerce.number(),
-  east: z.coerce.number(),
-})
 
 const browseRoutes: FastifyPluginAsync = async (fastify) => {
   const browseService = BrowseService.getInstance(fastify.prisma)

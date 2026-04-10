@@ -1,78 +1,24 @@
-import { computed, ref, type Ref } from 'vue'
+import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
-import { api, safeApiCall } from '@/lib/api'
-import type { BrowseBoundsResponse } from '@zod/apiResponse.dto'
-import type { PublicTag } from '@zod/tag/tag.dto'
-import type {
-  MapBounds,
-  MapCluster,
-  MapPoi,
-  BoundsWithZoom,
-} from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
-import type { PublicPostWithProfile } from '@zod/post/post.dto'
-import type { ClusterFeature, MapFeature, PointFeature } from '@shared/zod/map/cluster.dto'
-import { useBrowseFiltersStore } from '@/features/browse/stores/browseFiltersStore'
+import type { MapCluster, MapPoi, BoundsWithZoom } from '@/features/map/types/map.types'
+import type { ClusterFeature, PointFeature } from '@shared/zod/map/cluster.dto'
+import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
+import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 
 /**
- * Composable that manages the posts data layer, bounds-scoped tags,
- * and map selection state for the unified browse map. Profile clustering
- * continues to be managed by `useProfilesViewModel` / `findProfileStore`.
- * The ephemeral tag selection lives in `useBrowseFiltersStore`.
+ * View-model for the browse map. Reads cluster + post data from
+ * findProfileStore, maps DTOs to map-layer types, and provides
+ * unified bounds handling and selection state.
  */
-export function useBrowseViewModel(
-  clusterFeatures: Ref<MapFeature[]>,
-  onProfileBoundsChanged: (b: BoundsWithZoom) => void
-) {
-  const filtersStore = useBrowseFiltersStore()
-  const { selectedTagIds } = storeToRefs(filtersStore)
+export function useBrowseViewModel() {
+  const findProfileStore = useFindProfileStore()
+  const ownerStore = useOwnerProfileStore()
+  const { clusterFeatures, postPois, availableTags, isLoadingPosts, isLoading } =
+    storeToRefs(findProfileStore)
 
-  const postPois = ref<MapPoi[]>([])
-  const availableTags = ref<PublicTag[]>([])
-  const isLoadingPosts = ref(false)
-  let postAbortController: AbortController | null = null
+  const viewerProfile = computed(() => ownerStore.profile)
 
-  async function fetchPostsAndTags(bounds: MapBounds) {
-    if (postAbortController) postAbortController.abort()
-    const controller = new AbortController()
-    postAbortController = controller
-
-    isLoadingPosts.value = true
-    try {
-      const res = await safeApiCall(() =>
-        api.get<BrowseBoundsResponse>('/browse/bounds', {
-          params: bounds,
-          signal: controller.signal,
-        })
-      )
-
-      if (!res.data.success) return
-
-      // Map posts to MapPoi[]
-      postPois.value = (res.data.posts as PublicPostWithProfile[])
-        .filter((p) => p.location?.lat != null && p.location?.lon != null)
-        .map((p) => ({
-          id: p.id,
-          title: p.content?.substring(0, 50) ?? '',
-          location: { lat: p.location!.lat!, lon: p.location!.lon! },
-          image: p.postedBy?.profileImages?.[0],
-          type: 'post',
-          source: p,
-        }))
-
-      // Update available tags for the filter pill
-      availableTags.value = res.data.tags
-    } catch (err: any) {
-      if (err?.code === 'ERR_CANCELED') return
-      // On transient errors, keep the last good postPois/availableTags on
-      // screen rather than flashing to empty — the user just panned and a
-      // blank map is worse UX than slightly-stale results.
-    } finally {
-      if (postAbortController === controller) {
-        isLoadingPosts.value = false
-      }
-    }
-  }
-
+  // ── DTO → map-layer mapping ─────────────────────────────────────
   const clusters = computed<MapCluster[]>(() =>
     clusterFeatures.value
       .filter((f): f is ClusterFeature => f.type === 'cluster')
@@ -84,6 +30,8 @@ export function useBrowseViewModel(
       }))
   )
 
+  // TODO type wrangling - what type are we converting into?
+  // this belongs to the pinia store, or better yet, into the backend
   const profilePois = computed<MapPoi[]>(() =>
     clusterFeatures.value
       .filter((f): f is PointFeature => f.type === 'point')
@@ -102,6 +50,19 @@ export function useBrowseViewModel(
 
   const allPois = computed<MapPoi[]>(() => [...profilePois.value, ...postPois.value])
 
+  const haveResults = computed(() => clusterFeatures.value.length > 0)
+
+  const isNoOneAround = computed(() => {
+    const features = clusterFeatures.value
+    if (features.length === 0) return false
+    const first = features[0]
+    return (
+      features.length === 1 &&
+      first?.type === 'point' &&
+      first.id === viewerProfile.value?.id
+    )
+  })
+
   // ── Map selection state ────────────────────────────────────────────
   const activePoi = ref<MapPoi | null>(null)
 
@@ -109,25 +70,28 @@ export function useBrowseViewModel(
     activePoi.value = null
   }
 
-  // ── Unified bounds handler ─────────────────────────────────────────
-  async function onBoundsChanged(boundsWithZoom: BoundsWithZoom) {
-    await Promise.all([
-      onProfileBoundsChanged(boundsWithZoom),
-      fetchPostsAndTags(boundsWithZoom.bounds),
-    ])
+  // ── Bounds handler ─────────────────────────────────────────────────
+  async function onBoundsChanged({ bounds, zoom }: BoundsWithZoom) {
+    await findProfileStore.fetchBounds(bounds, zoom)
   }
 
+  const fetchPopupData = (id: string | number) =>
+    findProfileStore.fetchProfileForPopup(String(id))
+
   return {
-    postPois,
+    viewerProfile,
     clusters,
     profilePois,
+    postPois,
     allPois,
     availableTags,
-    selectedTagIds,
+    isLoading,
     isLoadingPosts,
-    fetchPostsAndTags,
+    haveResults,
+    isNoOneAround,
     activePoi,
     onSelectionClear,
     onBoundsChanged,
+    fetchPopupData,
   }
 }

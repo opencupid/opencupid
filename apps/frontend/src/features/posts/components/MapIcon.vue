@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { PoiIconProps } from '@/features/shared/components/osmPoiMap/OsmPoiMap.types'
+import type { PoiIconProps } from '@/features/map/types/map.types'
 
 defineOptions({ inheritAttrs: false })
 

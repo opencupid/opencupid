@@ -2,9 +2,10 @@
 import { ref } from 'vue'
 import type { Component } from 'vue'
 import type { Map as LMap } from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 
-import type { MapPoi, MapCluster, BoundsWithZoom } from './OsmPoiMap.types'
-import { useMapController } from './useMapController'
+import type { MapPoi, MapCluster, BoundsWithZoom } from '../types/map.types'
+import { useMapController } from '../composables/useMapController'
 import MapPlaceholder from '@/features/shared/components/MapPlaceholder.vue'
 
 const props = withDefaults(
@@ -34,58 +35,8 @@ const emit = defineEmits<{
 }>()
 
 const mapEl = ref<HTMLDivElement | null>(null)
-const popupTarget = ref<HTMLElement | null>(null)
-const popupItem = ref<MapPoi | null>(null)
-const isMapReady = ref(false)
 
-const { flyToMarker } = useMapController(
-  mapEl,
-  {
-    get items() {
-      return props.items
-    },
-    get clusters() {
-      return props.clusters ?? []
-    },
-    get iconResolver() {
-      return props.iconResolver
-    },
-    get popupResolver() {
-      return props.popupResolver
-    },
-    get center() {
-      return props.center
-    },
-    get zoom() {
-      return props.zoom ?? 7
-    },
-    get fitToPois() {
-      return props.fitToPois ?? false
-    },
-    get boundsDebounce() {
-      return props.boundsDebounce ?? 500
-    },
-    get fetchPopupData() {
-      return props.fetchPopupData
-    },
-  },
-  {
-    'bounds:changed': (payload) => emit('bounds:changed', payload),
-    'item:select': (id) => emit('item:select', id),
-    'map:ready': (map) => {
-      isMapReady.value = true
-      emit('map:ready', map)
-    },
-    'popup:open': (item, target) => {
-      popupItem.value = item
-      popupTarget.value = target
-    },
-    'popup:close': () => {
-      popupTarget.value = null
-      popupItem.value = null
-    },
-  }
-)
+const { flyToMarker, isMapReady, popupItem, popupTarget } = useMapController(mapEl, props, emit)
 
 defineExpose({ flyToMarker })
 </script>
