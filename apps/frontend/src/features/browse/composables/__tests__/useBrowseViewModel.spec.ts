@@ -41,7 +41,7 @@ describe('useBrowseViewModel', () => {
       },
     })
 
-    const vm = useBrowseViewModel(vi.fn())
+    const vm = useBrowseViewModel()
     const store = useFindProfileStore()
     await store.fetchPostsAndTags(mockBounds)
 
@@ -75,7 +75,7 @@ describe('useBrowseViewModel', () => {
     const store = useFindProfileStore()
     await store.fetchPostsAndTags(mockBounds)
 
-    const vm = useBrowseViewModel(vi.fn())
+    const vm = useBrowseViewModel()
     expect(vm.postPois.value).toHaveLength(1)
     expect(vm.postPois.value[0]!.id).toBe('post1')
   })

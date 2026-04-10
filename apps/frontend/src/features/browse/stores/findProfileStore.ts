@@ -39,6 +39,7 @@ let cachedBoundsTagSig = ''
 
 let clusterAbortController: AbortController | null = null
 let postAbortController: AbortController | null = null
+let lastZoom = 7
 let cachedClusterZoom: number | null = null
 let cachedClusterBounds: MapBounds | null = null
 let cachedClusterTagSig = ''
@@ -63,6 +64,22 @@ function tagSignature(tagIds: string[]): string {
  */
 function tagIdsParam(tagIds: string[]): string | undefined {
   return tagIds.length > 0 ? tagIds.join(',') : undefined
+}
+
+function sameViewport(
+  a: MapBounds | null,
+  aZoom: number,
+  b: MapBounds,
+  bZoom: number
+): boolean {
+  return (
+    aZoom === bZoom &&
+    a !== null &&
+    a.south === b.south &&
+    a.north === b.north &&
+    a.west === b.west &&
+    a.east === b.east
+  )
 }
 
 function invalidateBoundsCache(): void {
@@ -252,6 +269,19 @@ export const useFindProfileStore = defineStore('findProfile', {
       }
     },
 
+    /**
+     * Unified bounds handler — deduplicates viewport, then fetches
+     * clusters and posts in parallel.
+     */
+    async fetchBounds(bounds: MapBounds, zoom: number): Promise<void> {
+      if (sameViewport(this.lastMapBounds, lastZoom, bounds, zoom)) return
+      lastZoom = zoom
+      await Promise.all([
+        this.findClustersForMapBounds(bounds, zoom),
+        this.fetchPostsAndTags(bounds),
+      ])
+    },
+
     async fetchProfileForPopup(profileId: string): Promise<PublicProfile | null> {
       const cached = popupCache.get(profileId)
       if (cached) return cached
@@ -280,15 +310,13 @@ export const useFindProfileStore = defineStore('findProfile', {
     },
 
     async refetchBounds(): Promise<void> {
-      const lastZoom = cachedClusterZoom ?? 7
       invalidateBoundsCache()
       if (this.lastMapBounds) {
-        await this.findClustersForMapBounds(this.lastMapBounds, lastZoom)
+        await Promise.all([
+          this.findClustersForMapBounds(this.lastMapBounds, lastZoom),
+          this.fetchPostsAndTags(this.lastMapBounds),
+        ])
       }
-    },
-
-    invalidateMapCache(): void {
-      invalidateBoundsCache()
     },
 
     hide(profileId: string): void {

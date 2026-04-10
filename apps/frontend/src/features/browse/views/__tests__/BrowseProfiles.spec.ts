@@ -55,8 +55,6 @@ vi.mock('../../components/BrowseFilterBar.vue', () => ({
   },
 }))
 
-// Stub the new ephemeral filters store so the test doesn't have to bring
-// up real Pinia state for an unrelated dependency.
 vi.mock('@/features/browse/stores/browseFiltersStore', () => ({
   useBrowseFiltersStore: () => ({
     selectedTagIds: ref<string[]>([]),
@@ -67,18 +65,36 @@ vi.mock('@/features/browse/stores/browseFiltersStore', () => ({
   }),
 }))
 
-// Stub useBrowseViewModel — these tests focus on BrowseProfiles wiring,
-// not the post/tag layer composable's internals.
+// Shared VM state that tests can mutate
+const vmState = {
+  viewerProfile: ref<Record<string, any>>({ isSocialActive: true }),
+  isNoOneAround: ref(false),
+  isLoading: ref(false),
+  isLoadingPosts: ref(false),
+  haveResults: ref(true),
+  clusters: ref([]),
+  allPois: ref([]),
+  profilePois: ref([]),
+  postPois: ref([]),
+  availableTags: ref([]),
+  activePoi: ref(null),
+  onSelectionClear: vi.fn(),
+  onBoundsChanged: vi.fn(),
+  fetchPopupData: vi.fn(),
+}
+
 vi.mock('../../composables/useBrowseViewModel', () => ({
-  useBrowseViewModel: () => ({
-    clusters: ref([]),
-    allPois: ref([]),
-    availableTags: ref([]),
-    activePoi: ref(null),
-    onSelectionClear: vi.fn(),
-    onBoundsChanged: vi.fn(),
+  useBrowseViewModel: () => vmState,
+}))
+
+vi.mock('@/features/browse/stores/findProfileStore', () => ({
+  useFindProfileStore: () => ({
+    refetchBounds: vi.fn(),
+    lastMapBounds: null,
+    fetchBounds: vi.fn(),
   }),
 }))
+
 vi.mock('@/assets/icons/interface/target-2.svg', () => ({
   default: { template: '<svg class="icon-target" />' },
 }))
@@ -97,7 +113,6 @@ vi.mock('vue-router', () => ({
   }),
 }))
 
-// Stub OwnerDrawerOrchestrator to avoid media-encoder-host Worker dependency
 vi.mock('@/features/app/components/OwnerDrawerOrchestrator.vue', () => ({
   default: { template: '<div class="owner-drawer-stub" />' },
 }))
@@ -122,35 +137,10 @@ vi.mock('@/assets/icons/interface/user.svg', () => ({
   default: { template: '<svg class="icon-user" />' },
 }))
 
-// Control detail state via a ref so tests can set it
 const mockDetail = ref<{ type: 'profile' | 'post'; id: string } | null>(null)
 
 vi.mock('@/features/shared/composables/useDetailRouteState', () => ({
   useDetailRouteState: () => ({ detail: computed(() => mockDetail.value) }),
-}))
-
-const vmState = {
-  viewerProfile: ref<Record<string, any>>({ isSocialActive: true }),
-  isNoOneAround: ref(true),
-  isLoading: ref(false),
-  storeError: ref(null),
-  isInitialized: ref(true),
-  hideProfile: vi.fn(),
-  onBoundsChanged: vi.fn(),
-  openProfile: vi.fn(),
-  initialize: vi.fn(),
-  refetchForCurrentBounds: vi.fn(),
-  fetchPopupData: vi.fn(),
-}
-
-vi.mock('../../composables/useProfilesViewModel', () => ({
-  useProfilesViewModel: () => vmState,
-}))
-
-vi.mock('@/features/browse/stores/findProfileStore', () => ({
-  useFindProfileStore: () => ({
-    fetchProfileForPopup: vi.fn(),
-  }),
 }))
 
 const BButton = { template: '<button><slot /></button>' }
@@ -162,7 +152,6 @@ import BrowseProfiles from '../BrowseProfiles.vue'
 describe('BrowseProfiles view', () => {
   beforeEach(() => {
     vmState.isNoOneAround.value = false
-    vmState.isInitialized.value = true
     mockRouteName.value = 'Browse'
     mockDetail.value = null
     toastInfo.mockClear()
@@ -185,12 +174,6 @@ describe('BrowseProfiles view', () => {
       },
     })
   }
-
-  it('shows map-placeholder while not initialized', () => {
-    vmState.isInitialized.value = false
-    const wrapper = mountComponent()
-    expect(wrapper.find('.map-placeholder').exists()).toBe(true)
-  })
 
   it('does not show toast when there are no results (replaced by inline CTA)', async () => {
     vmState.isNoOneAround.value = false

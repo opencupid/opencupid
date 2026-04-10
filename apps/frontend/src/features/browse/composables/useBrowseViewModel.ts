@@ -3,18 +3,22 @@ import { storeToRefs } from 'pinia'
 import type { MapCluster, MapPoi, BoundsWithZoom } from '@/features/map/types/map.types'
 import type { ClusterFeature, PointFeature } from '@shared/zod/map/cluster.dto'
 import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
+import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 
 /**
- * Composable that manages the posts data layer, bounds-scoped tags,
- * and map selection state for the unified browse map.
+ * View-model for the browse map. Reads cluster + post data from
+ * findProfileStore, maps DTOs to map-layer types, and provides
+ * unified bounds handling and selection state.
  */
-export function useBrowseViewModel(
-  onProfileBoundsChanged: (b: BoundsWithZoom) => void
-) {
+export function useBrowseViewModel() {
   const findProfileStore = useFindProfileStore()
-  const { clusterFeatures, postPois, availableTags, isLoadingPosts } =
+  const ownerStore = useOwnerProfileStore()
+  const { clusterFeatures, postPois, availableTags, isLoadingPosts, isLoading } =
     storeToRefs(findProfileStore)
 
+  const viewerProfile = computed(() => ownerStore.profile)
+
+  // ── DTO → map-layer mapping ─────────────────────────────────────
   const clusters = computed<MapCluster[]>(() =>
     clusterFeatures.value
       .filter((f): f is ClusterFeature => f.type === 'cluster')
@@ -46,6 +50,19 @@ export function useBrowseViewModel(
 
   const allPois = computed<MapPoi[]>(() => [...profilePois.value, ...postPois.value])
 
+  const haveResults = computed(() => clusterFeatures.value.length > 0)
+
+  const isNoOneAround = computed(() => {
+    const features = clusterFeatures.value
+    if (features.length === 0) return false
+    const first = features[0]
+    return (
+      features.length === 1 &&
+      first?.type === 'point' &&
+      first.id === viewerProfile.value?.id
+    )
+  })
+
   // ── Map selection state ────────────────────────────────────────────
   const activePoi = ref<MapPoi | null>(null)
 
@@ -53,23 +70,28 @@ export function useBrowseViewModel(
     activePoi.value = null
   }
 
-  // ── Unified bounds handler ─────────────────────────────────────────
-  async function onBoundsChanged(boundsWithZoom: BoundsWithZoom) {
-    await Promise.all([
-      onProfileBoundsChanged(boundsWithZoom),
-      findProfileStore.fetchPostsAndTags(boundsWithZoom.bounds),
-    ])
+  // ── Bounds handler ─────────────────────────────────────────────────
+  async function onBoundsChanged({ bounds, zoom }: BoundsWithZoom) {
+    await findProfileStore.fetchBounds(bounds, zoom)
   }
 
+  const fetchPopupData = (id: string | number) =>
+    findProfileStore.fetchProfileForPopup(String(id))
+
   return {
-    postPois,
+    viewerProfile,
     clusters,
     profilePois,
+    postPois,
     allPois,
     availableTags,
+    isLoading,
     isLoadingPosts,
+    haveResults,
+    isNoOneAround,
     activePoi,
     onSelectionClear,
     onBoundsChanged,
+    fetchPopupData,
   }
 }
