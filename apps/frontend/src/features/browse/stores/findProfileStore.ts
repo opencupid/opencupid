@@ -147,10 +147,12 @@ export const useFindProfileStore = defineStore('findProfile', {
         this.isLoading = true
 
         const paddedBounds = padBounds(bounds, 0.3)
-        const res = await api.get<GetProfilesResponse>('/find/social/map/bounds', {
-          params: { ...paddedBounds, tagIds: tagIdsParam(tagIds) },
-          signal: controller.signal,
-        })
+        const res = await safeApiCall(() =>
+          api.get<GetProfilesResponse>('/find/social/map/bounds', {
+            params: { ...paddedBounds, tagIds: tagIdsParam(tagIds) },
+            signal: controller.signal,
+          })
+        )
         const fetched = PublicProfileArraySchema.parse(res.data.profiles)
 
         for (const profile of fetched) {
@@ -208,10 +210,12 @@ export const useFindProfileStore = defineStore('findProfile', {
         this.isLoading = true
 
         const paddedBounds = padBounds(bounds, 0.3)
-        const res = await api.get('/find/social/map/clusters', {
-          params: { ...paddedBounds, zoom, tagIds: tagIdsParam(tagIds) },
-          signal: controller.signal,
-        })
+        const res = await safeApiCall(() =>
+          api.get('/find/social/map/clusters', {
+            params: { ...paddedBounds, zoom, tagIds: tagIdsParam(tagIds) },
+            signal: controller.signal,
+          })
+        )
 
         this.clusterFeatures = ClusterMapResponseSchema.parse(res.data).features
         cachedClusterBounds = paddedBounds
