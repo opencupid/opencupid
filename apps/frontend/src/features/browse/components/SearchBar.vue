@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
+import { onClickOutside } from '@vueuse/core'
 
 import LocationFilterInput from '@/features/shared/profileform/LocationFilterInput.vue'
 import SelectableTagList from './SelectableTagList.vue'
@@ -30,6 +31,9 @@ const { selectedTags } = storeToRefs(filtersStore)
 const locationModel = ref<LocationDTO>({ country: '' })
 
 const panelOpen = ref(false)
+const pillRef = ref<HTMLElement | null>(null)
+
+onClickOutside(pillRef, closePanel)
 
 function openPanel() {
   panelOpen.value = true
@@ -55,8 +59,11 @@ function onLocationSet(point: GeoPoint) {
     :class="{ 'search-bar--open': panelOpen }"
     @click.stop
   >
-    <div class="search-bar__pill w-100 position-relative d-flex flex-row align-items-center"
-    @click="togglePanel">
+    <div
+      ref="pillRef"
+      class="search-bar__pill w-100 position-relative d-flex flex-row align-items-center border"
+      @click="togglePanel"
+    >
       <div class="search-bar__field search-bar__field--location">
         <LocationFilterInput
           v-model="locationModel"
@@ -75,16 +82,16 @@ function onLocationSet(point: GeoPoint) {
           @remove="selectedTags = []"
         />
       </div>
-      <div
-        class="search-bar__panel position-absolute overflow-y-auto overflow-x-hidden w-100 left-0 top-100 z-1 pointer-events-none shadow"
-        aria-hidden="true"
-      >
-        <SelectableTagList
-          :tags="availableTags ?? []"
-          selectable
-          @select="selectedTags = [$event]"
-        />
-      </div>
+    </div>
+    <div
+      class="search-bar__panel position-absolute overflow-y-auto overflow-x-hidden w-100 left-0 top-100 z-1 pointer-events-none px-1 pt-1 pb-2"
+      aria-hidden="true"
+    >
+      <SelectableTagList
+        :tags="availableTags ?? []"
+        selectable
+        @select="selectedTags = [$event]"
+      />
     </div>
   </div>
 </template>
@@ -104,28 +111,18 @@ $panel-height: 30vh;
   transition:
     border-radius 0.15s ease,
     box-shadow 0.15s ease;
-}
 
-// When the panel is open, the pill flattens its bottom edge into the
-// panel and the panel slides into view.
-.search-bar--open {
-  .search-bar__pill {
+  .search-bar--open & {
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
     box-shadow:
       0 1px 2px rgba(0, 0, 0, 0.1),
       0 4px 12px rgba(0, 0, 0, 0.06);
   }
-
-  .search-bar__panel {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translateY(0);
-  }
 }
 
 .search-bar__panel {
-  height: $panel-height;
+  height: 0;
   background-color: var(--bs-body-bg);
   border-bottom-left-radius: $pill-radius;
   border-bottom-right-radius: $pill-radius;
@@ -133,7 +130,19 @@ $panel-height: 30vh;
   transform: translateY(-4px);
   transition:
     opacity 0.15s ease,
+    height 0.15s ease,
     transform 0.15s ease;
+
+  .search-bar--open & {
+    height: $panel-height;
+    opacity: 1;
+    transform: translateY(0);
+    border: 1px solid var(--bs-border-color, rgba(0, 0, 0, 0.1));
+    border-top: none;
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.1),
+      0 4px 12px rgba(0, 0, 0, 0.06);
+  }
 }
 
 .search-bar__field {

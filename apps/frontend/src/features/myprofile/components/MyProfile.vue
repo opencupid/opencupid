@@ -1,17 +1,13 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useBootstrap } from '@/lib/bootstrap'
+import { ref } from 'vue'
 
-import StoreErrorOverlay from '@/features/shared/ui/StoreErrorOverlay.vue'
 import ProfileContent from '@/features/publicprofile/components/ProfileContent.vue'
 
 import { useMyProfileViewModel } from '../composables/useMyProfileViewModel'
 import MyProfileSecondaryNav from './MyProfileSecondaryNav.vue'
 import EditableFields from './EditableFields.vue'
 import EditSaveButton from '@/features/shared/ui/EditSaveButton.vue'
-import ChevronLeftIcon from '@/assets/icons/arrows/arrow-single-left.svg'
-
+import FloatingButton from '@/features/shared/components/FloatingButton.vue'
 
 const props = defineProps<{
   editMode?: boolean
@@ -47,44 +43,39 @@ const toggleDating = async () => {
   formData.isDatingActive = newValue
   await updateScopes({ isDatingActive: newValue })
 }
-
 </script>
 
 <template>
-  <div>
-    <EditableFields
-      v-model="formData"
-      :editState="viewState.isEditable"
-      @updated="updateProfile"
+  <div class="d-flex flex-grow-1 overflow-hidden flex-column position-relative">
+    <MyProfileSecondaryNav
+      v-model="viewState"
+      v-model:isDatingActive="formData.isDatingActive"
+      :is-dating-onboarded="isDatingOnboarded"
+      @datingmode:toggle="toggleDating"
+      @datingmode:prefs="openDatingPrefs"
+      class="flex-shrink-0 flex-grow-0"
+    />
+    <div
+      class="flex-grow-1 flex-shrink-1 overflow-x-hidden overflow-y-auto position-relative d-flex flex-column"
     >
-      <StoreErrorOverlay
-        v-if="error"
-        :error
-      />
-      <template v-else>
-        <div class="px-0">
-          <MyProfileSecondaryNav
-            v-model="viewState"
-            v-model:isDatingActive="formData.isDatingActive"
-            :is-dating-onboarded="isDatingOnboarded"
-            @datingmode:toggle="toggleDating"
-            @datingmode:prefs="openDatingPrefs"
-          />
-        </div>
-        <div :class="[viewState.currentScope, { editable: viewState.isEditable }]">
-          <ProfileContent
-            v-if="profilePreview"
-            :isLoading="isLoading"
-            @intent:field:edit="showModal = true"
-            class="shadow-lg"
-            :profile="profilePreview"
-          />
-          <div class="position-sticky bottom-0 pb-2 px-3 text-end">
-            <EditSaveButton v-model="viewState.isEditable" />
-          </div>
-        </div>
-      </template>
-    </EditableFields>
+      <EditableFields
+        v-model="formData"
+        :editState="viewState.isEditable"
+        @updated="updateProfile"
+        :class="[viewState.currentScope, { editable: viewState.isEditable }]"
+        class="scroll"
+      >
+        <ProfileContent
+          v-if="profilePreview"
+          :isLoading="isLoading"
+          @intent:field:edit="showModal = true"
+          :profile="profilePreview"
+        />
+      </EditableFields>
+    </div>
+    <FloatingButton>
+      <EditSaveButton v-model="viewState.isEditable" />
+    </FloatingButton>
   </div>
 </template>
 
@@ -132,5 +123,8 @@ const toggleDating = async () => {
 :deep(.editable-field) {
   display: inline-flex;
   align-items: center;
+}
+.scroll {
+  padding-bottom: 4rem;
 }
 </style>

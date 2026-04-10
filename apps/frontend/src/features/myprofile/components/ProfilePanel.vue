@@ -6,15 +6,16 @@ import { useOwnerProfileStore } from '../stores/ownerProfileStore'
 import { useMyProfileViewModel } from '../composables/useMyProfileViewModel'
 import { useMyProfileRouteState } from '../composables/useMyProfileRouteState'
 
-import MyProfileView from './MyProfile.vue'
-import SettingsView from '@/features/settings/components/Settings.vue'
-import DatingPrefsView from './DatingPrefs.vue'
-import DatingWizardView from './DatingWizard.vue'
-import PostsOrchestrator from '@/features/posts/components/PostsOrchestrator.vue'
+import MyProfile from './MyProfile.vue'
+import PanelHeader from './PanelHeader.vue'
+import DatingPrefs from './DatingPrefs.vue'
+import DatingWizard from './DatingWizard.vue'
+
+import Settings from '@/features/settings/components/Settings.vue'
 import ProfileImage from '@/features/images/components/ProfileImage.vue'
+import PostsOrchestrator from '@/features/posts/components/PostsOrchestrator.vue'
 
 import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
-import PanelHeader from './PanelHeader.vue'
 
 defineOptions({ name: 'ProfilePanel' })
 
@@ -34,7 +35,7 @@ function handleClose() {
 
 <template>
   <!-- Shared header — persists across all sub-views -->
-  <div class="offcanvas-header flex-shrink-0">
+  <div class="offcanvas-header flex-shrink-0 flex-grow-0">
     <template v-if="subView === 'settings'">
       <PanelHeader @back="router.replace({ name: 'Me' })">
         <template #title>{{ $t('settings.title') }}</template>
@@ -96,9 +97,9 @@ function handleClose() {
   <!-- Tab bar — hidden in non-main sub-views -->
   <div
     v-if="subView === 'myprofile' || subView === 'myposts'"
-    class="flex-shrink-0 d-flex align-items-center px-3"
+    class="flex-shrink-0 flex-grow-0 d-flex align-items-center justify-content-center"
   >
-    <ul class="nav nav-tabs flex-grow-1">
+    <ul class="nav nav-tabs flex-grow-0 flex-shrink-0 w-100 d-flex justify-content-center" role="tablist">
       <li class="nav-item">
         <button
           class="nav-link"
@@ -121,23 +122,24 @@ function handleClose() {
   </div>
 
   <!-- Content area -->
-  <div class="flex-grow-1 overflow-auto">
-    <MyProfileView
+  <div class="d-flex flex-grow-1 flex-shrink-1 overflow-hidden">
+    <MyProfile
       v-if="subView === 'myprofile'"
       @datingmode:prefs="router.push({ name: 'MeDating' })"
       @datingmode:wizard="router.push({ name: 'MeDatingWizard' })"
     />
 
     <PostsOrchestrator v-else-if="subView === 'myposts' || subView === 'editpost'" />
-    <SettingsView
+
+    <Settings
       v-else-if="subView === 'settings'"
       @close="handleClose"
     />
-    <DatingPrefsView
+    <DatingPrefs
       v-else-if="subView === 'datingprefs'"
       @close="router.replace({ name: 'Me' })"
     />
-    <DatingWizardView
+    <DatingWizard
       v-else-if="subView === 'datingwizard'"
       @close="router.replace({ name: 'Me' })"
     />

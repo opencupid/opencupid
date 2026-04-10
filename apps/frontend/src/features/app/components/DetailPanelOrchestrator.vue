@@ -20,7 +20,6 @@ const placement = computed(() => (isMdUp.value ? 'start' : 'bottom'))
     v-model="isOpen"
     :placement="placement"
     no-header
-    no-backdrop
     class="detail-panel shadow-lg"
     body-class="p-0 overflow-hidden"
     @hidden="notifyHidden"
@@ -44,9 +43,10 @@ const placement = computed(() => (isMdUp.value ? 'start' : 'bottom'))
     </PanelContentWrapper>
   </BOffcanvas>
 
-  <SwipeModal v-model="isOpen"
-  :snap-point="'75vh'"
-  v-else
+  <SwipeModal
+    v-model="isOpen"
+    :snap-point="'75vh'"
+    v-else
   >
     <PanelContentWrapper
       v-if="currentComponent"

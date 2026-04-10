@@ -17,13 +17,14 @@ const isSaving = ref(false)
 async function handleSave() {
   isSaving.value = true
   await Promise.all([updateProfile(), persistDatingPrefs()])
+  isSaving.value = false
   emit('close')
 }
 </script>
 
 <template>
   <div class="d-flex flex-column h-100">
-    <section class="p-2 w-100 flex-grow-1 overflow-auto hide-scrollbar py-3">
+    <section class="form-wrapper p-2 w-100 flex-grow-1 overflow-auto hide-scrollbar py-3 ">
       <BTabs
         variant="warning"
         nav-class="justify-content-center"
@@ -55,13 +56,15 @@ async function handleSave() {
         </BTab>
       </BTabs>
     </section>
-    <div class="flex-shrink-0 shadow shadow-lg bg-light-subtle py-3 d-flex justify-content-center gap-2">
+    <div
+      class="w-100 position-absolute bottom-0 flex-shrink-0 bg-light-subtle py-3 d-flex justify-content-center gap-2"
+    >
       <BButton
         variant="link"
         class="link-secondary"
         @click="emit('close')"
       >
-        {{ $t('onboarding.wizard.cancel') }}
+        {{ $t('myprofile.prefs.cancel') }}
       </BButton>
       <BButton
         variant="primary"
@@ -70,8 +73,15 @@ async function handleSave() {
         @click.stop="handleSave"
         :disabled="isLoading"
       >
-        {{ $t('onboarding.wizard.finish') }}
+        {{ $t('myprofile.prefs.save') }}
       </BButton>
     </div>
   </div>
 </template>
+
+<style lang="scss" scoped>
+
+.form-wrapper{
+  margin-bottom: 4rem;
+}
+</style>

@@ -56,42 +56,44 @@ provide('isEditable', toRef(props, 'editState'))
 </script>
 
 <template>
-  <BModal
-    v-model="fieldEditState.fieldEditModal"
-    :title="modalTitle"
-    :backdrop="'static'"
-    centered
-    size="lg"
-    button-size="sm"
-    fullscreen="sm"
-    :focus="false"
-    :no-close-on-backdrop="true"
-    :no-header="false"
-    :ok-title="'OK'"
-    :ok-class="'btn btn-primary px-5'"
-    :initial-animation="false"
-    body-class="d-flex flex-row align-items-center justify-content-center overflow-hidden flex-grow-1 min-h-0"
-    modal-class="field-edit-modal"
-    @ok="handleUpdate"
-    @cancel="handleCancelEdit"
-    @close="handleCancelEdit"
-    :keyboard="false"
-  >
-    <template #cancel="{ close }">
-      <BButton
-        class="btn btn-link text-decoration-none"
-        @click="close"
-        variant="link"
-        size="sm"
-        >{{ $t('uicomponents.dialog_cancel_button') }}</BButton
-      >
-    </template>
-    <div
-      id="field-edit-modal"
-      class="w-100 py-2"
-    ></div>
-  </BModal>
-  <slot> </slot>
+  <div class="d-flex flex-column flex-grow-1 flex-shrink-1 min-h-0">
+    <BModal
+      v-model="fieldEditState.fieldEditModal"
+      :title="modalTitle"
+      :backdrop="'static'"
+      centered
+      size="lg"
+      button-size="sm"
+      fullscreen="sm"
+      :focus="false"
+      :no-close-on-backdrop="true"
+      :no-header="false"
+      :ok-title="'OK'"
+      :ok-class="'btn btn-primary px-5'"
+      :initial-animation="false"
+      body-class="d-flex flex-row align-items-center justify-content-center overflow-hidden flex-grow-1 min-h-0"
+      modal-class="field-edit-modal"
+      @ok="handleUpdate"
+      @cancel="handleCancelEdit"
+      @close="handleCancelEdit"
+      :keyboard="false"
+    >
+      <template #cancel="{ close }">
+        <BButton
+          class="btn btn-link text-decoration-none"
+          @click="close"
+          variant="link"
+          size="sm"
+          >{{ $t('uicomponents.dialog_cancel_button') }}</BButton
+        >
+      </template>
+      <div
+        id="field-edit-modal"
+        class="w-100 py-2"
+      ></div>
+    </BModal>
+    <slot> </slot>
+  </div>
 </template>
 
 <style lang="scss">

@@ -271,7 +271,7 @@ export function useMapController(
     if (resolvePopup) {
       m.bindPopup('', {
         maxWidth: 420,
-        autoPan: true,
+        autoPan: false,
         autoPanPadding: L.point(20, 20),
         className: item.highlighted ? 'item-popup item-popup-highlighted' : 'item-popup',
       })
@@ -287,7 +287,7 @@ export function useMapController(
 
       m.on('click', (e: L.LeafletMouseEvent) => {
         if (isTouchEvent(e)) return
-        m.openPopup()
+        m.closePopup()
       })
 
       m.on('popupopen', async (e: L.PopupEvent) => {
