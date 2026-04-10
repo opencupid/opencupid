@@ -31,8 +31,7 @@ defineEmits<{
       class="me-2"
     >
       <BBadge
-        variant="secondary"
-        :class="{ selectable }"
+        :class="{ selectable, 'bg-tag': !selectable }"
         size="sm"
         :title="tag.name"
         @click="selectable && $emit('select', tag)"
@@ -58,10 +57,14 @@ defineEmits<{
   vertical-align: middle;
   user-select: none;
   font-weight: normal;
+  font-size: 0.75rem;
 
   &:hover {
     background-color: var(--bs-tag) !important;
   }
+}
+.selectable {
+  cursor: pointer;
 }
 
 .remove-icon {
