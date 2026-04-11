@@ -170,7 +170,7 @@ onMounted(async () => {
 <template>
   <div class="map-region h-100 position-relative overflow-hidden">
     <div
-      class="position-absolute w-100 top-0 end-0 d-flex align-items-starte justify-content-end gap-2 p-2"
+      class="position-absolute w-100 top-0 end-0 d-flex align-items-start justify-content-end gap-2 p-2"
       style="z-index: 1010"
     >
       <div class="flex-grow-1">

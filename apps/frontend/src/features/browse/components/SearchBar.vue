@@ -84,8 +84,9 @@ function onLocationSet(point: GeoPoint) {
       </div>
     </div>
     <div
-      class="search-bar__panel position-absolute overflow-y-auto overflow-x-hidden w-100 left-0 top-100 z-1 pointer-events-none px-1 pt-1 pb-2"
-      aria-hidden="true"
+      class="search-bar__panel position-absolute overflow-y-auto overflow-x-hidden w-100 left-0 top-100 z-1 px-1 pt-1 pb-2"
+      :class="panelOpen ? '' : 'pointer-events-none'"
+      :aria-hidden="panelOpen ? 'false' : 'true'"
     >
       <SelectableTagList
         :tags="availableTags ?? []"
