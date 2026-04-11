@@ -19,29 +19,26 @@ const emit = defineEmits<{
 <template>
   <div
     :class="{ dating: profile.isDatingActive }"
-    class="public-profile"
+    class="public-profile h-100"
   >
-    <div class="min-h-100 position-relative">
+    <div class="position-relative h-100 overflow-x-hidden">
       <div class="secondary-nav position-absolute w-100 py-2 text-color-white">
         <PublicProfileSecondaryNav
           @intent:back="emit('intent:back')"
           @intent:block="emit('intent:block')"
         />
       </div>
-
-      <ProfileContent
-        :profile="profile"
-        class="mb-5"
-      />
-
-      <div class="interactions position-fixed w-100">
-        <ProfileInteractions
-          :profile="profile"
-          @intent:message="(convoId: string) => emit('intent:message', convoId)"
-          @updated="emit('updated')"
-          @passed="emit('updated')"
-        />
+      <div class="profile-content h-100 overflow-auto hide-scrollbar">
+        <ProfileContent :profile="profile" />
       </div>
+    </div>
+    <div class="interactions position-absolute w-100 bottom-0 pb-3">
+      <ProfileInteractions
+        :profile="profile"
+        @intent:message="(convoId: string) => emit('intent:message', convoId)"
+        @updated="emit('updated')"
+        @passed="emit('updated')"
+      />
     </div>
   </div>
 </template>
@@ -51,8 +48,7 @@ const emit = defineEmits<{
   z-index: 1040;
 }
 .interactions {
-  bottom: 1rem;
-  left: 0;
+  bottom: 0;
   z-index: 2;
 }
 </style>

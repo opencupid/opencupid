@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n'
 import LocationSelector from './LocationSelector.vue'
 import IconHome from '@/assets/icons/interface/home.svg'
 
-import type { LocationDTO } from '@zod/dto/location.dto'
+import { toGeoPoint, type GeoPoint, type LocationDTO } from '@zod/dto/location.dto'
 import type { OwnerProfile } from '@zod/profile/profile.dto'
 
 const model = defineModel<LocationDTO>({ required: true })
@@ -14,32 +14,29 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  'location:set-from-profile': []
   /**
-   * Emitted when the user picks a location with usable coordinates.
-   * Consumers should treat this as a one-shot "pan the map here" command;
-   * it is no longer tied to any persistent filter state.
+   * Emitted when the user picks a location with usable coordinates,
+   * either via the selector or the "use my profile location" shortcut.
+   * Consumers should treat this as a one-shot "pan the map here"
+   * command. Locations without lat/lon are filtered out here so the
+   * payload is always a fully-populated `GeoPoint`.
    */
-  'location:fly-to': [coords: { lat: number; lon: number }]
+  'location:set': [point: GeoPoint]
 }>()
 
 const { t } = useI18n()
 
 function setLocationFromProfile() {
-  if (props.viewerProfile?.location) {
-    Object.assign(model.value, props.viewerProfile.location)
-    emit('location:set-from-profile')
-    const { lat, lon } = props.viewerProfile.location
-    if (lat != null && lon != null) {
-      emit('location:fly-to', { lat, lon })
-    }
-  }
+  const loc = props.viewerProfile?.location
+  if (!loc) return
+  Object.assign(model.value, loc)
+  const point = toGeoPoint(loc)
+  if (point) emit('location:set', point)
 }
 
 function onSelectorSelected(loc: LocationDTO) {
-  if (loc.lat != null && loc.lon != null) {
-    emit('location:fly-to', { lat: loc.lat, lon: loc.lon })
-  }
+  const point = toGeoPoint(loc)
+  if (point) emit('location:set', point)
 }
 </script>
 
@@ -48,7 +45,7 @@ function onSelectorSelected(loc: LocationDTO) {
     <BButton
       variant="link-secondary"
       size="sm"
-      class="p-0"
+      class="ms-1 p-0"
       :title="t('profiles.browse.filters.locate_button_title')"
       @click="setLocationFromProfile"
     >

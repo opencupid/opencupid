@@ -63,12 +63,12 @@ import ProfilePanel from '../ProfilePanel.vue'
 
 const globalConfig = {
   stubs: {
-    MyProfileView: {
-      name: 'MyProfileView',
+    MyProfile: {
+      name: 'MyProfile',
       template: '<div data-testid="my-profile-view" />',
     },
-    SettingsView: {
-      name: 'SettingsView',
+    Settings: {
+      name: 'Settings',
       template: '<div data-testid="settings-view" />',
       emits: ['close'],
     },
@@ -80,6 +80,8 @@ const globalConfig = {
       name: 'PostsOrchestrator',
       template: '<div data-testid="post-list" />',
     },
+    DatingPrefs: { name: 'DatingPrefs', template: '<div />', emits: ['close'] },
+    DatingWizard: { name: 'DatingWizard', template: '<div />', emits: ['close'] },
     ProfileImage: { template: '<span />' },
     IconSetting2: { template: '<span />' },
     IconBackward: { template: '<span />' },
@@ -151,7 +153,7 @@ describe('ProfilePanel', () => {
   it('SettingsView close event calls router.replace({ name: Browse })', async () => {
     mockSubView.value = 'settings'
     const wrapper = mount(ProfilePanel, { global: globalConfig })
-    await wrapper.findComponent({ name: 'SettingsView' }).vm.$emit('close')
+    await wrapper.findComponent({ name: 'Settings' }).vm.$emit('close')
     expect(mockReplace).toHaveBeenCalledWith({ name: 'Browse' })
   })
 })

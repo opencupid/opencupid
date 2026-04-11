@@ -6,6 +6,7 @@ vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k, locale: ref(
 vi.mock('@/features/geocoding/stores/geocodingStore', () => ({
   useGeocodingStore: () => ({ search: vi.fn(), results: [], isLoading: false }),
 }))
+vi.mock('@/assets/icons/interface/search.svg', () => ({ default: { template: '<span />' } }))
 
 import LocationSelectorComponent from '../LocationSelector.vue'
 import { ref } from 'vue'
@@ -14,7 +15,7 @@ describe('LocationSelectorComponent', () => {
   it('emits updates when fields change', async () => {
     const wrapper = mount(LocationSelectorComponent, {
       props: { modelValue: { country: '', cityName: '' } as any },
-      global: { stubs: { FormKit: true } },
+      global: { stubs: { FormKit: true }, mocks: { $t: (k: string) => k } },
     })
     ;(wrapper.vm as any).model = {
       ...(wrapper.vm as any).model,
@@ -34,6 +35,7 @@ describe('LocationSelectorComponent', () => {
     const wrapper = mount(LocationSelectorComponent, {
       props: { modelValue: { country: '', cityName: '' } as any },
       attrs: { 'close-on-select': true },
+      global: { mocks: { $t: (k: string) => k } },
     })
     const multiselect = wrapper.findComponent({ name: 'Multiselect' })
     expect(multiselect.exists() || wrapper.html()).toBeTruthy()
@@ -43,6 +45,7 @@ describe('LocationSelectorComponent', () => {
     const wrapper = mount(LocationSelectorComponent, {
       props: { modelValue: { country: '', cityName: '' } as any },
       attrs: { 'close-on-select': false },
+      global: { mocks: { $t: (k: string) => k } },
     })
     const multiselect = wrapper.findComponent({ name: 'Multiselect' })
     expect(multiselect.exists() || wrapper.html()).toBeTruthy()

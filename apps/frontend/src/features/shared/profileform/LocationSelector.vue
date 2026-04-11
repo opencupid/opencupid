@@ -7,6 +7,7 @@ import Multiselect from '@/features/shared/ui/multiselect'
 
 import { useDebounceFn } from '@vueuse/core'
 import CountryFlag from '../ui/CountryFlag.vue'
+import IconSearch from '@/assets/icons/interface/search.svg'
 
 defineOptions({ inheritAttrs: false })
 
@@ -96,8 +97,15 @@ onUnmounted(() => {
       @open="showHint = true"
       @close="showHint = false"
       @select="handleSelected"
-      :placeholder="t('profiles.forms.city_search_placeholder')"
+      :placeholder="$t('profiles.forms.city_search_placeholder')"
     >
+      <template #placeholder>
+        <IconSearch
+          class="svg-icon me-1"
+          :title="t('profiles.forms.city_search_placeholder')"
+        />
+      </template>
+
       <template #option="{ option }">
         <div class="d-flex flex-row align-items-start">
           <span class="flex-grow-1">{{ option.name }}</span>

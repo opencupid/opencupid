@@ -55,7 +55,7 @@ main {
     height: 3rem;
     background-color: rgba(0, 0, 0, 0.45);
     border-radius: 50%;
-    filter: blur(15px);
+    filter: blur(10px);
   }
 }
 
@@ -361,4 +361,13 @@ main {
 // Popovers
 .popover {
   box-shadow: var(--shadow-md);
+}
+
+
+// Fix: Bootstrap sets visibility:hidden on .offcanvas:not(.show), but
+// bootstrap-vue-next's <Transition> removes .show ~20ms before adding
+// .hiding. During that gap the panel flashes invisible. Override the
+// base rule so v-show (display:none) handles hiding instead.
+.offcanvas {
+  visibility: visible;
 }

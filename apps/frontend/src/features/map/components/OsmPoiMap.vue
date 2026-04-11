@@ -142,6 +142,15 @@ defineExpose({ flyToMarker })
   width: 15rem !important;
 }
 
+:deep(.item-popup) {
+  /* animation: popup-fade-in 0.15s ease 300ms both; */
+}
+
+/* @keyframes popup-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+} */
+
 :deep(.leaflet-popup-content-wrapper) {
   padding: 0;
   border-radius: 0.375rem;
@@ -174,6 +183,8 @@ defineExpose({ flyToMarker })
   right: -10px !important;
   padding: 0 !important;
   z-index: 1;
+  position: absolute;
+  text-decoration: none;
 }
 
 :deep(.leaflet-popup-close-button:hover) {

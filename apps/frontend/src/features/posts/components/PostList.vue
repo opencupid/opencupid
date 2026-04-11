@@ -63,17 +63,17 @@ function handlePostHide(post: any) {
 </script>
 
 <template>
-  <div class="post-list h-100 d-flex flex-column">
+  <div class="post-list h-100 w-100 d-flex flex-column">
     <BContainer v-if="!isInitialized && posts.length === 0">
       <PostPlaceholdersGrid />
     </BContainer>
 
     <div
       v-else-if="posts.length === 0"
-      class="d-flex align-items-center justify-content-center flex-grow-1"
+      class="d-flex align-items-center justify-content-center flex-grow-1 w-100"
     >
       <slot name="empty">
-        <p class="text-muted mb-0">{{ $t('posts.messages.no_posts') }}</p>
+        <p class="text-muted mb-0 text-center w-100">{{ $t('posts.messages.no_posts') }}</p>
       </slot>
     </div>
 

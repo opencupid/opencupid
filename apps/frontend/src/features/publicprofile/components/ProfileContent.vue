@@ -24,7 +24,6 @@ const { t } = useI18n()
 
 const props = defineProps<{
   profile: PublicProfileWithContext
-  wrapperClass?: string
 }>()
 
 const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
@@ -32,10 +31,7 @@ const viewerLocation = computed(() => viewerProfile?.value?.location)
 </script>
 
 <template>
-  <div
-    v-bind:class="props.wrapperClass"
-    class="profile-content position-relative rounded-top overflow-hidden"
-  >
+  <div class="position-relative ">
     <div class="overflow-hidden carousel-wrapper">
       <ImageCarousel :profile />
     </div>

@@ -34,7 +34,7 @@ const viewerLocation = computed(() => viewerProfile?.value?.location)
             :viewerLocation="viewerLocation"
             :location="item.location"
             :showCountryLabel="false"
-            :showCity="false"
+            :showCity="true"
             :showOnlyForeignCountry="true"
           />
         </span>

@@ -12,8 +12,8 @@ import { isValidLatLng, toLatLng } from '@/features/map/utils/mapUtils'
 import { useDetailRouteState } from '@/features/shared/composables/useDetailRouteState'
 import { useDetailPanel } from '@/features/app/composables/useDetailPanel'
 
-import BrowseFilterBar from '../components/BrowseFilterBar.vue'
 import OsmPoiMap from '@/features/map/components/OsmPoiMap.vue'
+import SearchBar from '../components/SearchBar.vue'
 import NoResultsCTA from '../components/NoResultsCTA.vue'
 import ProfileMapCard from '../components/ProfileMapCard.vue'
 import PublicProfileView from '@/features/publicprofile/components/PublicProfileView.vue'
@@ -25,6 +25,7 @@ import PostMapPopup from '@/features/posts/components/PostMapPopup.vue'
 import PostFullView from '@/features/posts/components/PostFullView.vue'
 import OwnerDrawerControls from '../components/OwnerDrawerControls.vue'
 import type { PublicPostWithProfile } from '@zod/post/post.dto'
+import type { GeoPoint } from '@zod/dto/location.dto'
 
 // Component name must be 'AppShell' for KeepAlive to identify it correctly
 defineOptions({ name: 'AppShell' })
@@ -60,8 +61,8 @@ const mapCenter = computed<[number, number] | undefined>(() => {
   const fromProfile = toLatLng(viewerProfile.value?.location)
   return isValidLatLng(fromProfile) ? fromProfile : undefined
 })
-function onLocationFlyTo(coords: { lat: number; lon: number }) {
-  mapCenterOverride.value = [coords.lat, coords.lon]
+function onLocationSet(point: GeoPoint) {
+  mapCenterOverride.value = [point.lat, point.lon]
 }
 
 provide('viewerProfile', toRef(viewerProfile))
@@ -169,14 +170,14 @@ onMounted(async () => {
 <template>
   <div class="map-region h-100 position-relative overflow-hidden">
     <div
-      class="position-absolute w-100 top-0 end-0 d-flex align-items-center justify-content-end gap-2 p-2"
+      class="position-absolute w-100 top-0 end-0 d-flex align-items-start justify-content-end gap-2 p-2"
       style="z-index: 1010"
     >
       <div class="flex-grow-1">
-        <BrowseFilterBar
+        <SearchBar
           :viewer-profile="viewerProfile"
           :available-tags="availableTags"
-          @location:fly-to="onLocationFlyTo"
+          @location:set="onLocationSet"
         />
       </div>
       <div class="flex-shrink-0 flex-grow-0">

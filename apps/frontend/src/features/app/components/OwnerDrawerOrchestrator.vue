@@ -65,8 +65,8 @@ function onHidden() {
     v-model="isOpen"
     placement="end"
     no-header
-    class="owner-drawer"
-    body-class="p-0"
+    class="owner-drawer h-100 overflow-hidden"
+    body-class="p-0 position-relative overflow-hidden d-flex flex-column"
     aria-labelledby="ownerDrawerLabel"
     @hidden="onHidden"
   >
@@ -75,7 +75,7 @@ function onHidden() {
   </BOffcanvas>
 </template>
 
-<style scoped lang="scss">
+<style  lang="scss">
 @import 'bootstrap/scss/functions';
 @import 'bootstrap/scss/variables';
 @import 'bootstrap/scss/mixins';

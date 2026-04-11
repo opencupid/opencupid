@@ -13,7 +13,7 @@ defineProps<{
   >
     <li
       v-for="tag in tags"
-      :key="tag.slug"
+      :key="tag.id"
       class="me-2"
     >
       <BBadge

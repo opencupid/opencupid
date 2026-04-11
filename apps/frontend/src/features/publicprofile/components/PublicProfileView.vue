@@ -76,11 +76,10 @@ const handleBlock = async () => {
       />
     </template>
 
-    <div v-if="isLoaded">
+    <div v-if="isLoaded" class="h-100">
       <PublicProfileComponent
         v-if="publicProfileStore.profile"
         :profile="publicProfileStore.profile"
-        class="shadow-lg mb-3 pb-5"
         @intent:back="handleBack"
         @intent:message="handleMessage"
         @intent:block="showBlockModal = true"

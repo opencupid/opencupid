@@ -40,8 +40,11 @@ type MapEmit = {
 // ---------------------------------------------------------------------------
 
 function isTouchEvent(e: L.LeafletMouseEvent): boolean {
-  const ev = e.originalEvent as PointerEvent
-  return ev.pointerType === 'touch'
+  const ev = e.originalEvent as Event | undefined
+  if (!ev) return false
+  if (typeof TouchEvent !== 'undefined' && ev instanceof TouchEvent) return true
+  if (ev instanceof PointerEvent) return ev.pointerType === 'touch'
+  return 'touches' in ev || 'changedTouches' in ev
 }
 
 // ---------------------------------------------------------------------------
@@ -271,7 +274,7 @@ export function useMapController(
     if (resolvePopup) {
       m.bindPopup('', {
         maxWidth: 420,
-        autoPan: true,
+        autoPan: false,
         autoPanPadding: L.point(20, 20),
         className: item.highlighted ? 'item-popup item-popup-highlighted' : 'item-popup',
       })
@@ -287,7 +290,7 @@ export function useMapController(
 
       m.on('click', (e: L.LeafletMouseEvent) => {
         if (isTouchEvent(e)) return
-        m.openPopup()
+        m.closePopup()
       })
 
       m.on('popupopen', async (e: L.PopupEvent) => {
