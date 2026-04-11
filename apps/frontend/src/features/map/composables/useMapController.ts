@@ -40,8 +40,11 @@ type MapEmit = {
 // ---------------------------------------------------------------------------
 
 function isTouchEvent(e: L.LeafletMouseEvent): boolean {
-  const ev = e.originalEvent as PointerEvent
-  return ev.pointerType === 'touch'
+  const ev = e.originalEvent as Event | undefined
+  if (!ev) return false
+  if (typeof TouchEvent !== 'undefined' && ev instanceof TouchEvent) return true
+  if (ev instanceof PointerEvent) return ev.pointerType === 'touch'
+  return 'touches' in ev || 'changedTouches' in ev
 }
 
 // ---------------------------------------------------------------------------
