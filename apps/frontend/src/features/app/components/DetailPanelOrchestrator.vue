@@ -46,6 +46,7 @@ const placement = computed(() => (isMdUp.value ? 'start' : 'bottom'))
   <SwipeModal
     v-model="isOpen"
     :snap-point="'75vh'"
+    :is-backdrop="false"
     v-else
   >
     <PanelContentWrapper
@@ -86,6 +87,13 @@ const placement = computed(() => (isMdUp.value ? 'start' : 'bottom'))
 .modal-style {
   background-color: $white !important;
   color: $body-color !important;
+}
+
+// Keep SwipeModal below Bootstrap modals. Using :is-backdrop="false" makes
+// the library call dialog.show() instead of showModal(), which keeps it in
+// the normal stacking context rather than the browser's top layer.
+.swipe-modal {
+  z-index: $zindex-offcanvas !important;
 }
 
 .swipe-modal::backdrop {
