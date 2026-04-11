@@ -44,6 +44,7 @@ main {
   color: #fff;
   position: relative;
   z-index: 1;
+  overflow: hidden;
 
   &::after {
     content: '';
@@ -55,7 +56,7 @@ main {
     height: 3rem;
     background-color: rgba(0, 0, 0, 0.45);
     border-radius: 50%;
-    filter: blur(15px);
+    filter: blur(10px);
   }
 }
 
