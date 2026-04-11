@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onBeforeUnmount, ref } from 'vue'
+import { onBeforeUnmount, ref, useTemplateRef, watchEffect } from 'vue'
+import { useElementSize } from '@vueuse/core'
 
 import type { MessageRecipient } from '@zod/profile/profile.dto'
 
@@ -31,15 +32,38 @@ withDefaults(
 
 const emit = defineEmits<{
   (e: 'sent'): void
+  (e: 'submitted'): void
 }>()
 
 const messageInput = ref<InstanceType<typeof SendMessageForm> | null>(null)
 
-// onCompleted fires ~3s after `message:sent`, giving the success-state UI
-// time to be visible before the parent reacts (e.g. closes a modal).
+// Measure the form branch so the success branch can hold its height — the
+// success UI (icon + one line of text) is much shorter than the form, and
+// without a latched minHeight the outer wrapper would collapse on swap,
+// jolting the modal layout. `useElementSize` tracks the form continuously
+// while mounted (including textarea auto-growth); `latchedHeight` only
+// copies non-zero values, so once the form unmounts and `formHeight` goes
+// back to 0, the latch retains the last real measurement.
+const formRef = useTemplateRef<HTMLElement>('formRef')
+const { height: formHeight } = useElementSize(formRef)
+const latchedHeight = ref(0)
+watchEffect(() => {
+  if (formHeight.value > 0) latchedHeight.value = formHeight.value
+})
+
+// Two-phase notification: `submitted` fires the instant the message is
+// accepted by the server so parents can hide pre-send affordances (e.g. a
+// "Maybe later" button) while the success state is visible. `sent` fires
+// ~3s later via onCompleted, giving the success-state UI time to be seen
+// before the parent reacts (e.g. closes a modal).
 const { messageSent, handleMessageSent, resetMessageSent } = useMessageSentState({
   onCompleted: () => emit('sent'),
 })
+
+const onMessageSent = (message: Parameters<typeof handleMessageSent>[0]) => {
+  emit('submitted')
+  handleMessageSent(message)
+}
 
 // Reset on unmount so the ref is back to its initial state when the
 // consumer re-mounts the panel (the composable only clears its timer
@@ -54,27 +78,39 @@ defineExpose({
 </script>
 
 <template>
-  <div class="w-100 h-100">
-    <div v-if="!messageSent">
+  <div
+    class="w-100 h-100 d-flex flex-column align-items-center"
+    :style="latchedHeight > 0 ? { minHeight: `${latchedHeight}px` } : undefined"
+  >
+    <div
+      v-if="!messageSent"
+      ref="formRef"
+    >
       <SendMessageForm
         ref="messageInput"
         :recipient-profile="recipientProfile"
         :conversation-id="null"
         :show-tags="showTags"
         :no-resize="noResize"
-        @message:sent="handleMessageSent"
+        @message:sent="onMessageSent"
       />
     </div>
     <div
       v-else
-      class="d-flex flex-column align-items-center justify-content-center h-100 text-success"
+      class="flex-grow-1 d-flex flex-column align-items-center justify-content-center text-success"
     >
-      <div class="animate__animated animate__zoomIn p-2">
-        <IconMessage class="svg-icon-lg" />
+      <div
+        class="p-2 w-100 opacity-75"
+        style="height: 5rem"
+      >
+        <component
+          :is="IconMessage"
+          class="svg-icon-lg w-100 h-100"
+        />
       </div>
-      <h5 class="text-center animate__animated animate__fadeInDown mb-0">
+      <h1 class="text-center mb-0">
         {{ $t('messaging.message_sent_success') }}
-      </h5>
+      </h1>
     </div>
   </div>
 </template>

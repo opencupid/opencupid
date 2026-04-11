@@ -4,6 +4,7 @@ import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 
 import ProfileImage from '@/features/images/components/ProfileImage.vue'
 import ContactFormPanel from '@/features/messaging/components/ContactFormPanel.vue'
+import { ref } from 'vue'
 
 defineProps<{
   profile: PublicProfileWithContext
@@ -16,9 +17,15 @@ const emit = defineEmits<{
   (e: 'messaged'): void
 }>()
 
+const isMessageSent = ref(false)
+
 const handleSent = () => {
   emit('messaged')
   emit('close')
+}
+
+const handleSubmitted = () => {
+  isMessageSent.value = true
 }
 </script>
 
@@ -33,7 +40,7 @@ const handleSent = () => {
     :no-footer="true"
     :no-header="true"
     initial-animation
-    content-class="bg-dating"
+    :content-class="['match-popup-content', { sent: isMessageSent }]"
     body-class="d-flex flex-row align-items-center justify-content-center overflow-hidden p-0"
     :keyboard="false"
   >
@@ -68,11 +75,13 @@ const handleSent = () => {
         <ContactFormPanel
           :recipient-profile="profile"
           @sent="handleSent"
+          @submitted="handleSubmitted"
         />
         <BButton
           variant="secondary"
           size="sm"
           @click="emit('close')"
+          v-if="!isMessageSent"
         >
           <!-- Maybe later -->
           {{ $t('interactions.cancel_button') }}
@@ -82,7 +91,7 @@ const handleSent = () => {
   </BModal>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .image-wrapper {
   width: 5rem;
   height: 5rem;
@@ -94,4 +103,20 @@ const handleSent = () => {
   margin-left: -1.5rem;
   margin-right: 0;
 }
+</style>
+
+<!--
+  Unscoped: BModal teleports content-class target to <body>, so a scoped
+  selector (or :deep()) cannot reach it. --bs-dating-light is emitted at
+  :root by Bootstrap's _root.scss from $dating-light in theme.scss.
+-->
+<style lang="scss">
+.match-popup-content {
+  background-color: var(--bs-dating-light);
+  transition: background-color 300ms ease-in-out;
+}
+.match-popup-content.sent {
+  background-color: white;
+}
+
 </style>

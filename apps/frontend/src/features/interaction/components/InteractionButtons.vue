@@ -107,6 +107,7 @@ const handleAnonymousChange = (value: boolean) => {
         <BButton
           class="btn-icon-lg btn-info me-2 btn-shadow"
           @click="handleMessageClick"
+          :class="{'opacity-50': !props.context.canMessage}"
         >
           <IconMessage class="svg-icon-lg p-0" />
         </BButton>
