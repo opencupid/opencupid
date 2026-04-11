@@ -1,0 +1,22 @@
+diff --git a/dist/vueSwipeModal.js b/dist/vueSwipeModal.js
+index 680184427661d143b7f0b147cd38f58fc2ef279b..4b43f4778dc5336f7243592fa8c4c166f6cf4362 100644
+--- a/dist/vueSwipeModal.js
++++ b/dist/vueSwipeModal.js
+@@ -284,7 +284,7 @@ const A = (t, l) => {
+       i.stopPropagation();
+     }, v = () => {
+       var a;
+-      !e.value || (s.isBackdrop ? e.value.showModal() : e.value.show(), (a = e.value) == null || a.style.setProperty("visibility", "visible"), navigator.userAgent.toLowerCase().includes("firefox") || (A(e.value, "opacity"), e.value.animate([
++      !e.value || (s.isBackdrop ? e.value.showModal() : e.value.show(), (a = e.value) == null || a.style.setProperty("visibility", "visible"), ("MozAppearance" in document.documentElement.style) || (A(e.value, "opacity"), e.value.animate([
+         { opacity: 0 },
+         { opacity: 1 }
+       ], {
+@@ -315,7 +315,7 @@ const A = (t, l) => {
+     }, T = () => {
+       if (!e.value)
+         return;
+-      const i = navigator.userAgent.toLowerCase().includes("firefox");
++      const i = ("MozAppearance" in document.documentElement.style);
+       A(e.value, "opacity"), i || (e.value.animate([
+         { opacity: 1 },
+         { opacity: 0 }

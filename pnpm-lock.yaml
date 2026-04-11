@@ -13,6 +13,9 @@ overrides:
   zod-to-json-schema: 3.24.5
 
 patchedDependencies:
+  '@takuma-ru/vue-swipe-modal@5.0.5':
+    hash: 16009e3b612984036dd4af8844dadf2aba2adbee11d599e967ad273a5cf48242
+    path: patches/@takuma-ru__vue-swipe-modal@5.0.5.patch
   vite-plugin-vue-mcp@0.3.2:
     hash: dd13284f0cd754ccb9ad4729b917019774e9fc64a677f6d7c79a03b0fec57ca2
     path: patches/vite-plugin-vue-mcp@0.3.2.patch
@@ -374,7 +377,7 @@ importers:
         version: 9.36.0(pinia@3.0.4(typescript@5.9.3)(vue@3.5.28(typescript@5.9.3)))(vue@3.5.28(typescript@5.9.3))
       '@takuma-ru/vue-swipe-modal':
         specifier: ^5.0.5
-        version: 5.0.5(vue@3.5.28(typescript@5.9.3))
+        version: 5.0.5(patch_hash=16009e3b612984036dd4af8844dadf2aba2adbee11d599e967ad273a5cf48242)(vue@3.5.28(typescript@5.9.3))
       '@tolgee/format-icu':
         specifier: ^6.4.0
         version: 6.4.0
@@ -10185,7 +10188,7 @@ snapshots:
 
   '@stomp/stompjs@7.3.0': {}
 
-  '@takuma-ru/vue-swipe-modal@5.0.5(vue@3.5.28(typescript@5.9.3))':
+  '@takuma-ru/vue-swipe-modal@5.0.5(patch_hash=16009e3b612984036dd4af8844dadf2aba2adbee11d599e967ad273a5cf48242)(vue@3.5.28(typescript@5.9.3))':
     dependencies:
       '@vueuse/core': 10.11.1(vue@3.5.28(typescript@5.9.3))
       consola: 3.4.2
