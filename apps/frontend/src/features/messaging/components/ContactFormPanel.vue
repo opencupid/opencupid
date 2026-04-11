@@ -79,7 +79,7 @@ defineExpose({
 
 <template>
   <div
-    class="w-100 h-100 d-flex flex-column align-items-center"
+    class="w-100 h-100 d-flex flex-column"
     :style="latchedHeight > 0 ? { minHeight: `${latchedHeight}px` } : undefined"
   >
     <div
