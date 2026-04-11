@@ -21,7 +21,7 @@ const emit = defineEmits<{
     :class="{ dating: profile.isDatingActive }"
     class="public-profile h-100"
   >
-    <div class="position-relative h-100">
+    <div class="position-relative h-100 overflow-x-hidden">
       <div class="secondary-nav position-absolute w-100 py-2 text-color-white">
         <PublicProfileSecondaryNav
           @intent:back="emit('intent:back')"
