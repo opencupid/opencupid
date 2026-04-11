@@ -1,10 +1,16 @@
 import { mount } from '@vue/test-utils'
 import { nextTick } from 'vue'
 import { setActivePinia, createPinia } from 'pinia'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import SearchBar from '../SearchBar.vue'
 import { useBrowseFiltersStore } from '@/features/browse/stores/browseFiltersStore'
+
+// Stub onClickOutside — jsdom doesn't support pointer events for this composable
+vi.mock('@vueuse/core', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@vueuse/core')>()
+  return { ...actual, onClickOutside: vi.fn() }
+})
 
 const LocationFilterInput = {
   name: 'LocationFilterInput',
@@ -13,11 +19,11 @@ const LocationFilterInput = {
   emits: ['update:modelValue', 'location:set'],
 }
 
-const TagSelector = {
-  name: 'TagSelector',
-  template: '<div class="tag-selector" />',
-  props: ['modelValue', 'taggable', 'closeOnSelect', 'openDirection', 'initialOptions'],
-  emits: ['update:modelValue', 'dropdown:open', 'dropdown:close'],
+const SelectableTagList = {
+  name: 'SelectableTagList',
+  template: '<div class="selectable-tag-list" />',
+  props: ['tags', 'selectable', 'removable'],
+  emits: ['select', 'remove'],
 }
 
 const availableTags = [
@@ -39,10 +45,17 @@ describe('SearchBar', () => {
       global: {
         stubs: {
           LocationFilterInput,
-          TagSelector,
+          SelectableTagList,
         },
       },
     })
+  }
+
+  // Helper: the template renders two SelectableTagList instances:
+  // [0] = removable (selected tags in pill), [1] = selectable (dropdown panel)
+  function getTagLists(wrapper: ReturnType<typeof mountComponent>) {
+    const all = wrapper.findAllComponents({ name: 'SelectableTagList' })
+    return { removableList: all[0]!, selectableList: all[1]! }
   }
 
   it('writes tag selection into the ephemeral browse filters store', async () => {
@@ -50,13 +63,11 @@ describe('SearchBar', () => {
     expect(store.selectedTagIds).toEqual([])
 
     const wrapper = mountComponent()
-    wrapper.findComponent({ name: 'TagSelector' }).vm.$emit('update:modelValue', [
-      { id: 't1', name: 'Vue', slug: 'vue' },
-      { id: 't2', name: 'Pinia', slug: 'pinia' },
-    ])
+    const { selectableList } = getTagLists(wrapper)
+    selectableList.vm.$emit('select', { id: 't1', name: 'Vue', slug: 'vue' })
     await nextTick()
 
-    expect(store.selectedTagIds).toEqual(['t1', 't2'])
+    expect(store.selectedTagIds).toEqual(['t1'])
   })
 
   it('reflects pre-existing store state in the tag selector', () => {
@@ -64,27 +75,21 @@ describe('SearchBar', () => {
     store.setTags([{ id: 't1', name: 'Vue', slug: 'vue' }])
 
     const wrapper = mountComponent()
-    const tagSelector = wrapper.findComponent({ name: 'TagSelector' })
-    expect(tagSelector.props('modelValue')).toEqual([{ id: 't1', name: 'Vue', slug: 'vue' }])
+    const { removableList } = getTagLists(wrapper)
+    expect(removableList.props('tags')).toEqual([{ id: 't1', name: 'Vue', slug: 'vue' }])
   })
 
-  // Regression: a tag picked via the TagSelector's autocomplete search may
-  // not be present in the bounds-scoped `availableTags` prop. The store
-  // must hold the full PublicTag objects so the filter bar can still
-  // render the pill (and the user can still remove it).
   it('renders selected tags that are NOT in availableTags', async () => {
     const store = useBrowseFiltersStore()
     const wrapper = mountComponent()
 
-    // User searches the global tag store and picks "Biokertészet" — a tag
-    // that lives in the DB but isn't in the current viewport's tag list.
     const offBoundsTag = { id: 'tag-out-of-bounds', name: 'Biokertészet', slug: 'biokerteszet' }
-    wrapper.findComponent({ name: 'TagSelector' }).vm.$emit('update:modelValue', [offBoundsTag])
+    const { selectableList, removableList } = getTagLists(wrapper)
+    selectableList.vm.$emit('select', offBoundsTag)
     await nextTick()
 
     expect(store.selectedTagIds).toEqual(['tag-out-of-bounds'])
-    const tagSelector = wrapper.findComponent({ name: 'TagSelector' })
-    expect(tagSelector.props('modelValue')).toEqual([offBoundsTag])
+    expect(removableList.props('tags')).toEqual([offBoundsTag])
   })
 
   it('emits location:set when LocationFilterInput emits a location with coords', async () => {
@@ -98,7 +103,7 @@ describe('SearchBar', () => {
     expect(wrapper.emitted('location:set')).toEqual([[{ lat: 51.5, lon: 4.45 }]])
   })
 
-  it('does not modify the store when location:set fires', async () => {
+  it('clears tag selection when location:set fires', async () => {
     const store = useBrowseFiltersStore()
     store.setTags([{ id: 't1', name: 'Vue', slug: 'vue' }])
 
@@ -108,6 +113,6 @@ describe('SearchBar', () => {
       .vm.$emit('location:set', { lat: 51.5, lon: 4.45 })
     await nextTick()
 
-    expect(store.selectedTagIds).toEqual(['t1'])
+    expect(store.selectedTagIds).toEqual([])
   })
 })

@@ -1,6 +1,12 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { defineComponent, h, nextTick } from 'vue'
+import { defineComponent, h, nextTick, ref } from 'vue'
+
+// Force isMdUp = true so BOffcanvas branch renders (jsdom has no matchMedia)
+vi.mock('@vueuse/core', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@vueuse/core')>()
+  return { ...actual, useMediaQuery: () => ref(true) }
+})
 
 import DetailPanelOrchestrator from '../DetailPanelOrchestrator.vue'
 import { useDetailPanel } from '@/features/app/composables/useDetailPanel'
@@ -22,6 +28,15 @@ const BOffcanvasStub = defineComponent({
   },
 })
 
+const SwipeModalStub = defineComponent({
+  name: 'SwipeModal',
+  props: ['modelValue', 'snapPoint', 'isBackdrop'],
+  emits: ['update:modelValue'],
+  setup(_, { slots }) {
+    return () => h('div', { class: 'swipe-modal-stub' }, slots.default?.())
+  },
+})
+
 describe('DetailPanelOrchestrator', () => {
   beforeEach(() => {
     const panel = useDetailPanel()
@@ -32,7 +47,7 @@ describe('DetailPanelOrchestrator', () => {
   const mountIt = () =>
     mount(DetailPanelOrchestrator, {
       global: {
-        stubs: { BOffcanvas: BOffcanvasStub },
+        stubs: { BOffcanvas: BOffcanvasStub, SwipeModal: SwipeModalStub },
         mocks: { $t: (k: string) => k },
       },
     })
