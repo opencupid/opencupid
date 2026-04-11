@@ -74,23 +74,3 @@ function onHidden() {
     <InboxPanel v-else-if="displayedType === 'inbox'" />
   </BOffcanvas>
 </template>
-
-<style  lang="scss">
-@import 'bootstrap/scss/functions';
-@import 'bootstrap/scss/variables';
-@import 'bootstrap/scss/mixins';
-
-.owner-drawer {
-  @include media-breakpoint-up(md) {
-    width: 75vw;
-  }
-
-  @include media-breakpoint-up(lg) {
-    width: 33vw;
-  }
-
-  @include media-breakpoint-down(sm) {
-    width: 100vw;
-  }
-}
-</style>

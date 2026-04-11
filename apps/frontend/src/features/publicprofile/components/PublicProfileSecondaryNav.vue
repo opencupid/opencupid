@@ -16,7 +16,7 @@ defineEmits<{
   <div class="d-flex justify-content-between align-items-center w-100">
     <button
       type="button"
-      class="btn btn-shaded"
+      class="btn btn-shaded me-1 mt-1"
       :title="t('profiles.more_options_button_title')"
       :aria-label="t('profiles.more_options_button_title')"
       @click="$emit('intent:block')"
@@ -26,7 +26,7 @@ defineEmits<{
 
     <button
       type="button"
-      class="btn btn-shaded"
+      class="btn btn-shaded me-1 mt-1"
       :title="t('profiles.back_button_title')"
       :aria-label="t('profiles.back_button_title')"
       @click="$emit('intent:back')"

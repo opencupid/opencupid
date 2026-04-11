@@ -52,14 +52,14 @@ function handleLogout() {
 </script>
 
 <template>
-  <div class="px-3 py-3 h-100">
+  <div class="px-3 py-3 h-100 d-flex flex-column justify-content-center">
     <fieldset class="d-flex align-items-center mb-3">
       <IconGlobe class="svg-icon svg-icon-lg me-2" />
       <LanguageSelectorDropdown size="md" />
     </fieldset>
 
     <hr />
-    
+
     <fieldset class="mb-3">
       <legend class="h6">{{ $t('settings.notifications_label') }}</legend>
       <OptInCheckboxes v-model="optInModel" />
