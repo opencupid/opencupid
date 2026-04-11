@@ -15,7 +15,7 @@ vi.mock('vue3-carousel', () => ({
     props: ['modelValue', 'itemsToShow', 'snapAlign'],
   },
   Slide: {
-    template: '<div class="slide" @pointerup="$emit(\'pointerup\', $event)"><slot /></div>',
+    template: '<div class="slide" @click="$emit(\'click\')"><slot /></div>',
   },
   Navigation: { template: '<div class="nav-stub" />' },
   Pagination: { template: '<div class="pagination-stub" />' },
@@ -43,23 +43,17 @@ const mountCarousel = (profile = makeProfile()) =>
   })
 
 describe('ImageCarousel', () => {
-  it('opens fullscreen on mouse click', () => {
+  it('opens fullscreen on image click', () => {
     const wrapper = mountCarousel()
-    ;(wrapper.vm as any).handleImageClick(new PointerEvent('pointerup', { pointerType: 'mouse' }))
+    ;(wrapper.vm as any).handleImageClick()
     expect((wrapper.vm as any).showFullscreen).toBe(true)
-  })
-
-  it('does not open fullscreen on touch', () => {
-    const wrapper = mountCarousel()
-    ;(wrapper.vm as any).handleImageClick(new PointerEvent('pointerup', { pointerType: 'touch' }))
-    expect((wrapper.vm as any).showFullscreen).toBe(false)
   })
 
   it('opens fullscreen preserving current slide index', () => {
     const wrapper = mountCarousel()
     const vm = wrapper.vm as any
     vm.inlineSlide = 2
-    vm.handleImageClick(new PointerEvent('pointerup', { pointerType: 'mouse' }))
+    vm.handleImageClick()
     expect(vm.inlineSlide).toBe(2)
     expect(vm.showFullscreen).toBe(true)
   })
@@ -67,7 +61,7 @@ describe('ImageCarousel', () => {
   it('closes fullscreen on click', () => {
     const wrapper = mountCarousel()
     const vm = wrapper.vm as any
-    vm.handleImageClick(new PointerEvent('pointerup', { pointerType: 'mouse' }))
+    vm.handleImageClick()
     expect(vm.showFullscreen).toBe(true)
     vm.showFullscreen = false
     expect(vm.showFullscreen).toBe(false)
