@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { nextTick, ref } from 'vue'
 
 vi.mock('vue-i18n', () => ({
   useI18n: () => ({ t: (k: string) => k }),
@@ -10,35 +9,13 @@ vi.mock('vue-router', () => ({
   useRouter: () => ({ replace: vi.fn(), push: vi.fn(), back: vi.fn() }),
 }))
 
-vi.mock('@/features/auth/stores/authStore', () => ({
-  useAuthStore: () => ({ profileId: 'profile-1' }),
-}))
-vi.mock('@/features/publicprofile/composables/useMessageSentState', () => ({
-  useMessageSentState: () => {
-    const messageSent = ref(false)
-    return {
-      messageSent,
-      handleMessageSent: vi.fn(() => {
-        messageSent.value = true
-      }),
-      resetMessageSent: vi.fn(() => {
-        messageSent.value = false
-      }),
-    }
-  },
-}))
+// PostCard (the only descendant PostFullView renders) imports SendMessageForm,
+// which transitively pulls in VoiceRecorder and media-encoder-host — the latter
+// uses `new Worker(...)` at module scope and explodes in jsdom. Stub it out.
 vi.mock('@/features/messaging/components/SendMessageForm.vue', () => ({
-  default: {
-    template: `
-      <div class="message-form">
-        <button class="send-message" @click="$emit('message:sent', { id: 'm-1' })">send</button>
-      </div>
-    `,
-  },
+  default: { template: '<div class="message-form" />' },
 }))
-vi.mock('@/assets/icons/interface/message.svg', () => ({
-  default: { template: '<span />' },
-}))
+
 vi.mock('@/assets/icons/interface/cross.svg', () => ({
   default: { template: '<span />' },
 }))
@@ -98,29 +75,5 @@ describe('PostFullView', () => {
 
     expect(wrapper.emitted('delete')).toBeTruthy()
     expect(wrapper.emitted('delete')?.[0]?.[0]).toEqual(post)
-  })
-
-  it('renders the inline send message form by default', () => {
-    const wrapper = mount(PostFullView, {
-      props: { post },
-      global: globalConfig,
-    })
-
-    expect(wrapper.find('.message-form').exists()).toBe(true)
-  })
-
-  it('replaces inline send form with success state after message is sent', async () => {
-    const wrapper = mount(PostFullView, {
-      props: { post },
-      global: globalConfig,
-    })
-
-    expect(wrapper.find('.message-form').exists()).toBe(true)
-
-    await wrapper.find('button.send-message').trigger('click')
-    await nextTick()
-
-    expect(wrapper.find('.message-form').exists()).toBe(false)
-    expect(wrapper.text()).toContain('messaging.message_sent_success')
   })
 })

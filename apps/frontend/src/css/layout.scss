@@ -59,21 +59,50 @@ nav.navbar + main {
   }
 }
 
-// Content-width container — used by MiddleColumn and page views
-// Fluid on mobile, capped at comfortable reading width on desktop
 .container-content {
   @include make-container();
 
   @include media-breakpoint-up(sm) {
     max-width: 540px;
   }
+
   @include media-breakpoint-up(md) {
     max-width: 640px;
   }
+
   @include media-breakpoint-up(lg) {
     max-width: 680px;
   }
+
   @include media-breakpoint-up(xl) {
     max-width: 720px;
+  }
+}
+
+.offcanvas.owner-drawer {
+  @include media-breakpoint-down(md) {
+    width: 100vw;
+  }
+
+  @include media-breakpoint-up(md) {
+    width: 75vw;
+  }
+
+  @include media-breakpoint-up(lg) {
+    width: 40vw;
+  }
+}
+
+.offcanvas.detail-panel {
+  @include media-breakpoint-down(sm) {
+    width: 100vw;
+  }
+
+  @include media-breakpoint-up(md) {
+    width: 75vw;
+  }
+
+  @include media-breakpoint-up(lg) {
+    width: 40vw;
   }
 }

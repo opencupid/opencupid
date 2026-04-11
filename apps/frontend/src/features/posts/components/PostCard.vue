@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, nextTick, ref, type Ref } from 'vue'
+import { computed, inject, nextTick, onBeforeUnmount, ref, type Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import PostIt from '@/features/shared/ui/PostIt.vue'
 import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
@@ -60,6 +60,10 @@ const handleContact = async () => {
   await nextTick()
   messageInput.value?.focusTextarea?.()
 }
+
+onBeforeUnmount(() => {
+  resetMessageSent()
+})
 </script>
 
 <template>

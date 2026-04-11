@@ -109,6 +109,7 @@ watch(
       :fullscreen="true"
       :lazy="true"
       no-animation
+      :teleport-disabled="true"
     >
       <template #header-close>
         <IconCross class="svg-icon" />

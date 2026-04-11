@@ -46,7 +46,7 @@ const placement = computed(() => (isMdUp.value ? 'start' : 'bottom'))
   <SwipeModal
     v-model="isOpen"
     :snap-point="'75vh'"
-    :is-backdrop="false"
+    :is-backdrop="true"
     v-else
   >
     <PanelContentWrapper
@@ -66,21 +66,8 @@ const placement = computed(() => (isMdUp.value ? 'start' : 'bottom'))
 @import 'bootstrap/scss/variables';
 @import 'bootstrap/scss/mixins';
 
-.detail-panel {
-  border-right: none;
-
-  @include media-breakpoint-up(md) {
-    // width: 33vw;
-    // min-width: 320px;
-  }
-
-  @include media-breakpoint-down(sm) {
-    width: 100vw;
-  }
-}
-
 .detail-panel.offcanvas-bottom {
-  height: 50vh;
+  height: 100vh;
 }
 
 // Override vue-swipe-modal scoped dark defaults
@@ -94,6 +81,14 @@ const placement = computed(() => (isMdUp.value ? 'start' : 'bottom'))
 // the normal stacking context rather than the browser's top layer.
 .swipe-modal {
   z-index: $zindex-offcanvas !important;
+
+  // SwipeModal's internal scroll container (`.panel`) leaks horizontal overflow
+  // from descendants that use filter: drop-shadow or transform halos (e.g. the
+  // PostIt wrapper on /posts/:id). Clip the x-axis at the scroll parent so the
+  // halo is painted up to the edge without producing a scrollbar.
+  .panel {
+    overflow-x: hidden;
+  }
 }
 
 .swipe-modal::backdrop {

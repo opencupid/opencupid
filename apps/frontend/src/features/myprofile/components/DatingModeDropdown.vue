@@ -13,7 +13,27 @@ const emit = defineEmits<{
 }>()
 
 const expand = ref(false)
+const popoverOpen = ref(false)
 const pillRef = ref<HTMLElement>()
+
+function expandPill() {
+  expand.value = true
+  popoverOpen.value = true
+  // Fire-and-forget auto-close — hint popover shouldn't linger forever.
+  setTimeout(() => {
+    popoverOpen.value = false
+  }, 10_000)
+}
+
+function collapsePill() {
+  popoverOpen.value = false
+  expand.value = false
+}
+
+function toggleExpand() {
+  if (expand.value) collapsePill()
+  else expandPill()
+}
 </script>
 
 <template>
@@ -24,8 +44,9 @@ const pillRef = ref<HTMLElement>()
     >
       <div
         class="expand-pill d-flex align-items-center"
-        @mouseenter="expand = true"
-        @mouseleave="expand = false"
+        @mouseenter="expandPill"
+        @mouseleave="collapsePill"
+        @click="toggleExpand"
       >
         <BButton variant="link">
           <span :class="{ 'text-dating': isDatingActive, 'text-secondary': !isDatingActive }">
@@ -36,6 +57,7 @@ const pillRef = ref<HTMLElement>()
         <div
           class="expand-grid"
           :class="{ expanded: expand }"
+          @click.stop
         >
           <div class="expand-grid-inner px-1">
             <BFormCheckbox
@@ -53,9 +75,9 @@ const pillRef = ref<HTMLElement>()
     </div>
     <BPopover
       :target="pillRef"
-      :show="expand"
+      v-model="popoverOpen"
       placement="top"
-      triggers=""
+      manual
       :delay="{ show: 1000, hide: 0 }"
     >
       <small class="lh-sm">{{ $t('profiles.forms.dating_mode_toggle_hint') }}</small>

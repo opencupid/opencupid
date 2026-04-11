@@ -4,7 +4,7 @@ defineOptions({ name: 'AuthLayout' })
 
 <template>
   <main
-    class="container-fluid d-flex flex-column justify-content-center align-items-center min-vh-100 map-bg"
+    class="d-flex flex-column justify-content-center align-items-center min-vh-100 map-bg"
   >
     <div
       class="d-flex flex-column align-items-center auth-dialog px-3 px-lg-5 py-4 rounded shadow-lg"
