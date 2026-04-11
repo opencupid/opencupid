@@ -25,7 +25,8 @@ const handleImageLoad = (position: number) => {
   loadedImages[position] = true
 }
 
-const handleImageClick = () => {
+const handleImageClick = (event: PointerEvent) => {
+  if (event.pointerType === 'touch') return
   showFullscreen.value = true
 }
 
@@ -72,7 +73,7 @@ watch(
       <Slide
         v-for="img in images"
         :key="img.position"
-        @click="handleImageClick"
+        @pointerup="handleImageClick"
       >
         <div class="ratio ratio-4x3">
           <ImageTag
