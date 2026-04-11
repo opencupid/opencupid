@@ -65,6 +65,7 @@ const handleModalShown = () => {
       </h6>
     </template>
     <ContactFormPanel
+      v-if="showModal"
       ref="messageInput"
       :recipient-profile="profile"
       :show-tags="true"

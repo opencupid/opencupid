@@ -20,6 +20,7 @@ const emit = defineEmits<{
 const isMessageSent = ref(false)
 
 const handleSent = () => {
+  isMessageSent.value = false
   emit('messaged')
   emit('close')
 }
@@ -39,6 +40,7 @@ const handleSubmitted = () => {
     :no-close-on-backdrop="true"
     :no-footer="true"
     :no-header="true"
+    :lazy="true"
     initial-animation
     :content-class="['match-popup-content', { sent: isMessageSent }]"
     body-class="d-flex flex-row align-items-center justify-content-center overflow-hidden p-0"
