@@ -1,13 +1,11 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
-
 import { type InteractionEdgePair } from '@zod/interaction/interaction.dto'
 import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 
 import ProfileImage from '@/features/images/components/ProfileImage.vue'
-import SendMessageForm from '@/features/messaging/components/SendMessageForm.vue'
+import ContactFormPanel from '@/features/messaging/components/ContactFormPanel.vue'
 
-const props = defineProps<{
+defineProps<{
   profile: PublicProfileWithContext
   match: InteractionEdgePair
   show: boolean
@@ -17,13 +15,10 @@ const emit = defineEmits<{
   (e: 'close'): void
   (e: 'messaged'): void
 }>()
-const messageSent = ref(false)
-const handleMessageSent = () => {
-  messageSent.value = true
-  setTimeout(() => {
-    emit('messaged')
-    emit('close')
-  }, 3000)
+
+const handleSent = () => {
+  emit('messaged')
+  emit('close')
 }
 </script>
 
@@ -41,7 +36,6 @@ const handleMessageSent = () => {
     content-class="bg-dating"
     body-class="d-flex flex-row align-items-center justify-content-center overflow-hidden p-0"
     :keyboard="false"
-    @hidden="messageSent = false"
   >
     <div class="w-100 p-5">
       <h6 class="display-6 text-center mb-4">
@@ -67,33 +61,22 @@ const handleMessageSent = () => {
         v-if="profile.interactionContext.canMessage"
         class="text-center"
       >
-        <div v-if="!messageSent">
-          <h6 class="text-center mb-3">
-            <!-- send {them} a messages -->
-            {{ $t('interactions.send_them_a_message', { name: profile.publicName }) }}
-          </h6>
-          <SendMessageForm
-            ref="messageInput"
-            :recipientProfile="profile"
-            :conversationId="null"
-            @message:sent="handleMessageSent"
-          />
-          <BButton
-            variant="secondary"
-            size="sm"
-            @click="emit('close')"
-          >
-            <!-- Maybe later -->
-            {{ $t('interactions.cancel_button') }}
-          </BButton>
-        </div>
-        <div
-          v-else
-          class="text-center"
+        <h6 class="text-center mb-3">
+          <!-- send {them} a messages -->
+          {{ $t('interactions.send_them_a_message', { name: profile.publicName }) }}
+        </h6>
+        <ContactFormPanel
+          :recipient-profile="profile"
+          @sent="handleSent"
+        />
+        <BButton
+          variant="secondary"
+          size="sm"
+          @click="emit('close')"
         >
-          <!-- Nice -->
-          {{ $t('interactions.message_confirmation') }}
-        </div>
+          <!-- Maybe later -->
+          {{ $t('interactions.cancel_button') }}
+        </BButton>
       </div>
     </div>
   </BModal>

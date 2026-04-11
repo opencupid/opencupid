@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, nextTick, onBeforeUnmount, ref, type Ref } from 'vue'
+import { computed, inject, nextTick, ref, type Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import PostIt from '@/features/shared/ui/PostIt.vue'
 import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
@@ -10,8 +10,7 @@ import IconMessage from '@/assets/icons/interface/message.svg'
 import PostTypeBadge from './PostTypeBadge.vue'
 import OwnerToolbar from './OwnerToolbar.vue'
 import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
-import SendMessageForm from '@/features/messaging/components/SendMessageForm.vue'
-import { useMessageSentState } from '@/features/publicprofile/composables/useMessageSentState'
+import ContactFormPanel from '@/features/messaging/components/ContactFormPanel.vue'
 
 import LocalizedTimeAgo from '@/features/shared/components/LocalizedTimeAgo.vue'
 
@@ -49,21 +48,15 @@ const displayContent = computed(() => {
 
 const { t } = useI18n()
 const showMessageForm = ref(false)
-const messageInput = ref()
-const { messageSent, handleMessageSent, resetMessageSent } = useMessageSentState()
+const messageInput = ref<InstanceType<typeof ContactFormPanel> | null>(null)
 
 const recipientProfile = computed<MessageRecipient>(() => props.post.postedBy)
 
 const handleContact = async () => {
-  resetMessageSent()
   showMessageForm.value = true
   await nextTick()
   messageInput.value?.focusTextarea?.()
 }
-
-onBeforeUnmount(() => {
-  resetMessageSent()
-})
 </script>
 
 <template>
@@ -186,28 +179,10 @@ onBeforeUnmount(() => {
       v-if="showMessageForm"
       class="mt-2 px-1"
     >
-      <div v-if="!messageSent">
-        <SendMessageForm
-          ref="messageInput"
-          :recipient-profile="recipientProfile"
-          :conversation-id="null"
-          @message:sent="handleMessageSent"
-        />
-      </div>
-      <div
-        v-else
-        class="d-flex flex-column align-items-center justify-content-center text-success py-3"
-      >
-        <div
-          class="my-2 animate__animated animate__zoomIn"
-          style="height: 3rem"
-        >
-          <IconMessage class="svg-icon-lg h-100 w-100" />
-        </div>
-        <h6 class="mb-2 text-center animate__animated animate__fadeInDown">
-          {{ t('messaging.message_sent_success') }}
-        </h6>
-      </div>
+      <ContactFormPanel
+        ref="messageInput"
+        :recipient-profile="recipientProfile"
+      />
     </div>
   </div>
 </template>
