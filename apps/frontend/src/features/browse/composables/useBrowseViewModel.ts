@@ -89,7 +89,11 @@ export function useBrowseViewModel() {
     await findProfileStore.fetchBounds(bounds, zoom)
   }
 
-  const fetchPopupData = (id: string | number) => findProfileStore.fetchProfileForPopup(String(id))
+  const fetchPopupData = (id: string | number) => {
+    const poi = allPois.value.find((p) => p.id === id)
+    if (poi?.type === 'post') return Promise.resolve(null)
+    return findProfileStore.fetchProfileForPopup(String(id))
+  }
 
   return {
     viewerProfile,

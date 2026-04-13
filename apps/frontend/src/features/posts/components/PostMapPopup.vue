@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { PublicPostWithProfile } from '@zod/post/post.dto'
+import type { PointFeature } from '@shared/zod/map/cluster.dto'
 
-defineProps<{ item: PublicPostWithProfile }>()
+defineProps<{ item: PointFeature }>()
 defineEmits<{ (e: 'click', id: string): void }>()
 </script>
 
@@ -9,7 +9,9 @@ defineEmits<{ (e: 'click', id: string): void }>()
   <div
     class="post-map-popup cursor-pointer p-3 user-select-none"
     @click="$emit('click', item.id)"
-  >{{ item.content.substring(0, 120) }}</div>
+  >
+    {{ (item.postContent ?? '').substring(0, 120) }}
+  </div>
 </template>
 
 <style scoped>
