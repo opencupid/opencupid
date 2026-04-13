@@ -11,13 +11,7 @@ import { PublicPostWithProfileSchema } from '@zod/post/post.dto'
 import type { PublicTag } from '@zod/tag/tag.dto'
 import type { MapPoi } from '@/features/map/types/map.types'
 import { ClusterMapResponseSchema, type MapFeature } from '@shared/zod/map/cluster.dto'
-import {
-  storeSuccess,
-  storeError,
-  type StoreVoidSuccess,
-  type StoreResponse,
-  type StoreError,
-} from '@/store/helpers'
+import { storeSuccess, storeError, type StoreVoidSuccess, type StoreError } from '@/store/helpers'
 import { bus } from '@/lib/bus'
 import { useBrowseFiltersStore } from './browseFiltersStore'
 import type { MapBounds } from '@/features/map/types/map.types'
@@ -95,7 +89,7 @@ export const useFindProfileStore = defineStore('findProfile', {
     async findClustersForMapBounds(
       bounds: MapBounds,
       zoom: number
-    ): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
+    ): Promise<StoreVoidSuccess | StoreError> {
       // Supercluster requires integer zoom; Leaflet can report fractional values
       // during fitBounds or mid-animation.
       zoom = Math.round(zoom)
@@ -152,9 +146,7 @@ export const useFindProfileStore = defineStore('findProfile', {
       }
     },
 
-    async fetchPostsAndTags(
-      bounds: MapBounds
-    ): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
+    async fetchPostsAndTags(bounds: MapBounds): Promise<StoreVoidSuccess | StoreError> {
       if (postAbortController) postAbortController.abort()
       const controller = new AbortController()
       postAbortController = controller

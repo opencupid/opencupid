@@ -108,7 +108,7 @@ watch(
       if (result.success && result.data) {
         panel.show(PostFullView, { post: result.data.post })
       } else {
-        toast.error(t('posts.error_load'))
+        toast.error(t('posts.messages.error_load'))
         panel.close()
         router.replace({ name: 'Browse' })
       }
