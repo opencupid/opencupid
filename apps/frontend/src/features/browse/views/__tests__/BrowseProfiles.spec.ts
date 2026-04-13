@@ -95,6 +95,13 @@ vi.mock('@/features/browse/stores/findProfileStore', () => ({
   }),
 }))
 
+vi.mock('@/features/posts/stores/postStore', () => ({
+  usePostStore: () => ({
+    fetchPublicPost: vi.fn().mockResolvedValue({ success: false }),
+    fetchOwnerPost: vi.fn().mockResolvedValue({ success: false }),
+  }),
+}))
+
 vi.mock('@/assets/icons/interface/target-2.svg', () => ({
   default: { template: '<svg class="icon-target" />' },
 }))

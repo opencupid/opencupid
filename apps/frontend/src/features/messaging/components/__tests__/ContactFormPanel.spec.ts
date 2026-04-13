@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
 
 import type { MessageRecipient } from '@zod/profile/profile.dto'
 
@@ -46,6 +47,7 @@ const globalConfig = {
 
 describe('ContactFormPanel', () => {
   beforeEach(() => {
+    setActivePinia(createPinia())
     vi.useFakeTimers()
   })
 

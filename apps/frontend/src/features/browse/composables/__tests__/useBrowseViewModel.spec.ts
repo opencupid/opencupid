@@ -31,8 +31,16 @@ describe('useBrowseViewModel', () => {
         profiles: [],
         posts: [
           {
-            id: 'post1',
+            id: 'clpost00000000000000001',
             content: 'Cherry harvest',
+            type: 'OFFER',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            postedById: 'p1',
+            country: 'HU',
+            cityName: 'Bp',
+            lat: 47.1,
+            lon: 18.6,
             location: { lat: 47.1, lon: 18.6, country: 'HU', cityName: 'Bp' },
             postedBy: { id: 'p1', publicName: 'Mónika', profileImages: [] },
           },
@@ -61,12 +69,33 @@ describe('useBrowseViewModel', () => {
         profiles: [],
         posts: [
           {
-            id: 'post1',
+            id: 'clpost00000000000000001',
             content: 'Has loc',
+            type: 'OFFER',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            postedById: 'p1',
+            country: 'HU',
+            cityName: null,
+            lat: 47,
+            lon: 18,
             location: { lat: 47, lon: 18, country: 'HU' },
-            postedBy: null,
+            postedBy: { id: 'p1', publicName: 'Test', profileImages: [] },
           },
-          { id: 'post2', content: 'No loc', location: null, postedBy: null },
+          {
+            id: 'clpost00000000000000002',
+            content: 'No loc',
+            type: 'OFFER',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            postedById: 'p2',
+            country: null,
+            cityName: null,
+            lat: null,
+            lon: null,
+            location: null,
+            postedBy: { id: 'p2', publicName: 'Test2', profileImages: [] },
+          },
         ],
         tags: [],
       },
@@ -77,6 +106,6 @@ describe('useBrowseViewModel', () => {
 
     const vm = useBrowseViewModel()
     expect(vm.postPois.value).toHaveLength(1)
-    expect(vm.postPois.value[0]!.id).toBe('post1')
+    expect(vm.postPois.value[0]!.id).toBe('clpost00000000000000001')
   })
 })
