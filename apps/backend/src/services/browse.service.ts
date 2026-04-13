@@ -9,6 +9,11 @@ import type { PublicPostWithProfile } from '@zod/post/post.dto'
 import type { PublicTag } from '@zod/tag/tag.dto'
 import type { Bounds } from '@zod/dto/bounds.dto'
 
+/**
+ * @deprecated Browse map data is now served by the unified cluster endpoint
+ * (ClusterService). This service has no active callers.
+ * TODO(cleanup): remove together with the /browse/bounds route shim.
+ */
 export class BrowseService {
   private static instance: BrowseService
 

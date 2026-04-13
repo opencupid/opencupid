@@ -27,7 +27,7 @@ describe('findProfileStore.refetchBounds', () => {
   })
 
   it('re-fetches clusters when lastMapBounds is set', async () => {
-    mockGet.mockResolvedValue({ data: { success: true, features: [] } })
+    mockGet.mockResolvedValue({ data: { success: true, features: [], tags: [] } })
     store.lastMapBounds = bounds
 
     await store.refetchBounds()
@@ -63,11 +63,12 @@ describe('findClustersForMapBounds', () => {
     vi.clearAllMocks()
   })
 
-  it('fetches clusters from the cluster endpoint with bounds and zoom', async () => {
+  it('fetches clusters and tags from the cluster endpoint', async () => {
     const mockFeatures = [
       { type: 'cluster', id: 1, lat: 47.5, lon: 19.0, count: 5, expansionZoom: 8 },
       {
         type: 'point',
+        kind: 'profile',
         id: 'p1',
         lat: 48.2,
         lon: 16.3,
@@ -76,7 +77,8 @@ describe('findClustersForMapBounds', () => {
         highlighted: false,
       },
     ]
-    mockGet.mockResolvedValue({ data: { success: true, features: mockFeatures } })
+    const mockTags = [{ id: 'cltagabc000000000000001', name: 'Biokert', slug: 'biokert' }]
+    mockGet.mockResolvedValue({ data: { success: true, features: mockFeatures, tags: mockTags } })
 
     const bounds = { south: 47, north: 49, west: 16, east: 20 }
     await store.findClustersForMapBounds(bounds, 6)
@@ -94,10 +96,12 @@ describe('findClustersForMapBounds', () => {
       })
     )
     expect(store.clusterFeatures).toHaveLength(2)
+    expect(store.availableTags).toHaveLength(1)
+    expect(store.availableTags[0]!.name).toBe('Biokert')
   })
 
   it('always refetches on zoom change even if bounds are cached', async () => {
-    mockGet.mockResolvedValue({ data: { success: true, features: [] } })
+    mockGet.mockResolvedValue({ data: { success: true, features: [], tags: [] } })
 
     const bounds = { south: 47, north: 49, west: 16, east: 20 }
 
@@ -115,14 +119,14 @@ describe('findClustersForMapBounds', () => {
       resolveFirst = r
     })
     mockGet.mockImplementationOnce(() => firstCall)
-    mockGet.mockResolvedValueOnce({ data: { success: true, features: [] } })
+    mockGet.mockResolvedValueOnce({ data: { success: true, features: [], tags: [] } })
 
     const bounds = { south: 47, north: 49, west: 16, east: 20 }
 
     const p1 = store.findClustersForMapBounds(bounds, 6)
     const p2 = store.findClustersForMapBounds(bounds, 7)
 
-    resolveFirst!({ data: { success: true, features: [] } })
+    resolveFirst!({ data: { success: true, features: [], tags: [] } })
     await Promise.all([p1, p2])
 
     expect(store.clusterFeatures).toEqual([])

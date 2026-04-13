@@ -35,6 +35,12 @@ vi.mock('../../api/mappers/profile.mappers', () => ({
   })),
 }))
 
+vi.mock('../../api/mappers/tag.mappers', () => ({
+  mapProfileTagsTranslated: vi.fn((tags: any[]) =>
+    tags.map((t: any) => ({ id: t.id, name: t.name, slug: t.slug }))
+  ),
+}))
+
 import findProfileRoutes from '../../api/routes/findProfile.route'
 import { MockFastify, MockReply } from '../../test-utils/fastify'
 import { ClusterService } from '@/services/cluster.service'
@@ -73,15 +79,28 @@ describe('GET /social/map/clusters', () => {
 
   const validQuery = { south: '45.0', north: '48.0', west: '16.0', east: '23.0', zoom: '10' }
 
-  it('returns features for valid bounds and zoom', async () => {
-    const mockFeatures = [{ type: 'Feature', geometry: { type: 'Point', coordinates: [19, 47] } }]
-    mockGetOrBuildClusters.mockResolvedValue(mockFeatures)
+  it('returns features and tags for valid bounds and zoom', async () => {
+    const mockFeatures = [
+      {
+        type: 'point',
+        kind: 'profile',
+        id: 'p1',
+        lat: 47,
+        lon: 19,
+        publicName: 'Alice',
+        image: null,
+        highlighted: false,
+      },
+    ]
+    const mockTags = [{ id: 't1', name: 'Bio', slug: 'bio' }]
+    mockGetOrBuildClusters.mockResolvedValue({ features: mockFeatures, tags: mockTags })
 
     await handler()({ session: mockSession, query: validQuery, log: { error: vi.fn() } }, reply)
 
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.features).toEqual(mockFeatures)
+    expect(reply.payload.tags).toBeDefined()
     expect(mockGetOrBuildClusters).toHaveBeenCalledWith(
       'profile-123',
       [16.0, 45.0, 23.0, 48.0],
@@ -91,7 +110,7 @@ describe('GET /social/map/clusters', () => {
   })
 
   it('forwards parsed tagIds to the cluster service', async () => {
-    mockGetOrBuildClusters.mockResolvedValue([])
+    mockGetOrBuildClusters.mockResolvedValue({ features: [], tags: [] })
 
     await handler()(
       {
@@ -139,7 +158,18 @@ describe('GET /social/map/clusters/leaves', () => {
   const handler = () => fastify.routes['GET /social/map/clusters/leaves']
 
   it('returns features for valid clusterId', async () => {
-    const mockFeatures = [{ type: 'Feature', geometry: { type: 'Point', coordinates: [19, 47] } }]
+    const mockFeatures = [
+      {
+        type: 'point',
+        kind: 'profile',
+        id: 'p1',
+        lat: 47,
+        lon: 19,
+        publicName: 'Alice',
+        image: null,
+        highlighted: false,
+      },
+    ]
     mockGetLeaves.mockReturnValue(mockFeatures)
 
     await handler()(

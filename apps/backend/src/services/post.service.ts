@@ -196,24 +196,27 @@ export class PostService {
         isDeleted: false,
         isVisible: true,
         ...(type ? { type } : {}),
-        OR: [
-          {
-            lat: { gte: bounds.south, lte: bounds.north },
-            lon: { gte: bounds.west, lte: bounds.east },
-          },
-          {
-            lat: null,
-            postedBy: {
-              lat: { gte: bounds.south, lte: bounds.north },
-              lon: { gte: bounds.west, lte: bounds.east },
-            },
-          },
-        ],
+        lat: { gte: bounds.south, lte: bounds.north },
+        lon: { gte: bounds.west, lte: bounds.east },
       },
       ...postedByInclude,
       orderBy: { createdAt: 'desc' },
       take: limit,
       skip: offset,
+    })
+  }
+
+  async findAllWithLocation(limit = 500) {
+    return this.prisma.post.findMany({
+      where: {
+        isDeleted: false,
+        isVisible: true,
+        lat: { not: null },
+        lon: { not: null },
+      },
+      ...postedByInclude,
+      orderBy: { createdAt: 'desc' },
+      take: limit,
     })
   }
 

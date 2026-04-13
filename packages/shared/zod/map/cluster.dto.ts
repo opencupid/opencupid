@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { PublicTagSchema } from '../tag/tag.dto'
 
 export const ClusterFeatureSchema = z.object({
   type: z.literal('cluster'),
@@ -11,6 +12,7 @@ export const ClusterFeatureSchema = z.object({
 
 export const PointFeatureSchema = z.object({
   type: z.literal('point'),
+  kind: z.enum(['profile', 'post']),
   id: z.string(),
   lat: z.number(),
   lon: z.number(),
@@ -22,6 +24,8 @@ export const PointFeatureSchema = z.object({
     })
     .nullable(),
   highlighted: z.boolean(),
+  postContent: z.string().optional(),
+  postType: z.string().optional(),
 })
 
 export const MapFeatureSchema = z.discriminatedUnion('type', [
@@ -32,6 +36,7 @@ export const MapFeatureSchema = z.discriminatedUnion('type', [
 export const ClusterMapResponseSchema = z.object({
   success: z.literal(true),
   features: z.array(MapFeatureSchema),
+  tags: z.array(PublicTagSchema),
 })
 
 export type ClusterFeature = z.infer<typeof ClusterFeatureSchema>
