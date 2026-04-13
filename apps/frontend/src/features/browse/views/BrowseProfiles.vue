@@ -3,6 +3,8 @@ import { computed, onActivated, onMounted, provide, ref, toRef, watch } from 'vu
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 
+import { useToast } from 'vue-toastification'
+import { useI18n } from 'vue-i18n'
 import { useBootstrap } from '@/lib/bootstrap'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { useBrowseViewModel } from '../composables/useBrowseViewModel'
@@ -69,6 +71,8 @@ provide('viewerProfile', toRef(viewerProfile))
 
 // ── Route-driven detail panel ──────────────────────────────────────
 const router = useRouter()
+const toast = useToast()
+const { t } = useI18n()
 const ownerProfileStore = useOwnerProfileStore()
 const postStore = usePostStore()
 
@@ -103,6 +107,10 @@ watch(
       const result = await postStore.fetchPublicPost(d.id)
       if (result.success && result.data) {
         panel.show(PostFullView, { post: result.data.post })
+      } else {
+        toast.error(t('posts.error_load'))
+        panel.close()
+        router.replace({ name: 'Browse' })
       }
     }
   },

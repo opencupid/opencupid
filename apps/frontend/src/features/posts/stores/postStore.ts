@@ -17,6 +17,7 @@ import type {
   PostsResponse,
   MyPostsResponse,
   PostResponse,
+  PublicPostDetailResponse,
   CreatePostResponse,
   UpdatePostResponse,
   DeletePostResponse,
@@ -175,7 +176,7 @@ export const usePostStore = defineStore('posts', {
 
     async fetchPublicPost(id: string): Promise<StoreResponse<{ post: PublicPostDetail }>> {
       try {
-        const res = await safeApiCall(() => api.get<PostResponse>(`/posts/${id}`))
+        const res = await safeApiCall(() => api.get<PublicPostDetailResponse>(`/posts/${id}`))
         const post = PublicPostDetailSchema.parse(res.data.post)
         return storeSuccess({ post })
       } catch (error: any) {

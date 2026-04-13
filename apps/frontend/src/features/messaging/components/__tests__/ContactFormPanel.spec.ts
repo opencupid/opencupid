@@ -32,11 +32,29 @@ vi.mock('@/assets/icons/interface/message.svg', () => ({
   default: { template: '<span class="icon-message-stub" />' },
 }))
 
+vi.mock('@/features/messaging/components/MessageBubble.vue', () => ({
+  default: {
+    name: 'MessageBubble',
+    props: ['message'],
+    template: '<div class="message-bubble-stub">{{ message.content }}</div>',
+  },
+}))
+
 import ContactFormPanel from '../ContactFormPanel.vue'
+import { useMessageStore } from '../../stores/messageStore'
 
 const recipient = {
   id: 'recipient-1',
   publicName: 'Recipient',
+} as unknown as MessageRecipient
+
+const waitingRecipient = {
+  id: 'recipient-1',
+  publicName: 'Recipient',
+  initiated: true,
+  canMessage: false,
+  conversationId: 'conv-1',
+  haveConversation: false,
 } as unknown as MessageRecipient
 
 const globalConfig = {
@@ -75,6 +93,40 @@ describe('ContactFormPanel', () => {
 
     expect(wrapper.find('.send-message-form-stub').exists()).toBe(false)
     expect(wrapper.text()).toContain('messaging.message_sent_success')
+  })
+
+  it('renders waiting-for-reply state when initiated && !canMessage', async () => {
+    const store = useMessageStore()
+    vi.spyOn(store, 'fetchMessages').mockResolvedValue({
+      success: true,
+      data: {
+        messages: [
+          {
+            id: 'msg-1',
+            conversationId: 'conv-1',
+            senderId: 'me',
+            content: 'Hello!',
+            messageType: 'text/plain',
+            createdAt: new Date(),
+            sender: { id: 'me', publicName: 'Me', profileImages: [] },
+            isMine: true,
+          },
+        ],
+      },
+    } as any)
+
+    const wrapper = mount(ContactFormPanel, {
+      props: { recipientProfile: waitingRecipient },
+      global: globalConfig,
+    })
+
+    await flushPromises()
+
+    expect(wrapper.find('.send-message-form-stub').exists()).toBe(false)
+    expect(wrapper.text()).toContain('messaging.already_sent_waiting')
+    expect(wrapper.find('.message-bubble-stub').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Hello!')
+    expect(wrapper.emitted('sent')).toBeUndefined()
   })
 
   it('emits `sent` after the 3s success window elapses', async () => {

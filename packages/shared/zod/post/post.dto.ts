@@ -56,10 +56,8 @@ export type PublicPostWithProfile = z.infer<typeof PublicPostWithProfileSchema>
 
 // Detail view for a single post (GET /posts/:id for non-owners)
 // Extends PublicPostWithProfile with conversation context on postedBy
-export const PublicPostDetailSchema = PublicPostSchema.extend({
+export const PublicPostDetailSchema = PublicPostWithProfileSchema.extend({
   postedBy: ProfileSummarySchema.merge(ConversationContextSchema),
-  location: LocationSchema.nullable().optional(),
-  isOwn: z.boolean().default(false),
 })
 export type PublicPostDetail = z.infer<typeof PublicPostDetailSchema>
 

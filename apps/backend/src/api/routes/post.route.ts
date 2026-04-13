@@ -62,7 +62,7 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
    * Returns a single post by ID. Returns owner view (with visibility metadata)
    * when the viewer is the post author, public view otherwise.
    * @param {string} id - Post ID (CUID)
-   * @returns {{ success, post: OwnerPost | PublicPostWithProfile }}
+   * @returns {{ success, post: OwnerPost | PublicPostDetail }}
    */
   fastify.get('/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const { id } = PostParamsSchema.parse(req.params)

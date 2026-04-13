@@ -42,9 +42,10 @@ const sentMessages = ref<MessageDTO[]>([])
 
 onMounted(async () => {
   if (!isWaitingForReply || !props.recipientProfile.conversationId) return
-  sentMessages.value = await messageStore.fetchMessagesForConversation(
-    props.recipientProfile.conversationId
-  )
+  const result = await messageStore.fetchMessages(props.recipientProfile.conversationId)
+  if (result.success && result.data) {
+    sentMessages.value = result.data.messages
+  }
 })
 
 const emit = defineEmits<{
@@ -134,9 +135,9 @@ defineExpose({
           class="mb-2"
         />
       </div>
-        <div class="form-hint  mb-3">
-          {{ $t('messaging.already_sent_waiting') }}
-        </div>
+      <div class="form-hint mb-3">
+        {{ $t('messaging.already_sent_waiting') }}
+      </div>
     </div>
 
     <!-- 3. Default: pre-send form -->
