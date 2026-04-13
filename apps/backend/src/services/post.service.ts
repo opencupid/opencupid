@@ -1,7 +1,8 @@
-import { PrismaClient, PostType, Prisma } from '@prisma/client'
+import { PostType, Prisma } from '@prisma/client'
 import type { CreatePostPayload, UpdatePostPayload } from '@zod/post/post.dto'
 import { conversationContextInclude } from '@/db/includes/profileIncludes'
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
+import { prisma } from '@/lib/prisma'
 
 const postedByInclude = {
   include: {
@@ -31,24 +32,18 @@ export type PostWithProfileAndContext = Prisma.PostGetPayload<
 
 export class PostService {
   private static instance: PostService
-  private prisma: PrismaClient
 
-  private constructor(prisma: PrismaClient) {
-    this.prisma = prisma
-  }
+  private constructor() {}
 
-  public static getInstance(prisma?: PrismaClient): PostService {
+  static getInstance(): PostService {
     if (!PostService.instance) {
-      if (!prisma) {
-        throw new Error('PostService requires PrismaClient on first instantiation')
-      }
-      PostService.instance = new PostService(prisma)
+      PostService.instance = new PostService()
     }
     return PostService.instance
   }
 
   async create(profileId: string, data: CreatePostPayload) {
-    return this.prisma.post.create({
+    return prisma.post.create({
       data: {
         content: data.content,
         type: data.type,
@@ -63,7 +58,7 @@ export class PostService {
   }
 
   async findById(id: string) {
-    return this.prisma.post.findFirst({
+    return prisma.post.findFirst({
       where: { id, isDeleted: false },
       ...postedByInclude,
     })
@@ -73,7 +68,7 @@ export class PostService {
     id: string,
     viewerProfileId: string
   ): Promise<PostWithProfileAndContext | null> {
-    const post = await this.prisma.post.findFirst({
+    const post = await prisma.post.findFirst({
       where: { id, isDeleted: false },
       ...postedByWithConversationInclude(viewerProfileId),
     })
@@ -97,7 +92,7 @@ export class PostService {
   ) {
     const { type, limit = 20, offset = 0, includeInvisible = false } = options
 
-    return this.prisma.post.findMany({
+    return prisma.post.findMany({
       where: {
         postedById: profileId,
         isDeleted: false,
@@ -120,7 +115,7 @@ export class PostService {
   ) {
     const { type, limit = 20, offset = 0 } = options
 
-    return this.prisma.post.findMany({
+    return prisma.post.findMany({
       where: {
         isDeleted: false,
         isVisible: true,
@@ -154,26 +149,13 @@ export class PostService {
     const minLon = lon - lonRange
     const maxLon = lon + lonRange
 
-    return this.prisma.post.findMany({
+    return prisma.post.findMany({
       where: {
         isDeleted: false,
         isVisible: true,
         ...(type ? { type } : {}),
-        OR: [
-          // Posts with their own location
-          {
-            lat: { gte: minLat, lte: maxLat },
-            lon: { gte: minLon, lte: maxLon },
-          },
-          // Posts without location — fall back to profile location
-          {
-            lat: null,
-            postedBy: {
-              lat: { gte: minLat, lte: maxLat },
-              lon: { gte: minLon, lte: maxLon },
-            },
-          },
-        ],
+        lat: { gte: minLat, lte: maxLat },
+        lon: { gte: minLon, lte: maxLon },
       },
       ...postedByInclude,
       orderBy: { createdAt: 'desc' },
@@ -192,7 +174,7 @@ export class PostService {
   ) {
     const { type, limit = 100, offset = 0 } = options
 
-    return this.prisma.post.findMany({
+    return prisma.post.findMany({
       where: {
         isDeleted: false,
         isVisible: true,
@@ -208,7 +190,7 @@ export class PostService {
   }
 
   async findAllWithLocation(viewerProfileId: string, limit = 500) {
-    return this.prisma.post.findMany({
+    return prisma.post.findMany({
       where: {
         isDeleted: false,
         isVisible: true,
@@ -233,7 +215,7 @@ export class PostService {
     const oneWeekAgo = new Date()
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
 
-    return this.prisma.post.findMany({
+    return prisma.post.findMany({
       where: {
         isDeleted: false,
         isVisible: true,
@@ -249,7 +231,7 @@ export class PostService {
 
   async update(id: string, profileId: string, data: UpdatePostPayload) {
     // Only allow owner to update
-    const post = await this.prisma.post.findFirst({
+    const post = await prisma.post.findFirst({
       where: { id, postedById: profileId, isDeleted: false },
     })
 
@@ -257,16 +239,16 @@ export class PostService {
       return null
     }
 
-    return this.prisma.post.update({
+    return prisma.post.update({
       where: { id },
       data: {
-        ...(data.content !== undefined && { content: data.content }),
-        ...(data.type !== undefined && { type: data.type }),
-        ...(data.isVisible !== undefined && { isVisible: data.isVisible }),
-        ...(data.country !== undefined && { country: data.country }),
-        ...(data.cityName !== undefined && { cityName: data.cityName }),
-        ...(data.lat !== undefined && { lat: data.lat }),
-        ...(data.lon !== undefined && { lon: data.lon }),
+        content: data.content,
+        type: data.type,
+        isVisible: data.isVisible,
+        country: data.country,
+        cityName: data.cityName,
+        lat: data.lat,
+        lon: data.lon,
         updatedAt: new Date(),
       },
       ...postedByInclude,
@@ -275,7 +257,7 @@ export class PostService {
 
   async delete(id: string, profileId: string) {
     // Only allow owner to delete
-    const post = await this.prisma.post.findFirst({
+    const post = await prisma.post.findFirst({
       where: { id, postedById: profileId, isDeleted: false },
     })
 
@@ -283,7 +265,7 @@ export class PostService {
       return null
     }
 
-    return this.prisma.post.update({
+    return prisma.post.update({
       where: { id },
       data: {
         isDeleted: true,

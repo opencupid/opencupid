@@ -88,7 +88,7 @@ describe('ClusterService', () => {
   beforeEach(() => {
     // Reset singleton so each test gets a fresh instance
     ;(ClusterService as any).instance = undefined
-    service = ClusterService.getInstance({} as any)
+    service = ClusterService.getInstance()
     vi.clearAllMocks()
     mockFindAllWithLocation.mockResolvedValue([])
   })

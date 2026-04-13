@@ -69,7 +69,7 @@ function parseTagIds(raw: unknown): string[] | null {
 const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
   // instantiate services
   const profileMatchService = ProfileMatchService.getInstance()
-  const clusterService = ClusterService.getInstance(fastify.prisma)
+  const clusterService = ClusterService.getInstance()
 
   const ClusterQuerySchema = BoundsQuerySchema.extend({
     zoom: z.coerce.number().int().min(0).max(MAP_MAX_ZOOM),
