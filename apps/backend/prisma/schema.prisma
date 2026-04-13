@@ -227,6 +227,8 @@ model Profile {
   // Activity tracking
   sessionLogs     ProfileSessionLog[]
   activitySummary ProfileActivitySummary?
+
+  @@index([lat, lon])
 }
 
 model LocalizedProfileField {
@@ -398,6 +400,7 @@ model Post {
   @@index([type])
   @@index([createdAt])
   @@index([isVisible, isDeleted])
+  @@index([lat, lon])
 }
 
 model ProfileSessionLog {
