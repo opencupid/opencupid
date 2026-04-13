@@ -2,7 +2,6 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "outDir": "./dist",
     "strict": true,
     "strictNullChecks": true,
     "module": "ES2020",
