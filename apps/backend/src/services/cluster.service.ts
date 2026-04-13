@@ -40,26 +40,27 @@ function buildCacheKey(profileId: string, tagIds: string[]): string {
 export class ClusterService {
   private indexes = new Map<string, CachedIndex>()
   private static instance: ClusterService
-  private prisma: PrismaClient | null = null
+
+  private constructor(private readonly prisma: PrismaClient) {}
 
   static getInstance(prisma?: PrismaClient): ClusterService {
     if (!ClusterService.instance) {
-      ClusterService.instance = new ClusterService()
-    }
-    if (prisma && !ClusterService.instance.prisma) {
-      ClusterService.instance.prisma = prisma
+      if (!prisma) {
+        throw new Error('ClusterService requires PrismaClient on first instantiation')
+      }
+      ClusterService.instance = new ClusterService(prisma)
     }
     return ClusterService.instance
   }
 
   async buildIndex(profileId: string, tagIds: string[] = []): Promise<void> {
     const profileMatchService = ProfileMatchService.getInstance()
-    const postService = PostService.getInstance()
+    const postService = PostService.getInstance(this.prisma)
 
     const [profiles, matchIds, posts] = await Promise.all([
       profileMatchService.findSocialProfilesWithLocation(profileId, tagIds),
       profileMatchService.findMutualMatchIds(profileId),
-      postService.findAllWithLocation(),
+      postService.findAllWithLocation(profileId),
     ])
 
     const matchSet = new Set(matchIds)

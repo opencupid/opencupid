@@ -102,7 +102,7 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
    * @query {number} east - Bounding box east longitude
    * @query {number} zoom - Map zoom level (0–12)
    * @query {string} [tagIds] - Optional comma-separated tag IDs
-   * @returns {{ success: true, features: MapFeature[] }}
+   * @returns {{ success: true, features: MapFeature[], tags: PublicTag[] }}
    */
   fastify.get('/social/map/clusters', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     if (!req.session.profile.isSocialActive) {

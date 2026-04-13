@@ -1,6 +1,7 @@
 import { PrismaClient, PostType, Prisma } from '@prisma/client'
 import type { CreatePostPayload, UpdatePostPayload } from '@zod/post/post.dto'
 import { conversationContextInclude } from '@/db/includes/profileIncludes'
+import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
 
 const postedByInclude = {
   include: {
@@ -206,13 +207,14 @@ export class PostService {
     })
   }
 
-  async findAllWithLocation(limit = 500) {
+  async findAllWithLocation(viewerProfileId: string, limit = 500) {
     return this.prisma.post.findMany({
       where: {
         isDeleted: false,
         isVisible: true,
         lat: { not: null },
         lon: { not: null },
+        postedBy: blocklistWhereClause(viewerProfileId),
       },
       ...postedByInclude,
       orderBy: { createdAt: 'desc' },
