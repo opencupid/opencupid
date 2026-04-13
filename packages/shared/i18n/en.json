@@ -191,6 +191,7 @@
     "welcome_message": "Welcome to {siteName}!\nI am Mookie, your host.\nThis is a place for us to connect, meet new people, and find like-minded souls. I hope you enjoy your stay here.\nHappy connecting!\n- Mookie"
   },
   "messaging": {
+    "already_sent_waiting": "You have already sent them a message. Once they answer, you can continue the conversation.",
     "block_member": "Block member",
     "block_report_unmatch": "Block/report/unmatch",
     "block_user_ok": "Block {name}",

@@ -24,7 +24,7 @@ import MapIcon from '@/features/posts/components/MapIcon.vue'
 import PostMapPopup from '@/features/posts/components/PostMapPopup.vue'
 import PostFullView from '@/features/posts/components/PostFullView.vue'
 import OwnerDrawerControls from '../components/OwnerDrawerControls.vue'
-import type { PublicPostWithProfile } from '@zod/post/post.dto'
+import { usePostStore } from '@/features/posts/stores/postStore'
 import type { GeoPoint } from '@zod/dto/location.dto'
 
 // Component name must be 'AppShell' for KeepAlive to identify it correctly
@@ -70,6 +70,7 @@ provide('viewerProfile', toRef(viewerProfile))
 // ── Route-driven detail panel ──────────────────────────────────────
 const router = useRouter()
 const ownerProfileStore = useOwnerProfileStore()
+const postStore = usePostStore()
 
 const { detail } = useDetailRouteState()
 const panel = useDetailPanel()
@@ -90,16 +91,19 @@ watch(
 
 // Drive the global detail panel from the route.
 watch(
-  [detail, activePoi],
-  ([d, poi]) => {
+  detail,
+  async (d) => {
     if (!d) {
       panel.close()
       return
     }
     if (d.type === 'profile') {
       panel.show(PublicProfileView, { profileId: d.id })
-    } else if (d.type === 'post' && poi) {
-      panel.show(PostFullView, { post: poi.source as PublicPostWithProfile })
+    } else if (d.type === 'post') {
+      const result = await postStore.fetchPublicPost(d.id)
+      if (result.success && result.data) {
+        panel.show(PostFullView, { post: result.data.post })
+      }
     }
   },
   { immediate: true }

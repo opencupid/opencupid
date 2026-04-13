@@ -2,8 +2,10 @@ import { defineStore } from 'pinia'
 import { api, safeApiCall } from '@/lib/api'
 import {
   PublicPostWithProfileSchema,
+  PublicPostDetailSchema,
   OwnerPostSchema,
   type PublicPostWithProfile,
+  type PublicPostDetail,
   type OwnerPost,
   type CreatePostPayload,
   type UpdatePostPayload,
@@ -160,11 +162,21 @@ export const usePostStore = defineStore('posts', {
       }
     },
 
-    async fetchPost(id: string): Promise<StorePostResponse> {
+    async fetchOwnerPost(id: string): Promise<StorePostResponse> {
       try {
         const res = await safeApiCall(() => api.get<PostResponse>(`/posts/${id}`))
         const post = OwnerPostSchema.parse(res.data.post)
         this.currentPost = post
+        return storeSuccess({ post })
+      } catch (error: any) {
+        return storeError(error, 'Failed to fetch post')
+      }
+    },
+
+    async fetchPublicPost(id: string): Promise<StoreResponse<{ post: PublicPostDetail }>> {
+      try {
+        const res = await safeApiCall(() => api.get<PostResponse>(`/posts/${id}`))
+        const post = PublicPostDetailSchema.parse(res.data.post)
         return storeSuccess({ post })
       } catch (error: any) {
         return storeError(error, 'Failed to fetch post')

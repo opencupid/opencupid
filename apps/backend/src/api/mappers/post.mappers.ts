@@ -3,10 +3,12 @@ import {
   PublicPostSchema,
   type PostWithProfile,
   type PublicPostWithProfile,
+  type PublicPostDetail,
   type OwnerPost,
 } from '@zod/post/post.dto'
 import type { LocationDTO } from '@zod/dto/location.dto'
 import { mapProfileSummary } from './profile.mappers'
+import { mapConversationContext } from './interaction.mappers'
 
 function extractPostLocation(post: Record<string, unknown>): LocationDTO | null {
   if (!post.country && !post.cityName && post.lat == null && post.lon == null) {
@@ -29,6 +31,19 @@ export function mapDbPostToPublic(
     ...PublicPostSchema.parse(rest),
     isOwn: post.postedById === viewerProfileId,
     postedBy: mapProfileSummary(postedBy),
+    location: extractPostLocation(rest),
+  }
+}
+
+export function mapDbPostToDetail(post: PostWithProfile): PublicPostDetail {
+  const { postedBy, ...rest } = post
+  return {
+    ...PublicPostSchema.parse(rest),
+    isOwn: false,
+    postedBy: {
+      ...mapProfileSummary(postedBy),
+      ...mapConversationContext(postedBy as any),
+    },
     location: extractPostLocation(rest),
   }
 }

@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { type MessageDTO } from '@zod/messaging/messaging.dto'
 import { nextTick, ref, watch } from 'vue'
-import VoiceMessage from './VoiceMessage.vue'
-import { renderMessage } from '@/lib/renderMessage'
+import MessageBubble from './MessageBubble.vue'
 
 const props = defineProps<{
   messages: MessageDTO[]
@@ -89,49 +88,11 @@ const handleScroll = () => {
     >
       {{ $t('messaging.loading_older_messages') }}
     </div>
-    <div
+    <MessageBubble
       v-for="msg in messages"
       :key="msg.id"
-      class="message mb-2 me-2 text-wrap animate__animated animate__zoomIn user-select-none"
-      :class="{
-        'bg-info align-self-start': !msg.isMine,
-        'bg-secondary align-self-end': msg.isMine,
-      }"
-    >
-      <!-- Voice message -->
-      <VoiceMessage
-        v-if="msg.messageType === 'audio/voice' && msg.attachment"
-        :attachment="msg.attachment"
-        :is-mine="msg.isMine"
-      />
-
-      <!-- Text message -->
-      <div
-        v-else
-        class="message-text"
-      >
-        <span v-html="renderMessage(msg.content)" />
-      </div>
-    </div>
+      :message="msg"
+      class="mb-2 me-2 animate__animated animate__zoomIn"
+    />
   </div>
 </template>
-
-<style lang="scss" scoped>
-.message {
-  max-width: 60%;
-  border-radius: 15px;
-  word-break: break-word;
-  padding: 0.25rem 0.5rem;
-  font-size: 0.9rem;
-  color: white;
-}
-
-.message-text p {
-  margin: 0 0 0 1rem;
-}
-
-.message-text :deep(a) {
-  color: inherit;
-  text-decoration: underline;
-}
-</style>

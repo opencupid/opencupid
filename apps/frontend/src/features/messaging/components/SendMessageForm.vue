@@ -20,6 +20,7 @@ import { useMessageStore } from '../stores/messageStore'
 const toast = useToast()
 
 const messageStore = useMessageStore()
+messageStore.error = null
 
 const props = withDefaults(
   defineProps<{

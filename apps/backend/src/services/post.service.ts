@@ -1,5 +1,6 @@
 import { PrismaClient, PostType, Prisma } from '@prisma/client'
 import type { CreatePostPayload, UpdatePostPayload } from '@zod/post/post.dto'
+import { conversationContextInclude } from '@/db/includes/profileIncludes'
 
 const postedByInclude = {
   include: {
@@ -10,6 +11,17 @@ const postedByInclude = {
     },
   },
 }
+
+const postedByWithConversationInclude = (viewerProfileId: string) => ({
+  include: {
+    postedBy: {
+      include: {
+        profileImages: true,
+        ...conversationContextInclude(viewerProfileId),
+      },
+    },
+  },
+})
 
 export class PostService {
   private static instance: PostService
@@ -45,13 +57,17 @@ export class PostService {
   }
 
   async findById(id: string, viewerProfileId?: string) {
+    const include = viewerProfileId
+      ? postedByWithConversationInclude(viewerProfileId)
+      : postedByInclude
+
     const post = await this.prisma.post.findFirst({
       where: {
         id,
         isDeleted: false,
         ...(viewerProfileId ? {} : { isVisible: true }),
       },
-      ...postedByInclude,
+      ...include,
     })
 
     // If viewer is not the owner, only return visible posts

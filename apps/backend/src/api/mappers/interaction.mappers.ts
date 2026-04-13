@@ -1,5 +1,6 @@
 import {
   type InteractionContext,
+  type ConversationContext,
   type DatingContext,
   DatingContextSchema,
 } from '@zod/interaction/interactionContext.dto'
@@ -34,10 +35,9 @@ function mapDatingContext(profile: DbProfileWithContext): DatingContext {
   }
 }
 
-export function mapInteractionContext(
-  profile: DbProfileWithContext,
-  includeDatingContext: boolean
-): InteractionContext {
+export function mapConversationContext(
+  profile: Pick<DbProfileWithContext, 'id' | 'conversationParticipants'>
+): ConversationContext {
   const participant = profile.conversationParticipants?.[0]
   const conversation = participant?.conversation
   const initiated =
@@ -53,8 +53,17 @@ export function mapInteractionContext(
   return {
     haveConversation: !!conversation && !initiated,
     canMessage,
-    conversationId: canMessage ? (conversation?.id ?? null) : null,
+    conversationId: canMessage || initiated ? (conversation?.id ?? null) : null,
     initiated,
+  }
+}
+
+export function mapInteractionContext(
+  profile: DbProfileWithContext,
+  includeDatingContext: boolean
+): InteractionContext {
+  return {
+    ...mapConversationContext(profile),
     ...(includeDatingContext ? mapDatingContext(profile) : DatingContextSchema.parse({})),
   }
 }
