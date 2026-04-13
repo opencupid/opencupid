@@ -1,13 +1,12 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
-
 import { type InteractionEdgePair } from '@zod/interaction/interaction.dto'
 import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
 
 import ProfileImage from '@/features/images/components/ProfileImage.vue'
-import SendMessageForm from '@/features/messaging/components/SendMessageForm.vue'
+import ContactFormPanel from '@/features/messaging/components/ContactFormPanel.vue'
+import { ref } from 'vue'
 
-const props = defineProps<{
+defineProps<{
   profile: PublicProfileWithContext
   match: InteractionEdgePair
   show: boolean
@@ -17,13 +16,17 @@ const emit = defineEmits<{
   (e: 'close'): void
   (e: 'messaged'): void
 }>()
-const messageSent = ref(false)
-const handleMessageSent = () => {
-  messageSent.value = true
-  setTimeout(() => {
-    emit('messaged')
-    emit('close')
-  }, 3000)
+
+const isMessageSent = ref(false)
+
+const handleSent = () => {
+  isMessageSent.value = false
+  emit('messaged')
+  emit('close')
+}
+
+const handleSubmitted = () => {
+  isMessageSent.value = true
 }
 </script>
 
@@ -37,11 +40,11 @@ const handleMessageSent = () => {
     :no-close-on-backdrop="true"
     :no-footer="true"
     :no-header="true"
+    :lazy="true"
     initial-animation
-    content-class="bg-dating"
+    :content-class="['match-popup-content', { sent: isMessageSent }]"
     body-class="d-flex flex-row align-items-center justify-content-center overflow-hidden p-0"
     :keyboard="false"
-    @hidden="messageSent = false"
   >
     <div class="w-100 p-5">
       <h6 class="display-6 text-center mb-4">
@@ -67,39 +70,30 @@ const handleMessageSent = () => {
         v-if="profile.interactionContext.canMessage"
         class="text-center"
       >
-        <div v-if="!messageSent">
-          <h6 class="text-center mb-3">
-            <!-- send {them} a messages -->
-            {{ $t('interactions.send_them_a_message', { name: profile.publicName }) }}
-          </h6>
-          <SendMessageForm
-            ref="messageInput"
-            :recipientProfile="profile"
-            :conversationId="null"
-            @message:sent="handleMessageSent"
-          />
-          <BButton
-            variant="secondary"
-            size="sm"
-            @click="emit('close')"
-          >
-            <!-- Maybe later -->
-            {{ $t('interactions.cancel_button') }}
-          </BButton>
-        </div>
-        <div
-          v-else
-          class="text-center"
+        <h6 class="text-center mb-3">
+          <!-- send {them} a messages -->
+          {{ $t('interactions.send_them_a_message', { name: profile.publicName }) }}
+        </h6>
+        <ContactFormPanel
+          :recipient-profile="profile"
+          @sent="handleSent"
+          @submitted="handleSubmitted"
+        />
+        <BButton
+          variant="secondary"
+          size="sm"
+          @click="emit('close')"
+          v-if="!isMessageSent"
         >
-          <!-- Nice -->
-          {{ $t('interactions.message_confirmation') }}
-        </div>
+          <!-- Maybe later -->
+          {{ $t('interactions.cancel_button') }}
+        </BButton>
       </div>
     </div>
   </BModal>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .image-wrapper {
   width: 5rem;
   height: 5rem;
@@ -111,4 +105,20 @@ const handleMessageSent = () => {
   margin-left: -1.5rem;
   margin-right: 0;
 }
+</style>
+
+<!--
+  Unscoped: BModal teleports content-class target to <body>, so a scoped
+  selector (or :deep()) cannot reach it. --bs-dating-light is emitted at
+  :root by Bootstrap's _root.scss from $dating-light in theme.scss.
+-->
+<style lang="scss">
+.match-popup-content {
+  background-color: var(--bs-dating-light);
+  transition: background-color 300ms ease-in-out;
+}
+.match-popup-content.sent {
+  background-color: white;
+}
+
 </style>
