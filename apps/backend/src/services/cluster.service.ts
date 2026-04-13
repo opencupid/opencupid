@@ -1,22 +1,29 @@
 import Supercluster from 'supercluster'
 import type { Feature, Point } from 'geojson'
+import type { PrismaClient } from '@prisma/client'
 import { ProfileMatchService } from './profileMatch.service'
+import { PostService } from './post.service'
 import { ImageService } from './image.service'
 import type { ClusterFeature, PointFeature, MapFeature } from '@shared/zod/map/cluster.dto'
+import type { TagWithTranslations } from '@shared/zod/tag/tag.db'
 import { MAP_MAX_ZOOM } from '@shared/maps'
 const CLUSTER_RADIUS = 40
 const INDEX_TTL_MS = 30 * 60 * 1000 // 30 minutes
 const INDEX_MAX_SIZE = 200
 
 interface PointProperties {
+  kind: 'profile' | 'post'
   id: string
   publicName: string
   image: { blurhash?: string | null; url?: string } | null
   highlighted: boolean
+  postContent?: string
+  postType?: string
 }
 
 interface CachedIndex {
   index: Supercluster<PointProperties, Supercluster.AnyProps>
+  tags: TagWithTranslations[]
   updatedAt: Date
 }
 
@@ -34,24 +41,32 @@ export class ClusterService {
   private indexes = new Map<string, CachedIndex>()
   private static instance: ClusterService
 
-  static getInstance(): ClusterService {
+  private constructor(private readonly prisma: PrismaClient) {}
+
+  static getInstance(prisma?: PrismaClient): ClusterService {
     if (!ClusterService.instance) {
-      ClusterService.instance = new ClusterService()
+      if (!prisma) {
+        throw new Error('ClusterService requires PrismaClient on first instantiation')
+      }
+      ClusterService.instance = new ClusterService(prisma)
     }
     return ClusterService.instance
   }
 
   async buildIndex(profileId: string, tagIds: string[] = []): Promise<void> {
     const profileMatchService = ProfileMatchService.getInstance()
+    const postService = PostService.getInstance(this.prisma)
 
-    const [profiles, matchIds] = await Promise.all([
+    const [profiles, matchIds, posts] = await Promise.all([
       profileMatchService.findSocialProfilesWithLocation(profileId, tagIds),
       profileMatchService.findMutualMatchIds(profileId),
+      postService.findAllWithLocation(profileId),
     ])
 
     const matchSet = new Set(matchIds)
+    const imageService = ImageService.getInstance()
 
-    const features: Feature<Point, PointProperties>[] = profiles
+    const profileFeatures: Feature<Point, PointProperties>[] = profiles
       .filter((p) => p.lat != null && p.lon != null)
       .map((p) => ({
         type: 'Feature' as const,
@@ -60,19 +75,55 @@ export class ClusterService {
           coordinates: [p.lon!, p.lat!],
         },
         properties: {
+          kind: 'profile' as const,
           id: p.id,
           publicName: p.publicName ?? '',
           image: p.profileImages?.[0]
             ? {
                 blurhash: p.profileImages[0].blurhash ?? null,
-                url: ImageService.getInstance()
-                  .getImageUrls(p.profileImages[0])
-                  .find((v) => v.size === 'thumb')?.url,
+                url: imageService.getImageUrls(p.profileImages[0]).find((v) => v.size === 'thumb')
+                  ?.url,
               }
             : null,
           highlighted: matchSet.has(p.id),
         },
       }))
+
+    const postFeatures: Feature<Point, PointProperties>[] = posts
+      .filter((p) => p.lat != null && p.lon != null)
+      .map((p) => ({
+        type: 'Feature' as const,
+        geometry: {
+          type: 'Point' as const,
+          coordinates: [p.lon!, p.lat!],
+        },
+        properties: {
+          kind: 'post' as const,
+          id: p.id,
+          publicName: p.postedBy?.publicName ?? '',
+          image: p.postedBy?.profileImages?.[0]
+            ? {
+                blurhash: p.postedBy.profileImages[0].blurhash ?? null,
+                url: imageService
+                  .getImageUrls(p.postedBy.profileImages[0])
+                  .find((v) => v.size === 'thumb')?.url,
+              }
+            : null,
+          highlighted: false,
+          postContent: p.content?.substring(0, 50),
+          postType: p.type,
+        },
+      }))
+
+    // Collect unique tags from profiles (raw, translated at request time)
+    const tagMap = new Map<string, TagWithTranslations>()
+    for (const profile of profiles) {
+      for (const tag of profile.tags ?? []) {
+        if (!tagMap.has(tag.id)) {
+          tagMap.set(tag.id, tag as TagWithTranslations)
+        }
+      }
+    }
 
     const index = new Supercluster<PointProperties, Supercluster.AnyProps>({
       radius: CLUSTER_RADIUS,
@@ -80,8 +131,12 @@ export class ClusterService {
       minPoints: 2,
     })
 
-    index.load(features)
-    this.indexes.set(buildCacheKey(profileId, tagIds), { index, updatedAt: new Date() })
+    index.load([...profileFeatures, ...postFeatures])
+    this.indexes.set(buildCacheKey(profileId, tagIds), {
+      index,
+      tags: Array.from(tagMap.values()),
+      updatedAt: new Date(),
+    })
   }
 
   getClusters(
@@ -89,13 +144,16 @@ export class ClusterService {
     bbox: [number, number, number, number],
     zoom: number,
     tagIds: string[] = []
-  ): MapFeature[] {
+  ): { features: MapFeature[]; tags: TagWithTranslations[] } {
     const key = buildCacheKey(profileId, tagIds)
     const cached = this.indexes.get(key)
-    if (!cached) return []
+    if (!cached) return { features: [], tags: [] }
 
     const raw = cached.index.getClusters(bbox, Math.round(zoom))
-    return raw.map((f) => this.mapFeature(f, key))
+    return {
+      features: raw.map((f) => this.mapFeature(f, key)),
+      tags: cached.tags,
+    }
   }
 
   async getOrBuildClusters(
@@ -103,7 +161,7 @@ export class ClusterService {
     bbox: [number, number, number, number],
     zoom: number,
     tagIds: string[] = []
-  ): Promise<MapFeature[]> {
+  ): Promise<{ features: MapFeature[]; tags: TagWithTranslations[] }> {
     this.pruneIndexes()
     const key = buildCacheKey(profileId, tagIds)
     if (!this.indexes.has(key)) {
@@ -125,12 +183,16 @@ export class ClusterService {
     const leaves = cached.index.getLeaves(clusterId, Infinity, 0)
     return leaves.map((f) => ({
       type: 'point' as const,
+      kind: f.properties.kind,
       id: f.properties.id,
       lat: f.geometry.coordinates[1],
       lon: f.geometry.coordinates[0],
       publicName: f.properties.publicName,
       image: f.properties.image,
       highlighted: f.properties.highlighted,
+      ...(f.properties.kind === 'post'
+        ? { postContent: f.properties.postContent, postType: f.properties.postType }
+        : {}),
     }))
   }
 
@@ -198,12 +260,16 @@ export class ClusterService {
     const props = f.properties as PointProperties
     return {
       type: 'point',
+      kind: props.kind,
       id: props.id,
       lat: f.geometry.coordinates[1],
       lon: f.geometry.coordinates[0],
       publicName: props.publicName,
       image: props.image,
       highlighted: props.highlighted,
+      ...(props.kind === 'post'
+        ? { postContent: props.postContent, postType: props.postType }
+        : {}),
     } satisfies PointFeature
   }
 }

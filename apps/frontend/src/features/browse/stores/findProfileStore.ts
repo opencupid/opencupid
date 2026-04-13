@@ -2,14 +2,8 @@ import { defineStore } from 'pinia'
 import { CanceledError } from 'axios'
 import { api, safeApiCall } from '@/lib/api'
 import type { PublicProfile } from '@zod/profile/profile.dto'
-import type {
-  BrowseBoundsResponse,
-  GetMatchIdsResponse,
-  GetPublicProfileResponse,
-} from '@zod/apiResponse.dto'
-import { PublicPostWithProfileSchema } from '@zod/post/post.dto'
+import type { GetMatchIdsResponse, GetPublicProfileResponse } from '@zod/apiResponse.dto'
 import type { PublicTag } from '@zod/tag/tag.dto'
-import type { MapPoi } from '@/features/map/types/map.types'
 import { ClusterMapResponseSchema, type MapFeature } from '@shared/zod/map/cluster.dto'
 import { storeSuccess, storeError, type StoreVoidSuccess, type StoreError } from '@/store/helpers'
 import { bus } from '@/lib/bus'
@@ -18,7 +12,6 @@ import type { MapBounds } from '@/features/map/types/map.types'
 import { boundsContain, padBounds } from '../utils/boundsUtils'
 
 let clusterAbortController: AbortController | null = null
-let postAbortController: AbortController | null = null
 let lastZoom = 7
 let cachedClusterZoom: number | null = null
 let cachedClusterBounds: MapBounds | null = null
@@ -69,9 +62,7 @@ type FindProfileStoreState = {
   matchedProfileIds: Set<string>
   lastMapBounds: MapBounds | null
   isLoading: boolean
-  postPois: MapPoi[]
   availableTags: PublicTag[]
-  isLoadingPosts: boolean
 }
 
 export const useFindProfileStore = defineStore('findProfile', {
@@ -80,9 +71,7 @@ export const useFindProfileStore = defineStore('findProfile', {
     matchedProfileIds: new Set<string>(),
     lastMapBounds: null,
     isLoading: false,
-    postPois: [] as MapPoi[],
     availableTags: [] as PublicTag[],
-    isLoadingPosts: false,
   }),
 
   actions: {
@@ -127,7 +116,9 @@ export const useFindProfileStore = defineStore('findProfile', {
           })
         )
 
-        this.clusterFeatures = ClusterMapResponseSchema.parse(res.data).features
+        const parsed = ClusterMapResponseSchema.parse(res.data)
+        this.clusterFeatures = parsed.features
+        this.availableTags = parsed.tags
         cachedClusterBounds = paddedBounds
         cachedClusterZoom = zoom
         cachedClusterTagSig = sig
@@ -146,59 +137,14 @@ export const useFindProfileStore = defineStore('findProfile', {
       }
     },
 
-    async fetchPostsAndTags(bounds: MapBounds): Promise<StoreVoidSuccess | StoreError> {
-      if (postAbortController) postAbortController.abort()
-      const controller = new AbortController()
-      postAbortController = controller
-
-      this.isLoadingPosts = true
-      try {
-        const res = await safeApiCall(() =>
-          api.get<BrowseBoundsResponse>('/browse/bounds', {
-            params: bounds,
-            signal: controller.signal,
-          })
-        )
-
-        if (!res.data.success) return storeError(new Error('Browse bounds request failed'))
-
-        // TODO: move post → MapPoi mapping to the backend (browse/bounds endpoint)
-        // so the frontend receives a uniform MapPoi[] shape, same as profiles.
-        const posts = PublicPostWithProfileSchema.array().parse(res.data.posts)
-        this.postPois = posts
-          .filter((p) => p.location?.lat != null && p.location?.lon != null)
-          .map((p) => ({
-            id: p.id,
-            title: p.content?.substring(0, 50) ?? '',
-            location: { lat: p.location!.lat!, lon: p.location!.lon! },
-            image: p.postedBy?.profileImages?.[0],
-            type: 'post',
-            source: p,
-          }))
-
-        this.availableTags = res.data.tags
-        return storeSuccess()
-      } catch (error: any) {
-        if (error instanceof CanceledError) return storeSuccess()
-        return storeError(error, 'Failed to fetch posts and tags')
-      } finally {
-        if (postAbortController === controller) {
-          this.isLoadingPosts = false
-        }
-      }
-    },
-
     /**
      * Unified bounds handler — deduplicates viewport, then fetches
-     * clusters and posts in parallel.
+     * clusters (including posts and tags) in a single request.
      */
     async fetchBounds(bounds: MapBounds, zoom: number): Promise<void> {
       if (sameViewport(this.lastMapBounds, lastZoom, bounds, zoom)) return
       lastZoom = zoom
-      await Promise.all([
-        this.findClustersForMapBounds(bounds, zoom),
-        this.fetchPostsAndTags(bounds),
-      ])
+      await this.findClustersForMapBounds(bounds, zoom)
     },
 
     async fetchProfileForPopup(profileId: string): Promise<PublicProfile | null> {
@@ -233,10 +179,7 @@ export const useFindProfileStore = defineStore('findProfile', {
     async refetchBounds(): Promise<void> {
       invalidateBoundsCache()
       if (this.lastMapBounds) {
-        await Promise.all([
-          this.findClustersForMapBounds(this.lastMapBounds, lastZoom),
-          this.fetchPostsAndTags(this.lastMapBounds),
-        ])
+        await this.findClustersForMapBounds(this.lastMapBounds, lastZoom)
       }
     },
 
@@ -245,18 +188,12 @@ export const useFindProfileStore = defineStore('findProfile', {
         clusterAbortController.abort()
         clusterAbortController = null
       }
-      if (postAbortController) {
-        postAbortController.abort()
-        postAbortController = null
-      }
       invalidateBoundsCache()
       this.clusterFeatures = []
       this.matchedProfileIds = new Set()
       this.lastMapBounds = null
       this.isLoading = false
-      this.postPois = []
       this.availableTags = []
-      this.isLoadingPosts = false
     },
   },
 })

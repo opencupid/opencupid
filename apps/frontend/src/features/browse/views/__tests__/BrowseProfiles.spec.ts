@@ -70,7 +70,6 @@ const vmState = {
   viewerProfile: ref<Record<string, any>>({ isSocialActive: true }),
   isNoOneAround: ref(false),
   isLoading: ref(false),
-  isLoadingPosts: ref(false),
   haveResults: ref(true),
   clusters: ref([]),
   allPois: ref([]),

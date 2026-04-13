@@ -24,88 +24,102 @@ describe('useBrowseViewModel', () => {
     vi.clearAllMocks()
   })
 
-  it('fetches posts and tags on bounds change', async () => {
-    mockGet.mockResolvedValue({
-      data: {
-        success: true,
-        profiles: [],
-        posts: [
-          {
-            id: 'clpost00000000000000001',
-            content: 'Cherry harvest',
-            type: 'OFFER',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            postedById: 'p1',
-            country: 'HU',
-            cityName: 'Bp',
-            lat: 47.1,
-            lon: 18.6,
-            location: { lat: 47.1, lon: 18.6, country: 'HU', cityName: 'Bp' },
-            postedBy: { id: 'p1', publicName: 'Mónika', profileImages: [] },
-          },
-        ],
-        tags: [{ id: 't1', name: 'Biokert', slug: 'biokert' }],
+  it('derives profile and post POIs from cluster features', () => {
+    const store = useFindProfileStore()
+    store.clusterFeatures = [
+      {
+        type: 'point',
+        kind: 'profile',
+        id: 'p1',
+        lat: 47.1,
+        lon: 18.6,
+        publicName: 'Alice',
+        image: null,
+        highlighted: false,
       },
-    })
+      {
+        type: 'point',
+        kind: 'post',
+        id: 'post1',
+        lat: 47.2,
+        lon: 18.7,
+        publicName: 'Bob',
+        image: null,
+        highlighted: false,
+        postContent: 'Cherry harvest',
+        postType: 'OFFER',
+      },
+      {
+        type: 'cluster',
+        id: 1,
+        lat: 47.3,
+        lon: 18.8,
+        count: 5,
+        expansionZoom: 8,
+      },
+    ]
 
     const vm = useBrowseViewModel()
-    const store = useFindProfileStore()
-    await store.fetchPostsAndTags(mockBounds)
 
-    expect(mockGet).toHaveBeenCalledWith(
-      '/browse/bounds',
-      expect.objectContaining({ params: mockBounds })
-    )
+    expect(vm.profilePois.value).toHaveLength(1)
+    expect(vm.profilePois.value[0]!.type).toBe('profile')
+    expect(vm.profilePois.value[0]!.id).toBe('p1')
+
     expect(vm.postPois.value).toHaveLength(1)
     expect(vm.postPois.value[0]!.type).toBe('post')
-    expect(vm.availableTags.value).toHaveLength(1)
+    expect(vm.postPois.value[0]!.title).toBe('Cherry harvest')
+
+    expect(vm.allPois.value).toHaveLength(2)
+    expect(vm.clusters.value).toHaveLength(1)
   })
 
-  it('filters out posts without location', async () => {
+  it('populates tags from cluster response', async () => {
+    const mockTags = [{ id: 'cltagabc000000000000001', name: 'Biokert', slug: 'biokert' }]
     mockGet.mockResolvedValue({
       data: {
         success: true,
-        profiles: [],
-        posts: [
+        features: [
           {
-            id: 'clpost00000000000000001',
-            content: 'Has loc',
-            type: 'OFFER',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            postedById: 'p1',
-            country: 'HU',
-            cityName: null,
-            lat: 47,
-            lon: 18,
-            location: { lat: 47, lon: 18, country: 'HU' },
-            postedBy: { id: 'p1', publicName: 'Test', profileImages: [] },
-          },
-          {
-            id: 'clpost00000000000000002',
-            content: 'No loc',
-            type: 'OFFER',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            postedById: 'p2',
-            country: null,
-            cityName: null,
-            lat: null,
-            lon: null,
-            location: null,
-            postedBy: { id: 'p2', publicName: 'Test2', profileImages: [] },
+            type: 'point',
+            kind: 'post',
+            id: 'post1',
+            lat: 47.1,
+            lon: 18.6,
+            publicName: 'Author',
+            image: null,
+            highlighted: false,
+            postContent: 'Has loc',
+            postType: 'OFFER',
           },
         ],
-        tags: [],
+        tags: mockTags,
       },
     })
 
     const store = useFindProfileStore()
-    await store.fetchPostsAndTags(mockBounds)
+    await store.findClustersForMapBounds(mockBounds, 10)
 
     const vm = useBrowseViewModel()
-    expect(vm.postPois.value).toHaveLength(1)
-    expect(vm.postPois.value[0]!.id).toBe('clpost00000000000000001')
+    expect(vm.availableTags.value).toHaveLength(1)
+    expect(vm.availableTags.value[0]!.name).toBe('Biokert')
+  })
+
+  it('excludes cluster features from POI lists', () => {
+    const store = useFindProfileStore()
+    store.clusterFeatures = [
+      {
+        type: 'cluster',
+        id: 1,
+        lat: 47.5,
+        lon: 19.0,
+        count: 10,
+        expansionZoom: 6,
+      },
+    ]
+
+    const vm = useBrowseViewModel()
+    expect(vm.profilePois.value).toHaveLength(0)
+    expect(vm.postPois.value).toHaveLength(0)
+    expect(vm.allPois.value).toHaveLength(0)
   })
 })

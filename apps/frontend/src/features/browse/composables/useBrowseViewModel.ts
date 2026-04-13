@@ -6,15 +6,15 @@ import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 
 /**
- * View-model for the browse map. Reads cluster + post data from
- * findProfileStore, maps DTOs to map-layer types, and provides
- * unified bounds handling and selection state.
+ * View-model for the browse map. Reads cluster data from findProfileStore,
+ * maps DTOs to map-layer types, and provides unified bounds handling and
+ * selection state. Both profile and post POIs derive from the cluster
+ * features — a single data source for the entire map.
  */
 export function useBrowseViewModel() {
   const findProfileStore = useFindProfileStore()
   const ownerStore = useOwnerProfileStore()
-  const { clusterFeatures, postPois, availableTags, isLoadingPosts, isLoading } =
-    storeToRefs(findProfileStore)
+  const { clusterFeatures, availableTags, isLoading } = storeToRefs(findProfileStore)
 
   const viewerProfile = computed(() => ownerStore.profile)
 
@@ -30,11 +30,9 @@ export function useBrowseViewModel() {
       }))
   )
 
-  // TODO type wrangling - what type are we converting into?
-  // this belongs to the pinia store, or better yet, into the backend
   const profilePois = computed<MapPoi[]>(() =>
     clusterFeatures.value
-      .filter((f): f is PointFeature => f.type === 'point')
+      .filter((f): f is PointFeature => f.type === 'point' && f.kind === 'profile')
       .map((p) => ({
         id: p.id,
         title: p.publicName,
@@ -44,6 +42,21 @@ export function useBrowseViewModel() {
           : undefined,
         highlighted: p.highlighted,
         type: 'profile',
+        source: p,
+      }))
+  )
+
+  const postPois = computed<MapPoi[]>(() =>
+    clusterFeatures.value
+      .filter((f): f is PointFeature => f.type === 'point' && f.kind === 'post')
+      .map((p) => ({
+        id: p.id,
+        title: p.postContent ?? '',
+        location: { lat: p.lat, lon: p.lon },
+        image: p.image?.url
+          ? { blurhash: p.image.blurhash, variants: [{ size: 'thumb', url: p.image.url }] }
+          : undefined,
+        type: 'post',
         source: p,
       }))
   )
@@ -59,6 +72,7 @@ export function useBrowseViewModel() {
     return (
       features.length === 1 &&
       first?.type === 'point' &&
+      first.kind === 'profile' &&
       first.id === viewerProfile.value?.id
     )
   })
@@ -75,8 +89,11 @@ export function useBrowseViewModel() {
     await findProfileStore.fetchBounds(bounds, zoom)
   }
 
-  const fetchPopupData = (id: string | number) =>
-    findProfileStore.fetchProfileForPopup(String(id))
+  const fetchPopupData = (id: string | number) => {
+    const poi = allPois.value.find((p) => p.id === id)
+    if (poi?.type === 'post') return Promise.resolve(null)
+    return findProfileStore.fetchProfileForPopup(String(id))
+  }
 
   return {
     viewerProfile,
@@ -86,7 +103,6 @@ export function useBrowseViewModel() {
     allPois,
     availableTags,
     isLoading,
-    isLoadingPosts,
     haveResults,
     isNoOneAround,
     activePoi,

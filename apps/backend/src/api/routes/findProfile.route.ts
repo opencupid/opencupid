@@ -16,6 +16,7 @@ import type { SocialMatchFilterDTO } from '@zod/match/filters.dto'
 
 import { MAP_MAX_ZOOM } from '@shared/maps'
 import { mapProfileToPublic } from '../mappers/profile.mappers'
+import { mapProfileTagsTranslated } from '../mappers/tag.mappers'
 
 // Pagination query schema for infinite scrolling
 const PaginationQuerySchema = z.object({
@@ -68,11 +69,7 @@ function parseTagIds(raw: unknown): string[] | null {
 const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
   // instantiate services
   const profileMatchService = ProfileMatchService.getInstance()
-  const clusterService = ClusterService.getInstance()
-
-  const BoundsWithTagsQuerySchema = BoundsQuerySchema.extend({
-    tagIds: z.string().optional(),
-  })
+  const clusterService = ClusterService.getInstance(fastify.prisma)
 
   const ClusterQuerySchema = BoundsQuerySchema.extend({
     zoom: z.coerce.number().int().min(0).max(MAP_MAX_ZOOM),
@@ -85,52 +82,14 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   /**
-   * GET /social/map/bounds
-   * Returns social profiles strictly within the given geographic bounding box,
-   * optionally filtered by a comma-separated list of tag IDs.
-   * @query {number} south - Required south latitude
-   * @query {number} north - Required north latitude
-   * @query {number} west - Required west longitude
-   * @query {number} east - Required east longitude
-   * @query {string} [tagIds] - Optional comma-separated tag IDs
-   * @returns {GetProfilesResponse}
+   * @deprecated GET /social/map/bounds — replaced by /social/map/clusters.
+   * Returns a static empty response. Kept for stale client compatibility only.
+   * TODO(cleanup): remove once all clients have been updated and dashboards
+   * confirm no traffic is hitting this path.
    */
-  fastify.get('/social/map/bounds', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-    if (!req.session.profile.isSocialActive) {
-      return sendForbiddenError(reply)
-    }
-
-    const parsed = BoundsWithTagsQuerySchema.safeParse(req.query)
-    if (!parsed.success) {
-      return sendError(
-        reply,
-        400,
-        'Missing or invalid bounds parameters (south, north, west, east)'
-      )
-    }
-
-    const myProfileId = req.session.profileId
-    const locale = req.session.lang
-    const { tagIds: rawTagIds, ...bounds } = parsed.data
-    const tagIds = parseTagIds(rawTagIds)
-    if (tagIds === null) {
-      return sendError(reply, 400, `Invalid tagIds (max ${MAX_TAG_IDS}, alphanumeric only)`)
-    }
-
-    try {
-      const profiles = await profileMatchService.findSocialProfilesInBounds(
-        myProfileId,
-        bounds,
-        tagIds,
-        [{ updatedAt: 'desc' }]
-      )
-      const mappedProfiles = profiles.map((p) => mapProfileToPublic(p, false, locale))
-      const response: GetProfilesResponse = { success: true, profiles: mappedProfiles }
-      return reply.code(200).send(response)
-    } catch (err) {
-      req.log.error(err)
-      return sendError(reply, 500, 'Failed to fetch bounded map profiles')
-    }
+  fastify.get('/social/map/bounds', { onRequest: [fastify.authenticate] }, async (_req, reply) => {
+    const response: GetProfilesResponse = { success: true, profiles: [] }
+    return reply.code(200).send(response)
   })
 
   /**
@@ -143,7 +102,7 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
    * @query {number} east - Bounding box east longitude
    * @query {number} zoom - Map zoom level (0–12)
    * @query {string} [tagIds] - Optional comma-separated tag IDs
-   * @returns {{ success: true, features: MapFeature[] }}
+   * @returns {{ success: true, features: MapFeature[], tags: PublicTag[] }}
    */
   fastify.get('/social/map/clusters', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     if (!req.session.profile.isSocialActive) {
@@ -163,13 +122,14 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     try {
-      const features = await clusterService.getOrBuildClusters(
+      const { features, tags: rawTags } = await clusterService.getOrBuildClusters(
         req.session.profileId,
         bbox,
         zoom,
         tagIds
       )
-      return reply.code(200).send({ success: true, features })
+      const tags = mapProfileTagsTranslated(rawTags, req.session.lang)
+      return reply.code(200).send({ success: true, features, tags })
     } catch (err) {
       req.log.error(err)
       return sendError(reply, 500, 'Failed to fetch clusters')

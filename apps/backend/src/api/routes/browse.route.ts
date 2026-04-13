@@ -1,38 +1,25 @@
 import { FastifyPluginAsync } from 'fastify'
-import { sendError } from '../helpers'
-import { BrowseService } from '@/services/browse.service'
-import { BoundsQuerySchema } from '@zod/dto/bounds.dto'
 import type { BrowseBoundsResponse } from '@zod/apiResponse.dto'
 
+// ────────────────────────────────────────────────────────────────────
+// DEPRECATED SHIM — /browse/bounds retired
+// ────────────────────────────────────────────────────────────────────
+// Browse map data is now served by the unified cluster endpoint at
+// GET /find/social/map/clusters (which returns features + tags).
+// This endpoint is kept solely so stale frontends do not break.
+//
+// TODO(cleanup): remove this route and the BrowseBoundsResponse type
+// once all clients have been updated and dashboards confirm no traffic.
+// ────────────────────────────────────────────────────────────────────
+
 const browseRoutes: FastifyPluginAsync = async (fastify) => {
-  const browseService = BrowseService.getInstance(fastify.prisma)
-
   /**
-   * GET /bounds
-   * Returns profiles, posts, and available tags within a geographic bounding box.
-   * Tags are derived from profile results only.
+   * @deprecated GET /bounds — replaced by GET /find/social/map/clusters.
+   * Returns a static empty response. Kept for stale client compatibility only.
    */
-  fastify.get('/bounds', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-    const parsed = BoundsQuerySchema.safeParse(req.query)
-    if (!parsed.success) {
-      return sendError(
-        reply,
-        400,
-        'Missing or invalid bounds parameters (south, north, west, east)'
-      )
-    }
-
-    const viewerProfileId = req.session.profileId
-    const locale = req.session.lang
-
-    try {
-      const result = await browseService.findInBounds(viewerProfileId, parsed.data, locale)
-      const response: BrowseBoundsResponse = { success: true, ...result }
-      return reply.code(200).send(response)
-    } catch (err) {
-      req.log.error(err)
-      return sendError(reply, 500, 'Failed to fetch browse data')
-    }
+  fastify.get('/bounds', { onRequest: [fastify.authenticate] }, async (_req, reply) => {
+    const response: BrowseBoundsResponse = { success: true, profiles: [], posts: [], tags: [] }
+    return reply.code(200).send(response)
   })
 }
 

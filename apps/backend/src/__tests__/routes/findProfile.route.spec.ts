@@ -1,13 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-const mockFindSocialProfilesInBounds = vi.fn()
 const mockFindMutualMatchIds = vi.fn()
 const mockFindNewProfilesAnywhere = vi.fn()
 
 vi.mock('@/services/profileMatch.service', () => ({
   ProfileMatchService: {
     getInstance: () => ({
-      findSocialProfilesInBounds: mockFindSocialProfilesInBounds,
+      findSocialProfilesInBounds: vi.fn(),
       findMutualMatchIds: mockFindMutualMatchIds,
       findNewProfilesAnywhere: mockFindNewProfilesAnywhere,
     }),
@@ -17,7 +16,7 @@ vi.mock('@/services/profileMatch.service', () => ({
 vi.mock('@/services/cluster.service', () => ({
   ClusterService: {
     getInstance: () => ({
-      getOrBuildClusters: vi.fn(),
+      getOrBuildClusters: vi.fn().mockResolvedValue({ features: [], tags: [] }),
       getLeaves: vi.fn(),
     }),
   },
@@ -45,6 +44,12 @@ vi.mock('../../api/mappers/profile.mappers', () => ({
   })),
 }))
 
+vi.mock('../../api/mappers/tag.mappers', () => ({
+  mapProfileTagsTranslated: vi.fn((tags: any[]) =>
+    tags.map((t: any) => ({ id: t.id, name: t.name, slug: t.slug }))
+  ),
+}))
+
 import findProfileRoutes from '../../api/routes/findProfile.route'
 import { MockFastify, MockReply } from '../../test-utils/fastify'
 
@@ -67,164 +72,17 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
-describe('GET /social/map/bounds', () => {
+// ────────────────────────────────────────────────────────────────────
+// Deprecated shim — /social/map/bounds replaced by /social/map/clusters
+// ────────────────────────────────────────────────────────────────────
+describe('GET /social/map/bounds (deprecated shim)', () => {
   const handler = () => fastify.routes['GET /social/map/bounds']
 
-  it('returns profiles within bounds', async () => {
-    const mockProfiles = [
-      {
-        id: 'p1',
-        publicName: 'Alice',
-        lat: 47.5,
-        lon: 19.0,
-        country: 'HU',
-        cityName: 'Budapest',
-        profileImages: [],
-        tags: [],
-      },
-    ]
-    mockFindSocialProfilesInBounds.mockResolvedValue(mockProfiles)
-
-    await handler()(
-      {
-        session: mockSession,
-        query: { south: '45.0', north: '48.0', west: '16.0', east: '23.0' },
-        log: { error: vi.fn() },
-      },
-      reply
-    )
+  it('returns a static empty profiles array', async () => {
+    await handler()({ session: mockSession }, reply)
 
     expect(reply.statusCode).toBe(200)
-    expect(reply.payload.success).toBe(true)
-    expect(reply.payload.profiles).toHaveLength(1)
-    expect(mockFindSocialProfilesInBounds).toHaveBeenCalledWith(
-      'profile-123',
-      { south: 45.0, north: 48.0, west: 16.0, east: 23.0 },
-      [],
-      [{ updatedAt: 'desc' }]
-    )
-  })
-
-  it('parses comma-separated tagIds and forwards them to the service', async () => {
-    mockFindSocialProfilesInBounds.mockResolvedValue([])
-
-    await handler()(
-      {
-        session: mockSession,
-        query: {
-          south: '45.0',
-          north: '48.0',
-          west: '16.0',
-          east: '23.0',
-          tagIds: 'cabcdef01,cabcdef02,cabcdef03',
-        },
-        log: { error: vi.fn() },
-      },
-      reply
-    )
-
-    expect(reply.statusCode).toBe(200)
-    expect(mockFindSocialProfilesInBounds).toHaveBeenCalledWith(
-      'profile-123',
-      { south: 45.0, north: 48.0, west: 16.0, east: 23.0 },
-      ['cabcdef01', 'cabcdef02', 'cabcdef03'],
-      [{ updatedAt: 'desc' }]
-    )
-  })
-
-  it('treats an empty tagIds string as no filter', async () => {
-    mockFindSocialProfilesInBounds.mockResolvedValue([])
-
-    await handler()(
-      {
-        session: mockSession,
-        query: { south: '45.0', north: '48.0', west: '16.0', east: '23.0', tagIds: '' },
-        log: { error: vi.fn() },
-      },
-      reply
-    )
-
-    expect(mockFindSocialProfilesInBounds).toHaveBeenCalledWith(
-      'profile-123',
-      expect.any(Object),
-      [],
-      expect.any(Array)
-    )
-  })
-
-  it('returns 400 when more than 5 tagIds are supplied', async () => {
-    await handler()(
-      {
-        session: mockSession,
-        query: {
-          south: '45.0',
-          north: '48.0',
-          west: '16.0',
-          east: '23.0',
-          tagIds: 'cabcdef01,cabcdef02,cabcdef03,cabcdef04,cabcdef05,cabcdef06',
-        },
-        log: { error: vi.fn() },
-      },
-      reply
-    )
-
-    expect(reply.statusCode).toBe(400)
-    expect(mockFindSocialProfilesInBounds).not.toHaveBeenCalled()
-  })
-
-  it('returns 400 when a tagId fails the shape check', async () => {
-    await handler()(
-      {
-        session: mockSession,
-        query: {
-          south: '45.0',
-          north: '48.0',
-          west: '16.0',
-          east: '23.0',
-          tagIds: "valid12345,'; DROP TABLE profile; --",
-        },
-        log: { error: vi.fn() },
-      },
-      reply
-    )
-
-    expect(reply.statusCode).toBe(400)
-    expect(mockFindSocialProfilesInBounds).not.toHaveBeenCalled()
-  })
-
-  it('returns 400 when bounds params are missing', async () => {
-    await handler()({ session: mockSession, query: {}, log: { error: vi.fn() } }, reply)
-
-    expect(reply.statusCode).toBe(400)
-    expect(mockFindSocialProfilesInBounds).not.toHaveBeenCalled()
-  })
-
-  it('returns 403 when social is not active', async () => {
-    await handler()(
-      {
-        session: { ...mockSession, profile: { ...mockSession.profile, isSocialActive: false } },
-        query: { south: '45.0', north: '48.0', west: '16.0', east: '23.0' },
-      },
-      reply
-    )
-
-    expect(reply.statusCode).toBe(403)
-    expect(mockFindSocialProfilesInBounds).not.toHaveBeenCalled()
-  })
-
-  it('returns 500 on service error', async () => {
-    mockFindSocialProfilesInBounds.mockRejectedValue(new Error('DB error'))
-
-    await handler()(
-      {
-        session: mockSession,
-        query: { south: '45.0', north: '48.0', west: '16.0', east: '23.0' },
-        log: { error: vi.fn() },
-      },
-      reply
-    )
-
-    expect(reply.statusCode).toBe(500)
+    expect(reply.payload).toEqual({ success: true, profiles: [] })
   })
 })
 
