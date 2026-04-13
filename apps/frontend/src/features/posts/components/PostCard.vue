@@ -177,7 +177,7 @@ const handleContact = async () => {
 
     <div
       v-if="showMessageForm"
-      class="mt-2 px-1"
+      class="mt-2 px-2"
     >
       <ContactFormPanel
         ref="messageInput"
