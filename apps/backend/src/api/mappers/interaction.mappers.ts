@@ -40,15 +40,18 @@ export function mapConversationContext(
 ): ConversationContext {
   const participant = profile.conversationParticipants?.[0]
   const conversation = participant?.conversation
-  const initiated =
-    !!conversation &&
-    conversation.status === 'INITIATED' &&
-    conversation.initiatorProfileId !== profile.id
+
+  // Did the viewer start this conversation? (profile.id is the target,
+  // so initiator !== target means the viewer initiated.)
+  const iStarted = !!conversation && conversation.initiatorProfileId !== profile.id
+
+  // Is the conversation still waiting for the target's first reply?
+  const initiated = iStarted && conversation!.status === 'INITIATED'
 
   const canMessage =
     !conversation || // no conversation exists
-    (initiated && conversation.status === 'ACCEPTED') || // i initiated and they accepted
-    (!initiated && conversation.status !== 'BLOCKED') // they initiated and i didn't block them
+    (iStarted && conversation!.status === 'ACCEPTED') || // i initiated and they accepted
+    (!iStarted && conversation!.status !== 'BLOCKED') // they initiated and i didn't block them
 
   return {
     haveConversation: !!conversation && !initiated,
