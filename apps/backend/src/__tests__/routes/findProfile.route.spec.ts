@@ -6,7 +6,6 @@ const mockFindNewProfilesAnywhere = vi.fn()
 vi.mock('@/services/profileMatch.service', () => ({
   ProfileMatchService: {
     getInstance: () => ({
-      findSocialProfilesInBounds: vi.fn(),
       findMutualMatchIds: mockFindMutualMatchIds,
       findNewProfilesAnywhere: mockFindNewProfilesAnywhere,
     }),

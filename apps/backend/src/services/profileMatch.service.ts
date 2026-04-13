@@ -59,36 +59,6 @@ export class ProfileMatchService {
     return ProfileMatchService.instance
   }
 
-  async findSocialProfilesInBounds(
-    profileId: string,
-    bounds: { south: number; north: number; west: number; east: number },
-    tagIds: string[] = [],
-    orderBy: OrderBy = defaultOrderBy
-  ): Promise<DbProfileWithImages[]> {
-    const tagFilter = tagIds.length ? { tags: { some: { id: { in: tagIds } } } } : {}
-    const boundsFilter = {
-      lat: { not: null, gte: bounds.south, lte: bounds.north },
-      lon: { not: null, gte: bounds.west, lte: bounds.east },
-    }
-
-    return await prisma.profile.findMany({
-      where: {
-        ...statusFlags,
-        isSocialActive: true,
-        id: { not: profileId },
-        ...tagFilter,
-        ...boundsFilter,
-        ...blocklistWhereClause(profileId),
-      },
-      include: {
-        ...tagsInclude(),
-        ...profileImageInclude(),
-      },
-      take: 500,
-      orderBy,
-    })
-  }
-
   /**
    * Fetches all social profiles with a location, optionally filtered by tagIds.
    * Used by ClusterService.buildIndex to seed the supercluster index.
