@@ -69,7 +69,7 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
     const viewerProfileId = req.session.profileId
 
     try {
-      const raw = await postService.findById(id, viewerProfileId)
+      const raw = await postService.findByIdWithContext(id, viewerProfileId)
       if (!raw) {
         return sendError(reply, 404, 'Post not found')
       }

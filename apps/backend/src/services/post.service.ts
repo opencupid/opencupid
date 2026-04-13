@@ -10,18 +10,23 @@ const postedByInclude = {
       },
     },
   },
-}
+} satisfies Prisma.PostFindFirstArgs
 
-const postedByWithConversationInclude = (viewerProfileId: string) => ({
-  include: {
-    postedBy: {
-      include: {
-        profileImages: true,
-        ...conversationContextInclude(viewerProfileId),
+const postedByWithConversationInclude = (viewerProfileId: string) =>
+  ({
+    include: {
+      postedBy: {
+        include: {
+          profileImages: true,
+          ...conversationContextInclude(viewerProfileId),
+        },
       },
     },
-  },
-})
+  }) satisfies Prisma.PostFindFirstArgs
+
+export type PostWithProfileAndContext = Prisma.PostGetPayload<
+  ReturnType<typeof postedByWithConversationInclude>
+>
 
 export class PostService {
   private static instance: PostService
@@ -56,22 +61,24 @@ export class PostService {
     })
   }
 
-  async findById(id: string, viewerProfileId?: string) {
-    const include = viewerProfileId
-      ? postedByWithConversationInclude(viewerProfileId)
-      : postedByInclude
+  async findById(id: string) {
+    return this.prisma.post.findFirst({
+      where: { id, isDeleted: false },
+      ...postedByInclude,
+    })
+  }
 
+  async findByIdWithContext(
+    id: string,
+    viewerProfileId: string
+  ): Promise<PostWithProfileAndContext | null> {
     const post = await this.prisma.post.findFirst({
-      where: {
-        id,
-        isDeleted: false,
-        ...(viewerProfileId ? {} : { isVisible: true }),
-      },
-      ...include,
+      where: { id, isDeleted: false },
+      ...postedByWithConversationInclude(viewerProfileId),
     })
 
-    // If viewer is not the owner, only return visible posts
-    if (viewerProfileId !== post?.postedById && !post?.isVisible) {
+    // Non-owners can only see visible posts
+    if (post && post.postedById !== viewerProfileId && !post.isVisible) {
       return null
     }
 
