@@ -195,6 +195,7 @@
     "welcome_message": "Üdv a {siteName} oldalon !\nMookie vagyok, a házigazda.\nEz egy olyan hely, ahol kapcsolatba léphetünk, új emberekkel találkozhatunk, és megtalálhatjuk a hasonlóan gondolkodó lelkeket. Remélem, jól fogod érezni magad itt.\nSzép kapcsolódásokat!\n\n- Mookie"
   },
   "messaging": {
+    "already_sent_waiting": "Már küldtél nekik üzenetet. Amint válaszolnak, folytathatod a beszélgetést.",
     "block_member": "Tag letiltása",
     "block_report_unmatch": "Letiltás/jelentés",
     "block_user_ok": "{name} letiltása",

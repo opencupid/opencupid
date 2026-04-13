@@ -123,6 +123,28 @@ export const useMessageStore = defineStore('message', {
         })
     },
 
+    async fetchMessages(
+      conversationId: string,
+      options?: { take?: number; cursor?: string }
+    ): Promise<StoreResponse<{ messages: MessageInConversation[] }>> {
+      try {
+        const res = await safeApiCall(() =>
+          api.get<MessagesResponse>(`/messages/${conversationId}`, {
+            params: {
+              take: options?.take ?? 10,
+              ...(options?.cursor ? { cursor: options.cursor } : {}),
+            },
+          })
+        )
+        if (res.data.success) {
+          return storeSuccess({ messages: res.data.messages })
+        }
+        return storeError(new Error('Failed to fetch messages'))
+      } catch (error: any) {
+        return storeError(error, 'Failed to fetch messages')
+      }
+    },
+
     async fetchMessagesForConversation(
       conversationId: string,
       options?: { cursor?: string; append?: boolean }

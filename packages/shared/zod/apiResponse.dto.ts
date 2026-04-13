@@ -29,7 +29,7 @@ import {
   type ReceivedLike,
 } from './interaction/interaction.dto'
 
-import type { OwnerPost, PublicPostWithProfile } from '@zod/post/post.dto'
+import type { OwnerPost, PublicPostWithProfile, PublicPostDetail } from '@zod/post/post.dto'
 
 export type GetProfileSummariesResponse = ApiSuccess<{ profiles: ProfileSummary[] }>
 
@@ -102,6 +102,7 @@ export type CaptchaChallengeResponse = ApiSuccess<any> // altcha challenge shape
 export type PostsResponse = ApiSuccess<{ posts: PublicPostWithProfile[] }>
 export type MyPostsResponse = ApiSuccess<{ posts: OwnerPost[] }>
 export type PostResponse = ApiSuccess<{ post: OwnerPost }>
+export type PublicPostDetailResponse = ApiSuccess<{ post: PublicPostDetail }>
 export type CreatePostResponse = ApiSuccess<{ post: OwnerPost }>
 export type UpdatePostResponse = ApiSuccess<{ post: OwnerPost }>
 export type DeletePostResponse = ApiSuccess<{}>

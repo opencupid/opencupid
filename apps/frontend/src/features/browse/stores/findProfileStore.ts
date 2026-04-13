@@ -7,17 +7,11 @@ import type {
   GetMatchIdsResponse,
   GetPublicProfileResponse,
 } from '@zod/apiResponse.dto'
-import type { PublicPostWithProfile } from '@zod/post/post.dto'
+import { PublicPostWithProfileSchema } from '@zod/post/post.dto'
 import type { PublicTag } from '@zod/tag/tag.dto'
 import type { MapPoi } from '@/features/map/types/map.types'
 import { ClusterMapResponseSchema, type MapFeature } from '@shared/zod/map/cluster.dto'
-import {
-  storeSuccess,
-  storeError,
-  type StoreVoidSuccess,
-  type StoreResponse,
-  type StoreError,
-} from '@/store/helpers'
+import { storeSuccess, storeError, type StoreVoidSuccess, type StoreError } from '@/store/helpers'
 import { bus } from '@/lib/bus'
 import { useBrowseFiltersStore } from './browseFiltersStore'
 import type { MapBounds } from '@/features/map/types/map.types'
@@ -52,12 +46,7 @@ function tagIdsParam(tagIds: string[]): string | undefined {
   return tagIds.length > 0 ? tagIds.join(',') : undefined
 }
 
-function sameViewport(
-  a: MapBounds | null,
-  aZoom: number,
-  b: MapBounds,
-  bZoom: number
-): boolean {
+function sameViewport(a: MapBounds | null, aZoom: number, b: MapBounds, bZoom: number): boolean {
   return (
     aZoom === bZoom &&
     a !== null &&
@@ -100,7 +89,7 @@ export const useFindProfileStore = defineStore('findProfile', {
     async findClustersForMapBounds(
       bounds: MapBounds,
       zoom: number
-    ): Promise<StoreResponse<StoreVoidSuccess | StoreError>> {
+    ): Promise<StoreVoidSuccess | StoreError> {
       // Supercluster requires integer zoom; Leaflet can report fractional values
       // during fitBounds or mid-animation.
       zoom = Math.round(zoom)
@@ -157,7 +146,7 @@ export const useFindProfileStore = defineStore('findProfile', {
       }
     },
 
-    async fetchPostsAndTags(bounds: MapBounds): Promise<void> {
+    async fetchPostsAndTags(bounds: MapBounds): Promise<StoreVoidSuccess | StoreError> {
       if (postAbortController) postAbortController.abort()
       const controller = new AbortController()
       postAbortController = controller
@@ -171,9 +160,12 @@ export const useFindProfileStore = defineStore('findProfile', {
           })
         )
 
-        if (!res.data.success) return
+        if (!res.data.success) return storeError(new Error('Browse bounds request failed'))
 
-        this.postPois = (res.data.posts as PublicPostWithProfile[])
+        // TODO: move post → MapPoi mapping to the backend (browse/bounds endpoint)
+        // so the frontend receives a uniform MapPoi[] shape, same as profiles.
+        const posts = PublicPostWithProfileSchema.array().parse(res.data.posts)
+        this.postPois = posts
           .filter((p) => p.location?.lat != null && p.location?.lon != null)
           .map((p) => ({
             id: p.id,
@@ -185,8 +177,10 @@ export const useFindProfileStore = defineStore('findProfile', {
           }))
 
         this.availableTags = res.data.tags
-      } catch (err: any) {
-        if (err?.code === 'ERR_CANCELED') return
+        return storeSuccess()
+      } catch (error: any) {
+        if (error instanceof CanceledError) return storeSuccess()
+        return storeError(error, 'Failed to fetch posts and tags')
       } finally {
         if (postAbortController === controller) {
           this.isLoadingPosts = false
@@ -212,7 +206,9 @@ export const useFindProfileStore = defineStore('findProfile', {
       if (cached) return cached
 
       try {
-        const res = await api.get<GetPublicProfileResponse>(`/profiles/${profileId}`)
+        const res = await safeApiCall(() =>
+          api.get<GetPublicProfileResponse>(`/profiles/${profileId}`)
+        )
         const profile = res.data.profile
         if (popupCache.size >= POPUP_CACHE_MAX) {
           const firstKey = popupCache.keys().next().value!

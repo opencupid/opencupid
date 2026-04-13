@@ -1,9 +1,12 @@
 import { defineStore } from 'pinia'
+import { CanceledError } from 'axios'
 import { api, safeApiCall } from '@/lib/api'
 import {
   PublicPostWithProfileSchema,
+  PublicPostDetailSchema,
   OwnerPostSchema,
   type PublicPostWithProfile,
+  type PublicPostDetail,
   type OwnerPost,
   type CreatePostPayload,
   type UpdatePostPayload,
@@ -15,6 +18,7 @@ import type {
   PostsResponse,
   MyPostsResponse,
   PostResponse,
+  PublicPostDetailResponse,
   CreatePostResponse,
   UpdatePostResponse,
   DeletePostResponse,
@@ -23,6 +27,7 @@ import { type PostTypeType } from '@zod/generated'
 import { storeSuccess, storeError, type StoreResponse } from '@/store/helpers'
 import type { MapBounds } from '@/features/map/types/map.types'
 
+let publicPostAbortController: AbortController | null = null
 const PublicPostWithProfileArraySchema = PublicPostWithProfileSchema.array()
 const OwnerPostArraySchema = OwnerPostSchema.array()
 type StorePostResponse = StoreResponse<{ post: OwnerPost }>
@@ -160,13 +165,30 @@ export const usePostStore = defineStore('posts', {
       }
     },
 
-    async fetchPost(id: string): Promise<StorePostResponse> {
+    async fetchOwnerPost(id: string): Promise<StorePostResponse> {
       try {
         const res = await safeApiCall(() => api.get<PostResponse>(`/posts/${id}`))
         const post = OwnerPostSchema.parse(res.data.post)
         this.currentPost = post
         return storeSuccess({ post })
       } catch (error: any) {
+        return storeError(error, 'Failed to fetch post')
+      }
+    },
+
+    async fetchPublicPost(id: string): Promise<StoreResponse<{ post: PublicPostDetail }>> {
+      if (publicPostAbortController) publicPostAbortController.abort()
+      const controller = new AbortController()
+      publicPostAbortController = controller
+
+      try {
+        const res = await safeApiCall(() =>
+          api.get<PublicPostDetailResponse>(`/posts/${id}`, { signal: controller.signal })
+        )
+        const post = PublicPostDetailSchema.parse(res.data.post)
+        return storeSuccess({ post })
+      } catch (error: any) {
+        if (error instanceof CanceledError) return storeSuccess()
         return storeError(error, 'Failed to fetch post')
       }
     },

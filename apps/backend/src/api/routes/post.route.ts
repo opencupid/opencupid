@@ -18,7 +18,7 @@ import type {
   UpdatePostResponse,
   DeletePostResponse,
 } from '@zod/apiResponse.dto'
-import { mapDbPostToOwner, mapDbPostToPublic } from '../mappers/post.mappers'
+import { mapDbPostToOwner, mapDbPostToPublic, mapDbPostToDetail } from '../mappers/post.mappers'
 
 const postRoutes: FastifyPluginAsync = async (fastify) => {
   const postService = PostService.getInstance(fastify.prisma)
@@ -59,21 +59,23 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * GET /:id
-   * Returns a single post by ID (owner view with visibility metadata).
+   * Returns a single post by ID. Returns owner view (with visibility metadata)
+   * when the viewer is the post author, public view otherwise.
    * @param {string} id - Post ID (CUID)
-   * @returns {{ success, post: OwnerPost }}
+   * @returns {{ success, post: OwnerPost | PublicPostDetail }}
    */
   fastify.get('/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const { id } = PostParamsSchema.parse(req.params)
     const viewerProfileId = req.session.profileId
 
     try {
-      const raw = await postService.findById(id, viewerProfileId)
+      const raw = await postService.findByIdWithContext(id, viewerProfileId)
       if (!raw) {
         return sendError(reply, 404, 'Post not found')
       }
 
-      const post = mapDbPostToOwner(raw)
+      const post =
+        raw.postedById === viewerProfileId ? mapDbPostToOwner(raw) : mapDbPostToDetail(raw)
 
       return reply.code(200).send({ success: true, post })
     } catch (err) {

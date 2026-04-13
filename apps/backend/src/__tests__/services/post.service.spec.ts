@@ -295,7 +295,7 @@ describe('PostService.findById', () => {
   it('returns post when found', async () => {
     mockPost.post.findFirst.mockResolvedValue(basePost)
 
-    const result = await service.findById(basePost.id, basePost.postedById)
+    const result = await service.findById(basePost.id)
 
     expect(result).toEqual(basePost)
   })
@@ -307,12 +307,22 @@ describe('PostService.findById', () => {
 
     expect(result).toBeNull()
   })
+})
+
+describe('PostService.findByIdWithContext', () => {
+  it('returns post with context when found', async () => {
+    mockPost.post.findFirst.mockResolvedValue(basePost)
+
+    const result = await service.findByIdWithContext(basePost.id, basePost.postedById)
+
+    expect(result).toEqual(basePost)
+  })
 
   it('returns null for invisible post when viewer is not owner', async () => {
     const invisiblePost = { ...basePost, isVisible: false }
     mockPost.post.findFirst.mockResolvedValue(invisiblePost)
 
-    const result = await service.findById(invisiblePost.id, 'other-profile-id')
+    const result = await service.findByIdWithContext(invisiblePost.id, 'other-profile-id')
 
     expect(result).toBeNull()
   })

@@ -20,8 +20,6 @@ const emit = defineEmits<{
   (e: 'delete', post: PublicPostWithProfile | OwnerPost): void
 }>()
 
-
-
 const closeDetailPanel = inject<(() => void) | null>('detailPanelClose', null)
 const handleBack = () => {
   if (closeDetailPanel) closeDetailPanel()

@@ -3,6 +3,8 @@ import { computed, onActivated, onMounted, provide, ref, toRef, watch } from 'vu
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 
+import { useToast } from 'vue-toastification'
+import { useI18n } from 'vue-i18n'
 import { useBootstrap } from '@/lib/bootstrap'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { useBrowseViewModel } from '../composables/useBrowseViewModel'
@@ -24,7 +26,7 @@ import MapIcon from '@/features/posts/components/MapIcon.vue'
 import PostMapPopup from '@/features/posts/components/PostMapPopup.vue'
 import PostFullView from '@/features/posts/components/PostFullView.vue'
 import OwnerDrawerControls from '../components/OwnerDrawerControls.vue'
-import type { PublicPostWithProfile } from '@zod/post/post.dto'
+import { usePostStore } from '@/features/posts/stores/postStore'
 import type { GeoPoint } from '@zod/dto/location.dto'
 
 // Component name must be 'AppShell' for KeepAlive to identify it correctly
@@ -69,7 +71,10 @@ provide('viewerProfile', toRef(viewerProfile))
 
 // ── Route-driven detail panel ──────────────────────────────────────
 const router = useRouter()
+const toast = useToast()
+const { t } = useI18n()
 const ownerProfileStore = useOwnerProfileStore()
+const postStore = usePostStore()
 
 const { detail } = useDetailRouteState()
 const panel = useDetailPanel()
@@ -90,16 +95,23 @@ watch(
 
 // Drive the global detail panel from the route.
 watch(
-  [detail, activePoi],
-  ([d, poi]) => {
+  detail,
+  async (d) => {
     if (!d) {
       panel.close()
       return
     }
     if (d.type === 'profile') {
       panel.show(PublicProfileView, { profileId: d.id })
-    } else if (d.type === 'post' && poi) {
-      panel.show(PostFullView, { post: poi.source as PublicPostWithProfile })
+    } else if (d.type === 'post') {
+      const result = await postStore.fetchPublicPost(d.id)
+      if (result.success && result.data) {
+        panel.show(PostFullView, { post: result.data.post })
+      } else {
+        toast.error(t('posts.messages.error_load'))
+        panel.close()
+        router.replace({ name: 'Browse' })
+      }
     }
   },
   { immediate: true }

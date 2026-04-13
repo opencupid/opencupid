@@ -59,6 +59,11 @@ export function storeError(error: unknown, fallbackMessage = 'Request failed'): 
     }
   }
 
+  // Handle plain Error instances
+  else if (error instanceof Error) {
+    message = error.message
+  }
+
   //   // TODO hook this up to a global debug flag
   if (__APP_CONFIG__.NODE_ENV === 'development') console.error(message, status, message)
 

@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { onBeforeUnmount, ref, useTemplateRef, watchEffect } from 'vue'
+import { onBeforeUnmount, onMounted, ref, useTemplateRef, watchEffect } from 'vue'
 import { useElementSize } from '@vueuse/core'
 
 import type { MessageRecipient } from '@zod/profile/profile.dto'
+import type { ConversationContext } from '@zod/interaction/interactionContext.dto'
+import type { MessageDTO } from '@zod/messaging/messaging.dto'
 
 import SendMessageForm from './SendMessageForm.vue'
+import MessageBubble from './MessageBubble.vue'
 import IconMessage from '@/assets/icons/interface/message.svg'
 import { useMessageSentState } from '@/features/publicprofile/composables/useMessageSentState'
+import { useMessageStore } from '../stores/messageStore'
 
 defineOptions({ name: 'ContactFormPanel' })
 
@@ -21,14 +25,28 @@ defineOptions({ name: 'ContactFormPanel' })
  * so sizing is dictated by the consumer — no `size` prop.
  */
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
-    recipientProfile: MessageRecipient
+    recipientProfile: MessageRecipient & Partial<ConversationContext>
     showTags?: boolean
     noResize?: boolean
   }>(),
   { showTags: false, noResize: true }
 )
+
+const isWaitingForReply =
+  props.recipientProfile.initiated === true && props.recipientProfile.canMessage === false
+
+const messageStore = useMessageStore()
+const sentMessages = ref<MessageDTO[]>([])
+
+onMounted(async () => {
+  if (!isWaitingForReply || !props.recipientProfile.conversationId) return
+  const result = await messageStore.fetchMessages(props.recipientProfile.conversationId)
+  if (result.success && result.data) {
+    sentMessages.value = result.data.messages
+  }
+})
 
 const emit = defineEmits<{
   (e: 'sent'): void
@@ -82,21 +100,9 @@ defineExpose({
     class="w-100 h-100 d-flex flex-column"
     :style="latchedHeight > 0 ? { minHeight: `${latchedHeight}px` } : undefined"
   >
+    <!-- 1. Transient success confirmation after a fresh send -->
     <div
-      v-if="!messageSent"
-      ref="formRef"
-    >
-      <SendMessageForm
-        ref="messageInput"
-        :recipient-profile="recipientProfile"
-        :conversation-id="null"
-        :show-tags="showTags"
-        :no-resize="noResize"
-        @message:sent="onMessageSent"
-      />
-    </div>
-    <div
-      v-else
+      v-if="messageSent"
       class="flex-grow-1 d-flex flex-column align-items-center justify-content-center text-success"
     >
       <div
@@ -111,6 +117,42 @@ defineExpose({
       <h1 class="text-center mb-0">
         {{ $t('messaging.message_sent_success') }}
       </h1>
+    </div>
+
+    <!-- 2. Waiting for reply — viewer already initiated contact -->
+    <div
+      v-else-if="isWaitingForReply"
+      class="flex-grow-1 d-flex flex-column align-items-center justify-content-center"
+    >
+      <div
+        v-if="sentMessages.length"
+        class="w-100 d-flex flex-column align-items-end px-2"
+      >
+        <MessageBubble
+          v-for="msg in sentMessages"
+          :key="msg.id"
+          :message="msg"
+          class="mb-2"
+        />
+      </div>
+      <div class="form-hint mb-3">
+        {{ $t('messaging.already_sent_waiting') }}
+      </div>
+    </div>
+
+    <!-- 3. Default: pre-send form -->
+    <div
+      v-else
+      ref="formRef"
+    >
+      <SendMessageForm
+        ref="messageInput"
+        :recipient-profile="recipientProfile"
+        :conversation-id="null"
+        :show-tags="showTags"
+        :no-resize="noResize"
+        @message:sent="onMessageSent"
+      />
     </div>
   </div>
 </template>
