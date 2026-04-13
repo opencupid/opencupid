@@ -7,7 +7,7 @@ import {
 } from '@zod/tag/tag.dto'
 import { FastifyPluginAsync } from 'fastify'
 import { sendError, addDebounceHeaders, rateLimitConfig } from '../helpers'
-import { TagService } from 'src/services/tag.service'
+import { TagService } from '@/services/tag.service'
 import type { TagResponse, TagsResponse, PopularTagsResponse } from '@zod/apiResponse.dto'
 import { DbTagToPublicTagTransform } from '../mappers/tag.mappers'
 const tagsRoutes: FastifyPluginAsync = async (fastify) => {

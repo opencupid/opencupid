@@ -4,7 +4,7 @@ import fastifyJwt from '@fastify/jwt'
 import Redis from 'ioredis'
 
 import { SessionService } from '../services/session.service'
-import { sendUnauthorizedError } from 'src/api/helpers'
+import { sendUnauthorizedError } from '@/api/helpers'
 import { appConfig } from '@/lib/appconfig'
 import '@fastify/cookie'
 import { SESSION_COOKIE, SESSION_COOKIE_OPTS, SESSION_MAX_AGE } from '@shared/session'

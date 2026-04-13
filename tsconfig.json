@@ -1,20 +1,15 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "strict": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    "baseUrl": ".",
     "paths": {
-      "@prisma/client": [
-        "apps/backend/node_modules/@prisma/client"
-      ],
-      "@zod/*": [
-        "packages/shared/zod/*"
-      ],
+      "@prisma/client": ["./apps/backend/node_modules/@prisma/client"],
+      "@zod/*": ["./packages/shared/zod/*"]
     },
     "typeRoots": [
       "./node_modules/@types",
@@ -22,9 +17,5 @@
       "./packages/shared/node_modules/@types"
     ]
   },
-  "include": [
-    "packages",
-    "apps",
-    "types"
-  ]
+  "include": ["packages", "apps", "types"]
 }

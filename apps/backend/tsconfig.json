@@ -1,37 +1,16 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "baseUrl": ".",
     "strict": true,
-    "strictNullChecks": true,
-    "module": "ES2020",
+    "module": "ESNext",
     "target": "ES2020",
-    "moduleResolution": "node",
-    "esModuleInterop": true,
-    "sourceMap": true,
-    "typeRoots": [
-      "./types",
-      "./node_modules/@types"
-    ],
+    "typeRoots": ["./types", "./node_modules/@types"],
     "paths": {
-      "@/*": [
-        "src/*"
-      ],
-      "@zod/*": [
-        "../../packages/shared/zod/*"
-      ],
-      "@shared/*": [
-        "../../packages/shared/*"
-      ]
+      "@/*": ["./src/*"],
+      "@zod/*": ["../../packages/shared/zod/*"],
+      "@shared/*": ["../../packages/shared/*"]
     },
-    "types": [
-      "node"
-    ]
+    "types": ["node"]
   },
-  "include": [
-    "src",
-    "types",
-    "scripts",
-    "src/**/*.vue"
-  ]
+  "include": ["src", "types", "scripts", "src/**/*.vue"]
 }

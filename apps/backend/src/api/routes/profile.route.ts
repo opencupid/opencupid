@@ -37,7 +37,7 @@ import { UpdateDatingPreferencesPayloadSchema } from '@zod/match/filters.dto'
 import { mapProfileToDatingPreferencesDTO } from '@/api/mappers/profileMatch.mappers'
 import { createDatingPrefsDefaults, DatingPreferencesFormSchema } from '@zod/match/filters.form'
 
-import { ProfileService } from 'src/services/profile.service'
+import { ProfileService } from '@/services/profile.service'
 import { ProfileMatchService } from '@/services/profileMatch.service'
 import { MessageService } from '../../services/messaging.service'
 

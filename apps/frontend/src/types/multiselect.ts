@@ -1,3 +1,5 @@
+import type { ComponentPublicInstance } from 'vue'
+
 export type MultiselectComponent = ComponentPublicInstance<{
   activate: () => void
   deactivate: () => void

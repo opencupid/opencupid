@@ -1,5 +1,6 @@
 ---
 '@opencupid/backend': patch
+'@opencupid/frontend': patch
 ---
 
-Remove unused outDir from backend tsconfig to fix TS6059 in VS Code (#1283)
+Clean up tsconfig files: fix TS 5.9 deprecations, remove redundant config, fix Docker build (#1283)

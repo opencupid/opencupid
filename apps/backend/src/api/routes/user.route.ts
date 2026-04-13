@@ -1,5 +1,5 @@
 import { FastifyPluginAsync } from 'fastify'
-import { UserService } from 'src/services/user.service'
+import { UserService } from '@/services/user.service'
 import { sendError, sendUnauthorizedError } from '../helpers'
 import { validateBody } from '@/utils/zodValidate'
 
