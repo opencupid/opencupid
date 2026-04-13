@@ -1,6 +1,5 @@
 import Supercluster from 'supercluster'
 import type { Feature, Point } from 'geojson'
-import type { PrismaClient } from '@prisma/client'
 import { ProfileMatchService } from './profileMatch.service'
 import { PostService } from './post.service'
 import { ImageService } from './image.service'
@@ -41,21 +40,16 @@ export class ClusterService {
   private indexes = new Map<string, CachedIndex>()
   private static instance: ClusterService
 
-  private constructor(private readonly prisma: PrismaClient) {}
-
-  static getInstance(prisma?: PrismaClient): ClusterService {
+  static getInstance(): ClusterService {
     if (!ClusterService.instance) {
-      if (!prisma) {
-        throw new Error('ClusterService requires PrismaClient on first instantiation')
-      }
-      ClusterService.instance = new ClusterService(prisma)
+      ClusterService.instance = new ClusterService()
     }
     return ClusterService.instance
   }
 
   async buildIndex(profileId: string, tagIds: string[] = []): Promise<void> {
     const profileMatchService = ProfileMatchService.getInstance()
-    const postService = PostService.getInstance(this.prisma)
+    const postService = PostService.getInstance()
 
     const [profiles, matchIds, posts] = await Promise.all([
       profileMatchService.findSocialProfilesWithLocation(profileId, tagIds),

@@ -1,22 +1,28 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { PostService } from '../../services/post.service'
 
-const mockPost = {
-  post: {
-    create: vi.fn(),
-    findFirst: vi.fn(),
-    findMany: vi.fn(),
-    update: vi.fn(),
+const { mockPost } = vi.hoisted(() => ({
+  mockPost: {
+    post: {
+      create: vi.fn(),
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      update: vi.fn(),
+    },
   },
-}
+}))
+
+vi.mock('@/lib/prisma', () => ({
+  prisma: mockPost,
+}))
+
+import { PostService } from '../../services/post.service'
 
 let service: PostService
 
 beforeEach(() => {
   vi.clearAllMocks()
-  // Reset singleton so each test gets a fresh instance with our mock
   ;(PostService as any).instance = undefined
-  service = PostService.getInstance(mockPost as any)
+  service = PostService.getInstance()
 })
 
 const basePost = {
@@ -152,7 +158,7 @@ describe('PostService.update', () => {
     )
   })
 
-  it('does not include location fields when not provided', async () => {
+  it('passes undefined for location fields when not provided', async () => {
     mockPost.post.findFirst.mockResolvedValue(basePost)
     mockPost.post.update.mockResolvedValue({ ...basePost, content: 'updated' })
 
@@ -162,10 +168,10 @@ describe('PostService.update', () => {
 
     const updateCall = mockPost.post.update.mock.calls[0][0]
     expect(updateCall.data).toHaveProperty('content', 'updated')
-    expect(updateCall.data).not.toHaveProperty('country')
-    expect(updateCall.data).not.toHaveProperty('cityName')
-    expect(updateCall.data).not.toHaveProperty('lat')
-    expect(updateCall.data).not.toHaveProperty('lon')
+    expect(updateCall.data.country).toBeUndefined()
+    expect(updateCall.data.cityName).toBeUndefined()
+    expect(updateCall.data.lat).toBeUndefined()
+    expect(updateCall.data.lon).toBeUndefined()
   })
 
   it('allows clearing location by setting fields to null', async () => {
@@ -216,28 +222,19 @@ describe('PostService.update', () => {
 })
 
 describe('PostService.findNearby', () => {
-  it('builds OR query with post location and profile fallback', async () => {
+  it('queries posts by their own lat/lon within bounding box', async () => {
     mockPost.post.findMany.mockResolvedValue([])
 
     await service.findNearby(52.52, 13.405, 50)
 
     const call = mockPost.post.findMany.mock.calls[0][0]
-    expect(call.where).toHaveProperty('OR')
-    expect(call.where.OR).toHaveLength(2)
-
-    // First clause: posts with their own location
-    const postLocationClause = call.where.OR[0]
-    expect(postLocationClause).toHaveProperty('lat')
-    expect(postLocationClause).toHaveProperty('lon')
-    expect(postLocationClause.lat).toHaveProperty('gte')
-    expect(postLocationClause.lat).toHaveProperty('lte')
-
-    // Second clause: posts without location, fallback to profile
-    const profileFallbackClause = call.where.OR[1]
-    expect(profileFallbackClause).toHaveProperty('lat', null)
-    expect(profileFallbackClause).toHaveProperty('postedBy')
-    expect(profileFallbackClause.postedBy.lat).toHaveProperty('gte')
-    expect(profileFallbackClause.postedBy.lon).toHaveProperty('lte')
+    expect(call.where).toHaveProperty('lat')
+    expect(call.where).toHaveProperty('lon')
+    expect(call.where.lat).toHaveProperty('gte')
+    expect(call.where.lat).toHaveProperty('lte')
+    expect(call.where.lon).toHaveProperty('gte')
+    expect(call.where.lon).toHaveProperty('lte')
+    expect(call.where).not.toHaveProperty('OR')
   })
 
   it('calculates correct bounding box', async () => {
@@ -253,12 +250,11 @@ describe('PostService.findNearby', () => {
     const expectedLonRange = radius / (111.0 * Math.cos((lat * Math.PI) / 180))
 
     const call = mockPost.post.findMany.mock.calls[0][0]
-    const postClause = call.where.OR[0]
 
-    expect(postClause.lat.gte).toBeCloseTo(lat - expectedLatRange, 5)
-    expect(postClause.lat.lte).toBeCloseTo(lat + expectedLatRange, 5)
-    expect(postClause.lon.gte).toBeCloseTo(lon - expectedLonRange, 5)
-    expect(postClause.lon.lte).toBeCloseTo(lon + expectedLonRange, 5)
+    expect(call.where.lat.gte).toBeCloseTo(lat - expectedLatRange, 5)
+    expect(call.where.lat.lte).toBeCloseTo(lat + expectedLatRange, 5)
+    expect(call.where.lon.gte).toBeCloseTo(lon - expectedLonRange, 5)
+    expect(call.where.lon.lte).toBeCloseTo(lon + expectedLonRange, 5)
   })
 
   it('applies type filter when provided', async () => {

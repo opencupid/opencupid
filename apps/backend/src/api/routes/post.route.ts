@@ -21,7 +21,7 @@ import type {
 import { mapDbPostToOwner, mapDbPostToPublic, mapDbPostToDetail } from '../mappers/post.mappers'
 
 const postRoutes: FastifyPluginAsync = async (fastify) => {
-  const postService = PostService.getInstance(fastify.prisma)
+  const postService = PostService.getInstance()
 
   /**
    * POST /

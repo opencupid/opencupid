@@ -39,7 +39,7 @@ export class BrowseService {
     tags: PublicTag[]
   }> {
     const profileMatchService = ProfileMatchService.getInstance()
-    const postService = PostService.getInstance(this.prisma)
+    const postService = PostService.getInstance()
 
     const [rawProfiles, rawPosts] = await Promise.all([
       profileMatchService.findSocialProfilesInBounds(
