@@ -33,6 +33,8 @@ export type PostWithProfileAndContext = Prisma.PostGetPayload<
 export class PostService {
   private static instance: PostService
 
+  private constructor() {}
+
   static getInstance(): PostService {
     if (!PostService.instance) {
       PostService.instance = new PostService()

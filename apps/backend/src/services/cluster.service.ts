@@ -40,6 +40,8 @@ export class ClusterService {
   private indexes = new Map<string, CachedIndex>()
   private static instance: ClusterService
 
+  private constructor() {}
+
   static getInstance(): ClusterService {
     if (!ClusterService.instance) {
       ClusterService.instance = new ClusterService()
