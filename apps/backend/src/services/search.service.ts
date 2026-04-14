@@ -2,11 +2,6 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '../lib/prisma'
 import { profileImageInclude } from '../db/includes/profileIncludes'
 import { blocklistWhereClause } from '../db/includes/blocklistWhereClause'
-import {
-  POST_FTS_DICTIONARY,
-  PROFILE_FTS_DICTIONARY_BY_LOCALE,
-  profileFtsDictionary,
-} from '../lib/fts'
 import { TagService } from './tag.service'
 import type { TagWithTranslations } from '@zod/tag/tag.db'
 import type { DbProfileSummary } from '@zod/profile/profile.db'
@@ -35,8 +30,23 @@ const EMPTY_RESULTS: SearchResults = {
 }
 
 /**
- * Multi-kind search: fans out to tag, profile-FTS, post-FTS, and location
- * queries in parallel, then returns grouped results for an omnibox UI.
+ * Escape LIKE metacharacters (`%`, `_`, `\`) so the user's raw query is
+ * treated as a literal substring. The caller wraps the result in `%...%`
+ * before passing it to ILIKE.
+ */
+function escapeLikePattern(term: string): string {
+  return term.replace(/[\\%_]/g, (c) => `\\${c}`)
+}
+
+/**
+ * Multi-kind search: fans out to tag, profile trigram, post trigram, and
+ * location queries in parallel, then returns grouped results for an
+ * omnibox UI.
+ *
+ * Profile intro text and post content are indexed with pg_trgm GIN indexes
+ * (see migrations/20260415000000_add_search_trgm_indexes). This gives fast,
+ * language-agnostic substring matching — no per-locale dictionary
+ * configuration is needed.
  */
 export class SearchService {
   private static instance: SearchService
@@ -75,70 +85,37 @@ export class SearchService {
     return TagService.getInstance().search(term, locale, { limit: SEARCH_TAG_LIMIT })
   }
 
-  // ── Profiles (FTS on LocalizedProfileField.tsv) ─────────────────────
+  // ── Profiles (trigram substring on LocalizedProfileField.value) ─────
   private async searchProfiles(
     term: string,
     locale: string,
     myProfileId: string
   ): Promise<DbProfileSummary[]> {
-    // Rows whose locale is the session locale OR English are eligible —
-    // mirrors the display fallback in `mapProfileToPublic`. We UNION one
-    // subquery per locale, each using its matching dictionary so stemming
-    // is correct per row.
-    const sessionDict = profileFtsDictionary(locale)
-    const englishDict = PROFILE_FTS_DICTIONARY_BY_LOCALE.en
+    // Rows in the session locale OR English are eligible — mirrors the
+    // display fallback in `mapProfileToPublic`. Trigram substring match
+    // via pg_trgm GIN index; ranking uses `similarity()`.
+    const pattern = `%${escapeLikePattern(term)}%`
+    const localeFilter = locale === 'en' ? ['en'] : [locale, 'en']
 
-    // If the session locale is English, session + en collapse to one branch.
-    const branches: Array<{ locale: string; dict: string }> =
-      locale === 'en'
-        ? [{ locale: 'en', dict: englishDict }]
-        : [
-            { locale, dict: sessionDict },
-            { locale: 'en', dict: englishDict },
-          ]
-
-    const unionSql = branches
-      .map(
-        (b, i) => `
-          SELECT lpf."profileId" AS profile_id,
-                 ts_rank(lpf."tsv", plainto_tsquery($${i * 2 + 2}::regconfig, $1)) AS rank
-          FROM "LocalizedProfileField" lpf
-          WHERE lpf."locale" = $${i * 2 + 3}
-            AND lpf."tsv" @@ plainto_tsquery($${i * 2 + 2}::regconfig, $1)
-        `
-      )
-      .join(' UNION ALL ')
-
-    const params: unknown[] = [term]
-    for (const branch of branches) {
-      params.push(branch.dict, branch.locale)
-    }
-
-    // Aggregate (max rank per profile), then join Profile and apply the
-    // same gating used elsewhere: active + onboarded + social-active, and
-    // blocklist in either direction.
-    const sql = `
-      WITH matches AS (
-        ${unionSql}
-      )
-      SELECT m.profile_id AS id, MAX(m.rank) AS rank
-      FROM matches m
-      JOIN "Profile" p ON p.id = m.profile_id
-      WHERE p."isActive" = true
+    const rows = await prisma.$queryRaw<Array<{ id: string; rank: number }>>`
+      SELECT lpf."profileId" AS id,
+             MAX(similarity(lpf."value", ${term})) AS rank
+      FROM "LocalizedProfileField" lpf
+      JOIN "Profile" p ON p.id = lpf."profileId"
+      WHERE lpf."locale" IN (${Prisma.join(localeFilter)})
+        AND lpf."value" ILIKE ${pattern}
+        AND p."isActive" = true
         AND p."isOnboarded" = true
         AND p."isSocialActive" = true
         AND NOT EXISTS (
           SELECT 1 FROM "_BlockedProfiles" bp
-          WHERE (bp."A" = p.id AND bp."B" = $${params.length + 1})
-             OR (bp."B" = p.id AND bp."A" = $${params.length + 1})
+          WHERE (bp."A" = p.id AND bp."B" = ${myProfileId})
+             OR (bp."B" = p.id AND bp."A" = ${myProfileId})
         )
-      GROUP BY m.profile_id
+      GROUP BY lpf."profileId"
       ORDER BY rank DESC
       LIMIT ${SEARCH_PROFILE_LIMIT}
     `
-    params.push(myProfileId)
-
-    const rows = await prisma.$queryRawUnsafe<Array<{ id: string; rank: number }>>(sql, ...params)
 
     if (rows.length === 0) return []
 
@@ -153,16 +130,18 @@ export class SearchService {
     return rows.map((r) => byId.get(r.id)).filter((p): p is (typeof profiles)[number] => Boolean(p))
   }
 
-  // ── Posts (FTS on Post.tsv, 'simple' dictionary) ────────────────────
+  // ── Posts (trigram substring on Post.content) ───────────────────────
   private async searchPosts(term: string, myProfileId: string): Promise<DbPostForSummary[]> {
+    const pattern = `%${escapeLikePattern(term)}%`
+
     const rows = await prisma.$queryRaw<Array<{ id: string; rank: number }>>`
       SELECT p.id,
-             ts_rank(p."tsv", plainto_tsquery(${POST_FTS_DICTIONARY}::regconfig, ${term})) AS rank
+             similarity(p."content", ${term}) AS rank
       FROM "Post" p
       JOIN "Profile" pr ON pr.id = p."postedById"
       WHERE p."isVisible" = true
         AND p."isDeleted" = false
-        AND p."tsv" @@ plainto_tsquery(${POST_FTS_DICTIONARY}::regconfig, ${term})
+        AND p."content" ILIKE ${pattern}
         AND pr."isActive" = true
         AND pr."isOnboarded" = true
         AND pr."isSocialActive" = true
@@ -172,7 +151,7 @@ export class SearchService {
              OR (bp."B" = pr.id AND bp."A" = ${myProfileId})
         )
       ORDER BY rank DESC
-      LIMIT ${Prisma.raw(String(SEARCH_POST_LIMIT))}
+      LIMIT ${SEARCH_POST_LIMIT}
     `
 
     if (rows.length === 0) return []

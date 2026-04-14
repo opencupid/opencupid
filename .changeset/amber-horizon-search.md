@@ -2,4 +2,4 @@
 '@opencupid/backend': minor
 ---
 
-Add /search endpoint: parallel full-text search across tags, profiles, posts, and locations. Backed by Postgres tsvector + GIN indexes on LocalizedProfileField (per-locale dictionary) and Post.content ('simple' dictionary).
+Add /search endpoint: parallel search across tags, profiles, posts, and locations. Profile and post text use pg_trgm GIN indexes (language-agnostic substring match via ILIKE + similarity ranking) — adding a new app locale requires no database changes.

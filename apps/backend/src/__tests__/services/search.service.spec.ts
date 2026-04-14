@@ -5,15 +5,56 @@ let service: any
 let mockPrisma: any
 let mockTagSearch: ReturnType<typeof vi.fn>
 
+/**
+ * Install a routing mock for `$queryRaw` that dispatches by inspecting the
+ * template SQL. Profiles query hits `LocalizedProfileField`; posts query
+ * hits `FROM "Post"`. Returns separate capture arrays + setters so tests
+ * can control each branch independently.
+ */
+function installQueryRawRouter() {
+  const profileCalls: unknown[][] = []
+  const postCalls: unknown[][] = []
+  let profileResult: any[] = []
+  let postResult: any[] = []
+
+  mockPrisma.$queryRaw.mockImplementation((strings: TemplateStringsArray, ...values: unknown[]) => {
+    const sql = Array.isArray(strings) ? strings.join('?') : String(strings)
+    if (sql.includes('LocalizedProfileField')) {
+      profileCalls.push([strings, ...values])
+      return Promise.resolve(profileResult)
+    }
+    if (sql.includes('FROM "Post"')) {
+      postCalls.push([strings, ...values])
+      return Promise.resolve(postResult)
+    }
+    return Promise.resolve([])
+  })
+
+  return {
+    profileCalls,
+    postCalls,
+    setProfileResult: (r: any[]) => {
+      profileResult = r
+    },
+    setPostResult: (r: any[]) => {
+      postResult = r
+    },
+  }
+}
+
 beforeEach(async () => {
   vi.resetModules()
   mockPrisma = createMockPrisma()
-  // Raw SQL helpers + post table are not in the default mock.
-  mockPrisma.$queryRaw = vi.fn()
-  mockPrisma.$queryRawUnsafe = vi.fn()
-  mockPrisma.post = { findMany: vi.fn() }
+  // Raw SQL helper + post table are not in the default mock.
+  mockPrisma.$queryRaw = vi.fn().mockResolvedValue([])
+  mockPrisma.post = { findMany: vi.fn().mockResolvedValue([]) }
 
-  mockTagSearch = vi.fn()
+  mockTagSearch = vi.fn().mockResolvedValue([])
+
+  // Default both location queries to empty so tests that don't exercise
+  // locations don't crash on the spread.
+  mockPrisma.profile.findMany.mockResolvedValue([])
+  mockPrisma.post.findMany.mockResolvedValue([])
 
   vi.doMock('../../lib/prisma', () => ({ prisma: mockPrisma }))
   vi.doMock('../../services/tag.service', () => ({
@@ -32,7 +73,6 @@ describe('SearchService.search — short-circuit', () => {
     const result = await service.search('a', 'en', 'me')
     expect(result).toEqual({ tags: [], profiles: [], posts: [], locations: [] })
     expect(mockTagSearch).not.toHaveBeenCalled()
-    expect(mockPrisma.$queryRawUnsafe).not.toHaveBeenCalled()
     expect(mockPrisma.$queryRaw).not.toHaveBeenCalled()
   })
 
@@ -43,12 +83,6 @@ describe('SearchService.search — short-circuit', () => {
 
   it('trims and collapses whitespace before the length check', async () => {
     // "a b" trims to "a b" (length 3), so it should dispatch.
-    mockTagSearch.mockResolvedValue([])
-    mockPrisma.$queryRawUnsafe.mockResolvedValue([])
-    mockPrisma.$queryRaw.mockResolvedValue([])
-    mockPrisma.profile.findMany.mockResolvedValue([])
-    mockPrisma.post.findMany.mockResolvedValue([])
-
     await service.search('  a  b  ', 'en', 'me')
 
     expect(mockTagSearch).toHaveBeenCalledWith('a b', 'en', { limit: 5 })
@@ -56,13 +90,6 @@ describe('SearchService.search — short-circuit', () => {
 })
 
 describe('SearchService.search — tags', () => {
-  beforeEach(() => {
-    mockPrisma.$queryRawUnsafe.mockResolvedValue([])
-    mockPrisma.$queryRaw.mockResolvedValue([])
-    mockPrisma.profile.findMany.mockResolvedValue([])
-    mockPrisma.post.findMany.mockResolvedValue([])
-  })
-
   it('delegates to TagService with the 5-result limit', async () => {
     mockTagSearch.mockResolvedValue([{ id: 't1', name: 'Music', translations: [] }])
 
@@ -73,48 +100,38 @@ describe('SearchService.search — tags', () => {
   })
 })
 
-describe('SearchService.search — profiles (FTS)', () => {
-  beforeEach(() => {
-    mockTagSearch.mockResolvedValue([])
-    mockPrisma.$queryRaw.mockResolvedValue([])
-    mockPrisma.post.findMany.mockResolvedValue([])
-    mockPrisma.profile.findMany.mockResolvedValue([])
-  })
-
-  it('runs the UNION-shaped FTS query with session + english branches for non-english locales', async () => {
-    mockPrisma.$queryRawUnsafe.mockResolvedValue([{ id: 'p1', rank: 0.8 }])
+describe('SearchService.search — profiles (trigram)', () => {
+  it('passes session-locale + "en" to the raw query for non-english locales', async () => {
+    const router = installQueryRawRouter()
+    router.setProfileResult([{ id: 'p1', rank: 0.8 }])
     mockPrisma.profile.findMany.mockResolvedValue([
       { id: 'p1', publicName: 'Alice', profileImages: [] },
     ])
 
     await service.search('guitar', 'hu', 'me')
 
-    expect(mockPrisma.$queryRawUnsafe).toHaveBeenCalledTimes(1)
-    const [sql, term, ...params] = mockPrisma.$queryRawUnsafe.mock.calls[0]
-    // Two locale branches ⇒ UNION ALL appears once.
-    expect(sql).toMatch(/UNION ALL/)
-    expect(term).toBe('guitar')
-    // params interleave [dict, locale, dict, locale, ...]; ensure 'hungarian' and 'english' both used.
-    expect(params).toContain('hungarian')
-    expect(params).toContain('english')
-    // myProfileId tacked on at the end
-    expect(params[params.length - 1]).toBe('me')
+    expect(router.profileCalls).toHaveLength(1)
+    // `Prisma.join(['hu', 'en'])` produces a Prisma.Sql whose underlying
+    // values array carries the locale strings — serialize everything the
+    // mock received and verify both locales surface somewhere in it.
+    const serialized = JSON.stringify(router.profileCalls[0])
+    expect(serialized).toContain('"hu"')
+    expect(serialized).toContain('"en"')
   })
 
-  it('collapses to a single branch when session locale is english', async () => {
-    mockPrisma.$queryRawUnsafe.mockResolvedValue([])
+  it('only passes "en" when session locale is english', async () => {
+    const router = installQueryRawRouter()
 
     await service.search('guitar', 'en', 'me')
 
-    const [sql, , ...params] = mockPrisma.$queryRawUnsafe.mock.calls[0]
-    // Single branch → no UNION.
-    expect(sql).not.toMatch(/UNION ALL/)
-    expect(params).toContain('english')
-    expect(params).not.toContain('hungarian')
+    const serialized = JSON.stringify(router.profileCalls[0])
+    expect(serialized).toContain('"en"')
+    expect(serialized).not.toContain('"hu"')
   })
 
   it('hydrates matching profiles and preserves rank order', async () => {
-    mockPrisma.$queryRawUnsafe.mockResolvedValue([
+    const router = installQueryRawRouter()
+    router.setProfileResult([
       { id: 'p2', rank: 0.9 },
       { id: 'p1', rank: 0.5 },
     ])
@@ -129,14 +146,14 @@ describe('SearchService.search — profiles (FTS)', () => {
     expect(result.profiles.map((p: any) => p.id)).toEqual(['p2', 'p1'])
   })
 
-  it('returns empty profiles array and skips hydration when no FTS rows match', async () => {
-    mockPrisma.$queryRawUnsafe.mockResolvedValue([])
+  it('returns empty profiles array and skips hydration when no rows match', async () => {
+    installQueryRawRouter() // both profile and post default to []
 
     const result = await service.search('xyzzy', 'en', 'me')
 
     expect(result.profiles).toEqual([])
-    // The hydration query uses `where: { id: { in: [...] } }` — verify we never
-    // issued one of those (the location query also calls profile.findMany).
+    // Hydration uses `where: { id: { in: [...] } }`; the location query uses
+    // `where: { cityName: ... }`. Assert no hydration was issued.
     const hydrationCalls = mockPrisma.profile.findMany.mock.calls.filter(
       ([arg]: [any]) => arg?.where?.id?.in !== undefined
     )
@@ -144,16 +161,10 @@ describe('SearchService.search — profiles (FTS)', () => {
   })
 })
 
-describe('SearchService.search — posts (FTS)', () => {
-  beforeEach(() => {
-    mockTagSearch.mockResolvedValue([])
-    mockPrisma.$queryRawUnsafe.mockResolvedValue([])
-    mockPrisma.profile.findMany.mockResolvedValue([])
-    mockPrisma.post.findMany.mockResolvedValue([])
-  })
-
-  it('runs an FTS query and hydrates posts in rank order', async () => {
-    mockPrisma.$queryRaw.mockResolvedValue([
+describe('SearchService.search — posts (trigram)', () => {
+  it('runs the post query and hydrates posts in rank order', async () => {
+    const router = installQueryRawRouter()
+    router.setPostResult([
       { id: 'post-b', rank: 0.9 },
       { id: 'post-a', rank: 0.5 },
     ])
@@ -174,18 +185,16 @@ describe('SearchService.search — posts (FTS)', () => {
 
     const result = await service.search('hello', 'en', 'me')
 
-    expect(mockPrisma.$queryRaw).toHaveBeenCalledTimes(1)
+    expect(router.postCalls).toHaveLength(1)
     expect(result.posts.map((p: any) => p.id)).toEqual(['post-b', 'post-a'])
   })
 
   it('skips hydration when no posts match', async () => {
-    mockPrisma.$queryRaw.mockResolvedValue([])
+    installQueryRawRouter()
 
     const result = await service.search('xyzzy', 'en', 'me')
 
     expect(result.posts).toEqual([])
-    // Hydration uses `where: { id: { in: [...] } }`; the location query uses
-    // `where: { cityName: ... }`. Assert no hydration was issued.
     const hydrationCalls = mockPrisma.post.findMany.mock.calls.filter(
       ([arg]: [any]) => arg?.where?.id?.in !== undefined
     )
@@ -194,12 +203,6 @@ describe('SearchService.search — posts (FTS)', () => {
 })
 
 describe('SearchService.search — locations', () => {
-  beforeEach(() => {
-    mockTagSearch.mockResolvedValue([])
-    mockPrisma.$queryRawUnsafe.mockResolvedValue([])
-    mockPrisma.$queryRaw.mockResolvedValue([])
-  })
-
   it('dedupes by case-insensitive city name across profile + post sources', async () => {
     mockPrisma.profile.findMany.mockResolvedValue([
       { cityName: 'Budapest', country: 'HU', lat: 47.5, lon: 19.0 },

@@ -239,12 +239,10 @@ model LocalizedProfileField {
   locale    String // 'en', 'hu', etc.
   value     String
 
-  // Generated tsvector (see migration). Dictionary is chosen per-row from
-  // `locale`: 'hu' → hungarian, anything else → english.
-  tsv Unsupported("tsvector")?
-
   @@unique([profileId, field, locale])
-  @@index([tsv], type: Gin)
+  // Trigram GIN index on `value` exists via raw SQL migration
+  // (prisma has no first-class type for gin_trgm_ops). See
+  // migrations/20260415000000_add_search_trgm_indexes/migration.sql.
 }
 
 model ProfileImage {
@@ -397,11 +395,6 @@ model Post {
   lat      Float?
   lon      Float?
 
-  // Generated tsvector over `content` using the language-agnostic
-  // 'simple' dictionary. Posts are short, author-written, and may mix
-  // languages — 'simple' avoids misstemming across languages.
-  tsv Unsupported("tsvector")?
-
   // Relations
   postedBy   Profile @relation(fields: [postedById], references: [id], onDelete: Cascade)
   postedById String
@@ -411,7 +404,8 @@ model Post {
   @@index([createdAt])
   @@index([isVisible, isDeleted])
   @@index([lat, lon])
-  @@index([tsv], type: Gin)
+  // Trigram GIN index on `content` exists via raw SQL migration. See
+  // migrations/20260415000000_add_search_trgm_indexes/migration.sql.
 }
 
 model ProfileSessionLog {
