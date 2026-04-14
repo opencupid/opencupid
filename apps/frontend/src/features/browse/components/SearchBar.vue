@@ -1,17 +1,19 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { onClickOutside } from '@vueuse/core'
 
 import LocationFilterInput from '@/features/shared/profileform/LocationFilterInput.vue'
 import SelectableTagList from './SelectableTagList.vue'
+import IconHome from '@/assets/icons/interface/home.svg'
+import IconSearch from '@/assets/icons/interface/search.svg'
 
 import type { LocationDTO, GeoPoint } from '@zod/dto/location.dto'
 import type { OwnerProfile } from '@zod/profile/profile.dto'
 import type { PublicTag } from '@zod/tag/tag.dto'
 import { useBrowseFiltersStore } from '@/features/browse/stores/browseFiltersStore'
 
-defineProps<{
+const props = defineProps<{
   viewerProfile: OwnerProfile | null
   /** Tags available in the current map bounds (from /browse/bounds) */
   availableTags?: PublicTag[]
@@ -25,13 +27,18 @@ const emit = defineEmits<{
 }>()
 
 const filtersStore = useBrowseFiltersStore()
-const { selectedTags } = storeToRefs(filtersStore)
+const { selectedTags, searchResults } = storeToRefs(filtersStore)
+
+function thumbUrl(variants: { size: string; url: string }[]): string | undefined {
+  return (variants.find((v) => v.size === 'thumb') ?? variants[0])?.url
+}
 
 // Drives the LocationSelector's display text only; never read back.
 const locationModel = ref<LocationDTO>({ country: '' })
 
 const panelOpen = ref(false)
 const pillRef = ref<HTMLElement | null>(null)
+const searchQuery = ref('')
 
 onClickOutside(pillRef, closePanel)
 
@@ -47,10 +54,19 @@ function togglePanel() {
   panelOpen.value = !panelOpen.value
 }
 
+function handleSetLocationHome() {
+  if (!props.viewerProfile?.location) return
+  // emit('location:set', props.viewerProfile.location)
+}
 function onLocationSet(point: GeoPoint) {
   selectedTags.value = []
   emit('location:set', point)
 }
+
+watch(searchQuery, (query) => {
+  selectedTags.value = []
+  filtersStore.search(query)
+})
 </script>
 
 <template>
@@ -64,17 +80,39 @@ function onLocationSet(point: GeoPoint) {
       class="search-bar__pill w-100 position-relative d-flex flex-row align-items-center border"
       @click="togglePanel"
     >
-      <div class="search-bar__field search-bar__field--location">
-        <LocationFilterInput
-          v-model="locationModel"
-          :viewer-profile="viewerProfile"
-          @location:set="onLocationSet"
-        />
+      <div class="search-bar__field w-100">
+        <div class="d-flex align-items-center">
+          <div class="flex-grow-1 flex-shrink-0">
+            <BInputGroup
+              class="input-group d-flex align-items-center w-100"
+              size="sm"
+            >
+              <template #prepend>
+                <IconSearch
+                  class="svg-icon ms-2 text-secondary"
+                  :title="$t('profiles.forms.city_search_placeholder')"
+                />
+              </template>
+              <BFormInput
+                v-model="searchQuery"
+                debounce="300"
+                placeholder="Search"
+              />
+
+            </BInputGroup>
+          </div>
+          <BButton
+            variant="link-secondary"
+            size="sm"
+            class="mx-1 p-0"
+            :title="$t('profiles.browse.filters.locate_button_title')"
+            @click="handleSetLocationHome"
+          >
+            <IconHome class="svg-icon-md" />
+          </BButton>
+        </div>
       </div>
-      <div
-        class="search-bar__divider"
-        aria-hidden="true"
-      />
+
       <div class="search-bar__field search-bar__field--tags">
         <SelectableTagList
           :tags="selectedTags"
@@ -88,11 +126,102 @@ function onLocationSet(point: GeoPoint) {
       :class="panelOpen ? '' : 'pointer-events-none'"
       :aria-hidden="panelOpen ? 'false' : 'true'"
     >
-      <SelectableTagList
-        :tags="availableTags ?? []"
-        selectable
-        @select="selectedTags = [$event]"
-      />
+      <div
+        v-if="searchResults"
+        class="search-bar__results d-flex flex-column gap-2"
+      >
+        <section
+          v-if="searchResults.tags.length"
+          class="search-bar__group"
+        >
+          <h6 class="search-bar__group-title text-uppercase small text-secondary mb-1">
+            Tags
+          </h6>
+          <SelectableTagList :tags="searchResults.tags" />
+        </section>
+
+        <section
+          v-if="searchResults.profiles.length"
+          class="search-bar__group"
+        >
+          <h6 class="search-bar__group-title text-uppercase small text-secondary mb-1">
+            Profiles
+          </h6>
+          <ul class="list-unstyled m-0">
+            <li
+              v-for="profile in searchResults.profiles"
+              :key="profile.id"
+              class="search-bar__profile py-1"
+            >
+              <RouterLink
+                :to="{ name: 'PublicProfile', params: { profileId: profile.id } }"
+                class="d-flex align-items-center gap-2 text-decoration-none text-body"
+              >
+                <img
+                  v-if="thumbUrl(profile.profileImages[0]?.variants ?? [])"
+                  :src="thumbUrl(profile.profileImages[0]?.variants ?? [])"
+                  :alt="profile.publicName"
+                  class="search-bar__avatar rounded-circle"
+                />
+                <span
+                  v-else
+                  class="search-bar__avatar search-bar__avatar--placeholder rounded-circle bg-secondary-subtle"
+                ></span>
+                <span class="text-truncate">{{ profile.publicName }}</span>
+              </RouterLink>
+            </li>
+          </ul>
+        </section>
+
+        <section
+          v-if="searchResults.posts.length"
+          class="search-bar__group"
+        >
+          <h6 class="search-bar__group-title text-uppercase small text-secondary mb-1">
+            Posts
+          </h6>
+          <ul class="list-unstyled m-0">
+            <li
+              v-for="post in searchResults.posts"
+              :key="post.id"
+              class="search-bar__post py-1"
+            >
+              <div class="small text-secondary">{{ post.postedBy.publicName }}</div>
+              <div class="text-truncate">{{ post.content }}</div>
+            </li>
+          </ul>
+        </section>
+
+        <section
+          v-if="searchResults.locations.length"
+          class="search-bar__group"
+        >
+          <h6 class="search-bar__group-title text-uppercase small text-secondary mb-1">
+            Locations
+          </h6>
+          <ul class="list-unstyled m-0">
+            <li
+              v-for="(loc, i) in searchResults.locations"
+              :key="`${loc.country}-${loc.cityName ?? ''}-${i}`"
+              class="search-bar__location py-1 text-truncate"
+            >
+              {{ loc.cityName ? `${loc.cityName}, ${loc.country}` : loc.country }}
+            </li>
+          </ul>
+        </section>
+
+        <div
+          v-if="
+            !searchResults.tags.length &&
+            !searchResults.profiles.length &&
+            !searchResults.posts.length &&
+            !searchResults.locations.length
+          "
+          class="text-center text-secondary small py-3"
+        >
+          No results
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -103,7 +232,7 @@ $panel-height: 30vh;
 
 .search-bar__pill {
   z-index: 2;
-  background-color: var(--bs-body-bg, #fff);
+  background-color: var(--bs-body-bg );
   border-radius: $pill-radius;
   box-shadow:
     0 1px 2px rgba(0, 0, 0, 0.08),
@@ -130,9 +259,9 @@ $panel-height: 30vh;
   opacity: 0;
   transform: translateY(-4px);
   transition:
-    opacity 0.15s ease,
-    height 0.15s ease,
-    transform 0.15s ease;
+    opacity 0.15s ease-in-out,
+    height 0.15s ease-in-out,
+    transform 0.15s ease-in-out;
 
   .search-bar--open & {
     height: $panel-height;
@@ -147,58 +276,26 @@ $panel-height: 30vh;
 }
 
 .search-bar__field {
-  flex: 1 1 0;
+  // flex: 1 1 0;
   min-width: 0;
 }
 
-.search-bar__divider {
-  flex: 0 0 1px;
-  align-self: stretch;
-  margin: 0.5rem 0.5rem;
-  background-color: var(--bs-border-color, rgba(0, 0, 0, 0.1));
+.search-bar__avatar {
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  flex-shrink: 0;
 }
 
-// Strip the multiselect inputs of their own borders/background so the
-// outer pill is the only visible frame. Targets vue-multiselect's
-// stable class names, including the --active state which re-applies
-// top/bottom borders when the dropdown opens.
-:deep(.multiselect__tags),
-:deep(.multiselect--active .multiselect__tags),
-:deep(.multiselect--above.multiselect--active .multiselect__tags) {
-  border: none;
-  background: transparent;
-  min-height: 38px;
-  padding-top: 8px;
-  padding-bottom: 0;
+
+
+:deep(.input-group) {
+  .form-control {
+    border: none;
+    background: transparent;
+    box-shadow: none;
+  }
 }
 
-:deep(.multiselect__single),
-:deep(.multiselect__input) {
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  outline: none;
-}
 
-:deep(.multiselect__input:focus),
-:deep(.multiselect__input:focus-visible) {
-  outline: none;
-  box-shadow: none;
-}
-
-:deep(.multiselect),
-:deep(.multiselect:focus),
-:deep(.multiselect--active),
-:deep(.multiselect--active .multiselect__content-wrapper) {
-  box-shadow: none;
-  outline: none;
-  border: none;
-}
-
-// The "use my profile location" button sits inline with the location
-// input; tighten its margin so it reads as part of the pill, not a
-// floating affordance.
-:deep(.location-selector) {
-  width: 100%;
-}
 </style>

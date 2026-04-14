@@ -1,7 +1,13 @@
 import { defineStore } from 'pinia'
+import { CanceledError } from 'axios'
+import { api, safeApiCall } from '@/lib/api'
 import { bus } from '@/lib/bus'
 import type { PublicTag } from '@zod/tag/tag.dto'
 import { MAX_BROWSE_TAGS } from '@shared/maps'
+import { SearchResponseSchema, type SearchResponse } from '@shared/zod/search/search.dto'
+import { storeSuccess, storeError, type StoreVoidSuccess, type StoreError } from '@/store/helpers'
+
+let searchAbortController: AbortController | null = null
 
 /**
  * Ephemeral, client-side filter state for the browse map. State lives only
@@ -17,11 +23,13 @@ import { MAX_BROWSE_TAGS } from '@shared/maps'
  */
 interface BrowseFiltersState {
   selectedTags: PublicTag[]
+  searchResults: SearchResponse | null
 }
 
 export const useBrowseFiltersStore = defineStore('browseFilters', {
   state: (): BrowseFiltersState => ({
     selectedTags: [],
+    searchResults: null,
   }),
 
   getters: {
@@ -31,6 +39,9 @@ export const useBrowseFiltersStore = defineStore('browseFilters', {
   },
 
   actions: {
+
+
+    
     toggleTag(tag: PublicTag) {
       const idx = this.selectedTags.findIndex((t) => t.id === tag.id)
       if (idx === -1) {
@@ -49,8 +60,40 @@ export const useBrowseFiltersStore = defineStore('browseFilters', {
       this.selectedTags = []
     },
 
+    async search(q: string): Promise<StoreVoidSuccess | StoreError> {
+      if (searchAbortController) {
+        searchAbortController.abort()
+      }
+      const controller = new AbortController()
+      searchAbortController = controller
+
+      try {
+        const res = await safeApiCall(() =>
+          api.get('/search', { params: { q }, signal: controller.signal })
+        )
+        const parsed = SearchResponseSchema.parse(res.data)
+        this.searchResults = parsed
+        return storeSuccess()
+      } catch (error: any) {
+        if (error instanceof CanceledError) {
+          this.searchResults = null
+          return storeSuccess()
+        }
+        return storeError(error, 'Search failed')
+      } finally {
+        if (searchAbortController === controller) {
+          searchAbortController = null
+        }
+      }
+    },
+
     reset() {
       this.selectedTags = []
+      this.searchResults = null
+      if (searchAbortController) {
+        searchAbortController.abort()
+        searchAbortController = null
+      }
     },
   },
 })

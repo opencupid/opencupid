@@ -1,5 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
+import { CanceledError } from 'axios'
+
+const { mockGet } = vi.hoisted(() => ({ mockGet: vi.fn() }))
+vi.mock('@/lib/api', () => ({
+  api: { get: mockGet },
+  safeApiCall: (fn: () => any) => fn(),
+  isApiOnline: () => Promise.resolve(),
+}))
 
 vi.mock('@/lib/bus', () => ({
   bus: { on: vi.fn(), emit: vi.fn() },
@@ -9,11 +17,20 @@ import { useBrowseFiltersStore } from '../browseFiltersStore'
 import { MAX_BROWSE_TAGS } from '@shared/maps'
 import type { PublicTag } from '@zod/tag/tag.dto'
 
+const emptyResults = {
+  success: true as const,
+  tags: [],
+  profiles: [],
+  posts: [],
+  locations: [],
+}
+
 const tag = (id: string, name = id): PublicTag => ({ id, name, slug: id })
 
 describe('useBrowseFiltersStore', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
+    vi.clearAllMocks()
   })
 
   it('starts with an empty selection', () => {
@@ -79,6 +96,99 @@ describe('useBrowseFiltersStore', () => {
       store.setTags([tag('t1'), tag('t2')])
       store.reset()
       expect(store.selectedTags).toEqual([])
+    })
+
+    it('reset also clears searchResults', async () => {
+      const store = useBrowseFiltersStore()
+      mockGet.mockResolvedValueOnce({ data: emptyResults })
+      await store.search('hello')
+      expect(store.searchResults).not.toBeNull()
+
+      store.reset()
+      expect(store.searchResults).toBeNull()
+    })
+  })
+
+  describe('search', () => {
+    it('starts with searchResults=null', () => {
+      const store = useBrowseFiltersStore()
+      expect(store.searchResults).toBeNull()
+    })
+
+    it('calls GET /search with the query and parses the response', async () => {
+      const store = useBrowseFiltersStore()
+      mockGet.mockResolvedValueOnce({ data: emptyResults })
+
+      const result = await store.search('hiking')
+
+      expect(mockGet).toHaveBeenCalledWith(
+        '/search',
+        expect.objectContaining({ params: { q: 'hiking' } })
+      )
+      expect(result.success).toBe(true)
+      expect(store.searchResults).toEqual(emptyResults)
+    })
+
+    it('stores results from the server', async () => {
+      const store = useBrowseFiltersStore()
+      const payload = {
+        success: true as const,
+        tags: [{ id: 'cltagabc000000000000001', name: 'Hiking', slug: 'hiking' }],
+        profiles: [],
+        posts: [],
+        locations: [],
+      }
+      mockGet.mockResolvedValueOnce({ data: payload })
+
+      await store.search('hik')
+
+      expect(store.searchResults?.tags).toHaveLength(1)
+      expect(store.searchResults?.tags[0]!.name).toBe('Hiking')
+    })
+
+    it('treats a canceled request as success and clears results', async () => {
+      const store = useBrowseFiltersStore()
+      mockGet.mockResolvedValueOnce({ data: emptyResults })
+      await store.search('first')
+      expect(store.searchResults).not.toBeNull()
+
+      mockGet.mockRejectedValueOnce(new CanceledError('canceled'))
+      const result = await store.search('second')
+
+      expect(result.success).toBe(true)
+      expect(store.searchResults).toBeNull()
+    })
+
+    it('returns a storeError on non-cancel failures', async () => {
+      const store = useBrowseFiltersStore()
+      mockGet.mockRejectedValueOnce(new Error('boom'))
+
+      const result = await store.search('x')
+
+      expect(result.success).toBe(false)
+    })
+
+    it('aborts the previous in-flight request on a new call', async () => {
+      const store = useBrowseFiltersStore()
+      const signals: AbortSignal[] = []
+      mockGet.mockImplementation((_url: string, opts: { signal: AbortSignal }) => {
+        signals.push(opts.signal)
+        return new Promise((resolve, reject) => {
+          opts.signal.addEventListener('abort', () => reject(new CanceledError('canceled')))
+          // second call resolves; first call never resolves on its own
+          if (signals.length === 2) {
+            resolve({ data: emptyResults })
+          }
+        })
+      })
+
+      const first = store.search('alpha')
+      const second = store.search('beta')
+
+      await Promise.all([first, second])
+
+      expect(signals[0]!.aborted).toBe(true)
+      expect(signals[1]!.aborted).toBe(false)
     })
   })
 })
