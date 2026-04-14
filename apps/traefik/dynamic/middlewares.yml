@@ -25,3 +25,15 @@ http:
       headers:
         customRequestHeaders:
           X-Admin-Authenticated: "true"
+
+    media-jwt:
+      plugin:
+        jwt:
+          Keys:
+            - "{{ env "JWT_SECRET" }}"
+          Alg: HS256
+          JwtSources:
+            - type: cookie
+              key: __session
+          PayloadFields:
+            - exp

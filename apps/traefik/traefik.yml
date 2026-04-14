@@ -1,6 +1,11 @@
 # Traefik v3 static configuration
-# Serves as a "dumb" TLS + routing proxy — no application secrets or logic.
 # All service routing is declared via Docker Compose labels on each service.
+
+experimental:
+  plugins:
+    jwt:
+      moduleName: github.com/traefik-plugins/traefik-jwt-plugin
+      version: v0.10.0
 
 entryPoints:
   web:
@@ -20,7 +25,6 @@ entryPoints:
 certificatesResolvers:
   letsencrypt:
     acme:
-      email: "${EMAIL}"
       storage: /acme/acme.json
       httpChallenge:
         entryPoint: web

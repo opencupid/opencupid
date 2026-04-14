@@ -20,6 +20,9 @@ services:
     ports:
       - '443:443'
       - '80:80'
+    environment:
+      - JWT_SECRET=${JWT_SECRET}
+      - TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_EMAIL=${EMAIL}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./apps/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
@@ -128,8 +131,7 @@ services:
       traefik.http.routers.media.rule: "Host(`${DOMAIN}`) && PathPrefix(`/user-content`)"
       traefik.http.routers.media.entrypoints: websecure
       traefik.http.routers.media.tls.certresolver: letsencrypt
-      traefik.http.routers.media.middlewares: media-auth,media-strip,media-cache
-      traefik.http.middlewares.media-auth.forwardauth.address: "http://backend:3000/api/auth/forward"
+      traefik.http.routers.media.middlewares: media-jwt@file,media-strip,media-cache
       traefik.http.middlewares.media-strip.stripprefix.prefixes: "/user-content"
       traefik.http.middlewares.media-cache.headers.customresponseheaders.Cache-Control: "public, max-age=31536000, immutable"
       traefik.http.middlewares.media-cache.headers.customresponseheaders.X-Content-Type-Options: "nosniff"

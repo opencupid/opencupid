@@ -10,7 +10,6 @@ import { SmsService } from '@/services/sms.service'
 import { CaptchaService } from '@/services/captcha.service'
 import { appConfig } from '@/lib/appconfig'
 import '@fastify/cookie'
-import authForwardRoutes from './auth-forward.route'
 
 import {
   UserIdentifyPayloadSchema,
@@ -61,8 +60,6 @@ function clearRefreshCookie(reply: FastifyReply) {
 const WS_TICKET_TTL = 30 // seconds
 
 const authRoutes: FastifyPluginAsync = async (fastify) => {
-  fastify.register(authForwardRoutes)
-
   const userService = UserService.getInstance()
   const captchaService = new CaptchaService(appConfig.ALTCHA_HMAC_KEY)
   const refreshTokenService = new RefreshTokenService(fastify.redis)
