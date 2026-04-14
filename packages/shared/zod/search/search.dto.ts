@@ -1,18 +1,8 @@
 import z from 'zod'
-import { PostTypeSchema } from '../generated'
 import { ProfileSummarySchema } from '../profile/profile.dto'
 import { PublicTagSchema } from '../tag/tag.dto'
+import { PostSummarySchema } from '../post/post.dto'
 import { LocationSchema } from '../dto/location.dto'
-
-/** Minimal post shape returned by /search — sized for omnibox rendering. */
-export const PostSummarySchema = z.object({
-  id: z.string(),
-  type: PostTypeSchema,
-  content: z.string(),
-  postedBy: ProfileSummarySchema,
-})
-
-export type PostSummary = z.infer<typeof PostSummarySchema>
 
 /** Grouped search results — one bucket per content kind. */
 export const SearchResponseSchema = z.object({

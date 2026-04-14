@@ -5,10 +5,10 @@ import {
   type PublicPostWithProfile,
   type PublicPostDetail,
   type OwnerPost,
+  type PostSummary,
 } from '@zod/post/post.dto'
 import type { PostWithProfileAndContext } from '@/services/post.service'
 import type { LocationDTO } from '@zod/dto/location.dto'
-import type { PostSummary } from '@zod/search/search.dto'
 import type { DbProfileSummary } from '@zod/profile/profile.db'
 import type { PostType } from '@prisma/client'
 import { mapProfileSummary } from './profile.mappers'

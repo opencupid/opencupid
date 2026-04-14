@@ -61,6 +61,15 @@ export const PublicPostDetailSchema = PublicPostWithProfileSchema.extend({
 })
 export type PublicPostDetail = z.infer<typeof PublicPostDetailSchema>
 
+// Minimal post shape for omnibox / search-result rendering
+export const PostSummarySchema = z.object({
+  id: z.string(),
+  type: PostTypeSchema,
+  content: z.string(),
+  postedBy: ProfileSummarySchema,
+})
+export type PostSummary = z.infer<typeof PostSummarySchema>
+
 // Create post payload (from client to API)
 export const CreatePostPayloadSchema = z.object({
   content: z.string().min(1).max(2000),
