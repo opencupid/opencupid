@@ -1,72 +1,136 @@
 <script setup lang="ts">
+import { inject, type Ref, computed } from 'vue'
+
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { faLocationDot } from '@fortawesome/free-solid-svg-icons'
+import IconPostIt from '@/assets/icons/interface/post-it.svg'
+
+import type { PublicTag } from '@zod/tag/tag.dto'
+import type { LocationDTO } from '@zod/dto/location.dto'
+import type { PostSummary } from '@zod/post/post.dto'
+import type { OwnerProfile, ProfileSummary } from '@zod/profile/profile.dto'
 import type { SearchResponse } from '@shared/zod/search/search.dto'
+import type { GeocodingResult } from '@/features/geocoding/stores/geocodingStore'
 
+import ProfileChipList from './ProfileChipList.vue'
 import SelectableTagList from './SelectableTagList.vue'
-import ProfileChipList from '@/features/shared/components/ProfileChipList.vue'
+import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
 
-defineProps<{ results: SearchResponse }>()
+const props = defineProps<{
+  results: SearchResponse
+  geocodedLocations?: GeocodingResult[]
+}>()
+
+const geocodedAsLocations = computed<LocationDTO[]>(() =>
+  (props.geocodedLocations ?? []).map((r) => ({
+    country: r.country,
+    cityName: r.name,
+    lat: r.lat,
+    lon: r.lon,
+  }))
+)
 
 defineEmits<{
-  'select:profile': [profileId: string]
+  'tag:select': [tag: PublicTag]
+  'post:select': [post: PostSummary]
+  'profile:select': [profile: ProfileSummary]
+  'location:select': [location: LocationDTO]
 }>()
+
+const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
+const viewerLocation = computed(() => viewerProfile?.value?.location)
 </script>
 
 <template>
-  <div class="search-results d-flex flex-column gap-2">
+  <div class="search-results d-flex flex-column">
+    <!-- <section v-if="results.locations.length">
+      <BListGroup flush>
+        <BListGroupItem
+          v-for="(loc, i) in results.locations"
+          href="#"
+          class="small"
+          :key="`${loc.country}-${loc.cityName ?? ''}-${i}`"
+          @click="$emit('location:select', loc)"
+        >
+          <FontAwesomeIcon
+            :icon="faLocationDot"
+            class="me-2 text-secondary"
+          />
+
+          <LocationLabel
+            :viewerLocation="viewerLocation"
+            :location="loc"
+            :showOnlyForeignCountry="true"
+            :showCountryIcon="false"
+          />
+        </BListGroupItem>
+      </BListGroup>
+    </section> -->
+
+    <section v-if="geocodedAsLocations.length">
+      <BListGroup flush>
+        <BListGroupItem
+          v-for="(loc, i) in geocodedAsLocations"
+          href="#"
+          class="small border-0"
+          :key="`geo-${loc.country}-${loc.cityName ?? ''}-${i}`"
+          @click="$emit('location:select', loc)"
+        >
+          <FontAwesomeIcon
+            :icon="faLocationDot"
+            class="me-2 text-secondary"
+          />
+
+          <LocationLabel
+            :viewerLocation="viewerLocation"
+            :location="loc"
+            :showOnlyForeignCountry="true"
+            :showCountryIcon="false"
+          />
+        </BListGroupItem>
+      </BListGroup>
+    </section>
+
     <section
       v-if="results.tags.length"
-      class="search-results__group"
+      class="px-2 pb-2 d-flex align-items-start"
     >
+      <IconPostIt
+        width="24"
+        height="24"
+        class="mt-1 me-2 text-secondary flex-shrink-0"
+      />
       <SelectableTagList
         :tags="results.tags"
         selectable
+        @select="$emit('tag:select', $event)"
       />
-      <hr class="my-1" />
     </section>
 
     <section
       v-if="results.profiles.length"
-      class="search-results__group"
+      class="px-2"
     >
       <ProfileChipList
         :profiles="results.profiles"
-        @select:profile="(id) => $emit('select:profile', id)"
+        @select:profile="(profile: ProfileSummary) => $emit('profile:select', profile)"
       />
     </section>
 
-    <section
-      v-if="results.posts.length"
-      class="search-results__group"
-    >
-      <h6 class="search-results__group-title text-uppercase small text-secondary mb-1">Posts</h6>
-      <ul class="list-unstyled m-0">
-        <li
+    <section v-if="results.posts.length">
+      <BListGroup flush>
+        <BListGroupItem
           v-for="post in results.posts"
+          class="bg-post-it small"
+          href="#"
           :key="post.id"
-          class="search-results__post py-1"
         >
-          <div class="small text-secondary">{{ post.postedBy.publicName }}</div>
-          <div class="text-truncate">{{ post.content }}</div>
-        </li>
-      </ul>
-    </section>
-
-    <section
-      v-if="results.locations.length"
-      class="search-results__group"
-    >
-      <h6 class="search-results__group-title text-uppercase small text-secondary mb-1">
-        Locations
-      </h6>
-      <ul class="list-unstyled m-0">
-        <li
-          v-for="(loc, i) in results.locations"
-          :key="`${loc.country}-${loc.cityName ?? ''}-${i}`"
-          class="search-results__location py-1 text-truncate"
-        >
-          {{ loc.cityName ? `${loc.cityName}, ${loc.country}` : loc.country }}
-        </li>
-      </ul>
+          <div class="small lh-sm text-truncate">
+            {{ post.content }}
+            <!-- <div class="text-secondary text-end">{{ post.postedBy.publicName }}</div> -->
+          </div>
+        </BListGroupItem>
+      </BListGroup>
     </section>
 
     <div
@@ -74,7 +138,8 @@ defineEmits<{
         !results.tags.length &&
         !results.profiles.length &&
         !results.posts.length &&
-        !results.locations.length
+        !results.locations.length &&
+        !geocodedAsLocations.length
       "
       class="text-center text-secondary small py-3"
     >

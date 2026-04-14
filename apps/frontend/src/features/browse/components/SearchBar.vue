@@ -9,9 +9,14 @@ import SearchInput from './SearchInput.vue'
 import SearchResults from './SearchResults.vue'
 
 import type { LocationDTO, GeoPoint } from '@zod/dto/location.dto'
-import type { OwnerProfile } from '@zod/profile/profile.dto'
+import type { OwnerProfile, ProfileSummary } from '@zod/profile/profile.dto'
 import type { PublicTag } from '@zod/tag/tag.dto'
 import { useSearchStore } from '@/features/browse/stores/searchStore'
+import { useGeocodingStore } from '@/features/geocoding/stores/geocodingStore'
+import { useI18n } from 'vue-i18n'
+import type { Profile } from '../../../../../../packages/shared/zod/generated'
+import { toGeoPoint } from '../../map/utils/mapUtils'
+import type { PostSummary } from '../../../../../../packages/shared/zod/post/post.dto'
 
 const props = defineProps<{
   viewerProfile: OwnerProfile | null
@@ -27,12 +32,11 @@ const emit = defineEmits<{
 }>()
 
 const searchStore = useSearchStore()
+const geocodingStore = useGeocodingStore()
 const { selectedTags, searchResults } = storeToRefs(searchStore)
+const { results: geocodedLocations } = storeToRefs(geocodingStore)
 const router = useRouter()
-
-function onSelectProfile(profileId: string) {
-  router.push({ name: 'PublicProfile', params: { profileId } })
-}
+const { locale } = useI18n()
 
 // Drives the LocationSelector's display text only; never read back.
 const locationModel = ref<LocationDTO>({ country: '' })
@@ -56,17 +60,40 @@ function togglePanel() {
 }
 
 function handleSetLocationHome() {
-  if (!props.viewerProfile?.location) return
-  // emit('location:set', props.viewerProfile.location)
+  const point = toGeoPoint(props.viewerProfile?.location)
+  if (point) emit('location:set', point)
 }
-function onLocationSet(point: GeoPoint) {
+
+function onSelectLocation(location: LocationDTO) {
+  const point = toGeoPoint(location)
+  if (!point) return
+  selectedTags.value = []
+  emit('location:set', point)
+}
+
+function onSelectProfile(profile: ProfileSummary) {
+  router.push({ name: 'PublicProfile', params: { profileId: profile.id } })
+}
+
+function onSelectTag(tag: PublicTag) {
+  // TODO
+  selectedTags.value = [tag]
+}
+
+function onSelectPost(post: PostSummary) {
+  // TODO
+  const point = toGeoPoint(post.location)
+  if (!point) return
   selectedTags.value = []
   emit('location:set', point)
 }
 
 watch(searchQuery, (query) => {
   selectedTags.value = []
+  // Fire both searches in parallel — each store owns its own abort controller,
+  // so rapid re-typing cancels prior in-flight requests on both sides.
   searchStore.search(query)
+  geocodingStore.search(query, locale.value)
 })
 </script>
 
@@ -97,14 +124,18 @@ watch(searchQuery, (query) => {
       </div>
     </div>
     <div
-      class="search-bar__panel position-absolute overflow-y-auto overflow-x-hidden w-100 left-0 top-100 z-1 px-1 pt-1 pb-2"
+      class="search-bar__panel position-absolute overflow-y-auto overflow-x-hidden w-100 left-0 top-100 z-1 pt-1 pb-2"
       :class="panelOpen ? '' : 'pointer-events-none'"
       :aria-hidden="panelOpen ? 'false' : 'true'"
     >
       <SearchResults
         v-if="searchResults"
         :results="searchResults"
-        @select:profile="onSelectProfile"
+        :geocoded-locations="geocodedLocations"
+        @profile:select="onSelectProfile"
+        @location:select="onSelectLocation"
+        @tag:select="onSelectTag"
+        @post:select="onSelectPost"
       />
     </div>
   </div>

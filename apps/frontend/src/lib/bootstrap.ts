@@ -9,6 +9,8 @@ import { useInteractionStore } from '../features/interaction/stores/useInteracti
 import { useMessageStore } from '../features/messaging/stores/messageStore'
 import { useOwnerProfileStore } from '../features/myprofile/stores/ownerProfileStore'
 import { useLocalStore } from '../store/localStore'
+import { useUserStore } from '../store/userStore'
+import { useI18nStore } from '../store/i18nStore'
 
 export const useBootstrap = defineStore('bootstrap', () => {
   // Singleton promise — subsequent calls to bootstrap() return the same promise

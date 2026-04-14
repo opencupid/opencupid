@@ -6,7 +6,7 @@ vi.mock('@/features/images/components/ProfileThumbnail.vue', () => ({
   default: { template: '<span class="thumb-stub" />' },
 }))
 
-import ProfileChipList from '../ProfileChipList.vue'
+import ProfileChipList from '../../../browse/components/ProfileChipList.vue'
 
 const profiles: ProfileSummary[] = [
   { id: 'p1', publicName: 'Alice', profileImages: [] },

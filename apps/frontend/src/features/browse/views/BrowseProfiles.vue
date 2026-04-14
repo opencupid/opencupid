@@ -27,7 +27,7 @@ import PostMapPopup from '@/features/posts/components/PostMapPopup.vue'
 import PostFullView from '@/features/posts/components/PostFullView.vue'
 import OwnerDrawerControls from '../components/OwnerDrawerControls.vue'
 import { usePostStore } from '@/features/posts/stores/postStore'
-import type { GeoPoint } from '@zod/dto/location.dto'
+import type { GeoPoint, LocationDTO } from '@zod/dto/location.dto'
 import ShareDialog from '@/features/app/components/ShareDialog.vue'
 
 // Component name must be 'AppShell' for KeepAlive to identify it correctly

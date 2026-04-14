@@ -6,14 +6,13 @@ defineProps<{ profiles: ProfileSummary[] }>()
 </script>
 
 <template>
-  <BListGroup>
+  <BListGroup flush>
     <BListGroupItem
       v-for="profile in profiles"
       href="#"
       :key="profile.id"
-      flush
-      class="profilechip d-flex align-items-center mb-1 p-1 border-0 rounded-3 cursor-pointer user-select-none"
-      @click="$emit('select:profile', profile.id)"
+      class="profilechip d-flex align-items-center mb-2 p-0 border-0 rounded-3 cursor-pointer user-select-none"
+      @click="$emit('select:profile', profile)"
     >
       <ProfileThumbnail
         :profile="profile"
