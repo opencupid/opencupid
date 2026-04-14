@@ -11,24 +11,29 @@ import { GetProfilesResponse } from '@zod/apiResponse.dto'
 import { MAP_MAX_ZOOM, MAX_BROWSE_TAGS } from '@shared/maps'
 import { mapProfileTagsTranslated } from '../mappers/tag.mappers'
 
-
 /** Zod schema: optional comma-separated tag IDs → deduped string[]. */
 const TagIdsSchema = z
   .string()
   .default('')
-  .transform((raw) => [...new Set(raw.split(',').map((s) => s.trim()).filter(Boolean))])
+  .transform((raw) => [
+    ...new Set(
+      raw
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+    ),
+  ])
   .pipe(z.array(z.string().cuid()).max(MAX_BROWSE_TAGS))
 
- const ClusterQuerySchema = BoundsQuerySchema.extend({
-    zoom: z.coerce.number().int().min(0).max(MAP_MAX_ZOOM),
-    tagIds: TagIdsSchema,
-  })
+const ClusterQuerySchema = BoundsQuerySchema.extend({
+  zoom: z.coerce.number().int().min(0).max(MAP_MAX_ZOOM),
+  tagIds: TagIdsSchema,
+})
 
-  const LeavesQuerySchema = z.object({
-    clusterId: z.coerce.number().int(),
-    tagIds: TagIdsSchema,
-  })
-
+const LeavesQuerySchema = z.object({
+  clusterId: z.coerce.number().int(),
+  tagIds: TagIdsSchema,
+})
 
 const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
   const clusterService = ClusterService.getInstance()
@@ -82,39 +87,43 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
    * @query {string} [tagIds] - Optional comma-separated tag IDs
    * @returns {{ success: true, features: PointFeature[] }}
    */
-  fastify.get(
-    '/cluster-leaves',
-    { onRequest: [fastify.authenticate] },
-    async (req, reply) => {
-      if (!req.session.profile.isSocialActive) {
-        return sendForbiddenError(reply)
-      }
-
-      const parsed = LeavesQuerySchema.safeParse(req.query)
-      if (!parsed.success) {
-        return sendError(reply, 400, 'Missing or invalid query parameters')
-      }
-
-      const { clusterId, tagIds } = parsed.data
-      const features = clusterService.getLeaves(req.session.profileId, clusterId, tagIds)
-      return reply.code(200).send({ success: true, features })
+  fastify.get('/cluster-leaves', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    if (!req.session.profile.isSocialActive) {
+      return sendForbiddenError(reply)
     }
-  )
+
+    const parsed = LeavesQuerySchema.safeParse(req.query)
+    if (!parsed.success) {
+      return sendError(reply, 400, 'Missing or invalid query parameters')
+    }
+
+    const { clusterId, tagIds } = parsed.data
+    const features = clusterService.getLeaves(req.session.profileId, clusterId, tagIds)
+    return reply.code(200).send({ success: true, features })
+  })
 
   // ── Deprecated shims for stale 0.48.0 clients ──────────────────────
   // Remove once all clients have updated.
 
   /** @deprecated Renamed to /clusters */
-  fastify.get('/social/map/clusters', { onRequest: [fastify.authenticate] }, async (_req, reply) => {
-    return reply.code(200).send({ success: true, features: [], tags: [] })
-  })
+  fastify.get(
+    '/social/map/clusters',
+    { onRequest: [fastify.authenticate] },
+    async (_req, reply) => {
+      return reply.code(200).send({ success: true, features: [], tags: [] })
+    }
+  )
 
   /** @deprecated Renamed to /cluster-leaves */
-  fastify.get('/social/map/clusters/leaves', { onRequest: [fastify.authenticate] }, async (_req, reply) => {
-    return reply.code(200).send({ success: true, features: [] })
-  })
+  fastify.get(
+    '/social/map/clusters/leaves',
+    { onRequest: [fastify.authenticate] },
+    async (_req, reply) => {
+      return reply.code(200).send({ success: true, features: [] })
+    }
+  )
 
-  /** @deprecated Renamed to /matches */
+  /** @deprecated Endpoint retired */
   fastify.get('/dating/match-ids', { onRequest: [fastify.authenticate] }, async (_req, reply) => {
     return reply.code(200).send({ success: true, ids: [] })
   })

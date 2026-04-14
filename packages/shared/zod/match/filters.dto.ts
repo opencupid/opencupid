@@ -7,4 +7,3 @@ export const UpdateDatingPreferencesPayloadSchema = ProfileSchema.pick({
   ...datingPreferencesFields,
 }).partial()
 export type UpdateDatingPreferencesPayload = z.infer<typeof UpdateDatingPreferencesPayloadSchema>
-
