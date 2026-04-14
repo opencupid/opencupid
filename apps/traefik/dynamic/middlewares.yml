@@ -30,7 +30,7 @@ http:
       plugin:
         jwt:
           Keys:
-            - "{{ env "JWT_SECRET" }}"
+            - '{{ env "JWT_SECRET" }}'
           Alg: HS256
           JwtSources:
             - type: cookie

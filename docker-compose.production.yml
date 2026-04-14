@@ -87,7 +87,7 @@ services:
       traefik.http.routers.frontend.rule: "Host(`${DOMAIN}`)"
       traefik.http.routers.frontend.priority: "1"
       traefik.http.routers.frontend.entrypoints: websecure
-      traefik.http.routers.frontend.middlewares: compress@file,rate-limit@file,security-headers@file
+      traefik.http.routers.frontend.middlewares: compress@file,rate-limit@file
       traefik.http.services.frontend.loadbalancer.server.port: "3001"
 
   admin:
@@ -112,7 +112,7 @@ services:
     image: nginx:alpine
     restart: always
     volumes:
-      - '${MEDIA_UPLOAD_DIR}:/var/www:ro'
+      - '${MEDIA_UPLOAD_DIR}:/usr/share/nginx/html:ro'
     labels:
       traefik.enable: "true"
       traefik.http.routers.media.rule: "Host(`${DOMAIN}`) && PathPrefix(`/user-content`)"
@@ -150,7 +150,7 @@ services:
       - jitsi-prosody
     labels:
       traefik.enable: "true"
-      traefik.http.routers.jitsi.rule: "Host(`meet.${DOMAIN}`)"
+      traefik.http.routers.jitsi.rule: "Host(`${JITSI_DOMAIN}`)"
       traefik.http.routers.jitsi.entrypoints: websecure
       traefik.http.services.jitsi.loadbalancer.server.port: "80"
 
