@@ -66,17 +66,11 @@ services:
       traefik.http.routers.ws.rule: "Host(`${DOMAIN}`) && PathPrefix(`/ws`)"
       traefik.http.routers.ws.entrypoints: websecure
 
-      # --- Admin domain: API (mTLS) ---
-      traefik.http.routers.admin-api.rule: "Host(`${ADMIN_DOMAIN}`) && PathPrefix(`/api`)"
-      traefik.http.routers.admin-api.entrypoints: websecure
-      traefik.http.routers.admin-api.tls.options: admin-mtls@file
-      traefik.http.routers.admin-api.middlewares: admin-header@file
-
-      # --- Admin domain: Bull Board (mTLS) ---
-      traefik.http.routers.admin-bullboard.rule: "Host(`${ADMIN_DOMAIN}`) && PathPrefix(`/bull-board`)"
-      traefik.http.routers.admin-bullboard.entrypoints: websecure
-      traefik.http.routers.admin-bullboard.tls.options: admin-mtls@file
-      traefik.http.routers.admin-bullboard.middlewares: admin-header@file
+      # --- Admin domain: API + Bull Board (mTLS) ---
+      traefik.http.routers.admin-backend.rule: "Host(`${ADMIN_DOMAIN}`) && (PathPrefix(`/api`) || PathPrefix(`/bull-board`))"
+      traefik.http.routers.admin-backend.entrypoints: websecure
+      traefik.http.routers.admin-backend.tls.options: admin-mtls@file
+      traefik.http.routers.admin-backend.middlewares: admin-header@file
 
   frontend:
     image: ${DOCKER_IMAGE_PREFIX:-ghcr.io/opencupid/opencupid}-frontend:${FRONTEND_VERSION:-latest}
