@@ -49,7 +49,7 @@ defineExpose({ flyToMarker })
     />
     <div
       ref="mapEl"
-      class="osm-poi-map"
+      class="osm-poi-map sentry-block"
       :class="{ 'opacity-50': !isMapReady }"
     />
 
