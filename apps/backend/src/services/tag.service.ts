@@ -30,8 +30,8 @@ export class TagService {
   }
 
   /**
-   * Find tags whose base name or session-locale translation contains the
-   * given substring (case-insensitive).
+   * Find tags whose session-locale translation contains the given substring
+   * (case-insensitive).
    * @param term       Search term.
    * @param locale     Session locale; used to match and include translations.
    * @param opts.limit Max results (default 20).
@@ -46,12 +46,7 @@ export class TagService {
         isDeleted: false,
         isApproved: true,
         isHidden: false,
-        OR: [
-          // Base name (originalLocale, typically 'en')
-          { name: { contains: term, mode: 'insensitive' } },
-          // Translation in the session locale
-          translationWhereClause(term, locale),
-        ],
+        ...translationWhereClause(term, locale),
       },
       include: tagTranslationsInclude(locale),
       take: opts.limit ?? 20,
