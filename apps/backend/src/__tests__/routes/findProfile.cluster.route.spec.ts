@@ -73,8 +73,8 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
-describe('GET /social/map/clusters', () => {
-  const handler = () => fastify.routes['GET /social/map/clusters']
+describe('GET /clusters', () => {
+  const handler = () => fastify.routes['GET /clusters']
 
   const validQuery = { south: '45.0', north: '48.0', west: '16.0', east: '23.0', zoom: '10' }
 
@@ -153,8 +153,8 @@ describe('GET /social/map/clusters', () => {
   })
 })
 
-describe('GET /social/map/clusters/leaves', () => {
-  const handler = () => fastify.routes['GET /social/map/clusters/leaves']
+describe('GET /cluster-leaves', () => {
+  const handler = () => fastify.routes['GET /cluster-leaves']
 
   it('returns features for valid clusterId', async () => {
     const mockFeatures = [

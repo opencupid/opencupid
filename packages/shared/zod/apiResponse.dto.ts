@@ -19,7 +19,6 @@ import type { ConversationSummary, MessageDTO } from '@zod/messaging/messaging.d
 import type { LoginUser, SettingsUser } from '@zod/user/user.dto'
 import type { LocationDTO } from '@zod/dto/location.dto'
 import type { VersionDTO } from '@zod/dto/version.dto'
-import type { SocialMatchFilterDTO } from '@zod/match/filters.dto'
 import type { DatingPreferencesFormType } from '@zod/match/filters.form'
 import { AuthErrorCodes } from '@zod/user/auth.dto'
 import {
@@ -33,13 +32,6 @@ import type { OwnerPost, PublicPostWithProfile, PublicPostDetail } from '@zod/po
 
 export type GetProfileSummariesResponse = ApiSuccess<{ profiles: ProfileSummary[] }>
 
-/**
- * @deprecated The persistent SocialMatchFilter model has been retired.
- * Kept only for the no-op shim at `GET/PATCH /find/social/filter`.
- * TODO(cleanup): remove together with the shim endpoints.
- */
-export type GetSocialMatchFilterResponse = ApiSuccess<{ filter: SocialMatchFilterDTO }>
-
 export type GetDatingPreferencesResponse = ApiSuccess<{ prefs: DatingPreferencesFormType }>
 export type UpdateDatingPreferencesResponse = ApiSuccess<{ prefs: DatingPreferencesFormType }>
 
@@ -47,7 +39,6 @@ export type GetMyProfileResponse = ApiSuccess<{ profile: OwnerProfile }>
 export type GetProfileOptInResponse = ApiSuccess<{ optIn: ProfileOptInSettings }>
 export type GetPublicProfileResponse = ApiSuccess<{ profile: PublicProfileWithContext }>
 export type GetProfilesResponse = ApiSuccess<{ profiles: PublicProfileWithContext[] }>
-export type GetMatchIdsResponse = ApiSuccess<{ ids: string[] }>
 export type UpdateProfileResponse = ApiSuccess<{ profile: OwnerProfile }>
 export type UpdateProfileScopeResponse = ApiSuccess<{
   isDatingActive: boolean

@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { CanceledError } from 'axios'
 import { api, safeApiCall } from '@/lib/api'
 import type { PublicProfile } from '@zod/profile/profile.dto'
-import type { GetMatchIdsResponse, GetPublicProfileResponse } from '@zod/apiResponse.dto'
+import type { GetPublicProfileResponse } from '@zod/apiResponse.dto'
 import type { PublicTag } from '@zod/tag/tag.dto'
 import { ClusterMapResponseSchema, type MapFeature } from '@shared/zod/map/cluster.dto'
 import { storeSuccess, storeError, type StoreVoidSuccess, type StoreError } from '@/store/helpers'
@@ -59,7 +59,6 @@ function invalidateBoundsCache(): void {
 
 type FindProfileStoreState = {
   clusterFeatures: MapFeature[]
-  matchedProfileIds: Set<string>
   lastMapBounds: MapBounds | null
   isLoading: boolean
   availableTags: PublicTag[]
@@ -68,7 +67,6 @@ type FindProfileStoreState = {
 export const useFindProfileStore = defineStore('findProfile', {
   state: (): FindProfileStoreState => ({
     clusterFeatures: [] as MapFeature[],
-    matchedProfileIds: new Set<string>(),
     lastMapBounds: null,
     isLoading: false,
     availableTags: [] as PublicTag[],
@@ -110,7 +108,7 @@ export const useFindProfileStore = defineStore('findProfile', {
 
         const paddedBounds = padBounds(bounds, 0.3)
         const res = await safeApiCall(() =>
-          api.get('/find/social/map/clusters', {
+          api.get('/find/clusters', {
             params: { ...paddedBounds, zoom, tagIds: tagIdsParam(tagIds) },
             signal: controller.signal,
           })
@@ -167,15 +165,6 @@ export const useFindProfileStore = defineStore('findProfile', {
       }
     },
 
-    async fetchDatingMatchIds(): Promise<void> {
-      try {
-        const res = await safeApiCall(() => api.get<GetMatchIdsResponse>('/find/dating/match-ids'))
-        this.matchedProfileIds = new Set(res.data.ids)
-      } catch {
-        this.matchedProfileIds = new Set()
-      }
-    },
-
     async refetchBounds(): Promise<void> {
       invalidateBoundsCache()
       if (this.lastMapBounds) {
@@ -190,7 +179,6 @@ export const useFindProfileStore = defineStore('findProfile', {
       }
       invalidateBoundsCache()
       this.clusterFeatures = []
-      this.matchedProfileIds = new Set()
       this.lastMapBounds = null
       this.isLoading = false
       this.availableTags = []

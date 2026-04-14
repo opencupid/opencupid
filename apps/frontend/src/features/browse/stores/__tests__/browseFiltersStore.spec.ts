@@ -5,7 +5,8 @@ vi.mock('@/lib/bus', () => ({
   bus: { on: vi.fn(), emit: vi.fn() },
 }))
 
-import { useBrowseFiltersStore, MAX_BROWSE_TAGS } from '../browseFiltersStore'
+import { useBrowseFiltersStore } from '../browseFiltersStore'
+import { MAX_BROWSE_TAGS } from '@shared/maps'
 import type { PublicTag } from '@zod/tag/tag.dto'
 
 const tag = (id: string, name = id): PublicTag => ({ id, name, slug: id })
