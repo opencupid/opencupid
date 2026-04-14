@@ -49,7 +49,6 @@ services:
       # --- Public domain: API ---
       traefik.http.routers.api.rule: "Host(`${DOMAIN}`) && PathPrefix(`/api`)"
       traefik.http.routers.api.entrypoints: websecure
-      traefik.http.routers.api.tls.certresolver: letsencrypt
       traefik.http.routers.api.middlewares: compress@file,rate-limit@file,api-body-limit
       traefik.http.services.backend.loadbalancer.server.port: "3000"
 
@@ -57,7 +56,6 @@ services:
       traefik.http.routers.api-upload.rule: "Host(`${DOMAIN}`) && (PathPrefix(`/api/image`) || PathPrefix(`/api/messages/voice`))"
       traefik.http.routers.api-upload.priority: "20"
       traefik.http.routers.api-upload.entrypoints: websecure
-      traefik.http.routers.api-upload.tls.certresolver: letsencrypt
       traefik.http.routers.api-upload.middlewares: upload-body-limit
 
       # Body size middlewares
@@ -67,19 +65,16 @@ services:
       # --- Public domain: WebSocket ---
       traefik.http.routers.ws.rule: "Host(`${DOMAIN}`) && PathPrefix(`/ws`)"
       traefik.http.routers.ws.entrypoints: websecure
-      traefik.http.routers.ws.tls.certresolver: letsencrypt
 
       # --- Admin domain: API (mTLS) ---
       traefik.http.routers.admin-api.rule: "Host(`${ADMIN_DOMAIN}`) && PathPrefix(`/api`)"
       traefik.http.routers.admin-api.entrypoints: websecure
-      traefik.http.routers.admin-api.tls.certresolver: letsencrypt
       traefik.http.routers.admin-api.tls.options: admin-mtls@file
       traefik.http.routers.admin-api.middlewares: admin-header@file
 
       # --- Admin domain: Bull Board (mTLS) ---
       traefik.http.routers.admin-bullboard.rule: "Host(`${ADMIN_DOMAIN}`) && PathPrefix(`/bull-board`)"
       traefik.http.routers.admin-bullboard.entrypoints: websecure
-      traefik.http.routers.admin-bullboard.tls.certresolver: letsencrypt
       traefik.http.routers.admin-bullboard.tls.options: admin-mtls@file
       traefik.http.routers.admin-bullboard.middlewares: admin-header@file
 
@@ -98,7 +93,6 @@ services:
       traefik.http.routers.frontend.rule: "Host(`${DOMAIN}`)"
       traefik.http.routers.frontend.priority: "1"
       traefik.http.routers.frontend.entrypoints: websecure
-      traefik.http.routers.frontend.tls.certresolver: letsencrypt
       traefik.http.routers.frontend.middlewares: compress@file,rate-limit@file,security-headers@file
       traefik.http.services.frontend.loadbalancer.server.port: "3001"
 
@@ -117,7 +111,6 @@ services:
       traefik.http.routers.admin.rule: "Host(`${ADMIN_DOMAIN}`)"
       traefik.http.routers.admin.priority: "1"
       traefik.http.routers.admin.entrypoints: websecure
-      traefik.http.routers.admin.tls.certresolver: letsencrypt
       traefik.http.routers.admin.tls.options: admin-mtls@file
       traefik.http.services.admin.loadbalancer.server.port: "3002"
 
@@ -130,7 +123,6 @@ services:
       traefik.enable: "true"
       traefik.http.routers.media.rule: "Host(`${DOMAIN}`) && PathPrefix(`/user-content`)"
       traefik.http.routers.media.entrypoints: websecure
-      traefik.http.routers.media.tls.certresolver: letsencrypt
       traefik.http.routers.media.middlewares: media-jwt@file,media-strip,media-cache
       traefik.http.middlewares.media-strip.stripprefix.prefixes: "/user-content"
       traefik.http.middlewares.media-cache.headers.customresponseheaders.Cache-Control: "public, max-age=31536000, immutable"
@@ -166,7 +158,6 @@ services:
       traefik.enable: "true"
       traefik.http.routers.jitsi.rule: "Host(`meet.${DOMAIN}`)"
       traefik.http.routers.jitsi.entrypoints: websecure
-      traefik.http.routers.jitsi.tls.certresolver: letsencrypt
       traefik.http.services.jitsi.loadbalancer.server.port: "80"
 
   jitsi-prosody:
