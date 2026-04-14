@@ -13,7 +13,7 @@ vi.mock('@/lib/bus', () => ({
   bus: { on: vi.fn(), emit: vi.fn() },
 }))
 
-import { useBrowseFiltersStore } from '../browseFiltersStore'
+import { useSearchStore } from '../searchStore'
 import { MAX_BROWSE_TAGS } from '@shared/maps'
 import type { PublicTag } from '@zod/tag/tag.dto'
 
@@ -27,40 +27,40 @@ const emptyResults = {
 
 const tag = (id: string, name = id): PublicTag => ({ id, name, slug: id })
 
-describe('useBrowseFiltersStore', () => {
+describe('useSearchStore', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
   })
 
   it('starts with an empty selection', () => {
-    const store = useBrowseFiltersStore()
+    const store = useSearchStore()
     expect(store.selectedTags).toEqual([])
     expect(store.selectedTagIds).toEqual([])
   })
 
   describe('toggleTag', () => {
     it('adds a tag when not present', () => {
-      const store = useBrowseFiltersStore()
+      const store = useSearchStore()
       store.toggleTag(tag('t1', 'Vue'))
       expect(store.selectedTagIds).toEqual(['t1'])
     })
 
     it('removes a tag when already present', () => {
-      const store = useBrowseFiltersStore()
+      const store = useSearchStore()
       store.toggleTag(tag('t1'))
       store.toggleTag(tag('t1'))
       expect(store.selectedTagIds).toEqual([])
     })
 
     it('preserves the full PublicTag object so the filter bar can render the pill', () => {
-      const store = useBrowseFiltersStore()
+      const store = useSearchStore()
       store.toggleTag(tag('t1', 'Hiking'))
       expect(store.selectedTags[0]).toEqual({ id: 't1', name: 'Hiking', slug: 't1' })
     })
 
     it(`refuses to add more than ${MAX_BROWSE_TAGS} tags`, () => {
-      const store = useBrowseFiltersStore()
+      const store = useSearchStore()
       for (let i = 0; i < MAX_BROWSE_TAGS + 3; i++) {
         store.toggleTag(tag(`t${i}`))
       }
@@ -70,14 +70,14 @@ describe('useBrowseFiltersStore', () => {
 
   describe('setTags', () => {
     it('replaces the selection wholesale', () => {
-      const store = useBrowseFiltersStore()
+      const store = useSearchStore()
       store.toggleTag(tag('t1'))
       store.setTags([tag('t2'), tag('t3')])
       expect(store.selectedTagIds).toEqual(['t2', 't3'])
     })
 
     it(`truncates to ${MAX_BROWSE_TAGS} tags`, () => {
-      const store = useBrowseFiltersStore()
+      const store = useSearchStore()
       store.setTags(Array.from({ length: MAX_BROWSE_TAGS + 4 }, (_, i) => tag(`t${i}`)))
       expect(store.selectedTags).toHaveLength(MAX_BROWSE_TAGS)
     })
@@ -85,21 +85,21 @@ describe('useBrowseFiltersStore', () => {
 
   describe('clearTags / reset', () => {
     it('clearTags empties the selection', () => {
-      const store = useBrowseFiltersStore()
+      const store = useSearchStore()
       store.setTags([tag('t1'), tag('t2')])
       store.clearTags()
       expect(store.selectedTags).toEqual([])
     })
 
     it('reset empties the selection', () => {
-      const store = useBrowseFiltersStore()
+      const store = useSearchStore()
       store.setTags([tag('t1'), tag('t2')])
       store.reset()
       expect(store.selectedTags).toEqual([])
     })
 
     it('reset also clears searchResults', async () => {
-      const store = useBrowseFiltersStore()
+      const store = useSearchStore()
       mockGet.mockResolvedValueOnce({ data: emptyResults })
       await store.search('hello')
       expect(store.searchResults).not.toBeNull()
@@ -111,12 +111,12 @@ describe('useBrowseFiltersStore', () => {
 
   describe('search', () => {
     it('starts with searchResults=null', () => {
-      const store = useBrowseFiltersStore()
+      const store = useSearchStore()
       expect(store.searchResults).toBeNull()
     })
 
     it('calls GET /search with the query and parses the response', async () => {
-      const store = useBrowseFiltersStore()
+      const store = useSearchStore()
       mockGet.mockResolvedValueOnce({ data: emptyResults })
 
       const result = await store.search('hiking')
@@ -130,7 +130,7 @@ describe('useBrowseFiltersStore', () => {
     })
 
     it('stores results from the server', async () => {
-      const store = useBrowseFiltersStore()
+      const store = useSearchStore()
       const payload = {
         success: true as const,
         tags: [{ id: 'cltagabc000000000000001', name: 'Hiking', slug: 'hiking' }],
@@ -147,7 +147,7 @@ describe('useBrowseFiltersStore', () => {
     })
 
     it('treats a canceled request as success and clears results', async () => {
-      const store = useBrowseFiltersStore()
+      const store = useSearchStore()
       mockGet.mockResolvedValueOnce({ data: emptyResults })
       await store.search('first')
       expect(store.searchResults).not.toBeNull()
@@ -160,7 +160,7 @@ describe('useBrowseFiltersStore', () => {
     })
 
     it('returns a storeError on non-cancel failures', async () => {
-      const store = useBrowseFiltersStore()
+      const store = useSearchStore()
       mockGet.mockRejectedValueOnce(new Error('boom'))
 
       const result = await store.search('x')
@@ -169,7 +169,7 @@ describe('useBrowseFiltersStore', () => {
     })
 
     it('aborts the previous in-flight request on a new call', async () => {
-      const store = useBrowseFiltersStore()
+      const store = useSearchStore()
       const signals: AbortSignal[] = []
       mockGet.mockImplementation((_url: string, opts: { signal: AbortSignal }) => {
         signals.push(opts.signal)

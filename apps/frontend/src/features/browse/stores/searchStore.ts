@@ -21,13 +21,13 @@ let searchAbortController: AbortController | null = null
  * store, not just the in-viewport list) would briefly show up and then
  * disappear from the UI.
  */
-interface BrowseFiltersState {
+interface SearchStoreState {
   selectedTags: PublicTag[]
   searchResults: SearchResponse | null
 }
 
-export const useBrowseFiltersStore = defineStore('browseFilters', {
-  state: (): BrowseFiltersState => ({
+export const useSearchStore = defineStore('search', {
+  state: (): SearchStoreState => ({
     selectedTags: [],
     searchResults: null,
   }),
@@ -99,5 +99,5 @@ export const useBrowseFiltersStore = defineStore('browseFilters', {
 })
 
 bus.on('auth:logout', () => {
-  useBrowseFiltersStore().reset()
+  useSearchStore().reset()
 })

@@ -8,7 +8,7 @@ import { useI18n } from 'vue-i18n'
 import { useBootstrap } from '@/lib/bootstrap'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { useBrowseViewModel } from '../composables/useBrowseViewModel'
-import { useBrowseFiltersStore } from '@/features/browse/stores/browseFiltersStore'
+import { useSearchStore } from '@/features/browse/stores/searchStore'
 import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 import { isValidLatLng, toLatLng } from '@/features/map/utils/mapUtils'
 import { useDetailRouteState } from '@/features/shared/composables/useDetailRouteState'
@@ -50,8 +50,8 @@ const findProfileStore = useFindProfileStore()
 
 // Ephemeral tag filter state (client-only). Changing it triggers a refetch
 // of the current viewport so the map reflects the new filter immediately.
-const filtersStore = useBrowseFiltersStore()
-const { selectedTagIds } = storeToRefs(filtersStore)
+const searchStore = useSearchStore()
+const { selectedTagIds } = storeToRefs(searchStore)
 watch(selectedTagIds, () => {
   findProfileStore.refetchBounds()
 })

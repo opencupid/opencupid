@@ -7,7 +7,7 @@ import type { PublicTag } from '@zod/tag/tag.dto'
 import { ClusterMapResponseSchema, type MapFeature } from '@shared/zod/map/cluster.dto'
 import { storeSuccess, storeError, type StoreVoidSuccess, type StoreError } from '@/store/helpers'
 import { bus } from '@/lib/bus'
-import { useBrowseFiltersStore } from './browseFiltersStore'
+import { useSearchStore } from './searchStore'
 import type { MapBounds } from '@/features/map/types/map.types'
 import { boundsContain, padBounds } from '../utils/boundsUtils'
 
@@ -88,7 +88,7 @@ export const useFindProfileStore = defineStore('findProfile', {
       clusterAbortController = controller
       this.lastMapBounds = bounds
 
-      const tagIds = useBrowseFiltersStore().selectedTagIds
+      const tagIds = useSearchStore().selectedTagIds
       const sig = tagSignature(tagIds)
 
       const sameTags = sig === cachedClusterTagSig

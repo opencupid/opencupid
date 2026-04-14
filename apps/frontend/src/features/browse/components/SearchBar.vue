@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useRouter } from 'vue-router'
 import { onClickOutside } from '@vueuse/core'
 
-import LocationFilterInput from '@/features/shared/profileform/LocationFilterInput.vue'
 import SelectableTagList from './SelectableTagList.vue'
-import IconHome from '@/assets/icons/interface/home.svg'
-import IconSearch from '@/assets/icons/interface/search.svg'
+import SearchInput from './SearchInput.vue'
+import SearchResults from './SearchResults.vue'
 
 import type { LocationDTO, GeoPoint } from '@zod/dto/location.dto'
 import type { OwnerProfile } from '@zod/profile/profile.dto'
 import type { PublicTag } from '@zod/tag/tag.dto'
-import { useBrowseFiltersStore } from '@/features/browse/stores/browseFiltersStore'
+import { useSearchStore } from '@/features/browse/stores/searchStore'
 
 const props = defineProps<{
   viewerProfile: OwnerProfile | null
@@ -26,11 +26,12 @@ const emit = defineEmits<{
   'location:set': [point: GeoPoint]
 }>()
 
-const filtersStore = useBrowseFiltersStore()
-const { selectedTags, searchResults } = storeToRefs(filtersStore)
+const searchStore = useSearchStore()
+const { selectedTags, searchResults } = storeToRefs(searchStore)
+const router = useRouter()
 
-function thumbUrl(variants: { size: string; url: string }[]): string | undefined {
-  return (variants.find((v) => v.size === 'thumb') ?? variants[0])?.url
+function onSelectProfile(profileId: string) {
+  router.push({ name: 'PublicProfile', params: { profileId } })
 }
 
 // Drives the LocationSelector's display text only; never read back.
@@ -65,7 +66,7 @@ function onLocationSet(point: GeoPoint) {
 
 watch(searchQuery, (query) => {
   selectedTags.value = []
-  filtersStore.search(query)
+  searchStore.search(query)
 })
 </script>
 
@@ -81,36 +82,10 @@ watch(searchQuery, (query) => {
       @click="togglePanel"
     >
       <div class="search-bar__field w-100">
-        <div class="d-flex align-items-center">
-          <div class="flex-grow-1 flex-shrink-0">
-            <BInputGroup
-              class="input-group d-flex align-items-center w-100"
-              size="sm"
-            >
-              <template #prepend>
-                <IconSearch
-                  class="svg-icon ms-2 text-secondary"
-                  :title="$t('profiles.forms.city_search_placeholder')"
-                />
-              </template>
-              <BFormInput
-                v-model="searchQuery"
-                debounce="300"
-                placeholder="Search"
-              />
-
-            </BInputGroup>
-          </div>
-          <BButton
-            variant="link-secondary"
-            size="sm"
-            class="mx-1 p-0"
-            :title="$t('profiles.browse.filters.locate_button_title')"
-            @click="handleSetLocationHome"
-          >
-            <IconHome class="svg-icon-md" />
-          </BButton>
-        </div>
+        <SearchInput
+          v-model="searchQuery"
+          @home:set="handleSetLocationHome"
+        />
       </div>
 
       <div class="search-bar__field search-bar__field--tags">
@@ -126,102 +101,11 @@ watch(searchQuery, (query) => {
       :class="panelOpen ? '' : 'pointer-events-none'"
       :aria-hidden="panelOpen ? 'false' : 'true'"
     >
-      <div
+      <SearchResults
         v-if="searchResults"
-        class="search-bar__results d-flex flex-column gap-2"
-      >
-        <section
-          v-if="searchResults.tags.length"
-          class="search-bar__group"
-        >
-          <h6 class="search-bar__group-title text-uppercase small text-secondary mb-1">
-            Tags
-          </h6>
-          <SelectableTagList :tags="searchResults.tags" />
-        </section>
-
-        <section
-          v-if="searchResults.profiles.length"
-          class="search-bar__group"
-        >
-          <h6 class="search-bar__group-title text-uppercase small text-secondary mb-1">
-            Profiles
-          </h6>
-          <ul class="list-unstyled m-0">
-            <li
-              v-for="profile in searchResults.profiles"
-              :key="profile.id"
-              class="search-bar__profile py-1"
-            >
-              <RouterLink
-                :to="{ name: 'PublicProfile', params: { profileId: profile.id } }"
-                class="d-flex align-items-center gap-2 text-decoration-none text-body"
-              >
-                <img
-                  v-if="thumbUrl(profile.profileImages[0]?.variants ?? [])"
-                  :src="thumbUrl(profile.profileImages[0]?.variants ?? [])"
-                  :alt="profile.publicName"
-                  class="search-bar__avatar rounded-circle"
-                />
-                <span
-                  v-else
-                  class="search-bar__avatar search-bar__avatar--placeholder rounded-circle bg-secondary-subtle"
-                ></span>
-                <span class="text-truncate">{{ profile.publicName }}</span>
-              </RouterLink>
-            </li>
-          </ul>
-        </section>
-
-        <section
-          v-if="searchResults.posts.length"
-          class="search-bar__group"
-        >
-          <h6 class="search-bar__group-title text-uppercase small text-secondary mb-1">
-            Posts
-          </h6>
-          <ul class="list-unstyled m-0">
-            <li
-              v-for="post in searchResults.posts"
-              :key="post.id"
-              class="search-bar__post py-1"
-            >
-              <div class="small text-secondary">{{ post.postedBy.publicName }}</div>
-              <div class="text-truncate">{{ post.content }}</div>
-            </li>
-          </ul>
-        </section>
-
-        <section
-          v-if="searchResults.locations.length"
-          class="search-bar__group"
-        >
-          <h6 class="search-bar__group-title text-uppercase small text-secondary mb-1">
-            Locations
-          </h6>
-          <ul class="list-unstyled m-0">
-            <li
-              v-for="(loc, i) in searchResults.locations"
-              :key="`${loc.country}-${loc.cityName ?? ''}-${i}`"
-              class="search-bar__location py-1 text-truncate"
-            >
-              {{ loc.cityName ? `${loc.cityName}, ${loc.country}` : loc.country }}
-            </li>
-          </ul>
-        </section>
-
-        <div
-          v-if="
-            !searchResults.tags.length &&
-            !searchResults.profiles.length &&
-            !searchResults.posts.length &&
-            !searchResults.locations.length
-          "
-          class="text-center text-secondary small py-3"
-        >
-          No results
-        </div>
-      </div>
+        :results="searchResults"
+        @select:profile="onSelectProfile"
+      />
     </div>
   </div>
 </template>
@@ -232,7 +116,7 @@ $panel-height: 30vh;
 
 .search-bar__pill {
   z-index: 2;
-  background-color: var(--bs-body-bg );
+  background-color: var(--bs-body-bg);
   border-radius: $pill-radius;
   box-shadow:
     0 1px 2px rgba(0, 0, 0, 0.08),
@@ -280,15 +164,6 @@ $panel-height: 30vh;
   min-width: 0;
 }
 
-.search-bar__avatar {
-  width: 32px;
-  height: 32px;
-  object-fit: cover;
-  flex-shrink: 0;
-}
-
-
-
 :deep(.input-group) {
   .form-control {
     border: none;
@@ -296,6 +171,4 @@ $panel-height: 30vh;
     box-shadow: none;
   }
 }
-
-
 </style>
