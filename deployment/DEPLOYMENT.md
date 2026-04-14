@@ -12,7 +12,7 @@ The app uses multiple domain names, configured in `.env`:
 | -------------- | ------------------- | ------------------------------------------------ |
 | `DOMAIN`       | `example.org`       | Main app (frontend + API)                        |
 | `ADMIN_DOMAIN` | `admin.example.org` | Admin panel (mTLS-protected)                     |
-| `JITSI_DOMAIN` | `meet.example.org`  | Jitsi Meet video calls (proxied through ingress) |
+| `JITSI_DOMAIN` | `meet.example.org`  | Jitsi Meet video calls (proxied through Traefik) |
 
 ### DNS setup
 
@@ -49,25 +49,9 @@ docker compose up -d
 
 source .env
 
-# Obtain TLS cert from Letsencrypt
-docker compose run --rm --service-ports certbot certonly \
-  --webroot -w /var/www/html \
-  --email "$EMAIL" \
-  --agree-tos \
-  --no-eff-email \
-  -d "$DOMAIN" \
-  -d "$ADMIN_DOMAIN" \
-  -d "$JITSI_DOMAIN"
-
-# Restart ingress to apply cert
-docker compose restart ingress
-```
-
-### Add cronjob for periodic cert renewal
-
-```bash
-0 3 * * * cd /srv/your-stack && /usr/bin/docker compose run --rm certbot renew
-
+# TLS certificates are managed automatically by Traefik via ACME/Let's Encrypt.
+# No manual certbot setup or cronjob needed — Traefik obtains and renews certs
+# on first request to each domain.
 ```
 
 ## Management commands
@@ -143,7 +127,7 @@ The admin domain is protected by **mutual TLS (mTLS)** — only clients presenti
    openssl pkcs12 -export -out client.p12 -inkey client.key -in client.crt -certfile ca.crt
    ```
 
-4. **Deploy the CA cert** as `/etc/nginx/client-ca.crt` on the server (mounted into the ingress container).
+4. **Deploy the CA cert** to the path specified by `ADMIN_CA_CERT_FILE` in `.env` (mounted into the Traefik container).
 
 5. **Import `client.p12`** into your browser's certificate store.
 
@@ -163,6 +147,6 @@ The following ports must be open on the production server:
 
 | Port  | Protocol | Purpose                                           |
 | ----- | -------- | ------------------------------------------------- |
-| 80    | TCP      | HTTP (certbot ACME challenges, redirect to HTTPS) |
+| 80    | TCP      | HTTP (ACME challenges, redirect to HTTPS)         |
 | 443   | TCP      | HTTPS (all web traffic including Jitsi)           |
 | 10000 | UDP      | Jitsi Videobridge media traffic                   |

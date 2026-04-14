@@ -1,0 +1,9 @@
+# Admin domain mTLS — requires a valid client certificate signed by the CA
+tls:
+  options:
+    admin-mtls:
+      clientAuth:
+        caFiles:
+          - /certs/admin-ca.crt
+        clientAuthType: RequireAndVerifyClientCert
+      minVersion: VersionTLS12

@@ -14,6 +14,19 @@ services:
     volumes:
       - ${POSTGRES_DATADIR}:/var/lib/postgresql/data
 
+  traefik:
+    image: traefik:v3.4
+    restart: always
+    ports:
+      - '443:443'
+      - '80:80'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./apps/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./apps/traefik/dynamic/:/etc/traefik/dynamic/:ro
+      - traefik-acme:/acme
+      - ${ADMIN_CA_CERT_FILE}:/certs/admin-ca.crt:ro
+
   backend:
     image: ${DOCKER_IMAGE_PREFIX:-ghcr.io/opencupid/opencupid}-backend:${BACKEND_VERSION:-latest}
     restart: always
@@ -27,6 +40,45 @@ services:
       - .env
     volumes:
       - '${MEDIA_UPLOAD_DIR}:${MEDIA_UPLOAD_DIR}'
+    labels:
+      traefik.enable: "true"
+
+      # --- Public domain: API ---
+      traefik.http.routers.api.rule: "Host(`${DOMAIN}`) && PathPrefix(`/api`)"
+      traefik.http.routers.api.entrypoints: websecure
+      traefik.http.routers.api.tls.certresolver: letsencrypt
+      traefik.http.routers.api.middlewares: compress@file,rate-limit@file,api-body-limit
+      traefik.http.services.backend.loadbalancer.server.port: "3000"
+
+      # --- Public domain: upload endpoints (20MB body limit) ---
+      traefik.http.routers.api-upload.rule: "Host(`${DOMAIN}`) && (PathPrefix(`/api/image`) || PathPrefix(`/api/messages/voice`))"
+      traefik.http.routers.api-upload.priority: "20"
+      traefik.http.routers.api-upload.entrypoints: websecure
+      traefik.http.routers.api-upload.tls.certresolver: letsencrypt
+      traefik.http.routers.api-upload.middlewares: upload-body-limit
+
+      # Body size middlewares
+      traefik.http.middlewares.upload-body-limit.buffering.maxRequestBodyBytes: "20971520"
+      traefik.http.middlewares.api-body-limit.buffering.maxRequestBodyBytes: "1048576"
+
+      # --- Public domain: WebSocket ---
+      traefik.http.routers.ws.rule: "Host(`${DOMAIN}`) && PathPrefix(`/ws`)"
+      traefik.http.routers.ws.entrypoints: websecure
+      traefik.http.routers.ws.tls.certresolver: letsencrypt
+
+      # --- Admin domain: API (mTLS) ---
+      traefik.http.routers.admin-api.rule: "Host(`${ADMIN_DOMAIN}`) && PathPrefix(`/api`)"
+      traefik.http.routers.admin-api.entrypoints: websecure
+      traefik.http.routers.admin-api.tls.certresolver: letsencrypt
+      traefik.http.routers.admin-api.tls.options: admin-mtls@file
+      traefik.http.routers.admin-api.middlewares: admin-header@file
+
+      # --- Admin domain: Bull Board (mTLS) ---
+      traefik.http.routers.admin-bullboard.rule: "Host(`${ADMIN_DOMAIN}`) && PathPrefix(`/bull-board`)"
+      traefik.http.routers.admin-bullboard.entrypoints: websecure
+      traefik.http.routers.admin-bullboard.tls.certresolver: letsencrypt
+      traefik.http.routers.admin-bullboard.tls.options: admin-mtls@file
+      traefik.http.routers.admin-bullboard.middlewares: admin-header@file
 
   frontend:
     image: ${DOCKER_IMAGE_PREFIX:-ghcr.io/opencupid/opencupid}-frontend:${FRONTEND_VERSION:-latest}
@@ -38,6 +90,14 @@ services:
       - .env
     depends_on:
       - backend
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.frontend.rule: "Host(`${DOMAIN}`)"
+      traefik.http.routers.frontend.priority: "1"
+      traefik.http.routers.frontend.entrypoints: websecure
+      traefik.http.routers.frontend.tls.certresolver: letsencrypt
+      traefik.http.routers.frontend.middlewares: compress@file,rate-limit@file,security-headers@file
+      traefik.http.services.frontend.loadbalancer.server.port: "3001"
 
   admin:
     image: ${DOCKER_IMAGE_PREFIX:-ghcr.io/opencupid/opencupid}-admin:${ADMIN_VERSION:-latest}
@@ -49,37 +109,31 @@ services:
       - .env
     depends_on:
       - backend
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.admin.rule: "Host(`${ADMIN_DOMAIN}`)"
+      traefik.http.routers.admin.priority: "1"
+      traefik.http.routers.admin.entrypoints: websecure
+      traefik.http.routers.admin.tls.certresolver: letsencrypt
+      traefik.http.routers.admin.tls.options: admin-mtls@file
+      traefik.http.services.admin.loadbalancer.server.port: "3002"
 
-  ingress:
-    image: ${DOCKER_IMAGE_PREFIX:-ghcr.io/opencupid/opencupid}-ingress:${INGRESS_VERSION:-latest}
-    build:
-      context: apps/ingress
+  media:
+    image: nginx:alpine
     restart: always
-    depends_on:
-      - admin
-      - frontend
-      - backend
-      - jitsi-web
-    env_file:
-      - .env
-    ports:
-      - '443:443'
-      - '80:80'
     volumes:
-      - ${ADMIN_CA_CERT_FILE}:/etc/nginx/client-ca.crt:ro
-      - ${MEDIA_UPLOAD_DIR}:/var/www
-      - certbot-webroot:/var/www/html
-      - certbot-etcdir:/etc/letsencrypt
-
-  certbot:
-    image: certbot/certbot
-    env_file:
-      - .env
-    profiles:
-      - certbot
-    volumes:
-      - certbot-etcdir:/etc/letsencrypt
-      - certbot-webroot:/var/www/html
+      - '${MEDIA_UPLOAD_DIR}:/var/www:ro'
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.media.rule: "Host(`${DOMAIN}`) && PathPrefix(`/user-content`)"
+      traefik.http.routers.media.entrypoints: websecure
+      traefik.http.routers.media.tls.certresolver: letsencrypt
+      traefik.http.routers.media.middlewares: media-auth,media-strip,media-cache
+      traefik.http.middlewares.media-auth.forwardauth.address: "http://backend:3000/api/auth/forward"
+      traefik.http.middlewares.media-strip.stripprefix.prefixes: "/user-content"
+      traefik.http.middlewares.media-cache.headers.customresponseheaders.Cache-Control: "public, max-age=31536000, immutable"
+      traefik.http.middlewares.media-cache.headers.customresponseheaders.X-Content-Type-Options: "nosniff"
+      traefik.http.services.media.loadbalancer.server.port: "80"
 
   jitsi-web:
     image: jitsi/web:stable
@@ -106,6 +160,12 @@ services:
       - TZ=UTC
     depends_on:
       - jitsi-prosody
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.jitsi.rule: "Host(`meet.${DOMAIN}`)"
+      traefik.http.routers.jitsi.entrypoints: websecure
+      traefik.http.routers.jitsi.tls.certresolver: letsencrypt
+      traefik.http.services.jitsi.loadbalancer.server.port: "80"
 
   jitsi-prosody:
     image: jitsi/prosody:stable
@@ -169,9 +229,8 @@ services:
 volumes:
   redis-data:
     driver: local
+  traefik-acme:
   jitsi-meet-cfg-web:
   jitsi-meet-cfg-prosody:
   jitsi-meet-cfg-jicofo:
   jitsi-meet-cfg-jvb:
-  certbot-webroot:
-  certbot-etcdir:

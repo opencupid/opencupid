@@ -1,0 +1,5 @@
+add_header X-Content-Type-Options "nosniff" always;
+add_header X-Frame-Options "DENY" always;
+add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+add_header Permissions-Policy 'camera=(self "https://meet.${DOMAIN}"), microphone=(self "https://meet.${DOMAIN}"), geolocation=(self)' always;
+add_header Content-Security-Policy "default-src 'self'; script-src 'self' https://*.${DOMAIN}; style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; worker-src 'self' blob:; media-src 'self' blob:; frame-src https://*.${DOMAIN}; img-src 'self' data: blob: ${CSP_ALLOWED_DOMAINS}; connect-src 'self' blob: wss://${DOMAIN} https://*.${DOMAIN} ${CSP_ALLOWED_DOMAINS}; upgrade-insecure-requests${CSP_REPORT_DIRECTIVE}" always;

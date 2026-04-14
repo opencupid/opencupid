@@ -3,7 +3,7 @@
   "changelog": "@changesets/cli/changelog",
   "commit": false,
   "fixed": [
-    ["@opencupid/backend", "@opencupid/frontend", "@opencupid/admin", "@opencupid/ingress"]
+    ["@opencupid/backend", "@opencupid/frontend", "@opencupid/admin"]
   ],
   "linked": [],
   "access": "restricted",

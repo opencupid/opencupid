@@ -34,11 +34,19 @@ async function main() {
   app.log.info(`🚀 Starting server, version ${__APP_VERSION__}`)
 
   // Register CORS plugin
+  const corsOrigins = appConfig.FRONTEND_URLS
+    ? appConfig.FRONTEND_URLS.split(',').map((u) => u.trim())
+    : [appConfig.FRONTEND_URL]
   app.register(cors, {
-    origin: appConfig.NODE_ENV === 'production' ? appConfig.FRONTEND_URL : true,
+    origin: appConfig.NODE_ENV === 'production' ? corsOrigins : true,
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
     methods: ['GET', 'PUT', 'POST', 'DELETE', 'PATCH'],
+  })
+
+  // Security headers for API responses
+  app.addHook('onSend', async (_req, reply) => {
+    reply.header('X-Content-Type-Options', 'nosniff')
   })
 
   app.register(import('@fastify/cookie'))
