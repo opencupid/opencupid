@@ -66,6 +66,7 @@ export const PostSummarySchema = z.object({
   id: z.string(),
   type: PostTypeSchema,
   content: z.string(),
+  location: LocationSchema,
   postedBy: ProfileSummarySchema,
 })
 export type PostSummary = z.infer<typeof PostSummarySchema>

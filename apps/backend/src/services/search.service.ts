@@ -164,6 +164,10 @@ export class SearchService {
         id: true,
         type: true,
         content: true,
+        country: true,
+        cityName: true,
+        lat: true,
+        lon: true,
         postedBy: {
           select: {
             id: true,

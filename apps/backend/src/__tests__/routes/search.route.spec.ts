@@ -15,6 +15,7 @@ vi.mock('../../api/mappers/post.mappers', () => ({
     id: p.id,
     type: p.type,
     content: p.content,
+    location: p.location ?? { country: '' },
     postedBy: {
       id: p.postedBy.id,
       publicName: p.postedBy.publicName,

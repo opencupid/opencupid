@@ -67,6 +67,10 @@ export type DbPostForSummary = {
   id: string
   type: PostType
   content: string
+  country: string | null
+  cityName: string | null
+  lat: number | null
+  lon: number | null
   postedBy: DbProfileSummary
 }
 
@@ -76,6 +80,7 @@ export function mapPostSummary(post: DbPostForSummary): PostSummary {
     id: post.id,
     type: post.type,
     content: post.content,
+    location: extractPostLocation(post) ?? { country: '' },
     postedBy: mapProfileSummary(post.postedBy),
   }
 }
