@@ -240,9 +240,6 @@ model LocalizedProfileField {
   value     String
 
   @@unique([profileId, field, locale])
-  // Trigram GIN index on `value` exists via raw SQL migration
-  // (prisma has no first-class type for gin_trgm_ops). See
-  // migrations/20260415000000_add_search_trgm_indexes/migration.sql.
 }
 
 model ProfileImage {
@@ -404,8 +401,6 @@ model Post {
   @@index([createdAt])
   @@index([isVisible, isDeleted])
   @@index([lat, lon])
-  // Trigram GIN index on `content` exists via raw SQL migration. See
-  // migrations/20260415000000_add_search_trgm_indexes/migration.sql.
 }
 
 model ProfileSessionLog {
