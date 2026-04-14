@@ -22,11 +22,9 @@ export interface SearchResults {
   locations: LocationDTO[]
 }
 
-const EMPTY_RESULTS: SearchResults = {
-  tags: [],
-  profiles: [],
-  posts: [],
-  locations: [],
+/** Factory so callers never share array references with each other. */
+function emptyResults(): SearchResults {
+  return { tags: [], profiles: [], posts: [], locations: [] }
 }
 
 /**
@@ -67,7 +65,7 @@ export class SearchService {
   ): Promise<SearchResults> {
     const term = rawQuery.trim().replace(/\s+/g, ' ')
     if (term.length < SEARCH_MIN_QUERY_LENGTH) {
-      return { ...EMPTY_RESULTS }
+      return emptyResults()
     }
 
     const [tags, profiles, posts, locations] = await Promise.all([
@@ -192,6 +190,9 @@ export class SearchService {
           ...blocklistWhereClause(myProfileId),
         },
         select: { cityName: true, country: true, lat: true, lon: true },
+        // Deterministic order so dedupe + per-category cap are stable
+        // across calls (the first row wins for each city key).
+        orderBy: { cityName: 'asc' },
         take: 50,
       }),
       prisma.post.findMany({
@@ -209,6 +210,7 @@ export class SearchService {
           },
         },
         select: { cityName: true, country: true, lat: true, lon: true },
+        orderBy: { cityName: 'asc' },
         take: 50,
       }),
     ])

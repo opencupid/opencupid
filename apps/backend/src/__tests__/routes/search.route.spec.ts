@@ -35,6 +35,7 @@ const baseSession = {
   userId: 'user-1',
   profileId: 'profile-123',
   lang: 'en',
+  profile: { isSocialActive: true, isDatingActive: false, isActive: true },
 }
 
 beforeEach(async () => {
@@ -118,6 +119,19 @@ describe('GET /search', () => {
       posts: [],
       locations: [],
     })
+  })
+
+  it('returns 403 when the caller is not social-active', async () => {
+    const session = {
+      ...baseSession,
+      profile: { ...baseSession.profile, isSocialActive: false },
+    }
+
+    await handler()({ session, query: { q: 'buda' }, log: { error: vi.fn() } }, reply)
+
+    expect(reply.statusCode).toBe(403)
+    expect(reply.payload.success).toBe(false)
+    expect(mockSearch).not.toHaveBeenCalled()
   })
 
   it('returns a 500 with a generic message when the service throws', async () => {

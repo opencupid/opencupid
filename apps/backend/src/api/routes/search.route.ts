@@ -1,16 +1,11 @@
 import { FastifyPluginAsync } from 'fastify'
-import { z } from 'zod'
 
-import { sendError } from '../helpers'
+import { sendError, sendForbiddenError } from '../helpers'
 import { SearchService } from '@/services/search.service'
 import { mapProfileSummary } from '../mappers/profile.mappers'
 import { mapPostSummary } from '../mappers/post.mappers'
 import { DbTagToPublicTagTransform } from '../mappers/tag.mappers'
-import type { SearchResponse } from '@zod/search/search.dto'
-
-const SearchQuerySchema = z.object({
-  q: z.string().default(''),
-})
+import { SearchQuerySchema, type SearchResponse } from '@zod/search/search.dto'
 
 const searchRoutes: FastifyPluginAsync = async (fastify) => {
   const searchService = SearchService.getInstance()
@@ -22,6 +17,10 @@ const searchRoutes: FastifyPluginAsync = async (fastify) => {
    * endpoint short-circuits with empty arrays.
    */
   fastify.get('/', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    if (!req.session.profile.isSocialActive) {
+      return sendForbiddenError(reply)
+    }
+
     const parsed = SearchQuerySchema.safeParse(req.query)
     if (!parsed.success) {
       return sendError(reply, 400, 'Missing or invalid query parameters')

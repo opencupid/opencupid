@@ -30,9 +30,10 @@ export class TagService {
   }
 
   /**
-   * Find tags whose name contains the given substring (case-insensitive).
+   * Find tags whose base name or session-locale translation contains the
+   * given substring (case-insensitive).
    * @param term       Search term.
-   * @param locale     Session locale; used to pick translations.
+   * @param locale     Session locale; used to match and include translations.
    * @param opts.limit Max results (default 20).
    */
   public async search(

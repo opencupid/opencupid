@@ -259,4 +259,23 @@ describe('SearchService.search — locations', () => {
     expect(result.posts).toEqual([])
     expect(result.locations).toHaveLength(1)
   })
+
+  it('sorts both location queries by cityName for deterministic dedupe', async () => {
+    mockPrisma.profile.findMany.mockResolvedValue([])
+    mockPrisma.post.findMany.mockResolvedValue([])
+
+    await service.search('buda', 'en', 'me')
+
+    // The location findMany calls use `where: { cityName: {...} }`; the
+    // hydration calls use `where: { id: { in: [...] } }`. Pick the former.
+    const locationCalls = [
+      ...mockPrisma.profile.findMany.mock.calls,
+      ...mockPrisma.post.findMany.mock.calls,
+    ].filter(([arg]: [any]) => arg?.where?.cityName !== undefined)
+
+    expect(locationCalls).toHaveLength(2)
+    for (const [arg] of locationCalls) {
+      expect(arg.orderBy).toEqual({ cityName: 'asc' })
+    }
+  })
 })

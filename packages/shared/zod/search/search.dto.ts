@@ -4,6 +4,13 @@ import { PublicTagSchema } from '../tag/tag.dto'
 import { PostSummarySchema } from '../post/post.dto'
 import { LocationSchema } from '../dto/location.dto'
 
+/** Query-string schema for GET /search. */
+export const SearchQuerySchema = z.object({
+  q: z.string().default(''),
+})
+
+export type SearchQuery = z.infer<typeof SearchQuerySchema>
+
 /** Grouped search results — one bucket per content kind. */
 export const SearchResponseSchema = z.object({
   success: z.literal(true),
