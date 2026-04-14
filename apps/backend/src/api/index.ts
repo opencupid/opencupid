@@ -14,6 +14,7 @@ import postRoutes from './routes/post.route'
 import callRoutes from './routes/call.route'
 import adminRoutes from './routes/admin.route'
 import browseRoutes from './routes/browse.route'
+import searchRoutes from './routes/search.route'
 
 const api: FastifyPluginAsync = async (fastify) => {
   fastify.register(authRoutes, { prefix: '/auth' })
@@ -31,6 +32,7 @@ const api: FastifyPluginAsync = async (fastify) => {
   fastify.register(callRoutes, { prefix: '/calls' })
   fastify.register(adminRoutes, { prefix: '/admin' })
   fastify.register(browseRoutes, { prefix: '/browse' })
+  fastify.register(searchRoutes, { prefix: '/search' })
 }
 
 export default api

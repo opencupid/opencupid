@@ -8,6 +8,9 @@ import {
 } from '@zod/post/post.dto'
 import type { PostWithProfileAndContext } from '@/services/post.service'
 import type { LocationDTO } from '@zod/dto/location.dto'
+import type { PostSummary } from '@zod/search/search.dto'
+import type { DbProfileSummary } from '@zod/profile/profile.db'
+import type { PostType } from '@prisma/client'
 import { mapProfileSummary } from './profile.mappers'
 import { mapConversationContext } from './interaction.mappers'
 
@@ -57,4 +60,22 @@ export function mapDbPostToOwner(post: PostWithProfile): OwnerPost {
     location: extractPostLocation(rest),
   }
   return OwnerPostSchema.parse(mapped)
+}
+
+/** Input shape for `mapPostSummary` — what the search query hydrates. */
+export type DbPostForSummary = {
+  id: string
+  type: PostType
+  content: string
+  postedBy: DbProfileSummary
+}
+
+/** Lightweight post mapper used by /search omnibox results. */
+export function mapPostSummary(post: DbPostForSummary): PostSummary {
+  return {
+    id: post.id,
+    type: post.type,
+    content: post.content,
+    postedBy: mapProfileSummary(post.postedBy),
+  }
 }

@@ -31,27 +31,29 @@ export class TagService {
 
   /**
    * Find tags whose name contains the given substring (case-insensitive).
+   * @param term       Search term.
+   * @param locale     Session locale; used to pick translations.
+   * @param opts.limit Max results (default 20).
    */
-  public async search(term: string, locale: string): Promise<TagWithTranslations[]> {
-    // use locale
-    const where = {
-      where: {
-        name: { contains: term, mode: 'insensitive' },
-        isDeleted: false,
-        isApproved: true,
-        isHidden: false,
-        ...translationWhereClause(term, locale),
-      },
-    }
+  public async search(
+    term: string,
+    locale: string,
+    opts: { limit?: number } = {}
+  ): Promise<TagWithTranslations[]> {
     return prisma.tag.findMany({
       where: {
         isDeleted: false,
         isApproved: true,
         isHidden: false,
-        ...translationWhereClause(term, locale),
+        OR: [
+          // Base name (originalLocale, typically 'en')
+          { name: { contains: term, mode: 'insensitive' } },
+          // Translation in the session locale
+          translationWhereClause(term, locale),
+        ],
       },
       include: tagTranslationsInclude(locale),
-      take: 20, // limit results for performance
+      take: opts.limit ?? 20,
       orderBy: {
         name: 'asc',
       },
