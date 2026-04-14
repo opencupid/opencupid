@@ -1,15 +1,7 @@
 import { defineStore } from 'pinia'
 import { bus } from '@/lib/bus'
 import type { PublicTag } from '@zod/tag/tag.dto'
-
-/**
- * Maximum number of tags the user may select for browse filtering.
- * Capping the selection bounds the size of the `tagIds` query string,
- * the Prisma `IN` filter, and the cluster service's per-(profile,tagSig)
- * cache key explosion. The backend route enforces the same cap as a
- * defense-in-depth measure — keep both numbers in sync.
- */
-export const MAX_BROWSE_TAGS = 5
+import { MAX_BROWSE_TAGS } from '@shared/maps'
 
 /**
  * Ephemeral, client-side filter state for the browse map. State lives only

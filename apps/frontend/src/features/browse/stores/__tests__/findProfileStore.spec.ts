@@ -33,7 +33,7 @@ describe('findProfileStore.refetchBounds', () => {
     await store.refetchBounds()
 
     expect(mockGet).toHaveBeenCalledWith(
-      '/find/social/map/clusters',
+      '/find/clusters',
       expect.objectContaining({
         params: expect.objectContaining({
           south: expect.any(Number),
@@ -84,7 +84,7 @@ describe('findClustersForMapBounds', () => {
     await store.findClustersForMapBounds(bounds, 6)
 
     expect(mockGet).toHaveBeenCalledWith(
-      '/find/social/map/clusters',
+      '/find/clusters',
       expect.objectContaining({
         params: expect.objectContaining({
           south: expect.any(Number),
