@@ -1,0 +1,236 @@
+import { Prisma } from '@prisma/client'
+import { prisma } from '../lib/prisma'
+import { profileImageInclude } from '../db/includes/profileIncludes'
+import { blocklistWhereClause } from '../db/includes/blocklistWhereClause'
+import { TagService } from './tag.service'
+import type { TagWithTranslations } from '@zod/tag/tag.db'
+import type { DbProfileSummary } from '@zod/profile/profile.db'
+import type { DbPostForSummary } from '../api/mappers/post.mappers'
+import type { LocationDTO } from '@zod/dto/location.dto'
+import {
+  SEARCH_LOCATION_LIMIT,
+  SEARCH_MIN_QUERY_LENGTH,
+  SEARCH_POST_LIMIT,
+  SEARCH_PROFILE_LIMIT,
+  SEARCH_TAG_LIMIT,
+} from '@zod/search/search.dto'
+
+export interface SearchResults {
+  tags: TagWithTranslations[]
+  profiles: DbProfileSummary[]
+  posts: DbPostForSummary[]
+  locations: LocationDTO[]
+}
+
+/** Factory so callers never share array references with each other. */
+function emptyResults(): SearchResults {
+  return { tags: [], profiles: [], posts: [], locations: [] }
+}
+
+/**
+ * Escape LIKE metacharacters (`%`, `_`, `\`) so the user's raw query is
+ * treated as a literal substring. The caller wraps the result in `%...%`
+ * before passing it to ILIKE.
+ */
+function escapeLikePattern(term: string): string {
+  return term.replace(/[\\%_]/g, (c) => `\\${c}`)
+}
+
+/**
+ * Multi-kind search: fans out to tag, profile trigram, post trigram, and
+ * location queries in parallel, then returns grouped results for an
+ * omnibox UI.
+ *
+ * Profile intro text and post content are indexed with pg_trgm GIN indexes
+ * (see migrations/20260415000000_add_search_trgm_indexes). This gives fast,
+ * language-agnostic substring matching — no per-locale dictionary
+ * configuration is needed.
+ */
+export class SearchService {
+  private static instance: SearchService
+
+  private constructor() {}
+
+  public static getInstance(): SearchService {
+    if (!SearchService.instance) {
+      SearchService.instance = new SearchService()
+    }
+    return SearchService.instance
+  }
+
+  public async search(
+    rawQuery: string,
+    locale: string,
+    myProfileId: string
+  ): Promise<SearchResults> {
+    const term = rawQuery.trim().replace(/\s+/g, ' ')
+    if (term.length < SEARCH_MIN_QUERY_LENGTH) {
+      return emptyResults()
+    }
+
+    const [tags, profiles, posts, locations] = await Promise.all([
+      this.searchTags(term, locale),
+      this.searchProfiles(term, locale, myProfileId),
+      this.searchPosts(term, myProfileId),
+      this.searchLocations(term, myProfileId),
+    ])
+
+    return { tags, profiles, posts, locations }
+  }
+
+  // ── Tags ────────────────────────────────────────────────────────────
+  private async searchTags(term: string, locale: string): Promise<TagWithTranslations[]> {
+    return TagService.getInstance().search(term, locale, { limit: SEARCH_TAG_LIMIT })
+  }
+
+  // ── Profiles (trigram substring on LocalizedProfileField.value) ─────
+  private async searchProfiles(
+    term: string,
+    locale: string,
+    myProfileId: string
+  ): Promise<DbProfileSummary[]> {
+    // Rows in the session locale OR English are eligible — mirrors the
+    // display fallback in `mapProfileToPublic`. Trigram substring match
+    // via pg_trgm GIN index; ranking uses `similarity()`.
+    const pattern = `%${escapeLikePattern(term)}%`
+    const localeFilter = locale === 'en' ? ['en'] : [locale, 'en']
+
+    const rows = await prisma.$queryRaw<Array<{ id: string; rank: number }>>`
+      SELECT lpf."profileId" AS id,
+             MAX(similarity(lpf."value", ${term})) AS rank
+      FROM "LocalizedProfileField" lpf
+      JOIN "Profile" p ON p.id = lpf."profileId"
+      WHERE lpf."locale" IN (${Prisma.join(localeFilter)})
+        AND lpf."value" ILIKE ${pattern}
+        AND p."isActive" = true
+        AND p."isOnboarded" = true
+        AND p."isSocialActive" = true
+        AND NOT EXISTS (
+          SELECT 1 FROM "_BlockedProfiles" bp
+          WHERE (bp."A" = p.id AND bp."B" = ${myProfileId})
+             OR (bp."B" = p.id AND bp."A" = ${myProfileId})
+        )
+      GROUP BY lpf."profileId"
+      ORDER BY rank DESC
+      LIMIT ${SEARCH_PROFILE_LIMIT}
+    `
+
+    if (rows.length === 0) return []
+
+    const ids = rows.map((r) => r.id)
+    const profiles = await prisma.profile.findMany({
+      where: { id: { in: ids } },
+      include: profileImageInclude(),
+    })
+
+    // Preserve rank order
+    const byId = new Map(profiles.map((p) => [p.id, p]))
+    return rows.map((r) => byId.get(r.id)).filter((p): p is (typeof profiles)[number] => Boolean(p))
+  }
+
+  // ── Posts (trigram substring on Post.content) ───────────────────────
+  private async searchPosts(term: string, myProfileId: string): Promise<DbPostForSummary[]> {
+    const pattern = `%${escapeLikePattern(term)}%`
+
+    const rows = await prisma.$queryRaw<Array<{ id: string; rank: number }>>`
+      SELECT p.id,
+             similarity(p."content", ${term}) AS rank
+      FROM "Post" p
+      JOIN "Profile" pr ON pr.id = p."postedById"
+      WHERE p."isVisible" = true
+        AND p."isDeleted" = false
+        AND p."content" ILIKE ${pattern}
+        AND pr."isActive" = true
+        AND pr."isOnboarded" = true
+        AND pr."isSocialActive" = true
+        AND NOT EXISTS (
+          SELECT 1 FROM "_BlockedProfiles" bp
+          WHERE (bp."A" = pr.id AND bp."B" = ${myProfileId})
+             OR (bp."B" = pr.id AND bp."A" = ${myProfileId})
+        )
+      ORDER BY rank DESC
+      LIMIT ${SEARCH_POST_LIMIT}
+    `
+
+    if (rows.length === 0) return []
+
+    const ids = rows.map((r) => r.id)
+    // `profileImages` is loaded without `select` so downstream mappers
+    // (toPublicProfileImage) receive the full row — they need mimeType,
+    // altText, position and blurhash, not just storagePath.
+    const posts = await prisma.post.findMany({
+      where: { id: { in: ids } },
+      select: {
+        id: true,
+        type: true,
+        content: true,
+        postedBy: {
+          select: {
+            id: true,
+            publicName: true,
+            profileImages: { orderBy: { position: 'asc' } },
+          },
+        },
+      },
+    })
+
+    const byId = new Map(posts.map((p) => [p.id, p]))
+    return rows.map((r) => byId.get(r.id)).filter((p): p is (typeof posts)[number] => Boolean(p))
+  }
+
+  // ── Locations (distinct cities across Profile + Post) ───────────────
+  private async searchLocations(term: string, myProfileId: string): Promise<LocationDTO[]> {
+    const [profileRows, postRows] = await Promise.all([
+      prisma.profile.findMany({
+        where: {
+          cityName: { contains: term, mode: 'insensitive' },
+          isActive: true,
+          isOnboarded: true,
+          isSocialActive: true,
+          ...blocklistWhereClause(myProfileId),
+        },
+        select: { cityName: true, country: true, lat: true, lon: true },
+        // Deterministic order so dedupe + per-category cap are stable
+        // across calls (the first row wins for each city key).
+        orderBy: { cityName: 'asc' },
+        take: 50,
+      }),
+      prisma.post.findMany({
+        where: {
+          cityName: { contains: term, mode: 'insensitive' },
+          isVisible: true,
+          isDeleted: false,
+          postedBy: {
+            is: {
+              isActive: true,
+              isOnboarded: true,
+              isSocialActive: true,
+              ...blocklistWhereClause(myProfileId),
+            },
+          },
+        },
+        select: { cityName: true, country: true, lat: true, lon: true },
+        orderBy: { cityName: 'asc' },
+        take: 50,
+      }),
+    ])
+
+    const seen = new Set<string>()
+    const out: LocationDTO[] = []
+    for (const row of [...profileRows, ...postRows]) {
+      const city = row.cityName ?? ''
+      if (!city) continue
+      const key = city.toLowerCase()
+      if (seen.has(key)) continue
+      seen.add(key)
+      out.push({
+        country: row.country ?? '',
+        cityName: city,
+        lat: row.lat ?? null,
+        lon: row.lon ?? null,
+      })
+      if (out.length >= SEARCH_LOCATION_LIMIT) break
+    }
+    return out
+  }
+}
