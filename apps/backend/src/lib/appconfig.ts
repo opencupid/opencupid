@@ -20,7 +20,7 @@ export const configSchema = z.object({
 
   SMTP_HOST: z.string(),
   SMTP_PORT: z.coerce.number(),
-  SMTP_USER: z.string().email(),
+  SMTP_USER: z.string(),
   SMTP_PASS: z.string(),
   EMAIL_FROM: z.string(),
 
