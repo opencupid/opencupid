@@ -68,14 +68,14 @@ export class SearchService {
       return emptyResults()
     }
 
-    const [tags, profiles, posts, locations] = await Promise.all([
+    const [tags, profiles, posts] = await Promise.all([
       this.searchTags(term, locale),
       this.searchProfiles(term, locale, myProfileId),
       this.searchPosts(term, myProfileId),
-      this.searchLocations(term, myProfileId),
+      // this.searchLocations(term, myProfileId),
     ])
 
-    return { tags, profiles, posts, locations }
+    return { tags, profiles, posts, locations:[] }
   }
 
   // ── Tags ────────────────────────────────────────────────────────────

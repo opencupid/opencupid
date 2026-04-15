@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useRouter } from 'vue-router'
 import { onClickOutside } from '@vueuse/core'
 
 import SelectableTagList from './SelectableTagList.vue'
@@ -26,9 +25,6 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  /**
-   * Emitted when the user picks a location from the selector.
-   */
   'location:set': [point: GeoPoint]
   'profile:select': [profile: ProfileSummary]
   'post:select': [post: PostSummary]
@@ -38,11 +34,7 @@ const searchStore = useSearchStore()
 const geocodingStore = useGeocodingStore()
 const { selectedTags, searchResults } = storeToRefs(searchStore)
 const { results: geocodedLocations } = storeToRefs(geocodingStore)
-const router = useRouter()
 const { locale } = useI18n()
-
-// Drives the LocationSelector's display text only; never read back.
-const locationModel = ref<LocationDTO>({ country: '' })
 
 const panelOpen = ref(false)
 const pillRef = ref<HTMLElement | null>(null)
@@ -72,6 +64,7 @@ function onSelectLocation(location: LocationDTO) {
   if (!point) return
   selectedTags.value = []
   emit('location:set', point)
+  geocodingStore.clear()
 }
 
 function onSelectTag(tag: PublicTag) {
@@ -81,7 +74,6 @@ function onSelectTag(tag: PublicTag) {
 function onSelectProfile(profile: ProfileSummary) {
   const point = toGeoPoint(profile.location)
   if (point) emit('location:set', point)
-  console.log('Emitting profile:select for', profile)
   emit('profile:select', profile)
 }
 
@@ -92,7 +84,6 @@ function onSelectPost(post: PostSummary) {
 }
 
 watch(searchQuery, (query) => {
-  selectedTags.value = []
   // Fire both searches in parallel — each store owns its own abort controller,
   // so rapid re-typing cancels prior in-flight requests on both sides.
   searchStore.search(query)
@@ -102,7 +93,7 @@ watch(searchQuery, (query) => {
 
 <template>
   <div
-    class="search-bar position-relative w-100"
+    class="search-bar position-relative col-12 col-md-8 col-lg-6"
     :class="{ 'search-bar--open': panelOpen }"
     @click.stop
   >
@@ -122,7 +113,7 @@ watch(searchQuery, (query) => {
           :tags="selectedTags"
           removable
           @remove="selectedTags = []"
-          class="flex-grow-0 flex-shrink-1"
+          class="flex-grow-0 flex-shrink-0"
         />
         <BButton
           variant="link-secondary"

@@ -74,5 +74,12 @@ export const useGeocodingStore = defineStore('geocoding', () => {
     }
   }
 
-  return { results, isLoading, search, searchNearby }
+  function clear() {
+    _abortController?.abort()
+    _abortController = null
+    results.value = []
+    isLoading.value = false
+  }
+
+  return { results, isLoading, search, searchNearby, clear }
 })

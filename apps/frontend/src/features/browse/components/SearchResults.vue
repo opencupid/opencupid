@@ -44,30 +44,7 @@ const viewerLocation = computed(() => viewerProfile?.value?.location)
 
 <template>
   <div class="search-results d-flex flex-column">
-    <!-- <section v-if="results.locations.length">
-      <BListGroup flush>
-        <BListGroupItem
-          v-for="(loc, i) in results.locations"
-          href="#"
-          class="small"
-          :key="`${loc.country}-${loc.cityName ?? ''}-${i}`"
-          @click="$emit('location:select', loc)"
-        >
-          <FontAwesomeIcon
-            :icon="faLocationDot"
-            class="me-2 text-secondary"
-          />
-
-          <LocationLabel
-            :viewerLocation="viewerLocation"
-            :location="loc"
-            :showOnlyForeignCountry="true"
-            :showCountryIcon="false"
-          />
-        </BListGroupItem>
-      </BListGroup>
-    </section> -->
-
+  
     <section v-if="geocodedAsLocations.length">
       <BListGroup flush>
         <BListGroupItem
