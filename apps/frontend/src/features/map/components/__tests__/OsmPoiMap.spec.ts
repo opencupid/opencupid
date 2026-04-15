@@ -62,6 +62,12 @@ vi.mock('leaflet', () => {
 
     getZoom: vi.fn(() => 10),
     getSize: vi.fn(() => ({ x: 1000, y: 800 })),
+    getBounds: vi.fn(() => ({
+      getSouth: () => 45.0,
+      getNorth: () => 48.0,
+      getWest: () => 16.0,
+      getEast: () => 23.0,
+    })),
     invalidateSize: vi.fn().mockReturnThis(),
     getCenter: vi.fn(() => ({ lat: 47, lng: 19 })),
     latLngToLayerPoint: vi.fn((latlng: { lat: number; lng: number }) => ({
@@ -224,6 +230,7 @@ async function mountMap(props: Partial<Record<string, any>> = {}) {
       items: [],
       iconResolver: () => DummyIcon,
       popupResolver: () => DummyPopup,
+      center: [47.0, 19.0] as [number, number],
       ...props,
     },
     attachTo: document.body,
@@ -402,32 +409,16 @@ describe('OsmPoiMap', () => {
     expect(mapInstance.flyTo).toHaveBeenCalledWith([48.0, 20.0], 15, { duration: 1 })
   })
 
-  it('initializes at world view when no center is provided', async () => {
-    await mountMap()
+  it('initializes at the provided center and zoom', async () => {
+    await mountMap({ center: [47.0, 19.0] as [number, number], zoom: 7 })
     await flushPromises()
 
     const mapCall = (L.map as any).mock.calls[0][1]
-    expect(mapCall.center).toEqual([0, 0])
-    expect(mapCall.zoom).toBe(2)
+    expect(mapCall.center).toEqual([47.0, 19.0])
+    expect(mapCall.zoom).toBe(7)
   })
 
-  it('auto-fits to markers when no center is provided', async () => {
-    await mountMap()
-    await flushPromises()
-
-    const mapInstance = (L.map as any).mock.results[0].value
-    expect(mapInstance.fitBounds).toHaveBeenCalled()
-  })
-
-  it('does not auto-fit to markers when center is provided', async () => {
-    await mountMap({ center: [48.0, 16.0] as [number, number] })
-    await flushPromises()
-
-    const mapInstance = (L.map as any).mock.results[0].value
-    expect(mapInstance.fitBounds).not.toHaveBeenCalled()
-  })
-
-  it('defers flyTo when container has zero dimensions and replays on resize', async () => {
+  it('defers center change when container has zero dimensions and replays on resize', async () => {
     const wrapper = await mountMap({ center: [47.0, 19.0] as [number, number], zoom: 7 })
     await flushPromises()
 
@@ -441,18 +432,22 @@ describe('OsmPoiMap', () => {
     // Simulate zero-size container (KeepAlive deactivation)
     mapInstance.getSize.mockReturnValue({ x: 0, y: 0 })
     mapInstance.flyTo.mockClear()
+    mapInstance.setView.mockClear()
 
-    // Change center while hidden — flyTo should be deferred, not called
+    // Change center while hidden — neither flyTo nor setView should fire
     await wrapper.setProps({ center: [50.0, 14.0] as [number, number] })
     await nextTick()
     expect(mapInstance.flyTo).not.toHaveBeenCalled()
+    expect(mapInstance.setView).not.toHaveBeenCalled()
 
     // Restore non-zero size and trigger the ResizeObserver callback
     mapInstance.getSize.mockReturnValue({ x: 1000, y: 800 })
 
     const roCallback = resizeObserverCallbacks[resizeObserverCallbacks.length - 1]!
     roCallback()
-    expect(mapInstance.flyTo).toHaveBeenCalledWith([50.0, 14.0], 10, { duration: 1 })
+    // Deferred-drain uses setView (teleport) to avoid loading intermediate tiles
+    expect(mapInstance.setView).toHaveBeenCalledWith([50.0, 14.0], 10)
+    expect(mapInstance.flyTo).not.toHaveBeenCalled()
   })
 
   it('suppresses bounds:changed when container has zero dimensions', async () => {
@@ -483,34 +478,6 @@ describe('OsmPoiMap', () => {
     vi.useRealTimers()
   })
 
-  it('unregisters moveend before fitBounds and re-registers via once to suppress bounds:changed', async () => {
-    // Mount with no items so initial fitBounds doesn't fire before we instrument once
-    const wrapper = await mountMap({ items: [] })
-    await flushPromises()
-
-    const mapInstance = (L.map as any).mock.results[0].value
-
-    // Capture the once callback so we can assert re-registration happens
-    let onceEvent: string | null = null
-    let onceCallback: (() => void) | null = null
-    mapInstance.once = vi.fn(function (event: string, cb: () => void) {
-      onceEvent = event
-      onceCallback = cb
-      return mapInstance
-    })
-
-    // Set items — triggers updateMarkers → first load → fitBounds path
-    await wrapper.setProps({ items })
-    await flushPromises()
-
-    // map.off should have been called to unregister emitBounds before fitBounds
-    expect(mapInstance.off).toHaveBeenCalledWith('moveend', expect.any(Function))
-    expect(mapInstance.fitBounds).toHaveBeenCalled()
-
-    // map.once should re-register moveend after the programmatic moveend fires
-    expect(onceEvent).toBe('moveend')
-    expect(onceCallback).toBeTypeOf('function')
-  })
 
   it('debounces bounds:changed emission on rapid moveend events', async () => {
     vi.useFakeTimers()

@@ -6,7 +6,6 @@ import 'leaflet/dist/leaflet.css'
 
 import type { MapPoi, MapCluster, BoundsWithZoom } from '../types/map.types'
 import { useMapController } from '../composables/useMapController'
-import MapPlaceholder from '@/features/shared/components/MapPlaceholder.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -14,7 +13,7 @@ const props = withDefaults(
     clusters?: MapCluster[]
     iconResolver: (poi: MapPoi) => Component
     popupResolver?: (poi: MapPoi) => Component
-    center?: [number, number]
+    center: [number, number]
     zoom?: number
     fitToPois?: boolean
     boundsDebounce?: number
@@ -36,21 +35,16 @@ const emit = defineEmits<{
 
 const mapEl = ref<HTMLDivElement | null>(null)
 
-const { flyToMarker, isMapReady, popupItem, popupTarget } = useMapController(mapEl, props, emit)
+const { flyToMarker, popupItem, popupTarget } = useMapController(mapEl, props, emit)
 
 defineExpose({ flyToMarker })
 </script>
 
 <template>
   <div class="osm-poi-map-wrapper">
-    <MapPlaceholder
-      v-show="!isMapReady"
-      class="position-absolute top-0 start-0 w-100 h-100 opacity-25"
-    />
     <div
       ref="mapEl"
       class="osm-poi-map sentry-block"
-      :class="{ 'opacity-50': !isMapReady }"
     />
 
     <Teleport
@@ -140,16 +134,22 @@ defineExpose({ flyToMarker })
 
 :deep(.leaflet-popup) {
   width: 15rem !important;
+  /* offset to top of marker to eliminate hover flashes */
+  margin-bottom: 45px;
 }
 
 :deep(.item-popup) {
-  /* animation: popup-fade-in 0.15s ease 300ms both; */
+  animation: popup-fade-in 0.15s ease-in-out 200ms both;
 }
 
-/* @keyframes popup-fade-in {
+:deep(.item-popup-post .leaflet-popup-tip) {
+  background: var(--postit-bg);
+}
+
+@keyframes popup-fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
-} */
+}
 
 :deep(.leaflet-popup-content-wrapper) {
   padding: 0;
@@ -171,7 +171,7 @@ defineExpose({ flyToMarker })
 :deep(.leaflet-popup-close-button) {
   width: 24px !important;
   height: 24px !important;
-  display: flex !important;
+  display: none;
   align-items: center;
   justify-content: center;
   background: rgba(0, 0, 0, 0.7) !important;

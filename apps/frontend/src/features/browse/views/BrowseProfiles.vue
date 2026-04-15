@@ -15,6 +15,7 @@ import { useDetailRouteState } from '@/features/shared/composables/useDetailRout
 import { useDetailPanel } from '@/features/app/composables/useDetailPanel'
 
 import OsmPoiMap from '@/features/map/components/OsmPoiMap.vue'
+import MapPlaceholder from '@/features/shared/components/MapPlaceholder.vue'
 import SearchBar from '../components/SearchBar.vue'
 import NoResultsCTA from '../components/NoResultsCTA.vue'
 import ProfileMapCard from '../components/ProfileMapCard.vue'
@@ -58,6 +59,14 @@ watch(selectedTagIds, () => {
 // Map center: starts at the viewer's own location, then moves when the
 // user picks a fly-to target from the location filter.
 const mapCenterOverride = ref<[number, number] | null>(null)
+
+// Placeholder visibility. Flipped by @map:ready from OsmPoiMap once the
+// first tile load completes. Hoisted out of OsmPoiMap so it paints from
+// first render — i.e. before mapCenter resolves and the map mounts.
+const isMapReady = ref(false)
+function onMapReady() {
+  isMapReady.value = true
+}
 const mapCenter = computed<[number, number] | undefined>(() => {
   if (mapCenterOverride.value) return mapCenterOverride.value
   const fromProfile = toLatLng(viewerProfile.value?.location)
@@ -209,7 +218,12 @@ onMounted(async () => {
         >
           <NoResultsCTA />
         </BAlert>
+        <MapPlaceholder
+          v-if="!isMapReady"
+          class="position-absolute top-0 start-0 w-100 h-100 opacity-25"
+        />
         <OsmPoiMap
+          v-if="mapCenter"
           :items="allPois"
           :clusters="clusters"
           :icon-resolver="(poi) => (poi.type === 'post' ? MapIcon : ProfileMarker)"
@@ -219,6 +233,7 @@ onMounted(async () => {
           class="h-100"
           @item:select="handleMarkerSelect"
           @bounds:changed="onBoundsChanged"
+          @map:ready="onMapReady"
         />
       </div>
     </main>

@@ -22,7 +22,7 @@ export interface MapProps {
   clusters: MapCluster[]
   iconResolver: (poi: MapPoi) => Component
   popupResolver?: (poi: MapPoi) => Component
-  center?: [number, number]
+  center: [number, number]
   zoom: number
   fitToPois: boolean
   boundsDebounce: number
@@ -67,7 +67,6 @@ export function useMapController(
   emit: MapEmit
 ) {
   // Reactive state exposed to the component
-  const isMapReady = ref(false)
   const popupItem = ref<MapPoi | null>(null)
   const popupTarget = ref<HTMLElement | null>(null)
 
@@ -129,8 +128,8 @@ export function useMapController(
 
   function createMap(): void {
     map = L.map(mapEl.value!, {
-      center: props.center ?? [0, 0],
-      zoom: props.center ? props.zoom : 2,
+      center: props.center,
+      zoom: props.zoom,
       maxZoom: MAP_MAX_ZOOM,
       preferCanvas: true,
       trackResize: false,
@@ -150,7 +149,7 @@ export function useMapController(
       if (deferred.center) {
         const center = deferred.center
         deferred.center = undefined
-        map.flyTo(center, lastStableZoom, { duration: 1 })
+        map.setView(center, lastStableZoom)
       }
     })
     resizeObserver.observe(mapEl.value!)
@@ -221,16 +220,19 @@ export function useMapController(
 
   function onReady(): void {
     phase = 'ready'
-    isMapReady.value = true
     emit('map:ready', map)
     drainDeferred()
+    // Initializing at the real center+zoom means Leaflet never fires a
+    // moveend for the first view (no animation to settle). Emit once
+    // explicitly so downstream can fetch data for the initial viewport.
+    emitBounds()
   }
 
   function drainDeferred(): void {
     if (deferred.center) {
       const center = deferred.center
       deferred.center = undefined
-      map.flyTo(center, lastStableZoom, { duration: 1 })
+      map.setView(center, lastStableZoom)
     }
   }
 
@@ -272,11 +274,14 @@ export function useMapController(
     })
 
     if (resolvePopup) {
+      const classes = ['item-popup']
+      if (item.type) classes.push(`item-popup-${item.type}`)
+      if (item.highlighted) classes.push('item-popup-highlighted')
       m.bindPopup('', {
         maxWidth: 420,
         autoPan: false,
         autoPanPadding: L.point(20, 20),
-        className: item.highlighted ? 'item-popup item-popup-highlighted' : 'item-popup',
+        className: classes.join(' '),
       })
 
       m.on('mouseover', (e: L.LeafletMouseEvent) => {
@@ -362,19 +367,6 @@ export function useMapController(
 
     for (const m of removed) oms.removeMarker(m)
     for (const m of added) oms.addMarker(m)
-
-    if (
-      added.length > 0 &&
-      pois.size() === added.length &&
-      !props.center &&
-      items.length > 0
-    ) {
-      const latlngs = items.map((i) => [i.location.lat, i.location.lon] as [number, number])
-      const bounds = L.latLngBounds(latlngs)
-      map.off('moveend', emitBounds)
-      map.fitBounds(bounds, { padding: [24, 24] })
-      map.once('moveend', () => map.on('moveend', emitBounds))
-    }
 
     if (dissolvedClusterAt) {
       const target = dissolvedClusterAt
@@ -469,5 +461,5 @@ export function useMapController(
     }
   )
 
-  return { flyToMarker, isMapReady, popupItem, popupTarget }
+  return { flyToMarker, popupItem, popupTarget }
 }
