@@ -4,6 +4,7 @@ import { inject, type Ref, computed } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faLocationDot } from '@fortawesome/free-solid-svg-icons'
 import IconPostIt from '@/assets/icons/interface/post-it.svg'
+import IconTag from '@/assets/icons/e-commerce/tag.svg'
 
 import type { PublicTag } from '@zod/tag/tag.dto'
 import type { LocationDTO } from '@zod/dto/location.dto'
@@ -72,7 +73,7 @@ const viewerLocation = computed(() => viewerProfile?.value?.location)
         <BListGroupItem
           v-for="(loc, i) in geocodedAsLocations"
           href="#"
-          class="small border-0"
+          class="small border-0 mb-0 px-2 py-1"
           :key="`geo-${loc.country}-${loc.cityName ?? ''}-${i}`"
           @click="$emit('location:select', loc)"
         >
@@ -95,7 +96,7 @@ const viewerLocation = computed(() => viewerProfile?.value?.location)
       v-if="results.tags.length"
       class="px-2 pb-2 d-flex align-items-start"
     >
-      <IconPostIt
+      <IconTag
         width="24"
         height="24"
         class="mt-1 me-2 text-secondary flex-shrink-0"
@@ -117,7 +118,16 @@ const viewerLocation = computed(() => viewerProfile?.value?.location)
       />
     </section>
 
-    <section v-if="results.posts.length">
+    <section
+      v-if="results.posts.length"
+      class="px-2 pb-2 d-flex align-items-start"
+    >
+      <IconPostIt
+        width="24"
+        height="24"
+        class="mt-1 me-2 text-secondary flex-shrink-0"
+      />
+
       <BListGroup flush>
         <BListGroupItem
           v-for="post in results.posts"

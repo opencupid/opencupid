@@ -11,12 +11,12 @@ import SearchResults from './SearchResults.vue'
 import type { LocationDTO, GeoPoint } from '@zod/dto/location.dto'
 import type { OwnerProfile, ProfileSummary } from '@zod/profile/profile.dto'
 import type { PublicTag } from '@zod/tag/tag.dto'
+import type { PostSummary } from '@zod/post/post.dto'
+
 import { useSearchStore } from '@/features/browse/stores/searchStore'
 import { useGeocodingStore } from '@/features/geocoding/stores/geocodingStore'
 import { useI18n } from 'vue-i18n'
-import type { Profile } from '../../../../../../packages/shared/zod/generated'
 import { toGeoPoint } from '../../map/utils/mapUtils'
-import type { PostSummary } from '../../../../../../packages/shared/zod/post/post.dto'
 
 const props = defineProps<{
   viewerProfile: OwnerProfile | null
@@ -93,7 +93,12 @@ watch(searchQuery, (query) => {
   // Fire both searches in parallel — each store owns its own abort controller,
   // so rapid re-typing cancels prior in-flight requests on both sides.
   searchStore.search(query)
-  geocodingStore.search(query, locale.value)
+  geocodingStore.searchNearby(
+    props.viewerProfile?.location?.country ?? '',
+    query,
+    locale.value,
+    5
+  )
 })
 </script>
 
@@ -191,7 +196,7 @@ $panel-height: 30vh;
 }
 
 .search-bar__field {
-  // flex: 1 1 0;
+  flex: 1 1 0;
   min-width: 0;
 }
 
