@@ -48,7 +48,7 @@ describe('searchPhoton', () => {
     const params: URLSearchParams = config.params
     expect(params.get('q')).toBe('Berlin')
     expect(params.get('lang')).toBe('en')
-    expect(params.get('limit')).toBe('10')
+    expect(params.get('limit')).toBe('50')
     expect(params.getAll('osm_tag')).toEqual([
       'place:city',
       'place:town',
