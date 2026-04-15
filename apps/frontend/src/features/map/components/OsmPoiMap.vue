@@ -134,6 +134,8 @@ defineExpose({ flyToMarker })
 
 :deep(.leaflet-popup) {
   width: 15rem !important;
+  /* offset to top of marker to eliminate hover flashes */
+  margin-bottom: 45px;
 }
 
 :deep(.item-popup) {
