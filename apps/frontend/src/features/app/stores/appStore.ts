@@ -11,6 +11,7 @@ export const useAppStore = defineStore('app', {
     updateAvailable: false,
     latestVersion: '',
     canInstallPwa: false,
+    shareCtaDismissed: false,
   }),
   actions: {
     async fetchLocation(): Promise<StoreResponse<LocationDTO>> {
