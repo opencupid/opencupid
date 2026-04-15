@@ -48,6 +48,13 @@ const {
 
 const findProfileStore = useFindProfileStore()
 
+// Alert visibility — reset to true each time the empty-state condition
+// re-triggers so the user sees it again after filter changes.
+const alertVisible = ref(true)
+watch(isNoOneAround, (value) => {
+  if (value) alertVisible.value = true
+})
+
 // Ephemeral tag filter state (client-only). Changing it triggers a refetch
 // of the current viewport so the map reflects the new filter immediately.
 const filtersStore = useBrowseFiltersStore()
@@ -212,9 +219,10 @@ onMounted(async () => {
       <div class="overflow-auto hide-scrollbar flex-grow-1 position-relative">
         <BAlert
           v-if="isNoOneAround"
+          v-model="alertVisible"
           variant="info"
           class="lonely-alert shadow p-2 p-md-2"
-          show
+          dismissible
         >
           <NoResultsCTA />
         </BAlert>
@@ -252,13 +260,13 @@ onMounted(async () => {
 }
 
 .lonely-alert {
-  top: 1rem;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   z-index: 1025;
   background-color: rgba($color: $info, $alpha: 0.6);
   position: absolute;
-  width: fit-content;
-  min-width: 80%;
+  width: auto;
+  max-width: 90%;
 }
 </style>
