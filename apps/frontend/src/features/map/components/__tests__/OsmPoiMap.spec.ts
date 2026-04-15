@@ -402,13 +402,13 @@ describe('OsmPoiMap', () => {
     expect(mapInstance.flyTo).toHaveBeenCalledWith([48.0, 20.0], 15, { duration: 1 })
   })
 
-  it('initializes at world view when no center is provided', async () => {
-    await mountMap()
+  it('initializes at the provided center and zoom', async () => {
+    await mountMap({ center: [47.0, 19.0] as [number, number], zoom: 7 })
     await flushPromises()
 
     const mapCall = (L.map as any).mock.calls[0][1]
-    expect(mapCall.center).toEqual([0, 0])
-    expect(mapCall.zoom).toBe(2)
+    expect(mapCall.center).toEqual([47.0, 19.0])
+    expect(mapCall.zoom).toBe(7)
   })
 
   it('auto-fits to markers when no center is provided', async () => {
@@ -427,7 +427,7 @@ describe('OsmPoiMap', () => {
     expect(mapInstance.fitBounds).not.toHaveBeenCalled()
   })
 
-  it('defers flyTo when container has zero dimensions and replays on resize', async () => {
+  it('defers center change when container has zero dimensions and replays on resize', async () => {
     const wrapper = await mountMap({ center: [47.0, 19.0] as [number, number], zoom: 7 })
     await flushPromises()
 
@@ -441,18 +441,22 @@ describe('OsmPoiMap', () => {
     // Simulate zero-size container (KeepAlive deactivation)
     mapInstance.getSize.mockReturnValue({ x: 0, y: 0 })
     mapInstance.flyTo.mockClear()
+    mapInstance.setView.mockClear()
 
-    // Change center while hidden — flyTo should be deferred, not called
+    // Change center while hidden — neither flyTo nor setView should fire
     await wrapper.setProps({ center: [50.0, 14.0] as [number, number] })
     await nextTick()
     expect(mapInstance.flyTo).not.toHaveBeenCalled()
+    expect(mapInstance.setView).not.toHaveBeenCalled()
 
     // Restore non-zero size and trigger the ResizeObserver callback
     mapInstance.getSize.mockReturnValue({ x: 1000, y: 800 })
 
     const roCallback = resizeObserverCallbacks[resizeObserverCallbacks.length - 1]!
     roCallback()
-    expect(mapInstance.flyTo).toHaveBeenCalledWith([50.0, 14.0], 10, { duration: 1 })
+    // Deferred-drain uses setView (teleport) to avoid loading intermediate tiles
+    expect(mapInstance.setView).toHaveBeenCalledWith([50.0, 14.0], 10)
+    expect(mapInstance.flyTo).not.toHaveBeenCalled()
   })
 
   it('suppresses bounds:changed when container has zero dimensions', async () => {

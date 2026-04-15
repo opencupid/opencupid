@@ -129,8 +129,8 @@ export function useMapController(
 
   function createMap(): void {
     map = L.map(mapEl.value!, {
-      center: props.center ?? [0, 0],
-      zoom: props.center ? props.zoom : 2,
+      center: props.center!,
+      zoom: props.zoom,
       maxZoom: MAP_MAX_ZOOM,
       preferCanvas: true,
       trackResize: false,
@@ -150,7 +150,7 @@ export function useMapController(
       if (deferred.center) {
         const center = deferred.center
         deferred.center = undefined
-        map.flyTo(center, lastStableZoom, { duration: 1 })
+        map.setView(center, lastStableZoom)
       }
     })
     resizeObserver.observe(mapEl.value!)
@@ -224,13 +224,17 @@ export function useMapController(
     isMapReady.value = true
     emit('map:ready', map)
     drainDeferred()
+    // Initializing at the real center+zoom means Leaflet never fires a
+    // moveend for the first view (no animation to settle). Emit once
+    // explicitly so downstream can fetch data for the initial viewport.
+    emitBounds()
   }
 
   function drainDeferred(): void {
     if (deferred.center) {
       const center = deferred.center
       deferred.center = undefined
-      map.flyTo(center, lastStableZoom, { duration: 1 })
+      map.setView(center, lastStableZoom)
     }
   }
 

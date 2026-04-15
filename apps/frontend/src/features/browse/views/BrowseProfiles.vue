@@ -210,6 +210,7 @@ onMounted(async () => {
           <NoResultsCTA />
         </BAlert>
         <OsmPoiMap
+          v-if="mapCenter"
           :items="allPois"
           :clusters="clusters"
           :icon-resolver="(poi) => (poi.type === 'post' ? MapIcon : ProfileMarker)"

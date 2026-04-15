@@ -67,7 +67,10 @@ vi.mock('@/features/browse/stores/browseFiltersStore', () => ({
 
 // Shared VM state that tests can mutate
 const vmState = {
-  viewerProfile: ref<Record<string, any>>({ isSocialActive: true }),
+  viewerProfile: ref<Record<string, any>>({
+    isSocialActive: true,
+    location: { country: 'HU', cityName: 'Budapest', lat: 47.5, lon: 19.0 },
+  }),
   isNoOneAround: ref(false),
   isLoading: ref(false),
   haveResults: ref(true),
@@ -215,15 +218,6 @@ describe('BrowseProfiles view', () => {
     vmState.viewerProfile.value = {
       isSocialActive: true,
       location: { country: 'HU', cityName: 'Budapest', lat: 47.5, lon: 19.0 },
-    }
-    const wrapper = mountComponent()
-    expect(wrapper.find('.map-view').exists()).toBe(true)
-  })
-
-  it('renders map when viewer profile has no coords', () => {
-    vmState.viewerProfile.value = {
-      isSocialActive: true,
-      location: { country: '', cityName: '', lat: null, lon: null },
     }
     const wrapper = mountComponent()
     expect(wrapper.find('.map-view').exists()).toBe(true)
