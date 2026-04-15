@@ -9,7 +9,7 @@ defineProps<{ profiles: ProfileSummary[] }>()
   <BListGroup flush>
     <BListGroupItem
       v-for="profile in profiles"
-      href="#"
+      button
       :key="profile.id"
       class="profilechip d-flex align-items-center mb-2 p-0 border-0 rounded-3 cursor-pointer user-select-none"
       @click="$emit('select:profile', profile)"

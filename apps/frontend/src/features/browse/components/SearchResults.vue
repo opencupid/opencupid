@@ -72,10 +72,10 @@ const viewerLocation = computed(() => viewerProfile?.value?.location)
       <BListGroup flush>
         <BListGroupItem
           v-for="(loc, i) in geocodedAsLocations"
-          href="#"
           class="small border-0 mb-0 px-2 py-1"
           :key="`geo-${loc.country}-${loc.cityName ?? ''}-${i}`"
           @click="$emit('location:select', loc)"
+          button
         >
           <FontAwesomeIcon
             :icon="faLocationDot"
@@ -132,8 +132,9 @@ const viewerLocation = computed(() => viewerProfile?.value?.location)
         <BListGroupItem
           v-for="post in results.posts"
           class="bg-post-it small"
-          href="#"
+          button
           :key="post.id"
+          @click="$emit('post:select', post)"
         >
           <div class="small lh-sm text-truncate">
             {{ post.content }}

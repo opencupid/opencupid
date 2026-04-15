@@ -7,6 +7,7 @@ import { onClickOutside } from '@vueuse/core'
 import SelectableTagList from './SelectableTagList.vue'
 import SearchInput from './SearchInput.vue'
 import SearchResults from './SearchResults.vue'
+import IconHome from '@/assets/icons/interface/home.svg'
 
 import type { LocationDTO, GeoPoint } from '@zod/dto/location.dto'
 import type { OwnerProfile, ProfileSummary } from '@zod/profile/profile.dto'
@@ -29,6 +30,8 @@ const emit = defineEmits<{
    * Emitted when the user picks a location from the selector.
    */
   'location:set': [point: GeoPoint]
+  'profile:select': [profile: ProfileSummary]
+  'post:select': [post: PostSummary]
 }>()
 
 const searchStore = useSearchStore()
@@ -71,21 +74,21 @@ function onSelectLocation(location: LocationDTO) {
   emit('location:set', point)
 }
 
-function onSelectProfile(profile: ProfileSummary) {
-  router.push({ name: 'PublicProfile', params: { profileId: profile.id } })
-}
-
 function onSelectTag(tag: PublicTag) {
-  // TODO
   selectedTags.value = [tag]
 }
 
+function onSelectProfile(profile: ProfileSummary) {
+  const point = toGeoPoint(profile.location)
+  if (point) emit('location:set', point)
+  console.log('Emitting profile:select for', profile)
+  emit('profile:select', profile)
+}
+
 function onSelectPost(post: PostSummary) {
-  // TODO
   const point = toGeoPoint(post.location)
-  if (!point) return
-  selectedTags.value = []
-  emit('location:set', point)
+  if (point) emit('location:set', point)
+  emit('post:select', post)
 }
 
 watch(searchQuery, (query) => {
@@ -93,12 +96,7 @@ watch(searchQuery, (query) => {
   // Fire both searches in parallel — each store owns its own abort controller,
   // so rapid re-typing cancels prior in-flight requests on both sides.
   searchStore.search(query)
-  geocodingStore.searchNearby(
-    props.viewerProfile?.location?.country ?? '',
-    query,
-    locale.value,
-    5
-  )
+  geocodingStore.searchNearby(props.viewerProfile?.location?.country ?? '', query, locale.value, 5)
 })
 </script>
 
@@ -113,19 +111,28 @@ watch(searchQuery, (query) => {
       class="search-bar__pill w-100 position-relative d-flex flex-row align-items-center border"
       @click="togglePanel"
     >
-      <div class="search-bar__field w-100">
+      <div class="d-flex align-items-center gap-1 flex-grow-1 min-w-0">
         <SearchInput
           v-model="searchQuery"
           @home:set="handleSetLocationHome"
+          class="flex-grow-1 flex-shrink-1 min-w-0"
         />
-      </div>
 
-      <div class="search-bar__field search-bar__field--tags">
         <SelectableTagList
           :tags="selectedTags"
           removable
           @remove="selectedTags = []"
+          class="flex-grow-0 flex-shrink-1"
         />
+        <BButton
+          variant="link-secondary"
+          size="sm"
+          class="mx-1 p-0 flex-grow-0 flex-shrink-0"
+          :title="$t('profiles.browse.filters.locate_button_title')"
+          @click="handleSetLocationHome"
+        >
+          <IconHome class="svg-icon-md" />
+        </BButton>
       </div>
     </div>
     <div
@@ -193,11 +200,6 @@ $panel-height: 30vh;
       0 1px 2px rgba(0, 0, 0, 0.1),
       0 4px 12px rgba(0, 0, 0, 0.06);
   }
-}
-
-.search-bar__field {
-  flex: 1 1 0;
-  min-width: 0;
 }
 
 :deep(.input-group) {

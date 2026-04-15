@@ -29,6 +29,8 @@ import OwnerDrawerControls from '../components/OwnerDrawerControls.vue'
 import { usePostStore } from '@/features/posts/stores/postStore'
 import type { GeoPoint, LocationDTO } from '@zod/dto/location.dto'
 import ShareDialog from '@/features/app/components/ShareDialog.vue'
+import type { PostSummary } from '@zod/post/post.dto'
+import type { ProfileSummary } from '@zod/profile/profile.dto'
 
 // Component name must be 'AppShell' for KeepAlive to identify it correctly
 defineOptions({ name: 'AppShell' })
@@ -144,13 +146,20 @@ function openInboxDrawer() {
   router.push({ name: 'Inbox' })
 }
 
+function handlePostSelect(post: PostSummary) {
+  router.push({ name: 'PublicPost', params: { postId: String(post.id) } })
+}
+function handleProfileSelect(profile: ProfileSummary) {
+  router.push({ name: 'PublicProfile', params: { profileId: String(profile.id) } })
+}
+
 function handleMarkerSelect(id: string | number) {
   const poi = allPois.value.find((p) => p.id === id)
   if (!poi) return
   if (poi.type === 'post') {
-    router.push({ name: 'PublicPost', params: { postId: String(id) } })
+    handlePostSelect(poi.source as PostSummary)
   } else {
-    router.push({ name: 'PublicProfile', params: { profileId: String(id) } })
+    handleProfileSelect(poi.source as ProfileSummary)
   }
 }
 
@@ -199,6 +208,8 @@ onMounted(async () => {
           :viewer-profile="viewerProfile"
           :available-tags="availableTags"
           @location:set="onLocationSet"
+          @profile:select="handleProfileSelect"
+          @post:select="handlePostSelect"
         />
       </div>
       <div class="flex-shrink-0 flex-grow-0">

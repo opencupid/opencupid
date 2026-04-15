@@ -1,18 +1,16 @@
 <script setup lang="ts">
-import IconHome from '@/assets/icons/interface/home.svg'
 import IconSearch from '@/assets/icons/interface/search.svg'
 
 defineProps<{ modelValue: string }>()
 
 defineEmits<{
   'update:modelValue': [value: string]
-  'home:set': []
 }>()
 </script>
 
 <template>
-  <div class="d-flex align-items-center">
-    <div class="flex-grow-1 flex-shrink-0">
+  <div class="d-flex align-items-center min-w-0">
+    <div class="flex-grow-1 flex-shrink-1 d-flex align-items-center min-w-0">
       <BInputGroup
         class="input-group d-flex align-items-center w-100"
         size="sm"
@@ -31,14 +29,5 @@ defineEmits<{
         />
       </BInputGroup>
     </div>
-    <BButton
-      variant="link-secondary"
-      size="sm"
-      class="mx-1 p-0"
-      :title="$t('profiles.browse.filters.locate_button_title')"
-      @click="$emit('home:set')"
-    >
-      <IconHome class="svg-icon-md" />
-    </BButton>
   </div>
 </template>
