@@ -6,6 +6,7 @@ vi.mock('../../api/mappers/profile.mappers', () => ({
     id: profile.id,
     publicName: profile.publicName,
     profileImages: profile.profileImages ?? [],
+    location: profile.location ?? { country: '' },
   }),
 }))
 
@@ -44,6 +45,7 @@ describe('mapDbPostToPublic', () => {
       id: basePostedBy.id,
       publicName: basePostedBy.publicName,
       profileImages: [],
+      location: { country: '' },
     })
     expect(result.location).toEqual({
       country: 'AT',

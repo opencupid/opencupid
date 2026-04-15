@@ -8,23 +8,11 @@ import {
   type PostSummary,
 } from '@zod/post/post.dto'
 import type { PostWithProfileAndContext } from '@/services/post.service'
-import type { LocationDTO } from '@zod/dto/location.dto'
 import type { DbProfileSummary } from '@zod/profile/profile.db'
 import type { PostType } from '@prisma/client'
 import { mapProfileSummary } from './profile.mappers'
 import { mapConversationContext } from './interaction.mappers'
-
-function extractPostLocation(post: Record<string, unknown>): LocationDTO | null {
-  if (!post.country && !post.cityName && post.lat == null && post.lon == null) {
-    return null
-  }
-  return {
-    country: (post.country as string) ?? '',
-    cityName: (post.cityName as string) ?? undefined,
-    lat: (post.lat as number) ?? null,
-    lon: (post.lon as number) ?? null,
-  }
-}
+import { DbLocationToLocationDTO, extractLocation } from './location.mappers'
 
 export function mapDbPostToPublic(
   post: PostWithProfile,
@@ -35,7 +23,7 @@ export function mapDbPostToPublic(
     ...PublicPostSchema.parse(rest),
     isOwn: post.postedById === viewerProfileId,
     postedBy: mapProfileSummary(postedBy),
-    location: extractPostLocation(rest),
+    location: extractLocation(rest),
   }
 }
 
@@ -48,7 +36,7 @@ export function mapDbPostToDetail(post: PostWithProfileAndContext): PublicPostDe
       ...mapProfileSummary(postedBy),
       ...mapConversationContext(postedBy),
     },
-    location: extractPostLocation(rest),
+    location: extractLocation(rest),
   }
 }
 
@@ -57,7 +45,7 @@ export function mapDbPostToOwner(post: PostWithProfile): OwnerPost {
   const mapped = {
     ...rest,
     postedBy: mapProfileSummary(postedBy),
-    location: extractPostLocation(rest),
+    location: extractLocation(rest),
   }
   return OwnerPostSchema.parse(mapped)
 }
@@ -80,7 +68,7 @@ export function mapPostSummary(post: DbPostForSummary): PostSummary {
     id: post.id,
     type: post.type,
     content: post.content,
-    location: extractPostLocation(post) ?? { country: '' },
+    location: DbLocationToLocationDTO(post),
     postedBy: mapProfileSummary(post.postedBy),
   }
 }

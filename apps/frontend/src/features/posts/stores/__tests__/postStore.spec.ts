@@ -38,6 +38,7 @@ const profileSummary = {
   id: CUID_1,
   publicName: 'Test',
   profileImages: [],
+  location: { country: '' },
 }
 
 function makePublicPost(id: string) {

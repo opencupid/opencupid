@@ -7,6 +7,7 @@ vi.mock('../../api/mappers/profile.mappers', () => ({
     id: p.id,
     publicName: p.publicName,
     profileImages: p.profileImages ?? [],
+    location: p.location ?? { country: '' },
   })),
 }))
 
