@@ -10,9 +10,15 @@ vi.mock('vue-toastification', () => ({ useToast: () => ({ info: toastInfo }) }))
 vi.mock('@/features/map/components/OsmPoiMap.vue', () => ({
   default: {
     name: 'OsmPoiMap',
-    template:
-      '<div class="map-view"><div class="map-placeholder" /><div class="osm-poi-map" /></div>',
+    template: '<div class="map-view"><div class="osm-poi-map" /></div>',
     props: ['items', 'clusters', 'iconResolver', 'center', 'popupComponent', 'fetchPopupData'],
+    emits: ['map:ready', 'item:select', 'bounds:changed'],
+  },
+}))
+vi.mock('@/features/shared/components/MapPlaceholder.vue', () => ({
+  default: {
+    name: 'MapPlaceholder',
+    template: '<div class="map-placeholder-stub" />',
   },
 }))
 vi.mock('../../components/ProfileMapCard.vue', () => ({
@@ -221,5 +227,15 @@ describe('BrowseProfiles view', () => {
     }
     const wrapper = mountComponent()
     expect(wrapper.find('.map-view').exists()).toBe(true)
+  })
+
+  it('shows MapPlaceholder and hides it after OsmPoiMap emits map:ready', async () => {
+    const wrapper = mountComponent()
+    expect(wrapper.find('.map-placeholder-stub').exists()).toBe(true)
+
+    wrapper.findComponent({ name: 'OsmPoiMap' }).vm.$emit('map:ready', {})
+    await nextTick()
+
+    expect(wrapper.find('.map-placeholder-stub').exists()).toBe(false)
   })
 })

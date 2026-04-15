@@ -6,7 +6,6 @@ import 'leaflet/dist/leaflet.css'
 
 import type { MapPoi, MapCluster, BoundsWithZoom } from '../types/map.types'
 import { useMapController } from '../composables/useMapController'
-import MapPlaceholder from '@/features/shared/components/MapPlaceholder.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -36,21 +35,16 @@ const emit = defineEmits<{
 
 const mapEl = ref<HTMLDivElement | null>(null)
 
-const { flyToMarker, isMapReady, popupItem, popupTarget } = useMapController(mapEl, props, emit)
+const { flyToMarker, popupItem, popupTarget } = useMapController(mapEl, props, emit)
 
 defineExpose({ flyToMarker })
 </script>
 
 <template>
   <div class="osm-poi-map-wrapper">
-    <MapPlaceholder
-      v-show="!isMapReady"
-      class="position-absolute top-0 start-0 w-100 h-100 opacity-25"
-    />
     <div
       ref="mapEl"
       class="osm-poi-map sentry-block"
-      :class="{ 'opacity-50': !isMapReady }"
     />
 
     <Teleport

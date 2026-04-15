@@ -67,7 +67,6 @@ export function useMapController(
   emit: MapEmit
 ) {
   // Reactive state exposed to the component
-  const isMapReady = ref(false)
   const popupItem = ref<MapPoi | null>(null)
   const popupTarget = ref<HTMLElement | null>(null)
 
@@ -221,7 +220,6 @@ export function useMapController(
 
   function onReady(): void {
     phase = 'ready'
-    isMapReady.value = true
     emit('map:ready', map)
     drainDeferred()
     // Initializing at the real center+zoom means Leaflet never fires a
@@ -473,5 +471,5 @@ export function useMapController(
     }
   )
 
-  return { flyToMarker, isMapReady, popupItem, popupTarget }
+  return { flyToMarker, popupItem, popupTarget }
 }
