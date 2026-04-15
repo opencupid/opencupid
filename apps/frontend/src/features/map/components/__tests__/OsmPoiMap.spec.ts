@@ -62,6 +62,12 @@ vi.mock('leaflet', () => {
 
     getZoom: vi.fn(() => 10),
     getSize: vi.fn(() => ({ x: 1000, y: 800 })),
+    getBounds: vi.fn(() => ({
+      getSouth: () => 45.0,
+      getNorth: () => 48.0,
+      getWest: () => 16.0,
+      getEast: () => 23.0,
+    })),
     invalidateSize: vi.fn().mockReturnThis(),
     getCenter: vi.fn(() => ({ lat: 47, lng: 19 })),
     latLngToLayerPoint: vi.fn((latlng: { lat: number; lng: number }) => ({
