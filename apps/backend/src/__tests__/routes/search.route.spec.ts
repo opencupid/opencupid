@@ -57,7 +57,7 @@ describe('GET /search', () => {
   const handler = () => fastify.routes['GET /']
 
   it('forwards session language and profileId to the service', async () => {
-    mockSearch.mockResolvedValue({ tags: [], profiles: [], posts: [], locations: [] })
+    mockSearch.mockResolvedValue({ tags: [], profiles: [], posts: [] })
 
     await handler()(
       { session: { ...baseSession, lang: 'hu' }, query: { q: 'guitar' }, log: { error: vi.fn() } },
@@ -87,7 +87,6 @@ describe('GET /search', () => {
           postedBy: { id: 'p1', publicName: 'Alice', profileImages: [{ storagePath: 'a/b' }] },
         },
       ],
-      locations: [{ cityName: 'Budapest', country: 'HU', lat: 47.5, lon: 19.0 }],
     })
 
     await handler()(
@@ -105,11 +104,10 @@ describe('GET /search', () => {
       content: 'Guitar lessons',
       postedBy: { id: 'p1', publicName: 'Alice' },
     })
-    expect(reply.payload.locations[0]).toMatchObject({ cityName: 'Budapest', country: 'HU' })
   })
 
   it('defaults missing q to empty string (and the service short-circuits)', async () => {
-    mockSearch.mockResolvedValue({ tags: [], profiles: [], posts: [], locations: [] })
+    mockSearch.mockResolvedValue({ tags: [], profiles: [], posts: [] })
 
     await handler()({ session: baseSession, query: {}, log: { error: vi.fn() } }, reply)
 
@@ -119,7 +117,6 @@ describe('GET /search', () => {
       tags: [],
       profiles: [],
       posts: [],
-      locations: [],
     })
   })
 

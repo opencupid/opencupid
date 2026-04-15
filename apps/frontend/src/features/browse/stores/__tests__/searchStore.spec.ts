@@ -22,7 +22,6 @@ const emptyResults = {
   tags: [],
   profiles: [],
   posts: [],
-  locations: [],
 }
 
 const tag = (id: string, name = id): PublicTag => ({ id, name, slug: id })
@@ -136,7 +135,6 @@ describe('useSearchStore', () => {
         tags: [{ id: 'cltagabc000000000000001', name: 'Hiking', slug: 'hiking' }],
         profiles: [],
         posts: [],
-        locations: [],
       }
       mockGet.mockResolvedValueOnce({ data: payload })
 
