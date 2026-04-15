@@ -47,7 +47,7 @@ jobs:
       - name: Verify fixed versioning
         run: |
           CANONICAL=$(node -p "require('./apps/frontend/package.json').version")
-          for svc in backend admin; do
+          for svc in backend admin ingress; do
             SVC_VER=$(node -p "require('./apps/${svc}/package.json').version")
             if [[ "$SVC_VER" != "$CANONICAL" ]]; then
               echo "::error::Version mismatch: frontend=${CANONICAL}, ${svc}=${SVC_VER}"
@@ -89,7 +89,7 @@ jobs:
           PREV_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
 
           NOTES=""
-          for svc in backend frontend admin; do
+          for svc in backend frontend admin ingress; do
             CHANGELOG="apps/${svc}/CHANGELOG.md"
             if ! git diff HEAD~1 --quiet -- "$CHANGELOG" 2>/dev/null; then
               VERSION=$(node -p "require('./apps/${svc}/package.json').version")

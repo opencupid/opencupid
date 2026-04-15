@@ -14,7 +14,7 @@ if [ -n "${CSP_REPORT_URI:-}" ]; then
 else
   export CSP_REPORT_DIRECTIVE=""
 fi
-envsubst '${DOMAIN} ${CSP_ALLOWED_DOMAINS} ${CSP_REPORT_DIRECTIVE}' \
+envsubst '${DOMAIN} ${JITSI_DOMAIN} ${CSP_ALLOWED_DOMAINS} ${CSP_REPORT_DIRECTIVE}' \
   < /etc/nginx/security-headers.conf.tmpl \
   > /etc/nginx/security-headers.conf
 

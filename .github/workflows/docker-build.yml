@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       images:
-        description: 'Images to build (comma-separated: backend,frontend,admin or "all")'
+        description: 'Images to build (comma-separated: backend,frontend,admin,ingress or "all")'
         required: false
         default: 'all'
 
@@ -40,7 +40,7 @@ jobs:
           PREFIX="ghcr.io/${{ github.repository }}"
           SERVICES=()
 
-          for SVC in backend frontend admin; do
+          for SVC in backend frontend admin ingress; do
             VERSION=$(node -p "require('./apps/${SVC}/package.json').version")
             TAG="${PREFIX}-${SVC}:${VERSION}"
             BUILD=false
@@ -76,7 +76,10 @@ jobs:
             FIRST=true
             for SVC in "${SERVICES[@]}"; do
               VERSION=$(node -p "require('./apps/${SVC}/package.json').version")
-              CTX="."
+              case "$SVC" in
+                ingress) CTX="apps/ingress" ;;
+                *)       CTX="." ;;
+              esac
               if [[ "$FIRST" != "true" ]]; then MATRIX+=","; fi
               MATRIX+="{\"service\":\"${SVC}\",\"dockerfile\":\"apps/${SVC}/Dockerfile\",\"context\":\"${CTX}\",\"version\":\"${VERSION}\"}"
               FIRST=false
@@ -94,7 +97,7 @@ jobs:
           echo "### Build matrix" >> "$GITHUB_STEP_SUMMARY"
           echo "| Service | Version | Build? |" >> "$GITHUB_STEP_SUMMARY"
           echo "|---------|---------|--------|" >> "$GITHUB_STEP_SUMMARY"
-          for SVC in backend frontend admin; do
+          for SVC in backend frontend admin ingress; do
             VERSION=$(node -p "require('./apps/${SVC}/package.json').version")
             TAG="${PREFIX}-${SVC}:${VERSION}"
             BUILD="⏭️"

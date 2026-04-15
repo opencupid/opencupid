@@ -26,14 +26,10 @@ http:
         customRequestHeaders:
           X-Admin-Authenticated: "true"
 
-    media-jwt:
-      plugin:
-        jwt:
-          Keys:
-            - '{{ env "JWT_SECRET" }}'
-          Alg: HS256
-          JwtSources:
-            - type: cookie
-              key: __session
-          PayloadFields:
-            - exp
+    # Strip client-supplied X-Admin-Authenticated on public routers so the
+    # backend only trusts the header when admin-header@file injects it on
+    # the mTLS-gated admin router.
+    public-sanitize:
+      headers:
+        customRequestHeaders:
+          X-Admin-Authenticated: ""

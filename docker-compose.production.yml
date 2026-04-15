@@ -15,7 +15,9 @@ services:
       - ${POSTGRES_DATADIR}:/var/lib/postgresql/data
 
   traefik:
-    image: traefik:v3.4
+    image: ${DOCKER_IMAGE_PREFIX:-ghcr.io/opencupid/opencupid}-ingress:${INGRESS_VERSION:-latest}
+    build:
+      context: ./apps/ingress
     restart: always
     ports:
       - '443:443'
@@ -25,8 +27,8 @@ services:
       - TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_EMAIL=${EMAIL}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./apps/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
-      - ./apps/traefik/dynamic/:/etc/traefik/dynamic/:ro
+      - ./apps/ingress/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./apps/ingress/dynamic/:/etc/traefik/dynamic/:ro
       - traefik-acme:/acme
       - ${ADMIN_CA_CERT_FILE}:/certs/admin-ca.crt:ro
 
@@ -49,14 +51,14 @@ services:
       # --- Public domain: API ---
       traefik.http.routers.api.rule: "Host(`${DOMAIN}`) && PathPrefix(`/api`)"
       traefik.http.routers.api.entrypoints: websecure
-      traefik.http.routers.api.middlewares: compress@file,rate-limit@file,api-body-limit
+      traefik.http.routers.api.middlewares: compress@file,rate-limit@file,api-body-limit,public-sanitize@file
       traefik.http.services.backend.loadbalancer.server.port: "3000"
 
       # --- Public domain: upload endpoints (20MB body limit) ---
       traefik.http.routers.api-upload.rule: "Host(`${DOMAIN}`) && (PathPrefix(`/api/image`) || PathPrefix(`/api/messages/voice`))"
       traefik.http.routers.api-upload.priority: "20"
       traefik.http.routers.api-upload.entrypoints: websecure
-      traefik.http.routers.api-upload.middlewares: upload-body-limit
+      traefik.http.routers.api-upload.middlewares: upload-body-limit,public-sanitize@file
 
       # Body size middlewares
       traefik.http.middlewares.upload-body-limit.buffering.maxRequestBodyBytes: "20971520"
@@ -65,6 +67,7 @@ services:
       # --- Public domain: WebSocket ---
       traefik.http.routers.ws.rule: "Host(`${DOMAIN}`) && PathPrefix(`/ws`)"
       traefik.http.routers.ws.entrypoints: websecure
+      traefik.http.routers.ws.middlewares: public-sanitize@file
 
       # --- Admin domain: API + Bull Board (mTLS) ---
       traefik.http.routers.admin-backend.rule: "Host(`${ADMIN_DOMAIN}`) && (PathPrefix(`/api`) || PathPrefix(`/bull-board`))"
@@ -117,8 +120,10 @@ services:
       traefik.enable: "true"
       traefik.http.routers.media.rule: "Host(`${DOMAIN}`) && PathPrefix(`/user-content`)"
       traefik.http.routers.media.entrypoints: websecure
-      traefik.http.routers.media.middlewares: media-jwt@file,media-strip,media-cache
+      traefik.http.routers.media.middlewares: media-jwt,media-strip,media-cache
       traefik.http.middlewares.media-strip.stripprefix.prefixes: "/user-content"
+      traefik.http.middlewares.media-jwt.plugin.jwt.secret: "${JWT_SECRET}"
+      traefik.http.middlewares.media-jwt.plugin.jwt.authCookieName: "__session"
       traefik.http.middlewares.media-cache.headers.customresponseheaders.Cache-Control: "public, max-age=31536000, immutable"
       traefik.http.middlewares.media-cache.headers.customresponseheaders.X-Content-Type-Options: "nosniff"
       traefik.http.services.media.loadbalancer.server.port: "80"
@@ -137,7 +142,7 @@ services:
       - ENABLE_XMPP_WEBSOCKET=1
       - ENABLE_COLIBRI_WEBSOCKET=1
       - COLIBRI_WEBSOCKET_JVB_LOOKUP_NAME=jitsi-jvb
-      - PUBLIC_URL=https://meet.${DOMAIN}
+      - PUBLIC_URL=https://${JITSI_DOMAIN}
       - XMPP_DOMAIN=meet.jitsi
       - XMPP_AUTH_DOMAIN=auth.meet.jitsi
       - XMPP_BOSH_URL_BASE=http://jitsi-prosody:5280
@@ -207,7 +212,7 @@ services:
       - JVB_PORT=10000
       - JVB_ADVERTISE_IPS=${JVB_ADVERTISE_IPS}
       - COLIBRI_WEBSOCKET_ENABLED=true
-      - COLIBRI_WEBSOCKET_DOMAIN=meet.${DOMAIN}
+      - COLIBRI_WEBSOCKET_DOMAIN=${JITSI_DOMAIN}
       - COLIBRI_WEBSOCKET_SERVER_ID=default-id
       - TZ=UTC
     depends_on:

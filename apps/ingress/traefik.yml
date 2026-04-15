@@ -2,10 +2,9 @@
 # All service routing is declared via Docker Compose labels on each service.
 
 experimental:
-  plugins:
+  localPlugins:
     jwt:
-      moduleName: github.com/traefik-plugins/traefik-jwt-plugin
-      version: v0.10.0
+      moduleName: github.com/legege/jwt-validation-middleware
 
 entryPoints:
   web:
