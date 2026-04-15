@@ -44,6 +44,7 @@ function makeConvo(conversationId: string, partnerName: string): ConversationSum
       id: `partner-${conversationId}`,
       publicName: partnerName,
       profileImages: [],
+      location: { country: '' },
     },
     lastMessage: null,
   }
@@ -79,6 +80,7 @@ describe('messageStore', () => {
           id: 'partner-profile-1',
           publicName: 'Partner',
           profileImages: [],
+          location: { country: '' },
         },
         lastMessage: {
           content: 'Initial message',
@@ -102,6 +104,7 @@ describe('messageStore', () => {
           id: 'partner-profile-1',
           publicName: 'Partner',
           profileImages: [],
+          location: { country: '' },
         },
       }
 
@@ -136,6 +139,7 @@ describe('messageStore', () => {
           id: 'partner-1',
           publicName: 'Partner 1',
           profileImages: [],
+          location: { country: '' },
         },
         lastMessage: null,
       }
@@ -159,6 +163,7 @@ describe('messageStore', () => {
           id: 'partner-2',
           publicName: 'Partner 2',
           profileImages: [],
+          location: { country: '' },
         },
         lastMessage: null,
       }
@@ -177,6 +182,7 @@ describe('messageStore', () => {
           id: 'partner-2',
           publicName: 'Partner 2',
           profileImages: [],
+          location: { country: '' },
         },
       }
 
@@ -210,6 +216,7 @@ describe('messageStore', () => {
           id: 'partner-1',
           publicName: 'Partner',
           profileImages: [],
+          location: { country: '' },
         },
         lastMessage: null,
       }
@@ -224,7 +231,7 @@ describe('messageStore', () => {
         messageType: 'text/html',
         createdAt: new Date('2024-01-02'),
         isMine: false,
-        sender: { id: 'partner-1', publicName: 'Partner', profileImages: [] },
+        sender: { id: 'partner-1', publicName: 'Partner', profileImages: [], location: { country: '' } },
       }
 
       await store.handleIncomingMessage(incomingMessage)
@@ -255,6 +262,7 @@ describe('messageStore', () => {
           id: 'partner-1',
           publicName: 'Partner',
           profileImages: [],
+          location: { country: '' },
         },
         lastMessage: null,
       }
@@ -269,7 +277,7 @@ describe('messageStore', () => {
         messageType: 'text/html',
         createdAt: new Date('2024-01-02'),
         isMine: false,
-        sender: { id: 'partner-1', publicName: 'Partner', profileImages: [] },
+        sender: { id: 'partner-1', publicName: 'Partner', profileImages: [], location: { country: '' } },
       }
 
       await store.handleIncomingMessage(incomingMessage)
