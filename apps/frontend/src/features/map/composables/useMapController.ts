@@ -274,11 +274,14 @@ export function useMapController(
     })
 
     if (resolvePopup) {
+      const classes = ['item-popup']
+      if (item.type) classes.push(`item-popup-${item.type}`)
+      if (item.highlighted) classes.push('item-popup-highlighted')
       m.bindPopup('', {
         maxWidth: 420,
         autoPan: false,
         autoPanPadding: L.point(20, 20),
-        className: item.highlighted ? 'item-popup item-popup-highlighted' : 'item-popup',
+        className: classes.join(' '),
       })
 
       m.on('mouseover', (e: L.LeafletMouseEvent) => {

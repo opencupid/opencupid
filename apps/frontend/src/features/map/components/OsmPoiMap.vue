@@ -139,13 +139,17 @@ defineExpose({ flyToMarker })
 }
 
 :deep(.item-popup) {
-  /* animation: popup-fade-in 0.15s ease 300ms both; */
+  animation: popup-fade-in 0.15s ease-in-out 200ms both;
 }
 
-/* @keyframes popup-fade-in {
+:deep(.item-popup-post .leaflet-popup-tip) {
+  background: var(--postit-bg);
+}
+
+@keyframes popup-fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
-} */
+}
 
 :deep(.leaflet-popup-content-wrapper) {
   padding: 0;
@@ -167,7 +171,7 @@ defineExpose({ flyToMarker })
 :deep(.leaflet-popup-close-button) {
   width: 24px !important;
   height: 24px !important;
-  display: flex !important;
+  display: none;
   align-items: center;
   justify-content: center;
   background: rgba(0, 0, 0, 0.7) !important;
