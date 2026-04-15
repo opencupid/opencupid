@@ -50,11 +50,18 @@ const SearchInput = {
   emits: ['update:modelValue', 'home:set'],
 }
 
-const SearchResults = {
-  name: 'SearchResults',
-  template: '<div class="search-results-stub" />',
-  props: ['results'],
-  emits: ['select:profile'],
+const SearchRefiners = {
+  name: 'SearchRefiners',
+  template: '<div class="search-refiners-stub" />',
+  props: ['tags', 'geocodedLocations'],
+  emits: ['tag:select', 'location:select'],
+}
+
+const SearchMatches = {
+  name: 'SearchMatches',
+  template: '<div class="search-matches-stub" />',
+  props: ['profiles', 'posts'],
+  emits: ['profile:select', 'post:select'],
 }
 
 const availableTags = [
@@ -77,7 +84,8 @@ describe('SearchBar', () => {
         stubs: {
           SelectableTagList,
           SearchInput,
-          SearchResults,
+          SearchRefiners,
+          SearchMatches,
         },
         mocks: {
           $t: (k: string) => k,

@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { onClickOutside } from '@vueuse/core'
 
 import SelectableTagList from './SelectableTagList.vue'
 import SearchInput from './SearchInput.vue'
-import SearchResults from './SearchResults.vue'
+import SearchRefiners from './SearchRefiners.vue'
+import SearchMatches from './SearchMatches.vue'
 import IconHome from '@/assets/icons/interface/home.svg'
 
 import type { LocationDTO, GeoPoint } from '@zod/dto/location.dto'
@@ -41,10 +42,6 @@ const pillRef = ref<HTMLElement | null>(null)
 const searchQuery = ref('')
 
 onClickOutside(pillRef, closePanel)
-
-function openPanel() {
-  panelOpen.value = true
-}
 
 function closePanel() {
   panelOpen.value = false
@@ -82,6 +79,10 @@ function onSelectPost(post: PostSummary) {
   if (point) emit('location:set', point)
   emit('post:select', post)
 }
+
+const isSearchMatchesEmpty = computed(
+  () => !searchResults.value?.profiles.length && !searchResults.value?.posts.length
+)
 
 watch(searchQuery, (query) => {
   // Fire both searches in parallel — each store owns its own abort controller,
@@ -127,26 +128,43 @@ watch(searchQuery, (query) => {
       </div>
     </div>
     <div
-      class="search-bar__panel position-absolute overflow-y-auto overflow-x-hidden w-100 left-0 top-100 z-1 pt-1 pb-2"
+      class="search-bar__panels position-absolute w-100 left-0 top-100 z-1 d-flex flex-column gap-2"
       :class="panelOpen ? '' : 'pointer-events-none'"
       :aria-hidden="panelOpen ? 'false' : 'true'"
     >
-      <SearchResults
-        v-if="searchResults"
-        :results="searchResults"
-        :geocoded-locations="geocodedLocations"
-        @profile:select="onSelectProfile"
-        @location:select="onSelectLocation"
-        @tag:select="onSelectTag"
-        @post:select="onSelectPost"
-      />
+      <div class="search-bar__refiners">
+        <SearchRefiners
+          :tags="searchResults?.tags ?? []"
+          :geocoded-locations="geocodedLocations"
+          @location:select="onSelectLocation"
+          @tag:select="onSelectTag"
+        />
+      </div>
+      <div
+        class="search-bar__matches py-2"
+        v-if="!isSearchMatchesEmpty"
+      >
+        <SearchMatches
+          :profiles="searchResults?.profiles ?? []"
+          :posts="searchResults?.posts ?? []"
+          @profile:select="onSelectProfile"
+          @post:select="onSelectPost"
+        />
+      </div>
     </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
+@import 'bootstrap/scss/functions';
+@import 'bootstrap/scss/variables';
+@import 'bootstrap/scss/mixins/breakpoints';
+
 $pill-radius: 28px;
-$panel-height: 30vh;
+// Generous wrapper cap — children set their own heights; the wrapper
+// just needs room to hold the tallest possible combined stack. `dvh`
+// (dynamic viewport height) accounts for mobile browser URL-bar chrome.
+$panels-max: calc(100dvh - 6rem);
 
 .search-bar__pill {
   z-index: 2;
@@ -169,27 +187,61 @@ $panel-height: 30vh;
   }
 }
 
-.search-bar__panel {
-  height: 0;
+// Shared visual treatment for both panels — bg, border, shadow.
+// Responsive vh sizing: panels claim more viewport on small screens
+// (where absolute pixel space is scarce) and relax on larger screens
+// where 30vh already yields plenty of pixels.
+.search-bar__refiners,
+.search-bar__matches {
   background-color: var(--bs-body-bg);
-  border-bottom-left-radius: $pill-radius;
-  border-bottom-right-radius: $pill-radius;
+  border: 1px solid var(--bs-border-color, rgba(0, 0, 0, 0.1));
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    0 4px 12px rgba(0, 0, 0, 0.06);
+
+  min-height: 4rem;
+  max-height: 45dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  @include media-breakpoint-up(md) {
+    max-height: 40dvh;
+  }
+  @include media-breakpoint-up(lg) {
+    max-height: 35dvh;
+  }
+}
+
+// Refiners fuse with the pill: flat top, rounded bottom, no top border.
+.search-bar__refiners {
+  border-top: none;
+  border-bottom-left-radius: 1rem;
+  border-bottom-right-radius: 1rem;
+}
+
+// Matches floats below with its own fully-rounded card look.
+.search-bar__matches {
+  border-radius: 1rem;
+}
+
+// Invisible wrapper — only handles open/close transition + positioning.
+// Visual treatment (bg, border, radius, shadow) lives in SearchPanel.vue
+// so each child is a distinct, separable surface.
+.search-bar__panels {
+  max-height: 0;
   opacity: 0;
   transform: translateY(-4px);
+  overflow: hidden;
   transition:
     opacity 0.15s ease-in-out,
-    height 0.15s ease-in-out,
+    max-height 0.15s ease-in-out,
     transform 0.15s ease-in-out;
 
   .search-bar--open & {
-    height: $panel-height;
+    max-height: $panels-max;
     opacity: 1;
     transform: translateY(0);
-    border: 1px solid var(--bs-border-color, rgba(0, 0, 0, 0.1));
-    border-top: none;
-    box-shadow:
-      0 1px 2px rgba(0, 0, 0, 0.1),
-      0 4px 12px rgba(0, 0, 0, 0.06);
+    overflow: visible;
   }
 }
 

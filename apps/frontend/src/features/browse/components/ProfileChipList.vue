@@ -11,7 +11,7 @@ defineProps<{ profiles: ProfileSummary[] }>()
       v-for="profile in profiles"
       button
       :key="profile.id"
-      class="profilechip d-flex align-items-center mb-2 p-0 border-0 rounded-3 cursor-pointer user-select-none"
+      class="profilechip small d-flex align-items-center mb-2 p-0 border-0 rounded-3 cursor-pointer user-select-none"
       @click="$emit('select:profile', profile)"
     >
       <ProfileThumbnail

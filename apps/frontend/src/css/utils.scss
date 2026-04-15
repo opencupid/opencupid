@@ -77,3 +77,23 @@ fieldset:disabled {
 .hide-scrollbar::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Edge */
 }
+
+// Bootstrap 5 ships `max-w-*` but not `min-w-*`. `min-width: 0` is the
+// canonical way to let a flex item shrink below its intrinsic min-content
+// width — without it, text/chip content keeps siblings from getting their
+// share of space.
+.min-w-0 {
+  min-width: 0 !important;
+}
+.min-w-25 {
+  min-width: 25% !important;
+}
+.min-w-50 {
+  min-width: 50% !important;
+}
+.min-w-75 {
+  min-width: 75% !important;
+}
+.min-w-100 {
+  min-width: 100% !important;
+}

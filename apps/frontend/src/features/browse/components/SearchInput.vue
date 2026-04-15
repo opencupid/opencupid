@@ -23,8 +23,14 @@ defineEmits<{
         </template>
         <BFormInput
           :model-value="modelValue"
+          type="search"
           debounce="300"
           placeholder="Search"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+          @focus="($event.target as HTMLInputElement).select()"
           @update:model-value="$emit('update:modelValue', String($event ?? ''))"
         />
       </BInputGroup>
