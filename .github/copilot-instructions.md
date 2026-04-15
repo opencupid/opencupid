@@ -23,7 +23,7 @@ OpenCupid is a free, open-source matchmaking application built as a Vue 3 + Node
 apps/
 ├── backend/        # Node.js/Fastify API with Prisma ORM
 ├── frontend/       # Vue 3 + Bootstrap 5 frontend
-└── ingress/        # Ingress configuration
+└── traefik/        # Traefik reverse proxy config
 packages/
 └── shared/         # Shared utilities, Zod schemas, i18n files
 ```

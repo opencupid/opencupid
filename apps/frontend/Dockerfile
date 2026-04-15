@@ -22,6 +22,7 @@ RUN pnpm run build-only
 FROM nginx:trixie
 LABEL org.opencontainers.image.source=https://github.com/opencupid/opencupid
 COPY apps/frontend/nginx.conf /etc/nginx/conf.d/default.conf
+COPY apps/frontend/security-headers.conf.tmpl /etc/nginx/security-headers.conf.tmpl
 COPY apps/frontend/docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 COPY --from=builder /app/apps/frontend/dist /var/www

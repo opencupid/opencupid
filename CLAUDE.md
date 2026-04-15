@@ -56,7 +56,7 @@ apps/
   frontend/     Vue 3 + Bootstrap 5 + SCSS SPA
   admin/        Vue 3 + Bootstrap 5 + SCSS SPA admin GUI
   backend/      Fastify + Prisma + WebSocket API
-  ingress/      Reverse proxy / ingress config
+  traefik/      Traefik reverse proxy config (TLS, routing via Docker labels)
 packages/
   shared/       Shared types, validation, i18n, utilities and reused UI components
 ```
@@ -286,8 +286,8 @@ gh run watch --exit-status
    cd ~/opencupid && git fetch --tags && git checkout vX.Y.Z
    # Update per-image version vars in .env (only changed images):
    # BACKEND_VERSION=1.0.1  FRONTEND_VERSION=1.0.2  etc.
-   docker compose -f docker-compose.production.yml pull backend frontend admin ingress
-   docker compose -f docker-compose.production.yml up -d --no-deps frontend ingress admin
+   docker compose -f docker-compose.production.yml pull backend frontend admin
+   docker compose -f docker-compose.production.yml up -d --no-deps frontend admin
    docker compose -f docker-compose.production.yml up -d --no-deps backend
    ```
 
@@ -302,7 +302,7 @@ docker compose -f docker-compose.production.yml exec backend npx prisma migrate 
    ```bash
    docker compose -f docker-compose.production.yml ps
    docker compose -f docker-compose.production.yml logs --tail=50 backend
-   docker compose -f docker-compose.production.yml logs --tail=50 ingress
+   docker compose -f docker-compose.production.yml logs --tail=50 traefik
    ```
 
 ## Formatting

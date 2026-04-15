@@ -1,0 +1,35 @@
+# Shared middleware definitions referenced by Docker Compose labels as @file
+http:
+  middlewares:
+    compress:
+      compress:
+        excludedContentTypes:
+          - image/webp
+          - image/jpeg
+          - image/png
+
+    rate-limit:
+      rateLimit:
+        average: 10
+        burst: 50
+        period: 1s
+
+    security-headers:
+      headers:
+        customResponseHeaders:
+          X-Content-Type-Options: nosniff
+          X-Frame-Options: DENY
+          Referrer-Policy: strict-origin-when-cross-origin
+
+    admin-header:
+      headers:
+        customRequestHeaders:
+          X-Admin-Authenticated: "true"
+
+    # Strip client-supplied X-Admin-Authenticated on public routers so the
+    # backend only trusts the header when admin-header@file injects it on
+    # the mTLS-gated admin router.
+    public-sanitize:
+      headers:
+        customRequestHeaders:
+          X-Admin-Authenticated: ""
