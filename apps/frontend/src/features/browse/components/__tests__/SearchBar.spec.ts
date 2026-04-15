@@ -11,6 +11,31 @@ vi.mock('@vueuse/core', async (importOriginal) => {
   return { ...actual, onClickOutside: vi.fn() }
 })
 
+// Stub useI18n — the real Tolgee-backed shim requires an active Tolgee
+// instance which the test harness doesn't install.
+vi.mock('vue-i18n', () => ({
+  useI18n: () => ({
+    t: (k: string) => k,
+    locale: { value: 'en' },
+  }),
+}))
+
+// Stub the geocoding store — its module-level useGeocoder() call hits the
+// network on import; not relevant to SearchBar's own behavior.
+vi.mock('@/features/geocoding/stores/geocodingStore', () => ({
+  useGeocodingStore: () => ({
+    results: [],
+    isLoading: false,
+    search: vi.fn(),
+    searchNearby: vi.fn(),
+  }),
+}))
+
+// Stub SVG-as-component imports — jsdom chokes parsing data-uri SVG src.
+vi.mock('@/assets/icons/interface/home.svg', () => ({
+  default: { template: '<span />' },
+}))
+
 const SelectableTagList = {
   name: 'SelectableTagList',
   template: '<div class="selectable-tag-list" />',
@@ -53,6 +78,9 @@ describe('SearchBar', () => {
           SelectableTagList,
           SearchInput,
           SearchResults,
+        },
+        mocks: {
+          $t: (k: string) => k,
         },
       },
     })
