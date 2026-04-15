@@ -230,6 +230,7 @@ async function mountMap(props: Partial<Record<string, any>> = {}) {
       items: [],
       iconResolver: () => DummyIcon,
       popupResolver: () => DummyPopup,
+      center: [47.0, 19.0] as [number, number],
       ...props,
     },
     attachTo: document.body,
@@ -417,22 +418,6 @@ describe('OsmPoiMap', () => {
     expect(mapCall.zoom).toBe(7)
   })
 
-  it('auto-fits to markers when no center is provided', async () => {
-    await mountMap()
-    await flushPromises()
-
-    const mapInstance = (L.map as any).mock.results[0].value
-    expect(mapInstance.fitBounds).toHaveBeenCalled()
-  })
-
-  it('does not auto-fit to markers when center is provided', async () => {
-    await mountMap({ center: [48.0, 16.0] as [number, number] })
-    await flushPromises()
-
-    const mapInstance = (L.map as any).mock.results[0].value
-    expect(mapInstance.fitBounds).not.toHaveBeenCalled()
-  })
-
   it('defers center change when container has zero dimensions and replays on resize', async () => {
     const wrapper = await mountMap({ center: [47.0, 19.0] as [number, number], zoom: 7 })
     await flushPromises()
@@ -493,34 +478,6 @@ describe('OsmPoiMap', () => {
     vi.useRealTimers()
   })
 
-  it('unregisters moveend before fitBounds and re-registers via once to suppress bounds:changed', async () => {
-    // Mount with no items so initial fitBounds doesn't fire before we instrument once
-    const wrapper = await mountMap({ items: [] })
-    await flushPromises()
-
-    const mapInstance = (L.map as any).mock.results[0].value
-
-    // Capture the once callback so we can assert re-registration happens
-    let onceEvent: string | null = null
-    let onceCallback: (() => void) | null = null
-    mapInstance.once = vi.fn(function (event: string, cb: () => void) {
-      onceEvent = event
-      onceCallback = cb
-      return mapInstance
-    })
-
-    // Set items — triggers updateMarkers → first load → fitBounds path
-    await wrapper.setProps({ items })
-    await flushPromises()
-
-    // map.off should have been called to unregister emitBounds before fitBounds
-    expect(mapInstance.off).toHaveBeenCalledWith('moveend', expect.any(Function))
-    expect(mapInstance.fitBounds).toHaveBeenCalled()
-
-    // map.once should re-register moveend after the programmatic moveend fires
-    expect(onceEvent).toBe('moveend')
-    expect(onceCallback).toBeTypeOf('function')
-  })
 
   it('debounces bounds:changed emission on rapid moveend events', async () => {
     vi.useFakeTimers()

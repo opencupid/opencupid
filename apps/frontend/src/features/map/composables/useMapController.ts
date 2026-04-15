@@ -22,7 +22,7 @@ export interface MapProps {
   clusters: MapCluster[]
   iconResolver: (poi: MapPoi) => Component
   popupResolver?: (poi: MapPoi) => Component
-  center?: [number, number]
+  center: [number, number]
   zoom: number
   fitToPois: boolean
   boundsDebounce: number
@@ -128,7 +128,7 @@ export function useMapController(
 
   function createMap(): void {
     map = L.map(mapEl.value!, {
-      center: props.center!,
+      center: props.center,
       zoom: props.zoom,
       maxZoom: MAP_MAX_ZOOM,
       preferCanvas: true,
@@ -364,19 +364,6 @@ export function useMapController(
 
     for (const m of removed) oms.removeMarker(m)
     for (const m of added) oms.addMarker(m)
-
-    if (
-      added.length > 0 &&
-      pois.size() === added.length &&
-      !props.center &&
-      items.length > 0
-    ) {
-      const latlngs = items.map((i) => [i.location.lat, i.location.lon] as [number, number])
-      const bounds = L.latLngBounds(latlngs)
-      map.off('moveend', emitBounds)
-      map.fitBounds(bounds, { padding: [24, 24] })
-      map.once('moveend', () => map.on('moveend', emitBounds))
-    }
 
     if (dissolvedClusterAt) {
       const target = dissolvedClusterAt

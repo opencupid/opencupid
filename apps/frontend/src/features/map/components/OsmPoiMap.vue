@@ -13,7 +13,7 @@ const props = withDefaults(
     clusters?: MapCluster[]
     iconResolver: (poi: MapPoi) => Component
     popupResolver?: (poi: MapPoi) => Component
-    center?: [number, number]
+    center: [number, number]
     zoom?: number
     fitToPois?: boolean
     boundsDebounce?: number
