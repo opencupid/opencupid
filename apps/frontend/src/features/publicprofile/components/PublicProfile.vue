@@ -21,36 +21,53 @@ const emit = defineEmits<{
     :class="{ dating: profile.isDatingActive }"
     class="public-profile h-100"
   >
-    <div class="h-100 pb-5">
-      <div class="position-relative h-100 overflow-x-hidden">
-        <div class="secondary-nav position-absolute w-100 py-2 text-color-white">
-          <PublicProfileSecondaryNav
-            @intent:back="emit('intent:back')"
-            @intent:block="emit('intent:block')"
-          />
-        </div>
-        <div class="profile-content h-100 overflow-auto hide-scrollbar">
-          <ProfileContent :profile="profile" />
-        </div>
-      </div>
-      <div class="interactions position-absolute w-100 bottom-0 pb-3">
-        <ProfileInteractions
-          :profile="profile"
-          @intent:message="(convoId: string) => emit('intent:message', convoId)"
-          @updated="emit('updated')"
-          @passed="emit('updated')"
+    <div class="position-relative h-100 overflow-x-hidden">
+      <div class="secondary-nav position-absolute w-100 py-2 text-color-white">
+        <PublicProfileSecondaryNav
+          @intent:back="emit('intent:back')"
+          @intent:block="emit('intent:block')"
         />
       </div>
+      <div class="profile-content h-100 overflow-auto hide-scrollbar">
+        <ProfileContent :profile="profile" />
+        <div class="pb-5 spacer" />
+      </div>
+    </div>
+    <div class="interactions position-absolute w-100 bottom-0 pb-3">
+      <ProfileInteractions
+        :profile="profile"
+        @intent:message="(convoId: string) => emit('intent:message', convoId)"
+        @updated="emit('updated')"
+        @passed="emit('updated')"
+      />
     </div>
   </div>
 </template>
 
 <style scoped>
+.public-profile {
+  --panel-bg: var(--bs-body-bg);
+}
+.public-profile.dating {
+  --panel-bg: var(--bs-dating-light);
+}
+
 .secondary-nav {
   z-index: 1040;
 }
 .interactions {
   bottom: 0;
-  z-index: 2;
+  z-index: 10;
+}
+.interactions::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 5rem;
+  background: linear-gradient(to bottom, transparent, var(--panel-bg));
+  pointer-events: none;
 }
 </style>
