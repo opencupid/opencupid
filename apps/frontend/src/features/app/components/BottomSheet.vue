@@ -84,8 +84,8 @@ const { lengthY } = useSwipe(handleRef, {
       }
     } else {
       el.animate([{ transform: `translateY(${delta}px)` }, { transform: 'translateY(0)' }], {
-        duration: 200,
-        easing: 'ease-out',
+        duration: 250,
+        easing: 'ease',
       })
     }
 
@@ -100,8 +100,8 @@ function onShow() {
     requestAnimationFrame(() => {
       el.style.transform = ''
       el.animate([{ transform: 'translateY(100%)' }, { transform: 'translateY(0)' }], {
-        duration: 300,
-        easing: 'ease-out',
+        duration: 250,
+        easing: 'ease',
       })
     })
   }
