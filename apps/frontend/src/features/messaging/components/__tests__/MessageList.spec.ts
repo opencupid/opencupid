@@ -1,5 +1,14 @@
 import { mount } from '@vue/test-utils'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+
+vi.mock('@/features/shared/components/LocalizedTimeAgo.vue', () => ({
+  default: {
+    name: 'LocalizedTimeAgo',
+    props: ['time'],
+    template: '<span />',
+  },
+}))
+
 import MessageList from '../MessageList.vue'
 import { type MessageDTO } from '@zod/messaging/messaging.dto'
 

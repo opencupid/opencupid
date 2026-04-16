@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { type MessageDTO } from '@zod/messaging/messaging.dto'
 import VoiceMessage from './VoiceMessage.vue'
+import LocalizedTimeAgo from '@/features/shared/components/LocalizedTimeAgo.vue'
 import { renderMessage } from '@/lib/renderMessage'
 
 defineProps<{
@@ -30,6 +31,13 @@ defineProps<{
     >
       <span v-html="renderMessage(message.content)" />
     </div>
+
+    <div
+      class="message-timestamp"
+      :class="message.isMine ? 'text-end' : 'text-start'"
+    >
+      <LocalizedTimeAgo :time="new Date(message.createdAt)" />
+    </div>
   </div>
 </template>
 
@@ -50,5 +58,10 @@ defineProps<{
 .message-text :deep(a) {
   color: inherit;
   text-decoration: underline;
+}
+
+.message-timestamp {
+  font-size: 0.65rem;
+  opacity: 0.7;
 }
 </style>
