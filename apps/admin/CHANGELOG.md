@@ -1,5 +1,12 @@
 # @opencupid/admin
 
+## 0.49.0
+
+### Minor Changes
+
+- 86042f7: refactor: replace nginx ingress with Traefik v3 reverse proxy (#1293)
+- 5a8c4a2: Add segment and origin filters, infinite scroll, and result count to admin Profiles, Users, and Tags pages (#1261)
+
 ## 0.48.0
 
 ## 0.47.0

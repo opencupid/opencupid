@@ -1,5 +1,40 @@
 # frontend
 
+## 0.49.0
+
+### Minor Changes
+
+- aa26b35: Route-driven shell with unified detail panel orchestration: named Me/Browse/Inbox/Conversation routes replace query-param redirects, panel lifecycle centralizes in DetailPanelOrchestrator, browse map renders PostFullView for posts and clamps flyToMarker to MAP_MAX_ZOOM (#1265)
+- 86042f7: refactor: replace nginx ingress with Traefik v3 reverse proxy (#1293)
+- e04618d: Replace SwipeModal with custom BottomSheet component using BOffcanvas + useSwipe
+- 9f954f2: ContactFormPanel: show waiting-for-reply state when user already initiated contact (#1279)
+- 0c1cb89: Search & profile panel UI polish: fix scroll chain in MyProfile drawer, restructure SearchBar with outside-click dismiss, robust touch detection for map markers, and various layout improvements
+- 377e74b: Retire the persistent SocialMatchFilter model in favour of ephemeral, client-side browse filtering. Tag selection now lives in a session-only Pinia store and is passed to bounds/cluster queries via a `?tagIds=` query param. The location input becomes a flyTo-only control that no longer filters results. The legacy `GET/PATCH /find/social/filter` endpoints remain as deprecated no-op shims so stale frontends keep working until all clients are updated.
+- 21778ac: Search omnibox in the browse pill: a single input that searches in parallel across tags, profiles, posts, and geocoded locations. Selecting a result navigates to the detail panel and flies the map to the picked location.
+  - Frontend: extracts SearchInput / SearchResults / ProfileChipList; geocoding is biased to the viewer's country and capped at 5 candidates; type-safe Bootstrap-Vue-Next variant augmentation (incl. a `post-it` color for post chips).
+  - Backend: `PostSummary` and `ProfileSummary` now carry `location: LocationDTO` so the client can fly the map to a result; `extractLocation` shared across mappers.
+
+- b12ebbc: Unify map browse endpoints into single clustered response with mixed profile+post clustering (#1284)
+- f1b71af: Auth page visual polish: glassmorphism login dialog, map background, responsive logo, and extract shared AuthLayout component
+
+### Patch Changes
+
+- e46b4ab: Fix map popup click not reaching profile navigation handler
+- d5e2c47: Fix panel layout spacing in DatingPrefs, EditPostDialog, and Settings views
+- d847866: Clean up tsconfig files: fix TS 5.9 deprecations, remove redundant config, fix Docker build (#1283)
+- 127c36e: Extract ContactFormPanel to encapsulate the "initial contact" send-message + success-state UX previously duplicated across PostCard, SendMessageDialog, and MatchPopup
+- 02a46a0: Initialize map directly at user's location instead of world view + flyTo, avoiding double tile load on cold start
+- a789c67: UI polish: fix OwnerDrawer specificity/breakpoint so responsive widths apply, clip x-overflow on SwipeModal panel so PostIt drop-shadow no longer leaks a horizontal scrollbar, vertically center Settings form with `safe center`, fix DatingModeDropdown BPopover writeback that re-opened the popover on collapse, teleport-disable the fullscreen image modal so it paints above SwipeModal's top layer, deterministic teardown of PostCard's inline send-message state
+- f156bf4: Remove dead profileList pipeline and fix double bootstrap in BrowseProfiles
+- acbceaf: Fix Sentry Replay stack overflow on iOS by excluding Leaflet map from DOM serialization (#1281)
+- efc2c9d: Remove deprecated endpoint shims and dead code, rename browse endpoints (#1294)
+- b7c15c0: Fix mobile error overlay flash on tab switch by adding visibility-aware offline detection
+- 64b56d4: Browse: replace lonely-alert with shared ShareDialog offcanvas (#1300)
+- ac27d7f: Fix stale map/filter state after onboarding completion (#1267). Moves `/onboarding` out of `AuthLayout`'s children and into its own top-level `OnboardingLayout` sibling, so navigating between onboarding and the main app causes the other layout to unmount — destroying any cached `AppShell` state (`<KeepAlive>`) from a pre-redirect mount. Previously, a freshly-registered user's transient `BrowseProfiles` mount would cache `matchFilter=null` and an uninitialized map centered on `[0,0]`, and that broken state was preserved through the onboarding wizard via `<KeepAlive>`, leaving the filter bar blank and the map stuck at world zoom on return.
+- c4a0175: Architectural cleanup: DRY up BoundsQuerySchema, move osmPoiMap into features/map, consolidate browse composables into single view-model
+- 7a5acd5: Fix sidebar leak over onboarding view and retire the posts sidebar. The PostsSidebar teleport into AuthLayout's shared slot was surviving KeepAlive deactivation in AppShell, bleeding stale DOM onto the Onboarding route during the fresh-login redirect hop. Removes PostsSidebar entirely and restores the pre-refactor dual-hook (onMounted + onActivated) onboarding guard in BrowseProfiles so keep-alive re-entry is handled.
+- 5e52956: Update i18n translation files with new keys and sorted entries
+
 ## 0.48.0
 
 ### Minor Changes

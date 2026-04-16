@@ -1,5 +1,32 @@
 # backend
 
+## 0.49.0
+
+### Minor Changes
+
+- a98fa75: Add /search endpoint: parallel search across tags, profiles, posts, and locations. Profile and post text use pg_trgm GIN indexes (language-agnostic substring match via ILIKE + similarity ranking) — adding a new app locale requires no database changes.
+- 86042f7: refactor: replace nginx ingress with Traefik v3 reverse proxy (#1293)
+- 9f954f2: ContactFormPanel: show waiting-for-reply state when user already initiated contact (#1279)
+- 377e74b: Retire the persistent SocialMatchFilter model in favour of ephemeral, client-side browse filtering. Tag selection now lives in a session-only Pinia store and is passed to bounds/cluster queries via a `?tagIds=` query param. The location input becomes a flyTo-only control that no longer filters results. The legacy `GET/PATCH /find/social/filter` endpoints remain as deprecated no-op shims so stale frontends keep working until all clients are updated.
+- 21778ac: Search omnibox in the browse pill: a single input that searches in parallel across tags, profiles, posts, and geocoded locations. Selecting a result navigates to the detail panel and flies the map to the picked location.
+  - Frontend: extracts SearchInput / SearchResults / ProfileChipList; geocoding is biased to the viewer's country and capped at 5 candidates; type-safe Bootstrap-Vue-Next variant augmentation (incl. a `post-it` color for post chips).
+  - Backend: `PostSummary` and `ProfileSummary` now carry `location: LocationDTO` so the client can fly the map to a result; `extractLocation` shared across mappers.
+
+- b12ebbc: Unify map browse endpoints into single clustered response with mixed profile+post clustering (#1284)
+
+### Patch Changes
+
+- 8ed1c79: Fix activity segment misclassifying single-visit users as 'returning'
+- d847866: Clean up tsconfig files: fix TS 5.9 deprecations, remove redundant config, fix Docker build (#1283)
+- efc2c9d: Remove deprecated endpoint shims and dead code, rename browse endpoints (#1294)
+- c4a0175: Architectural cleanup: DRY up BoundsQuerySchema, move osmPoiMap into features/map, consolidate browse composables into single view-model
+- de7c7a6: Evict cluster cache when blocking a profile (#1292)
+- 5dc7947: Add B-tree indexes on lat/lon columns for Profile and Post, remove dead BrowseService and findSocialProfilesInBounds
+- a362cc1: Relax SMTP_USER config validation to accept non-email usernames (#1299)
+- a4abe34: Align PostService and ClusterService with module-level prisma import pattern, simplify PostService.update(), remove erroneous findNearby OR fallback (#1285, #1286)
+- a3dd928: Fix profile image variant cutting off faces by replacing hand-rolled crop
+  geometry with smartcrop-sharp content-aware cropping and BlazeFace face boosts
+
 ## 0.48.0
 
 ## 0.47.0
