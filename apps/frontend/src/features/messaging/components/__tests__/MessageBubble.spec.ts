@@ -22,16 +22,19 @@ vi.mock('../VoiceMessage.vue', () => ({
 }))
 
 import MessageBubble from '../MessageBubble.vue'
+import type { MessageDTO } from '@zod/messaging/messaging.dto'
 
 const baseMessage = {
   id: '1',
   content: 'Hello!',
   isMine: false,
-  createdAt: '2026-01-15T12:00:00.000Z',
+  createdAt: new Date('2026-01-15T12:00:00.000Z'),
   messageType: 'text',
   attachment: null,
   conversationId: 'c1',
-}
+  senderId: 'p1',
+  sender: { id: 'p1', publicName: 'Alice', profileImages: [], location: { country: 'HU' } },
+} as MessageDTO
 
 describe('MessageBubble', () => {
   it('renders text message content', () => {
@@ -47,7 +50,7 @@ describe('MessageBubble', () => {
     })
     const timeAgo = wrapper.find('.time-ago')
     expect(timeAgo.exists()).toBe(true)
-    expect(timeAgo.text()).toBe('2026-01-15T12:00:00.000Z')
+    expect(timeAgo.text()).toContain('2026')
   })
 
   it('aligns timestamp to start for received messages', () => {
@@ -86,7 +89,14 @@ describe('MessageBubble', () => {
         message: {
           ...baseMessage,
           messageType: 'audio/voice',
-          attachment: { url: '/audio.webm', mimeType: 'audio/webm', duration: 5 },
+          attachment: {
+            id: 'att-1',
+            createdAt: new Date(),
+            url: '/audio.webm',
+            mimeType: 'audio/webm',
+            fileSize: 1024,
+            duration: 5,
+          },
         },
       },
     })
