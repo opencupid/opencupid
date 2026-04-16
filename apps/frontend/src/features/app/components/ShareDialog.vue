@@ -58,7 +58,7 @@ const handleWebShare = async () => {
   <BOffcanvas
     v-model="showModal"
     placement="bottom"
-    class="share-offcanvas col-12 col-md-6 offset-md-3 col-lg-4 offset-lg-4 "
+    class="share-offcanvas col-12 col-md-6 offset-md-3 col-lg-4 offset-lg-4"
     :class="{ 'share-offcanvas--expanded': expanded }"
     body-class="py-0 px-3 bg-light"
     header-class="bg-light"
@@ -72,7 +72,7 @@ const handleWebShare = async () => {
       <slot />
     </div>
 
-    <div class="d-flex flex-column justtify-content-center align-items-center mb-3">
+    <div class="d-flex flex-column justify-content-center align-items-center mb-3">
       <BButton
         v-if="useWebShare"
         variant="primary"

@@ -2,4 +2,4 @@
 '@opencupid/frontend': patch
 ---
 
-Browse: center the empty-state alert and make it dismissible (#1300)
+Browse: replace lonely-alert with shared ShareDialog offcanvas (#1300)

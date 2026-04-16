@@ -2,17 +2,11 @@
 import { useI18n } from 'vue-i18n'
 
 import { UseClipboard } from '@vueuse/components'
-import { useQRCode } from '@vueuse/integrations/useQRCode'
 import IconCopy from '@/assets/icons/interface/copy.svg'
 
 const { t } = useI18n()
 
 const shareUrl = window.location.origin
-const qrcode = useQRCode(shareUrl, {
-  errorCorrectionLevel: 'H',
-  margin: 3,
-  width: 300,
-})
 </script>
 
 <template>
@@ -40,11 +34,4 @@ const qrcode = useQRCode(shareUrl, {
       </BButton>
     </UseClipboard>
   </div>
-  <!-- <div class="text-center">
-    <img
-      :src="qrcode"
-      alt="QR Code"
-      class="img-fluid w-100"
-    />
-  </div> -->
 </template>
