@@ -45,7 +45,7 @@
   },
   "emails": {
     "fallback_hint": "If the button doesn't work, copy and paste this URL:",
-    "loginLink": {
+    "login_link": {
       "callToActionLabel": "Use login link",
       "contentBody": "Click the button below to log in.",
       "footer": "If you didn't request this, you can ignore this email.",

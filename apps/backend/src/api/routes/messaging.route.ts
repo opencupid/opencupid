@@ -216,6 +216,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
               })
             }
             await notifierService.notifyProfile(profileId, 'new_message', {
+              senderId: senderProfileId,
               sender: messageDTO.sender.publicName,
               message: cleanMessageForNotification(messageDTO.content, 100),
               link: `${appConfig.FRONTEND_URL}/inbox`,
@@ -399,6 +400,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
               })
               const t = i18next.getFixedT(recipientProfile?.user?.language || 'en')
               await notifierService.notifyProfile(payload.data.profileId, 'new_message', {
+                senderId: senderProfileId,
                 sender: messageDTO.sender.publicName,
                 message: t('notifications.voice_message_sent'),
                 link: `${appConfig.FRONTEND_URL}/inbox`,

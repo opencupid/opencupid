@@ -22,7 +22,8 @@ type NotifiableUser = {
 interface NotificationParams {
   login_link: { link: string }
   welcome: { link: string }
-  new_message: { sender: string; message: string; link: string }
+  /** senderId is used by constructDispatchKey to scope dedup per sender→recipient pair. */
+  new_message: { senderId: string; sender: string; message: string; link: string }
   new_like: { link: string }
   new_match: { name: string; link: string }
   onboarding_reminder: { link: string }
@@ -40,20 +41,29 @@ export class NotifierService {
 
   constructor(private disp = dispatcher) {}
 
-  private templateName(type: NotificationType): string {
-    switch (type) {
-      case 'login_link':
-        return 'loginLink'
+  /**
+   * Build a dispatch key that controls deduplication behavior per notification type.
+   *
+   * - Idempotent (welcome, onboarding_reminder): deterministic per user — safe to retry.
+   * - Throttled (new_message): deterministic per sender→recipient pair — one email per
+   *   conversation partner within the removeOnComplete retention window.
+   * - Event-driven (everything else): timestamped — every event produces its own job.
+   */
+  private constructDispatchKey<T extends NotificationType>(
+    emailType: T,
+    args: NotificationParams[T],
+    user: NotifiableUser
+  ): string {
+    switch (emailType) {
       case 'welcome':
-        return 'welcome'
-      case 'new_message':
-        return 'new_message'
-      case 'new_like':
-        return 'new_like'
-      case 'new_match':
-        return 'new_match'
       case 'onboarding_reminder':
-        return 'onboarding_reminder'
+        return `${emailType}-${user.id}`
+      case 'new_message': {
+        const { senderId } = args as NotificationParams['new_message']
+        return `${emailType}-${senderId}-${user.id}`
+      }
+      default:
+        return `${emailType}-${user.id}-${Date.now()}`
     }
   }
 
@@ -108,19 +118,19 @@ export class NotifierService {
   ): EmailPayload {
     const siteName = appConfig.SITE_NAME
     const t = i18next.getFixedT(user.language)
-    const tmpl = this.templateName(emailType)
 
+    // emailType maps 1:1 to the i18n key under `emails.*` (e.g. emails.new_message.subject).
     return {
       to: user.email,
-      subject: t(`emails.${tmpl}.subject`, { siteName }),
+      subject: t(`emails.${emailType}.subject`, { siteName }),
       templateProps: {
         siteName,
         publicName: user.profile?.publicName || '',
-        contentBody: t(`emails.${tmpl}.contentBody`, { siteName, ...args, ...user }),
-        callToActionLabel: t(`emails.${tmpl}.callToActionLabel`),
+        contentBody: t(`emails.${emailType}.contentBody`, { siteName, ...args, ...user }),
+        callToActionLabel: t(`emails.${emailType}.callToActionLabel`),
         callToActionUrl: args.link,
         fallbackHint: t(`emails.fallback_hint`),
-        footer: t(`emails.${tmpl}.footer`, { defaultValue: '' }),
+        footer: t(`emails.${emailType}.footer`, { defaultValue: '' }),
       },
     }
   }
@@ -134,15 +144,7 @@ export class NotifierService {
 
     const emailPayload = this.createEmailPayload(emailType, args, user)
 
-    // Idempotent notifications (welcome, onboarding_reminder) use a deterministic jobId
-    // so BullMQ deduplicates retries. Event-driven notifications (login_link, new_message,
-    // new_like, new_match) append a timestamp to allow multiple sends per user.
-    const jobId =
-      emailType === 'welcome' || emailType === 'onboarding_reminder'
-        ? `${emailType}-${user.id}`
-        : `${emailType}-${user.id}-${Date.now()}`
-
-    await this.disp.dispatchEmail(emailPayload, jobId)
+    await this.disp.dispatchEmail(emailPayload, this.constructDispatchKey(emailType, args, user))
   }
 }
 

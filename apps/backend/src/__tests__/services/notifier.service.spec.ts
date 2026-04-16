@@ -140,6 +140,31 @@ describe('NotifierService', () => {
     )
   })
 
+  it('notifyProfile: uses sender-scoped deterministic jobId for new_message', async () => {
+    mockPrisma.profile.findUnique.mockResolvedValue({
+      id: 'recipient-profile',
+      user: {
+        id: 'user-recipient',
+        email: 'recipient@example.com',
+        language: 'en',
+        profile: { publicName: 'Bob' },
+      },
+    })
+
+    const service = new NotifierService({ dispatchEmail: mockDispatchEmail } as any)
+    await service.notifyProfile('recipient-profile', 'new_message', {
+      senderId: 'sender-profile',
+      sender: 'Alice',
+      message: 'Hey there',
+      link: 'https://frontend.test/inbox',
+    })
+
+    expect(mockDispatchEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ to: 'recipient@example.com' }),
+      'new_message-sender-profile-user-recipient'
+    )
+  })
+
   it('notifyUser: dispatches welcome email payload for resolved user', async () => {
     mockPrisma.user.findUnique.mockResolvedValue({
       id: 'user-1',

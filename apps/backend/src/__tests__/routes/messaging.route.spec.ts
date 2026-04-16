@@ -281,7 +281,7 @@ describe('POST /message', () => {
     expect(mockNotifierService.notifyProfile).toHaveBeenCalledWith(
       'ck1234567890abcd12345678',
       'new_message',
-      expect.objectContaining({ link: 'http://test/inbox' })
+      expect.objectContaining({ senderId: 'p1', link: 'http://test/inbox' })
     )
   })
 
@@ -378,6 +378,7 @@ describe('POST /voice', () => {
       'ck1234567890abcd12345678',
       'new_message',
       expect.objectContaining({
+        senderId: 'p1',
         sender: 'TestSender',
         message: 'Sent a voice message', // i18n key resolves to this in English (fallback)
         link: 'http://test/inbox',
