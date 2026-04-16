@@ -345,4 +345,86 @@ describe('api error handling', () => {
     // Should re-emit api:offline since we were offline before
     expect(mockEmit).toHaveBeenCalledWith('api:offline')
   })
+
+  it('drains waitForRecovery when transitioning from DEBOUNCING to ONLINE', async () => {
+    let callCount = 0
+    const mockAdapter = vi.fn().mockImplementation((config: any) => {
+      callCount++
+      if (callCount === 1) {
+        return Promise.reject({
+          code: 'ERR_NETWORK',
+          config: { ...config, headers: config.headers || new AxiosHeaders() },
+          isAxiosError: true,
+        })
+      }
+      return Promise.resolve({
+        status: 200,
+        data: { ok: true },
+        headers: {},
+        config,
+        statusText: 'OK',
+      })
+    })
+    api.defaults.adapter = mockAdapter
+
+    // First request fails — starts debounce (state = DEBOUNCING)
+    try {
+      await api.get('/test')
+    } catch {
+      // expected
+    }
+
+    // Second request succeeds during DEBOUNCING — should transition to ONLINE
+    // and resolve any waiters without emitting api:online (was never OFFLINE)
+    await api.get('/test')
+
+    expect(mockEmit).not.toHaveBeenCalledWith('api:online')
+    expect(mockEmit).not.toHaveBeenCalledWith('api:offline')
+  })
+
+  it('does not emit api:online on RESUMING→ONLINE when was not offline before suspend', async () => {
+    const { bus } = await import('../bus')
+
+    // Go hidden from ONLINE (wasOfflineBeforeSuspend = false), then visible
+    bus.emit('app:hidden')
+    bus.emit('app:visible')
+
+    // Success response during RESUMING
+    const successAdapter = vi.fn().mockResolvedValue({
+      status: 200,
+      data: {},
+      headers: {},
+      config: {},
+      statusText: 'OK',
+    })
+    api.defaults.adapter = successAdapter
+
+    await api.get('/test')
+
+    // Should NOT emit api:online since we were never offline
+    expect(mockEmit).not.toHaveBeenCalledWith('api:online')
+  })
+
+  it('transitions RESUMING→SUSPENDED when tab goes hidden during grace period', async () => {
+    const { bus } = await import('../bus')
+    const failAdapter = vi.fn().mockRejectedValue({
+      code: 'ERR_NETWORK',
+      config: { headers: new AxiosHeaders() },
+      isAxiosError: true,
+    })
+    api.defaults.adapter = failAdapter
+
+    // Go hidden then visible (enters RESUMING with 5s grace)
+    bus.emit('app:hidden')
+    bus.emit('app:visible')
+
+    // Tab goes hidden again during grace period
+    bus.emit('app:hidden')
+
+    // Grace period timer fires — should NOT transition to OFFLINE
+    vi.advanceTimersByTime(5000)
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(mockEmit).not.toHaveBeenCalledWith('api:offline')
+  })
 })

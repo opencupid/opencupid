@@ -127,11 +127,11 @@ function transitionTo(newState: OfflineState) {
   switch (newState) {
     case 'ONLINE':
       clearAllTimers()
-      if (prev === 'OFFLINE' || prev === 'RESUMING') {
+      if (prev === 'OFFLINE' || (prev === 'RESUMING' && wasOfflineBeforeSuspend)) {
         bus.emit('api:online')
-        waitForRecovery.forEach((fn) => fn())
-        waitForRecovery = []
       }
+      waitForRecovery.forEach((fn) => fn())
+      waitForRecovery = []
       break
 
     case 'DEBOUNCING':
@@ -147,7 +147,10 @@ function transitionTo(newState: OfflineState) {
       break
 
     case 'SUSPENDED':
-      wasOfflineBeforeSuspend = prev === 'OFFLINE'
+      if (prev !== 'RESUMING') {
+        wasOfflineBeforeSuspend = prev === 'OFFLINE'
+      }
+      // When coming from RESUMING, preserve the existing wasOfflineBeforeSuspend value
       clearAllTimers()
       break
 
@@ -168,7 +171,7 @@ function transitionTo(newState: OfflineState) {
 
 // ── Visibility event handlers ─────────────────────────────────────────
 bus.on('app:hidden', () => {
-  if (state === 'ONLINE' || state === 'DEBOUNCING' || state === 'OFFLINE') {
+  if (state !== 'SUSPENDED') {
     transitionTo('SUSPENDED')
   }
 })
