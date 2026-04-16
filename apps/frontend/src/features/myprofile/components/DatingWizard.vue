@@ -24,7 +24,7 @@ const handleFinish = async () => {
 </script>
 
 <template>
-  <div class="d-flex flex-column h-100">
+  <div class="d-flex flex-column h-100 w-100">
     <section
       class="w-100 flex-grow-1 d-flex flex-column align-items-center justify-content-center overflow-auto hide-scrollbar p-2 position-relative"
     >
@@ -38,7 +38,7 @@ const handleFinish = async () => {
       >
         <template #overlay>
           <div
-            class="mt-3 mt-md-4 mt-lg-5 d-flex align-items-center flex-column justify-content-center"
+            class="h-100 mt-3 mt-md-4 mt-lg-5 d-flex align-items-center flex-column justify-content-center"
           >
             <div
               class="col-3 mx-auto d-flex align-items-center justify-content-center text-dating my-md-2"
