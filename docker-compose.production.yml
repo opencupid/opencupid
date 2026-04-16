@@ -63,6 +63,7 @@ services:
       traefik.http.routers.admin-backend.rule: "Host(`${ADMIN_DOMAIN}`) && (PathPrefix(`/api`) || PathPrefix(`/bull-board`))"
       traefik.http.routers.admin-backend.entrypoints: websecure
       traefik.http.routers.admin-backend.tls.options: admin-mtls@file
+      traefik.http.routers.admin-backend.tls.certResolver: letsencrypt
       traefik.http.routers.admin-backend.middlewares: admin-header@file
 
   frontend:
@@ -99,6 +100,7 @@ services:
       traefik.http.routers.admin.priority: "1"
       traefik.http.routers.admin.entrypoints: websecure
       traefik.http.routers.admin.tls.options: admin-mtls@file
+      traefik.http.routers.admin.tls.certResolver: letsencrypt
       traefik.http.services.admin.loadbalancer.server.port: "3002"
 
   media:
