@@ -239,6 +239,12 @@
       "voice_message_preview": "Voice message"
     }
   },
+  "myprofile": {
+    "prefs": {
+      "cancel": "Nevermind",
+      "save": "Update"
+    }
+  },
   "nav": {
     "browse": "Buddies",
     "bulletin": "Bulletin",
@@ -397,9 +403,9 @@
         "filter_display_label": "Looking in:",
         "locate_button_title": "Set to my location",
         "near_label": "Near...",
-        "search_placeholder": "Search",
         "search_button_title_dating": "Find people",
         "search_button_title_social": "Find people",
+        "search_placeholder": "Search",
         "social_title": "I 'm looking for connections...",
         "tags_label": "Interested in..."
       },
@@ -417,8 +423,6 @@
     },
     "forms": {
       "age_range": "Age range",
-      "tab_posts": "Posts",
-      "tab_profile": "Profile",
       "age_title_display": "I was born in {birthYear}",
       "city_add_placeholder": "Add this as new city",
       "city_deselect_label": "Remove",
@@ -464,6 +468,8 @@
       "pronouns_label": "They refer to me as...",
       "relationship_label": "I am...",
       "save_changes_hint": "Done editing",
+      "tab_posts": "Posts",
+      "tab_profile": "Profile",
       "tag_add_placeholder": "Add this as new tag",
       "tag_no_results": "Can't find anything similar.",
       "tag_search_placeholder": "Search interests..."

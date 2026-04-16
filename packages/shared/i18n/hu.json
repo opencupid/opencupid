@@ -243,6 +243,12 @@
       "voice_message_preview": "Hangüzenet"
     }
   },
+  "myprofile": {
+    "prefs": {
+      "cancel": "Mégsem",
+      "save": "Rendben"
+    }
+  },
   "nav": {
     "browse": "Komakereső",
     "bulletin": "Hirdetőtábla",
@@ -403,9 +409,9 @@
         "near_label": "Errefelé:",
         "search_button_title_dating": "Keresés",
         "search_button_title_social": "Keresés",
+        "search_placeholder": "Keresés",
         "social_title": "Itt keresek...",
-        "tags_label": "Érdeklődési körök...",
-        "search_placeholder": "Keresés"
+        "tags_label": "Érdeklődési körök..."
       },
       "invite_button": "Megosztás",
       "loading_more_profiles": "Egy pillanat...",
@@ -421,8 +427,6 @@
     },
     "forms": {
       "age_range": "Korosztály",
-      "tab_posts": "Bejegyzések",
-      "tab_profile": "Profil",
       "age_title_display": "{birthYear}-ben születtem",
       "city_add_placeholder": "Új város hozzáadása",
       "city_deselect_label": "Eltávolítás",
@@ -462,12 +466,15 @@
       "name_first_name_only": "Csak a keresztnevedet",
       "name_invalid": "Adj meg legalább 3 betűt",
       "name_label": "A keresztnevem...",
+      "preference_kids_label": " ",
       "preview_language": "Előnézeti nyelv",
       "preview_profile": "Profilom előnézete",
       "preview_profile_hint": "Így látják mások a profilomat",
       "pronouns_label": "Úgy hivatkoznak rám, mint...",
       "relationship_label": "Én...",
       "save_changes_hint": "Kész a szerkesztés",
+      "tab_posts": "Hirdetések",
+      "tab_profile": "Profil",
       "tag_add_placeholder": "Új címke",
       "tag_no_results": "Nem találtam hasonlót.",
       "tag_search_placeholder": "Érdeklődési körök..."
