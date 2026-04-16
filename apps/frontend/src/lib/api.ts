@@ -29,6 +29,53 @@ export const ERROR_CODES = [
 
 import './visibility'
 
+/*
+                    ┌──────────────────────────────────┐
+                    │                                  │
+    ┌───────────────▼───────────┐                      │
+    │         ONLINE            │◄─── success response │
+    │  (normal, detection on)   │     from any state   │
+    └──┬────────┬───────────────┘     except SUSPENDED │
+       │        │                                      │
+       │     network error                             │
+       │        │                                      │
+       │        ▼                                      │
+       │   ┌─────────────┐    success    ┌─────────────┘
+       │   │ DEBOUNCING  │───response───►│
+       │   │  (3s timer)  │              │
+       │   └──────┬──────┘               │
+       │          │ timer fires          │
+       │          ▼                      │
+       │   ┌─────────────┐  success      │
+       │   │   OFFLINE   │──response────►│
+       │   │ (retrying)  │               │
+       │   └──────┬──────┘               │
+       │          │                      │
+  tab hidden      │ tab hidden           │
+       │          │                      │
+       ▼          ▼                      │
+    ┌─────────────────────┐              │
+    │     SUSPENDED       │              │
+    │ (detection blocked, │              │
+    │  timers cancelled)  │              │
+    └──────────┬──────────┘              │
+               │ tab visible             │
+               ▼                         │
+    ┌─────────────────────┐              │
+    │     RESUMING        │              │
+    │ (grace period 5s,   │──success────►┘
+    │  health check fired,│
+    │  errors suppressed) │
+    └──────────┬──────────┘
+               │ grace expires
+               │ without success
+               ▼
+         back to ONLINE
+      (detection re-enabled,
+       next error starts
+       normal DEBOUNCING)
+*/
+
 // ── State machine ─────────────────────────────────────────────────────
 type OfflineState = 'ONLINE' | 'DEBOUNCING' | 'OFFLINE' | 'SUSPENDED' | 'RESUMING'
 
