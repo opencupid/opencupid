@@ -11,23 +11,6 @@ import * as blazeface from '@tensorflow-models/blazeface'
 type FaceBox = { x: number; y: number; width: number; height: number }
 type Rect = { left: number; top: number; width: number; height: number }
 
-function clamp(n: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, n))
-}
-
-function clampRect(r: Rect, iw: number, ih: number): Rect {
-  const left = clamp(r.left, 0, iw)
-  const top = clamp(r.top, 0, ih)
-  const right = clamp(r.left + r.width, 0, iw)
-  const bottom = clamp(r.top + r.height, 0, ih)
-  return {
-    left,
-    top,
-    width: clamp(right - left, 0, iw),
-    height: clamp(bottom - top, 0, ih),
-  }
-}
-
 function toIntRect(r: Rect, iw: number, ih: number): sharp.Region {
   const left = Math.floor(r.left)
   const top = Math.floor(r.top)
