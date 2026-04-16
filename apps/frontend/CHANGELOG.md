@@ -1,5 +1,15 @@
 # frontend
 
+## 0.50.0
+
+### Minor Changes
+
+- ba3507b: Add relative timestamp to message bubbles (#1307)
+
+### Patch Changes
+
+- dab0675: Decrease font size of message-sent confirmation text (#1306)
+
 ## 0.49.0
 
 ### Minor Changes

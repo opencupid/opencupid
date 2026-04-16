@@ -1,5 +1,15 @@
 # backend
 
+## 0.50.0
+
+### Minor Changes
+
+- d396a27: Scope new_message email notification dedup per sender→recipient pair
+
+### Patch Changes
+
+- 9785b27: Evict cluster cache when posts are created, updated, or deleted (#1309)
+
 ## 0.49.0
 
 ### Minor Changes
