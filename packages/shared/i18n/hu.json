@@ -404,7 +404,8 @@
         "search_button_title_dating": "Keresés",
         "search_button_title_social": "Keresés",
         "social_title": "Itt keresek...",
-        "tags_label": "Érdeklődési körök..."
+        "tags_label": "Érdeklődési körök...",
+        "search_placeholder": "Keresés"
       },
       "invite_button": "Megosztás",
       "loading_more_profiles": "Egy pillanat...",
