@@ -14,7 +14,7 @@ services:
     volumes:
       - ${POSTGRES_DATADIR}:/var/lib/postgresql/data
 
-  traefik:
+  ingress:
     image: ${DOCKER_IMAGE_PREFIX:-ghcr.io/opencupid/opencupid}-ingress:${INGRESS_VERSION:-latest}
     build:
       context: ./apps/ingress
@@ -51,18 +51,8 @@ services:
       # --- Public domain: API ---
       traefik.http.routers.api.rule: "Host(`${DOMAIN}`) && PathPrefix(`/api`)"
       traefik.http.routers.api.entrypoints: websecure
-      traefik.http.routers.api.middlewares: compress@file,rate-limit@file,api-body-limit,public-sanitize@file
+      traefik.http.routers.api.middlewares: compress@file,rate-limit@file,public-sanitize@file
       traefik.http.services.backend.loadbalancer.server.port: "3000"
-
-      # --- Public domain: upload endpoints (20MB body limit) ---
-      traefik.http.routers.api-upload.rule: "Host(`${DOMAIN}`) && (PathPrefix(`/api/image`) || PathPrefix(`/api/messages/voice`))"
-      traefik.http.routers.api-upload.priority: "20"
-      traefik.http.routers.api-upload.entrypoints: websecure
-      traefik.http.routers.api-upload.middlewares: upload-body-limit,public-sanitize@file
-
-      # Body size middlewares
-      traefik.http.middlewares.upload-body-limit.buffering.maxRequestBodyBytes: "20971520"
-      traefik.http.middlewares.api-body-limit.buffering.maxRequestBodyBytes: "1048576"
 
       # --- Public domain: WebSocket ---
       traefik.http.routers.ws.rule: "Host(`${DOMAIN}`) && PathPrefix(`/ws`)"
@@ -226,3 +216,4 @@ volumes:
   jitsi-meet-cfg-prosody:
   jitsi-meet-cfg-jicofo:
   jitsi-meet-cfg-jvb:
+
