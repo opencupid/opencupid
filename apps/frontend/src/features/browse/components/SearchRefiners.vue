@@ -34,8 +34,6 @@ const geocodedAsLocations = computed<LocationDTO[]>(() =>
 
 const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
 const viewerLocation = computed(() => viewerProfile?.value?.location)
-
-const isEmpty = computed(() => !props.tags.length && !geocodedAsLocations.value.length)
 </script>
 
 <template>
@@ -78,12 +76,5 @@ const isEmpty = computed(() => !props.tags.length && !geocodedAsLocations.value.
         @select="$emit('tag:select', $event)"
       />
     </section>
-
-    <div
-      v-if="isEmpty"
-      class="text-center text-secondary small py-3"
-    >
-      No suggestions
-    </div>
   </div>
 </template>

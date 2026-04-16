@@ -13,6 +13,7 @@ import type { LocationDTO, GeoPoint } from '@zod/dto/location.dto'
 import type { OwnerProfile, ProfileSummary } from '@zod/profile/profile.dto'
 import type { PublicTag } from '@zod/tag/tag.dto'
 import type { PostSummary } from '@zod/post/post.dto'
+import { SEARCH_MIN_QUERY_LENGTH } from '@zod/search/search.dto'
 
 import { useSearchStore } from '@/features/browse/stores/searchStore'
 import { useGeocodingStore } from '@/features/geocoding/stores/geocodingStore'
@@ -47,8 +48,8 @@ function closePanel() {
   panelOpen.value = false
 }
 
-function togglePanel() {
-  panelOpen.value = !panelOpen.value
+function openPanel() {
+  panelOpen.value = true
 }
 
 function handleSetLocationHome() {
@@ -85,6 +86,11 @@ const isSearchMatchesEmpty = computed(
 )
 
 watch(searchQuery, (query) => {
+  if (query.trim().length < SEARCH_MIN_QUERY_LENGTH) {
+    searchStore.searchResults = null
+    geocodingStore.clear()
+    return
+  }
   // Fire both searches in parallel — each store owns its own abort controller,
   // so rapid re-typing cancels prior in-flight requests on both sides.
   searchStore.search(query)
@@ -101,12 +107,11 @@ watch(searchQuery, (query) => {
     <div
       ref="pillRef"
       class="search-bar__pill w-100 position-relative d-flex flex-row align-items-center border"
-      @click="togglePanel"
+      @click="openPanel"
     >
       <div class="d-flex align-items-center gap-1 flex-grow-1 min-w-0">
         <SearchInput
           v-model="searchQuery"
-          @home:set="handleSetLocationHome"
           class="flex-grow-1 flex-shrink-1 min-w-0"
         />
 
@@ -121,7 +126,7 @@ watch(searchQuery, (query) => {
           size="sm"
           class="mx-1 p-0 flex-grow-0 flex-shrink-0"
           :title="$t('profiles.browse.filters.locate_button_title')"
-          @click="handleSetLocationHome"
+          @click.stop="handleSetLocationHome"
         >
           <IconHome class="svg-icon-md" />
         </BButton>

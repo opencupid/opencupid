@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-
 import type { PostSummary } from '@zod/post/post.dto'
 import type { ProfileSummary } from '@zod/profile/profile.dto'
 
 import ProfileChipList from './ProfileChipList.vue'
 import IconPostIt from '@/assets/icons/interface/post-it.svg'
 
-const props = defineProps<{
+defineProps<{
   profiles: ProfileSummary[]
   posts: PostSummary[]
 }>()

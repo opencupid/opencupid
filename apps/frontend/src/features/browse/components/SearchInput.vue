@@ -25,7 +25,7 @@ defineEmits<{
           :model-value="modelValue"
           type="search"
           debounce="300"
-          placeholder="Search"
+          :placeholder="$t('profiles.browse.filters.search_placeholder')"
           autocomplete="off"
           autocorrect="off"
           autocapitalize="off"
