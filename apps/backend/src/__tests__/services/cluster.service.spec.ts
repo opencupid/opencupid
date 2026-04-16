@@ -235,5 +235,19 @@ describe('ClusterService', () => {
       service.evict('viewer-1')
       expect(service.getClusters('viewer-1', [-180, -90, 180, 90], 5).features).toEqual([])
     })
+
+    it('evictAll clears all cached indexes', async () => {
+      mockFindSocialProfilesWithLocation.mockResolvedValue([makeProfile('p1', 47.5, 19.0)])
+      mockFindMutualMatchIds.mockResolvedValue([])
+
+      await service.buildIndex('viewer-1')
+      await service.buildIndex('viewer-2')
+      expect(service.hasIndex('viewer-1')).toBe(true)
+      expect(service.hasIndex('viewer-2')).toBe(true)
+
+      service.evictAll()
+      expect(service.hasIndex('viewer-1')).toBe(false)
+      expect(service.hasIndex('viewer-2')).toBe(false)
+    })
   })
 })
