@@ -25,7 +25,6 @@ function toIntRect(r: Rect, iw: number, ih: number): sharp.Region {
   return { left: clLeft, top: clTop, width: clRight - clLeft, height: clBottom - clTop }
 }
 
-
 export class ImageProcessor {
   private buffer: Buffer
   private sharpInstance: sharp.Sharp
