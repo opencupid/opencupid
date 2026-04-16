@@ -29,7 +29,6 @@
     "@fortawesome/vue-fontawesome": "3.1.3",
     "@openreplay/tracker": "^17.2.6",
     "@sentry/vue": "9.36.0",
-    "@takuma-ru/vue-swipe-modal": "^5.0.5",
     "@tolgee/format-icu": "^6.4.0",
     "@tolgee/vue": "^6.4.0",
     "@types/qrcode": "1.5.6",

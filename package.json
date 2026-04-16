@@ -70,8 +70,7 @@
       "vue-demi"
     ],
     "patchedDependencies": {
-      "vite-plugin-vue-mcp@0.3.2": "patches/vite-plugin-vue-mcp@0.3.2.patch",
-      "@takuma-ru/vue-swipe-modal@5.0.5": "patches/@takuma-ru__vue-swipe-modal@5.0.5.patch"
+      "vite-plugin-vue-mcp@0.3.2": "patches/vite-plugin-vue-mcp@0.3.2.patch"
     }
   },
   "packageManager": "pnpm@10.30.1"

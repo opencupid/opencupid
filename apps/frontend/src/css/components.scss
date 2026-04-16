@@ -183,7 +183,7 @@ main {
 }
 
 .dating {
-  background-color: transparentize($dating, 0.9);
+  background-color: $dating-light;
 }
 
 .social {
@@ -368,7 +368,6 @@ main {
 .popover {
   box-shadow: var(--shadow-md);
 }
-
 
 // Fix: Bootstrap sets visibility:hidden on .offcanvas:not(.show), but
 // bootstrap-vue-next's <Transition> removes .show ~20ms before adding
