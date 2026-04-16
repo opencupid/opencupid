@@ -3,12 +3,21 @@ import fs from 'fs/promises'
 import path from 'path'
 import sharp from 'sharp'
 
-const mockEstimateFaces = vi.fn(async () => [] as any[])
+const { mockEstimateFaces, mockSmartcrop } = vi.hoisted(() => ({
+  mockEstimateFaces: vi.fn(async () => [] as any[]),
+  mockSmartcrop: vi.fn(async (_img: any, opts: any) => ({
+    topCrop: { x: 100, y: 50, width: opts.width, height: opts.height },
+  })),
+}))
 
 vi.mock('@tensorflow-models/blazeface', () => ({
   load: vi.fn(async () => ({
     estimateFaces: mockEstimateFaces,
   })),
+}))
+
+vi.mock('smartcrop-sharp', () => ({
+  default: { crop: mockSmartcrop },
 }))
 
 import { ImageProcessor } from '../../services/imageprocessor'
@@ -43,7 +52,7 @@ describe('ImageProcessor', () => {
   it('can extract and resize cropped image', async () => {
     const processor = new ImageProcessor(buffer)
     await processor.analyze()
-    const rect = await processor.getFaceAwareCrop(300, 300)
+    const rect = await processor.getSmartCrop(300, 300)
 
     const outPath = path.join(TMP_DIR, 'crop-output.webp')
     await processor.extractAndResize(rect, 300, 300, outPath)
@@ -67,22 +76,22 @@ describe('ImageProcessor', () => {
     expect(meta.height).toBe(480)
   })
 
-  it('getFaceAwareCrop returns valid rect with no faces', async () => {
+  it('getSmartCrop returns valid rect with no faces', async () => {
     const processor = new ImageProcessor(buffer)
     await processor.analyze()
 
-    const rect = await processor.getFaceAwareCrop(150, 150)
+    const rect = await processor.getSmartCrop(150, 150)
     expect(rect.width).toBeGreaterThan(0)
     expect(rect.height).toBeGreaterThan(0)
     expect(rect.left).toBeGreaterThanOrEqual(0)
     expect(rect.top).toBeGreaterThanOrEqual(0)
   })
 
-  it('getFaceAwareCrop produces a usable crop for extractAndResize', async () => {
+  it('getSmartCrop produces a usable crop for extractAndResize', async () => {
     const processor = new ImageProcessor(buffer)
     await processor.analyze()
 
-    const rect = await processor.getFaceAwareCrop(600, 600, { paddingRatio: 0.75 })
+    const rect = await processor.getSmartCrop(600, 600)
     const outPath = path.join(TMP_DIR, 'face-crop-output.webp')
     await processor.extractAndResize(
       { x: rect.left, y: rect.top, width: rect.width, height: rect.height },
@@ -97,8 +106,7 @@ describe('ImageProcessor', () => {
     expect(meta.height).toBe(600)
   })
 
-  it('getFaceAwareCrop returns bounded rect when face detected', async () => {
-    // Mock a face in the center-ish area of the 1536×2048 test image
+  it('getSmartCrop passes face boosts to smartcrop', async () => {
     mockEstimateFaces.mockResolvedValueOnce([
       { topLeft: [500, 600], bottomRight: [800, 1000], probability: [0.95] },
     ])
@@ -106,44 +114,50 @@ describe('ImageProcessor', () => {
     const processor = new ImageProcessor(buffer)
     await processor.analyze()
 
-    const rect = await processor.getFaceAwareCrop(600, 600, { paddingRatio: 0.75 })
+    const rect = await processor.getSmartCrop(600, 600)
 
-    // Rect must be within image bounds
+    // Verify smartcrop was called with the face as a boost
+    expect(mockSmartcrop).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        width: 600,
+        height: 600,
+        boost: [
+          expect.objectContaining({
+            x: expect.any(Number),
+            y: expect.any(Number),
+            width: expect.any(Number),
+            height: expect.any(Number),
+            weight: 1.0,
+          }),
+        ],
+      })
+    )
+
+    // Rect comes from the mock topCrop
     expect(rect.left).toBeGreaterThanOrEqual(0)
     expect(rect.top).toBeGreaterThanOrEqual(0)
-    expect(rect.left + rect.width).toBeLessThanOrEqual(1536)
-    expect(rect.top + rect.height).toBeLessThanOrEqual(2048)
-    expect(rect.width).toBeGreaterThan(0)
-    expect(rect.height).toBeGreaterThan(0)
-
-    // Aspect ratio should be ~1:1 (600/600)
-    const ar = rect.width / rect.height
-    expect(ar).toBeCloseTo(1, 1)
-
-    // Must produce a valid output file
-    const outPath = path.join(TMP_DIR, 'face-detected-crop.webp')
-    await processor.extractAndResize(rect, 600, 600, outPath)
-    const meta = await sharp(outPath).metadata()
-    expect(meta.width).toBe(600)
-    expect(meta.height).toBe(600)
+    expect(rect.width).toBe(600)
+    expect(rect.height).toBe(600)
   })
 
-  it('getFaceAwareCrop handles face near image edge', async () => {
-    // Face near top-left corner — tests shift-inside-bounds logic
-    mockEstimateFaces.mockResolvedValueOnce([
-      { topLeft: [10, 10], bottomRight: [110, 150], probability: [0.9] },
-    ])
+  it('getSmartCrop calls smartcrop without boost when no faces detected', async () => {
+    mockEstimateFaces.mockResolvedValueOnce([])
+    mockSmartcrop.mockClear()
 
     const processor = new ImageProcessor(buffer)
     await processor.analyze()
 
-    const rect = await processor.getFaceAwareCrop(150, 150, { paddingRatio: 0.75 })
+    await processor.getSmartCrop(150, 150)
 
-    expect(rect.left).toBeGreaterThanOrEqual(0)
-    expect(rect.top).toBeGreaterThanOrEqual(0)
-    expect(rect.left + rect.width).toBeLessThanOrEqual(1536)
-    expect(rect.top + rect.height).toBeLessThanOrEqual(2048)
-    expect(rect.width).toBeGreaterThan(0)
+    expect(mockSmartcrop).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        width: 150,
+        height: 150,
+        boost: undefined,
+      })
+    )
   })
 
   it('encodeBlurhash returns a valid blurhash string', async () => {
