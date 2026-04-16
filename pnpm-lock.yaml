@@ -230,6 +230,9 @@ importers:
       slugify:
         specifier: 1.6.6
         version: 1.6.6
+      smartcrop-sharp:
+        specifier: ^2.0.8
+        version: 2.0.8(sharp@0.34.5)
       supercluster:
         specifier: ^8.0.1
         version: 8.0.1
@@ -6934,6 +6937,14 @@ packages:
   slugify@1.6.6:
     resolution: {integrity: sha512-h+z7HKHYXj6wJU+AnS/+IH8Uh9fdcX1Lrhg1/VMdf9PwoBQXFcXiAdsy2tSK0P6gKwJLXp02r90ahUCqHk9rrw==}
     engines: {node: '>=8.0.0'}
+
+  smartcrop-sharp@2.0.8:
+    resolution: {integrity: sha512-0rpK/ddGAx7ou6YqqvJRkw/xyR4qgqmJeUQ2EWDnN3hSuJUk4InPGE6Sa45+TYOfGEEQJrchjF1ujBPMhoe9iA==}
+    peerDependencies:
+      sharp: ^0.32.5
+
+  smartcrop@2.0.5:
+    resolution: {integrity: sha512-aXoHTM8XlC51g96kgZkYxZ2mx09/ibOrIVLiUNOFozV/MHmFSgEr1/5CKVBoFD5vd+re2wSy0xra21CyjRITzA==}
 
   sockjs-client@1.6.1:
     resolution: {integrity: sha512-2g0tjOR+fRs0amxENLi/q5TiJTqY+WXFOzb5UwXndlK6TO3U/mirZznpx6w34HVMoc3g7cY24yC/ZMIYnDlfkw==}
@@ -14911,6 +14922,13 @@ snapshots:
   slick@1.12.2: {}
 
   slugify@1.6.6: {}
+
+  smartcrop-sharp@2.0.8(sharp@0.34.5):
+    dependencies:
+      sharp: 0.34.5
+      smartcrop: 2.0.5
+
+  smartcrop@2.0.5: {}
 
   sockjs-client@1.6.1:
     dependencies:

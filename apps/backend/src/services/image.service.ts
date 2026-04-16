@@ -183,7 +183,7 @@ export class ImageService {
       const fit = v.fit ?? sharp.fit.inside
 
       if (['card', 'thumb', 'profile'].includes(v.name)) {
-        const rect = await processor.getFaceAwareCrop(width, height!, { paddingRatio: 0.75 })
+        const rect = await processor.getSmartCrop(width, height!)
         await processor.extractAndResize(rect, width, height!, outputPath)
       } else {
         await processor.resizeOriginal(width, height, fit, outputPath)

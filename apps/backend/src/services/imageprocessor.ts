@@ -1,5 +1,6 @@
 import sharp from 'sharp'
 import { encode as encodeBlurhashRaw } from 'blurhash'
+import smartcrop from 'smartcrop-sharp'
 
 import * as tf from '@tensorflow/tfjs'
 // Suppress "install tfjs-node for speed" console warning — we intentionally use the CPU backend
@@ -9,23 +10,6 @@ import * as blazeface from '@tensorflow-models/blazeface'
 
 type FaceBox = { x: number; y: number; width: number; height: number }
 type Rect = { left: number; top: number; width: number; height: number }
-
-function clamp(n: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, n))
-}
-
-function clampRect(r: Rect, iw: number, ih: number): Rect {
-  const left = clamp(r.left, 0, iw)
-  const top = clamp(r.top, 0, ih)
-  const right = clamp(r.left + r.width, 0, iw)
-  const bottom = clamp(r.top + r.height, 0, ih)
-  return {
-    left,
-    top,
-    width: clamp(right - left, 0, iw),
-    height: clamp(bottom - top, 0, ih),
-  }
-}
 
 function toIntRect(r: Rect, iw: number, ih: number): sharp.Region {
   const left = Math.floor(r.left)
@@ -39,58 +23,6 @@ function toIntRect(r: Rect, iw: number, ih: number): sharp.Region {
   const clBottom = Math.max(clTop + 1, Math.min(bottom, ih))
 
   return { left: clLeft, top: clTop, width: clRight - clLeft, height: clBottom - clTop }
-}
-
-function expandRect(r: Rect, paddingRatio: number): Rect {
-  const padW = r.width * paddingRatio
-  const padH = r.height * paddingRatio
-  return {
-    left: r.left - padW,
-    top: r.top - padH,
-    width: r.width + 2 * padW,
-    height: r.height + 2 * padH,
-  }
-}
-
-function ensureAspect(r: Rect, targetW: number, targetH: number): Rect {
-  const targetAR = targetW / targetH
-  const rAR = r.width / r.height
-  if (Math.abs(rAR - targetAR) < 1e-6) return r
-
-  const cx = r.left + r.width / 2
-  const cy = r.top + r.height / 2
-
-  if (rAR > targetAR) {
-    const newH = r.width / targetAR
-    return { left: cx - r.width / 2, top: cy - newH / 2, width: r.width, height: newH }
-  } else {
-    const newW = r.height * targetAR
-    return { left: cx - newW / 2, top: cy - r.height / 2, width: newW, height: r.height }
-  }
-}
-
-function maximizeWithinBounds(r: Rect, iw: number, ih: number): Rect {
-  const cx = r.left + r.width / 2
-  const cy = r.top + r.height / 2
-  const halfW = r.width / 2
-  const halfH = r.height / 2
-
-  const scaleX = Math.min(cx, iw - cx) / halfW
-  const scaleY = Math.min(cy, ih - cy) / halfH
-  const scale = Math.max(1, Math.min(scaleX, scaleY))
-
-  const newW = r.width * scale
-  const newH = r.height * scale
-  return { left: cx - newW / 2, top: cy - newH / 2, width: newW, height: newH }
-}
-
-function shiftInsideBounds(r: Rect, iw: number, ih: number): Rect {
-  let { left, top } = r
-  const w = Math.min(r.width, iw)
-  const h = Math.min(r.height, ih)
-  left = clamp(left, 0, iw - w)
-  top = clamp(top, 0, ih - h)
-  return { left, top, width: w, height: h }
 }
 
 export class ImageProcessor {
@@ -127,11 +59,6 @@ export class ImageProcessor {
     this.faces = await this.detectFaces()
   }
 
-  private pickPrimaryFace(): FaceBox | null {
-    if (!this.faces.length) return null
-    return this.faces.reduce((a, b) => (a.width * a.height >= b.width * b.height ? a : b))
-  }
-
   private async detectFaces(): Promise<FaceBox[]> {
     const { data, info } = await sharp(this.buffer, { failOn: 'error' })
       .removeAlpha()
@@ -152,41 +79,28 @@ export class ImageProcessor {
   }
 
   /**
-   * Face-aware crop: builds a padded rect around the primary face, adjusted to the
-   * target aspect ratio and maximized within image bounds. Falls back to full-image
-   * (letting sharp.strategy.attention pick the crop) when no face is detected.
+   * Content-aware crop using smartcrop-sharp with face detection boosts.
+   * Smartcrop scores candidate regions by skin tone, saturation, edges,
+   * and rule-of-thirds composition. Detected faces are passed as boost
+   * regions so they are prioritized in the scoring.
    */
-  async getFaceAwareCrop(
-    targetW: number,
-    targetH: number,
-    opts?: { paddingRatio?: number }
-  ): Promise<Rect> {
-    const paddingRatio = opts?.paddingRatio ?? 0.25
-    const iw = this.metadata?.width ?? 0
-    const ih = this.metadata?.height ?? 0
-    if (iw <= 0 || ih <= 0) {
-      return { left: 0, top: 0, width: Math.max(1, iw), height: Math.max(1, ih) }
-    }
+  async getSmartCrop(targetW: number, targetH: number): Promise<Rect> {
+    const boosts = this.faces.map((f) => ({
+      x: f.x,
+      y: f.y,
+      width: f.width,
+      height: f.height,
+      weight: 1.0,
+    }))
 
-    const face = this.pickPrimaryFace()
-    if (face) {
-      const faceRect: Rect = { left: face.x, top: face.y, width: face.width, height: face.height }
+    const result = await smartcrop.crop(this.buffer, {
+      width: targetW,
+      height: targetH,
+      boost: boosts.length > 0 ? boosts : undefined,
+    })
 
-      let r = expandRect(faceRect, paddingRatio)
-      r = clampRect(r, iw, ih)
-      r = ensureAspect(r, targetW, targetH)
-      r = maximizeWithinBounds(r, iw, ih)
-      r = shiftInsideBounds(r, iw, ih)
-
-      const minAcceptable = Math.min(iw, ih) * 0.1
-      if (r.width >= minAcceptable && r.height >= minAcceptable) {
-        return r
-      }
-    }
-
-    // No face or degenerate result — return full image and let
-    // sharp.strategy.attention pick the best crop during resize
-    return { left: 0, top: 0, width: iw, height: ih }
+    const c = result.topCrop
+    return { left: c.x, top: c.y, width: c.width, height: c.height }
   }
 
   async extractAndResize(
