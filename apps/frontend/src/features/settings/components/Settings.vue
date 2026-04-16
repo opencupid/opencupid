@@ -52,7 +52,7 @@ function handleLogout() {
 </script>
 
 <template>
-  <div class="px-3 py-3 h-100 d-flex flex-column justify-content-center">
+  <div class="px-3 p-md-5 h-100 w-100 d-flex flex-column justify-content-center">
     <fieldset class="d-flex align-items-center mb-3">
       <IconGlobe class="svg-icon svg-icon-lg me-2" />
       <LanguageSelectorDropdown size="md" />
