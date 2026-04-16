@@ -43,22 +43,25 @@ const placement = computed(() => (isMdUp.value ? 'start' : 'bottom'))
     </PanelContentWrapper>
   </BOffcanvas>
 
+  <!-- is-backdrop=false so the dialog uses show() instead of showModal(),
+       keeping it in normal stacking context where BModals paint on top. -->
   <SwipeModal
     v-model="isOpen"
     :snap-point="'75vh'"
-    :is-backdrop="true"
+    :is-backdrop="false"
+    :is-scroll-lock="false"
     v-else
   >
-    <PanelContentWrapper
-      v-if="currentComponent"
-      :close="close"
-    >
-      <component
-        :is="currentComponent"
-        v-bind="currentProps"
-      />
-    </PanelContentWrapper>
-  </SwipeModal>
+      <PanelContentWrapper
+        v-if="currentComponent"
+        :close="close"
+      >
+        <component
+          :is="currentComponent"
+          v-bind="currentProps"
+        />
+      </PanelContentWrapper>
+    </SwipeModal>
 </template>
 
 <style lang="scss">
@@ -91,10 +94,6 @@ const placement = computed(() => (isMdUp.value ? 'start' : 'bottom'))
   }
 }
 
-.swipe-modal::backdrop {
-  background-color: rgba(0, 0, 0, 0.3) !important;
-  backdrop-filter: none !important;
-}
 
 .drawer-close-tab {
   top: 50%;
