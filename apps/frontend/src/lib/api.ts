@@ -27,33 +27,160 @@ export const ERROR_CODES = [
   'ERR_NETWORK',
 ]
 
-let isOffline = false
-let retryTimeoutId: NodeJS.Timeout | null = null
-let offlineDebounceId: NodeJS.Timeout | null = null
+import './visibility'
+
+/*
+                    ┌──────────────────────────────────┐
+                    │                                  │
+    ┌───────────────▼───────────┐                      │
+    │         ONLINE            │◄─── success response │
+    │  (normal, detection on)   │     from any state   │
+    └──┬────────┬───────────────┘     except SUSPENDED │
+       │        │                                      │
+       │     network error                             │
+       │        │                                      │
+       │        ▼                                      │
+       │   ┌─────────────┐    success    ┌─────────────┘
+       │   │ DEBOUNCING  │───response───►│
+       │   │  (3s timer)  │              │
+       │   └──────┬──────┘               │
+       │          │ timer fires          │
+       │          ▼                      │
+       │   ┌─────────────┐  success      │
+       │   │   OFFLINE   │──response────►│
+       │   │ (retrying)  │               │
+       │   └──────┬──────┘               │
+       │          │                      │
+  tab hidden      │ tab hidden           │
+       │          │                      │
+       ▼          ▼                      │
+    ┌─────────────────────┐              │
+    │     SUSPENDED       │              │
+    │ (detection blocked, │              │
+    │  timers cancelled)  │              │
+    └──────────┬──────────┘              │
+               │ tab visible             │
+               ▼                         │
+    ┌─────────────────────┐              │
+    │     RESUMING        │              │
+    │ (grace period 5s,   │──success────►┘
+    │  health check fired,│
+    │  errors suppressed) │
+    └──────────┬──────────┘
+               │ grace expires
+               │ without success
+               ▼
+         back to ONLINE
+      (detection re-enabled,
+       next error starts
+       normal DEBOUNCING)
+*/
+
+// ── State machine ─────────────────────────────────────────────────────
+type OfflineState = 'ONLINE' | 'DEBOUNCING' | 'OFFLINE' | 'SUSPENDED' | 'RESUMING'
+
+let state: OfflineState = 'ONLINE'
+let debounceTimerId: ReturnType<typeof setTimeout> | null = null
+let retryTimerId: ReturnType<typeof setTimeout> | null = null
+let graceTimerId: ReturnType<typeof setTimeout> | null = null
+let wasOfflineBeforeSuspend = false
 let waitForRecovery: (() => void)[] = []
 
 export const isApiOnline = () =>
-  isOffline ? new Promise<void>((resolve) => waitForRecovery.push(resolve)) : Promise.resolve()
+  state === 'ONLINE'
+    ? Promise.resolve()
+    : new Promise<void>((resolve) => waitForRecovery.push(resolve))
 
-// // Periodic retry mechanism to detect API recovery - only used in non-development environments
-function startRetryMechanism() {
-  if (retryTimeoutId) {
-    clearTimeout(retryTimeoutId)
+/** For testing only — returns the current state machine state. */
+export const _getState = () => state
+
+function clearAllTimers() {
+  if (debounceTimerId) {
+    clearTimeout(debounceTimerId)
+    debounceTimerId = null
   }
+  if (retryTimerId) {
+    clearTimeout(retryTimerId)
+    retryTimerId = null
+  }
+  if (graceTimerId) {
+    clearTimeout(graceTimerId)
+    graceTimerId = null
+  }
+}
 
-  retryTimeoutId = setTimeout(async () => {
+function startRetryMechanism() {
+  if (retryTimerId) clearTimeout(retryTimerId)
+  retryTimerId = setTimeout(async () => {
     try {
       await getVersionInfo({ timeout: 5000 })
-      // If we reach here, the API is back online
-      // The success will be handled by the response interceptor
-    } catch (error) {
-      // Still offline, retry again
-      if (isOffline) {
-        startRetryMechanism()
-      }
+    } catch {
+      if (state === 'OFFLINE') startRetryMechanism()
     }
-  }, 10000) // Retry every 10 seconds
+  }, 10000)
 }
+
+function transitionTo(newState: OfflineState) {
+  const prev = state
+  state = newState
+
+  switch (newState) {
+    case 'ONLINE':
+      clearAllTimers()
+      if (prev === 'OFFLINE' || (prev === 'RESUMING' && wasOfflineBeforeSuspend)) {
+        bus.emit('api:online')
+      }
+      waitForRecovery.forEach((fn) => fn())
+      waitForRecovery = []
+      break
+
+    case 'DEBOUNCING':
+      debounceTimerId = setTimeout(() => {
+        debounceTimerId = null
+        transitionTo('OFFLINE')
+      }, 3000)
+      break
+
+    case 'OFFLINE':
+      bus.emit('api:offline')
+      startRetryMechanism()
+      break
+
+    case 'SUSPENDED':
+      if (prev !== 'RESUMING') {
+        wasOfflineBeforeSuspend = prev === 'OFFLINE'
+      }
+      // When coming from RESUMING, preserve the existing wasOfflineBeforeSuspend value
+      clearAllTimers()
+      break
+
+    case 'RESUMING':
+      graceTimerId = setTimeout(() => {
+        graceTimerId = null
+        if (wasOfflineBeforeSuspend) {
+          transitionTo('OFFLINE')
+        } else {
+          state = 'ONLINE' // silent transition, no emit needed
+        }
+      }, 5000)
+      // Proactive health check — its success/failure feeds into the interceptor
+      getVersionInfo({ timeout: 5000 }).catch(() => {})
+      break
+  }
+}
+
+// ── Visibility event handlers ─────────────────────────────────────────
+bus.on('app:hidden', () => {
+  if (state !== 'SUSPENDED') {
+    transitionTo('SUSPENDED')
+  }
+})
+
+bus.on('app:visible', () => {
+  if (state === 'SUSPENDED') {
+    transitionTo('RESUMING')
+  }
+})
 
 // --- Silent token refresh interceptor ---
 let isRefreshing = false
@@ -78,21 +205,10 @@ export async function getVersionInfo(options?: { timeout?: number }): Promise<Ve
 
 api.interceptors.response.use(
   (response) => {
-    if (offlineDebounceId) {
-      clearTimeout(offlineDebounceId)
-      offlineDebounceId = null
-    }
+    if (state === 'SUSPENDED') return response // don't transition while suspended
 
-    if (isOffline) {
-      isOffline = false
-      bus.emit('api:online')
-      waitForRecovery.forEach((fn) => fn())
-      waitForRecovery = []
-
-      if (retryTimeoutId) {
-        clearTimeout(retryTimeoutId)
-        retryTimeoutId = null
-      }
+    if (state !== 'ONLINE') {
+      transitionTo('ONLINE')
     }
 
     return response
@@ -145,38 +261,35 @@ api.interceptors.response.use(
       }
     }
 
-    // Network error handling — debounce to avoid false positives from app-switching
+    // Network error handling — visibility-aware state machine
     const isNetworkError = !error.response || ERROR_CODES.includes(error.code)
 
-    if (isNetworkError && !isOffline && !offlineDebounceId) {
-      offlineDebounceId = setTimeout(() => {
-        offlineDebounceId = null
-        isOffline = true
-        bus.emit('api:offline')
-        startRetryMechanism()
-      }, 3000)
+    if (isNetworkError && state === 'ONLINE') {
+      transitionTo('DEBOUNCING')
     }
+    // In SUSPENDED or RESUMING: swallow network errors (expected during tab transitions)
+    // In DEBOUNCING or OFFLINE: already handling, no-op
 
     return Promise.reject(error)
   }
 )
 
 export async function safeApiCall<T>(fn: () => Promise<T>): Promise<T> {
-  while (isOffline) {
+  while (state !== 'ONLINE') {
     await isApiOnline()
   }
 
   try {
-    const result = await fn()
-    return result
+    return await fn()
   } catch (err: any) {
     const isNetworkError = !err.response || ERROR_CODES.includes(err.code)
 
     if (isNetworkError) {
-      isOffline = true
-      startRetryMechanism()
+      if (state === 'ONLINE') {
+        transitionTo('DEBOUNCING')
+      }
       await isApiOnline()
-      return safeApiCall(fn) // try again after recovery
+      return safeApiCall(fn)
     }
 
     throw err
