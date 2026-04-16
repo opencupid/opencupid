@@ -17,7 +17,6 @@ import { useDetailPanel } from '@/features/app/composables/useDetailPanel'
 import OsmPoiMap from '@/features/map/components/OsmPoiMap.vue'
 import MapPlaceholder from '@/features/shared/components/MapPlaceholder.vue'
 import SearchBar from '../components/SearchBar.vue'
-import NoResultsCTA from '../components/NoResultsCTA.vue'
 import ProfileMapCard from '../components/ProfileMapCard.vue'
 import PublicProfileView from '@/features/publicprofile/components/PublicProfileView.vue'
 
@@ -29,6 +28,7 @@ import PostFullView from '@/features/posts/components/PostFullView.vue'
 import OwnerDrawerControls from '../components/OwnerDrawerControls.vue'
 import { usePostStore } from '@/features/posts/stores/postStore'
 import type { GeoPoint } from '@zod/dto/location.dto'
+import ShareDialog from '@/features/app/components/ShareDialog.vue'
 
 // Component name must be 'AppShell' for KeepAlive to identify it correctly
 defineOptions({ name: 'AppShell' })
@@ -210,18 +210,15 @@ onMounted(async () => {
     </div>
     <main class="list-view d-flex flex-column justify-content-start">
       <div class="overflow-auto hide-scrollbar flex-grow-1 position-relative">
-        <BAlert
-          v-if="isNoOneAround"
-          variant="info"
-          class="lonely-alert shadow p-2 p-md-2"
-          show
-        >
-          <NoResultsCTA />
-        </BAlert>
+        <ShareDialog :trigger="isNoOneAround">
+          {{ t('profiles.browse.no_results_cta_title') }}
+        </ShareDialog>
+
         <MapPlaceholder
           v-if="!isMapReady"
           class="position-absolute top-0 start-0 w-100 h-100 opacity-25"
         />
+
         <OsmPoiMap
           v-if="mapCenter"
           :items="allPois"
@@ -241,24 +238,7 @@ onMounted(async () => {
 </template>
 
 <style scoped lang="scss">
-@import 'bootstrap/scss/functions';
-@import 'bootstrap/scss/variables';
-@import 'bootstrap/scss/mixins';
-@import '@/css/app-vars.scss';
-@import '@/css/theme.scss';
-
 .list-view {
   height: 100vh;
-}
-
-.lonely-alert {
-  top: 1rem;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1025;
-  background-color: rgba($color: $info, $alpha: 0.6);
-  position: absolute;
-  width: fit-content;
-  min-width: 80%;
 }
 </style>

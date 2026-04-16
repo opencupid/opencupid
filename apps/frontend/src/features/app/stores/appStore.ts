@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { bus } from '@/lib/bus'
 import { api, getVersionInfo } from '@/lib/api'
 import { LocationSchema, type LocationDTO } from '@zod/dto/location.dto'
 import { type VersionDTO } from '@zod/dto/version.dto'
@@ -11,6 +12,7 @@ export const useAppStore = defineStore('app', {
     updateAvailable: false,
     latestVersion: '',
     canInstallPwa: false,
+    shareCtaDismissed: false,
   }),
   actions: {
     async fetchLocation(): Promise<StoreResponse<LocationDTO>> {
@@ -39,4 +41,8 @@ export const useAppStore = defineStore('app', {
       }
     },
   },
+})
+
+bus.on('auth:logout', () => {
+  useAppStore().$reset()
 })

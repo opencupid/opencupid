@@ -160,7 +160,7 @@ vi.mock('@/features/shared/composables/useDetailRouteState', () => ({
 
 const BButton = { template: '<button><slot /></button>' }
 const BContainer = { template: '<div class="container"><slot /></div>' }
-const NoResultsCTA = { template: '<div class="no-results-cta" />' }
+const ShareDialog = { template: '<div class="share-dialog"><slot /></div>', props: ['trigger'] }
 
 import BrowseProfiles from '../BrowseProfiles.vue'
 
@@ -180,7 +180,7 @@ describe('BrowseProfiles view', () => {
         stubs: {
           BButton,
           BContainer,
-          NoResultsCTA,
+          ShareDialog,
           NotificationDot: { template: '<span><slot /></span>' },
           ProfileImage: true,
           Teleport: true,
@@ -198,16 +198,16 @@ describe('BrowseProfiles view', () => {
     expect(toastInfo).not.toHaveBeenCalled()
   })
 
-  it('hides CTA alert when isNoOneAround is false (other profiles present)', () => {
+  it('passes trigger=false to ShareDialog when isNoOneAround is false', () => {
     vmState.isNoOneAround.value = false
     const wrapper = mountComponent()
-    expect(wrapper.findComponent({ name: 'BAlert' }).exists()).toBe(false)
+    expect(wrapper.findComponent(ShareDialog).props('trigger')).toBe(false)
   })
 
-  it('shows CTA alert when isNoOneAround is true (no other profiles)', () => {
+  it('passes trigger=true to ShareDialog when isNoOneAround is true', () => {
     vmState.isNoOneAround.value = true
     const wrapper = mountComponent()
-    expect(wrapper.findComponent({ name: 'BAlert' }).exists()).toBe(true)
+    expect(wrapper.findComponent(ShareDialog).props('trigger')).toBe(true)
   })
 
   it('renders map view with OsmPoiMap', () => {
