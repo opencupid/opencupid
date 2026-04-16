@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { computed, ref } from 'vue'
 import { CanceledError } from 'axios'
 import { api, safeApiCall } from '@/lib/api'
 import { bus } from '@/lib/bus'
@@ -9,93 +10,85 @@ import { storeSuccess, storeError, type StoreVoidSuccess, type StoreError } from
 
 let searchAbortController: AbortController | null = null
 
-/**
- * Ephemeral, client-side filter state for the browse map. State lives only
- * for the session: no persistence to localStorage, sessionStorage, or the
- * backend. Selections reset on page reload and on logout.
- *
- * The store holds full `PublicTag` objects (not just IDs) so that the
- * filter bar can render the selected pill regardless of whether the tag
- * is currently in the bounds-scoped `availableTags` list. Without this,
- * tags picked via the autocomplete search (which queries the global tag
- * store, not just the in-viewport list) would briefly show up and then
- * disappear from the UI.
- */
-interface SearchStoreState {
-  selectedTags: PublicTag[]
-  searchResults: SearchResponse | null
-}
+export const useSearchStore = defineStore('search', () => {
+  const selectedTags = ref<PublicTag[]>([])
+  const searchResults = ref<SearchResponse | null>(null)
+  const isLoading = ref(false)
 
-export const useSearchStore = defineStore('search', {
-  state: (): SearchStoreState => ({
-    selectedTags: [],
-    searchResults: null,
-  }),
+  const selectedTagIds = computed(() => selectedTags.value.map((t) => t.id))
+  const hasResults = computed(() => {
+    const r = searchResults.value
+    return !!r && (r.profiles.length > 0 || r.posts.length > 0 || r.tags.length > 0)
+  })
 
-  getters: {
-    selectedTagIds(state): string[] {
-      return state.selectedTags.map((t) => t.id)
-    },
-  },
+  function toggleTag(tag: PublicTag) {
+    const idx = selectedTags.value.findIndex((t) => t.id === tag.id)
+    if (idx === -1) {
+      if (selectedTags.value.length >= MAX_BROWSE_TAGS) return
+      selectedTags.value = [...selectedTags.value, tag]
+    } else {
+      selectedTags.value = selectedTags.value.filter((t) => t.id !== tag.id)
+    }
+  }
 
-  actions: {
+  function setTags(tags: PublicTag[]) {
+    selectedTags.value = tags.slice(0, MAX_BROWSE_TAGS)
+  }
 
+  function clearTags() {
+    selectedTags.value = []
+  }
 
-    
-    toggleTag(tag: PublicTag) {
-      const idx = this.selectedTags.findIndex((t) => t.id === tag.id)
-      if (idx === -1) {
-        if (this.selectedTags.length >= MAX_BROWSE_TAGS) return
-        this.selectedTags = [...this.selectedTags, tag]
-      } else {
-        this.selectedTags = this.selectedTags.filter((t) => t.id !== tag.id)
-      }
-    },
+  async function search(q: string): Promise<StoreVoidSuccess | StoreError> {
+    if (searchAbortController) {
+      searchAbortController.abort()
+    }
+    const controller = new AbortController()
+    searchAbortController = controller
+    isLoading.value = true
 
-    setTags(tags: PublicTag[]) {
-      this.selectedTags = tags.slice(0, MAX_BROWSE_TAGS)
-    },
-
-    clearTags() {
-      this.selectedTags = []
-    },
-
-    async search(q: string): Promise<StoreVoidSuccess | StoreError> {
-      if (searchAbortController) {
-        searchAbortController.abort()
-      }
-      const controller = new AbortController()
-      searchAbortController = controller
-
-      try {
-        const res = await safeApiCall(() =>
-          api.get('/search', { params: { q }, signal: controller.signal })
-        )
-        const parsed = SearchResponseSchema.parse(res.data)
-        this.searchResults = parsed
+    try {
+      const res = await safeApiCall(() =>
+        api.get('/search', { params: { q }, signal: controller.signal })
+      )
+      const parsed = SearchResponseSchema.parse(res.data)
+      searchResults.value = parsed
+      return storeSuccess()
+    } catch (error: any) {
+      if (error instanceof CanceledError) {
+        searchResults.value = null
         return storeSuccess()
-      } catch (error: any) {
-        if (error instanceof CanceledError) {
-          this.searchResults = null
-          return storeSuccess()
-        }
-        return storeError(error, 'Search failed')
-      } finally {
-        if (searchAbortController === controller) {
-          searchAbortController = null
-        }
       }
-    },
-
-    reset() {
-      this.selectedTags = []
-      this.searchResults = null
-      if (searchAbortController) {
-        searchAbortController.abort()
+      return storeError(error, 'Search failed')
+    } finally {
+      if (searchAbortController === controller) {
         searchAbortController = null
+        isLoading.value = false
       }
-    },
-  },
+    }
+  }
+
+  function reset() {
+    selectedTags.value = []
+    searchResults.value = null
+    if (searchAbortController) {
+      searchAbortController.abort()
+      searchAbortController = null
+    }
+  }
+
+  return {
+    selectedTags,
+    searchResults,
+    isLoading,
+    selectedTagIds,
+    hasResults,
+    toggleTag,
+    setTags,
+    clearTags,
+    search,
+    reset,
+  }
 })
 
 bus.on('auth:logout', () => {

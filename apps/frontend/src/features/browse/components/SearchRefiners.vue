@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, type Ref, computed } from 'vue'
+import { inject, ref, type Ref, computed, watch } from 'vue'
 
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faLocationDot } from '@fortawesome/free-solid-svg-icons'
@@ -16,6 +16,7 @@ import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
 const props = defineProps<{
   tags: PublicTag[]
   geocodedLocations?: GeocodingResult[]
+  isLoading?: boolean
 }>()
 
 defineEmits<{
@@ -37,8 +38,11 @@ const viewerLocation = computed(() => viewerProfile?.value?.location)
 </script>
 
 <template>
-  <div class="search-refiners d-flex flex-column">
-    <section v-if="geocodedAsLocations.length">
+  <div class="search-refiners d-flex flex-column p-1">
+    <section
+      v-if="geocodedAsLocations.length"
+      class="my-1"
+    >
       <BListGroup flush>
         <BListGroupItem
           v-for="(loc, i) in geocodedAsLocations"
@@ -63,7 +67,7 @@ const viewerLocation = computed(() => viewerProfile?.value?.location)
 
     <section
       v-if="tags.length"
-      class="px-2 pb-2 d-flex align-items-start"
+      class="px-2 my-1 d-flex align-items-start"
     >
       <IconTag
         width="24"

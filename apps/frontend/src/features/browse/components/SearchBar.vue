@@ -34,13 +34,26 @@ const emit = defineEmits<{
 
 const searchStore = useSearchStore()
 const geocodingStore = useGeocodingStore()
-const { selectedTags, searchResults } = storeToRefs(searchStore)
-const { results: geocodedLocations } = storeToRefs(geocodingStore)
+const {
+  selectedTags,
+  searchResults,
+  isLoading: searchLoading,
+  hasResults: searchHasResults,
+} = storeToRefs(searchStore)
+const {
+  results: geocodedLocations,
+  isLoading: geocodingLoading,
+  hasResults: geocodingHasResults,
+} = storeToRefs(geocodingStore)
 const { locale } = useI18n()
 
-const panelOpen = ref(false)
 const pillRef = ref<HTMLElement | null>(null)
 const searchQuery = ref('')
+
+const panelOpen = ref(false)
+
+const isLoading = computed(() => searchLoading.value || geocodingLoading.value)
+const haveResults = computed(() => searchHasResults.value || geocodingHasResults.value)
 
 onClickOutside(pillRef, closePanel)
 
@@ -49,6 +62,7 @@ function closePanel() {
 }
 
 function openPanel() {
+  if (!haveResults.value) return
   panelOpen.value = true
 }
 
@@ -96,6 +110,10 @@ watch(searchQuery, (query) => {
   searchStore.search(query)
   geocodingStore.searchNearby(props.viewerProfile?.location?.country ?? '', query, locale.value, 5)
 })
+
+watch(haveResults, () => {
+  if (!panelOpen.value) panelOpen.value = true
+})
 </script>
 
 <template>
@@ -137,16 +155,17 @@ watch(searchQuery, (query) => {
       :class="panelOpen ? '' : 'pointer-events-none'"
       :aria-hidden="panelOpen ? 'false' : 'true'"
     >
-      <div class="search-bar__refiners">
+      <div class="search-bar__refiners shadow">
         <SearchRefiners
           :tags="searchResults?.tags ?? []"
           :geocoded-locations="geocodedLocations"
+          :isLoading="isLoading"
           @location:select="onSelectLocation"
           @tag:select="onSelectTag"
         />
       </div>
       <div
-        class="search-bar__matches py-2"
+        class="search-bar__matches py-2 shadow"
         v-if="!isSearchMatchesEmpty"
       >
         <SearchMatches

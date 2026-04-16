@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useGeocoder } from '../composables/useGeocoder'
 import type { GeocodingResult } from '../types'
 
@@ -81,5 +81,7 @@ export const useGeocodingStore = defineStore('geocoding', () => {
     isLoading.value = false
   }
 
-  return { results, isLoading, search, searchNearby, clear }
+  const hasResults = computed(() => results.value.length > 0)
+
+  return { results, isLoading, hasResults, search, searchNearby, clear }
 })

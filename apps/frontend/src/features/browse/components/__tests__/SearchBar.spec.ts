@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { setActivePinia, createPinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { ref, computed } from 'vue'
 
 import SearchBar from '../SearchBar.vue'
 import { useSearchStore } from '@/features/browse/stores/searchStore'
@@ -22,14 +23,21 @@ vi.mock('vue-i18n', () => ({
 
 // Stub the geocoding store — its module-level useGeocoder() call hits the
 // network on import; not relevant to SearchBar's own behavior.
-vi.mock('@/features/geocoding/stores/geocodingStore', () => ({
-  useGeocodingStore: () => ({
-    results: [],
-    isLoading: false,
-    search: vi.fn(),
-    searchNearby: vi.fn(),
-  }),
-}))
+vi.mock('@/features/geocoding/stores/geocodingStore', () => {
+  const results = ref([])
+  const isLoading = ref(false)
+  const hasResults = computed(() => results.value.length > 0)
+  return {
+    useGeocodingStore: () => ({
+      results,
+      isLoading,
+      hasResults,
+      search: vi.fn(),
+      searchNearby: vi.fn(),
+      clear: vi.fn(),
+    }),
+  }
+})
 
 // Stub SVG-as-component imports — jsdom chokes parsing data-uri SVG src.
 vi.mock('@/assets/icons/interface/home.svg', () => ({
@@ -53,7 +61,7 @@ const SearchInput = {
 const SearchRefiners = {
   name: 'SearchRefiners',
   template: '<div class="search-refiners-stub" />',
-  props: ['tags', 'geocodedLocations'],
+  props: ['tags', 'geocodedLocations', 'isLoading'],
   emits: ['tag:select', 'location:select'],
 }
 

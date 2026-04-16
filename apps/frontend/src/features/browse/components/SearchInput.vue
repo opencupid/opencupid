@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import IconSearch from '@/assets/icons/interface/search.svg'
+import IconClear from '@/assets/icons/interface/cross.svg'
 
 defineProps<{ modelValue: string }>()
 
@@ -20,6 +21,17 @@ defineEmits<{
             class="svg-icon ms-2 text-secondary"
             :title="$t('profiles.forms.city_search_placeholder')"
           />
+        </template>
+        <template #append>
+          <BButton
+            variant="link-secondary"
+            v-if="modelValue.length"
+          >
+            <IconClear
+              class="svg-icon-sm"
+              @click.stop="$emit('update:modelValue', '')"
+            />
+          </BButton>
         </template>
         <BFormInput
           :model-value="modelValue"
