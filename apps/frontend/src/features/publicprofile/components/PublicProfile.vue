@@ -21,24 +21,26 @@ const emit = defineEmits<{
     :class="{ dating: profile.isDatingActive }"
     class="public-profile h-100"
   >
-    <div class="position-relative h-100 overflow-x-hidden">
-      <div class="secondary-nav position-absolute w-100 py-2 text-color-white">
-        <PublicProfileSecondaryNav
-          @intent:back="emit('intent:back')"
-          @intent:block="emit('intent:block')"
+    <div class="h-100 pb-5">
+      <div class="position-relative h-100 overflow-x-hidden">
+        <div class="secondary-nav position-absolute w-100 py-2 text-color-white">
+          <PublicProfileSecondaryNav
+            @intent:back="emit('intent:back')"
+            @intent:block="emit('intent:block')"
+          />
+        </div>
+        <div class="profile-content h-100 overflow-auto hide-scrollbar">
+          <ProfileContent :profile="profile" />
+        </div>
+      </div>
+      <div class="interactions position-absolute w-100 bottom-0 pb-3">
+        <ProfileInteractions
+          :profile="profile"
+          @intent:message="(convoId: string) => emit('intent:message', convoId)"
+          @updated="emit('updated')"
+          @passed="emit('updated')"
         />
       </div>
-      <div class="profile-content h-100 overflow-auto hide-scrollbar">
-        <ProfileContent :profile="profile" />
-      </div>
-    </div>
-    <div class="interactions position-absolute w-100 bottom-0 pb-3">
-      <ProfileInteractions
-        :profile="profile"
-        @intent:message="(convoId: string) => emit('intent:message', convoId)"
-        @updated="emit('updated')"
-        @passed="emit('updated')"
-      />
     </div>
   </div>
 </template>
