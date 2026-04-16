@@ -23,7 +23,7 @@ async function handleSave() {
 </script>
 
 <template>
-  <div class="d-flex flex-column h-100">
+  <div class="d-flex flex-column h-100 w-100 p-2">
     <section class="form-wrapper p-2 w-100 flex-grow-1 overflow-auto hide-scrollbar py-3 ">
       <BTabs
         variant="warning"

@@ -84,7 +84,7 @@ const handleSubmit = async () => {
 <template>
   <BForm
     @submit.prevent="handleSubmit"
-    class="w-100"
+    class="w-100 p-2 mt-2"
   >
     <PostIt
       class="position-relative p-2"
