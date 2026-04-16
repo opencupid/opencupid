@@ -6,12 +6,12 @@ vi.mock('@/features/images/components/ProfileThumbnail.vue', () => ({
   default: { template: '<span class="thumb-stub" />' },
 }))
 
-import ProfileChipList from '../ProfileChipList.vue'
+import ProfileChipList from '../../../browse/components/ProfileChipList.vue'
 
 const profiles: ProfileSummary[] = [
-  { id: 'p1', publicName: 'Alice', profileImages: [] },
-  { id: 'p2', publicName: 'Bob', profileImages: [] },
-  { id: 'p3', publicName: 'Charlie', profileImages: [] },
+  { id: 'p1', publicName: 'Alice', profileImages: [], location: { country: '' } },
+  { id: 'p2', publicName: 'Bob', profileImages: [], location: { country: '' } },
+  { id: 'p3', publicName: 'Charlie', profileImages: [], location: { country: '' } },
 ]
 
 describe('ProfileChipList', () => {
@@ -29,13 +29,13 @@ describe('ProfileChipList', () => {
     expect(items.at(2)?.text()).toContain('Charlie')
   })
 
-  it('emits select:profile with correct profileId on click', async () => {
+  it('emits select:profile with the profile object on click', async () => {
     const wrapper = mount(ProfileChipList, { props: { profiles } })
     const items = wrapper.findAll('.list-group-item')
     await items.at(1)!.trigger('click')
 
     const emitted = wrapper.emitted('select:profile')
     expect(emitted).toHaveLength(1)
-    expect(emitted?.[0]).toEqual(['p2'])
+    expect(emitted?.[0]).toEqual([profiles[1]])
   })
 })

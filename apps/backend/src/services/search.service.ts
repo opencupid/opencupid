@@ -1,14 +1,11 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '../lib/prisma'
 import { profileImageInclude } from '../db/includes/profileIncludes'
-import { blocklistWhereClause } from '../db/includes/blocklistWhereClause'
 import { TagService } from './tag.service'
 import type { TagWithTranslations } from '@zod/tag/tag.db'
 import type { DbProfileSummary } from '@zod/profile/profile.db'
 import type { DbPostForSummary } from '../api/mappers/post.mappers'
-import type { LocationDTO } from '@zod/dto/location.dto'
 import {
-  SEARCH_LOCATION_LIMIT,
   SEARCH_MIN_QUERY_LENGTH,
   SEARCH_POST_LIMIT,
   SEARCH_PROFILE_LIMIT,
@@ -19,12 +16,11 @@ export interface SearchResults {
   tags: TagWithTranslations[]
   profiles: DbProfileSummary[]
   posts: DbPostForSummary[]
-  locations: LocationDTO[]
 }
 
 /** Factory so callers never share array references with each other. */
 function emptyResults(): SearchResults {
-  return { tags: [], profiles: [], posts: [], locations: [] }
+  return { tags: [], profiles: [], posts: [] }
 }
 
 /**
@@ -68,14 +64,13 @@ export class SearchService {
       return emptyResults()
     }
 
-    const [tags, profiles, posts, locations] = await Promise.all([
+    const [tags, profiles, posts] = await Promise.all([
       this.searchTags(term, locale),
       this.searchProfiles(term, locale, myProfileId),
       this.searchPosts(term, myProfileId),
-      this.searchLocations(term, myProfileId),
     ])
 
-    return { tags, profiles, posts, locations }
+    return { tags, profiles, posts }
   }
 
   // ── Tags ────────────────────────────────────────────────────────────
@@ -164,6 +159,10 @@ export class SearchService {
         id: true,
         type: true,
         content: true,
+        country: true,
+        cityName: true,
+        lat: true,
+        lon: true,
         postedBy: {
           select: {
             id: true,
@@ -176,61 +175,5 @@ export class SearchService {
 
     const byId = new Map(posts.map((p) => [p.id, p]))
     return rows.map((r) => byId.get(r.id)).filter((p): p is (typeof posts)[number] => Boolean(p))
-  }
-
-  // ── Locations (distinct cities across Profile + Post) ───────────────
-  private async searchLocations(term: string, myProfileId: string): Promise<LocationDTO[]> {
-    const [profileRows, postRows] = await Promise.all([
-      prisma.profile.findMany({
-        where: {
-          cityName: { contains: term, mode: 'insensitive' },
-          isActive: true,
-          isOnboarded: true,
-          isSocialActive: true,
-          ...blocklistWhereClause(myProfileId),
-        },
-        select: { cityName: true, country: true, lat: true, lon: true },
-        // Deterministic order so dedupe + per-category cap are stable
-        // across calls (the first row wins for each city key).
-        orderBy: { cityName: 'asc' },
-        take: 50,
-      }),
-      prisma.post.findMany({
-        where: {
-          cityName: { contains: term, mode: 'insensitive' },
-          isVisible: true,
-          isDeleted: false,
-          postedBy: {
-            is: {
-              isActive: true,
-              isOnboarded: true,
-              isSocialActive: true,
-              ...blocklistWhereClause(myProfileId),
-            },
-          },
-        },
-        select: { cityName: true, country: true, lat: true, lon: true },
-        orderBy: { cityName: 'asc' },
-        take: 50,
-      }),
-    ])
-
-    const seen = new Set<string>()
-    const out: LocationDTO[] = []
-    for (const row of [...profileRows, ...postRows]) {
-      const city = row.cityName ?? ''
-      if (!city) continue
-      const key = city.toLowerCase()
-      if (seen.has(key)) continue
-      seen.add(key)
-      out.push({
-        country: row.country ?? '',
-        cityName: city,
-        lat: row.lat ?? null,
-        lon: row.lon ?? null,
-      })
-      if (out.length >= SEARCH_LOCATION_LIMIT) break
-    }
-    return out
   }
 }

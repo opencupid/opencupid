@@ -35,6 +35,10 @@ export const messageWithSenderInclude = {
     select: {
       id: true,
       publicName: true,
+      country: true,
+      cityName: true,
+      lat: true,
+      lon: true,
       profileImages: {
         orderBy: { position: 'asc' },
       },

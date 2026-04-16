@@ -33,6 +33,10 @@ export const DbMinimalProfileSchema = z.object({
   id: z.string(),
   publicName: z.string(),
   profileImages: z.array(z.object({ storagePath: z.string() })),
+  country: z.string().nullable().optional(),
+  cityName: z.string().nullable().optional(),
+  lat: z.number().nullable().optional(),
+  lon: z.number().nullable().optional(),
 })
 export type DbProfileSummary = z.infer<typeof DbMinimalProfileSchema>
 

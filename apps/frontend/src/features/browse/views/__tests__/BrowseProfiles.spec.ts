@@ -61,8 +61,8 @@ vi.mock('../../components/SearchBar.vue', () => ({
   },
 }))
 
-vi.mock('@/features/browse/stores/browseFiltersStore', () => ({
-  useBrowseFiltersStore: () => ({
+vi.mock('@/features/browse/stores/searchStore', () => ({
+  useSearchStore: () => ({
     selectedTagIds: ref<string[]>([]),
     toggleTag: vi.fn(),
     setTags: vi.fn(),

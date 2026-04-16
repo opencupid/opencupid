@@ -142,6 +142,7 @@ export const ProfileSummarySchema = z.object({
   id: z.string(),
   publicName: z.string(),
   profileImages: z.array(PublicProfileImageSchema),
+  location: LocationSchema,
 })
 
 export type ProfileSummary = z.infer<typeof ProfileSummarySchema>

@@ -35,6 +35,7 @@ vi.mock('../../api/mappers/profile.mappers', () => ({
     id: p.id,
     publicName: p.publicName,
     profileImages: p.profileImages,
+    location: p.location ?? { country: '' },
   })),
   mapProfileWithContext: vi.fn((db, _dating, _locale) => ({
     id: db.id,

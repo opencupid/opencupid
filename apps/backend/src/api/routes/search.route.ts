@@ -12,8 +12,8 @@ const searchRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * GET /search?q=<query>
-   * Returns results grouped by content kind: tags, profiles, posts, locations.
-   * All four queries run in parallel. Below the minimum query length the
+   * Returns results grouped by content kind: tags, profiles, posts.
+   * All three queries run in parallel. Below the minimum query length the
    * endpoint short-circuits with empty arrays.
    */
   fastify.get('/', { onRequest: [fastify.authenticate] }, async (req, reply) => {
@@ -29,14 +29,13 @@ const searchRoutes: FastifyPluginAsync = async (fastify) => {
     const { lang, profileId } = req.session
 
     try {
-      const { tags, profiles, posts, locations } = await searchService.search(q, lang, profileId)
+      const { tags, profiles, posts } = await searchService.search(q, lang, profileId)
 
       const response: SearchResponse = {
         success: true,
         tags: tags.map((t) => DbTagToPublicTagTransform(t, lang)),
         profiles: profiles.map(mapProfileSummary),
         posts: posts.map(mapPostSummary),
-        locations,
       }
       return reply.code(200).send(response)
     } catch (err) {

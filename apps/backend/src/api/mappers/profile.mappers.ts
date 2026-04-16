@@ -117,6 +117,12 @@ export function mapProfileSummary(profile: DbProfileSummary): ProfileSummary {
     id: profile.id,
     publicName: profile.publicName,
     profileImages: profile?.profileImages.map(toPublicProfileImage),
+    location: DbLocationToLocationDTO({
+      country: profile.country ?? null,
+      cityName: profile.cityName ?? null,
+      lat: profile.lat ?? null,
+      lon: profile.lon ?? null,
+    }),
   }
 }
 

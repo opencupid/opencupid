@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useGeocoder } from '../composables/useGeocoder'
 import type { GeocodingResult } from '../types'
 
@@ -12,6 +12,27 @@ export const useGeocodingStore = defineStore('geocoding', () => {
 
   const results = ref<GeocodingResult[]>([])
   const isLoading = ref(false)
+
+  async function searchNearby(
+    country: string,
+    query: string,
+    lang: string,
+    take: number = 5
+  ): Promise<GeocodingResult[]> {
+    await search(query, lang)
+    const preferred = country.toUpperCase()
+    // Stable sort: entries already ranked by exact-name match in search(),
+    // here we only promote in-country matches to the top without disturbing
+    // that secondary order.
+    results.value = [...results.value]
+      .sort(
+        (a, b) =>
+          Number(a.country.toUpperCase() !== preferred) -
+          Number(b.country.toUpperCase() !== preferred)
+      )
+      .slice(0, take)
+    return results.value
+  }
 
   async function search(query: string, lang: string): Promise<GeocodingResult[]> {
     if (!query) {
@@ -53,5 +74,14 @@ export const useGeocodingStore = defineStore('geocoding', () => {
     }
   }
 
-  return { results, isLoading, search }
+  function clear() {
+    _abortController?.abort()
+    _abortController = null
+    results.value = []
+    isLoading.value = false
+  }
+
+  const hasResults = computed(() => results.value.length > 0)
+
+  return { results, isLoading, hasResults, search, searchNearby, clear }
 })

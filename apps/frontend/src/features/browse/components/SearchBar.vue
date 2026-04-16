@@ -1,109 +1,198 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { onClickOutside } from '@vueuse/core'
 
-import LocationFilterInput from '@/features/shared/profileform/LocationFilterInput.vue'
 import SelectableTagList from './SelectableTagList.vue'
+import SearchInput from './SearchInput.vue'
+import SearchRefiners from './SearchRefiners.vue'
+import SearchMatches from './SearchMatches.vue'
+import IconHome from '@/assets/icons/interface/home.svg'
 
 import type { LocationDTO, GeoPoint } from '@zod/dto/location.dto'
-import type { OwnerProfile } from '@zod/profile/profile.dto'
+import type { OwnerProfile, ProfileSummary } from '@zod/profile/profile.dto'
 import type { PublicTag } from '@zod/tag/tag.dto'
-import { useBrowseFiltersStore } from '@/features/browse/stores/browseFiltersStore'
+import type { PostSummary } from '@zod/post/post.dto'
+import { SEARCH_MIN_QUERY_LENGTH } from '@zod/search/search.dto'
 
-defineProps<{
+import { useSearchStore } from '@/features/browse/stores/searchStore'
+import { useGeocodingStore } from '@/features/geocoding/stores/geocodingStore'
+import { useI18n } from 'vue-i18n'
+import { toGeoPoint } from '../../map/utils/mapUtils'
+
+const props = defineProps<{
   viewerProfile: OwnerProfile | null
   /** Tags available in the current map bounds (from /browse/bounds) */
   availableTags?: PublicTag[]
 }>()
 
 const emit = defineEmits<{
-  /**
-   * Emitted when the user picks a location from the selector.
-   */
   'location:set': [point: GeoPoint]
+  'profile:select': [profile: ProfileSummary]
+  'post:select': [post: PostSummary]
 }>()
 
-const filtersStore = useBrowseFiltersStore()
-const { selectedTags } = storeToRefs(filtersStore)
+const searchStore = useSearchStore()
+const geocodingStore = useGeocodingStore()
+const {
+  selectedTags,
+  searchResults,
+  isLoading: searchLoading,
+  hasResults: searchHasResults,
+} = storeToRefs(searchStore)
+const {
+  results: geocodedLocations,
+  isLoading: geocodingLoading,
+  hasResults: geocodingHasResults,
+} = storeToRefs(geocodingStore)
+const { locale } = useI18n()
 
-// Drives the LocationSelector's display text only; never read back.
-const locationModel = ref<LocationDTO>({ country: '' })
+const pillRef = ref<HTMLElement | null>(null)
+const searchQuery = ref('')
 
 const panelOpen = ref(false)
-const pillRef = ref<HTMLElement | null>(null)
+
+const isLoading = computed(() => searchLoading.value || geocodingLoading.value)
+const haveResults = computed(() => searchHasResults.value || geocodingHasResults.value)
 
 onClickOutside(pillRef, closePanel)
-
-function openPanel() {
-  panelOpen.value = true
-}
 
 function closePanel() {
   panelOpen.value = false
 }
 
-function togglePanel() {
-  panelOpen.value = !panelOpen.value
+function openPanel() {
+  if (!haveResults.value) return
+  panelOpen.value = true
 }
 
-function onLocationSet(point: GeoPoint) {
+function handleSetLocationHome() {
+  const point = toGeoPoint(props.viewerProfile?.location)
+  if (point) emit('location:set', point)
+}
+
+function onSelectLocation(location: LocationDTO) {
+  const point = toGeoPoint(location)
+  if (!point) return
   selectedTags.value = []
   emit('location:set', point)
+  geocodingStore.clear()
 }
+
+function onSelectTag(tag: PublicTag) {
+  selectedTags.value = [tag]
+}
+
+function onSelectProfile(profile: ProfileSummary) {
+  const point = toGeoPoint(profile.location)
+  if (point) emit('location:set', point)
+  emit('profile:select', profile)
+}
+
+function onSelectPost(post: PostSummary) {
+  const point = toGeoPoint(post.location)
+  if (point) emit('location:set', point)
+  emit('post:select', post)
+}
+
+const isSearchMatchesEmpty = computed(
+  () => !searchResults.value?.profiles.length && !searchResults.value?.posts.length
+)
+
+watch(searchQuery, (query) => {
+  if (query.trim().length < SEARCH_MIN_QUERY_LENGTH) {
+    searchStore.searchResults = null
+    geocodingStore.clear()
+    return
+  }
+  // Fire both searches in parallel — each store owns its own abort controller,
+  // so rapid re-typing cancels prior in-flight requests on both sides.
+  searchStore.search(query)
+  geocodingStore.searchNearby(props.viewerProfile?.location?.country ?? '', query, locale.value, 5)
+})
+
+watch(haveResults, () => {
+  if (!panelOpen.value) panelOpen.value = true
+})
 </script>
 
 <template>
   <div
-    class="search-bar position-relative w-100"
+    class="search-bar position-relative col-12 col-md-8 col-lg-6"
     :class="{ 'search-bar--open': panelOpen }"
     @click.stop
   >
     <div
       ref="pillRef"
       class="search-bar__pill w-100 position-relative d-flex flex-row align-items-center border"
-      @click="togglePanel"
+      @click="openPanel"
     >
-      <div class="search-bar__field search-bar__field--location">
-        <LocationFilterInput
-          v-model="locationModel"
-          :viewer-profile="viewerProfile"
-          @location:set="onLocationSet"
+      <div class="d-flex align-items-center gap-1 flex-grow-1 min-w-0">
+        <SearchInput
+          v-model="searchQuery"
+          class="flex-grow-1 flex-shrink-1 min-w-0"
         />
-      </div>
-      <div
-        class="search-bar__divider"
-        aria-hidden="true"
-      />
-      <div class="search-bar__field search-bar__field--tags">
+
         <SelectableTagList
           :tags="selectedTags"
           removable
           @remove="selectedTags = []"
+          class="flex-grow-0 flex-shrink-0"
         />
+        <BButton
+          variant="link-secondary"
+          size="sm"
+          class="mx-1 p-0 flex-grow-0 flex-shrink-0"
+          :title="$t('profiles.browse.filters.locate_button_title')"
+          @click.stop="handleSetLocationHome"
+        >
+          <IconHome class="svg-icon-md" />
+        </BButton>
       </div>
     </div>
     <div
-      class="search-bar__panel position-absolute overflow-y-auto overflow-x-hidden w-100 left-0 top-100 z-1 px-1 pt-1 pb-2"
+      class="search-bar__panels position-absolute w-100 left-0 top-100 z-1 d-flex flex-column gap-2"
       :class="panelOpen ? '' : 'pointer-events-none'"
       :aria-hidden="panelOpen ? 'false' : 'true'"
     >
-      <SelectableTagList
-        :tags="availableTags ?? []"
-        selectable
-        @select="selectedTags = [$event]"
-      />
+      <div class="search-bar__refiners shadow">
+        <SearchRefiners
+          :tags="searchResults?.tags ?? []"
+          :geocoded-locations="geocodedLocations"
+          :isLoading="isLoading"
+          @location:select="onSelectLocation"
+          @tag:select="onSelectTag"
+        />
+      </div>
+      <div
+        class="search-bar__matches py-2 shadow"
+        v-if="!isSearchMatchesEmpty"
+      >
+        <SearchMatches
+          :profiles="searchResults?.profiles ?? []"
+          :posts="searchResults?.posts ?? []"
+          @profile:select="onSelectProfile"
+          @post:select="onSelectPost"
+        />
+      </div>
     </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
+@import 'bootstrap/scss/functions';
+@import 'bootstrap/scss/variables';
+@import 'bootstrap/scss/mixins/breakpoints';
+
 $pill-radius: 28px;
-$panel-height: 30vh;
+// Generous wrapper cap — children set their own heights; the wrapper
+// just needs room to hold the tallest possible combined stack. `dvh`
+// (dynamic viewport height) accounts for mobile browser URL-bar chrome.
+$panels-max: calc(100dvh - 6rem);
 
 .search-bar__pill {
   z-index: 2;
-  background-color: var(--bs-body-bg, #fff);
+  background-color: var(--bs-body-bg);
   border-radius: $pill-radius;
   box-shadow:
     0 1px 2px rgba(0, 0, 0, 0.08),
@@ -122,83 +211,69 @@ $panel-height: 30vh;
   }
 }
 
-.search-bar__panel {
-  height: 0;
+// Shared visual treatment for both panels — bg, border, shadow.
+// Responsive vh sizing: panels claim more viewport on small screens
+// (where absolute pixel space is scarce) and relax on larger screens
+// where 30vh already yields plenty of pixels.
+.search-bar__refiners,
+.search-bar__matches {
   background-color: var(--bs-body-bg);
-  border-bottom-left-radius: $pill-radius;
-  border-bottom-right-radius: $pill-radius;
-  opacity: 0;
-  transform: translateY(-4px);
-  transition:
-    opacity 0.15s ease,
-    height 0.15s ease,
-    transform 0.15s ease;
+  border: 1px solid var(--bs-border-color, rgba(0, 0, 0, 0.1));
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    0 4px 12px rgba(0, 0, 0, 0.06);
 
-  .search-bar--open & {
-    height: $panel-height;
-    opacity: 1;
-    transform: translateY(0);
-    border: 1px solid var(--bs-border-color, rgba(0, 0, 0, 0.1));
-    border-top: none;
-    box-shadow:
-      0 1px 2px rgba(0, 0, 0, 0.1),
-      0 4px 12px rgba(0, 0, 0, 0.06);
+  min-height: 4rem;
+  max-height: 45dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  @include media-breakpoint-up(md) {
+    max-height: 40dvh;
+  }
+  @include media-breakpoint-up(lg) {
+    max-height: 35dvh;
   }
 }
 
-.search-bar__field {
-  flex: 1 1 0;
-  min-width: 0;
+// Refiners fuse with the pill: flat top, rounded bottom, no top border.
+.search-bar__refiners {
+  border-top: none;
+  border-bottom-left-radius: 1rem;
+  border-bottom-right-radius: 1rem;
 }
 
-.search-bar__divider {
-  flex: 0 0 1px;
-  align-self: stretch;
-  margin: 0.5rem 0.5rem;
-  background-color: var(--bs-border-color, rgba(0, 0, 0, 0.1));
+// Matches floats below with its own fully-rounded card look.
+.search-bar__matches {
+  border-radius: 1rem;
 }
 
-// Strip the multiselect inputs of their own borders/background so the
-// outer pill is the only visible frame. Targets vue-multiselect's
-// stable class names, including the --active state which re-applies
-// top/bottom borders when the dropdown opens.
-:deep(.multiselect__tags),
-:deep(.multiselect--active .multiselect__tags),
-:deep(.multiselect--above.multiselect--active .multiselect__tags) {
-  border: none;
-  background: transparent;
-  min-height: 38px;
-  padding-top: 8px;
-  padding-bottom: 0;
+// Invisible wrapper — only handles open/close transition + positioning.
+// Visual treatment (bg, border, radius, shadow) lives in SearchPanel.vue
+// so each child is a distinct, separable surface.
+.search-bar__panels {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-4px);
+  overflow: hidden;
+  transition:
+    opacity 0.15s ease-in-out,
+    max-height 0.15s ease-in-out,
+    transform 0.15s ease-in-out;
+
+  .search-bar--open & {
+    max-height: $panels-max;
+    opacity: 1;
+    transform: translateY(0);
+    overflow: visible;
+  }
 }
 
-:deep(.multiselect__single),
-:deep(.multiselect__input) {
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  outline: none;
-}
-
-:deep(.multiselect__input:focus),
-:deep(.multiselect__input:focus-visible) {
-  outline: none;
-  box-shadow: none;
-}
-
-:deep(.multiselect),
-:deep(.multiselect:focus),
-:deep(.multiselect--active),
-:deep(.multiselect--active .multiselect__content-wrapper) {
-  box-shadow: none;
-  outline: none;
-  border: none;
-}
-
-// The "use my profile location" button sits inline with the location
-// input; tighten its margin so it reads as part of the pill, not a
-// floating affordance.
-:deep(.location-selector) {
-  width: 100%;
+:deep(.input-group) {
+  .form-control {
+    border: none;
+    background: transparent;
+    box-shadow: none;
+  }
 }
 </style>

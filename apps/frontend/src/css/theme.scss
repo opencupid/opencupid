@@ -58,6 +58,7 @@ $social: #325d88; // Sandstone blue
 $dating: #d9534f; // Sandstone red
 $dating-light: lighten($dating, 30%);
 $tag: #b8860b; // Muted goldenrod — tags/interests
+$post-it: #fff4a3; // Sticky-note yellow
 
 $theme-colors: map-merge(
   $theme-colors,
@@ -66,6 +67,7 @@ $theme-colors: map-merge(
     'dating-light': $dating-light,
     'social': $social,
     'tag': $tag,
+    'post-it': $post-it,
   )
 );
 

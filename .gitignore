@@ -52,3 +52,4 @@ certs/
 .codex/
 .cursor/
 .vscode/mcp.json
+.vscode/settings.json

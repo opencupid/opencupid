@@ -51,11 +51,6 @@ beforeEach(async () => {
 
   mockTagSearch = vi.fn().mockResolvedValue([])
 
-  // Default both location queries to empty so tests that don't exercise
-  // locations don't crash on the spread.
-  mockPrisma.profile.findMany.mockResolvedValue([])
-  mockPrisma.post.findMany.mockResolvedValue([])
-
   vi.doMock('../../lib/prisma', () => ({ prisma: mockPrisma }))
   vi.doMock('../../services/tag.service', () => ({
     TagService: {
@@ -71,7 +66,7 @@ beforeEach(async () => {
 describe('SearchService.search — short-circuit', () => {
   it('returns empty arrays for queries shorter than the minimum length', async () => {
     const result = await service.search('a', 'en', 'me')
-    expect(result).toEqual({ tags: [], profiles: [], posts: [], locations: [] })
+    expect(result).toEqual({ tags: [], profiles: [], posts: [] })
     expect(mockTagSearch).not.toHaveBeenCalled()
     expect(mockPrisma.$queryRaw).not.toHaveBeenCalled()
   })
@@ -199,83 +194,5 @@ describe('SearchService.search — posts (trigram)', () => {
       ([arg]: [any]) => arg?.where?.id?.in !== undefined
     )
     expect(hydrationCalls).toHaveLength(0)
-  })
-})
-
-describe('SearchService.search — locations', () => {
-  it('dedupes by case-insensitive city name across profile + post sources', async () => {
-    mockPrisma.profile.findMany.mockResolvedValue([
-      { cityName: 'Budapest', country: 'HU', lat: 47.5, lon: 19.0 },
-      { cityName: 'budapest', country: 'HU', lat: 47.5, lon: 19.0 }, // dupe
-    ])
-    mockPrisma.post.findMany.mockResolvedValue([
-      { cityName: 'Budaörs', country: 'HU', lat: 47.46, lon: 18.96 },
-      { cityName: 'Budapest', country: 'HU', lat: 47.5, lon: 19.0 }, // dupe
-    ])
-
-    const result = await service.search('buda', 'en', 'me')
-
-    expect(result.locations.map((l: any) => l.cityName)).toEqual(['Budapest', 'Budaörs'])
-  })
-
-  it('drops rows without a city name', async () => {
-    mockPrisma.profile.findMany.mockResolvedValue([
-      { cityName: '', country: 'HU', lat: null, lon: null },
-      { cityName: null, country: 'HU', lat: null, lon: null },
-      { cityName: 'Győr', country: 'HU', lat: 47.68, lon: 17.63 },
-    ])
-    mockPrisma.post.findMany.mockResolvedValue([])
-
-    const result = await service.search('gyo', 'en', 'me')
-
-    expect(result.locations.map((l: any) => l.cityName)).toEqual(['Győr'])
-  })
-
-  it('caps locations at the per-category limit', async () => {
-    const many = Array.from({ length: 10 }, (_, i) => ({
-      cityName: `City${i}`,
-      country: 'HU',
-      lat: null,
-      lon: null,
-    }))
-    mockPrisma.profile.findMany.mockResolvedValue(many)
-    mockPrisma.post.findMany.mockResolvedValue([])
-
-    const result = await service.search('city', 'en', 'me')
-
-    expect(result.locations).toHaveLength(5)
-  })
-
-  it('surfaces locations even when tag/profile/post queries are empty', async () => {
-    mockPrisma.profile.findMany.mockResolvedValue([
-      { cityName: 'Budapest', country: 'HU', lat: 47.5, lon: 19.0 },
-    ])
-    mockPrisma.post.findMany.mockResolvedValue([])
-
-    const result = await service.search('buda', 'en', 'me')
-
-    expect(result.tags).toEqual([])
-    expect(result.profiles).toEqual([])
-    expect(result.posts).toEqual([])
-    expect(result.locations).toHaveLength(1)
-  })
-
-  it('sorts both location queries by cityName for deterministic dedupe', async () => {
-    mockPrisma.profile.findMany.mockResolvedValue([])
-    mockPrisma.post.findMany.mockResolvedValue([])
-
-    await service.search('buda', 'en', 'me')
-
-    // The location findMany calls use `where: { cityName: {...} }`; the
-    // hydration calls use `where: { id: { in: [...] } }`. Pick the former.
-    const locationCalls = [
-      ...mockPrisma.profile.findMany.mock.calls,
-      ...mockPrisma.post.findMany.mock.calls,
-    ].filter(([arg]: [any]) => arg?.where?.cityName !== undefined)
-
-    expect(locationCalls).toHaveLength(2)
-    for (const [arg] of locationCalls) {
-      expect(arg.orderBy).toEqual({ cityName: 'asc' })
-    }
   })
 })

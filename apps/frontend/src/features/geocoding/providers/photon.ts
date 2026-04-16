@@ -14,7 +14,7 @@ export const searchPhoton: GeocodingProvider = async (query, lang, signal?) => {
   const params = new URLSearchParams()
   params.set('q', query)
   params.set('lang', SUPPORTED_LANGS.includes(lang) ? lang : 'en')
-  params.set('limit', '10')
+  params.set('limit', '50')
   for (const tag of OSM_TAG_FILTERS) {
     params.append('osm_tag', tag)
   }

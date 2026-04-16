@@ -291,6 +291,10 @@ describe('MessageService.listMessagesForConversation', () => {
           select: {
             id: true,
             publicName: true,
+            country: true,
+            cityName: true,
+            lat: true,
+            lon: true,
             profileImages: { orderBy: { position: 'asc' } },
           },
         },
