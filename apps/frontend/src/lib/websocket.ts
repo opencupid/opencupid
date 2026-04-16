@@ -7,8 +7,10 @@ import type { WsTicketResponse } from '@zod/apiResponse.dto'
 let socket: ReturnType<typeof useWebSocket> | null = null
 let ticketUrl = ''
 let isIntentionalClose = false
+let wasConnected = false
 
 bus.on('auth:logout', () => {
+  wasConnected = false
   disconnectWebSocket()
 })
 
@@ -16,6 +18,18 @@ bus.on('api:online', async () => {
   // Reconnect WebSocket when the API comes back online after an outage,
   // unless the user explicitly logged out.
   if (!isIntentionalClose && socket?.status.value !== 'OPEN') {
+    await connectWebSocket()
+  }
+})
+
+bus.on('app:hidden', () => {
+  if (wasConnected) {
+    disconnectWebSocket()
+  }
+})
+
+bus.on('app:visible', async () => {
+  if (wasConnected && (!socket || socket.status.value !== 'OPEN')) {
     await connectWebSocket()
   }
 })
@@ -77,6 +91,7 @@ export async function connectWebSocket(): Promise<void> {
       }
     },
   })
+  wasConnected = true
 }
 
 export function disconnectWebSocket() {

@@ -202,4 +202,82 @@ describe('websocket', () => {
 
     expect(mockApiGet).not.toHaveBeenCalled()
   })
+
+  // ── visibility-driven lifecycle ─────────────────────────────────────
+
+  it('disconnects WebSocket on app:hidden', async () => {
+    await connectWebSocket()
+    mockClose.mockClear()
+
+    const handler = getBusHandler('app:hidden')
+    expect(handler).toBeDefined()
+    handler!()
+
+    expect(mockClose).toHaveBeenCalled()
+  })
+
+  it('does NOT fetch ticket on disconnect triggered by app:hidden', async () => {
+    await connectWebSocket()
+    mockApiGet.mockClear()
+
+    const hiddenHandler = getBusHandler('app:hidden')
+    hiddenHandler!()
+
+    // Simulate onDisconnected firing after close
+    const options = wsOptions()
+    const onDisconnected = options.onDisconnected as () => void
+    onDisconnected()
+
+    await Promise.resolve()
+    await Promise.resolve()
+
+    // fetchTicketUrl should NOT have been called because isIntentionalClose is true
+    expect(mockApiGet).not.toHaveBeenCalled()
+  })
+
+  it('reconnects WebSocket on app:visible if was previously connected', async () => {
+    await connectWebSocket()
+    mockApiGet.mockClear()
+    mockApiGet.mockResolvedValue({ data: { ticket: 'ticket-resume' } })
+
+    // Go hidden then visible
+    const hiddenHandler = getBusHandler('app:hidden')
+    hiddenHandler!()
+
+    const visibleHandler = getBusHandler('app:visible')
+    await visibleHandler!()
+
+    expect(mockApiGet).toHaveBeenCalledWith('/auth/ws-ticket')
+    // Two total: initial + reconnect after visibility
+    expect(mockUseWebSocket).toHaveBeenCalledTimes(2)
+  })
+
+  it('does NOT reconnect on app:visible if never connected', async () => {
+    // No prior connectWebSocket() call
+
+    const visibleHandler = getBusHandler('app:visible')
+    expect(visibleHandler).toBeDefined()
+    await visibleHandler!()
+
+    expect(mockApiGet).not.toHaveBeenCalled()
+  })
+
+  it('does NOT reconnect on app:visible after auth:logout', async () => {
+    await connectWebSocket()
+
+    // Simulate logout
+    const logoutHandler = getBusHandler('auth:logout')
+    logoutHandler!()
+
+    mockApiGet.mockClear()
+
+    // Go hidden then visible
+    const hiddenHandler = getBusHandler('app:hidden')
+    hiddenHandler!()
+
+    const visibleHandler = getBusHandler('app:visible')
+    await visibleHandler!()
+
+    expect(mockApiGet).not.toHaveBeenCalled()
+  })
 })
