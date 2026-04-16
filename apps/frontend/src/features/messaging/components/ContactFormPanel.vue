@@ -114,9 +114,9 @@ defineExpose({
           class="svg-icon-lg w-100 h-100"
         />
       </div>
-      <h1 class="text-center mb-0">
+      <p class="fs-5 text-center mb-0">
         {{ $t('messaging.message_sent_success') }}
-      </h1>
+      </p>
     </div>
 
     <!-- 2. Waiting for reply — viewer already initiated contact -->
