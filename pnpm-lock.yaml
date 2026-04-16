@@ -13,9 +13,6 @@ overrides:
   zod-to-json-schema: 3.24.5
 
 patchedDependencies:
-  '@takuma-ru/vue-swipe-modal@5.0.5':
-    hash: 16009e3b612984036dd4af8844dadf2aba2adbee11d599e967ad273a5cf48242
-    path: patches/@takuma-ru__vue-swipe-modal@5.0.5.patch
   vite-plugin-vue-mcp@0.3.2:
     hash: dd13284f0cd754ccb9ad4729b917019774e9fc64a677f6d7c79a03b0fec57ca2
     path: patches/vite-plugin-vue-mcp@0.3.2.patch
@@ -375,9 +372,6 @@ importers:
       '@sentry/vue':
         specifier: 9.36.0
         version: 9.36.0(pinia@3.0.4(typescript@5.9.3)(vue@3.5.28(typescript@5.9.3)))(vue@3.5.28(typescript@5.9.3))
-      '@takuma-ru/vue-swipe-modal':
-        specifier: ^5.0.5
-        version: 5.0.5(patch_hash=16009e3b612984036dd4af8844dadf2aba2adbee11d599e967ad273a5cf48242)(vue@3.5.28(typescript@5.9.3))
       '@tolgee/format-icu':
         specifier: ^6.4.0
         version: 6.4.0
@@ -649,6 +643,8 @@ importers:
       vue-tsc:
         specifier: 3.2.5
         version: 3.2.5(typescript@5.9.3)
+
+  apps/ingress: {}
 
   packages/shared:
     devDependencies:
@@ -2678,11 +2674,6 @@ packages:
   '@stomp/stompjs@7.3.0':
     resolution: {integrity: sha512-nKMLoFfJhrQAqkvvKd1vLq/cVBGCMwPRCD0LqW7UT1fecRx9C3GoKEIR2CYwVuErGeZu8w0kFkl2rlhPlqHVgQ==}
 
-  '@takuma-ru/vue-swipe-modal@5.0.5':
-    resolution: {integrity: sha512-KCEiCHU0sc0z+NKMY0pWYUYcLiicsUeVrlqFc3lv9juQO/fiUgB5tOuG9iN0jM0eJ7uVEUbcAYN21emmbvbqsQ==}
-    peerDependencies:
-      vue: 3.5.28
-
   '@tensorflow-models/blazeface@0.1.0':
     resolution: {integrity: sha512-Qc5Wii8/OE5beC7XfehkhF9SEFLaPbVKnxxalV0T9JXsUynXqvLommc9Eko7b8zXKy4SJ1BtVlcX2cmCzQrn9A==}
     peerDependencies:
@@ -2932,9 +2923,6 @@ packages:
 
   '@types/trusted-types@2.0.7':
     resolution: {integrity: sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw==}
-
-  '@types/web-bluetooth@0.0.20':
-    resolution: {integrity: sha512-g9gZnnXVq7gM7v3tJCWV/qw7w+KeOlSHAhgF9RytFyifW6AF61hdT2ucrYhPq9hLs5JIryeupHV3qGk95dH9ow==}
 
   '@types/web-bluetooth@0.0.21':
     resolution: {integrity: sha512-oIQLCGWtcFZy2JW77j9k8nHzAOpqMHLQejDA48XXMWH6tjCQHz5RCFz1bzsmROyL6PUm+LLnUiI4BCn221inxA==}
@@ -3274,9 +3262,6 @@ packages:
     peerDependencies:
       vue: 3.5.28
 
-  '@vueuse/core@10.11.1':
-    resolution: {integrity: sha512-guoy26JQktXPcz+0n3GukWIy/JDNKti9v6VEMu6kV2sYBsWuGiTU8OWdg+ADfUbHg3/3DlqySDe7JmdHrktiww==}
-
   '@vueuse/core@14.2.1':
     resolution: {integrity: sha512-3vwDzV+GDUNpdegRY6kzpLm4Igptq+GA0QkJ3W61Iv27YWwW/ufSlOfgQIpN6FZRMG0mkaz4gglJRtq5SeJyIQ==}
     peerDependencies:
@@ -3324,14 +3309,8 @@ packages:
       universal-cookie:
         optional: true
 
-  '@vueuse/metadata@10.11.1':
-    resolution: {integrity: sha512-IGa5FXd003Ug1qAZmyE8wF3sJ81xGLSqTqtQ6jaVfkeZ4i5kS2mwQF61yhVqojRnenVew5PldLyRgvdl4YYuSw==}
-
   '@vueuse/metadata@14.2.1':
     resolution: {integrity: sha512-1ButlVtj5Sb/HDtIy1HFr1VqCP4G6Ypqt5MAo0lCgjokrk2mvQKsK2uuy0vqu/Ks+sHfuHo0B9Y9jn9xKdjZsw==}
-
-  '@vueuse/shared@10.11.1':
-    resolution: {integrity: sha512-LHpC8711VFZlDaYUXEBbFBCQ7GS3dVU9mjOhhMhXP6txTV4EhYQg/KGnQuvt/sPAtoUKq7VVUnL6mVtFoL42sA==}
 
   '@vueuse/shared@14.2.1':
     resolution: {integrity: sha512-shTJncjV9JTI4oVNyF1FQonetYAiTBd+Qj7cY89SWbXSkx7gyhrgtEdF2ZAVWS1S3SHlaROO6F2IesJxQEkZBw==}
@@ -7801,17 +7780,6 @@ packages:
   vue-component-type-helpers@2.2.12:
     resolution: {integrity: sha512-YbGqHZ5/eW4SnkPNR44mKVc6ZKQoRs/Rux1sxC6rdwXb4qpbOSYfDr9DsTHolOTGmIKgM9j141mZbBeg05R1pw==}
 
-  vue-demi@0.14.10:
-    resolution: {integrity: sha512-nMZBOwuzabUO0nLgIcc6rycZEebF6eeUfaiQx9+WSk8e29IbLvPU9feI6tqW4kTo3hvoYAJkMh8n8D0fuISphg==}
-    engines: {node: '>=12'}
-    hasBin: true
-    peerDependencies:
-      '@vue/composition-api': ^1.0.0-rc.1
-      vue: 3.5.28
-    peerDependenciesMeta:
-      '@vue/composition-api':
-        optional: true
-
   vue-draggable-next@2.3.0:
     resolution: {integrity: sha512-ymbY0UIwfSdg0iDN/iyNNwUrTqZ/6KbPryzsvTNXBLuDCuOBdNijSK8yynNtmiSj6RapTPQfjLGQdJrZkzBd2w==}
     peerDependencies:
@@ -10186,14 +10154,6 @@ snapshots:
 
   '@stomp/stompjs@7.3.0': {}
 
-  '@takuma-ru/vue-swipe-modal@5.0.5(patch_hash=16009e3b612984036dd4af8844dadf2aba2adbee11d599e967ad273a5cf48242)(vue@3.5.28(typescript@5.9.3))':
-    dependencies:
-      '@vueuse/core': 10.11.1(vue@3.5.28(typescript@5.9.3))
-      consola: 3.4.2
-      vue: 3.5.28(typescript@5.9.3)
-    transitivePeerDependencies:
-      - '@vue/composition-api'
-
   '@tensorflow-models/blazeface@0.1.0(@tensorflow/tfjs-converter@4.22.0(@tensorflow/tfjs-core@4.22.0))(@tensorflow/tfjs-core@4.22.0)':
     dependencies:
       '@tensorflow/tfjs-converter': 4.22.0(@tensorflow/tfjs-core@4.22.0)
@@ -10480,8 +10440,6 @@ snapshots:
 
   '@types/trusted-types@2.0.7':
     optional: true
-
-  '@types/web-bluetooth@0.0.20': {}
 
   '@types/web-bluetooth@0.0.21': {}
 
@@ -10998,16 +10956,6 @@ snapshots:
       '@vueuse/shared': 14.2.1(vue@3.5.28(typescript@5.9.3))
       vue: 3.5.28(typescript@5.9.3)
 
-  '@vueuse/core@10.11.1(vue@3.5.28(typescript@5.9.3))':
-    dependencies:
-      '@types/web-bluetooth': 0.0.20
-      '@vueuse/metadata': 10.11.1
-      '@vueuse/shared': 10.11.1(vue@3.5.28(typescript@5.9.3))
-      vue-demi: 0.14.10(vue@3.5.28(typescript@5.9.3))
-    transitivePeerDependencies:
-      - '@vue/composition-api'
-      - vue
-
   '@vueuse/core@14.2.1(vue@3.5.28(typescript@5.9.3))':
     dependencies:
       '@types/web-bluetooth': 0.0.21
@@ -11026,16 +10974,7 @@ snapshots:
       sortablejs: 1.15.6
       universal-cookie: 8.0.1
 
-  '@vueuse/metadata@10.11.1': {}
-
   '@vueuse/metadata@14.2.1': {}
-
-  '@vueuse/shared@10.11.1(vue@3.5.28(typescript@5.9.3))':
-    dependencies:
-      vue-demi: 0.14.10(vue@3.5.28(typescript@5.9.3))
-    transitivePeerDependencies:
-      - '@vue/composition-api'
-      - vue
 
   '@vueuse/shared@14.2.1(vue@3.5.28(typescript@5.9.3))':
     dependencies:
@@ -15913,10 +15852,6 @@ snapshots:
       vue: 3.5.28(typescript@5.9.3)
 
   vue-component-type-helpers@2.2.12: {}
-
-  vue-demi@0.14.10(vue@3.5.28(typescript@5.9.3)):
-    dependencies:
-      vue: 3.5.28(typescript@5.9.3)
 
   vue-draggable-next@2.3.0(sortablejs@1.15.6)(vue@3.5.28(typescript@5.9.3)):
     dependencies:

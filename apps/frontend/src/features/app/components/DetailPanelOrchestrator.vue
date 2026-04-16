@@ -1,24 +1,22 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useMediaQuery } from '@vueuse/core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faCaretLeft } from '@fortawesome/free-solid-svg-icons'
 import { useDetailPanel } from '@/features/app/composables/useDetailPanel'
 import PanelContentWrapper from './PanelContentWrapper.vue'
-import { SwipeModal } from '@takuma-ru/vue-swipe-modal'
+import BottomSheet from './BottomSheet.vue'
 
 defineOptions({ name: 'DetailPanelOrchestrator' })
 
 const { isOpen, currentComponent, currentProps, close, notifyHidden } = useDetailPanel()
 const isMdUp = useMediaQuery('(min-width: 768px)')
-const placement = computed(() => (isMdUp.value ? 'start' : 'bottom'))
 </script>
 
 <template>
   <BOffcanvas
     v-if="isMdUp"
     v-model="isOpen"
-    :placement="placement"
+    placement="start"
     no-header
     class="detail-panel shadow-lg"
     body-class="p-0 overflow-hidden"
@@ -43,11 +41,10 @@ const placement = computed(() => (isMdUp.value ? 'start' : 'bottom'))
     </PanelContentWrapper>
   </BOffcanvas>
 
-  <SwipeModal
-    v-model="isOpen"
-    :snap-point="'75vh'"
-    :is-backdrop="true"
+  <BottomSheet
     v-else
+    v-model="isOpen"
+    @hidden="notifyHidden"
   >
     <PanelContentWrapper
       v-if="currentComponent"
@@ -58,43 +55,13 @@ const placement = computed(() => (isMdUp.value ? 'start' : 'bottom'))
         v-bind="currentProps"
       />
     </PanelContentWrapper>
-  </SwipeModal>
+  </BottomSheet>
 </template>
 
 <style lang="scss">
 @import 'bootstrap/scss/functions';
 @import 'bootstrap/scss/variables';
 @import 'bootstrap/scss/mixins';
-
-.detail-panel.offcanvas-bottom {
-  height: 100vh;
-}
-
-// Override vue-swipe-modal scoped dark defaults
-.modal-style {
-  background-color: $white !important;
-  color: $body-color !important;
-}
-
-// Keep SwipeModal below Bootstrap modals. Using :is-backdrop="false" makes
-// the library call dialog.show() instead of showModal(), which keeps it in
-// the normal stacking context rather than the browser's top layer.
-.swipe-modal {
-  z-index: $zindex-offcanvas !important;
-
-  // SwipeModal's internal scroll container (`.panel`) leaks horizontal overflow
-  // from descendants that use filter: drop-shadow or transform halos (e.g. the
-  // PostIt wrapper on /posts/:id). Clip the x-axis at the scroll parent so the
-  // halo is painted up to the edge without producing a scrollbar.
-  .panel {
-    overflow-x: hidden;
-  }
-}
-
-.swipe-modal::backdrop {
-  background-color: rgba(0, 0, 0, 0.3) !important;
-  backdrop-filter: none !important;
-}
 
 .drawer-close-tab {
   top: 50%;
