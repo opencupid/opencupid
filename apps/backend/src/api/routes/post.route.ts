@@ -12,6 +12,7 @@ import {
 } from '@zod/post/post.dto'
 import { rateLimitConfig, sendError } from '../helpers'
 import { PostService } from '@/services/post.service'
+import { ClusterService } from '@/services/cluster.service'
 import type {
   PostsResponse,
   CreatePostResponse,
@@ -22,6 +23,7 @@ import { mapDbPostToOwner, mapDbPostToPublic, mapDbPostToDetail } from '../mappe
 
 const postRoutes: FastifyPluginAsync = async (fastify) => {
   const postService = PostService.getInstance()
+  const clusterService = ClusterService.getInstance()
 
   /**
    * POST /
@@ -46,6 +48,7 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
 
       try {
         const created = await postService.create(profileId, data)
+        clusterService.evictAll()
         const post = mapDbPostToOwner(created)
         // TODO filter non-public fields
         const response: CreatePostResponse = { success: true, post }
@@ -114,6 +117,7 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
           return sendError(reply, 404, 'Post not found or access denied')
         }
 
+        clusterService.evictAll()
         const post = mapDbPostToOwner(raw)
         const response: UpdatePostResponse = { success: true, post }
         return reply.code(200).send(response)
@@ -150,6 +154,7 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
           return sendError(reply, 404, 'Post not found or access denied')
         }
 
+        clusterService.evictAll()
         const response: DeletePostResponse = { success: true }
         return reply.code(200).send(response)
       } catch (err: any) {

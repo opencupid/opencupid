@@ -205,6 +205,14 @@ export class ClusterService {
     }
   }
 
+  /**
+   * Evicts the entire cluster cache. Called when data visible to all viewers
+   * changes (e.g. a new post is created).
+   */
+  evictAll(): void {
+    this.indexes.clear()
+  }
+
   hasIndex(profileId: string, tagIds: string[] = []): boolean {
     return this.indexes.has(buildCacheKey(profileId, tagIds))
   }
