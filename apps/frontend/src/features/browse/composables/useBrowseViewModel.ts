@@ -2,19 +2,22 @@ import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import type { MapCluster, MapPoi, BoundsWithZoom } from '@/features/map/types/map.types'
 import type { ClusterFeature, PointFeature } from '@shared/zod/map/cluster.dto'
+import type { PostSummary } from '@zod/post/post.dto'
 import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
+import { usePostStore } from '@/features/posts/stores/postStore'
 
 /**
- * View-model for the browse map. Reads cluster data from findProfileStore,
- * maps DTOs to map-layer types, and provides unified bounds handling and
- * selection state. Both profile and post POIs derive from the cluster
- * features — a single data source for the entire map.
+ * View-model for the browse map. Profile POIs and clusters derive from
+ * findProfileStore cluster features; post POIs derive from postStore.postSummaries.
+ * A single bounds event triggers parallel fetches for both stores.
  */
 export function useBrowseViewModel() {
   const findProfileStore = useFindProfileStore()
   const ownerStore = useOwnerProfileStore()
+  const postStore = usePostStore()
   const { clusterFeatures, availableTags, isLoading } = storeToRefs(findProfileStore)
+  const { postSummaries } = storeToRefs(postStore)
 
   const viewerProfile = computed(() => ownerStore.profile)
 
@@ -47,15 +50,15 @@ export function useBrowseViewModel() {
   )
 
   const postPois = computed<MapPoi[]>(() =>
-    clusterFeatures.value
-      .filter((f): f is PointFeature => f.type === 'point' && f.kind === 'post')
+    postSummaries.value
+      .filter(
+        (p): p is PostSummary & { location: { lat: number; lon: number } } =>
+          p.location?.lat != null && p.location?.lon != null
+      )
       .map((p) => ({
         id: p.id,
-        title: p.postContent ?? '',
-        location: { lat: p.lat, lon: p.lon },
-        image: p.image?.url
-          ? { blurhash: p.image.blurhash, variants: [{ size: 'thumb', url: p.image.url }] }
-          : undefined,
+        title: p.content,
+        location: { lat: p.location.lat, lon: p.location.lon },
         type: 'post',
         source: p,
       }))
@@ -86,7 +89,10 @@ export function useBrowseViewModel() {
 
   // ── Bounds handler ─────────────────────────────────────────────────
   async function onBoundsChanged({ bounds, zoom }: BoundsWithZoom) {
-    await findProfileStore.fetchBounds(bounds, zoom)
+    await Promise.all([
+      findProfileStore.fetchBounds(bounds, zoom),
+      postStore.fetchPostsInBounds(bounds),
+    ])
   }
 
   const fetchPopupData = (id: string) => {
