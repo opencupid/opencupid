@@ -15,11 +15,17 @@ import { PostService } from '@/services/post.service'
 import { ClusterService } from '@/services/cluster.service'
 import type {
   PostsResponse,
+  PostSummariesResponse,
   CreatePostResponse,
   UpdatePostResponse,
   DeletePostResponse,
 } from '@zod/apiResponse.dto'
-import { mapDbPostToOwner, mapDbPostToPublic, mapDbPostToDetail } from '../mappers/post.mappers'
+import {
+  mapDbPostToOwner,
+  mapDbPostToPublic,
+  mapDbPostToDetail,
+  mapPostSummary,
+} from '../mappers/post.mappers'
 
 const postRoutes: FastifyPluginAsync = async (fastify) => {
   const postService = PostService.getInstance()
@@ -228,7 +234,7 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
    * @query {number} north - North latitude
    * @query {number} west - West longitude
    * @query {number} east - East longitude
-   * @returns {PostsResponse}
+   * @returns {PostSummariesResponse}
    */
   fastify.get('/bounds', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const parsed = BoundsQuerySchema.safeParse(req.query)
@@ -242,9 +248,9 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
 
     try {
       const raw = await postService.findInBounds(parsed.data)
-      const posts = raw.map((post) => mapDbPostToPublic(post, req.session.profileId))
+      const posts = raw.map((post) => mapPostSummary(post))
 
-      const response: PostsResponse = { success: true, posts }
+      const response: PostSummariesResponse = { success: true, posts }
       return reply.code(200).send(response)
     } catch (err) {
       fastify.log.error(err)
