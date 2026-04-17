@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
+import { ref } from 'vue'
 
 const mockGet = vi.fn()
 
@@ -12,6 +13,12 @@ vi.mock('@/lib/bus', () => ({
   bus: { on: vi.fn(), emit: vi.fn() },
 }))
 
+const fetchPostsInBounds = vi.fn().mockResolvedValue({ success: true })
+const postSummaries = ref<any[]>([])
+vi.mock('@/features/posts/stores/postStore', () => ({
+  usePostStore: () => ({ fetchPostsInBounds, postSummaries }),
+}))
+
 import { useBrowseViewModel } from '../useBrowseViewModel'
 import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 import type { MapBounds } from '@/features/map/types/map.types'
@@ -22,9 +29,10 @@ describe('useBrowseViewModel', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
+    postSummaries.value = []
   })
 
-  it('derives profile and post POIs from cluster features', () => {
+  it('derives profile POIs from cluster features', () => {
     const store = useFindProfileStore()
     store.clusterFeatures = [
       {
@@ -36,18 +44,6 @@ describe('useBrowseViewModel', () => {
         publicName: 'Alice',
         image: null,
         highlighted: false,
-      },
-      {
-        type: 'point',
-        kind: 'post',
-        id: 'post1',
-        lat: 47.2,
-        lon: 18.7,
-        publicName: 'Bob',
-        image: null,
-        highlighted: false,
-        postContent: 'Cherry harvest',
-        postType: 'OFFER',
       },
       {
         type: 'cluster',
@@ -65,12 +61,26 @@ describe('useBrowseViewModel', () => {
     expect(vm.profilePois.value[0]!.type).toBe('profile')
     expect(vm.profilePois.value[0]!.id).toBe('p1')
 
+    expect(vm.clusters.value).toHaveLength(1)
+  })
+
+  it('derives post POIs from postStore.postSummaries', () => {
+    postSummaries.value = [
+      {
+        id: 'post-1',
+        type: 'OFFER',
+        content: 'Cherry harvest',
+        location: { country: 'HU', cityName: 'Budapest', lat: 47.2, lon: 18.7 },
+        postedBy: { id: 'p1', publicName: 'Bob' },
+      },
+    ]
+
+    const vm = useBrowseViewModel()
+
     expect(vm.postPois.value).toHaveLength(1)
     expect(vm.postPois.value[0]!.type).toBe('post')
     expect(vm.postPois.value[0]!.title).toBe('Cherry harvest')
-
-    expect(vm.allPois.value).toHaveLength(2)
-    expect(vm.clusters.value).toHaveLength(1)
+    expect(vm.allPois.value).toHaveLength(1)
   })
 
   it('populates tags from cluster response', async () => {
@@ -121,5 +131,59 @@ describe('useBrowseViewModel', () => {
     expect(vm.profilePois.value).toHaveLength(0)
     expect(vm.postPois.value).toHaveLength(0)
     expect(vm.allPois.value).toHaveLength(0)
+  })
+
+  describe('onBoundsChanged', () => {
+    it('fetches cluster features and bounds posts in parallel', async () => {
+      const store = useFindProfileStore()
+      const fetchBoundsSpy = vi.spyOn(store, 'fetchBounds').mockResolvedValue()
+
+      const { onBoundsChanged } = useBrowseViewModel()
+      await onBoundsChanged({
+        bounds: { south: 47, north: 48, west: 18, east: 20 },
+        zoom: 7,
+      })
+
+      expect(fetchBoundsSpy).toHaveBeenCalledWith({ south: 47, north: 48, west: 18, east: 20 }, 7)
+      expect(fetchPostsInBounds).toHaveBeenCalledWith({
+        south: 47,
+        north: 48,
+        west: 18,
+        east: 20,
+      })
+    })
+  })
+
+  describe('postPois', () => {
+    it('derives from postStore.postSummaries (not cluster features)', () => {
+      postSummaries.value = [
+        {
+          id: 'post-1',
+          type: 'OFFER',
+          content: 'Hello',
+          location: { country: 'HU', cityName: 'Budapest', lat: 47.5, lon: 19.0 },
+          postedBy: { id: 'p1', publicName: 'Alice' },
+        },
+      ]
+      const { postPois } = useBrowseViewModel()
+      expect(postPois.value).toHaveLength(1)
+      expect(postPois.value[0]!.id).toBe('post-1')
+      expect(postPois.value[0]!.title).toBe('Hello')
+      expect(postPois.value[0]!.source).toEqual(postSummaries.value[0])
+    })
+
+    it('filters out posts without lat/lon', () => {
+      postSummaries.value = [
+        {
+          id: 'post-nolatlon',
+          type: 'OFFER',
+          content: 'No coords',
+          location: { country: 'HU' },
+          postedBy: { id: 'p1', publicName: 'Alice' },
+        },
+      ]
+      const { postPois } = useBrowseViewModel()
+      expect(postPois.value).toHaveLength(0)
+    })
   })
 })
