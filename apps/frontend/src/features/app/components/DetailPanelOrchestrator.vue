@@ -17,6 +17,7 @@ const { isOpen, currentComponent, currentProps, close, notifyHidden } = useDetai
     v-model="isOpen"
     placement="start"
     no-header
+    :focus="false"
     class="detail-panel shadow-lg"
     body-class="p-0 overflow-hidden"
     @hidden="notifyHidden"

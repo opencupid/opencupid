@@ -40,6 +40,7 @@ const isVisible = computed(() => props.posts.length > 0)
     :show="isVisible"
     no-backdrop
     no-trap
+    :focus="false"
     placement="bottom"
     body-class="p-0 d-flex overflow-hidden"
     header-class="py-1"
