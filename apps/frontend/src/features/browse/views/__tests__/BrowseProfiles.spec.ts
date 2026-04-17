@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { nextTick, ref, computed } from 'vue'
+import type { MapPoi } from '@/features/map/types/map.types'
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 
 const toastInfo = vi.fn()
@@ -91,7 +92,7 @@ const vmState = {
   clusters: ref([]),
   allPois: ref([]),
   profilePois: ref([]),
-  postPois: ref<any[]>([]),
+  postPois: ref<MapPoi[]>([]),
   availableTags: ref([]),
   activePoi: ref(null),
   onSelectionClear: vi.fn(),

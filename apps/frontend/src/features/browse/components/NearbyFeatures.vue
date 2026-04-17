@@ -1,14 +1,10 @@
 <script setup lang="ts">
+import { computed, ref } from 'vue'
 import type { MapPoi } from '@/features/map/types/map.types'
 import type { PostSummary } from '@zod/post/post.dto'
 import PostIt from '@/features/shared/ui/PostIt.vue'
-import BottomSheet from '@/features/app/components/BottomSheet.vue'
-
 import IconExpand from '@/assets/icons/arrows/chevrons-up.svg'
 import IconCollapse from '@/assets/icons/arrows/chevrons-down.svg'
-import { computed, ref, watch } from 'vue'
-
-import { isMdUp } from '@/lib/responsive'
 
 const props = defineProps<{
   posts: MapPoi[]
