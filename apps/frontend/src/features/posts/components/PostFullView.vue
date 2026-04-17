@@ -30,15 +30,14 @@ const handleBack = () => {
 <template>
   <div class="w-100">
     <div class="d-flex justify-content-end align-items-center w-100">
-      <button
-        type="button"
-        class="btn btn-shaded me-2 mt-2"
+      <BButton
+        variant="link-secondary"
         :title="$t('profiles.back_button_title')"
         :aria-label="$t('profiles.back_button_title')"
         @click="handleBack"
       >
         <IconCross class="svg-icon" />
-      </button>
+      </BButton>
     </div>
     <PostCard
       :post="post"

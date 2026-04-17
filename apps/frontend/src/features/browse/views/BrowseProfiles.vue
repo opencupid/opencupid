@@ -26,6 +26,7 @@ import MapIcon from '@/features/posts/components/MapIcon.vue'
 import PostMapPopup from '@/features/posts/components/PostMapPopup.vue'
 import PostFullView from '@/features/posts/components/PostFullView.vue'
 import OwnerDrawerControls from '../components/OwnerDrawerControls.vue'
+import NearbyFeatures from '../components/NearbyFeatures.vue'
 import { usePostStore } from '@/features/posts/stores/postStore'
 import type { GeoPoint, LocationDTO } from '@zod/dto/location.dto'
 import ShareDialog from '@/features/app/components/ShareDialog.vue'
@@ -41,6 +42,7 @@ const {
   isNoOneAround,
   clusters,
   allPois,
+  postPois,
   availableTags,
   activePoi,
   onSelectionClear,
@@ -153,7 +155,7 @@ function handleProfileSelect(profile: ProfileSummary) {
   router.push({ name: 'PublicProfile', params: { profileId: profile.id } })
 }
 
-function handleMarkerSelect(id: string ) {
+function handleMarkerSelect(id: string) {
   const poi = allPois.value.find((p) => p.id === id)
   if (!poi) return
   if (poi.type === 'post') {
@@ -200,7 +202,7 @@ onMounted(async () => {
 <template>
   <div class="map-region h-100 position-relative overflow-hidden">
     <div
-      class="position-absolute w-100 top-0 end-0 d-flex align-items-start justify-content-end gap-2 p-2"
+      class="search-bar-wrapper position-absolute w-100 top-0 end-0 d-flex align-items-start justify-content-end gap-2 p-2 pb-5"
       style="z-index: 1010"
     >
       <div class="flex-grow-1">
@@ -243,6 +245,11 @@ onMounted(async () => {
           @bounds:changed="onBoundsChanged"
           @map:ready="onMapReady"
         />
+
+        <NearbyFeatures
+          :posts="postPois"
+          @post:select="handlePostSelect"
+        />
       </div>
     </main>
   </div>
@@ -251,5 +258,8 @@ onMounted(async () => {
 <style scoped lang="scss">
 .list-view {
   height: 100vh;
+}
+.search-bar-wrapper {
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0));
 }
 </style>

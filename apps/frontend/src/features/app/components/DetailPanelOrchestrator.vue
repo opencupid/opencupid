@@ -1,15 +1,14 @@
 <script setup lang="ts">
-import { useMediaQuery } from '@vueuse/core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faCaretLeft } from '@fortawesome/free-solid-svg-icons'
 import { useDetailPanel } from '@/features/app/composables/useDetailPanel'
 import PanelContentWrapper from './PanelContentWrapper.vue'
 import BottomSheet from './BottomSheet.vue'
+import { isMdUp } from '@/lib/responsive'
 
 defineOptions({ name: 'DetailPanelOrchestrator' })
 
 const { isOpen, currentComponent, currentProps, close, notifyHidden } = useDetailPanel()
-const isMdUp = useMediaQuery('(min-width: 768px)')
 </script>
 
 <template>
