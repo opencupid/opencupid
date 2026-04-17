@@ -46,6 +46,14 @@ vi.mock('@/features/browse/components/OwnerDrawerControls.vue', () => ({
     emits: ['open:inbox', 'open:profile'],
   },
 }))
+vi.mock('../../components/NearbyFeatures.vue', () => ({
+  default: {
+    name: 'NearbyFeatures',
+    template: '<div class="nearby-features-stub" />',
+    props: ['posts'],
+    emits: ['post:select'],
+  },
+}))
 vi.mock('@/features/publicprofile/components/ProfileMarker.vue', () => ({
   default: { template: '<div />' },
 }))
@@ -237,5 +245,33 @@ describe('BrowseProfiles view', () => {
     await nextTick()
 
     expect(wrapper.find('.map-placeholder-stub').exists()).toBe(false)
+  })
+
+  it('passes postPois to NearbyFeatures', () => {
+    vmState.postPois.value = [
+      {
+        id: 'post-1',
+        title: 'Test post',
+        location: { lat: 47.5, lon: 19.0 },
+        type: 'post',
+        source: { id: 'post-1', type: 'OFFER', content: 'Test post' },
+      },
+    ]
+    const wrapper = mountComponent()
+    const nearby = wrapper.findComponent({ name: 'NearbyFeatures' })
+    expect(nearby.exists()).toBe(true)
+    expect(nearby.props('posts')).toHaveLength(1)
+    expect(nearby.props('posts')[0].id).toBe('post-1')
+  })
+
+  it('navigates to post route when NearbyFeatures emits post:select', async () => {
+    const wrapper = mountComponent()
+    const nearby = wrapper.findComponent({ name: 'NearbyFeatures' })
+    nearby.vm.$emit('post:select', { id: 'post-42' })
+    await nextTick()
+    expect(mockPush).toHaveBeenCalledWith({
+      name: 'PublicPost',
+      params: { postId: 'post-42' },
+    })
   })
 })

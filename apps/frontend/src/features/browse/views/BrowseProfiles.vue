@@ -246,11 +246,18 @@ onMounted(async () => {
           @map:ready="onMapReady"
         />
 
-        <NearbyFeatures
-          class="position-absolute bottom-0 w-100"
-          :posts="postPois"
-          @post:select="handlePostSelect"
-        />
+        <BOffcanvas
+          show
+          no-backdrop
+          placement="bottom"
+          body-class="p-0 d-flex flex-column overflow-hidden"
+          header-class="p-0"
+        >
+          <NearbyFeatures
+            :posts="postPois"
+            @post:select="handlePostSelect"
+          />
+        </BOffcanvas>
       </div>
     </main>
   </div>
