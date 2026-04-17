@@ -13,6 +13,7 @@ vi.mock('../../services/post.service', () => ({
 vi.mock('../../api/mappers/post.mappers', () => ({
   mapDbPostToOwner: (post: any) => post,
   mapDbPostToPublic: (post: any) => post,
+  mapPostSummary: (post: any) => post,
 }))
 
 beforeEach(async () => {
@@ -27,6 +28,7 @@ beforeEach(async () => {
     findNearby: vi.fn(),
     findRecent: vi.fn(),
     findByProfileId: vi.fn(),
+    findInBounds: vi.fn(),
   }
   await postRoutes(fastify as any, {})
 })
@@ -120,6 +122,58 @@ describe('DELETE /:id', () => {
     )
 
     expect(reply.statusCode).toBe(401)
+    expect(reply.payload.success).toBe(false)
+  })
+})
+
+describe('GET /bounds', () => {
+  // The shape after mapPostSummary has run (mocked as pass-through, so we provide mapped shape)
+  const insidePost = {
+    id: 'cmc7t45x400086w39gj30pzn1',
+    type: 'offer',
+    content: 'Inside post',
+    location: { country: 'HU', cityName: 'Budapest', lat: 47.5, lon: 19.0 },
+    postedBy: { id: 'cmc7t45x400086w39gj30pzn9', displayName: 'Alice', avatarKey: null },
+  }
+
+  it('returns 200 with PostSummary items for posts inside bounds', async () => {
+    mockPostService.findInBounds.mockResolvedValue([insidePost])
+
+    const handler = fastify.routes['GET /bounds']
+    await handler(
+      {
+        query: { south: '47', north: '48', west: '18', east: '20' },
+        session: { profileId: 'cmc7t45x400086w39gj30pzn9' },
+      } as any,
+      reply as any
+    )
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    expect(reply.payload.posts).toHaveLength(1)
+
+    const post = reply.payload.posts[0]
+    expect(post).toHaveProperty('id')
+    expect(post).toHaveProperty('type')
+    expect(post).toHaveProperty('content')
+    expect(post).toHaveProperty('location')
+    expect(post).toHaveProperty('postedBy')
+    expect(post).not.toHaveProperty('isOwn')
+    expect(post).not.toHaveProperty('conversationContext')
+    expect(post).not.toHaveProperty('isVisible')
+  })
+
+  it('returns 400 for invalid query parameters', async () => {
+    const handler = fastify.routes['GET /bounds']
+    await handler(
+      {
+        query: { south: 'foo', north: '48', west: '18', east: '20' },
+        session: { profileId: 'cmc7t45x400086w39gj30pzn9' },
+      } as any,
+      reply as any
+    )
+
+    expect(reply.statusCode).toBe(400)
     expect(reply.payload.success).toBe(false)
   })
 })
