@@ -36,13 +36,12 @@ function onWheel(e: WheelEvent) {
   e.preventDefault()
 }
 
-const isVisible = computed(() => props.posts.length>0)
+const isVisible = computed(() => props.posts.length > 0)
 </script>
 
 <template>
   <BOffcanvas
     :show="isVisible"
-    shadow
     no-backdrop
     no-trap
     placement="bottom"
@@ -108,6 +107,11 @@ const isVisible = computed(() => props.posts.length>0)
   font-size: 0.95rem;
   line-height: 1rem;
 }
+
+/* Override PostIt's 150px min-height — our teaser cards size to content. */
+.nearby-items :deep(.post-it-wrapper) {
+  min-height: 0;
+}
 </style>
 
 <style lang="scss">
@@ -121,27 +125,33 @@ const isVisible = computed(() => props.posts.length>0)
 @import 'bootstrap/scss/mixins';
 
 .nearby-features-panel.offcanvas {
-  height: 20vh;
-  transition: height 200ms ease;
-
-  @include media-breakpoint-up(sm) {
-    height: 30vh;
-  }
-
-  @include media-breakpoint-up(md) {
-    height: 20vh;
-  }
+  height: auto;
+  max-height: 15vh;
+  transition: max-height 200ms ease;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
 
   @include media-breakpoint-up(lg) {
-    height: 10vh;
+    max-height: 10vh;
   }
 
   @include media-breakpoint-up(xl) {
-    height: 15vh;
+    max-height: 15vh;
   }
 
   &.expanded {
-    height: 75vh;
+    max-height: 75vh;
+
+    @include media-breakpoint-up(md) {
+      max-height: 50vh;
+    }
+
+    @include media-breakpoint-up(lg) {
+      max-height: 50vh;
+    }
+
+    @include media-breakpoint-up(xl) {
+      max-height: 30vh;
+    }
   }
 }
 
