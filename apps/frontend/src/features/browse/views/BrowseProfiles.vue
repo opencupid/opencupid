@@ -26,6 +26,7 @@ import MapIcon from '@/features/posts/components/MapIcon.vue'
 import PostMapPopup from '@/features/posts/components/PostMapPopup.vue'
 import PostFullView from '@/features/posts/components/PostFullView.vue'
 import OwnerDrawerControls from '../components/OwnerDrawerControls.vue'
+import NearbyFeatures from '../components/NearbyFeatures.vue'
 import { usePostStore } from '@/features/posts/stores/postStore'
 import type { GeoPoint, LocationDTO } from '@zod/dto/location.dto'
 import ShareDialog from '@/features/app/components/ShareDialog.vue'
@@ -41,6 +42,7 @@ const {
   isNoOneAround,
   clusters,
   allPois,
+  postPois,
   availableTags,
   activePoi,
   onSelectionClear,
@@ -242,6 +244,12 @@ onMounted(async () => {
           @item:select="handleMarkerSelect"
           @bounds:changed="onBoundsChanged"
           @map:ready="onMapReady"
+        />
+
+        <NearbyFeatures
+          class="position-absolute bottom-0 w-100"
+          :posts="postPois"
+          @post:select="handlePostSelect"
         />
       </div>
     </main>
