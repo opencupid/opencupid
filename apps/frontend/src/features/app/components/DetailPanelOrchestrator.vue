@@ -45,15 +45,10 @@ const { isOpen, currentComponent, currentProps, close, notifyHidden } = useDetai
     v-model="isOpen"
     @hidden="notifyHidden"
   >
-    <PanelContentWrapper
-      v-if="currentComponent"
-      :close="close"
-    >
-      <component
-        :is="currentComponent"
-        v-bind="currentProps"
-      />
-    </PanelContentWrapper>
+    <component
+      :is="currentComponent"
+      v-bind="currentProps"
+    />
   </BottomSheet>
 </template>
 

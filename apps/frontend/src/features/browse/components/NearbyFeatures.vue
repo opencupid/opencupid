@@ -6,11 +6,11 @@ import BottomSheet from '@/features/app/components/BottomSheet.vue'
 
 import IconExpand from '@/assets/icons/arrows/chevrons-up.svg'
 import IconCollapse from '@/assets/icons/arrows/chevrons-down.svg'
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { isMdUp } from '@/lib/responsive'
 
-defineProps<{
+const props = defineProps<{
   posts: MapPoi[]
 }>()
 
@@ -27,16 +27,26 @@ const isExpanded = ref(false)
 function toggleExpanded() {
   isExpanded.value = !isExpanded.value
 }
+
+function onWheel(e: WheelEvent) {
+  if (isExpanded.value) return
+  if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return
+  const el = e.currentTarget as HTMLElement
+  el.scrollLeft += e.deltaY
+  e.preventDefault()
+}
+
+const isVisible = computed(() => props.posts.length>0)
 </script>
 
 <template>
   <BOffcanvas
-    :show="posts.length > 0"
+    :show="isVisible"
     shadow
     no-backdrop
     no-trap
     placement="bottom"
-    body-class="p-0 d-flex overflow-auto hide-scrollbar d-flex"
+    body-class="p-0 d-flex overflow-hidden"
     header-class="py-1"
     class="nearby-features-panel"
     :class="{ expanded: isExpanded }"
@@ -59,7 +69,10 @@ function toggleExpanded() {
         </BButton>
       </div>
     </template>
-    <div class="nearby-items d-flex">
+    <div
+      class="nearby-items d-flex flex-grow-1 min-w-0"
+      @wheel="onWheel"
+    >
       <div
         v-for="poi in posts"
         :key="poi.id"
@@ -78,10 +91,7 @@ function toggleExpanded() {
 </template>
 
 <style scoped lang="scss">
-.nearby-posts {
-  scroll-snap-type: x mandatory;
-}
-
+/* In-template elements — reached via scoped data-v hash. */
 .nearby-items {
   flex-wrap: nowrap;
   overflow-x: auto;
@@ -95,19 +105,17 @@ function toggleExpanded() {
 .post-content {
   overflow: hidden;
   font-family: 'Patrick Hand', cursive;
-  font-size: 1rem;
+  font-size: 0.95rem;
+  line-height: 1rem;
 }
 </style>
 
 <style lang="scss">
-.nearby-features-panel.expanded .nearby-items {
-  flex-wrap: wrap;
-  overflow-x: hidden;
-  overflow-y: auto;
-}
-</style>
-
-<style lang="scss">
+/*
+ * Rules targeting the BOffcanvas root (.nearby-features-panel) must be
+ * unscoped — the element is teleported to <body> without our data-v hash.
+ * Descendant selectors that cross the teleport boundary also belong here.
+ */
 @import 'bootstrap/scss/functions';
 @import 'bootstrap/scss/variables';
 @import 'bootstrap/scss/mixins';
@@ -134,21 +142,12 @@ function toggleExpanded() {
 
   &.expanded {
     height: 75vh;
-    @include media-breakpoint-up(sm) {
-      height: 30vh;
-    }
-
-    @include media-breakpoint-up(md) {
-      height: 20vh;
-    }
-
-    @include media-breakpoint-up(lg) {
-      height: 10vh;
-    }
-
-    @include media-breakpoint-up(xl) {
-      height: 50vh;
-    }
   }
+}
+
+.nearby-features-panel.expanded .nearby-items {
+  flex-wrap: wrap;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 </style>
