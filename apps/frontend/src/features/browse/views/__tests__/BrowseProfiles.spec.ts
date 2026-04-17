@@ -91,7 +91,7 @@ const vmState = {
   clusters: ref([]),
   allPois: ref([]),
   profilePois: ref([]),
-  postPois: ref([]),
+  postPois: ref<any[]>([]),
   availableTags: ref([]),
   activePoi: ref(null),
   onSelectionClear: vi.fn(),

@@ -155,7 +155,7 @@ function handleProfileSelect(profile: ProfileSummary) {
   router.push({ name: 'PublicProfile', params: { profileId: profile.id } })
 }
 
-function handleMarkerSelect(id: string ) {
+function handleMarkerSelect(id: string) {
   const poi = allPois.value.find((p) => p.id === id)
   if (!poi) return
   if (poi.type === 'post') {
@@ -246,18 +246,10 @@ onMounted(async () => {
           @map:ready="onMapReady"
         />
 
-        <BOffcanvas
-          show
-          no-backdrop
-          placement="bottom"
-          body-class="p-0 d-flex flex-column overflow-hidden"
-          header-class="p-0"
-        >
-          <NearbyFeatures
-            :posts="postPois"
-            @post:select="handlePostSelect"
-          />
-        </BOffcanvas>
+        <NearbyFeatures
+          :posts="postPois"
+          @post:select="handlePostSelect"
+        />
       </div>
     </main>
   </div>

@@ -26,3 +26,10 @@ provide('viewerProfile', profile)
     <DetailPanelOrchestrator />
   </div>
 </template>
+
+<style>
+.nearby-features-panel {
+  /* below detail-panel */
+  z-index: 1040;
+}
+</style>
