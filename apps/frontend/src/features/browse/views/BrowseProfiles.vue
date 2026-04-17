@@ -98,7 +98,7 @@ watch(
       onSelectionClear()
       return
     }
-    const found = allPois.value.find((p) => String(p.id) === d.id)
+    const found = allPois.value.find((p) => p.id === d.id)
     activePoi.value = found ?? null
   },
   { immediate: true }
@@ -147,13 +147,13 @@ function openInboxDrawer() {
 }
 
 function handlePostSelect(post: PostSummary) {
-  router.push({ name: 'PublicPost', params: { postId: String(post.id) } })
+  router.push({ name: 'PublicPost', params: { postId: post.id } })
 }
 function handleProfileSelect(profile: ProfileSummary) {
-  router.push({ name: 'PublicProfile', params: { profileId: String(profile.id) } })
+  router.push({ name: 'PublicProfile', params: { profileId: profile.id } })
 }
 
-function handleMarkerSelect(id: string | number) {
+function handleMarkerSelect(id: string ) {
   const poi = allPois.value.find((p) => p.id === id)
   if (!poi) return
   if (poi.type === 'post') {
