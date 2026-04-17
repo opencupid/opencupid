@@ -71,7 +71,7 @@ const isVisible = computed(() => props.posts.length > 0)
       <div
         v-for="poi in posts"
         :key="poi.id"
-        class="user-select-none col-6 col-md-4 col-lg-2"
+        class="user-select-none col-12 col-sm-6 col-md-4 col-lg-2"
         @click="handleClick(poi)"
       >
         <PostIt
@@ -135,7 +135,7 @@ const isVisible = computed(() => props.posts.length > 0)
   }
 
   &.expanded {
-    max-height: 75vh;
+    max-height: 60vh;
 
     @include media-breakpoint-up(md) {
       max-height: 50vh;
