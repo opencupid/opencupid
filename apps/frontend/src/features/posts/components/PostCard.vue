@@ -61,7 +61,7 @@ const handleContact = async () => {
 
 <template>
   <div
-    class="post-wrapper position-relative w-100"
+    class="post-wrapper position-relative w-100 p-2"
     :class="{
       'post-wrapper--invisible': post.isOwn && props.dimHidden && !(post as any).isVisible,
     }"
