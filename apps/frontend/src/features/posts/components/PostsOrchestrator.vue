@@ -6,7 +6,7 @@ import { useMyProfileViewModel } from '@/features/myprofile/composables/useMyPro
 import { LocationSchema } from '@zod/dto/location.dto'
 import type { OwnerPost } from '@zod/post/post.dto'
 import FloatingButton from '@/features/shared/components/FloatingButton.vue'
-import PostList from './PostList.vue'
+import MyPostList from './MyPostList.vue'
 import EditPostDialog from './EditPostDialog.vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faPenToSquare } from '@fortawesome/free-solid-svg-icons'
@@ -74,7 +74,7 @@ async function handleHide(post: OwnerPost) {
 
 <template>
   <template v-if="subView === 'myposts'">
-    <PostList
+    <MyPostList
       scope="my"
       @intent:edit="openEditPost"
       @intent:delete="handleDelete"

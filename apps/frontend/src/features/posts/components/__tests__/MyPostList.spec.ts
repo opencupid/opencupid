@@ -35,7 +35,7 @@ vi.mock('../../composables/usePostListViewModel', () => ({
   usePostListViewModel: () => mockVm,
 }))
 
-import PostList from '../PostList.vue'
+import MyPostList from '../MyPostList.vue'
 import { useInfiniteScroll } from '@vueuse/core'
 
 const stubs = {
@@ -55,7 +55,7 @@ const globalOpts = (extraStubs = {}) => ({
   mocks: { $t: (k: string) => k },
 })
 
-describe('PostList', () => {
+describe('MyPostList', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockVm.postStore = { isLoading: false, error: null }
@@ -66,7 +66,7 @@ describe('PostList', () => {
   })
 
   it('emits hide intent when post card emits hide', async () => {
-    const wrapper = mount(PostList, {
+    const wrapper = mount(MyPostList, {
       props: { scope: 'all' },
       global: globalOpts(),
     })
@@ -78,7 +78,7 @@ describe('PostList', () => {
   })
 
   it('emits delete intent when post card emits delete', async () => {
-    const wrapper = mount(PostList, {
+    const wrapper = mount(MyPostList, {
       props: { scope: 'all' },
       global: globalOpts(),
     })
@@ -90,7 +90,7 @@ describe('PostList', () => {
   })
 
   it('scroll container has overflow-auto and hide-scrollbar classes', () => {
-    const wrapper = mount(PostList, {
+    const wrapper = mount(MyPostList, {
       props: { scope: 'all' },
       global: globalOpts(),
     })
@@ -103,7 +103,7 @@ describe('PostList', () => {
   it('shows loading spinner when isLoadingMore is true', () => {
     mockVm.isLoadingMore = ref(true)
 
-    const wrapper = mount(PostList, {
+    const wrapper = mount(MyPostList, {
       props: { scope: 'all' },
       global: globalOpts({ BSpinner: { template: '<div class="spinner" />' } }),
     })
@@ -114,7 +114,7 @@ describe('PostList', () => {
   it('hides loading spinner when isLoadingMore is false', () => {
     mockVm.isLoadingMore = ref(false)
 
-    const wrapper = mount(PostList, {
+    const wrapper = mount(MyPostList, {
       props: { scope: 'all' },
       global: globalOpts({ BSpinner: { template: '<div class="spinner" />' } }),
     })
@@ -123,7 +123,7 @@ describe('PostList', () => {
   })
 
   it('registers infinite scroll on mount', () => {
-    mount(PostList, {
+    mount(MyPostList, {
       props: { scope: 'all' },
       global: globalOpts(),
     })
@@ -132,7 +132,7 @@ describe('PostList', () => {
   })
 
   it('outer container has flex-column layout for scrolling', () => {
-    const wrapper = mount(PostList, {
+    const wrapper = mount(MyPostList, {
       props: { scope: 'all' },
       global: globalOpts(),
     })
@@ -143,7 +143,7 @@ describe('PostList', () => {
   })
 
   it('accepts type prop and passes it to the view model', () => {
-    const wrapper = mount(PostList, {
+    const wrapper = mount(MyPostList, {
       props: { scope: 'all', type: 'OFFER' },
       global: globalOpts(),
     })
