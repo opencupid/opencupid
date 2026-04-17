@@ -5,7 +5,12 @@ import type { Component, Ref } from 'vue'
 
 import { DiffableLayer } from './DiffableLayer'
 import type { MapPoi, MapCluster, BoundsWithZoom, MarkerConfig } from '../types/map.types'
-import { isValidLatLng, createServerClusterIcon, hydratePoiIcon, MAP_MAX_ZOOM } from '../utils/mapUtils'
+import {
+  isValidLatLng,
+  createServerClusterIcon,
+  hydratePoiIcon,
+  MAP_MAX_ZOOM,
+} from '../utils/mapUtils'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -26,12 +31,12 @@ export interface MapProps {
   zoom: number
   fitToPois: boolean
   boundsDebounce: number
-  fetchPopupData?: (id: string | number) => Promise<unknown>
+  fetchPopupData?: (id: string) => Promise<unknown>
 }
 
 type MapEmit = {
   (e: 'bounds:changed', payload: BoundsWithZoom): void
-  (e: 'item:select', id: string | number): void
+  (e: 'item:select', id: string): void
   (e: 'map:ready', map: LMap): void
 }
 

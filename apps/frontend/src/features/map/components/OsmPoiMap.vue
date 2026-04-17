@@ -17,7 +17,7 @@ const props = withDefaults(
     zoom?: number
     fitToPois?: boolean
     boundsDebounce?: number
-    fetchPopupData?: (id: string | number) => Promise<unknown>
+    fetchPopupData?: (id: string) => Promise<unknown>
   }>(),
   {
     zoom: 7,
@@ -28,7 +28,7 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  (e: 'item:select', id: string | number): void
+  (e: 'item:select', id: string ): void
   (e: 'map:ready', map: LMap): void
   (e: 'bounds:changed', payload: BoundsWithZoom): void
 }>()

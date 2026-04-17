@@ -24,7 +24,7 @@ export interface PoiIconProps {
 
 /** A point-of-interest item for the map. Call sites map domain objects into this shape. */
 export interface MapPoi {
-  id: string | number
+  id: string
   title: string
   location: PoiLocation
   image?: AvatarImage
@@ -53,5 +53,5 @@ export interface BoundsWithZoom {
 export interface MarkerConfig {
   resolveIcon: (poi: MapPoi) => Component
   resolvePopup?: (poi: MapPoi) => Component
-  fetchPopupData?: (id: string | number) => Promise<unknown>
+  fetchPopupData?: (id: string) => Promise<unknown>
 }
