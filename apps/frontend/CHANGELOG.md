@@ -1,5 +1,16 @@
 # frontend
 
+## 0.51.0
+
+### Minor Changes
+
+- edc0027: Add NearbyFeatures panel on browse map — a bottom offcanvas showing nearby posts from the current map viewport as post-it teaser cards. Supports horizontal wheel-to-scroll in collapsed state and a wrap-grid layout when expanded. (#1315)
+
+### Patch Changes
+
+- 3563a73: Tighten MapPoi.id and related map-layer types from `string | number` to `string`, removing redundant coercions.
+- 507130d: Fix transient focus-outline artifact on BOffcanvas panels (NearbyFeatures, DetailPanelOrchestrator). BootstrapVueNext auto-focused the panel root on open, painting a 2px focus-visible outline above the panel edge until the first state change moved focus away. Passing `:focus="false"` opts out of the auto-focus for these persistent/secondary panels where the ring isn't needed.
+
 ## 0.50.0
 
 ### Minor Changes
