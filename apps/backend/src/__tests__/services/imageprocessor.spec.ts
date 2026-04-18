@@ -10,8 +10,9 @@ const { mockEstimateFaces, mockSmartcrop } = vi.hoisted(() => ({
   })),
 }))
 
-vi.mock('@tensorflow-models/blazeface', () => ({
-  load: vi.fn(async () => ({
+vi.mock('@tensorflow-models/face-detection', () => ({
+  SupportedModels: { MediaPipeFaceDetector: 'MediaPipeFaceDetector' },
+  createDetector: vi.fn(async () => ({
     estimateFaces: mockEstimateFaces,
   })),
 }))
@@ -108,7 +109,10 @@ describe('ImageProcessor', () => {
 
   it('getSmartCrop passes face boosts to smartcrop', async () => {
     mockEstimateFaces.mockResolvedValueOnce([
-      { topLeft: [500, 600], bottomRight: [800, 1000], probability: [0.95] },
+      {
+        box: { xMin: 500, yMin: 600, xMax: 800, yMax: 1000, width: 300, height: 400 },
+        keypoints: [],
+      },
     ])
 
     const processor = new ImageProcessor(buffer)
@@ -116,20 +120,22 @@ describe('ImageProcessor', () => {
 
     const rect = await processor.getSmartCrop(600, 600)
 
-    // Verify smartcrop was called with the face as a boost
+    // Verify smartcrop was called with the face as a boost using a heavy
+    // weight — small faces in large frames need this to outscore high-detail
+    // non-face regions (clothing, saturated backgrounds).
     expect(mockSmartcrop).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
         width: 600,
         height: 600,
         boost: [
-          expect.objectContaining({
-            x: expect.any(Number),
-            y: expect.any(Number),
-            width: expect.any(Number),
-            height: expect.any(Number),
-            weight: 1.0,
-          }),
+          {
+            x: 500,
+            y: 600,
+            width: 300,
+            height: 400,
+            weight: 10,
+          },
         ],
       })
     )
