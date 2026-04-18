@@ -47,7 +47,7 @@
     "@maxmind/geoip2-node": "6.3.4",
     "@prisma/client": "6.15.0",
     "@sentry/node": "10.39.0",
-    "@tensorflow-models/blazeface": "0.1.0",
+    "@tensorflow-models/face-detection": "1.0.3",
     "@tensorflow/tfjs": "4.22.0",
     "@tensorflow/tfjs-backend-cpu": "4.22.0",
     "@vue/server-renderer": "3.5.28",

@@ -4,8 +4,9 @@ import path from 'path'
 
 const mockEstimateFaces = vi.fn(async () => [] as any[])
 
-vi.mock('@tensorflow-models/blazeface', () => ({
-  load: vi.fn(async () => ({
+vi.mock('@tensorflow-models/face-detection', () => ({
+  SupportedModels: { MediaPipeFaceDetector: 'MediaPipeFaceDetector' },
+  createDetector: vi.fn(async () => ({
     estimateFaces: mockEstimateFaces,
   })),
 }))
