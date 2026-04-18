@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import postRoutes from '../../api/routes/post.route'
 import { MockFastify, MockReply } from '../../test-utils/fastify'
+import { PostSummarySchema } from '@zod/post/post.dto'
 
 let fastify: MockFastify
 let reply: MockReply
@@ -127,13 +128,19 @@ describe('DELETE /:id', () => {
 })
 
 describe('GET /bounds', () => {
-  // The shape after mapPostSummary has run (mocked as pass-through, so we provide mapped shape)
+  // Shape after mapPostSummary has run — matches PostSummary DTO (type enum uppercase,
+  // postedBy uses ProfileSummary fields). Validated against PostSummarySchema below.
   const insidePost = {
     id: 'cmc7t45x400086w39gj30pzn1',
-    type: 'offer',
+    type: 'OFFER',
     content: 'Inside post',
     location: { country: 'HU', cityName: 'Budapest', lat: 47.5, lon: 19.0 },
-    postedBy: { id: 'cmc7t45x400086w39gj30pzn9', displayName: 'Alice', avatarKey: null },
+    postedBy: {
+      id: 'cmc7t45x400086w39gj30pzn9',
+      publicName: 'Alice',
+      profileImages: [],
+      location: { country: 'HU', cityName: 'Budapest', lat: 47.5, lon: 19.0 },
+    },
   }
 
   it('returns 200 with PostSummary items for posts inside bounds', async () => {
@@ -152,12 +159,14 @@ describe('GET /bounds', () => {
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.posts).toHaveLength(1)
 
+    // Validate response items against the shared PostSummary contract — this
+    // catches drift without hardcoding every field.
     const post = reply.payload.posts[0]
-    expect(post).toHaveProperty('id')
-    expect(post).toHaveProperty('type')
-    expect(post).toHaveProperty('content')
-    expect(post).toHaveProperty('location')
-    expect(post).toHaveProperty('postedBy')
+    expect(() => PostSummarySchema.parse(post)).not.toThrow()
+    expect(post.id).toBe(insidePost.id)
+
+    // PostSummary is the lightweight teaser shape — must NOT leak the
+    // heavyweight fields that PublicPostWithProfile / OwnerPost carry.
     expect(post).not.toHaveProperty('isOwn')
     expect(post).not.toHaveProperty('conversationContext')
     expect(post).not.toHaveProperty('isVisible')
