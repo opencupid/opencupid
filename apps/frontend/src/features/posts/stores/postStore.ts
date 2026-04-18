@@ -41,8 +41,11 @@ type StorePostSummariesResponse = StoreResponse<{ posts: PostSummary[] }>
 
 export const usePostStore = defineStore('posts', {
   state: () => ({
+    /** Public feed — populated by fetchPosts / fetchNearbyPosts / fetchRecentPosts. Full shape with conversationContext. */
     posts: [] as PublicPostWithProfile[],
+    /** Owner-scoped post list — populated by fetchMyPosts. */
     myPosts: [] as OwnerPost[],
+    /** Lightweight teasers for map-bounds rendering — populated by fetchPostsInBounds. No conversationContext / isOwn / isVisible. */
     postSummaries: [] as PostSummary[],
     currentPost: null as PublicPostWithProfile | OwnerPost | null,
   }),

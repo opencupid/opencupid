@@ -2,7 +2,7 @@ import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import type { MapCluster, MapPoi, BoundsWithZoom } from '@/features/map/types/map.types'
 import type { ClusterFeature, PointFeature } from '@shared/zod/map/cluster.dto'
-import type { PostSummary } from '@zod/post/post.dto'
+import { toGeoPoint } from '@zod/dto/location.dto'
 import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { usePostStore } from '@/features/posts/stores/postStore'
@@ -50,18 +50,19 @@ export function useBrowseViewModel() {
   )
 
   const postPois = computed<MapPoi[]>(() =>
-    postSummaries.value
-      .filter(
-        (p): p is PostSummary & { location: { lat: number; lon: number } } =>
-          p.location?.lat != null && p.location?.lon != null
-      )
-      .map((p) => ({
-        id: p.id,
-        title: p.content,
-        location: { lat: p.location.lat, lon: p.location.lon },
-        type: 'post',
-        source: p,
-      }))
+    postSummaries.value.flatMap((p) => {
+      const location = toGeoPoint(p.location)
+      if (!location) return []
+      return [
+        {
+          id: p.id,
+          title: p.content,
+          location,
+          type: 'post',
+          source: p,
+        },
+      ]
+    })
   )
 
   const allPois = computed<MapPoi[]>(() => [...profilePois.value, ...postPois.value])
