@@ -64,14 +64,20 @@ describe('useBrowseViewModel', () => {
     expect(vm.clusters.value).toHaveLength(1)
   })
 
-  it('derives post POIs from postStore.postSummaries', () => {
-    postSummaries.value = [
+  it('derives post POIs from cluster features', () => {
+    const store = useFindProfileStore()
+    store.clusterFeatures = [
       {
+        type: 'point',
+        kind: 'post',
         id: 'post-1',
-        type: 'OFFER',
-        content: 'Cherry harvest',
-        location: { country: 'HU', cityName: 'Budapest', lat: 47.2, lon: 18.7 },
-        postedBy: { id: 'p1', publicName: 'Bob' },
+        lat: 47.2,
+        lon: 18.7,
+        publicName: 'Bob',
+        image: null,
+        highlighted: false,
+        postContent: 'Cherry harvest',
+        postType: 'OFFER',
       },
     ]
 
@@ -151,39 +157,6 @@ describe('useBrowseViewModel', () => {
         west: 18,
         east: 20,
       })
-    })
-  })
-
-  describe('postPois', () => {
-    it('derives from postStore.postSummaries (not cluster features)', () => {
-      postSummaries.value = [
-        {
-          id: 'post-1',
-          type: 'OFFER',
-          content: 'Hello',
-          location: { country: 'HU', cityName: 'Budapest', lat: 47.5, lon: 19.0 },
-          postedBy: { id: 'p1', publicName: 'Alice' },
-        },
-      ]
-      const { postPois } = useBrowseViewModel()
-      expect(postPois.value).toHaveLength(1)
-      expect(postPois.value[0]!.id).toBe('post-1')
-      expect(postPois.value[0]!.title).toBe('Hello')
-      expect(postPois.value[0]!.source).toEqual(postSummaries.value[0])
-    })
-
-    it('filters out posts without lat/lon', () => {
-      postSummaries.value = [
-        {
-          id: 'post-nolatlon',
-          type: 'OFFER',
-          content: 'No coords',
-          location: { country: 'HU' },
-          postedBy: { id: 'p1', publicName: 'Alice' },
-        },
-      ]
-      const { postPois } = useBrowseViewModel()
-      expect(postPois.value).toHaveLength(0)
     })
   })
 })

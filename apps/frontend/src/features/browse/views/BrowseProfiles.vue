@@ -42,7 +42,6 @@ const {
   isNoOneAround,
   clusters,
   allPois,
-  postPois,
   availableTags,
   activePoi,
   onSelectionClear,
@@ -247,7 +246,7 @@ onMounted(async () => {
         />
 
         <NearbyFeatures
-          :posts="postPois"
+          :posts="postStore.postSummaries"
           @post:select="handlePostSelect"
         />
       </div>

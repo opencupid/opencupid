@@ -1,7 +1,6 @@
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { nextTick, ref, computed } from 'vue'
-import type { MapPoi } from '@/features/map/types/map.types'
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 
 const toastInfo = vi.fn()
@@ -92,7 +91,6 @@ const vmState = {
   clusters: ref([]),
   allPois: ref([]),
   profilePois: ref([]),
-  postPois: ref<MapPoi[]>([]),
   availableTags: ref([]),
   activePoi: ref(null),
   onSelectionClear: vi.fn(),
@@ -112,10 +110,14 @@ vi.mock('@/features/browse/stores/findProfileStore', () => ({
   }),
 }))
 
+const mockPostSummaries = ref<any[]>([])
 vi.mock('@/features/posts/stores/postStore', () => ({
   usePostStore: () => ({
     fetchPublicPost: vi.fn().mockResolvedValue({ success: false }),
     fetchOwnerPost: vi.fn().mockResolvedValue({ success: false }),
+    get postSummaries() {
+      return mockPostSummaries.value
+    },
   }),
 }))
 
@@ -178,6 +180,7 @@ describe('BrowseProfiles view', () => {
     vmState.isNoOneAround.value = false
     mockRouteName.value = 'Browse'
     mockDetail.value = null
+    mockPostSummaries.value = []
     toastInfo.mockClear()
     mockPush.mockClear()
     mockReplace.mockClear()
@@ -248,14 +251,19 @@ describe('BrowseProfiles view', () => {
     expect(wrapper.find('.map-placeholder-stub').exists()).toBe(false)
   })
 
-  it('passes postPois to NearbyFeatures', () => {
-    vmState.postPois.value = [
+  it('passes postStore.postSummaries to NearbyFeatures', () => {
+    mockPostSummaries.value = [
       {
         id: 'post-1',
-        title: 'Test post',
-        location: { lat: 47.5, lon: 19.0 },
-        type: 'post',
-        source: { id: 'post-1', type: 'OFFER', content: 'Test post' },
+        type: 'OFFER',
+        content: 'Test post',
+        location: { country: 'HU', cityName: 'Budapest', lat: 47.5, lon: 19.0 },
+        postedBy: {
+          id: 'p1',
+          publicName: 'Author',
+          profileImages: [],
+          location: { country: 'HU', cityName: 'Budapest', lat: 47.5, lon: 19.0 },
+        },
       },
     ]
     const wrapper = mountComponent()

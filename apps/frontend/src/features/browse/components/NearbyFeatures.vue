@@ -1,21 +1,20 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import type { MapPoi } from '@/features/map/types/map.types'
 import type { PostSummary } from '@zod/post/post.dto'
 import PostIt from '@/features/shared/ui/PostIt.vue'
 import IconExpand from '@/assets/icons/arrows/chevrons-up.svg'
 import IconCollapse from '@/assets/icons/arrows/chevrons-down.svg'
 
 const props = defineProps<{
-  posts: MapPoi[]
+  posts: PostSummary[]
 }>()
 
 const emit = defineEmits<{
   (e: 'post:select', post: PostSummary): void
 }>()
 
-function handleClick(poi: MapPoi) {
-  emit('post:select', poi.source as PostSummary)
+function handleClick(post: PostSummary) {
+  emit('post:select', post)
 }
 
 const isExpanded = ref(false)
@@ -70,16 +69,16 @@ const isVisible = computed(() => props.posts.length > 0)
       @wheel="onWheel"
     >
       <div
-        v-for="poi in posts"
-        :key="poi.id"
+        v-for="post in posts"
+        :key="post.id"
         class="user-select-none col-12 col-sm-6 col-md-4 col-lg-2"
-        @click="handleClick(poi)"
+        @click="handleClick(post)"
       >
         <PostIt
           class="cursor-pointer p-2 post-content"
-          :id="poi.id"
+          :id="post.id"
         >
-          {{ (poi.title ?? '').substring(0, 120) }}
+          {{ post.content.substring(0, 120) }}
         </PostIt>
       </div>
     </div>

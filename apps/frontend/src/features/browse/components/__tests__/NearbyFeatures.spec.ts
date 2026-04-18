@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi } from 'vitest'
-import type { MapPoi } from '@/features/map/types/map.types'
+import type { PostSummary } from '@zod/post/post.dto'
 
 vi.mock('@/assets/icons/arrows/chevrons-up.svg', () => ({
   default: { template: '<svg class="icon-expand" />' },
@@ -30,13 +30,18 @@ const stubs = {
   BButton: { template: '<button><slot /></button>' },
 }
 
-function makePoi(id: string, title: string): MapPoi {
+function makePost(id: string, content: string): PostSummary {
   return {
     id,
-    title,
-    location: { lat: 47.5, lon: 19.0 },
-    type: 'post',
-    source: { id, type: 'OFFER', content: title, location: {}, postedBy: {} },
+    type: 'OFFER',
+    content,
+    location: { country: 'HU', cityName: 'Budapest', lat: 47.5, lon: 19.0 },
+    postedBy: {
+      id: `${id}-author`,
+      publicName: 'Author',
+      profileImages: [],
+      location: { country: 'HU', cityName: 'Budapest', lat: 47.5, lon: 19.0 },
+    },
   }
 }
 
@@ -50,7 +55,7 @@ describe('NearbyFeatures', () => {
   })
 
   it('renders a card for each post', () => {
-    const posts = [makePoi('p1', 'First post'), makePoi('p2', 'Second post')]
+    const posts = [makePost('p1', 'First post'), makePost('p2', 'Second post')]
     const wrapper = mount(NearbyFeatures, {
       props: { posts },
       global: { stubs },
@@ -64,20 +69,20 @@ describe('NearbyFeatures', () => {
   it('truncates long content to 120 characters', () => {
     const longContent = 'A'.repeat(200)
     const wrapper = mount(NearbyFeatures, {
-      props: { posts: [makePoi('p1', longContent)] },
+      props: { posts: [makePost('p1', longContent)] },
       global: { stubs },
     })
     expect(wrapper.find('.post-it-stub').text()).toHaveLength(120)
   })
 
-  it('emits post:select with source on card click', async () => {
-    const poi = makePoi('p1', 'Click me')
+  it('emits post:select with the post on card click', async () => {
+    const post = makePost('p1', 'Click me')
     const wrapper = mount(NearbyFeatures, {
-      props: { posts: [poi] },
+      props: { posts: [post] },
       global: { stubs },
     })
     await wrapper.find('.nearby-items > div').trigger('click')
     expect(wrapper.emitted('post:select')).toBeTruthy()
-    expect(wrapper.emitted('post:select')![0]![0]).toEqual(poi.source)
+    expect(wrapper.emitted('post:select')![0]![0]).toEqual(post)
   })
 })

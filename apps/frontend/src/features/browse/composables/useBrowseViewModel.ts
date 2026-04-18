@@ -2,22 +2,22 @@ import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import type { MapCluster, MapPoi, BoundsWithZoom } from '@/features/map/types/map.types'
 import type { ClusterFeature, PointFeature } from '@shared/zod/map/cluster.dto'
-import { toGeoPoint } from '@zod/dto/location.dto'
 import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { usePostStore } from '@/features/posts/stores/postStore'
 
 /**
- * View-model for the browse map. Profile POIs and clusters derive from
- * findProfileStore cluster features; post POIs derive from postStore.postSummaries.
- * A single bounds event triggers parallel fetches for both stores.
+ * View-model for the browse map. Map POIs (profile + post markers, clusters)
+ * derive from findProfileStore cluster features. A single bounds event
+ * triggers parallel fetches: cluster features for map markers, and
+ * postStore.postSummaries for the NearbyFeatures strip (which BrowseProfiles
+ * consumes directly from the store, not via this view-model).
  */
 export function useBrowseViewModel() {
   const findProfileStore = useFindProfileStore()
   const ownerStore = useOwnerProfileStore()
   const postStore = usePostStore()
   const { clusterFeatures, availableTags, isLoading } = storeToRefs(findProfileStore)
-  const { postSummaries } = storeToRefs(postStore)
 
   const viewerProfile = computed(() => ownerStore.profile)
 
@@ -50,19 +50,18 @@ export function useBrowseViewModel() {
   )
 
   const postPois = computed<MapPoi[]>(() =>
-    postSummaries.value.flatMap((p) => {
-      const location = toGeoPoint(p.location)
-      if (!location) return []
-      return [
-        {
-          id: p.id,
-          title: p.content,
-          location,
-          type: 'post',
-          source: p,
-        },
-      ]
-    })
+    clusterFeatures.value
+      .filter((f): f is PointFeature => f.type === 'point' && f.kind === 'post')
+      .map((p) => ({
+        id: p.id,
+        title: p.postContent ?? '',
+        location: { lat: p.lat, lon: p.lon },
+        image: p.image?.url
+          ? { blurhash: p.image.blurhash, variants: [{ size: 'thumb', url: p.image.url }] }
+          : undefined,
+        type: 'post',
+        source: p,
+      }))
   )
 
   const allPois = computed<MapPoi[]>(() => [...profilePois.value, ...postPois.value])
