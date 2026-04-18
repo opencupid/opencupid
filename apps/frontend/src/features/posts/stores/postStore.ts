@@ -5,9 +5,11 @@ import {
   PublicPostWithProfileSchema,
   PublicPostDetailSchema,
   OwnerPostSchema,
+  PostSummarySchema,
   type PublicPostWithProfile,
   type PublicPostDetail,
   type OwnerPost,
+  type PostSummary,
   type CreatePostPayload,
   type UpdatePostPayload,
   type PostQueryInput,
@@ -16,6 +18,7 @@ import {
 } from '@zod/post/post.dto'
 import type {
   PostsResponse,
+  PostSummariesResponse,
   MyPostsResponse,
   PostResponse,
   PublicPostDetailResponse,
@@ -30,14 +33,20 @@ import type { MapBounds } from '@/features/map/types/map.types'
 let publicPostAbortController: AbortController | null = null
 const PublicPostWithProfileArraySchema = PublicPostWithProfileSchema.array()
 const OwnerPostArraySchema = OwnerPostSchema.array()
+const PostSummaryArraySchema = PostSummarySchema.array()
 type StorePostResponse = StoreResponse<{ post: OwnerPost }>
 type StorePostsResponse = StoreResponse<{ posts: PublicPostWithProfile[] }>
 type StoreOwnerPostsResponse = StoreResponse<{ posts: OwnerPost[] }>
+type StorePostSummariesResponse = StoreResponse<{ posts: PostSummary[] }>
 
 export const usePostStore = defineStore('posts', {
   state: () => ({
+    /** Public feed — populated by fetchPosts / fetchNearbyPosts / fetchRecentPosts. Full shape with conversationContext. */
     posts: [] as PublicPostWithProfile[],
+    /** Owner-scoped post list — populated by fetchMyPosts. */
     myPosts: [] as OwnerPost[],
+    /** Lightweight teasers for map-bounds rendering — populated by fetchPostsInBounds. No conversationContext / isOwn / isVisible. */
+    postSummaries: [] as PostSummary[],
     currentPost: null as PublicPostWithProfile | OwnerPost | null,
   }),
 
@@ -263,13 +272,13 @@ export const usePostStore = defineStore('posts', {
       }
     },
 
-    async fetchPostsInBounds(bounds: MapBounds): Promise<StorePostsResponse> {
+    async fetchPostsInBounds(bounds: MapBounds): Promise<StorePostSummariesResponse> {
       try {
         const res = await safeApiCall(() =>
-          api.get<PostsResponse>('/posts/bounds', { params: bounds })
+          api.get<PostSummariesResponse>('/posts/bounds', { params: bounds })
         )
-        const posts = PublicPostWithProfileArraySchema.parse(res.data.posts)
-        this.posts = posts
+        const posts = PostSummaryArraySchema.parse(res.data.posts)
+        this.postSummaries = posts
         return storeSuccess({ posts })
       } catch (error: any) {
         return storeError(error, 'Failed to fetch posts in bounds')

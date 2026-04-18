@@ -223,4 +223,53 @@ describe('postStore', () => {
       expect(store.myPosts[0]!.id).toBe(CUID_NEW)
     })
   })
+
+  describe('fetchPostsInBounds', () => {
+    it('parses response into postSummaries state', async () => {
+      const fakePosts = [
+        {
+          id: CUID_1,
+          type: 'OFFER',
+          content: 'Hello',
+          location: { country: 'HU', cityName: 'Budapest', lat: 47.5, lon: 19.0 },
+          postedBy: {
+            id: CUID_2,
+            publicName: 'Alice',
+            profileImages: [],
+            location: { country: 'HU', cityName: 'Budapest', lat: 47.5, lon: 19.0 },
+          },
+        },
+      ]
+      mockApi.get.mockResolvedValueOnce({
+        data: { success: true, posts: fakePosts },
+      })
+
+      const store = usePostStore()
+      const result = await store.fetchPostsInBounds({
+        south: 47,
+        north: 48,
+        west: 18,
+        east: 20,
+      })
+
+      expect(result.success).toBe(true)
+      expect(store.postSummaries).toHaveLength(1)
+      expect(store.postSummaries[0]!.id).toBe(CUID_1)
+      expect(mockApi.get).toHaveBeenCalledWith('/posts/bounds', {
+        params: { south: 47, north: 48, west: 18, east: 20 },
+      })
+    })
+
+    it('returns error on request failure', async () => {
+      mockApi.get.mockRejectedValueOnce(new Error('network'))
+      const store = usePostStore()
+      const result = await store.fetchPostsInBounds({
+        south: 0,
+        north: 0,
+        west: 0,
+        east: 0,
+      })
+      expect(result.success).toBe(false)
+    })
+  })
 })
