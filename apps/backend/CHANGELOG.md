@@ -1,5 +1,15 @@
 # backend
 
+## 0.52.0
+
+### Minor Changes
+
+- b098972: NearbyFeatures strip now fetches posts directly from `/posts/bounds` so clustered posts are no longer hidden from the panel. The `/posts/bounds` response shape changed from `PublicPostWithProfile[]` to the lighter `PostSummary[]` (matches what the strip needs; no existing production consumer relied on the richer shape).
+
+### Patch Changes
+
+- da72eaf: Fix face-aware autocrop missing faces on full-body portraits: swap BlazeFace (selfie-tuned short-range, 128×128 input) for MediaPipe FaceDetector full-range (192×192, trained on wider scenes), raise smartcrop boost weight so small faces outscore saturated/high-detail regions, and stop sharp's attention strategy from re-cropping over smartcrop's output.
+
 ## 0.51.0
 
 ## 0.50.0
