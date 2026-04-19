@@ -29,6 +29,7 @@ vi.mock('@/lib/appconfig', () => ({
   appConfig: {
     SITE_NAME: 'OpenCupid',
     FRONTEND_URL: 'https://frontend.test',
+    DOMAIN: 'frontend.test',
   },
 }))
 
@@ -126,6 +127,11 @@ describe('NotifierService', () => {
       {
         to: 'user@example.com',
         subject: 'emails.new_like.subject-translated',
+        brand: {
+          siteName: 'OpenCupid',
+          frontendUrl: 'https://frontend.test',
+          domain: 'frontend.test',
+        },
         templateProps: {
           siteName: 'OpenCupid',
           publicName: 'Alice',
@@ -180,6 +186,11 @@ describe('NotifierService', () => {
       {
         to: 'user@example.com',
         subject: 'emails.welcome.subject-translated',
+        brand: {
+          siteName: 'OpenCupid',
+          frontendUrl: 'https://frontend.test',
+          domain: 'frontend.test',
+        },
         templateProps: {
           siteName: 'OpenCupid',
           publicName: 'Alice',
@@ -206,15 +217,20 @@ describe('NotifierService', () => {
     await service.notifyUser('user-2', 'welcome', { link: 'https://frontend.test/me' })
 
     expect(mockDispatchEmail).toHaveBeenCalledWith(
-      {
+      expect.objectContaining({
         to: 'user2@example.com',
         subject: 'emails.welcome.subject-translated',
+        brand: {
+          siteName: 'OpenCupid',
+          frontendUrl: 'https://frontend.test',
+          domain: 'frontend.test',
+        },
         templateProps: expect.objectContaining({
           publicName: '',
           callToActionLabel: 'emails.welcome.callToActionLabel-translated',
           callToActionUrl: 'https://frontend.test/me',
         }),
-      },
+      }),
       'welcome-user-2'
     )
   })

@@ -8,8 +8,15 @@ export type EmailTemplateProps = {
   footer?: string
 }
 
+export type Brand = {
+  siteName: string
+  frontendUrl: string
+  domain: string
+}
+
 export type EmailPayload = {
   to: string
   subject: string
+  brand: Brand
   templateProps: EmailTemplateProps
 }

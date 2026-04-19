@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { h } from 'vue'
 import type { Component } from 'vue'
 import type { EmailPayload, EmailTemplateProps } from '../../services/email/types'
+import { brandStub } from '../../test-utils/brand'
 
 // Mock the CSS import so the test environment has known CSS to inline
 vi.mock('../../services/email/emailTemplate.css', () => ({
@@ -25,6 +26,7 @@ const defaultProps: EmailTemplateProps = {
 const defaultPayload: EmailPayload = {
   to: 'alice@example.com',
   subject: 'Welcome',
+  brand: brandStub,
   templateProps: defaultProps,
 }
 
@@ -116,6 +118,7 @@ describe('renderEmail', () => {
     const result = await renderEmail(SimpleComponent, {
       to: 'bob@example.com',
       subject: 'Hello',
+      brand: brandStub,
       templateProps: props,
     })
     expect(result).toContain('Bob')
@@ -135,6 +138,7 @@ describe('renderEmail', () => {
     const result = await renderEmail(SimpleComponent, {
       to: 'carol@example.com',
       subject: 'No footer',
+      brand: brandStub,
       templateProps: props,
     })
     expect(result).toBeDefined()

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { dispatcher } from '../../queues/emailDispatcher'
+import { brandStub } from '../../test-utils/brand'
 
 const { mockAdd } = vi.hoisted(() => ({
   mockAdd: vi.fn(),
@@ -18,6 +19,7 @@ describe('EmailDispatcher.dispatchEmail', () => {
     const payload = {
       to: 'user@example.com',
       subject: 'Welcome',
+      brand: brandStub,
       templateProps: {
         publicName: 'Alice',
         callToActionLabel: 'Open app',
@@ -44,6 +46,7 @@ describe('EmailDispatcher.dispatchEmail', () => {
     const payload = {
       to: 'other@example.com',
       subject: 'Reset',
+      brand: brandStub,
       templateProps: {
         publicName: 'Bob',
         callToActionLabel: 'Reset password',
