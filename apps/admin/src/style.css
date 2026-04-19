@@ -1,7 +1,43 @@
 /* Admin-specific styles */
-.sidebar {
-  min-height: 100vh;
+
+/* Mobile top bar */
+.topbar {
+  height: 56px;
   background-color: #212529;
+  color: #fff;
+}
+
+.sidebar-toggle {
+  background: none;
+  border: none;
+  color: #fff;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* Sidebar (BOffcanvas) */
+.sidebar {
+  background-color: #212529;
+}
+
+.sidebar.offcanvas-lg {
+  --bs-offcanvas-width: 260px;
+}
+
+/* Desktop: override Bootstrap responsive offcanvas resets to keep sidebar look */
+@media (min-width: 992px) {
+  .sidebar.offcanvas-lg {
+    width: 220px;
+    flex-shrink: 0;
+    background-color: #212529 !important;
+    min-height: 100vh;
+  }
+
+  .sidebar.offcanvas-lg .offcanvas-body {
+    flex-grow: 1 !important;
+    flex-direction: column;
+    padding: 1rem !important;
+  }
 }
 
 .sidebar .nav-link {
@@ -40,4 +76,12 @@
   background: #fff;
   border-radius: 0.5rem;
   box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* Responsive tables: horizontal scroll on small screens */
+@media (max-width: 991.98px) {
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
