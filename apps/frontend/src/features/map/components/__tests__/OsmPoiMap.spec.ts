@@ -11,9 +11,9 @@ const ResizeObserverStub = vi.fn(function (cb: () => void) {
 })
 vi.stubGlobal('ResizeObserver', ResizeObserverStub)
 
-// jsdom lacks matchMedia; useMapController reads it at module load to detect
-// hover-capable devices. Stub with matches: true so desktop-hover popup
-// behavior is exercised by these tests.
+// jsdom lacks matchMedia; stub it because supportsHover() consults it during
+// marker creation to detect hover-capable devices. Use matches: true so
+// desktop-hover popup behavior is exercised by these tests.
 Object.defineProperty(window, 'matchMedia', {
   configurable: true,
   writable: true,
@@ -404,7 +404,7 @@ describe('OsmPoiMap', () => {
   })
 
   it('flyTo uses lastStableZoom from zoomend, not mid-animation getZoom', async () => {
-    const wrapper = await mountMap({ center: [47.0, 19.0] as [number, number], zoom: 7 })
+    const wrapper = await mountMap({ center: [47.0, 19.0] as [number, number] })
     await flushPromises()
 
     // The map instance returned by L.map shares mapProto references
@@ -439,7 +439,7 @@ describe('OsmPoiMap', () => {
   })
 
   it('defers center change when container has zero dimensions and replays on resize', async () => {
-    const wrapper = await mountMap({ center: [47.0, 19.0] as [number, number], zoom: 7 })
+    const wrapper = await mountMap({ center: [47.0, 19.0] as [number, number] })
     await flushPromises()
 
     const mapInstance = (L.map as any).mock.results[0].value
