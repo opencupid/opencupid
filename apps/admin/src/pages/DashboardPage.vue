@@ -153,54 +153,48 @@ onMounted(async () => {
 
     <div
       v-if="stats"
-      class="row g-3"
+      class="kpi-grid"
     >
-      <div class="col-sm-6 col-lg-4">
-        <div class="card kpi-card">
-          <div class="card-body">
-            <div class="text-muted small">Total Users</div>
-            <div class="kpi-value">{{ stats.totalUsers }}</div>
-          </div>
+      <div class="card kpi-card">
+        <div class="card-body">
+          <h6 class="card-title">Total Users</h6>
+          <h6 class="card-subtitle mb-2 text-body-secondary">&nbsp;</h6>
+          <div class="kpi-value">{{ stats.totalUsers }}</div>
         </div>
       </div>
-      <div class="col-sm-6 col-lg-4">
-        <div class="card kpi-card">
-          <div class="card-body">
-            <div class="text-muted small">Total Profiles</div>
-            <div class="kpi-value">{{ stats.totalProfiles }}</div>
-          </div>
+      <div class="card kpi-card">
+        <div class="card-body">
+          <h6 class="card-title">Total Profiles</h6>
+          <h6 class="card-subtitle mb-2 text-body-secondary">&nbsp;</h6>
+          <div class="kpi-value">{{ stats.totalProfiles }}</div>
         </div>
       </div>
-      <div class="col-sm-6 col-lg-4">
-        <div class="card kpi-card">
-          <div class="card-body">
-            <div class="text-muted small">Active Profiles</div>
-            <div class="kpi-value">{{ stats.activeProfiles }}</div>
-          </div>
+      <div class="card kpi-card">
+        <div class="card-body">
+          <h6 class="card-title">Active Profiles</h6>
+          <h6 class="card-subtitle mb-2 text-body-secondary">&nbsp;</h6>
+          <div class="kpi-value">{{ stats.activeProfiles }}</div>
         </div>
       </div>
-      <div class="col-sm-6 col-lg-4">
-        <div class="card kpi-card">
-          <div class="card-body">
-            <div class="text-muted small">Signups (Last 7 Days)</div>
-            <div class="kpi-value">{{ stats.recentSignups }}</div>
-          </div>
+      <div class="card kpi-card">
+        <div class="card-body">
+          <h6 class="card-title">Signups</h6>
+          <h6 class="card-subtitle mb-2 text-body-secondary">Last 7 Days</h6>
+          <div class="kpi-value">{{ stats.recentSignups }}</div>
         </div>
       </div>
-      <div class="col-sm-6 col-lg-4">
-        <div class="card kpi-card">
-          <div class="card-body">
-            <div class="text-muted small">Blocked Users</div>
-            <div class="kpi-value">{{ stats.blockedUsers }}</div>
-          </div>
+      <div class="card kpi-card">
+        <div class="card-body">
+          <h6 class="card-title">Blocked Users</h6>
+          <h6 class="card-subtitle mb-2 text-body-secondary">&nbsp;</h6>
+          <div class="kpi-value">{{ stats.blockedUsers }}</div>
         </div>
       </div>
-      <div class="col-sm-6 col-lg-4">
-        <div class="card kpi-card">
-          <div class="card-body">
-            <div class="text-muted small">Reported Profiles</div>
-            <div class="kpi-value">{{ stats.reportedProfiles }}</div>
-          </div>
+      <div class="card kpi-card">
+        <div class="card-body">
+          <h6 class="card-title">Reported Profiles</h6>
+          <h6 class="card-subtitle mb-2 text-body-secondary">&nbsp;</h6>
+          <div class="kpi-value">{{ stats.reportedProfiles }}</div>
         </div>
       </div>
     </div>
@@ -305,3 +299,18 @@ onMounted(async () => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 992px) {
+  .kpi-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+</style>
