@@ -397,6 +397,7 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
       try {
         const updated = await profileService.updateScopes(req.user.userId, data)
         if (!updated) return sendError(reply, 404, 'Profile not found')
+        clusterService.evict(updated.id)
         // Update session with new profile scope data
         await req.updateSession({
           hasActiveProfile: updated.isActive,
