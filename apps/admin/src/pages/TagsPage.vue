@@ -418,7 +418,7 @@ onUnmounted(() => {
       {{ error }}
     </div>
 
-    <div class="mb-3 d-flex gap-2">
+    <div class="mb-3 d-flex flex-wrap gap-2">
       <input
         v-model="search"
         type="text"
