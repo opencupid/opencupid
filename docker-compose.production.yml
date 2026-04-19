@@ -68,6 +68,9 @@ services:
 
   worker:
     image: ${DOCKER_IMAGE_PREFIX:-ghcr.io/opencupid/opencupid}-backend:${BACKEND_VERSION:-latest}
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
     restart: always
     command: ["node", "dist/worker.js"]
     depends_on:

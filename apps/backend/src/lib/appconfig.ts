@@ -7,10 +7,10 @@ import { findUpSync } from '@shared/findUp'
 export const configSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test', 'staging']).default('development'),
   API_PORT: z.coerce.number().default(3000),
+  WORKER_PORT: z.coerce.number().default(3100),
   FRONTEND_PORT: z.coerce.number().default(5173),
 
   FRONTEND_URL: z.string().url(),
-  FRONTEND_URLS: z.string().optional(),
   API_BASE_URL: z.string(),
   WS_BASE_URL: z.string(),
 

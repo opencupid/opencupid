@@ -1,4 +1,5 @@
 import { Worker, type Job } from 'bullmq'
+import Sentry from '@/lib/sentry'
 import { appConfig } from '@/lib/appconfig'
 import { bullConnection } from '@/lib/redis'
 import { logger } from '@/lib/logger'
@@ -59,13 +60,14 @@ export function registerWorkers(): Worker[] {
       logger.info({ queue: w.name, jobId: job.id, name: job.name, ms }, 'job completed')
     })
     w.on('failed', (job, err) => {
-      logger.error(
-        { queue: w.name, jobId: job?.id, name: job?.name, attemptsMade: job?.attemptsMade, err: err.message },
-        'job failed'
-      )
+      logger.warn({ queue: w.name, jobId: job?.id }, 'job failed')
+      Sentry.captureException(err, {
+        tags: { queue: w.name, jobName: job?.name },
+        extra: { jobId: job?.id, attemptsMade: job?.attemptsMade },
+      })
     })
     w.on('error', (err) => {
-      logger.error({ err: err.message }, 'worker error')
+      Sentry.captureException(err, { tags: { queue: w.name } })
     })
   }
 
@@ -75,8 +77,9 @@ export function registerWorkers(): Worker[] {
     logger.info({ signal }, 'draining workers')
     const results = await Promise.allSettled(workers.map((w) => w.close()))
     const drained = results.filter((r) => r.status === 'fulfilled').length
-    logger.info({ drained, total: workers.length }, 'workers drained')
-    process.exit(0)
+    const failed = results.length - drained
+    logger.info({ drained, failed, total: workers.length }, 'workers drained')
+    process.exit(failed > 0 ? 1 : 0)
   }
   process.once('SIGTERM', shutdown)
   process.once('SIGINT', shutdown)
