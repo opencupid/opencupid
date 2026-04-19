@@ -1,5 +1,11 @@
 # @opencupid/shared
 
+## 0.5.12
+
+### Patch Changes
+
+- 5d4f582: Add post indicator overlay to profiles with collocated posts
+
 ## 0.5.11
 
 ### Patch Changes

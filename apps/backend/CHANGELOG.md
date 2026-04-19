@@ -1,5 +1,11 @@
 # backend
 
+## 0.52.1
+
+### Patch Changes
+
+- 5d4f582: Add post indicator overlay to profiles with collocated posts
+
 ## 0.52.0
 
 ### Minor Changes

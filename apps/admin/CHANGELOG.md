@@ -1,5 +1,11 @@
 # @opencupid/admin
 
+## 0.52.1
+
+### Patch Changes
+
+- c73faf7: Add responsive mobile sidebar with offcanvas navigation
+
 ## 0.52.0
 
 ## 0.51.0
