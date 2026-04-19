@@ -5,13 +5,10 @@ import cors from '@fastify/cors'
 import { appConfig } from '@/lib/appconfig'
 import './lib/i18n' // Initialize i18next with translations
 
-import './workers/emailWorker' // ← side‐effect: starts the worker
-import './workers/activityWorker' // ← side-effect: starts the activity distill worker
-import './workers/activityFlushWorker' // ← side-effect: starts the activity flush worker
-import './workers/onboardingReminderWorker' // ← side-effect: starts the onboarding reminder worker
 import { checkUserContentRoot } from '@/lib/media'
 
 import { ImageProcessor } from './services/imageprocessor'
+
 async function main() {
   const app = Fastify({
     trustProxy: true,
@@ -31,7 +28,7 @@ async function main() {
     },
   })
 
-  app.log.info(`🚀 Starting server, version ${__APP_VERSION__}`)
+  app.log.info(`🚀 Starting API, version ${__APP_VERSION__}`)
 
   // Register CORS plugin
   const corsOrigins = appConfig.FRONTEND_URLS
@@ -57,15 +54,12 @@ async function main() {
   app.register(import('./plugins/prisma'))
   app.register(import('./plugins/session-auth'))
   app.register(import('./plugins/activity-tracking'))
-  app.register(import('./plugins/bull-board'), { prefix: '/bull-board' })
   // API routes
-  app.register(import('./api'), { prefix: '/api' })
+  app.register(import('./api/index'), { prefix: '/api' })
 
   // WebSocket routes
   const wsRoutes = import('./api/routes/message-ws.route')
   app.register(wsRoutes, { prefix: '/ws' })
-
-  // app.get('/healthz', async () => ({ ok: true }))
 
   const ok = checkUserContentRoot()
   if (!ok) {
@@ -79,7 +73,7 @@ async function main() {
   app.listen(
     {
       port: appConfig.API_PORT,
-      host: '0.0.0.0', // Listen on all interfaces
+      host: '0.0.0.0',
     },
     (err) => {
       if (err) {

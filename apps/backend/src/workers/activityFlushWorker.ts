@@ -1,7 +1,4 @@
-import { Worker } from 'bullmq'
-import IORedis from 'ioredis'
 import { Prisma } from '@prisma/client'
-import { appConfig } from '@/lib/appconfig'
 import { prisma } from '@/lib/prisma'
 
 const SESSION_GAP_MS = 30 * 60 * 1000
@@ -34,14 +31,3 @@ export async function processActivityFlushJob(profileId: string): Promise<void> 
   }
 }
 
-const connection = new IORedis(appConfig.REDIS_URL, { maxRetriesPerRequest: null })
-
-new Worker(
-  'activity-flush',
-  async (job) => {
-    const { profileId } = job.data as { profileId: string }
-    if (!profileId) return
-    await processActivityFlushJob(profileId)
-  },
-  { connection }
-)

@@ -1,14 +1,9 @@
-import { appConfig } from '@/lib/appconfig'
 import { Queue } from 'bullmq'
-import IORedis from 'ioredis'
-
-const connection = new IORedis(appConfig.REDIS_URL, {
-  maxRetriesPerRequest: null,
-})
+import { bullConnection } from '@/lib/redis'
 
 const DISTILL_CRON = '0 3 * * *' // daily at 03:00
 
-export const activityQueue = new Queue('activity-distill', { connection })
+export const activityQueue = new Queue('activity-distill', { connection: bullConnection })
 
 /**
  * Register the repeatable distillation job.

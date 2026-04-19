@@ -1,9 +1,6 @@
-import { Worker } from 'bullmq'
-import IORedis from 'ioredis'
+import type { Job } from 'bullmq'
 import { z } from 'zod'
-import { appConfig } from '@/lib/appconfig'
 import { sendOnboardingReminders } from '@/services/onboardingReminder.service'
-import { registerOnboardingReminderJob } from '@/queues/onboardingReminderQueue'
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000
 
@@ -30,36 +27,27 @@ export const jobDataSchema = z.object({
   windowOffsetMs: z.coerce.number().finite().nonnegative().default(ONE_DAY_MS),
 })
 
-type JobData = z.input<typeof jobDataSchema>
+export type OnboardingReminderJobData = z.input<typeof jobDataSchema>
 
-const connection = new IORedis(appConfig.REDIS_URL, { maxRetriesPerRequest: null })
+export async function processOnboardingReminderJob(
+  job: Job<OnboardingReminderJobData>
+): Promise<void> {
+  const { windowOffsetMs } = jobDataSchema.parse(job.data ?? {})
+  const now = Date.now()
+  const windowStart = new Date(now - windowOffsetMs - ONE_DAY_MS)
+  const windowEnd = new Date(now - windowOffsetMs)
+  await job.log(`Window: ${windowStart.toISOString()} → ${windowEnd.toISOString()}`)
 
-new Worker<JobData>(
-  'onboarding-reminder',
-  async (job) => {
-    const { windowOffsetMs } = jobDataSchema.parse(job.data ?? {})
-    const now = Date.now()
-    const windowStart = new Date(now - windowOffsetMs - ONE_DAY_MS)
-    const windowEnd = new Date(now - windowOffsetMs)
-    await job.log(`Window: ${windowStart.toISOString()} → ${windowEnd.toISOString()}`)
+  const count = await sendOnboardingReminders(
+    windowStart,
+    windowEnd,
+    async (sent, total, userId) => {
+      await job.updateProgress(Math.round((sent / total) * 100))
+      await job.log(`[${sent}/${total}] queued reminder for user ${userId}`)
+    }
+  )
 
-    const count = await sendOnboardingReminders(
-      windowStart,
-      windowEnd,
-      async (sent, total, userId) => {
-        await job.updateProgress(Math.round((sent / total) * 100))
-        await job.log(`[${sent}/${total}] queued reminder for user ${userId}`)
-      }
-    )
-
-    await job.log(
-      count > 0 ? `Done — ${count} reminder(s) queued` : 'No users matched — nothing sent'
-    )
-  },
-  { connection }
-)
-
-// Register the repeatable job schedule on startup
-registerOnboardingReminderJob().catch((err) => {
-  console.error('Failed to register onboarding reminder job:', err)
-})
+  await job.log(
+    count > 0 ? `Done — ${count} reminder(s) queued` : 'No users matched — nothing sent'
+  )
+}

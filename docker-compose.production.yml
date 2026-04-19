@@ -59,12 +59,36 @@ services:
       traefik.http.routers.ws.entrypoints: websecure
       traefik.http.routers.ws.middlewares: public-sanitize@file
 
-      # --- Admin domain: API + Bull Board (mTLS) ---
-      traefik.http.routers.admin-backend.rule: "Host(`${ADMIN_DOMAIN}`) && (PathPrefix(`/api`) || PathPrefix(`/bull-board`))"
+      # --- Admin domain: API (mTLS) ---
+      traefik.http.routers.admin-backend.rule: "Host(`${ADMIN_DOMAIN}`) && PathPrefix(`/api`)"
       traefik.http.routers.admin-backend.entrypoints: websecure
       traefik.http.routers.admin-backend.tls.options: admin-mtls@file
       traefik.http.routers.admin-backend.tls.certResolver: letsencrypt
       traefik.http.routers.admin-backend.middlewares: admin-header@file
+
+  worker:
+    image: ${DOCKER_IMAGE_PREFIX:-ghcr.io/opencupid/opencupid}-backend:${BACKEND_VERSION:-latest}
+    restart: always
+    command: ["node", "dist/worker.js"]
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - .env
+    volumes:
+      - '${MEDIA_UPLOAD_DIR}:${MEDIA_UPLOAD_DIR}'
+    deploy:
+      replicas: 1
+    labels:
+      traefik.enable: "true"
+
+      # --- Admin domain: Bull Board (mTLS) ---
+      traefik.http.routers.admin-bull-board.rule: "Host(`${ADMIN_DOMAIN}`) && PathPrefix(`/bull-board`)"
+      traefik.http.routers.admin-bull-board.entrypoints: websecure
+      traefik.http.routers.admin-bull-board.tls.options: admin-mtls@file
+      traefik.http.routers.admin-bull-board.tls.certResolver: letsencrypt
+      traefik.http.routers.admin-bull-board.middlewares: admin-header@file
+      traefik.http.services.worker.loadbalancer.server.port: "3100"
 
   frontend:
     image: ${DOCKER_IMAGE_PREFIX:-ghcr.io/opencupid/opencupid}-frontend:${FRONTEND_VERSION:-latest}
