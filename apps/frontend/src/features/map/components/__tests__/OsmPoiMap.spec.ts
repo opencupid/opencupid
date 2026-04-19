@@ -10,6 +10,25 @@ const ResizeObserverStub = vi.fn(function (cb: () => void) {
   return { observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn() }
 })
 vi.stubGlobal('ResizeObserver', ResizeObserverStub)
+
+// jsdom lacks matchMedia; useMapController reads it at module load to detect
+// hover-capable devices. Stub with matches: true so desktop-hover popup
+// behavior is exercised by these tests.
+Object.defineProperty(window, 'matchMedia', {
+  configurable: true,
+  writable: true,
+  value: vi.fn((query: string) => ({
+    matches: true,
+    media: query,
+    onchange: null,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+})
+
 afterAll(() => vi.unstubAllGlobals())
 
 // Track created markers and their icons
@@ -171,6 +190,7 @@ vi.mock('@/features/images/composables/useBlurhashDataUrl', () => ({
 import { mount, flushPromises } from '@vue/test-utils'
 import OsmPoiMap from '../OsmPoiMap.vue'
 import { POI_ICON_SIZE, MAP_MAX_ZOOM } from '../../utils/mapUtils'
+import { MAP_DEFAULT_ZOOM } from '@shared/maps'
 import type { MapCluster } from '../../types/map.types'
 import L from 'leaflet'
 
@@ -409,13 +429,13 @@ describe('OsmPoiMap', () => {
     expect(mapInstance.flyTo).toHaveBeenCalledWith([48.0, 20.0], 15, { duration: 1 })
   })
 
-  it('initializes at the provided center and zoom', async () => {
-    await mountMap({ center: [47.0, 19.0] as [number, number], zoom: 7 })
+  it('initializes at the provided center and the default zoom', async () => {
+    await mountMap({ center: [47.0, 19.0] as [number, number] })
     await flushPromises()
 
     const mapCall = (L.map as any).mock.calls[0][1]
     expect(mapCall.center).toEqual([47.0, 19.0])
-    expect(mapCall.zoom).toBe(7)
+    expect(mapCall.zoom).toBe(MAP_DEFAULT_ZOOM)
   })
 
   it('defers center change when container has zero dimensions and replays on resize', async () => {
@@ -477,7 +497,6 @@ describe('OsmPoiMap', () => {
 
     vi.useRealTimers()
   })
-
 
   it('debounces bounds:changed emission on rapid moveend events', async () => {
     vi.useFakeTimers()
