@@ -59,24 +59,26 @@ watch(selectedTagIds, () => {
   findProfileStore.refetchBounds()
 })
 
-// Map center: starts at the viewer's own location, then moves when the
-// user picks a fly-to target from the location filter.
-const mapCenterOverride = ref<[number, number] | null>(null)
+// Map center: user's explicit choice from the location filter. When null,
+// falls back to defaultMapCenter (the viewer's own profile location).
+const mapCenter = ref<[number, number] | null>(null)
 
 // Placeholder visibility. Flipped by @map:ready from OsmPoiMap once the
 // first tile load completes. Hoisted out of OsmPoiMap so it paints from
-// first render — i.e. before mapCenter resolves and the map mounts.
+// first render — i.e. before effectiveMapCenter resolves and the map mounts.
 const isMapReady = ref(false)
 function onMapReady() {
   isMapReady.value = true
 }
-const mapCenter = computed<[number, number] | undefined>(() => {
-  if (mapCenterOverride.value) return mapCenterOverride.value
+const defaultMapCenter = computed<[number, number] | undefined>(() => {
   const fromProfile = toLatLng(viewerProfile.value?.location)
   return isValidLatLng(fromProfile) ? fromProfile : undefined
 })
+const effectiveMapCenter = computed<[number, number] | undefined>(
+  () => mapCenter.value ?? defaultMapCenter.value
+)
 function onLocationSet(point: GeoPoint) {
-  mapCenterOverride.value = [point.lat, point.lon]
+  mapCenter.value = [point.lat, point.lon]
 }
 
 provide('viewerProfile', toRef(viewerProfile))
@@ -232,11 +234,11 @@ onMounted(async () => {
         />
 
         <OsmPoiMap
-          v-if="mapCenter"
+          v-if="effectiveMapCenter"
           :items="allPois"
           :clusters="clusters"
           :icon-resolver="(poi) => (poi.type === 'post' ? MapIcon : ProfileMarker)"
-          :center="mapCenter"
+          :center="effectiveMapCenter"
           :popup-resolver="(poi) => (poi.type === 'post' ? PostMapPopup : ProfileMapCard)"
           :fetch-popup-data="fetchPopupData"
           class="h-100"
