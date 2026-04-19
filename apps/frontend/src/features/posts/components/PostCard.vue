@@ -112,13 +112,15 @@ const handleContact = async () => {
                     :profile="post.postedBy"
                     class="me-2"
                   />
-                  <div>{{ post.postedBy.publicName }}</div>
-                  <LocalizedTimeAgo
-                    v-slot="{ timeAgo }"
-                    :time="post.createdAt"
-                  >
-                    | {{ timeAgo }}
-                  </LocalizedTimeAgo>
+                  <div>
+                    <div>{{ post.postedBy.publicName }}</div>
+                    <LocalizedTimeAgo
+                      v-slot="{ timeAgo }"
+                      :time="post.createdAt"
+                    >
+                      {{ timeAgo }}
+                    </LocalizedTimeAgo>
+                  </div>
                 </div>
               </div>
             </div>

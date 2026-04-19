@@ -11,6 +11,7 @@ import {
   hydratePoiIcon,
   MAP_MAX_ZOOM,
 } from '../utils/mapUtils'
+import { MAP_DEFAULT_ZOOM } from '@shared/maps'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -24,13 +25,10 @@ interface DeferredWork {
 
 export interface MapProps {
   items: MapPoi[]
-  clusters: MapCluster[]
+  clusters?: MapCluster[]
   iconResolver: (poi: MapPoi) => Component
   popupResolver?: (poi: MapPoi) => Component
   center: [number, number]
-  zoom: number
-  fitToPois: boolean
-  boundsDebounce: number
   fetchPopupData?: (id: string) => Promise<unknown>
 }
 
@@ -44,12 +42,19 @@ type MapEmit = {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function isTouchEvent(e: L.LeafletMouseEvent): boolean {
-  const ev = e.originalEvent as Event | undefined
-  if (!ev) return false
-  if (typeof TouchEvent !== 'undefined' && ev instanceof TouchEvent) return true
-  if (ev instanceof PointerEvent) return ev.pointerType === 'touch'
-  return 'touches' in ev || 'changedTouches' in ev
+/**
+ * True when the device reports a real hover-capable pointer (desktop mouse,
+ * stylus). On touch-only devices the browser's touch→mouse compatibility
+ * layer synthesizes mouseover/mouseout from taps and long-presses, which
+ * would misfire the hover-to-open-popup behavior. Gate hover handlers on
+ * this so touch devices rely on tap only.
+ */
+function supportsHover(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(hover: hover)').matches
+  )
 }
 
 // ---------------------------------------------------------------------------
@@ -61,6 +66,7 @@ const OMS_CIRCLE_FOOT_SEPARATION = 65
 const OMS_SPIRAL_FOOT_SEPARATION = 50
 const OMS_SPIRAL_LENGTH_START = 16
 const OMS_SPIRAL_LENGTH_FACTOR = 12
+const BOUNDS_DEBOUNCE_MS = 500
 
 // ---------------------------------------------------------------------------
 // Composable
@@ -88,7 +94,7 @@ export function useMapController(
   let resizeObserver: ResizeObserver
   let boundsTimer: ReturnType<typeof setTimeout> | null = null
   let dissolvedClusterAt: L.LatLng | null = null
-  let lastStableZoom: number = props.zoom
+  let lastStableZoom: number = MAP_DEFAULT_ZOOM
   let markerConfig: MarkerConfig | null = null
 
   // ── Lifecycle ───────────────────────────────────────────────────────────
@@ -134,7 +140,7 @@ export function useMapController(
   function createMap(): void {
     map = L.map(mapEl.value!, {
       center: props.center,
-      zoom: props.zoom,
+      zoom: MAP_DEFAULT_ZOOM,
       maxZoom: MAP_MAX_ZOOM,
       preferCanvas: true,
       trackResize: false,
@@ -196,14 +202,23 @@ export function useMapController(
       shouldUpdate: (prev, next) => {
         const prevUrl = prev.image?.variants?.[0]?.url
         const nextUrl = next.image?.variants?.[0]?.url
-        return prev.highlighted !== next.highlighted || prevUrl !== nextUrl
+        return (
+          prev.highlighted !== next.highlighted ||
+          prevUrl !== nextUrl ||
+          prev.hasPost !== next.hasPost
+        )
       },
       apply: (marker, item) => {
         if (!markerConfig) return
         marker.setIcon(
           hydratePoiIcon(
             markerConfig.resolveIcon(item),
-            { image: item.image, isSelected: false, isHighlighted: item.highlighted ?? false },
+            {
+              image: item.image,
+              isSelected: false,
+              isHighlighted: item.highlighted ?? false,
+              hasPost: item.hasPost,
+            },
             iconCache
           )
         )
@@ -260,7 +275,7 @@ export function useMapController(
         },
         zoom: map.getZoom(),
       })
-    }, props.boundsDebounce)
+    }, BOUNDS_DEBOUNCE_MS)
   }
 
   // ── POI markers ───────────────────────────────────────────────────────
@@ -272,13 +287,18 @@ export function useMapController(
     const m = L.marker([item.location.lat, item.location.lon], {
       icon: hydratePoiIcon(
         resolveIcon(item),
-        { image: item.image, isSelected: false, isHighlighted: item.highlighted ?? false },
+        {
+          image: item.image,
+          isSelected: false,
+          isHighlighted: item.highlighted ?? false,
+          hasPost: item.hasPost,
+        },
         iconCache
       ),
       keyboard: true,
     })
 
-    if (resolvePopup) {
+    if (resolvePopup && supportsHover()) {
       const classes = ['item-popup']
       if (item.type) classes.push(`item-popup-${item.type}`)
       if (item.highlighted) classes.push('item-popup-highlighted')
@@ -289,8 +309,7 @@ export function useMapController(
         className: classes.join(' '),
       })
 
-      m.on('mouseover', (e: L.LeafletMouseEvent) => {
-        if (isTouchEvent(e)) return
+      m.on('mouseover', () => {
         m.openPopup()
       })
 
@@ -298,8 +317,7 @@ export function useMapController(
         m.closePopup()
       })
 
-      m.on('click', (e: L.LeafletMouseEvent) => {
-        if (isTouchEvent(e)) return
+      m.on('click', () => {
         m.closePopup()
       })
 
@@ -439,7 +457,6 @@ export function useMapController(
 
   onMounted(() => {
     if (!mapEl.value) return
-    lastStableZoom = props.zoom
     init()
   })
 
@@ -456,7 +473,7 @@ export function useMapController(
 
   watch(
     () => props.clusters,
-    (newClusters) => updateClusters(newClusters)
+    (newClusters) => updateClusters(newClusters ?? [])
   )
 
   watch(

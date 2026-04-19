@@ -44,6 +44,7 @@ export function useBrowseViewModel() {
           ? { blurhash: p.image.blurhash, variants: [{ size: 'thumb', url: p.image.url }] }
           : undefined,
         highlighted: p.highlighted,
+        hasPost: p.hasPost,
         type: 'profile',
         source: p,
       }))

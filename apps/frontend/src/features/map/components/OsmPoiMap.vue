@@ -1,31 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import type { Component } from 'vue'
 import type { Map as LMap } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
-import type { MapPoi, MapCluster, BoundsWithZoom } from '../types/map.types'
-import { useMapController } from '../composables/useMapController'
+import type { BoundsWithZoom } from '../types/map.types'
+import { useMapController, type MapProps } from '../composables/useMapController'
 
-const props = withDefaults(
-  defineProps<{
-    items: MapPoi[]
-    clusters?: MapCluster[]
-    iconResolver: (poi: MapPoi) => Component
-    popupResolver?: (poi: MapPoi) => Component
-    center: [number, number]
-    zoom?: number
-    fitToPois?: boolean
-    boundsDebounce?: number
-    fetchPopupData?: (id: string) => Promise<unknown>
-  }>(),
-  {
-    zoom: 7,
-    fitToPois: false,
-    boundsDebounce: 500,
-    clusters: () => [],
-  }
-)
+const props = withDefaults(defineProps<MapProps>(), {
+  clusters: () => [],
+})
 
 const emit = defineEmits<{
   (e: 'item:select', id: string): void

@@ -35,7 +35,7 @@ export function createServerClusterIcon(count: number): L.DivIcon {
 function getIconCacheKey(component: Component, props: PoiIconProps): string {
   const name = (component as any).name ?? (component as any).__name ?? 'anon'
   const url = props.image?.variants?.[0]?.url ?? 'none'
-  return `${name}_${url}_${props.isSelected}_${props.isHighlighted}`
+  return `${name}_${url}_${props.isSelected}_${props.isHighlighted}_${props.hasPost ?? false}`
 }
 
 /** Renders a Vue component into a Leaflet DivIcon for use as a POI marker.

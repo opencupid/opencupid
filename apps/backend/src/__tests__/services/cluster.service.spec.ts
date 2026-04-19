@@ -64,14 +64,25 @@ const makeProfile = (id: string, lat: number, lon: number, name = 'User') => ({
   ],
 })
 
-const makePost = (id: string, lat: number, lon: number, content = 'A post') => ({
+const makePost = (
+  id: string,
+  lat: number,
+  lon: number,
+  postedById: string,
+  ownerLat?: number,
+  ownerLon?: number,
+  content = 'A post'
+) => ({
   id,
   content,
   type: 'OFFER',
   lat,
   lon,
+  postedById,
   postedBy: {
     publicName: 'PostAuthor',
+    lat: ownerLat ?? null,
+    lon: ownerLon ?? null,
     profileImages: [
       {
         id: `post-img-${id}`,
@@ -100,7 +111,7 @@ describe('ClusterService', () => {
         makeProfile('p2', 48.2, 16.3, 'Bob'),
         makeProfile('p3', 47.6, 19.1, 'Carol'),
       ]
-      const posts = [makePost('post1', 47.55, 19.05)]
+      const posts = [makePost('post1', 47.55, 19.05, 'author1')]
       mockFindSocialProfilesWithLocation.mockResolvedValue(profiles)
       mockFindMutualMatchIds.mockResolvedValue(['p2'])
       mockFindAllWithLocation.mockResolvedValue(posts)
@@ -206,7 +217,7 @@ describe('ClusterService', () => {
 
     it('returns mixed profile and post leaves', async () => {
       const profiles = [makeProfile('p1', 47.5, 19.0)]
-      const posts = [makePost('post1', 47.5001, 19.0001)]
+      const posts = [makePost('post1', 47.5001, 19.0001, 'other-author')]
       mockFindSocialProfilesWithLocation.mockResolvedValue(profiles)
       mockFindMutualMatchIds.mockResolvedValue([])
       mockFindAllWithLocation.mockResolvedValue(posts)
@@ -221,6 +232,58 @@ describe('ClusterService', () => {
         const kinds = leaves.map((l) => l.kind).sort()
         expect(kinds).toEqual(['post', 'profile'])
       }
+    })
+  })
+
+  describe('collocated post filtering', () => {
+    it('absorbs a post into its owner profile when locations match', async () => {
+      const profiles = [makeProfile('p1', 47.5, 19.0, 'Alice')]
+      const posts = [makePost('post1', 47.5, 19.0, 'p1', 47.5, 19.0)]
+      mockFindSocialProfilesWithLocation.mockResolvedValue(profiles)
+      mockFindMutualMatchIds.mockResolvedValue([])
+      mockFindAllWithLocation.mockResolvedValue(posts)
+
+      await service.buildIndex('viewer-1')
+      const { features } = service.getClusters('viewer-1', [16.0, 47.0, 20.0, 49.0], 12)
+
+      const isPoint = (f: any): f is PointFeature => f.type === 'point'
+      const points = features.filter(isPoint)
+      expect(points).toHaveLength(1)
+      expect(points[0]!.kind).toBe('profile')
+      expect(points[0]!.hasPost).toBe(true)
+    })
+
+    it('keeps a post as standalone when its location differs from owner', async () => {
+      const profiles = [makeProfile('p1', 47.5, 19.0, 'Alice')]
+      const posts = [makePost('post1', 48.0, 20.0, 'p1', 47.5, 19.0)]
+      mockFindSocialProfilesWithLocation.mockResolvedValue(profiles)
+      mockFindMutualMatchIds.mockResolvedValue([])
+      mockFindAllWithLocation.mockResolvedValue(posts)
+
+      await service.buildIndex('viewer-1')
+      const { features } = service.getClusters('viewer-1', [16.0, 47.0, 21.0, 49.0], 12)
+
+      const isPoint = (f: any): f is PointFeature => f.type === 'point'
+      const profilePoints = features.filter(isPoint).filter((f) => f.kind === 'profile')
+      const postPoints = features.filter(isPoint).filter((f) => f.kind === 'post')
+      expect(profilePoints).toHaveLength(1)
+      expect(profilePoints[0]!.hasPost).toBeUndefined()
+      expect(postPoints).toHaveLength(1)
+    })
+
+    it('keeps a post as standalone when owner is not in profiles list', async () => {
+      const profiles = [makeProfile('p1', 47.5, 19.0, 'Alice')]
+      const posts = [makePost('post1', 47.6, 19.1, 'other-profile', 47.6, 19.1)]
+      mockFindSocialProfilesWithLocation.mockResolvedValue(profiles)
+      mockFindMutualMatchIds.mockResolvedValue([])
+      mockFindAllWithLocation.mockResolvedValue(posts)
+
+      await service.buildIndex('viewer-1')
+      const { features } = service.getClusters('viewer-1', [16.0, 47.0, 20.0, 49.0], 12)
+
+      const isPoint = (f: any): f is PointFeature => f.type === 'point'
+      const postPoints = features.filter(isPoint).filter((f) => f.kind === 'post')
+      expect(postPoints).toHaveLength(1)
     })
   })
 
