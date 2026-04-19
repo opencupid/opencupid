@@ -279,7 +279,13 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         phonenumber: phonenumber || undefined,
       }
 
-      const { user, isNewUser } = await userService.setLoginToken(authId, token, language)
+      const originDomain = req.hostname.toLowerCase().split(':')[0]
+      const { user, isNewUser } = await userService.setLoginToken(
+        authId,
+        token,
+        language,
+        originDomain
+      )
 
       const userReturned: LoginUser = {
         id: user.id,

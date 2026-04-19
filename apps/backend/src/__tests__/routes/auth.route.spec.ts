@@ -255,6 +255,7 @@ describe('POST /send-magic-link', () => {
       isNewUser: true,
     })
     const req = {
+      hostname: 'test.local',
       body: {
         email: 'newuser@example.com',
         captchaSolution: 'ok',
@@ -284,6 +285,7 @@ describe('POST /send-magic-link', () => {
       isNewUser: false,
     })
     const req = {
+      hostname: 'test.local',
       body: {
         email: 'existing@example.com',
         captchaSolution: 'ok',
