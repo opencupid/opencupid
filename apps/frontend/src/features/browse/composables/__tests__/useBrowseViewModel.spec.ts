@@ -64,6 +64,26 @@ describe('useBrowseViewModel', () => {
     expect(vm.clusters.value).toHaveLength(1)
   })
 
+  it('passes hasPost flag from profile features to MapPoi', () => {
+    const store = useFindProfileStore()
+    store.clusterFeatures = [
+      {
+        type: 'point',
+        kind: 'profile',
+        id: 'p1',
+        lat: 47.1,
+        lon: 18.6,
+        publicName: 'Alice',
+        image: null,
+        highlighted: false,
+        hasPost: true,
+      },
+    ]
+
+    const vm = useBrowseViewModel()
+    expect(vm.profilePois.value[0]!.hasPost).toBe(true)
+  })
+
   it('derives post POIs from cluster features', () => {
     const store = useFindProfileStore()
     store.clusterFeatures = [

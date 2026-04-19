@@ -16,6 +16,7 @@ interface PointProperties {
   publicName: string
   image: { blurhash?: string | null; url?: string } | null
   highlighted: boolean
+  hasPost?: boolean
   postContent?: string
   postType?: string
 }
@@ -85,9 +86,18 @@ export class ClusterService {
         },
       }))
 
-    const postFeatures: Feature<Point, PointProperties>[] = posts
-      .filter((p) => p.lat != null && p.lon != null)
-      .map((p) => ({
+    const profileIndexById = new Map<string, number>()
+    profileFeatures.forEach((f, i) => profileIndexById.set(f.properties.id, i))
+
+    const postFeatures: Feature<Point, PointProperties>[] = []
+    for (const p of posts) {
+      if (p.lat == null || p.lon == null) continue
+      const profileIdx = profileIndexById.get(p.postedById)
+      if (profileIdx !== undefined && p.postedBy?.lat === p.lat && p.postedBy?.lon === p.lon) {
+        profileFeatures[profileIdx].properties.hasPost = true
+        continue
+      }
+      postFeatures.push({
         type: 'Feature' as const,
         geometry: {
           type: 'Point' as const,
@@ -109,7 +119,8 @@ export class ClusterService {
           postContent: p.content?.substring(0, 50),
           postType: p.type,
         },
-      }))
+      })
+    }
 
     // Collect unique tags from profiles (raw, translated at request time)
     const tagMap = new Map<string, TagWithTranslations>()
@@ -186,6 +197,7 @@ export class ClusterService {
       publicName: f.properties.publicName,
       image: f.properties.image,
       highlighted: f.properties.highlighted,
+      ...(f.properties.hasPost ? { hasPost: true } : {}),
       ...(f.properties.kind === 'post'
         ? { postContent: f.properties.postContent, postType: f.properties.postType }
         : {}),
@@ -271,6 +283,7 @@ export class ClusterService {
       publicName: props.publicName,
       image: props.image,
       highlighted: props.highlighted,
+      ...(props.hasPost ? { hasPost: true } : {}),
       ...(props.kind === 'post'
         ? { postContent: props.postContent, postType: props.postType }
         : {}),

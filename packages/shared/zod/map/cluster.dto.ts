@@ -24,6 +24,7 @@ export const PointFeatureSchema = z.object({
     })
     .nullable(),
   highlighted: z.boolean(),
+  hasPost: z.boolean().optional(),
   postContent: z.string().optional(),
   postType: z.string().optional(),
 })

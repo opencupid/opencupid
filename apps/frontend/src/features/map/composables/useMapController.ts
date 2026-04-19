@@ -196,14 +196,23 @@ export function useMapController(
       shouldUpdate: (prev, next) => {
         const prevUrl = prev.image?.variants?.[0]?.url
         const nextUrl = next.image?.variants?.[0]?.url
-        return prev.highlighted !== next.highlighted || prevUrl !== nextUrl
+        return (
+          prev.highlighted !== next.highlighted ||
+          prevUrl !== nextUrl ||
+          prev.hasPost !== next.hasPost
+        )
       },
       apply: (marker, item) => {
         if (!markerConfig) return
         marker.setIcon(
           hydratePoiIcon(
             markerConfig.resolveIcon(item),
-            { image: item.image, isSelected: false, isHighlighted: item.highlighted ?? false },
+            {
+              image: item.image,
+              isSelected: false,
+              isHighlighted: item.highlighted ?? false,
+              hasPost: item.hasPost,
+            },
             iconCache
           )
         )
@@ -272,7 +281,12 @@ export function useMapController(
     const m = L.marker([item.location.lat, item.location.lon], {
       icon: hydratePoiIcon(
         resolveIcon(item),
-        { image: item.image, isSelected: false, isHighlighted: item.highlighted ?? false },
+        {
+          image: item.image,
+          isSelected: false,
+          isHighlighted: item.highlighted ?? false,
+          hasPost: item.hasPost,
+        },
         iconCache
       ),
       keyboard: true,

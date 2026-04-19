@@ -20,6 +20,7 @@ export interface PoiIconProps {
   image?: AvatarImage
   isSelected: boolean
   isHighlighted: boolean
+  hasPost?: boolean
 }
 
 /** A point-of-interest item for the map. Call sites map domain objects into this shape. */
@@ -31,6 +32,8 @@ export interface MapPoi {
   highlighted?: boolean
   /** Discriminator for icon resolution when multiple POI types share one map. */
   type?: string
+  /** When true, the profile's own location has a collocated post — show a post indicator overlay. */
+  hasPost?: boolean
   /** The original domain object, passed through to the popup component as `:item` */
   source: unknown
 }
