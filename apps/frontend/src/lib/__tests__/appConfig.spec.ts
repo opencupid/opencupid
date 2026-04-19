@@ -5,13 +5,14 @@ import { appConfigSchema } from '@zod/config/appConfig.schema'
 
 describe('appConfig schema', () => {
   it('parses a valid config object using schema defaults', () => {
-    const result = appConfigSchema.parse({})
+    const result = appConfigSchema.parse({ DOMAIN: 'example.org' })
     expect(result).toMatchObject({
       API_BASE_URL: '/api',
       FRONTEND_URL: '',
       WS_BASE_URL: '/ws',
       MEDIA_URL_BASE: '/user-content',
       NODE_ENV: 'development',
+      DOMAIN: 'example.org',
       VAPID_PUBLIC_KEY: '',
       SENTRY_DSN: '',
       SITE_NAME: 'OpenCupid',
@@ -22,10 +23,15 @@ describe('appConfig schema', () => {
     })
   })
 
+  it('rejects config without required DOMAIN', () => {
+    expect(() => appConfigSchema.parse({})).toThrow(/DOMAIN/)
+  })
+
   it('overrides defaults with provided values', () => {
     const result = appConfigSchema.parse({
       API_BASE_URL: 'https://api.example.com',
       SITE_NAME: 'MyApp',
+      DOMAIN: 'example.org',
     })
     expect(result.API_BASE_URL).toBe('https://api.example.com')
     expect(result.SITE_NAME).toBe('MyApp')

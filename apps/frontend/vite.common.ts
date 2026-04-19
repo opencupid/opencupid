@@ -85,6 +85,7 @@ export const runtimeConfigPlugin = (mode: string): Plugin => {
     WS_BASE_URL: env.WS_BASE_URL ?? '/ws',
     MEDIA_URL_BASE: env.MEDIA_URL_BASE ?? '/user-content',
     NODE_ENV: env.NODE_ENV ?? 'development',
+    DOMAIN: env.DOMAIN ?? '',
     VAPID_PUBLIC_KEY: env.VAPID_PUBLIC_KEY ?? '',
     SENTRY_DSN: env.SENTRY_DSN ?? '',
     SITE_NAME: env.SITE_NAME ?? 'OpenCupid',

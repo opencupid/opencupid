@@ -1,4 +1,4 @@
-import type { Brand } from '@/services/email/types'
+import type { Brand } from '@/lib/brand'
 
 export const brandStub: Brand = {
   siteName: 'TestSite',

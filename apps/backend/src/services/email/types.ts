@@ -1,3 +1,5 @@
+import type { Brand } from '../../lib/brand'
+
 export type EmailTemplateProps = {
   siteName: string
   publicName: string
@@ -6,12 +8,6 @@ export type EmailTemplateProps = {
   callToActionUrl: string
   fallbackHint: string
   footer?: string
-}
-
-export type Brand = {
-  siteName: string
-  frontendUrl: string
-  domain: string
 }
 
 export type EmailPayload = {
