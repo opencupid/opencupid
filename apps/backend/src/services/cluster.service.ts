@@ -184,24 +184,13 @@ export class ClusterService {
   }
 
   getLeaves(profileId: string, clusterId: number, tagIds: string[] = []): PointFeature[] {
-    const cached = this.indexes.get(buildCacheKey(profileId, tagIds))
+    const cacheKey = buildCacheKey(profileId, tagIds)
+    const cached = this.indexes.get(cacheKey)
     if (!cached) return []
 
-    const leaves = cached.index.getLeaves(clusterId, Infinity, 0)
-    return leaves.map((f) => ({
-      type: 'point' as const,
-      kind: f.properties.kind,
-      id: f.properties.id,
-      lat: f.geometry.coordinates[1],
-      lon: f.geometry.coordinates[0],
-      publicName: f.properties.publicName,
-      image: f.properties.image,
-      highlighted: f.properties.highlighted,
-      ...(f.properties.hasPost ? { hasPost: true } : {}),
-      ...(f.properties.kind === 'post'
-        ? { postContent: f.properties.postContent, postType: f.properties.postType }
-        : {}),
-    }))
+    return cached.index
+      .getLeaves(clusterId, Infinity, 0)
+      .map((f) => this.mapFeature(f, cacheKey) as PointFeature)
   }
 
   /**
