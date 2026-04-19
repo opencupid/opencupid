@@ -1,6 +1,7 @@
 import { Worker, type Job } from 'bullmq'
 import { appConfig } from '@/lib/appconfig'
 import { bullConnection } from '@/lib/redis'
+import { logger } from '@/lib/logger'
 import { emailService } from '@/services/email/emailSender.service'
 import type { EmailPayload } from '@/services/email/types'
 import { processEmailJob } from '@/workers/emailWorker.processor'
@@ -52,9 +53,29 @@ export function registerWorkers(): Worker[] {
     ),
   ]
 
+  for (const w of workers) {
+    w.on('completed', (job) => {
+      const ms = job.processedOn ? Date.now() - job.processedOn : undefined
+      logger.info({ queue: w.name, jobId: job.id, name: job.name, ms }, 'job completed')
+    })
+    w.on('failed', (job, err) => {
+      logger.error(
+        { queue: w.name, jobId: job?.id, name: job?.name, attemptsMade: job?.attemptsMade, err: err.message },
+        'job failed'
+      )
+    })
+    w.on('error', (err) => {
+      logger.error({ err: err.message }, 'worker error')
+    })
+  }
+
+  logger.info({ queues: workers.map((w) => w.name) }, 'workers registered')
+
   const shutdown = async (signal: NodeJS.Signals) => {
-    console.log(`[worker] received ${signal}, draining in-flight jobs…`)
-    await Promise.allSettled(workers.map((w) => w.close()))
+    logger.info({ signal }, 'draining workers')
+    const results = await Promise.allSettled(workers.map((w) => w.close()))
+    const drained = results.filter((r) => r.status === 'fulfilled').length
+    logger.info({ drained, total: workers.length }, 'workers drained')
     process.exit(0)
   }
   process.once('SIGTERM', shutdown)

@@ -22,6 +22,7 @@ export const server = (mode: string, env: Record<string, string | undefined>, ap
   if (mode !== 'development') return {}
 
   const backendPort = env.BACKEND_PORT ?? '3000'
+  const workerPort = env.WORKER_PORT ?? '3100'
 
   return {
     server: {
@@ -43,7 +44,7 @@ export const server = (mode: string, env: Record<string, string | undefined>, ap
           },
         },
         '/bull-board': {
-          target: `http://localhost:${backendPort}`,
+          target: `http://localhost:${workerPort}`,
           changeOrigin: true,
           secure: false,
           headers: { 'X-Admin-Authenticated': 'true' },

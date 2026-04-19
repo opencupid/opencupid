@@ -3,6 +3,7 @@ import Sentry from '@/lib/sentry' // keep this at the top
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import { appConfig } from '@/lib/appconfig'
+import { logger } from '@/lib/logger'
 import './lib/i18n' // Initialize i18next with translations
 
 import { checkUserContentRoot } from '@/lib/media'
@@ -13,19 +14,7 @@ async function main() {
   const app = Fastify({
     trustProxy: true,
     disableRequestLogging: true,
-    logger: {
-      transport:
-        appConfig.NODE_ENV === 'production'
-          ? undefined
-          : {
-              target: 'pino-pretty',
-              options: {
-                colorize: true,
-                translateTime: 'HH:MM:ss Z',
-                ignore: 'pid,hostname',
-              },
-            },
-    },
+    loggerInstance: logger,
   })
 
   app.log.info(`🚀 Starting API, version ${__APP_VERSION__}`)
