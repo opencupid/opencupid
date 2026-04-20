@@ -100,13 +100,13 @@
         var target = decodeURIComponent(m[1])
         if (target === window.location.hostname) return
         var p = window.location.pathname
-        if (p === '/_migrate') return
+        // Never bounce the sidecar path (would recurse) or /magic-link (the URL
+        // is already authoritatively stamped by the backend with the user's
+        // originDomain, and verify-token must run on the landing host so it can
+        // overwrite stale __o cookies).
+        if (p === '/_migrate' || p === '/magic-link') return
         var rest = window.location.search + window.location.hash
-        var dest =
-          p === '/auth' || p === '/magic-link'
-            ? 'https://' + target + p + rest
-            : '/_migrate?to=' + encodeURIComponent(p + rest)
-        window.location.replace(dest)
+        window.location.replace('/_migrate?to=' + encodeURIComponent(p + rest))
       })()
     </script>
     <script
