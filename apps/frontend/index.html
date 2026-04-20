@@ -93,6 +93,22 @@
       style="height: 100dvh"
     ></div>
     <script src="/config.js"></script>
+    <script>
+      ;(function () {
+        var m = document.cookie.match(/(?:^|;\s*)__o=([^;]+)/)
+        if (!m) return
+        var target = decodeURIComponent(m[1])
+        if (target === window.location.hostname) return
+        var p = window.location.pathname
+        if (p === '/_migrate') return
+        var rest = window.location.search + window.location.hash
+        var dest =
+          p === '/auth' || p === '/magic-link'
+            ? 'https://' + target + p + rest
+            : '/_migrate?to=' + encodeURIComponent(p + rest)
+        window.location.replace(dest)
+      })()
+    </script>
     <script
       type="module"
       src="/src/main.ts"
