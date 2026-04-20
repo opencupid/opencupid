@@ -279,7 +279,10 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         phonenumber: phonenumber || undefined,
       }
 
-      const originDomain = req.hostname.toLowerCase().split(':')[0]
+      // Fastify's req.hostname already strips the port from Host; fall back
+      // to the process-env DOMAIN when hostname is missing (unit-test reqs
+      // constructed as plain objects, or misbehaving proxies).
+      const originDomain = (req.hostname ?? appConfig.DOMAIN).toLowerCase()
       const { user, isNewUser } = await userService.setLoginToken(
         authId,
         token,
