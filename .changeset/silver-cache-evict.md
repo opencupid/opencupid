@@ -2,4 +2,4 @@
 '@opencupid/backend': patch
 ---
 
-Move clusterService.evict() into finally block in PATCH /scopes (#1329)
+Evict cluster cache after updateSession succeeds in PATCH /scopes (#1329)
