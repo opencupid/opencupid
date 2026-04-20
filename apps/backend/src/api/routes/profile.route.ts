@@ -359,12 +359,9 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
         return profile
       })
 
-      try {
-        const response: UpdateProfileResponse = { success: true, profile: updated }
-        return reply.code(200).send(response)
-      } finally {
-        clusterService.evict(updated.id)
-      }
+      clusterService.evict(updated.id)
+      const response: UpdateProfileResponse = { success: true, profile: updated }
+      return reply.code(200).send(response)
     } catch (err) {
       fastify.log.error(err)
       // profileService.updateProfile() returned null, which means the profile was not found
@@ -401,27 +398,24 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
       try {
         const updated = await profileService.updateScopes(req.user.userId, data)
         if (!updated) return sendError(reply, 404, 'Profile not found')
-        try {
-          // Update session with new profile scope data
-          await req.updateSession({
-            hasActiveProfile: updated.isActive,
-            profile: {
-              id: updated.id,
-              isDatingActive: updated.isDatingActive,
-              isSocialActive: updated.isSocialActive,
-              isActive: updated.isActive,
-            },
-          })
-
-          const response: UpdateProfileScopeResponse = {
-            success: true,
+        // Update session with new profile scope data
+        await req.updateSession({
+          hasActiveProfile: updated.isActive,
+          profile: {
+            id: updated.id,
             isDatingActive: updated.isDatingActive,
+            isSocialActive: updated.isSocialActive,
             isActive: updated.isActive,
-          }
-          return reply.code(200).send(response)
-        } finally {
-          clusterService.evict(updated.id)
+          },
+        })
+        clusterService.evict(updated.id)
+
+        const response: UpdateProfileScopeResponse = {
+          success: true,
+          isDatingActive: updated.isDatingActive,
+          isActive: updated.isActive,
         }
+        return reply.code(200).send(response)
       } catch (error: any) {
         if (error.name === 'DatingEligibilityError') {
           return sendError(reply, 403, error.message)
@@ -446,11 +440,8 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.code(400).send({ error: 'Cannot block yourself.' })
       }
       await profileService.blockProfile(profileId, id)
-      try {
-        return reply.code(204).send()
-      } finally {
-        clusterService.evict(profileId)
-      }
+      clusterService.evict(profileId)
+      return reply.code(204).send()
     } catch (error) {
       fastify.log.error(error)
       return sendError(reply, 500, 'Failed to block profile')
@@ -468,11 +459,8 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
     try {
       const { id } = IdLookupParamsSchema.parse(req.params)
       await profileService.unblockProfile(profileId, id)
-      try {
-        return reply.code(204).send()
-      } finally {
-        clusterService.evict(profileId)
-      }
+      clusterService.evict(profileId)
+      return reply.code(204).send()
     } catch (error) {
       fastify.log.error(error)
       return sendError(reply, 500, 'Failed to unblock profile')

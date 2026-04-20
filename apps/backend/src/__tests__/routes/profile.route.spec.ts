@@ -376,7 +376,7 @@ describe('PATCH /scopes', () => {
     expect(reply.statusCode).toBe(404)
   })
 
-  it('evicts cluster cache even when updateSession throws', async () => {
+  it('does not evict when updateSession throws', async () => {
     const handler = fastify.routes['PATCH /scopes']
     const updatedDb = {
       id: 'p1',
@@ -390,7 +390,7 @@ describe('PATCH /scopes', () => {
 
     await handler(req, reply as any)
 
-    expect(mockClusterService.evict).toHaveBeenCalledWith('p1')
+    expect(mockClusterService.evict).not.toHaveBeenCalled()
     expect(reply.statusCode).toBe(500)
   })
 })
