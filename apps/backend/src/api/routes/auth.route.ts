@@ -59,6 +59,20 @@ function clearRefreshCookie(reply: FastifyReply) {
   reply.clearCookie(REFRESH_COOKIE, SESSION_COOKIE_OPTS)
 }
 
+// Stamps the __o cookie authoritatively on any host where login activity
+// occurs. Rewriting on every send and consume (not only cross-brand ones)
+// prevents ping-pong loops caused by stale __o values left on both brands
+// pointing at each other.
+function setOriginCookie(reply: FastifyReply, originDomain: string | null | undefined) {
+  if (!originDomain) return
+  if (appConfig.NODE_ENV === 'development') return
+  reply.setCookie(ORIGIN_COOKIE, originDomain, {
+    ...SESSION_COOKIE_OPTS,
+    secure: true,
+    maxAge: ORIGIN_MAX_AGE,
+  })
+}
+
 const WS_TICKET_TTL = 30 // seconds
 
 const authRoutes: FastifyPluginAsync = async (fastify) => {
@@ -123,6 +137,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
         setSessionCookie(reply, jwt)
         setRefreshCookie(reply, refreshToken)
+        setOriginCookie(reply, user.originDomain)
 
         const response: VerifyTokenResponse = { success: true, token: jwt }
         reply.code(200).send(response)
@@ -300,24 +315,19 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         isPushNotificationEnabled: user.isPushNotificationEnabled,
       }
 
-      // Cross-brand login: when an existing user registered on a different
-      // brand tries to log in here, mark the response with __o so the frontend
-      // / sidecar can route them home, and stamp the magic-link URL with their
-      // origin domain so the link itself lands on the right brand.
-
-      // TODO this code can be retired once the migration window for moving existing
-      // users to new brand domains expires
-      let linkBase = appConfig.FRONTEND_URL
-      if (user.email && appConfig.NODE_ENV !== 'development') {
-        if (user.originDomain && user.originDomain !== appConfig.DOMAIN) {
-          reply.setCookie(ORIGIN_COOKIE, user.originDomain, {
-            ...SESSION_COOKIE_OPTS,
-            secure: true,
-            maxAge: ORIGIN_MAX_AGE,
-          })
-          linkBase = `https://${user.originDomain}`
-        }
-      }
+      // Stamp __o authoritatively so the frontend inline redirect and the
+      // sidecar route the user to their home brand. The magic-link URL in the
+      // email is stamped with the origin domain so the link itself lands on
+      // the right brand.
+      // TODO this code can be retired once the migration window for moving
+      // existing users to new brand domains expires.
+      setOriginCookie(reply, user.originDomain)
+      const linkBase =
+        user.originDomain &&
+        user.originDomain !== appConfig.DOMAIN &&
+        appConfig.NODE_ENV !== 'development'
+          ? `https://${user.originDomain}`
+          : appConfig.FRONTEND_URL
 
       if (user.email)
         await notifierService.notifyUser(user.id, 'login_link', {
