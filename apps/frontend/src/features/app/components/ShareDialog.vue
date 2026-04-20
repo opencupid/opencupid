@@ -58,12 +58,12 @@ const handleWebShare = async () => {
   <BOffcanvas
     v-model="showModal"
     placement="bottom"
-    class="share-offcanvas col-12 col-md-6 offset-md-3 col-lg-4 offset-lg-4"
+    class="share-offcanvas col-12 col-md-6 offset-md-3 col-lg-4 offset-lg-4 shadow-lg"
     :class="{ 'share-offcanvas--expanded': expanded }"
     body-class="py-0 px-3 bg-light"
     header-class="bg-light"
     no-backdrop
-    shadow
+    :focus="false"
   >
     <div
       class="mx-2 mb-3 text-center"
