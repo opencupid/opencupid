@@ -32,6 +32,11 @@ providers:
   docker:
     exposedByDefault: false
     watch: true
+    # Keep routers/services registered for containers that have exited so a
+    # request matching their rule returns 502 instead of falling through to
+    # a less-specific router (e.g. the SPA's Host-only catch-all). Requires
+    # `traefik.docker.allownonrunning=true` on each opted-in container.
+    allowEmptyServices: true
   file:
     directory: /etc/traefik/dynamic/
     watch: true

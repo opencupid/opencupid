@@ -47,6 +47,7 @@ services:
       - '${MEDIA_UPLOAD_DIR}:${MEDIA_UPLOAD_DIR}'
     labels:
       traefik.enable: "true"
+      traefik.docker.allownonrunning: "true"
 
       # --- Public domain: API ---
       traefik.http.routers.api.rule: "Host(`${DOMAIN}`) && PathPrefix(`/api`)"
@@ -84,6 +85,7 @@ services:
       replicas: 1
     labels:
       traefik.enable: "true"
+      traefik.docker.allownonrunning: "true"
 
       # --- Admin domain: Bull Board (mTLS) ---
       traefik.http.routers.admin-bull-board.rule: "Host(`${ADMIN_DOMAIN}`) && PathPrefix(`/bull-board`)"
@@ -105,6 +107,7 @@ services:
       - backend
     labels:
       traefik.enable: "true"
+      traefik.docker.allownonrunning: "true"
       traefik.http.routers.frontend.rule: "Host(`${DOMAIN}`)"
       traefik.http.routers.frontend.priority: "1"
       traefik.http.routers.frontend.entrypoints: websecure
@@ -123,6 +126,7 @@ services:
       - backend
     labels:
       traefik.enable: "true"
+      traefik.docker.allownonrunning: "true"
       traefik.http.routers.admin.rule: "Host(`${ADMIN_DOMAIN}`)"
       traefik.http.routers.admin.priority: "1"
       traefik.http.routers.admin.entrypoints: websecure
@@ -137,6 +141,7 @@ services:
       - '${MEDIA_UPLOAD_DIR}:/usr/share/nginx/html:ro'
     labels:
       traefik.enable: "true"
+      traefik.docker.allownonrunning: "true"
       traefik.http.routers.media.rule: "Host(`${DOMAIN}`) && PathPrefix(`/user-content`)"
       traefik.http.routers.media.entrypoints: websecure
       traefik.http.routers.media.middlewares: media-jwt,media-strip,media-cache
