@@ -310,6 +310,149 @@ describe('POST /send-magic-link', () => {
     expect(reply.payload.user.email).toBe('existing@example.com')
   })
 
+  it('sets __o cookie and stamps magic-link with origin domain for cross-brand login', async () => {
+    mockUserService.findByAuthId.mockResolvedValue({
+      id: 'user5',
+      email: 'crossbrand@example.com',
+      phonenumber: null,
+      originDomain: 'other.example',
+    })
+    mockUserService.setLoginToken.mockResolvedValue({
+      user: {
+        id: 'user5',
+        email: 'crossbrand@example.com',
+        phonenumber: null,
+        isRegistrationConfirmed: true,
+        language: 'en',
+      },
+      isNewUser: false,
+    })
+    const req = {
+      body: {
+        email: 'crossbrand@example.com',
+        captchaSolution: 'ok',
+        language: 'en',
+      },
+    }
+    await handler(req as any, reply as any)
+    expect(mockUserService.findByAuthId).toHaveBeenCalledWith('crossbrand@example.com')
+    const originCookie = reply.cookies.find((c: any) => c.name === '__o')
+    expect(originCookie).toBeDefined()
+    expect(originCookie!.value).toBe('other.example')
+    expect(originCookie!.opts).toMatchObject({
+      path: '/',
+      sameSite: 'strict',
+      maxAge: 60 * 60 * 24 * 365 * 10,
+    })
+    expect(notifier.notifyUser).toHaveBeenCalledWith('user5', 'login_link', {
+      link: 'https://other.example/magic-link?token=abc123',
+    })
+  })
+
+  it('does not set __o cookie when existing user originDomain matches serving brand', async () => {
+    mockUserService.findByAuthId.mockResolvedValue({
+      id: 'user6',
+      email: 'match@example.com',
+      phonenumber: null,
+      originDomain: 'fallback.example',
+    })
+    mockUserService.setLoginToken.mockResolvedValue({
+      user: {
+        id: 'user6',
+        email: 'match@example.com',
+        phonenumber: null,
+        isRegistrationConfirmed: true,
+        language: 'en',
+      },
+      isNewUser: false,
+    })
+    const req = {
+      body: {
+        email: 'match@example.com',
+        captchaSolution: 'ok',
+        language: 'en',
+      },
+    }
+    await handler(req as any, reply as any)
+    expect(reply.cookies.find((c: any) => c.name === '__o')).toBeUndefined()
+    expect(notifier.notifyUser).toHaveBeenCalledWith('user6', 'login_link', {
+      link: 'http://test/magic-link?token=abc123',
+    })
+  })
+
+  it('does not set __o cookie when existing user has empty originDomain', async () => {
+    mockUserService.findByAuthId.mockResolvedValue({
+      id: 'user7',
+      email: 'empty@example.com',
+      phonenumber: null,
+      originDomain: '',
+    })
+    mockUserService.setLoginToken.mockResolvedValue({
+      user: {
+        id: 'user7',
+        email: 'empty@example.com',
+        phonenumber: null,
+        isRegistrationConfirmed: true,
+        language: 'en',
+      },
+      isNewUser: false,
+    })
+    const req = {
+      body: {
+        email: 'empty@example.com',
+        captchaSolution: 'ok',
+        language: 'en',
+      },
+    }
+    await handler(req as any, reply as any)
+    expect(reply.cookies.find((c: any) => c.name === '__o')).toBeUndefined()
+    expect(notifier.notifyUser).toHaveBeenCalledWith('user7', 'login_link', {
+      link: 'http://test/magic-link?token=abc123',
+    })
+  })
+
+  it('does not set __o cookie for a non-existent (new) user', async () => {
+    mockUserService.findByAuthId.mockResolvedValue(null)
+    mockUserService.setLoginToken.mockResolvedValue({
+      user: {
+        id: 'user8',
+        email: 'brand-new@example.com',
+        phonenumber: null,
+        isRegistrationConfirmed: false,
+        language: 'en',
+      },
+      isNewUser: true,
+    })
+    const req = {
+      body: {
+        email: 'brand-new@example.com',
+        captchaSolution: 'ok',
+        language: 'en',
+      },
+    }
+    await handler(req as any, reply as any)
+    expect(reply.cookies.find((c: any) => c.name === '__o')).toBeUndefined()
+    expect(notifier.notifyUser).toHaveBeenCalledWith('user8', 'login_link', {
+      link: 'http://test/magic-link?token=abc123',
+    })
+  })
+
+  it('does not call findByAuthId or set __o cookie for phone-only auth', async () => {
+    // We don't care whether SMS succeeds here — the brand-mismatch lookup is
+    // gated on `email` being present, so phone-only requests must never
+    // trigger findByAuthId regardless of the SMS outcome.
+    const req = {
+      body: {
+        phonenumber: '+1234567890',
+        captchaSolution: 'ok',
+        language: 'en',
+      },
+    }
+    await handler(req as any, reply as any)
+    expect(mockUserService.findByAuthId).not.toHaveBeenCalled()
+    expect(reply.cookies.find((c: any) => c.name === '__o')).toBeUndefined()
+  })
+
   it('returns 500 if SMS sending fails', async () => {
     vi.mock('@/services/sms.service', () => ({
       SmsService: class {

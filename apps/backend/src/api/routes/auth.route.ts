@@ -29,6 +29,8 @@ import {
   SESSION_MAX_AGE,
   REFRESH_COOKIE,
   REFRESH_MAX_AGE,
+  ORIGIN_COOKIE,
+  ORIGIN_MAX_AGE,
 } from '@shared/session'
 
 function setSessionCookie(reply: FastifyReply, jwt: string) {
@@ -279,6 +281,23 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         phonenumber: phonenumber || undefined,
       }
 
+      // Cross-brand login: when an existing user registered on a different
+      // brand tries to log in here, mark the response with __o so the frontend
+      // / sidecar can route them home, and stamp the magic-link URL with their
+      // origin domain so the link itself lands on the right brand.
+      let linkBase = appConfig.FRONTEND_URL
+      if (email) {
+        const existingUser = await userService.findByAuthId(email)
+        if (existingUser?.originDomain && existingUser.originDomain !== appConfig.DOMAIN) {
+          reply.setCookie(ORIGIN_COOKIE, existingUser.originDomain, {
+            ...SESSION_COOKIE_OPTS,
+            secure: appConfig.NODE_ENV !== 'development',
+            maxAge: ORIGIN_MAX_AGE,
+          })
+          linkBase = `https://${existingUser.originDomain}`
+        }
+      }
+
       // Per-brand-stack deployment: each API container's env DOMAIN is the
       // brand it serves. Read it directly instead of req.hostname — vite's
       // dev proxy rewrites Host (changeOrigin: true) which would clobber it.
@@ -300,7 +319,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
       if (user.email)
         await notifierService.notifyUser(user.id, 'login_link', {
-          link: `${appConfig.FRONTEND_URL}/magic-link?token=${token}`,
+          link: `${linkBase}/magic-link?token=${token}`,
         })
 
       const response: SendMagicLinkResponse = {
