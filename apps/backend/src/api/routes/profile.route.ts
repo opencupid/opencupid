@@ -359,8 +359,12 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
         return profile
       })
 
-      const response: UpdateProfileResponse = { success: true, profile: updated }
-      return reply.code(200).send(response)
+      try {
+        const response: UpdateProfileResponse = { success: true, profile: updated }
+        return reply.code(200).send(response)
+      } finally {
+        clusterService.evict(updated.id)
+      }
     } catch (err) {
       fastify.log.error(err)
       // profileService.updateProfile() returned null, which means the profile was not found
@@ -442,8 +446,11 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.code(400).send({ error: 'Cannot block yourself.' })
       }
       await profileService.blockProfile(profileId, id)
-      clusterService.evict(profileId)
-      return reply.code(204).send()
+      try {
+        return reply.code(204).send()
+      } finally {
+        clusterService.evict(profileId)
+      }
     } catch (error) {
       fastify.log.error(error)
       return sendError(reply, 500, 'Failed to block profile')
@@ -461,7 +468,11 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
     try {
       const { id } = IdLookupParamsSchema.parse(req.params)
       await profileService.unblockProfile(profileId, id)
-      return reply.code(204).send()
+      try {
+        return reply.code(204).send()
+      } finally {
+        clusterService.evict(profileId)
+      }
     } catch (error) {
       fastify.log.error(error)
       return sendError(reply, 500, 'Failed to unblock profile')
