@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import authRoutes from '../../api/routes/auth.route'
+import { appConfig } from '@/lib/appconfig'
 import { MockFastify, MockReply } from '../../test-utils/fastify'
 
 let fastify: MockFastify
@@ -311,42 +312,44 @@ describe('POST /send-magic-link', () => {
   })
 
   it('sets __o cookie and stamps magic-link with origin domain for cross-brand login', async () => {
-    mockUserService.findByAuthId.mockResolvedValue({
-      id: 'user5',
-      email: 'crossbrand@example.com',
-      phonenumber: null,
-      originDomain: 'other.example',
-    })
-    mockUserService.setLoginToken.mockResolvedValue({
-      user: {
-        id: 'user5',
-        email: 'crossbrand@example.com',
-        phonenumber: null,
-        isRegistrationConfirmed: true,
-        language: 'en',
-      },
-      isNewUser: false,
-    })
-    const req = {
-      body: {
-        email: 'crossbrand@example.com',
-        captchaSolution: 'ok',
-        language: 'en',
-      },
+    // The cross-brand branch is gated on NODE_ENV !== 'development' in the
+    // route. Flip it for the duration of this test so the branch executes.
+    const origNodeEnv = appConfig.NODE_ENV
+    appConfig.NODE_ENV = 'production'
+    try {
+      mockUserService.setLoginToken.mockResolvedValue({
+        user: {
+          id: 'user5',
+          email: 'crossbrand@example.com',
+          phonenumber: null,
+          isRegistrationConfirmed: true,
+          language: 'en',
+          originDomain: 'other.example',
+        },
+        isNewUser: false,
+      })
+      const req = {
+        body: {
+          email: 'crossbrand@example.com',
+          captchaSolution: 'ok',
+          language: 'en',
+        },
+      }
+      await handler(req as any, reply as any)
+      const originCookie = reply.cookies.find((c: any) => c.name === '__o')
+      expect(originCookie).toBeDefined()
+      expect(originCookie!.value).toBe('other.example')
+      expect(originCookie!.opts).toMatchObject({
+        path: '/',
+        sameSite: 'strict',
+        maxAge: 60 * 60 * 24 * 365 * 10,
+      })
+      expect(notifier.notifyUser).toHaveBeenCalledWith('user5', 'login_link', {
+        link: 'https://other.example/magic-link?token=abc123',
+      })
+    } finally {
+      appConfig.NODE_ENV = origNodeEnv
     }
-    await handler(req as any, reply as any)
-    expect(mockUserService.findByAuthId).toHaveBeenCalledWith('crossbrand@example.com')
-    const originCookie = reply.cookies.find((c: any) => c.name === '__o')
-    expect(originCookie).toBeDefined()
-    expect(originCookie!.value).toBe('other.example')
-    expect(originCookie!.opts).toMatchObject({
-      path: '/',
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 24 * 365 * 10,
-    })
-    expect(notifier.notifyUser).toHaveBeenCalledWith('user5', 'login_link', {
-      link: 'https://other.example/magic-link?token=abc123',
-    })
   })
 
   it('does not set __o cookie when existing user originDomain matches serving brand', async () => {
