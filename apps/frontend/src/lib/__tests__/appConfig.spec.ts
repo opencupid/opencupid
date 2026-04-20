@@ -23,8 +23,8 @@ describe('appConfig schema', () => {
     })
   })
 
-  it('rejects config without required DOMAIN', () => {
-    expect(() => appConfigSchema.parse({})).toThrow(/DOMAIN/)
+  it('applies placeholder default when DOMAIN is absent', () => {
+    expect(appConfigSchema.parse({})).toMatchObject({ DOMAIN: 'localhost' })
   })
 
   it('overrides defaults with provided values', () => {
