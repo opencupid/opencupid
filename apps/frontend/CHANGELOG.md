@@ -1,5 +1,16 @@
 # frontend
 
+## 0.53.0
+
+### Patch Changes
+
+- fb932d2: Break cross-brand login redirect loop by making \_\_o cookie stamping authoritative on both /send-magic-link and /verify-token, and removing the direct-redirect bypass for /auth and /magic-link in the frontend inline redirect script.
+- 82cc2c3: Tag frontend Sentry events with `frontend_origin` set to `__APP_CONFIG__.DOMAIN`, so dashboards/alerts are brand-attributable without URL parsing.
+- ea34fd3: Inline script in `index.html` reads the `__o` cookie and redirects to `/_migrate?to=<path>` when the user's origin brand hostname differs from the currently served hostname. Skips mid-auth flows (`/auth`, `/magic-link`, `/_migrate`). Runs before the Vue bundle loads to avoid races and uses `location.replace` so the redirected URL does not become a back-button entry.
+- 7c0e11a: fix(frontend): adjust ShareDialog shadow and disable autofocus
+- 71d17e0: Unblock frontend Docker build: give `DOMAIN` in the shared appConfig schema a `'localhost'` default so build-time parsing (where runtime env isn't exposed) no longer fails. Runtime `DOMAIN` is still injected by `envsubst` at container start from `.env`, and the backend continues to enforce a non-empty `DOMAIN` via its own schema. Updates the corresponding unit test and removes the now-redundant `DOMAIN: "ci.local"` workaround from the CI workflow.
+- 1e5287b: Hide title and hint when email magic-link token error is shown (#1337)
+
 ## 0.52.1
 
 ### Patch Changes

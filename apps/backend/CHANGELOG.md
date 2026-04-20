@@ -1,5 +1,25 @@
 # backend
 
+## 0.53.0
+
+### Minor Changes
+
+- f623e04: Record `User.originDomain` at registration. Every new user now captures the hostname they hit when signing up (normalized to lowercase, port stripped). Existing rows are backfilled to the deploy's `DOMAIN` env via a three-step migration (add nullable → backfill → set NOT NULL). No runtime consumer yet; this is data collection for future per-user brand features.
+
+  **Deploy note**: the backfill SQL in `20260420000000_add_user_origin_domain/migration.sql` currently uses the literal `'example.org'`. Substitute with the target environment's `DOMAIN` env before running `prisma migrate deploy` in staging/production.
+
+- f1a5c24: Split backend into dedicated API and worker containers. Workers are no longer instantiated as import side effects inside API replicas; repeatable/cron jobs register exactly once from a single `worker.ts` entrypoint, bull-board moves to the worker container on port 3100, and a shared ioredis connection replaces four ad-hoc ones. Traefik's admin router is split accordingly so `/api` stays on the backend while `/bull-board` points at the worker.
+- e10a372: Detect cross-brand login attempts: when the email matches an existing user whose `originDomain` differs from the serving brand, set an `__o` cookie with the user's origin domain and rewrite the magic-link URL to target that origin.
+- 46c345b: Add explicit `Brand` metadata on every email payload. Producers stamp brand identity (`siteName`, `frontendUrl`, `domain`) onto each job at enqueue time via a single `currentBrand()` helper, so workers never read process env for branding and can stay brand-blind. Under per-brand-stack deployment each API container's env already matches the user's brand.
+
+  `DOMAIN` is now required (no empty default) in both the shared `AppConfig` schema and the backend's own config schema, so downstream consumers are statically guaranteed a non-empty domain string.
+
+### Patch Changes
+
+- fb932d2: Break cross-brand login redirect loop by making \_\_o cookie stamping authoritative on both /send-magic-link and /verify-token, and removing the direct-redirect bypass for /auth and /magic-link in the frontend inline redirect script.
+- e3a269e: Evict cluster cache after updateSession succeeds in PATCH /scopes (#1329)
+- 3dd6b85: Evict cluster cache when dating scope is toggled so the map reflects the new active state.
+
 ## 0.52.1
 
 ### Patch Changes
