@@ -49,30 +49,30 @@
       "callToActionLabel": "Belépek",
       "contentBody": "Kattints a gombra a belépéshez:",
       "footer": "Ha nem Te kérted ezt az emailt, nyugodtan hagyd figyelmen kívül.",
-      "subject": "[{siteName}] Belépő link"
+      "subject": "Belépő link"
     },
     "new_like": {
       "callToActionLabel": "Megnyitom",
       "contentBody": "Szia, valaki komál téged.",
       "footer": " ",
-      "subject": "[{siteName}] Valaki komál téged"
+      "subject": "Valaki komál téged"
     },
     "new_match": {
       "callToActionLabel": "Megnyitom",
       "contentBody": "Szia, {name} és Te kölcsönösen komáljátok egymást.",
       "footer": " ",
-      "subject": "[{siteName}] Komáljátok egymást"
+      "subject": "Komáljátok egymást"
     },
     "new_message": {
       "callToActionLabel": "Üzenet megnyitása",
       "contentBody": "Szia, {sender} üzenetet küldött neked: {message}",
       "footer": " ",
-      "subject": "[{siteName}] Új üzeneted érkezett"
+      "subject": "Új üzeneted érkezett"
     },
     "onboarding_reminder": {
       "callToActionLabel": "Befejezem a profilomat",
       "contentBody": "Szia, elkezdted a profilod beállítását, de még nem fejezted be. Ha problémába ütköztél, vagy valami nem volt teljesen egyértelmű, válaszolj nyugodtan erre az emailre, szívesen segítünk. Szép napot!",
-      "subject": "[{siteName}] Elkezdett regisztráció"
+      "subject": "Elkezdett regisztráció"
     },
     "welcome": {
       "callToActionLabel": "Kapcsolódj",
