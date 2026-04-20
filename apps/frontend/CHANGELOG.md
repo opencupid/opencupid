@@ -1,5 +1,7 @@
 # frontend
 
+## 0.53.1
+
 ## 0.53.0
 
 ### Patch Changes

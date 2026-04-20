@@ -1,5 +1,11 @@
 # backend
 
+## 0.53.1
+
+### Patch Changes
+
+- 942bcfb: Stamp `__o` cookie in the `/refresh` handler so users with pre-existing active sessions get their home-brand marker backfilled without having to log out and back in (#1340).
+
 ## 0.53.0
 
 ### Minor Changes
