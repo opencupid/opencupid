@@ -7,9 +7,13 @@ let reply: MockReply
 let mockProfileService: any
 let mockProfileMatchService: any
 let mockMessageService: any
+let mockClusterService: any
 
 vi.mock('../../services/profile.service', () => ({
   ProfileService: { getInstance: () => mockProfileService },
+}))
+vi.mock('../../services/cluster.service', () => ({
+  ClusterService: { getInstance: () => mockClusterService },
 }))
 vi.mock('../../services/profileMatch.service', () => ({
   ProfileMatchService: { getInstance: () => mockProfileMatchService },
@@ -94,6 +98,9 @@ beforeEach(async () => {
   }
   mockMessageService = {
     sendWelcomeMessage: vi.fn(),
+  }
+  mockClusterService = {
+    evict: vi.fn(),
   }
   await profileRoutes(fastify as any, {})
 })
@@ -354,6 +361,7 @@ describe('PATCH /scopes', () => {
         isActive: true,
       },
     })
+    expect(mockClusterService.evict).toHaveBeenCalledWith('p1')
   })
 
   it('returns 404 when profile not found', async () => {
@@ -363,6 +371,24 @@ describe('PATCH /scopes', () => {
     const req = makeReq({ body: { isDatingActive: true } })
     await handler(req, reply as any)
     expect(reply.statusCode).toBe(404)
+  })
+
+  it('evicts cluster cache even when updateSession throws', async () => {
+    const handler = fastify.routes['PATCH /scopes']
+    const updatedDb = {
+      id: 'p1',
+      isDatingActive: true,
+      isSocialActive: true,
+      isActive: true,
+    }
+    mockProfileService.updateScopes.mockResolvedValue(updatedDb)
+    const req = makeReq({ body: { isDatingActive: true } })
+    req.updateSession = vi.fn().mockRejectedValue(new Error('session failure'))
+
+    await handler(req, reply as any)
+
+    expect(mockClusterService.evict).toHaveBeenCalledWith('p1')
+    expect(reply.statusCode).toBe(500)
   })
 })
 

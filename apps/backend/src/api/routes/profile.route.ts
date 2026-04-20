@@ -397,24 +397,27 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
       try {
         const updated = await profileService.updateScopes(req.user.userId, data)
         if (!updated) return sendError(reply, 404, 'Profile not found')
-        clusterService.evict(updated.id)
-        // Update session with new profile scope data
-        await req.updateSession({
-          hasActiveProfile: updated.isActive,
-          profile: {
-            id: updated.id,
-            isDatingActive: updated.isDatingActive,
-            isSocialActive: updated.isSocialActive,
-            isActive: updated.isActive,
-          },
-        })
+        try {
+          // Update session with new profile scope data
+          await req.updateSession({
+            hasActiveProfile: updated.isActive,
+            profile: {
+              id: updated.id,
+              isDatingActive: updated.isDatingActive,
+              isSocialActive: updated.isSocialActive,
+              isActive: updated.isActive,
+            },
+          })
 
-        const response: UpdateProfileScopeResponse = {
-          success: true,
-          isDatingActive: updated.isDatingActive,
-          isActive: updated.isActive,
+          const response: UpdateProfileScopeResponse = {
+            success: true,
+            isDatingActive: updated.isDatingActive,
+            isActive: updated.isActive,
+          }
+          return reply.code(200).send(response)
+        } finally {
+          clusterService.evict(updated.id)
         }
-        return reply.code(200).send(response)
       } catch (error: any) {
         if (error.name === 'DatingEligibilityError') {
           return sendError(reply, 403, error.message)
