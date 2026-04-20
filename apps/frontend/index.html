@@ -102,13 +102,11 @@
         var p = window.location.pathname
         if (p === '/_migrate') return
         var rest = window.location.search + window.location.hash
-        // Auth pages have no session to bridge — redirect directly to preserve
-        // GET state (magic-link token, etc.) without a sidecar round-trip.
         var dest =
           p === '/auth' || p === '/magic-link'
             ? 'https://' + target + p + rest
             : '/_migrate?to=' + encodeURIComponent(p + rest)
-`        window.location.replace(dest)
+        window.location.replace(dest)
       })()
     </script>
     <script
