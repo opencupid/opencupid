@@ -153,7 +153,7 @@ describe('MagicLink', () => {
       expect(wrapper.text()).toContain('auth.token_check_email')
     })
 
-    it('shows error alongside check-email message on failed magic link', async () => {
+    it('shows only error and back button on failed magic link, hiding title and hint', async () => {
       route.query = { token: '123456' }
       const authStore = useAuthStore()
       authStore.loginUser = emailLoginUser
@@ -169,8 +169,10 @@ describe('MagicLink', () => {
       await flushPromises()
 
       expect(wrapper.find('[data-testid="token-form"]').exists()).toBe(false)
-      expect(wrapper.text()).toContain('auth.token_check_email')
+      expect(wrapper.text()).not.toContain('auth.token_check_email')
+      expect(wrapper.text()).not.toContain('auth.token_check_messages')
       expect(wrapper.text()).toContain('auth.token_expired')
+      expect(wrapper.text()).toContain('uicomponents.back_button_title')
     })
   })
 })

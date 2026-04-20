@@ -120,18 +120,17 @@ function handleBackButton() {
       />
       <DevAutoLogin v-else-if="DevAutoLogin" />
       <template v-else>
-        <div class="fs-4 mb-3 w-100">
-          <ViewTitle
-            :icon="authStore.isPhoneAuth ? IconMessage : IconMail"
-            title=""
-            class="text-primary"
-          />
-          <div class="text-center">
-            {{ $t('auth.token_check_messages') }}
-          </div>
-        </div>
-
         <template v-if="authStore.isPhoneAuth">
+          <div class="fs-4 mb-3 w-100">
+            <ViewTitle
+              :icon="IconMessage"
+              title=""
+              class="text-primary"
+            />
+            <div class="text-center">
+              {{ $t('auth.token_check_messages') }}
+            </div>
+          </div>
           <div class="mb-3 form-text">
             {{ $t('auth.token_sent_phone') }}
           </div>
@@ -147,7 +146,19 @@ function handleBackButton() {
           v-else
           class="text-center"
         >
-          <p class="text-muted fs-6">{{ $t('auth.token_check_email') }}</p>
+          <template v-if="!error">
+            <div class="fs-4 mb-3 w-100">
+              <ViewTitle
+                :icon="IconMail"
+                title=""
+                class="text-primary"
+              />
+              <div class="text-center">
+                {{ $t('auth.token_check_messages') }}
+              </div>
+            </div>
+            <p class="text-muted fs-6">{{ $t('auth.token_check_email') }}</p>
+          </template>
           <div
             v-if="error"
             class="mt-2"
