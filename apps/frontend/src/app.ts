@@ -56,6 +56,7 @@ async function initSentry(app: ReturnType<typeof createApp>) {
       replaysSessionSampleRate: 0.1,
       replaysOnErrorSampleRate: 1.0,
     })
+    Sentry.setTag('frontend_origin', __APP_CONFIG__.DOMAIN)
   } catch (err) {
     console.warn('Failed to load Sentry:', err)
   }
