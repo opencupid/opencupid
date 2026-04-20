@@ -6,7 +6,7 @@ export const appConfigSchema = z.object({
   WS_BASE_URL: z.string().default('/ws'),
   MEDIA_URL_BASE: z.string().default('/user-content'),
   NODE_ENV: z.string().default('development'),
-  DOMAIN: z.string().min(1),
+  DOMAIN: z.string().min(1).default('localhost'),
   VAPID_PUBLIC_KEY: z.string().default(''),
   SENTRY_DSN: z.string().default(''),
   SITE_NAME: z.string().default('OpenCupid'),
