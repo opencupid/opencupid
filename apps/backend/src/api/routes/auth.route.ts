@@ -230,6 +230,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
       setSessionCookie(reply, newJwt)
       setRefreshCookie(reply, newRefreshToken)
+      setOriginCookie(reply, user.originDomain)
 
       const response: RefreshTokenResponse = { success: true, token: newJwt }
       reply.code(200).send(response)
