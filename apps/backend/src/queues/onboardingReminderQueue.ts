@@ -1,14 +1,12 @@
-import { appConfig } from '@/lib/appconfig'
 import { Queue } from 'bullmq'
-import IORedis from 'ioredis'
-
-const connection = new IORedis(appConfig.REDIS_URL, {
-  maxRetriesPerRequest: null,
-})
+import { bullConnection } from '@/lib/redis'
+import { logger } from '@/lib/logger'
 
 const REMINDER_CRON = '0 9 * * *' // daily at 09:00 UTC
 
-export const onboardingReminderQueue = new Queue('onboarding-reminder', { connection })
+export const onboardingReminderQueue = new Queue('onboarding-reminder', {
+  connection: bullConnection,
+})
 
 /**
  * Register the repeatable onboarding-reminder job.
@@ -20,4 +18,5 @@ export async function registerOnboardingReminderJob(): Promise<void> {
     { pattern: REMINDER_CRON },
     { name: 'onboarding-reminder' }
   )
+  logger.info({ queue: 'onboarding-reminder', pattern: REMINDER_CRON }, 'cron registered')
 }

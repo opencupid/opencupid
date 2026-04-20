@@ -1,4 +1,5 @@
 import type { EmailPayload } from '../services/email/types'
+import { logger } from '@/lib/logger'
 import { emailQueue } from './emailQueue'
 
 const ONE_DAY_SECS = 24 * 60 * 60
@@ -13,6 +14,7 @@ export class EmailDispatcher {
       removeOnComplete: { age: ONE_DAY_SECS, count: 1000 },
       removeOnFail: { age: ONE_WEEK_SECS, count: 1000 },
     })
+    logger.info({ queue: 'emails', jobId }, 'email enqueued')
   }
 }
 

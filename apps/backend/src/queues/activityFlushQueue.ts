@@ -1,10 +1,7 @@
 import { Queue } from 'bullmq'
-import IORedis from 'ioredis'
-import { appConfig } from '@/lib/appconfig'
+import { bullConnection } from '@/lib/redis'
 
-const connection = new IORedis(appConfig.REDIS_URL, { maxRetriesPerRequest: null })
-
-export const activityFlushQueue = new Queue('activity-flush', { connection })
+export const activityFlushQueue = new Queue('activity-flush', { connection: bullConnection })
 
 /**
  * Enqueues a profile activity event. Uses profileId as the job ID so only

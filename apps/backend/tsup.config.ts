@@ -6,7 +6,7 @@ const appVersion = getPackageVersion(path.join(__dirname, 'package.json'))
 const frontendVersion = getPackageVersion(path.join(__dirname, '../frontend/package.json'))
 
 export default defineConfig({
-  entry: ['src/main.ts'],
+  entry: ['src/api.ts', 'src/worker.ts'],
   outDir: 'dist',
   format: ['cjs'],
   splitting: false,
