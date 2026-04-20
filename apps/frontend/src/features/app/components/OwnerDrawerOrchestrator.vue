@@ -69,6 +69,7 @@ function onHidden() {
     body-class="p-0 position-relative overflow-hidden d-flex flex-column"
     aria-labelledby="ownerDrawerLabel"
     @hidden="onHidden"
+    :focus="false"
   >
     <ProfilePanel v-if="displayedType === 'profile'" />
     <InboxPanel v-else-if="displayedType === 'inbox'" />
