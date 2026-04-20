@@ -279,15 +279,14 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         phonenumber: phonenumber || undefined,
       }
 
-      // Fastify's req.hostname already strips the port from Host; fall back
-      // to the process-env DOMAIN when hostname is missing (unit-test reqs
-      // constructed as plain objects, or misbehaving proxies).
-      const originDomain = (req.hostname ?? appConfig.DOMAIN).toLowerCase()
+      // Per-brand-stack deployment: each API container's env DOMAIN is the
+      // brand it serves. Read it directly instead of req.hostname — vite's
+      // dev proxy rewrites Host (changeOrigin: true) which would clobber it.
       const { user, isNewUser } = await userService.setLoginToken(
         authId,
         token,
         language,
-        originDomain
+        appConfig.DOMAIN
       )
 
       const userReturned: LoginUser = {

@@ -269,7 +269,7 @@ describe('POST /send-magic-link', () => {
       expect.any(Object),
       'abc123',
       'en',
-      'test.local'
+      'fallback.example'
     )
     expect(notifier.notifyUser).toHaveBeenCalledWith('user3', 'login_link', {
       link: 'http://test/magic-link?token=abc123',
@@ -278,61 +278,6 @@ describe('POST /send-magic-link', () => {
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.status).toBe('register')
     expect(reply.payload.user.email).toBe('newuser@example.com')
-  })
-
-  it('lowercases the hostname when passing originDomain to setLoginToken', async () => {
-    mockUserService.setLoginToken.mockResolvedValue({
-      user: {
-        id: 'user5',
-        email: 'u@example.com',
-        phonenumber: null,
-        isRegistrationConfirmed: false,
-        language: 'en',
-      },
-      isNewUser: true,
-    })
-    const req = {
-      hostname: 'Test.Domain.HU',
-      body: {
-        email: 'u@example.com',
-        captchaSolution: 'ok',
-        language: 'en',
-      },
-    }
-    await handler(req as any, reply as any)
-    expect(mockUserService.setLoginToken).toHaveBeenCalledWith(
-      expect.any(Object),
-      'abc123',
-      'en',
-      'test.domain.hu'
-    )
-  })
-
-  it('falls back to appConfig.DOMAIN when req.hostname is missing', async () => {
-    mockUserService.setLoginToken.mockResolvedValue({
-      user: {
-        id: 'user6',
-        email: 'u@example.com',
-        phonenumber: null,
-        isRegistrationConfirmed: false,
-        language: 'en',
-      },
-      isNewUser: true,
-    })
-    const req = {
-      body: {
-        email: 'u@example.com',
-        captchaSolution: 'ok',
-        language: 'en',
-      },
-    }
-    await handler(req as any, reply as any)
-    expect(mockUserService.setLoginToken).toHaveBeenCalledWith(
-      expect.any(Object),
-      'abc123',
-      'en',
-      'fallback.example'
-    )
   })
 
   it('sends token via email for existing user and returns login status', async () => {
