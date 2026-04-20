@@ -29,6 +29,8 @@ import {
   SESSION_MAX_AGE,
   REFRESH_COOKIE,
   REFRESH_MAX_AGE,
+  ORIGIN_COOKIE,
+  ORIGIN_MAX_AGE,
 } from '@shared/session'
 
 function setSessionCookie(reply: FastifyReply, jwt: string) {
@@ -298,9 +300,28 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         isPushNotificationEnabled: user.isPushNotificationEnabled,
       }
 
+      // Cross-brand login: when an existing user registered on a different
+      // brand tries to log in here, mark the response with __o so the frontend
+      // / sidecar can route them home, and stamp the magic-link URL with their
+      // origin domain so the link itself lands on the right brand.
+
+      // TODO this code can be retired once the migration window for moving existing
+      // users to new brand domains expires
+      let linkBase = appConfig.FRONTEND_URL
+      if (user.email && appConfig.NODE_ENV !== 'development') {
+        if (user.originDomain && user.originDomain !== appConfig.DOMAIN) {
+          reply.setCookie(ORIGIN_COOKIE, user.originDomain, {
+            ...SESSION_COOKIE_OPTS,
+            secure: true,
+            maxAge: ORIGIN_MAX_AGE,
+          })
+          linkBase = `https://${user.originDomain}`
+        }
+      }
+
       if (user.email)
         await notifierService.notifyUser(user.id, 'login_link', {
-          link: `${appConfig.FRONTEND_URL}/magic-link?token=${token}`,
+          link: `${linkBase}/magic-link?token=${token}`,
         })
 
       const response: SendMagicLinkResponse = {
