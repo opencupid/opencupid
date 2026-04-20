@@ -49,32 +49,32 @@
       "callToActionLabel": "Use login link",
       "contentBody": "Click the button below to log in.",
       "footer": "If you didn't request this, you can ignore this email.",
-      "subject": "[{siteName}] Your login link"
+      "subject": "Your login link"
     },
     "new_like": {
       "callToActionLabel": "Find out who",
       "contentBody": "Hey there, someone sent you a  ❤️.",
-      "subject": "[{siteName}] You have a new like"
+      "subject": "You have a new like"
     },
     "new_match": {
       "callToActionLabel": "Open matches",
       "contentBody": "Hey there, you matched with {name}.",
-      "subject": "[{siteName}] You have a new match!"
+      "subject": "You have a new match!"
     },
     "new_message": {
       "callToActionLabel": "Read message",
       "contentBody": "Hey there, you have a new message from {sender}: {message}",
-      "subject": "[{siteName}] You have a new message"
+      "subject": "You have a new message"
     },
     "onboarding_reminder": {
       "callToActionLabel": "Complete my profile",
       "contentBody": "Hey there, you started setting up your profile on {siteName} but haven't finished yet. Did you change your mind or had some trouble? If you need any help, feel free to reply to this email.",
-      "subject": "[{siteName}] Forgot your profile?"
+      "subject": "Forgot your profile?"
     },
     "welcome": {
       "callToActionLabel": "Go connect with people",
       "contentBody": "Hey there, welcome aboard!",
-      "subject": "[{siteName}] Welcome!"
+      "subject": "Welcome!"
     }
   },
   "gender": {
