@@ -304,7 +304,7 @@ describe('POST /send-magic-link', () => {
       expect.any(Object),
       'abc123',
       'en',
-      'test.pelda.hu'
+      'test.domain.hu'
     )
   })
 
