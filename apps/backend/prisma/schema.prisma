@@ -145,6 +145,7 @@ model User {
   updatedAt               DateTime   @updatedAt
   lastLoginAt             DateTime?
   language                String     @default("en")
+  originDomain            String
   newsletterOptIn         Boolean    @default(true)
   roles                   UserRole[] @default([user])
 

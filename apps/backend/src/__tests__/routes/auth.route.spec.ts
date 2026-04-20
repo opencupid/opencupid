@@ -40,6 +40,7 @@ vi.mock('@/lib/appconfig', () => ({
     SMS_API_KEY: 'k',
     IMAGE_MAX_SIZE: 1000,
     FRONTEND_URL: 'http://test',
+    DOMAIN: 'fallback.example',
     DEV_AUTH_BYPASS_ENABLED: true,
   },
 }))
@@ -255,6 +256,7 @@ describe('POST /send-magic-link', () => {
       isNewUser: true,
     })
     const req = {
+      hostname: 'test.local',
       body: {
         email: 'newuser@example.com',
         captchaSolution: 'ok',
@@ -263,6 +265,12 @@ describe('POST /send-magic-link', () => {
     }
     await handler(req as any, reply as any)
     expect(mockUserService.generateLoginToken).toHaveBeenCalled()
+    expect(mockUserService.setLoginToken).toHaveBeenCalledWith(
+      expect.any(Object),
+      'abc123',
+      'en',
+      'fallback.example'
+    )
     expect(notifier.notifyUser).toHaveBeenCalledWith('user3', 'login_link', {
       link: 'http://test/magic-link?token=abc123',
     })
@@ -284,6 +292,7 @@ describe('POST /send-magic-link', () => {
       isNewUser: false,
     })
     const req = {
+      hostname: 'test.local',
       body: {
         email: 'existing@example.com',
         captchaSolution: 'ok',

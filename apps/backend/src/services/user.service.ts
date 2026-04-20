@@ -57,7 +57,8 @@ export class UserService {
   async setLoginToken(
     authId: UserIdentifier,
     otp: string,
-    language: string
+    language: string,
+    originDomain: string
   ): Promise<{
     user: User
     isNewUser: boolean
@@ -103,6 +104,7 @@ export class UserService {
         loginToken: otp,
         loginTokenExp: tokenExpiration,
         language,
+        originDomain,
       },
     })
 

@@ -279,7 +279,15 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         phonenumber: phonenumber || undefined,
       }
 
-      const { user, isNewUser } = await userService.setLoginToken(authId, token, language)
+      // Per-brand-stack deployment: each API container's env DOMAIN is the
+      // brand it serves. Read it directly instead of req.hostname — vite's
+      // dev proxy rewrites Host (changeOrigin: true) which would clobber it.
+      const { user, isNewUser } = await userService.setLoginToken(
+        authId,
+        token,
+        language,
+        appConfig.DOMAIN
+      )
 
       const userReturned: LoginUser = {
         id: user.id,
