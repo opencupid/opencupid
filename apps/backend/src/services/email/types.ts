@@ -1,3 +1,5 @@
+import type { Brand } from '../../lib/brand'
+
 export type EmailTemplateProps = {
   siteName: string
   publicName: string
@@ -11,5 +13,6 @@ export type EmailTemplateProps = {
 export type EmailPayload = {
   to: string
   subject: string
+  brand: Brand
   templateProps: EmailTemplateProps
 }

@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
-import { appConfig } from '@/lib/appconfig'
 import i18next from 'i18next'
+import { currentBrand } from '@/lib/brand'
 import { dispatcher } from '@/queues/emailDispatcher'
 import type { EmailPayload } from './email/types'
 
@@ -116,13 +116,15 @@ export class NotifierService {
     args: NotificationParams[T],
     user: NotifiableUser
   ): EmailPayload {
-    const siteName = appConfig.SITE_NAME
+    const brand = currentBrand()
+    const { siteName } = brand
     const t = i18next.getFixedT(user.language)
 
     // emailType maps 1:1 to the i18n key under `emails.*` (e.g. emails.new_message.subject).
     return {
       to: user.email,
       subject: t(`emails.${emailType}.subject`, { siteName }),
+      brand,
       templateProps: {
         siteName,
         publicName: user.profile?.publicName || '',

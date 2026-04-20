@@ -44,7 +44,7 @@ export const configSchema = z.object({
 
   WELCOME_MESSAGE_SENDER_PROFILE_ID: z.string().optional(),
 
-  DOMAIN: z.string().default('example.org'),
+  DOMAIN: z.string().min(1),
 
   SITE_NAME: z.string().default('OpenCupid'),
 

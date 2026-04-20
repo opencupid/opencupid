@@ -18,6 +18,7 @@ import { appConfigSchema } from '@zod/config/appConfig.schema'
   WS_BASE_URL: 'ws://localhost',
   MEDIA_URL_BASE: 'http://localhost/user-content',
   NODE_ENV: 'test',
+  DOMAIN: 'localhost',
   VAPID_PUBLIC_KEY: '',
   SENTRY_DSN: '',
   SITE_NAME: 'OpenCupid',
