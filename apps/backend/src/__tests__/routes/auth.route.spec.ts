@@ -292,7 +292,7 @@ describe('POST /send-magic-link', () => {
       isNewUser: true,
     })
     const req = {
-      hostname: 'Test.Komaterkep.HU',
+      hostname: 'Test.Domain.HU',
       body: {
         email: 'u@example.com',
         captchaSolution: 'ok',
@@ -304,7 +304,7 @@ describe('POST /send-magic-link', () => {
       expect.any(Object),
       'abc123',
       'en',
-      'test.komaterkep.hu'
+      'test.pelda.hu'
     )
   })
 
