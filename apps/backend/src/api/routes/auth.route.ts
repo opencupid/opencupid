@@ -323,7 +323,9 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       // existing users to new brand domains expires.
       setOriginCookie(reply, user.originDomain)
       const linkBase =
-        user.originDomain && user.originDomain !== appConfig.DOMAIN
+        user.originDomain &&
+        user.originDomain !== appConfig.DOMAIN &&
+        appConfig.NODE_ENV !== 'development'
           ? `https://${user.originDomain}`
           : appConfig.FRONTEND_URL
 
