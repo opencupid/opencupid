@@ -71,7 +71,7 @@ const isVisible = computed(() => props.posts.length > 0)
       <div
         v-for="post in posts"
         :key="post.id"
-        class="user-select-none col-12 col-sm-6 col-md-4 col-lg-2"
+        class="user-select-none col-12 col-sm-6 col-md-4 col-lg-3"
         @click="handleClick(post)"
       >
         <PostIt

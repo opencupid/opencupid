@@ -16,7 +16,6 @@ withDefaults(
 <template>
   <BRow
     cols="1"
-    cols-sm="2"
     cols-lg="3"
     class="g-2 gx-4 gy-4"
   >

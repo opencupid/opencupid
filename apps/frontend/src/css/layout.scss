@@ -80,10 +80,8 @@ nav.navbar + main {
 }
 
 .offcanvas.owner-drawer {
-  @include media-breakpoint-down(md) {
-    width: 100vw;
-  }
-
+  width: 100vw;
+  
   @include media-breakpoint-up(md) {
     width: 75vw;
   }
@@ -94,9 +92,7 @@ nav.navbar + main {
 }
 
 .offcanvas.detail-panel {
-  @include media-breakpoint-down(sm) {
-    width: 100vw;
-  }
+  width: 100vw;
 
   @include media-breakpoint-up(md) {
     width: 75vw;
