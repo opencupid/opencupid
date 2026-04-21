@@ -1,33 +1,6 @@
-import { createApp, nextTick } from 'vue'
-import { createPinia } from 'pinia'
-import { appUseI18n } from './lib/i18n'
-
 import '@/css/fonts.scss'
 import '@/css/bootstrap.scss'
 import '@/css/main.scss'
-import { useLocalStore } from './store/localStore'
-import { shouldShowLandingPage } from './lib/bootstrapRoute'
-import Cookies from 'universal-cookie'
-import { SESSION_COOKIE } from '@shared/session'
+import { bootstrapApp } from './app'
 
-const hasSession = !!new Cookies().get(SESSION_COOKIE) || !!localStorage.getItem('token')
-if (shouldShowLandingPage(window.location.pathname, hasSession)) {
-  import('@/features/landingpage/views/LandingPage.vue').then(({ default: Landing }) => {
-    const app = createApp(Landing)
-    app.use(createPinia())
-
-    const localStore = useLocalStore()
-    localStore.initialize()
-
-    appUseI18n(app)
-
-    app.mount('#app')
-    document.getElementById('splash')?.remove()
-    // Preload full app silently in background
-    nextTick(() => {
-      import('./app')
-    })
-  })
-} else {
-  import('./app').then(({ bootstrapApp }) => bootstrapApp())
-}
+bootstrapApp()

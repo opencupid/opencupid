@@ -152,18 +152,6 @@
     "you_matched_with_them": "{name} visszajelölt!",
     "you_messaged_them": "Üzenetet küldtél nekik"
   },
-  "landingpage": {
-    "date_1": " ",
-    "enter_button": "Belépés",
-    "enter_button_loading": "Egy pillanat...",
-    "footer_contribute": "Nyílt forráskód. Csatlakozz ",
-    "footer_madeby": "Sok ❤️-tel készíti néhány önkéntes",
-    "select_language": "Másik nyelv",
-    "socialize_1": " ",
-    "subtitle_1": "Mindannyian keressük a különféle kapcsolódásokat - társat, párt, hasonszőrűeket a környékről, tanítót, mentort, barátokat. Nem könnyű ez - szét vagyunk szóródva az ország különböző pontjain, falvakban, városokban, tanyákon. Gyakori, hogy hosszú idő után találkozunk először valakivel, aki csak pár faluval arrébb lakik ugyan, de nem keresztezik egymást útjaink. Vagy a szomszéd lépcsőházban, de sosem derül ki, hogy Ő is éppen tanyát keres és permakultúra videókat bingel a Youtubeon.\n\nEz itt egy biztonságos tér, ami segít a kapcsolódásban, ahol rátalálhatunk egymásra.",
-    "title": "Ez itt a {siteName}",
-    "title_lg": "Ez itt a {siteName}"
-  },
   "matches": {
     "anonymous_like_hint": "Egyelőre névtelenül komál téged. De a Komakeresőben rátalálhatsz - ha Te is komálod őt, ki fog derülni, ki küldte. Ha valakit ilyen jelöléssel látsz, a preferenciáitok megegyeznek:",
     "anonymous_like_hint_cta": "A Komakeresőhöz",

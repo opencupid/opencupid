@@ -31,12 +31,6 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
         external: (id) => id.includes('__tests__'),
         output: {
           manualChunks(id) {
-            if (id.includes('shared/ui/LocaleSelector')) {
-              return 'landing'
-            }
-            if (id.includes('features/landingpage')) {
-              return 'landing'
-            }
             if (id.includes('assets/icons')) {
               return 'icons'
             }
