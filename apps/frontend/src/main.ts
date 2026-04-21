@@ -94,11 +94,15 @@ useBootstrap().bootstrap()
 
 appUseI18n(app)
 
-await router.isReady()
+// Wrapped in async IIFE: top-level await isn't supported by the build
+// target (chrome87 / firefox78 / safari14) that esbuild is asked to hit.
+;(async () => {
+  await router.isReady()
 
-app.mount('#app')
-document.getElementById('splash')?.remove()
+  app.mount('#app')
+  document.getElementById('splash')?.remove()
 
-// Load observability tools after mount
-await initSentry(app)
-initOpenReplay()
+  // Load observability tools after mount
+  await initSentry(app)
+  initOpenReplay()
+})()
