@@ -148,18 +148,6 @@
     "you_matched_with_them": "You matched with them",
     "you_messaged_them": "You messaged them"
   },
-  "landingpage": {
-    "date_1": "Meet a soulmate, a partner, or someone to share the journey with",
-    "enter_button": "Enter",
-    "enter_button_loading": "Hang on a sec...",
-    "footer_contribute": "Anyone can contribute on",
-    "footer_madeby": "Made with ❤️ by the Gaians",
-    "select_language": "Select your language",
-    "socialize_1": "Find travel companions, local friends, and like-minded souls nearby",
-    "subtitle_1": "We're all looking for different kinds of connections – a companion, a partner, like-minded folks nearby, a teacher, a mentor, friends, a soulmate.\n\nIt's not always easy – we're scattered all over the country, in villages, towns, and remote homesteads. Sometimes it turns out, after ages, that we finally meet someone who lives just a couple of villages away, but our paths have never crossed. Or they're in the next apartment block, but you'd never know they're also hunting for a small farm and binge-watching permaculture videos on YouTube.\n\n{siteName} is created and run by fellow Gaian volunteers with no profit motive. It is a safe space made to help us connect and find each other.",
-    "title": "{siteName}",
-    "title_lg": "Welcome to {siteName}"
-  },
   "matches": {
     "anonymous_like_hint": "They didn't want you to know who they are, at least not yet. But you will find out when you like them back. You can bump into them on the map — if you see someone marked like this, your preferences match.",
     "anonymous_like_hint_cta": "Discover the community",
