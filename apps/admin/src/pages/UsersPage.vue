@@ -14,6 +14,8 @@ interface AdminUser {
   roles: string[]
   createdAt: string
   lastLoginAt: string | null
+  language: string
+  originDomain: string
   profile: { id: string; publicName: string } | null
 }
 
@@ -290,6 +292,7 @@ onUnmounted(() => {
             >
               Last Login{{ sortIndicator('lastLoginAt') }}
             </th>
+            <th>Origin</th>
             <th></th>
           </tr>
         </thead>
@@ -324,6 +327,7 @@ onUnmounted(() => {
             </td>
             <td>{{ new Date(user.createdAt).toLocaleDateString() }}</td>
             <td>{{ user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : '-' }}</td>
+            <td>{{ user.originDomain || '-' }}</td>
             <td class="text-nowrap">
               <button
                 v-if="user.profile"
@@ -343,7 +347,7 @@ onUnmounted(() => {
           </tr>
           <tr v-if="users.length === 0">
             <td
-              colspan="9"
+              colspan="10"
               class="text-center text-muted"
             >
               No users found
@@ -439,6 +443,10 @@ onUnmounted(() => {
                     : 'Never'
                 }}
               </dd>
+              <dt class="col-sm-4">Language</dt>
+              <dd class="col-sm-8">{{ selectedUser.language || '-' }}</dd>
+              <dt class="col-sm-4">Origin</dt>
+              <dd class="col-sm-8">{{ selectedUser.originDomain || '-' }}</dd>
               <dt class="col-sm-4">Profile</dt>
               <dd class="col-sm-8">
                 {{ selectedUser.profile?.publicName || 'No profile' }}

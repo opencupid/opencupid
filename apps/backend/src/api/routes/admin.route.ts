@@ -184,6 +184,8 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
             roles: true,
             createdAt: true,
             lastLoginAt: true,
+            language: true,
+            originDomain: true,
             newsletterOptIn: true,
             isRegistrationConfirmed: true,
             profile: { select: { id: true, publicName: true } },
@@ -228,6 +230,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
           updatedAt: true,
           lastLoginAt: true,
           language: true,
+          originDomain: true,
           newsletterOptIn: true,
           isPushNotificationEnabled: true,
           profile: {
