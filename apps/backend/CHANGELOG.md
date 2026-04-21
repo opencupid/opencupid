@@ -1,5 +1,11 @@
 # backend
 
+## 0.53.2
+
+### Patch Changes
+
+- 8e5e7c0: Expose `User.originDomain` and `User.language` in the admin UI — a new `Origin` column in the users table (last data column, before action buttons) and two new rows (`Language`, `Origin`) in the user detail modal. Backend `/admin/users` list endpoint now returns both fields; `/admin/users/:id` adds `originDomain` (already had `language`).
+
 ## 0.53.1
 
 ### Patch Changes

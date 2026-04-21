@@ -1,5 +1,12 @@
 # frontend
 
+## 0.53.2
+
+### Patch Changes
+
+- 831ba7a: Remove inline Vue landing page. The public landing at `/` now lives in the separate `opencupid/landingpages` repo and is served by Traefik to anonymous visitors; authenticated visitors skip it and go straight to the SPA.
+- 2ea540c: fix(frontend): tighten posts UI and offcanvas widths
+
 ## 0.53.1
 
 ## 0.53.0

@@ -1,5 +1,11 @@
 # @opencupid/shared
 
+## 0.6.1
+
+### Patch Changes
+
+- 2ea540c: fix(frontend): tighten posts UI and offcanvas widths
+
 ## 0.6.0
 
 ### Minor Changes
