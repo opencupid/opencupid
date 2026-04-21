@@ -94,8 +94,17 @@ useBootstrap().bootstrap()
 
 appUseI18n(app)
 
-// Wrapped in async IIFE: top-level await isn't supported by the build
-// target (chrome87 / firefox78 / safari14) that esbuild is asked to hit.
+// Wrapped in async IIFE because top-level await isn't supported by the
+// current build target (chrome87 / firefox78 / safari14 — Vite's default
+// `modules` preset, not an explicit choice in this repo).
+//
+// TODO: set an explicit `build.target` in vite.config.ts — e.g. 'es2022'
+// or 'baseline-widely-available' — then delete this IIFE. TLA has been
+// universally supported since late 2021 (Chrome/Firefox/Edge 89, Safari
+// 15.0); raising the target drops well under 1% of users (mostly iOS 14
+// stuck on iPhone 6s/7/SE 1st-gen) and makes the browser-support window
+// a deliberate policy instead of an inherited default. Blocked on
+// deciding whether any telemetry justifies keeping the old tail.
 ;(async () => {
   await router.isReady()
 
