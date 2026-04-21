@@ -12,7 +12,6 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    BAlert: typeof import('bootstrap-vue-next/components/BAlert')['BAlert']
     BBadge: typeof import('bootstrap-vue-next/components/BBadge')['BBadge']
     BButton: typeof import('bootstrap-vue-next/components/BButton')['BButton']
     BCol: typeof import('bootstrap-vue-next/components/BContainer')['BCol']
@@ -36,16 +35,12 @@ declare module 'vue' {
     BFormRadioGroup: typeof import('bootstrap-vue-next/components/BFormRadio')['BFormRadioGroup']
     BFormSelect: typeof import('bootstrap-vue-next/components/BFormSelect')['BFormSelect']
     BFormSelectOption: typeof import('bootstrap-vue-next/components/BFormSelect')['BFormSelectOption']
-    BFormTags: typeof import('bootstrap-vue-next/components/BFormTags')['BFormTags']
     BFormTextarea: typeof import('bootstrap-vue-next/components/BFormTextarea')['BFormTextarea']
     BInput: typeof import('bootstrap-vue-next/components/BFormInput')['BInput']
     BInputGroup: typeof import('bootstrap-vue-next/components/BInputGroup')['BInputGroup']
     BListGroup: typeof import('bootstrap-vue-next/components/BListGroup')['BListGroup']
     BListGroupItem: typeof import('bootstrap-vue-next/components/BListGroup')['BListGroupItem']
     BModal: typeof import('bootstrap-vue-next/components/BModal')['BModal']
-    BNavbar: typeof import('bootstrap-vue-next/components/BNavbar')['BNavbar']
-    BNavbarNav: typeof import('bootstrap-vue-next/components/BNavbar')['BNavbarNav']
-    BNavItem: typeof import('bootstrap-vue-next/components/BNav')['BNavItem']
     BOffcanvas: typeof import('bootstrap-vue-next/components/BOffcanvas')['BOffcanvas']
     BOverlay: typeof import('bootstrap-vue-next/components/BOverlay')['BOverlay']
     BPlaceholder: typeof import('bootstrap-vue-next/components/BPlaceholder')['BPlaceholder']
@@ -65,7 +60,6 @@ declare module 'vue' {
 
 // For TSX support
 declare global {
-  const BAlert: typeof import('bootstrap-vue-next/components/BAlert')['BAlert']
   const BBadge: typeof import('bootstrap-vue-next/components/BBadge')['BBadge']
   const BButton: typeof import('bootstrap-vue-next/components/BButton')['BButton']
   const BCol: typeof import('bootstrap-vue-next/components/BContainer')['BCol']
@@ -89,16 +83,12 @@ declare global {
   const BFormRadioGroup: typeof import('bootstrap-vue-next/components/BFormRadio')['BFormRadioGroup']
   const BFormSelect: typeof import('bootstrap-vue-next/components/BFormSelect')['BFormSelect']
   const BFormSelectOption: typeof import('bootstrap-vue-next/components/BFormSelect')['BFormSelectOption']
-  const BFormTags: typeof import('bootstrap-vue-next/components/BFormTags')['BFormTags']
   const BFormTextarea: typeof import('bootstrap-vue-next/components/BFormTextarea')['BFormTextarea']
   const BInput: typeof import('bootstrap-vue-next/components/BFormInput')['BInput']
   const BInputGroup: typeof import('bootstrap-vue-next/components/BInputGroup')['BInputGroup']
   const BListGroup: typeof import('bootstrap-vue-next/components/BListGroup')['BListGroup']
   const BListGroupItem: typeof import('bootstrap-vue-next/components/BListGroup')['BListGroupItem']
   const BModal: typeof import('bootstrap-vue-next/components/BModal')['BModal']
-  const BNavbar: typeof import('bootstrap-vue-next/components/BNavbar')['BNavbar']
-  const BNavbarNav: typeof import('bootstrap-vue-next/components/BNavbar')['BNavbarNav']
-  const BNavItem: typeof import('bootstrap-vue-next/components/BNav')['BNavItem']
   const BOffcanvas: typeof import('bootstrap-vue-next/components/BOffcanvas')['BOffcanvas']
   const BOverlay: typeof import('bootstrap-vue-next/components/BOverlay')['BOverlay']
   const BPlaceholder: typeof import('bootstrap-vue-next/components/BPlaceholder')['BPlaceholder']
