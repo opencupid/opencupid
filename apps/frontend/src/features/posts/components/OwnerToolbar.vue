@@ -42,11 +42,11 @@ defineEmits<{
       :title="isVisible ? $t('posts.actions.hide') : $t('posts.actions.show')"
       :aria-label="isVisible ? $t('posts.actions.hide') : $t('posts.actions.show')"
     >
-      <IconHide
+      <IconShow
         v-if="isVisible"
         class="svg-icon"
       />
-      <IconShow
+      <IconHide
         v-else
         class="svg-icon"
       />
