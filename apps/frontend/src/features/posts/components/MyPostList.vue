@@ -64,9 +64,9 @@ function handlePostHide(post: any) {
 
 <template>
   <div class="post-list h-100 w-100 d-flex flex-column">
-    <BContainer v-if="!isInitialized && posts.length === 0">
+    <div v-if="!isInitialized && posts.length === 0" class="p-2 p-md-3">
       <PostPlaceholdersGrid />
-    </BContainer>
+    </div>
 
     <div
       v-else-if="posts.length === 0"

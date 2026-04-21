@@ -20,6 +20,9 @@ import PostIt from '@/features/shared/ui/PostIt.vue'
 import PostTypeBadge from './PostTypeBadge.vue'
 import LocationSelector from '@/features/shared/profileform/LocationSelector.vue'
 
+import IconHide from '@/assets/icons/interface/hide.svg'
+import IconShow from '@/assets/icons/interface/unhide.svg'
+
 interface Emits {
   (e: 'cancel'): void
   (e: 'saved', post: OwnerPost): void
@@ -138,14 +141,27 @@ const handleSubmit = async () => {
         </BFormGroup>
 
         <!-- isVisible flag checkbox -->
-        <BFormGroup v-if="isEdit">
-          <BFormCheckbox
-            type="checkbox"
-            v-model="form.isVisible"
-            :label="$t('posts.labels.visibility')"
+        <BFormGroup
+          v-if="isEdit"
+          class="d-flex align-items-center"
+        >
+          <BButton
+            variant="link-secondary"
+            size="sm"
+            v-model:pressed="form.isVisible"
+            :title="form.isVisible ? $t('posts.actions.hide') : $t('posts.actions.show')"
+            :aria-label="form.isVisible ? $t('posts.actions.hide') : $t('posts.actions.show')"
           >
-            {{ $t('posts.labels.visibility') }}
-          </BFormCheckbox>
+            <IconShow
+              v-if="form.isVisible"
+              class="svg-icon"
+            />
+            <IconHide
+              v-else
+              class="svg-icon"
+            />
+          </BButton>
+          {{ $t('posts.labels.visibility') }}
         </BFormGroup>
       </div>
 

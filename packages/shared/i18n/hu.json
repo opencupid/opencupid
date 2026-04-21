@@ -349,7 +349,7 @@
       "location": "Helyszín",
       "type": "Típus",
       "updated": "Utoljára frissítve",
-      "visibility": "Látható mások számára"
+      "visibility": "Látható?"
     },
     "location": {
       "enable": "Helymeghatározás engedélyezése",
@@ -461,7 +461,7 @@
       "kids_preference_label": "Gyerekei?",
       "more_options": "További lehetőségek...",
       "my_dating_profile": "Párkereső profilom",
-      "my_preferences": "Preferenciáim",
+      "my_preferences": "Kit keresek?",
       "my_profile": "Adataim",
       "name_first_name_only": "Csak a keresztnevedet",
       "name_invalid": "Adj meg legalább 3 betűt",
