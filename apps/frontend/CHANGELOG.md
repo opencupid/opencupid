@@ -1,5 +1,12 @@
 # frontend
 
+## 0.53.3
+
+### Patch Changes
+
+- 44e9f6e: chore(frontend): update map-bg.png asset
+- 927e102: feat(frontend): move OG tags + brand labels to landing /pages/
+
 ## 0.53.2
 
 ### Patch Changes
