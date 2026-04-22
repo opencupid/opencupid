@@ -62,7 +62,7 @@ resource "local_file" "ssh_public_key" {
 
 resource "hcloud_ssh_key" "this" {
   name       = "opencupid-staging"
-  public_key = tls_private_key.staging.public_key_openssh
+  public_key = trimspace(tls_private_key.staging.public_key_openssh)
 }
 
 
