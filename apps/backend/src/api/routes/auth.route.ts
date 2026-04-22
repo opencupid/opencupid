@@ -1,6 +1,6 @@
 import cuid from 'cuid'
 import { randomUUID } from 'crypto'
-import { FastifyPluginAsync, FastifyReply } from 'fastify'
+import { FastifyPluginAsync } from 'fastify'
 import { notifierService } from '@/services/notifier.service'
 import { UserService } from '@/services/user.service'
 import { RefreshTokenService } from '@/services/refresh-token.service'
@@ -24,54 +24,14 @@ import type {
 } from '@zod/apiResponse.dto'
 import { UserIdentifier, JwtPayload } from '@zod/user/user.dto'
 import {
-  SESSION_COOKIE,
-  SESSION_COOKIE_OPTS,
-  SESSION_MAX_AGE,
-  REFRESH_COOKIE,
-  REFRESH_MAX_AGE,
-  ORIGIN_COOKIE,
-  ORIGIN_MAX_AGE,
-} from '@shared/session'
-
-function setSessionCookie(reply: FastifyReply, jwt: string) {
-  reply.setCookie(SESSION_COOKIE, jwt, {
-    ...SESSION_COOKIE_OPTS,
-    httpOnly: false,
-    secure: appConfig.NODE_ENV !== 'development',
-    maxAge: SESSION_MAX_AGE,
-  })
-}
-
-function setRefreshCookie(reply: FastifyReply, token: string) {
-  reply.setCookie(REFRESH_COOKIE, token, {
-    ...SESSION_COOKIE_OPTS,
-    httpOnly: true,
-    secure: appConfig.NODE_ENV !== 'development',
-    maxAge: REFRESH_MAX_AGE,
-  })
-}
-
-function clearSessionCookie(reply: FastifyReply) {
-  reply.clearCookie(SESSION_COOKIE, SESSION_COOKIE_OPTS)
-}
-
-function clearRefreshCookie(reply: FastifyReply) {
-  reply.clearCookie(REFRESH_COOKIE, SESSION_COOKIE_OPTS)
-}
-
-// Stamps the __o cookie authoritatively on any host where login activity
-// occurs. Rewriting on every send and consume (not only cross-brand ones)
-// prevents ping-pong loops caused by stale __o values left on both brands
-// pointing at each other.
-function setOriginCookie(reply: FastifyReply, originDomain: string | null | undefined) {
-  if (!originDomain) return
-  if (appConfig.NODE_ENV === 'development') return
-  reply.setCookie(ORIGIN_COOKIE, originDomain, {
-    ...SESSION_COOKIE_OPTS,
-    secure: true,
-    maxAge: ORIGIN_MAX_AGE,
-  })
-}
+  setSessionCookie,
+  setRefreshCookie,
+  clearSessionCookie,
+  clearRefreshCookie,
+  setOriginCookie,
+  getSessionCookie,
+  getRefreshCookie,
+} from '@/lib/session'
 
 const WS_TICKET_TTL = 30 // seconds
 
@@ -161,12 +121,12 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (req, reply) => {
-      const refreshToken = req.cookies[REFRESH_COOKIE]
+      const refreshToken = getRefreshCookie(req)
       if (!refreshToken) {
         return sendUnauthorizedError(reply, 'Missing refresh token')
       }
 
-      const expiredJwt = req.cookies[SESSION_COOKIE]
+      const expiredJwt = getSessionCookie(req)
       if (!expiredJwt) {
         return sendUnauthorizedError(reply, 'Missing session cookie')
       }
@@ -361,7 +321,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         // tokenVersion, which would invalidate all other active sessions
         // (other devices/browsers) since we have no "logout all" feature.
         await req.deleteSession()
-        const refreshToken = req.cookies[REFRESH_COOKIE]
+        const refreshToken = getRefreshCookie(req)
         if (refreshToken) {
           await refreshTokenService.delete(refreshToken, req.user.userId)
         }

@@ -131,15 +131,66 @@ describe('GET /verify-token', () => {
     expect(reply.cookies[0].opts).toMatchObject({
       path: '/',
       httpOnly: false,
-      sameSite: 'strict',
+      sameSite: 'lax',
     })
+    // Dev mode: no Domain attribute (browsers reject Domain on localhost).
+    expect(reply.cookies[0].opts.domain).toBeUndefined()
     expect(reply.cookies[1].name).toBe('__refresh')
     expect(reply.cookies[1].value).toBe('mock-refresh-token')
     expect(reply.cookies[1].opts).toMatchObject({
       path: '/',
       httpOnly: true,
-      sameSite: 'strict',
+      sameSite: 'lax',
     })
+    // Dev mode: the new-shape cookie is already host-only, so emitting a
+    // legacy host-only clearCookie would target the same (name, Domain, Path)
+    // slot as the just-set cookie and wipe it. The migration helper must
+    // skip the legacy clear in this case.
+    const clearedNames = reply.clearedCookies.map((c: any) => c.name)
+    expect(clearedNames).not.toContain('__session')
+    expect(clearedNames).not.toContain('__refresh')
+  })
+
+  it('sets Domain=.<DOMAIN> on session + refresh cookies in production', async () => {
+    const origNodeEnv = appConfig.NODE_ENV
+    appConfig.NODE_ENV = 'production'
+    try {
+      const handler = fastify.routes['GET /verify-token']
+      const user = { id: 'u1', email: 't@e.com', tokenVersion: 0, roles: [], language: 'en' }
+      mockUserService.validateLoginToken.mockResolvedValue({
+        success: true,
+        user,
+        isNewUser: false,
+      })
+      mockGetExistingUserSession.mockResolvedValue({
+        profileId: 'p1',
+        sessionData: {
+          userId: 'u1',
+          profileId: 'p1',
+          tokenVersion: 0,
+          lang: 'en',
+          roles: [],
+          hasActiveProfile: false,
+          profile: { id: 'p1', isDatingActive: false, isSocialActive: false, isActive: false },
+        },
+      })
+      fastify.jwt = { sign: vi.fn().mockReturnValue('jwt-token') }
+      await handler({ query: { token: 'abc123' } } as any, reply as any)
+
+      const session = reply.cookies.find((c: any) => c.name === '__session')!
+      const refresh = reply.cookies.find((c: any) => c.name === '__refresh')!
+      // Domain is the apex with a leading dot so the cookie is sent on any
+      // subdomain (apex + app. + api. etc.).
+      expect(session.opts.domain).toBe('.fallback.example')
+      expect(refresh.opts.domain).toBe('.fallback.example')
+      // The legacy-shape delete must NOT carry the Domain attribute — it
+      // targets the pre-migration host-only slot, which the browser keys
+      // separately from the domain-scoped slot.
+      const clearedSession = reply.clearedCookies.find((c: any) => c.name === '__session')!
+      expect(clearedSession.opts).toEqual({ path: '/' })
+    } finally {
+      appConfig.NODE_ENV = origNodeEnv
+    }
   })
 
   it('returns 200 and token for new user and initializes profile', async () => {
@@ -341,7 +392,7 @@ describe('POST /send-magic-link', () => {
       expect(originCookie!.value).toBe('other.example')
       expect(originCookie!.opts).toMatchObject({
         path: '/',
-        sameSite: 'strict',
+        sameSite: 'lax',
         maxAge: 60 * 60 * 24 * 365 * 10,
       })
       expect(notifier.notifyUser).toHaveBeenCalledWith('user5', 'login_link', {
@@ -608,13 +659,16 @@ describe('POST /logout', () => {
     expect(deleteSession).toHaveBeenCalled()
     expect(mockRefreshTokenService.delete).toHaveBeenCalledWith('tok-abc', 'user1')
     expect(mockRefreshTokenService.deleteAllForUser).not.toHaveBeenCalled()
-    expect(reply.clearedCookies[0]).toMatchObject({
+    // Logout clears both shapes for each cookie so a mid-migration user
+    // fully logs out regardless of which variant their browser still holds.
+    const cleared = reply.clearedCookies.map((c: any) => ({ name: c.name, opts: c.opts }))
+    expect(cleared).toContainEqual({
       name: '__session',
-      opts: { path: '/' },
+      opts: expect.objectContaining({ path: '/' }),
     })
-    expect(reply.clearedCookies[1]).toMatchObject({
+    expect(cleared).toContainEqual({
       name: '__refresh',
-      opts: { path: '/' },
+      opts: expect.objectContaining({ path: '/' }),
     })
   })
 })

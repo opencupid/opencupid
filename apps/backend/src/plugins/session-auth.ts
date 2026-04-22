@@ -7,7 +7,8 @@ import { SessionService } from '../services/session.service'
 import { sendUnauthorizedError } from '@/api/helpers'
 import { appConfig } from '@/lib/appconfig'
 import '@fastify/cookie'
-import { SESSION_COOKIE, SESSION_COOKIE_OPTS, SESSION_MAX_AGE } from '@shared/session'
+import { SESSION_COOKIE } from '@shared/session'
+import { getSessionCookie, setSessionCookie } from '@/lib/session'
 import { SessionData } from '@zod/user/user.dto'
 
 // Extend Fastify types
@@ -48,7 +49,7 @@ export default fp(async (fastify: FastifyInstance) => {
   // cookie. @fastify/jwt checks Bearer header first, then falls back to cookie.
   // Old clients still sending Authorization: Bearer get migrated to the cookie.
   fastify.decorate('authenticate', async (req: FastifyRequest, reply: FastifyReply) => {
-    const cookieToken = req.cookies[SESSION_COOKIE]
+    const cookieToken = getSessionCookie(req)
     const bearerToken = req.headers.authorization?.startsWith('Bearer ')
       ? req.headers.authorization.slice(7)
       : null
@@ -66,15 +67,13 @@ export default fp(async (fastify: FastifyInstance) => {
     // Resolve the session ID — prefer cookie, fall back to Bearer token
     const sessionId = cookieToken ?? bearerToken!
 
-    // Migrate old clients: set __session cookie so subsequent requests use it
-    if (!cookieToken && bearerToken) {
-      reply.setCookie(SESSION_COOKIE, sessionId, {
-        ...SESSION_COOKIE_OPTS,
-        httpOnly: false,
-        secure: appConfig.NODE_ENV !== 'development',
-        maxAge: SESSION_MAX_AGE,
-      })
-    }
+    // Silent cookie migration: rewrite every authenticated request to the
+    // domain-scoped cookie shape and delete the legacy host-only variant.
+    // Also covers the older localStorage → Bearer-header migration by
+    // stamping the cookie when the client only sent a Bearer token. Runs on
+    // the hot path so every active user is migrated on their very next
+    // authenticated call. Remove once the migration window has elapsed.
+    setSessionCookie(reply, sessionId)
 
     // Try to fetch an existing session from Redis
     const sess = await sessionService.get(sessionId)
