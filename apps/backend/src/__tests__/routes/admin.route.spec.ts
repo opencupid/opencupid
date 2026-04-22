@@ -214,8 +214,9 @@ describe('GET /stats/daily', () => {
 })
 
 describe('GET /users', () => {
-  it('returns paginated user list', async () => {
-    const mockUsers = [
+  it('returns paginated user list with lastSeenAt flattened from activitySummary', async () => {
+    const seen = new Date('2026-04-20T10:00:00Z')
+    mockPrisma.user.findMany.mockResolvedValue([
       {
         id: 'user1',
         email: 'test@test.com',
@@ -224,11 +225,13 @@ describe('GET /users', () => {
         isBlocked: false,
         roles: ['user'],
         createdAt: new Date(),
-        lastLoginAt: null,
-        profile: { id: 'prof1', publicName: 'Test' },
+        profile: {
+          id: 'prof1',
+          publicName: 'Test',
+          activitySummary: { lastSeenAt: seen },
+        },
       },
-    ]
-    mockPrisma.user.findMany.mockResolvedValue(mockUsers)
+    ])
     mockPrisma.user.count.mockResolvedValue(1)
 
     const handler = fastify.routes['GET /users']
@@ -236,8 +239,60 @@ describe('GET /users', () => {
 
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
-    expect(reply.payload.users).toEqual(mockUsers)
     expect(reply.payload.total).toBe(1)
+    expect(reply.payload.users).toHaveLength(1)
+    expect(reply.payload.users[0]).toMatchObject({
+      id: 'user1',
+      lastSeenAt: seen,
+      profile: { id: 'prof1', publicName: 'Test' },
+    })
+    // activitySummary is not leaked through the flattened profile
+    expect(reply.payload.users[0].profile).not.toHaveProperty('activitySummary')
+  })
+
+  it('returns lastSeenAt: null when profile is missing', async () => {
+    mockPrisma.user.findMany.mockResolvedValue([
+      {
+        id: 'user2',
+        email: 'x@y.z',
+        phonenumber: null,
+        isActive: false,
+        isBlocked: false,
+        roles: ['user'],
+        createdAt: new Date(),
+        profile: null,
+      },
+    ])
+    mockPrisma.user.count.mockResolvedValue(1)
+
+    const handler = fastify.routes['GET /users']
+    await handler({ query: { page: '1', pageSize: '25', search: '' } }, reply)
+
+    expect(reply.payload.users[0]).toMatchObject({ lastSeenAt: null, profile: null })
+  })
+
+  it('returns lastSeenAt: null when activitySummary is missing', async () => {
+    mockPrisma.user.findMany.mockResolvedValue([
+      {
+        id: 'user3',
+        email: 'a@b.c',
+        phonenumber: null,
+        isActive: true,
+        isBlocked: false,
+        roles: ['user'],
+        createdAt: new Date(),
+        profile: { id: 'prof3', publicName: 'Newbie', activitySummary: null },
+      },
+    ])
+    mockPrisma.user.count.mockResolvedValue(1)
+
+    const handler = fastify.routes['GET /users']
+    await handler({ query: { page: '1', pageSize: '25', search: '' } }, reply)
+
+    expect(reply.payload.users[0]).toMatchObject({
+      lastSeenAt: null,
+      profile: { id: 'prof3', publicName: 'Newbie' },
+    })
   })
 
   it('applies search filter', async () => {
@@ -261,16 +316,54 @@ describe('GET /users', () => {
 })
 
 describe('GET /users/:id', () => {
-  it('returns user detail', async () => {
-    const mockUser = { id: 'user1', email: 'test@test.com', isActive: true }
-    mockPrisma.user.findUnique.mockResolvedValue(mockUser)
+  it('returns user detail with lastSeenAt flattened from activitySummary', async () => {
+    const seen = new Date('2026-04-22T09:00:00Z')
+    mockPrisma.user.findUnique.mockResolvedValue({
+      id: 'user1',
+      email: 'test@test.com',
+      isActive: true,
+      profile: {
+        id: 'prof1',
+        publicName: 'Test',
+        isActive: true,
+        isSocialActive: true,
+        isDatingActive: false,
+        activitySummary: { lastSeenAt: seen },
+      },
+    })
 
     const handler = fastify.routes['GET /users/:id']
     await handler({ params: { id: 'user1' } }, reply)
 
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
-    expect(reply.payload.user).toEqual(mockUser)
+    expect(reply.payload.user).toMatchObject({
+      id: 'user1',
+      lastSeenAt: seen,
+      profile: {
+        id: 'prof1',
+        publicName: 'Test',
+        isActive: true,
+        isSocialActive: true,
+        isDatingActive: false,
+      },
+    })
+    expect(reply.payload.user.profile).not.toHaveProperty('activitySummary')
+  })
+
+  it('returns lastSeenAt: null when the user has no profile', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({
+      id: 'user2',
+      email: 'x@y.z',
+      isActive: false,
+      profile: null,
+    })
+
+    const handler = fastify.routes['GET /users/:id']
+    await handler({ params: { id: 'user2' } }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.user).toMatchObject({ id: 'user2', lastSeenAt: null, profile: null })
   })
 
   it('returns 404 for missing user', async () => {

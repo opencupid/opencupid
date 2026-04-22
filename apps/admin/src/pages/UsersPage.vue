@@ -13,7 +13,7 @@ interface AdminUser {
   isRegistrationConfirmed: boolean
   roles: string[]
   createdAt: string
-  lastLoginAt: string | null
+  lastSeenAt: string | null
   language: string
   originDomain: string
   profile: { id: string; publicName: string } | null
@@ -44,7 +44,7 @@ type SortColumn =
   | 'isActive'
   | 'isBlocked'
   | 'createdAt'
-  | 'lastLoginAt'
+  | 'lastSeenAt'
   | 'isRegistrationConfirmed'
   | 'newsletterOptIn'
 const sortColumn = ref<SortColumn | null>(null)
@@ -60,7 +60,7 @@ const sortedUsers = computed(() => {
     if (col === 'publicName') {
       aVal = a.profile?.publicName?.toLowerCase() ?? ''
       bVal = b.profile?.publicName?.toLowerCase() ?? ''
-    } else if (col === 'createdAt' || col === 'lastLoginAt') {
+    } else if (col === 'createdAt' || col === 'lastSeenAt') {
       aVal = a[col] ? new Date(a[col]).getTime() : 0
       bVal = b[col] ? new Date(b[col]).getTime() : 0
     } else {
@@ -288,9 +288,9 @@ onUnmounted(() => {
             </th>
             <th
               style="cursor: pointer"
-              @click="toggleSort('lastLoginAt')"
+              @click="toggleSort('lastSeenAt')"
             >
-              Last Login{{ sortIndicator('lastLoginAt') }}
+              Last Seen{{ sortIndicator('lastSeenAt') }}
             </th>
             <th>Origin</th>
             <th></th>
@@ -326,7 +326,7 @@ onUnmounted(() => {
               </span>
             </td>
             <td>{{ new Date(user.createdAt).toLocaleDateString() }}</td>
-            <td>{{ user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : '-' }}</td>
+            <td>{{ user.lastSeenAt ? new Date(user.lastSeenAt).toLocaleDateString() : '-' }}</td>
             <td>{{ user.originDomain || '-' }}</td>
             <td class="text-nowrap">
               <button
@@ -435,11 +435,11 @@ onUnmounted(() => {
               </dd>
               <dt class="col-sm-4">Created</dt>
               <dd class="col-sm-8">{{ new Date(selectedUser.createdAt).toLocaleString() }}</dd>
-              <dt class="col-sm-4">Last Login</dt>
+              <dt class="col-sm-4">Last Seen</dt>
               <dd class="col-sm-8">
                 {{
-                  selectedUser.lastLoginAt
-                    ? new Date(selectedUser.lastLoginAt).toLocaleString()
+                  selectedUser.lastSeenAt
+                    ? new Date(selectedUser.lastSeenAt).toLocaleString()
                     : 'Never'
                 }}
               </dd>

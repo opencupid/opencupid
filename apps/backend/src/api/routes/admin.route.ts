@@ -183,20 +183,31 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
             isBlocked: true,
             roles: true,
             createdAt: true,
-            lastLoginAt: true,
             language: true,
             originDomain: true,
             newsletterOptIn: true,
             isRegistrationConfirmed: true,
-            profile: { select: { id: true, publicName: true } },
+            profile: {
+              select: {
+                id: true,
+                publicName: true,
+                activitySummary: { select: { lastSeenAt: true } },
+              },
+            },
           },
         }),
         prisma.user.count({ where }),
       ])
 
+      const flattened = users.map(({ profile, ...rest }) => ({
+        ...rest,
+        lastSeenAt: profile?.activitySummary?.lastSeenAt ?? null,
+        profile: profile ? { id: profile.id, publicName: profile.publicName } : null,
+      }))
+
       return reply.code(200).send({
         success: true,
-        users,
+        users: flattened,
         total,
         page: pageNum,
         pageSize: size,
@@ -228,7 +239,6 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
           roles: true,
           createdAt: true,
           updatedAt: true,
-          lastLoginAt: true,
           language: true,
           originDomain: true,
           newsletterOptIn: true,
@@ -240,6 +250,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
               isActive: true,
               isSocialActive: true,
               isDatingActive: true,
+              activitySummary: { select: { lastSeenAt: true } },
             },
           },
         },
@@ -247,7 +258,22 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
 
       if (!user) return sendError(reply, 404, 'User not found')
 
-      return reply.code(200).send({ success: true, user })
+      const { profile, ...rest } = user
+      const flattened = {
+        ...rest,
+        lastSeenAt: profile?.activitySummary?.lastSeenAt ?? null,
+        profile: profile
+          ? {
+              id: profile.id,
+              publicName: profile.publicName,
+              isActive: profile.isActive,
+              isSocialActive: profile.isSocialActive,
+              isDatingActive: profile.isDatingActive,
+            }
+          : null,
+      }
+
+      return reply.code(200).send({ success: true, user: flattened })
     } catch (err) {
       fastify.log.error({ err }, 'Error fetching admin user detail')
       return sendError(reply, 500, 'Failed to fetch user')
