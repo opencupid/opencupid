@@ -48,6 +48,13 @@ export default fp(async (fastify: FastifyInstance) => {
   // Auth hook reads JWT from Authorization header (if present) or __session
   // cookie. @fastify/jwt checks Bearer header first, then falls back to cookie.
   // Old clients still sending Authorization: Bearer get migrated to the cookie.
+  //
+  // TODO(2026-05-05): Retire the Bearer fallback together with
+  // `migrateLegacyToken()` in the frontend authStore. By that date every
+  // pre-cutover JWT has expired (cutover 2026-03-30, JWT TTL 30d) and the
+  // only clients that could benefit from Bearer auth are dead ones. Drop the
+  // `bearerToken` branch, simplify to `const sessionId = cookieToken!` after
+  // the missing-cookie guard.
   fastify.decorate('authenticate', async (req: FastifyRequest, reply: FastifyReply) => {
     const cookieToken = getSessionCookie(req)
     const bearerToken = req.headers.authorization?.startsWith('Bearer ')

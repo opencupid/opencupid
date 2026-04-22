@@ -6,6 +6,12 @@
  * `apps/backend/src/lib/session-legacy.ts` — delete both files together once
  * the migration window has elapsed; every import will fail loudly, pointing
  * at call sites that still emit legacy behavior.
+ *
+ * TODO(2026-07-22): Retire this file + the backend sibling. The date is
+ * anchored to ~90 days after Phase 1 deploy (refresh-token TTL), by which
+ * point every active user is on the domain-scoped shape and any dormant
+ * host-only refresh token has expired. Bump this date forward if the PR
+ * #1353 merge slips materially past 2026-04-22.
  */
 import type Cookies from 'universal-cookie'
 import { canScopeToDomain } from '@shared/session'

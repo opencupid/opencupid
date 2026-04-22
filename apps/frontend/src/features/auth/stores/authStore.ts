@@ -42,7 +42,12 @@ function removeSessionCookie() {
  * the backend's authenticate hook picks it up and sets the __session cookie.
  * Cleans up localStorage after the first successful API response.
  *
- * TODO: Remove this function once all clients have migrated to cookie auth.
+ * TODO(2026-05-05): Retire together with the Bearer fallback in
+ * `apps/backend/src/plugins/session-auth.ts`. By that date every pre-cutover
+ * JWT (cutover: 2026-03-30, JWT TTL: 30d) has expired and this function can
+ * only return a dead token. Any remaining localStorage-only users get
+ * re-logged-in via magic link on next visit, which is what they'd have to
+ * do anyway.
  */
 function migrateLegacyToken(): string | null {
   const legacyToken = localStorage.getItem('token')
