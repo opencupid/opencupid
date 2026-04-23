@@ -38,6 +38,7 @@ async function main() {
   app.register(import('./plugins/prisma'))
   app.register(import('./plugins/session-auth'))
   app.register(import('./plugins/activity-tracking'))
+  app.register(import('./plugins/rate-limiter'))
   // API routes
   app.register(import('./api/index'), { prefix: '/api' })
 
