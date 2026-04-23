@@ -131,18 +131,11 @@ export class MessageService {
       },
 
       include: conversationSummaryInclude,
-      orderBy: [
-        {
-          conversation: {
-            status: 'desc',
-          },
+      orderBy: {
+        conversation: {
+          updatedAt: 'desc',
         },
-        {
-          conversation: {
-            updatedAt: 'desc',
-          },
-        },
-      ],
+      },
     })
   }
 

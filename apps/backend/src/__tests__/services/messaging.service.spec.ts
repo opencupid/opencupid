@@ -136,6 +136,13 @@ describe('MessageService.listConversationsForProfile', () => {
     // ensure blocklist filters applied
     expect(args.where.conversation.participants.some.profile.blockedProfiles.none.id).toBe('p1')
   })
+
+  it('orders conversations by updatedAt desc without status grouping', async () => {
+    mockPrisma.conversationParticipant.findMany.mockResolvedValue([])
+    await service.listConversationsForProfile('p1')
+    const args = mockPrisma.conversationParticipant.findMany.mock.calls[0][0]
+    expect(args.orderBy).toEqual({ conversation: { updatedAt: 'desc' } })
+  })
 })
 
 describe('MessageService.acceptConversationOnMatch', () => {
