@@ -86,11 +86,13 @@ export class UserService {
     if (userExists) {
       // Check if registration completed already or we're dealing with a new user
       const isNewUser = userExists.isRegistrationConfirmed === false
-      await prisma.user.update({
-        where: { id: userExists.id },
+      // Skip issuing a new login token for blocked users. updateMany (vs update)
+      // treats a no-match filter as a no-op instead of throwing P2025.
+      await prisma.user.updateMany({
+        where: { id: userExists.id, isBlocked: false },
         data: {
-          loginToken: otp, // Clear the reset token
-          loginTokenExp: tokenExpiration, // Clear the expiration
+          loginToken: otp,
+          loginTokenExp: tokenExpiration,
         },
       })
       return { user: userExists, isNewUser }
