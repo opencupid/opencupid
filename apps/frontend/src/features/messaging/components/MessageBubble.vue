@@ -43,7 +43,7 @@ defineProps<{
 
 <style lang="scss" scoped>
 .message-bubble {
-  max-width: 60%;
+  max-width: 80%;
   border-radius: 15px;
   word-break: break-word;
   padding: 0.25rem 0.5rem;
