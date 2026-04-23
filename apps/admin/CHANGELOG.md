@@ -1,5 +1,12 @@
 # @opencupid/admin
 
+## 0.53.4
+
+### Patch Changes
+
+- 377e55b: feat(admin): Daily Active chart + bar charts for interactions/matches/messages
+- df4775b: Admin dashboard: replace Daily Logins chart with Daily Active (from `lastSeenAt`); switch Interactions/Matches/Messages to bar charts.
+
 ## 0.53.3
 
 ## 0.53.2

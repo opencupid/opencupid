@@ -1,5 +1,13 @@
 # backend
 
+## 0.53.4
+
+### Patch Changes
+
+- 377e55b: feat(admin): Daily Active chart + bar charts for interactions/matches/messages
+- df4775b: Admin dashboard: replace Daily Logins chart with Daily Active (from `lastSeenAt`); switch Interactions/Matches/Messages to bar charts.
+- 595f6f2: Stop issuing magic-link login tokens for users with `User.isBlocked = true`. Previously `isBlocked` had no effect on the auth path — blocked users could still request and redeem login links.
+
 ## 0.53.3
 
 ## 0.53.2
