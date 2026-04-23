@@ -150,7 +150,14 @@ export const SendVoiceMessagePayloadSchema = z.object({
 
 export type SendVoiceMessagePayload = z.infer<typeof SendVoiceMessagePayloadSchema>
 
+// Internal classifier output: every possible state-machine decision the route
+// needs to act on, including the rejection case.
 export type SendOutcome = 'new_conversation' | 'accepted_on_reply' | 'reply' | 'blocked'
+
+// Wire-facing subset: the outcomes that accompany a successful 200 response.
+// 'blocked' is never returned on success — it becomes a 403 via MessagingError
+// at the route layer, so the client's SendMessageResponse.outcome can't see it.
+export type SendMessageOutcome = Exclude<SendOutcome, 'blocked'>
 
 // export type ConversationParticipantWithExtras = ConversationParticipantWithConversationSummary & {
 //   unreadCount: number,

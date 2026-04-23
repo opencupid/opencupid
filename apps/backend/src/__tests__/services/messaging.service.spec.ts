@@ -319,27 +319,31 @@ describe('MessageService.resolveConversation', () => {
 // (the route, via computeSendOutcome) to have already validated that the
 // accept is legal. The service just writes the state transition.
 describe('MessageService.acceptConversationOnReply', () => {
-  it('updates conversation status to ACCEPTED', async () => {
-    const updated = {
-      id: 'c1',
-      status: 'ACCEPTED',
-      initiatorProfileId: 'alice',
-      profileAId: 'alice',
-      profileBId: 'bob',
-    }
+  it('transitions INITIATED → ACCEPTED via guarded updateMany', async () => {
     const tx: any = {
       conversation: {
-        update: vi.fn().mockResolvedValue(updated),
+        updateMany: vi.fn().mockResolvedValue({ count: 1 }),
       },
     }
 
-    const result = await service.acceptConversationOnReply(tx, 'c1')
+    await service.acceptConversationOnReply(tx, 'c1')
 
-    expect(result).toEqual(updated)
-    const updateArgs = tx.conversation.update.mock.calls[0][0]
-    expect(updateArgs.where).toEqual({ id: 'c1' })
-    expect(updateArgs.data.status).toBe('ACCEPTED')
-    expect(updateArgs.data.updatedAt).toBeInstanceOf(Date)
+    const args = tx.conversation.updateMany.mock.calls[0][0]
+    expect(args.where).toEqual({ id: 'c1', status: 'INITIATED' })
+    expect(args.data.status).toBe('ACCEPTED')
+    expect(args.data.updatedAt).toBeInstanceOf(Date)
+  })
+
+  it('throws when no INITIATED row matched (concurrent transition)', async () => {
+    const tx: any = {
+      conversation: {
+        updateMany: vi.fn().mockResolvedValue({ count: 0 }),
+      },
+    }
+
+    await expect(service.acceptConversationOnReply(tx, 'c1')).rejects.toThrow(
+      /expected INITIATED conversation/
+    )
   })
 })
 
@@ -364,6 +368,9 @@ describe('MessageService.sendMessage (new primitive)', () => {
         findFirst: vi.fn().mockResolvedValue(opts.duplicate ?? null),
         create: vi.fn().mockResolvedValue(opts.created ?? builtMsg),
       },
+      conversation: {
+        update: vi.fn().mockResolvedValue(undefined),
+      },
     }
   }
 
@@ -380,6 +387,18 @@ describe('MessageService.sendMessage (new primitive)', () => {
     const result = await service.sendMessage(tx, 'c1', 'bob', 'hi', 'text/plain')
     expect(result.isDuplicate).toBe(true)
     expect(tx.message.create).not.toHaveBeenCalled()
+    // Do not bump the parent conversation on a duplicate send — inbox
+    // ordering should only advance for real new activity.
+    expect(tx.conversation.update).not.toHaveBeenCalled()
+  })
+
+  it('bumps parent conversation.updatedAt on non-duplicate send (inbox ordering)', async () => {
+    const tx = txForSend({})
+    await service.sendMessage(tx, 'c1', 'bob', 'hi', 'text/plain')
+    expect(tx.conversation.update).toHaveBeenCalledTimes(1)
+    const args = tx.conversation.update.mock.calls[0][0]
+    expect(args.where).toEqual({ id: 'c1' })
+    expect(args.data.updatedAt).toBeInstanceOf(Date)
   })
 
   it('skips dedup for attachment-bearing (voice) messages', async () => {
@@ -394,9 +413,10 @@ describe('MessageService.sendMessage (new primitive)', () => {
     expect(tx.message.create).toHaveBeenCalledTimes(1)
   })
 
-  it('throws on empty text content', async () => {
+  it('throws MessagingError(EMPTY_MESSAGE) on empty text content', async () => {
     const tx = txForSend({})
     await expect(service.sendMessage(tx, 'c1', 'bob', '   ', 'text/plain')).rejects.toMatchObject({
+      name: 'MessagingError',
       code: 'EMPTY_MESSAGE',
     })
     expect(tx.message.create).not.toHaveBeenCalled()

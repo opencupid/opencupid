@@ -10,10 +10,29 @@ let mockMessageService: any
 let mockWebPushService: any
 let mockNotifierService: any
 
-vi.mock('../../services/messaging.service', () => ({
-  MessageService: { getInstance: () => mockMessageService },
-  cleanMessageForNotification: vi.fn((msg: string) => msg),
-}))
+vi.mock('../../services/messaging.service', () => {
+  const MessagingErrorCodes = {
+    CONVERSATION_BLOCKED: 'CONVERSATION_BLOCKED',
+    EMPTY_MESSAGE: 'EMPTY_MESSAGE',
+  } as const
+  class MessagingError extends Error {
+    readonly code: (typeof MessagingErrorCodes)[keyof typeof MessagingErrorCodes]
+    constructor(
+      code: (typeof MessagingErrorCodes)[keyof typeof MessagingErrorCodes],
+      message: string
+    ) {
+      super(message)
+      this.name = 'MessagingError'
+      this.code = code
+    }
+  }
+  return {
+    MessageService: { getInstance: () => mockMessageService },
+    cleanMessageForNotification: vi.fn((msg: string) => msg),
+    MessagingError,
+    MessagingErrorCodes,
+  }
+})
 
 vi.mock('../../services/webpush.service', () => ({
   WebPushService: { getInstance: () => mockWebPushService, isWebPushConfigured: () => false },
@@ -345,14 +364,15 @@ describe('POST /message', () => {
     expect(mockNotifierService.notifyProfile).not.toHaveBeenCalled()
   })
 
-  it('returns 403 when resolveConversation throws', async () => {
+  it('re-throws unexpected errors from resolveConversation so Fastify returns 500', async () => {
     const handler = fastify.routes['POST /message']
-    mockMessageService.resolveConversation.mockRejectedValue(new Error('blocked'))
-    await handler({ session: { profileId: 'p1' }, body: validBody } as any, reply as any)
-    expect(reply.statusCode).toBe(403)
+    mockMessageService.resolveConversation.mockRejectedValue(new Error('db down'))
+    await expect(
+      handler({ session: { profileId: 'p1' }, body: validBody } as any, reply as any)
+    ).rejects.toThrow('db down')
   })
 
-  it('throws when conversation summary not found', async () => {
+  it('re-throws when conversation summary not found (invariant breach)', async () => {
     const handler = fastify.routes['POST /message']
     mockMessageService.resolveConversation.mockResolvedValue({
       convo: {
@@ -370,9 +390,9 @@ describe('POST /message', () => {
     })
     mockMessageService.getConversationSummary.mockResolvedValue(null)
 
-    await handler({ session: { profileId: 'p1' }, body: validBody } as any, reply as any)
-    // The thrown error is caught by the catch block which calls sendError with 403
-    expect(reply.statusCode).toBe(403)
+    await expect(
+      handler({ session: { profileId: 'p1' }, body: validBody } as any, reply as any)
+    ).rejects.toThrow('Conversation summary not found')
   })
 })
 
@@ -745,7 +765,8 @@ describe('POST /voice', () => {
 
     await handler({ session: { profileId: 'p1' }, parts: () => parts } as any, reply as any)
 
-    expect(reply.statusCode).toBe(403)
+    // Unexpected send-path errors surface as 500; upload-phase errors remain 400.
+    expect(reply.statusCode).toBe(500)
     expect(fs.promises.unlink).toHaveBeenCalled()
   })
 

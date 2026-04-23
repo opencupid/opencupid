@@ -1,7 +1,13 @@
 import { FastifyPluginAsync } from 'fastify'
 import multipart from '@fastify/multipart'
 import { rateLimitConfig, sendError } from '../helpers'
-import { MessageService, cleanMessageForNotification } from '@/services/messaging.service'
+import {
+  MessageService,
+  MessagingError,
+  MessagingErrorCodes,
+  cleanMessageForNotification,
+  type MessagingErrorCode,
+} from '@/services/messaging.service'
 import { computeSendOutcome } from '@/services/messaging.stateMachine'
 import { WebPushService } from '@/services/webpush.service'
 
@@ -37,6 +43,14 @@ const MessageListQuerySchema = z.object({
   cursor: z.string().cuid().optional(),
   take: z.coerce.number().int().min(1).max(50).optional(),
 })
+
+// HTTP status policy for MessagingError codes lives at the route layer, not
+// the service. Keeping it exhaustive (Record<...>) makes adding a new code a
+// compile error until the mapping is provided.
+const MESSAGING_ERROR_STATUS: Record<MessagingErrorCode, number> = {
+  [MessagingErrorCodes.CONVERSATION_BLOCKED]: 403,
+  [MessagingErrorCodes.EMPTY_MESSAGE]: 400,
+}
 
 const messageRoutes: FastifyPluginAsync = async (fastify) => {
   // Calculate max file size from configured max duration.
@@ -91,7 +105,10 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
         const outcome = computeSendOutcome(convo, wasCreated, senderProfileId)
 
         if (outcome === 'blocked') {
-          throw { error: 'Cannot send in this conversation', code: 'CONVERSATION_BLOCKED' }
+          throw new MessagingError(
+            MessagingErrorCodes.CONVERSATION_BLOCKED,
+            'Cannot send in this conversation'
+          )
         }
 
         if (outcome === 'accepted_on_reply') {
@@ -280,7 +297,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
    */
   fastify.post(
     '/message',
-    { onRequest: [fastify.authenticate], config: rateLimitConfig(fastify, '1 minute', 30) },
+    { onRequest: [fastify.authenticate], config: rateLimitConfig(fastify, '1 minute', 1) },
     async (req, reply) => {
       const senderProfileId = req.session.profileId
       if (!senderProfileId) return sendError(reply, 401, 'Sender ID not found.')
@@ -308,8 +325,11 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
             buildEmailBody: async () => cleanMessageForNotification(messageDTO.content, 100),
           })
         }
-      } catch (error: any) {
-        return sendError(reply, 403, error)
+      } catch (error) {
+        if (error instanceof MessagingError) {
+          return sendError(reply, MESSAGING_ERROR_STATUS[error.code], error.message)
+        }
+        throw error
       }
     }
   )
@@ -458,9 +478,15 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
               },
             })
           }
-        } catch (error: any) {
+        } catch (error) {
           await fsPromises.unlink(finalPath).catch(() => {})
-          return sendError(reply, 403, error)
+          if (error instanceof MessagingError) {
+            return sendError(reply, MESSAGING_ERROR_STATUS[error.code], error.message)
+          }
+          // Don't let the outer 400 catch swallow a send-path failure — that
+          // catch is scoped to upload/transcode problems only.
+          fastify.log.error(error, 'Voice message send failed')
+          return sendError(reply, 500, 'Failed to send voice message')
         }
       } catch (err: any) {
         fastify.log.warn('Voice upload error:', err)

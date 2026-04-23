@@ -5,6 +5,26 @@ import { Conversation } from '@zod/generated'
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
 import i18next from 'i18next'
 import { appConfig } from '../lib/appconfig'
+import { computeSendOutcome } from './messaging.stateMachine'
+
+// Business-error codes raised from the messaging service / route handlers.
+// HTTP status mapping is the route's responsibility — do not bake it in here.
+export const MessagingErrorCodes = {
+  CONVERSATION_BLOCKED: 'CONVERSATION_BLOCKED',
+  EMPTY_MESSAGE: 'EMPTY_MESSAGE',
+} as const
+
+export type MessagingErrorCode = (typeof MessagingErrorCodes)[keyof typeof MessagingErrorCodes]
+
+export class MessagingError extends Error {
+  readonly code: MessagingErrorCode
+
+  constructor(code: MessagingErrorCode, message: string) {
+    super(message)
+    this.name = 'MessagingError'
+    this.code = code
+  }
+}
 
 const conversationSummaryInclude = {
   conversation: {
@@ -238,7 +258,7 @@ export class MessageService {
     const cleanContent = messageType === 'text/plain' ? content.trim() : content
 
     if (messageType === 'text/plain' && !cleanContent) {
-      throw { error: 'Message content cannot be empty', code: 'EMPTY_MESSAGE' }
+      throw new MessagingError(MessagingErrorCodes.EMPTY_MESSAGE, 'Message content cannot be empty')
     }
 
     // Dedup: identical text content within 5s, text-only (attachments bypass dedup
@@ -269,6 +289,14 @@ export class MessageService {
       include: messageWithSenderInclude,
     })
 
+    // Bump parent conversation so inbox ordering (listConversationsForProfile
+    // orders by updatedAt DESC) reflects the new activity. Prisma @updatedAt
+    // only fires on direct updates, so creating a Message row is not enough.
+    await tx.conversation.update({
+      where: { id: convoId },
+      data: { updatedAt: new Date() },
+    })
+
     return { message, isDuplicate: false }
   }
 
@@ -280,7 +308,15 @@ export class MessageService {
     const mdContent = t('messages.welcome_message', { siteName })
     const content = simpleMarkdownToHtml(mdContent)
     return await prisma.$transaction(async (tx) => {
-      const { convo } = await this.resolveConversation(tx, senderId, recipientProfileId)
+      const { convo, wasCreated } = await this.resolveConversation(tx, senderId, recipientProfileId)
+      const outcome = computeSendOutcome(convo, wasCreated, senderId)
+      // If the welcome sender already has an INITIATED convo with this recipient
+      // (own pending invite) or anything BLOCKED, skip silently — we never want
+      // the welcome flow to enforce state-machine transitions or duplicate sends.
+      if (outcome === 'blocked') return
+      if (outcome === 'accepted_on_reply') {
+        await this.acceptConversationOnReply(tx, convo.id)
+      }
       await this.sendMessage(tx, convo.id, senderId, content, 'text/plain')
     })
   }
@@ -343,14 +379,19 @@ export class MessageService {
     }
   }
 
-  async acceptConversationOnReply(
-    tx: Prisma.TransactionClient,
-    convoId: string
-  ): Promise<Conversation> {
-    return tx.conversation.update({
-      where: { id: convoId },
+  async acceptConversationOnReply(tx: Prisma.TransactionClient, convoId: string): Promise<void> {
+    // Guard the transition so a concurrent BLOCKED/ACCEPTED write between
+    // classification and this call can't be silently flipped back to ACCEPTED.
+    // Under READ COMMITTED, the where-predicate is evaluated at write time.
+    const { count } = await tx.conversation.updateMany({
+      where: { id: convoId, status: 'INITIATED' },
       data: { status: 'ACCEPTED', updatedAt: new Date() },
     })
+    if (count !== 1) {
+      throw new Error(
+        `acceptConversationOnReply: expected INITIATED conversation ${convoId}, found ${count} matches`
+      )
+    }
   }
 
   /**

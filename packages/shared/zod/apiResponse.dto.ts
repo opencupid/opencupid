@@ -15,7 +15,11 @@ import type {
   PublicProfileWithContext,
 } from '@zod/profile/profile.dto'
 import type { PublicTag, PopularTag } from '@zod/tag/tag.dto'
-import type { ConversationSummary, MessageDTO, SendOutcome } from '@zod/messaging/messaging.dto'
+import type {
+  ConversationSummary,
+  MessageDTO,
+  SendMessageOutcome,
+} from '@zod/messaging/messaging.dto'
 import type { LoginUser, SettingsUser } from '@zod/user/user.dto'
 import type { LocationDTO } from '@zod/dto/location.dto'
 import type { VersionDTO } from '@zod/dto/version.dto'
@@ -69,7 +73,7 @@ export type ConversationResponse = ApiSuccess<{ conversation: ConversationSummar
 export type SendMessageResponse = ApiSuccess<{
   conversation: ConversationSummary
   message: MessageDTO
-  outcome: SendOutcome
+  outcome: SendMessageOutcome
 }>
 
 export type InitiateConversationResponse = ApiSuccess<{}>
