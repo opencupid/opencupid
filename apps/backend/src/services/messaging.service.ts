@@ -4,8 +4,6 @@ import type { ConversationParticipantWithConversationSummary } from '@zod/messag
 import { Conversation } from '@zod/generated'
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
 import i18next from 'i18next'
-// @ts-expect-error jsdom does not ship type declarations
-import { JSDOM } from 'jsdom'
 import { appConfig } from '../lib/appconfig'
 
 const conversationSummaryInclude = {
@@ -224,10 +222,10 @@ export class MessageService {
     return existingConversation
   }
 
-  async sendOrStartConversation(
+  async sendMessage(
     tx: Prisma.TransactionClient,
+    convoId: string,
     senderProfileId: string,
-    recipientProfileId: string,
     content: string,
     messageType: string = 'text/plain',
     attachmentData?: {
@@ -236,29 +234,20 @@ export class MessageService {
       fileSize?: number
       duration?: number
     }
-  ): Promise<{ convoId: string; message: MessageWithSender; isDuplicate: boolean }> {
-    // Trim user input for text messages; markdown rendering + sanitization happens on the frontend
+  ): Promise<{ message: MessageWithSender; isDuplicate: boolean }> {
     const cleanContent = messageType === 'text/plain' ? content.trim() : content
 
     if (messageType === 'text/plain' && !cleanContent) {
-      throw {
-        error: 'Message content cannot be empty',
-        code: 'EMPTY_MESSAGE',
-      }
+      throw { error: 'Message content cannot be empty', code: 'EMPTY_MESSAGE' }
     }
 
-    const [profileAId, profileBId] = this.sortProfilePair(senderProfileId, recipientProfileId)
-
-    const convo = await this.findOrCreateConversation(tx, profileAId, profileBId, senderProfileId)
-
-    // Dedup: check for identical text message within a 5-second window.
-    // Scoped to text-only — non-text messages (voice, etc.) have empty content
-    // so distinct uploads would incorrectly match each other.
+    // Dedup: identical text content within 5s, text-only (attachments bypass dedup
+    // because voice messages have empty content and would falsely match).
     if (messageType === 'text/plain' && !attachmentData) {
       const fiveSecondsAgo = new Date(Date.now() - 5000)
       const duplicate = await tx.message.findFirst({
         where: {
-          conversationId: convo.id,
+          conversationId: convoId,
           senderId: senderProfileId,
           content: cleanContent,
           messageType,
@@ -266,88 +255,34 @@ export class MessageService {
         },
         include: messageWithSenderInclude,
       })
-      if (duplicate) return { convoId: convo.id, message: duplicate, isDuplicate: true }
+      if (duplicate) return { message: duplicate, isDuplicate: true }
     }
 
     const message = await tx.message.create({
       data: {
-        conversationId: convo.id,
+        conversationId: convoId,
         senderId: senderProfileId,
         content: cleanContent,
         messageType,
-        ...(attachmentData && {
-          attachment: {
-            create: attachmentData,
-          },
-        }),
+        ...(attachmentData && { attachment: { create: attachmentData } }),
       },
       include: messageWithSenderInclude,
     })
 
-    return { convoId: convo.id, message, isDuplicate: false }
-  }
-
-  private async findOrCreateConversation(
-    tx: Prisma.TransactionClient,
-    profileAId: string,
-    profileBId: string,
-    senderId: string
-  ): Promise<Conversation> {
-    const existing = await tx.conversation.findUnique({
-      where: {
-        profileAId_profileBId: { profileAId, profileBId },
-      },
-    })
-
-    if (existing) {
-      if (!canSendMessageInConversation(existing, senderId)) {
-        throw {
-          error: 'Conversation is not accepted or sender cannot reply to initiated thread',
-          code: 'CONVERSATION_BLOCKED',
-        }
-      }
-
-      // Update status & last activity
-      await tx.conversation.update({
-        where: {
-          profileAId_profileBId: { profileAId, profileBId },
-        },
-        data: {
-          updatedAt: new Date(),
-          status: 'ACCEPTED',
-        },
-      })
-
-      return existing
-    }
-
-    // No existing conversation → auto-accept if profiles have a mutual like
-    const isMatch = await this.hasMutualLike(tx, profileAId, profileBId)
-
-    return tx.conversation.create({
-      data: {
-        status: isMatch ? 'ACCEPTED' : 'INITIATED',
-        initiatorProfileId: senderId,
-        profileAId,
-        profileBId,
-        participants: {
-          create: [{ profileId: profileAId }, { profileId: profileBId }],
-        },
-      },
-    })
+    return { message, isDuplicate: false }
   }
 
   async sendWelcomeMessage(recipientProfileId: string, locale: string) {
     const senderId = appConfig.WELCOME_MESSAGE_SENDER_PROFILE_ID
     const siteName = appConfig.SITE_NAME
-    if (senderId) {
-      const t = i18next.getFixedT(locale)
-      const mdContent = t('messages.welcome_message', { siteName })
-      const content = simpleMarkdownToHtml(mdContent)
-      return await prisma.$transaction(async (tx) => {
-        await this.sendOrStartConversation(tx, senderId, recipientProfileId, content, 'text/plain')
-      })
-    }
+    if (!senderId) return
+    const t = i18next.getFixedT(locale)
+    const mdContent = t('messages.welcome_message', { siteName })
+    const content = simpleMarkdownToHtml(mdContent)
+    return await prisma.$transaction(async (tx) => {
+      const { convo } = await this.resolveConversation(tx, senderId, recipientProfileId)
+      await this.sendMessage(tx, convo.id, senderId, content, 'text/plain')
+    })
   }
 
   private async hasMutualLike(
@@ -364,6 +299,58 @@ export class MessageService {
       },
     })
     return count === 2
+  }
+
+  async resolveConversation(
+    tx: Prisma.TransactionClient,
+    senderProfileId: string,
+    recipientProfileId: string
+  ): Promise<{ convo: Conversation; wasCreated: boolean }> {
+    const [profileAId, profileBId] = this.sortProfilePair(senderProfileId, recipientProfileId)
+
+    const existing = await tx.conversation.findUnique({
+      where: { profileAId_profileBId: { profileAId, profileBId } },
+    })
+
+    if (existing) return { convo: existing, wasCreated: false }
+
+    const isMatch = await this.hasMutualLike(tx, profileAId, profileBId)
+
+    try {
+      const created = await tx.conversation.create({
+        data: {
+          status: isMatch ? 'ACCEPTED' : 'INITIATED',
+          initiatorProfileId: senderProfileId,
+          profileAId,
+          profileBId,
+          participants: {
+            create: [{ profileId: profileAId }, { profileId: profileBId }],
+          },
+        },
+      })
+      return { convo: created, wasCreated: true }
+    } catch (err: any) {
+      if (err?.code !== 'P2002') throw err
+      // Concurrent creation won the race — re-query and return the existing row.
+      const existing = await tx.conversation.findUnique({
+        where: { profileAId_profileBId: { profileAId, profileBId } },
+      })
+      if (!existing) {
+        // P2002 without a row visible to this tx would indicate a real invariant breach.
+        throw err
+      }
+      return { convo: existing, wasCreated: false }
+    }
+  }
+
+  async acceptConversationOnReply(
+    tx: Prisma.TransactionClient,
+    convoId: string
+  ): Promise<Conversation> {
+    return tx.conversation.update({
+      where: { id: convoId },
+      data: { status: 'ACCEPTED', updatedAt: new Date() },
+    })
   }
 
   /**

@@ -61,220 +61,6 @@ describe('MessageService.getConversationSummary', () => {
   })
 })
 
-describe('MessageService.sendOrStartConversation dedup', () => {
-  it('returns isDuplicate: true for recent identical message', async () => {
-    const existingMsg = {
-      id: 'm-existing',
-      conversationId: 'c1',
-      senderId: 'sender',
-      content: 'hello',
-      messageType: 'text/plain',
-      createdAt: new Date(),
-      sender: { id: 'sender', publicName: 'Test', profileImages: [] },
-      attachment: null,
-    }
-
-    const tx: any = {
-      conversation: {
-        findUnique: vi.fn().mockResolvedValue({
-          id: 'c1',
-          status: 'ACCEPTED',
-          initiatorProfileId: 'other',
-          profileAId: 'recipient',
-          profileBId: 'sender',
-        }),
-        update: vi.fn(),
-      },
-      conversationParticipant: {},
-      message: {
-        findFirst: vi.fn().mockResolvedValue(existingMsg), // duplicate found
-        create: vi.fn(),
-      },
-    }
-
-    const result = await service.sendOrStartConversation(
-      tx,
-      'sender',
-      'recipient',
-      'hello',
-      'text/plain'
-    )
-    expect(result.isDuplicate).toBe(true)
-    expect(result.message.id).toBe('m-existing')
-    expect(tx.message.create).not.toHaveBeenCalled()
-  })
-
-  it('returns isDuplicate: false for new message', async () => {
-    const newMsg = {
-      id: 'm-new',
-      conversationId: 'c1',
-      senderId: 'sender',
-      content: 'hello',
-      messageType: 'text/plain',
-      createdAt: new Date(),
-      sender: { id: 'sender', publicName: 'Test', profileImages: [] },
-      attachment: null,
-    }
-
-    const tx: any = {
-      conversation: {
-        findUnique: vi.fn().mockResolvedValue({
-          id: 'c1',
-          status: 'ACCEPTED',
-          initiatorProfileId: 'other',
-          profileAId: 'recipient',
-          profileBId: 'sender',
-        }),
-        update: vi.fn(),
-      },
-      conversationParticipant: {},
-      message: {
-        findFirst: vi.fn().mockResolvedValue(null), // no duplicate
-        create: vi.fn().mockResolvedValue(newMsg),
-      },
-    }
-
-    const result = await service.sendOrStartConversation(
-      tx,
-      'sender',
-      'recipient',
-      'hello',
-      'text/plain'
-    )
-    expect(result.isDuplicate).toBe(false)
-    expect(result.message.id).toBe('m-new')
-    expect(tx.message.create).toHaveBeenCalled()
-  })
-
-  it('skips dedup for non-text messages (voice)', async () => {
-    const newMsg = {
-      id: 'm-voice',
-      conversationId: 'c1',
-      senderId: 'sender',
-      content: '',
-      messageType: 'audio/voice',
-      createdAt: new Date(),
-      sender: { id: 'sender', publicName: 'Test', profileImages: [] },
-      attachment: null,
-    }
-
-    const tx: any = {
-      conversation: {
-        findUnique: vi.fn().mockResolvedValue({
-          id: 'c1',
-          status: 'ACCEPTED',
-          initiatorProfileId: 'other',
-          profileAId: 'recipient',
-          profileBId: 'sender',
-        }),
-        update: vi.fn(),
-      },
-      conversationParticipant: {},
-      message: {
-        findFirst: vi.fn(),
-        create: vi.fn().mockResolvedValue(newMsg),
-      },
-    }
-
-    const result = await service.sendOrStartConversation(
-      tx,
-      'sender',
-      'recipient',
-      '',
-      'audio/voice',
-      { filePath: 'voice/test.opus', mimeType: 'audio/ogg', fileSize: 1000, duration: 5 }
-    )
-    expect(result.isDuplicate).toBe(false)
-    expect(tx.message.findFirst).not.toHaveBeenCalled()
-    expect(tx.message.create).toHaveBeenCalled()
-  })
-})
-
-describe('MessageService.findOrCreateConversation auto-accept on match', () => {
-  const newMsg = {
-    id: 'm-new',
-    conversationId: 'c1',
-    senderId: 'alice',
-    content: 'hi',
-    messageType: 'text/plain',
-    createdAt: new Date(),
-    sender: { id: 'alice', publicName: 'Alice', profileImages: [] },
-    attachment: null,
-  }
-
-  it('creates conversation as INITIATED when no mutual like exists', async () => {
-    const createdConvo = {
-      id: 'c1',
-      status: 'INITIATED',
-      initiatorProfileId: 'alice',
-      profileAId: 'alice',
-      profileBId: 'bob',
-    }
-
-    const tx: any = {
-      conversation: {
-        findUnique: vi.fn().mockResolvedValue(null),
-        create: vi.fn().mockResolvedValue(createdConvo),
-      },
-      likedProfile: {
-        count: vi.fn().mockResolvedValue(0),
-      },
-      message: {
-        findFirst: vi.fn().mockResolvedValue(null),
-        create: vi.fn().mockResolvedValue(newMsg),
-      },
-    }
-
-    await service.sendOrStartConversation(tx, 'alice', 'bob', 'hi', 'text/plain')
-
-    expect(tx.conversation.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({ status: 'INITIATED' }),
-      })
-    )
-  })
-
-  it('creates conversation as ACCEPTED when mutual like exists', async () => {
-    const createdConvo = {
-      id: 'c1',
-      status: 'ACCEPTED',
-      initiatorProfileId: 'alice',
-      profileAId: 'alice',
-      profileBId: 'bob',
-    }
-
-    const tx: any = {
-      conversation: {
-        findUnique: vi.fn().mockResolvedValue(null),
-        create: vi.fn().mockResolvedValue(createdConvo),
-      },
-      likedProfile: {
-        count: vi.fn().mockResolvedValue(2),
-      },
-      message: {
-        findFirst: vi.fn().mockResolvedValue(null),
-        create: vi.fn().mockResolvedValue(newMsg),
-      },
-    }
-
-    await service.sendOrStartConversation(tx, 'alice', 'bob', 'hi', 'text/plain')
-
-    expect(tx.likedProfile.count).toHaveBeenCalledWith({
-      where: {
-        OR: [
-          { fromId: 'alice', toId: 'bob' },
-          { fromId: 'bob', toId: 'alice' },
-        ],
-      },
-    })
-    expect(tx.conversation.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({ status: 'ACCEPTED' }),
-      })
-    )
-  })
-})
-
 describe('MessageService.listMessagesForConversation', () => {
   it('fetches latest page in descending order and returns ascending payload', async () => {
     mockPrisma.message.findMany.mockResolvedValue([
@@ -397,5 +183,222 @@ describe('MessageService.acceptConversationOnMatch', () => {
     expect(mockPrisma.conversation.findUnique).toHaveBeenCalledWith({
       where: { profileAId_profileBId: { profileAId: 'p1', profileBId: 'p2' } },
     })
+  })
+})
+
+describe('MessageService.resolveConversation', () => {
+  const existing = {
+    id: 'c-existing',
+    status: 'ACCEPTED',
+    initiatorProfileId: 'alice',
+    profileAId: 'alice',
+    profileBId: 'bob',
+  }
+
+  it('returns wasCreated: false for an existing pair (either argument order)', async () => {
+    const tx: any = {
+      conversation: {
+        findUnique: vi.fn().mockResolvedValue(existing),
+        create: vi.fn(),
+      },
+      likedProfile: { count: vi.fn() },
+    }
+
+    const r1 = await service.resolveConversation(tx, 'alice', 'bob')
+    const r2 = await service.resolveConversation(tx, 'bob', 'alice')
+
+    expect(r1).toEqual({ convo: existing, wasCreated: false })
+    expect(r2).toEqual({ convo: existing, wasCreated: false })
+    expect(tx.conversation.create).not.toHaveBeenCalled()
+    expect(tx.conversation.findUnique).toHaveBeenCalledTimes(2)
+    // Both orderings resolve to the canonical sorted pair:
+    for (const call of tx.conversation.findUnique.mock.calls) {
+      expect(call[0].where.profileAId_profileBId).toEqual({
+        profileAId: 'alice',
+        profileBId: 'bob',
+      })
+    }
+  })
+
+  it('creates INITIATED convo for fresh pair without mutual like', async () => {
+    const created = {
+      id: 'c-new',
+      status: 'INITIATED',
+      initiatorProfileId: 'alice',
+      profileAId: 'alice',
+      profileBId: 'bob',
+    }
+    const tx: any = {
+      conversation: {
+        findUnique: vi.fn().mockResolvedValue(null),
+        create: vi.fn().mockResolvedValue(created),
+      },
+      likedProfile: { count: vi.fn().mockResolvedValue(0) },
+    }
+
+    const result = await service.resolveConversation(tx, 'alice', 'bob')
+
+    expect(result).toEqual({ convo: created, wasCreated: true })
+    expect(tx.conversation.create).toHaveBeenCalledTimes(1)
+    const createArgs = tx.conversation.create.mock.calls[0][0]
+    expect(createArgs.data.status).toBe('INITIATED')
+    expect(createArgs.data.initiatorProfileId).toBe('alice')
+    expect(createArgs.data.profileAId).toBe('alice')
+    expect(createArgs.data.profileBId).toBe('bob')
+  })
+
+  it('creates ACCEPTED convo for fresh pair with mutual like', async () => {
+    const created = {
+      id: 'c-match',
+      status: 'ACCEPTED',
+      initiatorProfileId: 'alice',
+      profileAId: 'alice',
+      profileBId: 'bob',
+    }
+    const tx: any = {
+      conversation: {
+        findUnique: vi.fn().mockResolvedValue(null),
+        create: vi.fn().mockResolvedValue(created),
+      },
+      likedProfile: { count: vi.fn().mockResolvedValue(2) },
+    }
+
+    const result = await service.resolveConversation(tx, 'alice', 'bob')
+
+    expect(result).toEqual({ convo: created, wasCreated: true })
+    expect(tx.conversation.create.mock.calls[0][0].data.status).toBe('ACCEPTED')
+  })
+
+  it('handles P2002 by re-querying and returning existing row with wasCreated: false', async () => {
+    const existing = {
+      id: 'c-race-winner',
+      status: 'INITIATED',
+      initiatorProfileId: 'bob',
+      profileAId: 'alice',
+      profileBId: 'bob',
+    }
+    const p2002: any = new Error('Unique constraint failed')
+    p2002.code = 'P2002'
+
+    const findUnique = vi
+      .fn()
+      // first call: no existing
+      .mockResolvedValueOnce(null)
+      // re-query after P2002: existing
+      .mockResolvedValueOnce(existing)
+
+    const tx: any = {
+      conversation: {
+        findUnique,
+        create: vi.fn().mockRejectedValue(p2002),
+      },
+      likedProfile: { count: vi.fn().mockResolvedValue(0) },
+    }
+
+    const result = await service.resolveConversation(tx, 'alice', 'bob')
+
+    expect(result).toEqual({ convo: existing, wasCreated: false })
+    expect(findUnique).toHaveBeenCalledTimes(2)
+  })
+
+  it('rethrows non-P2002 errors from conversation.create', async () => {
+    const boom = new Error('something else')
+    const tx: any = {
+      conversation: {
+        findUnique: vi.fn().mockResolvedValue(null),
+        create: vi.fn().mockRejectedValue(boom),
+      },
+      likedProfile: { count: vi.fn().mockResolvedValue(0) },
+    }
+
+    await expect(service.resolveConversation(tx, 'alice', 'bob')).rejects.toBe(boom)
+  })
+})
+
+// acceptConversationOnReply is a thin mechanism: it trusts the caller
+// (the route, via computeSendOutcome) to have already validated that the
+// accept is legal. The service just writes the state transition.
+describe('MessageService.acceptConversationOnReply', () => {
+  it('updates conversation status to ACCEPTED', async () => {
+    const updated = {
+      id: 'c1',
+      status: 'ACCEPTED',
+      initiatorProfileId: 'alice',
+      profileAId: 'alice',
+      profileBId: 'bob',
+    }
+    const tx: any = {
+      conversation: {
+        update: vi.fn().mockResolvedValue(updated),
+      },
+    }
+
+    const result = await service.acceptConversationOnReply(tx, 'c1')
+
+    expect(result).toEqual(updated)
+    const updateArgs = tx.conversation.update.mock.calls[0][0]
+    expect(updateArgs.where).toEqual({ id: 'c1' })
+    expect(updateArgs.data.status).toBe('ACCEPTED')
+    expect(updateArgs.data.updatedAt).toBeInstanceOf(Date)
+  })
+})
+
+// sendMessage is a thin mechanism: it trusts the caller (route, via
+// computeSendOutcome) that the convo exists and the sender is allowed.
+// It owns only input validation (empty content) and dedup.
+describe('MessageService.sendMessage (new primitive)', () => {
+  const builtMsg = {
+    id: 'm-new',
+    conversationId: 'c1',
+    senderId: 'bob',
+    content: 'hi',
+    messageType: 'text/plain',
+    createdAt: new Date(),
+    sender: { id: 'bob', publicName: 'Bob', profileImages: [] },
+    attachment: null,
+  }
+
+  function txForSend(opts: { duplicate?: any; created?: any } = {}): any {
+    return {
+      message: {
+        findFirst: vi.fn().mockResolvedValue(opts.duplicate ?? null),
+        create: vi.fn().mockResolvedValue(opts.created ?? builtMsg),
+      },
+    }
+  }
+
+  it('writes a message and returns isDuplicate: false', async () => {
+    const tx = txForSend({})
+    const result = await service.sendMessage(tx, 'c1', 'bob', 'hi', 'text/plain')
+    expect(result.isDuplicate).toBe(false)
+    expect(result.message.id).toBe('m-new')
+    expect(tx.message.create).toHaveBeenCalledTimes(1)
+  })
+
+  it('returns isDuplicate: true for identical text within 5s, no new row', async () => {
+    const tx = txForSend({ duplicate: builtMsg })
+    const result = await service.sendMessage(tx, 'c1', 'bob', 'hi', 'text/plain')
+    expect(result.isDuplicate).toBe(true)
+    expect(tx.message.create).not.toHaveBeenCalled()
+  })
+
+  it('skips dedup for attachment-bearing (voice) messages', async () => {
+    const tx = txForSend({})
+    await service.sendMessage(tx, 'c1', 'bob', '', 'audio/voice', {
+      filePath: 'voice/x.opus',
+      mimeType: 'audio/ogg',
+      fileSize: 1000,
+      duration: 5,
+    })
+    expect(tx.message.findFirst).not.toHaveBeenCalled()
+    expect(tx.message.create).toHaveBeenCalledTimes(1)
+  })
+
+  it('throws on empty text content', async () => {
+    const tx = txForSend({})
+    await expect(service.sendMessage(tx, 'c1', 'bob', '   ', 'text/plain')).rejects.toMatchObject({
+      code: 'EMPTY_MESSAGE',
+    })
+    expect(tx.message.create).not.toHaveBeenCalled()
   })
 })

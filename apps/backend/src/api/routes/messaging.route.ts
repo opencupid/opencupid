@@ -2,6 +2,7 @@ import { FastifyPluginAsync } from 'fastify'
 import multipart from '@fastify/multipart'
 import { rateLimitConfig, sendError } from '../helpers'
 import { MessageService, cleanMessageForNotification } from '@/services/messaging.service'
+import { computeSendOutcome } from '@/services/messaging.stateMachine'
 import { WebPushService } from '@/services/webpush.service'
 
 import { z } from 'zod'
@@ -17,7 +18,8 @@ import {
   SendMessagePayloadSchema,
   SendVoiceMessagePayloadSchema,
 } from '@zod/messaging/messaging.dto'
-import { InteractionService } from '../../services/interaction.service'
+import type { MessageDTO } from '@zod/messaging/messaging.dto'
+import { InteractionService } from '@/services/interaction.service'
 import { notifierService } from '@/services/notifier.service'
 import { appConfig } from '@/lib/appconfig'
 import i18next from 'i18next'
@@ -58,6 +60,123 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
   const messageService = MessageService.getInstance()
   const webPushService = WebPushService.getInstance()
   const interactionService = InteractionService.getInstance()
+
+  /*
+   * Owns Phases 1 + 2 shared by /message and /voice: the resolve → classify →
+   * accept → send transaction, plus the post-tx summary lookup, match-seen
+   * side-effect, DTO mapping, and response assembly. Throws on 'blocked' so
+   * the handler's catch maps to a 403.
+   */
+  async function sendAndBuildResponse(input: {
+    senderProfileId: string
+    recipientProfileId: string
+    content: string
+    messageType: string
+    attachment?: {
+      filePath: string
+      mimeType: string
+      fileSize?: number
+      duration?: number
+    }
+  }): Promise<{ response: SendMessageResponse; messageDTO: MessageDTO; isDuplicate: boolean }> {
+    const { senderProfileId, recipientProfileId, content, messageType, attachment } = input
+
+    const { convoId, message, isDuplicate, outcome } = await fastify.prisma.$transaction(
+      async (tx) => {
+        const { convo, wasCreated } = await messageService.resolveConversation(
+          tx,
+          senderProfileId,
+          recipientProfileId
+        )
+        const outcome = computeSendOutcome(convo, wasCreated, senderProfileId)
+
+        if (outcome === 'blocked') {
+          throw { error: 'Cannot send in this conversation', code: 'CONVERSATION_BLOCKED' }
+        }
+
+        if (outcome === 'accepted_on_reply') {
+          await messageService.acceptConversationOnReply(tx, convo.id)
+        }
+
+        const sendResult = await messageService.sendMessage(
+          tx,
+          convo.id,
+          senderProfileId,
+          content,
+          messageType,
+          attachment
+        )
+
+        return {
+          convoId: convo.id,
+          message: sendResult.message,
+          isDuplicate: sendResult.isDuplicate,
+          outcome,
+        }
+      }
+    )
+
+    const conversation = await messageService.getConversationSummary(convoId, senderProfileId)
+
+    if (outcome === 'new_conversation') {
+      await interactionService.markMatchAsSeen(senderProfileId, recipientProfileId)
+    }
+
+    if (!conversation) {
+      throw new Error('Conversation summary not found')
+    }
+
+    const messageDTO = mapMessageToDTO(message)
+    const messageWithMine = mapMessageToDTO(message, senderProfileId)
+
+    const response: SendMessageResponse = {
+      success: true,
+      conversation: mapConversationParticipantToSummary(conversation, senderProfileId),
+      message: messageWithMine,
+      outcome,
+    }
+
+    return { response, messageDTO, isDuplicate }
+  }
+
+  /*
+   * Fans out a newly-written message to the recipient: WebSocket broadcast
+   * first, and only if that misses do we fall back to webpush + email. The
+   * email body is built by the caller so /message can do sync markdown
+   * cleaning and /voice can do the async language lookup + i18n.
+   *
+   * The findUnique + i18n work in the voice callback only runs when the WS
+   * broadcast misses, preserving the "recipient online → no email lookup"
+   * optimization from the original code.
+   */
+  async function fireNewMessageNotifications(args: {
+    senderProfileId: string
+    recipientProfileId: string
+    messageDTO: MessageDTO
+    buildEmailBody: () => Promise<string>
+  }): Promise<void> {
+    const { senderProfileId, recipientProfileId, messageDTO, buildEmailBody } = args
+
+    const isWsBroadcasted = broadcastToProfile(fastify, recipientProfileId, {
+      type: 'ws:new_message',
+      payload: messageDTO,
+    })
+
+    if (isWsBroadcasted) return
+
+    if (WebPushService.isWebPushConfigured()) {
+      webPushService.send(messageDTO, recipientProfileId).catch((err) => {
+        fastify.log.error(err, 'Web push failed')
+      })
+    }
+
+    await notifierService.notifyProfile(recipientProfileId, 'new_message', {
+      senderId: senderProfileId,
+      sender: messageDTO.sender.publicName,
+      message: await buildEmailBody(),
+      link: `${appConfig.FRONTEND_URL}/inbox`,
+    })
+  }
 
   /**
    * GET /:id
@@ -172,56 +291,22 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
       const { profileId, content } = body.data
 
       try {
-        const { convoId, message, isDuplicate } = await fastify.prisma.$transaction(async (tx) => {
-          return await messageService.sendOrStartConversation(
-            tx,
-            senderProfileId,
-            profileId,
-            content,
-            'text/plain'
-          )
+        const { response, messageDTO, isDuplicate } = await sendAndBuildResponse({
+          senderProfileId,
+          recipientProfileId: profileId,
+          content,
+          messageType: 'text/plain',
         })
-
-        const conversation = await messageService.getConversationSummary(convoId, senderProfileId)
-        if (!isDuplicate) {
-          await interactionService.markMatchAsSeen(senderProfileId, profileId)
-        }
-
-        if (!conversation) {
-          throw new Error('Conversation summary not found')
-        }
-
-        const messageDTO = mapMessageToDTO(message)
-        const messageWithMine = mapMessageToDTO(message, senderProfileId)
-
-        const response: SendMessageResponse = {
-          success: true,
-          conversation: mapConversationParticipantToSummary(conversation, senderProfileId),
-          message: messageWithMine,
-        }
 
         reply.code(200).send(response)
 
         if (!isDuplicate) {
-          // Broadcast the new message to the recipient's WebSocket connections
-          const isWsBroadcasted = broadcastToProfile(fastify, profileId, {
-            type: 'ws:new_message',
-            payload: messageDTO,
+          await fireNewMessageNotifications({
+            senderProfileId,
+            recipientProfileId: profileId,
+            messageDTO,
+            buildEmailBody: async () => cleanMessageForNotification(messageDTO.content, 100),
           })
-
-          if (!isWsBroadcasted) {
-            if (WebPushService.isWebPushConfigured()) {
-              webPushService.send(messageDTO, profileId).catch((err) => {
-                fastify.log.error(err, 'Web push failed')
-              })
-            }
-            await notifierService.notifyProfile(profileId, 'new_message', {
-              senderId: senderProfileId,
-              sender: messageDTO.sender.publicName,
-              message: cleanMessageForNotification(messageDTO.content, 100),
-              link: `${appConfig.FRONTEND_URL}/inbox`,
-            })
-          }
         }
       } catch (error: any) {
         return sendError(reply, 403, error)
@@ -342,73 +427,38 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
         }
 
         try {
-          const { convoId, message, isDuplicate } = await fastify.prisma.$transaction(
-            async (tx) => {
-              return await messageService.sendOrStartConversation(
-                tx,
-                senderProfileId,
-                payload.data.profileId,
-                payload.data.content,
-                'audio/voice',
-                {
-                  filePath: `${MEDIA_SUBDIR.VOICE}/${senderProfileId}/${finalFileName}`,
-                  mimeType: finalMimeType,
-                  fileSize: finalSize,
-                  duration: payload.data.duration,
-                }
-              )
-            }
-          )
-
-          const conversation = await messageService.getConversationSummary(convoId, senderProfileId)
-
-          if (!isDuplicate) {
-            await interactionService.markMatchAsSeen(senderProfileId, payload.data.profileId)
-          }
-
-          if (!conversation) {
-            throw new Error('Conversation summary not found')
-          }
-
-          const messageDTO = mapMessageToDTO(message)
-          const messageWithMine = mapMessageToDTO(message, senderProfileId)
-
-          const response: SendMessageResponse = {
-            success: true,
-            conversation: mapConversationParticipantToSummary(conversation, senderProfileId),
-            message: messageWithMine,
-          }
+          const { response, messageDTO, isDuplicate } = await sendAndBuildResponse({
+            senderProfileId,
+            recipientProfileId: payload.data.profileId,
+            content: payload.data.content,
+            messageType: 'audio/voice',
+            attachment: {
+              filePath: `${MEDIA_SUBDIR.VOICE}/${senderProfileId}/${finalFileName}`,
+              mimeType: finalMimeType,
+              fileSize: finalSize,
+              duration: payload.data.duration,
+            },
+          })
 
           reply.code(200).send(response)
 
           if (!isDuplicate) {
-            // Broadcast the new voice message to the recipient's WebSocket connections
-            const isWsBroadcasted = broadcastToProfile(fastify, payload.data.profileId, {
-              type: 'ws:new_message',
-              payload: messageDTO,
-            })
-
-            if (!isWsBroadcasted) {
-              if (WebPushService.isWebPushConfigured()) {
-                webPushService.send(messageDTO, payload.data.profileId).catch((err) => {
-                  fastify.log.error(err, 'Web push failed')
+            await fireNewMessageNotifications({
+              senderProfileId,
+              recipientProfileId: payload.data.profileId,
+              messageDTO,
+              buildEmailBody: async () => {
+                const recipientProfile = await fastify.prisma.profile.findUnique({
+                  where: { id: payload.data.profileId },
+                  select: { user: { select: { language: true } } },
                 })
-              }
-              const recipientProfile = await fastify.prisma.profile.findUnique({
-                where: { id: payload.data.profileId },
-                select: { user: { select: { language: true } } },
-              })
-              const t = i18next.getFixedT(recipientProfile?.user?.language || 'en')
-              await notifierService.notifyProfile(payload.data.profileId, 'new_message', {
-                senderId: senderProfileId,
-                sender: messageDTO.sender.publicName,
-                message: t('notifications.voice_message_sent'),
-                link: `${appConfig.FRONTEND_URL}/inbox`,
-              })
-            }
+                return i18next.getFixedT(recipientProfile?.user?.language || 'en')(
+                  'notifications.voice_message_sent'
+                )
+              },
+            })
           }
         } catch (error: any) {
-          // Clean up file if message creation fails
           await fsPromises.unlink(finalPath).catch(() => {})
           return sendError(reply, 403, error)
         }

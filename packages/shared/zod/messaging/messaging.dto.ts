@@ -150,6 +150,8 @@ export const SendVoiceMessagePayloadSchema = z.object({
 
 export type SendVoiceMessagePayload = z.infer<typeof SendVoiceMessagePayloadSchema>
 
+export type SendOutcome = 'new_conversation' | 'accepted_on_reply' | 'reply' | 'blocked'
+
 // export type ConversationParticipantWithExtras = ConversationParticipantWithConversationSummary & {
 //   unreadCount: number,
 // }
