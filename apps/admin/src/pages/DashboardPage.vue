@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useApi } from '../composables/useApi'
-import { Bar, Pie, Line } from 'vue-chartjs'
+import { Bar, Pie } from 'vue-chartjs'
 import {
   Chart as ChartJS,
   BarElement,
@@ -10,22 +10,9 @@ import {
   Tooltip,
   Legend,
   ArcElement,
-  LineElement,
-  PointElement,
-  Filler,
 } from 'chart.js'
 
-ChartJS.register(
-  BarElement,
-  CategoryScale,
-  LinearScale,
-  Tooltip,
-  Legend,
-  ArcElement,
-  LineElement,
-  PointElement,
-  Filler
-)
+ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend, ArcElement)
 
 interface SegmentCount {
   segment: string
@@ -50,7 +37,7 @@ interface DailyEntry {
 interface DailyStats {
   success: boolean
   dailySignups: DailyEntry[]
-  dailyLogins: DailyEntry[]
+  dailyLastSeen: DailyEntry[]
   dailyInteractions: DailyEntry[]
   dailyMatches: DailyEntry[]
   dailyMessages: DailyEntry[]
@@ -102,22 +89,6 @@ function buildSegmentPieData(counts: SegmentCount[]) {
       {
         data: counts.map((c) => c.count),
         backgroundColor: counts.map((c) => segmentColorMap[c.segment] ?? '#adb5bd'),
-      },
-    ],
-  }
-}
-
-function buildLineChartData(entries: DailyEntry[], color: string) {
-  return {
-    labels: entries.map((e) => e.date.slice(5)),
-    datasets: [
-      {
-        data: entries.map((e) => e.count),
-        borderColor: color,
-        backgroundColor: color + '33',
-        fill: true,
-        tension: 0.3,
-        pointRadius: 4,
       },
     ],
   }
@@ -225,10 +196,10 @@ onMounted(async () => {
       >
         <div class="card h-100">
           <div class="card-body">
-            <h6 class="card-title mb-3">Daily Logins (Last 7 Days)</h6>
+            <h6 class="card-title mb-3">Daily Active (Last 7 Days)</h6>
             <div style="height: 250px">
               <Bar
-                :data="buildChartData(dailyStats.dailyLogins, '#198754')"
+                :data="buildChartData(dailyStats.dailyLastSeen, '#198754')"
                 :options="chartOptions"
               />
             </div>
@@ -262,8 +233,8 @@ onMounted(async () => {
           <div class="card-body">
             <h6 class="card-title mb-3">Interactions (Last 7 Days)</h6>
             <div style="height: 250px">
-              <Line
-                :data="buildLineChartData(dailyStats.dailyInteractions, '#6f42c1')"
+              <Bar
+                :data="buildChartData(dailyStats.dailyInteractions, '#6f42c1')"
                 :options="chartOptions"
               />
             </div>
@@ -275,8 +246,8 @@ onMounted(async () => {
           <div class="card-body">
             <h6 class="card-title mb-3">Matches (Last 7 Days)</h6>
             <div style="height: 250px">
-              <Line
-                :data="buildLineChartData(dailyStats.dailyMatches, '#d63384')"
+              <Bar
+                :data="buildChartData(dailyStats.dailyMatches, '#d63384')"
                 :options="chartOptions"
               />
             </div>
@@ -288,8 +259,8 @@ onMounted(async () => {
           <div class="card-body">
             <h6 class="card-title mb-3">Messages (Last 7 Days)</h6>
             <div style="height: 250px">
-              <Line
-                :data="buildLineChartData(dailyStats.dailyMessages, '#fd7e14')"
+              <Bar
+                :data="buildChartData(dailyStats.dailyMessages, '#fd7e14')"
                 :options="chartOptions"
               />
             </div>
