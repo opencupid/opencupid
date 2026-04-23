@@ -523,6 +523,7 @@
     "error": {
       "cancel": "Cancel",
       "message": "An error occurred. Please try again later.",
+      "rate_limit": "Slow down partner.",
       "retry": "Retry",
       "title": "We've hit a snag here."
     },

@@ -1,7 +1,7 @@
 import { type ApiError } from '@zod/apiResponse.dto'
 import { AxiosError } from 'axios'
 import { ZodError } from 'zod'
-import { useToast } from 'vue-toastification'
+import { bus } from '@/lib/bus'
 
 export type StoreSuccess<T> = {
   success: true
@@ -50,9 +50,8 @@ export function storeError(error: unknown, fallbackMessage = 'Request failed'): 
     status = error.response?.status || 500
     const data = error.response?.data as ApiError
     message = data.message || fallbackMessage
-    // Rate limit hit
     if (status === 429) {
-      useToast().error('Slow down partner.')
+      bus.emit('api:rate_limit')
     }
     if (data.fieldErrors) {
       fieldErrors = data.fieldErrors

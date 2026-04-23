@@ -132,6 +132,10 @@ function handleApiOnline() {
   // })
 }
 
+function handleRateLimit() {
+  toast.error(t('uicomponents.error.rate_limit'), { id: 'api-rate-limit' })
+}
+
 onMounted(() => {
   bus.on('notification:new_message', handleMessageReceived)
   bus.on('ws:new_like', handleLikeReceived)
@@ -139,6 +143,7 @@ onMounted(() => {
   bus.on('ws:incoming_call', handleIncomingCall)
   bus.on('api:offline', handleApiOffline)
   bus.on('api:online', handleApiOnline)
+  bus.on('api:rate_limit', handleRateLimit)
 })
 
 onUnmounted(() => {
@@ -148,6 +153,7 @@ onUnmounted(() => {
   bus.off('ws:incoming_call', handleIncomingCall)
   bus.off('api:offline', handleApiOffline)
   bus.off('api:online', handleApiOnline)
+  bus.off('api:rate_limit', handleRateLimit)
 })
 </script>
 

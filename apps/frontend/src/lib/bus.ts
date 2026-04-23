@@ -11,6 +11,7 @@ type AppEvents = {
   'language:changed': { language: string }
   'api:offline': void
   'api:online': void
+  'api:rate_limit': void
   'app:hidden': void
   'app:visible': void
   'profile:dating-prefs-updated': void

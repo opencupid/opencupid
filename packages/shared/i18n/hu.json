@@ -528,6 +528,7 @@
     "error": {
       "cancel": "Mégse",
       "message": "Hiba történt. Kérjük, próbálja meg később újra.",
+      "rate_limit": "Hé, lassíts egy kicsit!",
       "retry": "Retry",
       "title": "Itt elakadtunk."
     },
