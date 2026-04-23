@@ -71,16 +71,29 @@ describe('UserService.validateLoginToken', () => {
 })
 
 describe('UserService.setLoginToken', () => {
-  it('updates existing user', async () => {
+  it('updates existing user and gates the update on isBlocked=false', async () => {
     const user = { id: 'u1', isRegistrationConfirmed: true }
     mockPrisma.user.findUnique.mockResolvedValue(user)
     const res = await service.setLoginToken({ email: 'a@a.com' }, '123', 'en', 'test.local')
     expect(res.user).toBe(user)
     expect(res.isNewUser).toBe(false)
-    expect(mockPrisma.user.update).toHaveBeenCalledWith({
-      where: { id: 'u1' },
+    expect(mockPrisma.user.updateMany).toHaveBeenCalledWith({
+      where: { id: 'u1', isBlocked: false },
       data: { loginToken: '123', loginTokenExp: expect.any(Date) },
     })
+  })
+
+  it('refuses to issue a login token to a blocked user', async () => {
+    // Contract: setLoginToken passes isBlocked=false in the updateMany filter so
+    // no new login token is persisted for a blocked user. This is the
+    // server-side gate preventing magic links from being sent to blocked
+    // accounts — see apps/backend/src/api/routes/auth.route.ts.
+    const blockedUser = { id: 'u-blocked', isRegistrationConfirmed: true, isBlocked: true }
+    mockPrisma.user.findUnique.mockResolvedValue(blockedUser)
+    await service.setLoginToken({ email: 'blocked@example.com' }, 'tok', 'en', 'test.local')
+    expect(mockPrisma.user.updateMany).toHaveBeenCalledTimes(1)
+    const call = mockPrisma.user.updateMany.mock.calls[0][0]
+    expect(call.where).toEqual({ id: 'u-blocked', isBlocked: false })
   })
 
   it('creates new user when missing', async () => {
