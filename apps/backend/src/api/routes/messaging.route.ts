@@ -297,7 +297,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
    */
   fastify.post(
     '/message',
-    { onRequest: [fastify.authenticate], config: rateLimitConfig(fastify, '1 minute', 1) },
+    { onRequest: [fastify.authenticate], config: rateLimitConfig(fastify, '1 minute', 30) },
     async (req, reply) => {
       const senderProfileId = req.session.profileId
       if (!senderProfileId) return sendError(reply, 401, 'Sender ID not found.')

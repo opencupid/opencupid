@@ -76,9 +76,8 @@ const tagsRoutes: FastifyPluginAsync = async (fastify) => {
     '/',
     {
       onRequest: [fastify.authenticate],
-      // rate limiter
       config: {
-        ...rateLimitConfig(fastify, '5 minute', 10), // 10 requests per minute
+        ...rateLimitConfig(fastify, '5 minute', 10),
       },
     },
     async (req, reply) => {

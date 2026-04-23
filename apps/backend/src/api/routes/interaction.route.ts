@@ -17,6 +17,8 @@ const TargetLookupParamsSchema = z.object({
   targetId: z.string().cuid(),
 })
 
+const RATE_LIMIT_LIKE_OR_PASS = 3 // per-minute ceiling for deliberate like/pass actions
+
 const interactionRoutes: FastifyPluginAsync = async (fastify) => {
   const service = InteractionService.getInstance()
 
@@ -65,7 +67,7 @@ const interactionRoutes: FastifyPluginAsync = async (fastify) => {
     '/like/:targetId',
     {
       onRequest: [fastify.authenticate],
-      config: rateLimitConfig(fastify, '5 minute', 15),
+      config: rateLimitConfig(fastify, '1 minute', RATE_LIMIT_LIKE_OR_PASS),
     },
     async (req, reply) => {
       const { targetId } = TargetLookupParamsSchema.parse(req.params)
@@ -141,7 +143,7 @@ const interactionRoutes: FastifyPluginAsync = async (fastify) => {
     '/pass/:targetId',
     {
       onRequest: [fastify.authenticate],
-      config: rateLimitConfig(fastify, '1 minute', 3),
+      config: rateLimitConfig(fastify, '1 minute', RATE_LIMIT_LIKE_OR_PASS),
     },
     async (req, reply) => {
       const { targetId } = TargetLookupParamsSchema.parse(req.params)
