@@ -31,9 +31,6 @@
     "test:i18n": "npx i18n-check --locales ../../packages/shared/i18n/ -s en --only missingKeys --exclude **/api/**",
     "test:coverage": "pnpm run test --coverage --coverage.reporter=text-summary"
   },
-  "prisma": {
-    "seed": "node prisma/seed/tags.js"
-  },
   "dependencies": {
     "@bull-board/api": "^6.20.6",
     "@bull-board/fastify": "^6.20.6",
