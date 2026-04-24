@@ -5,6 +5,8 @@ import { sendError } from '../helpers'
 import { prisma } from '@/lib/prisma'
 import { appConfig } from '@/lib/appconfig'
 import { getLast7Days, fillZeroDays } from '../adminHelpers'
+import { MessageService, MessagingError, MessagingErrorCodes } from '@/services/messaging.service'
+import { computeSendOutcome } from '@/services/messaging.stateMachine'
 
 // DeepL locale codes require region suffixes for some languages
 const DEEPL_LOCALE_MAP: Record<string, string> = {
@@ -424,6 +426,92 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
       fastify.log.error({ err }, 'Error fetching admin profiles')
       return sendError(reply, 500, 'Failed to fetch profiles')
     }
+  })
+
+  /**
+   * POST /profiles/send-message
+   * Sends an in-app message from the configured system sender
+   * (WELCOME_MESSAGE_SENDER_PROFILE_ID) to a list of recipient profiles.
+   * @body {string[]} profileIds - Array of recipient profile IDs
+   * @body {string} content - Message content
+   * @returns {{ success, sent, failed, results }}
+   */
+  fastify.post('/profiles/send-message', async (req, reply) => {
+    const body = (req.body ?? {}) as { profileIds?: unknown; content?: unknown }
+    const profileIds = Array.isArray(body.profileIds)
+      ? (body.profileIds.filter((x) => typeof x === 'string') as string[])
+      : []
+    const content = typeof body.content === 'string' ? body.content.trim() : ''
+
+    if (profileIds.length === 0) {
+      return sendError(reply, 400, 'profileIds must be a non-empty array')
+    }
+    if (!content) {
+      return sendError(reply, 400, 'content is required')
+    }
+
+    const senderProfileId = appConfig.WELCOME_MESSAGE_SENDER_PROFILE_ID
+    if (!senderProfileId) {
+      return sendError(reply, 503, 'WELCOME_MESSAGE_SENDER_PROFILE_ID is not configured')
+    }
+
+    const messageService = MessageService.getInstance()
+    const results: Array<{
+      profileId: string
+      outcome?: string
+      error?: string
+    }> = []
+
+    for (const recipientProfileId of profileIds) {
+      try {
+        const { outcome } = await prisma.$transaction(async (tx) => {
+          const { convo, wasCreated } = await messageService.resolveConversation(
+            tx,
+            senderProfileId,
+            recipientProfileId
+          )
+          const outcome = computeSendOutcome(convo, wasCreated, senderProfileId)
+
+          if (outcome === 'blocked') {
+            throw new MessagingError(
+              MessagingErrorCodes.CONVERSATION_BLOCKED,
+              'Cannot send in this conversation'
+            )
+          }
+
+          if (outcome === 'accepted_on_reply') {
+            await messageService.acceptConversationOnReply(tx, convo.id)
+          }
+
+          const sendResult = await messageService.sendMessage(
+            tx,
+            convo.id,
+            senderProfileId,
+            content,
+            'text/plain'
+          )
+
+          return {
+            convoId: convo.id,
+            message: sendResult.message,
+            isDuplicate: sendResult.isDuplicate,
+            outcome,
+          }
+        })
+
+        results.push({ profileId: recipientProfileId, outcome })
+      } catch (err) {
+        const code =
+          err instanceof MessagingError ? err.code : err instanceof Error ? err.message : 'UNKNOWN'
+        fastify.log.warn({ err, recipientProfileId }, 'Admin send-message: failed for recipient')
+        results.push({ profileId: recipientProfileId, error: code })
+      }
+    }
+
+    const sent = results.filter((r) => !r.error).length
+    const failed = results.length - sent
+
+    return reply.code(200).send({ success: true, sent, failed, results })
   })
 
   /**

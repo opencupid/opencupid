@@ -41,6 +41,14 @@ const allSegments = ['new', 'returning', 'frequent', 'dormant'] as const
 const selectedSegments = ref<string[]>([])
 const segmentDropdownOpen = ref(false)
 
+// Multi-selection + bulk message modal state
+const selectedProfileIds = ref<Set<string>>(new Set())
+const showSendMessageModal = ref(false)
+const messageContent = ref('')
+const sending = ref(false)
+const sendError = ref<string | null>(null)
+const sendResult = ref<{ sent: number; failed: number } | null>(null)
+
 type SortColumn =
   | 'publicName'
   | 'country'
@@ -184,6 +192,78 @@ function onClickOutside(e: MouseEvent) {
   }
 }
 
+function toggleProfileSelection(profileId: string) {
+  const next = new Set(selectedProfileIds.value)
+  if (next.has(profileId)) next.delete(profileId)
+  else next.add(profileId)
+  selectedProfileIds.value = next
+}
+
+const allVisibleSelected = computed(
+  () =>
+    sortedProfiles.value.length > 0 &&
+    sortedProfiles.value.every((p) => selectedProfileIds.value.has(p.id))
+)
+
+const someVisibleSelected = computed(
+  () =>
+    !allVisibleSelected.value &&
+    sortedProfiles.value.some((p) => selectedProfileIds.value.has(p.id))
+)
+
+function toggleSelectAllVisible() {
+  const next = new Set(selectedProfileIds.value)
+  if (allVisibleSelected.value) {
+    for (const p of sortedProfiles.value) next.delete(p.id)
+  } else {
+    for (const p of sortedProfiles.value) next.add(p.id)
+  }
+  selectedProfileIds.value = next
+}
+
+const selectedProfilesList = computed(() =>
+  profiles.value.filter((p) => selectedProfileIds.value.has(p.id))
+)
+
+function openSendMessageModal() {
+  if (selectedProfileIds.value.size === 0) return
+  messageContent.value = ''
+  sendError.value = null
+  sendResult.value = null
+  showSendMessageModal.value = true
+}
+
+function closeSendMessageModal() {
+  if (sending.value) return
+  showSendMessageModal.value = false
+}
+
+async function sendBulkMessage() {
+  if (!messageContent.value.trim() || selectedProfileIds.value.size === 0) return
+  sending.value = true
+  sendError.value = null
+  try {
+    const res = await apiRequest<{ success: boolean; sent: number; failed: number }>(
+      '/admin/profiles/send-message',
+      {
+        method: 'POST',
+        body: {
+          profileIds: Array.from(selectedProfileIds.value),
+          content: messageContent.value.trim(),
+        },
+      }
+    )
+    sendResult.value = { sent: res.sent, failed: res.failed }
+    // Clear selection once the send succeeded
+    selectedProfileIds.value = new Set()
+    messageContent.value = ''
+  } catch (err) {
+    sendError.value = err instanceof Error ? err.message : 'Failed to send messages'
+  } finally {
+    sending.value = false
+  }
+}
+
 const sentinel = ref<HTMLElement | null>(null)
 let observer: IntersectionObserver | null = null
 
@@ -281,6 +361,14 @@ onUnmounted(() => {
           {{ c }}
         </option>
       </select>
+      <button
+        type="button"
+        class="btn btn-primary ms-auto"
+        :disabled="selectedProfileIds.size === 0"
+        @click="openSendMessageModal"
+      >
+        Send message{{ selectedProfileIds.size > 0 ? ` (${selectedProfileIds.size})` : '' }}
+      </button>
     </div>
 
     <div class="table-container p-3">
@@ -296,6 +384,16 @@ onUnmounted(() => {
       >
         <thead>
           <tr>
+            <th style="width: 2.5rem">
+              <input
+                type="checkbox"
+                class="form-check-input"
+                aria-label="Select all visible profiles"
+                :checked="allVisibleSelected"
+                :indeterminate="someVisibleSelected"
+                @change="toggleSelectAllVisible"
+              />
+            </th>
             <th
               style="cursor: pointer"
               @click="toggleSort('publicName')"
@@ -354,6 +452,15 @@ onUnmounted(() => {
             style="cursor: pointer"
             @click="viewProfile(profile)"
           >
+            <td @click.stop>
+              <input
+                type="checkbox"
+                class="form-check-input"
+                :aria-label="`Select profile ${profile.publicName || profile.id}`"
+                :checked="selectedProfileIds.has(profile.id)"
+                @change="toggleProfileSelection(profile.id)"
+              />
+            </td>
             <td>{{ profile.publicName || '-' }}</td>
             <td>{{ [profile.cityName, profile.country].filter(Boolean).join(', ') || '-' }}</td>
             <td>{{ profile.gender || '-' }}</td>
@@ -393,7 +500,7 @@ onUnmounted(() => {
           </tr>
           <tr v-if="profiles.length === 0">
             <td
-              colspan="9"
+              colspan="10"
               class="text-center text-muted"
             >
               No profiles found
@@ -478,6 +585,100 @@ onUnmounted(() => {
     </div>
     <div
       v-if="selectedProfile"
+      class="modal-backdrop show"
+    ></div>
+
+    <!-- Send Message Modal -->
+    <div
+      v-if="showSendMessageModal"
+      class="modal d-block"
+      tabindex="-1"
+      @click.self="closeSendMessageModal"
+      @keydown.escape="closeSendMessageModal"
+    >
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Send message</h5>
+            <button
+              type="button"
+              class="btn-close"
+              :disabled="sending"
+              @click="closeSendMessageModal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div
+              v-if="sendResult"
+              class="alert alert-success"
+            >
+              Sent to {{ sendResult.sent }} profile{{ sendResult.sent === 1 ? '' : 's' }}.
+              <span v-if="sendResult.failed > 0"> {{ sendResult.failed }} failed. </span>
+            </div>
+            <div
+              v-if="sendError"
+              class="alert alert-danger"
+            >
+              {{ sendError }}
+            </div>
+            <template v-if="!sendResult">
+              <div class="mb-3">
+                <label class="form-label fw-semibold">
+                  Recipients ({{ selectedProfilesList.length }})
+                </label>
+                <div
+                  class="border rounded p-2 bg-light"
+                  style="max-height: 150px; overflow-y: auto"
+                >
+                  <span
+                    v-for="p in selectedProfilesList"
+                    :key="p.id"
+                    class="badge bg-secondary me-1 mb-1"
+                  >
+                    {{ p.publicName || p.id }}
+                  </span>
+                </div>
+              </div>
+              <div class="mb-0">
+                <label
+                  for="bulk-message-content"
+                  class="form-label fw-semibold"
+                >
+                  Message
+                </label>
+                <textarea
+                  id="bulk-message-content"
+                  v-model="messageContent"
+                  class="form-control"
+                  rows="6"
+                  :disabled="sending"
+                  placeholder="Write your message..."
+                ></textarea>
+              </div>
+            </template>
+          </div>
+          <div class="modal-footer">
+            <button
+              class="btn btn-secondary"
+              :disabled="sending"
+              @click="closeSendMessageModal"
+            >
+              {{ sendResult ? 'Close' : 'Cancel' }}
+            </button>
+            <button
+              v-if="!sendResult"
+              class="btn btn-primary"
+              :disabled="sending || !messageContent.trim() || selectedProfilesList.length === 0"
+              @click="sendBulkMessage"
+            >
+              {{ sending ? 'Sending...' : 'Send' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      v-if="showSendMessageModal"
       class="modal-backdrop show"
     ></div>
   </div>
