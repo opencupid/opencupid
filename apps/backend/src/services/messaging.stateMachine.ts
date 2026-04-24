@@ -1,29 +1,42 @@
 import { Conversation } from '@zod/generated'
-import type { SendOutcome } from '@zod/messaging/messaging.dto'
 
-/*
-Classifies a send against the conversation state machine. Given the resolved
-convo and whether it was just created this transaction, returns which kind
-of send this is:
+export type SendOutcome =
+  | 'new_conversation'
+  | 'accepted_on_reply'
+  | 'reply'
+  | 'pending'
+  | 'accept_and_promote_pending'
+  | 'blocked'
 
-| Condition                                | Outcome              |
-| ---------------------------------------- | -------------------- |
-| wasCreated = true                        | 'new_conversation'   |
-| status = INITIATED, sender ≠ initiator   | 'accepted_on_reply'  |
-| status = ACCEPTED                        | 'reply'              |
-| status = INITIATED, sender = initiator   | 'blocked'            |
-| status = BLOCKED or anything else        | 'blocked'            |
-
-Pure classifier — the 'blocked' outcome is the caller's signal to reject the
-send (the route maps it to a 403). Lives in its own module so tests that
-mock `messaging.service` leave the state machine real.
-*/
+/**
+ * Classifies a send against the conversation state machine.
+ *
+ * | Condition                                                 | Outcome                       |
+ * | --------------------------------------------------------- | ----------------------------- |
+ * | wasCreated AND sender quarantined                         | 'pending'                     |
+ * | wasCreated AND NOT quarantined                            | 'new_conversation'            |
+ * | existing PENDING AND sender = initiator                   | 'pending'                     |
+ * | existing PENDING AND sender ≠ initiator                   | 'accept_and_promote_pending'  |
+ * | existing INITIATED AND sender ≠ initiator                 | 'accepted_on_reply'           |
+ * | existing ACCEPTED                                         | 'reply'                       |
+ * | existing INITIATED AND sender = initiator                 | 'blocked'                     |
+ * | BLOCKED / ARCHIVED / DISCARDED                            | 'blocked'                     |
+ *
+ * DISCARDED should never be observed in practice (resolveConversation filters it),
+ * but it's included for defensive completeness.
+ */
 export function computeSendOutcome(
   convo: Pick<Conversation, 'status' | 'initiatorProfileId'>,
   wasCreated: boolean,
-  senderProfileId: string
+  senderProfileId: string,
+  senderIsQuarantined: boolean
 ): SendOutcome {
-  if (wasCreated) return 'new_conversation'
+  if (wasCreated) {
+    return senderIsQuarantined ? 'pending' : 'new_conversation'
+  }
+  if (convo.status === 'PENDING') {
+    return convo.initiatorProfileId === senderProfileId ? 'pending' : 'accept_and_promote_pending'
+  }
   if (convo.status === 'INITIATED' && convo.initiatorProfileId !== senderProfileId) {
     return 'accepted_on_reply'
   }

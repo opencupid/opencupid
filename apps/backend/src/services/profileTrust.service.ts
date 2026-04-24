@@ -1,0 +1,141 @@
+import type { TrustReasonType } from '@zod/generated'
+import { prisma } from '@/lib/prisma'
+import { MessageService } from '@/services/messaging.service'
+
+// Tunable threshold — number of active INITIATED+PENDING conversations (sender = profile)
+// that trips the SPAM_BURST flag. Module-local by design; promote to appConfig
+// only if runtime tuning becomes routine.
+export const SPAM_BURST_THRESHOLD = 3
+
+// Shared builder so every enqueue site uses the same BullMQ dedup key. If the clear
+// path here and the clear-unvetted-window worker (Task 6) drifted to different
+// formats, two promote-pendings jobs could race inside the serializable tx.
+export const promotePendingsJobId = (profileId: string) => `promote-pendings:${profileId}`
+
+export class ProfileTrustService {
+  private static instance: ProfileTrustService | null = null
+
+  private constructor() {}
+
+  static getInstance(): ProfileTrustService {
+    if (!this.instance) this.instance = new ProfileTrustService()
+    return this.instance
+  }
+
+  /**
+   * Any active trust flag (optional reason filter).
+   * Omit `reason` to answer "is this profile quarantined?" (used by the send-path gate).
+   * Pass `reason` to answer "does this profile have X specifically?" (used by reconcile idempotency).
+   */
+  async hasTrustFlag(profileId: string, reason?: TrustReasonType): Promise<boolean> {
+    const flag = await prisma.profileTrustFlag.findFirst({
+      where: {
+        profileId,
+        clearedAt: null,
+        ...(reason ? { reason } : {}),
+      },
+      select: { id: true },
+    })
+    return !!flag
+  }
+
+  /**
+   * Convergence function for SPAM_BURST. Drives the world toward the invariant:
+   * "a SPAM_BURST-flagged profile has zero INITIATED or PENDING conversations as initiator".
+   * ACCEPTED conversations stand — those represent mutual engagement from the recipient.
+   *
+   * Cases:
+   * - count >= threshold AND not flagged: write flag AND DISCARD active rows (INITIATED+PENDING).
+   * - count >= threshold AND already flagged: DISCARD any active rows that slipped through
+   *   a race (e.g. a send that crossed the hasTrustFlag check at the route before the flag
+   *   landed). Idempotent: updateMany hits zero rows in the steady state.
+   * - count < threshold AND already flagged: clear the flag AND enqueue promote-pendings
+   *   so held messages (if any) can be delivered.
+   * - count < threshold AND not flagged: no-op.
+   */
+  async reconcileSpamBurst(profileId: string): Promise<void> {
+    const rows = await prisma.conversation.findMany({
+      where: {
+        initiatorProfileId: profileId,
+        status: { in: ['INITIATED', 'PENDING'] },
+      },
+      select: { id: true },
+    })
+    const count = rows.length
+    const alreadyFlagged = await this.hasTrustFlag(profileId, 'SPAM_BURST')
+
+    if (count >= SPAM_BURST_THRESHOLD) {
+      if (!alreadyFlagged) {
+        await prisma.profileTrustFlag.create({
+          data: {
+            profileId,
+            reason: 'SPAM_BURST',
+            evidence: {
+              conversationIds: rows.map((r) => r.id),
+              countAtFlagTime: count,
+            },
+            flaggedBy: 'heuristic:spam_burst',
+          },
+        })
+      }
+      // Enforce the invariant regardless of whether we just wrote the flag or it
+      // was already there — closes the race window between the route's pre-tx
+      // quarantine check and the tx commit.
+      await prisma.conversation.updateMany({
+        where: {
+          initiatorProfileId: profileId,
+          status: { in: ['INITIATED', 'PENDING'] },
+        },
+        data: { status: 'DISCARDED' },
+      })
+    } else if (alreadyFlagged) {
+      await prisma.profileTrustFlag.updateMany({
+        where: { profileId, reason: 'SPAM_BURST', clearedAt: null },
+        data: { clearedAt: new Date() },
+      })
+      // Dynamic import — the profile-trust worker (Task 6) imports this service,
+      // so a top-level import of the queue would close a cycle once that lands.
+      const { profileTrustQueue } = await import('@/queues/profileTrustQueue')
+      await profileTrustQueue.add(
+        'promote-pendings',
+        { kind: 'promote-pendings', profileId },
+        {
+          jobId: promotePendingsJobId(profileId),
+          // drop completed jobs immediately (minimize Redis footprint);
+          // retain last 100 failures for diagnostics.
+          removeOnComplete: { count: 0 },
+          removeOnFail: { count: 100 },
+        }
+      )
+    }
+  }
+
+  /**
+   * Worker handler: if the profile has zero active flags, promote all its PENDING conversations.
+   * Runs in a serializable tx to close the race with reconcileSpamBurst writing DISCARDs.
+   * Idempotent — on 40001 retry, if SPAM_BURST landed meanwhile, `stillFlagged` short-circuits.
+   * Requires BullMQ worker-level retries (attempts > 1) since Prisma does not auto-retry.
+   */
+  async promotePendingsIfClear(profileId: string): Promise<void> {
+    const messageService = MessageService.getInstance()
+    await prisma.$transaction(
+      async (tx) => {
+        const stillFlagged = await tx.profileTrustFlag.findFirst({
+          where: { profileId, clearedAt: null },
+          select: { id: true },
+        })
+        if (stillFlagged) return
+
+        const pendings = await tx.conversation.findMany({
+          where: { initiatorProfileId: profileId, status: 'PENDING' },
+          select: { id: true, profileAId: true, profileBId: true },
+        })
+        for (const convo of pendings) {
+          const recipientId = convo.profileAId === profileId ? convo.profileBId : convo.profileAId
+          await messageService.promoteConversation(tx, convo.id, recipientId)
+        }
+      },
+      { isolationLevel: 'Serializable' }
+    )
+  }
+}

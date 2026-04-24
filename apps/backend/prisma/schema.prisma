@@ -228,7 +228,7 @@ model Profile {
   // Activity tracking
   sessionLogs     ProfileSessionLog[]
   activitySummary ProfileActivitySummary?
-  abuseFlags      ProfileAbuseFlag[]
+  trustFlags      ProfileTrustFlag[]
 
   @@index([lat, lon])
 }
@@ -275,6 +275,9 @@ model Conversation {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Active-pair uniqueness is enforced via a partial unique index in the migration SQL
+  // (Conversation_active_pair_key WHERE status != 'DISCARDED') — not representable in
+  // Prisma schema syntax.
   profileA   Profile @relation("ProfileA", fields: [profileAId], references: [id], onDelete: Cascade)
   profileAId String
 
@@ -289,8 +292,6 @@ model Conversation {
   initiator          Profile @relation(fields: [initiatorProfileId], references: [id])
 
   jitsiRoomId String?
-
-  @@unique([profileAId, profileBId], name: "profileAId_profileBId")
 }
 
 model ConversationParticipant {
@@ -314,6 +315,8 @@ enum ConversationStatus {
   ACCEPTED // Bob replied
   BLOCKED // Either blocked
   ARCHIVED // Archived by both or system
+  PENDING
+  DISCARDED
 }
 
 model LikedProfile {
@@ -426,10 +429,10 @@ model ProfileActivitySummary {
   segmentUpdatedAt DateTime        @default(now())
 }
 
-model ProfileAbuseFlag {
+model ProfileTrustFlag {
   id        String      @id @default(cuid())
   profileId String
-  reason    AbuseReason
+  reason    TrustReason
   flaggedAt DateTime    @default(now())
   clearedAt DateTime?
   evidence  Json
@@ -442,6 +445,7 @@ model ProfileAbuseFlag {
   // (not representable in Prisma schema syntax).
 }
 
-enum AbuseReason {
+enum TrustReason {
+  PROFILE_UNVETTED
   SPAM_BURST
 }

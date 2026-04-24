@@ -8,7 +8,7 @@ import './lib/i18n' // Initialize i18next with translations (onboarding-reminder
 import { registerWorkers } from './registerWorkers'
 import { registerDistillJob } from './queues/activityQueue'
 import { registerOnboardingReminderJob } from './queues/onboardingReminderQueue'
-import { registerAbuseCheckJob } from './queues/abuseCheckQueue'
+import { registerProfileTrustJobs } from './queues/profileTrustQueue'
 
 async function main() {
   const app = Fastify({
@@ -29,7 +29,7 @@ async function main() {
   await Promise.all([
     registerDistillJob(),
     registerOnboardingReminderJob(),
-    registerAbuseCheckJob(),
+    registerProfileTrustJobs(),
   ])
 
   app.listen({ port: appConfig.WORKER_PORT, host: '0.0.0.0' }, (err) => {

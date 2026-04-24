@@ -12,8 +12,8 @@ import {
   processOnboardingReminderJob,
   type OnboardingReminderJobData,
 } from '@/workers/onboardingReminderWorker'
-import { processAbuseCheckJob } from '@/workers/abuseCheckWorker'
-import type { AbuseCheckJobData } from '@/queues/abuseCheckQueue'
+import { processProfileTrustJob } from '@/workers/profileTrustWorker'
+import type { ProfileTrustJobData } from '@/queues/profileTrustQueue'
 
 type ActivityFlushJobData = { profileId: string }
 
@@ -55,10 +55,10 @@ export function registerWorkers(): Worker[] {
       { connection }
     ),
 
-    new Worker<AbuseCheckJobData>(
-      'abuse-check',
-      async (job: Job<AbuseCheckJobData>) => {
-        await processAbuseCheckJob(job)
+    new Worker<ProfileTrustJobData>(
+      'profile-trust',
+      async (job: Job<ProfileTrustJobData>) => {
+        await processProfileTrustJob(job)
       },
       { connection }
     ),

@@ -86,6 +86,28 @@ describe('ProfileService.initializeProfiles', () => {
     })
     expect(result).toBe(created)
   })
+
+  it('inserts a PROFILE_UNVETTED flag for new profiles', async () => {
+    mockPrisma.profile.findUnique.mockResolvedValue(null)
+    mockPrisma.profile.create.mockResolvedValue({ id: 'p-new', userId: 'u1' })
+    await service.initializeProfiles('u1')
+    expect(mockPrisma.$transaction).toHaveBeenCalled()
+    expect(mockPrisma.profileTrustFlag.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        profileId: 'p-new',
+        reason: 'PROFILE_UNVETTED',
+        flaggedBy: 'system:profile_create',
+        evidence: { source: 'default_on_create' },
+      }),
+    })
+  })
+
+  it('does NOT insert a flag for existing profiles', async () => {
+    mockPrisma.profile.findUnique.mockResolvedValue({ id: 'p-existing', userId: 'u1' })
+    await service.initializeProfiles('u1')
+    expect(mockPrisma.profileTrustFlag.create).not.toHaveBeenCalled()
+    expect(mockPrisma.$transaction).not.toHaveBeenCalled()
+  })
 })
 
 describe('ProfileService.updateProfileScalars', () => {

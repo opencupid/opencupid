@@ -378,21 +378,31 @@ export class ProfileService {
   }
 
   async initializeProfiles(userId: string): Promise<Profile> {
-    const profile = await prisma.profile.findUnique({
+    const existing = await prisma.profile.findUnique({
       where: { userId },
     })
 
-    if (profile) {
-      return profile
+    if (existing) {
+      return existing
     }
 
-    const newProfile = await prisma.profile.create({
-      data: {
-        userId,
-        publicName: '',
-      },
+    return prisma.$transaction(async (tx) => {
+      const newProfile = await tx.profile.create({
+        data: {
+          userId,
+          publicName: '',
+        },
+      })
+      await tx.profileTrustFlag.create({
+        data: {
+          profileId: newProfile.id,
+          reason: 'PROFILE_UNVETTED',
+          evidence: { source: 'default_on_create' },
+          flaggedBy: 'system:profile_create',
+        },
+      })
+      return newProfile
     })
-    return newProfile
   }
 
   async blockProfile(blockingProfileId: string, blockedProfileId: string) {

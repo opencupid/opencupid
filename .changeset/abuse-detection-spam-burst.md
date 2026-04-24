@@ -1,7 +1,6 @@
 ---
 '@opencupid/backend': minor
-'@opencupid/frontend': minor
 '@opencupid/shared': minor
 ---
 
-Add profile abuse detection (SPAM_BURST heuristic). Blocks senders with ≥3 active unreplied conversation initiations at the messaging route; surfaces a localized tooltip on the message button. Reconciliation converges via a BullMQ daily worker and an ad-hoc enqueue on each new-conversation send.
+Add profile-trust quarantine: every newly created profile is flagged `PROFILE_UNVETTED` for 24 hours, during which their outbound new conversations are held in a `PENDING` state invisible to the recipient. A 15-minute cron auto-clears the flag and promotes held messages silently. The existing SPAM_BURST heuristic now counts PENDING conversations too; on fire it marks the sender's active (INITIATED+PENDING) conversations `DISCARDED` (terminal). No frontend or API-response changes — the sender cannot distinguish PENDING from INITIATED from their response.
