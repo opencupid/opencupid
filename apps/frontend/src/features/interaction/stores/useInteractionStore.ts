@@ -78,9 +78,11 @@ export const useInteractionStore = defineStore('interaction', {
         const pair = InteractionEdgePairSchema.parse(res.data.pair)
 
         if (pair.isMatch) {
-          this.matches.push(pair.from)
+          this.matches.push(pair.to)
+          this.receivedLikes = this.receivedLikes.filter((e) => e.profile?.id !== targetId)
+          this.newMatchesCount++
         } else {
-          this.sent.push(pair.from)
+          this.sent.push(pair.to)
         }
 
         return storeSuccess(pair)
