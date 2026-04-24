@@ -539,6 +539,31 @@ describe('GET /profiles', () => {
       })
     )
   })
+
+  it('search OR clause includes id, publicName, cityName, country', async () => {
+    mockPrisma.profile.findMany.mockResolvedValue([])
+    mockPrisma.profile.count.mockResolvedValue(0)
+
+    const handler = fastify.routes['GET /profiles']
+    await handler({ query: { page: '1', pageSize: '25', search: 'cmod8' } }, reply)
+
+    expect(mockPrisma.profile.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          AND: [
+            {
+              OR: [
+                { id: { contains: 'cmod8', mode: 'insensitive' } },
+                { publicName: { contains: 'cmod8', mode: 'insensitive' } },
+                { cityName: { contains: 'cmod8', mode: 'insensitive' } },
+                { country: { contains: 'cmod8', mode: 'insensitive' } },
+              ],
+            },
+          ],
+        },
+      })
+    )
+  })
 })
 
 describe('GET /profiles/:id', () => {

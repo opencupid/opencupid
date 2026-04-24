@@ -314,7 +314,7 @@ onUnmounted(() => {
         v-model="search"
         type="text"
         class="form-control"
-        placeholder="Search by name or city..."
+        placeholder="Search by name, city, or profile ID..."
         @input="onSearchInput"
       />
       <div

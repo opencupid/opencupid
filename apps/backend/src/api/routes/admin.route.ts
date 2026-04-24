@@ -347,7 +347,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
    * Returns a paginated, searchable list of profiles with optional country filter.
    * @query {number} [page=1] - Page number
    * @query {number} [pageSize=25] - Page size (max 100)
-   * @query {string} [search] - Search by name, city, or country
+   * @query {string} [search] - Search by name, city, country, or profile id
    * @query {string} [country] - Country code filter
    * @query {string} [segments] - Comma-separated activity segments filter (e.g. "new,frequent")
    * @returns {{ success, profiles, total, page, pageSize }}
@@ -369,6 +369,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
       if (search) {
         conditions.push({
           OR: [
+            { id: { contains: search, mode: 'insensitive' as const } },
             { publicName: { contains: search, mode: 'insensitive' as const } },
             { cityName: { contains: search, mode: 'insensitive' as const } },
             { country: { contains: search, mode: 'insensitive' as const } },
