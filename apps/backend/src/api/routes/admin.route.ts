@@ -429,14 +429,14 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   /**
-   * POST /profiles/send-message
+   * POST /messages
    * Sends an in-app message from the configured system sender
    * (WELCOME_MESSAGE_SENDER_PROFILE_ID) to a list of recipient profiles.
    * @body {string[]} profileIds - Array of recipient profile IDs
    * @body {string} content - Message content
    * @returns {{ success, sent, failed, results }}
    */
-  fastify.post('/profiles/send-message', async (req, reply) => {
+  fastify.post('/messages', async (req, reply) => {
     const body = (req.body ?? {}) as { profileIds?: unknown; content?: unknown }
     const profileIds = Array.isArray(body.profileIds)
       ? (body.profileIds.filter((x) => typeof x === 'string') as string[])
@@ -455,6 +455,8 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
       return sendError(reply, 503, 'WELCOME_MESSAGE_SENDER_PROFILE_ID is not configured')
     }
 
+    const uniqueProfileIds = Array.from(new Set(profileIds))
+
     const messageService = MessageService.getInstance()
     const results: Array<{
       profileId: string
@@ -462,7 +464,11 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
       error?: string
     }> = []
 
-    for (const recipientProfileId of profileIds) {
+    for (const recipientProfileId of uniqueProfileIds) {
+      if (recipientProfileId === senderProfileId) {
+        results.push({ profileId: recipientProfileId, error: 'SELF_SEND_NOT_ALLOWED' })
+        continue
+      }
       try {
         const { outcome } = await prisma.$transaction(async (tx) => {
           const { convo, wasCreated } = await messageService.resolveConversation(
@@ -501,8 +507,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
 
         results.push({ profileId: recipientProfileId, outcome })
       } catch (err) {
-        const code =
-          err instanceof MessagingError ? err.code : err instanceof Error ? err.message : 'UNKNOWN'
+        const code = err instanceof MessagingError ? err.code : 'INTERNAL_ERROR'
         fastify.log.warn({ err, recipientProfileId }, 'Admin send-message: failed for recipient')
         results.push({ profileId: recipientProfileId, error: code })
       }

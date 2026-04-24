@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useApi, apiRequest } from '../composables/useApi'
 
 interface AdminProfile {
@@ -42,7 +42,8 @@ const selectedSegments = ref<string[]>([])
 const segmentDropdownOpen = ref(false)
 
 // Multi-selection + bulk message modal state
-const selectedProfileIds = ref<Set<string>>(new Set())
+const selectedProfiles = ref<Map<string, AdminProfile>>(new Map())
+const selectedProfileIds = computed(() => new Set(selectedProfiles.value.keys()))
 const showSendMessageModal = ref(false)
 const messageContent = ref('')
 const sending = ref(false)
@@ -192,11 +193,11 @@ function onClickOutside(e: MouseEvent) {
   }
 }
 
-function toggleProfileSelection(profileId: string) {
-  const next = new Set(selectedProfileIds.value)
-  if (next.has(profileId)) next.delete(profileId)
-  else next.add(profileId)
-  selectedProfileIds.value = next
+function toggleProfileSelection(profile: AdminProfile) {
+  const next = new Map(selectedProfiles.value)
+  if (next.has(profile.id)) next.delete(profile.id)
+  else next.set(profile.id, profile)
+  selectedProfiles.value = next
 }
 
 const allVisibleSelected = computed(
@@ -212,21 +213,19 @@ const someVisibleSelected = computed(
 )
 
 function toggleSelectAllVisible() {
-  const next = new Set(selectedProfileIds.value)
+  const next = new Map(selectedProfiles.value)
   if (allVisibleSelected.value) {
     for (const p of sortedProfiles.value) next.delete(p.id)
   } else {
-    for (const p of sortedProfiles.value) next.add(p.id)
+    for (const p of sortedProfiles.value) next.set(p.id, p)
   }
-  selectedProfileIds.value = next
+  selectedProfiles.value = next
 }
 
-const selectedProfilesList = computed(() =>
-  profiles.value.filter((p) => selectedProfileIds.value.has(p.id))
-)
+const selectedProfilesList = computed(() => Array.from(selectedProfiles.value.values()))
 
 function openSendMessageModal() {
-  if (selectedProfileIds.value.size === 0) return
+  if (selectedProfiles.value.size === 0) return
   messageContent.value = ''
   sendError.value = null
   sendResult.value = null
@@ -238,24 +237,32 @@ function closeSendMessageModal() {
   showSendMessageModal.value = false
 }
 
+function onSendModalKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape') closeSendMessageModal()
+}
+
+watch(showSendMessageModal, (open) => {
+  if (open) document.addEventListener('keydown', onSendModalKeydown)
+  else document.removeEventListener('keydown', onSendModalKeydown)
+})
+
 async function sendBulkMessage() {
-  if (!messageContent.value.trim() || selectedProfileIds.value.size === 0) return
+  if (!messageContent.value.trim() || selectedProfiles.value.size === 0) return
   sending.value = true
   sendError.value = null
   try {
     const res = await apiRequest<{ success: boolean; sent: number; failed: number }>(
-      '/admin/profiles/send-message',
+      '/admin/messages',
       {
         method: 'POST',
         body: {
-          profileIds: Array.from(selectedProfileIds.value),
+          profileIds: Array.from(selectedProfiles.value.keys()),
           content: messageContent.value.trim(),
         },
       }
     )
     sendResult.value = { sent: res.sent, failed: res.failed }
-    // Clear selection once the send succeeded
-    selectedProfileIds.value = new Set()
+    selectedProfiles.value = new Map()
     messageContent.value = ''
   } catch (err) {
     sendError.value = err instanceof Error ? err.message : 'Failed to send messages'
@@ -283,6 +290,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   document.removeEventListener('click', onClickOutside)
+  document.removeEventListener('keydown', onSendModalKeydown)
   observer?.disconnect()
 })
 </script>
@@ -458,7 +466,7 @@ onUnmounted(() => {
                 class="form-check-input"
                 :aria-label="`Select profile ${profile.publicName || profile.id}`"
                 :checked="selectedProfileIds.has(profile.id)"
-                @change="toggleProfileSelection(profile.id)"
+                @change="toggleProfileSelection(profile)"
               />
             </td>
             <td>{{ profile.publicName || '-' }}</td>
@@ -594,7 +602,6 @@ onUnmounted(() => {
       class="modal d-block"
       tabindex="-1"
       @click.self="closeSendMessageModal"
-      @keydown.escape="closeSendMessageModal"
     >
       <div class="modal-dialog modal-lg">
         <div class="modal-content">

@@ -1000,7 +1000,7 @@ describe('GET /subscribers', () => {
   })
 })
 
-describe('POST /profiles/send-message', () => {
+describe('POST /messages', () => {
   beforeEach(() => {
     mockAppConfig.WELCOME_MESSAGE_SENDER_PROFILE_ID = 'sys-sender'
     mockMessageService.resolveConversation.mockReset()
@@ -1010,7 +1010,7 @@ describe('POST /profiles/send-message', () => {
   })
 
   it('returns 400 when profileIds is missing or empty', async () => {
-    const handler = fastify.routes['POST /profiles/send-message']
+    const handler = fastify.routes['POST /messages']
     await handler({ body: { content: 'hi' } }, reply)
     expect(reply.statusCode).toBe(400)
 
@@ -1020,14 +1020,14 @@ describe('POST /profiles/send-message', () => {
   })
 
   it('returns 400 when content is empty', async () => {
-    const handler = fastify.routes['POST /profiles/send-message']
+    const handler = fastify.routes['POST /messages']
     await handler({ body: { profileIds: ['p1'], content: '   ' } }, reply)
     expect(reply.statusCode).toBe(400)
   })
 
   it('returns 503 when sender is not configured', async () => {
     mockAppConfig.WELCOME_MESSAGE_SENDER_PROFILE_ID = undefined as any
-    const handler = fastify.routes['POST /profiles/send-message']
+    const handler = fastify.routes['POST /messages']
     await handler({ body: { profileIds: ['p1'], content: 'hi' } }, reply)
     expect(reply.statusCode).toBe(503)
   })
@@ -1043,7 +1043,7 @@ describe('POST /profiles/send-message', () => {
       isDuplicate: false,
     })
 
-    const handler = fastify.routes['POST /profiles/send-message']
+    const handler = fastify.routes['POST /messages']
     await handler({ body: { profileIds: ['p1', 'p2'], content: 'hello' } }, reply)
 
     expect(reply.statusCode).toBe(200)
@@ -1070,7 +1070,7 @@ describe('POST /profiles/send-message', () => {
       isDuplicate: false,
     })
 
-    const handler = fastify.routes['POST /profiles/send-message']
+    const handler = fastify.routes['POST /messages']
     await handler({ body: { profileIds: ['p1'], content: 'hello' } }, reply)
 
     expect(mockMessageService.acceptConversationOnReply).toHaveBeenCalledWith(
@@ -1096,7 +1096,7 @@ describe('POST /profiles/send-message', () => {
       isDuplicate: false,
     })
 
-    const handler = fastify.routes['POST /profiles/send-message']
+    const handler = fastify.routes['POST /messages']
     await handler({ body: { profileIds: ['blocked-p', 'ok-p'], content: 'hello' } }, reply)
 
     expect(reply.statusCode).toBe(200)
@@ -1120,7 +1120,7 @@ describe('POST /profiles/send-message', () => {
       isDuplicate: false,
     })
 
-    const handler = fastify.routes['POST /profiles/send-message']
+    const handler = fastify.routes['POST /messages']
     await handler({ body: { profileIds: ['p1'], content: '  hello world  ' } }, reply)
 
     expect(mockMessageService.sendMessage).toHaveBeenCalledWith(
@@ -1130,6 +1130,57 @@ describe('POST /profiles/send-message', () => {
       'hello world',
       'text/plain'
     )
+  })
+
+  it('deduplicates recipient IDs so each recipient is messaged once', async () => {
+    mockMessageService.resolveConversation.mockResolvedValue({
+      convo: { id: 'c1', status: 'INITIATED', initiatorProfileId: 'sys-sender' },
+      wasCreated: true,
+    })
+    mockComputeSendOutcome.mockReturnValue('new_conversation')
+    mockMessageService.sendMessage.mockResolvedValue({
+      message: { id: 'm1' },
+      isDuplicate: false,
+    })
+
+    const handler = fastify.routes['POST /messages']
+    await handler({ body: { profileIds: ['p1', 'p1', 'p2', 'p1'], content: 'hi' } }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload).toMatchObject({ success: true, sent: 2, failed: 0 })
+    expect(mockMessageService.resolveConversation).toHaveBeenCalledTimes(2)
+  })
+
+  it('rejects sending to the configured sender profile', async () => {
+    const handler = fastify.routes['POST /messages']
+    await handler({ body: { profileIds: ['sys-sender', 'p1'], content: 'hi' } }, reply)
+
+    mockMessageService.resolveConversation.mockResolvedValue({
+      convo: { id: 'c1', status: 'INITIATED', initiatorProfileId: 'sys-sender' },
+      wasCreated: true,
+    })
+
+    // sys-sender is skipped without invoking the service
+    expect(reply.payload.results).toEqual(
+      expect.arrayContaining([{ profileId: 'sys-sender', error: 'SELF_SEND_NOT_ALLOWED' }])
+    )
+    // resolveConversation must not have been called for the sender
+    for (const call of mockMessageService.resolveConversation.mock.calls) {
+      expect(call[2]).not.toBe('sys-sender')
+    }
+  })
+
+  it('returns stable INTERNAL_ERROR code for non-MessagingError failures', async () => {
+    mockMessageService.resolveConversation.mockRejectedValue(
+      new Error('raw prisma error with sensitive details')
+    )
+
+    const handler = fastify.routes['POST /messages']
+    await handler({ body: { profileIds: ['p1'], content: 'hi' } }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload).toMatchObject({ success: true, sent: 0, failed: 1 })
+    expect(reply.payload.results).toEqual([{ profileId: 'p1', error: 'INTERNAL_ERROR' }])
   })
 })
 
