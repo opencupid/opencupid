@@ -228,6 +228,7 @@ model Profile {
   // Activity tracking
   sessionLogs     ProfileSessionLog[]
   activitySummary ProfileActivitySummary?
+  abuseFlags      ProfileAbuseFlag[]
 
   @@index([lat, lon])
 }
@@ -423,4 +424,24 @@ model ProfileActivitySummary {
   segment          ActivitySegment @default(dormant)
   demotionStreak   Int             @default(0)
   segmentUpdatedAt DateTime        @default(now())
+}
+
+model ProfileAbuseFlag {
+  id        String      @id @default(cuid())
+  profileId String
+  reason    AbuseReason
+  flaggedAt DateTime    @default(now())
+  clearedAt DateTime?
+  evidence  Json
+  flaggedBy String
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId, clearedAt])
+  // Partial index on active flags is defined in the migration SQL
+  // (not representable in Prisma schema syntax).
+}
+
+enum AbuseReason {
+  SPAM_BURST
 }

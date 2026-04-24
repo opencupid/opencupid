@@ -12,6 +12,7 @@ import { computeSendOutcome } from './messaging.stateMachine'
 export const MessagingErrorCodes = {
   CONVERSATION_BLOCKED: 'CONVERSATION_BLOCKED',
   EMPTY_MESSAGE: 'EMPTY_MESSAGE',
+  SENDER_FLAGGED: 'SENDER_FLAGGED',
 } as const
 
 export type MessagingErrorCode = (typeof MessagingErrorCodes)[keyof typeof MessagingErrorCodes]

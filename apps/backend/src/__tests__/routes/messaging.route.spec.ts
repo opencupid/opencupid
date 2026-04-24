@@ -9,11 +9,25 @@ let reply: MockReply
 let mockMessageService: any
 let mockWebPushService: any
 let mockNotifierService: any
+let mockAbuseCheckService: any
+
+vi.mock('../../services/abuseCheck.service', () => ({
+  AbuseCheckService: {
+    getInstance: () => mockAbuseCheckService,
+  },
+}))
+
+vi.mock('@/queues/abuseCheckQueue', () => ({
+  abuseCheckQueue: {
+    add: vi.fn().mockResolvedValue({}),
+  },
+}))
 
 vi.mock('../../services/messaging.service', () => {
   const MessagingErrorCodes = {
     CONVERSATION_BLOCKED: 'CONVERSATION_BLOCKED',
     EMPTY_MESSAGE: 'EMPTY_MESSAGE',
+    SENDER_FLAGGED: 'SENDER_FLAGGED',
   } as const
   class MessagingError extends Error {
     readonly code: (typeof MessagingErrorCodes)[keyof typeof MessagingErrorCodes]
@@ -110,6 +124,9 @@ beforeEach(async () => {
   vi.clearAllMocks()
   fastify = new MockFastify()
   reply = new MockReply()
+  mockAbuseCheckService = {
+    isFlaggedFor: vi.fn().mockResolvedValue(false),
+  }
   mockMessageService = {
     listMessagesForConversation: vi.fn(),
     listConversationsForProfile: vi.fn(),
@@ -1061,5 +1078,101 @@ describe('POST /conversations/:id/mark-read (error paths)', () => {
       reply as any
     )
     expect(reply.statusCode).toBe(500)
+  })
+})
+
+describe('abuse-check integration', () => {
+  const validBody = { profileId: 'ck1234567890abcd12345678', content: 'hello' }
+  const senderProfileId = 'p1'
+
+  function mockNewConversationSend() {
+    mockMessageService.resolveConversation.mockResolvedValue({
+      convo: { id: 'conv1', status: 'INITIATED', initiatorProfileId: senderProfileId },
+      wasCreated: true,
+    })
+    mockMessageService.sendMessage.mockResolvedValue({
+      message: { id: 'm1', senderId: senderProfileId },
+      isDuplicate: false,
+    })
+    mockMessageService.getConversationSummary.mockResolvedValue({
+      conversation: { status: 'ACTIVE' },
+    })
+  }
+
+  function mockReplySend() {
+    mockMessageService.resolveConversation.mockResolvedValue({
+      convo: { id: 'conv1', status: 'ACCEPTED', initiatorProfileId: 'other-user' },
+      wasCreated: false,
+    })
+    mockMessageService.sendMessage.mockResolvedValue({
+      message: { id: 'm1', senderId: senderProfileId },
+      isDuplicate: false,
+    })
+    mockMessageService.getConversationSummary.mockResolvedValue({
+      conversation: { status: 'ACTIVE' },
+    })
+  }
+
+  // Test A — gate rejects flagged senders with 403
+  it('returns 403 when sender is flagged for SPAM_BURST', async () => {
+    const handler = fastify.routes['POST /message']
+    mockAbuseCheckService.isFlaggedFor.mockResolvedValue(true)
+
+    await handler({ session: { profileId: senderProfileId }, body: validBody } as any, reply as any)
+
+    expect(reply.statusCode).toBe(403)
+    expect(mockMessageService.resolveConversation).not.toHaveBeenCalled()
+  })
+
+  // Test B — enqueue called on new_conversation
+  it('enqueues reconcile-one job when outcome is new_conversation', async () => {
+    const { abuseCheckQueue } = await import('@/queues/abuseCheckQueue')
+    const spy = vi.spyOn(abuseCheckQueue, 'add').mockResolvedValue({} as any)
+
+    const handler = fastify.routes['POST /message']
+    mockNewConversationSend()
+
+    await handler({ session: { profileId: senderProfileId }, body: validBody } as any, reply as any)
+
+    expect(reply.statusCode).toBe(200)
+    expect(spy).toHaveBeenCalledTimes(1)
+    expect(spy).toHaveBeenCalledWith(
+      'reconcile-one',
+      { kind: 'reconcile-one', profileId: senderProfileId },
+      expect.objectContaining({ jobId: `reconcile-spamburst:${senderProfileId}` })
+    )
+
+    spy.mockRestore()
+  })
+
+  // Test C — enqueue NOT called on other outcomes (reply)
+  it('does not enqueue when outcome is reply', async () => {
+    const { abuseCheckQueue } = await import('@/queues/abuseCheckQueue')
+    const spy = vi.spyOn(abuseCheckQueue, 'add').mockResolvedValue({} as any)
+
+    const handler = fastify.routes['POST /message']
+    mockReplySend()
+
+    await handler({ session: { profileId: senderProfileId }, body: validBody } as any, reply as any)
+
+    expect(reply.statusCode).toBe(200)
+    expect(spy).not.toHaveBeenCalled()
+
+    spy.mockRestore()
+  })
+
+  // Test D — send succeeds even when enqueue rejects
+  it('returns 200 even when enqueue throws (fire-and-forget)', async () => {
+    const { abuseCheckQueue } = await import('@/queues/abuseCheckQueue')
+    const spy = vi.spyOn(abuseCheckQueue, 'add').mockRejectedValue(new Error('redis down'))
+
+    const handler = fastify.routes['POST /message']
+    mockNewConversationSend()
+
+    await handler({ session: { profileId: senderProfileId }, body: validBody } as any, reply as any)
+
+    expect(reply.statusCode).toBe(200)
+
+    spy.mockRestore()
   })
 })

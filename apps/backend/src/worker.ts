@@ -8,6 +8,7 @@ import './lib/i18n' // Initialize i18next with translations (onboarding-reminder
 import { registerWorkers } from './registerWorkers'
 import { registerDistillJob } from './queues/activityQueue'
 import { registerOnboardingReminderJob } from './queues/onboardingReminderQueue'
+import { registerAbuseCheckJob } from './queues/abuseCheckQueue'
 
 async function main() {
   const app = Fastify({
@@ -25,7 +26,11 @@ async function main() {
   registerWorkers()
 
   // Upsert the cron schedulers. Idempotent — safe to call on every boot.
-  await Promise.all([registerDistillJob(), registerOnboardingReminderJob()])
+  await Promise.all([
+    registerDistillJob(),
+    registerOnboardingReminderJob(),
+    registerAbuseCheckJob(),
+  ])
 
   app.listen({ port: appConfig.WORKER_PORT, host: '0.0.0.0' }, (err) => {
     if (err) {

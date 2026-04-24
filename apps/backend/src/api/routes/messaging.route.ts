@@ -27,6 +27,8 @@ import {
 import type { MessageDTO } from '@zod/messaging/messaging.dto'
 import { InteractionService } from '@/services/interaction.service'
 import { notifierService } from '@/services/notifier.service'
+import { abuseCheckQueue } from '@/queues/abuseCheckQueue'
+import { AbuseCheckService } from '@/services/abuseCheck.service'
 import { appConfig } from '@/lib/appconfig'
 import i18next from 'i18next'
 import { MEDIA_SUBDIR } from '@/lib/media'
@@ -50,6 +52,7 @@ const MessageListQuerySchema = z.object({
 const MESSAGING_ERROR_STATUS: Record<MessagingErrorCode, number> = {
   [MessagingErrorCodes.CONVERSATION_BLOCKED]: 403,
   [MessagingErrorCodes.EMPTY_MESSAGE]: 400,
+  [MessagingErrorCodes.SENDER_FLAGGED]: 403,
 }
 
 const messageRoutes: FastifyPluginAsync = async (fastify) => {
@@ -74,6 +77,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
   const messageService = MessageService.getInstance()
   const webPushService = WebPushService.getInstance()
   const interactionService = InteractionService.getInstance()
+  const abuseCheckService = AbuseCheckService.getInstance()
 
   /*
    * Owns Phases 1 + 2 shared by /message and /voice: the resolve → classify →
@@ -94,6 +98,13 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
     }
   }): Promise<{ response: SendMessageResponse; messageDTO: MessageDTO; isDuplicate: boolean }> {
     const { senderProfileId, recipientProfileId, content, messageType, attachment } = input
+
+    if (await abuseCheckService.isFlaggedFor('SPAM_BURST', senderProfileId)) {
+      throw new MessagingError(
+        MessagingErrorCodes.SENDER_FLAGGED,
+        'Messaging blocked — contact support'
+      )
+    }
 
     const { convoId, message, isDuplicate, outcome } = await fastify.prisma.$transaction(
       async (tx) => {
@@ -137,6 +148,20 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
 
     if (outcome === 'new_conversation') {
       await interactionService.markMatchAsSeen(senderProfileId, recipientProfileId)
+    }
+
+    if (outcome === 'new_conversation') {
+      abuseCheckQueue
+        .add(
+          'reconcile-one',
+          { kind: 'reconcile-one', profileId: senderProfileId },
+          {
+            jobId: `reconcile-spamburst:${senderProfileId}`,
+            removeOnComplete: { count: 0 },
+            removeOnFail: { count: 100 },
+          }
+        )
+        .catch((err) => fastify.log.error({ err, senderProfileId }, 'abuseCheck enqueue failed'))
     }
 
     if (!conversation) {
