@@ -1,6 +1,7 @@
 ---
 '@opencupid/backend': minor
 '@opencupid/frontend': minor
+'@opencupid/shared': minor
 ---
 
 Narrow messaging response shapes and DTOs to what consumers actually render (#1369).
