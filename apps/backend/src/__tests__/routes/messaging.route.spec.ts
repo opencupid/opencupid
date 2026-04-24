@@ -49,13 +49,13 @@ vi.mock('../../utils/wsUtils', () => ({
 }))
 
 vi.mock('../../api/mappers/messaging.mappers', () => ({
-  mapMessageToDTO: vi.fn((m: any, currentProfileId?: string) => ({
+  mapMessageToDTO: vi.fn((m: any, currentProfileId: string) => ({
     ...m,
     id: m?.id ?? 'dto',
-    sender: m?.sender ?? { publicName: 'TestSender' },
+    sender: m?.sender ?? { publicName: 'TestSender', thumbnail: null },
     content: m?.content ?? '',
     mapped: true,
-    ...(currentProfileId !== undefined && { isMine: m?.senderId === currentProfileId }),
+    isMine: m?.senderId === currentProfileId,
   })),
   mapConversationParticipantToSummary: vi.fn(() => ({ id: 'summary', partnerProfile: {} })),
 }))
@@ -176,9 +176,10 @@ describe('POST /conversations/:id/mark-read', () => {
     expect(reply.statusCode).toBe(401)
   })
 
-  it('returns 404 when conversation not found', async () => {
+  it('marks conversation read and returns a patch with conversationId + lastReadAt', async () => {
     const handler = fastify.routes['POST /conversations/:id/mark-read']
-    mockMessageService.getConversationSummary.mockResolvedValue(null)
+    const lastReadAt = new Date('2024-06-01T00:00:00Z')
+    mockMessageService.markConversationRead.mockResolvedValue({ lastReadAt })
     await handler(
       { session: { profileId: 'p1' }, params: { id: 'ck1234567890abcd12345678' } } as any,
       reply as any
@@ -187,23 +188,14 @@ describe('POST /conversations/:id/mark-read', () => {
       'ck1234567890abcd12345678',
       'p1'
     )
-    expect(reply.statusCode).toBe(404)
-  })
-
-  it('marks conversation read and returns summary', async () => {
-    const handler = fastify.routes['POST /conversations/:id/mark-read']
-    mockMessageService.getConversationSummary.mockResolvedValue({})
-    await handler(
-      { session: { profileId: 'p1' }, params: { id: 'ck1234567890abcd12345678' } } as any,
-      reply as any
-    )
-    expect(mockMessageService.markConversationRead).toHaveBeenCalledWith(
-      'ck1234567890abcd12345678',
-      'p1'
-    )
+    // The narrow response should NOT hit getConversationSummary.
+    expect(mockMessageService.getConversationSummary).not.toHaveBeenCalled()
     expect(reply.statusCode).toBe(200)
-    expect(reply.payload.success).toBe(true)
-    expect(reply.payload.conversation.id).toBe('summary')
+    expect(reply.payload).toEqual({
+      success: true,
+      conversationId: 'ck1234567890abcd12345678',
+      lastReadAt,
+    })
   })
 })
 
@@ -250,8 +242,9 @@ describe('POST /message', () => {
     expect(reply.payload.message).toMatch('Invalid parameters')
   })
 
-  it('sends message and returns conversation with messageDTO', async () => {
+  it('reply outcome returns a conversationPatch instead of the full summary', async () => {
     const handler = fastify.routes['POST /message']
+    const updatedAt = new Date('2024-06-02T12:00:00Z')
     mockMessageService.resolveConversation.mockResolvedValue({
       convo: {
         id: 'conv1',
@@ -265,17 +258,22 @@ describe('POST /message', () => {
     mockMessageService.sendMessage.mockResolvedValue({
       message: { id: 'm1', senderId: 'p1' },
       isDuplicate: false,
-    })
-    mockMessageService.getConversationSummary.mockResolvedValue({
-      conversation: { status: 'ACTIVE' },
+      conversationUpdatedAt: updatedAt,
     })
 
     await handler({ session: { profileId: 'p1' }, body: validBody } as any, reply as any)
 
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
+    expect(reply.payload.outcome).toBe('reply')
     expect(reply.payload.message).toHaveProperty('isMine', true)
-    expect(reply.payload.conversation.id).toBe('summary')
+    // The dominant 'reply' arm must NOT re-fetch the conversation summary.
+    expect(mockMessageService.getConversationSummary).not.toHaveBeenCalled()
+    expect(reply.payload.conversation).toBeUndefined()
+    expect(reply.payload.conversationPatch).toEqual({
+      conversationId: 'conv1',
+      updatedAt,
+    })
     expect(mockMessageService.resolveConversation).toHaveBeenCalledWith(
       fastify.prisma,
       'p1',
@@ -290,7 +288,6 @@ describe('POST /message', () => {
       undefined
     )
     expect(mockMessageService.acceptConversationOnReply).not.toHaveBeenCalled()
-    expect(reply.payload.outcome).toBe('reply')
   })
 
   it('broadcasts via WS and falls back to notification when offline', async () => {
@@ -311,17 +308,20 @@ describe('POST /message', () => {
     mockMessageService.sendMessage.mockResolvedValue({
       message: { id: 'm1', senderId: 'p1' },
       isDuplicate: false,
-    })
-    mockMessageService.getConversationSummary.mockResolvedValue({
-      conversation: { status: 'ACTIVE' },
+      conversationUpdatedAt: new Date(),
     })
 
     await handler({ session: { profileId: 'p1' }, body: validBody } as any, reply as any)
 
+    // WS payload is mapped per-recipient: the recipient must see isMine: false,
+    // not the sender-side isMine or undefined.
     expect(broadcastToProfile).toHaveBeenCalledWith(
       fastify,
       'ck1234567890abcd12345678',
-      expect.objectContaining({ type: 'ws:new_message' })
+      expect.objectContaining({
+        type: 'ws:new_message',
+        payload: expect.objectContaining({ isMine: false }),
+      })
     )
     expect(mockNotifierService.notifyProfile).toHaveBeenCalledWith(
       'ck1234567890abcd12345678',
@@ -348,6 +348,7 @@ describe('POST /message', () => {
     mockMessageService.sendMessage.mockResolvedValue({
       message: { id: 'm1', senderId: 'p1' },
       isDuplicate: true,
+      conversationUpdatedAt: new Date(),
     })
     mockMessageService.getConversationSummary.mockResolvedValue({
       conversation: { status: 'ACTIVE' },
@@ -372,21 +373,23 @@ describe('POST /message', () => {
     ).rejects.toThrow('db down')
   })
 
-  it('re-throws when conversation summary not found (invariant breach)', async () => {
+  it('re-throws when conversation summary not found on non-reply outcomes (invariant breach)', async () => {
     const handler = fastify.routes['POST /message']
+    // new_conversation path needs the summary → missing summary is an invariant breach.
     mockMessageService.resolveConversation.mockResolvedValue({
       convo: {
         id: 'conv1',
-        status: 'ACCEPTED',
-        initiatorProfileId: 'other',
+        status: 'INITIATED',
+        initiatorProfileId: 'p1',
         profileAId: 'p1',
         profileBId: 'ck1234567890abcd12345678',
       },
-      wasCreated: false,
+      wasCreated: true,
     })
     mockMessageService.sendMessage.mockResolvedValue({
       message: { id: 'm1', senderId: 'p1' },
       isDuplicate: false,
+      conversationUpdatedAt: new Date(),
     })
     mockMessageService.getConversationSummary.mockResolvedValue(null)
 
@@ -412,6 +415,7 @@ describe('POST /message — outcomes', () => {
     mockMessageService.sendMessage.mockResolvedValue({
       message: { id: 'm1', senderId: senderProfileId },
       isDuplicate: options.isDuplicate ?? false,
+      conversationUpdatedAt: new Date('2024-06-01T00:00:00Z'),
     })
     mockMessageService.getConversationSummary.mockResolvedValue({
       conversation: { status: 'ACTIVE' },
@@ -502,6 +506,7 @@ describe('POST /message — outcomes', () => {
     mockMessageService.sendMessage.mockResolvedValueOnce({
       message: { id: 'm1', senderId: 'p1' },
       isDuplicate: false,
+      conversationUpdatedAt: new Date(),
     })
     mockMessageService.getConversationSummary.mockResolvedValueOnce({
       conversation: { status: 'ACTIVE' },
@@ -524,6 +529,7 @@ describe('POST /message — outcomes', () => {
     mockMessageService.sendMessage.mockResolvedValueOnce({
       message: { id: 'm2', senderId: 'p1' },
       isDuplicate: false,
+      conversationUpdatedAt: new Date(),
     })
     mockMessageService.getConversationSummary.mockResolvedValueOnce({
       conversation: { status: 'ACTIVE' },
@@ -550,6 +556,7 @@ describe('POST /message — outcomes', () => {
     mockMessageService.sendMessage.mockResolvedValueOnce({
       message: { id: 'm3', senderId: 'p1' },
       isDuplicate: false,
+      conversationUpdatedAt: new Date(),
     })
     mockMessageService.getConversationSummary.mockResolvedValueOnce({
       conversation: { status: 'ACTIVE' },
@@ -572,6 +579,7 @@ describe('POST /message — outcomes', () => {
     mockMessageService.sendMessage.mockResolvedValueOnce({
       message: { id: 'm-dup', senderId: 'p1' },
       isDuplicate: true,
+      conversationUpdatedAt: new Date(),
     })
     mockMessageService.getConversationSummary.mockResolvedValueOnce({
       conversation: { status: 'ACTIVE' },
@@ -610,6 +618,7 @@ describe('POST /voice', () => {
     mockMessageService.sendMessage.mockResolvedValue({
       message: { id: 'm1', senderId: 'p1' },
       isDuplicate: false,
+      conversationUpdatedAt: new Date(),
     })
     mockMessageService.getConversationSummary.mockResolvedValue({
       conversation: { status: 'ACTIVE' },
@@ -788,6 +797,7 @@ describe('POST /voice', () => {
     mockMessageService.sendMessage.mockResolvedValue({
       message: { id: 'm1', senderId: 'p1' },
       isDuplicate: true,
+      conversationUpdatedAt: new Date(),
     })
     mockMessageService.getConversationSummary.mockResolvedValue({
       conversation: { status: 'ACTIVE' },
@@ -847,6 +857,7 @@ describe('POST /voice — outcomes', () => {
     mockMessageService.sendMessage.mockResolvedValue({
       message: { id: 'mv1', senderId: senderProfileId },
       isDuplicate: options.isDuplicate ?? false,
+      conversationUpdatedAt: new Date('2024-06-01T00:00:00Z'),
     })
     mockMessageService.getConversationSummary.mockResolvedValue({
       conversation: { status: 'ACTIVE' },
@@ -952,6 +963,7 @@ describe('POST /voice — outcomes', () => {
     mockMessageService.sendMessage.mockResolvedValueOnce({
       message: { id: 'mv1', senderId: senderProfileId },
       isDuplicate: false,
+      conversationUpdatedAt: new Date(),
     })
     mockMessageService.getConversationSummary.mockResolvedValueOnce({
       conversation: { status: 'ACTIVE' },
@@ -971,6 +983,7 @@ describe('POST /voice — outcomes', () => {
     mockMessageService.sendMessage.mockResolvedValueOnce({
       message: { id: 'mv2', senderId: senderProfileId },
       isDuplicate: false,
+      conversationUpdatedAt: new Date(),
     })
     mockMessageService.getConversationSummary.mockResolvedValueOnce({
       conversation: { status: 'ACTIVE' },
@@ -994,6 +1007,7 @@ describe('POST /voice — outcomes', () => {
     mockMessageService.sendMessage.mockResolvedValueOnce({
       message: { id: 'mv3', senderId: senderProfileId },
       isDuplicate: false,
+      conversationUpdatedAt: new Date(),
     })
     mockMessageService.getConversationSummary.mockResolvedValueOnce({
       conversation: { status: 'ACTIVE' },
@@ -1013,6 +1027,7 @@ describe('POST /voice — outcomes', () => {
     mockMessageService.sendMessage.mockResolvedValueOnce({
       message: { id: 'mv-dup', senderId: senderProfileId },
       isDuplicate: true,
+      conversationUpdatedAt: new Date(),
     })
     mockMessageService.getConversationSummary.mockResolvedValueOnce({
       conversation: { status: 'ACTIVE' },

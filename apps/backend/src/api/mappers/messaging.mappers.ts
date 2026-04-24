@@ -1,15 +1,16 @@
 import type {
-  ConversationParticipantWithConversationSummary,
   ConversationSummary,
   MessageAttachmentDTO,
   MessageDTO,
+  MessagingProfileRef,
 } from '@zod/messaging/messaging.dto'
-import { mapProfileSummary } from './profile.mappers'
 import {
   canSendMessageInConversation,
+  type ConversationParticipantWithSummary,
   type MessageWithSender,
 } from '../../services/messaging.service'
 import { mediaUrl } from '../../lib/media'
+import { imageBasePath } from '../../lib/media'
 
 function mapConversationMeta(c: { id: string; updatedAt: Date; createdAt: Date }) {
   return {
@@ -19,8 +20,30 @@ function mapConversationMeta(c: { id: string; updatedAt: Date; createdAt: Date }
   }
 }
 
+// Build the thumb variant URL server-side from the first (position-0) image.
+// The `thumb` variant is the 128×128 WebP produced by ImageService.
+function buildThumbnail(
+  profileImages: { storagePath: string }[]
+): MessagingProfileRef['thumbnail'] {
+  const first = profileImages[0]
+  if (!first) return null
+  return { url: mediaUrl(`${imageBasePath(first.storagePath)}-thumb.webp`) }
+}
+
+export function mapMessagingProfileRef(profile: {
+  id: string
+  publicName: string
+  profileImages: { storagePath: string }[]
+}): MessagingProfileRef {
+  return {
+    id: profile.id,
+    publicName: profile.publicName,
+    thumbnail: buildThumbnail(profile.profileImages),
+  }
+}
+
 export function mapConversationParticipantToSummary(
-  p: ConversationParticipantWithConversationSummary,
+  p: ConversationParticipantWithSummary,
   currentProfileId: string
 ): ConversationSummary {
   const partner = p.conversation.participants.find((cp) => cp.profileId !== currentProfileId)
@@ -52,11 +75,11 @@ export function mapConversationParticipantToSummary(
         }
       : null,
     conversation: mapConversationMeta(p.conversation),
-    partnerProfile: mapProfileSummary(partner.profile),
+    partnerProfile: mapMessagingProfileRef(partner.profile),
   }
 }
 
-export function mapMessageToDTO(m: MessageWithSender, currentProfileId?: string): MessageDTO {
+export function mapMessageToDTO(m: MessageWithSender, currentProfileId: string): MessageDTO {
   return {
     id: m.id,
     conversationId: m.conversationId,
@@ -64,9 +87,9 @@ export function mapMessageToDTO(m: MessageWithSender, currentProfileId?: string)
     content: m.content,
     messageType: m.messageType,
     createdAt: m.createdAt,
-    sender: mapProfileSummary(m.sender),
+    sender: mapMessagingProfileRef(m.sender),
     attachment: m.attachment ? mapAttachmentDTO(m.attachment) : null,
-    ...(currentProfileId !== undefined && { isMine: m.senderId === currentProfileId }),
+    isMine: m.senderId === currentProfileId,
   }
 }
 

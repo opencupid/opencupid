@@ -3,6 +3,7 @@ import {
   mapMessageToDTO,
   mapConversationParticipantToSummary,
   mapAttachmentDTO,
+  mapMessagingProfileRef,
 } from '../../api/mappers/messaging.mappers'
 vi.mock('@prisma/client', () => ({ Prisma: {}, PrismaClient: class {} }))
 vi.mock('@/lib/appconfig', () => ({
@@ -51,21 +52,32 @@ const participant: any = {
 }
 
 describe('messaging mappers', () => {
-  describe('mapMessageToDTO', () => {
-    it('maps a message with sender to DTO', () => {
-      const dto = mapMessageToDTO(msg)
-      expect(dto.id).toBe('m1')
-      expect(dto.sender.publicName).toBe('Me')
-      expect(dto.attachment).toBeNull()
-      expect(dto.isMine).toBeUndefined()
+  describe('mapMessagingProfileRef', () => {
+    it('returns null thumbnail when the profile has no images', () => {
+      const ref = mapMessagingProfileRef({ id: 'p1', publicName: 'Me', profileImages: [] })
+      expect(ref).toEqual({ id: 'p1', publicName: 'Me', thumbnail: null })
     })
 
-    it('sets isMine true when senderId matches profileId', () => {
+    it('builds a thumb-variant URL from the first image', () => {
+      const ref = mapMessagingProfileRef({
+        id: 'p1',
+        publicName: 'Me',
+        profileImages: [{ storagePath: 'alice/abc' }],
+      })
+      expect(ref.thumbnail).toEqual({ url: '/user-content/images/alice/abc-thumb.webp' })
+    })
+  })
+
+  describe('mapMessageToDTO', () => {
+    it('sets isMine true when senderId matches currentProfileId', () => {
       const dto = mapMessageToDTO(msg, 'p1')
       expect(dto.isMine).toBe(true)
+      expect(dto.sender.publicName).toBe('Me')
+      expect(dto.sender.thumbnail).toBeNull()
+      expect(dto.attachment).toBeNull()
     })
 
-    it('sets isMine false when senderId does not match profileId', () => {
+    it('sets isMine false when senderId does not match currentProfileId', () => {
       const dto = mapMessageToDTO(msg, 'p2')
       expect(dto.isMine).toBe(false)
     })
@@ -82,7 +94,7 @@ describe('messaging mappers', () => {
           createdAt: new Date(),
         },
       }
-      const dto = mapMessageToDTO(msgWithAttachment)
+      const dto = mapMessageToDTO(msgWithAttachment, 'p1')
       expect(dto.attachment).not.toBeNull()
       expect(dto.attachment!.mimeType).toBe('audio/webm')
     })
@@ -91,6 +103,7 @@ describe('messaging mappers', () => {
   it('maps participant to conversation summary', () => {
     const summary = mapConversationParticipantToSummary(participant, 'p1')
     expect(summary.partnerProfile.publicName).toBe('Them')
+    expect(summary.partnerProfile.thumbnail).toBeNull()
     expect(summary.lastMessage?.isMine).toBe(true)
   })
 

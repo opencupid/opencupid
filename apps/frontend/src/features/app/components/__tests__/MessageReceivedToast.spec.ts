@@ -16,11 +16,12 @@ function makeMessage(overrides: Partial<MessageDTO> = {}): MessageDTO {
     senderId: 'p2',
     content: 'Hey there!',
     messageType: 'text/plain',
-    createdAt: new Date().toISOString(),
+    createdAt: new Date() as unknown as Date,
     sender: {
       id: 'p2',
       publicName: 'Alice',
-    } as MessageDTO['sender'],
+      thumbnail: null,
+    },
     isMine: false,
     attachment: null,
     ...overrides,
@@ -62,5 +63,38 @@ describe('MessageReceivedToast', () => {
     })
 
     expect(wrapper.text()).toContain('Alice')
+  })
+
+  it('renders no thumbnail img when sender.thumbnail is null', () => {
+    const wrapper = mount(MessageReceivedToast, {
+      props: {
+        message: makeMessage({
+          sender: { id: 'p2', publicName: 'Alice', thumbnail: null },
+        }),
+        toastId: 1,
+      },
+    })
+
+    expect(wrapper.find('.profile-thumbnail img').exists()).toBe(false)
+  })
+
+  it('renders the thumbnail img when sender.thumbnail is present', () => {
+    const wrapper = mount(MessageReceivedToast, {
+      props: {
+        message: makeMessage({
+          sender: {
+            id: 'p2',
+            publicName: 'Alice',
+            thumbnail: { url: '/user-content/images/alice/xyz-thumb.webp' },
+          },
+        }),
+        toastId: 1,
+      },
+    })
+
+    const img = wrapper.find('.profile-thumbnail img')
+    expect(img.exists()).toBe(true)
+    expect(img.attributes('src')).toBe('/user-content/images/alice/xyz-thumb.webp')
+    expect(img.attributes('alt')).toBe('Alice')
   })
 })

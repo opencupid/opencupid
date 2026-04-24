@@ -165,12 +165,10 @@ const callRoutes: FastifyPluginAsync = async (fastify) => {
         )
 
         if (!isDuplicate) {
-          const messageDTO = mapMessageToDTO(missedMsg)
-
           for (const p of conversation.participants) {
             broadcastToProfile(fastify, p.profileId, {
               type: 'ws:new_message',
-              payload: messageDTO,
+              payload: mapMessageToDTO(missedMsg, p.profileId),
             })
           }
         }
@@ -227,12 +225,10 @@ const callRoutes: FastifyPluginAsync = async (fastify) => {
           })
 
         if (!cancelIsDuplicate) {
-          const messageDTO = mapMessageToDTO(cancelMissedMsg)
-
           for (const p of conversation.participants) {
             broadcastToProfile(fastify, p.profileId, {
               type: 'ws:new_message',
-              payload: messageDTO,
+              payload: mapMessageToDTO(cancelMissedMsg, p.profileId),
             })
           }
         }

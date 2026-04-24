@@ -16,7 +16,7 @@ import { mapConversationParticipantToSummary, mapMessageToDTO } from '../mappers
 import type {
   MessagesResponse,
   ConversationsResponse,
-  ConversationResponse,
+  MarkConversationReadResponse,
   SendMessageResponse,
 } from '@zod/apiResponse.dto'
 import { broadcastToProfile } from '@/utils/wsUtils'
@@ -92,11 +92,15 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
       fileSize?: number
       duration?: number
     }
-  }): Promise<{ response: SendMessageResponse; messageDTO: MessageDTO; isDuplicate: boolean }> {
+  }): Promise<{
+    response: SendMessageResponse
+    message: Parameters<typeof mapMessageToDTO>[0]
+    isDuplicate: boolean
+  }> {
     const { senderProfileId, recipientProfileId, content, messageType, attachment } = input
 
-    const { convoId, message, isDuplicate, outcome } = await fastify.prisma.$transaction(
-      async (tx) => {
+    const { convoId, convoUpdatedAt, message, isDuplicate, outcome } =
+      await fastify.prisma.$transaction(async (tx) => {
         const { convo, wasCreated } = await messageService.resolveConversation(
           tx,
           senderProfileId,
@@ -126,34 +130,42 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
 
         return {
           convoId: convo.id,
+          convoUpdatedAt: sendResult.conversationUpdatedAt,
           message: sendResult.message,
           isDuplicate: sendResult.isDuplicate,
           outcome,
         }
-      }
-    )
-
-    const conversation = await messageService.getConversationSummary(convoId, senderProfileId)
+      })
 
     if (outcome === 'new_conversation') {
       await interactionService.markMatchAsSeen(senderProfileId, recipientProfileId)
     }
 
+    const messageWithMine = mapMessageToDTO(message, senderProfileId)
+
+    if (outcome === 'reply') {
+      const response: SendMessageResponse = {
+        success: true,
+        outcome,
+        message: messageWithMine,
+        conversationPatch: { conversationId: convoId, updatedAt: convoUpdatedAt },
+      }
+      return { response, message, isDuplicate }
+    }
+
+    const conversation = await messageService.getConversationSummary(convoId, senderProfileId)
     if (!conversation) {
       throw new Error('Conversation summary not found')
     }
 
-    const messageDTO = mapMessageToDTO(message)
-    const messageWithMine = mapMessageToDTO(message, senderProfileId)
-
     const response: SendMessageResponse = {
       success: true,
-      conversation: mapConversationParticipantToSummary(conversation, senderProfileId),
-      message: messageWithMine,
       outcome,
+      message: messageWithMine,
+      conversation: mapConversationParticipantToSummary(conversation, senderProfileId),
     }
 
-    return { response, messageDTO, isDuplicate }
+    return { response, message, isDuplicate }
   }
 
   /*
@@ -169,27 +181,32 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
   async function fireNewMessageNotifications(args: {
     senderProfileId: string
     recipientProfileId: string
-    messageDTO: MessageDTO
+    message: Parameters<typeof mapMessageToDTO>[0]
     buildEmailBody: () => Promise<string>
   }): Promise<void> {
-    const { senderProfileId, recipientProfileId, messageDTO, buildEmailBody } = args
+    const { senderProfileId, recipientProfileId, message, buildEmailBody } = args
+
+    // MessageDTO is viewer-specific: mapping here (rather than at the caller)
+    // yields isMine: false for the recipient instead of the stale undefined
+    // the shared sender-mapped DTO used to produce.
+    const recipientMessageDTO: MessageDTO = mapMessageToDTO(message, recipientProfileId)
 
     const isWsBroadcasted = broadcastToProfile(fastify, recipientProfileId, {
       type: 'ws:new_message',
-      payload: messageDTO,
+      payload: recipientMessageDTO,
     })
 
     if (isWsBroadcasted) return
 
     if (WebPushService.isWebPushConfigured()) {
-      webPushService.send(messageDTO, recipientProfileId).catch((err) => {
+      webPushService.send(recipientMessageDTO, recipientProfileId).catch((err) => {
         fastify.log.error(err, 'Web push failed')
       })
     }
 
     await notifierService.notifyProfile(recipientProfileId, 'new_message', {
       senderId: senderProfileId,
-      sender: messageDTO.sender.publicName,
+      sender: recipientMessageDTO.sender.publicName,
       message: await buildEmailBody(),
       link: `${appConfig.FRONTEND_URL}/inbox`,
     })
@@ -257,7 +274,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
    * POST /conversations/:id/mark-read
    * Marks all messages in a conversation as read for the current profile.
    * @param {string} id - Conversation ID (CUID)
-   * @returns {ConversationResponse} Updated conversation summary
+   * @returns {MarkConversationReadResponse} { conversationId, lastReadAt }
    */
   fastify.post(
     '/conversations/:id/mark-read',
@@ -271,13 +288,14 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
       const conversationId = id.data.id
 
       try {
-        await messageService.markConversationRead(conversationId, profileId)
-        const updated = await messageService.getConversationSummary(conversationId, profileId)
-        if (!updated) return sendError(reply, 404, 'Conversation not found')
-
-        const response: ConversationResponse = {
+        const updated = await messageService.markConversationRead(conversationId, profileId)
+        if (!updated.lastReadAt) {
+          throw new Error('markConversationRead did not set lastReadAt')
+        }
+        const response: MarkConversationReadResponse = {
           success: true,
-          conversation: mapConversationParticipantToSummary(updated, profileId),
+          conversationId,
+          lastReadAt: updated.lastReadAt,
         }
         return reply.code(200).send(response)
       } catch (error) {
@@ -308,7 +326,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
       const { profileId, content } = body.data
 
       try {
-        const { response, messageDTO, isDuplicate } = await sendAndBuildResponse({
+        const { response, message, isDuplicate } = await sendAndBuildResponse({
           senderProfileId,
           recipientProfileId: profileId,
           content,
@@ -321,8 +339,8 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
           await fireNewMessageNotifications({
             senderProfileId,
             recipientProfileId: profileId,
-            messageDTO,
-            buildEmailBody: async () => cleanMessageForNotification(messageDTO.content, 100),
+            message,
+            buildEmailBody: async () => cleanMessageForNotification(message.content, 100),
           })
         }
       } catch (error) {
@@ -447,7 +465,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
         }
 
         try {
-          const { response, messageDTO, isDuplicate } = await sendAndBuildResponse({
+          const { response, message, isDuplicate } = await sendAndBuildResponse({
             senderProfileId,
             recipientProfileId: payload.data.profileId,
             content: payload.data.content,
@@ -466,7 +484,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
             await fireNewMessageNotifications({
               senderProfileId,
               recipientProfileId: payload.data.profileId,
-              messageDTO,
+              message,
               buildEmailBody: async () => {
                 const recipientProfile = await fastify.prisma.profile.findUnique({
                   where: { id: payload.data.profileId },

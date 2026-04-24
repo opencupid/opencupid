@@ -1,6 +1,5 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
-import type { ConversationParticipantWithConversationSummary } from '@zod/messaging/messaging.dto'
 import { Conversation } from '@zod/generated'
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
 import i18next from 'i18next'
@@ -26,14 +25,25 @@ export class MessagingError extends Error {
   }
 }
 
+// Narrow projection that carries only what the thumb-URL builder reads
+// (`imageBasePath(storagePath)`). Keeps both messaging includes minimal.
+const thumbImageSelect = {
+  orderBy: { position: 'asc' as const },
+  take: 1,
+  select: { storagePath: true },
+}
+
 const conversationSummaryInclude = {
   conversation: {
     include: {
       participants: {
         include: {
           profile: {
-            include: {
-              profileImages: true,
+            select: {
+              id: true,
+              publicName: true,
+              isCallable: true,
+              profileImages: thumbImageSelect,
             },
           },
         },
@@ -46,20 +56,18 @@ const conversationSummaryInclude = {
       },
     },
   },
-}
+} satisfies Prisma.ConversationParticipantInclude
+
+export type ConversationParticipantWithSummary = Prisma.ConversationParticipantGetPayload<{
+  include: typeof conversationSummaryInclude
+}>
 
 export const messageWithSenderInclude = {
   sender: {
     select: {
       id: true,
       publicName: true,
-      country: true,
-      cityName: true,
-      lat: true,
-      lon: true,
-      profileImages: {
-        orderBy: { position: 'asc' },
-      },
+      profileImages: thumbImageSelect,
     },
   },
   attachment: true,
@@ -90,7 +98,7 @@ export class MessageService {
   async getConversationSummary(
     conversationId: string,
     profileId: string
-  ): Promise<ConversationParticipantWithConversationSummary | null> {
+  ): Promise<ConversationParticipantWithSummary | null> {
     return await prisma.conversationParticipant.findFirst({
       where: {
         conversationId,
@@ -247,7 +255,7 @@ export class MessageService {
       fileSize?: number
       duration?: number
     }
-  ): Promise<{ message: MessageWithSender; isDuplicate: boolean }> {
+  ): Promise<{ message: MessageWithSender; isDuplicate: boolean; conversationUpdatedAt: Date }> {
     const cleanContent = messageType === 'text/plain' ? content.trim() : content
 
     if (messageType === 'text/plain' && !cleanContent) {
@@ -268,7 +276,13 @@ export class MessageService {
         },
         include: messageWithSenderInclude,
       })
-      if (duplicate) return { message: duplicate, isDuplicate: true }
+      if (duplicate) {
+        const convo = await tx.conversation.findUniqueOrThrow({
+          where: { id: convoId },
+          select: { updatedAt: true },
+        })
+        return { message: duplicate, isDuplicate: true, conversationUpdatedAt: convo.updatedAt }
+      }
     }
 
     const message = await tx.message.create({
@@ -285,12 +299,13 @@ export class MessageService {
     // Bump parent conversation so inbox ordering (listConversationsForProfile
     // orders by updatedAt DESC) reflects the new activity. Prisma @updatedAt
     // only fires on direct updates, so creating a Message row is not enough.
-    await tx.conversation.update({
+    const bumped = await tx.conversation.update({
       where: { id: convoId },
       data: { updatedAt: new Date() },
+      select: { updatedAt: true },
     })
 
-    return { message, isDuplicate: false }
+    return { message, isDuplicate: false, conversationUpdatedAt: bumped.updatedAt }
   }
 
   async sendWelcomeMessage(recipientProfileId: string, locale: string) {
@@ -396,11 +411,6 @@ export class MessageService {
   sortProfilePair(a: string, b: string): [string, string] {
     return a < b ? [a, b] : [b, a]
   }
-}
-
-export type SendMessageSuccessResponse = {
-  conversation: ConversationParticipantWithConversationSummary
-  message: MessageWithSender
 }
 
 export type SendMessageErrorResponse = {

@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
-import type { ConversationSummary, MessageDTO } from '@zod/messaging/messaging.dto'
+import type {
+  ConversationPatch,
+  ConversationSummary,
+  MessageDTO,
+} from '@zod/messaging/messaging.dto'
+import type { SendMessageResponse } from '@zod/apiResponse.dto'
 
 const mockApi = vi.hoisted(() => ({
   get: vi.fn(),
@@ -43,10 +48,24 @@ function makeConvo(conversationId: string, partnerName: string): ConversationSum
     partnerProfile: {
       id: `partner-${conversationId}`,
       publicName: partnerName,
-      profileImages: [],
-      location: { country: '' },
+      thumbnail: null,
     },
     lastMessage: null,
+  }
+}
+
+function makeMessage(overrides: Partial<MessageDTO> = {}): MessageDTO {
+  return {
+    id: 'msg-1',
+    conversationId: 'convo-1',
+    senderId: 'profile-1',
+    content: 'Hello',
+    messageType: 'text/plain',
+    createdAt: new Date('2024-01-02'),
+    isMine: true,
+    sender: { id: 'profile-1', publicName: 'Me', thumbnail: null },
+    attachment: null,
+    ...overrides,
   }
 }
 
@@ -62,26 +81,8 @@ describe('messageStore', () => {
 
       // Setup: conversation exists in store with canReply = false (initiated by current user)
       const existingConvo: ConversationSummary = {
-        id: 'participant-1',
-        profileId: 'profile-1',
-        conversationId: 'convo-1',
-        lastReadAt: new Date('2024-01-01'),
-        isMuted: false,
-        isArchived: false,
+        ...makeConvo('convo-1', 'Partner'),
         canReply: false, // User initiated, waiting for reply
-        isCallable: true,
-        myIsCallable: true,
-        conversation: {
-          id: 'convo-1',
-          updatedAt: new Date('2024-01-01'),
-          createdAt: new Date('2024-01-01'),
-        },
-        partnerProfile: {
-          id: 'partner-profile-1',
-          publicName: 'Partner',
-          profileImages: [],
-          location: { country: '' },
-        },
         lastMessage: {
           content: 'Initial message',
           messageType: 'text/html',
@@ -92,21 +93,14 @@ describe('messageStore', () => {
       store.conversations = [existingConvo]
 
       // Incoming message from partner
-      const incomingMessage: MessageDTO = {
+      const incomingMessage: MessageDTO = makeMessage({
         id: 'msg-2',
-        conversationId: 'convo-1',
         senderId: 'partner-profile-1',
         content: 'Reply from partner',
         messageType: 'text/html',
-        createdAt: new Date('2024-01-02'),
         isMine: false,
-        sender: {
-          id: 'partner-profile-1',
-          publicName: 'Partner',
-          profileImages: [],
-          location: { country: '' },
-        },
-      }
+        sender: { id: 'partner-profile-1', publicName: 'Partner', thumbnail: null },
+      })
 
       // Act: handle incoming message
       await store.handleIncomingMessage(incomingMessage)
@@ -121,70 +115,31 @@ describe('messageStore', () => {
       const store = useMessageStore()
 
       const convo1: ConversationSummary = {
-        id: 'participant-1',
-        profileId: 'profile-1',
-        conversationId: 'convo-1',
-        lastReadAt: new Date('2024-01-01'),
-        isMuted: false,
-        isArchived: false,
+        ...makeConvo('convo-1', 'Partner 1'),
         canReply: true,
-        isCallable: true,
-        myIsCallable: true,
-        conversation: {
-          id: 'convo-1',
-          updatedAt: new Date('2024-01-01'),
-          createdAt: new Date('2024-01-01'),
-        },
-        partnerProfile: {
-          id: 'partner-1',
-          publicName: 'Partner 1',
-          profileImages: [],
-          location: { country: '' },
-        },
-        lastMessage: null,
       }
-
       const convo2: ConversationSummary = {
-        id: 'participant-2',
-        profileId: 'profile-1',
-        conversationId: 'convo-2',
-        lastReadAt: new Date('2024-01-02'),
-        isMuted: false,
-        isArchived: false,
+        ...makeConvo('convo-2', 'Partner 2'),
         canReply: true,
-        isCallable: true,
-        myIsCallable: true,
         conversation: {
           id: 'convo-2',
           updatedAt: new Date('2024-01-02'),
           createdAt: new Date('2024-01-02'),
         },
-        partnerProfile: {
-          id: 'partner-2',
-          publicName: 'Partner 2',
-          profileImages: [],
-          location: { country: '' },
-        },
-        lastMessage: null,
+        lastReadAt: new Date('2024-01-02'),
       }
 
       store.conversations = [convo1, convo2]
 
-      const incomingMessage: MessageDTO = {
-        id: 'msg-1',
+      const incomingMessage: MessageDTO = makeMessage({
         conversationId: 'convo-2',
         senderId: 'partner-2',
         content: 'New message',
         messageType: 'text/html',
         createdAt: new Date('2024-01-03'),
         isMine: false,
-        sender: {
-          id: 'partner-2',
-          publicName: 'Partner 2',
-          profileImages: [],
-          location: { country: '' },
-        },
-      }
+        sender: { id: 'partner-2', publicName: 'Partner 2', thumbnail: null },
+      })
 
       await store.handleIncomingMessage(incomingMessage)
 
@@ -197,42 +152,15 @@ describe('messageStore', () => {
       const store = useMessageStore()
       store.suppressMessageNotifications = false
 
-      const convo: ConversationSummary = {
-        id: 'participant-1',
-        profileId: 'profile-1',
-        conversationId: 'convo-1',
-        lastReadAt: new Date('2024-01-01'),
-        isMuted: false,
-        isArchived: false,
-        canReply: true,
-        isCallable: true,
-        myIsCallable: true,
-        conversation: {
-          id: 'convo-1',
-          updatedAt: new Date('2024-01-01'),
-          createdAt: new Date('2024-01-01'),
-        },
-        partnerProfile: {
-          id: 'partner-1',
-          publicName: 'Partner',
-          profileImages: [],
-          location: { country: '' },
-        },
-        lastMessage: null,
-      }
+      const convo: ConversationSummary = { ...makeConvo('convo-1', 'Partner'), canReply: true }
       store.conversations = [convo]
       store.activeConversation = null
 
-      const incomingMessage: MessageDTO = {
-        id: 'msg-1',
-        conversationId: 'convo-1',
+      const incomingMessage: MessageDTO = makeMessage({
         senderId: 'partner-1',
-        content: 'Hello',
-        messageType: 'text/html',
-        createdAt: new Date('2024-01-02'),
         isMine: false,
-        sender: { id: 'partner-1', publicName: 'Partner', profileImages: [], location: { country: '' } },
-      }
+        sender: { id: 'partner-1', publicName: 'Partner', thumbnail: null },
+      })
 
       await store.handleIncomingMessage(incomingMessage)
 
@@ -243,42 +171,15 @@ describe('messageStore', () => {
       const store = useMessageStore()
       store.suppressMessageNotifications = true
 
-      const convo: ConversationSummary = {
-        id: 'participant-1',
-        profileId: 'profile-1',
-        conversationId: 'convo-1',
-        lastReadAt: new Date('2024-01-01'),
-        isMuted: false,
-        isArchived: false,
-        canReply: true,
-        isCallable: true,
-        myIsCallable: true,
-        conversation: {
-          id: 'convo-1',
-          updatedAt: new Date('2024-01-01'),
-          createdAt: new Date('2024-01-01'),
-        },
-        partnerProfile: {
-          id: 'partner-1',
-          publicName: 'Partner',
-          profileImages: [],
-          location: { country: '' },
-        },
-        lastMessage: null,
-      }
+      const convo: ConversationSummary = { ...makeConvo('convo-1', 'Partner'), canReply: true }
       store.conversations = [convo]
       store.activeConversation = null
 
-      const incomingMessage: MessageDTO = {
-        id: 'msg-1',
-        conversationId: 'convo-1',
+      const incomingMessage: MessageDTO = makeMessage({
         senderId: 'partner-1',
-        content: 'Hello',
-        messageType: 'text/html',
-        createdAt: new Date('2024-01-02'),
         isMine: false,
-        sender: { id: 'partner-1', publicName: 'Partner', profileImages: [], location: { country: '' } },
-      }
+        sender: { id: 'partner-1', publicName: 'Partner', thumbnail: null },
+      })
 
       await store.handleIncomingMessage(incomingMessage)
 
@@ -345,13 +246,129 @@ describe('appendMessageIfNew', () => {
   })
 })
 
+describe('handleSendResponse (discriminated on outcome)', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  it('reply outcome: applies the patch to the matching conversation and bumps updatedAt', () => {
+    const store = useMessageStore()
+    const convo = makeConvo('convo-1', 'Partner')
+    const other = makeConvo('convo-other', 'Other')
+    store.conversations = [other, convo]
+    store.activeConversation = convo
+
+    const message = makeMessage({
+      id: 'msg-42',
+      conversationId: 'convo-1',
+      content: 'Reply!',
+      senderId: 'profile-1',
+      isMine: true,
+    })
+    const patch: ConversationPatch = {
+      conversationId: 'convo-1',
+      updatedAt: new Date('2024-06-01T00:00:00Z'),
+    }
+    const response: SendMessageResponse = {
+      success: true,
+      outcome: 'reply',
+      message,
+      conversationPatch: patch,
+    }
+
+    const result = store.handleSendResponse({ data: response })
+
+    expect(result).toEqual({ success: true, data: message })
+    expect(store.conversations[0]!.conversationId).toBe('convo-1')
+    expect(store.conversations[0]!.conversation.updatedAt).toEqual(patch.updatedAt)
+    expect(store.conversations[0]!.lastMessage).toEqual({
+      content: 'Reply!',
+      messageType: 'text/plain',
+      createdAt: message.createdAt,
+      isMine: true,
+    })
+    expect(store.messages.map((m) => m.id)).toContain('msg-42')
+  })
+
+  it('reply outcome: ignores the patch when the conversation was dropped from the list (race)', () => {
+    const store = useMessageStore()
+    // The store no longer holds this conversation (e.g. it was filtered out by
+    // a concurrent fetch while the send was in flight). The patch arm must
+    // not crash and must not re-fetch.
+    store.conversations = [makeConvo('convo-other', 'Other')]
+    store.activeConversation = null
+
+    const response: SendMessageResponse = {
+      success: true,
+      outcome: 'reply',
+      message: makeMessage({ conversationId: 'convo-stale' }),
+      conversationPatch: {
+        conversationId: 'convo-stale',
+        updatedAt: new Date('2024-06-01T00:00:00Z'),
+      },
+    }
+
+    const result = store.handleSendResponse({ data: response })
+
+    expect(result.success).toBe(true)
+    expect(store.conversations).toHaveLength(1)
+    expect(store.conversations[0]!.conversationId).toBe('convo-other')
+    expect(store.messages).toHaveLength(0)
+  })
+
+  it('new_conversation outcome: upserts the full conversation and appends the message if active', () => {
+    const store = useMessageStore()
+    store.conversations = []
+
+    const convo = makeConvo('convo-new', 'New Partner')
+    store.activeConversation = convo
+
+    const message = makeMessage({ id: 'msg-new', conversationId: 'convo-new' })
+    const response: SendMessageResponse = {
+      success: true,
+      outcome: 'new_conversation',
+      message,
+      conversation: convo,
+    }
+
+    const result = store.handleSendResponse({ data: response })
+
+    expect(result).toEqual({ success: true, data: message })
+    expect(store.conversations[0]!.conversationId).toBe('convo-new')
+    expect(store.messages.map((m) => m.id)).toContain('msg-new')
+  })
+
+  it('accepted_on_reply outcome: upserts the conversation', () => {
+    const store = useMessageStore()
+    store.conversations = [makeConvo('convo-other', 'Other')]
+    store.activeConversation = null
+
+    const convo = makeConvo('convo-accepted', 'Partner')
+    const message = makeMessage({ id: 'msg-accept', conversationId: 'convo-accepted' })
+    const response: SendMessageResponse = {
+      success: true,
+      outcome: 'accepted_on_reply',
+      message,
+      conversation: convo,
+    }
+
+    const result = store.handleSendResponse({ data: response })
+
+    expect(result.success).toBe(true)
+    expect(store.conversations[0]!.conversationId).toBe('convo-accepted')
+    // Inactive conversation: message not appended to the visible thread.
+    expect(store.messages).toHaveLength(0)
+  })
+})
+
 describe('sendMessage', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
   })
 
-  it('sends a text message and bumps conversation to top', async () => {
+  it('reply outcome: applies patch and bumps the existing conversation to the top', async () => {
     const store = useMessageStore()
     const otherConvo = makeConvo('convo-other', 'Other')
     const convo = makeConvo('convo-1', 'Partner')
@@ -361,9 +378,13 @@ describe('sendMessage', () => {
     mockApi.post.mockResolvedValue({
       data: {
         success: true,
-        conversation: { ...convo, lastMessage: { id: 'msg-1', content: 'Hello' } },
-        message: { id: 'msg-1', conversationId: 'convo-1', content: 'Hello' },
-      },
+        outcome: 'reply',
+        message: makeMessage({ id: 'msg-1', conversationId: 'convo-1', content: 'Hello' }),
+        conversationPatch: {
+          conversationId: 'convo-1',
+          updatedAt: new Date('2024-06-02'),
+        },
+      } satisfies SendMessageResponse,
     })
 
     const result = await store.sendMessage('partner-convo-1', 'Hello')
@@ -374,23 +395,6 @@ describe('sendMessage', () => {
     expect(store.conversations[1]!.conversationId).toBe('convo-other')
     expect(store.messages.map((m) => m.id)).toContain('msg-1')
     expect(store.isSending).toBe(false)
-  })
-
-  it('returns StoreError when message is null in response', async () => {
-    const store = useMessageStore()
-    const convo = makeConvo('convo-1', 'Partner')
-
-    mockApi.post.mockResolvedValue({
-      data: {
-        success: true,
-        conversation: convo,
-        message: null,
-      },
-    })
-
-    const result = await store.sendMessage('partner-convo-1', 'Hello')
-
-    expect(result).toMatchObject({ success: false })
   })
 })
 
@@ -409,9 +413,13 @@ describe('sendVoiceMessage', () => {
     mockApi.post.mockResolvedValue({
       data: {
         success: true,
-        conversation: { ...convo, lastMessage: { id: 'voice-1' } },
-        message: { id: 'voice-1', conversationId: 'convo-1', content: '' },
-      },
+        outcome: 'reply',
+        message: makeMessage({ id: 'voice-1', conversationId: 'convo-1', content: '' }),
+        conversationPatch: {
+          conversationId: 'convo-1',
+          updatedAt: new Date('2024-06-02'),
+        },
+      } satisfies SendMessageResponse,
     })
 
     const blob = new Blob(['audio'], { type: 'audio/webm' })
@@ -420,6 +428,31 @@ describe('sendVoiceMessage', () => {
     expect(result).toEqual({ success: true, data: expect.objectContaining({ id: 'voice-1' }) })
     expect(mockApi.post).toHaveBeenCalledWith('/messages/voice', expect.any(FormData))
     expect(store.isSending).toBe(false)
+  })
+})
+
+describe('markAsRead', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  it('applies lastReadAt patch to the matching conversation without a full replacement', async () => {
+    const store = useMessageStore()
+    const convo = makeConvo('convo-1', 'Partner')
+    store.conversations = [convo]
+
+    const lastReadAt = new Date('2024-06-02T10:00:00Z')
+    mockApi.post.mockResolvedValue({
+      data: { success: true, conversationId: 'convo-1', lastReadAt },
+    })
+
+    await store.markAsRead('convo-1')
+
+    expect(mockApi.post).toHaveBeenCalledWith('/messages/conversations/convo-1/mark-read')
+    expect(store.conversations[0]!.lastReadAt).toEqual(lastReadAt)
+    // Other fields on the entry are unchanged.
+    expect(store.conversations[0]!.partnerProfile.publicName).toBe('Partner')
   })
 })
 

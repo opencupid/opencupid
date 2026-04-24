@@ -33,7 +33,7 @@ const baseMessage = {
   attachment: null,
   conversationId: 'c1',
   senderId: 'p1',
-  sender: { id: 'p1', publicName: 'Alice', profileImages: [], location: { country: 'HU' } },
+  sender: { id: 'p1', publicName: 'Alice', thumbnail: null },
 } as MessageDTO
 
 describe('MessageBubble', () => {

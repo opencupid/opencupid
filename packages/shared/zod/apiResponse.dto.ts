@@ -16,9 +16,9 @@ import type {
 } from '@zod/profile/profile.dto'
 import type { PublicTag, PopularTag } from '@zod/tag/tag.dto'
 import type {
+  ConversationPatch,
   ConversationSummary,
   MessageDTO,
-  SendMessageOutcome,
 } from '@zod/messaging/messaging.dto'
 import type { LoginUser, SettingsUser } from '@zod/user/user.dto'
 import type { LocationDTO } from '@zod/dto/location.dto'
@@ -68,12 +68,25 @@ export type MessagesResponse = ApiSuccess<{
   hasMore: boolean
 }>
 export type ConversationsResponse = ApiSuccess<{ conversations: ConversationSummary[] }>
-export type ConversationResponse = ApiSuccess<{ conversation: ConversationSummary }>
 
-export type SendMessageResponse = ApiSuccess<{
-  conversation: ConversationSummary
-  message: MessageDTO
-  outcome: SendMessageOutcome
+// Discriminated on `outcome`: the dominant 'reply' arm ships a small
+// conversation patch; the other arms ship the full ConversationSummary
+// because the store may not yet hold the conversation.
+export type SendMessageResponse =
+  | ApiSuccess<{
+      outcome: 'reply'
+      message: MessageDTO
+      conversationPatch: ConversationPatch
+    }>
+  | ApiSuccess<{
+      outcome: 'new_conversation' | 'accepted_on_reply'
+      message: MessageDTO
+      conversation: ConversationSummary
+    }>
+
+export type MarkConversationReadResponse = ApiSuccess<{
+  conversationId: string
+  lastReadAt: Date
 }>
 
 export type InitiateConversationResponse = ApiSuccess<{}>

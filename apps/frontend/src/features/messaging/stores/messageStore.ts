@@ -4,15 +4,15 @@ import { api, safeApiCall } from '@/lib/api'
 import { bus } from '@/lib/bus'
 
 import type {
+  ConversationPatch,
   ConversationSummary,
   MessageDTO,
-  MessageInConversation,
   SendMessagePayload,
 } from '@zod/messaging/messaging.dto'
 import type {
   MessagesResponse,
   ConversationsResponse,
-  ConversationResponse,
+  MarkConversationReadResponse,
   SendMessageResponse,
 } from '@zod/apiResponse.dto'
 import { storeError, type StoreError, type StoreResponse, storeSuccess } from '@/store/helpers'
@@ -64,7 +64,12 @@ export const useMessageStore = defineStore('message', {
         // and we can reply (fixes bug where both "My turn" and "Their turn" badges show)
         const updatedConvo: ConversationSummary = {
           ...convo,
-          lastMessage: message,
+          lastMessage: {
+            content: message.content,
+            messageType: message.messageType,
+            createdAt: message.createdAt,
+            isMine: message.isMine,
+          },
           canReply: true,
         }
         this.bumpConversation(updatedConvo)
@@ -91,16 +96,47 @@ export const useMessageStore = defineStore('message', {
       ]
     },
 
-    handleSendResponse(res: {
-      data: { conversation: ConversationSummary; message: MessageDTO | null }
-    }): StoreResponse<MessageDTO> | StoreError {
-      const { conversation, message } = res.data
-      if (!message) return storeError(new Error('Message not sent'))
+    // Upsert a conversation summary into the list, bumping to top.
+    upsertConversation(conversation: ConversationSummary) {
       this.bumpConversation(conversation)
-      if (this.activeConversation?.conversationId === conversation.conversationId) {
+    },
+
+    // Apply a reply delta to an existing conversation entry. The server
+    // already holds the canonical updatedAt; we reuse it for inbox ordering.
+    applyReplyToConversation(message: MessageDTO, patch: ConversationPatch) {
+      const idx = this.conversations.findIndex((c) => c.conversationId === patch.conversationId)
+      // Race: convo dropped from the list while the send was in flight.
+      // Ignore — no fallback fetch (see "Out of scope" in the design doc).
+      if (idx === -1) return
+      const existing = this.conversations[idx]!
+      const updated: ConversationSummary = {
+        ...existing,
+        conversation: { ...existing.conversation, updatedAt: patch.updatedAt },
+        lastMessage: {
+          content: message.content,
+          messageType: message.messageType,
+          createdAt: message.createdAt,
+          isMine: message.isMine,
+        },
+      }
+      this.bumpConversation(updated)
+      this.updateUnreadFlag()
+      if (this.activeConversation?.conversationId === patch.conversationId) {
         this.appendMessageIfNew(message)
       }
-      return storeSuccess(message)
+    },
+
+    handleSendResponse(res: { data: SendMessageResponse }): StoreResponse<MessageDTO> {
+      const body = res.data
+      if (body.outcome === 'reply') {
+        this.applyReplyToConversation(body.message, body.conversationPatch)
+      } else {
+        this.upsertConversation(body.conversation)
+        if (this.activeConversation?.conversationId === body.conversation.conversationId) {
+          this.appendMessageIfNew(body.message)
+        }
+      }
+      return storeSuccess(body.message)
     },
 
     // Update a conversation in the list
@@ -126,7 +162,7 @@ export const useMessageStore = defineStore('message', {
     async fetchMessages(
       conversationId: string,
       options?: { take?: number; cursor?: string }
-    ): Promise<StoreResponse<{ messages: MessageInConversation[] }>> {
+    ): Promise<StoreResponse<{ messages: MessageDTO[] }>> {
       try {
         const res = await safeApiCall(() =>
           api.get<MessagesResponse>(`/messages/${conversationId}`, {
@@ -148,7 +184,7 @@ export const useMessageStore = defineStore('message', {
     async fetchMessagesForConversation(
       conversationId: string,
       options?: { cursor?: string; append?: boolean }
-    ): Promise<MessageInConversation[]> {
+    ): Promise<MessageDTO[]> {
       try {
         const isLoadingOlder = Boolean(options?.append)
         if (isLoadingOlder) {
@@ -200,7 +236,7 @@ export const useMessageStore = defineStore('message', {
       return []
     },
 
-    async fetchOlderMessages(): Promise<MessageInConversation[]> {
+    async fetchOlderMessages(): Promise<MessageDTO[]> {
       if (
         !this.activeConversation ||
         !this.hasMoreMessages ||
@@ -239,13 +275,18 @@ export const useMessageStore = defineStore('message', {
 
     async markAsRead(convoId: string) {
       try {
-        const updateConvo = await safeApiCall(() =>
-          api.post<ConversationResponse>(`/messages/conversations/${convoId}/mark-read`)
+        const res = await safeApiCall(() =>
+          api.post<MarkConversationReadResponse>(`/messages/conversations/${convoId}/mark-read`)
         )
-        if (updateConvo.data.success) {
-          const updatedConvo: ConversationSummary = updateConvo.data.conversation
-          this.updateConvo(updatedConvo)
-          this.updateUnreadFlag()
+        if (res.data.success) {
+          const idx = this.conversations.findIndex(
+            (c) => c.conversationId === res.data.conversationId
+          )
+          if (idx !== -1) {
+            const existing = this.conversations[idx]!
+            this.conversations[idx] = { ...existing, lastReadAt: res.data.lastReadAt }
+            this.updateUnreadFlag()
+          }
         }
       } catch (error: any) {
         console.error('Failed to mark conversation as read:', error)

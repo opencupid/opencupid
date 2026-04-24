@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { type ConversationSummary } from '@zod/messaging/messaging.dto'
-import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
 import { stripForPreview } from '@/lib/renderMessage'
 import { computed } from 'vue'
 
@@ -30,7 +29,14 @@ const haveConversations = computed(() => props.conversations.length > 0)
         @click="$emit('convo:select', convo)"
       >
         <div class="thumbnail me-2 flex-shrink-0">
-          <ProfileThumbnail :profile="convo.partnerProfile" />
+          <span class="profile-thumbnail d-inline-flex">
+            <img
+              v-if="convo.partnerProfile.thumbnail"
+              :src="convo.partnerProfile.thumbnail.url"
+              :alt="convo.partnerProfile.publicName"
+              class="img-fluid rounded"
+            />
+          </span>
         </div>
         <!--  extract into slot   -->
         <div class="overflow-hidden flex-grow-1 user-select-none">

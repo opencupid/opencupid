@@ -77,11 +77,11 @@ describe('MessageService.listMessagesForConversation', () => {
           select: {
             id: true,
             publicName: true,
-            country: true,
-            cityName: true,
-            lat: true,
-            lon: true,
-            profileImages: { orderBy: { position: 'asc' } },
+            profileImages: {
+              orderBy: { position: 'asc' },
+              take: 1,
+              select: { storagePath: true },
+            },
           },
         },
         attachment: true,
@@ -370,13 +370,15 @@ describe('MessageService.sendMessage (new primitive)', () => {
   }
 
   function txForSend(opts: { duplicate?: any; created?: any } = {}): any {
+    const updatedAt = new Date('2024-06-01T00:00:00Z')
     return {
       message: {
         findFirst: vi.fn().mockResolvedValue(opts.duplicate ?? null),
         create: vi.fn().mockResolvedValue(opts.created ?? builtMsg),
       },
       conversation: {
-        update: vi.fn().mockResolvedValue(undefined),
+        update: vi.fn().mockResolvedValue({ updatedAt }),
+        findUniqueOrThrow: vi.fn().mockResolvedValue({ updatedAt }),
       },
     }
   }

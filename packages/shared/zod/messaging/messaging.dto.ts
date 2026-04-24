@@ -1,33 +1,10 @@
 import { z } from 'zod'
-import { ProfileSummarySchema } from '../profile/profile.dto'
 import {
   ConversationParticipantSchema,
   ConversationSchema,
   MessageSchema,
   MessageAttachmentSchema,
 } from '../generated'
-import { Prisma } from '@prisma/client'
-
-const conversationParticipantFields = {
-  id: true,
-  profileId: true,
-  conversationId: true,
-  lastReadAt: true,
-  isMuted: true,
-  isArchived: true,
-} as const
-
-// Message attachment DB shape
-const DbMessageAttachmentDTOSchema = MessageAttachmentSchema.pick({
-  id: true,
-  mimeType: true,
-  fileSize: true,
-  duration: true,
-  createdAt: true,
-  filePath: true,
-})
-
-export type DbMessageAttachmentDTO = z.infer<typeof DbMessageAttachmentDTOSchema>
 
 // Message attachment DTO
 const MessageAttachmentDTOSchema = MessageAttachmentSchema.pick({
@@ -42,8 +19,23 @@ const MessageAttachmentDTOSchema = MessageAttachmentSchema.pick({
 
 export type MessageAttachmentDTO = z.infer<typeof MessageAttachmentDTOSchema>
 
-// this is used in the db layer
-const DbMessageInConversationSchema = MessageSchema.pick({
+// Messaging-owned profile-identity reference. Intentionally narrow: only what
+// messaging surfaces (bubble identity, toast, inbox list) actually render.
+// Do not reuse outside messaging — that is the antidote to the ProfileSummary
+// over-reuse pattern.
+export const MessagingProfileRefSchema = z.object({
+  id: z.string(),
+  publicName: z.string(),
+  thumbnail: z
+    .object({
+      url: z.string(),
+    })
+    .nullable(),
+})
+
+export type MessagingProfileRef = z.infer<typeof MessagingProfileRefSchema>
+
+const MessageDTOSchema = MessageSchema.pick({
   id: true,
   conversationId: true,
   senderId: true,
@@ -51,30 +43,9 @@ const DbMessageInConversationSchema = MessageSchema.pick({
   messageType: true,
   createdAt: true,
 }).extend({
-  sender: ProfileSummarySchema,
-  attachment: DbMessageAttachmentDTOSchema.nullable().optional(),
-})
-export type DbMessageInConversation = z.infer<typeof DbMessageInConversationSchema>
-
-// this is used in the db layer
-const MessageInConversationSchema = MessageSchema.pick({
-  id: true,
-  conversationId: true,
-  senderId: true,
-  content: true,
-  messageType: true,
-  createdAt: true,
-}).extend({
-  sender: ProfileSummarySchema,
-  attachment: MessageAttachmentDTOSchema.nullable().optional(),
-})
-export type MessageInConversation = z.infer<typeof MessageInConversationSchema>
-
-// this is used in the dto layer
-const MessageDTOSchema = MessageInConversationSchema.extend({
-  sender: ProfileSummarySchema,
-  isMine: z.boolean().optional(),
-  attachment: MessageAttachmentDTOSchema.nullable().optional(),
+  sender: MessagingProfileRefSchema,
+  attachment: MessageAttachmentDTOSchema.nullable(),
+  isMine: z.boolean(),
 })
 export type MessageDTO = z.infer<typeof MessageDTOSchema>
 
@@ -83,7 +54,7 @@ const MessageInConversationSummarySchema = MessageSchema.pick({
   messageType: true,
   createdAt: true,
 }).extend({
-  isMine: z.boolean().optional(),
+  isMine: z.boolean(),
 })
 
 const ConversationSummarySchema = ConversationParticipantSchema.pick({
@@ -102,36 +73,20 @@ const ConversationSummarySchema = ConversationParticipantSchema.pick({
   canReply: z.boolean().default(false),
   isCallable: z.boolean().default(true),
   myIsCallable: z.boolean().default(true),
-  partnerProfile: ProfileSummarySchema,
+  partnerProfile: MessagingProfileRefSchema,
   lastMessage: MessageInConversationSummarySchema.nullable(),
 })
 
 export type ConversationSummary = z.infer<typeof ConversationSummarySchema>
 
-export type ConversationParticipantWithConversationSummary =
-  Prisma.ConversationParticipantGetPayload<{
-    include: {
-      conversation: {
-        include: {
-          participants: {
-            include: {
-              profile: {
-                include: {
-                  profileImages: true
-                }
-              }
-            }
-          }
-          messages: {
-            take: 1
-            orderBy: {
-              createdAt: 'desc'
-            }
-          }
-        }
-      }
-    }
-  }>
+// Small delta returned by the 'reply' send arm. updatedAt reflects the
+// post-write value of Conversation.updatedAt (set in the same transaction as
+// the message insert), used for inbox ordering.
+export const ConversationPatchSchema = z.object({
+  conversationId: z.string(),
+  updatedAt: z.date(),
+})
+export type ConversationPatch = z.infer<typeof ConversationPatchSchema>
 
 export const SendMessagePayloadSchema = z.object({
   profileId: z.string().cuid(),
@@ -158,7 +113,3 @@ export type SendOutcome = 'new_conversation' | 'accepted_on_reply' | 'reply' | '
 // 'blocked' is never returned on success — it becomes a 403 via MessagingError
 // at the route layer, so the client's SendMessageResponse.outcome can't see it.
 export type SendMessageOutcome = Exclude<SendOutcome, 'blocked'>
-
-// export type ConversationParticipantWithExtras = ConversationParticipantWithConversationSummary & {
-//   unreadCount: number,
-// }
