@@ -157,20 +157,24 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     // Enqueue SPAM_BURST reconcile when the sender added a new row to their count.
+    // BullMQ forbids ':' in custom jobIds (Redis key separator) and throws
+    // synchronously from validateOptions, so a .catch() on the returned Promise
+    // wouldn't contain it — wrap in try/catch to keep enqueue failures out of the
+    // user-facing response.
     if (outcome === 'pending' || outcome === 'new_conversation') {
-      profileTrustQueue
-        .add(
+      try {
+        await profileTrustQueue.add(
           'reconcile-one',
           { kind: 'reconcile-one', profileId: senderProfileId },
           {
-            jobId: `trust:${senderProfileId}`,
+            jobId: `trust-${senderProfileId}`,
             removeOnComplete: { count: 0 },
             removeOnFail: { count: 100 },
           }
         )
-        .catch((err: unknown) =>
-          fastify.log.error({ err, senderProfileId }, 'profile-trust enqueue failed')
-        )
+      } catch (err) {
+        fastify.log.error({ err, senderProfileId }, 'profile-trust enqueue failed')
+      }
     }
 
     if (!conversation) {

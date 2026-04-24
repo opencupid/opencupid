@@ -1176,7 +1176,7 @@ describe('profile-trust integration', () => {
     expect(spy).toHaveBeenCalledWith(
       'reconcile-one',
       { kind: 'reconcile-one', profileId: senderProfileId },
-      expect.objectContaining({ jobId: `trust:${senderProfileId}` })
+      expect.objectContaining({ jobId: `trust-${senderProfileId}` })
     )
     // resolveConversation received createAsPending: true
     expect(mockMessageService.resolveConversation).toHaveBeenCalledWith(
@@ -1243,7 +1243,7 @@ describe('profile-trust integration', () => {
     expect(spy).toHaveBeenCalledWith(
       'reconcile-one',
       { kind: 'reconcile-one', profileId: senderProfileId },
-      expect.objectContaining({ jobId: `trust:${senderProfileId}` })
+      expect.objectContaining({ jobId: `trust-${senderProfileId}` })
     )
 
     spy.mockRestore()
