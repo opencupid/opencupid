@@ -49,7 +49,7 @@ const cleanMessageContent = computed(() => {
         v-if="message.sender.thumbnail"
         :src="message.sender.thumbnail.url"
         :alt="message.sender.publicName"
-        class="rounded"
+        class="fitted-image rounded"
       />
     </div>
     <div class="flex-grow-1 overflow-hidden">
@@ -62,3 +62,13 @@ const cleanMessageContent = computed(() => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.fitted-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+}
+</style>

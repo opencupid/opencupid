@@ -34,7 +34,7 @@ const haveConversations = computed(() => props.conversations.length > 0)
               v-if="convo.partnerProfile.thumbnail"
               :src="convo.partnerProfile.thumbnail.url"
               :alt="convo.partnerProfile.publicName"
-              class="img-fluid rounded"
+              class="fitted-image rounded"
             />
           </span>
         </div>
@@ -77,5 +77,12 @@ const haveConversations = computed(() => props.conversations.length > 0)
 .disabled {
   opacity: 0.5;
   pointer-events: none;
+}
+.fitted-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
 }
 </style>

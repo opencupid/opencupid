@@ -16,7 +16,7 @@ function makeMessage(overrides: Partial<MessageDTO> = {}): MessageDTO {
     senderId: 'p2',
     content: 'Hey there!',
     messageType: 'text/plain',
-    createdAt: new Date() as unknown as Date,
+    createdAt: new Date(),
     sender: {
       id: 'p2',
       publicName: 'Alice',
