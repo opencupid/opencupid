@@ -1081,6 +1081,11 @@ describe('POST /messages', () => {
       'hello',
       'text/plain'
     )
+    // System sender is never quarantined: computeSendOutcome must be called with
+    // senderIsQuarantined=false so the bulk-send path never produces 'pending'.
+    for (const call of mockComputeSendOutcome.mock.calls) {
+      expect(call[3]).toBe(false)
+    }
     expect(mockMessageService.acceptConversationOnReply).not.toHaveBeenCalled()
   })
 
