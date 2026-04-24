@@ -9,8 +9,8 @@ import { type MessageRecipient, type OwnerProfile } from '@zod/profile/profile.d
 
 import TagList from '@/features/shared/profiledisplay/TagList.vue'
 import LanguageList from '@/features/shared/profiledisplay/LanguageList.vue'
-import StoreErrorOverlay from '@/features/shared/ui/StoreErrorOverlay.vue'
 import IconCall from '@/assets/icons/interface/call.svg'
+import IconSend from '@/assets/icons/interface/send.svg'
 import SendModeSelector from './SendModeSelector.vue'
 import { useToast } from 'vue-toastification'
 import VoiceRecorder from './VoiceRecorder.vue'
@@ -108,10 +108,15 @@ const handleKeyPress = (event: KeyboardEvent) => {
   }
 }
 
+const isSending = ref(false)
+
 async function handleSendMessage() {
   const trimmedContent = content.value.trim()
   if (trimmedContent === '') return
+  isSending.value = true
   const result = await messageStore.sendMessage(props.recipientProfile.id, trimmedContent)
+  isSending.value = false
+  focusTextarea()
   if (result.success) {
     emit('message:sent', result.data!)
     content.value = '' // Clear the input after sending
@@ -173,11 +178,6 @@ function handleVoiceRecordingError(error: string) {
 
 <template>
   <div class="w-100">
-    <StoreErrorOverlay
-      v-if="messageStore.error"
-      :error="messageStore.error"
-    />
-
     <div class="mb-2">
       <div
         v-if="showTags"
@@ -248,11 +248,12 @@ function handleVoiceRecordingError(error: string) {
             <BButton
               v-if="sendMode === 'click'"
               variant="primary"
-              size="sm"
+              size="md"
               @click="handleSendMessage"
-              :disabled="content.trim() === '' || isVoiceActive"
+              :disabled="content.trim() === '' || isVoiceActive || isSending"
               :title="$t('messaging.send_message_button')"
             >
+              <IconSend class="svg-icon" />
               {{ $t('messaging.send_message_button') }}
             </BButton>
             <small
