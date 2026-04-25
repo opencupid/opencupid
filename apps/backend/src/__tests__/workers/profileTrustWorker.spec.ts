@@ -89,6 +89,20 @@ describe('processProfileTrustJob', () => {
       expect(profileTrustQueue.add).not.toHaveBeenCalled()
     })
 
+    it('excludes admin-set flags from the auto-clear scan', async () => {
+      vi.mocked(prisma.profileTrustFlag.findMany).mockResolvedValue([] as any)
+      await processProfileTrustJob(mockJob<ProfileTrustJobData>({ kind: 'clear-unvetted-window' }))
+      expect(prisma.profileTrustFlag.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            reason: 'PROFILE_UNVETTED',
+            clearedAt: null,
+            flaggedBy: { not: { startsWith: 'admin:' } },
+          }),
+        })
+      )
+    })
+
     it('continues when one profile fails', async () => {
       vi.mocked(prisma.profileTrustFlag.findMany).mockResolvedValue([
         { id: 'f1', profileId: 'p1' },

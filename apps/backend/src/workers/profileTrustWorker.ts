@@ -25,7 +25,12 @@ export async function processProfileTrustJob(job: Job<ProfileTrustJobData>): Pro
   if (data.kind === 'clear-unvetted-window') {
     const cutoff = new Date(Date.now() - UNVETTED_WINDOW_MS)
     const flagsToClear = await prisma.profileTrustFlag.findMany({
-      where: { reason: 'PROFILE_UNVETTED', clearedAt: null, flaggedAt: { lte: cutoff } },
+      where: {
+        reason: 'PROFILE_UNVETTED',
+        clearedAt: null,
+        flaggedAt: { lte: cutoff },
+        flaggedBy: { not: { startsWith: 'admin:' } },
+      },
       select: { id: true, profileId: true },
     })
     let failed = 0
