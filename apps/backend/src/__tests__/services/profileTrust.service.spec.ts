@@ -185,7 +185,7 @@ describe('ProfileTrustService', () => {
 
       expect(profileTrustFlagUpdateMany).toHaveBeenCalledWith({
         where: { profileId: 'profile-1', reason: 'SPAM_BURST', clearedAt: null },
-        data: { clearedAt: expect.any(Date) },
+        data: { clearedAt: expect.any(Date), clearedBy: 'heuristic:spam_burst_below_threshold' },
       })
       expect(queueAdd).toHaveBeenCalledWith(
         'promote-pendings',

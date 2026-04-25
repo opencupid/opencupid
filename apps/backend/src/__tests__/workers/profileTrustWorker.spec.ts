@@ -109,7 +109,7 @@ describe('processProfileTrustJob', () => {
       expect(prisma.profileTrustFlag.update).toHaveBeenCalledTimes(1)
       expect(prisma.profileTrustFlag.update).toHaveBeenCalledWith({
         where: { id: 'f2' },
-        data: { clearedAt: expect.any(Date) },
+        data: { clearedAt: expect.any(Date), clearedBy: 'system:unvetted_window' },
       })
     })
   })

@@ -107,7 +107,7 @@ export class ProfileTrustService {
     } else if (alreadyFlagged) {
       await prisma.profileTrustFlag.updateMany({
         where: { profileId, reason: 'SPAM_BURST', clearedAt: null },
-        data: { clearedAt: new Date() },
+        data: { clearedAt: new Date(), clearedBy: 'heuristic:spam_burst_below_threshold' },
       })
       // Dynamic import — the profile-trust worker (Task 6) imports this service,
       // so a top-level import of the queue would close a cycle once that lands.

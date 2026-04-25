@@ -48,7 +48,7 @@ export async function processProfileTrustJob(job: Job<ProfileTrustJobData>): Pro
         )
         await prisma.profileTrustFlag.update({
           where: { id },
-          data: { clearedAt: new Date() },
+          data: { clearedAt: new Date(), clearedBy: 'system:unvetted_window' },
         })
       } catch (err) {
         failed += 1
