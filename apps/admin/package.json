@@ -20,7 +20,9 @@
   "devDependencies": {
     "@tsconfig/node22": "22.0.5",
     "@vitejs/plugin-vue": "6.0.4",
+    "@vue/test-utils": "2.4.6",
     "@vue/tsconfig": "0.8.1",
+    "jsdom": "28.1.0",
     "typescript": "5.9.3",
     "vite": "6.3.5",
     "vite-plugin-mkcert": "1.17.10",

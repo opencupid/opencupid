@@ -17,6 +17,15 @@ const mockPrisma = vi.hoisted(() => {
     profileActivitySummary: {
       groupBy: vi.fn(),
     },
+    profileTrustFlag: {
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      count: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+    },
     tag: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
@@ -112,6 +121,7 @@ vi.mock('../../api/mappers/messaging.mappers', () => ({
 
 import adminRoutes from '../../api/routes/admin.route'
 import { MockReply } from '../../test-utils/fastify'
+import { ProfileTrustService } from '../../services/profileTrust.service'
 
 class AdminMockFastify {
   public routes: Record<string, any> = {}
@@ -493,6 +503,7 @@ describe('GET /profiles', () => {
         country: 'DE',
         cityName: 'Berlin',
         isActive: true,
+        _count: { trustFlags: 0 },
       },
     ]
     mockPrisma.profile.findMany.mockResolvedValue(mockProfiles)
@@ -503,8 +514,25 @@ describe('GET /profiles', () => {
 
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
-    expect(reply.payload.profiles).toEqual(mockProfiles)
+    expect(reply.payload.profiles).toHaveLength(1)
+    expect(reply.payload.profiles[0].id).toBe('prof1')
+    expect(reply.payload.profiles[0].hasActiveTrustFlag).toBe(false)
     expect(reply.payload.total).toBe(1)
+  })
+
+  it('exposes hasActiveTrustFlag derived from _count.trustFlags', async () => {
+    mockPrisma.profile.findMany.mockResolvedValue([
+      { id: 'p1', _count: { trustFlags: 1 } },
+      { id: 'p2', _count: { trustFlags: 0 } },
+    ])
+    mockPrisma.profile.count.mockResolvedValue(2)
+
+    const handler = fastify.routes['GET /profiles']
+    await handler({ query: {} }, reply)
+
+    const profiles = reply.payload.profiles as Array<{ id: string; hasActiveTrustFlag: boolean }>
+    expect(profiles.find((p) => p.id === 'p1')?.hasActiveTrustFlag).toBe(true)
+    expect(profiles.find((p) => p.id === 'p2')?.hasActiveTrustFlag).toBe(false)
   })
 
   it('filters by country when provided', async () => {
@@ -584,8 +612,20 @@ describe('GET /profiles', () => {
 })
 
 describe('GET /profiles/:id', () => {
-  it('returns profile detail', async () => {
-    const mockProfile = { id: 'prof1', publicName: 'Test', user: { id: 'user1' } }
+  it('returns profile detail with trustFlags and hasActiveTrustFlag derived', async () => {
+    const mockProfile = {
+      id: 'prof1',
+      publicName: 'Test',
+      user: { id: 'user1' },
+      trustFlags: [
+        {
+          id: 'f1',
+          reason: 'PROFILE_UNVETTED',
+          flaggedBy: 'admin:manual',
+          evidence: { note: 'hold' },
+        },
+      ],
+    }
     mockPrisma.profile.findUnique.mockResolvedValue(mockProfile)
 
     const handler = fastify.routes['GET /profiles/:id']
@@ -593,7 +633,16 @@ describe('GET /profiles/:id', () => {
 
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
-    expect(reply.payload.profile).toEqual(mockProfile)
+    expect(reply.payload.profile.id).toBe('prof1')
+    expect(reply.payload.profile.trustFlags).toHaveLength(1)
+    expect(reply.payload.profile.hasActiveTrustFlag).toBe(true)
+  })
+
+  it('reports hasActiveTrustFlag=false when no flags', async () => {
+    mockPrisma.profile.findUnique.mockResolvedValue({ id: 'p2', trustFlags: [] })
+    const handler = fastify.routes['GET /profiles/:id']
+    await handler({ params: { id: 'p2' } }, reply)
+    expect(reply.payload.profile.hasActiveTrustFlag).toBe(false)
   })
 
   it('returns 404 for missing profile', async () => {
@@ -1345,6 +1394,212 @@ describe('POST /messages', () => {
     expect(reply.statusCode).toBe(200)
     expect(reply.payload).toMatchObject({ success: true, sent: 0, failed: 1 })
     expect(reply.payload.results).toEqual([{ profileId: 'p1', error: 'INTERNAL_ERROR' }])
+  })
+})
+
+describe('GET /trust-flags', () => {
+  beforeEach(() => {
+    // Reset the singleton so any new mock state takes effect.
+    ;(ProfileTrustService as any).instance = null
+  })
+
+  it('returns flags + total with default pagination, active-only', async () => {
+    mockPrisma.profileTrustFlag.findMany.mockResolvedValue([{ id: 'f1', profileId: 'p1' }])
+    mockPrisma.profileTrustFlag.count.mockResolvedValue(1)
+
+    const handler = fastify.routes['GET /trust-flags']
+    await handler({ query: {} }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    expect(reply.payload.flags).toHaveLength(1)
+    expect(reply.payload.total).toBe(1)
+    expect(mockPrisma.profileTrustFlag.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { clearedAt: null } })
+    )
+  })
+
+  it('respects activeOnly=false to include cleared rows', async () => {
+    mockPrisma.profileTrustFlag.findMany.mockResolvedValue([])
+    mockPrisma.profileTrustFlag.count.mockResolvedValue(0)
+
+    const handler = fastify.routes['GET /trust-flags']
+    await handler({ query: { activeOnly: 'false' } }, reply)
+
+    const call = mockPrisma.profileTrustFlag.findMany.mock.calls[0][0]
+    expect(call.where.clearedAt).toBeUndefined()
+  })
+
+  it('passes the reason filter through', async () => {
+    mockPrisma.profileTrustFlag.findMany.mockResolvedValue([])
+    mockPrisma.profileTrustFlag.count.mockResolvedValue(0)
+
+    const handler = fastify.routes['GET /trust-flags']
+    await handler({ query: { reason: 'SPAM_BURST' } }, reply)
+
+    const call = mockPrisma.profileTrustFlag.findMany.mock.calls[0][0]
+    expect(call.where.reason).toBe('SPAM_BURST')
+  })
+
+  it('clamps pageSize to a sane upper bound', async () => {
+    mockPrisma.profileTrustFlag.findMany.mockResolvedValue([])
+    mockPrisma.profileTrustFlag.count.mockResolvedValue(0)
+
+    const handler = fastify.routes['GET /trust-flags']
+    await handler({ query: { pageSize: '99999' } }, reply)
+
+    expect(reply.payload.pageSize).toBe(100)
+  })
+
+  it('returns 400 on invalid reason', async () => {
+    const handler = fastify.routes['GET /trust-flags']
+    await handler({ query: { reason: 'BOGUS' } }, reply)
+    expect(reply.statusCode).toBe(400)
+    expect(mockPrisma.profileTrustFlag.findMany).not.toHaveBeenCalled()
+  })
+
+  it('treats empty reason= as "no filter"', async () => {
+    mockPrisma.profileTrustFlag.findMany.mockResolvedValue([])
+    mockPrisma.profileTrustFlag.count.mockResolvedValue(0)
+
+    const handler = fastify.routes['GET /trust-flags']
+    await handler({ query: { reason: '' } }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    const call = mockPrisma.profileTrustFlag.findMany.mock.calls[0][0]
+    expect(call.where.reason).toBeUndefined()
+  })
+})
+
+describe('POST /trust-flags/:id/clear', () => {
+  beforeEach(() => {
+    ;(ProfileTrustService as any).instance = null
+    vi.resetModules()
+  })
+
+  it('clears an admin-set flag and returns success', async () => {
+    mockPrisma.profileTrustFlag.findUnique.mockResolvedValue({
+      id: 'f1',
+      profileId: 'p1',
+      clearedAt: null,
+      flaggedBy: 'admin:manual',
+    })
+    mockPrisma.profileTrustFlag.updateMany.mockResolvedValue({ count: 1 })
+    // The service dynamically imports the queue; provide a mock so the import succeeds.
+    vi.doMock('@/queues/profileTrustQueue', () => ({
+      profileTrustQueue: { add: vi.fn().mockResolvedValue({}) },
+    }))
+
+    const handler = fastify.routes['POST /trust-flags/:id/clear']
+    await handler({ params: { id: 'f1' } }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    expect(mockPrisma.profileTrustFlag.updateMany).toHaveBeenCalledWith({
+      where: { id: 'f1', clearedAt: null },
+      data: { clearedAt: expect.any(Date), clearedBy: 'admin:manual' },
+    })
+  })
+
+  it('returns 404 when the flag is missing', async () => {
+    mockPrisma.profileTrustFlag.findUnique.mockResolvedValue(null)
+
+    const handler = fastify.routes['POST /trust-flags/:id/clear']
+    await handler({ params: { id: 'missing' } }, reply)
+
+    expect(reply.statusCode).toBe(404)
+  })
+
+  it('clears heuristic-set flags too', async () => {
+    mockPrisma.profileTrustFlag.findUnique.mockResolvedValue({
+      id: 'f1',
+      profileId: 'p1',
+      clearedAt: null,
+      flaggedBy: 'heuristic:spam_burst',
+    })
+    mockPrisma.profileTrustFlag.updateMany.mockResolvedValue({ count: 1 })
+    vi.doMock('@/queues/profileTrustQueue', () => ({
+      profileTrustQueue: { add: vi.fn().mockResolvedValue({}) },
+    }))
+
+    const handler = fastify.routes['POST /trust-flags/:id/clear']
+    await handler({ params: { id: 'f1' } }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(mockPrisma.profileTrustFlag.updateMany).toHaveBeenCalled()
+  })
+
+  it('returns 409 when the flag is already cleared', async () => {
+    mockPrisma.profileTrustFlag.findUnique.mockResolvedValue({
+      id: 'f1',
+      profileId: 'p1',
+      clearedAt: new Date(),
+      flaggedBy: 'admin:manual',
+    })
+
+    const handler = fastify.routes['POST /trust-flags/:id/clear']
+    await handler({ params: { id: 'f1' } }, reply)
+
+    expect(reply.statusCode).toBe(409)
+  })
+})
+
+describe('POST /profiles/:id/flag', () => {
+  beforeEach(() => {
+    ;(ProfileTrustService as any).instance = null
+  })
+
+  it('creates a new admin flag with the provided note', async () => {
+    mockPrisma.profileTrustFlag.findFirst.mockResolvedValue(null)
+    const created = {
+      id: 'f1',
+      profileId: 'p1',
+      flaggedBy: 'admin:manual',
+      evidence: { note: 'sketchy' },
+    }
+    mockPrisma.profileTrustFlag.create.mockResolvedValue(created)
+
+    const handler = fastify.routes['POST /profiles/:id/flag']
+    await handler({ params: { id: 'p1' }, body: { note: 'sketchy' } }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    expect(reply.payload.flag).toEqual(created)
+  })
+
+  it('is idempotent — returns the existing admin flag without creating', async () => {
+    const existing = {
+      id: 'f1',
+      profileId: 'p1',
+      flaggedBy: 'admin:manual',
+      evidence: { note: 'first' },
+    }
+    mockPrisma.profileTrustFlag.findFirst.mockResolvedValue(existing)
+
+    const handler = fastify.routes['POST /profiles/:id/flag']
+    await handler({ params: { id: 'p1' }, body: { note: 'second' } }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.flag).toEqual(existing)
+    expect(mockPrisma.profileTrustFlag.create).not.toHaveBeenCalled()
+  })
+
+  it('returns 400 on empty note', async () => {
+    const handler = fastify.routes['POST /profiles/:id/flag']
+    await handler({ params: { id: 'p1' }, body: { note: '   ' } }, reply)
+    expect(reply.statusCode).toBe(400)
+  })
+
+  it('returns 400 on note > 1000 chars', async () => {
+    const handler = fastify.routes['POST /profiles/:id/flag']
+    await handler({ params: { id: 'p1' }, body: { note: 'x'.repeat(1001) } }, reply)
+    expect(reply.statusCode).toBe(400)
+  })
+
+  it('returns 400 when body is missing', async () => {
+    const handler = fastify.routes['POST /profiles/:id/flag']
+    await handler({ params: { id: 'p1' } }, reply)
+    expect(reply.statusCode).toBe(400)
   })
 })
 

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useApi, apiRequest } from '../composables/useApi'
+import { flagProfile, clearTrustFlag } from '../composables/useTrustFlags'
 
 interface AdminProfile {
   id: string
@@ -18,6 +20,19 @@ interface AdminProfile {
   userId: string
   user: { email: string | null; phonenumber: string | null } | null
   activitySummary: { segment: string } | null
+  hasActiveTrustFlag: boolean
+}
+
+interface AdminProfileTrustFlag {
+  id: string
+  reason: 'PROFILE_UNVETTED' | 'SPAM_BURST'
+  flaggedAt: string
+  flaggedBy: string
+  evidence: unknown
+}
+
+interface AdminProfileDetail extends AdminProfile {
+  trustFlags: AdminProfileTrustFlag[]
 }
 
 interface ProfilesResponse {
@@ -139,10 +154,10 @@ async function appendProfiles() {
   }
 }
 
-function loadMore() {
+async function loadMore() {
   if (loadingMore.value || loading.value || !hasMore.value) return
   page.value++
-  appendProfiles()
+  await appendProfiles()
 }
 
 const segmentColors: Record<string, string> = {
@@ -156,8 +171,135 @@ function segmentBadgeClass(segment: string) {
   return `badge ${segmentColors[segment] ?? 'bg-secondary'}`
 }
 
-function viewProfile(profile: AdminProfile) {
+const selectedProfileDetail = ref<AdminProfileDetail | null>(null)
+const detailLoading = ref(false)
+const detailError = ref<string | null>(null)
+
+async function viewProfile(profile: AdminProfile) {
   selectedProfile.value = profile
+  selectedProfileDetail.value = null
+  detailError.value = null
+  detailLoading.value = true
+  try {
+    const res = await apiRequest<{ success: true; profile: AdminProfileDetail }>(
+      `/admin/profiles/${profile.id}`
+    )
+    selectedProfileDetail.value = res.profile
+  } catch (err) {
+    detailError.value = err instanceof Error ? err.message : 'failed to load profile'
+  } finally {
+    detailLoading.value = false
+  }
+}
+
+async function viewProfileById(id: string) {
+  const inList = profiles.value.find((p) => p.id === id)
+  if (inList) return viewProfile(inList)
+
+  detailLoading.value = true
+  detailError.value = null
+  try {
+    const res = await apiRequest<{ success: true; profile: AdminProfileDetail }>(
+      `/admin/profiles/${id}`
+    )
+    selectedProfile.value = res.profile
+    selectedProfileDetail.value = res.profile
+  } catch (err) {
+    detailError.value = err instanceof Error ? err.message : 'failed to load profile'
+  } finally {
+    detailLoading.value = false
+  }
+}
+
+const activeFlags = computed(() => selectedProfileDetail.value?.trustFlags ?? [])
+
+// Quarantine flow (from no-flag → write admin flag)
+const quarantineOpen = ref(false)
+const quarantineNote = ref('')
+const quarantineSubmitting = ref(false)
+const quarantineError = ref<string | null>(null)
+
+function openQuarantineForm() {
+  quarantineOpen.value = true
+  quarantineNote.value = ''
+  quarantineError.value = null
+}
+
+function cancelQuarantine() {
+  quarantineOpen.value = false
+}
+
+async function submitQuarantine() {
+  if (!selectedProfile.value || quarantineNote.value.trim().length === 0) return
+  quarantineSubmitting.value = true
+  quarantineError.value = null
+  try {
+    const current = selectedProfile.value
+    const res = await flagProfile(current.id, quarantineNote.value.trim())
+    selectedProfile.value = { ...current, hasActiveTrustFlag: true }
+    const idx = profiles.value.findIndex((p) => p.id === current.id)
+    const row = idx >= 0 ? profiles.value[idx] : undefined
+    if (row) {
+      profiles.value[idx] = { ...row, hasActiveTrustFlag: true }
+    }
+    if (selectedProfileDetail.value) {
+      selectedProfileDetail.value = {
+        ...selectedProfileDetail.value,
+        hasActiveTrustFlag: true,
+        trustFlags: [...selectedProfileDetail.value.trustFlags, res.flag],
+      }
+    }
+    quarantineOpen.value = false
+  } catch (err) {
+    quarantineError.value = err instanceof Error ? err.message : 'failed to quarantine'
+  } finally {
+    quarantineSubmitting.value = false
+  }
+}
+
+// Per-flag clear flow. The confirm modal targets one flag at a time.
+const pendingClearFlagId = ref<string | null>(null)
+const pendingClearFlag = computed(() =>
+  selectedProfileDetail.value?.trustFlags.find((f) => f.id === pendingClearFlagId.value) ?? null
+)
+const clearSubmitting = ref(false)
+const clearErrorDetail = ref<string | null>(null)
+
+function askClearFlag(flagId: string) {
+  pendingClearFlagId.value = flagId
+  clearErrorDetail.value = null
+}
+
+async function confirmClearFlag() {
+  const flagId = pendingClearFlagId.value
+  if (!flagId || !selectedProfile.value) return
+  clearSubmitting.value = true
+  clearErrorDetail.value = null
+  try {
+    await clearTrustFlag(flagId)
+    if (selectedProfileDetail.value) {
+      const remaining = selectedProfileDetail.value.trustFlags.filter((f) => f.id !== flagId)
+      selectedProfileDetail.value = {
+        ...selectedProfileDetail.value,
+        trustFlags: remaining,
+        hasActiveTrustFlag: remaining.length > 0,
+      }
+      if (remaining.length === 0) {
+        const current = selectedProfile.value
+        selectedProfile.value = { ...current, hasActiveTrustFlag: false }
+        const idx = profiles.value.findIndex((p) => p.id === current.id)
+        const row = idx >= 0 ? profiles.value[idx] : undefined
+        if (row) {
+          profiles.value[idx] = { ...row, hasActiveTrustFlag: false }
+        }
+      }
+    }
+    pendingClearFlagId.value = null
+  } catch (err) {
+    clearErrorDetail.value = err instanceof Error ? err.message : 'clear failed'
+  } finally {
+    clearSubmitting.value = false
+  }
 }
 
 function resetAndFetch() {
@@ -274,6 +416,8 @@ async function sendBulkMessage() {
 const sentinel = ref<HTMLElement | null>(null)
 let observer: IntersectionObserver | null = null
 
+const route = useRoute()
+
 onMounted(() => {
   document.addEventListener('click', onClickOutside)
   fetchCountries()
@@ -286,7 +430,18 @@ onMounted(() => {
     { rootMargin: '200px' }
   )
   if (sentinel.value) observer.observe(sentinel.value)
+
+  if (typeof route.query.profileId === 'string') {
+    viewProfileById(route.query.profileId)
+  }
 })
+
+watch(
+  () => route.query.profileId,
+  (id) => {
+    if (typeof id === 'string') viewProfileById(id)
+  }
+)
 
 onUnmounted(() => {
   document.removeEventListener('click', onClickOutside)
@@ -457,6 +612,7 @@ onUnmounted(() => {
           <tr
             v-for="profile in sortedProfiles"
             :key="profile.id"
+            :class="{ 'table-warning': profile.hasActiveTrustFlag }"
             style="cursor: pointer"
             @click="viewProfile(profile)"
           >
@@ -526,167 +682,313 @@ onUnmounted(() => {
     </div>
 
     <!-- Profile Detail Modal -->
-    <div
-      v-if="selectedProfile"
-      class="modal d-block"
-      tabindex="-1"
-      @click.self="selectedProfile = null"
-      @keydown.escape="selectedProfile = null"
-      @keydown.enter.prevent="selectedProfile = null"
-    >
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Profile Detail</h5>
-            <button
-              type="button"
-              class="btn-close"
-              @click="selectedProfile = null"
-            ></button>
-          </div>
-          <div class="modal-body">
-            <dl class="row mb-0">
-              <dt class="col-sm-4">ID</dt>
-              <dd class="col-sm-8">
-                <code>{{ selectedProfile.id }}</code>
-              </dd>
-              <dt class="col-sm-4">Name</dt>
-              <dd class="col-sm-8">{{ selectedProfile.publicName || '-' }}</dd>
-              <dt class="col-sm-4">User Email</dt>
-              <dd class="col-sm-8">{{ selectedProfile.user?.email || '-' }}</dd>
-              <dt class="col-sm-4">User Phone</dt>
-              <dd class="col-sm-8">{{ selectedProfile.user?.phonenumber || '-' }}</dd>
-              <dt class="col-sm-4">Country</dt>
-              <dd class="col-sm-8">{{ selectedProfile.country || '-' }}</dd>
-              <dt class="col-sm-4">City</dt>
-              <dd class="col-sm-8">{{ selectedProfile.cityName || '-' }}</dd>
-              <dt class="col-sm-4">Gender</dt>
-              <dd class="col-sm-8">{{ selectedProfile.gender || '-' }}</dd>
-              <dt class="col-sm-4">Social Active</dt>
-              <dd class="col-sm-8">{{ selectedProfile.isSocialActive ? 'Yes' : 'No' }}</dd>
-              <dt class="col-sm-4">Dating Active</dt>
-              <dd class="col-sm-8">{{ selectedProfile.isDatingActive ? 'Yes' : 'No' }}</dd>
-              <dt class="col-sm-4">Onboarded</dt>
-              <dd class="col-sm-8">{{ selectedProfile.isOnboarded ? 'Yes' : 'No' }}</dd>
-              <dt class="col-sm-4">Active</dt>
-              <dd class="col-sm-8">{{ selectedProfile.isActive ? 'Yes' : 'No' }}</dd>
-              <dt class="col-sm-4">Reported</dt>
-              <dd class="col-sm-8">{{ selectedProfile.isReported ? 'Yes' : 'No' }}</dd>
-              <dt class="col-sm-4">Blocked</dt>
-              <dd class="col-sm-8">{{ selectedProfile.isBlocked ? 'Yes' : 'No' }}</dd>
-              <dt class="col-sm-4">Activity Segment</dt>
-              <dd class="col-sm-8">{{ selectedProfile.activitySummary?.segment || '—' }}</dd>
-              <dt class="col-sm-4">Created</dt>
-              <dd class="col-sm-8">{{ new Date(selectedProfile.createdAt).toLocaleString() }}</dd>
-            </dl>
-          </div>
-          <div class="modal-footer">
-            <button
-              class="btn btn-secondary"
-              @click="selectedProfile = null"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div
-      v-if="selectedProfile"
-      class="modal-backdrop show"
-    ></div>
+    <div v-if="selectedProfile">
+      <div
+        class="modal d-block"
+        tabindex="-1"
+        @click.self="selectedProfile = null"
+        @keydown.escape="selectedProfile = null"
+        @keydown.enter.prevent="selectedProfile = null"
+      >
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Profile Detail</h5>
+              <button
+                type="button"
+                class="btn-close"
+                @click="selectedProfile = null"
+              ></button>
+            </div>
+            <div class="modal-body">
+              <dl class="row mb-0">
+                <dt class="col-sm-4">ID</dt>
+                <dd class="col-sm-8">
+                  <code>{{ selectedProfile.id }}</code>
+                </dd>
+                <dt class="col-sm-4">Name</dt>
+                <dd class="col-sm-8">{{ selectedProfile.publicName || '-' }}</dd>
+                <dt class="col-sm-4">User Email</dt>
+                <dd class="col-sm-8">{{ selectedProfile.user?.email || '-' }}</dd>
+                <dt class="col-sm-4">User Phone</dt>
+                <dd class="col-sm-8">{{ selectedProfile.user?.phonenumber || '-' }}</dd>
+                <dt class="col-sm-4">Country</dt>
+                <dd class="col-sm-8">{{ selectedProfile.country || '-' }}</dd>
+                <dt class="col-sm-4">City</dt>
+                <dd class="col-sm-8">{{ selectedProfile.cityName || '-' }}</dd>
+                <dt class="col-sm-4">Gender</dt>
+                <dd class="col-sm-8">{{ selectedProfile.gender || '-' }}</dd>
+                <dt class="col-sm-4">Social Active</dt>
+                <dd class="col-sm-8">{{ selectedProfile.isSocialActive ? 'Yes' : 'No' }}</dd>
+                <dt class="col-sm-4">Dating Active</dt>
+                <dd class="col-sm-8">{{ selectedProfile.isDatingActive ? 'Yes' : 'No' }}</dd>
+                <dt class="col-sm-4">Onboarded</dt>
+                <dd class="col-sm-8">{{ selectedProfile.isOnboarded ? 'Yes' : 'No' }}</dd>
+                <dt class="col-sm-4">Active</dt>
+                <dd class="col-sm-8">{{ selectedProfile.isActive ? 'Yes' : 'No' }}</dd>
+                <dt class="col-sm-4">Reported</dt>
+                <dd class="col-sm-8">{{ selectedProfile.isReported ? 'Yes' : 'No' }}</dd>
+                <dt class="col-sm-4">Blocked</dt>
+                <dd class="col-sm-8">{{ selectedProfile.isBlocked ? 'Yes' : 'No' }}</dd>
+                <dt class="col-sm-4">Activity Segment</dt>
+                <dd class="col-sm-8">{{ selectedProfile.activitySummary?.segment || '—' }}</dd>
+                <dt class="col-sm-4">Created</dt>
+                <dd class="col-sm-8">{{ new Date(selectedProfile.createdAt).toLocaleString() }}</dd>
+              </dl>
 
-    <!-- Send Message Modal -->
-    <div
-      v-if="showSendMessageModal"
-      class="modal d-block"
-      tabindex="-1"
-      @click.self="closeSendMessageModal"
-    >
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Send message</h5>
-            <button
-              type="button"
-              class="btn-close"
-              :disabled="sending"
-              @click="closeSendMessageModal"
-            ></button>
-          </div>
-          <div class="modal-body">
-            <div
-              v-if="sendResult"
-              class="alert alert-success"
-            >
-              Sent to {{ sendResult.sent }} profile{{ sendResult.sent === 1 ? '' : 's' }}.
-              <span v-if="sendResult.failed > 0"> {{ sendResult.failed }} failed. </span>
-            </div>
-            <div
-              v-if="sendError"
-              class="alert alert-danger"
-            >
-              {{ sendError }}
-            </div>
-            <template v-if="!sendResult">
-              <div class="mb-3">
-                <label class="form-label fw-semibold">
-                  Recipients ({{ selectedProfilesList.length }})
-                </label>
+              <div class="mt-3">
+                <h6 class="mb-2">Trust</h6>
                 <div
-                  class="border rounded p-2 bg-light"
-                  style="max-height: 150px; overflow-y: auto"
+                  v-if="detailLoading"
+                  class="text-muted small"
                 >
-                  <span
-                    v-for="p in selectedProfilesList"
-                    :key="p.id"
-                    class="badge bg-secondary me-1 mb-1"
+                  Loading trust info...
+                </div>
+                <div
+                  v-else-if="detailError"
+                  class="alert alert-danger small mb-0"
+                >
+                  {{ detailError }}
+                </div>
+                <template v-else>
+                  <div
+                    v-if="activeFlags.length === 0"
+                    class="text-muted small"
                   >
-                    {{ p.publicName || p.id }}
-                  </span>
+                    No active trust flags.
+                  </div>
+                  <div
+                    v-for="f in activeFlags"
+                    v-else
+                    :key="f.id"
+                    class="border rounded p-2 mb-2 d-flex align-items-start gap-2"
+                  >
+                    <div class="flex-grow-1">
+                      <div>
+                        <strong>{{ f.reason }}</strong>
+                        <code class="ms-2 small">{{ f.flaggedBy }}</code>
+                      </div>
+                      <div class="small text-muted">
+                        {{ new Date(f.flaggedAt).toLocaleString() }}
+                      </div>
+                      <div
+                        v-if="(f.evidence as { note?: string })?.note"
+                        class="small"
+                      >
+                        Note: {{ (f.evidence as { note: string }).note }}
+                      </div>
+                    </div>
+                    <button
+                      class="btn btn-sm btn-outline-primary"
+                      @click="askClearFlag(f.id)"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                </template>
+              </div>
+            </div>
+            <div class="modal-footer flex-wrap">
+              <div
+                v-if="quarantineOpen"
+                class="w-100"
+              >
+                <div
+                  v-if="quarantineError"
+                  class="alert alert-danger small"
+                >
+                  {{ quarantineError }}
+                </div>
+                <textarea
+                  v-model="quarantineNote"
+                  class="form-control mb-2"
+                  rows="3"
+                  placeholder="Reason for manual quarantine (1–1000 chars)"
+                  :disabled="quarantineSubmitting"
+                  @keydown.enter.stop
+                ></textarea>
+                <div class="d-flex justify-content-end gap-2">
+                  <button
+                    class="btn btn-secondary"
+                    :disabled="quarantineSubmitting"
+                    @click="cancelQuarantine"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    class="btn btn-warning"
+                    :disabled="quarantineSubmitting || quarantineNote.trim().length === 0"
+                    @click="submitQuarantine"
+                  >
+                    {{ quarantineSubmitting ? 'Submitting...' : 'Confirm quarantine' }}
+                  </button>
                 </div>
               </div>
-              <div class="mb-0">
-                <label
-                  for="bulk-message-content"
-                  class="form-label fw-semibold"
+              <template v-else>
+                <button
+                  v-if="activeFlags.length === 0 && !detailLoading"
+                  class="btn btn-warning me-auto"
+                  @click="openQuarantineForm"
                 >
-                  Message
-                </label>
-                <textarea
-                  id="bulk-message-content"
-                  v-model="messageContent"
-                  class="form-control"
-                  rows="6"
-                  :disabled="sending"
-                  placeholder="Write your message..."
-                ></textarea>
-              </div>
-            </template>
-          </div>
-          <div class="modal-footer">
-            <button
-              class="btn btn-secondary"
-              :disabled="sending"
-              @click="closeSendMessageModal"
-            >
-              {{ sendResult ? 'Close' : 'Cancel' }}
-            </button>
-            <button
-              v-if="!sendResult"
-              class="btn btn-primary"
-              :disabled="sending || !messageContent.trim() || selectedProfilesList.length === 0"
-              @click="sendBulkMessage"
-            >
-              {{ sending ? 'Sending...' : 'Send' }}
-            </button>
+                  Quarantine
+                </button>
+                <button
+                  class="btn btn-secondary"
+                  @click="selectedProfile = null"
+                >
+                  Close
+                </button>
+              </template>
+            </div>
           </div>
         </div>
       </div>
+      <div class="modal-backdrop show"></div>
     </div>
-    <div
-      v-if="showSendMessageModal"
-      class="modal-backdrop show"
-    ></div>
+
+    <!-- Confirm clear quarantine modal -->
+    <div v-if="pendingClearFlagId">
+      <div
+        class="modal d-block"
+        tabindex="-1"
+        @click.self="pendingClearFlagId = null"
+      >
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Clear trust flag?</h5>
+            </div>
+            <div class="modal-body">
+              <p class="mb-2">
+                Profile:
+                <strong>{{ selectedProfile?.publicName || selectedProfile?.id }}</strong>
+              </p>
+              <p class="mb-2">
+                Flag: <strong>{{ pendingClearFlag?.reason }}</strong>
+                <code class="ms-2 small">{{ pendingClearFlag?.flaggedBy }}</code>
+              </p>
+              <p class="text-muted small mb-0">
+                Held messages on this profile will be released once no active flags remain.
+                Clearing a SPAM_BURST flag does <em>not</em> revive its discarded conversations.
+              </p>
+              <div
+                v-if="clearErrorDetail"
+                class="alert alert-danger mt-2 mb-0"
+              >
+                {{ clearErrorDetail }}
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button
+                class="btn btn-secondary"
+                :disabled="clearSubmitting"
+                @click="pendingClearFlagId = null"
+              >
+                Cancel
+              </button>
+              <button
+                class="btn btn-primary"
+                :disabled="clearSubmitting"
+                @click="confirmClearFlag"
+              >
+                {{ clearSubmitting ? 'Clearing...' : 'Clear flag' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-backdrop show"></div>
+    </div>
+
+    <!-- Send Message Modal -->
+    <div v-if="showSendMessageModal">
+      <div
+        class="modal d-block"
+        tabindex="-1"
+        @click.self="closeSendMessageModal"
+      >
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Send message</h5>
+              <button
+                type="button"
+                class="btn-close"
+                :disabled="sending"
+                @click="closeSendMessageModal"
+              ></button>
+            </div>
+            <div class="modal-body">
+              <div
+                v-if="sendResult"
+                class="alert alert-success"
+              >
+                Sent to {{ sendResult.sent }} profile{{ sendResult.sent === 1 ? '' : 's' }}.
+                <span v-if="sendResult.failed > 0"> {{ sendResult.failed }} failed. </span>
+              </div>
+              <div
+                v-if="sendError"
+                class="alert alert-danger"
+              >
+                {{ sendError }}
+              </div>
+              <template v-if="!sendResult">
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">
+                    Recipients ({{ selectedProfilesList.length }})
+                  </label>
+                  <div
+                    class="border rounded p-2 bg-light"
+                    style="max-height: 150px; overflow-y: auto"
+                  >
+                    <span
+                      v-for="p in selectedProfilesList"
+                      :key="p.id"
+                      class="badge bg-secondary me-1 mb-1"
+                    >
+                      {{ p.publicName || p.id }}
+                    </span>
+                  </div>
+                </div>
+                <div class="mb-0">
+                  <label
+                    for="bulk-message-content"
+                    class="form-label fw-semibold"
+                  >
+                    Message
+                  </label>
+                  <textarea
+                    id="bulk-message-content"
+                    v-model="messageContent"
+                    class="form-control"
+                    rows="6"
+                    :disabled="sending"
+                    placeholder="Write your message..."
+                  ></textarea>
+                </div>
+              </template>
+            </div>
+            <div class="modal-footer">
+              <button
+                class="btn btn-secondary"
+                :disabled="sending"
+                @click="closeSendMessageModal"
+              >
+                {{ sendResult ? 'Close' : 'Cancel' }}
+              </button>
+              <button
+                v-if="!sendResult"
+                class="btn btn-primary"
+                :disabled="sending || !messageContent.trim() || selectedProfilesList.length === 0"
+                @click="sendBulkMessage"
+              >
+                {{ sending ? 'Sending...' : 'Send' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-backdrop show"></div>
+    </div>
   </div>
 </template>

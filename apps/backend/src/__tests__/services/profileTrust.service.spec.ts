@@ -4,6 +4,11 @@ vi.mock('../../lib/prisma', () => ({
   prisma: {
     profileTrustFlag: {
       findFirst: vi.fn(),
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      count: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
     },
   },
 }))
@@ -185,7 +190,7 @@ describe('ProfileTrustService', () => {
 
       expect(profileTrustFlagUpdateMany).toHaveBeenCalledWith({
         where: { profileId: 'profile-1', reason: 'SPAM_BURST', clearedAt: null },
-        data: { clearedAt: expect.any(Date) },
+        data: { clearedAt: expect.any(Date), clearedBy: 'heuristic:spam_burst_below_threshold' },
       })
       expect(queueAdd).toHaveBeenCalledWith(
         'promote-pendings',
@@ -273,6 +278,252 @@ describe('ProfileTrustService', () => {
         expect.any(Function),
         expect.objectContaining({ isolationLevel: 'Serializable' })
       )
+    })
+  })
+
+  describe('listTrustFlags', () => {
+    const flagFindMany = vi.fn()
+    const flagCount = vi.fn()
+
+    beforeEach(() => {
+      // Re-attach methods because the reconcileSpamBurst describe block
+      // overwrites `prisma.profileTrustFlag` with a partial shape.
+      ;(prisma as any).profileTrustFlag = {
+        ...(prisma as any).profileTrustFlag,
+        findMany: flagFindMany,
+        count: flagCount,
+      }
+      flagFindMany.mockReset()
+      flagCount.mockReset()
+    })
+
+    it('queries active flags by default, ordered by flaggedAt DESC, with profile join', async () => {
+      flagFindMany.mockResolvedValue([])
+      flagCount.mockResolvedValue(0)
+
+      await svc.listTrustFlags({ page: 1, pageSize: 25 })
+
+      expect(prisma.profileTrustFlag.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { clearedAt: null },
+          orderBy: { flaggedAt: 'desc' },
+          skip: 0,
+          take: 25,
+          include: expect.objectContaining({
+            profile: { select: { id: true, publicName: true, country: true, cityName: true } },
+          }),
+        })
+      )
+      expect(prisma.profileTrustFlag.count).toHaveBeenCalledWith({ where: { clearedAt: null } })
+    })
+
+    it('includes cleared rows when activeOnly is false', async () => {
+      flagFindMany.mockResolvedValue([])
+      flagCount.mockResolvedValue(0)
+
+      await svc.listTrustFlags({ page: 1, pageSize: 10, activeOnly: false })
+
+      const call = flagFindMany.mock.calls[0][0] as any
+      expect(call.where.clearedAt).toBeUndefined()
+    })
+
+    it('applies a reason filter when provided', async () => {
+      flagFindMany.mockResolvedValue([])
+      flagCount.mockResolvedValue(0)
+
+      await svc.listTrustFlags({ page: 1, pageSize: 10, reason: 'SPAM_BURST' })
+
+      const call = flagFindMany.mock.calls[0][0] as any
+      expect(call.where.reason).toBe('SPAM_BURST')
+    })
+
+    it('paginates via skip/take', async () => {
+      flagFindMany.mockResolvedValue([])
+      flagCount.mockResolvedValue(0)
+
+      await svc.listTrustFlags({ page: 3, pageSize: 25 })
+
+      const call = flagFindMany.mock.calls[0][0] as any
+      expect(call.skip).toBe(50)
+      expect(call.take).toBe(25)
+    })
+
+    it('returns the queried flags and total count', async () => {
+      const sample = [{ id: 'f1', profileId: 'p1' } as any]
+      flagFindMany.mockResolvedValue(sample)
+      flagCount.mockResolvedValue(7)
+
+      const result = await svc.listTrustFlags({ page: 1, pageSize: 25 })
+
+      expect(result.flags).toEqual(sample)
+      expect(result.total).toBe(7)
+    })
+  })
+
+  describe('clearFlag', () => {
+    const flagFindUnique = vi.fn()
+    const flagUpdateMany = vi.fn()
+    const queueAdd = vi.fn()
+
+    beforeEach(() => {
+      ;(prisma as any).profileTrustFlag = {
+        ...(prisma as any).profileTrustFlag,
+        findUnique: flagFindUnique,
+        updateMany: flagUpdateMany,
+      }
+      vi.doMock('@/queues/profileTrustQueue', () => ({
+        profileTrustQueue: { add: queueAdd },
+      }))
+      flagFindUnique.mockReset()
+      flagUpdateMany.mockReset()
+      queueAdd.mockReset()
+    })
+
+    it('writes clearedAt + clearedBy via conditional updateMany, enqueues promote-pendings, returns "cleared"', async () => {
+      flagFindUnique.mockResolvedValue({
+        id: 'f1',
+        profileId: 'p1',
+        clearedAt: null,
+        flaggedBy: 'admin:manual',
+      })
+      flagUpdateMany.mockResolvedValue({ count: 1 })
+      queueAdd.mockResolvedValue({})
+
+      const result = await svc.clearFlag('f1', 'admin:manual')
+
+      expect(result).toBe('cleared')
+      expect(flagUpdateMany).toHaveBeenCalledWith({
+        where: { id: 'f1', clearedAt: null },
+        data: { clearedAt: expect.any(Date), clearedBy: 'admin:manual' },
+      })
+      expect(queueAdd).toHaveBeenCalledWith(
+        'promote-pendings',
+        { kind: 'promote-pendings', profileId: 'p1' },
+        expect.objectContaining({ jobId: 'promote-pendings-p1' })
+      )
+    })
+
+    it('returns "not_found" when the flag is missing', async () => {
+      flagFindUnique.mockResolvedValue(null)
+      expect(await svc.clearFlag('missing', 'admin:manual')).toBe('not_found')
+      expect(flagUpdateMany).not.toHaveBeenCalled()
+    })
+
+    it('returns "already_cleared" when the flag is already cleared at read time', async () => {
+      flagFindUnique.mockResolvedValue({
+        id: 'f1',
+        profileId: 'p1',
+        clearedAt: new Date(),
+        flaggedBy: 'admin:manual',
+      })
+      expect(await svc.clearFlag('f1', 'admin:manual')).toBe('already_cleared')
+      expect(flagUpdateMany).not.toHaveBeenCalled()
+    })
+
+    it('returns "already_cleared" when a concurrent caller wins the race (count=0)', async () => {
+      flagFindUnique.mockResolvedValue({
+        id: 'f1',
+        profileId: 'p1',
+        clearedAt: null,
+        flaggedBy: 'admin:manual',
+      })
+      flagUpdateMany.mockResolvedValue({ count: 0 })
+
+      const result = await svc.clearFlag('f1', 'admin:manual')
+
+      expect(result).toBe('already_cleared')
+      expect(queueAdd).not.toHaveBeenCalled()
+    })
+
+    it('clears heuristic-set flags too (admin override)', async () => {
+      flagFindUnique.mockResolvedValue({
+        id: 'f1',
+        profileId: 'p1',
+        clearedAt: null,
+        flaggedBy: 'heuristic:spam_burst',
+      })
+      flagUpdateMany.mockResolvedValue({ count: 1 })
+      queueAdd.mockResolvedValue({})
+
+      const result = await svc.clearFlag('f1', 'admin:manual')
+
+      expect(result).toBe('cleared')
+      expect(flagUpdateMany).toHaveBeenCalledWith({
+        where: { id: 'f1', clearedAt: null },
+        data: { clearedAt: expect.any(Date), clearedBy: 'admin:manual' },
+      })
+    })
+  })
+
+  describe('flagProfile', () => {
+    const flagFindFirst = vi.fn()
+    const flagCreate = vi.fn()
+
+    beforeEach(() => {
+      ;(prisma as any).profileTrustFlag = {
+        ...(prisma as any).profileTrustFlag,
+        findFirst: flagFindFirst,
+        create: flagCreate,
+      }
+      flagFindFirst.mockReset()
+      flagCreate.mockReset()
+    })
+
+    it('writes a PROFILE_UNVETTED flag with note in evidence', async () => {
+      flagFindFirst.mockResolvedValue(null)
+      const created = {
+        id: 'f1',
+        profileId: 'p1',
+        reason: 'PROFILE_UNVETTED',
+        flaggedBy: 'admin:manual',
+        evidence: { note: 'sketchy' },
+      }
+      flagCreate.mockResolvedValue(created)
+
+      const result = await svc.flagProfile('p1', 'sketchy', 'admin:manual')
+
+      expect(flagCreate).toHaveBeenCalledWith({
+        data: {
+          profileId: 'p1',
+          reason: 'PROFILE_UNVETTED',
+          flaggedBy: 'admin:manual',
+          evidence: { note: 'sketchy' },
+        },
+      })
+      expect(result).toEqual(created)
+    })
+
+    it('is idempotent — returns the existing admin flag without creating a second', async () => {
+      const existing = {
+        id: 'f1',
+        profileId: 'p1',
+        reason: 'PROFILE_UNVETTED',
+        flaggedBy: 'admin:manual',
+        evidence: { note: 'first' },
+      }
+      flagFindFirst.mockResolvedValue(existing)
+
+      const result = await svc.flagProfile('p1', 'second', 'admin:manual')
+
+      expect(result).toEqual(existing)
+      expect(flagCreate).not.toHaveBeenCalled()
+    })
+
+    it('only treats admin-set flags as the idempotency key', async () => {
+      // System flag exists, but findFirst with the admin-prefix filter returns null.
+      flagFindFirst.mockResolvedValue(null)
+      flagCreate.mockResolvedValue({ id: 'fNew' })
+
+      await svc.flagProfile('p1', 'admin reason', 'admin:manual')
+
+      expect(flagFindFirst).toHaveBeenCalledWith({
+        where: expect.objectContaining({
+          profileId: 'p1',
+          clearedAt: null,
+          flaggedBy: { startsWith: 'admin:' },
+        }),
+      })
+      expect(flagCreate).toHaveBeenCalled()
     })
   })
 })

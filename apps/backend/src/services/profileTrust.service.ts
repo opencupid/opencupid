@@ -19,6 +19,13 @@ const SPAM_BURST_EVIDENCE_SAMPLE_SIZE = 10
 // BullMQ rejects ':' in custom jobIds (Redis key separator); use '-' as separator.
 export const promotePendingsJobId = (profileId: string) => `promote-pendings-${profileId}`
 
+/**
+ * Result of attempting to clear a flag. The service stays HTTP-agnostic;
+ * the route handler maps these codes to status codes (404 for not_found,
+ * 409 for already_cleared, 200 for cleared).
+ */
+export type ClearFlagResult = 'cleared' | 'not_found' | 'already_cleared'
+
 export class ProfileTrustService {
   private static instance: ProfileTrustService | null = null
 
@@ -27,6 +34,104 @@ export class ProfileTrustService {
   static getInstance(): ProfileTrustService {
     if (!this.instance) this.instance = new ProfileTrustService()
     return this.instance
+  }
+
+  /**
+   * Admin-only manual flag write. Idempotent: if an active admin flag already
+   * exists on the profile, returns it unchanged (no second flag, no duplicate
+   * evidence). Coexists with system/heuristic flags on the same profile —
+   * those are owned by separate machinery.
+   */
+  async flagProfile(profileId: string, note: string, flaggedBy: string) {
+    const existing = await prisma.profileTrustFlag.findFirst({
+      where: {
+        profileId,
+        clearedAt: null,
+        flaggedBy: { startsWith: 'admin:' },
+      },
+    })
+    if (existing) return existing
+
+    return prisma.profileTrustFlag.create({
+      data: {
+        profileId,
+        reason: 'PROFILE_UNVETTED',
+        flaggedBy,
+        evidence: { note },
+      },
+    })
+  }
+
+  /**
+   * Manual flag clear. Reuses the same promote-pendings enqueue path
+   * that the heuristic threshold-down branch uses, so held messages get released
+   * the same way regardless of who closed the flag.
+   *
+   * Note: heuristic SPAM_BURST flags can be cleared this way too, but the
+   * already-DISCARDED conversations stay terminal — clearing the flag does not
+   * revive them. The next reconcile pass may re-flag if the threshold is still
+   * breached.
+   *
+   * Returns a result code; the caller maps it to its protocol-specific response.
+   */
+  async clearFlag(flagId: string, clearedBy: string): Promise<ClearFlagResult> {
+    const flag = await prisma.profileTrustFlag.findUnique({ where: { id: flagId } })
+    if (!flag) return 'not_found'
+    if (flag.clearedAt) return 'already_cleared'
+
+    // Conditional write: only the call that actually transitions clearedAt
+    // null→now wins. A concurrent clearer's update affects 0 rows and we
+    // skip the enqueue, avoiding a duplicate promote-pendings job and
+    // timestamp drift on clearedAt/clearedBy.
+    const result = await prisma.profileTrustFlag.updateMany({
+      where: { id: flagId, clearedAt: null },
+      data: { clearedAt: new Date(), clearedBy },
+    })
+    if (result.count === 0) return 'already_cleared'
+
+    const { profileTrustQueue } = await import('@/queues/profileTrustQueue')
+    await profileTrustQueue.add(
+      'promote-pendings',
+      { kind: 'promote-pendings', profileId: flag.profileId },
+      {
+        jobId: promotePendingsJobId(flag.profileId),
+        removeOnComplete: { count: 0 },
+        removeOnFail: { count: 100 },
+      }
+    )
+    return 'cleared'
+  }
+
+  /**
+   * Admin-list view of trust flags. Active-only by default; pass activeOnly:false to include cleared.
+   * Joined with a small profile projection so the admin GUI can render rows without a second roundtrip.
+   */
+  async listTrustFlags(opts: {
+    activeOnly?: boolean
+    reason?: TrustReasonType
+    page: number
+    pageSize: number
+  }) {
+    const { activeOnly = true, reason, page, pageSize } = opts
+    const where = {
+      ...(activeOnly ? { clearedAt: null } : {}),
+      ...(reason ? { reason } : {}),
+    }
+    const [flags, total] = await Promise.all([
+      prisma.profileTrustFlag.findMany({
+        where,
+        orderBy: { flaggedAt: 'desc' },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        include: {
+          profile: {
+            select: { id: true, publicName: true, country: true, cityName: true },
+          },
+        },
+      }),
+      prisma.profileTrustFlag.count({ where }),
+    ])
+    return { flags, total }
   }
 
   /**
@@ -107,7 +212,7 @@ export class ProfileTrustService {
     } else if (alreadyFlagged) {
       await prisma.profileTrustFlag.updateMany({
         where: { profileId, reason: 'SPAM_BURST', clearedAt: null },
-        data: { clearedAt: new Date() },
+        data: { clearedAt: new Date(), clearedBy: 'heuristic:spam_burst_below_threshold' },
       })
       // Dynamic import — the profile-trust worker (Task 6) imports this service,
       // so a top-level import of the queue would close a cycle once that lands.

@@ -110,6 +110,13 @@ watch(
         <li class="nav-item">
           <router-link
             class="nav-link"
+            to="/moderation"
+            >Moderation</router-link
+          >
+        </li>
+        <li class="nav-item">
+          <router-link
+            class="nav-link"
             to="/tags"
             >Tags</router-link
           >

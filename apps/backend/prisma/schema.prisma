@@ -435,6 +435,7 @@ model ProfileTrustFlag {
   reason    TrustReason
   flaggedAt DateTime    @default(now())
   clearedAt DateTime?
+  clearedBy String?
   evidence  Json
   flaggedBy String
 

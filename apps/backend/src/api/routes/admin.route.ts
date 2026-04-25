@@ -1,6 +1,7 @@
 import { FastifyPluginAsync } from 'fastify'
 import { DeepLClient } from 'deepl-node'
 import slugify from 'slugify'
+import { TrustReasonSchema, type TrustReasonType } from '@zod/generated'
 import { sendError } from '../helpers'
 import { prisma } from '@/lib/prisma'
 import { appConfig } from '@/lib/appconfig'
@@ -9,6 +10,7 @@ import { MessageService, MessagingError, MessagingErrorCodes } from '@/services/
 import { computeSendOutcome } from '@/services/messaging.stateMachine'
 import { mapMessageToDTO } from '../mappers/messaging.mappers'
 import { broadcastToProfile } from '@/utils/wsUtils'
+import { ProfileTrustService } from '@/services/profileTrust.service'
 
 // DeepL locale codes require region suffixes for some languages
 const DEEPL_LOCALE_MAP: Record<string, string> = {
@@ -391,7 +393,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
       }
       const where = conditions.length > 0 ? { AND: conditions } : {}
 
-      const [profiles, total] = await Promise.all([
+      const [rows, total] = await Promise.all([
         prisma.profile.findMany({
           where,
           skip,
@@ -413,10 +415,16 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
             userId: true,
             user: { select: { email: true, phonenumber: true } },
             activitySummary: { select: { segment: true } },
+            _count: { select: { trustFlags: { where: { clearedAt: null } } } },
           },
         }),
         prisma.profile.count({ where }),
       ])
+
+      const profiles = rows.map(({ _count, ...rest }) => ({
+        ...rest,
+        hasActiveTrustFlag: _count.trustFlags > 0,
+      }))
 
       return reply.code(200).send({
         success: true,
@@ -918,15 +926,105 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
             select: { id: true, url: true, position: true },
             orderBy: { position: 'asc' },
           },
+          trustFlags: {
+            where: { clearedAt: null },
+            orderBy: { flaggedAt: 'desc' },
+          },
         },
       })
 
       if (!profile) return sendError(reply, 404, 'Profile not found')
 
-      return reply.code(200).send({ success: true, profile })
+      return reply.code(200).send({
+        success: true,
+        profile: { ...profile, hasActiveTrustFlag: profile.trustFlags.length > 0 },
+      })
     } catch (err) {
       fastify.log.error({ err }, 'Error fetching admin profile detail')
       return sendError(reply, 500, 'Failed to fetch profile')
+    }
+  })
+
+  /**
+   * GET /trust-flags
+   * Lists profile trust flags for the moderation page.
+   * @query {boolean} [activeOnly=true]
+   * @query {'PROFILE_UNVETTED'|'SPAM_BURST'} [reason]
+   * @query {number} [page=1]
+   * @query {number} [pageSize=25]
+   */
+  fastify.get('/trust-flags', async (req, reply) => {
+    try {
+      const q = req.query as Record<string, string | undefined>
+      const page = Math.max(1, parseInt(q.page ?? '1', 10) || 1)
+      const pageSize = Math.min(100, Math.max(1, parseInt(q.pageSize ?? '25', 10) || 25))
+      const activeOnly = q.activeOnly !== 'false'
+
+      let reason: TrustReasonType | undefined
+      if (q.reason !== undefined && q.reason !== '') {
+        const parsed = TrustReasonSchema.safeParse(q.reason)
+        if (!parsed.success) {
+          return sendError(reply, 400, `invalid reason: ${q.reason}`)
+        }
+        reason = parsed.data
+      }
+
+      const { flags, total } = await ProfileTrustService.getInstance().listTrustFlags({
+        page,
+        pageSize,
+        activeOnly,
+        reason,
+      })
+      return reply.code(200).send({ success: true, flags, total, page, pageSize })
+    } catch (err) {
+      fastify.log.error({ err }, 'Error listing trust flags')
+      return sendError(reply, 500, 'Failed to list trust flags')
+    }
+  })
+
+  /**
+   * POST /trust-flags/:id/clear
+   * Clears a trust flag by id if it is still active.
+   * Returns 404 if missing, 409 if already cleared.
+   */
+  fastify.post('/trust-flags/:id/clear', async (req, reply) => {
+    try {
+      const { id } = req.params as { id: string }
+      const result = await ProfileTrustService.getInstance().clearFlag(id, 'admin:manual')
+      switch (result) {
+        case 'cleared':
+          return reply.code(200).send({ success: true })
+        case 'not_found':
+          return sendError(reply, 404, 'flag not found')
+        case 'already_cleared':
+          return sendError(reply, 409, 'flag already cleared')
+      }
+    } catch (err) {
+      fastify.log.error({ err }, 'Error clearing trust flag')
+      return sendError(reply, 500, 'Failed to clear trust flag')
+    }
+  })
+
+  /**
+   * POST /profiles/:id/flag
+   * Manually quarantines a profile with an admin note.
+   * Idempotent: returns the existing admin flag if one is active.
+   */
+  fastify.post('/profiles/:id/flag', async (req, reply) => {
+    try {
+      const { id } = req.params as { id: string }
+      const body = (req.body ?? {}) as { note?: unknown }
+      const note = typeof body.note === 'string' ? body.note.trim() : ''
+
+      if (note.length === 0 || note.length > 1000) {
+        return sendError(reply, 400, 'note must be 1-1000 characters')
+      }
+
+      const flag = await ProfileTrustService.getInstance().flagProfile(id, note, 'admin:manual')
+      return reply.code(200).send({ success: true, flag })
+    } catch (err) {
+      fastify.log.error({ err }, 'Error flagging profile')
+      return sendError(reply, 500, 'Failed to flag profile')
     }
   })
 }
