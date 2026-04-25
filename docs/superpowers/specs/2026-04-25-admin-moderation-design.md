@@ -22,14 +22,14 @@ Heuristic-set flags (`PROFILE_UNVETTED` from `system:profile_create`, `SPAM_BURS
 
 ## Architectural decisions
 
-| # | Decision | Rationale |
-| --- | --- | --- |
-| 1 | Full CRUD on flags from admin UI | Listing alone wouldn't satisfy operational needs (false-positive `SPAM_BURST` recovery, manual quarantine of suspicious accounts). |
-| 2 | Add `clearedBy String?` to `ProfileTrustFlag` | Symmetry with `flaggedBy`. Lets queries answer "who cleared this?" without log scraping, and turns the `flaggedBy LIKE 'admin:%'` worker filter (decision 4) into a query against deliberately-structured data, not parsed free text. |
-| 3 | "Active only" by default, "Include cleared" toggle | Default view matches the brief ("currently flagged"). Toggle preserves audit trail without fragmenting the page into tabs. |
-| 4 | Reuse `PROFILE_UNVETTED` for manual flags; workers filter on `flaggedBy: { not: { startsWith: 'admin:' } }` | Smaller surface area than adding an `ADMIN_QUARANTINE` enum value. The codebase has zero exhaustive switches on `TrustReason`, so the type-safety win of a new enum value is currently theoretical. With `clearedBy` (decision 2) the prefix convention is structured, not brittle. |
-| 5 | Quarantine action lives in the ProfilesPage detail modal, not the row | The row is already crowded (10 columns). Detail modal is the natural place for per-profile actions. Rows get a `table-warning` class to signal "this profile has an active flag" at scan time. |
-| 6 | Admin-clear is allowed only on admin-set flags | Heuristic flags are read-only from the admin UI. Prevents accidental undoing of convergence-driven decisions. Clearing a `SPAM_BURST` would also semantically need to revive `DISCARDED` conversations — out of scope. |
+| #   | Decision                                                                                                    | Rationale                                                                                                                                                                                                                                                                           |
+| --- | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Full CRUD on flags from admin UI                                                                            | Listing alone wouldn't satisfy operational needs (false-positive `SPAM_BURST` recovery, manual quarantine of suspicious accounts).                                                                                                                                                  |
+| 2   | Add `clearedBy String?` to `ProfileTrustFlag`                                                               | Symmetry with `flaggedBy`. Lets queries answer "who cleared this?" without log scraping, and turns the `flaggedBy LIKE 'admin:%'` worker filter (decision 4) into a query against deliberately-structured data, not parsed free text.                                               |
+| 3   | "Active only" by default, "Include cleared" toggle                                                          | Default view matches the brief ("currently flagged"). Toggle preserves audit trail without fragmenting the page into tabs.                                                                                                                                                          |
+| 4   | Reuse `PROFILE_UNVETTED` for manual flags; workers filter on `flaggedBy: { not: { startsWith: 'admin:' } }` | Smaller surface area than adding an `ADMIN_QUARANTINE` enum value. The codebase has zero exhaustive switches on `TrustReason`, so the type-safety win of a new enum value is currently theoretical. With `clearedBy` (decision 2) the prefix convention is structured, not brittle. |
+| 5   | Quarantine action lives in the ProfilesPage detail modal, not the row                                       | The row is already crowded (10 columns). Detail modal is the natural place for per-profile actions. Rows get a `table-warning` class to signal "this profile has an active flag" at scan time.                                                                                      |
+| 6   | Admin-clear is allowed only on admin-set flags                                                              | Heuristic flags are read-only from the admin UI. Prevents accidental undoing of convergence-driven decisions. Clearing a `SPAM_BURST` would also semantically need to revive `DISCARDED` conversations — out of scope.                                                              |
 
 ## Schema change
 
@@ -54,14 +54,14 @@ Migration: add `clearedBy TEXT NULL`. No backfill — pre-existing cleared rows 
 
 ### `flaggedBy` / `clearedBy` value conventions
 
-| Source | `flaggedBy` | `clearedBy` |
-| --- | --- | --- |
-| Profile creation (auto-quarantine) | `system:profile_create` | — |
-| Heuristic SPAM_BURST detection | `heuristic:spam_burst` | — |
-| `clear-unvetted-window` worker | — | `system:unvetted_window` |
-| `reconcileSpamBurst` (count below threshold) | — | `heuristic:spam_burst_below_threshold` |
-| Admin manual flag | `admin:manual` | — |
-| Admin manual clear | — | `admin:manual` |
+| Source                                       | `flaggedBy`             | `clearedBy`                            |
+| -------------------------------------------- | ----------------------- | -------------------------------------- |
+| Profile creation (auto-quarantine)           | `system:profile_create` | —                                      |
+| Heuristic SPAM_BURST detection               | `heuristic:spam_burst`  | —                                      |
+| `clear-unvetted-window` worker               | —                       | `system:unvetted_window`               |
+| `reconcileSpamBurst` (count below threshold) | —                       | `heuristic:spam_burst_below_threshold` |
+| Admin manual flag                            | `admin:manual`          | —                                      |
+| Admin manual clear                           | —                       | `admin:manual`                         |
 
 The `admin:` prefix is load-bearing: the unvetted-window worker filters on it.
 
@@ -111,11 +111,11 @@ Reusing the existing `promote-pendings` enqueue (via `promotePendingsJobId(profi
 
 Added under [`apps/backend/src/api/routes/admin.route.ts`](../../apps/backend/src/api/routes/admin.route.ts), behind the existing `x-admin-authenticated` guard.
 
-| Method | Path | Body / Query | Response |
-| --- | --- | --- | --- |
-| `GET` | `/admin/trust-flags` | `?activeOnly=true&reason=&page=1&pageSize=25` | `{ success, flags, total, page, pageSize }` |
-| `POST` | `/admin/trust-flags/:id/clear` | — | `{ success }` |
-| `POST` | `/admin/profiles/:id/flag` | `{ note: string }` | `{ success, flag }` |
+| Method | Path                           | Body / Query                                  | Response                                    |
+| ------ | ------------------------------ | --------------------------------------------- | ------------------------------------------- |
+| `GET`  | `/admin/trust-flags`           | `?activeOnly=true&reason=&page=1&pageSize=25` | `{ success, flags, total, page, pageSize }` |
+| `POST` | `/admin/trust-flags/:id/clear` | —                                             | `{ success }`                               |
+| `POST` | `/admin/profiles/:id/flag`     | `{ note: string }`                            | `{ success, flag }`                         |
 
 `POST /flag` validates `note` is non-empty (max 1000 chars) — surfaces in `evidence.note` for forensic review.
 

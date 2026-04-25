@@ -617,7 +617,12 @@ describe('GET /profiles/:id', () => {
       publicName: 'Test',
       user: { id: 'user1' },
       trustFlags: [
-        { id: 'f1', reason: 'PROFILE_UNVETTED', flaggedBy: 'admin:manual', evidence: { note: 'hold' } },
+        {
+          id: 'f1',
+          reason: 'PROFILE_UNVETTED',
+          flaggedBy: 'admin:manual',
+          evidence: { note: 'hold' },
+        },
       ],
     }
     mockPrisma.profile.findUnique.mockResolvedValue(mockProfile)
@@ -1454,7 +1459,10 @@ describe('POST /trust-flags/:id/clear', () => {
 
   it('clears an admin-set flag and returns success', async () => {
     mockPrisma.profileTrustFlag.findUnique.mockResolvedValue({
-      id: 'f1', profileId: 'p1', clearedAt: null, flaggedBy: 'admin:manual',
+      id: 'f1',
+      profileId: 'p1',
+      clearedAt: null,
+      flaggedBy: 'admin:manual',
     })
     mockPrisma.profileTrustFlag.update.mockResolvedValue({})
     // The service dynamically imports the queue; provide a mock so the import succeeds.
@@ -1484,7 +1492,10 @@ describe('POST /trust-flags/:id/clear', () => {
 
   it('returns 409 when the flag is heuristic-set', async () => {
     mockPrisma.profileTrustFlag.findUnique.mockResolvedValue({
-      id: 'f1', profileId: 'p1', clearedAt: null, flaggedBy: 'heuristic:spam_burst',
+      id: 'f1',
+      profileId: 'p1',
+      clearedAt: null,
+      flaggedBy: 'heuristic:spam_burst',
     })
 
     const handler = fastify.routes['POST /trust-flags/:id/clear']
@@ -1496,7 +1507,10 @@ describe('POST /trust-flags/:id/clear', () => {
 
   it('returns 409 when the flag is already cleared', async () => {
     mockPrisma.profileTrustFlag.findUnique.mockResolvedValue({
-      id: 'f1', profileId: 'p1', clearedAt: new Date(), flaggedBy: 'admin:manual',
+      id: 'f1',
+      profileId: 'p1',
+      clearedAt: new Date(),
+      flaggedBy: 'admin:manual',
     })
 
     const handler = fastify.routes['POST /trust-flags/:id/clear']
@@ -1513,7 +1527,12 @@ describe('POST /profiles/:id/flag', () => {
 
   it('creates a new admin flag with the provided note', async () => {
     mockPrisma.profileTrustFlag.findFirst.mockResolvedValue(null)
-    const created = { id: 'f1', profileId: 'p1', flaggedBy: 'admin:manual', evidence: { note: 'sketchy' } }
+    const created = {
+      id: 'f1',
+      profileId: 'p1',
+      flaggedBy: 'admin:manual',
+      evidence: { note: 'sketchy' },
+    }
     mockPrisma.profileTrustFlag.create.mockResolvedValue(created)
 
     const handler = fastify.routes['POST /profiles/:id/flag']
@@ -1525,7 +1544,12 @@ describe('POST /profiles/:id/flag', () => {
   })
 
   it('is idempotent — returns the existing admin flag without creating', async () => {
-    const existing = { id: 'f1', profileId: 'p1', flaggedBy: 'admin:manual', evidence: { note: 'first' } }
+    const existing = {
+      id: 'f1',
+      profileId: 'p1',
+      flaggedBy: 'admin:manual',
+      evidence: { note: 'first' },
+    }
     mockPrisma.profileTrustFlag.findFirst.mockResolvedValue(existing)
 
     const handler = fastify.routes['POST /profiles/:id/flag']

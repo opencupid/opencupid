@@ -380,7 +380,12 @@ describe('ProfileTrustService', () => {
     })
 
     it('writes clearedAt + clearedBy, enqueues promote-pendings, returns "cleared"', async () => {
-      flagFindUnique.mockResolvedValue({ id: 'f1', profileId: 'p1', clearedAt: null, flaggedBy: 'admin:manual' })
+      flagFindUnique.mockResolvedValue({
+        id: 'f1',
+        profileId: 'p1',
+        clearedAt: null,
+        flaggedBy: 'admin:manual',
+      })
       flagUpdate.mockResolvedValue({})
       queueAdd.mockResolvedValue({})
 
@@ -406,7 +411,10 @@ describe('ProfileTrustService', () => {
 
     it('returns "already_cleared" when the flag is already cleared', async () => {
       flagFindUnique.mockResolvedValue({
-        id: 'f1', profileId: 'p1', clearedAt: new Date(), flaggedBy: 'admin:manual',
+        id: 'f1',
+        profileId: 'p1',
+        clearedAt: new Date(),
+        flaggedBy: 'admin:manual',
       })
       expect(await svc.clearFlag('f1', 'admin:manual')).toBe('already_cleared')
       expect(flagUpdate).not.toHaveBeenCalled()
@@ -414,7 +422,10 @@ describe('ProfileTrustService', () => {
 
     it('returns "non_admin" when the flag is heuristic-set', async () => {
       flagFindUnique.mockResolvedValue({
-        id: 'f1', profileId: 'p1', clearedAt: null, flaggedBy: 'heuristic:spam_burst',
+        id: 'f1',
+        profileId: 'p1',
+        clearedAt: null,
+        flaggedBy: 'heuristic:spam_burst',
       })
       expect(await svc.clearFlag('f1', 'admin:manual')).toBe('non_admin')
       expect(flagUpdate).not.toHaveBeenCalled()
@@ -438,7 +449,13 @@ describe('ProfileTrustService', () => {
 
     it('writes a PROFILE_UNVETTED flag with note in evidence', async () => {
       flagFindFirst.mockResolvedValue(null)
-      const created = { id: 'f1', profileId: 'p1', reason: 'PROFILE_UNVETTED', flaggedBy: 'admin:manual', evidence: { note: 'sketchy' } }
+      const created = {
+        id: 'f1',
+        profileId: 'p1',
+        reason: 'PROFILE_UNVETTED',
+        flaggedBy: 'admin:manual',
+        evidence: { note: 'sketchy' },
+      }
       flagCreate.mockResolvedValue(created)
 
       const result = await svc.flagProfile('p1', 'sketchy', 'admin:manual')
@@ -455,7 +472,13 @@ describe('ProfileTrustService', () => {
     })
 
     it('is idempotent — returns the existing admin flag without creating a second', async () => {
-      const existing = { id: 'f1', profileId: 'p1', reason: 'PROFILE_UNVETTED', flaggedBy: 'admin:manual', evidence: { note: 'first' } }
+      const existing = {
+        id: 'f1',
+        profileId: 'p1',
+        reason: 'PROFILE_UNVETTED',
+        flaggedBy: 'admin:manual',
+        evidence: { note: 'first' },
+      }
       flagFindFirst.mockResolvedValue(existing)
 
       const result = await svc.flagProfile('p1', 'second', 'admin:manual')

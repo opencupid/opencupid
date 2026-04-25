@@ -349,13 +349,28 @@ describe('listTrustFlags', () => {
     const p1 = await createTestProfile()
     const p2 = await createTestProfile()
     const older = await prisma.profileTrustFlag.create({
-      data: { profileId: p1.id, reason: 'PROFILE_UNVETTED', evidence: {}, flaggedBy: 'system:profile_create', flaggedAt: new Date('2026-01-01') },
+      data: {
+        profileId: p1.id,
+        reason: 'PROFILE_UNVETTED',
+        evidence: {},
+        flaggedBy: 'system:profile_create',
+        flaggedAt: new Date('2026-01-01'),
+      },
     })
     const newer = await prisma.profileTrustFlag.create({
-      data: { profileId: p2.id, reason: 'PROFILE_UNVETTED', evidence: {}, flaggedBy: 'admin:manual', flaggedAt: new Date('2026-04-01') },
+      data: {
+        profileId: p2.id,
+        reason: 'PROFILE_UNVETTED',
+        evidence: {},
+        flaggedBy: 'admin:manual',
+        flaggedAt: new Date('2026-04-01'),
+      },
     })
 
-    const { flags, total } = await ProfileTrustService.getInstance().listTrustFlags({ page: 1, pageSize: 10 })
+    const { flags, total } = await ProfileTrustService.getInstance().listTrustFlags({
+      page: 1,
+      pageSize: 10,
+    })
 
     expect(total).toBe(2)
     expect(flags.map((f) => f.id)).toEqual([newer.id, older.id])
@@ -365,13 +380,27 @@ describe('listTrustFlags', () => {
   it('filters by reason', async () => {
     const p = await createTestProfile()
     await prisma.profileTrustFlag.create({
-      data: { profileId: p.id, reason: 'PROFILE_UNVETTED', evidence: {}, flaggedBy: 'system:profile_create' },
+      data: {
+        profileId: p.id,
+        reason: 'PROFILE_UNVETTED',
+        evidence: {},
+        flaggedBy: 'system:profile_create',
+      },
     })
     await prisma.profileTrustFlag.create({
-      data: { profileId: p.id, reason: 'SPAM_BURST', evidence: {}, flaggedBy: 'heuristic:spam_burst' },
+      data: {
+        profileId: p.id,
+        reason: 'SPAM_BURST',
+        evidence: {},
+        flaggedBy: 'heuristic:spam_burst',
+      },
     })
 
-    const { flags } = await ProfileTrustService.getInstance().listTrustFlags({ page: 1, pageSize: 10, reason: 'SPAM_BURST' })
+    const { flags } = await ProfileTrustService.getInstance().listTrustFlags({
+      page: 1,
+      pageSize: 10,
+      reason: 'SPAM_BURST',
+    })
 
     expect(flags).toHaveLength(1)
     expect(flags[0].reason).toBe('SPAM_BURST')
@@ -380,11 +409,25 @@ describe('listTrustFlags', () => {
   it('includes cleared flags when activeOnly is false', async () => {
     const p = await createTestProfile()
     await prisma.profileTrustFlag.create({
-      data: { profileId: p.id, reason: 'PROFILE_UNVETTED', evidence: {}, flaggedBy: 'system:profile_create', clearedAt: new Date(), clearedBy: 'system:unvetted_window' },
+      data: {
+        profileId: p.id,
+        reason: 'PROFILE_UNVETTED',
+        evidence: {},
+        flaggedBy: 'system:profile_create',
+        clearedAt: new Date(),
+        clearedBy: 'system:unvetted_window',
+      },
     })
 
-    const activeOnly = await ProfileTrustService.getInstance().listTrustFlags({ page: 1, pageSize: 10 })
-    const all = await ProfileTrustService.getInstance().listTrustFlags({ page: 1, pageSize: 10, activeOnly: false })
+    const activeOnly = await ProfileTrustService.getInstance().listTrustFlags({
+      page: 1,
+      pageSize: 10,
+    })
+    const all = await ProfileTrustService.getInstance().listTrustFlags({
+      page: 1,
+      pageSize: 10,
+      activeOnly: false,
+    })
 
     expect(activeOnly.flags).toHaveLength(0)
     expect(all.flags).toHaveLength(1)
@@ -478,7 +521,12 @@ describe('clearFlag', () => {
   it('writes clearedAt + clearedBy and enqueues promote-pendings on admin flag', async () => {
     const profile = await createTestProfile()
     const flag = await prisma.profileTrustFlag.create({
-      data: { profileId: profile.id, reason: 'PROFILE_UNVETTED', evidence: { note: 'hold' }, flaggedBy: 'admin:manual' },
+      data: {
+        profileId: profile.id,
+        reason: 'PROFILE_UNVETTED',
+        evidence: { note: 'hold' },
+        flaggedBy: 'admin:manual',
+      },
     })
 
     await ProfileTrustService.getInstance().clearFlag(flag.id, 'admin:manual')
@@ -492,23 +540,41 @@ describe('clearFlag', () => {
   it('throws 409 when flag is non-admin', async () => {
     const profile = await createTestProfile()
     const flag = await prisma.profileTrustFlag.create({
-      data: { profileId: profile.id, reason: 'SPAM_BURST', evidence: {}, flaggedBy: 'heuristic:spam_burst' },
+      data: {
+        profileId: profile.id,
+        reason: 'SPAM_BURST',
+        evidence: {},
+        flaggedBy: 'heuristic:spam_burst',
+      },
     })
 
-    await expect(ProfileTrustService.getInstance().clearFlag(flag.id, 'admin:manual')).rejects.toThrow(/non-admin/i)
+    await expect(
+      ProfileTrustService.getInstance().clearFlag(flag.id, 'admin:manual')
+    ).rejects.toThrow(/non-admin/i)
   })
 
   it('throws 409 when flag is already cleared', async () => {
     const profile = await createTestProfile()
     const flag = await prisma.profileTrustFlag.create({
-      data: { profileId: profile.id, reason: 'PROFILE_UNVETTED', evidence: {}, flaggedBy: 'admin:manual', clearedAt: new Date(), clearedBy: 'admin:manual' },
+      data: {
+        profileId: profile.id,
+        reason: 'PROFILE_UNVETTED',
+        evidence: {},
+        flaggedBy: 'admin:manual',
+        clearedAt: new Date(),
+        clearedBy: 'admin:manual',
+      },
     })
 
-    await expect(ProfileTrustService.getInstance().clearFlag(flag.id, 'admin:manual')).rejects.toThrow(/already cleared/i)
+    await expect(
+      ProfileTrustService.getInstance().clearFlag(flag.id, 'admin:manual')
+    ).rejects.toThrow(/already cleared/i)
   })
 
   it('throws 404 when flag does not exist', async () => {
-    await expect(ProfileTrustService.getInstance().clearFlag('nonexistent', 'admin:manual')).rejects.toThrow(/not found/i)
+    await expect(
+      ProfileTrustService.getInstance().clearFlag('nonexistent', 'admin:manual')
+    ).rejects.toThrow(/not found/i)
   })
 })
 ```
@@ -591,7 +657,11 @@ describe('flagProfile', () => {
   it('writes a PROFILE_UNVETTED flag with note in evidence', async () => {
     const profile = await createTestProfile()
 
-    const flag = await ProfileTrustService.getInstance().flagProfile(profile.id, 'sketchy account', 'admin:manual')
+    const flag = await ProfileTrustService.getInstance().flagProfile(
+      profile.id,
+      'sketchy account',
+      'admin:manual'
+    )
 
     expect(flag.reason).toBe('PROFILE_UNVETTED')
     expect(flag.flaggedBy).toBe('admin:manual')
@@ -600,23 +670,42 @@ describe('flagProfile', () => {
 
   it('is idempotent — second call returns the existing admin flag', async () => {
     const profile = await createTestProfile()
-    const first = await ProfileTrustService.getInstance().flagProfile(profile.id, 'first', 'admin:manual')
-    const second = await ProfileTrustService.getInstance().flagProfile(profile.id, 'second', 'admin:manual')
+    const first = await ProfileTrustService.getInstance().flagProfile(
+      profile.id,
+      'first',
+      'admin:manual'
+    )
+    const second = await ProfileTrustService.getInstance().flagProfile(
+      profile.id,
+      'second',
+      'admin:manual'
+    )
 
     expect(second.id).toBe(first.id)
     expect((second.evidence as { note: string }).note).toBe('first')
 
-    const count = await prisma.profileTrustFlag.count({ where: { profileId: profile.id, flaggedBy: 'admin:manual' } })
+    const count = await prisma.profileTrustFlag.count({
+      where: { profileId: profile.id, flaggedBy: 'admin:manual' },
+    })
     expect(count).toBe(1)
   })
 
   it('coexists with an existing system flag on the same profile', async () => {
     const profile = await createTestProfile()
     await prisma.profileTrustFlag.create({
-      data: { profileId: profile.id, reason: 'PROFILE_UNVETTED', evidence: {}, flaggedBy: 'system:profile_create' },
+      data: {
+        profileId: profile.id,
+        reason: 'PROFILE_UNVETTED',
+        evidence: {},
+        flaggedBy: 'system:profile_create',
+      },
     })
 
-    const adminFlag = await ProfileTrustService.getInstance().flagProfile(profile.id, 'manual hold', 'admin:manual')
+    const adminFlag = await ProfileTrustService.getInstance().flagProfile(
+      profile.id,
+      'manual hold',
+      'admin:manual'
+    )
 
     const all = await prisma.profileTrustFlag.findMany({ where: { profileId: profile.id } })
     expect(all).toHaveLength(2)
@@ -702,7 +791,12 @@ describe('GET /admin/trust-flags', () => {
   it('returns active flags by default', async () => {
     const profile = await createTestProfile()
     await prisma.profileTrustFlag.create({
-      data: { profileId: profile.id, reason: 'PROFILE_UNVETTED', evidence: {}, flaggedBy: 'admin:manual' },
+      data: {
+        profileId: profile.id,
+        reason: 'PROFILE_UNVETTED',
+        evidence: {},
+        flaggedBy: 'admin:manual',
+      },
     })
 
     const res = await app.inject({
@@ -721,7 +815,14 @@ describe('GET /admin/trust-flags', () => {
   it('respects activeOnly=false', async () => {
     const profile = await createTestProfile()
     await prisma.profileTrustFlag.create({
-      data: { profileId: profile.id, reason: 'PROFILE_UNVETTED', evidence: {}, flaggedBy: 'admin:manual', clearedAt: new Date(), clearedBy: 'admin:manual' },
+      data: {
+        profileId: profile.id,
+        reason: 'PROFILE_UNVETTED',
+        evidence: {},
+        flaggedBy: 'admin:manual',
+        clearedAt: new Date(),
+        clearedBy: 'admin:manual',
+      },
     })
 
     const res = await app.inject({
@@ -807,7 +908,12 @@ describe('POST /admin/trust-flags/:id/clear', () => {
   it('clears an admin-set flag', async () => {
     const profile = await createTestProfile()
     const flag = await prisma.profileTrustFlag.create({
-      data: { profileId: profile.id, reason: 'PROFILE_UNVETTED', evidence: {}, flaggedBy: 'admin:manual' },
+      data: {
+        profileId: profile.id,
+        reason: 'PROFILE_UNVETTED',
+        evidence: {},
+        flaggedBy: 'admin:manual',
+      },
     })
 
     const res = await app.inject({
@@ -825,7 +931,12 @@ describe('POST /admin/trust-flags/:id/clear', () => {
   it('returns 409 when flag is heuristic', async () => {
     const profile = await createTestProfile()
     const flag = await prisma.profileTrustFlag.create({
-      data: { profileId: profile.id, reason: 'SPAM_BURST', evidence: {}, flaggedBy: 'heuristic:spam_burst' },
+      data: {
+        profileId: profile.id,
+        reason: 'SPAM_BURST',
+        evidence: {},
+        flaggedBy: 'heuristic:spam_burst',
+      },
     })
 
     const res = await app.inject({
@@ -1028,7 +1139,12 @@ it('includes hasActiveTrustFlag on each row', async () => {
   const flagged = await createTestProfile()
   const unflagged = await createTestProfile()
   await prisma.profileTrustFlag.create({
-    data: { profileId: flagged.id, reason: 'PROFILE_UNVETTED', evidence: {}, flaggedBy: 'admin:manual' },
+    data: {
+      profileId: flagged.id,
+      reason: 'PROFILE_UNVETTED',
+      evidence: {},
+      flaggedBy: 'admin:manual',
+    },
   })
 
   const res = await app.inject({
@@ -1102,7 +1218,12 @@ describe('GET /admin/profiles/:id', () => {
   it('returns a single profile with trust flag info', async () => {
     const profile = await createTestProfile()
     await prisma.profileTrustFlag.create({
-      data: { profileId: profile.id, reason: 'PROFILE_UNVETTED', evidence: { note: 'manual' }, flaggedBy: 'admin:manual' },
+      data: {
+        profileId: profile.id,
+        reason: 'PROFILE_UNVETTED',
+        evidence: { note: 'manual' },
+        flaggedBy: 'admin:manual',
+      },
     })
 
     const res = await app.inject({
@@ -1223,17 +1344,20 @@ export function listTrustFlags(opts: {
   page: number
   pageSize: number
 }) {
-  return apiRequest<{ success: true; flags: TrustFlagRow[]; total: number; page: number; pageSize: number }>(
-    '/admin/trust-flags',
-    {
-      params: {
-        page: opts.page,
-        pageSize: opts.pageSize,
-        activeOnly: opts.activeOnly === false ? 'false' : undefined,
-        reason: opts.reason,
-      },
-    }
-  )
+  return apiRequest<{
+    success: true
+    flags: TrustFlagRow[]
+    total: number
+    page: number
+    pageSize: number
+  }>('/admin/trust-flags', {
+    params: {
+      page: opts.page,
+      pageSize: opts.pageSize,
+      activeOnly: opts.activeOnly === false ? 'false' : undefined,
+      reason: opts.reason,
+    },
+  })
 }
 
 export function clearTrustFlag(id: string) {
@@ -1404,11 +1528,18 @@ async function confirmClear() {
 
 onMounted(() => {
   fetch(true)
-  observer = new IntersectionObserver(([entry]) => { if (entry?.isIntersecting) loadMore() }, { rootMargin: '200px' })
+  observer = new IntersectionObserver(
+    ([entry]) => {
+      if (entry?.isIntersecting) loadMore()
+    },
+    { rootMargin: '200px' }
+  )
   if (sentinel.value) observer.observe(sentinel.value)
 })
 
-onUnmounted(() => { observer?.disconnect() })
+onUnmounted(() => {
+  observer?.disconnect()
+})
 </script>
 
 <template>
@@ -1418,23 +1549,51 @@ onUnmounted(() => { observer?.disconnect() })
       <span class="text-muted ms-auto">{{ total }} flag{{ total === 1 ? '' : 's' }}</span>
     </div>
 
-    <div v-if="error" class="alert alert-danger">{{ error }}</div>
+    <div
+      v-if="error"
+      class="alert alert-danger"
+    >
+      {{ error }}
+    </div>
 
     <div class="mb-3 d-flex flex-wrap gap-2 align-items-center">
-      <select v-model="reasonFilter" class="form-select" style="max-width: 220px" @change="fetch(true)">
+      <select
+        v-model="reasonFilter"
+        class="form-select"
+        style="max-width: 220px"
+        @change="fetch(true)"
+      >
         <option value="">All reasons</option>
         <option value="PROFILE_UNVETTED">PROFILE_UNVETTED</option>
         <option value="SPAM_BURST">SPAM_BURST</option>
       </select>
       <div class="form-check">
-        <input id="include-cleared" v-model="includeCleared" type="checkbox" class="form-check-input" @change="fetch(true)" />
-        <label for="include-cleared" class="form-check-label">Include cleared</label>
+        <input
+          id="include-cleared"
+          v-model="includeCleared"
+          type="checkbox"
+          class="form-check-input"
+          @change="fetch(true)"
+        />
+        <label
+          for="include-cleared"
+          class="form-check-label"
+          >Include cleared</label
+        >
       </div>
     </div>
 
     <div class="table-container p-3">
-      <div v-if="loading" class="text-muted">Loading...</div>
-      <table v-else class="table table-hover mb-0">
+      <div
+        v-if="loading"
+        class="text-muted"
+      >
+        Loading...
+      </div>
+      <table
+        v-else
+        class="table table-hover mb-0"
+      >
         <thead>
           <tr>
             <th>Profile</th>
@@ -1447,59 +1606,114 @@ onUnmounted(() => { observer?.disconnect() })
           </tr>
         </thead>
         <tbody>
-          <tr v-for="f in flags" :key="f.id" :class="{ 'table-secondary': f.clearedAt !== null }">
+          <tr
+            v-for="f in flags"
+            :key="f.id"
+            :class="{ 'table-secondary': f.clearedAt !== null }"
+          >
             <td>
-              <a href="#" @click.prevent="openProfile(f.profileId)">{{ f.profile.publicName || f.profileId }}</a>
-              <div class="small text-muted"><code>{{ f.profileId }}</code></div>
+              <a
+                href="#"
+                @click.prevent="openProfile(f.profileId)"
+                >{{ f.profile.publicName || f.profileId }}</a
+              >
+              <div class="small text-muted">
+                <code>{{ f.profileId }}</code>
+              </div>
             </td>
-            <td><span :class="reasonBadgeClass(f)">{{ f.reason }}</span></td>
-            <td><code>{{ f.flaggedBy }}</code></td>
+            <td>
+              <span :class="reasonBadgeClass(f)">{{ f.reason }}</span>
+            </td>
+            <td>
+              <code>{{ f.flaggedBy }}</code>
+            </td>
             <td :title="f.flaggedAt">{{ new Date(f.flaggedAt).toLocaleString() }}</td>
             <td>
-              <span v-if="f.clearedAt" class="text-muted">
-                cleared {{ new Date(f.clearedAt).toLocaleDateString() }} by <code>{{ f.clearedBy }}</code>
+              <span
+                v-if="f.clearedAt"
+                class="text-muted"
+              >
+                cleared {{ new Date(f.clearedAt).toLocaleDateString() }} by
+                <code>{{ f.clearedBy }}</code>
               </span>
-              <span v-else class="badge bg-success">Active</span>
+              <span
+                v-else
+                class="badge bg-success"
+                >Active</span
+              >
             </td>
             <td>{{ evidenceSummary(f) }}</td>
             <td>
-              <button v-if="!f.clearedAt && isAdminFlag(f)"
+              <button
+                v-if="!f.clearedAt && isAdminFlag(f)"
                 class="btn btn-sm btn-outline-primary"
-                @click="askClear(f)">
+                @click="askClear(f)"
+              >
                 Clear
               </button>
             </td>
           </tr>
           <tr v-if="flags.length === 0">
-            <td colspan="7" class="text-center text-muted">No flags</td>
+            <td
+              colspan="7"
+              class="text-center text-muted"
+            >
+              No flags
+            </td>
           </tr>
         </tbody>
       </table>
 
-      <div ref="sentinel" class="text-center text-muted py-2">
+      <div
+        ref="sentinel"
+        class="text-center text-muted py-2"
+      >
         <span v-if="loadingMore">Loading more...</span>
       </div>
     </div>
 
     <!-- Confirm clear modal -->
-    <div v-if="pendingClearId" class="modal d-block" tabindex="-1" @click.self="pendingClearId = null">
+    <div
+      v-if="pendingClearId"
+      class="modal d-block"
+      tabindex="-1"
+      @click.self="pendingClearId = null"
+    >
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header"><h5 class="modal-title">Clear quarantine?</h5></div>
           <div class="modal-body">
             <p>This will lift the manual quarantine and release any held messages.</p>
-            <div v-if="clearError" class="alert alert-danger">{{ clearError }}</div>
+            <div
+              v-if="clearError"
+              class="alert alert-danger"
+            >
+              {{ clearError }}
+            </div>
           </div>
           <div class="modal-footer">
-            <button class="btn btn-secondary" :disabled="clearing" @click="pendingClearId = null">Cancel</button>
-            <button class="btn btn-primary" :disabled="clearing" @click="confirmClear">
+            <button
+              class="btn btn-secondary"
+              :disabled="clearing"
+              @click="pendingClearId = null"
+            >
+              Cancel
+            </button>
+            <button
+              class="btn btn-primary"
+              :disabled="clearing"
+              @click="confirmClear"
+            >
               {{ clearing ? 'Clearing...' : 'Clear quarantine' }}
             </button>
           </div>
         </div>
       </div>
     </div>
-    <div v-if="pendingClearId" class="modal-backdrop show"></div>
+    <div
+      v-if="pendingClearId"
+      class="modal-backdrop show"
+    ></div>
   </div>
 </template>
 ```
@@ -1615,7 +1829,13 @@ const sampleFlags = [
 describe('ModerationPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    ;(api.listTrustFlags as any).mockResolvedValue({ success: true, flags: sampleFlags, total: 2, page: 1, pageSize: 25 })
+    ;(api.listTrustFlags as any).mockResolvedValue({
+      success: true,
+      flags: sampleFlags,
+      total: 2,
+      page: 1,
+      pageSize: 25,
+    })
   })
 
   it('renders flags returned by the API', async () => {
@@ -1637,8 +1857,14 @@ describe('ModerationPage', () => {
     const wrapper = mount(ModerationPage)
     await flushPromises()
 
-    await wrapper.findAll('button').filter((b) => b.text() === 'Clear')[0].trigger('click')
-    await wrapper.findAll('button').filter((b) => b.text().includes('Clear quarantine'))[0].trigger('click')
+    await wrapper
+      .findAll('button')
+      .filter((b) => b.text() === 'Clear')[0]
+      .trigger('click')
+    await wrapper
+      .findAll('button')
+      .filter((b) => b.text().includes('Clear quarantine'))[0]
+      .trigger('click')
     await flushPromises()
 
     expect(api.clearTrustFlag).toHaveBeenCalledWith('f1')
@@ -1733,22 +1959,38 @@ import * as useApiMod from '../../composables/useApi'
 import ProfilesPage from '../ProfilesPage.vue'
 
 const baseProfile = {
-  id: 'p1', publicName: 'Alice', country: 'US', cityName: 'NYC',
-  isSocialActive: true, isDatingActive: false, isActive: true,
-  isReported: false, isBlocked: false, isOnboarded: true,
-  gender: 'F', createdAt: '2026-01-01T00:00:00Z', userId: 'u1',
-  user: { email: 'a@b.com', phonenumber: null }, activitySummary: null,
+  id: 'p1',
+  publicName: 'Alice',
+  country: 'US',
+  cityName: 'NYC',
+  isSocialActive: true,
+  isDatingActive: false,
+  isActive: true,
+  isReported: false,
+  isBlocked: false,
+  isOnboarded: true,
+  gender: 'F',
+  createdAt: '2026-01-01T00:00:00Z',
+  userId: 'u1',
+  user: { email: 'a@b.com', phonenumber: null },
+  activitySummary: null,
 }
 
 describe('ProfilesPage — trust flag indicator', () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('applies table-warning class to flagged rows', async () => {
     const flagged = { ...baseProfile, id: 'p2', publicName: 'Bob', hasActiveTrustFlag: true }
     const unflagged = { ...baseProfile, hasActiveTrustFlag: false }
 
     ;(useApiMod.useApi() as any).call.mockResolvedValue({
-      success: true, profiles: [flagged, unflagged], total: 2, page: 1, pageSize: 25,
+      success: true,
+      profiles: [flagged, unflagged],
+      total: 2,
+      page: 1,
+      pageSize: 25,
     })
 
     const wrapper = mount(ProfilesPage)
@@ -1812,15 +2054,18 @@ async function viewProfile(profile: AdminProfile) {
   selectedProfileDetail.value = null
   detailLoading.value = true
   try {
-    const res = await apiRequest<{ success: true; profile: AdminProfileDetail }>(`/admin/profiles/${profile.id}`)
+    const res = await apiRequest<{ success: true; profile: AdminProfileDetail }>(
+      `/admin/profiles/${profile.id}`
+    )
     selectedProfileDetail.value = res.profile
   } finally {
     detailLoading.value = false
   }
 }
 
-const activeAdminFlag = computed(() =>
-  selectedProfileDetail.value?.trustFlags.find((f) => f.flaggedBy.startsWith('admin:')) ?? null
+const activeAdminFlag = computed(
+  () =>
+    selectedProfileDetail.value?.trustFlags.find((f) => f.flaggedBy.startsWith('admin:')) ?? null
 )
 const activeFlags = computed(() => selectedProfileDetail.value?.trustFlags ?? [])
 ```
@@ -1855,13 +2100,25 @@ describe('ProfilesPage — detail modal Trust section', () => {
   it('shows active flags when profile has them', async () => {
     const profile = { ...baseProfile, hasActiveTrustFlag: true }
     ;(useApiMod.useApi() as any).call.mockResolvedValue({
-      success: true, profiles: [profile], total: 1, page: 1, pageSize: 25,
+      success: true,
+      profiles: [profile],
+      total: 1,
+      page: 1,
+      pageSize: 25,
     })
     ;(useApiMod.apiRequest as any).mockResolvedValue({
       success: true,
       profile: {
         ...profile,
-        trustFlags: [{ id: 'f1', reason: 'PROFILE_UNVETTED', flaggedAt: '2026-04-25T10:00:00Z', flaggedBy: 'admin:manual', evidence: { note: 'manual hold' } }],
+        trustFlags: [
+          {
+            id: 'f1',
+            reason: 'PROFILE_UNVETTED',
+            flaggedAt: '2026-04-25T10:00:00Z',
+            flaggedBy: 'admin:manual',
+            evidence: { note: 'manual hold' },
+          },
+        ],
       },
     })
 
@@ -1877,10 +2134,15 @@ describe('ProfilesPage — detail modal Trust section', () => {
   it('shows "No active trust flags" when profile is clean', async () => {
     const profile = { ...baseProfile, hasActiveTrustFlag: false }
     ;(useApiMod.useApi() as any).call.mockResolvedValue({
-      success: true, profiles: [profile], total: 1, page: 1, pageSize: 25,
+      success: true,
+      profiles: [profile],
+      total: 1,
+      page: 1,
+      pageSize: 25,
     })
     ;(useApiMod.apiRequest as any).mockResolvedValue({
-      success: true, profile: { ...profile, trustFlags: [] },
+      success: true,
+      profile: { ...profile, trustFlags: [] },
     })
 
     const wrapper = mount(ProfilesPage)
@@ -1950,7 +2212,10 @@ async function submitQuarantine() {
     if (selectedProfileDetail.value) {
       selectedProfileDetail.value = {
         ...selectedProfileDetail.value,
-        trustFlags: [...selectedProfileDetail.value.trustFlags, { ...res.flag, flaggedAt: res.flag.flaggedAt }],
+        trustFlags: [
+          ...selectedProfileDetail.value.trustFlags,
+          { ...res.flag, flaggedAt: res.flag.flaggedAt },
+        ],
       }
     }
     quarantineOpen.value = false
@@ -2005,14 +2270,26 @@ import { flagProfile as flagProfileMock } from '../../composables/useTrustFlags'
 it('posts quarantine note and updates row to flagged', async () => {
   const profile = { ...baseProfile, hasActiveTrustFlag: false }
   ;(useApiMod.useApi() as any).call.mockResolvedValue({
-    success: true, profiles: [profile], total: 1, page: 1, pageSize: 25,
+    success: true,
+    profiles: [profile],
+    total: 1,
+    page: 1,
+    pageSize: 25,
   })
   ;(useApiMod.apiRequest as any).mockResolvedValue({
-    success: true, profile: { ...profile, trustFlags: [] },
+    success: true,
+    profile: { ...profile, trustFlags: [] },
   })
   ;(flagProfileMock as any).mockResolvedValue({
     success: true,
-    flag: { id: 'fNew', profileId: profile.id, reason: 'PROFILE_UNVETTED', flaggedAt: '2026-04-25T11:00:00Z', flaggedBy: 'admin:manual', evidence: { note: 'sketchy' } },
+    flag: {
+      id: 'fNew',
+      profileId: profile.id,
+      reason: 'PROFILE_UNVETTED',
+      flaggedAt: '2026-04-25T11:00:00Z',
+      flaggedBy: 'admin:manual',
+      evidence: { note: 'sketchy' },
+    },
   })
 
   const wrapper = mount(ProfilesPage)
@@ -2020,9 +2297,15 @@ it('posts quarantine note and updates row to flagged', async () => {
   await wrapper.find('tbody tr').trigger('click')
   await flushPromises()
 
-  await wrapper.findAll('button').filter((b) => b.text() === 'Quarantine')[0].trigger('click')
+  await wrapper
+    .findAll('button')
+    .filter((b) => b.text() === 'Quarantine')[0]
+    .trigger('click')
   await wrapper.find('textarea').setValue('sketchy')
-  await wrapper.findAll('button').filter((b) => b.text().includes('Confirm quarantine'))[0].trigger('click')
+  await wrapper
+    .findAll('button')
+    .filter((b) => b.text().includes('Confirm quarantine'))[0]
+    .trigger('click')
   await flushPromises()
 
   expect(flagProfileMock).toHaveBeenCalledWith(profile.id, 'sketchy')
@@ -2075,7 +2358,9 @@ async function confirmClearQuarantine() {
   try {
     await clearTrustFlag(activeAdminFlag.value.id)
     if (selectedProfileDetail.value) {
-      const remaining = selectedProfileDetail.value.trustFlags.filter((f) => f.id !== activeAdminFlag.value!.id)
+      const remaining = selectedProfileDetail.value.trustFlags.filter(
+        (f) => f.id !== activeAdminFlag.value!.id
+      )
       selectedProfileDetail.value = { ...selectedProfileDetail.value, trustFlags: remaining }
       // Update list-row indicator only if no other flags remain
       if (remaining.length === 0) {
@@ -2098,7 +2383,11 @@ async function confirmClearQuarantine() {
 Inside the `<div class="modal-footer">`, alongside the existing Quarantine block:
 
 ```vue
-<button v-if="!quarantineOpen && activeAdminFlag" class="btn btn-outline-primary me-auto" @click="askClearQuarantine">
+<button
+  v-if="!quarantineOpen && activeAdminFlag"
+  class="btn btn-outline-primary me-auto"
+  @click="askClearQuarantine"
+>
   Clear quarantine
 </button>
 ```
@@ -2136,11 +2425,26 @@ import { clearTrustFlag as clearTrustFlagMock } from '../../composables/useTrust
 it('clears admin flag and updates row when no other flags remain', async () => {
   const profile = { ...baseProfile, hasActiveTrustFlag: true }
   ;(useApiMod.useApi() as any).call.mockResolvedValue({
-    success: true, profiles: [profile], total: 1, page: 1, pageSize: 25,
+    success: true,
+    profiles: [profile],
+    total: 1,
+    page: 1,
+    pageSize: 25,
   })
   ;(useApiMod.apiRequest as any).mockResolvedValue({
     success: true,
-    profile: { ...profile, trustFlags: [{ id: 'fAdmin', reason: 'PROFILE_UNVETTED', flaggedAt: '2026-04-25T10:00:00Z', flaggedBy: 'admin:manual', evidence: { note: 'hold' } }] },
+    profile: {
+      ...profile,
+      trustFlags: [
+        {
+          id: 'fAdmin',
+          reason: 'PROFILE_UNVETTED',
+          flaggedAt: '2026-04-25T10:00:00Z',
+          flaggedBy: 'admin:manual',
+          evidence: { note: 'hold' },
+        },
+      ],
+    },
   })
   ;(clearTrustFlagMock as any).mockResolvedValue({ success: true })
 
@@ -2149,8 +2453,14 @@ it('clears admin flag and updates row when no other flags remain', async () => {
   await wrapper.find('tbody tr').trigger('click')
   await flushPromises()
 
-  await wrapper.findAll('button').filter((b) => b.text() === 'Clear quarantine')[0].trigger('click')
-  await wrapper.findAll('button').filter((b) => b.text().includes('Clear quarantine') && !b.text().includes('Cancel'))[1].trigger('click')
+  await wrapper
+    .findAll('button')
+    .filter((b) => b.text() === 'Clear quarantine')[0]
+    .trigger('click')
+  await wrapper
+    .findAll('button')
+    .filter((b) => b.text().includes('Clear quarantine') && !b.text().includes('Cancel'))[1]
+    .trigger('click')
   await flushPromises()
 
   expect(clearTrustFlagMock).toHaveBeenCalledWith('fAdmin')
@@ -2160,11 +2470,26 @@ it('clears admin flag and updates row when no other flags remain', async () => {
 it('does not show Clear quarantine for system-only flags', async () => {
   const profile = { ...baseProfile, hasActiveTrustFlag: true }
   ;(useApiMod.useApi() as any).call.mockResolvedValue({
-    success: true, profiles: [profile], total: 1, page: 1, pageSize: 25,
+    success: true,
+    profiles: [profile],
+    total: 1,
+    page: 1,
+    pageSize: 25,
   })
   ;(useApiMod.apiRequest as any).mockResolvedValue({
     success: true,
-    profile: { ...profile, trustFlags: [{ id: 'fSys', reason: 'PROFILE_UNVETTED', flaggedAt: '2026-04-25T10:00:00Z', flaggedBy: 'system:profile_create', evidence: {} }] },
+    profile: {
+      ...profile,
+      trustFlags: [
+        {
+          id: 'fSys',
+          reason: 'PROFILE_UNVETTED',
+          flaggedAt: '2026-04-25T10:00:00Z',
+          flaggedBy: 'system:profile_create',
+          evidence: {},
+        },
+      ],
+    },
   })
 
   const wrapper = mount(ProfilesPage)
@@ -2219,7 +2544,9 @@ async function openProfileById(id: string) {
   // Slow path: fetch by id
   detailLoading.value = true
   try {
-    const res = await apiRequest<{ success: true; profile: AdminProfileDetail }>(`/admin/profiles/${id}`)
+    const res = await apiRequest<{ success: true; profile: AdminProfileDetail }>(
+      `/admin/profiles/${id}`
+    )
     selectedProfile.value = res.profile
     selectedProfileDetail.value = res.profile
   } finally {
@@ -2236,7 +2563,9 @@ onMounted(() => {
 
 watch(
   () => route.query.profileId,
-  (id) => { if (typeof id === 'string') openProfileById(id) }
+  (id) => {
+    if (typeof id === 'string') openProfileById(id)
+  }
 )
 ```
 
@@ -2253,11 +2582,21 @@ vi.mock('vue-router', () => ({
 it('auto-opens the modal for ?profileId=', async () => {
   mockRoute.query.profileId = 'p-deep'
   ;(useApiMod.useApi() as any).call.mockResolvedValue({
-    success: true, profiles: [], total: 0, page: 1, pageSize: 25,
+    success: true,
+    profiles: [],
+    total: 0,
+    page: 1,
+    pageSize: 25,
   })
   ;(useApiMod.apiRequest as any).mockResolvedValue({
     success: true,
-    profile: { ...baseProfile, id: 'p-deep', publicName: 'Deep', hasActiveTrustFlag: false, trustFlags: [] },
+    profile: {
+      ...baseProfile,
+      id: 'p-deep',
+      publicName: 'Deep',
+      hasActiveTrustFlag: false,
+      trustFlags: [],
+    },
   })
 
   const wrapper = mount(ProfilesPage)

@@ -189,7 +189,9 @@ describe('ProfilesPage', () => {
       .filter((b) => b.text() === 'Clear quarantine')[0]
       .trigger('click')
     // The dialog has its own "Clear quarantine" — find the second occurrence (in the confirm dialog)
-    const allClearButtons = wrapper.findAll('button').filter((b) => b.text().includes('Clear quarantine'))
+    const allClearButtons = wrapper
+      .findAll('button')
+      .filter((b) => b.text().includes('Clear quarantine'))
     await allClearButtons[allClearButtons.length - 1].trigger('click')
     await flushPromises()
 
