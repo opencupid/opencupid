@@ -36,8 +36,18 @@ function mapDatingContext(profile: DbProfileWithContext): DatingContext {
 }
 
 export function mapConversationContext(
-  profile: Pick<DbProfileWithContext, 'id' | 'conversationParticipants'>
+  profile: Pick<DbProfileWithContext, 'id' | 'conversationParticipants'>,
+  viewerProfileId: string
 ): ConversationContext {
+  // Self-view short-circuit. The conversation include filters by "conversations
+  // both viewer and target participate in", which on a self-view matches *every*
+  // conversation the viewer is in — `[0]` then resolves to an arbitrary one and
+  // the iStarted/canMessage logic below answers a meaningless question. There is
+  // no "message yourself" operation, so collapse to inert.
+  if (profile.id === viewerProfileId) {
+    return { haveConversation: false, canMessage: false, conversationId: null, initiated: false }
+  }
+
   const participant = profile.conversationParticipants?.[0]
   const conversation = participant?.conversation
 
@@ -63,10 +73,11 @@ export function mapConversationContext(
 
 export function mapInteractionContext(
   profile: DbProfileWithContext,
-  includeDatingContext: boolean
+  includeDatingContext: boolean,
+  viewerProfileId: string
 ): InteractionContext {
   return {
-    ...mapConversationContext(profile),
+    ...mapConversationContext(profile, viewerProfileId),
     ...(includeDatingContext ? mapDatingContext(profile) : DatingContextSchema.parse({})),
   }
 }

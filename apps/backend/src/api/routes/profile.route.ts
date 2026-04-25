@@ -212,7 +212,7 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
         )
       }
 
-      const profile = mapProfileWithContext(raw, includeDatingContext, locale)
+      const profile = mapProfileWithContext(raw, includeDatingContext, locale, myProfileId)
       const response: GetPublicProfileResponse = { success: true, profile }
       return reply.code(200).send(response)
     } catch (err) {

@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest'
 import { mapInteractionContext } from '../../api/mappers/interaction.mappers'
 import type { DbProfileWithContext } from '@zod/profile/profile.db'
 
+const VIEWER_ID = 'me'
+
 function makeProfile(overrides: Partial<DbProfileWithContext> = {}): DbProfileWithContext {
   return {
     id: 'p1',
@@ -17,7 +19,7 @@ function makeProfile(overrides: Partial<DbProfileWithContext> = {}): DbProfileWi
 describe('mapInteractionContext', () => {
   it('returns base context without dating when includeDatingContext is false', () => {
     const profile = makeProfile()
-    const result = mapInteractionContext(profile, false)
+    const result = mapInteractionContext(profile, false, VIEWER_ID)
     expect(result.haveConversation).toBe(false)
     expect(result.canMessage).toBe(true)
     expect(result.conversationId).toBeNull()
@@ -29,7 +31,7 @@ describe('mapInteractionContext', () => {
 
   it('returns dating context when includeDatingContext is true with no interactions', () => {
     const profile = makeProfile()
-    const result = mapInteractionContext(profile, true)
+    const result = mapInteractionContext(profile, true, VIEWER_ID)
     expect(result.likedByMe).toBe(false)
     expect(result.passedByMe).toBe(false)
     expect(result.isMatch).toBe(false)
@@ -41,7 +43,7 @@ describe('mapInteractionContext', () => {
     const profile = makeProfile({
       likesReceived: [{ fromId: 'me', isAnonymous: true }] as any,
     })
-    const result = mapInteractionContext(profile, true)
+    const result = mapInteractionContext(profile, true, VIEWER_ID)
     expect(result.likedByMe).toBe(true)
     expect(result.canLike).toBe(false)
     expect(result.isAnonymous).toBe(true)
@@ -51,7 +53,7 @@ describe('mapInteractionContext', () => {
     const profile = makeProfile({
       likesReceived: [{ fromId: 'me', isAnonymous: false }] as any,
     })
-    const result = mapInteractionContext(profile, true)
+    const result = mapInteractionContext(profile, true, VIEWER_ID)
     expect(result.isAnonymous).toBe(false)
   })
 
@@ -59,7 +61,7 @@ describe('mapInteractionContext', () => {
     const profile = makeProfile({
       likesSent: [{ toId: 'me', isAnonymous: false }] as any,
     })
-    const result = mapInteractionContext(profile, true)
+    const result = mapInteractionContext(profile, true, VIEWER_ID)
     expect(result.likedMeRevealed).toBe(true)
   })
 
@@ -67,7 +69,7 @@ describe('mapInteractionContext', () => {
     const profile = makeProfile({
       likesSent: [{ toId: 'me', isAnonymous: true }] as any,
     })
-    const result = mapInteractionContext(profile, true)
+    const result = mapInteractionContext(profile, true, VIEWER_ID)
     expect(result.likedMeRevealed).toBe(false)
   })
 
@@ -76,13 +78,13 @@ describe('mapInteractionContext', () => {
       likesReceived: [{ fromId: 'me' }] as any,
       likesSent: [{ toId: 'me' }] as any,
     })
-    const result = mapInteractionContext(profile, true)
+    const result = mapInteractionContext(profile, true, VIEWER_ID)
     expect(result.isMatch).toBe(true)
   })
 
   it('sets passedByMe when hiddenBy has entries', () => {
     const profile = makeProfile({ hiddenBy: [{ fromId: 'me' }] as any })
-    const result = mapInteractionContext(profile, true)
+    const result = mapInteractionContext(profile, true, VIEWER_ID)
     expect(result.passedByMe).toBe(true)
     expect(result.canPass).toBe(false)
   })
@@ -100,7 +102,7 @@ describe('mapInteractionContext', () => {
         },
       ] as any,
     })
-    const result = mapInteractionContext(profile, false)
+    const result = mapInteractionContext(profile, false, 'p1')
     expect(result.initiated).toBe(true)
     expect(result.haveConversation).toBe(false)
   })
@@ -118,9 +120,34 @@ describe('mapInteractionContext', () => {
         },
       ] as any,
     })
-    const result = mapInteractionContext(profile, false)
+    const result = mapInteractionContext(profile, false, 'p2')
     expect(result.initiated).toBe(false)
     expect(result.haveConversation).toBe(true)
     expect(result.conversationId).toBe('conv1')
+  })
+
+  it('returns inert conversation context when target profile is the viewer (self-view)', () => {
+    // Regression: when the viewer opens their own public profile, the include
+    // surfaces an arbitrary conversation of theirs (because viewer is also a
+    // participant in every one of their own conversations). The mapper must
+    // not treat that as a messageable target — there is no "message yourself"
+    // operation. Belt & suspenders for the route's self-view 404.
+    const profile = makeProfile({
+      id: VIEWER_ID,
+      conversationParticipants: [
+        {
+          conversation: {
+            id: 'conv-with-someone-else',
+            status: 'INITIATED',
+            initiatorProfileId: VIEWER_ID,
+          },
+        },
+      ] as any,
+    })
+    const result = mapInteractionContext(profile, false, VIEWER_ID)
+    expect(result.canMessage).toBe(false)
+    expect(result.conversationId).toBeNull()
+    expect(result.haveConversation).toBe(false)
+    expect(result.initiated).toBe(false)
   })
 })

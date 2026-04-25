@@ -92,11 +92,12 @@ export function mapProfileToPublic(
 export function mapProfileWithContext(
   dbProfile: DbProfileWithContext,
   includeDatingContext: boolean,
-  locale: string
+  locale: string,
+  viewerProfileId: string
 ): PublicProfileWithContext {
   const mapped = mapProfileToPublic(dbProfile, includeDatingContext, locale)
   const conversation = dbProfile.conversationParticipants?.[0]?.conversation ?? null
-  const interactionContext = mapInteractionContext(dbProfile, includeDatingContext)
+  const interactionContext = mapInteractionContext(dbProfile, includeDatingContext, viewerProfileId)
   return {
     ...mapped,
     conversation: conversation || null,
