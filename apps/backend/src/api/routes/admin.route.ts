@@ -393,7 +393,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
       }
       const where = conditions.length > 0 ? { AND: conditions } : {}
 
-      const [profiles, total] = await Promise.all([
+      const [rows, total] = await Promise.all([
         prisma.profile.findMany({
           where,
           skip,
@@ -415,10 +415,16 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
             userId: true,
             user: { select: { email: true, phonenumber: true } },
             activitySummary: { select: { segment: true } },
+            _count: { select: { trustFlags: { where: { clearedAt: null } } } },
           },
         }),
         prisma.profile.count({ where }),
       ])
+
+      const profiles = rows.map(({ _count, ...rest }) => ({
+        ...rest,
+        hasActiveTrustFlag: _count.trustFlags > 0,
+      }))
 
       return reply.code(200).send({
         success: true,
@@ -920,12 +926,19 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
             select: { id: true, url: true, position: true },
             orderBy: { position: 'asc' },
           },
+          trustFlags: {
+            where: { clearedAt: null },
+            orderBy: { flaggedAt: 'desc' },
+          },
         },
       })
 
       if (!profile) return sendError(reply, 404, 'Profile not found')
 
-      return reply.code(200).send({ success: true, profile })
+      return reply.code(200).send({
+        success: true,
+        profile: { ...profile, hasActiveTrustFlag: profile.trustFlags.length > 0 },
+      })
     } catch (err) {
       fastify.log.error({ err }, 'Error fetching admin profile detail')
       return sendError(reply, 500, 'Failed to fetch profile')

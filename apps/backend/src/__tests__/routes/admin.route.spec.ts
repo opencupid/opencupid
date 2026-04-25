@@ -502,6 +502,7 @@ describe('GET /profiles', () => {
         country: 'DE',
         cityName: 'Berlin',
         isActive: true,
+        _count: { trustFlags: 0 },
       },
     ]
     mockPrisma.profile.findMany.mockResolvedValue(mockProfiles)
@@ -512,8 +513,25 @@ describe('GET /profiles', () => {
 
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
-    expect(reply.payload.profiles).toEqual(mockProfiles)
+    expect(reply.payload.profiles).toHaveLength(1)
+    expect(reply.payload.profiles[0].id).toBe('prof1')
+    expect(reply.payload.profiles[0].hasActiveTrustFlag).toBe(false)
     expect(reply.payload.total).toBe(1)
+  })
+
+  it('exposes hasActiveTrustFlag derived from _count.trustFlags', async () => {
+    mockPrisma.profile.findMany.mockResolvedValue([
+      { id: 'p1', _count: { trustFlags: 1 } },
+      { id: 'p2', _count: { trustFlags: 0 } },
+    ])
+    mockPrisma.profile.count.mockResolvedValue(2)
+
+    const handler = fastify.routes['GET /profiles']
+    await handler({ query: {} }, reply)
+
+    const profiles = reply.payload.profiles as Array<{ id: string; hasActiveTrustFlag: boolean }>
+    expect(profiles.find((p) => p.id === 'p1')?.hasActiveTrustFlag).toBe(true)
+    expect(profiles.find((p) => p.id === 'p2')?.hasActiveTrustFlag).toBe(false)
   })
 
   it('filters by country when provided', async () => {
@@ -593,8 +611,15 @@ describe('GET /profiles', () => {
 })
 
 describe('GET /profiles/:id', () => {
-  it('returns profile detail', async () => {
-    const mockProfile = { id: 'prof1', publicName: 'Test', user: { id: 'user1' } }
+  it('returns profile detail with trustFlags and hasActiveTrustFlag derived', async () => {
+    const mockProfile = {
+      id: 'prof1',
+      publicName: 'Test',
+      user: { id: 'user1' },
+      trustFlags: [
+        { id: 'f1', reason: 'PROFILE_UNVETTED', flaggedBy: 'admin:manual', evidence: { note: 'hold' } },
+      ],
+    }
     mockPrisma.profile.findUnique.mockResolvedValue(mockProfile)
 
     const handler = fastify.routes['GET /profiles/:id']
@@ -602,7 +627,16 @@ describe('GET /profiles/:id', () => {
 
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
-    expect(reply.payload.profile).toEqual(mockProfile)
+    expect(reply.payload.profile.id).toBe('prof1')
+    expect(reply.payload.profile.trustFlags).toHaveLength(1)
+    expect(reply.payload.profile.hasActiveTrustFlag).toBe(true)
+  })
+
+  it('reports hasActiveTrustFlag=false when no flags', async () => {
+    mockPrisma.profile.findUnique.mockResolvedValue({ id: 'p2', trustFlags: [] })
+    const handler = fastify.routes['GET /profiles/:id']
+    await handler({ params: { id: 'p2' } }, reply)
+    expect(reply.payload.profile.hasActiveTrustFlag).toBe(false)
   })
 
   it('returns 404 for missing profile', async () => {
