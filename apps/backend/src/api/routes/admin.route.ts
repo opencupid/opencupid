@@ -7,6 +7,8 @@ import { appConfig } from '@/lib/appconfig'
 import { getLast7Days, fillZeroDays } from '../adminHelpers'
 import { MessageService, MessagingError, MessagingErrorCodes } from '@/services/messaging.service'
 import { computeSendOutcome } from '@/services/messaging.stateMachine'
+import { mapMessageToDTO } from '../mappers/messaging.mappers'
+import { broadcastToProfile } from '@/utils/wsUtils'
 
 // DeepL locale codes require region suffixes for some languages
 const DEEPL_LOCALE_MAP: Record<string, string> = {
@@ -471,7 +473,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
         continue
       }
       try {
-        const { outcome } = await prisma.$transaction(async (tx) => {
+        const { message, isDuplicate, outcome } = await prisma.$transaction(async (tx) => {
           const { convo, wasCreated } = await messageService.resolveConversation(
             tx,
             senderProfileId,
@@ -507,6 +509,22 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
             outcome,
           }
         })
+
+        // Push the message to the recipient over WebSocket if they're online.
+        // Admin broadcasts intentionally do NOT fall back to push/email — that's
+        // a separate product decision (#1377 follow-up). Skip on duplicate (the
+        // dedup window in sendMessage already returned the prior message row).
+        // Failures here must not roll back the persisted send.
+        if (!isDuplicate) {
+          try {
+            broadcastToProfile(fastify, recipientProfileId, {
+              type: 'ws:new_message',
+              payload: mapMessageToDTO(message),
+            })
+          } catch (err) {
+            fastify.log.warn({ err, recipientProfileId }, 'Admin send-message: WS broadcast failed')
+          }
+        }
 
         results.push({ profileId: recipientProfileId, outcome })
       } catch (err) {
