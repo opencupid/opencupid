@@ -244,20 +244,36 @@ export class MessageService {
     // messaging.stateMachine.ts. BLOCKED/ARCHIVED stand: those represent the
     // recipient's explicit choice and outrank engagement signals. DISCARDED is
     // filtered upstream by activeConversationWhere.
-    if (
-      existingConversation.status === 'INITIATED' ||
-      existingConversation.status === 'PENDING'
-    ) {
-      return await prisma.conversation.update({
-        where: { id: existingConversation.id },
-        data: {
-          status: 'ACCEPTED',
-          updatedAt: new Date(),
-        },
-      })
+    if (existingConversation.status !== 'INITIATED' && existingConversation.status !== 'PENDING') {
+      return existingConversation
     }
 
-    return existingConversation
+    const wasPending = existingConversation.status === 'PENDING'
+
+    return await prisma.$transaction(async (tx) => {
+      const updated = await tx.conversation.update({
+        where: { id: existingConversation.id },
+        data: { status: 'ACCEPTED', updatedAt: new Date() },
+      })
+
+      // PENDING conversations only have the original sender (= initiator) as a
+      // participant; the recipient must be inserted on promotion so both sides
+      // see the conversation in listConversationsForProfile. Mirror of
+      // promoteConversation's pattern — createMany + skipDuplicates is
+      // idempotent against any concurrent promote path.
+      if (wasPending) {
+        const recipientId =
+          existingConversation.profileAId === existingConversation.initiatorProfileId
+            ? existingConversation.profileBId
+            : existingConversation.profileAId
+        await tx.conversationParticipant.createMany({
+          data: [{ conversationId: existingConversation.id, profileId: recipientId }],
+          skipDuplicates: true,
+        })
+      }
+
+      return updated
+    })
   }
 
   async sendMessage(
