@@ -159,71 +159,10 @@ describe('MessageService.acceptConversationOnMatch', () => {
     })
   })
 
-  it('updates conversation status to ACCEPTED when status is INITIATED', async () => {
-    const existingConvo = { id: 'c1', status: 'INITIATED', profileAId: 'p1', profileBId: 'p2' }
-    const updatedConvo = { ...existingConvo, status: 'ACCEPTED' }
-
-    mockPrisma.conversation.findFirst.mockResolvedValue(existingConvo)
-    mockPrisma.conversation.update.mockResolvedValue(updatedConvo)
-
-    const result = await service.acceptConversationOnMatch('p1', 'p2')
-
-    expect(mockPrisma.conversation.update).toHaveBeenCalledWith({
-      where: { id: 'c1' },
-      data: { status: 'ACCEPTED', updatedAt: expect.any(Date) },
-    })
-    expect(result.status).toBe('ACCEPTED')
-  })
-
-  it('does not update conversation when status is already ACCEPTED', async () => {
-    const existingConvo = { id: 'c1', status: 'ACCEPTED', profileAId: 'p1', profileBId: 'p2' }
-
-    mockPrisma.conversation.findFirst.mockResolvedValue(existingConvo)
-
-    const result = await service.acceptConversationOnMatch('p1', 'p2')
-
-    expect(mockPrisma.conversation.update).not.toHaveBeenCalled()
-    expect(result).toBe(existingConvo)
-  })
-
-  it('promotes PENDING to ACCEPTED and adds the missing recipient participant', async () => {
-    // Mirror of the message-reply path's "mutual engagement promotes PENDING"
-    // semantic (see decision record in messaging.stateMachine.ts). A reciprocal
-    // like is the same legitimacy signal as a reply — quarantine should not
-    // trap a held conversation once both parties have signaled engagement.
-    //
-    // PENDING conversations only have the sender (= initiator) as a participant.
-    // Promoting status alone is insufficient: the recipient (= non-initiator)
-    // must be inserted as a participant so listConversationsForProfile sees the
-    // promoted row on both sides. createMany + skipDuplicates keeps this
-    // idempotent against any concurrent promote path.
-    const existingConvo = {
-      id: 'c1',
-      status: 'PENDING',
-      initiatorProfileId: 'p1', // p1 sent the PENDING; p2 is the missing participant
-      profileAId: 'p1',
-      profileBId: 'p2',
-    }
-    const updatedConvo = { ...existingConvo, status: 'ACCEPTED' }
-
-    mockPrisma.conversation.findFirst.mockResolvedValue(existingConvo)
-    mockPrisma.conversation.update.mockResolvedValue(updatedConvo)
-
-    const result = await service.acceptConversationOnMatch('p1', 'p2')
-
-    expect(mockPrisma.conversation.update).toHaveBeenCalledWith({
-      where: { id: 'c1' },
-      data: { status: 'ACCEPTED', updatedAt: expect.any(Date) },
-    })
-    expect(mockPrisma.conversationParticipant.createMany).toHaveBeenCalledWith({
-      data: [{ conversationId: 'c1', profileId: 'p2' }],
-      skipDuplicates: true,
-    })
-    expect(result.status).toBe('ACCEPTED')
-  })
-
-  it('does NOT add a participant when promoting INITIATED on mutual match', async () => {
-    // INITIATED conversations already have both participants; no insert needed.
+  it('promotes INITIATED to ACCEPTED via acceptConversationOnReply (no participant insert)', async () => {
+    // INITIATED conversations already have both participants; only the status
+    // transition is needed. Delegates to acceptConversationOnReply which does
+    // a guarded INITIATED → ACCEPTED via updateMany.
     const existingConvo = {
       id: 'c1',
       status: 'INITIATED',
@@ -231,14 +170,78 @@ describe('MessageService.acceptConversationOnMatch', () => {
       profileAId: 'p1',
       profileBId: 'p2',
     }
-    const updatedConvo = { ...existingConvo, status: 'ACCEPTED' }
+    mockPrisma.conversation.findFirst.mockResolvedValue(existingConvo)
+    mockPrisma.conversation.updateMany.mockResolvedValue({ count: 1 })
+    mockPrisma.conversation.findUniqueOrThrow.mockResolvedValue({
+      ...existingConvo,
+      status: 'ACCEPTED',
+    })
+
+    const result = await service.acceptConversationOnMatch('p1', 'p2')
+
+    expect(mockPrisma.conversation.updateMany).toHaveBeenCalledWith({
+      where: { id: 'c1', status: 'INITIATED' },
+      data: { status: 'ACCEPTED', updatedAt: expect.any(Date) },
+    })
+    expect(mockPrisma.conversationParticipant.createMany).not.toHaveBeenCalled()
+    expect(result.status).toBe('ACCEPTED')
+  })
+
+  it('does not transition when status is already ACCEPTED', async () => {
+    const existingConvo = { id: 'c1', status: 'ACCEPTED', profileAId: 'p1', profileBId: 'p2' }
 
     mockPrisma.conversation.findFirst.mockResolvedValue(existingConvo)
-    mockPrisma.conversation.update.mockResolvedValue(updatedConvo)
 
-    await service.acceptConversationOnMatch('p1', 'p2')
+    const result = await service.acceptConversationOnMatch('p1', 'p2')
 
+    expect(mockPrisma.conversation.updateMany).not.toHaveBeenCalled()
     expect(mockPrisma.conversationParticipant.createMany).not.toHaveBeenCalled()
+    expect(result).toBe(existingConvo)
+  })
+
+  it('promotes PENDING to ACCEPTED in two steps and adds the missing recipient participant', async () => {
+    // Mirror of the message-reply path's "mutual engagement promotes PENDING"
+    // semantic (see decision record in messaging.stateMachine.ts). A reciprocal
+    // like is the same legitimacy signal as a reply — quarantine should not
+    // trap a held conversation once both parties have signaled engagement.
+    //
+    // Implementation delegates to promoteConversation (PENDING → INITIATED +
+    // recipient participant insert) followed by acceptConversationOnReply
+    // (INITIATED → ACCEPTED). Same composition as the accept_and_promote_pending
+    // route handler — no parallel implementation of the participant-insert.
+    const existingConvo = {
+      id: 'c1',
+      status: 'PENDING',
+      initiatorProfileId: 'p1', // p1 sent the PENDING; p2 is the missing participant
+      profileAId: 'p1',
+      profileBId: 'p2',
+    }
+    mockPrisma.conversation.findFirst.mockResolvedValue(existingConvo)
+    // PENDING → INITIATED (promoteConversation)
+    // INITIATED → ACCEPTED (acceptConversationOnReply)
+    mockPrisma.conversation.updateMany
+      .mockResolvedValueOnce({ count: 1 })
+      .mockResolvedValueOnce({ count: 1 })
+    mockPrisma.conversation.findUniqueOrThrow.mockResolvedValue({
+      ...existingConvo,
+      status: 'ACCEPTED',
+    })
+
+    const result = await service.acceptConversationOnMatch('p1', 'p2')
+
+    expect(mockPrisma.conversation.updateMany).toHaveBeenNthCalledWith(1, {
+      where: { id: 'c1', status: 'PENDING' },
+      data: { status: 'INITIATED', updatedAt: expect.any(Date) },
+    })
+    expect(mockPrisma.conversation.updateMany).toHaveBeenNthCalledWith(2, {
+      where: { id: 'c1', status: 'INITIATED' },
+      data: { status: 'ACCEPTED', updatedAt: expect.any(Date) },
+    })
+    expect(mockPrisma.conversationParticipant.createMany).toHaveBeenCalledWith({
+      data: [{ conversationId: 'c1', profileId: 'p2' }],
+      skipDuplicates: true,
+    })
+    expect(result.status).toBe('ACCEPTED')
   })
 
   it.each(['BLOCKED', 'ARCHIVED'] as const)(
@@ -258,7 +261,7 @@ describe('MessageService.acceptConversationOnMatch', () => {
 
       const result = await service.acceptConversationOnMatch('p1', 'p2')
 
-      expect(mockPrisma.conversation.update).not.toHaveBeenCalled()
+      expect(mockPrisma.conversation.updateMany).not.toHaveBeenCalled()
       expect(mockPrisma.conversationParticipant.createMany).not.toHaveBeenCalled()
       expect(result).toBe(existingConvo)
     }

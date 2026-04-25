@@ -29,6 +29,7 @@ export function createMockPrisma() {
     },
     conversation: {
       findUnique: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
       findFirst: vi.fn(),
       update: vi.fn(),
       updateMany: vi.fn(),

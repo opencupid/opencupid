@@ -248,31 +248,22 @@ export class MessageService {
       return existingConversation
     }
 
-    const wasPending = existingConversation.status === 'PENDING'
-
     return await prisma.$transaction(async (tx) => {
-      const updated = await tx.conversation.update({
-        where: { id: existingConversation.id },
-        data: { status: 'ACCEPTED', updatedAt: new Date() },
-      })
-
-      // PENDING conversations only have the original sender (= initiator) as a
-      // participant; the recipient must be inserted on promotion so both sides
-      // see the conversation in listConversationsForProfile. Mirror of
-      // promoteConversation's pattern — createMany + skipDuplicates is
-      // idempotent against any concurrent promote path.
-      if (wasPending) {
+      // Same composition as the accept_and_promote_pending route handler:
+      // promoteConversation handles PENDING → INITIATED + recipient participant
+      // insert (mirroring the trust-flag-clear path), then acceptConversationOnReply
+      // takes INITIATED → ACCEPTED. Single source of truth for the participant
+      // insert and the concurrent-transition status guards.
+      if (existingConversation.status === 'PENDING') {
         const recipientId =
           existingConversation.profileAId === existingConversation.initiatorProfileId
             ? existingConversation.profileBId
             : existingConversation.profileAId
-        await tx.conversationParticipant.createMany({
-          data: [{ conversationId: existingConversation.id, profileId: recipientId }],
-          skipDuplicates: true,
-        })
+        await this.promoteConversation(tx, existingConversation.id, recipientId)
       }
+      await this.acceptConversationOnReply(tx, existingConversation.id)
 
-      return updated
+      return await tx.conversation.findUniqueOrThrow({ where: { id: existingConversation.id } })
     })
   }
 
