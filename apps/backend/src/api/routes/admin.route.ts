@@ -10,7 +10,7 @@ import { MessageService, MessagingError, MessagingErrorCodes } from '@/services/
 import { computeSendOutcome } from '@/services/messaging.stateMachine'
 import { mapMessageToDTO } from '../mappers/messaging.mappers'
 import { broadcastToProfile } from '@/utils/wsUtils'
-import { ProfileTrustService, ClearFlagError } from '@/services/profileTrust.service'
+import { ProfileTrustService } from '@/services/profileTrust.service'
 
 // DeepL locale codes require region suffixes for some languages
 const DEEPL_LOCALE_MAP: Record<string, string> = {
@@ -982,12 +982,18 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post('/trust-flags/:id/clear', async (req, reply) => {
     try {
       const { id } = req.params as { id: string }
-      await ProfileTrustService.getInstance().clearFlag(id, 'admin:manual')
-      return reply.code(200).send({ success: true })
-    } catch (err) {
-      if (err instanceof ClearFlagError) {
-        return sendError(reply, err.status, err.message)
+      const result = await ProfileTrustService.getInstance().clearFlag(id, 'admin:manual')
+      switch (result) {
+        case 'cleared':
+          return reply.code(200).send({ success: true })
+        case 'not_found':
+          return sendError(reply, 404, 'flag not found')
+        case 'already_cleared':
+          return sendError(reply, 409, 'flag already cleared')
+        case 'non_admin':
+          return sendError(reply, 409, 'cannot clear non-admin flag from admin UI')
       }
+    } catch (err) {
       fastify.log.error({ err }, 'Error clearing trust flag')
       return sendError(reply, 500, 'Failed to clear trust flag')
     }

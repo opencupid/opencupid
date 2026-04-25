@@ -20,19 +20,11 @@ const SPAM_BURST_EVIDENCE_SAMPLE_SIZE = 10
 export const promotePendingsJobId = (profileId: string) => `promote-pendings-${profileId}`
 
 /**
- * Thrown by clearFlag when the request cannot be honoured.
- * Status fields mirror what the route handler should send — 404 for missing,
- * 409 for state conflicts (already cleared, or non-admin flag).
+ * Result of attempting to clear a flag. The service stays HTTP-agnostic;
+ * the route handler maps these codes to status codes (404 for not_found,
+ * 409 for already_cleared / non_admin, 200 for cleared).
  */
-export class ClearFlagError extends Error {
-  constructor(
-    message: string,
-    public status: 404 | 409
-  ) {
-    super(message)
-    this.name = 'ClearFlagError'
-  }
-}
+export type ClearFlagResult = 'cleared' | 'not_found' | 'already_cleared' | 'non_admin'
 
 export class ProfileTrustService {
   private static instance: ProfileTrustService | null = null
@@ -77,14 +69,14 @@ export class ProfileTrustService {
    *
    * Refuses to clear non-admin flags (heuristic-set or system-set) — those are
    * owned by the convergence machinery and admins can't safely undo them by hand.
+   *
+   * Returns a result code; the caller maps it to its protocol-specific response.
    */
-  async clearFlag(flagId: string, clearedBy: string): Promise<void> {
+  async clearFlag(flagId: string, clearedBy: string): Promise<ClearFlagResult> {
     const flag = await prisma.profileTrustFlag.findUnique({ where: { id: flagId } })
-    if (!flag) throw new ClearFlagError('flag not found', 404)
-    if (flag.clearedAt) throw new ClearFlagError('flag already cleared', 409)
-    if (!flag.flaggedBy.startsWith('admin:')) {
-      throw new ClearFlagError('cannot clear non-admin flag from admin UI', 409)
-    }
+    if (!flag) return 'not_found'
+    if (flag.clearedAt) return 'already_cleared'
+    if (!flag.flaggedBy.startsWith('admin:')) return 'non_admin'
 
     await prisma.profileTrustFlag.update({
       where: { id: flagId },
@@ -101,6 +93,7 @@ export class ProfileTrustService {
         removeOnFail: { count: 100 },
       }
     )
+    return 'cleared'
   }
 
   /**

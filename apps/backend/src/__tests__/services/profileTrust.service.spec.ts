@@ -379,13 +379,14 @@ describe('ProfileTrustService', () => {
       queueAdd.mockReset()
     })
 
-    it('writes clearedAt + clearedBy and enqueues promote-pendings on admin flag', async () => {
+    it('writes clearedAt + clearedBy, enqueues promote-pendings, returns "cleared"', async () => {
       flagFindUnique.mockResolvedValue({ id: 'f1', profileId: 'p1', clearedAt: null, flaggedBy: 'admin:manual' })
       flagUpdate.mockResolvedValue({})
       queueAdd.mockResolvedValue({})
 
-      await svc.clearFlag('f1', 'admin:manual')
+      const result = await svc.clearFlag('f1', 'admin:manual')
 
+      expect(result).toBe('cleared')
       expect(flagUpdate).toHaveBeenCalledWith({
         where: { id: 'f1' },
         data: { clearedAt: expect.any(Date), clearedBy: 'admin:manual' },
@@ -397,29 +398,25 @@ describe('ProfileTrustService', () => {
       )
     })
 
-    it('throws ClearFlagError(404) when the flag is missing', async () => {
+    it('returns "not_found" when the flag is missing', async () => {
       flagFindUnique.mockResolvedValue(null)
-      const { ClearFlagError } = await import('../../services/profileTrust.service')
-      await expect(svc.clearFlag('missing', 'admin:manual')).rejects.toBeInstanceOf(ClearFlagError)
-      await expect(svc.clearFlag('missing', 'admin:manual')).rejects.toMatchObject({ status: 404 })
+      expect(await svc.clearFlag('missing', 'admin:manual')).toBe('not_found')
+      expect(flagUpdate).not.toHaveBeenCalled()
     })
 
-    it('throws ClearFlagError(409) when the flag is already cleared', async () => {
+    it('returns "already_cleared" when the flag is already cleared', async () => {
       flagFindUnique.mockResolvedValue({
         id: 'f1', profileId: 'p1', clearedAt: new Date(), flaggedBy: 'admin:manual',
       })
-      const { ClearFlagError } = await import('../../services/profileTrust.service')
-      await expect(svc.clearFlag('f1', 'admin:manual')).rejects.toBeInstanceOf(ClearFlagError)
-      await expect(svc.clearFlag('f1', 'admin:manual')).rejects.toMatchObject({ status: 409 })
+      expect(await svc.clearFlag('f1', 'admin:manual')).toBe('already_cleared')
+      expect(flagUpdate).not.toHaveBeenCalled()
     })
 
-    it('throws ClearFlagError(409) when the flag is non-admin (heuristic-set)', async () => {
+    it('returns "non_admin" when the flag is heuristic-set', async () => {
       flagFindUnique.mockResolvedValue({
         id: 'f1', profileId: 'p1', clearedAt: null, flaggedBy: 'heuristic:spam_burst',
       })
-      const { ClearFlagError } = await import('../../services/profileTrust.service')
-      await expect(svc.clearFlag('f1', 'admin:manual')).rejects.toBeInstanceOf(ClearFlagError)
-      await expect(svc.clearFlag('f1', 'admin:manual')).rejects.toMatchObject({ status: 409 })
+      expect(await svc.clearFlag('f1', 'admin:manual')).toBe('non_admin')
       expect(flagUpdate).not.toHaveBeenCalled()
       expect(queueAdd).not.toHaveBeenCalled()
     })
