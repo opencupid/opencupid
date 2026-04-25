@@ -18,7 +18,7 @@ export const TagTranslationScalarFieldEnumSchema = z.enum(['id','tagId','locale'
 
 export const ConnectionRequestScalarFieldEnumSchema = z.enum(['id','fromUserId','toUserId','scope','status','createdAt']);
 
-export const UserScalarFieldEnumSchema = z.enum(['id','email','phonenumber','tokenVersion','loginToken','loginTokenExp','isActive','isBlocked','isRegistrationConfirmed','createdAt','updatedAt','lastLoginAt','language','originDomain','newsletterOptIn','roles','isPushNotificationEnabled']);
+export const UserScalarFieldEnumSchema = z.enum(['id','email','phonenumber','tokenVersion','loginToken','loginTokenExp','isActive','isBlocked','isRegistrationConfirmed','createdAt','updatedAt','lastLoginAt','language','originDomain','newsletterOptIn','emailNotificationsOptIn','roles','isPushNotificationEnabled']);
 
 export const ProfileScalarFieldEnumSchema = z.enum(['id','publicName','country','cityName','isSocialActive','isDatingActive','isActive','isReported','isBlocked','isOnboarded','isCallable','hasFace','userId','work','languages','birthday','gender','pronouns','relationship','hasKids','prefAgeMin','prefAgeMax','prefGender','prefKids','lat','lon','createdAt','updatedAt']);
 
@@ -174,6 +174,7 @@ export const UserSchema = z.object({
   language: z.string(),
   originDomain: z.string(),
   newsletterOptIn: z.boolean(),
+  emailNotificationsOptIn: z.boolean(),
   isPushNotificationEnabled: z.boolean(),
 })
 
@@ -565,6 +566,7 @@ export const UserSelectSchema: z.ZodType<Prisma.UserSelect> = z.object({
   language: z.boolean().optional(),
   originDomain: z.boolean().optional(),
   newsletterOptIn: z.boolean().optional(),
+  emailNotificationsOptIn: z.boolean().optional(),
   roles: z.boolean().optional(),
   isPushNotificationEnabled: z.boolean().optional(),
   profile: z.union([z.boolean(),z.lazy(() => ProfileArgsSchema)]).optional(),
@@ -1301,6 +1303,7 @@ export const UserWhereInputSchema: z.ZodType<Prisma.UserWhereInput> = z.object({
   language: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   originDomain: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   newsletterOptIn: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
+  emailNotificationsOptIn: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
   roles: z.lazy(() => EnumUserRoleNullableListFilterSchema).optional(),
   isPushNotificationEnabled: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
   profile: z.union([ z.lazy(() => ProfileNullableScalarRelationFilterSchema),z.lazy(() => ProfileWhereInputSchema) ]).optional().nullable(),
@@ -1326,6 +1329,7 @@ export const UserOrderByWithRelationInputSchema: z.ZodType<Prisma.UserOrderByWit
   language: z.lazy(() => SortOrderSchema).optional(),
   originDomain: z.lazy(() => SortOrderSchema).optional(),
   newsletterOptIn: z.lazy(() => SortOrderSchema).optional(),
+  emailNotificationsOptIn: z.lazy(() => SortOrderSchema).optional(),
   roles: z.lazy(() => SortOrderSchema).optional(),
   isPushNotificationEnabled: z.lazy(() => SortOrderSchema).optional(),
   profile: z.lazy(() => ProfileOrderByWithRelationInputSchema).optional(),
@@ -1418,6 +1422,7 @@ export const UserWhereUniqueInputSchema: z.ZodType<Prisma.UserWhereUniqueInput> 
   language: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   originDomain: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   newsletterOptIn: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
+  emailNotificationsOptIn: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
   roles: z.lazy(() => EnumUserRoleNullableListFilterSchema).optional(),
   isPushNotificationEnabled: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
   profile: z.union([ z.lazy(() => ProfileNullableScalarRelationFilterSchema),z.lazy(() => ProfileWhereInputSchema) ]).optional().nullable(),
@@ -1443,6 +1448,7 @@ export const UserOrderByWithAggregationInputSchema: z.ZodType<Prisma.UserOrderBy
   language: z.lazy(() => SortOrderSchema).optional(),
   originDomain: z.lazy(() => SortOrderSchema).optional(),
   newsletterOptIn: z.lazy(() => SortOrderSchema).optional(),
+  emailNotificationsOptIn: z.lazy(() => SortOrderSchema).optional(),
   roles: z.lazy(() => SortOrderSchema).optional(),
   isPushNotificationEnabled: z.lazy(() => SortOrderSchema).optional(),
   _count: z.lazy(() => UserCountOrderByAggregateInputSchema).optional(),
@@ -1471,6 +1477,7 @@ export const UserScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.UserScal
   language: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   originDomain: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   newsletterOptIn: z.union([ z.lazy(() => BoolWithAggregatesFilterSchema),z.boolean() ]).optional(),
+  emailNotificationsOptIn: z.union([ z.lazy(() => BoolWithAggregatesFilterSchema),z.boolean() ]).optional(),
   roles: z.lazy(() => EnumUserRoleNullableListFilterSchema).optional(),
   isPushNotificationEnabled: z.union([ z.lazy(() => BoolWithAggregatesFilterSchema),z.boolean() ]).optional(),
 }).strict();
@@ -2975,6 +2982,7 @@ export const UserCreateInputSchema: z.ZodType<Prisma.UserCreateInput> = z.object
   language: z.string().optional(),
   originDomain: z.string(),
   newsletterOptIn: z.boolean().optional(),
+  emailNotificationsOptIn: z.boolean().optional(),
   roles: z.union([ z.lazy(() => UserCreaterolesInputSchema),z.lazy(() => UserRoleSchema).array() ]).optional(),
   isPushNotificationEnabled: z.boolean().optional(),
   profile: z.lazy(() => ProfileCreateNestedOneWithoutUserInputSchema).optional(),
@@ -3000,6 +3008,7 @@ export const UserUncheckedCreateInputSchema: z.ZodType<Prisma.UserUncheckedCreat
   language: z.string().optional(),
   originDomain: z.string(),
   newsletterOptIn: z.boolean().optional(),
+  emailNotificationsOptIn: z.boolean().optional(),
   roles: z.union([ z.lazy(() => UserCreaterolesInputSchema),z.lazy(() => UserRoleSchema).array() ]).optional(),
   isPushNotificationEnabled: z.boolean().optional(),
   profile: z.lazy(() => ProfileUncheckedCreateNestedOneWithoutUserInputSchema).optional(),
@@ -3025,6 +3034,7 @@ export const UserUpdateInputSchema: z.ZodType<Prisma.UserUpdateInput> = z.object
   language: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   originDomain: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   newsletterOptIn: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  emailNotificationsOptIn: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   roles: z.union([ z.lazy(() => UserUpdaterolesInputSchema),z.lazy(() => UserRoleSchema).array() ]).optional(),
   isPushNotificationEnabled: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   profile: z.lazy(() => ProfileUpdateOneWithoutUserNestedInputSchema).optional(),
@@ -3050,6 +3060,7 @@ export const UserUncheckedUpdateInputSchema: z.ZodType<Prisma.UserUncheckedUpdat
   language: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   originDomain: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   newsletterOptIn: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  emailNotificationsOptIn: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   roles: z.union([ z.lazy(() => UserUpdaterolesInputSchema),z.lazy(() => UserRoleSchema).array() ]).optional(),
   isPushNotificationEnabled: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   profile: z.lazy(() => ProfileUncheckedUpdateOneWithoutUserNestedInputSchema).optional(),
@@ -3075,6 +3086,7 @@ export const UserCreateManyInputSchema: z.ZodType<Prisma.UserCreateManyInput> = 
   language: z.string().optional(),
   originDomain: z.string(),
   newsletterOptIn: z.boolean().optional(),
+  emailNotificationsOptIn: z.boolean().optional(),
   roles: z.union([ z.lazy(() => UserCreaterolesInputSchema),z.lazy(() => UserRoleSchema).array() ]).optional(),
   isPushNotificationEnabled: z.boolean().optional()
 }).strict();
@@ -3095,6 +3107,7 @@ export const UserUpdateManyMutationInputSchema: z.ZodType<Prisma.UserUpdateManyM
   language: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   originDomain: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   newsletterOptIn: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  emailNotificationsOptIn: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   roles: z.union([ z.lazy(() => UserUpdaterolesInputSchema),z.lazy(() => UserRoleSchema).array() ]).optional(),
   isPushNotificationEnabled: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
@@ -3115,6 +3128,7 @@ export const UserUncheckedUpdateManyInputSchema: z.ZodType<Prisma.UserUncheckedU
   language: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   originDomain: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   newsletterOptIn: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  emailNotificationsOptIn: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   roles: z.union([ z.lazy(() => UserUpdaterolesInputSchema),z.lazy(() => UserRoleSchema).array() ]).optional(),
   isPushNotificationEnabled: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
@@ -4751,6 +4765,7 @@ export const UserCountOrderByAggregateInputSchema: z.ZodType<Prisma.UserCountOrd
   language: z.lazy(() => SortOrderSchema).optional(),
   originDomain: z.lazy(() => SortOrderSchema).optional(),
   newsletterOptIn: z.lazy(() => SortOrderSchema).optional(),
+  emailNotificationsOptIn: z.lazy(() => SortOrderSchema).optional(),
   roles: z.lazy(() => SortOrderSchema).optional(),
   isPushNotificationEnabled: z.lazy(() => SortOrderSchema).optional()
 }).strict();
@@ -4775,6 +4790,7 @@ export const UserMaxOrderByAggregateInputSchema: z.ZodType<Prisma.UserMaxOrderBy
   language: z.lazy(() => SortOrderSchema).optional(),
   originDomain: z.lazy(() => SortOrderSchema).optional(),
   newsletterOptIn: z.lazy(() => SortOrderSchema).optional(),
+  emailNotificationsOptIn: z.lazy(() => SortOrderSchema).optional(),
   isPushNotificationEnabled: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
@@ -4794,6 +4810,7 @@ export const UserMinOrderByAggregateInputSchema: z.ZodType<Prisma.UserMinOrderBy
   language: z.lazy(() => SortOrderSchema).optional(),
   originDomain: z.lazy(() => SortOrderSchema).optional(),
   newsletterOptIn: z.lazy(() => SortOrderSchema).optional(),
+  emailNotificationsOptIn: z.lazy(() => SortOrderSchema).optional(),
   isPushNotificationEnabled: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
@@ -8002,6 +8019,7 @@ export const UserCreateWithoutRequestsSentInputSchema: z.ZodType<Prisma.UserCrea
   language: z.string().optional(),
   originDomain: z.string(),
   newsletterOptIn: z.boolean().optional(),
+  emailNotificationsOptIn: z.boolean().optional(),
   roles: z.union([ z.lazy(() => UserCreaterolesInputSchema),z.lazy(() => UserRoleSchema).array() ]).optional(),
   isPushNotificationEnabled: z.boolean().optional(),
   profile: z.lazy(() => ProfileCreateNestedOneWithoutUserInputSchema).optional(),
@@ -8026,6 +8044,7 @@ export const UserUncheckedCreateWithoutRequestsSentInputSchema: z.ZodType<Prisma
   language: z.string().optional(),
   originDomain: z.string(),
   newsletterOptIn: z.boolean().optional(),
+  emailNotificationsOptIn: z.boolean().optional(),
   roles: z.union([ z.lazy(() => UserCreaterolesInputSchema),z.lazy(() => UserRoleSchema).array() ]).optional(),
   isPushNotificationEnabled: z.boolean().optional(),
   profile: z.lazy(() => ProfileUncheckedCreateNestedOneWithoutUserInputSchema).optional(),
@@ -8055,6 +8074,7 @@ export const UserCreateWithoutRequestsReceivedInputSchema: z.ZodType<Prisma.User
   language: z.string().optional(),
   originDomain: z.string(),
   newsletterOptIn: z.boolean().optional(),
+  emailNotificationsOptIn: z.boolean().optional(),
   roles: z.union([ z.lazy(() => UserCreaterolesInputSchema),z.lazy(() => UserRoleSchema).array() ]).optional(),
   isPushNotificationEnabled: z.boolean().optional(),
   profile: z.lazy(() => ProfileCreateNestedOneWithoutUserInputSchema).optional(),
@@ -8079,6 +8099,7 @@ export const UserUncheckedCreateWithoutRequestsReceivedInputSchema: z.ZodType<Pr
   language: z.string().optional(),
   originDomain: z.string(),
   newsletterOptIn: z.boolean().optional(),
+  emailNotificationsOptIn: z.boolean().optional(),
   roles: z.union([ z.lazy(() => UserCreaterolesInputSchema),z.lazy(() => UserRoleSchema).array() ]).optional(),
   isPushNotificationEnabled: z.boolean().optional(),
   profile: z.lazy(() => ProfileUncheckedCreateNestedOneWithoutUserInputSchema).optional(),
@@ -8119,6 +8140,7 @@ export const UserUpdateWithoutRequestsSentInputSchema: z.ZodType<Prisma.UserUpda
   language: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   originDomain: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   newsletterOptIn: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  emailNotificationsOptIn: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   roles: z.union([ z.lazy(() => UserUpdaterolesInputSchema),z.lazy(() => UserRoleSchema).array() ]).optional(),
   isPushNotificationEnabled: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   profile: z.lazy(() => ProfileUpdateOneWithoutUserNestedInputSchema).optional(),
@@ -8143,6 +8165,7 @@ export const UserUncheckedUpdateWithoutRequestsSentInputSchema: z.ZodType<Prisma
   language: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   originDomain: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   newsletterOptIn: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  emailNotificationsOptIn: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   roles: z.union([ z.lazy(() => UserUpdaterolesInputSchema),z.lazy(() => UserRoleSchema).array() ]).optional(),
   isPushNotificationEnabled: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   profile: z.lazy(() => ProfileUncheckedUpdateOneWithoutUserNestedInputSchema).optional(),
@@ -8178,6 +8201,7 @@ export const UserUpdateWithoutRequestsReceivedInputSchema: z.ZodType<Prisma.User
   language: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   originDomain: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   newsletterOptIn: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  emailNotificationsOptIn: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   roles: z.union([ z.lazy(() => UserUpdaterolesInputSchema),z.lazy(() => UserRoleSchema).array() ]).optional(),
   isPushNotificationEnabled: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   profile: z.lazy(() => ProfileUpdateOneWithoutUserNestedInputSchema).optional(),
@@ -8202,6 +8226,7 @@ export const UserUncheckedUpdateWithoutRequestsReceivedInputSchema: z.ZodType<Pr
   language: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   originDomain: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   newsletterOptIn: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  emailNotificationsOptIn: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   roles: z.union([ z.lazy(() => UserUpdaterolesInputSchema),z.lazy(() => UserRoleSchema).array() ]).optional(),
   isPushNotificationEnabled: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   profile: z.lazy(() => ProfileUncheckedUpdateOneWithoutUserNestedInputSchema).optional(),
@@ -8680,6 +8705,7 @@ export const UserCreateWithoutProfileInputSchema: z.ZodType<Prisma.UserCreateWit
   language: z.string().optional(),
   originDomain: z.string(),
   newsletterOptIn: z.boolean().optional(),
+  emailNotificationsOptIn: z.boolean().optional(),
   roles: z.union([ z.lazy(() => UserCreaterolesInputSchema),z.lazy(() => UserRoleSchema).array() ]).optional(),
   isPushNotificationEnabled: z.boolean().optional(),
   ProfileImage: z.lazy(() => ProfileImageCreateNestedManyWithoutUserInputSchema).optional(),
@@ -8704,6 +8730,7 @@ export const UserUncheckedCreateWithoutProfileInputSchema: z.ZodType<Prisma.User
   language: z.string().optional(),
   originDomain: z.string(),
   newsletterOptIn: z.boolean().optional(),
+  emailNotificationsOptIn: z.boolean().optional(),
   roles: z.union([ z.lazy(() => UserCreaterolesInputSchema),z.lazy(() => UserRoleSchema).array() ]).optional(),
   isPushNotificationEnabled: z.boolean().optional(),
   ProfileImage: z.lazy(() => ProfileImageUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
@@ -9420,6 +9447,7 @@ export const UserUpdateWithoutProfileInputSchema: z.ZodType<Prisma.UserUpdateWit
   language: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   originDomain: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   newsletterOptIn: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  emailNotificationsOptIn: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   roles: z.union([ z.lazy(() => UserUpdaterolesInputSchema),z.lazy(() => UserRoleSchema).array() ]).optional(),
   isPushNotificationEnabled: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   ProfileImage: z.lazy(() => ProfileImageUpdateManyWithoutUserNestedInputSchema).optional(),
@@ -9444,6 +9472,7 @@ export const UserUncheckedUpdateWithoutProfileInputSchema: z.ZodType<Prisma.User
   language: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   originDomain: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   newsletterOptIn: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  emailNotificationsOptIn: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   roles: z.union([ z.lazy(() => UserUpdaterolesInputSchema),z.lazy(() => UserRoleSchema).array() ]).optional(),
   isPushNotificationEnabled: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   ProfileImage: z.lazy(() => ProfileImageUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
@@ -10109,6 +10138,7 @@ export const UserCreateWithoutProfileImageInputSchema: z.ZodType<Prisma.UserCrea
   language: z.string().optional(),
   originDomain: z.string(),
   newsletterOptIn: z.boolean().optional(),
+  emailNotificationsOptIn: z.boolean().optional(),
   roles: z.union([ z.lazy(() => UserCreaterolesInputSchema),z.lazy(() => UserRoleSchema).array() ]).optional(),
   isPushNotificationEnabled: z.boolean().optional(),
   profile: z.lazy(() => ProfileCreateNestedOneWithoutUserInputSchema).optional(),
@@ -10133,6 +10163,7 @@ export const UserUncheckedCreateWithoutProfileImageInputSchema: z.ZodType<Prisma
   language: z.string().optional(),
   originDomain: z.string(),
   newsletterOptIn: z.boolean().optional(),
+  emailNotificationsOptIn: z.boolean().optional(),
   roles: z.union([ z.lazy(() => UserCreaterolesInputSchema),z.lazy(() => UserRoleSchema).array() ]).optional(),
   isPushNotificationEnabled: z.boolean().optional(),
   profile: z.lazy(() => ProfileUncheckedCreateNestedOneWithoutUserInputSchema).optional(),
@@ -10274,6 +10305,7 @@ export const UserUpdateWithoutProfileImageInputSchema: z.ZodType<Prisma.UserUpda
   language: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   originDomain: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   newsletterOptIn: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  emailNotificationsOptIn: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   roles: z.union([ z.lazy(() => UserUpdaterolesInputSchema),z.lazy(() => UserRoleSchema).array() ]).optional(),
   isPushNotificationEnabled: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   profile: z.lazy(() => ProfileUpdateOneWithoutUserNestedInputSchema).optional(),
@@ -10298,6 +10330,7 @@ export const UserUncheckedUpdateWithoutProfileImageInputSchema: z.ZodType<Prisma
   language: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   originDomain: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   newsletterOptIn: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  emailNotificationsOptIn: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   roles: z.union([ z.lazy(() => UserUpdaterolesInputSchema),z.lazy(() => UserRoleSchema).array() ]).optional(),
   isPushNotificationEnabled: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   profile: z.lazy(() => ProfileUncheckedUpdateOneWithoutUserNestedInputSchema).optional(),
@@ -12621,6 +12654,7 @@ export const UserCreateWithoutPushSubscriptionInputSchema: z.ZodType<Prisma.User
   language: z.string().optional(),
   originDomain: z.string(),
   newsletterOptIn: z.boolean().optional(),
+  emailNotificationsOptIn: z.boolean().optional(),
   roles: z.union([ z.lazy(() => UserCreaterolesInputSchema),z.lazy(() => UserRoleSchema).array() ]).optional(),
   isPushNotificationEnabled: z.boolean().optional(),
   profile: z.lazy(() => ProfileCreateNestedOneWithoutUserInputSchema).optional(),
@@ -12645,6 +12679,7 @@ export const UserUncheckedCreateWithoutPushSubscriptionInputSchema: z.ZodType<Pr
   language: z.string().optional(),
   originDomain: z.string(),
   newsletterOptIn: z.boolean().optional(),
+  emailNotificationsOptIn: z.boolean().optional(),
   roles: z.union([ z.lazy(() => UserCreaterolesInputSchema),z.lazy(() => UserRoleSchema).array() ]).optional(),
   isPushNotificationEnabled: z.boolean().optional(),
   profile: z.lazy(() => ProfileUncheckedCreateNestedOneWithoutUserInputSchema).optional(),
@@ -12685,6 +12720,7 @@ export const UserUpdateWithoutPushSubscriptionInputSchema: z.ZodType<Prisma.User
   language: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   originDomain: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   newsletterOptIn: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  emailNotificationsOptIn: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   roles: z.union([ z.lazy(() => UserUpdaterolesInputSchema),z.lazy(() => UserRoleSchema).array() ]).optional(),
   isPushNotificationEnabled: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   profile: z.lazy(() => ProfileUpdateOneWithoutUserNestedInputSchema).optional(),
@@ -12709,6 +12745,7 @@ export const UserUncheckedUpdateWithoutPushSubscriptionInputSchema: z.ZodType<Pr
   language: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   originDomain: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   newsletterOptIn: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  emailNotificationsOptIn: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   roles: z.union([ z.lazy(() => UserUpdaterolesInputSchema),z.lazy(() => UserRoleSchema).array() ]).optional(),
   isPushNotificationEnabled: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   profile: z.lazy(() => ProfileUncheckedUpdateOneWithoutUserNestedInputSchema).optional(),

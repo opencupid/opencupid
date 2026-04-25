@@ -74,6 +74,7 @@
       "contentBody": "Szia, elkezdted a profilod beállítását, de még nem fejezted be. Ha problémába ütköztél, vagy valami nem volt teljesen egyértelmű, válaszolj nyugodtan erre az emailre, szívesen segítünk. Szép napot!",
       "subject": "Elkezdett regisztráció"
     },
+    "unsubscribe_link": "Leiratkozás az értesítő levelekről",
     "welcome": {
       "callToActionLabel": "Kapcsolódj",
       "contentBody": "Üdv a közösségben!",
@@ -576,5 +577,16 @@
       "message": "Új verzió jelent meg, frissítsünk?",
       "reload": "Frissítsd"
     }
+  },
+  "unsubscribe": {
+    "already_body": "Már nem küldünk neked értesítő e-maileket.",
+    "already_title": "Már le vagy iratkozva",
+    "confirm_body": "Nem fogsz több értesítő e-mailt kapni. Bármikor bejelentkezve módosíthatod a beállításokat.",
+    "confirm_button": "Leiratkozom",
+    "confirm_title": "Leiratkozol az e-mail értesítésekről?",
+    "done_body": "Mostantól nem küldünk neked értesítő e-maileket.",
+    "done_title": "Sikeresen leiratkoztál",
+    "error_body": "Ez a leiratkozási link érvénytelen vagy lejárt. Kérjük, jelentkezz be a beállítások módosításához.",
+    "error_title": "Érvénytelen vagy lejárt link"
   }
 }

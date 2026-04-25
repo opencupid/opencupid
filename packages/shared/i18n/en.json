@@ -71,6 +71,7 @@
       "contentBody": "Hey there, you started setting up your profile on {siteName} but haven't finished yet. Did you change your mind or had some trouble? If you need any help, feel free to reply to this email.",
       "subject": "Forgot your profile?"
     },
+    "unsubscribe_link": "Unsubscribe from these emails",
     "welcome": {
       "callToActionLabel": "Go connect with people",
       "contentBody": "Hey there, welcome aboard!",
@@ -571,5 +572,16 @@
       "message": "An update is available.",
       "reload": "Reload"
     }
+  },
+  "unsubscribe": {
+    "already_body": "You no longer receive notification emails from us.",
+    "already_title": "You're already unsubscribed",
+    "confirm_body": "You won't receive any more notification emails. You can still log in and update your preferences at any time.",
+    "confirm_button": "Unsubscribe",
+    "confirm_title": "Unsubscribe from email notifications?",
+    "done_body": "You won't receive further notification emails from us.",
+    "done_title": "You've been unsubscribed",
+    "error_body": "This unsubscribe link is invalid or has expired. Please log in to manage your email preferences.",
+    "error_title": "Link invalid or expired"
   }
 }

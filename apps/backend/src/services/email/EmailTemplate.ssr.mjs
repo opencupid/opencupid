@@ -10,11 +10,24 @@ const _sfc_main = /* @__PURE__ */ defineComponent({
     callToActionLabel: {},
     callToActionUrl: {},
     fallbackHint: {},
-    footer: {}
+    footer: {},
+    unsubscribeUrl: {},
+    unsubscribeLabel: {}
   },
   setup(__props) {
     return (_ctx, _push, _parent, _attrs) => {
-      _push(`<div${ssrRenderAttrs(mergeProps({ style: { "margin": "0", "padding": "0", "background": "#f6f7f9" } }, _attrs))}><table role="presentation" class="outer" cellpadding="0" cellspacing="0"><tbody><tr><td class="center"><table role="presentation" class="card" width="600" cellpadding="0" cellspacing="0"><tbody><tr><td class="header"><div class="appName">${ssrInterpolate(__props.siteName)}</div></td></tr><tr><td class="body"><div class="content">${__props.contentBody ?? ""}</div><table role="presentation" class="ctaTable" cellpadding="0" cellspacing="0"><tbody><tr><td class="ctaCell"><a${ssrRenderAttr("href", __props.callToActionUrl)} class="ctaButton">${ssrInterpolate(__props.callToActionLabel)}</a></td></tr></tbody></table><p class="fallback">${ssrInterpolate(__props.fallbackHint)} <br><a${ssrRenderAttr("href", __props.callToActionUrl)} class="link">${ssrInterpolate(__props.callToActionUrl)}</a></p></td></tr><tr><td class="footer">${ssrInterpolate(__props.footer)}</td></tr></tbody></table></td></tr></tbody></table></div>`);
+      _push(`<div${ssrRenderAttrs(mergeProps({ style: { "margin": "0", "padding": "0", "background": "#f6f7f9" } }, _attrs))}><table role="presentation" class="outer" cellpadding="0" cellspacing="0"><tbody><tr><td class="center"><table role="presentation" class="card" width="600" cellpadding="0" cellspacing="0"><tbody><tr><td class="header"><div class="appName">${ssrInterpolate(__props.siteName)}</div></td></tr><tr><td class="body"><div class="content">${__props.contentBody ?? ""}</div><table role="presentation" class="ctaTable" cellpadding="0" cellspacing="0"><tbody><tr><td class="ctaCell"><a${ssrRenderAttr("href", __props.callToActionUrl)} class="ctaButton">${ssrInterpolate(__props.callToActionLabel)}</a></td></tr></tbody></table><p class="fallback">${ssrInterpolate(__props.fallbackHint)} <br><a${ssrRenderAttr("href", __props.callToActionUrl)} class="link">${ssrInterpolate(__props.callToActionUrl)}</a></p></td></tr><tr><td class="footer">`);
+      if (__props.footer) {
+        _push(`<div>${ssrInterpolate(__props.footer)}</div>`);
+      } else {
+        _push(`<!---->`);
+      }
+      if (__props.unsubscribeUrl) {
+        _push(`<div class="unsubscribe"><a${ssrRenderAttr("href", __props.unsubscribeUrl)} class="link">${ssrInterpolate(__props.unsubscribeLabel)}</a></div>`);
+      } else {
+        _push(`<!---->`);
+      }
+      _push(`</td></tr></tbody></table></td></tr></tbody></table></div>`);
     };
   }
 });

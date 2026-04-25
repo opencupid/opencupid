@@ -194,6 +194,9 @@ importers:
       dotenv-expand:
         specifier: 12.0.3
         version: 12.0.3
+      fast-jwt:
+        specifier: ^6.1.0
+        version: 6.1.0
       fastify:
         specifier: 5.7.4
         version: 5.7.4

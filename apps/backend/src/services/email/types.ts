@@ -8,6 +8,8 @@ export type EmailTemplateProps = {
   callToActionUrl: string
   fallbackHint: string
   footer?: string
+  unsubscribeUrl?: string
+  unsubscribeLabel?: string
 }
 
 export type EmailPayload = {
@@ -15,4 +17,5 @@ export type EmailPayload = {
   subject: string
   brand: Brand
   templateProps: EmailTemplateProps
+  headers?: Record<string, string>
 }

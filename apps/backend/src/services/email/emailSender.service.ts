@@ -12,7 +12,7 @@ export class EmailService {
     this.transporter = nodemailer.createTransport({
       host: appConfig.SMTP_HOST,
       port: port,
-      secure: (port === 465), // true for 465, false for other ports
+      secure: port === 465, // true for 465, false for other ports
       auth: {
         user: appConfig.SMTP_USER,
         pass: appConfig.SMTP_PASS,
@@ -28,6 +28,7 @@ export class EmailService {
       to: payload.to,
       subject: payload.subject,
       html,
+      headers: payload.headers,
     }
 
     return this.transporter.sendMail(mailOptions)

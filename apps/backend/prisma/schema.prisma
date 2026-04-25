@@ -146,7 +146,8 @@ model User {
   lastLoginAt             DateTime?
   language                String     @default("en")
   originDomain            String
-  newsletterOptIn         Boolean    @default(true)
+  newsletterOptIn           Boolean  @default(true)
+  emailNotificationsOptIn   Boolean  @default(true)
   roles                   UserRole[] @default([user])
 
   // relations

@@ -84,7 +84,18 @@ defineProps<EmailTemplateProps>()
                 </tr>
                 <tr>
                   <td class="footer">
-                    {{ footer }}
+                    <div v-if="footer">{{ footer }}</div>
+                    <div
+                      v-if="unsubscribeUrl"
+                      class="unsubscribe"
+                    >
+                      <a
+                        :href="unsubscribeUrl"
+                        class="link"
+                      >
+                        {{ unsubscribeLabel }}
+                      </a>
+                    </div>
                   </td>
                 </tr>
               </tbody>
