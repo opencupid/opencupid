@@ -84,4 +84,27 @@ describe('UploadButton', () => {
     const input = wrapper.find('input')
     expect(input.attributes('capture')).toBeUndefined()
   })
+
+  // Firefox on Android only honors `capture` when `accept` lists media MIME
+  // types — file extensions like `.jpg` are ignored and fall back to the
+  // gallery picker. See issue #234.
+  it('uses MIME-type accept values so capture works in Firefox/Android', () => {
+    const wrapper = mount(UploadButton, {
+      props: { capture: 'user' },
+      global: {
+        stubs: {
+          BFormFile: {
+            props: ['accept', 'capture'],
+            template: '<input :accept="accept" :capture="capture" />',
+          },
+          AvatarUploadIcon: true,
+          IconCamera2: true,
+          IconPhoto: true,
+        },
+      },
+    })
+    const accept = wrapper.find('input').attributes('accept') ?? ''
+    expect(accept).toContain('image/')
+    expect(accept).not.toMatch(/\.(jpe?g|png)/i)
+  })
 })
