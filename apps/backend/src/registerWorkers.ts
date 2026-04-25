@@ -12,6 +12,8 @@ import {
   processOnboardingReminderJob,
   type OnboardingReminderJobData,
 } from '@/workers/onboardingReminderWorker'
+import { processProfileTrustJob } from '@/workers/profileTrustWorker'
+import type { ProfileTrustJobData } from '@/queues/profileTrustQueue'
 
 type ActivityFlushJobData = { profileId: string }
 
@@ -49,6 +51,14 @@ export function registerWorkers(): Worker[] {
       'onboarding-reminder',
       async (job: Job<OnboardingReminderJobData>) => {
         await processOnboardingReminderJob(job)
+      },
+      { connection }
+    ),
+
+    new Worker<ProfileTrustJobData>(
+      'profile-trust',
+      async (job: Job<ProfileTrustJobData>) => {
+        await processProfileTrustJob(job)
       },
       { connection }
     ),

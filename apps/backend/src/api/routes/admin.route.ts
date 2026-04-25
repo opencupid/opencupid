@@ -477,7 +477,8 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
             senderProfileId,
             recipientProfileId
           )
-          const outcome = computeSendOutcome(convo, wasCreated, senderProfileId)
+          // System sender (WELCOME_MESSAGE_SENDER_PROFILE_ID) is never quarantined.
+          const outcome = computeSendOutcome(convo, wasCreated, senderProfileId, false)
 
           if (outcome === 'blocked') {
             throw new MessagingError(

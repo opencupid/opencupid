@@ -9,6 +9,19 @@ let reply: MockReply
 let mockMessageService: any
 let mockWebPushService: any
 let mockNotifierService: any
+let mockTrustService: any
+
+vi.mock('../../services/profileTrust.service', () => ({
+  ProfileTrustService: {
+    getInstance: () => mockTrustService,
+  },
+}))
+
+vi.mock('@/queues/profileTrustQueue', () => ({
+  profileTrustQueue: {
+    add: vi.fn().mockResolvedValue({}),
+  },
+}))
 
 vi.mock('../../services/messaging.service', () => {
   const MessagingErrorCodes = {
@@ -110,6 +123,9 @@ beforeEach(async () => {
   vi.clearAllMocks()
   fastify = new MockFastify()
   reply = new MockReply()
+  mockTrustService = {
+    hasTrustFlag: vi.fn().mockResolvedValue(false),
+  }
   mockMessageService = {
     listMessagesForConversation: vi.fn(),
     listConversationsForProfile: vi.fn(),
@@ -117,6 +133,7 @@ beforeEach(async () => {
     getConversationSummary: vi.fn(),
     resolveConversation: vi.fn(),
     acceptConversationOnReply: vi.fn(),
+    promoteConversation: vi.fn(),
     sendMessage: vi.fn(),
   }
   mockWebPushService = { send: vi.fn() }
@@ -279,7 +296,8 @@ describe('POST /message', () => {
     expect(mockMessageService.resolveConversation).toHaveBeenCalledWith(
       fastify.prisma,
       'p1',
-      'ck1234567890abcd12345678'
+      'ck1234567890abcd12345678',
+      { createAsPending: false }
     )
     expect(mockMessageService.sendMessage).toHaveBeenCalledWith(
       fastify.prisma,
@@ -290,7 +308,7 @@ describe('POST /message', () => {
       undefined
     )
     expect(mockMessageService.acceptConversationOnReply).not.toHaveBeenCalled()
-    expect(reply.payload.outcome).toBe('reply')
+    expect(reply.payload.outcome).toBeUndefined()
   })
 
   it('broadcasts via WS and falls back to notification when offline', async () => {
@@ -418,7 +436,7 @@ describe('POST /message — outcomes', () => {
     })
   }
 
-  it('outcome=new_conversation when wasCreated=true', async () => {
+  it('new_conversation outcome: wasCreated=true, no accept/promote', async () => {
     const handler = fastify.routes['POST /message']
     mockSend({
       convo: { id: 'conv1', status: 'INITIATED', initiatorProfileId: senderProfileId },
@@ -427,11 +445,13 @@ describe('POST /message — outcomes', () => {
 
     await handler({ session: { profileId: senderProfileId }, body: validBody } as any, reply as any)
 
-    expect(reply.payload.outcome).toBe('new_conversation')
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.outcome).toBeUndefined()
     expect(mockMessageService.acceptConversationOnReply).not.toHaveBeenCalled()
+    expect(mockMessageService.promoteConversation).not.toHaveBeenCalled()
   })
 
-  it('outcome=accepted_on_reply when non-initiator replies into INITIATED', async () => {
+  it('accepted_on_reply outcome: non-initiator replies into INITIATED', async () => {
     const handler = fastify.routes['POST /message']
     mockSend({
       convo: { id: 'conv1', status: 'INITIATED', initiatorProfileId: 'other-user' },
@@ -444,14 +464,15 @@ describe('POST /message — outcomes', () => {
 
     await handler({ session: { profileId: senderProfileId }, body: validBody } as any, reply as any)
 
-    expect(reply.payload.outcome).toBe('accepted_on_reply')
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.outcome).toBeUndefined()
     expect(mockMessageService.acceptConversationOnReply).toHaveBeenCalledWith(
       fastify.prisma,
       'conv1'
     )
   })
 
-  it('outcome=reply when convo is already ACCEPTED', async () => {
+  it('reply outcome: ACCEPTED convo, no accept/promote', async () => {
     const handler = fastify.routes['POST /message']
     mockSend({
       convo: { id: 'conv1', status: 'ACCEPTED', initiatorProfileId: 'other-user' },
@@ -460,7 +481,8 @@ describe('POST /message — outcomes', () => {
 
     await handler({ session: { profileId: senderProfileId }, body: validBody } as any, reply as any)
 
-    expect(reply.payload.outcome).toBe('reply')
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.outcome).toBeUndefined()
     expect(mockMessageService.acceptConversationOnReply).not.toHaveBeenCalled()
   })
 
@@ -853,7 +875,7 @@ describe('POST /voice — outcomes', () => {
     })
   }
 
-  it('outcome=new_conversation when wasCreated=true', async () => {
+  it('new_conversation outcome: wasCreated=true, no accept/promote', async () => {
     const handler = fastify.routes['POST /voice']
     mockVoiceSend({
       convo: { id: 'conv1', status: 'INITIATED', initiatorProfileId: senderProfileId },
@@ -866,11 +888,11 @@ describe('POST /voice — outcomes', () => {
     )
 
     expect(reply.statusCode).toBe(200)
-    expect(reply.payload.outcome).toBe('new_conversation')
+    expect(reply.payload.outcome).toBeUndefined()
     expect(mockMessageService.acceptConversationOnReply).not.toHaveBeenCalled()
   })
 
-  it('outcome=reply when convo is already ACCEPTED', async () => {
+  it('reply outcome: ACCEPTED convo, no accept/promote', async () => {
     const handler = fastify.routes['POST /voice']
     mockVoiceSend({
       convo: { id: 'conv1', status: 'ACCEPTED', initiatorProfileId: 'other-user' },
@@ -883,11 +905,11 @@ describe('POST /voice — outcomes', () => {
     )
 
     expect(reply.statusCode).toBe(200)
-    expect(reply.payload.outcome).toBe('reply')
+    expect(reply.payload.outcome).toBeUndefined()
     expect(mockMessageService.acceptConversationOnReply).not.toHaveBeenCalled()
   })
 
-  it('outcome=accepted_on_reply when non-initiator replies into INITIATED', async () => {
+  it('accepted_on_reply outcome: non-initiator replies into INITIATED', async () => {
     const handler = fastify.routes['POST /voice']
     mockVoiceSend({
       convo: { id: 'conv1', status: 'INITIATED', initiatorProfileId: 'other-user' },
@@ -904,7 +926,7 @@ describe('POST /voice — outcomes', () => {
     )
 
     expect(reply.statusCode).toBe(200)
-    expect(reply.payload.outcome).toBe('accepted_on_reply')
+    expect(reply.payload.outcome).toBeUndefined()
     expect(mockMessageService.acceptConversationOnReply).toHaveBeenCalledWith(
       fastify.prisma,
       'conv1'
@@ -1061,5 +1083,200 @@ describe('POST /conversations/:id/mark-read (error paths)', () => {
       reply as any
     )
     expect(reply.statusCode).toBe(500)
+  })
+})
+
+describe('profile-trust integration', () => {
+  const validBody = { profileId: 'ck1234567890abcd12345678', content: 'hello' }
+  const senderProfileId = 'p1'
+
+  function mockNewConversationSend() {
+    mockMessageService.resolveConversation.mockResolvedValue({
+      convo: { id: 'conv1', status: 'INITIATED', initiatorProfileId: senderProfileId },
+      wasCreated: true,
+    })
+    mockMessageService.sendMessage.mockResolvedValue({
+      message: { id: 'm1', senderId: senderProfileId },
+      isDuplicate: false,
+    })
+    mockMessageService.getConversationSummary.mockResolvedValue({
+      conversation: { status: 'ACTIVE' },
+    })
+  }
+
+  function mockReplySend() {
+    mockMessageService.resolveConversation.mockResolvedValue({
+      convo: { id: 'conv1', status: 'ACCEPTED', initiatorProfileId: 'other-user' },
+      wasCreated: false,
+    })
+    mockMessageService.sendMessage.mockResolvedValue({
+      message: { id: 'm1', senderId: senderProfileId },
+      isDuplicate: false,
+    })
+    mockMessageService.getConversationSummary.mockResolvedValue({
+      conversation: { status: 'ACTIVE' },
+    })
+  }
+
+  // Gate removed: quarantined senders no longer get 403 — they're shadow-banned to PENDING.
+  it('does not reject quarantined senders with 403 (shadow-ban pivot)', async () => {
+    const handler = fastify.routes['POST /message']
+    mockTrustService.hasTrustFlag.mockResolvedValue(true)
+    mockMessageService.resolveConversation.mockResolvedValue({
+      convo: { id: 'conv1', status: 'PENDING', initiatorProfileId: senderProfileId },
+      wasCreated: true,
+    })
+    mockMessageService.sendMessage.mockResolvedValue({
+      message: { id: 'm1', senderId: senderProfileId },
+      isDuplicate: false,
+    })
+    mockMessageService.getConversationSummary.mockResolvedValue({
+      conversation: { status: 'PENDING' },
+    })
+
+    await handler({ session: { profileId: senderProfileId }, body: validBody } as any, reply as any)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    expect(mockMessageService.resolveConversation).toHaveBeenCalled()
+  })
+
+  // PENDING outcome: quarantined sender writes a new convo → PENDING, no recipient side effects.
+  it('quarantined sender: PENDING outcome suppresses notifications, enqueues reconcile', async () => {
+    const { broadcastToProfile } = await import('../../utils/wsUtils')
+    const { profileTrustQueue } = await import('@/queues/profileTrustQueue')
+    ;(broadcastToProfile as any).mockClear()
+    const spy = vi.spyOn(profileTrustQueue, 'add').mockResolvedValue({} as any)
+
+    mockTrustService.hasTrustFlag.mockResolvedValue(true)
+    mockMessageService.resolveConversation.mockResolvedValue({
+      convo: { id: 'conv1', status: 'PENDING', initiatorProfileId: senderProfileId },
+      wasCreated: true,
+    })
+    mockMessageService.sendMessage.mockResolvedValue({
+      message: { id: 'm1', senderId: senderProfileId },
+      isDuplicate: false,
+    })
+    mockMessageService.getConversationSummary.mockResolvedValue({
+      conversation: { status: 'PENDING' },
+    })
+
+    const handler = fastify.routes['POST /message']
+    await handler({ session: { profileId: senderProfileId }, body: validBody } as any, reply as any)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.outcome).toBeUndefined()
+    // No WS broadcast / web-push / email.
+    const newMessageCalls = (broadcastToProfile as any).mock.calls.filter(
+      (c: any) => c[2]?.type === 'ws:new_message'
+    )
+    expect(newMessageCalls).toHaveLength(0)
+    expect(mockNotifierService.notifyProfile).not.toHaveBeenCalled()
+    // But reconcile WAS enqueued.
+    expect(spy).toHaveBeenCalledWith(
+      'reconcile-one',
+      { kind: 'reconcile-one', profileId: senderProfileId },
+      expect.objectContaining({ jobId: `trust-${senderProfileId}` })
+    )
+    // resolveConversation received createAsPending: true
+    expect(mockMessageService.resolveConversation).toHaveBeenCalledWith(
+      fastify.prisma,
+      senderProfileId,
+      'ck1234567890abcd12345678',
+      { createAsPending: true }
+    )
+
+    spy.mockRestore()
+  })
+
+  // accept_and_promote_pending: recipient (not quarantined) replies into sender's PENDING.
+  it('accept_and_promote_pending: promote + accept, notify, no enqueue', async () => {
+    const { profileTrustQueue } = await import('@/queues/profileTrustQueue')
+    const spy = vi.spyOn(profileTrustQueue, 'add').mockResolvedValue({} as any)
+
+    // Bob (p1) is sending into a PENDING initiated by Alice ('other-user').
+    mockTrustService.hasTrustFlag.mockResolvedValue(false)
+    mockMessageService.resolveConversation.mockResolvedValue({
+      convo: { id: 'conv1', status: 'PENDING', initiatorProfileId: 'other-user' },
+      wasCreated: false,
+    })
+    mockMessageService.sendMessage.mockResolvedValue({
+      message: { id: 'm1', senderId: senderProfileId },
+      isDuplicate: false,
+    })
+    mockMessageService.getConversationSummary.mockResolvedValue({
+      conversation: { status: 'ACCEPTED' },
+    })
+
+    const handler = fastify.routes['POST /message']
+    await handler({ session: { profileId: senderProfileId }, body: validBody } as any, reply as any)
+
+    expect(reply.statusCode).toBe(200)
+    expect(mockMessageService.promoteConversation).toHaveBeenCalledWith(
+      fastify.prisma,
+      'conv1',
+      senderProfileId
+    )
+    expect(mockMessageService.acceptConversationOnReply).toHaveBeenCalledWith(
+      fastify.prisma,
+      'conv1'
+    )
+    expect(mockNotifierService.notifyProfile).toHaveBeenCalled()
+    // Sender did NOT add a new row to their own count — no enqueue.
+    expect(spy).not.toHaveBeenCalled()
+
+    spy.mockRestore()
+  })
+
+  // Test B — enqueue called on new_conversation
+  it('enqueues reconcile-one job when outcome is new_conversation', async () => {
+    const { profileTrustQueue } = await import('@/queues/profileTrustQueue')
+    const spy = vi.spyOn(profileTrustQueue, 'add').mockResolvedValue({} as any)
+
+    const handler = fastify.routes['POST /message']
+    mockNewConversationSend()
+
+    await handler({ session: { profileId: senderProfileId }, body: validBody } as any, reply as any)
+
+    expect(reply.statusCode).toBe(200)
+    expect(spy).toHaveBeenCalledTimes(1)
+    expect(spy).toHaveBeenCalledWith(
+      'reconcile-one',
+      { kind: 'reconcile-one', profileId: senderProfileId },
+      expect.objectContaining({ jobId: `trust-${senderProfileId}` })
+    )
+
+    spy.mockRestore()
+  })
+
+  // Test C — enqueue NOT called on other outcomes (reply)
+  it('does not enqueue when outcome is reply', async () => {
+    const { profileTrustQueue } = await import('@/queues/profileTrustQueue')
+    const spy = vi.spyOn(profileTrustQueue, 'add').mockResolvedValue({} as any)
+
+    const handler = fastify.routes['POST /message']
+    mockReplySend()
+
+    await handler({ session: { profileId: senderProfileId }, body: validBody } as any, reply as any)
+
+    expect(reply.statusCode).toBe(200)
+    expect(spy).not.toHaveBeenCalled()
+
+    spy.mockRestore()
+  })
+
+  // Test D — send succeeds even when enqueue rejects
+  it('returns 200 even when enqueue throws (fire-and-forget)', async () => {
+    const { profileTrustQueue } = await import('@/queues/profileTrustQueue')
+    const spy = vi.spyOn(profileTrustQueue, 'add').mockRejectedValue(new Error('redis down'))
+
+    const handler = fastify.routes['POST /message']
+    mockNewConversationSend()
+
+    await handler({ session: { profileId: senderProfileId }, body: validBody } as any, reply as any)
+
+    expect(reply.statusCode).toBe(200)
+
+    spy.mockRestore()
   })
 })

@@ -147,11 +147,15 @@ describe('MessageService.listConversationsForProfile', () => {
 
 describe('MessageService.acceptConversationOnMatch', () => {
   it('returns null when no conversation exists', async () => {
-    mockPrisma.conversation.findUnique.mockResolvedValue(null)
+    mockPrisma.conversation.findFirst.mockResolvedValue(null)
     const result = await service.acceptConversationOnMatch('p1', 'p2')
     expect(result).toBeNull()
-    expect(mockPrisma.conversation.findUnique).toHaveBeenCalledWith({
-      where: { profileAId_profileBId: { profileAId: 'p1', profileBId: 'p2' } },
+    expect(mockPrisma.conversation.findFirst).toHaveBeenCalledWith({
+      where: {
+        profileAId: 'p1',
+        profileBId: 'p2',
+        status: { not: 'DISCARDED' },
+      },
     })
   })
 
@@ -159,13 +163,13 @@ describe('MessageService.acceptConversationOnMatch', () => {
     const existingConvo = { id: 'c1', status: 'INITIATED', profileAId: 'p1', profileBId: 'p2' }
     const updatedConvo = { ...existingConvo, status: 'ACCEPTED' }
 
-    mockPrisma.conversation.findUnique.mockResolvedValue(existingConvo)
+    mockPrisma.conversation.findFirst.mockResolvedValue(existingConvo)
     mockPrisma.conversation.update.mockResolvedValue(updatedConvo)
 
     const result = await service.acceptConversationOnMatch('p1', 'p2')
 
     expect(mockPrisma.conversation.update).toHaveBeenCalledWith({
-      where: { profileAId_profileBId: { profileAId: 'p1', profileBId: 'p2' } },
+      where: { id: 'c1' },
       data: { status: 'ACCEPTED', updatedAt: expect.any(Date) },
     })
     expect(result.status).toBe('ACCEPTED')
@@ -174,7 +178,7 @@ describe('MessageService.acceptConversationOnMatch', () => {
   it('does not update conversation when status is already ACCEPTED', async () => {
     const existingConvo = { id: 'c1', status: 'ACCEPTED', profileAId: 'p1', profileBId: 'p2' }
 
-    mockPrisma.conversation.findUnique.mockResolvedValue(existingConvo)
+    mockPrisma.conversation.findFirst.mockResolvedValue(existingConvo)
 
     const result = await service.acceptConversationOnMatch('p1', 'p2')
 
@@ -183,12 +187,16 @@ describe('MessageService.acceptConversationOnMatch', () => {
   })
 
   it('sorts profile IDs consistently', async () => {
-    mockPrisma.conversation.findUnique.mockResolvedValue(null)
+    mockPrisma.conversation.findFirst.mockResolvedValue(null)
 
     await service.acceptConversationOnMatch('p2', 'p1')
 
-    expect(mockPrisma.conversation.findUnique).toHaveBeenCalledWith({
-      where: { profileAId_profileBId: { profileAId: 'p1', profileBId: 'p2' } },
+    expect(mockPrisma.conversation.findFirst).toHaveBeenCalledWith({
+      where: {
+        profileAId: 'p1',
+        profileBId: 'p2',
+        status: { not: 'DISCARDED' },
+      },
     })
   })
 })
@@ -205,7 +213,7 @@ describe('MessageService.resolveConversation', () => {
   it('returns wasCreated: false for an existing pair (either argument order)', async () => {
     const tx: any = {
       conversation: {
-        findUnique: vi.fn().mockResolvedValue(existing),
+        findFirst: vi.fn().mockResolvedValue(existing),
         create: vi.fn(),
       },
       likedProfile: { count: vi.fn() },
@@ -217,12 +225,13 @@ describe('MessageService.resolveConversation', () => {
     expect(r1).toEqual({ convo: existing, wasCreated: false })
     expect(r2).toEqual({ convo: existing, wasCreated: false })
     expect(tx.conversation.create).not.toHaveBeenCalled()
-    expect(tx.conversation.findUnique).toHaveBeenCalledTimes(2)
+    expect(tx.conversation.findFirst).toHaveBeenCalledTimes(2)
     // Both orderings resolve to the canonical sorted pair:
-    for (const call of tx.conversation.findUnique.mock.calls) {
-      expect(call[0].where.profileAId_profileBId).toEqual({
+    for (const call of tx.conversation.findFirst.mock.calls) {
+      expect(call[0].where).toEqual({
         profileAId: 'alice',
         profileBId: 'bob',
+        status: { not: 'DISCARDED' },
       })
     }
   })
@@ -237,7 +246,7 @@ describe('MessageService.resolveConversation', () => {
     }
     const tx: any = {
       conversation: {
-        findUnique: vi.fn().mockResolvedValue(null),
+        findFirst: vi.fn().mockResolvedValue(null),
         create: vi.fn().mockResolvedValue(created),
       },
       likedProfile: { count: vi.fn().mockResolvedValue(0) },
@@ -264,7 +273,7 @@ describe('MessageService.resolveConversation', () => {
     }
     const tx: any = {
       conversation: {
-        findUnique: vi.fn().mockResolvedValue(null),
+        findFirst: vi.fn().mockResolvedValue(null),
         create: vi.fn().mockResolvedValue(created),
       },
       likedProfile: { count: vi.fn().mockResolvedValue(2) },
@@ -287,7 +296,7 @@ describe('MessageService.resolveConversation', () => {
     const p2002: any = new Error('Unique constraint failed')
     p2002.code = 'P2002'
 
-    const findUnique = vi
+    const findFirst = vi
       .fn()
       // first call: no existing
       .mockResolvedValueOnce(null)
@@ -296,7 +305,7 @@ describe('MessageService.resolveConversation', () => {
 
     const tx: any = {
       conversation: {
-        findUnique,
+        findFirst,
         create: vi.fn().mockRejectedValue(p2002),
       },
       likedProfile: { count: vi.fn().mockResolvedValue(0) },
@@ -305,20 +314,129 @@ describe('MessageService.resolveConversation', () => {
     const result = await service.resolveConversation(tx, 'alice', 'bob')
 
     expect(result).toEqual({ convo: existing, wasCreated: false })
-    expect(findUnique).toHaveBeenCalledTimes(2)
+    expect(findFirst).toHaveBeenCalledTimes(2)
   })
 
   it('rethrows non-P2002 errors from conversation.create', async () => {
     const boom = new Error('something else')
     const tx: any = {
       conversation: {
-        findUnique: vi.fn().mockResolvedValue(null),
+        findFirst: vi.fn().mockResolvedValue(null),
         create: vi.fn().mockRejectedValue(boom),
       },
       likedProfile: { count: vi.fn().mockResolvedValue(0) },
     }
 
     await expect(service.resolveConversation(tx, 'alice', 'bob')).rejects.toBe(boom)
+  })
+})
+
+describe('MessageService.promoteConversation', () => {
+  it('updates status to INITIATED via guarded updateMany and adds participant idempotently', async () => {
+    const updateMany = vi.fn().mockResolvedValue({ count: 1 })
+    const createMany = vi.fn().mockResolvedValue({ count: 1 })
+    const findUnique = vi.fn()
+    const tx: any = {
+      conversation: { updateMany, findUnique },
+      conversationParticipant: { createMany },
+    }
+    await service.promoteConversation(tx, 'c1', 'bob')
+
+    // Status update is guarded by `status: 'PENDING'` so a concurrently DISCARDED
+    // or BLOCKED row cannot be revived.
+    expect(updateMany).toHaveBeenCalledWith({
+      where: { id: 'c1', status: 'PENDING' },
+      data: { status: 'INITIATED', updatedAt: expect.any(Date) },
+    })
+    // Steady-state path: count===1 means the guard matched, no findUnique probe.
+    expect(findUnique).not.toHaveBeenCalled()
+    // Participant insertion is idempotent.
+    expect(createMany).toHaveBeenCalledWith({
+      data: [{ conversationId: 'c1', profileId: 'bob' }],
+      skipDuplicates: true,
+    })
+  })
+
+  it('tolerates a no-op promote when conversation is already INITIATED (concurrent run)', async () => {
+    // Worker race: another promoter already moved this PENDING → INITIATED. Our
+    // updateMany matches zero rows; we must NOT throw, NOT revive, just ensure
+    // the participant is present.
+    const updateMany = vi.fn().mockResolvedValue({ count: 0 })
+    const findUnique = vi.fn().mockResolvedValue({ status: 'INITIATED' })
+    const createMany = vi.fn().mockResolvedValue({ count: 0 })
+    const tx: any = {
+      conversation: { updateMany, findUnique },
+      conversationParticipant: { createMany },
+    }
+    await service.promoteConversation(tx, 'c1', 'bob')
+
+    expect(findUnique).toHaveBeenCalledWith({
+      where: { id: 'c1' },
+      select: { status: true },
+    })
+    expect(createMany).toHaveBeenCalled()
+  })
+
+  it('throws if the conversation has been DISCARDED — must not revive a terminal row', async () => {
+    const updateMany = vi.fn().mockResolvedValue({ count: 0 })
+    const findUnique = vi.fn().mockResolvedValue({ status: 'DISCARDED' })
+    const createMany = vi.fn()
+    const tx: any = {
+      conversation: { updateMany, findUnique },
+      conversationParticipant: { createMany },
+    }
+    await expect(service.promoteConversation(tx, 'c1', 'bob')).rejects.toThrow(/DISCARDED/)
+    // Importantly, no participant insertion happens after the throw.
+    expect(createMany).not.toHaveBeenCalled()
+  })
+
+  it('throws if the conversation does not exist', async () => {
+    const updateMany = vi.fn().mockResolvedValue({ count: 0 })
+    const findUnique = vi.fn().mockResolvedValue(null)
+    const createMany = vi.fn()
+    const tx: any = {
+      conversation: { updateMany, findUnique },
+      conversationParticipant: { createMany },
+    }
+    await expect(service.promoteConversation(tx, 'c1', 'bob')).rejects.toThrow(/not found/)
+    expect(createMany).not.toHaveBeenCalled()
+  })
+})
+
+describe('MessageService.resolveConversation DISCARDED handling', () => {
+  it('filters out DISCARDED conversations on lookup', async () => {
+    const findFirst = vi.fn().mockResolvedValue(null)
+    const create = vi.fn().mockResolvedValue({ id: 'c-new' })
+    const tx: any = {
+      conversation: { findFirst, create },
+      likedProfile: { count: vi.fn().mockResolvedValue(0) },
+    }
+    await service.resolveConversation(tx, 'alice', 'bob')
+    expect(findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          status: { not: 'DISCARDED' },
+        }),
+      })
+    )
+  })
+
+  it('creates PENDING with sender-only participants when createAsPending=true', async () => {
+    const findFirst = vi.fn().mockResolvedValue(null)
+    const create = vi.fn().mockResolvedValue({ id: 'c-new' })
+    const tx: any = {
+      conversation: { findFirst, create },
+      likedProfile: { count: vi.fn().mockResolvedValue(0) },
+    }
+    await service.resolveConversation(tx, 'alice', 'bob', { createAsPending: true })
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: 'PENDING',
+          participants: { create: [{ profileId: 'alice' }] },
+        }),
+      })
+    )
   })
 })
 

@@ -29,19 +29,25 @@ export class MessagingError extends Error {
 const conversationSummaryInclude = {
   conversation: {
     include: {
+      // Pair identity lives on the Conversation row itself (profileA/profileB) so
+      // the mapper can resolve the partner profile without depending on the
+      // participants list — required because PENDING conversations have only the
+      // sender as a participant until the trust flag clears.
+      profileA: { include: { profileImages: true } },
+      profileB: { include: { profileImages: true } },
       participants: {
-        include: {
-          profile: {
-            include: {
-              profileImages: true,
-            },
-          },
+        select: {
+          profileId: true,
+          isCallable: true,
+          isMuted: true,
+          isArchived: true,
+          lastReadAt: true,
         },
       },
       messages: {
         take: 1,
         orderBy: {
-          createdAt: 'desc' as const, // Ensure correct type for orderBy
+          createdAt: 'desc' as const,
         },
       },
     },
@@ -203,16 +209,28 @@ export class MessageService {
    * @param profileBId - The ID of the second profile.
    * @returns The updated conversation or null if no conversation exists.
    */
+  /**
+   * Lookup predicate for "active conversation between this sorted pair". DISCARDED
+   * tombstones are excluded — the partial unique index lets them coexist with a
+   * fresh active conversation for the same pair, so every lookup that expects a
+   * live row must filter them out.
+   */
+  private activeConversationWhere(sortedProfileAId: string, sortedProfileBId: string) {
+    return {
+      profileAId: sortedProfileAId,
+      profileBId: sortedProfileBId,
+      status: { not: 'DISCARDED' as const },
+    }
+  }
+
   async acceptConversationOnMatch(
     profileAId: string,
     profileBId: string
   ): Promise<Conversation | null> {
     const [sortedProfileAId, sortedProfileBId] = this.sortProfilePair(profileAId, profileBId)
 
-    const existingConversation = await prisma.conversation.findUnique({
-      where: {
-        profileAId_profileBId: { profileAId: sortedProfileAId, profileBId: sortedProfileBId },
-      },
+    const existingConversation = await prisma.conversation.findFirst({
+      where: this.activeConversationWhere(sortedProfileAId, sortedProfileBId),
     })
 
     if (!existingConversation) {
@@ -222,9 +240,7 @@ export class MessageService {
     // Only update if conversation is currently INITIATED
     if (existingConversation.status === 'INITIATED') {
       return await prisma.conversation.update({
-        where: {
-          profileAId_profileBId: { profileAId: sortedProfileAId, profileBId: sortedProfileBId },
-        },
+        where: { id: existingConversation.id },
         data: {
           status: 'ACCEPTED',
           updatedAt: new Date(),
@@ -302,7 +318,8 @@ export class MessageService {
     const content = simpleMarkdownToHtml(mdContent)
     return await prisma.$transaction(async (tx) => {
       const { convo, wasCreated } = await this.resolveConversation(tx, senderId, recipientProfileId)
-      const outcome = computeSendOutcome(convo, wasCreated, senderId)
+      // System welcome sender is never quarantined — hardcode `false`.
+      const outcome = computeSendOutcome(convo, wasCreated, senderId, false)
       // If the welcome sender already has an INITIATED convo with this recipient
       // (own pending invite) or anything BLOCKED, skip silently — we never want
       // the welcome flow to enforce state-machine transitions or duplicate sends.
@@ -333,43 +350,94 @@ export class MessageService {
   async resolveConversation(
     tx: Prisma.TransactionClient,
     senderProfileId: string,
-    recipientProfileId: string
+    recipientProfileId: string,
+    opts: { createAsPending?: boolean } = {}
   ): Promise<{ convo: Conversation; wasCreated: boolean }> {
     const [profileAId, profileBId] = this.sortProfilePair(senderProfileId, recipientProfileId)
 
-    const existing = await tx.conversation.findUnique({
-      where: { profileAId_profileBId: { profileAId, profileBId } },
+    const existing = await tx.conversation.findFirst({
+      where: this.activeConversationWhere(profileAId, profileBId),
     })
 
     if (existing) return { convo: existing, wasCreated: false }
 
-    const isMatch = await this.hasMutualLike(tx, profileAId, profileBId)
+    const status = opts.createAsPending
+      ? 'PENDING'
+      : (await this.hasMutualLike(tx, profileAId, profileBId))
+        ? 'ACCEPTED'
+        : 'INITIATED'
+    const participants = opts.createAsPending
+      ? { create: [{ profileId: senderProfileId }] } // sender only; recipient added on promote
+      : { create: [{ profileId: profileAId }, { profileId: profileBId }] }
 
     try {
       const created = await tx.conversation.create({
         data: {
-          status: isMatch ? 'ACCEPTED' : 'INITIATED',
+          status,
           initiatorProfileId: senderProfileId,
           profileAId,
           profileBId,
-          participants: {
-            create: [{ profileId: profileAId }, { profileId: profileBId }],
-          },
+          participants,
         },
       })
       return { convo: created, wasCreated: true }
     } catch (err: any) {
       if (err?.code !== 'P2002') throw err
       // Concurrent creation won the race — re-query and return the existing row.
-      const existing = await tx.conversation.findUnique({
-        where: { profileAId_profileBId: { profileAId, profileBId } },
+      const existingAfterRace = await tx.conversation.findFirst({
+        where: this.activeConversationWhere(profileAId, profileBId),
       })
-      if (!existing) {
+      if (!existingAfterRace) {
         // P2002 without a row visible to this tx would indicate a real invariant breach.
         throw err
       }
-      return { convo: existing, wasCreated: false }
+      return { convo: existingAfterRace, wasCreated: false }
     }
+  }
+
+  /**
+   * Promote a PENDING conversation to INITIATED and create the missing participant row
+   * atomically with the caller's transaction. Used by the promote-pendings worker and by
+   * the accept_and_promote_pending outcome in the route.
+   *
+   * Two concurrency hazards the guards below address:
+   * 1. The status filter prevents reviving a row that another path moved out of PENDING
+   *    (e.g. SPAM_BURST → DISCARDED, recipient block → BLOCKED, or another promoter that
+   *    already ran). count===0 is a benign "already promoted by someone else" if the row
+   *    sits in INITIATED/ACCEPTED; anything else is a genuine invariant breach.
+   * 2. createMany + skipDuplicates keeps participant insertion idempotent — without it,
+   *    a worker re-run or a route accept_and_promote_pending racing the worker would
+   *    P2002 on @@unique([profileId, conversationId]).
+   */
+  async promoteConversation(
+    tx: Prisma.TransactionClient,
+    conversationId: string,
+    missingParticipantId: string
+  ): Promise<void> {
+    const { count } = await tx.conversation.updateMany({
+      where: { id: conversationId, status: 'PENDING' },
+      data: { status: 'INITIATED', updatedAt: new Date() },
+    })
+
+    if (count === 0) {
+      const existing = await tx.conversation.findUnique({
+        where: { id: conversationId },
+        select: { status: true },
+      })
+      if (!existing) {
+        throw new Error(`promoteConversation: conversation ${conversationId} not found`)
+      }
+      if (existing.status !== 'INITIATED' && existing.status !== 'ACCEPTED') {
+        throw new Error(
+          `promoteConversation: expected PENDING conversation ${conversationId}, found ${existing.status}`
+        )
+      }
+    }
+
+    await tx.conversationParticipant.createMany({
+      data: [{ conversationId, profileId: missingParticipantId }],
+      skipDuplicates: true,
+    })
   }
 
   async acceptConversationOnReply(tx: Prisma.TransactionClient, convoId: string): Promise<void> {

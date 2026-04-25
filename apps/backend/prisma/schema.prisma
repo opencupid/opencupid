@@ -228,6 +228,7 @@ model Profile {
   // Activity tracking
   sessionLogs     ProfileSessionLog[]
   activitySummary ProfileActivitySummary?
+  trustFlags      ProfileTrustFlag[]
 
   @@index([lat, lon])
 }
@@ -274,6 +275,9 @@ model Conversation {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Active-pair uniqueness is enforced via a partial unique index in the migration SQL
+  // (Conversation_active_pair_key WHERE status != 'DISCARDED') — not representable in
+  // Prisma schema syntax.
   profileA   Profile @relation("ProfileA", fields: [profileAId], references: [id], onDelete: Cascade)
   profileAId String
 
@@ -288,8 +292,6 @@ model Conversation {
   initiator          Profile @relation(fields: [initiatorProfileId], references: [id])
 
   jitsiRoomId String?
-
-  @@unique([profileAId, profileBId], name: "profileAId_profileBId")
 }
 
 model ConversationParticipant {
@@ -313,6 +315,8 @@ enum ConversationStatus {
   ACCEPTED // Bob replied
   BLOCKED // Either blocked
   ARCHIVED // Archived by both or system
+  PENDING
+  DISCARDED
 }
 
 model LikedProfile {
@@ -423,4 +427,25 @@ model ProfileActivitySummary {
   segment          ActivitySegment @default(dormant)
   demotionStreak   Int             @default(0)
   segmentUpdatedAt DateTime        @default(now())
+}
+
+model ProfileTrustFlag {
+  id        String      @id @default(cuid())
+  profileId String
+  reason    TrustReason
+  flaggedAt DateTime    @default(now())
+  clearedAt DateTime?
+  evidence  Json
+  flaggedBy String
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId, clearedAt])
+  // Partial index on active flags is defined in the migration SQL
+  // (not representable in Prisma schema syntax).
+}
+
+enum TrustReason {
+  PROFILE_UNVETTED
+  SPAM_BURST
 }

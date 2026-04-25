@@ -8,7 +8,7 @@ import {
   cleanMessageForNotification,
   type MessagingErrorCode,
 } from '@/services/messaging.service'
-import { computeSendOutcome } from '@/services/messaging.stateMachine'
+import { computeSendOutcome, type SendOutcome } from '@/services/messaging.stateMachine'
 import { WebPushService } from '@/services/webpush.service'
 
 import { z } from 'zod'
@@ -27,6 +27,8 @@ import {
 import type { MessageDTO } from '@zod/messaging/messaging.dto'
 import { InteractionService } from '@/services/interaction.service'
 import { notifierService } from '@/services/notifier.service'
+import { profileTrustQueue } from '@/queues/profileTrustQueue'
+import { ProfileTrustService } from '@/services/profileTrust.service'
 import { appConfig } from '@/lib/appconfig'
 import i18next from 'i18next'
 import { MEDIA_SUBDIR } from '@/lib/media'
@@ -74,6 +76,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
   const messageService = MessageService.getInstance()
   const webPushService = WebPushService.getInstance()
   const interactionService = InteractionService.getInstance()
+  const trustService = ProfileTrustService.getInstance()
 
   /*
    * Owns Phases 1 + 2 shared by /message and /voice: the resolve → classify →
@@ -92,17 +95,26 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
       fileSize?: number
       duration?: number
     }
-  }): Promise<{ response: SendMessageResponse; messageDTO: MessageDTO; isDuplicate: boolean }> {
+  }): Promise<{
+    response: SendMessageResponse
+    messageDTO: MessageDTO
+    outcome: SendOutcome
+    isDuplicate: boolean
+  }> {
     const { senderProfileId, recipientProfileId, content, messageType, attachment } = input
+
+    // Pre-tx: is the sender currently quarantined? Drives PENDING vs INITIATED status.
+    const senderIsQuarantined = await trustService.hasTrustFlag(senderProfileId)
 
     const { convoId, message, isDuplicate, outcome } = await fastify.prisma.$transaction(
       async (tx) => {
         const { convo, wasCreated } = await messageService.resolveConversation(
           tx,
           senderProfileId,
-          recipientProfileId
+          recipientProfileId,
+          { createAsPending: senderIsQuarantined }
         )
-        const outcome = computeSendOutcome(convo, wasCreated, senderProfileId)
+        const outcome = computeSendOutcome(convo, wasCreated, senderProfileId, senderIsQuarantined)
 
         if (outcome === 'blocked') {
           throw new MessagingError(
@@ -111,6 +123,11 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
           )
         }
 
+        if (outcome === 'accept_and_promote_pending') {
+          // Recipient is replying to a PENDING from sender — promote + accept.
+          await messageService.promoteConversation(tx, convo.id, senderProfileId)
+          await messageService.acceptConversationOnReply(tx, convo.id)
+        }
         if (outcome === 'accepted_on_reply') {
           await messageService.acceptConversationOnReply(tx, convo.id)
         }
@@ -139,6 +156,27 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
       await interactionService.markMatchAsSeen(senderProfileId, recipientProfileId)
     }
 
+    // Enqueue SPAM_BURST reconcile when the sender added a new row to their count.
+    // BullMQ forbids ':' in custom jobIds (Redis key separator) and throws
+    // synchronously from validateOptions, so a .catch() on the returned Promise
+    // wouldn't contain it — wrap in try/catch to keep enqueue failures out of the
+    // user-facing response.
+    if (outcome === 'pending' || outcome === 'new_conversation') {
+      try {
+        await profileTrustQueue.add(
+          'reconcile-one',
+          { kind: 'reconcile-one', profileId: senderProfileId },
+          {
+            jobId: `trust-${senderProfileId}`,
+            removeOnComplete: { count: 0 },
+            removeOnFail: { count: 100 },
+          }
+        )
+      } catch (err) {
+        fastify.log.error({ err, senderProfileId }, 'profile-trust enqueue failed')
+      }
+    }
+
     if (!conversation) {
       throw new Error('Conversation summary not found')
     }
@@ -150,10 +188,9 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
       success: true,
       conversation: mapConversationParticipantToSummary(conversation, senderProfileId),
       message: messageWithMine,
-      outcome,
     }
 
-    return { response, messageDTO, isDuplicate }
+    return { response, messageDTO, outcome, isDuplicate }
   }
 
   /*
@@ -308,7 +345,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
       const { profileId, content } = body.data
 
       try {
-        const { response, messageDTO, isDuplicate } = await sendAndBuildResponse({
+        const { response, messageDTO, outcome, isDuplicate } = await sendAndBuildResponse({
           senderProfileId,
           recipientProfileId: profileId,
           content,
@@ -317,7 +354,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
 
         reply.code(200).send(response)
 
-        if (!isDuplicate) {
+        if (!isDuplicate && outcome !== 'pending') {
           await fireNewMessageNotifications({
             senderProfileId,
             recipientProfileId: profileId,
@@ -447,7 +484,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
         }
 
         try {
-          const { response, messageDTO, isDuplicate } = await sendAndBuildResponse({
+          const { response, messageDTO, outcome, isDuplicate } = await sendAndBuildResponse({
             senderProfileId,
             recipientProfileId: payload.data.profileId,
             content: payload.data.content,
@@ -462,7 +499,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
 
           reply.code(200).send(response)
 
-          if (!isDuplicate) {
+          if (!isDuplicate && outcome !== 'pending') {
             await fireNewMessageNotifications({
               senderProfileId,
               recipientProfileId: payload.data.profileId,
