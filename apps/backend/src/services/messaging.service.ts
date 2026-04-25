@@ -320,7 +320,7 @@ export class MessageService {
       const { convo, wasCreated } = await this.resolveConversation(tx, senderId, recipientProfileId)
       // System welcome sender is never quarantined — hardcode `false`. NOT an admin
       // broadcast either: if a welcome already exists, we want the 'blocked' outcome
-      // so the early-return below skips silently (line 327).
+      // so the early-return below skips silently.
       const outcome = computeSendOutcome(convo, wasCreated, senderId, false, false)
       // If the welcome sender already has an INITIATED convo with this recipient
       // (own pending invite) or anything BLOCKED, skip silently — we never want

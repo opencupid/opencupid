@@ -490,6 +490,16 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
             )
           }
 
+          // Mirror messaging.route.ts state-transition handling. Required when a
+          // quarantined user previously sent into the system sender's profile —
+          // that creates a PENDING with the user as initiator and the system
+          // sender as the silent recipient. Bulk-send to that user resolves the
+          // PENDING; without these calls the convo would stay PENDING and the
+          // system sender would never become a participant.
+          if (outcome === 'accept_and_promote_pending') {
+            await messageService.promoteConversation(tx, convo.id, senderProfileId)
+            await messageService.acceptConversationOnReply(tx, convo.id)
+          }
           if (outcome === 'accepted_on_reply') {
             await messageService.acceptConversationOnReply(tx, convo.id)
           }
@@ -514,8 +524,12 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
         // Admin broadcasts intentionally do NOT fall back to push/email — that's
         // a separate product decision (#1377 follow-up). Skip on duplicate (the
         // dedup window in sendMessage already returned the prior message row).
+        // Pre-check active sockets to avoid log spam from broadcastToProfile,
+        // which warns on every offline recipient — bulk-sends to mostly-offline
+        // audiences would otherwise generate hundreds of warning lines.
         // Failures here must not roll back the persisted send.
-        if (!isDuplicate) {
+        const hasActiveSockets = (fastify.connections?.get(recipientProfileId)?.size ?? 0) > 0
+        if (!isDuplicate && hasActiveSockets) {
           try {
             broadcastToProfile(fastify, recipientProfileId, {
               type: 'ws:new_message',
