@@ -477,8 +477,9 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
             senderProfileId,
             recipientProfileId
           )
-          // System sender (WELCOME_MESSAGE_SENDER_PROFILE_ID) is never quarantined.
-          const outcome = computeSendOutcome(convo, wasCreated, senderProfileId, false)
+          // System sender (WELCOME_MESSAGE_SENDER_PROFILE_ID) is never quarantined,
+          // and admin broadcast bypasses the self-initiated re-send block (#1377).
+          const outcome = computeSendOutcome(convo, wasCreated, senderProfileId, false, true)
 
           if (outcome === 'blocked') {
             throw new MessagingError(
