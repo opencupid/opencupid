@@ -104,7 +104,12 @@ describe('UploadButton', () => {
       },
     })
     const accept = wrapper.find('input').attributes('accept') ?? ''
-    expect(accept).toContain('image/')
-    expect(accept).not.toMatch(/\.(jpe?g|png)/i)
+    const acceptedMimeTypes = accept
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean)
+      .sort()
+
+    expect(acceptedMimeTypes).toEqual(['image/jpeg', 'image/png'])
   })
 })
