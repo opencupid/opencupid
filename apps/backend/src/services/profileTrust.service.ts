@@ -10,7 +10,8 @@ export const SPAM_BURST_THRESHOLD = 3
 // Shared builder so every enqueue site uses the same BullMQ dedup key. If the clear
 // path here and the clear-unvetted-window worker (Task 6) drifted to different
 // formats, two promote-pendings jobs could race inside the serializable tx.
-export const promotePendingsJobId = (profileId: string) => `promote-pendings:${profileId}`
+// BullMQ rejects ':' in custom jobIds (Redis key separator); use '-' as separator.
+export const promotePendingsJobId = (profileId: string) => `promote-pendings-${profileId}`
 
 export class ProfileTrustService {
   private static instance: ProfileTrustService | null = null

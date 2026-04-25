@@ -157,7 +157,7 @@ describe('ProfileTrustService', () => {
       expect(queueAdd).toHaveBeenCalledWith(
         'promote-pendings',
         { kind: 'promote-pendings', profileId: 'profile-1' },
-        expect.objectContaining({ jobId: 'promote-pendings:profile-1' })
+        expect.objectContaining({ jobId: 'promote-pendings-profile-1' })
       )
       expect(profileTrustFlagCreate).not.toHaveBeenCalled()
       expect(conversationUpdateMany).not.toHaveBeenCalled()

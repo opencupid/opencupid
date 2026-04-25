@@ -73,12 +73,12 @@ describe('processProfileTrustJob', () => {
       expect(profileTrustQueue.add).toHaveBeenCalledWith(
         'promote-pendings',
         { kind: 'promote-pendings', profileId: 'p1' },
-        expect.objectContaining({ jobId: 'promote-pendings:p1' })
+        expect.objectContaining({ jobId: 'promote-pendings-p1' })
       )
       expect(profileTrustQueue.add).toHaveBeenCalledWith(
         'promote-pendings',
         { kind: 'promote-pendings', profileId: 'p2' },
-        expect.objectContaining({ jobId: 'promote-pendings:p2' })
+        expect.objectContaining({ jobId: 'promote-pendings-p2' })
       )
     })
 
