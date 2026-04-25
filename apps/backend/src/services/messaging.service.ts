@@ -29,19 +29,25 @@ export class MessagingError extends Error {
 const conversationSummaryInclude = {
   conversation: {
     include: {
+      // Pair identity lives on the Conversation row itself (profileA/profileB) so
+      // the mapper can resolve the partner profile without depending on the
+      // participants list — required because PENDING conversations have only the
+      // sender as a participant until the trust flag clears.
+      profileA: { include: { profileImages: true } },
+      profileB: { include: { profileImages: true } },
       participants: {
-        include: {
-          profile: {
-            include: {
-              profileImages: true,
-            },
-          },
+        select: {
+          profileId: true,
+          isCallable: true,
+          isMuted: true,
+          isArchived: true,
+          lastReadAt: true,
         },
       },
       messages: {
         take: 1,
         orderBy: {
-          createdAt: 'desc' as const, // Ensure correct type for orderBy
+          createdAt: 'desc' as const,
         },
       },
     },

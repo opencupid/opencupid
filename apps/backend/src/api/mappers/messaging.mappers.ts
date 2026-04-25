@@ -23,16 +23,18 @@ export function mapConversationParticipantToSummary(
   p: ConversationParticipantWithConversationSummary,
   currentProfileId: string
 ): ConversationSummary {
-  const partner = p.conversation.participants.find((cp) => cp.profileId !== currentProfileId)
+  const { conversation } = p
+  // Partner identity comes from the pair fields on Conversation, not from the
+  // participants list — PENDING conversations have only the sender as a
+  // participant, but profileA/profileB are always populated.
+  const partner =
+    conversation.profileAId === currentProfileId ? conversation.profileB : conversation.profileA
+  const partnerState = conversation.participants.find((s) => s.profileId === partner.id)
+  const myState = conversation.participants.find((s) => s.profileId === currentProfileId)
 
-  if (!partner) throw new Error('Partner profile not found in conversation')
+  const lastMessage = conversation.messages[0] ?? null
+  const canReply = canSendMessageInConversation(conversation, currentProfileId)
 
-  const lastMessage = p.conversation.messages[0] ?? null
-
-  const canReply = canSendMessageInConversation(p.conversation, currentProfileId)
-  const myParticipant = p.conversation.participants.find((cp) => cp.profileId === currentProfileId)
-  const isCallable = partner.isCallable !== false && partner.profile.isCallable !== false
-  const myIsCallable = myParticipant?.isCallable !== false
   return {
     id: p.id,
     profileId: p.profileId,
@@ -41,8 +43,8 @@ export function mapConversationParticipantToSummary(
     isMuted: p.isMuted,
     isArchived: p.isArchived,
     canReply,
-    isCallable,
-    myIsCallable,
+    isCallable: partnerState?.isCallable !== false && partner.isCallable !== false,
+    myIsCallable: myState?.isCallable !== false,
     lastMessage: lastMessage
       ? {
           content: lastMessage.content,
@@ -51,8 +53,8 @@ export function mapConversationParticipantToSummary(
           isMine: lastMessage.senderId === currentProfileId,
         }
       : null,
-    conversation: mapConversationMeta(p.conversation),
-    partnerProfile: mapProfileSummary(partner.profile),
+    conversation: mapConversationMeta(conversation),
+    partnerProfile: mapProfileSummary(partner),
   }
 }
 

@@ -22,6 +22,9 @@ const msg: any = {
   attachment: null,
 }
 
+const profileMe = { id: 'p1', publicName: 'Me', profileImages: [], isCallable: true }
+const profileThem = { id: 'p2', publicName: 'Them', profileImages: [], isCallable: true }
+
 const participant: any = {
   id: 'cp1',
   profileId: 'p1',
@@ -34,17 +37,13 @@ const participant: any = {
     id: 'c1',
     updatedAt: new Date(),
     createdAt: new Date(),
+    profileAId: 'p1',
+    profileBId: 'p2',
+    profileA: profileMe,
+    profileB: profileThem,
     participants: [
-      {
-        profileId: 'p1',
-        isCallable: true,
-        profile: { id: 'p1', publicName: 'Me', profileImages: [], isCallable: true },
-      },
-      {
-        profileId: 'p2',
-        isCallable: true,
-        profile: { id: 'p2', publicName: 'Them', profileImages: [], isCallable: true },
-      },
+      { profileId: 'p1', isCallable: true, isMuted: false, isArchived: false, lastReadAt: null },
+      { profileId: 'p2', isCallable: true, isMuted: false, isArchived: false, lastReadAt: null },
     ],
     messages: [msg],
   },
@@ -106,18 +105,7 @@ describe('messaging mappers', () => {
         ...participant,
         conversation: {
           ...participant.conversation,
-          participants: [
-            {
-              profileId: 'p1',
-              isCallable: true,
-              profile: { id: 'p1', publicName: 'Me', profileImages: [], isCallable: true },
-            },
-            {
-              profileId: 'p2',
-              isCallable: true,
-              profile: { id: 'p2', publicName: 'Them', profileImages: [], isCallable: false },
-            },
-          ],
+          profileB: { ...profileThem, isCallable: false },
         },
       }
       const summary = mapConversationParticipantToSummary(p, 'p1')
@@ -133,12 +121,16 @@ describe('messaging mappers', () => {
             {
               profileId: 'p1',
               isCallable: true,
-              profile: { id: 'p1', publicName: 'Me', profileImages: [], isCallable: true },
+              isMuted: false,
+              isArchived: false,
+              lastReadAt: null,
             },
             {
               profileId: 'p2',
               isCallable: false,
-              profile: { id: 'p2', publicName: 'Them', profileImages: [], isCallable: true },
+              isMuted: false,
+              isArchived: false,
+              lastReadAt: null,
             },
           ],
         },
@@ -156,18 +148,54 @@ describe('messaging mappers', () => {
             {
               profileId: 'p1',
               isCallable: false,
-              profile: { id: 'p1', publicName: 'Me', profileImages: [], isCallable: true },
+              isMuted: false,
+              isArchived: false,
+              lastReadAt: null,
             },
             {
               profileId: 'p2',
               isCallable: true,
-              profile: { id: 'p2', publicName: 'Them', profileImages: [], isCallable: true },
+              isMuted: false,
+              isArchived: false,
+              lastReadAt: null,
             },
           ],
         },
       }
       const summary = mapConversationParticipantToSummary(p, 'p1')
       expect(summary.myIsCallable).toBe(false)
+    })
+  })
+
+  describe('PENDING conversation (sender-only participant)', () => {
+    // Regression: PENDING conversations omit the recipient's participant row.
+    // The mapper must still resolve the partner via profileB and treat absent
+    // participant state as "callable" (the !== false default).
+    const pendingParticipant: any = {
+      ...participant,
+      conversation: {
+        ...participant.conversation,
+        participants: [
+          {
+            profileId: 'p1',
+            isCallable: true,
+            isMuted: false,
+            isArchived: false,
+            lastReadAt: null,
+          },
+        ],
+      },
+    }
+
+    it('resolves partnerProfile from profileB when participant row is absent', () => {
+      const summary = mapConversationParticipantToSummary(pendingParticipant, 'p1')
+      expect(summary.partnerProfile.id).toBe('p2')
+      expect(summary.partnerProfile.publicName).toBe('Them')
+    })
+
+    it('returns isCallable=true when partner has no participant state yet', () => {
+      const summary = mapConversationParticipantToSummary(pendingParticipant, 'p1')
+      expect(summary.isCallable).toBe(true)
     })
   })
 

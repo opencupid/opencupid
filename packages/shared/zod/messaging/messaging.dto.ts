@@ -113,13 +113,15 @@ export type ConversationParticipantWithConversationSummary =
     include: {
       conversation: {
         include: {
+          profileA: { include: { profileImages: true } }
+          profileB: { include: { profileImages: true } }
           participants: {
-            include: {
-              profile: {
-                include: {
-                  profileImages: true
-                }
-              }
+            select: {
+              profileId: true
+              isCallable: true
+              isMuted: true
+              isArchived: true
+              lastReadAt: true
             }
           }
           messages: {
