@@ -77,7 +77,6 @@ describe('ProfileTrustService', () => {
   describe('reconcileSpamBurst', () => {
     // Mock conversation + profileTrustFlag + the queue
     const conversationCount = vi.fn()
-    const conversationFindMany = vi.fn()
     const profileTrustFlagCreate = vi.fn()
     const profileTrustFlagUpdateMany = vi.fn()
     const conversationUpdateMany = vi.fn()
@@ -86,7 +85,6 @@ describe('ProfileTrustService', () => {
     beforeEach(() => {
       ;(prisma as any).conversation = {
         count: conversationCount,
-        findMany: conversationFindMany,
         updateMany: conversationUpdateMany,
       }
       ;(prisma as any).profileTrustFlag = {
@@ -98,7 +96,6 @@ describe('ProfileTrustService', () => {
         profileTrustQueue: { add: queueAdd },
       }))
       conversationCount.mockReset()
-      conversationFindMany.mockReset()
       profileTrustFlagCreate.mockReset()
       profileTrustFlagUpdateMany.mockReset()
       conversationUpdateMany.mockReset()
@@ -107,7 +104,6 @@ describe('ProfileTrustService', () => {
 
     it('writes flag AND DISCARDs active (INITIATED+PENDING) when threshold reached and not already flagged', async () => {
       conversationCount.mockResolvedValue(3)
-      conversationFindMany.mockResolvedValue([{ id: 'c1' }, { id: 'c2' }, { id: 'c3' }])
       mockedFindFirst.mockResolvedValue(null) // hasTrustFlag returns false
 
       await svc.reconcileSpamBurst('profile-1')
@@ -116,7 +112,7 @@ describe('ProfileTrustService', () => {
         data: expect.objectContaining({
           profileId: 'profile-1',
           reason: 'SPAM_BURST',
-          evidence: { sampleConversationIds: ['c1', 'c2', 'c3'], countAtFlagTime: 3 },
+          evidence: '3',
           flaggedBy: 'heuristic:spam_burst',
         }),
       })
@@ -127,33 +123,6 @@ describe('ProfileTrustService', () => {
         },
         data: { status: 'DISCARDED' },
       })
-    })
-
-    it('caps evidence sample size when count is large', async () => {
-      // Abusive profile with 50 active conversations — sample must not include all 50.
-      conversationCount.mockResolvedValue(50)
-      conversationFindMany.mockResolvedValue(
-        Array.from({ length: 10 }, (_, i) => ({ id: `c${i}` }))
-      )
-      mockedFindFirst.mockResolvedValue(null)
-
-      await svc.reconcileSpamBurst('profile-1')
-
-      // findMany must be called with take: 10 (the bounded sample).
-      expect(conversationFindMany).toHaveBeenCalledWith(
-        expect.objectContaining({ take: 10, select: { id: true } })
-      )
-      // Evidence carries the full count but only the sampled IDs.
-      expect(profileTrustFlagCreate).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          evidence: expect.objectContaining({
-            countAtFlagTime: 50,
-            sampleConversationIds: expect.any(Array),
-          }),
-        }),
-      })
-      const evidence = (profileTrustFlagCreate.mock.calls[0][0] as any).data.evidence
-      expect(evidence.sampleConversationIds).toHaveLength(10)
     })
 
     it('DISCARDs race-survivors when at threshold and already flagged (convergence)', async () => {
@@ -167,8 +136,6 @@ describe('ProfileTrustService', () => {
 
       // No new flag written — idempotent.
       expect(profileTrustFlagCreate).not.toHaveBeenCalled()
-      // No sample fetch when we don't write a flag — saves the bounded findMany.
-      expect(conversationFindMany).not.toHaveBeenCalled()
       // But active-row DISCARD DOES run — this is the convergence guarantee.
       expect(conversationUpdateMany).toHaveBeenCalledWith({
         where: {
@@ -210,8 +177,6 @@ describe('ProfileTrustService', () => {
       expect(profileTrustFlagCreate).not.toHaveBeenCalled()
       expect(profileTrustFlagUpdateMany).not.toHaveBeenCalled()
       expect(queueAdd).not.toHaveBeenCalled()
-      // No findMany either — count() alone settles the decision.
-      expect(conversationFindMany).not.toHaveBeenCalled()
     })
 
     it('threshold-counting query includes both INITIATED and PENDING', async () => {
@@ -476,7 +441,7 @@ describe('ProfileTrustService', () => {
         profileId: 'p1',
         reason: 'PROFILE_UNVETTED',
         flaggedBy: 'admin:manual',
-        evidence: { note: 'sketchy' },
+        evidence: 'sketchy',
       }
       flagCreate.mockResolvedValue(created)
 
@@ -487,7 +452,7 @@ describe('ProfileTrustService', () => {
           profileId: 'p1',
           reason: 'PROFILE_UNVETTED',
           flaggedBy: 'admin:manual',
-          evidence: { note: 'sketchy' },
+          evidence: 'sketchy',
         },
       })
       expect(result).toEqual(created)
@@ -499,7 +464,7 @@ describe('ProfileTrustService', () => {
         profileId: 'p1',
         reason: 'PROFILE_UNVETTED',
         flaggedBy: 'admin:manual',
-        evidence: { note: 'first' },
+        evidence: 'first',
       }
       flagFindFirst.mockResolvedValue(existing)
 

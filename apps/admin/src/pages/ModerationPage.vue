@@ -63,14 +63,8 @@ const reasonBadgeClass = computed(() => (f: TrustFlagRow) => {
 })
 
 const evidenceSummary = computed(() => (f: TrustFlagRow) => {
-  const e = f.evidence as Record<string, unknown> | null
-  if (!e) return '—'
-  if (typeof e.note === 'string') {
-    return e.note.length > 60 ? e.note.slice(0, 60) + '…' : e.note
-  }
-  if (typeof e.countAtFlagTime === 'number') return `count=${e.countAtFlagTime}`
-  if (typeof e.source === 'string') return String(e.source)
-  return '—'
+  if (!f.evidence) return '—'
+  return f.evidence.length > 60 ? f.evidence.slice(0, 60) + '…' : f.evidence
 })
 
 function openProfile(profileId: string) {

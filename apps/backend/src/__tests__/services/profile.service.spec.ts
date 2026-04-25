@@ -97,7 +97,7 @@ describe('ProfileService.initializeProfiles', () => {
         profileId: 'p-new',
         reason: 'PROFILE_UNVETTED',
         flaggedBy: 'system:profile_create',
-        evidence: { source: 'default_on_create' },
+        evidence: '',
       }),
     })
   })

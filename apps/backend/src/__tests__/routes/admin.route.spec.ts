@@ -622,7 +622,7 @@ describe('GET /profiles/:id', () => {
           id: 'f1',
           reason: 'PROFILE_UNVETTED',
           flaggedBy: 'admin:manual',
-          evidence: { note: 'hold' },
+          evidence: 'hold',
         },
       ],
     }
@@ -1555,7 +1555,7 @@ describe('POST /profiles/:id/flag', () => {
       id: 'f1',
       profileId: 'p1',
       flaggedBy: 'admin:manual',
-      evidence: { note: 'sketchy' },
+      evidence: 'sketchy',
     }
     mockPrisma.profileTrustFlag.create.mockResolvedValue(created)
 
@@ -1572,7 +1572,7 @@ describe('POST /profiles/:id/flag', () => {
       id: 'f1',
       profileId: 'p1',
       flaggedBy: 'admin:manual',
-      evidence: { note: 'first' },
+      evidence: 'first',
     }
     mockPrisma.profileTrustFlag.findFirst.mockResolvedValue(existing)
 

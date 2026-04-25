@@ -436,7 +436,7 @@ model ProfileTrustFlag {
   flaggedAt DateTime    @default(now())
   clearedAt DateTime?
   clearedBy String?
-  evidence  Json
+  evidence  String
   flaggedBy String
 
   profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
