@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useApi, apiRequest } from '../composables/useApi'
+import { flagProfile, clearTrustFlag } from '../composables/useTrustFlags'
 
 interface AdminProfile {
   id: string
@@ -18,6 +20,19 @@ interface AdminProfile {
   userId: string
   user: { email: string | null; phonenumber: string | null } | null
   activitySummary: { segment: string } | null
+  hasActiveTrustFlag: boolean
+}
+
+interface AdminProfileTrustFlag {
+  id: string
+  reason: 'PROFILE_UNVETTED' | 'SPAM_BURST'
+  flaggedAt: string
+  flaggedBy: string
+  evidence: unknown
+}
+
+interface AdminProfileDetail extends AdminProfile {
+  trustFlags: AdminProfileTrustFlag[]
 }
 
 interface ProfilesResponse {
@@ -156,8 +171,138 @@ function segmentBadgeClass(segment: string) {
   return `badge ${segmentColors[segment] ?? 'bg-secondary'}`
 }
 
-function viewProfile(profile: AdminProfile) {
+const selectedProfileDetail = ref<AdminProfileDetail | null>(null)
+const detailLoading = ref(false)
+const detailError = ref<string | null>(null)
+
+async function viewProfile(profile: AdminProfile) {
   selectedProfile.value = profile
+  selectedProfileDetail.value = null
+  detailError.value = null
+  detailLoading.value = true
+  try {
+    const res = await apiRequest<{ success: true; profile: AdminProfileDetail }>(
+      `/admin/profiles/${profile.id}`
+    )
+    selectedProfileDetail.value = res.profile
+  } catch (err) {
+    detailError.value = err instanceof Error ? err.message : 'failed to load profile'
+  } finally {
+    detailLoading.value = false
+  }
+}
+
+async function viewProfileById(id: string) {
+  const inList = profiles.value.find((p) => p.id === id)
+  if (inList) return viewProfile(inList)
+
+  detailLoading.value = true
+  detailError.value = null
+  try {
+    const res = await apiRequest<{ success: true; profile: AdminProfileDetail }>(
+      `/admin/profiles/${id}`
+    )
+    selectedProfile.value = res.profile
+    selectedProfileDetail.value = res.profile
+  } catch (err) {
+    detailError.value = err instanceof Error ? err.message : 'failed to load profile'
+  } finally {
+    detailLoading.value = false
+  }
+}
+
+const activeFlags = computed(() => selectedProfileDetail.value?.trustFlags ?? [])
+const activeAdminFlag = computed(
+  () => activeFlags.value.find((f) => f.flaggedBy.startsWith('admin:')) ?? null
+)
+
+// Quarantine flow (from no-flag → write admin flag)
+const quarantineOpen = ref(false)
+const quarantineNote = ref('')
+const quarantineSubmitting = ref(false)
+const quarantineError = ref<string | null>(null)
+
+function openQuarantineForm() {
+  quarantineOpen.value = true
+  quarantineNote.value = ''
+  quarantineError.value = null
+}
+
+function cancelQuarantine() {
+  quarantineOpen.value = false
+}
+
+async function submitQuarantine() {
+  if (!selectedProfile.value || quarantineNote.value.trim().length === 0) return
+  quarantineSubmitting.value = true
+  quarantineError.value = null
+  try {
+    const current = selectedProfile.value
+    const res = await flagProfile(current.id, quarantineNote.value.trim())
+    selectedProfile.value = { ...current, hasActiveTrustFlag: true }
+    const idx = profiles.value.findIndex((p) => p.id === current.id)
+    const row = idx >= 0 ? profiles.value[idx] : undefined
+    if (row) {
+      profiles.value[idx] = { ...row, hasActiveTrustFlag: true }
+    }
+    if (selectedProfileDetail.value) {
+      selectedProfileDetail.value = {
+        ...selectedProfileDetail.value,
+        hasActiveTrustFlag: true,
+        trustFlags: [
+          ...selectedProfileDetail.value.trustFlags,
+          res.flag as unknown as AdminProfileTrustFlag,
+        ],
+      }
+    }
+    quarantineOpen.value = false
+  } catch (err) {
+    quarantineError.value = err instanceof Error ? err.message : 'failed to quarantine'
+  } finally {
+    quarantineSubmitting.value = false
+  }
+}
+
+// Clear quarantine flow (from active admin flag → clear it)
+const clearConfirmOpen = ref(false)
+const clearSubmitting = ref(false)
+const clearErrorDetail = ref<string | null>(null)
+
+function askClearQuarantine() {
+  clearConfirmOpen.value = true
+  clearErrorDetail.value = null
+}
+
+async function confirmClearQuarantine() {
+  if (!activeAdminFlag.value || !selectedProfile.value) return
+  clearSubmitting.value = true
+  clearErrorDetail.value = null
+  try {
+    const flagId = activeAdminFlag.value.id
+    await clearTrustFlag(flagId)
+    if (selectedProfileDetail.value) {
+      const remaining = selectedProfileDetail.value.trustFlags.filter((f) => f.id !== flagId)
+      selectedProfileDetail.value = {
+        ...selectedProfileDetail.value,
+        trustFlags: remaining,
+        hasActiveTrustFlag: remaining.length > 0,
+      }
+      if (remaining.length === 0) {
+        const current = selectedProfile.value
+        selectedProfile.value = { ...current, hasActiveTrustFlag: false }
+        const idx = profiles.value.findIndex((p) => p.id === current.id)
+        const row = idx >= 0 ? profiles.value[idx] : undefined
+        if (row) {
+          profiles.value[idx] = { ...row, hasActiveTrustFlag: false }
+        }
+      }
+    }
+    clearConfirmOpen.value = false
+  } catch (err) {
+    clearErrorDetail.value = err instanceof Error ? err.message : 'clear failed'
+  } finally {
+    clearSubmitting.value = false
+  }
 }
 
 function resetAndFetch() {
@@ -274,6 +419,8 @@ async function sendBulkMessage() {
 const sentinel = ref<HTMLElement | null>(null)
 let observer: IntersectionObserver | null = null
 
+const route = useRoute()
+
 onMounted(() => {
   document.addEventListener('click', onClickOutside)
   fetchCountries()
@@ -286,7 +433,18 @@ onMounted(() => {
     { rootMargin: '200px' }
   )
   if (sentinel.value) observer.observe(sentinel.value)
+
+  if (typeof route.query.profileId === 'string') {
+    viewProfileById(route.query.profileId)
+  }
 })
+
+watch(
+  () => route.query.profileId,
+  (id) => {
+    if (typeof id === 'string') viewProfileById(id)
+  }
+)
 
 onUnmounted(() => {
   document.removeEventListener('click', onClickOutside)
@@ -457,6 +615,7 @@ onUnmounted(() => {
           <tr
             v-for="profile in sortedProfiles"
             :key="profile.id"
+            :class="{ 'table-warning': profile.hasActiveTrustFlag }"
             style="cursor: pointer"
             @click="viewProfile(profile)"
           >
@@ -579,20 +738,161 @@ onUnmounted(() => {
               <dt class="col-sm-4">Created</dt>
               <dd class="col-sm-8">{{ new Date(selectedProfile.createdAt).toLocaleString() }}</dd>
             </dl>
+
+            <div class="mt-3">
+              <h6 class="mb-2">Trust</h6>
+              <div
+                v-if="detailLoading"
+                class="text-muted small"
+              >
+                Loading trust info...
+              </div>
+              <div
+                v-else-if="detailError"
+                class="alert alert-danger small mb-0"
+              >
+                {{ detailError }}
+              </div>
+              <template v-else>
+                <div
+                  v-if="activeFlags.length === 0"
+                  class="text-muted small"
+                >
+                  No active trust flags.
+                </div>
+                <div
+                  v-for="f in activeFlags"
+                  v-else
+                  :key="f.id"
+                  class="border rounded p-2 mb-2"
+                >
+                  <div>
+                    <strong>{{ f.reason }}</strong>
+                    <code class="ms-2 small">{{ f.flaggedBy }}</code>
+                  </div>
+                  <div class="small text-muted">{{ new Date(f.flaggedAt).toLocaleString() }}</div>
+                  <div
+                    v-if="(f.evidence as { note?: string })?.note"
+                    class="small"
+                  >
+                    Note: {{ (f.evidence as { note: string }).note }}
+                  </div>
+                </div>
+              </template>
+            </div>
           </div>
-          <div class="modal-footer">
-            <button
-              class="btn btn-secondary"
-              @click="selectedProfile = null"
+          <div class="modal-footer flex-wrap">
+            <div
+              v-if="quarantineOpen"
+              class="w-100"
             >
-              Close
-            </button>
+              <div
+                v-if="quarantineError"
+                class="alert alert-danger small"
+              >
+                {{ quarantineError }}
+              </div>
+              <textarea
+                v-model="quarantineNote"
+                class="form-control mb-2"
+                rows="3"
+                placeholder="Reason for manual quarantine (1–1000 chars)"
+                :disabled="quarantineSubmitting"
+              ></textarea>
+              <div class="d-flex justify-content-end gap-2">
+                <button
+                  class="btn btn-secondary"
+                  :disabled="quarantineSubmitting"
+                  @click="cancelQuarantine"
+                >
+                  Cancel
+                </button>
+                <button
+                  class="btn btn-warning"
+                  :disabled="quarantineSubmitting || quarantineNote.trim().length === 0"
+                  @click="submitQuarantine"
+                >
+                  {{ quarantineSubmitting ? 'Submitting...' : 'Confirm quarantine' }}
+                </button>
+              </div>
+            </div>
+            <template v-else>
+              <button
+                v-if="activeFlags.length === 0 && !detailLoading"
+                class="btn btn-warning me-auto"
+                @click="openQuarantineForm"
+              >
+                Quarantine
+              </button>
+              <button
+                v-if="activeAdminFlag"
+                class="btn btn-outline-primary me-auto"
+                @click="askClearQuarantine"
+              >
+                Clear quarantine
+              </button>
+              <button
+                class="btn btn-secondary"
+                @click="selectedProfile = null"
+              >
+                Close
+              </button>
+            </template>
           </div>
         </div>
       </div>
     </div>
     <div
       v-if="selectedProfile"
+      class="modal-backdrop show"
+    ></div>
+
+    <!-- Confirm clear quarantine modal -->
+    <div
+      v-if="clearConfirmOpen"
+      class="modal d-block"
+      tabindex="-1"
+      @click.self="clearConfirmOpen = false"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Clear quarantine?</h5>
+          </div>
+          <div class="modal-body">
+            <p>
+              Lift the manual quarantine on
+              <strong>{{ selectedProfile?.publicName || selectedProfile?.id }}</strong
+              >?
+            </p>
+            <div
+              v-if="clearErrorDetail"
+              class="alert alert-danger"
+            >
+              {{ clearErrorDetail }}
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              class="btn btn-secondary"
+              :disabled="clearSubmitting"
+              @click="clearConfirmOpen = false"
+            >
+              Cancel
+            </button>
+            <button
+              class="btn btn-primary"
+              :disabled="clearSubmitting"
+              @click="confirmClearQuarantine"
+            >
+              {{ clearSubmitting ? 'Clearing...' : 'Clear quarantine' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      v-if="clearConfirmOpen"
       class="modal-backdrop show"
     ></div>
 
