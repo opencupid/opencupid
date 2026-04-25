@@ -27,8 +27,15 @@ describe('computeSendOutcome', () => {
     )
   })
 
-  it('existing PENDING, sender ≠ initiator → accept_and_promote_pending', () => {
+  it('existing PENDING, sender ≠ initiator → accept_and_promote_pending (regardless of quarantine)', () => {
+    // Mutual engagement promotes: when the recipient sends back into the sender's
+    // PENDING, the conversation flips to ACCEPTED via accept_and_promote_pending,
+    // even when the recipient is also quarantined. Engagement is treated as a
+    // legitimacy signal that overrides individual quarantine.
     expect(computeSendOutcome(convo('PENDING', 'alice'), false, 'bob', false, false)).toBe(
+      'accept_and_promote_pending'
+    )
+    expect(computeSendOutcome(convo('PENDING', 'alice'), false, 'bob', true, false)).toBe(
       'accept_and_promote_pending'
     )
   })
@@ -107,6 +114,16 @@ describe('computeSendOutcome', () => {
       // Unchanged: new conversation creation still wins over the override branch.
       expect(computeSendOutcome(convo('INITIATED', 'alice'), true, 'alice', false, true)).toBe(
         'new_conversation'
+      )
+    })
+
+    it('admin broadcast as recipient of user-initiated INITIATED → accepted_on_reply', () => {
+      // The override only applies to self-initiated INITIATED. When the admin
+      // sender is the *recipient* of a user-initiated INITIATED (e.g. user
+      // messaged the welcome sender first and got no reply), the regular reply
+      // semantic wins — isAdminBroadcast is not consulted on this branch.
+      expect(computeSendOutcome(convo('INITIATED', 'alice'), false, 'bob', false, true)).toBe(
+        'accepted_on_reply'
       )
     })
   })
