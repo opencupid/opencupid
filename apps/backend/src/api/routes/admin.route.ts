@@ -1,7 +1,7 @@
 import { FastifyPluginAsync } from 'fastify'
 import { DeepLClient } from 'deepl-node'
 import slugify from 'slugify'
-import type { TrustReasonType } from '@zod/generated'
+import { TrustReasonSchema, type TrustReasonType } from '@zod/generated'
 import { sendError } from '../helpers'
 import { prisma } from '@/lib/prisma'
 import { appConfig } from '@/lib/appconfig'
@@ -959,7 +959,15 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
       const page = Math.max(1, parseInt(q.page ?? '1', 10) || 1)
       const pageSize = Math.min(100, Math.max(1, parseInt(q.pageSize ?? '25', 10) || 25))
       const activeOnly = q.activeOnly !== 'false'
-      const reason = q.reason as TrustReasonType | undefined
+
+      let reason: TrustReasonType | undefined
+      if (q.reason !== undefined && q.reason !== '') {
+        const parsed = TrustReasonSchema.safeParse(q.reason)
+        if (!parsed.success) {
+          return sendError(reply, 400, `invalid reason: ${q.reason}`)
+        }
+        reason = parsed.data
+      }
 
       const { flags, total } = await ProfileTrustService.getInstance().listTrustFlags({
         page,
@@ -976,8 +984,8 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * POST /trust-flags/:id/clear
-   * Manually clears an admin-set trust flag.
-   * Returns 404 if missing, 409 if non-admin or already cleared.
+   * Clears a trust flag by id if it is still active.
+   * Returns 404 if missing, 409 if already cleared.
    */
   fastify.post('/trust-flags/:id/clear', async (req, reply) => {
     try {

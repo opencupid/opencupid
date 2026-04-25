@@ -246,10 +246,7 @@ async function submitQuarantine() {
       selectedProfileDetail.value = {
         ...selectedProfileDetail.value,
         hasActiveTrustFlag: true,
-        trustFlags: [
-          ...selectedProfileDetail.value.trustFlags,
-          res.flag as unknown as AdminProfileTrustFlag,
-        ],
+        trustFlags: [...selectedProfileDetail.value.trustFlags, res.flag],
       }
     }
     quarantineOpen.value = false
@@ -262,6 +259,9 @@ async function submitQuarantine() {
 
 // Per-flag clear flow. The confirm modal targets one flag at a time.
 const pendingClearFlagId = ref<string | null>(null)
+const pendingClearFlag = computed(() =>
+  selectedProfileDetail.value?.trustFlags.find((f) => f.id === pendingClearFlagId.value) ?? null
+)
 const clearSubmitting = ref(false)
 const clearErrorDetail = ref<string | null>(null)
 
@@ -805,6 +805,7 @@ onUnmounted(() => {
                   rows="3"
                   placeholder="Reason for manual quarantine (1–1000 chars)"
                   :disabled="quarantineSubmitting"
+                  @keydown.enter.stop
                 ></textarea>
                 <div class="d-flex justify-content-end gap-2">
                   <button
@@ -855,17 +856,24 @@ onUnmounted(() => {
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title">Clear quarantine?</h5>
+              <h5 class="modal-title">Clear trust flag?</h5>
             </div>
             <div class="modal-body">
-              <p>
-                Lift the manual quarantine on
-                <strong>{{ selectedProfile?.publicName || selectedProfile?.id }}</strong
-                >?
+              <p class="mb-2">
+                Profile:
+                <strong>{{ selectedProfile?.publicName || selectedProfile?.id }}</strong>
+              </p>
+              <p class="mb-2">
+                Flag: <strong>{{ pendingClearFlag?.reason }}</strong>
+                <code class="ms-2 small">{{ pendingClearFlag?.flaggedBy }}</code>
+              </p>
+              <p class="text-muted small mb-0">
+                Held messages on this profile will be released once no active flags remain.
+                Clearing a SPAM_BURST flag does <em>not</em> revive its discarded conversations.
               </p>
               <div
                 v-if="clearErrorDetail"
-                class="alert alert-danger"
+                class="alert alert-danger mt-2 mb-0"
               >
                 {{ clearErrorDetail }}
               </div>
@@ -883,7 +891,7 @@ onUnmounted(() => {
                 :disabled="clearSubmitting"
                 @click="confirmClearFlag"
               >
-                {{ clearSubmitting ? 'Clearing...' : 'Clear quarantine' }}
+                {{ clearSubmitting ? 'Clearing...' : 'Clear flag' }}
               </button>
             </div>
           </div>

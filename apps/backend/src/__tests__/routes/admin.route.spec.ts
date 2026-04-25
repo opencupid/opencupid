@@ -24,6 +24,7 @@ const mockPrisma = vi.hoisted(() => {
       count: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
     },
     tag: {
       findMany: vi.fn(),
@@ -1449,6 +1450,25 @@ describe('GET /trust-flags', () => {
 
     expect(reply.payload.pageSize).toBe(100)
   })
+
+  it('returns 400 on invalid reason', async () => {
+    const handler = fastify.routes['GET /trust-flags']
+    await handler({ query: { reason: 'BOGUS' } }, reply)
+    expect(reply.statusCode).toBe(400)
+    expect(mockPrisma.profileTrustFlag.findMany).not.toHaveBeenCalled()
+  })
+
+  it('treats empty reason= as "no filter"', async () => {
+    mockPrisma.profileTrustFlag.findMany.mockResolvedValue([])
+    mockPrisma.profileTrustFlag.count.mockResolvedValue(0)
+
+    const handler = fastify.routes['GET /trust-flags']
+    await handler({ query: { reason: '' } }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    const call = mockPrisma.profileTrustFlag.findMany.mock.calls[0][0]
+    expect(call.where.reason).toBeUndefined()
+  })
 })
 
 describe('POST /trust-flags/:id/clear', () => {
@@ -1464,7 +1484,7 @@ describe('POST /trust-flags/:id/clear', () => {
       clearedAt: null,
       flaggedBy: 'admin:manual',
     })
-    mockPrisma.profileTrustFlag.update.mockResolvedValue({})
+    mockPrisma.profileTrustFlag.updateMany.mockResolvedValue({ count: 1 })
     // The service dynamically imports the queue; provide a mock so the import succeeds.
     vi.doMock('@/queues/profileTrustQueue', () => ({
       profileTrustQueue: { add: vi.fn().mockResolvedValue({}) },
@@ -1475,8 +1495,8 @@ describe('POST /trust-flags/:id/clear', () => {
 
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
-    expect(mockPrisma.profileTrustFlag.update).toHaveBeenCalledWith({
-      where: { id: 'f1' },
+    expect(mockPrisma.profileTrustFlag.updateMany).toHaveBeenCalledWith({
+      where: { id: 'f1', clearedAt: null },
       data: { clearedAt: expect.any(Date), clearedBy: 'admin:manual' },
     })
   })
@@ -1497,7 +1517,7 @@ describe('POST /trust-flags/:id/clear', () => {
       clearedAt: null,
       flaggedBy: 'heuristic:spam_burst',
     })
-    mockPrisma.profileTrustFlag.update.mockResolvedValue({})
+    mockPrisma.profileTrustFlag.updateMany.mockResolvedValue({ count: 1 })
     vi.doMock('@/queues/profileTrustQueue', () => ({
       profileTrustQueue: { add: vi.fn().mockResolvedValue({}) },
     }))
@@ -1506,7 +1526,7 @@ describe('POST /trust-flags/:id/clear', () => {
     await handler({ params: { id: 'f1' } }, reply)
 
     expect(reply.statusCode).toBe(200)
-    expect(mockPrisma.profileTrustFlag.update).toHaveBeenCalled()
+    expect(mockPrisma.profileTrustFlag.updateMany).toHaveBeenCalled()
   })
 
   it('returns 409 when the flag is already cleared', async () => {

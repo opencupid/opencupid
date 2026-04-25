@@ -2,7 +2,11 @@ import { apiRequest } from './useApi'
 
 export type TrustReason = 'PROFILE_UNVETTED' | 'SPAM_BURST'
 
-export interface TrustFlagRow {
+/**
+ * Bare flag record as the backend writes it (no joined profile).
+ * Returned by POST /admin/profiles/:id/flag.
+ */
+export interface ProfileTrustFlag {
   id: string
   profileId: string
   reason: TrustReason
@@ -11,6 +15,13 @@ export interface TrustFlagRow {
   clearedAt: string | null
   clearedBy: string | null
   evidence: unknown
+}
+
+/**
+ * Flag row joined with a small profile projection.
+ * Returned by GET /admin/trust-flags for the moderation list.
+ */
+export interface TrustFlagRow extends ProfileTrustFlag {
   profile: {
     id: string
     publicName: string
@@ -48,8 +59,11 @@ export function clearTrustFlag(id: string) {
 }
 
 export function flagProfile(profileId: string, note: string) {
-  return apiRequest<{ success: true; flag: TrustFlagRow }>(`/admin/profiles/${profileId}/flag`, {
-    method: 'POST',
-    body: { note },
-  })
+  return apiRequest<{ success: true; flag: ProfileTrustFlag }>(
+    `/admin/profiles/${profileId}/flag`,
+    {
+      method: 'POST',
+      body: { note },
+    }
+  )
 }

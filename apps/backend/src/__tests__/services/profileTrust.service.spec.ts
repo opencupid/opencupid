@@ -362,38 +362,38 @@ describe('ProfileTrustService', () => {
 
   describe('clearFlag', () => {
     const flagFindUnique = vi.fn()
-    const flagUpdate = vi.fn()
+    const flagUpdateMany = vi.fn()
     const queueAdd = vi.fn()
 
     beforeEach(() => {
       ;(prisma as any).profileTrustFlag = {
         ...(prisma as any).profileTrustFlag,
         findUnique: flagFindUnique,
-        update: flagUpdate,
+        updateMany: flagUpdateMany,
       }
       vi.doMock('@/queues/profileTrustQueue', () => ({
         profileTrustQueue: { add: queueAdd },
       }))
       flagFindUnique.mockReset()
-      flagUpdate.mockReset()
+      flagUpdateMany.mockReset()
       queueAdd.mockReset()
     })
 
-    it('writes clearedAt + clearedBy, enqueues promote-pendings, returns "cleared"', async () => {
+    it('writes clearedAt + clearedBy via conditional updateMany, enqueues promote-pendings, returns "cleared"', async () => {
       flagFindUnique.mockResolvedValue({
         id: 'f1',
         profileId: 'p1',
         clearedAt: null,
         flaggedBy: 'admin:manual',
       })
-      flagUpdate.mockResolvedValue({})
+      flagUpdateMany.mockResolvedValue({ count: 1 })
       queueAdd.mockResolvedValue({})
 
       const result = await svc.clearFlag('f1', 'admin:manual')
 
       expect(result).toBe('cleared')
-      expect(flagUpdate).toHaveBeenCalledWith({
-        where: { id: 'f1' },
+      expect(flagUpdateMany).toHaveBeenCalledWith({
+        where: { id: 'f1', clearedAt: null },
         data: { clearedAt: expect.any(Date), clearedBy: 'admin:manual' },
       })
       expect(queueAdd).toHaveBeenCalledWith(
@@ -406,10 +406,10 @@ describe('ProfileTrustService', () => {
     it('returns "not_found" when the flag is missing', async () => {
       flagFindUnique.mockResolvedValue(null)
       expect(await svc.clearFlag('missing', 'admin:manual')).toBe('not_found')
-      expect(flagUpdate).not.toHaveBeenCalled()
+      expect(flagUpdateMany).not.toHaveBeenCalled()
     })
 
-    it('returns "already_cleared" when the flag is already cleared', async () => {
+    it('returns "already_cleared" when the flag is already cleared at read time', async () => {
       flagFindUnique.mockResolvedValue({
         id: 'f1',
         profileId: 'p1',
@@ -417,7 +417,22 @@ describe('ProfileTrustService', () => {
         flaggedBy: 'admin:manual',
       })
       expect(await svc.clearFlag('f1', 'admin:manual')).toBe('already_cleared')
-      expect(flagUpdate).not.toHaveBeenCalled()
+      expect(flagUpdateMany).not.toHaveBeenCalled()
+    })
+
+    it('returns "already_cleared" when a concurrent caller wins the race (count=0)', async () => {
+      flagFindUnique.mockResolvedValue({
+        id: 'f1',
+        profileId: 'p1',
+        clearedAt: null,
+        flaggedBy: 'admin:manual',
+      })
+      flagUpdateMany.mockResolvedValue({ count: 0 })
+
+      const result = await svc.clearFlag('f1', 'admin:manual')
+
+      expect(result).toBe('already_cleared')
+      expect(queueAdd).not.toHaveBeenCalled()
     })
 
     it('clears heuristic-set flags too (admin override)', async () => {
@@ -427,14 +442,14 @@ describe('ProfileTrustService', () => {
         clearedAt: null,
         flaggedBy: 'heuristic:spam_burst',
       })
-      flagUpdate.mockResolvedValue({})
+      flagUpdateMany.mockResolvedValue({ count: 1 })
       queueAdd.mockResolvedValue({})
 
       const result = await svc.clearFlag('f1', 'admin:manual')
 
       expect(result).toBe('cleared')
-      expect(flagUpdate).toHaveBeenCalledWith({
-        where: { id: 'f1' },
+      expect(flagUpdateMany).toHaveBeenCalledWith({
+        where: { id: 'f1', clearedAt: null },
         data: { clearedAt: expect.any(Date), clearedBy: 'admin:manual' },
       })
     })

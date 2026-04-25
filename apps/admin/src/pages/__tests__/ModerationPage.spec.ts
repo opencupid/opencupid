@@ -100,10 +100,10 @@ describe('ModerationPage', () => {
       .trigger('click')
     await flushPromises()
 
-    // Click "Clear quarantine" inside the confirm modal.
+    // Click "Clear flag" inside the confirm modal.
     await wrapper
       .findAll('button')
-      .filter((b) => b.text() === 'Clear quarantine')[0]
+      .filter((b) => b.text() === 'Clear flag')[0]
       .trigger('click')
     await flushPromises()
 

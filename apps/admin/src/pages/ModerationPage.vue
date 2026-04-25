@@ -254,17 +254,24 @@ onUnmounted(() => {
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Clear quarantine?</h5>
+            <h5 class="modal-title">Clear trust flag?</h5>
           </div>
           <div class="modal-body">
-            <p>
-              Lift the manual quarantine on
-              <strong>{{ pendingClear.profile.publicName || pendingClear.profileId }}</strong
-              >? Held messages on this profile will be released.
+            <p class="mb-2">
+              Profile:
+              <strong>{{ pendingClear.profile.publicName || pendingClear.profileId }}</strong>
+            </p>
+            <p class="mb-2">
+              Flag: <strong>{{ pendingClear.reason }}</strong>
+              <code class="ms-2 small">{{ pendingClear.flaggedBy }}</code>
+            </p>
+            <p class="text-muted small mb-0">
+              Held messages on this profile will be released once no active flags remain.
+              Clearing a SPAM_BURST flag does <em>not</em> revive its discarded conversations.
             </p>
             <div
               v-if="clearError"
-              class="alert alert-danger"
+              class="alert alert-danger mt-2 mb-0"
             >
               {{ clearError }}
             </div>
@@ -282,7 +289,7 @@ onUnmounted(() => {
               :disabled="clearing"
               @click="confirmClear"
             >
-              {{ clearing ? 'Clearing...' : 'Clear quarantine' }}
+              {{ clearing ? 'Clearing...' : 'Clear flag' }}
             </button>
           </div>
         </div>

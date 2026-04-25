@@ -188,10 +188,10 @@ describe('ProfilesPage', () => {
       .findAll('button')
       .filter((b) => b.text() === 'Clear')[0]
       .trigger('click')
-    // Confirm dialog's primary button reads "Clear quarantine"
+    // Confirm dialog's primary button reads "Clear flag"
     await wrapper
       .findAll('button')
-      .filter((b) => b.text() === 'Clear quarantine')[0]
+      .filter((b) => b.text() === 'Clear flag')[0]
       .trigger('click')
     await flushPromises()
 

@@ -79,10 +79,15 @@ export class ProfileTrustService {
     if (!flag) return 'not_found'
     if (flag.clearedAt) return 'already_cleared'
 
-    await prisma.profileTrustFlag.update({
-      where: { id: flagId },
+    // Conditional write: only the call that actually transitions clearedAt
+    // null→now wins. A concurrent clearer's update affects 0 rows and we
+    // skip the enqueue, avoiding a duplicate promote-pendings job and
+    // timestamp drift on clearedAt/clearedBy.
+    const result = await prisma.profileTrustFlag.updateMany({
+      where: { id: flagId, clearedAt: null },
       data: { clearedAt: new Date(), clearedBy },
     })
+    if (result.count === 0) return 'already_cleared'
 
     const { profileTrustQueue } = await import('@/queues/profileTrustQueue')
     await profileTrustQueue.add(
