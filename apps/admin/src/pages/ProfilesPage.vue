@@ -154,10 +154,10 @@ async function appendProfiles() {
   }
 }
 
-function loadMore() {
+async function loadMore() {
   if (loadingMore.value || loading.value || !hasMore.value) return
   page.value++
-  appendProfiles()
+  await appendProfiles()
 }
 
 const segmentColors: Record<string, string> = {
