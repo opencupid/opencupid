@@ -114,7 +114,13 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
           recipientProfileId,
           { createAsPending: senderIsQuarantined }
         )
-        const outcome = computeSendOutcome(convo, wasCreated, senderProfileId, senderIsQuarantined)
+        const outcome = computeSendOutcome(
+          convo,
+          wasCreated,
+          senderProfileId,
+          senderIsQuarantined,
+          false
+        )
 
         if (outcome === 'blocked') {
           throw new MessagingError(

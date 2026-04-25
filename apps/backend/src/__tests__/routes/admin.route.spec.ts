@@ -65,6 +65,7 @@ vi.mock('deepl-node', () => {
 const mockMessageService = vi.hoisted(() => ({
   resolveConversation: vi.fn(),
   acceptConversationOnReply: vi.fn(),
+  promoteConversation: vi.fn(),
   sendMessage: vi.fn(),
 }))
 
@@ -97,6 +98,18 @@ vi.mock('@/services/messaging.stateMachine', () => ({
   computeSendOutcome: mockComputeSendOutcome,
 }))
 
+const mockBroadcastToProfile = vi.hoisted(() => vi.fn())
+
+vi.mock('@/utils/wsUtils', () => ({
+  broadcastToProfile: mockBroadcastToProfile,
+}))
+
+const mockMapMessageToDTO = vi.hoisted(() => vi.fn((m: any) => ({ ...m, mapped: true })))
+
+vi.mock('../../api/mappers/messaging.mappers', () => ({
+  mapMessageToDTO: mockMapMessageToDTO,
+}))
+
 import adminRoutes from '../../api/routes/admin.route'
 import { MockReply } from '../../test-utils/fastify'
 
@@ -104,6 +117,10 @@ class AdminMockFastify {
   public routes: Record<string, any> = {}
   public hooks: Record<string, any[]> = {}
   public log = { error: vi.fn(), warn: vi.fn(), info: vi.fn() }
+  // Mirrors the WS plugin's profileId → Set<socket> map. Tests pre-populate
+  // entries for recipients they want to receive a broadcast; absent entries
+  // mean "offline" and exercise the pre-check path that skips broadcasting.
+  public connections: Map<string, Set<unknown>> = new Map()
 
   get(path: string, opts: any, handler?: any) {
     this.routes[`GET ${path}`] = typeof opts === 'function' ? opts : handler
@@ -1026,12 +1043,20 @@ describe('GET /subscribers', () => {
 })
 
 describe('POST /messages', () => {
+  // Helper: register a fake socket for `profileId` so the pre-check sees the
+  // recipient as online and the WS broadcast runs.
+  function bringOnline(profileId: string) {
+    fastify.connections.set(profileId, new Set([{}]))
+  }
+
   beforeEach(() => {
     mockAppConfig.WELCOME_MESSAGE_SENDER_PROFILE_ID = 'sys-sender'
     mockMessageService.resolveConversation.mockReset()
     mockMessageService.acceptConversationOnReply.mockReset()
+    mockMessageService.promoteConversation.mockReset()
     mockMessageService.sendMessage.mockReset()
     mockComputeSendOutcome.mockReset()
+    fastify.connections.clear()
   })
 
   it('returns 400 when profileIds is missing or empty', async () => {
@@ -1067,6 +1092,9 @@ describe('POST /messages', () => {
       message: { id: 'm1' },
       isDuplicate: false,
     })
+    // Both recipients online — exercises the broadcast path.
+    bringOnline('p1')
+    bringOnline('p2')
 
     const handler = fastify.routes['POST /messages']
     await handler({ body: { profileIds: ['p1', 'p2'], content: 'hello' } }, reply)
@@ -1083,9 +1111,28 @@ describe('POST /messages', () => {
     )
     // System sender is never quarantined: computeSendOutcome must be called with
     // senderIsQuarantined=false so the bulk-send path never produces 'pending'.
+    // Also assert isAdminBroadcast=true so the self-initiated INITIATED override
+    // (#1377) is in effect — without it admins can't follow up to unanswered
+    // welcome threads.
     for (const call of mockComputeSendOutcome.mock.calls) {
       expect(call[3]).toBe(false)
+      expect(call[4]).toBe(true)
     }
+    // WS broadcast fires once per successful recipient with the mapped DTO.
+    expect(mockBroadcastToProfile).toHaveBeenCalledTimes(2)
+    expect(mockBroadcastToProfile).toHaveBeenCalledWith(
+      expect.anything(),
+      'p1',
+      expect.objectContaining({
+        type: 'ws:new_message',
+        payload: expect.objectContaining({ mapped: true }),
+      })
+    )
+    expect(mockBroadcastToProfile).toHaveBeenCalledWith(
+      expect.anything(),
+      'p2',
+      expect.objectContaining({ type: 'ws:new_message' })
+    )
     expect(mockMessageService.acceptConversationOnReply).not.toHaveBeenCalled()
   })
 
@@ -1125,6 +1172,7 @@ describe('POST /messages', () => {
       message: { id: 'm2' },
       isDuplicate: false,
     })
+    bringOnline('ok-p')
 
     const handler = fastify.routes['POST /messages']
     await handler({ body: { profileIds: ['blocked-p', 'ok-p'], content: 'hello' } }, reply)
@@ -1137,6 +1185,35 @@ describe('POST /messages', () => {
     ])
     // sendMessage was only called once — for the non-blocked recipient
     expect(mockMessageService.sendMessage).toHaveBeenCalledTimes(1)
+    // Likewise, only the non-blocked recipient gets a WS broadcast.
+    expect(mockBroadcastToProfile).toHaveBeenCalledTimes(1)
+    expect(mockBroadcastToProfile).toHaveBeenCalledWith(
+      expect.anything(),
+      'ok-p',
+      expect.objectContaining({ type: 'ws:new_message' })
+    )
+  })
+
+  it('skips WS broadcast when the message was deduplicated', async () => {
+    mockMessageService.resolveConversation.mockResolvedValue({
+      convo: { id: 'c1', status: 'ACCEPTED', initiatorProfileId: 'sys-sender' },
+      wasCreated: false,
+    })
+    mockComputeSendOutcome.mockReturnValue('reply')
+    // Same content sent twice within dedup window: service returns the prior
+    // message and isDuplicate=true. The WS broadcast must NOT fire — the
+    // recipient already got the original.
+    mockMessageService.sendMessage.mockResolvedValue({
+      message: { id: 'm1' },
+      isDuplicate: true,
+    })
+
+    const handler = fastify.routes['POST /messages']
+    await handler({ body: { profileIds: ['p1'], content: 'hello' } }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload).toMatchObject({ sent: 1, failed: 0 })
+    expect(mockBroadcastToProfile).not.toHaveBeenCalled()
   })
 
   it('trims content before sending', async () => {
@@ -1198,6 +1275,63 @@ describe('POST /messages', () => {
     for (const call of mockMessageService.resolveConversation.mock.calls) {
       expect(call[2]).not.toBe('sys-sender')
     }
+  })
+
+  // accept_and_promote_pending fires when a quarantined user previously sent into
+  // the system sender's profile (creating a PENDING with the user as initiator,
+  // system sender as silent recipient). The admin's bulk-send to that user must
+  // promote the convo + add the system sender as a participant — exactly the
+  // same handling as messaging.route.ts user-to-user.
+  it('promotes + accepts when outcome is accept_and_promote_pending', async () => {
+    mockMessageService.resolveConversation.mockResolvedValue({
+      convo: { id: 'c1', status: 'PENDING', initiatorProfileId: 'p1' },
+      wasCreated: false,
+    })
+    mockComputeSendOutcome.mockReturnValue('accept_and_promote_pending')
+    mockMessageService.sendMessage.mockResolvedValue({
+      message: { id: 'm1' },
+      isDuplicate: false,
+    })
+
+    const handler = fastify.routes['POST /messages']
+    await handler({ body: { profileIds: ['p1'], content: 'hello' } }, reply)
+
+    // promote first, then accept — order matters because acceptConversationOnReply's
+    // updateMany is guarded on status='INITIATED', which is the post-promote state.
+    expect(mockMessageService.promoteConversation).toHaveBeenCalledWith(
+      expect.anything(),
+      'c1',
+      'sys-sender'
+    )
+    expect(mockMessageService.acceptConversationOnReply).toHaveBeenCalledWith(
+      expect.anything(),
+      'c1'
+    )
+    expect(reply.payload).toMatchObject({ sent: 1, failed: 0 })
+  })
+
+  // Pre-check: if the recipient has no active WebSocket connections, skip the
+  // broadcast entirely so we don't fire the warn-log inside broadcastToProfile.
+  // Bulk-sends to mostly-offline audiences would otherwise generate hundreds of
+  // warning lines — see #1382 review thread.
+  it('skips WS broadcast when recipient has no active sockets (no log noise)', async () => {
+    mockMessageService.resolveConversation.mockResolvedValue({
+      convo: { id: 'c1', status: 'INITIATED', initiatorProfileId: 'sys-sender' },
+      wasCreated: true,
+    })
+    mockComputeSendOutcome.mockReturnValue('new_conversation')
+    mockMessageService.sendMessage.mockResolvedValue({
+      message: { id: 'm1' },
+      isDuplicate: false,
+    })
+    // No bringOnline() — recipient is offline.
+
+    const handler = fastify.routes['POST /messages']
+    await handler({ body: { profileIds: ['offline-p'], content: 'hello' } }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload).toMatchObject({ sent: 1, failed: 0 })
+    expect(mockBroadcastToProfile).not.toHaveBeenCalled()
   })
 
   it('returns stable INTERNAL_ERROR code for non-MessagingError failures', async () => {
