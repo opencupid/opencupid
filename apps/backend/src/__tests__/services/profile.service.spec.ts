@@ -108,6 +108,45 @@ describe('ProfileService.initializeProfiles', () => {
     expect(mockPrisma.profileTrustFlag.create).not.toHaveBeenCalled()
     expect(mockPrisma.$transaction).not.toHaveBeenCalled()
   })
+
+  it('catches P2002 from concurrent insert and returns the other caller’s profile', async () => {
+    // Two callers race past the existence check. First wins, second hits the unique
+    // constraint inside the transaction. The second must NOT throw — it must re-read
+    // and return the profile the first caller created (idempotency contract).
+    const concurrent = { id: 'p-concurrent', userId: 'u1' }
+    mockPrisma.profile.findUnique
+      .mockResolvedValueOnce(null) // initial check: nothing yet
+      .mockResolvedValueOnce(concurrent) // re-read after P2002
+    const { Prisma } = await import('@prisma/client')
+    const p2002 = new (Prisma.PrismaClientKnownRequestError as any)('Unique constraint failed', {
+      code: 'P2002',
+      clientVersion: 'test',
+    })
+    mockPrisma.profile.create.mockRejectedValue(p2002)
+
+    const result = await service.initializeProfiles('u1')
+    expect(result).toBe(concurrent)
+  })
+
+  it('rethrows P2002 if even the re-read returns no profile (real invariant breach)', async () => {
+    mockPrisma.profile.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce(null) // shouldn’t happen, but guard surfaces it as a thrown error
+    const { Prisma } = await import('@prisma/client')
+    const p2002 = new (Prisma.PrismaClientKnownRequestError as any)('Unique constraint failed', {
+      code: 'P2002',
+      clientVersion: 'test',
+    })
+    mockPrisma.profile.create.mockRejectedValue(p2002)
+
+    await expect(service.initializeProfiles('u1')).rejects.toBe(p2002)
+  })
+
+  it('rethrows non-P2002 errors unchanged', async () => {
+    mockPrisma.profile.findUnique.mockResolvedValue(null)
+    const boom = new Error('database is on fire')
+    mockPrisma.profile.create.mockRejectedValue(boom)
+
+    await expect(service.initializeProfiles('u1')).rejects.toBe(boom)
+  })
 })
 
 describe('ProfileService.updateProfileScalars', () => {

@@ -386,23 +386,35 @@ export class ProfileService {
       return existing
     }
 
-    return prisma.$transaction(async (tx) => {
-      const newProfile = await tx.profile.create({
-        data: {
-          userId,
-          publicName: '',
-        },
+    // Two concurrent callers can both pass the existence check, both enter the
+    // transaction, and one will P2002 on Profile.userId @unique. Catch and re-read
+    // so this method stays idempotent under concurrency — callers always get a
+    // Profile back (with its trust flag, written by whichever caller won the race).
+    try {
+      return await prisma.$transaction(async (tx) => {
+        const newProfile = await tx.profile.create({
+          data: {
+            userId,
+            publicName: '',
+          },
+        })
+        await tx.profileTrustFlag.create({
+          data: {
+            profileId: newProfile.id,
+            reason: 'PROFILE_UNVETTED',
+            evidence: { source: 'default_on_create' },
+            flaggedBy: 'system:profile_create',
+          },
+        })
+        return newProfile
       })
-      await tx.profileTrustFlag.create({
-        data: {
-          profileId: newProfile.id,
-          reason: 'PROFILE_UNVETTED',
-          evidence: { source: 'default_on_create' },
-          flaggedBy: 'system:profile_create',
-        },
-      })
-      return newProfile
-    })
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+        const concurrent = await prisma.profile.findUnique({ where: { userId } })
+        if (concurrent) return concurrent
+      }
+      throw err
+    }
   }
 
   async blockProfile(blockingProfileId: string, blockedProfileId: string) {

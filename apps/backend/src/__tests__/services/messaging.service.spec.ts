@@ -332,18 +332,74 @@ describe('MessageService.resolveConversation', () => {
 })
 
 describe('MessageService.promoteConversation', () => {
-  it('updates status to INITIATED and creates the missing participant', async () => {
+  it('updates status to INITIATED via guarded updateMany and adds participant idempotently', async () => {
+    const updateMany = vi.fn().mockResolvedValue({ count: 1 })
+    const createMany = vi.fn().mockResolvedValue({ count: 1 })
+    const findUnique = vi.fn()
     const tx: any = {
-      conversation: { update: vi.fn().mockResolvedValue({}) },
+      conversation: { updateMany, findUnique },
+      conversationParticipant: { createMany },
     }
     await service.promoteConversation(tx, 'c1', 'bob')
-    expect(tx.conversation.update).toHaveBeenCalledWith({
-      where: { id: 'c1' },
-      data: {
-        status: 'INITIATED',
-        participants: { create: { profileId: 'bob' } },
-      },
+
+    // Status update is guarded by `status: 'PENDING'` so a concurrently DISCARDED
+    // or BLOCKED row cannot be revived.
+    expect(updateMany).toHaveBeenCalledWith({
+      where: { id: 'c1', status: 'PENDING' },
+      data: { status: 'INITIATED', updatedAt: expect.any(Date) },
     })
+    // Steady-state path: count===1 means the guard matched, no findUnique probe.
+    expect(findUnique).not.toHaveBeenCalled()
+    // Participant insertion is idempotent.
+    expect(createMany).toHaveBeenCalledWith({
+      data: [{ conversationId: 'c1', profileId: 'bob' }],
+      skipDuplicates: true,
+    })
+  })
+
+  it('tolerates a no-op promote when conversation is already INITIATED (concurrent run)', async () => {
+    // Worker race: another promoter already moved this PENDING → INITIATED. Our
+    // updateMany matches zero rows; we must NOT throw, NOT revive, just ensure
+    // the participant is present.
+    const updateMany = vi.fn().mockResolvedValue({ count: 0 })
+    const findUnique = vi.fn().mockResolvedValue({ status: 'INITIATED' })
+    const createMany = vi.fn().mockResolvedValue({ count: 0 })
+    const tx: any = {
+      conversation: { updateMany, findUnique },
+      conversationParticipant: { createMany },
+    }
+    await service.promoteConversation(tx, 'c1', 'bob')
+
+    expect(findUnique).toHaveBeenCalledWith({
+      where: { id: 'c1' },
+      select: { status: true },
+    })
+    expect(createMany).toHaveBeenCalled()
+  })
+
+  it('throws if the conversation has been DISCARDED — must not revive a terminal row', async () => {
+    const updateMany = vi.fn().mockResolvedValue({ count: 0 })
+    const findUnique = vi.fn().mockResolvedValue({ status: 'DISCARDED' })
+    const createMany = vi.fn()
+    const tx: any = {
+      conversation: { updateMany, findUnique },
+      conversationParticipant: { createMany },
+    }
+    await expect(service.promoteConversation(tx, 'c1', 'bob')).rejects.toThrow(/DISCARDED/)
+    // Importantly, no participant insertion happens after the throw.
+    expect(createMany).not.toHaveBeenCalled()
+  })
+
+  it('throws if the conversation does not exist', async () => {
+    const updateMany = vi.fn().mockResolvedValue({ count: 0 })
+    const findUnique = vi.fn().mockResolvedValue(null)
+    const createMany = vi.fn()
+    const tx: any = {
+      conversation: { updateMany, findUnique },
+      conversationParticipant: { createMany },
+    }
+    await expect(service.promoteConversation(tx, 'c1', 'bob')).rejects.toThrow(/not found/)
+    expect(createMany).not.toHaveBeenCalled()
   })
 })
 

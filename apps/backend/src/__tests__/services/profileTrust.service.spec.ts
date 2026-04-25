@@ -71,6 +71,7 @@ describe('ProfileTrustService', () => {
 
   describe('reconcileSpamBurst', () => {
     // Mock conversation + profileTrustFlag + the queue
+    const conversationCount = vi.fn()
     const conversationFindMany = vi.fn()
     const profileTrustFlagCreate = vi.fn()
     const profileTrustFlagUpdateMany = vi.fn()
@@ -79,6 +80,7 @@ describe('ProfileTrustService', () => {
 
     beforeEach(() => {
       ;(prisma as any).conversation = {
+        count: conversationCount,
         findMany: conversationFindMany,
         updateMany: conversationUpdateMany,
       }
@@ -90,6 +92,7 @@ describe('ProfileTrustService', () => {
       vi.doMock('@/queues/profileTrustQueue', () => ({
         profileTrustQueue: { add: queueAdd },
       }))
+      conversationCount.mockReset()
       conversationFindMany.mockReset()
       profileTrustFlagCreate.mockReset()
       profileTrustFlagUpdateMany.mockReset()
@@ -98,6 +101,7 @@ describe('ProfileTrustService', () => {
     })
 
     it('writes flag AND DISCARDs active (INITIATED+PENDING) when threshold reached and not already flagged', async () => {
+      conversationCount.mockResolvedValue(3)
       conversationFindMany.mockResolvedValue([{ id: 'c1' }, { id: 'c2' }, { id: 'c3' }])
       mockedFindFirst.mockResolvedValue(null) // hasTrustFlag returns false
 
@@ -107,7 +111,7 @@ describe('ProfileTrustService', () => {
         data: expect.objectContaining({
           profileId: 'profile-1',
           reason: 'SPAM_BURST',
-          evidence: { conversationIds: ['c1', 'c2', 'c3'], countAtFlagTime: 3 },
+          evidence: { sampleConversationIds: ['c1', 'c2', 'c3'], countAtFlagTime: 3 },
           flaggedBy: 'heuristic:spam_burst',
         }),
       })
@@ -120,17 +124,46 @@ describe('ProfileTrustService', () => {
       })
     })
 
+    it('caps evidence sample size when count is large', async () => {
+      // Abusive profile with 50 active conversations — sample must not include all 50.
+      conversationCount.mockResolvedValue(50)
+      conversationFindMany.mockResolvedValue(
+        Array.from({ length: 10 }, (_, i) => ({ id: `c${i}` }))
+      )
+      mockedFindFirst.mockResolvedValue(null)
+
+      await svc.reconcileSpamBurst('profile-1')
+
+      // findMany must be called with take: 10 (the bounded sample).
+      expect(conversationFindMany).toHaveBeenCalledWith(
+        expect.objectContaining({ take: 10, select: { id: true } })
+      )
+      // Evidence carries the full count but only the sampled IDs.
+      expect(profileTrustFlagCreate).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          evidence: expect.objectContaining({
+            countAtFlagTime: 50,
+            sampleConversationIds: expect.any(Array),
+          }),
+        }),
+      })
+      const evidence = (profileTrustFlagCreate.mock.calls[0][0] as any).data.evidence
+      expect(evidence.sampleConversationIds).toHaveLength(10)
+    })
+
     it('DISCARDs race-survivors when at threshold and already flagged (convergence)', async () => {
       // Models the race: a send crossed the route's pre-tx hasTrustFlag check BEFORE
       // the flag landed, so when reconcile runs next, it sees count >= threshold AND
       // alreadyFlagged. The just-created INITIATED must still be DISCARDed.
-      conversationFindMany.mockResolvedValue([{ id: 'c1' }, { id: 'c2' }, { id: 'c3' }])
+      conversationCount.mockResolvedValue(3)
       mockedFindFirst.mockResolvedValue({ id: 'flag-1' } as any) // already flagged
 
       await svc.reconcileSpamBurst('profile-1')
 
       // No new flag written — idempotent.
       expect(profileTrustFlagCreate).not.toHaveBeenCalled()
+      // No sample fetch when we don't write a flag — saves the bounded findMany.
+      expect(conversationFindMany).not.toHaveBeenCalled()
       // But active-row DISCARD DOES run — this is the convergence guarantee.
       expect(conversationUpdateMany).toHaveBeenCalledWith({
         where: {
@@ -145,7 +178,7 @@ describe('ProfileTrustService', () => {
     })
 
     it('clears flag and enqueues promote-pendings when condition resolves', async () => {
-      conversationFindMany.mockResolvedValue([{ id: 'c1' }]) // count 1, below threshold
+      conversationCount.mockResolvedValue(1) // below threshold
       mockedFindFirst.mockResolvedValue({ id: 'flag-1' } as any) // currently flagged
 
       await svc.reconcileSpamBurst('profile-1')
@@ -164,7 +197,7 @@ describe('ProfileTrustService', () => {
     })
 
     it('no-ops when below threshold and not flagged', async () => {
-      conversationFindMany.mockResolvedValue([{ id: 'c1' }])
+      conversationCount.mockResolvedValue(1)
       mockedFindFirst.mockResolvedValue(null)
 
       await svc.reconcileSpamBurst('profile-1')
@@ -172,15 +205,16 @@ describe('ProfileTrustService', () => {
       expect(profileTrustFlagCreate).not.toHaveBeenCalled()
       expect(profileTrustFlagUpdateMany).not.toHaveBeenCalled()
       expect(queueAdd).not.toHaveBeenCalled()
+      // No findMany either — count() alone settles the decision.
+      expect(conversationFindMany).not.toHaveBeenCalled()
     })
 
     it('threshold-counting query includes both INITIATED and PENDING', async () => {
-      conversationFindMany.mockResolvedValue([])
+      conversationCount.mockResolvedValue(0)
       mockedFindFirst.mockResolvedValue(null)
       await svc.reconcileSpamBurst('profile-1')
-      expect(conversationFindMany).toHaveBeenCalledWith({
+      expect(conversationCount).toHaveBeenCalledWith({
         where: { initiatorProfileId: 'profile-1', status: { in: ['INITIATED', 'PENDING'] } },
-        select: { id: true },
       })
     })
   })

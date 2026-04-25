@@ -399,18 +399,44 @@ export class MessageService {
    * Promote a PENDING conversation to INITIATED and create the missing participant row
    * atomically with the caller's transaction. Used by the promote-pendings worker and by
    * the accept_and_promote_pending outcome in the route.
+   *
+   * Two concurrency hazards the guards below address:
+   * 1. The status filter prevents reviving a row that another path moved out of PENDING
+   *    (e.g. SPAM_BURST → DISCARDED, recipient block → BLOCKED, or another promoter that
+   *    already ran). count===0 is a benign "already promoted by someone else" if the row
+   *    sits in INITIATED/ACCEPTED; anything else is a genuine invariant breach.
+   * 2. createMany + skipDuplicates keeps participant insertion idempotent — without it,
+   *    a worker re-run or a route accept_and_promote_pending racing the worker would
+   *    P2002 on @@unique([profileId, conversationId]).
    */
   async promoteConversation(
     tx: Prisma.TransactionClient,
     conversationId: string,
     missingParticipantId: string
   ): Promise<void> {
-    await tx.conversation.update({
-      where: { id: conversationId },
-      data: {
-        status: 'INITIATED',
-        participants: { create: { profileId: missingParticipantId } },
-      },
+    const { count } = await tx.conversation.updateMany({
+      where: { id: conversationId, status: 'PENDING' },
+      data: { status: 'INITIATED', updatedAt: new Date() },
+    })
+
+    if (count === 0) {
+      const existing = await tx.conversation.findUnique({
+        where: { id: conversationId },
+        select: { status: true },
+      })
+      if (!existing) {
+        throw new Error(`promoteConversation: conversation ${conversationId} not found`)
+      }
+      if (existing.status !== 'INITIATED' && existing.status !== 'ACCEPTED') {
+        throw new Error(
+          `promoteConversation: expected PENDING conversation ${conversationId}, found ${existing.status}`
+        )
+      }
+    }
+
+    await tx.conversationParticipant.createMany({
+      data: [{ conversationId, profileId: missingParticipantId }],
+      skipDuplicates: true,
     })
   }
 
