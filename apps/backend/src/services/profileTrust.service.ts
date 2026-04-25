@@ -19,6 +19,21 @@ const SPAM_BURST_EVIDENCE_SAMPLE_SIZE = 10
 // BullMQ rejects ':' in custom jobIds (Redis key separator); use '-' as separator.
 export const promotePendingsJobId = (profileId: string) => `promote-pendings-${profileId}`
 
+/**
+ * Thrown by clearFlag when the request cannot be honoured.
+ * Status fields mirror what the route handler should send — 404 for missing,
+ * 409 for state conflicts (already cleared, or non-admin flag).
+ */
+export class ClearFlagError extends Error {
+  constructor(
+    message: string,
+    public status: 404 | 409
+  ) {
+    super(message)
+    this.name = 'ClearFlagError'
+  }
+}
+
 export class ProfileTrustService {
   private static instance: ProfileTrustService | null = null
 
@@ -27,6 +42,39 @@ export class ProfileTrustService {
   static getInstance(): ProfileTrustService {
     if (!this.instance) this.instance = new ProfileTrustService()
     return this.instance
+  }
+
+  /**
+   * Admin-only manual flag clear. Reuses the same promote-pendings enqueue path
+   * that the heuristic threshold-down branch uses, so held messages get released
+   * the same way regardless of who closed the flag.
+   *
+   * Refuses to clear non-admin flags (heuristic-set or system-set) — those are
+   * owned by the convergence machinery and admins can't safely undo them by hand.
+   */
+  async clearFlag(flagId: string, clearedBy: string): Promise<void> {
+    const flag = await prisma.profileTrustFlag.findUnique({ where: { id: flagId } })
+    if (!flag) throw new ClearFlagError('flag not found', 404)
+    if (flag.clearedAt) throw new ClearFlagError('flag already cleared', 409)
+    if (!flag.flaggedBy.startsWith('admin:')) {
+      throw new ClearFlagError('cannot clear non-admin flag from admin UI', 409)
+    }
+
+    await prisma.profileTrustFlag.update({
+      where: { id: flagId },
+      data: { clearedAt: new Date(), clearedBy },
+    })
+
+    const { profileTrustQueue } = await import('@/queues/profileTrustQueue')
+    await profileTrustQueue.add(
+      'promote-pendings',
+      { kind: 'promote-pendings', profileId: flag.profileId },
+      {
+        jobId: promotePendingsJobId(flag.profileId),
+        removeOnComplete: { count: 0 },
+        removeOnFail: { count: 100 },
+      }
+    )
   }
 
   /**

@@ -5,6 +5,7 @@ vi.mock('../../lib/prisma', () => ({
     profileTrustFlag: {
       findFirst: vi.fn(),
       findMany: vi.fn(),
+      findUnique: vi.fn(),
       count: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
@@ -356,6 +357,71 @@ describe('ProfileTrustService', () => {
 
       expect(result.flags).toEqual(sample)
       expect(result.total).toBe(7)
+    })
+  })
+
+  describe('clearFlag', () => {
+    const flagFindUnique = vi.fn()
+    const flagUpdate = vi.fn()
+    const queueAdd = vi.fn()
+
+    beforeEach(() => {
+      ;(prisma as any).profileTrustFlag = {
+        ...(prisma as any).profileTrustFlag,
+        findUnique: flagFindUnique,
+        update: flagUpdate,
+      }
+      vi.doMock('@/queues/profileTrustQueue', () => ({
+        profileTrustQueue: { add: queueAdd },
+      }))
+      flagFindUnique.mockReset()
+      flagUpdate.mockReset()
+      queueAdd.mockReset()
+    })
+
+    it('writes clearedAt + clearedBy and enqueues promote-pendings on admin flag', async () => {
+      flagFindUnique.mockResolvedValue({ id: 'f1', profileId: 'p1', clearedAt: null, flaggedBy: 'admin:manual' })
+      flagUpdate.mockResolvedValue({})
+      queueAdd.mockResolvedValue({})
+
+      await svc.clearFlag('f1', 'admin:manual')
+
+      expect(flagUpdate).toHaveBeenCalledWith({
+        where: { id: 'f1' },
+        data: { clearedAt: expect.any(Date), clearedBy: 'admin:manual' },
+      })
+      expect(queueAdd).toHaveBeenCalledWith(
+        'promote-pendings',
+        { kind: 'promote-pendings', profileId: 'p1' },
+        expect.objectContaining({ jobId: 'promote-pendings-p1' })
+      )
+    })
+
+    it('throws ClearFlagError(404) when the flag is missing', async () => {
+      flagFindUnique.mockResolvedValue(null)
+      const { ClearFlagError } = await import('../../services/profileTrust.service')
+      await expect(svc.clearFlag('missing', 'admin:manual')).rejects.toBeInstanceOf(ClearFlagError)
+      await expect(svc.clearFlag('missing', 'admin:manual')).rejects.toMatchObject({ status: 404 })
+    })
+
+    it('throws ClearFlagError(409) when the flag is already cleared', async () => {
+      flagFindUnique.mockResolvedValue({
+        id: 'f1', profileId: 'p1', clearedAt: new Date(), flaggedBy: 'admin:manual',
+      })
+      const { ClearFlagError } = await import('../../services/profileTrust.service')
+      await expect(svc.clearFlag('f1', 'admin:manual')).rejects.toBeInstanceOf(ClearFlagError)
+      await expect(svc.clearFlag('f1', 'admin:manual')).rejects.toMatchObject({ status: 409 })
+    })
+
+    it('throws ClearFlagError(409) when the flag is non-admin (heuristic-set)', async () => {
+      flagFindUnique.mockResolvedValue({
+        id: 'f1', profileId: 'p1', clearedAt: null, flaggedBy: 'heuristic:spam_burst',
+      })
+      const { ClearFlagError } = await import('../../services/profileTrust.service')
+      await expect(svc.clearFlag('f1', 'admin:manual')).rejects.toBeInstanceOf(ClearFlagError)
+      await expect(svc.clearFlag('f1', 'admin:manual')).rejects.toMatchObject({ status: 409 })
+      expect(flagUpdate).not.toHaveBeenCalled()
+      expect(queueAdd).not.toHaveBeenCalled()
     })
   })
 })
