@@ -424,4 +424,64 @@ describe('ProfileTrustService', () => {
       expect(queueAdd).not.toHaveBeenCalled()
     })
   })
+
+  describe('flagProfile', () => {
+    const flagFindFirst = vi.fn()
+    const flagCreate = vi.fn()
+
+    beforeEach(() => {
+      ;(prisma as any).profileTrustFlag = {
+        ...(prisma as any).profileTrustFlag,
+        findFirst: flagFindFirst,
+        create: flagCreate,
+      }
+      flagFindFirst.mockReset()
+      flagCreate.mockReset()
+    })
+
+    it('writes a PROFILE_UNVETTED flag with note in evidence', async () => {
+      flagFindFirst.mockResolvedValue(null)
+      const created = { id: 'f1', profileId: 'p1', reason: 'PROFILE_UNVETTED', flaggedBy: 'admin:manual', evidence: { note: 'sketchy' } }
+      flagCreate.mockResolvedValue(created)
+
+      const result = await svc.flagProfile('p1', 'sketchy', 'admin:manual')
+
+      expect(flagCreate).toHaveBeenCalledWith({
+        data: {
+          profileId: 'p1',
+          reason: 'PROFILE_UNVETTED',
+          flaggedBy: 'admin:manual',
+          evidence: { note: 'sketchy' },
+        },
+      })
+      expect(result).toEqual(created)
+    })
+
+    it('is idempotent — returns the existing admin flag without creating a second', async () => {
+      const existing = { id: 'f1', profileId: 'p1', reason: 'PROFILE_UNVETTED', flaggedBy: 'admin:manual', evidence: { note: 'first' } }
+      flagFindFirst.mockResolvedValue(existing)
+
+      const result = await svc.flagProfile('p1', 'second', 'admin:manual')
+
+      expect(result).toEqual(existing)
+      expect(flagCreate).not.toHaveBeenCalled()
+    })
+
+    it('only treats admin-set flags as the idempotency key', async () => {
+      // System flag exists, but findFirst with the admin-prefix filter returns null.
+      flagFindFirst.mockResolvedValue(null)
+      flagCreate.mockResolvedValue({ id: 'fNew' })
+
+      await svc.flagProfile('p1', 'admin reason', 'admin:manual')
+
+      expect(flagFindFirst).toHaveBeenCalledWith({
+        where: expect.objectContaining({
+          profileId: 'p1',
+          clearedAt: null,
+          flaggedBy: { startsWith: 'admin:' },
+        }),
+      })
+      expect(flagCreate).toHaveBeenCalled()
+    })
+  })
 })

@@ -45,6 +45,32 @@ export class ProfileTrustService {
   }
 
   /**
+   * Admin-only manual flag write. Idempotent: if an active admin flag already
+   * exists on the profile, returns it unchanged (no second flag, no duplicate
+   * evidence). Coexists with system/heuristic flags on the same profile —
+   * those are owned by separate machinery.
+   */
+  async flagProfile(profileId: string, note: string, flaggedBy: string) {
+    const existing = await prisma.profileTrustFlag.findFirst({
+      where: {
+        profileId,
+        clearedAt: null,
+        flaggedBy: { startsWith: 'admin:' },
+      },
+    })
+    if (existing) return existing
+
+    return prisma.profileTrustFlag.create({
+      data: {
+        profileId,
+        reason: 'PROFILE_UNVETTED',
+        flaggedBy,
+        evidence: { note },
+      },
+    })
+  }
+
+  /**
    * Admin-only manual flag clear. Reuses the same promote-pendings enqueue path
    * that the heuristic threshold-down branch uses, so held messages get released
    * the same way regardless of who closed the flag.
