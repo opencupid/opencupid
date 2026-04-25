@@ -4,6 +4,10 @@ vi.mock('../../lib/prisma', () => ({
   prisma: {
     profileTrustFlag: {
       findFirst: vi.fn(),
+      findMany: vi.fn(),
+      count: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
     },
   },
 }))
@@ -273,6 +277,85 @@ describe('ProfileTrustService', () => {
         expect.any(Function),
         expect.objectContaining({ isolationLevel: 'Serializable' })
       )
+    })
+  })
+
+  describe('listTrustFlags', () => {
+    const flagFindMany = vi.fn()
+    const flagCount = vi.fn()
+
+    beforeEach(() => {
+      // Re-attach methods because the reconcileSpamBurst describe block
+      // overwrites `prisma.profileTrustFlag` with a partial shape.
+      ;(prisma as any).profileTrustFlag = {
+        ...(prisma as any).profileTrustFlag,
+        findMany: flagFindMany,
+        count: flagCount,
+      }
+      flagFindMany.mockReset()
+      flagCount.mockReset()
+    })
+
+    it('queries active flags by default, ordered by flaggedAt DESC, with profile join', async () => {
+      flagFindMany.mockResolvedValue([])
+      flagCount.mockResolvedValue(0)
+
+      await svc.listTrustFlags({ page: 1, pageSize: 25 })
+
+      expect(prisma.profileTrustFlag.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { clearedAt: null },
+          orderBy: { flaggedAt: 'desc' },
+          skip: 0,
+          take: 25,
+          include: expect.objectContaining({
+            profile: { select: { id: true, publicName: true, country: true, cityName: true } },
+          }),
+        })
+      )
+      expect(prisma.profileTrustFlag.count).toHaveBeenCalledWith({ where: { clearedAt: null } })
+    })
+
+    it('includes cleared rows when activeOnly is false', async () => {
+      flagFindMany.mockResolvedValue([])
+      flagCount.mockResolvedValue(0)
+
+      await svc.listTrustFlags({ page: 1, pageSize: 10, activeOnly: false })
+
+      const call = flagFindMany.mock.calls[0][0] as any
+      expect(call.where.clearedAt).toBeUndefined()
+    })
+
+    it('applies a reason filter when provided', async () => {
+      flagFindMany.mockResolvedValue([])
+      flagCount.mockResolvedValue(0)
+
+      await svc.listTrustFlags({ page: 1, pageSize: 10, reason: 'SPAM_BURST' })
+
+      const call = flagFindMany.mock.calls[0][0] as any
+      expect(call.where.reason).toBe('SPAM_BURST')
+    })
+
+    it('paginates via skip/take', async () => {
+      flagFindMany.mockResolvedValue([])
+      flagCount.mockResolvedValue(0)
+
+      await svc.listTrustFlags({ page: 3, pageSize: 25 })
+
+      const call = flagFindMany.mock.calls[0][0] as any
+      expect(call.skip).toBe(50)
+      expect(call.take).toBe(25)
+    })
+
+    it('returns the queried flags and total count', async () => {
+      const sample = [{ id: 'f1', profileId: 'p1' } as any]
+      flagFindMany.mockResolvedValue(sample)
+      flagCount.mockResolvedValue(7)
+
+      const result = await svc.listTrustFlags({ page: 1, pageSize: 25 })
+
+      expect(result.flags).toEqual(sample)
+      expect(result.total).toBe(7)
     })
   })
 })

@@ -30,6 +30,38 @@ export class ProfileTrustService {
   }
 
   /**
+   * Admin-list view of trust flags. Active-only by default; pass activeOnly:false to include cleared.
+   * Joined with a small profile projection so the admin GUI can render rows without a second roundtrip.
+   */
+  async listTrustFlags(opts: {
+    activeOnly?: boolean
+    reason?: TrustReasonType
+    page: number
+    pageSize: number
+  }) {
+    const { activeOnly = true, reason, page, pageSize } = opts
+    const where = {
+      ...(activeOnly ? { clearedAt: null } : {}),
+      ...(reason ? { reason } : {}),
+    }
+    const [flags, total] = await Promise.all([
+      prisma.profileTrustFlag.findMany({
+        where,
+        orderBy: { flaggedAt: 'desc' },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        include: {
+          profile: {
+            select: { id: true, publicName: true, country: true, cityName: true },
+          },
+        },
+      }),
+      prisma.profileTrustFlag.count({ where }),
+    ])
+    return { flags, total }
+  }
+
+  /**
    * Any active trust flag (optional reason filter).
    * Omit `reason` to answer "is this profile quarantined?" (used by the send-path gate).
    * Pass `reason` to answer "does this profile have X specifically?" (used by reconcile idempotency).
