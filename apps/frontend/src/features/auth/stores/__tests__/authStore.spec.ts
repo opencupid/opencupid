@@ -49,6 +49,7 @@ vi.mock('@/lib/bootstrap', () => ({
 vi.stubGlobal('__APP_CONFIG__', {
   API_BASE_URL: 'http://localhost:3000',
   NODE_ENV: 'production',
+  DOMAIN: 'example.org',
 })
 afterAll(() => vi.unstubAllGlobals())
 
@@ -333,5 +334,25 @@ describe('authStore localStorage auth flow', () => {
     expect(store.userId).toBeNull()
 
     bus.off('auth:logged-out', loggedOutSpy)
+  })
+
+  it('auth:logout clears both host-only and domain-scoped session cookie shapes', async () => {
+    const { bus } = await import('@/lib/bus')
+    const removeSpy = vi.spyOn(Cookies.prototype, 'remove')
+    const store = useAuthStore()
+    store.userId = 'u1'
+
+    bus.emit('auth:logout')
+
+    const sessionRemoves = removeSpy.mock.calls.filter(([name]) => name === SESSION_COOKIE)
+    // Phase 1 silent migration: delete both pre- and post-migration shapes
+    // because universal-cookie only wipes the slot whose attributes match.
+    expect(sessionRemoves).toContainEqual([SESSION_COOKIE, { path: '/' }])
+    expect(sessionRemoves).toContainEqual([
+      SESSION_COOKIE,
+      { path: '/', sameSite: 'lax', domain: '.example.org' },
+    ])
+
+    removeSpy.mockRestore()
   })
 })

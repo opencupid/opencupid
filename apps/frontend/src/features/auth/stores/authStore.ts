@@ -18,9 +18,23 @@ type AuthStoreResponse<T> =
   | SuccessResponse<T>
   | (ApiError & { code: AuthErrorCodes; restart: 'otp' | 'userid' })
 
-import { SESSION_COOKIE, SESSION_COOKIE_OPTS } from '@shared/session'
+import { SESSION_COOKIE, resolveSessionCookie } from '@shared/session'
+import { clearLegacyCookie } from '@/lib/session-legacy'
 
 const cookies = new Cookies()
+
+/**
+ * Remove the currently-active cookie shape (host-only in dev, domain-scoped
+ * in prod), then delegate the legacy host-only delete to `clearLegacyCookie`
+ * which no-ops when the active shape is already host-only.
+ */
+function removeSessionCookie() {
+  cookies.remove(
+    SESSION_COOKIE,
+    resolveSessionCookie(__APP_CONFIG__.NODE_ENV, __APP_CONFIG__.DOMAIN)
+  )
+  clearLegacyCookie(cookies, SESSION_COOKIE)
+}
 
 /**
  * One-time migration for users upgrading from the old frontend that stored
@@ -28,7 +42,12 @@ const cookies = new Cookies()
  * the backend's authenticate hook picks it up and sets the __session cookie.
  * Cleans up localStorage after the first successful API response.
  *
- * TODO: Remove this function once all clients have migrated to cookie auth.
+ * TODO(2026-05-05): Retire together with the Bearer fallback in
+ * `apps/backend/src/plugins/session-auth.ts`. By that date every pre-cutover
+ * JWT (cutover: 2026-03-30, JWT TTL: 30d) has expired and this function can
+ * only return a dead token. Any remaining localStorage-only users get
+ * re-logged-in via magic link on next visit, which is what they'd have to
+ * do anyway.
  */
 function migrateLegacyToken(): string | null {
   const legacyToken = localStorage.getItem('token')
@@ -92,7 +111,7 @@ export const useAuthStore = defineStore('auth', {
           JSON.parse(atob(token.split('.')[1]!))
         } catch {
           // Malformed JWT — clear it
-          cookies.remove(SESSION_COOKIE, SESSION_COOKIE_OPTS)
+          removeSessionCookie()
           this.isInitialized = true
           return
         }
@@ -221,7 +240,7 @@ bus.on('auth:logout', () => {
   store.loginUser = null
   // Clear session cookie client-side so a failed server logout
   // doesn't leave the user appearing logged in on next page load.
-  cookies.remove(SESSION_COOKIE, SESSION_COOKIE_OPTS)
+  removeSessionCookie()
   localStorage.removeItem('authId')
   bus.emit('auth:logged-out')
 })

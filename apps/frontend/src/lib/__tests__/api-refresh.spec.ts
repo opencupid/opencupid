@@ -18,6 +18,7 @@ vi.mock('@/router', () => ({
 vi.stubGlobal('__APP_CONFIG__', {
   API_BASE_URL: 'http://localhost:3000',
   NODE_ENV: 'production',
+  DOMAIN: 'example.org',
 })
 afterAll(() => vi.unstubAllGlobals())
 

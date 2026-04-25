@@ -4,10 +4,11 @@ import fastifyJwt from '@fastify/jwt'
 import Redis from 'ioredis'
 
 import { SessionService } from '../services/session.service'
-import { sendUnauthorizedError } from '@/api/helpers'
+import { sendServiceUnavailableError, sendUnauthorizedError } from '@/api/helpers'
 import { appConfig } from '@/lib/appconfig'
 import '@fastify/cookie'
-import { SESSION_COOKIE, SESSION_COOKIE_OPTS, SESSION_MAX_AGE } from '@shared/session'
+import { SESSION_COOKIE } from '@shared/session'
+import { getSessionCookie, setSessionCookie } from '@/lib/session'
 import { SessionData } from '@zod/user/user.dto'
 
 // Extend Fastify types
@@ -47,8 +48,15 @@ export default fp(async (fastify: FastifyInstance) => {
   // Auth hook reads JWT from Authorization header (if present) or __session
   // cookie. @fastify/jwt checks Bearer header first, then falls back to cookie.
   // Old clients still sending Authorization: Bearer get migrated to the cookie.
+  //
+  // TODO(2026-05-05): Retire the Bearer fallback together with
+  // `migrateLegacyToken()` in the frontend authStore. By that date every
+  // pre-cutover JWT has expired (cutover 2026-03-30, JWT TTL 30d) and the
+  // only clients that could benefit from Bearer auth are dead ones. Drop the
+  // `bearerToken` branch, simplify to `const sessionId = cookieToken!` after
+  // the missing-cookie guard.
   fastify.decorate('authenticate', async (req: FastifyRequest, reply: FastifyReply) => {
-    const cookieToken = req.cookies[SESSION_COOKIE]
+    const cookieToken = getSessionCookie(req)
     const bearerToken = req.headers.authorization?.startsWith('Bearer ')
       ? req.headers.authorization.slice(7)
       : null
@@ -66,29 +74,39 @@ export default fp(async (fastify: FastifyInstance) => {
     // Resolve the session ID — prefer cookie, fall back to Bearer token
     const sessionId = cookieToken ?? bearerToken!
 
-    // Migrate old clients: set __session cookie so subsequent requests use it
-    if (!cookieToken && bearerToken) {
-      reply.setCookie(SESSION_COOKIE, sessionId, {
-        ...SESSION_COOKIE_OPTS,
-        httpOnly: false,
-        secure: appConfig.NODE_ENV !== 'development',
-        maxAge: SESSION_MAX_AGE,
-      })
+    // Session lookup + validation + migration-cookie stamp + TTL refresh all
+    // touch Redis (directly or indirectly). Wrap as one unit so any transient
+    // Redis failure (restart, network blip during backend deploy) returns a
+    // single distinguishable 503 — never fail-open, that would turn infra
+    // blips into auth bypasses.
+    let sess: SessionData | null
+    try {
+      sess = await sessionService.get(sessionId)
+      if (!sess) {
+        return sendUnauthorizedError(reply, 'Session expired')
+      }
+      if (req.user.tokenVersion !== sess.tokenVersion) {
+        return sendUnauthorizedError(reply, 'Token revoked')
+      }
+      // Refresh the session cookie on every authenticated request. Three
+      // jobs in one call:
+      //   1. Sliding TTL — resets Max-Age to 30d so active users stay
+      //      logged in as long as they keep using the app. Permanent
+      //      behavior, survives post-migration sunset.
+      //   2. Phase 1 shape migration — stamps the current domain-scoped
+      //      shape and (inside `clearLegacyCookie`) wipes the legacy
+      //      host-only slot when they're distinct.
+      //   3. Phase 0 Bearer → cookie migration — clients that sent only
+      //      an `Authorization: Bearer` header now carry a proper cookie
+      //      on their next request.
+      // Only runs after the full auth chain succeeds, so failed-auth
+      // responses don't re-stamp a cookie the client can't use.
+      setSessionCookie(reply, sessionId)
+      await sessionService.refreshTtl(sessionId)
+    } catch (err) {
+      req.log.error({ err, sessionId }, 'Redis error during authenticated request')
+      return sendServiceUnavailableError(reply, 'Session lookup failed')
     }
-
-    // Try to fetch an existing session from Redis
-    const sess = await sessionService.get(sessionId)
-    if (!sess) {
-      return sendUnauthorizedError(reply, 'Session expired')
-    }
-
-    // Verify tokenVersion matches between JWT and session
-    if (req.user.tokenVersion !== sess.tokenVersion) {
-      return sendUnauthorizedError(reply, 'Token revoked')
-    }
-
-    // Refresh TTL on simple reads
-    await sessionService.refreshTtl(sessionId)
 
     req.session = sess
     req.deleteSession = async () => {

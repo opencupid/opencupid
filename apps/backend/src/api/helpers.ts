@@ -26,6 +26,13 @@ export function sendForbiddenError(
   return sendError(reply, 403, message)
 }
 
+export function sendServiceUnavailableError(
+  reply: FastifyPluginAsync['prototype']['reply'],
+  message: string = 'Service temporarily unavailable'
+) {
+  return sendError(reply, 503, message)
+}
+
 export function getUserRoles(req: FastifyRequest): UserRole[] {
   return req.session?.roles || []
 }
