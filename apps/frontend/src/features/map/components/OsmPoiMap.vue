@@ -27,7 +27,7 @@ defineExpose({ flyToMarker })
   <div class="osm-poi-map-wrapper">
     <div
       ref="mapEl"
-      class="osm-poi-map sentry-block"
+      class="osm-poi-map"
     />
 
     <Teleport

@@ -1,4 +1,3 @@
-
 import '@/css/fonts.scss'
 import '@/css/bootstrap.scss'
 import '@/css/main.scss'
@@ -25,7 +24,6 @@ import { createBootstrap } from 'bootstrap-vue-next'
 
 import App from './App.vue'
 import router from './router'
-
 
 function initOpenReplay() {
   const { OPENREPLAY_PROJECT_KEY, OPENREPLAY_INGEST_POINT } = __APP_CONFIG__
@@ -58,7 +56,7 @@ async function initSentry(app: ReturnType<typeof createApp>) {
       integrations: [Sentry.browserTracingIntegration({ router }), Sentry.replayIntegration()],
       tracesSampleRate: 1.0,
       tracePropagationTargets: ['localhost', __APP_CONFIG__.FRONTEND_URL],
-      replaysSessionSampleRate: 0.1,
+      replaysSessionSampleRate: 0,
       replaysOnErrorSampleRate: 1.0,
     })
     Sentry.setTag('frontend_origin', __APP_CONFIG__.DOMAIN)
