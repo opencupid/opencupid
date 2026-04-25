@@ -1,53 +1,9 @@
 import { z } from 'zod';
-import { Prisma } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
 
 /////////////////////////////////////////
 // HELPER FUNCTIONS
 /////////////////////////////////////////
-
-// JSON
-//------------------------------------------------------
-
-export type NullableJsonInput = Prisma.JsonValue | null | 'JsonNull' | 'DbNull' | Prisma.NullTypes.DbNull | Prisma.NullTypes.JsonNull;
-
-export const transformJsonNull = (v?: NullableJsonInput) => {
-  if (!v || v === 'DbNull') return Prisma.DbNull;
-  if (v === 'JsonNull') return Prisma.JsonNull;
-  return v;
-};
-
-export const JsonValueSchema: z.ZodType<Prisma.JsonValue> = z.lazy(() =>
-  z.union([
-    z.string(),
-    z.number(),
-    z.boolean(),
-    z.literal(null),
-    z.record(z.lazy(() => JsonValueSchema.optional())),
-    z.array(z.lazy(() => JsonValueSchema)),
-  ])
-);
-
-export type JsonValueType = z.infer<typeof JsonValueSchema>;
-
-export const NullableJsonValue = z
-  .union([JsonValueSchema, z.literal('DbNull'), z.literal('JsonNull')])
-  .nullable()
-  .transform((v) => transformJsonNull(v));
-
-export type NullableJsonValueType = z.infer<typeof NullableJsonValue>;
-
-export const InputJsonValueSchema: z.ZodType<Prisma.InputJsonValue> = z.lazy(() =>
-  z.union([
-    z.string(),
-    z.number(),
-    z.boolean(),
-    z.object({ toJSON: z.function(z.tuple([]), z.any()) }),
-    z.record(z.lazy(() => z.union([InputJsonValueSchema, z.literal(null)]))),
-    z.array(z.lazy(() => z.union([InputJsonValueSchema, z.literal(null)]))),
-  ])
-);
-
-export type InputJsonValueType = z.infer<typeof InputJsonValueSchema>;
 
 
 /////////////////////////////////////////
@@ -94,13 +50,9 @@ export const ProfileTrustFlagScalarFieldEnumSchema = z.enum(['id','profileId','r
 
 export const SortOrderSchema = z.enum(['asc','desc']);
 
-export const JsonNullValueInputSchema = z.enum(['JsonNull',]).transform((value) => (value === 'JsonNull' ? Prisma.JsonNull : value));
-
 export const QueryModeSchema = z.enum(['default','insensitive']);
 
 export const NullsOrderSchema = z.enum(['first','last']);
-
-export const JsonNullValueFilterSchema = z.enum(['DbNull','JsonNull','AnyNull',]).transform((value) => value === 'JsonNull' ? Prisma.JsonNull : value === 'DbNull' ? Prisma.JsonNull : value === 'AnyNull' ? Prisma.AnyNull : value);
 
 export const ConnectionTypeSchema = z.enum(['friend','dating']);
 
@@ -473,7 +425,7 @@ export const ProfileTrustFlagSchema = z.object({
   flaggedAt: z.coerce.date(),
   clearedAt: z.coerce.date().nullable(),
   clearedBy: z.string().nullable(),
-  evidence: JsonValueSchema,
+  evidence: z.string(),
   flaggedBy: z.string(),
 })
 
@@ -2718,7 +2670,7 @@ export const ProfileTrustFlagWhereInputSchema: z.ZodType<Prisma.ProfileTrustFlag
   flaggedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   clearedAt: z.union([ z.lazy(() => DateTimeNullableFilterSchema),z.coerce.date() ]).optional().nullable(),
   clearedBy: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
-  evidence: z.lazy(() => JsonFilterSchema).optional(),
+  evidence: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   flaggedBy: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   profile: z.union([ z.lazy(() => ProfileScalarRelationFilterSchema),z.lazy(() => ProfileWhereInputSchema) ]).optional(),
 }).strict();
@@ -2748,7 +2700,7 @@ export const ProfileTrustFlagWhereUniqueInputSchema: z.ZodType<Prisma.ProfileTru
   flaggedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   clearedAt: z.union([ z.lazy(() => DateTimeNullableFilterSchema),z.coerce.date() ]).optional().nullable(),
   clearedBy: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
-  evidence: z.lazy(() => JsonFilterSchema).optional(),
+  evidence: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   flaggedBy: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   profile: z.union([ z.lazy(() => ProfileScalarRelationFilterSchema),z.lazy(() => ProfileWhereInputSchema) ]).optional(),
 }).strict());
@@ -2777,7 +2729,7 @@ export const ProfileTrustFlagScalarWhereWithAggregatesInputSchema: z.ZodType<Pri
   flaggedAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
   clearedAt: z.union([ z.lazy(() => DateTimeNullableWithAggregatesFilterSchema),z.coerce.date() ]).optional().nullable(),
   clearedBy: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema),z.string() ]).optional().nullable(),
-  evidence: z.lazy(() => JsonWithAggregatesFilterSchema).optional(),
+  evidence: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   flaggedBy: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
 }).strict();
 
@@ -4322,7 +4274,7 @@ export const ProfileTrustFlagCreateInputSchema: z.ZodType<Prisma.ProfileTrustFla
   flaggedAt: z.coerce.date().optional(),
   clearedAt: z.coerce.date().optional().nullable(),
   clearedBy: z.string().optional().nullable(),
-  evidence: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
+  evidence: z.string(),
   flaggedBy: z.string(),
   profile: z.lazy(() => ProfileCreateNestedOneWithoutTrustFlagsInputSchema)
 }).strict();
@@ -4334,7 +4286,7 @@ export const ProfileTrustFlagUncheckedCreateInputSchema: z.ZodType<Prisma.Profil
   flaggedAt: z.coerce.date().optional(),
   clearedAt: z.coerce.date().optional().nullable(),
   clearedBy: z.string().optional().nullable(),
-  evidence: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
+  evidence: z.string(),
   flaggedBy: z.string()
 }).strict();
 
@@ -4344,7 +4296,7 @@ export const ProfileTrustFlagUpdateInputSchema: z.ZodType<Prisma.ProfileTrustFla
   flaggedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   clearedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   clearedBy: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  evidence: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  evidence: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   flaggedBy: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   profile: z.lazy(() => ProfileUpdateOneRequiredWithoutTrustFlagsNestedInputSchema).optional()
 }).strict();
@@ -4356,7 +4308,7 @@ export const ProfileTrustFlagUncheckedUpdateInputSchema: z.ZodType<Prisma.Profil
   flaggedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   clearedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   clearedBy: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  evidence: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  evidence: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   flaggedBy: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
@@ -4367,7 +4319,7 @@ export const ProfileTrustFlagCreateManyInputSchema: z.ZodType<Prisma.ProfileTrus
   flaggedAt: z.coerce.date().optional(),
   clearedAt: z.coerce.date().optional().nullable(),
   clearedBy: z.string().optional().nullable(),
-  evidence: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
+  evidence: z.string(),
   flaggedBy: z.string()
 }).strict();
 
@@ -4377,7 +4329,7 @@ export const ProfileTrustFlagUpdateManyMutationInputSchema: z.ZodType<Prisma.Pro
   flaggedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   clearedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   clearedBy: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  evidence: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  evidence: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   flaggedBy: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
@@ -4388,7 +4340,7 @@ export const ProfileTrustFlagUncheckedUpdateManyInputSchema: z.ZodType<Prisma.Pr
   flaggedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   clearedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   clearedBy: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  evidence: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  evidence: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   flaggedBy: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
@@ -5708,23 +5660,6 @@ export const EnumTrustReasonFilterSchema: z.ZodType<Prisma.EnumTrustReasonFilter
   not: z.union([ z.lazy(() => TrustReasonSchema),z.lazy(() => NestedEnumTrustReasonFilterSchema) ]).optional(),
 }).strict();
 
-export const JsonFilterSchema: z.ZodType<Prisma.JsonFilter> = z.object({
-  equals: InputJsonValueSchema.optional(),
-  path: z.string().array().optional(),
-  mode: z.lazy(() => QueryModeSchema).optional(),
-  string_contains: z.string().optional(),
-  string_starts_with: z.string().optional(),
-  string_ends_with: z.string().optional(),
-  array_starts_with: InputJsonValueSchema.optional().nullable(),
-  array_ends_with: InputJsonValueSchema.optional().nullable(),
-  array_contains: InputJsonValueSchema.optional().nullable(),
-  lt: InputJsonValueSchema.optional(),
-  lte: InputJsonValueSchema.optional(),
-  gt: InputJsonValueSchema.optional(),
-  gte: InputJsonValueSchema.optional(),
-  not: InputJsonValueSchema.optional()
-}).strict();
-
 export const ProfileTrustFlagCountOrderByAggregateInputSchema: z.ZodType<Prisma.ProfileTrustFlagCountOrderByAggregateInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
   profileId: z.lazy(() => SortOrderSchema).optional(),
@@ -5743,6 +5678,7 @@ export const ProfileTrustFlagMaxOrderByAggregateInputSchema: z.ZodType<Prisma.Pr
   flaggedAt: z.lazy(() => SortOrderSchema).optional(),
   clearedAt: z.lazy(() => SortOrderSchema).optional(),
   clearedBy: z.lazy(() => SortOrderSchema).optional(),
+  evidence: z.lazy(() => SortOrderSchema).optional(),
   flaggedBy: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
@@ -5753,6 +5689,7 @@ export const ProfileTrustFlagMinOrderByAggregateInputSchema: z.ZodType<Prisma.Pr
   flaggedAt: z.lazy(() => SortOrderSchema).optional(),
   clearedAt: z.lazy(() => SortOrderSchema).optional(),
   clearedBy: z.lazy(() => SortOrderSchema).optional(),
+  evidence: z.lazy(() => SortOrderSchema).optional(),
   flaggedBy: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
@@ -5764,26 +5701,6 @@ export const EnumTrustReasonWithAggregatesFilterSchema: z.ZodType<Prisma.EnumTru
   _count: z.lazy(() => NestedIntFilterSchema).optional(),
   _min: z.lazy(() => NestedEnumTrustReasonFilterSchema).optional(),
   _max: z.lazy(() => NestedEnumTrustReasonFilterSchema).optional()
-}).strict();
-
-export const JsonWithAggregatesFilterSchema: z.ZodType<Prisma.JsonWithAggregatesFilter> = z.object({
-  equals: InputJsonValueSchema.optional(),
-  path: z.string().array().optional(),
-  mode: z.lazy(() => QueryModeSchema).optional(),
-  string_contains: z.string().optional(),
-  string_starts_with: z.string().optional(),
-  string_ends_with: z.string().optional(),
-  array_starts_with: InputJsonValueSchema.optional().nullable(),
-  array_ends_with: InputJsonValueSchema.optional().nullable(),
-  array_contains: InputJsonValueSchema.optional().nullable(),
-  lt: InputJsonValueSchema.optional(),
-  lte: InputJsonValueSchema.optional(),
-  gt: InputJsonValueSchema.optional(),
-  gte: InputJsonValueSchema.optional(),
-  not: InputJsonValueSchema.optional(),
-  _count: z.lazy(() => NestedIntFilterSchema).optional(),
-  _min: z.lazy(() => NestedJsonFilterSchema).optional(),
-  _max: z.lazy(() => NestedJsonFilterSchema).optional()
 }).strict();
 
 export const TagTranslationCreateNestedManyWithoutTagInputSchema: z.ZodType<Prisma.TagTranslationCreateNestedManyWithoutTagInput> = z.object({
@@ -7761,23 +7678,6 @@ export const NestedEnumTrustReasonWithAggregatesFilterSchema: z.ZodType<Prisma.N
   _max: z.lazy(() => NestedEnumTrustReasonFilterSchema).optional()
 }).strict();
 
-export const NestedJsonFilterSchema: z.ZodType<Prisma.NestedJsonFilter> = z.object({
-  equals: InputJsonValueSchema.optional(),
-  path: z.string().array().optional(),
-  mode: z.lazy(() => QueryModeSchema).optional(),
-  string_contains: z.string().optional(),
-  string_starts_with: z.string().optional(),
-  string_ends_with: z.string().optional(),
-  array_starts_with: InputJsonValueSchema.optional().nullable(),
-  array_ends_with: InputJsonValueSchema.optional().nullable(),
-  array_contains: InputJsonValueSchema.optional().nullable(),
-  lt: InputJsonValueSchema.optional(),
-  lte: InputJsonValueSchema.optional(),
-  gt: InputJsonValueSchema.optional(),
-  gte: InputJsonValueSchema.optional(),
-  not: InputJsonValueSchema.optional()
-}).strict();
-
 export const TagTranslationCreateWithoutTagInputSchema: z.ZodType<Prisma.TagTranslationCreateWithoutTagInput> = z.object({
   locale: z.string(),
   name: z.string()
@@ -9419,7 +9319,7 @@ export const ProfileTrustFlagCreateWithoutProfileInputSchema: z.ZodType<Prisma.P
   flaggedAt: z.coerce.date().optional(),
   clearedAt: z.coerce.date().optional().nullable(),
   clearedBy: z.string().optional().nullable(),
-  evidence: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
+  evidence: z.string(),
   flaggedBy: z.string()
 }).strict();
 
@@ -9429,7 +9329,7 @@ export const ProfileTrustFlagUncheckedCreateWithoutProfileInputSchema: z.ZodType
   flaggedAt: z.coerce.date().optional(),
   clearedAt: z.coerce.date().optional().nullable(),
   clearedBy: z.string().optional().nullable(),
-  evidence: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
+  evidence: z.string(),
   flaggedBy: z.string()
 }).strict();
 
@@ -9931,7 +9831,7 @@ export const ProfileTrustFlagScalarWhereInputSchema: z.ZodType<Prisma.ProfileTru
   flaggedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   clearedAt: z.union([ z.lazy(() => DateTimeNullableFilterSchema),z.coerce.date() ]).optional().nullable(),
   clearedBy: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
-  evidence: z.lazy(() => JsonFilterSchema).optional(),
+  evidence: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   flaggedBy: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
 }).strict();
 
@@ -13991,7 +13891,7 @@ export const ProfileTrustFlagCreateManyProfileInputSchema: z.ZodType<Prisma.Prof
   flaggedAt: z.coerce.date().optional(),
   clearedAt: z.coerce.date().optional().nullable(),
   clearedBy: z.string().optional().nullable(),
-  evidence: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
+  evidence: z.string(),
   flaggedBy: z.string()
 }).strict();
 
@@ -14664,7 +14564,7 @@ export const ProfileTrustFlagUpdateWithoutProfileInputSchema: z.ZodType<Prisma.P
   flaggedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   clearedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   clearedBy: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  evidence: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  evidence: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   flaggedBy: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
@@ -14674,7 +14574,7 @@ export const ProfileTrustFlagUncheckedUpdateWithoutProfileInputSchema: z.ZodType
   flaggedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   clearedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   clearedBy: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  evidence: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  evidence: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   flaggedBy: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
@@ -14684,7 +14584,7 @@ export const ProfileTrustFlagUncheckedUpdateManyWithoutProfileInputSchema: z.Zod
   flaggedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   clearedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   clearedBy: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  evidence: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  evidence: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   flaggedBy: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 

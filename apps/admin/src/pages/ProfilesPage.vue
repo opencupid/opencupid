@@ -28,7 +28,7 @@ interface AdminProfileTrustFlag {
   reason: 'PROFILE_UNVETTED' | 'SPAM_BURST'
   flaggedAt: string
   flaggedBy: string
-  evidence: unknown
+  evidence: string
 }
 
 interface AdminProfileDetail extends AdminProfile {
@@ -771,11 +771,8 @@ onUnmounted(() => {
                       <div class="small text-muted">
                         {{ new Date(f.flaggedAt).toLocaleString() }}
                       </div>
-                      <div
-                        v-if="(f.evidence as { note?: string })?.note"
-                        class="small"
-                      >
-                        Note: {{ (f.evidence as { note: string }).note }}
+                      <div v-if="f.evidence" class="small">
+                        {{ f.evidence }}
                       </div>
                     </div>
                     <button

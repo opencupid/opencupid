@@ -402,7 +402,7 @@ export class ProfileService {
           data: {
             profileId: newProfile.id,
             reason: 'PROFILE_UNVETTED',
-            evidence: { source: 'default_on_create' },
+            evidence: '',
             flaggedBy: 'system:profile_create',
           },
         })

@@ -7,12 +7,6 @@ import { MessageService } from '@/services/messaging.service'
 // only if runtime tuning becomes routine.
 export const SPAM_BURST_THRESHOLD = 3
 
-// Cap on how many conversation IDs we attach to evidence.sampleConversationIds.
-// The decision logic only depends on the count (countAtFlagTime); the IDs are a
-// support-debugging aid. Bounding keeps the JSONB write small even for extreme
-// offenders with hundreds of unanswered threads.
-const SPAM_BURST_EVIDENCE_SAMPLE_SIZE = 10
-
 // Shared builder so every enqueue site uses the same BullMQ dedup key. If the clear
 // path here and the clear-unvetted-window worker (Task 6) drifted to different
 // formats, two promote-pendings jobs could race inside the serializable tx.
@@ -57,7 +51,7 @@ export class ProfileTrustService {
         profileId,
         reason: 'PROFILE_UNVETTED',
         flaggedBy,
-        evidence: { note },
+        evidence: note,
       },
     })
   }
@@ -177,24 +171,11 @@ export class ProfileTrustService {
 
     if (count >= SPAM_BURST_THRESHOLD) {
       if (!alreadyFlagged) {
-        // Fetch a bounded sample only when actually writing the flag.
-        const sample = await prisma.conversation.findMany({
-          where: {
-            initiatorProfileId: profileId,
-            status: { in: ['INITIATED', 'PENDING'] },
-          },
-          select: { id: true },
-          take: SPAM_BURST_EVIDENCE_SAMPLE_SIZE,
-          orderBy: { createdAt: 'asc' },
-        })
         await prisma.profileTrustFlag.create({
           data: {
             profileId,
             reason: 'SPAM_BURST',
-            evidence: {
-              sampleConversationIds: sample.map((r) => r.id),
-              countAtFlagTime: count,
-            },
+            evidence: String(count),
             flaggedBy: 'heuristic:spam_burst',
           },
         })

@@ -8,7 +8,7 @@ CREATE TABLE "ProfileTrustFlag" (
     "reason" "TrustReason" NOT NULL,
     "flaggedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "clearedAt" TIMESTAMP(3),
-    "evidence" JSONB NOT NULL,
+    "evidence" TEXT NOT NULL,
     "flaggedBy" TEXT NOT NULL,
 
     CONSTRAINT "ProfileTrustFlag_pkey" PRIMARY KEY ("id")

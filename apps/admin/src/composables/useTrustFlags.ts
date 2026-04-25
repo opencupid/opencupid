@@ -14,7 +14,7 @@ export interface ProfileTrustFlag {
   flaggedBy: string
   clearedAt: string | null
   clearedBy: string | null
-  evidence: unknown
+  evidence: string
 }
 
 /**

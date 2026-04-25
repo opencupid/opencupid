@@ -23,7 +23,7 @@ const adminFlag = {
   flaggedBy: 'admin:manual',
   clearedAt: null,
   clearedBy: null,
-  evidence: { note: 'manual hold' },
+  evidence: 'manual hold',
   profile: { id: 'p1', publicName: 'Alice', country: 'US', cityName: 'NYC' },
 }
 
@@ -35,7 +35,7 @@ const heuristicFlag = {
   flaggedBy: 'heuristic:spam_burst',
   clearedAt: null,
   clearedBy: null,
-  evidence: { countAtFlagTime: 5 },
+  evidence: '5',
   profile: { id: 'p2', publicName: 'Bob', country: 'US', cityName: 'LA' },
 }
 
