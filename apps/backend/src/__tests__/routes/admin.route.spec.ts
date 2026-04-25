@@ -1490,19 +1490,23 @@ describe('POST /trust-flags/:id/clear', () => {
     expect(reply.statusCode).toBe(404)
   })
 
-  it('returns 409 when the flag is heuristic-set', async () => {
+  it('clears heuristic-set flags too', async () => {
     mockPrisma.profileTrustFlag.findUnique.mockResolvedValue({
       id: 'f1',
       profileId: 'p1',
       clearedAt: null,
       flaggedBy: 'heuristic:spam_burst',
     })
+    mockPrisma.profileTrustFlag.update.mockResolvedValue({})
+    vi.doMock('@/queues/profileTrustQueue', () => ({
+      profileTrustQueue: { add: vi.fn().mockResolvedValue({}) },
+    }))
 
     const handler = fastify.routes['POST /trust-flags/:id/clear']
     await handler({ params: { id: 'f1' } }, reply)
 
-    expect(reply.statusCode).toBe(409)
-    expect(mockPrisma.profileTrustFlag.update).not.toHaveBeenCalled()
+    expect(reply.statusCode).toBe(200)
+    expect(mockPrisma.profileTrustFlag.update).toHaveBeenCalled()
   })
 
   it('returns 409 when the flag is already cleared', async () => {

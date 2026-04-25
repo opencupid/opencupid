@@ -56,8 +56,6 @@ async function loadMore() {
   await fetchFlags(false)
 }
 
-const isAdminFlag = computed(() => (f: TrustFlagRow) => f.flaggedBy.startsWith('admin:'))
-
 const reasonBadgeClass = computed(() => (f: TrustFlagRow) => {
   if (f.flaggedBy.startsWith('admin:')) return 'badge bg-danger'
   if (f.flaggedBy.startsWith('heuristic:')) return 'badge bg-warning text-dark'
@@ -219,7 +217,7 @@ onUnmounted(() => {
             <td>{{ evidenceSummary(f) }}</td>
             <td>
               <button
-                v-if="!f.clearedAt && isAdminFlag(f)"
+                v-if="!f.clearedAt"
                 class="btn btn-sm btn-outline-primary"
                 @click="askClear(f)"
               >

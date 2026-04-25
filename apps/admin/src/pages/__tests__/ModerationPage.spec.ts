@@ -58,11 +58,11 @@ describe('ModerationPage', () => {
     expect(wrapper.text()).toContain('Bob')
   })
 
-  it('shows Clear button only on admin-set rows', async () => {
+  it('shows Clear button on every active row regardless of source', async () => {
     const wrapper = mount(ModerationPage)
     await flushPromises()
     const clearButtons = wrapper.findAll('button').filter((b) => b.text() === 'Clear')
-    expect(clearButtons).toHaveLength(1)
+    expect(clearButtons).toHaveLength(2) // both admin-set and heuristic-set are clearable
   })
 
   it('refetches with activeOnly=false when "Include cleared" is toggled', async () => {

@@ -22,9 +22,9 @@ export const promotePendingsJobId = (profileId: string) => `promote-pendings-${p
 /**
  * Result of attempting to clear a flag. The service stays HTTP-agnostic;
  * the route handler maps these codes to status codes (404 for not_found,
- * 409 for already_cleared / non_admin, 200 for cleared).
+ * 409 for already_cleared, 200 for cleared).
  */
-export type ClearFlagResult = 'cleared' | 'not_found' | 'already_cleared' | 'non_admin'
+export type ClearFlagResult = 'cleared' | 'not_found' | 'already_cleared'
 
 export class ProfileTrustService {
   private static instance: ProfileTrustService | null = null
@@ -63,12 +63,14 @@ export class ProfileTrustService {
   }
 
   /**
-   * Admin-only manual flag clear. Reuses the same promote-pendings enqueue path
+   * Manual flag clear. Reuses the same promote-pendings enqueue path
    * that the heuristic threshold-down branch uses, so held messages get released
    * the same way regardless of who closed the flag.
    *
-   * Refuses to clear non-admin flags (heuristic-set or system-set) — those are
-   * owned by the convergence machinery and admins can't safely undo them by hand.
+   * Note: heuristic SPAM_BURST flags can be cleared this way too, but the
+   * already-DISCARDED conversations stay terminal — clearing the flag does not
+   * revive them. The next reconcile pass may re-flag if the threshold is still
+   * breached.
    *
    * Returns a result code; the caller maps it to its protocol-specific response.
    */
@@ -76,7 +78,6 @@ export class ProfileTrustService {
     const flag = await prisma.profileTrustFlag.findUnique({ where: { id: flagId } })
     if (!flag) return 'not_found'
     if (flag.clearedAt) return 'already_cleared'
-    if (!flag.flaggedBy.startsWith('admin:')) return 'non_admin'
 
     await prisma.profileTrustFlag.update({
       where: { id: flagId },

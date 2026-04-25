@@ -153,7 +153,7 @@ describe('ProfilesPage', () => {
     expect(wrapper.find('tbody tr').classes()).toContain('table-warning')
   })
 
-  it('clear quarantine flow: clears admin flag and unstyles row', async () => {
+  it('per-flag clear: clears the targeted flag and updates row state', async () => {
     apiRequestMock.mockResolvedValue({
       success: true,
       profile: {
@@ -183,23 +183,23 @@ describe('ProfilesPage', () => {
     await wrapper.find('tbody tr').trigger('click')
     await flushPromises()
 
-    // Open the confirm modal
+    // Per-flag Clear button lives in the Trust section card next to the flag
+    await wrapper
+      .findAll('button')
+      .filter((b) => b.text() === 'Clear')[0]
+      .trigger('click')
+    // Confirm dialog's primary button reads "Clear quarantine"
     await wrapper
       .findAll('button')
       .filter((b) => b.text() === 'Clear quarantine')[0]
       .trigger('click')
-    // The dialog has its own "Clear quarantine" — find the second occurrence (in the confirm dialog)
-    const allClearButtons = wrapper
-      .findAll('button')
-      .filter((b) => b.text().includes('Clear quarantine'))
-    await allClearButtons[allClearButtons.length - 1].trigger('click')
     await flushPromises()
 
     expect(clearTrustFlagMock).toHaveBeenCalledWith('fAdmin')
     expect(wrapper.find('tbody tr').classes()).not.toContain('table-warning')
   })
 
-  it('does not show Clear quarantine button when only system/heuristic flags are active', async () => {
+  it('per-flag clear is available for system/heuristic flags too', async () => {
     apiRequestMock.mockResolvedValue({
       success: true,
       profile: {
@@ -222,9 +222,10 @@ describe('ProfilesPage', () => {
     await wrapper.find('tbody tr').trigger('click')
     await flushPromises()
 
-    const clearButtons = wrapper.findAll('button').filter((b) => b.text() === 'Clear quarantine')
-    expect(clearButtons).toHaveLength(0)
-    // Quarantine button also hidden because flags exist
+    // System flag now also has a Clear button (per relaxed policy)
+    const clearButtons = wrapper.findAll('button').filter((b) => b.text() === 'Clear')
+    expect(clearButtons.length).toBeGreaterThanOrEqual(1)
+    // Quarantine button still hidden because the profile already has an active flag
     const quarantineButtons = wrapper.findAll('button').filter((b) => b.text() === 'Quarantine')
     expect(quarantineButtons).toHaveLength(0)
   })

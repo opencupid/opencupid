@@ -212,9 +212,6 @@ async function viewProfileById(id: string) {
 }
 
 const activeFlags = computed(() => selectedProfileDetail.value?.trustFlags ?? [])
-const activeAdminFlag = computed(
-  () => activeFlags.value.find((f) => f.flaggedBy.startsWith('admin:')) ?? null
-)
 
 // Quarantine flow (from no-flag → write admin flag)
 const quarantineOpen = ref(false)
@@ -263,22 +260,22 @@ async function submitQuarantine() {
   }
 }
 
-// Clear quarantine flow (from active admin flag → clear it)
-const clearConfirmOpen = ref(false)
+// Per-flag clear flow. The confirm modal targets one flag at a time.
+const pendingClearFlagId = ref<string | null>(null)
 const clearSubmitting = ref(false)
 const clearErrorDetail = ref<string | null>(null)
 
-function askClearQuarantine() {
-  clearConfirmOpen.value = true
+function askClearFlag(flagId: string) {
+  pendingClearFlagId.value = flagId
   clearErrorDetail.value = null
 }
 
-async function confirmClearQuarantine() {
-  if (!activeAdminFlag.value || !selectedProfile.value) return
+async function confirmClearFlag() {
+  const flagId = pendingClearFlagId.value
+  if (!flagId || !selectedProfile.value) return
   clearSubmitting.value = true
   clearErrorDetail.value = null
   try {
-    const flagId = activeAdminFlag.value.id
     await clearTrustFlag(flagId)
     if (selectedProfileDetail.value) {
       const remaining = selectedProfileDetail.value.trustFlags.filter((f) => f.id !== flagId)
@@ -297,7 +294,7 @@ async function confirmClearQuarantine() {
         }
       }
     }
-    clearConfirmOpen.value = false
+    pendingClearFlagId.value = null
   } catch (err) {
     clearErrorDetail.value = err instanceof Error ? err.message : 'clear failed'
   } finally {
@@ -764,19 +761,29 @@ onUnmounted(() => {
                   v-for="f in activeFlags"
                   v-else
                   :key="f.id"
-                  class="border rounded p-2 mb-2"
+                  class="border rounded p-2 mb-2 d-flex align-items-start gap-2"
                 >
-                  <div>
-                    <strong>{{ f.reason }}</strong>
-                    <code class="ms-2 small">{{ f.flaggedBy }}</code>
+                  <div class="flex-grow-1">
+                    <div>
+                      <strong>{{ f.reason }}</strong>
+                      <code class="ms-2 small">{{ f.flaggedBy }}</code>
+                    </div>
+                    <div class="small text-muted">
+                      {{ new Date(f.flaggedAt).toLocaleString() }}
+                    </div>
+                    <div
+                      v-if="(f.evidence as { note?: string })?.note"
+                      class="small"
+                    >
+                      Note: {{ (f.evidence as { note: string }).note }}
+                    </div>
                   </div>
-                  <div class="small text-muted">{{ new Date(f.flaggedAt).toLocaleString() }}</div>
-                  <div
-                    v-if="(f.evidence as { note?: string })?.note"
-                    class="small"
+                  <button
+                    class="btn btn-sm btn-outline-primary"
+                    @click="askClearFlag(f.id)"
                   >
-                    Note: {{ (f.evidence as { note: string }).note }}
-                  </div>
+                    Clear
+                  </button>
                 </div>
               </template>
             </div>
@@ -825,13 +832,6 @@ onUnmounted(() => {
                 Quarantine
               </button>
               <button
-                v-if="activeAdminFlag"
-                class="btn btn-outline-primary me-auto"
-                @click="askClearQuarantine"
-              >
-                Clear quarantine
-              </button>
-              <button
                 class="btn btn-secondary"
                 @click="selectedProfile = null"
               >
@@ -849,10 +849,10 @@ onUnmounted(() => {
 
     <!-- Confirm clear quarantine modal -->
     <div
-      v-if="clearConfirmOpen"
+      v-if="pendingClearFlagId"
       class="modal d-block"
       tabindex="-1"
-      @click.self="clearConfirmOpen = false"
+      @click.self="pendingClearFlagId = null"
     >
       <div class="modal-dialog">
         <div class="modal-content">
@@ -876,14 +876,14 @@ onUnmounted(() => {
             <button
               class="btn btn-secondary"
               :disabled="clearSubmitting"
-              @click="clearConfirmOpen = false"
+              @click="pendingClearFlagId = null"
             >
               Cancel
             </button>
             <button
               class="btn btn-primary"
               :disabled="clearSubmitting"
-              @click="confirmClearQuarantine"
+              @click="confirmClearFlag"
             >
               {{ clearSubmitting ? 'Clearing...' : 'Clear quarantine' }}
             </button>
@@ -892,7 +892,7 @@ onUnmounted(() => {
       </div>
     </div>
     <div
-      v-if="clearConfirmOpen"
+      v-if="pendingClearFlagId"
       class="modal-backdrop show"
     ></div>
 

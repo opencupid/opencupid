@@ -990,8 +990,6 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
           return sendError(reply, 404, 'flag not found')
         case 'already_cleared':
           return sendError(reply, 409, 'flag already cleared')
-        case 'non_admin':
-          return sendError(reply, 409, 'cannot clear non-admin flag from admin UI')
       }
     } catch (err) {
       fastify.log.error({ err }, 'Error clearing trust flag')

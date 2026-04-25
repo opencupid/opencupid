@@ -420,16 +420,23 @@ describe('ProfileTrustService', () => {
       expect(flagUpdate).not.toHaveBeenCalled()
     })
 
-    it('returns "non_admin" when the flag is heuristic-set', async () => {
+    it('clears heuristic-set flags too (admin override)', async () => {
       flagFindUnique.mockResolvedValue({
         id: 'f1',
         profileId: 'p1',
         clearedAt: null,
         flaggedBy: 'heuristic:spam_burst',
       })
-      expect(await svc.clearFlag('f1', 'admin:manual')).toBe('non_admin')
-      expect(flagUpdate).not.toHaveBeenCalled()
-      expect(queueAdd).not.toHaveBeenCalled()
+      flagUpdate.mockResolvedValue({})
+      queueAdd.mockResolvedValue({})
+
+      const result = await svc.clearFlag('f1', 'admin:manual')
+
+      expect(result).toBe('cleared')
+      expect(flagUpdate).toHaveBeenCalledWith({
+        where: { id: 'f1' },
+        data: { clearedAt: expect.any(Date), clearedBy: 'admin:manual' },
+      })
     })
   })
 
