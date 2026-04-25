@@ -1,5 +1,11 @@
 # @opencupid/admin
 
+## 0.54.0
+
+### Minor Changes
+
+- dbc0427: Admin: bulk in-app message to selected profiles from the Profiles page
+
 ## 0.53.4
 
 ### Patch Changes
