@@ -50,23 +50,21 @@ async function fetchFlags(reset = true) {
   }
 }
 
-function loadMore() {
+async function loadMore() {
   if (loadingMore.value || loading.value || !hasMore.value) return
   page.value++
-  fetchFlags(false)
+  await fetchFlags(false)
 }
 
-function isAdminFlag(f: TrustFlagRow) {
-  return f.flaggedBy.startsWith('admin:')
-}
+const isAdminFlag = computed(() => (f: TrustFlagRow) => f.flaggedBy.startsWith('admin:'))
 
-function reasonBadgeClass(f: TrustFlagRow) {
+const reasonBadgeClass = computed(() => (f: TrustFlagRow) => {
   if (f.flaggedBy.startsWith('admin:')) return 'badge bg-danger'
   if (f.flaggedBy.startsWith('heuristic:')) return 'badge bg-warning text-dark'
   return 'badge bg-secondary'
-}
+})
 
-function evidenceSummary(f: TrustFlagRow) {
+const evidenceSummary = computed(() => (f: TrustFlagRow) => {
   const e = f.evidence as Record<string, unknown> | null
   if (!e) return '—'
   if (typeof e.note === 'string') {
@@ -75,7 +73,7 @@ function evidenceSummary(f: TrustFlagRow) {
   if (typeof e.countAtFlagTime === 'number') return `count=${e.countAtFlagTime}`
   if (typeof e.source === 'string') return String(e.source)
   return '—'
-}
+})
 
 function openProfile(profileId: string) {
   router.push({ path: '/profiles', query: { profileId } })
@@ -196,9 +194,6 @@ onUnmounted(() => {
                 @click.prevent="openProfile(f.profileId)"
                 >{{ f.profile.publicName || f.profileId }}</a
               >
-              <div class="small text-muted">
-                <code>{{ f.profileId }}</code>
-              </div>
             </td>
             <td>
               <span :class="reasonBadgeClass(f)">{{ f.reason }}</span>
