@@ -1,5 +1,13 @@
 # frontend
 
+## 0.55.0
+
+### Patch Changes
+
+- 92769e1: Fix "Take Photo" button opening the gallery instead of the camera in Firefox/Android (#234). The image upload input now uses MIME-type values in `accept` so the `capture` attribute is honored across browsers.
+- bd1b660: Bump @sentry/vue to 10.50.0, disable Replay session sampling on iOS-affected routes, revert OsmPoiMap sentry-block band-aid (#1373)
+- 265f7d2: Silent cookie migration to domain-scoped **session/**refresh cookies ahead of SPA subdomain split. Every authenticated response now sets the new domain-scoped cookie shape (driven by `appConfig.DOMAIN`) and emits a delete for the legacy host-only variant, so active users are migrated in-place without being logged out (#1351)
+
 ## 0.54.0
 
 ### Patch Changes
