@@ -237,8 +237,17 @@ export class MessageService {
       return null
     }
 
-    // Only update if conversation is currently INITIATED
-    if (existingConversation.status === 'INITIATED') {
+    // Mutual engagement promotes both INITIATED (waiting on first reply) and
+    // PENDING (held due to sender quarantine) to ACCEPTED. PENDING shares the
+    // same legitimacy reasoning as the message-reply path's
+    // `accept_and_promote_pending` outcome — see the decision record in
+    // messaging.stateMachine.ts. BLOCKED/ARCHIVED stand: those represent the
+    // recipient's explicit choice and outrank engagement signals. DISCARDED is
+    // filtered upstream by activeConversationWhere.
+    if (
+      existingConversation.status === 'INITIATED' ||
+      existingConversation.status === 'PENDING'
+    ) {
       return await prisma.conversation.update({
         where: { id: existingConversation.id },
         data: {

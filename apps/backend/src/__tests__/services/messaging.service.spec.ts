@@ -186,6 +186,42 @@ describe('MessageService.acceptConversationOnMatch', () => {
     expect(result).toBe(existingConvo)
   })
 
+  it('promotes PENDING to ACCEPTED on mutual match', async () => {
+    // Mirror of the message-reply path's "mutual engagement promotes PENDING"
+    // semantic (see decision record in messaging.stateMachine.ts). A reciprocal
+    // like is the same legitimacy signal as a reply — quarantine should not
+    // trap a held conversation once both parties have signaled engagement.
+    const existingConvo = { id: 'c1', status: 'PENDING', profileAId: 'p1', profileBId: 'p2' }
+    const updatedConvo = { ...existingConvo, status: 'ACCEPTED' }
+
+    mockPrisma.conversation.findFirst.mockResolvedValue(existingConvo)
+    mockPrisma.conversation.update.mockResolvedValue(updatedConvo)
+
+    const result = await service.acceptConversationOnMatch('p1', 'p2')
+
+    expect(mockPrisma.conversation.update).toHaveBeenCalledWith({
+      where: { id: 'c1' },
+      data: { status: 'ACCEPTED', updatedAt: expect.any(Date) },
+    })
+    expect(result.status).toBe('ACCEPTED')
+  })
+
+  it.each(['BLOCKED', 'ARCHIVED'] as const)(
+    'does NOT promote %s conversations on mutual match',
+    async (status) => {
+      // Recipient-choice statuses (BLOCKED, ARCHIVED) must not be overridden by
+      // a mutual like — the recipient's explicit decision outranks engagement
+      // signals. DISCARDED is filtered upstream by activeConversationWhere.
+      const existingConvo = { id: 'c1', status, profileAId: 'p1', profileBId: 'p2' }
+      mockPrisma.conversation.findFirst.mockResolvedValue(existingConvo)
+
+      const result = await service.acceptConversationOnMatch('p1', 'p2')
+
+      expect(mockPrisma.conversation.update).not.toHaveBeenCalled()
+      expect(result).toBe(existingConvo)
+    }
+  )
+
   it('sorts profile IDs consistently', async () => {
     mockPrisma.conversation.findFirst.mockResolvedValue(null)
 
