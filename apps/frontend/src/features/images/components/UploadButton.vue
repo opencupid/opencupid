@@ -28,7 +28,7 @@ const idAttr = computed(() => 'image-upload-input' + (captureAttr.value ?? ''))
     >
       <BFormFile
         :id="idAttr"
-        accept=".jpg,.jpeg,.png"
+        accept="image/jpeg,image/png"
         ref="fileInput"
         autofocus
         @change="$emit('file:change', $event)"
