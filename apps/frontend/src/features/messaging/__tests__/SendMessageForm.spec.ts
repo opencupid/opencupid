@@ -55,7 +55,6 @@ describe('SendMessageForm', () => {
     },
     introSocial: '',
     introDating: '',
-    conversation: null,
     interactionContext: {
       likedByMe: false,
       likedMeRevealed: false,
