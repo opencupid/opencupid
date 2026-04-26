@@ -28,24 +28,4 @@ describe('SecondaryNav', () => {
   //   expect(wrapper.find('.test-left').exists()).toBe(true)
   // })
 
-  // it('renders ScopeViewToggler with v-model', async () => {
-  //   const wrapper = mount(SecondaryNav)
-  //   const toggler = wrapper.findComponent(ScopeViewToggler)
-  //   expect(toggler.exists()).toBe(true)
-  // })
-
-  // it('emits prefs:toggle when button is clicked', async () => {
-  //   const wrapper = mount(SecondaryNav)
-  //   const button = wrapper.find('button')
-  //   await button.trigger('click')
-  //   expect(wrapper.emitted('prefs:toggle')).toBeTruthy()
-  // })
-
-  // it('disables button when prefsButtonDisabled is true', () => {
-  //   const wrapper = mount(SecondaryNav, {
-  //     props: { prefsButtonDisabled: true },
-  //   })
-  //   const button = wrapper.find('button')
-  //   expect(button.attributes('disabled')).toBeDefined()
-  // })
 })

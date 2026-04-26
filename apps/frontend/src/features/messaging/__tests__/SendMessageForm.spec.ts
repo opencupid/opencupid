@@ -10,7 +10,6 @@ vi.mock('@/features/shared/profiledisplay/TagList.vue', () => ({
 vi.mock('@/features/shared/profiledisplay/LanguageList.vue', () => ({
   default: { template: '<div />' },
 }))
-vi.mock('@/features/shared/ui/StoreErrorOverlay.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/call.svg', () => ({
   default: { template: '<span data-testid="icon-call" />' },
 }))
@@ -94,7 +93,6 @@ describe('SendMessageForm', () => {
           BDropdownItem: true,
           TagList: true,
           LanguageList: true,
-          StoreErrorOverlay: true,
           VoiceRecorder: true,
           IconMenuDotsVert: true,
           Mic2Icon: true,
@@ -152,7 +150,6 @@ describe('SendMessageForm', () => {
           TagList: true,
           LanguageList: true,
           BModal: true,
-          StoreErrorOverlay: true,
           VoiceRecorder: VoiceRecorderStub,
           VoiceMessage: true,
           IconMenuDotsVert: true,
@@ -270,7 +267,6 @@ describe('SendMessageForm', () => {
           BDropdownItem: false,
           TagList: true,
           LanguageList: true,
-          StoreErrorOverlay: true,
           VoiceRecorder: true,
           IconMenuDotsVert: true,
           Mic2Icon: true,
@@ -322,7 +318,6 @@ describe('SendMessageForm', () => {
           TagList: true,
           LanguageList: LanguageListStub,
           BModal: true,
-          StoreErrorOverlay: true,
           VoiceRecorder: VoiceRecorderStub,
           VoiceMessage: true,
           IconMenuDotsVert: true,
