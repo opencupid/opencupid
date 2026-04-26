@@ -459,18 +459,15 @@ export class MessageService {
   }
 
   async acceptConversationOnReply(tx: Prisma.TransactionClient, convoId: string): Promise<void> {
-    // Guard the transition so a concurrent BLOCKED/ACCEPTED write between
-    // classification and this call can't be silently flipped back to ACCEPTED.
-    // Under READ COMMITTED, the where-predicate is evaluated at write time.
-    const { count } = await tx.conversation.updateMany({
+    // Best-effort INITIATED → ACCEPTED. The status predicate makes a concurrent
+    // BLOCKED/DISCARDED/ACCEPTED winner a silent no-op rather than a clobber:
+    // under READ COMMITTED the where-clause is evaluated at write time, so if
+    // another tx already moved the row off INITIATED the count comes back 0
+    // and we leave their state alone.
+    await tx.conversation.updateMany({
       where: { id: convoId, status: 'INITIATED' },
       data: { status: 'ACCEPTED', updatedAt: new Date() },
     })
-    if (count !== 1) {
-      throw new Error(
-        `acceptConversationOnReply: expected INITIATED conversation ${convoId}, found ${count} matches`
-      )
-    }
   }
 
   /**

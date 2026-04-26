@@ -540,16 +540,15 @@ describe('MessageService.acceptConversationOnReply', () => {
     expect(args.data.updatedAt).toBeInstanceOf(Date)
   })
 
-  it('throws when no INITIATED row matched (concurrent transition)', async () => {
+  it('is a silent no-op when no INITIATED row matched (concurrent transition)', async () => {
     const tx: any = {
       conversation: {
         updateMany: vi.fn().mockResolvedValue({ count: 0 }),
       },
     }
 
-    await expect(service.acceptConversationOnReply(tx, 'c1')).rejects.toThrow(
-      /expected INITIATED conversation/
-    )
+    await expect(service.acceptConversationOnReply(tx, 'c1')).resolves.toBeUndefined()
+    expect(tx.conversation.updateMany).toHaveBeenCalledTimes(1)
   })
 })
 
