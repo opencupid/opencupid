@@ -215,8 +215,9 @@ export class ProfileTrustService {
   /**
    * Worker handler: if the profile has zero active flags, promote all its PENDING conversations.
    * Runs in a serializable tx to close the race with reconcileSpamBurst writing DISCARDs.
-   * Idempotent — on 40001 retry, if SPAM_BURST landed meanwhile, `stillFlagged` short-circuits.
-   * Requires BullMQ worker-level retries (attempts > 1) since Prisma does not auto-retry.
+   * Per-row races are absorbed by promoteConversation's best-effort no-op; genuine R-W
+   * conflicts surface as 40001 at commit, retried by BullMQ (requires attempts > 1 — Prisma
+   * does not auto-retry). On retry `stillFlagged` short-circuits if SPAM_BURST landed.
    */
   async promotePendingsIfClear(profileId: string): Promise<void> {
     const messageService = MessageService.getInstance()

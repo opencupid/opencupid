@@ -414,18 +414,16 @@ export class MessageService {
   }
 
   /**
-   * Promote a PENDING conversation to INITIATED and create the missing participant row
-   * atomically with the caller's transaction. Used by the promote-pendings worker and by
-   * the accept_and_promote_pending outcome in the route.
+   * Best-effort PENDING → INITIATED promotion plus the missing participant row, atomic
+   * with the caller's tx. count===0 is a silent no-op: the row was already promoted by
+   * a peer, moved to DISCARDED by SPAM_BURST, blocked by the recipient, or never
+   * existed — in every case the caller's intent is already satisfied or the row should
+   * not be revived, so skipping the participant insert is the right behavior.
    *
-   * Two concurrency hazards the guards below address:
-   * 1. The status filter prevents reviving a row that another path moved out of PENDING
-   *    (e.g. SPAM_BURST → DISCARDED, recipient block → BLOCKED, or another promoter that
-   *    already ran). count===0 is a benign "already promoted by someone else" if the row
-   *    sits in INITIATED/ACCEPTED; anything else is a genuine invariant breach.
-   * 2. createMany + skipDuplicates keeps participant insertion idempotent — without it,
-   *    a worker re-run or a route accept_and_promote_pending racing the worker would
-   *    P2002 on @@unique([profileId, conversationId]).
+   * createMany + skipDuplicates keeps participant insertion idempotent under worker
+   * re-runs and route races (otherwise P2002 on @@unique([profileId, conversationId])).
+   * Genuine read-write conflicts surface as 40001 at the outer SERIALIZABLE commit and
+   * are handled by BullMQ retry — not by exceptions here.
    */
   async promoteConversation(
     tx: Prisma.TransactionClient,
@@ -438,18 +436,7 @@ export class MessageService {
     })
 
     if (count === 0) {
-      const existing = await tx.conversation.findUnique({
-        where: { id: conversationId },
-        select: { status: true },
-      })
-      if (!existing) {
-        throw new Error(`promoteConversation: conversation ${conversationId} not found`)
-      }
-      if (existing.status !== 'INITIATED' && existing.status !== 'ACCEPTED') {
-        throw new Error(
-          `promoteConversation: expected PENDING conversation ${conversationId}, found ${existing.status}`
-        )
-      }
+      return
     }
 
     await tx.conversationParticipant.createMany({
