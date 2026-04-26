@@ -96,7 +96,10 @@ export function mapProfileWithContext(
   viewerProfileId: string
 ): PublicProfileWithContext {
   const mapped = mapProfileToPublic(dbProfile, includeDatingContext, locale)
-  const conversation = dbProfile.conversationParticipants?.[0]?.conversation ?? null
+  // Same resolution as mapConversationContext — keep these in lockstep so the
+  // top-level `conversation` field matches what drives `interactionContext`.
+  const conversation =
+    dbProfile.conversationAsA?.[0] ?? dbProfile.conversationAsB?.[0] ?? null
   const interactionContext = mapInteractionContext(dbProfile, includeDatingContext, viewerProfileId)
   return {
     ...mapped,

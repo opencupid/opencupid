@@ -55,22 +55,41 @@ export function blockedContextInclude(myProfileId: string) {
   } satisfies Prisma.ProfileInclude
 }
 
-export const conversationContextInclude = (myProfileId: string) => ({
-  conversationParticipants: {
-    where: {
-      conversation: {
-        participants: {
-          some: {
-            profileId: myProfileId,
-          },
-        },
-      },
+/**
+ * Surfaces the single active Conversation between the target profile and the
+ * viewer (if any), via Profile's two pair-identity relations:
+ *   target.conversationAsA WHERE profileBId=viewer
+ *   target.conversationAsB WHERE profileAId=viewer
+ *
+ * The partial unique index on (profileAId, profileBId) WHERE status<>DISCARDED
+ * guarantees at most one row across both walks, so the mapper just picks
+ * `conversationAsA[0] ?? conversationAsB[0]`.
+ *
+ * Visibility rules baked into the WHERE clauses:
+ *   - DISCARDED conversations are excluded (terminal state — should not drive
+ *     interaction context).
+ *   - PENDING is only visible to the initiator (sender of the held message).
+ *     Other statuses are visible to either side. This keeps the recipient
+ *     blind to held PENDINGs they didn't originate (anti-spam guarantee) while
+ *     letting the sender see their own held conversation so the GUI can gate
+ *     `canMessage` correctly.
+ */
+export const conversationContextInclude = (myProfileId: string) => {
+  const visibilityClause: Pick<Prisma.ConversationWhereInput, 'OR'> = {
+    OR: [
+      { status: { in: ['INITIATED', 'ACCEPTED', 'BLOCKED', 'ARCHIVED'] } },
+      { status: 'PENDING', initiatorProfileId: myProfileId },
+    ],
+  }
+  return {
+    conversationAsA: {
+      where: { profileBId: myProfileId, ...visibilityClause },
     },
-    include: {
-      conversation: true,
+    conversationAsB: {
+      where: { profileAId: myProfileId, ...visibilityClause },
     },
-  },
-})
+  }
+}
 
 /**
  * Prisma includes for computing the viewer ↔ target interaction state.

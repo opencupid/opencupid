@@ -36,27 +36,31 @@ function mapDatingContext(profile: DbProfileWithContext): DatingContext {
 }
 
 export function mapConversationContext(
-  profile: Pick<DbProfileWithContext, 'id' | 'conversationParticipants'>,
+  profile: Pick<DbProfileWithContext, 'id' | 'conversationAsA' | 'conversationAsB'>,
   viewerProfileId: string
 ): ConversationContext {
-  // Self-view short-circuit. The conversation include filters by "conversations
-  // both viewer and target participate in", which on a self-view matches *every*
-  // conversation the viewer is in — `[0]` then resolves to an arbitrary one and
-  // the iStarted/canMessage logic below answers a meaningless question. There is
-  // no "message yourself" operation, so collapse to inert.
+  // Self-view short-circuit. The pair-identity walks would surface every
+  // conversation where the viewer is in *both* slots — i.e. nothing, since a
+  // conversation with oneself doesn't exist — but defensively collapse to
+  // inert anyway. There is no "message yourself" operation.
   if (profile.id === viewerProfileId) {
     return { haveConversation: false, canMessage: false, conversationId: null, initiated: false }
   }
 
-  const participant = profile.conversationParticipants?.[0]
-  const conversation = participant?.conversation
+  // The include's partial unique index (status != DISCARDED) guarantees at
+  // most one Conversation across both pair-identity walks.
+  const conversation = profile.conversationAsA?.[0] ?? profile.conversationAsB?.[0] ?? null
 
   // Did the viewer start this conversation? (profile.id is the target,
   // so initiator !== target means the viewer initiated.)
   const iStarted = !!conversation && conversation.initiatorProfileId !== profile.id
 
-  // Is the conversation still waiting for the target's first reply?
-  const initiated = iStarted && conversation!.status === 'INITIATED'
+  // Is the conversation still waiting for the target's first reply? PENDING
+  // (held due to viewer-side quarantine) reads the same as INITIATED from the
+  // sender's UX perspective — both mean "I sent, awaiting the other side". The
+  // held-vs-delivered distinction is a backend concern, not a UI one.
+  const initiated =
+    iStarted && (conversation!.status === 'INITIATED' || conversation!.status === 'PENDING')
 
   const canMessage =
     !conversation || // no conversation exists

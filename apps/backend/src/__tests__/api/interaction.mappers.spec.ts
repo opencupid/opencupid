@@ -10,7 +10,8 @@ function makeProfile(overrides: Partial<DbProfileWithContext> = {}): DbProfileWi
     likesReceived: [],
     likesSent: [],
     hiddenBy: [],
-    conversationParticipants: [],
+    conversationAsA: [],
+    conversationAsB: [],
     blockedProfiles: [],
     ...overrides,
   } as any
@@ -92,13 +93,11 @@ describe('mapInteractionContext', () => {
   it('detects initiated conversation from the other profile', () => {
     const profile = makeProfile({
       id: 'p2',
-      conversationParticipants: [
+      conversationAsA: [
         {
-          conversation: {
-            id: 'conv1',
-            status: 'INITIATED',
-            initiatorProfileId: 'p1', // someone else initiated
-          },
+          id: 'conv1',
+          status: 'INITIATED',
+          initiatorProfileId: 'p1', // someone else initiated
         },
       ] as any,
     })
@@ -107,16 +106,37 @@ describe('mapInteractionContext', () => {
     expect(result.haveConversation).toBe(false)
   })
 
+  it('treats PENDING-as-sender like INITIATED-as-sender (initiated=true, canMessage=false)', () => {
+    // A quarantined sender's first message creates a PENDING conversation.
+    // From the sender's UX perspective this is the same state as INITIATED
+    // ("I sent, waiting for the other side") — quarantine is a backend
+    // implementation detail. The mapper must produce the same canMessage gate
+    // as INITIATED-by-self so the GUI greys out the message button.
+    const profile = makeProfile({
+      id: 'p2',
+      conversationAsA: [
+        {
+          id: 'conv-pending',
+          status: 'PENDING',
+          initiatorProfileId: 'p1', // viewer p1 initiated; held due to p1's quarantine
+        },
+      ] as any,
+    })
+    const result = mapInteractionContext(profile, false, 'p1')
+    expect(result.initiated).toBe(true)
+    expect(result.canMessage).toBe(false)
+    expect(result.conversationId).toBe('conv-pending')
+    expect(result.haveConversation).toBe(false)
+  })
+
   it('detects existing conversation (not initiated)', () => {
     const profile = makeProfile({
       id: 'p1',
-      conversationParticipants: [
+      conversationAsA: [
         {
-          conversation: {
-            id: 'conv1',
-            status: 'ACCEPTED',
-            initiatorProfileId: 'p1', // I initiated
-          },
+          id: 'conv1',
+          status: 'ACCEPTED',
+          initiatorProfileId: 'p1', // I initiated
         },
       ] as any,
     })
@@ -128,19 +148,16 @@ describe('mapInteractionContext', () => {
 
   it('returns inert conversation context when target profile is the viewer (self-view)', () => {
     // Regression: when the viewer opens their own public profile, the include
-    // surfaces an arbitrary conversation of theirs (because viewer is also a
-    // participant in every one of their own conversations). The mapper must
-    // not treat that as a messageable target — there is no "message yourself"
-    // operation. Belt & suspenders for the route's self-view 404.
+    // would otherwise surface unrelated conversations of theirs. The mapper
+    // must not treat that as a messageable target — there is no "message
+    // yourself" operation. Belt & suspenders for the route's self-view 404.
     const profile = makeProfile({
       id: VIEWER_ID,
-      conversationParticipants: [
+      conversationAsA: [
         {
-          conversation: {
-            id: 'conv-with-someone-else',
-            status: 'INITIATED',
-            initiatorProfileId: VIEWER_ID,
-          },
+          id: 'conv-with-someone-else',
+          status: 'INITIATED',
+          initiatorProfileId: VIEWER_ID,
         },
       ] as any,
     })
