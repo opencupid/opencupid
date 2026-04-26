@@ -26,6 +26,7 @@ COPY apps/frontend/security-headers.conf.tmpl /etc/nginx/security-headers.conf.t
 COPY apps/frontend/docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 COPY --from=builder /app/apps/frontend/dist /var/www
+COPY --from=builder /app/apps/frontend/package.json /app/apps/frontend/package.json
 COPY apps/frontend/config.template.js /var/www/config.template.js
 
 EXPOSE 3001
