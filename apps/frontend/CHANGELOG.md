@@ -1,5 +1,11 @@
 # frontend
 
+## 0.55.3
+
+### Patch Changes
+
+- e5e2eb0: Include `apps/frontend/package.json` in the nginx runtime image so CI can read the shipped version directly from the image.
+
 ## 0.55.2
 
 ### Patch Changes
