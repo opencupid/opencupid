@@ -42,7 +42,7 @@ import { ProfileMatchService } from '@/services/profileMatch.service'
 import { MessageService } from '../../services/messaging.service'
 import { ClusterService } from '@/services/cluster.service'
 
-const RATE_LIMIT_PROFILE_SCOPES = 1 // max scope toggles per day
+const RATE_LIMIT_PROFILE_SCOPES = 5 // max scope toggles per day
 
 // Route params for ID lookups
 const IdLookupParamsSchema = z.object({

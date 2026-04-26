@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { PublicProfileWithContext } from '@zod/profile/profile.dto'
+import { inject, type Ref } from 'vue'
+import type { OwnerProfile, PublicProfileWithContext } from '@zod/profile/profile.dto'
 import ProfileInteractions from '@/features/interaction/components/ProfileInteractions.vue'
 import ProfileContent from '../components/ProfileContent.vue'
 import PublicProfileSecondaryNav from '../components/PublicProfileSecondaryNav.vue'
@@ -14,6 +15,8 @@ const emit = defineEmits<{
   (e: 'intent:block'): void
   (e: 'updated'): void
 }>()
+
+const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
 </script>
 
 <template>
@@ -33,7 +36,10 @@ const emit = defineEmits<{
         <div class="pb-5 spacer" />
       </div>
     </div>
-    <div class="interactions position-absolute w-100 bottom-0 pb-3">
+    <div
+      class="interactions position-absolute w-100 bottom-0 pb-3"
+      v-if="viewerProfile?.id !== profile?.id"
+    >
       <ProfileInteractions
         :profile="profile"
         @intent:message="(convoId: string) => emit('intent:message', convoId)"
