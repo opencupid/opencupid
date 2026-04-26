@@ -172,28 +172,3 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
           tags: ${{ steps.tags.outputs.tags }}
-
-      # Re-run the builder stage with a local export so the *exact* dist/ that
-      # was baked into the pushed image can be picked up by the
-      # sentry-sourcemaps workflow. Building source maps in a separate workflow
-      # would risk producing different chunk hashes (different Node patch,
-      # different native binaries, etc.) and orphaning the deployed bundles.
-      - name: Export builder stage for sourcemap upload
-        if: matrix.service == 'frontend' || matrix.service == 'backend'
-        uses: docker/build-push-action@v6
-        with:
-          context: ${{ matrix.context }}
-          file: ${{ matrix.dockerfile }}
-          target: builder
-          platforms: linux/amd64
-          cache-from: type=gha,scope=${{ matrix.service }}
-          outputs: type=local,dest=./builder-out
-
-      - name: Upload dist artifact for sourcemap upload
-        if: matrix.service == 'frontend' || matrix.service == 'backend'
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.service }}-dist
-          path: ./builder-out/app/apps/${{ matrix.service }}/dist
-          if-no-files-found: error
-          retention-days: 7

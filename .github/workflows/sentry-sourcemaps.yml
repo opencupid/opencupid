@@ -4,15 +4,18 @@ on:
   workflow_run:
     workflows: ['Docker Build']
     types: [completed]
+  workflow_dispatch:
 
 permissions:
   contents: read
-  actions: read
 
 jobs:
   sentry-sourcemaps:
     runs-on: ubuntu-latest
-    if: github.event.workflow_run.conclusion == 'success'
+    if: >-
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event.workflow_run.conclusion == 'success')
+    continue-on-error: true
     steps:
       - name: Check Sentry secrets
         id: secrets-check
@@ -24,15 +27,24 @@ jobs:
             echo "has_secrets=true" >> "$GITHUB_OUTPUT"
           fi
 
-      # Check out the same SHA the Docker Build ran against so the package.json
-      # version we extract matches the version that was just baked into the
-      # pushed images. The default workflow_run checkout would use the default
-      # branch HEAD instead, which can drift past the released commit.
       - name: Checkout code
         if: steps.secrets-check.outputs.has_secrets == 'true'
         uses: actions/checkout@v6
+
+      - name: Install pnpm
+        if: steps.secrets-check.outputs.has_secrets == 'true'
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        if: steps.secrets-check.outputs.has_secrets == 'true'
+        uses: actions/setup-node@v6
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        if: steps.secrets-check.outputs.has_secrets == 'true'
+        run: pnpm install --frozen-lockfile
 
       - name: Extract frontend version
         if: steps.secrets-check.outputs.has_secrets == 'true'
@@ -44,45 +56,27 @@ jobs:
         id: backend-version
         run: echo "version=$(node -p "require('./apps/backend/package.json').version")" >> "$GITHUB_OUTPUT"
 
-      - name: Download frontend dist artifact
+      - name: Build frontend
         if: steps.secrets-check.outputs.has_secrets == 'true'
-        id: download-frontend
-        continue-on-error: true
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-dist
-          path: ./apps/frontend/dist
-          run-id: ${{ github.event.workflow_run.id }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm --filter frontend build-only
 
-      - name: Download backend dist artifact
+      - name: Build backend
         if: steps.secrets-check.outputs.has_secrets == 'true'
-        id: download-backend
-        continue-on-error: true
-        uses: actions/download-artifact@v4
-        with:
-          name: backend-dist
-          path: ./apps/backend/dist
-          run-id: ${{ github.event.workflow_run.id }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Install sentry-cli
-        if: steps.secrets-check.outputs.has_secrets == 'true' && (steps.download-frontend.outcome == 'success' || steps.download-backend.outcome == 'success')
-        run: npm install -g @sentry/cli
+        run: pnpm --filter backend prisma:generate && pnpm --filter backend build
 
       - name: Upload frontend sourcemaps
-        if: steps.secrets-check.outputs.has_secrets == 'true' && steps.download-frontend.outcome == 'success'
+        if: steps.secrets-check.outputs.has_secrets == 'true'
         run: |
           VERSION="${{ steps.frontend-version.outputs.version }}"
-          sentry-cli --url $SENTRY_URL releases \
+          pnpm exec sentry-cli --url $SENTRY_URL releases \
             --org $SENTRY_ORG new --project $SENTRY_PROJECT "frontend@${VERSION}"
-          sentry-cli --url $SENTRY_URL releases \
+          pnpm exec sentry-cli --url $SENTRY_URL releases \
             --org $SENTRY_ORG files "frontend@${VERSION}" upload-sourcemaps \
             --project $SENTRY_PROJECT \
             --url-prefix '~/' \
-            --log-level=info \
+            --log-level=debug \
             ./apps/frontend/dist
-          sentry-cli --url $SENTRY_URL releases \
+          pnpm exec sentry-cli --url $SENTRY_URL releases \
             --org $SENTRY_ORG finalize "frontend@${VERSION}"
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
@@ -91,18 +85,18 @@ jobs:
           SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
 
       - name: Upload backend sourcemaps
-        if: steps.secrets-check.outputs.has_secrets == 'true' && steps.download-backend.outcome == 'success'
+        if: steps.secrets-check.outputs.has_secrets == 'true'
         run: |
           VERSION="${{ steps.backend-version.outputs.version }}"
-          sentry-cli --url $SENTRY_URL releases \
+          pnpm exec sentry-cli --url $SENTRY_URL releases \
             --org $SENTRY_ORG new --project $SENTRY_PROJECT "api@${VERSION}"
-          sentry-cli --url $SENTRY_URL releases \
+          pnpm exec sentry-cli --url $SENTRY_URL releases \
             --org $SENTRY_ORG files "api@${VERSION}" upload-sourcemaps \
             --project $SENTRY_PROJECT \
             --url-prefix '~/' \
-            --log-level=info \
+            --log-level=debug \
             ./apps/backend/dist
-          sentry-cli --url $SENTRY_URL releases \
+          pnpm exec sentry-cli --url $SENTRY_URL releases \
             --org $SENTRY_ORG finalize "api@${VERSION}"
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
