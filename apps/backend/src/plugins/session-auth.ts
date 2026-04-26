@@ -9,6 +9,7 @@ import { appConfig } from '@/lib/appconfig'
 import '@fastify/cookie'
 import { SESSION_COOKIE } from '@shared/session'
 import { getSessionCookie, setSessionCookie } from '@/lib/session'
+import { restampRefreshCookieIfPresent } from '@/lib/session-legacy'
 import { SessionData } from '@zod/user/user.dto'
 
 // Extend Fastify types
@@ -102,6 +103,11 @@ export default fp(async (fastify: FastifyInstance) => {
       // Only runs after the full auth chain succeeds, so failed-auth
       // responses don't re-stamp a cookie the client can't use.
       setSessionCookie(reply, sessionId)
+      // Phase 1 shape migration for __refresh: same intent as job (2)
+      // above but for the refresh cookie. Eager re-stamp here means a
+      // planned host migration does not force active sessions to
+      // re-authenticate. Sunsets together with `session-legacy.ts`.
+      restampRefreshCookieIfPresent(req, reply)
       await sessionService.refreshTtl(sessionId)
     } catch (err) {
       req.log.error({ err, sessionId }, 'Redis error during authenticated request')
