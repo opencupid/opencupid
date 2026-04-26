@@ -13,8 +13,13 @@
  * host-only refresh token has expired. Bump this date forward if the PR
  * #1353 merge slips materially past 2026-04-22.
  */
-import { FastifyReply } from 'fastify'
-import { canScopeToDomain } from '@shared/session'
+import { FastifyReply, FastifyRequest } from 'fastify'
+import {
+  REFRESH_COOKIE,
+  REFRESH_MAX_AGE,
+  canScopeToDomain,
+  resolveSessionCookie,
+} from '@shared/session'
 import { appConfig } from '@/lib/appconfig'
 
 /**
@@ -33,4 +38,32 @@ export function clearLegacyCookie(reply: FastifyReply, name: string): void {
   // slot.
   if (!canScopeToDomain(appConfig.NODE_ENV, appConfig.DOMAIN)) return
   reply.clearCookie(name, LEGACY_HOST_ONLY_COOKIE_OPTS)
+}
+
+/**
+ * Hot-path migration: re-stamp `__refresh` with the current domain-scoped
+ * shape on every authenticated request, and clear the pre-migration host-only
+ * slot. Mirrors the eager migration that PR #1353 wires for `__session`,
+ * extending it to `__refresh` so that a planned host migration does not force
+ * existing sessions to re-authenticate.
+ *
+ * The cookie shape is inlined here (rather than delegating to
+ * `setRefreshCookie` in `./session`) because `./session` already imports from
+ * this file — delegating would create a circular import. The duplication is
+ * bounded by the same 2026-07-22 sunset that retires the rest of this file.
+ */
+export function restampRefreshCookieIfPresent(
+  req: FastifyRequest,
+  reply: FastifyReply,
+): void {
+  if (!canScopeToDomain(appConfig.NODE_ENV, appConfig.DOMAIN)) return
+  const value = req.cookies[REFRESH_COOKIE]
+  if (!value) return
+  reply.setCookie(REFRESH_COOKIE, value, {
+    ...resolveSessionCookie(appConfig.NODE_ENV, appConfig.DOMAIN),
+    httpOnly: true,
+    secure: appConfig.NODE_ENV !== 'development',
+    maxAge: REFRESH_MAX_AGE,
+  })
+  reply.clearCookie(REFRESH_COOKIE, LEGACY_HOST_ONLY_COOKIE_OPTS)
 }
