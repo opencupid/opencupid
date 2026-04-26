@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { ProfileSchema, ConversationSchema, UserSchema } from '../generated'
+import { ProfileSchema, UserSchema } from '../generated'
 
 import { PublicTagSchema, type PublicTag } from '../tag/tag.dto'
 import { PublicProfileImageSchema } from './profileimage.dto'
@@ -57,7 +57,6 @@ export const PublicProfileWithContextSchema = ProfileUnionSchema.and(
     tags: z.array(PublicTagSchema).default([]),
     introSocial: z.string().default(''),
     introDating: z.string().default(''),
-    conversation: ConversationSchema.nullable(),
     interactionContext: InteractionContextSchema,
   })
 )

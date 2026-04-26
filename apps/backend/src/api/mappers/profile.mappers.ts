@@ -95,11 +95,9 @@ export function mapProfileWithContext(
   locale: string
 ): PublicProfileWithContext {
   const mapped = mapProfileToPublic(dbProfile, includeDatingContext, locale)
-  const conversation = dbProfile.conversationParticipants?.[0]?.conversation ?? null
   const interactionContext = mapInteractionContext(dbProfile, includeDatingContext)
   return {
     ...mapped,
-    conversation: conversation || null,
     interactionContext,
   } as PublicProfileWithContext
 }
