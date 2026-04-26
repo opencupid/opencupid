@@ -42,6 +42,10 @@ const toggleDating = async () => {
   const newValue = !formData.isDatingActive
   formData.isDatingActive = newValue
   await updateScopes({ isDatingActive: newValue })
+  if (!isDatingOnboarded.value) {
+    emit('datingmode:wizard')
+    return
+  }
 }
 </script>
 

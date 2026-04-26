@@ -31,7 +31,7 @@ const interactionRoutes: FastifyPluginAsync = async (fastify) => {
     '/',
     {
       onRequest: [fastify.authenticate],
-      config: rateLimitConfig(fastify, '1 minute', 5),
+      config: rateLimitConfig(fastify, '1 minute', 25),
     },
     async (req, reply) => {
       const myId = req.session.profileId

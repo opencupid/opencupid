@@ -24,7 +24,7 @@ export const validatePublicName = (publicName: string): PublicNameValidationErro
     return 'invalid_characters'
   }
 
-  if (Array.from(value).length <= 3) {
+  if (Array.from(value).length <= 2) {
     return 'too_short'
   }
 

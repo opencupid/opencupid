@@ -44,9 +44,6 @@ function toggleExpand() {
     >
       <div
         class="expand-pill d-flex align-items-center"
-        @mouseenter="expandPill"
-        @mouseleave="collapsePill"
-        @click="toggleExpand"
       >
         <BButton variant="link">
           <span :class="{ 'text-dating': isDatingActive, 'text-secondary': !isDatingActive }">
@@ -55,8 +52,7 @@ function toggleExpand() {
         </BButton>
 
         <div
-          class="expand-grid"
-          :class="{ expanded: expand }"
+          class="expand-grid expanded"
           @click.stop
         >
           <div class="expand-grid-inner px-1">
@@ -65,7 +61,6 @@ function toggleExpand() {
               :model-value="isDatingActive"
               @update:model-value="$emit('datingmode:toggle')"
               tabindex="-1"
-              v-show="expand"
             >
               <span>{{ $t('profiles.forms.dating_mode') }}</span>
             </BFormCheckbox>
