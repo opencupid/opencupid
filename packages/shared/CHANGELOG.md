@@ -1,5 +1,11 @@
 # @opencupid/shared
 
+## 0.7.2
+
+### Patch Changes
+
+- a3c2100: Fix correctness gaps in the messaging quarantine state machine: self-view no longer leaks `canMessage=true` / a stale conversationId; mutual matches now promote held PENDING conversations to ACCEPTED and insert the missing recipient participant; and the sender's own held PENDING is now visible to their `canMessage` check. Also drops the top-level `conversation` field from `PublicProfileWithContext` (#1388) — it leaked raw `status: "PENDING"` and duplicated `interactionContext` policy. Refactors `computeSendOutcome` to a status-keyed switch with TS-enforced exhaustiveness.
+
 ## 0.7.1
 
 ### Patch Changes

@@ -1,5 +1,17 @@
 # backend
 
+## 0.55.2
+
+### Patch Changes
+
+- a3c2100: Fix correctness gaps in the messaging quarantine state machine: self-view no longer leaks `canMessage=true` / a stale conversationId; mutual matches now promote held PENDING conversations to ACCEPTED and insert the missing recipient participant; and the sender's own held PENDING is now visible to their `canMessage` check. Also drops the top-level `conversation` field from `PublicProfileWithContext` (#1388) — it leaked raw `status: "PENDING"` and duplicated `interactionContext` policy. Refactors `computeSendOutcome` to a status-keyed switch with TS-enforced exhaustiveness.
+- afbb490: UX & dev-ergonomics tweaks:
+  - Raise like rate limit from 5/min to 25/min so QA scenarios on mutual-match flows aren't throttled.
+  - Raise scope-toggle rate limit from 1/day to 5/day so users (and dev/QA) aren't locked out after a single accidental toggle.
+  - `PublicProfile.vue`: hide the `<ProfileInteractions>` row (message/like buttons) when the viewer is the target of the profile they're looking at. Belt-and-suspenders frontend guard for the self-view case already gated server-side via `interactionContext`.
+  - `publicNameValidation.ts`: lower the minimum public name length from 4 to 3 characters so 3-letter names (e.g. "Joe") are valid.
+  - `DatingModeDropdown.vue`: drop the `expanded` toggle class — the grid is now always shown when the dropdown is open, removing a redundant nested expand state.
+
 ## 0.55.1
 
 ### Patch Changes
