@@ -379,14 +379,17 @@ export class MessageService {
 
     if (existing) return { convo: existing, wasCreated: false }
 
-    const status = opts.createAsPending
-      ? 'PENDING'
-      : (await this.hasMutualLike(tx, profileAId, profileBId))
-        ? 'ACCEPTED'
-        : 'INITIATED'
-    const participants = opts.createAsPending
-      ? { create: [{ profileId: senderProfileId }] } // sender only; recipient added on promote
-      : { create: [{ profileId: profileAId }, { profileId: profileBId }] }
+    let status: 'PENDING' | 'INITIATED' | 'ACCEPTED'
+    let participants
+    if (opts.createAsPending) {
+      // Sender only; recipient added on promote.
+      status = 'PENDING'
+      participants = { create: [{ profileId: senderProfileId }] }
+    } else {
+      const isMutualMatch = await this.hasMutualLike(tx, profileAId, profileBId)
+      status = isMutualMatch ? 'ACCEPTED' : 'INITIATED'
+      participants = { create: [{ profileId: profileAId }, { profileId: profileBId }] }
+    }
 
     try {
       const created = await tx.conversation.create({

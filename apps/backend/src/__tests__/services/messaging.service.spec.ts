@@ -490,6 +490,23 @@ describe('MessageService.resolveConversation DISCARDED handling', () => {
       })
     )
   })
+
+  it('createAsPending=true short-circuits hasMutualLike — PENDING wins over a mutual match', async () => {
+    // Quarantine ranks above engagement signals at create-time: a quarantined
+    // sender's first send must hold as PENDING even if a prior mutual like
+    // exists. promoteConversation handles the legitimate post-engagement
+    // promote on a separate path.
+    const likedProfileCount = vi.fn().mockResolvedValue(2)
+    const create = vi.fn().mockResolvedValue({ id: 'c-new' })
+    const tx: any = {
+      conversation: { findFirst: vi.fn().mockResolvedValue(null), create },
+      likedProfile: { count: likedProfileCount },
+    }
+    await service.resolveConversation(tx, 'alice', 'bob', { createAsPending: true })
+
+    expect(likedProfileCount).not.toHaveBeenCalled()
+    expect(create.mock.calls[0][0].data.status).toBe('PENDING')
+  })
 })
 
 // acceptConversationOnReply is a thin mechanism: it trusts the caller
