@@ -84,7 +84,9 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const post =
-        raw.postedById === viewerProfileId ? mapDbPostToOwner(raw) : mapDbPostToDetail(raw)
+        raw.postedById === viewerProfileId
+          ? mapDbPostToOwner(raw)
+          : mapDbPostToDetail(raw, viewerProfileId)
 
       return reply.code(200).send({ success: true, post })
     } catch (err) {

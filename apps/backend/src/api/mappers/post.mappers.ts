@@ -27,14 +27,17 @@ export function mapDbPostToPublic(
   }
 }
 
-export function mapDbPostToDetail(post: PostWithProfileAndContext): PublicPostDetail {
+export function mapDbPostToDetail(
+  post: PostWithProfileAndContext,
+  viewerProfileId: string
+): PublicPostDetail {
   const { postedBy, ...rest } = post
   return {
     ...PublicPostSchema.parse(rest),
     isOwn: false,
     postedBy: {
       ...mapProfileSummary(postedBy),
-      ...mapConversationContext(postedBy),
+      ...mapConversationContext(postedBy, viewerProfileId),
     },
     location: extractLocation(rest),
   }

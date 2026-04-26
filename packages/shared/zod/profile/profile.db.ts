@@ -1,6 +1,5 @@
 import z from 'zod'
 import {
-  ConversationParticipantSchema,
   ConversationSchema,
   HiddenProfileSchema,
   LikedProfileSchema,
@@ -41,13 +40,14 @@ export const DbMinimalProfileSchema = z.object({
 export type DbProfileSummary = z.infer<typeof DbMinimalProfileSchema>
 
 export const DbProfileWithContextSchema = DbProfileWithImagesSchema.extend({
-  conversationParticipants: z
-    .array(
-      ConversationParticipantSchema.extend({
-        conversation: ConversationSchema,
-      })
-    )
-    .default([]),
+  // Pair-identity walks via Profile.conversationAsA / conversationAsB. The
+  // include filters at the DB level so that, between the two arrays, at most
+  // one Conversation row surfaces — the active conversation between viewer
+  // and target. PENDING-by-recipient is filtered out (recipient must not
+  // learn about held PENDINGs they didn't originate). See
+  // conversationContextInclude in apps/backend/src/db/includes/profileIncludes.ts.
+  conversationAsA: z.array(ConversationSchema).default([]),
+  conversationAsB: z.array(ConversationSchema).default([]),
 
   likesReceived: z.array(LikedProfileSchema),
   likesSent: z.array(LikedProfileSchema),

@@ -30,6 +30,14 @@ export type SendOutcome =
  * override BLOCKED / ARCHIVED / DISCARDED — admins must not be able to override
  * a recipient's explicit block.
  *
+ * The PENDING-non-initiator branch deliberately ignores `senderIsQuarantined`
+ * and promotes via `accept_and_promote_pending` even when both parties are in
+ * the unvetted window. Mutual engagement is treated as a legitimacy signal
+ * that overrides individual quarantine: spam against unsuspecting recipients
+ * stays held, but two genuinely-engaging new users can connect immediately.
+ * The single-direction quarantine ("hide PENDING from recipients who have not
+ * engaged") is by design — not a missing case.
+ *
  * DISCARDED should never be observed in practice (resolveConversation filters it),
  * but it's included for defensive completeness.
  */
@@ -43,19 +51,25 @@ export function computeSendOutcome(
   if (wasCreated) {
     return senderIsQuarantined ? 'pending' : 'new_conversation'
   }
-  if (convo.status === 'PENDING') {
-    return convo.initiatorProfileId === senderProfileId ? 'pending' : 'accept_and_promote_pending'
+
+  const isInitiator = convo.initiatorProfileId === senderProfileId
+
+  switch (convo.status) {
+    case 'PENDING':
+      if (isInitiator) return 'pending'
+      return 'accept_and_promote_pending'
+
+    case 'INITIATED':
+      if (isAdminBroadcast && isInitiator) return 'reply'
+      if (!isInitiator) return 'accepted_on_reply'
+      return 'blocked'
+
+    case 'ACCEPTED':
+      return 'reply'
+
+    case 'BLOCKED':
+    case 'ARCHIVED':
+    case 'DISCARDED':
+      return 'blocked'
   }
-  if (convo.status === 'INITIATED' && convo.initiatorProfileId !== senderProfileId) {
-    return 'accepted_on_reply'
-  }
-  if (convo.status === 'ACCEPTED') return 'reply'
-  if (
-    isAdminBroadcast &&
-    convo.status === 'INITIATED' &&
-    convo.initiatorProfileId === senderProfileId
-  ) {
-    return 'reply'
-  }
-  return 'blocked'
 }

@@ -159,32 +159,113 @@ describe('MessageService.acceptConversationOnMatch', () => {
     })
   })
 
-  it('updates conversation status to ACCEPTED when status is INITIATED', async () => {
-    const existingConvo = { id: 'c1', status: 'INITIATED', profileAId: 'p1', profileBId: 'p2' }
-    const updatedConvo = { ...existingConvo, status: 'ACCEPTED' }
-
+  it('promotes INITIATED to ACCEPTED via acceptConversationOnReply (no participant insert)', async () => {
+    // INITIATED conversations already have both participants; only the status
+    // transition is needed. Delegates to acceptConversationOnReply which does
+    // a guarded INITIATED → ACCEPTED via updateMany.
+    const existingConvo = {
+      id: 'c1',
+      status: 'INITIATED',
+      initiatorProfileId: 'p1',
+      profileAId: 'p1',
+      profileBId: 'p2',
+    }
     mockPrisma.conversation.findFirst.mockResolvedValue(existingConvo)
-    mockPrisma.conversation.update.mockResolvedValue(updatedConvo)
+    mockPrisma.conversation.updateMany.mockResolvedValue({ count: 1 })
+    mockPrisma.conversation.findUniqueOrThrow.mockResolvedValue({
+      ...existingConvo,
+      status: 'ACCEPTED',
+    })
 
     const result = await service.acceptConversationOnMatch('p1', 'p2')
 
-    expect(mockPrisma.conversation.update).toHaveBeenCalledWith({
-      where: { id: 'c1' },
+    expect(mockPrisma.conversation.updateMany).toHaveBeenCalledWith({
+      where: { id: 'c1', status: 'INITIATED' },
       data: { status: 'ACCEPTED', updatedAt: expect.any(Date) },
     })
+    expect(mockPrisma.conversationParticipant.createMany).not.toHaveBeenCalled()
     expect(result.status).toBe('ACCEPTED')
   })
 
-  it('does not update conversation when status is already ACCEPTED', async () => {
+  it('does not transition when status is already ACCEPTED', async () => {
     const existingConvo = { id: 'c1', status: 'ACCEPTED', profileAId: 'p1', profileBId: 'p2' }
 
     mockPrisma.conversation.findFirst.mockResolvedValue(existingConvo)
 
     const result = await service.acceptConversationOnMatch('p1', 'p2')
 
-    expect(mockPrisma.conversation.update).not.toHaveBeenCalled()
+    expect(mockPrisma.conversation.updateMany).not.toHaveBeenCalled()
+    expect(mockPrisma.conversationParticipant.createMany).not.toHaveBeenCalled()
     expect(result).toBe(existingConvo)
   })
+
+  it('promotes PENDING to ACCEPTED in two steps and adds the missing recipient participant', async () => {
+    // Mirror of the message-reply path's "mutual engagement promotes PENDING"
+    // semantic (see decision record in messaging.stateMachine.ts). A reciprocal
+    // like is the same legitimacy signal as a reply — quarantine should not
+    // trap a held conversation once both parties have signaled engagement.
+    //
+    // Implementation delegates to promoteConversation (PENDING → INITIATED +
+    // recipient participant insert) followed by acceptConversationOnReply
+    // (INITIATED → ACCEPTED). Same composition as the accept_and_promote_pending
+    // route handler — no parallel implementation of the participant-insert.
+    const existingConvo = {
+      id: 'c1',
+      status: 'PENDING',
+      initiatorProfileId: 'p1', // p1 sent the PENDING; p2 is the missing participant
+      profileAId: 'p1',
+      profileBId: 'p2',
+    }
+    mockPrisma.conversation.findFirst.mockResolvedValue(existingConvo)
+    // PENDING → INITIATED (promoteConversation)
+    // INITIATED → ACCEPTED (acceptConversationOnReply)
+    mockPrisma.conversation.updateMany
+      .mockResolvedValueOnce({ count: 1 })
+      .mockResolvedValueOnce({ count: 1 })
+    mockPrisma.conversation.findUniqueOrThrow.mockResolvedValue({
+      ...existingConvo,
+      status: 'ACCEPTED',
+    })
+
+    const result = await service.acceptConversationOnMatch('p1', 'p2')
+
+    expect(mockPrisma.conversation.updateMany).toHaveBeenNthCalledWith(1, {
+      where: { id: 'c1', status: 'PENDING' },
+      data: { status: 'INITIATED', updatedAt: expect.any(Date) },
+    })
+    expect(mockPrisma.conversation.updateMany).toHaveBeenNthCalledWith(2, {
+      where: { id: 'c1', status: 'INITIATED' },
+      data: { status: 'ACCEPTED', updatedAt: expect.any(Date) },
+    })
+    expect(mockPrisma.conversationParticipant.createMany).toHaveBeenCalledWith({
+      data: [{ conversationId: 'c1', profileId: 'p2' }],
+      skipDuplicates: true,
+    })
+    expect(result.status).toBe('ACCEPTED')
+  })
+
+  it.each(['BLOCKED', 'ARCHIVED'] as const)(
+    'does NOT promote %s conversations on mutual match',
+    async (status) => {
+      // Recipient-choice statuses (BLOCKED, ARCHIVED) must not be overridden by
+      // a mutual like — the recipient's explicit decision outranks engagement
+      // signals. DISCARDED is filtered upstream by activeConversationWhere.
+      const existingConvo = {
+        id: 'c1',
+        status,
+        initiatorProfileId: 'p1',
+        profileAId: 'p1',
+        profileBId: 'p2',
+      }
+      mockPrisma.conversation.findFirst.mockResolvedValue(existingConvo)
+
+      const result = await service.acceptConversationOnMatch('p1', 'p2')
+
+      expect(mockPrisma.conversation.updateMany).not.toHaveBeenCalled()
+      expect(mockPrisma.conversationParticipant.createMany).not.toHaveBeenCalled()
+      expect(result).toBe(existingConvo)
+    }
+  )
 
   it('sorts profile IDs consistently', async () => {
     mockPrisma.conversation.findFirst.mockResolvedValue(null)
@@ -335,9 +416,8 @@ describe('MessageService.promoteConversation', () => {
   it('updates status to INITIATED via guarded updateMany and adds participant idempotently', async () => {
     const updateMany = vi.fn().mockResolvedValue({ count: 1 })
     const createMany = vi.fn().mockResolvedValue({ count: 1 })
-    const findUnique = vi.fn()
     const tx: any = {
-      conversation: { updateMany, findUnique },
+      conversation: { updateMany },
       conversationParticipant: { createMany },
     }
     await service.promoteConversation(tx, 'c1', 'bob')
@@ -348,8 +428,6 @@ describe('MessageService.promoteConversation', () => {
       where: { id: 'c1', status: 'PENDING' },
       data: { status: 'INITIATED', updatedAt: expect.any(Date) },
     })
-    // Steady-state path: count===1 means the guard matched, no findUnique probe.
-    expect(findUnique).not.toHaveBeenCalled()
     // Participant insertion is idempotent.
     expect(createMany).toHaveBeenCalledWith({
       data: [{ conversationId: 'c1', profileId: 'bob' }],
@@ -357,48 +435,22 @@ describe('MessageService.promoteConversation', () => {
     })
   })
 
-  it('tolerates a no-op promote when conversation is already INITIATED (concurrent run)', async () => {
-    // Worker race: another promoter already moved this PENDING → INITIATED. Our
-    // updateMany matches zero rows; we must NOT throw, NOT revive, just ensure
-    // the participant is present.
+  it('is a silent no-op when count===0 (peer-promoted, DISCARDED, BLOCKED, or absent)', async () => {
+    // The status filter on PENDING absorbs every concurrent transition without
+    // a probe: peer-promoter, SPAM_BURST → DISCARDED, recipient → BLOCKED, or
+    // a row that no longer exists all collapse to count===0 → return without
+    // inserting the participant (the prior promoter inserted it, or the row
+    // shouldn't be revived).
     const updateMany = vi.fn().mockResolvedValue({ count: 0 })
-    const findUnique = vi.fn().mockResolvedValue({ status: 'INITIATED' })
-    const createMany = vi.fn().mockResolvedValue({ count: 0 })
-    const tx: any = {
-      conversation: { updateMany, findUnique },
-      conversationParticipant: { createMany },
-    }
-    await service.promoteConversation(tx, 'c1', 'bob')
-
-    expect(findUnique).toHaveBeenCalledWith({
-      where: { id: 'c1' },
-      select: { status: true },
-    })
-    expect(createMany).toHaveBeenCalled()
-  })
-
-  it('throws if the conversation has been DISCARDED — must not revive a terminal row', async () => {
-    const updateMany = vi.fn().mockResolvedValue({ count: 0 })
-    const findUnique = vi.fn().mockResolvedValue({ status: 'DISCARDED' })
+    const findUnique = vi.fn()
     const createMany = vi.fn()
     const tx: any = {
       conversation: { updateMany, findUnique },
       conversationParticipant: { createMany },
     }
-    await expect(service.promoteConversation(tx, 'c1', 'bob')).rejects.toThrow(/DISCARDED/)
-    // Importantly, no participant insertion happens after the throw.
-    expect(createMany).not.toHaveBeenCalled()
-  })
 
-  it('throws if the conversation does not exist', async () => {
-    const updateMany = vi.fn().mockResolvedValue({ count: 0 })
-    const findUnique = vi.fn().mockResolvedValue(null)
-    const createMany = vi.fn()
-    const tx: any = {
-      conversation: { updateMany, findUnique },
-      conversationParticipant: { createMany },
-    }
-    await expect(service.promoteConversation(tx, 'c1', 'bob')).rejects.toThrow(/not found/)
+    await expect(service.promoteConversation(tx, 'c1', 'bob')).resolves.toBeUndefined()
+    expect(findUnique).not.toHaveBeenCalled()
     expect(createMany).not.toHaveBeenCalled()
   })
 })
@@ -438,6 +490,23 @@ describe('MessageService.resolveConversation DISCARDED handling', () => {
       })
     )
   })
+
+  it('createAsPending=true short-circuits hasMutualLike — PENDING wins over a mutual match', async () => {
+    // Quarantine ranks above engagement signals at create-time: a quarantined
+    // sender's first send must hold as PENDING even if a prior mutual like
+    // exists. promoteConversation handles the legitimate post-engagement
+    // promote on a separate path.
+    const likedProfileCount = vi.fn().mockResolvedValue(2)
+    const create = vi.fn().mockResolvedValue({ id: 'c-new' })
+    const tx: any = {
+      conversation: { findFirst: vi.fn().mockResolvedValue(null), create },
+      likedProfile: { count: likedProfileCount },
+    }
+    await service.resolveConversation(tx, 'alice', 'bob', { createAsPending: true })
+
+    expect(likedProfileCount).not.toHaveBeenCalled()
+    expect(create.mock.calls[0][0].data.status).toBe('PENDING')
+  })
 })
 
 // acceptConversationOnReply is a thin mechanism: it trusts the caller
@@ -459,16 +528,15 @@ describe('MessageService.acceptConversationOnReply', () => {
     expect(args.data.updatedAt).toBeInstanceOf(Date)
   })
 
-  it('throws when no INITIATED row matched (concurrent transition)', async () => {
+  it('is a silent no-op when no INITIATED row matched (concurrent transition)', async () => {
     const tx: any = {
       conversation: {
         updateMany: vi.fn().mockResolvedValue({ count: 0 }),
       },
     }
 
-    await expect(service.acceptConversationOnReply(tx, 'c1')).rejects.toThrow(
-      /expected INITIATED conversation/
-    )
+    await expect(service.acceptConversationOnReply(tx, 'c1')).resolves.toBeUndefined()
+    expect(tx.conversation.updateMany).toHaveBeenCalledTimes(1)
   })
 })
 

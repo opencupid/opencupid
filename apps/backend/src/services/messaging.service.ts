@@ -237,18 +237,34 @@ export class MessageService {
       return null
     }
 
-    // Only update if conversation is currently INITIATED
-    if (existingConversation.status === 'INITIATED') {
-      return await prisma.conversation.update({
-        where: { id: existingConversation.id },
-        data: {
-          status: 'ACCEPTED',
-          updatedAt: new Date(),
-        },
-      })
+    // Mutual engagement promotes both INITIATED (waiting on first reply) and
+    // PENDING (held due to sender quarantine) to ACCEPTED. PENDING shares the
+    // same legitimacy reasoning as the message-reply path's
+    // `accept_and_promote_pending` outcome — see the decision record in
+    // messaging.stateMachine.ts. BLOCKED/ARCHIVED stand: those represent the
+    // recipient's explicit choice and outrank engagement signals. DISCARDED is
+    // filtered upstream by activeConversationWhere.
+    if (existingConversation.status !== 'INITIATED' && existingConversation.status !== 'PENDING') {
+      return existingConversation
     }
 
-    return existingConversation
+    return await prisma.$transaction(async (tx) => {
+      // Same composition as the accept_and_promote_pending route handler:
+      // promoteConversation handles PENDING → INITIATED + recipient participant
+      // insert (mirroring the trust-flag-clear path), then acceptConversationOnReply
+      // takes INITIATED → ACCEPTED. Single source of truth for the participant
+      // insert and the concurrent-transition status guards.
+      if (existingConversation.status === 'PENDING') {
+        const recipientId =
+          existingConversation.profileAId === existingConversation.initiatorProfileId
+            ? existingConversation.profileBId
+            : existingConversation.profileAId
+        await this.promoteConversation(tx, existingConversation.id, recipientId)
+      }
+      await this.acceptConversationOnReply(tx, existingConversation.id)
+
+      return await tx.conversation.findUniqueOrThrow({ where: { id: existingConversation.id } })
+    })
   }
 
   async sendMessage(
@@ -363,14 +379,17 @@ export class MessageService {
 
     if (existing) return { convo: existing, wasCreated: false }
 
-    const status = opts.createAsPending
-      ? 'PENDING'
-      : (await this.hasMutualLike(tx, profileAId, profileBId))
-        ? 'ACCEPTED'
-        : 'INITIATED'
-    const participants = opts.createAsPending
-      ? { create: [{ profileId: senderProfileId }] } // sender only; recipient added on promote
-      : { create: [{ profileId: profileAId }, { profileId: profileBId }] }
+    let status: 'PENDING' | 'INITIATED' | 'ACCEPTED'
+    let participants
+    if (opts.createAsPending) {
+      // Sender only; recipient added on promote.
+      status = 'PENDING'
+      participants = { create: [{ profileId: senderProfileId }] }
+    } else {
+      const isMutualMatch = await this.hasMutualLike(tx, profileAId, profileBId)
+      status = isMutualMatch ? 'ACCEPTED' : 'INITIATED'
+      participants = { create: [{ profileId: profileAId }, { profileId: profileBId }] }
+    }
 
     try {
       const created = await tx.conversation.create({
@@ -398,18 +417,16 @@ export class MessageService {
   }
 
   /**
-   * Promote a PENDING conversation to INITIATED and create the missing participant row
-   * atomically with the caller's transaction. Used by the promote-pendings worker and by
-   * the accept_and_promote_pending outcome in the route.
+   * Best-effort PENDING → INITIATED promotion plus the missing participant row, atomic
+   * with the caller's tx. count===0 is a silent no-op: the row was already promoted by
+   * a peer, moved to DISCARDED by SPAM_BURST, blocked by the recipient, or never
+   * existed — in every case the caller's intent is already satisfied or the row should
+   * not be revived, so skipping the participant insert is the right behavior.
    *
-   * Two concurrency hazards the guards below address:
-   * 1. The status filter prevents reviving a row that another path moved out of PENDING
-   *    (e.g. SPAM_BURST → DISCARDED, recipient block → BLOCKED, or another promoter that
-   *    already ran). count===0 is a benign "already promoted by someone else" if the row
-   *    sits in INITIATED/ACCEPTED; anything else is a genuine invariant breach.
-   * 2. createMany + skipDuplicates keeps participant insertion idempotent — without it,
-   *    a worker re-run or a route accept_and_promote_pending racing the worker would
-   *    P2002 on @@unique([profileId, conversationId]).
+   * createMany + skipDuplicates keeps participant insertion idempotent under worker
+   * re-runs and route races (otherwise P2002 on @@unique([profileId, conversationId])).
+   * Genuine read-write conflicts surface as 40001 at the outer SERIALIZABLE commit and
+   * are handled by BullMQ retry — not by exceptions here.
    */
   async promoteConversation(
     tx: Prisma.TransactionClient,
@@ -422,18 +439,7 @@ export class MessageService {
     })
 
     if (count === 0) {
-      const existing = await tx.conversation.findUnique({
-        where: { id: conversationId },
-        select: { status: true },
-      })
-      if (!existing) {
-        throw new Error(`promoteConversation: conversation ${conversationId} not found`)
-      }
-      if (existing.status !== 'INITIATED' && existing.status !== 'ACCEPTED') {
-        throw new Error(
-          `promoteConversation: expected PENDING conversation ${conversationId}, found ${existing.status}`
-        )
-      }
+      return
     }
 
     await tx.conversationParticipant.createMany({
@@ -443,18 +449,15 @@ export class MessageService {
   }
 
   async acceptConversationOnReply(tx: Prisma.TransactionClient, convoId: string): Promise<void> {
-    // Guard the transition so a concurrent BLOCKED/ACCEPTED write between
-    // classification and this call can't be silently flipped back to ACCEPTED.
-    // Under READ COMMITTED, the where-predicate is evaluated at write time.
-    const { count } = await tx.conversation.updateMany({
+    // Best-effort INITIATED → ACCEPTED. The status predicate makes a concurrent
+    // BLOCKED/DISCARDED/ACCEPTED winner a silent no-op rather than a clobber:
+    // under READ COMMITTED the where-clause is evaluated at write time, so if
+    // another tx already moved the row off INITIATED the count comes back 0
+    // and we leave their state alone.
+    await tx.conversation.updateMany({
       where: { id: convoId, status: 'INITIATED' },
       data: { status: 'ACCEPTED', updatedAt: new Date() },
     })
-    if (count !== 1) {
-      throw new Error(
-        `acceptConversationOnReply: expected INITIATED conversation ${convoId}, found ${count} matches`
-      )
-    }
   }
 
   /**

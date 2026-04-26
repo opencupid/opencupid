@@ -29,8 +29,10 @@ export function createMockPrisma() {
     },
     conversation: {
       findUnique: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
       findFirst: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
       create: vi.fn(),
     },
     likedProfile: {
@@ -51,6 +53,7 @@ export function createMockPrisma() {
       findMany: vi.fn(),
       updateMany: vi.fn(),
       update: vi.fn(),
+      createMany: vi.fn(),
     },
     message: {
       count: vi.fn(),
