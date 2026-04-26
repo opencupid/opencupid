@@ -52,10 +52,7 @@ export function clearLegacyCookie(reply: FastifyReply, name: string): void {
  * this file — delegating would create a circular import. The duplication is
  * bounded by the same 2026-07-22 sunset that retires the rest of this file.
  */
-export function restampRefreshCookieIfPresent(
-  req: FastifyRequest,
-  reply: FastifyReply,
-): void {
+export function restampRefreshCookieIfPresent(req: FastifyRequest, reply: FastifyReply): void {
   if (!canScopeToDomain(appConfig.NODE_ENV, appConfig.DOMAIN)) return
   const value = req.cookies[REFRESH_COOKIE]
   if (!value) return
