@@ -15,30 +15,35 @@ permissions:
   packages: write
 
 jobs:
-  detect:
+  build:
     runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.check.outputs.matrix }}
-      has-builds: ${{ steps.check.outputs.has-builds }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Log in to GitHub Container Registry (GHCR)
-        if: github.event_name == 'release'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Detect which images need building
-        id: check
+      - name: Build and push images
         env:
           FORCE_IMAGES: ${{ github.event.inputs.images || '' }}
+          REPO: ${{ github.repository }}
+          EVENT: ${{ github.event_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
-          PREFIX="ghcr.io/${{ github.repository }}"
-          SERVICES=()
+          PREFIX="ghcr.io/${REPO}"
+          SHA=$(git rev-parse --short HEAD)
+
+          echo "### Build matrix" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Service | Version | Build? |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---------|---------|--------|" >> "$GITHUB_STEP_SUMMARY"
 
           for SVC in backend frontend admin ingress; do
             VERSION=$(node -p "require('./apps/${SVC}/package.json').version")
@@ -61,114 +66,32 @@ jobs:
               fi
             fi
 
-            if [[ "$BUILD" == "true" ]]; then
-              SERVICES+=("$SVC")
+            if [[ "$BUILD" != "true" ]]; then
+              echo "| ${SVC} | ${VERSION} | ⏭️ |" >> "$GITHUB_STEP_SUMMARY"
+              continue
             fi
-          done
+            echo "| ${SVC} | ${VERSION} | ✅ |" >> "$GITHUB_STEP_SUMMARY"
 
-          # Build the matrix JSON
-          if [[ ${#SERVICES[@]} -eq 0 ]]; then
-            echo "matrix={\"include\":[]}" >> "$GITHUB_OUTPUT"
-            echo "has-builds=false" >> "$GITHUB_OUTPUT"
-            echo "ℹ️ No images need building"
-          else
-            MATRIX='{"include":['
-            FIRST=true
-            for SVC in "${SERVICES[@]}"; do
-              VERSION=$(node -p "require('./apps/${SVC}/package.json').version")
-              case "$SVC" in
-                ingress) CTX="apps/ingress" ;;
-                *)       CTX="." ;;
-              esac
-              if [[ "$FIRST" != "true" ]]; then MATRIX+=","; fi
-              MATRIX+="{\"service\":\"${SVC}\",\"dockerfile\":\"apps/${SVC}/Dockerfile\",\"context\":\"${CTX}\",\"version\":\"${VERSION}\"}"
-              FIRST=false
-            done
-            MATRIX+=']}'
-            echo "matrix=${MATRIX}" >> "$GITHUB_OUTPUT"
-            echo "has-builds=true" >> "$GITHUB_OUTPUT"
-          fi
+            case "$SVC" in
+              ingress) CTX="apps/ingress" ;;
+              *)       CTX="." ;;
+            esac
 
-      - name: Summary
-        env:
-          FORCE_IMAGES: ${{ github.event.inputs.images || '' }}
-        run: |
-          PREFIX="ghcr.io/${{ github.repository }}"
-          echo "### Build matrix" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Service | Version | Build? |" >> "$GITHUB_STEP_SUMMARY"
-          echo "|---------|---------|--------|" >> "$GITHUB_STEP_SUMMARY"
-          for SVC in backend frontend admin ingress; do
-            VERSION=$(node -p "require('./apps/${SVC}/package.json').version")
-            TAG="${PREFIX}-${SVC}:${VERSION}"
-            BUILD="⏭️"
-            if [[ -n "$FORCE_IMAGES" ]]; then
-              if [[ "$FORCE_IMAGES" == "all" || "$FORCE_IMAGES" == *"$SVC"* ]]; then
-                BUILD="✅"
-              fi
-            else
-              if ! docker manifest inspect "$TAG" > /dev/null 2>&1; then
-                BUILD="✅"
-              fi
+            TAG_ARGS=(
+              -t "${PREFIX}-${SVC}:${VERSION}"
+              -t "${PREFIX}-${SVC}:${SHA}"
+              -t "${PREFIX}-${SVC}:latest"
+            )
+            if [[ "$EVENT" == "release" ]]; then
+              TAG_ARGS+=(-t "${PREFIX}-${SVC}:${RELEASE_TAG}")
             fi
-            echo "| ${SVC} | ${VERSION} | ${BUILD} |" >> "$GITHUB_STEP_SUMMARY"
+
+            docker buildx build \
+              --file "apps/${SVC}/Dockerfile" \
+              --platform linux/amd64 \
+              --push \
+              --cache-from "type=gha,scope=${SVC}" \
+              --cache-to "type=gha,mode=max,scope=${SVC}" \
+              "${TAG_ARGS[@]}" \
+              "$CTX"
           done
-
-  build:
-    needs: detect
-    if: needs.detect.outputs.has-builds == 'true'
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.detect.outputs.matrix) }}
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Compute image tags
-        id: tags
-        run: |
-          SHA=$(git rev-parse --short HEAD)
-          VERSION="${{ matrix.version }}"
-          PREFIX="ghcr.io/${{ github.repository }}"
-          SVC="${{ matrix.service }}"
-
-          {
-            echo "${PREFIX}-${SVC}:${VERSION}"
-            echo "${PREFIX}-${SVC}:${SHA}"
-            echo "${PREFIX}-${SVC}:latest"
-          } > tags.txt
-
-          if [[ "${{ github.event_name }}" == "release" ]]; then
-            echo "${PREFIX}-${SVC}:${{ github.event.release.tag_name }}" >> tags.txt
-          fi
-
-          {
-            echo "tags<<EOF"
-            cat tags.txt
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to GitHub Container Registry (GHCR)
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push image
-        uses: docker/build-push-action@v6
-        with:
-          context: ${{ matrix.context }}
-          file: ${{ matrix.dockerfile }}
-          platforms: linux/amd64,linux/arm64
-          push: true
-          cache-from: type=gha,scope=${{ matrix.service }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
-          tags: ${{ steps.tags.outputs.tags }}
