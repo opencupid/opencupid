@@ -133,7 +133,7 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
     const { id: profileImageId } = IdLookupParamsSchema.parse(req.params)
 
     try {
-      const ok = await imageService.deleteImage(req.user.userId, profileImageId)
+      const ok = await imageService.deleteImage(req.session.profileId, profileImageId)
       if (!ok) {
         return sendError(reply, 500, 'Failed to delete image')
       }
@@ -160,7 +160,7 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
     const { images } = ReorderProfileImagesPayloadSchema.parse(req.body)
 
     try {
-      const updated = await imageService.reorderImages(req.user.userId, images)
+      const updated = await imageService.reorderImages(req.session.profileId, images)
       const ownerImages = mapProfileImagesToOwner(updated)
       const response: ImageApiResponse = { success: true, images: ownerImages }
       return reply.code(200).send(response)

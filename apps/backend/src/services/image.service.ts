@@ -1,6 +1,7 @@
 import path from 'path'
 import fs from 'fs'
 
+import { Prisma } from '@prisma/client'
 import { prisma } from '../lib/prisma'
 import { getMediaRoot, imageBasePath, makeImageLocation, mediaUrl } from '@/lib/media'
 
@@ -11,6 +12,7 @@ import type { ProfileImage } from '@zod/generated'
 import sharp from 'sharp'
 
 import { ImageProcessor } from './imageprocessor'
+import { syncProfileHasFace } from './profile.service'
 
 type Variant = {
   name: string
@@ -117,6 +119,7 @@ export class ImageService {
           isModerated: false,
           contentHash: contentHash,
           blurhash: processed.blurhash,
+          hasFace: processed.hasFace,
           position: position,
         },
       })
@@ -149,6 +152,7 @@ export class ImageService {
       mime: processor.getMime(),
       variants: outputPaths,
       blurhash,
+      hasFace: processor.hasFaces(),
     }
   }
 
@@ -166,6 +170,7 @@ export class ImageService {
       ...processor.getOriginalSize(),
       variants: outputPaths,
       blurhash,
+      hasFace: processor.hasFaces(),
     }
   }
 
@@ -211,21 +216,22 @@ export class ImageService {
 
   /**
    * Delete a ProfileImage record
-   * @param userId - ID of the user who owns the image
+   * @param profileId - ID of the profile that owns the image
    * @param imageId - ID of the image to delete
    * Returns true if successful, false if not
    */
-  async deleteImage(userId: string, imageId: string): Promise<boolean> {
+  async deleteImage(profileId: string, imageId: string): Promise<boolean> {
     const image = await prisma.profileImage.findUnique({
-      where: { id: imageId, userId },
+      where: { id: imageId, profileId },
     })
     if (!image) {
-      console.warn('Image not found or does not belong to user')
+      console.warn('Image not found or does not belong to profile')
       return false
     }
     try {
-      await prisma.profileImage.delete({
-        where: { id: image.id },
+      await prisma.$transaction(async (tx) => {
+        await tx.profileImage.delete({ where: { id: image.id } })
+        await syncProfileHasFace(tx, profileId)
       })
     } catch (err) {
       console.error('Error deleting image from database:', err)
@@ -253,31 +259,32 @@ export class ImageService {
 
   /**
    * Reorder images by updating their positions
-   * @param userId - ID of the user whose images are being reordered
+   * @param profileId - ID of the profile whose images are being reordered
    * @param items - Array of image IDs and their new positions
    * Returns the updated images sorted by position
    */
-  async reorderImages(userId: string, items: ProfileImagePosition[]) {
+  async reorderImages(profileId: string, items: ProfileImagePosition[]) {
     const valid = await prisma.profileImage.findMany({
-      where: { userId, id: { in: items.map((i) => i.id) } },
+      where: { profileId, id: { in: items.map((i) => i.id) } },
       select: { id: true },
     })
 
-    const validIds = new Set(valid.map((v: any) => v.id))
+    const validIds = new Set(valid.map((v) => v.id))
     if (items.some((i) => !validIds.has(i.id))) {
       throw new Error('Invalid image ID')
     }
 
-    // Bulk‐update positions in a single transaction
-    const ops = items.map((item) =>
-      prisma.profileImage.update({
-        where: { id: item.id },
-        data: { position: item.position },
-      })
-    )
-    const updated = await prisma.$transaction(ops)
-
-    // Return them sorted by position
-    return updated.sort((a: any, b: any) => a.position - b.position)
+    return prisma.$transaction(async (tx) => {
+      const updated = await Promise.all(
+        items.map((item) =>
+          tx.profileImage.update({
+            where: { id: item.id },
+            data: { position: item.position },
+          })
+        )
+      )
+      await syncProfileHasFace(tx, profileId)
+      return updated.sort((a, b) => a.position - b.position)
+    })
   }
 }

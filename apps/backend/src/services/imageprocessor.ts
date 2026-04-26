@@ -168,6 +168,10 @@ export class ImageProcessor {
     }
   }
 
+  hasFaces(): boolean {
+    return this.faces.length > 0
+  }
+
   async encodeBlurhash(componentX = 4, componentY = 3): Promise<string> {
     const { data, info } = await sharp(this.buffer, { failOn: 'error' })
       .resize(32, 32, { fit: 'inside' })

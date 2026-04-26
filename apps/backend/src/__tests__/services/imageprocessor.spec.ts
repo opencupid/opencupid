@@ -50,6 +50,20 @@ describe('ImageProcessor', () => {
     expect(processor['faces'].length).toBeGreaterThanOrEqual(0)
   })
 
+  it('hasFaces() reflects detector results', async () => {
+    mockEstimateFaces.mockResolvedValueOnce([])
+    const noFaceProcessor = new ImageProcessor(buffer)
+    await noFaceProcessor.analyze()
+    expect(noFaceProcessor.hasFaces()).toBe(false)
+
+    mockEstimateFaces.mockResolvedValueOnce([
+      { box: { xMin: 0, yMin: 0, xMax: 10, yMax: 10, width: 10, height: 10 }, keypoints: [] },
+    ])
+    const faceProcessor = new ImageProcessor(buffer)
+    await faceProcessor.analyze()
+    expect(faceProcessor.hasFaces()).toBe(true)
+  })
+
   it('can extract and resize cropped image', async () => {
     const processor = new ImageProcessor(buffer)
     await processor.analyze()
