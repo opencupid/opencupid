@@ -11,6 +11,10 @@ import IconSearch from '@/assets/icons/interface/search.svg'
 
 defineOptions({ inheritAttrs: false })
 
+const props = defineProps<{
+  locationBias?: LocationDTO | null
+}>()
+
 const emit = defineEmits<{
   (e: 'selected', value: LocationDTO): void
 }>()
@@ -20,7 +24,7 @@ const debouncedAsyncFind = useDebounceFn(async (query: string) => {
     geocoding.results = selected.value ? [selected.value] : []
     return
   }
-  await geocoding.search(query, locale.value)
+  await geocoding.search(query, locale.value, props.locationBias ?? undefined)
 }, 500) // debounce delay in ms
 
 const model = defineModel<LocationDTO>({

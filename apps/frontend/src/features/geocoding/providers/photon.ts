@@ -10,7 +10,7 @@ interface PhotonProperties {
 const SUPPORTED_LANGS = ['en', 'de']
 const OSM_TAG_FILTERS = ['place:city', 'place:town', 'place:village', 'place:hamlet']
 
-export const searchPhoton: GeocodingProvider = async (query, lang, signal?) => {
+export const searchPhoton: GeocodingProvider = async (query, lang, signal?, bias?) => {
   const params = new URLSearchParams()
   params.set('q', query)
   params.set('lang', SUPPORTED_LANGS.includes(lang) ? lang : 'en')
@@ -20,6 +20,16 @@ export const searchPhoton: GeocodingProvider = async (query, lang, signal?) => {
   }
   params.append('layer', 'city')
   params.append('layer', 'locality')
+  if (bias) {
+    params.set('lat', String(bias.lat))
+    params.set('lon', String(bias.lon))
+    // Photon defaults (zoom=12, location_bias_scale=0.4) leave prominence
+    // strong enough that a faraway exact-name match (e.g. "Als" in DK) beats
+    // nearby villages. Widen the radius and downweight prominence so the
+    // bias point dominates ranking.
+    params.set('zoom', '8')
+    params.set('location_bias_scale', '0.0')
+  }
 
   const res = await axios.get<FeatureCollection<Point, PhotonProperties>>(
     'https://photon.komoot.io/api/',

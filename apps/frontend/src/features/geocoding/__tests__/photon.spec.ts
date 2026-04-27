@@ -113,6 +113,30 @@ describe('searchPhoton', () => {
     expect(config.signal).toBe(controller.signal)
   })
 
+  it('omits bias params when no bias is supplied', async () => {
+    mockGet.mockResolvedValue({ data: { type: 'FeatureCollection', features: [] } })
+
+    await searchPhoton('Berlin', 'en')
+
+    const params: URLSearchParams = mockGet.mock.calls[0]![1].params
+    expect(params.has('lat')).toBe(false)
+    expect(params.has('lon')).toBe(false)
+    expect(params.has('zoom')).toBe(false)
+    expect(params.has('location_bias_scale')).toBe(false)
+  })
+
+  it('forwards bias coords and tuning params when bias is supplied', async () => {
+    mockGet.mockResolvedValue({ data: { type: 'FeatureCollection', features: [] } })
+
+    await searchPhoton('als', 'en', undefined, { lat: 46.679423, lon: 18.5389986 })
+
+    const params: URLSearchParams = mockGet.mock.calls[0]![1].params
+    expect(params.get('lat')).toBe('46.679423')
+    expect(params.get('lon')).toBe('18.5389986')
+    expect(params.get('zoom')).toBe('8')
+    expect(params.get('location_bias_scale')).toBe('0.0')
+  })
+
   it('propagates errors (does not catch)', async () => {
     mockGet.mockRejectedValue(new Error('Network error'))
 

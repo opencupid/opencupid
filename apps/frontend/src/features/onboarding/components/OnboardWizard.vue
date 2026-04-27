@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { type EditProfileForm } from '@zod/profile/profile.form'
@@ -80,16 +80,11 @@ const handleLocationSelected = async (location: { country: string }) => {
   })
 }
 
-onMounted(() => {
-  // Pre-populate the country from the geoip lookup so the user lands in the
-  // right region by default. Don't clobber a country the user already picked
-  // (e.g. from a saved draft profile).
-  if (!formData.value.location?.country && appStore.geoipCountry) {
-    formData.value.location = {
-      ...(formData.value.location ?? { cityName: '', lat: null, lon: null }),
-      country: appStore.geoipCountry,
-    }
-  }
+const defaultLocation = computed(() => appStore.geoipLocation)
+
+onMounted(async () => {
+  // obtain default geoip location
+  await appStore.fetchLocation()
 })
 
 const siteName = __APP_CONFIG__.SITE_NAME
@@ -149,6 +144,7 @@ const siteName = __APP_CONFIG__.SITE_NAME
           </legend>
           <LocationSelectorComponent
             v-model="formData.location"
+            :location-bias="defaultLocation"
             open-direction="bottom"
             :allow-empty="false"
             :close-on-select="true"

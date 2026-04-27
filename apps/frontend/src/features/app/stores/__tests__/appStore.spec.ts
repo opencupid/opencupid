@@ -12,6 +12,7 @@ vi.mock('@/lib/api', () => ({
     get: vi.fn(),
   },
   getVersionInfo: vi.fn(),
+  safeApiCall: vi.fn((fn: () => Promise<unknown>) => fn()),
 }))
 
 describe('useAppStore - checkVersion', () => {
@@ -97,9 +98,10 @@ describe('useAppStore - fetchLocation', () => {
     vi.clearAllMocks()
   })
 
-  it('stores the looked-up country in geoipCountry', async () => {
+  it('stores the looked-up location on success', async () => {
     const mockGet = apiModule.api.get as any
     mockGet.mockResolvedValue({
+      status: 200,
       data: { success: true, location: { country: 'DE', cityName: '' } },
     })
 
@@ -107,11 +109,11 @@ describe('useAppStore - fetchLocation', () => {
     const result = await store.fetchLocation()
 
     expect(result.success).toBe(true)
-    expect(store.geoipCountry).toBe('DE')
+    expect(store.geoipLocation).toEqual({ country: 'DE', cityName: '' })
     expect(mockGet).toHaveBeenCalledWith('/app/location')
   })
 
-  it('leaves geoipCountry empty on API failure', async () => {
+  it('leaves geoipLocation null on API failure', async () => {
     const mockGet = apiModule.api.get as any
     mockGet.mockRejectedValue(new Error('boom'))
 
@@ -119,7 +121,7 @@ describe('useAppStore - fetchLocation', () => {
     const result = await store.fetchLocation()
 
     expect(result.success).toBe(false)
-    expect(store.geoipCountry).toBe('')
+    expect(store.geoipLocation).toBeNull()
   })
 })
 
@@ -139,12 +141,15 @@ describe('useAppStore - initialize', () => {
     )
 
     const store = useAppStore()
-    store.initialize()
+    store.fetchLocation()
 
     expect(mockGet).toHaveBeenCalledWith('/app/location')
 
-    resolveGet({ data: { success: true, location: { country: 'FR', cityName: '' } } })
+    resolveGet({
+      status: 200,
+      data: { success: true, location: { country: 'FR', cityName: '' } },
+    })
     await new Promise((r) => setTimeout(r, 0))
-    expect(store.geoipCountry).toBe('FR')
+    expect(store.geoipLocation).toEqual({ country: 'FR', cityName: '' })
   })
 })

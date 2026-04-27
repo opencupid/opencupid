@@ -8,7 +8,6 @@ vi.mock('../../composables/useGeocoder', () => ({
 }))
 
 import { useGeocodingStore } from '../geocodingStore'
-import { useAppStore } from '@/features/app/stores/appStore'
 
 describe('geocodingStore', () => {
   beforeEach(() => {
@@ -23,7 +22,7 @@ describe('geocodingStore', () => {
     const store = useGeocodingStore()
     const results = await store.search('Berlin', 'en')
 
-    expect(mockSearch).toHaveBeenCalledWith('Berlin', 'en', expect.any(AbortSignal))
+    expect(mockSearch).toHaveBeenCalledWith('Berlin', 'en', expect.any(AbortSignal), null)
     expect(results).toEqual(mockResults)
     expect(store.results).toEqual(mockResults)
   })
@@ -142,52 +141,60 @@ describe('geocodingStore', () => {
     expect(store.results.slice(1).map((r) => r.name)).toContain('San Juan Bautista')
   })
 
-  it('uses appStore.geoipCountry as the bias when no explicit country is given', async () => {
-    const unsorted = [
-      { name: 'Paris', country: 'FR', lat: 48.85, lon: 2.35 },
-      { name: 'Paris', country: 'US', lat: 33.66, lon: -95.55 },
-    ]
-    mockSearch.mockResolvedValue(unsorted)
-
-    const appStore = useAppStore()
-    appStore.geoipCountry = 'US'
+  it('forwards locationBias coords to the geocoder as bias', async () => {
+    mockSearch.mockResolvedValue([])
 
     const store = useGeocodingStore()
-    await store.searchNearby('', 'paris', 'en', 5)
+    await store.search('Berlin', 'en', {
+      country: 'DE',
+      cityName: '',
+      lat: 52.52,
+      lon: 13.405,
+    })
 
-    expect(store.results[0]!.country).toBe('US')
+    expect(mockSearch).toHaveBeenCalledWith('Berlin', 'en', expect.any(AbortSignal), {
+      lat: 52.52,
+      lon: 13.405,
+    })
   })
 
-  it('prefers explicit country bias over geoipCountry', async () => {
-    const unsorted = [
-      { name: 'Paris', country: 'US', lat: 33.66, lon: -95.55 },
-      { name: 'Paris', country: 'FR', lat: 48.85, lon: 2.35 },
-    ]
-    mockSearch.mockResolvedValue(unsorted)
-
-    const appStore = useAppStore()
-    appStore.geoipCountry = 'US'
+  it('omits bias when locationBias has no coords', async () => {
+    mockSearch.mockResolvedValue([])
 
     const store = useGeocodingStore()
-    await store.searchNearby('FR', 'paris', 'en', 5)
+    await store.search('Berlin', 'en', { country: 'DE', cityName: '' })
 
-    expect(store.results[0]!.country).toBe('FR')
+    expect(mockSearch).toHaveBeenCalledWith('Berlin', 'en', expect.any(AbortSignal), null)
   })
 
-  it('promotes geoipCountry hits within the same exact-match tier in search()', async () => {
-    const unsorted = [
-      { name: 'Paris', country: 'US', lat: 33.66, lon: -95.55 },
-      { name: 'Paris', country: 'FR', lat: 48.85, lon: 2.35 },
-    ]
-    mockSearch.mockResolvedValue(unsorted)
-
-    const appStore = useAppStore()
-    appStore.geoipCountry = 'FR'
+  it('caps results to the default take of 5', async () => {
+    const many = Array.from({ length: 10 }, (_, i) => ({
+      name: `City${i}`,
+      country: 'DE',
+      lat: 0,
+      lon: 0,
+    }))
+    mockSearch.mockResolvedValue(many)
 
     const store = useGeocodingStore()
-    await store.search('paris', 'en')
+    await store.search('city', 'en')
 
-    expect(store.results[0]!.country).toBe('FR')
+    expect(store.results).toHaveLength(5)
+  })
+
+  it('respects an explicit take parameter', async () => {
+    const many = Array.from({ length: 10 }, (_, i) => ({
+      name: `City${i}`,
+      country: 'DE',
+      lat: 0,
+      lon: 0,
+    }))
+    mockSearch.mockResolvedValue(many)
+
+    const store = useGeocodingStore()
+    await store.search('city', 'en', null, 3)
+
+    expect(store.results).toHaveLength(3)
   })
 
   it('does not treat a CanceledError as a real failure', async () => {

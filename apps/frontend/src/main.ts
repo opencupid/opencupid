@@ -6,7 +6,6 @@ import registerToast from './lib/toast'
 import { useBootstrap } from './lib/bootstrap'
 import { appUseI18n } from './lib/i18n'
 import { useAuthStore } from './features/auth/stores/authStore'
-import { useAppStore } from './features/app/stores/appStore'
 
 // Register push-only service worker
 if ('serviceWorker' in navigator) {
@@ -89,7 +88,6 @@ app.use(createBootstrap()) // bootstrap-vue-next
 registerToast(app)
 
 useAuthStore().initialize()
-useAppStore().initialize()
 useBootstrap().bootstrap()
 
 appUseI18n(app)

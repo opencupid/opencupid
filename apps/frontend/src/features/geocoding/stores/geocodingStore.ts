@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { useGeocoder } from '../composables/useGeocoder'
-import { useAppStore } from '@/features/app/stores/appStore'
+import { toGeoPoint, type LocationDTO } from '@zod/dto/location.dto'
 import type { GeocodingResult } from '../types'
 
 export type { GeocodingResult }
@@ -14,33 +14,12 @@ export const useGeocodingStore = defineStore('geocoding', () => {
   const results = ref<GeocodingResult[]>([])
   const isLoading = ref(false)
 
-  async function searchNearby(
-    country: string,
+  async function search(
     query: string,
     lang: string,
+    locationBias?: LocationDTO | null,
     take: number = 5
   ): Promise<GeocodingResult[]> {
-    await search(query, lang)
-    // Bias toward the explicit country when one is supplied; otherwise fall
-    // back to the country detected from the client IP at app startup. Either
-    // way the bias is a stable sort that promotes in-country hits without
-    // disturbing the exact-name ranking applied in search().
-    const preferred = (country || useAppStore().geoipCountry).toUpperCase()
-    if (!preferred) {
-      results.value = results.value.slice(0, take)
-      return results.value
-    }
-    results.value = [...results.value]
-      .sort(
-        (a, b) =>
-          Number(a.country.toUpperCase() !== preferred) -
-          Number(b.country.toUpperCase() !== preferred)
-      )
-      .slice(0, take)
-    return results.value
-  }
-
-  async function search(query: string, lang: string): Promise<GeocodingResult[]> {
     if (!query) {
       _abortController?.abort()
       _abortController = null
@@ -54,25 +33,22 @@ export const useGeocodingStore = defineStore('geocoding', () => {
     const { signal } = _abortController
 
     const normalizedQuery = query.trim().toLowerCase()
-    const geoipCountry = useAppStore().geoipCountry.toUpperCase()
+    const bias = toGeoPoint(locationBias)
 
     isLoading.value = true
     try {
-      const data = await geocode(query, lang, signal)
+      const data = await geocode(query, lang, signal, bias)
       if (!signal.aborted) {
-        results.value = data.sort((a, b) => {
-          const exactMatchDiff =
-            Number(a.name.toLowerCase() !== normalizedQuery) -
-            Number(b.name.toLowerCase() !== normalizedQuery)
-          if (exactMatchDiff !== 0 || !geoipCountry) return exactMatchDiff
-          // Within the same exact-match tier, promote results from the
-          // geoip-detected country so the user sees regionally-relevant
-          // hits first when no other country bias is in play.
-          return (
-            Number(a.country.toUpperCase() !== geoipCountry) -
-            Number(b.country.toUpperCase() !== geoipCountry)
+        // Photon's ranking blends name match, popularity and our location
+        // bias. Re-sort to guarantee an exact name match wins regardless of
+        // popularity within the bias-respecting result order (sort is stable).
+        results.value = data
+          .sort(
+            (a, b) =>
+              Number(a.name.toLowerCase() !== normalizedQuery) -
+              Number(b.name.toLowerCase() !== normalizedQuery)
           )
-        })
+          .slice(0, take)
       }
       return results.value
     } catch (err) {
@@ -98,5 +74,5 @@ export const useGeocodingStore = defineStore('geocoding', () => {
 
   const hasResults = computed(() => results.value.length > 0)
 
-  return { results, isLoading, hasResults, search, searchNearby, clear }
+  return { results, isLoading, hasResults, search, clear }
 })

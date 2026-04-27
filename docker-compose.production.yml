@@ -258,6 +258,13 @@ services:
     depends_on:
       - jitsi-prosody
 
+  # GeoIP lookup API. Internal-only — no ports published, no traefik labels.
+  # Other services reach it at http://geoip-api:8080. Image bundles the
+  # MaxMind GeoLite2 databases, so no volumes or env vars are required.
+  geoip-api:
+    image: observabilitystack/geoip-api:latest
+    restart: always
+    
 volumes:
   redis-data:
     driver: local
