@@ -125,22 +125,6 @@ describe('geocodingStore', () => {
     expect(store.results).toEqual([{ name: 'San Juan', country: 'PH', lat: 18.5, lon: -66.1 }])
   })
 
-  it('sorts exact matches (case-insensitive) to the top', async () => {
-    const unsorted = [
-      { name: 'San Juan de la Nava', country: 'ES', lat: 40.4, lon: -4.8 },
-      { name: 'San Juan', country: 'PH', lat: 18.5, lon: -66.1 },
-      { name: 'San Juan Bautista', country: 'ES', lat: 39.6, lon: 2.9 },
-    ]
-    mockSearch.mockResolvedValue(unsorted)
-
-    const store = useGeocodingStore()
-    await store.search('san juan', 'en')
-
-    expect(store.results[0]!.name).toBe('San Juan')
-    expect(store.results.slice(1).map((r) => r.name)).toContain('San Juan de la Nava')
-    expect(store.results.slice(1).map((r) => r.name)).toContain('San Juan Bautista')
-  })
-
   it('forwards locationBias coords to the geocoder as bias', async () => {
     mockSearch.mockResolvedValue([])
 

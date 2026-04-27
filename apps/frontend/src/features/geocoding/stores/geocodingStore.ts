@@ -32,23 +32,13 @@ export const useGeocodingStore = defineStore('geocoding', () => {
     _abortController = new AbortController()
     const { signal } = _abortController
 
-    const normalizedQuery = query.trim().toLowerCase()
     const bias = toGeoPoint(locationBias)
 
     isLoading.value = true
     try {
       const data = await geocode(query, lang, signal, bias)
       if (!signal.aborted) {
-        // Photon's ranking blends name match, popularity and our location
-        // bias. Re-sort to guarantee an exact name match wins regardless of
-        // popularity within the bias-respecting result order (sort is stable).
-        results.value = data
-          .sort(
-            (a, b) =>
-              Number(a.name.toLowerCase() !== normalizedQuery) -
-              Number(b.name.toLowerCase() !== normalizedQuery)
-          )
-          .slice(0, take)
+        results.value = data.slice(0, take)
       }
       return results.value
     } catch (err) {
