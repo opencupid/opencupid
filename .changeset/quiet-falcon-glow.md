@@ -3,4 +3,4 @@
 '@opencupid/frontend': minor
 ---
 
-Replace MaxMind WebServiceClient with the self-hosted observabilitystack/geoip-api service for IP-based country lookup. The frontend now resolves the user's country once at startup via a non-blocking `appStore.initialize()` call, pre-populates the onboarding location step, and uses the detected country as a default bias for geocoding searches.
+Replace MaxMind with self-hosted observabilitystack/geoip-api for IP-based location lookup. The backend `/location` endpoint now returns lat/lon alongside country (configurable via `GEOIP_API_URL`), and the frontend uses the resolved location to bias Photon geocoder suggestions toward the user's region.
