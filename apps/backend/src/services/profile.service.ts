@@ -369,16 +369,16 @@ export class ProfileService {
   ): Promise<{
     profileImages: ProfileImage[]
   }> {
-    return prisma.$transaction(async (tx) => {
-      await tx.profile.update({
-        where: { id: profileId },
-        data: { profileImages: { connect: { id: imageId } } },
-      })
-      await syncProfileHasFace(tx, profileId)
-      return tx.profile.findUniqueOrThrow({
-        where: { id: profileId },
-        select: { profileImages: true },
-      })
+    return prisma.profile.update({
+      where: {
+        id: profileId,
+      },
+      data: {
+        profileImages: { connect: { id: imageId } },
+      },
+      select: {
+        profileImages: true,
+      },
     })
   }
 
