@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { type CreateProfileForm, CreateProfileFormSchema } from '@zod/profile/profile.form'
@@ -23,12 +23,12 @@ import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 const profileStore = useOwnerProfileStore()
 const i18nStore = useI18nStore()
 
-const profileForm = reactive<CreateProfileForm>({
+const profileForm = ref<CreateProfileForm>({
   ...CreateProfileFormSchema.parse({}),
   languages: [i18nStore.getLanguage()],
 })
 
-const datingPrefs = reactive<DatingPreferencesFormType>(DatingPreferencesFormSchema.parse({}))
+const datingPrefs = ref<DatingPreferencesFormType>(DatingPreferencesFormSchema.parse({}))
 
 const error = ref('')
 
@@ -46,10 +46,10 @@ const handleWizardFinish = async () => {
   // handle the case where the user changes this flag
   // after filling data info datingPrefs and then changing the
   // toggle afterwards. We'll leave the prefs empty
-  if (profileForm.isDatingActive) {
-    Object.assign(profileForm, datingPrefs)
+  if (profileForm.value.isDatingActive) {
+    Object.assign(profileForm.value, datingPrefs.value)
   }
-  const res = await profileStore.createOwnerProfile(profileForm)
+  const res = await profileStore.createOwnerProfile(profileForm.value)
   if (!res.success) {
     console.error('Failed to save profile:', res.message)
     error.value = res.message || 'Failed to save profile'
