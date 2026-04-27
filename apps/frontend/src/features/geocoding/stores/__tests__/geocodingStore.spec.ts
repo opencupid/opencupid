@@ -22,7 +22,7 @@ describe('geocodingStore', () => {
     const store = useGeocodingStore()
     const results = await store.search('Berlin', 'en')
 
-    expect(mockSearch).toHaveBeenCalledWith('Berlin', 'en', expect.any(AbortSignal))
+    expect(mockSearch).toHaveBeenCalledWith('Berlin', 'en', expect.any(AbortSignal), null)
     expect(results).toEqual(mockResults)
     expect(store.results).toEqual(mockResults)
   })
@@ -125,20 +125,60 @@ describe('geocodingStore', () => {
     expect(store.results).toEqual([{ name: 'San Juan', country: 'PH', lat: 18.5, lon: -66.1 }])
   })
 
-  it('sorts exact matches (case-insensitive) to the top', async () => {
-    const unsorted = [
-      { name: 'San Juan de la Nava', country: 'ES', lat: 40.4, lon: -4.8 },
-      { name: 'San Juan', country: 'PH', lat: 18.5, lon: -66.1 },
-      { name: 'San Juan Bautista', country: 'ES', lat: 39.6, lon: 2.9 },
-    ]
-    mockSearch.mockResolvedValue(unsorted)
+  it('forwards locationBias coords to the geocoder as bias', async () => {
+    mockSearch.mockResolvedValue([])
 
     const store = useGeocodingStore()
-    await store.search('san juan', 'en')
+    await store.search('Berlin', 'en', {
+      country: 'DE',
+      cityName: '',
+      lat: 52.52,
+      lon: 13.405,
+    })
 
-    expect(store.results[0]!.name).toBe('San Juan')
-    expect(store.results.slice(1).map((r) => r.name)).toContain('San Juan de la Nava')
-    expect(store.results.slice(1).map((r) => r.name)).toContain('San Juan Bautista')
+    expect(mockSearch).toHaveBeenCalledWith('Berlin', 'en', expect.any(AbortSignal), {
+      lat: 52.52,
+      lon: 13.405,
+    })
+  })
+
+  it('omits bias when locationBias has no coords', async () => {
+    mockSearch.mockResolvedValue([])
+
+    const store = useGeocodingStore()
+    await store.search('Berlin', 'en', { country: 'DE', cityName: '' })
+
+    expect(mockSearch).toHaveBeenCalledWith('Berlin', 'en', expect.any(AbortSignal), null)
+  })
+
+  it('caps results to the default take of 5', async () => {
+    const many = Array.from({ length: 10 }, (_, i) => ({
+      name: `City${i}`,
+      country: 'DE',
+      lat: 0,
+      lon: 0,
+    }))
+    mockSearch.mockResolvedValue(many)
+
+    const store = useGeocodingStore()
+    await store.search('city', 'en')
+
+    expect(store.results).toHaveLength(5)
+  })
+
+  it('respects an explicit take parameter', async () => {
+    const many = Array.from({ length: 10 }, (_, i) => ({
+      name: `City${i}`,
+      country: 'DE',
+      lat: 0,
+      lon: 0,
+    }))
+    mockSearch.mockResolvedValue(many)
+
+    const store = useGeocodingStore()
+    await store.search('city', 'en', null, 3)
+
+    expect(store.results).toHaveLength(3)
   })
 
   it('does not treat a CanceledError as a real failure', async () => {

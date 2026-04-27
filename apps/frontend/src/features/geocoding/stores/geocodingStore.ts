@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { useGeocoder } from '../composables/useGeocoder'
+import { toGeoPoint, type LocationDTO } from '@zod/dto/location.dto'
 import type { GeocodingResult } from '../types'
 
 export type { GeocodingResult }
@@ -13,28 +14,12 @@ export const useGeocodingStore = defineStore('geocoding', () => {
   const results = ref<GeocodingResult[]>([])
   const isLoading = ref(false)
 
-  async function searchNearby(
-    country: string,
+  async function search(
     query: string,
     lang: string,
+    locationBias?: LocationDTO | null,
     take: number = 5
   ): Promise<GeocodingResult[]> {
-    await search(query, lang)
-    const preferred = country.toUpperCase()
-    // Stable sort: entries already ranked by exact-name match in search(),
-    // here we only promote in-country matches to the top without disturbing
-    // that secondary order.
-    results.value = [...results.value]
-      .sort(
-        (a, b) =>
-          Number(a.country.toUpperCase() !== preferred) -
-          Number(b.country.toUpperCase() !== preferred)
-      )
-      .slice(0, take)
-    return results.value
-  }
-
-  async function search(query: string, lang: string): Promise<GeocodingResult[]> {
     if (!query) {
       _abortController?.abort()
       _abortController = null
@@ -47,17 +32,13 @@ export const useGeocodingStore = defineStore('geocoding', () => {
     _abortController = new AbortController()
     const { signal } = _abortController
 
-    const normalizedQuery = query.trim().toLowerCase()
+    const bias = toGeoPoint(locationBias)
 
     isLoading.value = true
     try {
-      const data = await geocode(query, lang, signal)
+      const data = await geocode(query, lang, signal, bias)
       if (!signal.aborted) {
-        results.value = data.sort(
-          (a, b) =>
-            Number(a.name.toLowerCase() !== normalizedQuery) -
-            Number(b.name.toLowerCase() !== normalizedQuery)
-        )
+        results.value = data.slice(0, take)
       }
       return results.value
     } catch (err) {
@@ -83,5 +64,5 @@ export const useGeocodingStore = defineStore('geocoding', () => {
 
   const hasResults = computed(() => results.value.length > 0)
 
-  return { results, isLoading, hasResults, search, searchNearby, clear }
+  return { results, isLoading, hasResults, search, clear }
 })

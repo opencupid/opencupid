@@ -12,6 +12,7 @@ vi.mock('@/lib/api', () => ({
     get: vi.fn(),
   },
   getVersionInfo: vi.fn(),
+  safeApiCall: vi.fn((fn: () => Promise<unknown>) => fn()),
 }))
 
 describe('useAppStore - checkVersion', () => {
@@ -88,5 +89,60 @@ describe('useAppStore - checkVersion', () => {
     await store.checkVersion()
 
     expect(mockGetVersionInfo).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('useAppStore - fetchLocation', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  it('stores the looked-up location on success', async () => {
+    const mockGet = apiModule.api.get as any
+    mockGet.mockResolvedValue({
+      status: 200,
+      data: { success: true, location: { country: 'DE', cityName: '' } },
+    })
+
+    const store = useAppStore()
+    const result = await store.fetchLocation()
+
+    expect(result.success).toBe(true)
+    expect(store.geoipLocation).toEqual({ country: 'DE', cityName: '' })
+    expect(mockGet).toHaveBeenCalledWith('/app/location')
+  })
+
+  it('leaves geoipLocation null on API failure', async () => {
+    const mockGet = apiModule.api.get as any
+    mockGet.mockRejectedValue(new Error('boom'))
+
+    const store = useAppStore()
+    const result = await store.fetchLocation()
+
+    expect(result.success).toBe(false)
+    expect(store.geoipLocation).toBeNull()
+  })
+
+  it('does not block callers (returns a pending promise)', async () => {
+    const mockGet = apiModule.api.get as any
+    let resolveGet!: (v: unknown) => void
+    mockGet.mockReturnValue(
+      new Promise((resolve) => {
+        resolveGet = resolve
+      })
+    )
+
+    const store = useAppStore()
+    store.fetchLocation()
+
+    expect(mockGet).toHaveBeenCalledWith('/app/location')
+
+    resolveGet({
+      status: 200,
+      data: { success: true, location: { country: 'FR', cityName: '' } },
+    })
+    await new Promise((r) => setTimeout(r, 0))
+    expect(store.geoipLocation).toEqual({ country: 'FR', cityName: '' })
   })
 })

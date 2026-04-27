@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { type EditProfileForm } from '@zod/profile/profile.form'
@@ -23,6 +24,7 @@ import { logCheckpoint } from '@/lib/diagnostics'
 
 import { useWizardSteps } from '@/features/onboarding/composables/useWizardSteps'
 import { useTagsStore } from '@/store/tagStore'
+import { useAppStore } from '@/features/app/stores/appStore'
 
 const { t } = useI18n()
 
@@ -69,6 +71,7 @@ const handleSubmit = () => {
 }
 
 const tagStore = useTagsStore()
+const appStore = useAppStore()
 
 const handleLocationSelected = async (location: { country: string }) => {
   await tagStore.fetchPopularTags({
@@ -76,6 +79,13 @@ const handleLocationSelected = async (location: { country: string }) => {
     limit: 50,
   })
 }
+
+const defaultLocation = computed(() => appStore.geoipLocation)
+
+onMounted(async () => {
+  // obtain default geoip location
+  await appStore.fetchLocation()
+})
 
 const siteName = __APP_CONFIG__.SITE_NAME
 </script>
@@ -134,10 +144,10 @@ const siteName = __APP_CONFIG__.SITE_NAME
           </legend>
           <LocationSelectorComponent
             v-model="formData.location"
+            :location-bias="defaultLocation"
             open-direction="bottom"
             :allow-empty="false"
             :close-on-select="true"
-            :geoIp="true"
             @selected="handleLocationSelected"
           />
           <p class="form-text text-muted mt-2">

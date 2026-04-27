@@ -1,3 +1,5 @@
+import type { GeoPoint } from '@zod/dto/location.dto'
+
 export interface GeocodingResult {
   name: string
   country: string // ISO 3166-1 alpha-2, uppercase (e.g. "DE")
@@ -8,5 +10,6 @@ export interface GeocodingResult {
 export type GeocodingProvider = (
   query: string,
   lang: string,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  bias?: GeoPoint | null
 ) => Promise<GeocodingResult[]>

@@ -108,7 +108,7 @@ watch(searchQuery, (query) => {
   // Fire both searches in parallel — each store owns its own abort controller,
   // so rapid re-typing cancels prior in-flight requests on both sides.
   searchStore.search(query)
-  geocodingStore.searchNearby(props.viewerProfile?.location?.country ?? '', query, locale.value, 5)
+  geocodingStore.search(query, locale.value, props.viewerProfile?.location)
 })
 
 watch(haveResults, () => {

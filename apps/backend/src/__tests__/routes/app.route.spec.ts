@@ -1,75 +1,44 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 
-// Mock the MaxMind client
-const mockMaxMindClient = {
-  country: vi.fn(),
-}
-
-vi.mock('@maxmind/geoip2-node', () => {
-  // In Vitest v4, vi.fn() as constructor ignores return value from
-  // the implementation function.  Use a class-based mock instead.
-  class MockWebServiceClient {
-    country = mockMaxMindClient.country
-  }
-  return { WebServiceClient: MockWebServiceClient }
-})
-
 import appRoutes from '../../api/routes/app.route'
+import { appConfig } from '../../lib/appconfig'
 import { MockFastify, MockReply } from '../../test-utils/fastify'
 
 let fastify: MockFastify
 let reply: MockReply
+let originalGeoipUrl: string
 
-// We'll mock appConfig per test case since it's imported by the route
-const mockAppConfig = vi.hoisted(() => ({
-  NODE_ENV: 'development',
-  MAXMIND_ACCOUNT_ID: 'test-account',
-  MAXMIND_LICENSE_KEY: 'test-key',
-}))
-
-vi.mock('@/lib/appconfig', () => ({
-  appConfig: mockAppConfig,
-}))
+const mockFetch = vi.fn()
 
 beforeEach(async () => {
   fastify = new MockFastify()
   reply = new MockReply()
   fastify.authenticate = vi.fn()
+  vi.stubGlobal('fetch', mockFetch)
+  originalGeoipUrl = appConfig.GEOIP_API_URL
+  appConfig.GEOIP_API_URL = 'http://geoip-api:8080'
   await appRoutes(fastify as any, {})
 })
 
 afterEach(() => {
+  vi.unstubAllGlobals()
   vi.clearAllMocks()
+  appConfig.GEOIP_API_URL = originalGeoipUrl
 })
 
+function jsonResponse(body: unknown, init: { ok?: boolean; status?: number } = {}) {
+  return {
+    ok: init.ok ?? true,
+    status: init.status ?? 200,
+    json: async () => body,
+  }
+}
+
 describe('GET /location', () => {
-  it('returns mock location when NODE_ENV is development', async () => {
-    mockAppConfig.NODE_ENV = 'development'
-    const handler = fastify.routes['GET /location']
-
-    await handler(
-      {
-        headers: { 'x-forwarded-for': '192.168.1.1' },
-        ip: '127.0.0.1',
-      } as any,
-      reply as any
-    )
-
-    expect(reply.statusCode).toBe(200)
-    expect(reply.payload.success).toBe(true)
-    expect(reply.payload.location.country).toBe('MX')
-    expect(reply.payload.location.cityName).toBe('')
-    expect(mockMaxMindClient.country).not.toHaveBeenCalled()
-  })
-
-  it('calls MaxMind service when NODE_ENV is production', async () => {
-    mockAppConfig.NODE_ENV = 'production'
-    mockMaxMindClient.country.mockResolvedValue({
-      country: { isoCode: 'US' },
-    })
+  it('queries geoip-api with the client IP and returns the country', async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({ country: 'US' }))
 
     const handler = fastify.routes['GET /location']
-
     await handler(
       {
         headers: { 'x-forwarded-for': '8.8.8.8' },
@@ -81,37 +50,70 @@ describe('GET /location', () => {
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.location.country).toBe('US')
-    expect(mockMaxMindClient.country).toHaveBeenCalledWith('8.8.8.8')
+    expect(mockFetch).toHaveBeenCalledWith('http://geoip-api:8080/8.8.8.8')
   })
 
-  it('calls MaxMind service when NODE_ENV is test', async () => {
-    mockAppConfig.NODE_ENV = 'test'
-    mockMaxMindClient.country.mockResolvedValue({
-      country: { isoCode: 'CA' },
-    })
+  it('returns a location with undefined country when geoip-api omits it (e.g. private IP)', async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({}))
 
     const handler = fastify.routes['GET /location']
-
     await handler(
       {
-        headers: { 'x-forwarded-for': '1.2.3.4' },
-        ip: '1.2.3.4',
+        headers: {},
+        ip: '127.0.0.1',
       } as any,
       reply as any
     )
 
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
-    expect(reply.payload.location.country).toBe('CA')
-    expect(mockMaxMindClient.country).toHaveBeenCalledWith('1.2.3.4')
+    expect(reply.payload.location.country).toBeUndefined()
   })
 
-  it('handles MaxMind service errors gracefully', async () => {
-    mockAppConfig.NODE_ENV = 'production'
-    mockMaxMindClient.country.mockRejectedValue(new Error('MaxMind error'))
+  it('returns 500 when geoip-api responds with a non-JSON body', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => {
+        throw new SyntaxError('Unexpected end of JSON input')
+      },
+    })
 
     const handler = fastify.routes['GET /location']
+    await handler(
+      {
+        headers: {},
+        ip: '127.0.0.1',
+      } as any,
+      reply as any
+    )
 
+    expect(reply.statusCode).toBe(500)
+    expect(reply.payload.success).toBe(false)
+    expect(reply.payload.message).toBe('Location lookup failed')
+  })
+
+  it('returns 502 when upstream returns non-2xx', async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({}, { ok: false, status: 502 }))
+
+    const handler = fastify.routes['GET /location']
+    await handler(
+      {
+        headers: { 'x-forwarded-for': '8.8.8.8' },
+        ip: '8.8.8.8',
+      } as any,
+      reply as any
+    )
+
+    expect(reply.statusCode).toBe(502)
+    expect(reply.payload.success).toBe(false)
+    expect(reply.payload.message).toBe('Geolocation upstream error')
+  })
+
+  it('handles network errors gracefully', async () => {
+    mockFetch.mockRejectedValueOnce(new Error('ECONNREFUSED'))
+
+    const handler = fastify.routes['GET /location']
     await handler(
       {
         headers: { 'x-forwarded-for': '8.8.8.8' },
@@ -125,14 +127,27 @@ describe('GET /location', () => {
     expect(reply.payload.message).toBe('Location lookup failed')
   })
 
-  it('extracts client IP from x-forwarded-for header', async () => {
-    mockAppConfig.NODE_ENV = 'production'
-    mockMaxMindClient.country.mockResolvedValue({
-      country: { isoCode: 'FR' },
-    })
+  it('returns 502 when upstream response fails zod validation', async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({ country: 'NOT_AN_ISO_CODE' }))
 
     const handler = fastify.routes['GET /location']
+    await handler(
+      {
+        headers: { 'x-forwarded-for': '8.8.8.8' },
+        ip: '8.8.8.8',
+      } as any,
+      reply as any
+    )
 
+    expect(reply.statusCode).toBe(502)
+    expect(reply.payload.success).toBe(false)
+    expect(reply.payload.message).toBe('Geolocation upstream returned malformed data')
+  })
+
+  it('extracts client IP from x-forwarded-for header', async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({ country: 'FR' }))
+
+    const handler = fastify.routes['GET /location']
     await handler(
       {
         headers: { 'x-forwarded-for': '203.0.113.1, 198.51.100.1' },
@@ -141,17 +156,13 @@ describe('GET /location', () => {
       reply as any
     )
 
-    expect(mockMaxMindClient.country).toHaveBeenCalledWith('203.0.113.1')
+    expect(mockFetch).toHaveBeenCalledWith('http://geoip-api:8080/203.0.113.1')
   })
 
   it('strips IPv6 prefix from IPv4-mapped addresses', async () => {
-    mockAppConfig.NODE_ENV = 'production'
-    mockMaxMindClient.country.mockResolvedValue({
-      country: { isoCode: 'DE' },
-    })
+    mockFetch.mockResolvedValueOnce(jsonResponse({ country: 'DE' }))
 
     const handler = fastify.routes['GET /location']
-
     await handler(
       {
         headers: { 'x-forwarded-for': '::ffff:203.0.113.1' },
@@ -160,7 +171,7 @@ describe('GET /location', () => {
       reply as any
     )
 
-    expect(mockMaxMindClient.country).toHaveBeenCalledWith('203.0.113.1')
+    expect(mockFetch).toHaveBeenCalledWith('http://geoip-api:8080/203.0.113.1')
   })
 })
 

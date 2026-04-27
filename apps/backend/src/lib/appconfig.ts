@@ -37,9 +37,6 @@ export const configSchema = z.object({
 
   SENTRY_DSN: z.string().optional(),
 
-  MAXMIND_ACCOUNT_ID: z.string(),
-  MAXMIND_LICENSE_KEY: z.string(),
-
   VOICE_MESSAGE_MAX_DURATION: z.coerce.number().default(120), // Max duration in seconds
 
   WELCOME_MESSAGE_SENDER_PROFILE_ID: z.string().optional(),
@@ -51,6 +48,8 @@ export const configSchema = z.object({
   JITSI_DOMAIN: z.string().default('meet.jit.si'),
 
   DEEPL_API_KEY: z.string().optional(),
+
+  GEOIP_API_URL: z.string().url().default('http://geoip-api:8080'),
 
   DEV_AUTH_BYPASS_ENABLED: z
     .enum(['true', 'false'])
