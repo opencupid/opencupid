@@ -20,11 +20,11 @@ export const ConnectionRequestScalarFieldEnumSchema = z.enum(['id','fromUserId',
 
 export const UserScalarFieldEnumSchema = z.enum(['id','email','phonenumber','tokenVersion','loginToken','loginTokenExp','isActive','isBlocked','isRegistrationConfirmed','createdAt','updatedAt','lastLoginAt','language','originDomain','newsletterOptIn','roles','isPushNotificationEnabled']);
 
-export const ProfileScalarFieldEnumSchema = z.enum(['id','publicName','country','cityName','isSocialActive','isDatingActive','isActive','isReported','isBlocked','isOnboarded','isCallable','userId','work','languages','birthday','gender','pronouns','relationship','hasKids','prefAgeMin','prefAgeMax','prefGender','prefKids','lat','lon','createdAt','updatedAt']);
+export const ProfileScalarFieldEnumSchema = z.enum(['id','publicName','country','cityName','isSocialActive','isDatingActive','isActive','isReported','isBlocked','isOnboarded','isCallable','hasFace','userId','work','languages','birthday','gender','pronouns','relationship','hasKids','prefAgeMin','prefAgeMax','prefGender','prefKids','lat','lon','createdAt','updatedAt']);
 
 export const LocalizedProfileFieldScalarFieldEnumSchema = z.enum(['id','profileId','field','locale','value']);
 
-export const ProfileImageScalarFieldEnumSchema = z.enum(['id','userId','profileId','position','altText','storagePath','url','width','height','mimeType','createdAt','updatedAt','contentHash','blurhash','isModerated','isFlagged']);
+export const ProfileImageScalarFieldEnumSchema = z.enum(['id','userId','profileId','position','altText','storagePath','url','width','height','mimeType','createdAt','updatedAt','contentHash','blurhash','isModerated','isFlagged','hasFace']);
 
 export const ConversationScalarFieldEnumSchema = z.enum(['id','createdAt','updatedAt','profileAId','profileBId','status','initiatorProfileId','jitsiRoomId']);
 
@@ -201,6 +201,7 @@ export const ProfileSchema = z.object({
   isBlocked: z.boolean(),
   isOnboarded: z.boolean(),
   isCallable: z.boolean(),
+  hasFace: z.boolean(),
   userId: z.string(),
   work: z.string(),
   languages: z.string().array(),
@@ -250,6 +251,7 @@ export const ProfileImageSchema = z.object({
   blurhash: z.string().nullable(),
   isModerated: z.boolean(),
   isFlagged: z.boolean(),
+  hasFace: z.boolean(),
 })
 
 export type ProfileImage = z.infer<typeof ProfileImageSchema>
@@ -640,6 +642,7 @@ export const ProfileSelectSchema: z.ZodType<Prisma.ProfileSelect> = z.object({
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   userId: z.boolean().optional(),
   work: z.boolean().optional(),
   languages: z.boolean().optional(),
@@ -729,6 +732,7 @@ export const ProfileImageSelectSchema: z.ZodType<Prisma.ProfileImageSelect> = z.
   blurhash: z.boolean().optional(),
   isModerated: z.boolean().optional(),
   isFlagged: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   user: z.union([z.boolean(),z.lazy(() => UserArgsSchema)]).optional(),
   profile: z.union([z.boolean(),z.lazy(() => ProfileArgsSchema)]).optional(),
 }).strict()
@@ -1486,6 +1490,7 @@ export const ProfileWhereInputSchema: z.ZodType<Prisma.ProfileWhereInput> = z.ob
   isBlocked: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
   isOnboarded: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
   isCallable: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
+  hasFace: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
   userId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   work: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   languages: z.lazy(() => StringNullableListFilterSchema).optional(),
@@ -1535,6 +1540,7 @@ export const ProfileOrderByWithRelationInputSchema: z.ZodType<Prisma.ProfileOrde
   isBlocked: z.lazy(() => SortOrderSchema).optional(),
   isOnboarded: z.lazy(() => SortOrderSchema).optional(),
   isCallable: z.lazy(() => SortOrderSchema).optional(),
+  hasFace: z.lazy(() => SortOrderSchema).optional(),
   userId: z.lazy(() => SortOrderSchema).optional(),
   work: z.lazy(() => SortOrderSchema).optional(),
   languages: z.lazy(() => SortOrderSchema).optional(),
@@ -1600,6 +1606,7 @@ export const ProfileWhereUniqueInputSchema: z.ZodType<Prisma.ProfileWhereUniqueI
   isBlocked: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
   isOnboarded: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
   isCallable: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
+  hasFace: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
   work: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   languages: z.lazy(() => StringNullableListFilterSchema).optional(),
   birthday: z.union([ z.lazy(() => DateTimeNullableFilterSchema),z.coerce.date() ]).optional().nullable(),
@@ -1648,6 +1655,7 @@ export const ProfileOrderByWithAggregationInputSchema: z.ZodType<Prisma.ProfileO
   isBlocked: z.lazy(() => SortOrderSchema).optional(),
   isOnboarded: z.lazy(() => SortOrderSchema).optional(),
   isCallable: z.lazy(() => SortOrderSchema).optional(),
+  hasFace: z.lazy(() => SortOrderSchema).optional(),
   userId: z.lazy(() => SortOrderSchema).optional(),
   work: z.lazy(() => SortOrderSchema).optional(),
   languages: z.lazy(() => SortOrderSchema).optional(),
@@ -1686,6 +1694,7 @@ export const ProfileScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.Profi
   isBlocked: z.union([ z.lazy(() => BoolWithAggregatesFilterSchema),z.boolean() ]).optional(),
   isOnboarded: z.union([ z.lazy(() => BoolWithAggregatesFilterSchema),z.boolean() ]).optional(),
   isCallable: z.union([ z.lazy(() => BoolWithAggregatesFilterSchema),z.boolean() ]).optional(),
+  hasFace: z.union([ z.lazy(() => BoolWithAggregatesFilterSchema),z.boolean() ]).optional(),
   userId: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   work: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   languages: z.lazy(() => StringNullableListFilterSchema).optional(),
@@ -1792,6 +1801,7 @@ export const ProfileImageWhereInputSchema: z.ZodType<Prisma.ProfileImageWhereInp
   blurhash: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   isModerated: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
   isFlagged: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
+  hasFace: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
   user: z.union([ z.lazy(() => UserScalarRelationFilterSchema),z.lazy(() => UserWhereInputSchema) ]).optional(),
   profile: z.union([ z.lazy(() => ProfileNullableScalarRelationFilterSchema),z.lazy(() => ProfileWhereInputSchema) ]).optional().nullable(),
 }).strict();
@@ -1813,6 +1823,7 @@ export const ProfileImageOrderByWithRelationInputSchema: z.ZodType<Prisma.Profil
   blurhash: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   isModerated: z.lazy(() => SortOrderSchema).optional(),
   isFlagged: z.lazy(() => SortOrderSchema).optional(),
+  hasFace: z.lazy(() => SortOrderSchema).optional(),
   user: z.lazy(() => UserOrderByWithRelationInputSchema).optional(),
   profile: z.lazy(() => ProfileOrderByWithRelationInputSchema).optional()
 }).strict();
@@ -1849,6 +1860,7 @@ export const ProfileImageWhereUniqueInputSchema: z.ZodType<Prisma.ProfileImageWh
   blurhash: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   isModerated: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
   isFlagged: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
+  hasFace: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
   user: z.union([ z.lazy(() => UserScalarRelationFilterSchema),z.lazy(() => UserWhereInputSchema) ]).optional(),
   profile: z.union([ z.lazy(() => ProfileNullableScalarRelationFilterSchema),z.lazy(() => ProfileWhereInputSchema) ]).optional().nullable(),
 }).strict());
@@ -1870,6 +1882,7 @@ export const ProfileImageOrderByWithAggregationInputSchema: z.ZodType<Prisma.Pro
   blurhash: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   isModerated: z.lazy(() => SortOrderSchema).optional(),
   isFlagged: z.lazy(() => SortOrderSchema).optional(),
+  hasFace: z.lazy(() => SortOrderSchema).optional(),
   _count: z.lazy(() => ProfileImageCountOrderByAggregateInputSchema).optional(),
   _avg: z.lazy(() => ProfileImageAvgOrderByAggregateInputSchema).optional(),
   _max: z.lazy(() => ProfileImageMaxOrderByAggregateInputSchema).optional(),
@@ -1897,6 +1910,7 @@ export const ProfileImageScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.
   blurhash: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema),z.string() ]).optional().nullable(),
   isModerated: z.union([ z.lazy(() => BoolWithAggregatesFilterSchema),z.boolean() ]).optional(),
   isFlagged: z.union([ z.lazy(() => BoolWithAggregatesFilterSchema),z.boolean() ]).optional(),
+  hasFace: z.union([ z.lazy(() => BoolWithAggregatesFilterSchema),z.boolean() ]).optional(),
 }).strict();
 
 export const ConversationWhereInputSchema: z.ZodType<Prisma.ConversationWhereInput> = z.object({
@@ -3117,6 +3131,7 @@ export const ProfileCreateInputSchema: z.ZodType<Prisma.ProfileCreateInput> = z.
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.coerce.date().optional().nullable(),
@@ -3165,6 +3180,7 @@ export const ProfileUncheckedCreateInputSchema: z.ZodType<Prisma.ProfileUnchecke
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   userId: z.string(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -3213,6 +3229,7 @@ export const ProfileUpdateInputSchema: z.ZodType<Prisma.ProfileUpdateInput> = z.
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -3261,6 +3278,7 @@ export const ProfileUncheckedUpdateInputSchema: z.ZodType<Prisma.ProfileUnchecke
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -3309,6 +3327,7 @@ export const ProfileCreateManyInputSchema: z.ZodType<Prisma.ProfileCreateManyInp
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   userId: z.string(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -3339,6 +3358,7 @@ export const ProfileUpdateManyMutationInputSchema: z.ZodType<Prisma.ProfileUpdat
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -3368,6 +3388,7 @@ export const ProfileUncheckedUpdateManyInputSchema: z.ZodType<Prisma.ProfileUnch
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -3456,6 +3477,7 @@ export const ProfileImageCreateInputSchema: z.ZodType<Prisma.ProfileImageCreateI
   blurhash: z.string().optional().nullable(),
   isModerated: z.boolean().optional(),
   isFlagged: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   user: z.lazy(() => UserCreateNestedOneWithoutProfileImageInputSchema),
   profile: z.lazy(() => ProfileCreateNestedOneWithoutProfileImagesInputSchema).optional()
 }).strict();
@@ -3476,7 +3498,8 @@ export const ProfileImageUncheckedCreateInputSchema: z.ZodType<Prisma.ProfileIma
   contentHash: z.string().optional().nullable(),
   blurhash: z.string().optional().nullable(),
   isModerated: z.boolean().optional(),
-  isFlagged: z.boolean().optional()
+  isFlagged: z.boolean().optional(),
+  hasFace: z.boolean().optional()
 }).strict();
 
 export const ProfileImageUpdateInputSchema: z.ZodType<Prisma.ProfileImageUpdateInput> = z.object({
@@ -3494,6 +3517,7 @@ export const ProfileImageUpdateInputSchema: z.ZodType<Prisma.ProfileImageUpdateI
   blurhash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   isModerated: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isFlagged: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   user: z.lazy(() => UserUpdateOneRequiredWithoutProfileImageNestedInputSchema).optional(),
   profile: z.lazy(() => ProfileUpdateOneWithoutProfileImagesNestedInputSchema).optional()
 }).strict();
@@ -3515,6 +3539,7 @@ export const ProfileImageUncheckedUpdateInputSchema: z.ZodType<Prisma.ProfileIma
   blurhash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   isModerated: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isFlagged: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const ProfileImageCreateManyInputSchema: z.ZodType<Prisma.ProfileImageCreateManyInput> = z.object({
@@ -3533,7 +3558,8 @@ export const ProfileImageCreateManyInputSchema: z.ZodType<Prisma.ProfileImageCre
   contentHash: z.string().optional().nullable(),
   blurhash: z.string().optional().nullable(),
   isModerated: z.boolean().optional(),
-  isFlagged: z.boolean().optional()
+  isFlagged: z.boolean().optional(),
+  hasFace: z.boolean().optional()
 }).strict();
 
 export const ProfileImageUpdateManyMutationInputSchema: z.ZodType<Prisma.ProfileImageUpdateManyMutationInput> = z.object({
@@ -3551,6 +3577,7 @@ export const ProfileImageUpdateManyMutationInputSchema: z.ZodType<Prisma.Profile
   blurhash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   isModerated: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isFlagged: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const ProfileImageUncheckedUpdateManyInputSchema: z.ZodType<Prisma.ProfileImageUncheckedUpdateManyInput> = z.object({
@@ -3570,6 +3597,7 @@ export const ProfileImageUncheckedUpdateManyInputSchema: z.ZodType<Prisma.Profil
   blurhash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   isModerated: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isFlagged: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const ConversationCreateInputSchema: z.ZodType<Prisma.ConversationCreateInput> = z.object({
@@ -4978,6 +5006,7 @@ export const ProfileCountOrderByAggregateInputSchema: z.ZodType<Prisma.ProfileCo
   isBlocked: z.lazy(() => SortOrderSchema).optional(),
   isOnboarded: z.lazy(() => SortOrderSchema).optional(),
   isCallable: z.lazy(() => SortOrderSchema).optional(),
+  hasFace: z.lazy(() => SortOrderSchema).optional(),
   userId: z.lazy(() => SortOrderSchema).optional(),
   work: z.lazy(() => SortOrderSchema).optional(),
   languages: z.lazy(() => SortOrderSchema).optional(),
@@ -5015,6 +5044,7 @@ export const ProfileMaxOrderByAggregateInputSchema: z.ZodType<Prisma.ProfileMaxO
   isBlocked: z.lazy(() => SortOrderSchema).optional(),
   isOnboarded: z.lazy(() => SortOrderSchema).optional(),
   isCallable: z.lazy(() => SortOrderSchema).optional(),
+  hasFace: z.lazy(() => SortOrderSchema).optional(),
   userId: z.lazy(() => SortOrderSchema).optional(),
   work: z.lazy(() => SortOrderSchema).optional(),
   birthday: z.lazy(() => SortOrderSchema).optional(),
@@ -5042,6 +5072,7 @@ export const ProfileMinOrderByAggregateInputSchema: z.ZodType<Prisma.ProfileMinO
   isBlocked: z.lazy(() => SortOrderSchema).optional(),
   isOnboarded: z.lazy(() => SortOrderSchema).optional(),
   isCallable: z.lazy(() => SortOrderSchema).optional(),
+  hasFace: z.lazy(() => SortOrderSchema).optional(),
   userId: z.lazy(() => SortOrderSchema).optional(),
   work: z.lazy(() => SortOrderSchema).optional(),
   birthday: z.lazy(() => SortOrderSchema).optional(),
@@ -5187,7 +5218,8 @@ export const ProfileImageCountOrderByAggregateInputSchema: z.ZodType<Prisma.Prof
   contentHash: z.lazy(() => SortOrderSchema).optional(),
   blurhash: z.lazy(() => SortOrderSchema).optional(),
   isModerated: z.lazy(() => SortOrderSchema).optional(),
-  isFlagged: z.lazy(() => SortOrderSchema).optional()
+  isFlagged: z.lazy(() => SortOrderSchema).optional(),
+  hasFace: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const ProfileImageAvgOrderByAggregateInputSchema: z.ZodType<Prisma.ProfileImageAvgOrderByAggregateInput> = z.object({
@@ -5212,7 +5244,8 @@ export const ProfileImageMaxOrderByAggregateInputSchema: z.ZodType<Prisma.Profil
   contentHash: z.lazy(() => SortOrderSchema).optional(),
   blurhash: z.lazy(() => SortOrderSchema).optional(),
   isModerated: z.lazy(() => SortOrderSchema).optional(),
-  isFlagged: z.lazy(() => SortOrderSchema).optional()
+  isFlagged: z.lazy(() => SortOrderSchema).optional(),
+  hasFace: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const ProfileImageMinOrderByAggregateInputSchema: z.ZodType<Prisma.ProfileImageMinOrderByAggregateInput> = z.object({
@@ -5231,7 +5264,8 @@ export const ProfileImageMinOrderByAggregateInputSchema: z.ZodType<Prisma.Profil
   contentHash: z.lazy(() => SortOrderSchema).optional(),
   blurhash: z.lazy(() => SortOrderSchema).optional(),
   isModerated: z.lazy(() => SortOrderSchema).optional(),
-  isFlagged: z.lazy(() => SortOrderSchema).optional()
+  isFlagged: z.lazy(() => SortOrderSchema).optional(),
+  hasFace: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const ProfileImageSumOrderByAggregateInputSchema: z.ZodType<Prisma.ProfileImageSumOrderByAggregateInput> = z.object({
@@ -7711,6 +7745,7 @@ export const ProfileCreateWithoutTagsInputSchema: z.ZodType<Prisma.ProfileCreate
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.coerce.date().optional().nullable(),
@@ -7758,6 +7793,7 @@ export const ProfileUncheckedCreateWithoutTagsInputSchema: z.ZodType<Prisma.Prof
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   userId: z.string(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -7855,6 +7891,7 @@ export const ProfileScalarWhereInputSchema: z.ZodType<Prisma.ProfileScalarWhereI
   isBlocked: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
   isOnboarded: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
   isCallable: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
+  hasFace: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
   userId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   work: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   languages: z.lazy(() => StringNullableListFilterSchema).optional(),
@@ -8185,6 +8222,7 @@ export const ProfileCreateWithoutUserInputSchema: z.ZodType<Prisma.ProfileCreate
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.coerce.date().optional().nullable(),
@@ -8232,6 +8270,7 @@ export const ProfileUncheckedCreateWithoutUserInputSchema: z.ZodType<Prisma.Prof
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.coerce.date().optional().nullable(),
@@ -8287,6 +8326,7 @@ export const ProfileImageCreateWithoutUserInputSchema: z.ZodType<Prisma.ProfileI
   blurhash: z.string().optional().nullable(),
   isModerated: z.boolean().optional(),
   isFlagged: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   profile: z.lazy(() => ProfileCreateNestedOneWithoutProfileImagesInputSchema).optional()
 }).strict();
 
@@ -8305,7 +8345,8 @@ export const ProfileImageUncheckedCreateWithoutUserInputSchema: z.ZodType<Prisma
   contentHash: z.string().optional().nullable(),
   blurhash: z.string().optional().nullable(),
   isModerated: z.boolean().optional(),
-  isFlagged: z.boolean().optional()
+  isFlagged: z.boolean().optional(),
+  hasFace: z.boolean().optional()
 }).strict();
 
 export const ProfileImageCreateOrConnectWithoutUserInputSchema: z.ZodType<Prisma.ProfileImageCreateOrConnectWithoutUserInput> = z.object({
@@ -8425,6 +8466,7 @@ export const ProfileUpdateWithoutUserInputSchema: z.ZodType<Prisma.ProfileUpdate
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -8472,6 +8514,7 @@ export const ProfileUncheckedUpdateWithoutUserInputSchema: z.ZodType<Prisma.Prof
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -8543,6 +8586,7 @@ export const ProfileImageScalarWhereInputSchema: z.ZodType<Prisma.ProfileImageSc
   blurhash: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   isModerated: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
   isFlagged: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
+  hasFace: z.union([ z.lazy(() => BoolFilterSchema),z.boolean() ]).optional(),
 }).strict();
 
 export const ConnectionRequestUpsertWithWhereUniqueWithoutFromUserInputSchema: z.ZodType<Prisma.ConnectionRequestUpsertWithWhereUniqueWithoutFromUserInput> = z.object({
@@ -8723,6 +8767,7 @@ export const ProfileImageCreateWithoutProfileInputSchema: z.ZodType<Prisma.Profi
   blurhash: z.string().optional().nullable(),
   isModerated: z.boolean().optional(),
   isFlagged: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   user: z.lazy(() => UserCreateNestedOneWithoutProfileImageInputSchema)
 }).strict();
 
@@ -8741,7 +8786,8 @@ export const ProfileImageUncheckedCreateWithoutProfileInputSchema: z.ZodType<Pri
   contentHash: z.string().optional().nullable(),
   blurhash: z.string().optional().nullable(),
   isModerated: z.boolean().optional(),
-  isFlagged: z.boolean().optional()
+  isFlagged: z.boolean().optional(),
+  hasFace: z.boolean().optional()
 }).strict();
 
 export const ProfileImageCreateOrConnectWithoutProfileInputSchema: z.ZodType<Prisma.ProfileImageCreateOrConnectWithoutProfileInput> = z.object({
@@ -8948,6 +8994,7 @@ export const ProfileCreateWithoutBlockedByProfilesInputSchema: z.ZodType<Prisma.
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.coerce.date().optional().nullable(),
@@ -8995,6 +9042,7 @@ export const ProfileUncheckedCreateWithoutBlockedByProfilesInputSchema: z.ZodTyp
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   userId: z.string(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -9047,6 +9095,7 @@ export const ProfileCreateWithoutBlockedProfilesInputSchema: z.ZodType<Prisma.Pr
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.coerce.date().optional().nullable(),
@@ -9094,6 +9143,7 @@ export const ProfileUncheckedCreateWithoutBlockedProfilesInputSchema: z.ZodType<
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   userId: z.string(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -9847,6 +9897,7 @@ export const ProfileCreateWithoutLocalizedInputSchema: z.ZodType<Prisma.ProfileC
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.coerce.date().optional().nullable(),
@@ -9894,6 +9945,7 @@ export const ProfileUncheckedCreateWithoutLocalizedInputSchema: z.ZodType<Prisma
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   userId: z.string(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -9957,6 +10009,7 @@ export const ProfileUpdateWithoutLocalizedInputSchema: z.ZodType<Prisma.ProfileU
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -10004,6 +10057,7 @@ export const ProfileUncheckedUpdateWithoutLocalizedInputSchema: z.ZodType<Prisma
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -10104,6 +10158,7 @@ export const ProfileCreateWithoutProfileImagesInputSchema: z.ZodType<Prisma.Prof
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.coerce.date().optional().nullable(),
@@ -10151,6 +10206,7 @@ export const ProfileUncheckedCreateWithoutProfileImagesInputSchema: z.ZodType<Pr
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   userId: z.string(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -10273,6 +10329,7 @@ export const ProfileUpdateWithoutProfileImagesInputSchema: z.ZodType<Prisma.Prof
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -10320,6 +10377,7 @@ export const ProfileUncheckedUpdateWithoutProfileImagesInputSchema: z.ZodType<Pr
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -10367,6 +10425,7 @@ export const ProfileCreateWithoutConversationAsAInputSchema: z.ZodType<Prisma.Pr
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.coerce.date().optional().nullable(),
@@ -10414,6 +10473,7 @@ export const ProfileUncheckedCreateWithoutConversationAsAInputSchema: z.ZodType<
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   userId: z.string(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -10466,6 +10526,7 @@ export const ProfileCreateWithoutConversationAsBInputSchema: z.ZodType<Prisma.Pr
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.coerce.date().optional().nullable(),
@@ -10513,6 +10574,7 @@ export const ProfileUncheckedCreateWithoutConversationAsBInputSchema: z.ZodType<
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   userId: z.string(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -10621,6 +10683,7 @@ export const ProfileCreateWithoutConversationInputSchema: z.ZodType<Prisma.Profi
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.coerce.date().optional().nullable(),
@@ -10668,6 +10731,7 @@ export const ProfileUncheckedCreateWithoutConversationInputSchema: z.ZodType<Pri
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   userId: z.string(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -10731,6 +10795,7 @@ export const ProfileUpdateWithoutConversationAsAInputSchema: z.ZodType<Prisma.Pr
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -10778,6 +10843,7 @@ export const ProfileUncheckedUpdateWithoutConversationAsAInputSchema: z.ZodType<
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -10836,6 +10902,7 @@ export const ProfileUpdateWithoutConversationAsBInputSchema: z.ZodType<Prisma.Pr
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -10883,6 +10950,7 @@ export const ProfileUncheckedUpdateWithoutConversationAsBInputSchema: z.ZodType<
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -10973,6 +11041,7 @@ export const ProfileUpdateWithoutConversationInputSchema: z.ZodType<Prisma.Profi
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -11020,6 +11089,7 @@ export const ProfileUncheckedUpdateWithoutConversationInputSchema: z.ZodType<Pri
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -11067,6 +11137,7 @@ export const ProfileCreateWithoutConversationParticipantsInputSchema: z.ZodType<
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.coerce.date().optional().nullable(),
@@ -11114,6 +11185,7 @@ export const ProfileUncheckedCreateWithoutConversationParticipantsInputSchema: z
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   userId: z.string(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -11206,6 +11278,7 @@ export const ProfileUpdateWithoutConversationParticipantsInputSchema: z.ZodType<
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -11253,6 +11326,7 @@ export const ProfileUncheckedUpdateWithoutConversationParticipantsInputSchema: z
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -11335,6 +11409,7 @@ export const ProfileCreateWithoutLikesSentInputSchema: z.ZodType<Prisma.ProfileC
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.coerce.date().optional().nullable(),
@@ -11382,6 +11457,7 @@ export const ProfileUncheckedCreateWithoutLikesSentInputSchema: z.ZodType<Prisma
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   userId: z.string(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -11434,6 +11510,7 @@ export const ProfileCreateWithoutLikesReceivedInputSchema: z.ZodType<Prisma.Prof
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.coerce.date().optional().nullable(),
@@ -11481,6 +11558,7 @@ export const ProfileUncheckedCreateWithoutLikesReceivedInputSchema: z.ZodType<Pr
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   userId: z.string(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -11544,6 +11622,7 @@ export const ProfileUpdateWithoutLikesSentInputSchema: z.ZodType<Prisma.ProfileU
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -11591,6 +11670,7 @@ export const ProfileUncheckedUpdateWithoutLikesSentInputSchema: z.ZodType<Prisma
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -11649,6 +11729,7 @@ export const ProfileUpdateWithoutLikesReceivedInputSchema: z.ZodType<Prisma.Prof
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -11696,6 +11777,7 @@ export const ProfileUncheckedUpdateWithoutLikesReceivedInputSchema: z.ZodType<Pr
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -11743,6 +11825,7 @@ export const ProfileCreateWithoutHiddenProfilesInputSchema: z.ZodType<Prisma.Pro
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.coerce.date().optional().nullable(),
@@ -11790,6 +11873,7 @@ export const ProfileUncheckedCreateWithoutHiddenProfilesInputSchema: z.ZodType<P
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   userId: z.string(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -11842,6 +11926,7 @@ export const ProfileCreateWithoutHiddenByInputSchema: z.ZodType<Prisma.ProfileCr
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.coerce.date().optional().nullable(),
@@ -11889,6 +11974,7 @@ export const ProfileUncheckedCreateWithoutHiddenByInputSchema: z.ZodType<Prisma.
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   userId: z.string(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -11952,6 +12038,7 @@ export const ProfileUpdateWithoutHiddenProfilesInputSchema: z.ZodType<Prisma.Pro
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -11999,6 +12086,7 @@ export const ProfileUncheckedUpdateWithoutHiddenProfilesInputSchema: z.ZodType<P
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -12057,6 +12145,7 @@ export const ProfileUpdateWithoutHiddenByInputSchema: z.ZodType<Prisma.ProfileUp
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -12104,6 +12193,7 @@ export const ProfileUncheckedUpdateWithoutHiddenByInputSchema: z.ZodType<Prisma.
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -12180,6 +12270,7 @@ export const ProfileCreateWithoutMessageInputSchema: z.ZodType<Prisma.ProfileCre
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.coerce.date().optional().nullable(),
@@ -12227,6 +12318,7 @@ export const ProfileUncheckedCreateWithoutMessageInputSchema: z.ZodType<Prisma.P
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   userId: z.string(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -12348,6 +12440,7 @@ export const ProfileUpdateWithoutMessageInputSchema: z.ZodType<Prisma.ProfileUpd
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -12395,6 +12488,7 @@ export const ProfileUncheckedUpdateWithoutMessageInputSchema: z.ZodType<Prisma.P
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -12635,6 +12729,7 @@ export const ProfileCreateWithoutPostsInputSchema: z.ZodType<Prisma.ProfileCreat
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.coerce.date().optional().nullable(),
@@ -12682,6 +12777,7 @@ export const ProfileUncheckedCreateWithoutPostsInputSchema: z.ZodType<Prisma.Pro
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   userId: z.string(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -12745,6 +12841,7 @@ export const ProfileUpdateWithoutPostsInputSchema: z.ZodType<Prisma.ProfileUpdat
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -12792,6 +12889,7 @@ export const ProfileUncheckedUpdateWithoutPostsInputSchema: z.ZodType<Prisma.Pro
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -12839,6 +12937,7 @@ export const ProfileCreateWithoutSessionLogsInputSchema: z.ZodType<Prisma.Profil
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.coerce.date().optional().nullable(),
@@ -12886,6 +12985,7 @@ export const ProfileUncheckedCreateWithoutSessionLogsInputSchema: z.ZodType<Pris
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   userId: z.string(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -12949,6 +13049,7 @@ export const ProfileUpdateWithoutSessionLogsInputSchema: z.ZodType<Prisma.Profil
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -12996,6 +13097,7 @@ export const ProfileUncheckedUpdateWithoutSessionLogsInputSchema: z.ZodType<Pris
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -13043,6 +13145,7 @@ export const ProfileCreateWithoutActivitySummaryInputSchema: z.ZodType<Prisma.Pr
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.coerce.date().optional().nullable(),
@@ -13090,6 +13193,7 @@ export const ProfileUncheckedCreateWithoutActivitySummaryInputSchema: z.ZodType<
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   userId: z.string(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -13153,6 +13257,7 @@ export const ProfileUpdateWithoutActivitySummaryInputSchema: z.ZodType<Prisma.Pr
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -13200,6 +13305,7 @@ export const ProfileUncheckedUpdateWithoutActivitySummaryInputSchema: z.ZodType<
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -13247,6 +13353,7 @@ export const ProfileCreateWithoutTrustFlagsInputSchema: z.ZodType<Prisma.Profile
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.coerce.date().optional().nullable(),
@@ -13294,6 +13401,7 @@ export const ProfileUncheckedCreateWithoutTrustFlagsInputSchema: z.ZodType<Prism
   isBlocked: z.boolean().optional(),
   isOnboarded: z.boolean().optional(),
   isCallable: z.boolean().optional(),
+  hasFace: z.boolean().optional(),
   userId: z.string(),
   work: z.string().optional(),
   languages: z.union([ z.lazy(() => ProfileCreatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -13357,6 +13465,7 @@ export const ProfileUpdateWithoutTrustFlagsInputSchema: z.ZodType<Prisma.Profile
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -13404,6 +13513,7 @@ export const ProfileUncheckedUpdateWithoutTrustFlagsInputSchema: z.ZodType<Prism
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -13474,6 +13584,7 @@ export const ProfileUpdateWithoutTagsInputSchema: z.ZodType<Prisma.ProfileUpdate
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -13521,6 +13632,7 @@ export const ProfileUncheckedUpdateWithoutTagsInputSchema: z.ZodType<Prisma.Prof
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -13568,6 +13680,7 @@ export const ProfileUncheckedUpdateManyWithoutTagsInputSchema: z.ZodType<Prisma.
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -13601,7 +13714,8 @@ export const ProfileImageCreateManyUserInputSchema: z.ZodType<Prisma.ProfileImag
   contentHash: z.string().optional().nullable(),
   blurhash: z.string().optional().nullable(),
   isModerated: z.boolean().optional(),
-  isFlagged: z.boolean().optional()
+  isFlagged: z.boolean().optional(),
+  hasFace: z.boolean().optional()
 }).strict();
 
 export const ConnectionRequestCreateManyFromUserInputSchema: z.ZodType<Prisma.ConnectionRequestCreateManyFromUserInput> = z.object({
@@ -13646,6 +13760,7 @@ export const ProfileImageUpdateWithoutUserInputSchema: z.ZodType<Prisma.ProfileI
   blurhash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   isModerated: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isFlagged: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   profile: z.lazy(() => ProfileUpdateOneWithoutProfileImagesNestedInputSchema).optional()
 }).strict();
 
@@ -13665,6 +13780,7 @@ export const ProfileImageUncheckedUpdateWithoutUserInputSchema: z.ZodType<Prisma
   blurhash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   isModerated: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isFlagged: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const ProfileImageUncheckedUpdateManyWithoutUserInputSchema: z.ZodType<Prisma.ProfileImageUncheckedUpdateManyWithoutUserInput> = z.object({
@@ -13683,6 +13799,7 @@ export const ProfileImageUncheckedUpdateManyWithoutUserInputSchema: z.ZodType<Pr
   blurhash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   isModerated: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isFlagged: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const ConnectionRequestUpdateWithoutFromUserInputSchema: z.ZodType<Prisma.ConnectionRequestUpdateWithoutFromUserInput> = z.object({
@@ -13781,7 +13898,8 @@ export const ProfileImageCreateManyProfileInputSchema: z.ZodType<Prisma.ProfileI
   contentHash: z.string().optional().nullable(),
   blurhash: z.string().optional().nullable(),
   isModerated: z.boolean().optional(),
-  isFlagged: z.boolean().optional()
+  isFlagged: z.boolean().optional(),
+  hasFace: z.boolean().optional()
 }).strict();
 
 export const ConversationParticipantCreateManyProfileInputSchema: z.ZodType<Prisma.ConversationParticipantCreateManyProfileInput> = z.object({
@@ -13954,6 +14072,7 @@ export const ProfileImageUpdateWithoutProfileInputSchema: z.ZodType<Prisma.Profi
   blurhash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   isModerated: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isFlagged: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   user: z.lazy(() => UserUpdateOneRequiredWithoutProfileImageNestedInputSchema).optional()
 }).strict();
 
@@ -13973,6 +14092,7 @@ export const ProfileImageUncheckedUpdateWithoutProfileInputSchema: z.ZodType<Pri
   blurhash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   isModerated: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isFlagged: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const ProfileImageUncheckedUpdateManyWithoutProfileInputSchema: z.ZodType<Prisma.ProfileImageUncheckedUpdateManyWithoutProfileInput> = z.object({
@@ -13991,6 +14111,7 @@ export const ProfileImageUncheckedUpdateManyWithoutProfileInputSchema: z.ZodType
   blurhash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   isModerated: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isFlagged: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const ConversationParticipantUpdateWithoutProfileInputSchema: z.ZodType<Prisma.ConversationParticipantUpdateWithoutProfileInput> = z.object({
@@ -14181,6 +14302,7 @@ export const ProfileUpdateWithoutBlockedByProfilesInputSchema: z.ZodType<Prisma.
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -14228,6 +14350,7 @@ export const ProfileUncheckedUpdateWithoutBlockedByProfilesInputSchema: z.ZodTyp
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -14275,6 +14398,7 @@ export const ProfileUncheckedUpdateManyWithoutBlockedByProfilesInputSchema: z.Zo
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -14305,6 +14429,7 @@ export const ProfileUpdateWithoutBlockedProfilesInputSchema: z.ZodType<Prisma.Pr
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
   birthday: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -14352,6 +14477,7 @@ export const ProfileUncheckedUpdateWithoutBlockedProfilesInputSchema: z.ZodType<
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),
@@ -14399,6 +14525,7 @@ export const ProfileUncheckedUpdateManyWithoutBlockedProfilesInputSchema: z.ZodT
   isBlocked: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isOnboarded: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   isCallable: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
+  hasFace: z.union([ z.boolean(),z.lazy(() => BoolFieldUpdateOperationsInputSchema) ]).optional(),
   userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   work: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   languages: z.union([ z.lazy(() => ProfileUpdatelanguagesInputSchema),z.string().array() ]).optional(),

@@ -92,20 +92,20 @@ enum ActivitySegment {
 }
 
 model Tag {
-  id             String              @id @default(cuid())
-  slug           String              @unique
-  name           String              @unique
+  id             String           @id @default(cuid())
+  slug           String           @unique
+  name           String           @unique
   /// Locale the tag was originally created in
-  originalLocale String              @default("en")
-  isUserCreated  Boolean             @default(false)
-  isApproved     Boolean             @default(false)
-  isHidden       Boolean             @default(false)
-  isDeleted      Boolean             @default(false)
+  originalLocale String           @default("en")
+  isUserCreated  Boolean          @default(false)
+  isApproved     Boolean          @default(false)
+  isHidden       Boolean          @default(false)
+  isDeleted      Boolean          @default(false)
   createdBy      String?
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
   translations   TagTranslation[]
-  profiles       Profile[]           @relation("ProfileTags")
+  profiles       Profile[]        @relation("ProfileTags")
 }
 
 model TagTranslation {
@@ -173,6 +173,7 @@ model Profile {
   isBlocked      Boolean @default(false)
   isOnboarded    Boolean @default(false)
   isCallable     Boolean @default(true)
+  hasFace        Boolean @default(false)
 
   userId String @unique
   user   User   @relation(fields: [userId], references: [id])
@@ -266,8 +267,10 @@ model ProfileImage {
   blurhash    String?
   isModerated Boolean @default(false)
   isFlagged   Boolean @default(false)
+  hasFace     Boolean @default(false)
 
   @@index([userId])
+  @@index([profileId, position])
 }
 
 model Conversation {
@@ -440,10 +443,10 @@ model ProfileTrustFlag {
   flaggedBy String
 
   profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-
-  @@index([profileId, clearedAt])
   // Partial index on active flags is defined in the migration SQL
   // (not representable in Prisma schema syntax).
+
+  @@index([profileId, clearedAt])
 }
 
 enum TrustReason {
