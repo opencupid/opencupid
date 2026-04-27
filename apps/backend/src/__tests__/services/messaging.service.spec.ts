@@ -11,6 +11,12 @@ beforeEach(async () => {
   vi.resetModules()
   mockPrisma = createMockPrisma()
   vi.doMock('../../lib/prisma', () => ({ prisma: mockPrisma }))
+  vi.doMock('../../lib/appconfig', () => ({
+    appConfig: {
+      WELCOME_MESSAGE_SENDER_PROFILE_ID: 'sys-sender',
+      SITE_NAME: 'TestSite',
+    },
+  }))
   const module = await import('../../services/messaging.service')
   ;(module.MessageService as any).instance = undefined
   service = module.MessageService.getInstance()
@@ -613,5 +619,75 @@ describe('MessageService.sendMessage (new primitive)', () => {
       code: 'EMPTY_MESSAGE',
     })
     expect(tx.message.create).not.toHaveBeenCalled()
+  })
+})
+
+describe('MessageService.sendWelcomeMessage', () => {
+  it('reads template content from MessageTemplate and substitutes {siteName}', async () => {
+    mockPrisma.messageTemplate.findUnique.mockResolvedValueOnce({
+      id: 't1',
+      type: 'welcome',
+      locale: 'hu',
+      content: 'Üdv a {siteName} oldalon',
+    })
+    mockPrisma.conversation.findFirst.mockResolvedValue(null)
+    mockPrisma.conversation.create.mockResolvedValue({
+      id: 'c1',
+      status: 'INITIATED',
+      profileAId: 'sys-sender',
+      profileBId: 'p2',
+      initiatorProfileId: 'sys-sender',
+    })
+    mockPrisma.message.findFirst.mockResolvedValue(null)
+    mockPrisma.message.create.mockResolvedValue({ id: 'm1' })
+    mockPrisma.conversation.update.mockResolvedValue({})
+
+    await service.sendWelcomeMessage('p2', 'hu')
+
+    expect(mockPrisma.messageTemplate.findUnique).toHaveBeenCalledWith({
+      where: { type_locale: { type: 'welcome', locale: 'hu' } },
+    })
+    const createArgs = mockPrisma.message.create.mock.calls[0][0]
+    expect(createArgs.data.content).toBe('Üdv a TestSite oldalon')
+  })
+
+  it('falls back to "en" template when the requested locale row is missing', async () => {
+    mockPrisma.messageTemplate.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({
+      id: 't1',
+      type: 'welcome',
+      locale: 'en',
+      content: 'Welcome to {siteName}',
+    })
+    mockPrisma.conversation.findFirst.mockResolvedValue(null)
+    mockPrisma.conversation.create.mockResolvedValue({
+      id: 'c1',
+      status: 'INITIATED',
+      profileAId: 'sys-sender',
+      profileBId: 'p2',
+      initiatorProfileId: 'sys-sender',
+    })
+    mockPrisma.message.findFirst.mockResolvedValue(null)
+    mockPrisma.message.create.mockResolvedValue({ id: 'm1' })
+    mockPrisma.conversation.update.mockResolvedValue({})
+
+    await service.sendWelcomeMessage('p2', 'fr')
+
+    expect(mockPrisma.messageTemplate.findUnique).toHaveBeenNthCalledWith(1, {
+      where: { type_locale: { type: 'welcome', locale: 'fr' } },
+    })
+    expect(mockPrisma.messageTemplate.findUnique).toHaveBeenNthCalledWith(2, {
+      where: { type_locale: { type: 'welcome', locale: 'en' } },
+    })
+    const createArgs = mockPrisma.message.create.mock.calls[0][0]
+    expect(createArgs.data.content).toBe('Welcome to TestSite')
+  })
+
+  it('returns silently when no template exists in any locale', async () => {
+    mockPrisma.messageTemplate.findUnique.mockResolvedValue(null)
+
+    await service.sendWelcomeMessage('p2', 'fr')
+
+    expect(mockPrisma.message.create).not.toHaveBeenCalled()
+    expect(mockPrisma.conversation.create).not.toHaveBeenCalled()
   })
 })

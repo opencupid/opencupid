@@ -454,3 +454,18 @@ enum TrustReason {
   PROFILE_UNVETTED
   SPAM_BURST
 }
+
+enum MessageTemplateType {
+  welcome
+}
+
+model MessageTemplate {
+  id        String              @id @default(cuid())
+  type      MessageTemplateType
+  locale    String
+  content   String
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  @@unique([type, locale])
+}

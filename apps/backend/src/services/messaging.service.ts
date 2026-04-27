@@ -3,7 +3,6 @@ import { prisma } from '@/lib/prisma'
 import type { ConversationParticipantWithConversationSummary } from '@zod/messaging/messaging.dto'
 import { Conversation } from '@zod/generated'
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
-import i18next from 'i18next'
 import { appConfig } from '../lib/appconfig'
 import { computeSendOutcome } from './messaging.stateMachine'
 
@@ -329,8 +328,18 @@ export class MessageService {
     const senderId = appConfig.WELCOME_MESSAGE_SENDER_PROFILE_ID
     const siteName = appConfig.SITE_NAME
     if (!senderId) return
-    const t = i18next.getFixedT(locale)
-    const mdContent = t('messages.welcome_message', { siteName })
+    // Templates are stored in the DB (MessageTemplate). Fall back to 'en' when the
+    // recipient's locale has no row — every supported language is expected to have
+    // a row, but we never want a missing translation to drop the welcome silently.
+    const template =
+      (await prisma.messageTemplate.findUnique({
+        where: { type_locale: { type: 'welcome', locale } },
+      })) ??
+      (await prisma.messageTemplate.findUnique({
+        where: { type_locale: { type: 'welcome', locale: 'en' } },
+      }))
+    if (!template) return
+    const mdContent = template.content.replace(/\{siteName\}/g, siteName)
     const content = simpleMarkdownToHtml(mdContent)
     return await prisma.$transaction(async (tx) => {
       const { convo, wasCreated } = await this.resolveConversation(tx, senderId, recipientProfileId)

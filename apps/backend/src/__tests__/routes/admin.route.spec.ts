@@ -39,6 +39,10 @@ const mockPrisma = vi.hoisted(() => {
       update: vi.fn(),
       delete: vi.fn(),
     },
+    messageTemplate: {
+      findMany: vi.fn(),
+      update: vi.fn(),
+    },
     $executeRawUnsafe: vi.fn(),
     $queryRaw: vi.fn(),
     $transaction: vi.fn(),
@@ -1599,6 +1603,86 @@ describe('POST /profiles/:id/flag', () => {
     const handler = fastify.routes['POST /profiles/:id/flag']
     await handler({ params: { id: 'p1' } }, reply)
     expect(reply.statusCode).toBe(400)
+  })
+})
+
+describe('GET /message-templates', () => {
+  it('returns templates ordered by type then locale', async () => {
+    const rows = [
+      {
+        id: 't1',
+        type: 'welcome',
+        locale: 'en',
+        content: 'hi',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: 't2',
+        type: 'welcome',
+        locale: 'hu',
+        content: 'üdv',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ]
+    mockPrisma.messageTemplate.findMany.mockResolvedValueOnce(rows)
+
+    const handler = fastify.routes['GET /message-templates']
+    await handler({}, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    expect(reply.payload.templates).toEqual(rows)
+    expect(mockPrisma.messageTemplate.findMany).toHaveBeenCalledWith({
+      orderBy: [{ type: 'asc' }, { locale: 'asc' }],
+    })
+  })
+
+  it('returns 500 on db error', async () => {
+    mockPrisma.messageTemplate.findMany.mockRejectedValueOnce(new Error('boom'))
+    const handler = fastify.routes['GET /message-templates']
+    await handler({}, reply)
+    expect(reply.statusCode).toBe(500)
+  })
+})
+
+describe('PATCH /message-templates/:id', () => {
+  it('updates content and returns the updated row', async () => {
+    const updated = {
+      id: 't1',
+      type: 'welcome',
+      locale: 'en',
+      content: 'new content',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
+    mockPrisma.messageTemplate.update.mockResolvedValueOnce(updated)
+
+    const handler = fastify.routes['PATCH /message-templates/:id']
+    await handler({ params: { id: 't1' }, body: { content: 'new content' } }, reply)
+
+    expect(mockPrisma.messageTemplate.update).toHaveBeenCalledWith({
+      where: { id: 't1' },
+      data: { content: 'new content' },
+    })
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.template).toEqual(updated)
+  })
+
+  it('returns 400 when content is empty', async () => {
+    const handler = fastify.routes['PATCH /message-templates/:id']
+    await handler({ params: { id: 't1' }, body: { content: '   ' } }, reply)
+    expect(reply.statusCode).toBe(400)
+    expect(mockPrisma.messageTemplate.update).not.toHaveBeenCalled()
+  })
+
+  it('returns 404 when template does not exist', async () => {
+    const err = Object.assign(new Error('not found'), { code: 'P2025' })
+    mockPrisma.messageTemplate.update.mockRejectedValueOnce(err)
+    const handler = fastify.routes['PATCH /message-templates/:id']
+    await handler({ params: { id: 'missing' }, body: { content: 'x' } }, reply)
+    expect(reply.statusCode).toBe(404)
   })
 })
 
