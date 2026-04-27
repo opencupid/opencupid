@@ -1,5 +1,12 @@
 # frontend
 
+## 0.55.4
+
+### Patch Changes
+
+- 19eacdd: Block public access to \*.map files via nginx; sourcemaps remain in image for Sentry upload only.
+- 7988b8f: Use `ref()` instead of `reactive()` for v-model bindings in onboarding view to silence `@vue/compiler-sfc` warnings (#583)
+
 ## 0.55.3
 
 ### Patch Changes

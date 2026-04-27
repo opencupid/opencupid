@@ -1,5 +1,13 @@
 # backend
 
+## 0.55.4
+
+### Patch Changes
+
+- 4b867b6: Eagerly migrate the \_\_refresh cookie to the domain-scoped shape on every authenticated request so a planned host migration does not force existing sessions to re-authenticate.
+- c15c994: Detect faces on profile image uploads and mirror the primary image's face flag onto the profile.
+- 7a23da3: chore(sentry): lower backend tracesSampleRate to 0.05
+
 ## 0.55.3
 
 ## 0.55.2
