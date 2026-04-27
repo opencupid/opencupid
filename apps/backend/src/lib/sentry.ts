@@ -7,7 +7,7 @@ if (appConfig.NODE_ENV !== 'development') {
     dsn: appConfig.SENTRY_DSN,
     release: `api@${__APP_VERSION__}`,
     environment: appConfig.NODE_ENV,
-    tracesSampleRate: 1.0,
+    tracesSampleRate: 0.05,
     sendDefaultPii: true,
   })
 }
