@@ -13,13 +13,24 @@ export const useAppStore = defineStore('app', {
     latestVersion: '',
     canInstallPwa: false,
     shareCtaDismissed: false,
+    geoipCountry: '' as string,
   }),
   actions: {
+    /**
+     * One-shot startup hook called once from main.ts. Fires off background
+     * lookups (currently just the geoip country) so subsequent UI surfaces
+     * (onboarding, geocoding bias) can read them from the store. Failures
+     * are swallowed — geoipCountry stays empty, callers handle that.
+     */
+    initialize() {
+      void this.fetchLocation()
+    },
     async fetchLocation(): Promise<StoreResponse<LocationDTO>> {
       try {
         this.isLoading = true
         const res = await api.get<LocationResponse>('/app/location')
         const parsed = LocationSchema.parse(res.data.location)
+        this.geoipCountry = parsed.country ?? ''
         return storeSuccess(parsed)
       } catch (err: unknown) {
         return storeError(err, 'Failed to fetch location')

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { type EditProfileForm } from '@zod/profile/profile.form'
@@ -23,6 +24,7 @@ import { logCheckpoint } from '@/lib/diagnostics'
 
 import { useWizardSteps } from '@/features/onboarding/composables/useWizardSteps'
 import { useTagsStore } from '@/store/tagStore'
+import { useAppStore } from '@/features/app/stores/appStore'
 
 const { t } = useI18n()
 
@@ -69,6 +71,7 @@ const handleSubmit = () => {
 }
 
 const tagStore = useTagsStore()
+const appStore = useAppStore()
 
 const handleLocationSelected = async (location: { country: string }) => {
   await tagStore.fetchPopularTags({
@@ -76,6 +79,18 @@ const handleLocationSelected = async (location: { country: string }) => {
     limit: 50,
   })
 }
+
+onMounted(() => {
+  // Pre-populate the country from the geoip lookup so the user lands in the
+  // right region by default. Don't clobber a country the user already picked
+  // (e.g. from a saved draft profile).
+  if (!formData.value.location?.country && appStore.geoipCountry) {
+    formData.value.location = {
+      ...(formData.value.location ?? { cityName: '', lat: null, lon: null }),
+      country: appStore.geoipCountry,
+    }
+  }
+})
 
 const siteName = __APP_CONFIG__.SITE_NAME
 </script>
@@ -137,7 +152,6 @@ const siteName = __APP_CONFIG__.SITE_NAME
             open-direction="bottom"
             :allow-empty="false"
             :close-on-select="true"
-            :geoIp="true"
             @selected="handleLocationSelected"
           />
           <p class="form-text text-muted mt-2">

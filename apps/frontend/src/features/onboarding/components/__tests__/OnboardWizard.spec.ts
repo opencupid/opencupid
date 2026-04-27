@@ -61,6 +61,7 @@ import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import OnboardWizard from '../OnboardWizard.vue'
 import { useTagsStore } from '@/store/tagStore'
+import { useAppStore } from '@/features/app/stores/appStore'
 
 const mockTags = [
   { id: 't1', name: 'Hiking', slug: 'hiking', count: 10 },
@@ -177,6 +178,26 @@ describe('OnboardWizard TagCloud integration', () => {
     await flushPromises()
 
     expect(formData.tags).toEqual([{ id: 't1', name: 'Hiking', slug: 'hiking' }])
+  })
+
+  it('pre-populates formData.location.country from appStore.geoipCountry on mount', async () => {
+    const appStore = useAppStore()
+    appStore.geoipCountry = 'DE'
+
+    const { formData } = mountWizard({ location: { country: '' } })
+    await flushPromises()
+
+    expect(formData.location.country).toBe('DE')
+  })
+
+  it('does not overwrite an existing country with the geoip value', async () => {
+    const appStore = useAppStore()
+    appStore.geoipCountry = 'DE'
+
+    const { formData } = mountWizard({ location: { country: 'FR' } })
+    await flushPromises()
+
+    expect(formData.location.country).toBe('FR')
   })
 
   it('clicking the same tag twice does not duplicate it', async () => {

@@ -8,6 +8,7 @@ vi.mock('../../composables/useGeocoder', () => ({
 }))
 
 import { useGeocodingStore } from '../geocodingStore'
+import { useAppStore } from '@/features/app/stores/appStore'
 
 describe('geocodingStore', () => {
   beforeEach(() => {
@@ -139,6 +140,54 @@ describe('geocodingStore', () => {
     expect(store.results[0]!.name).toBe('San Juan')
     expect(store.results.slice(1).map((r) => r.name)).toContain('San Juan de la Nava')
     expect(store.results.slice(1).map((r) => r.name)).toContain('San Juan Bautista')
+  })
+
+  it('uses appStore.geoipCountry as the bias when no explicit country is given', async () => {
+    const unsorted = [
+      { name: 'Paris', country: 'FR', lat: 48.85, lon: 2.35 },
+      { name: 'Paris', country: 'US', lat: 33.66, lon: -95.55 },
+    ]
+    mockSearch.mockResolvedValue(unsorted)
+
+    const appStore = useAppStore()
+    appStore.geoipCountry = 'US'
+
+    const store = useGeocodingStore()
+    await store.searchNearby('', 'paris', 'en', 5)
+
+    expect(store.results[0]!.country).toBe('US')
+  })
+
+  it('prefers explicit country bias over geoipCountry', async () => {
+    const unsorted = [
+      { name: 'Paris', country: 'US', lat: 33.66, lon: -95.55 },
+      { name: 'Paris', country: 'FR', lat: 48.85, lon: 2.35 },
+    ]
+    mockSearch.mockResolvedValue(unsorted)
+
+    const appStore = useAppStore()
+    appStore.geoipCountry = 'US'
+
+    const store = useGeocodingStore()
+    await store.searchNearby('FR', 'paris', 'en', 5)
+
+    expect(store.results[0]!.country).toBe('FR')
+  })
+
+  it('promotes geoipCountry hits within the same exact-match tier in search()', async () => {
+    const unsorted = [
+      { name: 'Paris', country: 'US', lat: 33.66, lon: -95.55 },
+      { name: 'Paris', country: 'FR', lat: 48.85, lon: 2.35 },
+    ]
+    mockSearch.mockResolvedValue(unsorted)
+
+    const appStore = useAppStore()
+    appStore.geoipCountry = 'FR'
+
+    const store = useGeocodingStore()
+    await store.search('paris', 'en')
+
+    expect(store.results[0]!.country).toBe('FR')
   })
 
   it('does not treat a CanceledError as a real failure', async () => {

@@ -1,11 +1,16 @@
 import { FastifyPluginAsync } from 'fastify'
-import { WebServiceClient } from '@maxmind/geoip2-node'
+import { z } from 'zod'
 
-import { appConfig } from '@/lib/appconfig'
 import { LocationSchema, type LocationDTO } from '@zod/dto/location.dto'
 import { VersionSchema, type VersionDTO } from '@zod/dto/version.dto'
 import type { ApiError } from '@shared/zod/apiResponse.dto'
 import { rateLimitConfig } from '../helpers'
+
+const GEOIP_API_URL = 'http://geoip-api:8080'
+
+const GeoipApiResponseSchema = z.object({
+  country: z.string().min(2).max(2).optional(),
+})
 
 function extractClientIp(headerValue: string | undefined, fallbackIp: string): string {
   const rawIp = headerValue?.split(',')[0].trim() ?? fallbackIp
@@ -54,14 +59,13 @@ const appRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * GET /location
-   * Returns the client's country based on IP geolocation (MaxMind GeoLite2).
-   * In development, returns a hardcoded country ('MX').
+   * Returns the client's country based on IP geolocation, looked up via the
+   * observabilitystack/geoip-api service running at GEOIP_API_URL.
    * @returns {{ success, location: LocationDTO }} { country, cityName }
    */
   fastify.get(
     '/location',
     {
-      onRequest: [fastify.authenticate],
       config: {
         ...rateLimitConfig(fastify, '5 minute', 5),
       },
@@ -70,24 +74,14 @@ const appRoutes: FastifyPluginAsync = async (fastify) => {
       const rawHeader = req.headers['x-forwarded-for'] as string | undefined
       const clientIp = extractClientIp(rawHeader, req.ip)
 
-      if (appConfig.NODE_ENV === 'development') {
-        const location: LocationDTO = {
-          country: 'MX',
-          cityName: '',
-        }
-        const payload = LocationSchema.parse(location)
-        return reply.code(200).send({ success: true, location: payload })
-      }
-
       try {
-        const client = new WebServiceClient(
-          appConfig.MAXMIND_ACCOUNT_ID,
-          appConfig.MAXMIND_LICENSE_KEY,
-          { host: 'geolite.info' }
-        )
-        const result = await client.country(clientIp)
+        const res = await fetch(`${GEOIP_API_URL}/${encodeURIComponent(clientIp)}`)
+        if (!res.ok) {
+          throw new Error(`geoip-api returned ${res.status}`)
+        }
+        const parsed = GeoipApiResponseSchema.parse(await res.json())
         const location: LocationDTO = {
-          country: result.country?.isoCode ?? '',
+          country: parsed.country ?? '',
           cityName: '',
         }
         const payload = LocationSchema.parse(location)

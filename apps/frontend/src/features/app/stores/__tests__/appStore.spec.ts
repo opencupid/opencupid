@@ -90,3 +90,61 @@ describe('useAppStore - checkVersion', () => {
     expect(mockGetVersionInfo).toHaveBeenCalledTimes(1)
   })
 })
+
+describe('useAppStore - fetchLocation', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  it('stores the looked-up country in geoipCountry', async () => {
+    const mockGet = apiModule.api.get as any
+    mockGet.mockResolvedValue({
+      data: { success: true, location: { country: 'DE', cityName: '' } },
+    })
+
+    const store = useAppStore()
+    const result = await store.fetchLocation()
+
+    expect(result.success).toBe(true)
+    expect(store.geoipCountry).toBe('DE')
+    expect(mockGet).toHaveBeenCalledWith('/app/location')
+  })
+
+  it('leaves geoipCountry empty on API failure', async () => {
+    const mockGet = apiModule.api.get as any
+    mockGet.mockRejectedValue(new Error('boom'))
+
+    const store = useAppStore()
+    const result = await store.fetchLocation()
+
+    expect(result.success).toBe(false)
+    expect(store.geoipCountry).toBe('')
+  })
+})
+
+describe('useAppStore - initialize', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  it('kicks off fetchLocation without blocking', async () => {
+    const mockGet = apiModule.api.get as any
+    let resolveGet!: (v: unknown) => void
+    mockGet.mockReturnValue(
+      new Promise((resolve) => {
+        resolveGet = resolve
+      })
+    )
+
+    const store = useAppStore()
+    store.initialize()
+
+    expect(mockGet).toHaveBeenCalledWith('/app/location')
+
+    resolveGet({ data: { success: true, location: { country: 'FR', cityName: '' } } })
+    await new Promise((r) => setTimeout(r, 0))
+    expect(store.geoipCountry).toBe('FR')
+  })
+})
