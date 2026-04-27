@@ -49,6 +49,8 @@ export const configSchema = z.object({
 
   DEEPL_API_KEY: z.string().optional(),
 
+  GEOIP_API_URL: z.string().url().default('http://geoip-api:8080'),
+
   DEV_AUTH_BYPASS_ENABLED: z
     .enum(['true', 'false'])
     .default('false')

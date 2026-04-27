@@ -5,8 +5,7 @@ import { LocationSchema, type LocationDTO } from '@zod/dto/location.dto'
 import { VersionSchema, type VersionDTO } from '@zod/dto/version.dto'
 import type { ApiError } from '@shared/zod/apiResponse.dto'
 import { rateLimitConfig } from '../helpers'
-
-const GEOIP_API_URL = 'http://geoip-api:8080'
+import { appConfig } from '@/lib/appconfig'
 
 const GeoipApiResponseSchema = z.object({
   country: z.string().min(2).max(2).optional(),
@@ -60,12 +59,13 @@ const appRoutes: FastifyPluginAsync = async (fastify) => {
   /**
    * GET /location
    * Returns the client's country based on IP geolocation, looked up via the
-   * observabilitystack/geoip-api service running at GEOIP_API_URL.
+   * observabilitystack/geoip-api service running at appConfig.GEOIP_API_URL.
    * @returns {{ success, location: LocationDTO }} { country, cityName }
    */
   fastify.get(
     '/location',
     {
+      onRequest: [fastify.authenticate],
       config: {
         ...rateLimitConfig(fastify, '5 minute', 5),
       },
@@ -74,8 +74,16 @@ const appRoutes: FastifyPluginAsync = async (fastify) => {
       const rawHeader = req.headers['x-forwarded-for'] as string | undefined
       const clientIp = extractClientIp(rawHeader, req.ip)
 
+      if (appConfig.NODE_ENV === 'development') {
+        const location: LocationDTO = {
+          country: 'HU',
+          cityName: '',
+        }
+        return reply.code(200).send({ success: true, location })
+      }
+
       try {
-        const res = await fetch(`${GEOIP_API_URL}/${encodeURIComponent(clientIp)}`)
+        const res = await fetch(`${appConfig.GEOIP_API_URL}/${encodeURIComponent(clientIp)}`)
         if (!res.ok) {
           throw new Error(`geoip-api returned ${res.status}`)
         }
