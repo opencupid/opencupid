@@ -123,15 +123,8 @@ describe('useAppStore - fetchLocation', () => {
     expect(result.success).toBe(false)
     expect(store.geoipLocation).toBeNull()
   })
-})
 
-describe('useAppStore - initialize', () => {
-  beforeEach(() => {
-    setActivePinia(createPinia())
-    vi.clearAllMocks()
-  })
-
-  it('kicks off fetchLocation without blocking', async () => {
+  it('does not block callers (returns a pending promise)', async () => {
     const mockGet = apiModule.api.get as any
     let resolveGet!: (v: unknown) => void
     mockGet.mockReturnValue(
