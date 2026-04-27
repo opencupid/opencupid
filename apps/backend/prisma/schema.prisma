@@ -270,6 +270,7 @@ model ProfileImage {
   hasFace     Boolean @default(false)
 
   @@index([userId])
+  @@index([profileId, position])
 }
 
 model Conversation {

@@ -1,7 +1,6 @@
 import path from 'path'
 import fs from 'fs'
 
-import { Prisma } from '@prisma/client'
 import { prisma } from '../lib/prisma'
 import { getMediaRoot, imageBasePath, makeImageLocation, mediaUrl } from '@/lib/media'
 
@@ -275,14 +274,15 @@ export class ImageService {
     }
 
     return prisma.$transaction(async (tx) => {
-      const updated = await Promise.all(
-        items.map((item) =>
-          tx.profileImage.update({
+      const updated = []
+      for (const item of items) {
+        updated.push(
+          await tx.profileImage.update({
             where: { id: item.id },
             data: { position: item.position },
           })
         )
-      )
+      }
       await syncProfileHasFace(tx, profileId)
       return updated.sort((a, b) => a.position - b.position)
     })
