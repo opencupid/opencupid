@@ -63,7 +63,7 @@ export class UserService {
     user: User
     isNewUser: boolean
   }> {
-    const email = authId.email.toLowerCase()
+    const email = authId.email.trim().toLowerCase()
     const userExists = await prisma.user.findUnique({ where: { email } })
     const tokenExpiration = getTokenExpiration()
 
