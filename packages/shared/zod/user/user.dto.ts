@@ -10,7 +10,7 @@ export const JwtPayloadSchema = z.object({
 export type JwtPayload = z.infer<typeof JwtPayloadSchema>
 
 export const UserIdentifierSchema = z.object({
-  email: z.string().min(1, 'Email is required'),
+  email: z.string().trim().min(1, 'Email is required').email('Invalid email address'),
 })
 export type UserIdentifier = z.infer<typeof UserIdentifierSchema>
 
