@@ -505,12 +505,12 @@
     "widowed": "Widowed"
   },
   "settings": {
-    "enable_push": "Enable Push Notifications",
+    "email_notifications_opt_in": "Email",
     "language_label": "Language",
-    "newsletter_opt_in": "I'm happy to receive the occasional email newsletter",
+    "newsletter_opt_in": "Email newsletter",
+    "notifications_opt_in": "When someone sends me a message, like or match...",
     "notifications_label": "Notifications",
-    "push_notifications": "Push Notifications",
-    "push_notify_messages": "Notifications when someone messages me",
+    "push_notify_messages": "Popup and mobile notification",
     "title": "Settings"
   },
   "uicomponents": {

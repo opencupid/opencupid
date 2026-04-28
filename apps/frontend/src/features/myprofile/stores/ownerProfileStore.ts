@@ -36,6 +36,7 @@ import {
 const defaultOptInSettings: ProfileOptInSettings = {
   isCallable: true,
   newsletterOptIn: true,
+  emailNotificationsOptIn: true,
   isPushNotificationEnabled: false,
 }
 import {

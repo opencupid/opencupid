@@ -510,12 +510,13 @@
     "widowed": "Özvegy"
   },
   "settings": {
+    "email_notifications_opt_in": "e-mail értesítést új üzenetről",
     "enable_push": "Push értesítések engedélyezése",
     "language_label": "Nyelv",
     "newsletter_opt_in": "Szívesen kapok alkalmi hírlevelet",
     "notifications_label": "Értesítések",
     "push_notifications": "Push értesítések",
-    "push_notify_messages": "Értesítést kérek, ha üzenetet kapok",
+    "push_notify_messages": "Mobil értesítés  új üzenetről",
     "title": "Beállítások"
   },
   "uicomponents": {
