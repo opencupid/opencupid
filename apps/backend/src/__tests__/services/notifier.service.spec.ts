@@ -133,11 +133,14 @@ describe('NotifierService', () => {
       }),
     })
     const jwtPath = /[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/
+    // Footer link goes to the SPA page (with ?lang= for unauth localization).
     expect(payload.templateProps.unsubscribeUrl).toMatch(
       new RegExp(`^https://frontend\\.test/unsubscribe/${jwtPath.source}\\?lang=de$`)
     )
+    // List-Unsubscribe header MUST point at the API path so RFC 8058 one-click
+    // POSTs from mail providers reach the backend, not the SPA shell.
     expect(payload.headers['List-Unsubscribe']).toMatch(
-      new RegExp(`^<https://frontend\\.test/unsubscribe/${jwtPath.source}\\?lang=de>$`)
+      new RegExp(`^<https://frontend\\.test/api/unsubscribe/${jwtPath.source}>$`)
     )
     expect(payload.headers['List-Unsubscribe-Post']).toBe('List-Unsubscribe=One-Click')
   })
