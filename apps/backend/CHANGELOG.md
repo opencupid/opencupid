@@ -1,5 +1,13 @@
 # backend
 
+## 0.56.0
+
+### Minor Changes
+
+- d440626: Replace MaxMind with self-hosted observabilitystack/geoip-api for IP-based location lookup. The backend `/location` endpoint now returns lat/lon alongside country (configurable via `GEOIP_API_URL`), and the frontend uses the resolved location to bias Photon geocoder suggestions toward the user's region.
+- 897f2a9: Require email at registration; remove phone-only auth path. Migrates existing phone-only users to placeholder emails (`<userId>@phone.migrated.local`).
+- 35fbd9d: Add one-click email unsubscribe per RFC 8058. Notification emails now carry a `List-Unsubscribe` / `List-Unsubscribe-Post` header and a footer link to `/unsubscribe/:token?lang=<locale>`. The token is a stateless HMAC of `(userId, emailHash)` with a 2-day TTL, signed with a dedicated `UNSUBSCRIBE_SECRET` so it cannot be reused for authentication. New `User.emailNotificationsOptIn` flag gates all suppressible email types and is exposed as a Settings checkbox; magic-link login emails are always sent and do not include unsubscribe metadata. Closes #1376.
+
 ## 0.55.4
 
 ### Patch Changes

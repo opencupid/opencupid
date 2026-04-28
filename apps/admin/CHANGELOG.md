@@ -1,5 +1,11 @@
 # @opencupid/admin
 
+## 0.56.0
+
+### Patch Changes
+
+- 897f2a9: Require email at registration; remove phone-only auth path. Migrates existing phone-only users to placeholder emails (`<userId>@phone.migrated.local`).
+
 ## 0.55.4
 
 ### Patch Changes
