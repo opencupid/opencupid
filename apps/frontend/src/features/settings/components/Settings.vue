@@ -73,8 +73,10 @@ function handleLogout() {
         class="flex-grow-1 form-hint"
         style="min-width: 0; word-break: break-all"
       >
-        <span v-if="userStore.user?.email">{{ userStore.user.email }}</span>
-        <span v-if="userStore.user?.phonenumber">{{ userStore.user.phonenumber }}</span>
+        <template v-if="userStore.user">
+          <span>{{ userStore.user.email }}</span>
+          <span v-if="userStore.user.phonenumber">{{ userStore.user.phonenumber }}</span>
+        </template>
       </div>
       <BButton
         variant="secondary"

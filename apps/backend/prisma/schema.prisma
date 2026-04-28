@@ -133,7 +133,7 @@ model ConnectionRequest {
 
 model User {
   id                      String     @id @default(cuid())
-  email                   String?    @unique
+  email                   String     @unique
   phonenumber             String?    @unique
   tokenVersion            Int        @default(0)
   loginToken              String?    @unique

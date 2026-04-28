@@ -873,7 +873,6 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
     try {
       const users = await prisma.user.findMany({
         where: {
-          email: { not: null },
           profile: { isActive: true },
         },
         select: {

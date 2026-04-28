@@ -28,7 +28,6 @@ export const configSchema = z.object({
   MEDIA_UPLOAD_DIR: z.string(),
   MEDIA_URL_BASE: z.string(),
   IMAGE_MAX_SIZE: z.coerce.number(),
-  SMS_API_KEY: z.string(),
 
   ALTCHA_HMAC_KEY: z.string(),
 

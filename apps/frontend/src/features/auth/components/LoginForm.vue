@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import type { UserIdentifyPayload } from '@zod/user/user.dto'
-import { emailRegex, phoneRegex } from '@/lib/utils'
+import { emailRegex } from '@/lib/utils'
 import CaptchaWidget from './CaptchaWidget.vue'
 import { useI18n } from 'vue-i18n'
 
 import IconTick from '@/assets/icons/interface/tick.svg'
 import IconMail from '@/assets/icons/interface/mail.svg'
-import IconPhone from '@/assets/icons/interface/phone.svg'
 import IconLogin from '@/assets/icons/interface/login.svg'
 
 const { t } = useI18n()
@@ -21,24 +20,19 @@ const emit = defineEmits<{
   (e: 'updated', identifier: UserIdentifyPayload): void
 }>()
 
-// State variables
 const authIdInput = ref(props.defaultAuthId || '')
 const captchaPayload = ref('')
 const error = ref('')
 
-const authIdentifier = computed(() => {
-  return {
-    email: emailRegex.test(authIdInput.value) ? authIdInput.value : '',
-    phonenumber: phoneRegex.test(authIdInput.value) ? authIdInput.value : '',
-    captchaSolution: captchaPayload.value || '',
-    language: '',
-  }
-})
+const authIdentifier = computed<UserIdentifyPayload>(() => ({
+  email: authIdInput.value,
+  captchaSolution: captchaPayload.value || '',
+  language: '',
+}))
 
-// Method to handle sending login link
 async function handleSendLoginLink() {
   if (!authIdInput.value) {
-    error.value = t('auth.auth_id_input_empty') // "Please enter your email or phone number."
+    error.value = t('auth.auth_id_input_empty')
     return
   }
   emit('updated', authIdentifier.value)
@@ -46,8 +40,7 @@ async function handleSendLoginLink() {
 
 const inputState = computed(() => {
   if (!authIdInput.value || authIdInput.value === '') return null
-  // Check if the input is a valid email or phone number
-  return emailRegex.test(authIdInput.value) || phoneRegex.test(authIdInput.value)
+  return emailRegex.test(authIdInput.value)
 })
 
 const formState = computed(() => {
@@ -108,14 +101,7 @@ function handleCaptchaUpdatePayload(payload: string) {
               class="text-muted"
               v-else
             >
-              <IconMail
-                class="svg-icon"
-                v-if="authIdInput.includes('@')"
-              />
-              <IconPhone
-                class="svg-icon"
-                v-else-if="authIdInput.startsWith('+')"
-              />
+              <IconMail class="svg-icon" />
             </span>
           </div>
         </BFormFloatingLabel>

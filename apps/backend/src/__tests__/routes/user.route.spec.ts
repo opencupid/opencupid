@@ -12,7 +12,6 @@ vi.mock('../../services/user.service', () => ({
 vi.mock('@/lib/appconfig', () => ({
   appConfig: {
     ALTCHA_HMAC_KEY: 'x',
-    SMS_API_KEY: 'k',
     IMAGE_MAX_SIZE: 1000,
     FRONTEND_URL: 'http://test',
   },

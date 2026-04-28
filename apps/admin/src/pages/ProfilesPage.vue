@@ -18,7 +18,7 @@ interface AdminProfile {
   gender: string | null
   createdAt: string
   userId: string
-  user: { email: string | null; phonenumber: string | null } | null
+  user: { email: string; phonenumber: string | null } | null
   activitySummary: { segment: string } | null
   hasActiveTrustFlag: boolean
 }
@@ -259,8 +259,9 @@ async function submitQuarantine() {
 
 // Per-flag clear flow. The confirm modal targets one flag at a time.
 const pendingClearFlagId = ref<string | null>(null)
-const pendingClearFlag = computed(() =>
-  selectedProfileDetail.value?.trustFlags.find((f) => f.id === pendingClearFlagId.value) ?? null
+const pendingClearFlag = computed(
+  () =>
+    selectedProfileDetail.value?.trustFlags.find((f) => f.id === pendingClearFlagId.value) ?? null
 )
 const clearSubmitting = ref(false)
 const clearErrorDetail = ref<string | null>(null)
@@ -709,7 +710,7 @@ onUnmounted(() => {
                 <dt class="col-sm-4">Name</dt>
                 <dd class="col-sm-8">{{ selectedProfile.publicName || '-' }}</dd>
                 <dt class="col-sm-4">User Email</dt>
-                <dd class="col-sm-8">{{ selectedProfile.user?.email || '-' }}</dd>
+                <dd class="col-sm-8">{{ selectedProfile.user?.email ?? '-' }}</dd>
                 <dt class="col-sm-4">User Phone</dt>
                 <dd class="col-sm-8">{{ selectedProfile.user?.phonenumber || '-' }}</dd>
                 <dt class="col-sm-4">Country</dt>
@@ -771,7 +772,10 @@ onUnmounted(() => {
                       <div class="small text-muted">
                         {{ new Date(f.flaggedAt).toLocaleString() }}
                       </div>
-                      <div v-if="f.evidence" class="small">
+                      <div
+                        v-if="f.evidence"
+                        class="small"
+                      >
                         {{ f.evidence }}
                       </div>
                     </div>
@@ -865,8 +869,8 @@ onUnmounted(() => {
                 <code class="ms-2 small">{{ pendingClearFlag?.flaggedBy }}</code>
               </p>
               <p class="text-muted small mb-0">
-                Held messages on this profile will be released once no active flags remain.
-                Clearing a SPAM_BURST flag does <em>not</em> revive its discarded conversations.
+                Held messages on this profile will be released once no active flags remain. Clearing
+                a SPAM_BURST flag does <em>not</em> revive its discarded conversations.
               </p>
               <div
                 v-if="clearErrorDetail"

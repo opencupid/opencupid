@@ -57,11 +57,13 @@ describe('sendOnboardingReminders', () => {
 
   it('filters for users with no profile or unfinished onboarding', async () => {
     const sendOnboardingReminders = await importService()
-    await sendOnboardingReminders(new Date('2026-03-30T12:00:00Z'), new Date('2026-03-31T12:00:00Z'))
+    await sendOnboardingReminders(
+      new Date('2026-03-30T12:00:00Z'),
+      new Date('2026-03-31T12:00:00Z')
+    )
 
     const call = mockPrisma.user.findMany.mock.calls[0][0]
     expect(call.where.OR).toEqual([{ profile: null }, { profile: { isOnboarded: false } }])
-    expect(call.where.email).toEqual({ not: null })
   })
 
   it('sends reminder for each matching user', async () => {

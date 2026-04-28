@@ -7,10 +7,8 @@ import { useI18n } from 'vue-i18n'
 
 import { useAuthStore } from '../stores/authStore'
 import AuthLayout from '../components/AuthLayout.vue'
-import TokenInput from '../components/TokenInput.vue'
 import ViewTitle from '@/features/shared/ui/ViewTitle.vue'
 import ChevronLeftIcon from '@/assets/icons/arrows/arrow-single-left.svg'
-import IconMessage from '@/assets/icons/interface/message.svg'
 import IconMail from '@/assets/icons/interface/mail.svg'
 
 // Only show the dev auto-login shortcut when both conditions are true:
@@ -22,11 +20,8 @@ const DevAutoLogin =
     ? defineAsyncComponent(() => import('../components/DevAutoLogin.vue'))
     : null
 
-// Reactive variables
 const error = ref('' as string)
-const isValidated = ref<boolean | null>(null)
 const isLoading = ref(false)
-const lastTokenAttempt = ref('')
 
 const router = useRouter()
 const route = useRoute()
@@ -42,56 +37,38 @@ onMounted(async () => {
   if (!route.query.token) {
     return
   }
-  const rawToken = typeof route.query.token === 'string' ? route.query.token : ''
   const params = TokenParamSchema.safeParse(route.query)
   if (!params.success) {
     error.value = t('auth.token_invalid_link')
-    lastTokenAttempt.value = rawToken
-    isValidated.value = false
     isCheckingMagicLinkToken.value = false
     return
   }
-  await doVerifyToken(params.data.token)
-  if (!isValidated.value) {
-    isCheckingMagicLinkToken.value = false
-  }
-})
-
-async function handleTokenSubmitted(token: string): Promise<void> {
-  await doVerifyToken(token)
-}
-
-async function doVerifyToken(token: string) {
-  lastTokenAttempt.value = token
   isLoading.value = true
   try {
-    const res = await authStore.verifyToken(token)
+    const res = await authStore.verifyToken(params.data.token)
     if (res.success) {
-      isValidated.value = true
       error.value = ''
       await router.push('/browse')
       return
-    } else {
-      switch (res.code) {
-        case 'AUTH_EXPIRED_TOKEN':
-          error.value = t('auth.token_expired')
-          break
-        case 'AUTH_INVALID_TOKEN':
-          error.value = t('auth.token_invalid')
-          break
-        case 'AUTH_INVALID_INPUT':
-          error.value = t('auth.token_different_device')
-          break
-        default:
-          error.value = t('auth.token_unknown_error')
-      }
-      isValidated.value = false
-      return
     }
+    switch (res.code) {
+      case 'AUTH_EXPIRED_TOKEN':
+        error.value = t('auth.token_expired')
+        break
+      case 'AUTH_INVALID_TOKEN':
+        error.value = t('auth.token_invalid')
+        break
+      case 'AUTH_INVALID_INPUT':
+        error.value = t('auth.token_different_device')
+        break
+      default:
+        error.value = t('auth.token_unknown_error')
+    }
+    isCheckingMagicLinkToken.value = false
   } finally {
     isLoading.value = false
   }
-}
+})
 
 function handleBackButton() {
   error.value = ''
@@ -119,11 +96,14 @@ function handleBackButton() {
         variant="primary"
       />
       <DevAutoLogin v-else-if="DevAutoLogin" />
-      <template v-else>
-        <template v-if="authStore.isPhoneAuth">
+      <div
+        v-else
+        class="text-center"
+      >
+        <template v-if="!error">
           <div class="fs-4 mb-3 w-100">
             <ViewTitle
-              :icon="IconMessage"
+              :icon="IconMail"
               title=""
               class="text-primary"
             />
@@ -131,50 +111,23 @@ function handleBackButton() {
               {{ $t('auth.token_check_messages') }}
             </div>
           </div>
-          <div class="mb-3 form-text">
-            {{ $t('auth.token_sent_phone') }}
-          </div>
-          <TokenInput
-            :isLoading="isLoading"
-            :validationResult="isValidated"
-            :validationError="error"
-            :initialToken="lastTokenAttempt"
-            @token:submit="handleTokenSubmitted"
-          />
+          <p class="text-muted fs-6">{{ $t('auth.token_check_email') }}</p>
         </template>
         <div
-          v-else
-          class="text-center"
+          v-if="error"
+          class="mt-2"
         >
-          <template v-if="!error">
-            <div class="fs-4 mb-3 w-100">
-              <ViewTitle
-                :icon="IconMail"
-                title=""
-                class="text-primary"
-              />
-              <div class="text-center">
-                {{ $t('auth.token_check_messages') }}
-              </div>
-            </div>
-            <p class="text-muted fs-6">{{ $t('auth.token_check_email') }}</p>
-          </template>
-          <div
-            v-if="error"
-            class="mt-2"
-          >
-            <div class="text-danger mb-2">{{ error }}</div>
+          <div class="text-danger mb-2">{{ error }}</div>
 
-            <BButton
-              variant="secondary"
-              :title="$t('uicomponents.back_button_title')"
-              @click="handleBackButton"
-            >
-              {{ $t('uicomponents.back_button_title') }}
-            </BButton>
-          </div>
+          <BButton
+            variant="secondary"
+            :title="$t('uicomponents.back_button_title')"
+            @click="handleBackButton"
+          >
+            {{ $t('uicomponents.back_button_title') }}
+          </BButton>
         </div>
-      </template>
+      </div>
     </div>
   </AuthLayout>
 </template>

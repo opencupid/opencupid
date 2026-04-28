@@ -23,7 +23,6 @@ export async function sendOnboardingReminders(
         gte: windowStart,
         lt: windowEnd,
       },
-      email: { not: null },
       OR: [{ profile: null }, { profile: { isOnboarded: false } }],
     },
     select: {
