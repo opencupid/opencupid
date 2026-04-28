@@ -63,28 +63,11 @@ export class UserService {
     user: User
     isNewUser: boolean
   }> {
-    // Normalize identifiers: lowercase email, remove all whitespace from phone
-    // Note: Callers ensure either email or phonenumber exists (validated at route level)
-    let normalizedAuthId: { email: string } | { phonenumber: string }
-
-    if (authId.email) {
-      normalizedAuthId = { email: authId.email.toLowerCase() }
-    } else if (authId.phonenumber) {
-      // Remove all whitespace characters (spaces, tabs, newlines) from phone number
-      normalizedAuthId = { phonenumber: authId.phonenumber.replace(/\s+/g, '') }
-    } else {
-      throw new Error(
-        'Invalid authentication identifier: neither email nor phone number provided (should be validated at route level)'
-      )
-    }
-
-    const authIdField = normalizedAuthId
-    const userExists = await prisma.user.findUnique({ where: { ...authIdField } })
+    const email = authId.email.trim().toLowerCase()
+    const userExists = await prisma.user.findUnique({ where: { email } })
     const tokenExpiration = getTokenExpiration()
 
-    // user record exists
     if (userExists) {
-      // Check if registration completed already or we're dealing with a new user
       const isNewUser = userExists.isRegistrationConfirmed === false
       // Skip issuing a new login token for blocked users. updateMany (vs update)
       // treats a no-match filter as a no-op instead of throwing P2025.
@@ -98,11 +81,9 @@ export class UserService {
       return { user: userExists, isNewUser }
     }
 
-    const isNewUser = true
-    // register email address
     const user = await prisma.user.create({
       data: {
-        ...authIdField,
+        email,
         loginToken: otp,
         loginTokenExp: tokenExpiration,
         language,
@@ -110,7 +91,7 @@ export class UserService {
       },
     })
 
-    return { user, isNewUser }
+    return { user, isNewUser: true }
   }
 
   async getUserById(userId: string): Promise<User | null> {
@@ -153,11 +134,7 @@ export class UserService {
   }
 
   async findByAuthId(authId: string): Promise<User | null> {
-    return prisma.user.findFirst({
-      where: {
-        OR: [{ email: authId.toLowerCase() }, { phonenumber: authId.replace(/\s+/g, '') }],
-      },
-    })
+    return prisma.user.findUnique({ where: { email: authId.toLowerCase() } })
   }
 
   generateLoginToken() {

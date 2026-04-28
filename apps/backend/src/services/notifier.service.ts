@@ -108,7 +108,7 @@ export class NotifierService {
       where: { id: userId },
     })
     if (!user) return
-    await this.notifyResolvedUser(user as NotifiableUser, emailType, args)
+    await this.notifyResolvedUser(user, emailType, args)
   }
 
   private createEmailPayload<T extends NotificationType>(
@@ -142,10 +142,7 @@ export class NotifierService {
     emailType: T,
     args: NotificationParams[T]
   ): Promise<void> {
-    if (!user || !user.email) return
-
     const emailPayload = this.createEmailPayload(emailType, args, user)
-
     await this.disp.dispatchEmail(emailPayload, this.constructDispatchKey(emailType, args, user))
   }
 }

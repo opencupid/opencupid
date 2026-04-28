@@ -99,7 +99,7 @@ describe('UserService.setLoginToken', () => {
   it('creates new user when missing', async () => {
     mockPrisma.user.findUnique.mockResolvedValue(null)
     mockPrisma.user.create.mockResolvedValue({ id: 'new' })
-    const res = await service.setLoginToken({ phonenumber: '+1' }, '999', 'en', 'test.local')
+    const res = await service.setLoginToken({ email: 'new@example.com' }, '999', 'en', 'test.local')
     expect(res.isNewUser).toBe(true)
     expect(mockPrisma.user.create).toHaveBeenCalled()
     expect(res.user.id).toBe('new')
@@ -122,30 +122,6 @@ describe('UserService.setLoginToken', () => {
       data: {
         email: 'new@example.com',
         loginToken: '123',
-        loginTokenExp: expect.any(Date),
-        language: 'en',
-        originDomain: 'test.local',
-      },
-    })
-  })
-
-  it('removes whitespace from phone number when looking up user', async () => {
-    const user = { id: 'u2', phonenumber: '+12345678901', isRegistrationConfirmed: true }
-    mockPrisma.user.findUnique.mockResolvedValue(user)
-    await service.setLoginToken({ phonenumber: '+1 234 567 8901' }, '456', 'en', 'test.local')
-    expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
-      where: { phonenumber: '+12345678901' },
-    })
-  })
-
-  it('removes whitespace from phone number when creating new user', async () => {
-    mockPrisma.user.findUnique.mockResolvedValue(null)
-    mockPrisma.user.create.mockResolvedValue({ id: 'new', phonenumber: '+12345678901' })
-    await service.setLoginToken({ phonenumber: '+1 234 567 8901' }, '456', 'en', 'test.local')
-    expect(mockPrisma.user.create).toHaveBeenCalledWith({
-      data: {
-        phonenumber: '+12345678901',
-        loginToken: '456',
         loginTokenExp: expect.any(Date),
         language: 'en',
         originDomain: 'test.local',

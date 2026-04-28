@@ -1,4 +1,3 @@
-import cuid from 'cuid'
 import { randomUUID } from 'crypto'
 import { FastifyPluginAsync } from 'fastify'
 import { notifierService } from '@/services/notifier.service'
@@ -6,7 +5,6 @@ import { UserService } from '@/services/user.service'
 import { RefreshTokenService } from '@/services/refresh-token.service'
 import { createNewUserSession, getExistingUserSession } from '@/services/auth-session'
 import { rateLimitConfig, sendError, sendUnauthorizedError } from '../helpers'
-import { SmsService } from '@/services/sms.service'
 import { CaptchaService } from '@/services/captcha.service'
 import { appConfig } from '@/lib/appconfig'
 import '@fastify/cookie'
@@ -22,7 +20,7 @@ import type {
   SendMagicLinkResponse,
   WsTicketResponse,
 } from '@zod/apiResponse.dto'
-import { UserIdentifier, JwtPayload } from '@zod/user/user.dto'
+import { JwtPayload } from '@zod/user/user.dto'
 import {
   setSessionCookie,
   setRefreshCookie,
@@ -199,10 +197,9 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * POST /send-magic-link
-   * Sends a magic-link login email or SMS OTP code to the given identifier.
+   * Sends a magic-link login email to the given identifier.
    * Creates the user if they don't exist yet.
-   * @body {string} [email] - Email address (send email link)
-   * @body {string} [phonenumber] - Phone number (send SMS OTP)
+   * @body {string} email - Email address (send email link)
    * @body {string} captchaSolution - ALTCHA captcha solution
    * @body {string} [language] - Preferred language code
    * @returns {SendMagicLinkResponse} User info + status ('login' | 'register')
@@ -220,7 +217,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.code(400).send({ code: 'AUTH_MISSING_FIELD' })
       }
 
-      const { email, phonenumber, captchaSolution, language } = params.data
+      const { email, captchaSolution, language } = params.data
 
       try {
         const captchaOk = await captchaService.validate(captchaSolution)
@@ -232,36 +229,13 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.code(500).send({ code: 'AUTH_INTERNAL_ERROR' })
       }
 
-      let token = ''
-
-      if (email) {
-        token = userService.generateLoginToken()
-      } else if (phonenumber) {
-        const smsService = new SmsService(appConfig.SMS_API_KEY)
-        const userId = cuid()
-        const smsRes = await smsService.sendOtp(phonenumber, userId)
-        if (smsRes.success && smsRes.otp && smsRes.otp !== '') {
-          token = smsRes.otp
-        } else {
-          fastify.log.error('Textbelt error sending', smsRes.error)
-          return reply.code(500).send({
-            code: 'AUTH_INTERNAL_ERROR',
-            message:
-              'SMS sending is down at the moment. Apologies for that, please try again later.',
-          })
-        }
-      }
-
-      const authId: UserIdentifier = {
-        email: email || undefined,
-        phonenumber: phonenumber || undefined,
-      }
+      const token = userService.generateLoginToken()
 
       // Per-brand-stack deployment: each API container's env DOMAIN is the
       // brand it serves. Read it directly instead of req.hostname — vite's
       // dev proxy rewrites Host (changeOrigin: true) which would clobber it.
       const { user, isNewUser } = await userService.setLoginToken(
-        authId,
+        { email },
         token,
         language,
         appConfig.DOMAIN
@@ -290,10 +264,9 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
           ? `https://${user.originDomain}`
           : appConfig.FRONTEND_URL
 
-      if (user.email)
-        await notifierService.notifyUser(user.id, 'login_link', {
-          link: `${linkBase}/magic-link?token=${token}`,
-        })
+      await notifierService.notifyUser(user.id, 'login_link', {
+        link: `${linkBase}/magic-link?token=${token}`,
+      })
 
       const response: SendMagicLinkResponse = {
         success: true,

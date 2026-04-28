@@ -1042,7 +1042,7 @@ describe('GET /subscribers', () => {
     ])
   })
 
-  it('only queries users with email and active profile', async () => {
+  it('only queries users with active profile', async () => {
     mockPrisma.user.findMany.mockResolvedValue([])
 
     const handler = fastify.routes['GET /subscribers']
@@ -1050,7 +1050,6 @@ describe('GET /subscribers', () => {
 
     expect(mockPrisma.user.findMany).toHaveBeenCalledWith({
       where: {
-        email: { not: null },
         profile: { isActive: true },
       },
       select: {

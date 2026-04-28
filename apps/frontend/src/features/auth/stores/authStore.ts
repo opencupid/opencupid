@@ -68,10 +68,6 @@ function migrateLegacyToken(): string | null {
   return legacyToken
 }
 
-const getAuthId = (authId: UserIdentifier): string => {
-  return authId.email ? authId.email : (authId.phonenumber ?? '')
-}
-
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     session: null as SessionData | null,
@@ -86,7 +82,6 @@ export const useAuthStore = defineStore('auth', {
     isLoggedIn: (state) => state.userId !== null,
     getUserId: (state) => state.userId,
     getEmail: (state) => state.email,
-    isPhoneAuth: (state) => Boolean(state.loginUser?.phonenumber),
   },
 
   actions: {
@@ -191,7 +186,7 @@ export const useAuthStore = defineStore('auth', {
         }
         const user = params.data
         this.loginUser = user
-        localStorage.setItem('authId', getAuthId(authId))
+        localStorage.setItem('authId', authId.email)
         return {
           success: true,
           user,

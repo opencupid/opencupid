@@ -59,20 +59,6 @@ describe('NotifierService', () => {
     expect(mockDispatchEmail).not.toHaveBeenCalled()
   })
 
-  it('notifyUser: skips when user email is missing', async () => {
-    mockPrisma.user.findUnique.mockResolvedValue({
-      id: 'user-1',
-      email: null,
-      language: 'en',
-      profile: { publicName: 'Alice' },
-    })
-
-    const service = new NotifierService({ dispatchEmail: mockDispatchEmail } as any)
-    await service.notifyUser('user-1', 'welcome', { link: 'https://frontend.test/me' })
-
-    expect(mockDispatchEmail).not.toHaveBeenCalled()
-  })
-
   it('notifyProfile: skips when profile is missing', async () => {
     mockPrisma.profile.findUnique.mockResolvedValue(null)
 

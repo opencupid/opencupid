@@ -5,7 +5,7 @@ import { apiRequest } from '../composables/useApi'
 
 interface AdminUser {
   id: string
-  email: string | null
+  email: string
   phonenumber: string | null
   isActive: boolean
   isBlocked: boolean
@@ -101,7 +101,7 @@ interface AdminProfile {
   gender: string | null
   createdAt: string
   userId: string
-  user: { email: string | null; phonenumber: string | null } | null
+  user: { email: string; phonenumber: string | null } | null
 }
 
 const selectedProfile = ref<AdminProfile | null>(null)
@@ -303,7 +303,7 @@ onUnmounted(() => {
             style="cursor: pointer"
             @click="viewUser(user)"
           >
-            <td>{{ user.email || user.phonenumber || '-' }}</td>
+            <td>{{ user.email }}</td>
             <td>{{ user.profile?.publicName || '-' }}</td>
             <td>
               <span :class="user.isRegistrationConfirmed ? 'badge bg-success' : 'badge bg-warning'">
@@ -396,7 +396,7 @@ onUnmounted(() => {
                 <code>{{ selectedUser.id }}</code>
               </dd>
               <dt class="col-sm-4">Email</dt>
-              <dd class="col-sm-8">{{ selectedUser.email || '-' }}</dd>
+              <dd class="col-sm-8">{{ selectedUser.email }}</dd>
               <dt class="col-sm-4">Phone</dt>
               <dd class="col-sm-8">{{ selectedUser.phonenumber || '-' }}</dd>
               <dt class="col-sm-4">Roles</dt>
@@ -504,7 +504,7 @@ onUnmounted(() => {
               <dt class="col-sm-4">Name</dt>
               <dd class="col-sm-8">{{ selectedProfile.publicName || '-' }}</dd>
               <dt class="col-sm-4">User Email</dt>
-              <dd class="col-sm-8">{{ selectedProfile.user?.email || '-' }}</dd>
+              <dd class="col-sm-8">{{ selectedProfile.user?.email ?? '-' }}</dd>
               <dt class="col-sm-4">User Phone</dt>
               <dd class="col-sm-8">{{ selectedProfile.user?.phonenumber || '-' }}</dd>
               <dt class="col-sm-4">Country</dt>

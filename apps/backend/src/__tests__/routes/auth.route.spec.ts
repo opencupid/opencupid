@@ -38,7 +38,6 @@ vi.mock('@/lib/appconfig', () => ({
   appConfig: {
     NODE_ENV: 'development',
     ALTCHA_HMAC_KEY: 'x',
-    SMS_API_KEY: 'k',
     IMAGE_MAX_SIZE: 1000,
     FRONTEND_URL: 'http://test',
     DOMAIN: 'fallback.example',
@@ -489,42 +488,6 @@ describe('POST /send-magic-link', () => {
     expect(notifier.notifyUser).toHaveBeenCalledWith('user8', 'login_link', {
       link: 'http://test/magic-link?token=abc123',
     })
-  })
-
-  it('does not call findByAuthId or set __o cookie for phone-only auth', async () => {
-    // We don't care whether SMS succeeds here — the brand-mismatch lookup is
-    // gated on `email` being present, so phone-only requests must never
-    // trigger findByAuthId regardless of the SMS outcome.
-    const req = {
-      body: {
-        phonenumber: '+1234567890',
-        captchaSolution: 'ok',
-        language: 'en',
-      },
-    }
-    await handler(req as any, reply as any)
-    expect(mockUserService.findByAuthId).not.toHaveBeenCalled()
-    expect(reply.cookies.find((c: any) => c.name === '__o')).toBeUndefined()
-  })
-
-  it('returns 500 if SMS sending fails', async () => {
-    vi.mock('@/services/sms.service', () => ({
-      SmsService: class {
-        sendOtp = vi.fn().mockResolvedValue({ success: false, error: 'smsfail' })
-      },
-    }))
-    vi.mock('cuid', () => ({ default: () => 'cmc7t45x400086w39gj30pzn3' }))
-    const req = {
-      body: {
-        phonenumber: '+1234567890',
-        captchaSolution: 'ok',
-        language: 'en',
-      },
-    }
-    await handler(req as any, reply as any)
-    expect(reply.statusCode).toBe(500)
-    expect(reply.payload.code).toBe('AUTH_INTERNAL_ERROR')
-    expect(reply.payload.message).toMatch(/SMS sending is down/)
   })
 })
 

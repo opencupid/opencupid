@@ -10,17 +10,13 @@ export const JwtPayloadSchema = z.object({
 export type JwtPayload = z.infer<typeof JwtPayloadSchema>
 
 export const UserIdentifierSchema = z.object({
-  email: z.string().optional(),
-  phonenumber: z.string().optional(),
+  email: z.string().trim().min(1, 'Email is required').email('Invalid email address'),
 })
 export type UserIdentifier = z.infer<typeof UserIdentifierSchema>
 
 export const UserIdentifyPayloadSchema = UserIdentifierSchema.extend({
   captchaSolution: z.string().min(1, 'Captcha solution is required'),
   language: z.string(),
-}).refine((data) => !!data.email || !!data.phonenumber, {
-  message: 'Either email or phone number is required.',
-  path: ['email'], // mark the error on the email field (or 'phonenumber')
 })
 export type UserIdentifyPayload = z.infer<typeof UserIdentifyPayloadSchema>
 

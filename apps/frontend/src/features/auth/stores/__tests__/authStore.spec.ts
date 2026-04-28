@@ -166,7 +166,7 @@ describe('authStore localStorage auth flow', () => {
     clearSessionCookie()
   })
 
-  it('saves authId in localStorage after sendMagicLink success (email)', async () => {
+  it('saves authId in localStorage after sendMagicLink success', async () => {
     mockApi.post.mockResolvedValue({
       data: {
         user: {
@@ -181,7 +181,7 @@ describe('authStore localStorage auth flow', () => {
     })
 
     const store = useAuthStore()
-    const res = await store.sendMagicLink({ email: 'test@example.com', phonenumber: '' })
+    const res = await store.sendMagicLink({ email: 'test@example.com' })
 
     expect(res.success).toBe(true)
     expect(localStorage.getItem('authId')).toBe('test@example.com')
@@ -203,9 +203,8 @@ describe('authStore localStorage auth flow', () => {
 
     const store = useAuthStore()
     expect(store.loginUser).toBeNull()
-    expect(store.isPhoneAuth).toBe(false)
 
-    await store.sendMagicLink({ email: 'test@example.com', phonenumber: '' })
+    await store.sendMagicLink({ email: 'test@example.com' })
 
     expect(store.loginUser).toEqual({
       id: 'ck1234567890abcd12345678',
@@ -215,7 +214,6 @@ describe('authStore localStorage auth flow', () => {
       newsletterOptIn: true,
       isPushNotificationEnabled: false,
     })
-    expect(store.isPhoneAuth).toBe(false)
 
     const token = makeJwt({
       userId: 'u1',
@@ -229,47 +227,6 @@ describe('authStore localStorage auth flow', () => {
     await store.verifyToken('123456')
 
     expect(store.loginUser).toBeNull()
-  })
-
-  it('sets isPhoneAuth to true for phone-based login', async () => {
-    mockApi.post.mockResolvedValue({
-      data: {
-        user: {
-          id: 'ck1234567890abcd12345679',
-          email: '',
-          phonenumber: '+12345678901',
-          language: 'en',
-          newsletterOptIn: true,
-          isPushNotificationEnabled: false,
-        },
-      },
-    })
-
-    const store = useAuthStore()
-    await store.sendMagicLink({ email: '', phonenumber: '+12345678901' })
-
-    expect(store.isPhoneAuth).toBe(true)
-  })
-
-  it('saves phone number as authId after sendMagicLink success (phone)', async () => {
-    mockApi.post.mockResolvedValue({
-      data: {
-        user: {
-          id: 'ck1234567890abcd12345679',
-          email: '',
-          phonenumber: '+12345678901',
-          language: 'en',
-          newsletterOptIn: true,
-          isPushNotificationEnabled: false,
-        },
-      },
-    })
-
-    const store = useAuthStore()
-    const res = await store.sendMagicLink({ email: '', phonenumber: '+12345678901' })
-
-    expect(res.success).toBe(true)
-    expect(localStorage.getItem('authId')).toBe('+12345678901')
   })
 
   it('clears authId after successful verifyToken', async () => {

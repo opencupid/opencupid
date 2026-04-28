@@ -6,7 +6,6 @@ vi.mock('@/assets/images/app/logo.svg', () => ({ default: { template: '<div />' 
 vi.mock('@/assets/icons/interface/login.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/tick.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/mail.svg', () => ({ default: { template: '<div />' } }))
-vi.mock('@/assets/icons/interface/phone.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('../components/LocaleSelector.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 const stubFormKit = { template: '<form><slot :state="{ valid: true }" /></form>' }
@@ -25,7 +24,7 @@ describe('LoginForm', () => {
     ;(wrapper.vm as any).authIdInput = 'test@example.com'
     expect((wrapper.vm as any).inputState).toBe(true)
     ;(wrapper.vm as any).authIdInput = '+12345678901'
-    expect((wrapper.vm as any).inputState).toBe(true)
+    expect((wrapper.vm as any).inputState).toBe(false)
   })
 
   it('emits updated with computed identifier', async () => {
@@ -37,7 +36,6 @@ describe('LoginForm', () => {
     await (wrapper.vm as any).handleSendLoginLink()
     expect(wrapper.emitted('updated')![0]![0]).toEqual({
       email: 'test@example.com',
-      phonenumber: '',
       captchaSolution: '',
       language: '',
     })
