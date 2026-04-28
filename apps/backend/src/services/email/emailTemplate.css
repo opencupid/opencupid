@@ -109,3 +109,8 @@ body {
   color: #8e8c84;
   text-align: left;
 }
+
+.unsubscribe {
+  margin-top: 8px;
+  font-size: 12px;
+}

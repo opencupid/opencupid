@@ -15,6 +15,7 @@ export const configSchema = z.object({
   WS_BASE_URL: z.string(),
 
   JWT_SECRET: z.string().min(10),
+  UNSUBSCRIBE_SECRET: z.string().min(10),
 
   DATABASE_URL: z.string().url(),
   REDIS_URL: z.string().url(),

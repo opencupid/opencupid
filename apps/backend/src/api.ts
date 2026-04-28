@@ -15,6 +15,9 @@ async function main() {
     trustProxy: true,
     disableRequestLogging: true,
     loggerInstance: logger,
+    // Signed unsubscribe tokens (HS256 JWT) are ~230 chars and exceed Fastify's
+    // 100-char default for path params, causing 404 on otherwise-valid routes.
+    routerOptions: { maxParamLength: 500 },
   })
 
   app.log.info(`🚀 Starting API, version ${__APP_VERSION__}`)

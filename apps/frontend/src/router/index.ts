@@ -10,6 +10,7 @@ import AppShell from '@/features/browse/views/BrowseProfiles.vue'
 import OnboardingView from '@/features/onboarding/views/Onboarding.vue'
 import LoginView from '@/features/auth/views/LoginView.vue'
 import MagicLink from '@/features/auth/views/MagicLink.vue'
+import UnsubscribeView from '@/features/unsubscribe/views/UnsubscribeView.vue'
 
 // All browse-area routes render AppShell. KeepAlive (include: ['AppShell'])
 // in AppShellLayout keeps it mounted across navigations. AppShell reads the
@@ -32,6 +33,12 @@ const routes: Array<RouteRecordRaw> = [
     path: '/magic-link',
     name: 'MagicLink',
     component: MagicLink,
+    meta: { requiresAuth: false },
+  },
+  {
+    path: '/unsubscribe/:token',
+    name: 'Unsubscribe',
+    component: UnsubscribeView,
     meta: { requiresAuth: false },
   },
 
@@ -94,7 +101,7 @@ router.beforeEach(async (to) => {
     return { name: 'Login' }
   }
 
-  if (!to.meta.requiresAuth && authStore.isLoggedIn) {
+  if (!to.meta.requiresAuth && authStore.isLoggedIn && to.name !== 'Unsubscribe') {
     return { name: 'Browse' }
   }
 })

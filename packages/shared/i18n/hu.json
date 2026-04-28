@@ -35,6 +35,7 @@
   "calls": {
     "accept": "Fogadás",
     "allow_calls_label": "Hívható vagyok",
+    "section_title": "Hívások",
     "call_button_title": "Videóhívás",
     "calling": "Hívás...",
     "cancel_call": "Mégse",
@@ -74,6 +75,7 @@
       "contentBody": "Szia, elkezdted a profilod beállítását, de még nem fejezted be. Ha problémába ütköztél, vagy valami nem volt teljesen egyértelmű, válaszolj nyugodtan erre az emailre, szívesen segítünk. Szép napot!",
       "subject": "Elkezdett regisztráció"
     },
+    "unsubscribe_link": "Leiratkozás az értesítő levelekről",
     "welcome": {
       "callToActionLabel": "Kapcsolódj",
       "contentBody": "Üdv a közösségben!",
@@ -509,12 +511,16 @@
     "widowed": "Özvegy"
   },
   "settings": {
+    "calls_opt_in_hint": "Ezt minden tagnál külön is letilthatod. Ha egyáltalán nem szeretnél videóhívásokat fogadni, vedd ki a pipát.",
+    "email_notifications_opt_in": "e-mail értesítést új üzenetről",
     "enable_push": "Push értesítések engedélyezése",
     "language_label": "Nyelv",
     "newsletter_opt_in": "Szívesen kapok alkalmi hírlevelet",
+    "newsletter_opt_in_hint": "Közösségi hírek, új funkciók, ilyesmi. Bármikor leiratkozhatsz.",
     "notifications_label": "Értesítések",
+    "notifications_opt_in": "Ha üzenetet, lájkot vagy találatot kapok...",
     "push_notifications": "Push értesítések",
-    "push_notify_messages": "Értesítést kérek, ha üzenetet kapok",
+    "push_notify_messages": "Mobil értesítés  új üzenetről",
     "title": "Beállítások"
   },
   "uicomponents": {
@@ -576,5 +582,16 @@
       "message": "Új verzió jelent meg, frissítsünk?",
       "reload": "Frissítsd"
     }
+  },
+  "unsubscribe": {
+    "already_body": "Már nem küldünk neked értesítő e-maileket.",
+    "already_title": "Már le vagy iratkozva",
+    "confirm_body": "Nem fogsz több értesítő e-mailt kapni. Bármikor bejelentkezve módosíthatod a beállításokat.",
+    "confirm_button": "Leiratkozom",
+    "confirm_title": "Leiratkozol az e-mail értesítésekről?",
+    "done_body": "Mostantól nem küldünk neked értesítő e-maileket.",
+    "done_title": "Sikeresen leiratkoztál",
+    "error_body": "Ez a leiratkozási link érvénytelen vagy lejárt. Kérjük, jelentkezz be a beállítások módosításához.",
+    "error_title": "Érvénytelen vagy lejárt link"
   }
 }

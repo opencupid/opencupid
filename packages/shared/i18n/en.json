@@ -35,6 +35,7 @@
   "calls": {
     "accept": "Accept",
     "allow_calls_label": "Allow calls",
+    "section_title": "Calls",
     "call_button_title": "Start video call",
     "calling": "Calling...",
     "cancel_call": "Cancel",
@@ -71,6 +72,7 @@
       "contentBody": "Hey there, you started setting up your profile on {siteName} but haven't finished yet. Did you change your mind or had some trouble? If you need any help, feel free to reply to this email.",
       "subject": "Forgot your profile?"
     },
+    "unsubscribe_link": "Unsubscribe from these emails",
     "welcome": {
       "callToActionLabel": "Go connect with people",
       "contentBody": "Hey there, welcome aboard!",
@@ -504,12 +506,14 @@
     "widowed": "Widowed"
   },
   "settings": {
-    "enable_push": "Enable Push Notifications",
+    "calls_opt_in_hint": "You can disable this on a per-member basis as well. Uncheck this if you're not interested in using this at all.",
+    "email_notifications_opt_in": "Email",
     "language_label": "Language",
-    "newsletter_opt_in": "I'm happy to receive the occasional email newsletter",
+    "newsletter_opt_in": "Email newsletter",
+    "newsletter_opt_in_hint": "Community updates, new features, that kind of stuff. You can unsubscribe any time.",
+    "notifications_opt_in": "When someone sends me a message, like or match...",
     "notifications_label": "Notifications",
-    "push_notifications": "Push Notifications",
-    "push_notify_messages": "Notifications when someone messages me",
+    "push_notify_messages": "Popup and mobile notification",
     "title": "Settings"
   },
   "uicomponents": {
@@ -571,5 +575,16 @@
       "message": "An update is available.",
       "reload": "Reload"
     }
+  },
+  "unsubscribe": {
+    "already_body": "You no longer receive notification emails from us.",
+    "already_title": "You're already unsubscribed",
+    "confirm_body": "You won't receive any more notification emails. You can still log in and update your preferences at any time.",
+    "confirm_button": "Unsubscribe",
+    "confirm_title": "Unsubscribe from email notifications?",
+    "done_body": "You won't receive further notification emails from us.",
+    "done_title": "You've been unsubscribed",
+    "error_body": "This unsubscribe link is invalid or has expired. Please log in to manage your email preferences.",
+    "error_title": "Link invalid or expired"
   }
 }

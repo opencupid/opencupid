@@ -132,7 +132,7 @@ export const UpdateProfileOptInPayloadSchema = ProfileOptInSettingsSchema.partia
   .strict()
   .refine((data) => Object.keys(data).length > 0, {
     message:
-      'At least one field (isCallable, newsletterOptIn, or isPushNotificationEnabled) is required',
+      'At least one field (isCallable, newsletterOptIn, emailNotificationsOptIn, or isPushNotificationEnabled) is required',
   })
 export type UpdateProfileOptInPayload = z.infer<typeof UpdateProfileOptInPayloadSchema>
 

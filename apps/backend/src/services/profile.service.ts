@@ -119,6 +119,7 @@ export class ProfileService {
         user: {
           select: {
             newsletterOptIn: true,
+            emailNotificationsOptIn: true,
             isPushNotificationEnabled: true,
           },
         },
@@ -130,6 +131,7 @@ export class ProfileService {
     return {
       isCallable: profile.isCallable,
       newsletterOptIn: profile.user.newsletterOptIn,
+      emailNotificationsOptIn: profile.user.emailNotificationsOptIn,
       isPushNotificationEnabled: profile.user.isPushNotificationEnabled,
     }
   }
@@ -158,6 +160,9 @@ export class ProfileService {
     if (typeof data.newsletterOptIn === 'boolean') {
       userUpdateData.newsletterOptIn = data.newsletterOptIn
     }
+    if (typeof data.emailNotificationsOptIn === 'boolean') {
+      userUpdateData.emailNotificationsOptIn = data.emailNotificationsOptIn
+    }
     if (typeof data.isPushNotificationEnabled === 'boolean') {
       userUpdateData.isPushNotificationEnabled = data.isPushNotificationEnabled
     }
@@ -181,6 +186,7 @@ export class ProfileService {
 
     let userFlags: {
       newsletterOptIn: boolean
+      emailNotificationsOptIn: boolean
       isPushNotificationEnabled: boolean
     } | null = null
 
@@ -190,6 +196,7 @@ export class ProfileService {
         data: userUpdateData,
         select: {
           newsletterOptIn: true,
+          emailNotificationsOptIn: true,
           isPushNotificationEnabled: true,
         },
       })
@@ -198,6 +205,7 @@ export class ProfileService {
         where: { id: userId },
         select: {
           newsletterOptIn: true,
+          emailNotificationsOptIn: true,
           isPushNotificationEnabled: true,
         },
       })
@@ -208,6 +216,7 @@ export class ProfileService {
     return {
       isCallable,
       newsletterOptIn: userFlags.newsletterOptIn,
+      emailNotificationsOptIn: userFlags.emailNotificationsOptIn,
       isPushNotificationEnabled: userFlags.isPushNotificationEnabled,
     }
   }

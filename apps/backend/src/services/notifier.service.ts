@@ -1,8 +1,10 @@
 import { prisma } from '@/lib/prisma'
+import type { User } from '@prisma/client'
 import i18next from 'i18next'
-import { currentBrand } from '@/lib/brand'
+import { currentBrand, type Brand } from '@/lib/brand'
 import { dispatcher } from '@/queues/emailDispatcher'
 import type { EmailPayload } from './email/types'
+import { hashEmail, signUnsubscribeToken } from './email/unsubscribeToken'
 
 type NotificationType =
   | 'login_link'
@@ -12,12 +14,18 @@ type NotificationType =
   | 'new_match'
   | 'onboarding_reminder'
 
-type NotifiableUser = {
-  id: string
-  email: string
-  language: string
-  profile?: { publicName: string }
-}
+// login_link is auth/transactional — always sent and never carries an
+// unsubscribe link or List-Unsubscribe header. Every other type is a
+// suppressible notification subject to emailNotificationsOptIn.
+const SUPPRESSIBLE_TYPES: ReadonlySet<NotificationType> = new Set([
+  'welcome',
+  'new_message',
+  'new_like',
+  'new_match',
+  'onboarding_reminder',
+])
+
+type NotifiableUser = User & { profile?: { publicName: string } | null }
 
 interface NotificationParams {
   login_link: { link: string }
@@ -92,7 +100,7 @@ export class NotifierService {
       },
     })
     if (!profile?.user) return
-    await this.notifyResolvedUser(profile.user as NotifiableUser, type, args)
+    await this.notifyResolvedUser(profile.user, type, args)
   }
 
   /**
@@ -120,6 +128,9 @@ export class NotifierService {
     const { siteName } = brand
     const t = i18next.getFixedT(user.language)
 
+    const suppressible = SUPPRESSIBLE_TYPES.has(emailType)
+    const unsubscribe = suppressible ? this.buildUnsubscribe(brand, user, t) : undefined
+
     // emailType maps 1:1 to the i18n key under `emails.*` (e.g. emails.new_message.subject).
     return {
       to: user.email,
@@ -133,7 +144,39 @@ export class NotifierService {
         callToActionUrl: args.link,
         fallbackHint: t(`emails.fallback_hint`),
         footer: t(`emails.${emailType}.footer`, { defaultValue: '' }),
+        unsubscribeUrl: unsubscribe?.pageUrl,
+        unsubscribeLabel: unsubscribe?.label,
       },
+      headers: unsubscribe
+        ? {
+            'List-Unsubscribe': `<${unsubscribe.apiUrl}>`,
+            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+          }
+        : undefined,
+    }
+  }
+
+  private buildUnsubscribe(
+    brand: Brand,
+    user: NotifiableUser,
+    t: ReturnType<typeof i18next.getFixedT>
+  ): { pageUrl: string; apiUrl: string; label: string } {
+    const token = signUnsubscribeToken({
+      userId: user.id,
+      emailHash: hashEmail(user.email),
+    })
+    // The page (footer link) lives on the SPA so the user gets a confirmation UI.
+    // The API URL goes in the List-Unsubscribe header where mail providers POST
+    // for one-click — this MUST hit the backend route, not the SPA, since the
+    // SPA serves index.html for any path and would 200 a POST without doing
+    // anything (RFC 8058 §3 mail providers treat that as success).
+    // The page URL also carries ?lang because the unsubscribe view runs
+    // unauthenticated and has no access to User.language otherwise.
+    const lang = encodeURIComponent(user.language)
+    return {
+      pageUrl: `${brand.frontendUrl}/unsubscribe/${token}?lang=${lang}`,
+      apiUrl: `${brand.frontendUrl}/api/unsubscribe/${token}`,
+      label: t('emails.unsubscribe_link', { defaultValue: 'Unsubscribe from these emails' }),
     }
   }
 
@@ -142,6 +185,8 @@ export class NotifierService {
     emailType: T,
     args: NotificationParams[T]
   ): Promise<void> {
+    if (SUPPRESSIBLE_TYPES.has(emailType) && user.emailNotificationsOptIn === false) return
+
     const emailPayload = this.createEmailPayload(emailType, args, user)
     await this.disp.dispatchEmail(emailPayload, this.constructDispatchKey(emailType, args, user))
   }

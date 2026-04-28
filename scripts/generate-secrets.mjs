@@ -10,6 +10,7 @@ import { randomUUID, generateKeyPairSync } from 'node:crypto'
 // --- Simple secrets (UUID v4) ---
 console.log('# Secrets (paste into .env)\n')
 console.log(`JWT_SECRET=${randomUUID()}`)
+console.log(`UNSUBSCRIBE_SECRET=${randomUUID()}`)
 console.log(`AUTH_IMG_HMAC_SECRET=${randomUUID()}`)
 console.log(`ALTCHA_HMAC_KEY=${randomUUID()}`)
 

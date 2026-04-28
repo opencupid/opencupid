@@ -30,6 +30,7 @@ vi.mock('@/lib/appconfig', () => ({
     SITE_NAME: 'OpenCupid',
     FRONTEND_URL: 'https://frontend.test',
     DOMAIN: 'frontend.test',
+    UNSUBSCRIBE_SECRET: 'test-unsubscribe-secret',
   },
 }))
 
@@ -100,6 +101,7 @@ describe('NotifierService', () => {
         id: 'user-1',
         email: 'user@example.com',
         language: 'de',
+        emailNotificationsOptIn: true,
         profile: { publicName: 'Alice' },
       },
     })
@@ -109,27 +111,38 @@ describe('NotifierService', () => {
 
     expect(mockGetFixedT).toHaveBeenCalledWith('de')
     expect(mockDispatchEmail).toHaveBeenCalledTimes(1)
-    expect(mockDispatchEmail).toHaveBeenCalledWith(
-      {
-        to: 'user@example.com',
-        subject: 'emails.new_like.subject-translated',
-        brand: {
-          siteName: 'OpenCupid',
-          frontendUrl: 'https://frontend.test',
-          domain: 'frontend.test',
-        },
-        templateProps: {
-          siteName: 'OpenCupid',
-          publicName: 'Alice',
-          contentBody: 'emails.new_like.contentBody-translated',
-          callToActionLabel: 'emails.new_like.callToActionLabel-translated',
-          callToActionUrl: 'https://frontend.test/browse',
-          fallbackHint: 'emails.fallback_hint-translated',
-          footer: 'emails.new_like.footer-translated',
-        },
+    const [payload, jobId] = mockDispatchEmail.mock.calls[0]
+    expect(jobId).toMatch(/^new_like-user-1-\d+$/)
+    expect(payload).toMatchObject({
+      to: 'user@example.com',
+      subject: 'emails.new_like.subject-translated',
+      brand: {
+        siteName: 'OpenCupid',
+        frontendUrl: 'https://frontend.test',
+        domain: 'frontend.test',
       },
-      expect.stringMatching(/^new_like-user-1-\d+$/)
+      templateProps: expect.objectContaining({
+        siteName: 'OpenCupid',
+        publicName: 'Alice',
+        contentBody: 'emails.new_like.contentBody-translated',
+        callToActionLabel: 'emails.new_like.callToActionLabel-translated',
+        callToActionUrl: 'https://frontend.test/browse',
+        fallbackHint: 'emails.fallback_hint-translated',
+        footer: 'emails.new_like.footer-translated',
+        unsubscribeLabel: 'emails.unsubscribe_link-translated',
+      }),
+    })
+    const jwtPath = /[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/
+    // Footer link goes to the SPA page (with ?lang= for unauth localization).
+    expect(payload.templateProps.unsubscribeUrl).toMatch(
+      new RegExp(`^https://frontend\\.test/unsubscribe/${jwtPath.source}\\?lang=de$`)
     )
+    // List-Unsubscribe header MUST point at the API path so RFC 8058 one-click
+    // POSTs from mail providers reach the backend, not the SPA shell.
+    expect(payload.headers['List-Unsubscribe']).toMatch(
+      new RegExp(`^<https://frontend\\.test/api/unsubscribe/${jwtPath.source}>$`)
+    )
+    expect(payload.headers['List-Unsubscribe-Post']).toBe('List-Unsubscribe=One-Click')
   })
 
   it('notifyProfile: uses sender-scoped deterministic jobId for new_message', async () => {
@@ -139,6 +152,7 @@ describe('NotifierService', () => {
         id: 'user-recipient',
         email: 'recipient@example.com',
         language: 'en',
+        emailNotificationsOptIn: true,
         profile: { publicName: 'Bob' },
       },
     })
@@ -162,6 +176,7 @@ describe('NotifierService', () => {
       id: 'user-1',
       email: 'user@example.com',
       language: 'en',
+      emailNotificationsOptIn: true,
       profile: { publicName: 'Alice' },
     })
 
@@ -169,24 +184,16 @@ describe('NotifierService', () => {
     await service.notifyUser('user-1', 'welcome', { link: 'https://frontend.test/me' })
 
     expect(mockDispatchEmail).toHaveBeenCalledWith(
-      {
+      expect.objectContaining({
         to: 'user@example.com',
         subject: 'emails.welcome.subject-translated',
-        brand: {
-          siteName: 'OpenCupid',
-          frontendUrl: 'https://frontend.test',
-          domain: 'frontend.test',
-        },
-        templateProps: {
+        templateProps: expect.objectContaining({
           siteName: 'OpenCupid',
           publicName: 'Alice',
           contentBody: 'emails.welcome.contentBody-translated',
-          callToActionLabel: 'emails.welcome.callToActionLabel-translated',
           callToActionUrl: 'https://frontend.test/me',
-          fallbackHint: 'emails.fallback_hint-translated',
-          footer: 'emails.welcome.footer-translated',
-        },
-      },
+        }),
+      }),
       'welcome-user-1'
     )
   })
@@ -196,6 +203,7 @@ describe('NotifierService', () => {
       id: 'user-2',
       email: 'user2@example.com',
       language: 'en',
+      emailNotificationsOptIn: true,
       profile: null,
     })
 
@@ -219,5 +227,41 @@ describe('NotifierService', () => {
       }),
       'welcome-user-2'
     )
+  })
+
+  it('notifyUser: skips suppressible emails when emailNotificationsOptIn is false', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({
+      id: 'user-3',
+      email: 'user3@example.com',
+      language: 'en',
+      emailNotificationsOptIn: false,
+      profile: { publicName: 'Carol' },
+    })
+
+    const service = new NotifierService({ dispatchEmail: mockDispatchEmail } as any)
+    await service.notifyUser('user-3', 'welcome', { link: 'https://frontend.test/me' })
+
+    expect(mockDispatchEmail).not.toHaveBeenCalled()
+  })
+
+  it('notifyUser: always sends login_link even when emailNotificationsOptIn is false', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({
+      id: 'user-4',
+      email: 'user4@example.com',
+      language: 'en',
+      emailNotificationsOptIn: false,
+      profile: { publicName: 'Dave' },
+    })
+
+    const service = new NotifierService({ dispatchEmail: mockDispatchEmail } as any)
+    await service.notifyUser('user-4', 'login_link', {
+      link: 'https://frontend.test/magic-link?token=abc',
+    })
+
+    expect(mockDispatchEmail).toHaveBeenCalledTimes(1)
+    const [payload] = mockDispatchEmail.mock.calls[0]
+    expect(payload.headers).toBeUndefined()
+    expect(payload.templateProps.unsubscribeUrl).toBeUndefined()
+    expect(payload.templateProps.unsubscribeLabel).toBeUndefined()
   })
 })

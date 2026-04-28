@@ -53,12 +53,10 @@ function handleLogout() {
 
 <template>
   <div class="px-3 p-md-5 h-100 w-100 d-flex flex-column justify-content-center">
-    <fieldset class="d-flex align-items-center mb-3">
+    <fieldset class="d-flex align-items-center mb-5">
       <IconGlobe class="svg-icon svg-icon-lg me-2" />
       <LanguageSelectorDropdown size="md" />
     </fieldset>
-
-    <hr />
 
     <fieldset class="mb-3">
       <legend class="h6">{{ $t('settings.notifications_label') }}</legend>
