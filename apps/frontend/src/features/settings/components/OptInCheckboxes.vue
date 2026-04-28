@@ -96,12 +96,12 @@ async function handleOptInChange(event: Event, patch: UpdateProfileOptInPayload)
       >
         {{ t('settings.newsletter_opt_in') }}
       </label>
-    <div class="form-hint ">Community updates, new features, that kind of stuff. You can unsubscribe any time.</div>
+      <div class="form-hint">{{ t('settings.newsletter_opt_in_hint') }}</div>
     </div>
   </fieldset>
 
   <fieldset class="mb-2 mb-md-">
-    <legend class="h6">Calls</legend>
+    <legend class="h6">{{ t('calls.section_title') }}</legend>
 
     <div class="form-check">
       <input
@@ -120,8 +120,7 @@ async function handleOptInChange(event: Event, patch: UpdateProfileOptInPayload)
       >
         {{ t('calls.open_to_calls_setting') }}
       </label>
-    <div class="form-hint ">You can disable this on a per-member basis as well.  Uncheck this if you're not interested in using this at all.</div>
-
+      <div class="form-hint">{{ t('settings.calls_opt_in_hint') }}</div>
     </div>
   </fieldset>
 </template>

@@ -2,41 +2,48 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { api } from '@/lib/api'
 import AuthLayout from '@/features/auth/components/AuthLayout.vue'
+import { useI18nStore } from '@/store/i18nStore'
+import { useUnsubscribeStore } from '../stores/unsubscribeStore'
 
 type Status = 'loading' | 'confirm' | 'done' | 'already' | 'error'
 
 const route = useRoute()
 const { t } = useI18n()
+const i18nStore = useI18nStore()
+const unsubscribeStore = useUnsubscribeStore()
 
 const status = ref<Status>('loading')
 const submitting = ref(false)
 const token = String(route.params.token ?? '')
+
+// Apply the locale carried by the email URL before the page renders any text.
+// The unsubscribe view runs unauthenticated, so the user's stored language is
+// not available — the email layer encodes it as ?lang=<code>. The store ignores
+// invalid values, so a tampered or stale lang param is safe.
+const lang = typeof route.query.lang === 'string' ? route.query.lang : null
+if (lang && i18nStore.getAvailableLocales().includes(lang)) {
+  i18nStore.setLanguage(lang)
+}
 
 onMounted(async () => {
   if (!token) {
     status.value = 'error'
     return
   }
-  try {
-    const res = await api.get(`/unsubscribe/${encodeURIComponent(token)}`)
-    status.value = res.data.alreadyUnsubscribed ? 'already' : 'confirm'
-  } catch {
+  const res = await unsubscribeStore.getStatus(token)
+  if (!res.success) {
     status.value = 'error'
+    return
   }
+  status.value = res.data?.alreadyUnsubscribed ? 'already' : 'confirm'
 })
 
 async function confirmUnsubscribe() {
   submitting.value = true
-  try {
-    await api.post(`/unsubscribe/${encodeURIComponent(token)}`)
-    status.value = 'done'
-  } catch {
-    status.value = 'error'
-  } finally {
-    submitting.value = false
-  }
+  const res = await unsubscribeStore.unsubscribe(token)
+  submitting.value = false
+  status.value = res.success ? 'done' : 'error'
 }
 </script>
 

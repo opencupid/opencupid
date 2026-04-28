@@ -134,10 +134,10 @@ describe('NotifierService', () => {
     })
     const jwtPath = /[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/
     expect(payload.templateProps.unsubscribeUrl).toMatch(
-      new RegExp(`^https://frontend\\.test/unsubscribe/${jwtPath.source}$`)
+      new RegExp(`^https://frontend\\.test/unsubscribe/${jwtPath.source}\\?lang=de$`)
     )
     expect(payload.headers['List-Unsubscribe']).toMatch(
-      new RegExp(`^<https://frontend\\.test/unsubscribe/${jwtPath.source}>$`)
+      new RegExp(`^<https://frontend\\.test/unsubscribe/${jwtPath.source}\\?lang=de>$`)
     )
     expect(payload.headers['List-Unsubscribe-Post']).toBe('List-Unsubscribe=One-Click')
   })

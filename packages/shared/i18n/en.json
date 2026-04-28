@@ -35,6 +35,7 @@
   "calls": {
     "accept": "Accept",
     "allow_calls_label": "Allow calls",
+    "section_title": "Calls",
     "call_button_title": "Start video call",
     "calling": "Calling...",
     "cancel_call": "Cancel",
@@ -505,9 +506,11 @@
     "widowed": "Widowed"
   },
   "settings": {
+    "calls_opt_in_hint": "You can disable this on a per-member basis as well. Uncheck this if you're not interested in using this at all.",
     "email_notifications_opt_in": "Email",
     "language_label": "Language",
     "newsletter_opt_in": "Email newsletter",
+    "newsletter_opt_in_hint": "Community updates, new features, that kind of stuff. You can unsubscribe any time.",
     "notifications_opt_in": "When someone sends me a message, like or match...",
     "notifications_label": "Notifications",
     "push_notify_messages": "Popup and mobile notification",

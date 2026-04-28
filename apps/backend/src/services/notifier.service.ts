@@ -165,8 +165,12 @@ export class NotifierService {
       userId: user.id,
       emailHash: hashEmail(user.email),
     })
+    // The unsubscribe page renders before the user can authenticate, so it has no
+    // access to User.language. Carry the locale on the URL so the page can match
+    // the language the email was sent in.
+    const lang = encodeURIComponent(user.language)
     return {
-      url: `${brand.frontendUrl}/unsubscribe/${token}`,
+      url: `${brand.frontendUrl}/unsubscribe/${token}?lang=${lang}`,
       label: t('emails.unsubscribe_link', { defaultValue: 'Unsubscribe from these emails' }),
     }
   }

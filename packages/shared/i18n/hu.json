@@ -35,6 +35,7 @@
   "calls": {
     "accept": "Fogadás",
     "allow_calls_label": "Hívható vagyok",
+    "section_title": "Hívások",
     "call_button_title": "Videóhívás",
     "calling": "Hívás...",
     "cancel_call": "Mégse",
@@ -510,11 +511,14 @@
     "widowed": "Özvegy"
   },
   "settings": {
+    "calls_opt_in_hint": "Ezt minden tagnál külön is letilthatod. Ha egyáltalán nem szeretnél videóhívásokat fogadni, vedd ki a pipát.",
     "email_notifications_opt_in": "e-mail értesítést új üzenetről",
     "enable_push": "Push értesítések engedélyezése",
     "language_label": "Nyelv",
     "newsletter_opt_in": "Szívesen kapok alkalmi hírlevelet",
+    "newsletter_opt_in_hint": "Közösségi hírek, új funkciók, ilyesmi. Bármikor leiratkozhatsz.",
     "notifications_label": "Értesítések",
+    "notifications_opt_in": "Ha üzenetet, lájkot vagy találatot kapok...",
     "push_notifications": "Push értesítések",
     "push_notify_messages": "Mobil értesítés  új üzenetről",
     "title": "Beállítások"
