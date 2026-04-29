@@ -66,6 +66,34 @@ describe('ConversationSummaries', () => {
     expect(wrapper.find('.last-message').text()).toBe('messaging.voice.voice_message_preview')
   })
 
+  it('shows the "my turn" badge by default for non-admin-initiated conversations', () => {
+    const wrapper = mount(ConversationSummaries, {
+      props: {
+        conversations: [makeConvo({ isAdminInitiator: false })],
+        activeConversation: null,
+        loading: false,
+      },
+      ...globalMocks,
+    })
+
+    expect(wrapper.html()).toContain('messaging.my_turn')
+  })
+
+  it('hides the turn badges for admin-initiated conversations', () => {
+    const wrapper = mount(ConversationSummaries, {
+      props: {
+        conversations: [makeConvo({ isAdminInitiator: true })],
+        activeConversation: null,
+        loading: false,
+      },
+      ...globalMocks,
+    })
+
+    const html = wrapper.html()
+    expect(html).not.toContain('messaging.my_turn')
+    expect(html).not.toContain('messaging.their_turn')
+  })
+
   it('strips HTML tags from text message preview', () => {
     const wrapper = mount(ConversationSummaries, {
       props: {

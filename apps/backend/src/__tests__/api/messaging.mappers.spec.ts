@@ -5,9 +5,13 @@ import {
   mapAttachmentDTO,
 } from '../../api/mappers/messaging.mappers'
 vi.mock('@prisma/client', () => ({ Prisma: {}, PrismaClient: class {} }))
+const mockAppConfig: { MEDIA_URL_BASE: string; ADMIN_PROFILE_ID?: string } = {
+  MEDIA_URL_BASE: '/user-content',
+  ADMIN_PROFILE_ID: 'admin-profile',
+}
 vi.mock('@/lib/appconfig', () => ({
-  appConfig: {
-    MEDIA_URL_BASE: '/user-content',
+  get appConfig() {
+    return mockAppConfig
   },
 }))
 
@@ -39,6 +43,7 @@ const participant: any = {
     createdAt: new Date(),
     profileAId: 'p1',
     profileBId: 'p2',
+    initiatorProfileId: 'p1',
     profileA: profileMe,
     profileB: profileThem,
     participants: [
@@ -164,6 +169,38 @@ describe('messaging mappers', () => {
       }
       const summary = mapConversationParticipantToSummary(p, 'p1')
       expect(summary.myIsCallable).toBe(false)
+    })
+  })
+
+  describe('isAdminInitiator mapping', () => {
+    it('returns false when initiator is a regular user', () => {
+      const summary = mapConversationParticipantToSummary(participant, 'p1')
+      expect(summary.isAdminInitiator).toBe(false)
+    })
+
+    it('returns true when initiator equals appConfig.ADMIN_PROFILE_ID', () => {
+      const p: any = {
+        ...participant,
+        conversation: { ...participant.conversation, initiatorProfileId: 'admin-profile' },
+      }
+      const summary = mapConversationParticipantToSummary(p, 'p1')
+      expect(summary.isAdminInitiator).toBe(true)
+    })
+
+    it('returns false when ADMIN_PROFILE_ID is unset, even if initiator is also undefined', () => {
+      // Guards against undefined === undefined falsely matching every conversation.
+      const previous = mockAppConfig.ADMIN_PROFILE_ID
+      mockAppConfig.ADMIN_PROFILE_ID = undefined
+      try {
+        const p: any = {
+          ...participant,
+          conversation: { ...participant.conversation, initiatorProfileId: undefined },
+        }
+        const summary = mapConversationParticipantToSummary(p, 'p1')
+        expect(summary.isAdminInitiator).toBe(false)
+      } finally {
+        mockAppConfig.ADMIN_PROFILE_ID = previous
+      }
     })
   })
 

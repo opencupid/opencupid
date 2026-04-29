@@ -45,7 +45,10 @@ const haveConversations = computed(() => props.conversations.length > 0)
             }}</small
           >
         </div>
-        <div class="flex-shrink-0 me-2">
+        <div
+          v-if="!convo.isAdminInitiator"
+          class="flex-shrink-0 me-2"
+        >
           <small
             v-if="!convo.lastMessage?.isMine"
             class="badge bg-danger"
