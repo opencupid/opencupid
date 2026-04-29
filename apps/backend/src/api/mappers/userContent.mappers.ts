@@ -50,7 +50,7 @@ export type DbUserContentForSummary = {
 export function projectPublicUserContent<T extends DbUserContentRow>(
   row: T,
   viewerProfileId: string
-): Omit<PublicUserContentWithProfile, never> {
+): PublicUserContentWithProfile {
   const { postedBy, ...rest } = row
   return {
     ...PublicUserContentSchema.parse(rest),
@@ -68,7 +68,7 @@ export function projectPublicUserContent<T extends DbUserContentRow>(
 export function projectDetailUserContent<T extends DbUserContentRowWithContext>(
   row: T,
   viewerProfileId: string
-): Omit<PublicUserContentDetail, never> {
+): PublicUserContentDetail {
   const { postedBy, ...rest } = row
   return {
     ...PublicUserContentSchema.parse(rest),
@@ -98,7 +98,7 @@ export function projectOwnerUserContent<T extends DbUserContentRow>(row: T) {
 /** Summary projection for /search omnibox / map teaser layers. */
 export function projectUserContentSummary<T extends DbUserContentForSummary>(
   row: T
-): Omit<UserContentSummary, never> {
+): UserContentSummary {
   return {
     id: row.id,
     content: row.content,

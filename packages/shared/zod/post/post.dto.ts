@@ -2,7 +2,6 @@ import { z } from 'zod'
 import { PostSchema, PostTypeSchema } from '../generated'
 import { ProfileSummarySchema } from '../profile/profile.dto'
 import { ConversationContextSchema } from '../interaction/interactionContext.dto'
-import { DbMinimalProfileSchema } from '../profile/profile.db'
 import { LocationSchema } from '@zod/dto/location.dto'
 import {
   userContentPublicFields,
@@ -22,11 +21,6 @@ const ownerPostFields = {
   ...userContentOwnerFields,
   type: true,
 } as const
-
-export const PostWithProfileSchema = PostSchema.extend({
-  postedBy: DbMinimalProfileSchema,
-})
-export type PostWithProfile = z.infer<typeof PostWithProfileSchema>
 
 export const PublicPostSchema = PostSchema.pick(publicPostFields).extend({
   isOwn: z.boolean().optional(),

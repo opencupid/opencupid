@@ -6,7 +6,13 @@ import { rateLimitConfig, sendError } from '../helpers'
 import type { UserContentService, ListOptions } from '@/services/userContent.service'
 
 interface UserContentMappers<TRow, TDetailRow, TBoundsRow, TOwner, TPublic, TDetail, TSummary> {
-  toOwner(raw: TRow): TOwner
+  /**
+   * Maps an owner-visible row. Accepts either the standard `TRow` (returned
+   * by create/update/findByProfileId/etc.) or the wider `TDetailRow` from
+   * findByIdWithContext, since the GET /:id route hands the detail row to
+   * this mapper when the viewer owns the resource.
+   */
+  toOwner(raw: TRow | TDetailRow): TOwner
   toPublic(raw: TRow, viewerProfileId: string): TPublic
   toDetail(raw: TDetailRow, viewerProfileId: string): TDetail
   toSummary(raw: TBoundsRow): TSummary
@@ -32,8 +38,8 @@ interface UserContentSchemas<TCreatePayload, TUpdatePayload> {
 }
 
 export interface UserContentRouteConfig<
-  TRow,
-  TDetailRow,
+  TRow extends { postedById: string },
+  TDetailRow extends { postedById: string },
   TBoundsRow,
   TCreatePayload,
   TUpdatePayload,
@@ -74,8 +80,8 @@ export interface UserContentRouteConfig<
 const capitalize = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s)
 
 export function makeUserContentRoutes<
-  TRow,
-  TDetailRow,
+  TRow extends { postedById: string },
+  TDetailRow extends { postedById: string },
   TBoundsRow,
   TCreatePayload,
   TUpdatePayload,
@@ -144,10 +150,8 @@ export function makeUserContentRoutes<
         const raw = await service.findByIdWithContext(id, viewerProfileId)
         if (!raw) return sendError(reply, 404, `${capitalize(label)} not found`)
 
-        const isOwner = (raw as unknown as { postedById: string }).postedById === viewerProfileId
-        const item = isOwner
-          ? mappers.toOwner(raw as unknown as TRow)
-          : mappers.toDetail(raw, viewerProfileId)
+        const isOwner = raw.postedById === viewerProfileId
+        const item = isOwner ? mappers.toOwner(raw) : mappers.toDetail(raw, viewerProfileId)
 
         return reply.code(200).send({ success: true, [wire.singular]: item })
       } catch (err) {
