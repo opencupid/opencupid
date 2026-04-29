@@ -13,7 +13,7 @@ beforeEach(async () => {
   vi.doMock('../../lib/prisma', () => ({ prisma: mockPrisma }))
   vi.doMock('../../lib/appconfig', () => ({
     appConfig: {
-      WELCOME_MESSAGE_SENDER_PROFILE_ID: 'sys-sender',
+      ADMIN_PROFILE_ID: 'sys-sender',
       SITE_NAME: 'TestSite',
     },
   }))

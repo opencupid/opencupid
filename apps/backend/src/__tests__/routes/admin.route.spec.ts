@@ -58,7 +58,7 @@ vi.mock('@/lib/prisma', () => ({
 
 const mockAppConfig = vi.hoisted(() => ({
   DEEPL_API_KEY: 'test-deepl-key',
-  WELCOME_MESSAGE_SENDER_PROFILE_ID: 'sys-sender',
+  ADMIN_PROFILE_ID: 'sys-sender',
 }))
 
 vi.mock('@/lib/appconfig', () => ({
@@ -1102,7 +1102,7 @@ describe('POST /messages', () => {
   }
 
   beforeEach(() => {
-    mockAppConfig.WELCOME_MESSAGE_SENDER_PROFILE_ID = 'sys-sender'
+    mockAppConfig.ADMIN_PROFILE_ID = 'sys-sender'
     mockMessageService.resolveConversation.mockReset()
     mockMessageService.acceptConversationOnReply.mockReset()
     mockMessageService.promoteConversation.mockReset()
@@ -1128,7 +1128,7 @@ describe('POST /messages', () => {
   })
 
   it('returns 503 when sender is not configured', async () => {
-    mockAppConfig.WELCOME_MESSAGE_SENDER_PROFILE_ID = undefined as any
+    mockAppConfig.ADMIN_PROFILE_ID = undefined as any
     const handler = fastify.routes['POST /messages']
     await handler({ body: { profileIds: ['p1'], content: 'hi' } }, reply)
     expect(reply.statusCode).toBe(503)
