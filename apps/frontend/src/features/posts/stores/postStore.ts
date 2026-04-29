@@ -6,11 +6,8 @@ import {
   OwnerPostSchema,
   PostSummarySchema,
   type PublicPostWithProfile,
-  type PublicPostDetail,
   type OwnerPost,
   type PostSummary,
-  type CreatePostPayload,
-  type UpdatePostPayload,
   type PostQueryInput,
   type NearbyPostQueryInput,
   type PostScope,
@@ -27,14 +24,8 @@ export const usePostStore = defineStore('posts', () => {
   const currentItem = ref<PublicPostWithProfile | OwnerPost | null>(null)
 
   // --- generic UserContent actions, shared with future Event store ---
-  const a = useUserContentActions<
-    PublicPostWithProfile,
-    OwnerPost,
-    PostSummary,
-    PublicPostDetail,
-    CreatePostPayload,
-    UpdatePostPayload
-  >(
+  // Generics inferred from state refs and config (including wire literal types).
+  const a = useUserContentActions(
     { items, myItems, summaries, currentItem },
     {
       basePath: '/posts',
@@ -45,7 +36,7 @@ export const usePostStore = defineStore('posts', () => {
       detailSchema: PublicPostDetailSchema,
       endpoints: {
         list: '',
-        mine: 'profile/me',
+        mine: 'me',
         nearby: 'nearby',
         recent: 'recent',
         bounds: 'bounds',

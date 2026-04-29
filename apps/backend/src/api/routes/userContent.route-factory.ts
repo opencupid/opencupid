@@ -305,8 +305,8 @@ export function makeUserContentRoutes<
       )
     }
 
-    // GET /profile/me
-    fastify.get('/profile/me', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    // GET /me
+    fastify.get('/me', { onRequest: [fastify.authenticate] }, async (req, reply) => {
       const profileId = req.session.profileId
       if (!profileId) return sendError(reply, 401, 'Profile required')
       const query = schemas.listQuery.parse(req.query)

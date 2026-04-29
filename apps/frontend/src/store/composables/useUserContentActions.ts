@@ -8,7 +8,7 @@ import type { MapBounds } from '@/features/map/types/map.types'
 export interface UserContentEndpoints {
   /** GET / list endpoint, relative to basePath. Default: '' (i.e. basePath itself). */
   list?: string
-  /** GET /profile/me, relative to basePath. */
+  /** GET /me — owner-scoped list, relative to basePath. */
   mine: string
   /** GET /nearby. Optional. */
   nearby?: string
@@ -18,15 +18,26 @@ export interface UserContentEndpoints {
   bounds?: string
 }
 
-export interface UserContentActionsConfig<TPublic, TOwner, TSummary, TDetail> {
+export interface UserContentActionsConfig<
+  TPublic,
+  TOwner,
+  TSummary,
+  TDetail,
+  TSingular extends string = string,
+  TPlural extends string = string,
+> {
   /** Resource base path, e.g. '/posts'. */
   basePath: string
-  /** Wire response keys per content type. */
+  /**
+   * Wire response keys per content type. The literal types of `singular` and
+   * `plural` propagate into action return types so a Post store yields
+   * `{ post: ... }` and an Event store yields `{ event: ... }`.
+   */
   wire: {
     /** Singular response key, e.g. 'post'. Used in `{success, [singular]: ...}`. */
-    singular: string
+    singular: TSingular
     /** Plural response key, e.g. 'posts'. Used in `{success, [plural]: [...]}`. */
-    plural: string
+    plural: TPlural
   }
   publicSchema: z.ZodType<TPublic, z.ZodTypeDef, unknown>
   ownerSchema: z.ZodType<TOwner, z.ZodTypeDef, unknown>
@@ -56,11 +67,11 @@ export function useUserContentActions<
   TOwner extends { id: string; isVisible: boolean },
   TSummary,
   TDetail,
-  TCreatePayload,
-  TUpdatePayload extends Partial<{ isVisible: boolean }>,
+  TSingular extends string,
+  TPlural extends string,
 >(
   state: UserContentActionsState<TPublic, TOwner, TSummary>,
-  config: UserContentActionsConfig<TPublic, TOwner, TSummary, TDetail>
+  config: UserContentActionsConfig<TPublic, TOwner, TSummary, TDetail, TSingular, TPlural>
 ) {
   const publicArraySchema = config.publicSchema.array()
   const ownerArraySchema = config.ownerSchema.array()
@@ -74,28 +85,33 @@ export function useUserContentActions<
   const extractItem = (data: unknown): unknown => (data as Record<string, unknown>)[singular]
   const extractList = (data: unknown): unknown => (data as Record<string, unknown>)[plural]
 
+  const wrapItem = <V>(value: V) => ({ [singular]: value }) as Record<TSingular, V>
+  const wrapList = <V>(value: V) => ({ [plural]: value }) as Record<TPlural, V>
+
   // --- writes ---
 
-  async function create(payload: TCreatePayload): Promise<StoreResponse<{ post: TOwner }>> {
+  async function create<TCreatePayload>(
+    payload: TCreatePayload
+  ): Promise<StoreResponse<Record<TSingular, TOwner>>> {
     try {
       const res = await safeApiCall(() => api.post(config.basePath, payload))
       const item = config.ownerSchema.parse(extractItem(res.data))
       state.myItems.value.unshift(item)
-      return storeSuccess({ post: item })
+      return storeSuccess(wrapItem(item))
     } catch (error: any) {
       return storeError(error, errFor('create'))
     }
   }
 
-  async function update(
+  async function update<TUpdatePayload>(
     id: string,
     payload: TUpdatePayload
-  ): Promise<StoreResponse<{ post: TOwner }>> {
+  ): Promise<StoreResponse<Record<TSingular, TOwner>>> {
     try {
       const res = await safeApiCall(() => api.patch(`${config.basePath}/${id}`, payload))
       const item = config.ownerSchema.parse(extractItem(res.data))
       syncOwnerIntoState(id, item)
-      return storeSuccess({ post: item })
+      return storeSuccess(wrapItem(item))
     } catch (error: any) {
       return storeError(error, errFor('update'))
     }
@@ -116,11 +132,9 @@ export function useUserContentActions<
   async function setVisibility(
     id: string,
     isVisible: boolean
-  ): Promise<StoreResponse<{ post: TOwner }>> {
+  ): Promise<StoreResponse<Record<TSingular, TOwner>>> {
     try {
-      const res = await safeApiCall(() =>
-        api.patch(`${config.basePath}/${id}`, { isVisible } as TUpdatePayload)
-      )
+      const res = await safeApiCall(() => api.patch(`${config.basePath}/${id}`, { isVisible }))
       const item = config.ownerSchema.parse(extractItem(res.data))
       syncOwnerIntoState(id, item)
 
@@ -130,7 +144,7 @@ export function useUserContentActions<
         state.items.value = state.items.value.filter((p) => p.id !== id) as TPublic[]
       }
 
-      return storeSuccess({ post: item })
+      return storeSuccess(wrapItem(item))
     } catch (error: any) {
       return storeError(error, `Failed to update ${config.resourceLabel} visibility`)
     }
@@ -143,7 +157,7 @@ export function useUserContentActions<
 
   async function fetchList<Q extends PaginatedQueryLike>(
     query: Q = {} as Q
-  ): Promise<StoreResponse<{ posts: TPublic[] }>> {
+  ): Promise<StoreResponse<Record<TPlural, TPublic[]>>> {
     return fetchListInto(
       state.items,
       publicArraySchema,
@@ -155,7 +169,7 @@ export function useUserContentActions<
 
   async function fetchMine<Q extends PaginatedQueryLike>(
     query: Q = {} as Q
-  ): Promise<StoreResponse<{ posts: TOwner[] }>> {
+  ): Promise<StoreResponse<Record<TPlural, TOwner[]>>> {
     return fetchListInto(
       state.myItems,
       ownerArraySchema,
@@ -167,7 +181,7 @@ export function useUserContentActions<
 
   async function fetchNearby<Q extends PaginatedQueryLike>(
     query: Q
-  ): Promise<StoreResponse<{ posts: TPublic[] }>> {
+  ): Promise<StoreResponse<Record<TPlural, TPublic[]>>> {
     if (!config.endpoints.nearby) {
       return storeError(
         new Error('not supported'),
@@ -185,7 +199,7 @@ export function useUserContentActions<
 
   async function fetchRecent<Q extends PaginatedQueryLike>(
     query: Q = {} as Q
-  ): Promise<StoreResponse<{ posts: TPublic[] }>> {
+  ): Promise<StoreResponse<Record<TPlural, TPublic[]>>> {
     if (!config.endpoints.recent) {
       return storeError(
         new Error('not supported'),
@@ -201,7 +215,9 @@ export function useUserContentActions<
     )
   }
 
-  async function fetchInBounds(bounds: MapBounds): Promise<StoreResponse<{ posts: TSummary[] }>> {
+  async function fetchInBounds(
+    bounds: MapBounds
+  ): Promise<StoreResponse<Record<TPlural, TSummary[]>>> {
     if (!config.endpoints.bounds) {
       return storeError(
         new Error('not supported'),
@@ -214,7 +230,7 @@ export function useUserContentActions<
       )
       const items = summaryArraySchema.parse(extractList(res.data))
       state.summaries.value = items
-      return storeSuccess({ posts: items })
+      return storeSuccess(wrapList(items))
     } catch (error: any) {
       return storeError(error, `Failed to fetch ${config.resourceLabel} in bounds`)
     }
@@ -222,18 +238,18 @@ export function useUserContentActions<
 
   // --- single reads ---
 
-  async function fetchOwner(id: string): Promise<StoreResponse<{ post: TOwner }>> {
+  async function fetchOwner(id: string): Promise<StoreResponse<Record<TSingular, TOwner>>> {
     try {
       const res = await safeApiCall(() => api.get(`${config.basePath}/${id}`))
       const item = config.ownerSchema.parse(extractItem(res.data))
       state.currentItem.value = item
-      return storeSuccess({ post: item })
+      return storeSuccess(wrapItem(item))
     } catch (error: any) {
       return storeError(error, errFor('fetch'))
     }
   }
 
-  async function fetchPublic(id: string): Promise<StoreResponse<{ post: TDetail }>> {
+  async function fetchPublic(id: string): Promise<StoreResponse<Record<TSingular, TDetail>>> {
     publicSingleAbort?.abort()
     const ctl = new AbortController()
     publicSingleAbort = ctl
@@ -242,7 +258,7 @@ export function useUserContentActions<
         api.get(`${config.basePath}/${id}`, { signal: ctl.signal })
       )
       const item = config.detailSchema.parse(extractItem(res.data))
-      return storeSuccess({ post: item })
+      return storeSuccess(wrapItem(item))
     } catch (error: any) {
       if (error instanceof CanceledError) return storeSuccess()
       return storeError(error, errFor('fetch'))
@@ -251,15 +267,22 @@ export function useUserContentActions<
 
   // --- state helpers ---
 
+  /**
+   * Upserts an item into the public list and (when the input is owner-shaped)
+   * also into the owner list. Owner-shape detection uses the discriminating
+   * `isVisible` property; only owner-shaped inputs get `isOwn: true` forced
+   * onto the public list copy. Public-shaped inputs preserve their existing
+   * `isOwn` value (or absence thereof).
+   */
   function upsertItem(item: TPublic | TOwner): void {
-    const isOwn = 'isVisible' in item
-    if (isOwn) {
+    const isOwnerShape = 'isVisible' in item
+    if (isOwnerShape) {
       const i = state.myItems.value.findIndex((p) => p.id === item.id)
       if (i === -1) state.myItems.value.unshift(item as TOwner)
       else state.myItems.value[i] = item as TOwner
     }
     const j = state.items.value.findIndex((p) => p.id === item.id)
-    const asPublic = { ...(item as object), isOwn: true } as TPublic
+    const asPublic = (isOwnerShape ? { ...(item as object), isOwn: true } : item) as TPublic
     if (j === -1) state.items.value.unshift(asPublic)
     else state.items.value[j] = asPublic
   }
@@ -290,7 +313,7 @@ export function useUserContentActions<
     relPath: string,
     query: Q,
     errMsg: string
-  ): Promise<StoreResponse<{ posts: T[] }>> {
+  ): Promise<StoreResponse<Record<TPlural, T[]>>> {
     try {
       const res = await safeApiCall(() =>
         api.get(joinPath(config.basePath, relPath), { params: query })
@@ -298,7 +321,7 @@ export function useUserContentActions<
       const items = arraySchema.parse(extractList(res.data))
       if (query.offset === 0 || query.offset === undefined) target.value = items
       else target.value.push(...items)
-      return storeSuccess({ posts: items })
+      return storeSuccess(wrapList(items))
     } catch (error: any) {
       return storeError(error, errMsg)
     }
