@@ -1,6 +1,7 @@
 import { FastifyPluginAsync } from 'fastify'
 import { DeepLClient } from 'deepl-node'
 import slugify from 'slugify'
+import { Prisma } from '@prisma/client'
 import { TrustReasonSchema, type TrustReasonType } from '@zod/generated'
 import { sendError } from '../helpers'
 import { prisma } from '@/lib/prisma'
@@ -442,7 +443,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
   /**
    * POST /messages
    * Sends an in-app message from the configured system sender
-   * (WELCOME_MESSAGE_SENDER_PROFILE_ID) to a list of recipient profiles.
+   * (ADMIN_PROFILE_ID) to a list of recipient profiles.
    * @body {string[]} profileIds - Array of recipient profile IDs
    * @body {string} content - Message content
    * @returns {{ success, sent, failed, results }}
@@ -461,9 +462,9 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
       return sendError(reply, 400, 'content is required')
     }
 
-    const senderProfileId = appConfig.WELCOME_MESSAGE_SENDER_PROFILE_ID
+    const senderProfileId = appConfig.ADMIN_PROFILE_ID
     if (!senderProfileId) {
-      return sendError(reply, 503, 'WELCOME_MESSAGE_SENDER_PROFILE_ID is not configured')
+      return sendError(reply, 503, 'ADMIN_PROFILE_ID is not configured')
     }
 
     const uniqueProfileIds = Array.from(new Set(profileIds))
@@ -487,7 +488,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
             senderProfileId,
             recipientProfileId
           )
-          // System sender (WELCOME_MESSAGE_SENDER_PROFILE_ID) is never quarantined,
+          // System sender (ADMIN_PROFILE_ID) is never quarantined,
           // and admin broadcast bypasses the self-initiated re-send block (#1377).
           const outcome = computeSendOutcome(convo, wasCreated, senderProfileId, false, true)
 
@@ -1024,6 +1025,51 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
     } catch (err) {
       fastify.log.error({ err }, 'Error flagging profile')
       return sendError(reply, 500, 'Failed to flag profile')
+    }
+  })
+
+  /**
+   * GET /message-templates
+   * Returns every message template row, ordered by type then locale.
+   */
+  fastify.get('/message-templates', async (_req, reply) => {
+    try {
+      const templates = await prisma.messageTemplate.findMany({
+        orderBy: [{ type: 'asc' }, { locale: 'asc' }],
+      })
+      return reply.code(200).send({ success: true, templates })
+    } catch (err) {
+      fastify.log.error({ err }, 'Error fetching message templates')
+      return sendError(reply, 500, 'Failed to fetch message templates')
+    }
+  })
+
+  /**
+   * PATCH /message-templates/:id
+   * Updates the content of a single template. Type and locale are immutable
+   * (changing identity for a row would silently re-key live messaging behavior).
+   */
+  fastify.patch('/message-templates/:id', async (req, reply) => {
+    try {
+      const { id } = req.params as { id: string }
+      const body = (req.body ?? {}) as { content?: unknown }
+      const content = typeof body.content === 'string' ? body.content : ''
+
+      if (!content.trim()) {
+        return sendError(reply, 400, 'content is required')
+      }
+
+      const template = await prisma.messageTemplate.update({
+        where: { id },
+        data: { content },
+      })
+      return reply.code(200).send({ success: true, template })
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
+        return sendError(reply, 404, 'Message template not found')
+      }
+      fastify.log.error({ err }, 'Error updating message template')
+      return sendError(reply, 500, 'Failed to update message template')
     }
   })
 }

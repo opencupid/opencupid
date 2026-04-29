@@ -48,6 +48,8 @@ export const ProfileActivitySummaryScalarFieldEnumSchema = z.enum(['profileId','
 
 export const ProfileTrustFlagScalarFieldEnumSchema = z.enum(['id','profileId','reason','flaggedAt','clearedAt','clearedBy','evidence','flaggedBy']);
 
+export const MessageTemplateScalarFieldEnumSchema = z.enum(['id','type','locale','content','createdAt','updatedAt']);
+
 export const SortOrderSchema = z.enum(['asc','desc']);
 
 export const QueryModeSchema = z.enum(['default','insensitive']);
@@ -97,6 +99,10 @@ export type ConversationStatusType = `${z.infer<typeof ConversationStatusSchema>
 export const TrustReasonSchema = z.enum(['PROFILE_UNVETTED','SPAM_BURST']);
 
 export type TrustReasonType = `${z.infer<typeof TrustReasonSchema>}`
+
+export const MessageTemplateTypeSchema = z.enum(['welcome']);
+
+export type MessageTemplateTypeType = `${z.infer<typeof MessageTemplateTypeSchema>}`
 
 /////////////////////////////////////////
 // MODELS
@@ -433,6 +439,21 @@ export const ProfileTrustFlagSchema = z.object({
 })
 
 export type ProfileTrustFlag = z.infer<typeof ProfileTrustFlagSchema>
+
+/////////////////////////////////////////
+// MESSAGE TEMPLATE SCHEMA
+/////////////////////////////////////////
+
+export const MessageTemplateSchema = z.object({
+  type: MessageTemplateTypeSchema,
+  id: z.string().cuid(),
+  locale: z.string(),
+  content: z.string(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+})
+
+export type MessageTemplate = z.infer<typeof MessageTemplateSchema>
 
 /////////////////////////////////////////
 // SELECT & INCLUDE
@@ -1020,6 +1041,18 @@ export const ProfileTrustFlagSelectSchema: z.ZodType<Prisma.ProfileTrustFlagSele
   evidence: z.boolean().optional(),
   flaggedBy: z.boolean().optional(),
   profile: z.union([z.boolean(),z.lazy(() => ProfileArgsSchema)]).optional(),
+}).strict()
+
+// MESSAGE TEMPLATE
+//------------------------------------------------------
+
+export const MessageTemplateSelectSchema: z.ZodType<Prisma.MessageTemplateSelect> = z.object({
+  id: z.boolean().optional(),
+  type: z.boolean().optional(),
+  locale: z.boolean().optional(),
+  content: z.boolean().optional(),
+  createdAt: z.boolean().optional(),
+  updatedAt: z.boolean().optional(),
 }).strict()
 
 
@@ -2754,6 +2787,76 @@ export const ProfileTrustFlagScalarWhereWithAggregatesInputSchema: z.ZodType<Pri
   flaggedBy: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
 }).strict();
 
+export const MessageTemplateWhereInputSchema: z.ZodType<Prisma.MessageTemplateWhereInput> = z.object({
+  AND: z.union([ z.lazy(() => MessageTemplateWhereInputSchema),z.lazy(() => MessageTemplateWhereInputSchema).array() ]).optional(),
+  OR: z.lazy(() => MessageTemplateWhereInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => MessageTemplateWhereInputSchema),z.lazy(() => MessageTemplateWhereInputSchema).array() ]).optional(),
+  id: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  type: z.union([ z.lazy(() => EnumMessageTemplateTypeFilterSchema),z.lazy(() => MessageTemplateTypeSchema) ]).optional(),
+  locale: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  content: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+}).strict();
+
+export const MessageTemplateOrderByWithRelationInputSchema: z.ZodType<Prisma.MessageTemplateOrderByWithRelationInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  type: z.lazy(() => SortOrderSchema).optional(),
+  locale: z.lazy(() => SortOrderSchema).optional(),
+  content: z.lazy(() => SortOrderSchema).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  updatedAt: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const MessageTemplateWhereUniqueInputSchema: z.ZodType<Prisma.MessageTemplateWhereUniqueInput> = z.union([
+  z.object({
+    id: z.string().cuid(),
+    type_locale: z.lazy(() => MessageTemplateTypeLocaleCompoundUniqueInputSchema)
+  }),
+  z.object({
+    id: z.string().cuid(),
+  }),
+  z.object({
+    type_locale: z.lazy(() => MessageTemplateTypeLocaleCompoundUniqueInputSchema),
+  }),
+])
+.and(z.object({
+  id: z.string().cuid().optional(),
+  type_locale: z.lazy(() => MessageTemplateTypeLocaleCompoundUniqueInputSchema).optional(),
+  AND: z.union([ z.lazy(() => MessageTemplateWhereInputSchema),z.lazy(() => MessageTemplateWhereInputSchema).array() ]).optional(),
+  OR: z.lazy(() => MessageTemplateWhereInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => MessageTemplateWhereInputSchema),z.lazy(() => MessageTemplateWhereInputSchema).array() ]).optional(),
+  type: z.union([ z.lazy(() => EnumMessageTemplateTypeFilterSchema),z.lazy(() => MessageTemplateTypeSchema) ]).optional(),
+  locale: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  content: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+}).strict());
+
+export const MessageTemplateOrderByWithAggregationInputSchema: z.ZodType<Prisma.MessageTemplateOrderByWithAggregationInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  type: z.lazy(() => SortOrderSchema).optional(),
+  locale: z.lazy(() => SortOrderSchema).optional(),
+  content: z.lazy(() => SortOrderSchema).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  updatedAt: z.lazy(() => SortOrderSchema).optional(),
+  _count: z.lazy(() => MessageTemplateCountOrderByAggregateInputSchema).optional(),
+  _max: z.lazy(() => MessageTemplateMaxOrderByAggregateInputSchema).optional(),
+  _min: z.lazy(() => MessageTemplateMinOrderByAggregateInputSchema).optional()
+}).strict();
+
+export const MessageTemplateScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.MessageTemplateScalarWhereWithAggregatesInput> = z.object({
+  AND: z.union([ z.lazy(() => MessageTemplateScalarWhereWithAggregatesInputSchema),z.lazy(() => MessageTemplateScalarWhereWithAggregatesInputSchema).array() ]).optional(),
+  OR: z.lazy(() => MessageTemplateScalarWhereWithAggregatesInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => MessageTemplateScalarWhereWithAggregatesInputSchema),z.lazy(() => MessageTemplateScalarWhereWithAggregatesInputSchema).array() ]).optional(),
+  id: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
+  type: z.union([ z.lazy(() => EnumMessageTemplateTypeWithAggregatesFilterSchema),z.lazy(() => MessageTemplateTypeSchema) ]).optional(),
+  locale: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
+  content: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
+  createdAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
+  updatedAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
+}).strict();
+
 export const TagCreateInputSchema: z.ZodType<Prisma.TagCreateInput> = z.object({
   id: z.string().cuid().optional(),
   slug: z.string(),
@@ -4386,6 +4489,69 @@ export const ProfileTrustFlagUncheckedUpdateManyInputSchema: z.ZodType<Prisma.Pr
   flaggedBy: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
+export const MessageTemplateCreateInputSchema: z.ZodType<Prisma.MessageTemplateCreateInput> = z.object({
+  id: z.string().cuid().optional(),
+  type: z.lazy(() => MessageTemplateTypeSchema),
+  locale: z.string(),
+  content: z.string(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional()
+}).strict();
+
+export const MessageTemplateUncheckedCreateInputSchema: z.ZodType<Prisma.MessageTemplateUncheckedCreateInput> = z.object({
+  id: z.string().cuid().optional(),
+  type: z.lazy(() => MessageTemplateTypeSchema),
+  locale: z.string(),
+  content: z.string(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional()
+}).strict();
+
+export const MessageTemplateUpdateInputSchema: z.ZodType<Prisma.MessageTemplateUpdateInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  type: z.union([ z.lazy(() => MessageTemplateTypeSchema),z.lazy(() => EnumMessageTemplateTypeFieldUpdateOperationsInputSchema) ]).optional(),
+  locale: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  content: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+}).strict();
+
+export const MessageTemplateUncheckedUpdateInputSchema: z.ZodType<Prisma.MessageTemplateUncheckedUpdateInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  type: z.union([ z.lazy(() => MessageTemplateTypeSchema),z.lazy(() => EnumMessageTemplateTypeFieldUpdateOperationsInputSchema) ]).optional(),
+  locale: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  content: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+}).strict();
+
+export const MessageTemplateCreateManyInputSchema: z.ZodType<Prisma.MessageTemplateCreateManyInput> = z.object({
+  id: z.string().cuid().optional(),
+  type: z.lazy(() => MessageTemplateTypeSchema),
+  locale: z.string(),
+  content: z.string(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional()
+}).strict();
+
+export const MessageTemplateUpdateManyMutationInputSchema: z.ZodType<Prisma.MessageTemplateUpdateManyMutationInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  type: z.union([ z.lazy(() => MessageTemplateTypeSchema),z.lazy(() => EnumMessageTemplateTypeFieldUpdateOperationsInputSchema) ]).optional(),
+  locale: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  content: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+}).strict();
+
+export const MessageTemplateUncheckedUpdateManyInputSchema: z.ZodType<Prisma.MessageTemplateUncheckedUpdateManyInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  type: z.union([ z.lazy(() => MessageTemplateTypeSchema),z.lazy(() => EnumMessageTemplateTypeFieldUpdateOperationsInputSchema) ]).optional(),
+  locale: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  content: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+}).strict();
+
 export const StringFilterSchema: z.ZodType<Prisma.StringFilter> = z.object({
   equals: z.string().optional(),
   in: z.string().array().optional(),
@@ -5752,6 +5918,55 @@ export const EnumTrustReasonWithAggregatesFilterSchema: z.ZodType<Prisma.EnumTru
   _count: z.lazy(() => NestedIntFilterSchema).optional(),
   _min: z.lazy(() => NestedEnumTrustReasonFilterSchema).optional(),
   _max: z.lazy(() => NestedEnumTrustReasonFilterSchema).optional()
+}).strict();
+
+export const EnumMessageTemplateTypeFilterSchema: z.ZodType<Prisma.EnumMessageTemplateTypeFilter> = z.object({
+  equals: z.lazy(() => MessageTemplateTypeSchema).optional(),
+  in: z.lazy(() => MessageTemplateTypeSchema).array().optional(),
+  notIn: z.lazy(() => MessageTemplateTypeSchema).array().optional(),
+  not: z.union([ z.lazy(() => MessageTemplateTypeSchema),z.lazy(() => NestedEnumMessageTemplateTypeFilterSchema) ]).optional(),
+}).strict();
+
+export const MessageTemplateTypeLocaleCompoundUniqueInputSchema: z.ZodType<Prisma.MessageTemplateTypeLocaleCompoundUniqueInput> = z.object({
+  type: z.lazy(() => MessageTemplateTypeSchema),
+  locale: z.string()
+}).strict();
+
+export const MessageTemplateCountOrderByAggregateInputSchema: z.ZodType<Prisma.MessageTemplateCountOrderByAggregateInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  type: z.lazy(() => SortOrderSchema).optional(),
+  locale: z.lazy(() => SortOrderSchema).optional(),
+  content: z.lazy(() => SortOrderSchema).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  updatedAt: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const MessageTemplateMaxOrderByAggregateInputSchema: z.ZodType<Prisma.MessageTemplateMaxOrderByAggregateInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  type: z.lazy(() => SortOrderSchema).optional(),
+  locale: z.lazy(() => SortOrderSchema).optional(),
+  content: z.lazy(() => SortOrderSchema).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  updatedAt: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const MessageTemplateMinOrderByAggregateInputSchema: z.ZodType<Prisma.MessageTemplateMinOrderByAggregateInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  type: z.lazy(() => SortOrderSchema).optional(),
+  locale: z.lazy(() => SortOrderSchema).optional(),
+  content: z.lazy(() => SortOrderSchema).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  updatedAt: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const EnumMessageTemplateTypeWithAggregatesFilterSchema: z.ZodType<Prisma.EnumMessageTemplateTypeWithAggregatesFilter> = z.object({
+  equals: z.lazy(() => MessageTemplateTypeSchema).optional(),
+  in: z.lazy(() => MessageTemplateTypeSchema).array().optional(),
+  notIn: z.lazy(() => MessageTemplateTypeSchema).array().optional(),
+  not: z.union([ z.lazy(() => MessageTemplateTypeSchema),z.lazy(() => NestedEnumMessageTemplateTypeWithAggregatesFilterSchema) ]).optional(),
+  _count: z.lazy(() => NestedIntFilterSchema).optional(),
+  _min: z.lazy(() => NestedEnumMessageTemplateTypeFilterSchema).optional(),
+  _max: z.lazy(() => NestedEnumMessageTemplateTypeFilterSchema).optional()
 }).strict();
 
 export const TagTranslationCreateNestedManyWithoutTagInputSchema: z.ZodType<Prisma.TagTranslationCreateNestedManyWithoutTagInput> = z.object({
@@ -7342,6 +7557,10 @@ export const ProfileUpdateOneRequiredWithoutTrustFlagsNestedInputSchema: z.ZodTy
   update: z.union([ z.lazy(() => ProfileUpdateToOneWithWhereWithoutTrustFlagsInputSchema),z.lazy(() => ProfileUpdateWithoutTrustFlagsInputSchema),z.lazy(() => ProfileUncheckedUpdateWithoutTrustFlagsInputSchema) ]).optional(),
 }).strict();
 
+export const EnumMessageTemplateTypeFieldUpdateOperationsInputSchema: z.ZodType<Prisma.EnumMessageTemplateTypeFieldUpdateOperationsInput> = z.object({
+  set: z.lazy(() => MessageTemplateTypeSchema).optional()
+}).strict();
+
 export const NestedStringFilterSchema: z.ZodType<Prisma.NestedStringFilter> = z.object({
   equals: z.string().optional(),
   in: z.string().array().optional(),
@@ -7727,6 +7946,23 @@ export const NestedEnumTrustReasonWithAggregatesFilterSchema: z.ZodType<Prisma.N
   _count: z.lazy(() => NestedIntFilterSchema).optional(),
   _min: z.lazy(() => NestedEnumTrustReasonFilterSchema).optional(),
   _max: z.lazy(() => NestedEnumTrustReasonFilterSchema).optional()
+}).strict();
+
+export const NestedEnumMessageTemplateTypeFilterSchema: z.ZodType<Prisma.NestedEnumMessageTemplateTypeFilter> = z.object({
+  equals: z.lazy(() => MessageTemplateTypeSchema).optional(),
+  in: z.lazy(() => MessageTemplateTypeSchema).array().optional(),
+  notIn: z.lazy(() => MessageTemplateTypeSchema).array().optional(),
+  not: z.union([ z.lazy(() => MessageTemplateTypeSchema),z.lazy(() => NestedEnumMessageTemplateTypeFilterSchema) ]).optional(),
+}).strict();
+
+export const NestedEnumMessageTemplateTypeWithAggregatesFilterSchema: z.ZodType<Prisma.NestedEnumMessageTemplateTypeWithAggregatesFilter> = z.object({
+  equals: z.lazy(() => MessageTemplateTypeSchema).optional(),
+  in: z.lazy(() => MessageTemplateTypeSchema).array().optional(),
+  notIn: z.lazy(() => MessageTemplateTypeSchema).array().optional(),
+  not: z.union([ z.lazy(() => MessageTemplateTypeSchema),z.lazy(() => NestedEnumMessageTemplateTypeWithAggregatesFilterSchema) ]).optional(),
+  _count: z.lazy(() => NestedIntFilterSchema).optional(),
+  _min: z.lazy(() => NestedEnumMessageTemplateTypeFilterSchema).optional(),
+  _max: z.lazy(() => NestedEnumMessageTemplateTypeFilterSchema).optional()
 }).strict();
 
 export const TagTranslationCreateWithoutTagInputSchema: z.ZodType<Prisma.TagTranslationCreateWithoutTagInput> = z.object({
@@ -15942,6 +16178,63 @@ export const ProfileTrustFlagFindUniqueOrThrowArgsSchema: z.ZodType<Prisma.Profi
   where: ProfileTrustFlagWhereUniqueInputSchema,
 }).strict() ;
 
+export const MessageTemplateFindFirstArgsSchema: z.ZodType<Prisma.MessageTemplateFindFirstArgs> = z.object({
+  select: MessageTemplateSelectSchema.optional(),
+  where: MessageTemplateWhereInputSchema.optional(),
+  orderBy: z.union([ MessageTemplateOrderByWithRelationInputSchema.array(),MessageTemplateOrderByWithRelationInputSchema ]).optional(),
+  cursor: MessageTemplateWhereUniqueInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ MessageTemplateScalarFieldEnumSchema,MessageTemplateScalarFieldEnumSchema.array() ]).optional(),
+}).strict() ;
+
+export const MessageTemplateFindFirstOrThrowArgsSchema: z.ZodType<Prisma.MessageTemplateFindFirstOrThrowArgs> = z.object({
+  select: MessageTemplateSelectSchema.optional(),
+  where: MessageTemplateWhereInputSchema.optional(),
+  orderBy: z.union([ MessageTemplateOrderByWithRelationInputSchema.array(),MessageTemplateOrderByWithRelationInputSchema ]).optional(),
+  cursor: MessageTemplateWhereUniqueInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ MessageTemplateScalarFieldEnumSchema,MessageTemplateScalarFieldEnumSchema.array() ]).optional(),
+}).strict() ;
+
+export const MessageTemplateFindManyArgsSchema: z.ZodType<Prisma.MessageTemplateFindManyArgs> = z.object({
+  select: MessageTemplateSelectSchema.optional(),
+  where: MessageTemplateWhereInputSchema.optional(),
+  orderBy: z.union([ MessageTemplateOrderByWithRelationInputSchema.array(),MessageTemplateOrderByWithRelationInputSchema ]).optional(),
+  cursor: MessageTemplateWhereUniqueInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ MessageTemplateScalarFieldEnumSchema,MessageTemplateScalarFieldEnumSchema.array() ]).optional(),
+}).strict() ;
+
+export const MessageTemplateAggregateArgsSchema: z.ZodType<Prisma.MessageTemplateAggregateArgs> = z.object({
+  where: MessageTemplateWhereInputSchema.optional(),
+  orderBy: z.union([ MessageTemplateOrderByWithRelationInputSchema.array(),MessageTemplateOrderByWithRelationInputSchema ]).optional(),
+  cursor: MessageTemplateWhereUniqueInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+}).strict() ;
+
+export const MessageTemplateGroupByArgsSchema: z.ZodType<Prisma.MessageTemplateGroupByArgs> = z.object({
+  where: MessageTemplateWhereInputSchema.optional(),
+  orderBy: z.union([ MessageTemplateOrderByWithAggregationInputSchema.array(),MessageTemplateOrderByWithAggregationInputSchema ]).optional(),
+  by: MessageTemplateScalarFieldEnumSchema.array(),
+  having: MessageTemplateScalarWhereWithAggregatesInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+}).strict() ;
+
+export const MessageTemplateFindUniqueArgsSchema: z.ZodType<Prisma.MessageTemplateFindUniqueArgs> = z.object({
+  select: MessageTemplateSelectSchema.optional(),
+  where: MessageTemplateWhereUniqueInputSchema,
+}).strict() ;
+
+export const MessageTemplateFindUniqueOrThrowArgsSchema: z.ZodType<Prisma.MessageTemplateFindUniqueOrThrowArgs> = z.object({
+  select: MessageTemplateSelectSchema.optional(),
+  where: MessageTemplateWhereUniqueInputSchema,
+}).strict() ;
+
 export const TagCreateArgsSchema: z.ZodType<Prisma.TagCreateArgs> = z.object({
   select: TagSelectSchema.optional(),
   include: TagIncludeSchema.optional(),
@@ -16911,5 +17204,55 @@ export const ProfileTrustFlagUpdateManyAndReturnArgsSchema: z.ZodType<Prisma.Pro
 
 export const ProfileTrustFlagDeleteManyArgsSchema: z.ZodType<Prisma.ProfileTrustFlagDeleteManyArgs> = z.object({
   where: ProfileTrustFlagWhereInputSchema.optional(),
+  limit: z.number().optional(),
+}).strict() ;
+
+export const MessageTemplateCreateArgsSchema: z.ZodType<Prisma.MessageTemplateCreateArgs> = z.object({
+  select: MessageTemplateSelectSchema.optional(),
+  data: z.union([ MessageTemplateCreateInputSchema,MessageTemplateUncheckedCreateInputSchema ]),
+}).strict() ;
+
+export const MessageTemplateUpsertArgsSchema: z.ZodType<Prisma.MessageTemplateUpsertArgs> = z.object({
+  select: MessageTemplateSelectSchema.optional(),
+  where: MessageTemplateWhereUniqueInputSchema,
+  create: z.union([ MessageTemplateCreateInputSchema,MessageTemplateUncheckedCreateInputSchema ]),
+  update: z.union([ MessageTemplateUpdateInputSchema,MessageTemplateUncheckedUpdateInputSchema ]),
+}).strict() ;
+
+export const MessageTemplateCreateManyArgsSchema: z.ZodType<Prisma.MessageTemplateCreateManyArgs> = z.object({
+  data: z.union([ MessageTemplateCreateManyInputSchema,MessageTemplateCreateManyInputSchema.array() ]),
+  skipDuplicates: z.boolean().optional(),
+}).strict() ;
+
+export const MessageTemplateCreateManyAndReturnArgsSchema: z.ZodType<Prisma.MessageTemplateCreateManyAndReturnArgs> = z.object({
+  data: z.union([ MessageTemplateCreateManyInputSchema,MessageTemplateCreateManyInputSchema.array() ]),
+  skipDuplicates: z.boolean().optional(),
+}).strict() ;
+
+export const MessageTemplateDeleteArgsSchema: z.ZodType<Prisma.MessageTemplateDeleteArgs> = z.object({
+  select: MessageTemplateSelectSchema.optional(),
+  where: MessageTemplateWhereUniqueInputSchema,
+}).strict() ;
+
+export const MessageTemplateUpdateArgsSchema: z.ZodType<Prisma.MessageTemplateUpdateArgs> = z.object({
+  select: MessageTemplateSelectSchema.optional(),
+  data: z.union([ MessageTemplateUpdateInputSchema,MessageTemplateUncheckedUpdateInputSchema ]),
+  where: MessageTemplateWhereUniqueInputSchema,
+}).strict() ;
+
+export const MessageTemplateUpdateManyArgsSchema: z.ZodType<Prisma.MessageTemplateUpdateManyArgs> = z.object({
+  data: z.union([ MessageTemplateUpdateManyMutationInputSchema,MessageTemplateUncheckedUpdateManyInputSchema ]),
+  where: MessageTemplateWhereInputSchema.optional(),
+  limit: z.number().optional(),
+}).strict() ;
+
+export const MessageTemplateUpdateManyAndReturnArgsSchema: z.ZodType<Prisma.MessageTemplateUpdateManyAndReturnArgs> = z.object({
+  data: z.union([ MessageTemplateUpdateManyMutationInputSchema,MessageTemplateUncheckedUpdateManyInputSchema ]),
+  where: MessageTemplateWhereInputSchema.optional(),
+  limit: z.number().optional(),
+}).strict() ;
+
+export const MessageTemplateDeleteManyArgsSchema: z.ZodType<Prisma.MessageTemplateDeleteManyArgs> = z.object({
+  where: MessageTemplateWhereInputSchema.optional(),
   limit: z.number().optional(),
 }).strict() ;

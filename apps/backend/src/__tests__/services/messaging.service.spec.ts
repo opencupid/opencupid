@@ -11,6 +11,12 @@ beforeEach(async () => {
   vi.resetModules()
   mockPrisma = createMockPrisma()
   vi.doMock('../../lib/prisma', () => ({ prisma: mockPrisma }))
+  vi.doMock('../../lib/appconfig', () => ({
+    appConfig: {
+      ADMIN_PROFILE_ID: 'sys-sender',
+      SITE_NAME: 'TestSite',
+    },
+  }))
   const module = await import('../../services/messaging.service')
   ;(module.MessageService as any).instance = undefined
   service = module.MessageService.getInstance()
@@ -613,5 +619,48 @@ describe('MessageService.sendMessage (new primitive)', () => {
       code: 'EMPTY_MESSAGE',
     })
     expect(tx.message.create).not.toHaveBeenCalled()
+  })
+})
+
+describe('MessageService.sendWelcomeMessage', () => {
+  it('reads the template for the recipient locale and sends its content verbatim', async () => {
+    mockPrisma.messageTemplate.findUnique.mockResolvedValueOnce({
+      id: 't1',
+      type: 'welcome',
+      locale: 'hu',
+      content: 'Üdv az oldalon',
+    })
+    mockPrisma.conversation.findFirst.mockResolvedValue(null)
+    mockPrisma.conversation.create.mockResolvedValue({
+      id: 'c1',
+      status: 'INITIATED',
+      profileAId: 'sys-sender',
+      profileBId: 'p2',
+      initiatorProfileId: 'sys-sender',
+    })
+    mockPrisma.message.findFirst.mockResolvedValue(null)
+    mockPrisma.message.create.mockResolvedValue({ id: 'm1' })
+    mockPrisma.conversation.update.mockResolvedValue({})
+
+    await service.sendWelcomeMessage('p2', 'hu')
+
+    expect(mockPrisma.messageTemplate.findUnique).toHaveBeenCalledWith({
+      where: { type_locale: { type: 'welcome', locale: 'hu' } },
+    })
+    const createArgs = mockPrisma.message.create.mock.calls[0][0]
+    expect(createArgs.data.content).toBe('Üdv az oldalon')
+  })
+
+  it('does not send when the requested locale has no template (no fallback to other languages)', async () => {
+    mockPrisma.messageTemplate.findUnique.mockResolvedValue(null)
+
+    await service.sendWelcomeMessage('p2', 'fr')
+
+    expect(mockPrisma.messageTemplate.findUnique).toHaveBeenCalledTimes(1)
+    expect(mockPrisma.messageTemplate.findUnique).toHaveBeenCalledWith({
+      where: { type_locale: { type: 'welcome', locale: 'fr' } },
+    })
+    expect(mockPrisma.message.create).not.toHaveBeenCalled()
+    expect(mockPrisma.conversation.create).not.toHaveBeenCalled()
   })
 })

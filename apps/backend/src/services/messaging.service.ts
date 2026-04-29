@@ -3,7 +3,6 @@ import { prisma } from '@/lib/prisma'
 import type { ConversationParticipantWithConversationSummary } from '@zod/messaging/messaging.dto'
 import { Conversation } from '@zod/generated'
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
-import i18next from 'i18next'
 import { appConfig } from '../lib/appconfig'
 import { computeSendOutcome } from './messaging.stateMachine'
 
@@ -326,12 +325,16 @@ export class MessageService {
   }
 
   async sendWelcomeMessage(recipientProfileId: string, locale: string) {
-    const senderId = appConfig.WELCOME_MESSAGE_SENDER_PROFILE_ID
-    const siteName = appConfig.SITE_NAME
+    const senderId = appConfig.ADMIN_PROFILE_ID
     if (!senderId) return
-    const t = i18next.getFixedT(locale)
-    const mdContent = t('messages.welcome_message', { siteName })
-    const content = simpleMarkdownToHtml(mdContent)
+    // Only send when a template exists for the recipient's exact locale. We deliberately
+    // do not fall back to another language: a welcome in the wrong language is worse
+    // than no welcome at all.
+    const template = await prisma.messageTemplate.findUnique({
+      where: { type_locale: { type: 'welcome', locale } },
+    })
+    if (!template) return
+    const content = simpleMarkdownToHtml(template.content)
     return await prisma.$transaction(async (tx) => {
       const { convo, wasCreated } = await this.resolveConversation(tx, senderId, recipientProfileId)
       // System welcome sender is never quarantined — hardcode `false`. NOT an admin

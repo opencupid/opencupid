@@ -1,1 +1,0 @@
-import './seed/tags'

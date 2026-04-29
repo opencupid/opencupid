@@ -58,6 +58,7 @@ export function createMockPrisma() {
     },
     message: {
       count: vi.fn(),
+      findFirst: vi.fn(),
       findMany: vi.fn(),
       create: vi.fn(),
     },
@@ -83,6 +84,11 @@ export function createMockPrisma() {
       delete: vi.fn(),
       deleteMany: vi.fn(),
       count: vi.fn(),
+    },
+    messageTemplate: {
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      update: vi.fn(),
     },
     $transaction: vi.fn((fn: (client: any) => any) => fn(mock)),
   }
