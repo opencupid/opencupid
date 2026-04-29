@@ -3,11 +3,7 @@ import type { CreatePostPayload, UpdatePostPayload } from '@zod/post/post.dto'
 import { conversationContextInclude } from '@/db/includes/profileIncludes'
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
 import { prisma } from '@/lib/prisma'
-import type {
-  UserContentService,
-  ListOptions,
-  BoundsBox,
-} from './userContent.service'
+import type { UserContentService, ListOptions, BoundsBox } from './userContent.service'
 
 const postedByInclude = {
   include: {
@@ -37,16 +33,13 @@ export type PostWithProfileAndContext = Prisma.PostGetPayload<
   ReturnType<typeof postedByWithConversationInclude>
 >
 
-export class PostService
-  implements
-    UserContentService<
-      PostWithProfile,
-      PostWithProfileAndContext,
-      PostWithProfile,
-      CreatePostPayload,
-      UpdatePostPayload
-    >
-{
+export class PostService implements UserContentService<
+  PostWithProfile,
+  PostWithProfileAndContext,
+  PostWithProfile,
+  CreatePostPayload,
+  UpdatePostPayload
+> {
   private static instance: PostService
 
   private constructor() {}

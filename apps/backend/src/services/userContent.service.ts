@@ -11,13 +11,7 @@
  * concrete content type opt out — the route factory only registers the
  * corresponding endpoint when the method is present.
  */
-export interface UserContentService<
-  TRow,
-  TDetailRow,
-  TBoundsRow,
-  TCreatePayload,
-  TUpdatePayload,
-> {
+export interface UserContentService<TRow, TDetailRow, TBoundsRow, TCreatePayload, TUpdatePayload> {
   create(profileId: string, data: TCreatePayload): Promise<TRow>
   update(id: string, profileId: string, data: TUpdatePayload): Promise<TRow | null>
   delete(id: string, profileId: string): Promise<{ id: string } | null>
@@ -30,12 +24,7 @@ export interface UserContentService<
     options: ListOptions & { includeInvisible?: boolean }
   ): Promise<TRow[]>
 
-  findNearby?(
-    lat: number,
-    lon: number,
-    radius: number,
-    options: ListOptions
-  ): Promise<TRow[]>
+  findNearby?(lat: number, lon: number, radius: number, options: ListOptions): Promise<TRow[]>
   findRecent?(options: ListOptions): Promise<TRow[]>
   findInBounds?(bounds: BoundsBox): Promise<TBoundsRow[]>
 }

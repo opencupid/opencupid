@@ -1,12 +1,9 @@
 import { FastifyPluginAsync } from 'fastify'
-import { type ZodSchema } from 'zod'
+import { z } from 'zod'
 import { BoundsQuerySchema } from '@zod/dto/bounds.dto'
 import { validateBody } from '@/utils/zodValidate'
 import { rateLimitConfig, sendError } from '../helpers'
-import type {
-  UserContentService,
-  ListOptions,
-} from '@/services/userContent.service'
+import type { UserContentService, ListOptions } from '@/services/userContent.service'
 
 interface UserContentMappers<TRow, TDetailRow, TBoundsRow, TOwner, TPublic, TDetail, TSummary> {
   toOwner(raw: TRow): TOwner
@@ -15,13 +12,23 @@ interface UserContentMappers<TRow, TDetailRow, TBoundsRow, TOwner, TPublic, TDet
   toSummary(raw: TBoundsRow): TSummary
 }
 
+/**
+ * Schema slots accept any Zod schema whose parse output matches the expected
+ * shape. We use `z.ZodType<Output, ZodTypeDef, unknown>` (rather than
+ * `ZodSchema<T>` which requires input == output) so schemas with `.default()`,
+ * `.coerce`, or other input/output divergences are accepted.
+ */
 interface UserContentSchemas<TCreatePayload, TUpdatePayload> {
-  create: ZodSchema<TCreatePayload>
-  update: ZodSchema<TUpdatePayload>
-  params: ZodSchema<{ id: string }>
-  profileParams: ZodSchema<{ profileId: string }>
-  listQuery: ZodSchema<ListOptions>
-  nearbyQuery?: ZodSchema<ListOptions & { lat: number; lon: number; radius: number }>
+  create: z.ZodType<TCreatePayload, z.ZodTypeDef, unknown>
+  update: z.ZodType<TUpdatePayload, z.ZodTypeDef, unknown>
+  params: z.ZodType<{ id: string }, z.ZodTypeDef, unknown>
+  profileParams: z.ZodType<{ profileId: string }, z.ZodTypeDef, unknown>
+  listQuery: z.ZodType<ListOptions, z.ZodTypeDef, unknown>
+  nearbyQuery?: z.ZodType<
+    ListOptions & { lat: number; lon: number; radius: number },
+    z.ZodTypeDef,
+    unknown
+  >
 }
 
 export interface UserContentRouteConfig<
@@ -120,9 +127,7 @@ export function makeUserContentRoutes<
         try {
           const created = await service.create(profileId, data)
           await config.onMutation?.()
-          return reply
-            .code(201)
-            .send({ success: true, [wire.singular]: mappers.toOwner(created) })
+          return reply.code(201).send({ success: true, [wire.singular]: mappers.toOwner(created) })
         } catch (err: any) {
           fastify.log.error(err)
           return sendError(reply, 500, `Failed to create ${label}`)
@@ -139,8 +144,7 @@ export function makeUserContentRoutes<
         const raw = await service.findByIdWithContext(id, viewerProfileId)
         if (!raw) return sendError(reply, 404, `${capitalize(label)} not found`)
 
-        const isOwner =
-          (raw as unknown as { postedById: string }).postedById === viewerProfileId
+        const isOwner = (raw as unknown as { postedById: string }).postedById === viewerProfileId
         const item = isOwner
           ? mappers.toOwner(raw as unknown as TRow)
           : mappers.toDetail(raw, viewerProfileId)
@@ -169,12 +173,9 @@ export function makeUserContentRoutes<
 
         try {
           const raw = await service.update(id, profileId, data)
-          if (!raw)
-            return sendError(reply, 404, `${capitalize(label)} not found or access denied`)
+          if (!raw) return sendError(reply, 404, `${capitalize(label)} not found or access denied`)
           await config.onMutation?.()
-          return reply
-            .code(200)
-            .send({ success: true, [wire.singular]: mappers.toOwner(raw) })
+          return reply.code(200).send({ success: true, [wire.singular]: mappers.toOwner(raw) })
         } catch (err: any) {
           fastify.log.error(err)
           return sendError(reply, 500, `Failed to update ${label}`)
@@ -227,13 +228,7 @@ export function makeUserContentRoutes<
       fastify.get('/nearby', { onRequest: [fastify.authenticate] }, async (req, reply) => {
         const query = nearbyQuery.parse(req.query)
         try {
-          const raw = await findNearby.call(
-            service,
-            query.lat,
-            query.lon,
-            query.radius,
-            query
-          )
+          const raw = await findNearby.call(service, query.lat, query.lon, query.radius, query)
           const items = raw.map((r) => mappers.toPublic(r, req.session.profileId))
           return reply.code(200).send({ success: true, [wire.plural]: items })
         } catch (err) {

@@ -75,6 +75,8 @@ describe('post.dto type contracts', () => {
   })
 
   it('NearbyPostQuery keyset', () => {
-    expectTypeOf<keyof NearbyPostQuery>().toEqualTypeOf<keyof PostQuery | 'lat' | 'lon' | 'radius'>()
+    expectTypeOf<keyof NearbyPostQuery>().toEqualTypeOf<
+      keyof PostQuery | 'lat' | 'lon' | 'radius'
+    >()
   })
 })
