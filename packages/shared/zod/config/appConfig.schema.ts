@@ -17,6 +17,8 @@ export const appConfigSchema = z.object({
   GEOCODING_ALLOWED_COUNTRIES: z.string().default(''),
   OPENREPLAY_PROJECT_KEY: z.string().default(''),
   OPENREPLAY_INGEST_POINT: z.string().default(''),
+  UMAMI_URL: z.string().default(''),
+  UMAMI_WEBSITE_ID: z.string().default(''),
   DEV_AUTH_BYPASS_ENABLED: z
     .enum(['true', 'false'])
     .default('false')

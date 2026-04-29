@@ -1,0 +1,158 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import type { Handler } from 'mitt'
+
+const busHandlers: Record<string, Handler<any>> = {}
+const mockOn = vi.fn((event: string, handler: Handler<any>) => {
+  busHandlers[event] = handler
+})
+
+vi.mock('@/lib/bus', () => ({
+  bus: { on: mockOn },
+}))
+
+const ENABLED = { UMAMI_URL: 'https://u.example.com', UMAMI_WEBSITE_ID: 'abc-123' }
+const DISABLED = { UMAMI_URL: '', UMAMI_WEBSITE_ID: '' }
+
+function setConfig(overrides: Partial<{ UMAMI_URL: string; UMAMI_WEBSITE_ID: string }>) {
+  ;(globalThis as any).__APP_CONFIG__ = {
+    ...(globalThis as any).__APP_CONFIG__,
+    ...overrides,
+  }
+}
+
+describe('umami', () => {
+  let originalConfig: any
+
+  beforeEach(() => {
+    originalConfig = { ...((globalThis as any).__APP_CONFIG__ ?? {}) }
+    document.head.innerHTML = ''
+    delete (window as any).umami
+    for (const key of Object.keys(busHandlers)) delete busHandlers[key]
+    mockOn.mockClear()
+    vi.resetModules()
+  })
+
+  afterEach(() => {
+    ;(globalThis as any).__APP_CONFIG__ = originalConfig
+    vi.useRealTimers()
+  })
+
+  describe('initUmami', () => {
+    it('does not append a script when both env vars are empty', async () => {
+      setConfig(DISABLED)
+      const { initUmami } = await import('../umami')
+      initUmami()
+      expect(document.head.querySelector('script')).toBeNull()
+    })
+
+    it('does not append a script when UMAMI_URL is empty', async () => {
+      setConfig({ UMAMI_URL: '', UMAMI_WEBSITE_ID: 'abc' })
+      const { initUmami } = await import('../umami')
+      initUmami()
+      expect(document.head.querySelector('script')).toBeNull()
+    })
+
+    it('does not append a script when UMAMI_WEBSITE_ID is empty', async () => {
+      setConfig({ UMAMI_URL: 'https://u.example.com', UMAMI_WEBSITE_ID: '' })
+      const { initUmami } = await import('../umami')
+      initUmami()
+      expect(document.head.querySelector('script')).toBeNull()
+    })
+
+    it('appends a deferred script with src and data-website-id when enabled', async () => {
+      setConfig(ENABLED)
+      const { initUmami } = await import('../umami')
+      initUmami()
+      const script = document.head.querySelector('script') as HTMLScriptElement | null
+      expect(script).not.toBeNull()
+      expect(script!.src).toBe('https://u.example.com/script.js')
+      expect(script!.getAttribute('data-website-id')).toBe('abc-123')
+      expect(script!.defer).toBe(true)
+    })
+  })
+
+  describe('identifyUmami / resetUmamiIdentity', () => {
+    it('calls window.umami.identify(profileId) once umami is ready', async () => {
+      setConfig(ENABLED)
+      vi.useFakeTimers()
+      const { identifyUmami } = await import('../umami')
+      const identify = vi.fn()
+
+      identifyUmami('profile-1')
+      expect(identify).not.toHaveBeenCalled()
+      ;(window as any).umami = { identify, track: vi.fn() }
+      await vi.advanceTimersByTimeAsync(150)
+
+      expect(identify).toHaveBeenCalledWith('profile-1')
+    })
+
+    it('calls window.umami.identify() with no args on reset', async () => {
+      setConfig(ENABLED)
+      const identify = vi.fn()
+      ;(window as any).umami = { identify, track: vi.fn() }
+      const { resetUmamiIdentity } = await import('../umami')
+
+      resetUmamiIdentity()
+      expect(identify).toHaveBeenCalledWith()
+    })
+
+    it('gives up polling without throwing if window.umami never appears', async () => {
+      setConfig(ENABLED)
+      vi.useFakeTimers()
+      const { identifyUmami } = await import('../umami')
+
+      identifyUmami('profile-1')
+      // Past the 5s budget; no global ever appears.
+      await vi.advanceTimersByTimeAsync(6000)
+
+      expect(window.umami).toBeUndefined()
+    })
+
+    it('is a no-op (no setTimeout, no script) when umami is disabled', async () => {
+      setConfig(DISABLED)
+      const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout')
+      const { identifyUmami, resetUmamiIdentity } = await import('../umami')
+
+      identifyUmami('profile-1')
+      resetUmamiIdentity()
+
+      expect(setTimeoutSpy).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('bus listener registration', () => {
+    it('registers auth:login and auth:logged-out listeners when enabled', async () => {
+      setConfig(ENABLED)
+      await import('../umami')
+      const events = mockOn.mock.calls.map(([event]) => event)
+      expect(events).toContain('auth:login')
+      expect(events).toContain('auth:logged-out')
+    })
+
+    it('does not register any bus listeners when disabled', async () => {
+      setConfig(DISABLED)
+      await import('../umami')
+      expect(mockOn).not.toHaveBeenCalled()
+    })
+
+    it('auth:login handler invokes umami.identify with the profileId', async () => {
+      setConfig(ENABLED)
+      const identify = vi.fn()
+      ;(window as any).umami = { identify, track: vi.fn() }
+      await import('../umami')
+
+      busHandlers['auth:login']?.({ profileId: 'profile-42' })
+      expect(identify).toHaveBeenCalledWith('profile-42')
+    })
+
+    it('auth:logged-out handler invokes umami.identify with no args', async () => {
+      setConfig(ENABLED)
+      const identify = vi.fn()
+      ;(window as any).umami = { identify, track: vi.fn() }
+      await import('../umami')
+
+      busHandlers['auth:logged-out']?.(undefined)
+      expect(identify).toHaveBeenCalledWith()
+    })
+  })
+})
