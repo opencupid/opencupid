@@ -10,14 +10,15 @@ declare global {
   }
 }
 
+const enabled = Boolean(__APP_CONFIG__.UMAMI_URL && __APP_CONFIG__.UMAMI_WEBSITE_ID)
+
 export function initUmami() {
-  const { UMAMI_URL, UMAMI_WEBSITE_ID } = __APP_CONFIG__
-  if (!UMAMI_URL || !UMAMI_WEBSITE_ID) return
+  if (!enabled) return
 
   const script = document.createElement('script')
   script.defer = true
-  script.src = `${UMAMI_URL}/script.js`
-  script.setAttribute('data-website-id', UMAMI_WEBSITE_ID)
+  script.src = `${__APP_CONFIG__.UMAMI_URL}/script.js`
+  script.setAttribute('data-website-id', __APP_CONFIG__.UMAMI_WEBSITE_ID)
   script.setAttribute('data-performance', 'true')
   document.head.appendChild(script)
 }
@@ -27,6 +28,7 @@ export function initUmami() {
 // before the script tag is appended in main.ts). Programmatic identify()
 // must wait for the global. Poll briefly, then give up.
 function whenUmamiReady(fn: (umami: NonNullable<Window['umami']>) => void) {
+  if (!enabled) return
   const start = Date.now()
   const tick = () => {
     if (window.umami?.identify) {
@@ -47,10 +49,12 @@ export function resetUmamiIdentity() {
   whenUmamiReady((umami) => umami.identify())
 }
 
-bus.on('auth:login', ({ profileId }) => {
-  if (profileId) identifyUmami(profileId)
-})
+if (enabled) {
+  bus.on('auth:login', ({ profileId }) => {
+    if (profileId) identifyUmami(profileId)
+  })
 
-bus.on('auth:logged-out', () => {
-  resetUmamiIdentity()
-})
+  bus.on('auth:logged-out', () => {
+    resetUmamiIdentity()
+  })
+}
