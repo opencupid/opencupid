@@ -6,6 +6,7 @@ import registerToast from './lib/toast'
 import { useBootstrap } from './lib/bootstrap'
 import { appUseI18n } from './lib/i18n'
 import { useAuthStore } from './features/auth/stores/authStore'
+import { initUmami } from './lib/umami'
 
 // Register push-only service worker
 if ('serviceWorker' in navigator) {
@@ -40,17 +41,6 @@ function initOpenReplay() {
     .catch((err) => {
       console.warn('Failed to load OpenReplay:', err)
     })
-}
-
-function initUmami() {
-  const { UMAMI_URL, UMAMI_WEBSITE_ID } = __APP_CONFIG__
-  if (!UMAMI_URL || !UMAMI_WEBSITE_ID) return
-
-  const script = document.createElement('script')
-  script.defer = true
-  script.src = `${UMAMI_URL}/script.js`
-  script.setAttribute('data-website-id', UMAMI_WEBSITE_ID)
-  document.head.appendChild(script)
 }
 
 async function initSentry(app: ReturnType<typeof createApp>) {
