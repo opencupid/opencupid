@@ -24,7 +24,7 @@ const haveConversations = computed(() => props.conversations.length > 0)
         v-for="convo in conversations"
         :key="convo.conversationId"
         :active="activeConversation?.conversationId === convo.conversationId"
-        :class="{ disabled: !convo.canReply }"
+        :class="{ disabled: !convo.canReply, admin: convo.isAdminInitiator }"
         variant="light"
         class="d-flex justify-content-start align-items-center mb-3 p-2 border-0 rounded-3 shadow cursor-pointer user-select-none"
         @click="$emit('convo:select', convo)"
@@ -67,12 +67,20 @@ const haveConversations = computed(() => props.conversations.length > 0)
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
+@import '@bootstrap/scss/functions';
+@import '@bootstrap/scss/variables';
+@import '@bootstrap/scss/mixins';
+@import '@/css/theme';
+
 .last-message {
   text-overflow: ellipsis;
 }
 .disabled {
   opacity: 0.5;
   pointer-events: none;
+}
+.admin {
+  background-color: transparentize($color: $info, $amount: 0.9);
 }
 </style>
