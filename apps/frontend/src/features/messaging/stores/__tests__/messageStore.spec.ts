@@ -35,6 +35,7 @@ function makeConvo(conversationId: string, partnerName: string): ConversationSum
     canReply: false,
     isCallable: true,
     myIsCallable: true,
+    isAdminInitiator: false,
     conversation: {
       id: conversationId,
       updatedAt: new Date('2024-01-01'),
@@ -71,6 +72,7 @@ describe('messageStore', () => {
         canReply: false, // User initiated, waiting for reply
         isCallable: true,
         myIsCallable: true,
+        isAdminInitiator: false,
         conversation: {
           id: 'convo-1',
           updatedAt: new Date('2024-01-01'),
@@ -130,6 +132,7 @@ describe('messageStore', () => {
         canReply: true,
         isCallable: true,
         myIsCallable: true,
+        isAdminInitiator: false,
         conversation: {
           id: 'convo-1',
           updatedAt: new Date('2024-01-01'),
@@ -154,6 +157,7 @@ describe('messageStore', () => {
         canReply: true,
         isCallable: true,
         myIsCallable: true,
+        isAdminInitiator: false,
         conversation: {
           id: 'convo-2',
           updatedAt: new Date('2024-01-02'),
@@ -207,6 +211,7 @@ describe('messageStore', () => {
         canReply: true,
         isCallable: true,
         myIsCallable: true,
+        isAdminInitiator: false,
         conversation: {
           id: 'convo-1',
           updatedAt: new Date('2024-01-01'),
@@ -231,7 +236,12 @@ describe('messageStore', () => {
         messageType: 'text/html',
         createdAt: new Date('2024-01-02'),
         isMine: false,
-        sender: { id: 'partner-1', publicName: 'Partner', profileImages: [], location: { country: '' } },
+        sender: {
+          id: 'partner-1',
+          publicName: 'Partner',
+          profileImages: [],
+          location: { country: '' },
+        },
       }
 
       await store.handleIncomingMessage(incomingMessage)
@@ -253,6 +263,7 @@ describe('messageStore', () => {
         canReply: true,
         isCallable: true,
         myIsCallable: true,
+        isAdminInitiator: false,
         conversation: {
           id: 'convo-1',
           updatedAt: new Date('2024-01-01'),
@@ -277,7 +288,12 @@ describe('messageStore', () => {
         messageType: 'text/html',
         createdAt: new Date('2024-01-02'),
         isMine: false,
-        sender: { id: 'partner-1', publicName: 'Partner', profileImages: [], location: { country: '' } },
+        sender: {
+          id: 'partner-1',
+          publicName: 'Partner',
+          profileImages: [],
+          location: { country: '' },
+        },
       }
 
       await store.handleIncomingMessage(incomingMessage)

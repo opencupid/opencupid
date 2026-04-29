@@ -10,6 +10,7 @@ import {
   type MessageWithSender,
 } from '../../services/messaging.service'
 import { mediaUrl } from '../../lib/media'
+import { appConfig } from '../../lib/appconfig'
 
 function mapConversationMeta(c: { id: string; updatedAt: Date; createdAt: Date }) {
   return {
@@ -34,6 +35,12 @@ export function mapConversationParticipantToSummary(
 
   const lastMessage = conversation.messages[0] ?? null
   const canReply = canSendMessageInConversation(conversation, currentProfileId)
+  // Truthiness guard: if ADMIN_PROFILE_ID is unset, undefined === undefined would
+  // mark every conversation as admin-initiated. Comparing only when the id is
+  // configured matches the rest of the codebase's "no admin id, no admin behavior"
+  // contract (see messaging.service.sendWelcomeMessage).
+  const adminId = appConfig.ADMIN_PROFILE_ID
+  const isAdminInitiator = !!adminId && conversation.initiatorProfileId === adminId
 
   return {
     id: p.id,
@@ -43,6 +50,7 @@ export function mapConversationParticipantToSummary(
     isMuted: p.isMuted,
     isArchived: p.isArchived,
     canReply,
+    isAdminInitiator,
     isCallable: partnerState?.isCallable !== false && partner.isCallable !== false,
     myIsCallable: myState?.isCallable !== false,
     lastMessage: lastMessage
