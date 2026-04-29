@@ -443,7 +443,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
   /**
    * POST /messages
    * Sends an in-app message from the configured system sender
-   * (WELCOME_MESSAGE_SENDER_PROFILE_ID) to a list of recipient profiles.
+   * (ADMIN_PROFILE_ID) to a list of recipient profiles.
    * @body {string[]} profileIds - Array of recipient profile IDs
    * @body {string} content - Message content
    * @returns {{ success, sent, failed, results }}
@@ -462,9 +462,9 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
       return sendError(reply, 400, 'content is required')
     }
 
-    const senderProfileId = appConfig.WELCOME_MESSAGE_SENDER_PROFILE_ID
+    const senderProfileId = appConfig.ADMIN_PROFILE_ID
     if (!senderProfileId) {
-      return sendError(reply, 503, 'WELCOME_MESSAGE_SENDER_PROFILE_ID is not configured')
+      return sendError(reply, 503, 'ADMIN_PROFILE_ID is not configured')
     }
 
     const uniqueProfileIds = Array.from(new Set(profileIds))
@@ -488,7 +488,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
             senderProfileId,
             recipientProfileId
           )
-          // System sender (WELCOME_MESSAGE_SENDER_PROFILE_ID) is never quarantined,
+          // System sender (ADMIN_PROFILE_ID) is never quarantined,
           // and admin broadcast bypasses the self-initiated re-send block (#1377).
           const outcome = computeSendOutcome(convo, wasCreated, senderProfileId, false, true)
 

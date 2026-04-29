@@ -325,7 +325,7 @@ export class MessageService {
   }
 
   async sendWelcomeMessage(recipientProfileId: string, locale: string) {
-    const senderId = appConfig.WELCOME_MESSAGE_SENDER_PROFILE_ID
+    const senderId = appConfig.ADMIN_PROFILE_ID
     if (!senderId) return
     // Only send when a template exists for the recipient's exact locale. We deliberately
     // do not fall back to another language: a welcome in the wrong language is worse
