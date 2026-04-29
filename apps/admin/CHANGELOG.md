@@ -1,5 +1,11 @@
 # @opencupid/admin
 
+## 0.57.0
+
+### Minor Changes
+
+- 9f44887: Move welcome message content from i18n into a new `MessageTemplate` database table so site operators can edit it from the admin UI under Messages without a deploy.
+
 ## 0.56.0
 
 ### Patch Changes

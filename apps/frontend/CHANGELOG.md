@@ -1,5 +1,12 @@
 # frontend
 
+## 0.57.0
+
+### Minor Changes
+
+- bdea6c5: Hide "My turn / Their turn" badges on admin-initiated conversations.
+- e5847c6: Add Umami analytics
+
 ## 0.56.0
 
 ### Minor Changes

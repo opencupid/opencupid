@@ -1,5 +1,11 @@
 # @opencupid/shared
 
+## 0.8.1
+
+### Patch Changes
+
+- bdea6c5: Hide "My turn / Their turn" badges on admin-initiated conversations.
+
 ## 0.8.0
 
 ### Minor Changes

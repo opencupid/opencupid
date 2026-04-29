@@ -1,5 +1,12 @@
 # backend
 
+## 0.57.0
+
+### Minor Changes
+
+- bdea6c5: Hide "My turn / Their turn" badges on admin-initiated conversations.
+- 9f44887: Move welcome message content from i18n into a new `MessageTemplate` database table so site operators can edit it from the admin UI under Messages without a deploy.
+
 ## 0.56.0
 
 ### Minor Changes
