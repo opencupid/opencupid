@@ -3,6 +3,11 @@ import type { CreatePostPayload, UpdatePostPayload } from '@zod/post/post.dto'
 import { conversationContextInclude } from '@/db/includes/profileIncludes'
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
 import { prisma } from '@/lib/prisma'
+import type {
+  UserContentService,
+  ListOptions,
+  BoundsBox,
+} from './userContent.service'
 
 const postedByInclude = {
   include: {
@@ -26,11 +31,22 @@ const postedByWithConversationInclude = (viewerProfileId: string) =>
     },
   }) satisfies Prisma.PostFindFirstArgs
 
+export type PostWithProfile = Prisma.PostGetPayload<typeof postedByInclude>
+
 export type PostWithProfileAndContext = Prisma.PostGetPayload<
   ReturnType<typeof postedByWithConversationInclude>
 >
 
-export class PostService {
+export class PostService
+  implements
+    UserContentService<
+      PostWithProfile,
+      PostWithProfileAndContext,
+      PostWithProfile,
+      CreatePostPayload,
+      UpdatePostPayload
+    >
+{
   private static instance: PostService
 
   private constructor() {}
@@ -42,7 +58,7 @@ export class PostService {
     return PostService.instance
   }
 
-  async create(profileId: string, data: CreatePostPayload) {
+  async create(profileId: string, data: CreatePostPayload): Promise<PostWithProfile> {
     return prisma.post.create({
       data: {
         content: data.content,
@@ -57,7 +73,7 @@ export class PostService {
     })
   }
 
-  async findById(id: string) {
+  async findById(id: string): Promise<PostWithProfile | null> {
     return prisma.post.findFirst({
       where: { id, isDeleted: false },
       ...postedByInclude,
@@ -83,13 +99,8 @@ export class PostService {
 
   async findByProfileId(
     profileId: string,
-    options: {
-      type?: PostType
-      limit?: number
-      offset?: number
-      includeInvisible?: boolean
-    } = {}
-  ) {
+    options: ListOptions & { includeInvisible?: boolean } = {}
+  ): Promise<PostWithProfile[]> {
     const { type, limit = 20, offset = 0, includeInvisible = false } = options
 
     return prisma.post.findMany({
@@ -97,7 +108,7 @@ export class PostService {
         postedById: profileId,
         isDeleted: false,
         ...(includeInvisible ? {} : { isVisible: true }),
-        ...(type ? { type } : {}),
+        ...(type ? { type: type as PostType } : {}),
       },
       ...postedByInclude,
       orderBy: { createdAt: 'desc' },
@@ -106,20 +117,14 @@ export class PostService {
     })
   }
 
-  async findAll(
-    options: {
-      type?: PostType
-      limit?: number
-      offset?: number
-    } = {}
-  ) {
+  async findAll(options: ListOptions = {}): Promise<PostWithProfile[]> {
     const { type, limit = 20, offset = 0 } = options
 
     return prisma.post.findMany({
       where: {
         isDeleted: false,
         isVisible: true,
-        ...(type ? { type } : {}),
+        ...(type ? { type: type as PostType } : {}),
       },
       ...postedByInclude,
       orderBy: { createdAt: 'desc' },
@@ -132,12 +137,8 @@ export class PostService {
     lat: number,
     lon: number,
     radius: number,
-    options: {
-      type?: PostType
-      limit?: number
-      offset?: number
-    } = {}
-  ) {
+    options: ListOptions = {}
+  ): Promise<PostWithProfile[]> {
     const { type, limit = 20, offset = 0 } = options
 
     // Calculate bounding box for efficiency (approximate)
@@ -153,7 +154,7 @@ export class PostService {
       where: {
         isDeleted: false,
         isVisible: true,
-        ...(type ? { type } : {}),
+        ...(type ? { type: type as PostType } : {}),
         lat: { gte: minLat, lte: maxLat },
         lon: { gte: minLon, lte: maxLon },
       },
@@ -164,32 +165,21 @@ export class PostService {
     })
   }
 
-  async findInBounds(
-    bounds: { south: number; north: number; west: number; east: number },
-    options: {
-      type?: PostType
-      limit?: number
-      offset?: number
-    } = {}
-  ) {
-    const { type, limit = 100, offset = 0 } = options
-
+  async findInBounds(bounds: BoundsBox): Promise<PostWithProfile[]> {
     return prisma.post.findMany({
       where: {
         isDeleted: false,
         isVisible: true,
-        ...(type ? { type } : {}),
         lat: { gte: bounds.south, lte: bounds.north },
         lon: { gte: bounds.west, lte: bounds.east },
       },
       ...postedByInclude,
       orderBy: { createdAt: 'desc' },
-      take: limit,
-      skip: offset,
+      take: 100,
     })
   }
 
-  async findAllWithLocation(viewerProfileId: string, limit = 500) {
+  async findAllWithLocation(viewerProfileId: string, limit = 500): Promise<PostWithProfile[]> {
     return prisma.post.findMany({
       where: {
         isDeleted: false,
@@ -204,13 +194,7 @@ export class PostService {
     })
   }
 
-  async findRecent(
-    options: {
-      type?: PostType
-      limit?: number
-      offset?: number
-    } = {}
-  ) {
+  async findRecent(options: ListOptions = {}): Promise<PostWithProfile[]> {
     const { type, limit = 20, offset = 0 } = options
     const oneWeekAgo = new Date()
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
@@ -220,7 +204,7 @@ export class PostService {
         isDeleted: false,
         isVisible: true,
         createdAt: { gte: oneWeekAgo },
-        ...(type ? { type } : {}),
+        ...(type ? { type: type as PostType } : {}),
       },
       ...postedByInclude,
       orderBy: { createdAt: 'desc' },
@@ -229,7 +213,11 @@ export class PostService {
     })
   }
 
-  async update(id: string, profileId: string, data: UpdatePostPayload) {
+  async update(
+    id: string,
+    profileId: string,
+    data: UpdatePostPayload
+  ): Promise<PostWithProfile | null> {
     // Only allow owner to update
     const post = await prisma.post.findFirst({
       where: { id, postedById: profileId, isDeleted: false },
@@ -255,7 +243,7 @@ export class PostService {
     })
   }
 
-  async delete(id: string, profileId: string) {
+  async delete(id: string, profileId: string): Promise<{ id: string } | null> {
     // Only allow owner to delete
     const post = await prisma.post.findFirst({
       where: { id, postedById: profileId, isDeleted: false },
