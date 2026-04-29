@@ -42,6 +42,17 @@ function initOpenReplay() {
     })
 }
 
+function initUmami() {
+  const { UMAMI_URL, UMAMI_WEBSITE_ID } = __APP_CONFIG__
+  if (!UMAMI_URL || !UMAMI_WEBSITE_ID) return
+
+  const script = document.createElement('script')
+  script.defer = true
+  script.src = `${UMAMI_URL}/script.js`
+  script.setAttribute('data-website-id', UMAMI_WEBSITE_ID)
+  document.head.appendChild(script)
+}
+
 async function initSentry(app: ReturnType<typeof createApp>) {
   if (__APP_CONFIG__.NODE_ENV === 'development') return
   if (!__APP_CONFIG__.SENTRY_DSN) return
@@ -112,4 +123,5 @@ appUseI18n(app)
   // Load observability tools after mount
   await initSentry(app)
   initOpenReplay()
+  initUmami()
 })()
