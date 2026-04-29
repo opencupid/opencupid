@@ -1678,7 +1678,11 @@ describe('PATCH /message-templates/:id', () => {
   })
 
   it('returns 404 when template does not exist', async () => {
-    const err = Object.assign(new Error('not found'), { code: 'P2025' })
+    const { Prisma } = await import('@prisma/client')
+    const err = new Prisma.PrismaClientKnownRequestError('not found', {
+      code: 'P2025',
+      clientVersion: 'test',
+    })
     mockPrisma.messageTemplate.update.mockRejectedValueOnce(err)
     const handler = fastify.routes['PATCH /message-templates/:id']
     await handler({ params: { id: 'missing' }, body: { content: 'x' } }, reply)

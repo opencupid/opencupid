@@ -166,7 +166,7 @@ onMounted(fetchTemplates)
               {{ saveError }}
             </div>
             <div class="mb-3">
-              <label class="form-label">Template ID</label>
+              <label class="form-label">Template type</label>
               <input
                 class="form-control"
                 :value="selected.type"

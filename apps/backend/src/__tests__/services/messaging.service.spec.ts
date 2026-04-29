@@ -651,42 +651,15 @@ describe('MessageService.sendWelcomeMessage', () => {
     expect(createArgs.data.content).toBe('Üdv a TestSite oldalon')
   })
 
-  it('falls back to "en" template when the requested locale row is missing', async () => {
-    mockPrisma.messageTemplate.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({
-      id: 't1',
-      type: 'welcome',
-      locale: 'en',
-      content: 'Welcome to {siteName}',
-    })
-    mockPrisma.conversation.findFirst.mockResolvedValue(null)
-    mockPrisma.conversation.create.mockResolvedValue({
-      id: 'c1',
-      status: 'INITIATED',
-      profileAId: 'sys-sender',
-      profileBId: 'p2',
-      initiatorProfileId: 'sys-sender',
-    })
-    mockPrisma.message.findFirst.mockResolvedValue(null)
-    mockPrisma.message.create.mockResolvedValue({ id: 'm1' })
-    mockPrisma.conversation.update.mockResolvedValue({})
-
-    await service.sendWelcomeMessage('p2', 'fr')
-
-    expect(mockPrisma.messageTemplate.findUnique).toHaveBeenNthCalledWith(1, {
-      where: { type_locale: { type: 'welcome', locale: 'fr' } },
-    })
-    expect(mockPrisma.messageTemplate.findUnique).toHaveBeenNthCalledWith(2, {
-      where: { type_locale: { type: 'welcome', locale: 'en' } },
-    })
-    const createArgs = mockPrisma.message.create.mock.calls[0][0]
-    expect(createArgs.data.content).toBe('Welcome to TestSite')
-  })
-
-  it('returns silently when no template exists in any locale', async () => {
+  it('does not send when the requested locale has no template (no fallback to other languages)', async () => {
     mockPrisma.messageTemplate.findUnique.mockResolvedValue(null)
 
     await service.sendWelcomeMessage('p2', 'fr')
 
+    expect(mockPrisma.messageTemplate.findUnique).toHaveBeenCalledTimes(1)
+    expect(mockPrisma.messageTemplate.findUnique).toHaveBeenCalledWith({
+      where: { type_locale: { type: 'welcome', locale: 'fr' } },
+    })
     expect(mockPrisma.message.create).not.toHaveBeenCalled()
     expect(mockPrisma.conversation.create).not.toHaveBeenCalled()
   })

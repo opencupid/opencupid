@@ -328,16 +328,12 @@ export class MessageService {
     const senderId = appConfig.WELCOME_MESSAGE_SENDER_PROFILE_ID
     const siteName = appConfig.SITE_NAME
     if (!senderId) return
-    // Templates are stored in the DB (MessageTemplate). Fall back to 'en' when the
-    // recipient's locale has no row — every supported language is expected to have
-    // a row, but we never want a missing translation to drop the welcome silently.
-    const template =
-      (await prisma.messageTemplate.findUnique({
-        where: { type_locale: { type: 'welcome', locale } },
-      })) ??
-      (await prisma.messageTemplate.findUnique({
-        where: { type_locale: { type: 'welcome', locale: 'en' } },
-      }))
+    // Only send when a template exists for the recipient's exact locale. We deliberately
+    // do not fall back to another language: a welcome in the wrong language is worse
+    // than no welcome at all.
+    const template = await prisma.messageTemplate.findUnique({
+      where: { type_locale: { type: 'welcome', locale } },
+    })
     if (!template) return
     const mdContent = template.content.replace(/\{siteName\}/g, siteName)
     const content = simpleMarkdownToHtml(mdContent)

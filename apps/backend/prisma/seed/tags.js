@@ -16,6 +16,10 @@ async function main() {
   console.log(`Seeded ${tags.length} tags, ${tagTranslations.length} translations`)
 }
 
-main()
-  .catch((e) => { console.error(e); process.exit(1) })
-  .finally(() => prisma.$disconnect())
+module.exports = main
+
+if (require.main === module) {
+  main()
+    .catch((e) => { console.error(e); process.exit(1) })
+    .finally(() => prisma.$disconnect())
+}

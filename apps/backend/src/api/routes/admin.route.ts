@@ -1,6 +1,7 @@
 import { FastifyPluginAsync } from 'fastify'
 import { DeepLClient } from 'deepl-node'
 import slugify from 'slugify'
+import { Prisma } from '@prisma/client'
 import { TrustReasonSchema, type TrustReasonType } from '@zod/generated'
 import { sendError } from '../helpers'
 import { prisma } from '@/lib/prisma'
@@ -1064,7 +1065,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
       })
       return reply.code(200).send({ success: true, template })
     } catch (err) {
-      if (err instanceof Error && 'code' in err && (err as { code?: string }).code === 'P2025') {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
         return sendError(reply, 404, 'Message template not found')
       }
       fastify.log.error({ err }, 'Error updating message template')
