@@ -326,7 +326,6 @@ export class MessageService {
 
   async sendWelcomeMessage(recipientProfileId: string, locale: string) {
     const senderId = appConfig.WELCOME_MESSAGE_SENDER_PROFILE_ID
-    const siteName = appConfig.SITE_NAME
     if (!senderId) return
     // Only send when a template exists for the recipient's exact locale. We deliberately
     // do not fall back to another language: a welcome in the wrong language is worse
@@ -335,8 +334,7 @@ export class MessageService {
       where: { type_locale: { type: 'welcome', locale } },
     })
     if (!template) return
-    const mdContent = template.content.replace(/\{siteName\}/g, siteName)
-    const content = simpleMarkdownToHtml(mdContent)
+    const content = simpleMarkdownToHtml(template.content)
     return await prisma.$transaction(async (tx) => {
       const { convo, wasCreated } = await this.resolveConversation(tx, senderId, recipientProfileId)
       // System welcome sender is never quarantined — hardcode `false`. NOT an admin

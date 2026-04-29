@@ -623,12 +623,12 @@ describe('MessageService.sendMessage (new primitive)', () => {
 })
 
 describe('MessageService.sendWelcomeMessage', () => {
-  it('reads template content from MessageTemplate and substitutes {siteName}', async () => {
+  it('reads the template for the recipient locale and sends its content verbatim', async () => {
     mockPrisma.messageTemplate.findUnique.mockResolvedValueOnce({
       id: 't1',
       type: 'welcome',
       locale: 'hu',
-      content: 'Üdv a {siteName} oldalon',
+      content: 'Üdv az oldalon',
     })
     mockPrisma.conversation.findFirst.mockResolvedValue(null)
     mockPrisma.conversation.create.mockResolvedValue({
@@ -648,7 +648,7 @@ describe('MessageService.sendWelcomeMessage', () => {
       where: { type_locale: { type: 'welcome', locale: 'hu' } },
     })
     const createArgs = mockPrisma.message.create.mock.calls[0][0]
-    expect(createArgs.data.content).toBe('Üdv a TestSite oldalon')
+    expect(createArgs.data.content).toBe('Üdv az oldalon')
   })
 
   it('does not send when the requested locale has no template (no fallback to other languages)', async () => {

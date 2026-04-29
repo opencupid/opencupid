@@ -195,9 +195,6 @@ onMounted(fetchTemplates)
                 class="form-control"
                 rows="10"
               ></textarea>
-              <div class="form-text">
-                Use <code>&#123;siteName&#125;</code> as a placeholder for the site name.
-              </div>
             </div>
           </div>
           <div class="modal-footer">
