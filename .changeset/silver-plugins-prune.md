@@ -2,4 +2,4 @@
 '@opencupid/backend': patch
 ---
 
-Delete dead `plugins/auth.ts` (unused `@fastify/jwt` registration) (#1401)
+Delete dead `plugins/auth.ts` file (#1401)
