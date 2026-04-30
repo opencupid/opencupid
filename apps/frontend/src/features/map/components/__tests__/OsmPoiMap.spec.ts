@@ -693,7 +693,7 @@ describe('OsmPoiMap', () => {
     })
   })
 
-  describe('dissolvedClusterAt — spiderfy after max-zoom cluster dissolve', () => {
+  describe('spiderfy after max-zoom cluster dissolve', () => {
     const maxZoomCluster: MapCluster = {
       id: 300,
       location: { lat: 47.0, lon: 19.0 },
@@ -714,7 +714,7 @@ describe('OsmPoiMap', () => {
       )?.[1]
       expect(clickHandler).toBeDefined()
 
-      // Click the cluster at max zoom — dissolvedClusterAt is set
+      // Click the cluster at max zoom — pending spiderfy is armed
       clickHandler()
 
       // spiderfy not yet triggered (no leaf markers arrived yet)
@@ -730,7 +730,7 @@ describe('OsmPoiMap', () => {
       vi.useRealTimers()
     })
 
-    it('dissolvedClusterAt is consumed only once even if items update is called twice', async () => {
+    it('pending spiderfy is consumed only once even if items update is called twice', async () => {
       vi.useFakeTimers()
 
       const wrapper = await mountMap({ items: [], clusters: [maxZoomCluster] })
@@ -742,7 +742,7 @@ describe('OsmPoiMap', () => {
       )?.[1]
       clickHandler()
 
-      // First items update — drains dissolvedClusterAt, triggers spiderfy
+      // First items update — drains the pending callback, triggers spiderfy
       await wrapper.setProps({ items: [items[0]] })
       await flushPromises()
       vi.runAllTimers()
@@ -753,6 +753,41 @@ describe('OsmPoiMap', () => {
       await flushPromises()
       vi.runAllTimers()
 
+      expect(omsInstance.spiderListener).not.toHaveBeenCalled()
+
+      vi.useRealTimers()
+    })
+
+    it('does not fire phantom spiderfy on a later items batch when the first batch had no leaves', async () => {
+      // Regression: pre-fix, the dissolvedClusterAt flag stayed armed when
+      // an items batch arrived without matching leaves (e.g., user panned
+      // before the fetch returned). Any later batch with nearby markers —
+      // possibly from a wholly unrelated viewport later — would fire a
+      // phantom spiderfy. The fix binds the intent to the click's closure
+      // and consumes it on the first batch regardless of match success.
+      vi.useFakeTimers()
+
+      const wrapper = await mountMap({ items: [], clusters: [maxZoomCluster] })
+      await flushPromises()
+
+      const clusterMarkerInstance = (L.marker as any).mock.results[0].value
+      const clickHandler = clusterMarkerInstance.on.mock.calls.find(
+        (c: any) => c[0] === 'click'
+      )?.[1]
+      clickHandler()
+
+      // First batch: empty (user panned, leaves never arrived). The pending
+      // callback runs against zero markers and silently consumes itself.
+      await wrapper.setProps({ items: [] })
+      await flushPromises()
+      vi.runAllTimers()
+      expect(omsInstance.spiderListener).not.toHaveBeenCalled()
+
+      // Second batch: leaves are now present (mock distanceTo = 0 means any
+      // marker matches). Pre-fix this would have fired phantom spiderfy.
+      await wrapper.setProps({ items: [items[0]] })
+      await flushPromises()
+      vi.runAllTimers()
       expect(omsInstance.spiderListener).not.toHaveBeenCalled()
 
       vi.useRealTimers()

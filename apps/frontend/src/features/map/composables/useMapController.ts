@@ -101,7 +101,13 @@ export function useMapController(
   const iconCache = new Map<string, L.DivIcon>()
   let resizeObserver: ResizeObserver
   let boundsTimer: ReturnType<typeof setTimeout> | null = null
-  let dissolvedClusterAt: L.LatLng | null = null
+  // One-shot continuation invoked the next time an items batch arrives.
+  // Used by the max-zoom cluster click to spiderfy as soon as the leaves
+  // land, and only then. A second click overwrites the slot; an items
+  // batch with no matching leaves consumes it silently. Bounding the
+  // intent to the first batch after the click means a stale flag can't
+  // fire a phantom spiderfy minutes later if the user has panned away.
+  let pendingItemsCallback: (() => void) | null = null
   let markerConfig: MarkerConfig | null = null
 
   // ── Lifecycle ───────────────────────────────────────────────────────────
@@ -378,7 +384,10 @@ export function useMapController(
     m.on('click', () => {
       if (cluster.expansionZoom >= MAP_MAX_ZOOM) {
         clusters.update(clusters.allItems().filter((c) => c.id !== cluster.id))
-        dissolvedClusterAt = L.latLng(cluster.location.lat, cluster.location.lon)
+        const target = L.latLng(cluster.location.lat, cluster.location.lon)
+        // Bind the spiderfy intent to this click's closure. The next items
+        // batch consumes it; a second click before that overwrites it.
+        pendingItemsCallback = () => triggerSpiderfy(target)
         map.setView([cluster.location.lat, cluster.location.lon], MAP_MAX_ZOOM)
       } else {
         map.flyTo([cluster.location.lat, cluster.location.lon], cluster.expansionZoom, {
@@ -399,23 +408,19 @@ export function useMapController(
     for (const m of removed) oms.removeMarker(m)
     for (const m of added) oms.addMarker(m)
 
-    // After a max-zoom cluster click, dissolvedClusterAt holds the location
-    // we want to spiderfy as soon as the matching leaf markers arrive. Try
-    // each items batch; if no marker is yet within range, leave the flag
-    // armed so the next batch retries. Replaces the previous setTimeout(0)
-    // hand-off, which assumed the right markers always landed in this tick.
-    if (dissolvedClusterAt && triggerSpiderfy(dissolvedClusterAt)) {
-      dissolvedClusterAt = null
+    if (pendingItemsCallback) {
+      const cb = pendingItemsCallback
+      pendingItemsCallback = null
+      cb()
     }
   }
 
-  function triggerSpiderfy(target: L.LatLng): boolean {
+  function triggerSpiderfy(target: L.LatLng): void {
     const match = [...pois.values()].find(
       (m) => m.getLatLng().distanceTo(target) < SPIDERFY_COLOCATION_THRESHOLD_M
     )
-    if (!match) return false
+    if (!match) return
     ;(oms as any).spiderListener(match)
-    return true
   }
 
   function updateMarkers(items: MapPoi[], config: MarkerConfig): void {
