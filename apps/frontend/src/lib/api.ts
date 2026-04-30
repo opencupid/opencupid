@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios, { CanceledError } from 'axios'
 import Cookies from 'universal-cookie'
 import { bus } from './bus'
 import { VersionSchema, type VersionDTO } from '@zod/dto/version.dto'
@@ -269,8 +269,10 @@ api.interceptors.response.use(
       }
     }
 
-    // Network error handling — visibility-aware state machine
-    const isNetworkError = !error.response || ERROR_CODES.includes(error.code)
+    // Network error handling — visibility-aware state machine.
+    // CanceledError (AbortController) is intentional, not connectivity loss.
+    const isNetworkError =
+      !(error instanceof CanceledError) && (!error.response || ERROR_CODES.includes(error.code))
 
     if (isNetworkError && state === 'ONLINE') {
       transitionTo('DEBOUNCING')
@@ -290,6 +292,11 @@ export async function safeApiCall<T>(fn: () => Promise<T>): Promise<T> {
   try {
     return await fn()
   } catch (err: any) {
+    // Caller-initiated cancellation is not a connectivity failure — surface
+    // it so the caller's catch can handle it without re-driving the offline
+    // state machine or auto-retrying the (intentionally cancelled) request.
+    if (err instanceof CanceledError) throw err
+
     const isNetworkError = !err.response || ERROR_CODES.includes(err.code)
 
     if (isNetworkError) {
