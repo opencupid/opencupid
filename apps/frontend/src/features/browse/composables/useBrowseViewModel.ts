@@ -22,11 +22,14 @@ export function useBrowseViewModel() {
   const viewerProfile = computed(() => ownerStore.profile)
 
   // ── DTO → map-layer mapping ─────────────────────────────────────
-  // Memoise output objects by id so identity is stable across cluster
-  // refetches when the underlying feature is unchanged. DiffableLayer's
-  // shouldUpdate then short-circuits without re-rendering icons. Each
-  // entry is markRaw'd to skip Vue's deep-proxy traversal — consumers
-  // only read scalar fields.
+  // Memoise output objects by id. Per-session contract: POI data is
+  // treated as immutable for the lifetime of an id — first sighting
+  // wins, later batches with the same id return the cached reference
+  // unchanged. The GUI is not expected to reflect mid-session DB changes,
+  // so no equivalence check is needed. Clusters DO change between batches
+  // (count rebalances, centroid shifts on filter changes) and use a
+  // structural equivalence check below. Every entry is markRaw'd to skip
+  // Vue's deep-proxy traversal — consumers only read scalar fields.
   const clusterCache = new Map<number, MapCluster>()
   const profileCache = new Map<string, MapPoi>()
   const postCache = new Map<string, MapPoi>()
@@ -53,21 +56,9 @@ export function useBrowseViewModel() {
   }
 
   function memoProfilePoi(p: PointFeature): MapPoi {
+    const cached = profileCache.get(p.id)
+    if (cached) return cached
     const url = p.image?.url
-    const prev = profileCache.get(p.id)
-    if (
-      prev &&
-      prev.location.lat === p.lat &&
-      prev.location.lon === p.lon &&
-      prev.image?.variants?.[0]?.url === url &&
-      prev.highlighted === p.highlighted &&
-      prev.hasPost === p.hasPost &&
-      prev.title === p.publicName
-    ) {
-      // Source is allowed to swap — keep object identity, refresh source ref.
-      ;(prev as { source: unknown }).source = p
-      return prev
-    }
     const next = markRaw<MapPoi>({
       id: p.id,
       title: p.publicName,
@@ -83,22 +74,12 @@ export function useBrowseViewModel() {
   }
 
   function memoPostPoi(p: PointFeature): MapPoi {
+    const cached = postCache.get(p.id)
+    if (cached) return cached
     const url = p.image?.url
-    const title = p.postContent ?? ''
-    const prev = postCache.get(p.id)
-    if (
-      prev &&
-      prev.location.lat === p.lat &&
-      prev.location.lon === p.lon &&
-      prev.image?.variants?.[0]?.url === url &&
-      prev.title === title
-    ) {
-      ;(prev as { source: unknown }).source = p
-      return prev
-    }
     const next = markRaw<MapPoi>({
       id: p.id,
-      title,
+      title: p.postContent ?? '',
       location: { lat: p.lat, lon: p.lon },
       image: url ? { blurhash: p.image!.blurhash, variants: [{ size: 'thumb', url }] } : undefined,
       type: 'post',

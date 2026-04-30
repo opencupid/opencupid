@@ -14,16 +14,20 @@ export class DiffableLayer<T extends { id: string | number }> {
   private items = new Map<string | number, T>()
   private fns: {
     create: (item: T) => LMarker
-    shouldUpdate: (prev: T, next: T) => boolean
-    apply: (marker: LMarker, item: T) => void
+    // shouldUpdate/apply are optional. Layers whose data is treated as
+    // immutable per id (e.g. POIs in this app) omit them; the known-id
+    // path then becomes a pure no-op. Layers whose data legitimately
+    // changes between batches (e.g. clusters) supply both.
+    shouldUpdate?: (prev: T, next: T) => boolean
+    apply?: (marker: LMarker, item: T) => void
   }
 
   constructor(
     layer: L.LayerGroup,
     fns: {
       create: (item: T) => LMarker
-      shouldUpdate: (prev: T, next: T) => boolean
-      apply: (marker: LMarker, item: T) => void
+      shouldUpdate?: (prev: T, next: T) => boolean
+      apply?: (marker: LMarker, item: T) => void
     }
   ) {
     this.layer = layer
@@ -55,8 +59,8 @@ export class DiffableLayer<T extends { id: string | number }> {
         toAdd.push(marker)
       } else {
         this.items.set(id, item)
-        if (this.fns.shouldUpdate(prev, item)) {
-          this.fns.apply(this.markers.get(id)!, item)
+        if (this.fns.shouldUpdate?.(prev, item)) {
+          this.fns.apply?.(this.markers.get(id)!, item)
         }
       }
     }

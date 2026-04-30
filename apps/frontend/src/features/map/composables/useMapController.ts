@@ -199,32 +199,12 @@ export function useMapController(
       if (id !== undefined) emit('item:select', String(id))
     })
 
+    // POI data is treated as immutable per id for the lifetime of a session
+    // (the GUI is not expected to reflect mid-session DB changes). No
+    // shouldUpdate/apply: existing markers are never re-rendered, only
+    // added on first sighting and removed when their id leaves the viewport.
     pois = new DiffableLayer<MapPoi>(pointLayer, {
       create: (item) => createPoiMarker(item),
-      shouldUpdate: (prev, next) => {
-        const prevUrl = prev.image?.variants?.[0]?.url
-        const nextUrl = next.image?.variants?.[0]?.url
-        return (
-          prev.highlighted !== next.highlighted ||
-          prevUrl !== nextUrl ||
-          prev.hasPost !== next.hasPost
-        )
-      },
-      apply: (marker, item) => {
-        if (!markerConfig) return
-        marker.setIcon(
-          hydratePoiIcon(
-            markerConfig.resolveIcon(item),
-            {
-              image: item.image,
-              isSelected: false,
-              isHighlighted: item.highlighted ?? false,
-              hasPost: item.hasPost,
-            },
-            iconCache
-          )
-        )
-      },
     })
 
     clusters = new DiffableLayer<MapCluster>(clusterLayer, {
