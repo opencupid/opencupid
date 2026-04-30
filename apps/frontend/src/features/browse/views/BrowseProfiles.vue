@@ -28,7 +28,7 @@ import PostFullView from '@/features/posts/components/PostFullView.vue'
 import OwnerDrawerControls from '../components/OwnerDrawerControls.vue'
 import NearbyFeatures from '../components/NearbyFeatures.vue'
 import { usePostStore } from '@/features/posts/stores/postStore'
-import { toGeoPoint, type GeoPoint, type LocationDTO } from '@zod/dto/location.dto'
+import { toGeoPoint, type GeoPoint } from '@zod/dto/location.dto'
 import ShareDialog from '@/features/app/components/ShareDialog.vue'
 import type { PostSummary } from '@zod/post/post.dto'
 import type { ProfileSummary } from '@zod/profile/profile.dto'
@@ -74,8 +74,6 @@ const initialMapCenter = computed<[number, number] | undefined>(() => {
   return isValidLatLng(fromProfile) ? fromProfile : undefined
 })
 
-// Search-driven highlight: the map zooms in and drops a pin on the chosen
-// point. The pin self-clears on the next user pan/zoom — see useMapController.
 const highlightedLocation = ref<[number, number] | null>(null)
 function onLocationSet(point: GeoPoint) {
   highlightedLocation.value = [point.lat, point.lon]
