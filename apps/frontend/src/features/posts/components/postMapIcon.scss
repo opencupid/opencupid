@@ -1,16 +1,3 @@
-<script setup lang="ts">
-import type { PoiIconProps } from '@/features/map/types/map.types'
-
-defineOptions({ inheritAttrs: false })
-
-defineProps<PoiIconProps>()
-</script>
-
-<template>
-  <div class="map-postit" />
-</template>
-
-<style scoped lang="scss">
 .map-postit {
   width: 1.4rem;
   height: 1.4rem;
@@ -33,4 +20,3 @@ defineProps<PoiIconProps>()
     border-radius: 0 0 0 3px;
   }
 }
-</style>

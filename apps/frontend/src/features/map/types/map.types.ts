@@ -1,5 +1,17 @@
-import type { AvatarImage } from '@/features/publicprofile/components/ProfileMarker.vue'
 import type { Component } from 'vue'
+
+/** A profile/post avatar image as rendered into a marker icon. */
+export interface AvatarImage {
+  blurhash?: string | null
+  variants?: { size: string; url: string }[]
+}
+
+/**
+ * A marker-icon renderer. Returns the inner HTML for a Leaflet DivIcon —
+ * called once per icon-cache miss. Pure string interpolation: no Vue render,
+ * no virtual DOM. Implementations live alongside the icon styles.
+ */
+export type IconRenderer = (props: PoiIconProps) => string
 
 /** Location coordinates for a map point */
 export interface PoiLocation {
@@ -54,7 +66,7 @@ export interface BoundsWithZoom {
 
 /** Per-render configuration passed from the component to MapController.updateMarkers(). */
 export interface MarkerConfig {
-  resolveIcon: (poi: MapPoi) => Component
+  resolveIcon: (poi: MapPoi) => IconRenderer
   resolvePopup?: (poi: MapPoi) => Component
-  fetchPopupData?: (id: string) => Promise<unknown>
+  fetchPopupData?: (id: string, signal?: AbortSignal) => Promise<unknown>
 }

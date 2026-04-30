@@ -9,6 +9,8 @@ import type { Marker as LMarker } from 'leaflet'
 export class DiffableLayer<T extends { id: string | number }> {
   private layer: L.LayerGroup
   private markers = new Map<string | number, LMarker>()
+  // Reverse index for O(1) marker → id lookup (e.g. on OMS click).
+  private idsByMarker = new WeakMap<LMarker, string | number>()
   private items = new Map<string | number, T>()
   private fns: {
     create: (item: T) => LMarker
@@ -36,6 +38,7 @@ export class DiffableLayer<T extends { id: string | number }> {
     for (const [id, marker] of this.markers) {
       if (!incomingMap.has(id)) {
         toRemove.push(marker)
+        this.idsByMarker.delete(marker)
         this.markers.delete(id)
         this.items.delete(id)
       }
@@ -47,6 +50,7 @@ export class DiffableLayer<T extends { id: string | number }> {
       if (!prev) {
         const marker = this.fns.create(item)
         this.markers.set(id, marker)
+        this.idsByMarker.set(marker, id)
         this.items.set(id, item)
         toAdd.push(marker)
       } else {
@@ -65,12 +69,19 @@ export class DiffableLayer<T extends { id: string | number }> {
 
   clear(): void {
     this.layer.clearLayers()
+    // WeakMap entries die with their marker keys.
+    this.idsByMarker = new WeakMap()
     this.markers.clear()
     this.items.clear()
   }
 
   get(id: string | number): LMarker | undefined {
     return this.markers.get(id)
+  }
+
+  /** O(1) reverse lookup — undefined if the marker isn't part of this layer. */
+  getId(marker: LMarker): string | number | undefined {
+    return this.idsByMarker.get(marker)
   }
 
   values(): IterableIterator<LMarker> {

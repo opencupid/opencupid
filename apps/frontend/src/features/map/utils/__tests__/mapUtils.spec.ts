@@ -8,15 +8,10 @@ vi.mock('leaflet', () => ({
   divIcon: vi.fn((opts: any) => ({ _type: 'divIcon', ...opts })),
 }))
 
-import { defineComponent, h } from 'vue'
+import type { IconRenderer } from '../../types/map.types'
 import { isValidLatLng, hydratePoiIcon } from '../mapUtils'
 
-const DummyIcon = defineComponent({
-  props: ['image', 'isSelected', 'isHighlighted'],
-  render() {
-    return h('img', { src: 'test.jpg' })
-  },
-})
+const DummyIcon: IconRenderer = (props) => `<img src="${props.image?.variants?.[0]?.url ?? ''}"/>`
 
 describe('isValidLatLng', () => {
   it.each([
@@ -38,7 +33,6 @@ describe('isValidLatLng', () => {
     expect(isValidLatLng(input as any)).toBe(expected)
   })
 })
-
 
 describe('hydratePoiIcon caching', () => {
   it('returns cached icon for identical props', () => {

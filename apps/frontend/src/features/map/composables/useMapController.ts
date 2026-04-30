@@ -4,7 +4,13 @@ import { nextTick, onMounted, onBeforeUnmount, onActivated, onDeactivated, ref, 
 import type { Component, Ref } from 'vue'
 
 import { DiffableLayer } from './DiffableLayer'
-import type { MapPoi, MapCluster, BoundsWithZoom, MarkerConfig } from '../types/map.types'
+import type {
+  MapPoi,
+  MapCluster,
+  BoundsWithZoom,
+  MarkerConfig,
+  IconRenderer,
+} from '../types/map.types'
 import {
   isValidLatLng,
   createServerClusterIcon,
@@ -26,7 +32,7 @@ interface DeferredWork {
 export interface MapProps {
   items: MapPoi[]
   clusters?: MapCluster[]
-  iconResolver: (poi: MapPoi) => Component
+  iconResolver: (poi: MapPoi) => IconRenderer
   popupResolver?: (poi: MapPoi) => Component
   initialCenter: [number, number]
   highlightedLocation?: [number, number] | null
@@ -183,12 +189,8 @@ export function useMapController(
     oms.spiralLengthFactor = OMS_SPIRAL_LENGTH_FACTOR
 
     oms.addListener('click', (marker) => {
-      for (const item of pois.allItems()) {
-        if (pois.get(item.id) === (marker as LMarker)) {
-          emit('item:select', item.id)
-          return
-        }
-      }
+      const id = pois.getId(marker as LMarker)
+      if (id !== undefined) emit('item:select', String(id))
     })
 
     pois = new DiffableLayer<MapPoi>(pointLayer, {
@@ -315,6 +317,11 @@ export function useMapController(
         m.closePopup()
       })
 
+      // Per-marker abort controller for the in-flight popup fetch. A fast
+      // hover-sweep across markers cancels prior fetches instead of letting
+      // them queue up.
+      let popupAbort: AbortController | null = null
+
       m.on('popupopen', async (e: L.PopupEvent) => {
         const popup = e.popup
         const target = popup
@@ -326,16 +333,21 @@ export function useMapController(
         }
 
         if (fetchPopupData) {
+          popupAbort?.abort()
+          const controller = new AbortController()
+          popupAbort = controller
           const itemId = item.id
           try {
-            const fullData = await fetchPopupData(itemId)
-            if (!popup.isOpen()) return
+            const fullData = await fetchPopupData(itemId, controller.signal)
+            if (controller.signal.aborted || !popup.isOpen()) return
             if (fullData && target) {
               popupItem.value = { ...item, source: fullData }
               popupTarget.value = target
             }
           } catch {
-            // Popup may already be closed — nothing useful to show.
+            // Aborted or popup already closed — nothing useful to show.
+          } finally {
+            if (popupAbort === controller) popupAbort = null
           }
         }
 
@@ -345,6 +357,8 @@ export function useMapController(
       })
 
       m.on('popupclose', () => {
+        popupAbort?.abort()
+        popupAbort = null
         popupTarget.value = null
         popupItem.value = null
       })
@@ -385,19 +399,23 @@ export function useMapController(
     for (const m of removed) oms.removeMarker(m)
     for (const m of added) oms.addMarker(m)
 
-    if (dissolvedClusterAt) {
-      const target = dissolvedClusterAt
+    // After a max-zoom cluster click, dissolvedClusterAt holds the location
+    // we want to spiderfy as soon as the matching leaf markers arrive. Try
+    // each items batch; if no marker is yet within range, leave the flag
+    // armed so the next batch retries. Replaces the previous setTimeout(0)
+    // hand-off, which assumed the right markers always landed in this tick.
+    if (dissolvedClusterAt && triggerSpiderfy(dissolvedClusterAt)) {
       dissolvedClusterAt = null
-      setTimeout(() => triggerSpiderfy(target), 0)
     }
   }
 
-  function triggerSpiderfy(target: L.LatLng): void {
+  function triggerSpiderfy(target: L.LatLng): boolean {
     const match = [...pois.values()].find(
       (m) => m.getLatLng().distanceTo(target) < SPIDERFY_COLOCATION_THRESHOLD_M
     )
-    if (!match) return
+    if (!match) return false
     ;(oms as any).spiderListener(match)
+    return true
   }
 
   function updateMarkers(items: MapPoi[], config: MarkerConfig): void {

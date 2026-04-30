@@ -201,15 +201,14 @@ const DummyPopup = defineComponent({
   },
 })
 
-const DummyIcon = defineComponent({
-  props: ['image', 'isSelected', 'isHighlighted'],
-  render() {
-    return h('img', {
-      src: this.image?.variants?.[0]?.url,
-      class: { 'poi-avatar': true, highlighted: this.isHighlighted },
-    })
-  },
-})
+const DummyIcon = (props: {
+  image?: { variants?: { size: string; url: string }[] }
+  isHighlighted?: boolean
+}) => {
+  const url = props.image?.variants?.[0]?.url ?? ''
+  const cls = props.isHighlighted ? 'poi-avatar highlighted' : 'poi-avatar'
+  return `<img src="${url}" class="${cls}"/>`
+}
 
 function makeImage(url: string, blurhash?: string) {
   return { blurhash: blurhash ?? null, variants: [{ size: 'thumb', url }] }
@@ -789,7 +788,7 @@ describe('OsmPoiMap', () => {
       await flushPromises()
       await nextTick()
 
-      expect(fetchPopupData).toHaveBeenCalledWith('1')
+      expect(fetchPopupData).toHaveBeenCalledWith('1', expect.any(AbortSignal))
       expect(popupUpdate).toHaveBeenCalled()
     })
 

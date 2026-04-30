@@ -1,6 +1,5 @@
 import L from 'leaflet'
-import { type Component, render, h } from 'vue'
-import type { PoiIconProps } from '../types/map.types'
+import type { IconRenderer, PoiIconProps } from '../types/map.types'
 import type { GeoPoint, LocationDTO } from '@zod/dto/location.dto'
 
 /** Validates that a coordinate pair contains finite numbers (rejects NaN, Infinity, null, undefined). */
@@ -32,29 +31,37 @@ export function createServerClusterIcon(count: number): L.DivIcon {
   })
 }
 
-function getIconCacheKey(component: Component, props: PoiIconProps): string {
-  const name = (component as any).name ?? (component as any).__name ?? 'anon'
-  const url = props.image?.variants?.[0]?.url ?? 'none'
-  return `${name}_${url}_${props.isSelected}_${props.isHighlighted}_${props.hasPost ?? false}`
+// Renderers are identity-keyed via this WeakMap so cache keys stay short
+// and don't risk collisions across renderers with the same `name`.
+const rendererIds = new WeakMap<IconRenderer, number>()
+let nextRendererId = 0
+function rendererId(renderer: IconRenderer): number {
+  let id = rendererIds.get(renderer)
+  if (id === undefined) {
+    id = nextRendererId++
+    rendererIds.set(renderer, id)
+  }
+  return id
 }
 
-/** Renders a Vue component into a Leaflet DivIcon for use as a POI marker.
+function getIconCacheKey(renderer: IconRenderer, props: PoiIconProps): string {
+  const url = props.image?.variants?.[0]?.url ?? 'none'
+  return `${rendererId(renderer)}_${url}_${props.isSelected}_${props.isHighlighted}_${props.hasPost ?? false}`
+}
+
+/** Builds a Leaflet DivIcon for a POI marker via a pure HTML renderer.
+ *  No Vue render() / vDOM round-trip — the renderer returns a string directly.
  *  @param cache - per-instance Map so icons are never shared across map instances. */
 export function hydratePoiIcon(
-  component: Component,
+  renderer: IconRenderer,
   iconProps: PoiIconProps,
   cache: Map<string, L.DivIcon>
 ): L.DivIcon {
-  const key = getIconCacheKey(component, iconProps)
+  const key = getIconCacheKey(renderer, iconProps)
   const cached = cache.get(key)
   if (cached) return cached
 
-  const container = document.createElement('span')
-  render(h(component, iconProps), container)
-  // Cache the rendered HTML string, not the live element — Leaflet's DivIcon
-  // uses appendChild for element nodes, which *moves* them between markers
-  // instead of cloning. Passing a string lets Leaflet parse fresh DOM per marker.
-  const html = container.innerHTML
+  const html = renderer(iconProps)
   const icon = L.divIcon({
     className: 'poi-avatar-icon',
     html,

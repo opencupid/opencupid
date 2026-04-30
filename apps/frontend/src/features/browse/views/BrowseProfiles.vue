@@ -20,8 +20,8 @@ import SearchBar from '../components/SearchBar.vue'
 import ProfileMapCard from '../components/ProfileMapCard.vue'
 import PublicProfileView from '@/features/publicprofile/components/PublicProfileView.vue'
 
-import ProfileMarker from '@/features/publicprofile/components/ProfileMarker.vue'
-import MapIcon from '@/features/posts/components/MapIcon.vue'
+import { renderProfileMarkerHtml } from '@/features/publicprofile/components/profileMarkerIcon'
+import { renderPostMapIconHtml } from '@/features/posts/components/postMapIcon'
 
 import PostMapPopup from '@/features/posts/components/PostMapPopup.vue'
 import PostFullView from '@/features/posts/components/PostFullView.vue'
@@ -245,7 +245,9 @@ onMounted(async () => {
           v-if="initialMapCenter"
           :items="allPois"
           :clusters="clusters"
-          :icon-resolver="(poi) => (poi.type === 'post' ? MapIcon : ProfileMarker)"
+          :icon-resolver="
+            (poi) => (poi.type === 'post' ? renderPostMapIconHtml : renderProfileMarkerHtml)
+          "
           :initial-center="initialMapCenter"
           :highlighted-location="highlightedLocation"
           :popup-resolver="(poi) => (poi.type === 'post' ? PostMapPopup : ProfileMapCard)"

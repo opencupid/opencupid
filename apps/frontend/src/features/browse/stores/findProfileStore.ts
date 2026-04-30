@@ -145,16 +145,26 @@ export const useFindProfileStore = defineStore('findProfile', {
       await this.findClustersForMapBounds(bounds, zoom)
     },
 
-    async fetchProfileForPopup(profileId: string): Promise<PublicProfile | null> {
+    async fetchProfileForPopup(
+      profileId: string,
+      signal?: AbortSignal
+    ): Promise<PublicProfile | null> {
       const cached = popupCache.get(profileId)
-      if (cached) return cached
+      if (cached) {
+        // LRU touch — re-insert moves the key to the end of insertion order.
+        popupCache.delete(profileId)
+        popupCache.set(profileId, cached)
+        return cached
+      }
 
       try {
         const res = await safeApiCall(() =>
-          api.get<GetPublicProfileResponse>(`/profiles/${profileId}`)
+          api.get<GetPublicProfileResponse>(`/profiles/${profileId}`, { signal })
         )
         const profile = res.data.profile
         if (popupCache.size >= POPUP_CACHE_MAX) {
+          // Map iteration is insertion-ordered; combined with the touch above
+          // this evicts the least-recently-used entry.
           const firstKey = popupCache.keys().next().value!
           popupCache.delete(firstKey)
         }
