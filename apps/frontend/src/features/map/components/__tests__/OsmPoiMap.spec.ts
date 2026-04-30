@@ -37,7 +37,6 @@ const createdMarkers: { latLng: [number, number]; opts: any; icon?: any }[] = []
 // Mock leaflet before imports
 vi.mock('leaflet', () => {
   const divIcon = vi.fn((opts: any) => ({ _type: 'divIcon', ...opts }))
-  const icon = vi.fn((opts: any) => ({ _type: 'icon', ...opts }))
 
   const markerProto = {
     bindPopup: vi.fn().mockReturnThis(),
@@ -135,7 +134,6 @@ vi.mock('leaflet', () => {
       map: mapFn,
       marker,
       divIcon,
-      icon,
       layerGroup,
       latLng,
       latLngBounds,
@@ -150,7 +148,6 @@ vi.mock('leaflet', () => {
     map: mapFn,
     marker,
     divIcon,
-    icon,
     layerGroup,
     latLng,
     latLngBounds,
@@ -500,34 +497,20 @@ describe('OsmPoiMap', () => {
   })
 
   describe('highlightedLocation', () => {
-    it('flies to the point at the search-focus zoom and drops a pin marker', async () => {
+    it('flies to the point at the search-focus zoom', async () => {
       const wrapper = await mountMap()
       await flushPromises()
 
       const mapInstance = (L.map as any).mock.results[0].value
       mapInstance.flyTo.mockClear()
-      const markerCountBefore = (L.marker as any).mock.calls.length
 
       await wrapper.setProps({ highlightedLocation: [47.5, 19.0] as [number, number] })
       await flushPromises()
 
-      // Pin marker created via L.icon (URL-based icon, not divIcon)
-      expect(L.icon).toHaveBeenCalledTimes(1)
-      const iconOpts = (L.icon as any).mock.calls[0][0]
-      expect(iconOpts.iconUrl).toBeDefined()
-      expect(iconOpts.className).toBe('search-pin-icon')
-
-      // One additional marker created on the search-pin layer
-      expect((L.marker as any).mock.calls.length).toBe(markerCountBefore + 1)
-      const pinMarkerCall = (L.marker as any).mock.calls.at(-1)
-      expect(pinMarkerCall[0]).toEqual([47.5, 19.0])
-      expect(pinMarkerCall[1].interactive).toBe(false)
-
-      // Map flies to the point at the fixed search-focus zoom
       expect(mapInstance.flyTo).toHaveBeenCalledWith([47.5, 19.0], 12, { duration: 1 })
     })
 
-    it('clears the pin on the second moveend (skips the flyTo settle)', async () => {
+    it('flies again on subsequent highlightedLocation change', async () => {
       const wrapper = await mountMap()
       await flushPromises()
 
@@ -535,42 +518,12 @@ describe('OsmPoiMap', () => {
 
       await wrapper.setProps({ highlightedLocation: [47.5, 19.0] as [number, number] })
       await flushPromises()
-
-      // The pin marker is the most recent one created
-      const pinMarker = (L.marker as any).mock.results.at(-1)!.value
-      pinMarker.remove = vi.fn()
-
-      // Find the moveend handler registered by showHighlight (last 'on' call for 'moveend')
-      const moveendHandlers = mapInstance.on.mock.calls.filter((c: any) => c[0] === 'moveend')
-      const onMove = moveendHandlers.at(-1)![1]
-
-      // First moveend = the flyTo settling. Pin must NOT be cleared.
-      onMove()
-      expect(pinMarker.remove).not.toHaveBeenCalled()
-
-      // Second moveend = a real user pan/zoom. Pin clears.
-      onMove()
-      expect(pinMarker.remove).toHaveBeenCalled()
-    })
-
-    it('replaces an existing pin when highlightedLocation changes again', async () => {
-      const wrapper = await mountMap()
-      await flushPromises()
-
-      await wrapper.setProps({ highlightedLocation: [47.5, 19.0] as [number, number] })
-      await flushPromises()
-      const firstPin = (L.marker as any).mock.results.at(-1)!.value
-      firstPin.remove = vi.fn()
-      const markerCountAfterFirst = (L.marker as any).mock.calls.length
+      mapInstance.flyTo.mockClear()
 
       await wrapper.setProps({ highlightedLocation: [48.0, 16.3] as [number, number] })
       await flushPromises()
 
-      // First pin is removed and a new one is created at the new point
-      expect(firstPin.remove).toHaveBeenCalled()
-      expect((L.marker as any).mock.calls.length).toBe(markerCountAfterFirst + 1)
-      const secondPinCall = (L.marker as any).mock.calls.at(-1)
-      expect(secondPinCall[0]).toEqual([48.0, 16.3])
+      expect(mapInstance.flyTo).toHaveBeenCalledWith([48.0, 16.3], 12, { duration: 1 })
     })
   })
 

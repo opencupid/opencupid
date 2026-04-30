@@ -28,7 +28,7 @@ import PostFullView from '@/features/posts/components/PostFullView.vue'
 import OwnerDrawerControls from '../components/OwnerDrawerControls.vue'
 import NearbyFeatures from '../components/NearbyFeatures.vue'
 import { usePostStore } from '@/features/posts/stores/postStore'
-import type { GeoPoint, LocationDTO } from '@zod/dto/location.dto'
+import { toGeoPoint, type GeoPoint, type LocationDTO } from '@zod/dto/location.dto'
 import ShareDialog from '@/features/app/components/ShareDialog.vue'
 import type { PostSummary } from '@zod/post/post.dto'
 import type { ProfileSummary } from '@zod/profile/profile.dto'
@@ -156,6 +156,16 @@ function handleProfileSelect(profile: ProfileSummary) {
   router.push({ name: 'PublicProfile', params: { profileId: profile.id } })
 }
 
+// NearbyFeatures lives outside the map, so picking a post there must move the
+// map for context. Map-marker clicks (handleMarkerSelect) and SearchBar's
+// post:select don't need this — the marker click is already on-screen, and
+// SearchBar emits its own location:set alongside post:select.
+function onNearbyPostSelect(post: PostSummary) {
+  const point = toGeoPoint(post.location)
+  if (point) highlightedLocation.value = [point.lat, point.lon]
+  handlePostSelect(post)
+}
+
 function handleMarkerSelect(id: string) {
   const poi = allPois.value.find((p) => p.id === id)
   if (!poi) return
@@ -250,7 +260,7 @@ onMounted(async () => {
 
         <NearbyFeatures
           :posts="postStore.postSummaries"
-          @post:select="handlePostSelect"
+          @post:select="onNearbyPostSelect"
         />
       </div>
     </main>

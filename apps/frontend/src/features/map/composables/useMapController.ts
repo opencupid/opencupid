@@ -12,7 +12,6 @@ import {
   MAP_MAX_ZOOM,
 } from '../utils/mapUtils'
 import { MAP_DEFAULT_ZOOM } from '@shared/maps'
-import pinFilledUrl from '@/assets/icons/interface/pin-filled.svg?url'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -70,7 +69,6 @@ const OMS_SPIRAL_LENGTH_START = 16
 const OMS_SPIRAL_LENGTH_FACTOR = 12
 const BOUNDS_DEBOUNCE_MS = 500
 const SEARCH_FOCUS_ZOOM = 12
-const SEARCH_PIN_SIZE = 32
 
 // ---------------------------------------------------------------------------
 // Composable
@@ -94,9 +92,6 @@ export function useMapController(
   let clusters: DiffableLayer<MapCluster>
   let pointLayer: L.LayerGroup
   let clusterLayer: L.LayerGroup
-  let searchPinLayer: L.LayerGroup | null = null
-  let searchPinMarker: LMarker | null = null
-  let highlightCleanup: (() => void) | null = null
   const iconCache = new Map<string, L.DivIcon>()
   let resizeObserver: ResizeObserver
   let boundsTimer: ReturnType<typeof setTimeout> | null = null
@@ -120,7 +115,6 @@ export function useMapController(
       boundsTimer = null
     }
     iconCache.clear()
-    clearHighlight()
     map?.off('moveend', emitBounds)
     pois?.clear()
     clusters?.clear()
@@ -419,14 +413,7 @@ export function useMapController(
     clusters.update(newClusters)
   }
 
-  // ── Highlighted location (search-driven pin + flyTo) ──────────────────
-
-  function clearHighlight(): void {
-    highlightCleanup?.()
-    highlightCleanup = null
-    searchPinMarker?.remove()
-    searchPinMarker = null
-  }
+  // ── Highlighted location (search-driven flyTo) ────────────────────────
 
   function showHighlight(point: [number, number]): void {
     if (!isValidLatLng(point)) return
@@ -439,37 +426,7 @@ export function useMapController(
       deferred.highlight = point
       return
     }
-
-    clearHighlight()
-
-    if (!searchPinLayer) searchPinLayer = L.layerGroup().addTo(map)
-    searchPinMarker = L.marker(point, {
-      icon: L.icon({
-        iconUrl: pinFilledUrl,
-        iconSize: [SEARCH_PIN_SIZE, SEARCH_PIN_SIZE],
-        iconAnchor: [SEARCH_PIN_SIZE / 2, SEARCH_PIN_SIZE],
-        className: 'search-pin-icon',
-      }),
-      interactive: false,
-      keyboard: false,
-    }).addTo(searchPinLayer)
-
     map.flyTo(point, SEARCH_FOCUS_ZOOM, { duration: 1 })
-
-    // The flyTo itself will fire one moveend when its animation settles.
-    // Skip that one; clear the pin on the *next* moveend (a real user pan
-    // or zoom). Programmatic moves elsewhere are rare and clearing the pin
-    // on them is acceptable.
-    let settled = false
-    const onMove = () => {
-      if (!settled) {
-        settled = true
-        return
-      }
-      clearHighlight()
-    }
-    map.on('moveend', onMove)
-    highlightCleanup = () => map.off('moveend', onMove)
   }
 
   // ── Helper ────────────────────────────────────────────────────────────

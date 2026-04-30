@@ -2,4 +2,4 @@
 '@opencupid/frontend': minor
 ---
 
-Map search results now zoom in and drop a pin marker. The pin self-clears on the next user pan/zoom.
+The browse map now zooms in when a location is picked from the search bar, or when a post is clicked in the NearbyFeatures strip below the map.
