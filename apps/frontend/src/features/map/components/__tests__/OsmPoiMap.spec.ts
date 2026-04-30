@@ -611,13 +611,21 @@ describe('OsmPoiMap', () => {
       expect(clusterLayerInstance.removeLayer).toHaveBeenCalled()
     })
 
-    it('updates existing cluster marker latlng and icon in place', async () => {
+    it('does not update existing cluster markers when fields change between batches', async () => {
+      // Per-session contract: cluster fields are immutable per id.
+      // cluster_id is supercluster's per-index identifier and the index
+      // is cached per (profile, tagIds) on the backend, so the same id
+      // never legitimately appears with different fields. Filter changes
+      // produce entirely different ids, not same id with new count.
       const wrapper = await mountMap({ items: [], clusters: [clusters[0]] })
       await flushPromises()
 
+      const markerInstance = (L.marker as any).mock.results[0].value
       const markerCountBefore = (L.marker as any).mock.calls.length
 
-      // Update the same cluster id with new location/count
+      // Same id with different fields would have triggered shouldUpdate +
+      // apply pre-fix. Now nothing happens: no new marker, no setLatLng,
+      // no setIcon. The marker keeps its original construction-time state.
       const updated: MapCluster = {
         id: 100,
         location: { lat: 49.0, lon: 20.0 },
@@ -627,8 +635,9 @@ describe('OsmPoiMap', () => {
       await wrapper.setProps({ clusters: [updated] })
       await flushPromises()
 
-      // No new marker should be created — updated in place
       expect((L.marker as any).mock.calls.length).toBe(markerCountBefore)
+      expect(markerInstance.setLatLng).not.toHaveBeenCalled()
+      expect(markerInstance.setIcon).not.toHaveBeenCalled()
     })
 
     it('cluster click at max zoom removes marker and sets view', async () => {

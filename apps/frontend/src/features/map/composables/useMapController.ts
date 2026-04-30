@@ -207,16 +207,14 @@ export function useMapController(
       create: (item) => createPoiMarker(item),
     })
 
+    // Clusters share the immutable-per-id contract with POIs: cluster_id
+    // is supercluster's per-index identifier and the index is cached per
+    // (profile, tagIds) on the backend, so within a session the same id
+    // always carries the same fields. Filter changes produce entirely
+    // different ids (different cache key → different index), not same
+    // ids with different counts.
     clusters = new DiffableLayer<MapCluster>(clusterLayer, {
       create: (cluster) => createClusterMarker(cluster),
-      shouldUpdate: (prev, next) =>
-        prev.count !== next.count ||
-        prev.location.lat !== next.location.lat ||
-        prev.location.lon !== next.location.lon,
-      apply: (marker, cluster) => {
-        marker.setLatLng([cluster.location.lat, cluster.location.lon])
-        marker.setIcon(createServerClusterIcon(cluster.count))
-      },
     })
   }
 

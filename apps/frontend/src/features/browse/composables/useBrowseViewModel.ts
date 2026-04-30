@@ -22,29 +22,23 @@ export function useBrowseViewModel() {
   const viewerProfile = computed(() => ownerStore.profile)
 
   // ── DTO → map-layer mapping ─────────────────────────────────────
-  // Memoise output objects by id. Per-session contract: POI data is
-  // treated as immutable for the lifetime of an id — first sighting
-  // wins, later batches with the same id return the cached reference
-  // unchanged. The GUI is not expected to reflect mid-session DB changes,
-  // so no equivalence check is needed. Clusters DO change between batches
-  // (count rebalances, centroid shifts on filter changes) and use a
-  // structural equivalence check below. Every entry is markRaw'd to skip
-  // Vue's deep-proxy traversal — consumers only read scalar fields.
+  // Memoise output objects by id. Per-session contract: map data —
+  // POIs and clusters alike — is treated as immutable for the lifetime
+  // of an id. First sighting wins; later batches with the same id
+  // return the cached reference unchanged. Clusters satisfy this by
+  // construction: cluster_id is supercluster's per-index identifier,
+  // and the supercluster index is keyed in the backend by (profile,
+  // tagIds), so within a session the (id → fields) mapping is a
+  // function — different filters produce entirely different ids, not
+  // same ids with different counts. Every entry is markRaw'd to skip
+  // Vue's deep-proxy traversal.
   const clusterCache = new Map<number, MapCluster>()
   const profileCache = new Map<string, MapPoi>()
   const postCache = new Map<string, MapPoi>()
 
   function memoCluster(f: ClusterFeature): MapCluster {
-    const prev = clusterCache.get(f.id)
-    if (
-      prev &&
-      prev.location.lat === f.lat &&
-      prev.location.lon === f.lon &&
-      prev.count === f.count &&
-      prev.expansionZoom === f.expansionZoom
-    ) {
-      return prev
-    }
+    const cached = clusterCache.get(f.id)
+    if (cached) return cached
     const next = markRaw<MapCluster>({
       id: f.id,
       location: { lat: f.lat, lon: f.lon },
