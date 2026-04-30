@@ -28,7 +28,7 @@ import PostFullView from '@/features/posts/components/PostFullView.vue'
 import OwnerDrawerControls from '../components/OwnerDrawerControls.vue'
 import NearbyFeatures from '../components/NearbyFeatures.vue'
 import { usePostStore } from '@/features/posts/stores/postStore'
-import type { GeoPoint, LocationDTO } from '@zod/dto/location.dto'
+import { toGeoPoint, type GeoPoint } from '@zod/dto/location.dto'
 import ShareDialog from '@/features/app/components/ShareDialog.vue'
 import type { PostSummary } from '@zod/post/post.dto'
 import type { ProfileSummary } from '@zod/profile/profile.dto'
@@ -59,26 +59,24 @@ watch(selectedTagIds, () => {
   findProfileStore.refetchBounds()
 })
 
-// Map center: user's explicit choice from the location filter. When null,
-// falls back to defaultMapCenter (the viewer's own profile location).
-const mapCenter = ref<[number, number] | null>(null)
-
 // Placeholder visibility. Flipped by @map:ready from OsmPoiMap once the
 // first tile load completes. Hoisted out of OsmPoiMap so it paints from
-// first render — i.e. before effectiveMapCenter resolves and the map mounts.
+// first render — i.e. before initialMapCenter resolves and the map mounts.
 const isMapReady = ref(false)
 function onMapReady() {
   isMapReady.value = true
 }
-const defaultMapCenter = computed<[number, number] | undefined>(() => {
+
+// Initial center for the map's first mount. Read once by OsmPoiMap; not
+// reactive after mount.
+const initialMapCenter = computed<[number, number] | undefined>(() => {
   const fromProfile = toLatLng(viewerProfile.value?.location)
   return isValidLatLng(fromProfile) ? fromProfile : undefined
 })
-const effectiveMapCenter = computed<[number, number] | undefined>(
-  () => mapCenter.value ?? defaultMapCenter.value
-)
+
+const highlightedLocation = ref<[number, number] | null>(null)
 function onLocationSet(point: GeoPoint) {
-  mapCenter.value = [point.lat, point.lon]
+  highlightedLocation.value = [point.lat, point.lon]
 }
 
 provide('viewerProfile', toRef(viewerProfile))
@@ -154,6 +152,16 @@ function handlePostSelect(post: PostSummary) {
 }
 function handleProfileSelect(profile: ProfileSummary) {
   router.push({ name: 'PublicProfile', params: { profileId: profile.id } })
+}
+
+// NearbyFeatures lives outside the map, so picking a post there must move the
+// map for context. Map-marker clicks (handleMarkerSelect) and SearchBar's
+// post:select don't need this — the marker click is already on-screen, and
+// SearchBar emits its own location:set alongside post:select.
+function onNearbyPostSelect(post: PostSummary) {
+  const point = toGeoPoint(post.location)
+  if (point) highlightedLocation.value = [point.lat, point.lon]
+  handlePostSelect(post)
 }
 
 function handleMarkerSelect(id: string) {
@@ -234,11 +242,12 @@ onMounted(async () => {
         />
 
         <OsmPoiMap
-          v-if="effectiveMapCenter"
+          v-if="initialMapCenter"
           :items="allPois"
           :clusters="clusters"
           :icon-resolver="(poi) => (poi.type === 'post' ? MapIcon : ProfileMarker)"
-          :center="effectiveMapCenter"
+          :initial-center="initialMapCenter"
+          :highlighted-location="highlightedLocation"
           :popup-resolver="(poi) => (poi.type === 'post' ? PostMapPopup : ProfileMapCard)"
           :fetch-popup-data="fetchPopupData"
           class="h-100"
@@ -249,7 +258,7 @@ onMounted(async () => {
 
         <NearbyFeatures
           :posts="postStore.postSummaries"
-          @post:select="handlePostSelect"
+          @post:select="onNearbyPostSelect"
         />
       </div>
     </main>

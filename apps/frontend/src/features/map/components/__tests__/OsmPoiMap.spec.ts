@@ -250,7 +250,7 @@ async function mountMap(props: Partial<Record<string, any>> = {}) {
       items: [],
       iconResolver: () => DummyIcon,
       popupResolver: () => DummyPopup,
-      center: [47.0, 19.0] as [number, number],
+      initialCenter: [47.0, 19.0] as [number, number],
       ...props,
     },
     attachTo: document.body,
@@ -403,34 +403,8 @@ describe('OsmPoiMap', () => {
     expect(moveendCall).toBeDefined()
   })
 
-  it('flyTo uses lastStableZoom from zoomend, not mid-animation getZoom', async () => {
-    const wrapper = await mountMap({ center: [47.0, 19.0] as [number, number] })
-    await flushPromises()
-
-    // The map instance returned by L.map shares mapProto references
-    const mapInstance = (L.map as any).mock.results[0].value
-
-    // Find the zoomend handler registered during ensureMap()
-    const zoomendCall = mapInstance.on.mock.calls.find((c: any) => c[0] === 'zoomend')
-    expect(zoomendCall).toBeDefined()
-    const zoomendHandler = zoomendCall[1]
-
-    // Simulate user zooming to 15: getZoom returns 15 when zoomend fires
-    mapInstance.getZoom.mockReturnValue(15)
-    zoomendHandler()
-
-    // Simulate a mid-flyTo state where getZoom would return an intermediate value
-    mapInstance.getZoom.mockReturnValue(3)
-
-    // Change center — flyTo should use lastStableZoom (15), not the mid-animation value (3)
-    await wrapper.setProps({ center: [48.0, 20.0] as [number, number] })
-    await nextTick()
-
-    expect(mapInstance.flyTo).toHaveBeenCalledWith([48.0, 20.0], 15, { duration: 1 })
-  })
-
-  it('initializes at the provided center and the default zoom', async () => {
-    await mountMap({ center: [47.0, 19.0] as [number, number] })
+  it('initializes at the provided initialCenter and the default zoom', async () => {
+    await mountMap({ initialCenter: [47.0, 19.0] as [number, number] })
     await flushPromises()
 
     const mapCall = (L.map as any).mock.calls[0][1]
@@ -438,36 +412,29 @@ describe('OsmPoiMap', () => {
     expect(mapCall.zoom).toBe(MAP_DEFAULT_ZOOM)
   })
 
-  it('defers center change when container has zero dimensions and replays on resize', async () => {
-    const wrapper = await mountMap({ center: [47.0, 19.0] as [number, number] })
+  it('defers highlightedLocation when container has zero dimensions and replays on resize', async () => {
+    const wrapper = await mountMap({ initialCenter: [47.0, 19.0] as [number, number] })
     await flushPromises()
 
     const mapInstance = (L.map as any).mock.results[0].value
 
-    // Simulate zoomend so lastStableZoom is set
-    const zoomendHandler = mapInstance.on.mock.calls.find((c: any) => c[0] === 'zoomend')[1]
-    mapInstance.getZoom.mockReturnValue(10)
-    zoomendHandler()
-
     // Simulate zero-size container (KeepAlive deactivation)
     mapInstance.getSize.mockReturnValue({ x: 0, y: 0 })
     mapInstance.flyTo.mockClear()
-    mapInstance.setView.mockClear()
 
-    // Change center while hidden — neither flyTo nor setView should fire
-    await wrapper.setProps({ center: [50.0, 14.0] as [number, number] })
+    // Change highlightedLocation while hidden — flyTo should not fire
+    await wrapper.setProps({ highlightedLocation: [50.0, 14.0] as [number, number] })
     await nextTick()
     expect(mapInstance.flyTo).not.toHaveBeenCalled()
-    expect(mapInstance.setView).not.toHaveBeenCalled()
 
     // Restore non-zero size and trigger the ResizeObserver callback
     mapInstance.getSize.mockReturnValue({ x: 1000, y: 800 })
 
     const roCallback = resizeObserverCallbacks[resizeObserverCallbacks.length - 1]!
     roCallback()
-    // Deferred-drain uses setView (teleport) to avoid loading intermediate tiles
-    expect(mapInstance.setView).toHaveBeenCalledWith([50.0, 14.0], 10)
-    expect(mapInstance.flyTo).not.toHaveBeenCalled()
+
+    // Deferred highlight is drained: flyTo to the search-focus zoom
+    expect(mapInstance.flyTo).toHaveBeenCalledWith([50.0, 14.0], 12, { duration: 1 })
   })
 
   it('suppresses bounds:changed when container has zero dimensions', async () => {
@@ -527,6 +494,37 @@ describe('OsmPoiMap', () => {
     ])
 
     vi.useRealTimers()
+  })
+
+  describe('highlightedLocation', () => {
+    it('flies to the point at the search-focus zoom', async () => {
+      const wrapper = await mountMap()
+      await flushPromises()
+
+      const mapInstance = (L.map as any).mock.results[0].value
+      mapInstance.flyTo.mockClear()
+
+      await wrapper.setProps({ highlightedLocation: [47.5, 19.0] as [number, number] })
+      await flushPromises()
+
+      expect(mapInstance.flyTo).toHaveBeenCalledWith([47.5, 19.0], 12, { duration: 1 })
+    })
+
+    it('flies again on subsequent highlightedLocation change', async () => {
+      const wrapper = await mountMap()
+      await flushPromises()
+
+      const mapInstance = (L.map as any).mock.results[0].value
+
+      await wrapper.setProps({ highlightedLocation: [47.5, 19.0] as [number, number] })
+      await flushPromises()
+      mapInstance.flyTo.mockClear()
+
+      await wrapper.setProps({ highlightedLocation: [48.0, 16.3] as [number, number] })
+      await flushPromises()
+
+      expect(mapInstance.flyTo).toHaveBeenCalledWith([48.0, 16.3], 12, { duration: 1 })
+    })
   })
 
   describe('diff-based updateMarkers', () => {
@@ -680,7 +678,7 @@ describe('OsmPoiMap', () => {
       const mapCallsBefore = (L.map as any).mock.calls.length
 
       // Additional prop updates should not re-init the map
-      await wrapper.setProps({ center: [48.0, 20.0] as [number, number] })
+      await wrapper.setProps({ highlightedLocation: [48.0, 20.0] as [number, number] })
       await flushPromises()
       await wrapper.setProps({ items: [items[0]] })
       await flushPromises()

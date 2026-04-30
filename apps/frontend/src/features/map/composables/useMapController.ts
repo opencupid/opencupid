@@ -20,7 +20,7 @@ import { MAP_DEFAULT_ZOOM } from '@shared/maps'
 type MapPhase = 'uninitialized' | 'loading' | 'ready' | 'suspended'
 
 interface DeferredWork {
-  center?: [number, number]
+  highlight?: [number, number]
 }
 
 export interface MapProps {
@@ -28,7 +28,8 @@ export interface MapProps {
   clusters?: MapCluster[]
   iconResolver: (poi: MapPoi) => Component
   popupResolver?: (poi: MapPoi) => Component
-  center: [number, number]
+  initialCenter: [number, number]
+  highlightedLocation?: [number, number] | null
   fetchPopupData?: (id: string) => Promise<unknown>
 }
 
@@ -67,6 +68,7 @@ const OMS_SPIRAL_FOOT_SEPARATION = 50
 const OMS_SPIRAL_LENGTH_START = 16
 const OMS_SPIRAL_LENGTH_FACTOR = 12
 const BOUNDS_DEBOUNCE_MS = 500
+const SEARCH_FOCUS_ZOOM = 12
 
 // ---------------------------------------------------------------------------
 // Composable
@@ -94,7 +96,6 @@ export function useMapController(
   let resizeObserver: ResizeObserver
   let boundsTimer: ReturnType<typeof setTimeout> | null = null
   let dissolvedClusterAt: L.LatLng | null = null
-  let lastStableZoom: number = MAP_DEFAULT_ZOOM
   let markerConfig: MarkerConfig | null = null
 
   // ── Lifecycle ───────────────────────────────────────────────────────────
@@ -139,7 +140,7 @@ export function useMapController(
 
   function createMap(): void {
     map = L.map(mapEl.value!, {
-      center: props.center,
+      center: props.initialCenter,
       zoom: MAP_DEFAULT_ZOOM,
       maxZoom: MAP_MAX_ZOOM,
       preferCanvas: true,
@@ -148,20 +149,13 @@ export function useMapController(
     })
     L.control.zoom({ position: 'bottomright' }).addTo(map)
 
-    map.on('zoomend', () => {
-      lastStableZoom = map.getZoom()
-    })
     map.on('moveend', emitBounds)
 
     resizeObserver = new ResizeObserver(() => {
       const size = map.getSize()
       if (size.x === 0 || size.y === 0) return
       map.invalidateSize({ debounceMoveend: true })
-      if (deferred.center) {
-        const center = deferred.center
-        deferred.center = undefined
-        map.setView(center, lastStableZoom)
-      }
+      drainDeferred()
     })
     resizeObserver.observe(mapEl.value!)
   }
@@ -249,10 +243,10 @@ export function useMapController(
   }
 
   function drainDeferred(): void {
-    if (deferred.center) {
-      const center = deferred.center
-      deferred.center = undefined
-      map.setView(center, lastStableZoom)
+    if (deferred.highlight) {
+      const point = deferred.highlight
+      deferred.highlight = undefined
+      showHighlight(point)
     }
   }
 
@@ -419,28 +413,20 @@ export function useMapController(
     clusters.update(newClusters)
   }
 
-  // ── Imperative commands ───────────────────────────────────────────────
+  // ── Highlighted location (search-driven flyTo) ────────────────────────
 
-  function flyToCenter(center: [number, number]): void {
-    if (!isValidLatLng(center)) return
+  function showHighlight(point: [number, number]): void {
+    if (!isValidLatLng(point)) return
     if (phase !== 'ready') {
-      deferred.center = center
+      deferred.highlight = point
       return
     }
     const size = map.getSize()
     if (size.x === 0 || size.y === 0) {
-      deferred.center = center
+      deferred.highlight = point
       return
     }
-    map.flyTo(center, lastStableZoom, { duration: 1 })
-  }
-
-  function flyToMarker(poi: MapPoi): void {
-    if (phase !== 'ready') return
-    map.flyTo([poi.location.lat, poi.location.lon], MAP_MAX_ZOOM, {
-      animate: true,
-      duration: 0.6,
-    })
+    map.flyTo(point, SEARCH_FOCUS_ZOOM, { duration: 1 })
   }
 
   // ── Helper ────────────────────────────────────────────────────────────
@@ -477,11 +463,11 @@ export function useMapController(
   )
 
   watch(
-    () => props.center,
-    (center) => {
-      if (center) flyToCenter(center)
+    () => props.highlightedLocation,
+    (point) => {
+      if (point) showHighlight(point)
     }
   )
 
-  return { flyToMarker, popupItem, popupTarget }
+  return { popupItem, popupTarget }
 }
