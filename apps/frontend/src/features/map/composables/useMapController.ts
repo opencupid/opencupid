@@ -12,6 +12,7 @@ import {
   MAP_MAX_ZOOM,
 } from '../utils/mapUtils'
 import { MAP_DEFAULT_ZOOM } from '@shared/maps'
+import pinFilledUrl from '@/assets/icons/interface/pin-filled.svg?url'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -20,7 +21,7 @@ import { MAP_DEFAULT_ZOOM } from '@shared/maps'
 type MapPhase = 'uninitialized' | 'loading' | 'ready' | 'suspended'
 
 interface DeferredWork {
-  center?: [number, number]
+  highlight?: [number, number]
 }
 
 export interface MapProps {
@@ -28,7 +29,8 @@ export interface MapProps {
   clusters?: MapCluster[]
   iconResolver: (poi: MapPoi) => Component
   popupResolver?: (poi: MapPoi) => Component
-  center: [number, number]
+  initialCenter: [number, number]
+  highlightedLocation?: [number, number] | null
   fetchPopupData?: (id: string) => Promise<unknown>
 }
 
@@ -67,6 +69,8 @@ const OMS_SPIRAL_FOOT_SEPARATION = 50
 const OMS_SPIRAL_LENGTH_START = 16
 const OMS_SPIRAL_LENGTH_FACTOR = 12
 const BOUNDS_DEBOUNCE_MS = 500
+const SEARCH_FOCUS_ZOOM = 12
+const SEARCH_PIN_SIZE = 32
 
 // ---------------------------------------------------------------------------
 // Composable
@@ -90,11 +94,13 @@ export function useMapController(
   let clusters: DiffableLayer<MapCluster>
   let pointLayer: L.LayerGroup
   let clusterLayer: L.LayerGroup
+  let searchPinLayer: L.LayerGroup | null = null
+  let searchPinMarker: LMarker | null = null
+  let highlightCleanup: (() => void) | null = null
   const iconCache = new Map<string, L.DivIcon>()
   let resizeObserver: ResizeObserver
   let boundsTimer: ReturnType<typeof setTimeout> | null = null
   let dissolvedClusterAt: L.LatLng | null = null
-  let lastStableZoom: number = MAP_DEFAULT_ZOOM
   let markerConfig: MarkerConfig | null = null
 
   // ── Lifecycle ───────────────────────────────────────────────────────────
@@ -114,6 +120,7 @@ export function useMapController(
       boundsTimer = null
     }
     iconCache.clear()
+    clearHighlight()
     map?.off('moveend', emitBounds)
     pois?.clear()
     clusters?.clear()
@@ -139,7 +146,7 @@ export function useMapController(
 
   function createMap(): void {
     map = L.map(mapEl.value!, {
-      center: props.center,
+      center: props.initialCenter,
       zoom: MAP_DEFAULT_ZOOM,
       maxZoom: MAP_MAX_ZOOM,
       preferCanvas: true,
@@ -148,20 +155,13 @@ export function useMapController(
     })
     L.control.zoom({ position: 'bottomright' }).addTo(map)
 
-    map.on('zoomend', () => {
-      lastStableZoom = map.getZoom()
-    })
     map.on('moveend', emitBounds)
 
     resizeObserver = new ResizeObserver(() => {
       const size = map.getSize()
       if (size.x === 0 || size.y === 0) return
       map.invalidateSize({ debounceMoveend: true })
-      if (deferred.center) {
-        const center = deferred.center
-        deferred.center = undefined
-        map.setView(center, lastStableZoom)
-      }
+      drainDeferred()
     })
     resizeObserver.observe(mapEl.value!)
   }
@@ -249,10 +249,10 @@ export function useMapController(
   }
 
   function drainDeferred(): void {
-    if (deferred.center) {
-      const center = deferred.center
-      deferred.center = undefined
-      map.setView(center, lastStableZoom)
+    if (deferred.highlight) {
+      const point = deferred.highlight
+      deferred.highlight = undefined
+      showHighlight(point)
     }
   }
 
@@ -419,28 +419,57 @@ export function useMapController(
     clusters.update(newClusters)
   }
 
-  // ── Imperative commands ───────────────────────────────────────────────
+  // ── Highlighted location (search-driven pin + flyTo) ──────────────────
 
-  function flyToCenter(center: [number, number]): void {
-    if (!isValidLatLng(center)) return
+  function clearHighlight(): void {
+    highlightCleanup?.()
+    highlightCleanup = null
+    searchPinMarker?.remove()
+    searchPinMarker = null
+  }
+
+  function showHighlight(point: [number, number]): void {
+    if (!isValidLatLng(point)) return
     if (phase !== 'ready') {
-      deferred.center = center
+      deferred.highlight = point
       return
     }
     const size = map.getSize()
     if (size.x === 0 || size.y === 0) {
-      deferred.center = center
+      deferred.highlight = point
       return
     }
-    map.flyTo(center, lastStableZoom, { duration: 1 })
-  }
 
-  function flyToMarker(poi: MapPoi): void {
-    if (phase !== 'ready') return
-    map.flyTo([poi.location.lat, poi.location.lon], MAP_MAX_ZOOM, {
-      animate: true,
-      duration: 0.6,
-    })
+    clearHighlight()
+
+    if (!searchPinLayer) searchPinLayer = L.layerGroup().addTo(map)
+    searchPinMarker = L.marker(point, {
+      icon: L.icon({
+        iconUrl: pinFilledUrl,
+        iconSize: [SEARCH_PIN_SIZE, SEARCH_PIN_SIZE],
+        iconAnchor: [SEARCH_PIN_SIZE / 2, SEARCH_PIN_SIZE],
+        className: 'search-pin-icon',
+      }),
+      interactive: false,
+      keyboard: false,
+    }).addTo(searchPinLayer)
+
+    map.flyTo(point, SEARCH_FOCUS_ZOOM, { duration: 1 })
+
+    // The flyTo itself will fire one moveend when its animation settles.
+    // Skip that one; clear the pin on the *next* moveend (a real user pan
+    // or zoom). Programmatic moves elsewhere are rare and clearing the pin
+    // on them is acceptable.
+    let settled = false
+    const onMove = () => {
+      if (!settled) {
+        settled = true
+        return
+      }
+      clearHighlight()
+    }
+    map.on('moveend', onMove)
+    highlightCleanup = () => map.off('moveend', onMove)
   }
 
   // ── Helper ────────────────────────────────────────────────────────────
@@ -477,11 +506,11 @@ export function useMapController(
   )
 
   watch(
-    () => props.center,
-    (center) => {
-      if (center) flyToCenter(center)
+    () => props.highlightedLocation,
+    (point) => {
+      if (point) showHighlight(point)
     }
   )
 
-  return { flyToMarker, popupItem, popupTarget }
+  return { popupItem, popupTarget }
 }

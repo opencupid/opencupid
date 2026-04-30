@@ -18,9 +18,7 @@ const emit = defineEmits<{
 
 const mapEl = ref<HTMLDivElement | null>(null)
 
-const { flyToMarker, popupItem, popupTarget } = useMapController(mapEl, props, emit)
-
-defineExpose({ flyToMarker })
+const { popupItem, popupTarget } = useMapController(mapEl, props, emit)
 </script>
 
 <template>

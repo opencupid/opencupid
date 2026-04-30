@@ -59,26 +59,26 @@ watch(selectedTagIds, () => {
   findProfileStore.refetchBounds()
 })
 
-// Map center: user's explicit choice from the location filter. When null,
-// falls back to defaultMapCenter (the viewer's own profile location).
-const mapCenter = ref<[number, number] | null>(null)
-
 // Placeholder visibility. Flipped by @map:ready from OsmPoiMap once the
 // first tile load completes. Hoisted out of OsmPoiMap so it paints from
-// first render — i.e. before effectiveMapCenter resolves and the map mounts.
+// first render — i.e. before initialMapCenter resolves and the map mounts.
 const isMapReady = ref(false)
 function onMapReady() {
   isMapReady.value = true
 }
-const defaultMapCenter = computed<[number, number] | undefined>(() => {
+
+// Initial center for the map's first mount. Read once by OsmPoiMap; not
+// reactive after mount.
+const initialMapCenter = computed<[number, number] | undefined>(() => {
   const fromProfile = toLatLng(viewerProfile.value?.location)
   return isValidLatLng(fromProfile) ? fromProfile : undefined
 })
-const effectiveMapCenter = computed<[number, number] | undefined>(
-  () => mapCenter.value ?? defaultMapCenter.value
-)
+
+// Search-driven highlight: the map zooms in and drops a pin on the chosen
+// point. The pin self-clears on the next user pan/zoom — see useMapController.
+const highlightedLocation = ref<[number, number] | null>(null)
 function onLocationSet(point: GeoPoint) {
-  mapCenter.value = [point.lat, point.lon]
+  highlightedLocation.value = [point.lat, point.lon]
 }
 
 provide('viewerProfile', toRef(viewerProfile))
@@ -234,11 +234,12 @@ onMounted(async () => {
         />
 
         <OsmPoiMap
-          v-if="effectiveMapCenter"
+          v-if="initialMapCenter"
           :items="allPois"
           :clusters="clusters"
           :icon-resolver="(poi) => (poi.type === 'post' ? MapIcon : ProfileMarker)"
-          :center="effectiveMapCenter"
+          :initial-center="initialMapCenter"
+          :highlighted-location="highlightedLocation"
           :popup-resolver="(poi) => (poi.type === 'post' ? PostMapPopup : ProfileMapCard)"
           :fetch-popup-data="fetchPopupData"
           class="h-100"
