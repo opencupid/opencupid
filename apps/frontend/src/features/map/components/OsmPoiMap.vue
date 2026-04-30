@@ -18,7 +18,7 @@ const emit = defineEmits<{
 
 const mapEl = ref<HTMLDivElement | null>(null)
 
-const { popupItem, popupTarget } = useMapController(mapEl, props, emit)
+const { popupItem, popupFullData, popupTarget } = useMapController(mapEl, props, emit)
 </script>
 
 <template>
@@ -28,13 +28,21 @@ const { popupItem, popupTarget } = useMapController(mapEl, props, emit)
       class="osm-poi-map"
     />
 
+    <!--
+      Posts render the popup directly from the marker's PointFeature.
+      Profiles need a fetched PublicProfile (popupFullData), so we wait
+      until it lands — pre-fetch the popup container is empty rather
+      than rendering ProfileMapCard with a partial PointFeature shape.
+    -->
     <Teleport
-      v-if="popupResolver && popupTarget && popupItem"
+      v-if="
+        popupResolver && popupTarget && popupItem && (popupItem.kind === 'post' || popupFullData)
+      "
       :to="popupTarget"
     >
       <component
         :is="popupResolver(popupItem)"
-        :item="popupItem.source"
+        :item="popupItem.kind === 'post' ? popupItem : popupFullData"
         @click="$emit('item:select', popupItem.id)"
       />
     </Teleport>

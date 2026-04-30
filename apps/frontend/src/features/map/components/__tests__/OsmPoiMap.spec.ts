@@ -191,7 +191,7 @@ import { mount, flushPromises } from '@vue/test-utils'
 import OsmPoiMap from '../OsmPoiMap.vue'
 import { POI_ICON_SIZE, MAP_MAX_ZOOM } from '../../utils/mapUtils'
 import { MAP_DEFAULT_ZOOM } from '@shared/maps'
-import type { MapCluster } from '../../types/map.types'
+import type { MapCluster, MapPoi } from '../../types/map.types'
 import L from 'leaflet'
 
 const DummyPopup = defineComponent({
@@ -202,40 +202,51 @@ const DummyPopup = defineComponent({
 })
 
 const DummyIcon = (props: {
-  image?: { variants?: { size: string; url: string }[] }
+  image?: { url?: string; blurhash?: string | null }
   isHighlighted?: boolean
 }) => {
-  const url = props.image?.variants?.[0]?.url ?? ''
+  const url = props.image?.url ?? ''
   const cls = props.isHighlighted ? 'poi-avatar highlighted' : 'poi-avatar'
   return `<img src="${url}" class="${cls}"/>`
 }
 
 function makeImage(url: string, blurhash?: string) {
-  return { blurhash: blurhash ?? null, variants: [{ size: 'thumb', url }] }
+  return { url, blurhash: blurhash ?? null }
 }
 
-const items = [
-  {
+function makePoi(overrides: Partial<MapPoi> & { id: string; lat: number; lon: number }): MapPoi {
+  return {
+    type: 'point',
+    kind: 'profile',
+    publicName: '',
+    image: null,
+    highlighted: false,
+    ...overrides,
+  } as MapPoi
+}
+
+const items: MapPoi[] = [
+  makePoi({
     id: '1',
-    location: { lat: 47.5, lon: 19.0 },
-    title: 'Alice',
+    lat: 47.5,
+    lon: 19.0,
+    publicName: 'Alice',
     image: makeImage('https://img/alice.jpg'),
-    source: { name: 'Alice' },
-  },
-  {
+  }),
+  makePoi({
     id: '2',
-    location: { lat: 48.2, lon: 16.3 },
-    title: 'Bob',
+    lat: 48.2,
+    lon: 16.3,
+    publicName: 'Bob',
     image: makeImage('https://img/bob.jpg'),
-    source: { name: 'Bob' },
-  },
-  {
+  }),
+  makePoi({
     id: '3',
-    location: { lat: 46.0, lon: 18.0 },
-    title: 'Carol',
+    lat: 46.0,
+    lon: 18.0,
+    publicName: 'Carol',
     image: makeImage('https://img/carol.jpg'),
-    source: { name: 'Carol' },
-  },
+  }),
 ]
 
 async function mountMap(props: Partial<Record<string, any>> = {}) {
@@ -592,8 +603,8 @@ describe('OsmPoiMap', () => {
 
   describe('updateClusterMarkers', () => {
     const clusters: MapCluster[] = [
-      { id: 100, location: { lat: 47.5, lon: 19.0 }, count: 5, expansionZoom: 8 },
-      { id: 200, location: { lat: 48.0, lon: 16.0 }, count: 3, expansionZoom: 10 },
+      { type: 'cluster', id: 100, lat: 47.5, lon: 19.0, count: 5, expansionZoom: 8 },
+      { type: 'cluster', id: 200, lat: 48.0, lon: 16.0, count: 3, expansionZoom: 10 },
     ]
 
     it('creates cluster markers and removes stale ones on prop change', async () => {
@@ -627,8 +638,10 @@ describe('OsmPoiMap', () => {
       // apply pre-fix. Now nothing happens: no new marker, no setLatLng,
       // no setIcon. The marker keeps its original construction-time state.
       const updated: MapCluster = {
+        type: 'cluster',
         id: 100,
-        location: { lat: 49.0, lon: 20.0 },
+        lat: 49.0,
+        lon: 20.0,
         count: 8,
         expansionZoom: 9,
       }
@@ -642,8 +655,10 @@ describe('OsmPoiMap', () => {
 
     it('cluster click at max zoom removes marker and sets view', async () => {
       const maxZoomCluster: MapCluster = {
+        type: 'cluster',
         id: 300,
-        location: { lat: 47.0, lon: 19.0 },
+        lat: 47.0,
+        lon: 19.0,
         count: 2,
         expansionZoom: MAP_MAX_ZOOM,
       }
@@ -707,8 +722,10 @@ describe('OsmPoiMap', () => {
 
   describe('spiderfy after max-zoom cluster dissolve', () => {
     const maxZoomCluster: MapCluster = {
+      type: 'cluster',
       id: 300,
-      location: { lat: 47.0, lon: 19.0 },
+      lat: 47.0,
+      lon: 19.0,
       count: 2,
       expansionZoom: MAP_MAX_ZOOM,
     }

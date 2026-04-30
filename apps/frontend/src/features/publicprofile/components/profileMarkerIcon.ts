@@ -7,7 +7,7 @@ function escapeAttr(s: string): string {
 }
 
 export const renderProfileMarkerHtml: IconRenderer = (props) => {
-  const url = props.image?.variants?.find((v) => v.size === 'thumb')?.url
+  const url = props.image?.url
   if (!url) return ''
   const bg = props.image?.blurhash
     ? ` style="background-image:url(${escapeAttr(blurhashToDataUrl(props.image.blurhash))})"`

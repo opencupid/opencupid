@@ -45,7 +45,7 @@ function rendererId(renderer: IconRenderer): number {
 }
 
 function getIconCacheKey(renderer: IconRenderer, props: PoiIconProps): string {
-  const url = props.image?.variants?.[0]?.url ?? 'none'
+  const url = props.image?.url ?? 'none'
   return `${rendererId(renderer)}_${url}_${props.isSelected}_${props.isHighlighted}_${props.hasPost ?? false}`
 }
 

@@ -85,8 +85,15 @@ export function useMapController(
   props: MapProps,
   emit: MapEmit
 ) {
-  // Reactive state exposed to the component
+  // Reactive state exposed to the component.
+  // popupItem is the marker's PointFeature — always the same shape, used
+  // by the host to choose a popup component (post vs profile) and to read
+  // ids/coords. popupFullData is the optionally-fetched detail blob (e.g.
+  // PublicProfile) returned by fetchPopupData; null for posts (which need
+  // no fetch) and null pre-fetch for profiles. The host gates popup
+  // rendering on whichever it needs.
   const popupItem = ref<MapPoi | null>(null)
+  const popupFullData = ref<unknown>(null)
   const popupTarget = ref<HTMLElement | null>(null)
 
   // Internal mutable state
@@ -264,11 +271,11 @@ export function useMapController(
     if (!markerConfig) throw new Error('markerConfig must be set before createPoiMarker')
     const { resolveIcon, resolvePopup, fetchPopupData } = markerConfig
 
-    const m = L.marker([item.location.lat, item.location.lon], {
+    const m = L.marker([item.lat, item.lon], {
       icon: hydratePoiIcon(
         resolveIcon(item),
         {
-          image: item.image,
+          image: item.image ?? undefined,
           isSelected: false,
           isHighlighted: item.highlighted ?? false,
           hasPost: item.hasPost,
@@ -279,8 +286,7 @@ export function useMapController(
     })
 
     if (resolvePopup && supportsHover()) {
-      const classes = ['item-popup']
-      if (item.type) classes.push(`item-popup-${item.type}`)
+      const classes = ['item-popup', `item-popup-${item.kind}`]
       if (item.highlighted) classes.push('item-popup-highlighted')
       m.bindPopup('', {
         maxWidth: 420,
@@ -313,6 +319,7 @@ export function useMapController(
           ?.querySelector('.leaflet-popup-content') as HTMLElement | null
         if (target) {
           popupItem.value = item
+          popupFullData.value = null
           popupTarget.value = target
         }
 
@@ -324,10 +331,7 @@ export function useMapController(
           try {
             const fullData = await fetchPopupData(itemId, controller.signal)
             if (controller.signal.aborted || !popup.isOpen()) return
-            if (fullData && target) {
-              popupItem.value = { ...item, source: fullData }
-              popupTarget.value = target
-            }
+            if (fullData) popupFullData.value = fullData
           } catch {
             // Aborted or popup already closed — nothing useful to show.
           } finally {
@@ -345,6 +349,7 @@ export function useMapController(
         popupAbort = null
         popupTarget.value = null
         popupItem.value = null
+        popupFullData.value = null
       })
     }
 
@@ -354,7 +359,7 @@ export function useMapController(
   // ── Cluster markers ───────────────────────────────────────────────────
 
   function createClusterMarker(cluster: MapCluster): LMarker {
-    const m = L.marker([cluster.location.lat, cluster.location.lon], {
+    const m = L.marker([cluster.lat, cluster.lon], {
       icon: createServerClusterIcon(cluster.count),
       keyboard: true,
     })
@@ -362,13 +367,13 @@ export function useMapController(
     m.on('click', () => {
       if (cluster.expansionZoom >= MAP_MAX_ZOOM) {
         clusters.update(clusters.allItems().filter((c) => c.id !== cluster.id))
-        const target = L.latLng(cluster.location.lat, cluster.location.lon)
+        const target = L.latLng(cluster.lat, cluster.lon)
         // Bind the spiderfy intent to this click's closure. The next items
         // batch consumes it; a second click before that overwrites it.
         pendingItemsCallback = () => triggerSpiderfy(target)
-        map.setView([cluster.location.lat, cluster.location.lon], MAP_MAX_ZOOM)
+        map.setView([cluster.lat, cluster.lon], MAP_MAX_ZOOM)
       } else {
-        map.flyTo([cluster.location.lat, cluster.location.lon], cluster.expansionZoom, {
+        map.flyTo([cluster.lat, cluster.lon], cluster.expansionZoom, {
           duration: 0.5,
         })
       }
@@ -470,5 +475,5 @@ export function useMapController(
     }
   )
 
-  return { popupItem, popupTarget }
+  return { popupItem, popupFullData, popupTarget }
 }

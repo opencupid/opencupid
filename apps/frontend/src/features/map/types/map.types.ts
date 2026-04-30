@@ -1,10 +1,16 @@
 import type { Component } from 'vue'
+import type { ClusterFeature, PointFeature } from '@shared/zod/map/cluster.dto'
 
-/** A profile/post avatar image as rendered into a marker icon. */
-export interface AvatarImage {
-  blurhash?: string | null
-  variants?: { size: string; url: string }[]
-}
+/**
+ * The map layer renders the cluster service's DTOs directly. Earlier
+ * iterations defined separate `MapPoi` / `MapCluster` shapes that the
+ * view-model projected into; that layer earned nothing — it had one
+ * consumer, one input shape, and the projection's only architectural
+ * job was to manufacture a `source` round-trip for the type info it
+ * had just discarded. The DTO types are the single source of truth.
+ */
+export type MapPoi = PointFeature
+export type MapCluster = ClusterFeature
 
 /**
  * A marker-icon renderer. Returns the inner HTML for a Leaflet DivIcon —
@@ -12,12 +18,6 @@ export interface AvatarImage {
  * no virtual DOM. Implementations live alongside the icon styles.
  */
 export type IconRenderer = (props: PoiIconProps) => string
-
-/** Location coordinates for a map point */
-export interface PoiLocation {
-  lat: number
-  lon: number
-}
 
 /** Viewport bounds emitted by bounds:changed */
 export interface MapBounds {
@@ -27,35 +27,12 @@ export interface MapBounds {
   east: number
 }
 
-/** Props contract for custom marker icon components passed via `iconComponent`. */
+/** Props contract for marker icon renderers. */
 export interface PoiIconProps {
-  image?: AvatarImage
+  image?: PointFeature['image']
   isSelected: boolean
   isHighlighted: boolean
   hasPost?: boolean
-}
-
-/** A point-of-interest item for the map. Call sites map domain objects into this shape. */
-export interface MapPoi {
-  id: string
-  title: string
-  location: PoiLocation
-  image?: AvatarImage
-  highlighted?: boolean
-  /** Discriminator for icon resolution when multiple POI types share one map. */
-  type?: string
-  /** When true, the profile's own location has a collocated post — show a post indicator overlay. */
-  hasPost?: boolean
-  /** The original domain object, passed through to the popup component as `:item` */
-  source: unknown
-}
-
-/** A server-computed cluster marker. */
-export interface MapCluster {
-  id: number
-  location: PoiLocation
-  count: number
-  expansionZoom: number
 }
 
 /** Bounds + zoom emitted on viewport change for cluster queries. */

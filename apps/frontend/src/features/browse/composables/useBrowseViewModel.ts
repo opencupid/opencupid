@@ -1,7 +1,6 @@
 import { computed, markRaw, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import type { MapCluster, MapPoi, BoundsWithZoom } from '@/features/map/types/map.types'
-import type { ClusterFeature, PointFeature } from '@shared/zod/map/cluster.dto'
 import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { usePostStore } from '@/features/posts/stores/postStore'
@@ -22,6 +21,9 @@ export function useBrowseViewModel() {
   const viewerProfile = computed(() => ownerStore.profile)
 
   // ── DTO → map-layer mapping ─────────────────────────────────────
+  // The map layer renders cluster-service DTOs directly: MapPoi is
+  // PointFeature, MapCluster is ClusterFeature. No projection.
+  //
   // Memoise output objects by id. Per-session contract: map data —
   // POIs and clusters alike — is treated as immutable for the lifetime
   // of an id. First sighting wins; later batches with the same id
@@ -36,50 +38,11 @@ export function useBrowseViewModel() {
   const profileCache = new Map<string, MapPoi>()
   const postCache = new Map<string, MapPoi>()
 
-  function memoCluster(f: ClusterFeature): MapCluster {
-    const cached = clusterCache.get(f.id)
+  function memoBy<K, V extends object>(cache: Map<K, V>, key: K, value: V): V {
+    const cached = cache.get(key)
     if (cached) return cached
-    const next = markRaw<MapCluster>({
-      id: f.id,
-      location: { lat: f.lat, lon: f.lon },
-      count: f.count,
-      expansionZoom: f.expansionZoom,
-    })
-    clusterCache.set(f.id, next)
-    return next
-  }
-
-  function memoProfilePoi(p: PointFeature): MapPoi {
-    const cached = profileCache.get(p.id)
-    if (cached) return cached
-    const url = p.image?.url
-    const next = markRaw<MapPoi>({
-      id: p.id,
-      title: p.publicName,
-      location: { lat: p.lat, lon: p.lon },
-      image: url ? { blurhash: p.image!.blurhash, variants: [{ size: 'thumb', url }] } : undefined,
-      highlighted: p.highlighted,
-      hasPost: p.hasPost,
-      type: 'profile',
-      source: p,
-    })
-    profileCache.set(p.id, next)
-    return next
-  }
-
-  function memoPostPoi(p: PointFeature): MapPoi {
-    const cached = postCache.get(p.id)
-    if (cached) return cached
-    const url = p.image?.url
-    const next = markRaw<MapPoi>({
-      id: p.id,
-      title: p.postContent ?? '',
-      location: { lat: p.lat, lon: p.lon },
-      image: url ? { blurhash: p.image!.blurhash, variants: [{ size: 'thumb', url }] } : undefined,
-      type: 'post',
-      source: p,
-    })
-    postCache.set(p.id, next)
+    const next = markRaw(value)
+    cache.set(key, next)
     return next
   }
 
@@ -89,7 +52,7 @@ export function useBrowseViewModel() {
     for (const f of clusterFeatures.value) {
       if (f.type !== 'cluster') continue
       live.add(f.id)
-      out.push(memoCluster(f as ClusterFeature))
+      out.push(memoBy(clusterCache, f.id, f))
     }
     for (const id of clusterCache.keys()) if (!live.has(id)) clusterCache.delete(id)
     return out
@@ -101,7 +64,7 @@ export function useBrowseViewModel() {
     for (const f of clusterFeatures.value) {
       if (f.type !== 'point' || f.kind !== 'profile') continue
       live.add(f.id)
-      out.push(memoProfilePoi(f as PointFeature))
+      out.push(memoBy(profileCache, f.id, f))
     }
     for (const id of profileCache.keys()) if (!live.has(id)) profileCache.delete(id)
     return out
@@ -113,7 +76,7 @@ export function useBrowseViewModel() {
     for (const f of clusterFeatures.value) {
       if (f.type !== 'point' || f.kind !== 'post') continue
       live.add(f.id)
-      out.push(memoPostPoi(f as PointFeature))
+      out.push(memoBy(postCache, f.id, f))
     }
     for (const id of postCache.keys()) if (!live.has(id)) postCache.delete(id)
     return out
@@ -152,7 +115,7 @@ export function useBrowseViewModel() {
 
   const fetchPopupData = (id: string, signal?: AbortSignal) => {
     const poi = allPois.value.find((p) => p.id === id)
-    if (poi?.type === 'post') return Promise.resolve(null)
+    if (poi?.kind === 'post') return Promise.resolve(null)
     return findProfileStore.fetchProfileForPopup(id, signal)
   }
 
