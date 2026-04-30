@@ -36,7 +36,7 @@ export interface MapProps {
   popupResolver?: (poi: MapPoi) => Component
   initialCenter: [number, number]
   highlightedLocation?: [number, number] | null
-  fetchPopupData?: (id: string) => Promise<unknown>
+  fetchPopupData?: (id: string, signal?: AbortSignal) => Promise<unknown>
 }
 
 type MapEmit = {
