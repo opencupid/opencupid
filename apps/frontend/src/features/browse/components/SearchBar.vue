@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { onClickOutside } from '@vueuse/core'
+import { onClickOutside, useDebounceFn } from '@vueuse/core'
 
 import SelectableTagList from './SelectableTagList.vue'
 import SearchInput from './SearchInput.vue'
@@ -100,13 +100,15 @@ const isSearchMatchesEmpty = computed(
   () => !searchResults.value?.profiles.length && !searchResults.value?.posts.length
 )
 
+const trackSearch = useDebounceFn(() => tracker.track('search'), 500)
+
 watch(searchQuery, (query) => {
   if (query.trim().length < SEARCH_MIN_QUERY_LENGTH) {
     searchStore.searchResults = null
     geocodingStore.clear()
     return
   }
-  tracker.track('search')
+  trackSearch()
   // Fire both searches in parallel — each store owns its own abort controller,
   // so rapid re-typing cancels prior in-flight requests on both sides.
   searchStore.search(query)
