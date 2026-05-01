@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
+import * as Sentry from '@sentry/vue'
 import { useGeocoder } from '../composables/useGeocoder'
 import { toGeoPoint, type LocationDTO } from '@zod/dto/location.dto'
 import type { GeocodingResult } from '../types'
@@ -39,6 +40,13 @@ export const useGeocodingStore = defineStore('geocoding', () => {
       const data = await geocode(query, lang, signal, bias)
       if (!signal.aborted) {
         results.value = data.slice(0, take)
+        if (data.length === 0) {
+          Sentry.captureMessage('Geocoder returned no results', {
+            level: 'info',
+            tags: { feature: 'geocoding', outcome: 'empty' },
+            extra: { query, lang, bias },
+          })
+        }
       }
       return results.value
     } catch (err) {

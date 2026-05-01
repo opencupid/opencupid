@@ -2,9 +2,14 @@ import { setActivePinia, createPinia } from 'pinia'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const mockSearch = vi.hoisted(() => vi.fn())
+const mockCaptureMessage = vi.hoisted(() => vi.fn())
 
 vi.mock('../../composables/useGeocoder', () => ({
   useGeocoder: () => ({ search: mockSearch }),
+}))
+
+vi.mock('@sentry/vue', () => ({
+  captureMessage: mockCaptureMessage,
 }))
 
 import { useGeocodingStore } from '../geocodingStore'
@@ -13,6 +18,7 @@ describe('geocodingStore', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     mockSearch.mockReset()
+    mockCaptureMessage.mockReset()
   })
 
   it('returns results from the geocoder', async () => {
@@ -179,6 +185,32 @@ describe('geocodingStore', () => {
     await store.search('city', 'en', null, 3)
 
     expect(store.results).toHaveLength(3)
+  })
+
+  it('reports an empty geocoder result to Sentry', async () => {
+    mockSearch.mockResolvedValue([])
+
+    const store = useGeocodingStore()
+    await store.search('Atlantis', 'en')
+
+    expect(mockCaptureMessage).toHaveBeenCalledTimes(1)
+    expect(mockCaptureMessage).toHaveBeenCalledWith(
+      'Geocoder returned no results',
+      expect.objectContaining({
+        level: 'info',
+        tags: { feature: 'geocoding', outcome: 'empty' },
+        extra: expect.objectContaining({ query: 'Atlantis', lang: 'en' }),
+      })
+    )
+  })
+
+  it('does not report to Sentry when results are non-empty', async () => {
+    mockSearch.mockResolvedValue([{ name: 'Berlin', country: 'DE', lat: 52.5, lon: 13.4 }])
+
+    const store = useGeocodingStore()
+    await store.search('Berlin', 'en')
+
+    expect(mockCaptureMessage).not.toHaveBeenCalled()
   })
 
   it('does not treat a CanceledError as a real failure', async () => {
