@@ -1,5 +1,16 @@
 # backend
 
+## 0.58.0
+
+### Minor Changes
+
+- a071892: Extract UserContent abstraction layer (Zod base schemas, mapper projections, service interface, and Fastify route factory) so future content types (e.g. Event) can compose with Post on shared infrastructure. No wire-format or behavior changes.
+
+### Patch Changes
+
+- 0d3dc31: Resolve unmet peer-dep warnings: bump zod to 3.25.76 (satisfies the MCP SDK's `^3.25 || ^4.0` peer range) and add a pnpm peerDependencyRule allowing sharp 0.34 for `smartcrop-sharp` (which still pins `^0.32.5` but uses only stable APIs). (#1402)
+- c029abf: Delete dead `plugins/auth.ts` file (#1401)
+
 ## 0.57.0
 
 ### Minor Changes

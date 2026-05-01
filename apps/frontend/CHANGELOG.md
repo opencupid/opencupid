@@ -1,5 +1,17 @@
 # frontend
 
+## 0.58.0
+
+### Minor Changes
+
+- ee1f1d2: The browse map now zooms in when a location is picked from the search bar, or when a post is clicked in the NearbyFeatures strip below the map.
+- cf3a624: Extract `useUserContentActions` composable and refactor `postStore` to setup syntax. Generic CRUD/fetch action set is now reusable for future content stores (e.g. Event). All public store property and action names preserved — no consumer changes.
+
+### Patch Changes
+
+- c23bdfe: Smoother browse map on pan/zoom and marker hover, plus fix `api:offline` firing spuriously when in-flight popup/cluster fetches were aborted.
+- 0b900d2: Disable browser auto-translation to prevent crash on Chrome iOS when a Hungarian user landed on the app and Chrome's translator wrapped Vue-rendered text nodes in `<font>` tags, causing Vue's renderer to recurse infinitely.
+
 ## 0.57.0
 
 ### Minor Changes

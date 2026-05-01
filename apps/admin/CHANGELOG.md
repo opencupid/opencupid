@@ -1,5 +1,11 @@
 # @opencupid/admin
 
+## 0.58.0
+
+### Patch Changes
+
+- 0b900d2: Disable browser auto-translation to prevent crash on Chrome iOS when a Hungarian user landed on the app and Chrome's translator wrapped Vue-rendered text nodes in `<font>` tags, causing Vue's renderer to recurse infinitely.
+
 ## 0.57.0
 
 ### Minor Changes
