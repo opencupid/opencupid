@@ -149,7 +149,7 @@ describe('fetchProfileForPopup', () => {
 
     const result = await store.fetchProfileForPopup('p1')
 
-    expect(mockGet).toHaveBeenCalledWith('/profiles/p1')
+    expect(mockGet).toHaveBeenCalledWith('/profiles/p1', expect.objectContaining({}))
     expect(result).toEqual(mockProfile)
   })
 

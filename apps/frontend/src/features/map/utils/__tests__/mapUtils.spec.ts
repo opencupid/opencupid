@@ -8,15 +8,10 @@ vi.mock('leaflet', () => ({
   divIcon: vi.fn((opts: any) => ({ _type: 'divIcon', ...opts })),
 }))
 
-import { defineComponent, h } from 'vue'
+import type { IconRenderer } from '../../types/map.types'
 import { isValidLatLng, hydratePoiIcon } from '../mapUtils'
 
-const DummyIcon = defineComponent({
-  props: ['image', 'isSelected', 'isHighlighted'],
-  render() {
-    return h('img', { src: 'test.jpg' })
-  },
-})
+const DummyIcon: IconRenderer = (props) => `<img src="${props.image?.url ?? ''}"/>`
 
 describe('isValidLatLng', () => {
   it.each([
@@ -39,12 +34,11 @@ describe('isValidLatLng', () => {
   })
 })
 
-
 describe('hydratePoiIcon caching', () => {
   it('returns cached icon for identical props', () => {
     const cache = new Map()
     const props = {
-      image: { variants: [{ size: 'thumb' as const, url: 'a.jpg' }], blurhash: null },
+      image: { url: 'a.jpg', blurhash: null },
       isSelected: false,
       isHighlighted: false,
     }
@@ -56,7 +50,7 @@ describe('hydratePoiIcon caching', () => {
   it('returns different icon when highlighted changes', () => {
     const cache = new Map()
     const base = {
-      image: { variants: [{ size: 'thumb' as const, url: 'a.jpg' }], blurhash: null },
+      image: { url: 'a.jpg', blurhash: null },
       isSelected: false,
     }
     const icon1 = hydratePoiIcon(DummyIcon, { ...base, isHighlighted: false }, cache)
@@ -66,7 +60,7 @@ describe('hydratePoiIcon caching', () => {
 
   it('fresh cache produces a new icon for the same props', () => {
     const props = {
-      image: { variants: [{ size: 'thumb' as const, url: 'a.jpg' }], blurhash: null },
+      image: { url: 'a.jpg', blurhash: null },
       isSelected: false,
       isHighlighted: false,
     }

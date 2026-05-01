@@ -20,8 +20,8 @@ import SearchBar from '../components/SearchBar.vue'
 import ProfileMapCard from '../components/ProfileMapCard.vue'
 import PublicProfileView from '@/features/publicprofile/components/PublicProfileView.vue'
 
-import ProfileMarker from '@/features/publicprofile/components/ProfileMarker.vue'
-import MapIcon from '@/features/posts/components/MapIcon.vue'
+import { renderProfileMarkerHtml } from '@/features/publicprofile/components/profileMarkerIcon'
+import { renderPostMapIconHtml } from '@/features/posts/components/postMapIcon'
 
 import PostMapPopup from '@/features/posts/components/PostMapPopup.vue'
 import PostFullView from '@/features/posts/components/PostFullView.vue'
@@ -29,9 +29,8 @@ import OwnerDrawerControls from '../components/OwnerDrawerControls.vue'
 import NearbyFeatures from '../components/NearbyFeatures.vue'
 import { usePostStore } from '@/features/posts/stores/postStore'
 import { toGeoPoint, type GeoPoint } from '@zod/dto/location.dto'
-import ShareDialog from '@/features/app/components/ShareDialog.vue'
 import type { PostSummary } from '@zod/post/post.dto'
-import type { ProfileSummary } from '@zod/profile/profile.dto'
+import ShareDialog from '@/features/app/components/ShareDialog.vue'
 
 // Component name must be 'AppShell' for KeepAlive to identify it correctly
 defineOptions({ name: 'AppShell' })
@@ -147,10 +146,10 @@ function openInboxDrawer() {
   router.push({ name: 'Inbox' })
 }
 
-function handlePostSelect(post: PostSummary) {
+function handlePostSelect(post: { id: string }) {
   router.push({ name: 'PublicPost', params: { postId: post.id } })
 }
-function handleProfileSelect(profile: ProfileSummary) {
+function handleProfileSelect(profile: { id: string }) {
   router.push({ name: 'PublicProfile', params: { profileId: profile.id } })
 }
 
@@ -167,11 +166,8 @@ function onNearbyPostSelect(post: PostSummary) {
 function handleMarkerSelect(id: string) {
   const poi = allPois.value.find((p) => p.id === id)
   if (!poi) return
-  if (poi.type === 'post') {
-    handlePostSelect(poi.source as PostSummary)
-  } else {
-    handleProfileSelect(poi.source as ProfileSummary)
-  }
+  if (poi.kind === 'post') handlePostSelect({ id })
+  else handleProfileSelect({ id })
 }
 
 // ── Onboarding guard ───────────────────────────────────────────────
@@ -245,10 +241,12 @@ onMounted(async () => {
           v-if="initialMapCenter"
           :items="allPois"
           :clusters="clusters"
-          :icon-resolver="(poi) => (poi.type === 'post' ? MapIcon : ProfileMarker)"
+          :icon-resolver="
+            (poi) => (poi.kind === 'post' ? renderPostMapIconHtml : renderProfileMarkerHtml)
+          "
           :initial-center="initialMapCenter"
           :highlighted-location="highlightedLocation"
-          :popup-resolver="(poi) => (poi.type === 'post' ? PostMapPopup : ProfileMapCard)"
+          :popup-resolver="(poi) => (poi.kind === 'post' ? PostMapPopup : ProfileMapCard)"
           :fetch-popup-data="fetchPopupData"
           class="h-100"
           @item:select="handleMarkerSelect"

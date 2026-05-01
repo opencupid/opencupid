@@ -54,8 +54,11 @@ vi.mock('../../components/NearbyFeatures.vue', () => ({
     emits: ['post:select'],
   },
 }))
-vi.mock('@/features/publicprofile/components/ProfileMarker.vue', () => ({
-  default: { template: '<div />' },
+vi.mock('@/features/publicprofile/components/profileMarkerIcon', () => ({
+  renderProfileMarkerHtml: () => '<div />',
+}))
+vi.mock('@/features/posts/components/postMapIcon', () => ({
+  renderPostMapIconHtml: () => '<div />',
 }))
 vi.mock('@/features/posts/components/PostMarker.vue', () => ({
   default: { template: '<div />' },

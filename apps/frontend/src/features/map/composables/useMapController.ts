@@ -4,7 +4,13 @@ import { nextTick, onMounted, onBeforeUnmount, onActivated, onDeactivated, ref, 
 import type { Component, Ref } from 'vue'
 
 import { DiffableLayer } from './DiffableLayer'
-import type { MapPoi, MapCluster, BoundsWithZoom, MarkerConfig } from '../types/map.types'
+import type {
+  MapPoi,
+  MapCluster,
+  BoundsWithZoom,
+  MarkerConfig,
+  IconRenderer,
+} from '../types/map.types'
 import {
   isValidLatLng,
   createServerClusterIcon,
@@ -26,11 +32,11 @@ interface DeferredWork {
 export interface MapProps {
   items: MapPoi[]
   clusters?: MapCluster[]
-  iconResolver: (poi: MapPoi) => Component
+  iconResolver: (poi: MapPoi) => IconRenderer
   popupResolver?: (poi: MapPoi) => Component
   initialCenter: [number, number]
   highlightedLocation?: [number, number] | null
-  fetchPopupData?: (id: string) => Promise<unknown>
+  fetchPopupData?: (id: string, signal?: AbortSignal) => Promise<unknown>
 }
 
 type MapEmit = {
@@ -79,8 +85,15 @@ export function useMapController(
   props: MapProps,
   emit: MapEmit
 ) {
-  // Reactive state exposed to the component
+  // Reactive state exposed to the component.
+  // popupItem is the marker's PointFeature — always the same shape, used
+  // by the host to choose a popup component (post vs profile) and to read
+  // ids/coords. popupFullData is the optionally-fetched detail blob (e.g.
+  // PublicProfile) returned by fetchPopupData; null for posts (which need
+  // no fetch) and null pre-fetch for profiles. The host gates popup
+  // rendering on whichever it needs.
   const popupItem = ref<MapPoi | null>(null)
+  const popupFullData = ref<unknown>(null)
   const popupTarget = ref<HTMLElement | null>(null)
 
   // Internal mutable state
@@ -95,7 +108,13 @@ export function useMapController(
   const iconCache = new Map<string, L.DivIcon>()
   let resizeObserver: ResizeObserver
   let boundsTimer: ReturnType<typeof setTimeout> | null = null
-  let dissolvedClusterAt: L.LatLng | null = null
+  // One-shot continuation invoked the next time an items batch arrives.
+  // Used by the max-zoom cluster click to spiderfy as soon as the leaves
+  // land, and only then. A second click overwrites the slot; an items
+  // batch with no matching leaves consumes it silently. Bounding the
+  // intent to the first batch after the click means a stale flag can't
+  // fire a phantom spiderfy minutes later if the user has panned away.
+  let pendingItemsCallback: (() => void) | null = null
   let markerConfig: MarkerConfig | null = null
 
   // ── Lifecycle ───────────────────────────────────────────────────────────
@@ -183,52 +202,26 @@ export function useMapController(
     oms.spiralLengthFactor = OMS_SPIRAL_LENGTH_FACTOR
 
     oms.addListener('click', (marker) => {
-      for (const item of pois.allItems()) {
-        if (pois.get(item.id) === (marker as LMarker)) {
-          emit('item:select', item.id)
-          return
-        }
-      }
+      const id = pois.getId(marker as LMarker)
+      if (id !== undefined) emit('item:select', String(id))
     })
 
+    // POI data is treated as immutable per id for the lifetime of a session
+    // (the GUI is not expected to reflect mid-session DB changes). No
+    // shouldUpdate/apply: existing markers are never re-rendered, only
+    // added on first sighting and removed when their id leaves the viewport.
     pois = new DiffableLayer<MapPoi>(pointLayer, {
       create: (item) => createPoiMarker(item),
-      shouldUpdate: (prev, next) => {
-        const prevUrl = prev.image?.variants?.[0]?.url
-        const nextUrl = next.image?.variants?.[0]?.url
-        return (
-          prev.highlighted !== next.highlighted ||
-          prevUrl !== nextUrl ||
-          prev.hasPost !== next.hasPost
-        )
-      },
-      apply: (marker, item) => {
-        if (!markerConfig) return
-        marker.setIcon(
-          hydratePoiIcon(
-            markerConfig.resolveIcon(item),
-            {
-              image: item.image,
-              isSelected: false,
-              isHighlighted: item.highlighted ?? false,
-              hasPost: item.hasPost,
-            },
-            iconCache
-          )
-        )
-      },
     })
 
+    // Clusters share the immutable-per-id contract with POIs: cluster_id
+    // is supercluster's per-index identifier and the index is cached per
+    // (profile, tagIds) on the backend, so within a session the same id
+    // always carries the same fields. Filter changes produce entirely
+    // different ids (different cache key → different index), not same
+    // ids with different counts.
     clusters = new DiffableLayer<MapCluster>(clusterLayer, {
       create: (cluster) => createClusterMarker(cluster),
-      shouldUpdate: (prev, next) =>
-        prev.count !== next.count ||
-        prev.location.lat !== next.location.lat ||
-        prev.location.lon !== next.location.lon,
-      apply: (marker, cluster) => {
-        marker.setLatLng([cluster.location.lat, cluster.location.lon])
-        marker.setIcon(createServerClusterIcon(cluster.count))
-      },
     })
   }
 
@@ -278,11 +271,11 @@ export function useMapController(
     if (!markerConfig) throw new Error('markerConfig must be set before createPoiMarker')
     const { resolveIcon, resolvePopup, fetchPopupData } = markerConfig
 
-    const m = L.marker([item.location.lat, item.location.lon], {
+    const m = L.marker([item.lat, item.lon], {
       icon: hydratePoiIcon(
         resolveIcon(item),
         {
-          image: item.image,
+          image: item.image ?? undefined,
           isSelected: false,
           isHighlighted: item.highlighted ?? false,
           hasPost: item.hasPost,
@@ -293,8 +286,7 @@ export function useMapController(
     })
 
     if (resolvePopup && supportsHover()) {
-      const classes = ['item-popup']
-      if (item.type) classes.push(`item-popup-${item.type}`)
+      const classes = ['item-popup', `item-popup-${item.kind}`]
       if (item.highlighted) classes.push('item-popup-highlighted')
       m.bindPopup('', {
         maxWidth: 420,
@@ -315,6 +307,11 @@ export function useMapController(
         m.closePopup()
       })
 
+      // Per-marker abort controller for the in-flight popup fetch. A fast
+      // hover-sweep across markers cancels prior fetches instead of letting
+      // them queue up.
+      let popupAbort: AbortController | null = null
+
       m.on('popupopen', async (e: L.PopupEvent) => {
         const popup = e.popup
         const target = popup
@@ -322,20 +319,23 @@ export function useMapController(
           ?.querySelector('.leaflet-popup-content') as HTMLElement | null
         if (target) {
           popupItem.value = item
+          popupFullData.value = null
           popupTarget.value = target
         }
 
         if (fetchPopupData) {
+          popupAbort?.abort()
+          const controller = new AbortController()
+          popupAbort = controller
           const itemId = item.id
           try {
-            const fullData = await fetchPopupData(itemId)
-            if (!popup.isOpen()) return
-            if (fullData && target) {
-              popupItem.value = { ...item, source: fullData }
-              popupTarget.value = target
-            }
+            const fullData = await fetchPopupData(itemId, controller.signal)
+            if (controller.signal.aborted || !popup.isOpen()) return
+            if (fullData) popupFullData.value = fullData
           } catch {
-            // Popup may already be closed — nothing useful to show.
+            // Aborted or popup already closed — nothing useful to show.
+          } finally {
+            if (popupAbort === controller) popupAbort = null
           }
         }
 
@@ -345,8 +345,11 @@ export function useMapController(
       })
 
       m.on('popupclose', () => {
+        popupAbort?.abort()
+        popupAbort = null
         popupTarget.value = null
         popupItem.value = null
+        popupFullData.value = null
       })
     }
 
@@ -356,7 +359,7 @@ export function useMapController(
   // ── Cluster markers ───────────────────────────────────────────────────
 
   function createClusterMarker(cluster: MapCluster): LMarker {
-    const m = L.marker([cluster.location.lat, cluster.location.lon], {
+    const m = L.marker([cluster.lat, cluster.lon], {
       icon: createServerClusterIcon(cluster.count),
       keyboard: true,
     })
@@ -364,10 +367,13 @@ export function useMapController(
     m.on('click', () => {
       if (cluster.expansionZoom >= MAP_MAX_ZOOM) {
         clusters.update(clusters.allItems().filter((c) => c.id !== cluster.id))
-        dissolvedClusterAt = L.latLng(cluster.location.lat, cluster.location.lon)
-        map.setView([cluster.location.lat, cluster.location.lon], MAP_MAX_ZOOM)
+        const target = L.latLng(cluster.lat, cluster.lon)
+        // Bind the spiderfy intent to this click's closure. The next items
+        // batch consumes it; a second click before that overwrites it.
+        pendingItemsCallback = () => triggerSpiderfy(target)
+        map.setView([cluster.lat, cluster.lon], MAP_MAX_ZOOM)
       } else {
-        map.flyTo([cluster.location.lat, cluster.location.lon], cluster.expansionZoom, {
+        map.flyTo([cluster.lat, cluster.lon], cluster.expansionZoom, {
           duration: 0.5,
         })
       }
@@ -385,10 +391,10 @@ export function useMapController(
     for (const m of removed) oms.removeMarker(m)
     for (const m of added) oms.addMarker(m)
 
-    if (dissolvedClusterAt) {
-      const target = dissolvedClusterAt
-      dissolvedClusterAt = null
-      setTimeout(() => triggerSpiderfy(target), 0)
+    if (pendingItemsCallback) {
+      const cb = pendingItemsCallback
+      pendingItemsCallback = null
+      cb()
     }
   }
 
@@ -469,5 +475,5 @@ export function useMapController(
     }
   )
 
-  return { popupItem, popupTarget }
+  return { popupItem, popupFullData, popupTarget }
 }

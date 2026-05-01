@@ -191,7 +191,7 @@ import { mount, flushPromises } from '@vue/test-utils'
 import OsmPoiMap from '../OsmPoiMap.vue'
 import { POI_ICON_SIZE, MAP_MAX_ZOOM } from '../../utils/mapUtils'
 import { MAP_DEFAULT_ZOOM } from '@shared/maps'
-import type { MapCluster } from '../../types/map.types'
+import type { MapCluster, MapPoi } from '../../types/map.types'
 import L from 'leaflet'
 
 const DummyPopup = defineComponent({
@@ -201,42 +201,52 @@ const DummyPopup = defineComponent({
   },
 })
 
-const DummyIcon = defineComponent({
-  props: ['image', 'isSelected', 'isHighlighted'],
-  render() {
-    return h('img', {
-      src: this.image?.variants?.[0]?.url,
-      class: { 'poi-avatar': true, highlighted: this.isHighlighted },
-    })
-  },
-})
-
-function makeImage(url: string, blurhash?: string) {
-  return { blurhash: blurhash ?? null, variants: [{ size: 'thumb', url }] }
+const DummyIcon = (props: {
+  image?: { url?: string; blurhash?: string | null }
+  isHighlighted?: boolean
+}) => {
+  const url = props.image?.url ?? ''
+  const cls = props.isHighlighted ? 'poi-avatar highlighted' : 'poi-avatar'
+  return `<img src="${url}" class="${cls}"/>`
 }
 
-const items = [
-  {
+function makeImage(url: string, blurhash?: string) {
+  return { url, blurhash: blurhash ?? null }
+}
+
+function makePoi(overrides: Partial<MapPoi> & { id: string; lat: number; lon: number }): MapPoi {
+  return {
+    type: 'point',
+    kind: 'profile',
+    publicName: '',
+    image: null,
+    highlighted: false,
+    ...overrides,
+  } as MapPoi
+}
+
+const items: MapPoi[] = [
+  makePoi({
     id: '1',
-    location: { lat: 47.5, lon: 19.0 },
-    title: 'Alice',
+    lat: 47.5,
+    lon: 19.0,
+    publicName: 'Alice',
     image: makeImage('https://img/alice.jpg'),
-    source: { name: 'Alice' },
-  },
-  {
+  }),
+  makePoi({
     id: '2',
-    location: { lat: 48.2, lon: 16.3 },
-    title: 'Bob',
+    lat: 48.2,
+    lon: 16.3,
+    publicName: 'Bob',
     image: makeImage('https://img/bob.jpg'),
-    source: { name: 'Bob' },
-  },
-  {
+  }),
+  makePoi({
     id: '3',
-    location: { lat: 46.0, lon: 18.0 },
-    title: 'Carol',
+    lat: 46.0,
+    lon: 18.0,
+    publicName: 'Carol',
     image: makeImage('https://img/carol.jpg'),
-    source: { name: 'Carol' },
-  },
+  }),
 ]
 
 async function mountMap(props: Partial<Record<string, any>> = {}) {
@@ -569,29 +579,32 @@ describe('OsmPoiMap', () => {
       expect(pointLayerInstance.removeLayer).toHaveBeenCalled()
     })
 
-    it('updates marker icon in place when highlighted changes', async () => {
+    it('does not update existing POI markers when fields change between batches', async () => {
+      // Per-session contract: POI data is treated as immutable per id —
+      // the GUI is not expected to reflect mid-session DB changes. Existing
+      // markers are never re-rendered, only added on first sighting and
+      // removed when their id leaves the viewport.
       const item0 = { ...items[0], highlighted: false }
       const wrapper = await mountMap({ items: [item0] })
       await flushPromises()
 
       const markerInstance = (L.marker as any).mock.results[0].value
 
-      // Change highlighted flag
+      // Same id, different highlighted. Pre-fix this would have fired
+      // DiffableLayer.shouldUpdate → apply → setIcon. Now nothing happens.
       const item0Highlighted = { ...items[0], highlighted: true }
       await wrapper.setProps({ items: [item0Highlighted] })
       await flushPromises()
 
-      // Marker should have been updated in-place via setIcon
-      expect(markerInstance.setIcon).toHaveBeenCalled()
-      // No new markers should have been created
+      expect(markerInstance.setIcon).not.toHaveBeenCalled()
       expect((L.marker as any).mock.calls.length).toBe(1)
     })
   })
 
   describe('updateClusterMarkers', () => {
     const clusters: MapCluster[] = [
-      { id: 100, location: { lat: 47.5, lon: 19.0 }, count: 5, expansionZoom: 8 },
-      { id: 200, location: { lat: 48.0, lon: 16.0 }, count: 3, expansionZoom: 10 },
+      { type: 'cluster', id: 100, lat: 47.5, lon: 19.0, count: 5, expansionZoom: 8 },
+      { type: 'cluster', id: 200, lat: 48.0, lon: 16.0, count: 3, expansionZoom: 10 },
     ]
 
     it('creates cluster markers and removes stale ones on prop change', async () => {
@@ -609,30 +622,43 @@ describe('OsmPoiMap', () => {
       expect(clusterLayerInstance.removeLayer).toHaveBeenCalled()
     })
 
-    it('updates existing cluster marker latlng and icon in place', async () => {
+    it('does not update existing cluster markers when fields change between batches', async () => {
+      // Per-session contract: cluster fields are immutable per id.
+      // cluster_id is supercluster's per-index identifier and the index
+      // is cached per (profile, tagIds) on the backend, so the same id
+      // never legitimately appears with different fields. Filter changes
+      // produce entirely different ids, not same id with new count.
       const wrapper = await mountMap({ items: [], clusters: [clusters[0]] })
       await flushPromises()
 
+      const markerInstance = (L.marker as any).mock.results[0].value
       const markerCountBefore = (L.marker as any).mock.calls.length
 
-      // Update the same cluster id with new location/count
+      // Same id with different fields would have triggered shouldUpdate +
+      // apply pre-fix. Now nothing happens: no new marker, no setLatLng,
+      // no setIcon. The marker keeps its original construction-time state.
       const updated: MapCluster = {
+        type: 'cluster',
         id: 100,
-        location: { lat: 49.0, lon: 20.0 },
+        lat: 49.0,
+        lon: 20.0,
         count: 8,
         expansionZoom: 9,
       }
       await wrapper.setProps({ clusters: [updated] })
       await flushPromises()
 
-      // No new marker should be created — updated in place
       expect((L.marker as any).mock.calls.length).toBe(markerCountBefore)
+      expect(markerInstance.setLatLng).not.toHaveBeenCalled()
+      expect(markerInstance.setIcon).not.toHaveBeenCalled()
     })
 
     it('cluster click at max zoom removes marker and sets view', async () => {
       const maxZoomCluster: MapCluster = {
+        type: 'cluster',
         id: 300,
-        location: { lat: 47.0, lon: 19.0 },
+        lat: 47.0,
+        lon: 19.0,
         count: 2,
         expansionZoom: MAP_MAX_ZOOM,
       }
@@ -694,10 +720,12 @@ describe('OsmPoiMap', () => {
     })
   })
 
-  describe('dissolvedClusterAt — spiderfy after max-zoom cluster dissolve', () => {
+  describe('spiderfy after max-zoom cluster dissolve', () => {
     const maxZoomCluster: MapCluster = {
+      type: 'cluster',
       id: 300,
-      location: { lat: 47.0, lon: 19.0 },
+      lat: 47.0,
+      lon: 19.0,
       count: 2,
       expansionZoom: MAP_MAX_ZOOM,
     }
@@ -715,7 +743,7 @@ describe('OsmPoiMap', () => {
       )?.[1]
       expect(clickHandler).toBeDefined()
 
-      // Click the cluster at max zoom — dissolvedClusterAt is set
+      // Click the cluster at max zoom — pending spiderfy is armed
       clickHandler()
 
       // spiderfy not yet triggered (no leaf markers arrived yet)
@@ -731,7 +759,7 @@ describe('OsmPoiMap', () => {
       vi.useRealTimers()
     })
 
-    it('dissolvedClusterAt is consumed only once even if items update is called twice', async () => {
+    it('pending spiderfy is consumed only once even if items update is called twice', async () => {
       vi.useFakeTimers()
 
       const wrapper = await mountMap({ items: [], clusters: [maxZoomCluster] })
@@ -743,7 +771,7 @@ describe('OsmPoiMap', () => {
       )?.[1]
       clickHandler()
 
-      // First items update — drains dissolvedClusterAt, triggers spiderfy
+      // First items update — drains the pending callback, triggers spiderfy
       await wrapper.setProps({ items: [items[0]] })
       await flushPromises()
       vi.runAllTimers()
@@ -754,6 +782,41 @@ describe('OsmPoiMap', () => {
       await flushPromises()
       vi.runAllTimers()
 
+      expect(omsInstance.spiderListener).not.toHaveBeenCalled()
+
+      vi.useRealTimers()
+    })
+
+    it('does not fire phantom spiderfy on a later items batch when the first batch had no leaves', async () => {
+      // Regression: pre-fix, the dissolvedClusterAt flag stayed armed when
+      // an items batch arrived without matching leaves (e.g., user panned
+      // before the fetch returned). Any later batch with nearby markers —
+      // possibly from a wholly unrelated viewport later — would fire a
+      // phantom spiderfy. The fix binds the intent to the click's closure
+      // and consumes it on the first batch regardless of match success.
+      vi.useFakeTimers()
+
+      const wrapper = await mountMap({ items: [], clusters: [maxZoomCluster] })
+      await flushPromises()
+
+      const clusterMarkerInstance = (L.marker as any).mock.results[0].value
+      const clickHandler = clusterMarkerInstance.on.mock.calls.find(
+        (c: any) => c[0] === 'click'
+      )?.[1]
+      clickHandler()
+
+      // First batch: empty (user panned, leaves never arrived). The pending
+      // callback runs against zero markers and silently consumes itself.
+      await wrapper.setProps({ items: [] })
+      await flushPromises()
+      vi.runAllTimers()
+      expect(omsInstance.spiderListener).not.toHaveBeenCalled()
+
+      // Second batch: leaves are now present (mock distanceTo = 0 means any
+      // marker matches). Pre-fix this would have fired phantom spiderfy.
+      await wrapper.setProps({ items: [items[0]] })
+      await flushPromises()
+      vi.runAllTimers()
       expect(omsInstance.spiderListener).not.toHaveBeenCalled()
 
       vi.useRealTimers()
@@ -789,7 +852,7 @@ describe('OsmPoiMap', () => {
       await flushPromises()
       await nextTick()
 
-      expect(fetchPopupData).toHaveBeenCalledWith('1')
+      expect(fetchPopupData).toHaveBeenCalledWith('1', expect.any(AbortSignal))
       expect(popupUpdate).toHaveBeenCalled()
     })
 

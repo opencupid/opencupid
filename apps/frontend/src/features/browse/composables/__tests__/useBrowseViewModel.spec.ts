@@ -58,7 +58,7 @@ describe('useBrowseViewModel', () => {
     const vm = useBrowseViewModel()
 
     expect(vm.profilePois.value).toHaveLength(1)
-    expect(vm.profilePois.value[0]!.type).toBe('profile')
+    expect(vm.profilePois.value[0]!.kind).toBe('profile')
     expect(vm.profilePois.value[0]!.id).toBe('p1')
 
     expect(vm.clusters.value).toHaveLength(1)
@@ -104,8 +104,8 @@ describe('useBrowseViewModel', () => {
     const vm = useBrowseViewModel()
 
     expect(vm.postPois.value).toHaveLength(1)
-    expect(vm.postPois.value[0]!.type).toBe('post')
-    expect(vm.postPois.value[0]!.title).toBe('Cherry harvest')
+    expect(vm.postPois.value[0]!.kind).toBe('post')
+    expect(vm.postPois.value[0]!.postContent).toBe('Cherry harvest')
     expect(vm.allPois.value).toHaveLength(1)
   })
 
