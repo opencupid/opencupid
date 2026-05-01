@@ -4,6 +4,19 @@ import { conversationContextInclude } from '@/db/includes/profileIncludes'
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
 import { prisma } from '@/lib/prisma'
 import type { UserContentService, ListOptions, BoundsBox } from './userContent.service'
+import {
+  boundingBoxWhere,
+  boundsWhere,
+  notDeleted,
+  ownedBy,
+  paginate,
+  recentSince,
+  softDeleteData,
+  visibilityFilter,
+  visible,
+} from './userContent.helpers'
+
+const typeFilter = (type?: string) => (type ? { type: type as PostType } : {})
 
 const postedByInclude = {
   include: {
@@ -68,7 +81,7 @@ export class PostService implements UserContentService<
 
   async findById(id: string): Promise<PostWithProfile | null> {
     return prisma.post.findFirst({
-      where: { id, isDeleted: false },
+      where: { id, ...notDeleted },
       ...postedByInclude,
     })
   }
@@ -78,11 +91,11 @@ export class PostService implements UserContentService<
     viewerProfileId: string
   ): Promise<PostWithProfileAndContext | null> {
     const post = await prisma.post.findFirst({
-      where: { id, isDeleted: false },
+      where: { id, ...notDeleted },
       ...postedByWithConversationInclude(viewerProfileId),
     })
 
-    // Non-owners can only see visible posts
+    // Non-owners can only see visible posts.
     if (post && post.postedById !== viewerProfileId && !post.isVisible) {
       return null
     }
@@ -94,35 +107,25 @@ export class PostService implements UserContentService<
     profileId: string,
     options: ListOptions & { includeInvisible?: boolean } = {}
   ): Promise<PostWithProfile[]> {
-    const { type, limit = 20, offset = 0, includeInvisible = false } = options
-
     return prisma.post.findMany({
       where: {
         postedById: profileId,
-        isDeleted: false,
-        ...(includeInvisible ? {} : { isVisible: true }),
-        ...(type ? { type: type as PostType } : {}),
+        ...notDeleted,
+        ...visibilityFilter(options.includeInvisible ?? false),
+        ...typeFilter(options.type),
       },
       ...postedByInclude,
       orderBy: { createdAt: 'desc' },
-      take: limit,
-      skip: offset,
+      ...paginate(options),
     })
   }
 
   async findAll(options: ListOptions = {}): Promise<PostWithProfile[]> {
-    const { type, limit = 20, offset = 0 } = options
-
     return prisma.post.findMany({
-      where: {
-        isDeleted: false,
-        isVisible: true,
-        ...(type ? { type: type as PostType } : {}),
-      },
+      where: { ...visible, ...typeFilter(options.type) },
       ...postedByInclude,
       orderBy: { createdAt: 'desc' },
-      take: limit,
-      skip: offset,
+      ...paginate(options),
     })
   }
 
@@ -132,40 +135,21 @@ export class PostService implements UserContentService<
     radius: number,
     options: ListOptions = {}
   ): Promise<PostWithProfile[]> {
-    const { type, limit = 20, offset = 0 } = options
-
-    // Calculate bounding box for efficiency (approximate)
-    const latRange = radius / 111.0 // 1 degree lat ≈ 111 km
-    const lonRange = radius / (111.0 * Math.cos((lat * Math.PI) / 180))
-
-    const minLat = lat - latRange
-    const maxLat = lat + latRange
-    const minLon = lon - lonRange
-    const maxLon = lon + lonRange
-
     return prisma.post.findMany({
       where: {
-        isDeleted: false,
-        isVisible: true,
-        ...(type ? { type: type as PostType } : {}),
-        lat: { gte: minLat, lte: maxLat },
-        lon: { gte: minLon, lte: maxLon },
+        ...visible,
+        ...typeFilter(options.type),
+        ...boundingBoxWhere(lat, lon, radius),
       },
       ...postedByInclude,
       orderBy: { createdAt: 'desc' },
-      take: limit,
-      skip: offset,
+      ...paginate(options),
     })
   }
 
   async findInBounds(bounds: BoundsBox): Promise<PostWithProfile[]> {
     return prisma.post.findMany({
-      where: {
-        isDeleted: false,
-        isVisible: true,
-        lat: { gte: bounds.south, lte: bounds.north },
-        lon: { gte: bounds.west, lte: bounds.east },
-      },
+      where: { ...visible, ...boundsWhere(bounds) },
       ...postedByInclude,
       orderBy: { createdAt: 'desc' },
       take: 100,
@@ -175,8 +159,7 @@ export class PostService implements UserContentService<
   async findAllWithLocation(viewerProfileId: string, limit = 500): Promise<PostWithProfile[]> {
     return prisma.post.findMany({
       where: {
-        isDeleted: false,
-        isVisible: true,
+        ...visible,
         lat: { not: null },
         lon: { not: null },
         postedBy: blocklistWhereClause(viewerProfileId),
@@ -188,21 +171,15 @@ export class PostService implements UserContentService<
   }
 
   async findRecent(options: ListOptions = {}): Promise<PostWithProfile[]> {
-    const { type, limit = 20, offset = 0 } = options
-    const oneWeekAgo = new Date()
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-
     return prisma.post.findMany({
       where: {
-        isDeleted: false,
-        isVisible: true,
-        createdAt: { gte: oneWeekAgo },
-        ...(type ? { type: type as PostType } : {}),
+        ...visible,
+        createdAt: { gte: recentSince(7) },
+        ...typeFilter(options.type),
       },
       ...postedByInclude,
       orderBy: { createdAt: 'desc' },
-      take: limit,
-      skip: offset,
+      ...paginate(options),
     })
   }
 
@@ -211,14 +188,8 @@ export class PostService implements UserContentService<
     profileId: string,
     data: UpdatePostPayload
   ): Promise<PostWithProfile | null> {
-    // Only allow owner to update
-    const post = await prisma.post.findFirst({
-      where: { id, postedById: profileId, isDeleted: false },
-    })
-
-    if (!post) {
-      return null
-    }
+    const owned = await prisma.post.findFirst({ where: ownedBy(id, profileId) })
+    if (!owned) return null
 
     return prisma.post.update({
       where: { id },
@@ -237,21 +208,9 @@ export class PostService implements UserContentService<
   }
 
   async delete(id: string, profileId: string): Promise<{ id: string } | null> {
-    // Only allow owner to delete
-    const post = await prisma.post.findFirst({
-      where: { id, postedById: profileId, isDeleted: false },
-    })
+    const owned = await prisma.post.findFirst({ where: ownedBy(id, profileId) })
+    if (!owned) return null
 
-    if (!post) {
-      return null
-    }
-
-    return prisma.post.update({
-      where: { id },
-      data: {
-        isDeleted: true,
-        updatedAt: new Date(),
-      },
-    })
+    return prisma.post.update({ where: { id }, data: softDeleteData() })
   }
 }
