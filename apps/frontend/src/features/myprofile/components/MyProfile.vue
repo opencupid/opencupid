@@ -67,7 +67,7 @@ const toggleDating = async () => {
         :editState="viewState.isEditable"
         @updated="updateProfile"
         :class="[viewState.currentScope, { editable: viewState.isEditable }]"
-        class="scroll"
+        class="scroll hide-scrollbar"
       >
         <ProfileContent
           v-if="profilePreview"
