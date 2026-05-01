@@ -49,6 +49,12 @@ export function resetUmamiIdentity() {
   whenUmamiReady((umami) => umami.identify())
 }
 
+export const tracker = {
+  track(eventName: string, data?: Record<string, unknown>) {
+    whenUmamiReady((umami) => umami.track(eventName, data))
+  },
+}
+
 if (enabled) {
   bus.on('auth:login', ({ profileId }) => {
     if (profileId) identifyUmami(profileId)

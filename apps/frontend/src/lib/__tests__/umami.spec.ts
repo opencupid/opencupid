@@ -120,6 +120,32 @@ describe('umami', () => {
     })
   })
 
+  describe('tracker.track', () => {
+    it('calls window.umami.track once umami is ready', async () => {
+      setConfig(ENABLED)
+      vi.useFakeTimers()
+      const { tracker } = await import('../umami')
+      const track = vi.fn()
+
+      tracker.track('event-x', { a: 1 })
+      expect(track).not.toHaveBeenCalled()
+      ;(window as any).umami = { identify: vi.fn(), track }
+      await vi.advanceTimersByTimeAsync(150)
+
+      expect(track).toHaveBeenCalledWith('event-x', { a: 1 })
+    })
+
+    it('is a no-op when umami is disabled', async () => {
+      setConfig(DISABLED)
+      const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout')
+      const { tracker } = await import('../umami')
+
+      tracker.track('event-x')
+
+      expect(setTimeoutSpy).not.toHaveBeenCalled()
+    })
+  })
+
   describe('bus listener registration', () => {
     it('registers auth:login and auth:logged-out listeners when enabled', async () => {
       setConfig(ENABLED)

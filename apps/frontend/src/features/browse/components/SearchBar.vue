@@ -17,6 +17,7 @@ import { SEARCH_MIN_QUERY_LENGTH } from '@zod/search/search.dto'
 
 import { useSearchStore } from '@/features/browse/stores/searchStore'
 import { useGeocodingStore } from '@/features/geocoding/stores/geocodingStore'
+import { tracker } from '@/lib/umami'
 import { useI18n } from 'vue-i18n'
 import { toGeoPoint } from '../../map/utils/mapUtils'
 
@@ -105,6 +106,7 @@ watch(searchQuery, (query) => {
     geocodingStore.clear()
     return
   }
+  tracker.track('search')
   // Fire both searches in parallel — each store owns its own abort controller,
   // so rapid re-typing cancels prior in-flight requests on both sides.
   searchStore.search(query)

@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import type { UserIdentifyPayload } from '@zod/user/user.dto'
 import { emailRegex } from '@/lib/utils'
+import { tracker } from '@/lib/umami'
 import CaptchaWidget from './CaptchaWidget.vue'
 import { useI18n } from 'vue-i18n'
 
@@ -35,6 +36,7 @@ async function handleSendLoginLink() {
     error.value = t('auth.auth_id_input_empty')
     return
   }
+  tracker.track('auth-email-submitted')
   emit('updated', authIdentifier.value)
 }
 
