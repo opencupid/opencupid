@@ -91,8 +91,8 @@ export const useAuthStore = defineStore('auth', {
         const payload = JSON.parse(atob(token.split('.')[1]!)) as JwtPayload
         this.userId = payload.userId
         this.profileId = payload.profileId
-        if (payload.profileId) {
-          bus.emit('auth:login', { profileId: payload.profileId })
+        if (payload.userId) {
+          bus.emit('auth:login', { userId: payload.userId })
         }
       } catch (e) {
         console.warn('Failed to parse JWT payload:', e)

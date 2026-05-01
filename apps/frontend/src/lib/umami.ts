@@ -41,8 +41,8 @@ function whenUmamiReady(fn: (umami: NonNullable<Window['umami']>) => void) {
   tick()
 }
 
-export function identifyUmami(profileId: string) {
-  whenUmamiReady((umami) => umami.identify(profileId))
+export function identifyUmami(userId: string) {
+  whenUmamiReady((umami) => umami.identify(userId))
 }
 
 export function resetUmamiIdentity() {
@@ -56,8 +56,8 @@ export const tracker = {
 }
 
 if (enabled) {
-  bus.on('auth:login', ({ profileId }) => {
-    if (profileId) identifyUmami(profileId)
+  bus.on('auth:login', ({ userId }) => {
+    if (userId) identifyUmami(userId)
   })
 
   bus.on('auth:logged-out', () => {

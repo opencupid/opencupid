@@ -161,14 +161,14 @@ describe('umami', () => {
       expect(mockOn).not.toHaveBeenCalled()
     })
 
-    it('auth:login handler invokes umami.identify with the profileId', async () => {
+    it('auth:login handler invokes umami.identify with the userId', async () => {
       setConfig(ENABLED)
       const identify = vi.fn()
       ;(window as any).umami = { identify, track: vi.fn() }
       await import('../umami')
 
-      busHandlers['auth:login']?.({ profileId: 'profile-42' })
-      expect(identify).toHaveBeenCalledWith('profile-42')
+      busHandlers['auth:login']?.({ userId: 'user-42' })
+      expect(identify).toHaveBeenCalledWith('user-42')
     })
 
     it('auth:logged-out handler invokes umami.identify with no args', async () => {
