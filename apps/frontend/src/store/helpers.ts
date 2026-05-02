@@ -48,12 +48,12 @@ export function storeError(error: unknown, fallbackMessage = 'Request failed'): 
   // Handle Axios response errors
   else if (isAxiosError(error)) {
     status = error.response?.status || 500
-    const data = error.response?.data as ApiError
-    message = data.message || fallbackMessage
+    const data = error.response?.data as ApiError | undefined
+    message = data?.message || fallbackMessage
     if (status === 429) {
       bus.emit('api:rate_limit')
     }
-    if (data.fieldErrors) {
+    if (data?.fieldErrors) {
       fieldErrors = data.fieldErrors
     }
   }
