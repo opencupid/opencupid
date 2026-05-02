@@ -54,13 +54,13 @@
     },
     "new_like": {
       "callToActionLabel": "Find out who",
-      "contentBody": "Hey there, someone sent you a  ❤️.",
-      "subject": "You have a new like"
+      "contentBody": "Hey there, someone smiled at you.",
+      "subject": "Someone smiled at you"
     },
     "new_match": {
       "callToActionLabel": "Open matches",
-      "contentBody": "Hey there, you matched with {name}.",
-      "subject": "You have a new match!"
+      "contentBody": "Hey there, you and {name} smiled at each other.",
+      "subject": "You smiled at each other!"
     },
     "new_message": {
       "callToActionLabel": "Read message",
@@ -131,51 +131,51 @@
     "welcome_title": "Welcome to {siteName}!"
   },
   "interactions": {
-    "anonymous_like_explanation": "They will not know who sent it until they like you back.",
+    "anonymous_like_explanation": "They won't know who sent it until they smile back at you.",
     "anonymous_toggle_anonymous": "Stay anonymous",
     "anonymous_toggle_reveal": "Reveal my profile",
     "cancel_button": "Maybe later",
     "its_a_match": "It's a match!",
-    "like_button_title": "Like",
+    "like_button_title": "Smile",
     "like_error": "Oops, this didn't work. Please try again.",
-    "like_them_back": "Like them back to match.",
+    "like_them_back": "Smile back at them?",
     "message_confirmation": "Nice!",
     "pass_button_title": "Pass",
     "revealed_like_explanation": "They will see who sent it.",
-    "send_a_like": "Send them a like",
+    "send_a_like": "Smile at them",
     "send_a_message": "Send a message",
     "send_them_a_message": "Send {name} a message",
-    "they_liked_you": "They liked you!",
-    "you_liked_them": "You liked them",
-    "you_matched_with_them": "You matched with them",
+    "they_liked_you": "They smiled at you!",
+    "you_liked_them": "You smiled at them",
+    "you_matched_with_them": "{name} smiled back!",
     "you_messaged_them": "You messaged them"
   },
   "matches": {
-    "anonymous_like_hint": "They didn't want you to know who they are, at least not yet. But you will find out when you like them back. You can bump into them on the map — if you see someone marked like this, your preferences match.",
+    "anonymous_like_hint": "They smiled at you anonymously, at least for now. You'll find out who when you smile back. You can bump into them on the map — if you see someone marked like this, your preferences match.",
     "anonymous_like_hint_cta": "Discover the community",
     "find_button_cta": "Go connect",
-    "no_match_have_sent_like": "They will surely like you back.",
+    "no_match_have_sent_like": "They will surely smile back at you.",
     "no_match_have_sent_like_cta": "Keep lookin'",
-    "no_match_no_sent_like": "There's gotta be someone you like out there?  ",
+    "no_match_no_sent_like": "There's gotta be someone out there worth smiling at?  ",
     "no_match_no_sent_like_cta": "Start lookin'",
     "notifications": {
       "and": "and",
       "matches": "{count, plural, one {# new match} other {# new matches}}",
-      "you_have_likes": "{count, plural, one {You have # ❤️} other {You have # ❤️}}"
+      "you_have_likes": "{count, plural, one {Someone smiled at you} other {# people smiled at you}}"
     },
     "pass_confirm_dialog": {
       "liked_button_no": "No, don't pass",
       "liked_button_yes": "Yes, pass",
       "matched_button_no": "No!",
       "matched_button_yes": "Yes, unmatch",
-      "question_liked": "You already liked them. Are you sure you want to pass?",
-      "question_matched": "You already matched with them. Do you REALLY want to unmatch?",
+      "question_liked": "You already smiled at them. Are you sure you want to pass?",
+      "question_matched": "You smiled at each other. Do you REALLY want to unmatch?",
       "title": "But wait..."
     },
-    "received_likes": "{count, plural, =0 {You have no likes.} one {You have # like.} other {You have # likes!}}",
+    "received_likes": "{count, plural, =0 {No smiles yet.} one {You have # smile.} other {You have # smiles!}}",
     "received_likes_cta": "Find out who sent it",
-    "you_matched_with": "You matched with {name}!",
-    "you_received_like": "You received a like!"
+    "you_matched_with": "{name} smiled back!",
+    "you_received_like": "Someone smiled at you!"
   },
   "messaging": {
     "already_sent_waiting": "You have already sent them a message. Once they answer, you can continue the conversation.",
@@ -508,7 +508,7 @@
     "language_label": "Language",
     "newsletter_opt_in": "Email newsletter",
     "newsletter_opt_in_hint": "Community updates, new features, that kind of stuff. You can unsubscribe any time.",
-    "notifications_opt_in": "When someone sends me a message, like or match...",
+    "notifications_opt_in": "When someone messages me, smiles at me, or matches with me...",
     "notifications_label": "Notifications",
     "push_notify_messages": "Popup and mobile notification",
     "title": "Settings"
