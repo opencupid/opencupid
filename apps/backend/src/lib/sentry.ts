@@ -2,7 +2,7 @@ import * as Sentry from '@sentry/node'
 
 import { appConfig } from './appconfig'
 
-if (appConfig.NODE_ENV !== 'development') {
+if (appConfig.SENTRY_DSN) {
   Sentry.init({
     dsn: appConfig.SENTRY_DSN,
     release: `api@${__APP_VERSION__}`,
