@@ -16,7 +16,7 @@ import OnboardingComplete from '@/features/onboarding/components/OnboardingCompl
 import { useI18nStore } from '@/store/i18nStore'
 import { useBootstrap } from '@/lib/bootstrap'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
-import { logCheckpoint } from '@/lib/diagnostics'
+import { tracker } from '@/lib/umami'
 import { useMessageStore } from '../../messaging/stores/messageStore'
 import MiddleColumn from '@/features/shared/ui/MiddleColumn.vue'
 
@@ -67,7 +67,7 @@ onMounted(async () => {
     return
   }
 
-  logCheckpoint('onboarding:started')
+  tracker.track('onboarding-started')
 })
 </script>
 
