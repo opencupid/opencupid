@@ -13,6 +13,10 @@ vi.mock('@/lib/api', () => ({
   },
   getVersionInfo: vi.fn(),
   safeApiCall: vi.fn((fn: () => Promise<unknown>) => fn()),
+  isNetworkError: (err: unknown) => {
+    const e = err as { response?: unknown; isNetworkError?: boolean } | null | undefined
+    return !!e && (e.isNetworkError === true || !e.response)
+  },
 }))
 
 describe('useAppStore - checkVersion', () => {
@@ -64,7 +68,12 @@ describe('useAppStore - checkVersion', () => {
 
   it('handles API errors gracefully', async () => {
     const mockGetVersionInfo = apiModule.getVersionInfo as any
-    mockGetVersionInfo.mockRejectedValue(new Error('Network error'))
+    // Simulate an HTTP error response (not a network error) so it is surfaced
+    // as a StoreError rather than swallowed by the offline state machine.
+    mockGetVersionInfo.mockRejectedValue({
+      isAxiosError: true,
+      response: { status: 500, data: { message: 'Internal error' } },
+    })
 
     const store = useAppStore()
     const result = await store.checkVersion()
@@ -73,6 +82,20 @@ describe('useAppStore - checkVersion', () => {
     if (!result.success) {
       expect(result.message).toBeTruthy()
     }
+    expect(store.updateAvailable).toBe(false)
+  })
+
+  it('silently skips network failures (handled by the offline state machine)', async () => {
+    const mockGetVersionInfo = apiModule.getVersionInfo as any
+    // Axios network error: rejected with no `response` populated.
+    mockGetVersionInfo.mockRejectedValue({ isAxiosError: true, code: 'ERR_NETWORK' })
+
+    const store = useAppStore()
+    const result = await store.checkVersion()
+
+    // Should NOT crash and should NOT surface a StoreError — connectivity
+    // recovery is the state machine's job.
+    expect(result.success).toBe(true)
     expect(store.updateAvailable).toBe(false)
   })
 

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { bus } from '@/lib/bus'
-import { api, getVersionInfo, safeApiCall } from '@/lib/api'
+import { api, getVersionInfo, isNetworkError, safeApiCall } from '@/lib/api'
 import { LocationSchema, type LocationDTO } from '@zod/dto/location.dto'
 import { type VersionDTO } from '@zod/dto/version.dto'
 import type { LocationResponse } from '@zod/apiResponse.dto'
@@ -51,6 +51,11 @@ export const useAppStore = defineStore('app', {
 
         return storeSuccess(parsed)
       } catch (err: unknown) {
+        // The version probe deliberately bypasses safeApiCall (it's the
+        // health-check the offline state machine itself uses). Connectivity
+        // failures are already tracked by that state machine and will retry
+        // via the `api:online` event — don't surface them as store errors.
+        if (isNetworkError(err)) return storeSuccess(undefined)
         return storeError(err, 'Failed to check update availability')
       }
     },

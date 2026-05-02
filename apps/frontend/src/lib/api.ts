@@ -28,6 +28,13 @@ export const ERROR_CODES = [
   'ERR_NETWORK',
 ]
 
+export function isNetworkError(err: unknown): boolean {
+  if (err instanceof CanceledError) return false
+  const e = err as { response?: unknown; code?: string } | null | undefined
+  if (!e) return false
+  return !e.response || (typeof e.code === 'string' && ERROR_CODES.includes(e.code))
+}
+
 import './visibility'
 
 /*
@@ -271,10 +278,7 @@ api.interceptors.response.use(
 
     // Network error handling — visibility-aware state machine.
     // CanceledError (AbortController) is intentional, not connectivity loss.
-    const isNetworkError =
-      !(error instanceof CanceledError) && (!error.response || ERROR_CODES.includes(error.code))
-
-    if (isNetworkError && state === 'ONLINE') {
+    if (isNetworkError(error) && state === 'ONLINE') {
       transitionTo('DEBOUNCING')
     }
     // In SUSPENDED or RESUMING: swallow network errors (expected during tab transitions)
@@ -297,9 +301,7 @@ export async function safeApiCall<T>(fn: () => Promise<T>): Promise<T> {
     // state machine or auto-retrying the (intentionally cancelled) request.
     if (err instanceof CanceledError) throw err
 
-    const isNetworkError = !err.response || ERROR_CODES.includes(err.code)
-
-    if (isNetworkError) {
+    if (isNetworkError(err)) {
       if (state === 'ONLINE') {
         transitionTo('DEBOUNCING')
       }
