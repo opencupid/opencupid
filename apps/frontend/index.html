@@ -80,6 +80,13 @@
       style="height: 100dvh"
     ></div>
     <script src="/config.js"></script>
+    <!--
+      WARNING: this inline script's body is pinned by a sha256 hash in
+      apps/frontend/security-headers.conf.tmpl (script-src). Any edit
+      here — including whitespace — changes the hash and silently
+      breaks the bouncer under CSP. Recompute the hash and update the
+      header file when editing.
+    -->
     <script>
       ;(function () {
         var m = document.cookie.match(/(?:^|;\s*)__o=([^;]+)/)
