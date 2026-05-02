@@ -1,5 +1,11 @@
 # frontend
 
+## 0.59.1
+
+### Patch Changes
+
+- cbbda28: Allow the cross-domain bouncer script in index.html under CSP via a sha256 hash in script-src.
+
 ## 0.59.0
 
 ### Minor Changes
