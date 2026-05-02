@@ -11,7 +11,15 @@ vi.mock('@/features/map/components/OsmPoiMap.vue', () => ({
   default: {
     name: 'OsmPoiMap',
     template: '<div class="map-view"><div class="osm-poi-map" /></div>',
-    props: ['items', 'clusters', 'iconResolver', 'center', 'popupComponent', 'fetchPopupData'],
+    props: [
+      'items',
+      'clusters',
+      'iconResolver',
+      'initialCenter',
+      'highlightedLocation',
+      'popupResolver',
+      'fetchPopupData',
+    ],
     emits: ['map:ready', 'item:select', 'bounds:changed'],
   },
 }))
@@ -177,10 +185,15 @@ const BContainer = { template: '<div class="container"><slot /></div>' }
 const ShareDialog = { template: '<div class="share-dialog"><slot /></div>', props: ['trigger'] }
 
 import BrowseProfiles from '../BrowseProfiles.vue'
+import { MAP_DEFAULT_CENTER } from '@shared/maps'
 
 describe('BrowseProfiles view', () => {
   beforeEach(() => {
     vmState.isNoOneAround.value = false
+    vmState.viewerProfile.value = {
+      isSocialActive: true,
+      location: { country: 'HU', cityName: 'Budapest', lat: 47.5, lon: 19.0 },
+    }
     mockRouteName.value = 'Browse'
     mockDetail.value = null
     mockPostSummaries.value = []
@@ -242,6 +255,25 @@ describe('BrowseProfiles view', () => {
     }
     const wrapper = mountComponent()
     expect(wrapper.find('.map-view').exists()).toBe(true)
+    const map = wrapper.findComponent({ name: 'OsmPoiMap' })
+    expect(map.props('initialCenter')).toEqual([47.5, 19.0])
+  })
+
+  it('mounts the map with MAP_DEFAULT_CENTER when viewer profile lacks lat/lon', () => {
+    vmState.viewerProfile.value = {
+      isSocialActive: true,
+      location: { country: 'HU', cityName: 'Budapest', lat: null, lon: null },
+    }
+    const wrapper = mountComponent()
+    const map = wrapper.findComponent({ name: 'OsmPoiMap' })
+    expect(map.exists()).toBe(true)
+    expect(map.props('initialCenter')).toEqual(MAP_DEFAULT_CENTER)
+  })
+
+  it('does not mount the map until viewerProfile has loaded', () => {
+    vmState.viewerProfile.value = null as unknown as Record<string, any>
+    const wrapper = mountComponent()
+    expect(wrapper.findComponent({ name: 'OsmPoiMap' }).exists()).toBe(false)
   })
 
   it('shows MapPlaceholder and hides it after OsmPoiMap emits map:ready', async () => {
