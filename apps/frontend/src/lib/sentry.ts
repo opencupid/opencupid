@@ -3,7 +3,6 @@ import type { App } from 'vue'
 import router from '@/router'
 
 export function initSentry(app: App): void {
-  if (__APP_CONFIG__.NODE_ENV === 'development') return
   if (!__APP_CONFIG__.SENTRY_DSN) return
 
   Sentry.init({
