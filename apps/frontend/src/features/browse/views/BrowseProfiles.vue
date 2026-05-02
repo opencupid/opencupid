@@ -11,6 +11,7 @@ import { useBrowseViewModel } from '../composables/useBrowseViewModel'
 import { useSearchStore } from '@/features/browse/stores/searchStore'
 import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 import { isValidLatLng, toLatLng } from '@/features/map/utils/mapUtils'
+import { MAP_DEFAULT_CENTER } from '@shared/maps'
 import { useDetailRouteState } from '@/features/shared/composables/useDetailRouteState'
 import { useDetailPanel } from '@/features/app/composables/useDetailPanel'
 
@@ -67,10 +68,11 @@ function onMapReady() {
 }
 
 // Initial center for the map's first mount. Read once by OsmPoiMap; not
-// reactive after mount.
-const initialMapCenter = computed<[number, number] | undefined>(() => {
+// reactive after mount. Falls back to MAP_DEFAULT_CENTER when the viewer
+// profile has no resolved coordinates so the map still mounts and renders.
+const initialMapCenter = computed<[number, number]>(() => {
   const fromProfile = toLatLng(viewerProfile.value?.location)
-  return isValidLatLng(fromProfile) ? fromProfile : undefined
+  return isValidLatLng(fromProfile) ? fromProfile : MAP_DEFAULT_CENTER
 })
 
 const highlightedLocation = ref<[number, number] | null>(null)
@@ -238,7 +240,7 @@ onMounted(async () => {
         />
 
         <OsmPoiMap
-          v-if="initialMapCenter"
+          v-if="viewerProfile"
           :items="allPois"
           :clusters="clusters"
           :icon-resolver="
