@@ -7,6 +7,7 @@ import { useBootstrap } from './lib/bootstrap'
 import { appUseI18n } from './lib/i18n'
 import { useAuthStore } from './features/auth/stores/authStore'
 import { initUmami } from './lib/umami'
+import { initSentry } from './lib/sentry'
 
 // Register push-only service worker
 if ('serviceWorker' in navigator) {
@@ -41,29 +42,6 @@ function initOpenReplay() {
     .catch((err) => {
       console.warn('Failed to load OpenReplay:', err)
     })
-}
-
-async function initSentry(app: ReturnType<typeof createApp>) {
-  if (__APP_CONFIG__.NODE_ENV === 'development') return
-  if (!__APP_CONFIG__.SENTRY_DSN) return
-
-  try {
-    const Sentry = await import('@sentry/vue')
-    Sentry.init({
-      app,
-      dsn: __APP_CONFIG__.SENTRY_DSN,
-      release: `frontend@${__APP_VERSION__}`,
-      sendDefaultPii: true,
-      integrations: [Sentry.browserTracingIntegration({ router }), Sentry.replayIntegration()],
-      tracesSampleRate: 1.0,
-      tracePropagationTargets: ['localhost', __APP_CONFIG__.FRONTEND_URL],
-      replaysSessionSampleRate: 0,
-      replaysOnErrorSampleRate: 1.0,
-    })
-    Sentry.setTag('frontend_origin', __APP_CONFIG__.DOMAIN)
-  } catch (err) {
-    console.warn('Failed to load Sentry:', err)
-  }
 }
 
 const app = createApp(App)
@@ -111,7 +89,7 @@ appUseI18n(app)
   document.getElementById('splash')?.remove()
 
   // Load observability tools after mount
-  await initSentry(app)
+  initSentry(app)
   initOpenReplay()
   initUmami()
 })()
