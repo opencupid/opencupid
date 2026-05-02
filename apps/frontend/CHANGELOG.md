@@ -1,5 +1,18 @@
 # frontend
 
+## 0.59.0
+
+### Minor Changes
+
+- a5061b7: Extract Sentry init into `lib/sentry.ts` and instrument empty geocoder results with `Sentry.captureMessage`.
+- 61bfd37: Add Umami event tracking for onboarding wizard steps, login email submission, and search bar to capture richer engagement data.
+
+### Patch Changes
+
+- 16dbfa3: Tighten Settings view layout: remove empty fieldset placeholders, swap legend for h6, tighten responsive margins, smaller form-hint typography.
+- 1292a46: Hide scrollbar on MyProfile component scroll container
+- b23675d: Restore CSP and other security headers on SPA-served paths. nginx's per-location `add_header` was suppressing the server-level stack on every HTML response.
+
 ## 0.58.0
 
 ### Minor Changes
