@@ -3,7 +3,6 @@ import { bus } from '@/lib/bus'
 declare global {
   interface Window {
     umami?: {
-      // No-arg call clears the session identity per Umami's identify() API.
       identify: (id?: string | Record<string, unknown>, data?: Record<string, unknown>) => void
       track: (...args: unknown[]) => void
     }
@@ -42,11 +41,20 @@ function whenUmamiReady(fn: (umami: NonNullable<Window['umami']>) => void) {
 }
 
 export function identifyUmami(userId: string) {
-  whenUmamiReady((umami) => umami.identify(userId))
+  // Pass userId as session data, not as the unique ID. Calling identify(userId)
+  // makes Umami pivot the sessionId hash from (ip+ua+salt) to (userId), which
+  // splits the visit into separate "session" rows in the dashboard — anonymous
+  // events on /auth become one row, post-login events become another. Passing
+  // a data-only object keeps the same anonymous sessionId hash and attaches
+  // userId as queryable session metadata, preserving continuity of the visit.
+  whenUmamiReady((umami) => umami.identify({ user: userId }))
 }
 
 export function resetUmamiIdentity() {
-  whenUmamiReady((umami) => umami.identify())
+  // Explicitly null out the `user` session-data key on logout so the post-logout
+  // portion of the visit isn't still attributed to the previous user when
+  // querying by session metadata.
+  whenUmamiReady((umami) => umami.identify({ user: null }))
 }
 
 export const tracker = {

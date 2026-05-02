@@ -72,28 +72,30 @@ describe('umami', () => {
   })
 
   describe('identifyUmami / resetUmamiIdentity', () => {
-    it('calls window.umami.identify(profileId) once umami is ready', async () => {
+    it('calls window.umami.identify with userId as session data once umami is ready', async () => {
       setConfig(ENABLED)
       vi.useFakeTimers()
       const { identifyUmami } = await import('../umami')
       const identify = vi.fn()
 
-      identifyUmami('profile-1')
+      identifyUmami('user-1')
       expect(identify).not.toHaveBeenCalled()
       ;(window as any).umami = { identify, track: vi.fn() }
       await vi.advanceTimersByTimeAsync(150)
 
-      expect(identify).toHaveBeenCalledWith('profile-1')
+      // Pass userId as data, not as the unique-id arg, so Umami doesn't pivot
+      // the sessionId hash and fragment the visit into separate session rows.
+      expect(identify).toHaveBeenCalledWith({ user: 'user-1' })
     })
 
-    it('calls window.umami.identify() with no args on reset', async () => {
+    it('calls window.umami.identify with { user: null } on reset', async () => {
       setConfig(ENABLED)
       const identify = vi.fn()
       ;(window as any).umami = { identify, track: vi.fn() }
       const { resetUmamiIdentity } = await import('../umami')
 
       resetUmamiIdentity()
-      expect(identify).toHaveBeenCalledWith()
+      expect(identify).toHaveBeenCalledWith({ user: null })
     })
 
     it('gives up polling without throwing if window.umami never appears', async () => {
@@ -161,24 +163,24 @@ describe('umami', () => {
       expect(mockOn).not.toHaveBeenCalled()
     })
 
-    it('auth:login handler invokes umami.identify with the userId', async () => {
+    it('auth:login handler invokes umami.identify with the userId as session data', async () => {
       setConfig(ENABLED)
       const identify = vi.fn()
       ;(window as any).umami = { identify, track: vi.fn() }
       await import('../umami')
 
       busHandlers['auth:login']?.({ userId: 'user-42' })
-      expect(identify).toHaveBeenCalledWith('user-42')
+      expect(identify).toHaveBeenCalledWith({ user: 'user-42' })
     })
 
-    it('auth:logged-out handler invokes umami.identify with no args', async () => {
+    it('auth:logged-out handler invokes umami.identify with { user: null }', async () => {
       setConfig(ENABLED)
       const identify = vi.fn()
       ;(window as any).umami = { identify, track: vi.fn() }
       await import('../umami')
 
       busHandlers['auth:logged-out']?.(undefined)
-      expect(identify).toHaveBeenCalledWith()
+      expect(identify).toHaveBeenCalledWith({ user: null })
     })
   })
 })
