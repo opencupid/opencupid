@@ -20,7 +20,7 @@ import IconLogout from '@/assets/icons/interface/logout.svg'
 import IconCupid from '@/assets/images/app/cupid.svg'
 
 import { useStepper } from '@vueuse/core'
-import { logCheckpoint } from '@/lib/diagnostics'
+import { tracker } from '@/lib/umami'
 
 import { useWizardSteps } from '@/features/onboarding/composables/useWizardSteps'
 import { useTagsStore } from '@/store/tagStore'
@@ -49,7 +49,7 @@ const handleNext = () => {
   if (current.value.flags === 'stage_one_end') {
     if (!formData.value.isDatingActive) {
       goTo('confirm')
-      logCheckpoint('onboarding:completed', { skippedDating: true })
+      tracker.track('onboarding-completed', { skippedDating: true })
       emit('finished')
       return
     }
@@ -57,10 +57,10 @@ const handleNext = () => {
   goToNext()
 
   if (isLast.value) {
-    logCheckpoint('onboarding:completed', { skippedDating: false })
+    tracker.track('onboarding-completed', { skippedDating: false })
     emit('finished')
   } else {
-    logCheckpoint('onboarding:step_changed', { step: stepNames.value[index.value] })
+    tracker.track(`onboarding-${stepNames.value[index.value]}`)
   }
 }
 

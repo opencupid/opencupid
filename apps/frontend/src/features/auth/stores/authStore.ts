@@ -91,9 +91,6 @@ export const useAuthStore = defineStore('auth', {
         const payload = JSON.parse(atob(token.split('.')[1]!)) as JwtPayload
         this.userId = payload.userId
         this.profileId = payload.profileId
-        if (payload.profileId) {
-          bus.emit('auth:login', { profileId: payload.profileId })
-        }
       } catch (e) {
         console.warn('Failed to parse JWT payload:', e)
         this.userId = null
@@ -116,6 +113,9 @@ export const useAuthStore = defineStore('auth', {
         // Even if the JWT is expired, keep it — the refresh interceptor in
         // api.ts will attempt a silent refresh using the httpOnly __refresh cookie.
         this.setAuthState(token)
+        if (this.userId) {
+          bus.emit('auth:login', { userId: this.userId })
+        }
       }
       this.isInitialized = true
     },
@@ -138,6 +138,9 @@ export const useAuthStore = defineStore('auth', {
 
         if (res.data.success === true) {
           this.setAuthState(res.data.token)
+          if (this.userId) {
+            bus.emit('auth:login', { userId: this.userId })
+          }
           this.loginUser = null
           localStorage.removeItem('authId')
         } else {

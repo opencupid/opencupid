@@ -3,7 +3,7 @@ import type { WSEvents } from '@/types/wsBusEvents'
 import type { MessageDTO } from '@zod/messaging/messaging.dto'
 
 type AppEvents = {
-  'auth:login': { profileId: string }
+  'auth:login': { userId: string }
   'auth:logout': void
   'auth:logged-out': void
   'auth:token-refreshed': { token: string }

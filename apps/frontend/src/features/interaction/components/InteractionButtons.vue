@@ -7,6 +7,7 @@ import IconCross from '@/assets/icons/interface/cross.svg'
 import IconMessage from '@/assets/icons/interface/message.svg'
 import AnonymousToggle from './AnonymousToggle.vue'
 import ConfirmPassDialog from './ConfirmPassDialog.vue'
+import { tracker } from '@/lib/umami'
 
 const props = defineProps<{
   context: InteractionContext
@@ -35,6 +36,7 @@ const handleLikeClick = () => {
   if (props.context.likedByMe || !props.context.canLike) {
     return
   }
+  tracker.track('interaction-like', { anonymous: selectedAnonymous.value })
   emit('like', selectedAnonymous.value)
 }
 
@@ -44,6 +46,7 @@ const handlePassClick = () => {
     passPopover.value = true
     return
   }
+  tracker.track('interaction-pass')
   emit('pass')
 }
 
@@ -55,6 +58,7 @@ const handleConfirmClick = () => {
 const handleMessageClick = () => {
   const context = props.context
   if (context.canMessage) {
+    tracker.track('interaction-message')
     emit('message')
     return
   }
