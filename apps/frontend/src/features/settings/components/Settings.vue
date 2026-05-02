@@ -53,22 +53,21 @@ function handleLogout() {
 
 <template>
   <div class="px-3 p-md-5 h-100 w-100 d-flex flex-column justify-content-center">
-    <fieldset class="d-flex align-items-center mb-5">
+    <fieldset class="d-flex align-items-center mb-3 mb-lg-5">
       <IconGlobe class="svg-icon svg-icon-lg me-2" />
       <LanguageSelectorDropdown size="md" />
     </fieldset>
 
-    <fieldset class="mb-3">
-      <legend class="h6">{{ $t('settings.notifications_label') }}</legend>
+    <div class="mb-md-3">
+      <h6>{{ $t('settings.notifications_label') }}</h6>
       <OptInCheckboxes v-model="optInModel" />
-    </fieldset>
-    <fieldset class="mb-3">
+    </div>
+    <fieldset class="mb-md-3">
       <PwaInstallButton />
     </fieldset>
-    <hr />
     <fieldset class="d-flex flex-wrap align-items-center gap-2">
       <div
-        class="flex-grow-1 form-hint"
+        class="flex-grow-1 form-hint small lh-sm"
         style="min-width: 0; word-break: break-all"
       >
         <template v-if="userStore.user">
