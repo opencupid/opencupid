@@ -13,7 +13,11 @@ export function initSentry(app: App): void {
     sendDefaultPii: true,
     integrations: [Sentry.browserTracingIntegration({ router }), Sentry.replayIntegration()],
     tracesSampleRate: 1.0,
-    tracePropagationTargets: ['localhost', __APP_CONFIG__.FRONTEND_URL],
+    tracePropagationTargets: [
+      'localhost',
+      __APP_CONFIG__.API_BASE_URL,
+      __APP_CONFIG__.FRONTEND_URL,
+    ],
     replaysSessionSampleRate: 0,
     replaysOnErrorSampleRate: 1.0,
   })
