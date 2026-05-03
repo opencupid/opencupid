@@ -176,6 +176,7 @@ describe('GET /:id', () => {
     )
     expect(mockMessageService.listMessagesForConversation).toHaveBeenCalledWith(
       'ck1234567890abcd12345678',
+      'p1',
       { cursor: undefined, take: undefined }
     )
     expect(reply.statusCode).toBe(200)

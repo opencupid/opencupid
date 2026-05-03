@@ -265,7 +265,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
         messages: raw,
         nextCursor,
         hasMore,
-      } = await messageService.listMessagesForConversation(conversationId, {
+      } = await messageService.listMessagesForConversation(conversationId, profileId, {
         cursor: query.data.cursor,
         take: query.data.take,
       })
