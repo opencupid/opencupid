@@ -77,7 +77,10 @@ describe('MessageService.listMessagesForConversation', () => {
     const result = await service.listMessagesForConversation('c1')
 
     expect(mockPrisma.message.findMany).toHaveBeenCalledWith({
-      where: { conversationId: 'c1' },
+      where: {
+        conversationId: 'c1',
+        conversation: { status: { in: ['INITIATED', 'ACCEPTED', 'ARCHIVED'] } },
+      },
       include: {
         sender: {
           select: {
@@ -120,6 +123,18 @@ describe('MessageService.listMessagesForConversation', () => {
     expect(result.hasMore).toBe(true)
     expect(result.nextCursor).toBe('m8')
   })
+
+  it('filters out messages from non-inbox-visible conversations (DISCARDED, BLOCKED, PENDING)', async () => {
+    // Defense in depth: even with a direct conversationId, messages from a
+    // non-inbox-visible conversation must not be readable. Mirrors the inbox
+    // listing's allowlist so a deep link or cached id can't bypass the filter.
+    mockPrisma.message.findMany.mockResolvedValue([])
+    await service.listMessagesForConversation('c1')
+    const args = mockPrisma.message.findMany.mock.calls[0][0]
+    expect(args.where.conversation).toEqual({
+      status: { in: ['INITIATED', 'ACCEPTED', 'ARCHIVED'] },
+    })
+  })
 })
 
 describe('MessageService.markConversationRead', () => {
@@ -141,6 +156,18 @@ describe('MessageService.listConversationsForProfile', () => {
     expect(args.where.profileId).toBe('p1')
     // ensure blocklist filters applied
     expect(args.where.conversation.participants.some.profile.blockedProfiles.none.id).toBe('p1')
+  })
+
+  it('filters by inbox-visible status allowlist (INITIATED, ACCEPTED, ARCHIVED)', async () => {
+    // Allowlist not denylist: a future ConversationStatus value defaults to
+    // invisible. Regression guard against the prior NOT-BLOCKED denylist that
+    // leaked DISCARDED tombstones into the inbox.
+    mockPrisma.conversationParticipant.findMany.mockResolvedValue([])
+    await service.listConversationsForProfile('p1')
+    const args = mockPrisma.conversationParticipant.findMany.mock.calls[0][0]
+    expect(args.where.conversation.status).toEqual({
+      in: ['INITIATED', 'ACCEPTED', 'ARCHIVED'],
+    })
   })
 
   it('orders conversations by updatedAt desc without status grouping', async () => {
@@ -497,12 +524,12 @@ describe('MessageService.resolveConversation DISCARDED handling', () => {
     )
   })
 
-  it('createAsPending=true short-circuits hasMutualLike — PENDING wins over a mutual match', async () => {
-    // Quarantine ranks above engagement signals at create-time: a quarantined
-    // sender's first send must hold as PENDING even if a prior mutual like
-    // exists. promoteConversation handles the legitimate post-engagement
-    // promote on a separate path.
-    const likedProfileCount = vi.fn().mockResolvedValue(2)
+  it('createAsPending=true with a mutual match: bypass quarantine to INITIATED with both participants', async () => {
+    // Mutual-match quarantine bypass: the recipient's prior like is opt-in to
+    // contact, so the message is delivered as INITIATED instead of being held
+    // PENDING. ACCEPTED would skip the recipient's reply requirement, so we
+    // stop short of that.
+    const likedProfileCount = vi.fn().mockResolvedValue(2) // both directions present
     const create = vi.fn().mockResolvedValue({ id: 'c-new' })
     const tx: any = {
       conversation: { findFirst: vi.fn().mockResolvedValue(null), create },
@@ -510,8 +537,11 @@ describe('MessageService.resolveConversation DISCARDED handling', () => {
     }
     await service.resolveConversation(tx, 'alice', 'bob', { createAsPending: true })
 
-    expect(likedProfileCount).not.toHaveBeenCalled()
-    expect(create.mock.calls[0][0].data.status).toBe('PENDING')
+    expect(likedProfileCount).toHaveBeenCalled()
+    expect(create.mock.calls[0][0].data.status).toBe('INITIATED')
+    expect(create.mock.calls[0][0].data.participants).toEqual({
+      create: [{ profileId: 'alice' }, { profileId: 'bob' }],
+    })
   })
 })
 

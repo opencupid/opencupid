@@ -74,6 +74,19 @@ export type MessageWithSender = Prisma.MessageGetPayload<{
   include: typeof messageWithSenderInclude
 }>
 
+/**
+ * Status allowlist for inbox-visible conversations. Allowlist (not denylist)
+ * so a future ConversationStatus value defaults to invisible — any new state
+ * must be explicitly opted into the inbox. PENDING is excluded: held messages
+ * stay invisible until promote; the recipient never had a participant row,
+ * and the sender shouldn't see quarantine state in their inbox either.
+ */
+const INBOX_VISIBLE_STATUSES = ['INITIATED', 'ACCEPTED', 'ARCHIVED'] as const
+
+const inboxVisibleConversationWhere = {
+  status: { in: [...INBOX_VISIBLE_STATUSES] },
+} satisfies Prisma.ConversationWhereInput
+
 export class MessageService {
   private static instance: MessageService
 
@@ -114,14 +127,8 @@ export class MessageService {
     return await prisma.conversationParticipant.findMany({
       where: {
         profileId,
-        NOT: [
-          {
-            conversation: {
-              status: 'BLOCKED', // Exclude blocked conversations
-            },
-          },
-        ],
         conversation: {
+          ...inboxVisibleConversationWhere,
           participants: {
             some: {
               profile: {
@@ -158,6 +165,7 @@ export class MessageService {
     const messages = await prisma.message.findMany({
       where: {
         conversationId,
+        conversation: inboxVisibleConversationWhere,
       },
       include: messageWithSenderInclude,
       orderBy: {
@@ -382,14 +390,20 @@ export class MessageService {
 
     if (existing) return { convo: existing, wasCreated: false }
 
+    const isMutualMatch = await this.hasMutualLike(tx, profileAId, profileBId)
     let status: 'PENDING' | 'INITIATED' | 'ACCEPTED'
     let participants
-    if (opts.createAsPending) {
+    if (opts.createAsPending && !isMutualMatch) {
       // Sender only; recipient added on promote.
       status = 'PENDING'
       participants = { create: [{ profileId: senderProfileId }] }
+    } else if (opts.createAsPending && isMutualMatch) {
+      // Mutual-match quarantine bypass: the recipient's prior like is opt-in to
+      // contact, so the message is delivered as INITIATED instead of being held
+      // PENDING. Stops short of ACCEPTED — that still requires an actual reply.
+      status = 'INITIATED'
+      participants = { create: [{ profileId: profileAId }, { profileId: profileBId }] }
     } else {
-      const isMutualMatch = await this.hasMutualLike(tx, profileAId, profileBId)
       status = isMutualMatch ? 'ACCEPTED' : 'INITIATED'
       participants = { create: [{ profileId: profileAId }, { profileId: profileBId }] }
     }
