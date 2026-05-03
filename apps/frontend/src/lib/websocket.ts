@@ -52,46 +52,57 @@ export async function connectWebSocket(): Promise<void> {
   const fetched = await fetchTicketUrl()
   if (!fetched) return
 
-  socket = useWebSocket(() => ticketUrl, {
-    immediate: true,
-    autoReconnect: {
-      retries: 3,
-      delay: 3000,
-    },
-    onConnected: () => {},
-    onDisconnected: () => {
-      console.warn('[WS] Connection closed.')
-      if (!isIntentionalClose) {
-        fetchTicketUrl()
-      }
-    },
-    onMessage: (_ws, event) => {
-      try {
-        const data: WSMessage = JSON.parse(event.data)
-        switch (data.type) {
-          case 'ws:new_like':
-            bus.emit('ws:new_like')
-            break
-          case 'ws:new_message':
-          case 'ws:new_match':
-          case 'ws:app_notification':
-            bus.emit(data.type, data.payload)
-            break
-          case 'ws:incoming_call':
-          case 'ws:call_accepted':
-          case 'ws:call_declined':
-          case 'ws:call_cancelled':
-            bus.emit(data.type, data.payload)
-            break
-          default:
-            console.warn('[WS] Unknown message type:', data)
+  // The WebSocket constructor can throw synchronously in some browser contexts
+  // (notably WebKit on iOS in Private Browsing or restricted WKWebView
+  // contexts, which raises SecurityError code 18). Swallow the throw so the
+  // rest of the app keeps working — visibility/online reconnect paths will
+  // retry on their own.
+  try {
+    socket = useWebSocket(() => ticketUrl, {
+      immediate: true,
+      autoReconnect: {
+        retries: 3,
+        delay: 3000,
+      },
+      onConnected: () => {},
+      onDisconnected: () => {
+        console.warn('[WS] Connection closed.')
+        if (!isIntentionalClose) {
+          fetchTicketUrl()
         }
-      } catch (err) {
-        console.error('WebSocket parse error:', err)
-      }
-    },
-  })
-  wasConnected = true
+      },
+      onMessage: (_ws, event) => {
+        try {
+          const data: WSMessage = JSON.parse(event.data)
+          switch (data.type) {
+            case 'ws:new_like':
+              bus.emit('ws:new_like')
+              break
+            case 'ws:new_message':
+            case 'ws:new_match':
+            case 'ws:app_notification':
+              bus.emit(data.type, data.payload)
+              break
+            case 'ws:incoming_call':
+            case 'ws:call_accepted':
+            case 'ws:call_declined':
+            case 'ws:call_cancelled':
+              bus.emit(data.type, data.payload)
+              break
+            default:
+              console.warn('[WS] Unknown message type:', data)
+          }
+        } catch (err) {
+          console.error('WebSocket parse error:', err)
+        }
+      },
+    })
+    wasConnected = true
+  } catch (err) {
+    console.warn('[WS] Failed to open WebSocket', err)
+    socket = null
+    wasConnected = false
+  }
 }
 
 export function disconnectWebSocket() {

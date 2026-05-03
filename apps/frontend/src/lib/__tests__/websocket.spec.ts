@@ -82,6 +82,19 @@ describe('websocket', () => {
     expect(mockUseWebSocket).not.toHaveBeenCalled()
   })
 
+  it('swallows synchronous SecurityError thrown by useWebSocket (iOS WebKit)', async () => {
+    // iOS WebKit can throw SecurityError code 18 from the WebSocket
+    // constructor in Private Browsing / restricted WKWebView contexts.
+    // connectWebSocket must not propagate that — the rest of the app
+    // would otherwise see an unhandled rejection and break bootstrap.
+    const securityError = new DOMException('The operation is insecure.', 'SecurityError')
+    mockUseWebSocket.mockImplementationOnce(() => {
+      throw securityError
+    })
+
+    await expect(connectWebSocket()).resolves.toBeUndefined()
+  })
+
   it('cleans up existing socket before creating a new one', async () => {
     await connectWebSocket()
     mockApiGet.mockResolvedValue({ data: { ticket: 'ticket-new' } })
