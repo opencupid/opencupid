@@ -373,6 +373,7 @@ describe('GET /users', () => {
       expect.objectContaining({
         where: {
           OR: [
+            { id: { contains: 'test@', mode: 'insensitive' } },
             { email: { contains: 'test@', mode: 'insensitive' } },
             { phonenumber: { contains: 'test@' } },
           ],
