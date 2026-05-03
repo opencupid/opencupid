@@ -231,7 +231,7 @@ onUnmounted(() => {
         v-model="search"
         type="text"
         class="form-control"
-        placeholder="Search by email or phone..."
+        placeholder="Search by email, phone, or user ID..."
         @input="onSearchInput"
       />
     </div>

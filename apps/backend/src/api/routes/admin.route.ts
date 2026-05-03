@@ -159,7 +159,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
    * Returns a paginated, searchable list of users.
    * @query {number} [page=1] - Page number
    * @query {number} [pageSize=25] - Page size (max 100)
-   * @query {string} [search] - Search by email or phone
+   * @query {string} [search] - Search by email, phone, or user id
    * @returns {{ success, users, total, page, pageSize }}
    */
   fastify.get('/users', async (req, reply) => {
@@ -172,6 +172,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
       const where = search
         ? {
             OR: [
+              { id: { contains: search, mode: 'insensitive' as const } },
               { email: { contains: search, mode: 'insensitive' as const } },
               { phonenumber: { contains: search } },
             ],
