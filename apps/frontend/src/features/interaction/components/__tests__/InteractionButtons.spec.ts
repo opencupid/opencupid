@@ -2,7 +2,7 @@ import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi } from 'vitest'
 import { nextTick } from 'vue'
 
-vi.mock('@/assets/icons/interface/heart.svg', () => ({
+vi.mock('@/assets/icons/emojis/smiling-emoji.svg', () => ({
   default: { template: '<span />' },
 }))
 vi.mock('@/assets/icons/interface/cross.svg', () => ({
