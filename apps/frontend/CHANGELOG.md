@@ -1,5 +1,12 @@
 # frontend
 
+## 0.59.2
+
+### Patch Changes
+
+- 27b17ef: Rebrand the "like" feature as "smile" in user-facing copy (HU + EN). Heart icon swapped for smiling-emoji.svg in InteractionButtons. Like feature behavior is unchanged.
+- 7792f81: Always mount the BrowseProfiles map, falling back to a default centroid when the viewer profile lacks coordinates (#1420)
+
 ## 0.59.1
 
 ### Patch Changes

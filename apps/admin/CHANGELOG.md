@@ -1,5 +1,11 @@
 # @opencupid/admin
 
+## 0.59.2
+
+### Patch Changes
+
+- 2f1033e: Allow searching admin user list by user ID
+
 ## 0.59.1
 
 ## 0.59.0

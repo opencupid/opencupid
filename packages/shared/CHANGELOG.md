@@ -1,5 +1,11 @@
 # @opencupid/shared
 
+## 0.9.1
+
+### Patch Changes
+
+- 27b17ef: Rebrand the "like" feature as "smile" in user-facing copy (HU + EN). Heart icon swapped for smiling-emoji.svg in InteractionButtons. Like feature behavior is unchanged.
+
 ## 0.9.0
 
 ### Minor Changes
