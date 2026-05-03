@@ -176,6 +176,7 @@ describe('GET /:id', () => {
     )
     expect(mockMessageService.listMessagesForConversation).toHaveBeenCalledWith(
       'ck1234567890abcd12345678',
+      'p1',
       { cursor: undefined, take: undefined }
     )
     expect(reply.statusCode).toBe(200)
@@ -499,7 +500,11 @@ describe('POST /message — outcomes', () => {
     expect(mockMessageService.sendMessage).not.toHaveBeenCalled()
   })
 
-  it('calls markMatchAsSeen only when outcome=new_conversation', async () => {
+  it('calls markMatchAsSeen on every non-blocked send outcome', async () => {
+    // Engagement-clears-isNew contract: once the sender has acted on a match
+    // (any outcome other than 'blocked', which throws upstream), the match is
+    // no longer "new" from their inbox's perspective. Idempotent at the DB
+    // layer, so calling on duplicates is harmless.
     const interactionModule = await import('../../services/interaction.service')
     const markSpy = vi.fn().mockResolvedValue(undefined)
     ;(interactionModule.InteractionService as any).getInstance = () => ({
@@ -537,7 +542,7 @@ describe('POST /message — outcomes', () => {
     )
     expect(markSpy).toHaveBeenCalledTimes(1)
 
-    // Case 2: reply in ACCEPTED convo → NOT called
+    // Case 2: reply in ACCEPTED convo → called
     markSpy.mockClear()
     mockMessageService.resolveConversation.mockResolvedValueOnce({
       convo: { id: 'c1', status: 'ACCEPTED', initiatorProfileId: 'other' },
@@ -557,9 +562,9 @@ describe('POST /message — outcomes', () => {
       } as any,
       reply as any
     )
-    expect(markSpy).not.toHaveBeenCalled()
+    expect(markSpy).toHaveBeenCalledTimes(1)
 
-    // Case 3: accepted_on_reply → NOT called
+    // Case 3: accepted_on_reply → called
     markSpy.mockClear()
     mockMessageService.resolveConversation.mockResolvedValueOnce({
       convo: { id: 'c1', status: 'INITIATED', initiatorProfileId: 'other' },
@@ -583,9 +588,10 @@ describe('POST /message — outcomes', () => {
       } as any,
       reply as any
     )
-    expect(markSpy).not.toHaveBeenCalled()
+    expect(markSpy).toHaveBeenCalledTimes(1)
 
-    // Case 4: duplicate reply → NOT called (pre-fix behavior also NOT called here because !isDuplicate was false)
+    // Case 4: duplicate reply → still called (idempotent at the DB layer; the
+    // dedupe short-circuit happens deeper in sendMessage, not here).
     markSpy.mockClear()
     mockMessageService.resolveConversation.mockResolvedValueOnce({
       convo: { id: 'c1', status: 'ACCEPTED', initiatorProfileId: 'other' },
@@ -605,7 +611,7 @@ describe('POST /message — outcomes', () => {
       } as any,
       reply as any
     )
-    expect(markSpy).not.toHaveBeenCalled()
+    expect(markSpy).toHaveBeenCalledTimes(1)
   })
 })
 
@@ -949,7 +955,10 @@ describe('POST /voice — outcomes', () => {
     expect(mockMessageService.sendMessage).not.toHaveBeenCalled()
   })
 
-  it('calls markMatchAsSeen only when outcome=new_conversation', async () => {
+  it('calls markMatchAsSeen on every non-blocked send outcome', async () => {
+    // Voice route shares sendAndBuildResponse with the text route, so the
+    // engagement-clears-isNew contract holds identically. 'blocked' throws
+    // upstream, so by here every outcome is engagement.
     const interactionModule = await import('../../services/interaction.service')
     const markSpy = vi.fn().mockResolvedValue(undefined)
     ;(interactionModule.InteractionService as any).getInstance = () => ({
@@ -984,7 +993,7 @@ describe('POST /voice — outcomes', () => {
     )
     expect(markSpy).toHaveBeenCalledTimes(1)
 
-    // Case 2: reply in ACCEPTED convo → NOT called
+    // Case 2: reply in ACCEPTED convo → called
     markSpy.mockClear()
     mockMessageService.resolveConversation.mockResolvedValueOnce({
       convo: { id: 'c1', status: 'ACCEPTED', initiatorProfileId: 'other' },
@@ -1001,9 +1010,9 @@ describe('POST /voice — outcomes', () => {
       { session: { profileId: senderProfileId }, parts: () => voiceParts() } as any,
       reply as any
     )
-    expect(markSpy).not.toHaveBeenCalled()
+    expect(markSpy).toHaveBeenCalledTimes(1)
 
-    // Case 3: accepted_on_reply → NOT called
+    // Case 3: accepted_on_reply → called
     markSpy.mockClear()
     mockMessageService.resolveConversation.mockResolvedValueOnce({
       convo: { id: 'c1', status: 'INITIATED', initiatorProfileId: 'other' },
@@ -1024,9 +1033,9 @@ describe('POST /voice — outcomes', () => {
       { session: { profileId: senderProfileId }, parts: () => voiceParts() } as any,
       reply as any
     )
-    expect(markSpy).not.toHaveBeenCalled()
+    expect(markSpy).toHaveBeenCalledTimes(1)
 
-    // Case 4: duplicate reply → NOT called
+    // Case 4: duplicate reply → still called (idempotent at the DB layer).
     markSpy.mockClear()
     mockMessageService.resolveConversation.mockResolvedValueOnce({
       convo: { id: 'c1', status: 'ACCEPTED', initiatorProfileId: 'other' },
@@ -1043,7 +1052,7 @@ describe('POST /voice — outcomes', () => {
       { session: { profileId: senderProfileId }, parts: () => voiceParts() } as any,
       reply as any
     )
-    expect(markSpy).not.toHaveBeenCalled()
+    expect(markSpy).toHaveBeenCalledTimes(1)
   })
 })
 

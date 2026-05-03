@@ -158,9 +158,12 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
 
     const conversation = await messageService.getConversationSummary(convoId, senderProfileId)
 
-    if (outcome === 'new_conversation') {
-      await interactionService.markMatchAsSeen(senderProfileId, recipientProfileId)
-    }
+    // Any send-path engagement clears the new-match flag — the sender has
+    // acted on this match, so the matches list shouldn't keep advertising it
+    // as needing attention. ('blocked' already threw above, so by here every
+    // outcome is engagement.) Idempotent at the DB layer: UPDATE ... WHERE
+    // isNew=true is a no-op when already cleared.
+    await interactionService.markMatchAsSeen(senderProfileId, recipientProfileId)
 
     // Enqueue SPAM_BURST reconcile when the sender added a new row to their count.
     // BullMQ forbids ':' in custom jobIds (Redis key separator) and throws
@@ -262,7 +265,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
         messages: raw,
         nextCursor,
         hasMore,
-      } = await messageService.listMessagesForConversation(conversationId, {
+      } = await messageService.listMessagesForConversation(conversationId, profileId, {
         cursor: query.data.cursor,
         take: query.data.take,
       })

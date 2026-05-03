@@ -74,27 +74,13 @@ describe('MessageService.listMessagesForConversation', () => {
       { id: 'm2', createdAt: new Date('2024-01-02') },
     ])
 
-    const result = await service.listMessagesForConversation('c1')
+    const result = await service.listMessagesForConversation('c1', 'p1')
 
-    expect(mockPrisma.message.findMany).toHaveBeenCalledWith({
-      where: { conversationId: 'c1' },
-      include: {
-        sender: {
-          select: {
-            id: true,
-            publicName: true,
-            country: true,
-            cityName: true,
-            lat: true,
-            lon: true,
-            profileImages: { orderBy: { position: 'asc' } },
-          },
-        },
-        attachment: true,
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 11,
-    })
+    const args = mockPrisma.message.findMany.mock.calls[0][0]
+    expect(args.where.conversationId).toBe('c1')
+    expect(args.orderBy).toEqual({ createdAt: 'desc' })
+    expect(args.take).toBe(11)
+    expect(args.include.attachment).toBe(true)
     expect(result.messages.map((m: any) => m.id)).toEqual(['m2', 'm3'])
     expect(result.hasMore).toBe(false)
     expect(result.nextCursor).toBeNull()
@@ -107,7 +93,10 @@ describe('MessageService.listMessagesForConversation', () => {
       { id: 'm7', createdAt: new Date('2024-01-07') },
     ])
 
-    const result = await service.listMessagesForConversation('c1', { cursor: 'm10', take: 2 })
+    const result = await service.listMessagesForConversation('c1', 'p1', {
+      cursor: 'm10',
+      take: 2,
+    })
 
     expect(mockPrisma.message.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -119,6 +108,36 @@ describe('MessageService.listMessagesForConversation', () => {
     expect(result.messages.map((m: any) => m.id)).toEqual(['m8', 'm9'])
     expect(result.hasMore).toBe(true)
     expect(result.nextCursor).toBe('m8')
+  })
+
+  it('filters out messages from non-inbox-visible conversations (DISCARDED, BLOCKED)', async () => {
+    // Defense in depth: even with a direct conversationId, messages from a
+    // non-inbox-visible conversation must not be readable. The visibility
+    // predicate is the same OR-shape as listConversationsForProfile.
+    mockPrisma.message.findMany.mockResolvedValue([])
+    await service.listMessagesForConversation('c1', 'p1')
+    const args = mockPrisma.message.findMany.mock.calls[0][0]
+    expect(args.where.conversation.OR).toBeDefined()
+    expect(args.where.conversation.OR[0].status).toEqual({
+      in: ['INITIATED', 'ACCEPTED', 'ARCHIVED'],
+    })
+    expect(args.where.conversation.OR[1]).toMatchObject({
+      status: 'PENDING',
+      initiatorProfileId: 'p1',
+    })
+  })
+
+  it('requires viewer to be a participant (regression: cross-profile read protection)', async () => {
+    // The route GET /:id is callable with any conversationId by any
+    // authenticated user. listMessagesForConversation must therefore gate on
+    // viewer participation in the predicate itself — the route does not check
+    // it. This test locks in that the viewer-as-participant clause is part of
+    // the multi-participant arm.
+    mockPrisma.message.findMany.mockResolvedValue([])
+    await service.listMessagesForConversation('c1', 'p1')
+    const args = mockPrisma.message.findMany.mock.calls[0][0]
+    const multiArm = args.where.conversation.OR[0]
+    expect(multiArm.AND[0].participants.some.profileId).toBe('p1')
   })
 })
 
@@ -139,8 +158,37 @@ describe('MessageService.listConversationsForProfile', () => {
     await service.listConversationsForProfile('p1')
     const args = mockPrisma.conversationParticipant.findMany.mock.calls[0][0]
     expect(args.where.profileId).toBe('p1')
-    // ensure blocklist filters applied
-    expect(args.where.conversation.participants.some.profile.blockedProfiles.none.id).toBe('p1')
+    // Blocklist clause lives inside the multi-participant OR arm's "other
+    // participant" sub-clause (the second AND member).
+    const multiArm = args.where.conversation.OR[0]
+    expect(multiArm.AND[1].participants.some.profile.blockedProfiles.none.id).toBe('p1')
+  })
+
+  it('filters by inbox-visible status allowlist + PENDING sender bypass + viewer-participation gate', async () => {
+    // Two-arm visibility:
+    //   Arm 1 (multi-participant): status in allowlist AND viewer IS a
+    //          participant AND another non-blocked participant exists.
+    //   Arm 2 (sender PENDING): viewer is initiator (participation implied
+    //          by PENDING construction).
+    // Arm 1's viewer-participation clause is the access-control gate — must be
+    // present so listMessagesForConversation (no outer participant filter)
+    // can't be used to read someone else's messages by guessing conversationId.
+    mockPrisma.conversationParticipant.findMany.mockResolvedValue([])
+    await service.listConversationsForProfile('p1')
+    const args = mockPrisma.conversationParticipant.findMany.mock.calls[0][0]
+    expect(args.where.conversation.OR).toHaveLength(2)
+
+    const multiArm = args.where.conversation.OR[0]
+    expect(multiArm.status).toEqual({ in: ['INITIATED', 'ACCEPTED', 'ARCHIVED'] })
+    // Viewer must be a participant (access-control gate)
+    expect(multiArm.AND[0].participants.some.profileId).toBe('p1')
+    // ...AND another non-blocked participant must exist
+    expect(multiArm.AND[1].participants.some.profile.id).toEqual({ not: 'p1' })
+
+    expect(args.where.conversation.OR[1]).toMatchObject({
+      status: 'PENDING',
+      initiatorProfileId: 'p1',
+    })
   })
 
   it('orders conversations by updatedAt desc without status grouping', async () => {
@@ -497,12 +545,12 @@ describe('MessageService.resolveConversation DISCARDED handling', () => {
     )
   })
 
-  it('createAsPending=true short-circuits hasMutualLike — PENDING wins over a mutual match', async () => {
-    // Quarantine ranks above engagement signals at create-time: a quarantined
-    // sender's first send must hold as PENDING even if a prior mutual like
-    // exists. promoteConversation handles the legitimate post-engagement
-    // promote on a separate path.
-    const likedProfileCount = vi.fn().mockResolvedValue(2)
+  it('createAsPending=true with a mutual match: bypass quarantine to INITIATED with both participants', async () => {
+    // Mutual-match quarantine bypass: the recipient's prior like is opt-in to
+    // contact, so the message is delivered as INITIATED instead of being held
+    // PENDING. ACCEPTED would skip the recipient's reply requirement, so we
+    // stop short of that.
+    const likedProfileCount = vi.fn().mockResolvedValue(2) // both directions present
     const create = vi.fn().mockResolvedValue({ id: 'c-new' })
     const tx: any = {
       conversation: { findFirst: vi.fn().mockResolvedValue(null), create },
@@ -510,8 +558,11 @@ describe('MessageService.resolveConversation DISCARDED handling', () => {
     }
     await service.resolveConversation(tx, 'alice', 'bob', { createAsPending: true })
 
-    expect(likedProfileCount).not.toHaveBeenCalled()
-    expect(create.mock.calls[0][0].data.status).toBe('PENDING')
+    expect(likedProfileCount).toHaveBeenCalled()
+    expect(create.mock.calls[0][0].data.status).toBe('INITIATED')
+    expect(create.mock.calls[0][0].data.participants).toEqual({
+      create: [{ profileId: 'alice' }, { profileId: 'bob' }],
+    })
   })
 })
 
