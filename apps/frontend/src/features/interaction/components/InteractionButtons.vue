@@ -2,8 +2,9 @@
 import { computed, ref, watch } from 'vue'
 import { type InteractionContext } from '@zod/interaction/interactionContext.dto'
 
-import IconHeart from '@/assets/icons/interface/heart.svg'
-import IconCross from '@/assets/icons/interface/cross.svg'
+import IconLike from '@/assets/icons/emojis/smiling-emoji.svg'
+import IconPass from '@/assets/icons/interface/cross.svg'
+
 import IconMessage from '@/assets/icons/interface/message.svg'
 import AnonymousToggle from './AnonymousToggle.vue'
 import ConfirmPassDialog from './ConfirmPassDialog.vue'
@@ -90,7 +91,7 @@ const handleAnonymousChange = (value: boolean) => {
             :disabled="!context.canPass"
             :title="$t('interactions.pass_button_title')"
           >
-            <IconCross class="svg-icon-lg" />
+            <IconPass class="svg-icon-lg" />
           </BButton>
         </template>
         <ConfirmPassDialog
@@ -134,7 +135,7 @@ const handleAnonymousChange = (value: boolean) => {
     >
       <template #target>
         <BButton class="btn-icon-lg btn-dating btn-shadow">
-          <IconHeart class="svg-icon-lg" />
+          <IconLike class="svg-icon-lg" />
         </BButton>
       </template>
       <AnonymousToggle
@@ -154,7 +155,7 @@ const handleAnonymousChange = (value: boolean) => {
             {{ $t('interactions.they_liked_you') }}
           </span>
           <span class="flex-grow-0 text-dating flex-shrink-1">
-            <IconHeart class="svg-icon" />
+            <IconLike class="svg-icon" />
           </span>
         </span>
       </template>
@@ -164,7 +165,7 @@ const handleAnonymousChange = (value: boolean) => {
           class="btn-icon-lg btn-dating btn-shadow"
           @click="handleLikeClick"
         >
-          <IconHeart class="svg-icon-lg" />
+          <IconLike class="svg-icon-lg" />
         </BButton>
       </template>
       <span class="mb-2 d-block">
@@ -184,7 +185,7 @@ const handleAnonymousChange = (value: boolean) => {
             {{ $t('interactions.send_a_like') }}
           </span>
           <span class="flex-grow-0 text-dating flex-shrink-1">
-            <IconHeart class="svg-icon" />
+            <IconLike class="svg-icon" />
           </span>
         </span>
       </template>
@@ -193,7 +194,7 @@ const handleAnonymousChange = (value: boolean) => {
           class="btn-icon-lg btn-dating btn-shadow"
           @click="handleLikeClick"
         >
-          <IconHeart class="svg-icon-lg" />
+          <IconLike class="svg-icon-lg" />
         </BButton>
       </template>
       <AnonymousToggle v-model="selectedAnonymous" />

@@ -54,15 +54,15 @@
     },
     "new_like": {
       "callToActionLabel": "Megnyitom",
-      "contentBody": "Szia, valaki komál téged.",
+      "contentBody": "Szia, valaki Rád mosolygott!'",
       "footer": " ",
-      "subject": "Valaki komál téged"
+      "subject": "Valaki rád mosolygott"
     },
     "new_match": {
       "callToActionLabel": "Megnyitom",
-      "contentBody": "Szia, {name} és Te kölcsönösen komáljátok egymást.",
+      "contentBody": "Szia, {name} és Te egymásra mosolyogtatok.",
       "footer": " ",
-      "subject": "Komáljátok egymást"
+      "subject": "Rámosolyogtatok egymásra"
     },
     "new_message": {
       "callToActionLabel": "Üzenet megnyitása",
@@ -135,27 +135,27 @@
     "welcome_title": "Légy üdvözölve nálunk."
   },
   "interactions": {
-    "anonymous_like_explanation": "Csak akkor fogja tudni, ki küldte, ha ő is komál téged.",
+    "anonymous_like_explanation": "Csak akkor derül ki, hogy tőled jött, ha visszamosolyog rád.",
     "anonymous_toggle_anonymous": "Névtelenül",
     "anonymous_toggle_reveal": "Mutasd a profilom",
     "cancel_button": "Talán később",
     "its_a_match": "Kölcsönös!",
-    "like_button_title": "Komálom!",
+    "like_button_title": "Rámosolygok!",
     "like_error": "Hoppá, ez nem működött. Kérjük, próbáld meg újra.",
-    "like_them_back": "Jelöld vissza, ha Te is.  ",
+    "like_them_back": "Visszamosolyogsz?",
     "message_confirmation": "Elküldve!",
     "pass_button_title": "Passzolok",
     "revealed_like_explanation": "Látni fogja, hogy Te küldted.",
-    "send_a_like": "Komálom?",
+    "send_a_like": "Rámosolygok",
     "send_a_message": "Üzenetet küldök neki",
     "send_them_a_message": "Küldj neki egy üzenetet.",
-    "they_liked_you": "Komál téged!",
-    "you_liked_them": "Komálom",
-    "you_matched_with_them": "{name} visszajelölt!",
-    "you_messaged_them": "Üzenetet küldtél nekik"
+    "they_liked_you": "Rád mosolygott!",
+    "you_liked_them": "Rámosolygok",
+    "you_matched_with_them": "{name} visszamosolygott!",
+    "you_messaged_them": "Üzenetet küldtél neki"
   },
   "matches": {
-    "anonymous_like_hint": "Egyelőre névtelenül komál téged. De a Komakeresőben rátalálhatsz - ha Te is komálod őt, ki fog derülni, ki küldte. Ha valakit ilyen jelöléssel látsz, a preferenciáitok megegyeznek:",
+    "anonymous_like_hint": "Egyelőre névtelenül mosolygott rád. De a Komakeresőben rátalálhatsz - ha Te is rámosolyogsz, ki fog derülni, ki küldte. Ha valakit ilyen jelöléssel látsz, könnyen lehet, hogy egymást keresitek:",
     "anonymous_like_hint_cta": "A Komakeresőhöz",
     "find_button_cta": "Kapcsolódj",
     "no_match_have_sent_like": "Még nem lájkolt vissza senki",
@@ -165,21 +165,21 @@
     "notifications": {
       "and": "és",
       "matches": "{count, plural, one {# új kölcsönös ❤️} other {# új kölcsönös ❤️}}",
-      "you_have_likes": "{count, plural, one {Valaki komál téged} other {Többen komálnak}}"
+      "you_have_likes": "{count, plural, one {Valaki rád mosolygott} other {Többen rád mosolyogtak}}"
     },
     "pass_confirm_dialog": {
       "liked_button_no": "Nem!",
       "liked_button_yes": "Igen, visszavonom",
       "matched_button_no": "Inkább nem",
       "matched_button_yes": "Igen, passzolok",
-      "question_liked": "Már komáltad őt.  Meggondoltad magad?",
-      "question_matched": "Kölcsönösen komáljátok egymást. TÉNYLEG passzolni szeretnél?",
+      "question_liked": "Korábban rámosolyogtál.  Meggondoltad magad?",
+      "question_matched": "Egymásra mosolyogtatok. TÉNYLEG passzolni szeretnél?",
       "title": "De várj..."
     },
     "received_likes": "{count, plural, =0 {Még nincs ❤️-od} one {# ❤️-ot kaptál} other {# ❤️-od van}}",
     "received_likes_cta": "Vajon ki küldte?",
-    "you_matched_with": "{name} is komál téged",
-    "you_received_like": "Valaki komál! ❤️"
+    "you_matched_with": "{name} visszamosolygott",
+    "you_received_like": "Valaki rád mosolygott!"
   },
   "messaging": {
     "already_sent_waiting": "Már küldtél nekik üzenetet. Amint válaszolnak, folytathatod a beszélgetést.",
@@ -188,7 +188,7 @@
     "block_user_ok": "{name} letiltása",
     "conversation_options_title": "Beszélgetés beállításai",
     "loading_older_messages": "Régebbi üzenetek betöltése…",
-    "matches_list_title": "Komáljuk egymást ❤️",
+    "matches_list_title": "Egymásra mosolyogtunk ❤️",
     "message_input_hint": "Enter-rel küldheted",
     "message_input_hint_click": "Kattints a KÜLDÉS gombra",
     "message_input_placeholder": "...",
