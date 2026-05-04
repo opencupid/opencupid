@@ -6,7 +6,7 @@ import registerToast from './lib/toast'
 import { useBootstrap } from './lib/bootstrap'
 import { appUseI18n } from './lib/i18n'
 import { useAuthStore } from './features/auth/stores/authStore'
-import { initUmami } from './lib/umami'
+import { useUmami } from './lib/umami'
 import { initSentry } from './lib/sentry'
 
 // Register push-only service worker
@@ -91,5 +91,5 @@ appUseI18n(app)
   // Load observability tools after mount
   initSentry(app)
   initOpenReplay()
-  initUmami()
+  useUmami().initUmami()
 })()
