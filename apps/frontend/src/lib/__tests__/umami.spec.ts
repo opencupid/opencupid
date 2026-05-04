@@ -20,6 +20,16 @@ function setConfig(overrides: Partial<{ UMAMI_URL: string; UMAMI_WEBSITE_ID: str
   }
 }
 
+function fireScriptLoad() {
+  const script = document.head.querySelector('script') as HTMLScriptElement | null
+  script?.dispatchEvent(new Event('load'))
+}
+
+function fireScriptError() {
+  const script = document.head.querySelector('script') as HTMLScriptElement | null
+  script?.dispatchEvent(new Event('error'))
+}
+
 describe('umami', () => {
   let originalConfig: any
 
@@ -34,7 +44,6 @@ describe('umami', () => {
 
   afterEach(() => {
     ;(globalThis as any).__APP_CONFIG__ = originalConfig
-    vi.useRealTimers()
   })
 
   describe('initUmami', () => {
@@ -59,7 +68,7 @@ describe('umami', () => {
       expect(document.head.querySelector('script')).toBeNull()
     })
 
-    it('appends a deferred script with src and data-website-id when enabled', async () => {
+    it('appends a script with src and data-website-id when enabled', async () => {
       setConfig(ENABLED)
       const { initUmami } = await import('../umami')
       initUmami()
@@ -67,21 +76,22 @@ describe('umami', () => {
       expect(script).not.toBeNull()
       expect(script!.src).toBe('https://u.example.com/script.js')
       expect(script!.getAttribute('data-website-id')).toBe('abc-123')
-      expect(script!.defer).toBe(true)
+      expect(script!.getAttribute('data-performance')).toBe('true')
     })
   })
 
   describe('identifyUmami / resetUmamiIdentity', () => {
-    it('calls window.umami.identify with userId as session data once umami is ready', async () => {
+    it('calls window.umami.identify with userId as session data once the script loads', async () => {
       setConfig(ENABLED)
-      vi.useFakeTimers()
-      const { identifyUmami } = await import('../umami')
+      const { initUmami, identifyUmami } = await import('../umami')
       const identify = vi.fn()
 
+      initUmami()
       identifyUmami('user-1')
       expect(identify).not.toHaveBeenCalled()
       ;(window as any).umami = { identify, track: vi.fn() }
-      await vi.advanceTimersByTimeAsync(150)
+      fireScriptLoad()
+      await Promise.resolve()
 
       // Pass userId as data, not as the unique-id arg, so Umami doesn't pivot
       // the sessionId hash and fragment the visit into separate session rows.
@@ -90,61 +100,69 @@ describe('umami', () => {
 
     it('calls window.umami.identify with { user: null } on reset', async () => {
       setConfig(ENABLED)
+      const { initUmami, resetUmamiIdentity } = await import('../umami')
       const identify = vi.fn()
+
+      initUmami()
       ;(window as any).umami = { identify, track: vi.fn() }
-      const { resetUmamiIdentity } = await import('../umami')
+      fireScriptLoad()
+      await Promise.resolve()
 
       resetUmamiIdentity()
+      await Promise.resolve()
       expect(identify).toHaveBeenCalledWith({ user: null })
     })
 
-    it('gives up polling without throwing if window.umami never appears', async () => {
+    it('does not throw when the script load fails', async () => {
       setConfig(ENABLED)
-      vi.useFakeTimers()
-      const { identifyUmami } = await import('../umami')
+      const { initUmami, identifyUmami } = await import('../umami')
 
+      initUmami()
       identifyUmami('profile-1')
-      // Past the 5s budget; no global ever appears.
-      await vi.advanceTimersByTimeAsync(6000)
+      fireScriptError()
+      await Promise.resolve()
 
       expect(window.umami).toBeUndefined()
     })
 
-    it('is a no-op (no setTimeout, no script) when umami is disabled', async () => {
+    it('is a no-op when umami is disabled', async () => {
       setConfig(DISABLED)
-      const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout')
-      const { identifyUmami, resetUmamiIdentity } = await import('../umami')
+      const { initUmami, identifyUmami, resetUmamiIdentity } = await import('../umami')
 
+      initUmami()
       identifyUmami('profile-1')
       resetUmamiIdentity()
+      await Promise.resolve()
 
-      expect(setTimeoutSpy).not.toHaveBeenCalled()
+      expect(document.head.querySelector('script')).toBeNull()
     })
   })
 
   describe('tracker.track', () => {
-    it('calls window.umami.track once umami is ready', async () => {
+    it('calls window.umami.track once the script loads', async () => {
       setConfig(ENABLED)
-      vi.useFakeTimers()
-      const { tracker } = await import('../umami')
+      const { initUmami, tracker } = await import('../umami')
       const track = vi.fn()
 
+      initUmami()
       tracker.track('event-x', { a: 1 })
       expect(track).not.toHaveBeenCalled()
       ;(window as any).umami = { identify: vi.fn(), track }
-      await vi.advanceTimersByTimeAsync(150)
+      fireScriptLoad()
+      await Promise.resolve()
 
       expect(track).toHaveBeenCalledWith('event-x', { a: 1 })
     })
 
     it('is a no-op when umami is disabled', async () => {
       setConfig(DISABLED)
-      const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout')
-      const { tracker } = await import('../umami')
+      const { initUmami, tracker } = await import('../umami')
 
+      initUmami()
       tracker.track('event-x')
+      await Promise.resolve()
 
-      expect(setTimeoutSpy).not.toHaveBeenCalled()
+      expect(document.head.querySelector('script')).toBeNull()
     })
   })
 
@@ -165,21 +183,31 @@ describe('umami', () => {
 
     it('auth:login handler invokes umami.identify with the userId as session data', async () => {
       setConfig(ENABLED)
+      const { initUmami } = await import('../umami')
       const identify = vi.fn()
+
+      initUmami()
       ;(window as any).umami = { identify, track: vi.fn() }
-      await import('../umami')
+      fireScriptLoad()
+      await Promise.resolve()
 
       busHandlers['auth:login']?.({ userId: 'user-42' })
+      await Promise.resolve()
       expect(identify).toHaveBeenCalledWith({ user: 'user-42' })
     })
 
     it('auth:logged-out handler invokes umami.identify with { user: null }', async () => {
       setConfig(ENABLED)
+      const { initUmami } = await import('../umami')
       const identify = vi.fn()
+
+      initUmami()
       ;(window as any).umami = { identify, track: vi.fn() }
-      await import('../umami')
+      fireScriptLoad()
+      await Promise.resolve()
 
       busHandlers['auth:logged-out']?.(undefined)
+      await Promise.resolve()
       expect(identify).toHaveBeenCalledWith({ user: null })
     })
   })
