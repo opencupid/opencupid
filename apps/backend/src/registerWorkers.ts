@@ -7,15 +7,12 @@ import { emailService } from '@/services/email/emailSender.service'
 import type { EmailPayload } from '@/services/email/types'
 import { processEmailJob } from '@/workers/emailWorker.processor'
 import { processActivityDistillJob } from '@/workers/activityWorker'
-import { processActivityFlushJob } from '@/workers/activityFlushWorker'
 import {
   processOnboardingReminderJob,
   type OnboardingReminderJobData,
 } from '@/workers/onboardingReminderWorker'
 import { processProfileTrustJob } from '@/workers/profileTrustWorker'
 import type { ProfileTrustJobData } from '@/queues/profileTrustQueue'
-
-type ActivityFlushJobData = { profileId: string }
 
 export function registerWorkers(): Worker[] {
   const connection = bullConnection
@@ -33,16 +30,6 @@ export function registerWorkers(): Worker[] {
       'activity-distill',
       async () => {
         await processActivityDistillJob()
-      },
-      { connection }
-    ),
-
-    new Worker<ActivityFlushJobData>(
-      'activity-flush',
-      async (job: Job<ActivityFlushJobData>) => {
-        const { profileId } = job.data
-        if (!profileId) return
-        await processActivityFlushJob(profileId)
       },
       { connection }
     ),

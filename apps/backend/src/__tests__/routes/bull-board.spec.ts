@@ -15,7 +15,6 @@ vi.mock('@bull-board/fastify', () => ({
 }))
 vi.mock('../../queues/emailQueue', () => ({ emailQueue: {} }))
 vi.mock('../../queues/activityQueue', () => ({ activityQueue: {} }))
-vi.mock('../../queues/activityFlushQueue', () => ({ activityFlushQueue: {} }))
 vi.mock('../../queues/onboardingReminderQueue', () => ({ onboardingReminderQueue: {} }))
 vi.mock('../../queues/profileTrustQueue', () => ({ profileTrustQueue: {} }))
 
@@ -88,4 +87,3 @@ describe('bull-board auth guard', () => {
     expect(reply.payload).toBeUndefined()
   })
 })
-
