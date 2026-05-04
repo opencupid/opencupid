@@ -1,5 +1,7 @@
 # @opencupid/admin
 
+## 0.59.3
+
 ## 0.59.2
 
 ### Patch Changes

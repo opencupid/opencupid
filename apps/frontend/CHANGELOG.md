@@ -1,5 +1,11 @@
 # frontend
 
+## 0.59.3
+
+### Patch Changes
+
+- f1b3480: Replace Umami init polling with a load-event promise so identify/track calls before the script loads are queued reliably and silently dropped on script load failure rather than hanging.
+
 ## 0.59.2
 
 ### Patch Changes
