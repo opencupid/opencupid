@@ -18,6 +18,8 @@ export function useInteractionsViewModel() {
     updateLike: store.updateLike,
     pass: store.passProfile,
     refreshInteractions: store.fetchInteractions,
+    fetchContext: store.fetchContext,
+    contextFor: (profileId: string) => computed(() => store.contextByProfileId[profileId]),
     initialize: store.initialize,
     isInitialized: computed(() => store.initialized),
     isLoading: computed(() => store.loading || !store.initialized),

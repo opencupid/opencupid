@@ -41,10 +41,6 @@ vi.mock('../../api/mappers/profile.mappers', () => ({
     profileImages: p.profileImages,
     location: p.location ?? { country: '' },
   })),
-  mapProfileWithContext: vi.fn((db, _dating, _locale, _viewerId) => ({
-    id: db.id,
-    publicName: db.publicName || 'mapped',
-  })),
   mapProfileToPublic: vi.fn((db, _dating, _locale) => ({
     id: db.id,
     publicName: db.publicName || 'mapped',
@@ -82,7 +78,7 @@ beforeEach(async () => {
   mockProfileService = {
     getProfileCompleteByUserId: vi.fn(),
     getProfileCompleteById: vi.fn(),
-    getProfileWithContextById: vi.fn(),
+    getProfilePublicById: vi.fn(),
     getProfileByUserId: vi.fn(),
     updateCompleteProfile: vi.fn(),
     getOptInSettingsByProfileId: vi.fn(),
@@ -173,7 +169,7 @@ describe('GET /:id', () => {
       isDatingActive: false,
       conversationParticipants: [],
     }
-    mockProfileService.getProfileWithContextById.mockResolvedValue(dbProfile)
+    mockProfileService.getProfilePublicById.mockResolvedValue(dbProfile)
 
     const req = makeReq({ params: { id: 'cm000000000000000000000p2' } })
     await handler(req, reply as any)
@@ -183,7 +179,7 @@ describe('GET /:id', () => {
 
   it('returns 404 when profile not found', async () => {
     const handler = fastify.routes['GET /:id']
-    mockProfileService.getProfileWithContextById.mockResolvedValue(null)
+    mockProfileService.getProfilePublicById.mockResolvedValue(null)
 
     const req = makeReq({ params: { id: 'cm000000000000000000000p2' } })
     await handler(req, reply as any)
@@ -197,7 +193,7 @@ describe('GET /:id', () => {
       userId: 'u2',
       blockedProfiles: [{ id: 'p1' }],
     }
-    mockProfileService.getProfileWithContextById.mockResolvedValue(dbProfile)
+    mockProfileService.getProfilePublicById.mockResolvedValue(dbProfile)
 
     const req = makeReq({ params: { id: 'cm000000000000000000000p2' } })
     await handler(req, reply as any)
@@ -212,7 +208,7 @@ describe('GET /:id', () => {
       blockedProfiles: [],
       isDatingActive: false,
     }
-    mockProfileService.getProfileWithContextById.mockResolvedValue(dbProfile)
+    mockProfileService.getProfilePublicById.mockResolvedValue(dbProfile)
 
     const req = makeReq({
       params: { id: 'cm000000000000000000000p2' },

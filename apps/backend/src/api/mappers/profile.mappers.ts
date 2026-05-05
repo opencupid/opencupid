@@ -1,15 +1,11 @@
 import {
-  type PublicProfileWithContext,
+  type PublicProfile,
   ProfileUnionSchema,
   type ProfileSummary,
   type OwnerProfile,
   OwnerScalarsSchema,
 } from '@zod/profile/profile.dto'
-import {
-  type DbProfileSummary,
-  type DbProfileWithContext,
-  type DbProfileWithImages,
-} from '@zod/profile/profile.db'
+import { type DbProfileSummary, type DbProfileWithImages } from '@zod/profile/profile.db'
 import { LocationSchema } from '@zod/dto/location.dto'
 import { DbLocationToLocationDTO } from './location.mappers'
 
@@ -21,7 +17,6 @@ import {
   toPublicProfileImage,
   type MinimalProfileImage,
 } from './image.mappers'
-import { mapInteractionContext } from './interaction.mappers'
 
 export function mapDbProfileToOwnerProfile(locale: string, db: DbProfileWithImages): OwnerProfile {
   const scalars = OwnerScalarsSchema.parse(db)
@@ -52,7 +47,7 @@ export function mapProfileToPublic(
   dbProfile: DbProfileWithImages,
   includeDatingContext: boolean,
   locale: string
-): PublicProfileWithContext {
+): PublicProfile {
   // map localized fields with fallback to first available locale
   const get = (field: string): string => {
     // First try to find the preferred locale with a non-empty value
@@ -86,21 +81,7 @@ export function mapProfileToPublic(
     location: DbLocationToLocationDTO(dbProfile),
     introSocial: get('introSocial') || '',
     introDating: get('introDating') || '',
-  } as PublicProfileWithContext
-}
-
-export function mapProfileWithContext(
-  dbProfile: DbProfileWithContext,
-  includeDatingContext: boolean,
-  locale: string,
-  viewerProfileId: string
-): PublicProfileWithContext {
-  const mapped = mapProfileToPublic(dbProfile, includeDatingContext, locale)
-  const interactionContext = mapInteractionContext(dbProfile, includeDatingContext, viewerProfileId)
-  return {
-    ...mapped,
-    interactionContext,
-  } as PublicProfileWithContext
+  } as PublicProfile
 }
 
 export function mapProfileImagesToOwner(images: ProfileImage[]): OwnerProfileImage[] {

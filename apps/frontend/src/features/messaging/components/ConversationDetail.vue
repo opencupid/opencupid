@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watchEffect } from 'vue'
 
-import type { PublicProfileWithContext } from '@zod/profile/profile.dto'
+import type { PublicProfile } from '@zod/profile/profile.dto'
 import type { ConversationSummary } from '@zod/messaging/messaging.dto'
 
 import ProfileContent from '@/features/publicprofile/components/ProfileContent.vue'
@@ -35,7 +35,7 @@ const router = useRouter()
 const panel = useDetailPanel()
 
 const showModal = ref(false)
-const conversationPartner = ref<PublicProfileWithContext | null>(null)
+const conversationPartner = ref<PublicProfile | null>(null)
 
 // Click on the conversation partner header → push their profile into the
 // global detail panel. The panel owns its own lifecycle; this component

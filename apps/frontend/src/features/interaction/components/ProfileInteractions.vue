@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 
-import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
+import { type PublicProfile } from '@zod/profile/profile.dto'
 
 import InteractionButtons from './InteractionButtons.vue'
 import SendMessageDialog from '@/features/publicprofile/components/SendMessageDialog.vue'
@@ -16,7 +16,7 @@ const { t } = useI18n()
 const toast = useToast()
 
 const props = defineProps<{
-  profile: PublicProfileWithContext
+  profile: PublicProfile
 }>()
 
 const emit = defineEmits<{
@@ -30,7 +30,10 @@ const showMessageModal = ref(false)
 const showMatchModal = ref(false)
 const match = ref<InteractionEdgePair>()
 
-const { like, pass, updateLike, refreshInteractions, isLoading } = useInteractionsViewModel()
+const { like, pass, updateLike, refreshInteractions, fetchContext, contextFor } =
+  useInteractionsViewModel()
+
+const context = contextFor(props.profile.id)
 
 const handleLike = async (isAnonymous: boolean) => {
   const result = await like(props.profile.id, isAnonymous)
@@ -64,15 +67,24 @@ const handleAnonymousUpdate = async (isAnonymous: boolean) => {
 }
 
 const handleMessageIntent = () => {
-  const context = props.profile.interactionContext
-  if (context.haveConversation && context.conversationId) {
-    emit('intent:message', context?.conversationId)
+  const ctx = context.value
+  if (!ctx) return
+  if (ctx.haveConversation && ctx.conversationId) {
+    emit('intent:message', ctx.conversationId)
     return
   }
-  if (context.canMessage) {
+  if (ctx.canMessage) {
     showMessageModal.value = true
   }
 }
+
+watch(
+  () => props.profile.id,
+  (id) => {
+    if (id) fetchContext(id)
+  },
+  { immediate: true }
+)
 
 onMounted(async () => {
   await refreshInteractions()
@@ -81,7 +93,7 @@ onMounted(async () => {
 
 <template>
   <div
-    v-if="profile.interactionContext"
+    v-if="context"
     class="profile-interactions d-flex justify-content-center align-items-center gap-2"
   >
     <InteractionButtons
@@ -89,7 +101,7 @@ onMounted(async () => {
       @pass="handlePass"
       @like="handleLike"
       @update:anonymous="handleAnonymousUpdate"
-      :context="profile.interactionContext"
+      :context="context"
     />
     <SendMessageDialog
       v-model="showMessageModal"

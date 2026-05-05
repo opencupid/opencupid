@@ -2,7 +2,7 @@
 import { computed, inject, type Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import { type OwnerProfile, type PublicProfileWithContext } from '@zod/profile/profile.dto'
+import { type OwnerProfile, type PublicProfile } from '@zod/profile/profile.dto'
 
 import ImageCarousel from './ImageCarousel.vue'
 import IconPhoto from '@/assets/icons/interface/photo.svg'
@@ -23,7 +23,7 @@ import ImageEditor from '@/features/images/components/ImageEditor.vue'
 const { t } = useI18n()
 
 const props = defineProps<{
-  profile: PublicProfileWithContext
+  profile: PublicProfile
 }>()
 
 const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
@@ -31,7 +31,7 @@ const viewerLocation = computed(() => viewerProfile?.value?.location)
 </script>
 
 <template>
-  <div class="position-relative ">
+  <div class="position-relative">
     <div class="overflow-hidden carousel-wrapper">
       <ImageCarousel :profile />
     </div>

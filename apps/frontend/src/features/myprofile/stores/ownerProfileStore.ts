@@ -6,7 +6,6 @@ import type {
   ProfileOptInSettings,
   ProfileScope,
   PublicProfile,
-  PublicProfileWithContext,
   UpdateProfileOptInPayload,
   UpdateProfileScopePayload,
 } from '@zod/profile/profile.dto'
@@ -53,7 +52,7 @@ import {
   CreateProfileFormToPayloadTransform,
 } from '@zod/profile/profile.form'
 
-export type PublicProfileResponse = StoreResponse<PublicProfileWithContext> | StoreError
+export type PublicProfileResponse = StoreResponse<PublicProfile> | StoreError
 
 const defaultDatingPrefs = (): DatingPreferencesFormType => DatingPreferencesFormSchema.parse({})
 

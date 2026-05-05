@@ -9,6 +9,10 @@ import {
   type InteractionEdgePair,
   type ReceivedLike,
 } from '@zod/interaction/interaction.dto'
+import {
+  InteractionContextSchema,
+  type InteractionContext,
+} from '@zod/interaction/interactionContext.dto'
 import { storeError, storeSuccess, type StoreError, type StoreResponse } from '@/store/helpers'
 
 interface InteractionState {
@@ -17,6 +21,7 @@ interface InteractionState {
   newMatchesCount: number
   matches: InteractionEdge[]
   passed: string[] // just IDs for now
+  contextByProfileId: Record<string, InteractionContext>
   loading: boolean
   initialized: boolean
   error: StoreError | null
@@ -29,6 +34,7 @@ export const useInteractionStore = defineStore('interaction', {
     newMatchesCount: 0,
     matches: [],
     passed: [],
+    contextByProfileId: {},
     loading: false,
     initialized: false,
     error: null,
@@ -42,6 +48,22 @@ export const useInteractionStore = defineStore('interaction', {
       if (edge.isMatch && !this.matches.some((e) => e.profile.id === edge.profile.id)) {
         this.matches.unshift(edge)
         this.newMatchesCount++
+      }
+    },
+
+    // Fetch the viewer's interaction context with a target profile.
+    // Cached on the store keyed by profileId so consumers can read it
+    // reactively after the first round-trip without re-issuing the request.
+    async fetchContext(profileId: string): Promise<StoreResponse<InteractionContext>> {
+      try {
+        const res = await safeApiCall(() =>
+          api.get<{ success: true; context: unknown }>(`/interactions/context/${profileId}`)
+        )
+        const context = InteractionContextSchema.parse(res.data.context)
+        this.contextByProfileId[profileId] = context
+        return storeSuccess(context)
+      } catch (error) {
+        return storeError(error)
       }
     },
 
@@ -85,6 +107,7 @@ export const useInteractionStore = defineStore('interaction', {
           this.sent.push(pair.to)
         }
 
+        await this.fetchContext(targetId)
         return storeSuccess(pair)
       } catch (error) {
         console.error('Failed to like profile:', error)
@@ -111,6 +134,7 @@ export const useInteractionStore = defineStore('interaction', {
           this.sent[sentIdx] = pair.from
         }
 
+        await this.fetchContext(targetId)
         return storeSuccess(pair)
       } catch (error) {
         console.error('Failed to update like:', error)
@@ -139,6 +163,7 @@ export const useInteractionStore = defineStore('interaction', {
         // Optionally: remove from sent/matches if previously liked
         this.sent = this.sent.filter((e) => e.profile.id !== targetId)
         this.matches = this.matches.filter((e) => e.profile.id !== targetId)
+        await this.fetchContext(targetId)
         return storeSuccess()
       } catch (error) {
         console.error('Failed to pass profile:', error)
@@ -173,6 +198,7 @@ export const useInteractionStore = defineStore('interaction', {
       this.receivedLikes = []
       this.matches = []
       this.passed = []
+      this.contextByProfileId = {}
       this.loading = false
       this.initialized = false
       this.error = null

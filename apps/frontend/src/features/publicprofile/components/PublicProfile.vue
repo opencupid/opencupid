@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { inject, type Ref } from 'vue'
-import type { OwnerProfile, PublicProfileWithContext } from '@zod/profile/profile.dto'
+import type { OwnerProfile, PublicProfile } from '@zod/profile/profile.dto'
 import ProfileInteractions from '@/features/interaction/components/ProfileInteractions.vue'
 import ProfileContent from '../components/ProfileContent.vue'
 import PublicProfileSecondaryNav from '../components/PublicProfileSecondaryNav.vue'
 
 const props = defineProps<{
-  profile: PublicProfileWithContext
+  profile: PublicProfile
 }>()
 
 const emit = defineEmits<{

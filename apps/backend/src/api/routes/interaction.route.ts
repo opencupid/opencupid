@@ -2,12 +2,16 @@ import { FastifyPluginAsync } from 'fastify'
 import z from 'zod'
 import { rateLimitConfig, sendError } from '../helpers'
 import type {
+  InteractionContextResponse,
   InteractionEdgeResponse,
   InteractionEdgesResponse,
   InteractionStatsResponse,
   ReceivedLikesResponse,
 } from '@zod/apiResponse.dto'
 import { InteractionService } from '@/services/interaction.service'
+import { ProfileService } from '@/services/profile.service'
+import { ProfileMatchService } from '@/services/profileMatch.service'
+import { mapInteractionContext } from '@/api/mappers/interaction.mappers'
 import { broadcastToProfile } from '@/utils/wsUtils'
 import { notifierService } from '@/services/notifier.service'
 import { appConfig } from '@/lib/appconfig'
@@ -21,6 +25,52 @@ const RATE_LIMIT_LIKE_OR_PASS = 3 // per-minute ceiling for deliberate like/pass
 
 const interactionRoutes: FastifyPluginAsync = async (fastify) => {
   const service = InteractionService.getInstance()
+  const profileService = ProfileService.getInstance()
+  const profileMatchService = ProfileMatchService.getInstance()
+
+  /**
+   * GET /context/:targetId
+   * Returns the viewer's interaction context with the target profile —
+   * conversation state plus (when both sides are dating-active and mutually
+   * compatible) dating state. Hidden behind a 404 when the target has blocked
+   * the viewer, matching the privacy contract of GET /profiles/:id.
+   * @param {string} targetId - Profile ID to read context for (CUID)
+   * @returns {InteractionContextResponse}
+   */
+  fastify.get<{ Params: { targetId: string } }>(
+    '/context/:targetId',
+    {
+      onRequest: [fastify.authenticate],
+      config: rateLimitConfig(fastify, '1 minute', 60),
+    },
+    async (req, reply) => {
+      const { targetId } = TargetLookupParamsSchema.parse(req.params)
+      const myId = req.session.profileId
+
+      try {
+        const raw = await profileService.getInteractionContextSourceById(targetId, myId)
+        if (!raw) return sendError(reply, 404, 'Profile not found')
+        if (raw.blockedProfiles.length > 0) {
+          return sendError(reply, 404, 'This profile does not exist')
+        }
+
+        let includeDatingContext = false
+        if (raw.isDatingActive && req.session.profile.isDatingActive) {
+          includeDatingContext = await profileMatchService.areProfilesMutuallyCompatible(
+            myId,
+            raw.id
+          )
+        }
+
+        const context = mapInteractionContext(raw, includeDatingContext, myId)
+        const response: InteractionContextResponse = { success: true, context }
+        return reply.code(200).send(response)
+      } catch (err) {
+        fastify.log.error(err)
+        return sendError(reply, 500, 'Failed to fetch interaction context')
+      }
+    }
+  )
 
   /**
    * GET /

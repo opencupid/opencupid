@@ -20,7 +20,6 @@ import {
   mapDbProfileToOwnerProfile,
   mapProfileSummary,
   mapProfileToPublic,
-  mapProfileWithContext,
 } from '@/api/mappers/profile.mappers'
 import type {
   GetDatingPreferencesResponse,
@@ -179,9 +178,12 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * GET /:id
-   * Returns a public profile with interaction context (like/match/conversation state).
-   * Dating context is only included when both profiles have dating active and are mutually compatible.
-   * Returns 404 if the target profile has blocked the viewer (intentionally vague for privacy).
+   * Returns a public profile (without viewer-relative interaction state).
+   * The viewer's like/match/conversation state with this profile is served
+   * separately by GET /interactions/context/:targetId.
+   *
+   * Returns 404 if the target profile has blocked the viewer (intentionally
+   * vague for privacy).
    * @param {string} id - Target profile ID (CUID)
    * @returns {GetPublicProfileResponse}
    */
@@ -191,7 +193,7 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
 
     try {
       const { id } = IdLookupParamsSchema.parse(req.params)
-      const raw = await profileService.getProfileWithContextById(id, myProfileId)
+      const raw = await profileService.getProfilePublicById(id, myProfileId)
       if (!raw) return sendError(reply, 404, 'Profile not found')
 
       // the profile being requested has blocked the current profile
@@ -212,7 +214,7 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
         )
       }
 
-      const profile = mapProfileWithContext(raw, includeDatingContext, locale, myProfileId)
+      const profile = mapProfileToPublic(raw, includeDatingContext, locale)
       const response: GetPublicProfileResponse = { success: true, profile }
       return reply.code(200).send(response)
     } catch (err) {

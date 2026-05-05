@@ -12,8 +12,9 @@ import type {
   OwnerProfile,
   ProfileOptInSettings,
   ProfileSummary,
-  PublicProfileWithContext,
+  PublicProfile,
 } from '@zod/profile/profile.dto'
+import type { InteractionContext } from '@zod/interaction/interactionContext.dto'
 import type { PublicTag, PopularTag } from '@zod/tag/tag.dto'
 import type { ConversationSummary, MessageDTO } from '@zod/messaging/messaging.dto'
 import type { LoginUser, SettingsUser } from '@zod/user/user.dto'
@@ -42,8 +43,8 @@ export type UpdateDatingPreferencesResponse = ApiSuccess<{ prefs: DatingPreferen
 
 export type GetMyProfileResponse = ApiSuccess<{ profile: OwnerProfile }>
 export type GetProfileOptInResponse = ApiSuccess<{ optIn: ProfileOptInSettings }>
-export type GetPublicProfileResponse = ApiSuccess<{ profile: PublicProfileWithContext }>
-export type GetProfilesResponse = ApiSuccess<{ profiles: PublicProfileWithContext[] }>
+export type GetPublicProfileResponse = ApiSuccess<{ profile: PublicProfile }>
+export type GetProfilesResponse = ApiSuccess<{ profiles: PublicProfile[] }>
 export type UpdateProfileResponse = ApiSuccess<{ profile: OwnerProfile }>
 export type UpdateProfileScopeResponse = ApiSuccess<{
   isDatingActive: boolean
@@ -78,6 +79,7 @@ export type ReceivedLikesResponse = ApiSuccess<{ edges: ReceivedLike[] }>
 export type InteractionEdgeResponse = ApiSuccess<{ pair: InteractionEdgePair }>
 export type InteractionEdgeCountResponse = ApiSuccess<{ count: number }>
 export type InteractionStatsResponse = ApiSuccess<{ stats: InteractionStats }>
+export type InteractionContextResponse = ApiSuccess<{ context: InteractionContext }>
 
 export type AuthResponse<T> = ApiSuccess<T> | (ApiError & { code: AuthErrorCodes })
 export type GetUserSettingsResponse = ApiSuccess<{ user: SettingsUser }>
@@ -107,7 +109,7 @@ export type DeletePostResponse = ApiSuccess<{}>
 
 // Browse responses
 export type BrowseBoundsResponse = ApiSuccess<{
-  profiles: PublicProfileWithContext[]
+  profiles: PublicProfile[]
   posts: PublicPostWithProfile[]
   tags: PublicTag[]
 }>

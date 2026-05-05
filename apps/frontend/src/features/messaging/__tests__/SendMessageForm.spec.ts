@@ -2,7 +2,7 @@ import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { ref } from 'vue'
-import type { PublicProfileWithContext } from '@zod/profile/profile.dto'
+import type { PublicProfile } from '@zod/profile/profile.dto'
 
 vi.mock('@/features/shared/profiledisplay/TagList.vue', () => ({
   default: { template: '<div />' },
@@ -40,7 +40,7 @@ describe('SendMessageForm', () => {
     localStorage.clear()
   })
 
-  const mockRecipient: PublicProfileWithContext = {
+  const mockRecipient: PublicProfile = {
     id: '123',
     publicName: 'Test User',
     isDatingActive: false,
@@ -55,20 +55,6 @@ describe('SendMessageForm', () => {
     },
     introSocial: '',
     introDating: '',
-    interactionContext: {
-      likedByMe: false,
-      likedMeRevealed: false,
-      isMatch: false,
-      isAnonymous: true,
-      passedByMe: false,
-      canLike: false,
-      canPass: false,
-      canDate: false,
-      haveConversation: false,
-      canMessage: true,
-      conversationId: null,
-      initiated: false,
-    },
   }
 
   it('defaults to "click" send mode', () => {
