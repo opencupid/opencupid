@@ -37,10 +37,10 @@ const bars = computed(() => {
 </script>
 
 <template>
-  <div class="card kpi-card h-100">
+  <div class="card kpi-card h-100 pt-3">
     <div class="card-body kpi-body">
-      <div class="kpi-text">
-        <h6 class="card-title mb-0">{{ title }}</h6>
+      <div class="kpi-text w-100">
+        <h6 class="card-title mb-1 ">{{ title }}</h6>
         <div class="kpi-subtitle text-body-secondary">
           {{ subtitle || '\xa0' }}
         </div>
@@ -73,16 +73,17 @@ const bars = computed(() => {
 </template>
 
 <style scoped>
-.kpi-body {
+.card-body.kpi-body {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   align-items: end;
   gap: 0.75rem;
-  padding: 0.75rem 1rem;
+  padding: 0;
 }
 
 .kpi-text {
   min-width: 0;
+  margin: 0 0.5rem 0.5rem 1rem;
 }
 
 .kpi-subtitle {
@@ -98,9 +99,10 @@ const bars = computed(() => {
 }
 
 .kpi-spark {
-  height: 2.25rem;
+  height: 80%;
   width: 100%;
   justify-self: end;
+  background: var(--bs-secondary-light);
 }
 
 .kpi-spark svg {

@@ -143,7 +143,7 @@ onMounted(async () => {
         color="#dc3545"
       />
       <KpiCard
-        title="Reported Profiles"
+        title="Reported"
         subtitle="Total"
         :value="stats.reportedProfiles"
         :series="series(dailyStats?.dailyReportedProfiles)"
