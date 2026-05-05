@@ -170,18 +170,23 @@ onMounted(async () => {
         :series="series(dailyStats?.dailyMessages)"
         color="#fd7e14"
       />
-      <div
-        v-if="stats.segmentCounts?.length"
-        class="card h-100"
-      >
-        <div class="card-body d-flex flex-column">
-          <h6 class="card-title mb-1">Activity Segments</h6>
-          <h6 class="card-subtitle mb-2 text-body-secondary small">Current</h6>
-          <div class="segment-chart flex-grow-1">
-            <Pie
-              :data="segmentPieData"
-              :options="pieOptions"
-            />
+    </div>
+
+    <div
+      v-if="stats?.segmentCounts?.length"
+      class="row g-3 mt-3"
+    >
+      <div class="col-md-6 col-lg-4">
+        <div class="card">
+          <div class="card-body">
+            <h6 class="card-title mb-1">Activity Segments</h6>
+            <h6 class="card-subtitle mb-2 text-body-secondary small">Current</h6>
+            <div class="segment-chart">
+              <Pie
+                :data="segmentPieData"
+                :options="pieOptions"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -193,8 +198,7 @@ onMounted(async () => {
 .kpi-grid {
   display: grid;
   grid-template-columns: 1fr;
-  grid-auto-rows: 1fr;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 @media (min-width: 576px) {
@@ -210,6 +214,6 @@ onMounted(async () => {
 }
 
 .segment-chart {
-  min-height: 10rem;
+  height: 14rem;
 }
 </style>

@@ -38,15 +38,17 @@ const bars = computed(() => {
 
 <template>
   <div class="card kpi-card h-100">
-    <div class="card-body d-flex flex-column">
-      <h6 class="card-title mb-1">{{ title }}</h6>
-      <h6 class="card-subtitle mb-2 text-body-secondary small">
-        {{ subtitle || '\xa0' }}
-      </h6>
-      <div class="kpi-value">{{ value }}</div>
+    <div class="card-body kpi-body">
+      <div class="kpi-text">
+        <h6 class="card-title mb-0">{{ title }}</h6>
+        <div class="kpi-subtitle text-body-secondary">
+          {{ subtitle || '\xa0' }}
+        </div>
+        <div class="kpi-value">{{ value }}</div>
+      </div>
       <div
         v-if="series.length"
-        class="kpi-spark mt-auto"
+        class="kpi-spark"
       >
         <svg
           :viewBox="`0 0 ${VIEW_W} ${VIEW_H}`"
@@ -71,19 +73,34 @@ const bars = computed(() => {
 </template>
 
 <style scoped>
-.kpi-card {
-  min-height: 8rem;
+.kpi-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: end;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+}
+
+.kpi-text {
+  min-width: 0;
+}
+
+.kpi-subtitle {
+  font-size: 0.75rem;
+  line-height: 1.2;
+  margin-bottom: 0.25rem;
 }
 
 .kpi-value {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.1;
 }
 
 .kpi-spark {
-  height: 2.5rem;
+  height: 2.25rem;
   width: 100%;
+  justify-self: end;
 }
 
 .kpi-spark svg {
