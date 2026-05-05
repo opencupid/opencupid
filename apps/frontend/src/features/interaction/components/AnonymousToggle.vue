@@ -32,9 +32,8 @@ const handleRevealedClick = () => {
     <div class="d-flex justify-content-center gap-2">
       <div>
         <BButton
-          variant="outline-dating-light"
           size="lg"
-          class="d-flex align-items-center mb-1 p-4"
+          class="btn-anon-choice mb-1"
           @click="handleAnonymousClick"
           @mouseover="hintAnonymous = true"
           @mouseout="hintAnonymous = null"
@@ -51,9 +50,8 @@ const handleRevealedClick = () => {
 
       <div>
         <BButton
-          variant="outline-dating-light"
           size="lg"
-          class="d-flex align-items-center mb-1 p-4"
+          class="btn-anon-choice mb-1"
           @click="handleRevealedClick"
           @mouseover="hintAnonymous = false"
           @mouseout="hintAnonymous = null"

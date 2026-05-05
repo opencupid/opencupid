@@ -107,10 +107,10 @@ describe('InteractionButtons', () => {
       mountOpts({ ...baseContext, likedMeRevealed: true, isAnonymous: false })
     )
 
-    // The popover trigger renders with variant="dating" (.btn-dating); the
-    // actual "like back" action button inside the popover body is the only
-    // .btn-outline-dating in the tree, so it disambiguates cleanly.
-    const likeBackBtn = wrapper.find('.btn-outline-dating')
+    // The popover trigger renders with .btn-like; the actual "like back"
+    // action button inside the popover body is the only .btn-like-back in
+    // the tree, so it disambiguates cleanly.
+    const likeBackBtn = wrapper.find('.btn-like-back')
     await likeBackBtn.trigger('click')
 
     expect(wrapper.emitted('like')).toEqual([[false]])

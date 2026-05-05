@@ -150,7 +150,7 @@ const handleMessageClick = () => {
       :title="$t('interactions.you_liked_them')"
     >
       <template #target>
-        <BButton class="btn-icon-lg btn-shadow" variant="dating">
+        <BButton class="btn-like">
           <IconLike class="svg-icon-lg" />
         </BButton>
       </template>
@@ -177,16 +177,13 @@ const handleMessageClick = () => {
       </template>
 
       <template #target>
-        <BButton
-          class="btn-icon-lg btn-shadow"
-          variant="dating"
-        >
+        <BButton class="btn-like">
           <IconLike class="svg-icon-lg" />
         </BButton>
       </template>
       <span class="mb-2 d-block">
         <BButton
-          variant="outline-dating"
+          class="btn-like-back"
           size="sm"
           @click="handleLikeBackClick"
         >
@@ -214,10 +211,7 @@ const handleMessageClick = () => {
         </span>
       </template>
       <template #target>
-        <BButton
-          class="btn-icon-lg btn-shadow"
-          variant="dating"
-        >
+        <BButton class="btn-like">
           <IconLike class="svg-icon-lg" />
         </BButton>
       </template>
