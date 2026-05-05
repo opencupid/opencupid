@@ -136,13 +136,14 @@
   },
   "interactions": {
     "anonymous_like_explanation": "Csak akkor derül ki, hogy tőled jött, ha visszamosolyog rád.",
-    "anonymous_toggle_anonymous": "Névtelenül",
-    "anonymous_toggle_reveal": "Mutasd a profilom",
+    "anonymous_toggle_anonymous": "Nem",
+    "anonymous_toggle_question": "Lássa, hogy ki küldte?",
+    "anonymous_toggle_reveal": "Igen",
     "cancel_button": "Talán később",
     "its_a_match": "Kölcsönös!",
     "like_button_title": "Rámosolygok!",
     "like_error": "Hoppá, ez nem működött. Kérjük, próbáld meg újra.",
-    "like_them_back": "Visszamosolyogsz?",
+    "like_them_back": "Visszamosolygok",
     "message_confirmation": "Elküldve!",
     "pass_button_title": "Passzolok",
     "revealed_like_explanation": "Látni fogja, hogy Te küldted.",
@@ -152,7 +153,8 @@
     "they_liked_you": "Rád mosolygott!",
     "you_liked_them": "Rámosolygok",
     "you_matched_with_them": "{name} visszamosolygott!",
-    "you_messaged_them": "Üzenetet küldtél neki"
+    "you_messaged_them": "Üzenetet küldtél neki",
+    "you_smiled_at": "Rámosolyogtál!"
   },
   "matches": {
     "anonymous_like_hint": "Egyelőre névtelenül mosolygott rád. De a Komakeresőben rátalálhatsz - ha Te is rámosolyogsz, ki fog derülni, ki küldte. Ha valakit ilyen jelöléssel látsz, könnyen lehet, hogy egymást keresitek:",

@@ -1,13 +1,14 @@
 <script lang="ts" setup>
-import { computed, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { type InteractionContext } from '@zod/interaction/interactionContext.dto'
 
 import IconLike from '@/assets/icons/emojis/smiling-emoji.svg'
 import IconPass from '@/assets/icons/interface/cross.svg'
-
 import IconMessage from '@/assets/icons/interface/message.svg'
-import AnonymousToggle from './AnonymousToggle.vue'
+
 import ConfirmPassDialog from './ConfirmPassDialog.vue'
+import AnonymousToggle from './AnonymousToggle.vue'
+
 import { tracker } from '@/lib/umami'
 
 const props = defineProps<{
@@ -32,12 +33,29 @@ watch(
   }
 )
 
-const handleLikeClick = () => {
-  // If the user has already liked the profile, do nothing
+const handleUpdateAnonymous = (isAnonymous: boolean) => {
+  if (!props.context.likedByMe || isAnonymous === props.context.isAnonymous) {
+    return
+  }
+  selectedAnonymous.value = isAnonymous
+  tracker.track('interaction-update-like', { anonymous: isAnonymous })
+  emit('update:anonymous', isAnonymous)
+}
+
+const handleCreateLikeClick = (isAnonymous: boolean) => {
   if (props.context.likedByMe || !props.context.canLike) {
     return
   }
-  tracker.track('interaction-like', { anonymous: selectedAnonymous.value })
+  selectedAnonymous.value = isAnonymous
+  tracker.track('interaction-create-like', { anonymous: isAnonymous })
+  emit('like', isAnonymous)
+}
+
+const handleLikeBackClick = () => {
+  if (props.context.likedByMe || !props.context.canLike) {
+    return
+  }
+  tracker.track('interaction-like-back', { anonymous: selectedAnonymous.value })
   emit('like', selectedAnonymous.value)
 }
 
@@ -63,10 +81,6 @@ const handleMessageClick = () => {
     emit('message')
     return
   }
-}
-
-const handleAnonymousChange = (value: boolean) => {
-  emit('update:anonymous', value)
 }
 </script>
 
@@ -112,7 +126,7 @@ const handleAnonymousChange = (value: boolean) => {
         <BButton
           class="btn-icon-lg btn-info me-2 btn-shadow"
           @click="handleMessageClick"
-          :class="{'opacity-50': !props.context.canMessage}"
+          :class="{ 'opacity-50': !props.context.canMessage }"
         >
           <IconMessage class="svg-icon-lg p-0" />
         </BButton>
@@ -131,16 +145,18 @@ const handleAnonymousChange = (value: boolean) => {
     <BPopover
       v-if="context.canDate && !context.isMatch && context.likedByMe"
       placement="top"
+      style="min-width: 16rem; min-height: 14rem"
+      body-class="d-flex align-items-center flex-column justify-items-center"
       :title="$t('interactions.you_liked_them')"
     >
       <template #target>
-        <BButton class="btn-icon-lg btn-dating btn-shadow">
+        <BButton class="btn-icon-lg btn-shadow" variant="dating">
           <IconLike class="svg-icon-lg" />
         </BButton>
       </template>
       <AnonymousToggle
-        v-model="selectedAnonymous"
-        @change="handleAnonymousChange"
+        :selectedAnonymous="context.isAnonymous"
+        @change="handleUpdateAnonymous"
       />
     </BPopover>
 
@@ -162,14 +178,22 @@ const handleAnonymousChange = (value: boolean) => {
 
       <template #target>
         <BButton
-          class="btn-icon-lg btn-dating btn-shadow"
-          @click="handleLikeClick"
+          class="btn-icon-lg btn-shadow"
+          variant="dating"
         >
           <IconLike class="svg-icon-lg" />
         </BButton>
       </template>
       <span class="mb-2 d-block">
-        {{ $t('interactions.like_them_back') }}
+        <BButton
+          variant="outline-dating"
+          size="sm"
+          @click="handleLikeBackClick"
+        >
+          <IconLike class="svg-icon" />
+
+          {{ $t('interactions.like_them_back') }}
+        </BButton>
       </span>
     </BPopover>
 
@@ -177,7 +201,7 @@ const handleAnonymousChange = (value: boolean) => {
     <BPopover
       v-else-if="context.canDate && !context.isMatch"
       placement="top"
-      style="width: 16rem; height: 12rem"
+      style="min-width: 16rem; min-height: 14rem"
     >
       <template #title>
         <span class="d-inline-flex w-100">
@@ -191,13 +215,16 @@ const handleAnonymousChange = (value: boolean) => {
       </template>
       <template #target>
         <BButton
-          class="btn-icon-lg btn-dating btn-shadow"
-          @click="handleLikeClick"
+          class="btn-icon-lg btn-shadow"
+          variant="dating"
         >
           <IconLike class="svg-icon-lg" />
         </BButton>
       </template>
-      <AnonymousToggle v-model="selectedAnonymous" />
+      <AnonymousToggle
+        :selectedAnonymous="context.likedByMe ? context.isAnonymous : null"
+        @change="handleCreateLikeClick"
+      />
     </BPopover>
   </div>
 </template>

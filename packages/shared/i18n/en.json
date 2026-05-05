@@ -133,12 +133,13 @@
   "interactions": {
     "anonymous_like_explanation": "They won't know who sent it until they smile back at you.",
     "anonymous_toggle_anonymous": "Stay anonymous",
-    "anonymous_toggle_reveal": "Reveal my profile",
+    "anonymous_toggle_question": "Let them see who sent it?",
+    "anonymous_toggle_reveal": "Show my name",
     "cancel_button": "Maybe later",
     "its_a_match": "It's a match!",
     "like_button_title": "Smile",
     "like_error": "Oops, this didn't work. Please try again.",
-    "like_them_back": "Smile back at them?",
+    "like_them_back": "Smile back",
     "message_confirmation": "Nice!",
     "pass_button_title": "Pass",
     "revealed_like_explanation": "They will see who sent it.",
@@ -148,7 +149,8 @@
     "they_liked_you": "They smiled at you!",
     "you_liked_them": "You smiled at them",
     "you_matched_with_them": "{name} smiled back!",
-    "you_messaged_them": "You messaged them"
+    "you_messaged_them": "You messaged them",
+    "you_smiled_at": "You smiled at {name}"
   },
   "matches": {
     "anonymous_like_hint": "They smiled at you anonymously, at least for now. You'll find out who when you smile back. You can bump into them on the map — if you see someone marked like this, your preferences match.",
