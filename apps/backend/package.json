@@ -8,6 +8,7 @@
     "build:ssr": "vite build",
     "start": "node dist/api.js",
     "start:worker": "node dist/worker.js",
+    "postinstall": "prisma generate",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate  dev",
     "prisma:seed": "prisma db seed",
