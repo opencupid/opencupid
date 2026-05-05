@@ -41,6 +41,7 @@ const handleLike = async (isAnonymous: boolean) => {
     } else {
       emit('liked')
       emit('updated')
+      toast.info(t('interactions.you_smiled_at', { name: props.profile.publicName }))
     }
   } else {
     toast.error(t('interactions.like_error'))

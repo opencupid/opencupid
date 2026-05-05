@@ -33,14 +33,33 @@ const displayedLikes = computed(() => receivedLikes.value.slice(0, 4))
         v-for="like in displayedLikes"
         :key="like.createdAt"
       >
-        <RevealedLikeCard
+        <div
+          class="like-card dating p-2"
           v-if="like.profile"
-          :profile="like.profile"
-          @click="emit('interaction:selected', like)"
-        />
+        >
+          <RevealedLikeCard
+            :profile="like.profile"
+            @click="emit('interaction:selected', like)"
+          />
+        </div>
         <!-- Anonymous: popover card with hint -->
-        <AnonymousLikeCard v-else />
+        <div
+          class="like-card dating p-2"
+          v-else
+        >
+          <AnonymousLikeCard />
+        </div>
       </BCol>
     </BRow>
   </div>
 </template>
+
+<style scoped>
+
+.like-card:hover {
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
+}
+.like-card {
+  border-radius: var(--bs-border-radius-lg);
+}
+</style>

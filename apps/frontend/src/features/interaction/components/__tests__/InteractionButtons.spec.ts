@@ -1,6 +1,5 @@
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi } from 'vitest'
-import { nextTick } from 'vue'
 
 vi.mock('@/assets/icons/emojis/smiling-emoji.svg', () => ({
   default: { template: '<span />' },
@@ -13,6 +12,20 @@ vi.mock('@/assets/icons/interface/message.svg', () => ({
 }))
 vi.mock('../ConfirmPassDialog.vue', () => ({
   default: { template: '<div />' },
+}))
+
+// Stub AnonymousToggle so tests can drive its `change` event directly
+// without depending on its internal markup or i18n.
+vi.mock('../AnonymousToggle.vue', () => ({
+  default: {
+    props: ['selectedAnonymous'],
+    emits: ['change'],
+    template:
+      '<div class="anonymous-toggle-stub">' +
+      '<button class="toggle-anon" @click="$emit(\'change\', true)" /> ' +
+      '<button class="toggle-revealed" @click="$emit(\'change\', false)" />' +
+      '</div>',
+  },
 }))
 
 import InteractionButtons from '../InteractionButtons.vue'
@@ -39,51 +52,65 @@ const mountOpts = (context: InteractionContext) => ({
 })
 
 describe('InteractionButtons', () => {
-  it('emits like with selectedAnonymous value when like button is clicked', async () => {
-    const wrapper = mount(InteractionButtons, mountOpts({ ...baseContext, isAnonymous: true }))
+  it('emits like(true) when the anonymous toggle is clicked in the create-like popover', async () => {
+    const wrapper = mount(InteractionButtons, mountOpts({ ...baseContext }))
 
-    const likeBtn = wrapper.find('.btn-dating')
-    await likeBtn.trigger('click')
+    await wrapper.find('.toggle-anon').trigger('click')
 
     expect(wrapper.emitted('like')).toEqual([[true]])
   })
 
-  it('emits like with isAnonymous=false when context starts revealed', async () => {
-    const wrapper = mount(InteractionButtons, mountOpts({ ...baseContext, isAnonymous: false }))
+  it('emits like(false) when the revealed toggle is clicked in the create-like popover', async () => {
+    const wrapper = mount(InteractionButtons, mountOpts({ ...baseContext }))
 
-    const likeBtn = wrapper.find('.btn-dating')
-    await likeBtn.trigger('click')
+    await wrapper.find('.toggle-revealed').trigger('click')
 
     expect(wrapper.emitted('like')).toEqual([[false]])
-  })
-
-  it('syncs selectedAnonymous when context.isAnonymous changes', async () => {
-    const context = { ...baseContext, isAnonymous: true }
-    const wrapper = mount(InteractionButtons, mountOpts(context))
-
-    // Click like — should emit true (anonymous)
-    const likeBtn = wrapper.find('.btn-dating')
-    await likeBtn.trigger('click')
-    expect(wrapper.emitted('like')![0]).toEqual([true])
-
-    // Update context to revealed
-    await wrapper.setProps({
-      context: { ...context, isAnonymous: false, canLike: true },
-    })
-    await nextTick()
-
-    // Click like again — should now emit false (revealed)
-    await likeBtn.trigger('click')
-    expect(wrapper.emitted('like')![1]).toEqual([false])
   })
 
   it('does not emit like when canLike is false', async () => {
     const wrapper = mount(InteractionButtons, mountOpts({ ...baseContext, canLike: false }))
 
-    const likeBtn = wrapper.find('.btn-dating')
-    await likeBtn.trigger('click')
+    await wrapper.find('.toggle-anon').trigger('click')
 
     expect(wrapper.emitted('like')).toBeUndefined()
+  })
+
+  it('emits update:anonymous when toggling anonymity on an already-liked profile', async () => {
+    const wrapper = mount(
+      InteractionButtons,
+      mountOpts({ ...baseContext, likedByMe: true, isAnonymous: true, canLike: false })
+    )
+
+    // already liked: toggling to revealed should emit update:anonymous(false)
+    await wrapper.find('.toggle-revealed').trigger('click')
+
+    expect(wrapper.emitted('update:anonymous')).toEqual([[false]])
+    // should NOT emit a new like
+    expect(wrapper.emitted('like')).toBeUndefined()
+  })
+
+  it('does not emit update:anonymous when the chosen value matches current isAnonymous', async () => {
+    const wrapper = mount(
+      InteractionButtons,
+      mountOpts({ ...baseContext, likedByMe: true, isAnonymous: true, canLike: false })
+    )
+
+    await wrapper.find('.toggle-anon').trigger('click')
+
+    expect(wrapper.emitted('update:anonymous')).toBeUndefined()
+  })
+
+  it('emits like when "like back" button is clicked (they liked me, revealed)', async () => {
+    const wrapper = mount(
+      InteractionButtons,
+      mountOpts({ ...baseContext, likedMeRevealed: true, isAnonymous: false })
+    )
+
+    const likeBackBtn = wrapper.find('.btn-dating')
+    await likeBackBtn.trigger('click')
+
+    expect(wrapper.emitted('like')).toEqual([[false]])
   })
 
   it('emits message when message button is clicked and canMessage is true', async () => {
@@ -100,7 +127,7 @@ describe('InteractionButtons', () => {
     // confirmation dialog instead of emitting 'pass' directly.
     const wrapper = mount(
       InteractionButtons,
-      mountOpts({ ...baseContext, likedByMe: true, canLike: false }),
+      mountOpts({ ...baseContext, likedByMe: true, canLike: false })
     )
 
     const passBtn = wrapper.find('[title="interactions.pass_button_title"]')
