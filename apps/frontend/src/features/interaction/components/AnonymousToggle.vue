@@ -3,7 +3,7 @@ import { inject, ref, type Ref } from 'vue'
 import type { OwnerProfile } from '@zod/profile/profile.dto'
 
 import RevealedLikeCard from './RevealedLikeCard.vue'
-import AnonymousLikeCard from './AnonymousLikeCard.vue'
+import AnonymousProfileChip from './AnonymousProfileChip.vue'
 
 const props = defineProps<{
   selectedAnonymous: boolean | null
@@ -30,25 +30,26 @@ const handleRevealedClick = () => {
   <div>
     <h6 class="text-center">{{ $t('interactions.anonymous_toggle_question') }}</h6>
     <div class="d-flex justify-content-center gap-2">
-      <div>
+      <div class="anon-choice">
         <BButton
           variant="outline-dating-light"
-          class="btn-anon-choice mb-1"
+          size="lg"
+          class="d-flex align-items-center justify-content-center mb-1 p-2 "
           @click="handleAnonymousClick"
           @mouseover="hintAnonymous = true"
           @mouseout="hintAnonymous = null"
           :pressed="props.selectedAnonymous === true"
         >
-          <AnonymousLikeCard />
+          <AnonymousProfileChip  />
         </BButton>
         <div class="text-center">{{ $t('interactions.anonymous_toggle_anonymous') }}</div>
       </div>
 
-      <div>
+      <div class="anon-choice">
         <BButton
-          size="lg"
-          class="btn-anon-choice mb-1"
           variant="outline-dating-light"
+          size="lg"
+          class="d-flex align-items-center justify-content-center mb-1 p-2 "
           @click="handleRevealedClick"
           @mouseover="hintAnonymous = false"
           @mouseout="hintAnonymous = null"
@@ -57,7 +58,6 @@ const handleRevealedClick = () => {
           <RevealedLikeCard
             v-if="viewerProfile"
             :profile="viewerProfile"
-            class="w-100"
           />
         </BButton>
         <div class="text-center">{{ $t('interactions.anonymous_toggle_reveal') }}</div>
@@ -65,7 +65,7 @@ const handleRevealedClick = () => {
     </div>
     <div
       class="form-hint mb-2 text-muted"
-      style="height: 1rem"
+      style="min-height: 2rem"
     >
       <span
         class="hint"
@@ -82,6 +82,16 @@ const handleRevealedClick = () => {
 </template>
 
 <style scoped>
+/* Two side-by-side toggle choices with equal square dimensions; the
+   wrapping div fixes the BButton's box so its content (chip / card) can
+   shrink-fit and center without dragging the button height with it. */
+.anon-choice {
+  width: 6rem;
+  /* height: 6rem; */
+  display: flex;
+  flex-direction: column;
+}
+
 .hint {
   display: none;
 }
