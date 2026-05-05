@@ -43,7 +43,6 @@ const handleLike = async (isAnonymous: boolean) => {
       showMatchModal.value = true
     } else {
       emit('liked')
-      emit('updated')
       toast.info(t('interactions.you_smiled_at', { name: props.profile.publicName }))
     }
   } else {
@@ -54,14 +53,11 @@ const handleLike = async (isAnonymous: boolean) => {
 const handlePass = async () => {
   await pass(props.profile.id)
   emit('passed')
-  emit('updated')
 }
 
 const handleAnonymousUpdate = async (isAnonymous: boolean) => {
   const result = await updateLike(props.profile.id, isAnonymous)
-  if (result.success) {
-    emit('updated')
-  } else {
+  if (!result.success) {
     toast.error(t('interactions.like_error'))
   }
 }

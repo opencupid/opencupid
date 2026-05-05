@@ -44,7 +44,6 @@ const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
         :profile="profile"
         @intent:message="(convoId: string) => emit('intent:message', convoId)"
         @updated="emit('updated')"
-        @passed="emit('updated')"
       />
     </div>
   </div>
