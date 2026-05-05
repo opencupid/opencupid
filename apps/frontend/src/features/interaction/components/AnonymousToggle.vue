@@ -28,7 +28,7 @@ const handleRevealedClick = () => {
 
 <template>
   <div>
-    <h6 class="text-center">{{ $t('interactions.anonymous_toggle_question') }}</h6>
+    <h6 class="text-center text-secondary">{{ $t('interactions.anonymous_toggle_question') }}</h6>
     <div class="d-flex justify-content-center gap-2">
       <div class="anon-choice">
         <BButton
@@ -40,7 +40,7 @@ const handleRevealedClick = () => {
           @mouseout="hintAnonymous = null"
           :pressed="props.selectedAnonymous === true"
         >
-          <AnonymousProfileChip  />
+          <AnonymousProfileChip :gender="viewerProfile?.gender ?? undefined" />
         </BButton>
         <div class="text-center">{{ $t('interactions.anonymous_toggle_anonymous') }}</div>
       </div>
@@ -64,7 +64,7 @@ const handleRevealedClick = () => {
       </div>
     </div>
     <div
-      class="form-hint mb-2 text-muted"
+      class="form-hint mb-2 text-muted px-2 mt-1"
       style="min-height: 2rem"
     >
       <span

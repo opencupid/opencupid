@@ -86,6 +86,7 @@ const handleMessageClick = () => {
 </script>
 
 <template>
+  <!-- pass button/popover -->
   <div class="d-flex justify-content-center align-items-center gap-2">
     <div v-if="context.canDate && !context.isMatch && context.likedByMe">
       <BPopover
@@ -93,7 +94,6 @@ const handleMessageClick = () => {
         placement="top"
         title="Popover"
         body-class="bg-danger-subtle"
-        manual
         click
         lazy
         title-class="d-none"
@@ -101,12 +101,12 @@ const handleMessageClick = () => {
         <template #target>
           <BButton
             variant="secondary"
-            class="btn-icon-lg me-2 btn-shadow"
+            class="btn-icon-lg me-2 btn-shadow bg-secondary-subtle"
             @click="handlePassClick"
             :disabled="!context.canPass"
             :title="$t('interactions.pass_button_title')"
           >
-            <IconPass class="svg-icon-lg" />
+            <IconPass class="svg-icon-lg text-secondary" />
           </BButton>
         </template>
         <ConfirmPassDialog
@@ -125,11 +125,12 @@ const handleMessageClick = () => {
     >
       <template #target>
         <BButton
-          class="btn-icon-lg btn-info me-2 btn-shadow"
+          class="btn-icon-lg me-2 btn-shadow bg-info-subtle"
+          variant="info"
           @click="handleMessageClick"
-          :class="{ 'opacity-50': !props.context.canMessage }"
+          :disabled="!props.context.canMessage"
         >
-          <IconMessage class="svg-icon-lg p-0" />
+          <IconMessage class="svg-icon-lg p-0 text-info" />
         </BButton>
       </template>
       <span v-if="props.context.canMessage">
@@ -172,11 +173,10 @@ const handleMessageClick = () => {
       <template #title>
         <span class="d-inline-flex w-100">
           <span class="flex-grow-1">
+            <IconLike class="svg-icon text-dating" />
             {{ $t('interactions.they_liked_you') }}
           </span>
-          <span class="flex-grow-0 text-dating flex-shrink-1">
-            <IconLike class="svg-icon" />
-          </span>
+          <span class="flex-grow-0 text-dating flex-shrink-1 ms-2"> </span>
         </span>
       </template>
 
@@ -184,20 +184,13 @@ const handleMessageClick = () => {
         <BButton
           class="btn-icon-lg btn-shadow"
           variant="dating"
+          @click="handleLikeBackClick"
         >
           <IconLike class="svg-icon-lg" />
         </BButton>
       </template>
       <span class="mb-2 d-block">
-        <BButton
-          variant="outline-dating"
-          size="sm"
-          @click="handleLikeBackClick"
-        >
-          <IconLike class="svg-icon" />
-
-          {{ $t('interactions.like_them_back') }}
-        </BButton>
+        {{ $t('interactions.like_them_back') }}
       </span>
     </BPopover>
 
@@ -219,10 +212,10 @@ const handleMessageClick = () => {
       </template>
       <template #target>
         <BButton
-          class="btn-icon-lg btn-shadow"
+          class="btn-icon-lg btn-shadow bg-dating-light"
           variant="dating"
         >
-          <IconLike class="svg-icon-lg" />
+          <IconLike class="svg-icon-lg text-dating" />
         </BButton>
       </template>
       <AnonymousToggle

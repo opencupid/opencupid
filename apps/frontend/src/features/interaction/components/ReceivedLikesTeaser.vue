@@ -40,7 +40,6 @@ const displayedLikes = computed(() => receivedLikes.value.slice(0, 4))
           <RevealedLikeCard
             :profile="like.profile"
             @click="emit('interaction:selected', like)"
-            class="like-card"
           />
         </div>
         <!-- Anonymous: popover card with hint -->
@@ -56,8 +55,11 @@ const displayedLikes = computed(() => receivedLikes.value.slice(0, 4))
 </template>
 
 <style scoped>
+
 .like-card:hover {
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
+}
+.like-card {
   border-radius: var(--bs-border-radius-lg);
 }
 </style>

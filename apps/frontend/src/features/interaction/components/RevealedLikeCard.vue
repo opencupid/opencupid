@@ -33,10 +33,6 @@ defineProps<{
   cursor: pointer;
 }
 
-.like-card:hover {
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
-  border-radius: var(--bs-border-radius-lg);
-}
 .publicname {
   height: 0.75rem;
   font-size: 0.625rem;

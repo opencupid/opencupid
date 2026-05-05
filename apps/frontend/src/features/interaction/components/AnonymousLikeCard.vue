@@ -1,11 +1,23 @@
 <script setup lang="ts">
-import { inject, type Ref } from 'vue'
+import { computed, inject, type Ref } from 'vue'
+import { storeToRefs } from 'pinia'
 import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
 import type { OwnerProfile } from '@zod/profile/profile.dto'
+import type { GenderType } from '@zod/generated'
 import IconSearch from '@/assets/icons/interface/search.svg'
 import AnonymousProfileChip from './AnonymousProfileChip.vue'
+import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 
 const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
+
+const { datingPrefs } = storeToRefs(useOwnerProfileStore())
+
+const likerGender = computed<GenderType | undefined>(() => {
+  const prefs = datingPrefs.value.prefGender ?? []
+  if (prefs.includes('male')) return 'male'
+  if (prefs.includes('female')) return 'female'
+  return undefined
+})
 </script>
 
 <template>
@@ -17,7 +29,7 @@ const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
     style="min-width: 16rem"
   >
     <template #target>
-      <AnonymousProfileChip class="clickable" />
+      <AnonymousProfileChip class="clickable" :gender="likerGender" />
     </template>
     <p class="mb-2">
       {{ $t('matches.anonymous_like_hint') }}
