@@ -24,7 +24,8 @@ const emit = defineEmits<{
 
 const passPopover = ref(false)
 
-// Local ref tracks the radio selection — synced from context when it changes
+// Holds the user's current anonymity preference, kept in sync with the
+// server-provided context so handleLikeBackClick can emit the latest value.
 const selectedAnonymous = ref(props.context.isAnonymous)
 watch(
   () => props.context.isAnonymous,
@@ -146,7 +147,7 @@ const handleMessageClick = () => {
       v-if="context.canDate && !context.isMatch && context.likedByMe"
       placement="top"
       style="min-width: 16rem; min-height: 14rem"
-      body-class="d-flex align-items-center flex-column justify-items-center"
+      body-class="d-flex align-items-center flex-column justify-content-center"
       :title="$t('interactions.you_liked_them')"
     >
       <template #target>
