@@ -168,11 +168,9 @@ afterEach(() => {
 describe('GET /stats', () => {
   it('returns dashboard stats', async () => {
     mockPrisma.user.count
-      .mockResolvedValueOnce(100) // totalUsers
       .mockResolvedValueOnce(5) // recentSignups
       .mockResolvedValueOnce(2) // blockedUsers
     mockPrisma.profile.count
-      .mockResolvedValueOnce(90) // totalProfiles
       .mockResolvedValueOnce(80) // activeProfiles
       .mockResolvedValueOnce(3) // reportedProfiles
     mockPrisma.profileActivitySummary.groupBy.mockResolvedValueOnce([
@@ -188,8 +186,6 @@ describe('GET /stats', () => {
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.stats).toEqual({
-      totalUsers: 100,
-      totalProfiles: 90,
       activeProfiles: 80,
       recentSignups: 5,
       blockedUsers: 2,
@@ -215,13 +211,15 @@ describe('GET /stats', () => {
 })
 
 describe('GET /stats/daily', () => {
-  it('returns daily signups and last-seen counts with zero-filled days', async () => {
+  it('returns daily series with zero-filled days', async () => {
     mockPrisma.$queryRaw
       .mockResolvedValueOnce([{ date: '2026-02-20', count: BigInt(3) }]) // signups
       .mockResolvedValueOnce([
         { date: '2026-02-19', count: BigInt(7) },
         { date: '2026-02-21', count: BigInt(2) },
       ]) // last seen
+      .mockResolvedValueOnce([{ date: '2026-02-22', count: BigInt(1) }]) // blocked users
+      .mockResolvedValueOnce([{ date: '2026-02-23', count: BigInt(2) }]) // reported profiles
       .mockResolvedValueOnce([{ date: '2026-03-29', count: BigInt(5) }]) // interactions
       .mockResolvedValueOnce([{ date: '2026-03-30', count: BigInt(2) }]) // matches
       .mockResolvedValueOnce([{ date: '2026-03-28', count: BigInt(10) }]) // messages
@@ -233,12 +231,19 @@ describe('GET /stats/daily', () => {
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.dailySignups).toHaveLength(7)
     expect(reply.payload.dailyLastSeen).toHaveLength(7)
+    expect(reply.payload.dailyBlockedUsers).toHaveLength(7)
+    expect(reply.payload.dailyReportedProfiles).toHaveLength(7)
     expect(reply.payload.dailyInteractions).toHaveLength(7)
     expect(reply.payload.dailyMatches).toHaveLength(7)
     expect(reply.payload.dailyMessages).toHaveLength(7)
 
     // Verify zero-fill: each entry has date and count
     for (const entry of reply.payload.dailySignups) {
+      expect(entry).toHaveProperty('date')
+      expect(entry).toHaveProperty('count')
+      expect(typeof entry.count).toBe('number')
+    }
+    for (const entry of reply.payload.dailyBlockedUsers) {
       expect(entry).toHaveProperty('date')
       expect(entry).toHaveProperty('count')
       expect(typeof entry.count).toBe('number')
@@ -254,6 +259,8 @@ describe('GET /stats/daily', () => {
     mockPrisma.$queryRaw
       .mockResolvedValueOnce([]) // signups
       .mockResolvedValueOnce([]) // last seen
+      .mockResolvedValueOnce([]) // blocked users
+      .mockResolvedValueOnce([]) // reported profiles
       .mockResolvedValueOnce([]) // interactions
       .mockResolvedValueOnce([]) // matches
       .mockResolvedValueOnce([]) // messages
@@ -264,6 +271,8 @@ describe('GET /stats/daily', () => {
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.dailySignups.every((d: any) => d.count === 0)).toBe(true)
     expect(reply.payload.dailyLastSeen.every((d: any) => d.count === 0)).toBe(true)
+    expect(reply.payload.dailyBlockedUsers.every((d: any) => d.count === 0)).toBe(true)
+    expect(reply.payload.dailyReportedProfiles.every((d: any) => d.count === 0)).toBe(true)
     expect(reply.payload.dailyInteractions.every((d: any) => d.count === 0)).toBe(true)
     expect(reply.payload.dailyMatches.every((d: any) => d.count === 0)).toBe(true)
     expect(reply.payload.dailyMessages.every((d: any) => d.count === 0)).toBe(true)
