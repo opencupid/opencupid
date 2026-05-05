@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { inject, ref, type Ref } from 'vue'
 import type { OwnerProfile } from '@zod/profile/profile.dto'
-import ProfileImage from '@/features/images/components/ProfileImage.vue'
 
-import IconAnonymousUser from '@/assets/icons/interface/user.svg'
+import RevealedLikeCard from './RevealedLikeCard.vue'
+import AnonymousLikeCard from './AnonymousLikeCard.vue'
 
 const props = defineProps<{
   selectedAnonymous: boolean | null
@@ -32,18 +32,14 @@ const handleRevealedClick = () => {
     <div class="d-flex justify-content-center gap-2">
       <div>
         <BButton
-          size="lg"
+          variant="outline-dating-light"
           class="btn-anon-choice mb-1"
           @click="handleAnonymousClick"
           @mouseover="hintAnonymous = true"
           @mouseout="hintAnonymous = null"
           :pressed="props.selectedAnonymous === true"
         >
-          <div class="placeholder-chip ratio ratio-1x1 dating-eligible-highlight">
-            <div class="d-flex align-items-center justify-content-center w-100 h-100">
-              <IconAnonymousUser class="svg-icon text-dating" />
-            </div>
-          </div>
+          <AnonymousLikeCard />
         </BButton>
         <div class="text-center">{{ $t('interactions.anonymous_toggle_anonymous') }}</div>
       </div>
@@ -52,18 +48,17 @@ const handleRevealedClick = () => {
         <BButton
           size="lg"
           class="btn-anon-choice mb-1"
+          variant="outline-dating-light"
           @click="handleRevealedClick"
           @mouseover="hintAnonymous = false"
           @mouseout="hintAnonymous = null"
           :pressed="props.selectedAnonymous === false"
         >
-          <span class="profile-thumbnail d-inline-flex">
-            <ProfileImage
-              v-if="viewerProfile"
-              :profile="viewerProfile"
-              variant="thumb"
-            />
-          </span>
+          <RevealedLikeCard
+            v-if="viewerProfile"
+            :profile="viewerProfile"
+            class="w-100"
+          />
         </BButton>
         <div class="text-center">{{ $t('interactions.anonymous_toggle_reveal') }}</div>
       </div>

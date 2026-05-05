@@ -198,11 +198,14 @@ main {
 
 // Anonymity-toggle choice button (outline dating-light).
 .btn-anon-choice {
-  @extend .btn;
-  @extend .btn-outline-dating-light;
+  // @extend .btn;
+  // @extend .btn-outline-dating-light;
   display: flex;
   align-items: center;
+  justify-content: center;
   padding: 1.5rem;
+  width: 4rem;
+  height: 4rem;
 }
 
 .dating {
