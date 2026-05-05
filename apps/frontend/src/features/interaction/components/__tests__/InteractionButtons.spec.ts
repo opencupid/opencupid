@@ -79,7 +79,7 @@ describe('InteractionButtons', () => {
   it('emits update:anonymous when toggling anonymity on an already-liked profile', async () => {
     const wrapper = mount(
       InteractionButtons,
-      mountOpts({ ...baseContext, likedByMe: true, isAnonymous: true, canLike: false }),
+      mountOpts({ ...baseContext, likedByMe: true, isAnonymous: true, canLike: false })
     )
 
     // already liked: toggling to revealed should emit update:anonymous(false)
@@ -93,7 +93,7 @@ describe('InteractionButtons', () => {
   it('does not emit update:anonymous when the chosen value matches current isAnonymous', async () => {
     const wrapper = mount(
       InteractionButtons,
-      mountOpts({ ...baseContext, likedByMe: true, isAnonymous: true, canLike: false }),
+      mountOpts({ ...baseContext, likedByMe: true, isAnonymous: true, canLike: false })
     )
 
     await wrapper.find('.toggle-anon').trigger('click')
@@ -104,11 +104,14 @@ describe('InteractionButtons', () => {
   it('emits like when "like back" button is clicked (they liked me, revealed)', async () => {
     const wrapper = mount(
       InteractionButtons,
-      mountOpts({ ...baseContext, likedMeRevealed: true, isAnonymous: false }),
+      mountOpts({ ...baseContext, likedMeRevealed: true, isAnonymous: false })
     )
 
-    const likeBtn = wrapper.find('.btn-dating')
-    await likeBtn.trigger('click')
+    // The popover trigger renders with variant="dating" (.btn-dating); the
+    // actual "like back" action button inside the popover body is the only
+    // .btn-outline-dating in the tree, so it disambiguates cleanly.
+    const likeBackBtn = wrapper.find('.btn-outline-dating')
+    await likeBackBtn.trigger('click')
 
     expect(wrapper.emitted('like')).toEqual([[false]])
   })
@@ -127,7 +130,7 @@ describe('InteractionButtons', () => {
     // confirmation dialog instead of emitting 'pass' directly.
     const wrapper = mount(
       InteractionButtons,
-      mountOpts({ ...baseContext, likedByMe: true, canLike: false }),
+      mountOpts({ ...baseContext, likedByMe: true, canLike: false })
     )
 
     const passBtn = wrapper.find('[title="interactions.pass_button_title"]')
