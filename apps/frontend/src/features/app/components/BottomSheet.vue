@@ -127,6 +127,7 @@ function onHidden() {
     header-class="p-0"
     @show="onShow"
     @hidden="onHidden"
+    :focus="false"
   >
     <template #header>
       <div
