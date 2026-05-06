@@ -13,12 +13,16 @@ import { WebPushService } from '@/services/webpush.service'
 
 import { z } from 'zod'
 import { mapConversationParticipantToSummary, mapMessageToDTO } from '../mappers/messaging.mappers'
+import { mapProfileSummary } from '../mappers/profile.mappers'
 import type {
   MessagesResponse,
   ConversationsResponse,
   ConversationResponse,
+  ConversationByProfileResponse,
   SendMessageResponse,
 } from '@zod/apiResponse.dto'
+import type { ConversationDraftSummary } from '@zod/messaging/messaging.dto'
+import { ProfileService } from '@/services/profile.service'
 import { broadcastToProfile } from '@/utils/wsUtils'
 import {
   SendMessagePayloadSchema,
@@ -77,6 +81,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
   const webPushService = WebPushService.getInstance()
   const interactionService = InteractionService.getInstance()
   const trustService = ProfileTrustService.getInstance()
+  const profileService = ProfileService.getInstance()
 
   /*
    * Owns Phases 1 + 2 shared by /message and /voice: the resolve → classify →
@@ -298,6 +303,71 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
       return sendError(reply, 500, 'Failed to fetch conversations')
     }
   })
+
+  /**
+   * GET /conversations/by-profile/:profileId
+   * Resolves the conversation between the viewer and the given partner. Returns
+   * a persisted ConversationSummary if one exists, or a ConversationDraftSummary
+   * (no DB write) for matched pairs that haven't messaged yet. Vague 404 when
+   * the partner has blocked the viewer; 403 when the pair isn't matched (drafts
+   * are gated to matches because that's the only UX entry point).
+   * @returns {ConversationByProfileResponse}
+   */
+  fastify.get(
+    '/conversations/by-profile/:profileId',
+    { onRequest: [fastify.authenticate] },
+    async (req, reply) => {
+      const viewerProfileId = req.session.profileId
+      if (!viewerProfileId) return sendError(reply, 401, 'Profile not found.')
+
+      const params = z.object({ profileId: z.string().cuid() }).safeParse(req.params)
+      if (!params.success) return sendError(reply, 400, 'Invalid profileId')
+      const partnerId = params.data.profileId
+
+      try {
+        const partner = await profileService.getProfilePublicById(partnerId, viewerProfileId)
+        if (!partner) return sendError(reply, 404, 'Profile not found')
+        // Vague 404 mirrors GET /profile/:id — the partner blocking the viewer
+        // is indistinguishable from "no such profile" by design.
+        if (partner.blockedProfiles.length > 0) {
+          return sendError(reply, 404, 'Profile not found')
+        }
+
+        const existing = await messageService.findConversationSummaryByPartner(
+          viewerProfileId,
+          partnerId
+        )
+        if (existing) {
+          const response: ConversationByProfileResponse = {
+            success: true,
+            conversation: mapConversationParticipantToSummary(existing, viewerProfileId),
+          }
+          return reply.code(200).send(response)
+        }
+
+        // No persisted conversation — drafts are only offered to matched pairs.
+        const isMatched = await messageService.hasMutualLike(viewerProfileId, partnerId)
+        if (!isMatched) return sendError(reply, 403, 'Cannot message this profile')
+
+        const viewer = await profileService.getProfileById(viewerProfileId)
+        const draft: ConversationDraftSummary = {
+          isDraft: true,
+          partnerProfile: mapProfileSummary(partner),
+          canReply: true,
+          isCallable: partner.isCallable !== false,
+          myIsCallable: viewer?.isCallable !== false,
+        }
+        const response: ConversationByProfileResponse = {
+          success: true,
+          conversation: draft,
+        }
+        return reply.code(200).send(response)
+      } catch (error) {
+        fastify.log.error(error)
+        return sendError(reply, 500, 'Failed to resolve conversation')
+      }
+    }
+  )
 
   /**
    * POST /conversations/:id/mark-read

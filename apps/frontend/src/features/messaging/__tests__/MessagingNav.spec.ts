@@ -22,7 +22,9 @@ const stubs = {
 describe('MessagingNav', () => {
   it('emits deselect:convo on back button click', async () => {
     const wrapper = mount(MessagingNav, {
-      props: { recipient: { id: '1', publicName: 'B', profileImages: [], location: { country: '' } } },
+      props: {
+        recipient: { id: '1', publicName: 'B', profileImages: [], location: { country: '' } },
+      },
       global: { stubs, mocks: { $t: (key: string) => key } },
     })
     await wrapper.find('.back-button a').trigger('click')
@@ -31,7 +33,10 @@ describe('MessagingNav', () => {
 
   it('renders allow calls checkbox checked when allowCalls is true', () => {
     const wrapper = mount(MessagingNav, {
-      props: { recipient: { id: '1', publicName: 'B', profileImages: [], location: { country: '' } }, allowCalls: true },
+      props: {
+        recipient: { id: '1', publicName: 'B', profileImages: [], location: { country: '' } },
+        allowCalls: true,
+      },
       global: { stubs, mocks: { $t: (key: string) => key } },
     })
     const checkbox = wrapper.find('#allow-calls-check')
@@ -41,11 +46,27 @@ describe('MessagingNav', () => {
 
   it('renders allow calls checkbox unchecked when allowCalls is false', () => {
     const wrapper = mount(MessagingNav, {
-      props: { recipient: { id: '1', publicName: 'B', profileImages: [], location: { country: '' } }, allowCalls: false },
+      props: {
+        recipient: { id: '1', publicName: 'B', profileImages: [], location: { country: '' } },
+        allowCalls: false,
+      },
       global: { stubs, mocks: { $t: (key: string) => key } },
     })
     const checkbox = wrapper.find('#allow-calls-check')
     expect(checkbox.exists()).toBe(true)
     expect((checkbox.element as HTMLInputElement).checked).toBe(false)
+  })
+
+  it('disables the allow calls checkbox when callableDisabled is true', () => {
+    const wrapper = mount(MessagingNav, {
+      props: {
+        recipient: { id: '1', publicName: 'B', profileImages: [], location: { country: '' } },
+        allowCalls: true,
+        callableDisabled: true,
+      },
+      global: { stubs, mocks: { $t: (key: string) => key } },
+    })
+    const checkbox = wrapper.find('#allow-calls-check')
+    expect((checkbox.element as HTMLInputElement).disabled).toBe(true)
   })
 })

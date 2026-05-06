@@ -47,10 +47,6 @@ export function useMessagingViewModel() {
     }, 2000)
   }
 
-  // Send message dialog state
-  const showMessageModal = ref(false)
-  const messageProfile = ref<PublicProfile>()
-
   // Fetch a public profile by id. Returns the profile or null on failure.
   // Consumers decide what to do with the result (e.g. push into the detail panel).
   const handleProfileSelect = async (profileId: string): Promise<PublicProfile | null> => {
@@ -59,15 +55,10 @@ export function useMessagingViewModel() {
     return res.data ?? null
   }
 
-  const handleMatchSelect = async (profileId: string) => {
-    const res = await fetchProfile(profileId)
-    if (!res?.success) return
-    messageProfile.value = res.data
-    showMessageModal.value = true
-  }
-
-  const handleMessageSent = () => {
-    messageStore.fetchConversations()
+  // Open the conversation-detail view for a match. The ConversationNew route
+  // resolves the convo (existing or draft) via useConversationDetailViewModel.
+  const handleMatchSelect = (profileId: string) => {
+    router.push({ name: 'ConversationNew', params: { profileId } })
   }
 
   const haveConversations = computed(() => messageStore.conversations.length > 0)
@@ -92,12 +83,7 @@ export function useMessagingViewModel() {
     // Handlers
     handleSelectConvo,
     handleMatchSelect,
-    handleMessageSent,
     fetchConversations: () => messageStore.fetchConversations(),
-
-    // Send message dialog
-    showMessageModal,
-    messageProfile,
 
     // Lifecycle
     initialize,

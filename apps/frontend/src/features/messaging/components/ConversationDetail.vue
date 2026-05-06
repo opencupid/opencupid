@@ -1,93 +1,38 @@
 <script setup lang="ts">
-import { ref, computed, watchEffect } from 'vue'
-
-import type { PublicProfile } from '@zod/profile/profile.dto'
-import type { ConversationSummary } from '@zod/messaging/messaging.dto'
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 import ProfileContent from '@/features/publicprofile/components/ProfileContent.vue'
 
 import { useMessageStore } from '@/features/messaging/stores/messageStore'
-import { usePublicProfileStore } from '@/features/publicprofile/stores/publicProfileStore'
-import { useCallStore } from '@/features/videocall/stores/callStore'
 import { useDetailPanel } from '@/features/app/composables/useDetailPanel'
-import { useRouter } from 'vue-router'
+import { useConversationDetailViewModel } from '../composables/useConversationDetailViewModel'
 import BlockProfileDialog from '@/features/publicprofile/components/BlockProfileDialog.vue'
 
 import SendMessage from './SendMessageForm.vue'
 import MessageList from './MessageList.vue'
 import MessagingNav from './MessagingNav.vue'
-import * as callsApi from '@/features/videocall/api/calls.api'
 
-const profileStore = usePublicProfileStore()
-const messageStore = useMessageStore()
-const callStore = useCallStore()
-
-const props = defineProps<{
-  conversation: ConversationSummary | null
-  loading: boolean
-}>()
-
-const emit = defineEmits<{
-  (e: 'deselect:convo'): void
-}>()
+defineOptions({ name: 'ConversationDetail' })
 
 const router = useRouter()
+const messageStore = useMessageStore()
 const panel = useDetailPanel()
 
+const vm = useConversationDetailViewModel()
+
 const showModal = ref(false)
-const conversationPartner = ref<PublicProfile | null>(null)
 
-// Click on the conversation partner header → push their profile into the
-// global detail panel. The panel owns its own lifecycle; this component
-// holds no state about whether the panel is currently open.
 function onProfileSelect() {
-  if (conversationPartner.value) {
-    panel.show(ProfileContent, { profile: conversationPartner.value })
+  if (vm.partner.value) {
+    panel.show(ProfileContent, { profile: vm.partner.value })
   }
 }
 
-const canCall = computed(() => {
-  if (!props.conversation) return false
-  return props.conversation.canReply && props.conversation.isCallable
-})
-
-const myIsCallable = computed(() => {
-  return props.conversation?.myIsCallable ?? true
-})
-
-watchEffect(async () => {
-  if (props.conversation) {
-    const res = await profileStore.getPublicProfile(props.conversation.partnerProfile.id)
-    if (res.success) conversationPartner.value = res.data ?? null
-    else conversationPartner.value = null
-  } else {
-    conversationPartner.value = null
-  }
-})
-
-const handleBlockProfile = async () => {
-  if (!conversationPartner.value) return
-  const ok = await profileStore.blockProfile(conversationPartner.value.id)
+async function handleBlockProfile() {
+  const ok = await vm.blockProfile()
   showModal.value = false
-  if (ok) {
-    emit('deselect:convo')
-  }
-}
-
-function handleStartCall() {
-  if (!props.conversation) return
-  callStore.initiateCall(props.conversation.conversationId)
-}
-
-async function handleToggleCallable(event: Event) {
-  if (!props.conversation) return
-  const checkbox = event.target as HTMLInputElement
-  const isCallable = checkbox.checked
-  try {
-    await callsApi.updateCallable(props.conversation.conversationId, isCallable)
-  } catch {
-    checkbox.checked = !isCallable
-  }
+  if (ok) vm.deselect()
 }
 </script>
 
@@ -95,14 +40,15 @@ async function handleToggleCallable(event: Event) {
   <div class="convo-detail shadow-lg h-100 position-relative d-flex flex-column">
     <MessagingNav
       class="messaging-nav w-100"
-      v-if="conversationPartner"
-      :recipient="conversationPartner"
-      :allowCalls="myIsCallable"
-      @deselect:convo="emit('deselect:convo')"
+      v-if="vm.partner.value"
+      :recipient="vm.partner.value"
+      :allowCalls="vm.myIsCallable.value"
+      :callableDisabled="vm.isDraft.value"
+      @deselect:convo="vm.deselect"
       @close="router.replace({ name: 'Browse' })"
       @profile:select="onProfileSelect"
       @block:open="showModal = true"
-      @callable:toggle="handleToggleCallable"
+      @callable:toggle="vm.toggleCallable"
     />
 
     <div class="flex-grow-1 overflow-hidden d-flex flex-column">
@@ -116,19 +62,20 @@ async function handleToggleCallable(event: Event) {
 
     <div class="send-message-wrapper d-flex flex-column align-items-center w-100 py-3 px-2">
       <SendMessage
-        v-if="conversationPartner && conversation"
-        :recipientProfile="conversationPartner"
-        :conversationId="conversation.conversationId"
-        :canCall="canCall"
-        @call:start="handleStartCall"
+        v-if="vm.partner.value && vm.conversation.value"
+        :recipientProfile="vm.partner.value"
+        :conversationId="vm.persistedConversation.value?.conversationId ?? null"
+        :canCall="vm.canCall.value"
+        @message:sent="vm.onMessageSent"
+        @call:start="vm.startCall"
       />
     </div>
 
     <BlockProfileDialog
-      v-if="conversationPartner"
-      :profile="conversationPartner"
+      v-if="vm.partner.value"
+      :profile="vm.partner.value"
       v-model="showModal"
-      :loading="profileStore.isLoading"
+      :loading="vm.profileStoreLoading.value"
       @block="handleBlockProfile"
     />
   </div>

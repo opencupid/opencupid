@@ -2,9 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 
 const mockFetchProfile = vi.fn()
+const mockRouterPush = vi.fn()
 
 vi.mock('vue-router', () => ({
-  useRouter: () => ({ push: vi.fn() }),
+  useRouter: () => ({ push: mockRouterPush }),
 }))
 
 vi.mock('@/lib/bootstrap', () => ({
@@ -42,6 +43,7 @@ describe('useMessagingViewModel – handleProfileSelect', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     mockFetchProfile.mockReset()
+    mockRouterPush.mockReset()
   })
 
   it('returns the fetched profile when fetchProfile succeeds', async () => {
@@ -63,5 +65,27 @@ describe('useMessagingViewModel – handleProfileSelect', () => {
     const result = await handleProfileSelect('prof-x')
 
     expect(result).toBeNull()
+  })
+})
+
+describe('useMessagingViewModel – handleMatchSelect', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    mockFetchProfile.mockReset()
+    mockRouterPush.mockReset()
+  })
+
+  it('navigates to ConversationNew route with the partner profileId', () => {
+    const { handleMatchSelect } = useMessagingViewModel()
+
+    handleMatchSelect('prof-7')
+
+    expect(mockRouterPush).toHaveBeenCalledWith({
+      name: 'ConversationNew',
+      params: { profileId: 'prof-7' },
+    })
+    // Match click no longer eagerly fetches the profile — that happens in
+    // useConversationDetailViewModel after the route transition.
+    expect(mockFetchProfile).not.toHaveBeenCalled()
   })
 })

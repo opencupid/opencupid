@@ -32,6 +32,7 @@ function makeConvo(conversationId: string, partnerName: string): ConversationSum
     lastReadAt: new Date('2024-01-01'),
     isMuted: false,
     isArchived: false,
+    isDraft: false,
     canReply: false,
     isCallable: true,
     myIsCallable: true,
@@ -69,6 +70,7 @@ describe('messageStore', () => {
         lastReadAt: new Date('2024-01-01'),
         isMuted: false,
         isArchived: false,
+        isDraft: false,
         canReply: false, // User initiated, waiting for reply
         isCallable: true,
         myIsCallable: true,
@@ -129,6 +131,7 @@ describe('messageStore', () => {
         lastReadAt: new Date('2024-01-01'),
         isMuted: false,
         isArchived: false,
+        isDraft: false,
         canReply: true,
         isCallable: true,
         myIsCallable: true,
@@ -154,6 +157,7 @@ describe('messageStore', () => {
         lastReadAt: new Date('2024-01-02'),
         isMuted: false,
         isArchived: false,
+        isDraft: false,
         canReply: true,
         isCallable: true,
         myIsCallable: true,
@@ -208,6 +212,7 @@ describe('messageStore', () => {
         lastReadAt: new Date('2024-01-01'),
         isMuted: false,
         isArchived: false,
+        isDraft: false,
         canReply: true,
         isCallable: true,
         myIsCallable: true,
@@ -260,6 +265,7 @@ describe('messageStore', () => {
         lastReadAt: new Date('2024-01-01'),
         isMuted: false,
         isArchived: false,
+        isDraft: false,
         canReply: true,
         isCallable: true,
         myIsCallable: true,
@@ -490,6 +496,33 @@ describe('setActiveConversationById', () => {
   })
 })
 
+describe('resetActiveConversation', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  // Regression: opening a draft right after viewing another thread used to
+  // render the previous thread's messages because reset only nulled
+  // activeConversation. All per-thread state now resets together.
+  it('clears messages and pagination state along with activeConversation', () => {
+    const store = useMessageStore()
+    store.activeConversation = makeConvo('convo-1', 'Alice')
+    store.messages = [{ id: 'm1' } as any]
+    store.messageCursor = 'cursor-1'
+    store.hasMoreMessages = true
+    store.isLoadingMoreMessages = true
+
+    store.resetActiveConversation()
+
+    expect(store.activeConversation).toBeNull()
+    expect(store.messages).toEqual([])
+    expect(store.messageCursor).toBeNull()
+    expect(store.hasMoreMessages).toBe(false)
+    expect(store.isLoadingMoreMessages).toBe(false)
+  })
+})
+
 describe('teardown', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -609,5 +642,69 @@ describe('fetchMessagesForConversation pagination', () => {
 
     expect(store.messages.map((m) => m.id)).toEqual(['m1', 'm2', 'm3', 'm4'])
     expect(store.hasMoreMessages).toBe(false)
+  })
+})
+
+describe('resolveConversationByProfile', () => {
+  it('returns persisted conversation summary when one exists', async () => {
+    const store = useMessageStore()
+    const persisted = makeConvo('c1', 'Partner')
+    mockApi.get.mockResolvedValue({
+      data: { success: true, conversation: persisted },
+    })
+
+    const res = await store.resolveConversationByProfile('p2')
+
+    expect(mockApi.get).toHaveBeenCalledWith('/messages/conversations/by-profile/p2')
+    expect(res.success).toBe(true)
+    expect(res.success && res.data?.isDraft).toBe(false)
+    expect(res.success && (res.data as ConversationSummary).conversationId).toBe('c1')
+  })
+
+  it('returns draft summary when no conversation exists yet', async () => {
+    const store = useMessageStore()
+    const draft = {
+      isDraft: true as const,
+      partnerProfile: {
+        id: 'p2',
+        publicName: 'Partner',
+        profileImages: [],
+        location: { country: '' },
+      },
+      canReply: true,
+      isCallable: true,
+      myIsCallable: true,
+    }
+    mockApi.get.mockResolvedValue({
+      data: { success: true, conversation: draft },
+    })
+
+    const res = await store.resolveConversationByProfile('p2')
+
+    expect(res.success).toBe(true)
+    expect(res.success && res.data?.isDraft).toBe(true)
+  })
+
+  it('does NOT mutate this.conversations on success', async () => {
+    const store = useMessageStore()
+    store.conversations = []
+    mockApi.get.mockResolvedValue({
+      data: { success: true, conversation: makeConvo('c1', 'Partner') },
+    })
+
+    await store.resolveConversationByProfile('p2')
+
+    // Persisted resolves are read-only — they don't mass-update the inbox list.
+    // Drafts likewise must never enter the list (they're not real conversations).
+    expect(store.conversations).toHaveLength(0)
+  })
+
+  it('returns store error when the API call fails', async () => {
+    const store = useMessageStore()
+    mockApi.get.mockRejectedValue(new Error('forbidden'))
+
+    const res = await store.resolveConversationByProfile('p2')
+
+    expect(res.success).toBe(false)
   })
 })

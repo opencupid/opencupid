@@ -8,6 +8,9 @@ import IconMenuDotsVert from '@/assets/icons/interface/menu-dots-vert.svg'
 defineProps<{
   recipient: ProfileSummary
   allowCalls?: boolean
+  // Disables the allow-calls toggle when there's no persisted conversation
+  // to write the setting against (e.g. draft conversations).
+  callableDisabled?: boolean
 }>()
 
 defineEmits<{
@@ -69,6 +72,7 @@ defineEmits<{
               type="checkbox"
               class="form-check-input m-0"
               :checked="allowCalls"
+              :disabled="callableDisabled"
               @change="$emit('callable:toggle', $event)"
             />
           </label>

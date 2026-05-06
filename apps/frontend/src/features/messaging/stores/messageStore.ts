@@ -4,6 +4,7 @@ import { api, safeApiCall } from '@/lib/api'
 import { bus } from '@/lib/bus'
 
 import type {
+  ConversationOrDraft,
   ConversationSummary,
   MessageDTO,
   MessageInConversation,
@@ -11,6 +12,7 @@ import type {
 } from '@zod/messaging/messaging.dto'
 import type {
   MessagesResponse,
+  ConversationByProfileResponse,
   ConversationsResponse,
   ConversationResponse,
   SendMessageResponse,
@@ -216,6 +218,25 @@ export const useMessageStore = defineStore('message', {
       })
     },
 
+    // Resolve the conversation between the viewer and a partner profile.
+    // Returns either the persisted ConversationSummary or a synthesized
+    // ConversationDraftSummary for matched pairs that haven't messaged yet.
+    // Drafts are *not* added to `this.conversations` — they only enter the list
+    // after the first message persists the conversation server-side.
+    async resolveConversationByProfile(
+      profileId: string
+    ): Promise<StoreResponse<ConversationOrDraft>> {
+      try {
+        const res = await safeApiCall(() =>
+          api.get<ConversationByProfileResponse>(`/messages/conversations/by-profile/${profileId}`)
+        )
+        if (!res.data.success) return storeError(res.data)
+        return storeSuccess(res.data.conversation)
+      } catch (error) {
+        return storeError(error)
+      }
+    },
+
     async fetchConversations(): Promise<ConversationSummary[]> {
       try {
         this.isLoading = true
@@ -313,6 +334,10 @@ export const useMessageStore = defineStore('message', {
 
     resetActiveConversation() {
       this.activeConversation = null
+      this.messages = []
+      this.messageCursor = null
+      this.hasMoreMessages = false
+      this.isLoadingMoreMessages = false
     },
 
     async handleProfileBlocked() {

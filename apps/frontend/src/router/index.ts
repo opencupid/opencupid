@@ -85,6 +85,7 @@ const routes: Array<RouteRecordRaw> = [
       // Inbox area (drives drawer → InboxPanel sub-views)
       browseRoute('inbox', 'Inbox'),
       browseRoute('inbox/:conversationId', 'Conversation'),
+      browseRoute('inbox/new/:profileId', 'ConversationNew'),
     ],
   },
 ]

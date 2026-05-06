@@ -49,6 +49,7 @@ export function mapConversationParticipantToSummary(
     lastReadAt: p.lastReadAt,
     isMuted: p.isMuted,
     isArchived: p.isArchived,
+    isDraft: false,
     canReply,
     isAdminInitiator,
     isCallable: partnerState?.isCallable !== false && partner.isCallable !== false,
