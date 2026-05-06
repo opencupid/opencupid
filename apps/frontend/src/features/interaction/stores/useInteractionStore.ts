@@ -13,6 +13,7 @@ import {
   InteractionContextSchema,
   type InteractionContext,
 } from '@zod/interaction/interactionContext.dto'
+import type { InteractionContextResponse } from '@zod/apiResponse.dto'
 import { storeError, storeSuccess, type StoreError, type StoreResponse } from '@/store/helpers'
 
 interface InteractionState {
@@ -21,7 +22,7 @@ interface InteractionState {
   newMatchesCount: number
   matches: InteractionEdge[]
   passed: string[] // just IDs for now
-  contextByProfileId: Record<string, InteractionContext>
+  contextByProfileId: Partial<Record<string, InteractionContext>>
   loading: boolean
   initialized: boolean
   error: StoreError | null
@@ -57,7 +58,7 @@ export const useInteractionStore = defineStore('interaction', {
     async fetchContext(profileId: string): Promise<StoreResponse<InteractionContext>> {
       try {
         const res = await safeApiCall(() =>
-          api.get<{ success: true; context: unknown }>(`/interactions/context/${profileId}`)
+          api.get<InteractionContextResponse>(`/interactions/context/${profileId}`)
         )
         const context = InteractionContextSchema.parse(res.data.context)
         this.contextByProfileId[profileId] = context

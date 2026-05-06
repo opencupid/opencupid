@@ -33,7 +33,7 @@ const match = ref<InteractionEdgePair>()
 const { like, pass, updateLike, refreshInteractions, fetchContext, contextFor } =
   useInteractionsViewModel()
 
-const context = contextFor(props.profile.id)
+const context = contextFor(() => props.profile.id)
 
 const handleLike = async (isAnonymous: boolean) => {
   const result = await like(props.profile.id, isAnonymous)

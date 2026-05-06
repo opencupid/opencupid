@@ -59,10 +59,7 @@ export class ProfileService {
   // Public profile fetch — only the viewer-facing block check is included as
   // it gates 404 visibility. Viewer-relative interaction state (likes, hides,
   // conversations) lives behind the dedicated /interactions/context endpoint.
-  async getProfilePublicById(
-    profileId: string,
-    myProfileId: string
-  ): Promise<(DbProfileWithImages & { blockedProfiles: { id: string }[] }) | null> {
+  async getProfilePublicById(profileId: string, myProfileId: string) {
     return prisma.profile.findUnique({
       where: { id: profileId },
       include: {
@@ -70,7 +67,7 @@ export class ProfileService {
         ...profileImageInclude(),
         ...blockedContextInclude(myProfileId),
       },
-    }) as Promise<(DbProfileWithImages & { blockedProfiles: { id: string }[] }) | null>
+    })
   }
 
   // Interaction-context source fetch — only the viewer-relative relations
