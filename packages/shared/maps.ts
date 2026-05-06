@@ -15,9 +15,10 @@ export const MAP_DEFAULT_CENTER: [number, number] = [50, 14]
 export const MAX_BROWSE_TAGS = 5
 
 /**
- * Discriminator values for the points clustered on the social map. Used by
- * the wire-level `kinds` filter, the supercluster point properties, and the
- * `<MapLayerControl>` button group.
+ * Discriminator values for the kinds of user-generated content that appear on
+ * the social map. Used by the wire-level `kinds` filter, the supercluster
+ * point properties, and the `<MapLayerControl>` button group. Aligned with
+ * the existing UserContent terminology in the backend mappers.
  */
-export const MAP_LAYER_KINDS = ['profile', 'post'] as const
-export type MapLayerKind = (typeof MAP_LAYER_KINDS)[number]
+export const USER_CONTENT_KINDS = ['profile', 'post'] as const
+export type UserContentKind = (typeof USER_CONTENT_KINDS)[number]

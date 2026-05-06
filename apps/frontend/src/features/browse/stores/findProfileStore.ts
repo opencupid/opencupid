@@ -9,7 +9,7 @@ import { storeSuccess, storeError, type StoreVoidSuccess, type StoreError } from
 import { bus } from '@/lib/bus'
 import { useSearchStore } from './searchStore'
 import { useMapStore } from '@/features/map/stores/mapStore'
-import { type MapLayerKind } from '@shared/maps'
+import { type UserContentKind } from '@shared/maps'
 import type { MapBounds } from '@/features/map/types/map.types'
 import { boundsContain, padBounds } from '../utils/boundsUtils'
 
@@ -42,18 +42,18 @@ function tagIdsParam(tagIds: string[]): string | undefined {
   return tagIds.length > 0 ? tagIds.join(',') : undefined
 }
 
-function kindsSignature(kinds: MapLayerKind[]): string {
+function kindsSignature(kinds: UserContentKind[]): string {
   return [...kinds].sort().join(',')
 }
 
-function kindsParam(kinds: MapLayerKind[]): string {
+function kindsParam(kinds: UserContentKind[]): string {
   // Schema requires non-empty; always emit so dev-tools URLs are explicit.
   return kinds.join(',')
 }
 
-function selectedKinds(): MapLayerKind[] {
+function selectedKinds(): UserContentKind[] {
   const m = useMapStore()
-  const kinds: MapLayerKind[] = []
+  const kinds: UserContentKind[] = []
   if (m.showPeople) kinds.push('profile')
   if (m.showPosts) kinds.push('post')
   return kinds

@@ -5,7 +5,7 @@ import { PostService } from './post.service'
 import { ImageService } from './image.service'
 import type { ClusterFeature, PointFeature, MapFeature } from '@shared/zod/map/cluster.dto'
 import type { TagWithTranslations } from '@shared/zod/tag/tag.db'
-import { MAP_MAX_ZOOM, type MapLayerKind } from '@shared/maps'
+import { MAP_MAX_ZOOM, type UserContentKind } from '@shared/maps'
 const CLUSTER_RADIUS = 40
 const INDEX_TTL_MS = 30 * 60 * 1000 // 30 minutes
 const INDEX_MAX_SIZE = 200
@@ -33,7 +33,7 @@ interface CachedIndex {
  * The `|kinds` segment uses a different separator than `:tags` so the two
  * segments never collide.
  */
-function buildCacheKey(profileId: string, tagIds: string[], kinds: MapLayerKind[]): string {
+function buildCacheKey(profileId: string, tagIds: string[], kinds: UserContentKind[]): string {
   const tagPart = tagIds.length === 0 ? '' : `:${[...tagIds].sort().join(',')}`
   const kindPart = `|${[...kinds].sort().join(',')}`
   return `${profileId}${tagPart}${kindPart}`
@@ -52,7 +52,7 @@ export class ClusterService {
     return ClusterService.instance
   }
 
-  async buildIndex(profileId: string, tagIds: string[], kinds: MapLayerKind[]): Promise<void> {
+  async buildIndex(profileId: string, tagIds: string[], kinds: UserContentKind[]): Promise<void> {
     const profileMatchService = ProfileMatchService.getInstance()
     const postService = PostService.getInstance()
 
@@ -164,7 +164,7 @@ export class ClusterService {
     bbox: [number, number, number, number],
     zoom: number,
     tagIds: string[],
-    kinds: MapLayerKind[]
+    kinds: UserContentKind[]
   ): { features: MapFeature[]; tags: TagWithTranslations[] } {
     const key = buildCacheKey(profileId, tagIds, kinds)
     const cached = this.indexes.get(key)
@@ -182,7 +182,7 @@ export class ClusterService {
     bbox: [number, number, number, number],
     zoom: number,
     tagIds: string[],
-    kinds: MapLayerKind[]
+    kinds: UserContentKind[]
   ): Promise<{ features: MapFeature[]; tags: TagWithTranslations[] }> {
     this.pruneIndexes()
     const key = buildCacheKey(profileId, tagIds, kinds)
@@ -196,7 +196,7 @@ export class ClusterService {
     profileId: string,
     clusterId: number,
     tagIds: string[],
-    kinds: MapLayerKind[]
+    kinds: UserContentKind[]
   ): number {
     const cached = this.indexes.get(buildCacheKey(profileId, tagIds, kinds))
     if (!cached) return MAP_MAX_ZOOM
@@ -207,7 +207,7 @@ export class ClusterService {
     profileId: string,
     clusterId: number,
     tagIds: string[],
-    kinds: MapLayerKind[]
+    kinds: UserContentKind[]
   ): PointFeature[] {
     const cacheKey = buildCacheKey(profileId, tagIds, kinds)
     const cached = this.indexes.get(cacheKey)
@@ -239,7 +239,7 @@ export class ClusterService {
     this.indexes.clear()
   }
 
-  hasIndex(profileId: string, tagIds: string[], kinds: MapLayerKind[]): boolean {
+  hasIndex(profileId: string, tagIds: string[], kinds: UserContentKind[]): boolean {
     return this.indexes.has(buildCacheKey(profileId, tagIds, kinds))
   }
 
