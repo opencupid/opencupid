@@ -333,7 +333,7 @@ describe('BrowseProfiles view', () => {
   })
 
   it('refetches bounds when mapStore.showPeople toggles', async () => {
-    const wrapper = mountComponent()
+    mountComponent()
     await flushPromises()
 
     // mapStore is real (not mocked); read it via the same import the component uses.
