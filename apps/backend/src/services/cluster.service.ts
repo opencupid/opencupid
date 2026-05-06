@@ -62,17 +62,15 @@ export class ClusterService {
     const [profiles, matchIds, posts] = await Promise.all([
       wantProfiles
         ? profileMatchService.findSocialProfilesWithLocation(profileId, tagIds)
-        : Promise.resolve([] as Awaited<
-            ReturnType<typeof profileMatchService.findSocialProfilesWithLocation>
-          >),
+        : Promise.resolve(
+            [] as Awaited<ReturnType<typeof profileMatchService.findSocialProfilesWithLocation>>
+          ),
       wantProfiles
         ? profileMatchService.findMutualMatchIds(profileId)
         : Promise.resolve([] as string[]),
       wantPosts
         ? postService.findAllWithLocation(profileId)
-        : Promise.resolve([] as Awaited<
-            ReturnType<typeof postService.findAllWithLocation>
-          >),
+        : Promise.resolve([] as Awaited<ReturnType<typeof postService.findAllWithLocation>>),
     ])
 
     const matchSet = new Set(matchIds)
