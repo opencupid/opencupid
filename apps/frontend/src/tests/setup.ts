@@ -3,6 +3,7 @@ import {
   BInput,
   BForm,
   BButton,
+  BButtonGroup,
   BFormFloatingLabel,
   BFormTextarea,
   BFormCheckbox,
@@ -30,4 +31,6 @@ import { appConfigSchema } from '@zod/config/appConfig.schema'
 import packageJson from '../../package.json'
 ;(globalThis as any).__APP_VERSION__ = packageJson.version
 
-config.global.components = {}
+config.global.components = {
+  BButtonGroup,
+}
