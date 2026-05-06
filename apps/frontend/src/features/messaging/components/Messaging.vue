@@ -3,7 +3,6 @@ import type { ConversationSummary } from '@zod/messaging/messaging.dto'
 
 import ConversationSummaries from './ConversationSummaries.vue'
 import EmptyView from './EmptyView.vue'
-import SendMessageDialog from '@/features/publicprofile/components/SendMessageDialog.vue'
 import MatchesList from '@/features/interaction/components/MatchesList.vue'
 import ReceivedLikesTeaser from '@/features/interaction/components/ReceivedLikesTeaser.vue'
 import PublicProfileView from '@/features/publicprofile/components/PublicProfileView.vue'
@@ -38,12 +37,9 @@ const {
   fetchConversations,
   handleMatchSelect,
   handleProfileSelect,
-  handleMessageSent,
   matches,
   haveMatches,
   showEmptyState,
-  showMessageModal,
-  messageProfile,
 } = useMessagingViewModel()
 
 const panel = useDetailPanel()
@@ -112,13 +108,6 @@ function handleSelectConvo(convo: ConversationSummary) {
         />
       </div>
     </div>
-
-    <SendMessageDialog
-      v-if="messageProfile"
-      v-model="showMessageModal"
-      :profile="messageProfile"
-      @sent="handleMessageSent"
-    />
   </div>
 
   <!-- Detail panel content is pushed into DetailPanelOrchestrator
