@@ -354,6 +354,12 @@ describe('ClusterService', () => {
       mockFindAllWithLocation.mockResolvedValue([])
 
       await service.buildIndex('viewer-1', [], ['profile'])
+
+      // Building one kinds selection must not satisfy a different selection.
+      expect(service.hasIndex('viewer-1', [], ['profile'])).toBe(true)
+      expect(service.hasIndex('viewer-1', [], ['post'])).toBe(false)
+      expect(service.hasIndex('viewer-1', [], ['profile', 'post'])).toBe(false)
+
       await service.buildIndex('viewer-1', [], ['profile', 'post'])
 
       expect(service.hasIndex('viewer-1', [], ['profile'])).toBe(true)
