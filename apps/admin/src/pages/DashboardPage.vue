@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useApi } from '../composables/useApi'
-import { Bar, Pie } from 'vue-chartjs'
+import { Pie } from 'vue-chartjs'
 import {
   Chart as ChartJS,
   BarElement,
@@ -11,6 +11,7 @@ import {
   Legend,
   ArcElement,
 } from 'chart.js'
+import KpiCard from '../components/KpiCard.vue'
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend, ArcElement)
 
@@ -20,8 +21,6 @@ interface SegmentCount {
 }
 
 interface Stats {
-  totalUsers: number
-  totalProfiles: number
   activeProfiles: number
   recentSignups: number
   blockedUsers: number
@@ -38,6 +37,8 @@ interface DailyStats {
   success: boolean
   dailySignups: DailyEntry[]
   dailyLastSeen: DailyEntry[]
+  dailyBlockedUsers: DailyEntry[]
+  dailyReportedProfiles: DailyEntry[]
   dailyInteractions: DailyEntry[]
   dailyMatches: DailyEntry[]
   dailyMessages: DailyEntry[]
@@ -47,27 +48,20 @@ const { call, loading, error } = useApi()
 const stats = ref<Stats | null>(null)
 const dailyStats = ref<DailyStats | null>(null)
 
-const chartOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: { legend: { display: false } },
-  scales: {
-    y: { beginAtZero: true, ticks: { stepSize: 1 } },
-  },
-}
+const series = (rows: DailyEntry[] | undefined) => (rows ? rows.map((r) => r.count) : [])
 
-function buildChartData(entries: DailyEntry[], color: string) {
-  return {
-    labels: entries.map((e) => e.date.slice(5)), // "MM-DD"
-    datasets: [
-      {
-        data: entries.map((e) => e.count),
-        backgroundColor: color,
-        borderRadius: 4,
-      },
-    ],
-  }
-}
+const dailyActiveTotal = computed(() =>
+  (dailyStats.value?.dailyLastSeen ?? []).reduce((sum, r) => sum + r.count, 0)
+)
+const interactionsTotal = computed(() =>
+  (dailyStats.value?.dailyInteractions ?? []).reduce((sum, r) => sum + r.count, 0)
+)
+const matchesTotal = computed(() =>
+  (dailyStats.value?.dailyMatches ?? []).reduce((sum, r) => sum + r.count, 0)
+)
+const messagesTotal = computed(() =>
+  (dailyStats.value?.dailyMessages ?? []).reduce((sum, r) => sum + r.count, 0)
+)
 
 const segmentColorMap: Record<string, string> = {
   new: '#0d6efd',
@@ -82,7 +76,8 @@ const pieOptions = {
   plugins: { legend: { position: 'bottom' as const } },
 }
 
-function buildSegmentPieData(counts: SegmentCount[]) {
+const segmentPieData = computed(() => {
+  const counts = stats.value?.segmentCounts ?? []
   return {
     labels: counts.map((c) => c.segment),
     datasets: [
@@ -92,7 +87,7 @@ function buildSegmentPieData(counts: SegmentCount[]) {
       },
     ],
   }
-}
+})
 
 onMounted(async () => {
   const [statsRes, dailyRes] = await Promise.all([
@@ -126,142 +121,70 @@ onMounted(async () => {
       v-if="stats"
       class="kpi-grid"
     >
-      <div class="card kpi-card">
-        <div class="card-body">
-          <h6 class="card-title">Total Users</h6>
-          <h6 class="card-subtitle mb-2 text-body-secondary">&nbsp;</h6>
-          <div class="kpi-value">{{ stats.totalUsers }}</div>
-        </div>
-      </div>
-      <div class="card kpi-card">
-        <div class="card-body">
-          <h6 class="card-title">Total Profiles</h6>
-          <h6 class="card-subtitle mb-2 text-body-secondary">&nbsp;</h6>
-          <div class="kpi-value">{{ stats.totalProfiles }}</div>
-        </div>
-      </div>
-      <div class="card kpi-card">
-        <div class="card-body">
-          <h6 class="card-title">Active Profiles</h6>
-          <h6 class="card-subtitle mb-2 text-body-secondary">&nbsp;</h6>
-          <div class="kpi-value">{{ stats.activeProfiles }}</div>
-        </div>
-      </div>
-      <div class="card kpi-card">
-        <div class="card-body">
-          <h6 class="card-title">Signups</h6>
-          <h6 class="card-subtitle mb-2 text-body-secondary">Last 7 Days</h6>
-          <div class="kpi-value">{{ stats.recentSignups }}</div>
-        </div>
-      </div>
-      <div class="card kpi-card">
-        <div class="card-body">
-          <h6 class="card-title">Blocked Users</h6>
-          <h6 class="card-subtitle mb-2 text-body-secondary">&nbsp;</h6>
-          <div class="kpi-value">{{ stats.blockedUsers }}</div>
-        </div>
-      </div>
-      <div class="card kpi-card">
-        <div class="card-body">
-          <h6 class="card-title">Reported Profiles</h6>
-          <h6 class="card-subtitle mb-2 text-body-secondary">&nbsp;</h6>
-          <div class="kpi-value">{{ stats.reportedProfiles }}</div>
-        </div>
-      </div>
+      <KpiCard
+        title="Signups"
+        subtitle="Last 7 Days"
+        :value="stats.recentSignups"
+        :series="series(dailyStats?.dailySignups)"
+        color="#0d6efd"
+      />
+      <KpiCard
+        title="Daily Active"
+        subtitle="Last 7 Days"
+        :value="dailyActiveTotal"
+        :series="series(dailyStats?.dailyLastSeen)"
+        color="#198754"
+      />
+      <KpiCard
+        title="Blocked Users"
+        subtitle="Total"
+        :value="stats.blockedUsers"
+        :series="series(dailyStats?.dailyBlockedUsers)"
+        color="#dc3545"
+      />
+      <KpiCard
+        title="Reported"
+        subtitle="Total"
+        :value="stats.reportedProfiles"
+        :series="series(dailyStats?.dailyReportedProfiles)"
+        color="#fd7e14"
+      />
+      <KpiCard
+        title="Interactions"
+        subtitle="Last 7 Days"
+        :value="interactionsTotal"
+        :series="series(dailyStats?.dailyInteractions)"
+        color="#6f42c1"
+      />
+      <KpiCard
+        title="Matches"
+        subtitle="Last 7 Days"
+        :value="matchesTotal"
+        :series="series(dailyStats?.dailyMatches)"
+        color="#d63384"
+      />
+      <KpiCard
+        title="Messages"
+        subtitle="Last 7 Days"
+        :value="messagesTotal"
+        :series="series(dailyStats?.dailyMessages)"
+        color="#fd7e14"
+      />
     </div>
 
     <div
-      v-if="dailyStats || stats?.segmentCounts?.length"
-      class="row g-3 mt-2"
+      v-if="stats?.segmentCounts?.length"
+      class="row g-3 mt-3"
     >
-      <div
-        v-if="dailyStats"
-        class="col-md-4"
-      >
-        <div class="card h-100">
+      <div class="col-md-6 col-lg-4">
+        <div class="card">
           <div class="card-body">
-            <h6 class="card-title mb-3">Daily Signups (Last 7 Days)</h6>
-            <div style="height: 250px">
-              <Bar
-                :data="buildChartData(dailyStats.dailySignups, '#0d6efd')"
-                :options="chartOptions"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-      <div
-        v-if="dailyStats"
-        class="col-md-4"
-      >
-        <div class="card h-100">
-          <div class="card-body">
-            <h6 class="card-title mb-3">Daily Active (Last 7 Days)</h6>
-            <div style="height: 250px">
-              <Bar
-                :data="buildChartData(dailyStats.dailyLastSeen, '#198754')"
-                :options="chartOptions"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-      <div
-        v-if="stats?.segmentCounts?.length"
-        class="col-md-4"
-      >
-        <div class="card h-100">
-          <div class="card-body">
-            <h6 class="card-title mb-3">Activity Segments</h6>
-            <div style="height: 250px">
+            <h6 class="card-title mb-1">Activity Segments</h6>
+            <h6 class="card-subtitle mb-2 text-body-secondary small">Current</h6>
+            <div class="segment-chart">
               <Pie
-                :data="buildSegmentPieData(stats.segmentCounts)"
+                :data="segmentPieData"
                 :options="pieOptions"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div
-      v-if="dailyStats"
-      class="row g-3 mt-2"
-    >
-      <div class="col-md-4">
-        <div class="card h-100">
-          <div class="card-body">
-            <h6 class="card-title mb-3">Interactions (Last 7 Days)</h6>
-            <div style="height: 250px">
-              <Bar
-                :data="buildChartData(dailyStats.dailyInteractions, '#6f42c1')"
-                :options="chartOptions"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card h-100">
-          <div class="card-body">
-            <h6 class="card-title mb-3">Matches (Last 7 Days)</h6>
-            <div style="height: 250px">
-              <Bar
-                :data="buildChartData(dailyStats.dailyMatches, '#d63384')"
-                :options="chartOptions"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card h-100">
-          <div class="card-body">
-            <h6 class="card-title mb-3">Messages (Last 7 Days)</h6>
-            <div style="height: 250px">
-              <Bar
-                :data="buildChartData(dailyStats.dailyMessages, '#fd7e14')"
-                :options="chartOptions"
               />
             </div>
           </div>
@@ -274,14 +197,23 @@ onMounted(async () => {
 <style scoped>
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-auto-rows: 1fr;
-  gap: 1rem;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+@media (min-width: 576px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (min-width: 992px) {
   .kpi-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
   }
+}
+
+.segment-chart {
+  height: 14rem;
 }
 </style>

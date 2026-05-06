@@ -29,66 +29,92 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * GET /stats/daily
-   * Returns daily signup and last-seen counts for the last 7 days.
-   * @returns {{ success, dailySignups, dailyLastSeen }}
+   * Returns daily counts for the last 7 days for each KPI rendered on the
+   * admin dashboard. Each series is zero-filled so the frontend can render
+   * uniform 7-day mini charts without gap handling.
    */
   fastify.get('/stats/daily', async (_req, reply) => {
     try {
       const days = getLast7Days()
       const since = days[0]
 
-      const [signupRows, lastSeenRows, interactionRows, matchRows, messageRows] = await Promise.all(
-        [
-          prisma.$queryRaw<{ date: string; count: bigint }[]>`
-            SELECT DATE("createdAt")::text AS date, COUNT(*)::bigint AS count
-            FROM "User"
-            WHERE "createdAt" >= ${since}::date
-            GROUP BY DATE("createdAt")
-            ORDER BY date
-          `,
-          prisma.$queryRaw<{ date: string; count: bigint }[]>`
-            SELECT DATE("lastSeenAt")::text AS date, COUNT(*)::bigint AS count
-            FROM "ProfileActivitySummary"
-            WHERE "lastSeenAt" >= ${since}::date
-            GROUP BY DATE("lastSeenAt")
-            ORDER BY date
-          `,
-          prisma.$queryRaw<{ date: string; count: bigint }[]>`
-            SELECT DATE(first_at)::text AS date, COUNT(*)::bigint AS count
-            FROM (
-              SELECT LEAST("fromId","toId") AS a, GREATEST("fromId","toId") AS b,
-                     MIN("createdAt") AS first_at
-              FROM "LikedProfile"
-              GROUP BY a, b
-            ) pairs
-            WHERE first_at >= ${since}::date
-            GROUP BY DATE(first_at)
-            ORDER BY date
-          `,
-          prisma.$queryRaw<{ date: string; count: bigint }[]>`
-            SELECT DATE(GREATEST(a."createdAt", b."createdAt"))::text AS date,
-                   COUNT(*)::bigint AS count
-            FROM "LikedProfile" a
-            JOIN "LikedProfile" b ON a."fromId" = b."toId" AND a."toId" = b."fromId"
-            WHERE a."fromId" < a."toId"
-              AND GREATEST(a."createdAt", b."createdAt") >= ${since}::date
-            GROUP BY DATE(GREATEST(a."createdAt", b."createdAt"))
-            ORDER BY date
-          `,
-          prisma.$queryRaw<{ date: string; count: bigint }[]>`
-            SELECT DATE("createdAt")::text AS date, COUNT(*)::bigint AS count
-            FROM "Message"
-            WHERE "createdAt" >= ${since}::date
-            GROUP BY DATE("createdAt")
-            ORDER BY date
-          `,
-        ]
-      )
+      const [
+        signupRows,
+        lastSeenRows,
+        blockedRows,
+        reportedRows,
+        interactionRows,
+        matchRows,
+        messageRows,
+      ] = await Promise.all([
+        prisma.$queryRaw<{ date: string; count: bigint }[]>`
+          SELECT DATE("createdAt")::text AS date, COUNT(*)::bigint AS count
+          FROM "User"
+          WHERE "createdAt" >= ${since}::date
+          GROUP BY DATE("createdAt")
+          ORDER BY date
+        `,
+        prisma.$queryRaw<{ date: string; count: bigint }[]>`
+          SELECT DATE("lastSeenAt")::text AS date, COUNT(*)::bigint AS count
+          FROM "ProfileActivitySummary"
+          WHERE "lastSeenAt" >= ${since}::date
+          GROUP BY DATE("lastSeenAt")
+          ORDER BY date
+        `,
+        // Approximation: User has no blockedAt timestamp, so use updatedAt
+        // for currently-blocked users as the latest-block proxy.
+        prisma.$queryRaw<{ date: string; count: bigint }[]>`
+          SELECT DATE("updatedAt")::text AS date, COUNT(*)::bigint AS count
+          FROM "User"
+          WHERE "isBlocked" = true AND "updatedAt" >= ${since}::date
+          GROUP BY DATE("updatedAt")
+          ORDER BY date
+        `,
+        // Same approximation for reported profiles.
+        prisma.$queryRaw<{ date: string; count: bigint }[]>`
+          SELECT DATE("updatedAt")::text AS date, COUNT(*)::bigint AS count
+          FROM "Profile"
+          WHERE "isReported" = true AND "updatedAt" >= ${since}::date
+          GROUP BY DATE("updatedAt")
+          ORDER BY date
+        `,
+        prisma.$queryRaw<{ date: string; count: bigint }[]>`
+          SELECT DATE(first_at)::text AS date, COUNT(*)::bigint AS count
+          FROM (
+            SELECT LEAST("fromId","toId") AS a, GREATEST("fromId","toId") AS b,
+                   MIN("createdAt") AS first_at
+            FROM "LikedProfile"
+            GROUP BY a, b
+          ) pairs
+          WHERE first_at >= ${since}::date
+          GROUP BY DATE(first_at)
+          ORDER BY date
+        `,
+        prisma.$queryRaw<{ date: string; count: bigint }[]>`
+          SELECT DATE(GREATEST(a."createdAt", b."createdAt"))::text AS date,
+                 COUNT(*)::bigint AS count
+          FROM "LikedProfile" a
+          JOIN "LikedProfile" b ON a."fromId" = b."toId" AND a."toId" = b."fromId"
+          WHERE a."fromId" < a."toId"
+            AND GREATEST(a."createdAt", b."createdAt") >= ${since}::date
+          GROUP BY DATE(GREATEST(a."createdAt", b."createdAt"))
+          ORDER BY date
+        `,
+        prisma.$queryRaw<{ date: string; count: bigint }[]>`
+          SELECT DATE("createdAt")::text AS date, COUNT(*)::bigint AS count
+          FROM "Message"
+          WHERE "createdAt" >= ${since}::date
+          GROUP BY DATE("createdAt")
+          ORDER BY date
+        `,
+      ])
 
       return reply.code(200).send({
         success: true,
         dailySignups: fillZeroDays(signupRows, days),
         dailyLastSeen: fillZeroDays(lastSeenRows, days),
+        dailyBlockedUsers: fillZeroDays(blockedRows, days),
+        dailyReportedProfiles: fillZeroDays(reportedRows, days),
         dailyInteractions: fillZeroDays(interactionRows, days),
         dailyMatches: fillZeroDays(matchRows, days),
         dailyMessages: fillZeroDays(messageRows, days),
@@ -101,35 +127,25 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * GET /stats
-   * Returns dashboard KPIs: total users, active profiles, recent signups, blocked/reported counts,
-   * and activity segment distribution.
-   * @returns {{ success, stats }}
+   * Returns dashboard KPIs: active profiles, recent signups, blocked/reported
+   * counts, and activity segment distribution.
    */
   fastify.get('/stats', async (_req, reply) => {
     try {
       const now = new Date()
       const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
 
-      const [
-        totalUsers,
-        totalProfiles,
-        activeProfiles,
-        recentSignups,
-        blockedUsers,
-        reportedProfiles,
-        segmentGroups,
-      ] = await Promise.all([
-        prisma.user.count(),
-        prisma.profile.count(),
-        prisma.profile.count({ where: { isActive: true } }),
-        prisma.user.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
-        prisma.user.count({ where: { isBlocked: true } }),
-        prisma.profile.count({ where: { isReported: true } }),
-        prisma.profileActivitySummary.groupBy({
-          by: ['segment'],
-          _count: { segment: true },
-        }),
-      ])
+      const [activeProfiles, recentSignups, blockedUsers, reportedProfiles, segmentGroups] =
+        await Promise.all([
+          prisma.profile.count({ where: { isActive: true } }),
+          prisma.user.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
+          prisma.user.count({ where: { isBlocked: true } }),
+          prisma.profile.count({ where: { isReported: true } }),
+          prisma.profileActivitySummary.groupBy({
+            by: ['segment'],
+            _count: { segment: true },
+          }),
+        ])
 
       const segmentCounts = segmentGroups.map((g) => ({
         segment: g.segment,
@@ -139,8 +155,6 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.code(200).send({
         success: true,
         stats: {
-          totalUsers,
-          totalProfiles,
           activeProfiles,
           recentSignups,
           blockedUsers,
