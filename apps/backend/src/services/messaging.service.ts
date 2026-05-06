@@ -388,10 +388,10 @@ export class MessageService {
     })
   }
 
-  private async hasMutualLike(
-    tx: Prisma.TransactionClient,
+  async hasMutualLike(
     profileAId: string,
-    profileBId: string
+    profileBId: string,
+    tx: Prisma.TransactionClient | typeof prisma = prisma
   ): Promise<boolean> {
     const count = await tx.likedProfile.count({
       where: {
@@ -402,6 +402,27 @@ export class MessageService {
       },
     })
     return count === 2
+  }
+
+  /**
+   * Looks up an existing active conversation between the viewer and a partner
+   * profile, returning the same shape as `getConversationSummary` so the route
+   * mapper produces an identical ConversationSummary. DISCARDED tombstones are
+   * excluded via `activeConversationWhere`. Used by the resolve-or-draft
+   * endpoint to decide between "return persisted" and "synthesize draft".
+   */
+  async findConversationSummaryByPartner(
+    viewerProfileId: string,
+    partnerProfileId: string
+  ): Promise<ConversationParticipantWithConversationSummary | null> {
+    const [profileAId, profileBId] = this.sortProfilePair(viewerProfileId, partnerProfileId)
+    return await prisma.conversationParticipant.findFirst({
+      where: {
+        profileId: viewerProfileId,
+        conversation: this.activeConversationWhere(profileAId, profileBId),
+      },
+      include: conversationSummaryInclude,
+    })
   }
 
   async resolveConversation(
@@ -418,7 +439,7 @@ export class MessageService {
 
     if (existing) return { convo: existing, wasCreated: false }
 
-    const isMutualMatch = await this.hasMutualLike(tx, profileAId, profileBId)
+    const isMutualMatch = await this.hasMutualLike(profileAId, profileBId, tx)
     let status: 'PENDING' | 'INITIATED' | 'ACCEPTED'
     let participants
     if (opts.createAsPending && !isMutualMatch) {

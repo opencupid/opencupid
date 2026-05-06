@@ -10,6 +10,7 @@ let mockMessageService: any
 let mockWebPushService: any
 let mockNotifierService: any
 let mockTrustService: any
+let mockProfileService: any
 
 vi.mock('../../services/profileTrust.service', () => ({
   ProfileTrustService: {
@@ -71,6 +72,14 @@ vi.mock('../../api/mappers/messaging.mappers', () => ({
     ...(currentProfileId !== undefined && { isMine: m?.senderId === currentProfileId }),
   })),
   mapConversationParticipantToSummary: vi.fn(() => ({ id: 'summary', partnerProfile: {} })),
+}))
+
+vi.mock('../../api/mappers/profile.mappers', () => ({
+  mapProfileSummary: vi.fn((p: any) => ({ id: p.id, publicName: p.publicName ?? 'Partner' })),
+}))
+
+vi.mock('@/services/profile.service', () => ({
+  ProfileService: { getInstance: () => mockProfileService },
 }))
 
 vi.mock('@/lib/appconfig', () => ({
@@ -135,6 +144,12 @@ beforeEach(async () => {
     acceptConversationOnReply: vi.fn(),
     promoteConversation: vi.fn(),
     sendMessage: vi.fn(),
+    findConversationSummaryByPartner: vi.fn(),
+    hasMutualLike: vi.fn(),
+  }
+  mockProfileService = {
+    getProfilePublicById: vi.fn(),
+    getProfileById: vi.fn(),
   }
   mockWebPushService = { send: vi.fn() }
   mockNotifierService = (await import('../../services/notifier.service')).notifierService
@@ -1287,5 +1302,144 @@ describe('profile-trust integration', () => {
     expect(reply.statusCode).toBe(200)
 
     spy.mockRestore()
+  })
+})
+
+describe('GET /conversations/by-profile/:profileId', () => {
+  const validProfileId = 'ck1234567890abcd12345678'
+
+  it('returns 401 when session is missing', async () => {
+    const handler = fastify.routes['GET /conversations/by-profile/:profileId']
+    await handler({ session: {}, params: { profileId: validProfileId } } as any, reply as any)
+    expect(reply.statusCode).toBe(401)
+  })
+
+  it('returns 400 when profileId is not a CUID', async () => {
+    const handler = fastify.routes['GET /conversations/by-profile/:profileId']
+    await handler(
+      { session: { profileId: 'p1' }, params: { profileId: 'not-a-cuid' } } as any,
+      reply as any
+    )
+    expect(reply.statusCode).toBe(400)
+  })
+
+  it('returns 404 when partner profile is not found', async () => {
+    const handler = fastify.routes['GET /conversations/by-profile/:profileId']
+    mockProfileService.getProfilePublicById.mockResolvedValue(null)
+    await handler(
+      { session: { profileId: 'p1' }, params: { profileId: validProfileId } } as any,
+      reply as any
+    )
+    expect(reply.statusCode).toBe(404)
+  })
+
+  it('returns vague 404 when partner has blocked the viewer', async () => {
+    const handler = fastify.routes['GET /conversations/by-profile/:profileId']
+    mockProfileService.getProfilePublicById.mockResolvedValue({
+      id: validProfileId,
+      blockedProfiles: [{ id: 'p1' }],
+      isCallable: true,
+    })
+    await handler(
+      { session: { profileId: 'p1' }, params: { profileId: validProfileId } } as any,
+      reply as any
+    )
+    expect(reply.statusCode).toBe(404)
+  })
+
+  it('returns persisted ConversationSummary when conversation exists', async () => {
+    const handler = fastify.routes['GET /conversations/by-profile/:profileId']
+    mockProfileService.getProfilePublicById.mockResolvedValue({
+      id: validProfileId,
+      blockedProfiles: [],
+      isCallable: true,
+    })
+    mockMessageService.findConversationSummaryByPartner.mockResolvedValue({ id: 'cp-existing' })
+    await handler(
+      { session: { profileId: 'p1' }, params: { profileId: validProfileId } } as any,
+      reply as any
+    )
+    expect(mockMessageService.findConversationSummaryByPartner).toHaveBeenCalledWith(
+      'p1',
+      validProfileId
+    )
+    // hasMutualLike must NOT be consulted — existing convos bypass the match gate.
+    expect(mockMessageService.hasMutualLike).not.toHaveBeenCalled()
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    // Mocked mapper returns { id: 'summary', partnerProfile: {} } — proves the
+    // persisted-summary branch ran (not the synthesized draft branch).
+    expect(reply.payload.conversation.id).toBe('summary')
+  })
+
+  it('returns 403 when no conversation exists and pair is not matched', async () => {
+    const handler = fastify.routes['GET /conversations/by-profile/:profileId']
+    mockProfileService.getProfilePublicById.mockResolvedValue({
+      id: validProfileId,
+      blockedProfiles: [],
+      isCallable: true,
+    })
+    mockMessageService.findConversationSummaryByPartner.mockResolvedValue(null)
+    mockMessageService.hasMutualLike.mockResolvedValue(false)
+    await handler(
+      { session: { profileId: 'p1' }, params: { profileId: validProfileId } } as any,
+      reply as any
+    )
+    expect(reply.statusCode).toBe(403)
+  })
+
+  it('returns ConversationDraftSummary when matched and no conversation exists', async () => {
+    const handler = fastify.routes['GET /conversations/by-profile/:profileId']
+    mockProfileService.getProfilePublicById.mockResolvedValue({
+      id: validProfileId,
+      publicName: 'Partner',
+      blockedProfiles: [],
+      isCallable: true,
+    })
+    mockMessageService.findConversationSummaryByPartner.mockResolvedValue(null)
+    mockMessageService.hasMutualLike.mockResolvedValue(true)
+    mockProfileService.getProfileById.mockResolvedValue({ id: 'p1', isCallable: true })
+    await handler(
+      { session: { profileId: 'p1' }, params: { profileId: validProfileId } } as any,
+      reply as any
+    )
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    expect(reply.payload.conversation.isDraft).toBe(true)
+    expect(reply.payload.conversation.partnerProfile.id).toBe(validProfileId)
+    expect(reply.payload.conversation.canReply).toBe(true)
+    expect(reply.payload.conversation.isCallable).toBe(true)
+    expect(reply.payload.conversation.myIsCallable).toBe(true)
+  })
+
+  it('reflects per-profile isCallable flags in the draft', async () => {
+    const handler = fastify.routes['GET /conversations/by-profile/:profileId']
+    mockProfileService.getProfilePublicById.mockResolvedValue({
+      id: validProfileId,
+      publicName: 'Partner',
+      blockedProfiles: [],
+      isCallable: false,
+    })
+    mockMessageService.findConversationSummaryByPartner.mockResolvedValue(null)
+    mockMessageService.hasMutualLike.mockResolvedValue(true)
+    mockProfileService.getProfileById.mockResolvedValue({ id: 'p1', isCallable: false })
+    await handler(
+      { session: { profileId: 'p1' }, params: { profileId: validProfileId } } as any,
+      reply as any
+    )
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.conversation.isDraft).toBe(true)
+    expect(reply.payload.conversation.isCallable).toBe(false)
+    expect(reply.payload.conversation.myIsCallable).toBe(false)
+  })
+
+  it('returns 500 when service throws unexpectedly', async () => {
+    const handler = fastify.routes['GET /conversations/by-profile/:profileId']
+    mockProfileService.getProfilePublicById.mockRejectedValue(new Error('db down'))
+    await handler(
+      { session: { profileId: 'p1' }, params: { profileId: validProfileId } } as any,
+      reply as any
+    )
+    expect(reply.statusCode).toBe(500)
   })
 })
