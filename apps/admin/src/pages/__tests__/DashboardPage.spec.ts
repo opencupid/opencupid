@@ -12,9 +12,10 @@ vi.mock('../../composables/useApi', () => ({
 }))
 
 // vue-chartjs renders a <canvas> via Chart.js which jsdom can't paint.
-// Stub the Pie wrapper so the component tree mounts without canvas calls.
+// Stub the chart wrappers so the component tree mounts without canvas calls.
 vi.mock('vue-chartjs', () => ({
   Pie: { name: 'Pie', template: '<div data-test="pie-chart" />' },
+  Bar: { name: 'Bar', template: '<div data-test="bar-chart" />' },
 }))
 
 import DashboardPage from '../DashboardPage.vue'
@@ -58,6 +59,31 @@ describe('DashboardPage', () => {
     useApiCall.mockImplementation((path: string) => {
       if (path === '/admin/stats') return Promise.resolve({ success: true, stats })
       if (path === '/admin/stats/daily') return Promise.resolve(dailyStats)
+      if (path === '/admin/stats/breakdown')
+        return Promise.resolve({
+          success: true,
+          metric: 'interactions',
+          range: '72h',
+          unit: 'hour',
+          buckets: ['2026-05-06T00:00:00.000Z'],
+          series: [
+            {
+              key: 'likes',
+              label: 'Likes',
+              data: [{ bucket: '2026-05-06T00:00:00.000Z', count: 1 }],
+            },
+            {
+              key: 'anonymous',
+              label: 'Anonymous',
+              data: [{ bucket: '2026-05-06T00:00:00.000Z', count: 0 }],
+            },
+            {
+              key: 'matches',
+              label: 'Matches',
+              data: [{ bucket: '2026-05-06T00:00:00.000Z', count: 0 }],
+            },
+          ],
+        })
       return Promise.resolve(null)
     })
   })
@@ -74,7 +100,7 @@ describe('DashboardPage', () => {
       'Signups',
       'Daily Active',
       'Blocked Users',
-      'Reported Profiles',
+      'Reported',
       'Interactions',
       'Matches',
       'Messages',
@@ -109,5 +135,37 @@ describe('DashboardPage', () => {
     await flushPromises()
 
     expect(wrapper.find('[data-test="pie-chart"]').exists()).toBe(true)
+  })
+
+  it('opens the drill-down modal when the Interactions KPI is clicked', async () => {
+    const wrapper = mount(DashboardPage)
+    await flushPromises()
+
+    expect(wrapper.find('.modal').exists()).toBe(false)
+
+    await wrapper.find('[data-test="kpi-interactions"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('.modal').exists()).toBe(true)
+    // Modal fired off the breakdown request with the default 72h range.
+    const breakdownCall = useApiCall.mock.calls.find(
+      (c: any[]) => c[0] === '/admin/stats/breakdown'
+    )
+    expect(breakdownCall).toBeTruthy()
+    expect(breakdownCall![1].params).toMatchObject({ metric: 'interactions', range: '72h' })
+  })
+
+  it('opens the drill-down modal when the Messages KPI is clicked', async () => {
+    const wrapper = mount(DashboardPage)
+    await flushPromises()
+
+    await wrapper.find('[data-test="kpi-messages"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('.modal').exists()).toBe(true)
+    const breakdownCall = useApiCall.mock.calls.find(
+      (c: any[]) => c[0] === '/admin/stats/breakdown' && c[1]?.params?.metric === 'messages'
+    )
+    expect(breakdownCall).toBeTruthy()
   })
 })

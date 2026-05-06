@@ -289,6 +289,114 @@ describe('GET /stats/daily', () => {
   })
 })
 
+describe('GET /stats/breakdown', () => {
+  it('returns three zero-filled hourly series for interactions over 72h by default', async () => {
+    mockPrisma.$queryRaw
+      .mockResolvedValueOnce([]) // likes
+      .mockResolvedValueOnce([]) // anonymous
+      .mockResolvedValueOnce([]) // matches
+
+    const handler = fastify.routes['GET /stats/breakdown']
+    await handler({ query: {} }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    expect(reply.payload.metric).toBe('interactions')
+    expect(reply.payload.range).toBe('72h')
+    expect(reply.payload.unit).toBe('hour')
+    expect(reply.payload.buckets).toHaveLength(72)
+    expect(reply.payload.series).toHaveLength(3)
+    expect(reply.payload.series.map((s: any) => s.key)).toEqual(['likes', 'anonymous', 'matches'])
+    for (const s of reply.payload.series) {
+      expect(s.data).toHaveLength(72)
+      expect(s.data.every((d: any) => d.count === 0)).toBe(true)
+    }
+  })
+
+  it('returns 24 hourly buckets when range=24h', async () => {
+    mockPrisma.$queryRaw
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+
+    const handler = fastify.routes['GET /stats/breakdown']
+    await handler({ query: { range: '24h' } }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.unit).toBe('hour')
+    expect(reply.payload.buckets).toHaveLength(24)
+    for (const s of reply.payload.series) {
+      expect(s.data).toHaveLength(24)
+    }
+  })
+
+  it('returns 7 daily buckets when range=7d', async () => {
+    mockPrisma.$queryRaw
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+
+    const handler = fastify.routes['GET /stats/breakdown']
+    await handler({ query: { range: '7d' } }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.unit).toBe('day')
+    expect(reply.payload.buckets).toHaveLength(7)
+    for (const s of reply.payload.series) {
+      expect(s.data).toHaveLength(7)
+    }
+  })
+
+  it('returns messages and conversations series when metric=messages', async () => {
+    mockPrisma.$queryRaw
+      .mockResolvedValueOnce([]) // messages
+      .mockResolvedValueOnce([]) // conversations
+
+    const handler = fastify.routes['GET /stats/breakdown']
+    await handler({ query: { metric: 'messages', range: '24h' } }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.metric).toBe('messages')
+    expect(reply.payload.series).toHaveLength(2)
+    expect(reply.payload.series.map((s: any) => s.key)).toEqual(['messages', 'conversations'])
+    for (const s of reply.payload.series) {
+      expect(s.data).toHaveLength(24)
+    }
+  })
+
+  it('zero-fills missing buckets and preserves matched bucket counts', async () => {
+    // Pick the most-recent hour bucket so we know the bucket key matches.
+    const now = new Date()
+    const hour = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours())
+    )
+    const key = hour.toISOString().slice(0, 13)
+
+    mockPrisma.$queryRaw
+      .mockResolvedValueOnce([{ bucket: key, count: BigInt(4) }])
+      .mockResolvedValueOnce([{ bucket: key, count: BigInt(1) }])
+      .mockResolvedValueOnce([{ bucket: key, count: BigInt(2) }])
+
+    const handler = fastify.routes['GET /stats/breakdown']
+    await handler({ query: { range: '24h' } }, reply)
+
+    const likes = reply.payload.series.find((s: any) => s.key === 'likes')
+    const last = likes.data[likes.data.length - 1]
+    expect(last.count).toBe(4)
+    expect(likes.data.slice(0, -1).every((d: any) => d.count === 0)).toBe(true)
+  })
+
+  it('handles errors gracefully', async () => {
+    mockPrisma.$queryRaw.mockRejectedValueOnce(new Error('DB error'))
+
+    const handler = fastify.routes['GET /stats/breakdown']
+    await handler({ query: {} }, reply)
+
+    expect(reply.statusCode).toBe(500)
+    expect(reply.payload.success).toBe(false)
+  })
+})
+
 describe('GET /users', () => {
   it('returns paginated user list with lastSeenAt flattened from activitySummary', async () => {
     const seen = new Date('2026-04-20T10:00:00Z')

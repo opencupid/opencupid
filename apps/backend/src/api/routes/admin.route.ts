@@ -6,7 +6,14 @@ import { TrustReasonSchema, type TrustReasonType } from '@zod/generated'
 import { sendError } from '../helpers'
 import { prisma } from '@/lib/prisma'
 import { appConfig } from '@/lib/appconfig'
-import { getLast7Days, fillZeroDays } from '../adminHelpers'
+import {
+  getLast7Days,
+  fillZeroDays,
+  getBreakdownConfig,
+  bucketFormat,
+  fillZeroBuckets,
+  type BreakdownRange,
+} from '../adminHelpers'
 import { MessageService, MessagingError, MessagingErrorCodes } from '@/services/messaging.service'
 import { computeSendOutcome } from '@/services/messaging.stateMachine'
 import { mapMessageToDTO } from '../mappers/messaging.mappers'
@@ -122,6 +129,123 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
     } catch (err) {
       fastify.log.error({ err }, 'Error fetching daily stats')
       return sendError(reply, 500, 'Failed to fetch daily stats')
+    }
+  })
+
+  /**
+   * GET /stats/breakdown
+   * Returns per-bucket series powering the dashboard drill-down modal.
+   *
+   * Query params:
+   *   metric: 'interactions' | 'messages' (default: 'interactions')
+   *   range:  '24h' | '72h' | '7d'        (default: '72h')
+   *
+   * 24h/72h are bucketed by hour; 7d is bucketed by day. All buckets are
+   * UTC-aligned and zero-filled so the frontend renders a uniform timeline.
+   */
+  fastify.get('/stats/breakdown', async (req, reply) => {
+    try {
+      const q = req.query as Record<string, string | undefined>
+      const metric = q.metric === 'messages' ? 'messages' : 'interactions'
+      const rangeParam: BreakdownRange = q.range === '24h' ? '24h' : q.range === '7d' ? '7d' : '72h'
+
+      const { since, unit, buckets } = getBreakdownConfig(rangeParam)
+      const fmt = bucketFormat(unit)
+
+      type BucketRow = { bucket: string; count: bigint }
+
+      if (metric === 'interactions') {
+        const [likeRows, anonRows, matchRows] = await Promise.all([
+          prisma.$queryRaw<BucketRow[]>`
+            SELECT to_char(date_trunc(${unit}, "createdAt" AT TIME ZONE 'UTC'), ${fmt}) AS bucket,
+                   COUNT(*)::bigint AS count
+            FROM "LikedProfile"
+            WHERE "createdAt" >= ${since}
+            GROUP BY 1
+            ORDER BY 1
+          `,
+          prisma.$queryRaw<BucketRow[]>`
+            SELECT to_char(date_trunc(${unit}, "createdAt" AT TIME ZONE 'UTC'), ${fmt}) AS bucket,
+                   COUNT(*)::bigint AS count
+            FROM "LikedProfile"
+            WHERE "isAnonymous" = true AND "createdAt" >= ${since}
+            GROUP BY 1
+            ORDER BY 1
+          `,
+          prisma.$queryRaw<BucketRow[]>`
+            SELECT to_char(date_trunc(${unit}, match_at AT TIME ZONE 'UTC'), ${fmt}) AS bucket,
+                   COUNT(*)::bigint AS count
+            FROM (
+              SELECT GREATEST(a."createdAt", b."createdAt") AS match_at
+              FROM "LikedProfile" a
+              JOIN "LikedProfile" b ON a."fromId" = b."toId" AND a."toId" = b."fromId"
+              WHERE a."fromId" < a."toId"
+                AND GREATEST(a."createdAt", b."createdAt") >= ${since}
+            ) m
+            GROUP BY 1
+            ORDER BY 1
+          `,
+        ])
+
+        return reply.code(200).send({
+          success: true,
+          metric,
+          range: rangeParam,
+          unit,
+          buckets: buckets.map((d) => d.toISOString()),
+          series: [
+            { key: 'likes', label: 'Likes', data: fillZeroBuckets(likeRows, buckets, unit) },
+            {
+              key: 'anonymous',
+              label: 'Anonymous',
+              data: fillZeroBuckets(anonRows, buckets, unit),
+            },
+            { key: 'matches', label: 'Matches', data: fillZeroBuckets(matchRows, buckets, unit) },
+          ],
+        })
+      }
+
+      const [messageRows, conversationRows] = await Promise.all([
+        prisma.$queryRaw<BucketRow[]>`
+          SELECT to_char(date_trunc(${unit}, "createdAt" AT TIME ZONE 'UTC'), ${fmt}) AS bucket,
+                 COUNT(*)::bigint AS count
+          FROM "Message"
+          WHERE "createdAt" >= ${since}
+          GROUP BY 1
+          ORDER BY 1
+        `,
+        prisma.$queryRaw<BucketRow[]>`
+          SELECT to_char(date_trunc(${unit}, "createdAt" AT TIME ZONE 'UTC'), ${fmt}) AS bucket,
+                 COUNT(*)::bigint AS count
+          FROM "Conversation"
+          WHERE "createdAt" >= ${since}
+          GROUP BY 1
+          ORDER BY 1
+        `,
+      ])
+
+      return reply.code(200).send({
+        success: true,
+        metric,
+        range: rangeParam,
+        unit,
+        buckets: buckets.map((d) => d.toISOString()),
+        series: [
+          {
+            key: 'messages',
+            label: 'Messages Sent',
+            data: fillZeroBuckets(messageRows, buckets, unit),
+          },
+          {
+            key: 'conversations',
+            label: 'New Conversations',
+            data: fillZeroBuckets(conversationRows, buckets, unit),
+          },
+        ],
+      })
+    } catch (err) {
+      fastify.log.error({ err }, 'Error fetching breakdown stats')
+      return sendError(reply, 500, 'Failed to fetch breakdown stats')
     }
   })
 

@@ -7,12 +7,14 @@ interface Props {
   value: number | string
   series?: number[]
   color?: string
+  clickable?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   subtitle: '',
   series: () => [],
   color: '#0d6efd',
+  clickable: false,
 })
 
 const VIEW_W = 100
@@ -37,10 +39,15 @@ const bars = computed(() => {
 </script>
 
 <template>
-  <div class="card kpi-card h-100 pt-3">
+  <div
+    class="card kpi-card h-100 pt-3"
+    :class="{ 'kpi-card-clickable': clickable }"
+    :role="clickable ? 'button' : undefined"
+    :tabindex="clickable ? 0 : undefined"
+  >
     <div class="card-body kpi-body">
       <div class="kpi-text w-100">
-        <h6 class="card-title mb-1 ">{{ title }}</h6>
+        <h6 class="card-title mb-1">{{ title }}</h6>
         <div class="kpi-subtitle text-body-secondary">
           {{ subtitle || '\xa0' }}
         </div>
@@ -109,5 +116,18 @@ const bars = computed(() => {
   width: 100%;
   height: 100%;
   display: block;
+}
+
+.kpi-card-clickable {
+  cursor: pointer;
+  transition:
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.kpi-card-clickable:hover,
+.kpi-card-clickable:focus-visible {
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
 }
 </style>
