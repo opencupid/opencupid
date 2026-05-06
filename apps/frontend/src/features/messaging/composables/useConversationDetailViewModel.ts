@@ -52,7 +52,10 @@ export function useConversationDetailViewModel() {
     return c.canReply && c.isCallable
   })
 
-  const myIsCallable = computed(() => persistedConversation.value?.myIsCallable ?? true)
+  // Sourced from the unified conversation (drafts include myIsCallable too)
+  // so the MessagingNav toggle reflects the viewer's actual setting in draft
+  // mode. The toggle itself is disabled in draft mode — see toggleCallable.
+  const myIsCallable = computed(() => conversation.value?.myIsCallable ?? true)
 
   // Route-driven resolution. Detail mode loads an existing conversation by id;
   // draft mode resolves by partner profileId without writing anything.

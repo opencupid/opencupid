@@ -43,6 +43,7 @@ async function handleBlockProfile() {
       v-if="vm.partner.value"
       :recipient="vm.partner.value"
       :allowCalls="vm.myIsCallable.value"
+      :callableDisabled="vm.isDraft.value"
       @deselect:convo="vm.deselect"
       @close="router.replace({ name: 'Browse' })"
       @profile:select="onProfileSelect"

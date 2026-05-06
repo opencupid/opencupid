@@ -166,6 +166,21 @@ describe('useConversationDetailViewModel — draft mode', () => {
     expect(mockMessageStore.setActiveConversation).not.toHaveBeenCalled()
   })
 
+  it('exposes myIsCallable from the draft summary (not the persisted-only fallback)', async () => {
+    mockRouteName.value = 'ConversationNew'
+    mockRouteParams.value = { profileId: 'p2' }
+
+    const draft = { ...makeDraftSummary('p2'), myIsCallable: false }
+    mockMessageStore.resolveConversationByProfile.mockResolvedValue({
+      success: true,
+      data: draft,
+    })
+
+    const vm = useConversationDetailViewModel()
+    await vi.waitFor(() => expect(vm.isDraft.value).toBe(true))
+    expect(vm.myIsCallable.value).toBe(false)
+  })
+
   it('redirects to the canonical Conversation route when an existing conversation is resolved', async () => {
     mockRouteName.value = 'ConversationNew'
     mockRouteParams.value = { profileId: 'p3' }

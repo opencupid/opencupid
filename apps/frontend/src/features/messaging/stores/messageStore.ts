@@ -334,6 +334,10 @@ export const useMessageStore = defineStore('message', {
 
     resetActiveConversation() {
       this.activeConversation = null
+      this.messages = []
+      this.messageCursor = null
+      this.hasMoreMessages = false
+      this.isLoadingMoreMessages = false
     },
 
     async handleProfileBlocked() {

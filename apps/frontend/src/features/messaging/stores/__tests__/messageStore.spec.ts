@@ -496,6 +496,33 @@ describe('setActiveConversationById', () => {
   })
 })
 
+describe('resetActiveConversation', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  // Regression: opening a draft right after viewing another thread used to
+  // render the previous thread's messages because reset only nulled
+  // activeConversation. All per-thread state now resets together.
+  it('clears messages and pagination state along with activeConversation', () => {
+    const store = useMessageStore()
+    store.activeConversation = makeConvo('convo-1', 'Alice')
+    store.messages = [{ id: 'm1' } as any]
+    store.messageCursor = 'cursor-1'
+    store.hasMoreMessages = true
+    store.isLoadingMoreMessages = true
+
+    store.resetActiveConversation()
+
+    expect(store.activeConversation).toBeNull()
+    expect(store.messages).toEqual([])
+    expect(store.messageCursor).toBeNull()
+    expect(store.hasMoreMessages).toBe(false)
+    expect(store.isLoadingMoreMessages).toBe(false)
+  })
+})
+
 describe('teardown', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
