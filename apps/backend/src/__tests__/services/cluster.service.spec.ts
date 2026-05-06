@@ -406,6 +406,25 @@ describe('ClusterService', () => {
       expect(points).toHaveLength(1)
       expect(points[0]).toMatchObject({ kind: 'post' })
     })
+
+    it('evict clears entries with both : and | separators for the profile', async () => {
+      mockFindSocialProfilesWithLocation.mockResolvedValue([makeProfile('p1', 47.5, 19.0)])
+      mockFindMutualMatchIds.mockResolvedValue([])
+      mockFindAllWithLocation.mockResolvedValue([])
+
+      // Build with no tags (key shape: viewer-1|profile)
+      await service.buildIndex('viewer-1', [], ['profile'])
+      // Build with tags (key shape: viewer-1:tagA|profile)
+      await service.buildIndex('viewer-1', ['tagA'], ['profile'])
+
+      expect(service.hasIndex('viewer-1', [], ['profile'])).toBe(true)
+      expect(service.hasIndex('viewer-1', ['tagA'], ['profile'])).toBe(true)
+
+      service.evict('viewer-1')
+
+      expect(service.hasIndex('viewer-1', [], ['profile'])).toBe(false)
+      expect(service.hasIndex('viewer-1', ['tagA'], ['profile'])).toBe(false)
+    })
   })
 
   describe('evict', () => {
