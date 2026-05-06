@@ -86,7 +86,7 @@ const MessageInConversationSummarySchema = MessageSchema.pick({
   isMine: z.boolean().optional(),
 })
 
-const ConversationSummarySchema = ConversationParticipantSchema.pick({
+export const ConversationSummarySchema = ConversationParticipantSchema.pick({
   id: true,
   profileId: true,
   conversationId: true,
@@ -94,6 +94,7 @@ const ConversationSummarySchema = ConversationParticipantSchema.pick({
   isMuted: true,
   isArchived: true,
 }).extend({
+  isDraft: z.literal(false).default(false),
   conversation: ConversationSchema.pick({
     id: true,
     updatedAt: true,
@@ -108,6 +109,27 @@ const ConversationSummarySchema = ConversationParticipantSchema.pick({
 })
 
 export type ConversationSummary = z.infer<typeof ConversationSummarySchema>
+
+// Draft conversation — no DB row yet. Used for the "matched but not messaged"
+// state where the UI still needs to render a conversation-detail view. Sending
+// the first message persists the conversation and replaces this with a
+// ConversationSummary.
+export const ConversationDraftSummarySchema = z.object({
+  isDraft: z.literal(true),
+  partnerProfile: ProfileSummarySchema,
+  canReply: z.boolean(),
+  isCallable: z.boolean(),
+  myIsCallable: z.boolean(),
+})
+
+export type ConversationDraftSummary = z.infer<typeof ConversationDraftSummarySchema>
+
+export const ConversationOrDraftSchema = z.discriminatedUnion('isDraft', [
+  ConversationSummarySchema,
+  ConversationDraftSummarySchema,
+])
+
+export type ConversationOrDraft = z.infer<typeof ConversationOrDraftSchema>
 
 export type ConversationParticipantWithConversationSummary =
   Prisma.ConversationParticipantGetPayload<{
