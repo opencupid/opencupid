@@ -168,6 +168,7 @@ describe('GET /clusters', () => {
       reply
     )
     expect(reply.statusCode).toBe(400)
+    expect(mockGetOrBuildClusters).not.toHaveBeenCalled()
   })
 
   it('returns 400 when kinds is unknown', async () => {
@@ -180,6 +181,7 @@ describe('GET /clusters', () => {
       reply
     )
     expect(reply.statusCode).toBe(400)
+    expect(mockGetOrBuildClusters).not.toHaveBeenCalled()
   })
 
   it('returns 400 for missing params', async () => {
