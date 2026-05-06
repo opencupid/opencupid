@@ -365,6 +365,47 @@ describe('ClusterService', () => {
       expect(service.hasIndex('viewer-1', [], ['profile'])).toBe(true)
       expect(service.hasIndex('viewer-1', [], ['profile', 'post'])).toBe(true)
     })
+
+    it('skips post fetch when kinds is profile-only', async () => {
+      mockFindSocialProfilesWithLocation.mockResolvedValue([makeProfile('p1', 47.5, 19.0)])
+      mockFindMutualMatchIds.mockResolvedValue([])
+      mockFindAllWithLocation.mockResolvedValue([])
+
+      await service.buildIndex('viewer-1', [], ['profile'])
+
+      expect(mockFindSocialProfilesWithLocation).toHaveBeenCalledTimes(1)
+      expect(mockFindAllWithLocation).not.toHaveBeenCalled()
+    })
+
+    it('skips profile and match-id fetches when kinds is post-only', async () => {
+      mockFindSocialProfilesWithLocation.mockResolvedValue([])
+      mockFindMutualMatchIds.mockResolvedValue([])
+      mockFindAllWithLocation.mockResolvedValue([makePost('post1', 47.5, 19.0, 'author1')])
+
+      await service.buildIndex('viewer-1', [], ['post'])
+
+      expect(mockFindSocialProfilesWithLocation).not.toHaveBeenCalled()
+      expect(mockFindMutualMatchIds).not.toHaveBeenCalled()
+      expect(mockFindAllWithLocation).toHaveBeenCalledTimes(1)
+    })
+
+    it('produces only post features when kinds is post-only', async () => {
+      mockFindSocialProfilesWithLocation.mockResolvedValue([])
+      mockFindMutualMatchIds.mockResolvedValue([])
+      mockFindAllWithLocation.mockResolvedValue([makePost('post1', 47.5, 19.0, 'author1')])
+
+      await service.buildIndex('viewer-1', [], ['post'])
+      const { features } = service.getClusters(
+        'viewer-1',
+        [16.0, 47.0, 20.0, 49.0],
+        12,
+        [],
+        ['post']
+      )
+      const points = features.filter((f) => f.type === 'point')
+      expect(points).toHaveLength(1)
+      expect(points[0]).toMatchObject({ kind: 'post' })
+    })
   })
 
   describe('evict', () => {
