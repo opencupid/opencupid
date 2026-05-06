@@ -13,7 +13,11 @@ import {
   InteractionContextSchema,
   type InteractionContext,
 } from '@zod/interaction/interactionContext.dto'
-import type { InteractionContextResponse } from '@zod/apiResponse.dto'
+import type {
+  InteractionContextResponse,
+  InteractionEdgeResponse,
+  InteractionStatsResponse,
+} from '@zod/apiResponse.dto'
 import { storeError, storeSuccess, type StoreError, type StoreResponse } from '@/store/helpers'
 
 interface InteractionState {
@@ -71,7 +75,7 @@ export const useInteractionStore = defineStore('interaction', {
     async fetchInteractions() {
       this.loading = true
       try {
-        const res = await safeApiCall(() => api.get('/interactions'))
+        const res = await safeApiCall(() => api.get<InteractionStatsResponse>('/interactions'))
         const stats = InteractionStatsSchema.parse(res.data.stats)
         this.sent = stats.sent
         this.matches = stats.matches
@@ -92,7 +96,7 @@ export const useInteractionStore = defineStore('interaction', {
     ): Promise<StoreResponse<InteractionEdgePair>> {
       try {
         const res = await safeApiCall(() =>
-          api.post<{ success: true; pair: unknown }>(`/interactions/like/${targetId}`, {
+          api.post<InteractionEdgeResponse>(`/interactions/like/${targetId}`, {
             isAnonymous,
           })
         )
@@ -122,7 +126,7 @@ export const useInteractionStore = defineStore('interaction', {
     ): Promise<StoreResponse<InteractionEdgePair>> {
       try {
         const res = await safeApiCall(() =>
-          api.patch<{ success: true; pair: unknown }>(`/interactions/like/${targetId}`, {
+          api.patch<InteractionEdgeResponse>(`/interactions/like/${targetId}`, {
             isAnonymous,
           })
         )
@@ -185,6 +189,7 @@ export const useInteractionStore = defineStore('interaction', {
 
     async initialize() {
       bus.on('ws:new_like', this.onNewLike)
+      bus.on('ws:update_like', this.onNewLike)
       bus.on('ws:new_match', this.onNewMatch)
       if (!this.initialized) {
         await this.fetchInteractions()
@@ -193,6 +198,7 @@ export const useInteractionStore = defineStore('interaction', {
 
     teardown() {
       bus.off('ws:new_like', this.onNewLike)
+      bus.off('ws:update_like', this.onNewLike)
       bus.off('ws:new_match', this.onNewMatch)
       // Remove any other event listeners you may have added
       this.sent = []

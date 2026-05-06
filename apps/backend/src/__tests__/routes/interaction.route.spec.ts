@@ -198,6 +198,28 @@ describe('PATCH /like/:targetId', () => {
     })
   })
 
+  it('broadcasts ws:update_like to the recipient on every update', async () => {
+    const { broadcastToProfile } = await import('../../utils/wsUtils')
+    const handler = fastify.routes['PATCH /like/:targetId']
+    const pair = {
+      isMatch: false,
+      to: { profile: { id: 'p2' }, isMatch: false, isAnonymous: true },
+      from: { profile: { id: 'p1' }, isMatch: false, isAnonymous: true },
+    }
+    mockService.updateLike.mockResolvedValue(pair)
+
+    const req = makeReq({
+      params: { targetId: 'cm000000000000000000000p2' },
+      body: { isAnonymous: true },
+    })
+    await handler(req, reply as any)
+
+    expect(broadcastToProfile).toHaveBeenCalledWith(fastify, 'cm000000000000000000000p2', {
+      type: 'ws:update_like',
+      payload: pair.from,
+    })
+  })
+
   it('returns 500 on error', async () => {
     const handler = fastify.routes['PATCH /like/:targetId']
     mockService.updateLike.mockRejectedValue(new Error('fail'))
@@ -220,6 +242,19 @@ describe('POST /pass/:targetId', () => {
     await handler(req, reply as any)
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
+  })
+
+  it('broadcasts ws:update_like to the recipient', async () => {
+    const { broadcastToProfile } = await import('../../utils/wsUtils')
+    const handler = fastify.routes['POST /pass/:targetId']
+    mockService.pass.mockResolvedValue(undefined)
+
+    const req = makeReq({ params: { targetId: 'cm000000000000000000000p2' } })
+    await handler(req, reply as any)
+
+    expect(broadcastToProfile).toHaveBeenCalledWith(fastify, 'cm000000000000000000000p2', {
+      type: 'ws:update_like',
+    })
   })
 
   it('returns 500 on error', async () => {

@@ -175,7 +175,14 @@ const interactionRoutes: FastifyPluginAsync = async (fastify) => {
       try {
         const pair = await service.updateLike(myId, targetId, body)
         const response: InteractionEdgeResponse = { success: true, pair }
-        return reply.code(200).send(response)
+        reply.code(200).send(response)
+
+        // Broadcast to the recipient — send the initiator's edge so they see the
+        // updated anonymity state (reveal or re-hide).
+        broadcastToProfile(fastify, targetId, {
+          type: 'ws:update_like',
+          payload: pair.from,
+        })
       } catch (err) {
         fastify.log.error(err)
         return sendError(reply, 500, 'Failed to update like')
@@ -201,7 +208,11 @@ const interactionRoutes: FastifyPluginAsync = async (fastify) => {
 
       try {
         await service.pass(myId, targetId)
-        return reply.code(200).send({ success: true })
+        reply.code(200).send({ success: true })
+
+        // Pass deletes any existing likes in either direction, so the recipient's
+        // received-likes list may have changed. Notify them to refetch.
+        broadcastToProfile(fastify, targetId, { type: 'ws:update_like' })
       } catch (err) {
         fastify.log.error(err)
         return sendError(reply, 500, 'Failed to pass profile')
