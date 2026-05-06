@@ -1,16 +1,20 @@
 <script lang="ts" setup>
 import { type InteractionEdgePair } from '@zod/interaction/interaction.dto'
-import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
+import { type PublicProfile } from '@zod/profile/profile.dto'
 
 import ProfileImage from '@/features/images/components/ProfileImage.vue'
 import ContactFormPanel from '@/features/messaging/components/ContactFormPanel.vue'
 import { ref } from 'vue'
+import { useInteractionsViewModel } from '../composables/useInteractionsViewModel'
 
-defineProps<{
-  profile: PublicProfileWithContext
+const props = defineProps<{
+  profile: PublicProfile
   match: InteractionEdgePair
   show: boolean
 }>()
+
+const { contextFor } = useInteractionsViewModel()
+const context = contextFor(props.profile.id)
 
 const emit = defineEmits<{
   (e: 'close'): void
@@ -67,7 +71,7 @@ const handleSubmitted = () => {
         </div>
       </div>
       <div
-        v-if="profile.interactionContext.canMessage"
+        v-if="context?.canMessage"
         class="text-center"
       >
         <h6 class="text-center mb-3">
@@ -120,5 +124,4 @@ const handleSubmitted = () => {
 .match-popup-content.sent {
   background-color: white;
 }
-
 </style>

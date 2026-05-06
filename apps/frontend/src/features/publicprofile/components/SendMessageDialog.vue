@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { nextTick, ref } from 'vue'
 
-import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
+import { type PublicProfile } from '@zod/profile/profile.dto'
 
 import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
 import ContactFormPanel from '@/features/messaging/components/ContactFormPanel.vue'
@@ -9,7 +9,7 @@ import ContactFormPanel from '@/features/messaging/components/ContactFormPanel.v
 const showModal = defineModel<boolean>()
 
 defineProps<{
-  profile: PublicProfileWithContext
+  profile: PublicProfile
 }>()
 
 const emit = defineEmits<{

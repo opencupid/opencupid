@@ -5,9 +5,21 @@ import { MockFastify, MockReply } from '../../test-utils/fastify'
 let fastify: MockFastify
 let reply: MockReply
 let mockService: any
+let mockProfileService: any
+let mockProfileMatchService: any
+let mockMapInteractionContext: (...args: unknown[]) => unknown
 
 vi.mock('../../services/interaction.service', () => ({
   InteractionService: { getInstance: () => mockService },
+}))
+vi.mock('../../services/profile.service', () => ({
+  ProfileService: { getInstance: () => mockProfileService },
+}))
+vi.mock('../../services/profileMatch.service', () => ({
+  ProfileMatchService: { getInstance: () => mockProfileMatchService },
+}))
+vi.mock('../../api/mappers/interaction.mappers', () => ({
+  mapInteractionContext: (...args: unknown[]) => mockMapInteractionContext(...args),
 }))
 vi.mock('../../utils/wsUtils', () => ({
   broadcastToProfile: vi.fn().mockReturnValue(true),
@@ -25,7 +37,10 @@ vi.mock('@/lib/appconfig', () => ({
 }))
 
 const makeReq = (overrides: any = {}) => ({
-  session: { profileId: 'p1' },
+  session: {
+    profileId: 'p1',
+    profile: { isDatingActive: false },
+  },
   ...overrides,
 })
 
@@ -42,6 +57,13 @@ beforeEach(async () => {
     pass: vi.fn(),
     updateLike: vi.fn(),
   }
+  mockProfileService = {
+    getInteractionContextSourceById: vi.fn(),
+  }
+  mockProfileMatchService = {
+    areProfilesMutuallyCompatible: vi.fn().mockResolvedValue(false),
+  }
+  mockMapInteractionContext = vi.fn().mockReturnValue({ stub: 'context' })
   await interactionRoutes(fastify as any, {})
 })
 
@@ -176,6 +198,28 @@ describe('PATCH /like/:targetId', () => {
     })
   })
 
+  it('broadcasts ws:update_like to the recipient on every update', async () => {
+    const { broadcastToProfile } = await import('../../utils/wsUtils')
+    const handler = fastify.routes['PATCH /like/:targetId']
+    const pair = {
+      isMatch: false,
+      to: { profile: { id: 'p2' }, isMatch: false, isAnonymous: true },
+      from: { profile: { id: 'p1' }, isMatch: false, isAnonymous: true },
+    }
+    mockService.updateLike.mockResolvedValue(pair)
+
+    const req = makeReq({
+      params: { targetId: 'cm000000000000000000000p2' },
+      body: { isAnonymous: true },
+    })
+    await handler(req, reply as any)
+
+    expect(broadcastToProfile).toHaveBeenCalledWith(fastify, 'cm000000000000000000000p2', {
+      type: 'ws:update_like',
+      payload: pair.from,
+    })
+  })
+
   it('returns 500 on error', async () => {
     const handler = fastify.routes['PATCH /like/:targetId']
     mockService.updateLike.mockRejectedValue(new Error('fail'))
@@ -198,6 +242,19 @@ describe('POST /pass/:targetId', () => {
     await handler(req, reply as any)
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
+  })
+
+  it('broadcasts ws:update_like to the recipient', async () => {
+    const { broadcastToProfile } = await import('../../utils/wsUtils')
+    const handler = fastify.routes['POST /pass/:targetId']
+    mockService.pass.mockResolvedValue(undefined)
+
+    const req = makeReq({ params: { targetId: 'cm000000000000000000000p2' } })
+    await handler(req, reply as any)
+
+    expect(broadcastToProfile).toHaveBeenCalledWith(fastify, 'cm000000000000000000000p2', {
+      type: 'ws:update_like',
+    })
   })
 
   it('returns 500 on error', async () => {
@@ -245,5 +302,74 @@ describe('GET /matches', () => {
     await handler(makeReq(), reply as any)
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.edges).toBe(edges)
+  })
+})
+
+describe('GET /context/:targetId', () => {
+  const targetId = 'cm000000000000000000000p2'
+
+  it('returns the mapped interaction context on success', async () => {
+    const handler = fastify.routes['GET /context/:targetId']
+    const raw = { id: 'p2', isDatingActive: false, blockedProfiles: [] }
+    mockProfileService.getInteractionContextSourceById.mockResolvedValue(raw)
+    mockMapInteractionContext = vi.fn().mockReturnValue({ canMessage: true })
+
+    await handler(makeReq({ params: { targetId } }), reply as any)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload).toStrictEqual({ success: true, context: { canMessage: true } })
+    expect(mockProfileService.getInteractionContextSourceById).toHaveBeenCalledWith(targetId, 'p1')
+    expect(mockMapInteractionContext).toHaveBeenCalledWith(raw, false, 'p1')
+  })
+
+  it('checks mutual compatibility when both sides are dating-active', async () => {
+    const handler = fastify.routes['GET /context/:targetId']
+    const raw = { id: 'p2', isDatingActive: true, blockedProfiles: [] }
+    mockProfileService.getInteractionContextSourceById.mockResolvedValue(raw)
+    mockProfileMatchService.areProfilesMutuallyCompatible.mockResolvedValue(true)
+
+    const req = makeReq({
+      params: { targetId },
+      session: { profileId: 'p1', profile: { isDatingActive: true } },
+    })
+    await handler(req, reply as any)
+
+    expect(reply.statusCode).toBe(200)
+    expect(mockProfileMatchService.areProfilesMutuallyCompatible).toHaveBeenCalledWith('p1', 'p2')
+    expect(mockMapInteractionContext).toHaveBeenCalledWith(raw, true, 'p1')
+  })
+
+  it('returns 404 when the target profile does not exist', async () => {
+    const handler = fastify.routes['GET /context/:targetId']
+    mockProfileService.getInteractionContextSourceById.mockResolvedValue(null)
+
+    await handler(makeReq({ params: { targetId } }), reply as any)
+
+    expect(reply.statusCode).toBe(404)
+    expect(reply.payload.success).toBe(false)
+  })
+
+  it('returns 404 when the target has blocked the viewer (privacy)', async () => {
+    const handler = fastify.routes['GET /context/:targetId']
+    mockProfileService.getInteractionContextSourceById.mockResolvedValue({
+      id: 'p2',
+      isDatingActive: false,
+      blockedProfiles: [{ id: 'p1' }],
+    })
+
+    await handler(makeReq({ params: { targetId } }), reply as any)
+
+    expect(reply.statusCode).toBe(404)
+    expect(reply.payload.success).toBe(false)
+    expect(mockMapInteractionContext).not.toHaveBeenCalled()
+  })
+
+  it('returns 500 on service error', async () => {
+    const handler = fastify.routes['GET /context/:targetId']
+    mockProfileService.getInteractionContextSourceById.mockRejectedValue(new Error('boom'))
+
+    await handler(makeReq({ params: { targetId } }), reply as any)
+
+    expect(reply.statusCode).toBe(500)
   })
 })

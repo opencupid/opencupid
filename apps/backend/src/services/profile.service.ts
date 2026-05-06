@@ -56,21 +56,34 @@ export class ProfileService {
     return ProfileService.instance
   }
 
-  async getProfileWithContextById(
-    profileId: string,
-    myProfileId: string
-  ): Promise<DbProfileWithContext | null> {
-    const query = {
+  // Public profile fetch — only the viewer-facing block check is included as
+  // it gates 404 visibility. Viewer-relative interaction state (likes, hides,
+  // conversations) lives behind the dedicated /interactions/context endpoint.
+  async getProfilePublicById(profileId: string, myProfileId: string) {
+    return prisma.profile.findUnique({
       where: { id: profileId },
       include: {
         ...tagsInclude(),
         ...profileImageInclude(),
+        ...blockedContextInclude(myProfileId),
+      },
+    })
+  }
+
+  // Interaction-context source fetch — only the viewer-relative relations
+  // needed by mapInteractionContext. No tags/images/localized.
+  async getInteractionContextSourceById(
+    profileId: string,
+    myProfileId: string
+  ): Promise<DbProfileWithContext | null> {
+    return prisma.profile.findUnique({
+      where: { id: profileId },
+      include: {
         ...interactionContextInclude(myProfileId),
         ...conversationContextInclude(myProfileId),
         ...blockedContextInclude(myProfileId),
       },
-    }
-    return await prisma.profile.findUnique(query)
+    }) as Promise<DbProfileWithContext | null>
   }
 
   async getProfileByUserId(userId: string): Promise<Profile | null> {

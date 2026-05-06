@@ -1,4 +1,4 @@
-import { computed } from 'vue'
+import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 import { useInteractionStore } from '../stores/useInteractionStore'
 
 export function useInteractionsViewModel() {
@@ -18,6 +18,9 @@ export function useInteractionsViewModel() {
     updateLike: store.updateLike,
     pass: store.passProfile,
     refreshInteractions: store.fetchInteractions,
+    fetchContext: store.fetchContext,
+    contextFor: (profileId: MaybeRefOrGetter<string>) =>
+      computed(() => store.contextByProfileId[toValue(profileId)]),
     initialize: store.initialize,
     isInitialized: computed(() => store.initialized),
     isLoading: computed(() => store.loading || !store.initialized),

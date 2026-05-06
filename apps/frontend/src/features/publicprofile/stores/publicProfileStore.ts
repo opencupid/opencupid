@@ -1,8 +1,8 @@
 import z from 'zod'
 import { defineStore } from 'pinia'
 import { api, safeApiCall } from '@/lib/api'
-import type { ProfileSummary, PublicProfileWithContext } from '@zod/profile/profile.dto'
-import { ProfileSummarySchema, PublicProfileWithContextSchema } from '@zod/profile/profile.dto'
+import type { ProfileSummary, PublicProfile } from '@zod/profile/profile.dto'
+import { ProfileSummarySchema, PublicProfileSchema } from '@zod/profile/profile.dto'
 import {
   storeSuccess,
   storeError,
@@ -14,7 +14,7 @@ import type { GetProfileSummariesResponse, GetPublicProfileResponse } from '@zod
 import { bus } from '@/lib/bus'
 
 type PublicProfileStoreState = {
-  profile: PublicProfileWithContext | null // Current public profile
+  profile: PublicProfile | null // Current public profile
   isLoading: boolean // Loading state
 }
 export const usePublicProfileStore = defineStore('publicProfile', {
@@ -25,13 +25,13 @@ export const usePublicProfileStore = defineStore('publicProfile', {
 
   actions: {
     // Fetch a profile by ID
-    async getPublicProfile(profileId: string): Promise<StoreResponse<PublicProfileWithContext>> {
+    async getPublicProfile(profileId: string): Promise<StoreResponse<PublicProfile>> {
       try {
         this.isLoading = true // Set loading state
         const res = await safeApiCall(() =>
           api.get<GetPublicProfileResponse>(`/profiles/${profileId}`)
         )
-        const fetched = PublicProfileWithContextSchema.parse(res.data.profile)
+        const fetched = PublicProfileSchema.parse(res.data.profile)
         this.profile = fetched
         return storeSuccess(fetched)
       } catch (error: any) {

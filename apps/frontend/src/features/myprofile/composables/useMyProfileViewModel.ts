@@ -1,7 +1,7 @@
 import { useI18nStore } from '@/store/i18nStore'
 import { computed, reactive, toRef, watch } from 'vue'
 
-import { type PublicProfileWithContext } from '@zod/profile/profile.dto'
+import { type PublicProfile } from '@zod/profile/profile.dto'
 import { type EditFieldProfileFormWithImages } from '@zod/profile/profile.form'
 
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
@@ -20,12 +20,12 @@ export function useMyProfileViewModel(isEditMode: boolean) {
   })
 
   // computed properties
-  const publicProfile = reactive({} as PublicProfileWithContext)
-  const profilePreview = computed((): PublicProfileWithContext => {
+  const publicProfile = reactive({} as PublicProfile)
+  const profilePreview = computed((): PublicProfile => {
     return {
       ...publicProfile,
       isDatingActive: viewState.currentScope === 'dating',
-    } as PublicProfileWithContext
+    } as PublicProfile
   })
 
   const isDatingOnboarded = computed(() => {

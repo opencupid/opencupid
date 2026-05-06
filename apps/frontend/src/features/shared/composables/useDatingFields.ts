@@ -1,8 +1,4 @@
-import {
-  type OwnerProfile,
-  type PublicProfile,
-  type PublicProfileWithContext,
-} from '@zod/profile/profile.dto'
+import { type OwnerProfile, type PublicProfile } from '@zod/profile/profile.dto'
 import { computed, h, type Ref } from 'vue'
 import { useEnumOptions } from './useEnumOptions'
 

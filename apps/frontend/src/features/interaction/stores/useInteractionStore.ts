@@ -9,6 +9,15 @@ import {
   type InteractionEdgePair,
   type ReceivedLike,
 } from '@zod/interaction/interaction.dto'
+import {
+  InteractionContextSchema,
+  type InteractionContext,
+} from '@zod/interaction/interactionContext.dto'
+import type {
+  InteractionContextResponse,
+  InteractionEdgeResponse,
+  InteractionStatsResponse,
+} from '@zod/apiResponse.dto'
 import { storeError, storeSuccess, type StoreError, type StoreResponse } from '@/store/helpers'
 
 interface InteractionState {
@@ -17,6 +26,7 @@ interface InteractionState {
   newMatchesCount: number
   matches: InteractionEdge[]
   passed: string[] // just IDs for now
+  contextByProfileId: Partial<Record<string, InteractionContext>>
   loading: boolean
   initialized: boolean
   error: StoreError | null
@@ -29,6 +39,7 @@ export const useInteractionStore = defineStore('interaction', {
     newMatchesCount: 0,
     matches: [],
     passed: [],
+    contextByProfileId: {},
     loading: false,
     initialized: false,
     error: null,
@@ -45,10 +56,26 @@ export const useInteractionStore = defineStore('interaction', {
       }
     },
 
+    // Fetch the viewer's interaction context with a target profile.
+    // Cached on the store keyed by profileId so consumers can read it
+    // reactively after the first round-trip without re-issuing the request.
+    async fetchContext(profileId: string): Promise<StoreResponse<InteractionContext>> {
+      try {
+        const res = await safeApiCall(() =>
+          api.get<InteractionContextResponse>(`/interactions/context/${profileId}`)
+        )
+        const context = InteractionContextSchema.parse(res.data.context)
+        this.contextByProfileId[profileId] = context
+        return storeSuccess(context)
+      } catch (error) {
+        return storeError(error)
+      }
+    },
+
     async fetchInteractions() {
       this.loading = true
       try {
-        const res = await safeApiCall(() => api.get('/interactions'))
+        const res = await safeApiCall(() => api.get<InteractionStatsResponse>('/interactions'))
         const stats = InteractionStatsSchema.parse(res.data.stats)
         this.sent = stats.sent
         this.matches = stats.matches
@@ -69,7 +96,7 @@ export const useInteractionStore = defineStore('interaction', {
     ): Promise<StoreResponse<InteractionEdgePair>> {
       try {
         const res = await safeApiCall(() =>
-          api.post<{ success: true; pair: unknown }>(`/interactions/like/${targetId}`, {
+          api.post<InteractionEdgeResponse>(`/interactions/like/${targetId}`, {
             isAnonymous,
           })
         )
@@ -85,6 +112,7 @@ export const useInteractionStore = defineStore('interaction', {
           this.sent.push(pair.to)
         }
 
+        await this.fetchContext(targetId)
         return storeSuccess(pair)
       } catch (error) {
         console.error('Failed to like profile:', error)
@@ -98,7 +126,7 @@ export const useInteractionStore = defineStore('interaction', {
     ): Promise<StoreResponse<InteractionEdgePair>> {
       try {
         const res = await safeApiCall(() =>
-          api.patch<{ success: true; pair: unknown }>(`/interactions/like/${targetId}`, {
+          api.patch<InteractionEdgeResponse>(`/interactions/like/${targetId}`, {
             isAnonymous,
           })
         )
@@ -111,6 +139,7 @@ export const useInteractionStore = defineStore('interaction', {
           this.sent[sentIdx] = pair.from
         }
 
+        await this.fetchContext(targetId)
         return storeSuccess(pair)
       } catch (error) {
         console.error('Failed to update like:', error)
@@ -139,6 +168,7 @@ export const useInteractionStore = defineStore('interaction', {
         // Optionally: remove from sent/matches if previously liked
         this.sent = this.sent.filter((e) => e.profile.id !== targetId)
         this.matches = this.matches.filter((e) => e.profile.id !== targetId)
+        await this.fetchContext(targetId)
         return storeSuccess()
       } catch (error) {
         console.error('Failed to pass profile:', error)
@@ -159,6 +189,7 @@ export const useInteractionStore = defineStore('interaction', {
 
     async initialize() {
       bus.on('ws:new_like', this.onNewLike)
+      bus.on('ws:update_like', this.onNewLike)
       bus.on('ws:new_match', this.onNewMatch)
       if (!this.initialized) {
         await this.fetchInteractions()
@@ -167,12 +198,14 @@ export const useInteractionStore = defineStore('interaction', {
 
     teardown() {
       bus.off('ws:new_like', this.onNewLike)
+      bus.off('ws:update_like', this.onNewLike)
       bus.off('ws:new_match', this.onNewMatch)
       // Remove any other event listeners you may have added
       this.sent = []
       this.receivedLikes = []
       this.matches = []
       this.passed = []
+      this.contextByProfileId = {}
       this.loading = false
       this.initialized = false
       this.error = null

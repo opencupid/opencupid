@@ -3,7 +3,7 @@ import { whenever } from '@vueuse/core'
 import { useRouter } from 'vue-router'
 
 import type { ConversationSummary } from '@zod/messaging/messaging.dto'
-import type { PublicProfileWithContext } from '@zod/profile/profile.dto'
+import type { PublicProfile } from '@zod/profile/profile.dto'
 
 import { useBootstrap } from '@/lib/bootstrap'
 import { useMessageStore } from '../stores/messageStore'
@@ -49,13 +49,11 @@ export function useMessagingViewModel() {
 
   // Send message dialog state
   const showMessageModal = ref(false)
-  const messageProfile = ref<PublicProfileWithContext>()
+  const messageProfile = ref<PublicProfile>()
 
   // Fetch a public profile by id. Returns the profile or null on failure.
   // Consumers decide what to do with the result (e.g. push into the detail panel).
-  const handleProfileSelect = async (
-    profileId: string
-  ): Promise<PublicProfileWithContext | null> => {
+  const handleProfileSelect = async (profileId: string): Promise<PublicProfile | null> => {
     const res = await fetchProfile(profileId)
     if (!res?.success) return null
     return res.data ?? null

@@ -15,7 +15,6 @@ import {
   profileOptInFields,
   userOptInFields,
 } from './profile.fields'
-import { InteractionContextSchema } from '@zod/interaction/interactionContext.dto'
 
 const PublicScalarsSchema = ProfileSchema.pick({
   ...baseFields,
@@ -50,19 +49,7 @@ export const PublicProfileSchema = ProfileUnionSchema.and(
 )
 export type PublicProfile = z.infer<typeof PublicProfileSchema>
 
-export const PublicProfileWithContextSchema = ProfileUnionSchema.and(
-  z.object({
-    location: LocationSchema,
-    profileImages: z.array(PublicProfileImageSchema).default([]),
-    tags: z.array(PublicTagSchema).default([]),
-    introSocial: z.string().default(''),
-    introDating: z.string().default(''),
-    interactionContext: InteractionContextSchema,
-  })
-)
 export const PublicProfileArraySchema = z.array(PublicProfileSchema)
-
-export type PublicProfileWithContext = z.infer<typeof PublicProfileWithContextSchema>
 
 export const OwnerScalarsSchema = ProfileSchema.pick({
   ...baseFields,
@@ -83,7 +70,7 @@ export const OwnerProfileSchema = OwnerScalarsSchema.extend({
 })
 export type OwnerProfile = z.infer<typeof OwnerProfileSchema>
 
-export type OwnerOrPublicProfile = OwnerProfile | PublicProfileWithContext
+export type OwnerOrPublicProfile = OwnerProfile | PublicProfile
 
 export const editableFields = {
   ...socialFields,
