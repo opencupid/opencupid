@@ -14,8 +14,10 @@ import { isValidLatLng, toLatLng } from '@/features/map/utils/mapUtils'
 import { MAP_DEFAULT_CENTER } from '@shared/maps'
 import { useDetailRouteState } from '@/features/shared/composables/useDetailRouteState'
 import { useDetailPanel } from '@/features/app/composables/useDetailPanel'
+import { useMapStore } from '@/features/map/stores/mapStore'
 
 import OsmPoiMap from '@/features/map/components/OsmPoiMap.vue'
+import MapLayerControl from '@/features/map/components/MapLayerControl.vue'
 import MapPlaceholder from '@/features/shared/components/MapPlaceholder.vue'
 import SearchBar from '../components/SearchBar.vue'
 import ProfileMapCard from '../components/ProfileMapCard.vue'
@@ -58,6 +60,17 @@ const { selectedTagIds } = storeToRefs(searchStore)
 watch(selectedTagIds, () => {
   findProfileStore.refetchBounds()
 })
+
+// Server-side layer filtering: toggling a layer changes the `kinds` query
+// param sent on cluster fetches. Invalidate the bounds cache and refetch.
+const mapStore = useMapStore()
+const { showPeople, showPosts } = storeToRefs(mapStore)
+watch(
+  () => [showPeople.value, showPosts.value] as const,
+  () => {
+    findProfileStore.refetchBounds()
+  }
+)
 
 // Placeholder visibility. Flipped by @map:ready from OsmPoiMap once the
 // first tile load completes. Hoisted out of OsmPoiMap so it paints from
@@ -221,6 +234,7 @@ onMounted(async () => {
           @post:select="handlePostSelect"
         />
       </div>
+
       <div class="flex-shrink-0 flex-grow-0">
         <OwnerDrawerControls
           @open:inbox="openInboxDrawer()"
@@ -255,6 +269,13 @@ onMounted(async () => {
           @bounds:changed="onBoundsChanged"
           @map:ready="onMapReady"
         />
+
+        <div
+          class="map-layer-control-wrapper position-absolute"
+          style="top: 4rem; right: 0.5rem; z-index: 1010"
+        >
+          <MapLayerControl />
+        </div>
 
         <NearbyFeatures
           :posts="postStore.postSummaries"

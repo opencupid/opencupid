@@ -1,6 +1,7 @@
-import { mount } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { nextTick, ref, computed } from 'vue'
+import { setActivePinia, createPinia } from 'pinia'
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 
 const toastInfo = vi.fn()
@@ -80,6 +81,10 @@ vi.mock('../../components/SearchBar.vue', () => ({
   },
 }))
 
+vi.mock('@/features/map/components/MapLayerControl.vue', () => ({
+  default: { name: 'MapLayerControl', template: '<div class="map-layer-control-stub" />' },
+}))
+
 vi.mock('@/features/browse/stores/searchStore', () => ({
   useSearchStore: () => ({
     selectedTagIds: ref<string[]>([]),
@@ -113,11 +118,16 @@ vi.mock('../../composables/useBrowseViewModel', () => ({
   useBrowseViewModel: () => vmState,
 }))
 
+const { mockRefetchBounds, mockFetchBounds } = vi.hoisted(() => ({
+  mockRefetchBounds: vi.fn(),
+  mockFetchBounds: vi.fn(),
+}))
+
 vi.mock('@/features/browse/stores/findProfileStore', () => ({
   useFindProfileStore: () => ({
-    refetchBounds: vi.fn(),
+    refetchBounds: mockRefetchBounds,
     lastMapBounds: null,
-    fetchBounds: vi.fn(),
+    fetchBounds: mockFetchBounds,
   }),
 }))
 
@@ -189,6 +199,7 @@ import { MAP_DEFAULT_CENTER } from '@shared/maps'
 
 describe('BrowseProfiles view', () => {
   beforeEach(() => {
+    setActivePinia(createPinia())
     vmState.isNoOneAround.value = false
     vmState.viewerProfile.value = {
       isSocialActive: true,
@@ -200,6 +211,8 @@ describe('BrowseProfiles view', () => {
     toastInfo.mockClear()
     mockPush.mockClear()
     mockReplace.mockClear()
+    mockRefetchBounds.mockClear()
+    mockFetchBounds.mockClear()
   })
 
   const mountComponent = () => {
@@ -317,5 +330,20 @@ describe('BrowseProfiles view', () => {
       name: 'PublicPost',
       params: { postId: 'post-42' },
     })
+  })
+
+  it('refetches bounds when mapStore.showPeople toggles', async () => {
+    const wrapper = mountComponent()
+    await flushPromises()
+
+    // mapStore is real (not mocked); read it via the same import the component uses.
+    const { useMapStore } = await import('@/features/map/stores/mapStore')
+    const mapStore = useMapStore()
+
+    mockRefetchBounds.mockClear()
+    mapStore.setShowPeople(false)
+    await nextTick()
+
+    expect(mockRefetchBounds).toHaveBeenCalledTimes(1)
   })
 })
