@@ -617,3 +617,67 @@ describe('fetchMessagesForConversation pagination', () => {
     expect(store.hasMoreMessages).toBe(false)
   })
 })
+
+describe('resolveConversationByProfile', () => {
+  it('returns persisted conversation summary when one exists', async () => {
+    const store = useMessageStore()
+    const persisted = makeConvo('c1', 'Partner')
+    mockApi.get.mockResolvedValue({
+      data: { success: true, conversation: persisted },
+    })
+
+    const res = await store.resolveConversationByProfile('p2')
+
+    expect(mockApi.get).toHaveBeenCalledWith('/messages/conversations/by-profile/p2')
+    expect(res.success).toBe(true)
+    expect(res.success && res.data?.isDraft).toBe(false)
+    expect(res.success && (res.data as ConversationSummary).conversationId).toBe('c1')
+  })
+
+  it('returns draft summary when no conversation exists yet', async () => {
+    const store = useMessageStore()
+    const draft = {
+      isDraft: true as const,
+      partnerProfile: {
+        id: 'p2',
+        publicName: 'Partner',
+        profileImages: [],
+        location: { country: '' },
+      },
+      canReply: true,
+      isCallable: true,
+      myIsCallable: true,
+    }
+    mockApi.get.mockResolvedValue({
+      data: { success: true, conversation: draft },
+    })
+
+    const res = await store.resolveConversationByProfile('p2')
+
+    expect(res.success).toBe(true)
+    expect(res.success && res.data?.isDraft).toBe(true)
+  })
+
+  it('does NOT mutate this.conversations on success', async () => {
+    const store = useMessageStore()
+    store.conversations = []
+    mockApi.get.mockResolvedValue({
+      data: { success: true, conversation: makeConvo('c1', 'Partner') },
+    })
+
+    await store.resolveConversationByProfile('p2')
+
+    // Persisted resolves are read-only — they don't mass-update the inbox list.
+    // Drafts likewise must never enter the list (they're not real conversations).
+    expect(store.conversations).toHaveLength(0)
+  })
+
+  it('returns store error when the API call fails', async () => {
+    const store = useMessageStore()
+    mockApi.get.mockRejectedValue(new Error('forbidden'))
+
+    const res = await store.resolveConversationByProfile('p2')
+
+    expect(res.success).toBe(false)
+  })
+})
