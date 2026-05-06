@@ -1,4 +1,4 @@
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import type {
@@ -82,13 +82,19 @@ export function useConversationDetailViewModel() {
             params: { conversationId: res.data.conversationId },
           })
         }
-      } else {
-        draftSummary.value = null
-        messageStore.resetActiveConversation()
       }
     },
     { immediate: true }
   )
+
+  // Cleanup must run synchronously during unmount: when the route changes
+  // back to /inbox, <ConversationDetail> is torn down by v-else-if before
+  // any watcher gets a chance to flush, so a watch-based reset would never
+  // fire. onBeforeUnmount runs as part of the unmount itself.
+  onBeforeUnmount(() => {
+    draftSummary.value = null
+    messageStore.resetActiveConversation()
+  })
 
   // Partner PublicProfile drives the header (avatar, name, callable toggle).
   // Fetched whenever the conversation we're viewing changes partner identity.

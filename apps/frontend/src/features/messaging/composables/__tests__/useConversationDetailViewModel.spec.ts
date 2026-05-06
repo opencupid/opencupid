@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
-import { ref } from 'vue'
+import { defineComponent, h, ref } from 'vue'
+import { mount } from '@vue/test-utils'
 
 import type { ConversationDraftSummary, ConversationSummary } from '@zod/messaging/messaging.dto'
 
@@ -222,5 +223,34 @@ describe('useConversationDetailViewModel — onMessageSent draft swap', () => {
     const vm = useConversationDetailViewModel()
     await vm.onMessageSent()
     expect(mockRouterReplace).not.toHaveBeenCalled()
+  })
+})
+
+describe('useConversationDetailViewModel — unmount cleanup', () => {
+  // Regression: clicking "Back" from ConversationDetail switches the route to
+  // /inbox, which synchronously unmounts <ConversationDetail> via v-else-if in
+  // InboxPanel. A watcher-based reset never gets to flush, so the cleanup must
+  // run during unmount itself. Without this, the previously open conversation
+  // stays highlighted as `active` in the list.
+  it('resets activeConversation when the host component unmounts', async () => {
+    mockRouteName.value = 'Conversation'
+    mockRouteParams.value = { conversationId: 'c1' }
+    mockMessageStore.activeConversation = makePersistedSummary('c1')
+
+    const Host = defineComponent({
+      setup() {
+        useConversationDetailViewModel()
+        return () => h('div')
+      },
+    })
+
+    const wrapper = mount(Host)
+    await vi.waitFor(() =>
+      expect(mockMessageStore.setActiveConversationById).toHaveBeenCalledWith('c1')
+    )
+
+    wrapper.unmount()
+
+    expect(mockMessageStore.resetActiveConversation).toHaveBeenCalled()
   })
 })
