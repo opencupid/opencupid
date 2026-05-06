@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
+import { useMapStore } from '@/features/map/stores/mapStore'
 
 const { mockGet } = vi.hoisted(() => ({ mockGet: vi.fn() }))
 vi.mock('@/lib/api', () => ({
@@ -161,5 +162,74 @@ describe('fetchProfileForPopup', () => {
     await store.fetchProfileForPopup('p1')
 
     expect(mockGet).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('findClustersForMapBounds with layer kinds', () => {
+  let store: ReturnType<typeof useFindProfileStore>
+  const bounds = { south: 45, north: 48, west: 16, east: 23 }
+
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    store = useFindProfileStore()
+    store.teardown()
+    vi.clearAllMocks()
+  })
+
+  it('sends kinds=profile,post when both layers are on', async () => {
+    mockGet.mockResolvedValue({ data: { success: true, features: [], tags: [] } })
+
+    await store.findClustersForMapBounds(bounds, 7)
+
+    expect(mockGet).toHaveBeenCalledWith(
+      '/find/clusters',
+      expect.objectContaining({
+        params: expect.objectContaining({ kinds: 'profile,post' }),
+      })
+    )
+  })
+
+  it('sends kinds=post when only Posts is selected', async () => {
+    mockGet.mockResolvedValue({ data: { success: true, features: [], tags: [] } })
+
+    const mapStore = useMapStore()
+    mapStore.setShowPeople(false)
+
+    await store.findClustersForMapBounds(bounds, 7)
+
+    expect(mockGet).toHaveBeenCalledWith(
+      '/find/clusters',
+      expect.objectContaining({
+        params: expect.objectContaining({ kinds: 'post' }),
+      })
+    )
+  })
+
+  it('skips network when same kinds + same viewport are already cached', async () => {
+    mockGet.mockResolvedValue({ data: { success: true, features: [], tags: [] } })
+
+    await store.findClustersForMapBounds(bounds, 7)
+    expect(mockGet).toHaveBeenCalledTimes(1)
+
+    await store.findClustersForMapBounds(bounds, 7)
+    expect(mockGet).toHaveBeenCalledTimes(1)
+  })
+
+  it('refetches when kinds changes even with the same viewport', async () => {
+    mockGet.mockResolvedValue({ data: { success: true, features: [], tags: [] } })
+
+    await store.findClustersForMapBounds(bounds, 7)
+    expect(mockGet).toHaveBeenCalledTimes(1)
+
+    useMapStore().setShowPosts(false)
+
+    await store.findClustersForMapBounds(bounds, 7)
+    expect(mockGet).toHaveBeenCalledTimes(2)
+    expect(mockGet).toHaveBeenLastCalledWith(
+      '/find/clusters',
+      expect.objectContaining({
+        params: expect.objectContaining({ kinds: 'profile' }),
+      })
+    )
   })
 })

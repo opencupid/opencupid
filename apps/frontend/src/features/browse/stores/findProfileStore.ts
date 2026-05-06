@@ -8,6 +8,8 @@ import { ClusterMapResponseSchema, type MapFeature } from '@shared/zod/map/clust
 import { storeSuccess, storeError, type StoreVoidSuccess, type StoreError } from '@/store/helpers'
 import { bus } from '@/lib/bus'
 import { useSearchStore } from './searchStore'
+import { useMapStore } from '@/features/map/stores/mapStore'
+import { type MapLayerKind } from '@shared/maps'
 import type { MapBounds } from '@/features/map/types/map.types'
 import { boundsContain, padBounds } from '../utils/boundsUtils'
 
@@ -16,6 +18,7 @@ let lastZoom = 7
 let cachedClusterZoom: number | null = null
 let cachedClusterBounds: MapBounds | null = null
 let cachedClusterTagSig = ''
+let cachedClusterKindsSig = ''
 const popupCache = new Map<string, PublicProfile>()
 const POPUP_CACHE_MAX = 20
 
@@ -39,6 +42,23 @@ function tagIdsParam(tagIds: string[]): string | undefined {
   return tagIds.length > 0 ? tagIds.join(',') : undefined
 }
 
+function kindsSignature(kinds: MapLayerKind[]): string {
+  return [...kinds].sort().join(',')
+}
+
+function kindsParam(kinds: MapLayerKind[]): string {
+  // Schema requires non-empty; always emit so dev-tools URLs are explicit.
+  return kinds.join(',')
+}
+
+function selectedKinds(): MapLayerKind[] {
+  const m = useMapStore()
+  const kinds: MapLayerKind[] = []
+  if (m.showPeople) kinds.push('profile')
+  if (m.showPosts) kinds.push('post')
+  return kinds
+}
+
 function sameViewport(a: MapBounds | null, aZoom: number, b: MapBounds, bZoom: number): boolean {
   return (
     aZoom === bZoom &&
@@ -54,6 +74,7 @@ function invalidateBoundsCache(): void {
   cachedClusterBounds = null
   cachedClusterZoom = null
   cachedClusterTagSig = ''
+  cachedClusterKindsSig = ''
   popupCache.clear()
 }
 
@@ -90,11 +111,15 @@ export const useFindProfileStore = defineStore('findProfile', {
 
       const tagIds = useSearchStore().selectedTagIds
       const sig = tagSignature(tagIds)
+      const kinds = selectedKinds()
+      const kindsSig = kindsSignature(kinds)
 
       const sameTags = sig === cachedClusterTagSig
+      const sameKinds = kindsSig === cachedClusterKindsSig
       const zoomChanged = cachedClusterZoom !== zoom
       if (
         sameTags &&
+        sameKinds &&
         !zoomChanged &&
         cachedClusterBounds &&
         boundsContain(cachedClusterBounds, bounds)
@@ -109,7 +134,12 @@ export const useFindProfileStore = defineStore('findProfile', {
         const paddedBounds = padBounds(bounds, 0.3)
         const res = await safeApiCall(() =>
           api.get('/find/clusters', {
-            params: { ...paddedBounds, zoom, tagIds: tagIdsParam(tagIds) },
+            params: {
+              ...paddedBounds,
+              zoom,
+              tagIds: tagIdsParam(tagIds),
+              kinds: kindsParam(kinds),
+            },
             signal: controller.signal,
           })
         )
@@ -120,6 +150,7 @@ export const useFindProfileStore = defineStore('findProfile', {
         cachedClusterBounds = paddedBounds
         cachedClusterZoom = zoom
         cachedClusterTagSig = sig
+        cachedClusterKindsSig = kindsSig
 
         return storeSuccess()
       } catch (error: any) {
