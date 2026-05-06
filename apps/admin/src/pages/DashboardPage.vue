@@ -12,8 +12,15 @@ import {
   ArcElement,
 } from 'chart.js'
 import KpiCard from '../components/KpiCard.vue'
+import DashboardDrillDownModal from '../components/DashboardDrillDownModal.vue'
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend, ArcElement)
+
+type DrillDownMetric = 'interactions' | 'messages'
+const drillDown = ref<{ metric: DrillDownMetric; title: string } | null>(null)
+function openDrillDown(metric: DrillDownMetric, title: string) {
+  drillDown.value = { metric, title }
+}
 
 interface SegmentCount {
   segment: string
@@ -155,6 +162,11 @@ onMounted(async () => {
         :value="interactionsTotal"
         :series="series(dailyStats?.dailyInteractions)"
         color="#6f42c1"
+        clickable
+        data-test="kpi-interactions"
+        @click="openDrillDown('interactions', 'Interactions')"
+        @keydown.enter="openDrillDown('interactions', 'Interactions')"
+        @keydown.space.prevent="openDrillDown('interactions', 'Interactions')"
       />
       <KpiCard
         title="Matches"
@@ -169,8 +181,20 @@ onMounted(async () => {
         :value="messagesTotal"
         :series="series(dailyStats?.dailyMessages)"
         color="#fd7e14"
+        clickable
+        data-test="kpi-messages"
+        @click="openDrillDown('messages', 'Messages')"
+        @keydown.enter="openDrillDown('messages', 'Messages')"
+        @keydown.space.prevent="openDrillDown('messages', 'Messages')"
       />
     </div>
+
+    <DashboardDrillDownModal
+      v-if="drillDown"
+      :metric="drillDown.metric"
+      :title="drillDown.title"
+      @close="drillDown = null"
+    />
 
     <div
       v-if="stats?.segmentCounts?.length"
