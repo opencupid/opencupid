@@ -60,7 +60,7 @@ describe('DashboardDrillDownModal', () => {
     })
   })
 
-  it('fetches breakdown with default 72h range and renders three bar charts', async () => {
+  it('fetches breakdown with default 72h range and renders a single combined bar chart', async () => {
     const wrapper = mount(DashboardDrillDownModal, {
       props: { metric: 'interactions', title: 'Interactions' },
     })
@@ -70,7 +70,17 @@ describe('DashboardDrillDownModal', () => {
       '/admin/stats/breakdown',
       expect.objectContaining({ params: { metric: 'interactions', range: '72h' } })
     )
-    expect(wrapper.findAll('[data-test="bar-chart"]')).toHaveLength(3)
+    const charts = wrapper.findAllComponents({ name: 'Bar' })
+    expect(charts).toHaveLength(1)
+
+    // One dataset per series, each with its own colour.
+    const data = charts[0].props('data') as {
+      datasets: { label: string; backgroundColor: string }[]
+    }
+    expect(data.datasets.map((d) => d.label)).toEqual(['Likes', 'Anonymous', 'Matches'])
+    const colors = new Set(data.datasets.map((d) => d.backgroundColor))
+    expect(colors.size).toBe(3)
+
     expect(wrapper.text()).toContain('Likes')
     expect(wrapper.text()).toContain('Anonymous')
     expect(wrapper.text()).toContain('Matches')
@@ -102,17 +112,18 @@ describe('DashboardDrillDownModal', () => {
     expect(wrapper.emitted('close')).toBeTruthy()
   })
 
-  it('shows total count for each series', async () => {
+  it('shows total count for each series in the legend', async () => {
     const wrapper = mount(DashboardDrillDownModal, {
       props: { metric: 'interactions', title: 'Interactions' },
     })
     await flushPromises()
 
+    const text = wrapper.text().replace(/\s+/g, ' ')
     // Likes: 3 + 5 = 8
-    expect(wrapper.text()).toContain('Total: 8')
+    expect(text).toContain('Likes: 8')
     // Anonymous: 1 + 0 = 1
-    expect(wrapper.text()).toContain('Total: 1')
+    expect(text).toContain('Anonymous: 1')
     // Matches: 0 + 2 = 2
-    expect(wrapper.text()).toContain('Total: 2')
+    expect(text).toContain('Matches: 2')
   })
 })

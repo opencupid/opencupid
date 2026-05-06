@@ -79,16 +79,16 @@ const labels = computed(() => {
   return b.buckets.map((iso) => formatLabel(iso, b.unit))
 })
 
-function chartData(series: Series) {
+function chartData() {
+  const b = breakdown.value
+  if (!b) return { labels: [], datasets: [] }
   return {
     labels: labels.value,
-    datasets: [
-      {
-        label: series.label,
-        data: series.data.map((d) => d.count),
-        backgroundColor: SERIES_COLORS[series.key] ?? '#0d6efd',
-      },
-    ],
+    datasets: b.series.map((s) => ({
+      label: s.label,
+      data: s.data.map((d) => d.count),
+      backgroundColor: SERIES_COLORS[s.key] ?? '#0d6efd',
+    })),
   }
 }
 
@@ -100,9 +100,14 @@ const chartOptions = computed(() => {
   return {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
+    plugins: {
+      legend: { position: 'bottom' as const },
+      tooltip: { mode: 'index' as const, intersect: false },
+    },
+    interaction: { mode: 'index' as const, intersect: false },
     scales: {
       x: {
+        stacked: false,
         ticks: {
           autoSkip: false,
           maxRotation: 0,
@@ -172,27 +177,29 @@ function onClose() {
           >
             Loading...
           </div>
-          <div
-            v-if="breakdown"
-            class="d-flex flex-column gap-4"
-          >
-            <div
-              v-for="series in breakdown.series"
-              :key="series.key"
-              class="drilldown-series"
-            >
-              <div class="d-flex justify-content-between align-items-baseline mb-2">
-                <h6 class="mb-0">{{ series.label }}</h6>
-                <span class="text-body-secondary small">
-                  Total: {{ series.data.reduce((sum, d) => sum + d.count, 0) }}
-                </span>
-              </div>
-              <div class="drilldown-chart">
-                <Bar
-                  :data="chartData(series)"
-                  :options="chartOptions"
-                />
-              </div>
+          <div v-if="breakdown">
+            <div class="d-flex flex-wrap gap-3 mb-3">
+              <span
+                v-for="series in breakdown.series"
+                :key="series.key"
+                class="text-body-secondary small"
+              >
+                <span
+                  class="drilldown-swatch"
+                  :style="{ backgroundColor: SERIES_COLORS[series.key] ?? '#0d6efd' }"
+                  aria-hidden="true"
+                ></span>
+                {{ series.label }}:
+                <strong class="text-body">
+                  {{ series.data.reduce((sum, d) => sum + d.count, 0) }}
+                </strong>
+              </span>
+            </div>
+            <div class="drilldown-chart">
+              <Bar
+                :data="chartData()"
+                :options="chartOptions"
+              />
             </div>
           </div>
         </div>
@@ -213,6 +220,15 @@ function onClose() {
 
 <style scoped>
 .drilldown-chart {
-  height: 12rem;
+  height: 22rem;
+}
+
+.drilldown-swatch {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 0.125rem;
+  margin-right: 0.35rem;
+  vertical-align: -1px;
 }
 </style>
