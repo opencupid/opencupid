@@ -1,5 +1,12 @@
 # frontend
 
+## 0.60.0
+
+### Minor Changes
+
+- ab92ac2: Redesign the like popover with a button-pair anonymous/revealed toggle, add a "you smiled at X" confirmation toast, and split tracking into create/update/like-back events.
+- 47bab10: Extract interaction context from public profile DTO into a dedicated `GET /interactions/context/:targetId` endpoint, owned by `useInteractionStore` on the frontend.
+
 ## 0.59.3
 
 ### Patch Changes

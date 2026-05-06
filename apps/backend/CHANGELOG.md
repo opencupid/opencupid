@@ -1,5 +1,15 @@
 # backend
 
+## 0.60.0
+
+### Minor Changes
+
+- b21b661: Redesign admin dashboard with uniform KPI + mini-chart cards. Removes the
+  unused Total Users / Total Profiles tiles and folds the standalone Daily
+  Signups / Daily Active bar charts into the KPI cards. Adds daily series for
+  blocked users and reported profiles to `/admin/stats/daily`.
+- 47bab10: Extract interaction context from public profile DTO into a dedicated `GET /interactions/context/:targetId` endpoint, owned by `useInteractionStore` on the frontend.
+
 ## 0.59.3
 
 ### Patch Changes
