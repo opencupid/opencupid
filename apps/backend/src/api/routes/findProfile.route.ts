@@ -85,14 +85,15 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * GET /cluster-leaves
-   * Returns the individual profile points that make up a cluster.
+   * Returns the individual point features (profiles and/or posts, scoped by
+   * the requested `kinds`) that make up a cluster.
    * The `tagIds` param must match the selection used when fetching the
    * cluster itself — each tag combination has its own cached index.
    * Likewise, `kinds` MUST match the value used when fetching the cluster —
    * each `(tags, kinds)` combination is its own cached index.
    * @query {number} clusterId - The cluster ID to expand
    * @query {string} [tagIds] - Optional comma-separated tag IDs
-   * @query {string} kinds - Comma-separated layer kinds (e.g., 'profile,post'). At least one required.
+   * @query {string} kinds - Comma-separated content kinds (e.g., 'profile,post'). At least one required.
    * @returns {{ success: true, features: PointFeature[] }}
    */
   fastify.get('/cluster-leaves', { onRequest: [fastify.authenticate] }, async (req, reply) => {
