@@ -183,6 +183,13 @@
     "you_matched_with": "{name} visszamosolygott",
     "you_received_like": "Valaki rád mosolygott!"
   },
+  "map": {
+    "layer_control": {
+      "people": "Emberek",
+      "posts": "Hirdetések",
+      "aria_label": "Térképrétegek"
+    }
+  },
   "messaging": {
     "already_sent_waiting": "Már küldtél nekik üzenetet. Amint válaszolnak, folytathatod a beszélgetést.",
     "block_member": "Tag letiltása",
