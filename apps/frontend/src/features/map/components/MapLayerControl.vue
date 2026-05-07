@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { BButton, BFormCheckbox, BPopover } from 'bootstrap-vue-next'
 import { useI18n } from '@/lib/i18n'
 import type { UserContentKind } from '@shared/maps'
+import { useTimeoutFn } from '@vueuse/core'
 
 import IconLayer from '@/assets/icons/interface/layer.svg'
 import IconProfile from '@/assets/icons/interface/user.svg'
@@ -15,13 +17,35 @@ function toggle(kind: UserContentKind) {
   const current = model.value
   model.value = current.includes(kind) ? current.filter((k) => k !== kind) : [...current, kind]
 }
+
+// The only-selected layer can't be deselected: backend rejects empty
+// `kinds`. Disabling the checkbox makes the rule visible (greyed-out)
+// instead of swallowing clicks silently.
+function isLocked(kind: UserContentKind) {
+  return model.value.length === 1 && model.value[0] === kind
+}
+
+const popoverRef = ref<InstanceType<typeof BPopover> | null>(null)
+const POPOVER_AUTO_HIDE_MS = 3000
+
+// Hover-driven auto-hide: timer counts while the cursor is outside the
+// popover body, pauses while it's inside. Mouseleave starts a fresh
+// 3-second deadline; mouseenter cancels it.
+const { start: startHideTimer, stop: stopHideTimer } = useTimeoutFn(
+  () => {
+    popoverRef.value?.hide()
+  },
+  POPOVER_AUTO_HIDE_MS,
+  { immediate: false }
+)
 </script>
 
 <template>
   <div class="map-layer-control">
     <BPopover
-      click
-      placement="left"
+      ref="popoverRef"
+      placement="bottom"
+      style="max-width: 16rem"
       :title="t('map.layer_control.aria_label')"
     >
       <template #target>
@@ -33,32 +57,38 @@ function toggle(kind: UserContentKind) {
           <IconLayer class="svg-icon" />
         </BButton>
       </template>
-      <div class="d-flex gap-3 py-2 px-1">
+      <div
+        class="d-flex gap-3 py-2 px-1"
+        @mouseenter="stopHideTimer"
+        @mouseleave="startHideTimer"
+      >
         <div class="text-center">
           <BFormCheckbox
             button
-            variant="outline-primary"
+            button-variant="outline-primary"
             size="lg"
             class="btn-layer-select"
             :model-value="model.includes('profile')"
-            @click="toggle('profile')"
+            :disabled="isLocked('profile')"
+            @update:model-value="toggle('profile')"
           >
             <IconProfile class="svg-icon-lg" />
+            <div class="form-hint mt-1">{{ t('map.layer_control.people') }}</div>
           </BFormCheckbox>
-          <div class="form-hint mt-1">{{ t('map.layer_control.people') }}</div>
         </div>
         <div class="text-center">
           <BFormCheckbox
             button
-            variant="outline-primary"
+            button-variant="outline-primary"
             size="lg"
             class="btn-layer-select"
             :model-value="model.includes('post')"
-            @click="toggle('post')"
+            :disabled="isLocked('post')"
+            @update:model-value="toggle('post')"
           >
             <IconPost class="svg-icon-lg" />
+            <div class="form-hint mt-1">{{ t('map.layer_control.posts') }}</div>
           </BFormCheckbox>
-          <div class="form-hint mt-1">{{ t('map.layer_control.posts') }}</div>
         </div>
       </div>
     </BPopover>

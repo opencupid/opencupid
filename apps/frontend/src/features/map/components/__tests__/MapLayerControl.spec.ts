@@ -33,8 +33,10 @@ function mountWith(modelValue: UserContentKind[]) {
 }
 
 function toggles(wrapper: ReturnType<typeof mountWith>) {
-  // BFormCheckbox renders an <input type="checkbox"> per toggle; the
-  // component's @click handler fires on either the input or its label.
+  // BFormCheckbox renders an <input type="checkbox"> per toggle.
+  // setValue() simulates a real user toggle: it flips the input's
+  // checked state and dispatches `change`, which is what BFormCheckbox
+  // listens to in order to emit update:modelValue.
   const inputs = wrapper.findAll('input[type="checkbox"]')
   if (inputs.length !== 2) throw new Error(`expected 2 toggles, got ${inputs.length}`)
   return { people: inputs[0]!, posts: inputs[1]! }
@@ -48,27 +50,28 @@ describe('MapLayerControl', () => {
     expect(text).toContain('map.layer_control.posts')
   })
 
-  it('emits update:modelValue without "profile" when the people toggle is clicked while selected', async () => {
+  it('emits update:modelValue without "profile" when the people toggle is unchecked while selected', async () => {
     const wrapper = mountWith(['profile', 'post'])
-    await toggles(wrapper).people.trigger('click')
+    await toggles(wrapper).people.setValue(false)
     expect(wrapper.emitted('update:modelValue')).toEqual([[['post']]])
   })
 
-  it('emits update:modelValue without "post" when the posts toggle is clicked while selected', async () => {
+  it('emits update:modelValue without "post" when the posts toggle is unchecked while selected', async () => {
     const wrapper = mountWith(['profile', 'post'])
-    await toggles(wrapper).posts.trigger('click')
+    await toggles(wrapper).posts.setValue(false)
     expect(wrapper.emitted('update:modelValue')).toEqual([[['profile']]])
   })
 
-  it('emits update:modelValue adding "profile" when the people toggle is clicked while unselected', async () => {
+  it('emits update:modelValue adding "profile" when the people toggle is checked while unselected', async () => {
     const wrapper = mountWith(['post'])
-    await toggles(wrapper).people.trigger('click')
+    await toggles(wrapper).people.setValue(true)
     expect(wrapper.emitted('update:modelValue')).toEqual([[['post', 'profile']]])
   })
 
-  it("does not enforce the at-least-one invariant — that is the parent's job", async () => {
+  it('disables the only-selected toggle so it cannot be unchecked', () => {
     const wrapper = mountWith(['profile'])
-    await toggles(wrapper).people.trigger('click')
-    expect(wrapper.emitted('update:modelValue')).toEqual([[[]]])
+    const { people, posts } = toggles(wrapper)
+    expect(people.attributes('disabled')).toBeDefined()
+    expect(posts.attributes('disabled')).toBeUndefined()
   })
 })

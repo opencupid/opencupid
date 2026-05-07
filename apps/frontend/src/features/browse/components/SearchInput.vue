@@ -1,12 +1,21 @@
 <script setup lang="ts">
 import IconSearch from '@/assets/icons/interface/search.svg'
 import IconClear from '@/assets/icons/interface/cross.svg'
+import { computed, ref } from 'vue'
 
-defineProps<{ modelValue: string }>()
+const props = defineProps<{ modelValue: string }>()
 
 defineEmits<{
   'update:modelValue': [value: string]
 }>()
+
+const isFocused = ref(false)
+const hideSearchIcon = computed(() => isFocused.value || props.modelValue.length > 0)
+
+function onFocus(event: FocusEvent) {
+  isFocused.value = true
+  ;(event.target as HTMLInputElement).select()
+}
 </script>
 
 <template>
@@ -19,6 +28,7 @@ defineEmits<{
         <template #prepend>
           <IconSearch
             class="svg-icon ms-2 text-secondary"
+            :class="{ 'd-none': hideSearchIcon }"
             :title="$t('profiles.forms.city_search_placeholder')"
           />
         </template>
@@ -42,7 +52,8 @@ defineEmits<{
           autocorrect="off"
           autocapitalize="off"
           spellcheck="false"
-          @focus="($event.target as HTMLInputElement).select()"
+          @focus="onFocus"
+          @blur="isFocused = false"
           @update:model-value="$emit('update:modelValue', String($event ?? ''))"
         />
       </BInputGroup>
