@@ -1,120 +1,320 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { CanceledError } from 'axios'
+import { api, safeApiCall } from '@/lib/api'
 import {
   PublicPostWithProfileSchema,
   PublicPostDetailSchema,
   OwnerPostSchema,
   PostSummarySchema,
   type PublicPostWithProfile,
+  type PublicPostDetail,
   type OwnerPost,
   type PostSummary,
+  type CreatePostPayload,
+  type UpdatePostPayload,
   type PostQueryInput,
   type NearbyPostQueryInput,
   type PostScope,
 } from '@zod/post/post.dto'
+import type {
+  PostsResponse,
+  PostSummariesResponse,
+  MyPostsResponse,
+  PostResponse,
+  PublicPostDetailResponse,
+  CreatePostResponse,
+  UpdatePostResponse,
+  DeletePostResponse,
+} from '@zod/apiResponse.dto'
 import { type PostTypeType } from '@zod/generated'
-import { storeSuccess } from '@/store/helpers'
-import { useUserContentActions } from '@/store/composables/useUserContentActions'
+import { storeSuccess, storeError, type StoreResponse } from '@/store/helpers'
+import type { MapBounds } from '@/features/map/types/map.types'
 
-export const usePostStore = defineStore('posts', () => {
-  // --- state (refs owned by the store; aliased on return to preserve the public API) ---
-  const items = ref<PublicPostWithProfile[]>([])
-  const myItems = ref<OwnerPost[]>([])
-  const summaries = ref<PostSummary[]>([])
-  const currentItem = ref<PublicPostWithProfile | OwnerPost | null>(null)
+let publicPostAbortController: AbortController | null = null
+const PublicPostWithProfileArraySchema = PublicPostWithProfileSchema.array()
+const OwnerPostArraySchema = OwnerPostSchema.array()
+const PostSummaryArraySchema = PostSummarySchema.array()
+type StorePostResponse = StoreResponse<{ post: OwnerPost }>
+type StorePostsResponse = StoreResponse<{ posts: PublicPostWithProfile[] }>
+type StoreOwnerPostsResponse = StoreResponse<{ posts: OwnerPost[] }>
+type StorePostSummariesResponse = StoreResponse<{ posts: PostSummary[] }>
 
-  // --- generic UserContent actions, shared with future Event store ---
-  // Generics inferred from state refs and config (including wire literal types).
-  const a = useUserContentActions(
-    { items, myItems, summaries, currentItem },
-    {
-      basePath: '/posts',
-      wire: { singular: 'post', plural: 'posts' },
-      publicSchema: PublicPostWithProfileSchema,
-      ownerSchema: OwnerPostSchema,
-      summarySchema: PostSummarySchema,
-      detailSchema: PublicPostDetailSchema,
-      endpoints: {
-        list: '',
-        mine: 'me',
-        nearby: 'nearby',
-        recent: 'recent',
-        bounds: 'bounds',
-      },
-      resourceLabel: 'post',
-    }
-  )
+export const usePostStore = defineStore('posts', {
+  state: () => ({
+    /** Public feed — populated by fetchPosts / fetchNearbyPosts / fetchRecentPosts. Full shape with conversationContext. */
+    posts: [] as PublicPostWithProfile[],
+    /** Owner-scoped post list — populated by fetchMyPosts. */
+    myPosts: [] as OwnerPost[],
+    /** Lightweight teasers for map-bounds rendering — populated by fetchPostsInBounds. No conversationContext / isOwn / isVisible. */
+    postSummaries: [] as PostSummary[],
+    currentPost: null as PublicPostWithProfile | OwnerPost | null,
+  }),
 
-  // --- post-specific getters ---
-  const getPostsByType = (type: PostTypeType) => items.value.filter((post) => post.type === type)
-  const getOffers = computed(() => items.value.filter((post) => post.type === 'OFFER'))
-  const getRequests = computed(() => items.value.filter((post) => post.type === 'REQUEST'))
+  getters: {
+    getPostsByType: (state) => (type: PostTypeType) => {
+      return state.posts.filter((post) => post.type === type)
+    },
+    getOffers: (state) => state.posts.filter((post) => post.type === 'OFFER'),
+    getRequests: (state) => state.posts.filter((post) => post.type === 'REQUEST'),
+  },
 
-  // --- post-specific scope dispatcher (PostScope is post-shaped) ---
-  async function loadPosts(
-    scope: PostScope,
-    options: {
-      type?: PostTypeType
-      page?: number
-      pageSize?: number
-      nearbyParams?: NearbyPostQueryInput
-    } = {}
-  ) {
-    const { type, page = 0, pageSize = 20, nearbyParams } = options
-    const baseQuery: PostQueryInput = {
-      type,
-      limit: pageSize,
-      offset: page * pageSize,
-    }
-    switch (scope) {
-      case 'nearby':
-        if (nearbyParams) {
-          return await a.fetchNearby({ ...baseQuery, ...nearbyParams })
+  actions: {
+    async createPost(payload: CreatePostPayload): Promise<StorePostResponse> {
+      try {
+        const res = await safeApiCall(() => api.post<CreatePostResponse>('/posts', payload))
+        const post = OwnerPostSchema.parse(res.data.post)
+        this.myPosts.unshift(post)
+        return storeSuccess({ post })
+      } catch (error: any) {
+        return storeError(error, 'Failed to create post')
+      }
+    },
+
+    async updatePost(id: string, payload: UpdatePostPayload): Promise<StorePostResponse> {
+      try {
+        const res = await safeApiCall(() => api.patch<UpdatePostResponse>(`/posts/${id}`, payload))
+        const post = OwnerPostSchema.parse(res.data.post)
+
+        const index = this.myPosts.findIndex((p) => p.id === id)
+        if (index !== -1) {
+          this.myPosts[index] = post
         }
-        return storeSuccess({ posts: [] as PublicPostWithProfile[] })
-      case 'recent':
-        return await a.fetchRecent(baseQuery)
-      case 'my':
-        return await a.fetchMine(baseQuery)
-      default:
-        return await a.fetchList(baseQuery)
-    }
-  }
+        if (this.currentPost?.id === id) {
+          this.currentPost = post
+        }
 
-  return {
-    // state — public names preserved
-    posts: items,
-    myPosts: myItems,
-    postSummaries: summaries,
-    currentPost: currentItem,
+        return storeSuccess({ post })
+      } catch (error: any) {
+        return storeError(error, 'Failed to update post')
+      }
+    },
 
-    // CRUD — public names preserved
-    createPost: a.create,
-    updatePost: a.update,
-    deletePost: a.deleteItem,
-    setPostVisibility: a.setVisibility,
-    hidePost: a.hide,
-    showPost: a.show,
+    async deletePost(id: string): Promise<StoreResponse<void>> {
+      try {
+        await safeApiCall(() => api.delete<DeletePostResponse>(`/posts/${id}`))
 
-    // fetches — public names preserved
-    fetchPosts: a.fetchList,
-    fetchNearbyPosts: a.fetchNearby,
-    fetchRecentPosts: a.fetchRecent,
-    fetchMyPosts: a.fetchMine,
-    fetchPostsInBounds: a.fetchInBounds,
-    fetchOwnerPost: a.fetchOwner,
-    fetchPublicPost: a.fetchPublic,
+        this.myPosts = this.myPosts.filter((post) => post.id !== id)
+        this.posts = this.posts.filter((post) => post.id !== id)
+        if (this.currentPost?.id === id) {
+          this.currentPost = null
+        }
 
-    // state helpers — public names preserved
-    upsertPost: a.upsertItem,
-    clearPosts: a.clearItems,
-    clearMyPosts: a.clearMyItems,
-    setCurrentPost: a.setCurrentItem,
+        return storeSuccess()
+      } catch (error: any) {
+        return storeError(error, 'Failed to delete post')
+      }
+    },
 
-    // post-specific surface
-    getPostsByType,
-    getOffers,
-    getRequests,
-    loadPosts,
-  }
+    async setPostVisibility(id: string, isVisible: boolean): Promise<StorePostResponse> {
+      try {
+        const res = await safeApiCall(() =>
+          api.patch<UpdatePostResponse>(`/posts/${id}`, { isVisible })
+        )
+        const post = OwnerPostSchema.parse(res.data.post)
+
+        const index = this.myPosts.findIndex((p) => p.id === id)
+        if (index !== -1) {
+          this.myPosts[index] = post
+        }
+
+        if (post.isVisible) {
+          this.upsertPost(post)
+        } else {
+          this.posts = this.posts.filter((p) => p.id !== id)
+        }
+
+        if (this.currentPost?.id === id) {
+          this.currentPost = post
+        }
+
+        return storeSuccess({ post })
+      } catch (error: any) {
+        return storeError(error, 'Failed to update post visibility')
+      }
+    },
+
+    async hidePost(id: string) {
+      return this.setPostVisibility(id, false)
+    },
+
+    async showPost(id: string) {
+      return this.setPostVisibility(id, true)
+    },
+
+    async loadPosts(
+      scope: PostScope,
+      options: {
+        type?: PostTypeType
+        page?: number
+        pageSize?: number
+        nearbyParams?: NearbyPostQueryInput
+      } = {}
+    ) {
+      const { type, page = 0, pageSize = 20, nearbyParams } = options
+      const baseQuery: PostQueryInput = {
+        type,
+        limit: pageSize,
+        offset: page * pageSize,
+      }
+      switch (scope) {
+        case 'nearby':
+          if (nearbyParams) {
+            return await this.fetchNearbyPosts({
+              ...baseQuery,
+              ...nearbyParams,
+            })
+          }
+          return storeSuccess({ posts: [] as PublicPostWithProfile[] })
+        case 'recent':
+          return await this.fetchRecentPosts(baseQuery)
+        case 'my':
+          return await this.fetchMyPosts(baseQuery)
+        default:
+          return await this.fetchPosts(baseQuery)
+      }
+    },
+
+    async fetchOwnerPost(id: string): Promise<StorePostResponse> {
+      try {
+        const res = await safeApiCall(() => api.get<PostResponse>(`/posts/${id}`))
+        const post = OwnerPostSchema.parse(res.data.post)
+        this.currentPost = post
+        return storeSuccess({ post })
+      } catch (error: any) {
+        return storeError(error, 'Failed to fetch post')
+      }
+    },
+
+    async fetchPublicPost(id: string): Promise<StoreResponse<{ post: PublicPostDetail }>> {
+      if (publicPostAbortController) publicPostAbortController.abort()
+      const controller = new AbortController()
+      publicPostAbortController = controller
+
+      try {
+        const res = await safeApiCall(() =>
+          api.get<PublicPostDetailResponse>(`/posts/${id}`, { signal: controller.signal })
+        )
+        const post = PublicPostDetailSchema.parse(res.data.post)
+        return storeSuccess({ post })
+      } catch (error: any) {
+        if (error instanceof CanceledError) return storeSuccess()
+        return storeError(error, 'Failed to fetch post')
+      }
+    },
+
+    async fetchPosts(query: PostQueryInput = {}): Promise<StorePostsResponse> {
+      try {
+        const res = await safeApiCall(() => api.get<PostsResponse>('/posts', { params: query }))
+        const posts = PublicPostWithProfileArraySchema.parse(res.data.posts)
+
+        if (query.offset === 0 || query.offset === undefined) {
+          this.posts = posts
+        } else {
+          this.posts.push(...posts)
+        }
+        return storeSuccess({ posts })
+      } catch (error: any) {
+        return storeError(error, 'Failed to fetch posts')
+      }
+    },
+
+    async fetchNearbyPosts(query: NearbyPostQueryInput): Promise<StorePostsResponse> {
+      try {
+        const res = await safeApiCall(() =>
+          api.get<PostsResponse>('/posts/nearby', { params: query })
+        )
+        const posts = PublicPostWithProfileArraySchema.parse(res.data.posts)
+
+        if (query.offset === 0 || query.offset === undefined) {
+          this.posts = posts
+        } else {
+          this.posts.push(...posts)
+        }
+        return storeSuccess({ posts })
+      } catch (error: any) {
+        return storeError(error, 'Failed to fetch nearby posts')
+      }
+    },
+
+    async fetchRecentPosts(query: PostQueryInput = {}): Promise<StorePostsResponse> {
+      try {
+        const res = await safeApiCall(() =>
+          api.get<PostsResponse>('/posts/recent', { params: query })
+        )
+        const posts = PublicPostWithProfileArraySchema.parse(res.data.posts)
+
+        if (query.offset === 0 || query.offset === undefined) {
+          this.posts = posts
+        } else {
+          this.posts.push(...posts)
+        }
+        return storeSuccess({ posts })
+      } catch (error: any) {
+        return storeError(error, 'Failed to fetch recent posts')
+      }
+    },
+
+    async fetchMyPosts(query: PostQueryInput = {}): Promise<StoreOwnerPostsResponse> {
+      try {
+        const res = await safeApiCall(() =>
+          api.get<MyPostsResponse>('/posts/profile/me', { params: query })
+        )
+        const posts = OwnerPostArraySchema.parse(res.data.posts)
+
+        if (query.offset === 0 || query.offset === undefined) {
+          this.myPosts = posts
+        } else {
+          this.myPosts.push(...posts)
+        }
+        return storeSuccess({ posts })
+      } catch (error: any) {
+        return storeError(error, 'Failed to fetch my posts')
+      }
+    },
+
+    async fetchPostsInBounds(bounds: MapBounds): Promise<StorePostSummariesResponse> {
+      try {
+        const res = await safeApiCall(() =>
+          api.get<PostSummariesResponse>('/posts/bounds', { params: bounds })
+        )
+        const posts = PostSummaryArraySchema.parse(res.data.posts)
+        this.postSummaries = posts
+        return storeSuccess({ posts })
+      } catch (error: any) {
+        return storeError(error, 'Failed to fetch posts in bounds')
+      }
+    },
+
+    upsertPost(post: PublicPostWithProfile | OwnerPost) {
+      const isOwn = 'isVisible' in post
+
+      if (isOwn) {
+        const idx = this.myPosts.findIndex((p) => p.id === post.id)
+        if (idx === -1) {
+          this.myPosts.unshift(post as OwnerPost)
+        } else {
+          this.myPosts[idx] = post as OwnerPost
+        }
+      }
+
+      const idx = this.posts.findIndex((p) => p.id === post.id)
+      if (idx === -1) {
+        this.posts.unshift({ ...post, isOwn: true } as PublicPostWithProfile)
+      } else {
+        this.posts[idx] = { ...post, isOwn: true } as PublicPostWithProfile
+      }
+    },
+
+    clearPosts() {
+      this.posts = []
+    },
+
+    clearMyPosts() {
+      this.myPosts = []
+    },
+
+    setCurrentPost(post: PublicPostWithProfile | OwnerPost | null) {
+      this.currentPost = post
+    },
+  },
 })
