@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { provide, toRef } from 'vue'
+import { provide } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useOwnerProfileStore } from '../stores/ownerProfileStore'
-import { useMyProfileViewModel } from '../composables/useMyProfileViewModel'
 import { useMyProfileRouteState } from '../composables/useMyProfileRouteState'
 
 import MyProfile from './MyProfile.vue'
@@ -23,10 +22,8 @@ const router = useRouter()
 const { subView } = useMyProfileRouteState()
 
 const ownerProfileStore = useOwnerProfileStore()
-const { formData } = useMyProfileViewModel(false)
 
 provide('isOwner', true)
-provide('viewerProfile', toRef(formData))
 
 function handleClose() {
   router.replace({ name: 'Browse' })
@@ -99,7 +96,10 @@ function handleClose() {
     v-if="subView === 'myprofile' || subView === 'myposts'"
     class="flex-shrink-0 flex-grow-0 d-flex align-items-center justify-content-center"
   >
-    <ul class="nav nav-tabs flex-grow-0 flex-shrink-0 w-100 d-flex justify-content-center" role="tablist">
+    <ul
+      class="nav nav-tabs flex-grow-0 flex-shrink-0 w-100 d-flex justify-content-center"
+      role="tablist"
+    >
       <li class="nav-item">
         <button
           class="nav-link"
