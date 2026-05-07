@@ -21,8 +21,7 @@ const { hasUnreadMessages, hasMatchNotifications } = useNotificationState()
   <div class="owner-drawer-controls d-flex flex-column flex-md-row gap-2">
     <BButton
       variant="light"
-      class="btn-sm rounded-circle shadow p-0 overflow-hidden order-1 order-md-0 border"
-      style="width: 2.5rem; height: 2.5rem"
+      class="btn-rounded rounded-circle shadow  overflow-hidden order-1 order-md-0 border"
       :aria-label="$t('nav.inbox')"
       @click="$emit('open:inbox')"
     >
@@ -32,8 +31,7 @@ const { hasUnreadMessages, hasMatchNotifications } = useNotificationState()
     </BButton>
     <BButton
       variant="light"
-      class="btn-sm rounded-circle shadow p-0 overflow-hidden"
-      style="width: 2.5rem; height: 2.5rem"
+      class="btn-rounded rounded-circle p-0 shadow  overflow-hidden"
       :aria-label="$t('nav.profile')"
       @click="$emit('open:profile')"
     >
