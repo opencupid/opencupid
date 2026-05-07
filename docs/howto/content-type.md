@@ -49,7 +49,7 @@ model Event {
 
 Add a `events Event[]` back-relation on the `Profile` model.
 
-Then follow [docs/howto/migrations.md](./migrations.md) (or [create-migration](../../docs/howto/migrations.md) if available) to author the migration:
+Then author the migration:
 
 ```bash
 pnpm --filter backend prisma:migrate -- --name add_event_model

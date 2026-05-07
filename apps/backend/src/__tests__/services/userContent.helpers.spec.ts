@@ -84,12 +84,12 @@ describe('userContent.helpers', () => {
       expect(box.lon.lte).toBeCloseTo(1, 5)
     })
 
-    it('shrinks longitude span at higher latitudes (cos correction)', () => {
+    it('widens longitude span in degrees at higher latitudes (cos correction for fixed km radius)', () => {
       const equator = boundingBoxWhere(0, 0, 111)
       const at60 = boundingBoxWhere(60, 0, 111)
       const equatorLonSpan = equator.lon.lte - equator.lon.gte
       const at60LonSpan = at60.lon.lte - at60.lon.gte
-      // cos(60°) = 0.5, so longitude span at 60° lat is ~2× the equator span for the same km radius
+      // cos(60°) = 0.5, so to cover the same km radius, the box must span ~2× more degrees of longitude at 60° lat
       expect(at60LonSpan).toBeCloseTo(equatorLonSpan * 2, 4)
     })
 

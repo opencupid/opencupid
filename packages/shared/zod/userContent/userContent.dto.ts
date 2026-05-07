@@ -77,7 +77,7 @@ export const UserContentQueryShape = {
 } as const
 
 export const NearbyQueryShape = {
-  lat: z.coerce.number(),
-  lon: z.coerce.number(),
+  lat: z.coerce.number().min(-90).max(90),
+  lon: z.coerce.number().min(-180).max(180),
   radius: z.coerce.number().int().min(1).max(500).default(50),
 } as const
