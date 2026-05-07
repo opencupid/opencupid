@@ -332,7 +332,7 @@ describe('BrowseProfiles view', () => {
     })
   })
 
-  it('refetches bounds when mapStore.showPeople toggles', async () => {
+  it('refetches bounds when mapStore.selectedLayers changes', async () => {
     mountComponent()
     await flushPromises()
 
@@ -341,7 +341,7 @@ describe('BrowseProfiles view', () => {
     const mapStore = useMapStore()
 
     mockRefetchBounds.mockClear()
-    mapStore.setShowPeople(false)
+    mapStore.setSelectedLayers(['post'])
     await nextTick()
 
     expect(mockRefetchBounds).toHaveBeenCalledTimes(1)

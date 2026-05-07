@@ -1,31 +1,27 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { USER_CONTENT_KINDS, type UserContentKind } from '@shared/maps'
 
 /**
- * Map UI state — per-layer visibility for the BrowseProfiles map's layer
- * control. The selection is sent to the backend as the `kinds` query param
- * on cluster fetches; toggling a layer in the UI causes
- * `findProfileStore` to invalidate its bounds cache and refetch.
+ * Map UI state — which user-content layers are visible on the
+ * BrowseProfiles map. The selection is sent verbatim to the backend as
+ * the `kinds` query param on cluster fetches; toggling a layer in the
+ * UI causes `findProfileStore` to invalidate its bounds cache and refetch.
  *
- * The component-level invariant that at least one layer is always selected
- * keeps the wire payload non-empty (the backend rejects empty `kinds`).
+ * Invariant: at least one kind is always selected. The wire schema rejects
+ * empty `kinds`, so the setter clamps empty input by keeping the current
+ * value rather than letting the UI write an unsendable selection.
  */
 export const useMapStore = defineStore('map', () => {
-  const showPeople = ref(true)
-  const showPosts = ref(true)
+  const selectedLayers = ref<UserContentKind[]>([...USER_CONTENT_KINDS])
 
-  function setShowPeople(value: boolean) {
-    showPeople.value = value
-  }
-
-  function setShowPosts(value: boolean) {
-    showPosts.value = value
+  function setSelectedLayers(next: UserContentKind[]) {
+    if (next.length === 0) return
+    selectedLayers.value = next
   }
 
   return {
-    showPeople,
-    showPosts,
-    setShowPeople,
-    setShowPosts,
+    selectedLayers,
+    setSelectedLayers,
   }
 })

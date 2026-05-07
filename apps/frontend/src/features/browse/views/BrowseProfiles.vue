@@ -11,7 +11,7 @@ import { useBrowseViewModel } from '../composables/useBrowseViewModel'
 import { useSearchStore } from '@/features/browse/stores/searchStore'
 import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 import { isValidLatLng, toLatLng } from '@/features/map/utils/mapUtils'
-import { MAP_DEFAULT_CENTER } from '@shared/maps'
+import { MAP_DEFAULT_CENTER, type UserContentKind } from '@shared/maps'
 import { useDetailRouteState } from '@/features/shared/composables/useDetailRouteState'
 import { useDetailPanel } from '@/features/app/composables/useDetailPanel'
 import { useMapStore } from '@/features/map/stores/mapStore'
@@ -63,14 +63,16 @@ watch(selectedTagIds, () => {
 
 // Server-side layer filtering: toggling a layer changes the `kinds` query
 // param sent on cluster fetches. Invalidate the bounds cache and refetch.
+// MapLayerControl is presentational — it gets the selection via v-model.
 const mapStore = useMapStore()
-const { showPeople, showPosts } = storeToRefs(mapStore)
-watch(
-  () => [showPeople.value, showPosts.value] as const,
-  () => {
-    findProfileStore.refetchBounds()
-  }
-)
+const { selectedLayers } = storeToRefs(mapStore)
+const selectedMapLayers = computed<UserContentKind[]>({
+  get: () => selectedLayers.value,
+  set: (next) => mapStore.setSelectedLayers(next),
+})
+watch(selectedLayers, () => {
+  findProfileStore.refetchBounds()
+})
 
 // Placeholder visibility. Flipped by @map:ready from OsmPoiMap once the
 // first tile load completes. Hoisted out of OsmPoiMap so it paints from
@@ -274,7 +276,7 @@ onMounted(async () => {
           class="map-layer-control-wrapper position-absolute"
           style="top: 4rem; right: 0.5rem; z-index: 1010"
         >
-          <MapLayerControl />
+          <MapLayerControl v-model="selectedMapLayers" />
         </div>
 
         <NearbyFeatures

@@ -193,7 +193,7 @@ describe('findClustersForMapBounds with layer kinds', () => {
     mockGet.mockResolvedValue({ data: { success: true, features: [], tags: [] } })
 
     const mapStore = useMapStore()
-    mapStore.setShowPeople(false)
+    mapStore.setSelectedLayers(['post'])
 
     await store.findClustersForMapBounds(bounds, 7)
 
@@ -221,7 +221,7 @@ describe('findClustersForMapBounds with layer kinds', () => {
     await store.findClustersForMapBounds(bounds, 7)
     expect(mockGet).toHaveBeenCalledTimes(1)
 
-    useMapStore().setShowPosts(false)
+    useMapStore().setSelectedLayers(['profile'])
 
     await store.findClustersForMapBounds(bounds, 7)
     expect(mockGet).toHaveBeenCalledTimes(2)

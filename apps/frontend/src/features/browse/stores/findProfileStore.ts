@@ -51,14 +51,6 @@ function kindsParam(kinds: UserContentKind[]): string {
   return kinds.join(',')
 }
 
-function selectedKinds(): UserContentKind[] {
-  const m = useMapStore()
-  const kinds: UserContentKind[] = []
-  if (m.showPeople) kinds.push('profile')
-  if (m.showPosts) kinds.push('post')
-  return kinds
-}
-
 function sameViewport(a: MapBounds | null, aZoom: number, b: MapBounds, bZoom: number): boolean {
   return (
     aZoom === bZoom &&
@@ -111,7 +103,7 @@ export const useFindProfileStore = defineStore('findProfile', {
 
       const tagIds = useSearchStore().selectedTagIds
       const sig = tagSignature(tagIds)
-      const kinds = selectedKinds()
+      const kinds = useMapStore().selectedLayers
       const kindsSig = kindsSignature(kinds)
 
       const sameTags = sig === cachedClusterTagSig

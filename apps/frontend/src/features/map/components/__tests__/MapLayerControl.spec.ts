@@ -1,6 +1,5 @@
-import { vi, describe, it, expect, beforeEach } from 'vitest'
+import { vi, describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { setActivePinia, createPinia } from 'pinia'
 
 vi.mock('@/lib/i18n', () => ({
   useI18n: () => ({
@@ -9,69 +8,67 @@ vi.mock('@/lib/i18n', () => ({
   }),
 }))
 
-import MapLayerControl from '../MapLayerControl.vue'
-import { useMapStore } from '../../stores/mapStore'
-
-beforeEach(() => {
-  setActivePinia(createPinia())
+// vitest doesn't run vite-svg-loader, so *.svg imports resolve to URL
+// strings instead of Vue components. Provide no-op Vue components so the
+// imports inside MapLayerControl render cleanly under jsdom. vi.mock is
+// hoisted, so each factory is fully self-contained.
+vi.mock('@/assets/icons/interface/layer.svg', async () => {
+  const { defineComponent, h } = await import('vue')
+  return { default: defineComponent({ render: () => h('svg') }) }
+})
+vi.mock('@/assets/icons/interface/user.svg', async () => {
+  const { defineComponent, h } = await import('vue')
+  return { default: defineComponent({ render: () => h('svg') }) }
+})
+vi.mock('@/assets/icons/interface/post-it.svg', async () => {
+  const { defineComponent, h } = await import('vue')
+  return { default: defineComponent({ render: () => h('svg') }) }
 })
 
-describe('MapLayerControl', () => {
-  function buttons(wrapper: ReturnType<typeof mount>) {
-    const all = wrapper.findAll('button')
-    if (all.length !== 2) throw new Error(`expected 2 buttons, got ${all.length}`)
-    return { people: all[0]!, posts: all[1]! }
-  }
+import MapLayerControl from '../MapLayerControl.vue'
+import type { UserContentKind } from '@shared/maps'
 
+function mountWith(modelValue: UserContentKind[]) {
+  return mount(MapLayerControl, { props: { modelValue } })
+}
+
+function toggles(wrapper: ReturnType<typeof mountWith>) {
+  // BFormCheckbox renders an <input type="checkbox"> per toggle; the
+  // component's @click handler fires on either the input or its label.
+  const inputs = wrapper.findAll('input[type="checkbox"]')
+  if (inputs.length !== 2) throw new Error(`expected 2 toggles, got ${inputs.length}`)
+  return { people: inputs[0]!, posts: inputs[1]! }
+}
+
+describe('MapLayerControl', () => {
   it('renders both layer toggles with translation keys', () => {
-    const wrapper = mount(MapLayerControl)
+    const wrapper = mountWith(['profile', 'post'])
     const text = wrapper.text()
     expect(text).toContain('map.layer_control.people')
     expect(text).toContain('map.layer_control.posts')
   })
 
-  it('reflects initial store visibility (both pressed)', () => {
-    const wrapper = mount(MapLayerControl)
-    const { people, posts } = buttons(wrapper)
-    expect(people.attributes('aria-pressed')).toBe('true')
-    expect(posts.attributes('aria-pressed')).toBe('true')
+  it('emits update:modelValue without "profile" when the people toggle is clicked while selected', async () => {
+    const wrapper = mountWith(['profile', 'post'])
+    await toggles(wrapper).people.trigger('click')
+    expect(wrapper.emitted('update:modelValue')).toEqual([[['post']]])
   })
 
-  it('toggles showPeople off when clicked while showPosts is on', async () => {
-    const wrapper = mount(MapLayerControl)
-    const store = useMapStore()
-    const { people } = buttons(wrapper)
-    await people.trigger('click')
-    expect(store.showPeople).toBe(false)
-    expect(store.showPosts).toBe(true)
+  it('emits update:modelValue without "post" when the posts toggle is clicked while selected', async () => {
+    const wrapper = mountWith(['profile', 'post'])
+    await toggles(wrapper).posts.trigger('click')
+    expect(wrapper.emitted('update:modelValue')).toEqual([[['profile']]])
   })
 
-  it('toggles showPosts off when clicked while showPeople is on', async () => {
-    const wrapper = mount(MapLayerControl)
-    const store = useMapStore()
-    const { posts } = buttons(wrapper)
-    await posts.trigger('click')
-    expect(store.showPosts).toBe(false)
-    expect(store.showPeople).toBe(true)
+  it('emits update:modelValue adding "profile" when the people toggle is clicked while unselected', async () => {
+    const wrapper = mountWith(['post'])
+    await toggles(wrapper).people.trigger('click')
+    expect(wrapper.emitted('update:modelValue')).toEqual([[['post', 'profile']]])
   })
 
-  it('clicking the only-pressed button is a no-op (both stay as they were)', async () => {
-    const wrapper = mount(MapLayerControl)
-    const store = useMapStore()
-    store.setShowPosts(false)
-    await wrapper.vm.$nextTick()
-    const { people } = buttons(wrapper)
-    await people.trigger('click')
-    expect(store.showPeople).toBe(true)
-    expect(store.showPosts).toBe(false)
-  })
-
-  it('updates aria-pressed when the store mutates externally', async () => {
-    const wrapper = mount(MapLayerControl)
-    const store = useMapStore()
-    store.setShowPeople(false)
-    await wrapper.vm.$nextTick()
-    const { people } = buttons(wrapper)
-    expect(people.attributes('aria-pressed')).toBe('false')
+  it("does not enforce the at-least-one invariant — that is the parent's job", async () => {
+    const wrapper = mountWith(['profile'])
+    await toggles(wrapper).people.trigger('click')
+    expect(wrapper.emitted('update:modelValue')).toEqual([[[]]])
   })
 })
