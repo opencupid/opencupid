@@ -22,8 +22,17 @@ process.env.DEBUG = 'vite:*' // Add this to force verbose output
 // https://vite.dev/config/
 export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
   const env = mode === 'development' ? loadProjectEnv(mode) : process.env
+  const sharedDefine = define(__dirname)
   return {
-    ...define(__dirname),
+    ...sharedDefine,
+    define: {
+      ...sharedDefine.define,
+      // Sentry tree-shaking: tracing and replay integrations are not used,
+      // so drop the corresponding code paths from @sentry/core at build time.
+      // Docs: https://docs.sentry.io/platforms/javascript/configuration/tree-shaking/
+      __SENTRY_TRACING__: false,
+      __SENTRY_DEBUG__: false,
+    },
     ...server(mode, env, __dirname),
     build: {
       sourcemap: true,
@@ -31,10 +40,10 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
         external: (id) => id.includes('__tests__'),
         output: {
           manualChunks(id) {
-            if (id.includes('assets/icons')) {
+            if (id.includes('/src/assets/icons/')) {
               return 'icons'
             }
-            if (id.includes('flag-icons')) {
+            if (id.includes('/flag-icons/')) {
               return 'flags'
             }
           },
