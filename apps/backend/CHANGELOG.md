@@ -1,5 +1,16 @@
 # backend
 
+## 0.61.0
+
+### Minor Changes
+
+- 3db11af: Add dashboard drill-down modal for Interactions and Messages KPIs. Clicking
+  the KPI card opens a modal with detailed bar charts (likes / anonymous /
+  matches for interactions; messages sent / new conversations for messages)
+  across a configurable timeline (24h / 72h / 7d, default 72h), backed by a new
+  `/admin/stats/breakdown` endpoint with hourly or daily buckets.
+- a401891: Match click in the inbox opens the conversation-detail view instead of the send-message modal, with a redesigned like popover and extracted interaction-context endpoint. See PR description for full details.
+
 ## 0.60.0
 
 ### Minor Changes

@@ -1,5 +1,17 @@
 # frontend
 
+## 0.61.0
+
+### Minor Changes
+
+- a401891: Match click in the inbox opens the conversation-detail view instead of the send-message modal, with a redesigned like popover and extracted interaction-context endpoint. See PR description for full details.
+
+### Patch Changes
+
+- b448f07: bundle: chunk consolidation, sentry tree-shake, asset trims
+- 73b99c3: Eliminate duplicate profile preview and dating-prefs fetches when opening the owner drawer.
+- fd9249e: Add HMR support for i18n JSON files (no full page reloads on translation edits)
+
 ## 0.60.0
 
 ### Minor Changes

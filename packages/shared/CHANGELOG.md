@@ -1,5 +1,11 @@
 # @opencupid/shared
 
+## 0.9.3
+
+### Patch Changes
+
+- a401891: Match click in the inbox opens the conversation-detail view instead of the send-message modal, with a redesigned like popover and extracted interaction-context endpoint. See PR description for full details.
+
 ## 0.9.2
 
 ### Patch Changes
