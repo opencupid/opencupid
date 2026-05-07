@@ -5,28 +5,37 @@ import { useI18nStore } from '@/store/i18nStore'
 
 // Always register English (fallback)
 import enLocale from 'i18n-iso-countries/langs/en.json'
+import huLocale from 'i18n-iso-countries/langs/hu.json'
 countries.registerLocale(enLocale)
+countries.registerLocale(huLocale)
 
-const loadedLocales = new Set(['en'])
+const loadedLocales = new Set(['en', 'hu'])
 
 const localeLoaders: Record<string, () => Promise<any>> = {
-  de: () => import('i18n-iso-countries/langs/de.json'),
-  es: () => import('i18n-iso-countries/langs/es.json'),
-  fr: () => import('i18n-iso-countries/langs/fr.json'),
-  hu: () => import('i18n-iso-countries/langs/hu.json'),
-  it: () => import('i18n-iso-countries/langs/it.json'),
-  nl: () => import('i18n-iso-countries/langs/nl.json'),
-  pl: () => import('i18n-iso-countries/langs/pl.json'),
-  pt: () => import('i18n-iso-countries/langs/pt.json'),
-  ro: () => import('i18n-iso-countries/langs/ro.json'),
-  sk: () => import('i18n-iso-countries/langs/sk.json'),
+  // keep this
+  // hu: () => import('i18n-iso-countries/langs/hu.json'),
+  // de: () => import('i18n-iso-countries/langs/de.json'),
+  // es: () => import('i18n-iso-countries/langs/es.json'),
+  // fr: () => import('i18n-iso-countries/langs/fr.json'),
+  // it: () => import('i18n-iso-countries/langs/it.json'),
+  // nl: () => import('i18n-iso-countries/langs/nl.json'),
+  // pl: () => import('i18n-iso-countries/langs/pl.json'),
+  // pt: () => import('i18n-iso-countries/langs/pt.json'),
+  // ro: () => import('i18n-iso-countries/langs/ro.json'),
+  // sk: () => import('i18n-iso-countries/langs/sk.json'),
 }
 
 let language = 'en'
 
-// Lazy-register other languages only when first needed
+// Lazy-register other languages only when first needed.
 async function ensureCountryLocale(locale: string) {
-  if (loadedLocales.has(locale)) return
+  // If the locale is already registered (en/hu are pre-registered, others
+  // become loaded on first request), update the active language
+  // immediately so subsequent getNames/getName calls switch.
+  if (loadedLocales.has(locale)) {
+    language = locale
+    return
+  }
 
   const loader = localeLoaders[locale]
   if (!loader) {

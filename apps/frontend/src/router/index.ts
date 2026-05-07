@@ -4,13 +4,27 @@ import type { RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { bus } from '@/lib/bus'
 
-import AppShellLayout from '@/features/app/views/AppShellLayout.vue'
 import OnboardingLayout from '@/features/app/views/OnboardingLayout.vue'
-import AppShell from '@/features/browse/views/BrowseProfiles.vue'
-import OnboardingView from '@/features/onboarding/views/Onboarding.vue'
+// LoginView stays eager so the form renders on first paint without a chunk
+// fetch — this is the primary unauthenticated entry point.
 import LoginView from '@/features/auth/views/LoginView.vue'
 import MagicLink from '@/features/auth/views/MagicLink.vue'
-import UnsubscribeView from '@/features/unsubscribe/views/UnsubscribeView.vue'
+
+// Route components are lazy-loaded for bundle splitting. AppShellLayout in
+// particular is the gateway to the entire authenticated feature surface
+// (it transitively imports OwnerDrawerOrchestrator → ProfilePanel +
+// InboxPanel → ~240 KB gz of feature code), so lazy-loading it keeps that
+// subgraph out of the pre-auth bundle.
+//
+// Race-safety: verifyToken does not await bootstrap directly — bootstrap
+// is orchestrated by lib/auth.ts via the auth:login bus event. The
+// post-login navigator (MagicLink.vue.onMounted) awaits bootstrapReady()
+// from lib/auth before calling router.push, so authenticated route
+// components mount with profile state already loaded.
+const AppShellLayout = () => import('@/features/app/views/AppShellLayout.vue')
+const AppShell = () => import('@/features/browse/views/BrowseProfiles.vue')
+const OnboardingView = () => import('@/features/onboarding/views/Onboarding.vue')
+const UnsubscribeView = () => import('@/features/unsubscribe/views/UnsubscribeView.vue')
 
 // All browse-area routes render AppShell. KeepAlive (include: ['AppShell'])
 // in AppShellLayout keeps it mounted across navigations. AppShell reads the

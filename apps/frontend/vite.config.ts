@@ -22,19 +22,36 @@ process.env.DEBUG = 'vite:*' // Add this to force verbose output
 // https://vite.dev/config/
 export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
   const env = mode === 'development' ? loadProjectEnv(mode) : process.env
+  const sharedDefine = define(__dirname)
   return {
-    ...define(__dirname),
+    ...sharedDefine,
+    define: {
+      ...sharedDefine.define,
+      // Sentry tree-shaking: tracing and replay integrations are not used,
+      // so drop the corresponding code paths from @sentry/core at build time.
+      // Docs: https://docs.sentry.io/platforms/javascript/configuration/tree-shaking/
+      __SENTRY_TRACING__: false,
+      __SENTRY_DEBUG__: false,
+    },
     ...server(mode, env, __dirname),
     build: {
       sourcemap: true,
       rollupOptions: {
         external: (id) => id.includes('__tests__'),
         output: {
+          // Inline chunks below this size into a parent that imports them,
+          // reducing per-request HTTP/2 overhead for tiny shared modules.
+          // 30 KB raw ≈ ~9 KB gz — catches small single-consumer shared
+          // utility chunks without forcing per-route lazy chunks to merge.
+          experimentalMinChunkSize: 30 * 1024,
+          chunkFileNames: 'assets/chunk-[hash].js',
+          entryFileNames: 'assets/entry-[hash].js',
+          assetFileNames: 'assets/asset-[hash][extname]',
           manualChunks(id) {
-            if (id.includes('assets/icons')) {
+            if (id.includes('/src/assets/icons/')) {
               return 'icons'
             }
-            if (id.includes('flag-icons')) {
+            if (id.includes('/flag-icons/')) {
               return 'flags'
             }
           },

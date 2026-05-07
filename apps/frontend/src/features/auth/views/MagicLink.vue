@@ -6,6 +6,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 
 import { useAuthStore } from '../stores/authStore'
+import { bootstrapReady } from '@/lib/auth'
 import AuthLayout from '../components/AuthLayout.vue'
 import ViewTitle from '@/features/shared/ui/ViewTitle.vue'
 import ChevronLeftIcon from '@/assets/icons/arrows/arrow-single-left.svg'
@@ -48,6 +49,21 @@ onMounted(async () => {
     const res = await authStore.verifyToken(params.data.token)
     if (res.success) {
       error.value = ''
+      // Wait for the orchestrator to finish bootstrapping (owner profile
+      // fetched, stores initialized) before navigating into the
+      // authenticated UI. Prevents BrowseProfiles.onMounted from reading a
+      // null profile and silently skipping the /onboarding redirect for
+      // freshly registered users. bootstrapReady() rejects on bootstrap
+      // failure — caught below so we surface a user-visible error instead
+      // of dropping the user into a half-mounted authenticated shell.
+      try {
+        await bootstrapReady()
+      } catch (err) {
+        console.error('Bootstrap failed after login:', err)
+        error.value = t('auth.token_unknown_error')
+        isCheckingMagicLinkToken.value = false
+        return
+      }
       await router.push('/browse')
       return
     }

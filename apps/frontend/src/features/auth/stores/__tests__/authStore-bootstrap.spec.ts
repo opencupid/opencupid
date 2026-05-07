@@ -1,10 +1,14 @@
 /**
- * Tests the login flow sequencing between authStore.verifyToken and bootstrap.
+ * Tests the login signalling between authStore.verifyToken and the
+ * bootstrap orchestrator (lib/auth.ts).
  *
- * Critical invariant: by the time verifyToken resolves with success, the owner
- * profile must already be loaded in the store. This prevents a race condition
- * where UserHome (kept alive by <KeepAlive>) could check isOnboarded before
- * the profile fetch completes and skip the /onboarding redirect.
+ * Architecture:
+ *   - verifyToken emits `auth:login` on the bus on success and returns.
+ *   - lib/auth.ts subscribes to `auth:login`, kicks off bootstrap, and
+ *     exposes `bootstrapReady()` so post-login navigation paths can await
+ *     bootstrap completion before pushing to authenticated routes.
+ *   - authStore is decoupled from bootstrap — it does not import lib/auth
+ *     or lib/bootstrap directly.
  */
 import { describe, it, expect, vi, beforeEach, afterAll } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
@@ -15,14 +19,14 @@ function makeJwt(payload: Record<string, unknown>): string {
   return `${header}.${body}.fakesig`
 }
 
-const { mockApi, mockSafeApiCall, mockOnLogin } = vi.hoisted(() => ({
+const { mockApi, mockSafeApiCall, mockBusEmit } = vi.hoisted(() => ({
   mockApi: {
     get: vi.fn(),
     post: vi.fn(),
     defaults: { headers: { common: {} as Record<string, string> } },
   },
   mockSafeApiCall: vi.fn((fn: () => Promise<unknown>) => fn()),
-  mockOnLogin: vi.fn().mockResolvedValue(undefined),
+  mockBusEmit: vi.fn(),
 }))
 
 vi.mock('@/lib/api', () => ({
@@ -32,11 +36,7 @@ vi.mock('@/lib/api', () => ({
 }))
 
 vi.mock('@/lib/bus', () => ({
-  bus: { emit: vi.fn(), on: vi.fn() },
-}))
-
-vi.mock('@/lib/bootstrap', () => ({
-  useBootstrap: () => ({ onLogin: mockOnLogin }),
+  bus: { emit: mockBusEmit, on: vi.fn() },
 }))
 
 vi.stubGlobal('__APP_CONFIG__', { API_BASE_URL: 'http://localhost:3000', NODE_ENV: 'test' })
@@ -44,51 +44,35 @@ afterAll(() => vi.unstubAllGlobals())
 
 import { useAuthStore } from '../authStore'
 
-describe('authStore.verifyToken bootstrap sequencing', () => {
+describe('authStore.verifyToken signals login via bus', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     localStorage.clear()
     vi.clearAllMocks()
-    mockOnLogin.mockResolvedValue(undefined)
     mockSafeApiCall.mockImplementation((fn: () => Promise<unknown>) => fn())
   })
 
-  it('calls onLogin after successful token verification', async () => {
-    const token = makeJwt({ userId: 'u1', profileId: 'p1', exp: Date.now() / 1000 + 3600 })
-    mockApi.get.mockResolvedValue({ data: { success: true, token } })
-
-    const store = useAuthStore()
-    await store.verifyToken('123456')
-
-    expect(mockOnLogin).toHaveBeenCalledOnce()
-  })
-
-  it('profile is loaded before verifyToken resolves — onLogin awaited', async () => {
-    // Simulate onLogin taking time to fetch the profile
-    let onLoginResolved = false
-    mockOnLogin.mockImplementation(async () => {
-      await new Promise((r) => setTimeout(r, 10))
-      onLoginResolved = true
-    })
-
+  it('emits auth:login after successful token verification', async () => {
     const token = makeJwt({ userId: 'u1', profileId: 'p1', exp: Date.now() / 1000 + 3600 })
     mockApi.get.mockResolvedValue({ data: { success: true, token } })
 
     const store = useAuthStore()
     const result = await store.verifyToken('123456')
 
-    // By the time verifyToken resolves, onLogin must have completed
     expect(result.success).toBe(true)
-    expect(onLoginResolved).toBe(true)
+    expect(mockBusEmit).toHaveBeenCalledWith('auth:login', { userId: 'u1' })
   })
 
-  it('does not call onLogin when token verification fails', async () => {
+  it('does not emit auth:login when token verification fails', async () => {
     mockApi.get.mockResolvedValue({ data: { success: false } })
 
     const store = useAuthStore()
     const result = await store.verifyToken('wrong-token')
 
     expect(result.success).toBe(false)
-    expect(mockOnLogin).not.toHaveBeenCalled()
+    // Assert no auth:login emission regardless of payload — covers the
+    // (otherwise undetected) case of bus.emit('auth:login', undefined).
+    const authLoginCalls = mockBusEmit.mock.calls.filter((c) => c[0] === 'auth:login')
+    expect(authLoginCalls).toHaveLength(0)
   })
 })
