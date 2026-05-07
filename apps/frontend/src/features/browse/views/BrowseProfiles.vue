@@ -14,7 +14,6 @@ import { isValidLatLng, toLatLng } from '@/features/map/utils/mapUtils'
 import { MAP_DEFAULT_CENTER } from '@shared/maps'
 import { useDetailRouteState } from '@/features/shared/composables/useDetailRouteState'
 import { useDetailPanel } from '@/features/app/composables/useDetailPanel'
-import { useMapStore } from '@/features/map/stores/mapStore'
 
 import OsmPoiMap from '@/features/map/components/OsmPoiMap.vue'
 import MapLayerControl from '@/features/map/components/MapLayerControl.vue'
@@ -63,7 +62,7 @@ watch(selectedTagIds, () => {
 
 // Server-side layer filtering: toggling a layer changes the `kinds` query
 // param sent on cluster fetches. Invalidate the bounds cache and refetch.
-const { selectedLayers } = storeToRefs(useMapStore())
+const { selectedLayers } = storeToRefs(findProfileStore)
 watch(selectedLayers, () => {
   findProfileStore.refetchBounds()
 })

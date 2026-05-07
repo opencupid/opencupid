@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useMapStore } from '@/features/map/stores/mapStore'
 
 const { mockGet } = vi.hoisted(() => ({ mockGet: vi.fn() }))
 vi.mock('@/lib/api', () => ({
@@ -192,8 +191,7 @@ describe('findClustersForMapBounds with layer kinds', () => {
   it('sends kinds=post when only Posts is selected', async () => {
     mockGet.mockResolvedValue({ data: { success: true, features: [], tags: [] } })
 
-    const mapStore = useMapStore()
-    mapStore.setSelectedLayers(['post'])
+    store.selectedLayers = ['post']
 
     await store.findClustersForMapBounds(bounds, 7)
 
@@ -221,7 +219,7 @@ describe('findClustersForMapBounds with layer kinds', () => {
     await store.findClustersForMapBounds(bounds, 7)
     expect(mockGet).toHaveBeenCalledTimes(1)
 
-    useMapStore().setSelectedLayers(['profile'])
+    store.selectedLayers = ['profile']
 
     await store.findClustersForMapBounds(bounds, 7)
     expect(mockGet).toHaveBeenCalledTimes(2)

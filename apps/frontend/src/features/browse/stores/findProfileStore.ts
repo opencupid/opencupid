@@ -8,8 +8,7 @@ import { ClusterMapResponseSchema, type MapFeature } from '@shared/zod/map/clust
 import { storeSuccess, storeError, type StoreVoidSuccess, type StoreError } from '@/store/helpers'
 import { bus } from '@/lib/bus'
 import { useSearchStore } from './searchStore'
-import { useMapStore } from '@/features/map/stores/mapStore'
-import { type UserContentKind } from '@shared/maps'
+import { USER_CONTENT_KINDS, type UserContentKind } from '@shared/maps'
 import type { MapBounds } from '@/features/map/types/map.types'
 import { boundsContain, padBounds } from '../utils/boundsUtils'
 
@@ -75,6 +74,14 @@ type FindProfileStoreState = {
   lastMapBounds: MapBounds | null
   isLoading: boolean
   availableTags: PublicTag[]
+  /**
+   * Which user-content layers are visible on the map. Sent verbatim to the
+   * backend as the `kinds` query param on cluster fetches; toggling
+   * invalidates the bounds cache and triggers a refetch. The non-empty
+   * invariant required by the wire schema is enforced upstream by
+   * MapLayerControl, which disables the last-remaining checkbox.
+   */
+  selectedLayers: UserContentKind[]
 }
 
 export const useFindProfileStore = defineStore('findProfile', {
@@ -83,6 +90,7 @@ export const useFindProfileStore = defineStore('findProfile', {
     lastMapBounds: null,
     isLoading: false,
     availableTags: [] as PublicTag[],
+    selectedLayers: [...USER_CONTENT_KINDS],
   }),
 
   actions: {
@@ -103,7 +111,7 @@ export const useFindProfileStore = defineStore('findProfile', {
 
       const tagIds = useSearchStore().selectedTagIds
       const sig = tagSignature(tagIds)
-      const kinds = useMapStore().selectedLayers
+      const kinds = this.selectedLayers
       const kindsSig = kindsSignature(kinds)
 
       const sameTags = sig === cachedClusterTagSig
@@ -215,6 +223,7 @@ export const useFindProfileStore = defineStore('findProfile', {
       this.lastMapBounds = null
       this.isLoading = false
       this.availableTags = []
+      this.selectedLayers = [...USER_CONTENT_KINDS]
     },
   },
 })

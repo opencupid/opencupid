@@ -118,18 +118,9 @@ vi.mock('../../composables/useBrowseViewModel', () => ({
   useBrowseViewModel: () => vmState,
 }))
 
-const { mockRefetchBounds, mockFetchBounds } = vi.hoisted(() => ({
-  mockRefetchBounds: vi.fn(),
-  mockFetchBounds: vi.fn(),
-}))
-
-vi.mock('@/features/browse/stores/findProfileStore', () => ({
-  useFindProfileStore: () => ({
-    refetchBounds: mockRefetchBounds,
-    lastMapBounds: null,
-    fetchBounds: mockFetchBounds,
-  }),
-}))
+// findProfileStore is real (so storeToRefs works); spies attach in beforeEach.
+import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
+let mockRefetchBounds: ReturnType<typeof vi.spyOn>
 
 const mockPostSummaries = ref<any[]>([])
 vi.mock('@/features/posts/stores/postStore', () => ({
@@ -200,6 +191,9 @@ import { MAP_DEFAULT_CENTER } from '@shared/maps'
 describe('BrowseProfiles view', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
+    const findProfileStore = useFindProfileStore()
+    mockRefetchBounds = vi.spyOn(findProfileStore, 'refetchBounds').mockResolvedValue(undefined)
+    vi.spyOn(findProfileStore, 'fetchBounds').mockResolvedValue(undefined)
     vmState.isNoOneAround.value = false
     vmState.viewerProfile.value = {
       isSocialActive: true,
@@ -211,8 +205,6 @@ describe('BrowseProfiles view', () => {
     toastInfo.mockClear()
     mockPush.mockClear()
     mockReplace.mockClear()
-    mockRefetchBounds.mockClear()
-    mockFetchBounds.mockClear()
   })
 
   const mountComponent = () => {
@@ -332,16 +324,13 @@ describe('BrowseProfiles view', () => {
     })
   })
 
-  it('refetches bounds when mapStore.selectedLayers changes', async () => {
+  it('refetches bounds when findProfileStore.selectedLayers changes', async () => {
     mountComponent()
     await flushPromises()
 
-    // mapStore is real (not mocked); read it via the same import the component uses.
-    const { useMapStore } = await import('@/features/map/stores/mapStore')
-    const mapStore = useMapStore()
-
+    const findProfileStore = useFindProfileStore()
     mockRefetchBounds.mockClear()
-    mapStore.setSelectedLayers(['post'])
+    findProfileStore.selectedLayers = ['post']
     await nextTick()
 
     expect(mockRefetchBounds).toHaveBeenCalledTimes(1)
