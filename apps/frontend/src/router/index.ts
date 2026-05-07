@@ -4,13 +4,20 @@ import type { RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { bus } from '@/lib/bus'
 
-import AppShellLayout from '@/features/app/views/AppShellLayout.vue'
 import OnboardingLayout from '@/features/app/views/OnboardingLayout.vue'
-import AppShell from '@/features/browse/views/BrowseProfiles.vue'
-import OnboardingView from '@/features/onboarding/views/Onboarding.vue'
+// LoginView stays eager so the form renders on first paint without a chunk
+// fetch — this is the primary unauthenticated entry point.
 import LoginView from '@/features/auth/views/LoginView.vue'
-import MagicLink from '@/features/auth/views/MagicLink.vue'
-import UnsubscribeView from '@/features/unsubscribe/views/UnsubscribeView.vue'
+
+// Authenticated views are lazy-loaded. Vue Router resolves the dynamic
+// import before instantiating the component, so onMounted() still fires
+// after verifyToken → bootstrap completes (the race guard in
+// authStore.verifyToken is preserved by construction).
+const AppShellLayout = () => import('@/features/app/views/AppShellLayout.vue')
+const AppShell = () => import('@/features/browse/views/BrowseProfiles.vue')
+const OnboardingView = () => import('@/features/onboarding/views/Onboarding.vue')
+const MagicLink = () => import('@/features/auth/views/MagicLink.vue')
+const UnsubscribeView = () => import('@/features/unsubscribe/views/UnsubscribeView.vue')
 
 // All browse-area routes render AppShell. KeepAlive (include: ['AppShell'])
 // in AppShellLayout keeps it mounted across navigations. AppShell reads the
