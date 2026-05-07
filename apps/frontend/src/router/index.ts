@@ -8,15 +8,19 @@ import OnboardingLayout from '@/features/app/views/OnboardingLayout.vue'
 // LoginView stays eager so the form renders on first paint without a chunk
 // fetch — this is the primary unauthenticated entry point.
 import LoginView from '@/features/auth/views/LoginView.vue'
+import MagicLink from '@/features/auth/views/MagicLink.vue'
 
-// Authenticated views are lazy-loaded. Vue Router resolves the dynamic
-// import before instantiating the component, so onMounted() still fires
-// after verifyToken → bootstrap completes (the race guard in
-// authStore.verifyToken is preserved by construction).
+// Route components are lazy-loaded — Vue Router resolves the dynamic import
+// before instantiating the component, so onMounted() still fires after
+// verifyToken → bootstrap completes (the race guard in authStore.verifyToken
+// is preserved by construction). AppShellLayout in particular is the
+// gateway to the entire authenticated feature surface (it transitively
+// imports OwnerDrawerOrchestrator → ProfilePanel + InboxPanel → ~240 KB
+// gz of feature code), so lazy-loading it keeps that subgraph out of the
+// pre-auth bundle.
 const AppShellLayout = () => import('@/features/app/views/AppShellLayout.vue')
 const AppShell = () => import('@/features/browse/views/BrowseProfiles.vue')
 const OnboardingView = () => import('@/features/onboarding/views/Onboarding.vue')
-const MagicLink = () => import('@/features/auth/views/MagicLink.vue')
 const UnsubscribeView = () => import('@/features/unsubscribe/views/UnsubscribeView.vue')
 
 // All browse-area routes render AppShell. KeepAlive (include: ['AppShell'])

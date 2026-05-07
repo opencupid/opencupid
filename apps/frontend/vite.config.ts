@@ -39,6 +39,14 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       rollupOptions: {
         external: (id) => id.includes('__tests__'),
         output: {
+          // Inline chunks below this size into a parent that imports them,
+          // reducing per-request HTTP/2 overhead for tiny shared modules.
+          // 20 KB raw ≈ ~6 KB gz — catches the small-shared-utility chunks
+          // without forcing per-route lazy chunks to merge.
+          experimentalMinChunkSize: 30 * 1024,
+          chunkFileNames: 'assets/chunk-[hash].js',
+          entryFileNames: 'assets/entry-[hash].js',
+          assetFileNames: 'assets/asset-[hash][extname]',
           manualChunks(id) {
             if (id.includes('/src/assets/icons/')) {
               return 'icons'

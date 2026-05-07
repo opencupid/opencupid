@@ -6,6 +6,8 @@ import registerToast from './lib/toast'
 import { appUseI18n } from './lib/i18n'
 import { useAuthStore } from './features/auth/stores/authStore'
 import { initUmami } from './lib/umami'
+import { initSentry } from './lib/sentry'
+import { initOpenReplay } from './lib/openreplay'
 
 // Register push-only service worker
 if ('serviceWorker' in navigator) {
@@ -25,23 +27,6 @@ import { createBootstrap } from 'bootstrap-vue-next'
 import App from './App.vue'
 import router from './router'
 import './lib/auth'
-
-function initOpenReplay() {
-  const { OPENREPLAY_PROJECT_KEY, OPENREPLAY_INGEST_POINT } = __APP_CONFIG__
-  if (!OPENREPLAY_PROJECT_KEY || !OPENREPLAY_INGEST_POINT) return
-
-  import('@openreplay/tracker')
-    .then(({ default: Tracker }) => {
-      const tracker = new Tracker({
-        projectKey: OPENREPLAY_PROJECT_KEY,
-        ingestPoint: OPENREPLAY_INGEST_POINT,
-      })
-      tracker.start()
-    })
-    .catch((err) => {
-      console.warn('Failed to load OpenReplay:', err)
-    })
-}
 
 const app = createApp(App)
 
@@ -83,15 +68,13 @@ appUseI18n(app)
   app.mount('#app')
   document.getElementById('splash')?.remove()
 
-  // Load observability tools after mount. Sentry's initSentry is dynamically
-  // imported so the entire @sentry/vue stack (~250 KB gz including replay)
-  // stays out of the initial chunk and only downloads post first-paint.
-  // Errors thrown before this point are caught by app.config.errorHandler
-  // (set above) and logged to console; they are not reported to Sentry, which
-  // is the expected trade-off for the bundle savings.
-  import('./lib/sentry')
-    .then(({ initSentry }) => initSentry(app))
-    .catch((err) => console.warn('Failed to load Sentry:', err))
-  initOpenReplay()
+  // Load observability tools after mount. The Sentry/OpenReplay wrappers
+  // are eagerly imported but their heavy dependencies (@sentry/vue,
+  // @openreplay/tracker) are conditionally lazy-loaded inside — only fetched
+  // when the env-var gate passes. Errors thrown before this point are caught
+  // by app.config.errorHandler (set above) and logged to console; they are
+  // not reported to Sentry, which is the expected trade-off.
+  initSentry(app).catch((err) => console.warn('Failed to load Sentry:', err))
+  initOpenReplay().catch((err) => console.warn('Failed to load OpenReplay:', err))
   initUmami()
 })()
