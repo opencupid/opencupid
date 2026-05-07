@@ -70,6 +70,9 @@ describe('authStore.verifyToken signals login via bus', () => {
     const result = await store.verifyToken('wrong-token')
 
     expect(result.success).toBe(false)
-    expect(mockBusEmit).not.toHaveBeenCalledWith('auth:login', expect.anything())
+    // Assert no auth:login emission regardless of payload — covers the
+    // (otherwise undetected) case of bus.emit('auth:login', undefined).
+    const authLoginCalls = mockBusEmit.mock.calls.filter((c) => c[0] === 'auth:login')
+    expect(authLoginCalls).toHaveLength(0)
   })
 })

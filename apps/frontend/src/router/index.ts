@@ -10,14 +10,17 @@ import OnboardingLayout from '@/features/app/views/OnboardingLayout.vue'
 import LoginView from '@/features/auth/views/LoginView.vue'
 import MagicLink from '@/features/auth/views/MagicLink.vue'
 
-// Route components are lazy-loaded — Vue Router resolves the dynamic import
-// before instantiating the component, so onMounted() still fires after
-// verifyToken → bootstrap completes (the race guard in authStore.verifyToken
-// is preserved by construction). AppShellLayout in particular is the
-// gateway to the entire authenticated feature surface (it transitively
-// imports OwnerDrawerOrchestrator → ProfilePanel + InboxPanel → ~240 KB
-// gz of feature code), so lazy-loading it keeps that subgraph out of the
-// pre-auth bundle.
+// Route components are lazy-loaded for bundle splitting. AppShellLayout in
+// particular is the gateway to the entire authenticated feature surface
+// (it transitively imports OwnerDrawerOrchestrator → ProfilePanel +
+// InboxPanel → ~240 KB gz of feature code), so lazy-loading it keeps that
+// subgraph out of the pre-auth bundle.
+//
+// Race-safety: verifyToken does not await bootstrap directly — bootstrap
+// is orchestrated by lib/auth.ts via the auth:login bus event. The
+// post-login navigator (MagicLink.vue.onMounted) awaits bootstrapReady()
+// from lib/auth before calling router.push, so authenticated route
+// components mount with profile state already loaded.
 const AppShellLayout = () => import('@/features/app/views/AppShellLayout.vue')
 const AppShell = () => import('@/features/browse/views/BrowseProfiles.vue')
 const OnboardingView = () => import('@/features/onboarding/views/Onboarding.vue')

@@ -10,9 +10,12 @@ import { useAuthStore } from './features/auth/stores/authStore'
 
 // All three authenticated-only surfaces (AppNotifier, FaviconNotification,
 // VideoCallSurface) are bundled together via AuthenticatedSurface so the
-// browser fetches one chunk instead of three on login. Their transitive
-// deps — vue-toastification, tinycon, callStore, notification stores —
-// stay out of the eager bundle.
+// browser fetches one chunk instead of three on login. Transitive deps
+// reachable only through these components — tinycon, callStore, the
+// notification stores, the call api client, the toast components — stay
+// out of the eager bundle. (vue-toastification itself stays eager because
+// its plugin is registered at app boot in main.ts; only the toast
+// components/handlers that USE useToast() lazy-load with this surface.)
 const AuthenticatedSurface = defineAsyncComponent(
   () => import('@/features/app/components/AuthenticatedSurface.vue')
 )

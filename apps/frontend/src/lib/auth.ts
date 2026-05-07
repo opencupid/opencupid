@@ -8,6 +8,12 @@ let pending: Promise<void> | null = null
 
 bus.on('auth:login', () => {
   pending = import('./bootstrap').then(({ useBootstrap }) => useBootstrap().onLogin())
+  // Observe the rejection separately so cold-start paths (authStore
+  // initialize → bus.emit, with no awaiter) don't surface as unhandled
+  // promise rejections. This .catch() runs in parallel — it does NOT
+  // replace `pending`, so callers awaiting bootstrapReady() still see
+  // the original rejection and can decide how to recover.
+  pending.catch((err) => console.error('Bootstrap failed:', err))
 })
 
 /**

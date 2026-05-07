@@ -27,9 +27,15 @@ const localeLoaders: Record<string, () => Promise<any>> = {
 
 let language = 'en'
 
-// Lazy-register other languages only when first needed
+// Lazy-register other languages only when first needed.
 async function ensureCountryLocale(locale: string) {
-  if (loadedLocales.has(locale)) return
+  // If the locale is already registered (en/hu are pre-registered, others
+  // become loaded on first request), update the active language
+  // immediately so subsequent getNames/getName calls switch.
+  if (loadedLocales.has(locale)) {
+    language = locale
+    return
+  }
 
   const loader = localeLoaders[locale]
   if (!loader) {

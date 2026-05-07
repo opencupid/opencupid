@@ -41,8 +41,8 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
         output: {
           // Inline chunks below this size into a parent that imports them,
           // reducing per-request HTTP/2 overhead for tiny shared modules.
-          // 20 KB raw ≈ ~6 KB gz — catches the small-shared-utility chunks
-          // without forcing per-route lazy chunks to merge.
+          // 30 KB raw ≈ ~9 KB gz — catches small single-consumer shared
+          // utility chunks without forcing per-route lazy chunks to merge.
           experimentalMinChunkSize: 30 * 1024,
           chunkFileNames: 'assets/chunk-[hash].js',
           entryFileNames: 'assets/entry-[hash].js',
